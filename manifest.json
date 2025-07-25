@@ -1,0 +1,12 @@
+{
+	"id": "think-os",
+	"name": "Think OS",
+	"version": "0.0.1",
+	"minAppVersion": "0.15.0",
+	"description": "A Preact-powered dashboard plugin.",
+	"author": "臂展两米八",
+	"authorUrl": "https://github.com/yourname",
+	"main": "main.js",
+	"scripts": [],
+	"styles": "styles.css"
+  }

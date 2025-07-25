@@ -1,0 +1,24 @@
+
+/* 让复选框使用系统外观 */
+.task-checkbox {
+  appearance: auto !important;
+  -webkit-appearance: checkbox !important;
+}
+
+/* ✅ 已完成 / 勾选时使用亮绿色 */
+.task-checkbox.done,
+.task-checkbox:checked {
+  accent-color: #16a34a !important;
+}
+
+/* 已完成的复选框不可再次点击（写在 CSS 里或写在 JSX 都行） */
+.task-checkbox.done {
+  pointer-events: none;
+}
+.task-checkbox:checked::after {
+  content: none !important;
+  display: none !important;
+  -webkit-mask-image: none !important;
+  background-color: transparent !important;
+}
+
