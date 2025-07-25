@@ -1,0 +1,169 @@
+{
+  "dashboards": [
+    {
+      "name": "全局",
+      "modules": [
+        {
+          "view": "TableView",
+          "title": "未完成任务",
+          "collapsed": true,
+          "filters": [
+            {
+              "field": "status",
+              "op": "=",
+              "value": "open"
+            }
+          ],
+          "sort": [],
+          "props": {
+            "rowField": "filename",
+            "colField": "tags"
+          },
+          "fields": [
+            "header",
+            "category",
+            "icon",
+            "title"
+          ],
+          "group": "status"
+        },
+        {
+          "view": "BlockView",
+          "title": "完成任务",
+          "collapsed": false,
+          "filters": [
+            {
+              "field": "status",
+              "op": "=",
+              "value": "done"
+            }
+          ],
+          "sort": [],
+          "props": {
+            "rowField": "date",
+            "colField": "tags"
+          }
+        },
+        {
+          "view": "BlockView",
+          "title": "计划",
+          "collapsed": false,
+          "filters": [
+            {
+              "field": "category",
+              "op": "=",
+              "value": "计划"
+            }
+          ],
+          "sort": [],
+          "props": {},
+          "fields": [
+            "category",
+            "icon",
+            "content"
+          ],
+          "group": "extra.时间"
+        },
+        {
+          "view": "BlockView",
+          "title": "总结",
+          "collapsed": false,
+          "filters": [
+            {
+              "field": "category",
+              "op": "=",
+              "value": "总结"
+            }
+          ],
+          "sort": [],
+          "props": {},
+          "fields": [
+            "category",
+            "data",
+            "icon",
+            "content"
+          ],
+          "group": "tags"
+        },
+        {
+          "view": "BlockView",
+          "title": "思考",
+          "collapsed": false,
+          "filters": [
+            {
+              "field": "filename",
+              "op": "=",
+              "value": "思考"
+            }
+          ],
+          "sort": [],
+          "props": {},
+          "fields": [
+            "category",
+            "data",
+            "icon",
+            "content"
+          ],
+          "group": "tags"
+        },
+        {
+          "view": "BlockView",
+          "title": "打卡",
+          "collapsed": false,
+          "filters": [
+            {
+              "field": "category",
+              "op": "=",
+              "value": "打卡"
+            }
+          ],
+          "sort": [],
+          "props": {},
+          "fields": [
+            "category",
+            "data",
+            "icon",
+            "content"
+          ],
+          "group": "tags"
+        }
+      ],
+      "initialDate": "2025-07-19",
+      "path": "01",
+      "tags": [
+        "思考",
+        "生活",
+        "健康",
+        "电脑",
+        "工作"
+      ],
+      "initialView": "月"
+    },
+    {
+      "name": "02",
+      "modules": [
+        {
+          "view": "SettingsFormView",
+          "title": "新模块",
+          "collapsed": false,
+          "filters": [],
+          "sort": [],
+          "props": {}
+        }
+      ],
+      "initialDate": "2025-07-24",
+      "path": "01",
+      "tags": [
+        "思考",
+        "生活",
+        "健康",
+        "电脑",
+        "工作"
+      ],
+      "initialView": "周"
+    }
+  ],
+  "inputSettings": {
+    "topic": "生活/睡眠"
+  }
+}
