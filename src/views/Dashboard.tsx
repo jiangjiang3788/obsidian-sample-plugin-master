@@ -177,12 +177,12 @@ export function Dashboard({ config, dataStore, plugin }: DashboardProps) {
 
     // 时间范围过滤
     if (currentView && currentDate) {
-      const { startDate, endDate } = getDateRange(currentDate, currentView);
-      items = items.filter(it => {
-        if (!it.date) return false;
-        const d = moment(it.date, 'YYYY-MM-DD');
-        return d.isSameOrAfter(startDate) && d.isSameOrBefore(endDate);
-      });
+    const { startDate, endDate } = getDateRange(currentDate, currentView);
+    items = items.filter(it => {
+      if (!it.date) return true; // 🟢 显示无日期项
+      const d = moment(it.date, 'YYYY-MM-DD');
+      return d.isSameOrAfter(startDate) && d.isSameOrBefore(endDate);
+    });
     }
 
     // 关键字过滤
