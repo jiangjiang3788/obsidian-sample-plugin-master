@@ -1,5 +1,5 @@
 // main.ts
-// 插件主入口（整合事件节流、DataStore 拆分后的调用方式保持兼容）
+// 插件主入口（整合事件节流、 DataStore  拆分后的调用方式保持兼容）
 import { Plugin, TFile } from 'obsidian';
 import { render, h } from 'preact';
 import { DataStore } from './data/store';
