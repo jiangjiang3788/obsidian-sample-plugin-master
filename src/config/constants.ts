@@ -1,4 +1,4 @@
-// src/config/constants.ts
+// config/constants.ts
 export const CODEBLOCK_LANG = 'think';
 
 export const OPS = ['=', '!=', 'includes', 'regex', '>', '<'] as const;

@@ -1,6 +1,6 @@
-import type { ViewName } from '../views';
-
 // config/schema.ts - 定义数据模型和配置的 TypeScript 接口
+
+import type { ViewName } from '../views';
 export interface Item {
   id: string;            // 唯一标识: filePath#line
   title: string;         // 标题

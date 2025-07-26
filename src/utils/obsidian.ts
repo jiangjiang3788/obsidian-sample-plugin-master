@@ -1,4 +1,4 @@
-// src/utils/obsidian.ts
+// utils/obsidian.ts
 import { DataStore } from '../data/store';
 
 export function makeObsUri(itemId: string): string {

@@ -1,4 +1,4 @@
-// src/views/index.ts - 视图组件注册表，将视图名称映射到组件
+// views/index.ts - 视图组件注册表，将视图名称映射到组件
 import { TableView }    from './TableView';
 import { BlockView }    from './BlockView';
 import { TimelineView } from './TimelineView';

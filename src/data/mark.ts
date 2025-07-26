@@ -1,5 +1,6 @@
-// src/data/mark.ts
-// 同理，搬迁后仅改动 import 路径
+// data/mark.ts
+
+
 import { EMOJI } from '../config/constants';
 import { DATE_YMD_RE } from '../utils/regex';
 import { normalizeDateStr } from '../utils/date';

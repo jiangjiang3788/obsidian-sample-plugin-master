@@ -1,5 +1,5 @@
-// src/views/ExcelView.tsx
-// src/views/ExcelView.tsx
+// views/ExcelView.tsx
+
 import { h } from 'preact';
 import { Item, getAllFields, readField } from '../config/schema';
 
