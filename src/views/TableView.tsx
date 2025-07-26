@@ -76,6 +76,7 @@ function renderItemCell(item: Item) {
 
     return (
       <span>
+        {/* 复选框 */}
         {!isDone && (
           <input type="checkbox" id={checkboxId} class="task-checkbox" onChange={handleChange} />
         )}
@@ -88,6 +89,11 @@ function renderItemCell(item: Item) {
             onClick={e => e.preventDefault()}
           />
         )}
+        
+        {/* 图标 */}
+        {item.icon && <span class="task-icon">{item.icon}</span>}
+        
+        {/* 标题 */}
         <a href={makeObsUri(item.id)} target="_blank" rel="noopener">
           {item.title}
         </a>
