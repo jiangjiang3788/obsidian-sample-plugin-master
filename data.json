@@ -161,9 +161,38 @@
         "工作"
       ],
       "initialView": "周"
+    },
+    {
+      "name": "未完成任务",
+      "modules": [
+        {
+          "view": "TableView",
+          "title": "❗ 未完成任务",
+          "collapsed": false,
+          "filters": [
+            {
+              "field": "status",
+              "op": "=",
+              "value": "open"
+            }
+          ],
+          "sort": [],
+          "props": {
+            "rowField": "recurrence",
+            "colField": "tags"
+          }
+        }
+      ],
+      "initialDate": "2025-07-26",
+      "path": "01",
+      "tags": [
+        "思考",
+        "生活",
+        "健康",
+        "电脑",
+        "工作"
+      ],
+      "initialView": "季"
     }
-  ],
-  "inputSettings": {
-    "topic": "生活/睡眠"
-  }
+  ]
 }
