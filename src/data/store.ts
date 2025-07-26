@@ -1,4 +1,5 @@
-// src/data/store.ts - 数据存储与查询，实现扫描 Vault、维护 Item 列表、提供查询接口
+// data/store.ts - 数据存储与查询，实现扫描 Vault、维护 Item 列表、提供查询接口
+
 import { App, TFile, TFolder, HeadingCache } from 'obsidian';
 import { Item, FilterRule, SortRule, readField } from '../config/schema';
 import { parseTaskLine, parseBlockContent } from './parser';

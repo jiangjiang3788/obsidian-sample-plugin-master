@@ -1,4 +1,4 @@
-// src/config/categoryColorMap.ts
+// config/categoryColorMap.ts
 
 // 类别到颜色的映射
 export const CATEGORY_COLOR_MAP: Record<string, string> = {

@@ -1,4 +1,4 @@
-// src/views/SettingsFormView.tsx
+// views/SettingsFormView.tsx
 import { useState } from 'preact/hooks';
 import ThinkPlugin from '../main';
 
