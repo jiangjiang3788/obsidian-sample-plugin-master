@@ -143,7 +143,7 @@
       "name": "02",
       "modules": [
         {
-          "view": "SettingsFormView",
+          "view": "ExcelView",
           "title": "新模块",
           "collapsed": false,
           "filters": [],
@@ -190,11 +190,17 @@
             {
               "field": "status",
               "op": "=",
-              "value": "open"
+              "value": "done"
             }
           ],
           "sort": [],
-          "props": {}
+          "props": {},
+          "fields": [
+            "category",
+            "date",
+            "icon",
+            "title"
+          ]
         }
       ],
       "initialDate": "2025-07-26",
@@ -208,5 +214,6 @@
       ],
       "initialView": "季"
     }
-  ]
+  ],
+  "inputSettings": {}
 }
