@@ -201,6 +201,20 @@
             "icon",
             "title"
           ]
+        },
+        {
+          "view": "BlockView",
+          "title": "新模块",
+          "collapsed": false,
+          "filters": [
+            {
+              "field": "status",
+              "op": "=",
+              "value": "open"
+            }
+          ],
+          "sort": [],
+          "props": {}
         }
       ],
       "initialDate": "2025-07-26",

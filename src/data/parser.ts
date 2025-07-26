@@ -111,22 +111,8 @@ export function parseTaskLine(
     titleSrc = titleSrc.replace(/^(?:\p{Extended_Pictographic}\uFE0F?\s*)+/u, '');
   }
 
-<<<<<<< HEAD
   // 使用 cleanTaskText 来清理标题
   titleSrc = cleanTaskText(titleSrc);
-=======
-  // 清理 title
-  titleSrc = titleSrc
-    .replace(TAG_RE, '')
-    .replace(META_BRACKET, '')
-    .replace(/[📅⏳🛫➕]\s*\d{4}[-/]\d{2}[-/]\d{2}/g, '')
-    .replace(/[✅❌]\s*\d{4}[-/]\d{2}[-/]\d{2}/g, '')
-    .replace(/[🔺⏫🔼🔽⏬]/g, '')
-    .replace(/🔁\s*[^\n📅⏳🛫➕✅❌]*/g, '')  // ✅ 新逻辑
-    .replace(/\s\s+/g, ' ')
-    .trim();
->>>>>>> 5136864 (重复性字段能提取了)
-
 
   const item: Item = {
     id: `${filePath}#${lineNo}`,
