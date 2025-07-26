@@ -89,7 +89,7 @@ export function parseTaskLine(
 
   // 日期/emoji
   const pickDate = (emoji: string): string | undefined => {
-    const mt = lineText.match(new RegExp(`${emoji}\s*(${DATE_YMD_RE.source})`));
+    const mt = lineText.match(new RegExp(`${emoji}\\s*(${DATE_YMD_RE.source})`));
     return mt ? normalizeDateStr(mt[1]) : undefined;
   };
   const doneDate       = pickDate(EMOJI.done);
@@ -222,6 +222,7 @@ export function parseBlockContent(
       .map(p => p.trim())
       .filter(Boolean)
       .forEach(t => tags.push(t.replace(/^#/, '')));
+
   }
 
   if (contentText.trim() !== '') {
