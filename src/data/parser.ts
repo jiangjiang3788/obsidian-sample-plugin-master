@@ -44,13 +44,9 @@ export function parseTaskLine(
 
   // 重复性
   let recurrence = 'none';
-  const recIndex = lineText.indexOf(EMOJI.repeat);
-  if (recIndex !== -1) {
-    let recPhrase = lineText.substring(recIndex);
-    const cutIdx = recPhrase.search(/[➕⏳🛫📅✅❌]/);
-    if (cutIdx !== -1) recPhrase = recPhrase.substring(0, cutIdx);
-    recPhrase = recPhrase.replace(/^🔁\s*/, '').trim();
-    if (recPhrase) recurrence = recPhrase;
+  const recMatch = lineText.match(/🔁\s*([^\n📅⏳🛫➕✅❌]*)/);
+  if (recMatch && recMatch[1]) {
+    recurrence = recMatch[1].trim();
   }
 
   // 括号 meta
@@ -105,9 +101,10 @@ export function parseTaskLine(
     .replace(/[📅⏳🛫➕]\s*\d{4}[-/]\d{2}[-/]\d{2}/g, '')
     .replace(/[✅❌]\s*\d{4}[-/]\d{2}[-/]\d{2}/g, '')
     .replace(/[🔺⏫🔼🔽⏬]/g, '')
-    .replace(/🔁.*?(?=(➕|⏳|🛫|📅|✅|❌|$))/, '')
+    .replace(/🔁\s*[^\n📅⏳🛫➕✅❌]*/g, '')  // ✅ 新逻辑
     .replace(/\s\s+/g, ' ')
     .trim();
+
 
   const item: Item = {
     id: `${filePath}#${lineNo}`,
