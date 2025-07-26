@@ -280,14 +280,410 @@ export function Dashboard({ config, dataStore, plugin }: DashboardProps) {
 
       {/* 配置面板（原样保留） */}
       {showConfig && tempConfig && (
-        /* …… 你原来的 配置 UI 代码，完整保留（略） …… */
-        /* 我上面只是改了 saveConfig 的实现，整段 UI 这里不重复贴，以免太长 */
-        /* 直接用你发来的整段 Dashboard.tsx，唯一需要合并的就是 renderModule 和 saveConfig 里的改动 */
         <div
           style="border:1px solid #eee;padding:12px;margin-bottom:12px;border-radius:8px;background:#fcfcfc;"
         >
-          {/* …… 原样保留 …… */}
-          {/* 这里请用你完整的 Dashboard.tsx 的配置面板那段；我不重复贴了，避免冲突 */}
+          <h3 style="margin-top:0;">编辑配置</h3>
+          <fieldset style="margin-bottom:10px;">
+            <legend>基础设置</legend>
+            <label>
+              配置名称:
+              <input
+                type="text"
+                value={tempConfig.name}
+                onInput={e =>
+                  setTempConfig({ ...tempConfig, name: (e.target as HTMLInputElement).value })
+                }
+              />
+            </label>
+            <br />
+            <label>
+              数据源路径:
+              <input
+                type="text"
+                value={tempConfig.path || ''}
+                onInput={e =>
+                  setTempConfig({ ...tempConfig, path: (e.target as HTMLInputElement).value })
+                }
+              />
+            </label>
+            <br />
+            <label>
+              标签(逗号分隔):
+              <input
+                type="text"
+                value={Array.isArray(tempConfig.tags) ? tempConfig.tags.join(',') : (tempConfig.tags || '')}
+                onInput={e => {
+                  const val = (e.target as HTMLInputElement).value;
+                  const tags = val.split(/[,，]/).map(t => t.trim()).filter(Boolean);
+                  setTempConfig({ ...tempConfig, tags });
+                }}
+              />
+            </label>
+            <br />
+            <label>
+              初始视图:
+              <select
+                value={tempConfig.initialView || '月'}
+                onChange={e =>
+                  setTempConfig({
+                    ...tempConfig,
+                    initialView: (e.target as HTMLSelectElement).value,
+                  })
+                }
+              >
+                {['年', '季', '月', '周', '天'].map(v => (
+                  <option value={v}>{v}</option>
+                ))}
+              </select>
+            </label>
+            <br />
+            <label>
+              初始日期:
+              <input
+                type="date"
+                value={tempConfig.initialDate || moment().format('YYYY-MM-DD')}
+                onChange={e =>
+                  setTempConfig({
+                    ...tempConfig,
+                    initialDate: (e.target as HTMLInputElement).value,
+                  })
+                }
+              />
+            </label>
+            <br />
+          </fieldset>
+
+          <div id="modulesArea">
+            {tempConfig.modules.map((mod, idx) => (
+              <fieldset style="border:1px solid #ccc;padding:8px;margin-bottom:8px;">
+                <legend>
+                  {mod.title || '模块'} ({mod.view})
+                </legend>
+                <div>
+                  <label>
+                    模块标题:
+                    <input
+                      type="text"
+                      value={mod.title}
+                      onInput={e => {
+                        const arr = [...tempConfig.modules];
+                        arr[idx] = { ...mod, title: (e.target as HTMLInputElement).value };
+                        setTempConfig({ ...tempConfig, modules: arr });
+                      }}
+                    />
+                  </label>
+                </div>
+                <div>
+                  <label>
+                    视图类型:
+                    <select
+                      value={mod.view}
+                      onChange={e => {
+                        const arr = [...tempConfig.modules];
+                        arr[idx] = { ...mod, view: (e.target as HTMLSelectElement).value as any };
+                        setTempConfig({ ...tempConfig, modules: arr });
+                      }}
+                    >
+                      {Object.keys(ViewComponents).map(v => (
+                        <option value={v}>{v}</option>
+                      ))}
+                    </select>
+                  </label>
+                </div>
+                <div>
+                  <label>
+                    默认折叠:
+                    <input
+                      type="checkbox"
+                      checked={!!mod.collapsed}
+                      onChange={e => {
+                        const arr = [...tempConfig.modules];
+                        arr[idx] = { ...mod, collapsed: (e.target as HTMLInputElement).checked };
+                        setTempConfig({ ...tempConfig, modules: arr });
+                      }}
+                    />
+                  </label>
+                </div>
+
+                {mod.view === 'TableView' && (
+                  <div>
+                    <label>
+                      行字段:
+                      <input
+                        type="text"
+                        value={mod.props?.rowField || ''}
+                        onInput={e => {
+                          const arr = [...tempConfig.modules];
+                          arr[idx] = {
+                            ...mod,
+                            props: { ...mod.props, rowField: (e.target as HTMLInputElement).value },
+                          };
+                          setTempConfig({ ...tempConfig, modules: arr });
+                        }}
+                      />
+                    </label>
+                    <br />
+                    <label>
+                      列字段:
+                      <input
+                        type="text"
+                        value={mod.props?.colField || ''}
+                        onInput={e => {
+                          const arr = [...tempConfig.modules];
+                          arr[idx] = {
+                            ...mod,
+                            props: { ...mod.props, colField: (e.target as HTMLInputElement).value },
+                          };
+                          setTempConfig({ ...tempConfig, modules: arr });
+                        }}
+                      />
+                    </label>
+                  </div>
+                )}
+
+                {(mod.view === 'BlockView' || mod.view === 'TimelineView') && (
+                  <div>
+                    <label>
+                      分组字段:
+                      <input
+                        type="text"
+                        value={mod.group || ''}
+                        onInput={e => {
+                          const arr = [...tempConfig.modules];
+                          arr[idx] = { ...mod, group: (e.target as HTMLInputElement).value || undefined };
+                          setTempConfig({ ...tempConfig, modules: arr });
+                        }}
+                      />
+                    </label>
+                  </div>
+                )}
+
+                {mod.view !== 'TableView' &&
+                  mod.view !== 'ChartView' &&
+                  mod.view !== 'CalendarView' && (
+                    <div>
+                      <label>
+                        显示字段(逗号分隔 / * 为动态):
+                        <input
+                          type="text"
+                          placeholder="如 title,tags,date 或 *"
+                          value={mod.fields ? mod.fields.join(',') : ''}
+                          onInput={e => {
+                            const val = (e.target as HTMLInputElement).value;
+                            const arrFields =
+                              val.trim() === '*'
+                                ? ['*']
+                                : val.split(/[,，]/).map(f => f.trim()).filter(Boolean);
+                            const arr = [...tempConfig.modules];
+                            arr[idx] = { ...mod, fields: arrFields.length ? arrFields : undefined };
+                            setTempConfig({ ...tempConfig, modules: arr });
+                          }}
+                        />
+                      </label>
+                    </div>
+                  )}
+
+                {/* 过滤规则 */}
+                <div style="border-top:1px dashed #ccc;margin-top:6px;padding-top:6px;">
+                  <strong>过滤规则</strong>
+                  {(mod.filters || []).map((rule, ridx) => (
+                    <div style="display:flex;margin-bottom:4px;">
+                      <input
+                        type="text"
+                        style="flex:0 0 30%;"
+                        value={rule.field}
+                        onInput={e => {
+                          const nf = (e.target as HTMLInputElement).value;
+                          const nfils = [...(mod.filters || [])];
+                          nfils[ridx] = { ...rule, field: nf };
+                          const arr = [...tempConfig.modules];
+                          arr[idx] = { ...mod, filters: nfils };
+                          setTempConfig({ ...tempConfig, modules: arr });
+                        }}
+                      />
+                      <select
+                        value={rule.op}
+                        onChange={e => {
+                          const op = (e.target as HTMLSelectElement).value as typeof rule.op;
+                          const nfils = [...(mod.filters || [])];
+                          nfils[ridx] = { ...rule, op };
+                          const arr = [...tempConfig.modules];
+                          arr[idx] = { ...mod, filters: nfils };
+                          setTempConfig({ ...tempConfig, modules: arr });
+                        }}
+                      >
+                        {['=', '!=', 'includes', 'regex', '>', '<'].map(op => (
+                          <option value={op}>{op}</option>
+                        ))}
+                      </select>
+                      <input
+                        type="text"
+                        style="flex:0 0 30%;"
+                        value={String(rule.value)}
+                        onInput={e => {
+                          const nv = (e.target as HTMLInputElement).value;
+                          const nfils = [...(mod.filters || [])];
+                          nfils[ridx] = { ...rule, value: nv };
+                          const arr = [...tempConfig.modules];
+                          arr[idx] = { ...mod, filters: nfils };
+                          setTempConfig({ ...tempConfig, modules: arr });
+                        }}
+                      />
+                      <button
+                        onClick={() => {
+                          const nfils = [...(mod.filters || [])];
+                          nfils.splice(ridx, 1);
+                          const arr = [...tempConfig.modules];
+                          arr[idx] = { ...mod, filters: nfils };
+                          setTempConfig({ ...tempConfig, modules: arr });
+                        }}
+                      >
+                        删除
+                      </button>
+                    </div>
+                  ))}
+                  <button
+                    onClick={() => {
+                      const nfils = [...(mod.filters || []), { field: '', op: '=', value: '' }];
+                      const arr = [...tempConfig.modules];
+                      arr[idx] = { ...mod, filters: nfils };
+                      setTempConfig({ ...tempConfig, modules: arr });
+                    }}
+                  >
+                    + 添加过滤条件
+                  </button>
+                </div>
+
+                {/* 排序规则 */}
+                <div style="border-top:1px dashed #ccc;margin-top:6px;padding-top:6px;">
+                  <strong>排序规则</strong>
+                  {(mod.sort || []).map((rule, ridx) => (
+                    <div style="display:flex;margin-bottom:4px;">
+                      <input
+                        type="text"
+                        style="flex:0 0 40%;"
+                        value={rule.field}
+                        onInput={e => {
+                          const nf = (e.target as HTMLInputElement).value;
+                          const ns = [...(mod.sort || [])];
+                          ns[ridx] = { ...rule, field: nf };
+                          const arr = [...tempConfig.modules];
+                          arr[idx] = { ...mod, sort: ns };
+                          setTempConfig({ ...tempConfig, modules: arr });
+                        }}
+                      />
+                      <select
+                        value={rule.dir}
+                        onChange={e => {
+                          const d = (e.target as HTMLSelectElement).value as typeof rule.dir;
+                          const ns = [...(mod.sort || [])];
+                          ns[ridx] = { ...rule, dir: d };
+                          const arr = [...tempConfig.modules];
+                          arr[idx] = { ...mod, sort: ns };
+                          setTempConfig({ ...tempConfig, modules: arr });
+                        }}
+                      >
+                        <option value="asc">升序</option>
+                        <option value="desc">降序</option>
+                      </select>
+                      <button
+                        style="margin-left:4px;"
+                        onClick={() => {
+                          const ns = [...(mod.sort || [])];
+                          ns.splice(ridx, 1);
+                          const arr = [...tempConfig.modules];
+                          arr[idx] = { ...mod, sort: ns };
+                          setTempConfig({ ...tempConfig, modules: arr });
+                        }}
+                      >
+                        删除
+                      </button>
+                    </div>
+                  ))}
+                  <button
+                    onClick={() => {
+                      const ns = [...(mod.sort || []), { field: '', dir: 'asc' }];
+                      const arr = [...tempConfig.modules];
+                      arr[idx] = { ...mod, sort: ns };
+                      setTempConfig({ ...tempConfig, modules: arr });
+                    }}
+                  >
+                    + 添加排序条件
+                  </button>
+                </div>
+
+                <div style="text-align:right;">
+                  {idx > 0 && (
+                    <button
+                      onClick={() => {
+                        const arr = [...tempConfig.modules];
+                        [arr[idx - 1], arr[idx]] = [arr[idx], arr[idx - 1]];
+                        setTempConfig({ ...tempConfig, modules: arr });
+                      }}
+                    >
+                      ↑ 上移
+                    </button>
+                  )}
+                  {idx < tempConfig.modules.length - 1 && (
+                    <button
+                      onClick={() => {
+                        const arr = [...tempConfig.modules];
+                        [arr[idx], arr[idx + 1]] = [arr[idx + 1], arr[idx]];
+                        setTempConfig({ ...tempConfig, modules: arr });
+                      }}
+                    >
+                      ↓ 下移
+                    </button>
+                  )}
+                  <button
+                    onClick={() => {
+                      const arr = [...tempConfig.modules];
+                      arr.splice(idx, 1);
+                      setTempConfig({ ...tempConfig, modules: arr });
+                    }}
+                  >
+                    删除模块
+                  </button>
+                </div>
+              </fieldset>
+            ))}
+            <div>
+              <select value={newViewType} onChange={e => setNewViewType((e.target as HTMLSelectElement).value)}>
+                {Object.keys(ViewComponents).map(v => (
+                  <option value={v}>{v}</option>
+                ))}
+              </select>
+              <button
+                style="margin-left:6px;"
+                onClick={() => {
+                  const mod: ModuleConfig = {
+                    view: newViewType as any,
+                    title: '新模块',
+                    collapsed: false,
+                    filters: [],
+                    sort: [],
+                    props: {},
+                  };
+                  setTempConfig({ ...tempConfig!, modules: [...tempConfig!.modules, mod] });
+                }}
+              >
+                添加模块
+              </button>
+            </div>
+          </div>
+
+          <hr />
+          <button onClick={saveConfig}>保存配置</button>
+          <button style="margin-left:8px;" onClick={() => setShowConfig(false)}>
+            取消
+          </button>
+
+          <datalist id="fields-list">
+            {getAllFields(dataStore.query()).map(f => (
+              <option value={f} />
+            ))}
+          </datalist>
         </div>
       )}
 
