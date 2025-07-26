@@ -13,6 +13,23 @@ import {
 import { normalizeDateStr } from '../utils/date';
 import { EMOJI } from '../config/constants';
 
+// 用于提取任务标题的清理函数
+function cleanTaskText(text: string): string {
+    // 1. 去除行首的 - [ ] 或 - [x] 或 - [X]
+    let result = text.replace(/^\s*-\s*\[[ xX]\]\s*/, "").trim();
+
+    // 2. 去除所有#标签
+    result = result.replace(/#[\p{L}\p{N}_-]+/gu, "");
+
+    // 3. 按 ( 或 空格 分割，取第一个非空片段
+    let main = result.split(/[\s(]/).find(s => s && s.trim());
+
+    // 4. 去除第一个emoji字符
+    main = main?.replace(/^\p{Extended_Pictographic}\uFE0F?/u, "").trim();
+
+    return main ? main.trim() : "";
+}
+
 function pickPriority(line: string): Item['priority'] | undefined {
   if (line.includes('🔺')) return 'highest';
   if (line.includes('⏫')) return 'high';
@@ -56,7 +73,7 @@ export function parseTaskLine(
     const key = m[1].trim();
     const value = m[2].trim();
     const lowerKey = key.toLowerCase();
-    if (['主题', '标签', 'tag', 'tags'].includes(lowerKey)) {
+    if (["主题", "标签", "tag", "tags"].includes(lowerKey)) {
       value.split(/[,，]/).forEach(v => {
         const t = v.trim().replace(/^#/, '');
         if (t) tags.push(t);
@@ -72,7 +89,7 @@ export function parseTaskLine(
 
   // 日期/emoji
   const pickDate = (emoji: string): string | undefined => {
-    const mt = lineText.match(new RegExp(`${emoji}\\s*(${DATE_YMD_RE.source})`));
+    const mt = lineText.match(new RegExp(`${emoji}\s*(${DATE_YMD_RE.source})`));
     return mt ? normalizeDateStr(mt[1]) : undefined;
   };
   const doneDate       = pickDate(EMOJI.done);
@@ -94,17 +111,8 @@ export function parseTaskLine(
     titleSrc = titleSrc.replace(/^(?:\p{Extended_Pictographic}\uFE0F?\s*)+/u, '');
   }
 
-  // 清理 title
-  titleSrc = titleSrc
-    .replace(TAG_RE, '')
-    .replace(META_BRACKET, '')
-    .replace(/[📅⏳🛫➕]\s*\d{4}[-/]\d{2}[-/]\d{2}/g, '')
-    .replace(/[✅❌]\s*\d{4}[-/]\d{2}[-/]\d{2}/g, '')
-    .replace(/[🔺⏫🔼🔽⏬]/g, '')
-    .replace(/🔁\s*[^\n📅⏳🛫➕✅❌]*/g, '')  // ✅ 新逻辑
-    .replace(/\s\s+/g, ' ')
-    .trim();
-
+  // 使用 cleanTaskText 来清理标题
+  titleSrc = cleanTaskText(titleSrc);
 
   const item: Item = {
     id: `${filePath}#${lineNo}`,
@@ -140,7 +148,6 @@ export function parseTaskLine(
     if (status === 'cancelled') item.date = cancelledDate;
   }
 
-  // open 状态的日期优先
   if (status === 'open') {
     item.date = dueDate || scheduledDate || startDate || createdDate;
   }
