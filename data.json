@@ -30,7 +30,7 @@
         {
           "view": "BlockView",
           "title": "完成任务",
-          "collapsed": false,
+          "collapsed": true,
           "filters": [
             {
               "field": "status",
@@ -47,7 +47,7 @@
         {
           "view": "BlockView",
           "title": "计划",
-          "collapsed": false,
+          "collapsed": true,
           "filters": [
             {
               "field": "category",
@@ -67,7 +67,7 @@
         {
           "view": "BlockView",
           "title": "总结",
-          "collapsed": false,
+          "collapsed": true,
           "filters": [
             {
               "field": "category",
@@ -88,7 +88,7 @@
         {
           "view": "BlockView",
           "title": "思考",
-          "collapsed": false,
+          "collapsed": true,
           "filters": [
             {
               "field": "filename",
@@ -109,7 +109,7 @@
         {
           "view": "BlockView",
           "title": "打卡",
-          "collapsed": false,
+          "collapsed": true,
           "filters": [
             {
               "field": "category",
