@@ -64,14 +64,14 @@ export class SettingsTab extends PluginSettingTab {
       /* 表单主体 */
       const host = wrap.createDiv();
       render(
-        (DashboardConfigForm as any)({
-          dashboard: structuredClone(dash),
+        h(DashboardConfigForm, {
+          dashboard:  structuredClone(dash),
           dashboards: this.plugin.dashboards,
           onSave: (d: any) => {
             Object.assign(dash, d);
             this.plugin.persistAll().then(() => new Notice('已保存'));
             this.display();
-          },
+         },
           onCancel: () => this.display(),
         }),
         host
