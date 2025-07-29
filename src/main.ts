@@ -1,4 +1,4 @@
-// main.ts
+// src/main.ts
 import { Plugin } from 'obsidian';
 import { DataStore } from './data/store';
 import { DashboardConfig } from './config/schema';
