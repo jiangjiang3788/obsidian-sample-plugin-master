@@ -10,72 +10,85 @@ import ThinkPlugin from '../main';
 import { DashboardConfigForm } from './DashboardConfigForm';
 
 export class SettingsTab extends PluginSettingTab {
-  plugin: ThinkPlugin;
+  private plugin: ThinkPlugin;
 
   constructor(app: any, plugin: ThinkPlugin) {
     super(app, plugin);
     this.plugin = plugin;
   }
-
+  /* ------------------------------------------------------------------ */
+  /** 刷新整个设置面板 */
   display(): void {
     const { containerEl } = this;
     containerEl.empty();
     containerEl.createEl('h2', { text: 'Think 仪表盘 - 配置管理' });
 
-    /* ---- 新建按钮 ---- */
+    /* ── 新建仪表盘 ─────────────────────────────────────────── */
     containerEl
       .createEl('button', { text: '➕ 新建仪表盘', cls: 'mod-cta' })
       .onclick = () => {
         let name = '新仪表盘', n = 1;
         while (this.plugin.dashboards.some(d => d.name === name))
           name = `新仪表盘${n++}`;
+
         this.plugin.dashboards.push({ name, modules: [] });
-        this.plugin.persistAll();
-        this.display();
+        this.persistAndReload('已创建新仪表盘');
       };
 
-    /* ---- 拿到上次点击的目标 ---- */
-    const want = localStorage.getItem('think-target-dash') || null;
+    /* ── 展开此前点击的仪表盘（localStorage 记忆） ────────────── */
+    const wantOpen = localStorage.getItem('think-target-dash');
 
-    /* ---- 仪表盘列表 ---- */
+    /* ── 列出所有仪表盘 ─────────────────────────────────────── */
     this.plugin.dashboards.forEach((dash, idx) => {
-      const wrap = containerEl.createEl('details', { cls: 'think-settings-block' });
-      if (dash.name === want) {
-        wrap.open = true;
+      const details = containerEl.createEl('details', { cls: 'think-settings-block' });
+      if (dash.name === wantOpen) {
+        details.open = true;
         localStorage.removeItem('think-target-dash');
       }
 
-      const sum = wrap.createEl('summary', { text: dash.name });
-      sum.addClass('setting-item');
+      /* summary 区（名称 + 删除按钮） */
+      const summary = details.createEl('summary');
+      summary.addClass('setting-item');
+      summary.createSpan({ text: dash.name });
 
-      /* 删除按钮 */
-      const delBtn = sum.createEl('button', { text: '🗑', cls: 'mod-warning' });
-      delBtn.style.marginLeft = 'auto';
-      delBtn.onclick = e => {
+      /* 删除 */
+      summary.createEl('button', { text: '🗑', cls: 'mod-warning' }).onclick = e => {
         e.stopPropagation();
-        if (confirm(`删除仪表盘「${dash.name}」？`)) {
+        if (confirm(`确认删除仪表盘「${dash.name}」？此操作不可撤销！`)) {
           this.plugin.dashboards.splice(idx, 1);
-          this.plugin.persistAll();
-          new Notice('已删除');
-          this.display();
+          this.persistAndReload('已删除仪表盘');
         }
       };
 
-      /* 表单主体 */
-      const host = wrap.createDiv();
+      /* 表单挂载点 */
+      const host = details.createDiv();
+
+      /* 渲染 DashboardConfigForm（传入克隆以避免即时修改原数据） */
       render(
         h(DashboardConfigForm, {
-          dashboard:  structuredClone(dash),
-          dashboards: this.plugin.dashboards,
-          onSave: (d: any) => {
+          dashboard  : structuredClone(dash),
+          dashboards : this.plugin.dashboards,
+          /* 保存：写回 dash → persist → 刷新 UI */
+          onSave     : (d) => {
             Object.assign(dash, d);
-            this.plugin.persistAll().then(() => new Notice('已保存'));
-            this.display();
-         },
-          onCancel: () => this.display(),
+            this.persistAndReload('已保存');
+            /* 保存后保持展开状态 */
+            localStorage.setItem('think-target-dash', dash.name);
+          },
+          /* 取消：简单刷新一次即可恢复制前状态 */
+          onCancel   : () => this.display(),
         }),
-        host
+        host,
       );
+    });
+  }
+
+  /* ------------------------------------------------------------------ */
+  /** 持久化全部 dashboards，并刷新面板 */
+  private persistAndReload(msg: string) {
+    this.plugin.persistAll().then(() => {
+      new Notice(msg);
+      this.display();
     });
   }
 }
