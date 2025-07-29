@@ -8,6 +8,7 @@ import { ModulePanel } from './ModulePanel';
 import type ThinkPlugin from '../main';
 import { TFile, TFolder, Notice } from 'obsidian';
 import { ViewComponents } from './index';
+import { getDateRange } from '../utils/date';   // 
 
 const QUARTER_TEXT = ['一', '二', '三', '四'];
 
@@ -51,33 +52,8 @@ export function Dashboard({ config, dataStore, plugin }: DashboardProps) {
     }
   }, [showConfig, config]);
 
-  const getDateRange = (date: any, viewType: string) => {
-    let s = date.clone(),
-      e = date.clone();
-    switch (viewType) {
-      case '年':
-        s = date.clone().startOf('year');
-        e = date.clone().endOf('year');
-        break;
-      case '季':
-        s = date.clone().startOf('quarter');
-        e = date.clone().endOf('quarter');
-        break;
-      case '月':
-        s = date.clone().startOf('month');
-        e = date.clone().endOf('month');
-        break;
-      case '周':
-        s = date.clone().startOf('week');
-        e = date.clone().endOf('week');
-        break;
-      case '天':
-        s = date.clone().startOf('day');
-        e = date.clone().endOf('day');
-        break;
-    }
-    return { startDate: s, endDate: e };
-  };
+  const { startDate, endDate } = getDateRange(currentDate, currentView);
+  
 
   const formattedDate = (date: any, viewType: string) => {
     switch (viewType) {

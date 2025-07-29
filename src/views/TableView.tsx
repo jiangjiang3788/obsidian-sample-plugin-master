@@ -1,12 +1,12 @@
-
 // views/TableView.tsx
-
-import { JSX, h } from 'preact';
+// 精简复选框逻辑，复用 TaskCheckbox
+import { h } from 'preact';
+import { JSX } from 'preact';
 import { Item, readField } from '../config/schema';
 import { DataStore } from '../data/store';
-import './styles.css';
 import { makeObsUri } from '../utils/obsidian';
 import { EMPTY_LABEL } from '../config/constants';
+import { TaskCheckbox } from './common/TaskCheckbox';   // ★ 新增
 
 interface TableViewProps {
   items: Item[];
@@ -15,46 +15,53 @@ interface TableViewProps {
 }
 
 export function TableView({ items, rowField, colField }: TableViewProps) {
-  if (!rowField || !colField) return <div>（TableView 需要配置 rowField 和 colField）</div>;
+  if (!rowField || !colField)
+    return <div>（TableView 需要配置 rowField 和 colField）</div>;
 
-  const rowValues: string[] = [];
-  const colValues: string[] = [];
+  const rowVals: string[] = [];
+  const colVals: string[] = [];
   const matrix: Record<string, Record<string, Item[]>> = {};
 
-  for (const item of items) {
-    const rv = readField(item, rowField) ?? EMPTY_LABEL;
-    const cv = readField(item, colField) ?? EMPTY_LABEL;
-    const rKey = String(rv);
-    const cKey = String(cv);
+  items.forEach(it => {
+    const r = String(readField(it, rowField) ?? EMPTY_LABEL);
+    const c = String(readField(it, colField) ?? EMPTY_LABEL);
+    if (!matrix[r]) {
+      matrix[r] = {};
+      rowVals.push(r);
+    }
+    if (!matrix[r][c]) matrix[r][c] = [];
+    matrix[r][c].push(it);
+    if (!colVals.includes(c)) colVals.push(c);
+  });
 
-    if (!matrix[rKey]) { matrix[rKey] = {}; rowValues.push(rKey); }
-    if (!matrix[rKey][cKey]) matrix[rKey][cKey] = [];
-    matrix[rKey][cKey].push(item);
-    if (!colValues.includes(cKey)) colValues.push(cKey);
-  }
-
-  rowValues.sort();
-  colValues.sort();
+  rowVals.sort();
+  colVals.sort();
 
   return (
     <table class="think-table">
       <thead>
         <tr>
           <th>{rowField}</th>
-          {colValues.map(col => <th key={col}>{col}</th>)}
+          {colVals.map(c => (
+            <th key={c}>{c}</th>
+          ))}
         </tr>
       </thead>
       <tbody>
-        {rowValues.map(row => (
-          <tr key={row}>
-            <td><strong>{row}</strong></td>
-            {colValues.map(col => {
-              const cellItems = matrix[row]?.[col] || [];
-              return cellItems.length === 0 ? (
-                <td key={col} class="empty" />
+        {rowVals.map(r => (
+          <tr key={r}>
+            <td>
+              <strong>{r}</strong>
+            </td>
+            {colVals.map(c => {
+              const cellItems = matrix[r]?.[c] || [];
+              return !cellItems.length ? (
+                <td key={c} class="empty" />
               ) : (
-                <td key={col}>
-                  {cellItems.map(it => <div key={it.id}>{renderItemCell(it)}</div>)}
+                <td key={c}>
+                  {cellItems.map(it => (
+                    <div key={it.id}>{renderCellItem(it)}</div>
+                  ))}
                 </td>
               );
             })}
@@ -65,35 +72,17 @@ export function TableView({ items, rowField, colField }: TableViewProps) {
   );
 }
 
-function renderItemCell(item: Item) {
+/* ---------- 单元格内渲染 ---------- */
+function renderCellItem(item: Item) {
   if (item.type === 'task') {
     const isDone = item.status === 'done';
-    const checkboxId = 'cb-' + item.id.replace(/[^a-zA-Z0-9]/g, '_');
-
-    const handleChange: JSX.GenericEventHandler<HTMLInputElement> = evt => {
-      if (evt.currentTarget.checked) DataStore.instance.markItemDone(item.id);
-    };
-
     return (
       <span>
-        {/* 复选框 */}
-        {!isDone && (
-          <input type="checkbox" id={checkboxId} class="task-checkbox" onChange={handleChange} />
-        )}
-        {isDone && (
-          <input
-            type="checkbox"
-            id={checkboxId}
-            class="task-checkbox done"
-            checked
-            onClick={e => e.preventDefault()}
-          />
-        )}
-        
-        {/* 图标 */}
+        <TaskCheckbox
+          done={isDone}
+          onMarkDone={() => DataStore.instance.markItemDone(item.id)}
+        />
         {item.icon && <span class="task-icon">{item.icon}</span>}
-        
-        {/* 标题 */}
         <a href={makeObsUri(item.id)} target="_blank" rel="noopener">
           {item.title}
         </a>
