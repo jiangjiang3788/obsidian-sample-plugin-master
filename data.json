@@ -227,6 +227,10 @@
         "工作"
       ],
       "initialView": "季"
+    },
+    {
+      "name": "新仪表盘",
+      "modules": []
     }
   ],
   "inputSettings": {}
