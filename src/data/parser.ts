@@ -4,7 +4,6 @@ import { Item } from '../config/schema';
 import {
   TAG_RE,
   KV_IN_PAREN,
-  META_BRACKET,
   DATE_YMD_RE,
   RE_TASK_PREFIX,
   RE_DONE_BOX,
@@ -12,24 +11,9 @@ import {
 } from '../utils/regex';
 import { normalizeDateStr } from '../utils/date';
 import { EMOJI } from '../config/constants';
+import { cleanTaskText } from '../utils/text';
 
-// 用于提取任务标题的清理函数
-function cleanTaskText(text: string): string {
-    // 1. 去除行首的 - [ ] 或 - [x] 或 - [X]
-    let result = text.replace(/^\s*-\s*\[[ xX]\]\s*/, "").trim();
-
-    // 2. 去除所有#标签
-    result = result.replace(/#[\p{L}\p{N}_-]+/gu, "");
-
-    // 3. 按 ( 或 空格 分割，取第一个非空片段
-    let main = result.split(/[\s(]/).find(s => s && s.trim());
-
-    // 4. 去除第一个emoji字符
-    main = main?.replace(/^\p{Extended_Pictographic}\uFE0F?/u, "").trim();
-
-    return main ? main.trim() : "";
-}
-
+// 优先级
 function pickPriority(line: string): Item['priority'] | undefined {
   if (line.includes('🔺')) return 'highest';
   if (line.includes('⏫')) return 'high';
@@ -47,7 +31,6 @@ export function parseTaskLine(
   parentFolder: string
 ): Item | null {
   const lineText = rawLine;
-
   if (!RE_TASK_PREFIX.test(lineText)) return null;
 
   // 状态
@@ -62,9 +45,7 @@ export function parseTaskLine(
   // 重复性
   let recurrence = 'none';
   const recMatch = lineText.match(/🔁\s*([^\n📅⏳🛫➕✅❌]*)/);
-  if (recMatch && recMatch[1]) {
-    recurrence = recMatch[1].trim();
-  }
+  if (recMatch && recMatch[1]) recurrence = recMatch[1].trim();
 
   // 括号 meta
   const extra: Record<string, string | number | boolean> = {};
@@ -73,7 +54,7 @@ export function parseTaskLine(
     const key = m[1].trim();
     const value = m[2].trim();
     const lowerKey = key.toLowerCase();
-    if (["主题", "标签", "tag", "tags"].includes(lowerKey)) {
+    if (['主题', '标签', 'tag', 'tags'].includes(lowerKey)) {
       value.split(/[,，]/).forEach(v => {
         const t = v.trim().replace(/^#/, '');
         if (t) tags.push(t);
@@ -111,7 +92,7 @@ export function parseTaskLine(
     titleSrc = titleSrc.replace(/^(?:\p{Extended_Pictographic}\uFE0F?\s*)+/u, '');
   }
 
-  // 使用 cleanTaskText 来清理标题
+  // 使用统一 cleanTaskText
   titleSrc = cleanTaskText(titleSrc);
 
   const item: Item = {
@@ -222,7 +203,6 @@ export function parseBlockContent(
       .map(p => p.trim())
       .filter(Boolean)
       .forEach(t => tags.push(t.replace(/^#/, '')));
-
   }
 
   if (contentText.trim() !== '') {
