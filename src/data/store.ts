@@ -1,9 +1,10 @@
-// data/store.ts - 数据存储与查询，实现扫描 Vault、维护 Item 列表、提供查询接口
+// data/store.ts - 数据存储与查询，实现扫描 Vault、维护 Item 列表、提供查询接口 
 
 import { App, TFile, TFolder, HeadingCache } from 'obsidian';
 import { Item, FilterRule, SortRule, readField } from '../config/schema';
 import { parseTaskLine, parseBlockContent } from './parser';
 import { throttle } from '../utils/timing';
+import { TaskService } from '../services/taskService';
 
 export class DataStore {
   static instance: DataStore;
@@ -159,111 +160,9 @@ export class DataStore {
     return this.queryItems(filters, sortRules);
   }
 
-  /* ---------- 标记任务完成 ---------- */
+  /* ---------- 标记任务完成（统一调用 Service） ---------- */
   async markItemDone(itemId: string): Promise<void> {
-    const parts = itemId.split('#');
-    const filePath = parts[0];
-    const lineNo = Number(parts[1]) || 0;
-    const file = this.app.vault.getAbstractFileByPath(filePath);
-    if (!(file instanceof TFile)) return;
-    try {
-      const content = await this.app.vault.read(file);
-      const lines = content.split(/\r?\n/);
-      if (lineNo <= 0 || lineNo > lines.length) return;
-      const rawLine = lines[lineNo - 1];
-      if (!/^\s*-\s*\[ \]/.test(rawLine)) return;
-
-      const moment = (window as any).moment;
-      const today = moment().format('YYYY-MM-DD');
-      const nowTime = moment().format('HH:mm');
-
-      let completedLine = rawLine;
-      completedLine = completedLine.replace(/(\s|^)(时长::[^\s\(\)]+)/g, (match, pre, content) => {
-        if (match.includes('(') && match.includes(')')) return match;
-        return `${pre}(${content})`;
-      });
-      if (/\(时长::[^\)]+\)/.test(completedLine)) {
-        completedLine = completedLine.replace(
-          /\((时长::[^\)]+)\)/,
-          `(时间::${nowTime}) ($1)`
-        );
-      } else if (/时长::[^\s]+/.test(completedLine)) {
-        completedLine = completedLine.replace(
-          /(时长::[^\s]+)/,
-          `(时间::${nowTime}) ($1)`
-        );
-      } else if (/🔁/.test(completedLine)) {
-        completedLine = completedLine.replace(
-          /(🔁)/,
-          `(时间::${nowTime}) $1`
-        );
-      } else {
-        completedLine = completedLine + ` (时间::${nowTime})`;
-      }
-
-      completedLine = completedLine.replace(/^(\s*-\s*)\[[ xX-]\]/, '$1[x]');
-      if (!/^-\s*\[x\]/.test(completedLine)) {
-        completedLine = '- [x] ' + completedLine.replace(/^-\s*\[.\]/, '').replace(/^-\s*/, '');
-      }
-      completedLine = completedLine.replace(/\s*✅\s*\d{4}-\d{2}-\d{2}$/, '');
-      completedLine = completedLine.trim() + ` ✅ ${today}`;
-
-      const isRecurring = rawLine.includes('🔁');
-      if (isRecurring) {
-        const generateNextRecurringTaskText = (rawTask: string): string => {
-          let nextLine = rawTask;
-          nextLine = nextLine.replace(/^(\s*-\s*)\[[ xX-]\]/, '$1[ ]');
-          nextLine = nextLine.replace(/\s*✅\s*\d{4}[-/]\d{2}[-/]\d{2}/, '');
-          nextLine = nextLine.replace(/\(时间::\d{2}:\d{2}\)/, '');
-
-          const recMatch = rawTask.match(/🔁\s*every\s+(\d+)?\s*(day|week|month|year)s?\s*(when done)?/);
-          const moment = (window as any).moment;
-          let interval = 1;
-          let unit = 'day';
-          let whenDone = false;
-          if (recMatch) {
-            if (recMatch[1]) interval = parseInt(recMatch[1]);
-            unit = recMatch[2];
-            if (unit.endsWith('s')) unit = unit.slice(0, -1);
-            whenDone = !!recMatch[3];
-          }
-          const baseDate = whenDone ? moment() : (() => {
-            const due = rawTask.match(/📅\s*(\d{4}[-/]\d{2}[-/]\d{2})/);
-            if (due) return moment(due[1], ['YYYY-MM-DD','YYYY/MM/DD']);
-            const scheduled = rawTask.match(/⏳\s*(\d{4}[-/]\d{2}[-/]\d{2})/);
-            if (scheduled) return moment(scheduled[1], ['YYYY-MM-DD','YYYY/MM/DD']);
-            const start = rawTask.match(/🛫\s*(\d{4}[-/]\d{2}[-/]\d{2})/);
-            if (start) return moment(start[1], ['YYYY-MM-DD','YYYY/MM/DD']);
-            return moment();
-          })();
-          const nextDate = baseDate.clone().add(interval, unit + (interval > 1 ? 's' : ''));
-          const nextDateStr = nextDate.format('YYYY-MM-DD');
-
-          if (/📅\s*\d{4}-\d{2}-\d{2}/.test(nextLine)) {
-            nextLine = nextLine.replace(/📅\s*\d{4}[-/]\d{2}[-/]\d{2}/, `📅 ${nextDateStr}`);
-          }
-          if (/⏳\s*\d{4}-\d{2}-\d{2}/.test(nextLine)) {
-            nextLine = nextLine.replace(/⏳\s*\d{4}[-/]\d{2}[-/]\d{2}/, `⏳ ${nextDateStr}`);
-          }
-          if (/🛫\s*\d{4}-\d{2}-\d{2}/.test(nextLine)) {
-          nextLine = nextLine.replace(/🛫\s*\d{4}[-/]\d{2}[-/]\d{2}/, `🛫 ${nextDateStr}`);
-          }
-          nextLine = nextLine.trim();
-          return nextLine;
-        };
-        lines[lineNo - 1] = completedLine;
-        const nextTaskLine = generateNextRecurringTaskText(rawLine);
-        lines.splice(lineNo, 0, nextTaskLine);
-      } else {
-        lines[lineNo - 1] = completedLine;
-      }
-
-      await this.app.vault.modify(file, lines.join("\n"));
-      await this.scanFile(file);
-      this._emitChange();
-    } catch (err) {
-      console.error('ThinkPlugin: 标记任务完成时发生错误', err);
-    }
+    await TaskService.completeTask(itemId);
   }
 
   /* ---------- 订阅 ---------- */
