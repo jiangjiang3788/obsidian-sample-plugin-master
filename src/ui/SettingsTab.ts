@@ -6,6 +6,7 @@ import {
 } from '../config/schema';
 import ThinkPlugin from '../main';
 import { VIEW_OPTIONS } from '../views';
+import { OPS } from '../config/constants';  
 
 export class SettingsTab extends PluginSettingTab {
   plugin: ThinkPlugin;
@@ -232,9 +233,10 @@ export class SettingsTab extends PluginSettingTab {
         fieldInput.setAttr('list', 'think-fields-list');
 
         const opSelect = rowDiv.createEl('select');
-        ['=', '!=', 'includes', 'regex', '>', '<'].forEach(op => {
+        OPS.forEach(op => {
           opSelect.add(new Option(op, op, false, op === rule.op));
         });
+      
         opSelect.onchange = () => { rule.op = opSelect.value as FilterRule['op']; };
 
         const valueInput = rowDiv.createEl('input');
