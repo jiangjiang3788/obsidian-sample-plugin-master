@@ -140,15 +140,16 @@
       "initialView": "月"
     },
     {
-      "name": "02",
+      "name": "0235",
       "modules": [
         {
-          "view": "ExcelView",
+          "view": "BlockView",
           "title": "新模块",
           "collapsed": false,
           "filters": [],
           "sort": [],
-          "props": {}
+          "props": {},
+          "fields": []
         }
       ],
       "initialDate": "2025-07-24",

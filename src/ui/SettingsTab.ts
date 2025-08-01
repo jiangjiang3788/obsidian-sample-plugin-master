@@ -1,6 +1,6 @@
 // src/ui/SettingsTab.ts
 //-----------------------------------------------------------
-// 读取 localStorage 中的待展开目标
+// 设置页（懒加载 DashboardConfigForm 以加速打开速度）
 //-----------------------------------------------------------
 
 /** @jsxImportSource preact */
@@ -16,6 +16,7 @@ export class SettingsTab extends PluginSettingTab {
     super(app, plugin);
     this.plugin = plugin;
   }
+
   /* ------------------------------------------------------------------ */
   /** 刷新整个设置面板 */
   display(): void {
@@ -35,51 +36,54 @@ export class SettingsTab extends PluginSettingTab {
         this.persistAndReload('已创建新仪表盘');
       };
 
-    /* ── 展开此前点击的仪表盘（localStorage 记忆） ────────────── */
+    /* 上次点击的目标（展开用） */
     const wantOpen = localStorage.getItem('think-target-dash');
 
     /* ── 列出所有仪表盘 ─────────────────────────────────────── */
     this.plugin.dashboards.forEach((dash, idx) => {
       const details = containerEl.createEl('details', { cls: 'think-settings-block' });
-      if (dash.name === wantOpen) {
-        details.open = true;
-        localStorage.removeItem('think-target-dash');
-      }
+      details.open = dash.name === wantOpen;
+      if (details.open) localStorage.removeItem('think-target-dash');
 
-      /* summary 区（名称 + 删除按钮） */
+      /* summary（名称 + 删除按钮） */
       const summary = details.createEl('summary');
       summary.addClass('setting-item');
       summary.createSpan({ text: dash.name });
 
-      /* 删除 */
-      summary.createEl('button', { text: '🗑', cls: 'mod-warning' }).onclick = e => {
-        e.stopPropagation();
-        if (confirm(`确认删除仪表盘「${dash.name}」？此操作不可撤销！`)) {
-          this.plugin.dashboards.splice(idx, 1);
-          this.persistAndReload('已删除仪表盘');
-        }
+      summary
+        .createEl('button', { text: '🗑', cls: 'mod-warning' })
+        .onclick = e => {
+          e.stopPropagation();
+          if (confirm(`确认删除仪表盘「${dash.name}」？此操作不可撤销！`)) {
+            this.plugin.dashboards.splice(idx, 1);
+            this.persistAndReload('已删除仪表盘');
+          }
+        };
+
+      /* 懒加载 DashboardConfigForm：仅在展开时渲染一次 */
+      const host = details.createDiv();
+      const renderForm = () => {
+        host.empty();   // 防止重复
+        render(
+          h(DashboardConfigForm, {
+            dashboard  : structuredClone(dash),
+            dashboards : this.plugin.dashboards,
+            onSave     : d => {
+              Object.assign(dash, d);
+              this.persistAndReload('已保存');
+              localStorage.setItem('think-target-dash', dash.name); // 保持展开
+            },
+            onCancel   : () => this.display(),
+          }),
+          host,
+        );
       };
 
-      /* 表单挂载点 */
-      const host = details.createDiv();
-
-      /* 渲染 DashboardConfigForm（传入克隆以避免即时修改原数据） */
-      render(
-        h(DashboardConfigForm, {
-          dashboard  : structuredClone(dash),
-          dashboards : this.plugin.dashboards,
-          /* 保存：写回 dash → persist → 刷新 UI */
-          onSave     : (d) => {
-            Object.assign(dash, d);
-            this.persistAndReload('已保存');
-            /* 保存后保持展开状态 */
-            localStorage.setItem('think-target-dash', dash.name);
-          },
-          /* 取消：简单刷新一次即可恢复制前状态 */
-          onCancel   : () => this.display(),
-        }),
-        host,
-      );
+      /* 如果默认是 open 立即渲染，否则等待 toggle 事件 */
+      if (details.open) renderForm();
+      details.addEventListener('toggle', () => {
+        if (details.open && host.childElementCount === 0) renderForm();
+      });
     });
   }
 
