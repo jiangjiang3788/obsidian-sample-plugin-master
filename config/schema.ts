@@ -1,5 +1,3 @@
-// config/schema.ts - 定义数据模型和配置的 TypeScript 接口
-
 // config/schema.ts ─ 数据模型 & 配置接口
 import type { ViewName } from '../views';
 

@@ -1,6 +1,6 @@
 // src/main.ts
 //-----------------------------------------------------------
-// Think Plugin 入口（完整实现，包含 openSettingsForDashboard）
+// Think Plugin 入口（含废弃视图清理）
 //-----------------------------------------------------------
 
 import { Plugin } from 'obsidian';
@@ -18,11 +18,11 @@ export interface PersistData {
 
 export default class ThinkPlugin extends Plugin {
   /* ---------- 属性 ---------- */
-  dataStore!: DataStore;                                          // 全局数据层
-  dashboards: DashboardConfig[] = [];                             // 所有仪表盘
+  dataStore!: DataStore;
+  dashboards: DashboardConfig[] = [];
   activeDashboards: Array<{ container: HTMLElement; configName: string }> = [];
-  inputSettings: Record<string, any> = {};                        // 通用持久化
-  currentSettingsTarget: string | null = null;                    // 打开设置时聚焦的仪表盘名
+  inputSettings: Record<string, any> = {};
+  currentSettingsTarget: string | null = null;
 
   /* ---------- 生命周期 ---------- */
   async onload() {
@@ -34,12 +34,15 @@ export default class ThinkPlugin extends Plugin {
     if (!this.dashboards.length) this._createDefaultDashboard();
     this.inputSettings = saved?.inputSettings ?? {};
 
-    /* 向后兼容旧视图名 */
-    this.dashboards.forEach(d =>
-      d.modules.forEach(m => {
-        if ((m.view as any) === 'ListView') m.view = 'BlockView';
-      }),
-    );
+    /* 向后兼容旧视图名 & 删除已废弃视图 ---------------------- */
+    this.dashboards.forEach(d => {
+      d.modules = d.modules
+        .filter(m => (m.view as any) !== 'SettingsFormView') // ← ★ 删除旧模块
+        .map(m => {
+          if ((m.view as any) === 'ListView') m.view = 'BlockView';
+          return m;
+        });
+    });
 
     /* 数据层 & 监听 */
     this.dataStore = new DataStore(this.app);
@@ -51,7 +54,7 @@ export default class ThinkPlugin extends Plugin {
     this._injectStyles();
     this.addSettingTab(new SettingsTab(this.app, this));
 
-    // ▼ 若存在待展开目标，在 SettingsTab.display 中处理
+    /* 清理本地存储标记 */
     this.register(() => localStorage.removeItem('think-target-dash'));
   }
 
@@ -61,22 +64,12 @@ export default class ThinkPlugin extends Plugin {
   }
 
   /* ---------- 公共 API ---------- */
-
-  /**
-   * 从 Dashboard 视图调用：立即打开插件设置并自动展开对应仪表盘
-   */
   openSettingsForDashboard(name: string) {
-    // ① 先记到 localStorage，防止同一 session 多实例
     localStorage.setItem('think-target-dash', name);
-
-    // ② 打开设置面板，再切换到本插件
-    this.app.setting.open();                    // Obsidian >=1.4
+    this.app.setting.open();
     this.app.setting.openTabById(this.manifest.id);
   }
 
-  /**
-   * 保存全部仪表盘与用户输入配置
-   */
   async persistAll() {
     await this.saveData({
       dashboards: this.dashboards,
@@ -85,14 +78,11 @@ export default class ThinkPlugin extends Plugin {
   }
 
   /* ---------- 内部工具 ---------- */
-
-  /** 默认示例仪表盘（首次安装时注入） */
   private _createDefaultDashboard() {
     const now = new Date();
-    const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(
-      2,
-      '0',
-    )}-${String(now.getDate()).padStart(2, '0')}`;
+    const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(
+      now.getDate(),
+    ).padStart(2, '0')}`;
 
     const def: DashboardConfig = {
       name: '默认仪表盘',
@@ -128,7 +118,6 @@ export default class ThinkPlugin extends Plugin {
     this.dashboards.push(def);
   }
 
-  /** 把全局 CSS 注入到文档 <head> */
   private _injectStyles() {
     if (document.getElementById(STYLE_TAG_ID)) return;
     const style = document.createElement('style');

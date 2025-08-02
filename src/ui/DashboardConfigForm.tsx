@@ -102,18 +102,41 @@ const ModuleCard = memo<ModCardProps>(({
   };
 
   /* 增删行 */
-  const addFilter =()=>keepScroll(()=>{
-    setFieldValue(`modules.${idx}.filtersArr`,[...mod.filtersArr,{field:'',op:'=',value:''}],false);
-  });
-  const delFilter=(i:number)=>keepScroll(()=>{
-    setFieldValue(`modules.${idx}.filtersArr`,mod.filtersArr.filter((_:any,j:number)=>j!==i),false);
-  });
-  const addSort =()=>keepScroll(()=>{
-    setFieldValue(`modules.${idx}.sortArr`,[...mod.sortArr,{field:'',dir:'asc'}],false);
-  });
-  const delSort=(i:number)=>keepScroll(()=>{
-    setFieldValue(`modules.${idx}.sortArr`,mod.sortArr.filter((_:any,j:number)=>j!==i),false);
-  });
+  const addFilter = () =>
+    keepScroll(() =>
+      setFieldValue(
+        `modules.${idx}.filtersArr`,
+        [...mod.filtersArr, { field: '', op: '=', value: '' }],
+        false,
+      ),
+    );
+
+  const delFilter = (i: number) =>
+    keepScroll(() =>
+      setFieldValue(
+        `modules.${idx}.filtersArr`,
+        mod.filtersArr.filter((_: any, j: number) => j !== i),
+        false,
+      ),
+    );
+
+  const addSort = () =>
+    keepScroll(() =>
+      setFieldValue(
+        `modules.${idx}.sortArr`,
+        [...mod.sortArr, { field: '', dir: 'asc' }],
+        false,
+      ),
+    );
+
+  const delSort = (i: number) =>
+    keepScroll(() =>
+      setFieldValue(
+        `modules.${idx}.sortArr`,
+        mod.sortArr.filter((_: any, j: number) => j !== i),
+        false,
+      ),
+    );
 
   const setDebounced = useDebounced(
     (path:string,val:any)=>setFieldValue(path,val,false),300,
@@ -128,7 +151,8 @@ const ModuleCard = memo<ModCardProps>(({
       {/* Header */}
       <Stack direction="row" spacing={1} alignItems="center">
         <TextField label="标题" value={mod.title}
-          onInput={e=>setFieldValue(`modules.${idx}.title`,
+          onInput={e=>setFieldValue(
+            `modules.${idx}.title`,
             (e.target as HTMLInputElement).value,false)} sx={{flex:1}}/>
         <Select value={mod.view}
           onChange={e=>setFieldValue(`modules.${idx}.view`,e.target.value,false)}
@@ -137,7 +161,7 @@ const ModuleCard = memo<ModCardProps>(({
         </Select>
         <FormControlLabel label="默认折叠"
           control={<Checkbox checked={mod.collapsed}
-            onChange={e=>setFieldValue(`modules.${idx}.collapsed`,e.target.checked,false)}/>}
+            onChange={e=>setFieldValue(`modules.${idx}.collapsed`,e.target.checked,false)}/> }
           sx={{ml:1}}/>
         <IconButton size="small" onClick={toggle} sx={CIRCLE_BTN}>
           {open?<ArrowDropUp/>:<ArrowDropDown/>}
@@ -207,7 +231,8 @@ const ModuleCard = memo<ModCardProps>(({
                     {OPS.map(op=><MenuItem key={op} value={op}>{op}</MenuItem>)}
                   </Select>
                   <TextField value={f.value}
-                    onInput={e=>setDebounced(`modules.${idx}.filtersArr.${i}.value`,
+                    onInput={e=>setDebounced(
+                      `modules.${idx}.filtersArr.${i}.value`,
                       (e.target as HTMLInputElement).value)} sx={{flex:1}}/>
                   <IconButton size="small" color="error" sx={CIRCLE_BTN}
                     onClick={()=>delFilter(i)}><DeleteIcon fontSize="small"/></IconButton>
@@ -290,9 +315,9 @@ export function DashboardConfigForm({ dashboard,dashboards,onSave,onCancel }:Pro
             modules:vals.modules.map(({id,filtersArr,sortArr,fieldsArr,groupsArr,...rest}):ModuleConfig=>({
               ...rest,
               filters:filtersArr.filter((f:any)=>f.field).map(f=>({field:f.field,op:f.op,value:f.value})),
-              sort:sortArr.filter((s:any)=>s.field).map(s=>({field:s.field,dir:s.dir})),
-              fields:fieldsArr,
-              groups:groupsArr,
+              sort   :sortArr  .filter((s:any)=>s.field).map(s=>({field:s.field,dir:s.dir})),
+              fields :fieldsArr,
+              groups :groupsArr,
             })),
           };
           onSave(cleaned);
@@ -310,7 +335,6 @@ export function DashboardConfigForm({ dashboard,dashboards,onSave,onCancel }:Pro
             </Stack>
             <Collapse in={baseOpen} timeout="auto" unmountOnExit>
               <Stack spacing={1.5}>
-                {/* 行 */}
                 {[{
                   label:'配置名称',node:<TextField fullWidth value={values.name}
                     onInput={e=>setFieldValue('name',(e.target as HTMLInputElement).value,false)}/>,

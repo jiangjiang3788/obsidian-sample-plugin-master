@@ -1,8 +1,4 @@
 // src/views/Dashboard.tsx
-//-----------------------------------------------------------
-// 仪表盘视图：统一筛选助手 + 齿轮按钮跳设置页
-//-----------------------------------------------------------
-
 /** @jsxImportSource preact */
 import { h } from 'preact';
 import { useState, useEffect } from 'preact/hooks';
@@ -13,7 +9,6 @@ import type ThinkPlugin from '../main';
 import { TFile, TFolder } from 'obsidian';
 import { ViewComponents } from './index';
 import { getDateRange } from '../utils/date';
-import { DashboardConfigForm } from '../ui/DashboardConfigForm';
 import {
   filterByRules,
   sortItems,
@@ -21,7 +16,7 @@ import {
   filterByKeyword,
 } from '../utils/itemFilter';
 
-const QUARTER_TEXT = ['一', '二', '三', '四'];
+const QTXT = ['一', '二', '三', '四'];
 
 interface Props {
   config: DashboardConfig;
@@ -36,26 +31,25 @@ export function Dashboard({ config, dataStore, plugin }: Props) {
   const [date, setDate] = useState(
     config.initialDate ? moment(config.initialDate) : moment(),
   );
-  const [showCfg, setShowCfg] = useState(false);
   const [kw, setKw] = useState('');
-
   const [, force] = useState(0);
+
+  /* 数据层变动后强制刷新 */
   useEffect(() => {
     const fn = () => force(v => v + 1);
     dataStore.subscribe(fn);
     return () => dataStore.unsubscribe(fn);
   }, [dataStore]);
 
-  /* ---------- 工具 ---------- */
+  /* 小工具 */
   const unit = (v: string) =>
     ({ 年: 'year', 季: 'quarter', 月: 'month', 周: 'week', 天: 'day' } as any)[v] ??
     'day';
-
   const fmt = (d: any, v: string) =>
     v === '年'
       ? d.format('YYYY年')
       : v === '季'
-      ? `${d.year()}年${QUARTER_TEXT[d.quarter() - 1]}季度`
+      ? `${d.year()}年${QTXT[d.quarter() - 1]}季度`
       : v === '月'
       ? d.format('YYYY-MM')
       : v === '周'
@@ -64,19 +58,18 @@ export function Dashboard({ config, dataStore, plugin }: Props) {
 
   const { startDate, endDate } = getDateRange(date, view);
 
-  /* ---------- 渲染模块 ---------- */
-  const renderModule = (m: ModuleConfig) => {
-    if (m.view === 'SettingsFormView') {
-      const V = ViewComponents[m.view] as any;
+  /* ---------------- Module 渲染 ---------------- */
+  const renderModule = (m: ModuleConfig & { groups?: string[] }) => {
+    const V = (ViewComponents as any)[m.view];
+    if (!V)
       return (
         <ModulePanel module={m}>
-          <V plugin={plugin} storageKey="inputSettings" />
+          <div>未知视图：{m.view}</div>
         </ModulePanel>
       );
-    }
 
-    /* ① 数据收集 + 统一过滤 */
-    let items = dataStore.queryItems(); // 先拿全部
+    /* ① 采集并过滤数据 */
+    let items = dataStore.queryItems();
     items = filterByRules(items, m.filters || []);
     items = filterByDateRange(
       items,
@@ -91,7 +84,7 @@ export function Dashboard({ config, dataStore, plugin }: Props) {
         it.tags.some(t => config.tags!.some(x => t.includes(x))),
       );
     }
-    if (config.path && config.path.trim()) {
+    if (config.path?.trim()) {
       const target = config.path.trim();
       const af = (dataStore as any)['app'].vault.getAbstractFileByPath(target);
       const keep = (p: string) =>
@@ -106,18 +99,20 @@ export function Dashboard({ config, dataStore, plugin }: Props) {
     /* ③ 排序 */
     items = sortItems(items, m.sort || []);
 
-    /* ---------- 视图组件 ---------- */
-    const V = (ViewComponents as any)[m.view];
-    if (!V)
-      return (
-        <ModulePanel module={m}>
-          <div>未知视图：{m.view}</div>
-        </ModulePanel>
-      );
-
+    /* ④ 视图 props 拼装 ------------------------------------ */
     const vp: any = { ...(m.props || {}) };
-    if (m.group) vp.groupField = m.group;
-    if (m.fields) vp.fields = m.fields;
+
+    /* 多层级 groupsArr → 取第 1 层做分组字段（按需可自行扩展） */
+    if ((m as any).groups?.length) vp.groupField = (m as any).groups[0];
+
+    /* 行 / 列字段（TableView 专用） */
+    if (m.view === 'TableView') {
+      vp.rowField = (m as any).rowField || '';
+      vp.colField = (m as any).colField || '';
+    }
+
+    /* 显示字段 */
+    if (m.fields?.length) vp.fields = m.fields;
 
     return (
       <ModulePanel module={m}>
@@ -126,14 +121,7 @@ export function Dashboard({ config, dataStore, plugin }: Props) {
     );
   };
 
-  const onSaveConfig = (d: DashboardConfig) => {
-    Object.assign(config, d);
-    plugin.persistAll().then(() => {
-      setShowCfg(false);
-    });
-  };
-
-  /* ---------- 输出 ---------- */
+  /* ---------------- 页面 ---------------- */
   return (
     <div>
       {/* 顶栏 */}
@@ -149,12 +137,8 @@ export function Dashboard({ config, dataStore, plugin }: Props) {
         >
           {fmt(date, view)}
         </button>
-        <button onClick={() => setDate(date.clone().subtract(1, unit(view)))}>
-          ←
-        </button>
-        <button onClick={() => setDate(date.clone().add(1, unit(view)))}>
-          →
-        </button>
+        <button onClick={() => setDate(date.clone().subtract(1, unit(view)))}>←</button>
+        <button onClick={() => setDate(date.clone().add(1, unit(view)))}>→</button>
         <button onClick={() => setDate(moment())}>＝</button>
         <input
           placeholder="快速过滤…"
@@ -171,16 +155,8 @@ export function Dashboard({ config, dataStore, plugin }: Props) {
         </button>
       </div>
 
-      {showCfg ? (
-        <DashboardConfigForm
-          dashboard={structuredClone(config)}
-          dashboards={plugin.dashboards}
-          onSave={onSaveConfig}
-          onCancel={() => setShowCfg(false)}
-        />
-      ) : (
-        config.modules.map(renderModule)
-      )}
+      {/* 模块循环 */}
+      {config.modules.map(renderModule)}
     </div>
   );
 }
