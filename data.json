@@ -141,17 +141,7 @@
     },
     {
       "name": "02",
-      "modules": [
-        {
-          "view": "SettingsFormView",
-          "title": "新模块",
-          "collapsed": false,
-          "filters": [],
-          "sort": [],
-          "props": {},
-          "fields": []
-        }
-      ],
+      "modules": [],
       "initialDate": "2025-07-24",
       "path": "01",
       "tags": [
@@ -170,18 +160,27 @@
           "view": "BlockView",
           "title": "新模块",
           "collapsed": false,
-          "filters": [],
+          "filters": [
+            {
+              "field": "status",
+              "op": "=",
+              "value": "done"
+            }
+          ],
           "sort": [],
           "fields": [
             "category",
             "date",
             "icon",
             "title",
-            "content"
+            "content",
+            "extra.时长"
           ],
           "groups": [
             "filename"
-          ]
+          ],
+          "rowField": "tags",
+          "colField": "date"
         }
       ],
       "initialDate": "2025-07-26",

@@ -1,6 +1,7 @@
 // src/ui/SettingsTab.ts
+
 //-----------------------------------------------------------
-// 设置页（懒加载 DashboardConfigForm 以加速打开速度）
+// 设置页：新增「通用输入设置」，并保持仪表盘管理功能
 //-----------------------------------------------------------
 
 /** @jsxImportSource preact */
@@ -8,6 +9,7 @@ import { h, render } from 'preact';
 import { PluginSettingTab, Notice } from 'obsidian';
 import ThinkPlugin from '../main';
 import { DashboardConfigForm } from './DashboardConfigForm';
+import { SettingsFormView } from '../views/SettingsFormView';   // ← 复用原表单
 
 export class SettingsTab extends PluginSettingTab {
   private plugin: ThinkPlugin;
@@ -18,17 +20,32 @@ export class SettingsTab extends PluginSettingTab {
   }
 
   /* ------------------------------------------------------------------ */
-  /** 刷新整个设置面板 */
   display(): void {
     const { containerEl } = this;
     containerEl.empty();
+
+    /* ── 通用输入设置 ───────────────────────────────────────── */
+    containerEl.createEl('h2', { text: '通用输入设置 (inputSettings)' });
+    const globalHost = containerEl.createDiv();
+    render(
+      h(SettingsFormView, {
+        plugin: this.plugin,
+        storageKey: 'inputSettings',
+      }),
+      globalHost,
+    );
+
+    containerEl.createEl('hr');
+
+    /* ── 仪表盘配置管理 ───────────────────────────────────── */
     containerEl.createEl('h2', { text: 'Think 仪表盘 - 配置管理' });
 
-    /* ── 新建仪表盘 ─────────────────────────────────────────── */
+    /* 新建仪表盘按钮 */
     containerEl
       .createEl('button', { text: '➕ 新建仪表盘', cls: 'mod-cta' })
       .onclick = () => {
-        let name = '新仪表盘', n = 1;
+        let name = '新仪表盘',
+          n = 1;
         while (this.plugin.dashboards.some(d => d.name === name))
           name = `新仪表盘${n++}`;
 
@@ -36,20 +53,19 @@ export class SettingsTab extends PluginSettingTab {
         this.persistAndReload('已创建新仪表盘');
       };
 
-    /* 上次点击的目标（展开用） */
+    /* 上次展开目标 */
     const wantOpen = localStorage.getItem('think-target-dash');
 
-    /* ── 列出所有仪表盘 ─────────────────────────────────────── */
+    /* 列出全部仪表盘 */
     this.plugin.dashboards.forEach((dash, idx) => {
       const details = containerEl.createEl('details', { cls: 'think-settings-block' });
       details.open = dash.name === wantOpen;
       if (details.open) localStorage.removeItem('think-target-dash');
 
-      /* summary（名称 + 删除按钮） */
+      /* summary */
       const summary = details.createEl('summary');
       summary.addClass('setting-item');
       summary.createSpan({ text: dash.name });
-
       summary
         .createEl('button', { text: '🗑', cls: 'mod-warning' })
         .onclick = e => {
@@ -60,35 +76,32 @@ export class SettingsTab extends PluginSettingTab {
           }
         };
 
-      /* 懒加载 DashboardConfigForm：仅在展开时渲染一次 */
+      /* 懒加载配置表单 */
       const host = details.createDiv();
-      const renderForm = () => {
-        host.empty();   // 防止重复
+      const mountForm = () => {
+        host.empty();
         render(
           h(DashboardConfigForm, {
-            dashboard  : structuredClone(dash),
-            dashboards : this.plugin.dashboards,
-            onSave     : d => {
+            dashboard: structuredClone(dash),
+            dashboards: this.plugin.dashboards,
+            onSave: d => {
               Object.assign(dash, d);
               this.persistAndReload('已保存');
               localStorage.setItem('think-target-dash', dash.name); // 保持展开
             },
-            onCancel   : () => this.display(),
+            onCancel: () => this.display(),
           }),
           host,
         );
       };
-
-      /* 如果默认是 open 立即渲染，否则等待 toggle 事件 */
-      if (details.open) renderForm();
+      if (details.open) mountForm();
       details.addEventListener('toggle', () => {
-        if (details.open && host.childElementCount === 0) renderForm();
+        if (details.open && host.childElementCount === 0) mountForm();
       });
     });
   }
 
   /* ------------------------------------------------------------------ */
-  /** 持久化全部 dashboards，并刷新面板 */
   private persistAndReload(msg: string) {
     this.plugin.persistAll().then(() => {
       new Notice(msg);
