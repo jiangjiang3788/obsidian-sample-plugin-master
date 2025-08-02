@@ -1,7 +1,6 @@
 // src/ui/SettingsTab.ts
-
 //-----------------------------------------------------------
-// 设置页：新增「通用输入设置」，并保持仪表盘管理功能
+// 设置页：① 通用输入设置（表格） ② 仪表盘管理
 //-----------------------------------------------------------
 
 /** @jsxImportSource preact */
@@ -9,7 +8,7 @@ import { h, render } from 'preact';
 import { PluginSettingTab, Notice } from 'obsidian';
 import ThinkPlugin from '../main';
 import { DashboardConfigForm } from './DashboardConfigForm';
-import { SettingsFormView } from '../views/SettingsFormView';   // ← 复用原表单
+import { InputSettingsTable } from './InputSettingsTable';      // ★ 新增
 
 export class SettingsTab extends PluginSettingTab {
   private plugin: ThinkPlugin;
@@ -25,15 +24,8 @@ export class SettingsTab extends PluginSettingTab {
     containerEl.empty();
 
     /* ── 通用输入设置 ───────────────────────────────────────── */
-    containerEl.createEl('h2', { text: '通用输入设置 (inputSettings)' });
-    const globalHost = containerEl.createDiv();
-    render(
-      h(SettingsFormView, {
-        plugin: this.plugin,
-        storageKey: 'inputSettings',
-      }),
-      globalHost,
-    );
+    const inputHost = containerEl.createDiv({ cls: 'think-settings-block' });
+    render(h(InputSettingsTable, { plugin: this.plugin }), inputHost);
 
     containerEl.createEl('hr');
 
