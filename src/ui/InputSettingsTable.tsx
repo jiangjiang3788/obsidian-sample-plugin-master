@@ -1,6 +1,6 @@
 // src/ui/InputSettingsTable.tsx
 /** @jsxImportSource preact */
-// InputSettingsTable.tsx —— 极简表格 UI（双击单元格可编辑 JSON）
+// InputSettingsTable.tsx —— 极简表格 UI（单击单元格可编辑 JSON/图标）
 
 import { useState, useMemo } from 'preact/hooks';
 import {
@@ -14,11 +14,11 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import ThinkPlugin from '../main';
 import { Notice } from 'obsidian';
 
-/* ---------- 标记字符 ---------- */
-const ENABLE_MARK   = '✓';
-const DISABLE_MARK  = '—';
-const INHERIT_MARK  = '◇';
-const OVERRIDE_MARK = '●';
+/* ---------- 单元格标记（仅显示一个图标） ---------- */
+const ENABLE_TEXT   = '✅';
+const DISABLE_TEXT  = '❌';
+const INHERIT_TEXT  = '🔽';
+const OVERRIDE_TEXT = '📄';
 
 /* ---------- 主组件 ---------- */
 interface Props { plugin: ThinkPlugin }
@@ -45,9 +45,14 @@ export function InputSettingsTable({ plugin }: Props) {
   const [editing, setEditing] = useState<{
     themeIdx: number; type: string; json: string;
   } | null>(null);
+
   const [addOpen, setAddOpen] = useState(false);
   const [newPath, setNewPath] = useState('');
+
   const [delIdx,  setDelIdx]  = useState<number | null>(null);
+
+  // 图标编辑对话框
+  const [iconEdit, setIconEdit] = useState<{ themeIdx: number; value: string } | null>(null);
 
   /* ---------- JSON 编辑 ---------- */
   const openEdit = (themeIdx: number, type: string) => {
@@ -108,20 +113,25 @@ export function InputSettingsTable({ plugin }: Props) {
     });
   };
 
-  /* ---------- 渲染工具 ---------- */
+  /* ---------- 渲染工具：单图标逻辑 ----------
+     规则：
+     - enabled === false  => ❌（禁用）
+     - enabled !== false 且 inherited === true  => 🔽（继承）
+     - enabled !== false 且 inherited === false => 📄（覆写）
+     备注：启用但继承/覆写判定后，不再额外显示“启用”图标，避免冗余。
+  ------------------------------------------------ */
   const renderCell = (cfg: any, inherited: boolean, themeIdx: number, type: string) => {
     const enabled = cfg?.enabled ?? true;
-    const mark1   = enabled ? ENABLE_MARK : DISABLE_MARK;
-    const mark2   = inherited ? INHERIT_MARK : OVERRIDE_MARK;
-    const txt     = cfg?.file ? cfg.file : cfg?.fields?.length ? `字段:${cfg.fields.length}` : '';
+    const symbol  = enabled ? (inherited ? INHERIT_TEXT : OVERRIDE_TEXT) : DISABLE_TEXT;
+    const tip     = !enabled ? '禁用' : (inherited ? '继承' : '覆写');
 
     return (
       <TableCell
-        sx={{ cursor: 'pointer', whiteSpace: 'nowrap' }}
-        onDblClick={() => openEdit(themeIdx, type)}
-        title="双击编辑 / 粘贴 JSON"
+        sx={{ cursor: 'pointer', whiteSpace: 'nowrap', textAlign: 'center' }}
+        onClick={() => openEdit(themeIdx, type)}
+        title={`单击编辑 / 粘贴 JSON（当前：${tip}）`}
       >
-        {mark1}&nbsp;{mark2}&nbsp;{txt}
+        {symbol}
       </TableCell>
     );
   };
@@ -141,7 +151,7 @@ export function InputSettingsTable({ plugin }: Props) {
     <Box sx={{ mt: 2 }}>
       {/* 顶栏 */}
       <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-        <strong style={{ fontSize: '1.1rem' }}>通用输入设置（双击单元格编辑）</strong>
+        <strong style={{ fontSize: '1.1rem' }}>通用输入设置（单击单元格编辑）</strong>
         <Tooltip title="新增主题">
           <IconButton size="small" sx={{ ml: 1 }} onClick={() => setAddOpen(true)}>
             <AddIcon />
@@ -149,22 +159,28 @@ export function InputSettingsTable({ plugin }: Props) {
         </Tooltip>
       </Box>
 
-      {/* 主表格 */}
-      <Table size="small">
+      {/* 主表格（表头不换行） */}
+      <Table size="small" sx={{ '& th': { whiteSpace: 'nowrap' } }}>
         <TableHead>
           <TableRow>
-            <TableCell>主题路径</TableCell>
-            <TableCell align="center">图标</TableCell>
-            <TableCell align="center">Task</TableCell>
-            {blockKeys.map(k => <TableCell key={k} align="center">Block：{k}</TableCell>)}
-            <TableCell />
+            <TableCell sx={{ whiteSpace: 'nowrap' }}>主题路径</TableCell>
+            <TableCell align="center" sx={{ whiteSpace: 'nowrap' }}>图标</TableCell>
+            <TableCell align="center" sx={{ whiteSpace: 'nowrap' }}>Task</TableCell>
+            {blockKeys.map(k => (
+              <TableCell key={k} align="center" sx={{ whiteSpace: 'nowrap' }}>
+                {k}
+              </TableCell>
+            ))}
+            <TableCell /> {/* 操作列 */}
           </TableRow>
         </TableHead>
         <TableBody>
           {/* Base 行 */}
           <TableRow sx={{ bgcolor: '#f7f7f7' }}>
-            <TableCell><strong>Base（共性默认）</strong></TableCell>
-            <TableCell />
+            <TableCell sx={{ whiteSpace: 'nowrap', wordBreak: 'keep-all' }}>
+              <strong>Base（共性默认）</strong>
+            </TableCell>
+            <TableCell align="center" />
             {renderCell(data.base.task ?? {}, false, -1, 'task')}
             {blockKeys.map(k => renderCell(data.base.blocks?.[k] ?? {}, false, -1, k))}
             <TableCell />
@@ -173,8 +189,15 @@ export function InputSettingsTable({ plugin }: Props) {
           {/* Theme 行 */}
           {data.themes.map((th: any, idx: number) => (
             <TableRow key={th.path}>
-              <TableCell>{th.path}</TableCell>
-              <TableCell align="center">{th.icon ?? ''}</TableCell>
+              <TableCell sx={{ whiteSpace: 'nowrap', wordBreak: 'keep-all' }}>{th.path}</TableCell>
+              <TableCell
+                align="center"
+                sx={{ whiteSpace: 'nowrap', cursor: 'pointer' }}
+                title="单击编辑图标（可输入文字或表情；留空=不显示）"
+                onClick={() => setIconEdit({ themeIdx: idx, value: th.icon ?? '' })}
+              >
+                {th.icon ?? ''}
+              </TableCell>
               {(() => {
                 const [cfg, inh] = getCfg(idx, 'task');
                 return renderCell(cfg, inh, idx, 'task');
@@ -205,7 +228,8 @@ export function InputSettingsTable({ plugin }: Props) {
             <TextField
               multiline minRows={12} fullWidth
               value={editing.json}
-              onInput={e => setEditing(p => p ? { ...p, json: (e.target as HTMLInputElement).value } : p)}
+              onChange={e => setEditing(p => p ? { ...p, json: (e.target as HTMLInputElement).value } : p)}
+              onKeyDown={e => e.stopPropagation()}
               sx={{ fontFamily: 'monospace' }}
             />
           </DialogContent>,
@@ -216,8 +240,43 @@ export function InputSettingsTable({ plugin }: Props) {
         ]}
       </Dialog>
 
+      {/* 图标编辑对话框 */}
+      <Dialog open={!!iconEdit} maxWidth="xs" fullWidth disablePortal onClose={() => setIconEdit(null)}>
+        {iconEdit && [
+          <DialogTitle key="t">编辑图标（{data.themes[iconEdit.themeIdx].path}）</DialogTitle>,
+          <DialogContent key="c">
+            <TextField
+              autoFocus
+              fullWidth
+              placeholder="可输入文字或表情，如 ✨ / 😴 / 💪"
+              value={iconEdit.value}
+              onChange={e => setIconEdit(p => p ? ({ ...p, value: (e.target as HTMLInputElement).value }) : p)}
+              onKeyDown={e => e.stopPropagation()}
+            />
+          </DialogContent>,
+          <DialogActions key="a">
+            <Button onClick={() => setIconEdit(null)}>取消</Button>
+            <Button
+              startIcon={<SaveIcon />}
+              onClick={() => {
+                const v = (iconEdit.value || '').trim();
+                data.themes[iconEdit.themeIdx].icon = v || undefined;
+                plugin.inputSettings = data;
+                plugin.persistAll().then(() => {
+                  new Notice('已保存图标');
+                  setIconEdit(null);
+                  setRefresh(r => r + 1);
+                });
+              }}
+            >
+              保存
+            </Button>
+          </DialogActions>,
+        ]}
+      </Dialog>
+
       {/* 新增主题对话框 */}
-      <Dialog open={addOpen} maxWidth="xs" disablePortal onClose={() => setAddOpen(false)}>
+      <Dialog open={addOpen} maxWidth="xs" fullWidth disablePortal onClose={() => setAddOpen(false)}>
         {[
           <DialogTitle key="t">新增主题路径</DialogTitle>,
           <DialogContent key="c">
@@ -225,7 +284,14 @@ export function InputSettingsTable({ plugin }: Props) {
               fullWidth autoFocus
               placeholder="如 健康/饮食"
               value={newPath}
-              onInput={e => setNewPath((e.target as HTMLInputElement).value)}
+              onChange={e => setNewPath((e.target as HTMLInputElement).value)}
+              onKeyDown={e => {
+                e.stopPropagation();
+                if ((e as any).key === 'Enter') {
+                  e.preventDefault();
+                  confirmAdd();
+                }
+              }}
             />
           </DialogContent>,
           <DialogActions key="a">

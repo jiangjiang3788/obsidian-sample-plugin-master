@@ -25,7 +25,9 @@
             "icon",
             "title"
           ],
-          "group": "status"
+          "groups": [
+            "status"
+          ]
         },
         {
           "view": "BlockView",
@@ -62,7 +64,9 @@
             "icon",
             "content"
           ],
-          "group": "extra.时间"
+          "groups": [
+            "extra.时间"
+          ]
         },
         {
           "view": "BlockView",
@@ -83,7 +87,9 @@
             "icon",
             "content"
           ],
-          "group": "tags"
+          "groups": [
+            "tags"
+          ]
         },
         {
           "view": "BlockView",
@@ -104,7 +110,9 @@
             "icon",
             "content"
           ],
-          "group": "tags"
+          "groups": [
+            "tags"
+          ]
         },
         {
           "view": "BlockView",
@@ -125,7 +133,9 @@
             "icon",
             "content"
           ],
-          "group": "tags"
+          "groups": [
+            "tags"
+          ]
         }
       ],
       "initialDate": "2025-07-19",
@@ -207,5 +217,165 @@
       "modules": []
     }
   ],
-  "inputSettings": {}
+  "inputSettings": {
+    "base": {
+      "task": {
+        "enabled": true,
+        "file": "{{主题}}.md",
+        "fields": [
+          "任务状态",
+          "图标",
+          "重复",
+          "内容",
+          "时间",
+          "时长",
+          "日期"
+        ]
+      },
+      "blocks": {
+        "计划": {
+          "enabled": true,
+          "fields": [
+            "分类",
+            "周期",
+            "日期",
+            "主题",
+            "图标",
+            "内容"
+          ]
+        },
+        "输入": {
+          "enabled": true,
+          "fields": [
+            "分类",
+            "日期",
+            "主题",
+            "图标",
+            "内容"
+          ]
+        },
+        "总结": {
+          "enabled": true,
+          "fields": [
+            "分类",
+            "日期",
+            "主题",
+            "图标",
+            "内容"
+          ]
+        },
+        "打卡": {
+          "enabled": true,
+          "fields": [
+            "分类",
+            "日期",
+            "主题",
+            "图标",
+            "内容",
+            "评分"
+          ],
+          "displayMode": "emoji",
+          "colorMapping": [
+            "#6dabde",
+            "#FAE26D",
+            "#D1BEF5",
+            "#CCA9EE",
+            "#FF9896"
+          ],
+          "emojiMapping": [
+            "♨️",
+            "🧘🏻‍♀️",
+            "💪"
+          ]
+        }
+      }
+    },
+    "themes": [
+      {
+        "path": "健康",
+        "icon": "✨",
+        "task": {
+          "enabled": true,
+          "file": "001健康.md"
+        }
+      },
+      {
+        "path": "健康/睡眠",
+        "icon": "😴",
+        "task": {
+          "enabled": false
+        },
+        "blocks": {
+          "计划": {
+            "enabled": true
+          },
+          "输入": {
+            "enabled": false
+          },
+          "总结": {
+            "enabled": true
+          },
+          "打卡": {
+            "enabled": true,
+            "displayMode": "color",
+            "colorMapping": [
+              "#FFE5E5",
+              "#FFB3B3",
+              "#FF8080"
+            ]
+          }
+        }
+      },
+      {
+        "path": "健康/运动",
+        "icon": "💪",
+        "task": {
+          "enabled": true,
+          "file": "{{主题}}.md",
+          "fields": [
+            "任务状态",
+            "图标",
+            "重复",
+            "内容",
+            "时间",
+            "时长",
+            "日期",
+            "距离"
+          ]
+        },
+        "blocks": {
+          "打卡": {
+            "enabled": true,
+            "fields": [
+              "分类",
+              "日期",
+              "主题",
+              "图标",
+              "内容",
+              "评分",
+              "心率"
+            ]
+          }
+        }
+      },
+      {
+        "path": "生活",
+        "icon": "✨",
+        "task": {
+          "enabled": false,
+          "file": "生活任务.md"
+        },
+        "blocks": {
+          "打卡": {
+            "enabled": true,
+            "displayMode": "image",
+            "imageMapping": {
+              "阅读": "book.png",
+              "家务": "home.png"
+            }
+          }
+        }
+      }
+    ]
+  }
 }
