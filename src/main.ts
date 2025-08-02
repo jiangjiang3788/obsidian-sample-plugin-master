@@ -1,6 +1,6 @@
 // src/main.ts
 //-----------------------------------------------------------
-// Think Plugin 入口（含废弃视图清理）
+// Think Plugin 入口（含废弃视图清理） + 快速输入面板命令
 //-----------------------------------------------------------
 
 import { Plugin } from 'obsidian';
@@ -10,6 +10,14 @@ import { SettingsTab } from './ui/SettingsTab';
 import { STYLE_TAG_ID, GLOBAL_CSS } from './config/constants';
 import { VaultWatcher } from './core/VaultWatcher';
 import { CodeblockEmbedder } from './core/CodeblockEmbedder';
+
+// ★ 新增：快速输入面板（三个 Modal）
+import { QuickTaskModal } from './ui/modals/QuickTaskModal';
+import { QuickBlockModal } from './ui/modals/QuickBlockModal';
+import { QuickHabitModal } from './ui/modals/QuickHabitModal';
+
+// （可选）确保复选框等样式在视图中生效；若你已有全局样式管控，可注释掉
+import './views/styles.css';
 
 export interface PersistData {
   dashboards: DashboardConfig[];
@@ -53,6 +61,23 @@ export default class ThinkPlugin extends Plugin {
     /* 样式注入 + 设置页 */
     this._injectStyles();
     this.addSettingTab(new SettingsTab(this.app, this));
+
+    /* ★ 新增：三条命令（可在 Obsidian → 快捷键 中绑定热键） */
+    this.addCommand({
+      id: 'think-quick-input-task',
+      name: '快速录入 · 任务',
+      callback: () => new QuickTaskModal(this).open(),
+    });
+    this.addCommand({
+      id: 'think-quick-input-block',
+      name: '快速录入 · 计划/总结/思考',
+      callback: () => new QuickBlockModal(this).open(),
+    });
+    this.addCommand({
+      id: 'think-quick-input-habit',
+      name: '快速录入 · 打卡',
+      callback: () => new QuickHabitModal(this).open(),
+    });
 
     /* 清理本地存储标记 */
     this.register(() => localStorage.removeItem('think-target-dash'));
