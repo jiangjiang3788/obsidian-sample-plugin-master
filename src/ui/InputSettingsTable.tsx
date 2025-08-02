@@ -1,16 +1,17 @@
 // src/ui/InputSettingsTable.tsx
 /** @jsxImportSource preact */
-// InputSettingsTable.tsx —— 极简表格 UI（单击单元格可编辑 JSON/图标）
+// InputSettingsTable.tsx —— 极简表格 UI（单击单元格可编辑 JSON/图标 + 可折叠）
 
 import { useState, useMemo } from 'preact/hooks';
 import {
   Box, Table, TableHead, TableRow, TableCell, TableBody,
   IconButton, Tooltip, Dialog, DialogTitle, DialogContent,
-  TextField, DialogActions, Button
+  TextField, DialogActions, Button, Accordion, AccordionSummary, AccordionDetails
 } from '@mui/material';
-import AddIcon    from '@mui/icons-material/Add';
-import SaveIcon   from '@mui/icons-material/Save';
-import DeleteIcon from '@mui/icons-material/Delete';
+import AddIcon       from '@mui/icons-material/Add';
+import SaveIcon      from '@mui/icons-material/Save';
+import DeleteIcon    from '@mui/icons-material/Delete';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ThinkPlugin from '../main';
 import { Notice } from 'obsidian';
 
@@ -32,6 +33,16 @@ export function InputSettingsTable({ plugin }: Props) {
     raw.themes ??= [];
     return raw;
   }, [plugin.inputSettings, refresh]);
+
+  /* ---------- 折叠状态（本地记忆） ---------- */
+  const [open, setOpen] = useState<boolean>(() => {
+    const v = localStorage.getItem('think-input-settings-expanded');
+    return v === null ? true : v === 'true';
+  });
+  const onToggle = (_: any, expanded: boolean) => {
+    setOpen(expanded);
+    try { localStorage.setItem('think-input-settings-expanded', String(expanded)); } catch {}
+  };
 
   /* ---------- 动态列 ---------- */
   const blockKeys = useMemo(() => {
@@ -149,76 +160,81 @@ export function InputSettingsTable({ plugin }: Props) {
   /* ---------- 组件渲染 ---------- */
   return (
     <Box sx={{ mt: 2 }}>
-      {/* 顶栏 */}
-      <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-        <strong style={{ fontSize: '1.1rem' }}>通用输入设置（单击单元格编辑）</strong>
-        <Tooltip title="新增主题">
-          <IconButton size="small" sx={{ ml: 1 }} onClick={() => setAddOpen(true)}>
-            <AddIcon />
-          </IconButton>
-        </Tooltip>
-      </Box>
+      <Accordion expanded={open} onChange={onToggle} disableGutters>
+        <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+          <Box sx={{ display: 'flex', alignItems: 'center', width: '100%', justifyContent: 'space-between' }}>
+            <strong style={{ fontSize: '1.1rem' }}>通用输入设置（单击单元格编辑）</strong>
+            <Tooltip title="新增主题">
+              <IconButton size="small" onClick={(e) => { e.stopPropagation(); setAddOpen(true); }}>
+                <AddIcon />
+              </IconButton>
+            </Tooltip>
+          </Box>
+        </AccordionSummary>
 
-      {/* 主表格（表头不换行） */}
-      <Table size="small" sx={{ '& th': { whiteSpace: 'nowrap' } }}>
-        <TableHead>
-          <TableRow>
-            <TableCell sx={{ whiteSpace: 'nowrap' }}>主题路径</TableCell>
-            <TableCell align="center" sx={{ whiteSpace: 'nowrap' }}>图标</TableCell>
-            <TableCell align="center" sx={{ whiteSpace: 'nowrap' }}>Task</TableCell>
-            {blockKeys.map(k => (
-              <TableCell key={k} align="center" sx={{ whiteSpace: 'nowrap' }}>
-                {k}
-              </TableCell>
-            ))}
-            <TableCell /> {/* 操作列 */}
-          </TableRow>
-        </TableHead>
-        <TableBody>
-          {/* Base 行 */}
-          <TableRow sx={{ bgcolor: '#f7f7f7' }}>
-            <TableCell sx={{ whiteSpace: 'nowrap', wordBreak: 'keep-all' }}>
-              <strong>Base（共性默认）</strong>
-            </TableCell>
-            <TableCell align="center" />
-            {renderCell(data.base.task ?? {}, false, -1, 'task')}
-            {blockKeys.map(k => renderCell(data.base.blocks?.[k] ?? {}, false, -1, k))}
-            <TableCell />
-          </TableRow>
+        <AccordionDetails>
+          {/* 主表格（表头不换行） */}
+          <Table size="small" sx={{ '& th': { whiteSpace: 'nowrap' } }}>
+            <TableHead>
+              <TableRow>
+                <TableCell sx={{ whiteSpace: 'nowrap' }}>主题路径</TableCell>
+                <TableCell align="center" sx={{ whiteSpace: 'nowrap' }}>图标</TableCell>
+                <TableCell align="center" sx={{ whiteSpace: 'nowrap' }}>Task</TableCell>
+                {blockKeys.map(k => (
+                  <TableCell key={k} align="center" sx={{ whiteSpace: 'nowrap' }}>
+                    {k}
+                  </TableCell>
+                ))}
+                <TableCell /> {/* 操作列 */}
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {/* Base 行 */}
+              <TableRow sx={{ bgcolor: '#f7f7f7' }}>
+                <TableCell sx={{ whiteSpace: 'nowrap', wordBreak: 'keep-all' }}>
+                  <strong>Base（共性默认）</strong>
+                </TableCell>
+                <TableCell align="center" />
+                {renderCell(data.base.task ?? {}, false, -1, 'task')}
+                {blockKeys.map(k => renderCell(data.base.blocks?.[k] ?? {}, false, -1, k))}
+                <TableCell />
+              </TableRow>
 
-          {/* Theme 行 */}
-          {data.themes.map((th: any, idx: number) => (
-            <TableRow key={th.path}>
-              <TableCell sx={{ whiteSpace: 'nowrap', wordBreak: 'keep-all' }}>{th.path}</TableCell>
-              <TableCell
-                align="center"
-                sx={{ whiteSpace: 'nowrap', cursor: 'pointer' }}
-                title="单击编辑图标（可输入文字或表情；留空=不显示）"
-                onClick={() => setIconEdit({ themeIdx: idx, value: th.icon ?? '' })}
-              >
-                {th.icon ?? ''}
-              </TableCell>
-              {(() => {
-                const [cfg, inh] = getCfg(idx, 'task');
-                return renderCell(cfg, inh, idx, 'task');
-              })()}
-              {blockKeys.map(k => {
-                const child = th.blocks?.[k];
-                const inh   = !child || Object.keys(child).length === 0;
-                const cfg   = child ?? data.base.blocks?.[k] ?? {};
-                return renderCell(cfg, inh, idx, k);
-              })}
-              <TableCell>
-                <Tooltip title="删除主题">
-                  <IconButton size="small" color="error" onClick={() => setDelIdx(idx)}>
-                    <DeleteIcon />
-                  </IconButton>
-                </Tooltip>
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+              {/* Theme 行 */}
+              {data.themes.map((th: any, idx: number) => (
+                <TableRow key={th.path}>
+                  <TableCell sx={{ whiteSpace: 'nowrap', wordBreak: 'keep-all' }}>{th.path}</TableCell>
+                  <TableCell
+                    align="center"
+                    sx={{ whiteSpace: 'nowrap', cursor: 'pointer' }}
+                    title="单击编辑图标（可输入文字或表情；留空=不显示）"
+                    onClick={() => setIconEdit({ themeIdx: idx, value: th.icon ?? '' })}
+                  >
+                    {th.icon ?? ''}
+                  </TableCell>
+                  {(() => {
+                    const [cfg, inh] = getCfg(idx, 'task');
+                    return renderCell(cfg, inh, idx, 'task');
+                  })()}
+                  {blockKeys.map(k => {
+                    const child = th.blocks?.[k];
+                    const inh   = !child || Object.keys(child).length === 0;
+                    const cfg   = child ?? data.base.blocks?.[k] ?? {};
+                    return renderCell(cfg, inh, idx, k);
+                  })}
+                  <TableCell>
+                    <Tooltip title="删除主题">
+                      <IconButton size="small" color="error" onClick={() => setDelIdx(idx)}>
+                        <DeleteIcon />
+                      </IconButton>
+                    </Tooltip>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </AccordionDetails>
+      </Accordion>
 
       {/* JSON 编辑对话框 */}
       <Dialog open={!!editing} fullWidth maxWidth="sm" disablePortal onClose={() => setEditing(null)}>
