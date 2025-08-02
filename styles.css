@@ -1,0 +1,1 @@
+.task-checkbox{appearance:auto!important;-webkit-appearance:checkbox!important}.task-checkbox.done,.task-checkbox:checked{accent-color:#16a34a!important}.task-checkbox.done{pointer-events:none}.task-checkbox:checked:after{content:none!important;display:none!important;-webkit-mask-image:none!important;background-color:transparent!important}
