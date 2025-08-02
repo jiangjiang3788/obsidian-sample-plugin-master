@@ -1,15 +1,20 @@
 // src/ui/DashboardConfigForm.tsx
+
+/* ------------------------------------------------------------------
+   DashboardConfigForm.tsx  ⟨Obsidian 插件示例・最终修正版⟩
+   ------------------------------------------------------------------ */
 /** @jsxImportSource preact */
 import { h } from 'preact';
 import { memo } from 'preact/compat';
-import { useMemo, useRef, useCallback, useState } from 'preact/hooks';
+import {
+  useMemo, useRef, useCallback, useState,
+} from 'preact/hooks';
 import {
   ThemeProvider, CssBaseline,
   Box, Stack, Typography,
   TextField, Select, MenuItem,
   Checkbox, FormControlLabel,
-  IconButton, Button, Chip, Autocomplete, Divider,
-  Collapse,
+  IconButton, Divider, Collapse, Autocomplete, Chip,
 } from '@mui/material';
 import AddIcon       from '@mui/icons-material/Add';
 import DeleteIcon    from '@mui/icons-material/Delete';
@@ -24,182 +29,188 @@ import {
   CORE_FIELDS,
 } from '../config/schema';
 import { VIEW_OPTIONS } from '../views';
-import { theme } from './mui-theme';
+import { theme as baseTheme } from './mui-theme';
 
-/* ---------- 通用 ---------- */
+/* ---------- MUI 统一外观 ---------- */
+const theme = {
+  ...baseTheme,
+  components: {
+    ...(baseTheme.components || {}),
+    MuiTextField: { defaultProps: { size: 'small', variant: 'outlined' } },
+    MuiSelect   : { defaultProps: { size: 'small', variant: 'outlined' } },
+    MuiOutlinedInput: {
+      styleOverrides: {
+        root: {
+          '& .MuiOutlinedInput-notchedOutline': { borderWidth: 1 },
+          '&:hover .MuiOutlinedInput-notchedOutline': { borderWidth: 1 },
+          '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderWidth: 1 },
+        },
+      },
+    },
+  },
+};
+
+/* ---------- 样式 & 工具 ---------- */
+const CIRCLE_BTN = {
+  border: '1px solid', borderColor: 'divider',
+  borderRadius: '50%', boxShadow: 'none',
+  width: 26, height: 26, p: '2px',
+};
+const CIRCLE_BTN_S = { ...CIRCLE_BTN, width: 22, height: 22, p: '1px' };
 const OPS = ['=', '!=', 'includes', 'regex', '>', '<'] as const;
-const safeJSON = <T,>(txt: string, fallback: T): T => { try { return JSON.parse(txt); } catch { return fallback; } };
-function useDebounced<T extends (...a: any[]) => void>(fn: T, delay = 300) {
-  const r = useRef(fn); r.current = fn;
-  return useCallback((...a: Parameters<T>) => {
-    clearTimeout((r as any)._t);
-    (r as any)._t = setTimeout(() => r.current(...a), delay);
-  }, [delay]);
+
+function keepScroll(fn: () => void) {
+  const y = window.scrollY;
+  fn();
+  const restore = () => window.scrollTo({ top: y });
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => setTimeout(restore, 0));
+  });
 }
 
-/* ========== 模块卡片 ========== */
+function useDebounced<T extends(...a:any)=>void>(fn:T, ms=300) {
+  const r = useRef(fn); r.current = fn;
+  return useCallback((...a:Parameters<T>)=>{
+    clearTimeout((r as any)._t);
+    (r as any)._t = setTimeout(()=>r.current(...a), ms);
+  },[ms]);
+}
+
+/* -------------------- ModuleCard -------------------- */
 interface ModCardProps {
   idx: number;
   mod: any;
   fieldOptions: string[];
-  setFieldValue: (path: string, v: any, validate?: boolean) => void;
-  remove: (i: number) => void;
-  move: (from: number, to: number) => void;
+  setFieldValue: (path:string,v:any,validate?:boolean)=>void;
+  remove: (i:number)=>void;
+  move: (from:number,to:number)=>void;
 }
-
-const MENU_FIX = { disablePortal: true, disableScrollLock: true };
 
 const ModuleCard = memo<ModCardProps>(({
   idx, mod, fieldOptions, setFieldValue, remove, move,
-}) => {
-  const [open, setOpen] = useState(true);
-  const toggle = () => setOpen(v => !v);
+})=>{
+  const [open,setOpen]=useState(true);
+  const toggle = ()=>keepScroll(()=>setOpen(v=>!v));
 
   /* 拖动排序 */
-  const onDragStart = (e: DragEvent) => e.dataTransfer?.setData('text/plain', idx.toString());
-  const onDragOver  = (e: DragEvent) => e.preventDefault();
-  const onDrop = (e: DragEvent) => {
+  const onDragStart=(e:DragEvent)=>e.dataTransfer?.setData('text',idx.toString());
+  const onDragOver =(e:DragEvent)=>e.preventDefault();
+  const onDrop     =(e:DragEvent)=>{
     e.preventDefault();
-    const from = Number(e.dataTransfer?.getData('text/plain') ?? -1);
-    if (!isNaN(from) && from !== idx) move(from, idx);
+    const from=Number(e.dataTransfer?.getData('text')??-1);
+    if(!isNaN(from)&&from!==idx) move(from,idx);
   };
 
-  /* 操作函数 */
-  const addFilter  = () => setFieldValue(`modules.${idx}.filtersArr`, [...mod.filtersArr, {field:'',op:'=',value:''}], false);
-  const delFilter  = (i: number) => setFieldValue(`modules.${idx}.filtersArr`, mod.filtersArr.filter((_: any, j: number) => j !== i), false);
-  const addSort    = () => setFieldValue(`modules.${idx}.sortArr`,    [...mod.sortArr,    {field:'',dir:'asc'}], false);
-  const delSort    = (i: number) => setFieldValue(`modules.${idx}.sortArr`,    mod.sortArr.filter((_: any, j: number) => j !== i), false);
+  /* 增删行 */
+  const addFilter =()=>keepScroll(()=>{
+    setFieldValue(`modules.${idx}.filtersArr`,[...mod.filtersArr,{field:'',op:'=',value:''}],false);
+  });
+  const delFilter=(i:number)=>keepScroll(()=>{
+    setFieldValue(`modules.${idx}.filtersArr`,mod.filtersArr.filter((_:any,j:number)=>j!==i),false);
+  });
+  const addSort =()=>keepScroll(()=>{
+    setFieldValue(`modules.${idx}.sortArr`,[...mod.sortArr,{field:'',dir:'asc'}],false);
+  });
+  const delSort=(i:number)=>keepScroll(()=>{
+    setFieldValue(`modules.${idx}.sortArr`,mod.sortArr.filter((_:any,j:number)=>j!==i),false);
+  });
 
   const setDebounced = useDebounced(
-    (path: string, val: any) => setFieldValue(path, val, false),
-    300,
+    (path:string,val:any)=>setFieldValue(path,val,false),300,
   );
 
   return (
     <Box
-      draggable
-      onDragStart={onDragStart as any}
-      onDragOver={onDragOver as any}
-      onDrop={onDrop as any}
-      sx={{
-        border: '1px solid',
-        borderColor: 'divider',
-        borderRadius: 2,
-        p: 1.5,
-        backgroundColor: 'background.paper',
-      }}
+      draggable onDragStart={onDragStart as any}
+      onDragOver={onDragOver as any} onDrop={onDrop as any}
+      sx={{border:1,borderColor:'divider',borderRadius:2,p:1.5,bgcolor:'background.paper'}}
     >
-      {/* 头部 */}
+      {/* Header */}
       <Stack direction="row" spacing={1} alignItems="center">
-        <DragHandle sx={{ cursor: 'grab', color: 'text.secondary' }} />
-        <TextField
-          label="标题"
-          value={mod.title}
-          onInput={e => setFieldValue(`modules.${idx}.title`, (e.target as HTMLInputElement).value, false)}
-          sx={{ flex: 2, minWidth: 180 }}
-          size="small"
-        />
-        <Select
-          size="small"
-          value={mod.view}
-          onChange={e => setFieldValue(`modules.${idx}.view`, e.target.value, false)}
-          sx={{ width: 'max-content' }}
-          MenuProps={MENU_FIX}
-        >
-          {VIEW_OPTIONS.map(v => <MenuItem key={v} value={v}>{v}</MenuItem>)}
+        <TextField label="标题" value={mod.title}
+          onInput={e=>setFieldValue(`modules.${idx}.title`,
+            (e.target as HTMLInputElement).value,false)} sx={{flex:1}}/>
+        <Select value={mod.view}
+          onChange={e=>setFieldValue(`modules.${idx}.view`,e.target.value,false)}
+          sx={{minWidth:140}}>
+          {VIEW_OPTIONS.map(v=><MenuItem key={v} value={v}>{v}</MenuItem>)}
         </Select>
-        <FormControlLabel
-          label="默认折叠"
-          sx={{ ml: 1, whiteSpace: 'nowrap' }}
-          control={
-            <Checkbox
-              size="small"
-              checked={mod.collapsed}
-              onChange={e => setFieldValue(`modules.${idx}.collapsed`, e.target.checked, false)}
-            />
-          }
-        />
-        <IconButton size="small" onClick={toggle}>{open ? <ArrowDropUp /> : <ArrowDropDown />}</IconButton>
-        <IconButton size="small" color="error" onClick={() => remove(idx)}><DeleteIcon fontSize="small" /></IconButton>
+        <FormControlLabel label="默认折叠"
+          control={<Checkbox checked={mod.collapsed}
+            onChange={e=>setFieldValue(`modules.${idx}.collapsed`,e.target.checked,false)}/>}
+          sx={{ml:1}}/>
+        <IconButton size="small" onClick={toggle} sx={CIRCLE_BTN}>
+          {open?<ArrowDropUp/>:<ArrowDropDown/>}
+        </IconButton>
+        <IconButton size="small" color="error" sx={CIRCLE_BTN}
+          onClick={()=>keepScroll(()=>remove(idx))}><DeleteIcon fontSize="small"/></IconButton>
+        <IconButton size="small" sx={CIRCLE_BTN}><DragHandle fontSize="small"/></IconButton>
       </Stack>
 
-      {/* 内容 */}
+      {/* Content */}
       <Collapse in={open} timeout="auto" unmountOnExit>
-        <Stack spacing={2} sx={{ mt: 2 }}>
-          {mod.view === 'TableView' && (
+        <Stack spacing={2} sx={{mt:2}}>
+          {/* TableView 行/列字段 */}
+          {mod.view==='TableView'&&(
             <Stack direction="row" spacing={2}>
-              <TextField
-                label="行字段"
-                value={mod.rowField}
-                onInput={e => setFieldValue(`modules.${idx}.rowField`, (e.target as HTMLInputElement).value, false)}
-                size="small"
-                sx={{ flex: 1 }}
-              />
-              <TextField
-                label="列字段"
-                value={mod.colField}
-                onInput={e => setFieldValue(`modules.${idx}.colField`, (e.target as HTMLInputElement).value, false)}
-                size="small"
-                sx={{ flex: 1 }}
-              />
+              <Autocomplete freeSolo options={fieldOptions} value={mod.rowField??''}
+                onChange={(_,v)=>setFieldValue(`modules.${idx}.rowField`,v??'',false)}
+                renderInput={p=><TextField {...p} label="行字段"
+                  variant="standard" InputProps={{...p.InputProps,disableUnderline:true}}/>}
+                sx={{flex:1}}/>
+              <Autocomplete freeSolo options={fieldOptions} value={mod.colField??''}
+                onChange={(_,v)=>setFieldValue(`modules.${idx}.colField`,v??'',false)}
+                renderInput={p=><TextField {...p} label="列字段"
+                  variant="standard" InputProps={{...p.InputProps,disableUnderline:true}}/>}
+                sx={{flex:1}}/>
             </Stack>
           )}
 
           {/* 显示字段 */}
-          <Autocomplete
-            multiple
-            freeSolo
-            options={fieldOptions}
-            value={mod.fieldsArr}
-            onChange={(_, v) => setFieldValue(`modules.${idx}.fieldsArr`, v, false)}
-            renderTags={(value, getTagProps) =>
-              value.map((opt, i) => <Chip label={opt} {...getTagProps({ index: i })} />)
-            }
-            renderInput={p => (
-              <TextField
-                {...p}
-                label="显示字段（可多选）"
-                size="small"
-                variant="outlined"
-              />
-            )}
-          />
+          <Box>
+            <Typography color="error" fontWeight={600} mb={1}>显示字段</Typography>
+            <Autocomplete multiple options={fieldOptions} value={mod.fieldsArr}
+              onChange={(_,v)=>setFieldValue(`modules.${idx}.fieldsArr`,v,false)}
+              renderTags={(v,getTagProps)=>v.map((opt,i)=><Chip label={opt}{...getTagProps({index:i})}/>)}
+              renderInput={p=><TextField {...p} variant="standard" placeholder="选择或输入字段"
+                InputProps={{...p.InputProps,disableUnderline:true}}/>}/>
+          </Box>
+
+          {/* 分组字段 */}
+          <Box>
+            <Typography color="error" fontWeight={600} mb={1}>分组字段</Typography>
+            <Autocomplete multiple options={fieldOptions} value={mod.groupsArr}
+              onChange={(_,v)=>setFieldValue(`modules.${idx}.groupsArr`,v,false)}
+              renderTags={(v,getTagProps)=>v.map((opt,i)=><Chip label={opt}{...getTagProps({index:i})}/>)}
+              renderInput={p=><TextField {...p} variant="standard" placeholder="选择或输入字段"
+                InputProps={{...p.InputProps,disableUnderline:true}}/>}/>
+          </Box>
 
           {/* 过滤规则 */}
           <Box>
             <Stack direction="row" alignItems="center" spacing={1} mb={1}>
-              <Typography fontWeight={500}>过滤规则</Typography>
-              <IconButton size="small" onClick={addFilter}><AddIcon fontSize="small" /></IconButton>
+              <Typography color="error" fontWeight={600}>过滤规则</Typography>
+              <IconButton size="small" onClick={addFilter} sx={CIRCLE_BTN_S}>
+                <AddIcon fontSize="small"/></IconButton>
             </Stack>
             <Stack spacing={1}>
-              {mod.filtersArr.map((f: any, i: number) => (
+              {mod.filtersArr.map((f:any,i:number)=>(
                 <Stack key={i} direction="row" spacing={1}>
-                  <Autocomplete
-                    freeSolo
-                    options={fieldOptions}
-                    value={f.field}
-                    onChange={(_, v) => setFieldValue(`modules.${idx}.filtersArr.${i}.field`, v ?? '', false)}
-                    renderInput={p => (
-                      <TextField {...p} size="small" variant="outlined" />
-                    )}
-                    sx={{ flex: 1 }}
-                  />
-                  <Select
-                    size="small"
-                    value={f.op}
-                    onChange={e => setFieldValue(`modules.${idx}.filtersArr.${i}.op`, e.target.value, false)}
-                    sx={{ width: 90 }}
-                    MenuProps={MENU_FIX}
-                  >
-                    {OPS.map(op => <MenuItem key={op} value={op}>{op}</MenuItem>)}
+                  <TextField select value={f.field}
+                    onChange={e=>setFieldValue(`modules.${idx}.filtersArr.${i}.field`,
+                      e.target.value,false)} sx={{flex:1}}>
+                    {fieldOptions.map(o=><MenuItem key={o} value={o}>{o}</MenuItem>)}
+                  </TextField>
+                  <Select value={f.op}
+                    onChange={e=>setFieldValue(`modules.${idx}.filtersArr.${i}.op`,
+                      e.target.value,false)} sx={{width:90}}>
+                    {OPS.map(op=><MenuItem key={op} value={op}>{op}</MenuItem>)}
                   </Select>
-                  <TextField
-                    size="small"
-                    value={f.value}
-                    onInput={e => setDebounced(`modules.${idx}.filtersArr.${i}.value`, (e.target as HTMLInputElement).value)}
-                    sx={{ flex: 1 }}
-                  />
-                  <IconButton size="small" color="error" onClick={() => delFilter(i)}><DeleteIcon fontSize="small" /></IconButton>
+                  <TextField value={f.value}
+                    onInput={e=>setDebounced(`modules.${idx}.filtersArr.${i}.value`,
+                      (e.target as HTMLInputElement).value)} sx={{flex:1}}/>
+                  <IconButton size="small" color="error" sx={CIRCLE_BTN}
+                    onClick={()=>delFilter(i)}><DeleteIcon fontSize="small"/></IconButton>
                 </Stack>
               ))}
             </Stack>
@@ -208,33 +219,26 @@ const ModuleCard = memo<ModCardProps>(({
           {/* 排序规则 */}
           <Box>
             <Stack direction="row" alignItems="center" spacing={1} mb={1}>
-              <Typography fontWeight={500}>排序规则</Typography>
-              <IconButton size="small" onClick={addSort}><AddIcon fontSize="small" /></IconButton>
+              <Typography color="error" fontWeight={600}>排序规则</Typography>
+              <IconButton size="small" onClick={addSort} sx={CIRCLE_BTN_S}>
+                <AddIcon fontSize="small"/></IconButton>
             </Stack>
             <Stack spacing={1}>
-              {mod.sortArr.map((s: any, i: number) => (
+              {mod.sortArr.map((s:any,i:number)=>(
                 <Stack key={i} direction="row" spacing={1}>
-                  <Autocomplete
-                    freeSolo
-                    options={fieldOptions}
-                    value={s.field}
-                    onChange={(_, v) => setFieldValue(`modules.${idx}.sortArr.${i}.field`, v ?? '', false)}
-                    renderInput={p => (
-                      <TextField {...p} size="small" variant="outlined" />
-                    )}
-                    sx={{ flex: 1 }}
-                  />
-                  <Select
-                    size="small"
-                    value={s.dir}
-                    onChange={e => setFieldValue(`modules.${idx}.sortArr.${i}.dir`, e.target.value, false)}
-                    sx={{ width: 100 }}
-                    MenuProps={MENU_FIX}
-                  >
+                  <TextField select value={s.field}
+                    onChange={e=>setFieldValue(`modules.${idx}.sortArr.${i}.field`,
+                      e.target.value,false)} sx={{flex:1}}>
+                    {fieldOptions.map(o=><MenuItem key={o} value={o}>{o}</MenuItem>)}
+                  </TextField>
+                  <Select value={s.dir}
+                    onChange={e=>setFieldValue(`modules.${idx}.sortArr.${i}.dir`,
+                      e.target.value,false)} sx={{width:100}}>
                     <MenuItem value="asc">升序</MenuItem>
                     <MenuItem value="desc">降序</MenuItem>
                   </Select>
-                  <IconButton size="small" color="error" onClick={() => delSort(i)}><DeleteIcon fontSize="small" /></IconButton>
+                  <IconButton size="small" color="error" sx={CIRCLE_BTN}
+                    onClick={()=>delSort(i)}><DeleteIcon fontSize="small"/></IconButton>
                 </Stack>
               ))}
             </Stack>
@@ -245,140 +249,128 @@ const ModuleCard = memo<ModCardProps>(({
   );
 });
 
-/* ========== 主表单组件 ========== */
+/* -------------------- DashboardConfigForm -------------------- */
 interface Props {
-  dashboard: DashboardConfig;
+  dashboard : DashboardConfig;
   dashboards: DashboardConfig[];
-  onSave: (d: DashboardConfig) => void;
-  onCancel: () => void;
+  onSave    : (d:DashboardConfig)=>void;
+  onCancel  : ()=>void;
 }
 
-export function DashboardConfigForm({ dashboard, dashboards, onSave, onCancel }: Props) {
-  const fieldOptions = useMemo(
-    () => Array.from(new Set([...CORE_FIELDS, 'extra.主题', 'extra.时长', 'extra.地点'])).sort(),
-    [],
-  );
-  const isNameUnique = (n: string) => dashboards.every(d => d === dashboard || d.name !== n);
-  const genId = () => Date.now().toString(36) + Math.random().toString(36).slice(2);
+export function DashboardConfigForm({ dashboard,dashboards,onSave,onCancel }:Props){
+  const fieldOptions = useMemo(()=>Array.from(
+    new Set([...CORE_FIELDS,'extra.主题','extra.时长','extra.地点'])).sort(),[]);
+  const genId = ()=>Date.now().toString(36)+Math.random().toString(36).slice(2);
+
+  const [baseOpen,setBaseOpen]=useState(true);
+  const toggleBase = ()=>keepScroll(()=>setBaseOpen(v=>!v));
 
   return (
     <ThemeProvider theme={theme}>
-      <CssBaseline />
+      <CssBaseline/>
       <Formik
         initialValues={{
           ...dashboard,
-          initialView: dashboard.initialView || '月',
-          tags: dashboard.tags?.join(', ') || '',
-          modules: dashboard.modules.map(m => ({
-            id: genId(),
-            ...m,
-            filtersArr: (m.filters ?? []).map(x => ({ ...x })),
-            sortArr: (m.sort ?? []).map(x => ({ ...x })),
-            fieldsArr: m.fields ?? [],
+          initialView:dashboard.initialView||'月',
+          tags:dashboard.tags?.join(', ')||'',
+          modules:dashboard.modules.map(m=>({
+            id:genId(),...m,
+            filtersArr:(m.filters??[]).map(x=>({...x})),
+            sortArr:(m.sort??[]).map(x=>({...x})),
+            fieldsArr:m.fields??[],
+            groupsArr:m.groups??[],
           })),
         }}
-        validate={v => {
-          const e: any = {}; const n = v.name.trim();
-          if (!n) e.name = '名称不能为空'; else if (!isNameUnique(n)) e.name = '名称已存在';
-          return e;
-        }}
+        validate={()=>({})}          /* 允许名称重复 — 覆盖保存 */
         validateOnChange={false}
-        onSubmit={vals => {
-          const cleaned: DashboardConfig = {
-            ...dashboard,
-            ...vals,
-            tags: vals.tags.split(/[,，]/).map(t => t.trim()).filter(Boolean),
-            modules: vals.modules.map(({ id, filtersArr, sortArr, fieldsArr, ...rest }): ModuleConfig => ({
+        onSubmit={vals=>{
+          const cleaned:DashboardConfig={
+            ...dashboard,...vals,
+            tags:vals.tags.split(/[,，]/).map(t=>t.trim()).filter(Boolean),
+            modules:vals.modules.map(({id,filtersArr,sortArr,fieldsArr,groupsArr,...rest}):ModuleConfig=>({
               ...rest,
-              filters: filtersArr.filter((f: any) => f.field).map(f => ({ field: f.field, op: f.op, value: f.value })),
-              sort: sortArr.filter((s: any) => s.field).map(s => ({ field: s.field, dir: s.dir })),
-              fields: fieldsArr,
+              filters:filtersArr.filter((f:any)=>f.field).map(f=>({field:f.field,op:f.op,value:f.value})),
+              sort:sortArr.filter((s:any)=>s.field).map(s=>({field:s.field,dir:s.dir})),
+              fields:fieldsArr,
+              groups:groupsArr,
             })),
           };
           onSave(cleaned);
         }}
       >
-        {({ values, errors, setFieldValue }) => (
-          <Form>
-            {/* 基础设置 */}
-            <Box sx={{ p: 2, border: 1, borderColor: 'divider', borderRadius: 2, mb: 3, backgroundColor: 'background.paper' }}>
-              <Typography variant="h6" gutterBottom>基础设置</Typography>
+      {({ values,setFieldValue })=>(
+        <Form>
+          {/* 基础设置 */}
+          <Box sx={{p:2,border:1,borderColor:'divider',borderRadius:2,mb:3,bgcolor:'background.paper'}}>
+            <Stack direction="row" alignItems="center" spacing={1} mb={baseOpen?2:0}>
+              <Typography variant="h6" color="error">基础设置</Typography>
+              <IconButton size="small" sx={CIRCLE_BTN} onClick={toggleBase}>
+                {baseOpen?<ArrowDropUp/>:<ArrowDropDown/>}
+              </IconButton>
+            </Stack>
+            <Collapse in={baseOpen} timeout="auto" unmountOnExit>
+              <Stack spacing={1.5}>
+                {/* 行 */}
+                {[{
+                  label:'配置名称',node:<TextField fullWidth value={values.name}
+                    onInput={e=>setFieldValue('name',(e.target as HTMLInputElement).value,false)}/>,
+                },{
+                  label:'数据源路径',node:<TextField fullWidth value={values.path}
+                    onInput={e=>setFieldValue('path',(e.target as HTMLInputElement).value,false)}/>,
+                },{
+                  label:'标签(逗号分隔)',node:<TextField fullWidth value={values.tags}
+                    onInput={e=>setFieldValue('tags',(e.target as HTMLInputElement).value,false)}/>,
+                },{
+                  label:'初始视图',node:<Select sx={{minWidth:160}} value={values.initialView}
+                    onChange={e=>setFieldValue('initialView',e.target.value,false)}>
+                      {['年','季','月','周','天'].map(v=><MenuItem key={v} value={v}>{v}</MenuItem>)}
+                    </Select>,
+                },{
+                  label:'初始日期',node:<TextField type="date" sx={{minWidth:200}}
+                    value={values.initialDate}
+                    onChange={e=>setFieldValue('initialDate',(e.target as HTMLInputElement).value,false)}
+                    InputLabelProps={{shrink:true}}/>,
+                }].map((r,i)=>(
+                  <Stack key={i} direction="row" alignItems="center" spacing={2}>
+                    <Typography sx={{minWidth:96}}>{r.label}</Typography>{r.node}
+                  </Stack>
+                ))}
+              </Stack>
+            </Collapse>
+          </Box>
+
+          {/* 模块列表 */}
+          <FieldArray name="modules">
+          {({ push,remove,move })=>(
+            <Box sx={{mb:3}}>
+              <Stack direction="row" justifyContent="space-between" alignItems="center" mb={1}>
+                <Typography variant="h6" color="error">模块列表</Typography>
+                <IconButton size="small" sx={CIRCLE_BTN}
+                  onClick={()=>keepScroll(()=>push({
+                    id:genId(),view:'BlockView',title:'新模块',collapsed:false,
+                    filtersArr:[],sortArr:[],fieldsArr:[],groupsArr:[],
+                  }))}><AddIcon/></IconButton>
+              </Stack>
+              <Divider sx={{mb:2}}/>
               <Stack spacing={2}>
-                <TextField
-                  label="配置名称"
-                  value={values.name}
-                  error={!!errors.name}
-                  helperText={errors.name}
-                  onInput={e => setFieldValue('name', (e.target as HTMLInputElement).value, false)}
-                />
-                <TextField
-                  label="数据源路径"
-                  value={values.path}
-                  placeholder="如 Daily/2025，可留空"
-                  onInput={e => setFieldValue('path', (e.target as HTMLInputElement).value, false)}
-                />
-                <TextField
-                  label="标签(逗号分隔)"
-                  value={values.tags}
-                  onInput={e => setFieldValue('tags', (e.target as HTMLInputElement).value, false)}
-                />
-                <Select
-                  value={values.initialView}
-                  onChange={e => setFieldValue('initialView', e.target.value, false)}
-                  sx={{ maxWidth: 160 }}
-                  MenuProps={MENU_FIX}
-                >
-                  {['年', '季', '月', '周', '天'].map(v => <MenuItem key={v} value={v}>{v}</MenuItem>)}
-                </Select>
-                <TextField
-                  type="date"
-                  label="初始日期"
-                  value={values.initialDate}
-                  onChange={e => setFieldValue('initialDate', (e.target as HTMLInputElement).value, false)}
-                  InputLabelProps={{ shrink: true }}
-                  sx={{ maxWidth: 200 }}
-                />
+                {values.modules.map((m:any,i:number)=>(
+                  <ModuleCard key={m.id} idx={i} mod={m}
+                    fieldOptions={fieldOptions}
+                    setFieldValue={setFieldValue}
+                    remove={remove} move={move}/>
+                ))}
               </Stack>
             </Box>
+          )}
+          </FieldArray>
 
-            {/* 模块列表 */}
-            <FieldArray name="modules">
-              {({ push, remove, move }) => (
-                <Box sx={{ mb: 3 }}>
-                  <Stack direction="row" justifyContent="space-between" alignItems="center" mb={1}>
-                    <Typography variant="h6">模块列表</Typography>
-                    <IconButton
-                      color="primary"
-                      onClick={() => push({
-                        id: genId(), view: 'BlockView', title: '新模块', collapsed: false,
-                        filtersArr: [], sortArr: [], fieldsArr: [],
-                      })}
-                    ><AddIcon /></IconButton>
-                  </Stack>
-                  <Divider sx={{ mb: 2 }} />
-                  <Stack spacing={2}>
-                    {values.modules.map((m: any, i: number) => (
-                      <ModuleCard
-                        key={m.id}
-                        idx={i}
-                        mod={m}
-                        fieldOptions={fieldOptions}
-                        setFieldValue={setFieldValue}
-                        remove={remove}
-                        move={move}
-                      />
-                    ))}
-                  </Stack>
-                </Box>
-              )}
-            </FieldArray>
-
-            <Stack direction="row" spacing={2} justifyContent="flex-end">
-              <Button variant="contained" type="submit">💾 保存</Button>
-              <Button variant="outlined" color="secondary" onClick={onCancel}>取消</Button>
-            </Stack>
-          </Form>
-        )}
+          {/* 底部按钮 */}
+          <Stack direction="row" spacing={1.5} justifyContent="flex-end">
+            <IconButton type="submit" sx={CIRCLE_BTN}>💾</IconButton>
+            <IconButton onClick={onCancel} sx={CIRCLE_BTN}>✖</IconButton>
+          </Stack>
+        </Form>
+      )}
       </Formik>
     </ThemeProvider>
   );

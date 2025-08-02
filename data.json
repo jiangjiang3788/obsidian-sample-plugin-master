@@ -167,55 +167,21 @@
       "name": "未完成任务",
       "modules": [
         {
-          "view": "TableView",
-          "title": "❗ 未完成任务",
-          "collapsed": false,
-          "filters": [
-            {
-              "field": "status",
-              "op": "=",
-              "value": "open"
-            }
-          ],
-          "sort": [],
-          "props": {
-            "rowField": "recurrence",
-            "colField": "tags"
-          }
-        },
-        {
           "view": "BlockView",
           "title": "新模块",
           "collapsed": false,
-          "filters": [
-            {
-              "field": "status",
-              "op": "=",
-              "value": "done"
-            }
-          ],
+          "filters": [],
           "sort": [],
-          "props": {},
           "fields": [
             "category",
             "date",
             "icon",
-            "title"
-          ]
-        },
-        {
-          "view": "BlockView",
-          "title": "新模块",
-          "collapsed": false,
-          "filters": [
-            {
-              "field": "status",
-              "op": "=",
-              "value": "open"
-            }
+            "title",
+            "content"
           ],
-          "sort": [],
-          "props": {}
+          "groups": [
+            "filename"
+          ]
         }
       ],
       "initialDate": "2025-07-26",
@@ -228,6 +194,18 @@
         "工作"
       ],
       "initialView": "季"
+    },
+    {
+      "name": "新仪表盘7",
+      "modules": []
+    },
+    {
+      "name": "新仪表盘8",
+      "modules": []
+    },
+    {
+      "name": "新仪表盘9",
+      "modules": []
     }
   ],
   "inputSettings": {}
