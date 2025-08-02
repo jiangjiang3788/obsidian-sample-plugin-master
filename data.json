@@ -15,10 +15,6 @@
             }
           ],
           "sort": [],
-          "props": {
-            "rowField": "filename",
-            "colField": "tags"
-          },
           "fields": [
             "header",
             "category",
@@ -27,7 +23,9 @@
           ],
           "groups": [
             "status"
-          ]
+          ],
+          "rowField": "filename",
+          "colField": "tags"
         },
         {
           "view": "BlockView",
@@ -40,11 +38,7 @@
               "value": "done"
             }
           ],
-          "sort": [],
-          "props": {
-            "rowField": "date",
-            "colField": "tags"
-          }
+          "sort": []
         },
         {
           "view": "BlockView",
@@ -58,7 +52,6 @@
             }
           ],
           "sort": [],
-          "props": {},
           "fields": [
             "category",
             "icon",
@@ -80,7 +73,6 @@
             }
           ],
           "sort": [],
-          "props": {},
           "fields": [
             "category",
             "data",
@@ -103,7 +95,6 @@
             }
           ],
           "sort": [],
-          "props": {},
           "fields": [
             "category",
             "data",
@@ -126,7 +117,6 @@
             }
           ],
           "sort": [],
-          "props": {},
           "fields": [
             "category",
             "data",
@@ -203,24 +193,12 @@
         "工作"
       ],
       "initialView": "季"
-    },
-    {
-      "name": "新仪表盘7",
-      "modules": []
-    },
-    {
-      "name": "新仪表盘8",
-      "modules": []
-    },
-    {
-      "name": "新仪表盘9",
-      "modules": []
     }
   ],
   "inputSettings": {
     "base": {
       "task": {
-        "enabled": true,
+        "enabled": false,
         "file": "{{主题}}.md",
         "fields": [
           "任务状态",
@@ -234,7 +212,8 @@
       },
       "blocks": {
         "计划": {
-          "enabled": true,
+          "enabled": false,
+          "file": "01/计划.md",
           "fields": [
             "分类",
             "周期",
@@ -242,66 +221,176 @@
             "主题",
             "图标",
             "内容"
-          ]
-        },
-        "输入": {
-          "enabled": true,
-          "fields": [
-            "分类",
-            "日期",
-            "主题",
-            "图标",
-            "内容"
-          ]
+          ],
+          "fieldOptions": {
+            "分类": [
+              "计划"
+            ],
+            "周期": [
+              "周",
+              "月",
+              "季",
+              "年"
+            ]
+          }
         },
         "总结": {
-          "enabled": true,
+          "enabled": false,
+          "file": "01/总结.md",
+          "fields": [
+            "分类",
+            "周期",
+            "日期",
+            "主题",
+            "图标",
+            "内容"
+          ],
+          "fieldOptions": {
+            "分类": [
+              "总结"
+            ],
+            "周期": [
+              "周",
+              "月",
+              "季",
+              "年"
+            ]
+          }
+        },
+        "思考": {
+          "enabled": false,
+          "file": "01/思考.md",
           "fields": [
             "分类",
             "日期",
             "主题",
             "图标",
             "内容"
-          ]
+          ],
+          "fieldOptions": {
+            "分类": [
+              "事件",
+              "感受",
+              "思考"
+            ]
+          }
         },
         "打卡": {
-          "enabled": true,
-          "fields": [
+          "enabled": false,
+          "file": "01/打卡.md",
+          "inputFields": [
             "分类",
             "日期",
             "主题",
-            "图标",
-            "内容",
-            "评分"
+            "评分",
+            "内容"
           ],
-          "displayMode": "emoji",
-          "colorMapping": [
-            "#6dabde",
-            "#FAE26D",
-            "#D1BEF5",
-            "#CCA9EE",
-            "#FF9896"
-          ],
-          "emojiMapping": [
-            "♨️",
-            "🧘🏻‍♀️",
-            "💪"
+          "dataFilePath": "01/打卡",
+          "presets": [
+            {
+              "tag": "健康/睡眠",
+              "displayMode": "image",
+              "starCount": 10,
+              "imageMapping": [
+                "DJ/RELITU/S1.png",
+                "DJ/RELITU/S2.png",
+                "DJ/RELITU/S3.png",
+                "DJ/RELITU/S4.png",
+                "DJ/RELITU/S5.png",
+                "DJ/RELITU/S6.png",
+                "DJ/RELITU/S7.png",
+                "DJ/RELITU/S8.png",
+                "DJ/RELITU/S9.png",
+                "DJ/RELITU/S10.png"
+              ]
+            },
+            {
+              "tag": "健康/身体",
+              "dataFilePath": "01/打卡",
+              "displayMode": "image",
+              "starCount": 5,
+              "imageMapping": [
+                "DJ/RELITU/DL1.png",
+                "DJ/RELITU/DL2.png",
+                "DJ/RELITU/DL3.png",
+                "DJ/RELITU/DL4.png",
+                "DJ/RELITU/DL5.png"
+              ]
+            },
+            {
+              "tag": "健康/心情",
+              "monthsToShow": 1,
+              "displayMode": "image",
+              "starCount": 8,
+              "imageMapping": [
+                "DJ/RELITU/01.png",
+                "DJ/RELITU/02.png",
+                "DJ/RELITU/03.png",
+                "DJ/RELITU/04.png",
+                "DJ/RELITU/05.png",
+                "DJ/RELITU/06.png",
+                "DJ/RELITU/07.png",
+                "DJ/RELITU/08.png"
+              ]
+            },
+            {
+              "tag": "健康/运动",
+              "dataFilePath": "01/打卡",
+              "monthsToShow": 1,
+              "displayMode": "emoji",
+              "starCount": 3,
+              "emojiMapping": [
+                "♨️",
+                "🧘🏻‍♀️",
+                "💪"
+              ]
+            },
+            {
+              "tag": "生活/读书",
+              "dataFilePath": "01/打卡",
+              "displayMode": "emoji",
+              "starCount": 1,
+              "emojiMapping": [
+                "📚"
+              ]
+            },
+            {
+              "tag": "健康/粑粑",
+              "dataFilePath": "01/打卡",
+              "displayMode": "image",
+              "starCount": 3,
+              "imageMapping": [
+                "DJ/RELITU/BB1.png",
+                "DJ/RELITU/BB2.png",
+                "DJ/RELITU/BB3.png"
+              ]
+            }
           ]
         }
       }
     },
     "themes": [
       {
-        "path": "健康",
-        "icon": "✨",
+        "path": "思考",
+        "icon": "🧠",
         "task": {
-          "enabled": true,
-          "file": "001健康.md"
+          "enabled": false
+        },
+        "blocks": {
+          "思考": {
+            "enabled": true
+          },
+          "总结": {
+            "enabled": true
+          },
+          "计划": {
+            "enabled": true
+          }
         }
       },
       {
-        "path": "健康/睡眠",
-        "icon": "😴",
+        "path": "思考/自我",
+        "icon": "🐈",
         "task": {
           "enabled": false
         },
@@ -309,20 +398,319 @@
           "计划": {
             "enabled": true
           },
-          "输入": {
-            "enabled": false
+          "总结": {
+            "enabled": true
+          },
+          "思考": {
+            "enabled": true
+          }
+        }
+      },
+      {
+        "path": "思考/垚垚",
+        "icon": "👶",
+        "task": {
+          "enabled": false
+        },
+        "blocks": {
+          "计划": {
+            "enabled": true
           },
           "总结": {
             "enabled": true
           },
+          "思考": {
+            "enabled": true
+          }
+        }
+      },
+      {
+        "path": "思考/阳阳",
+        "icon": "👨",
+        "task": {
+          "enabled": false
+        },
+        "blocks": {
+          "计划": {
+            "enabled": true
+          },
+          "总结": {
+            "enabled": true
+          },
+          "思考": {
+            "enabled": true
+          }
+        }
+      },
+      {
+        "path": "思考/婆婆",
+        "icon": "🧓",
+        "task": {
+          "enabled": false
+        },
+        "blocks": {
+          "计划": {
+            "enabled": true
+          },
+          "总结": {
+            "enabled": true
+          },
+          "思考": {
+            "enabled": true
+          }
+        }
+      },
+      {
+        "path": "思考/芦苇",
+        "icon": "🔆",
+        "task": {
+          "enabled": false
+        },
+        "blocks": {
+          "计划": {
+            "enabled": true
+          },
+          "总结": {
+            "enabled": true
+          },
+          "思考": {
+            "enabled": true
+          }
+        }
+      },
+      {
+        "path": "思考/家庭",
+        "icon": "👪",
+        "task": {
+          "enabled": false
+        },
+        "blocks": {
+          "计划": {
+            "enabled": true
+          },
+          "总结": {
+            "enabled": true
+          },
+          "思考": {
+            "enabled": true
+          }
+        }
+      },
+      {
+        "path": "生活",
+        "icon": "✨",
+        "task": {
+          "enabled": true,
+          "file": "2-3生活.md"
+        },
+        "blocks": {
+          "计划": {
+            "enabled": true
+          },
+          "总结": {
+            "enabled": true
+          },
+          "思考": {
+            "enabled": true
+          }
+        }
+      },
+      {
+        "path": "生活/读书",
+        "icon": "📚",
+        "task": {
+          "enabled": true,
+          "file": "2-3生活.md"
+        },
+        "blocks": {
+          "计划": {
+            "enabled": true
+          },
+          "总结": {
+            "enabled": true
+          },
+          "思考": {
+            "enabled": true
+          },
           "打卡": {
-            "enabled": true,
-            "displayMode": "color",
-            "colorMapping": [
-              "#FFE5E5",
-              "#FFB3B3",
-              "#FF8080"
-            ]
+            "enabled": true
+          }
+        }
+      },
+      {
+        "path": "生活/娱乐",
+        "icon": "📺",
+        "task": {
+          "enabled": true,
+          "file": "2-3生活.md"
+        },
+        "blocks": {
+          "计划": {
+            "enabled": true
+          },
+          "总结": {
+            "enabled": true
+          },
+          "思考": {
+            "enabled": true
+          }
+        }
+      },
+      {
+        "path": "生活/卫生",
+        "icon": "🚿",
+        "task": {
+          "enabled": true,
+          "file": "2-3生活.md"
+        },
+        "blocks": {
+          "计划": {
+            "enabled": true
+          },
+          "总结": {
+            "enabled": true
+          },
+          "思考": {
+            "enabled": true
+          }
+        }
+      },
+      {
+        "path": "生活/开车",
+        "icon": "🚗",
+        "task": {
+          "enabled": true,
+          "file": "2-3生活.md"
+        },
+        "blocks": {
+          "计划": {
+            "enabled": true
+          },
+          "总结": {
+            "enabled": true
+          },
+          "思考": {
+            "enabled": true
+          }
+        }
+      },
+      {
+        "path": "生活/垚垚",
+        "icon": "👶",
+        "task": {
+          "enabled": true,
+          "file": "2-3生活.md"
+        },
+        "blocks": {
+          "计划": {
+            "enabled": true
+          },
+          "总结": {
+            "enabled": true
+          },
+          "思考": {
+            "enabled": true
+          }
+        }
+      },
+      {
+        "path": "生活/家务",
+        "icon": "🧹",
+        "task": {
+          "enabled": true,
+          "file": "2-3生活.md"
+        },
+        "blocks": {
+          "计划": {
+            "enabled": true
+          },
+          "总结": {
+            "enabled": true
+          },
+          "思考": {
+            "enabled": true
+          }
+        }
+      },
+      {
+        "path": "生活/整理",
+        "icon": "📦",
+        "task": {
+          "enabled": true,
+          "file": "2-3生活.md"
+        },
+        "blocks": {
+          "计划": {
+            "enabled": true
+          },
+          "总结": {
+            "enabled": true
+          },
+          "思考": {
+            "enabled": true
+          }
+        }
+      },
+      {
+        "path": "健康/睡眠",
+        "icon": "💤",
+        "task": {
+          "enabled": true,
+          "file": "2-1健康.md"
+        },
+        "blocks": {
+          "计划": {
+            "enabled": true
+          },
+          "总结": {
+            "enabled": true
+          },
+          "思考": {
+            "enabled": true
+          },
+          "打卡": {
+            "enabled": true
+          }
+        }
+      },
+      {
+        "path": "健康/身体",
+        "icon": "😩",
+        "task": {
+          "enabled": true,
+          "file": "2-0其他.md"
+        },
+        "blocks": {
+          "计划": {
+            "enabled": true
+          },
+          "总结": {
+            "enabled": true
+          },
+          "思考": {
+            "enabled": true
+          },
+          "打卡": {
+            "enabled": true
+          }
+        }
+      },
+      {
+        "path": "健康/习惯",
+        "icon": "🛁",
+        "task": {
+          "enabled": true,
+          "file": "2-1健康.md"
+        },
+        "blocks": {
+          "计划": {
+            "enabled": true
+          },
+          "总结": {
+            "enabled": true
+          },
+          "思考": {
+            "enabled": true
           }
         }
       },
@@ -331,48 +719,365 @@
         "icon": "💪",
         "task": {
           "enabled": true,
-          "file": "{{主题}}.md",
-          "fields": [
-            "任务状态",
-            "图标",
-            "重复",
-            "内容",
-            "时间",
-            "时长",
-            "日期",
-            "距离"
-          ]
+          "file": "2-1健康.md"
         },
         "blocks": {
+          "计划": {
+            "enabled": true
+          },
+          "总结": {
+            "enabled": true
+          },
+          "思考": {
+            "enabled": true
+          },
           "打卡": {
-            "enabled": true,
-            "fields": [
-              "分类",
-              "日期",
-              "主题",
-              "图标",
-              "内容",
-              "评分",
-              "心率"
-            ]
+            "enabled": true
           }
         }
       },
       {
-        "path": "生活",
-        "icon": "✨",
+        "path": "健康/粑粑",
+        "icon": "💩",
         "task": {
-          "enabled": false,
-          "file": "生活任务.md"
+          "enabled": true,
+          "file": "2-1健康.md"
         },
         "blocks": {
+          "计划": {
+            "enabled": true
+          },
+          "总结": {
+            "enabled": true
+          },
+          "思考": {
+            "enabled": true
+          },
           "打卡": {
-            "enabled": true,
-            "displayMode": "image",
-            "imageMapping": {
-              "阅读": "book.png",
-              "家务": "home.png"
-            }
+            "enabled": true
+          }
+        }
+      },
+      {
+        "path": "健康/早餐",
+        "icon": "🥚",
+        "task": {
+          "enabled": true,
+          "file": "2-2三餐.md"
+        },
+        "blocks": {
+          "计划": {
+            "enabled": true
+          },
+          "总结": {
+            "enabled": true
+          },
+          "思考": {
+            "enabled": true
+          }
+        }
+      },
+      {
+        "path": "健康/午餐",
+        "icon": "🍱",
+        "task": {
+          "enabled": true,
+          "file": "2-2三餐.md"
+        },
+        "blocks": {
+          "计划": {
+            "enabled": true
+          },
+          "总结": {
+            "enabled": true
+          },
+          "思考": {
+            "enabled": true
+          }
+        }
+      },
+      {
+        "path": "健康/晚餐",
+        "icon": "🥣",
+        "task": {
+          "enabled": true,
+          "file": "2-2三餐.md"
+        },
+        "blocks": {
+          "计划": {
+            "enabled": true
+          },
+          "总结": {
+            "enabled": true
+          },
+          "思考": {
+            "enabled": true
+          }
+        }
+      },
+      {
+        "path": "电脑/记录系统",
+        "icon": "🎴",
+        "task": {
+          "enabled": true,
+          "file": "2-5电脑.md"
+        },
+        "blocks": {
+          "计划": {
+            "enabled": true
+          },
+          "总结": {
+            "enabled": true
+          },
+          "思考": {
+            "enabled": true
+          }
+        }
+      },
+      {
+        "path": "电脑",
+        "icon": "🖥",
+        "task": {
+          "enabled": true,
+          "file": "2-5电脑.md"
+        },
+        "blocks": {
+          "计划": {
+            "enabled": true
+          },
+          "总结": {
+            "enabled": true
+          },
+          "思考": {
+            "enabled": true
+          }
+        }
+      },
+      {
+        "path": "电脑/整理",
+        "icon": "✒",
+        "task": {
+          "enabled": true,
+          "file": "2-5电脑.md"
+        },
+        "blocks": {
+          "计划": {
+            "enabled": true
+          },
+          "总结": {
+            "enabled": true
+          },
+          "思考": {
+            "enabled": true
+          }
+        }
+      },
+      {
+        "path": "电脑/ob 基础",
+        "icon": "🎚",
+        "task": {
+          "enabled": true,
+          "file": "2-5电脑.md"
+        },
+        "blocks": {
+          "计划": {
+            "enabled": true
+          },
+          "总结": {
+            "enabled": true
+          },
+          "思考": {
+            "enabled": true
+          }
+        }
+      },
+      {
+        "path": "电脑/笔记系统",
+        "icon": "📕",
+        "task": {
+          "enabled": true,
+          "file": "2-5电脑.md"
+        },
+        "blocks": {
+          "计划": {
+            "enabled": true
+          },
+          "总结": {
+            "enabled": true
+          },
+          "思考": {
+            "enabled": true
+          }
+        }
+      },
+      {
+        "path": "电脑/整理时间",
+        "icon": "✒",
+        "task": {
+          "enabled": true,
+          "file": "2-5电脑.md"
+        },
+        "blocks": {
+          "计划": {
+            "enabled": true
+          },
+          "总结": {
+            "enabled": true
+          },
+          "思考": {
+            "enabled": true
+          }
+        }
+      },
+      {
+        "path": "电脑/整理复盘",
+        "icon": "✒",
+        "task": {
+          "enabled": true,
+          "file": "2-5电脑.md"
+        },
+        "blocks": {
+          "计划": {
+            "enabled": true
+          },
+          "总结": {
+            "enabled": true
+          },
+          "思考": {
+            "enabled": true
+          }
+        }
+      },
+      {
+        "path": "电脑/思路整理",
+        "icon": "✒",
+        "task": {
+          "enabled": true,
+          "file": "2-5电脑.md"
+        },
+        "blocks": {
+          "计划": {
+            "enabled": true
+          },
+          "总结": {
+            "enabled": true
+          },
+          "思考": {
+            "enabled": true
+          }
+        }
+      },
+      {
+        "path": "工作/设计",
+        "icon": "🖥",
+        "task": {
+          "enabled": true,
+          "file": "2-6工作.md"
+        },
+        "blocks": {
+          "计划": {
+            "enabled": true
+          },
+          "总结": {
+            "enabled": true
+          },
+          "思考": {
+            "enabled": true
+          }
+        }
+      },
+      {
+        "path": "工作/投标",
+        "icon": "🎟",
+        "task": {
+          "enabled": true,
+          "file": "2-6工作.md"
+        },
+        "blocks": {
+          "计划": {
+            "enabled": true
+          },
+          "总结": {
+            "enabled": true
+          },
+          "思考": {
+            "enabled": true
+          }
+        }
+      },
+      {
+        "path": "工作/其他",
+        "icon": "📋",
+        "task": {
+          "enabled": true,
+          "file": "2-6工作.md"
+        },
+        "blocks": {
+          "计划": {
+            "enabled": true
+          },
+          "总结": {
+            "enabled": true
+          },
+          "思考": {
+            "enabled": true
+          }
+        }
+      },
+      {
+        "path": "工作/工作流",
+        "icon": "📋",
+        "task": {
+          "enabled": true,
+          "file": "2-6工作.md"
+        },
+        "blocks": {
+          "计划": {
+            "enabled": true
+          },
+          "总结": {
+            "enabled": true
+          },
+          "思考": {
+            "enabled": true
+          }
+        }
+      },
+      {
+        "path": "工作/手续、对账",
+        "icon": "📋",
+        "task": {
+          "enabled": true,
+          "file": "2-6工作.md"
+        },
+        "blocks": {
+          "计划": {
+            "enabled": true
+          },
+          "总结": {
+            "enabled": true
+          },
+          "思考": {
+            "enabled": true
+          }
+        }
+      },
+      {
+        "path": "工作/老板任务",
+        "icon": "💥",
+        "task": {
+          "enabled": true,
+          "file": "2-6工作.md"
+        },
+        "blocks": {
+          "计划": {
+            "enabled": true
+          },
+          "总结": {
+            "enabled": true
+          },
+          "思考": {
+            "enabled": true
           }
         }
       }
