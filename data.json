@@ -140,10 +140,10 @@
       "initialView": "月"
     },
     {
-      "name": "0235",
+      "name": "02",
       "modules": [
         {
-          "view": "BlockView",
+          "view": "SettingsFormView",
           "title": "新模块",
           "collapsed": false,
           "filters": [],
@@ -228,10 +228,6 @@
         "工作"
       ],
       "initialView": "季"
-    },
-    {
-      "name": "新仪表盘",
-      "modules": []
     }
   ],
   "inputSettings": {}
