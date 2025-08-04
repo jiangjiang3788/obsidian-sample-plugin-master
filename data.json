@@ -215,11 +215,11 @@
             "✅"
           ],
           "重复": [
-            "none",
-            "day",
-            "week",
-            "month",
-            "year"
+            " ",
+            "🔁 every day",
+            "🔁 every week",
+            "🔁 every month",
+            "🔁 every year"
           ]
         },
         "template": "{{任务状态}} {{内容}} (时间::{{时间}}) (时长::{{时长}}) {{重复}} {{任务状态}} {{日期}}"
@@ -515,7 +515,7 @@
         "icon": "✨",
         "task": {
           "enabled": true,
-          "file": "2-3生活.md"
+          "file": "01/2-3生活.md"
         },
         "blocks": {
           "计划": {
@@ -534,7 +534,7 @@
         "icon": "📚",
         "task": {
           "enabled": true,
-          "file": "2-3生活.md"
+          "file": "01/2-3生活.md"
         },
         "blocks": {
           "计划": {
@@ -556,7 +556,7 @@
         "icon": "📺",
         "task": {
           "enabled": true,
-          "file": "2-3生活.md"
+          "file": "01/2-3生活.md"
         },
         "blocks": {
           "计划": {
@@ -575,7 +575,7 @@
         "icon": "🚿",
         "task": {
           "enabled": true,
-          "file": "2-3生活.md"
+          "file": "01/2-3生活.md"
         },
         "blocks": {
           "计划": {
@@ -594,7 +594,7 @@
         "icon": "🚗",
         "task": {
           "enabled": true,
-          "file": "2-3生活.md"
+          "file": "01/2-3生活.md"
         },
         "blocks": {
           "计划": {
@@ -613,7 +613,7 @@
         "icon": "👶",
         "task": {
           "enabled": true,
-          "file": "2-3生活.md"
+          "file": "01/2-3生活.md"
         },
         "blocks": {
           "计划": {
@@ -632,7 +632,7 @@
         "icon": "🧹",
         "task": {
           "enabled": true,
-          "file": "2-3生活.md"
+          "file": "01/2-3生活.md"
         },
         "blocks": {
           "计划": {
@@ -651,7 +651,7 @@
         "icon": "📦",
         "task": {
           "enabled": true,
-          "file": "2-3生活.md"
+          "file": "01/2-3生活.md"
         },
         "blocks": {
           "计划": {
@@ -670,7 +670,7 @@
         "icon": "💤",
         "task": {
           "enabled": true,
-          "file": "2-1健康.md"
+          "file": "01/2-1健康.md"
         },
         "blocks": {
           "计划": {
@@ -692,7 +692,7 @@
         "icon": "😩",
         "task": {
           "enabled": true,
-          "file": "2-0其他.md"
+          "file": "01/2-0其他.md"
         },
         "blocks": {
           "计划": {
@@ -714,7 +714,7 @@
         "icon": "🛁",
         "task": {
           "enabled": true,
-          "file": "2-1健康.md"
+          "file": "01/2-1健康.md"
         },
         "blocks": {
           "计划": {
@@ -733,7 +733,7 @@
         "icon": "💪",
         "task": {
           "enabled": true,
-          "file": "2-1健康.md"
+          "file": "01/2-1健康.md"
         },
         "blocks": {
           "计划": {
@@ -755,7 +755,7 @@
         "icon": "💩",
         "task": {
           "enabled": true,
-          "file": "2-1健康.md"
+          "file": "01/2-1健康.md"
         },
         "blocks": {
           "计划": {
@@ -777,7 +777,7 @@
         "icon": "🥚",
         "task": {
           "enabled": true,
-          "file": "2-2三餐.md"
+          "file": "01/2-2三餐.md"
         },
         "blocks": {
           "计划": {
@@ -796,7 +796,7 @@
         "icon": "🍱",
         "task": {
           "enabled": true,
-          "file": "2-2三餐.md"
+          "file": "01/2-2三餐.md"
         },
         "blocks": {
           "计划": {
@@ -815,7 +815,7 @@
         "icon": "🥣",
         "task": {
           "enabled": true,
-          "file": "2-2三餐.md"
+          "file": "01/2-2三餐.md"
         },
         "blocks": {
           "计划": {
@@ -834,7 +834,7 @@
         "icon": "🎴",
         "task": {
           "enabled": true,
-          "file": "2-5电脑.md"
+          "file": "01/2-5电脑.md"
         },
         "blocks": {
           "计划": {
@@ -853,7 +853,7 @@
         "icon": "🖥",
         "task": {
           "enabled": true,
-          "file": "2-5电脑.md"
+          "file": "01/2-5电脑.md"
         },
         "blocks": {
           "计划": {
@@ -872,7 +872,7 @@
         "icon": "✒",
         "task": {
           "enabled": true,
-          "file": "2-5电脑.md"
+          "file": "01/2-5电脑.md"
         },
         "blocks": {
           "计划": {
@@ -891,7 +891,7 @@
         "icon": "🎚",
         "task": {
           "enabled": true,
-          "file": "2-5电脑.md"
+          "file": "01/2-5电脑.md"
         },
         "blocks": {
           "计划": {
@@ -910,7 +910,7 @@
         "icon": "📕",
         "task": {
           "enabled": true,
-          "file": "2-5电脑.md"
+          "file": "01/2-5电脑.md"
         },
         "blocks": {
           "计划": {
@@ -929,7 +929,7 @@
         "icon": "✒",
         "task": {
           "enabled": true,
-          "file": "2-5电脑.md"
+          "file": "01/2-5电脑.md"
         },
         "blocks": {
           "计划": {
@@ -948,7 +948,7 @@
         "icon": "✒",
         "task": {
           "enabled": true,
-          "file": "2-5电脑.md"
+          "file": "01/2-5电脑.md"
         },
         "blocks": {
           "计划": {
@@ -967,7 +967,7 @@
         "icon": "✒",
         "task": {
           "enabled": true,
-          "file": "2-5电脑.md"
+          "file": "01/2-5电脑.md"
         },
         "blocks": {
           "计划": {
@@ -986,7 +986,7 @@
         "icon": "🖥",
         "task": {
           "enabled": true,
-          "file": "2-6工作.md"
+          "file": "01/2-6工作.md"
         },
         "blocks": {
           "计划": {
@@ -1005,7 +1005,7 @@
         "icon": "🎟",
         "task": {
           "enabled": true,
-          "file": "2-6工作.md"
+          "file": "01/2-6工作.md"
         },
         "blocks": {
           "计划": {
@@ -1024,7 +1024,7 @@
         "icon": "📋",
         "task": {
           "enabled": true,
-          "file": "2-6工作.md"
+          "file": "01/2-6工作.md"
         },
         "blocks": {
           "计划": {
@@ -1043,7 +1043,7 @@
         "icon": "📋",
         "task": {
           "enabled": true,
-          "file": "2-6工作.md"
+          "file": "01/2-6工作.md"
         },
         "blocks": {
           "计划": {
@@ -1062,7 +1062,7 @@
         "icon": "📋",
         "task": {
           "enabled": true,
-          "file": "2-6工作.md"
+          "file": "01/2-6工作.md"
         },
         "blocks": {
           "计划": {
@@ -1081,7 +1081,7 @@
         "icon": "💥",
         "task": {
           "enabled": true,
-          "file": "2-6工作.md"
+          "file": "01/2-6工作.md"
         },
         "blocks": {
           "计划": {

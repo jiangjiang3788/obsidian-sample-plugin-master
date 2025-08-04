@@ -48,16 +48,38 @@ function TaskForm({ app, plugin, close }: { app: App; plugin: ThinkPlugin; close
     const title = form['内容']?.trim() || form['任务内容']?.trim();
     if (!title) { new Notice('请填写任务内容'); return; }
 
+    /* === 根据任务状态映射任务前缀 === */
+    let taskPrefix = '';
+    switch (form['任务状态']) {
+      case '✅': taskPrefix = '- [x] '; break;   // 已完成
+      case '📅':
+      case '🛫': taskPrefix = '- [ ] '; break;   // 待办 / 进行中
+      default :  taskPrefix = '';
+    }
+
+    /* === 调用模板生成最终行 ========= */
     const line = makeTaskLine({
       themePath : theme!.path,
-      template  : theme?.template,          // 从 inputSettings.template 继承
-      fields    : { ...form, 前缀: '- [ ] ' }
+      template  : theme?.template,
+      fields    : {
+        ...form,
+        任务前缀: taskPrefix,   // 对应 {{@任务前缀}}
+        前缀   : taskPrefix    // 兜底 {{前缀}}
+      }
     });
 
+    /* === 写入并提示 ================ */
+    let targetPath = '';
     try {
-      await svc.writeTask(theme!.path, null, line);
-      new Notice('已保存任务'); plugin.dataStore?.notifyChange?.(); close();
-    } catch(e:any){ new Notice('保存失败：'+e.message); }
+      targetPath = await svc.writeTask(theme!.path, null, line);
+      console.log(`%c[Think] 任务写入成功 → ${targetPath}`, 'color:green;font-weight:bold');
+      new Notice(`✅ 已保存任务 → ${targetPath}`);
+      plugin.dataStore?.notifyChange?.();
+      close();
+    } catch(e:any){
+      console.error('[Think] 任务写入失败', { targetPath, error: e });
+      new Notice(`❌ 保存失败：${e.message ?? e}（路径：${targetPath || '未知'}）`);
+    }
   }
 
   /* ---------- 渲染 ---------- */
@@ -146,7 +168,6 @@ function Field({label, children}: {label:string; children:any}) {
   );
 }
 
-/** 带原生蓝点的单选按钮 */
 function Radio(
   {value, checked, onChange, label, name}: 
   {value:string; checked:boolean; onChange:()=>void; label?:string; name?:string}
