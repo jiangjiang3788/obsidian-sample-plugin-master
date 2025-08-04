@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang='zh-CN'>
+<head>
+<meta charset='UTF-8'>
+<title>Obsidian 插件源码浏览器</title>
+<style>
+  :root{
+    --bg-sidebar:#ffffff;
+    --bg-preview:#fafafa;
+    --border-color:#e0e0e0;
+    --line-color:#d0d0d0;
+    --btn-bg:#f5f7fa;
+    --btn-border:#cccccc;
+    --btn-hover:#e8ebf0;
+    --text:#333333;
+    --accent:#3f51b5;
+    --accent-light:rgba(63,81,181,.1);
+    --toast-bg:#2196f3;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;display:flex;height:100vh;overflow:hidden;color:var(--text);font-family:system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,'Noto Sans',sans-serif}
+
+  button{margin-left:4px;font-size:12px;padding:3px 8px;border:1px solid var(--btn-border);background:var(--btn-bg);border-radius:4px;cursor:pointer}
+  button:hover{background:var(--btn-hover)}
+  .iconBtn{padding:2px 6px}
+  .selected{background:var(--accent-light)}
+
+  #sidebar{width:340px;overflow:auto;border-right:1px solid var(--border-color);padding:8px 12px;background:var(--bg-sidebar)}
+
+  #previewPane{flex:1;display:flex;flex-direction:column;height:100%}
+  #previewHeader{display:flex;align-items:center;border-bottom:1px solid var(--border-color);background:#f0f2f5}
+  #previewTitle{flex:1;padding:6px 10px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  #preview{flex:1;overflow:auto;font-family:monospace;border:none;resize:none;padding:12px;background:var(--bg-preview);white-space:pre;outline:none}
+
+  details{position:relative;margin:2px 0;padding-left:1em}
+  details::before{content:'';position:absolute;left:0.4em;top:0;bottom:0;width:1px;background:var(--line-color)}
+  summary{list-style:none;display:flex;align-items:center;cursor:pointer;user-select:none;position:relative;padding:2px 0}
+  summary::-webkit-details-marker, summary::marker{display:none}
+  summary::before{content:'';position:absolute;left:-0.6em;top:50%;width:0.6em;height:1px;background:var(--line-color)}
+  .fileRow{position:relative;display:flex;align-items:center;margin:2px 0 2px 1.6em;padding:2px 0}
+  .fileRow::before{content:'';position:absolute;left:0.4em;height:100%;width:1px;background:var(--line-color)}
+  .fileRow>span{flex:1;cursor:pointer;user-select:none}
+
+  .toast{
+    position:fixed;
+    bottom:16px;
+    left:50%;
+    transform:translateX(-50%);
+    background:var(--toast-bg);
+    color:#fff;
+    padding:8px 14px;
+    border-radius:6px;
+    font-size:14px;
+    opacity:0;
+    pointer-events:none;
+    animation:fadeIn .25s forwards,fadeOut .25s forwards 1.75s
+  }
+  @keyframes fadeIn{to{opacity:1}}
+  @keyframes fadeOut{to{opacity:0}}
+</style>
+</head>
+<body>
+  <div id="sidebar">
+    <button id="openDir" type="button">选择文件夹</button>
+    <button id="collapseAll" type="button">折叠全部</button>
+    <div id="tree"></div>
+  </div>
+
+  <div id="previewPane">
+    <div id="previewHeader">
+      <div id="previewTitle">（未选择文件）</div>
+      <button id="saveBtn" class="iconBtn" type="button" hidden>保存</button>
+    </div>
+    <textarea id="preview" readonly spellcheck="false">// 这里会显示文件内容</textarea>
+  </div>
+
+<script>
+const $ = id=>document.getElementById(id);
+let rootHandle=null;
+let selected={handle:null,path:'',element:null};
+let isDirty=false;
+
+function showToast(msg){
+  const t=document.createElement('div');
+  t.className='toast';
+  t.textContent=msg;
+  document.body.appendChild(t);
+  setTimeout(()=>t.remove(),2000);
+}
+
+function createBtn(text,fn){
+  const b=document.createElement('button');
+  b.textContent=text;
+  b.type='button';
+  b.className='iconBtn';
+  b.onclick=fn;
+  return b;
+}
+
+$('openDir').onclick=async()=>{
+  try{
+    rootHandle=await window.showDirectoryPicker({id:'obsidian-plugin-root'});
+    $('tree').innerHTML='';
+    await renderTree(rootHandle,'',$('tree'));
+    resetPreview();
+  }catch(e){console.error(e);}
+};
+
+$('collapseAll').onclick=()=>{
+  document.querySelectorAll('#tree details').forEach(d=>d.open=false);
+}
+
+function resetPreview(){
+  $('previewTitle').textContent='（未选择文件）';
+  $('preview').value='// 这里会显示文件内容';
+  $('preview').readOnly=true;
+  $('saveBtn').hidden=true;
+  isDirty=false;
+}
+
+function setSelected(elem,handle,fullPath){
+  if(selected.element) selected.element.classList.remove('selected');
+  selected={handle,path:fullPath,element:elem};
+  elem.classList.add('selected');
+  $('previewTitle').textContent=fullPath;
+}
+
+async function copyHandle(handle,path){
+  if(handle.kind==='file'){
+    await navigator.clipboard.writeText(await (await handle.getFile()).text());
+  }else{
+    await navigator.clipboard.writeText(await traverseAndConcat(handle,path+'/'));
+  }
+  showToast('已复制到剪贴板');
+}
+
+document.addEventListener('keydown',async e=>{
+  if(e.key==='c'&&(e.ctrlKey||e.metaKey)&&selected.handle){
+    e.preventDefault();
+    await copyHandle(selected.handle,selected.path);
+  }
+});
+
+async function renderTree(dirHandle,relativePath,container){
+  const entries = [];
+  for await(const [name,handle] of dirHandle){
+    entries.push({name,handle});
+  }
+  entries.sort((a,b)=>{
+    if(a.handle.kind !== b.handle.kind){
+      return a.handle.kind === 'file' ? 1 : -1;
+    }
+    return a.name.localeCompare(b.name);
+  });
+  for (const {name,handle} of entries) {
+    const fullPath=relativePath+name;
+    if(handle.kind==='file'){
+      container.appendChild(createFileRow(handle,fullPath,name));
+    }else{
+      const details=document.createElement('details');
+      const summary=document.createElement('summary');
+      summary.textContent=name;
+      summary.addEventListener('click',e=>{e.stopPropagation();setSelected(summary,handle,fullPath+'/');});
+      summary.appendChild(createBtn('🔁',async e=>{e.stopPropagation();await copyHandle(handle,fullPath);}));
+      details.appendChild(summary);
+      const children=document.createElement('div');
+      details.appendChild(children);
+      container.appendChild(details);
+      await renderTree(handle,fullPath+'/',children);
+    }
+  }
+}
+
+function createFileRow(handle,fullPath,displayName){
+  const row=document.createElement('div');row.className='fileRow';
+  const label=document.createElement('span');label.textContent=displayName;row.appendChild(label);
+  label.addEventListener('click',async()=>{
+    setSelected(row,handle,fullPath);
+    $('preview').value=await (await handle.getFile()).text();
+    $('preview').readOnly=false;
+    $('saveBtn').hidden=false;
+    isDirty=false;
+  });
+  row.appendChild(createBtn('🔁',async()=>{await copyHandle(handle,fullPath);}));
+  return row;
+}
+
+$('preview').addEventListener('input',()=>{if(!$('preview').readOnly) isDirty=true;});
+
+$('saveBtn').onclick=async()=>{
+  if(!selected.handle||selected.handle.kind!=='file'||!isDirty) return;
+  const writable=await selected.handle.createWritable();
+  await writable.write($('preview').value);
+  await writable.close();
+  isDirty=false;
+  showToast('已保存');
+};
+
+async function traverseAndConcat(dirHandle,prefix=''){
+  let out='';
+  const entries=[];
+  for await(const [name,hdl] of dirHandle){
+    entries.push({name,hdl});
+  }
+  entries.sort((a,b)=>{
+    if(a.hdl.kind !== b.hdl.kind){
+      return a.hdl.kind === 'file' ? 1 : -1;
+    }
+    return a.name.localeCompare(b.name);
+  });
+  for(const {name,hdl} of entries){
+    if(hdl.kind==='file'){
+      out+=`\n\n===== ${prefix}${name} =====\n${await (await hdl.getFile()).text()}`;
+    }else{
+      out+=await traverseAndConcat(hdl,prefix+name+'/');
+    }
+  }
+  return out;
+}
+</script>
+</body>
+</html>
