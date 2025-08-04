@@ -23,7 +23,7 @@ function BlockForm({ app, plugin, close }: { app: App; plugin: ThinkPlugin; clos
 
   const [category, setCategory] = useState<'计划'|'总结'|'思考'>('思考');
   const [top, setTop] = useState<'生活'|'健康'|'电脑'|'工作'|'其他'>('生活');
-  const themes = useMemo(()=>svc.listThemesByTop(top, 'block', category), [top, category]);
+  const themes = useMemo(()=>svc.listTaskThemesByTop(top, 'block', category), [top, category]);
   const [themePath, setThemePath] = useState(themes[0]?.path || top);
   const themeIcon = (themes.find(t=>t.path===themePath)?.icon) || '';
 
@@ -88,7 +88,7 @@ function BlockForm({ app, plugin, close }: { app: App; plugin: ThinkPlugin; clos
         <div class="setting-item-control">
           {(['生活','健康','电脑','工作','其他'] as const).map(t=>(
             <label style="margin-right:8px;">
-              <input type="radio" name="top" checked={top===t} onChange={()=>{ setTop(t); const ts = svc.listThemesByTop(t,'block',category); setThemePath(ts[0]?.path || t); }}/>
+              <input type="radio" name="top" checked={top===t} onChange={()=>{ setTop(t); const ts = svc.listTaskThemesByTop(t,'block',category); setThemePath(ts[0]?.path || t); }}/>
               <span style="margin-left:4px;">{t}</span>
             </label>
           ))}
@@ -98,7 +98,7 @@ function BlockForm({ app, plugin, close }: { app: App; plugin: ThinkPlugin; clos
       <div class="setting-item"><div class="setting-item-name">主题</div>
         <div class="setting-item-control">
           <select value={themePath} onChange={e=>setThemePath((e.target as HTMLSelectElement).value)} style="min-width:260px;">
-            {svc.listThemesByTop(top,'block',category).map(t=>(
+            {svc.listTaskThemesByTop(top,'block',category).map(t=>(
               <option value={t.path}>{t.icon ? `${t.icon} ` : ''}{t.path}</option>
             ))}
           </select>

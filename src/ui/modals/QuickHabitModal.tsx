@@ -39,7 +39,7 @@ function HabitForm({ app, plugin, close }: { app: App; plugin: ThinkPlugin; clos
 
   // 主题选择：根据预设 tag 顶层匹配（健康/睡眠 -> 顶层=健康）
   const top = (cur.tag || '').split('/')[0] || '生活';
-  const themes = useMemo(()=>svc.listThemesByTop(top, 'block', '打卡'), [top, idx]);
+  const themes = useMemo(()=>svc.listTaskThemesByTop(top, 'block', '打卡'), [top, idx]);
   const [themePath, setThemePath] = useState(themes[0]?.path || top);
   useEffect(()=>{ setThemePath(themes[0]?.path || top); }, [top]);
 

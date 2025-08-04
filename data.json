@@ -198,7 +198,7 @@
   "inputSettings": {
     "base": {
       "task": {
-        "enabled": false,
+        "enabled": true,
         "file": "{{主题}}.md",
         "fields": [
           "任务状态",
