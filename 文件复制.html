@@ -139,6 +139,16 @@ document.addEventListener('keydown',async e=>{
     e.preventDefault();
     await copyHandle(selected.handle,selected.path);
   }
+  // 新增 Ctrl+Shift+S 快捷键保存功能
+  if(e.key.toLowerCase()==='s' && e.ctrlKey && e.shiftKey){
+    e.preventDefault();
+    if(!selected.handle||selected.handle.kind!=='file'||!isDirty) return;
+    const writable=await selected.handle.createWritable();
+    await writable.write($('preview').value);
+    await writable.close();
+    isDirty=false;
+    showToast('已保存（Ctrl+Shift+S）');
+  }
 });
 
 async function renderTree(dirHandle,relativePath,container){
@@ -161,7 +171,7 @@ async function renderTree(dirHandle,relativePath,container){
       const summary=document.createElement('summary');
       summary.textContent=name;
       summary.addEventListener('click',e=>{e.stopPropagation();setSelected(summary,handle,fullPath+'/');});
-      summary.appendChild(createBtn('🔁',async e=>{e.stopPropagation();await copyHandle(handle,fullPath);}));
+      summary.appendChild(createBtn('🔁',async e=>{e.stopPropagation();await copyHandle(handle,fullPath);})); 
       details.appendChild(summary);
       const children=document.createElement('div');
       details.appendChild(children);
@@ -181,7 +191,7 @@ function createFileRow(handle,fullPath,displayName){
     $('saveBtn').hidden=false;
     isDirty=false;
   });
-  row.appendChild(createBtn('🔁',async()=>{await copyHandle(handle,fullPath);}));
+  row.appendChild(createBtn('🔁',async()=>{await copyHandle(handle,fullPath);})); 
   return row;
 }
 
