@@ -579,13 +579,13 @@
         },
         "blocks": {
           "计划": {
-            "enabled": true
+            "enabled": false
           },
           "总结": {
-            "enabled": true
+            "enabled": false
           },
           "思考": {
-            "enabled": true
+            "enabled": false
           }
         }
       },
@@ -598,13 +598,13 @@
         },
         "blocks": {
           "计划": {
-            "enabled": true
+            "enabled": false
           },
           "总结": {
-            "enabled": true
+            "enabled": false
           },
           "思考": {
-            "enabled": true
+            "enabled": false
           }
         }
       },
@@ -617,13 +617,13 @@
         },
         "blocks": {
           "计划": {
-            "enabled": true
+            "enabled": false
           },
           "总结": {
-            "enabled": true
+            "enabled": false
           },
           "思考": {
-            "enabled": true
+            "enabled": false
           }
         }
       },
@@ -636,13 +636,13 @@
         },
         "blocks": {
           "计划": {
-            "enabled": true
+            "enabled": false
           },
           "总结": {
-            "enabled": true
+            "enabled": false
           },
           "思考": {
-            "enabled": true
+            "enabled": false
           }
         }
       },
@@ -655,13 +655,13 @@
         },
         "blocks": {
           "计划": {
-            "enabled": true
+            "enabled": false
           },
           "总结": {
-            "enabled": true
+            "enabled": false
           },
           "思考": {
-            "enabled": true
+            "enabled": false
           }
         }
       },
@@ -759,13 +759,13 @@
         },
         "blocks": {
           "计划": {
-            "enabled": true
+            "enabled": false
           },
           "总结": {
-            "enabled": true
+            "enabled": false
           },
           "思考": {
-            "enabled": true
+            "enabled": false
           },
           "打卡": {
             "enabled": true
@@ -781,13 +781,13 @@
         },
         "blocks": {
           "计划": {
-            "enabled": true
+            "enabled": false
           },
           "总结": {
-            "enabled": true
+            "enabled": false
           },
           "思考": {
-            "enabled": true
+            "enabled": false
           }
         }
       },
@@ -800,13 +800,13 @@
         },
         "blocks": {
           "计划": {
-            "enabled": true
+            "enabled": false
           },
           "总结": {
-            "enabled": true
+            "enabled": false
           },
           "思考": {
-            "enabled": true
+            "enabled": false
           }
         }
       },
@@ -819,13 +819,13 @@
         },
         "blocks": {
           "计划": {
-            "enabled": true
+            "enabled": false
           },
           "总结": {
-            "enabled": true
+            "enabled": false
           },
           "思考": {
-            "enabled": true
+            "enabled": false
           }
         }
       },
@@ -838,13 +838,13 @@
         },
         "blocks": {
           "计划": {
-            "enabled": true
+            "enabled": false
           },
           "总结": {
-            "enabled": true
+            "enabled": false
           },
           "思考": {
-            "enabled": true
+            "enabled": false
           }
         }
       },
@@ -876,13 +876,13 @@
         },
         "blocks": {
           "计划": {
-            "enabled": true
+            "enabled": false
           },
           "总结": {
-            "enabled": true
+            "enabled": false
           },
           "思考": {
-            "enabled": true
+            "enabled": false
           }
         }
       },
@@ -895,13 +895,13 @@
         },
         "blocks": {
           "计划": {
-            "enabled": true
+            "enabled": false
           },
           "总结": {
-            "enabled": true
+            "enabled": false
           },
           "思考": {
-            "enabled": true
+            "enabled": false
           }
         }
       },
@@ -914,13 +914,13 @@
         },
         "blocks": {
           "计划": {
-            "enabled": true
+            "enabled": false
           },
           "总结": {
-            "enabled": true
+            "enabled": false
           },
           "思考": {
-            "enabled": true
+            "enabled": false
           }
         }
       },
@@ -933,13 +933,13 @@
         },
         "blocks": {
           "计划": {
-            "enabled": true
+            "enabled": false
           },
           "总结": {
-            "enabled": true
+            "enabled": false
           },
           "思考": {
-            "enabled": true
+            "enabled": false
           }
         }
       },
@@ -952,13 +952,13 @@
         },
         "blocks": {
           "计划": {
-            "enabled": true
+            "enabled": false
           },
           "总结": {
-            "enabled": true
+            "enabled": false
           },
           "思考": {
-            "enabled": true
+            "enabled": false
           }
         }
       },
@@ -971,13 +971,13 @@
         },
         "blocks": {
           "计划": {
-            "enabled": true
+            "enabled": false
           },
           "总结": {
-            "enabled": true
+            "enabled": false
           },
           "思考": {
-            "enabled": true
+            "enabled": false
           }
         }
       },
@@ -990,13 +990,13 @@
         },
         "blocks": {
           "计划": {
-            "enabled": true
+            "enabled": false
           },
           "总结": {
-            "enabled": true
+            "enabled": false
           },
           "思考": {
-            "enabled": true
+            "enabled": false
           }
         }
       },
@@ -1009,13 +1009,13 @@
         },
         "blocks": {
           "计划": {
-            "enabled": true
+            "enabled": false
           },
           "总结": {
-            "enabled": true
+            "enabled": false
           },
           "思考": {
-            "enabled": true
+            "enabled": false
           }
         }
       },
@@ -1028,13 +1028,13 @@
         },
         "blocks": {
           "计划": {
-            "enabled": true
+            "enabled": false
           },
           "总结": {
-            "enabled": true
+            "enabled": false
           },
           "思考": {
-            "enabled": true
+            "enabled": false
           }
         }
       },
@@ -1047,13 +1047,13 @@
         },
         "blocks": {
           "计划": {
-            "enabled": true
+            "enabled": false
           },
           "总结": {
-            "enabled": true
+            "enabled": false
           },
           "思考": {
-            "enabled": true
+            "enabled": false
           }
         }
       },
@@ -1066,13 +1066,13 @@
         },
         "blocks": {
           "计划": {
-            "enabled": true
+            "enabled": false
           },
           "总结": {
-            "enabled": true
+            "enabled": false
           },
           "思考": {
-            "enabled": true
+            "enabled": false
           }
         }
       },
@@ -1085,12 +1085,30 @@
         },
         "blocks": {
           "计划": {
+            "enabled": false
+          },
+          "总结": {
+            "enabled": false
+          },
+          "思考": {
+            "enabled": false
+          }
+        }
+      },
+      {
+        "path": "工作",
+        "icon": "🖥️",
+        "task": {
+          "enabled": false
+        },
+        "blocks": {
+          "思考": {
             "enabled": true
           },
           "总结": {
             "enabled": true
           },
-          "思考": {
+          "打卡": {
             "enabled": true
           }
         }
