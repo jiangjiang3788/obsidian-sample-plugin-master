@@ -32,29 +32,15 @@ export class InputService {
   private applyFileTemplate(tpl: string, themePath: string) {
     return tpl.replace(/\{\{\s*主题\s*\}\}/g, lastSegment(themePath));
   }
-
-  private resolveTargetFilePath(
-    themePath: string,
-    kind: 'task' | 'block',
-    blockName?: string,
-  ): string | null {
+  private resolveTargetFilePath(themePath: string): string | null {
     const s     = this.settings;
     const theme = (s.themes || []).find((t: any) => t.path === themePath) || null;
-
-    if (kind === 'task') {
-      const file = theme?.task?.file ?? s.base?.task?.file;
-      return file ? this.applyFileTemplate(file, themePath) : null;
-    }
-
-    // block
-    const tBlk  = theme?.blocks?.[blockName!];
-    const bBlk  = s.base?.blocks?.[blockName!];
-    const file  = tBlk?.file ?? bBlk?.file;
+    const file  = theme?.task?.file ?? s.base?.task?.file;
     return file ? this.applyFileTemplate(file, themePath) : null;
   }
 
   /* ------------------------------------------------------------------ */
-  /* 二、确保文件 / 目录存在                                             */
+  /* 二、文件 / 目录辅助                                                 */
   /* ------------------------------------------------------------------ */
   private async ensureFolder(path: string) {
     if (!path) return;
@@ -75,55 +61,70 @@ export class InputService {
     if (folder) await this.ensureFolder(folder);
     return await this.app.vault.create(fp, '');
   }
-  private async appendToFile(file: TFile, payload: string) {
-    const txt = await this.app.vault.read(file);
-    await this.app.vault.modify(file, (txt.endsWith('\n') ? txt : txt + '\n') + payload + '\n');
+
+  /* ------------------------------------------------------------------ */
+  /* 三、在指定 ## 标题下插入                                            */
+  /* ------------------------------------------------------------------ */
+  private async appendUnderHeader(file: TFile, headerTitle: string, payload: string) {
+    const raw = await this.app.vault.read(file);
+    const esc = headerTitle.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const re  = new RegExp(`^##\\s+${esc}\\s*$`, 'm');
+    const lines = raw.split('\n');
+
+    // 若标题不存在 → 文件末尾加标题
+    if (!re.test(raw)) {
+      if (lines.length && lines[lines.length - 1].trim() !== '') lines.push('');
+      lines.push(`## ${headerTitle}`, '');
+    }
+
+    // 找标题行及块末尾
+    const idxHeader = lines.findIndex(l => re.test(l));
+    let idxInsert = idxHeader + 1;
+    while (idxInsert < lines.length && !/^##\s+/.test(lines[idxInsert])) idxInsert++;
+
+    lines.splice(idxInsert, 0, payload);
+    await this.app.vault.modify(file, lines.join('\n'));
   }
 
   /* ------------------------------------------------------------------ */
-  /* 三、写入 API                                                        */
+  /* 四、写入任务 / 块                                                   */
   /* ------------------------------------------------------------------ */
-  /** 返回实际文件路径，并在控制台打印写入位置 */
   async writeTask(themePath: string, fileHint: string | null, payload: string): Promise<string> {
-    const fp = fileHint ?? this.resolveTargetFilePath(themePath, 'task');
+    const fp = fileHint ?? this.resolveTargetFilePath(themePath);
     if (!fp) throw new Error('未配置任务写入文件路径');
-    console.log(`[Think] 准备写入任务 → ${fp}`);
-    await this.appendToFile(await this.getOrCreateFile(fp), payload);
-    console.log(`[Think] 已写入任务 → ${fp}`);
+    const file = await this.getOrCreateFile(fp);
+    await this.appendUnderHeader(file, themePath, payload);
     return fp;
   }
 
   async writeBlock(themePath: string, blockName: string, fileHint: string | null, payload: string): Promise<string> {
-    const fp = fileHint ?? this.resolveTargetFilePath(themePath, 'block', blockName);
+    const fp = fileHint ?? this.resolveTargetFilePath(themePath);
     if (!fp) throw new Error(`未配置 ${blockName} 写入文件路径`);
-    console.log(`[Think] 准备写入 ${blockName} → ${fp}`);
-    await this.appendToFile(await this.getOrCreateFile(fp), payload);
-    console.log(`[Think] 已写入 ${blockName} → ${fp}`);
+    const file = await this.getOrCreateFile(fp);
+    await this.appendUnderHeader(file, themePath, payload);
     return fp;
   }
 
   /* ------------------------------------------------------------------ */
-  /* 四、分类 / 主题检索                                                 */
+  /* 五、分类 / 主题检索                                                 */
   /* ------------------------------------------------------------------ */
-  /** 仅返回“至少存在启用 task” 的顶级分类 */
+  /** 返回开启 task 的顶级分类 */
   getTaskTopCategories(): string[] {
     const set = new Set<string>();
     (this.settings.themes || []).forEach((t: any) => {
       if (t.task?.enabled) set.add(t.path.split('/')[0]);
     });
-    return Array.from(set).sort((a, b) => a.localeCompare(b, 'zh'));
+    return Array.from(set).sort((a,b)=>a.localeCompare(b,'zh'));
   }
 
-  /** 返回指定 top 下所有启用 task 的主题（完整配置） */
+  /** 返回指定 top 下所有启用 task 的主题 */
   listTaskThemesByTop(top: string): TaskThemeConfig[] {
     const { themes = [], base = {} } = this.settings;
     const baseTask = base.task ?? {};
 
     return themes
-      .filter((t: any) =>
-        (t.path === top || t.path.startsWith(top + '/')) && (t.task?.enabled ?? false),
-      )
-      .map((t: any) => {
+      .filter((t: any)=>(t.path===top||t.path.startsWith(top+'/')) && (t.task?.enabled??false))
+      .map((t: any)=>{
         const task = t.task ?? {};
         return {
           path         : t.path,
@@ -136,20 +137,14 @@ export class InputService {
       });
   }
 
-  /* ----- 可选：按块检索主题（仅返回 path/icon） ----- */
-  listBlockThemesByTop(top: string, blockName: string) {
+  /** ★ 新增：返回指定 top 下、启用 block(category) 的主题（仅 path/icon） */
+  listBlockThemesByTop(top: string, category: string): { path: string; icon?: string }[] {
     return (this.settings.themes || [])
-      .filter((t: any) =>
-        (t.path === top || t.path.startsWith(top + '/')) &&
-        (t.blocks?.[blockName]?.enabled ?? false),
+      .filter((t: any)=>
+        (t.path===top || t.path.startsWith(top+'/')) &&
+        (t.blocks?.[category]?.enabled ?? false)
       )
-      .map((t: any) => ({ path: t.path, icon: t.icon }))
-      .sort((a, b) => a.path.localeCompare(b.path, 'zh'));
-  }
-
-  /* ---------- 向后兼容旧接口 ---------- */
-  /** @deprecated 改用 listTaskThemesByTop */
-  listThemesByTop(top: string) {
-    return this.listTaskThemesByTop(top);
+      .map((t: any)=>({ path: t.path, icon: t.icon }))
+      .sort((a,b)=>a.path.localeCompare(b.path,'zh'));
   }
 }
