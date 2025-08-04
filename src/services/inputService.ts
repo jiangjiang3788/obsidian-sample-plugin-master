@@ -83,16 +83,23 @@ export class InputService {
   /* ------------------------------------------------------------------ */
   /* 三、写入 API                                                        */
   /* ------------------------------------------------------------------ */
-  async writeTask(themePath: string, fileHint: string | null, payload: string) {
+  /** 返回实际文件路径，并在控制台打印写入位置 */
+  async writeTask(themePath: string, fileHint: string | null, payload: string): Promise<string> {
     const fp = fileHint ?? this.resolveTargetFilePath(themePath, 'task');
     if (!fp) throw new Error('未配置任务写入文件路径');
+    console.log(`[Think] 准备写入任务 → ${fp}`);
     await this.appendToFile(await this.getOrCreateFile(fp), payload);
+    console.log(`[Think] 已写入任务 → ${fp}`);
+    return fp;
   }
 
-  async writeBlock(themePath: string, blockName: string, fileHint: string | null, payload: string) {
+  async writeBlock(themePath: string, blockName: string, fileHint: string | null, payload: string): Promise<string> {
     const fp = fileHint ?? this.resolveTargetFilePath(themePath, 'block', blockName);
     if (!fp) throw new Error(`未配置 ${blockName} 写入文件路径`);
+    console.log(`[Think] 准备写入 ${blockName} → ${fp}`);
     await this.appendToFile(await this.getOrCreateFile(fp), payload);
+    console.log(`[Think] 已写入 ${blockName} → ${fp}`);
+    return fp;
   }
 
   /* ------------------------------------------------------------------ */
