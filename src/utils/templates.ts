@@ -2,7 +2,7 @@
 import { EMOJI } from '../config/constants';
 import { normalizeDateStr } from './date';
 
-/** 返回路径最后一段 */
+/** 取路径最后一段：a/b/c -> c */
 export function lastSegment(path: string) {
   return (path || '').split('/').filter(Boolean).pop() || path || '';
 }
@@ -11,38 +11,38 @@ export function lastSegment(path: string) {
 /* 新版模板渲染任务行（无自动 #标签）                                  */
 /* ------------------------------------------------------------------ */
 export function makeTaskLine(opts: {
-  themePath?: string;          // 不再自动追加标签，可忽略
-  template?: string;           // 如 "{{@任务前缀}} {{@图标}}{{任务内容}} ..."
+  themePath?: string;
+  template?: string;
   fields: Record<string, string | number | boolean | null | undefined>;
 }): string {
   const { template = '{{前缀}}{{内容}}', fields } = opts;
 
   /* ---------- 字段安全化 ---------- */
   const safe: Record<string, string> = {};
-  Object.entries(fields || {}).forEach(([k, v]) => {
-    safe[k] = v == null ? '' : String(v);
-  });
+  Object.entries(fields || {}).forEach(([k, v]) => { safe[k] = v == null ? '' : String(v); });
   if (!('前缀' in safe))      safe['前缀'] = '';
   if (!('任务前缀' in safe))  safe['任务前缀'] = safe['前缀'];
 
-  /* ---------- 渲染占位符 ---------- */
-  // 支持 {{key}} 与 {{@key}}
-  const PLACEHOLDER = /\{\{\s*@?([^}]+?)\s*\}\}/g;
+  /* ---------- 占位符替换 ---------- */
+  const PLACEHOLDER = /\{\{\s*@?([^}]+?)\s*\}\}/g;   // 支持 {{key}} / {{@key}}
   let line = template.replace(PLACEHOLDER, (_m, p1) => {
     const key = String(p1).trim();
     return Object.prototype.hasOwnProperty.call(safe, key) ? safe[key] : '';
   });
 
-  /* ---------- 若模板没写前缀占位符则补默认待办符 ---------- */
-  if (!/\{\{\s*@?(?:前缀|任务前缀)\s*\}\}/.test(template) && !line.startsWith('- [')) {
-    line = '- [ ] ' + line;
+  /* ---------- 前缀兜底 ---------- */
+  const hasPrefixSlot = /\{\{\s*@?(?:前缀|任务前缀)\s*\}\}/.test(template);
+  if (!hasPrefixSlot && !line.startsWith('- [')) {
+    const fallback = safe['前缀'] || '- [ ] ';
+    line = fallback + line;
   }
 
+  /* ---------- 压缩多余空格 ---------- */
   return line.replace(/[ \t]+/g, ' ').trim();
 }
 
 /* ------------------------------------------------------------------ */
-/* 旧版任务行 & 生成块：保持原有逻辑                                   */
+/* 旧版任务行（带 emoji & #标签）                                      */
 /* ------------------------------------------------------------------ */
 export function makeTaskLineLegacy(opts: {
   prefix: '- [ ] ' | '- [x] ' | '- [-] ' | '';
@@ -77,7 +77,8 @@ export function makeTaskLineLegacy(opts: {
   addDate(EMOJI.scheduled, opts.scheduled);
   addDate(EMOJI.due,       opts.due);
 
-  if (opts.repeat) pieces.push(`${EMOJI.repeat} every ${opts.repeat}${opts.repeat === 'day' ? '' : 's'}`);
+  if (opts.repeat)
+    pieces.push(`${EMOJI.repeat} every ${opts.repeat}${opts.repeat === 'day' ? '' : 's'}`);
 
   if (opts.statusEmoji && opts.markDate)
     pieces.push(`${opts.statusEmoji} ${normalizeDateStr(opts.markDate)}`);
@@ -85,6 +86,9 @@ export function makeTaskLineLegacy(opts: {
   return pieces.join(' ').trim();
 }
 
+/* ------------------------------------------------------------------ */
+/* 生成块（计划/总结/思考/打卡）                                       */
+/* ------------------------------------------------------------------ */
 export function makeBlock(opts: {
   category: string;
   dateISO?: string;
@@ -96,10 +100,10 @@ export function makeBlock(opts: {
 }) {
   const lines: string[] = ['<!-- start -->'];
   lines.push(`分类:: ${opts.category}`);
-  if (opts.dateISO)   lines.push(`日期:: ${normalizeDateStr(opts.dateISO)}`);
-  if (opts.themeLabel)lines.push(`主题:: ${opts.themeLabel}`);
-  if (opts.icon)      lines.push(`图标:: ${opts.icon}`);
-  if (opts.tags?.length) lines.push(`标签:: ${opts.tags.join(', ')}`);
+  if (opts.dateISO)     lines.push(`日期:: ${normalizeDateStr(opts.dateISO)}`);
+  if (opts.themeLabel)  lines.push(`主题:: ${opts.themeLabel}`);
+  if (opts.icon)        lines.push(`图标:: ${opts.icon}`);
+  if (opts.tags?.length)lines.push(`标签:: ${opts.tags.join(', ')}`);
   if (opts.extra) Object.entries(opts.extra).forEach(([k, v]) => lines.push(`${k}:: ${String(v)}`));
 
   const content = (opts.content || '').trim();
