@@ -1,129 +1,167 @@
+// src/ui/modals/QuickTaskModal.tsx
 /** @jsxImportSource preact */
 import { App, Modal, Notice } from 'obsidian';
 import { h, render } from 'preact';
 import { useState } from 'preact/hooks';
 import type ThinkPlugin from '../../main';
-import { InputService } from '../../services/inputService';
+import { InputService, TaskThemeConfig } from '../../services/inputService';
 import { makeTaskLine } from '../../utils/templates';
-import { EMOJI } from '../../config/constants';
 
-function todayISO() {
-  const m = (window as any).moment();
-  return m.format('YYYY-MM-DD');
-}
-function nowHHMM() {
-  const m = (window as any).moment();
-  return m.format('HH:mm');
-}
+/* ---------------- 工具函数 ---------------- */
+const todayISO = () => (window as any).moment().format('YYYY-MM-DD');
+const nowHHMM  = () => (window as any).moment().format('HH:mm');
+const lastSeg  = (p: string) => p.split('/').pop() ?? p;
 
+/* ===================================================================== */
+/*  Modal 外壳                                                           */
+/* ===================================================================== */
 export class QuickTaskModal extends Modal {
-  constructor(private plugin: ThinkPlugin) {
-    super(plugin.app);
-  }
-  onOpen() {
-    render(<TaskForm app={this.app} plugin={this.plugin} close={() => this.close()} />, this.contentEl);
-  }
-  onClose() {
-    this.contentEl.empty();
-  }
+  constructor(private plugin: ThinkPlugin) { super(plugin.app); }
+  onOpen()  { render(<TaskForm app={this.app} plugin={this.plugin} close={() => this.close()}/>, this.contentEl); }
+  onClose() { this.contentEl.empty(); }
 }
 
-function TaskForm({ app, plugin, close }: { app: App; plugin: ThinkPlugin; close: () => void; }) {
+/* ===================================================================== */
+/*  Main 表单                                                            */
+/* ===================================================================== */
+function TaskForm({ app, plugin, close }: { app: App; plugin: ThinkPlugin; close: () => void }) {
   const svc = new InputService(app, plugin);
 
-  const topCategories = svc.getTopCategories();
-  const [top, setTop] = useState(topCategories[0] ?? '');
-  const themes = svc.listTaskThemesByTop(top);
-  const [themePath, setThemePath] = useState(themes[0]?.path || '');
-  const currentTheme = themes.find(t => t.path === themePath);
-  const themeIcon = currentTheme?.icon || '';
-  const fields = currentTheme?.fields ?? [];
+  /* ---------- 分类 & 主题 ---------- */
+  const [top,    setTop   ] = useState(svc.getTaskTopCategories()[0] || '');
+  const [themes, setThemes] = useState<TaskThemeConfig[]>(svc.listTaskThemesByTop(top));
+  const [theme,  setTheme ] = useState<TaskThemeConfig | null>(themes[0] || null);
 
-  const [form, setForm] = useState<Record<string, string>>({
-    '任务内容': '',
-    '日期': todayISO(),
-    '时间': nowHHMM(),
-    '时长': '',
+  /* ---------- 动态字段 ---------- */
+  const options = theme?.fieldOptions ?? {};
+  const init: Record<string,string> = {};
+  (theme?.fields || []).forEach(f=>{
+    init[f] = f==='日期' ? todayISO() :
+              f==='时间' ? nowHHMM()  :
+              options[f]?.[0] ?? '';
   });
+  const [form, setForm] = useState(init);
+  const update = (k:string,v:string)=>setForm(o=>({...o,[k]:v}));
 
-  const updateField = (field: string, value: string) => {
-    setForm(f => ({ ...f, [field]: value }));
-  };
-
-  const onSubmit = async () => {
-    const title = form['任务内容']?.trim();
-    if (!title) {
-      new Notice('请填写任务内容');
-      return;
-    }
+  /* ---------- 保存 ---------- */
+  async function save() {
+    const title = form['内容']?.trim() || form['任务内容']?.trim();
+    if (!title) { new Notice('请填写任务内容'); return; }
 
     const line = makeTaskLine({
-      prefix: '- [ ] ',
-      title,
-      themePath,
-      icon: themeIcon,
-      due: form['日期'],
-      timeHHMM: form['时间'],
-      duration: form['时长'] || undefined,
+      themePath : theme!.path,
+      template  : theme?.template,          // 从 inputSettings.template 继承
+      fields    : { ...form, 前缀: '- [ ] ' }
     });
 
     try {
-      await svc.writeTask(themePath, null, line);
-      new Notice('已保存任务');
-      plugin.dataStore?.notifyChange?.();
-      close();
-    } catch (e: any) {
-      new Notice('保存失败：' + e.message);
-    }
-  };
+      await svc.writeTask(theme!.path, null, line);
+      new Notice('已保存任务'); plugin.dataStore?.notifyChange?.(); close();
+    } catch(e:any){ new Notice('保存失败：'+e.message); }
+  }
 
+  /* ---------- 渲染 ---------- */
   return (
     <div class="think-modal">
-      <h3>快速录入 · 任务</h3>
+      <h3 style="margin-bottom:1rem;">快速录入 · 任务</h3>
 
-      <div class="setting-item"><div class="setting-item-name">大类</div>
-        <div class="setting-item-control">
-          {topCategories.map(t => (
-            <label style="margin-right:8px;">
-              <input type="radio" name="top" checked={top === t} onChange={() => {
-                setTop(t);
-                const ts = svc.listTaskThemesByTop(t);
-                setThemePath(ts[0]?.path || '');
-              }} />
-              <span style="margin-left:4px;">{t}</span>
-            </label>
-          ))}
-        </div>
-      </div>
+      {/* ---- 顶级分类 ---- */}
+      <Field label="大类">
+        {svc.getTaskTopCategories().map(c => (
+          <Radio
+            key={c}
+            value={c}
+            label={c}
+            checked={top === c}
+            onChange={()=>{
+              setTop(c);
+              const ts = svc.listTaskThemesByTop(c);
+              setThemes(ts); setTheme(ts[0] || null);
+            }}
+          />
+        ))}
+      </Field>
 
-      <div class="setting-item"><div class="setting-item-name">主题</div>
-        <div class="setting-item-control">
-          <select value={themePath} onChange={e => setThemePath((e.target as HTMLSelectElement).value)} style="min-width:240px;">
-            {svc.listTaskThemesByTop(top).map(t => (
-              <option value={t.path}>{t.icon ? `${t.icon} ` : ''}{t.path}</option>
-            ))}
-          </select>
-        </div>
-      </div>
-
-      {fields.map(field => (
-        <div class="setting-item">
-          <div class="setting-item-name">{field}</div>
-          <div class="setting-item-control">
-            <input
-              value={form[field] ?? ''}
-              placeholder={`输入${field}...`}
-              onInput={e => updateField(field, (e.target as HTMLInputElement).value)}
-              type={field === '日期' ? 'date' : field === '时间' ? 'time' : 'text'}
+      {/* ---- 主题 ---- */}
+      {theme && (
+        <Field label="主题">
+          {themes.map(t => (
+            <Radio
+              key={t.path}
+              name="theme"
+              value={t.path}
+              label={lastSeg(t.path)}
+              checked={theme.path === t.path}
+              onChange={()=>setTheme(t)}
             />
-          </div>
-        </div>
-      ))}
+          ))}
+        </Field>
+      )}
 
-      <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:8px;">
-        <button class="mod-cta" onClick={onSubmit}>提交 ↩︎</button>
+      {/* ---- 动态字段 ---- */}
+      {theme?.fields.map(f => {
+        const choices = options[f];
+        return (
+          <Field key={f} label={f}>
+            {choices?.length ? (
+              choices.map(v=>(
+                <Radio
+                  key={v}
+                  name={f}
+                  value={v}
+                  label={v}
+                  checked={form[f]===v}
+                  onChange={()=>update(f,v)}
+                />
+              ))
+            ) : (
+              <input
+                style="width:100%;"
+                type={f==='日期'?'date':f==='时间'?'time':'text'}
+                value={form[f]}
+                onInput={e=>update(f,(e.target as HTMLInputElement).value)}
+              />
+            )}
+          </Field>
+        );
+      })}
+
+      <div style="display:flex;justify-content:flex-end;margin-top:1rem;gap:.5rem;">
+        <button class="mod-cta" onClick={save}>提交 ↩︎</button>
         <button onClick={close}>取消</button>
       </div>
     </div>
+  );
+}
+
+/* ===================================================================== */
+/*  小组件                                                               */
+/* ===================================================================== */
+function Field({label, children}: {label:string; children:any}) {
+  return (
+    <div style="margin-bottom:12px;width:100%;">
+      <div style="margin-bottom:4px;font-weight:600;">{label}</div>
+      <div style="display:flex;flex-wrap:wrap;gap:8px;width:100%;">{children}</div>
+    </div>
+  );
+}
+
+/** 带原生蓝点的单选按钮 */
+function Radio(
+  {value, checked, onChange, label, name}: 
+  {value:string; checked:boolean; onChange:()=>void; label?:string; name?:string}
+) {
+  return (
+    <label style="display:flex;align-items:center;gap:4px;cursor:pointer;">
+      <input
+        type="radio"
+        name={name || 'top'}
+        value={value}
+        checked={checked}
+        onChange={onChange}
+        style="appearance:radio;-webkit-appearance:radio;"
+      />
+      <span>{label ?? value}</span>
+    </label>
   );
 }
