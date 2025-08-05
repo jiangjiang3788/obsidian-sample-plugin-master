@@ -20,13 +20,19 @@ function Form({app,plugin,close}:{app:App;plugin:ThinkPlugin;close:()=>void}) {
   const svc = new InputService(app,plugin);
 
   const [cat,setCat]  = useState<'计划'|'总结'|'思考'>('思考');
-  const [top,setTop]  = useState<'生活'|'健康'|'电脑'|'工作'|'其他'>('生活');
 
+  /** ---------- 动态获取顶级分类 ---------- */
+  const initTops = svc.getBlockTopCategories(cat);
+  const [topCats,setTopCats] = useState<string[]>(initTops);
+  const [top,setTop]  = useState<string>(initTops[0] ?? '');
+
+  /** ---------- 主题列表 ---------- */
   const buildThemes = ()=>svc.listBlockThemesByTop(top,cat);
   const [themes,setThemes]=useState(buildThemes());
   const [theme,setTheme]  = useState(themes[0]?.path||top);
   const themeIcon         = themes.find(t=>t.path===theme)?.icon??'';
 
+  /* ---------- 其他字段 ---------- */
   const baseBlk = plugin.inputSettings?.base?.blocks?.[cat] ?? {};
   const opts    = baseBlk.fieldOptions ?? {};
   const periods = Array.isArray(opts['周期']) ? opts['周期'] : [];
@@ -39,16 +45,22 @@ function Form({app,plugin,close}:{app:App;plugin:ThinkPlugin;close:()=>void}) {
   const [period,setPeriod]=useState( (cat!=='思考' && periods.includes('周')) ? '周' : '');
   const [type,setType]    = useState( cat==='思考' && types.includes('思考') ? '思考' : '');
 
-  /* -------- 切换大类 / 类别 -------- */
-  const refresh = (newTop=top,newCat=cat)=>{
-    const ts = svc.listBlockThemesByTop(newTop,newCat);
-    setThemes(ts); setTheme(ts[0]?.path||newTop);
+  /* ---------- 刷新大类 / 主题 ---------- */
+  const refresh = (newCat=cat,newTop: string|null=null)=>{
+    const newTops = svc.getBlockTopCategories(newCat);
+    setTopCats(newTops);
+    const resolvedTop = newTop ?? (newTops[0] ?? '');
+    setTop(resolvedTop);
+
+    const ts = svc.listBlockThemesByTop(resolvedTop,newCat);
+    setThemes(ts); setTheme(ts[0]?.path||resolvedTop);
+
     /* 重设默认周期/分类 */
     setPeriod( (newCat!=='思考' && periods.includes('周')) ? '周' : '');
     setType  ( newCat==='思考' && types.includes('思考') ? '思考' : '');
   };
 
-  /* -------- 保存 -------- */
+  /* ---------- 保存 ---------- */
   const save = async ()=>{
     if(!txt.trim()){ new Notice('请填写内容'); return; }
 
@@ -75,27 +87,28 @@ function Form({app,plugin,close}:{app:App;plugin:ThinkPlugin;close:()=>void}) {
     }
   };
 
-  /* -------- UI -------- */
+  /* ---------- UI ---------- */
   return (
     <div class="think-modal">
       <h3 style="margin-bottom:1rem;">快速录入 · {cat}</h3>
 
+      {/* 类别 */}
       <Field label="类别">
         {(['计划','总结','思考'] as const).map(c=>(
-          <Radio key={c} checked={cat===c} label={c} onChange={()=>{
-            setCat(c); refresh(top,c);
-          }}/>
+          <Radio key={c} checked={cat===c} label={c} onChange={()=>{ setCat(c); refresh(c,null); }}/>
         ))}
       </Field>
 
+      {/* 大类（动态） */}
       <Field label="大类">
-        {(['生活','健康','电脑','工作','其他'] as const).map(t=>(
+        {topCats.map(t=>(
           <Radio key={t} checked={top===t} label={t} onChange={()=>{
-            setTop(t); refresh(t,cat);
+            setTop(t); refresh(cat,t);
           }}/>
         ))}
       </Field>
 
+      {/* 主题 */}
       <Field label="主题">
         {themes.map(t=>(
           <Radio key={t.path} name="theme" checked={theme===t.path}

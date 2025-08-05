@@ -131,6 +131,17 @@ export class InputService {
     return [...set].sort((a, b) => a.localeCompare(b, 'zh'));
   }
 
+  /** 返回启用指定 block 的顶级分类（计划 / 总结 / 思考 / 打卡） */
+  getBlockTopCategories(blockName: string): string[] {
+    const set = new Set<string>();
+    (this.settings.themes || []).forEach((t: any) => {
+      if (t.blocks?.[blockName]?.enabled === true) {
+        set.add(t.path.split('/')[0]);
+      }
+    });
+    return [...set].sort((a, b) => a.localeCompare(b, 'zh'));
+  }
+
   /** 返回指定顶级分类下启用 task 的完整主题配置 */
   listTaskThemesByTop(top: string): TaskThemeConfig[] {
     const { themes = [], base = {} } = this.settings;

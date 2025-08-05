@@ -10,18 +10,11 @@ import { makeBlock } from '../../utils/templates';
 /* ---------- 工具 ---------- */
 const todayISO = () => (window as any).moment().format('YYYY-MM-DD');
 const lastSeg  = (p: string) => p.split('/').pop() ?? p;
-
-type Preset = {
-  tag: string;                  // 生活/早起 之类
-  starCount?: number;           // 最大评分
-  displayMode?: 'image' | 'emoji';
-  emojiMapping?: string[];      // 暂未用
-  imageMapping?: string[];      // 暂未用
-};
+const INPUT_W  = '140px';                        // 日期 & 评分统一宽度
 
 export class QuickHabitModal extends Modal {
   constructor(private plugin: ThinkPlugin) { super(plugin.app); }
-  onOpen()  { render(<HabitForm app={this.app} plugin={this.plugin} close={()=>this.close()}/>, this.contentEl); }
+  onOpen()  { render(<HabitForm app={this.app} plugin={this.plugin} close={() => this.close()}/>, this.contentEl); }
   onClose() { this.contentEl.empty(); }
 }
 
@@ -30,46 +23,51 @@ function HabitForm(
 ) {
   const svc = new InputService(app, plugin);
 
-  /* ---------- 读取 presets ---------- */
-  const presets: Preset[] = plugin.inputSettings?.base?.blocks?.['打卡']?.presets ?? [];
-  const [presetIdx, setPresetIdx] = useState(0);
-  const curPreset = presets[presetIdx] ?? { tag: '' };
+  /* ---------- 顶级分类 ---------- */
+  const topCats = svc.getBlockTopCategories('打卡');
+  const [top, setTop] = useState(topCats[0] ?? '');
 
-  /* ---------- 大类 / 主题 ---------- */
-  const initTop = (curPreset.tag || '').split('/')[0] || '生活';
-  const [top, setTop] = useState<typeof initTop>(initTop);
-
+  /* ---------- 主题列表 ---------- */
   const buildThemes = () => svc.listBlockThemesByTop(top, '打卡');
   const [themes, setThemes] = useState(buildThemes());
   const [themePath, setThemePath] = useState(themes[0]?.path || top);
   const themeIcon = themes.find(t => t.path === themePath)?.icon ?? '';
 
+  /* ---------- 动态读取 starCount ---------- */
+  function getStarMax(path: string): number {
+    const th = (plugin.inputSettings?.themes || []).find((t: any) => t.path === path);
+    const blk = th?.blocks?.['打卡'] || {};
+    if (typeof blk.starCount === 'number') return blk.starCount;
+    if (Array.isArray(blk.emojiMapping))  return blk.emojiMapping.length;
+    if (Array.isArray(blk.imageMapping))  return blk.imageMapping.length;
+    return 5;                              // 默认
+  }
+
+  const [starMax, setStarMax] = useState(getStarMax(themePath));
+
   /* ---------- 其他字段 ---------- */
   const [dateISO, setDateISO] = useState(todayISO());
   const [content, setContent] = useState('');
+  const [score,   setScore]   = useState(1);
 
-  /* ---------- 评分 ---------- */
-  const [score, setScore] = useState(1);
+  /* ---------- 主题变化时同步评分上限 ---------- */
   useEffect(() => {
-    const max = curPreset.starCount || 5;
-    if (score > max) setScore(max);
-    if (score < 1)   setScore(1);
-  }, [presetIdx]);
+    const mx = getStarMax(themePath);
+    setStarMax(mx);
+    if (score > mx) setScore(mx);
+  }, [themePath]);
 
-  /* ---------- 切换预设 ---------- */
-  function choosePreset(i: number) {
-    setPresetIdx(i);
-    const newTop = (presets[i].tag || '').split('/')[0] || '生活';
-    setTop(newTop);
-    const ts = svc.listBlockThemesByTop(newTop, '打卡');
+  /* ---------- 切换大类 ---------- */
+  function chooseTop(t: string) {
+    setTop(t);
+    const ts = svc.listBlockThemesByTop(t, '打卡');
     setThemes(ts);
-    setThemePath(ts[0]?.path || newTop);
-    setScore(1);
+    setThemePath(ts[0]?.path || t);
   }
 
   /* ---------- 提交 ---------- */
   async function onSubmit() {
-    if (!curPreset.tag) { new Notice('请先配置打卡 presets'); return; }
+    if (!content.trim()) { new Notice('请填写内容'); return; }
 
     const blockText = makeBlock({
       category   : '打卡',
@@ -77,7 +75,7 @@ function HabitForm(
       themeLabel : top,
       icon       : themeIcon,
       content    : content,
-      extra      : { '评分': String(score), '预设': curPreset.tag }
+      extra      : { '评分': String(score) }        // 仅评分
     });
 
     try {
@@ -91,38 +89,18 @@ function HabitForm(
   }
 
   /* ---------- 渲染 ---------- */
-  const max = curPreset.starCount || 5;
-
   return (
     <div class="think-modal">
       <h3 style="margin-bottom:1rem;">快速录入 · 打卡</h3>
 
-      {/* 预设 */}
-      <Field label="预设">
-        {presets.map((p, i) => (
-          <Radio
-            key={i}
-            value={String(i)}
-            checked={presetIdx === i}
-            onChange={() => choosePreset(i)}
-            label={p.tag || `预设${i + 1}`}
-          />
-        ))}
-      </Field>
-
       {/* 大类 */}
       <Field label="大类">
-        {(['生活', '健康', '电脑', '工作', '其他'] as const).map(t => (
+        {topCats.map(t => (
           <Radio
             key={t}
             value={t}
             checked={top === t}
-            onChange={() => {
-              setTop(t);
-              const ts = svc.listBlockThemesByTop(t, '打卡');
-              setThemes(ts);
-              setThemePath(ts[0]?.path || t);
-            }}
+            onChange={() => chooseTop(t)}
             label={t}
           />
         ))}
@@ -148,19 +126,19 @@ function HabitForm(
           type="date"
           value={dateISO}
           onChange={e => setDateISO((e.target as HTMLInputElement).value)}
-          style="min-width:140px;"
+          style={{ width: INPUT_W }}
         />
       </Field>
 
       {/* 评分 */}
-      <Field label={`评分 (1~${max})`}>
+      <Field label={`评分 (1~${starMax})`}>
         <input
           type="number"
           min={1}
-          max={max}
+          max={starMax}
           value={score}
           onInput={e => setScore(Number((e.target as HTMLInputElement).value))}
-          style="width:80px;"
+          style={{ width: INPUT_W }}
         />
       </Field>
 
