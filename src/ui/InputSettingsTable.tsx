@@ -1,6 +1,6 @@
 // src/ui/InputSettingsTable.tsx
 /** @jsxImportSource preact */
-// InputSettingsTable.tsx —— 极简表格 UI（单击单元格可编辑 JSON/图标 + 可折叠）
+// InputSettingsTable.tsx —— 紧凑表格 UI（单击单元格可编辑 JSON/图标 + 可折叠）
 
 import { useState, useMemo } from 'preact/hooks';
 import {
@@ -20,6 +20,10 @@ const ENABLE_TEXT   = '✅';
 const DISABLE_TEXT  = '❌';
 const INHERIT_TEXT  = '🔽';
 const OVERRIDE_TEXT = '📄';
+
+/* 行间距（表格更紧凑） */
+const ROW_PADDING_Y = 0.5; // 0.5 × theme.spacing = 4px
+const CELL_PADDING_X = 1;  // 1 × theme.spacing  = 8px
 
 /* ---------- 主组件 ---------- */
 interface Props { plugin: ThinkPlugin }
@@ -138,7 +142,7 @@ export function InputSettingsTable({ plugin }: Props) {
 
     return (
       <TableCell
-        sx={{ cursor: 'pointer', whiteSpace: 'nowrap', textAlign: 'center' }}
+        sx={{ cursor: 'pointer', whiteSpace: 'nowrap', textAlign: 'center', py: ROW_PADDING_Y, px: CELL_PADDING_X }}
         onClick={() => openEdit(themeIdx, type)}
         title={`单击编辑 / 粘贴 JSON（当前：${tip}）`}
       >
@@ -174,24 +178,22 @@ export function InputSettingsTable({ plugin }: Props) {
 
         <AccordionDetails>
           {/* 主表格（表头不换行） */}
-          <Table size="small" sx={{ '& th': { whiteSpace: 'nowrap' } }}>
+          <Table size="small" sx={{ '& th, & td': { whiteSpace: 'nowrap', py: ROW_PADDING_Y, px: CELL_PADDING_X } }}>
             <TableHead>
               <TableRow>
-                <TableCell sx={{ whiteSpace: 'nowrap' }}>主题路径</TableCell>
-                <TableCell align="center" sx={{ whiteSpace: 'nowrap' }}>图标</TableCell>
-                <TableCell align="center" sx={{ whiteSpace: 'nowrap' }}>Task</TableCell>
+                <TableCell>主题路径</TableCell>
+                <TableCell align="center">图标</TableCell>
+                <TableCell align="center">Task</TableCell>
                 {blockKeys.map(k => (
-                  <TableCell key={k} align="center" sx={{ whiteSpace: 'nowrap' }}>
-                    {k}
-                  </TableCell>
+                  <TableCell key={k} align="center">{k}</TableCell>
                 ))}
                 <TableCell /> {/* 操作列 */}
               </TableRow>
             </TableHead>
             <TableBody>
               {/* Base 行 */}
-              <TableRow sx={{ bgcolor: '#f7f7f7' }}>
-                <TableCell sx={{ whiteSpace: 'nowrap', wordBreak: 'keep-all' }}>
+              <TableRow sx={{ bgcolor: '#f7f7f7', '& > *': { py: ROW_PADDING_Y, px: CELL_PADDING_X } }}>
+                <TableCell>
                   <strong>Base（共性默认）</strong>
                 </TableCell>
                 <TableCell align="center" />
@@ -202,31 +204,41 @@ export function InputSettingsTable({ plugin }: Props) {
 
               {/* Theme 行 */}
               {data.themes.map((th: any, idx: number) => (
-                <TableRow key={th.path}>
-                  <TableCell sx={{ whiteSpace: 'nowrap', wordBreak: 'keep-all' }}>{th.path}</TableCell>
+                <TableRow key={th.path} sx={{ '& > *': { py: ROW_PADDING_Y, px: CELL_PADDING_X } }}>
+                  <TableCell>{th.path}</TableCell>
+
+                  {/* 图标单元格 */}
                   <TableCell
                     align="center"
-                    sx={{ whiteSpace: 'nowrap', cursor: 'pointer' }}
+                    sx={{ cursor: 'pointer' }}
                     title="单击编辑图标（可输入文字或表情；留空=不显示）"
                     onClick={() => setIconEdit({ themeIdx: idx, value: th.icon ?? '' })}
                   >
                     {th.icon ?? ''}
                   </TableCell>
+
+                  {/* Task */}
                   {(() => {
                     const [cfg, inh] = getCfg(idx, 'task');
                     return renderCell(cfg, inh, idx, 'task');
                   })()}
+
+                  {/* Blocks */}
                   {blockKeys.map(k => {
                     const child = th.blocks?.[k];
                     const inh   = !child || Object.keys(child).length === 0;
                     const cfg   = child ?? data.base.blocks?.[k] ?? {};
                     return renderCell(cfg, inh, idx, k);
                   })}
-                  <TableCell>
+
+                  {/* 删除主题 */}
+                  <TableCell align="center">
                     <Tooltip title="删除主题">
-                      <IconButton size="small" color="error" onClick={() => setDelIdx(idx)}>
-                        <DeleteIcon />
-                      </IconButton>
+                      {/* 直接使用图标，不使用圆形按钮 */}
+                      <DeleteIcon
+                        sx={{ cursor: 'pointer', color: 'error.main' }}
+                        onClick={() => setDelIdx(idx)}
+                      />
                     </Tooltip>
                   </TableCell>
                 </TableRow>

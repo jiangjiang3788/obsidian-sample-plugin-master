@@ -22,3 +22,43 @@
   background-color: transparent !important;
 }
 
+
+/* ──────────────────────────────────────────────────────────────── */
+/*   放在插件自己的样式文件里；重载插件后立即生效                   */
+/* ──────────────────────────────────────────────────────────────── */
+
+/* 设置面板整行字体再大一点（原本 13-14px）*/
+.think-setting-table  { font-size: 15px; }
+
+/* 表头加粗、加大 */
+.think-setting-table thead th {
+  font-size: 16px;
+  font-weight: 700;
+}
+
+/* 每一行的 emoji / 图标再放大 25% */
+.think-setting-table td.icon-cell {
+  font-size: 135%;          /* emoji 用字体大小控制 */
+  line-height: 1.2;
+}
+
+/* 如果你用 img 作为图标，可限制高度并增加内边距 */
+.think-setting-table td.icon-cell img {
+  height: 20px;
+  width : 20px;
+  margin-right: 4px;
+}
+
+/* 勾选框列留一点左右间距（更好点触） */
+.think-setting-table td input[type="checkbox"] {
+  transform: scale(1.2);    /* 整体放大勾选框 */
+  margin: 0 4px;
+}
+
+/* 红色垃圾桶按钮加大 */
+.think-setting-table td .trash-btn {
+  font-size: 18px;
+  padding: 2px 6px;
+}
+
+
