@@ -1,16 +1,14 @@
 // services/taskService.ts
 /**
- * 业务服务层 —— 专管“完成任务”逻辑，
- * DataStore 不再直接写业务代码，避免重复。
+ * 业务服务层 —— 专管“完成任务”逻辑
  */
 import { DataStore } from '../data/store';
 import { markTaskDone } from '../data/mark';
 import { TFile } from 'obsidian';
+import { dayjs } from '../utils/date';                         // (#5)
 
 export class TaskService {
-  /**
-   * 标记任务完成（支持周期任务），并刷新数据存储。
-   */
+  /** 标记任务完成（支持周期任务），并刷新数据存储 */
   static async completeTask(itemId: string): Promise<void> {
     const ds = DataStore.instance;
     if (!ds) throw new Error('DataStore not ready');
@@ -25,13 +23,11 @@ export class TaskService {
     if (lineNo < 1 || lineNo > lines.length) return;
 
     const rawLine = lines[lineNo - 1];
-    if (!/^\s*-\s*\[ \]/.test(rawLine)) return;          // 不是未完成任务
+    if (!/^\s*-\s*\[ \]/.test(rawLine)) return;      // 不是未完成任务
 
-    const moment      = (window as any).moment;
-    const todayISO    = moment().format('YYYY-MM-DD');
-    const nowTime     = moment().format('HH:mm');
-    const { completedLine, nextTaskLine } =
-      markTaskDone(rawLine, todayISO, nowTime);
+    const todayISO = dayjs().format('YYYY-MM-DD');
+    const nowTime  = dayjs().format('HH:mm');
+    const { completedLine, nextTaskLine } = markTaskDone(rawLine, todayISO, nowTime);
 
     lines[lineNo - 1] = completedLine;
     if (nextTaskLine) lines.splice(lineNo, 0, nextTaskLine);

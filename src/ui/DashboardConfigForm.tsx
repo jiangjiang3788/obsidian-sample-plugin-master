@@ -1,8 +1,6 @@
 // src/ui/DashboardConfigForm.tsx
 
-/* ------------------------------------------------------------------
-   DashboardConfigForm.tsx  ⟨Obsidian 插件示例・最终修正版⟩
-   ------------------------------------------------------------------ */
+// src/ui/DashboardConfigForm.tsx
 /** @jsxImportSource preact */
 import { h } from 'preact';
 import { memo } from 'preact/compat';
@@ -30,6 +28,9 @@ import {
 } from '../config/schema';
 import { VIEW_OPTIONS } from '../views';
 import { theme as baseTheme } from './mui-theme';
+import { OPS } from '../config/constants';                      // ← 复用全局常量 (#1)
+
+
 
 /* ---------- MUI 统一外观 ---------- */
 const theme = {
