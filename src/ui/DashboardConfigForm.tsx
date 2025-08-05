@@ -3,6 +3,7 @@
 // src/ui/DashboardConfigForm.tsx
 /** @jsxImportSource preact */
 import { h } from 'preact';
+import { OPS } from '../config/constants';
 import { memo } from 'preact/compat';
 import {
   useMemo, useRef, useCallback, useState,
@@ -58,7 +59,7 @@ const CIRCLE_BTN = {
   width: 26, height: 26, p: '2px',
 };
 const CIRCLE_BTN_S = { ...CIRCLE_BTN, width: 22, height: 22, p: '1px' };
-const OPS = ['=', '!=', 'includes', 'regex', '>', '<'] as const;
+
 
 function keepScroll(fn: () => void) {
   const y = window.scrollY;

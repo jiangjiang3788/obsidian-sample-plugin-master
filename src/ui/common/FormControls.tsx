@@ -1,5 +1,9 @@
+// src/ui/common/FormControls.tsx
+
+
 /** @jsxImportSource preact */
-/* 公共表单小组件：Field / Radio  —— 解决多处重复 (#1) */
+// 公共表单小组件：Field / Radio 组件
+
 import { h } from 'preact';
 
 export function Field({ label, children }: { label: string; children: any }) {
