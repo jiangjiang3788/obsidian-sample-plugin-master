@@ -1,4 +1,3 @@
-// src/views/Dashboard.tsx
 /** @jsxImportSource preact */
 import { h } from 'preact';
 import { useState, useEffect } from 'preact/hooks';
@@ -8,7 +7,7 @@ import { ModulePanel } from './ModulePanel';
 import type ThinkPlugin from '../main';
 import { TFile, TFolder } from 'obsidian';
 import { ViewComponents } from './index';
-import { getDateRange } from '../utils/date';
+import { getDateRange, dayjs } from '../utils/date';         // (#5)
 import {
   filterByRules,
   sortItems,
@@ -25,11 +24,9 @@ interface Props {
 }
 
 export function Dashboard({ config, dataStore, plugin }: Props) {
-  const moment = (window as any).moment;
-
   const [view, setView] = useState(config.initialView || '月');
   const [date, setDate] = useState(
-    config.initialDate ? moment(config.initialDate) : moment(),
+    config.initialDate ? dayjs(config.initialDate) : dayjs(),
   );
   const [kw, setKw] = useState('');
   const [, force] = useState(0);
@@ -102,16 +99,11 @@ export function Dashboard({ config, dataStore, plugin }: Props) {
     /* ④ 视图 props 拼装 ------------------------------------ */
     const vp: any = { ...(m.props || {}) };
 
-    /* 多层级 groupsArr → 取第 1 层做分组字段（按需可自行扩展） */
     if ((m as any).groups?.length) vp.groupField = (m as any).groups[0];
-
-    /* 行 / 列字段（TableView 专用） */
     if (m.view === 'TableView') {
       vp.rowField = (m as any).rowField || '';
       vp.colField = (m as any).colField || '';
     }
-
-    /* 显示字段 */
     if (m.fields?.length) vp.fields = m.fields;
 
     return (
@@ -131,15 +123,12 @@ export function Dashboard({ config, dataStore, plugin }: Props) {
             {v}
           </button>
         ))}
-        <button
-          disabled
-          style="font-weight:bold;margin:0 4px;background:#fff;"
-        >
+        <button disabled style="font-weight:bold;margin:0 4px;background:#fff;">
           {fmt(date, view)}
         </button>
         <button onClick={() => setDate(date.clone().subtract(1, unit(view)))}>←</button>
         <button onClick={() => setDate(date.clone().add(1, unit(view)))}>→</button>
-        <button onClick={() => setDate(moment())}>＝</button>
+        <button onClick={() => setDate(dayjs())}>＝</button>
         <input
           placeholder="快速过滤…"
           style="margin-left:4px;"
