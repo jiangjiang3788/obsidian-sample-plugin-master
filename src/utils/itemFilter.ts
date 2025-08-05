@@ -7,9 +7,7 @@ import { Item, FilterRule, SortRule, readField } from '../config/schema';
 
 /* ---------- 过滤 ---------- */
 export function filterByRules(items: Item[], rules: FilterRule[] = []) {
-  return rules.length
-    ? items.filter(it => rules.every(r => matchRule(it, r)))
-    : items;
+  return rules.length ? items.filter(it => rules.every(r => matchRule(it, r))) : items;
 }
 
 function matchRule(item: Item, rule: FilterRule): boolean {
@@ -17,18 +15,17 @@ function matchRule(item: Item, rule: FilterRule): boolean {
   const v2 = rule.value;
 
   switch (rule.op) {
-    case '=':   return String(v1) === String(v2);
-    case '!=':  return String(v1) !== String(v2);
-    case 'includes':
-      return Array.isArray(v1)
+    case '='   : return String(v1) === String(v2);
+    case '!='  : return String(v1) !== String(v2);
+    case 'includes': return Array.isArray(v1)
         ? v1.some(x => String(x).includes(String(v2)))
         : String(v1).includes(String(v2));
     case 'regex':
       try { return new RegExp(String(v2)).test(String(v1)); }
       catch { return false; }
-    case '>':   return String(v1) >  String(v2);
-    case '<':   return String(v1) <  String(v2);
-    default:    return false;
+    case '>'   : return String(v1) > String(v2);
+    case '<'   : return String(v1) < String(v2);
+    default    : return false;
   }
 }
 
@@ -50,22 +47,19 @@ export function sortItems(items: Item[], rules: SortRule[] = []) {
   });
 }
 
-/* ---------- 日期区间 ---------- */
+/* ---------- 日期区间（改为毫秒级比较） ---------- */
 export function filterByDateRange(
-  items: Item[],
-  startISO?: string,
-  endISO?: string,
-  momentLib: any = (window as any).moment
+  items: Item[], startISO?: string, endISO?: string
 ) {
   if (!startISO && !endISO) return items;
-  const s = startISO ? momentLib(startISO) : null;
-  const e = endISO   ? momentLib(endISO)   : null;
+  const sMs = startISO ? Date.parse(startISO) : null;
+  const eMs = endISO   ? Date.parse(endISO)   : null;
 
   return items.filter(it => {
-    if (!it.date) return true;
-    const d = momentLib(it.date, 'YYYY-MM-DD');
-    if (s && d.isBefore(s, 'day')) return false;
-    if (e && d.isAfter(e,  'day')) return false;
+    const t = (it.startMs ?? (it.startISO ? Date.parse(it.startISO) : NaN));
+    if (isNaN(t)) return true;
+    if (sMs !== null && t < sMs) return false;
+    if (eMs !== null && t > eMs) return false;
     return true;
   });
 }
@@ -74,7 +68,5 @@ export function filterByDateRange(
 export function filterByKeyword(items: Item[], kw: string) {
   if (!kw.trim()) return items;
   const s = kw.trim().toLowerCase();
-  return items.filter(it =>
-    (it.title + ' ' + it.content).toLowerCase().includes(s)
-  );
+  return items.filter(it => (it.title + ' ' + it.content).toLowerCase().includes(s));
 }
