@@ -10,11 +10,10 @@ import { makeBlock } from '../../utils/templates';
 /* ---------- 工具 ---------- */
 const todayISO = () => (window as any).moment().format('YYYY-MM-DD');
 const lastSeg  = (p: string) => p.split('/').pop() ?? p;
-const INPUT_W  = '140px';                        // 日期 & 评分统一宽度
 
 export class QuickHabitModal extends Modal {
   constructor(private plugin: ThinkPlugin) { super(plugin.app); }
-  onOpen()  { render(<HabitForm app={this.app} plugin={this.plugin} close={() => this.close()}/>, this.contentEl); }
+  onOpen()  { render(<HabitForm app={this.app} plugin={this.plugin} close={()=>this.close()}/>, this.contentEl); }
   onClose() { this.contentEl.empty(); }
 }
 
@@ -24,31 +23,29 @@ function HabitForm(
   const svc = new InputService(app, plugin);
 
   /* ---------- 顶级分类 ---------- */
-  const topCats = svc.getBlockTopCategories('打卡');
+  const topCats = svc.getBlockTopCategories('打卡');            // 若没有此 API，可用 getTaskTopCategories()
   const [top, setTop] = useState(topCats[0] ?? '');
 
   /* ---------- 主题列表 ---------- */
   const buildThemes = () => svc.listBlockThemesByTop(top, '打卡');
-  const [themes, setThemes] = useState(buildThemes());
+  const [themes, setThemes]     = useState(buildThemes());
   const [themePath, setThemePath] = useState(themes[0]?.path || top);
-  const themeIcon = themes.find(t => t.path === themePath)?.icon ?? '';
 
-  /* ---------- 动态读取 starCount ---------- */
+  /* ---------- starCount ---------- */
   function getStarMax(path: string): number {
-    const th = (plugin.inputSettings?.themes || []).find((t: any) => t.path === path);
+    const th  = (plugin.inputSettings?.themes || []).find((t: any) => t.path === path);
     const blk = th?.blocks?.['打卡'] || {};
     if (typeof blk.starCount === 'number') return blk.starCount;
-    if (Array.isArray(blk.emojiMapping))  return blk.emojiMapping.length;
-    if (Array.isArray(blk.imageMapping))  return blk.imageMapping.length;
-    return 5;                              // 默认
+    if (Array.isArray(blk.emojiMapping))   return blk.emojiMapping.length;
+    if (Array.isArray(blk.imageMapping))   return blk.imageMapping.length;
+    return 5;
   }
-
   const [starMax, setStarMax] = useState(getStarMax(themePath));
 
   /* ---------- 其他字段 ---------- */
   const [dateISO, setDateISO] = useState(todayISO());
   const [content, setContent] = useState('');
-  const [score,   setScore]   = useState(1);
+  const [score, setScore]     = useState(1);
 
   /* ---------- 主题变化时同步评分上限 ---------- */
   useEffect(() => {
@@ -69,17 +66,16 @@ function HabitForm(
   async function onSubmit() {
     if (!content.trim()) { new Notice('请填写内容'); return; }
 
-    const blockText = makeBlock({
+    const block = makeBlock({
       category   : '打卡',
-      dateISO    : dateISO,
+      dateISO,
       themeLabel : top,
-      icon       : themeIcon,
-      content    : content,
-      extra      : { '评分': String(score) }        // 仅评分
+      content,
+      extra      : { '评分': String(score) }          // 仅评分
     });
 
     try {
-      await svc.writeBlock(themePath, '打卡', null, blockText);
+      await svc.writeBlock(themePath, '打卡', null, block);
       new Notice('✅ 已保存打卡');
       plugin.dataStore?.notifyChange?.();
       close();
@@ -126,7 +122,7 @@ function HabitForm(
           type="date"
           value={dateISO}
           onChange={e => setDateISO((e.target as HTMLInputElement).value)}
-          style={{ width: INPUT_W }}
+          style={{ width: '100%' }}
         />
       </Field>
 
@@ -138,7 +134,7 @@ function HabitForm(
           max={starMax}
           value={score}
           onInput={e => setScore(Number((e.target as HTMLInputElement).value))}
-          style={{ width: INPUT_W }}
+          style={{ width: '100%' }}
         />
       </Field>
 
@@ -169,7 +165,7 @@ function Field({ label, children }: { label: string; children: any }) {
   return (
     <div style="margin-bottom:12px;">
       <div style="margin-bottom:4px;font-weight:600;">{label}</div>
-      <div style="display:flex;flex-wrap:wrap;gap:8px;">{children}</div>
+      <div style="display:flex;flex-wrap:wrap;gap:8px;width:100%;">{children}</div>
     </div>
   );
 }
