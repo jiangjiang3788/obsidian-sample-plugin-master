@@ -14,7 +14,11 @@
       "isolatedModules": true,
       "baseUrl": ".",
       "paths": {
-        "@/*": ["src/*"]
+        "@/*": ["src/*"],           // 已有就保持
+        "@core/*": ["src/core/*"],  // 后续使用
+        "@platform/*": ["src/platform/*"],
+        "@features/*": ["src/features/*"],
+        "@shared/*": ["src/shared/*"]
       },
       "types": ["vite/client", "preact"]
     },

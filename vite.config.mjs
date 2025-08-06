@@ -2,6 +2,7 @@
 import { defineConfig } from 'vite';
 import preact from '@preact/preset-vite';
 import replace from '@rollup/plugin-replace';
+import path from 'node:path'; 
 
 export default defineConfig({
   plugins: [
@@ -20,6 +21,10 @@ export default defineConfig({
       'react-dom': 'preact/compat',
       'react-dom/test-utils': 'preact/test-utils',
       'react/jsx-runtime': 'preact/jsx-runtime',
+      '@core':     path.resolve(__dirname, 'src/core'),
+      '@platform': path.resolve(__dirname, 'src/platform'),
+      '@features': path.resolve(__dirname, 'src/features'),
+      '@shared':   path.resolve(__dirname, 'src/shared'),
     },
   },
 
