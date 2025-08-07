@@ -1,2 +1,2 @@
-// src/shared/index.ts
-src/shared/index.ts
+export * from './components';
+export * from './styles'; // 如果需要
