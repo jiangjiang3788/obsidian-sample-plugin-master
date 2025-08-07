@@ -1,15 +1,11 @@
-// src/ui/SettingsTab.ts
-//-----------------------------------------------------------
-// 设置页：① 通用输入设置（表格） ② 仪表盘管理
-//-----------------------------------------------------------
+
 
 /** @jsxImportSource preact */
-import { h, render } from 'preact';
 import { PluginSettingTab, Notice } from 'obsidian';
-import ThinkPlugin from '../main';
-import { DashboardConfigForm } from './DashboardConfigForm';
-import { InputSettingsTable } from './InputSettingsTable';      // ★ 新增
+import type ThinkPlugin from '@root/main';          // 视你 main.ts 真实路径调整
+import { DashboardConfigForm } from '@features/dashboard/ui';   
 
+import { InputSettingsTable  } from './InputSettingsTable';
 export class SettingsTab extends PluginSettingTab {
   private plugin: ThinkPlugin;
 

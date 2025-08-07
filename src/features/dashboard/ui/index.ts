@@ -5,7 +5,7 @@ import { TableView }   from './TableView';
 import { BlockView }   from './BlockView';
 import { ExcelView }   from './ExcelView';
 
-
+export * from './DashboardConfigForm';
 
 /* ------------------------------------------------------------------ */
 /* 视图注册表 —— key = 视图名称（外部配置使用）                        */
