@@ -1,4 +1,4 @@
-import type { ViewName } from '../views';
+import type { ViewName } from '@features/dashboard/ui';
 
 /* ---------- 数据项 ---------- */
 export interface Item {

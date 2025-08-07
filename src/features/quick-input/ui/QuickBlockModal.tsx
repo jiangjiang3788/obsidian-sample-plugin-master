@@ -6,7 +6,7 @@ import type ThinkPlugin from '../../main';
 import { InputService } from '@core/services/inputService';
 import { makeBlock } from '@core/utils/templates';
 import { todayISO } from '@core/utils/date';                   // (#5)
-import { Field, Radio } from '../common/FormControls';        // (#1)
+import { Field, Radio } from '@shared/components/FieldRadio';        // (#1)
 
 const lastSeg = (p:string)=>p.split('/').pop()??p;
 

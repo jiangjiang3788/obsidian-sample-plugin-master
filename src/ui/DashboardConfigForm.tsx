@@ -27,7 +27,7 @@ import {
   ModuleConfig,
   CORE_FIELDS,
 } from '@core/domain/schema';
-import { VIEW_OPTIONS } from '../views';
+import { VIEW_OPTIONS } from '@features/dashboard/ui';
 import { theme as baseTheme } from './mui-theme';
 import { OPS } from '@core/domain/constants';                      // ← 复用全局常量 (#1)
 

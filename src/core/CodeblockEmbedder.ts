@@ -2,7 +2,7 @@
 import { DashboardConfig } from '@core/domain/schema';
 import { CODEBLOCK_LANG } from '@core/domain/constants';
 import { render, h } from 'preact';
-import { Dashboard } from '../views/Dashboard';
+import { Dashboard } from '@features/dashboard/ui/Dashboard';
 import type ThinkPlugin from '../main';
 import { DataStore } from '@core/services/dataStore';
 
