@@ -1,5 +1,5 @@
 // src/utils/templates.ts
-import { EMOJI } from '../config/constants';
+import { EMOJI } from '@core/domain/constants';
 import { normalizeDateStr } from './date';
 
 /* ------------------------------------------------------------------ */

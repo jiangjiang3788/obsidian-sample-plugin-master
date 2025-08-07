@@ -1,19 +1,19 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
 import { useState, useEffect } from 'preact/hooks';
-import { DataStore } from '../data/store';
-import { DashboardConfig, ModuleConfig } from '../config/schema';
+import { DataStore } from '@core/services/dataStore';
+import { DashboardConfig, ModuleConfig } from '@core/domain/schema';
 import { ModulePanel } from './ModulePanel';
 import type ThinkPlugin from '../main';
 import { TFile, TFolder } from 'obsidian';
 import { ViewComponents } from './index';
-import { getDateRange, dayjs } from '../utils/date';         // (#5)
+import { getDateRange, dayjs } from '@core/utils/date';         // (#5)
 import {
   filterByRules,
   sortItems,
   filterByDateRange,
   filterByKeyword,
-} from '../utils/itemFilter';
+} from '@core/utils/itemFilter';
 
 const QTXT = ['一', '二', '三', '四'];
 

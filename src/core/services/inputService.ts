@@ -1,6 +1,6 @@
 // src/services/inputService.ts
 import { App, TFile, TFolder } from 'obsidian';
-import { lastSegment } from '../utils/templates';
+import { lastSegment } from '@core/utils/templates';
 import type ThinkPlugin from '../main';
 
 type InputSettings = Record<string, any>;

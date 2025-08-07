@@ -1,10 +1,10 @@
 // data/store.ts - 数据存储与查询，实现扫描 Vault、维护 Item 列表、提供查询接口 
 
 import { App, TFile, TFolder, HeadingCache } from 'obsidian';
-import { Item, FilterRule, SortRule, readField } from '../config/schema';
-import { parseTaskLine, parseBlockContent } from './parser';
-import { throttle } from '../utils/timing';
-import { TaskService } from '../services/taskService';
+import { Item, FilterRule, SortRule, readField } from '@core/domain/schema';
+import { parseTaskLine, parseBlockContent } from '@core/utils/parser';
+import { throttle } from '@core/utils/timing';
+import { TaskService } from '@core/services/taskService';
 
 export class DataStore {
   static instance: DataStore;

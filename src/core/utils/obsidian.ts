@@ -1,5 +1,5 @@
 // utils/obsidian.ts
-import { DataStore } from '../data/store';
+import { DataStore } from '@core/services/dataStore';
 
 export function makeObsUri(itemId: string): string {
   const hashIndex = itemId.lastIndexOf('#');
