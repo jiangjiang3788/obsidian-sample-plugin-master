@@ -1,6 +1,8 @@
 
 
 /** @jsxImportSource preact */
+import { h, render } from 'preact';
+
 import { PluginSettingTab, Notice } from 'obsidian';
 import type ThinkPlugin from '@root/main';          // 视你 main.ts 真实路径调整
 import { DashboardConfigForm } from '@features/dashboard/ui';   
