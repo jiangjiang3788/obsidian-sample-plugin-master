@@ -5,7 +5,7 @@ import { Item, readField } from '@core/domain/schema';
 import { getCategoryColor } from '@core/domain/categoryColorMap';
 import { DataStore } from '@core/services/dataStore';
 import { makeObsUri } from '@core/utils/obsidian';
-import { TaskCheckbox } from './common/TaskCheckbox';   // ★ 新增
+import { TaskCheckbox } from '@shared/components/TaskCheckbox';   // ★ 新增
 
 interface BlockViewProps {
   items: Item[];

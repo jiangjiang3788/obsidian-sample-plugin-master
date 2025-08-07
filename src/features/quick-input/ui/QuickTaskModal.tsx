@@ -6,7 +6,7 @@ import type ThinkPlugin from '../../main';
 import { InputService, TaskThemeConfig } from '@core/services/inputService';
 import { makeTaskLine } from '@core/utils/templates';
 import { todayISO, nowHHMM } from '@core/utils/date';               // (#5)
-import { Field, Radio } from '../common/FormControls';              // (#1)
+import { Field, Radio } from '@shared/components/FieldRadio';              // (#1)
 
 /* ===================================================================== */
 export class QuickTaskModal extends Modal {

@@ -6,7 +6,7 @@ import { Item, readField } from '@core/domain/schema';
 import { DataStore } from '@core/services/dataStore';
 import { makeObsUri } from '@core/utils/obsidian';
 import { EMPTY_LABEL } from '@core/domain/constants';
-import { TaskCheckbox } from './common/TaskCheckbox';   // ★ 新增
+import { TaskCheckbox } from '@shared/components/TaskCheckbox';   // ★ 新增
 
 interface TableViewProps {
   items: Item[];

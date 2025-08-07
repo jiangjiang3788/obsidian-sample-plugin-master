@@ -9,9 +9,9 @@ import { STYLE_TAG_ID, GLOBAL_CSS } from '@core/domain/constants';
 import { VaultWatcher } from './core/VaultWatcher';
 import { CodeblockEmbedder } from './core/CodeblockEmbedder';
 // ★ 新增：快速输入面板（三个 Modal）
-import { QuickTaskModal } from './ui/modals/QuickTaskModal';
-import { QuickBlockModal } from './ui/modals/QuickBlockModal';
-import { QuickHabitModal } from './ui/modals/QuickHabitModal';
+import { QuickTaskModal } from '@features/quick-input/ui/QuickTaskModal';
+import { QuickBlockModal } from '@features/quick-input/ui/QuickBlockModal';
+import { QuickHabitModal } from '@features/quick-input/ui/QuickHabitModal';
 
 import './views/styles.css'; // 让复选框样式生效
 
