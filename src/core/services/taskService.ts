@@ -1,13 +1,8 @@
-// src/services/taskService.ts
-/**
- * 业务服务层 —— 专管“完成任务”逻辑
- */
-
-import { DataStore } from './dataStore';               // ← 同级引用
+// taskService.ts —— 处理「勾选任务」的业务服务
+import { DataStore } from './dataStore';
 import { markTaskDone } from '@core/utils/mark';
-import { TFile } from 'obsidian';
+import type { TFile } from 'obsidian';
 import { dayjs } from '@core/utils/date';
-
 
 export class TaskService {
   static async completeTask(itemId: string): Promise<void> {
@@ -16,10 +11,13 @@ export class TaskService {
 
     const [filePath, lineStr] = itemId.split('#');
     const lineNo = Number(lineStr);
-    const file = ds['app'].vault.getAbstractFileByPath(filePath);
-    if (!(file instanceof TFile)) return;
+    const file = ds.platform.app.vault.getAbstractFileByPath(
+      filePath,
+    );
+    if (!(file instanceof (ds.platform.app.vault as any).constructor.TFile))
+      return;
 
-    const content = await ds['app'].vault.read(file);
+    const content = await ds.platform.readFile(file as TFile);
     const lines = content.split(/\r?\n/);
     if (lineNo < 1 || lineNo > lines.length) return;
 
@@ -28,13 +26,17 @@ export class TaskService {
 
     const todayISO = dayjs().format('YYYY-MM-DD');
     const nowTime = dayjs().format('HH:mm');
-    const { completedLine, nextTaskLine } = markTaskDone(rawLine, todayISO, nowTime);
+    const { completedLine, nextTaskLine } = markTaskDone(
+      rawLine,
+      todayISO,
+      nowTime,
+    );
 
     lines[lineNo - 1] = completedLine;
     if (nextTaskLine) lines.splice(lineNo, 0, nextTaskLine);
 
-    await ds['app'].vault.modify(file, lines.join('\n'));
-    await ds.scanFile(file);
+    await ds.platform.writeFile(file as TFile, lines.join('\n'));
+    await ds.scanFile(file as TFile);
     ds.notifyChange();
   }
 }
