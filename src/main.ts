@@ -13,7 +13,7 @@ import { QuickTaskModal } from '@features/quick-input/ui/QuickTaskModal';
 import { QuickBlockModal } from '@features/quick-input/ui/QuickBlockModal';
 import { QuickHabitModal } from '@features/quick-input/ui/QuickHabitModal';
 
-import './views/styles.css'; // 让复选框样式生效
+import '@shared/styles/styles.css';
 
 export interface PersistData {
   dashboards: DashboardConfig[];
