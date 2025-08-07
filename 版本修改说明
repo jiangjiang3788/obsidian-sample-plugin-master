@@ -1,0 +1,43 @@
+### 1 · 我们已经完成的核心调整
+
+| 调整点                               | 目的                    | 关键改动                                                                      |
+| --------------------------------- | --------------------- | ------------------------------------------------------------------------- |
+| **抽象 Obsidian API → `@platform`** | 让核心逻辑不再直接依赖 Obsidian。 | `src/platform/obsidian.ts` 封装 `readFile / writeFile / getMarkdownFiles …` |
+| **业务核心下沉 → `@core`**              | 提升可测试性；以后迁移平台更简单。     | `dataStore / taskService / utils …` 移到 `src/core/**`，并用别名 `@core/*` 引用    |
+| **UI 组件插件化 → `@features`**        | 每个功能独立，可按需裁剪、启停。      | Dashboard、Quick-Input 组件移至 `src/features/*/ui` 并暴露 `setup()`              |
+| **共享层 → `@shared`**               | 公用样式 & 小组件一处维护。       | `TaskCheckbox / FieldRadio / styles.css …`                                |
+| **`main.ts` 重写**                  | 保持“薄壳”，只做装配 & 设置读写    | 创建 `ThinkContext`，在 `setup()` 时统一注入                                       |
+
+> *结果：项目已完全符合**Core + Platform + Features + Shared** 四层架构，代码块解析 & Dashboard 渲染恢复正常。*
+
+---
+
+### 2 · 接下来建议的收尾事项
+
+| 优先级 | 任务                          | 操作要点                                                                                                                                    |
+| --- | --------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| ★★★ | **迁移/精简旧的 src/ui\***        | · 将仍残留在 `src/ui` 下的配置页、主题表单等，按“Feature or Shared”规则挪到位<br>· 更新 import；然后删除原文件                                                           |
+| ★★  | **SettingsTab → Feature 化** | - 建议在 `src/features/settings/` 新建 `ui/SettingsTab.tsx`<br>- 在 `index.ts` 暴露 `setup(ctx)` ➜ `plugin.addSettingTab(new SettingsTab(ctx))` |
+| ★★  | **统一 ESLint 边界规则**          | 使用 `eslint-plugin-boundaries` 禁止跨 Feature 直接 import                                                                                     |
+| ★   | **单元测试补货**                  | `core` 层可用 vitest / jest 直接跑；`platform` 接口用 mock                                                                                        |
+| ★   | **CI：tsc + vite build**     | 确保 PR / commit 阶段触发编译；早发现路径/类型错误                                                                                                        |
+| ☆   | **文档梳理**                    | 在 `README` 添加「如何写新 Feature / 如何扩展 Platform」说明                                                                                           |
+
+---
+
+### 3 · 仍存在的历史遗留 & 易踩坑
+
+| 类别                 | 详情                                                                       | 规避方案                                                                                                 |
+| ------------------ | ------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------- |
+| **路径遗漏**           | 旧文件的相对 import（`../views/...`）若未跑完脚本会在 build 时报 *Could not resolve*       | · 继续补充 `moved-paths.json`<br>· 或 VS Code `Find in Files` 搜 `../views`、`../data`                      |
+| **样式加载顺序**         | 统一改走 `@shared/styles/styles.css` 后，局部 CSS 可能被覆盖                          | - 调整 `styles.css` 中的选择器权重或拆分成模块化 CSS                                                                 |
+| **未抽象的方法**         | 若未来核心层需要 `app.workspace.…` 等接口，要记得在 `platform/obsidian.ts` 再加包装          | 保持 **core 禁止直接 import obsidian** 的原则                                                                 |
+| **State 同步**       | Dashboard 内部仍直接读取 `plugin.dashboards`；若设置页改动后没 `notifyChange` 会导致 UI 不刷新 | · 在 `upsertDashboard()` 后调用 `dataStore.notifyChange()`<br>· 或给 Dashboard 加 `useEffect` 订阅 Setting 变更 |
+| **Quick-Input 验证** | Modal 里对字段的判空、日期格式仍较脆弱                                                   | 引入 `zod / yup` 在 UI 层做一次 schema 校验                                                                   |
+| **Tree-Shake**     | vite build 已设 `moduleSideEffects:false`；务必确认第三方包没有副作用导入（例如 dayjs 插件）     | 若出问题，可在 `package.json#sideEffects` 白名单保留                                                             |
+
+---
+
+> **一句话总结**：
+> **核心(无平台依赖) → 平台(Obsidian API) → 插件化特性(Feature) → 共享层(Shared)** 的纵向分层已经打好地基；
+> 剩余工作主要是**扫尾迁移 / 规则固化 / 自动化保障**，确保以后再添加功能时不会重蹈耦合的老路。
