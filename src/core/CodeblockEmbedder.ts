@@ -1,22 +1,26 @@
-// core/CodeblockEmbedder.ts
-import { DashboardConfig } from '@core/domain/schema';
-import { CODEBLOCK_LANG } from '@core/domain/constants';
+// src/core/CodeblockEmbedder.ts
+//-----------------------------------------------------------
+// 负责解析 ```think 代码块并渲染 Dashboard
+//-----------------------------------------------------------
+
 import { render, h } from 'preact';
-import { Dashboard } from '@features/dashboard/ui/Dashboard';
-import type ThinkPlugin from '../main';
-import { DataStore } from '@core/services/dataStore';
 
-/** 负责处理 ```think 代码块并渲染 Dashboard */
+import { CODEBLOCK_LANG }   from '@core/domain/constants';
+import { DashboardConfig }  from '@core/domain/schema';
+import { DataStore }        from '@core/services/dataStore';
+
+import { Dashboard }        from '@features/dashboard/ui/Dashboard';   // 新路径
+import type ThinkPlugin     from '../main';
+
 export class CodeblockEmbedder {
-  private plugin: ThinkPlugin;
-  private dataStore: DataStore;
-
-  constructor(plugin: ThinkPlugin, dataStore: DataStore) {
-    this.plugin    = plugin;
-    this.dataStore = dataStore;
+  constructor(
+    private plugin: ThinkPlugin,
+    private dataStore: DataStore,
+  ) {
     this.registerProcessor();
   }
 
+  /* ---------- 注册代码块处理器 ---------- */
   private registerProcessor() {
     this.plugin.registerMarkdownCodeBlockProcessor(
       CODEBLOCK_LANG,
@@ -24,10 +28,12 @@ export class CodeblockEmbedder {
         let configName: string | undefined;
         let inlineDash: DashboardConfig | undefined;
 
+        /* ① 解析代码块 JSON 参数 ----------------------------- */
         try {
           const input = source.trim() ? JSON.parse(source) : {};
+
           if (Array.isArray(input.modules)) {
-            // ② 内联模式
+            //   内联模式：在代码块里直接写 modules
             inlineDash = {
               name: input.name || '__inline__',
               path: input.path || '',
@@ -37,15 +43,20 @@ export class CodeblockEmbedder {
               modules: input.modules,
             };
           } else {
-            // ① 引用持久化
+            //   引用模式：{ "config": "默认仪表盘" }
             configName = input.config || input.dashboard || input.name;
           }
         } catch (e) {
           console.warn('ThinkPlugin: 仪表盘代码块 JSON 解析失败', e);
         }
 
-        if (inlineDash) return this.mount(el, inlineDash);
+        /* ② 内联仪表盘直接渲染 -------------------------------- */
+        if (inlineDash) {
+          this.mount(el, inlineDash);
+          return;
+        }
 
+        /* ③ 找不到 name → 默认第一个 ------------------------- */
         if (!configName && this.plugin.dashboards.length)
           configName = this.plugin.dashboards[0].name;
 
@@ -59,12 +70,13 @@ export class CodeblockEmbedder {
     );
   }
 
+  /* ---------- 在元素上挂载 Preact Dashboard ---------- */
   private mount(el: HTMLElement, dash: DashboardConfig) {
     render(
       h(Dashboard, {
-        config: dash,
+        config:    dash,
         dataStore: this.dataStore,
-        plugin:   this.plugin,
+        plugin:    this.plugin,
       }),
       el,
     );
