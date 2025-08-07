@@ -2,10 +2,12 @@
 /**
  * 业务服务层 —— 专管“完成任务”逻辑
  */
-import { DataStore } from '../data/store';
-import { markTaskDone } from '../utils/mark';         // ← 修改路径
+
+import { DataStore } from './dataStore';               // ← 同级引用
+import { markTaskDone } from '@core/utils/mark';
 import { TFile } from 'obsidian';
-import { dayjs } from '../utils/date';
+import { dayjs } from '@core/utils/date';
+
 
 export class TaskService {
   static async completeTask(itemId: string): Promise<void> {

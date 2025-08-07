@@ -1,10 +1,10 @@
 // core/CodeblockEmbedder.ts
-import { DashboardConfig } from '../config/schema';
-import { CODEBLOCK_LANG } from '../config/constants';
+import { DashboardConfig } from '@core/domain/schema';
+import { CODEBLOCK_LANG } from '@core/domain/constants';
 import { render, h } from 'preact';
 import { Dashboard } from '../views/Dashboard';
 import type ThinkPlugin from '../main';
-import { DataStore } from '../data/store';
+import { DataStore } from '@core/services/dataStore';
 
 /** 负责处理 ```think 代码块并渲染 Dashboard */
 export class CodeblockEmbedder {

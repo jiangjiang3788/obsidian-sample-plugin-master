@@ -3,7 +3,7 @@
 // src/ui/DashboardConfigForm.tsx
 /** @jsxImportSource preact */
 import { h } from 'preact';
-import { OPS } from '../config/constants';
+import { OPS } from '@core/domain/constants';
 import { memo } from 'preact/compat';
 import {
   useMemo, useRef, useCallback, useState,
@@ -26,10 +26,10 @@ import {
   DashboardConfig,
   ModuleConfig,
   CORE_FIELDS,
-} from '../config/schema';
+} from '@core/domain/schema';
 import { VIEW_OPTIONS } from '../views';
 import { theme as baseTheme } from './mui-theme';
-import { OPS } from '../config/constants';                      // ← 复用全局常量 (#1)
+import { OPS } from '@core/domain/constants';                      // ← 复用全局常量 (#1)
 
 
 

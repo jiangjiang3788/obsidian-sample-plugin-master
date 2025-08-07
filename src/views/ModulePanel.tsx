@@ -4,7 +4,7 @@
 // 折叠组件：支持 Ctrl/⌘ + 点击标题一键折叠/展开全部模块
 import { h } from 'preact';
 import { useState, useRef, useEffect } from 'preact/hooks';
-import { ModuleConfig } from '../config/schema';
+import { ModuleConfig } from '@core/domain/schema';
 
 interface ModulePanelProps {
   module: ModuleConfig;

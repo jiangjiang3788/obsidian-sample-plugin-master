@@ -3,7 +3,7 @@
 // 统一的筛选 / 排序 / 日期区间 / 关键字过滤助手
 //-----------------------------------------------------------
 
-import { Item, FilterRule, SortRule, readField } from '../config/schema';
+import { Item, FilterRule, SortRule, readField } from '@core/domain/schema';
 
 /* ---------- 过滤 ---------- */
 export function filterByRules(items: Item[], rules: FilterRule[] = []) {

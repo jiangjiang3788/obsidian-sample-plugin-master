@@ -3,9 +3,9 @@ import { App, Modal, Notice } from 'obsidian';
 import { h, render } from 'preact';
 import { useState, useEffect } from 'preact/hooks';
 import type ThinkPlugin from '../../main';
-import { InputService } from '../../services/inputService';
-import { makeBlock } from '../../utils/templates';
-import { todayISO } from '../../utils/date';                  // (#5)
+import { InputService } from '@core/services/inputService';
+import { makeBlock } from '@core/utils/templates';
+import { todayISO } from '@core/utils/date';                  // (#5)
 import { Field, Radio } from '../common/FormControls';       // (#1)
 
 const lastSeg = (p:string)=>p.split('/').pop()??p;

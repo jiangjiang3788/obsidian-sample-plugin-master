@@ -4,13 +4,13 @@
 //-----------------------------------------------------------
 
 import { Plugin } from 'obsidian';
-import { DataStore } from './data/store';
-import { DashboardConfig } from './config/schema';
+
+import { DashboardConfig } from '@core/domain/schema';
 import { SettingsTab } from './ui/SettingsTab';
-import { STYLE_TAG_ID, GLOBAL_CSS } from './config/constants';
+import { STYLE_TAG_ID, GLOBAL_CSS } from '@core/domain/constants';
 import { VaultWatcher } from './core/VaultWatcher';
 import { CodeblockEmbedder } from './core/CodeblockEmbedder';
-
+import { DataStore } from '@core/services/dataStore'; 
 // ★ 新增：快速输入面板（三个 Modal）
 import { QuickTaskModal } from './ui/modals/QuickTaskModal';
 import { QuickBlockModal } from './ui/modals/QuickBlockModal';

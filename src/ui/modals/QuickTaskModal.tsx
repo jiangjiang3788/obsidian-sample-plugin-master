@@ -3,9 +3,9 @@ import { App, Modal, Notice } from 'obsidian';
 import { h, render } from 'preact';
 import { useState } from 'preact/hooks';
 import type ThinkPlugin from '../../main';
-import { InputService, TaskThemeConfig } from '../../services/inputService';
-import { makeTaskLine } from '../../utils/templates';
-import { todayISO, nowHHMM } from '../../utils/date';               // (#5)
+import { InputService, TaskThemeConfig } from '@core/services/inputService';
+import { makeTaskLine } from '@core/utils/templates';
+import { todayISO, nowHHMM } from '@core/utils/date';               // (#5)
 import { Field, Radio } from '../common/FormControls';              // (#1)
 
 /* ===================================================================== */

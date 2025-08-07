@@ -1,7 +1,7 @@
 // views/ExcelView.tsx
 
 import { h } from 'preact';
-import { Item, getAllFields, readField } from '../config/schema';
+import { Item, getAllFields, readField } from '@core/domain/schema';
 
 interface ExcelViewProps {
   items: Item[];

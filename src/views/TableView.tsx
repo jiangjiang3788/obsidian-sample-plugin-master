@@ -2,10 +2,10 @@
 // 精简复选框逻辑，复用 TaskCheckbox
 import { h } from 'preact';
 import { JSX } from 'preact';
-import { Item, readField } from '../config/schema';
-import { DataStore } from '../data/store';
-import { makeObsUri } from '../utils/obsidian';
-import { EMPTY_LABEL } from '../config/constants';
+import { Item, readField } from '@core/domain/schema';
+import { DataStore } from '@core/services/dataStore';
+import { makeObsUri } from '@core/utils/obsidian';
+import { EMPTY_LABEL } from '@core/domain/constants';
 import { TaskCheckbox } from './common/TaskCheckbox';   // ★ 新增
 
 interface TableViewProps {

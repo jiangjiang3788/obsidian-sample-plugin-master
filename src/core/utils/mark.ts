@@ -1,8 +1,8 @@
 // 任务状态切换与周期任务工具函数
-import { EMOJI } from '../config/constants';
-import { DATE_YMD_RE } from '../utils/regex';
-import { normalizeDateStr } from '../utils/date';
-import { dayjs } from '../utils/date';                               // (#5)
+import { EMOJI } from '@core/domain/constants';
+import { DATE_YMD_RE } from '@core/utils/regex';
+import { normalizeDateStr } from '@core/utils/date';
+import { dayjs } from '@core/utils/date';                               // (#5)
 
 /* ---------- 周期任务工具类型 ---------- */
 export interface RecurrenceInfo {

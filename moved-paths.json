@@ -1,0 +1,67 @@
+{
+  "./data/store": "@core/services/dataStore",
+  "../data/store": "@core/services/dataStore",
+
+  "./services/taskService": "@core/services/taskService",
+  "../services/taskService": "@core/services/taskService",
+
+  "./services/inputService": "@core/services/inputService",
+  "../services/inputService": "@core/services/inputService",
+
+  "./config/schema": "@core/domain/schema",
+  "../config/schema": "@core/domain/schema",
+  "../../config/schema": "@core/domain/schema",
+
+  "./config/constants": "@core/domain/constants",
+  "../config/constants": "@core/domain/constants",
+  "../../config/constants": "@core/domain/constants",
+
+  "./config/categoryColorMap": "@core/domain/categoryColorMap",
+  "../config/categoryColorMap": "@core/domain/categoryColorMap",
+  "../../config/categoryColorMap": "@core/domain/categoryColorMap",
+
+  "./utils/templates": "@core/utils/templates",
+  "../utils/templates": "@core/utils/templates",
+  "../../utils/templates": "@core/utils/templates",
+
+  "./utils/date": "@core/utils/date",
+  "../utils/date": "@core/utils/date",
+  "../../utils/date": "@core/utils/date",
+
+  "./utils/timing": "@core/utils/timing",
+  "../utils/timing": "@core/utils/timing",
+  "../../utils/timing": "@core/utils/timing",
+
+  "./utils/text": "@core/utils/text",
+  "../utils/text": "@core/utils/text",
+  "../../utils/text": "@core/utils/text",
+
+  "./utils/regex": "@core/utils/regex",
+  "../utils/regex": "@core/utils/regex",
+  "../../utils/regex": "@core/utils/regex",
+
+  "./utils/inputSettings": "@core/utils/inputSettings",
+  "../utils/inputSettings": "@core/utils/inputSettings",
+  "../../utils/inputSettings": "@core/utils/inputSettings",
+
+  "./utils/mark": "@core/utils/mark",
+  "../utils/mark": "@core/utils/mark",
+  "../../utils/mark": "@core/utils/mark",
+
+  "./utils/itemFilter": "@core/utils/itemFilter",
+  "../utils/itemFilter": "@core/utils/itemFilter",
+  "../../utils/itemFilter": "@core/utils/itemFilter",
+
+  "./utils/obsidian": "@core/utils/obsidian",
+  "../utils/obsidian": "@core/utils/obsidian",
+  "../../utils/obsidian": "@core/utils/obsidian",
+
+  "../config/schema": "@core/domain/schema",
+  "../config/constants": "@core/domain/constants",
+  "../config/categoryColorMap": "@core/domain/categoryColorMap",
+  "../../config/schema": "@core/domain/schema",
+  "../../config/constants": "@core/domain/constants",
+  "../../config/categoryColorMap": "@core/domain/categoryColorMap",
+  "../data/parser": "@core/utils/parser",
+  "../../data/parser": "@core/utils/parser"
+}

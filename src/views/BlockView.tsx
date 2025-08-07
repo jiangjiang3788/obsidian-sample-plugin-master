@@ -1,10 +1,10 @@
 // views/BlockView.tsx
 // 主要改动：使用公共 TaskCheckbox 组件，删除重复逻辑
 import { h, JSX } from 'preact';
-import { Item, readField } from '../config/schema';
-import { getCategoryColor } from '../config/categoryColorMap';
-import { DataStore } from '../data/store';
-import { makeObsUri } from '../utils/obsidian';
+import { Item, readField } from '@core/domain/schema';
+import { getCategoryColor } from '@core/domain/categoryColorMap';
+import { DataStore } from '@core/services/dataStore';
+import { makeObsUri } from '@core/utils/obsidian';
 import { TaskCheckbox } from './common/TaskCheckbox';   // ★ 新增
 
 interface BlockViewProps {

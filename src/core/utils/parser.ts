@@ -1,12 +1,12 @@
 // src/data/parser.ts
-import { Item } from '../config/schema';
+import { Item } from '@core/domain/schema';
 import {
   TAG_RE, KV_IN_PAREN, DATE_YMD_RE, RE_TASK_PREFIX,
   RE_DONE_BOX, RE_CANCEL_BOX
-} from '../utils/regex';
-import { normalizeDateStr, extractDate } from '../utils/date';
-import { EMOJI } from '../config/constants';
-import { cleanTaskText } from '../utils/text';
+} from '@core/utils/regex';
+import { normalizeDateStr, extractDate } from '@core/utils/date';
+import { EMOJI } from '@core/domain/constants';
+import { cleanTaskText } from '@core/utils/text';
 
 /* ---------- 工具 ---------- */
 function pick(line: string, emoji: string) { return extractDate(line, emoji); }
