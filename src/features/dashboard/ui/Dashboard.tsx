@@ -4,10 +4,10 @@ import { useState, useEffect } from 'preact/hooks';
 import { DataStore } from '@core/services/dataStore';
 import { DashboardConfig, ModuleConfig } from '@core/domain/schema';
 import { ModulePanel } from './ModulePanel';
-import type ThinkPlugin from '../main';
+import type ThinkPlugin from '../../../main';          // ✅ 修正：原来是 '../main'（不存在）
 import { TFile, TFolder } from 'obsidian';
 import { ViewComponents } from '@features/dashboard/ui';
-import { getDateRange, dayjs } from '@core/utils/date';         // (#5)
+import { getDateRange, dayjs } from '@core/utils/date';
 import {
   filterByRules,
   sortItems,

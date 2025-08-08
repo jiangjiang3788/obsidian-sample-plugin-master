@@ -1,9 +1,7 @@
 // src/ui/DashboardConfigForm.tsx
-
-// src/ui/DashboardConfigForm.tsx
 /** @jsxImportSource preact */
 import { h } from 'preact';
-import { OPS } from '@core/domain/constants';
+import { OPS } from '@core/domain/constants';                 // ✅ 保留这一行
 import { memo } from 'preact/compat';
 import {
   useMemo, useRef, useCallback, useState,
@@ -29,8 +27,8 @@ import {
 } from '@core/domain/schema';
 import { VIEW_OPTIONS } from '@features/dashboard/ui';
 import { theme as baseTheme } from '@shared/styles/mui-theme';
-import { OPS } from '@core/domain/constants';                      // ← 复用全局常量 (#1)
 
+// ❌ 原文件这里有一行「import { OPS } from '@core/domain/constants'」是重复的，直接删掉即可
 
 
 /* ---------- MUI 统一外观 ---------- */
