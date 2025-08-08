@@ -56,24 +56,19 @@ export function filterByDateRange(items: Item[], startISO?: string, endISO?: str
   const eMs = endISO   ? Date.parse(endISO)   : null;
 
   return items.filter(it => {
-    // 统一口径优先：dateMs -> date(ISO)
     const t = (it.dateMs ?? (it.date ? Date.parse(it.date) : NaN));
 
-    // ✅ 关键规则：
-    // - 没有统一日期的项：
-    //   * 若是已完成或已取消 → 隐藏
-    //   * 其余（未完成）     → 保留
+    // 没统一日期：完成/取消→隐藏；未完成→保留
     if (isNaN(t)) {
       const st = String(it.status || '').toLowerCase();
       return !(st === 'done' || st === 'cancelled');
     }
-
-    // 有日期的按区间过滤
     if (sMs !== null && t < sMs) return false;
     if (eMs !== null && t > eMs) return false;
     return true;
   });
 }
+
 
 
 /* ---------- 关键字 ---------- */

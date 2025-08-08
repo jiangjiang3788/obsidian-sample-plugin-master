@@ -19,10 +19,6 @@ export interface Item {
   modified: number;
   extra   : Record<string,string|number|boolean>;
 
-
-  dateMs?: number;        // 毫秒时间戳（用于排序/区间比较）
-  dateSource?: 'done'|'due'|'scheduled'|'start'|'created'|'end'|'block';
-
   header?   : string;
   icon?     : string;
   priority? : 'lowest'|'low'|'medium'|'high'|'highest';
@@ -36,6 +32,10 @@ export interface Item {
   doneDate?      : string;
   cancelledDate? : string;
   filename?      : string;
+
+  /* ✅ 统一口径（DataStore 标准化产物） */
+  dateMs?: number;
+  dateSource?: 'done'|'due'|'scheduled'|'start'|'created'|'end'|'block';
 }
 
 /* ---------- 仪表盘模块配置 ---------- */
@@ -62,6 +62,23 @@ export interface SortRule {
   dir  : 'asc' | 'desc';
 }
 
+/* ---------- ✅ 每个仪表盘的写入 overrides ---------- */
+export interface DashboardOverrides {
+  /** 任务写入覆盖：模板 + 文件路径（可使用 {{主题}}） */
+  task?: {
+    template?: string;
+    file?: string;
+  };
+  /** 各 Block 写入覆盖（计划/总结/思考/打卡） */
+  blocks?: Record<string, {
+    file?: string;
+    /** 输出字段顺序（如：['分类','日期','主题','图标','标签','内容']） */
+    fieldsOrder?: string[];
+    /** 预留：如需后续自定义模板可扩展 template?: string; */
+  }>;
+}
+
+/* ---------- 仪表盘配置 ---------- */
 export interface DashboardConfig {
   name       : string;
   path?      : string;
@@ -69,6 +86,9 @@ export interface DashboardConfig {
   initialView?: string;
   initialDate?: string;
   modules    : ModuleConfig[];
+
+  /** ✅ 新增：本仪表盘专属写入覆盖 */
+  overrides?: DashboardOverrides;
 }
 
 export const CORE_FIELDS = [
@@ -76,10 +96,10 @@ export const CORE_FIELDS = [
   'startISO','endISO','startMs','endMs','header','icon','priority',
   'createdDate','scheduledDate','startDate','dueDate','doneDate','cancelledDate',
   'created','modified','filename',
-  // ✅ 统一日期口径字段，供 Excel / Table 显示与排序
+  // 统一日期口径字段（供 Excel/Table 显示/排序）
   'date','dateMs','dateSource',
 ] as const;
-
+export type CoreField = typeof CORE_FIELDS[number];
 
 export function getAllFields(items: Item[]): string[] {
   const set = new Set<string>(CORE_FIELDS as unknown as string[]);

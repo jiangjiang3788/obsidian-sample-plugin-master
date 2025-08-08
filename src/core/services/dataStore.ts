@@ -5,7 +5,7 @@ import { parseTaskLine, parseBlockContent } from '@core/utils/parser';
 import { throttle } from '@core/utils/timing';
 import { TaskService } from '@core/services/taskService';
 import { ObsidianPlatform } from '@platform/obsidian';
-
+import { normalizeItemDates } from '@core/utils/normalize';
 // 统一的过滤/排序工具
 import { filterByRules, sortItems } from '@core/utils/itemFilter';
 

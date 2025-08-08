@@ -1,4 +1,5 @@
 // src/core/utils/normalize.ts
+
 import { Item } from '@core/domain/schema';
 
 const ORDER = ['done','due','scheduled','start','created','end'] as const;
@@ -36,5 +37,4 @@ export function normalizeItemDates(it: Item): void {
       return;
     }
   }
-  // 没有任何日期字段：保持 undefined，不强行写
 }
