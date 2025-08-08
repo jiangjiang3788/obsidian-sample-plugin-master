@@ -1,6 +1,7 @@
-// src/utils/itemFilter.ts
+// src/core/utils/itemFilter.ts
 //-----------------------------------------------------------
 // 统一的筛选 / 排序 / 日期区间 / 关键字过滤助手
+// —— 用统一口径 item.date / item.dateMs 做时间过滤
 //-----------------------------------------------------------
 
 import { Item, FilterRule, SortRule, readField } from '@core/domain/schema';
@@ -47,22 +48,33 @@ export function sortItems(items: Item[], rules: SortRule[] = []) {
   });
 }
 
-/* ---------- 日期区间（改为毫秒级比较） ---------- */
-export function filterByDateRange(
-  items: Item[], startISO?: string, endISO?: string
-) {
+/* ---------- 日期区间（仅保留有统一 date 的项） ---------- */
+// 仅替换这个函数即可
+export function filterByDateRange(items: Item[], startISO?: string, endISO?: string) {
   if (!startISO && !endISO) return items;
   const sMs = startISO ? Date.parse(startISO) : null;
   const eMs = endISO   ? Date.parse(endISO)   : null;
 
   return items.filter(it => {
-    const t = (it.startMs ?? (it.startISO ? Date.parse(it.startISO) : NaN));
-    if (isNaN(t)) return true;
+    // 统一口径优先：dateMs -> date(ISO)
+    const t = (it.dateMs ?? (it.date ? Date.parse(it.date) : NaN));
+
+    // ✅ 关键规则：
+    // - 没有统一日期的项：
+    //   * 若是已完成或已取消 → 隐藏
+    //   * 其余（未完成）     → 保留
+    if (isNaN(t)) {
+      const st = String(it.status || '').toLowerCase();
+      return !(st === 'done' || st === 'cancelled');
+    }
+
+    // 有日期的按区间过滤
     if (sMs !== null && t < sMs) return false;
     if (eMs !== null && t > eMs) return false;
     return true;
   });
 }
+
 
 /* ---------- 关键字 ---------- */
 export function filterByKeyword(items: Item[], kw: string) {
