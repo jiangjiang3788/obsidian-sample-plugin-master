@@ -19,6 +19,10 @@ export interface Item {
   modified: number;
   extra   : Record<string,string|number|boolean>;
 
+
+  dateMs?: number;        // 毫秒时间戳（用于排序/区间比较）
+  dateSource?: 'done'|'due'|'scheduled'|'start'|'created'|'end'|'block';
+
   header?   : string;
   icon?     : string;
   priority? : 'lowest'|'low'|'medium'|'high'|'highest';
@@ -72,8 +76,10 @@ export const CORE_FIELDS = [
   'startISO','endISO','startMs','endMs','header','icon','priority',
   'createdDate','scheduledDate','startDate','dueDate','doneDate','cancelledDate',
   'created','modified','filename',
+  // ✅ 统一日期口径字段，供 Excel / Table 显示与排序
+  'date','dateMs','dateSource',
 ] as const;
-export type CoreField = typeof CORE_FIELDS[number];
+
 
 export function getAllFields(items: Item[]): string[] {
   const set = new Set<string>(CORE_FIELDS as unknown as string[]);

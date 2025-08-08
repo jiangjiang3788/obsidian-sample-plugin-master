@@ -1,27 +1,19 @@
-// dataStore.ts —— 与 Vault 交互的核心数据层
+// src/core/services/dataStore.ts —— 与 Vault 交互的核心数据层
 import { HeadingCache, TFile, TFolder } from 'obsidian';
-import {
-  Item,
-  FilterRule,
-  SortRule,
-  readField,
-} from '@core/domain/schema';
-import {
-  parseTaskLine,
-  parseBlockContent,
-} from '@core/utils/parser';
+import { Item, FilterRule, SortRule } from '@core/domain/schema';
+import { parseTaskLine, parseBlockContent } from '@core/utils/parser';
 import { throttle } from '@core/utils/timing';
 import { TaskService } from '@core/services/taskService';
-import {
-  ObsidianPlatform,
-  TAbstractFile,
-} from '@platform/obsidian';
+import { ObsidianPlatform } from '@platform/obsidian';
 
-// ✅ 引入统一的过滤/排序工具，避免两套实现打架
-import {
-  filterByRules,
-  sortItems,
-} from '@core/utils/itemFilter';
+// 统一的过滤/排序工具
+import { filterByRules, sortItems } from '@core/utils/itemFilter';
+
+// ✅ 新增：统一计算 date/dateMs/dateSource
+import { normalizeItemDates } from '@core/utils/normalize';
+
+// ✅ 乐观更新时要用到今天日期
+import { todayISO } from '@core/utils/date';
 
 export class DataStore {
   /* ---------------- 单例 ---------------- */
@@ -61,7 +53,7 @@ export class DataStore {
     return this.scanAll();
   }
 
-  /** 扫描单文件并更新缓存 */
+  /** 扫描单文件并更新缓存（📌 这里统一调用 normalizeItemDates） */
   async scanFile(file: TFile): Promise<Item[]> {
     try {
       const content = await this.platform.readFile(file);
@@ -122,6 +114,10 @@ export class DataStore {
                 ? file.name.slice(0, -3)
                 : file.name;
               blockItem.filename = name;
+
+              // ✅ 统一日期口径
+              normalizeItemDates(blockItem);
+
               fileItems.push(blockItem);
             }
             i = endIdx;
@@ -148,6 +144,10 @@ export class DataStore {
             ? file.name.slice(0, -3)
             : file.name;
           taskItem.filename = name;
+
+          // ✅ 统一日期口径
+          normalizeItemDates(taskItem);
+
           fileItems.push(taskItem);
         }
       }
@@ -189,7 +189,6 @@ export class DataStore {
     filters: FilterRule[] = [],
     sortRules: SortRule[] = [],
   ): Item[] {
-    // ✅ 用统一工具实现过滤/排序，避免与 itemFilter 逻辑分叉
     const filtered = filterByRules(this.items, filters);
     return sortItems(filtered, sortRules);
   }
@@ -198,8 +197,29 @@ export class DataStore {
     return this.queryItems(filters, sortRules);
   }
 
-  /* ---------- 标记完成 ---------- */
+  /* ---------- 标记完成（乐观更新 + 真正写回） ---------- */
   async markItemDone(itemId: string): Promise<void> {
+    // 1) 乐观更新：立刻在内存里修改并刷新 UI
+    const it = this.items.find(x => x.id === itemId);
+    if (it && it.status !== 'done') {
+      const today = todayISO();
+      it.status   = 'done';
+      it.doneDate = today;
+
+      // 统一一下口径字段（和 normalize 保持一致）
+      it.date = it.date || today;
+      it.dateSource = it.dateSource || 'done';
+      const t = Date.parse(today);
+      if (!isNaN(t)) {
+        it.dateMs = it.dateMs ?? t;
+        it.endMs  = it.endMs  ?? t;
+      }
+      it.endISO = it.endISO || today;
+
+      this.notifyChange(); // 立即刷新界面
+    }
+
+    // 2) 写回文件 + 重新扫描（完成后会再次 notifyChange）
     await TaskService.completeTask(itemId);
   }
 

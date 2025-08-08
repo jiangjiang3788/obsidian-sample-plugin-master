@@ -38,7 +38,9 @@
               "value": "done"
             }
           ],
-          "sort": []
+          "sort": [],
+          "fields": [],
+          "groups": []
         },
         {
           "view": "BlockView",
@@ -137,7 +139,7 @@
         "电脑",
         "工作"
       ],
-      "initialView": "月"
+      "initialView": "周"
     },
     {
       "name": "02",
@@ -157,28 +159,13 @@
       "name": "未完成任务",
       "modules": [
         {
-          "view": "BlockView",
+          "view": "ExcelView",
           "title": "新模块",
           "collapsed": false,
-          "filters": [
-            {
-              "field": "status",
-              "op": "=",
-              "value": "done"
-            }
-          ],
+          "filters": [],
           "sort": [],
-          "fields": [
-            "category",
-            "date",
-            "icon",
-            "title",
-            "content",
-            "extra.时长"
-          ],
-          "groups": [
-            "filename"
-          ],
+          "fields": [],
+          "groups": [],
           "rowField": "tags",
           "colField": "date"
         }
@@ -192,7 +179,7 @@
         "电脑",
         "工作"
       ],
-      "initialView": "季"
+      "initialView": "天"
     }
   ],
   "inputSettings": {
