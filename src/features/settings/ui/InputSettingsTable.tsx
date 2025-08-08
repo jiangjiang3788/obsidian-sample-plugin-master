@@ -1,4 +1,3 @@
-// src/ui/InputSettingsTable.tsx
 /** @jsxImportSource preact */
 // InputSettingsTable.tsx —— 紧凑表格 UI（单击单元格可编辑 JSON/图标 + 可折叠）
 
@@ -12,7 +11,7 @@ import AddIcon       from '@mui/icons-material/Add';
 import SaveIcon      from '@mui/icons-material/Save';
 import DeleteIcon    from '@mui/icons-material/Delete';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import ThinkPlugin from '../main';
+import type ThinkPlugin from '../../../main';   // ✅ 修正：原来 '../main' 不对
 import { Notice } from 'obsidian';
 
 /* ---------- 单元格标记（仅显示一个图标） ---------- */
@@ -21,8 +20,10 @@ const DISABLE_TEXT  = '❌';
 const INHERIT_TEXT  = '🔽';
 const OVERRIDE_TEXT = '📄';
 
+
+
 /* 行间距（表格更紧凑） */
-const ROW_PADDING_Y = 0.5; // 0.5 × theme.spacing = 4px
+const ROW_PADDING_Y = 0.3; // 0.5 × theme.spacing = 4px
 const CELL_PADDING_X = 1;  // 1 × theme.spacing  = 8px
 
 /* ---------- 主组件 ---------- */

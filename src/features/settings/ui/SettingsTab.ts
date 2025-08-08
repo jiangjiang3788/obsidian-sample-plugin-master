@@ -1,13 +1,12 @@
-
-
 /** @jsxImportSource preact */
 import { h, render } from 'preact';
 
 import { PluginSettingTab, Notice } from 'obsidian';
-import type ThinkPlugin from '@root/main';          // 视你 main.ts 真实路径调整
-import { DashboardConfigForm } from '@features/dashboard/ui';   
+import type ThinkPlugin from '../../../main';          // ✅ 原来用 '@root/main'
+import { DashboardConfigForm } from '../../dashboard/ui';   // ✅ 原来用 '@features/dashboard/ui'
 
 import { InputSettingsTable  } from './InputSettingsTable';
+
 export class SettingsTab extends PluginSettingTab {
   private plugin: ThinkPlugin;
 
@@ -93,7 +92,7 @@ export class SettingsTab extends PluginSettingTab {
 
   /* ------------------------------------------------------------------ */
   private persistAndReload(msg: string) {
-    this.plugin.persistAll().then(() => {
+    this.plugin.persistAll().then(() => {   // ✅ 现在 main 里有 persistAll 了
       new Notice(msg);
       this.display();
     });

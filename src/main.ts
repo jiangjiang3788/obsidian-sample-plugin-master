@@ -1,4 +1,5 @@
 import { App, Plugin, Notice } from 'obsidian';
+import { render } from 'preact'; // ✅ 用于卸载 Preact
 
 import { ObsidianPlatform } from '@platform/obsidian';
 import { DataStore }        from '@core/services/dataStore';
@@ -40,9 +41,15 @@ export default class ThinkPlugin extends Plugin {
   private _settings!: ThinkSettings;
 
   get dashboards()    { return this._settings.dashboards; }
+  set dashboards(v: DashboardConfig[]) { this._settings.dashboards = v; }          // ✅ setter
+
   get inputSettings() { return this._settings.inputSettings; }
+  set inputSettings(v: InputSettings)  { this._settings.inputSettings = v; }       // ✅ setter
 
   activeDashboards: { container: HTMLElement; configName: string }[] = [];
+
+  // 统一持久化出口（设置页等调用）
+  async persistAll() { await this.saveSettings(); }                                 // ✅ 新增
 
   // ===== 生命周期 ===== //
 
@@ -72,7 +79,12 @@ export default class ThinkPlugin extends Plugin {
 
   onunload(): void {
     console.log('ThinkPlugin unload');
-    this.activeDashboards.forEach(({ container }) => container.empty());
+    // ✅ 正确卸载 Preact，避免内存泄漏
+    this.activeDashboards.forEach(({ container }) => {
+      try { render(null, container); } catch {}
+      container.empty();
+    });
+    this.activeDashboards = [];
   }
 
   // ===== 设置持久化 ===== //

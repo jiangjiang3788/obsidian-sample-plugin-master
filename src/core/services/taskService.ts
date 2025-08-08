@@ -1,7 +1,7 @@
 // taskService.ts —— 处理「勾选任务」的业务服务
 import { DataStore } from './dataStore';
 import { markTaskDone } from '@core/utils/mark';
-import type { TFile } from 'obsidian';
+import { TFile } from 'obsidian';                 // ✅ 运行时需要值，不能用 type-only
 import { dayjs } from '@core/utils/date';
 
 export class TaskService {
@@ -11,11 +11,8 @@ export class TaskService {
 
     const [filePath, lineStr] = itemId.split('#');
     const lineNo = Number(lineStr);
-    const file = ds.platform.app.vault.getAbstractFileByPath(
-      filePath,
-    );
-    if (!(file instanceof (ds.platform.app.vault as any).constructor.TFile))
-      return;
+    const file = ds.platform.app.vault.getAbstractFileByPath(filePath);
+    if (!(file instanceof TFile)) return;         // ✅ 正确判断
 
     const content = await ds.platform.readFile(file as TFile);
     const lines = content.split(/\r?\n/);

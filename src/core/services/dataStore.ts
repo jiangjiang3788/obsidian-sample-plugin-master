@@ -17,6 +17,12 @@ import {
   TAbstractFile,
 } from '@platform/obsidian';
 
+// ✅ 引入统一的过滤/排序工具，避免两套实现打架
+import {
+  filterByRules,
+  sortItems,
+} from '@core/utils/itemFilter';
+
 export class DataStore {
   /* ---------------- 单例 ---------------- */
   static instance: DataStore;
@@ -183,40 +189,9 @@ export class DataStore {
     filters: FilterRule[] = [],
     sortRules: SortRule[] = [],
   ): Item[] {
-    let results = this.items.filter(item =>
-      (filters || []).every(rule => this._matchItem(item, rule)),
-    );
-
-    if (sortRules.length > 0) {
-      results.sort((a, b) => {
-        for (const rule of sortRules) {
-          const aVal = readField(a, rule.field);
-          const bVal = readField(b, rule.field);
-          if (aVal == null && bVal == null) continue;
-          if (aVal == null) return rule.dir === 'asc' ? 1 : -1;
-          if (bVal == null) return rule.dir === 'asc' ? -1 : 1;
-
-          if (
-            typeof aVal === 'number' &&
-            typeof bVal === 'number'
-          ) {
-            if (aVal !== bVal)
-              return rule.dir === 'asc'
-                ? aVal - bVal
-                : bVal - aVal;
-          } else {
-            const aStr = String(aVal);
-            const bStr = String(bVal);
-            if (aStr !== bStr)
-              return rule.dir === 'asc'
-                ? aStr.localeCompare(bStr)
-                : bStr.localeCompare(aStr);
-          }
-        }
-        return 0;
-      });
-    }
-    return results;
+    // ✅ 用统一工具实现过滤/排序，避免与 itemFilter 逻辑分叉
+    const filtered = filterByRules(this.items, filters);
+    return sortItems(filtered, sortRules);
   }
   /** 旧 API */
   query(filters: FilterRule[] = [], sortRules: SortRule[] = []) {
@@ -253,66 +228,5 @@ export class DataStore {
   }
   notifyChange() {
     this._emitThrottled();
-  }
-
-  /* ====================================================================== */
-  /*                               私有工具                                 */
-  /* ====================================================================== */
-
-  private _matchItem(item: Item, rule: FilterRule): boolean {
-    const fieldVal = readField(item, rule.field);
-    const cmpVal = rule.value;
-
-    if (rule.op === '=' || rule.op === '!=') {
-      const isEqual =
-        fieldVal != null &&
-        cmpVal != null &&
-        String(fieldVal) === String(cmpVal);
-      return rule.op === '=' ? isEqual : !isEqual;
-    }
-    if (rule.op === 'includes') {
-      if (fieldVal == null) return false;
-      if (Array.isArray(fieldVal))
-        return fieldVal.some(v =>
-          String(v).includes(String(cmpVal)),
-        );
-      return String(fieldVal).includes(String(cmpVal));
-    }
-    if (rule.op === 'regex') {
-      if (fieldVal == null) return false;
-      try {
-        const regex = new RegExp(String(cmpVal));
-        if (Array.isArray(fieldVal))
-          return fieldVal.some(v => regex.test(String(v)));
-        return regex.test(String(fieldVal));
-      } catch {
-        console.warn('ThinkPlugin: 无效的正则表达式', cmpVal);
-        return false;
-      }
-    }
-    if (rule.op === '>' || rule.op === '<') {
-      if (fieldVal == null) return false;
-
-      const itemNum = Number(fieldVal);
-      const cmpNum = Number(cmpVal);
-      if (!isNaN(itemNum) && !isNaN(cmpNum))
-        return rule.op === '>'
-          ? itemNum > cmpNum
-          : itemNum < cmpNum;
-
-      const itemTime = Date.parse(String(fieldVal));
-      const cmpTime = Date.parse(String(cmpVal));
-      if (!isNaN(itemTime) && !isNaN(cmpTime))
-        return rule.op === '>'
-          ? itemTime > cmpTime
-          : itemTime < cmpTime;
-
-      const aStr = String(fieldVal);
-      const bStr = String(cmpVal);
-      return rule.op === '>'
-        ? aStr > bStr
-        : aStr < bStr;
-    }
-    return false;
   }
 }

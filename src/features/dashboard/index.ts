@@ -1,7 +1,7 @@
 // src/features/dashboard/index.ts
-import type { ThinkContext } from '@platform/context';
+import type { ThinkContext } from '../../main';   // ✅ 原来指向 @platform/context（并不存在）
 
-import { VaultWatcher }     from '@core/VaultWatcher';
+import { VaultWatcher }      from '@core/VaultWatcher';
 import { CodeblockEmbedder } from '@core/CodeblockEmbedder';
 
 /** Dashboard Feature 的入口 —— 把所有与仪表盘相关的监听 / 代码块注册都放这里 */
