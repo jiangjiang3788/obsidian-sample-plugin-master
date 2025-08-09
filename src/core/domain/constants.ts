@@ -1,4 +1,6 @@
+// src/core/domain/constants.ts
 // config/constants.ts
+
 export const CODEBLOCK_LANG = 'think';
 
 export const OPS = ['=', '!=', 'includes', 'regex', '>', '<'] as const;
@@ -24,7 +26,11 @@ export const EMPTY_LABEL = '无日期';
 
 export const STYLE_TAG_ID = 'think-dashboard-style';
 
-// 将默认注入样式集中在此，便于替换/关闭
+/**
+ * 全局样式
+ * - 强制把模块中的链接设为「黑色 + 无下划线」并覆盖主题（用 !important）
+ * - 其它基础表格/标签样式保持原有
+ */
 export const GLOBAL_CSS = `
 .think-table{width:100%;border:1px solid #ccc;border-collapse:collapse;}
 .think-table th,.think-table td{border:1px solid #ccc;padding:4px;}
@@ -37,5 +43,9 @@ export const GLOBAL_CSS = `
 .module-title{flex:1;font-weight:bold;}
 .module-toggle{margin-left:4px;}
 .module-content{padding:6px 8px;}
-.think-module a{color:black;text-decoration:none;}
+/* 关键：仪表盘模块内的所有链接 → 黑色、无下划线（覆盖主题） */
+.think-module a,
+.think-module a:visited { color:#000 !important; text-decoration:none !important; }
+.think-module a:hover,
+.think-module a:active { text-decoration:none !important; }
 `.trim();
