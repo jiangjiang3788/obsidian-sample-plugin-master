@@ -1,6 +1,5 @@
 // src/core/domain/constants.ts
 // config/constants.ts
-
 export const CODEBLOCK_LANG = 'think';
 
 export const OPS = ['=', '!=', 'includes', 'regex', '>', '<'] as const;
@@ -23,14 +22,9 @@ export const EMOJI = {
 } as const;
 
 export const EMPTY_LABEL = '无日期';
-
 export const STYLE_TAG_ID = 'think-dashboard-style';
 
-/**
- * 全局样式
- * - 强制把模块中的链接设为「黑色 + 无下划线」并覆盖主题（用 !important）
- * - 其它基础表格/标签样式保持原有
- */
+/** 全局样式：把仪表盘里的链接统一成黑色、无下划线（覆盖主题），并保留表格等基础样式 */
 export const GLOBAL_CSS = `
 .think-table{width:100%;border:1px solid #ccc;border-collapse:collapse;}
 .think-table th,.think-table td{border:1px solid #ccc;padding:4px;}
