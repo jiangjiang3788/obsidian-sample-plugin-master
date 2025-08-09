@@ -1,4 +1,5 @@
-// src/data/parser.ts
+// src/core/utils/parser.ts
+// 解析任务与块，直接生成 categoryKey（不再生成 status/category）
 import { Item } from '@core/domain/schema';
 import {
   TAG_RE, KV_IN_PAREN, DATE_YMD_RE, RE_TASK_PREFIX,
@@ -10,16 +11,8 @@ import { cleanTaskText } from '@core/utils/text';
 
 /* ---------- 工具 ---------- */
 function pick(line: string, emoji: string) { return extractDate(line, emoji); }
-
-/* ---------- 优先级 ---------- */
-function pickPriority(line: string): Item['priority'] | undefined {
-  if (line.includes('🔺')) return 'highest';
-  if (line.includes('⏫')) return 'high';
-  if (line.includes('🔼')) return 'medium';
-  if (line.includes('🔽')) return 'low';
-  if (line.includes('⏬')) return 'lowest';
-  return undefined;
-}
+const isDoneLine = (line: string) => RE_DONE_BOX.test(line);
+const isCancelledLine = (line: string) => RE_CANCEL_BOX.test(line);
 
 /** 解析任务行 */
 export function parseTaskLine(
@@ -28,10 +21,9 @@ export function parseTaskLine(
   const lineText = rawLine;
   if (!RE_TASK_PREFIX.test(lineText)) return null;
 
-  /* ---- 状态 ---- */
-  let status: Item['status'] = 'open';
-  if (RE_DONE_BOX.test(lineText)) status = 'done';
-  else if (RE_CANCEL_BOX.test(lineText)) status = 'cancelled';
+  /* ---- 状态 → categoryKey ---- */
+  const status = isDoneLine(lineText) ? 'done' : isCancelledLine(lineText) ? 'cancelled' : 'open';
+  const categoryKey = `任务/${status}`;
 
   /* ---- 标签 ---- */
   const tagMatches = lineText.match(TAG_RE) || [];
@@ -71,9 +63,17 @@ export function parseTaskLine(
   const startDate     = pick(lineText, EMOJI.start);
   const createdDate   = pick(lineText, EMOJI.created);
 
-  const priority = pickPriority(lineText);
+  /* ---- 优先级 / 图标 / 标题 ---- */
+  const pickPriority = (line: string): Item['priority'] | undefined => {
+    if (line.includes('🔺')) return 'highest';
+    if (line.includes('⏫')) return 'high';
+    if (line.includes('🔼')) return 'medium';
+    if (line.includes('⏽')) return 'low';
+    if (line.includes('⏬')) return 'lowest';
+    if (line.includes('🔽')) return 'low';
+    return undefined;
+  };
 
-  /* ---- 图标与标题 ---- */
   let icon: string | undefined;
   const afterPrefix = lineText.replace(RE_TASK_PREFIX, '').trim();
   const iconMatch = afterPrefix.match(/^(\p{Extended_Pictographic}\uFE0F?)/u);
@@ -84,25 +84,26 @@ export function parseTaskLine(
   }
   titleSrc = cleanTaskText(titleSrc);
 
+  const priority = pickPriority(lineText);
+
   /* ---- Item ---- */
   const item: Item = {
     id: `${filePath}#${lineNo}`,
     title: titleSrc || '',
     content: lineText.trim(),
     type: 'task',
-    status,
-    category: '任务',
     tags: Array.from(new Set(tags)),
     recurrence,
     created: 0,
     modified: 0,
     extra,
+    categoryKey,
   };
 
-  /* dates */
   if (icon) item.icon = icon;
   if (priority) item.priority = priority;
 
+  // 兼容日期字段（供 normalize 使用）
   if (createdDate)   item.createdDate = createdDate;
   if (scheduledDate) item.scheduledDate = scheduledDate;
   if (startDate)     item.startDate = startDate;
@@ -110,30 +111,28 @@ export function parseTaskLine(
   if (doneDate)      item.doneDate = doneDate;
   if (cancelledDate) item.cancelledDate = cancelledDate;
 
-  /* 统一 Start / End for timeline */
+  /* timeline Start/End */
   item.startISO = startDate || scheduledDate || dueDate || createdDate;
   item.endISO   = doneDate || cancelledDate || dueDate;
-  if (!item.startISO && item.status === 'open') item.startISO = item.date = item.dueDate || item.scheduledDate || item.startDate || item.createdDate;
-  if (!item.endISO)   item.endISO   = item.startISO;
+  if (!item.startISO && status === 'open') {
+    item.startISO = item.date = item.dueDate || item.scheduledDate || item.startDate || item.createdDate;
+  }
+  if (!item.endISO) item.endISO = item.startISO;
 
   if (item.startISO) item.startMs = Date.parse(item.startISO);
   if (item.endISO)   item.endMs   = Date.parse(item.endISO);
 
-  /* default date (back‑compat) */
-  if (status === 'done')       item.date = doneDate;
-  else if (status === 'cancelled') item.date = cancelledDate;
-
   return item;
 }
 
-/** 解析块内容 */
+/** 解析块内容（categoryKey = 原来的 “分类/类别/category” 或父文件夹名） */
 export function parseBlockContent(
   filePath: string, lines: string[], startIdx: number, endIdx: number, parentFolder: string
 ): Item | null {
   const contentLines = lines.slice(startIdx + 1, endIdx);
   let title = '';
-  let category: string | null = null;
-  let status: string | undefined;
+  let categoryKey: string | null = null;
+  let statusIgnored: string | undefined; // 兼容旧“状态”字段，但不再使用
   let date: string | undefined;
   const tags: string[] = [];
   const extra: Record<string, string | number | boolean> = {};
@@ -152,9 +151,9 @@ export function parseBlockContent(
         const key = kv[1].trim();
         const value = kv[2] || '';
         const lower = key.toLowerCase();
-        if (['分类', '类别', 'category'].includes(lower))       category = value.trim();
+        if (['分类', '类别', 'category'].includes(lower))       categoryKey = value.trim();
         else if (['主题', '标签', 'tag', 'tags'].includes(lower)) themeValue = value.trim();
-        else if (['状态', 'status'].includes(lower))            status = value.trim();
+        else if (['状态', 'status'].includes(lower))            statusIgnored = value.trim();
         else if (['日期', 'date'].includes(lower))              date = normalizeDateStr(value.trim());
         else if (['内容', 'content'].includes(lower)) {
           contentStarted = true; contentText = value;
@@ -181,20 +180,20 @@ export function parseBlockContent(
   title = title.replace(/^(?:\p{Extended_Pictographic}\uFE0F?\s*)+/u, '').trim();
   if (title) title = title.slice(0, 10);
 
-  if (!category) category = parentFolder || '';
+  // 默认使用父文件夹作为类别
+  if (!categoryKey) categoryKey = parentFolder || '';
 
   const item: Item = {
     id: `${filePath}#${startIdx + 1}`,
     title: title || '',
     content: contentText.trim(),
     type: 'block',
-    status,
-    category,
     tags: Array.from(new Set(tags)),
     recurrence: 'none',
     created: 0,
     modified: 0,
     extra,
+    categoryKey,
   };
   if (iconVal) item.icon = iconVal;
 

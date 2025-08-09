@@ -1,24 +1,27 @@
-// views/BlockView.tsx
-// 主要改动：使用公共 TaskCheckbox 组件，删除重复逻辑
+// src/features/dashboard/ui/BlockView.tsx
+// 默认按 categoryKey 分组；颜色/标签基于 categoryKey
 import { h, JSX } from 'preact';
 import { Item, readField } from '@core/domain/schema';
 import { getCategoryColor } from '@core/domain/categoryColorMap';
 import { DataStore } from '@core/services/dataStore';
 import { makeObsUri } from '@core/utils/obsidian';
-import { TaskCheckbox } from '@shared/components/TaskCheckbox';   // ★ 新增
+import { TaskCheckbox } from '@shared/components/TaskCheckbox';
 
 interface BlockViewProps {
   items: Item[];
-  groupField?: string;
+  groupField?: string;   // ← 未传则默认 categoryKey
   showMeta?: boolean;
   fields?: string[];
 }
 
+const isDone = (k?: string) => /\/done$/i.test(k || '');
+
 export function BlockView(props: BlockViewProps) {
-  const { groupField, showMeta = true, fields } = props;
+  const { showMeta = true } = props;
+  const groupField = props.groupField || 'categoryKey';
   let items = props.items;
 
-  /* ------------------------- 分组逻辑保持不变 ------------------------- */
+  /* ------------------------- 分组 ------------------------- */
   let grouped: Record<string, Item[]> | null = null;
   let groupKeys: string[] = [];
   if (groupField) {
@@ -34,21 +37,21 @@ export function BlockView(props: BlockViewProps) {
     groupKeys.sort();
   }
 
-  /* ------------------------- 渲染任务 / Block ------------------------- */
+  /* ------------------------- 渲染 ------------------------- */
 
   const renderTaskLine = (item: Item) => {
-    const isDone = item.status === 'done';
+    const done = isDone(item.categoryKey);
     return (
       <div style="margin-bottom:4px;line-height:1.5;">
         <TaskCheckbox
-          done={isDone}
+          done={done}
           onMarkDone={() => DataStore.instance.markItemDone(item.id)}
         />
         <a
-          href={makeObsUri(item.id)}
+          href={makeObsUri(item)}
           target="_blank"
           rel="noopener"
-          class={isDone ? 'task-done' : ''}
+          class={done ? 'task-done' : ''}
         >
           {item.title}
         </a>
@@ -62,37 +65,40 @@ export function BlockView(props: BlockViewProps) {
     );
   };
 
-  const renderBlock = (item: Item) => (
-    <div
-      style="
-        display:grid;
-        grid-template-columns:auto minmax(180px,1fr);
-        align-items:start;
-        gap:8px;
-        margin-bottom:8px;
-      "
-    >
-      {showMeta && (
-        <div style="font-size:90%;display:flex;flex-wrap:wrap;gap:4px;">
-          <span
-            class="tag-pill"
-            style={`background:${getCategoryColor(item.category)};`}
-          >
-            {item.category}
-          </span>
-          {item.date && <span class="tag-pill">{item.date}</span>}
-          {item.extra['图标'] && (
-            <span class="tag-pill">{item.extra['图标']}</span>
-          )}
+  const renderBlock = (item: Item) => {
+    const base = (item.categoryKey || '').split('/')[0] || '';
+    return (
+      <div
+        style="
+          display:grid;
+          grid-template-columns:auto minmax(180px,1fr);
+          align-items:start;
+          gap:8px;
+          margin-bottom:8px;
+        "
+      >
+        {showMeta && (
+          <div style="font-size:90%;display:flex;flex-wrap:wrap;gap:4px;">
+            <span
+              class="tag-pill"
+              style={`background:${getCategoryColor(item.categoryKey)};`}
+            >
+              {base}
+            </span>
+            {item.date && <span class="tag-pill">{item.date}</span>}
+            {item.extra['图标'] && (
+              <span class="tag-pill">{String(item.extra['图标'])}</span>
+            )}
+          </div>
+        )}
+        <div style="white-space:pre-wrap;line-height:1.5;">
+          <a href={makeObsUri(item)} target="_blank" rel="noopener">
+            {item.content}
+          </a>
         </div>
-      )}
-      <div style="white-space:pre-wrap;line-height:1.5;">
-        <a href={makeObsUri(item.id)} target="_blank" rel="noopener">
-          {item.content}
-        </a>
       </div>
-    </div>
-  );
+    );
+  };
 
   const renderItem = (it: Item) =>
     it.type === 'task' ? renderTaskLine(it) : renderBlock(it);

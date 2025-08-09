@@ -1,41 +1,59 @@
+// src/core/domain/schema.ts
 import type { ViewName } from '@features/dashboard/ui';
+import type { RecurrenceInfo } from '@core/utils/mark';
 
 /* ---------- 数据项 ---------- */
 export interface Item {
-  id      : string;
+  id      : string;                         // path#line
   title   : string;
   content : string;
   type    : 'task' | 'block';
-  status? : string;
-  category: string;
   tags    : string[];
+
+  /** 合并后的单一口径：任务=“任务/<status>”，块=原类别（计划/总结/思考/打卡/…） */
+  categoryKey: string;
+
+  /** 原始重复性串；运行时可配合 recurrenceInfo 使用 */
   recurrence : string;
+  /** 运行时结构化的重复性（不落盘） */
+  recurrenceInfo?: RecurrenceInfo;
 
-  /* timeline unified */
-  startISO?: string;  endISO?: string;
-  startMs? : number;  endMs? : number;
+  /* timeline（仅时间轴/甘特视图使用） */
+  startISO?: string;  endISO?: string;      // ISO 日期字符串
+  startMs? : number;  endMs? : number;      // UTC 毫秒（运行时计算）
 
-  created : number;
-  modified: number;
-  extra   : Record<string,string|number|boolean>;
+  /** 统一口径（权威） */
+  date?: string;                             // 统一显示/过滤日期
+  dateMs?: number;                           // 统一排序值（运行时计算）
+  dateSource?: 'done'|'due'|'scheduled'|'start'|'created'|'end'|'block';
 
+  /** 文件元（运行时） */
+  created : number;                          // file.stat.ctime
+  modified: number;                          // file.stat.mtime
+  filename?: string;                         // 兼容旧用法
   header?   : string;
+
+  /** 展示性元 */
   icon?     : string;
   priority? : 'lowest'|'low'|'medium'|'high'|'highest';
 
-  /* legacy / compatibility */
-  date?          : string;
+  /** 扩展 */
+  extra   : Record<string,string|number|boolean>;
+
+  /* ---------- 兼容字段（仅作解析线索；UI 不直接读取） ---------- */
   createdDate?   : string;
   scheduledDate? : string;
   startDate?     : string;
   dueDate?       : string;
   doneDate?      : string;
   cancelledDate? : string;
-  filename?      : string;
 
-  /* ✅ 统一口径（DataStore 标准化产物） */
-  dateMs?: number;
-  dateSource?: 'done'|'due'|'scheduled'|'start'|'created'|'end'|'block';
+  /* 运行时便捷定位（不落盘） */
+  file?: {
+    path: string;
+    line?: number;
+    basename?: string;
+  };
 }
 
 /* ---------- 仪表盘模块配置 ---------- */
@@ -62,23 +80,11 @@ export interface SortRule {
   dir  : 'asc' | 'desc';
 }
 
-/* ---------- ✅ 每个仪表盘的写入 overrides ---------- */
-export interface DashboardOverrides {
-  /** 任务写入覆盖：模板 + 文件路径（可使用 {{主题}}） */
-  task?: {
-    template?: string;
-    file?: string;
-  };
-  /** 各 Block 写入覆盖（计划/总结/思考/打卡） */
-  blocks?: Record<string, {
-    file?: string;
-    /** 输出字段顺序（如：['分类','日期','主题','图标','标签','内容']） */
-    fieldsOrder?: string[];
-    /** 预留：如需后续自定义模板可扩展 template?: string; */
-  }>;
-}
-
 /* ---------- 仪表盘配置 ---------- */
+export interface DashboardOverrides {
+  task?: { template?: string; file?: string };
+  blocks?: Record<string, { file?: string; fieldsOrder?: string[] }>;
+}
 export interface DashboardConfig {
   name       : string;
   path?      : string;
@@ -86,26 +92,43 @@ export interface DashboardConfig {
   initialView?: string;
   initialDate?: string;
   modules    : ModuleConfig[];
-
-  /** ✅ 新增：本仪表盘专属写入覆盖 */
   overrides?: DashboardOverrides;
 }
 
+/* ---------- 字段集合 ---------- */
 export const CORE_FIELDS = [
-  'id','title','content','type','status','category','tags','recurrence',
-  'startISO','endISO','startMs','endMs','header','icon','priority',
-  'createdDate','scheduledDate','startDate','dueDate','doneDate','cancelledDate',
-  'created','modified','filename',
-  // 统一日期口径字段（供 Excel/Table 显示/排序）
+  // 基本
+  'id','type','title','content','categoryKey','tags','icon','priority',
+
+  // 统一日期口径（权威）
   'date','dateMs','dateSource',
+
+  // 时间轴
+  'startISO','endISO','startMs','endMs',
+
+  // 文件元
+  'filename','created','modified',
+  'file.path','file.line','file.basename',
+
+  // 兼容日期字段
+  'createdDate','scheduledDate','startDate','dueDate','doneDate','cancelledDate',
 ] as const;
 export type CoreField = typeof CORE_FIELDS[number];
 
+/** 收集所有可能字段（含 extra.* 与 file.*） */
 export function getAllFields(items: Item[]): string[] {
   const set = new Set<string>(CORE_FIELDS as unknown as string[]);
-  items.forEach(it => Object.keys(it.extra || {}).forEach(k => set.add('extra.' + k)));
+  items.forEach(it => {
+    Object.keys(it.extra || {}).forEach(k => set.add('extra.' + k));
+    const f: any = (it as any).file;
+    if (f && typeof f === 'object') Object.keys(f).forEach((k: string) => set.add('file.' + k));
+  });
   return Array.from(set);
 }
+
+/** 统一读取：支持 extra.* / file.* 前缀 */
 export function readField(item: Item, field: string): any {
-  return field.startsWith('extra.') ? item.extra?.[field.slice(6)] : (item as any)[field];
+  if (field.startsWith('extra.')) return item.extra?.[field.slice(6)];
+  if (field.startsWith('file.'))  return (item as any).file?.[field.slice(5)];
+  return (item as any)[field];
 }

@@ -1,10 +1,21 @@
-import type { ThinkContext } from '@platform/context';
+// src/features/quick-input/logic/registerCommands.ts
+import type { App } from 'obsidian';
+import type ThinkPlugin from '../../../main';
+
+/** 与 main.ts 保持一致的注入上下文 */
+export interface ThinkContext {
+  app: App;
+  plugin: ThinkPlugin;
+  platform: any;
+  dataStore: any;
+}
+
 import { QuickTaskModal }   from '../ui/QuickTaskModal';
 import { QuickBlockModal }  from '../ui/QuickBlockModal';
 import { QuickHabitModal }  from '../ui/QuickHabitModal';
 
 export function registerQuickInputCommands(ctx: ThinkContext) {
-  const { app, plugin } = ctx;
+  const { plugin } = ctx;
 
   plugin.addCommand({
     id: 'think-quick-input-task',

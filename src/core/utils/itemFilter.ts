@@ -1,9 +1,6 @@
 // src/core/utils/itemFilter.ts
-//-----------------------------------------------------------
 // 统一的筛选 / 排序 / 日期区间 / 关键字过滤助手
-// —— 用统一口径 item.date / item.dateMs 做时间过滤
-//-----------------------------------------------------------
-
+// —— 删除 status/category 依赖，改用 categoryKey 推断是否“已关闭”
 import { Item, FilterRule, SortRule, readField } from '@core/domain/schema';
 
 /* ---------- 过滤 ---------- */
@@ -49,7 +46,10 @@ export function sortItems(items: Item[], rules: SortRule[] = []) {
 }
 
 /* ---------- 日期区间（仅保留有统一 date 的项） ---------- */
-// 仅替换这个函数即可
+function isClosed(it: Item) {
+  const k = (it.categoryKey || '').toLowerCase();
+  return /\/(done|cancelled)\b/.test(k);
+}
 export function filterByDateRange(items: Item[], startISO?: string, endISO?: string) {
   if (!startISO && !endISO) return items;
   const sMs = startISO ? Date.parse(startISO) : null;
@@ -58,18 +58,15 @@ export function filterByDateRange(items: Item[], startISO?: string, endISO?: str
   return items.filter(it => {
     const t = (it.dateMs ?? (it.date ? Date.parse(it.date) : NaN));
 
-    // 没统一日期：完成/取消→隐藏；未完成→保留
+    // 没统一日期：已关闭→隐藏；未关闭→保留
     if (isNaN(t)) {
-      const st = String(it.status || '').toLowerCase();
-      return !(st === 'done' || st === 'cancelled');
+      return !isClosed(it);
     }
     if (sMs !== null && t < sMs) return false;
     if (eMs !== null && t > eMs) return false;
     return true;
   });
 }
-
-
 
 /* ---------- 关键字 ---------- */
 export function filterByKeyword(items: Item[], kw: string) {
