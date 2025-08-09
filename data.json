@@ -9,20 +9,20 @@
           "collapsed": true,
           "filters": [
             {
-              "field": "status",
+              "field": "categoryKey",
               "op": "=",
-              "value": "open"
+              "value": "任务/open"
             }
           ],
           "sort": [],
           "fields": [
             "header",
-            "category",
+            "categoryKey",
             "icon",
             "title"
           ],
           "groups": [
-            "status"
+            "categoryKey"
           ],
           "rowField": "recurrence",
           "colField": "tags"
@@ -33,9 +33,9 @@
           "collapsed": true,
           "filters": [
             {
-              "field": "status",
+              "field": "categoryKey",
               "op": "=",
-              "value": "done"
+              "value": "任务/done"
             }
           ],
           "sort": [],
@@ -50,14 +50,14 @@
           "collapsed": true,
           "filters": [
             {
-              "field": "category",
+              "field": "categoryKey",
               "op": "=",
               "value": "计划"
             }
           ],
           "sort": [],
           "fields": [
-            "category",
+            "categoryKey",
             "icon",
             "content"
           ],
@@ -71,21 +71,20 @@
           "collapsed": true,
           "filters": [
             {
-              "field": "category",
+              "field": "categoryKey",
               "op": "=",
               "value": "总结"
             }
           ],
           "sort": [],
           "fields": [
-            "category",
+            "categoryKey",
             "icon",
             "content",
-            "date"
-          ],
-          "groups": [
+            "date",
             "tags"
-          ]
+          ],
+          "groups": []
         },
         {
           "view": "BlockView",
@@ -100,7 +99,7 @@
           ],
           "sort": [],
           "fields": [
-            "category",
+            "categoryKey",
             "icon",
             "content"
           ],
@@ -114,14 +113,14 @@
           "collapsed": true,
           "filters": [
             {
-              "field": "category",
+              "field": "categoryKey",
               "op": "=",
               "value": "打卡"
             }
           ],
           "sort": [],
           "fields": [
-            "category",
+            "categoryKey",
             "icon",
             "content",
             "date"

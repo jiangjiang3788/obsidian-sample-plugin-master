@@ -1,7 +1,8 @@
-// src/ui/DashboardConfigForm.tsx
+// src/features/dashboard/ui/DashboardConfigForm.tsx
+// 改动点：新增模块的默认 groupsArr = ['categoryKey']
 /** @jsxImportSource preact */
 import { h } from 'preact';
-import { OPS } from '@core/domain/constants';                 // ✅ 保留这一行
+import { OPS } from '@core/domain/constants';
 import { memo } from 'preact/compat';
 import {
   useMemo, useRef, useCallback, useState,
@@ -27,9 +28,6 @@ import {
 } from '@core/domain/schema';
 import { VIEW_OPTIONS } from '@features/dashboard/ui';
 import { theme as baseTheme } from '@shared/styles/mui-theme';
-
-// ❌ 原文件这里有一行「import { OPS } from '@core/domain/constants'」是重复的，直接删掉即可
-
 
 /* ---------- MUI 统一外观 ---------- */
 const theme = {
@@ -57,7 +55,6 @@ const CIRCLE_BTN = {
   width: 26, height: 26, p: '2px',
 };
 const CIRCLE_BTN_S = { ...CIRCLE_BTN, width: 22, height: 22, p: '1px' };
-
 
 function keepScroll(fn: () => void) {
   const y = window.scrollY;
@@ -303,10 +300,10 @@ export function DashboardConfigForm({ dashboard,dashboards,onSave,onCancel }:Pro
             filtersArr:(m.filters??[]).map(x=>({...x})),
             sortArr:(m.sort??[]).map(x=>({...x})),
             fieldsArr:m.fields??[],
-            groupsArr:m.groups??[],
+            groupsArr:(m as any).groups??[],
           })),
         }}
-        validate={()=>({})}          /* 允许名称重复 — 覆盖保存 */
+        validate={()=>({})}
         validateOnChange={false}
         onSubmit={vals=>{
           const cleaned:DashboardConfig={
@@ -317,7 +314,7 @@ export function DashboardConfigForm({ dashboard,dashboards,onSave,onCancel }:Pro
               filters:filtersArr.filter((f:any)=>f.field).map(f=>({field:f.field,op:f.op,value:f.value})),
               sort   :sortArr  .filter((s:any)=>s.field).map(s=>({field:s.field,dir:s.dir})),
               fields :fieldsArr,
-              groups :groupsArr,
+              groups :groupsArr, // ← 保持 groups
             })),
           };
           onSave(cleaned);
@@ -369,11 +366,21 @@ export function DashboardConfigForm({ dashboard,dashboards,onSave,onCancel }:Pro
             <Box sx={{mb:3}}>
               <Stack direction="row" justifyContent="space-between" alignItems="center" mb={1}>
                 <Typography variant="h6" color="error">模块列表</Typography>
-                <IconButton size="small" sx={CIRCLE_BTN}
+                <IconButton
+                  size="small" sx={CIRCLE_BTN}
                   onClick={()=>keepScroll(()=>push({
-                    id:genId(),view:'BlockView',title:'新模块',collapsed:false,
-                    filtersArr:[],sortArr:[],fieldsArr:[],groupsArr:[],
-                  }))}><AddIcon/></IconButton>
+                    id:genId(),
+                    view:'BlockView',
+                    title:'新模块',
+                    collapsed:false,
+                    filtersArr:[],
+                    sortArr:[],
+                    fieldsArr:[],
+                    groupsArr:['categoryKey'], // ← 默认分组
+                  }))}
+                >
+                  <AddIcon/>
+                </IconButton>
               </Stack>
               <Divider sx={{mb:2}}/>
               <Stack spacing={2}>

@@ -1,3 +1,6 @@
+// src/main.ts
+// 在 loadSettings() 里加入迁移脚本：把 status/category 迁到 categoryKey，并修正模块里的 filters/sort/group/fields/row/col
+
 import { App, Plugin, Notice } from 'obsidian';
 import { render } from 'preact'; // ✅ 用于卸载 Preact
 
@@ -56,7 +59,7 @@ export default class ThinkPlugin extends Plugin {
   async onload(): Promise<void> {
     console.log('ThinkPlugin load');
 
-    // 0. 加载用户设置
+    // 0. 加载用户设置（含迁移）
     await this.loadSettings();
 
     // 1. 初始化 platform / core
@@ -92,6 +95,17 @@ export default class ThinkPlugin extends Plugin {
   private async loadSettings() {
     const stored = (await this.loadData()) as Partial<ThinkSettings> | null;
     this._settings = Object.assign({}, DEFAULT_SETTINGS, stored);
+
+    // ✅ 迁移：status/category -> categoryKey
+    const changed = migrateSettingsToCategoryKey(this._settings);
+    if (changed) {
+      try {
+        await this.saveData(this._settings);
+        console.log('[ThinkPlugin] settings migrated to categoryKey');
+      } catch (e) {
+        console.warn('[ThinkPlugin] settings migration save failed', e);
+      }
+    }
   }
 
   async saveSettings() {
@@ -119,4 +133,100 @@ export default class ThinkPlugin extends Plugin {
       localStorage.setItem('think-target-dash', name);
     }
   }
+}
+
+/* ====================================================================== */
+/*                         迁移脚本（一次性）                              */
+/* ====================================================================== */
+
+function migrateSettingsToCategoryKey(settings: ThinkSettings): boolean {
+  let changed = false;
+
+  const mapFieldName = (f?: string) => {
+    if (!f) return f;
+    if (f === 'status' || f === 'category') { changed = true; return 'categoryKey'; }
+    return f;
+  };
+
+  const mapStatusValue = (v: any) => {
+    if (typeof v !== 'string') return v;
+    const s = v.trim().toLowerCase();
+    if (s === 'open' || s === 'done' || s === 'cancelled') {
+      changed = true;
+      return `任务/${s}`;
+    }
+    return v;
+  };
+
+  const fixFilters = (filters?: any[]) => {
+    if (!Array.isArray(filters)) return filters;
+    return filters.map(f => {
+      if (!f || typeof f !== 'object') return f;
+      const nf = { ...f };
+      if (nf.field === 'status') {
+        nf.field = 'categoryKey';
+        nf.value = mapStatusValue(nf.value);
+        changed = true;
+      } else if (nf.field === 'category') {
+        nf.field = 'categoryKey';
+        changed = true;
+      }
+      return nf;
+    });
+  };
+
+  const fixSort = (sort?: any[]) => {
+    if (!Array.isArray(sort)) return sort;
+    return sort.map(s => {
+      if (!s || typeof s !== 'object') return s;
+      const ns = { ...s };
+      ns.field = mapFieldName(ns.field);
+      return ns;
+    });
+  };
+
+  const fixArrayFields = (arr?: string[]) => {
+    if (!Array.isArray(arr)) return arr;
+    const mapped = arr.map(a => (a === 'status' || a === 'category') ? 'categoryKey' : a);
+    if (mapped.some((v, i) => v !== arr[i])) changed = true;
+    // 去重保持顺序
+    const seen = new Set<string>();
+    return mapped.filter(v => (seen.has(v) ? false : (seen.add(v), true)));
+  };
+
+  const fixModule = (m: any) => {
+    if (!m || typeof m !== 'object') return m;
+    const nm = { ...m };
+
+    // filters / sort
+    nm.filters = fixFilters(nm.filters);
+    nm.sort    = fixSort(nm.sort);
+
+    // group（字符串）与 groups（数组，UI 扩展用）
+    if (typeof nm.group === 'string' && (nm.group === 'status' || nm.group === 'category')) {
+      nm.group = 'categoryKey'; changed = true;
+    }
+    if (Array.isArray(nm.groups)) nm.groups = fixArrayFields(nm.groups);
+
+    // row/col（TableView）
+    if (nm.rowField === 'status' || nm.rowField === 'category') {
+      nm.rowField = 'categoryKey'; changed = true;
+    }
+    if (nm.colField === 'status' || nm.colField === 'category') {
+      nm.colField = 'categoryKey'; changed = true;
+    }
+
+    // fields（Excel/Table 可见列）
+    if (Array.isArray(nm.fields)) nm.fields = fixArrayFields(nm.fields);
+
+    return nm;
+  };
+
+  // 仪表盘模块批量处理
+  (settings.dashboards || []).forEach(d => {
+    if (!Array.isArray(d.modules)) return;
+    d.modules = d.modules.map(fixModule);
+  });
+
+  return changed;
 }

@@ -1,18 +1,20 @@
-// views/TableView.tsx
-// 精简复选框逻辑，复用 TaskCheckbox
+// src/features/dashboard/ui/TableView.tsx
+// 复选框/删除线依据 categoryKey；其余不变
 import { h } from 'preact';
 import { JSX } from 'preact';
 import { Item, readField } from '@core/domain/schema';
 import { DataStore } from '@core/services/dataStore';
 import { makeObsUri } from '@core/utils/obsidian';
 import { EMPTY_LABEL } from '@core/domain/constants';
-import { TaskCheckbox } from '@shared/components/TaskCheckbox';   // ★ 新增
+import { TaskCheckbox } from '@shared/components/TaskCheckbox';
 
 interface TableViewProps {
   items: Item[];
   rowField: string;
   colField: string;
 }
+
+const isDone = (k?: string) => /\/done$/i.test(k || '');
 
 export function TableView({ items, rowField, colField }: TableViewProps) {
   if (!rowField || !colField)
@@ -75,22 +77,22 @@ export function TableView({ items, rowField, colField }: TableViewProps) {
 /* ---------- 单元格内渲染 ---------- */
 function renderCellItem(item: Item) {
   if (item.type === 'task') {
-    const isDone = item.status === 'done';
+    const done = isDone(item.categoryKey);
     return (
       <span>
         <TaskCheckbox
-          done={isDone}
+          done={done}
           onMarkDone={() => DataStore.instance.markItemDone(item.id)}
         />
         {item.icon && <span class="task-icon">{item.icon}</span>}
-        <a href={makeObsUri(item.id)} target="_blank" rel="noopener">
+        <a href={makeObsUri(item)} target="_blank" rel="noopener" class={done ? 'task-done' : ''}>
           {item.title}
         </a>
       </span>
     );
   }
   return (
-    <a href={makeObsUri(item.id)} target="_blank" rel="noopener">
+    <a href={makeObsUri(item)} target="_blank" rel="noopener">
       {item.title}
     </a>
   );

@@ -1,10 +1,11 @@
+// src/features/dashboard/ui/Dashboard.tsx
 /** @jsxImportSource preact */
 import { h } from 'preact';
 import { useState, useEffect } from 'preact/hooks';
 import { DataStore } from '@core/services/dataStore';
 import { DashboardConfig, ModuleConfig } from '@core/domain/schema';
 import { ModulePanel } from './ModulePanel';
-import type ThinkPlugin from '../../../main';          // ✅ 修正：原来是 '../main'（不存在）
+import type ThinkPlugin from '../../../main';
 import { TFile, TFolder } from 'obsidian';
 import { ViewComponents } from '@features/dashboard/ui';
 import { getDateRange, dayjs } from '@core/utils/date';
@@ -99,7 +100,13 @@ export function Dashboard({ config, dataStore, plugin }: Props) {
     /* ④ 视图 props 拼装 ------------------------------------ */
     const vp: any = { ...(m.props || {}) };
 
-    if ((m as any).groups?.length) vp.groupField = (m as any).groups[0];
+    // 默认分组：BlockView 在缺省时按 categoryKey 分组
+    if ((m as any).groups?.length) {
+      vp.groupField = (m as any).groups[0];
+    } else if (m.view === 'BlockView' && vp.groupField == null) {
+      vp.groupField = 'categoryKey';
+    }
+
     if (m.view === 'TableView') {
       vp.rowField = (m as any).rowField || '';
       vp.colField = (m as any).colField || '';

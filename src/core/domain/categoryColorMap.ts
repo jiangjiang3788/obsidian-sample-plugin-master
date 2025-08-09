@@ -1,6 +1,5 @@
-// config/categoryColorMap.ts
-
-// 类别到颜色的映射
+// src/core/domain/categoryColorMap.ts
+// 类别到颜色的映射（传入 categoryKey；按“/”前缀取基础类别）
 export const CATEGORY_COLOR_MAP: Record<string, string> = {
   打卡: '#d2cceb',
   任务: '#caebf3',
@@ -12,6 +11,7 @@ export const CATEGORY_COLOR_MAP: Record<string, string> = {
   // ... 其它类别
 };
 
-export function getCategoryColor(category: string): string {
-  return CATEGORY_COLOR_MAP[category] || '#e0e0e0';
+export function getCategoryColor(categoryKey: string): string {
+  const base = (categoryKey || '').split('/')[0] || '';
+  return CATEGORY_COLOR_MAP[base] || '#e0e0e0';
 }
