@@ -1,13 +1,9 @@
 // src/views/index.ts
 // 统一注册所有可用视图，并导出 ViewComponents 供 Dashboard.tsx 动态选择
 
-
-
 import { TableView }   from './TableView';
 import { BlockView }   from './BlockView';
-import { ExcelView }   from './ExcelView';
-
-export * from './DashboardConfigForm' 
+import { ExcelView }   from './ExcelView'; 
 
 
 /* ------------------------------------------------------------------ */

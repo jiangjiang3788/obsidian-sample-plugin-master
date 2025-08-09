@@ -13,11 +13,10 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 
 // ⬇️ 用新的、本目录下的表单
-
+import { DashboardConfigForm } from './DashboardConfigForm';
 
 import { InputSettingsTable }  from './InputSettingsTable';
 import { theme as baseTheme }  from '@shared/styles/mui-theme';
-import { DashboardConfigForm } from '../../dashboard/ui';
 
 function keepScroll(fn: () => void) {
   const y = window.scrollY;
