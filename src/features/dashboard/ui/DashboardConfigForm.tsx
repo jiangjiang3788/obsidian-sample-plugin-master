@@ -1,5 +1,5 @@
 // src/features/dashboard/ui/DashboardConfigForm.tsx
-// 改动点：新增模块的默认 groupsArr = ['categoryKey']
+// 改动点：统一无外框；“基础配置 / 模块设置”两段都可折叠；所有影响布局的交互用 keepScroll 包裹。
 /** @jsxImportSource preact */
 import { h } from 'preact';
 import { OPS } from '@core/domain/constants';
@@ -29,37 +29,16 @@ import {
 import { VIEW_OPTIONS } from '@features/dashboard/ui';
 import { theme as baseTheme } from '@shared/styles/mui-theme';
 
-/* ---------- MUI 统一外观 ---------- */
-const theme = {
-  ...baseTheme,
-  components: {
-    ...(baseTheme.components || {}),
-    MuiTextField: { defaultProps: { size: 'small', variant: 'outlined' } },
-    MuiSelect   : { defaultProps: { size: 'small', variant: 'outlined' } },
-    MuiOutlinedInput: {
-      styleOverrides: {
-        root: {
-          '& .MuiOutlinedInput-notchedOutline': { borderWidth: 1 },
-          '&:hover .MuiOutlinedInput-notchedOutline': { borderWidth: 1 },
-          '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderWidth: 1 },
-        },
-      },
-    },
-  },
-};
+const theme = baseTheme;
 
-/* ---------- 样式 & 工具 ---------- */
-const CIRCLE_BTN = {
-  border: '1px solid', borderColor: 'divider',
-  borderRadius: '50%', boxShadow: 'none',
-  width: 26, height: 26, p: '2px',
-};
+const CIRCLE_BTN = { border: '1px solid', borderColor: 'divider', borderRadius: '50%', boxShadow: 'none', width: 26, height: 26, p: '2px' };
 const CIRCLE_BTN_S = { ...CIRCLE_BTN, width: 22, height: 22, p: '1px' };
 
 function keepScroll(fn: () => void) {
-  const y = window.scrollY;
+  const el = document.scrollingElement || document.documentElement;
+  const y = el.scrollTop;
   fn();
-  const restore = () => window.scrollTo({ top: y });
+  const restore = () => el.scrollTo({ top: y });
   requestAnimationFrame(() => {
     requestAnimationFrame(() => setTimeout(restore, 0));
   });
@@ -89,16 +68,14 @@ const ModuleCard = memo<ModCardProps>(({
   const [open,setOpen]=useState(true);
   const toggle = ()=>keepScroll(()=>setOpen(v=>!v));
 
-  /* 拖动排序 */
   const onDragStart=(e:DragEvent)=>e.dataTransfer?.setData('text',idx.toString());
   const onDragOver =(e:DragEvent)=>e.preventDefault();
   const onDrop     =(e:DragEvent)=>{
     e.preventDefault();
     const from=Number(e.dataTransfer?.getData('text')??-1);
-    if(!isNaN(from)&&from!==idx) move(from,idx);
+    if(!isNaN(from)&&from!==idx) keepScroll(()=>move(from,idx));
   };
 
-  /* 增删行 */
   const addFilter = () =>
     keepScroll(() =>
       setFieldValue(
@@ -143,7 +120,7 @@ const ModuleCard = memo<ModCardProps>(({
     <Box
       draggable onDragStart={onDragStart as any}
       onDragOver={onDragOver as any} onDrop={onDrop as any}
-      sx={{border:1,borderColor:'divider',borderRadius:2,p:1.5,bgcolor:'background.paper'}}
+      sx={{ border: 0, p: 1.5, bgcolor:'transparent' }}
     >
       {/* Header */}
       <Stack direction="row" spacing={1} alignItems="center">
@@ -152,13 +129,13 @@ const ModuleCard = memo<ModCardProps>(({
             `modules.${idx}.title`,
             (e.target as HTMLInputElement).value,false)} sx={{flex:1}}/>
         <Select value={mod.view}
-          onChange={e=>setFieldValue(`modules.${idx}.view`,e.target.value,false)}
+          onChange={e=>keepScroll(()=>setFieldValue(`modules.${idx}.view`,e.target.value,false))}
           sx={{minWidth:140}}>
           {VIEW_OPTIONS.map(v=><MenuItem key={v} value={v}>{v}</MenuItem>)}
         </Select>
         <FormControlLabel label="默认折叠"
           control={<Checkbox checked={mod.collapsed}
-            onChange={e=>setFieldValue(`modules.${idx}.collapsed`,e.target.checked,false)}/> }
+            onChange={e=>keepScroll(()=>setFieldValue(`modules.${idx}.collapsed`,e.target.checked,false))}/> }
           sx={{ml:1}}/>
         <IconButton size="small" onClick={toggle} sx={CIRCLE_BTN}>
           {open?<ArrowDropUp/>:<ArrowDropDown/>}
@@ -169,18 +146,18 @@ const ModuleCard = memo<ModCardProps>(({
       </Stack>
 
       {/* Content */}
-      <Collapse in={open} timeout="auto" unmountOnExit>
+      <Collapse in={open} timeout={120} unmountOnExit>
         <Stack spacing={2} sx={{mt:2}}>
           {/* TableView 行/列字段 */}
           {mod.view==='TableView'&&(
             <Stack direction="row" spacing={2}>
               <Autocomplete freeSolo options={fieldOptions} value={mod.rowField??''}
-                onChange={(_,v)=>setFieldValue(`modules.${idx}.rowField`,v??'',false)}
+                onChange={(_,v)=>keepScroll(()=>setFieldValue(`modules.${idx}.rowField`,v??'',false))}
                 renderInput={p=><TextField {...p} label="行字段"
                   variant="standard" InputProps={{...p.InputProps,disableUnderline:true}}/>}
                 sx={{flex:1}}/>
               <Autocomplete freeSolo options={fieldOptions} value={mod.colField??''}
-                onChange={(_,v)=>setFieldValue(`modules.${idx}.colField`,v??'',false)}
+                onChange={(_,v)=>keepScroll(()=>setFieldValue(`modules.${idx}.colField`,v??'',false))}
                 renderInput={p=><TextField {...p} label="列字段"
                   variant="standard" InputProps={{...p.InputProps,disableUnderline:true}}/>}
                 sx={{flex:1}}/>
@@ -191,7 +168,7 @@ const ModuleCard = memo<ModCardProps>(({
           <Box>
             <Typography color="error" fontWeight={600} mb={1}>显示字段</Typography>
             <Autocomplete multiple options={fieldOptions} value={mod.fieldsArr}
-              onChange={(_,v)=>setFieldValue(`modules.${idx}.fieldsArr`,v,false)}
+              onChange={(_,v)=>keepScroll(()=>setFieldValue(`modules.${idx}.fieldsArr`,v,false))}
               renderTags={(v,getTagProps)=>v.map((opt,i)=><Chip label={opt}{...getTagProps({index:i})}/>)}
               renderInput={p=><TextField {...p} variant="standard" placeholder="选择或输入字段"
                 InputProps={{...p.InputProps,disableUnderline:true}}/>}/>
@@ -201,7 +178,7 @@ const ModuleCard = memo<ModCardProps>(({
           <Box>
             <Typography color="error" fontWeight={600} mb={1}>分组字段</Typography>
             <Autocomplete multiple options={fieldOptions} value={mod.groupsArr}
-              onChange={(_,v)=>setFieldValue(`modules.${idx}.groupsArr`,v,false)}
+              onChange={(_,v)=>keepScroll(()=>setFieldValue(`modules.${idx}.groupsArr`,v,false))}
               renderTags={(v,getTagProps)=>v.map((opt,i)=><Chip label={opt}{...getTagProps({index:i})}/>)}
               renderInput={p=><TextField {...p} variant="standard" placeholder="选择或输入字段"
                 InputProps={{...p.InputProps,disableUnderline:true}}/>}/>
@@ -218,13 +195,13 @@ const ModuleCard = memo<ModCardProps>(({
               {mod.filtersArr.map((f:any,i:number)=>(
                 <Stack key={i} direction="row" spacing={1}>
                   <TextField select value={f.field}
-                    onChange={e=>setFieldValue(`modules.${idx}.filtersArr.${i}.field`,
-                      e.target.value,false)} sx={{flex:1}}>
+                    onChange={e=>keepScroll(()=>setFieldValue(`modules.${idx}.filtersArr.${i}.field`,
+                      e.target.value,false))} sx={{flex:1}}>
                     {fieldOptions.map(o=><MenuItem key={o} value={o}>{o}</MenuItem>)}
                   </TextField>
                   <Select value={f.op}
-                    onChange={e=>setFieldValue(`modules.${idx}.filtersArr.${i}.op`,
-                      e.target.value,false)} sx={{width:90}}>
+                    onChange={e=>keepScroll(()=>setFieldValue(`modules.${idx}.filtersArr.${i}.op`,
+                      e.target.value,false))} sx={{width:90}}>
                     {OPS.map(op=><MenuItem key={op} value={op}>{op}</MenuItem>)}
                   </Select>
                   <TextField value={f.value}
@@ -249,13 +226,13 @@ const ModuleCard = memo<ModCardProps>(({
               {mod.sortArr.map((s:any,i:number)=>(
                 <Stack key={i} direction="row" spacing={1}>
                   <TextField select value={s.field}
-                    onChange={e=>setFieldValue(`modules.${idx}.sortArr.${i}.field`,
-                      e.target.value,false)} sx={{flex:1}}>
+                    onChange={e=>keepScroll(()=>setFieldValue(`modules.${idx}.sortArr.${i}.field`,
+                      e.target.value,false))} sx={{flex:1}}>
                     {fieldOptions.map(o=><MenuItem key={o} value={o}>{o}</MenuItem>)}
                   </TextField>
                   <Select value={s.dir}
-                    onChange={e=>setFieldValue(`modules.${idx}.sortArr.${i}.dir`,
-                      e.target.value,false)} sx={{width:100}}>
+                    onChange={e=>keepScroll(()=>setFieldValue(`modules.${idx}.sortArr.${i}.dir`,
+                      e.target.value,false))} sx={{width:100}}>
                     <MenuItem value="asc">升序</MenuItem>
                     <MenuItem value="desc">降序</MenuItem>
                   </Select>
@@ -285,7 +262,9 @@ export function DashboardConfigForm({ dashboard,dashboards,onSave,onCancel }:Pro
   const genId = ()=>Date.now().toString(36)+Math.random().toString(36).slice(2);
 
   const [baseOpen,setBaseOpen]=useState(true);
+  const [modsOpen,setModsOpen]=useState(true);
   const toggleBase = ()=>keepScroll(()=>setBaseOpen(v=>!v));
+  const toggleMods = ()=>keepScroll(()=>setModsOpen(v=>!v));
 
   return (
     <ThemeProvider theme={theme}>
@@ -314,7 +293,7 @@ export function DashboardConfigForm({ dashboard,dashboards,onSave,onCancel }:Pro
               filters:filtersArr.filter((f:any)=>f.field).map(f=>({field:f.field,op:f.op,value:f.value})),
               sort   :sortArr  .filter((s:any)=>s.field).map(s=>({field:s.field,dir:s.dir})),
               fields :fieldsArr,
-              groups :groupsArr, // ← 保持 groups
+              groups :groupsArr,
             })),
           };
           onSave(cleaned);
@@ -322,15 +301,15 @@ export function DashboardConfigForm({ dashboard,dashboards,onSave,onCancel }:Pro
       >
       {({ values,setFieldValue })=>(
         <Form>
-          {/* 基础设置 */}
-          <Box sx={{p:2,border:1,borderColor:'divider',borderRadius:2,mb:3,bgcolor:'background.paper'}}>
-            <Stack direction="row" alignItems="center" spacing={1} mb={baseOpen?2:0}>
-              <Typography variant="h6" color="error">基础设置</Typography>
-              <IconButton size="small" sx={CIRCLE_BTN} onClick={toggleBase}>
+          {/* 基础设置（无外框，可折叠） */}
+          <Box sx={{mb:2}}>
+            <Stack direction="row" alignItems="center" spacing={1} mb={baseOpen?1:0}>
+              <Typography variant="h6" color="error">基础配置</Typography>
+              <IconButton size="small" onClick={toggleBase} sx={CIRCLE_BTN}>
                 {baseOpen?<ArrowDropUp/>:<ArrowDropDown/>}
               </IconButton>
             </Stack>
-            <Collapse in={baseOpen} timeout="auto" unmountOnExit>
+            <Collapse in={baseOpen} timeout={120} unmountOnExit>
               <Stack spacing={1.5}>
                 {[{
                   label:'配置名称',node:<TextField fullWidth value={values.name}
@@ -343,13 +322,13 @@ export function DashboardConfigForm({ dashboard,dashboards,onSave,onCancel }:Pro
                     onInput={e=>setFieldValue('tags',(e.target as HTMLInputElement).value,false)}/>,
                 },{
                   label:'初始视图',node:<Select sx={{minWidth:160}} value={values.initialView}
-                    onChange={e=>setFieldValue('initialView',e.target.value,false)}>
+                    onChange={e=>keepScroll(()=>setFieldValue('initialView',e.target.value,false))}>
                       {['年','季','月','周','天'].map(v=><MenuItem key={v} value={v}>{v}</MenuItem>)}
                     </Select>,
                 },{
                   label:'初始日期',node:<TextField type="date" sx={{minWidth:200}}
                     value={values.initialDate}
-                    onChange={e=>setFieldValue('initialDate',(e.target as HTMLInputElement).value,false)}
+                    onChange={e=>keepScroll(()=>setFieldValue('initialDate',(e.target as HTMLInputElement).value,false))}
                     InputLabelProps={{shrink:true}}/>,
                 }].map((r,i)=>(
                   <Stack key={i} direction="row" alignItems="center" spacing={2}>
@@ -360,40 +339,51 @@ export function DashboardConfigForm({ dashboard,dashboards,onSave,onCancel }:Pro
             </Collapse>
           </Box>
 
-          {/* 模块列表 */}
-          <FieldArray name="modules">
-          {({ push,remove,move })=>(
-            <Box sx={{mb:3}}>
-              <Stack direction="row" justifyContent="space-between" alignItems="center" mb={1}>
-                <Typography variant="h6" color="error">模块列表</Typography>
+          {/* 模块列表（无外框，可折叠） */}
+          <Box sx={{mb:2}}>
+            <Stack direction="row" justifyContent="space-between" alignItems="center" mb={modsOpen?1:0}>
+              <Typography variant="h6" color="error">模块设置</Typography>
+              <Stack direction="row" spacing={1}>
+                <IconButton size="small" onClick={()=>keepScroll(()=>setModsOpen(v=>!v))} sx={CIRCLE_BTN}>
+                  {modsOpen ? <ArrowDropUp/> : <ArrowDropDown/>}
+                </IconButton>
                 <IconButton
                   size="small" sx={CIRCLE_BTN}
-                  onClick={()=>keepScroll(()=>push({
-                    id:genId(),
-                    view:'BlockView',
-                    title:'新模块',
-                    collapsed:false,
-                    filtersArr:[],
-                    sortArr:[],
-                    fieldsArr:[],
-                    groupsArr:['categoryKey'], // ← 默认分组
-                  }))}
+                  onClick={()=>keepScroll(()=>setFieldValue('modules',[
+                    ...values.modules,
+                    {
+                      id:genId(),
+                      view:'BlockView',
+                      title:'新模块',
+                      collapsed:false,
+                      filtersArr:[],
+                      sortArr:[],
+                      fieldsArr:[],
+                      groupsArr:['categoryKey'],
+                    }
+                  ],false))}
                 >
                   <AddIcon/>
                 </IconButton>
               </Stack>
+            </Stack>
+
+            <Collapse in={modsOpen} timeout={120} unmountOnExit>
               <Divider sx={{mb:2}}/>
-              <Stack spacing={2}>
-                {values.modules.map((m:any,i:number)=>(
-                  <ModuleCard key={m.id} idx={i} mod={m}
-                    fieldOptions={fieldOptions}
-                    setFieldValue={setFieldValue}
-                    remove={remove} move={move}/>
-                ))}
-              </Stack>
-            </Box>
-          )}
-          </FieldArray>
+              <FieldArray name="modules">
+              {({ remove,move })=>(
+                <Stack spacing={2}>
+                  {values.modules.map((m:any,i:number)=>(
+                    <ModuleCard key={m.id} idx={i} mod={m}
+                      fieldOptions={fieldOptions}
+                      setFieldValue={setFieldValue}
+                      remove={remove} move={move}/>
+                  ))}
+                </Stack>
+              )}
+              </FieldArray>
+            </Collapse>
+          </Box>
 
           {/* 底部按钮 */}
           <Stack direction="row" spacing={1.5} justifyContent="flex-end">

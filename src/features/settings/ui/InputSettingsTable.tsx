@@ -1,7 +1,6 @@
 // src/features/settings/ui/InputSettingsTable.tsx
 /** @jsxImportSource preact */
-// InputSettingsTable.tsx —— 紧凑表格 UI（单击单元格可编辑 JSON/图标）
-// 注意：折叠由外层 SettingsTab 的 MUI Accordion 控制，这里不再使用 Accordion
+// InputSettingsTable.tsx —— 紧凑表格 UI（支持 bare 模式：不包外框）
 
 import { h } from 'preact';
 import { useState, useMemo } from 'preact/hooks';
@@ -16,16 +15,18 @@ import DeleteIcon    from '@mui/icons-material/Delete';
 import type ThinkPlugin from '../../../main';
 import { Notice } from 'obsidian';
 
-/* 行间距（表格更紧凑） */
-const ROW_PADDING_Y = 0.3; // 0.5 × theme.spacing = 4px
-const CELL_PADDING_X = 1;  // 1 × theme.spacing  = 8px
+const ROW_PADDING_Y = 0.3;
+const CELL_PADDING_X = 1;
 
-/* ---------- 主组件 ---------- */
-interface Props { plugin: ThinkPlugin }
-export function InputSettingsTable({ plugin }: Props) {
+interface Props {
+  plugin: ThinkPlugin;
+  /** bare=true 时不自带圆角白底边框 */
+  bare?: boolean;
+}
+
+export function InputSettingsTable({ plugin, bare = false }: Props) {
   const [refresh, setRefresh] = useState(0);
 
-  /* ---------- 原始数据 ---------- */
   const data = useMemo(() => {
     const raw = plugin.inputSettings || { base: {}, themes: [] };
     raw.base   ??= {};
@@ -33,7 +34,6 @@ export function InputSettingsTable({ plugin }: Props) {
     return raw;
   }, [plugin.inputSettings, refresh]);
 
-  /* ---------- 动态列：所有出现过的 block key ---------- */
   const blockKeys = useMemo(() => {
     const s = new Set<string>();
     (data.themes as any[]).forEach((t: any) => Object.keys(t.blocks ?? {}).forEach(k => s.add(k)));
@@ -41,14 +41,12 @@ export function InputSettingsTable({ plugin }: Props) {
     return Array.from(s).sort();
   }, [data]);
 
-  /* ---------- 对话框状态 ---------- */
   const [editing, setEditing] = useState<{ themeIdx: number; type: string; json: string } | null>(null);
   const [addOpen, setAddOpen] = useState(false);
   const [newPath, setNewPath] = useState('');
   const [delIdx,  setDelIdx]  = useState<number | null>(null);
   const [iconEdit, setIconEdit] = useState<{ themeIdx: number; value: string } | null>(null);
 
-  /* ---------- JSON 编辑 ---------- */
   const openEdit = (themeIdx: number, type: string) => {
     const obj = themeIdx < 0
       ? (type === 'task' ? data.base.task ?? {} : data.base.blocks?.[type] ?? {})
@@ -83,7 +81,6 @@ export function InputSettingsTable({ plugin }: Props) {
     });
   };
 
-  /* ---------- 新增 / 删除主题 ---------- */
   const confirmAdd = () => {
     const path = newPath.trim();
     if (!path) return;
@@ -105,12 +102,10 @@ export function InputSettingsTable({ plugin }: Props) {
     });
   };
 
-  /* ---------- 渲染工具：单图标逻辑（统一：禁用=❌ / 继承=🔽 / 覆写=📄） ---------- */
   const renderCell = (cfg: any, inherited: boolean, themeIdx: number, type: string) => {
     const enabled = cfg?.enabled ?? true;
     const symbol  = enabled ? (inherited ? '🔽' : '📄') : '❌';
     const tip     = !enabled ? '禁用' : (inherited ? '继承' : '覆写');
-
     return (
       <TableCell
         sx={{ cursor: 'pointer', whiteSpace: 'nowrap', textAlign: 'center', py: ROW_PADDING_Y, px: CELL_PADDING_X }}
@@ -131,20 +126,26 @@ export function InputSettingsTable({ plugin }: Props) {
     return [cfg, inh] as [any, boolean];
   };
 
-  /* ---------- UI ---------- */
-  return (
-    <Box sx={{ p: 2, border: 1, borderColor: 'divider', borderRadius: 2, bgcolor: 'background.paper' }}>
-      {/* 简洁工具栏 */}
-      <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 1 }}>
-        <Typography fontWeight={600}>通用输入设置</Typography>
-        <Tooltip title="新增主题">
-          <IconButton size="small" onClick={() => setAddOpen(true)}><AddIcon/></IconButton>
-        </Tooltip>
-      </Stack>
-      <Divider sx={{ mb: 1.5 }} />
+  const containerSx = bare
+    ? { p: 0, border: 0, bgcolor: 'transparent' }
+    : { p: 2, border: 1, borderColor: 'divider', borderRadius: 0, bgcolor: 'background.paper' };
 
-      {/* 主表格 */}
-      <Table size="small" sx={{ '& th, & td': { whiteSpace: 'nowrap', py: ROW_PADDING_Y, px: CELL_PADDING_X } }}>
+  return (
+    <Box sx={containerSx}>
+      {!bare && (
+        <div>
+          <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 1 }}>
+            <Typography fontWeight={600}>通用输入设置</Typography>
+            <Tooltip title="新增主题">
+              <IconButton size="small" onClick={() => setAddOpen(true)}><AddIcon/></IconButton>
+            </Tooltip>
+          </Stack>
+          <Divider sx={{ mb: 1.5 }} />
+        </div>
+      )}
+
+      <Table size="small" class="think-setting-table"
+        sx={{ '& th, & td': { whiteSpace: 'nowrap', py: ROW_PADDING_Y, px: CELL_PADDING_X } }}>
         <TableHead>
           <TableRow>
             <TableCell>主题路径</TableCell>
@@ -153,11 +154,10 @@ export function InputSettingsTable({ plugin }: Props) {
             {blockKeys.map(k => (
               <TableCell key={k} align="center">{k}</TableCell>
             ))}
-            <TableCell /> {/* 操作列 */}
+            <TableCell />
           </TableRow>
         </TableHead>
         <TableBody>
-          {/* Base 行 */}
           <TableRow sx={{ bgcolor: '#f7f7f7', '& > *': { py: ROW_PADDING_Y, px: CELL_PADDING_X } }}>
             <TableCell><strong>Base（共性默认）</strong></TableCell>
             <TableCell align="center" />
@@ -166,14 +166,12 @@ export function InputSettingsTable({ plugin }: Props) {
             <TableCell />
           </TableRow>
 
-          {/* Theme 行 */}
           {(data.themes as any[]).map((th: any, idx: number) => (
             <TableRow key={th.path} sx={{ '& > *': { py: ROW_PADDING_Y, px: CELL_PADDING_X } }}>
               <TableCell>{th.path}</TableCell>
-
-              {/* 图标单元格 */}
               <TableCell
                 align="center"
+                class="icon-cell"
                 sx={{ cursor: 'pointer' }}
                 title="单击编辑图标（可输入文字或表情；留空=不显示）"
                 onClick={() => setIconEdit({ themeIdx: idx, value: th.icon ?? '' })}
@@ -181,13 +179,11 @@ export function InputSettingsTable({ plugin }: Props) {
                 {th.icon ?? ''}
               </TableCell>
 
-              {/* Task */}
               {(() => {
                 const [cfg, inh] = getCfg(idx, 'task');
                 return renderCell(cfg, inh, idx, 'task');
               })()}
 
-              {/* Blocks */}
               {blockKeys.map(k => {
                 const child = th.blocks?.[k];
                 const inh   = !child || Object.keys(child).length === 0;
@@ -195,7 +191,6 @@ export function InputSettingsTable({ plugin }: Props) {
                 return renderCell(cfg, inh, idx, k);
               })}
 
-              {/* 删除主题 */}
               <TableCell align="center">
                 <Tooltip title="删除主题">
                   <DeleteIcon
@@ -209,7 +204,7 @@ export function InputSettingsTable({ plugin }: Props) {
         </TableBody>
       </Table>
 
-      {/* JSON 编辑对话框 */}
+      {/* JSON 编辑 */}
       <Dialog open={!!editing} fullWidth maxWidth="sm" disablePortal onClose={() => setEditing(null)}>
         {editing && [
           <DialogTitle key="t">编辑配置（{editing.themeIdx < 0 ? 'Base' : (data.themes as any[])[editing.themeIdx].path} → {editing.type}）</DialogTitle>,
@@ -229,7 +224,7 @@ export function InputSettingsTable({ plugin }: Props) {
         ]}
       </Dialog>
 
-      {/* 图标编辑对话框 */}
+      {/* 图标编辑 */}
       <Dialog open={!!iconEdit} maxWidth="xs" fullWidth disablePortal onClose={() => setIconEdit(null)}>
         {iconEdit && [
           <DialogTitle key="t">编辑图标（{(data.themes as any[])[iconEdit.themeIdx].path}）</DialogTitle>,
@@ -263,7 +258,7 @@ export function InputSettingsTable({ plugin }: Props) {
         ]}
       </Dialog>
 
-      {/* 新增主题对话框 */}
+      {/* 新增主题 */}
       <Dialog open={addOpen} maxWidth="xs" fullWidth disablePortal onClose={() => setAddOpen(false)}>
         {[
           <DialogTitle key="t">新增主题路径</DialogTitle>,
@@ -289,7 +284,7 @@ export function InputSettingsTable({ plugin }: Props) {
         ]}
       </Dialog>
 
-      {/* 删除确认对话框 */}
+      {/* 删除确认 */}
       <Dialog open={delIdx !== null} maxWidth="xs" disablePortal onClose={() => setDelIdx(null)}>
         {delIdx !== null && [
           <DialogTitle key="t">确认删除</DialogTitle>,
