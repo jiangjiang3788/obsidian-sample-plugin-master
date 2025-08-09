@@ -20,10 +20,13 @@ import { InputSettingsTable }  from './InputSettingsTable';
 import { theme as baseTheme }  from '@shared/styles/mui-theme';
 
 function keepScroll(fn: () => void) {
-  const y = window.scrollY;
+  const el = document.scrollingElement || document.documentElement;
+  const y = el.scrollTop;
   fn();
+  // 连续两帧 + 微延迟，尽量压住 MUI 触发的布局抖动
+  const restore = () => el.scrollTo({ top: y });
   requestAnimationFrame(() => {
-    requestAnimationFrame(() => window.scrollTo({ top: y }));
+    requestAnimationFrame(() => setTimeout(restore, 0));
   });
 }
 
@@ -93,18 +96,32 @@ function SettingsRoot({ plugin }: { plugin: ThinkPlugin }) {
     <ThemeProvider theme={baseTheme}>
       <CssBaseline />
       <Box sx={{ display:'grid', gap:2 }}>
-        {/* ── 通用输入设置 ───────────────────────────────────── */}
-        <Accordion expanded={openInput} onChange={(_,e)=>setOpenInput(e)} disableGutters>
+        {/* ── 通用输入设置（裸） ─────────────────────────────── */}
+        <Accordion
+          expanded={openInput}
+          onChange={(_,e)=>setOpenInput(e)}
+          transitionDuration={120}
+          disableGutters
+          square
+          sx={{ boxShadow:'none', borderRadius:0 }}
+        >
           <AccordionSummary expandIcon={<ExpandMoreIcon/>}>
             <Typography variant="h6" color="error">通用输入设置</Typography>
           </AccordionSummary>
           <AccordionDetails>
-            <InputSettingsTable plugin={plugin} />
+            <InputSettingsTable plugin={plugin} bare />
           </AccordionDetails>
         </Accordion>
 
         {/* ── 仪表盘配置管理 ───────────────────────────────── */}
-        <Accordion expanded={openDash} onChange={(_,e)=>setOpenDash(e)} disableGutters>
+        <Accordion
+          expanded={openDash}
+          onChange={(_,e)=>setOpenDash(e)}
+          transitionDuration={120}
+          disableGutters
+          square
+          sx={{ boxShadow:'none', borderRadius:0 }}
+        >
           <AccordionSummary expandIcon={<ExpandMoreIcon/>}>
             <Stack direction="row" alignItems="center" spacing={1} sx={{ width:'100%', justifyContent:'space-between' }}>
               <Typography variant="h6" color="error">Think 仪表盘 - 配置管理</Typography>
@@ -121,9 +138,13 @@ function SettingsRoot({ plugin }: { plugin: ThinkPlugin }) {
             {dashboards.map((dash, idx) => (
               <Accordion
                 key={dash.name}
+                data-dash-name={dash.name}
                 expanded={openName === dash.name}
-                onChange={(_, e)=> setOpenName(e ? dash.name : (openName===dash.name? null : openName))}
+                onChange={(_, e)=> keepScroll(() => setOpenName(e ? dash.name : (openName===dash.name? null : openName)))}
+                transitionDuration={120}
                 disableGutters
+                square
+                sx={{ boxShadow:'none', borderRadius:0 }}
               >
                 <AccordionSummary expandIcon={<ExpandMoreIcon/>}>
                   <Stack direction="row" alignItems="center" spacing={1} sx={{ width:'100%', justifyContent:'space-between' }}>
@@ -167,7 +188,6 @@ export class SettingsTab extends PluginSettingTab {
   display(): void {
     const { containerEl } = this;
     containerEl.empty();
-    // 直接用 JSX，别再用 h()
     render(<SettingsRoot plugin={this.plugin} />, containerEl);
   }
 }
