@@ -18,20 +18,11 @@ import { GLOBAL_CSS, STYLE_TAG_ID } from '@core/domain/constants';
 interface ThinkSettings {
   dashboards:    DashboardConfig[];
   inputSettings: InputSettings;
-
-  /** 迁移元数据（用于可回滚） */
-  _migration?: {
-    categoryKey?: {
-      applied: boolean;             // 是否已应用过迁移
-      backup?: DashboardConfig[];   // 迁移前的 dashboards 备份
-    }
-  }
 }
 
 const DEFAULT_SETTINGS: ThinkSettings = {
   dashboards:    [],
   inputSettings: { base: {}, themes: [] },
-  _migration: {},
 };
 
 // ---------- Feature Context ---------- //
@@ -67,18 +58,18 @@ export default class ThinkPlugin extends Plugin {
   async onload(): Promise<void> {
     console.log('ThinkPlugin load');
 
-    // 0. 加载用户设置（含迁移）
+    // 0) 加载设置（并做一次性清理：去掉历史上残留的 _migration 字段）
     await this.loadSettings();
 
-    // 1. 注入全局样式（保证链接是黑色无下划线）
+    // 1) 注入全局样式（把链接改为黑色无下划线）
     this.injectGlobalCss();
 
-    // 2. 初始化 platform / core
+    // 2) 初始化 platform / core
     this.platform  = new ObsidianPlatform(this.app);
     this.dataStore = new DataStore(this.platform);
     await this.dataStore.initialScan();
 
-    // 3. 注入 Feature Context
+    // 3) 注入 Feature Context
     const ctx: ThinkContext = {
       app:       this.app,
       plugin:    this,
@@ -89,16 +80,6 @@ export default class ThinkPlugin extends Plugin {
     DashboardFeature.setup?.(ctx);
     QuickInputFeature.setup?.(ctx);
     SettingsFeature.setup?.(ctx);  // ← 注册设置页
-
-    // （可选）提供一个回滚命令，想恢复迁移前的配置可用
-    this.addCommand({
-      id: 'think-revert-categorykey-migration',
-      name: '开发者：回滚「categoryKey」迁移（还原 dashboards）',
-      callback: async () => {
-        const ok = await this.revertCategoryKeyMigration();
-        new Notice(ok ? '已回滚到迁移前配置' : '没有可回滚的备份或已回滚过');
-      },
-    });
   }
 
   onunload(): void {
@@ -118,17 +99,21 @@ export default class ThinkPlugin extends Plugin {
   // ===== 设置持久化 ===== //
 
   private async loadSettings() {
-    const stored = (await this.loadData()) as Partial<ThinkSettings> | null;
+    const stored = (await this.loadData()) as any as Partial<ThinkSettings> | null;
+
+    // 合并默认
     this._settings = Object.assign({}, DEFAULT_SETTINGS, stored);
 
-    // ✅ 迁移：status/category -> categoryKey（一次性），并带备份以便回滚
-    const changed = migrateSettingsToCategoryKey(this._settings);
-    if (changed) {
+    // 一次性清理：如果旧版本曾经写入过 _migration 字段，这里直接删除并保存一次
+    if (stored && '_migration' in stored) {
       try {
+        const clone: any = { ...this._settings };
+        delete (clone as any)._migration;
+        this._settings = clone;
         await this.saveData(this._settings);
-        console.log('[ThinkPlugin] settings migrated to categoryKey');
+        console.log('[ThinkPlugin] cleaned legacy _migration flag');
       } catch (e) {
-        console.warn('[ThinkPlugin] settings migration save failed', e);
+        console.warn('[ThinkPlugin] failed to clean legacy _migration flag', e);
       }
     }
   }
@@ -169,130 +154,4 @@ export default class ThinkPlugin extends Plugin {
       localStorage.setItem('think-target-dash', name);
     }
   }
-
-  /** 回滚到迁移前（如果有备份） */
-  private async revertCategoryKeyMigration(): Promise<boolean> {
-    const flag = this._settings._migration?.categoryKey;
-    if (!flag?.applied || !flag.backup) return false;
-
-    // 还原
-    this._settings.dashboards = JSON.parse(JSON.stringify(flag.backup));
-    this._settings._migration = {
-      ...this._settings._migration,
-      categoryKey: { applied: false, backup: undefined },
-    };
-    await this.saveSettings();
-    return true;
-  }
-}
-
-/* ====================================================================== */
-/*                         迁移脚本（一次性）                              */
-/*  作用：把 status / category 的字段/值 统一迁到 categoryKey
-/*  覆盖范围：filters / sort / group(s) / rowField / colField / fields
-/*  兼容：idempotent（多次运行无副作用）；并在首次迁移前做 dashboards 备份，可回滚 */
-/* ====================================================================== */
-
-function migrateSettingsToCategoryKey(settings: ThinkSettings): boolean {
-  const mig = settings._migration ||= {};
-  const ck  = mig.categoryKey ||= { applied: false as boolean, backup: undefined as DashboardConfig[]|undefined };
-
-  if (ck.applied) return false; // 已经迁移过，直接跳过
-
-  let changed = false;
-
-  const mapFieldName = (f?: string) => {
-    if (!f) return f;
-    if (f === 'status' || f === 'category') { changed = true; return 'categoryKey'; }
-    return f;
-  };
-
-  const mapStatusValue = (v: any) => {
-    if (typeof v !== 'string') return v;
-    const s = v.trim().toLowerCase();
-    if (s === 'open' || s === 'done' || s === 'cancelled') {
-      changed = true;
-      return `任务/${s}`;
-    }
-    return v;
-  };
-
-  const fixFilters = (filters?: any[]) => {
-    if (!Array.isArray(filters)) return filters;
-    return filters.map(f => {
-      if (!f || typeof f !== 'object') return f;
-      const nf = { ...f };
-      if (nf.field === 'status') {
-        nf.field = 'categoryKey';
-        nf.value = mapStatusValue(nf.value);
-        changed = true;
-      } else if (nf.field === 'category') {
-        nf.field = 'categoryKey';
-        changed = true;
-      }
-      return nf;
-    });
-  };
-
-  const fixSort = (sort?: any[]) => {
-    if (!Array.isArray(sort)) return sort;
-    return sort.map(s => {
-      if (!s || typeof s !== 'object') return s;
-      const ns = { ...s };
-      ns.field = mapFieldName(ns.field);
-      return ns;
-    });
-  };
-
-  const fixArrayFields = (arr?: string[]) => {
-    if (!Array.isArray(arr)) return arr;
-    const mapped = arr.map(a => (a === 'status' || a === 'category') ? 'categoryKey' : a);
-    if (mapped.some((v, i) => v !== arr[i])) changed = true;
-    // 去重保持顺序
-    const seen = new Set<string>();
-    return mapped.filter(v => (seen.has(v) ? false : (seen.add(v), true)));
-  };
-
-  const fixModule = (m: any) => {
-    if (!m || typeof m !== 'object') return m;
-    const nm = { ...m };
-
-    // filters / sort
-    nm.filters = fixFilters(nm.filters);
-    nm.sort    = fixSort(nm.sort);
-
-    // group（字符串）与 groups（数组）
-    if (typeof nm.group === 'string' && (nm.group === 'status' || nm.group === 'category')) {
-      nm.group = 'categoryKey'; changed = true;
-    }
-    if (Array.isArray(nm.groups)) nm.groups = fixArrayFields(nm.groups);
-
-    // row/col（TableView）
-    if (nm.rowField === 'status' || nm.rowField === 'category') {
-      nm.rowField = 'categoryKey'; changed = true;
-    }
-    if (nm.colField === 'status' || nm.colField === 'category') {
-      nm.colField = 'categoryKey'; changed = true;
-    }
-
-    // fields（Excel/Table 可见列）
-    if (Array.isArray(nm.fields)) nm.fields = fixArrayFields(nm.fields);
-
-    return nm;
-  };
-
-  // 迁移前备份 dashboards，便于回滚
-  ck.backup = JSON.parse(JSON.stringify(settings.dashboards || []));
-
-  // 仪表盘模块批量处理
-  (settings.dashboards || []).forEach(d => {
-    if (!Array.isArray(d.modules)) return;
-    d.modules = d.modules.map(fixModule);
-  });
-
-  // 打标记
-  ck.applied = true;
-  settings._migration.categoryKey = ck;
-
-  return changed;
 }
