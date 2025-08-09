@@ -1,6 +1,7 @@
 // src/features/settings/ui/InputSettingsTable.tsx
 /** @jsxImportSource preact */
-// InputSettingsTable.tsx —— 紧凑表格 UI（支持 bare 模式：不包外框）
+// InputSettingsTable.tsx —— 紧凑表格 UI（去掉 Fragment，避免重复导入）
+// 单击单元格可编辑 JSON / 图标
 
 import { h } from 'preact';
 import { useState, useMemo } from 'preact/hooks';
@@ -18,13 +19,8 @@ import { Notice } from 'obsidian';
 const ROW_PADDING_Y = 0.3;
 const CELL_PADDING_X = 1;
 
-interface Props {
-  plugin: ThinkPlugin;
-  /** bare=true 时不自带圆角白底边框 */
-  bare?: boolean;
-}
-
-export function InputSettingsTable({ plugin, bare = false }: Props) {
+interface Props { plugin: ThinkPlugin }
+export function InputSettingsTable({ plugin }: Props) {
   const [refresh, setRefresh] = useState(0);
 
   const data = useMemo(() => {
@@ -106,6 +102,7 @@ export function InputSettingsTable({ plugin, bare = false }: Props) {
     const enabled = cfg?.enabled ?? true;
     const symbol  = enabled ? (inherited ? '🔽' : '📄') : '❌';
     const tip     = !enabled ? '禁用' : (inherited ? '继承' : '覆写');
+
     return (
       <TableCell
         sx={{ cursor: 'pointer', whiteSpace: 'nowrap', textAlign: 'center', py: ROW_PADDING_Y, px: CELL_PADDING_X }}
@@ -126,26 +123,18 @@ export function InputSettingsTable({ plugin, bare = false }: Props) {
     return [cfg, inh] as [any, boolean];
   };
 
-  const containerSx = bare
-    ? { p: 0, border: 0, bgcolor: 'transparent' }
-    : { p: 2, border: 1, borderColor: 'divider', borderRadius: 0, bgcolor: 'background.paper' };
-
   return (
-    <Box sx={containerSx}>
-      {!bare && (
-        <div>
-          <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 1 }}>
-            <Typography fontWeight={600}>通用输入设置</Typography>
-            <Tooltip title="新增主题">
-              <IconButton size="small" onClick={() => setAddOpen(true)}><AddIcon/></IconButton>
-            </Tooltip>
-          </Stack>
-          <Divider sx={{ mb: 1.5 }} />
-        </div>
-      )}
+    <Box sx={{ p: 2, border: 1, borderColor: 'divider', borderRadius: 2, bgcolor: 'background.paper' }} class="think-setting-root">
+      {/* 工具栏（不用 Fragment） */}
+      <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 1 }}>
+        <Typography fontWeight={600}>通用输入设置</Typography>
+        <Tooltip title="新增主题">
+          <IconButton size="small" onClick={() => setAddOpen(true)}><AddIcon/></IconButton>
+        </Tooltip>
+      </Stack>
+      <Divider sx={{ mb: 1.5 }} />
 
-      <Table size="small" class="think-setting-table"
-        sx={{ '& th, & td': { whiteSpace: 'nowrap', py: ROW_PADDING_Y, px: CELL_PADDING_X } }}>
+      <Table size="small" sx={{ '& th, & td': { whiteSpace: 'nowrap', py: ROW_PADDING_Y, px: CELL_PADDING_X } }} className="think-setting-table">
         <TableHead>
           <TableRow>
             <TableCell>主题路径</TableCell>
@@ -169,9 +158,9 @@ export function InputSettingsTable({ plugin, bare = false }: Props) {
           {(data.themes as any[]).map((th: any, idx: number) => (
             <TableRow key={th.path} sx={{ '& > *': { py: ROW_PADDING_Y, px: CELL_PADDING_X } }}>
               <TableCell>{th.path}</TableCell>
+
               <TableCell
                 align="center"
-                class="icon-cell"
                 sx={{ cursor: 'pointer' }}
                 title="单击编辑图标（可输入文字或表情；留空=不显示）"
                 onClick={() => setIconEdit({ themeIdx: idx, value: th.icon ?? '' })}
@@ -206,63 +195,67 @@ export function InputSettingsTable({ plugin, bare = false }: Props) {
 
       {/* JSON 编辑 */}
       <Dialog open={!!editing} fullWidth maxWidth="sm" disablePortal onClose={() => setEditing(null)}>
-        {editing && [
-          <DialogTitle key="t">编辑配置（{editing.themeIdx < 0 ? 'Base' : (data.themes as any[])[editing.themeIdx].path} → {editing.type}）</DialogTitle>,
-          <DialogContent key="c">
-            <TextField
-              multiline minRows={12} fullWidth
-              value={editing.json}
-              onChange={e => setEditing(p => p ? { ...p, json: (e.target as HTMLInputElement).value } : p)}
-              onKeyDown={e => e.stopPropagation()}
-              sx={{ fontFamily: 'monospace' }}
-            />
-          </DialogContent>,
-          <DialogActions key="a">
-            <Button onClick={() => setEditing(null)}>取消</Button>
-            <Button startIcon={<SaveIcon />} onClick={saveEdit}>保存</Button>
-          </DialogActions>,
-        ]}
+        {editing ? (
+          <div>
+            <DialogTitle>编辑配置（{editing.themeIdx < 0 ? 'Base' : (data.themes as any[])[editing.themeIdx].path} → {editing.type}）</DialogTitle>
+            <DialogContent>
+              <TextField
+                multiline minRows={12} fullWidth
+                value={editing.json}
+                onChange={e => setEditing(p => p ? { ...p, json: (e.target as HTMLInputElement).value } : p)}
+                onKeyDown={e => e.stopPropagation()}
+                sx={{ fontFamily: 'monospace' }}
+              />
+            </DialogContent>
+            <DialogActions>
+              <Button onClick={() => setEditing(null)}>取消</Button>
+              <Button startIcon={<SaveIcon />} onClick={saveEdit}>保存</Button>
+            </DialogActions>
+          </div>
+        ) : null}
       </Dialog>
 
       {/* 图标编辑 */}
       <Dialog open={!!iconEdit} maxWidth="xs" fullWidth disablePortal onClose={() => setIconEdit(null)}>
-        {iconEdit && [
-          <DialogTitle key="t">编辑图标（{(data.themes as any[])[iconEdit.themeIdx].path}）</DialogTitle>,
-          <DialogContent key="c">
-            <TextField
-              autoFocus fullWidth
-              placeholder="可输入文字或表情，如 ✨ / 😴 / 💪"
-              value={iconEdit.value}
-              onChange={e => setIconEdit(p => p ? ({ ...p, value: (e.target as HTMLInputElement).value }) : p)}
-              onKeyDown={e => e.stopPropagation()}
-            />
-          </DialogContent>,
-          <DialogActions key="a">
-            <Button onClick={() => setIconEdit(null)}>取消</Button>
-            <Button
-              startIcon={<SaveIcon />}
-              onClick={() => {
-                const v = (iconEdit.value || '').trim();
-                (data.themes as any[])[iconEdit.themeIdx].icon = v || undefined;
-                plugin.inputSettings = data;
-                plugin.persistAll().then(() => {
-                  new Notice('已保存图标');
-                  setIconEdit(null);
-                  setRefresh(r => r + 1);
-                });
-              }}
-            >
-              保存
-            </Button>
-          </DialogActions>,
-        ]}
+        {iconEdit ? (
+          <div>
+            <DialogTitle>编辑图标（{(data.themes as any[])[iconEdit.themeIdx].path}）</DialogTitle>
+            <DialogContent>
+              <TextField
+                autoFocus fullWidth
+                placeholder="可输入文字或表情，如 ✨ / 😴 / 💪"
+                value={iconEdit.value}
+                onChange={e => setIconEdit(p => p ? ({ ...p, value: (e.target as HTMLInputElement).value }) : p)}
+                onKeyDown={e => e.stopPropagation()}
+              />
+            </DialogContent>
+            <DialogActions>
+              <Button onClick={() => setIconEdit(null)}>取消</Button>
+              <Button
+                startIcon={<SaveIcon />}
+                onClick={() => {
+                  const v = (iconEdit.value || '').trim();
+                  (data.themes as any[])[iconEdit.themeIdx].icon = v || undefined;
+                  plugin.inputSettings = data;
+                  plugin.persistAll().then(() => {
+                    new Notice('已保存图标');
+                    setIconEdit(null);
+                    setRefresh(r => r + 1);
+                  });
+                }}
+              >
+                保存
+              </Button>
+            </DialogActions>
+          </div>
+        ) : null}
       </Dialog>
 
       {/* 新增主题 */}
       <Dialog open={addOpen} maxWidth="xs" fullWidth disablePortal onClose={() => setAddOpen(false)}>
-        {[
-          <DialogTitle key="t">新增主题路径</DialogTitle>,
-          <DialogContent key="c">
+        <div>
+          <DialogTitle>新增主题路径</DialogTitle>
+          <DialogContent>
             <TextField
               fullWidth autoFocus
               placeholder="如 健康/饮食"
@@ -276,24 +269,26 @@ export function InputSettingsTable({ plugin, bare = false }: Props) {
                 }
               }}
             />
-          </DialogContent>,
-          <DialogActions key="a">
+          </DialogContent>
+          <DialogActions>
             <Button onClick={() => setAddOpen(false)}>取消</Button>
             <Button onClick={confirmAdd}>添加</Button>
-          </DialogActions>,
-        ]}
+          </DialogActions>
+        </div>
       </Dialog>
 
       {/* 删除确认 */}
       <Dialog open={delIdx !== null} maxWidth="xs" disablePortal onClose={() => setDelIdx(null)}>
-        {delIdx !== null && [
-          <DialogTitle key="t">确认删除</DialogTitle>,
-          <DialogContent key="c">确认删除主题「{(data.themes as any[])[delIdx].path}」？</DialogContent>,
-          <DialogActions key="a">
-            <Button onClick={() => setDelIdx(null)}>取消</Button>
-            <Button color="error" onClick={confirmDelete}>删除</Button>
-          </DialogActions>,
-        ]}
+        {delIdx !== null ? (
+          <div>
+            <DialogTitle>确认删除</DialogTitle>
+            <DialogContent>确认删除主题「{(data.themes as any[])[delIdx].path}」？</DialogContent>
+            <DialogActions>
+              <Button onClick={() => setDelIdx(null)}>取消</Button>
+              <Button color="error" onClick={confirmDelete}>删除</Button>
+            </DialogActions>
+          </div>
+        ) : null}
       </Dialog>
     </Box>
   );
