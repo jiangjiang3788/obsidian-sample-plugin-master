@@ -64,15 +64,40 @@
 
 
 
-/* src/shared/styles/styles.css */
-/* 扁平、小巧的 pill */
+
+/* 视图说明条 */
+.view-meta{
+  display:flex;align-items:center;gap:6px;
+  font-size:12px;background:#fafafa;border-left:3px solid var(--c);
+  padding:4px 8px;border-radius:6px;margin:.25rem 0 .5rem;
+}
+.view-meta .dot{width:6px;height:6px;border-radius:50%;background:var(--c);}
+
+
+/* 让 Autocomplete 包裹的 tag 背景清空，否则会盖掉我们的小 pill */
+.MuiAutocomplete-root .MuiAutocomplete-tag {
+  padding: 0 !important;
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+}
+
+/* 扁平小 pill：确保出现浅灰色圆角背景块 */
 .think-pills { display:flex; flex-wrap:wrap; gap:6px; }
-.think-pill{
+
+.think-pills .think-pill{
   display:inline-flex; align-items:center;
   padding:0 8px;
   height:18px; line-height:18px; font-size:12px;
   border-radius:9999px;
-  background:#eee;
+  background: var(--think-pill-bg, #eee) !important;   /* 关键：强制浅灰 */
+  border: 1px solid rgba(0,0,0,.08);
   cursor:pointer; user-select:none;
 }
-.think-pill:hover{ background:#e3e3e3; }
+.think-pills .think-pill:hover{ background:#e3e3e3 !important; }
+
+/* 暗色主题也有对比（Maple/Dark 等） */
+body.theme-dark .think-pills .think-pill{
+  --think-pill-bg: rgba(255,255,255,.08);
+  border-color: rgba(255,255,255,.12);
+}
