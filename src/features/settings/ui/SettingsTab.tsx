@@ -1,4 +1,3 @@
-// src/features/settings/ui/SettingsTab.tsx
 /** @jsxImportSource preact */
 import { render } from 'preact';
 import { useMemo, useState, useEffect } from 'preact/hooks';
@@ -15,8 +14,8 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 // ⬇️ 用新的、本目录下的表单
 import { DashboardConfigForm } from './DashboardConfigForm';
 
-import { InputSettingsTable }  from './InputSettingsTable';
-import { theme as baseTheme }  from '@shared/styles/mui-theme';
+import { InputSettingsTable } from './InputSettingsTable';
+import { theme as baseTheme } from '@shared/styles/mui-theme';
 
 function keepScroll(fn: () => void) {
   const y = window.scrollY;
@@ -39,7 +38,7 @@ function SettingsRoot({ plugin }: { plugin: ThinkPlugin }) {
     return v === null ? true : v === 'true';
   });
   useEffect(() => { localStorage.setItem('think-settings-open-input', String(openInput)); }, [openInput]);
-  useEffect(() => { localStorage.setItem('think-settings-open-dash',  String(openDash));  }, [openDash]);
+  useEffect(() => { localStorage.setItem('think-settings-open-dash', String(openDash)); }, [openDash]);
 
   const [openName, setOpenName] = useState<string | null>(() => localStorage.getItem('think-target-dash'));
   useEffect(() => {
@@ -90,9 +89,11 @@ function SettingsRoot({ plugin }: { plugin: ThinkPlugin }) {
       <CssBaseline />
       <Box sx={{ display:'grid', gap:1.5 }} class="think-compact">
         {/* ── 通用输入设置 ───────────────────────────── */}
-        <Accordion expanded={openInput} onChange={(_,e)=>setOpenInput(e)} disableGutters>
-          <AccordionSummary expandIcon={<ExpandMoreIcon/>}>
-            <Typography variant="h6" color="error">通用输入设置</Typography>
+        <Accordion expanded={openInput} onChange={(_, e) => setOpenInput(e)} disableGutters>
+          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+            <Typography sx={{ color: 'error.main', fontWeight: 800, fontSize: 22 }}>
+              通用输入设置
+            </Typography>
           </AccordionSummary>
           <AccordionDetails>
             <InputSettingsTable plugin={plugin} />
@@ -100,16 +101,20 @@ function SettingsRoot({ plugin }: { plugin: ThinkPlugin }) {
         </Accordion>
 
         {/* ── 仪表盘配置管理 ───────────────────────── */}
-        <Accordion expanded={openDash} onChange={(_,e)=>setOpenDash(e)} disableGutters>
-          <AccordionSummary expandIcon={<ExpandMoreIcon/>}>
-            <Stack direction="row" alignItems="center" sx={{ width:'100%', justifyContent:'space-between' }}>
-              <Typography variant="h6" color="error">Think 仪表盘 - 配置管理</Typography>
-              <IconButton size="small" onClick={addDashboard}><AddIcon fontSize="small"/></IconButton>
+        <Accordion expanded={openDash} onChange={(_, e) => setOpenDash(e)} disableGutters>
+          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+            <Stack direction="row" alignItems="center" sx={{ width: '100%', justifyContent: 'space-between' }}>
+              <Typography sx={{ color: 'error.main', fontWeight: 800, fontSize: 22 }}>
+                仪表盘配置管理
+              </Typography>
+              <IconButton size="small" onClick={addDashboard}>
+                <AddIcon fontSize="small" />
+              </IconButton>
             </Stack>
           </AccordionSummary>
-          <AccordionDetails sx={{ display:'grid', gap:1 }}>
+          <AccordionDetails sx={{ display: 'grid', gap: 1 }}>
             {dashboards.length === 0 && (
-              <Box sx={{ color:'text.secondary', fontSize:13 }}>
+              <Box sx={{ color: 'text.secondary', fontSize: 13 }}>
                 还没有仪表盘，点右上角 <AddIcon fontSize="inherit" /> 新建。
               </Box>
             )}
@@ -118,18 +123,20 @@ function SettingsRoot({ plugin }: { plugin: ThinkPlugin }) {
               <Accordion
                 key={dash.name}
                 expanded={openName === dash.name}
-                onChange={(_, e)=> setOpenName(e ? dash.name : (openName===dash.name? null : openName))}
+                onChange={(_, e) => setOpenName(e ? dash.name : (openName === dash.name ? null : openName))}
                 disableGutters
               >
-                <AccordionSummary expandIcon={<ExpandMoreIcon/>}>
-                  <Stack direction="row" alignItems="center" sx={{ width:'100%', justifyContent:'space-between' }}>
-                    <Typography fontWeight={600}>{dash.name}</Typography>
+                <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                  <Stack direction="row" alignItems="center" sx={{ width: '100%', justifyContent: 'space-between' }}>
+                    <Typography sx={{ color: 'error.main', fontWeight: 600, fontSize: 20 }}>
+                      {dash.name}
+                    </Typography>
                     <IconButton
                       size="small"
-                      onClick={(ev)=>{ev.stopPropagation(); deleteDashboard(idx);}}
+                      onClick={(ev) => { ev.stopPropagation(); deleteDashboard(idx); }}
                       title="删除此配置"
                     >
-                      <DeleteIcon fontSize="small"/>
+                      <DeleteIcon fontSize="small" />
                     </IconButton>
                   </Stack>
                 </AccordionSummary>
@@ -138,8 +145,8 @@ function SettingsRoot({ plugin }: { plugin: ThinkPlugin }) {
                   <DashboardConfigForm
                     dashboard={structuredClone(dash)}
                     dashboards={plugin.dashboards}
-                    onSave={(d)=>saveDash(idx, d)}
-                    onCancel={()=>{}}
+                    onSave={(d) => saveDash(idx, d)}
+                    onCancel={() => {}}
                   />
                 </AccordionDetails>
               </Accordion>
