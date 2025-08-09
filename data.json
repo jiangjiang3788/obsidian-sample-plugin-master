@@ -142,20 +142,6 @@
       "initialView": "周"
     },
     {
-      "name": "02",
-      "modules": [],
-      "initialDate": "2025-07-24",
-      "path": "01",
-      "tags": [
-        "思考",
-        "生活",
-        "健康",
-        "电脑",
-        "工作"
-      ],
-      "initialView": "周"
-    },
-    {
       "name": "未完成任务",
       "modules": [
         {
@@ -164,10 +150,7 @@
           "collapsed": false,
           "filters": [],
           "sort": [],
-          "fields": [],
-          "groups": [],
-          "rowField": "tags",
-          "colField": "date"
+          "fields": []
         }
       ],
       "initialDate": "2025-07-26",
@@ -179,7 +162,9 @@
         "电脑",
         "工作"
       ],
-      "initialView": "天"
+      "initialView": "天",
+      "_modsOpen": true,
+      "_baseOpen": false
     }
   ],
   "inputSettings": {

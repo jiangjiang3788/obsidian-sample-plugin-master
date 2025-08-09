@@ -1,4 +1,5 @@
 // src/shared/styles/mui-theme.ts
+// —— 极简紧凑主题：输入高度更低、去下划线、减少外边距
 import { createTheme } from '@mui/material/styles';
 
 export const theme = createTheme({
@@ -6,53 +7,55 @@ export const theme = createTheme({
     mode: 'light',
     primary:  { main: '#007aff' },
     secondary:{ main: '#ff9500' },
-    background: { default: '#f2f2f7', paper: '#ffffff' },
+    background: { default:'#f7f7f9', paper:'#fff' },
   },
-
-  // 全局直角：去掉“到处都是 5px 小圆角”的观感
-  shape: { borderRadius: 0 },
-
-  // 全局阴影关闭：解决“整体阴影太重”
-  shadows: Array(25).fill('none') as any,
-
-  // 加快折叠/展开动画
-  transitions: {
-    duration: {
-      shortest: 80,
-      shorter : 120,
-      short   : 150,
-      standard: 180,
-      enteringScreen: 180,
-      leavingScreen : 120,
-    },
+  shape: { borderRadius: 6 },
+  typography: {
+    fontFamily:
+      '"SF Pro Text", -apple-system, BlinkMacSystemFont, "Segoe UI", ' +
+      'Roboto, Helvetica, Arial, sans-serif',
+    fontSize: 13,
+    button: { textTransform: 'none', fontWeight: 500, fontSize: 13 },
   },
-
   components: {
-    // 纸面默认无阴影
-    MuiPaper: {
-      defaultProps: { elevation: 0 },
-      styleOverrides: { root: { boxShadow: 'none' } },
-    },
+    MuiTextField:    { defaultProps: { size: 'small', variant: 'standard', fullWidth: true } },
+    MuiSelect:       { defaultProps: { size: 'small', variant: 'standard' } },
+    MuiAutocomplete: { defaultProps: { size: 'small' } },
+    MuiButton:       { styleOverrides: { root: { borderRadius: 6, boxShadow: 'none' } } },
 
-    // Accordion 去掉阴影、分割线、圆角，并加快动画
-    MuiAccordion: {
-      defaultProps: { disableGutters: true, square: true, TransitionProps: { timeout: 120 } as any },
+    // 关键：把输入高度和内边距压到更小
+    MuiInputBase: {
       styleOverrides: {
-        root: {
-          boxShadow: 'none',
-          borderRadius: 0,
-          '&::before': { display: 'none' },   // 去掉那条细分割线
+        root:  { minHeight: 0 },                                       // 不要撑高容器
+        input: {
+          height: 22, lineHeight: '22px', padding: '0 6px',            // 比日期框还矮
+          fontSize: 13,
         },
       },
     },
-    MuiAccordionDetails: {
-      styleOverrides: { root: { paddingTop: 8, paddingBottom: 8 } },
+
+    // 去掉 standard 变体的底部灰线
+    MuiInput: {
+      styleOverrides: {
+        root: {
+          '&:before,&:after,&:hover:not(.Mui-disabled):before': {
+            borderBottom: '0 !important',
+          },
+        },
+      },
     },
 
-    // 全局尺寸和外观（保留你原来的习惯）
-    MuiTextField:   { defaultProps: { size: 'small', fullWidth: true } },
-    MuiSelect:      { defaultProps: { size: 'small', fullWidth: true } },
-    MuiAutocomplete:{ defaultProps: { size: 'small', fullWidth: true } },
-    MuiButton:      { styleOverrides: { root: { borderRadius: 0 } } }, // 与直角统一
+    // 兼容偶尔出现的 outlined，弱化边框
+    MuiOutlinedInput: {
+      styleOverrides: {
+        root: { '& .MuiOutlinedInput-notchedOutline': { borderColor: '#ddd' } },
+        input: { padding: '2px 6px' },
+      },
+    },
+
+    // 控制 FormControl 的外边距，别让它把行距撑大
+    MuiFormControl: {
+      styleOverrides: { root: { margin: 0 } },
+    },
   },
 });
