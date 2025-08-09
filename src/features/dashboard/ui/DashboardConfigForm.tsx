@@ -1,5 +1,4 @@
 // src/features/dashboard/ui/DashboardConfigForm.tsx
-// 改动点：统一无外框；“基础配置 / 模块设置”两段都可折叠；所有影响布局的交互用 keepScroll 包裹。
 /** @jsxImportSource preact */
 import { h } from 'preact';
 import { OPS } from '@core/domain/constants';
@@ -122,21 +121,37 @@ const ModuleCard = memo<ModCardProps>(({
       onDragOver={onDragOver as any} onDrop={onDrop as any}
       sx={{ border: 0, p: 1.5, bgcolor:'transparent' }}
     >
-      {/* Header */}
-      <Stack direction="row" spacing={1} alignItems="center">
-        <TextField label="标题" value={mod.title}
+      {/* Header —— 调整布局：标题更宽；视图选择固定宽度；“折叠”不换行 */}
+      <Stack direction="row" spacing={1} alignItems="center" sx={{ flexWrap:'nowrap' }}>
+        <TextField
+          label="标题"
+          value={mod.title}
           onInput={e=>setFieldValue(
             `modules.${idx}.title`,
-            (e.target as HTMLInputElement).value,false)} sx={{flex:1}}/>
-        <Select value={mod.view}
+            (e.target as HTMLInputElement).value,false)}
+          sx={{ flex:'1 1 auto', minWidth: 280 }}
+        />
+
+        <Select
+          value={mod.view}
+          fullWidth={false}
           onChange={e=>keepScroll(()=>setFieldValue(`modules.${idx}.view`,e.target.value,false))}
-          sx={{minWidth:140}}>
+          sx={{ flex:'0 0 160px', minWidth:160 }}
+        >
           {VIEW_OPTIONS.map(v=><MenuItem key={v} value={v}>{v}</MenuItem>)}
         </Select>
-        <FormControlLabel label="默认折叠"
-          control={<Checkbox checked={mod.collapsed}
-            onChange={e=>keepScroll(()=>setFieldValue(`modules.${idx}.collapsed`,e.target.checked,false))}/> }
-          sx={{ml:1}}/>
+
+        <FormControlLabel
+          label="折叠"
+          control={
+            <Checkbox
+              checked={mod.collapsed}
+              onChange={e=>keepScroll(()=>setFieldValue(`modules.${idx}.collapsed`,e.target.checked,false))}
+            />
+          }
+          sx={{ ml:1, '& .MuiFormControlLabel-label': { whiteSpace:'nowrap' } }}
+        />
+
         <IconButton size="small" onClick={toggle} sx={CIRCLE_BTN}>
           {open?<ArrowDropUp/>:<ArrowDropDown/>}
         </IconButton>
@@ -199,7 +214,7 @@ const ModuleCard = memo<ModCardProps>(({
                       e.target.value,false))} sx={{flex:1}}>
                     {fieldOptions.map(o=><MenuItem key={o} value={o}>{o}</MenuItem>)}
                   </TextField>
-                  <Select value={f.op}
+                  <Select value={f.op} fullWidth={false}
                     onChange={e=>keepScroll(()=>setFieldValue(`modules.${idx}.filtersArr.${i}.op`,
                       e.target.value,false))} sx={{width:90}}>
                     {OPS.map(op=><MenuItem key={op} value={op}>{op}</MenuItem>)}
@@ -230,7 +245,7 @@ const ModuleCard = memo<ModCardProps>(({
                       e.target.value,false))} sx={{flex:1}}>
                     {fieldOptions.map(o=><MenuItem key={o} value={o}>{o}</MenuItem>)}
                   </TextField>
-                  <Select value={s.dir}
+                  <Select value={s.dir} fullWidth={false}
                     onChange={e=>keepScroll(()=>setFieldValue(`modules.${idx}.sortArr.${i}.dir`,
                       e.target.value,false))} sx={{width:100}}>
                     <MenuItem value="asc">升序</MenuItem>
@@ -301,7 +316,7 @@ export function DashboardConfigForm({ dashboard,dashboards,onSave,onCancel }:Pro
       >
       {({ values,setFieldValue })=>(
         <Form>
-          {/* 基础设置（无外框，可折叠） */}
+          {/* 基础配置 */}
           <Box sx={{mb:2}}>
             <Stack direction="row" alignItems="center" spacing={1} mb={baseOpen?1:0}>
               <Typography variant="h6" color="error">基础配置</Typography>
@@ -322,6 +337,7 @@ export function DashboardConfigForm({ dashboard,dashboards,onSave,onCancel }:Pro
                     onInput={e=>setFieldValue('tags',(e.target as HTMLInputElement).value,false)}/>,
                 },{
                   label:'初始视图',node:<Select sx={{minWidth:160}} value={values.initialView}
+                    fullWidth={false}
                     onChange={e=>keepScroll(()=>setFieldValue('initialView',e.target.value,false))}>
                       {['年','季','月','周','天'].map(v=><MenuItem key={v} value={v}>{v}</MenuItem>)}
                     </Select>,
@@ -339,7 +355,7 @@ export function DashboardConfigForm({ dashboard,dashboards,onSave,onCancel }:Pro
             </Collapse>
           </Box>
 
-          {/* 模块列表（无外框，可折叠） */}
+          {/* 模块设置 + 分割线 */}
           <Box sx={{mb:2}}>
             <Stack direction="row" justifyContent="space-between" alignItems="center" mb={modsOpen?1:0}>
               <Typography variant="h6" color="error">模块设置</Typography>
@@ -372,12 +388,19 @@ export function DashboardConfigForm({ dashboard,dashboards,onSave,onCancel }:Pro
               <Divider sx={{mb:2}}/>
               <FieldArray name="modules">
               {({ remove,move })=>(
-                <Stack spacing={2}>
+                <Stack spacing={0}>
                   {values.modules.map((m:any,i:number)=>(
-                    <ModuleCard key={m.id} idx={i} mod={m}
-                      fieldOptions={fieldOptions}
-                      setFieldValue={setFieldValue}
-                      remove={remove} move={move}/>
+                    <div key={m.id}>
+                      <ModuleCard
+                        idx={i}
+                        mod={m}
+                        fieldOptions={fieldOptions}
+                        setFieldValue={setFieldValue}
+                        remove={remove}
+                        move={move}
+                      />
+                      {i < values.modules.length - 1 && <Divider sx={{ my: 1.5 }} />}
+                    </div>
                   ))}
                 </Stack>
               )}
