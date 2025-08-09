@@ -1,4 +1,3 @@
-// src/features/settings/ui/DashboardConfigForm.tsx
 /** @jsxImportSource preact */
 import { h } from 'preact';
 import { useMemo, useState } from 'preact/hooks';
@@ -90,7 +89,9 @@ export function DashboardConfigForm({ dashboard, dashboards, onSave, onCancel }:
           <Stack direction="row" alignItems="center" spacing={0.75}
                  onClick={()=>keepScroll(()=>set('_baseOpen', !vals._baseOpen))}
                  sx={{cursor:'pointer', userSelect:'none', mb: vals._baseOpen? 0.5:0}}>
-            <Typography variant="h6" color="error">基础配置</Typography>
+            <Typography sx={{ color:'text.primary', fontWeight:600, fontSize:16 }}>
+              基础配置
+            </Typography>
             <span>{vals._baseOpen?'▾':'▸'}</span>
           </Stack>
           <Collapse in={vals._baseOpen} timeout={120} unmountOnExit>
@@ -130,7 +131,9 @@ export function DashboardConfigForm({ dashboard, dashboards, onSave, onCancel }:
           <Stack direction="row" alignItems="center" sx={{justifyContent:'space-between'}}
                  onClick={()=>keepScroll(()=>set('_modsOpen', !vals._modsOpen))}>
             <Stack direction="row" alignItems="center" spacing={0.75} sx={{cursor:'pointer', userSelect:'none'}}>
-              <Typography variant="h6" color="error">模块设置</Typography>
+              <Typography sx={{ color:'text.primary', fontWeight:600, fontSize:16 }}>
+                模块设置
+              </Typography>
               <span>{vals._modsOpen?'▾':'▸'}</span>
             </Stack>
             <IconButton size="small" onClick={(e)=>{e.stopPropagation(); addModule();}} title="新增模块">
@@ -139,7 +142,7 @@ export function DashboardConfigForm({ dashboard, dashboards, onSave, onCancel }:
           </Stack>
 
           <Collapse in={vals._modsOpen} timeout={120} unmountOnExit>
-            <Divider sx={{my:0.75}}/>
+            <Divider sx={{my:0.75, borderColor: 'gray'}}/>
             <Stack spacing={0.75}>
               {vals.modules.map((m:any,i:number)=>{
                 const Editor = VIEW_EDITORS[(m.view as ViewKind) ?? 'BlockView'];
@@ -150,8 +153,9 @@ export function DashboardConfigForm({ dashboard, dashboards, onSave, onCancel }:
                            onClick={()=>keepScroll(()=>set(`modules.${i}._open`, !m._open))}
                            sx={{cursor:'pointer', userSelect:'none'}}>
                       <span style="font-size:16px;line-height:1;">{m._open?'▾':'▸'}</span>
-                      <Typography sx={{flex:1,fontWeight:600}} title="点击折叠/展开">{m.title||'新模块'}</Typography>
-
+                      <Typography sx={{ flex:1, color:'text.primary', fontWeight:600, fontSize:16 }} title="点击折叠/展开">
+                        {m.title || '新模块'}
+                      </Typography>
                       <Select value={m.view} MenuProps={menu}
                               onClick={e=>e.stopPropagation()}
                               onChange={e=>keepScroll(()=>set(`modules.${i}.view`, e.target.value))}
@@ -180,9 +184,8 @@ export function DashboardConfigForm({ dashboard, dashboards, onSave, onCancel }:
                         <Editor
                           value={m}
                           fieldOptions={fieldOptions}
-                          onChange={(patch)=>keepScroll(()=>set(`modules.${i}`, { ...m, ...patch }))}
-                        />
-
+                          onChange={(patch)=>keepScroll(()=>set(`modules.${i}`, { ...m, ...patch }))}/>
+                        
                         {/* 通用：显示字段 / 分组字段 */}
                         <PillMultiSelect
                           label="显示字段"
@@ -214,13 +217,13 @@ export function DashboardConfigForm({ dashboard, dashboards, onSave, onCancel }:
                           mode="sort"
                           rows={m.sortArr}
                           fieldOptions={fieldOptions}
-                          onAdd={()=>keepScroll(()=>set(`modules.${i}.sortArr`, [...m.sortArr,{field:'',dir:'asc'}] ))}
+                          onAdd={()=>keepScroll(()=>set(`modules.${i}.sortArr`, [...m.sortArr,{field:'',dir:'asc'}]))}
                           onChange={(rows)=>keepScroll(()=>set(`modules.${i}.sortArr`, rows))}
                         />
                       </Box>
                     </Collapse>
 
-                    {i < vals.modules.length-1 && <Divider sx={{my:0.5}}/>}
+                    {i < vals.modules.length-1 && <Divider sx={{my:0.5, borderColor: 'gray'}} />}
                   </div>
                 );
               })}
