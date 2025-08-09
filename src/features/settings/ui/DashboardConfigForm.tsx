@@ -202,7 +202,7 @@ export function DashboardConfigForm({ dashboard, dashboards, onSave, onCancel }:
                         />
 
                         {/* 过滤 / 排序 */}
-                        <div style="height:8px;"></div>
+                        <div style="height:6px;"></div>
                         <RuleList
                           title="过滤规则"
                           mode="filter"
@@ -211,7 +211,7 @@ export function DashboardConfigForm({ dashboard, dashboards, onSave, onCancel }:
                           onAdd={()=>keepScroll(()=>set(`modules.${i}.filtersArr`, [...m.filtersArr,{field:'',op:'=',value:''}] ))}
                           onChange={(rows)=>keepScroll(()=>set(`modules.${i}.filtersArr`, rows))}
                         />
-                        <div style="height:8px;"></div>
+                        <div style="height:6px;"></div>
                         <RuleList
                           title="排序规则"
                           mode="sort"
