@@ -11,9 +11,13 @@ import {
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import { DashboardConfigForm } from '../../dashboard/ui';
+
+// ⬇️ 用新的、本目录下的表单
+
+
 import { InputSettingsTable }  from './InputSettingsTable';
 import { theme as baseTheme }  from '@shared/styles/mui-theme';
+import { DashboardConfigForm } from '../../dashboard/ui';
 
 function keepScroll(fn: () => void) {
   const y = window.scrollY;
@@ -26,13 +30,6 @@ function keepScroll(fn: () => void) {
 function SettingsRoot({ plugin }: { plugin: ThinkPlugin }) {
   const [tick, setTick] = useState(0);
   const dashboards = useMemo(() => plugin.dashboards || [], [plugin.dashboards, tick]);
-
-  // Obsidian 设置页右侧滚动容器
-  const [scroller, setScroller] = useState<HTMLElement|null>(null);
-  useEffect(() => {
-    const el = document.querySelector('.vertical-tab-content') as HTMLElement | null;
-    setScroller(el);
-  }, []);
 
   const [openInput, setOpenInput] = useState<boolean>(() => {
     const v = localStorage.getItem('think-settings-open-input');
@@ -108,7 +105,6 @@ function SettingsRoot({ plugin }: { plugin: ThinkPlugin }) {
           <AccordionSummary expandIcon={<ExpandMoreIcon/>}>
             <Stack direction="row" alignItems="center" sx={{ width:'100%', justifyContent:'space-between' }}>
               <Typography variant="h6" color="error">Think 仪表盘 - 配置管理</Typography>
-              {/* 简洁：不再套圆圈，只保留小图标 */}
               <IconButton size="small" onClick={addDashboard}><AddIcon fontSize="small"/></IconButton>
             </Stack>
           </AccordionSummary>
@@ -145,7 +141,6 @@ function SettingsRoot({ plugin }: { plugin: ThinkPlugin }) {
                     dashboards={plugin.dashboards}
                     onSave={(d)=>saveDash(idx, d)}
                     onCancel={()=>{}}
-                    scroller={scroller}
                   />
                 </AccordionDetails>
               </Accordion>
@@ -159,7 +154,14 @@ function SettingsRoot({ plugin }: { plugin: ThinkPlugin }) {
 
 export class SettingsTab extends PluginSettingTab {
   private plugin: ThinkPlugin;
-  constructor(app: any, plugin: ThinkPlugin) { super(app, plugin); this.plugin = plugin; }
+
+  // ⬇️ 给设置页一个固定 id，方便 openSettingsForDashboard() 精确跳转
+  id = 'think-settings';
+
+  constructor(app: any, plugin: ThinkPlugin) {
+    super(app, plugin);
+    this.plugin = plugin;
+  }
 
   display(): void {
     const { containerEl } = this;
