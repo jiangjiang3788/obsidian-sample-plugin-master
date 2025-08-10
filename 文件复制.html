@@ -26,6 +26,9 @@
   .selected{background:var(--accent-light)}
 
   #sidebar{width:340px;overflow:auto;border-right:1px solid var(--border-color);padding:8px 12px;background:var(--bg-sidebar)}
+  
+  /* 顶部按钮组样式 */
+  .toolbar{display:flex;gap:4px;margin-bottom:8px;flex-wrap:wrap;}
 
   #previewPane{flex:1;display:flex;flex-direction:column;height:100%}
   #previewHeader{display:flex;align-items:center;border-bottom:1px solid var(--border-color);background:#f0f2f5}
@@ -37,9 +40,19 @@
   summary{list-style:none;display:flex;align-items:center;cursor:pointer;user-select:none;position:relative;padding:2px 0}
   summary::-webkit-details-marker, summary::marker{display:none}
   summary::before{content:'';position:absolute;left:-0.6em;top:50%;width:0.6em;height:1px;background:var(--line-color)}
+  
+  /* 调整 summary 内部布局，让复制按钮右对齐 */
+  summary .folderName{flex:1;display:flex;align-items:center;}
+  summary .copyBtn{margin-left:auto;}
+  
+  /* 文件行样式调整 */
   .fileRow{position:relative;display:flex;align-items:center;margin:2px 0 2px 1.6em;padding:2px 0}
   .fileRow::before{content:'';position:absolute;left:0.4em;height:100%;width:1px;background:var(--line-color)}
-  .fileRow>span{flex:1;cursor:pointer;user-select:none}
+  .fileRow .fileName{flex:1;display:flex;align-items:center;cursor:pointer;user-select:none}
+  .fileRow .copyBtn{margin-left:auto;}
+  
+  /* 复选框样式 */
+  input[type="checkbox"]{margin-right:4px;cursor:pointer;}
 
   .toast{
     position:fixed;
@@ -61,8 +74,13 @@
 </head>
 <body>
   <div id="sidebar">
-    <button id="openDir" type="button">选择文件夹</button>
-    <button id="collapseAll" type="button">折叠全部</button>
+    <div class="toolbar">
+      <button id="openDir" type="button">选择文件夹</button>
+      <button id="collapseAll" type="button">折叠全部</button>
+      <button id="copySelected" type="button">复制选中</button>
+      <button id="selectAll" type="button">全选</button>
+      <button id="deselectAll" type="button">取消全选</button>
+    </div>
     <div id="tree"></div>
   </div>
 
@@ -79,6 +97,7 @@ const $ = id=>document.getElementById(id);
 let rootHandle=null;
 let selected={handle:null,path:'',element:null};
 let isDirty=false;
+let checkedItems = new Map(); // 存储选中的项目 {path: {handle, type: 'file'|'folder'}}
 
 function showToast(msg){
   const t=document.createElement('div');
@@ -88,11 +107,11 @@ function showToast(msg){
   setTimeout(()=>t.remove(),2000);
 }
 
-function createBtn(text,fn){
+function createBtn(text,fn,className='iconBtn'){
   const b=document.createElement('button');
   b.textContent=text;
   b.type='button';
-  b.className='iconBtn';
+  b.className=className;
   b.onclick=fn;
   return b;
 }
@@ -101,6 +120,7 @@ $('openDir').onclick=async()=>{
   try{
     rootHandle=await window.showDirectoryPicker({id:'obsidian-plugin-root'});
     $('tree').innerHTML='';
+    checkedItems.clear();
     await renderTree(rootHandle,'',$('tree'));
     resetPreview();
   }catch(e){console.error(e);}
@@ -108,6 +128,106 @@ $('openDir').onclick=async()=>{
 
 $('collapseAll').onclick=()=>{
   document.querySelectorAll('#tree details').forEach(d=>d.open=false);
+}
+
+// 全选按钮
+$('selectAll').onclick=()=>{
+  document.querySelectorAll('#tree input[type="checkbox"]').forEach(cb=>{
+    cb.checked=true;
+    const path = cb.dataset.path;
+    const type = cb.dataset.type;
+    const handleElem = cb.closest('[data-handle]');
+    if(handleElem){
+      checkedItems.set(path, {handle: handleElem.dataset.handle, type});
+    }
+  });
+}
+
+// 取消全选按钮
+$('deselectAll').onclick=()=>{
+  document.querySelectorAll('#tree input[type="checkbox"]').forEach(cb=>{
+    cb.checked=false;
+  });
+  checkedItems.clear();
+}
+
+// 复制选中按钮
+$('copySelected').onclick=async()=>{
+  if(checkedItems.size===0){
+    showToast('请先选择要复制的项目');
+    return;
+  }
+  
+  let result='';
+  let fileCount = 0;
+  let folderCount = 0;
+  
+  // 对选中的项目按路径排序
+  const sortedPaths = Array.from(checkedItems.keys()).sort();
+  
+  for(const path of sortedPaths){
+    const item = checkedItems.get(path);
+    if(!item) continue;
+    
+    const actualHandle = await findHandleByPath(rootHandle, path, item.type);
+    if(actualHandle){
+      if(item.type === 'file'){
+        const fileContent = await (await actualHandle.getFile()).text();
+        result += `\n\n===== ${path} =====\n${fileContent}`;
+        fileCount++;
+      }else{
+        result += await traverseAndConcat(actualHandle, path+'/');
+        folderCount++;
+      }
+    }
+  }
+  
+  if(result){
+    await navigator.clipboard.writeText(result);
+    let msg = '已复制到剪贴板：';
+    if(fileCount > 0) msg += `${fileCount}个文件`;
+    if(folderCount > 0) msg += (fileCount > 0 ? '，' : '') + `${folderCount}个文件夹`;
+    showToast(msg);
+  }
+}
+
+// 根据路径查找handle
+async function findHandleByPath(rootHandle, targetPath, type='folder'){
+  if(!targetPath || targetPath==='/') return rootHandle;
+  
+  const parts = targetPath.split('/').filter(p=>p);
+  if(parts.length === 0) return rootHandle;
+  
+  let currentHandle = rootHandle;
+  
+  // 处理文件的情况
+  if(type === 'file'){
+    const fileName = parts.pop(); // 最后一个是文件名
+    // 先导航到父目录
+    for(const part of parts){
+      try{
+        currentHandle = await currentHandle.getDirectoryHandle(part);
+      }catch(e){
+        return null;
+      }
+    }
+    // 获取文件handle
+    try{
+      return await currentHandle.getFileHandle(fileName);
+    }catch(e){
+      return null;
+    }
+  }
+  
+  // 处理文件夹的情况
+  for(const part of parts){
+    try{
+      currentHandle = await currentHandle.getDirectoryHandle(part);
+    }catch(e){
+      return null;
+    }
+  }
+  return currentHandle;
 }
 
 function resetPreview(){
@@ -162,36 +282,116 @@ async function renderTree(dirHandle,relativePath,container){
     }
     return a.name.localeCompare(b.name);
   });
+  
   for (const {name,handle} of entries) {
     const fullPath=relativePath+name;
     if(handle.kind==='file'){
       container.appendChild(createFileRow(handle,fullPath,name));
     }else{
       const details=document.createElement('details');
+      details.dataset.handle = 'folder';
+      details.dataset.path = fullPath;
+      
       const summary=document.createElement('summary');
-      summary.textContent=name;
-      summary.addEventListener('click',e=>{e.stopPropagation();setSelected(summary,handle,fullPath+'/');});
-      summary.appendChild(createBtn('🔁',async e=>{e.stopPropagation();await copyHandle(handle,fullPath);})); 
+      
+      // 创建文件夹名称容器
+      const folderName = document.createElement('span');
+      folderName.className = 'folderName';
+      
+      // 添加复选框
+      const checkbox = document.createElement('input');
+      checkbox.type = 'checkbox';
+      checkbox.dataset.path = fullPath;
+      checkbox.dataset.type = 'folder';
+      checkbox.onclick = (e)=>{
+        e.stopPropagation();
+        if(checkbox.checked){
+          checkedItems.set(fullPath, {handle: 'folder', type: 'folder'});
+        }else{
+          checkedItems.delete(fullPath);
+        }
+      };
+      
+      const nameText = document.createElement('span');
+      nameText.textContent = name;
+      
+      folderName.appendChild(checkbox);
+      folderName.appendChild(nameText);
+      
+      summary.appendChild(folderName);
+      
+      // 复制按钮右对齐
+      const copyBtn = createBtn('🔁',async e=>{
+        e.stopPropagation();
+        await copyHandle(handle,fullPath);
+      }, 'iconBtn copyBtn');
+      summary.appendChild(copyBtn);
+      
+      summary.addEventListener('click',e=>{
+        if(e.target !== checkbox){
+          e.stopPropagation();
+          setSelected(summary,handle,fullPath+'/');
+        }
+      });
+      
       details.appendChild(summary);
       const children=document.createElement('div');
       details.appendChild(children);
       container.appendChild(details);
+      
       await renderTree(handle,fullPath+'/',children);
     }
   }
 }
 
 function createFileRow(handle,fullPath,displayName){
-  const row=document.createElement('div');row.className='fileRow';
-  const label=document.createElement('span');label.textContent=displayName;row.appendChild(label);
-  label.addEventListener('click',async()=>{
-    setSelected(row,handle,fullPath);
-    $('preview').value=await (await handle.getFile()).text();
-    $('preview').readOnly=false;
-    $('saveBtn').hidden=false;
-    isDirty=false;
+  const row=document.createElement('div');
+  row.className='fileRow';
+  row.dataset.handle = 'file';
+  row.dataset.path = fullPath;
+  
+  // 创建文件名容器
+  const fileName = document.createElement('span');
+  fileName.className = 'fileName';
+  
+  // 添加复选框
+  const checkbox = document.createElement('input');
+  checkbox.type = 'checkbox';
+  checkbox.dataset.path = fullPath;
+  checkbox.dataset.type = 'file';
+  checkbox.onclick = (e)=>{
+    e.stopPropagation();
+    if(checkbox.checked){
+      checkedItems.set(fullPath, {handle: 'file', type: 'file'});
+    }else{
+      checkedItems.delete(fullPath);
+    }
+  };
+  
+  const nameText = document.createElement('span');
+  nameText.textContent = displayName;
+  
+  fileName.appendChild(checkbox);
+  fileName.appendChild(nameText);
+  
+  fileName.addEventListener('click',async(e)=>{
+    if(e.target !== checkbox){
+      setSelected(row,handle,fullPath);
+      $('preview').value=await (await handle.getFile()).text();
+      $('preview').readOnly=false;
+      $('saveBtn').hidden=false;
+      isDirty=false;
+    }
   });
-  row.appendChild(createBtn('🔁',async()=>{await copyHandle(handle,fullPath);})); 
+  
+  row.appendChild(fileName);
+  
+  // 复制按钮右对齐
+  const copyBtn = createBtn('🔁',async()=>{
+    await copyHandle(handle,fullPath);
+  }, 'iconBtn copyBtn');
+  row.appendChild(copyBtn);
+  
   return row;
 }
 
