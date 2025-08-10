@@ -68,6 +68,8 @@ export interface ModuleConfig {
   colField?: string;
   props?   : Record<string,any>;
   fields?  : string[];
+  // 添加 viewConfig 用于存储视图专属配置，例如 TimelineView 的配置
+  viewConfig?: Record<string, any>;
 }
 
 export interface FilterRule {
