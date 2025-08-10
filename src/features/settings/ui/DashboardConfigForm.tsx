@@ -30,6 +30,7 @@ function keepScroll(fn:()=>void){
 // ======================= 新增：所有视图模块的默认配置 =======================
 const genId = ()=>Date.now().toString(36)+Math.random().toString(36).slice(2);
 
+// 【关键修改】将所有模块的默认配置集中在此处
 const DEFAULT_MODULE_CONFIGS: Record<ViewName, Omit<any, 'id' | '_open'>> = {
   BlockView: {
     view: 'BlockView', title: '新模块', collapsed: false,
@@ -41,26 +42,45 @@ const DEFAULT_MODULE_CONFIGS: Record<ViewName, Omit<any, 'id' | '_open'>> = {
   },
   TableView: {
     view: 'TableView', title: '新表格', collapsed: false,
-    filtersArr:[], sortArr:[{field:'completionDate', dir:'desc'}], fieldsArr:['content', 'status', 'completionDate'], groupsArr:[],
+    filtersArr:[], sortArr:[{field:'doneDate', dir:'desc'}], fieldsArr:['content', 'categoryKey', 'doneDate'], groupsArr:[],
   },
   ExcelView: {
     view: 'ExcelView', title: '新表格', collapsed: false,
     filtersArr:[], sortArr:[], fieldsArr:[], groupsArr:[],
   },
-  TimelineView: { // <-- 这里是 TimelineView 的默认配置
+  TimelineView: { // <-- 【关键修改】此处使用最新的、合理的 TimelineView 默认配置
     view: 'TimelineView', title: '新时间轴', collapsed: false,
     filtersArr:[], sortArr:[], fieldsArr:[], groupsArr:[],
     viewConfig: {
-      categoryMap: {
-        "00-健康打卡": "健康", "2-1健康": "健康", "2-2三餐": "健康",
-        "2-3生活": "生活", "2-4思考": "思考", "2-5电脑": "电脑", "2-6工作": "工作",
-        "2-0其他": "其他",
-      },
-      colorPalette: [
-        "#60a5fa", "#34d399", "#fbbf24", "#f87171", "#a78bfa",
-        "#f472b6", "#38bdf8", "#10b981", "#f97316"
-      ],
-      progressOrder: ['健康', '生活', '电脑', '工作', '其他'],
+      hourHeight: 50,
+      startHour: 7,
+      endHour: 24,
+      categories: {
+        "健康": {
+          color: "#34d399",
+          files: ["00-健康打卡", "2-1健康", "2-2三餐"] // 文件名或路径前缀
+        },
+        "生活": {
+          color: "#fbbf24",
+          files: ["2-3生活"]
+        },
+        "思考": {
+          color: "#a78bfa",
+          files: ["2-4思考"]
+        },
+        "电脑": {
+          color: "#60a5fa",
+          files: ["2-5电脑"]
+        },
+        "工作": {
+          color: "#f87171",
+          files: ["2-6工作"]
+        },
+        "其他": {
+          color: "#a1a1aa", // 使用一个中性色
+          files: ["2-0其他"]
+        }
+      }
     }
   }
 };
@@ -98,7 +118,6 @@ export function DashboardConfigForm({ dashboard, dashboards, onSave, onCancel }:
       for(let i=0;i<seg.length-1;i++) cur=cur[seg[i]]; cur[seg.at(-1)!]=val; return d; });
   };
 
-  // 修改：添加模块时使用默认配置
   const addModule=()=>keepScroll(()=>set('modules',[...vals.modules, {
     ...structuredClone(DEFAULT_MODULE_CONFIGS.TimelineView), // 默认添加时间轴视图
     id: genId(),
@@ -107,16 +126,14 @@ export function DashboardConfigForm({ dashboard, dashboards, onSave, onCancel }:
   
   const removeModule=(i:number)=>keepScroll(()=>set('modules', vals.modules.filter((_x:any,j:number)=>j!==i)));
 
-  // 新增：当切换视图类型时，加载对应的默认配置
   const handleViewChange = (index: number, newView: ViewName) => {
     const currentModule = vals.modules[index];
     const newModuleConfig = structuredClone(DEFAULT_MODULE_CONFIGS[newView] || DEFAULT_MODULE_CONFIGS.BlockView);
     
-    // 保留通用配置，替换视图专属配置
     const updatedModule = {
-      ...currentModule, // 保留 id, _open 等
-      ...newModuleConfig, // 应用新视图的 title, view, viewConfig, fieldsArr 等
-      title: currentModule.title, // 保留用户已修改的标题
+      ...currentModule,
+      ...newModuleConfig,
+      title: currentModule.title,
     };
 
     const newModules = [...vals.modules];
@@ -208,7 +225,6 @@ export function DashboardConfigForm({ dashboard, dashboards, onSave, onCancel }:
                 const Editor = VIEW_EDITORS[(m.view as ViewKind) ?? 'BlockView'];
                 return (
                   <div key={m.id}>
-                    {/* 模块头（点击折叠/展开） */}
                     <Stack direction="row" alignItems="center" spacing={0.6}
                            onClick={()=>keepScroll(()=>set(`modules.${i}._open`, !m._open))}
                            sx={{cursor:'pointer', userSelect:'none'}}>
@@ -218,36 +234,27 @@ export function DashboardConfigForm({ dashboard, dashboards, onSave, onCancel }:
                       </Typography>
                       <Select value={m.view} MenuProps={menu}
                               onClick={e=>e.stopPropagation()}
-                              // 修改：onChange 事件调用新的 handleViewChange 函数
                               onChange={e=>keepScroll(()=>handleViewChange(i, e.target.value as ViewName))}
                               sx={{minWidth:110}}>
                         {VIEW_OPTIONS.map(v=><MenuItem key={v} value={v}>{v.replace('View','')}</MenuItem>)}
                       </Select>
-
                       <IconButton size="small" color="error"
                                   onClick={(e)=>{e.stopPropagation(); removeModule(i);}} title="删除模块">
                         <DeleteIcon fontSize="small"/>
                       </IconButton>
                     </Stack>
-
-                    {/* 模块体 */}
                     <Collapse in={m._open} timeout={110} unmountOnExit>
                       <Box sx={{mt:0.6}}>
-                        {/* 标题编辑 */}
                         <Stack direction="row" spacing={0.6} alignItems="center" sx={{mb:0.4}}>
                           <Typography sx={{minWidth:72}}>模块标题</Typography>
                           <TextField value={m.title||''}
                                      onInput={e=>set(`modules.${i}.title`, (e.target as HTMLInputElement).value)}
                                      sx={{flex:1}}/>
                         </Stack>
-
-                        {/* 视图专属设置 */}
                         {Editor && <Editor
                           value={m.viewConfig || {}}
                           onChange={(patch)=>keepScroll(()=>set(`modules.${i}.viewConfig`, { ...(m.viewConfig || {}), ...patch }))}
                           fieldOptions={fieldOptions}/>}
-                        
-                        {/* 通用：显示字段 / 分组字段 */}
                         <PillMultiSelect
                           label="显示字段"
                           value={m.fieldsArr}
@@ -261,8 +268,6 @@ export function DashboardConfigForm({ dashboard, dashboards, onSave, onCancel }:
                           options={fieldOptions}
                           onChange={v=>keepScroll(()=>set(`modules.${i}.groupsArr`, v))}
                         />
-
-                        {/* 过滤 / 排序 */}
                         <div style="height:6px;"></div>
                         <RuleList
                           title="过滤规则"
@@ -292,7 +297,6 @@ export function DashboardConfigForm({ dashboard, dashboards, onSave, onCancel }:
           </Collapse>
         </Box>
 
-        {/* 底部操作 */}
         <Stack direction="row" spacing={1} justifyContent="flex-end">
           <IconButton onClick={save} title="保存"><CheckIcon/></IconButton>
           <IconButton onClick={onCancel} title="取消"><CloseIcon/></IconButton>

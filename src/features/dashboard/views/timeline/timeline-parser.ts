@@ -21,6 +21,16 @@ export interface TaskBlock extends TimelineTask {
   blockEndMinute: number;
 }
 
+/**
+ * 新的分类配置结构，用于 `viewConfig.categories`
+ */
+interface CategoryConfig {
+    color: string;
+    files: string[]; // 文件名或路径前缀数组
+}
+type CategoriesMap = Record<string, CategoryConfig>;
+
+
 const DATE_FORMAT = 'YYYY-MM-DD';
 
 /**
@@ -75,11 +85,11 @@ export function processItemsToTimelineTasks(items: Item[]): TimelineTask[] {
   const timelineTasks: TimelineTask[] = [];
 
   for (const item of items) {
-    if (item.type !== 'task' || !item.completed) continue;
+    if (item.type !== 'task' || !item.categoryKey?.endsWith('/done')) continue;
 
     const { startMinute, duration, endMinute } = parseTimeAndDuration(item.content);
 
-    if (startMinute !== null && duration !== null && endMinute !== null && item.completionDate) {
+    if (startMinute !== null && duration !== null && endMinute !== null && item.doneDate) {
       timelineTasks.push({
         ...item,
         startMinute,
@@ -100,27 +110,34 @@ export function processItemsToTimelineTasks(items: Item[]): TimelineTask[] {
  */
 export function splitTaskIntoDayBlocks(task: TimelineTask, dateRange: [dayjs.Dayjs, dayjs.Dayjs]): TaskBlock[] {
   const blocks: TaskBlock[] = [];
-  if (task.startMinute === null || task.endMinute === null || !task.completionDate) {
+  if (task.startMinute === null || task.endMinute === null || !task.doneDate) {
     return [];
   }
 
-  const baseDate = dayjs(task.completionDate);
+  const baseDate = dayjs(task.doneDate);
   let currentStartMinute = task.startMinute;
   let remainingDuration = task.duration;
   let currentDate = baseDate;
 
   while (remainingDuration > 0) {
     const dayStr = currentDate.format(DATE_FORMAT);
-    const dayStart = currentDate.startOf('day');
-    const dayEnd = currentDate.endOf('day');
 
-    // 如果当前日期超出查询范围，则停止处理
+    // 如果当前日期在查询范围之外
     if (currentDate.isBefore(dateRange[0], 'day') || currentDate.isAfter(dateRange[1], 'day')) {
-      break;
+        // 【关键修复点】这里将 `range` 改为 `dateRange`
+        // 如果任务已经进行到范围之后，就可以停止了
+        if (currentDate.isAfter(dateRange[1], 'day')) break;
+
+        // 如果任务开始于范围之前，我们需要快进到范围的第一天
+        const minutesInDay = Math.min(1440 - currentStartMinute, remainingDuration);
+        remainingDuration -= minutesInDay;
+        currentStartMinute = 0;
+        currentDate = currentDate.add(1, 'day');
+        continue;
     }
     
     // 计算当天内的开始和结束分钟数
-    const blockStartMinute = Math.max(0, currentStartMinute);
+    const blockStartMinute = currentStartMinute;
     const blockEndMinute = Math.min(1440, currentStartMinute + remainingDuration);
 
     if (blockStartMinute < blockEndMinute) {
@@ -145,15 +162,30 @@ export function splitTaskIntoDayBlocks(task: TimelineTask, dateRange: [dayjs.Day
 /**
  * 计算给定任务块列表中，每个分类的总时长（小时）
  * @param blocks - TaskBlock 数组
- * @param categoryMap - 文件名到分类的映射
- * @returns 一个记录 { category: hours } 的对象
+ * @param categories - 新的分类配置对象
+ * @returns 一个记录 { categoryName: hours } 的对象
  */
-export function calculateCategoryHours(blocks: TaskBlock[], categoryMap: Record<string, string>): Record<string, number> {
+export function calculateCategoryHours(blocks: TaskBlock[], categories: CategoriesMap): Record<string, number> {
     const hoursMap: Record<string, number> = {};
+
+    // 初始化所有已定义分类的时长为 0
+    for (const categoryName in categories) {
+        hoursMap[categoryName] = 0;
+    }
+
     for (const block of blocks) {
-        const category = categoryMap[block.fileName] || block.fileName;
         const durationHours = (block.blockEndMinute - block.blockStartMinute) / 60;
-        hoursMap[category] = (hoursMap[category] || 0) + durationHours;
+        let foundCategory = false;
+
+        // 遍历配置中的每个分类
+        for (const [categoryName, config] of Object.entries(categories)) {
+            // 检查任务的文件路径是否匹配该分类下的任何一个文件/前缀
+            if (block.file?.path && config.files.some(prefix => block.file!.path.includes(prefix))) {
+                hoursMap[categoryName] = (hoursMap[categoryName] || 0) + durationHours;
+                foundCategory = true;
+                break; // 找到第一个匹配的分类后就停止，避免重复计算
+            }
+        }
     }
     return hoursMap;
 }

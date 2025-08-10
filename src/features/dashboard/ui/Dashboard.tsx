@@ -3,7 +3,7 @@
 import { h } from 'preact';
 import { useState, useEffect, useMemo } from 'preact/hooks';
 import { DataStore } from '@core/services/dataStore';
-import { DashboardConfig, ModuleConfig, DashboardModule } from '@core/domain/schema';
+import { DashboardConfig, Item, ModuleConfig } from '@core/domain/schema'; // Item 和 ModuleConfig 应该从 schema 导入
 import { ModulePanel } from './ModulePanel';
 import type ThinkPlugin from '../../../main';
 import { TFile, TFolder } from 'obsidian';
@@ -22,6 +22,15 @@ interface Props {
   config: DashboardConfig;
   dataStore: DataStore;
   plugin: ThinkPlugin;
+}
+
+// 修正：DashboardModule 类型定义，确保与 schema 一致
+// 在 schema.ts 中，已经有名为 ModuleConfig 的接口，可以直接使用。
+// 如果 DashboardModule 是一个本地增强类型，需要定义它
+interface DashboardModule extends ModuleConfig {
+    id?: string;
+    groups?: string[];
+    viewConfig?: Record<string, any>;
 }
 
 export function Dashboard({ config, dataStore, plugin }: Props) {
@@ -93,7 +102,8 @@ export function Dashboard({ config, dataStore, plugin }: Props) {
         af instanceof TFolder
           ? p.startsWith(target.endsWith('/') ? target : target + '/')
           : af instanceof TFile
-          ? p.startsWith(target + '#')
+          // 修正： TFile 的 id 是 path + '#line'，所以应该是 startsWith(path + '#')
+          ? p.startsWith(target)
           : p.startsWith(target.endsWith('/') ? target : target + '/');
       items = items.filter(it => keep(it.id));
     }
@@ -113,19 +123,22 @@ export function Dashboard({ config, dataStore, plugin }: Props) {
       vp.colField = m.colField || '';
     }
     if (m.fields?.length) vp.fields = m.fields;
+    
+    // 传递 module.viewConfig 给 TimelineView
+    if (m.view === 'TimelineView' && m.viewConfig) {
+        vp.viewConfig = m.viewConfig;
+    }
 
-    // ======================== 核心修改点 ========================
     return (
       <ModulePanel module={m}>
         <V
           items={items}
-          module={m}         // 传递完整的模块对象，供 TimelineView 读取 viewConfig
-          dateRange={dateRange} // 传递日期范围，供 TimelineView 判断聚合模式
+          module={m}         // 传递完整的模块对象
+          dateRange={dateRange} // 传递日期范围
           {...vp}
         />
       </ModulePanel>
     );
-    // =========================================================
   };
 
   /* ---------------- 页面 ---------------- */
