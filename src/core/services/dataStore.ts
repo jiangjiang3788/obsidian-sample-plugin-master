@@ -46,6 +46,9 @@ export class DataStore {
       let nextHeadingIndex = 0;
       let currentSectionTags: string[] = [];
       let currentHeader = '';
+      const fileName = file.name.toLowerCase().endsWith('.md')
+                ? file.name.slice(0, -3) : file.name;
+
 
       for (let i = 0; i < lines.length; i++) {
         const line = lines[i];
@@ -76,13 +79,12 @@ export class DataStore {
               blockItem.modified = file.stat.mtime;
               if (currentHeader) blockItem.header = currentHeader;
               blockItem.tags = Array.from(new Set([...currentSectionTags, ...blockItem.tags]));
-              const name = file.name.toLowerCase().endsWith('.md')
-                ? file.name.slice(0, -3) : file.name;
-              blockItem.filename = name;
+              blockItem.filename = fileName; // 使用统一的 fileName
+              blockItem.fileName = fileName; // 再次确保 Item.fileName 被设置
               normalizeItemDates(blockItem);
               const hashIdx = blockItem.id.lastIndexOf('#');
               const lineNo = hashIdx >= 0 ? Number(blockItem.id.slice(hashIdx + 1)) : undefined;
-              (blockItem as any).file = { path: filePath, line: lineNo, basename: name };
+              (blockItem as any).file = { path: filePath, line: lineNo, basename: fileName };
               fileItems.push(blockItem);
             }
             i = endIdx;
@@ -97,11 +99,10 @@ export class DataStore {
           taskItem.created = file.stat.ctime;
           taskItem.modified = file.stat.mtime;
           if (currentHeader) taskItem.header = currentHeader;
-          const name = file.name.toLowerCase().endsWith('.md')
-            ? file.name.slice(0, -3) : file.name;
-          taskItem.filename = name;
+          taskItem.filename = fileName; // 使用统一的 fileName
+          taskItem.fileName = fileName; // 再次确保 Item.fileName 被设置
           normalizeItemDates(taskItem);
-          (taskItem as any).file = { path: filePath, line: i + 1, basename: name };
+          (taskItem as any).file = { path: filePath, line: i + 1, basename: fileName };
           (taskItem as any).recurrenceInfo = parseRecurrence(taskItem.content) || undefined;
           fileItems.push(taskItem);
         }

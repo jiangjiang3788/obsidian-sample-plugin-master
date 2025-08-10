@@ -1,0 +1,206 @@
+/* src/features/dashboard/views/timeline/TimelineView.css */
+
+.timeline-view {
+  display: flex;
+  flex-direction: column;
+  gap: 10px; /* 统计图和时间轴容器之间的间距 */
+  font-family: var(--font-text); /* 使用 Obsidian 的字体变量 */
+  font-size: 13px;
+}
+
+.timeline-category-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  background-color: var(--background-secondary);
+  padding: 8px;
+  border-radius: var(--radius-m);
+  border: 1px solid var(--background-modifier-border);
+}
+
+.timeline-category-bar-container {
+  flex: 1; /* 每个分类条占据等分空间 */
+  min-width: 120px; /* 最小宽度，防止过小 */
+  height: 24px;
+  background-color: var(--background-modifier-box-shadow); /* 灰色背景条 */
+  border-radius: 9999px; /* 圆角 */
+  overflow: hidden;
+  position: relative;
+  display: flex; /* 让内部 bar 和 label 可以并排 */
+  align-items: center;
+}
+
+.timeline-category-bar {
+  height: 100%;
+  border-radius: 9999px;
+  transition: width 0.3s ease-in-out;
+}
+
+.timeline-category-label {
+  position: absolute;
+  left: 0;
+  right: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-normal);
+  font-weight: 500;
+  font-size: 12px;
+  padding: 0 8px; /* 内部填充 */
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+}
+
+.timeline-container {
+  display: flex;
+  overflow-x: auto; /* 允许水平滚动 */
+  border: 1px solid var(--background-modifier-border);
+  border-radius: var(--radius-m);
+  background-color: var(--background-primary);
+  position: relative; /* 用于 sticky header */
+}
+
+.timeline-sticky-header {
+  position: sticky;
+  left: 0;
+  top: 0;
+  z-index: 10;
+  background-color: var(--background-primary); /* 确保背景在滚动时不会透明 */
+  box-shadow: 2px 0 5px rgba(0,0,0,0.05); /* 阴影增加层次感 */
+}
+
+.timeline-axis-container {
+  display: flex;
+  flex-direction: column;
+  min-width: 50px; /* 时间轴宽度 */
+  background-color: var(--background-primary);
+  border-right: 1px solid var(--background-modifier-border);
+}
+
+.timeline-time-label {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end; /* 时间标签靠右 */
+  padding-right: 8px;
+  border-bottom: 1px dashed var(--background-modifier-border-hover); /* 虚线分隔 */
+  box-sizing: border-box; /* 确保 padding 不会增加高度 */
+  color: var(--text-muted);
+  font-size: 11px;
+}
+
+.timeline-content {
+  flex: 1;
+  overflow-y: hidden; /* 防止内容区域单独出现垂直滚动条 */
+}
+
+.timeline-grid-container {
+  display: grid;
+  /* grid-template-columns will be set by JS */
+  min-width: 100%; /* 确保网格至少占据容器宽度 */
+}
+
+.timeline-day-column {
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid var(--background-modifier-border);
+}
+
+.timeline-day-header {
+  position: sticky;
+  top: 0;
+  background-color: var(--background-primary);
+  border-bottom: 1px solid var(--background-modifier-border);
+  padding: 4px;
+  text-align: center;
+  font-weight: 600;
+  z-index: 5; /* 确保在任务块之上 */
+  color: var(--text-normal);
+}
+
+.timeline-day-weekday {
+  display: block;
+  font-size: 10px;
+  font-weight: 400;
+  color: var(--text-faint);
+}
+
+.timeline-day-grid {
+  position: relative;
+  flex: 1;
+}
+
+.timeline-task-block {
+  position: absolute;
+  left: 2px;
+  right: 2px;
+  padding: 4px 6px;
+  border-radius: var(--radius-s);
+  overflow: hidden;
+  box-shadow: var(--shadow-s);
+  color: var(--text-on-accent); /* 确保文本在彩色背景上可见 */
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  cursor: pointer;
+  z-index: 1; /* 确保在虚线之上 */
+}
+
+.timeline-task-block-text {
+  font-size: 12px;
+  line-height: 1.2;
+}
+
+.view-empty-state {
+  color: var(--text-faint);
+  text-align: center;
+  padding: 20px;
+  border: 1px dashed var(--background-modifier-border);
+  border-radius: var(--radius-m);
+  margin-top: 10px;
+}
+
+/* 兼容暗色主题 */
+body.theme-dark {
+  .timeline-category-stats {
+    background-color: var(--background-secondary-alt);
+    border-color: var(--background-modifier-border-hover);
+  }
+  .timeline-category-bar-container {
+    background-color: var(--background-modifier-box-shadow);
+  }
+  .timeline-category-label {
+    color: var(--text-normal);
+  }
+  .timeline-container {
+    border-color: var(--background-modifier-border-hover);
+    background-color: var(--background-primary-alt);
+  }
+  .timeline-sticky-header,
+  .timeline-axis-container {
+    background-color: var(--background-primary-alt);
+    box-shadow: 2px 0 5px rgba(0,0,0,0.2);
+    border-color: var(--background-modifier-border-hover);
+  }
+  .timeline-time-label {
+    border-color: var(--background-modifier-border);
+    color: var(--text-faint);
+  }
+  .timeline-day-column {
+    border-color: var(--background-modifier-border);
+  }
+  .timeline-day-header {
+    background-color: var(--background-primary-alt);
+    border-color: var(--background-modifier-border);
+    color: var(--text-normal);
+  }
+  .timeline-day-weekday {
+    color: var(--text-faint);
+  }
+  .timeline-task-block {
+    color: var(--text-on-accent);
+  }
+  .view-empty-state {
+    border-color: var(--background-modifier-border-hover);
+    color: var(--text-faint);
+  }
+}

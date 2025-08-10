@@ -54,6 +54,8 @@ export interface Item {
     line?: number;
     basename?: string;
   };
+  // 【新增】添加 fileName 字段，方便 TimelineView 获取
+  fileName?: string;
 }
 
 /* ---------- 仪表盘模块配置 ---------- */
