@@ -55,32 +55,15 @@ const DEFAULT_MODULE_CONFIGS: Record<ViewName, Omit<any, 'id' | '_open'>> = {
       hourHeight: 50,
       startHour: 7,
       endHour: 24,
-      categories: {
-        "健康": {
-          color: "#34d399",
-          files: ["00-健康打卡", "2-1健康", "2-2三餐"] // 文件名或路径前缀
-        },
-        "生活": {
-          color: "#fbbf24",
-          files: ["2-3生活"]
-        },
-        "思考": {
-          color: "#a78bfa",
-          files: ["2-4思考"]
-        },
-        "电脑": {
-          color: "#60a5fa",
-          files: ["2-5电脑"]
-        },
-        "工作": {
-          color: "#f87171",
-          files: ["2-6工作"]
-        },
-        "其他": {
-          color: "#a1a1aa", // 使用一个中性色
-          files: ["2-0其他"]
-        }
-      }
+      categories: { // 使用新的 categories 结构
+        "健康": { color: "#34d399", files: ["00-健康打卡", "2-1健康", "2-2三餐"] },
+        "生活": { color: "#fbbf24", files: ["2-3生活"] },
+        "思考": { color: "#a78bfa", files: ["2-4思考"] },
+        "电脑": { color: "#60a5fa", files: ["2-5电脑"] },
+        "工作": { color: "#f87171", files: ["2-6工作"] },
+        "其他": { color: "#a1a1aa", files: ["2-0其他"] },
+      },
+      progressOrder: ["健康", "生活", "思考", "电脑", "工作", "其他"], // 默认进度条顺序
     }
   }
 };
@@ -283,7 +266,7 @@ export function DashboardConfigForm({ dashboard, dashboards, onSave, onCancel }:
                           mode="sort"
                           rows={m.sortArr}
                           fieldOptions={fieldOptions}
-                          onAdd={()=>keepScroll(()=>set(`modules.${i}.sortArr`, [...m.sortArr,{field:'',dir:'asc'}]))}
+                          onAdd={() => keepScroll(() => set(`modules.${i}.sortArr`, [...m.sortArr, { field: '', dir: 'asc' }]))}
                           onChange={(rows)=>keepScroll(()=>set(`modules.${i}.sortArr`, rows))}
                         />
                       </Box>
