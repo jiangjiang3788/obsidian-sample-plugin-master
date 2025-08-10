@@ -1,9 +1,9 @@
 // src/features/dashboard/ui/Dashboard.tsx
 /** @jsxImportSource preact */
 import { h } from 'preact';
-import { useState, useEffect } from 'preact/hooks';
+import { useState, useEffect, useMemo } from 'preact/hooks';
 import { DataStore } from '@core/services/dataStore';
-import { DashboardConfig, ModuleConfig } from '@core/domain/schema';
+import { DashboardConfig, ModuleConfig, DashboardModule } from '@core/domain/schema';
 import { ModulePanel } from './ModulePanel';
 import type ThinkPlugin from '../../../main';
 import { TFile, TFolder } from 'obsidian';
@@ -40,24 +40,28 @@ export function Dashboard({ config, dataStore, plugin }: Props) {
   }, [dataStore]);
 
   /* 小工具 */
-  const unit = (v: string) =>
-    ({ 年: 'year', 季: 'quarter', 月: 'month', 周: 'week', 天: 'day' } as any)[v] ??
-    'day';
-  const fmt = (d: any, v: string) =>
-    v === '年'
-      ? d.format('YYYY年')
-      : v === '季'
-      ? `${d.year()}年${QTXT[d.quarter() - 1]}季度`
-      : v === '月'
-      ? d.format('YYYY-MM')
-      : v === '周'
-      ? d.format('YYYY-[W]WW')
-      : d.format('YYYY-MM-DD');
+  const unit = useMemo(() => 
+    (v: string) => ({ 年: 'year', 季: 'quarter', 月: 'month', 周: 'week', 天: 'day' } as any)[v] ?? 'day', 
+  []);
 
-  const { startDate, endDate } = getDateRange(date, view);
+  const fmt = useMemo(() => 
+    (d: dayjs.Dayjs, v: string) =>
+      v === '年'
+        ? d.format('YYYY年')
+        : v === '季'
+        ? `${d.year()}年${QTXT[d.quarter() - 1]}季度`
+        : v === '月'
+        ? d.format('YYYY-MM')
+        : v === '周'
+        ? d.format('YYYY-[W]WW')
+        : d.format('YYYY-MM-DD'),
+  []);
+
+  const { startDate, endDate } = useMemo(() => getDateRange(date, view), [date, view]);
+  const dateRange: [Date, Date] = useMemo(() => [startDate.toDate(), endDate.toDate()], [startDate, endDate]);
 
   /* ---------------- Module 渲染 ---------------- */
-  const renderModule = (m: ModuleConfig & { groups?: string[] }) => {
+  const renderModule = (m: DashboardModule) => {
     const V = (ViewComponents as any)[m.view];
     if (!V)
       return (
@@ -84,7 +88,7 @@ export function Dashboard({ config, dataStore, plugin }: Props) {
     }
     if (config.path?.trim()) {
       const target = config.path.trim();
-      const af = (dataStore as any)['app'].vault.getAbstractFileByPath(target);
+      const af = plugin.app.vault.getAbstractFileByPath(target);
       const keep = (p: string) =>
         af instanceof TFolder
           ? p.startsWith(target.endsWith('/') ? target : target + '/')
@@ -97,27 +101,31 @@ export function Dashboard({ config, dataStore, plugin }: Props) {
     /* ③ 排序 */
     items = sortItems(items, m.sort || []);
 
-    /* ④ 视图 props 拼装 ------------------------------------ */
+    /* ④ 视图 props 拼装 (主要为兼容旧视图) */
     const vp: any = { ...(m.props || {}) };
-
-    // 默认分组：BlockView 在缺省时按 categoryKey 分组
-    if ((m as any).groups?.length) {
-      vp.groupField = (m as any).groups[0];
+    if (m.groups?.length) {
+      vp.groupField = m.groups[0];
     } else if (m.view === 'BlockView' && vp.groupField == null) {
       vp.groupField = 'categoryKey';
     }
-
     if (m.view === 'TableView') {
-      vp.rowField = (m as any).rowField || '';
-      vp.colField = (m as any).colField || '';
+      vp.rowField = m.rowField || '';
+      vp.colField = m.colField || '';
     }
     if (m.fields?.length) vp.fields = m.fields;
 
+    // ======================== 核心修改点 ========================
     return (
       <ModulePanel module={m}>
-        <V items={items} {...vp} />
+        <V
+          items={items}
+          module={m}         // 传递完整的模块对象，供 TimelineView 读取 viewConfig
+          dateRange={dateRange} // 传递日期范围，供 TimelineView 判断聚合模式
+          {...vp}
+        />
       </ModulePanel>
     );
+    // =========================================================
   };
 
   /* ---------------- 页面 ---------------- */
