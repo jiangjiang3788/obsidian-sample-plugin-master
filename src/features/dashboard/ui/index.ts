@@ -1,17 +1,16 @@
-// src/views/index.ts
-// 统一注册所有可用视图，并导出 ViewComponents 供 Dashboard.tsx 动态选择
-
-import { TableView }   from './TableView';
-import { BlockView }   from './BlockView';
-import { ExcelView }   from './ExcelView'; 
-
+// src/features/dashboard/ui/index.ts
+import { TableView } from './TableView';
+import { BlockView } from './BlockView';
+import { ExcelView } from './ExcelView';
+import { TimelineView } from './TimelineView'; // 1. 导入新的视图组件
 
 /* ------------------------------------------------------------------ */
-/* 视图注册表 —— key = 视图名称（外部配置使用）                        */
+/* 视图注册表                                                         */
 /* ------------------------------------------------------------------ */
 export const VIEW_REGISTRY = {
   TableView,
   BlockView,
+  TimelineView, // 2. 在注册表中添加新视图
   ExcelView,
 } as const;
 

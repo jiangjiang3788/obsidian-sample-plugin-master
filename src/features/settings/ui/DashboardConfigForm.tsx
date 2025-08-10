@@ -1,3 +1,4 @@
+// src/features/settings/ui/DashboardConfigForm.tsx
 /** @jsxImportSource preact */
 import { h } from 'preact';
 import { useMemo, useState } from 'preact/hooks';
@@ -11,7 +12,7 @@ import CheckIcon from '@mui/icons-material/Check';
 import CloseIcon from '@mui/icons-material/Close';
 
 import { CORE_FIELDS, DashboardConfig, ModuleConfig } from '@core/domain/schema';
-import { VIEW_OPTIONS } from '@features/dashboard/ui';
+import { VIEW_OPTIONS, ViewName } from '@features/dashboard/ui'; // 确保 ViewName 被导出
 import { theme as baseTheme } from '@shared/styles/mui-theme';
 import { PillMultiSelect } from '@shared/components/form/PillMultiSelect';
 import { RuleList } from '@shared/components/form/RuleList';
@@ -26,6 +27,46 @@ function keepScroll(fn:()=>void){
   requestAnimationFrame(()=>{ window.scrollTo({top:y}); requestAnimationFrame(()=>window.scrollTo({top:y})); });
 }
 
+// ======================= 新增：所有视图模块的默认配置 =======================
+const genId = ()=>Date.now().toString(36)+Math.random().toString(36).slice(2);
+
+const DEFAULT_MODULE_CONFIGS: Record<ViewName, Omit<any, 'id' | '_open'>> = {
+  BlockView: {
+    view: 'BlockView', title: '新模块', collapsed: false,
+    filtersArr:[], sortArr:[], fieldsArr:[], groupsArr:['categoryKey'],
+  },
+  ListView: {
+    view: 'ListView', title: '新列表', collapsed: false,
+    filtersArr:[], sortArr:[], fieldsArr:['content'], groupsArr:['fileName'],
+  },
+  TableView: {
+    view: 'TableView', title: '新表格', collapsed: false,
+    filtersArr:[], sortArr:[{field:'completionDate', dir:'desc'}], fieldsArr:['content', 'status', 'completionDate'], groupsArr:[],
+  },
+  ExcelView: {
+    view: 'ExcelView', title: '新表格', collapsed: false,
+    filtersArr:[], sortArr:[], fieldsArr:[], groupsArr:[],
+  },
+  TimelineView: { // <-- 这里是 TimelineView 的默认配置
+    view: 'TimelineView', title: '新时间轴', collapsed: false,
+    filtersArr:[], sortArr:[], fieldsArr:[], groupsArr:[],
+    viewConfig: {
+      categoryMap: {
+        "00-健康打卡": "健康", "2-1健康": "健康", "2-2三餐": "健康",
+        "2-3生活": "生活", "2-4思考": "思考", "2-5电脑": "电脑", "2-6工作": "工作",
+        "2-0其他": "其他",
+      },
+      colorPalette: [
+        "#60a5fa", "#34d399", "#fbbf24", "#f87171", "#a78bfa",
+        "#f472b6", "#38bdf8", "#10b981", "#f97316"
+      ],
+      progressOrder: ['健康', '生活', '电脑', '工作', '其他'],
+    }
+  }
+};
+// ========================================================================
+
+
 export interface Props {
   dashboard : DashboardConfig;
   dashboards: DashboardConfig[];
@@ -35,7 +76,6 @@ export interface Props {
 
 export function DashboardConfigForm({ dashboard, dashboards, onSave, onCancel }: Props) {
   const fieldOptions = useMemo(()=>Array.from(new Set([...CORE_FIELDS,'extra.主题','extra.时长','extra.地点'])).sort(),[]);
-  const genId = ()=>Date.now().toString(36)+Math.random().toString(36).slice(2);
 
   const [vals,setVals] = useState<any>({
     ...dashboard,
@@ -58,18 +98,38 @@ export function DashboardConfigForm({ dashboard, dashboards, onSave, onCancel }:
       for(let i=0;i<seg.length-1;i++) cur=cur[seg[i]]; cur[seg.at(-1)!]=val; return d; });
   };
 
-  const addModule=()=>keepScroll(()=>set('modules',[...vals.modules,{
-    id:genId(), view:'BlockView', title:'新模块', collapsed:false,
-    filtersArr:[], sortArr:[], fieldsArr:[], groupsArr:['categoryKey'], _open:true,
+  // 修改：添加模块时使用默认配置
+  const addModule=()=>keepScroll(()=>set('modules',[...vals.modules, {
+    ...structuredClone(DEFAULT_MODULE_CONFIGS.TimelineView), // 默认添加时间轴视图
+    id: genId(),
+    _open: true,
   }]));
+  
   const removeModule=(i:number)=>keepScroll(()=>set('modules', vals.modules.filter((_x:any,j:number)=>j!==i)));
+
+  // 新增：当切换视图类型时，加载对应的默认配置
+  const handleViewChange = (index: number, newView: ViewName) => {
+    const currentModule = vals.modules[index];
+    const newModuleConfig = structuredClone(DEFAULT_MODULE_CONFIGS[newView] || DEFAULT_MODULE_CONFIGS.BlockView);
+    
+    // 保留通用配置，替换视图专属配置
+    const updatedModule = {
+      ...currentModule, // 保留 id, _open 等
+      ...newModuleConfig, // 应用新视图的 title, view, viewConfig, fieldsArr 等
+      title: currentModule.title, // 保留用户已修改的标题
+    };
+
+    const newModules = [...vals.modules];
+    newModules[index] = updatedModule;
+    set('modules', newModules);
+  };
 
   const save=()=>{
     const cleaned:DashboardConfig={
       ...dashboard,
       ...vals,
       tags:String(vals.tags||'').split(/[,，]/).map((t:string)=>t.trim()).filter(Boolean),
-      modules:vals.modules.map(({id,filtersArr,sortArr,fieldsArr,groupsArr,_open,...rest}:any):ModuleConfig=>({
+      modules:vals.modules.map(({id,filtersArr,sortArr,fieldsArr,groupsArr,_open, ...rest}:any):ModuleConfig=>({
         ...rest,
         filters:(filtersArr||[]).filter((f:any)=>f.field).map((f:any)=>({...f})),
         sort   :(sortArr   ||[]).filter((s:any)=>s.field).map((s:any)=>({...s})),
@@ -158,7 +218,8 @@ export function DashboardConfigForm({ dashboard, dashboards, onSave, onCancel }:
                       </Typography>
                       <Select value={m.view} MenuProps={menu}
                               onClick={e=>e.stopPropagation()}
-                              onChange={e=>keepScroll(()=>set(`modules.${i}.view`, e.target.value))}
+                              // 修改：onChange 事件调用新的 handleViewChange 函数
+                              onChange={e=>keepScroll(()=>handleViewChange(i, e.target.value as ViewName))}
                               sx={{minWidth:110}}>
                         {VIEW_OPTIONS.map(v=><MenuItem key={v} value={v}>{v.replace('View','')}</MenuItem>)}
                       </Select>
@@ -181,10 +242,10 @@ export function DashboardConfigForm({ dashboard, dashboards, onSave, onCancel }:
                         </Stack>
 
                         {/* 视图专属设置 */}
-                        <Editor
-                          value={m}
-                          fieldOptions={fieldOptions}
-                          onChange={(patch)=>keepScroll(()=>set(`modules.${i}`, { ...m, ...patch }))}/>
+                        {Editor && <Editor
+                          value={m.viewConfig || {}}
+                          onChange={(patch)=>keepScroll(()=>set(`modules.${i}.viewConfig`, { ...(m.viewConfig || {}), ...patch }))}
+                          fieldOptions={fieldOptions}/>}
                         
                         {/* 通用：显示字段 / 分组字段 */}
                         <PillMultiSelect
