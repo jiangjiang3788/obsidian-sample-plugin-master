@@ -1,8 +1,5 @@
-// src/features/settings/ui/InputSettingsTable.tsx
+// src/core/settings/ui/InputSettingsTable.tsx
 /** @jsxImportSource preact */
-// InputSettingsTable.tsx —— 紧凑表格 UI（去掉 Fragment，避免重复导入）
-// 单击单元格可编辑 JSON / 图标
-
 import { h } from 'preact';
 import { useState, useMemo } from 'preact/hooks';
 import {
@@ -125,7 +122,7 @@ export function InputSettingsTable({ plugin }: Props) {
 
   return (
     <Box sx={{ p: 2, border: 1, borderColor: 'divider', borderRadius: 2, bgcolor: 'background.paper' }} class="think-setting-root">
-      {/* 工具栏（不用 Fragment） */}
+      {/* 工具栏 */}
       <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 1 }}>
         <Typography fontWeight={600}>通用输入设置</Typography>
         <Tooltip title="新增主题">
