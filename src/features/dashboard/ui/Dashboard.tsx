@@ -7,12 +7,13 @@ import { DashboardConfig, Item, ModuleConfig } from '@core/domain/schema';
 import { ModulePanel } from './ModulePanel';
 import type ThinkPlugin from '../../../main';
 import { ViewComponents } from '@features/dashboard/ui';
-import { getDateRange, dayjs } from '@core/utils/date';
+// --- 修改：导入新的工具函数，并移除 dayjs 的直接导入 ---
+import { getDateRange, dayjs, formatDateForView } from '@core/utils/date';
 import { filterByRules, sortItems } from '@core/utils/itemFilter';
 import { DashboardContext } from './DashboardContext';
-import { useDashboardData } from '../hooks'; // <-- 导入新的钩子
+import { useDashboardData } from '../hooks';
 
-const QTXT = ['一', '二', '三', '四'];
+// const QTXT = ['一', '二', '三', '四']; // <--- 移除：该逻辑已移入 date.ts
 
 interface Props {
   config: DashboardConfig;
@@ -27,8 +28,6 @@ export function Dashboard({ config, dataStore, plugin }: Props) {
   );
   const [kw, setKw] = useState('');
 
-  // 移除了 force state 和 useEffect 订阅逻辑，因为它们已封装在 useDashboardData 中
-
   const handleMarkItemDone = (itemId: string) => {
     dataStore.markItemDone(itemId);
   };
@@ -37,23 +36,12 @@ export function Dashboard({ config, dataStore, plugin }: Props) {
     (v: string) => ({ 年: 'year', 季: 'quarter', 月: 'month', 周: 'week', 天: 'day' } as any)[v] ?? 'day',
     []);
 
-  const fmt = useMemo(() =>
-    (d: dayjs.Dayjs, v: string) =>
-      v === '年'
-        ? d.format('YYYY年')
-        : v === '季'
-          ? `${d.year()}年${QTXT[d.quarter() - 1]}季度`
-          : v === '月'
-            ? d.format('YYYY-MM')
-            : v === '周'
-              ? d.format('YYYY-[W]WW')
-              : d.format('YYYY-MM-DD'),
-    []);
+  // --- 修改：fmt 函数现在变得极其简单和干净 ---
+  const fmt = useMemo(() => formatDateForView, []);
 
   const { startDate, endDate } = useMemo(() => getDateRange(date, view), [date, view]);
   const dateRange: [Date, Date] = useMemo(() => [startDate.toDate(), endDate.toDate()], [startDate, endDate]);
 
-  // 【核心改动】使用自定义钩子获取全局过滤后的数据
   const baseFilteredItems = useDashboardData(dataStore, config, dateRange, kw, plugin);
 
   const renderModule = (m: ModuleConfig) => {
@@ -65,18 +53,14 @@ export function Dashboard({ config, dataStore, plugin }: Props) {
         </ModulePanel>
       );
     
-    // 【核心改动】对每个模块的最终数据进行缓存
     const moduleItems = useMemo(() => {
         console.log(`Calculating items for module: ${m.title}`);
-        // 1. 从预处理好的 baseFilteredItems 开始
         let items = baseFilteredItems;
-        // 2. 只应用模块自身的过滤和排序规则
         items = filterByRules(items, m.filters || []);
         items = sortItems(items, m.sort || []);
         return items;
-    }, [baseFilteredItems, m.filters, m.sort]); // 依赖项是基础数据和模块自身的规则
+    }, [baseFilteredItems, m.filters, m.sort]); 
 
-    // 视图专属的 props (vp) 准备逻辑保持不变
     const vp: any = { ...(m.props || {}) };
     vp.groupField = m.group;
     if (m.view === 'BlockView' && !vp.groupField) {
@@ -94,7 +78,7 @@ export function Dashboard({ config, dataStore, plugin }: Props) {
     return (
       <ModulePanel module={m}>
         <V
-          items={moduleItems} // 传递最终为模块计算好的数据
+          items={moduleItems} 
           module={m}
           dateRange={dateRange}
           {...vp}
@@ -106,7 +90,6 @@ export function Dashboard({ config, dataStore, plugin }: Props) {
   return (
     <DashboardContext.Provider value={{ onMarkItemDone: handleMarkItemDone }}>
       <div>
-        {/* --- 修改 (#12): 条件渲染工具栏 --- */}
         {!config.hideToolbar && (
             <div class="tp-toolbar" style="margin-bottom:8px;">
                 {['年', '季', '月', '周', '天'].map(v => (
@@ -131,9 +114,7 @@ export function Dashboard({ config, dataStore, plugin }: Props) {
                 </button>
             </div>
         )}
-        {/* --- 修改结束 --- */}
 
-        {/* 模块循环，现在使用重构后的 renderModule */}
         {config.modules.map(renderModule)}
       </div>
     </DashboardContext.Provider>
