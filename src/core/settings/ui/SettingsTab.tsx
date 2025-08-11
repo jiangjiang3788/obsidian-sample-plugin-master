@@ -1,10 +1,10 @@
 // src/core/settings/ui/SettingsTab.tsx
 /** @jsxImportSource preact */
 import { render } from 'preact';
-import { useMemo, useState, useEffect } from 'preact/hooks';
+import { useMemo, useState } from 'preact/hooks';
 import { PluginSettingTab, Notice } from 'obsidian';
 import type ThinkPlugin from '../../../main';
-import type { DashboardConfig, ThinkSettings } from '../../../main'; // 引入类型
+import type { DashboardConfig, ThinkSettings } from '../../../main';
 import {
   ThemeProvider, CssBaseline, Box, Stack, Typography, IconButton,
   Accordion, AccordionSummary, AccordionDetails
@@ -16,6 +16,9 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { DashboardConfigForm } from '@features/dashboard/settings/DashboardConfigForm';
 import { InputSettingsTable } from './InputSettingsTable';
 import { theme as baseTheme } from '@shared/styles/mui-theme';
+// [REFACTOR] Import the new custom hook.
+import { usePersistentState } from '@shared/hooks/usePersistentState';
+
 
 function keepScroll(fn: () => void) {
   const y = window.scrollY;
@@ -27,26 +30,15 @@ function keepScroll(fn: () => void) {
 
 function SettingsRoot({ plugin }: { plugin: ThinkPlugin }) {
   const [tick, setTick] = useState(0);
-  // [REFACTOR] Data is now derived from the plugin instance, refreshed by `tick`
   const dashboards = useMemo(() => plugin.dashboards || [], [plugin.dashboards, tick]);
   const inputSettings = useMemo(() => plugin.inputSettings || { base: {}, themes: [] }, [plugin.inputSettings, tick]);
 
-  const [openInput, setOpenInput] = useState<boolean>(() => {
-    const v = localStorage.getItem('think-settings-open-input');
-    return v === null ? true : v === 'true';
-  });
-  const [openDash, setOpenDash] = useState<boolean>(() => {
-    const v = localStorage.getItem('think-settings-open-dash');
-    return v === null ? true : v === 'true';
-  });
-  useEffect(() => { localStorage.setItem('think-settings-open-input', String(openInput)); }, [openInput]);
-  useEffect(() => { localStorage.setItem('think-settings-open-dash', String(openDash)); }, [openDash]);
-
-  const [openName, setOpenName] = useState<string | null>(() => localStorage.getItem('think-target-dash'));
-  useEffect(() => {
-    if (openName) localStorage.setItem('think-target-dash', openName);
-    else localStorage.removeItem('think-target-dash');
-  }, [openName]);
+  // [REFACTOR] Replace useState + useEffect combinations with the custom hook.
+  const [openInput, setOpenInput] = usePersistentState('think-settings-open-input', true);
+  const [openDash, setOpenDash] = usePersistentState('think-settings-open-dash', true);
+  const [openName, setOpenName] = usePersistentState<string | null>('think-target-dash', null);
+  
+  // The useEffects for localStorage are now gone, simplifying the component.
 
   const addDashboard = () => {
     keepScroll(() => {
@@ -75,36 +67,30 @@ function SettingsRoot({ plugin }: { plugin: ThinkPlugin }) {
     });
   };
 
-  // [REFACTOR] Centralized handler for saving a dashboard configuration.
   const saveDash = (idx: number, newDashData: DashboardConfig) => {
     keepScroll(() => {
-      // Check for name conflicts if name has changed
       const oldName = plugin.dashboards[idx].name;
       const newName = newDashData.name;
       if (oldName !== newName && plugin.dashboards.some((d, i) => i !== idx && d.name === newName)) {
-          new Notice(`错误：名称为 "${newName}" 的仪表盘已存在。`);
-          return;
+        new Notice(`错误：名称为 "${newName}" 的仪表盘已存在。`);
+        return;
       }
-
       plugin.dashboards[idx] = newDashData;
       plugin.persistAll().then(() => {
         new Notice('已保存');
         setTick(t => t + 1);
-        // If name changed, update the open accordion
         setOpenName(newName);
       });
     });
   };
-  
-  // [REFACTOR] Centralized handler for saving input settings.
+
   const handleSaveInputSettings = (newSettings: ThinkSettings['inputSettings']) => {
-      keepScroll(() => {
-          plugin.inputSettings = newSettings;
-          plugin.persistAll().then(() => {
-              // No notice needed here as sub-components show them.
-              setTick(t => t + 1);
-          });
+    keepScroll(() => {
+      plugin.inputSettings = newSettings;
+      plugin.persistAll().then(() => {
+        setTick(t => t + 1);
       });
+    });
   };
 
   return (
@@ -119,7 +105,6 @@ function SettingsRoot({ plugin }: { plugin: ThinkPlugin }) {
             </Typography>
           </AccordionSummary>
           <AccordionDetails>
-            {/* [REFACTOR] Pass settings data and onSave callback to the child component. */}
             <InputSettingsTable settings={inputSettings} onSave={handleSaveInputSettings} />
           </AccordionDetails>
         </Accordion>
@@ -145,7 +130,7 @@ function SettingsRoot({ plugin }: { plugin: ThinkPlugin }) {
 
             {dashboards.map((dash, idx) => (
               <Accordion
-                key={dash.name} // Using name as key is risky if it can change, but OK for now.
+                key={dash.name}
                 expanded={openName === dash.name}
                 onChange={(_, e) => setOpenName(e ? dash.name : (openName === dash.name ? null : openName))}
                 disableGutters
@@ -166,12 +151,11 @@ function SettingsRoot({ plugin }: { plugin: ThinkPlugin }) {
                 </AccordionSummary>
 
                 <AccordionDetails>
-                  {/* [REFACTOR] Pass dashboard data and onSave callback. */}
                   <DashboardConfigForm
                     dashboard={dash}
                     dashboards={plugin.dashboards}
                     onSave={(d) => saveDash(idx, d)}
-                    onCancel={() => setOpenName(null)} // Example cancel action
+                    onCancel={() => setOpenName(null)}
                   />
                 </AccordionDetails>
               </Accordion>
