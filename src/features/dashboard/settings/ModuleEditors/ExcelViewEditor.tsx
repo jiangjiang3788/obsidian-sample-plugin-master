@@ -1,6 +1,20 @@
-// src/features/settings/ui/ModuleEditors/ExcelViewEditor.tsx
+// src/features/dashboard/settings/ModuleEditors/ExcelViewEditor.tsx
 /** @jsxImportSource preact */
 import { h } from 'preact';
+
+/**
+ * @fileoverview ExcelView 的设置编辑器。
+ * 新增: 导出该视图的默认配置，作为单一真源。
+ */
+
+// [REFACTOR] 导出默认配置
+export const DEFAULT_CONFIG = {
+  view: 'ExcelView' as const,
+  title: '数据表格',
+  collapsed: false,
+  filters: [],
+  sort: [],
+};
 
 export function ExcelViewEditor() {
   return (
