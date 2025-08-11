@@ -1,4 +1,4 @@
-// core/VaultWatcher.ts
+// src/core/VaultWatcher.ts
 import { Plugin, TFile } from 'obsidian';
 import { DataStore } from '@core/services/dataStore';
 

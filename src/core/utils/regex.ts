@@ -1,4 +1,4 @@
-// utils/regex.ts
+//  src/core/utils/regex.ts
 export const DATE_YMD = '\\d{4}[-/]\\d{2}[-/]\\d{2}';
 export const DATE_YMD_RE = new RegExp(DATE_YMD);
 
