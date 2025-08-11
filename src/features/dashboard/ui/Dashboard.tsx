@@ -1,22 +1,16 @@
 // src/features/dashboard/ui/Dashboard.tsx
 /** @jsxImportSource preact */
 import { h } from 'preact';
-import { useState, useEffect, useMemo } from 'preact/hooks';
+import { useState, useMemo } from 'preact/hooks';
 import { DataStore } from '@core/services/dataStore';
 import { DashboardConfig, Item, ModuleConfig } from '@core/domain/schema';
 import { ModulePanel } from './ModulePanel';
 import type ThinkPlugin from '../../../main';
-import { TFile, TFolder } from 'obsidian';
 import { ViewComponents } from '@features/dashboard/ui';
 import { getDateRange, dayjs } from '@core/utils/date';
-import {
-  filterByRules,
-  sortItems,
-  filterByDateRange,
-  filterByKeyword,
-} from '@core/utils/itemFilter';
-// [REFACTOR] Import the newly created context.
+import { filterByRules, sortItems } from '@core/utils/itemFilter';
 import { DashboardContext } from './DashboardContext';
+import { useDashboardData } from '../hooks'; // <-- 导入新的钩子
 
 const QTXT = ['一', '二', '三', '四'];
 
@@ -32,13 +26,8 @@ export function Dashboard({ config, dataStore, plugin }: Props) {
     config.initialDate ? dayjs(config.initialDate) : dayjs(),
   );
   const [kw, setKw] = useState('');
-  const [, force] = useState(0);
 
-  useEffect(() => {
-    const fn = () => force(v => v + 1);
-    dataStore.subscribe(fn);
-    return () => dataStore.unsubscribe(fn);
-  }, [dataStore]);
+  // 移除了 force state 和 useEffect 订阅逻辑，因为它们已封装在 useDashboardData 中
 
   const handleMarkItemDone = (itemId: string) => {
     dataStore.markItemDone(itemId);
@@ -64,6 +53,9 @@ export function Dashboard({ config, dataStore, plugin }: Props) {
   const { startDate, endDate } = useMemo(() => getDateRange(date, view), [date, view]);
   const dateRange: [Date, Date] = useMemo(() => [startDate.toDate(), endDate.toDate()], [startDate, endDate]);
 
+  // 【核心改动】使用自定义钩子获取全局过滤后的数据
+  const baseFilteredItems = useDashboardData(dataStore, config, dateRange, kw, plugin);
+
   const renderModule = (m: ModuleConfig) => {
     const V = (ViewComponents as any)[m.view];
     if (!V)
@@ -72,23 +64,19 @@ export function Dashboard({ config, dataStore, plugin }: Props) {
           <div>未知视图：{m.view}</div>
         </ModulePanel>
       );
-    
-    // Data processing logic remains the same...
-    let items = dataStore.queryItems();
-    items = filterByRules(items, m.filters || []);
-    items = filterByDateRange(items, startDate.format('YYYY-MM-DD'), endDate.format('YYYY-MM-DD'));
-    items = filterByKeyword(items, kw);
-    if (config.tags?.length) {
-      items = items.filter(it => it.tags.some(t => config.tags!.some(x => t.includes(x))));
-    }
-    if (config.path?.trim()) {
-      const target = config.path.trim();
-      const af = plugin.app.vault.getAbstractFileByPath(target);
-      const keep = (p: string) => af instanceof TFolder ? p.startsWith(target.endsWith('/') ? target : target + '/') : af instanceof TFile ? p.startsWith(target) : p.startsWith(target.endsWith('/') ? target : target + '/');
-      items = items.filter(it => keep(it.id));
-    }
-    items = sortItems(items, m.sort || []);
+    
+    // 【核心改动】对每个模块的最终数据进行缓存
+    const moduleItems = useMemo(() => {
+        console.log(`Calculating items for module: ${m.title}`);
+        // 1. 从预处理好的 baseFilteredItems 开始
+        let items = baseFilteredItems;
+        // 2. 只应用模块自身的过滤和排序规则
+        items = filterByRules(items, m.filters || []);
+        items = sortItems(items, m.sort || []);
+        return items;
+    }, [baseFilteredItems, m.filters, m.sort]); // 依赖项是基础数据和模块自身的规则
 
+    // 视图专属的 props (vp) 准备逻辑保持不变
     const vp: any = { ...(m.props || {}) };
     vp.groupField = m.group;
     if (m.view === 'BlockView' && !vp.groupField) {
@@ -106,10 +94,9 @@ export function Dashboard({ config, dataStore, plugin }: Props) {
     return (
       <ModulePanel module={m}>
         <V
-          items={items}
+          items={moduleItems} // 传递最终为模块计算好的数据
           module={m}
           dateRange={dateRange}
-          // [REFACTOR] The onMarkItemDone prop is no longer passed here.
           {...vp}
         />
       </ModulePanel>
@@ -117,10 +104,9 @@ export function Dashboard({ config, dataStore, plugin }: Props) {
   };
 
   return (
-    // [REFACTOR] Wrap the entire dashboard in the Context Provider.
     <DashboardContext.Provider value={{ onMarkItemDone: handleMarkItemDone }}>
       <div>
-        {/* 顶栏 */}
+        {/* 顶栏 UI 保持不变 */}
         <div class="tp-toolbar" style="margin-bottom:8px;">
             {['年', '季', '月', '周', '天'].map(v => (
                 <button onClick={() => setView(v)} class={v === view ? 'active' : ''}>{v}</button>
@@ -144,7 +130,7 @@ export function Dashboard({ config, dataStore, plugin }: Props) {
             </button>
         </div>
 
-        {/* 模块循环 */}
+        {/* 模块循环，现在使用重构后的 renderModule */}
         {config.modules.map(renderModule)}
       </div>
     </DashboardContext.Provider>
