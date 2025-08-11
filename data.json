@@ -152,33 +152,46 @@
           "sort": [],
           "fields": [],
           "viewConfig": {
-            "categoryMap": {
-              "00-健康打卡": "健康",
-              "2-1健康": "健康",
-              "2-2三餐": "健康",
-              "2-3生活": "生活",
-              "2-4思考": "思考",
-              "2-5电脑": "电脑",
-              "2-6工作": "工作",
-              "2-0其他": "其他"
+            "defaultHourHeight": 50,
+            "WEEKLY_AGGREGATION_THRESHOLD_DAYS": 35,
+            "MAX_HOURS_PER_DAY": 24,
+            "UNTRACKED_LABEL": "未记录",
+            "categoryMap": {},
+            "categories": {
+              "工作": {
+                "color": "#60a5fa",
+                "files": [
+                  "工作",
+                  "Work"
+                ]
+              },
+              "学习": {
+                "color": "#34d399",
+                "files": [
+                  "学习",
+                  "Study"
+                ]
+              },
+              "生活": {
+                "color": "#fbbf24",
+                "files": [
+                  "生活",
+                  "Life"
+                ]
+              }
             },
             "colorPalette": [
-              "#60a5fa",
               "#34d399",
               "#fbbf24",
-              "#f87171",
               "#a78bfa",
-              "#f472b6",
-              "#38bdf8",
-              "#10b981",
-              "#f97316"
+              "#60a5fa",
+              "#f87171",
+              "#a1a1aa"
             ],
             "progressOrder": [
-              "健康",
-              "生活",
-              "电脑",
               "工作",
-              "其他"
+              "学习",
+              "生活"
             ]
           }
         }

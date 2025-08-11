@@ -7,25 +7,29 @@ import {
   IconButton, Tooltip, Dialog, DialogTitle, DialogContent,
   TextField, DialogActions, Button, Stack, Typography, Divider
 } from '@mui/material';
-import AddIcon       from '@mui/icons-material/Add';
-import SaveIcon      from '@mui/icons-material/Save';
-import DeleteIcon    from '@mui/icons-material/Delete';
-import type ThinkPlugin from '../../../main';
+import AddIcon from '@mui/icons-material/Add';
+import SaveIcon from '@mui/icons-material/Save';
+import DeleteIcon from '@mui/icons-material/Delete';
 import { Notice } from 'obsidian';
+import type { ThinkSettings } from '../../../main'; // 引入顶层设置类型
 
 const ROW_PADDING_Y = 0.3;
 const CELL_PADDING_X = 1;
 
-interface Props { plugin: ThinkPlugin }
-export function InputSettingsTable({ plugin }: Props) {
-  const [refresh, setRefresh] = useState(0);
+// [REFACTOR] Props changed: No longer accepts `plugin`. Accepts `settings` data and an `onSave` callback.
+interface Props {
+  settings: ThinkSettings['inputSettings'];
+  onSave: (newSettings: ThinkSettings['inputSettings']) => void;
+}
 
+export function InputSettingsTable({ settings, onSave }: Props) {
+  // data is now derived from props. When props change, the table will re-render.
   const data = useMemo(() => {
-    const raw = plugin.inputSettings || { base: {}, themes: [] };
-    raw.base   ??= {};
+    const raw = structuredClone(settings) || { base: {}, themes: [] };
+    raw.base ??= {};
     raw.themes ??= [];
     return raw;
-  }, [plugin.inputSettings, refresh]);
+  }, [settings]);
 
   const blockKeys = useMemo(() => {
     const s = new Set<string>();
@@ -37,7 +41,7 @@ export function InputSettingsTable({ plugin }: Props) {
   const [editing, setEditing] = useState<{ themeIdx: number; type: string; json: string } | null>(null);
   const [addOpen, setAddOpen] = useState(false);
   const [newPath, setNewPath] = useState('');
-  const [delIdx,  setDelIdx]  = useState<number | null>(null);
+  const [delIdx, setDelIdx] = useState<number | null>(null);
   const [iconEdit, setIconEdit] = useState<{ themeIdx: number; value: string } | null>(null);
 
   const openEdit = (themeIdx: number, type: string) => {
@@ -46,59 +50,71 @@ export function InputSettingsTable({ plugin }: Props) {
       : (type === 'task' ? (data.themes[themeIdx] as any).task ?? {} : (data.themes[themeIdx] as any).blocks?.[type] ?? {});
     setEditing({ themeIdx, type, json: JSON.stringify(obj, null, 2) });
   };
+
+  // [REFACTOR] All save/update functions now call the `onSave` prop with the new data state.
   const saveEdit = () => {
     if (!editing) return;
     let obj;
     try { obj = JSON.parse(editing.json || '{}'); }
     catch { new Notice('JSON 解析失败'); return; }
 
+    const newData = structuredClone(data);
     if (editing.themeIdx < 0) {
-      if (editing.type === 'task') (data.base as any).task = obj;
+      if (editing.type === 'task') (newData.base as any).task = obj;
       else {
-        (data.base as any).blocks ??= {};
-        (data.base as any).blocks[editing.type] = obj;
+        (newData.base as any).blocks ??= {};
+        (newData.base as any).blocks[editing.type] = obj;
       }
     } else {
-      const th = (data.themes as any[])[editing.themeIdx];
+      const th = (newData.themes as any[])[editing.themeIdx];
       if (editing.type === 'task') th.task = obj;
       else {
         th.blocks ??= {};
         th.blocks[editing.type] = obj;
       }
     }
-    plugin.inputSettings = data;
-    plugin.persistAll().then(() => {
-      new Notice('已保存设置');
-      setEditing(null);
-      setRefresh(r => r + 1);
-    });
+    onSave(newData);
+    new Notice('已保存设置');
+    setEditing(null);
   };
 
   const confirmAdd = () => {
     const path = newPath.trim();
     if (!path) return;
     if ((data.themes as any[]).some((t: any) => t.path === path)) { new Notice('该主题已存在'); return; }
-    (data.themes as any[]).push({ path });
-    plugin.inputSettings = data;
-    plugin.persistAll().then(() => {
-      new Notice('已新增主题');
-      setAddOpen(false); setNewPath(''); setRefresh(r => r + 1);
-    });
+
+    const newData = structuredClone(data);
+    (newData.themes as any[]).push({ path });
+    onSave(newData);
+    new Notice('已新增主题');
+    setAddOpen(false);
+    setNewPath('');
   };
+
   const confirmDelete = () => {
     if (delIdx === null) return;
-    const removed = (data.themes as any[]).splice(delIdx, 1)[0];
-    plugin.inputSettings = data;
-    plugin.persistAll().then(() => {
-      new Notice(`已删除主题「${removed.path}」`);
-      setDelIdx(null); setRefresh(r => r + 1);
-    });
+    const newData = structuredClone(data);
+    const removed = (newData.themes as any[]).splice(delIdx, 1)[0];
+    onSave(newData);
+    new Notice(`已删除主题「${removed.path}」`);
+    setDelIdx(null);
   };
+  
+  const saveIcon = () => {
+    if (!iconEdit) return;
+    const newData = structuredClone(data);
+    const v = (iconEdit.value || '').trim();
+    (newData.themes as any[])[iconEdit.themeIdx].icon = v || undefined;
+    onSave(newData);
+    new Notice('已保存图标');
+    setIconEdit(null);
+  };
+
 
   const renderCell = (cfg: any, inherited: boolean, themeIdx: number, type: string) => {
     const enabled = cfg?.enabled ?? true;
-    const symbol  = enabled ? (inherited ? '🔽' : '📄') : '❌';
-    const tip     = !enabled ? '禁用' : (inherited ? '继承' : '覆写');
+    const symbol = enabled ? (inherited ? '🔽' : '📄') : '❌';
+    const tip = !enabled ? '禁用' : (inherited ? '继承' : '覆写');
 
     return (
       <TableCell
@@ -110,13 +126,14 @@ export function InputSettingsTable({ plugin }: Props) {
       </TableCell>
     );
   };
+
   const getCfg = (themeIdx: number, type: string) => {
     if (themeIdx < 0) return [(data.base as any).task ?? {}, false] as [any, boolean];
-    const th     = (data.themes as any[])[themeIdx];
-    const child  = type === 'task' ? th.task : th.blocks?.[type];
+    const th = (data.themes as any[])[themeIdx];
+    const child = type === 'task' ? th.task : th.blocks?.[type];
     const parent = type === 'task' ? (data.base as any).task : (data.base as any).blocks?.[type];
-    const inh    = !child || Object.keys(child).length === 0;
-    const cfg    = child ?? parent ?? {};
+    const inh = !child || Object.keys(child).length === 0;
+    const cfg = child ?? parent ?? {};
     return [cfg, inh] as [any, boolean];
   };
 
@@ -126,7 +143,7 @@ export function InputSettingsTable({ plugin }: Props) {
       <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 1 }}>
         <Typography fontWeight={600}>通用输入设置</Typography>
         <Tooltip title="新增主题">
-          <IconButton size="small" onClick={() => setAddOpen(true)}><AddIcon/></IconButton>
+          <IconButton size="small" onClick={() => setAddOpen(true)}><AddIcon /></IconButton>
         </Tooltip>
       </Stack>
       <Divider sx={{ mb: 1.5 }} />
@@ -172,8 +189,8 @@ export function InputSettingsTable({ plugin }: Props) {
 
               {blockKeys.map(k => {
                 const child = th.blocks?.[k];
-                const inh   = !child || Object.keys(child).length === 0;
-                const cfg   = child ?? (data.base as any).blocks?.[k] ?? {};
+                const inh = !child || Object.keys(child).length === 0;
+                const cfg = child ?? (data.base as any).blocks?.[k] ?? {};
                 return renderCell(cfg, inh, idx, k);
               })}
 
@@ -228,21 +245,7 @@ export function InputSettingsTable({ plugin }: Props) {
             </DialogContent>
             <DialogActions>
               <Button onClick={() => setIconEdit(null)}>取消</Button>
-              <Button
-                startIcon={<SaveIcon />}
-                onClick={() => {
-                  const v = (iconEdit.value || '').trim();
-                  (data.themes as any[])[iconEdit.themeIdx].icon = v || undefined;
-                  plugin.inputSettings = data;
-                  plugin.persistAll().then(() => {
-                    new Notice('已保存图标');
-                    setIconEdit(null);
-                    setRefresh(r => r + 1);
-                  });
-                }}
-              >
-                保存
-              </Button>
+              <Button startIcon={<SaveIcon />} onClick={saveIcon}>保存</Button>
             </DialogActions>
           </div>
         ) : null}

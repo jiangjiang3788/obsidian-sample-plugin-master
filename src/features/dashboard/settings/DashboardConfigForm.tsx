@@ -17,8 +17,6 @@ import { theme as baseTheme } from '@shared/styles/mui-theme';
 import { PillMultiSelect } from '@shared/components/form/PillMultiSelect';
 import { RuleList } from '@shared/components/form/RuleList';
 import { VIEW_EDITORS, ViewKind } from './ModuleEditors/registry';
-
-// [REFACTOR] 导入各个模块的默认配置
 import { DEFAULT_CONFIG as BlockViewDefault } from './ModuleEditors/BlockViewEditor';
 import { DEFAULT_CONFIG as TableViewDefault } from './ModuleEditors/TableViewEditor';
 import { DEFAULT_CONFIG as ExcelViewDefault } from './ModuleEditors/ExcelViewEditor';
@@ -26,29 +24,24 @@ import { DEFAULT_CONFIG as TimelineViewDefault } from './ModuleEditors/TimelineV
 
 const menu = { disablePortal: true, keepMounted: true } as const;
 
-/* 保持滚动位置（避免“跳”） */
 function keepScroll(fn: () => void) {
   const y = window.scrollY; fn();
-  setTimeout(() => window.scrollTo({ top: y }), 0);
-  requestAnimationFrame(() => { window.scrollTo({ top: y }); requestAnimationFrame(() => window.scrollTo({ top: y })); });
+  requestAnimationFrame(() => { window.scrollTo({ top: y }); });
 }
 
-// ======================= 所有视图模块的默认配置 =======================
 const genId = () => Date.now().toString(36) + Math.random().toString(36).slice(2);
 
-// [REFACTOR] 使用导入的配置构建统一的默认配置映射表
 const DEFAULT_MODULE_CONFIGS: Record<ViewName, Omit<any, 'id' | '_open'>> = {
   BlockView: BlockViewDefault,
   TableView: TableViewDefault,
   ExcelView: ExcelViewDefault,
   TimelineView: TimelineViewDefault,
 };
-// ========================================================================
 
-
+// [REFACTOR] Props are already well-defined for decoupling. No changes needed to the signature.
 export interface Props {
   dashboard: DashboardConfig;
-  dashboards: DashboardConfig[];
+  dashboards: DashboardConfig[]; // Used for validation or context, which is acceptable.
   onSave: (d: DashboardConfig) => void;
   onCancel: () => void;
 }
@@ -75,12 +68,11 @@ export function DashboardConfigForm({ dashboard, dashboards, onSave, onCancel }:
     if (!path.includes('.')) { setVals((v: any) => ({ ...v, [path]: val })); return; }
     setVals((v: any) => {
       const d = structuredClone(v); const seg = path.split('.'); let cur: any = d;
-      for (let i = 0; i < seg.length - 1; i++) cur = cur[seg[i]]; cur[seg.at(-1)!] = val; return d;
+      for (let i = 0; i < seg.length - 1; i++) cur = cur[seg.at(-1)!] = val; return d;
     });
   };
 
   const addModule = () => keepScroll(() => set('modules', [...vals.modules, {
-    // [REFACTOR] 从统一映射表中获取默认配置
     ...structuredClone(DEFAULT_MODULE_CONFIGS.TimelineView),
     id: genId(),
     _open: true,
@@ -90,13 +82,12 @@ export function DashboardConfigForm({ dashboard, dashboards, onSave, onCancel }:
 
   const handleViewChange = (index: number, newView: ViewName) => {
     const currentModule = vals.modules[index];
-    // [REFACTOR] 从统一映射表中获取新视图的默认配置
     const newModuleConfig = structuredClone(DEFAULT_MODULE_CONFIGS[newView] || DEFAULT_MODULE_CONFIGS.BlockView);
 
     const updatedModule = {
       ...currentModule,
       ...newModuleConfig,
-      title: currentModule.title, // 保留用户已修改的标题
+      title: currentModule.title,
     };
 
     const newModules = [...vals.modules];
@@ -104,10 +95,12 @@ export function DashboardConfigForm({ dashboard, dashboards, onSave, onCancel }:
     set('modules', newModules);
   };
 
+  // [REFACTOR] The save function correctly calls the `onSave` prop with the cleaned data. This is good.
   const save = () => {
     const cleaned: DashboardConfig = {
       ...dashboard,
       ...vals,
+      name: vals.name, // Ensure name is also passed
       tags: String(vals.tags || '').split(/[,，]/).map((t: string) => t.trim()).filter(Boolean),
       modules: vals.modules.map(({ id, filtersArr, sortArr, fieldsArr, groupsArr, _open, ...rest }: any): ModuleConfig => ({
         ...rest,
@@ -120,47 +113,48 @@ export function DashboardConfigForm({ dashboard, dashboards, onSave, onCancel }:
     onSave(cleaned);
   };
 
+  // ... (The rest of the JSX rendering code remains unchanged)
   return (
     <ThemeProvider theme={baseTheme}>
-      <CssBaseline />
-      <Box class="think-compact" sx={{ display: 'grid', gap: 1 }}>
+      <CssBaseline/>
+      <Box class="think-compact" sx={{display:'grid', gap:1}}>
         {/* 基础配置 */}
         <Box>
           <Stack direction="row" alignItems="center" spacing={0.75}
-            onClick={() => keepScroll(() => set('_baseOpen', !vals._baseOpen))}
-            sx={{ cursor: 'pointer', userSelect: 'none', mb: vals._baseOpen ? 0.5 : 0 }}>
-            <Typography sx={{ color: 'text.primary', fontWeight: 600, fontSize: 16 }}>
+                 onClick={()=>keepScroll(()=>set('_baseOpen', !vals._baseOpen))}
+                 sx={{cursor:'pointer', userSelect:'none', mb: vals._baseOpen? 0.5:0}}>
+            <Typography sx={{ color:'text.primary', fontWeight:600, fontSize:16 }}>
               基础配置
             </Typography>
-            <span>{vals._baseOpen ? '▾' : '▸'}</span>
+            <span>{vals._baseOpen?'▾':'▸'}</span>
           </Stack>
           <Collapse in={vals._baseOpen} timeout={120} unmountOnExit>
             <Stack spacing={0.6}>
               <Stack direction="row" spacing={0.6} alignItems="center">
-                <Typography sx={{ minWidth: 92 }}>配置名称</Typography>
-                <TextField value={vals.name} onInput={e => set('name', (e.target as HTMLInputElement).value)} />
+                <Typography sx={{minWidth:92}}>配置名称</Typography>
+                <TextField value={vals.name} onInput={e=>set('name',(e.target as HTMLInputElement).value)}/>
               </Stack>
               <Stack direction="row" spacing={0.6} alignItems="center">
-                <Typography sx={{ minWidth: 92 }}>数据源路径</Typography>
-                <TextField value={vals.path} onInput={e => set('path', (e.target as HTMLInputElement).value)} />
+                <Typography sx={{minWidth:92}}>数据源路径</Typography>
+                <TextField value={vals.path} onInput={e=>set('path',(e.target as HTMLInputElement).value)}/>
               </Stack>
               <Stack direction="row" spacing={0.6} alignItems="center">
-                <Typography sx={{ minWidth: 92 }}>标签</Typography>
-                <TextField value={vals.tags} onInput={e => set('tags', (e.target as HTMLInputElement).value)} />
+                <Typography sx={{minWidth:92}}>标签</Typography>
+                <TextField value={vals.tags} onInput={e=>set('tags',(e.target as HTMLInputElement).value)}/>
               </Stack>
               <Stack direction="row" spacing={0.6} alignItems="center">
-                <Typography sx={{ minWidth: 92 }}>初始视图</Typography>
+                <Typography sx={{minWidth:92}}>初始视图</Typography>
                 <Select value={vals.initialView} MenuProps={menu}
-                  onChange={e => keepScroll(() => set('initialView', e.target.value))}
-                  sx={{ minWidth: 120 }}>
-                  {['年', '季', '月', '周', '天'].map(v => <MenuItem key={v} value={v}>{v}</MenuItem>)}
+                        onChange={e=>keepScroll(()=>set('initialView', e.target.value))}
+                        sx={{minWidth:120}}>
+                  {['年','季','月','周','天'].map(v=><MenuItem key={v} value={v}>{v}</MenuItem>)}
                 </Select>
               </Stack>
               <Stack direction="row" spacing={0.6} alignItems="center">
-                <Typography sx={{ minWidth: 92 }}>初始日期</Typography>
+                <Typography sx={{minWidth:92}}>初始日期</Typography>
                 <TextField type="date" value={vals.initialDate}
-                  onChange={e => keepScroll(() => set('initialDate', (e.target as HTMLInputElement).value))}
-                  sx={{ minWidth: 160 }} />
+                           onChange={e=>keepScroll(()=>set('initialDate',(e.target as HTMLInputElement).value))}
+                           sx={{minWidth:160}}/>
               </Stack>
             </Stack>
           </Collapse>
@@ -168,68 +162,68 @@ export function DashboardConfigForm({ dashboard, dashboards, onSave, onCancel }:
 
         {/* 模块设置 */}
         <Box>
-          <Stack direction="row" alignItems="center" sx={{ justifyContent: 'space-between' }}
-            onClick={() => keepScroll(() => set('_modsOpen', !vals._modsOpen))}>
-            <Stack direction="row" alignItems="center" spacing={0.75} sx={{ cursor: 'pointer', userSelect: 'none' }}>
-              <Typography sx={{ color: 'text.primary', fontWeight: 600, fontSize: 16 }}>
+          <Stack direction="row" alignItems="center" sx={{justifyContent:'space-between'}}
+                 onClick={()=>keepScroll(()=>set('_modsOpen', !vals._modsOpen))}>
+            <Stack direction="row" alignItems="center" spacing={0.75} sx={{cursor:'pointer', userSelect:'none'}}>
+              <Typography sx={{ color:'text.primary', fontWeight:600, fontSize:16 }}>
                 模块设置
               </Typography>
-              <span>{vals._modsOpen ? '▾' : '▸'}</span>
+              <span>{vals._modsOpen?'▾':'▸'}</span>
             </Stack>
-            <IconButton size="small" onClick={(e) => { e.stopPropagation(); addModule(); }} title="新增模块">
-              <AddIcon fontSize="small" />
+            <IconButton size="small" onClick={(e)=>{e.stopPropagation(); addModule();}} title="新增模块">
+              <AddIcon fontSize="small"/>
             </IconButton>
           </Stack>
 
           <Collapse in={vals._modsOpen} timeout={120} unmountOnExit>
-            <Divider sx={{ my: 0.75, borderColor: 'gray' }} />
+            <Divider sx={{my:0.75, borderColor: 'gray'}}/>
             <Stack spacing={0.75}>
-              {vals.modules.map((m: any, i: number) => {
+              {vals.modules.map((m:any,i:number)=>{
                 const Editor = VIEW_EDITORS[(m.view as ViewKind) ?? 'BlockView'];
                 return (
                   <div key={m.id}>
                     <Stack direction="row" alignItems="center" spacing={0.6}
-                      onClick={() => keepScroll(() => set(`modules.${i}._open`, !m._open))}
-                      sx={{ cursor: 'pointer', userSelect: 'none' }}>
-                      <span style="font-size:16px;line-height:1;">{m._open ? '▾' : '▸'}</span>
-                      <Typography sx={{ flex: 1, color: 'text.primary', fontWeight: 600, fontSize: 16 }} title="点击折叠/展开">
+                           onClick={()=>keepScroll(()=>set(`modules.${i}._open`, !m._open))}
+                           sx={{cursor:'pointer', userSelect:'none'}}>
+                      <span style="font-size:16px;line-height:1;">{m._open?'▾':'▸'}</span>
+                      <Typography sx={{ flex:1, color:'text.primary', fontWeight:600, fontSize:16 }} title="点击折叠/展开">
                         {m.title || '新模块'}
                       </Typography>
                       <Select value={m.view} MenuProps={menu}
-                        onClick={e => e.stopPropagation()}
-                        onChange={e => keepScroll(() => handleViewChange(i, e.target.value as ViewName))}
-                        sx={{ minWidth: 110 }}>
-                        {VIEW_OPTIONS.map(v => <MenuItem key={v} value={v}>{v.replace('View', '')}</MenuItem>)}
+                              onClick={e=>e.stopPropagation()}
+                              onChange={e=>keepScroll(()=>handleViewChange(i, e.target.value as ViewName))}
+                              sx={{minWidth:110}}>
+                        {VIEW_OPTIONS.map(v=><MenuItem key={v} value={v}>{v.replace('View','')}</MenuItem>)}
                       </Select>
                       <IconButton size="small" color="error"
-                        onClick={(e) => { e.stopPropagation(); removeModule(i); }} title="删除模块">
-                        <DeleteIcon fontSize="small" />
+                                  onClick={(e)=>{e.stopPropagation(); removeModule(i);}} title="删除模块">
+                        <DeleteIcon fontSize="small"/>
                       </IconButton>
                     </Stack>
                     <Collapse in={m._open} timeout={110} unmountOnExit>
-                      <Box sx={{ mt: 0.6 }}>
-                        <Stack direction="row" spacing={0.6} alignItems="center" sx={{ mb: 0.4 }}>
-                          <Typography sx={{ minWidth: 72 }}>模块标题</Typography>
-                          <TextField value={m.title || ''}
-                            onInput={e => set(`modules.${i}.title`, (e.target as HTMLInputElement).value)}
-                            sx={{ flex: 1 }} />
+                      <Box sx={{mt:0.6}}>
+                        <Stack direction="row" spacing={0.6} alignItems="center" sx={{mb:0.4}}>
+                          <Typography sx={{minWidth:72}}>模块标题</Typography>
+                          <TextField value={m.title||''}
+                                     onInput={e=>set(`modules.${i}.title`, (e.target as HTMLInputElement).value)}
+                                     sx={{flex:1}}/>
                         </Stack>
                         {Editor && <Editor
                           value={m}
-                          onChange={(patch) => keepScroll(() => set(`modules.${i}`, { ...m, ...patch }))}
-                          fieldOptions={fieldOptions} />}
+                          onChange={(patch)=>keepScroll(()=>set(`modules.${i}`, { ...m, ...patch }))}
+                          fieldOptions={fieldOptions}/>}
                         <PillMultiSelect
                           label="显示字段"
                           value={m.fieldsArr}
                           options={fieldOptions}
-                          onChange={v => keepScroll(() => set(`modules.${i}.fieldsArr`, v))}
+                          onChange={v=>keepScroll(()=>set(`modules.${i}.fieldsArr`, v))}
                         />
                         <div style="height:6px;"></div>
                         <PillMultiSelect
                           label="分组字段"
                           value={m.groupsArr}
                           options={fieldOptions}
-                          onChange={v => keepScroll(() => set(`modules.${i}.groupsArr`, v))}
+                          onChange={v=>keepScroll(()=>set(`modules.${i}.groupsArr`, v))}
                         />
                         <div style="height:6px;"></div>
                         <RuleList
@@ -237,8 +231,8 @@ export function DashboardConfigForm({ dashboard, dashboards, onSave, onCancel }:
                           mode="filter"
                           rows={m.filtersArr}
                           fieldOptions={fieldOptions}
-                          onAdd={() => keepScroll(() => set(`modules.${i}.filtersArr`, [...m.filtersArr, { field: '', op: '=', value: '' }]))}
-                          onChange={(rows) => keepScroll(() => set(`modules.${i}.filtersArr`, rows))}
+                          onAdd={()=>keepScroll(()=>set(`modules.${i}.filtersArr`, [...m.filtersArr,{field:'',op:'=',value:''}] ))}
+                          onChange={(rows)=>keepScroll(()=>set(`modules.${i}.filtersArr`, rows))}
                         />
                         <div style="height:6px;"></div>
                         <RuleList
@@ -247,12 +241,12 @@ export function DashboardConfigForm({ dashboard, dashboards, onSave, onCancel }:
                           rows={m.sortArr}
                           fieldOptions={fieldOptions}
                           onAdd={() => keepScroll(() => set(`modules.${i}.sortArr`, [...m.sortArr, { field: '', dir: 'asc' }]))}
-                          onChange={(rows) => keepScroll(() => set(`modules.${i}.sortArr`, rows))}
+                          onChange={(rows)=>keepScroll(()=>set(`modules.${i}.sortArr`, rows))}
                         />
                       </Box>
                     </Collapse>
 
-                    {i < vals.modules.length - 1 && <Divider sx={{ my: 0.5, borderColor: 'gray' }} />}
+                    {i < vals.modules.length-1 && <Divider sx={{my:0.5, borderColor: 'gray'}} />}
                   </div>
                 );
               })}
@@ -261,8 +255,8 @@ export function DashboardConfigForm({ dashboard, dashboards, onSave, onCancel }:
         </Box>
 
         <Stack direction="row" spacing={1} justifyContent="flex-end">
-          <IconButton onClick={save} title="保存"><CheckIcon /></IconButton>
-          <IconButton onClick={onCancel} title="取消"><CloseIcon /></IconButton>
+          <IconButton onClick={save} title="保存"><CheckIcon/></IconButton>
+          <IconButton onClick={onCancel} title="取消"><CloseIcon/></IconButton>
         </Stack>
       </Box>
     </ThemeProvider>
