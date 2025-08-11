@@ -1,4 +1,4 @@
-// taskService.ts —— 处理「勾选任务」的业务服务
+// src\core\services\taskService.ts
 import { DataStore } from './dataStore';
 import { markTaskDone } from '@core/utils/mark';
 import { TFile } from 'obsidian';                 // ✅ 运行时需要值，不能用 type-only

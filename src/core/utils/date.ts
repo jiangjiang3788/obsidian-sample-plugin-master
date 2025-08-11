@@ -1,3 +1,7 @@
+
+
+// src/core/utils/date.ts
+
 /**
  * 统一使用 dayjs，彻底移除 moment‑shim         (#5)
  * 提供 todayISO / nowHHMM 等常用工具函数

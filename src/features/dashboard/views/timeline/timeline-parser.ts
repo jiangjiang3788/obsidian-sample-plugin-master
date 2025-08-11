@@ -21,16 +21,6 @@ export interface TaskBlock extends TimelineTask {
   blockEndMinute: number;
 }
 
-/**
- * 新的分类配置结构，用于 `viewConfig.categories`
- */
-export interface CategoryConfig { // 导出这个接口以便其他地方使用
-    color: string;
-    files: string[]; // 文件名或路径前缀数组
-}
-export type CategoriesMap = Record<string, CategoryConfig>; // 导出这个类型
-
-
 const DATE_FORMAT = 'YYYY-MM-DD';
 
 /**
@@ -162,42 +152,4 @@ export function splitTaskIntoDayBlocks(task: TimelineTask, dateRange: [dayjs.Day
   }
 
   return blocks;
-}
-
-/**
- * 计算给定任务块列表中，每个分类的总时长（小时）
- * @param blocks - TaskBlock 数组
- * @param categories - 新的分类配置对象
- * @param untrackedLabel - 未追踪任务的标签
- * @returns 一个记录 { categoryName: hours } 的对象
- */
-export function calculateCategoryHours(blocks: TaskBlock[], categories: CategoriesMap, untrackedLabel: string): Record<string, number> {
-    const hoursMap: Record<string, number> = {};
-
-    // 初始化所有已定义分类的时长为 0
-    for (const categoryName in categories) {
-        hoursMap[categoryName] = 0;
-    }
-    hoursMap[untrackedLabel] = 0; // 初始化未记录分类
-
-    for (const block of blocks) {
-        const durationHours = (block.blockEndMinute - block.blockStartMinute) / 60;
-        let foundCategory = false;
-
-        // 遍历配置中的每个分类
-        for (const [categoryName, config] of Object.entries(categories)) {
-            // 检查任务的文件路径是否匹配该分类下的任何一个文件/前缀
-            // 确保 block.fileName 存在
-            if (block.fileName && config.files.some(prefix => block.fileName.includes(prefix))) {
-                hoursMap[categoryName] = (hoursMap[categoryName] || 0) + durationHours;
-                foundCategory = true;
-                break; // 找到第一个匹配的分类后就停止，避免重复计算
-            }
-        }
-        // 如果没有找到匹配的分类，则归入“未记录”
-        if (!foundCategory) {
-          hoursMap[untrackedLabel] = (hoursMap[untrackedLabel] || 0) + durationHours;
-        }
-    }
-    return hoursMap;
 }

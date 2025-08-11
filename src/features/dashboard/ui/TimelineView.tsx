@@ -291,7 +291,7 @@ export function TimelineView({ items, dateRange, module }: TimelineViewProps) {
 
   // 6. 渲染
   if (timelineTasks.length === 0) {
-    return <div class="view-empty-state">当前范围内没有可供可视化的任务。请确保任务已完成、有完成日期，并包含 `(时间:: HH:mm)` 和 `(时长:: mm)` 格式的元数据。</div>
+    return <div style={{ color: 'var(--text-faint)', textAlign: 'center', padding: '20px' }}>当前范围内没有可供可视化的任务。请确保任务已完成、有完成日期，并包含 `(时间:: HH:mm)` 和 `(时长:: mm)` 格式的元数据。</div>
   }
 
   // 6a. 渲染周视图

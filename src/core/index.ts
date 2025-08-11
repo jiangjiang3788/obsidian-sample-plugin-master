@@ -1,3 +1,4 @@
+// src/core/index.ts
 export * from './domain/constants';
 export * from './domain/categoryColorMap';
 export * from './domain/schema';

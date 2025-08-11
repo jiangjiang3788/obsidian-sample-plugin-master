@@ -1,4 +1,4 @@
-// utils/inputSettings.ts 
+// src/core/utils/inputSettings.ts
 import type { App } from 'obsidian';
 import type ThinkPlugin from '../main';
 

@@ -27,43 +27,36 @@ function keepScroll(fn:()=>void){
   requestAnimationFrame(()=>{ window.scrollTo({top:y}); requestAnimationFrame(()=>window.scrollTo({top:y})); });
 }
 
-// ======================= 新增：所有视图模块的默认配置 =======================
+// ======================= 所有视图模块的默认配置 =======================
 const genId = ()=>Date.now().toString(36)+Math.random().toString(36).slice(2);
 
 // 【关键修改】将所有模块的默认配置集中在此处
 const DEFAULT_MODULE_CONFIGS: Record<ViewName, Omit<any, 'id' | '_open'>> = {
   BlockView: {
-    view: 'BlockView', title: '新模块', collapsed: false,
-    filtersArr:[], sortArr:[], fieldsArr:[], groupsArr:['categoryKey'],
-  },
-  ListView: {
-    view: 'ListView', title: '新列表', collapsed: false,
-    filtersArr:[], sortArr:[], fieldsArr:['content'], groupsArr:['fileName'],
+    view: 'BlockView', title: '块视图', collapsed: false,
+    filters:[], sort:[], fields:[], group:'categoryKey',
   },
   TableView: {
-    view: 'TableView', title: '新表格', collapsed: false,
-    filtersArr:[], sortArr:[{field:'doneDate', dir:'desc'}], fieldsArr:['content', 'categoryKey', 'doneDate'], groupsArr:[],
+    view: 'TableView', title: '表格视图', collapsed: false,
+    filters:[], sort:[{field:'date', dir:'desc'}], rowField: 'categoryKey', colField: 'date'
   },
   ExcelView: {
-    view: 'ExcelView', title: '新表格', collapsed: false,
-    filtersArr:[], sortArr:[], fieldsArr:[], groupsArr:[],
+    view: 'ExcelView', title: '数据表格', collapsed: false,
+    filters:[], sort:[],
   },
-  TimelineView: { // <-- 【关键修改】此处使用最新的、合理的 TimelineView 默认配置
-    view: 'TimelineView', title: '新时间轴', collapsed: false,
-    filtersArr:[], sortArr:[], fieldsArr:[], groupsArr:[],
+  TimelineView: {
+    view: 'TimelineView', title: '时间轴', collapsed: false,
+    filters:[], sort:[],
     viewConfig: {
-      hourHeight: 50,
-      startHour: 7,
-      endHour: 24,
-      categories: { // 使用新的 categories 结构
-        "健康": { color: "#34d399", files: ["00-健康打卡", "2-1健康", "2-2三餐"] },
-        "生活": { color: "#fbbf24", files: ["2-3生活"] },
-        "思考": { color: "#a78bfa", files: ["2-4思考"] },
-        "电脑": { color: "#60a5fa", files: ["2-5电脑"] },
-        "工作": { color: "#f87171", files: ["2-6工作"] },
-        "其他": { color: "#a1a1aa", files: ["2-0其他"] },
+      defaultHourHeight: 50,
+      WEEKLY_AGGREGATION_THRESHOLD_DAYS: 35,
+      MAX_HOURS_PER_DAY: 24,
+      UNTRACKED_LABEL: "未记录",
+      categoryMap: {
+        "健康": "健康", "生活": "生活", "思考": "思考", "电脑": "电脑", "工作": "工作", "其他": "其他"
       },
-      progressOrder: ["健康", "生活", "思考", "电脑", "工作", "其他"], // 默认进度条顺序
+      colorPalette: ["#34d399", "#fbbf24", "#a78bfa", "#60a5fa", "#f87171", "#a1a1aa"],
+      progressOrder: ["健康", "生活", "思考", "电脑", "工作", "其他"],
     }
   }
 };
@@ -89,7 +82,7 @@ export function DashboardConfigForm({ dashboard, dashboards, onSave, onCancel }:
       filtersArr:(m.filters??[]).map(x=>({...x})),
       sortArr   :(m.sort??[]   ).map(x=>({...x})),
       fieldsArr :m.fields??[],
-      groupsArr :(m as any).groups??[],
+      groupsArr :[m.group].filter(Boolean)??[],
       _open:true,
     })),
     _baseOpen:true,_modsOpen:true,
@@ -116,7 +109,7 @@ export function DashboardConfigForm({ dashboard, dashboards, onSave, onCancel }:
     const updatedModule = {
       ...currentModule,
       ...newModuleConfig,
-      title: currentModule.title,
+      title: currentModule.title, // 保留用户已修改的标题
     };
 
     const newModules = [...vals.modules];
@@ -134,7 +127,7 @@ export function DashboardConfigForm({ dashboard, dashboards, onSave, onCancel }:
         filters:(filtersArr||[]).filter((f:any)=>f.field).map((f:any)=>({...f})),
         sort   :(sortArr   ||[]).filter((s:any)=>s.field).map((s:any)=>({...s})),
         fields:fieldsArr||[],
-        ...(groupsArr && groupsArr.length? { groups:groupsArr } : {}),
+        group: groupsArr?.[0] || undefined,
       })),
     };
     onSave(cleaned);
@@ -235,8 +228,8 @@ export function DashboardConfigForm({ dashboard, dashboards, onSave, onCancel }:
                                      sx={{flex:1}}/>
                         </Stack>
                         {Editor && <Editor
-                          value={m.viewConfig || {}}
-                          onChange={(patch)=>keepScroll(()=>set(`modules.${i}.viewConfig`, { ...(m.viewConfig || {}), ...patch }))}
+                          value={m}
+                          onChange={(patch)=>keepScroll(()=>set(`modules.${i}`, { ...m, ...patch }))}
                           fieldOptions={fieldOptions}/>}
                         <PillMultiSelect
                           label="显示字段"
