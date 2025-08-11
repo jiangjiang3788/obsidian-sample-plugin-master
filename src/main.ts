@@ -7,7 +7,7 @@ import { DataStore }        from '@core/services/dataStore';
 
 import * as DashboardFeature   from '@features/dashboard';
 import * as QuickInputFeature  from '@features/quick-input';
-import * as SettingsFeature    from '@features/settings';
+import * as CoreSettings       from '@core/settings/index'; // <-- THE FIX IS HERE
 
 import type { DashboardConfig } from '@core/domain/schema';
 import type { InputSettings }   from '@core/utils/inputSettings';
@@ -25,7 +25,7 @@ const DEFAULT_SETTINGS: ThinkSettings = {
   inputSettings: { base: {}, themes: [] },
 };
 
-// ---------- Feature Context ---------- //
+// ---------- Feature & Core Context ---------- //
 
 export interface ThinkContext {
   app:       App;
@@ -69,7 +69,7 @@ export default class ThinkPlugin extends Plugin {
     this.dataStore = new DataStore(this.platform);
     await this.dataStore.initialScan();
 
-    // 3) 注入 Feature Context
+    // 3) 注入 Feature & Core Context
     const ctx: ThinkContext = {
       app:       this.app,
       plugin:    this,
@@ -79,7 +79,7 @@ export default class ThinkPlugin extends Plugin {
 
     DashboardFeature.setup?.(ctx);
     QuickInputFeature.setup?.(ctx);
-    SettingsFeature.setup?.(ctx);  // ← 注册设置页
+    CoreSettings.setup?.(ctx);  // ← 注册设置页 (从新的 core/settings 模块)
   }
 
   onunload(): void {
@@ -147,6 +147,7 @@ export default class ThinkPlugin extends Plugin {
   /** 打开设置页并（可选）跳转定位 */
   openSettingsForDashboard(name?: string) {
     this.app.setting.open();
+    // 确保设置页tab的ID与 SettingsTab.ts 中定义的 `id` 字段一致
     this.app.setting.setTabById?.('think-settings');
 
     if (name) {

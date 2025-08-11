@@ -1,4 +1,4 @@
-// src/features/settings/ui/DashboardConfigForm.tsx
+// src/features/dashboard/settings/DashboardConfigForm.tsx
 /** @jsxImportSource preact */
 import { h } from 'preact';
 import { useMemo, useState } from 'preact/hooks';
@@ -12,7 +12,7 @@ import CheckIcon from '@mui/icons-material/Check';
 import CloseIcon from '@mui/icons-material/Close';
 
 import { CORE_FIELDS, DashboardConfig, ModuleConfig } from '@core/domain/schema';
-import { VIEW_OPTIONS, ViewName } from '@features/dashboard/ui'; // 确保 ViewName 被导出
+import { VIEW_OPTIONS, ViewName } from '@features/dashboard/ui';
 import { theme as baseTheme } from '@shared/styles/mui-theme';
 import { PillMultiSelect } from '@shared/components/form/PillMultiSelect';
 import { RuleList } from '@shared/components/form/RuleList';

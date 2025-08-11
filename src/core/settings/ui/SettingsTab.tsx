@@ -1,3 +1,4 @@
+// src/core/settings/ui/SettingsTab.tsx
 /** @jsxImportSource preact */
 import { render } from 'preact';
 import { useMemo, useState, useEffect } from 'preact/hooks';
@@ -11,8 +12,8 @@ import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 
-// ⬇️ 用新的、本目录下的表单
-import { DashboardConfigForm } from './DashboardConfigForm';
+// ⬇️ 从新的 dashboard feature 路径导入
+import { DashboardConfigForm } from '@features/dashboard/settings/DashboardConfigForm';
 
 import { InputSettingsTable } from './InputSettingsTable';
 import { theme as baseTheme } from '@shared/styles/mui-theme';
@@ -159,14 +160,11 @@ function SettingsRoot({ plugin }: { plugin: ThinkPlugin }) {
 }
 
 export class SettingsTab extends PluginSettingTab {
-  private plugin: ThinkPlugin;
-
   // ⬇️ 给设置页一个固定 id，方便 openSettingsForDashboard() 精确跳转
   id = 'think-settings';
 
-  constructor(app: any, plugin: ThinkPlugin) {
+  constructor(public app: any, private plugin: ThinkPlugin) {
     super(app, plugin);
-    this.plugin = plugin;
   }
 
   display(): void {
