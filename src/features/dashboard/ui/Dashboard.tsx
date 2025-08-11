@@ -64,17 +64,17 @@ export function Dashboard({ config, dataStore, plugin }: Props) {
           <div>未知视图：{m.view}</div>
         </ModulePanel>
       );
-    
-    // 【核心改动】对每个模块的最终数据进行缓存
+    
+    // 【核心改动】对每个模块的最终数据进行缓存
     const moduleItems = useMemo(() => {
-        console.log(`Calculating items for module: ${m.title}`);
-        // 1. 从预处理好的 baseFilteredItems 开始
-        let items = baseFilteredItems;
-        // 2. 只应用模块自身的过滤和排序规则
-        items = filterByRules(items, m.filters || []);
-        items = sortItems(items, m.sort || []);
-        return items;
-    }, [baseFilteredItems, m.filters, m.sort]); // 依赖项是基础数据和模块自身的规则
+        console.log(`Calculating items for module: ${m.title}`);
+        // 1. 从预处理好的 baseFilteredItems 开始
+        let items = baseFilteredItems;
+        // 2. 只应用模块自身的过滤和排序规则
+        items = filterByRules(items, m.filters || []);
+        items = sortItems(items, m.sort || []);
+        return items;
+    }, [baseFilteredItems, m.filters, m.sort]); // 依赖项是基础数据和模块自身的规则
 
     // 视图专属的 props (vp) 准备逻辑保持不变
     const vp: any = { ...(m.props || {}) };
@@ -106,29 +106,32 @@ export function Dashboard({ config, dataStore, plugin }: Props) {
   return (
     <DashboardContext.Provider value={{ onMarkItemDone: handleMarkItemDone }}>
       <div>
-        {/* 顶栏 UI 保持不变 */}
-        <div class="tp-toolbar" style="margin-bottom:8px;">
-            {['年', '季', '月', '周', '天'].map(v => (
-                <button onClick={() => setView(v)} class={v === view ? 'active' : ''}>{v}</button>
-            ))}
-            <button disabled style="font-weight:bold;margin:0 4px;background:#fff;">{fmt(date, view)}</button>
-            <button onClick={() => setDate(date.clone().subtract(1, unit(view)))}>←</button>
-            <button onClick={() => setDate(date.clone().add(1, unit(view)))}>→</button>
-            <button onClick={() => setDate(dayjs())}>＝</button>
-            <input
-              placeholder="快速过滤…"
-              style="margin-left:4px;"
-              value={kw}
-              onInput={e => setKw((e.target as HTMLInputElement).value)}
-            />
-            <button
-              style="margin-left:4px;"
-              onClick={() => plugin.openSettingsForDashboard(config.name)}
-              title="在插件设置中编辑本仪表盘"
-            >
-              ⚙︎
-            </button>
-        </div>
+        {/* --- 修改 (#12): 条件渲染工具栏 --- */}
+        {!config.hideToolbar && (
+            <div class="tp-toolbar" style="margin-bottom:8px;">
+                {['年', '季', '月', '周', '天'].map(v => (
+                    <button onClick={() => setView(v)} class={v === view ? 'active' : ''}>{v}</button>
+                ))}
+                <button disabled style="font-weight:bold;margin:0 4px;background:#fff;">{fmt(date, view)}</button>
+                <button onClick={() => setDate(date.clone().subtract(1, unit(view)))}>←</button>
+                <button onClick={() => setDate(date.clone().add(1, unit(view)))}>→</button>
+                <button onClick={() => setDate(dayjs())}>＝</button>
+                <input
+                  placeholder="快速过滤…"
+                  style="margin-left:4px;"
+                  value={kw}
+                  onInput={e => setKw((e.target as HTMLInputElement).value)}
+                />
+                <button
+                  style="margin-left:4px;"
+                  onClick={() => plugin.openSettingsForDashboard(config.name)}
+                  title="在插件设置中编辑本仪表盘"
+                >
+                  ⚙︎
+                </button>
+            </div>
+        )}
+        {/* --- 修改结束 --- */}
 
         {/* 模块循环，现在使用重构后的 renderModule */}
         {config.modules.map(renderModule)}

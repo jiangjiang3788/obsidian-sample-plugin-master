@@ -37,7 +37,7 @@ export interface Item {
   created: number;                       // file.stat.ctime
   modified: number;                      // file.stat.mtime
   filename?: string;                       // 兼容旧用法
-  header?: string;
+  header?: string;                           // <--- 已存在，很好！
 
   /** 展示性元 */
   icon?: string;
@@ -103,6 +103,7 @@ export interface DashboardConfig {
   initialDate?: string;
   modules: ModuleConfig[];
   overrides?: DashboardOverrides;
+  hideToolbar?: boolean; // <--- 新增 (#12): 隐藏顶部工具栏的选项
 }
 
 /* ---------- 字段集合 ---------- */
@@ -117,7 +118,7 @@ export const CORE_FIELDS = [
   'startISO', 'endISO', 'startMs', 'endMs',
 
   // 文件元
-  'filename', 'created', 'modified',
+  'filename', 'header', 'created', 'modified', // <--- 新增 (#6): 将 'header' 加入核心字段
   'file.path', 'file.line', 'file.basename',
 
   // 兼容日期字段
