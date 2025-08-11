@@ -1,4 +1,4 @@
-// src/features/settings/ui/ModuleEditors/TimelineViewEditor.tsx
+// src/features/dashboard/settings/ModuleEditors/TimelineViewEditor.tsx
 /** @jsxImportSource preact */
 import { h } from 'preact';
 import { Box, Stack, Typography, TextField, Button, IconButton } from '@mui/material';
@@ -6,6 +6,36 @@ import { ViewEditorProps } from './registry';
 import { ListEditor } from '@shared/components/form/ListEditor';
 import AddIcon from '@mui/icons-material/AddCircleOutline';
 import DeleteIcon from '@mui/icons-material/RemoveCircleOutline';
+
+/**
+ * @fileoverview TimelineView 的设置编辑器。
+ * 新增: 导出该视图的默认配置，作为单一真源。
+ */
+
+// [REFACTOR] 导出默认配置
+export const DEFAULT_CONFIG = {
+    view: 'TimelineView' as const,
+    title: '时间轴',
+    collapsed: false,
+    filters: [],
+    sort: [],
+    viewConfig: {
+      defaultHourHeight: 50,
+      WEEKLY_AGGREGATION_THRESHOLD_DAYS: 35,
+      MAX_HOURS_PER_DAY: 24,
+      UNTRACKED_LABEL: "未记录",
+      // 新版本中，这个映射改由 categories 字段提供，但保留一个示例
+      categoryMap: {},
+      categories: { // 提供一个更结构化的默认值
+          "工作": { color: "#60a5fa", files: ["工作", "Work"] },
+          "学习": { color: "#34d399", files: ["学习", "Study"] },
+          "生活": { color: "#fbbf24", files: ["生活", "Life"] },
+      },
+      colorPalette: ["#34d399", "#fbbf24", "#a78bfa", "#60a5fa", "#f87171", "#a1a1aa"],
+      progressOrder: ["工作", "学习", "生活"],
+    }
+};
+
 
 // 定义新的 CategoryConfig 类型
 interface CategoryConfig {
@@ -16,7 +46,12 @@ type CategoriesMap = Record<string, CategoryConfig>;
 
 export function TimelineViewEditor({ value, onChange }: ViewEditorProps) {
   // `value` 包含了整个 viewConfig，我们需要从中提取 categories
-  const categories: CategoriesMap = value.categories || {};
+  const viewConfig = value.viewConfig || {};
+  const categories: CategoriesMap = viewConfig.categories || {};
+
+  const handleConfigChange = (patch: Record<string, any>) => {
+    onChange({ viewConfig: { ...viewConfig, ...patch } });
+  };
 
   const handleCategoryNameChange = (oldName: string, newName: string) => {
     if (oldName === newName || !newName) return;
@@ -24,11 +59,11 @@ export function TimelineViewEditor({ value, onChange }: ViewEditorProps) {
     for (const [key, catConfig] of Object.entries(categories)) {
       newCategories[key === oldName ? newName : key] = catConfig;
     }
-    onChange({ categories: newCategories });
+    handleConfigChange({ categories: newCategories });
   };
 
   const handleCategoryColorChange = (name: string, newColor: string) => {
-    onChange({
+    handleConfigChange({
       categories: {
         ...categories,
         [name]: {
@@ -40,7 +75,7 @@ export function TimelineViewEditor({ value, onChange }: ViewEditorProps) {
   };
 
   const handleCategoryFilesChange = (name: string, newFiles: string[]) => {
-    onChange({
+    handleConfigChange({
       categories: {
         ...categories,
         [name]: {
@@ -57,7 +92,7 @@ export function TimelineViewEditor({ value, onChange }: ViewEditorProps) {
     while (categories[newName]) {
       newName = `新分类${i++}`;
     }
-    onChange({
+    handleConfigChange({
       categories: {
         ...categories,
         [newName]: { color: '#60a5fa', files: [] }, // 默认颜色和空文件列表
@@ -67,11 +102,11 @@ export function TimelineViewEditor({ value, onChange }: ViewEditorProps) {
 
   const removeCategory = (nameToRemove: string) => {
     const { [nameToRemove]: _, ...rest } = categories;
-    onChange({ categories: rest });
+    handleConfigChange({ categories: rest });
   };
 
   const handleProgressOrderChange = (newOrder: string[]) => {
-    onChange({ progressOrder: newOrder });
+    handleConfigChange({ progressOrder: newOrder });
   };
 
   return (
@@ -91,7 +126,7 @@ export function TimelineViewEditor({ value, onChange }: ViewEditorProps) {
               <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1 }}>
                 <TextField
                   label="分类名"
-                  value={name}
+                  defaultValue={name} // Use defaultValue to avoid controlled/uncontrolled warning on key change
                   onBlur={e => handleCategoryNameChange(name, (e.target as HTMLInputElement).value.trim())}
                   sx={{ flex: 1 }}
                 />
@@ -130,7 +165,7 @@ export function TimelineViewEditor({ value, onChange }: ViewEditorProps) {
           进度条显示顺序
         </Typography>
         <ListEditor
-          value={value.progressOrder || []}
+          value={viewConfig.progressOrder || []}
           onChange={handleProgressOrderChange}
           placeholder="分类名 (填写上方定义的分类名)"
         />
@@ -147,8 +182,8 @@ export function TimelineViewEditor({ value, onChange }: ViewEditorProps) {
         <TextField
           label="像素值 (越高越精细)"
           type="number"
-          value={value.hourHeight || 50}
-          onChange={e => onChange({ hourHeight: Number((e.target as HTMLInputElement).value) })}
+          value={viewConfig.defaultHourHeight || 50}
+          onChange={e => handleConfigChange({ defaultHourHeight: Number((e.target as HTMLInputElement).value) })}
           inputProps={{ min: 20, max: 200 }}
           fullWidth
         />
