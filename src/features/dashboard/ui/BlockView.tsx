@@ -1,29 +1,30 @@
 // src/features/dashboard/ui/BlockView.tsx
-// 默认按 categoryKey 分组；颜色/标签基于 categoryKey
 import { h, JSX } from 'preact';
+import { useContext } from 'preact/hooks'; // [REFACTOR] Import useContext hook.
 import { Item, readField } from '@core/domain/schema';
 import { getCategoryColor } from '@core/domain/categoryColorMap';
 import { makeObsUri } from '@core/utils/obsidian';
 import { TaskCheckbox } from '@shared/components/TaskCheckbox';
-
-// [REFACTOR] DataStore has been removed from this component.
+import { DashboardContext } from './DashboardContext'; // [REFACTOR] Import the context.
 
 interface BlockViewProps {
   items: Item[];
-  groupField?: string;   // ← 未传则默认 categoryKey
+  groupField?: string;
   showMeta?: boolean;
   fields?: string[];
-  onMarkItemDone: (itemId: string) => void; // [REFACTOR] Add a callback prop for handling actions.
+  // [REFACTOR] onMarkItemDone prop is no longer needed.
 }
 
 const isDone = (k?: string) => /\/done$/i.test(k || '');
 
 export function BlockView(props: BlockViewProps) {
-  const { showMeta = true, onMarkItemDone } = props; // [REFACTOR] Destructure the new prop.
+  // [REFACTOR] Consume the context to get the required function.
+  const { onMarkItemDone } = useContext(DashboardContext);
+  
+  const { showMeta = true } = props;
   const groupField = props.groupField || 'categoryKey';
   let items = props.items;
 
-  /* ------------------------- 分组 ------------------------- */
   let grouped: Record<string, Item[]> | null = null;
   let groupKeys: string[] = [];
   if (groupField) {
@@ -39,15 +40,13 @@ export function BlockView(props: BlockViewProps) {
     groupKeys.sort();
   }
 
-  /* ------------------------- 渲染 ------------------------- */
-
   const renderTaskLine = (item: Item) => {
     const done = isDone(item.categoryKey);
     return (
       <div style="margin-bottom:4px;line-height:1.5;">
         <TaskCheckbox
           done={done}
-          // [REFACTOR] Use the callback from props instead of the global DataStore instance.
+          // [REFACTOR] Use the function obtained from the context.
           onMarkDone={() => onMarkItemDone(item.id)}
         />
         <a
@@ -60,9 +59,7 @@ export function BlockView(props: BlockViewProps) {
         </a>
         {item.icon && <span class="tag-pill">{item.icon}</span>}
         {item.tags.map(t => (
-          <span class="tag-pill" key={t}>
-            {t}
-          </span>
+          <span class="tag-pill" key={t}>{t}</span>
         ))}
       </div>
     );
@@ -71,42 +68,23 @@ export function BlockView(props: BlockViewProps) {
   const renderBlock = (item: Item) => {
     const base = (item.categoryKey || '').split('/')[0] || '';
     return (
-      <div
-        style="
-         display:grid;
-         grid-template-columns:auto minmax(180px,1fr);
-         align-items:start;
-         gap:8px;
-         margin-bottom:8px;
-        "
-      >
+      <div style="display:grid; grid-template-columns:auto minmax(180px,1fr); align-items:start; gap:8px; margin-bottom:8px;">
         {showMeta && (
           <div style="font-size:90%;display:flex;flex-wrap:wrap;gap:4px;">
-            <span
-              class="tag-pill"
-              style={`background:${getCategoryColor(item.categoryKey)};`}
-            >
-              {base}
-            </span>
+            <span class="tag-pill" style={`background:${getCategoryColor(item.categoryKey)};`}>{base}</span>
             {item.date && <span class="tag-pill">{item.date}</span>}
-            {item.extra['图标'] && (
-              <span class="tag-pill">{String(item.extra['图标'])}</span>
-            )}
+            {item.extra['图标'] && (<span class="tag-pill">{String(item.extra['图标'])}</span>)}
           </div>
         )}
         <div style="white-space:pre-wrap;line-height:1.5;">
-          <a href={makeObsUri(item)} target="_blank" rel="noopener">
-            {item.content}
-          </a>
+          <a href={makeObsUri(item)} target="_blank" rel="noopener">{item.content}</a>
         </div>
       </div>
     );
   };
 
-  const renderItem = (it: Item) =>
-    it.type === 'task' ? renderTaskLine(it) : renderBlock(it);
+  const renderItem = (it: Item) => it.type === 'task' ? renderTaskLine(it) : renderBlock(it);
 
-  /* ------------------------- 输出 ------------------------- */
   return (
     <div>
       {grouped

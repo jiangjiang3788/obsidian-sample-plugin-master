@@ -1,23 +1,25 @@
 // src/features/dashboard/ui/TableView.tsx
-// 复选框/删除线依据 categoryKey；其余不变
 import { h } from 'preact';
+import { useContext } from 'preact/hooks'; // [REFACTOR] Import useContext hook.
 import { Item, readField } from '@core/domain/schema';
 import { makeObsUri } from '@core/utils/obsidian';
 import { EMPTY_LABEL } from '@core/domain/constants';
 import { TaskCheckbox } from '@shared/components/TaskCheckbox';
-
-// [REFACTOR] DataStore has been removed from this component.
+import { DashboardContext } from './DashboardContext'; // [REFACTOR] Import the context.
 
 interface TableViewProps {
   items: Item[];
   rowField: string;
   colField: string;
-  onMarkItemDone: (itemId: string) => void; // [REFACTOR] Add a callback prop for handling actions.
+  // [REFACTOR] onMarkItemDone prop is no longer needed.
 }
 
 const isDone = (k?: string) => /\/done$/i.test(k || '');
 
-export function TableView({ items, rowField, colField, onMarkItemDone }: TableViewProps) {
+export function TableView({ items, rowField, colField }: TableViewProps) {
+  // [REFACTOR] Consume the context to get the required function.
+  const { onMarkItemDone } = useContext(DashboardContext);
+
   if (!rowField || !colField)
     return <div>（TableView 需要配置 rowField 和 colField）</div>;
 
@@ -40,7 +42,6 @@ export function TableView({ items, rowField, colField, onMarkItemDone }: TableVi
   rowVals.sort();
   colVals.sort();
 
-  /* ---------- 单元格内渲染 (Helper) ---------- */
   function renderCellItem(item: Item) {
     if (item.type === 'task') {
       const done = isDone(item.categoryKey);
@@ -48,7 +49,7 @@ export function TableView({ items, rowField, colField, onMarkItemDone }: TableVi
         <span>
           <TaskCheckbox
             done={done}
-            // [REFACTOR] Use the callback from props instead of the global DataStore instance.
+            // [REFACTOR] Use the function obtained from the context.
             onMarkDone={() => onMarkItemDone(item.id)}
           />
           {item.icon && <span class="task-icon">{item.icon}</span>}
@@ -70,26 +71,20 @@ export function TableView({ items, rowField, colField, onMarkItemDone }: TableVi
       <thead>
         <tr>
           <th>{rowField}</th>
-          {colVals.map(c => (
-            <th key={c}>{c}</th>
-          ))}
+          {colVals.map(c => (<th key={c}>{c}</th>))}
         </tr>
       </thead>
       <tbody>
         {rowVals.map(r => (
           <tr key={r}>
-            <td>
-              <strong>{r}</strong>
-            </td>
+            <td><strong>{r}</strong></td>
             {colVals.map(c => {
               const cellItems = matrix[r]?.[c] || [];
               return !cellItems.length ? (
                 <td key={c} class="empty" />
               ) : (
                 <td key={c}>
-                  {cellItems.map(it => (
-                    <div key={it.id}>{renderCellItem(it)}</div>
-                  ))}
+                  {cellItems.map(it => (<div key={it.id}>{renderCellItem(it)}</div>))}
                 </td>
               );
             })}
