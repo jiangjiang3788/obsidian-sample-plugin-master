@@ -28,9 +28,9 @@ interface Props {
 // 在 schema.ts 中，已经有名为 ModuleConfig 的接口，可以直接使用。
 // 如果 DashboardModule 是一个本地增强类型，需要定义它
 interface DashboardModule extends ModuleConfig {
-    id?: string;
-    groups?: string[];
-    viewConfig?: Record<string, any>;
+  id?: string;
+  groups?: string[];
+  viewConfig?: Record<string, any>;
 }
 
 export function Dashboard({ config, dataStore, plugin }: Props) {
@@ -47,24 +47,31 @@ export function Dashboard({ config, dataStore, plugin }: Props) {
     dataStore.subscribe(fn);
     return () => dataStore.unsubscribe(fn);
   }, [dataStore]);
+  
+  // [REFACTOR] Define a handler for marking items as done, to be passed down to child components.
+  const handleMarkItemDone = (itemId: string) => {
+      dataStore.markItemDone(itemId);
+      // We don't need to call force() here because the dataStore will notify its listeners,
+      // which will trigger the state update.
+  };
 
   /* 小工具 */
-  const unit = useMemo(() => 
-    (v: string) => ({ 年: 'year', 季: 'quarter', 月: 'month', 周: 'week', 天: 'day' } as any)[v] ?? 'day', 
-  []);
+  const unit = useMemo(() =>
+    (v: string) => ({ 年: 'year', 季: 'quarter', 月: 'month', 周: 'week', 天: 'day' } as any)[v] ?? 'day',
+    []);
 
-  const fmt = useMemo(() => 
+  const fmt = useMemo(() =>
     (d: dayjs.Dayjs, v: string) =>
       v === '年'
         ? d.format('YYYY年')
         : v === '季'
-        ? `${d.year()}年${QTXT[d.quarter() - 1]}季度`
-        : v === '月'
-        ? d.format('YYYY-MM')
-        : v === '周'
-        ? d.format('YYYY-[W]WW')
-        : d.format('YYYY-MM-DD'),
-  []);
+          ? `${d.year()}年${QTXT[d.quarter() - 1]}季度`
+          : v === '月'
+            ? d.format('YYYY-MM')
+            : v === '周'
+              ? d.format('YYYY-[W]WW')
+              : d.format('YYYY-MM-DD'),
+    []);
 
   const { startDate, endDate } = useMemo(() => getDateRange(date, view), [date, view]);
   const dateRange: [Date, Date] = useMemo(() => [startDate.toDate(), endDate.toDate()], [startDate, endDate]);
@@ -102,9 +109,9 @@ export function Dashboard({ config, dataStore, plugin }: Props) {
         af instanceof TFolder
           ? p.startsWith(target.endsWith('/') ? target : target + '/')
           : af instanceof TFile
-          // 修正： TFile 的 id 是 path + '#line'，所以应该是 startsWith(path + '#')
-          ? p.startsWith(target)
-          : p.startsWith(target.endsWith('/') ? target : target + '/');
+            // 修正： TFile 的 id 是 path + '#line'，所以应该是 startsWith(path + '#')
+            ? p.startsWith(target)
+            : p.startsWith(target.endsWith('/') ? target : target + '/');
       items = items.filter(it => keep(it.id));
     }
 
@@ -123,18 +130,19 @@ export function Dashboard({ config, dataStore, plugin }: Props) {
       vp.colField = m.colField || '';
     }
     if (m.fields?.length) vp.fields = m.fields;
-    
+
     // 传递 module.viewConfig 给 TimelineView
     if (m.view === 'TimelineView' && m.viewConfig) {
-        vp.viewConfig = m.viewConfig;
+      vp.viewConfig = m.viewConfig;
     }
 
     return (
       <ModulePanel module={m}>
         <V
           items={items}
-          module={m}         // 传递完整的模块对象
+          module={m}           // 传递完整的模块对象
           dateRange={dateRange} // 传递日期范围
+          onMarkItemDone={handleMarkItemDone} // [REFACTOR] Pass the handler down to the view component.
           {...vp}
         />
       </ModulePanel>

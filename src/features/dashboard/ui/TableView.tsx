@@ -1,22 +1,23 @@
 // src/features/dashboard/ui/TableView.tsx
 // 复选框/删除线依据 categoryKey；其余不变
 import { h } from 'preact';
-import { JSX } from 'preact';
 import { Item, readField } from '@core/domain/schema';
-import { DataStore } from '@core/services/dataStore';
 import { makeObsUri } from '@core/utils/obsidian';
 import { EMPTY_LABEL } from '@core/domain/constants';
 import { TaskCheckbox } from '@shared/components/TaskCheckbox';
+
+// [REFACTOR] DataStore has been removed from this component.
 
 interface TableViewProps {
   items: Item[];
   rowField: string;
   colField: string;
+  onMarkItemDone: (itemId: string) => void; // [REFACTOR] Add a callback prop for handling actions.
 }
 
 const isDone = (k?: string) => /\/done$/i.test(k || '');
 
-export function TableView({ items, rowField, colField }: TableViewProps) {
+export function TableView({ items, rowField, colField, onMarkItemDone }: TableViewProps) {
   if (!rowField || !colField)
     return <div>（TableView 需要配置 rowField 和 colField）</div>;
 
@@ -38,6 +39,31 @@ export function TableView({ items, rowField, colField }: TableViewProps) {
 
   rowVals.sort();
   colVals.sort();
+
+  /* ---------- 单元格内渲染 (Helper) ---------- */
+  function renderCellItem(item: Item) {
+    if (item.type === 'task') {
+      const done = isDone(item.categoryKey);
+      return (
+        <span>
+          <TaskCheckbox
+            done={done}
+            // [REFACTOR] Use the callback from props instead of the global DataStore instance.
+            onMarkDone={() => onMarkItemDone(item.id)}
+          />
+          {item.icon && <span class="task-icon">{item.icon}</span>}
+          <a href={makeObsUri(item)} target="_blank" rel="noopener" class={done ? 'task-done' : ''}>
+            {item.title}
+          </a>
+        </span>
+      );
+    }
+    return (
+      <a href={makeObsUri(item)} target="_blank" rel="noopener">
+        {item.title}
+      </a>
+    );
+  }
 
   return (
     <table class="think-table">
@@ -71,29 +97,5 @@ export function TableView({ items, rowField, colField }: TableViewProps) {
         ))}
       </tbody>
     </table>
-  );
-}
-
-/* ---------- 单元格内渲染 ---------- */
-function renderCellItem(item: Item) {
-  if (item.type === 'task') {
-    const done = isDone(item.categoryKey);
-    return (
-      <span>
-        <TaskCheckbox
-          done={done}
-          onMarkDone={() => DataStore.instance.markItemDone(item.id)}
-        />
-        {item.icon && <span class="task-icon">{item.icon}</span>}
-        <a href={makeObsUri(item)} target="_blank" rel="noopener" class={done ? 'task-done' : ''}>
-          {item.title}
-        </a>
-      </span>
-    );
-  }
-  return (
-    <a href={makeObsUri(item)} target="_blank" rel="noopener">
-      {item.title}
-    </a>
   );
 }

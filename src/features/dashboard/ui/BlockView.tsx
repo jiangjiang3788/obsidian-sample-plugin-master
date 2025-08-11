@@ -3,21 +3,23 @@
 import { h, JSX } from 'preact';
 import { Item, readField } from '@core/domain/schema';
 import { getCategoryColor } from '@core/domain/categoryColorMap';
-import { DataStore } from '@core/services/dataStore';
 import { makeObsUri } from '@core/utils/obsidian';
 import { TaskCheckbox } from '@shared/components/TaskCheckbox';
+
+// [REFACTOR] DataStore has been removed from this component.
 
 interface BlockViewProps {
   items: Item[];
   groupField?: string;   // ← 未传则默认 categoryKey
   showMeta?: boolean;
   fields?: string[];
+  onMarkItemDone: (itemId: string) => void; // [REFACTOR] Add a callback prop for handling actions.
 }
 
 const isDone = (k?: string) => /\/done$/i.test(k || '');
 
 export function BlockView(props: BlockViewProps) {
-  const { showMeta = true } = props;
+  const { showMeta = true, onMarkItemDone } = props; // [REFACTOR] Destructure the new prop.
   const groupField = props.groupField || 'categoryKey';
   let items = props.items;
 
@@ -45,7 +47,8 @@ export function BlockView(props: BlockViewProps) {
       <div style="margin-bottom:4px;line-height:1.5;">
         <TaskCheckbox
           done={done}
-          onMarkDone={() => DataStore.instance.markItemDone(item.id)}
+          // [REFACTOR] Use the callback from props instead of the global DataStore instance.
+          onMarkDone={() => onMarkItemDone(item.id)}
         />
         <a
           href={makeObsUri(item)}
@@ -70,11 +73,11 @@ export function BlockView(props: BlockViewProps) {
     return (
       <div
         style="
-          display:grid;
-          grid-template-columns:auto minmax(180px,1fr);
-          align-items:start;
-          gap:8px;
-          margin-bottom:8px;
+         display:grid;
+         grid-template-columns:auto minmax(180px,1fr);
+         align-items:start;
+         gap:8px;
+         margin-bottom:8px;
         "
       >
         {showMeta && (
@@ -108,11 +111,11 @@ export function BlockView(props: BlockViewProps) {
     <div>
       {grouped
         ? groupKeys.map(grp => (
-            <div key={grp}>
-              <h5>{grp}</h5>
-              {grouped![grp].map(renderItem)}
-            </div>
-          ))
+          <div key={grp}>
+            <h5>{grp}</h5>
+            {grouped![grp].map(renderItem)}
+          </div>
+        ))
         : items.map(renderItem)}
     </div>
   );
