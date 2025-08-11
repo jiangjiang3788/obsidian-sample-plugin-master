@@ -145,7 +145,7 @@
       "name": "未完成任务",
       "modules": [
         {
-          "view": "TimelineView",
+          "view": "ExcelView",
           "title": "新模块",
           "collapsed": false,
           "filters": [],
@@ -207,7 +207,8 @@
       ],
       "initialView": "天",
       "_modsOpen": true,
-      "_baseOpen": true
+      "_baseOpen": true,
+      "hideToolbar": true
     }
   ],
   "inputSettings": {

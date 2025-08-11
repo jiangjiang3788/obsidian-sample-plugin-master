@@ -5,7 +5,8 @@ import { h } from 'preact';
 import { useMemo, useState } from 'preact/hooks';
 import {
   ThemeProvider, CssBaseline, Box, Stack, Typography,
-  TextField, Select, MenuItem, IconButton, Collapse, Divider
+  TextField, Select, MenuItem, IconButton, Collapse, Divider,
+  Checkbox, FormControlLabel, Tooltip // <--- 新增: 导入 Checkbox, FormControlLabel, Tooltip
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -42,9 +43,11 @@ export function DashboardConfigForm({ dashboard, dashboards, onSave, onCancel }:
   const [vals, setVals] = useState<any>({
     ...dashboard,
     initialView: dashboard.initialView || '月',
+    hideToolbar: dashboard.hideToolbar || false, // <--- 新增 (#12)
     tags: (dashboard.tags || []).join(', '),
     modules: (dashboard.modules || []).map(m => ({
       id: genId(), ...m,
+      collapsed: m.collapsed || false, // <--- 新增 (#7)
       filtersArr: (m.filters ?? []).map(x => ({ ...x })),
       sortArr: (m.sort ?? []).map(x => ({ ...x })),
       fieldsArr: m.fields ?? [],
@@ -59,7 +62,7 @@ export function DashboardConfigForm({ dashboard, dashboards, onSave, onCancel }:
     setVals((v: any) => {
       const d = structuredClone(v); const seg = path.split('.'); let cur: any = d;
       for (let i = 0; i < seg.length - 1; i++) cur = cur[seg[i]];
-      cur[seg.at(-1)!] = val; return d;
+      cur[seg.at(-1)!] = val; return d;
     });
   };
 
@@ -72,20 +75,20 @@ export function DashboardConfigForm({ dashboard, dashboards, onSave, onCancel }:
   const removeModule = (i: number) => keepScroll(() => set('modules', vals.modules.filter((_x: any, j: number) => j !== i)));
 
   const handleViewChange = (index: number, newView: ViewName) => {
-    keepScroll(() => {
-        const currentModule = vals.modules[index];
-        const newModuleConfig = structuredClone(VIEW_DEFAULT_CONFIGS[newView] || VIEW_DEFAULT_CONFIGS.BlockView);
+    keepScroll(() => {
+        const currentModule = vals.modules[index];
+        const newModuleConfig = structuredClone(VIEW_DEFAULT_CONFIGS[newView] || VIEW_DEFAULT_CONFIGS.BlockView);
 
-        const updatedModule = {
-          ...currentModule,
-          ...newModuleConfig,
-          title: currentModule.title, // Preserve the title
-        };
+        const updatedModule = {
+          ...currentModule,
+          ...newModuleConfig,
+          title: currentModule.title, // Preserve the title
+        };
 
-        const newModules = [...vals.modules];
-        newModules[index] = updatedModule;
-        set('modules', newModules);
-    });
+        const newModules = [...vals.modules];
+        newModules[index] = updatedModule;
+        set('modules', newModules);
+    });
   };
 
   const save = () => {
@@ -93,6 +96,7 @@ export function DashboardConfigForm({ dashboard, dashboards, onSave, onCancel }:
       ...dashboard,
       ...vals,
       name: vals.name,
+      hideToolbar: vals.hideToolbar, // <--- 新增 (#12)
       tags: String(vals.tags || '').split(/[,，]/).map((t: string) => t.trim()).filter(Boolean),
       modules: vals.modules.map(({ id, filtersArr, sortArr, fieldsArr, groupsArr, _open, ...rest }: any): ModuleConfig => ({
         ...rest,
@@ -148,6 +152,16 @@ export function DashboardConfigForm({ dashboard, dashboards, onSave, onCancel }:
                            onChange={e=>set('initialDate',(e.target as HTMLInputElement).value)}
                            sx={{minWidth:160}}/>
               </Stack>
+                {/* --- 新增 (#12) --- */}
+                <Stack direction="row" spacing={0.6} alignItems="center">
+                    <Typography sx={{minWidth:92}}>界面选项</Typography>
+                    <FormControlLabel
+                        control={<Checkbox checked={vals.hideToolbar} onChange={e => set('hideToolbar', e.target.checked)} />}
+                        label="隐藏顶部工具栏"
+                        sx={{ m: 0 }}
+                    />
+                </Stack>
+                {/* --- 新增结束 --- */}
             </Stack>
           </Collapse>
         </Box>
@@ -181,6 +195,16 @@ export function DashboardConfigForm({ dashboard, dashboards, onSave, onCancel }:
                       <Typography sx={{ flex:1, color:'text.primary', fontWeight:600, fontSize:16 }} title="点击折叠/展开">
                         {m.title || '新模块'}
                       </Typography>
+                        {/* --- 新增 (#7) --- */}
+                        <Tooltip title="设置此模块在加载时是否默认折叠">
+                            <FormControlLabel
+                                sx={{ m: 0, mr: 1 }}
+                                control={<Checkbox size="small" checked={m.collapsed} onChange={e => set(`modules.${i}.collapsed`, e.target.checked)} onClick={e => e.stopPropagation()}/>}
+                                label={<Typography sx={{fontSize: 12}}>默认折叠</Typography>}
+                                onClick={e => e.stopPropagation()}
+                            />
+                        </Tooltip>
+                        {/* --- 新增结束 --- */}
                       <Select value={m.view} MenuProps={menu}
                               onClick={e=>e.stopPropagation()}
                               onChange={e=>handleViewChange(i, e.target.value as ViewName)}
