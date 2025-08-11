@@ -2,7 +2,7 @@
 import { TableView } from './TableView';
 import { BlockView } from './BlockView';
 import { ExcelView } from './ExcelView';
-import { TimelineView } from './TimelineView'; // 1. 导入新的视图组件
+import { TimelineView } from './TimelineView';
 import type { ComponentType } from 'preact';
 
 // [REFACTOR] Import the authoritative ViewName and VIEW_OPTIONS from the domain layer.
@@ -16,10 +16,10 @@ import { VIEW_OPTIONS as DOMAIN_VIEW_OPTIONS } from '@core/domain/schema';
 // [REFACTOR] This registry must now implement all views defined in the domain's ViewName type.
 // The `Record<ViewName, any>` provides type-safety.
 export const VIEW_REGISTRY: Record<ViewName, ComponentType<any>> = {
-  TableView,
-  BlockView,
-  TimelineView, // 2. 在注册表中添加新视图
-  ExcelView,
+  TableView,
+  BlockView,
+  TimelineView,
+  ExcelView,
 } as const;
 
 /** Dashboard.tsx 动态调用用这个常量 */
