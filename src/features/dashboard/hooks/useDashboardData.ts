@@ -28,7 +28,10 @@ export function useDashboardData(
 
     // 订阅 dataStore 的变化以触发重渲染
     useEffect(() => {
-        const listener = () => forceUpdate(v => v + 1);
+        const listener = () => {
+          
+          forceUpdate(v => v + 1);
+        };
         dataStore.subscribe(listener);
         return () => dataStore.unsubscribe(listener);
     }, [dataStore]);

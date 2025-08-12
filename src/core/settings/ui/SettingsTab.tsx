@@ -18,6 +18,7 @@ import { theme as baseTheme } from '@shared/styles/mui-theme';
 import { usePersistentState } from '@shared/hooks/usePersistentState';
 import { AppStore, useStore } from '@state/AppStore'; // [FIX] 引入 AppStore 和 useStore
 
+// 辅助函数，用于在执行操作后保持滚动条位置，提升体验
 function keepScroll(fn: () => void) {
   const y = window.scrollY;
   fn();
@@ -27,7 +28,7 @@ function keepScroll(fn: () => void) {
 }
 
 function SettingsRoot({ plugin }: { plugin: ThinkPlugin }) {
-  // [FIX] 使用 useStore hook 从 AppStore 响应式地获取状态，移除 tick
+  // [FIX] 使用 useStore hook 从 AppStore 响应式地获取状态
   const dashboards = useStore(state => state.settings.dashboards);
   const inputSettings = useStore(state => state.settings.inputSettings);
 
@@ -38,17 +39,15 @@ function SettingsRoot({ plugin }: { plugin: ThinkPlugin }) {
   // [FIX] 所有写操作都通过 AppStore actions
   const addDashboard = () => {
     keepScroll(async () => {
-      // 获取当前仪表盘列表以计算新名称
-      const currentDashboards = AppStore.instance.getSettings().dashboards;
-      let name = '新仪表盘', n = 1;
-      while (currentDashboards.some(d => d.name === name)) {
-        name = `新仪表盘${n++}`;
-      }
-      // 添加一个临时配置，因为 action 内部会生成默认值
-      await AppStore.instance.addDashboard(name); 
+      // action 内部会处理重名问题
+      await AppStore.instance.addDashboard('新仪表盘'); 
       new Notice('已创建新仪表盘');
       setOpenDash(true);
-      setOpenName(name);
+      
+      // 找到刚刚创建的仪表盘的实际名称并展开它
+      const currentDashboards = AppStore.instance.getSettings().dashboards;
+      const newDash = currentDashboards[currentDashboards.length - 1];
+      if (newDash) setOpenName(newDash.name);
     });
   };
 
@@ -83,11 +82,12 @@ function SettingsRoot({ plugin }: { plugin: ThinkPlugin }) {
     });
   };
 
+  // ... 其余 JSX 代码与您提供的版本相同，这里为了完整性而包含 ...
   return (
     <ThemeProvider theme={baseTheme}>
       <CssBaseline />
       <Box sx={{ display: 'grid', gap: 1.5 }} class="think-compact">
-        {/* ── 通用输入设置 ───────────────────────────── */}
+        {/* 通用输入设置 */}
         <Accordion expanded={openInput} onChange={(_, e) => setOpenInput(e)} disableGutters>
           <AccordionSummary expandIcon={<ExpandMoreIcon />}>
             <Typography sx={{ color: 'error.main', fontWeight: 800, fontSize: 22 }}>
@@ -99,7 +99,7 @@ function SettingsRoot({ plugin }: { plugin: ThinkPlugin }) {
           </AccordionDetails>
         </Accordion>
 
-        {/* ── 仪表盘配置管理 ───────────────────────── */}
+        {/* 仪表盘配置管理 */}
         <Accordion expanded={openDash} onChange={(_, e) => setOpenDash(e)} disableGutters>
           <AccordionSummary expandIcon={<ExpandMoreIcon />}>
             <Stack direction="row" alignItems="center" sx={{ width: '100%', justifyContent: 'space-between' }}>
@@ -120,7 +120,7 @@ function SettingsRoot({ plugin }: { plugin: ThinkPlugin }) {
 
             {dashboards.map((dash, idx) => (
               <Accordion
-                key={dash.name + idx} // 使用 name + idx 避免重名导致 key 冲突问题
+                key={dash.name + idx} // 使用 name + idx 避免重名导致 key 冲突
                 expanded={openName === dash.name}
                 onChange={(_, e) => setOpenName(e ? dash.name : (openName === dash.name ? null : openName))}
                 disableGutters
@@ -139,7 +139,6 @@ function SettingsRoot({ plugin }: { plugin: ThinkPlugin }) {
                     </IconButton>
                   </Stack>
                 </AccordionSummary>
-
                 <AccordionDetails>
                   <DashboardConfigForm
                     dashboard={dash}
@@ -156,6 +155,7 @@ function SettingsRoot({ plugin }: { plugin: ThinkPlugin }) {
     </ThemeProvider>
   );
 }
+
 
 export class SettingsTab extends PluginSettingTab {
   id = 'think-settings';

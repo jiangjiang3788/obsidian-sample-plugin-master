@@ -21,6 +21,8 @@ export function parseTaskLine(
   const lineText = rawLine;
   if (!RE_TASK_PREFIX.test(lineText)) return null;
 
+  
+
   /* ---- 状态 → categoryKey ---- */
   const status = isDoneLine(lineText) ? 'done' : isCancelledLine(lineText) ? 'cancelled' : 'open';
   const categoryKey = `任务/${status}`;
