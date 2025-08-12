@@ -74,7 +74,10 @@ export class AppStore {
   }
 
   private async _updateSettingsAndPersist(updater: (draft: ThinkSettings) => void) {
-    updater(this._state.settings);
+    // 使用 structuredClone 避免直接修改 state 引用，虽然在当前实现中不是必须的，但是个好习惯
+    const newSettings = structuredClone(this._state.settings);
+    updater(newSettings);
+    this._state.settings = newSettings;
     await this._plugin.persistAll(this._state.settings);
     this._notify();
   }
@@ -95,25 +98,32 @@ export class AppStore {
     });
   }
 
-  public addDashboard = async () => {
+  // [FIX] 允许传入一个预设的名称
+  public addDashboard = async (name: string = '新仪表盘') => {
     await this._updateSettingsAndPersist(draft => {
-      let name = '新仪表盘', n = 1;
-      while (draft.dashboards.some(d => d.name === name)) {
-        name = `新仪表盘${n++}`;
+      let finalName = name;
+      let n = 1;
+      // 确保名称唯一
+      while (draft.dashboards.some(d => d.name === finalName)) {
+        finalName = `${name}${n++}`;
       }
-      draft.dashboards.push({ name, modules: [] });
+      draft.dashboards.push({ name: finalName, modules: [] });
     });
   }
 
   public deleteDashboard = async (idx: number) => {
     await this._updateSettingsAndPersist(draft => {
-      draft.dashboards.splice(idx, 1);
+      if (idx >= 0 && idx < draft.dashboards.length) {
+        draft.dashboards.splice(idx, 1);
+      }
     });
   }
 
   public updateDashboard = async (idx: number, newDashData: DashboardConfig) => {
     await this._updateSettingsAndPersist(draft => {
-      draft.dashboards[idx] = newDashData;
+        if (idx >= 0 && idx < draft.dashboards.length) {
+            draft.dashboards[idx] = newDashData;
+        }
     });
   }
 }
@@ -126,12 +136,13 @@ export function useStore<T>(selector: (state: AppState) => T): T {
     const [slice, setSlice] = useState(() => selector(store.getState()));
 
     useEffect(() => {
-        // 订阅 store 的变化
         const unsubscribe = store.subscribe(() => {
             const newSlice = selector(store.getState());
-            // 关键优化：只有当选择的状态切片真正改变时才更新组件状态
+            // 使用函数式更新来比较前后 state，避免不必要的渲染
             setSlice(currentSlice => {
-                if (newSlice !== currentSlice) {
+                // 进行浅比较，如果选择的是对象或数组，这可能不足够
+                // 但对于 dashboards 和 inputSettings 这种通常整个替换的场景是有效的
+                if (JSON.stringify(newSlice) !== JSON.stringify(currentSlice)) {
                     return newSlice;
                 }
                 return currentSlice;

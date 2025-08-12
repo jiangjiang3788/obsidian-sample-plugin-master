@@ -6,7 +6,7 @@
         {
           "view": "TableView",
           "title": "未完成任务",
-          "collapsed": true,
+          "collapsed": false,
           "filters": [
             {
               "field": "categoryKey",
@@ -30,7 +30,7 @@
         {
           "view": "TableView",
           "title": "完成任务",
-          "collapsed": true,
+          "collapsed": false,
           "filters": [
             {
               "field": "categoryKey",
@@ -139,7 +139,10 @@
         "电脑",
         "工作"
       ],
-      "initialView": "周"
+      "initialView": "周",
+      "hideToolbar": false,
+      "_baseOpen": true,
+      "_modsOpen": true
     },
     {
       "name": "未完成任务",
