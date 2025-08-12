@@ -130,7 +130,7 @@
           ]
         }
       ],
-      "initialDate": "2025-07-19",
+      "initialDate": "2025-08-12",
       "path": "01",
       "tags": [
         "思考",
@@ -139,7 +139,7 @@
         "电脑",
         "工作"
       ],
-      "initialView": "周",
+      "initialView": "月",
       "hideToolbar": false,
       "_baseOpen": true,
       "_modsOpen": true
@@ -148,7 +148,7 @@
       "name": "未完成任务",
       "modules": [
         {
-          "view": "ExcelView",
+          "view": "TimelineView",
           "title": "新模块",
           "collapsed": false,
           "filters": [],
@@ -162,24 +162,36 @@
             "categoryMap": {},
             "categories": {
               "工作": {
-                "color": "#60a5fa",
+                "color": "#fbe660",
                 "files": [
                   "工作",
                   "Work"
                 ]
               },
-              "学习": {
-                "color": "#34d399",
+              "健康": {
+                "color": "#369fd3",
                 "files": [
-                  "学习",
-                  "Study"
+                  "健康",
+                  "三餐"
                 ]
               },
               "生活": {
-                "color": "#fbbf24",
+                "color": "#5be65d",
                 "files": [
                   "生活",
                   "Life"
+                ]
+              },
+              "电脑": {
+                "color": "#fb6060",
+                "files": [
+                  "电脑"
+                ]
+              },
+              "其他": {
+                "color": "#60a5fa",
+                "files": [
+                  "其他"
                 ]
               }
             },
@@ -192,9 +204,11 @@
               "#a1a1aa"
             ],
             "progressOrder": [
+              "健康",
+              "生活",
+              "电脑",
               "工作",
-              "学习",
-              "生活"
+              "其他"
             ]
           }
         }
@@ -208,10 +222,10 @@
         "电脑",
         "工作"
       ],
-      "initialView": "天",
+      "initialView": "周",
       "_modsOpen": true,
       "_baseOpen": true,
-      "hideToolbar": true
+      "hideToolbar": false
     }
   ],
   "inputSettings": {
