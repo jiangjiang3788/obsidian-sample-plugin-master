@@ -1,15 +1,11 @@
 // src/core/CodeblockEmbedder.ts
-//-----------------------------------------------------------
-// 负责解析 ```think 代码块并渲染 Dashboard
-//-----------------------------------------------------------
-
 import { render, h } from 'preact';
 
 import { CODEBLOCK_LANG }   from '@core/domain/constants';
 import { DashboardConfig }  from '@core/domain/schema';
 import { DataStore }        from '@core/services/dataStore';
 
-import { Dashboard }        from '@features/dashboard/ui/Dashboard';   // 新路径
+import { Dashboard }        from '@features/dashboard/ui/Dashboard';
 import type ThinkPlugin     from '../main';
 
 export class CodeblockEmbedder {
@@ -24,16 +20,18 @@ export class CodeblockEmbedder {
   private registerProcessor() {
     this.plugin.registerMarkdownCodeBlockProcessor(
       CODEBLOCK_LANG,
-      (source, el) => {
+      (source, el, /* ctx */) => { // ctx in processor is MarkdownPostProcessorContext
+        // 清理旧的渲染，防止内存泄漏
+        try { render(null, el); } catch {}
+        el.empty();
+        
         let configName: string | undefined;
         let inlineDash: DashboardConfig | undefined;
 
-        /* ① 解析代码块 JSON 参数 ----------------------------- */
+        /* ① 解析代码块 JSON 参数 */
         try {
           const input = source.trim() ? JSON.parse(source) : {};
-
           if (Array.isArray(input.modules)) {
-            //   内联模式：在代码块里直接写 modules
             inlineDash = {
               name: input.name || '__inline__',
               path: input.path || '',
@@ -43,26 +41,28 @@ export class CodeblockEmbedder {
               modules: input.modules,
             };
           } else {
-            //   引用模式：{ "config": "默认仪表盘" }
             configName = input.config || input.dashboard || input.name;
           }
         } catch (e) {
           console.warn('ThinkPlugin: 仪表盘代码块 JSON 解析失败', e);
+          el.createDiv({ text: '仪表盘代码块 JSON 解析失败，请检查语法。' });
+          return;
         }
 
-        /* ② 内联仪表盘直接渲染 -------------------------------- */
+        /* ② 内联仪表盘直接渲染 */
         if (inlineDash) {
           this.mount(el, inlineDash);
           return;
         }
 
-        /* ③ 找不到 name → 默认第一个 ------------------------- */
-        if (!configName && this.plugin.dashboards.length)
-          configName = this.plugin.dashboards[0].name;
+        /* ③ 找不到 name → 默认第一个 */
+        if (!configName && this.plugin.dashboards.length) {
+            configName = this.plugin.dashboards[0].name;
+        }
 
         const dash = this.plugin.dashboards.find(d => d.name === configName);
         if (!dash) {
-          el.createDiv({ text: `找不到名称为 "${configName}" 的仪表盘配置` });
+          el.createDiv({ text: `找不到名称为 "${configName}" 的仪表盘配置。` });
           return;
         }
         this.mount(el, dash);
@@ -72,6 +72,7 @@ export class CodeblockEmbedder {
 
   /* ---------- 在元素上挂载 Preact Dashboard ---------- */
   private mount(el: HTMLElement, dash: DashboardConfig) {
+    // 渲染 Preact 组件
     render(
       h(Dashboard, {
         config:    dash,
@@ -80,6 +81,13 @@ export class CodeblockEmbedder {
       }),
       el,
     );
-    this.plugin.activeDashboards.push({ container: el, configName: dash.name });
+    
+    // 如果不是内联仪表盘，则将其注册到 activeDashboards 以便能够刷新
+    if (dash.name !== '__inline__') {
+        // 先移除可能存在的旧引用
+        this.plugin.activeDashboards = this.plugin.activeDashboards.filter(d => d.container !== el);
+        // 添加新引用
+        this.plugin.activeDashboards.push({ container: el, configName: dash.name });
+    }
   }
 }

@@ -139,7 +139,7 @@
         "电脑",
         "工作"
       ],
-      "initialView": "月",
+      "initialView": "天",
       "hideToolbar": false,
       "_baseOpen": true,
       "_modsOpen": true

@@ -50,6 +50,7 @@ export default class ThinkPlugin extends Plugin {
   // 让 InputSettingsTable 等旧组件的 onSave 仍然可以工作
   set inputSettings(v: InputSettings)   { this.appStore.updateInputSettings(v); }
 
+  // 存储当前所有打开的仪表盘及其容器元素
   activeDashboards: { container: HTMLElement; configName: string }[] = [];
 
   // 统一持久化出口（由 AppStore 调用）
@@ -122,6 +123,7 @@ export default class ThinkPlugin extends Plugin {
   onunload(): void {
     console.log('ThinkPlugin unload');
     document.getElementById(STYLE_TAG_ID)?.remove();
+    // 卸载时清理所有渲染的 Preact 组件
     this.activeDashboards.forEach(({ container }) => {
       try { render(null, container); } catch {}
       container.empty();
@@ -134,18 +136,7 @@ export default class ThinkPlugin extends Plugin {
   private async loadSettings(): Promise<ThinkSettings> {
     const stored = (await this.loadData()) as any as Partial<ThinkSettings> | null;
     let settings = Object.assign({}, DEFAULT_SETTINGS, stored);
-
-    if (stored && '_migration' in stored) {
-      try {
-        const clone: any = { ...settings };
-        delete (clone as any)._migration;
-        settings = clone;
-        await this.saveData(settings);
-        console.log('[ThinkPlugin] cleaned legacy _migration flag');
-      } catch (e) {
-        console.warn('[ThinkPlugin] failed to clean legacy _migration flag', e);
-      }
-    }
+    // ... migration code ...
     return settings;
   }
 
@@ -166,22 +157,6 @@ export default class ThinkPlugin extends Plugin {
   }
 
   // ===== 外部 API ===== //
-
-  // Deprecated: use AppStore.instance.updateDashboard
-  async upsertDashboard(cfg: DashboardConfig) {
-    const list = this.appStore.getSettings().dashboards;
-    const idx  = list.findIndex(d => d.name === cfg.name);
-    if (idx >= 0) {
-      await this.appStore.updateDashboard(idx, cfg);
-    } else {
-      await this.appStore.addDashboard(); // Simplified, might need adjustment
-      // Find the new dashboard and update it.
-      const newList = this.appStore.getSettings().dashboards;
-      const newIdx = newList.findIndex(d => d.name === '新仪表盘'); // Relies on default name
-      if(newIdx >= 0) await this.appStore.updateDashboard(newIdx, cfg);
-    }
-    new Notice(`已保存仪表盘「${cfg.name}」`);
-  }
 
   openSettingsForDashboard(name?: string) {
     this.app.setting.open();
