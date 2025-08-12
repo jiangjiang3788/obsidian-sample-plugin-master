@@ -25,6 +25,7 @@ export default defineConfig({
       '@platform': path.resolve(__dirname, 'src/platform'),
       '@features': path.resolve(__dirname, 'src/features'),
       '@shared':   path.resolve(__dirname, 'src/shared'),
+      '@state': path.resolve(__dirname, 'src/state'),
     },
   },
 

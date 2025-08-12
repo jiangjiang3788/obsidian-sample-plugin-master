@@ -18,7 +18,8 @@
         "@core/*": ["src/core/*"],  // 后续使用
         "@platform/*": ["src/platform/*"],
         "@features/*": ["src/features/*"],
-        "@shared/*": ["src/shared/*"]
+        "@shared/*": ["src/shared/*"],
+        "@state/*": ["src/state/*"]
       },
       "types": ["vite/client", "preact"]
     },
