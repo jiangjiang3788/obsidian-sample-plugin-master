@@ -1,10 +1,10 @@
 // src/main.ts
 import { App, Plugin, Notice } from 'obsidian';
-import { render } from 'preact';
+import { render, h } from 'preact';
 
 import { ObsidianPlatform } from '@platform/obsidian';
 import { DataStore }        from '@core/services/dataStore';
-import { AppStore }         from '@state/AppStore'; // <-- 引入 AppStore
+import { AppStore }         from '@state/AppStore';
 
 import * as DashboardFeature  from '@features/dashboard';
 import * as QuickInputFeature from '@features/quick-input';
@@ -13,6 +13,7 @@ import * as CoreSettings      from '@core/settings/index';
 import type { DashboardConfig } from '@core/domain/schema';
 import type { InputSettings }   from '@core/utils/inputSettings';
 import { GLOBAL_CSS, STYLE_TAG_ID } from '@core/domain/constants';
+import { Dashboard } from '@features/dashboard/ui/Dashboard'; // 导入 Dashboard 组件用于重新渲染
 
 // ---------- 插件级类型 & 默认值 ---------- //
 
@@ -54,6 +55,37 @@ export default class ThinkPlugin extends Plugin {
   // 统一持久化出口（由 AppStore 调用）
   async persistAll(settings: ThinkSettings) {
     await this.saveData(settings);
+    // [FIX] 保存设置后，立即重新渲染所有活动的仪表盘
+    this.rerenderActiveDashboards(settings);
+  }
+  
+  // ===== 新增方法：重新渲染活动的仪表盘 ===== //
+  private rerenderActiveDashboards(settings: ThinkSettings) {
+    console.log('[ThinkPlugin] Rerendering active dashboards...');
+    this.activeDashboards.forEach(activeDash => {
+        const { container, configName } = activeDash;
+        // 从最新的设置中查找此仪表盘的配置
+        const newConfig = settings.dashboards.find(d => d.name === configName);
+
+        if (newConfig) {
+            // 如果找到了新配置，则用新配置重新渲染
+            render(h(Dashboard, {
+                config: newConfig,
+                dataStore: this.dataStore,
+                plugin: this,
+            }), container);
+        } else {
+            // 如果没找到（例如，仪表盘被删除了），则清空容器
+            try { render(null, container); } catch {}
+            container.empty();
+            container.createDiv({ text: `仪表盘配置 "${configName}" 已被删除。` });
+        }
+    });
+
+    // 清理掉那些已经被删除的仪表盘引用
+    this.activeDashboards = this.activeDashboards.filter(ad => 
+        settings.dashboards.some(d => d.name === ad.configName)
+    );
   }
 
   // ===== 生命周期 ===== //
