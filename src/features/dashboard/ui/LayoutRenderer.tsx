@@ -62,13 +62,13 @@ export function LayoutRenderer({ layout, dataStore }: Props) {
       return items;
     }, [baseFilteredItems, dataSource]);
 
-    // 准备视图组件的 props
     const viewProps: any = {
       items: viewItems,
       dateRange: dateRange,
-      // [FIX] 将完整的 viewInstance 作为 module prop 传递下去
       module: viewInstance, 
-      // 其他通用 props
+      // [MOD] 把当前选择的周期（年/季/月...）传给视图
+      // 这样 TimelineView 就能根据它来切换显示模式
+      currentView: view,
       ...viewInstance.viewConfig,
       groupField: viewInstance.group,
       fields: viewInstance.fields,
