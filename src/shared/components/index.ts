@@ -1,4 +1,7 @@
 // src/shared/components/index.ts
 
 export * from './TaskCheckbox';
-export * from './FieldRadio';   // Field & Radio 组合
+export * from './FieldRadio';
+export * from './form/RadioGroup';
+// 新增导出
+export * from './dialogs/ActionDialog';
