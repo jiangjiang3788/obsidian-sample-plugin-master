@@ -10,9 +10,11 @@
     "@codemirror/view": "^6.38.1",
     "@mui/icons-material": "^7.2.0",
     "dayjs": "^1.11.13",
+    "immer": "^10.1.1",
     "preact": "^10.26.9",
     "react": "^19.1.0",
-    "react-dom": "^19.1.0"
+    "react-dom": "^19.1.0",
+    "use-immer": "^0.11.0"
   },
   "devDependencies": {
     "@emotion/react": "^11.14.0",
