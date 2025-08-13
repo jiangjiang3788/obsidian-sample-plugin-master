@@ -27,44 +27,29 @@ export class CodeblockEmbedder {
         el.empty();
        
         let configName: string | undefined;
-        let inlineDash: DashboardConfig | undefined;
 
         /* ① 解析代码块 JSON 参数 */
         try {
           const input = source.trim() ? JSON.parse(source) : {};
-          if (Array.isArray(input.modules)) {
-            inlineDash = {
-              // [REFACTOR] 使用常量
-              name: input.name || INTERNAL_NAMES.INLINE_DASHBOARD,
-              path: input.path || '',
-              tags: input.tags || [],
-              initialView: input.initialView || '月',
-              initialDate: input.initialDate || '',
-              modules: input.modules,
-            };
-          } else {
-            configName = input.config || input.dashboard || input.name;
-          }
+          // [MODIFIED] 移除内联仪表盘的解析逻辑，只读取配置名称
+          configName = input.config || input.dashboard || input.name;
         } catch (e) {
           console.warn('ThinkPlugin: 仪表盘代码块 JSON 解析失败', e);
           el.createDiv({ text: '仪表盘代码块 JSON 解析失败，请检查语法。' });
           return;
         }
+        
+        /* [REMOVED] 内联仪表盘的渲染逻辑已被移除 */
 
-        /* ② 内联仪表盘直接渲染 */
-        if (inlineDash) {
-          this.mount(el, inlineDash);
-          return;
-        }
-
-        /* ③ 找不到 name → 默认第一个 */
+        /* ② 如果未指定名称，则默认使用第一个仪表盘 */
         if (!configName && this.plugin.dashboards.length) {
             configName = this.plugin.dashboards[0].name;
         }
 
+        /* ③ 根据名称查找配置并渲染 */
         const dash = this.plugin.dashboards.find(d => d.name === configName);
         if (!dash) {
-          el.createDiv({ text: `找不到名称为 "${configName}" 的仪表盘配置。` });
+          el.createDiv({ text: `找不到名称为 "${configName}" 的仪表盘配置。请在插件设置中创建。` });
           return;
         }
         this.mount(el, dash);
@@ -84,13 +69,10 @@ export class CodeblockEmbedder {
       el,
     );
    
-    // 如果不是内联仪表盘，则将其注册到 activeDashboards 以便能够刷新
-    // [REFACTOR] 使用常量
-    if (dash.name !== INTERNAL_NAMES.INLINE_DASHBOARD) {
-        // 先移除可能存在的旧引用
-        this.plugin.activeDashboards = this.plugin.activeDashboards.filter(d => d.container !== el);
-        // 添加新引用
-        this.plugin.activeDashboards.push({ container: el, configName: dash.name });
-    }
+    // [MODIFIED] 不再需要检查是否为内联仪表盘，所有渲染的仪表盘都注册以便刷新
+    // 先移除可能存在的旧引用
+    this.plugin.activeDashboards = this.plugin.activeDashboards.filter(d => d.container !== el);
+    // 添加新引用
+    this.plugin.activeDashboards.push({ container: el, configName: dash.name });
   }
 }
