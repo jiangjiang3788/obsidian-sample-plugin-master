@@ -1,236 +1,143 @@
 {
-  "dashboards": [
+  "dataSources": [
     {
-      "name": "全局",
-      "modules": [
+      "id": "ds_me9ye2lwwlc44",
+      "name": "计划",
+      "filters": [
         {
-          "view": "TableView",
-          "title": "未完成任务",
-          "collapsed": false,
-          "filters": [
-            {
-              "field": "categoryKey",
-              "op": "=",
-              "value": "任务/open"
-            }
-          ],
-          "sort": [],
-          "fields": [
-            "header",
-            "categoryKey",
-            "icon",
-            "title"
-          ],
-          "groups": [
-            "categoryKey"
-          ],
-          "rowField": "recurrence",
-          "colField": "tags"
-        },
-        {
-          "view": "TableView",
-          "title": "完成任务",
-          "collapsed": false,
-          "filters": [
-            {
-              "field": "categoryKey",
-              "op": "=",
-              "value": "任务/done"
-            }
-          ],
-          "sort": [],
-          "fields": [],
-          "groups": [],
-          "rowField": "tags",
-          "colField": "date"
-        },
-        {
-          "view": "BlockView",
-          "title": "计划",
-          "collapsed": true,
-          "filters": [
-            {
-              "field": "categoryKey",
-              "op": "=",
-              "value": "计划"
-            }
-          ],
-          "sort": [],
-          "fields": [
-            "categoryKey",
-            "icon",
-            "content"
-          ],
-          "groups": [
-            "extra.时间"
-          ]
-        },
-        {
-          "view": "BlockView",
-          "title": "总结",
-          "collapsed": true,
-          "filters": [
-            {
-              "field": "categoryKey",
-              "op": "=",
-              "value": "总结"
-            }
-          ],
-          "sort": [],
-          "fields": [
-            "categoryKey",
-            "icon",
-            "content",
-            "date",
-            "tags"
-          ],
-          "groups": []
-        },
-        {
-          "view": "BlockView",
-          "title": "思考",
-          "collapsed": true,
-          "filters": [
-            {
-              "field": "filename",
-              "op": "=",
-              "value": "思考"
-            }
-          ],
-          "sort": [],
-          "fields": [
-            "categoryKey",
-            "icon",
-            "content"
-          ],
-          "groups": [
-            "tags"
-          ]
-        },
-        {
-          "view": "BlockView",
-          "title": "打卡",
-          "collapsed": true,
-          "filters": [
-            {
-              "field": "categoryKey",
-              "op": "=",
-              "value": "打卡"
-            }
-          ],
-          "sort": [
-            {
-              "field": "date",
-              "dir": "asc"
-            }
-          ],
-          "fields": [
-            "categoryKey",
-            "icon",
-            "content",
-            "date"
-          ],
-          "groups": [
-            "tags"
-          ]
+          "field": "categoryKey",
+          "op": "=",
+          "value": "计划"
         }
       ],
-      "initialDate": "2025-08-12",
-      "path": "01",
-      "tags": [
-        "思考",
-        "生活",
-        "健康",
-        "电脑",
-        "工作"
-      ],
-      "initialView": "周",
-      "hideToolbar": false,
-      "_baseOpen": true,
-      "_modsOpen": true
+      "sort": [
+        {
+          "field": "date",
+          "dir": "asc"
+        }
+      ]
     },
     {
-      "name": "未完成任务",
-      "modules": [
+      "id": "ds_me9yjmlznzs33",
+      "name": "完成任务",
+      "filters": [
         {
-          "view": "TimelineView",
-          "title": "新模块",
-          "collapsed": false,
-          "filters": [],
-          "sort": [],
-          "fields": [],
-          "viewConfig": {
-            "defaultHourHeight": 50,
-            "WEEKLY_AGGREGATION_THRESHOLD_DAYS": 35,
-            "MAX_HOURS_PER_DAY": 24,
-            "UNTRACKED_LABEL": "未记录",
-            "categoryMap": {},
-            "categories": {
-              "工作": {
-                "color": "#fbe660",
-                "files": [
-                  "工作",
-                  "Work"
-                ]
-              },
-              "健康": {
-                "color": "#369fd3",
-                "files": [
-                  "健康",
-                  "三餐"
-                ]
-              },
-              "生活": {
-                "color": "#5be65d",
-                "files": [
-                  "生活",
-                  "Life"
-                ]
-              },
-              "电脑": {
-                "color": "#fb6060",
-                "files": [
-                  "电脑"
-                ]
-              },
-              "其他": {
-                "color": "#60a5fa",
-                "files": [
-                  "其他"
-                ]
-              }
-            },
-            "colorPalette": [
-              "#34d399",
-              "#fbbf24",
-              "#a78bfa",
-              "#60a5fa",
-              "#f87171",
-              "#a1a1aa"
-            ],
-            "progressOrder": [
-              "健康",
-              "生活",
-              "电脑",
-              "工作",
-              "其他"
-            ]
-          }
+          "field": "categoryKey",
+          "op": "=",
+          "value": "任务/done"
         }
       ],
-      "initialDate": "2025-07-26",
-      "path": "01",
-      "tags": [
-        "思考",
-        "生活",
-        "健康",
-        "电脑",
-        "工作"
+      "sort": []
+    }
+  ],
+  "viewInstances": [
+    {
+      "id": "view_me9ygd5ci3kdp",
+      "title": "计划",
+      "viewType": "BlockView",
+      "dataSourceId": "ds_me9ye2lwwlc44",
+      "viewConfig": {
+        "view": "BlockView",
+        "title": "块视图",
+        "collapsed": false,
+        "filters": [],
+        "sort": [],
+        "fields": [],
+        "group": "categoryKey"
+      },
+      "fields": [
+        "date",
+        "tags",
+        "icon",
+        "content"
       ],
+      "collapsed": false,
+      "group": "tags"
+    },
+    {
+      "id": "view_me9ykdhhufm5i",
+      "title": "时间轴",
+      "viewType": "TimelineView",
+      "dataSourceId": "ds_me9yjmlznzs33",
+      "viewConfig": {
+        "view": "TimelineView",
+        "title": "时间轴",
+        "collapsed": false,
+        "filters": [],
+        "sort": [],
+        "viewConfig": {
+          "defaultHourHeight": 50,
+          "WEEKLY_AGGREGATION_THRESHOLD_DAYS": 35,
+          "MAX_HOURS_PER_DAY": 24,
+          "UNTRACKED_LABEL": "未记录",
+          "categoryMap": {},
+          "categories": {
+            "健康": {
+              "color": "#60a5fa",
+              "files": [
+                "00-健康打卡",
+                "2-1健康",
+                "2-2三餐"
+              ]
+            },
+            "生活": {
+              "color": "#34d399",
+              "files": [
+                "2-3生活"
+              ]
+            },
+            "工作": {
+              "color": "#fbbf24",
+              "files": [
+                "2-6工作"
+              ]
+            },
+            "电脑": {
+              "color": "#fb606f",
+              "files": [
+                "2-5电脑"
+              ]
+            },
+            "其他": {
+              "color": "#bababa",
+              "files": [
+                "2-0其他"
+              ]
+            }
+          },
+          "colorPalette": [
+            "#34d399",
+            "#fbbf24",
+            "#a78bfa",
+            "#60a5fa",
+            "#f87171",
+            "#a1a1aa"
+          ],
+          "progressOrder": [
+            "健康",
+            "生活",
+            "电脑",
+            "工作",
+            "其他"
+          ]
+        }
+      },
+      "fields": []
+    }
+  ],
+  "layouts": [
+    {
+      "id": "layout_me9yskul4lkf6",
+      "name": "全局",
+      "viewInstanceIds": [
+        "view_me9ykdhhufm5i"
+      ],
+      "displayMode": "list",
       "initialView": "周",
-      "_modsOpen": true,
-      "_baseOpen": true,
-      "hideToolbar": false
+      "gridConfig": {
+        "columns": 2
+      },
+      "initialDate": "2025-08-13"
     }
   ],
   "inputSettings": {
@@ -1020,5 +927,239 @@
         "icon": "🔆"
       }
     ]
-  }
+  },
+  "dashboards": [
+    {
+      "name": "全局",
+      "modules": [
+        {
+          "view": "TableView",
+          "title": "未完成任务",
+          "collapsed": false,
+          "filters": [
+            {
+              "field": "categoryKey",
+              "op": "=",
+              "value": "任务/open"
+            }
+          ],
+          "sort": [],
+          "fields": [
+            "header",
+            "categoryKey",
+            "icon",
+            "title"
+          ],
+          "groups": [
+            "categoryKey"
+          ],
+          "rowField": "recurrence",
+          "colField": "tags"
+        },
+        {
+          "view": "TableView",
+          "title": "完成任务",
+          "collapsed": false,
+          "filters": [
+            {
+              "field": "categoryKey",
+              "op": "=",
+              "value": "任务/done"
+            }
+          ],
+          "sort": [],
+          "fields": [],
+          "groups": [],
+          "rowField": "tags",
+          "colField": "date"
+        },
+        {
+          "view": "BlockView",
+          "title": "计划",
+          "collapsed": true,
+          "filters": [
+            {
+              "field": "categoryKey",
+              "op": "=",
+              "value": "计划"
+            }
+          ],
+          "sort": [],
+          "fields": [
+            "categoryKey",
+            "icon",
+            "content"
+          ],
+          "groups": [
+            "extra.时间"
+          ]
+        },
+        {
+          "view": "BlockView",
+          "title": "总结",
+          "collapsed": true,
+          "filters": [
+            {
+              "field": "categoryKey",
+              "op": "=",
+              "value": "总结"
+            }
+          ],
+          "sort": [],
+          "fields": [
+            "categoryKey",
+            "icon",
+            "content",
+            "date",
+            "tags"
+          ],
+          "groups": []
+        },
+        {
+          "view": "BlockView",
+          "title": "思考",
+          "collapsed": true,
+          "filters": [
+            {
+              "field": "filename",
+              "op": "=",
+              "value": "思考"
+            }
+          ],
+          "sort": [],
+          "fields": [
+            "categoryKey",
+            "icon",
+            "content"
+          ],
+          "groups": [
+            "tags"
+          ]
+        },
+        {
+          "view": "BlockView",
+          "title": "打卡",
+          "collapsed": true,
+          "filters": [
+            {
+              "field": "categoryKey",
+              "op": "=",
+              "value": "打卡"
+            }
+          ],
+          "sort": [
+            {
+              "field": "date",
+              "dir": "asc"
+            }
+          ],
+          "fields": [
+            "categoryKey",
+            "icon",
+            "content",
+            "date"
+          ],
+          "groups": [
+            "tags"
+          ]
+        }
+      ],
+      "initialDate": "2025-08-12",
+      "path": "01",
+      "tags": [
+        "思考",
+        "生活",
+        "健康",
+        "电脑",
+        "工作"
+      ],
+      "initialView": "周",
+      "hideToolbar": false,
+      "_baseOpen": true,
+      "_modsOpen": true
+    },
+    {
+      "name": "未完成任务",
+      "modules": [
+        {
+          "view": "TimelineView",
+          "title": "新模块",
+          "collapsed": false,
+          "filters": [],
+          "sort": [],
+          "fields": [],
+          "viewConfig": {
+            "defaultHourHeight": 50,
+            "WEEKLY_AGGREGATION_THRESHOLD_DAYS": 35,
+            "MAX_HOURS_PER_DAY": 24,
+            "UNTRACKED_LABEL": "未记录",
+            "categoryMap": {},
+            "categories": {
+              "工作": {
+                "color": "#fbe660",
+                "files": [
+                  "工作",
+                  "Work"
+                ]
+              },
+              "健康": {
+                "color": "#369fd3",
+                "files": [
+                  "健康",
+                  "三餐"
+                ]
+              },
+              "生活": {
+                "color": "#5be65d",
+                "files": [
+                  "生活",
+                  "Life"
+                ]
+              },
+              "电脑": {
+                "color": "#fb6060",
+                "files": [
+                  "电脑"
+                ]
+              },
+              "其他": {
+                "color": "#60a5fa",
+                "files": [
+                  "其他"
+                ]
+              }
+            },
+            "colorPalette": [
+              "#34d399",
+              "#fbbf24",
+              "#a78bfa",
+              "#60a5fa",
+              "#f87171",
+              "#a1a1aa"
+            ],
+            "progressOrder": [
+              "健康",
+              "生活",
+              "电脑",
+              "工作",
+              "其他"
+            ]
+          }
+        }
+      ],
+      "initialDate": "2025-07-26",
+      "path": "01",
+      "tags": [
+        "思考",
+        "生活",
+        "健康",
+        "电脑",
+        "工作"
+      ],
+      "initialView": "周",
+      "_modsOpen": true,
+      "_baseOpen": true,
+      "hideToolbar": false
+    }
+  ]
 }
