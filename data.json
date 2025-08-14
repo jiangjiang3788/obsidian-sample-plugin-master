@@ -195,11 +195,11 @@
       "fields": [
         "categoryKey",
         "icon",
-        "title",
+        "date",
         "content"
       ],
       "group": "tags",
-      "collapsed": true
+      "collapsed": false
     },
     {
       "id": "view_mebhmnfytbhat",
@@ -216,11 +216,11 @@
       "fields": [
         "categoryKey",
         "icon",
-        "title",
+        "date",
         "content"
       ],
       "group": "tags",
-      "collapsed": true
+      "collapsed": false
     },
     {
       "id": "view_mebho1v6n4oio",
@@ -237,23 +237,11 @@
       "fields": [
         "categoryKey",
         "icon",
-        "title",
+        "date",
         "content"
       ],
       "group": "tags",
-      "collapsed": true
-    },
-    {
-      "id": "view_mebhqa2sds77i",
-      "title": "新视图",
-      "viewType": "ExcelView",
-      "dataSourceId": "",
-      "viewConfig": {
-        "view": "ExcelView",
-        "title": "数据表格",
-        "collapsed": false,
-        "fields": []
-      }
+      "collapsed": false
     }
   ],
   "layouts": [
