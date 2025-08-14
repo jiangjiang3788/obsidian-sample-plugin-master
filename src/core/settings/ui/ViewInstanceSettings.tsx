@@ -8,7 +8,7 @@ import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { usePersistentState } from '@shared/hooks/usePersistentState';
 import { LOCAL_STORAGE_KEYS, DEFAULT_NAMES } from '@core/domain/constants';
-import { VIEW_OPTIONS, ViewName, getAllFields } from '@core/domain/schema';
+import { VIEW_OPTIONS, ViewName, getAllFields, Period } from '@core/domain/schema';
 import type { ViewInstance } from '@core/domain/schema';
 import { VIEW_EDITORS, VIEW_DEFAULT_CONFIGS } from '@features/dashboard/settings/ModuleEditors/registry';
 import { PillMultiSelect } from '@shared/components/form/PillMultiSelect';
@@ -19,27 +19,26 @@ function ViewInstanceEditor({ vi }: { vi: ViewInstance }) {
     const dataSources = useStore(state => state.settings.dataSources);
     const fieldOptions = useMemo(() => getAllFields(DataStore.instance.queryItems()), []);
     const EditorComponent = VIEW_EDITORS[vi.viewType];
+    const dateConfig = vi.dateConfig || { mode: 'inherit_from_layout' };
 
     const handleUpdate = (updates: Partial<ViewInstance>) => {
         AppStore.instance.updateViewInstance(vi.id, updates);
     };
 
     const handleViewTypeChange = (newViewType: ViewName) => {
-        // [FIX] 直接使用修正后的默认配置，不再有嵌套问题
         handleUpdate({
             viewType: newViewType,
             viewConfig: structuredClone(VIEW_DEFAULT_CONFIGS[newViewType]),
         });
     };
     
-    // [FIX] 增加一个兼容层，如果检测到旧的错误数据结构，则自动修复它
     const correctedViewConfig = useMemo(() => {
         if (vi.viewConfig && vi.viewConfig.viewConfig) {
-            console.warn("Found nested viewConfig, auto-correcting...", vi);
             return vi.viewConfig.viewConfig;
         }
         return vi.viewConfig || {};
     }, [vi.viewConfig]);
+
 
     return (
         <Stack spacing={2}>
@@ -63,6 +62,39 @@ function ViewInstanceEditor({ vi }: { vi: ViewInstance }) {
                     {dataSources.map(ds => <MenuItem key={ds.id} value={ds.id}>{ds.name}</MenuItem>)}
                 </Select>
             </Stack>
+
+            {/* [NEW] 日期处理方式设置 */}
+            <Box sx={{ border: '1px solid var(--background-modifier-border)', p: 1.5, borderRadius: 1 }}>
+                <Typography variant="subtitle2" sx={{ mb: 1.5 }}>日期处理方式</Typography>
+                <Stack direction="row" spacing={2} alignItems="center">
+                    <Select 
+                        label="模式" 
+                        value={dateConfig.mode} 
+                        onChange={e => handleUpdate({ dateConfig: { ...dateConfig, mode: e.target.value as any } })} 
+                        variant="filled" 
+                        sx={{ flex: 1 }}
+                    >
+                        <MenuItem value="inherit_from_layout">继承布局工具栏</MenuItem>
+                        <MenuItem value="fixed_period">使用固定周期</MenuItem>
+                    </Select>
+                    {dateConfig.mode === 'fixed_period' && (
+                        <Select 
+                            label="固定周期"
+                            value={dateConfig.period || '月'}
+                            onChange={e => handleUpdate({ dateConfig: { ...dateConfig, period: e.target.value as Period } })}
+                            variant="filled"
+                            sx={{ flex: 1 }}
+                        >
+                            {['年', '季', '月', '周', '天'].map(p => <MenuItem key={p} value={p}>{p}</MenuItem>)}
+                        </Select>
+                    )}
+                </Stack>
+                <Typography variant="caption" color="text.secondary" sx={{mt: 1, display: 'block'}}>
+                    - **继承布局工具栏**: 视图的周期和日期由布局顶部的 年/季/月... 按钮和日期导航控制。
+                    <br/>
+                    - **使用固定周期**: 视图的周期是固定的，但仍会跟随布局的日期导航（上一周期/下一周期）同步更新。
+                </Typography>
+            </Box>
 
             <PillMultiSelect label="显示字段" value={vi.fields || []} options={fieldOptions} onChange={v => handleUpdate({ fields: v })} />
             <PillMultiSelect label="分组字段 (仅BlockView)" value={vi.group ? [vi.group] : []} options={fieldOptions} onChange={v => handleUpdate({ group: v[0] || undefined })} />
