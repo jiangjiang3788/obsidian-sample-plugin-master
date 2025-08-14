@@ -10,28 +10,26 @@ import {
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 import DeleteForeverOutlinedIcon from '@mui/icons-material/DeleteForeverOutlined';
 import AddIcon from '@mui/icons-material/Add';
+import SaveIcon from '@mui/icons-material/Save';
+import CancelIcon from '@mui/icons-material/Cancel';
 import { usePersistentState } from '@shared/hooks/usePersistentState';
 import { LOCAL_STORAGE_KEYS } from '@core/domain/constants';
 import { getAllFields, readField } from '@core/domain/schema';
 import { DataStore } from '@core/services/dataStore';
-import { useMemo, useState } from 'preact/hooks';
+import { useMemo, useState, useCallback, useEffect } from 'preact/hooks';
 import type { DataSource } from '@core/domain/schema';
 
 // --- Start of Merged RuleList Logic ---
-
-// 辅助函数，获取用于自动补全的唯一字段值
-function useUniqueFieldValues() {
+function useUniqueFieldValues() { /* ... (no changes) ... */
     return useMemo(() => {
         const items = DataStore.instance.queryItems();
         const allKnownFields = new Set<string>(getAllFields(items));
         const valueMap: Record<string, Set<string>> = {};
         allKnownFields.forEach(field => valueMap[field] = new Set());
-
         for (const item of items) {
             for (const field of allKnownFields) {
                 const value = readField(item, field);
                 if (value === null || value === undefined || String(value).trim() === '') continue;
-                
                 const values = Array.isArray(value) ? value : [value];
                 values.forEach(v => {
                     const strV = String(v).trim();
@@ -39,7 +37,6 @@ function useUniqueFieldValues() {
                 });
             }
         }
-        
         const result: Record<string, string[]> = {};
         for(const field in valueMap) {
             if(valueMap[field].size > 0) {
@@ -49,22 +46,16 @@ function useUniqueFieldValues() {
         return result;
     }, []);
 }
-
 const defaultFilterRule = { field: '', op: '=', value: '' };
 const defaultSortRule = { field: '', dir: 'asc' };
-
-// 新的内置规则构建器组件
 function RuleBuilder({ title, mode, rows, fieldOptions, onChange }: any) {
     const isFilterMode = mode === 'filter';
     const [newRule, setNewRule] = useState(isFilterMode ? defaultFilterRule : defaultSortRule);
-
     const uniqueFieldValues = useUniqueFieldValues();
     const remove = (i:number)=>onChange(rows.filter((_,j)=>j!==i));
-
     const updateNewRule = (patch: Partial<typeof newRule>) => {
         setNewRule(current => ({ ...current, ...patch }));
     };
-    
     const handleAddRule = () => {
         if (!newRule.field) {
             alert('请选择一个字段');
@@ -73,14 +64,12 @@ function RuleBuilder({ title, mode, rows, fieldOptions, onChange }: any) {
         onChange([...rows, newRule]);
         setNewRule(isFilterMode ? defaultFilterRule : defaultSortRule);
     };
-
     const formatRule = (rule: any) => {
         if (isFilterMode) {
             return `${rule.field} ${rule.op} "${rule.value}"`;
         }
         return `${rule.field} ${rule.dir === 'asc' ? '升序' : '降序'}`;
     };
-
     return (
         <Stack direction="row" spacing={2}>
             <Typography sx={{ width: '80px', flexShrink: 0, fontWeight: 500, pt: '8px' }}>{title}</Typography>
@@ -101,7 +90,6 @@ function RuleBuilder({ title, mode, rows, fieldOptions, onChange }: any) {
                         <MenuItem value=""><em>选择字段</em></MenuItem>
                         {fieldOptions.map((o: string) => <MenuItem key={o} value={o}>{o}</MenuItem>)}
                     </Select>
-
                     {isFilterMode ? (
                         <Select size="small" value={newRule.op} variant="outlined" onChange={e => updateNewRule({ op: e.target.value })}>
                             {['=','!=','includes','regex','>','<'].map(op=><MenuItem key={op} value={op}>{op}</MenuItem>)}
@@ -112,18 +100,16 @@ function RuleBuilder({ title, mode, rows, fieldOptions, onChange }: any) {
                             <MenuItem value="desc">降序</MenuItem>
                         </Select>
                     )}
-
                     {isFilterMode && (
                         <Autocomplete
                             freeSolo fullWidth size="small"
-                            disableClearable // [MODIFIED] 添加此属性来移除清除按钮
+                            disableClearable
                             options={uniqueFieldValues[newRule.field] || []}
                             value={newRule.value}
                             onInputChange={(_, newValue) => updateNewRule({ value: newValue || '' })}
                             renderInput={(params) => <TextField {...params} variant="outlined" placeholder="输入值" />}
                         />
                     )}
-
                     <Button variant="contained" size="small" onClick={handleAddRule} startIcon={<AddIcon />}>
                         添加
                     </Button>
@@ -132,19 +118,36 @@ function RuleBuilder({ title, mode, rows, fieldOptions, onChange }: any) {
         </Stack>
     );
 }
-
 // --- End of Merged RuleList Logic ---
 
-
 function DataSourceEditor({ ds }: { ds: DataSource }) {
-    const fieldOptions = useMemo(() => {
-        const allItems = DataStore.instance.queryItems();
-        return getAllFields(allItems);
-    }, []);
+    const fieldOptions = useMemo(() => getAllFields(DataStore.instance.queryItems()), []);
 
-    const handleUpdate = (updates: Partial<DataSource>) => {
-        AppStore.instance.updateDataSource(ds.id, updates);
-    };
+    // [MODIFIED] 使用本地 state 来暂存所有修改
+    const [localDs, setLocalDs] = useState(ds);
+    
+    // 当外部传入的 ds 对象变化时 (例如，切换折叠面板)，同步本地 state
+    useEffect(() => {
+        setLocalDs(ds);
+    }, [ds]);
+    
+    // 计算本地修改是否与原始数据不同
+    const hasChanges = useMemo(() => JSON.stringify(localDs) !== JSON.stringify(ds), [localDs, ds]);
+    
+    // 所有修改都先更新到本地 state
+    const handleLocalUpdate = (updates: Partial<DataSource>) => {
+        setLocalDs(current => ({...current, ...updates}));
+    };
+
+    // 点击保存按钮时，才将本地 state 提交到全局 AppStore
+    const handleSave = () => {
+        AppStore.instance.updateDataSource(localDs.id, localDs);
+    };
+
+    // 放弃修改，恢复到原始状态
+    const handleRevert = () => {
+        setLocalDs(ds);
+    };
 
     return (
         <Stack spacing={2} sx={{p: '8px 16px'}}>
@@ -152,25 +155,36 @@ function DataSourceEditor({ ds }: { ds: DataSource }) {
                 <Typography sx={{ width: '80px', flexShrink: 0, fontWeight: 500 }}>名称</Typography>
                 <TextField
                     variant="outlined" size="small"
-                    defaultValue={ds.name}
-                    onBlur={(e) => handleUpdate({ name: (e.target as HTMLInputElement).value })}
+                    value={localDs.name}
+                    onChange={e => handleLocalUpdate({ name: (e.target as HTMLInputElement).value })}
                     sx={{maxWidth: '400px'}}
                 />
             </Stack>
             <RuleBuilder
                 title="过滤规则"
                 mode="filter"
-                rows={ds.filters}
+                rows={localDs.filters}
                 fieldOptions={fieldOptions}
-                onChange={(rows: any) => handleUpdate({ filters: rows })}
+                onChange={(rows: any) => handleLocalUpdate({ filters: rows })}
             />
             <RuleBuilder
                 title="排序规则"
                 mode="sort"
-                rows={ds.sort}
+                rows={localDs.sort}
                 fieldOptions={fieldOptions}
-                onChange={(rows: any) => handleUpdate({ sort: rows })}
+                onChange={(rows: any) => handleLocalUpdate({ sort: rows })}
             />
+            {/* [NEW] 保存和取消按钮区域 */}
+            {hasChanges && (
+                <Stack direction="row" spacing={2} justifyContent="flex-end" sx={{pt: 1}}>
+                    <Button onClick={handleRevert} startIcon={<CancelIcon />}>
+                        取消
+                    </Button>
+                    <Button variant="contained" onClick={handleSave} startIcon={<SaveIcon />}>
+                        保存更改
+                    </Button>
+                </Stack>
+            )}
         </Stack>
     );
 }
@@ -180,8 +194,7 @@ export function DataSourceSettings() {
     const [openId, setOpenId] = usePersistentState<string | null>(LOCAL_STORAGE_KEYS.SETTINGS_DATASOURCE_OPEN, null);
 
     const handleAdd = () => {
-        const newName = DEFAULT_NAMES.NEW_DATASOURCE;
-        AppStore.instance.addDataSource(newName).then(() => {
+        AppStore.instance.addDataSource(DEFAULT_NAMES.NEW_DATASOURCE).then(() => {
             const latestDs = AppStore.instance.getSettings().dataSources.at(-1);
             if (latestDs) setOpenId(latestDs.id);
         });

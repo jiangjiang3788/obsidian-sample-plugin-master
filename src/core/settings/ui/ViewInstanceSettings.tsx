@@ -5,7 +5,7 @@ import { useStore, AppStore } from '@state/AppStore';
 import { 
     Accordion, AccordionSummary, AccordionDetails, Box, Stack, Typography, 
     IconButton, TextField, Select, MenuItem, FormControlLabel, Checkbox, 
-    Tooltip, Chip
+    Tooltip, Chip, Radio, RadioGroup as MuiRadioGroup
 } from '@mui/material';
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 import DeleteForeverOutlinedIcon from '@mui/icons-material/DeleteForeverOutlined';
@@ -15,9 +15,8 @@ import { VIEW_OPTIONS, ViewName, getAllFields, Period } from '@core/domain/schem
 import type { ViewInstance } from '@core/domain/schema';
 import { VIEW_EDITORS, VIEW_DEFAULT_CONFIGS } from '@features/dashboard/settings/ModuleEditors/registry';
 import { DataStore } from '@core/services/dataStore';
-import { useMemo, useState } from 'preact/hooks';
+import { useMemo, useState, useCallback, useEffect } from 'preact/hooks';
 
-// 固定标签宽度，用于对齐
 const LABEL_WIDTH = '80px';
 
 function ViewInstanceEditor({ vi }: { vi: ViewInstance }) {
@@ -25,10 +24,31 @@ function ViewInstanceEditor({ vi }: { vi: ViewInstance }) {
     const fieldOptions = useMemo(() => getAllFields(DataStore.instance.queryItems()), []);
     const EditorComponent = VIEW_EDITORS[vi.viewType];
     const dateConfig = vi.dateConfig || { mode: 'inherit_from_layout' };
+    const [title, setTitle] = useState(vi.title);
+
+    useEffect(() => {
+        setTitle(vi.title);
+    }, [vi]);
+
+    const correctedViewConfig = useMemo(() => {
+        if (vi.viewConfig && typeof (vi.viewConfig as any).categories === 'object') {
+            return vi.viewConfig;
+        }
+        if (vi.viewConfig && (vi.viewConfig as any).viewConfig) {
+            return (vi.viewConfig as any).viewConfig;
+        }
+        return vi.viewConfig || {};
+    }, [vi.viewConfig]);
 
     const handleUpdate = (updates: Partial<ViewInstance>) => {
         AppStore.instance.updateViewInstance(vi.id, updates);
     };
+
+    const handleTitleBlur = () => {
+        if (title !== vi.title) {
+            handleUpdate({ title: title });
+        }
+    };
 
     const handleViewTypeChange = (newViewType: ViewName) => {
         handleUpdate({
@@ -53,8 +73,9 @@ function ViewInstanceEditor({ vi }: { vi: ViewInstance }) {
                 <Typography sx={{ width: LABEL_WIDTH, flexShrink: 0, fontWeight: 500 }}>视图标题</Typography>
                 <TextField
                     variant="outlined" size="small"
-                    defaultValue={vi.title}
-                    onBlur={e => handleUpdate({ title: (e.target as HTMLInputElement).value })}
+                    value={title}
+                    onChange={e => setTitle((e.target as HTMLInputElement).value)}
+                    onBlur={handleTitleBlur}
                     sx={{ maxWidth: '400px', flexGrow: 1 }}
                 />
                 <FormControlLabel
@@ -116,8 +137,8 @@ function ViewInstanceEditor({ vi }: { vi: ViewInstance }) {
                 <Box pt={1} mt={1} sx={{borderTop: '1px solid rgba(0,0,0,0.08)'}}>
                     <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 1.5, mt: 1 }}>{vi.viewType.replace('View','')} 专属配置</Typography>
                     <EditorComponent
-                        value={vi.viewConfig || {}}
-                        onChange={(patch: any) => handleUpdate({ viewConfig: { ...(vi.viewConfig || {}), ...patch } })}
+                        value={correctedViewConfig}
+                        onChange={(patch: any) => handleUpdate({ viewConfig: { ...correctedViewConfig, ...patch } })}
                         fieldOptions={fieldOptions}
                     />
                 </Box>
