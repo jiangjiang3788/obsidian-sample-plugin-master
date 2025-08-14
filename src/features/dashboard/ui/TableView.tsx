@@ -1,95 +1,187 @@
 // src/features/dashboard/ui/TableView.tsx
+
 import { h } from 'preact';
+
 import { Item, readField } from '@core/domain/schema';
+
 import { makeObsUri } from '@core/utils/obsidian';
+
 import { EMPTY_LABEL } from '@core/domain/constants';
+
 import { TaskCheckbox } from '@shared/components/TaskCheckbox';
-import { DataStore } from '@core/services/dataStore'; // <-- 引入 DataStore
+
+import { DataStore } from '@core/services/dataStore';
+
+
 
 interface TableViewProps {
+
   items: Item[];
+
   rowField: string;
+
   colField: string;
+
 }
 
-const isDone = (k?: string) => /\/done$/i.test(k || '');
+
+
+const isDone = (k?: string) => /\/(done|cancelled)$/i.test(k || '');
+
+
 
 export function TableView({ items, rowField, colField }: TableViewProps) {
-  // 不再需要 Context，直接从 DataStore 单例调用方法
+
+  // 直接从 DataStore 单例调用方法，不再需要 Context
+
   const onMarkItemDone = (itemId: string) => {
+
     DataStore.instance.markItemDone(itemId);
+
   };
 
-  if (!rowField || !colField)
-    return <div>（TableView 需要配置 rowField 和 colField）</div>;
 
-  const rowVals: string[] = [];
-  const colVals: string[] = [];
-  const matrix: Record<string, Record<string, Item[]>> = {};
 
-  items.forEach(it => {
-    const r = String(readField(it, rowField) ?? EMPTY_LABEL);
-    const c = String(readField(it, colField) ?? EMPTY_LABEL);
-    if (!matrix[r]) {
-      matrix[r] = {};
-      rowVals.push(r);
-    }
-    if (!matrix[r][c]) matrix[r][c] = [];
-    matrix[r][c].push(it);
-    if (!colVals.includes(c)) colVals.push(c);
-  });
+  if (!rowField || !colField) {
 
-  rowVals.sort();
-  colVals.sort();
+    return <div>（表格视图需要配置“行字段”和“列字段”）</div>;
 
-  function renderCellItem(item: Item) {
-    if (item.type === 'task') {
-      const done = isDone(item.categoryKey);
-      return (
-        <span>
-          <TaskCheckbox
-            done={done}
-            onMarkDone={() => onMarkItemDone(item.id)}
-          />
-          {item.icon && <span class="task-icon">{item.icon}</span>}
-          <a href={makeObsUri(item)} target="_blank" rel="noopener" class={done ? 'task-done' : ''}>
-            {item.title}
-          </a>
-        </span>
-      );
-    }
-    return (
-      <a href={makeObsUri(item)} target="_blank" rel="noopener">
-        {item.title}
-      </a>
-    );
   }
 
+
+
+  const rowVals: Set<string> = new Set();
+
+  const colVals: Set<string> = new Set();
+
+  const matrix: Record<string, Record<string, Item[]>> = {};
+
+
+
+  items.forEach(it => {
+
+    const r = String(readField(it, rowField) ?? EMPTY_LABEL);
+
+    const c = String(readField(it, colField) ?? EMPTY_LABEL);
+
+    rowVals.add(r);
+
+    colVals.add(c);
+
+    if (!matrix[r]) matrix[r] = {};
+
+    if (!matrix[r][c]) matrix[r][c] = [];
+
+    matrix[r][c].push(it);
+
+  });
+
+
+
+  const sortedRows = Array.from(rowVals).sort((a,b) => a.localeCompare(b, 'zh-CN'));
+
+  const sortedCols = Array.from(colVals).sort((a,b) => a.localeCompare(b, 'zh-CN'));
+
+
+
+  function renderCellItem(item: Item) {
+
+    if (item.type === 'task') {
+
+      const done = isDone(item.categoryKey);
+
+      return (
+
+        <span>
+
+          <TaskCheckbox
+
+            done={done}
+
+            onMarkDone={() => onMarkItemDone(item.id)}
+
+          />
+
+          {item.icon && <span class="task-icon">{item.icon}</span>}
+
+          <a href={makeObsUri(item)} target="_blank" rel="noopener" class={done ? 'task-done' : ''}>
+
+            {item.title}
+
+          </a>
+
+        </span>
+
+      );
+
+    }
+
+    return (
+
+      <a href={makeObsUri(item)} target="_blank" rel="noopener">
+
+        {item.title}
+
+      </a>
+
+    );
+
+  }
+
+
+
   return (
+
     <table class="think-table">
+
       <thead>
+
         <tr>
+
           <th>{rowField}</th>
-          {colVals.map(c => (<th key={c}>{c}</th>))}
+
+          {sortedCols.map(c => (<th key={c}>{c}</th>))}
+
         </tr>
+
       </thead>
+
       <tbody>
-        {rowVals.map(r => (
+
+        {sortedRows.map(r => (
+
           <tr key={r}>
+
             <td><strong>{r}</strong></td>
-            {colVals.map(c => {
+
+            {sortedCols.map(c => {
+
               const cellItems = matrix[r]?.[c] || [];
+
               return !cellItems.length ? (
+
                 <td key={c} class="empty" />
+
               ) : (
+
                 <td key={c}>
+
                   {cellItems.map(it => (<div key={it.id}>{renderCellItem(it)}</div>))}
+
                 </td>
+
               );
+
             })}
+
           </tr>
+
         ))}
+
       </tbody>
+
     </table>
+
   );
+
 }
