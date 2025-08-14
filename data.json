@@ -1,63 +1,54 @@
 {
   "dataSources": [
     {
-      "id": "ds_me9ye2lwwlc44",
-      "name": "计划",
-      "filters": [
-        {
-          "field": "categoryKey",
-          "op": "=",
-          "value": "计划"
-        },
-        {
-          "field": "doneDate",
-          "op": "=",
-          "value": ""
-        }
-      ],
-      "sort": [
-        {
-          "field": "date",
-          "dir": "asc"
-        }
-      ]
+      "id": "ds_me9yjmlznzs33",
+      "name": "所有未完成任务",
+      "filters": [],
+      "sort": []
     },
     {
-      "id": "ds_me9yjmlznzs33",
-      "name": "完成任务",
-      "filters": [
-        {
-          "field": "categoryKey",
-          "op": "=",
-          "value": "任务/done"
-        }
-      ],
+      "id": "ds_mebgqp5mbtxdn",
+      "name": "所有完成任务",
+      "filters": [],
+      "sort": []
+    },
+    {
+      "id": "ds_mebgvlukh4idm",
+      "name": "所有总结",
+      "filters": [],
+      "sort": []
+    },
+    {
+      "id": "ds_mebgvy8y9dhq0",
+      "name": "所有计划",
+      "filters": [],
+      "sort": []
+    },
+    {
+      "id": "ds_mebgwuail3bcu",
+      "name": "所有思考",
+      "filters": [],
       "sort": []
     }
   ],
   "viewInstances": [
     {
       "id": "view_me9ygd5ci3kdp",
-      "title": "计划",
-      "viewType": "BlockView",
-      "dataSourceId": "ds_me9ye2lwwlc44",
+      "title": "所有未完成任务",
+      "viewType": "TableView",
+      "dataSourceId": "ds_me9yjmlznzs33",
       "viewConfig": {
-        "view": "BlockView",
-        "title": "块视图",
+        "view": "TableView",
+        "title": "表格视图",
         "collapsed": false,
-        "fields": [],
-        "group": "categoryKey"
+        "rowField": "date",
+        "colField": "tags"
       },
-      "fields": [
-        "endMs",
-        "extra.(时间",
-        "created"
-      ],
+      "fields": [],
       "collapsed": false,
       "dateConfig": {
-        "mode": "fixed_period"
-      },
-      "group": "date"
+        "mode": "inherit_from_layout"
+      }
     },
     {
       "id": "view_me9ykdhhufm5i",
@@ -128,6 +119,19 @@
         }
       },
       "fields": []
+    },
+    {
+      "id": "view_mebh1ykmt4nes",
+      "title": "新视图",
+      "viewType": "BlockView",
+      "dataSourceId": "",
+      "viewConfig": {
+        "view": "BlockView",
+        "title": "块视图",
+        "collapsed": false,
+        "fields": [],
+        "group": "categoryKey"
+      }
     }
   ],
   "layouts": [
@@ -135,8 +139,7 @@
       "id": "layout_me9yskul4lkf6",
       "name": "全局",
       "viewInstanceIds": [
-        "view_me9ygd5ci3kdp",
-        "view_me9ykdhhufm5i"
+        "view_me9ygd5ci3kdp"
       ],
       "displayMode": "list",
       "initialView": "周",
@@ -145,7 +148,7 @@
       },
       "initialDate": "2025-08-13",
       "hideToolbar": false,
-      "initialDateFollowsNow": true
+      "initialDateFollowsNow": false
     }
   ],
   "inputSettings": {
