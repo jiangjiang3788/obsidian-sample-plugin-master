@@ -3,31 +3,61 @@
     {
       "id": "ds_me9yjmlznzs33",
       "name": "所有未完成任务",
-      "filters": [],
+      "filters": [
+        {
+          "field": "categoryKey",
+          "op": "=",
+          "value": "任务/open"
+        }
+      ],
       "sort": []
     },
     {
       "id": "ds_mebgqp5mbtxdn",
       "name": "所有完成任务",
-      "filters": [],
+      "filters": [
+        {
+          "field": "categoryKey",
+          "op": "=",
+          "value": "任务/done"
+        }
+      ],
       "sort": []
     },
     {
       "id": "ds_mebgvlukh4idm",
       "name": "所有总结",
-      "filters": [],
+      "filters": [
+        {
+          "field": "categoryKey",
+          "op": "=",
+          "value": "总结"
+        }
+      ],
       "sort": []
     },
     {
       "id": "ds_mebgvy8y9dhq0",
       "name": "所有计划",
-      "filters": [],
+      "filters": [
+        {
+          "field": "categoryKey",
+          "op": "=",
+          "value": "计划"
+        }
+      ],
       "sort": []
     },
     {
       "id": "ds_mebgwuail3bcu",
       "name": "所有思考",
-      "filters": [],
+      "filters": [
+        {
+          "field": "filename",
+          "op": "=",
+          "value": "思考"
+        }
+      ],
       "sort": []
     }
   ],
@@ -41,11 +71,11 @@
         "view": "TableView",
         "title": "表格视图",
         "collapsed": false,
-        "rowField": "date",
+        "rowField": "recurrence",
         "colField": "tags"
       },
       "fields": [],
-      "collapsed": false,
+      "collapsed": true,
       "dateConfig": {
         "mode": "inherit_from_layout"
       }
@@ -123,14 +153,106 @@
     {
       "id": "view_mebh1ykmt4nes",
       "title": "新视图",
+      "viewType": "ExcelView",
+      "dataSourceId": "ds_me9yjmlznzs33",
+      "viewConfig": {
+        "view": "ExcelView",
+        "title": "数据表格",
+        "collapsed": false,
+        "fields": []
+      },
+      "fields": [
+        "extra.时长",
+        "extra.评分"
+      ]
+    },
+    {
+      "id": "view_mebhi1503znl8",
+      "title": "完成任务",
+      "viewType": "TableView",
+      "dataSourceId": "ds_mebgqp5mbtxdn",
+      "viewConfig": {
+        "view": "TableView",
+        "title": "表格视图",
+        "collapsed": false,
+        "rowField": "tags",
+        "colField": "date"
+      },
+      "collapsed": true
+    },
+    {
+      "id": "view_mebhkcowrs6e5",
+      "title": "所有总结",
       "viewType": "BlockView",
-      "dataSourceId": "",
+      "dataSourceId": "ds_mebgvlukh4idm",
       "viewConfig": {
         "view": "BlockView",
         "title": "块视图",
         "collapsed": false,
         "fields": [],
         "group": "categoryKey"
+      },
+      "fields": [
+        "categoryKey",
+        "icon",
+        "title",
+        "content"
+      ],
+      "group": "tags",
+      "collapsed": true
+    },
+    {
+      "id": "view_mebhmnfytbhat",
+      "title": "所有计划",
+      "viewType": "BlockView",
+      "dataSourceId": "ds_mebgvy8y9dhq0",
+      "viewConfig": {
+        "view": "BlockView",
+        "title": "块视图",
+        "collapsed": false,
+        "fields": [],
+        "group": "categoryKey"
+      },
+      "fields": [
+        "categoryKey",
+        "icon",
+        "title",
+        "content"
+      ],
+      "group": "tags",
+      "collapsed": true
+    },
+    {
+      "id": "view_mebho1v6n4oio",
+      "title": "所有思考",
+      "viewType": "BlockView",
+      "dataSourceId": "ds_mebgwuail3bcu",
+      "viewConfig": {
+        "view": "BlockView",
+        "title": "块视图",
+        "collapsed": false,
+        "fields": [],
+        "group": "categoryKey"
+      },
+      "fields": [
+        "categoryKey",
+        "icon",
+        "title",
+        "content"
+      ],
+      "group": "tags",
+      "collapsed": true
+    },
+    {
+      "id": "view_mebhqa2sds77i",
+      "title": "新视图",
+      "viewType": "ExcelView",
+      "dataSourceId": "",
+      "viewConfig": {
+        "view": "ExcelView",
+        "title": "数据表格",
+        "collapsed": false,
+        "fields": []
       }
     }
   ],
@@ -139,7 +261,11 @@
       "id": "layout_me9yskul4lkf6",
       "name": "全局",
       "viewInstanceIds": [
-        "view_me9ygd5ci3kdp"
+        "view_me9ygd5ci3kdp",
+        "view_mebhi1503znl8",
+        "view_mebhmnfytbhat",
+        "view_mebhkcowrs6e5",
+        "view_mebho1v6n4oio"
       ],
       "displayMode": "list",
       "initialView": "周",
