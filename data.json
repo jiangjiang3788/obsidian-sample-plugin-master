@@ -39,27 +39,25 @@
     {
       "id": "view_me9ygd5ci3kdp",
       "title": "计划",
-      "viewType": "TableView",
+      "viewType": "BlockView",
       "dataSourceId": "ds_me9ye2lwwlc44",
       "viewConfig": {
-        "view": "TableView",
-        "title": "表格视图",
+        "view": "BlockView",
+        "title": "块视图",
         "collapsed": false,
-        "filters": [],
-        "sort": [
-          {
-            "field": "date",
-            "dir": "desc"
-          }
-        ],
-        "rowField": "categoryKey",
-        "colField": "date"
+        "fields": [],
+        "group": "categoryKey"
       },
-      "fields": [],
+      "fields": [
+        "endMs",
+        "extra.(时间",
+        "created"
+      ],
       "collapsed": false,
       "dateConfig": {
         "mode": "fixed_period"
-      }
+      },
+      "group": "date"
     },
     {
       "id": "view_me9ykdhhufm5i",
