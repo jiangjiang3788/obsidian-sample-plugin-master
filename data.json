@@ -133,6 +133,7 @@
       "id": "layout_me9yskul4lkf6",
       "name": "全局",
       "viewInstanceIds": [
+        "view_me9ygd5ci3kdp",
         "view_me9ykdhhufm5i"
       ],
       "displayMode": "list",
@@ -140,7 +141,9 @@
       "gridConfig": {
         "columns": 2
       },
-      "initialDate": "2025-08-13"
+      "initialDate": "2025-08-13",
+      "hideToolbar": false,
+      "initialDateFollowsNow": true
     }
   ],
   "inputSettings": {
