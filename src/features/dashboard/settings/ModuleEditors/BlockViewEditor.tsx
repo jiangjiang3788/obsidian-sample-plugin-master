@@ -1,27 +1,20 @@
 // src/features/dashboard/settings/ModuleEditors/BlockViewEditor.tsx
 /** @jsxImportSource preact */
 import { h } from 'preact';
+import { Typography } from '@mui/material';
 
-/**
- * @fileoverview BlockView 的设置编辑器。
- * 新增: 导出该视图的默认配置，作为单一真源。
- */
-
-// [REFACTOR] 导出默认配置
 export const DEFAULT_CONFIG = {
-  view: 'BlockView' as const,
-  title: '块视图',
-  collapsed: false,
-  filters: [],
-  sort: [],
-  fields: [],
-  group: 'categoryKey',
+  view: 'BlockView' as const,
+  title: '块视图',
+  collapsed: false,
+  fields: [],
+  group: 'categoryKey',
 };
 
 export function BlockViewEditor() {
-  return (
-    <div class="view-meta" style="--c:#22aa66">
-      <span class="dot"></span>块视图：主要使用“分组字段/显示字段/过滤/排序”
-    </div>
-  );
+  return (
+    <Typography variant="body1" color="text.secondary">
+      块视图（BlockView）没有专属配置项。它的行为主要由上方的 **显示字段** 和 **分组字段** 控制。
+    </Typography>
+  );
 }

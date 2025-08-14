@@ -2,17 +2,23 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
 import { useStore, AppStore } from '@state/AppStore';
-import { Accordion, AccordionSummary, AccordionDetails, Box, Stack, Typography, IconButton, TextField, Select, MenuItem, FormControlLabel, Checkbox, Tooltip } from '@mui/material';
-import AddIcon from '@mui/icons-material/Add';
-import DeleteIcon from '@mui/icons-material/Delete';
+import { 
+    Accordion, AccordionSummary, AccordionDetails, Box, Stack, Typography, 
+    IconButton, TextField, Select, MenuItem, FormControlLabel, Checkbox, 
+    Tooltip, Chip
+} from '@mui/material';
+import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
+import DeleteForeverOutlinedIcon from '@mui/icons-material/DeleteForeverOutlined';
 import { usePersistentState } from '@shared/hooks/usePersistentState';
 import { LOCAL_STORAGE_KEYS, DEFAULT_NAMES } from '@core/domain/constants';
 import { VIEW_OPTIONS, ViewName, getAllFields, Period } from '@core/domain/schema';
 import type { ViewInstance } from '@core/domain/schema';
 import { VIEW_EDITORS, VIEW_DEFAULT_CONFIGS } from '@features/dashboard/settings/ModuleEditors/registry';
-import { PillMultiSelect } from '@shared/components/form/PillMultiSelect';
 import { DataStore } from '@core/services/dataStore';
-import { useMemo } from 'preact/hooks';
+import { useMemo, useState } from 'preact/hooks';
+
+// 固定标签宽度，用于对齐
+const LABEL_WIDTH = '80px';
 
 function ViewInstanceEditor({ vi }: { vi: ViewInstance }) {
     const dataSources = useStore(state => state.settings.dataSources);
@@ -30,83 +36,91 @@ function ViewInstanceEditor({ vi }: { vi: ViewInstance }) {
             viewConfig: structuredClone(VIEW_DEFAULT_CONFIGS[newViewType]),
         });
     };
-    
-    const correctedViewConfig = useMemo(() => {
-        if (vi.viewConfig && vi.viewConfig.viewConfig) {
-            return vi.viewConfig.viewConfig;
-        }
-        return vi.viewConfig || {};
-    }, [vi.viewConfig]);
 
+    const addField = (field: string) => {
+        if (field && !vi.fields?.includes(field)) {
+            handleUpdate({ fields: [...(vi.fields || []), field] });
+        }
+    };
+
+    const removeField = (field: string) => {
+        handleUpdate({ fields: vi.fields?.filter(f => f !== field) });
+    };
 
     return (
-        <Stack spacing={2}>
-            <Stack direction="row" spacing={2} alignItems="center">
-                <TextField label="视图标题" defaultValue={vi.title} onBlur={e => handleUpdate({ title: (e.target as HTMLInputElement).value })} variant="filled" sx={{ flex: 1 }} />
-                <Tooltip title="勾选后，此视图在布局中默认是折叠状态">
-                    <FormControlLabel
-                        control={<Checkbox checked={!!vi.collapsed} onChange={e => handleUpdate({ collapsed: e.target.checked })} />}
-                        label="默认折叠"
-                        sx={{ flexShrink: 0 }}
-                    />
-                </Tooltip>
-            </Stack>
-            
-            <Stack direction="row" spacing={2}>
-                <Select label="视图类型" value={vi.viewType} onChange={e => handleViewTypeChange(e.target.value as ViewName)} variant="filled" sx={{ flex: 1 }}>
+        <Stack spacing={2} sx={{ p: '8px 16px' }}>
+            <Stack direction="row" alignItems="center" spacing={2}>
+                <Typography sx={{ width: LABEL_WIDTH, flexShrink: 0, fontWeight: 500 }}>视图标题</Typography>
+                <TextField
+                    variant="outlined" size="small"
+                    defaultValue={vi.title}
+                    onBlur={e => handleUpdate({ title: (e.target as HTMLInputElement).value })}
+                    sx={{ maxWidth: '400px', flexGrow: 1 }}
+                />
+                <FormControlLabel
+                    control={<Checkbox size="small" checked={!!vi.collapsed} onChange={e => handleUpdate({ collapsed: e.target.checked })} />}
+                    label={<Typography noWrap>默认折叠</Typography>}
+                />
+            </Stack>
+
+            <Stack direction="row" alignItems="center" spacing={2}>
+                 <Typography sx={{ width: LABEL_WIDTH, flexShrink: 0, fontWeight: 500 }}>基础配置</Typography>
+                <Select size="small" value={vi.viewType} variant="outlined" onChange={e => handleViewTypeChange(e.target.value as ViewName)} sx={{ minWidth: 150, flexGrow: 1 }}>
                     {VIEW_OPTIONS.map(v => <MenuItem key={v} value={v}>{v.replace('View', '')}</MenuItem>)}
                 </Select>
-                <Select label="数据源" value={vi.dataSourceId} onChange={e => handleUpdate({ dataSourceId: e.target.value as string })} variant="filled" sx={{ flex: 1 }}>
-                    <MenuItem value=""><em>-- 无 --</em></MenuItem>
+                <Select size="small" value={vi.dataSourceId} variant="outlined" displayEmpty onChange={e => handleUpdate({ dataSourceId: e.target.value as string })} sx={{ minWidth: 150, flexGrow: 1 }}>
+                    <MenuItem value=""><em>-- 选择数据源 --</em></MenuItem>
                     {dataSources.map(ds => <MenuItem key={ds.id} value={ds.id}>{ds.name}</MenuItem>)}
                 </Select>
-            </Stack>
-
-            {/* [NEW] 日期处理方式设置 */}
-            <Box sx={{ border: '1px solid var(--background-modifier-border)', p: 1.5, borderRadius: 1 }}>
-                <Typography variant="subtitle2" sx={{ mb: 1.5 }}>日期处理方式</Typography>
-                <Stack direction="row" spacing={2} alignItems="center">
-                    <Select 
-                        label="模式" 
-                        value={dateConfig.mode} 
-                        onChange={e => handleUpdate({ dateConfig: { ...dateConfig, mode: e.target.value as any } })} 
-                        variant="filled" 
-                        sx={{ flex: 1 }}
-                    >
-                        <MenuItem value="inherit_from_layout">继承布局工具栏</MenuItem>
-                        <MenuItem value="fixed_period">使用固定周期</MenuItem>
+            </Stack>
+            
+            <Stack direction="row" alignItems="center" spacing={2}>
+                <Typography sx={{ width: LABEL_WIDTH, flexShrink: 0, fontWeight: 500 }}>日期处理</Typography>
+                 <Select size="small" value={dateConfig.mode} variant="outlined" onChange={e => handleUpdate({ dateConfig: { ...dateConfig, mode: e.target.value as any } })} sx={{ minWidth: 150, flexGrow: 1 }}>
+                    <MenuItem value="inherit_from_layout">继承布局</MenuItem>
+                    <MenuItem value="fixed_period">固定周期</MenuItem>
+                </Select>
+                {dateConfig.mode === 'fixed_period' && (
+                    <Select size="small" value={dateConfig.period || '月'} variant="outlined" onChange={e => handleUpdate({ dateConfig: { ...dateConfig, period: e.target.value as Period } })} sx={{ minWidth: 150, flexGrow: 1 }}>
+                        {['年', '季', '月', '周', '天'].map(p => <MenuItem key={p} value={p}>{p}</MenuItem>)}
                     </Select>
-                    {dateConfig.mode === 'fixed_period' && (
-                        <Select 
-                            label="固定周期"
-                            value={dateConfig.period || '月'}
-                            onChange={e => handleUpdate({ dateConfig: { ...dateConfig, period: e.target.value as Period } })}
-                            variant="filled"
-                            sx={{ flex: 1 }}
-                        >
-                            {['年', '季', '月', '周', '天'].map(p => <MenuItem key={p} value={p}>{p}</MenuItem>)}
-                        </Select>
-                    )}
-                </Stack>
-                <Typography variant="caption" color="text.secondary" sx={{mt: 1, display: 'block'}}>
-                    - **继承布局工具栏**: 视图的周期和日期由布局顶部的 年/季/月... 按钮和日期导航控制。
-                    <br/>
-                    - **使用固定周期**: 视图的周期是固定的，但仍会跟随布局的日期导航（上一周期/下一周期）同步更新。
-                </Typography>
-            </Box>
+                )}
+            </Stack>
 
-            <PillMultiSelect label="显示字段" value={vi.fields || []} options={fieldOptions} onChange={v => handleUpdate({ fields: v })} />
-            <PillMultiSelect label="分组字段 (仅BlockView)" value={vi.group ? [vi.group] : []} options={fieldOptions} onChange={v => handleUpdate({ group: v[0] || undefined })} />
+            <Stack direction="row" flexWrap="wrap" spacing={1} useFlexGap alignItems="center">
+                <Typography sx={{ width: LABEL_WIDTH, flexShrink: 0, fontWeight: 500 }}>显示字段</Typography>
+                {(vi.fields || []).map(field => (
+                    <Tooltip key={field} title={`点击移除字段: ${field}`}>
+                        <Chip label={field} onClick={() => removeField(field)} size="small" />
+                    </Tooltip>
+                ))}
+                <Select
+                    size="small" displayEmpty value=""
+                    onChange={(e) => addField(e.target.value as string)}
+                    sx={{ minWidth: 150, '.MuiOutlinedInput-notchedOutline': { borderStyle: 'dashed' } }}
+                    renderValue={() => <Typography color="text.secondary" sx={{fontSize: '0.875rem'}}><em>+ 添加字段...</em></Typography>}
+                >
+                    {fieldOptions.filter(f => !vi.fields?.includes(f)).map(f => <MenuItem key={f} value={f}>{f}</MenuItem>)}
+                </Select>
+            </Stack>
+
+            <Stack direction="row" alignItems="center" spacing={2}>
+                <Typography sx={{ width: LABEL_WIDTH, flexShrink: 0, fontWeight: 500 }}>分组字段</Typography>
+                <Select size="small" value={vi.group || ''} displayEmpty variant="outlined" onChange={e => handleUpdate({ group: e.target.value || undefined })} fullWidth>
+                    <MenuItem value=""><em>-- 不分组 --</em></MenuItem>
+                    {fieldOptions.map(f => <MenuItem key={f} value={f}>{f}</MenuItem>)}
+                </Select>
+            </Stack>
 
             {EditorComponent && (
-                <Box sx={{ borderTop: '1px dashed #ccc', pt: 2, mt: 1 }}>
-                    <Typography variant="subtitle2" sx={{ mb: 1 }}>{vi.viewType.replace('View','')} 专属配置</Typography>
-                    <EditorComponent
-                        value={correctedViewConfig}
-                        onChange={(patch) => handleUpdate({ viewConfig: { ...correctedViewConfig, ...patch } })}
-                        fieldOptions={fieldOptions}
-                    />
-                </Box>
+                <Box pt={1} mt={1} sx={{borderTop: '1px solid rgba(0,0,0,0.08)'}}>
+                    <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 1.5, mt: 1 }}>{vi.viewType.replace('View','')} 专属配置</Typography>
+                    <EditorComponent
+                        value={vi.viewConfig || {}}
+                        onChange={(patch: any) => handleUpdate({ viewConfig: { ...(vi.viewConfig || {}), ...patch } })}
+                        fieldOptions={fieldOptions}
+                    />
+                </Box>
             )}
         </Stack>
     );
@@ -123,17 +137,21 @@ export function ViewInstanceSettings() {
         });
     };
 
-    const handleDelete = (id: string) => {
-        if (confirm('确认删除此视图吗？布局中对该视图的引用将被移除。')) {
+    const handleDelete = (id: string, name: string) => {
+        if (confirm(`确认删除视图 "${name}" 吗？\n布局中对该视图的引用将被移除。`)) {
             AppStore.instance.deleteViewInstance(id);
         }
     };
     
     return (
-        <Box>
-            <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
+        <Box sx={{ maxWidth: '900px', mx: 'auto' }}>
+            <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 2 }}>
                 <Typography variant="h6">管理视图</Typography>
-                <IconButton onClick={handleAdd} title="新增视图"><AddIcon /></IconButton>
+                <Tooltip title="新增视图">
+                    <IconButton onClick={handleAdd} color="success">
+                        <AddCircleOutlineIcon />
+                    </IconButton>
+                </Tooltip>
             </Stack>
             <Stack spacing={1}>
                 {viewInstances.map(vi => (
@@ -142,24 +160,28 @@ export function ViewInstanceSettings() {
                         expanded={openId === vi.id}
                         onChange={() => setOpenId(openId === vi.id ? null : vi.id)}
                         disableGutters
-                        elevation={2}
+                        elevation={1}
                         sx={{ '&:before': { display: 'none' } }}
                     >
                         <AccordionSummary
-                            sx={{
-                                minHeight: 40,
-                                '& .MuiAccordionSummary-content': { my: '10px' },
-                                cursor: 'pointer',
-                            }}
-                        >
-                            <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ width: '100%' }}>
-                                <Typography fontWeight={500}>{vi.title}</Typography>
-                                <IconButton size="small" color="error" onClick={e => { e.stopPropagation(); handleDelete(vi.id); }} title="删除" sx={{ opacity: 0.6, '&:hover': { opacity: 1 } }}>
-                                    <DeleteIcon fontSize="small" />
-                                </IconButton>
-                            </Stack>
-                        </AccordionSummary>
-                        <AccordionDetails sx={{ bgcolor: 'action.hover', borderTop: '1px solid var(--background-modifier-border)' }}>
+                            sx={{
+                                minHeight: 48,
+                                '& .MuiAccordionSummary-content': { my: '12px', alignItems: 'center', justifyContent: 'space-between' },
+                                cursor: 'pointer',
+                            }}
+                        >
+                            <Typography fontWeight={500}>{vi.title}</Typography>
+                            <Tooltip title="删除此视图">
+                                <IconButton
+                                    size="small"
+                                    onClick={e => { e.stopPropagation(); handleDelete(vi.id, vi.title); }}
+                                    sx={{ color: 'text.secondary', opacity: 0.5, '&:hover': { opacity: 1, color: 'error.main' } }}
+                                >
+                                    <DeleteForeverOutlinedIcon />
+                                </IconButton>
+                            </Tooltip>
+                        </AccordionSummary>
+                        <AccordionDetails sx={{ bgcolor: 'action.hover', borderTop: '1px solid rgba(0,0,0,0.08)' }}>
                             <ViewInstanceEditor vi={vi} />
                         </AccordionDetails>
                     </Accordion>
