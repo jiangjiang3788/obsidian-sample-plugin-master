@@ -52,7 +52,10 @@
         "content"
       ],
       "collapsed": false,
-      "group": "tags"
+      "group": "tags",
+      "dateConfig": {
+        "mode": "fixed_period"
+      }
     },
     {
       "id": "view_me9ykdhhufm5i",
