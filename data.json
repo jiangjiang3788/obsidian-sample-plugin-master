@@ -8,6 +8,11 @@
           "field": "categoryKey",
           "op": "=",
           "value": "计划"
+        },
+        {
+          "field": "doneDate",
+          "op": "=",
+          "value": ""
         }
       ],
       "sort": [
@@ -34,25 +39,24 @@
     {
       "id": "view_me9ygd5ci3kdp",
       "title": "计划",
-      "viewType": "BlockView",
+      "viewType": "TableView",
       "dataSourceId": "ds_me9ye2lwwlc44",
       "viewConfig": {
-        "view": "BlockView",
-        "title": "块视图",
+        "view": "TableView",
+        "title": "表格视图",
         "collapsed": false,
         "filters": [],
-        "sort": [],
-        "fields": [],
-        "group": "categoryKey"
+        "sort": [
+          {
+            "field": "date",
+            "dir": "desc"
+          }
+        ],
+        "rowField": "categoryKey",
+        "colField": "date"
       },
-      "fields": [
-        "date",
-        "tags",
-        "icon",
-        "content"
-      ],
+      "fields": [],
       "collapsed": false,
-      "group": "tags",
       "dateConfig": {
         "mode": "fixed_period"
       }
