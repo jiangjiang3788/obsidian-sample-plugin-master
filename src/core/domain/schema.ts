@@ -13,23 +13,21 @@ export interface DataSource {
   sort: SortRule[];
 }
 
-// [NEW] 定义视图的日期配置
 export type DateConfigMode = 'inherit_from_layout' | 'fixed_period';
 export type Period = '年' | '季' | '月' | '周' | '天';
 
 export interface DateConfig {
   mode: DateConfigMode;
-  period?: Period; // 仅在 mode 为 'fixed_period' 时使用
+  period?: Period;
 }
 
-/** [MOD] 视图实例：增加 dateConfig 字段 */
 export interface ViewInstance {
   id: string;
   title: string;
   viewType: ViewName;
   dataSourceId: string;
   collapsed?: boolean;
-  dateConfig?: DateConfig; // 新增字段
+  dateConfig?: DateConfig;
   fields?: string[];
   group?: string;
   viewConfig?: Record<string, any>;
@@ -43,7 +41,7 @@ export interface Layout {
   hideToolbar?: boolean;
   initialView?: string;
   initialDate?: string;
-  initialDateFollowsNow?: boolean; // [NEW] 新增字段，用于“跟随当前时间”
+  initialDateFollowsNow?: boolean;
   displayMode?: 'list' | 'grid';
   gridConfig?: {
     columns?: number;
@@ -116,8 +114,11 @@ export interface Item {
 }
 
 // ----- 字段读取工具 ----- //
-export const CORE_FIELDS = [ 'id', 'type', 'title', 'content', 'categoryKey', 'tags', 'icon', 'priority', 'date', 'dateMs', 'dateSource', 'startISO', 'endISO', 'startMs', 'endMs', 'filename', 'header', 'created', 'modified', 'file.path', 'file.line', 'file.basename', 'createdDate', 'scheduledDate', 'startDate', 'dueDate', 'doneDate', 'cancelledDate' ] as const;
+// [FIXED] 在这个核心字段列表中添加 'recurrence'
+export const CORE_FIELDS = [ 'id', 'type', 'title', 'content', 'categoryKey', 'tags', 'recurrence', 'icon', 'priority', 'date', 'dateMs', 'dateSource', 'startISO', 'endISO', 'startMs', 'endMs', 'filename', 'header', 'created', 'modified', 'file.path', 'file.line', 'file.basename', 'createdDate', 'scheduledDate', 'startDate', 'dueDate', 'doneDate', 'cancelledDate' ] as const;
+
 export type CoreField = typeof CORE_FIELDS[number];
+
 export function getAllFields(items: Item[]): string[] {
   const set = new Set<string>(CORE_FIELDS as unknown as string[]);
   items.forEach(it => {
