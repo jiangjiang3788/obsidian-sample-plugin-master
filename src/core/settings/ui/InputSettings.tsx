@@ -7,26 +7,8 @@ import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { useStore, AppStore } from '@state/AppStore';
 import type { InputTemplate } from '@core/domain/schema';
+import { TemplateEditorModal } from './components/TemplateEditorModal'; 
 
-// [占位符] 我们将在后续迭代中用真实组件替换
-const TemplateEditorModal = ({ isOpen, onClose, template, onSave }: any) => {
-    if (!isOpen) return null;
-    return (
-        <div style={{ position: 'fixed', display: 'flex', flexDirection: 'column', top: '15%', left: '50%', transform: 'translateX(-50%)', width: '600px', maxWidth:'90vw', height: '70vh', background: 'var(--background-secondary)', border: '1px solid var(--background-modifier-border)', zIndex: 1000, padding: '20px', borderRadius: '8px', boxShadow: '0 5px 15px rgba(0,0,0,0.2)' }}>
-            <h2 style={{marginTop: 0}}>编辑模板 (MVP占位符)</h2>
-            <p>模板ID: {template?.id}</p>
-            <p>模板名称: {template?.name}</p>
-            <textarea style={{ flex: 1, width: '100%', whiteSpace: 'pre', fontFamily: 'monospace', fontSize: '12px' }} readOnly value={JSON.stringify(template, null, 2)} />
-            <div style={{marginTop: '1rem', display: 'flex', justifyContent: 'flex-end', gap: '8px'}}>
-                <Button onClick={() => onSave(template)} variant="contained">保存</Button>
-                <Button onClick={onClose} variant="outlined">关闭</Button>
-            </div>
-        </div>
-    )
-};
-
-
-// 组件：管理Block类型
 function BlockTypeManager() {
     const blockTypes = useStore(state => state.settings.inputSettings?.blockTypes || []);
     const [newType, setNewType] = useState('');
@@ -47,9 +29,17 @@ function BlockTypeManager() {
     return (
         <Box sx={{ mb: 3 }}>
             <Typography variant="h6" gutterBottom>1. 管理 Block 类型</Typography>
+            <Typography variant="body2" color="text.secondary" sx={{mb: 1.5}}>在这里添加、删除全局可用的 Block 类型。表格的列会据此动态变化。</Typography>
             <Stack direction="row" spacing={1} sx={{ mb: 1, flexWrap: 'wrap', gap: 1 }}>
                 {(blockTypes || []).map(type => (
-                    <Chip key={type} label={type} onDelete={() => handleDelete(type)} />
+                    <Tooltip key={type} title={`点击删除 "${type}"`}>
+                        <Chip 
+                            label={type} 
+                            onClick={() => handleDelete(type)} 
+                            onDelete={() => handleDelete(type)} // onDelete 仅用于显示 'x' 图标
+                            sx={{ cursor: 'pointer' }}
+                        />
+                    </Tooltip>
                 ))}
             </Stack>
             <Stack direction="row" spacing={1} alignItems="center">
@@ -66,7 +56,6 @@ function BlockTypeManager() {
     );
 }
 
-// [FIX] 新增缺失的 ThemePathManager 组件定义
 function ThemePathManager({ onAdd }: { onAdd: (path: string) => void }) {
     const [newPath, setNewPath] = useState('');
     const handleAdd = () => {
@@ -91,12 +80,9 @@ function ThemePathManager({ onAdd }: { onAdd: (path: string) => void }) {
 }
 
 
-// 主界面
 export function InputSettings() {
     const settings = useStore(state => state.settings.inputSettings);
-    
     const { blockTypes = [], themePaths = [], templates = [] } = settings || {};
-    
     const [editingTemplate, setEditingTemplate] = useState<Partial<InputTemplate> | null>(null);
 
     const sortedThemePaths = useMemo(() => {
@@ -115,16 +101,16 @@ export function InputSettings() {
         if (existingTemplate) {
             setEditingTemplate(structuredClone(existingTemplate));
         } else {
-            setEditingTemplate({
-                id: `tpl_${Date.now().toString(36)}`,
-                name: name,
-                fields: [],
-                outputTemplate: '',
-                targetFile: ''
-            });
+            const baseTemplate = templatesByName.get(`theme:Base#type:${type}`);
+            const newTemplate = baseTemplate ? structuredClone(baseTemplate) : { fields: [], outputTemplate: '', targetFile: ''};
+            
+            newTemplate.id = `tpl_${Date.now().toString(36)}`;
+            newTemplate.name = name;
+            
+            setEditingTemplate(newTemplate);
         }
     };
-
+    
     const handleSaveTemplate = (templateToSave: InputTemplate) => {
         AppStore.instance.upsertTemplate(templateToSave);
         setEditingTemplate(null);
