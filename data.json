@@ -66,69 +66,67 @@
       "id": "view_me9ykdhhufm5i",
       "title": "时间轴",
       "viewType": "TimelineView",
-      "dataSourceId": "ds_me9yjmlznzs33",
+      "dataSourceId": "ds_mebgqp5mbtxdn",
       "viewConfig": {
-        "view": "TimelineView",
-        "title": "时间轴",
-        "collapsed": false,
-        "filters": [],
-        "sort": [],
-        "viewConfig": {
-          "defaultHourHeight": 50,
-          "WEEKLY_AGGREGATION_THRESHOLD_DAYS": 35,
-          "MAX_HOURS_PER_DAY": 24,
-          "UNTRACKED_LABEL": "未记录",
-          "categoryMap": {},
-          "categories": {
-            "健康": {
-              "color": "#60a5fa",
-              "files": [
-                "00-健康打卡",
-                "2-1健康",
-                "2-2三餐"
-              ]
-            },
-            "生活": {
-              "color": "#34d399",
-              "files": [
-                "2-3生活"
-              ]
-            },
-            "工作": {
-              "color": "#fbbf24",
-              "files": [
-                "2-6工作"
-              ]
-            },
-            "电脑": {
-              "color": "#fb606f",
-              "files": [
-                "2-5电脑"
-              ]
-            },
-            "其他": {
-              "color": "#bababa",
-              "files": [
-                "2-0其他"
-              ]
-            }
+        "defaultHourHeight": 50,
+        "WEEKLY_AGGREGATION_THRESHOLD_DAYS": 35,
+        "MAX_HOURS_PER_DAY": 24,
+        "UNTRACKED_LABEL": "未记录",
+        "categoryMap": {},
+        "categories": {
+          "健康": {
+            "color": "#60a5fa",
+            "files": [
+              "00-健康打卡",
+              "2-1健康",
+              "2-2三餐"
+            ]
           },
-          "colorPalette": [
-            "#34d399",
-            "#fbbf24",
-            "#a78bfa",
-            "#60a5fa",
-            "#f87171",
-            "#a1a1aa"
-          ],
-          "progressOrder": [
-            "健康",
-            "生活",
-            "电脑",
-            "工作",
-            "其他"
-          ]
-        }
+          "生活": {
+            "color": "#34d399",
+            "files": [
+              "2-3生活"
+            ]
+          },
+          "电脑": {
+            "color": "#fb606f",
+            "files": [
+              "2-5电脑"
+            ]
+          },
+          "工作": {
+            "color": "#fbbf24",
+            "files": [
+              "2-6工作"
+            ]
+          },
+          "其他": {
+            "color": "#bababa",
+            "files": [
+              "2-0其他"
+            ]
+          },
+          "未记录": {
+            "color": "#828282",
+            "files": []
+          }
+        },
+        "colorPalette": [
+          "#34d399",
+          "#fbbf24",
+          "#a78bfa",
+          "#60a5fa",
+          "#f87171",
+          "#a1a1aa"
+        ],
+        "progressOrder": [
+          "健康",
+          "生活",
+          "电脑",
+          "工作",
+          "其他",
+          "未记录"
+        ]
       },
       "fields": []
     },
@@ -233,6 +231,7 @@
       "id": "layout_me9yskul4lkf6",
       "name": "全局",
       "viewInstanceIds": [
+        "view_me9ykdhhufm5i",
         "view_me9ygd5ci3kdp",
         "view_mebhi1503znl8",
         "view_mebhmnfytbhat",
@@ -247,6 +246,16 @@
       "initialDate": "2025-08-13",
       "hideToolbar": false,
       "initialDateFollowsNow": false
+    },
+    {
+      "id": "layout_mec7caqjvfemf",
+      "name": "时间轴",
+      "viewInstanceIds": [
+        "view_me9ykdhhufm5i"
+      ],
+      "displayMode": "list",
+      "initialView": "月",
+      "initialDateFollowsNow": true
     }
   ],
   "inputSettings": {
