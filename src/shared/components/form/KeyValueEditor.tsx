@@ -1,9 +1,10 @@
 // src/shared/components/form/KeyValueEditor.tsx
 /** @jsxImportSource preact */
 import { h } from 'preact';
-import { Stack, TextField, IconButton } from '@mui/material';
+import { Stack, TextField, IconButton, Tooltip } from '@mui/material';
 import AddIcon from '@mui/icons-material/AddCircleOutline';
 import DeleteIcon from '@mui/icons-material/RemoveCircleOutline';
+import { useState, useEffect } from 'preact/hooks';
 
 interface Props {
   value: Record<string, string>;
@@ -13,57 +14,91 @@ interface Props {
 }
 
 export function KeyValueEditor({ value, onChange, keyLabel = "Key", valueLabel = "Value" }: Props) {
-  const entries = Object.entries(value || {});
+  const [entries, setEntries] = useState(Object.entries(value || {}));
 
-  const handleKeyChange = (oldKey: string, newKey: string) => {
-    if (oldKey === newKey || !newKey) return;
-    const newMap: Record<string, string> = {};
-    for (const [k, v] of entries) {
-      newMap[k === oldKey ? newKey : k] = v;
-    }
-    onChange(newMap);
+  useEffect(() => {
+    setEntries(Object.entries(value || {}));
+  }, [value]);
+  
+  const handleUpdate = (newEntries: [string, string][]) => {
+      const newMap: Record<string, string> = {};
+      let hasDuplicate = false;
+      const keys = new Set<string>();
+
+      for (const [k, v] of newEntries) {
+          if (keys.has(k)) {
+              hasDuplicate = true;
+          }
+          keys.add(k);
+          newMap[k] = v;
+      }
+      
+      // 可以在这里加一个重复键的提示
+      if (hasDuplicate) {
+          console.warn("Duplicate keys found in KeyValueEditor");
+      }
+
+      onChange(newMap);
   };
 
-  const handleValueChange = (key: string, newValue: string) => {
-    onChange({ ...value, [key]: newValue });
+  const handleKeyChange = (index: number, newKey: string) => {
+    const newEntries = [...entries];
+    newEntries[index][0] = newKey;
+    setEntries(newEntries);
+    handleUpdate(newEntries);
+  };
+
+  const handleValueChange = (index: number, newValue: string) => {
+    const newEntries = [...entries];
+    newEntries[index][1] = newValue;
+    setEntries(newEntries);
+    handleUpdate(newEntries);
   };
 
   const addEntry = () => {
-    const newKey = `new_key_${Date.now()}`;
-    if (value && value[newKey]) return; // Avoid collision, though unlikely
-    onChange({ ...(value || {}), [newKey]: '' });
+    const newKey = `newKey${entries.length + 1}`;
+    const newEntries = [...entries, [newKey, '']];
+    setEntries(newEntries);
+    handleUpdate(newEntries);
   };
 
-  const removeEntry = (keyToRemove: string) => {
-    const { [keyToRemove]: _, ...rest } = value;
-    onChange(rest);
+  const removeEntry = (index: number) => {
+    const newEntries = entries.filter((_, i) => i !== index);
+    setEntries(newEntries);
+    handleUpdate(newEntries);
   };
 
   return (
-    <Stack spacing={0.5}>
-      {entries.map(([key, val]) => (
-        <Stack key={key} direction="row" spacing={0.5} alignItems="center">
+    <Stack spacing={1} sx={{ p: 1, border: '1px solid rgba(0,0,0,0.1)', borderRadius: 1, bgcolor: 'action.hover' }}>
+      {entries.map(([key, val], index) => (
+        <Stack key={index} direction="row" spacing={1} alignItems="center">
           <TextField
             label={keyLabel}
             value={key}
-            onBlur={e => handleKeyChange(key, (e.target as HTMLInputElement).value.trim())}
-            fullWidth
+            onChange={e => handleKeyChange(index, (e.target as HTMLInputElement).value)}
+            size="small"
+            variant="outlined"
           />
           <TextField
             label={valueLabel}
             value={val}
-            onInput={e => handleValueChange(key, (e.target as HTMLInputElement).value)}
-            fullWidth
+            onChange={e => handleValueChange(index, (e.target as HTMLInputElement).value)}
+            size="small"
+            variant="outlined"
           />
-          <IconButton onClick={() => removeEntry(key)} size="small" color="error" title="删除此项">
-            <DeleteIcon fontSize="small" />
-          </IconButton>
+          <Tooltip title="删除此项">
+            <IconButton onClick={() => removeEntry(index)} size="small" sx={{ color: 'text.secondary' }}>
+              <DeleteIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
         </Stack>
       ))}
       <Stack direction="row" justifyContent="flex-start">
-        <IconButton onClick={addEntry} size="small" color="primary" title="添加新项">
-          <AddIcon />
-        </IconButton>
+        <Tooltip title="添加新项">
+            <IconButton onClick={addEntry} size="small" color="primary">
+                <AddIcon />
+            </IconButton>
+        </Tooltip>
       </Stack>
     </Stack>
   );

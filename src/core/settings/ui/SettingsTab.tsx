@@ -12,8 +12,8 @@ import { theme as baseTheme } from '@shared/styles/mui-theme';
 import { DataSourceSettings } from './DataSourceSettings';
 import { ViewInstanceSettings } from './ViewInstanceSettings';
 import { LayoutSettings } from './LayoutSettings';
-import { InputSettingsTable } from './InputSettingsTable';
-// [FIX] 从 @state/AppStore 同时导入 AppStore 类和 useStore hook
+// [修改] 导入我们新的主组件
+import { InputSettings } from './InputSettings'; 
 import { useStore, AppStore } from '@state/AppStore';
 
 function a11yProps(index: number) {
@@ -31,9 +31,6 @@ function TabPanel(props: { children?: any; value: number; index: number; }) {
 
 function SettingsRoot() {
   const [tabIndex, setTabIndex] = usePersistentState(LOCAL_STORAGE_KEYS.SETTINGS_TABS, 0);
-  const inputSettings = useStore(state => state.settings.inputSettings);
-  // 现在 AppStore 已被导入，这行代码可以正常工作了
-  const { updateInputSettings } = AppStore.instance;
 
   return (
     <ThemeProvider theme={baseTheme}>
@@ -51,7 +48,8 @@ function SettingsRoot() {
         <TabPanel value={tabIndex} index={1}><ViewInstanceSettings /></TabPanel>
         <TabPanel value={tabIndex} index={2}><DataSourceSettings /></TabPanel>
         <TabPanel value={tabIndex} index={3}>
-          <InputSettingsTable settings={inputSettings} onSave={updateInputSettings} />
+            {/* [修改] 使用新的组件，不再需要传递props */}
+            <InputSettings />
         </TabPanel>
       </Box>
     </ThemeProvider>
