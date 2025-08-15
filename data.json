@@ -63,24 +63,6 @@
   ],
   "viewInstances": [
     {
-      "id": "view_me9ygd5ci3kdp",
-      "title": "所有未完成任务",
-      "viewType": "TableView",
-      "dataSourceId": "ds_me9yjmlznzs33",
-      "viewConfig": {
-        "view": "TableView",
-        "title": "表格视图",
-        "collapsed": false,
-        "rowField": "recurrence",
-        "colField": "tags"
-      },
-      "fields": [],
-      "collapsed": true,
-      "dateConfig": {
-        "mode": "inherit_from_layout"
-      }
-    },
-    {
       "id": "view_me9ykdhhufm5i",
       "title": "时间轴",
       "viewType": "TimelineView",
@@ -151,34 +133,22 @@
       "fields": []
     },
     {
-      "id": "view_mebh1ykmt4nes",
-      "title": "新视图",
-      "viewType": "ExcelView",
-      "dataSourceId": "ds_me9yjmlznzs33",
-      "viewConfig": {
-        "view": "ExcelView",
-        "title": "数据表格",
-        "collapsed": false,
-        "fields": []
-      },
-      "fields": [
-        "extra.时长",
-        "extra.评分"
-      ]
-    },
-    {
-      "id": "view_mebhi1503znl8",
-      "title": "完成任务",
+      "id": "view_me9ygd5ci3kdp",
+      "title": "所有未完成任务",
       "viewType": "TableView",
-      "dataSourceId": "ds_mebgqp5mbtxdn",
+      "dataSourceId": "ds_me9yjmlznzs33",
       "viewConfig": {
         "view": "TableView",
         "title": "表格视图",
         "collapsed": false,
-        "rowField": "tags",
-        "colField": "date"
+        "rowField": "recurrence",
+        "colField": "tags"
       },
-      "collapsed": true
+      "fields": [],
+      "collapsed": true,
+      "dateConfig": {
+        "mode": "inherit_from_layout"
+      }
     },
     {
       "id": "view_mebhkcowrs6e5",
@@ -200,6 +170,20 @@
       ],
       "group": "tags",
       "collapsed": false
+    },
+    {
+      "id": "view_mebhi1503znl8",
+      "title": "完成任务",
+      "viewType": "TableView",
+      "dataSourceId": "ds_mebgqp5mbtxdn",
+      "viewConfig": {
+        "view": "TableView",
+        "title": "表格视图",
+        "collapsed": false,
+        "rowField": "tags",
+        "colField": "date"
+      },
+      "collapsed": true
     },
     {
       "id": "view_mebhmnfytbhat",
