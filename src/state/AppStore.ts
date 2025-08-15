@@ -67,6 +67,31 @@ export class AppStore {
     return `${prefix}_${Date.now().toString(36)}${Math.random().toString(36).slice(2, 7)}`;
   }
 
+  // ----- [NEW] Generic Reusable Helper Functions -----
+  private _moveItemInArray<T extends { id: string }>(array: T[], id: string, direction: 'up' | 'down') {
+    const index = array.findIndex(item => item.id === id);
+    if (index === -1) return;
+
+    const newIndex = direction === 'up' ? index - 1 : index + 1;
+    if (newIndex < 0 || newIndex >= array.length) return;
+
+    const [movedItem] = array.splice(index, 1);
+    array.splice(newIndex, 0, movedItem);
+  }
+
+  private _duplicateItemInArray<T extends { id: string, name: string }>(array: T[], id: string) {
+    const index = array.findIndex(item => item.id === id);
+    if (index === -1) return;
+
+    const originalItem = array[index];
+    const newItem = structuredClone(originalItem);
+    newItem.id = this._generateId(originalItem.id.split('_')[0]);
+    newItem.name = `${originalItem.name} (Copy)`;
+
+    array.splice(index + 1, 0, newItem);
+  }
+
+
   // -- DataSources Actions --
   public addDataSource = async (name: string) => {
     await this._updateSettingsAndPersist(draft => {
@@ -92,6 +117,16 @@ export class AppStore {
       });
     });
   }
+  public moveDataSource = async (id: string, direction: 'up' | 'down') => {
+    await this._updateSettingsAndPersist(draft => {
+      this._moveItemInArray(draft.dataSources, id, direction);
+    });
+  }
+  public duplicateDataSource = async (id: string) => {
+    await this._updateSettingsAndPersist(draft => {
+      this._duplicateItemInArray(draft.dataSources, id);
+    });
+  }
 
   // -- ViewInstances Actions --
   public addViewInstance = async (name: string) => {
@@ -109,6 +144,10 @@ export class AppStore {
     await this._updateSettingsAndPersist(draft => {
       const index = draft.viewInstances.findIndex(vi => vi.id === id);
       if (index !== -1) {
+        // 当视图类型改变时，重置其专属配置
+        if (updates.viewType && updates.viewType !== draft.viewInstances[index].viewType) {
+            updates.viewConfig = structuredClone(VIEW_DEFAULT_CONFIGS[updates.viewType]);
+        }
         draft.viewInstances[index] = { ...draft.viewInstances[index], ...updates };
       }
     });
@@ -122,6 +161,23 @@ export class AppStore {
       });
     });
   }
+  public moveViewInstance = async (id: string, direction: 'up' | 'down') => {
+    await this._updateSettingsAndPersist(draft => {
+      this._moveItemInArray(draft.viewInstances, id, direction);
+    });
+  }
+  public duplicateViewInstance = async (id: string) => {
+    await this._updateSettingsAndPersist(draft => {
+      // 视图的复制逻辑特殊，因为它的 `name` 字段是 `title`
+      const index = draft.viewInstances.findIndex(item => item.id === id);
+      if (index === -1) return;
+      const originalItem: any = draft.viewInstances[index];
+      const newItem = structuredClone(originalItem);
+      newItem.id = this._generateId('view');
+      newItem.title = `${originalItem.title} (Copy)`;
+      draft.viewInstances.splice(index + 1, 0, newItem);
+    });
+  }
   
   // -- Layouts Actions --
   public addLayout = async (name: string) => {
@@ -132,7 +188,7 @@ export class AppStore {
         viewInstanceIds: [],
         displayMode: 'list',
         initialView: '月',
-        initialDateFollowsNow: true, // [MOD] 新增字段的默认值
+        initialDateFollowsNow: true,
       });
     });
   }
@@ -147,6 +203,16 @@ export class AppStore {
   public deleteLayout = async (id: string) => {
     await this._updateSettingsAndPersist(draft => {
       draft.layouts = draft.layouts.filter(l => l.id !== id);
+    });
+  }
+  public moveLayout = async (id: string, direction: 'up' | 'down') => {
+    await this._updateSettingsAndPersist(draft => {
+      this._moveItemInArray(draft.layouts, id, direction);
+    });
+  }
+  public duplicateLayout = async (id: string) => {
+    await this._updateSettingsAndPersist(draft => {
+      this._duplicateItemInArray(draft.layouts, id);
     });
   }
 
