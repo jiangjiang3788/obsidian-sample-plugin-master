@@ -1,16 +1,10 @@
 // src/features/quick-input/index.ts
-import type ThinkPlugin from '../../main';
-import type { App } from 'obsidian';
+// [修改] 导入 ThinkContext 类型以保持一致性
+import type { ThinkContext } from '../../main';
 import { registerQuickInputCommands } from './logic/registerCommands';
 
-/** 与 main.ts 注入的 ThinkContext 对齐（app/plugin/platform/dataStore） */
-export interface ThinkContext {
-  app: App;
-  plugin: ThinkPlugin;
-  platform: any;
-  dataStore: any;
-}
-
+// [修改] setup 函数的参数从 plugin 改回 ctx (ThinkContext)
 export function setup(ctx: ThinkContext) {
+  // 保持传递 ctx 对象
   registerQuickInputCommands(ctx);
 }
