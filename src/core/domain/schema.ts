@@ -1,6 +1,66 @@
 // src/core/domain/schema.ts
 import type { RecurrenceInfo } from '@core/utils/mark';
 
+// ----- [新] 输入模板设置 (Input Template Settings) ----- //
+
+/**
+ * 定义一个选项的多个输出值，实现“一对多”映射
+ * e.g., { content: '- [ ]', name: '📅' }
+ */
+export interface TemplateFieldOptionValues {
+  [key: string]: string;
+}
+
+/**
+ * 定义一个字段的单个选项 (e.g., "待办")
+ */
+export interface TemplateFieldOption {
+  label: string; // UI上显示的选项, e.g., "📅 待办"
+  values: TemplateFieldOptionValues;
+}
+
+/**
+ * 定义一个模板中的字段 (e.g., "任务状态")
+ */
+export interface TemplateField {
+  id: string; // 使用UUID或时间戳确保在React中key的唯一性
+  key: string;
+  label: string;
+  type: 'text' | 'textarea' | 'date' | 'time' | 'select' | 'radio';
+  defaultValue?: string;
+  options?: TemplateFieldOption[];
+}
+
+/**
+ * 定义一个完整的录入模板 (e.g., "默认任务" or "每周复盘")
+ */
+export interface InputTemplate {
+  id: string;
+  // [修改] name不再是简单的模板名，而是唯一标识符，如 "theme:生活/娱乐#type:Task"
+  name: string; 
+  fields: TemplateField[];
+  outputTemplate: string;
+  targetFile: string;
+  appendUnderHeader?: string;
+  // 用于打卡等特殊配置
+  customConfig?: Record<string, any>;
+  // [新增] 明确的禁用状态
+  disabled?: boolean; 
+}
+
+/**
+ * 插件设置中 inputSettings 的全新结构
+ */
+export interface InputSettings {
+  // 用户可自定义的Block类型，驱动表格的列
+  blockTypes: string[];
+  // 所有主题路径的列表，驱动表格的行
+  themePaths: string[]; 
+  // 所有模板的集合，是我们所有配置的真理之源
+  templates: InputTemplate[];
+}
+
+
 // ----- 视图与布局定义 ----- //
 
 export const VIEW_OPTIONS = ['BlockView', 'TableView', 'ExcelView', 'TimelineView'] as const;

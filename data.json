@@ -1041,6 +1041,33 @@
         },
         "icon": "🔆"
       }
+    ],
+    "blockTypes": [
+      "01",
+      "02",
+      "03",
+      "04",
+      "05"
+    ],
+    "templates": [
+      {
+        "id": "tpl_mecszol7",
+        "name": "theme:A#type:02",
+        "fields": [],
+        "outputTemplate": "",
+        "targetFile": ""
+      },
+      {
+        "id": "tpl_mecsztls",
+        "name": "theme:A/1#type:02",
+        "fields": [],
+        "outputTemplate": "",
+        "targetFile": ""
+      }
+    ],
+    "themePaths": [
+      "A",
+      "A/1"
     ]
   }
 }
