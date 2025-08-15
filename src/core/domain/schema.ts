@@ -115,7 +115,7 @@ export interface Item {
 
 // ----- 字段读取工具 ----- //
 // [FIXED] 在这个核心字段列表中添加 'recurrence'
-export const CORE_FIELDS = [ 'id', 'type', 'title', 'content', 'categoryKey', 'tags', 'recurrence', 'icon', 'priority', 'date', 'dateMs', 'dateSource', 'startISO', 'endISO', 'startMs', 'endMs', 'filename', 'header', 'created', 'modified', 'file.path', 'file.line', 'file.basename', 'createdDate', 'scheduledDate', 'startDate', 'dueDate', 'doneDate', 'cancelledDate' ] as const;
+export const CORE_FIELDS = [ 'id', 'type', 'title', 'content', 'categoryKey', 'tags', 'recurrence', 'icon', 'priority', 'date',   'filename', 'header', 'created', 'modified',   'file.basename'] as const;
 
 export type CoreField = typeof CORE_FIELDS[number];
 
