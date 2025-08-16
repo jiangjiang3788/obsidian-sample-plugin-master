@@ -8,29 +8,27 @@ import AddIcon from '@mui/icons-material/Add';
 import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
 import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
 import RemoveCircleOutlineIcon from '@mui/icons-material/RemoveCircleOutline';
-import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
 import { KeyValueEditor } from '@shared/components/form/KeyValueEditor';
 import type { TemplateField, TemplateFieldOption } from '@core/domain/schema';
 
-// 单个选项的编辑器
+// 单个选项的编辑器 (重构后)
 function OptionRow({ option, onChange, onRemove }: { option: TemplateFieldOption, onChange: (newOption: TemplateFieldOption) => void, onRemove: () => void }) {
-    const [showExtra, setShowExtra] = useState(false);
+    const [showExtra, setShowExtra] = useState(Object.keys(option.extraValues || {}).length > 0);
+    
     return (
-        <Box sx={{ p: 1.5, border: '1px dashed', borderColor: 'divider', borderRadius: 1 }}>
+        <Box>
             <Stack direction="row" alignItems="center" spacing={2}>
                 <TextField label="UI显示名 (Label)" placeholder="若为空则显示Value" value={option.label || ''} onChange={e => onChange({ ...option, label: (e.target as HTMLInputElement).value })} size="small" variant="outlined" sx={{flex: 1}}/>
                 <TextField label="主要输出值 (Value)" value={option.value} onChange={e => onChange({ ...option, value: (e.target as HTMLInputElement).value })} size="small" variant="outlined" sx={{flex: 1}}/>
-                <Tooltip title={showExtra ? "收起额外值" : "配置额外值 (一对多)"}>
+                <Tooltip title={showExtra ? "收起额外值" : "配置额外值 (用于 {{key.extraKey}} 格式)"}>
                     <Button size="small" onClick={() => setShowExtra(!showExtra)} endIcon={showExtra ? <KeyboardArrowUpIcon/> : <KeyboardArrowDownIcon/>}>高级</Button>
                 </Tooltip>
                 <Tooltip title="删除此选项"><IconButton onClick={onRemove} size="small"><RemoveCircleOutlineIcon fontSize='small' /></IconButton></Tooltip>
             </Stack>
             {showExtra && (
-                 <Box sx={{ mt: 1.5 }}>
-                    {/* [FIX] 将 `{{key.extraKey}}` 放入JS表达式中以避免JSX解析错误 */}
-                    <Typography variant="caption" color="text.secondary" sx={{mb: 0.5, display: 'block'}}>额外输出值 (用于 {'{{key.extraKey}}'})</Typography>
+                 <Box sx={{ mt: 1.5, pl: 1 }}>
                     <KeyValueEditor
                         value={option.extraValues || {}}
                         onChange={newValues => onChange({ ...option, extraValues: newValues })}
@@ -54,40 +52,12 @@ function FieldRow({ field, index, fieldCount, onUpdate, onRemove, onMove }: { fi
 
     const addOption = () => {
         const newOptions = [...(field.options || [])];
-        newOptions.push({ value: `新选项${newOptions.length + 1}` });
+        newOptions.push({ value: `新选项${newOptions.length + 1}`, label: `新选项${newOptions.length + 1}` });
         onUpdate({ options: newOptions });
     };
 
     const removeOption = (optIndex: number) => {
         onUpdate({ options: (field.options || []).filter((_, i) => i !== optIndex) });
-    };
-
-    const handleValueChange = (optIndex: number, key: string, value: string) => {
-        const option = (field.options || [])[optIndex];
-        const newValues = { ...option.values, [key]: value };
-        handleOptionChange(optIndex, { ...option, values: newValues });
-    };
-    
-    const handleValueKeyChange = (optIndex: number, oldKey: string, newKey: string) => {
-        if (oldKey === newKey) return;
-        const option = (field.options || [])[optIndex];
-        const newValues: Record<string, string> = {};
-        Object.entries(option.values).forEach(([k, v]) => {
-            newValues[k === oldKey ? newKey : k] = v;
-        });
-        handleOptionChange(optIndex, { ...option, values: newValues });
-    };
-
-    const addValuePair = (optIndex: number) => {
-        const option = (field.options || [])[optIndex];
-        const newValues = { ...option.values, [`newKey${Object.keys(option.values || {}).length+1}`]: '' };
-        handleOptionChange(optIndex, { ...option, values: newValues });
-    };
-
-    const removeValuePair = (optIndex: number, keyToRemove: string) => {
-        const option = (field.options || [])[optIndex];
-        const { [keyToRemove]: _, ...rest } = option.values;
-        handleOptionChange(optIndex, { ...option, values: rest });
     };
 
     return (
@@ -102,7 +72,7 @@ function FieldRow({ field, index, fieldCount, onUpdate, onRemove, onMove }: { fi
                     <MenuItem value="select">下拉选择</MenuItem>
                     <MenuItem value="radio">单选按钮</MenuItem>
                 </Select>
-                <TextField label="字段名称 (Key)" placeholder="e.g., category" value={field.key} onChange={e => onUpdate({ key: (e.target as HTMLInputElement).value })} size="small" variant="outlined" sx={{flex: 1}}/>
+                <TextField label="字段变量名 (Key)" placeholder="e.g., category" value={field.key} onChange={e => onUpdate({ key: (e.target as HTMLInputElement).value })} size="small" variant="outlined" sx={{flex: 1}}/>
                 
                 {field.type === 'number' && (
                     <Stack direction="row" spacing={1}>
@@ -120,12 +90,12 @@ function FieldRow({ field, index, fieldCount, onUpdate, onRemove, onMove }: { fi
 
             {(field.type === 'select' || field.type === 'radio') && (
                 <Box sx={{ mt: 2, pl: 2 }}>
-                    <Stack spacing={1.5}>
+                    <Stack spacing={1.5} divider={<Divider flexItem sx={{ borderStyle: 'dashed' }} />}>
                         {(field.options || []).map((option, optIndex) => (
                             <OptionRow key={optIndex} option={option} onChange={(newOpt) => handleOptionChange(optIndex, newOpt)} onRemove={() => removeOption(optIndex)} />
                         ))}
-                        <Button onClick={addOption} startIcon={<AddIcon />} size="small" sx={{ alignSelf: 'flex-start' }}>添加选项</Button>
                     </Stack>
+                    <Button onClick={addOption} startIcon={<AddIcon />} size="small" sx={{ alignSelf: 'flex-start', mt: 1.5 }}>添加选项</Button>
                 </Box>
             )}
         </Box>
@@ -133,7 +103,7 @@ function FieldRow({ field, index, fieldCount, onUpdate, onRemove, onMove }: { fi
 }
 
 // 主组件
-export function FieldsEditor({ fields = [], onChange }: Props) {
+export function FieldsEditor({ fields = [], onChange }: any) { // props type changed to 'any' for simplicity
 
     const handleUpdate = (index: number, updates: Partial<TemplateField>) => {
         const newFields = [...(fields || [])];
@@ -147,7 +117,6 @@ export function FieldsEditor({ fields = [], onChange }: Props) {
             {
                 id: `field_${Date.now().toString(36)}`,
                 key: `newField${(fields || []).length + 1}`,
-                label: '新字段', // label 字段已移除, 但保留以防万一
                 type: 'text',
             }
         ]);
@@ -167,7 +136,7 @@ export function FieldsEditor({ fields = [], onChange }: Props) {
 
     return (
         <Stack spacing={2} divider={<Divider sx={{ my: 1 }} />}>
-             {(fields || []).map((field, index) => (
+             {(fields || []).map((field: TemplateField, index: number) => (
                 <FieldRow
                     key={field.id}
                     field={field}

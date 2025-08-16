@@ -3193,7 +3193,7 @@
         ],
         "outputTemplate": "\n分类:: {{category.content}}\n周期:: {{period.content}}\n日期:: {{date.content}}\n主题:: {{theme.content}}\n图标:: {{icon.content}}\n内容:: {{content.content}}\n",
         "targetFile": "01/计划.md",
-        "disabled": false
+        "disabled": true
       },
       {
         "id": "tpl_mecvrer25sqzu",
