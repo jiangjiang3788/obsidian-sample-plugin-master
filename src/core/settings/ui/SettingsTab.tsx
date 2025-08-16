@@ -12,9 +12,8 @@ import { theme as baseTheme } from '@shared/styles/mui-theme';
 import { DataSourceSettings } from './DataSourceSettings';
 import { ViewInstanceSettings } from './ViewInstanceSettings';
 import { LayoutSettings } from './LayoutSettings';
-// [修改] 导入我们新的主组件
-import { InputSettings } from './InputSettings'; 
-import { useStore, AppStore } from '@state/AppStore';
+// [修改] 导入我们新的主组件，不再需要 InputSettingsTable
+import { InputSettings } from './InputSettings';
 
 function a11yProps(index: number) {
   return { id: `settings-tab-${index}`, 'aria-controls': `settings-tabpanel-${index}` };
@@ -48,7 +47,7 @@ function SettingsRoot() {
         <TabPanel value={tabIndex} index={1}><ViewInstanceSettings /></TabPanel>
         <TabPanel value={tabIndex} index={2}><DataSourceSettings /></TabPanel>
         <TabPanel value={tabIndex} index={3}>
-            {/* [修改] 使用新的组件，不再需要传递props */}
+            {/* [修改] 直接使用新的组件，不再需要传递 props */}
             <InputSettings />
         </TabPanel>
       </Box>

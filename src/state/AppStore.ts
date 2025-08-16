@@ -216,32 +216,15 @@ export class AppStore {
   }
 
   // -- InputSettings Actions --
-  // [重构] 替换旧的 updateInputSettings
-
-  /**
-   * 更新整个 inputSettings 对象，通常用于初始化或整体重置
-   */
-  public updateInputSettings = async (newInputSettings: InputSettings) => {
-    await this._updateSettingsAndPersist(draft => {
-      draft.inputSettings = newInputSettings;
-    });
-  }
-
-  /**
-   * 更新 Block 类型列表
-   */
   public updateBlockTypes = async (newBlockTypes: string[]) => {
     await this._updateSettingsAndPersist(draft => {
-        // 安全地处理 undefined
         if (!draft.inputSettings) draft.inputSettings = { blockTypes: [], themePaths: [], templates: [] };
         
         const oldBlockTypes = new Set(draft.inputSettings.blockTypes || []);
         const newBlockTypesSet = new Set(newBlockTypes);
         
-        // 找出被删除的 block 类型
         const deletedTypes = [...oldBlockTypes].filter(t => !newBlockTypesSet.has(t));
 
-        // 从 templates 中移除与已删除 block 类型相关的模板
         if (deletedTypes.length > 0) {
             draft.inputSettings.templates = (draft.inputSettings.templates || []).filter(template => {
                 const type = template.name.split('#type:')[1];
@@ -252,9 +235,6 @@ export class AppStore {
     });
   }
 
-  /**
-   * 更新主题路径列表
-   */
   public updateThemePaths = async (newThemePaths: string[]) => {
     await this._updateSettingsAndPersist(draft => {
         if (!draft.inputSettings) draft.inputSettings = { blockTypes: [], themePaths: [], templates: [] };
@@ -264,7 +244,6 @@ export class AppStore {
 
         const deletedPaths = [...oldThemePaths].filter(p => !newThemePathsSet.has(p));
 
-        // 删除与已删除主题路径相关的模板
         if (deletedPaths.length > 0) {
             draft.inputSettings.templates = (draft.inputSettings.templates || []).filter(template => {
                 const theme = template.name.split('#type:')[0].replace('theme:', '');
@@ -275,10 +254,29 @@ export class AppStore {
     });
   }
 
-  /**
-   * 更新或创建一个模板
-   * 如果模板ID已存在，则更新；否则，添加新模板。
-   */
+  // [新增] 重命名主题路径 Action
+  public renameThemePath = async (oldPath: string, newPath: string) => {
+      await this._updateSettingsAndPersist(draft => {
+          if (!draft.inputSettings) return;
+
+          // 1. 更新 themePaths 数组
+          const pathIndex = draft.inputSettings.themePaths.indexOf(oldPath);
+          if (pathIndex !== -1) {
+              draft.inputSettings.themePaths[pathIndex] = newPath;
+          }
+
+          // 2. 更新所有关联的 template 的 name
+          const oldPrefix = `theme:${oldPath}#type:`;
+          const newPrefix = `theme:${newPath}#type:`;
+          draft.inputSettings.templates.forEach(template => {
+              if (template.name.startsWith(oldPrefix)) {
+                  template.name = template.name.replace(oldPrefix, newPrefix);
+              }
+          });
+      });
+  }
+
+
   public upsertTemplate = async (template: InputTemplate) => {
     await this._updateSettingsAndPersist(draft => {
       if (!draft.inputSettings) draft.inputSettings = { blockTypes: [], themePaths: [], templates: [] };
@@ -291,9 +289,6 @@ export class AppStore {
     });
   }
 
-  /**
-   * 根据唯一名称删除一个模板
-   */
   public deleteTemplateByName = async (name: string) => {
       await this._updateSettingsAndPersist(draft => {
           if (!draft.inputSettings) return;
