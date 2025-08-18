@@ -59,6 +59,12 @@
         }
       ],
       "sort": []
+    },
+    {
+      "id": "ds_meh5m3brbfc93",
+      "name": "生活总结",
+      "filters": [],
+      "sort": []
     }
   ],
   "viewInstances": [
@@ -163,7 +169,7 @@
         "date",
         "content"
       ],
-      "group": "tags",
+      "group": "priority",
       "collapsed": false
     },
     {
@@ -178,7 +184,8 @@
         "rowField": "tags",
         "colField": "date"
       },
-      "collapsed": true
+      "collapsed": true,
+      "group": "priority"
     },
     {
       "id": "view_mebhmnfytbhat",
@@ -221,6 +228,20 @@
       ],
       "group": "tags",
       "collapsed": false
+    },
+    {
+      "id": "view_meh5nz9y3mxkk",
+      "title": "生活总结",
+      "viewType": "ExcelView",
+      "dataSourceId": "ds_meh5m3brbfc93",
+      "viewConfig": {
+        "view": "ExcelView",
+        "title": "数据表格",
+        "collapsed": false,
+        "fields": []
+      },
+      "fields": [],
+      "group": "tags"
     }
   ],
   "layouts": [
@@ -249,6 +270,16 @@
       "name": "时间轴",
       "viewInstanceIds": [
         "view_me9ykdhhufm5i"
+      ],
+      "displayMode": "list",
+      "initialView": "月",
+      "initialDateFollowsNow": true
+    },
+    {
+      "id": "layout_meh5qunjs8kqn",
+      "name": "生活总结",
+      "viewInstanceIds": [
+        "view_meh5nz9y3mxkk"
       ],
       "displayMode": "list",
       "initialView": "月",
