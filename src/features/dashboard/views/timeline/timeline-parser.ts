@@ -10,6 +10,7 @@ export interface TimelineTask extends Item {
   endMinute: number;
   duration: number;
   pureText: string;
+  actualStartDate: string; // 任务真实的开始日期
 }
 
 /**
@@ -75,23 +76,27 @@ export function processItemsToTimelineTasks(items: Item[]): TimelineTask[] {
   const timelineTasks: TimelineTask[] = [];
 
   for (const item of items) {
-    // 确保 item.file.basename 存在，用于分类映射
     const fileName = item.file?.basename || item.filename || '';
-    if (!fileName) continue; // 如果没有文件名，则跳过
+    if (!fileName) continue;
 
     if (item.type !== 'task' || !item.categoryKey?.endsWith('/done')) continue;
 
     const { startMinute, duration, endMinute } = parseTimeAndDuration(item.content);
 
     if (startMinute !== null && duration !== null && endMinute !== null && item.doneDate) {
+      
+      const doneDate = dayjs(item.doneDate);
+      const daysSpanned = Math.floor(startMinute / 1440);
+      const actualStartDate = doneDate.subtract(daysSpanned, 'day').format(DATE_FORMAT);
+
       timelineTasks.push({
         ...item,
         startMinute,
         duration,
         endMinute,
         pureText: extractPureText(item.content),
-        // 添加 fileName 到 TimelineTask，方便后续分类映射
         fileName: fileName,
+        actualStartDate: actualStartDate,
       });
     }
   }
@@ -110,20 +115,14 @@ export function splitTaskIntoDayBlocks(task: TimelineTask, dateRange: [dayjs.Day
     return [];
   }
 
-  const baseDate = dayjs(task.doneDate);
-  let currentStartMinute = task.startMinute;
+  let currentDate = dayjs(task.actualStartDate);
+  let currentStartMinute = task.startMinute % 1440;
   let remainingDuration = task.duration;
-  let currentDate = baseDate;
-
-  while (remainingDuration > 0) {
+  
+  while (remainingDuration > 0 && currentDate.isBefore(dateRange[1].add(1, 'day'))) {
     const dayStr = currentDate.format(DATE_FORMAT);
 
-    // 如果当前日期在查询范围之外
-    if (currentDate.isBefore(dateRange[0], 'day') || currentDate.isAfter(dateRange[1], 'day')) {
-        // 如果任务已经进行到范围之后，就可以停止了
-        if (currentDate.isAfter(dateRange[1], 'day')) break;
-
-        // 如果任务开始于范围之前，我们需要快进到范围的第一天
+    if (currentDate.isBefore(dateRange[0], 'day')) {
         const minutesInDay = Math.min(1440 - currentStartMinute, remainingDuration);
         remainingDuration -= minutesInDay;
         currentStartMinute = 0;
@@ -131,7 +130,6 @@ export function splitTaskIntoDayBlocks(task: TimelineTask, dateRange: [dayjs.Day
         continue;
     }
     
-    // 计算当天内的开始和结束分钟数
     const blockStartMinute = currentStartMinute;
     const blockEndMinute = Math.min(1440, currentStartMinute + remainingDuration);
 
@@ -144,10 +142,9 @@ export function splitTaskIntoDayBlocks(task: TimelineTask, dateRange: [dayjs.Day
       });
     }
 
-    // 更新剩余时长和下一天的开始时间
     const durationInDay = blockEndMinute - blockStartMinute;
     remainingDuration -= durationInDay;
-    currentStartMinute = 0; // 后续天都从 00:00 开始
+    currentStartMinute = 0;
     currentDate = currentDate.add(1, 'day');
   }
 

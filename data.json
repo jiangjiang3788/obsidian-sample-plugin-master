@@ -263,7 +263,7 @@
       },
       "initialDate": "2025-08-13",
       "hideToolbar": false,
-      "initialDateFollowsNow": false
+      "initialDateFollowsNow": true
     },
     {
       "id": "layout_mec7caqjvfemf",
