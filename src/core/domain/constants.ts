@@ -61,6 +61,12 @@ export const GLOBAL_CSS = `
 /* 关键：模块内的所有链接 → 黑色、无下划线（覆盖主题） */
 .think-module a, .think-module a:visited { color:#000 !important; text-decoration:none !important; }
 .think-module a:hover, .think-module a:active { text-decoration:none !important; }
-/* [NEW] 为工具栏当前激活的周期按钮添加描边提示 */
+/* 为工具栏当前激活的周期按钮添加描边提示 */
 .tp-toolbar button.active { outline: 2px solid var(--interactive-accent, #007aff); outline-offset: -1px; }
+/* [NEW] 时间轴任务块悬停按钮样式 */
+.timeline-task-block .task-buttons { visibility: hidden; opacity: 0; position: absolute; top: 2px; right: 2px; display: flex; gap: 2px; background: var(--background-secondary); border-radius: 4px; padding: 2px; box-shadow: var(--shadow-s); transition: opacity 0.1s ease-in-out; }
+.timeline-task-block:hover .task-buttons { visibility: visible; opacity: 1; }
+.timeline-task-block .task-buttons button { all: unset; cursor: pointer; padding: 2px 4px; border-radius: 2px; font-size: 12px; }
+.timeline-task-block .task-buttons button:hover { background: var(--background-modifier-hover); }
+.timeline-task-block .task-buttons button:disabled { cursor: not-allowed; color: var(--text-muted); }
 `.trim();
