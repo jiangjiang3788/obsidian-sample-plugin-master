@@ -287,8 +287,71 @@
     }
   ],
   "inputSettings": {
-    "blocks": [],
-    "themes": [],
-    "overrides": []
+    "blocks": [
+      {
+        "id": "blk_meic1my6m62iu",
+        "name": "任务",
+        "fields": [
+          {
+            "id": "field_meictfn1",
+            "key": " 状态",
+            "label": "新字段 1",
+            "type": "select",
+            "options": [
+              {
+                "value": "01",
+                "label": "01"
+              },
+              {
+                "value": "02",
+                "label": "02"
+              }
+            ]
+          }
+        ],
+        "outputTemplate": "-[ ]  {{主题}}  {{icon}}  {{block}}  {{状态}}",
+        "targetFile": "02/{{主题}}.md",
+        "appendUnderHeader": "## {{主题}}"
+      },
+      {
+        "id": "blk_meibt0i819ze1",
+        "name": "思考",
+        "fields": [
+          {
+            "id": "field_meibum9n",
+            "key": "newField1",
+            "type": "radio"
+          }
+        ],
+        "outputTemplate": "",
+        "targetFile": "01/思考",
+        "appendUnderHeader": "## {{主题}}"
+      }
+    ],
+    "themes": [
+      {
+        "id": "thm_meibvgs0wykgc",
+        "path": "生活",
+        "icon": "💥"
+      }
+    ],
+    "overrides": [
+      {
+        "blockId": "blk_meibt0i819ze1",
+        "themeId": "thm_meibvgs0wykgc",
+        "status": "enabled",
+        "id": "ovr_meicw54ellv64",
+        "fields": [
+          {
+            "id": "field_meibum9n",
+            "key": "newField1",
+            "type": "radio"
+          }
+        ],
+        "outputTemplate": "",
+        "targetFile": "01/思考",
+        "appendUnderHeader": "## {{主题}}"
+      }
+    ]
   }
 }
