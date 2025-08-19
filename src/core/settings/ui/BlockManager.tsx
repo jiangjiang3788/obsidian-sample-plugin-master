@@ -2,13 +2,15 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
 import { useStore, AppStore } from '@state/AppStore';
-import { Accordion, AccordionSummary, AccordionDetails, Box, Stack, Typography, IconButton, TextField, Tooltip, Divider, Button } from '@mui/material';
+import { Accordion, AccordionSummary, AccordionDetails, Box, Stack, Typography, IconButton, TextField, Tooltip, Divider } from '@mui/material';
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 import DeleteForeverOutlinedIcon from '@mui/icons-material/DeleteForeverOutlined';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import { useState, useEffect } from 'preact/hooks';
 import { FieldsEditor } from './components/FieldsEditor';
 import type { BlockTemplate } from '@core/domain/schema';
+// [新增] 导入变量复制器组件
+import { TemplateVariableCopier } from './components/TemplateVariableCopier';
 
 // Block 编辑器内部组件
 function BlockEditor({ block }: { block: BlockTemplate }) {
@@ -30,67 +32,36 @@ function BlockEditor({ block }: { block: BlockTemplate }) {
     
     return (
         <Stack spacing={3}>
-            <TextField
-                label="Block 名称"
-                value={localBlock.name}
-                onChange={e => setLocalBlock(b => ({...b, name: (e.target as HTMLInputElement).value}))}
-                onBlur={() => handleBlur('name')}
-                variant="outlined"
-                size="small"
-                sx={{ maxWidth: 400 }}
-            />
+            <TextField label="Block 名称" value={localBlock.name} onChange={e => setLocalBlock(b => ({ ...b, name: (e.target as HTMLInputElement).value }))} onBlur={() => handleBlur('name')} variant="outlined" size="small" sx={{ maxWidth: 400 }} />
             <Divider />
             <Box>
                 <Typography variant="h6" sx={{ fontSize: '1rem', fontWeight: 600, mb: 1 }}>输出目标</Typography>
                 <Stack spacing={2}>
-                    <TextField
-                        label="目标文件路径"
-                        value={localBlock.targetFile}
-                        onChange={e => setLocalBlock(b => ({...b, targetFile: e.target.value}))}
-                        onBlur={() => handleBlur('targetFile')}
-                        placeholder="e.g., daily/{{moment:YYYY-MM-DD}}.md"
-                        variant="outlined" size="small"
-                    />
-                    <TextField
-                        label="追加到标题下 (可选)"
-                        value={localBlock.appendUnderHeader}
-                        onChange={e => setLocalBlock(b => ({...b, appendUnderHeader: e.target.value}))}
-                        onBlur={() => handleBlur('appendUnderHeader')}
-                        placeholder="e.g., ## {{主题}}"
-                        variant="outlined" size="small"
-                    />
+                    <TextField label="目标文件路径" value={localBlock.targetFile} onChange={e => setLocalBlock(b => ({ ...b, targetFile: e.target.value }))} onBlur={() => handleBlur('targetFile')} placeholder="e.g., {{theme.path}}/{{标题.value}}.md" variant="outlined" size="small" />
+                    <TextField label="追加到标题下 (可选)" value={localBlock.appendUnderHeader} onChange={e => setLocalBlock(b => ({ ...b, appendUnderHeader: e.target.value }))} onBlur={() => handleBlur('appendUnderHeader')} placeholder="e.g., ## {{block.name}}" variant="outlined" size="small" />
                 </Stack>
             </Box>
             <Divider />
             <Box>
                 <Typography variant="h6" sx={{ fontSize: '1rem', fontWeight: 600, mb: 1.5 }}>表单字段</Typography>
-                <FieldsEditor
-                    fields={localBlock.fields}
-                    onChange={(newFields) => handleUpdate({ fields: newFields })}
-                />
+                <FieldsEditor fields={localBlock.fields} onChange={(newFields) => handleUpdate({ fields: newFields })} />
             </Box>
             <Divider />
             <Box>
-                <Typography variant="h6" sx={{ fontSize: '1rem', fontWeight: 600, mb: 1 }}>输出模板</Typography>
-                <TextField
-                    label="Output Template"
-                    multiline
-                    rows={4}
-                    value={localBlock.outputTemplate}
-                    onChange={e => setLocalBlock(b => ({...b, outputTemplate: e.target.value}))}
-                    onBlur={() => handleBlur('outputTemplate')}
-                    placeholder="使用 {{key}} 引用上面定义的字段"
-                    variant="outlined"
-                    sx={{ fontFamily: 'monospace', '& textarea': { fontSize: '13px' } }}
-                />
+                {/* [修改] 将变量复制器放在标题旁边 */}
+                <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 1 }}>
+                    <Typography variant="h6" sx={{ fontSize: '1rem', fontWeight: 600 }}>输出模板</Typography>
+                    <TemplateVariableCopier block={localBlock} />
+                </Stack>
+                <TextField label="Output Template" multiline rows={4} value={localBlock.outputTemplate} onChange={e => setLocalBlock(b => ({ ...b, outputTemplate: e.target.value }))} onBlur={() => handleBlur('outputTemplate')} placeholder="使用 {{key.value}} 引用上面定义的字段" variant="outlined" sx={{ fontFamily: 'monospace', '& textarea': { fontSize: '13px' } }} />
             </Box>
         </Stack>
     );
 }
 
-
-// Block 管理器主组件
+// BlockManager 主组件 (保持不变)
 export function BlockManager() {
+    // ... 此部分代码与之前完全相同，无需修改 ...
     const blocks = useStore(state => state.settings.inputSettings.blocks);
     const [openId, setOpenId] = useState<string | null>(blocks.length > 0 ? blocks[0].id : null);
 

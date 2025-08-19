@@ -294,9 +294,9 @@
         "fields": [
           {
             "id": "field_meictfn1",
-            "key": " 状态",
+            "key": "01",
             "label": "新字段 1",
-            "type": "select",
+            "type": "text",
             "options": [
               {
                 "value": "01",
@@ -307,11 +307,70 @@
                 "label": "02"
               }
             ]
+          },
+          {
+            "id": "field_meiizsvl",
+            "key": "02",
+            "label": "新字段 2",
+            "type": "textarea"
+          },
+          {
+            "id": "field_meiizzy8",
+            "key": "03",
+            "label": "新字段 3",
+            "type": "number",
+            "min": 1,
+            "max": 3
+          },
+          {
+            "id": "field_meij00nb",
+            "key": "04",
+            "label": "新字段 4",
+            "type": "date"
+          },
+          {
+            "id": "field_meij0d4j",
+            "key": "05",
+            "label": "新字段 5",
+            "type": "time"
+          },
+          {
+            "id": "field_meij0huh",
+            "key": "06",
+            "label": "新字段 6",
+            "type": "select",
+            "options": [
+              {
+                "value": "新选项1",
+                "label": "新选项1",
+                "extraValues": {
+                  "newKey1": "",
+                  "newKey2": "",
+                  "newKey3": ""
+                }
+              }
+            ]
+          },
+          {
+            "id": "field_meij12q4",
+            "key": "06",
+            "label": "新字段 7",
+            "type": "radio",
+            "options": [
+              {
+                "value": "新选项1",
+                "label": "新选项1"
+              },
+              {
+                "value": "新选项2",
+                "label": "新选项2"
+              }
+            ]
           }
         ],
-        "outputTemplate": "-[ ]  {{主题}}  {{icon}}  {{block}}  {{状态}}",
-        "targetFile": "02/{{主题}}.md",
-        "appendUnderHeader": "## {{主题}}"
+        "outputTemplate": "<!-- start -->\n-[ ]  {{主题}}  {{icon}}  {{block}}  {{状态}}\n<!-- end -->\n\n",
+        "targetFile": "02/001.md",
+        "appendUnderHeader": ""
       },
       {
         "id": "blk_meibt0i819ze1",
@@ -333,6 +392,11 @@
         "id": "thm_meibvgs0wykgc",
         "path": "生活",
         "icon": "💥"
+      },
+      {
+        "id": "thm_meijf0rd761u9",
+        "path": "生活/健康",
+        "icon": "💌"
       }
     ],
     "overrides": [
@@ -351,6 +415,33 @@
         "outputTemplate": "",
         "targetFile": "01/思考",
         "appendUnderHeader": "## {{主题}}"
+      },
+      {
+        "blockId": "blk_meic1my6m62iu",
+        "themeId": "thm_meibvgs0wykgc",
+        "status": "enabled",
+        "id": "ovr_meihw437otwpv",
+        "fields": [
+          {
+            "id": "field_meictfn1",
+            "key": " 状态",
+            "label": "新字段 1",
+            "type": "select",
+            "options": [
+              {
+                "value": "01",
+                "label": "01"
+              },
+              {
+                "value": "02",
+                "label": "02"
+              }
+            ]
+          }
+        ],
+        "outputTemplate": "-[ ]  {{theme.path}}  {{theme.icon}}  {{block.name}}  {{状态}}",
+        "targetFile": "02/{{theme.path}}.md",
+        "appendUnderHeader": "## {{theme.path}}"
       }
     ]
   }
