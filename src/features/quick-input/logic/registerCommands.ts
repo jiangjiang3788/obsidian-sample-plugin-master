@@ -1,40 +1,48 @@
 // src/features/quick-input/logic/registerCommands.ts
-// [修改] 导入 ThinkContext 类型
 import type { ThinkContext } from '../../../main';
 import { QuickInputModal } from '../ui/QuickInputModal';
 import { AppStore } from '@state/AppStore';
 
-// [修改] 函数参数从 plugin 改回 ctx (ThinkContext)
 export function registerQuickInputCommands(ctx: ThinkContext) {
-
-    // [修改] 从 ctx 对象中解构出 plugin 实例
     const { plugin } = ctx;
-
     const appStore = AppStore.instance;
-    
     const settings = appStore.getSettings().inputSettings;
-    if (!settings || !settings.templates) {
-        console.log("ThinkPlugin: No input templates found to register commands.");
+
+    if (!settings || !settings.blocks || settings.blocks.length === 0) {
+        console.log("ThinkPlugin: No Block Templates found to register commands.");
         return;
     }
 
-    settings.templates.forEach(template => {
-        const [themePart, typePart] = template.name.split('#type:');
-        const themeName = themePart.replace('theme:', '');
-        const typeName = typePart;
-        
-        const commandName = themeName === 'Base' 
-            ? `快速录入 - ${typeName} (默认)`
-            : `快速录入 - ${themeName} / ${typeName}`;
+    const { blocks, themes, overrides } = settings;
 
-        // 现在 plugin 变量是正确的 Plugin 实例，可以安全调用 .addCommand
+    // 1. 注册基础 Block 命令 (默认命令)
+    blocks.forEach(block => {
         plugin.addCommand({
-            id: `think-quick-input-${template.id}`,
-            name: commandName,
+            id: `think-quick-input-base-${block.id}`,
+            name: `快速录入 - ${block.name} (默认)`,
             callback: () => {
-                // 注意：QuickInputModal 的构造函数需要的是 app 实例，可以从 ctx 中获取
-                new QuickInputModal(ctx.app, template.id).open();
+                new QuickInputModal(ctx.app, block.id, undefined).open();
             },
+        });
+    });
+
+    // 2. 注册所有 (主题 x Block) 的组合命令
+    themes.forEach(theme => {
+        blocks.forEach(block => {
+            // 检查是否存在对此组合的禁用覆写
+            const override = overrides.find(o => o.themeId === theme.id && o.blockId === block.id);
+            if (override && override.status === 'disabled') {
+                // 如果被禁用了，则不为此组合创建命令
+                return;
+            }
+
+            plugin.addCommand({
+                id: `think-quick-input-theme-${theme.id}-${block.id}`,
+                name: `快速录入 - ${theme.path} / ${block.name}`,
+                callback: () => {
+                    new QuickInputModal(ctx.app, block.id, theme.id).open();
+                },
+            });
         });
     });
 }
