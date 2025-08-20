@@ -373,76 +373,235 @@
         "appendUnderHeader": ""
       },
       {
-        "id": "blk_meibt0i819ze1",
-        "name": "思考",
-        "fields": [
-          {
-            "id": "field_meibum9n",
-            "key": "newField1",
-            "type": "radio"
-          }
-        ],
+        "id": "blk_mejsdvflptluo",
+        "name": "计划",
+        "fields": [],
         "outputTemplate": "",
-        "targetFile": "01/思考",
-        "appendUnderHeader": "## {{主题}}"
+        "targetFile": "",
+        "appendUnderHeader": ""
+      },
+      {
+        "id": "blk_mejsfuehqj4s0",
+        "name": "总结",
+        "fields": [],
+        "outputTemplate": "",
+        "targetFile": "",
+        "appendUnderHeader": ""
+      },
+      {
+        "id": "blk_mejsg1dc46fj9",
+        "name": "思考",
+        "fields": [],
+        "outputTemplate": "",
+        "targetFile": "",
+        "appendUnderHeader": ""
+      },
+      {
+        "id": "blk_mejsg76atopau",
+        "name": "打卡",
+        "fields": [],
+        "outputTemplate": "",
+        "targetFile": "",
+        "appendUnderHeader": ""
       }
     ],
     "themes": [
       {
-        "id": "thm_meibvgs0wykgc",
-        "path": "生活",
-        "icon": "💥"
+        "id": "thm_mejsim4o4c2mw",
+        "path": "思考",
+        "icon": ""
       },
       {
-        "id": "thm_meijf0rd761u9",
-        "path": "生活/健康",
-        "icon": "💌"
+        "id": "thm_mejsj5pzfonlh",
+        "path": "思考/自我",
+        "icon": ""
+      },
+      {
+        "id": "thm_mejsjh81u5lyz",
+        "path": "思考/垚垚",
+        "icon": ""
+      },
+      {
+        "id": "thm_mejsjpvsuflrj",
+        "path": "思考/阳阳",
+        "icon": ""
+      },
+      {
+        "id": "thm_mejsk4s9spuik",
+        "path": "思考/婆婆",
+        "icon": ""
+      },
+      {
+        "id": "thm_mejskaj1enucn",
+        "path": "思考/芦苇",
+        "icon": ""
+      },
+      {
+        "id": "thm_mejskeoadmnaj",
+        "path": "思考/家庭",
+        "icon": ""
+      },
+      {
+        "id": "thm_mejsl0rd9ggip",
+        "path": "思考/读书",
+        "icon": ""
+      },
+      {
+        "id": "thm_mejsl7i17il4q",
+        "path": "生活",
+        "icon": ""
+      },
+      {
+        "id": "thm_mejslgmvm2yym",
+        "path": "生活/娱乐",
+        "icon": ""
+      },
+      {
+        "id": "thm_mejsmcngeij2y",
+        "path": "生活/开车",
+        "icon": ""
+      },
+      {
+        "id": "thm_mejsmps6gropq",
+        "path": "生活/垚垚",
+        "icon": ""
+      },
+      {
+        "id": "thm_mejsn748ryfip",
+        "path": "生活/家务",
+        "icon": ""
+      },
+      {
+        "id": "thm_mejsnf4dp61nq",
+        "path": "生活/整理",
+        "icon": ""
+      },
+      {
+        "id": "thm_mejsnu4ekns46",
+        "path": "健康",
+        "icon": ""
+      },
+      {
+        "id": "thm_mejso10pwthbr",
+        "path": "健康/卫生",
+        "icon": ""
+      },
+      {
+        "id": "thm_mejso80owbe8a",
+        "path": "健康/睡眠",
+        "icon": ""
+      },
+      {
+        "id": "thm_mejsosvgm4lcp",
+        "path": "健康/身体",
+        "icon": ""
+      },
+      {
+        "id": "thm_mejsoxh023r2m",
+        "path": "健康/习惯",
+        "icon": ""
+      },
+      {
+        "id": "thm_mejsp0lukfkh0",
+        "path": "健康/运动",
+        "icon": ""
+      },
+      {
+        "id": "thm_mejspgfly30j8",
+        "path": "健康/粑粑",
+        "icon": ""
+      },
+      {
+        "id": "thm_mejspn5ocowew",
+        "path": "健康/早餐",
+        "icon": ""
+      },
+      {
+        "id": "thm_mejspwp4h6de9",
+        "path": "健康/午餐",
+        "icon": ""
+      },
+      {
+        "id": "thm_mejst90wwyoyn",
+        "path": "健康/晚餐",
+        "icon": ""
+      },
+      {
+        "id": "thm_mejstnaohdg8t",
+        "path": "健康/心情",
+        "icon": ""
+      },
+      {
+        "id": "thm_mejstzgoiocwm",
+        "path": "电脑",
+        "icon": ""
+      },
+      {
+        "id": "thm_mejsuv5sylsi0",
+        "path": "电脑/ob基础",
+        "icon": ""
+      },
+      {
+        "id": "thm_mejsvgb4hlukj",
+        "path": "电脑/笔记系统",
+        "icon": ""
+      },
+      {
+        "id": "thm_mejsvlfjaerh5",
+        "path": "电脑/记录系统",
+        "icon": ""
+      },
+      {
+        "id": "thm_mejsvz19l0804",
+        "path": "电脑/整理",
+        "icon": ""
+      },
+      {
+        "id": "thm_mejswaiozga40",
+        "path": "电脑/整理/时间整理",
+        "icon": ""
+      },
+      {
+        "id": "thm_mejswh9v0jpsi",
+        "path": "电脑/整理/复盘整理",
+        "icon": ""
+      },
+      {
+        "id": "thm_mejswmjkpyrzg",
+        "path": "电脑/整理/思路整理",
+        "icon": ""
+      },
+      {
+        "id": "thm_mejsx2qu3g8fi",
+        "path": "工作",
+        "icon": ""
+      },
+      {
+        "id": "thm_mejsxbyuursnz",
+        "path": "工作/设计",
+        "icon": ""
+      },
+      {
+        "id": "thm_mejsxl0soxhxz",
+        "path": "工作/投标",
+        "icon": ""
+      },
+      {
+        "id": "thm_mejsxtufpvqd3",
+        "path": "工作/手续、对账",
+        "icon": ""
+      },
+      {
+        "id": "thm_mejsy9nvsnd0q",
+        "path": "工作/其他",
+        "icon": ""
+      },
+      {
+        "id": "thm_mejsye15uvbzi",
+        "path": "工作/老板任务",
+        "icon": ""
       }
     ],
-    "overrides": [
-      {
-        "blockId": "blk_meibt0i819ze1",
-        "themeId": "thm_meibvgs0wykgc",
-        "status": "enabled",
-        "id": "ovr_meicw54ellv64",
-        "fields": [
-          {
-            "id": "field_meibum9n",
-            "key": "newField1",
-            "type": "radio"
-          }
-        ],
-        "outputTemplate": "",
-        "targetFile": "01/思考",
-        "appendUnderHeader": "## {{主题}}"
-      },
-      {
-        "blockId": "blk_meic1my6m62iu",
-        "themeId": "thm_meibvgs0wykgc",
-        "status": "enabled",
-        "id": "ovr_meihw437otwpv",
-        "fields": [
-          {
-            "id": "field_meictfn1",
-            "key": " 状态",
-            "label": "新字段 1",
-            "type": "select",
-            "options": [
-              {
-                "value": "01",
-                "label": "01"
-              },
-              {
-                "value": "02",
-                "label": "02"
-              }
-            ]
-          }
-        ],
-        "outputTemplate": "-[ ]  {{theme.path}}  {{theme.icon}}  {{block.name}}  {{状态}}",
-        "targetFile": "02/{{theme.path}}.md",
-        "appendUnderHeader": "## {{theme.path}}"
-      }
-    ]
+    "overrides": []
   }
 }
