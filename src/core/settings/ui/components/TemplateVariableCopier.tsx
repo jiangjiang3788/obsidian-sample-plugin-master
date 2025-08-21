@@ -5,35 +5,31 @@ import { useMemo } from 'preact/hooks';
 import { Notice } from 'obsidian';
 import type { BlockTemplate } from '@core/domain/schema';
 import { SimpleSelect } from '@shared/ui/SimpleSelect';
-import { Box, Typography } from '@mui/material';
+import { Box } from '@mui/material';
 
 interface Props {
     block: BlockTemplate;
 }
 
 export function TemplateVariableCopier({ block }: Props) {
-    // 生成所有可用变量的列表
+    // [修改] 全面简化变量的显示名称和实际值
     const variableOptions = useMemo(() => {
         const options = [
-            { value: '{{block.name}}', label: 'Block 名称' },
-            { value: '{{theme.path}}', label: '主题 路径' },
-            { value: '{{theme.icon}}', label: '主题 图标' },
-            { value: '{{moment:YYYY-MM-DD}}', label: '动态日期 (moment)' },
+            { value: '{{block}}', label: 'block' },
+            { value: '{{theme}}', label: 'theme' },
+            { value: '{{icon}}', label: 'icon' },
+            { value: '{{moment:YYYY-MM-DD}}', label: 'moment:YYYY-MM-DD' },
         ];
 
         block.fields.forEach(field => {
-            options.push({ value: `{{${field.key}}}`, label: `字段: ${field.label}` });
-            options.push({ value: `{{${field.key}.value}}`, label: `字段: ${field.label} (.value)` });
+            const fieldKey = field.key || 'untitled';
+
+            // 移除了 "字段: " 前缀
+            options.push({ value: `{{${fieldKey}}}`, label: `${fieldKey}` });
+            options.push({ value: `{{${fieldKey}.value}}`, label: `${fieldKey}.value` });
+            
             if (field.type === 'select' || field.type === 'radio') {
-                options.push({ value: `{{${field.key}.label}}`, label: `字段: ${field.label} (.label)` });
-                // 如果有额外值，也加入选项
-                const extraKeys = new Set<string>();
-                field.options?.forEach(opt => {
-                    Object.keys(opt.extraValues || {}).forEach(key => extraKeys.add(key));
-                });
-                extraKeys.forEach(key => {
-                    options.push({ value: `{{${field.key}.${key}}}`, label: `字段: ${field.label} (.${key})` });
-                });
+                options.push({ value: `{{${fieldKey}.label}}`, label: `${fieldKey}.label` });
             }
         });
 
@@ -52,7 +48,7 @@ export function TemplateVariableCopier({ block }: Props) {
                 value="" // 每次选择后保持为空
                 options={variableOptions}
                 onChange={handleCopy}
-                placeholder="-- 复制可用变量 --"
+                placeholder="-- 复制变量 --"
             />
         </Box>
     );

@@ -2,51 +2,77 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
 import { useState } from 'preact/hooks';
-import { Box, Stack, TextField, IconButton, Button, Typography, Tooltip, Divider } from '@mui/material';
+import { Box, Stack, TextField, IconButton, Button, Typography, Tooltip, Divider, Checkbox, FormControlLabel } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import AddIcon from '@mui/icons-material/Add';
 import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
 import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
 import RemoveCircleOutlineIcon from '@mui/icons-material/RemoveCircleOutline';
-import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
-import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
-import { KeyValueEditor } from '@shared/components/form/KeyValueEditor';
 import type { TemplateField, TemplateFieldOption } from '@core/domain/schema';
-// [新增] 导入 SimpleSelect
 import { SimpleSelect } from '@shared/ui/SimpleSelect';
 
-// 单个选项的编辑器 (OptionRow) 组件保持不变
+// 单个选项的编辑器 (OptionRow) 组件
 function OptionRow({ option, onChange, onRemove }: { option: TemplateFieldOption, onChange: (newOption: TemplateFieldOption) => void, onRemove: () => void }) {
-    const [showExtra, setShowExtra] = useState(Object.keys(option.extraValues || {}).length > 0);
+    // 状态：控制是否为高级模式（选项和值分离）
+    // 如果 label 存在且与 value 不同，则默认为高级模式
+    const [isAdvanced, setIsAdvanced] = useState(!!(option.label && option.label !== option.value));
+
+    // 处理高级模式切换
+    const handleAdvancedToggle = (checked: boolean) => {
+        setIsAdvanced(checked);
+        // 当从高级模式切换回简单模式时，将 `value` 同步给 `label`，保持一致
+        if (!checked) {
+            onChange({ ...option, label: option.value });
+        }
+    };
+
+    // 处理“值”输入框的变化
+    const handleValueChange = (newValue: string) => {
+        if (isAdvanced) {
+            // 高级模式下，只更新 value
+            onChange({ ...option, value: newValue });
+        } else {
+            // 简单模式下，同时更新 value 和 label
+            onChange({ ...option, value: newValue, label: newValue });
+        }
+    };
+
+    // 处理“选项”输入框的变化（仅在高级模式下可见）
+    const handleLabelChange = (newLabel: string) => {
+        onChange({ ...option, label: newLabel });
+    };
 
     return (
         <Box>
-            <Stack direction="row" alignItems="center" spacing={2}>
-                <TextField label="UI显示名 (Label)" placeholder="若为空则显示Value" value={option.label || ''} onChange={e => onChange({ ...option, label: (e.target as HTMLInputElement).value })} size="small" variant="outlined" sx={{ flex: 1 }} />
-                <TextField label="主要输出值 (Value)" value={option.value} onChange={e => onChange({ ...option, value: (e.target as HTMLInputElement).value })} size="small" variant="outlined" sx={{ flex: 1 }} />
-                <Tooltip title={showExtra ? "收起额外值" : "配置额外值 (用于 {{key.extraKey}} 格式)"}>
-                    <Button size="small" onClick={() => setShowExtra(!showExtra)} endIcon={showExtra ? <KeyboardArrowUpIcon /> : <KeyboardArrowDownIcon />}>高级</Button>
-                </Tooltip>
+            <Stack direction="row" alignItems="center" spacing={1.5}>
+                {isAdvanced ? (
+                    // 高级模式：显示两个输入框
+                    // [修复] 使用 Box 替代 Fragment 来避免构建错误
+                    // `display: 'contents'` 确保这个 Box 不会影响父级 Stack 的布局
+                    <Box sx={{ display: 'contents' }}>
+                        <TextField label="选项" value={option.label || ''} onChange={e => handleLabelChange((e.target as HTMLInputElement).value)} size="small" variant="outlined" sx={{ flex: 1 }} />
+                        <TextField label="值" value={option.value} onChange={e => handleValueChange((e.target as HTMLInputElement).value)} size="small" variant="outlined" sx={{ flex: 1 }} />
+                    </Box>
+                ) : (
+                    // 简单模式：显示一个输入框
+                    <TextField label="选项/值" value={option.value} onChange={e => handleValueChange((e.target as HTMLInputElement).value)} size="small" variant="outlined" sx={{ flex: 1 }} />
+                )}
+
+                <FormControlLabel
+                    control={<Checkbox checked={isAdvanced} onChange={(e) => handleAdvancedToggle(e.target.checked)} size="small" />}
+                    label={<Typography sx={{fontSize: 13}}>高级</Typography>}
+                    title="勾选后可分别设置选项的显示名称和实际输出值"
+                />
+                
                 <Tooltip title="删除此选项"><IconButton onClick={onRemove} size="small"><RemoveCircleOutlineIcon fontSize='small' /></IconButton></Tooltip>
             </Stack>
-            {showExtra && (
-                <Box sx={{ mt: 1.5, pl: 1 }}>
-                    <KeyValueEditor
-                        value={option.extraValues || {}}
-                        onChange={newValues => onChange({ ...option, extraValues: newValues })}
-                        keyLabel="变量名 (Key)"
-                        valueLabel="输出内容 (Value)"
-                    />
-                </Box>
-            )}
         </Box>
     );
 }
 
 
-// 单个字段的编辑器
+// 单个字段的编辑器 (FieldRow) - 无需修改
 function FieldRow({ field, index, fieldCount, onUpdate, onRemove, onMove }: { field: TemplateField, index: number, fieldCount: number, onUpdate: (updates: Partial<TemplateField>) => void, onRemove: () => void, onMove: (direction: 'up' | 'down') => void }) {
-
     const handleOptionChange = (optIndex: number, newOption: TemplateFieldOption) => {
         const newOptions = [...(field.options || [])];
         newOptions[optIndex] = newOption;
@@ -55,7 +81,8 @@ function FieldRow({ field, index, fieldCount, onUpdate, onRemove, onMove }: { fi
 
     const addOption = () => {
         const newOptions = [...(field.options || [])];
-        newOptions.push({ value: `新选项${newOptions.length + 1}`, label: `新选项${newOptions.length + 1}` });
+        const baseName = `新选项${newOptions.length + 1}`;
+        newOptions.push({ value: baseName, label: baseName }); // 默认 label 和 value 相同
         onUpdate({ options: newOptions });
     };
 
@@ -63,7 +90,6 @@ function FieldRow({ field, index, fieldCount, onUpdate, onRemove, onMove }: { fi
         onUpdate({ options: (field.options || []).filter((_, i) => i !== optIndex) });
     };
 
-    // [修改] 为 SimpleSelect 准备选项
     const fieldTypeOptions = [
         { value: "text", label: "单行文本" },
         { value: "textarea", label: "多行文本" },
@@ -77,7 +103,6 @@ function FieldRow({ field, index, fieldCount, onUpdate, onRemove, onMove }: { fi
     return (
         <Box>
             <Stack direction="row" spacing={2} alignItems="center">
-                {/* [修改] 将 MUI Select 替换为 SimpleSelect */}
                 <SimpleSelect
                     value={field.type}
                     options={fieldTypeOptions}
@@ -115,7 +140,7 @@ function FieldRow({ field, index, fieldCount, onUpdate, onRemove, onMove }: { fi
     );
 }
 
-// 主组件 (FieldsEditor) 保持不变
+// 主组件 (FieldsEditor) - 无需修改
 export function FieldsEditor({ fields = [], onChange }: { fields: TemplateField[], onChange: (fields: TemplateField[]) => void }) {
     const handleUpdate = (index: number, updates: Partial<TemplateField>) => {
         const newFields = [...(fields || [])];

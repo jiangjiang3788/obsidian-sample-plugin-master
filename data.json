@@ -293,84 +293,36 @@
         "name": "任务",
         "fields": [
           {
-            "id": "field_meictfn1",
-            "key": "01",
+            "id": "field_mekr8gby",
+            "key": " 状态",
             "label": "新字段 1",
-            "type": "text",
-            "options": [
-              {
-                "value": "01",
-                "label": "01"
-              },
-              {
-                "value": "02",
-                "label": "02"
-              }
-            ]
-          },
-          {
-            "id": "field_meiizsvl",
-            "key": "02",
-            "label": "新字段 2",
-            "type": "textarea"
-          },
-          {
-            "id": "field_meiizzy8",
-            "key": "03",
-            "label": "新字段 3",
-            "type": "number",
-            "min": 1,
-            "max": 3
-          },
-          {
-            "id": "field_meij00nb",
-            "key": "04",
-            "label": "新字段 4",
-            "type": "date"
-          },
-          {
-            "id": "field_meij0d4j",
-            "key": "05",
-            "label": "新字段 5",
-            "type": "time"
-          },
-          {
-            "id": "field_meij0huh",
-            "key": "06",
-            "label": "新字段 6",
-            "type": "select",
-            "options": [
-              {
-                "value": "新选项1",
-                "label": "新选项1",
-                "extraValues": {
-                  "newKey1": "",
-                  "newKey2": "",
-                  "newKey3": ""
-                }
-              }
-            ]
-          },
-          {
-            "id": "field_meij12q4",
-            "key": "06",
-            "label": "新字段 7",
             "type": "radio",
             "options": [
               {
-                "value": "新选项1",
-                "label": "新选项1"
+                "value": "- [x]",
+                "label": "✅",
+                "extraValues": {}
               },
               {
-                "value": "新选项2",
-                "label": "新选项2"
+                "value": "- [ ]",
+                "label": "🛫"
+              },
+              {
+                "value": "- [ ]",
+                "label": "📅"
               }
             ]
+          },
+          {
+            "id": "field_mekt6ks3",
+            "key": " 任务内容",
+            "label": "新字段 2",
+            "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n-[ ]  {{主题}}  {{icon}}  {{block}}  {{状态}}\n<!-- end -->\n\n",
-        "targetFile": "02/001.md",
-        "appendUnderHeader": ""
+        "outputTemplate": "---\n{{block}}{{theme}}{{icon}}{{moment:YYYY-MM-DD}}\n{{ 状态}}\n{{ 任务内容}}\n{{ 任务内容.value}}\n---\n",
+        "targetFile": "02/01.md",
+        "appendUnderHeader": "## {{theme.path}}"
       },
       {
         "id": "blk_mejsdvflptluo",
@@ -383,7 +335,28 @@
       {
         "id": "blk_mejsfuehqj4s0",
         "name": "总结",
-        "fields": [],
+        "fields": [
+          {
+            "id": "field_mekrw2ui",
+            "key": "002",
+            "label": "新字段 1",
+            "type": "radio",
+            "options": [
+              {
+                "value": "1",
+                "label": "1",
+                "extraValues": {
+                  "1.2": "1.2",
+                  "1.1": "1.1"
+                }
+              },
+              {
+                "value": "2",
+                "label": "2"
+              }
+            ]
+          }
+        ],
         "outputTemplate": "",
         "targetFile": "",
         "appendUnderHeader": ""
@@ -602,6 +575,71 @@
         "icon": ""
       }
     ],
-    "overrides": []
+    "overrides": [
+      {
+        "id": "ovr_mekswctgu1kmh",
+        "blockId": "blk_meic1my6m62iu",
+        "themeId": "thm_mejsj5pzfonlh",
+        "status": "disabled",
+        "fields": [
+          {
+            "id": "field_mekr8gby",
+            "key": " 状态",
+            "label": "新字段 1",
+            "type": "radio",
+            "options": [
+              {
+                "value": "- [x]",
+                "label": "✅",
+                "extraValues": {}
+              },
+              {
+                "value": "- [ ]",
+                "label": "🛫"
+              },
+              {
+                "value": "- [ ]",
+                "label": "📅"
+              }
+            ]
+          }
+        ],
+        "outputTemplate": " {{icon}} {{内容}} (时间::{{时间}}) (时长::{{时长}}) {{recurrence.content}} {{status.name}} {{日期}}\n\n",
+        "targetFile": "",
+        "appendUnderHeader": "## {{theme.path}}"
+      },
+      {
+        "id": "ovr_mekswgyn6jejg",
+        "blockId": "blk_meic1my6m62iu",
+        "themeId": "thm_mejsjh81u5lyz",
+        "status": "enabled",
+        "fields": [
+          {
+            "id": "field_mekr8gby",
+            "key": " 状态",
+            "label": "新字段 1",
+            "type": "radio",
+            "options": [
+              {
+                "value": "- [x]",
+                "label": "✅",
+                "extraValues": {}
+              },
+              {
+                "value": "- [ ]",
+                "label": "🛫"
+              },
+              {
+                "value": "- [ ]",
+                "label": "📅"
+              }
+            ]
+          }
+        ],
+        "outputTemplate": " {{icon}} {{内容}} (时间::{{时间}}) (时长::{{时长}}) {{recurrence.content}} {{status.name}} {{日期}}\n\n",
+        "targetFile": "",
+        "appendUnderHeader": "## {{theme.path}}"
+      }
+    ]
   }
 }

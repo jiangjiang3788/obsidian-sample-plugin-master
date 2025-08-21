@@ -9,7 +9,7 @@ import type { RecurrenceInfo } from '@core/utils/mark';
 export interface TemplateFieldOption {
     value: string;
     label?: string;
-    extraValues?: Record<string, string>;
+    // [修改] 移除了 extraValues 属性
 }
 
 export interface TemplateField {
@@ -28,8 +28,8 @@ export interface TemplateField {
  * 这是所有设置的“单一事实来源”
  */
 export interface BlockTemplate {
-    id: string;               // e.g., 'blk_task', 'blk_habit'
-    name: string;             // e.g., 'Task', '打卡' (作为列标题和命令的一部分)
+    id: string;              // e.g., 'blk_task', 'blk_habit'
+    name: string;              // e.g., 'Task', '打卡' (作为列标题和命令的一部分)
     fields: TemplateField[];
     outputTemplate: string;   // 输出到文件的模板
     targetFile: string;       // 目标文件路径模板
@@ -41,7 +41,7 @@ export interface BlockTemplate {
  * 作为行标题
  */
 export interface ThemeDefinition {
-    id: string;    // 唯一ID
+    id: string;   // 唯一ID
     path: string;  // 主题路径, e.g., "个人/项目"
     icon?: string; // 主题图标 (可选)
 }
@@ -51,9 +51,9 @@ export interface ThemeDefinition {
  * 存储在 overrides 数组中，代表一个 (主题, Block) 的交叉点配置
  */
 export interface ThemeOverride {
-    id: string;               // 覆写配置自身的ID
-    blockId: string;          // 关联的 Block ID, e.g., 'blk_task'
-    themeId: string;          // 关联的 Theme ID
+    id: string;              // 覆写配置自身的ID
+    blockId: string;           // 关联的 Block ID, e.g., 'blk_task'
+    themeId: string;           // 关联的 Theme ID
     status: 'enabled' | 'disabled'; // 'enabled' 代表覆写, 'disabled' 代表禁用
     // 以下字段存在时，代表对基础 BlockTemplate 的覆写
     fields?: TemplateField[];

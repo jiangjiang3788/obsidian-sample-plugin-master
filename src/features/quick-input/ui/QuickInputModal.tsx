@@ -3,7 +3,6 @@
 import { App, Modal, Notice } from 'obsidian';
 import { h, render } from 'preact';
 import { useState, useMemo, useEffect } from 'preact/hooks';
-// [核心修复] 在这里同时导入 AppStore 和 useStore
 import { AppStore, useStore } from '@state/AppStore';
 import { InputService } from '@core/services/inputService';
 import { DataStore } from '@core/services/dataStore';
@@ -48,12 +47,11 @@ function getEffectiveTemplate(settings: InputSettings, blockId: string, themeId?
 // Preact 表单组件
 function QuickInputForm({ app, blockId, closeModal }: { app: App; blockId: string; closeModal: () => void }) {
     const svc = useMemo(() => new InputService(app), [app]);
-    // [修复] 此处 useStore 现在可以被正确找到
     const allThemes = useStore(state => state.settings.inputSettings.themes);
     
     const [selectedThemeId, setSelectedThemeId] = useState<string | null>(null);
 
-    const { template, title, theme } = useMemo(() => {
+    const { template, theme } = useMemo(() => {
         const settings = AppStore.instance.getSettings().inputSettings;
         return getEffectiveTemplate(settings, blockId, selectedThemeId || undefined);
     }, [blockId, selectedThemeId]);
@@ -66,7 +64,10 @@ function QuickInputForm({ app, blockId, closeModal }: { app: App; blockId: strin
         template.fields.forEach(field => {
             if ((field.type === 'radio' || field.type === 'select') && field.options && field.options.length > 0) {
                 const defaultOption = field.options.find(o => o.value === field.defaultValue) || field.options[0];
-                if (defaultOption) { initialData[field.key] = { ...defaultOption.extraValues, value: defaultOption.value, label: defaultOption.label || defaultOption.value }; }
+                if (defaultOption) {
+                    // [修改] 移除了 extraValues 的合并
+                    initialData[field.key] = { value: defaultOption.value, label: defaultOption.label || defaultOption.value };
+                }
             } else {
                 initialData[field.key] = { value: field.defaultValue || '' };
             }
@@ -98,7 +99,6 @@ function QuickInputForm({ app, blockId, closeModal }: { app: App; blockId: strin
         return <div>错误：找不到ID为 "{blockId}" 的Block模板。</div>;
     }
     
-    // renderField 函数保持不变
     const renderField = (field: TemplateField) => {
         const value = formData[field.key]?.value;
         switch (field.type) {
@@ -117,7 +117,8 @@ function QuickInputForm({ app, blockId, closeModal }: { app: App; blockId: strin
                         <MuiRadioGroup row value={value || ''} onChange={e => {
                             const selectedOption = field.options?.find(opt => opt.value === e.target.value);
                             if (selectedOption) {
-                                const optionObject = { ...selectedOption.extraValues, value: selectedOption.value, label: selectedOption.label || selectedOption.value };
+                                // [修改] 移除了 extraValues 的合并
+                                const optionObject = { value: selectedOption.value, label: selectedOption.label || selectedOption.value };
                                 handleUpdate(field.key, optionObject, true);
                             }
                         }}>
@@ -139,7 +140,8 @@ function QuickInputForm({ app, blockId, closeModal }: { app: App; blockId: strin
                             onChange={selectedValue => {
                                 const selectedOption = field.options?.find(opt => opt.value === selectedValue);
                                 if (selectedOption) {
-                                    const optionObject = { ...selectedOption.extraValues, value: selectedOption.value, label: selectedOption.label || selectedOption.value };
+                                    // [修改] 移除了 extraValues 的合并
+                                    const optionObject = { value: selectedOption.value, label: selectedOption.label || selectedOption.value };
                                     handleUpdate(field.key, optionObject, true);
                                 }
                             }}
