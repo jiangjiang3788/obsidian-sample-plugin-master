@@ -103,87 +103,91 @@ body.theme-dark .think-pills .think-pill{
 }
 
 
-// src/features/dashboard/styles/global.ts
-
-// ... 您其他的全局样式 ...
-
-// [FINAL VERSION] 根据您的个人风格偏好调整后的最终样式
-export const GLOBAL_CSS = `
-/* ... 您其他的全局样式 ... */
-
-/* [NEW] 移除 BlockView 内部所有链接的下划线，以符合您的偏好 */
-.block-language-think a,
-.block-language-think a:visited,
-.block-language-think a:hover {
+.block-language-think .module-content a {
     text-decoration: none !important;
 }
 
-/* --- BlockView Component Styles --- */
-.block-language-think .bv-group { margin-bottom: 1.5em; }
-.block-language-think .bv-group-title { margin-bottom: 0.8em; font-size: 1.1em; font-weight: 600; color: var(--text-normal); border-bottom: 1px solid var(--background-modifier-border); padding-bottom: 0.4em; }
 
-.block-language-think .bv-item { transition: background-color 0.2s ease-in-out; border-radius: 6px; }
-.block-language-think .bv-item:hover { background-color: var(--background-modifier-hover); }
-
-.block-language-think .bv-item--task { display: flex; align-items: flex-start; gap: 8px; padding: 4px; }
-.block-language-think .bv-item--task .bv-task-checkbox-wrapper { margin-top: 1px; }
-.block-language-think .bv-item--task .bv-task-content { flex: 1; }
-.block-language-think .bv-item--task .bv-task-title { color: var(--text-normal); line-height: 1.5; }
-
-/* Block Item 两栏布局 */
-.block-language-think .bv-item--block {
-  display: flex !important;
-  flex-direction: row !important;
-  gap: 16px;
-  padding: 8px;
-  margin-bottom: 8px;
-  border: none; /* [MODIFIED] 移除您不想要的描边 */
-}
-/* 我们依然保留 hover 时的背景色，因为它不突兀且能提供反馈 */
-.block-language-think .bv-item--block:hover { background-color: var(--background-modifier-hover); }
-
-/* 左栏：元数据 */
-.block-language-think .bv-block-metadata {
-  flex-shrink: 0;
-  width: 180px;
+.block-language-think .module-content .bv-group-title {
+    margin-bottom: 0.8em;
+    font-weight: 600;
+    color: var(--text-normal);
+    border-bottom: 1px solid var(--background-modifier-border);
+    padding-bottom: 0.4em;
 }
 
-/* 右栏：主内容 */
-.block-language-think .bv-block-main {
-  flex-grow: 1;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
+
+.block-language-think .module-content .bv-item--block {
+    display: flex;
+    gap: 16px;
+    padding: 8px;
+    margin-bottom: 8px;
+    border-radius: 6px;
+    border: none; /* 移除边框 */
+}
+.block-language-think .module-content .bv-item--block:hover {
+    background-color: var(--background-modifier-hover);
 }
 
-/* 窄视图下的响应式布局 */
-.block-language-think .bv-item--block.is-narrow {
-  flex-direction: column !important;
-  gap: 8px;
+
+.block-language-think .module-content .bv-block-metadata {
+    flex-shrink: 0;
+    width: 180px;
 }
-.block-language-think .bv-item--block.is-narrow .bv-block-metadata {
-  width: 100%;
+.block-language-think .module-content .bv-block-main {
+    flex-grow: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
 }
 
-.block-language-think .bv-block-title a { font-weight: 600; font-size: 1.05em; color: var(--text-normal); }
-.block-language-think .bv-block-content a { white-space: pre-wrap; line-height: 1.6; color: var(--text-muted); }
-
-.block-language-think .bv-fields-list { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
-
-/* [MODIFIED] 药丸样式，完全恢复到您喜欢的风格 */
-.block-language-think .tag-pill {
-  display: inline-flex;
-  align-items: center;
-  height: auto; /* 高度自适应 */
-  padding: 2px 8px; /* 调整内边距以匹配您的风格 */
-  font-size: 90%; /* 使用您原来的字体大小 */
-  line-height: 1.5;
-  border-radius: 4px; /* [MODIFIED] 恢复您喜欢的方角药丸样式 */
-  background: var(--background-modifier-hover); /* [KEPT] 保留您喜欢的紫色/灰色背景 (categoryKey 会覆盖此项) */
-  border: 1px solid var(--background-modifier-border);
-  white-space: nowrap;
+.block-language-think .module-content .bv-item--block.is-narrow {
+    flex-direction: column;
+    gap: 8px;
 }
-.block-language-think .tag-pill img { height: 1.2em; width: 1.2em; object-fit: contain; }
+.block-language-think .module-content .bv-item--block.is-narrow .bv-block-metadata {
+    width: 100%;
+}
 
-`.trim();
+
+.block-language-think .module-content .bv-block-title a {
+    font-weight: 600;
+    color: var(--text-normal);
+}
+.block-language-think .module-content .bv-block-content a {
+    white-space: pre-wrap;
+    line-height: 1.6;
+    color: var(--text-muted);
+}
+
+
+.block-language-think .module-content .bv-fields-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    align-items: center;
+}
+.block-language-think .module-content .tag-pill {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 8px;
+    border-radius: 4px; /* 您喜欢的方角 */
+    background: var(--background-modifier-hover); /* 您喜欢的背景色 */
+    border: 1px solid var(--background-modifier-border);
+    white-space: nowrap;
+    line-height: 1.5;
+}
+.block-language-think .module-content .tag-pill img {
+    height: 1.2em; /* 高度跟随字体 */
+    width: 1.2em;
+    object-fit: contain;
+}
+
+
+.block-language-think .module-content .bv-item--task { display: flex; align-items: flex-start; gap: 8px; padding: 4px; border-radius: 6px; }
+.block-language-think .module-content .bv-item--task:hover { background-color: var(--background-modifier-hover); }
+.block-language-think .module-content .bv-item--task .bv-task-checkbox-wrapper { margin-top: 2px; }
+.block-language-think .module-content .bv-item--task .bv-task-content { flex: 1; }
+.block-language-think .module-content .bv-item--task .bv-task-title { color: var(--text-normal); line-height: 1.5; }
+

@@ -98,7 +98,6 @@ export function LayoutRenderer({ layout, dataStore, plugin }: Props) {
     } : {};
 
     return (
-        // [MODIFIED] 这里不再需要 think-plugin-container 类名
         <div>
             {!layout.hideToolbar && (
                 <div class="tp-toolbar" style="margin-bottom:8px;">
