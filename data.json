@@ -137,7 +137,8 @@
       },
       "fields": [
         "categoryKey"
-      ]
+      ],
+      "collapsed": true
     },
     {
       "id": "view_me9ygd5ci3kdp",
@@ -246,8 +247,7 @@
         "collapsed": false,
         "fields": []
       },
-      "fields": [],
-      "group": "tags"
+      "fields": []
     },
     {
       "id": "view_meledh5dqcl9i",
@@ -266,8 +266,7 @@
         "date",
         "icon",
         "pintu",
-        "title",
-        "content"
+        "title"
       ]
     }
   ],

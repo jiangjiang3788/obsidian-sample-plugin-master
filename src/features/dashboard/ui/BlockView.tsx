@@ -140,6 +140,7 @@ export function BlockView(props: BlockViewProps) {
 
     const grouped: Record<string, Item[]> = {};
     for (const it of items) {
+        // [INFO] 这行代码确保了没有分组字段值的项目会被归入“(未分类)”组
         const key = String(readField(it, groupField) ?? '(未分类)');
         if (!grouped[key]) grouped[key] = [];
         grouped[key].push(it);
