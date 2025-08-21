@@ -10,11 +10,10 @@ import * as DashboardFeature from '@features/dashboard';
 import * as QuickInputFeature from '@features/quick-input';
 import * as CoreSettings from '@core/settings/index';
 
-// [修改] 从 domain 层导入核心类型和默认值
-import { ThinkSettings, DEFAULT_SETTINGS, DataSource, ViewInstance, Layout, InputSettings } from '@core/domain/schema';
-import { GLOBAL_CSS, STYLE_TAG_ID } from '@core/domain/constants';
-
-// [移除] ThinkSettings 接口和 DEFAULT_SETTINGS 常量，它们已移至 schema.ts
+import { ThinkSettings, DEFAULT_SETTINGS } from '@core/domain/schema';
+// [修改] 分开导入，STYLE_TAG_ID 来自 domain, GLOBAL_CSS 来自 feature
+import { STYLE_TAG_ID } from '@core/domain/constants';
+import { GLOBAL_CSS } from '@features/dashboard/styles/global';
 
 // ---------- Feature & Core Context ---------- //
 
@@ -83,7 +82,6 @@ export default class ThinkPlugin extends Plugin {
 
     private async loadSettings(): Promise<ThinkSettings> {
         const stored = (await this.loadData()) as Partial<ThinkSettings> | null;
-        // [修改] 直接使用从 domain 导出的 DEFAULT_SETTINGS
         const merged = Object.assign({}, DEFAULT_SETTINGS, stored);
         merged.dataSources = merged.dataSources || [];
         merged.viewInstances = merged.viewInstances || [];
@@ -103,6 +101,7 @@ export default class ThinkPlugin extends Plugin {
             el.id = STYLE_TAG_ID;
             document.head.appendChild(el);
         }
+        // [修改] 此处使用的 GLOBAL_CSS 现在是从新位置导入的
         el.textContent = GLOBAL_CSS;
     }
 }
