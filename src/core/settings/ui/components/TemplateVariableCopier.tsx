@@ -12,7 +12,6 @@ interface Props {
 }
 
 export function TemplateVariableCopier({ block }: Props) {
-    // [修改] 全面简化变量的显示名称和实际值
     const variableOptions = useMemo(() => {
         const options = [
             { value: '{{block}}', label: 'block' },
@@ -24,12 +23,12 @@ export function TemplateVariableCopier({ block }: Props) {
         block.fields.forEach(field => {
             const fieldKey = field.key || 'untitled';
 
-            // 移除了 "字段: " 前缀
+            // 基础变量，所有字段都提供
             options.push({ value: `{{${fieldKey}}}`, label: `${fieldKey}` });
-            options.push({ value: `{{${fieldKey}.value}}`, label: `${fieldKey}.value` });
             
+            // [修改] 仅为复杂字段提供 .value 选项
             if (field.type === 'select' || field.type === 'radio') {
-                options.push({ value: `{{${fieldKey}.label}}`, label: `${fieldKey}.label` });
+                options.push({ value: `{{${fieldKey}.value}}`, label: `${fieldKey}.value` });
             }
         });
 

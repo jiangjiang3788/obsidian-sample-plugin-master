@@ -9,27 +9,17 @@ import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import { useState, useEffect } from 'preact/hooks';
 import { FieldsEditor } from './components/FieldsEditor';
 import type { BlockTemplate } from '@core/domain/schema';
-// [新增] 导入变量复制器组件
 import { TemplateVariableCopier } from './components/TemplateVariableCopier';
 
 // Block 编辑器内部组件
 function BlockEditor({ block }: { block: BlockTemplate }) {
     const [localBlock, setLocalBlock] = useState(block);
-
-    useEffect(() => {
-        setLocalBlock(block);
-    }, [block]);
-
-    const handleUpdate = (updates: Partial<BlockTemplate>) => {
-        AppStore.instance.updateBlock(block.id, updates);
-    };
-
+    useEffect(() => { setLocalBlock(block); }, [block]);
+    const handleUpdate = (updates: Partial<BlockTemplate>) => { AppStore.instance.updateBlock(block.id, updates); };
     const handleBlur = (key: keyof BlockTemplate) => {
-        if (localBlock[key] !== block[key]) {
-            handleUpdate({ [key]: localBlock[key] });
-        }
+        // @ts-ignore
+        if (localBlock[key] !== block[key]) handleUpdate({ [key]: localBlock[key] });
     };
-    
     return (
         <Stack spacing={3}>
             <TextField label="Block 名称" value={localBlock.name} onChange={e => setLocalBlock(b => ({ ...b, name: (e.target as HTMLInputElement).value }))} onBlur={() => handleBlur('name')} variant="outlined" size="small" sx={{ maxWidth: 400 }} />
@@ -37,8 +27,8 @@ function BlockEditor({ block }: { block: BlockTemplate }) {
             <Box>
                 <Typography variant="h6" sx={{ fontSize: '1rem', fontWeight: 600, mb: 1 }}>输出目标</Typography>
                 <Stack spacing={2}>
-                    <TextField label="目标文件路径" value={localBlock.targetFile} onChange={e => setLocalBlock(b => ({ ...b, targetFile: e.target.value }))} onBlur={() => handleBlur('targetFile')} placeholder="e.g., {{theme.path}}/{{标题.value}}.md" variant="outlined" size="small" />
-                    <TextField label="追加到标题下 (可选)" value={localBlock.appendUnderHeader} onChange={e => setLocalBlock(b => ({ ...b, appendUnderHeader: e.target.value }))} onBlur={() => handleBlur('appendUnderHeader')} placeholder="e.g., ## {{block.name}}" variant="outlined" size="small" />
+                    <TextField label="目标文件路径" value={localBlock.targetFile} onChange={e => setLocalBlock(b => ({ ...b, targetFile: (e.target as HTMLInputElement).value }))} onBlur={() => handleBlur('targetFile')} placeholder="e.g., {{theme.path}}/{{标题.value}}.md" variant="outlined" size="small" />
+                    <TextField label="追加到标题下 (可选)" value={localBlock.appendUnderHeader || ''} onChange={e => setLocalBlock(b => ({ ...b, appendUnderHeader: (e.target as HTMLInputElement).value }))} onBlur={() => handleBlur('appendUnderHeader')} placeholder="e.g., ## {{block.name}}" variant="outlined" size="small" />
                 </Stack>
             </Box>
             <Divider />
@@ -48,23 +38,21 @@ function BlockEditor({ block }: { block: BlockTemplate }) {
             </Box>
             <Divider />
             <Box>
-                {/* [修改] 将变量复制器放在标题旁边 */}
                 <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 1 }}>
                     <Typography variant="h6" sx={{ fontSize: '1rem', fontWeight: 600 }}>输出模板</Typography>
                     <TemplateVariableCopier block={localBlock} />
                 </Stack>
-                <TextField label="Output Template" multiline rows={4} value={localBlock.outputTemplate} onChange={e => setLocalBlock(b => ({ ...b, outputTemplate: e.target.value }))} onBlur={() => handleBlur('outputTemplate')} placeholder="使用 {{key.value}} 引用上面定义的字段" variant="outlined" sx={{ fontFamily: 'monospace', '& textarea': { fontSize: '13px' } }} />
+                {/* [修改] 确认行数设置为 8 */}
+                <TextField label="Output Template" multiline rows={8} value={localBlock.outputTemplate} onChange={e => setLocalBlock(b => ({ ...b, outputTemplate: (e.target as HTMLInputElement).value }))} onBlur={() => handleBlur('outputTemplate')} placeholder="使用 {{key}} 引用上面定义的字段" variant="outlined" sx={{ fontFamily: 'monospace', '& textarea': { fontSize: '13px' } }} />
             </Box>
         </Stack>
     );
 }
 
-// BlockManager 主组件 (保持不变)
+// BlockManager 主组件
 export function BlockManager() {
-    // ... 此部分代码与之前完全相同，无需修改 ...
     const blocks = useStore(state => state.settings.inputSettings.blocks);
-    const [openId, setOpenId] = useState<string | null>(blocks.length > 0 ? blocks[0].id : null);
-
+    const [openId, setOpenId] = useState<string | null>(null);
     const handleAdd = () => {
         const newName = `新Block ${blocks.length + 1}`;
         AppStore.instance.addBlock(newName).then(() => {
@@ -72,31 +60,21 @@ export function BlockManager() {
             if (latestBlock) setOpenId(latestBlock.id);
         });
     };
-
     const handleDelete = (id: string, name: string) => {
         if (confirm(`确认删除Block "${name}" 吗？\n所有与此Block相关的主题覆写配置都将被一并删除。`)) {
             AppStore.instance.deleteBlock(id);
         }
     };
-
     return (
         <Box sx={{ maxWidth: '900px', mx: 'auto' }}>
             <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 2 }}>
                 <Typography variant="h6">1. 管理 Block</Typography>
-                <Tooltip title="新增Block类型">
-                    <IconButton onClick={handleAdd} color="success"><AddCircleOutlineIcon /></IconButton>
-                </Tooltip>
+                <Tooltip title="新增Block类型"><IconButton onClick={handleAdd} color="success"><AddCircleOutlineIcon /></IconButton></Tooltip>
             </Stack>
             <Typography variant="body2" color="text.secondary" sx={{mb: 1.5}}>在这里定义所有快速输入的基础模板，例如任务、打卡、总结等。</Typography>
-            
             <Stack spacing={1}>
                 {blocks.map((block, index) => (
-                    <Accordion
-                        key={block.id}
-                        expanded={openId === block.id}
-                        onChange={() => setOpenId(openId === block.id ? null : block.id)}
-                        disableGutters elevation={1} sx={{ '&:before': { display: 'none' } }}
-                    >
+                    <Accordion key={block.id} expanded={openId === block.id} onChange={() => setOpenId(openId === block.id ? null : block.id)} disableGutters elevation={1} sx={{ '&:before': { display: 'none' } }}>
                         <AccordionSummary>
                             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
                                 <Typography fontWeight={500}>{block.name}</Typography>
@@ -108,9 +86,7 @@ export function BlockManager() {
                                 </Stack>
                             </Box>
                         </AccordionSummary>
-                        <AccordionDetails sx={{ bgcolor: 'action.hover', borderTop: '1px solid rgba(0,0,0,0.08)' }}>
-                            <BlockEditor block={block} />
-                        </AccordionDetails>
+                        <AccordionDetails sx={{ bgcolor: 'action.hover', borderTop: '1px solid rgba(0,0,0,0.08)' }}><BlockEditor block={block} /></AccordionDetails>
                     </Accordion>
                 ))}
             </Stack>

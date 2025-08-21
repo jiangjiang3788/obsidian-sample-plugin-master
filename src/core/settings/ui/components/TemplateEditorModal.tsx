@@ -1,12 +1,13 @@
 // src/core/settings/ui/components/TemplateEditorModal.tsx
 /** @jsxImportSource preact */
 import { h } from 'preact';
-import { useState, useEffect } from 'preact/hooks';
+import { useState, useEffect, useMemo } from 'preact/hooks';
 import { Dialog, DialogTitle, DialogContent, DialogActions, Button, Stack, TextField, Typography, Box, RadioGroup, FormControlLabel, Radio, FormControl, FormLabel, Divider } from '@mui/material';
 import { FieldsEditor } from './FieldsEditor';
 import type { BlockTemplate, ThemeDefinition, ThemeOverride, TemplateField } from '@core/domain/schema';
 import { AppStore } from '@state/AppStore';
 import { Notice } from 'obsidian';
+import { TemplateVariableCopier } from './TemplateVariableCopier';
 
 type EditMode = 'inherit' | 'override' | 'disabled';
 
@@ -28,7 +29,6 @@ export function TemplateEditorModal({ isOpen, onClose, block, theme, existingOve
             setLocalOverride(structuredClone(existingOverride));
         } else {
             setMode('inherit');
-            // 当继承时，也从block中复制一份作为覆写的起点，方便用户切换到覆写模式
             setLocalOverride({
                 fields: structuredClone(block.fields),
                 outputTemplate: block.outputTemplate,
@@ -38,16 +38,20 @@ export function TemplateEditorModal({ isOpen, onClose, block, theme, existingOve
         }
     }, [isOpen, existingOverride, block]);
 
+    const effectiveBlockForCopier = useMemo<BlockTemplate>(() => {
+        return {
+            ...block,
+            ...localOverride,
+            fields: localOverride.fields || block.fields,
+        };
+    }, [block, localOverride]);
+
     const handleSave = () => {
         const store = AppStore.instance;
         if (mode === 'inherit') {
-            // 如果存在覆写，则删除它
-            if (existingOverride) {
-                store.deleteOverride(block.id, theme.id);
-            }
+            if (existingOverride) store.deleteOverride(block.id, theme.id);
             new Notice(`已设为继承 "${block.name}" 的基础配置`);
         } else {
-            // 更新或创建覆写
             const dataToSave: Omit<ThemeOverride, 'id'> = {
                 blockId: block.id,
                 themeId: theme.id,
@@ -81,7 +85,6 @@ export function TemplateEditorModal({ isOpen, onClose, block, theme, existingOve
                             <FormControlLabel value="disabled" control={<Radio />} label="禁用" />
                         </RadioGroup>
                     </FormControl>
-
                     <fieldset disabled={isFormDisabled} style={{ border: 'none', padding: 0, margin: 0, opacity: isFormDisabled ? 0.6 : 1 }}>
                         <Stack spacing={3}>
                             <Divider />
@@ -95,15 +98,16 @@ export function TemplateEditorModal({ isOpen, onClose, block, theme, existingOve
                             <Divider />
                             <Box>
                                 <Typography variant="h6" sx={{ fontSize: '1rem', fontWeight: 600, mb: 1.5 }}>表单字段</Typography>
-                                <FieldsEditor
-                                    fields={localOverride.fields || []}
-                                    onChange={(newFields: TemplateField[]) => setLocalOverride(o => ({ ...o, fields: newFields }))}
-                                />
+                                <FieldsEditor fields={localOverride.fields || []} onChange={(newFields: TemplateField[]) => setLocalOverride(o => ({ ...o, fields: newFields }))} />
                             </Box>
                             <Divider />
                             <Box>
-                                <Typography variant="h6" sx={{ fontSize: '1rem', fontWeight: 600, mb: 1 }}>输出模板</Typography>
-                                <TextField multiline rows={4} value={localOverride.outputTemplate || ''} onChange={e => setLocalOverride(o => ({...o, outputTemplate: e.target.value}))} fullWidth variant="outlined" sx={{ fontFamily: 'monospace' }} />
+                                <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 1 }}>
+                                    <Typography variant="h6" sx={{ fontSize: '1rem', fontWeight: 600 }}>输出模板</Typography>
+                                    <TemplateVariableCopier block={effectiveBlockForCopier} />
+                                </Stack>
+                                {/* [修改] 确认行数设置为 8 */}
+                                <TextField multiline rows={8} value={localOverride.outputTemplate || ''} onChange={e => setLocalOverride(o => ({...o, outputTemplate: e.target.value}))} fullWidth variant="outlined" sx={{ fontFamily: 'monospace' }} />
                             </Box>
                         </Stack>
                     </fieldset>
