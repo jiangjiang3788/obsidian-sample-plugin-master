@@ -360,5 +360,39 @@ body.theme-dark .think-pills .think-pill{
 .block-language-think .module-content .bv-item--task .bv-task-content { flex: 1; }
 .block-language-think .module-content .bv-item--task .bv-task-title { color: var(--text-normal); line-height: 1.5; }
 
+/* [MODIFIED] 提高 TimelineView 悬浮按钮的 CSS 优先级 */
+.block-language-think .timeline-task-block .task-buttons {
+    visibility: hidden;
+    opacity: 0;
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    display: flex;
+    gap: 2px;
+    background: var(--background-secondary);
+    border-radius: 4px;
+    padding: 2px;
+    box-shadow: var(--shadow-s);
+    transition: opacity 0.1s ease-in-out, visibility 0.1s ease-in-out;
+}
+.block-language-think .timeline-task-block:hover .task-buttons {
+    visibility: visible;
+    opacity: 1;
+}
+.block-language-think .timeline-task-block .task-buttons button {
+    all: unset;
+    cursor: pointer;
+    padding: 2px 4px;
+    border-radius: 2px;
+    font-size: 12px;
+}
+.block-language-think .timeline-task-block .task-buttons button:hover {
+    background: var(--background-modifier-hover);
+}
+.block-language-think .timeline-task-block .task-buttons button:disabled {
+    cursor: not-allowed;
+    color: var(--text-muted);
+}
+
 `.trim();class Ck extends dt.Plugin{platform;dataStore;appStore;rendererService;get plugin(){return this}async onload(){console.log("ThinkPlugin load");const t=await this.loadSettings();this.injectGlobalCss(),this.platform=new tf(this.app),this.dataStore=new rn(this.platform),this.appStore=Le.instance,this.appStore.init(this,t),this.rendererService=new Co(this,this.dataStore,this.appStore),await this.dataStore.initialScan(),UC?.(this),XC?.(this),Sk?.(this),this.addCommand({id:"think-open-settings",name:"打开 Think 插件设置",callback:()=>{this.app.setting.open(),this.app.setting.openTabById(this.manifest.id)}})}onunload(){console.log("ThinkPlugin unload"),document.getElementById(ma)?.remove(),this.rendererService.cleanup()}async loadSettings(){const t=await this.loadData(),n=Object.assign({},Hf,t);return n.dataSources=n.dataSources||[],n.viewInstances=n.viewInstances||[],n.layouts=n.layouts||[],n.inputSettings=n.inputSettings||{blocks:[],themes:[],overrides:[]},n}async saveSettings(){await this.saveData(this.appStore.getSettings())}injectGlobalCss(){let t=document.getElementById(ma);t||(t=document.createElement("style"),t.id=ma,document.head.appendChild(t)),t.textContent=wk}}module.exports=Ck;
 //# sourceMappingURL=main.js.map

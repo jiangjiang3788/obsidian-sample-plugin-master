@@ -176,7 +176,6 @@
         "date",
         "content"
       ],
-      "group": "priority",
       "collapsed": false
     },
     {
@@ -212,7 +211,6 @@
         "date",
         "content"
       ],
-      "group": "tags",
       "collapsed": false
     },
     {
@@ -233,7 +231,7 @@
         "date",
         "content"
       ],
-      "group": "tags",
+      "group": "categoryKey",
       "collapsed": false
     },
     {
@@ -247,7 +245,8 @@
         "collapsed": false,
         "fields": []
       },
-      "fields": []
+      "fields": [],
+      "group": "tags"
     },
     {
       "id": "view_meledh5dqcl9i",
