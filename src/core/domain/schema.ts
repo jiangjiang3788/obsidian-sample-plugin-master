@@ -29,8 +29,8 @@ export interface TemplateFieldOption {
 
 export interface TemplateField {
     id: string;
-    key: string; 
-    label: string; 
+    key: string;  
+    label: string;  
     type: 'text' | 'textarea' | 'date' | 'time' | 'select' | 'radio' | 'number';
     defaultValue?: string;
     options?: TemplateFieldOption[];
@@ -63,9 +63,9 @@ export interface ThemeDefinition {
  * 主题对 Block 的覆写配置
  */
 export interface ThemeOverride {
-    id: string;              
-    blockId: string;           
-    themeId: string;           
+    id: string;            
+    blockId: string;            
+    themeId: string;            
     status: 'enabled' | 'disabled'; 
     fields?: TemplateField[];
     outputTemplate?: string;
@@ -188,10 +188,12 @@ export interface Item {
     duration?: number;
     period?: string;
     rating?: number;
+    pintu?: string; // [NEW] 新增“评图”核心字段
 }
 
 // ----- 字段读取工具 (保持不变) ----- //
-export const CORE_FIELDS = ['id', 'type', 'title', 'content', 'categoryKey', 'tags', 'recurrence', 'icon', 'priority', 'date', 'filename', 'header', 'created', 'modified', 'file.basename', 'time', 'duration', 'period', 'rating'] as const;
+// [MODIFIED] 将 'pintu' 添加到核心字段列表中
+export const CORE_FIELDS = ['id', 'type', 'title', 'content', 'categoryKey', 'tags', 'recurrence', 'icon', 'priority', 'date',  'header', 'time', 'duration', 'period', 'rating', 'pintu'] as const;
 
 export type CoreField = typeof CORE_FIELDS[number];
 

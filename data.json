@@ -63,7 +63,13 @@
     {
       "id": "ds_meh5m3brbfc93",
       "name": "生活总结",
-      "filters": [],
+      "filters": [
+        {
+          "field": "categoryKey",
+          "op": "=",
+          "value": "打卡"
+        }
+      ],
       "sort": []
     }
   ],
@@ -242,6 +248,27 @@
       },
       "fields": [],
       "group": "tags"
+    },
+    {
+      "id": "view_meledh5dqcl9i",
+      "title": "生活总结 (副本)",
+      "viewType": "BlockView",
+      "dataSourceId": "ds_meh5m3brbfc93",
+      "viewConfig": {
+        "view": "BlockView",
+        "title": "块视图",
+        "collapsed": false,
+        "fields": [],
+        "group": "categoryKey"
+      },
+      "fields": [
+        "categoryKey",
+        "date",
+        "icon",
+        "pintu",
+        "title",
+        "content"
+      ]
     }
   ],
   "layouts": [
@@ -279,7 +306,8 @@
       "id": "layout_meh5qunjs8kqn",
       "name": "生活总结",
       "viewInstanceIds": [
-        "view_meh5nz9y3mxkk"
+        "view_meh5nz9y3mxkk",
+        "view_meledh5dqcl9i"
       ],
       "displayMode": "list",
       "initialView": "月",

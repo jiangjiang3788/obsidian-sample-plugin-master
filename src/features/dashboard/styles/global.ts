@@ -1,32 +1,61 @@
 // src/features/dashboard/styles/global.ts
 
-/**
- * @file 存放Dashboard功能注入的全局CSS样式。
- * 从 core/domain/constants.ts 迁移至此，以实现业务逻辑与表现层的分离。
- */
 export const GLOBAL_CSS = `
-.think-table{width:100%;border:1px solid #ccc;border-collapse:collapse;}
-.think-table th,.think-table td{border:1px solid #ccc;padding:4px;}
-.think-table th{background:#f0f0f0;text-align:center;}
-.think-table td{text-align:left;}
-.think-table td.empty{background:#f9f9f9;}
-.tag-pill{background:#e0e0e0;border-radius:4px;padding:0 6px;margin-right:6px;font-size:90%;display:inline-block;}
-.task-done{text-decoration:line-through;color:gray;}
-.module-header{display:flex;align-items:center;padding:4px 8px;background:#eee;cursor:pointer;}
-.module-title{flex:1;font-weight:bold;}
-.module-toggle{margin-left:4px;}
-.module-content{padding:6px 8px;}
-.think-layout-grid { display: grid; gap: 8px; }
-.think-layout-list { display: flex; flex-direction: column; gap: 8px; }
-/* 关键：模块内的所有链接 → 黑色、无下划线（覆盖主题） */
-.think-module a, .think-module a:visited { color:#000 !important; text-decoration:none !important; }
-.think-module a:hover, .think-module a:active { text-decoration:none !important; }
-/* 为工具栏当前激活的周期按钮添加描边提示 */
-.tp-toolbar button.active { outline: 2px solid var(--interactive-accent, #007aff); outline-offset: -1px; }
-/* [NEW] 时间轴任务块悬停按钮样式 */
-.timeline-task-block .task-buttons { visibility: hidden; opacity: 0; position: absolute; top: 2px; right: 2px; display: flex; gap: 2px; background: var(--background-secondary); border-radius: 4px; padding: 2px; box-shadow: var(--shadow-s); transition: opacity 0.1s ease-in-out; }
-.timeline-task-block:hover .task-buttons { visibility: visible; opacity: 1; }
-.timeline-task-block .task-buttons button { all: unset; cursor: pointer; padding: 2px 4px; border-radius: 2px; font-size: 12px; }
-.timeline-task-block .task-buttons button:hover { background: var(--background-modifier-hover); }
-.timeline-task-block .task-buttons button:disabled { cursor: not-allowed; color: var(--text-muted); }
+/* ... 您其他的全局样式 ... */
+
+/* [MODIFIED] 使用 .block-language-think 作为唯一的、高优先级的父选择器 */
+
+.block-language-think .bv-group { margin-bottom: 1.5em; }
+.block-language-think .bv-group-title { margin-bottom: 0.8em; font-size: 1.1em; font-weight: 600; color: var(--text-normal); border-bottom: 1px solid var(--background-modifier-border); padding-bottom: 0.4em; }
+
+.block-language-think .bv-item { transition: background-color 0.2s ease-in-out; border-radius: 6px; }
+.block-language-think .bv-item:hover { background-color: var(--background-modifier-hover); }
+
+.block-language-think .bv-item--task { display: flex; align-items: flex-start; gap: 8px; padding: 4px; }
+.block-language-think .bv-item--task .bv-task-checkbox-wrapper { margin-top: 1px; }
+.block-language-think .bv-item--task .bv-task-content { flex: 1; }
+.block-language-think .bv-item--task .bv-task-title { color: var(--text-normal); line-height: 1.5; }
+
+/* Block Item 两栏布局 */
+.block-language-think .bv-item--block {
+  display: flex !important; /* 使用 !important 确保最高优先级 */
+  flex-direction: row !important;
+  gap: 16px;
+  padding: 8px;
+  margin-bottom: 8px;
+  border: 1px solid var(--background-modifier-border);
+}
+.block-language-think .bv-item--block:hover { border-color: var(--interactive-accent); }
+
+/* 左栏：元数据 */
+.block-language-think .bv-block-metadata {
+  flex-shrink: 0;
+  width: 180px;
+}
+
+/* 右栏：主内容 */
+.block-language-think .bv-block-main {
+  flex-grow: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* 窄视图下的响应式布局 */
+.block-language-think .bv-item--block.is-narrow {
+  flex-direction: column !important;
+  gap: 8px;
+}
+.block-language-think .bv-item--block.is-narrow .bv-block-metadata {
+  width: 100%;
+}
+
+.block-language-think .bv-block-title a { font-weight: 600; font-size: 1.05em; color: var(--text-normal); }
+.block-language-think .bv-block-content a { white-space: pre-wrap; line-height: 1.6; color: var(--text-muted); }
+
+.block-language-think .bv-fields-list { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.block-language-think .tag-pill { display: inline-flex; align-items: center; height: 22px; padding: 0 8px; font-size: 13px; line-height: 1; border-radius: 999px; background: var(--background-modifier-hover); border: 1px solid var(--background-modifier-border); white-space: nowrap; }
+.block-language-think .tag-pill img { height: 14px; width: 14px; object-fit: contain; }
+
 `.trim();
