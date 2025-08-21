@@ -1,6 +1,5 @@
 // src/core/services/inputService.ts
 import { App, TFile, TFolder, moment } from 'obsidian';
-// [修改] 增加 ThemeDefinition 的导入
 import type { BlockTemplate, ThemeDefinition } from '@core/domain/schema';
 
 export class InputService {
@@ -9,22 +8,35 @@ export class InputService {
     private renderTemplate(templateString: string, data: Record<string, any>): string {
         return templateString.replace(/\{\{\s*([^}]+?)\s*\}\}/g, (_, placeholder) => {
             const key = placeholder.trim();
+
+            // [新增] 优先处理简化后的快捷变量
+            if (key === 'block') return data.block?.name || '';
+            if (key === 'theme') return data.theme?.path || '';
+            if (key === 'icon') return data.theme?.icon || '';
+
+            // 处理 moment 动态日期
             if (key.startsWith('moment:')) {
                 const format = key.substring(7);
                 return moment().format(format);
             }
+
+            // 处理标准的点状表示法 (e.g., my_field.value)
             const keys = key.split('.');
-            let value = data;
+            let value: any = data;
             for (const k of keys) {
                 if (value && typeof value === 'object' && k in value) {
                     value = value[k];
                 } else {
+                    // 如果路径中断，返回空字符串
                     return '';
                 }
             }
+            
+            // 如果最终结果是一个包含 .value 的对象（来自下拉/单选/文本字段），则提取其 .value
             if (typeof value === 'object' && value !== null && 'value' in value) {
                 return String((value as any).value);
             }
+
             return value !== null && value !== undefined ? String(value) : '';
         });
     }
@@ -40,11 +52,9 @@ export class InputService {
             throw new Error(`传入了无效的模板对象。`);
         }
 
-        // [核心修改] 将 theme 和 block 信息也注入到渲染数据中
         const renderData = { 
             ...formData, 
             block: { name: template.name },
-            // 如果有 theme 对象，则将其 path 和 icon 放入 renderData.theme 中
             theme: theme ? { path: theme.path, icon: theme.icon || '' } : {}
         };
 
@@ -80,7 +90,7 @@ export class InputService {
             if (!af) {
                 try {
                     await this.app.vault.createFolder(cur);
-                } catch (e) {
+                } catch (e: any) {
                     throw new Error(`创建文件夹 "${cur}" 失败。请检查路径是否有效或存在权限问题。原始错误: ${e.message}`);
                 }
             } else if (af instanceof TFile) {
@@ -103,7 +113,7 @@ export class InputService {
         }
         try {
             return await this.app.vault.create(fp, '');
-        } catch (error) {
+        } catch (error: any) {
             console.warn(`ThinkPlugin: 创建文件时遇到初始错误: ${error.message}. 正在尝试重新获取...`);
             await new Promise(resolve => setTimeout(resolve, 100));
             const existingFile = this.app.vault.getAbstractFileByPath(fp);

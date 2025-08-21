@@ -2,14 +2,17 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
 import { useStore, AppStore } from '@state/AppStore';
-import { Box, Table, TableHead, TableRow, TableCell, TableBody, IconButton, Tooltip, TextField, Button, Stack, Typography, Chip } from '@mui/material';
+import { Box, Table, TableHead, TableRow, TableCell, TableBody, IconButton, Tooltip, TextField, Button, Stack, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
+import EditIcon from '@mui/icons-material/Edit';
+import TaskAltIcon from '@mui/icons-material/TaskAlt';
+import CancelIcon from '@mui/icons-material/Cancel';
 import { useState, useMemo } from 'preact/hooks';
 import { TemplateEditorModal } from './components/TemplateEditorModal';
 import type { BlockTemplate, ThemeDefinition, ThemeOverride } from '@core/domain/schema';
 
-// [新增] 用于行内编辑的简单输入框组件
+// 用于行内编辑的简单输入框组件 (保持不变)
 function InlineEditor({ value, onSave }: { value: string, onSave: (newValue: string) => void }) {
     const [current, setCurrent] = useState(value);
 
@@ -44,11 +47,7 @@ function InlineEditor({ value, onSave }: { value: string, onSave: (newValue: str
 export function ThemeMatrix() {
     const { blocks, themes, overrides } = useStore(state => state.settings.inputSettings);
     const [newThemePath, setNewThemePath] = useState('');
-    
-    // [修改] 编辑状态现在只跟踪行ID
     const [editingThemeId, setEditingThemeId] = useState<string | null>(null);
-
-    // [MODAL STATE]
     const [modalOpen, setModalOpen] = useState(false);
     const [modalData, setModalData] = useState<{ block: BlockTemplate; theme: ThemeDefinition; override: ThemeOverride | null } | null>(null);
 
@@ -67,7 +66,6 @@ export function ThemeMatrix() {
     };
 
     const handleCellClick = (block: BlockTemplate, theme: ThemeDefinition) => {
-        // 如果正在编辑行，则不打开模态框
         if (editingThemeId) return;
         const override = overridesMap.get(`${theme.id}:${block.id}`) || null;
         setModalData({ block, theme, override });
@@ -82,9 +80,9 @@ export function ThemeMatrix() {
             <Table size="small" sx={{ '& th, & td': { whiteSpace: 'nowrap', py: 1, px: 1.5 } }}>
                 <TableHead>
                     <TableRow>
-                        {/* [修改] 表头分为两列 */}
                         <TableCell sx={{ width: '5%', fontWeight: 'bold' }}>图标</TableCell>
-                        <TableCell sx={{ width: '25%', fontWeight: 'bold' }}>主题路径</TableCell>
+                        {/* [修改] 将“主题路径”简化为“主题” */}
+                        <TableCell sx={{ width: '25%', fontWeight: 'bold' }}>主题</TableCell>
                         {blocks.map(b => <TableCell key={b.id} align="center" sx={{ fontWeight: 'bold' }}>{b.name}</TableCell>)}
                         <TableCell align="center" sx={{ fontWeight: 'bold' }}>操作</TableCell>
                     </TableRow>
@@ -92,7 +90,6 @@ export function ThemeMatrix() {
                 <TableBody>
                     {themes.map(theme => (
                         <TableRow key={theme.id} hover>
-                            {/* [修改] 图标列 */}
                             <TableCell onDblClick={() => setEditingThemeId(theme.id)} sx={{ cursor: 'text' }}>
                                 {editingThemeId === theme.id ? (
                                     <InlineEditor 
@@ -103,7 +100,6 @@ export function ThemeMatrix() {
                                     <Typography align="center">{theme.icon || ' '}</Typography>
                                 )}
                             </TableCell>
-                            {/* [修改] 路径列 */}
                             <TableCell onDblClick={() => setEditingThemeId(theme.id)} sx={{ cursor: 'text' }}>
                                 {editingThemeId === theme.id ? (
                                     <InlineEditor 
@@ -117,17 +113,29 @@ export function ThemeMatrix() {
 
                             {blocks.map(block => {
                                 const override = overridesMap.get(`${theme.id}:${block.id}`);
-                                let chip: h.JSX.Element;
+                                let cellIcon: h.JSX.Element;
+                                let cellTitle: string;
+
                                 if (override) {
-                                    chip = override.status === 'disabled'
-                                        ? <Chip label="已禁用" color="default" size="small" variant="outlined" />
-                                        : <Chip label="已覆写" color="success" size="small" />;
+                                    if (override.status === 'disabled') {
+                                        cellIcon = <CancelIcon sx={{ fontSize: '1.4rem', color: 'error.main', verticalAlign: 'middle' }} />;
+                                        cellTitle = '已禁用';
+                                    } else {
+                                        cellIcon = <EditIcon sx={{ fontSize: '1.4rem', color: 'primary.main', verticalAlign: 'middle' }} />;
+                                        cellTitle = '已覆写';
+                                    }
                                 } else {
-                                    chip = <Chip label="继承" color="primary" size="small" variant="outlined" />;
+                                    cellIcon = <TaskAltIcon sx={{ fontSize: '1.4rem', color: 'success.main', verticalAlign: 'middle' }} />;
+                                    cellTitle = '继承';
                                 }
+
                                 return (
                                     <TableCell key={block.id} align="center" onClick={() => handleCellClick(block, theme)} sx={{ cursor: 'pointer' }}>
-                                        {chip}
+                                        <Tooltip title={cellTitle}>
+                                            <span>
+                                                {cellIcon}
+                                            </span>
+                                        </Tooltip>
                                     </TableCell>
                                 );
                             })}
