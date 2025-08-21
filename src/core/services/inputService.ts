@@ -5,69 +5,87 @@ import type { BlockTemplate, ThemeDefinition } from '@core/domain/schema';
 export class InputService {
     constructor(private app: App) { }
 
+    // [修改] 增加详细的调试日志
     private renderTemplate(templateString: string, data: Record<string, any>): string {
+        console.log('[Think插件调试] 步骤3: 进入模板渲染引擎', {
+            '待渲染模板': templateString,
+            '可用数据': JSON.parse(JSON.stringify(data)),
+        });
+
         return templateString.replace(/\{\{\s*([^}]+?)\s*\}\}/g, (_, placeholder) => {
             const key = placeholder.trim();
+            let result = `(未找到变量: ${key})`; // 默认一个错误提示，方便调试
 
-            // [新增] 优先处理简化后的快捷变量
-            if (key === 'block') return data.block?.name || '';
-            if (key === 'theme') return data.theme?.path || '';
-            if (key === 'icon') return data.theme?.icon || '';
+            console.log(`[Think插件调试]   - 正在解析变量: {{${key}}}`);
 
-            // 处理 moment 动态日期
-            if (key.startsWith('moment:')) {
-                const format = key.substring(7);
-                return moment().format(format);
-            }
-
-            // 处理标准的点状表示法 (e.g., my_field.value)
-            const keys = key.split('.');
-            let value: any = data;
-            for (const k of keys) {
-                if (value && typeof value === 'object' && k in value) {
-                    value = value[k];
+            try {
+                if (key === 'block') {
+                    result = data.block?.name || '';
+                } else if (key === 'theme') {
+                    result = data.theme?.path || '';
+                } else if (key === 'icon') {
+                    result = data.theme?.icon || '';
+                } else if (key.startsWith('moment:')) {
+                    const format = key.substring(7);
+                    result = moment().format(format);
                 } else {
-                    // 如果路径中断，返回空字符串
-                    return '';
-                }
-            }
-            
-            // 如果最终结果是一个包含 .value 的对象（来自下拉/单选/文本字段），则提取其 .value
-            if (typeof value === 'object' && value !== null && 'value' in value) {
-                return String((value as any).value);
-            }
+                    const keys = key.split('.');
+                    const rootKey = keys[0];
+                    
+                    if (!(rootKey in data)) {
+                        console.log(`[Think插件调试]     -> 失败: 根键 "${rootKey}" 在数据中未找到。`);
+                        return ''; // 返回空字符串而不是错误提示
+                    }
 
-            return value !== null && value !== undefined ? String(value) : '';
+                    let value: any = data[rootKey];
+                    if (keys.length > 1) {
+                        for (let i = 1; i < keys.length; i++) {
+                            if (value && typeof value === 'object' && keys[i] in value) {
+                                value = value[keys[i]];
+                            } else {
+                                console.log(`[Think插件调试]     -> 失败: 在路径 "${key}" 中, 无法找到 "${keys[i]}"。`);
+                                value = ''; // 路径无效
+                                break;
+                            }
+                        }
+                    }
+
+                    if (typeof value === 'object' && value !== null && 'label' in value) {
+                        // 如果是直接访问复杂对象 {{状态}}, 默认返回 label
+                        result = String(value.label);
+                    } else {
+                        result = value !== null && value !== undefined ? String(value) : '';
+                    }
+                }
+                console.log(`[Think插件调试]     -> 解析结果: "${result}"`);
+                return result;
+            } catch (e: any) {
+                console.error(`[Think插件调试]     -> 解析变量 {{${key}}} 时发生错误:`, e);
+                return `(解析错误: ${key})`;
+            }
         });
     }
 
-    /**
-     * [核心修改] executeTemplate 现在接收一个可选的 theme 对象
-     * @param template - 一个完整的 BlockTemplate 对象
-     * @param formData - 从 QuickInputModal 收集的表单数据
-     * @param theme - (可选) 当前命令关联的主题对象
-     */
     public async executeTemplate(template: BlockTemplate, formData: Record<string, any>, theme?: ThemeDefinition): Promise<string> {
-        if (!template) {
-            throw new Error(`传入了无效的模板对象。`);
-        }
+        if (!template) throw new Error(`传入了无效的模板对象。`);
 
         const renderData = { 
             ...formData, 
             block: { name: template.name },
             theme: theme ? { path: theme.path, icon: theme.icon || '' } : {}
         };
+        console.log('[Think插件调试] 步骤2: 构建用于渲染的最终数据 (renderData)', JSON.parse(JSON.stringify(renderData)));
 
         const outputContent = this.renderTemplate(template.outputTemplate, renderData).trim();
+        console.log(`[Think插件调试] 步骤4: 最终渲染出的待写入内容:\n---\n${outputContent}\n---`);
+        
         const targetFilePath = this.renderTemplate(template.targetFile, renderData).trim();
-        const header = template.appendUnderHeader ? this.renderTemplate(template.appendUnderHeader, renderData) : null;
+        console.log(`[Think插件调试] 步骤5: 最终渲染出的目标文件路径: "${targetFilePath}"`);
 
-        if (!targetFilePath) {
-            throw new Error("模板未定义目标文件路径 (targetFile)。");
-        }
-        if (!outputContent) {
-            throw new Error("渲染后的输出内容为空。");
-        }
+        const header = template.appendUnderHeader ? this.renderTemplate(template.appendUnderHeader, renderData) : null;
+        if(header) console.log(`[Think插件调试] 步骤6: 最终渲染出的目标标题: "${header}"`);
+
+        if (!targetFilePath) throw new Error("模板未定义目标文件路径 (targetFile)。");
         
         const file = await this.getOrCreateFile(targetFilePath);
         if (header) {
@@ -77,10 +95,11 @@ export class InputService {
             const newContent = existingContent ? `${existingContent.trim()}\n\n${outputContent}` : outputContent;
             await this.app.vault.modify(file, newContent);
         }
+        console.log('[Think插件调试] 步骤7: 文件写入操作完成。');
         return targetFilePath;
     }
 
-    // ... getOrCreateFile, ensureFolder, appendUnderHeader 等函数保持不变 ...
+    // ... 其余辅助函数保持不变 ...
     private async ensureFolder(path: string): Promise<void> {
         const segs = path.split('/').filter(Boolean);
         let cur = '';
@@ -98,7 +117,6 @@ export class InputService {
             }
         }
     }
-
     private async getOrCreateFile(fp: string): Promise<TFile> {
         let file = this.app.vault.getAbstractFileByPath(fp);
         if (file instanceof TFile) {
@@ -125,7 +143,6 @@ export class InputService {
             }
         }
     }
-
     private async appendUnderHeader(file: TFile, header: string, payload: string) {
         const esc = header.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
         const regex = new RegExp(`^${esc}\\s*$`, 'm');

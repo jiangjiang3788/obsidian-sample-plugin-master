@@ -12,7 +12,7 @@ import { SimpleSelect } from '@shared/ui/SimpleSelect';
 
 // Modal 主类 (保持不变)
 export class QuickInputModal extends Modal {
-    constructor(app: App, private blockId: string, private themeId?: string) {
+    constructor(app: App, private blockId: string) {
         super(app);
     }
     onOpen() {
@@ -25,36 +25,80 @@ export class QuickInputModal extends Modal {
 }
 
 // 模板查找逻辑 (保持不变)
-function getEffectiveTemplate(settings: InputSettings, blockId: string, themeId?: string): { template: BlockTemplate | null; title: string, theme: ThemeDefinition | null } {
+function getEffectiveTemplate(settings: InputSettings, blockId: string, themeId?: string): { template: BlockTemplate | null; theme: ThemeDefinition | null } {
     const baseBlock = settings.blocks.find(b => b.id === blockId);
-    if (!baseBlock) return { template: null, title: '未知Block', theme: null };
+    if (!baseBlock) return { template: null, theme: null };
     const theme = settings.themes.find(t => t.id === themeId) || null;
-    let title = `${baseBlock.name} (默认)`;
-    if (theme) {
-        title = `${theme.path} / ${baseBlock.name}`;
-    }
     if (themeId) {
         const override = settings.overrides.find(o => o.blockId === blockId && o.themeId === themeId);
         if (override && override.status === 'enabled') {
             const effectiveTemplate: BlockTemplate = { ...baseBlock, fields: override.fields ?? baseBlock.fields, outputTemplate: override.outputTemplate ?? baseBlock.outputTemplate, targetFile: override.targetFile ?? baseBlock.targetFile, appendUnderHeader: override.appendUnderHeader ?? baseBlock.appendUnderHeader };
-            return { template: effectiveTemplate, title, theme };
+            return { template: effectiveTemplate, theme };
         }
     }
-    return { template: baseBlock, title, theme };
+    return { template: baseBlock, theme };
 }
 
+// [修改] 层级主题辅助函数现在会根据当前 blockId 过滤禁用的主题
+const useHierarchicalThemes = (blockId: string) => {
+    const settings = useStore(state => state.settings.inputSettings);
+    const { themes, overrides } = settings;
+
+    return useMemo(() => {
+        // 1. 找出所有为当前 blockId 明确禁用了的主题 ID
+        const disabledThemeIds = new Set<string>();
+        overrides.forEach(override => {
+            if (override.blockId === blockId && override.status === 'disabled') {
+                disabledThemeIds.add(override.themeId);
+            }
+        });
+
+        // 2. 过滤掉被禁用的主题
+        const availableThemes = themes.filter(theme => !disabledThemeIds.has(theme.id));
+
+        // 3. 基于可用主题构建层级结构
+        const primaryThemes: ThemeDefinition[] = [];
+        const secondaryThemeMap = new Map<string, ThemeDefinition[]>();
+        const themeIdMap = new Map<string, ThemeDefinition>();
+
+        availableThemes.forEach(theme => {
+            themeIdMap.set(theme.id, theme);
+            const parts = theme.path.split('/');
+            if (parts.length === 1) {
+                primaryThemes.push(theme);
+            } else {
+                const primaryName = parts[0];
+                if (!secondaryThemeMap.has(primaryName)) {
+                    secondaryThemeMap.set(primaryName, []);
+                }
+                secondaryThemeMap.get(primaryName)?.push(theme);
+            }
+        });
+
+        primaryThemes.forEach(pt => {
+            if (!secondaryThemeMap.has(pt.path)) {
+                secondaryThemeMap.set(pt.path, []);
+            }
+        });
+
+        return { primaryThemes, secondaryThemeMap, themeIdMap };
+    }, [themes, overrides, blockId]);
+};
 
 // Preact 表单组件
 function QuickInputForm({ app, blockId, closeModal }: { app: App; blockId: string; closeModal: () => void }) {
     const svc = useMemo(() => new InputService(app), [app]);
-    const allThemes = useStore(state => state.settings.inputSettings.themes);
+    const { primaryThemes, secondaryThemeMap, themeIdMap } = useHierarchicalThemes(blockId);
     
-    const [selectedThemeId, setSelectedThemeId] = useState<string | null>(null);
+    const [selectedPrimaryThemeId, setSelectedPrimaryThemeId] = useState<string | null>(null);
+    const [selectedSecondaryThemeId, setSelectedSecondaryThemeId] = useState<string | null>(null);
 
-    const { template, theme } = useMemo(() => {
+    const effectiveThemeId = selectedSecondaryThemeId || selectedPrimaryThemeId;
+    
+    const { template } = useMemo(() => {
         const settings = AppStore.instance.getSettings().inputSettings;
-        return getEffectiveTemplate(settings, blockId, selectedThemeId || undefined);
-    }, [blockId, selectedThemeId]);
+        return getEffectiveTemplate(settings, blockId, effectiveThemeId || undefined);
+    }, [blockId, effectiveThemeId]);
 
     const [formData, setFormData] = useState<Record<string, any>>({});
 
@@ -64,30 +108,24 @@ function QuickInputForm({ app, blockId, closeModal }: { app: App; blockId: strin
         template.fields.forEach(field => {
             if ((field.type === 'radio' || field.type === 'select') && field.options && field.options.length > 0) {
                 const defaultOption = field.options.find(o => o.value === field.defaultValue) || field.options[0];
-                if (defaultOption) {
-                    // [修改] 移除了 extraValues 的合并
-                    initialData[field.key] = { value: defaultOption.value, label: defaultOption.label || defaultOption.value };
-                }
+                if (defaultOption) initialData[field.key] = { value: defaultOption.value, label: defaultOption.label || defaultOption.value };
             } else {
-                initialData[field.key] = { value: field.defaultValue || '' };
+                initialData[field.key] = field.defaultValue || '';
             }
         });
         setFormData(initialData);
     }, [template]);
 
     const handleUpdate = (key: string, value: any, isOptionObject = false) => {
-        setFormData(current => {
-            const currentFieldData = current[key] || {};
-            const newFieldData = isOptionObject ? value : { ...currentFieldData, value: value };
-            return { ...current, [key]: newFieldData };
-        });
+        setFormData(current => ({ ...current, [key]: isOptionObject ? { value: value.value, label: value.label } : value }));
     };
     
     const handleSubmit = async () => {
         if (!template) return;
         try {
-            const targetFile = await svc.executeTemplate(template, formData, theme || undefined);
-            new Notice(`✅ 已保存到 ${targetFile}`);
+            const finalTheme = effectiveThemeId ? themeIdMap.get(effectiveThemeId) : undefined;
+            await svc.executeTemplate(template, formData, finalTheme);
+            new Notice(`✅ 已保存`);
             DataStore.instance?.notifyChange?.();
             closeModal();
         } catch (e: any) {
@@ -98,84 +136,115 @@ function QuickInputForm({ app, blockId, closeModal }: { app: App; blockId: strin
     if (!template) {
         return <div>错误：找不到ID为 "{blockId}" 的Block模板。</div>;
     }
-    
+
     const renderField = (field: TemplateField) => {
-        const value = formData[field.key]?.value;
+        const isComplex = typeof formData[field.key] === 'object' && formData[field.key] !== null;
+        const value = isComplex ? formData[field.key]?.value : formData[field.key];
+        const label = field.label || field.key; // [修复] 优先使用 label，如果 label 为空则使用 key
+
         switch (field.type) {
             case 'textarea':
-                return <TextField label={field.label} multiline rows={4} value={value || ''} onChange={e => handleUpdate(field.key, e.target.value)} fullWidth variant="outlined" />;
             case 'date':
-                return <TextField label={field.label} type="date" value={value || ''} onChange={e => handleUpdate(field.key, e.target.value)} fullWidth variant="outlined" InputLabelProps={{ shrink: true }} />;
             case 'time':
-                return <TextField label={field.label} type="time" value={value || ''} onChange={e => handleUpdate(field.key, e.target.value)} fullWidth variant="outlined" InputLabelProps={{ shrink: true }} />;
             case 'number':
-                return <TextField label={field.label} type="number" value={value || ''} onChange={e => handleUpdate(field.key, e.target.value)} fullWidth variant="outlined" inputProps={{ min: field.min, max: field.max }} />;
+            case 'text':
+            default:
+                return <TextField 
+                    label={label} 
+                    value={value || ''} 
+                    onChange={e => handleUpdate(field.key, e.target.value)} 
+                    fullWidth 
+                    variant="outlined"
+                    type={field.type === 'textarea' ? undefined : field.type}
+                    multiline={field.type === 'textarea'}
+                    rows={field.type === 'textarea' ? 4 : undefined}
+                    InputLabelProps={ (field.type === 'date' || field.type === 'time') ? { shrink: true } : undefined}
+                    inputProps={ field.type === 'number' ? { min: field.min, max: field.max } : undefined}
+                />;
+            
             case 'radio':
+                const selectedOptionObject = formData[field.key];
+                const selectedIndex = field.options?.findIndex(opt => opt.value === selectedOptionObject?.value && opt.label === selectedOptionObject?.label) ?? -1;
                 return (
                     <FormControl component="fieldset">
-                        <Typography variant="body2" sx={{ fontWeight: 500 }}>{field.label}</Typography>
-                        <MuiRadioGroup row value={value || ''} onChange={e => {
-                            const selectedOption = field.options?.find(opt => opt.value === e.target.value);
-                            if (selectedOption) {
-                                // [修改] 移除了 extraValues 的合并
-                                const optionObject = { value: selectedOption.value, label: selectedOption.label || selectedOption.value };
-                                handleUpdate(field.key, optionObject, true);
-                            }
-                        }}>
-                            {(field.options || []).map(opt => (
-                                <FormControlLabel key={opt.value} value={opt.value} control={<Radio />} label={opt.label || opt.value} />
+                        <Typography variant="body2" sx={{ fontWeight: 500 }}>{label}</Typography>
+                        <MuiRadioGroup 
+                            row 
+                            value={selectedIndex > -1 ? String(selectedIndex) : ''} 
+                            onChange={e => {
+                                const newIndex = parseInt(e.target.value, 10);
+                                const newlySelectedOption = field.options?.[newIndex];
+                                if (newlySelectedOption) {
+                                    handleUpdate(field.key, { value: newlySelectedOption.value, label: newlySelectedOption.label || newlySelectedOption.value }, true);
+                                }
+                            }}
+                        >
+                            {(field.options || []).map((opt, index) => (
+                                <FormControlLabel key={index} value={String(index)} control={<Radio />} label={opt.label || opt.value} />
                             ))}
                         </MuiRadioGroup>
                     </FormControl>
                 );
+
             case 'select':
                 const selectOptions = (field.options || []).map(opt => ({ value: opt.value, label: opt.label || opt.value }));
                 return (
                     <FormControl fullWidth>
-                        <Typography variant="body2" sx={{ fontWeight: 500, mb: 0.5 }}>{field.label}</Typography>
+                        <Typography variant="body2" sx={{ fontWeight: 500, mb: 0.5 }}>{label}</Typography>
                         <SimpleSelect
                             value={value || ''}
                             options={selectOptions}
-                            placeholder={`-- 选择 ${field.label} --`}
+                            placeholder={`-- 选择 ${label} --`}
                             onChange={selectedValue => {
                                 const selectedOption = field.options?.find(opt => opt.value === selectedValue);
                                 if (selectedOption) {
-                                    // [修改] 移除了 extraValues 的合并
-                                    const optionObject = { value: selectedOption.value, label: selectedOption.label || selectedOption.value };
-                                    handleUpdate(field.key, optionObject, true);
+                                    handleUpdate(field.key, { value: selectedOption.value, label: selectedOption.label || selectedOption.value }, true);
                                 }
                             }}
                         />
                     </FormControl>
                 );
-            case 'text':
-            default:
-                return <TextField label={field.label} value={value || ''} onChange={e => handleUpdate(field.key, e.target.value)} fullWidth variant="outlined" />;
         }
     };
+    
+    const selectedPrimaryTheme = selectedPrimaryThemeId ? themeIdMap.get(selectedPrimaryThemeId) : null;
+    const secondaryThemes = selectedPrimaryTheme ? secondaryThemeMap.get(selectedPrimaryTheme.path) : null;
 
     return (
         <div class="think-modal" style={{ padding: '0 1rem 1rem 1rem' }}>
             <h3 style={{ marginBottom: '1rem' }}>快速录入 · {template.name}</h3>
             
-            {allThemes.length > 0 && (
-                 <FormControl component="fieldset" sx={{ mb: 2 }}>
-                    <Typography variant="body2" sx={{ fontWeight: 600 }}>选择主题</Typography>
-                    <MuiRadioGroup row value={selectedThemeId || ''} onChange={e => setSelectedThemeId(e.target.value || null)}>
-                        <FormControlLabel value="" control={<Radio />} label={"默认 (无主题)"} />
-                        {allThemes.map(theme => (
+            {primaryThemes.length > 0 && (
+                 <FormControl component="fieldset" sx={{ mb: 1 }}>
+                    <Typography variant="body2" sx={{ fontWeight: 600 }}>主题分类</Typography>
+                    <MuiRadioGroup row value={selectedPrimaryThemeId || ''} onChange={e => {
+                        const newPrimaryId = e.target.value || null;
+                        setSelectedPrimaryThemeId(newPrimaryId);
+                        setSelectedSecondaryThemeId(null);
+                    }}>
+                        <FormControlLabel value="" control={<Radio />} label={"无主题"} />
+                        {primaryThemes.map(theme => (
                             <FormControlLabel key={theme.id} value={theme.id} control={<Radio />} label={`${theme.icon || ''} ${theme.path}`.trim()} />
                         ))}
                     </MuiRadioGroup>
                 </FormControl>
             )}
 
-            <Divider sx={{mb: 2.5}} />
+            {selectedPrimaryTheme && secondaryThemes && secondaryThemes.length > 0 && (
+                 <FormControl component="fieldset" sx={{ mb: 2 }}>
+                    <Typography variant="body2" sx={{ fontWeight: 600 }}>具体主题</Typography>
+                    <MuiRadioGroup row value={selectedSecondaryThemeId || ''} onChange={e => setSelectedSecondaryThemeId(e.target.value || null)}>
+                        <FormControlLabel value="" control={<Radio />} label={`${selectedPrimaryTheme.path}`} />
+                        {secondaryThemes.map(theme => (
+                            <FormControlLabel key={theme.id} value={theme.id} control={<Radio />} label={`${theme.icon || ''} ${theme.path.split('/')[1]}`.trim()} />
+                        ))}
+                    </MuiRadioGroup>
+                </FormControl>
+            )}
 
+            <Divider sx={{mb: 2.5}} />
             <Stack spacing={2.5}>
-                {template.fields.map(field => (
-                    <div key={field.id}>{renderField(field)}</div>
-                ))}
+                {template.fields.map(field => <div key={field.id}>{renderField(field)}</div>)}
             </Stack>
             <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '1.5rem', gap: '8px' }}>
                 <Button onClick={handleSubmit} variant="contained">提交</Button>

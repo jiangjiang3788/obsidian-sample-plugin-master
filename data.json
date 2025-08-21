@@ -294,8 +294,8 @@
         "fields": [
           {
             "id": "field_mekr8gby",
-            "key": " 状态",
-            "label": "新字段 1",
+            "key": "状态",
+            "label": "状态",
             "type": "radio",
             "options": [
               {
@@ -315,12 +315,48 @@
           },
           {
             "id": "field_mekt6ks3",
-            "key": " 任务内容",
-            "label": "新字段 2",
+            "key": "任务内容",
+            "label": "任务内容",
             "type": "textarea"
+          },
+          {
+            "id": "field_mekymbeq",
+            "key": "时间",
+            "label": "时间",
+            "type": "time"
+          },
+          {
+            "id": "field_mekymokf",
+            "key": "时长",
+            "label": "时长",
+            "type": "text"
+          },
+          {
+            "id": "field_mekyn4c3",
+            "key": "重复",
+            "label": "重复",
+            "type": "radio",
+            "options": [
+              {
+                "value": " ",
+                "label": "不重复"
+              },
+              {
+                "value": "🔁 every day",
+                "label": "每天"
+              },
+              {
+                "value": "🔁 every mothon",
+                "label": "每周"
+              },
+              {
+                "value": "🔁 every year",
+                "label": "每月"
+              }
+            ]
           }
         ],
-        "outputTemplate": "---\n{{block}}{{theme}}{{icon}}{{moment:YYYY-MM-DD}}\n{{ 状态}}\n{{ 任务内容}}\n{{ 任务内容.value}}\n---\n",
+        "outputTemplate": "\n{{状态.value}} {{icon}} {{任务内容}} (时间::{{时间}}) (时长::{{时长}})  {{重复}}  {{状态}} {{moment:YYYY-MM-DD}}",
         "targetFile": "02/01.md",
         "appendUnderHeader": "## {{theme.path}}"
       },
@@ -382,7 +418,7 @@
       {
         "id": "thm_mejsim4o4c2mw",
         "path": "思考",
-        "icon": ""
+        "icon": "💢"
       },
       {
         "id": "thm_mejsj5pzfonlh",
@@ -609,14 +645,14 @@
         "appendUnderHeader": "## {{theme.path}}"
       },
       {
-        "id": "ovr_mekswgyn6jejg",
+        "id": "ovr_mekz43o6e4nbi",
         "blockId": "blk_meic1my6m62iu",
-        "themeId": "thm_mejsjh81u5lyz",
-        "status": "enabled",
+        "themeId": "thm_mejsim4o4c2mw",
+        "status": "disabled",
         "fields": [
           {
             "id": "field_mekr8gby",
-            "key": " 状态",
+            "key": "状态",
             "label": "新字段 1",
             "type": "radio",
             "options": [
@@ -634,10 +670,422 @@
                 "label": "📅"
               }
             ]
+          },
+          {
+            "id": "field_mekt6ks3",
+            "key": "任务内容",
+            "label": "新字段 2",
+            "type": "textarea"
+          },
+          {
+            "id": "field_mekymbeq",
+            "key": "时间",
+            "label": "新字段 3",
+            "type": "time"
+          },
+          {
+            "id": "field_mekymokf",
+            "key": "时长",
+            "label": "新字段 4",
+            "type": "text"
+          },
+          {
+            "id": "field_mekyn4c3",
+            "key": "重复",
+            "label": "新字段 5",
+            "type": "radio",
+            "options": [
+              {
+                "value": " ",
+                "label": "不重复"
+              },
+              {
+                "value": "🔁 every day",
+                "label": "每天"
+              },
+              {
+                "value": "🔁 every mothon",
+                "label": "每周"
+              },
+              {
+                "value": "🔁 every year",
+                "label": "每月"
+              }
+            ]
           }
         ],
-        "outputTemplate": " {{icon}} {{内容}} (时间::{{时间}}) (时长::{{时长}}) {{recurrence.content}} {{status.name}} {{日期}}\n\n",
-        "targetFile": "",
+        "outputTemplate": "\n{{状态.value}} {{icon}} {{任务内容}} (时间::{{时间}}) (时长::{{时长}})   {{状态}} {{moment:YYYY-MM-DD}}",
+        "targetFile": "02/01.md",
+        "appendUnderHeader": "## {{theme.path}}"
+      },
+      {
+        "id": "ovr_mekz4e77m43iy",
+        "blockId": "blk_meic1my6m62iu",
+        "themeId": "thm_mejsk4s9spuik",
+        "status": "disabled",
+        "fields": [
+          {
+            "id": "field_mekr8gby",
+            "key": "状态",
+            "label": "新字段 1",
+            "type": "radio",
+            "options": [
+              {
+                "value": "- [x]",
+                "label": "✅",
+                "extraValues": {}
+              },
+              {
+                "value": "- [ ]",
+                "label": "🛫"
+              },
+              {
+                "value": "- [ ]",
+                "label": "📅"
+              }
+            ]
+          },
+          {
+            "id": "field_mekt6ks3",
+            "key": "任务内容",
+            "label": "新字段 2",
+            "type": "textarea"
+          },
+          {
+            "id": "field_mekymbeq",
+            "key": "时间",
+            "label": "新字段 3",
+            "type": "time"
+          },
+          {
+            "id": "field_mekymokf",
+            "key": "时长",
+            "label": "新字段 4",
+            "type": "text"
+          },
+          {
+            "id": "field_mekyn4c3",
+            "key": "重复",
+            "label": "新字段 5",
+            "type": "radio",
+            "options": [
+              {
+                "value": " ",
+                "label": "不重复"
+              },
+              {
+                "value": "🔁 every day",
+                "label": "每天"
+              },
+              {
+                "value": "🔁 every mothon",
+                "label": "每周"
+              },
+              {
+                "value": "🔁 every year",
+                "label": "每月"
+              }
+            ]
+          }
+        ],
+        "outputTemplate": "\n{{状态.value}} {{icon}} {{任务内容}} (时间::{{时间}}) (时长::{{时长}})   {{状态}} {{moment:YYYY-MM-DD}}",
+        "targetFile": "02/01.md",
+        "appendUnderHeader": "## {{theme.path}}"
+      },
+      {
+        "id": "ovr_mekz4hud4pvpa",
+        "blockId": "blk_meic1my6m62iu",
+        "themeId": "thm_mejskaj1enucn",
+        "status": "disabled",
+        "fields": [
+          {
+            "id": "field_mekr8gby",
+            "key": "状态",
+            "label": "新字段 1",
+            "type": "radio",
+            "options": [
+              {
+                "value": "- [x]",
+                "label": "✅",
+                "extraValues": {}
+              },
+              {
+                "value": "- [ ]",
+                "label": "🛫"
+              },
+              {
+                "value": "- [ ]",
+                "label": "📅"
+              }
+            ]
+          },
+          {
+            "id": "field_mekt6ks3",
+            "key": "任务内容",
+            "label": "新字段 2",
+            "type": "textarea"
+          },
+          {
+            "id": "field_mekymbeq",
+            "key": "时间",
+            "label": "新字段 3",
+            "type": "time"
+          },
+          {
+            "id": "field_mekymokf",
+            "key": "时长",
+            "label": "新字段 4",
+            "type": "text"
+          },
+          {
+            "id": "field_mekyn4c3",
+            "key": "重复",
+            "label": "新字段 5",
+            "type": "radio",
+            "options": [
+              {
+                "value": " ",
+                "label": "不重复"
+              },
+              {
+                "value": "🔁 every day",
+                "label": "每天"
+              },
+              {
+                "value": "🔁 every mothon",
+                "label": "每周"
+              },
+              {
+                "value": "🔁 every year",
+                "label": "每月"
+              }
+            ]
+          }
+        ],
+        "outputTemplate": "\n{{状态.value}} {{icon}} {{任务内容}} (时间::{{时间}}) (时长::{{时长}})   {{状态}} {{moment:YYYY-MM-DD}}",
+        "targetFile": "02/01.md",
+        "appendUnderHeader": "## {{theme.path}}"
+      },
+      {
+        "id": "ovr_mekz4u7k77rgt",
+        "blockId": "blk_meic1my6m62iu",
+        "themeId": "thm_mejsjpvsuflrj",
+        "status": "disabled",
+        "fields": [
+          {
+            "id": "field_mekr8gby",
+            "key": "状态",
+            "label": "新字段 1",
+            "type": "radio",
+            "options": [
+              {
+                "value": "- [x]",
+                "label": "✅",
+                "extraValues": {}
+              },
+              {
+                "value": "- [ ]",
+                "label": "🛫"
+              },
+              {
+                "value": "- [ ]",
+                "label": "📅"
+              }
+            ]
+          },
+          {
+            "id": "field_mekt6ks3",
+            "key": "任务内容",
+            "label": "新字段 2",
+            "type": "textarea"
+          },
+          {
+            "id": "field_mekymbeq",
+            "key": "时间",
+            "label": "新字段 3",
+            "type": "time"
+          },
+          {
+            "id": "field_mekymokf",
+            "key": "时长",
+            "label": "新字段 4",
+            "type": "text"
+          },
+          {
+            "id": "field_mekyn4c3",
+            "key": "重复",
+            "label": "新字段 5",
+            "type": "radio",
+            "options": [
+              {
+                "value": " ",
+                "label": "不重复"
+              },
+              {
+                "value": "🔁 every day",
+                "label": "每天"
+              },
+              {
+                "value": "🔁 every mothon",
+                "label": "每周"
+              },
+              {
+                "value": "🔁 every year",
+                "label": "每月"
+              }
+            ]
+          }
+        ],
+        "outputTemplate": "\n{{状态.value}} {{icon}} {{任务内容}} (时间::{{时间}}) (时长::{{时长}})   {{状态}} {{moment:YYYY-MM-DD}}",
+        "targetFile": "02/01.md",
+        "appendUnderHeader": "## {{theme.path}}"
+      },
+      {
+        "id": "ovr_mekz510f46593",
+        "blockId": "blk_meic1my6m62iu",
+        "themeId": "thm_mejskeoadmnaj",
+        "status": "disabled",
+        "fields": [
+          {
+            "id": "field_mekr8gby",
+            "key": "状态",
+            "label": "新字段 1",
+            "type": "radio",
+            "options": [
+              {
+                "value": "- [x]",
+                "label": "✅",
+                "extraValues": {}
+              },
+              {
+                "value": "- [ ]",
+                "label": "🛫"
+              },
+              {
+                "value": "- [ ]",
+                "label": "📅"
+              }
+            ]
+          },
+          {
+            "id": "field_mekt6ks3",
+            "key": "任务内容",
+            "label": "新字段 2",
+            "type": "textarea"
+          },
+          {
+            "id": "field_mekymbeq",
+            "key": "时间",
+            "label": "新字段 3",
+            "type": "time"
+          },
+          {
+            "id": "field_mekymokf",
+            "key": "时长",
+            "label": "新字段 4",
+            "type": "text"
+          },
+          {
+            "id": "field_mekyn4c3",
+            "key": "重复",
+            "label": "新字段 5",
+            "type": "radio",
+            "options": [
+              {
+                "value": " ",
+                "label": "不重复"
+              },
+              {
+                "value": "🔁 every day",
+                "label": "每天"
+              },
+              {
+                "value": "🔁 every mothon",
+                "label": "每周"
+              },
+              {
+                "value": "🔁 every year",
+                "label": "每月"
+              }
+            ]
+          }
+        ],
+        "outputTemplate": "\n{{状态.value}} {{icon}} {{任务内容}} (时间::{{时间}}) (时长::{{时长}})   {{状态}} {{moment:YYYY-MM-DD}}",
+        "targetFile": "02/01.md",
+        "appendUnderHeader": "## {{theme.path}}"
+      },
+      {
+        "id": "ovr_mekz5u3jce2kj",
+        "blockId": "blk_meic1my6m62iu",
+        "themeId": "thm_mejsjh81u5lyz",
+        "status": "disabled",
+        "fields": [
+          {
+            "id": "field_mekr8gby",
+            "key": "状态",
+            "label": "新字段 1",
+            "type": "radio",
+            "options": [
+              {
+                "value": "- [x]",
+                "label": "✅",
+                "extraValues": {}
+              },
+              {
+                "value": "- [ ]",
+                "label": "🛫"
+              },
+              {
+                "value": "- [ ]",
+                "label": "📅"
+              }
+            ]
+          },
+          {
+            "id": "field_mekt6ks3",
+            "key": "任务内容",
+            "label": "新字段 2",
+            "type": "textarea"
+          },
+          {
+            "id": "field_mekymbeq",
+            "key": "时间",
+            "label": "新字段 3",
+            "type": "time"
+          },
+          {
+            "id": "field_mekymokf",
+            "key": "时长",
+            "label": "新字段 4",
+            "type": "text"
+          },
+          {
+            "id": "field_mekyn4c3",
+            "key": "重复",
+            "label": "新字段 5",
+            "type": "radio",
+            "options": [
+              {
+                "value": " ",
+                "label": "不重复"
+              },
+              {
+                "value": "🔁 every day",
+                "label": "每天"
+              },
+              {
+                "value": "🔁 every mothon",
+                "label": "每周"
+              },
+              {
+                "value": "🔁 every year",
+                "label": "每月"
+              }
+            ]
+          }
+        ],
+        "outputTemplate": "\n{{状态.value}} {{icon}} {{任务内容}} (时间::{{时间}}) (时长::{{时长}})   {{状态}} {{moment:YYYY-MM-DD}}",
+        "targetFile": "02/01.md",
         "appendUnderHeader": "## {{theme.path}}"
       }
     ]
