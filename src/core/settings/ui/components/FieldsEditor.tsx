@@ -53,17 +53,21 @@ function OptionRow({ option, onChange, onRemove }: { option: TemplateFieldOption
 
 // 单个字段的编辑器
 function FieldRow({ field, index, fieldCount, onUpdate, onRemove, onMove }: { field: TemplateField, index: number, fieldCount: number, onUpdate: (updates: Partial<TemplateField>) => void, onRemove: () => void, onMove: (direction: 'up' | 'down') => void }) {
-    // [最终简化] 只使用一个本地 state 来管理字段的统一名称
+    
+    // [重构核心] 只使用一个本地 state 来管理字段的统一名称。
+    // 无论是新建还是编辑，都优先使用 label 作为显示值。
     const [localName, setLocalName] = useState(field.label || field.key);
     useEffect(() => { setLocalName(field.label || field.key); }, [field.label, field.key]);
 
-    // 失去焦点时，将这一个名称同时更新到 key 和 label 上
+    // [重构核心] 当输入框失去焦点时，执行更新操作
     const handleNameBlur = () => {
         const trimmedName = localName.trim();
+        // 只有当名字非空且发生变化时才更新
         if (trimmedName && trimmedName !== (field.label || field.key)) {
+            // 将这一个名称同时更新到 key 和 label 上，保持二者统一
             onUpdate({ key: trimmedName, label: trimmedName });
         } else {
-            // 如果用户清空了输入框，则恢复为原始值
+            // 如果用户清空了输入框后又失焦，则恢复为原始值，防止出现空字段名
             setLocalName(field.label || field.key);
         }
     };
@@ -98,16 +102,17 @@ function FieldRow({ field, index, fieldCount, onUpdate, onRemove, onMove }: { fi
             <Stack direction="row" spacing={2} alignItems="center">
                 <SimpleSelect value={field.type} options={fieldTypeOptions} onChange={val => onUpdate({ type: val as TemplateField['type'] })} sx={{ minWidth: 120, flexShrink: 0 }} />
                 
-                {/* [最终简化] 只保留一个输入框，用于同时设置显示名称和变量名 */}
-                <TextField 
-                    label="字段名称" 
-                    placeholder="例如：任务内容" 
-                    value={localName} 
+                {/* [重构核心] 只保留一个输入框，用于同时设置显示名称 (label) 和变量名 (key) */}
+                <TextField
+                    label="字段名称"
+                    placeholder="例如：任务内容"
+                    value={localName}
                     onChange={e => setLocalName((e.target as HTMLInputElement).value)}
-                    onBlur={handleNameBlur}
-                    size="small" 
-                    variant="outlined" 
-                    sx={{ flexGrow: 1 }} 
+                    onBlur={handleNameBlur} // 失焦时触发更新
+                    size="small"
+                    variant="outlined"
+                    sx={{ flexGrow: 1 }}
+                    title="该名称将作为表单项的标题，并在模板中通过 {{字段名称}} 的形式引用"
                 />
                 
                 {field.type === 'number' && (

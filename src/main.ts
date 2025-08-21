@@ -11,7 +11,6 @@ import * as QuickInputFeature from '@features/quick-input';
 import * as CoreSettings from '@core/settings/index';
 
 import { ThinkSettings, DEFAULT_SETTINGS } from '@core/domain/schema';
-// [修改] 分开导入，STYLE_TAG_ID 来自 domain, GLOBAL_CSS 来自 feature
 import { STYLE_TAG_ID } from '@core/domain/constants';
 import { GLOBAL_CSS } from '@features/dashboard/styles/global';
 
@@ -28,11 +27,19 @@ export interface ThinkContext {
 
 // ---------- 主插件类 ---------- //
 
-export default class ThinkPlugin extends Plugin {
+// [重构] 让插件类直接实现上下文接口, 自身实例即为 Context
+export default class ThinkPlugin extends Plugin implements ThinkContext {
+    // ThinkContext 接口要求的属性
     platform!: ObsidianPlatform;
     dataStore!: DataStore;
     appStore!: AppStore;
     rendererService!: RendererService;
+
+    // `plugin` 属性通过 getter 实现，返回自身实例
+    get plugin() {
+        return this;
+    }
+    // `app` 属性由 Plugin 基类提供，天然满足接口要求
 
     async onload(): Promise<void> {
         console.log('ThinkPlugin load');
@@ -41,6 +48,7 @@ export default class ThinkPlugin extends Plugin {
 
         this.injectGlobalCss();
 
+        // 初始化所有服务并挂载到 this 上
         this.platform = new ObsidianPlatform(this.app);
         this.dataStore = new DataStore(this.platform);
         this.appStore = AppStore.instance;
@@ -49,18 +57,10 @@ export default class ThinkPlugin extends Plugin {
 
         await this.dataStore.initialScan();
 
-        const ctx: ThinkContext = {
-            app: this.app,
-            plugin: this,
-            platform: this.platform,
-            dataStore: this.dataStore,
-            appStore: this.appStore,
-            rendererService: this.rendererService,
-        };
-
-        DashboardFeature.setup?.(ctx);
-        QuickInputFeature.setup?.(ctx);
-        CoreSettings.setup?.(ctx);
+        // [重构] 不再需要创建临时的 ctx 对象, 直接将 this (插件实例) 作为上下文传递
+        DashboardFeature.setup?.(this);
+        QuickInputFeature.setup?.(this);
+        CoreSettings.setup?.(this);
 
         this.addCommand({
             id: 'think-open-settings',
@@ -101,7 +101,6 @@ export default class ThinkPlugin extends Plugin {
             el.id = STYLE_TAG_ID;
             document.head.appendChild(el);
         }
-        // [修改] 此处使用的 GLOBAL_CSS 现在是从新位置导入的
         el.textContent = GLOBAL_CSS;
     }
 }
