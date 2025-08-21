@@ -1,6 +1,5 @@
 // src/state/AppStore.ts
 import { useState, useEffect } from 'preact/hooks';
-// [MOD] 导入所有需要的类型
 import type { ThinkSettings, DataSource, ViewInstance, Layout, InputSettings, BlockTemplate, ThemeDefinition, ThemeOverride } from '../main';
 import type ThinkPlugin from '../main';
 import { VIEW_DEFAULT_CONFIGS } from '@features/dashboard/settings/ModuleEditors/registry';
@@ -48,11 +47,16 @@ export class AppStore {
         this._listeners.forEach(l => l());
     }
 
+    // [修改] 重构核心更新流程
     private async _updateSettingsAndPersist(updater: (draft: ThinkSettings) => void) {
         const newSettings = structuredClone(this._state.settings);
         updater(newSettings);
         this._state.settings = newSettings;
-        await this._plugin.persistAll(this._state.settings);
+        
+        // 1. 直接调用插件的保存数据API，将数据持久化
+        await this._plugin.saveData(this._state.settings);
+        
+        // 2. 发出通知。所有订阅者（如RendererService）将收到此通知并自行决定如何响应
         this._notify();
     }
 
@@ -61,7 +65,8 @@ export class AppStore {
     private _generateId(prefix: string): string {
         return `${prefix}_${Date.now().toString(36)}${Math.random().toString(36).slice(2, 7)}`;
     }
-
+    
+    // ... 其他所有 Actions 方法保持不变 (addDataSource, updateBlock, 等) ...
     // ----- 通用辅助函数 -----
     private _moveItemInArray<T extends { id: string }>(array: T[], id: string, direction: 'up' | 'down') {
         const index = array.findIndex(item => item.id === id);
@@ -202,9 +207,7 @@ export class AppStore {
         });
     }
 
-    // -- [重构] InputSettings Actions --
-
-    // BlockTemplate Actions
+    // -- InputSettings Actions --
     public addBlock = async (name: string) => {
         await this._updateSettingsAndPersist(draft => {
             draft.inputSettings.blocks.push({
@@ -228,7 +231,6 @@ export class AppStore {
     public deleteBlock = async (id: string) => {
         await this._updateSettingsAndPersist(draft => {
             draft.inputSettings.blocks = draft.inputSettings.blocks.filter(b => b.id !== id);
-            // 级联删除所有相关的覆写
             draft.inputSettings.overrides = draft.inputSettings.overrides.filter(o => o.blockId !== id);
         });
     }
@@ -243,7 +245,6 @@ export class AppStore {
         });
     }
 
-    // ThemeDefinition Actions
     public addTheme = async (path: string) => {
         await this._updateSettingsAndPersist(draft => {
             if (path && !draft.inputSettings.themes.some(t => t.path === path)) {
@@ -255,7 +256,6 @@ export class AppStore {
         await this._updateSettingsAndPersist(draft => {
             const index = draft.inputSettings.themes.findIndex(t => t.id === id);
             if (index > -1) {
-                // 如果路径已存在，则阻止更新
                 if (updates.path && draft.inputSettings.themes.some(t => t.path === updates.path && t.id !== id)) {
                     console.warn(`主题路径 "${updates.path}" 已存在。`);
                     return;
@@ -267,7 +267,6 @@ export class AppStore {
     public deleteTheme = async (id: string) => {
         await this._updateSettingsAndPersist(draft => {
             draft.inputSettings.themes = draft.inputSettings.themes.filter(t => t.id !== id);
-            // 级联删除所有相关的覆写
             draft.inputSettings.overrides = draft.inputSettings.overrides.filter(o => o.themeId !== id);
         });
     }
@@ -277,16 +276,13 @@ export class AppStore {
         });
     }
 
-    // ThemeOverride Actions
     public upsertOverride = async (overrideData: Omit<ThemeOverride, 'id'>) => {
         await this._updateSettingsAndPersist(draft => {
             const index = draft.inputSettings.overrides.findIndex(o => o.blockId === overrideData.blockId && o.themeId === overrideData.themeId);
             if (index > -1) {
-                // 更新现有覆写
                 const existingId = draft.inputSettings.overrides[index].id;
                 draft.inputSettings.overrides[index] = { ...overrideData, id: existingId };
             } else {
-                // 创建新覆写
                 const newOverride: ThemeOverride = {
                     id: this._generateId('ovr'),
                     ...overrideData,
@@ -307,7 +303,6 @@ export class AppStore {
 // 3. 创建供 Preact 组件使用的 Hook
 export function useStore<T>(selector: (state: AppState) => T): T {
     const store = AppStore.instance;
-    // 使用 JSON.stringify 进行简单的深比较，防止不必要的重复渲染
     const getSnapshot = () => JSON.stringify(selector(store.getState()));
 
     const [state, setState] = useState(getSnapshot());

@@ -1,19 +1,17 @@
 // src/main.ts
-import { App, Plugin, Notice } from 'obsidian';
-import { render, h } from 'preact';
+import { App, Plugin } from 'obsidian';
 
 import { ObsidianPlatform } from '@platform/obsidian';
 import { DataStore } from '@core/services/dataStore';
 import { AppStore } from '@state/AppStore';
+import { RendererService } from '@core/services/RendererService'; // [新增] 导入新服务
 
 import * as DashboardFeature from '@features/dashboard';
 import * as QuickInputFeature from '@features/quick-input';
 import * as CoreSettings from '@core/settings/index';
 
-// [MOD] 导入新的设置类型
 import type { DataSource, ViewInstance, Layout, InputSettings } from '@core/domain/schema';
 import { GLOBAL_CSS, STYLE_TAG_ID } from '@core/domain/constants';
-import { LayoutRenderer } from '@features/dashboard/ui/LayoutRenderer';
 
 // ---------- 插件级类型 & 默认值 ---------- //
 
@@ -21,7 +19,6 @@ export interface ThinkSettings {
     dataSources: DataSource[];
     viewInstances: ViewInstance[];
     layouts: Layout[];
-    // [MOD] 使用新的 InputSettings 结构
     inputSettings: InputSettings;
 }
 
@@ -29,7 +26,6 @@ const DEFAULT_SETTINGS: ThinkSettings = {
     dataSources: [],
     viewInstances: [],
     layouts: [],
-    // [MOD] 新的默认值
     inputSettings: { blocks: [], themes: [], overrides: [] },
 };
 
@@ -41,6 +37,7 @@ export interface ThinkContext {
     platform: ObsidianPlatform;
     dataStore: DataStore;
     appStore: AppStore;
+    rendererService: RendererService; // [新增] 将 rendererService 加入上下文
 }
 
 // ---------- 主插件类 ---------- //
@@ -49,37 +46,11 @@ export default class ThinkPlugin extends Plugin {
     platform!: ObsidianPlatform;
     dataStore!: DataStore;
     appStore!: AppStore;
+    rendererService!: RendererService; // [新增] 声明 rendererService
 
-    activeLayouts: { container: HTMLElement; layoutName: string }[] = [];
-
-    async persistAll(settings: ThinkSettings) {
-        await this.saveData(settings);
-        this.rerenderActiveLayouts(settings);
-    }
-
-    private rerenderActiveLayouts(settings: ThinkSettings) {
-        console.log('[ThinkPlugin] Rerendering active layouts...');
-        this.activeLayouts.forEach(activeLayout => {
-            const { container, layoutName } = activeLayout;
-            const newLayoutConfig = settings.layouts.find(l => l.name === layoutName);
-
-            if (newLayoutConfig) {
-                render(h(LayoutRenderer, {
-                    layout: newLayoutConfig,
-                    dataStore: this.dataStore,
-                    plugin: this,
-                }), container);
-            } else {
-                try { render(null, container); } catch { }
-                container.empty();
-                container.createDiv({ text: `布局配置 "${layoutName}" 已被删除。` });
-            }
-        });
-
-        this.activeLayouts = this.activeLayouts.filter(al =>
-            settings.layouts.some(l => l.name === al.layoutName)
-        );
-    }
+    // [移除] activeLayouts 数组，其职责已移交至 RendererService
+    // [移除] persistAll 方法，其职责已移交至 AppStore
+    // [移除] rerenderActiveLayouts 方法，其职责已移交至 RendererService
 
     async onload(): Promise<void> {
         console.log('ThinkPlugin load');
@@ -88,22 +59,28 @@ export default class ThinkPlugin extends Plugin {
 
         this.injectGlobalCss();
 
+        // 1. 初始化平台和核心服务
         this.platform = new ObsidianPlatform(this.app);
         this.dataStore = new DataStore(this.platform);
-
         this.appStore = AppStore.instance;
         this.appStore.init(this, settings);
 
+        // 2. [新增] 初始化渲染服务
+        this.rendererService = new RendererService(this, this.dataStore, this.appStore);
+
         await this.dataStore.initialScan();
 
+        // 3. 构建上下文，传递给所有功能模块
         const ctx: ThinkContext = {
             app: this.app,
             plugin: this,
             platform: this.platform,
             dataStore: this.dataStore,
             appStore: this.appStore,
+            rendererService: this.rendererService, // [新增] 传递 rendererService
         };
 
+        // 4. 启动所有功能模块
         DashboardFeature.setup?.(ctx);
         QuickInputFeature.setup?.(ctx);
         CoreSettings.setup?.(ctx);
@@ -123,11 +100,9 @@ export default class ThinkPlugin extends Plugin {
     onunload(): void {
         console.log('ThinkPlugin unload');
         document.getElementById(STYLE_TAG_ID)?.remove();
-        this.activeLayouts.forEach(({ container }) => {
-            try { render(null, container); } catch { }
-            container.empty();
-        });
-        this.activeLayouts = [];
+        
+        // [修改] 调用 rendererService 进行统一清理，不再手动管理
+        this.rendererService.cleanup();
     }
 
     private async loadSettings(): Promise<ThinkSettings> {
@@ -136,13 +111,15 @@ export default class ThinkPlugin extends Plugin {
         merged.dataSources = merged.dataSources || [];
         merged.viewInstances = merged.viewInstances || [];
         merged.layouts = merged.layouts || [];
-        // [MOD] 确保新的 inputSettings 结构存在
         merged.inputSettings = merged.inputSettings || { blocks: [], themes: [], overrides: [] };
         return merged;
     }
 
+    // [修改] 此方法现在仅由 AppStore 内部调用，用于代理保存操作
     async saveSettings() {
-        await this.persistAll(this.appStore.getSettings());
+        // 这个方法现在实际上可以由 AppStore 内部的 `_updateSettingsAndPersist` 触发
+        // 我们保留它以防有其他地方需要手动触发保存（尽管最佳实践是通过更新AppStore来完成）
+        await this.saveData(this.appStore.getSettings());
     }
 
     private injectGlobalCss() {
