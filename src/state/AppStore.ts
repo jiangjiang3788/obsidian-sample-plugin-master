@@ -1,9 +1,11 @@
 // src/state/AppStore.ts
 import { useState, useEffect } from 'preact/hooks';
-import type { ThinkSettings, DataSource, ViewInstance, Layout, InputSettings, BlockTemplate, ThemeDefinition, ThemeOverride } from '../main';
+// [修改] 更新导入路径，从 @core/domain/schema 获取所有类型
+import type { ThinkSettings, DataSource, ViewInstance, Layout, InputSettings, BlockTemplate, ThemeDefinition, ThemeOverride } from '@core/domain/schema';
 import type ThinkPlugin from '../main';
 import { VIEW_DEFAULT_CONFIGS } from '@features/dashboard/settings/ModuleEditors/registry';
 
+// ... 文件其余部分保持不变 ...
 // 1. 定义 Store 中 state 的结构
 export interface AppState {
     settings: ThinkSettings;
@@ -47,27 +49,21 @@ export class AppStore {
         this._listeners.forEach(l => l());
     }
 
-    // [修改] 重构核心更新流程
     private async _updateSettingsAndPersist(updater: (draft: ThinkSettings) => void) {
         const newSettings = structuredClone(this._state.settings);
         updater(newSettings);
         this._state.settings = newSettings;
         
-        // 1. 直接调用插件的保存数据API，将数据持久化
         await this._plugin.saveData(this._state.settings);
         
-        // 2. 发出通知。所有订阅者（如RendererService）将收到此通知并自行决定如何响应
         this._notify();
     }
-
-    // ----- 行为 (Actions) ----- //
-
+    
+    // ... 所有 Actions 方法保持不变 ...
     private _generateId(prefix: string): string {
         return `${prefix}_${Date.now().toString(36)}${Math.random().toString(36).slice(2, 7)}`;
     }
     
-    // ... 其他所有 Actions 方法保持不变 (addDataSource, updateBlock, 等) ...
-    // ----- 通用辅助函数 -----
     private _moveItemInArray<T extends { id: string }>(array: T[], id: string, direction: 'up' | 'down') {
         const index = array.findIndex(item => item.id === id);
         if (index === -1) return;
@@ -93,7 +89,6 @@ export class AppStore {
         array.splice(index + 1, 0, newItem);
     }
 
-    // -- DataSources Actions --
     public addDataSource = async (name: string) => {
         await this._updateSettingsAndPersist(draft => {
             draft.dataSources.push({ id: this._generateId('ds'), name, filters: [], sort: [] });
@@ -128,7 +123,6 @@ export class AppStore {
         });
     }
 
-    // -- ViewInstances Actions --
     public addViewInstance = async (title: string) => {
         await this._updateSettingsAndPersist(draft => {
             draft.viewInstances.push({
@@ -170,7 +164,6 @@ export class AppStore {
         });
     }
 
-    // -- Layouts Actions --
     public addLayout = async (name: string) => {
         await this._updateSettingsAndPersist(draft => {
             draft.layouts.push({
@@ -207,7 +200,6 @@ export class AppStore {
         });
     }
 
-    // -- InputSettings Actions --
     public addBlock = async (name: string) => {
         await this._updateSettingsAndPersist(draft => {
             draft.inputSettings.blocks.push({
@@ -300,7 +292,7 @@ export class AppStore {
     }
 }
 
-// 3. 创建供 Preact 组件使用的 Hook
+
 export function useStore<T>(selector: (state: AppState) => T): T {
     const store = AppStore.instance;
     const getSnapshot = () => JSON.stringify(selector(store.getState()));
