@@ -200,4 +200,38 @@ body.theme-dark .think-pills .think-pill{
 .block-language-think .module-content .bv-item--task .bv-task-content { flex: 1; }
 .block-language-think .module-content .bv-item--task .bv-task-title { color: var(--text-normal); line-height: 1.5; }
 
+/* [MODIFIED] 提高 TimelineView 悬浮按钮的 CSS 优先级 */
+.block-language-think .timeline-task-block .task-buttons {
+    visibility: hidden;
+    opacity: 0;
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    display: flex;
+    gap: 2px;
+    background: var(--background-secondary);
+    border-radius: 4px;
+    padding: 2px;
+    box-shadow: var(--shadow-s);
+    transition: opacity 0.1s ease-in-out, visibility 0.1s ease-in-out;
+}
+.block-language-think .timeline-task-block:hover .task-buttons {
+    visibility: visible;
+    opacity: 1;
+}
+.block-language-think .timeline-task-block .task-buttons button {
+    all: unset;
+    cursor: pointer;
+    padding: 2px 4px;
+    border-radius: 2px;
+    font-size: 12px;
+}
+.block-language-think .timeline-task-block .task-buttons button:hover {
+    background: var(--background-modifier-hover);
+}
+.block-language-think .timeline-task-block .task-buttons button:disabled {
+    cursor: not-allowed;
+    color: var(--text-muted);
+}
+
 `.trim();
