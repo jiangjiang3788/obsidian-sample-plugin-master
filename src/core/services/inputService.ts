@@ -5,18 +5,11 @@ import type { BlockTemplate, ThemeDefinition } from '@core/domain/schema';
 export class InputService {
     constructor(private app: App) { }
 
-    // [修改] 增加详细的调试日志
+    // [重构] 移除了此函数中所有的 [Think插件调试] console.log 语句
     private renderTemplate(templateString: string, data: Record<string, any>): string {
-        console.log('[Think插件调试] 步骤3: 进入模板渲染引擎', {
-            '待渲染模板': templateString,
-            '可用数据': JSON.parse(JSON.stringify(data)),
-        });
-
         return templateString.replace(/\{\{\s*([^}]+?)\s*\}\}/g, (_, placeholder) => {
             const key = placeholder.trim();
-            let result = `(未找到变量: ${key})`; // 默认一个错误提示，方便调试
-
-            console.log(`[Think插件调试]   - 正在解析变量: {{${key}}}`);
+            let result = ''; // 默认返回空字符串
 
             try {
                 if (key === 'block') {
@@ -33,8 +26,7 @@ export class InputService {
                     const rootKey = keys[0];
                     
                     if (!(rootKey in data)) {
-                        console.log(`[Think插件调试]     -> 失败: 根键 "${rootKey}" 在数据中未找到。`);
-                        return ''; // 返回空字符串而不是错误提示
+                        return ''; // 根键不存在，直接返回空
                     }
 
                     let value: any = data[rootKey];
@@ -43,7 +35,6 @@ export class InputService {
                             if (value && typeof value === 'object' && keys[i] in value) {
                                 value = value[keys[i]];
                             } else {
-                                console.log(`[Think插件调试]     -> 失败: 在路径 "${key}" 中, 无法找到 "${keys[i]}"。`);
                                 value = ''; // 路径无效
                                 break;
                             }
@@ -57,11 +48,10 @@ export class InputService {
                         result = value !== null && value !== undefined ? String(value) : '';
                     }
                 }
-                console.log(`[Think插件调试]     -> 解析结果: "${result}"`);
                 return result;
             } catch (e: any) {
-                console.error(`[Think插件调试]     -> 解析变量 {{${key}}} 时发生错误:`, e);
-                return `(解析错误: ${key})`;
+                console.error(`[ThinkPlugin] 解析模板变量 {{${key}}} 时发生错误:`, e);
+                return `(解析错误: ${key})`; // 保留错误提示，以防模板本身有问题
             }
         });
     }
@@ -69,21 +59,16 @@ export class InputService {
     public async executeTemplate(template: BlockTemplate, formData: Record<string, any>, theme?: ThemeDefinition): Promise<string> {
         if (!template) throw new Error(`传入了无效的模板对象。`);
 
-        const renderData = { 
-            ...formData, 
+        const renderData = {
+            ...formData,
             block: { name: template.name },
             theme: theme ? { path: theme.path, icon: theme.icon || '' } : {}
         };
-        console.log('[Think插件调试] 步骤2: 构建用于渲染的最终数据 (renderData)', JSON.parse(JSON.stringify(renderData)));
-
-        const outputContent = this.renderTemplate(template.outputTemplate, renderData).trim();
-        console.log(`[Think插件调试] 步骤4: 最终渲染出的待写入内容:\n---\n${outputContent}\n---`);
         
+        // [重构] 移除了此函数中所有的 [Think插件调试] console.log 语句
+        const outputContent = this.renderTemplate(template.outputTemplate, renderData).trim();
         const targetFilePath = this.renderTemplate(template.targetFile, renderData).trim();
-        console.log(`[Think插件调试] 步骤5: 最终渲染出的目标文件路径: "${targetFilePath}"`);
-
         const header = template.appendUnderHeader ? this.renderTemplate(template.appendUnderHeader, renderData) : null;
-        if(header) console.log(`[Think插件调试] 步骤6: 最终渲染出的目标标题: "${header}"`);
 
         if (!targetFilePath) throw new Error("模板未定义目标文件路径 (targetFile)。");
         
@@ -95,7 +80,7 @@ export class InputService {
             const newContent = existingContent ? `${existingContent.trim()}\n\n${outputContent}` : outputContent;
             await this.app.vault.modify(file, newContent);
         }
-        console.log('[Think插件调试] 步骤7: 文件写入操作完成。');
+        
         return targetFilePath;
     }
 
@@ -117,6 +102,7 @@ export class InputService {
             }
         }
     }
+    
     private async getOrCreateFile(fp: string): Promise<TFile> {
         let file = this.app.vault.getAbstractFileByPath(fp);
         if (file instanceof TFile) {
@@ -143,6 +129,7 @@ export class InputService {
             }
         }
     }
+
     private async appendUnderHeader(file: TFile, header: string, payload: string) {
         const esc = header.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
         const regex = new RegExp(`^${esc}\\s*$`, 'm');
