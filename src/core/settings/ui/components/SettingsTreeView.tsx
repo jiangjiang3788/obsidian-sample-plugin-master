@@ -1,17 +1,18 @@
 // src/core/settings/ui/components/SettingsTreeView.tsx
 /** @jsxImportSource preact */
 import { h, ComponentChild, Fragment } from 'preact';
-// [修正] 从 preact/hooks 中导入 useEffect
 import { useState, useEffect } from 'preact/hooks';
 import { Box, Stack, Typography, IconButton, Tooltip, TextField, Collapse, Button } from '@mui/material';
-import FolderIcon from '@mui/icons-material/Folder';
-import FolderOpenIcon from '@mui/icons-material/FolderOpen';
+// [视觉优化] 不再需要导入 FolderIcon 和 FolderOpenIcon
 import ArrowRightIcon from '@mui/icons-material/ArrowRight';
 import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 import DriveFileMoveOutlinedIcon from '@mui/icons-material/DriveFileMoveOutlined';
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
 import DeleteForeverOutlinedIcon from '@mui/icons-material/DeleteForeverOutlined';
+import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
+import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
+import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 
 import type { Group, Groupable } from '@core/domain/schema';
 import { AppStore } from '@state/AppStore';
@@ -33,14 +34,15 @@ interface SettingsTreeViewProps {
     onAddGroup: (parentId: string | null) => void;
     onDeleteItem: (item: TreeItem) => void;
     onUpdateItemName: (item: TreeItem, newName: string) => void;
+    onMoveItem: (item: TreeItem, direction: 'up' | 'down') => void;
+    onDuplicateItem: (item: TreeItem) => void;
 }
 
 const Node = ({ node, children, ...props }: { node: TreeItem, children: ComponentChild } & any) => {
-    const { onUpdateItemName, onDeleteItem, onMoveItem } = props;
+    const { onUpdateItemName, onDeleteItem, onOpenMoveDialog, onMoveItem, onDuplicateItem, index, siblingCount } = props;
     const [isEditing, setIsEditing] = useState(false);
     const [name, setName] = useState(node.name);
 
-    // 当外部 props 的 name 变化时，同步内部 state
     useEffect(() => { setName(node.name); }, [node.name]);
 
     const handleNameBlur = () => {
@@ -75,16 +77,9 @@ const Node = ({ node, children, ...props }: { node: TreeItem, children: Componen
                     borderTopRightRadius: props.isExpanded && !node.isGroup ? 8 : 0,
                 }}
             >
-                {node.isGroup ? (
-                    <IconButton size="small" onClick={props.onToggle} sx={{ mr: 0.5 }}>
-                        {props.isExpanded ? <ArrowDropDownIcon /> : <ArrowRightIcon />}
-                    </IconButton>
-                ) : (
-                    // 对于配置项，也提供一个展开/折叠按钮
-                    <IconButton size="small" onClick={props.onToggle} sx={{ mr: 0.5, visibility: 'visible' }}>
-                        {props.isExpanded ? <ArrowDropDownIcon /> : <ArrowRightIcon />}
-                    </IconButton>
-                )}
+                <IconButton size="small" onClick={props.onToggle} sx={{ mr: 0.5 }}>
+                    {props.isExpanded ? <ArrowDropDownIcon /> : <ArrowRightIcon />}
+                </IconButton>
                 
                 {isEditing ? (
                     <TextField 
@@ -102,16 +97,24 @@ const Node = ({ node, children, ...props }: { node: TreeItem, children: Componen
                         onClick={props.onToggle}
                         onDblClick={() => setIsEditing(true)}
                         title="双击可重命名"
-                        sx={{ flexGrow: 1, cursor: 'pointer', fontWeight: node.isGroup ? 600 : 500 }}
+                        sx={{ 
+                            flexGrow: 1, 
+                            cursor: 'pointer', 
+                            fontWeight: node.isGroup ? 600 : 500,
+                            // [视觉优化] 分组使用蓝色，项目使用默认颜色
+                            color: node.isGroup ? 'primary.main' : 'text.primary',
+                        }}
                     >
-                        {node.isGroup && (props.isExpanded ? <FolderOpenIcon sx={{ fontSize: '1rem', verticalAlign: 'middle', mr: 0.5 }}/> : <FolderIcon sx={{ fontSize: '1rem', verticalAlign: 'middle', mr: 0.5 }}/>)}
+                        {/* [视觉优化] 移除文件夹图标 */}
                         {node.name}
                     </Typography>
                 )}
 
                 <Stack direction="row" className="actions" sx={{ opacity: 0, transition: 'opacity 0.2s' }}>
-                    <Tooltip title="移动"><IconButton size="small" onClick={() => onMoveItem(node)}><DriveFileMoveOutlinedIcon fontSize="small"/></IconButton></Tooltip>
-                    <Tooltip title="重命名"><IconButton size="small" onClick={() => setIsEditing(true)}><EditOutlinedIcon fontSize="small"/></IconButton></Tooltip>
+                    <Tooltip title="上移"><span><IconButton size="small" disabled={index === 0} onClick={() => onMoveItem(node, 'up')}><ArrowUpwardIcon fontSize="small" /></IconButton></span></Tooltip>
+                    <Tooltip title="下移"><span><IconButton size="small" disabled={index === siblingCount - 1} onClick={() => onMoveItem(node, 'down')}><ArrowDownwardIcon fontSize="small" /></IconButton></span></Tooltip>
+                    <Tooltip title="复制"><span><IconButton size="small" onClick={() => onDuplicateItem(node)}><ContentCopyIcon fontSize="small" /></IconButton></span></Tooltip>
+                    <Tooltip title="移动到..."><IconButton size="small" onClick={() => onOpenMoveDialog(node)}><DriveFileMoveOutlinedIcon fontSize="small"/></IconButton></Tooltip>
                     <Tooltip title="删除"><IconButton size="small" onClick={() => onDeleteItem(node)} sx={{color: 'text.secondary', '&:hover': {color: 'error.main'}}}><DeleteForeverOutlinedIcon fontSize="small"/></IconButton></Tooltip>
                 </Stack>
             </Stack>
@@ -123,7 +126,8 @@ const Node = ({ node, children, ...props }: { node: TreeItem, children: Componen
 
 export function SettingsTreeView({
     groups, items, allGroups, parentId, level = 0,
-    renderItem, onAddItem, onAddGroup, onDeleteItem, onUpdateItemName
+    renderItem, onAddItem, onAddGroup, onDeleteItem, onUpdateItemName,
+    onMoveItem, onDuplicateItem
 }: SettingsTreeViewProps) {
 
     const [collapsedState, setCollapsedState] = useState<Record<string, boolean>>({});
@@ -144,7 +148,7 @@ export function SettingsTreeView({
 
     return (
         <Box>
-            {childGroups.map(group => {
+            {childGroups.map((group, index) => {
                 const isExpanded = !collapsedState[group.id];
                 const treeItem: TreeItem = { ...group, isGroup: true };
                 return (
@@ -153,10 +157,14 @@ export function SettingsTreeView({
                             node={treeItem}
                             isExpanded={isExpanded}
                             level={level}
+                            index={index}
+                            siblingCount={childGroups.length + childItems.length}
                             onToggle={() => toggleCollapse(group.id)}
                             onUpdateItemName={onUpdateItemName}
                             onDeleteItem={onDeleteItem}
-                            onMoveItem={setMovingItem}
+                            onOpenMoveDialog={setMovingItem}
+                            onMoveItem={onMoveItem}
+                            onDuplicateItem={onDuplicateItem}
                         >
                             <Collapse in={isExpanded}>
                                 <SettingsTreeView
@@ -170,6 +178,8 @@ export function SettingsTreeView({
                                     onAddGroup={onAddGroup}
                                     onDeleteItem={onDeleteItem}
                                     onUpdateItemName={onUpdateItemName}
+                                    onMoveItem={onMoveItem}
+                                    onDuplicateItem={onDuplicateItem}
                                 />
                             </Collapse>
                         </Node>
@@ -177,7 +187,7 @@ export function SettingsTreeView({
                 );
             })}
             
-            {childItems.map(item => {
+            {childItems.map((item, index) => {
                 const isExpanded = !collapsedState[item.id];
                 return (
                     <Box key={item.id} sx={{ borderBottom: '1px solid rgba(0,0,0,0.08)' }}>
@@ -185,10 +195,14 @@ export function SettingsTreeView({
                             node={item}
                             isExpanded={isExpanded}
                             level={level}
+                            index={index + childGroups.length}
+                            siblingCount={childGroups.length + childItems.length}
                             onToggle={() => toggleCollapse(item.id)}
                             onUpdateItemName={onUpdateItemName}
                             onDeleteItem={onDeleteItem}
-                            onMoveItem={setMovingItem}
+                            onOpenMoveDialog={setMovingItem}
+                            onMoveItem={onMoveItem}
+                            onDuplicateItem={onDuplicateItem}
                         >
                             <Collapse in={isExpanded}>
                                 <Box sx={{ bgcolor: 'action.hover', borderTop: '1px solid rgba(0,0,0,0.05)' }}>
@@ -200,7 +214,6 @@ export function SettingsTreeView({
                 );
             })}
             
-            {/* 只在根节点显示“添加”按钮 */}
             {level === 0 && (
                 <Stack direction="row" spacing={1} sx={{ mt: 2 }}>
                     <Button onClick={() => onAddItem(parentId)} startIcon={<AddCircleOutlineIcon />} size="small">添加新项</Button>

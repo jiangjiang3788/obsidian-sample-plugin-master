@@ -3,10 +3,10 @@
 import { h } from 'preact';
 import { useStore, AppStore } from '@state/AppStore';
 import { DEFAULT_NAMES } from '@core/domain/constants';
-import { Typography, Stack, Box, TextField } from '@mui/material';
+import { Typography, Stack, Box } from '@mui/material';
 import { getAllFields } from '@core/domain/schema';
 import { DataStore } from '@core/services/dataStore';
-import { useMemo, useState, useEffect } from 'preact/hooks';
+import { useMemo } from 'preact/hooks';
 import type { DataSource } from '@core/domain/schema';
 import { RuleBuilder } from './components/RuleBuilder';
 import { SettingsTreeView, TreeItem } from './components/SettingsTreeView';
@@ -82,6 +82,20 @@ export function DataSourceSettings({ app }: { app: App }) {
             AppStore.instance.updateDataSource(item.id, { name: newName });
         }
     };
+    
+    // [UX修正] 新增排序和复制的回调
+    const handleMoveItem = (item: TreeItem, direction: 'up' | 'down') => {
+        // 分组的排序暂未实现，仅处理配置项
+        if (!item.isGroup) {
+            AppStore.instance.moveDataSource(item.id, direction);
+        }
+    };
+
+    const handleDuplicateItem = (item: TreeItem) => {
+        if (!item.isGroup) {
+            AppStore.instance.duplicateDataSource(item.id);
+        }
+    };
 
     return (
         <Box sx={{ maxWidth: '900px', mx: 'auto' }}>
@@ -99,6 +113,8 @@ export function DataSourceSettings({ app }: { app: App }) {
                 onAddGroup={handleAddGroup}
                 onDeleteItem={handleDeleteItem}
                 onUpdateItemName={handleUpdateItemName}
+                onMoveItem={handleMoveItem}
+                onDuplicateItem={handleDuplicateItem}
             />
         </Box>
     );
