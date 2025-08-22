@@ -131,6 +131,19 @@ export function LayoutSettings({ app }: { app: App }) {
             AppStore.instance.updateLayout(item.id, { name: newName });
         }
     };
+    
+    // [UX修正] 新增排序和复制的回调
+    const handleMoveItem = (item: TreeItem, direction: 'up' | 'down') => {
+        if (!item.isGroup) {
+            AppStore.instance.moveLayout(item.id, direction);
+        }
+    };
+
+    const handleDuplicateItem = (item: TreeItem) => {
+        if (!item.isGroup) {
+            AppStore.instance.duplicateLayout(item.id);
+        }
+    };
 
     return (
         <Box sx={{ maxWidth: '900px', mx: 'auto' }}>
@@ -148,6 +161,8 @@ export function LayoutSettings({ app }: { app: App }) {
                 onAddGroup={handleAddGroup}
                 onDeleteItem={handleDeleteItem}
                 onUpdateItemName={handleUpdateItemName}
+                onMoveItem={handleMoveItem}
+                onDuplicateItem={handleDuplicateItem}
             />
         </Box>
     );

@@ -8,7 +8,7 @@ import { VIEW_OPTIONS, ViewName, getAllFields } from '@core/domain/schema';
 import type { ViewInstance } from '@core/domain/schema';
 import { VIEW_EDITORS } from '@features/dashboard/settings/ModuleEditors/registry';
 import { DataStore } from '@core/services/dataStore';
-import { useMemo, useEffect } from 'preact/hooks';
+import { useMemo } from 'preact/hooks';
 import { SimpleSelect } from '@shared/ui/SimpleSelect';
 import { SettingsTreeView, TreeItem } from './components/SettingsTreeView';
 import { NamePromptModal } from '@shared/components/dialogs/NamePromptModal';
@@ -133,6 +133,19 @@ export function ViewInstanceSettings({ app }: { app: App }) {
             AppStore.instance.updateViewInstance(item.id, { title: newName });
         }
     };
+
+    // [UX修正] 新增排序和复制的回调
+    const handleMoveItem = (item: TreeItem, direction: 'up' | 'down') => {
+        if (!item.isGroup) {
+            AppStore.instance.moveViewInstance(item.id, direction);
+        }
+    };
+
+    const handleDuplicateItem = (item: TreeItem) => {
+        if (!item.isGroup) {
+            AppStore.instance.duplicateViewInstance(item.id);
+        }
+    };
     
     return (
         <Box sx={{ maxWidth: '900px', mx: 'auto' }}>
@@ -150,6 +163,8 @@ export function ViewInstanceSettings({ app }: { app: App }) {
                 onAddGroup={handleAddGroup}
                 onDeleteItem={handleDeleteItem}
                 onUpdateItemName={handleUpdateItemName}
+                onMoveItem={handleMoveItem}
+                onDuplicateItem={handleDuplicateItem}
             />
         </Box>
     );
