@@ -5,6 +5,12 @@
       "name": "新分组",
       "parentId": null,
       "type": "dataSource"
+    },
+    {
+      "id": "group_mema4arf1achh",
+      "name": "新分组",
+      "parentId": null,
+      "type": "layout"
     }
   ],
   "dataSources": [
@@ -388,6 +394,15 @@
       "displayMode": "list",
       "initialView": "月",
       "initialDateFollowsNow": true
+    },
+    {
+      "id": "layout_mema45l8jgbmv",
+      "name": "新布局",
+      "viewInstanceIds": [],
+      "displayMode": "list",
+      "initialView": "月",
+      "initialDateFollowsNow": true,
+      "parentId": null
     }
   ],
   "inputSettings": {
