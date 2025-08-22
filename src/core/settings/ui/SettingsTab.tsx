@@ -12,64 +12,63 @@ import { theme as baseTheme } from '@shared/styles/mui-theme';
 import { DataSourceSettings } from './DataSourceSettings';
 import { ViewInstanceSettings } from './ViewInstanceSettings';
 import { LayoutSettings } from './LayoutSettings';
-// [修改] 导入我们新的主组件，不再需要 InputSettingsTable
 import { InputSettings } from './InputSettings';
 
 function a11yProps(index: number) {
-  return { id: `settings-tab-${index}`, 'aria-controls': `settings-tabpanel-${index}` };
+  return { id: `settings-tab-${index}`, 'aria-controls': `settings-tabpanel-${index}` };
 }
 
 function TabPanel(props: { children?: any; value: number; index: number; }) {
-  const { children, value, index, ...other } = props;
-  return (
-    <div role="tabpanel" hidden={value !== index} id={`settings-tabpanel-${index}`} {...other}>
-      {value === index && <Box sx={{ p: 2 }}>{children}</Box>}
-    </div>
-  );
+  const { children, value, index, ...other } = props;
+  return (
+    <div role="tabpanel" hidden={value !== index} id={`settings-tabpanel-${index}`} {...other}>
+      {value === index && <Box sx={{ p: 2 }}>{children}</Box>}
+    </div>
+  );
 }
 
-function SettingsRoot() {
-  const [tabIndex, setTabIndex] = usePersistentState(LOCAL_STORAGE_KEYS.SETTINGS_TABS, 0);
+// [架构修正] SettingsRoot 现在接收 app 作为 prop
+function SettingsRoot({ app }: { app: App }) {
+  const [tabIndex, setTabIndex] = usePersistentState(LOCAL_STORAGE_KEYS.SETTINGS_TABS, 0);
 
-  return (
-    <ThemeProvider theme={baseTheme}>
-      <CssBaseline />
-      <Box sx={{ width: '100%' }} class="think-setting-root">
-        <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
-          <Tabs value={tabIndex} onChange={(_, newValue) => setTabIndex(newValue)} aria-label="settings tabs">
-            <Tab label="布局" {...a11yProps(0)} />
-            <Tab label="视图" {...a11yProps(1)} />
-            <Tab label="数据源" {...a11yProps(2)} />
-            <Tab label="快速输入" {...a11yProps(3)} />
-          </Tabs>
-        </Box>
-        <TabPanel value={tabIndex} index={0}><LayoutSettings /></TabPanel>
-        <TabPanel value={tabIndex} index={1}><ViewInstanceSettings /></TabPanel>
-        <TabPanel value={tabIndex} index={2}><DataSourceSettings /></TabPanel>
-        <TabPanel value={tabIndex} index={3}>
-            {/* [修改] 直接使用新的组件，不再需要传递 props */}
-            <InputSettings />
-        </TabPanel>
-      </Box>
-    </ThemeProvider>
-  );
+  return (
+    <ThemeProvider theme={baseTheme}>
+      <CssBaseline />
+      <Box sx={{ width: '100%' }} class="think-setting-root">
+        <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
+          <Tabs value={tabIndex} onChange={(_, newValue) => setTabIndex(newValue)} aria-label="settings tabs">
+            <Tab label="布局" {...a11yProps(0)} />
+            <Tab label="视图" {...a11yProps(1)} />
+            <Tab label="数据源" {...a11yProps(2)} />
+            <Tab label="快速输入" {...a11yProps(3)} />
+          </Tabs>
+        </Box>
+        {/* [架构修正] 将 app prop 传递给每个设置页面 */}
+        <TabPanel value={tabIndex} index={0}><LayoutSettings app={app} /></TabPanel>
+        <TabPanel value={tabIndex} index={1}><ViewInstanceSettings app={app} /></TabPanel>
+        <TabPanel value={tabIndex} index={2}><DataSourceSettings app={app} /></TabPanel>
+        <TabPanel value={tabIndex} index={3}><InputSettings /></TabPanel>
+      </Box>
+    </ThemeProvider>
+  );
 }
 
 export class SettingsTab extends PluginSettingTab {
-  id: string;
+  id: string;
 
-  constructor(public app: App, private plugin: ThinkPlugin) {
-    super(app, plugin);
-    this.id = plugin.manifest.id;
-  }
+  constructor(public app: App, private plugin: ThinkPlugin) {
+    super(app, plugin);
+    this.id = plugin.manifest.id;
+  }
 
-  display(): void {
-    const { containerEl } = this;
-    containerEl.empty();
-    render(<SettingsRoot />, containerEl);
-  }
+  display(): void {
+    const { containerEl } = this;
+    containerEl.empty();
+    // [架构修正] 将 this.app 传递给根组件
+    render(<SettingsRoot app={this.app} />, containerEl);
+  }
 
-  hide(): void {
-    unmountComponentAtNode(this.containerEl);
-  }
+  hide(): void {
+    unmountComponentAtNode(this.containerEl);
+  }
 }

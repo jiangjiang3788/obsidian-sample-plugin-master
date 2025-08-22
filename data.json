@@ -1,4 +1,12 @@
 {
+  "groups": [
+    {
+      "id": "group_mem9c0yqeumgu",
+      "name": "新分组",
+      "parentId": null,
+      "type": "dataSource"
+    }
+  ],
   "dataSources": [
     {
       "id": "ds_me9yjmlznzs33",
@@ -71,6 +79,20 @@
         }
       ],
       "sort": []
+    },
+    {
+      "id": "ds_mem9buq26s9gu",
+      "name": "新数据源",
+      "filters": [],
+      "sort": [],
+      "parentId": null
+    },
+    {
+      "id": "ds_mem9c72y0sxyk",
+      "name": "新数据源",
+      "filters": [],
+      "sort": [],
+      "parentId": "group_mem9c0yqeumgu"
     }
   ],
   "viewInstances": [
@@ -267,6 +289,62 @@
         "pintu",
         "title"
       ]
+    },
+    {
+      "id": "view_mem9dw9fseknn",
+      "title": "新视图",
+      "viewType": "BlockView",
+      "dataSourceId": "",
+      "viewConfig": {
+        "view": "BlockView",
+        "title": "块视图",
+        "collapsed": false,
+        "fields": [],
+        "group": "categoryKey"
+      },
+      "parentId": null
+    },
+    {
+      "id": "view_mem9e36qsojnb",
+      "title": "新视图",
+      "viewType": "BlockView",
+      "dataSourceId": "",
+      "viewConfig": {
+        "view": "BlockView",
+        "title": "块视图",
+        "collapsed": false,
+        "fields": [],
+        "group": "categoryKey"
+      },
+      "parentId": null
+    },
+    {
+      "id": "view_mem9e7vgiuv1k",
+      "title": "新视图",
+      "viewType": "BlockView",
+      "dataSourceId": "",
+      "viewConfig": {
+        "view": "BlockView",
+        "title": "块视图",
+        "collapsed": false,
+        "fields": [],
+        "group": "categoryKey"
+      },
+      "parentId": null
+    },
+    {
+      "id": "view_mem9ecq39nnq6",
+      "title": "新视图",
+      "viewType": "BlockView",
+      "dataSourceId": "",
+      "viewConfig": {
+        "view": "BlockView",
+        "title": "块视图",
+        "collapsed": false,
+        "fields": [],
+        "group": "categoryKey"
+      },
+      "parentId": null
     }
   ],
   "layouts": [
