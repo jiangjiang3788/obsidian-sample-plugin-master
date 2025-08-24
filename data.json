@@ -23,6 +23,18 @@
       "name": "新分组",
       "parentId": null,
       "type": "layout"
+    },
+    {
+      "id": "group_mepfs3f8ion31",
+      "name": "新分组 (副本)",
+      "parentId": null,
+      "type": "viewInstance"
+    },
+    {
+      "id": "group_mepfs74koqmtk",
+      "name": "📂全局 (副本)",
+      "parentId": null,
+      "type": "viewInstance"
     }
   ],
   "dataSources": [
@@ -170,7 +182,8 @@
       "parentId": "group_memc1a9ofen88",
       "fields": [
         "type"
-      ]
+      ],
+      "collapsed": true
     },
     {
       "id": "view_membnf1hgjgm3",
@@ -184,7 +197,89 @@
         "rowField": "recurrence",
         "colField": "tags"
       },
-      "parentId": "group_memc1a9ofen88"
+      "parentId": "group_memc1a9ofen88",
+      "collapsed": true
+    },
+    {
+      "id": "view_mepfs74ks7l8h",
+      "title": "时间轴",
+      "viewType": "TimelineView",
+      "dataSourceId": "ds_membld9cc3oj6",
+      "viewConfig": {
+        "defaultHourHeight": 50,
+        "MAX_HOURS_PER_DAY": 24,
+        "UNTRACKED_LABEL": "未记录",
+        "categoryMap": {},
+        "categories": {
+          "健康": {
+            "color": "#60a5fa",
+            "files": [
+              "00-健康打卡",
+              "2-1健康",
+              "2-2三餐"
+            ]
+          },
+          "生活": {
+            "color": "#34d399",
+            "files": [
+              "2-3生活"
+            ]
+          },
+          "电脑": {
+            "color": "#fb606f",
+            "files": [
+              "2-5电脑"
+            ]
+          },
+          "工作": {
+            "color": "#fbbf24",
+            "files": [
+              "2-6工作"
+            ]
+          },
+          "其他": {
+            "color": "#bababa",
+            "files": [
+              "2-0其他"
+            ]
+          }
+        },
+        "colorPalette": [
+          "#34d399",
+          "#fbbf24",
+          "#a78bfa",
+          "#60a5fa",
+          "#f87171",
+          "#a1a1aa"
+        ],
+        "progressOrder": [
+          "健康",
+          "生活",
+          "电脑",
+          "工作",
+          "其他"
+        ]
+      },
+      "parentId": "group_mepfs74koqmtk",
+      "fields": [
+        "type"
+      ],
+      "collapsed": true
+    },
+    {
+      "id": "view_mepfs74kysx9y",
+      "title": "未完成任务",
+      "viewType": "TableView",
+      "dataSourceId": "ds_membld9cc3oj6",
+      "viewConfig": {
+        "view": "TableView",
+        "title": "表格视图",
+        "collapsed": false,
+        "rowField": "recurrence",
+        "colField": "tags"
+      },
+      "parentId": "group_mepfs74koqmtk",
+      "collapsed": true
     }
   ],
   "layouts": [

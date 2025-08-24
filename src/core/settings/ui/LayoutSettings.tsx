@@ -85,65 +85,67 @@ function LayoutEditor({ layout }: { layout: Layout }) {
 
 
 export function LayoutSettings({ app }: { app: App }) {
-    const layouts = useStore(state => state.settings.layouts);
-    const allGroups = useStore(state => state.settings.groups);
-    const layoutGroups = useMemo(() => allGroups.filter(g => g.type === 'layout'), [allGroups]);
-    const itemsAsTreeItems: TreeItem[] = useMemo(() => layouts.map(l => ({
-        ...l,
-        name: l.name,
-        isGroup: false,
-    })), [layouts]);
+    const layouts = useStore(state => state.settings.layouts);
+    const allGroups = useStore(state => state.settings.groups);
+    const layoutGroups = useMemo(() => allGroups.filter(g => g.type === 'layout'), [allGroups]);
+    const itemsAsTreeItems: TreeItem[] = useMemo(() => layouts.map(l => ({
+        ...l,
+        name: l.name,
+        isGroup: false,
+    })), [layouts]);
 
-    const handleAddItem = (parentId: string | null) => {
-        new NamePromptModal(
-            app,
-            "创建新布局",
-            "请输入新布局名称...",
-            DEFAULT_NAMES.NEW_LAYOUT,
-            (newName) => AppStore.instance.addLayout(newName, parentId)
-        ).open();
-    };
-    const handleAddGroup = (parentId: string | null) => {
-        new NamePromptModal(
-            app,
-            "创建新分组",
-            "请输入分组名称...",
-            "新分组",
-            (newName) => AppStore.instance.addGroup(newName, parentId, 'layout')
-        ).open();
-    };
-    const handleDeleteItem = (item: TreeItem) => {
-        const confirmText = item.isGroup
-            ? `确认删除分组 "${item.name}" 吗？\n其内部所有内容将被移至上一级。`
-            : `确认删除布局 "${item.name}" 吗？`;
-        if (confirm(confirmText)) {
-            if (item.isGroup) {
-                AppStore.instance.deleteGroup(item.id);
-            } else {
-                AppStore.instance.deleteLayout(item.id);
-            }
-        }
-    };
-    const handleUpdateItemName = (item: TreeItem, newName: string) => {
-        if (item.isGroup) {
-            AppStore.instance.updateGroup(item.id, { name: newName });
-        } else {
-            AppStore.instance.updateLayout(item.id, { name: newName });
-        }
-    };
-    
-    // [UX修正] 新增排序和复制的回调
-    const handleMoveItem = (item: TreeItem, direction: 'up' | 'down') => {
-        if (!item.isGroup) {
-            AppStore.instance.moveLayout(item.id, direction);
-        }
-    };
+    const handleAddItem = (parentId: string | null) => {
+        new NamePromptModal(
+            app,
+            "创建新布局",
+            "请输入新布局名称...",
+            DEFAULT_NAMES.NEW_LAYOUT,
+            (newName) => AppStore.instance.addLayout(newName, parentId)
+        ).open();
+    };
+    const handleAddGroup = (parentId: string | null) => {
+        new NamePromptModal(
+            app,
+            "创建新分组",
+            "请输入分组名称...",
+            "新分组",
+            (newName) => AppStore.instance.addGroup(newName, parentId, 'layout')
+        ).open();
+    };
+    const handleDeleteItem = (item: TreeItem) => {
+        const confirmText = item.isGroup
+            ? `确认删除分组 "${item.name}" 吗？\n其内部所有内容将被移至上一级。`
+            : `确认删除布局 "${item.name}" 吗？`;
+        if (confirm(confirmText)) {
+            if (item.isGroup) {
+                AppStore.instance.deleteGroup(item.id);
+            } else {
+                AppStore.instance.deleteLayout(item.id);
+            }
+        }
+    };
+    const handleUpdateItemName = (item: TreeItem, newName: string) => {
+        if (item.isGroup) {
+            AppStore.instance.updateGroup(item.id, { name: newName });
+        } else {
+            AppStore.instance.updateLayout(item.id, { name: newName });
+        }
+    };
+    
+    const handleMoveItem = (item: TreeItem, direction: 'up' | 'down') => {
+        if (!item.isGroup) {
+            AppStore.instance.moveLayout(item.id, direction);
+        }
+    };
 
-    const handleDuplicateItem = (item: TreeItem) => {
-        if (!item.isGroup) {
-            AppStore.instance.duplicateLayout(item.id);
-        }
-    };
+	// [核心修改] 允许复制分组
+    const handleDuplicateItem = (item: TreeItem) => {
+        if (item.isGroup) {
+            AppStore.instance.duplicateGroup(item.id);
+        } else {
+            AppStore.instance.duplicateLayout(item.id);
+        }
+    };
 
     return (
         <Box sx={{ maxWidth: '900px', mx: 'auto' }}>
@@ -151,19 +153,19 @@ export function LayoutSettings({ app }: { app: App }) {
                 <Typography variant="h6">管理布局</Typography>
             </Stack>
 
-            <SettingsTreeView
-                groups={layoutGroups}
-                items={itemsAsTreeItems}
-                allGroups={layoutGroups}
-                parentId={null}
-                renderItem={(l: Layout) => <LayoutEditor layout={l} />}
-                onAddItem={handleAddItem}
-                onAddGroup={handleAddGroup}
-                onDeleteItem={handleDeleteItem}
-                onUpdateItemName={handleUpdateItemName}
-                onMoveItem={handleMoveItem}
-                onDuplicateItem={handleDuplicateItem}
-            />
+            <SettingsTreeView
+                groups={layoutGroups}
+                items={itemsAsTreeItems}
+                allGroups={layoutGroups}
+                parentId={null}
+                renderItem={(l: Layout) => <LayoutEditor layout={l} />}
+                onAddItem={handleAddItem}
+                onAddGroup={handleAddGroup}
+                onDeleteItem={handleDeleteItem}
+                onUpdateItemName={handleUpdateItemName}
+                onMoveItem={handleMoveItem}
+                onDuplicateItem={handleDuplicateItem}
+            />
         </Box>
     );
 }
