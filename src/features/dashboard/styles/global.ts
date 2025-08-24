@@ -234,4 +234,170 @@ body.theme-dark .think-pills .think-pill{
     color: var(--text-muted);
 }
 
+/* [全新] Time Navigator (概览模式导航器) 样式 - 横向布局 */
+.time-navigator-container {
+    display: flex;
+    flex-direction: row;
+    gap: 8px;
+    height: 100px;
+    font-size: 12px;
+    user-select: none;
+    margin-bottom: 16px;
+    width: 100%;
+    background: var(--background-secondary);
+    padding: 8px;
+    border-radius: 8px;
+    box-sizing: border-box;
+}
+
+.tn-cell {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+    box-sizing: border-box;
+}
+
+/* 左侧控制列 */
+.tn-control-col {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    width: 60px;
+    flex-shrink: 0;
+}
+.tn-year-cell {
+    flex-grow: 1;
+    background: #9B7FBD;
+    color: white;
+    font-weight: bold;
+    font-size: 1.4em;
+    cursor: pointer;
+}
+.tn-year-cell:hover {
+    opacity: 0.9;
+}
+.tn-nav-buttons {
+    height: 28px;
+    flex-shrink: 0;
+    display: flex;
+    gap: 4px;
+}
+.tn-nav-buttons button {
+    flex-grow: 1;
+    border: 1px solid var(--background-modifier-border);
+    background: var(--background-primary);
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 1.2em;
+    padding-bottom: 2px;
+}
+.tn-nav-buttons button:hover {
+    background: var(--background-modifier-hover);
+    border-color: var(--interactive-accent);
+}
+
+/* 右侧主内容区 */
+.tn-main-col {
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+    gap: 4px;
+    min-width: 0;
+}
+.tn-row {
+    display: flex;
+    gap: 4px;
+}
+.tn-row-top {
+    flex-grow: 1;
+}
+
+/* 季度块 */
+.tn-quarter-block {
+    display: flex;
+    flex-direction: column;
+    flex: 1; /* 等分宽度 */
+    background: var(--background-primary);
+    border-radius: 6px;
+    padding: 4px;
+    gap: 4px;
+    cursor: pointer;
+    border: 1px solid transparent;
+}
+.tn-quarter-block.is-selected {
+    border-color: #FFD600; /* 黄色高亮选中的季度 */
+}
+.tn-quarter-block .tn-quarter-header {
+    text-align: center;
+    font-weight: bold;
+    font-size: 0.9em;
+    color: var(--text-muted);
+    padding-bottom: 2px;
+}
+.tn-quarter-block .tn-quarter-header.is-past {
+    color: #9B7FBD;
+}
+.tn-quarter-block.is-today .tn-quarter-header {
+    color: var(--interactive-accent);
+}
+.tn-months-container {
+    display: flex;
+    flex-grow: 1;
+    gap: 4px;
+}
+
+/* 月份单元格 */
+.tn-month-cell {
+    flex: 1;
+    font-weight: 500;
+    background: var(--background-secondary);
+    color: var(--text-muted);
+    border: 1px solid transparent;
+}
+.tn-month-cell.is-past {
+    background: #9B7FBD;
+    color: white;
+}
+.tn-month-cell.is-today {
+    background: var(--interactive-accent-hover);
+    color: white;
+}
+.tn-month-cell.is-selected {
+    border-color: #FFD600;
+}
+
+/* 周单元格 */
+.tn-weeks-container {
+    height: 24px;
+    flex-shrink: 0;
+    background: var(--background-primary);
+    border-radius: 6px;
+    padding: 3px;
+    overflow: hidden;
+}
+.tn-week-cell {
+    flex-basis: 0;
+    flex-grow: 1;
+    font-size: 10px;
+    background: var(--background-secondary);
+    color: var(--text-muted);
+    cursor: pointer;
+    min-width: 10px;
+    border: 1px solid transparent;
+}
+.tn-week-cell.is-past {
+    background: #EDE6F6; /* 淡紫色 */
+    color: #9B7FBD;
+}
+.tn-week-cell.is-today {
+    background: var(--interactive-accent-hover);
+    color: white;
+    font-weight: bold;
+}
+.tn-week-cell.is-selected {
+    border-color: #FFD600;
+    box-shadow: 0 0 0 1px #FFD600;
+}
 `.trim();

@@ -9,7 +9,8 @@ import type ThinkPlugin from '../../../main';
 import { ViewComponents } from '@features/dashboard/ui';
 import { getDateRange, dayjs, formatDateForView } from '@core/utils/date';
 import { filterByRules, sortItems, filterByDateRange, filterByKeyword, filterByPeriod } from '@core/utils/itemFilter';
-import { useStore } from '@state/AppStore';
+import { AppStore, useStore } from '@state/AppStore';
+import { TimeNavigator } from './TimeNavigator';
 
 interface Props {
     layout: Layout;
@@ -21,18 +22,41 @@ export function LayoutRenderer({ layout, dataStore, plugin }: Props) {
     const allViews = useStore(state => state.settings.viewInstances);
     const allDataSources = useStore(state => state.settings.dataSources);
     
+    // 初始日期：如果概览模式开启，则严格使用 initialDate；否则，如果设置了跟随今天，则使用今天
+    const getInitialDate = () => {
+        if (layout.isOverviewMode) {
+            return layout.initialDate ? dayjs(layout.initialDate) : dayjs();
+        }
+        return layout.initialDateFollowsNow ? dayjs() : (layout.initialDate ? dayjs(layout.initialDate) : dayjs());
+    };
+
     const [layoutView, setLayoutView] = useState(layout.initialView || '月');
-    const [layoutDate, setLayoutDate] = useState(layout.initialDate ? dayjs(layout.initialDate) : dayjs());
-    
+    const [layoutDate, setLayoutDate] = useState(getInitialDate());
     const [kw, setKw] = useState('');
     const [force, forceUpdate] = useState(0);
+
+    // 当外部设置变化时，同步内部状态
+    useEffect(() => {
+        setLayoutDate(getInitialDate());
+        setLayoutView(layout.initialView || '月');
+    }, [layout.id, layout.initialDate, layout.initialDateFollowsNow, layout.isOverviewMode, layout.initialView]);
+
     useEffect(() => {
         const listener = () => forceUpdate(v => v + 1);
         dataStore.subscribe(listener);
         return () => dataStore.unsubscribe(listener);
     }, [dataStore]);
-
-    const unit = useMemo(() => (v: string) => ({ '年': 'year', '季': 'quarter', '月': 'month', '周': 'week', '天': 'day' }[v] || 'day') as (v:string) => dayjs.ManipulateType, []);
+    
+    // 概览模式下的日期更新处理函数
+    const handleOverviewDateChange = (newDate: dayjs.Dayjs) => {
+        const newDateString = newDate.format('YYYY-MM-DD');
+        // 更新本地状态以立即响应UI
+        setLayoutDate(newDate);
+        // 调用AppStore更新并持久化设置
+        AppStore.instance.updateLayout(layout.id, { initialDate: newDateString });
+    };
+    
+    const unit = useMemo(() => (v: string) => ({ '年': 'year', '季': 'quarter', '月': 'month', '周': 'week', '天': 'day' }[v] || 'day') as (v:string) => dayjs.ManipulateType, []);
     const fmt = useMemo(() => formatDateForView, []);
 
     const renderViewInstance = (viewId: string) => {
@@ -41,37 +65,29 @@ export function LayoutRenderer({ layout, dataStore, plugin }: Props) {
 
         const dataSource = allDataSources.find(ds => ds.id === viewInstance.dataSourceId);
         if (!dataSource) return <div class="think-module">数据源 (ID: {viewInstance.dataSourceId}) 未找到</div>;
-        
-        const dateRange = useMemo(() => {
-            const { startDate, endDate } = getDateRange(layoutDate, layoutView);
-            return [startDate.toDate(), endDate.toDate()] as [Date, Date];
-        }, [layoutView, layoutDate]);
 
         const viewItems = useMemo(() => {
-			// 1. 检查数据源是否已经硬性规定了周期
-            const hasPeriodFilterInDataSource = (dataSource.filters || []).some(f => f.field === 'period');
+            const dataSourcePeriodFilter = (dataSource.filters || []).find(f => f.field === 'period');
+            // 在普通模式下，周期由工具栏的 layoutView 决定；在概览模式下，周期由数据源自身决定
+            const viewPeriod = dataSourcePeriodFilter ? dataSourcePeriodFilter.value : layoutView;
 
-			// 2. 构建数据过滤管道 (Pipeline)
+            // 根据视图自身的周期和布局的统一日期锚点，计算时间范围
+            const range = getDateRange(layoutDate, viewPeriod);
+            const start = range.startDate.toISOString().slice(0, 10);
+            const end = range.endDate.toISOString().slice(0, 10);
+
             let items = dataStore.queryItems();
-			
-			// 2.1 应用数据源中定义的所有过滤规则
 			items = filterByRules(items, dataSource.filters || []);
-
-			// 2.2 应用工具栏中的关键字过滤
             items = filterByKeyword(items, kw);
 
-			// 2.3 [核心逻辑] 如果数据源没有规定周期，则应用工具栏选择的周期进行过滤
-			if (!hasPeriodFilterInDataSource) {
+			// 仅在普通模式且数据源未指定周期时，才使用工具栏周期进行过滤
+			if (!layout.isOverviewMode && !dataSourcePeriodFilter) {
 				items = filterByPeriod(items, layoutView);
 			}
 
-			// 2.4 应用时间范围过滤
-            const [start, end] = dateRange;
-            items = filterByDateRange(items, start?.toISOString().slice(0, 10), end?.toISOString().slice(0, 10));
-
-			// 3. 最后，应用排序规则
+            items = filterByDateRange(items, start, end);
             return sortItems(items, dataSource.sort || []);
-        }, [dataStore, force, dataSource, kw, dateRange, layoutView]);
+        }, [dataStore, force, dataSource, kw, layoutDate, layoutView, layout.isOverviewMode]);
 
         const ViewComponent = (ViewComponents as any)[viewInstance.viewType];
         if (!ViewComponent) return <div class="think-module">未知视图: {viewInstance.viewType}</div>;
@@ -79,9 +95,7 @@ export function LayoutRenderer({ layout, dataStore, plugin }: Props) {
         const viewProps: any = {
             app: plugin.app,
             items: viewItems,
-            dateRange: dateRange,
             module: viewInstance, 
-            currentView: layoutView,
             ...viewInstance.viewConfig,
             groupField: viewInstance.group,
             fields: viewInstance.fields,
@@ -108,16 +122,21 @@ export function LayoutRenderer({ layout, dataStore, plugin }: Props) {
     return (
         <div>
             {!layout.hideToolbar && (
-                <div class="tp-toolbar" style="margin-bottom:8px;">
-                    {['年', '季', '月', '周', '天'].map(v => (
-                        <button onClick={() => setLayoutView(v)} class={v === layoutView ? 'active' : ''}>{v}</button>
-                    ))}
-                    <button disabled style="font-weight:bold;margin:0 4px;background:#fff;">{fmt(layoutDate, layoutView)}</button>
-                    <button onClick={() => setLayoutDate(layoutDate.clone().subtract(1, unit(layoutView)))}>←</button>
-                    <button onClick={() => setLayoutDate(layoutDate.clone().add(1, unit(layoutView)))}>→</button>
-                    <button onClick={() => setLayoutDate(dayjs())}>＝</button>
-                    <input placeholder="快速过滤…" style="margin-left:4px;" value={kw} onInput={e => setKw((e.target as HTMLInputElement).value)} />
-                </div>
+                layout.isOverviewMode ? (
+                    <TimeNavigator currentDate={layoutDate} onDateChange={handleOverviewDateChange} />
+                ) : (
+                    // 旧的普通工具栏
+                    <div class="tp-toolbar" style="margin-bottom:8px;">
+                        {['年', '季', '月', '周', '天'].map(v => (
+                            <button onClick={() => setLayoutView(v)} class={v === layoutView ? 'active' : ''}>{v}</button>
+                        ))}
+                        <button disabled style="font-weight:bold;margin:0 4px;background:#fff;">{fmt(layoutDate, layoutView)}</button>
+                        <button onClick={() => setLayoutDate(prev => prev.clone().subtract(1, unit(layoutView)))}>←</button>
+                        <button onClick={() => setLayoutDate(prev => prev.clone().add(1, unit(layoutView)))}>→</button>
+                        <button onClick={() => setLayoutDate(dayjs())}>＝</button>
+                        <input placeholder="快速过滤…" style="margin-left:4px;" value={kw} onInput={e => setKw((e.target as HTMLInputElement).value)} />
+                    </div>
+                )
             )}
             <div style={gridStyle}>
                 {layout.viewInstanceIds.map(renderViewInstance)}
