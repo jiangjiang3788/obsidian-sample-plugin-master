@@ -76,34 +76,43 @@ export default class ThinkPlugin extends Plugin implements ThinkContext {
     private async loadSettings(): Promise<ThinkSettings> {
         const stored = (await this.loadData()) as Partial<ThinkSettings> | null;
         const merged = Object.assign({}, DEFAULT_SETTINGS, stored);
-        
-        // [核心修改] 数据迁移逻辑
-        if (!merged.hasOwnProperty('groups')) {
-            console.log('ThinkPlugin: 检测到旧版本数据，开始迁移...');
-            merged.groups = [];
-            const generateId = (prefix: string) => `${prefix}_${Date.now().toString(36)}${Math.random().toString(36).slice(2, 7)}`;
+        
+        // [核心修改] 数据迁移逻辑
+        if (!merged.hasOwnProperty('groups')) {
+            console.log('ThinkPlugin: 检测到旧版本数据，开始迁移...');
+            merged.groups = [];
+            const generateId = (prefix: string) => `${prefix}_${Date.now().toString(36)}${Math.random().toString(36).slice(2, 7)}`;
 
-            const migrate = (items: any[], type: GroupType) => {
-                if (items && items.length > 0) {
-                    const defaultGroup: Group = {
-                        id: generateId('group'),
-                        name: '默认分组',
-                        type: type,
-                        parentId: null
-                    };
-                    merged.groups.push(defaultGroup);
-                    items.forEach(item => {
-                        if (!item.hasOwnProperty('parentId')) {
-                            item.parentId = defaultGroup.id;
-                        }
-                    });
-                }
-            };
-            
-            migrate(merged.dataSources, 'dataSource');
-            migrate(merged.viewInstances, 'viewInstance');
-            migrate(merged.layouts, 'layout');
-        }
+            const migrate = (items: any[], type: GroupType) => {
+                if (items && items.length > 0) {
+                    const defaultGroup: Group = {
+                        id: generateId('group'),
+                        name: '默认分组',
+                        type: type,
+                        parentId: null
+                    };
+                    merged.groups.push(defaultGroup);
+                    items.forEach(item => {
+                        if (!item.hasOwnProperty('parentId')) {
+                            item.parentId = defaultGroup.id;
+                        }
+                    });
+                }
+            };
+            
+            migrate(merged.dataSources, 'dataSource');
+            migrate(merged.viewInstances, 'viewInstance');
+            migrate(merged.layouts, 'layout');
+        }
+
+        // [新增修改] 为没有 collapsed 属性的旧视图实例数据补充默认值 true
+        if (merged.viewInstances) {
+            merged.viewInstances.forEach(vi => {
+                if (vi.collapsed === undefined) {
+                    vi.collapsed = true;
+                }
+            });
+        }
 
         merged.dataSources = merged.dataSources || [];
         merged.viewInstances = merged.viewInstances || [];
