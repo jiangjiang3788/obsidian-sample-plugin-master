@@ -13,28 +13,16 @@
       "type": "viewInstance"
     },
     {
-      "id": "group_memcflcwwbitl",
-      "name": "新分组",
-      "parentId": null,
-      "type": "viewInstance"
-    },
-    {
       "id": "group_memcg1u3us3jc",
       "name": "新分组",
       "parentId": null,
       "type": "layout"
     },
     {
-      "id": "group_mepfs3f8ion31",
-      "name": "新分组 (副本)",
+      "id": "group_mepgtz1okfmfo",
+      "name": "周总结",
       "parentId": null,
-      "type": "viewInstance"
-    },
-    {
-      "id": "group_mepfs74koqmtk",
-      "name": "📂全局 (副本)",
-      "parentId": null,
-      "type": "viewInstance"
+      "type": "dataSource"
     }
   ],
   "dataSources": [
@@ -50,6 +38,47 @@
       ],
       "sort": [],
       "parentId": "group_mem9c0yqeumgu"
+    },
+    {
+      "id": "ds_mepgu823uydpz",
+      "name": "1思考总结",
+      "filters": [
+        {
+          "field": "categoryKey",
+          "op": "=",
+          "value": "总结"
+        },
+        {
+          "field": "period",
+          "op": "=",
+          "value": "周"
+        },
+        {
+          "field": "tags",
+          "op": "includes",
+          "value": "思考"
+        }
+      ],
+      "sort": [],
+      "parentId": null
+    },
+    {
+      "id": "ds_mepgxbxz2iex4",
+      "name": "1思考总结 (副本)",
+      "filters": [
+        {
+          "field": "categoryKey",
+          "op": "=",
+          "value": "总结"
+        },
+        {
+          "field": "tags",
+          "op": "includes",
+          "value": "思考"
+        }
+      ],
+      "sort": [],
+      "parentId": null
     }
   ],
   "viewInstances": [
@@ -260,7 +289,7 @@
           "其他"
         ]
       },
-      "parentId": "group_mepfs74koqmtk",
+      "parentId": null,
       "fields": [
         "type"
       ],
@@ -278,8 +307,52 @@
         "rowField": "recurrence",
         "colField": "tags"
       },
-      "parentId": "group_mepfs74koqmtk",
+      "parentId": null,
       "collapsed": true
+    },
+    {
+      "id": "view_mepgw6pp1iqso",
+      "title": "思考周总结",
+      "viewType": "BlockView",
+      "dataSourceId": "ds_mepgu823uydpz",
+      "viewConfig": {
+        "view": "BlockView",
+        "title": "块视图",
+        "collapsed": false,
+        "fields": [],
+        "group": "categoryKey"
+      },
+      "collapsed": true,
+      "parentId": null,
+      "fields": [
+        "period",
+        "categoryKey",
+        "date",
+        "icon",
+        "content"
+      ]
+    },
+    {
+      "id": "view_mepgxhrowj3e7",
+      "title": "思考周总结 (副本)",
+      "viewType": "BlockView",
+      "dataSourceId": "ds_mepgxbxz2iex4",
+      "viewConfig": {
+        "view": "BlockView",
+        "title": "块视图",
+        "collapsed": false,
+        "fields": [],
+        "group": "categoryKey"
+      },
+      "collapsed": true,
+      "parentId": null,
+      "fields": [
+        "period",
+        "categoryKey",
+        "date",
+        "icon",
+        "content"
+      ]
     }
   ],
   "layouts": [
@@ -294,6 +367,18 @@
       "initialDateFollowsNow": true,
       "parentId": "group_memcg1u3us3jc",
       "hideToolbar": false
+    },
+    {
+      "id": "layout_mepgxvhes0ghq",
+      "name": "思考测试",
+      "viewInstanceIds": [
+        "view_mepgw6pp1iqso",
+        "view_mepgxhrowj3e7"
+      ],
+      "displayMode": "grid",
+      "initialView": "月",
+      "initialDateFollowsNow": true,
+      "parentId": null
     }
   ],
   "inputSettings": {
