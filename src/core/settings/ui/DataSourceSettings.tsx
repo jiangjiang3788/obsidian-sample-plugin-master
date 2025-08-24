@@ -33,89 +33,90 @@ function DataSourceEditor({ ds }: { ds: DataSource }) {
 
 export function DataSourceSettings({ app }: { app: App }) {
     const dataSources = useStore(state => state.settings.dataSources);
-    const allGroups = useStore(state => state.settings.groups);
-    const dsGroups = useMemo(() => allGroups.filter(g => g.type === 'dataSource'), [allGroups]);
+    const allGroups = useStore(state => state.settings.groups);
+    const dsGroups = useMemo(() => allGroups.filter(g => g.type === 'dataSource'), [allGroups]);
 
-    const itemsAsTreeItems: TreeItem[] = useMemo(() => dataSources.map(ds => ({
-        ...ds,
-        name: ds.name,
-        isGroup: false,
-    })), [dataSources]);
+    const itemsAsTreeItems: TreeItem[] = useMemo(() => dataSources.map(ds => ({
+        ...ds,
+        name: ds.name,
+        isGroup: false,
+    })), [dataSources]);
 
-    const handleAddItem = (parentId: string | null) => {
-        new NamePromptModal(
-            app,
-            "创建新数据源",
-            "请输入数据源名称...",
-            DEFAULT_NAMES.NEW_DATASOURCE,
-            (newName) => AppStore.instance.addDataSource(newName, parentId)
-        ).open();
-    };
+    const handleAddItem = (parentId: string | null) => {
+        new NamePromptModal(
+            app,
+            "创建新数据源",
+            "请输入数据源名称...",
+            DEFAULT_NAMES.NEW_DATASOURCE,
+            (newName) => AppStore.instance.addDataSource(newName, parentId)
+        ).open();
+    };
 
-    const handleAddGroup = (parentId: string | null) => {
-        new NamePromptModal(
-            app,
-            "创建新分组",
-            "请输入分组名称...",
-            "新分组",
-            (newName) => AppStore.instance.addGroup(newName, parentId, 'dataSource')
-        ).open();
-    };
+    const handleAddGroup = (parentId: string | null) => {
+        new NamePromptModal(
+            app,
+            "创建新分组",
+            "请输入分组名称...",
+            "新分组",
+            (newName) => AppStore.instance.addGroup(newName, parentId, 'dataSource')
+        ).open();
+    };
 
-    const handleDeleteItem = (item: TreeItem) => {
-        const confirmText = item.isGroup
-            ? `确认删除分组 "${item.name}" 吗？\n其内部所有内容将被移至上一级。`
-            : `确认删除数据源 "${item.name}" 吗？\n引用此数据源的视图将失效。`;
-        if (confirm(confirmText)) {
-            if (item.isGroup) {
-                AppStore.instance.deleteGroup(item.id);
-            } else {
-                AppStore.instance.deleteDataSource(item.id);
-            }
-        }
-    };
-    
-    const handleUpdateItemName = (item: TreeItem, newName: string) => {
-        if (item.isGroup) {
-            AppStore.instance.updateGroup(item.id, { name: newName });
-        } else {
-            AppStore.instance.updateDataSource(item.id, { name: newName });
-        }
-    };
-    
-    // [UX修正] 新增排序和复制的回调
-    const handleMoveItem = (item: TreeItem, direction: 'up' | 'down') => {
-        // 分组的排序暂未实现，仅处理配置项
-        if (!item.isGroup) {
-            AppStore.instance.moveDataSource(item.id, direction);
-        }
-    };
+    const handleDeleteItem = (item: TreeItem) => {
+        const confirmText = item.isGroup
+            ? `确认删除分组 "${item.name}" 吗？\n其内部所有内容将被移至上一级。`
+            : `确认删除数据源 "${item.name}" 吗？\n引用此数据源的视图将失效。`;
+        if (confirm(confirmText)) {
+            if (item.isGroup) {
+                AppStore.instance.deleteGroup(item.id);
+            } else {
+                AppStore.instance.deleteDataSource(item.id);
+            }
+        }
+    };
+    
+    const handleUpdateItemName = (item: TreeItem, newName: string) => {
+        if (item.isGroup) {
+            AppStore.instance.updateGroup(item.id, { name: newName });
+        } else {
+            AppStore.instance.updateDataSource(item.id, { name: newName });
+        }
+    };
+    
+    const handleMoveItem = (item: TreeItem, direction: 'up' | 'down') => {
+        if (!item.isGroup) {
+            AppStore.instance.moveDataSource(item.id, direction);
+        }
+    };
 
-    const handleDuplicateItem = (item: TreeItem) => {
-        if (!item.isGroup) {
-            AppStore.instance.duplicateDataSource(item.id);
-        }
-    };
+	// [核心修改] 允许复制分组
+    const handleDuplicateItem = (item: TreeItem) => {
+        if (item.isGroup) {
+            AppStore.instance.duplicateGroup(item.id);
+        } else {
+            AppStore.instance.duplicateDataSource(item.id);
+        }
+    };
 
     return (
         <Box sx={{ maxWidth: '900px', mx: 'auto' }}>
             <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 2 }}>
                 <Typography variant="h6">管理数据源</Typography>
             </Stack>
-            
-            <SettingsTreeView
-                groups={dsGroups}
-                items={itemsAsTreeItems}
-                allGroups={dsGroups}
-                parentId={null}
-                renderItem={(ds: DataSource) => <DataSourceEditor ds={ds} />}
-                onAddItem={handleAddItem}
-                onAddGroup={handleAddGroup}
-                onDeleteItem={handleDeleteItem}
-                onUpdateItemName={handleUpdateItemName}
-                onMoveItem={handleMoveItem}
-                onDuplicateItem={handleDuplicateItem}
-            />
+            
+            <SettingsTreeView
+                groups={dsGroups}
+                items={itemsAsTreeItems}
+                allGroups={dsGroups}
+                parentId={null}
+                renderItem={(ds: DataSource) => <DataSourceEditor ds={ds} />}
+                onAddItem={handleAddItem}
+                onAddGroup={handleAddGroup}
+                onDeleteItem={handleDeleteItem}
+                onUpdateItemName={handleUpdateItemName}
+                onMoveItem={handleMoveItem}
+                onDuplicateItem={handleDuplicateItem}
+            />
         </Box>
     );
 }

@@ -136,6 +136,60 @@ export class AppStore {
         });
     }
     
+	// [新增] 深度复制分组及其所有内容
+	public duplicateGroup = async (groupId: string) => {
+		await this._updateSettingsAndPersist(draft => {
+			const groupToDuplicate = draft.groups.find(g => g.id === groupId);
+			if (!groupToDuplicate) return;
+
+			// 递归函数，用于深度复制
+			const deepDuplicate = (originalGroupId: string, newParentId: string | null) => {
+				const originalGroup = draft.groups.find(g => g.id === originalGroupId);
+				if (!originalGroup) return;
+
+				// 1. 复制当前分组
+				const newGroup: Group = {
+					...structuredClone(originalGroup),
+					id: this._generateId('group'),
+					parentId: newParentId,
+					// 只有最顶层的分组名称添加“(副本)”后缀
+					name: originalGroup.id === groupId ? `${originalGroup.name} (副本)` : originalGroup.name,
+				};
+				draft.groups.push(newGroup);
+
+				// 2. 复制此分组下的直接子项目 (DataSources, Views, Layouts)
+				const getItemsArrayForType = (type: GroupType) => {
+					switch (type) {
+						case 'dataSource': return { items: draft.dataSources, prefix: 'ds' };
+						case 'viewInstance': return { items: draft.viewInstances, prefix: 'view' };
+						case 'layout': return { items: draft.layouts, prefix: 'layout' };
+						default: return { items: [], prefix: 'item' };
+					}
+				};
+
+				const { items, prefix } = getItemsArrayForType(originalGroup.type);
+				const childItemsToDuplicate = items.filter(item => item.parentId === originalGroupId);
+				childItemsToDuplicate.forEach(item => {
+					const newItem = {
+						...structuredClone(item),
+						id: this._generateId(prefix),
+						parentId: newGroup.id, // 指向新创建的父分组
+					};
+					(items as Groupable[]).push(newItem);
+				});
+
+				// 3. 递归复制子分组
+				const childGroupsToDuplicate = draft.groups.filter(g => g.parentId === originalGroupId);
+				childGroupsToDuplicate.forEach(childGroup => {
+					deepDuplicate(childGroup.id, newGroup.id);
+				});
+			};
+
+			// 启动递归复制
+			deepDuplicate(groupId, groupToDuplicate.parentId);
+		});
+	}
+
     // --- [新增] 通用移动 Action ---
     public moveItem = async (itemId: string, targetParentId: string | null) => {
         await this._updateSettingsAndPersist(draft => {
@@ -205,7 +259,7 @@ export class AppStore {
                 viewType: 'BlockView',
                 dataSourceId: '',
                 viewConfig: structuredClone(VIEW_DEFAULT_CONFIGS.BlockView),
-                collapsed: true, // [新增修改] 新建的视图实例默认折叠
+                collapsed: true,
                 parentId
             });
         });
