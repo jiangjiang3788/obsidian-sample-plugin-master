@@ -112,6 +112,7 @@ export interface Layout extends Groupable {
     initialView?: string;
     initialDate?: string;
     initialDateFollowsNow?: boolean;
+    isOverviewMode?: boolean; // [新增] 概览模式开关
     displayMode?: 'list' | 'grid';
     gridConfig?: {
         columns?: number;

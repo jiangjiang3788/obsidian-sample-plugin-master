@@ -8,7 +8,6 @@ import type { Layout } from '@core/domain/schema';
 import { useMemo, useCallback } from 'preact/hooks';
 import { SimpleSelect } from '@shared/ui/SimpleSelect';
 import { SettingsTreeView, TreeItem } from './components/SettingsTreeView';
-import { DataStore } from '@core/services/dataStore';
 import { NamePromptModal } from '@shared/components/dialogs/NamePromptModal';
 import { App } from 'obsidian';
 
@@ -54,14 +53,24 @@ function LayoutEditor({ layout }: { layout: Layout }) {
 
     return (
         <Stack spacing={2} sx={{ p: '8px 16px 16px 50px' }}>
+            <Stack direction="row" alignItems="center" spacing={2}>
+                <Typography sx={{ width: LABEL_WIDTH, flexShrink: 0, fontWeight: 500 }}>模式</Typography>
+                <FormControlLabel 
+                    control={<Checkbox size="small" checked={!!layout.isOverviewMode} onChange={e => handleUpdate({ isOverviewMode: e.target.checked, initialDateFollowsNow: false })} />} 
+                    label={<Typography noWrap>启用概览模式</Typography>} 
+                    title="启用后，此布局将变为持久化时间导航模式，工具栏样式将改变，且时间不再跟随今日。"
+                />
+            </Stack>
+
             <Stack direction="row" alignItems="center" spacing={2}>
                 <Typography sx={{ width: LABEL_WIDTH, flexShrink: 0, fontWeight: 500 }}>工具栏</Typography>
-                <FormControlLabel control={<Checkbox size="small" checked={!layout.hideToolbar} onChange={e => handleUpdate({ hideToolbar: !(e.target as HTMLInputElement).checked })} />} label={<Typography noWrap>显示工具栏</Typography>} sx={{ flexShrink: 0, mr: 0 }} />
+                <FormControlLabel control={<Checkbox size="small" checked={!layout.hideToolbar} onChange={e => handleUpdate({ hideToolbar: !(e.target as HTMLInputElement).checked })} />} label={<Typography noWrap>显示工具栏/导航器</Typography>} sx={{ flexShrink: 0, mr: 0 }} />
             </Stack>
             <Stack direction="row" alignItems="center" spacing={2}>
                 <Typography sx={{ width: LABEL_WIDTH, flexShrink: 0, fontWeight: 500 }}>初始日期</Typography>
-                <TextField type="date" size="small" variant="outlined" disabled={!!layout.initialDateFollowsNow} defaultValue={layout.initialDate || ''} onBlur={e => handleUpdate({ initialDate: (e.target as HTMLInputElement).value })} sx={{ width: '170px' }} />
-                <FormControlLabel control={<Checkbox size="small" checked={!!layout.initialDateFollowsNow} onChange={e => handleUpdate({ initialDateFollowsNow: e.target.checked })} />} label={<Typography noWrap>跟随今日</Typography>} />
+                {/* 在概览模式下，此日期为持久化的时间锚点 */}
+                <TextField type="date" size="small" variant="outlined" disabled={!!layout.initialDateFollowsNow && !layout.isOverviewMode} value={layout.initialDate || ''} onChange={e => handleUpdate({ initialDate: (e.target as HTMLInputElement).value })} sx={{ width: '170px' }} />
+                <FormControlLabel control={<Checkbox size="small" disabled={!!layout.isOverviewMode} checked={!!layout.initialDateFollowsNow} onChange={e => handleUpdate({ initialDateFollowsNow: e.target.checked })} />} label={<Typography noWrap>跟随今日</Typography>} />
             </Stack>
             <AlignedRadioGroup label="初始周期" options={PERIOD_OPTIONS} selectedValue={layout.initialView || '月'} onChange={(value: string) => handleUpdate({ initialView: value })} />
             <AlignedRadioGroup label="排列方式" options={DISPLAY_MODE_OPTIONS} selectedValue={layout.displayMode || 'list'} onChange={(value: string) => handleUpdate({ displayMode: value as 'list' | 'grid' })} />
@@ -138,7 +147,6 @@ export function LayoutSettings({ app }: { app: App }) {
         }
     };
 
-	// [核心修改] 允许复制分组
     const handleDuplicateItem = (item: TreeItem) => {
         if (item.isGroup) {
             AppStore.instance.duplicateGroup(item.id);
