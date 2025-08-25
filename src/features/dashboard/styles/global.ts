@@ -586,4 +586,85 @@ body.theme-dark .think-pills .think-pill{
     padding: 24px;
     text-align: center;
 }
+/* ============== [新增] ModulePanel 自定义样式 (v2) ============== */
+.think-module {
+    border-radius: 8px;
+    margin-bottom: 16px;
+    overflow: hidden;
+    /* 为整个模块添加一个细微的边框，使其更有整体感 */
+    border: 1px solid #E4DCD0; 
+}
+body.theme-dark .think-module {
+    border: 1px solid #4a4130;
+}
+
+.module-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 12px;
+    cursor: pointer;
+    background-color: #F0E6D7; /* 用户指定的颜色 */
+    color: #5a4b33; /* 为浅色背景搭配深色文字 */
+}
+
+body.theme-dark .module-header {
+    background-color: #5a4b33; /* 适配暗色模式的深棕色 */
+    color: #E5D5B9; /* 适配暗色模式的浅色文字 */
+}
+
+.module-title {
+    font-weight: 600;
+}
+
+.module-header-controls {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+}
+
+.module-header-actions {
+    display: flex;
+    align-items: center;
+}
+
+.module-action-plus {
+    font-size: 20px;
+    font-weight: 500;
+    line-height: 1;
+    color: inherit;
+    opacity: 0.6;
+    padding: 0 4px;
+    border-radius: 4px;
+    cursor: pointer;
+    user-select: none;
+}
+
+.module-action-plus:hover {
+    opacity: 1;
+    background-color: rgba(0,0,0,0.08);
+}
+body.theme-dark .module-action-plus:hover {
+    background-color: rgba(255,255,255,0.1);
+}
+
+.module-toggle {
+    font-size: 14px;
+    line-height: 1;
+    opacity: 0.7;
+}
+
+.module-content {
+    padding: 12px;
+    background-color: #F9F5EF; /* 比标题栏更浅的颜色 */
+    /* 内容区不再需要上边框，因为整个模块已有边框 */
+}
+
+body.theme-dark .module-content {
+    background-color: #2F2A24; /* 适配暗色模式的更浅的深棕色 */
+}
+
+/* ============== [新增样式结束] ============== */
+
 `.trim();
