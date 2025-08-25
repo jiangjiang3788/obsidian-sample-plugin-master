@@ -20,9 +20,147 @@
     },
     {
       "id": "group_mepgtz1okfmfo",
-      "name": "周总结",
+      "name": "思考总结",
+      "parentId": "group_mer2v7dzwuyb0",
+      "type": "dataSource"
+    },
+    {
+      "id": "group_mer2ooqzcy2vz",
+      "name": "生活总结",
+      "parentId": "group_mer2v7dzwuyb0",
+      "type": "dataSource"
+    },
+    {
+      "id": "group_mer2r9nn2gkx5",
+      "name": "健康总结",
+      "parentId": "group_mer2v7dzwuyb0",
+      "type": "dataSource"
+    },
+    {
+      "id": "group_mer2v7dzwuyb0",
+      "name": "总结",
       "parentId": null,
       "type": "dataSource"
+    },
+    {
+      "id": "group_mer2wj4v6vbmv",
+      "name": "电脑总结",
+      "parentId": "group_mer2v7dzwuyb0",
+      "type": "dataSource"
+    },
+    {
+      "id": "group_mer2wkh2hfu3t",
+      "name": "工作总结",
+      "parentId": "group_mer2v7dzwuyb0",
+      "type": "dataSource"
+    },
+    {
+      "id": "group_mer53hxzlkqcl",
+      "name": "计划",
+      "parentId": null,
+      "type": "dataSource"
+    },
+    {
+      "id": "group_mer53hxzk1xpz",
+      "name": "思考计划",
+      "parentId": "group_mer53hxzlkqcl",
+      "type": "dataSource"
+    },
+    {
+      "id": "group_mer53hxz8ywpq",
+      "name": "生活计划",
+      "parentId": "group_mer53hxzlkqcl",
+      "type": "dataSource"
+    },
+    {
+      "id": "group_mer53hxzejm0s",
+      "name": "健康计划",
+      "parentId": "group_mer53hxzlkqcl",
+      "type": "dataSource"
+    },
+    {
+      "id": "group_mer53hxzp9l4g",
+      "name": "电脑计划",
+      "parentId": "group_mer53hxzlkqcl",
+      "type": "dataSource"
+    },
+    {
+      "id": "group_mer53hxzs9hkh",
+      "name": "工作计划",
+      "parentId": "group_mer53hxzlkqcl",
+      "type": "dataSource"
+    },
+    {
+      "id": "group_mer5oj3wueept",
+      "name": "思考总结",
+      "parentId": "group_mer5qz4odo1fi",
+      "type": "viewInstance"
+    },
+    {
+      "id": "group_mer5qc61xm7ni",
+      "name": "生活总结",
+      "parentId": "group_mer5qz4odo1fi",
+      "type": "viewInstance"
+    },
+    {
+      "id": "group_mer5qdss3nlkm",
+      "name": "健康总结",
+      "parentId": "group_mer5qz4odo1fi",
+      "type": "viewInstance"
+    },
+    {
+      "id": "group_mer5qenajiet0",
+      "name": "电脑总结",
+      "parentId": "group_mer5qz4odo1fi",
+      "type": "viewInstance"
+    },
+    {
+      "id": "group_mer5qlrm519f9",
+      "name": "工作总结",
+      "parentId": "group_mer5qz4odo1fi",
+      "type": "viewInstance"
+    },
+    {
+      "id": "group_mer5qz4odo1fi",
+      "name": "总结视图",
+      "parentId": null,
+      "type": "viewInstance"
+    },
+    {
+      "id": "group_mer60bnntsb03",
+      "name": "计划视图",
+      "parentId": null,
+      "type": "viewInstance"
+    },
+    {
+      "id": "group_mer60bnnssk89",
+      "name": "思考计划",
+      "parentId": "group_mer60bnntsb03",
+      "type": "viewInstance"
+    },
+    {
+      "id": "group_mer60bnoootcl",
+      "name": "生活计划",
+      "parentId": "group_mer60bnntsb03",
+      "type": "viewInstance"
+    },
+    {
+      "id": "group_mer60bno0hsk0",
+      "name": "健康计划",
+      "parentId": "group_mer60bnntsb03",
+      "type": "viewInstance"
+    },
+    {
+      "id": "group_mer60bnort9rv",
+      "name": "电脑计划",
+      "parentId": "group_mer60bnntsb03",
+      "type": "viewInstance"
+    },
+    {
+      "id": "group_mer60bnom4ztr",
+      "name": "工作计划",
+      "parentId": "group_mer60bnntsb03",
+      "type": "viewInstance"
     }
   ],
   "dataSources": [
@@ -40,8 +178,73 @@
       "parentId": "group_mem9c0yqeumgu"
     },
     {
+      "id": "ds_mer6herh46uji",
+      "name": "完成任务",
+      "filters": [
+        {
+          "field": "categoryKey",
+          "op": "=",
+          "value": "任务/done"
+        }
+      ],
+      "sort": [],
+      "parentId": "group_mem9c0yqeumgu"
+    },
+    {
+      "id": "ds_mer6iqguhcilh",
+      "name": "计划",
+      "filters": [
+        {
+          "field": "categoryKey",
+          "op": "=",
+          "value": "计划"
+        }
+      ],
+      "sort": [],
+      "parentId": "group_mem9c0yqeumgu"
+    },
+    {
+      "id": "ds_mer6jowbemiwu",
+      "name": "总结",
+      "filters": [
+        {
+          "field": "categoryKey",
+          "op": "=",
+          "value": "总结"
+        }
+      ],
+      "sort": [],
+      "parentId": "group_mem9c0yqeumgu"
+    },
+    {
+      "id": "ds_mer6k19bdcof2",
+      "name": "思考",
+      "filters": [
+        {
+          "field": "file.basename",
+          "op": "=",
+          "value": "思考"
+        }
+      ],
+      "sort": [],
+      "parentId": "group_mem9c0yqeumgu"
+    },
+    {
+      "id": "ds_mer6kbdnogrty",
+      "name": "打卡",
+      "filters": [
+        {
+          "field": "categoryKey",
+          "op": "=",
+          "value": "打卡"
+        }
+      ],
+      "sort": [],
+      "parentId": "group_mem9c0yqeumgu"
+    },
+    {
       "id": "ds_mepgu823uydpz",
-      "name": "1思考总结",
+      "name": "1️⃣思考总结",
       "filters": [
         {
           "field": "categoryKey",
@@ -60,11 +263,11 @@
         }
       ],
       "sort": [],
-      "parentId": null
+      "parentId": "group_mepgtz1okfmfo"
     },
     {
       "id": "ds_mepo8pkir629r",
-      "name": "2思考总结 (副本)",
+      "name": "2️⃣思考总结",
       "filters": [
         {
           "field": "categoryKey",
@@ -83,11 +286,11 @@
         }
       ],
       "sort": [],
-      "parentId": null
+      "parentId": "group_mepgtz1okfmfo"
     },
     {
       "id": "ds_mepo8ov7p2sup",
-      "name": "3思考总结 (副本)",
+      "name": "3️⃣思考总结 ",
       "filters": [
         {
           "field": "categoryKey",
@@ -106,11 +309,11 @@
         }
       ],
       "sort": [],
-      "parentId": null
+      "parentId": "group_mepgtz1okfmfo"
     },
     {
       "id": "ds_mepo8nxuzsrst",
-      "name": "4思考总结 (副本)",
+      "name": "4️⃣思考总结 ",
       "filters": [
         {
           "field": "categoryKey",
@@ -129,25 +332,7 @@
         }
       ],
       "sort": [],
-      "parentId": null
-    },
-    {
-      "id": "ds_mepgxbxz2iex4",
-      "name": "5思考总结 (副本)",
-      "filters": [
-        {
-          "field": "categoryKey",
-          "op": "=",
-          "value": "总结"
-        },
-        {
-          "field": "tags",
-          "op": "includes",
-          "value": "思考"
-        }
-      ],
-      "sort": [],
-      "parentId": null
+      "parentId": "group_mepgtz1okfmfo"
     },
     {
       "id": "ds_meqt2x9ecim6c",
@@ -155,6 +340,834 @@
       "filters": [],
       "sort": [],
       "parentId": null
+    },
+    {
+      "id": "ds_mer2ooqzzdgam",
+      "name": "1️⃣生活总结",
+      "filters": [
+        {
+          "field": "categoryKey",
+          "op": "=",
+          "value": "总结"
+        },
+        {
+          "field": "period",
+          "op": "=",
+          "value": "周"
+        },
+        {
+          "field": "tags",
+          "op": "includes",
+          "value": "生活"
+        }
+      ],
+      "sort": [],
+      "parentId": "group_mer2ooqzcy2vz"
+    },
+    {
+      "id": "ds_mer2ooqzombzz",
+      "name": "2️⃣生活总结",
+      "filters": [
+        {
+          "field": "categoryKey",
+          "op": "=",
+          "value": "总结"
+        },
+        {
+          "field": "period",
+          "op": "=",
+          "value": "月"
+        },
+        {
+          "field": "tags",
+          "op": "includes",
+          "value": "生活"
+        }
+      ],
+      "sort": [],
+      "parentId": "group_mer2ooqzcy2vz"
+    },
+    {
+      "id": "ds_mer2ooqz9017g",
+      "name": "3️⃣生活总结 ",
+      "filters": [
+        {
+          "field": "categoryKey",
+          "op": "=",
+          "value": "总结"
+        },
+        {
+          "field": "period",
+          "op": "=",
+          "value": "季"
+        },
+        {
+          "field": "tags",
+          "op": "includes",
+          "value": "生活"
+        }
+      ],
+      "sort": [],
+      "parentId": "group_mer2ooqzcy2vz"
+    },
+    {
+      "id": "ds_mer2ooqz14p1v",
+      "name": "4️⃣生活总结 ",
+      "filters": [
+        {
+          "field": "categoryKey",
+          "op": "=",
+          "value": "总结"
+        },
+        {
+          "field": "period",
+          "op": "=",
+          "value": "年"
+        },
+        {
+          "field": "tags",
+          "op": "includes",
+          "value": "生活"
+        }
+      ],
+      "sort": [],
+      "parentId": "group_mer2ooqzcy2vz"
+    },
+    {
+      "id": "ds_mer2r9nnu5a4q",
+      "name": "1️⃣健康总结",
+      "filters": [
+        {
+          "field": "categoryKey",
+          "op": "=",
+          "value": "总结"
+        },
+        {
+          "field": "period",
+          "op": "=",
+          "value": "周"
+        },
+        {
+          "field": "tags",
+          "op": "includes",
+          "value": "健康"
+        }
+      ],
+      "sort": [],
+      "parentId": "group_mer2r9nn2gkx5"
+    },
+    {
+      "id": "ds_mer2r9nno8qkz",
+      "name": "2️⃣健康总结",
+      "filters": [
+        {
+          "field": "categoryKey",
+          "op": "=",
+          "value": "总结"
+        },
+        {
+          "field": "period",
+          "op": "=",
+          "value": "月"
+        },
+        {
+          "field": "tags",
+          "op": "includes",
+          "value": "健康"
+        }
+      ],
+      "sort": [],
+      "parentId": "group_mer2r9nn2gkx5"
+    },
+    {
+      "id": "ds_mer2r9nnqh2rw",
+      "name": "3️⃣健康总结 ",
+      "filters": [
+        {
+          "field": "categoryKey",
+          "op": "=",
+          "value": "总结"
+        },
+        {
+          "field": "period",
+          "op": "=",
+          "value": "季"
+        },
+        {
+          "field": "tags",
+          "op": "includes",
+          "value": "健康"
+        }
+      ],
+      "sort": [],
+      "parentId": "group_mer2r9nn2gkx5"
+    },
+    {
+      "id": "ds_mer2r9nn3mimd",
+      "name": "4️⃣健康总结 ",
+      "filters": [
+        {
+          "field": "categoryKey",
+          "op": "=",
+          "value": "总结"
+        },
+        {
+          "field": "period",
+          "op": "=",
+          "value": "年"
+        },
+        {
+          "field": "tags",
+          "op": "includes",
+          "value": "健康"
+        }
+      ],
+      "sort": [],
+      "parentId": "group_mer2r9nn2gkx5"
+    },
+    {
+      "id": "ds_mer2wj4v1yhol",
+      "name": "1️⃣电脑总结",
+      "filters": [
+        {
+          "field": "categoryKey",
+          "op": "=",
+          "value": "总结"
+        },
+        {
+          "field": "period",
+          "op": "=",
+          "value": "周"
+        },
+        {
+          "field": "tags",
+          "op": "includes",
+          "value": "电脑"
+        }
+      ],
+      "sort": [],
+      "parentId": "group_mer2wj4v6vbmv"
+    },
+    {
+      "id": "ds_mer2wj4v61q9o",
+      "name": "2️⃣电脑总结",
+      "filters": [
+        {
+          "field": "categoryKey",
+          "op": "=",
+          "value": "总结"
+        },
+        {
+          "field": "period",
+          "op": "=",
+          "value": "月"
+        },
+        {
+          "field": "tags",
+          "op": "includes",
+          "value": "电脑"
+        }
+      ],
+      "sort": [],
+      "parentId": "group_mer2wj4v6vbmv"
+    },
+    {
+      "id": "ds_mer2wj4v93yfe",
+      "name": "3️⃣电脑总结 ",
+      "filters": [
+        {
+          "field": "categoryKey",
+          "op": "=",
+          "value": "总结"
+        },
+        {
+          "field": "period",
+          "op": "=",
+          "value": "季"
+        },
+        {
+          "field": "tags",
+          "op": "includes",
+          "value": "电脑"
+        }
+      ],
+      "sort": [],
+      "parentId": "group_mer2wj4v6vbmv"
+    },
+    {
+      "id": "ds_mer2wj4vq3tjx",
+      "name": "4️⃣电脑总结 ",
+      "filters": [
+        {
+          "field": "categoryKey",
+          "op": "=",
+          "value": "总结"
+        },
+        {
+          "field": "period",
+          "op": "=",
+          "value": "年"
+        },
+        {
+          "field": "tags",
+          "op": "includes",
+          "value": "电脑"
+        }
+      ],
+      "sort": [],
+      "parentId": "group_mer2wj4v6vbmv"
+    },
+    {
+      "id": "ds_mer2wkh265u5u",
+      "name": "1️⃣工作总结",
+      "filters": [
+        {
+          "field": "categoryKey",
+          "op": "=",
+          "value": "总结"
+        },
+        {
+          "field": "period",
+          "op": "=",
+          "value": "周"
+        },
+        {
+          "field": "tags",
+          "op": "includes",
+          "value": "工作"
+        }
+      ],
+      "sort": [],
+      "parentId": "group_mer2wkh2hfu3t"
+    },
+    {
+      "id": "ds_mer2wkh289gh3",
+      "name": "2️⃣工作总结",
+      "filters": [
+        {
+          "field": "categoryKey",
+          "op": "=",
+          "value": "总结"
+        },
+        {
+          "field": "period",
+          "op": "=",
+          "value": "月"
+        },
+        {
+          "field": "tags",
+          "op": "includes",
+          "value": "工作"
+        }
+      ],
+      "sort": [],
+      "parentId": "group_mer2wkh2hfu3t"
+    },
+    {
+      "id": "ds_mer2wkh23qp7i",
+      "name": "3️⃣工作总结 ",
+      "filters": [
+        {
+          "field": "categoryKey",
+          "op": "=",
+          "value": "总结"
+        },
+        {
+          "field": "period",
+          "op": "=",
+          "value": "季"
+        },
+        {
+          "field": "tags",
+          "op": "includes",
+          "value": "工作"
+        }
+      ],
+      "sort": [],
+      "parentId": "group_mer2wkh2hfu3t"
+    },
+    {
+      "id": "ds_mer2wkh2ljiw5",
+      "name": "4️⃣工作总结 ",
+      "filters": [
+        {
+          "field": "categoryKey",
+          "op": "=",
+          "value": "总结"
+        },
+        {
+          "field": "period",
+          "op": "=",
+          "value": "年"
+        },
+        {
+          "field": "tags",
+          "op": "includes",
+          "value": "工作"
+        }
+      ],
+      "sort": [],
+      "parentId": "group_mer2wkh2hfu3t"
+    },
+    {
+      "id": "ds_mer53hxz55fva",
+      "name": "1️⃣思考计划",
+      "filters": [
+        {
+          "field": "period",
+          "op": "=",
+          "value": "周"
+        },
+        {
+          "field": "tags",
+          "op": "includes",
+          "value": "思考"
+        },
+        {
+          "field": "categoryKey",
+          "op": "=",
+          "value": "计划"
+        }
+      ],
+      "sort": [],
+      "parentId": "group_mer53hxzk1xpz"
+    },
+    {
+      "id": "ds_mer53hxzn8vwi",
+      "name": "2️⃣思考计划",
+      "filters": [
+        {
+          "field": "tags",
+          "op": "includes",
+          "value": "思考"
+        },
+        {
+          "field": "period",
+          "op": "=",
+          "value": "月"
+        },
+        {
+          "field": "categoryKey",
+          "op": "=",
+          "value": "计划"
+        }
+      ],
+      "sort": [],
+      "parentId": "group_mer53hxzk1xpz"
+    },
+    {
+      "id": "ds_mer53hxz61jj4",
+      "name": "3️⃣思考计划",
+      "filters": [
+        {
+          "field": "tags",
+          "op": "includes",
+          "value": "思考"
+        },
+        {
+          "field": "period",
+          "op": "=",
+          "value": "季"
+        },
+        {
+          "field": "categoryKey",
+          "op": "=",
+          "value": "计划"
+        }
+      ],
+      "sort": [],
+      "parentId": "group_mer53hxzk1xpz"
+    },
+    {
+      "id": "ds_mer53hxzk0ni0",
+      "name": "4️⃣思考计划",
+      "filters": [
+        {
+          "field": "tags",
+          "op": "includes",
+          "value": "思考"
+        },
+        {
+          "field": "period",
+          "op": "=",
+          "value": "年"
+        },
+        {
+          "field": "categoryKey",
+          "op": "=",
+          "value": "计划"
+        }
+      ],
+      "sort": [],
+      "parentId": "group_mer53hxzk1xpz"
+    },
+    {
+      "id": "ds_mer53hxzcbokq",
+      "name": "1️⃣生活计划",
+      "filters": [
+        {
+          "field": "period",
+          "op": "=",
+          "value": "周"
+        },
+        {
+          "field": "tags",
+          "op": "includes",
+          "value": "生活"
+        },
+        {
+          "field": "categoryKey",
+          "op": "=",
+          "value": "计划"
+        }
+      ],
+      "sort": [],
+      "parentId": "group_mer53hxz8ywpq"
+    },
+    {
+      "id": "ds_mer53hxzo1ft6",
+      "name": "2️⃣生活计划",
+      "filters": [
+        {
+          "field": "period",
+          "op": "=",
+          "value": "月"
+        },
+        {
+          "field": "tags",
+          "op": "includes",
+          "value": "生活"
+        },
+        {
+          "field": "categoryKey",
+          "op": "=",
+          "value": "计划"
+        }
+      ],
+      "sort": [],
+      "parentId": "group_mer53hxz8ywpq"
+    },
+    {
+      "id": "ds_mer53hxz8hqi9",
+      "name": "3️⃣生活计划",
+      "filters": [
+        {
+          "field": "period",
+          "op": "=",
+          "value": "季"
+        },
+        {
+          "field": "tags",
+          "op": "includes",
+          "value": "生活"
+        },
+        {
+          "field": "categoryKey",
+          "op": "=",
+          "value": "计划"
+        }
+      ],
+      "sort": [],
+      "parentId": "group_mer53hxz8ywpq"
+    },
+    {
+      "id": "ds_mer53hxzci0o5",
+      "name": "4️⃣生活计划",
+      "filters": [
+        {
+          "field": "period",
+          "op": "=",
+          "value": "年"
+        },
+        {
+          "field": "tags",
+          "op": "includes",
+          "value": "生活"
+        },
+        {
+          "field": "categoryKey",
+          "op": "=",
+          "value": "计划"
+        }
+      ],
+      "sort": [],
+      "parentId": "group_mer53hxz8ywpq"
+    },
+    {
+      "id": "ds_mer53hxzowvgh",
+      "name": "1️⃣健康计划",
+      "filters": [
+        {
+          "field": "period",
+          "op": "=",
+          "value": "周"
+        },
+        {
+          "field": "tags",
+          "op": "includes",
+          "value": "健康"
+        },
+        {
+          "field": "categoryKey",
+          "op": "=",
+          "value": "计划"
+        }
+      ],
+      "sort": [],
+      "parentId": "group_mer53hxzejm0s"
+    },
+    {
+      "id": "ds_mer53hxzpc2mv",
+      "name": "2️⃣健康计划",
+      "filters": [
+        {
+          "field": "period",
+          "op": "=",
+          "value": "月"
+        },
+        {
+          "field": "tags",
+          "op": "includes",
+          "value": "健康"
+        },
+        {
+          "field": "categoryKey",
+          "op": "=",
+          "value": "计划"
+        }
+      ],
+      "sort": [],
+      "parentId": "group_mer53hxzejm0s"
+    },
+    {
+      "id": "ds_mer53hxzxkv8m",
+      "name": "3️⃣健康计划",
+      "filters": [
+        {
+          "field": "period",
+          "op": "=",
+          "value": "季"
+        },
+        {
+          "field": "tags",
+          "op": "includes",
+          "value": "健康"
+        },
+        {
+          "field": "categoryKey",
+          "op": "=",
+          "value": "计划"
+        }
+      ],
+      "sort": [],
+      "parentId": "group_mer53hxzejm0s"
+    },
+    {
+      "id": "ds_mer53hxz648xm",
+      "name": "4️⃣健康计划",
+      "filters": [
+        {
+          "field": "period",
+          "op": "=",
+          "value": "年"
+        },
+        {
+          "field": "tags",
+          "op": "includes",
+          "value": "健康"
+        },
+        {
+          "field": "categoryKey",
+          "op": "=",
+          "value": "计划"
+        }
+      ],
+      "sort": [],
+      "parentId": "group_mer53hxzejm0s"
+    },
+    {
+      "id": "ds_mer53hxzzbifa",
+      "name": "1️⃣电脑计划",
+      "filters": [
+        {
+          "field": "period",
+          "op": "=",
+          "value": "周"
+        },
+        {
+          "field": "tags",
+          "op": "includes",
+          "value": "电脑"
+        },
+        {
+          "field": "categoryKey",
+          "op": "=",
+          "value": "计划"
+        }
+      ],
+      "sort": [],
+      "parentId": "group_mer53hxzp9l4g"
+    },
+    {
+      "id": "ds_mer53hxzset0r",
+      "name": "2️⃣电脑计划",
+      "filters": [
+        {
+          "field": "period",
+          "op": "=",
+          "value": "月"
+        },
+        {
+          "field": "tags",
+          "op": "includes",
+          "value": "电脑"
+        },
+        {
+          "field": "categoryKey",
+          "op": "=",
+          "value": "计划"
+        }
+      ],
+      "sort": [],
+      "parentId": "group_mer53hxzp9l4g"
+    },
+    {
+      "id": "ds_mer53hxzzalmt",
+      "name": "3️⃣电脑计划",
+      "filters": [
+        {
+          "field": "period",
+          "op": "=",
+          "value": "季"
+        },
+        {
+          "field": "tags",
+          "op": "includes",
+          "value": "电脑"
+        },
+        {
+          "field": "categoryKey",
+          "op": "=",
+          "value": "计划"
+        }
+      ],
+      "sort": [],
+      "parentId": "group_mer53hxzp9l4g"
+    },
+    {
+      "id": "ds_mer53hxzulzpz",
+      "name": "4️⃣电脑计划",
+      "filters": [
+        {
+          "field": "period",
+          "op": "=",
+          "value": "年"
+        },
+        {
+          "field": "tags",
+          "op": "includes",
+          "value": "电脑"
+        },
+        {
+          "field": "categoryKey",
+          "op": "=",
+          "value": "计划"
+        }
+      ],
+      "sort": [],
+      "parentId": "group_mer53hxzp9l4g"
+    },
+    {
+      "id": "ds_mer53hxzj7z87",
+      "name": "1️⃣工作计划",
+      "filters": [
+        {
+          "field": "period",
+          "op": "=",
+          "value": "周"
+        },
+        {
+          "field": "tags",
+          "op": "includes",
+          "value": "工作"
+        },
+        {
+          "field": "categoryKey",
+          "op": "=",
+          "value": "计划"
+        }
+      ],
+      "sort": [],
+      "parentId": "group_mer53hxzs9hkh"
+    },
+    {
+      "id": "ds_mer53hxzh8pgc",
+      "name": "2️⃣工作计划",
+      "filters": [
+        {
+          "field": "period",
+          "op": "=",
+          "value": "月"
+        },
+        {
+          "field": "tags",
+          "op": "includes",
+          "value": "工作"
+        },
+        {
+          "field": "categoryKey",
+          "op": "=",
+          "value": "计划"
+        }
+      ],
+      "sort": [],
+      "parentId": "group_mer53hxzs9hkh"
+    },
+    {
+      "id": "ds_mer53hxzp1h3k",
+      "name": "3️⃣工作计划",
+      "filters": [
+        {
+          "field": "period",
+          "op": "=",
+          "value": "季"
+        },
+        {
+          "field": "tags",
+          "op": "includes",
+          "value": "工作"
+        },
+        {
+          "field": "categoryKey",
+          "op": "=",
+          "value": "计划"
+        }
+      ],
+      "sort": [],
+      "parentId": "group_mer53hxzs9hkh"
+    },
+    {
+      "id": "ds_mer53hxz1d5hz",
+      "name": "4️⃣工作计划",
+      "filters": [
+        {
+          "field": "period",
+          "op": "=",
+          "value": "年"
+        },
+        {
+          "field": "tags",
+          "op": "includes",
+          "value": "工作"
+        },
+        {
+          "field": "categoryKey",
+          "op": "=",
+          "value": "计划"
+        }
+      ],
+      "sort": [],
+      "parentId": "group_mer53hxzs9hkh"
     }
   ],
   "viewInstances": [
@@ -228,7 +1241,7 @@
       "id": "view_membbqjam5v63",
       "title": "时间轴",
       "viewType": "TimelineView",
-      "dataSourceId": "ds_membld9cc3oj6",
+      "dataSourceId": "ds_mer6herh46uji",
       "viewConfig": {
         "defaultHourHeight": 50,
         "MAX_HOURS_PER_DAY": 24,
@@ -285,9 +1298,7 @@
         ]
       },
       "parentId": "group_memc1a9ofen88",
-      "fields": [
-        "type"
-      ],
+      "fields": [],
       "collapsed": true
     },
     {
@@ -306,89 +1317,23 @@
       "collapsed": true
     },
     {
-      "id": "view_mepfs74ks7l8h",
-      "title": "时间轴",
-      "viewType": "TimelineView",
-      "dataSourceId": "ds_membld9cc3oj6",
-      "viewConfig": {
-        "defaultHourHeight": 50,
-        "MAX_HOURS_PER_DAY": 24,
-        "UNTRACKED_LABEL": "未记录",
-        "categoryMap": {},
-        "categories": {
-          "健康": {
-            "color": "#60a5fa",
-            "files": [
-              "00-健康打卡",
-              "2-1健康",
-              "2-2三餐"
-            ]
-          },
-          "生活": {
-            "color": "#34d399",
-            "files": [
-              "2-3生活"
-            ]
-          },
-          "电脑": {
-            "color": "#fb606f",
-            "files": [
-              "2-5电脑"
-            ]
-          },
-          "工作": {
-            "color": "#fbbf24",
-            "files": [
-              "2-6工作"
-            ]
-          },
-          "其他": {
-            "color": "#bababa",
-            "files": [
-              "2-0其他"
-            ]
-          }
-        },
-        "colorPalette": [
-          "#34d399",
-          "#fbbf24",
-          "#a78bfa",
-          "#60a5fa",
-          "#f87171",
-          "#a1a1aa"
-        ],
-        "progressOrder": [
-          "健康",
-          "生活",
-          "电脑",
-          "工作",
-          "其他"
-        ]
-      },
-      "parentId": null,
-      "fields": [
-        "type"
-      ],
-      "collapsed": true
-    },
-    {
-      "id": "view_mepfs74kysx9y",
-      "title": "未完成任务",
+      "id": "view_mer6ll4mtbjry",
+      "title": "完成任务",
       "viewType": "TableView",
-      "dataSourceId": "ds_membld9cc3oj6",
+      "dataSourceId": "ds_mer6herh46uji",
       "viewConfig": {
         "view": "TableView",
         "title": "表格视图",
         "collapsed": false,
-        "rowField": "recurrence",
-        "colField": "tags"
+        "rowField": "tags",
+        "colField": "date"
       },
-      "parentId": null,
+      "parentId": "group_memc1a9ofen88",
       "collapsed": true
     },
     {
       "id": "view_mepgw6pp1iqso",
-      "title": "思考周总结",
+      "title": "1️⃣思考总结",
       "viewType": "BlockView",
       "dataSourceId": "ds_mepgu823uydpz",
       "viewConfig": {
@@ -399,7 +1344,95 @@
         "group": "categoryKey"
       },
       "collapsed": false,
-      "parentId": null,
+      "parentId": "group_mer5oj3wueept",
+      "fields": [
+        "period",
+        "categoryKey",
+        "date",
+        "icon",
+        "content"
+      ]
+    },
+    {
+      "id": "view_mer6n7pwf7suy",
+      "title": "计划",
+      "viewType": "BlockView",
+      "dataSourceId": "ds_mer6iqguhcilh",
+      "viewConfig": {
+        "view": "BlockView",
+        "title": "块视图",
+        "collapsed": false,
+        "fields": [],
+        "group": "categoryKey"
+      },
+      "collapsed": false,
+      "parentId": "group_memc1a9ofen88",
+      "fields": [
+        "period",
+        "categoryKey",
+        "date",
+        "icon",
+        "content"
+      ]
+    },
+    {
+      "id": "view_mer6nwkl1hfxn",
+      "title": "总结",
+      "viewType": "BlockView",
+      "dataSourceId": "ds_mer6jowbemiwu",
+      "viewConfig": {
+        "view": "BlockView",
+        "title": "块视图",
+        "collapsed": false,
+        "fields": [],
+        "group": "categoryKey"
+      },
+      "collapsed": false,
+      "parentId": "group_memc1a9ofen88",
+      "fields": [
+        "period",
+        "categoryKey",
+        "date",
+        "icon",
+        "content"
+      ]
+    },
+    {
+      "id": "view_mer6oglaold8i",
+      "title": "思考",
+      "viewType": "BlockView",
+      "dataSourceId": "ds_mer6k19bdcof2",
+      "viewConfig": {
+        "view": "BlockView",
+        "title": "块视图",
+        "collapsed": false,
+        "fields": [],
+        "group": "categoryKey"
+      },
+      "collapsed": false,
+      "parentId": "group_memc1a9ofen88",
+      "fields": [
+        "period",
+        "categoryKey",
+        "date",
+        "icon",
+        "content"
+      ]
+    },
+    {
+      "id": "view_mer6oto0gp4ju",
+      "title": "打卡",
+      "viewType": "BlockView",
+      "dataSourceId": "ds_mer6kbdnogrty",
+      "viewConfig": {
+        "view": "BlockView",
+        "title": "块视图",
+        "collapsed": false,
+        "fields": [],
+        "group": "categoryKey"
+      },
+      "collapsed": false,
+      "parentId": "group_memc1a9ofen88",
       "fields": [
         "period",
         "categoryKey",
@@ -410,7 +1443,7 @@
     },
     {
       "id": "view_mepob3wx8y6de",
-      "title": "2思考周总结 (副本)",
+      "title": "2️⃣思考总结",
       "viewType": "BlockView",
       "dataSourceId": "ds_mepo8pkir629r",
       "viewConfig": {
@@ -421,7 +1454,7 @@
         "group": "categoryKey"
       },
       "collapsed": false,
-      "parentId": null,
+      "parentId": "group_mer5oj3wueept",
       "fields": [
         "period",
         "categoryKey",
@@ -432,7 +1465,7 @@
     },
     {
       "id": "view_mepob31qw4rkw",
-      "title": "3思考周总结 (副本)",
+      "title": "3️⃣思考总结 ",
       "viewType": "BlockView",
       "dataSourceId": "ds_mepo8ov7p2sup",
       "viewConfig": {
@@ -443,7 +1476,7 @@
         "group": "categoryKey"
       },
       "collapsed": false,
-      "parentId": null,
+      "parentId": "group_mer5oj3wueept",
       "fields": [
         "period",
         "categoryKey",
@@ -454,7 +1487,7 @@
     },
     {
       "id": "view_mepob2tblbjjz",
-      "title": "4思考周总结 (副本)",
+      "title": "4️⃣思考总结",
       "viewType": "BlockView",
       "dataSourceId": "ds_mepo8nxuzsrst",
       "viewConfig": {
@@ -465,29 +1498,7 @@
         "group": "categoryKey"
       },
       "collapsed": false,
-      "parentId": null,
-      "fields": [
-        "period",
-        "categoryKey",
-        "date",
-        "icon",
-        "content"
-      ]
-    },
-    {
-      "id": "view_mepgxhrowj3e7",
-      "title": "思考周总结 (副本)",
-      "viewType": "BlockView",
-      "dataSourceId": "ds_mepgxbxz2iex4",
-      "viewConfig": {
-        "view": "BlockView",
-        "title": "块视图",
-        "collapsed": false,
-        "fields": [],
-        "group": "categoryKey"
-      },
-      "collapsed": false,
-      "parentId": null,
+      "parentId": "group_mer5oj3wueept",
       "fields": [
         "period",
         "categoryKey",
@@ -549,6 +1560,10 @@
           {
             "name": "总结",
             "color": "#59ac9b"
+          },
+          {
+            "name": "02",
+            "color": "#82a3b1"
           }
         ]
       },
@@ -560,6 +1575,798 @@
         "tags",
         "content"
       ]
+    },
+    {
+      "id": "view_mer5qc61gnav2",
+      "title": "1️⃣生活总结",
+      "viewType": "BlockView",
+      "dataSourceId": "ds_mer2ooqzzdgam",
+      "viewConfig": {
+        "view": "BlockView",
+        "title": "块视图",
+        "collapsed": false,
+        "fields": [],
+        "group": "categoryKey"
+      },
+      "collapsed": false,
+      "parentId": "group_mer5qc61xm7ni",
+      "fields": [
+        "period",
+        "categoryKey",
+        "date",
+        "icon",
+        "content"
+      ]
+    },
+    {
+      "id": "view_mer5qc61jfxaw",
+      "title": "2️⃣生活总结",
+      "viewType": "BlockView",
+      "dataSourceId": "ds_mer2ooqzombzz",
+      "viewConfig": {
+        "view": "BlockView",
+        "title": "块视图",
+        "collapsed": false,
+        "fields": [],
+        "group": "categoryKey"
+      },
+      "collapsed": false,
+      "parentId": "group_mer5qc61xm7ni",
+      "fields": [
+        "period",
+        "categoryKey",
+        "date",
+        "icon",
+        "content"
+      ]
+    },
+    {
+      "id": "view_mer5qc61hph6b",
+      "title": "3️⃣生活总结 ",
+      "viewType": "BlockView",
+      "dataSourceId": "ds_mer2ooqz9017g",
+      "viewConfig": {
+        "view": "BlockView",
+        "title": "块视图",
+        "collapsed": false,
+        "fields": [],
+        "group": "categoryKey"
+      },
+      "collapsed": false,
+      "parentId": "group_mer5qc61xm7ni",
+      "fields": [
+        "period",
+        "categoryKey",
+        "date",
+        "icon",
+        "content"
+      ]
+    },
+    {
+      "id": "view_mer5qc617rq9u",
+      "title": "4️⃣生活总结",
+      "viewType": "BlockView",
+      "dataSourceId": "ds_mer2ooqz14p1v",
+      "viewConfig": {
+        "view": "BlockView",
+        "title": "块视图",
+        "collapsed": false,
+        "fields": [],
+        "group": "categoryKey"
+      },
+      "collapsed": false,
+      "parentId": "group_mer5qc61xm7ni",
+      "fields": [
+        "period",
+        "categoryKey",
+        "date",
+        "icon",
+        "content"
+      ]
+    },
+    {
+      "id": "view_mer5qdssxdd2f",
+      "title": "1️⃣健康总结",
+      "viewType": "BlockView",
+      "dataSourceId": "ds_mer2r9nnu5a4q",
+      "viewConfig": {
+        "view": "BlockView",
+        "title": "块视图",
+        "collapsed": false,
+        "fields": [],
+        "group": "categoryKey"
+      },
+      "collapsed": false,
+      "parentId": "group_mer5qdss3nlkm",
+      "fields": [
+        "period",
+        "categoryKey",
+        "date",
+        "icon",
+        "content"
+      ]
+    },
+    {
+      "id": "view_mer5qdss5fz9m",
+      "title": "2️⃣健康总结",
+      "viewType": "BlockView",
+      "dataSourceId": "ds_mer2r9nno8qkz",
+      "viewConfig": {
+        "view": "BlockView",
+        "title": "块视图",
+        "collapsed": false,
+        "fields": [],
+        "group": "categoryKey"
+      },
+      "collapsed": false,
+      "parentId": "group_mer5qdss3nlkm",
+      "fields": [
+        "period",
+        "categoryKey",
+        "date",
+        "icon",
+        "content"
+      ]
+    },
+    {
+      "id": "view_mer5qdss3iyvk",
+      "title": "3️⃣健康总结 ",
+      "viewType": "BlockView",
+      "dataSourceId": "ds_mer2r9nnqh2rw",
+      "viewConfig": {
+        "view": "BlockView",
+        "title": "块视图",
+        "collapsed": false,
+        "fields": [],
+        "group": "categoryKey"
+      },
+      "collapsed": false,
+      "parentId": "group_mer5qdss3nlkm",
+      "fields": [
+        "period",
+        "categoryKey",
+        "date",
+        "icon",
+        "content"
+      ]
+    },
+    {
+      "id": "view_mer5qdsszcvn5",
+      "title": "4️⃣健康总结",
+      "viewType": "BlockView",
+      "dataSourceId": "ds_mer2r9nn3mimd",
+      "viewConfig": {
+        "view": "BlockView",
+        "title": "块视图",
+        "collapsed": false,
+        "fields": [],
+        "group": "categoryKey"
+      },
+      "collapsed": false,
+      "parentId": "group_mer5qdss3nlkm",
+      "fields": [
+        "period",
+        "categoryKey",
+        "date",
+        "icon",
+        "content"
+      ]
+    },
+    {
+      "id": "view_mer5qenaak5oq",
+      "title": "1️⃣电脑总结",
+      "viewType": "BlockView",
+      "dataSourceId": "ds_mer2wj4v1yhol",
+      "viewConfig": {
+        "view": "BlockView",
+        "title": "块视图",
+        "collapsed": false,
+        "fields": [],
+        "group": "categoryKey"
+      },
+      "collapsed": false,
+      "parentId": "group_mer5qenajiet0",
+      "fields": [
+        "period",
+        "categoryKey",
+        "date",
+        "icon",
+        "content"
+      ]
+    },
+    {
+      "id": "view_mer5qena23btv",
+      "title": "2️⃣电脑总结",
+      "viewType": "BlockView",
+      "dataSourceId": "ds_mer2wj4v61q9o",
+      "viewConfig": {
+        "view": "BlockView",
+        "title": "块视图",
+        "collapsed": false,
+        "fields": [],
+        "group": "categoryKey"
+      },
+      "collapsed": false,
+      "parentId": "group_mer5qenajiet0",
+      "fields": [
+        "period",
+        "categoryKey",
+        "date",
+        "icon",
+        "content"
+      ]
+    },
+    {
+      "id": "view_mer5qenavnxxt",
+      "title": "3️⃣电脑总结 ",
+      "viewType": "BlockView",
+      "dataSourceId": "ds_mer2wj4v93yfe",
+      "viewConfig": {
+        "view": "BlockView",
+        "title": "块视图",
+        "collapsed": false,
+        "fields": [],
+        "group": "categoryKey"
+      },
+      "collapsed": false,
+      "parentId": "group_mer5qenajiet0",
+      "fields": [
+        "period",
+        "categoryKey",
+        "date",
+        "icon",
+        "content"
+      ]
+    },
+    {
+      "id": "view_mer5qenaqlltt",
+      "title": "4️⃣电脑总结",
+      "viewType": "BlockView",
+      "dataSourceId": "ds_mer2wj4vq3tjx",
+      "viewConfig": {
+        "view": "BlockView",
+        "title": "块视图",
+        "collapsed": false,
+        "fields": [],
+        "group": "categoryKey"
+      },
+      "collapsed": false,
+      "parentId": "group_mer5qenajiet0",
+      "fields": [
+        "period",
+        "categoryKey",
+        "date",
+        "icon",
+        "content"
+      ]
+    },
+    {
+      "id": "view_mer5qlrm3xnu6",
+      "title": "1️⃣工作总结",
+      "viewType": "BlockView",
+      "dataSourceId": "ds_mer2wkh265u5u",
+      "viewConfig": {
+        "view": "BlockView",
+        "title": "块视图",
+        "collapsed": false,
+        "fields": [],
+        "group": "categoryKey"
+      },
+      "collapsed": false,
+      "parentId": "group_mer5qlrm519f9",
+      "fields": [
+        "period",
+        "categoryKey",
+        "date",
+        "icon",
+        "content"
+      ]
+    },
+    {
+      "id": "view_mer5qlrmishnl",
+      "title": "2️⃣工作总结",
+      "viewType": "BlockView",
+      "dataSourceId": "ds_mer2wj4v61q9o",
+      "viewConfig": {
+        "view": "BlockView",
+        "title": "块视图",
+        "collapsed": false,
+        "fields": [],
+        "group": "categoryKey"
+      },
+      "collapsed": false,
+      "parentId": "group_mer5qlrm519f9",
+      "fields": [
+        "period",
+        "categoryKey",
+        "date",
+        "icon",
+        "content"
+      ]
+    },
+    {
+      "id": "view_mer5qlrmy8s09",
+      "title": "3️⃣工作总结 ",
+      "viewType": "BlockView",
+      "dataSourceId": "ds_mer2wkh23qp7i",
+      "viewConfig": {
+        "view": "BlockView",
+        "title": "块视图",
+        "collapsed": false,
+        "fields": [],
+        "group": "categoryKey"
+      },
+      "collapsed": false,
+      "parentId": "group_mer5qlrm519f9",
+      "fields": [
+        "period",
+        "categoryKey",
+        "date",
+        "icon",
+        "content"
+      ]
+    },
+    {
+      "id": "view_mer5qlrmxm6dv",
+      "title": "4️⃣工作总结",
+      "viewType": "BlockView",
+      "dataSourceId": "ds_mer2wkh2ljiw5",
+      "viewConfig": {
+        "view": "BlockView",
+        "title": "块视图",
+        "collapsed": false,
+        "fields": [],
+        "group": "categoryKey"
+      },
+      "collapsed": false,
+      "parentId": "group_mer5qlrm519f9",
+      "fields": [
+        "period",
+        "categoryKey",
+        "date",
+        "icon",
+        "content"
+      ]
+    },
+    {
+      "id": "view_mer60bnnknqug",
+      "title": "1️⃣思考计划",
+      "viewType": "BlockView",
+      "dataSourceId": "ds_mer53hxz55fva",
+      "viewConfig": {
+        "view": "BlockView",
+        "title": "块视图",
+        "collapsed": false,
+        "fields": [],
+        "group": "categoryKey"
+      },
+      "collapsed": false,
+      "parentId": "group_mer60bnnssk89",
+      "fields": [
+        "period",
+        "categoryKey",
+        "date",
+        "icon",
+        "content"
+      ]
+    },
+    {
+      "id": "view_mer60bnnvblx5",
+      "title": "2️⃣思考计划",
+      "viewType": "BlockView",
+      "dataSourceId": "ds_mer53hxzn8vwi",
+      "viewConfig": {
+        "view": "BlockView",
+        "title": "块视图",
+        "collapsed": false,
+        "fields": [],
+        "group": "categoryKey"
+      },
+      "collapsed": false,
+      "parentId": "group_mer60bnnssk89",
+      "fields": [
+        "period",
+        "categoryKey",
+        "date",
+        "icon",
+        "content"
+      ]
+    },
+    {
+      "id": "view_mer60bnn8haqj",
+      "title": "3️⃣思考计划",
+      "viewType": "BlockView",
+      "dataSourceId": "ds_mer53hxz61jj4",
+      "viewConfig": {
+        "view": "BlockView",
+        "title": "块视图",
+        "collapsed": false,
+        "fields": [],
+        "group": "categoryKey"
+      },
+      "collapsed": false,
+      "parentId": "group_mer60bnnssk89",
+      "fields": [
+        "period",
+        "categoryKey",
+        "date",
+        "icon",
+        "content"
+      ]
+    },
+    {
+      "id": "view_mer60bnoftke2",
+      "title": "4️⃣思考计划",
+      "viewType": "BlockView",
+      "dataSourceId": "ds_mer53hxzk0ni0",
+      "viewConfig": {
+        "view": "BlockView",
+        "title": "块视图",
+        "collapsed": false,
+        "fields": [],
+        "group": "categoryKey"
+      },
+      "collapsed": false,
+      "parentId": "group_mer60bnnssk89",
+      "fields": [
+        "period",
+        "categoryKey",
+        "date",
+        "icon",
+        "content"
+      ]
+    },
+    {
+      "id": "view_mer60bno9eenu",
+      "title": "1️⃣生活计划",
+      "viewType": "BlockView",
+      "dataSourceId": "ds_mer53hxzcbokq",
+      "viewConfig": {
+        "view": "BlockView",
+        "title": "块视图",
+        "collapsed": false,
+        "fields": [],
+        "group": "categoryKey"
+      },
+      "collapsed": false,
+      "parentId": "group_mer60bnoootcl",
+      "fields": [
+        "period",
+        "categoryKey",
+        "date",
+        "icon",
+        "content"
+      ]
+    },
+    {
+      "id": "view_mer60bnonxojo",
+      "title": "2️⃣生活计划",
+      "viewType": "BlockView",
+      "dataSourceId": "ds_mer53hxzo1ft6",
+      "viewConfig": {
+        "view": "BlockView",
+        "title": "块视图",
+        "collapsed": false,
+        "fields": [],
+        "group": "categoryKey"
+      },
+      "collapsed": false,
+      "parentId": "group_mer60bnoootcl",
+      "fields": [
+        "period",
+        "categoryKey",
+        "date",
+        "icon",
+        "content"
+      ]
+    },
+    {
+      "id": "view_mer60bnot3klw",
+      "title": "3️⃣生活计划",
+      "viewType": "BlockView",
+      "dataSourceId": "ds_mer53hxz8hqi9",
+      "viewConfig": {
+        "view": "BlockView",
+        "title": "块视图",
+        "collapsed": false,
+        "fields": [],
+        "group": "categoryKey"
+      },
+      "collapsed": false,
+      "parentId": "group_mer60bnoootcl",
+      "fields": [
+        "period",
+        "categoryKey",
+        "date",
+        "icon",
+        "content"
+      ]
+    },
+    {
+      "id": "view_mer60bno7dsek",
+      "title": "4️⃣生活计划",
+      "viewType": "BlockView",
+      "dataSourceId": "ds_mer53hxzci0o5",
+      "viewConfig": {
+        "view": "BlockView",
+        "title": "块视图",
+        "collapsed": false,
+        "fields": [],
+        "group": "categoryKey"
+      },
+      "collapsed": false,
+      "parentId": "group_mer60bnoootcl",
+      "fields": [
+        "period",
+        "categoryKey",
+        "date",
+        "icon",
+        "content"
+      ]
+    },
+    {
+      "id": "view_mer60bnotqdt6",
+      "title": "1️⃣健康计划",
+      "viewType": "BlockView",
+      "dataSourceId": "ds_mer53hxzowvgh",
+      "viewConfig": {
+        "view": "BlockView",
+        "title": "块视图",
+        "collapsed": false,
+        "fields": [],
+        "group": "categoryKey"
+      },
+      "collapsed": false,
+      "parentId": "group_mer60bno0hsk0",
+      "fields": [
+        "period",
+        "categoryKey",
+        "date",
+        "icon",
+        "content"
+      ]
+    },
+    {
+      "id": "view_mer60bnom80n2",
+      "title": "2️⃣健康计划",
+      "viewType": "BlockView",
+      "dataSourceId": "ds_mer53hxzpc2mv",
+      "viewConfig": {
+        "view": "BlockView",
+        "title": "块视图",
+        "collapsed": false,
+        "fields": [],
+        "group": "categoryKey"
+      },
+      "collapsed": false,
+      "parentId": "group_mer60bno0hsk0",
+      "fields": [
+        "period",
+        "categoryKey",
+        "date",
+        "icon",
+        "content"
+      ]
+    },
+    {
+      "id": "view_mer60bno1632k",
+      "title": "3️⃣健康计划",
+      "viewType": "BlockView",
+      "dataSourceId": "ds_mer53hxzxkv8m",
+      "viewConfig": {
+        "view": "BlockView",
+        "title": "块视图",
+        "collapsed": false,
+        "fields": [],
+        "group": "categoryKey"
+      },
+      "collapsed": false,
+      "parentId": "group_mer60bno0hsk0",
+      "fields": [
+        "period",
+        "categoryKey",
+        "date",
+        "icon",
+        "content"
+      ]
+    },
+    {
+      "id": "view_mer60bnopn0k0",
+      "title": "4️⃣健康计划",
+      "viewType": "BlockView",
+      "dataSourceId": "ds_mer53hxz648xm",
+      "viewConfig": {
+        "view": "BlockView",
+        "title": "块视图",
+        "collapsed": false,
+        "fields": [],
+        "group": "categoryKey"
+      },
+      "collapsed": false,
+      "parentId": "group_mer60bno0hsk0",
+      "fields": [
+        "period",
+        "categoryKey",
+        "date",
+        "icon",
+        "content"
+      ]
+    },
+    {
+      "id": "view_mer60bnoqjuvd",
+      "title": "1️⃣电脑计划",
+      "viewType": "BlockView",
+      "dataSourceId": "ds_mer53hxzzbifa",
+      "viewConfig": {
+        "view": "BlockView",
+        "title": "块视图",
+        "collapsed": false,
+        "fields": [],
+        "group": "categoryKey"
+      },
+      "collapsed": false,
+      "parentId": "group_mer60bnort9rv",
+      "fields": [
+        "period",
+        "categoryKey",
+        "date",
+        "icon",
+        "content"
+      ]
+    },
+    {
+      "id": "view_mer60bnolot1w",
+      "title": "2️⃣电脑计划",
+      "viewType": "BlockView",
+      "dataSourceId": "ds_mer53hxzset0r",
+      "viewConfig": {
+        "view": "BlockView",
+        "title": "块视图",
+        "collapsed": false,
+        "fields": [],
+        "group": "categoryKey"
+      },
+      "collapsed": false,
+      "parentId": "group_mer60bnort9rv",
+      "fields": [
+        "period",
+        "categoryKey",
+        "date",
+        "icon",
+        "content"
+      ]
+    },
+    {
+      "id": "view_mer60bno49f5p",
+      "title": "3️⃣电脑计划",
+      "viewType": "BlockView",
+      "dataSourceId": "ds_mer53hxzzalmt",
+      "viewConfig": {
+        "view": "BlockView",
+        "title": "块视图",
+        "collapsed": false,
+        "fields": [],
+        "group": "categoryKey"
+      },
+      "collapsed": false,
+      "parentId": "group_mer60bnort9rv",
+      "fields": [
+        "period",
+        "categoryKey",
+        "date",
+        "icon",
+        "content"
+      ]
+    },
+    {
+      "id": "view_mer60bnobvo0w",
+      "title": "4️⃣电脑计划",
+      "viewType": "BlockView",
+      "dataSourceId": "ds_mer53hxzulzpz",
+      "viewConfig": {
+        "view": "BlockView",
+        "title": "块视图",
+        "collapsed": false,
+        "fields": [],
+        "group": "categoryKey"
+      },
+      "collapsed": false,
+      "parentId": "group_mer60bnort9rv",
+      "fields": [
+        "period",
+        "categoryKey",
+        "date",
+        "icon",
+        "content"
+      ]
+    },
+    {
+      "id": "view_mer60bnoowtde",
+      "title": "1️⃣工作计划",
+      "viewType": "BlockView",
+      "dataSourceId": "ds_mer53hxzj7z87",
+      "viewConfig": {
+        "view": "BlockView",
+        "title": "块视图",
+        "collapsed": false,
+        "fields": [],
+        "group": "categoryKey"
+      },
+      "collapsed": false,
+      "parentId": "group_mer60bnom4ztr",
+      "fields": [
+        "period",
+        "categoryKey",
+        "date",
+        "icon",
+        "content"
+      ]
+    },
+    {
+      "id": "view_mer60bnob6mvt",
+      "title": "2️⃣工作计划",
+      "viewType": "BlockView",
+      "dataSourceId": "ds_mer53hxzh8pgc",
+      "viewConfig": {
+        "view": "BlockView",
+        "title": "块视图",
+        "collapsed": false,
+        "fields": [],
+        "group": "categoryKey"
+      },
+      "collapsed": false,
+      "parentId": "group_mer60bnom4ztr",
+      "fields": [
+        "period",
+        "categoryKey",
+        "date",
+        "icon",
+        "content"
+      ]
+    },
+    {
+      "id": "view_mer60bnosncfs",
+      "title": "3️⃣工作计划",
+      "viewType": "BlockView",
+      "dataSourceId": "ds_mer53hxzp1h3k",
+      "viewConfig": {
+        "view": "BlockView",
+        "title": "块视图",
+        "collapsed": false,
+        "fields": [],
+        "group": "categoryKey"
+      },
+      "collapsed": false,
+      "parentId": "group_mer60bnom4ztr",
+      "fields": [
+        "period",
+        "categoryKey",
+        "date",
+        "icon",
+        "content"
+      ]
+    },
+    {
+      "id": "view_mer60bnor9x6r",
+      "title": "4️⃣工作计划",
+      "viewType": "BlockView",
+      "dataSourceId": "ds_mer53hxz1d5hz",
+      "viewConfig": {
+        "view": "BlockView",
+        "title": "块视图",
+        "collapsed": false,
+        "fields": [],
+        "group": "categoryKey"
+      },
+      "collapsed": false,
+      "parentId": "group_mer60bnom4ztr",
+      "fields": [
+        "period",
+        "categoryKey",
+        "date",
+        "icon",
+        "content"
+      ]
     }
   ],
   "layouts": [
@@ -567,7 +2374,12 @@
       "id": "layout_memcg9jjoq6j4",
       "name": "全局布局",
       "viewInstanceIds": [
-        "view_membnf1hgjgm3"
+        "view_membnf1hgjgm3",
+        "view_mer6ll4mtbjry",
+        "view_mer6n7pwf7suy",
+        "view_mer6nwkl1hfxn",
+        "view_mer6oglaold8i",
+        "view_mer6oto0gp4ju"
       ],
       "displayMode": "list",
       "initialView": "月",
@@ -577,7 +2389,7 @@
     },
     {
       "id": "layout_mepgxvhes0ghq",
-      "name": "思考测试",
+      "name": "数据视图",
       "viewInstanceIds": [
         "view_meqt389ufhx91"
       ],
@@ -590,6 +2402,75 @@
       "gridConfig": {
         "columns": 2
       }
+    },
+    {
+      "id": "layout_mer6a23a8isuw",
+      "name": "总结布局",
+      "viewInstanceIds": [
+        "view_mepgw6pp1iqso",
+        "view_mer5qc61gnav2",
+        "view_mer5qdssxdd2f",
+        "view_mer5qenaak5oq",
+        "view_mer5qlrm3xnu6",
+        "view_mepob3wx8y6de",
+        "view_mer5qc61jfxaw",
+        "view_mer5qdss5fz9m",
+        "view_mer5qena23btv",
+        "view_mer5qlrmishnl",
+        "view_mepob31qw4rkw",
+        "view_mer5qc61hph6b",
+        "view_mer5qdss3iyvk",
+        "view_mer5qenavnxxt",
+        "view_mer5qlrmy8s09",
+        "view_mepob2tblbjjz",
+        "view_mer5qc617rq9u",
+        "view_mer5qdsszcvn5",
+        "view_mer5qenaqlltt",
+        "view_mer5qlrmxm6dv"
+      ],
+      "displayMode": "grid",
+      "initialView": "月",
+      "initialDateFollowsNow": false,
+      "parentId": null,
+      "gridConfig": {
+        "columns": 5
+      },
+      "isOverviewMode": true,
+      "initialDate": "2025-06-16"
+    },
+    {
+      "id": "layout_mer6y66i78epn",
+      "name": "计划布局",
+      "viewInstanceIds": [
+        "view_mer60bnnknqug",
+        "view_mer60bno9eenu",
+        "view_mer60bnotqdt6",
+        "view_mer60bnoqjuvd",
+        "view_mer60bnoowtde",
+        "view_mer60bnnvblx5",
+        "view_mer60bnonxojo",
+        "view_mer60bnom80n2",
+        "view_mer60bnolot1w",
+        "view_mer60bnob6mvt",
+        "view_mer60bnn8haqj",
+        "view_mer60bnot3klw",
+        "view_mer60bno1632k",
+        "view_mer60bno49f5p",
+        "view_mer60bnosncfs",
+        "view_mer60bnoftke2",
+        "view_mer60bno7dsek",
+        "view_mer60bnopn0k0",
+        "view_mer60bnobvo0w",
+        "view_mer60bnor9x6r"
+      ],
+      "displayMode": "grid",
+      "initialView": "月",
+      "initialDateFollowsNow": false,
+      "parentId": null,
+      "gridConfig": {
+        "columns": 5
+      },
+      "isOverviewMode": true
     }
   ],
   "inputSettings": {
