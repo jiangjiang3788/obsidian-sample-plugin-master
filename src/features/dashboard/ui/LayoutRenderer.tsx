@@ -61,27 +61,36 @@ export function LayoutRenderer({ layout, dataStore, plugin }: Props) {
         const dataSource = allDataSources.find(ds => ds.id === viewInstance.dataSourceId);
         if (!dataSource) return <div class="think-module">数据源 (ID: {viewInstance.dataSourceId}) 未找到</div>;
 
-        // [核心修复] 在这里计算好每个视图自己的dateRange
-        const dataSourcePeriodFilter = (dataSource.filters || []).find(f => f.field === 'period');
-        const viewPeriod = dataSourcePeriodFilter ? dataSourcePeriodFilter.value : layoutView;
-        const range = getDateRange(layoutDate, viewPeriod);
-        const dateRangeForView: [Date, Date] = [range.startDate.toDate(), range.endDate.toDate()];
+        const dateRangeForView = useMemo(() => {
+            let range;
+            if (viewInstance.viewType === 'StatisticsView') {
+                range = getDateRange(layoutDate, '年'); 
+            } else {
+                const dataSourcePeriodFilter = (dataSource.filters || []).find(f => f.field === 'period');
+                const viewPeriod = dataSourcePeriodFilter ? dataSourcePeriodFilter.value : layoutView;
+                range = getDateRange(layoutDate, viewPeriod);
+            }
+            return [range.startDate.toDate(), range.endDate.toDate()] as [Date, Date];
+        }, [layoutDate, layoutView, viewInstance.viewType, dataSource.filters]);
 
         const viewItems = useMemo(() => {
-            const start = range.startDate.toISOString().slice(0, 10);
-            const end = range.endDate.toISOString().slice(0, 10);
+            const start = dayjs(dateRangeForView[0]).format('YYYY-MM-DD');
+            const end = dayjs(dateRangeForView[1]).format('YYYY-MM-DD');
 
             let items = dataStore.queryItems();
 			items = filterByRules(items, dataSource.filters || []);
             items = filterByKeyword(items, kw);
 
-			if (!layout.isOverviewMode && !dataSourcePeriodFilter) {
-				items = filterByPeriod(items, layoutView);
+			if (!layout.isOverviewMode) {
+                const dataSourcePeriodFilter = (dataSource.filters || []).find(f => f.field === 'period');
+                if (!dataSourcePeriodFilter) {
+				    items = filterByPeriod(items, layoutView);
+                }
 			}
 
             items = filterByDateRange(items, start, end);
             return sortItems(items, dataSource.sort || []);
-        }, [dataStore, force, dataSource, kw, layoutDate, layoutView, layout.isOverviewMode]);
+        }, [dataStore, force, dataSource, kw, dateRangeForView, layout.isOverviewMode, layoutView]);
 
         const ViewComponent = (ViewComponents as any)[viewInstance.viewType];
         if (!ViewComponent) return <div class="think-module">未知视图: {viewInstance.viewType}</div>;
@@ -89,17 +98,12 @@ export function LayoutRenderer({ layout, dataStore, plugin }: Props) {
         const viewProps: any = {
             app: plugin.app,
             items: viewItems,
-            dateRange: dateRangeForView, // [核心修复] 将计算好的 dateRange 传递下去
-            module: viewInstance, 
-            ...viewInstance.viewConfig,
+            dateRange: dateRangeForView, 
+            module: viewInstance, // [核心修改] 传入完整的视图配置
+            ...viewInstance.viewConfig, // 仍然展开，方便TimelineView等直接使用
             groupField: viewInstance.group,
             fields: viewInstance.fields,
         };
-
-        if (viewInstance.viewType === 'TableView') {
-            viewProps.rowField = viewInstance.viewConfig?.rowField || '';
-            viewProps.colField = viewInstance.viewConfig?.colField || '';
-        }
 
         return (
             <ModulePanel title={viewInstance.title} collapsed={viewInstance.collapsed}>
@@ -108,11 +112,7 @@ export function LayoutRenderer({ layout, dataStore, plugin }: Props) {
         );
     };
 
-    const gridStyle = layout.displayMode === 'grid' ? {
-        display: 'grid',
-        gridTemplateColumns: `repeat(${layout.gridConfig?.columns || 2}, 1fr)`,
-        gap: '8px'
-    } : {};
+    const gridStyle = layout.displayMode === 'grid' ? { display: 'grid', gridTemplateColumns: `repeat(${layout.gridConfig?.columns || 2}, 1fr)`, gap: '8px' } : {};
 
     return (
         <div>
@@ -121,9 +121,7 @@ export function LayoutRenderer({ layout, dataStore, plugin }: Props) {
                     <TimeNavigator currentDate={layoutDate} onDateChange={handleOverviewDateChange} />
                 ) : (
                     <div class="tp-toolbar" style="margin-bottom:8px;">
-                        {['年', '季', '月', '周', '天'].map(v => (
-                            <button onClick={() => setLayoutView(v)} class={v === layoutView ? 'active' : ''}>{v}</button>
-                        ))}
+                        {['年', '季', '月', '周', '天'].map(v => ( <button onClick={() => setLayoutView(v)} class={v === layoutView ? 'active' : ''}>{v}</button> ))}
                         <button disabled style="font-weight:bold;margin:0 4px;background:#fff;">{fmt(layoutDate, layoutView)}</button>
                         <button onClick={() => setLayoutDate(prev => prev.clone().subtract(1, unit(layoutView)))}>←</button>
                         <button onClick={() => setLayoutDate(prev => prev.clone().add(1, unit(layoutView)))}>→</button>
