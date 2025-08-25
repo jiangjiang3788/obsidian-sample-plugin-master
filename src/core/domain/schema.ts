@@ -82,7 +82,7 @@ export interface InputSettings {
 
 // ----- 视图与布局定义 (保持不变) ----- //
 
-export const VIEW_OPTIONS = ['BlockView', 'TableView', 'ExcelView', 'TimelineView'] as const;
+export const VIEW_OPTIONS = ['BlockView', 'TableView', 'ExcelView', 'TimelineView', 'StatisticsView'] as const;
 export type ViewName = typeof VIEW_OPTIONS[number];
 
 // [修改] 实现 Groupable 接口

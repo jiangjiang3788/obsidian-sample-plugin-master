@@ -400,4 +400,154 @@ body.theme-dark .think-pills .think-pill{
     border-color: #FFD600;
     box-shadow: 0 0 0 1px #FFD600;
 }
+
+
+
+/* [全新] Statistics View (统计视图) 样式 */
+.statistics-view {
+    padding: 8px;
+    background: var(--background-secondary);
+    border-radius: 8px;
+}
+.sv-timeline {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+.sv-row {
+    display: flex;
+    gap: 8px;
+}
+.sv-row-weeks {
+    display: flex;
+    gap: 4px;
+}
+.sv-month-col {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    flex: 1;
+}
+
+/* 柱状图通用样式 */
+.sv-bar-chart {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    width: 100%;
+    min-height: 48px;
+    border-radius: 6px;
+    overflow: hidden;
+    background: var(--background-primary);
+    border: 1px solid var(--background-modifier-border);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    flex: 1;
+}
+.sv-bar-chart:hover {
+    border-color: var(--interactive-accent);
+}
+.sv-bar-chart.is-empty {
+    align-items: center;
+    color: var(--text-faint);
+    font-size: 12px;
+}
+
+.sv-bar-chart-label {
+    position: absolute;
+    top: 5px;
+    left: 8px;
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--text-muted);
+    z-index: 2;
+}
+
+.sv-bar-chart-container {
+    display: flex;
+    width: 100%;
+    height: 100%;
+    align-self: flex-end; /* 使其从底部开始 */
+}
+.sv-bar-segment {
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: rgba(0,0,0,0.7);
+    font-size: 12px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    text-shadow: 0 0 5px #ffffff99;
+}
+.sv-bar-segment:hover {
+    filter: brightness(1.1);
+    transform: scale(1.02);
+    z-index: 1;
+}
+.sv-bar-segment-number {
+    opacity: 0;
+    transition: opacity 0.2s;
+}
+.sv-bar-segment:hover .sv-bar-segment-number {
+    opacity: 1;
+}
+
+/* 周视图的特殊样式 (更紧凑) */
+.sv-month-col .sv-bar-chart {
+    min-height: 24px;
+}
+.sv-month-col .sv-bar-chart-label {
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: var(--text-normal);
+}
+.sv-month-col .sv-bar-chart-container {
+    opacity: 0.3;
+}
+.sv-month-col .sv-bar-chart:hover .sv-bar-chart-container {
+    opacity: 1;
+}
+.sv-month-col .sv-bar-chart:hover .sv-bar-chart-label {
+    opacity: 0;
+}
+.sv-month-col .sv-bar-segment-number {
+    font-size: 10px;
+}
+
+/* 悬浮窗样式 */
+.sv-popover {
+    background: var(--background-primary);
+    border: 1px solid var(--background-modifier-border);
+    border-radius: 8px;
+    box-shadow: var(--shadow-l);
+    max-width: 400px;
+    min-width: 250px;
+}
+.sv-popover-title {
+    font-weight: bold;
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--background-modifier-border);
+}
+.sv-popover-content {
+    max-height: 300px;
+    overflow-y: auto;
+    padding: 8px;
+}
+.sv-popover-item {
+    padding: 6px 10px;
+    border-radius: 4px;
+    margin-bottom: 4px;
+}
+.sv-popover-link {
+    text-decoration: none;
+    color: var(--text-normal);
+}
+.sv-popover-empty {
+    color: var(--text-faint);
+    padding: 16px;
+    text-align: center;
+}
 `.trim();
