@@ -148,6 +148,13 @@
       ],
       "sort": [],
       "parentId": null
+    },
+    {
+      "id": "ds_meqt2x9ecim6c",
+      "name": "不筛选数据",
+      "filters": [],
+      "sort": [],
+      "parentId": null
     }
   ],
   "viewInstances": [
@@ -488,6 +495,38 @@
         "icon",
         "content"
       ]
+    },
+    {
+      "id": "view_meqt389ufhx91",
+      "title": "数据汇总",
+      "viewType": "StatisticsView",
+      "dataSourceId": "ds_meqt2x9ecim6c",
+      "viewConfig": {
+        "categoryOrder": [
+          "总结",
+          "计划",
+          "事件",
+          "感受",
+          "思考",
+          ""
+        ],
+        "categoryColors": {
+          "总结": "#FFD6E0",
+          "计划": "#B5EAD7",
+          "事件": "#FFFACD",
+          "感受": "#FFDAC1",
+          "思考": "#C7CEEA"
+        }
+      },
+      "collapsed": false,
+      "parentId": null,
+      "fields": [
+        "categoryKey",
+        "icon",
+        "tags",
+        "content"
+      ],
+      "group": "tags"
     }
   ],
   "layouts": [
@@ -507,19 +546,16 @@
       "id": "layout_mepgxvhes0ghq",
       "name": "思考测试",
       "viewInstanceIds": [
-        "view_mepgw6pp1iqso",
-        "view_mepob3wx8y6de",
-        "view_mepob31qw4rkw",
-        "view_mepob2tblbjjz"
+        "view_meqt389ufhx91"
       ],
-      "displayMode": "grid",
+      "displayMode": "list",
       "initialView": "月",
       "initialDateFollowsNow": false,
       "parentId": null,
-      "isOverviewMode": true,
-      "initialDate": "2024-11-25",
+      "isOverviewMode": false,
+      "initialDate": "2026-01-01",
       "gridConfig": {
-        "columns": 5
+        "columns": 2
       }
     }
   ],

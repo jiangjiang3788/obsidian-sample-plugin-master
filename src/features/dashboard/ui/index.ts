@@ -2,6 +2,7 @@
 import { TableView } from './TableView';
 import { BlockView } from './BlockView';
 import { ExcelView } from './ExcelView';
+import { StatisticsView } from './StatisticsView';
 import { TimelineView } from './TimelineView';
 import type { ComponentType } from 'preact';
 
@@ -20,6 +21,7 @@ export const VIEW_REGISTRY: Record<ViewName, ComponentType<any>> = {
   BlockView,
   TimelineView,
   ExcelView,
+  StatisticsView, // [新增]
 } as const;
 
 /** Dashboard.tsx 动态调用用这个常量 */
