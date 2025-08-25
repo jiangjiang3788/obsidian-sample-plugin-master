@@ -7,16 +7,16 @@ interface ModulePanelProps {
   title: string;
   collapsed?: boolean;
   children: any;
+  onActionClick?: () => void;
 }
 
-export function ModulePanel({ title, collapsed: initialCollapsed, children }: ModulePanelProps) {
+export function ModulePanel({ title, collapsed: initialCollapsed, children, onActionClick }: ModulePanelProps) {
   const [collapsed, setCollapsed] = useState<boolean>(!!initialCollapsed);
   const rootRef = useRef<HTMLDivElement>(null);
 
   const toggleCollapsed = () => setCollapsed(v => !v);
 
   const onHeaderClick = (e: MouseEvent) => {
-    // 如果点击的是可交互的 actions 区域，则不觸發折叠
     if ((e.target as HTMLElement).closest('.module-header-actions')) {
         return;
     }
@@ -49,9 +49,8 @@ export function ModulePanel({ title, collapsed: initialCollapsed, children }: Mo
                     class="module-action-plus" 
                     title="快捷输入"
                     onClick={(e) => {
-                        e.stopPropagation(); // 阻止事件冒泡到 module-header
-                        // 您可以在此添加点击"+"号后的具体逻辑
-                        console.log(`Action for "${title}" clicked.`);
+                        e.stopPropagation();
+                        onActionClick?.();
                     }}
                 >
                     +
