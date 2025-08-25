@@ -516,7 +516,41 @@
           "事件": "#FFFACD",
           "感受": "#FFDAC1",
           "思考": "#C7CEEA"
-        }
+        },
+        "categories": [
+          {
+            "name": "🧠",
+            "color": "#6b6977"
+          },
+          {
+            "name": "打卡",
+            "color": "#f5bb0b"
+          },
+          {
+            "name": "感受",
+            "color": "#fb732d"
+          },
+          {
+            "name": "计划",
+            "color": "#61d982"
+          },
+          {
+            "name": "任务",
+            "color": "#8e0dbd"
+          },
+          {
+            "name": "事件",
+            "color": "#c5c0af"
+          },
+          {
+            "name": "思考",
+            "color": "#dae735"
+          },
+          {
+            "name": "总结",
+            "color": "#59ac9b"
+          }
+        ]
       },
       "collapsed": false,
       "parentId": null,
@@ -525,8 +559,7 @@
         "icon",
         "tags",
         "content"
-      ],
-      "group": "tags"
+      ]
     }
   ],
   "layouts": [
@@ -550,7 +583,7 @@
       ],
       "displayMode": "list",
       "initialView": "月",
-      "initialDateFollowsNow": false,
+      "initialDateFollowsNow": true,
       "parentId": null,
       "isOverviewMode": false,
       "initialDate": "2026-01-01",

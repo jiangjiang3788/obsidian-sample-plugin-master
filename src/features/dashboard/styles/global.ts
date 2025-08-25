@@ -402,152 +402,188 @@ body.theme-dark .think-pills .think-pill{
 }
 
 
-
-/* [全新] Statistics View (统计视图) 样式 */
+/* [全新] Statistics View (统计视图) 样式 V3.1 */
 .statistics-view {
     padding: 8px;
     background: var(--background-secondary);
     border-radius: 8px;
+    box-sizing: border-box;
+}
+.statistics-view-placeholder {
+    padding: 40px;
+    text-align: center;
+    color: var(--text-faint);
+    font-size: 1.1em;
 }
 .sv-timeline {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 12px;
 }
 .sv-row {
-    display: flex;
+    display: grid;
     gap: 8px;
+    border-top: 1px solid var(--background-modifier-border);
+    padding-top: 12px;
 }
+.sv-row:first-child {
+    border-top: none;
+    padding-top: 0;
+}
+.sv-row-quarters { grid-template-columns: repeat(4, 1fr); }
+.sv-row-months { grid-template-columns: repeat(12, 1fr); }
 .sv-row-weeks {
-    display: flex;
+    display: grid;
+    grid-template-columns: repeat(12, 1fr);
     gap: 4px;
+    border-top: 1px solid var(--background-modifier-border);
+    padding-top: 12px;
 }
 .sv-month-col {
     display: flex;
     flex-direction: column;
     gap: 4px;
-    flex: 1;
+}
+.sv-month-col-header {
+    text-align: center;
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--text-faint);
+}
+.sv-month-col-weeks {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
 }
 
-/* 柱状图通用样式 */
-.sv-bar-chart {
+/* 统一的图表块样式 */
+.sv-chart-block {
     position: relative;
     display: flex;
     flex-direction: column;
-    justify-content: center;
-    width: 100%;
-    min-height: 48px;
     border-radius: 6px;
     overflow: hidden;
     background: var(--background-primary);
     border: 1px solid var(--background-modifier-border);
     cursor: pointer;
     transition: all 0.2s ease;
-    flex: 1;
+    padding: 8px;
+    height: 120px;
 }
-.sv-bar-chart:hover {
+.sv-chart-block.is-compact {
+    height: 60px;
+    padding: 4px;
+}
+.sv-chart-block:hover {
     border-color: var(--interactive-accent);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-s);
 }
-.sv-bar-chart.is-empty {
-    align-items: center;
-    color: var(--text-faint);
-    font-size: 12px;
-}
-
-.sv-bar-chart-label {
-    position: absolute;
-    top: 5px;
-    left: 8px;
-    font-size: 11px;
-    font-weight: 500;
-    color: var(--text-muted);
-    z-index: 2;
-}
-
-.sv-bar-chart-container {
-    display: flex;
+.sv-chart-block.is-empty .sv-chart-label {
     width: 100%;
-    height: 100%;
-    align-self: flex-end; /* 使其从底部开始 */
-}
-.sv-bar-segment {
     height: 100%;
     display: flex;
     align-items: center;
     justify-content: center;
-    color: rgba(0,0,0,0.7);
+    color: var(--text-faint);
     font-size: 12px;
+}
+.sv-chart-label {
+    font-size: 11px;
     font-weight: 500;
-    transition: all 0.2s ease;
-    text-shadow: 0 0 5px #ffffff99;
+    color: var(--text-muted);
+    text-align: center;
+    margin-bottom: 4px;
+    flex-shrink: 0;
 }
-.sv-bar-segment:hover {
-    filter: brightness(1.1);
-    transform: scale(1.02);
-    z-index: 1;
-}
-.sv-bar-segment-number {
-    opacity: 0;
-    transition: opacity 0.2s;
-}
-.sv-bar-segment:hover .sv-bar-segment-number {
-    opacity: 1;
+.sv-chart-bars-container {
+    display: flex;
+    gap: 4px;
+    flex-grow: 1;
+    align-items: flex-end;
 }
 
-/* 周视图的特殊样式 (更紧凑) */
-.sv-month-col .sv-bar-chart {
-    min-height: 24px;
+/* [核心修改] 竖向柱状图的样式调整 */
+.sv-vbar-wrapper {
+    flex: 1;
+    min-width: 0;
+    height: 100%;
+    display: flex;
+    flex-direction: column; /* 改为正常的列方向 */
+    justify-content: flex-end; /* 内容（标签和柱子）在底部对齐 */
+    align-items: center;
 }
-.sv-month-col .sv-bar-chart-label {
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    color: var(--text-normal);
-}
-.sv-month-col .sv-bar-chart-container {
-    opacity: 0.3;
-}
-.sv-month-col .sv-bar-chart:hover .sv-bar-chart-container {
-    opacity: 1;
-}
-.sv-month-col .sv-bar-chart:hover .sv-bar-chart-label {
-    opacity: 0;
-}
-.sv-month-col .sv-bar-segment-number {
+.sv-vbar-bar-label {
     font-size: 10px;
+    color: var(--text-muted);
+    font-weight: 500;
+    margin-bottom: 2px; /* 在数字和柱子顶部之间创建间距 */
 }
+.sv-vbar-bar {
+    width: 80%;
+    border-radius: 3px 3px 0 0;
+    background: #ccc;
+    min-height: 2px;
+    transition: height 0.3s ease;
+}
+
+/* ... 悬浮窗样式保持不变 ... */
+.sv-popover {
+    background: var(--background-primary);
+    border: 1px solid var(--background-modifier-border);
+    border-radius: 12px;
+    box-shadow: var(--shadow-l);
+    width: 500px;
+    max-width: 90vw;
+}
+.sv-popover-title {
+    font-weight: bold;
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--background-modifier-border);
+}
+.sv-popover-content {
+    max-height: 450px;
+    overflow-y: auto;
+    padding: 4px;
+}
+.sv-popover-content .block-language-think {
+    padding: 0;
+}
+.sv-popover-empty {
+    color: var(--text-faint);
+    padding: 24px;
+    text-align: center;
+}
+
 
 /* 悬浮窗样式 */
 .sv-popover {
     background: var(--background-primary);
     border: 1px solid var(--background-modifier-border);
-    border-radius: 8px;
+    border-radius: 12px;
     box-shadow: var(--shadow-l);
-    max-width: 400px;
-    min-width: 250px;
+    width: 500px;
+    max-width: 90vw;
 }
 .sv-popover-title {
     font-weight: bold;
-    padding: 8px 12px;
+    padding: 8px 8px 8px 16px; /* 调整padding为右侧按钮留出空间 */
     border-bottom: 1px solid var(--background-modifier-border);
+    display: flex; /* [新增] 使用flex布局 */
+    justify-content: space-between; /* [新增] 两端对齐 */
+    align-items: center; /* [新增] 垂直居中 */
 }
 .sv-popover-content {
-    max-height: 300px;
+    max-height: 450px;
     overflow-y: auto;
-    padding: 8px;
+    padding: 4px;
 }
-.sv-popover-item {
-    padding: 6px 10px;
-    border-radius: 4px;
-    margin-bottom: 4px;
-}
-.sv-popover-link {
-    text-decoration: none;
-    color: var(--text-normal);
+.sv-popover-content .block-language-think {
+    padding: 0;
 }
 .sv-popover-empty {
     color: var(--text-faint);
-    padding: 16px;
+    padding: 24px;
     text-align: center;
 }
 `.trim();
