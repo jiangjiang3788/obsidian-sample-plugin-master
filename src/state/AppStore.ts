@@ -1,11 +1,13 @@
 // src/state/AppStore.ts
 import { useState, useEffect } from 'preact/hooks';
-// [修改] 导入新增的 Group 和 GroupType 类型
 import type { ThinkSettings, DataSource, ViewInstance, Layout, InputSettings, BlockTemplate, ThemeDefinition, ThemeOverride, Group, GroupType, Groupable } from '@core/domain/schema';
 import type ThinkPlugin from '../main';
 import { VIEW_DEFAULT_CONFIGS } from '@features/dashboard/settings/ModuleEditors/registry';
+// [新增] 导入 App, Notice, QuickInputModal 和 dayjs
+import { App, Notice } from 'obsidian';
+import { QuickInputModal } from '@features/quick-input/ui/QuickInputModal';
+import { dayjs } from '@core/utils/date';
 
-// ... AppState, AppStore 类的定义保持不变 ...
 export interface AppState {
     settings: ThinkSettings;
 }
@@ -43,6 +45,50 @@ export class AppStore {
         return () => this._listeners.delete(listener);
     }
 
+    // [新增] 快捷输入的核心逻辑控制器
+    /**
+     * 根据视图配置，触发最合适的快捷输入模态框
+     * @param app Obsidian App 实例
+     * @param viewInstance 用户点击了哪个视图的 "+" 按钮
+     * @param dateContext 视图当前的日期上下文
+     * @param periodContext 视图当前的周期上下文 (年/季/月/周/日)
+     */
+    public openQuickInputForView(app: App, viewInstance: ViewInstance, dateContext: dayjs.Dayjs, periodContext: string) {
+        const settings = this.getSettings();
+        const dataSource = settings.dataSources.find(ds => ds.id === viewInstance.dataSourceId);
+
+        if (!dataSource) {
+            new Notice('快捷输入失败：找不到对应的数据源。');
+            return;
+        }
+
+        const categoryFilter = dataSource.filters.find(f => f.field === 'categoryKey' && (f.op === '=' || f.op === 'includes'));
+        if (!categoryFilter || !categoryFilter.value) {
+            new Notice('快捷输入失败：此视图的数据源未按 "categoryKey" 进行筛选。');
+            return;
+        }
+
+        const blockName = categoryFilter.value as string; // e.g., "打卡" or "工作/项目A"
+        const targetBlock = settings.inputSettings.blocks.find(b => b.name === blockName);
+
+        if (!targetBlock) {
+            new Notice(`快捷输入失败：找不到名为 "${blockName}" 的Block模板。`);
+            return;
+        }
+
+        // 尝试根据 blockName (来自categoryKey) 查找匹配的主题
+        const targetTheme = settings.inputSettings.themes.find(t => t.path === blockName);
+
+        // 构建预填写的上下文信息对象
+        const context: Record<string, any> = {
+            '日期': dateContext.format('YYYY-MM-DD'),
+            '周期': periodContext,
+        };
+
+        // 使用找的的 Block ID, 上下文, 和 主题 ID 来打开模态框
+        new QuickInputModal(app, targetBlock.id, context, targetTheme?.id).open();
+    }
+
     private _notify() {
         this._listeners.forEach(l => l());
     }
@@ -61,7 +107,6 @@ export class AppStore {
         return `${prefix}_${Date.now().toString(36)}${Math.random().toString(36).slice(2, 7)}`;
     }
 
-    // --- [修改] 通用工具函数，现在可以处理带 parentId 的项 ---
     private _moveItemInArray<T extends Groupable>(array: T[], id: string, direction: 'up' | 'down') {
         const siblings = array.filter(item => item.parentId === array.find(i => i.id === id)?.parentId);
         const index = siblings.findIndex(item => item.id === id);
@@ -89,13 +134,11 @@ export class AppStore {
         
         const currentName = (originalItem as any)[nameField] || '';
         (newItem as any)[nameField] = `${currentName} (副本)`;
-        // 复制的项应与原项在同一分组下
         newItem.parentId = originalItem.parentId;
 
         array.splice(index + 1, 0, newItem);
     }
 
-    // --- [新增] 分组管理 Actions ---
     public addGroup = async (name: string, parentId: string | null, type: GroupType) => {
         await this._updateSettingsAndPersist(draft => {
             const newGroup: Group = { id: this._generateId('group'), name, parentId, type };
@@ -119,11 +162,9 @@ export class AppStore {
 
             const newParentId = groupToDelete.parentId;
 
-            // 移动子分组
             draft.groups.forEach(g => {
                 if (g.parentId === id) g.parentId = newParentId;
             });
-            // 移动子配置项
             const itemArrays: Groupable[][] = [draft.dataSources, draft.viewInstances, draft.layouts];
             itemArrays.forEach(arr => {
                 arr.forEach(item => {
@@ -131,33 +172,27 @@ export class AppStore {
                 });
             });
 
-            // 删除分组
             draft.groups = draft.groups.filter(g => g.id !== id);
         });
     }
     
-	// [新增] 深度复制分组及其所有内容
 	public duplicateGroup = async (groupId: string) => {
 		await this._updateSettingsAndPersist(draft => {
 			const groupToDuplicate = draft.groups.find(g => g.id === groupId);
 			if (!groupToDuplicate) return;
 
-			// 递归函数，用于深度复制
 			const deepDuplicate = (originalGroupId: string, newParentId: string | null) => {
 				const originalGroup = draft.groups.find(g => g.id === originalGroupId);
 				if (!originalGroup) return;
 
-				// 1. 复制当前分组
 				const newGroup: Group = {
 					...structuredClone(originalGroup),
 					id: this._generateId('group'),
 					parentId: newParentId,
-					// 只有最顶层的分组名称添加“(副本)”后缀
 					name: originalGroup.id === groupId ? `${originalGroup.name} (副本)` : originalGroup.name,
 				};
 				draft.groups.push(newGroup);
 
-				// 2. 复制此分组下的直接子项目 (DataSources, Views, Layouts)
 				const getItemsArrayForType = (type: GroupType) => {
 					switch (type) {
 						case 'dataSource': return { items: draft.dataSources, prefix: 'ds' };
@@ -173,24 +208,20 @@ export class AppStore {
 					const newItem = {
 						...structuredClone(item),
 						id: this._generateId(prefix),
-						parentId: newGroup.id, // 指向新创建的父分组
+						parentId: newGroup.id,
 					};
 					(items as Groupable[]).push(newItem);
 				});
 
-				// 3. 递归复制子分组
 				const childGroupsToDuplicate = draft.groups.filter(g => g.parentId === originalGroupId);
 				childGroupsToDuplicate.forEach(childGroup => {
 					deepDuplicate(childGroup.id, newGroup.id);
 				});
 			};
-
-			// 启动递归复制
 			deepDuplicate(groupId, groupToDuplicate.parentId);
 		});
 	}
 
-    // --- [新增] 通用移动 Action ---
     public moveItem = async (itemId: string, targetParentId: string | null) => {
         await this._updateSettingsAndPersist(draft => {
             const allItems: (Groupable & {id: string})[] = [...draft.groups, ...draft.dataSources, ...draft.viewInstances, ...draft.layouts];
@@ -198,13 +229,11 @@ export class AppStore {
 
             if (!itemToMove) return;
 
-            // 防循环校验：如果要移动的是一个分组，确保目标不是它的子孙
             if (itemId.startsWith('group_')) {
                 let currentParentId = targetParentId;
                 while(currentParentId) {
                     if (currentParentId === itemId) {
                         console.error("不能将分组移动到其自己的子分组中。");
-                        // 在实际应用中可以 new Notice() 提示用户
                         return; 
                     }
                     currentParentId = draft.groups.find(g => g.id === currentParentId)?.parentId ?? null;
@@ -215,8 +244,6 @@ export class AppStore {
         });
     }
 
-
-    // --- [修改] 数据源、视图、布局 Actions ---
     public addDataSource = async (name: string, parentId: string | null = null) => {
         await this._updateSettingsAndPersist(draft => {
             draft.dataSources.push({ id: this._generateId('ds'), name, filters: [], sort: [], parentId });

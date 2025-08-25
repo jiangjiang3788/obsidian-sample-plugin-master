@@ -2470,7 +2470,8 @@
       "gridConfig": {
         "columns": 5
       },
-      "isOverviewMode": true
+      "isOverviewMode": true,
+      "initialDate": "2025-05-26"
     }
   ],
   "inputSettings": {
@@ -2550,10 +2551,47 @@
       {
         "id": "blk_mejsdvflptluo",
         "name": "计划",
-        "fields": [],
-        "outputTemplate": "",
-        "targetFile": "",
-        "appendUnderHeader": ""
+        "fields": [
+          {
+            "id": "field_mer92so5",
+            "key": "周期",
+            "label": "周期",
+            "type": "radio",
+            "options": [
+              {
+                "value": "周",
+                "label": "周"
+              },
+              {
+                "value": "月",
+                "label": "月"
+              },
+              {
+                "value": "季",
+                "label": "季"
+              },
+              {
+                "value": "🆕",
+                "label": "年"
+              }
+            ]
+          },
+          {
+            "id": "field_mer94wbx",
+            "key": "日期",
+            "label": "日期",
+            "type": "time"
+          },
+          {
+            "id": "field_mer95h6l",
+            "key": "内容",
+            "label": "内容",
+            "type": "textarea"
+          }
+        ],
+        "outputTemplate": "<!-- start -->\n分类:: 计划\n分类:: {{周期}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n",
+        "targetFile": "01/计划.md",
+        "appendUnderHeader": "## {{theme}}"
       },
       {
         "id": "blk_mejsfuehqj4s0",
@@ -2561,28 +2599,48 @@
         "fields": [
           {
             "id": "field_mekrw2ui",
-            "key": "002",
-            "label": "新字段 1",
+            "key": "周期",
+            "label": "周期",
             "type": "radio",
             "options": [
               {
-                "value": "1",
-                "label": "1",
+                "value": "周",
+                "label": "周",
                 "extraValues": {
                   "1.2": "1.2",
                   "1.1": "1.1"
                 }
               },
               {
-                "value": "2",
-                "label": "2"
+                "value": "月",
+                "label": "月"
+              },
+              {
+                "value": "季",
+                "label": "季"
+              },
+              {
+                "value": "年",
+                "label": "年"
               }
             ]
+          },
+          {
+            "id": "field_mer983il",
+            "key": "日期",
+            "label": "日期",
+            "type": "date"
+          },
+          {
+            "id": "field_mer989rn",
+            "key": "内容",
+            "label": "内容",
+            "type": "textarea"
           }
         ],
-        "outputTemplate": "",
-        "targetFile": "",
-        "appendUnderHeader": ""
+        "outputTemplate": "<!-- start -->\n分类:: 总结\n分类:: {{周期}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->",
+        "targetFile": "01/总结.md",
+        "appendUnderHeader": "## {{theme}}"
       },
       {
         "id": "blk_mejsg1dc46fj9",
