@@ -1,7 +1,7 @@
 // src/core/settings/ui/LayoutSettings.tsx
 /** @jsxImportSource preact */
 import { h } from 'preact';
-import { useStore } from '@state/AppStore';
+import { useStore , AppStore} from '@state/AppStore';
 import { Box, Stack, Typography, TextField, Checkbox, FormControlLabel, Tooltip, Chip, Radio, RadioGroup as MuiRadioGroup } from '@mui/material';
 import type { Layout } from '@core/domain/schema';
 import { useMemo, useCallback } from 'preact/hooks';

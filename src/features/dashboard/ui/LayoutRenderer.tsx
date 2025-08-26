@@ -9,7 +9,7 @@ import type ThinkPlugin from '../../../main';
 import { ViewComponents } from '@features/dashboard/ui';
 import { getDateRange, dayjs, formatDateForView } from '@core/utils/date';
 import { filterByRules, sortItems, filterByDateRange, filterByKeyword, filterByPeriod } from '@core/utils/itemFilter';
-import { useStore } from '@state/AppStore';
+import { useStore , AppStore} from '@state/AppStore';
 import { TimeNavigator } from './TimeNavigator';
 // [重构] 导入 ActionService
 import { ActionService } from '@core/services/ActionService';

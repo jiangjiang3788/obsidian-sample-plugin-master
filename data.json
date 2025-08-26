@@ -1577,6 +1577,21 @@
       ]
     },
     {
+      "id": "view_mesci2vh386vf",
+      "title": "数据汇总 (副本)",
+      "viewType": "ExcelView",
+      "dataSourceId": "ds_meqt2x9ecim6c",
+      "viewConfig": {
+        "view": "ExcelView",
+        "title": "数据表格",
+        "collapsed": false,
+        "fields": []
+      },
+      "collapsed": false,
+      "parentId": null,
+      "fields": []
+    },
+    {
       "id": "view_mer5qc61gnav2",
       "title": "1️⃣生活总结",
       "viewType": "BlockView",
@@ -2472,6 +2487,17 @@
       },
       "isOverviewMode": true,
       "initialDate": "2025-05-26"
+    },
+    {
+      "id": "layout_mescqn3ltmxo3",
+      "name": "excle",
+      "viewInstanceIds": [
+        "view_mesci2vh386vf"
+      ],
+      "displayMode": "list",
+      "initialView": "月",
+      "initialDateFollowsNow": true,
+      "parentId": null
     }
   ],
   "inputSettings": {
