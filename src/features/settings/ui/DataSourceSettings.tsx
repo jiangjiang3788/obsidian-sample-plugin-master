@@ -1,7 +1,7 @@
 // src/core/settings/ui/DataSourceSettings.tsx
 /** @jsxImportSource preact */
 import { h } from 'preact';
-import { useStore } from '@state/AppStore';
+import { useStore , AppStore} from '@state/AppStore';
 import { Typography, Stack, Box } from '@mui/material';
 import { getAllFields } from '@core/domain/schema';
 import { DataStore } from '@core/services/dataStore';

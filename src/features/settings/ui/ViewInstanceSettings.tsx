@@ -1,13 +1,11 @@
 // src/features/settings/ui/ViewInstanceSettings.tsx
-// [注意] 此文件已从 src/core/settings/ui/ 移动到新位置
-
 /** @jsxImportSource preact */
 import { h } from 'preact';
-import { useStore } from '@state/AppStore';
+// [紧急修复] 此处同时导入 AppStore 类和 useStore Hook
+import { useStore, AppStore } from '@state/AppStore'; 
 import { Box, Stack, Typography, FormControlLabel, Checkbox, Tooltip, Chip } from '@mui/material';
 import { VIEW_OPTIONS, ViewName, getAllFields } from '@core/domain/schema';
 import type { ViewInstance } from '@core/domain/schema';
-// [修改] 更新导入路径到新的 view-editors 目录
 import { VIEW_EDITORS } from './components/view-editors/registry';
 import { DataStore } from '@core/services/dataStore';
 import { useMemo } from 'preact/hooks';
@@ -18,20 +16,20 @@ import { useSettingsManager } from './hooks/useSettingsManager';
 
 const LABEL_WIDTH = '80px';
 
-// 内部编辑器组件保持不变
+// 内部编辑器组件
 function ViewInstanceEditor({ vi }: { vi: ViewInstance }) {
-    // ... 此函数内部代码无变化 ...
     const dataSources = useStore(state => state.settings.dataSources);
     const fieldOptions = useMemo(() => getAllFields(DataStore.instance.queryItems()), []);
     const EditorComponent = VIEW_EDITORS[vi.viewType];
     
     const correctedViewConfig = useMemo(() => {
         if (vi.viewConfig && typeof (vi.viewConfig as any).categories === 'object') return vi.viewConfig;
-        if (vi.viewConfig && (vi.viewConfig as any).viewConfig) return (vi.viewConfig as any).viewConfig;
+        if (vi.viewConfig && (vi.viewConfig as any).viewConfig) return (vi.viewconfig as any).viewConfig;
         return vi.viewConfig || {};
     }, [vi.viewConfig]);
 
     const handleUpdate = (updates: Partial<ViewInstance>) => {
+        // [修复] 现在 AppStore 是已定义的，这行代码可以正常工作
         AppStore.instance.updateViewInstance(vi.id, updates);
     };
     
