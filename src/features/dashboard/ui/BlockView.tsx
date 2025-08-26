@@ -1,26 +1,27 @@
 // src/features/dashboard/ui/BlockView.tsx
 /** @jsxImportSource preact */
 import { h } from 'preact';
-import { Item, readField } from '@core/domain/schema';
+import { Item, readField, ThemeDefinition } from '@core/domain/schema';
 import { makeObsUri } from '@core/utils/obsidian';
 import { TaskCheckbox } from '@shared/components/TaskCheckbox';
 import { DataStore } from '@core/services/dataStore';
 import { getFieldLabel } from '@core/domain/fields';
 import { useRef, useState, useEffect } from 'preact/hooks';
 import { App } from 'obsidian';
-import { useStore, AppStore } from '@state/AppStore'; // [新增] 导入 useStore
-import { TagsRenderer } from '@shared/components/TagsRenderer'; // [新增] 导入新的 TagsRenderer
+import { useStore } from '@state/AppStore';
+import { TagsRenderer } from '@shared/components/TagsRenderer';
 import { getCategoryColor } from '@core/domain/categoryColorMap';
+import { TaskSendToTimerButton } from '@shared/components/TaskSendToTimerButton'; // 导入计时器按钮
 
-// [修改] FieldRenderer 现在需要 allThemes prop
-const FieldRenderer = ({ item, fieldKey, app, allThemes }: { item: Item; fieldKey: string; app: App; allThemes: any[] }) => {
+// 内部辅助组件 1: FieldRenderer
+const FieldRenderer = ({ item, fieldKey, app, allThemes }: { item: Item; fieldKey: string; app: App; allThemes: ThemeDefinition[] }) => {
     const value = readField(item, fieldKey);
     if (value === null || value === undefined || value === '' || (Array.isArray(value) && value.length === 0)) {
         return null;
     }
     const label = getFieldLabel(fieldKey);
     
-    // [核心修改] 当字段为 tags 时，使用新的专用组件渲染
+    // 当字段为 tags 时，使用新的专用组件渲染
     if (fieldKey === 'tags') {
         return <TagsRenderer tags={value} allThemes={allThemes} />;
     }
@@ -52,11 +53,10 @@ const FieldRenderer = ({ item, fieldKey, app, allThemes }: { item: Item; fieldKe
     );
 };
 
-
 const isDone = (k?: string) => /\/(done|cancelled)$/i.test(k || '');
 
-// ... TaskItem 和 BlockItem 组件现在需要传递 allThemes prop ...
-const TaskItem = ({ item, fields, onMarkDone, app, allThemes }: { item: Item; fields: string[]; onMarkDone: (id: string) => void; app: App; allThemes: any[] }) => {
+// 内部辅助组件 2: TaskItem
+const TaskItem = ({ item, fields, onMarkDone, app, allThemes }: { item: Item; fields: string[]; onMarkDone: (id: string) => void; app: App; allThemes: ThemeDefinition[] }) => {
     const done = isDone(item.categoryKey);
     return (
         <div class="bv-item bv-item--task">
@@ -64,11 +64,15 @@ const TaskItem = ({ item, fields, onMarkDone, app, allThemes }: { item: Item; fi
                 <TaskCheckbox done={done} onMarkDone={() => onMarkDone(item.id)} />
             </div>
             <div class="bv-task-content">
-                <a href={makeObsUri(item)} target="_blank" rel="noopener" class={`bv-task-title ${done ? 'task-done' : ''}`}>
-                    {item.icon && <span class="icon" style="margin-right: 4px;">{item.icon}</span>}
-                    {item.title}
-                </a>
-                {/* [修改] 此处渲染字段时，向下传递 allThemes */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <a href={makeObsUri(item)} target="_blank" rel="noopener" class={`bv-task-title ${done ? 'task-done' : ''}`}>
+                        {item.icon && <span class="icon" style="margin-right: 4px;">{item.icon}</span>}
+                        {item.title}
+                    </a>
+                    {/* [修改] 只有未完成任务才显示计时器按钮 */}
+                    {!done && <TaskSendToTimerButton taskId={item.id} />}
+                </div>
+                {/* [修改] 为了统一样式，将字段渲染也包裹起来 */}
                 <div class="bv-fields-list-wrapper">
                     {fields.map(fieldKey => <FieldRenderer key={fieldKey} item={item} fieldKey={fieldKey} app={app} allThemes={allThemes} />)}
                 </div>
@@ -77,8 +81,8 @@ const TaskItem = ({ item, fields, onMarkDone, app, allThemes }: { item: Item; fi
     );
 };
 
-const BlockItem = ({ item, fields, isNarrow, app, allThemes }: { item: Item; fields: string[]; isNarrow: boolean; app: App; allThemes: any[] }) => {
-    // ... 内部逻辑不变 ...
+// 内部辅助组件 3: BlockItem
+const BlockItem = ({ item, fields, isNarrow, app, allThemes }: { item: Item; fields: string[]; isNarrow: boolean; app: App; allThemes: ThemeDefinition[] }) => {
     const metadataFields = fields.filter(f => f !== 'title' && f !== 'content');
     const showTitle = fields.includes('title') && item.title;
     const showContent = fields.includes('content') && item.content;
@@ -87,7 +91,6 @@ const BlockItem = ({ item, fields, isNarrow, app, allThemes }: { item: Item; fie
     return (
         <div class={`bv-item bv-item--block ${narrowClass}`}>
             <div class="bv-block-metadata">
-                {/* [修改] 此处渲染字段时，向下传递 allThemes */}
                 <div class="bv-fields-list-wrapper">
                      {metadataFields.map(fieldKey => <FieldRenderer key={fieldKey} item={item} fieldKey={fieldKey} app={app} allThemes={allThemes} />)}
                 </div>
@@ -109,7 +112,7 @@ const BlockItem = ({ item, fields, isNarrow, app, allThemes }: { item: Item; fie
 };
 
 
-// --- 主组件: BlockView ---
+// 主组件: BlockView
 interface BlockViewProps {
     items: Item[];
     groupField?: string;
@@ -120,7 +123,7 @@ interface BlockViewProps {
 export function BlockView(props: BlockViewProps) {
     const { items, groupField, fields = [], app } = props;
     
-    // [新增] 从 AppStore 中获取所有主题定义
+    // 从 AppStore 中获取所有主题定义，以传递给子组件
     const allThemes = useStore(state => state.settings.inputSettings.themes);
 
     const containerRef = useRef<HTMLDivElement>(null);

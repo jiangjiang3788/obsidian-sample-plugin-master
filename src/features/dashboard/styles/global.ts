@@ -666,6 +666,66 @@ body.theme-dark .module-content {
     /* background-color: #2F2A24; */
 }
 
-/* ============== [新增样式结束] ============== */
+
+
+/* Task Item 的样式也需要被精确限定 */
+.block-language-think .module-content .bv-item--task { display: flex; align-items: flex-start; gap: 8px; padding: 4px; border-radius: 6px; }
+.block-language-think .module-content .bv-item--task:hover { background-color: var(--background-modifier-hover); }
+.block-language-think .module-content .bv-item--task .bv-task-checkbox-wrapper { margin-top: 2px; }
+.block-language-think .module-content .bv-item--task .bv-task-content { flex: 1; }
+.block-language-think .module-content .bv-item--task .bv-task-title { color: var(--text-normal); line-height: 1.5; }
+
+/* [MODIFIED] 提高 TimelineView 悬浮按钮的 CSS 优先级 */
+.block-language-think .timeline-task-block .task-buttons {
+    visibility: hidden;
+    opacity: 0;
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    display: flex;
+    gap: 2px;
+    background: var(--background-secondary);
+    border-radius: 4px;
+    padding: 2px;
+    box-shadow: var(--shadow-s);
+    transition: opacity 0.1s ease-in-out, visibility 0.1s ease-in-out;
+}
+.block-language-think .timeline-task-block:hover .task-buttons {
+    visibility: visible;
+    opacity: 1;
+}
+.block-language-think .timeline-task-block .task-buttons button {
+    all: unset;
+    cursor: pointer;
+    padding: 2px 4px;
+    border-radius: 2px;
+    font-size: 12px;
+}
+.block-language-think .timeline-task-block .task-buttons button:hover {
+    background: var(--background-modifier-hover);
+}
+.block-language-think .timeline-task-block .task-buttons button:disabled {
+    cursor: not-allowed;
+    color: var(--text-muted);
+}
+
+
+
+/* ============== [新增] 全局计时器挂件样式 ============== */
+
+/* 这是状态栏中由 addStatusBarItem() 创建的容器元素的样式 */
+.think-plugin-timer-widget {
+    /* 与状态栏中的其他项保持一点距离 */
+    margin: 0 8px;
+}
+
+/* 我们的 Preact 组件会被渲染到这个容器里 */
+/* MUI 的 Paper 组件自带背景和阴影，所以我们不需要在这里加 */
+/* 主要是确保它能正确显示 */
+.think-plugin-timer-widget > .MuiPaper-root {
+    /* 如果需要，可以在这里覆盖MUI组件的样式 */
+    /* 例如，确保背景色在不同主题下都清晰可见 */
+    background-color: var(--background-secondary) !important;
+}
 
 `.trim();
