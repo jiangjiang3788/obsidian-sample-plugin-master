@@ -1,24 +1,26 @@
-// src/core/settings/ui/ViewInstanceSettings.tsx
+// src/features/settings/ui/ViewInstanceSettings.tsx
+// [注意] 此文件已从 src/core/settings/ui/ 移动到新位置
+
 /** @jsxImportSource preact */
 import { h } from 'preact';
 import { useStore } from '@state/AppStore';
 import { Box, Stack, Typography, FormControlLabel, Checkbox, Tooltip, Chip } from '@mui/material';
 import { VIEW_OPTIONS, ViewName, getAllFields } from '@core/domain/schema';
 import type { ViewInstance } from '@core/domain/schema';
-import { VIEW_EDITORS } from '@features/dashboard/settings/ModuleEditors/registry';
+// [修改] 更新导入路径到新的 view-editors 目录
+import { VIEW_EDITORS } from './components/view-editors/registry';
 import { DataStore } from '@core/services/dataStore';
 import { useMemo } from 'preact/hooks';
 import { SimpleSelect } from '@shared/ui/SimpleSelect';
 import { SettingsTreeView, TreeItem } from './components/SettingsTreeView';
 import { App } from 'obsidian';
-// [重构] 导入新的自定义 Hook
 import { useSettingsManager } from './hooks/useSettingsManager';
-
 
 const LABEL_WIDTH = '80px';
 
 // 内部编辑器组件保持不变
 function ViewInstanceEditor({ vi }: { vi: ViewInstance }) {
+    // ... 此函数内部代码无变化 ...
     const dataSources = useStore(state => state.settings.dataSources);
     const fieldOptions = useMemo(() => getAllFields(DataStore.instance.queryItems()), []);
     const EditorComponent = VIEW_EDITORS[vi.viewType];
@@ -87,8 +89,6 @@ export function ViewInstanceSettings({ app }: { app: App }) {
     const viewInstances = useStore(state => state.settings.viewInstances);
     const allGroups = useStore(state => state.settings.groups);
     const viewGroups = useMemo(() => allGroups.filter(g => g.type === 'viewInstance'), [allGroups]);
-
-    // [重构] 使用一行 Hook 代替之前所有的 handle... 函数
     const manager = useSettingsManager({ app, type: 'viewInstance', itemNoun: '视图' });
 
     const itemsAsTreeItems: TreeItem[] = useMemo(() => viewInstances.map(vi => ({
@@ -109,7 +109,6 @@ export function ViewInstanceSettings({ app }: { app: App }) {
                 allGroups={viewGroups}
                 parentId={null}
                 renderItem={(vi: ViewInstance) => <ViewInstanceEditor vi={vi} />}
-                // [重构] 直接将 manager 中的函数传递给 props
                 onAddItem={manager.onAddItem}
                 onAddGroup={manager.onAddGroup}
                 onDeleteItem={manager.onDeleteItem}

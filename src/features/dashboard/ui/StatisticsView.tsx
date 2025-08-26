@@ -5,11 +5,13 @@ import { useState, useMemo, useEffect, useRef } from 'preact/hooks';
 import { Item, readField, ViewInstance } from '@core/domain/schema';
 import { dayjs, getWeeksInYear } from '@core/utils/date';
 import { App } from 'obsidian';
-import { DEFAULT_CONFIG } from '../settings/ModuleEditors/StatisticsViewEditor';
+// [最终修正] 使用别名路径，代码更清晰且稳定
+import { DEFAULT_CONFIG } from '@features/settings/ui/components/view-editors/StatisticsViewEditor';
 import { BlockView } from './BlockView';
 import { IconButton, Tooltip } from '@mui/material';
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 
+// ... 文件剩余部分代码保持不变 ...
 // =============== 类型定义 ===============
 interface StatisticsViewProps {
     items: Item[];

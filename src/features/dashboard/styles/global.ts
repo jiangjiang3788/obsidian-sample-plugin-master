@@ -657,12 +657,13 @@ body.theme-dark .module-action-plus:hover {
 
 .module-content {
     padding: 12px;
-    background-color: #F9F5EF; /* 比标题栏更浅的颜色 */
-    /* 内容区不再需要上边框，因为整个模块已有边框 */
+    /* [修改] 下面这行背景色被删除或注释掉了 */
+    /* background-color: #F9F5EF; */
 }
 
 body.theme-dark .module-content {
-    background-color: #2F2A24; /* 适配暗色模式的更浅的深棕色 */
+    /* [修改] 下面这行背景色被删除或注释掉了 */
+    /* background-color: #2F2A24; */
 }
 
 /* ============== [新增样式结束] ============== */
