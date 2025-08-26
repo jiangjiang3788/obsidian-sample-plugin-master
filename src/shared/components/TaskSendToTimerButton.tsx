@@ -1,7 +1,8 @@
 // src/shared/components/TaskSendToTimerButton.tsx
 /** @jsxImportSource preact */
 import { h } from 'preact';
-import { useTimer } from '@shared/hooks/useTimer';
+import { useStore } from '@state/AppStore';
+import { TimerService } from '@core/services/TimerService';
 import { IconButton, Tooltip } from '@mui/material';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import HourglassTopIcon from '@mui/icons-material/HourglassTop';
@@ -11,20 +12,17 @@ interface TaskSendToTimerButtonProps {
 }
 
 /**
- * 任务列表中的“发送到计时器”按钮。
- * - 默认显示播放图标。
- * - 如果是当前正在计时的任务，显示激活状态图标。
- * - 如果有其他任务在计时，则禁用。
+ * 任务列表中的“发送到计时器”按钮 (多任务版本)。
+ * - 如果任务已在计时器中，显示激活状态。
+ * - 否则，显示播放按钮以添加并开始计时。
  */
 export function TaskSendToTimerButton({ taskId }: TaskSendToTimerButtonProps) {
-    const { activeTimer, start } = useTimer();
-    
-    const isThisTaskActive = activeTimer?.taskId === taskId;
-    const isAnotherTaskActive = activeTimer && !isThisTaskActive;
+    const timers = useStore(state => state.timers);
+    const thisTaskTimer = timers.find(t => t.taskId === taskId);
 
-    if (isThisTaskActive) {
+    if (thisTaskTimer) {
         return (
-            <Tooltip title="当前任务正在计时">
+            <Tooltip title={`该任务已在计时面板中 (${thisTaskTimer.status})`}>
                 <IconButton size="small" color="primary" sx={{ cursor: 'default' }}>
                     <HourglassTopIcon fontSize="small" />
                 </IconButton>
@@ -33,16 +31,13 @@ export function TaskSendToTimerButton({ taskId }: TaskSendToTimerButtonProps) {
     }
 
     return (
-        <Tooltip title={isAnotherTaskActive ? "已有其他任务在计时" : "开始计时"}>
-            <span> {/* Tooltip 需要包裹一个DOM元素来处理 disabled 状态 */}
-                <IconButton 
-                    size="small" 
-                    onClick={() => start(taskId)} 
-                    disabled={isAnotherTaskActive}
-                >
-                    <PlayArrowIcon fontSize="small" />
-                </IconButton>
-            </span>
+        <Tooltip title="添加并开始计时">
+            <IconButton 
+                size="small" 
+                onClick={() => TimerService.startOrResume(taskId)} 
+            >
+                <PlayArrowIcon fontSize="small" />
+            </IconButton>
         </Tooltip>
     );
 }

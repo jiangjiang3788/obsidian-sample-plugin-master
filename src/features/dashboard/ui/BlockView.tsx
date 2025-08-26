@@ -11,7 +11,7 @@ import { App } from 'obsidian';
 import { useStore } from '@state/AppStore';
 import { TagsRenderer } from '@shared/components/TagsRenderer';
 import { getCategoryColor } from '@core/domain/categoryColorMap';
-import { TaskSendToTimerButton } from '@shared/components/TaskSendToTimerButton'; // 导入计时器按钮
+import { TaskSendToTimerButton } from '@shared/components/TaskSendToTimerButton'; // 确认导入的是新按钮
 
 // 内部辅助组件 1: FieldRenderer
 const FieldRenderer = ({ item, fieldKey, app, allThemes }: { item: Item; fieldKey: string; app: App; allThemes: ThemeDefinition[] }) => {
@@ -69,10 +69,8 @@ const TaskItem = ({ item, fields, onMarkDone, app, allThemes }: { item: Item; fi
                         {item.icon && <span class="icon" style="margin-right: 4px;">{item.icon}</span>}
                         {item.title}
                     </a>
-                    {/* [修改] 只有未完成任务才显示计时器按钮 */}
                     {!done && <TaskSendToTimerButton taskId={item.id} />}
                 </div>
-                {/* [修改] 为了统一样式，将字段渲染也包裹起来 */}
                 <div class="bv-fields-list-wrapper">
                     {fields.map(fieldKey => <FieldRenderer key={fieldKey} item={item} fieldKey={fieldKey} app={app} allThemes={allThemes} />)}
                 </div>

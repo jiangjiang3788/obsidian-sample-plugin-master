@@ -6,7 +6,7 @@ import { makeObsUri } from '@core/utils/obsidian';
 import { EMPTY_LABEL } from '@core/domain/constants';
 import { TaskCheckbox } from '@shared/components/TaskCheckbox';
 import { DataStore } from '@core/services/dataStore';
-import { TaskSendToTimerButton } from '@shared/components/TaskSendToTimerButton'; // 导入计时器按钮
+import { TaskSendToTimerButton } from '@shared/components/TaskSendToTimerButton'; // 确认导入的是新按钮
 
 interface TableViewProps {
     items: Item[];
@@ -55,7 +55,6 @@ export function TableView({ items, rowField, colField }: TableViewProps) {
                     <a href={makeObsUri(item)} target="_blank" rel="noopener" class={done ? 'task-done' : ''} style={{ flexGrow: 1, minWidth: 0, textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>
                         {item.title}
                     </a>
-                    {/* [修改] 只有未完成任务才显示计时器按钮 */}
                     {!done && <TaskSendToTimerButton taskId={item.id} />}
                 </span>
             );

@@ -1,25 +1,32 @@
 // src/features/quick-input/ui/QuickInputModal.tsx
 /** @jsxImportSource preact */
+import { h } from 'preact';
 import { App, Modal, Notice } from 'obsidian';
-import { h, render, Fragment } from 'preact';
-import { useState, useMemo, useEffect, useCallback } from 'preact/hooks';
+import { render, unmountComponentAtNode } from 'preact/compat';
+import { useState, useMemo, useEffect } from 'preact/hooks';
 import { AppStore, useStore } from '@state/AppStore';
 import { InputService } from '@core/services/inputService';
 import { DataStore } from '@core/services/dataStore';
-import type { InputSettings, BlockTemplate, ThemeDefinition, TemplateField, ThemeTreeNode } from '@core/domain/schema';
+import type { InputSettings, BlockTemplate, ThemeDefinition, TemplateField } from '@core/domain/schema';
 import { Button, TextField, RadioGroup as MuiRadioGroup, FormControlLabel, Radio, FormControl, Typography, Stack, Divider } from '@mui/material';
 import { SimpleSelect } from '@shared/ui/SimpleSelect';
-// [修改] 我们依然需要 buildThemeTree 来构建数据结构
-import { buildThemeTree } from '@core/utils/themeUtils';
+import { buildThemeTree, ThemeTreeNode } from '@core/utils/themeUtils';
 
-// [说明] 之前的 ThemeSelector 组件已不再需要
+// [新增] 定义 onSave 回调函数的类型
+export interface QuickInputSaveData {
+    template: BlockTemplate;
+    formData: Record<string, any>;
+    theme?: ThemeDefinition;
+}
 
 export class QuickInputModal extends Modal {
+    // [修改] 构造函数增加 onSave 可选参数
     constructor(
         app: App, 
         private blockId: string, 
         private context?: Record<string, any>,
         private themeId?: string,
+        private onSave?: (data: QuickInputSaveData) => void, // 如果提供了这个回调，则进入“计时器创建”模式
     ) {
         super(app);
     }
@@ -32,6 +39,7 @@ export class QuickInputModal extends Modal {
                 blockId={this.blockId} 
                 context={this.context}
                 themeId={this.themeId}
+                onSave={this.onSave}
                 closeModal={() => this.close()} 
             />, 
             this.contentEl
@@ -39,7 +47,9 @@ export class QuickInputModal extends Modal {
     }
 
     onClose() {
-        this.contentEl.empty();
+        const { contentEl } = this;
+        // 确保 Preact 组件被正确卸载
+        unmountComponentAtNode(contentEl);
     }
 }
 
@@ -57,34 +67,58 @@ function getEffectiveTemplate(settings: InputSettings, blockId: string, themeId?
     return { template: baseBlock, theme };
 }
 
-// [新增] 辅助函数，用于在主题树中查找一个节点及其父节点的路径
+// 查找节点路径的辅助函数
 const findNodePath = (nodes: ThemeTreeNode[], themeId: string): ThemeTreeNode[] => {
     for (const node of nodes) {
-        if (node.themeId === themeId) {
-            return [node];
-        }
+        if (node.themeId === themeId) return [node];
         if (node.children.length > 0) {
             const path = findNodePath(node.children, themeId);
-            if (path.length > 0) {
-                return [node, ...path];
-            }
+            if (path.length > 0) return [node, ...path];
         }
     }
     return [];
 };
 
+// 递归渲染主题层级的辅助函数
+const renderThemeLevels = (nodes: ThemeTreeNode[], activePath: ThemeTreeNode[], onSelect: (id: string, parentId: string | null) => void, level = 0) => {
+    const parentNode = activePath[level - 1];
+    const parentThemeId = parentNode ? parentNode.themeId : null;
 
-function QuickInputForm({ app, blockId, context, themeId, closeModal }: { 
+    return (
+        <div>
+            <MuiRadioGroup row value={activePath[level]?.themeId || ''}>
+                {nodes.map(node => (
+                    <FormControlLabel
+                        key={node.id}
+                        value={node.themeId}
+                        disabled={!node.themeId}
+                        control={<Radio onClick={() => node.themeId && onSelect(node.themeId, parentThemeId)} size="small" />}
+                        label={node.name}
+                    />
+                ))}
+            </MuiRadioGroup>
+            {activePath[level] && activePath[level].children.length > 0 && (
+                <div style={{ paddingLeft: '20px' }}>
+                    {renderThemeLevels(activePath[level].children, activePath, onSelect, level + 1)}
+                </div>
+            )}
+        </div>
+    );
+};
+
+
+// QuickInputForm 组件
+function QuickInputForm({ app, blockId, context, themeId, onSave, closeModal }: { 
     app: App; 
     blockId: string; 
     context?: Record<string, any>;
     themeId?: string;
+    onSave?: (data: QuickInputSaveData) => void;
     closeModal: () => void 
 }) {
     const svc = useMemo(() => new InputService(app), [app]);
     const settings = useStore(state => state.settings.inputSettings);
     
-    // [修改] 准备主题树和查找表
     const { themeTree, themeIdMap } = useMemo(() => {
         const { themes, overrides } = settings;
         const disabledThemeIds = new Set<string>();
@@ -105,7 +139,6 @@ function QuickInputForm({ app, blockId, context, themeId, closeModal }: {
         return getEffectiveTemplate(settings, blockId, selectedThemeId || undefined);
     }, [settings, blockId, selectedThemeId]);
     
-    // ... formData 相关的 state 和 effect 保持不变 ...
     const [formData, setFormData] = useState<Record<string, any>>({});
     useEffect(() => {
         if (!template) return;
@@ -129,24 +162,32 @@ function QuickInputForm({ app, blockId, context, themeId, closeModal }: {
         setFormData(initialData);
     }, [template, context]);
 
+
     const handleUpdate = (key: string, value: any, isOptionObject = false) => {
         setFormData(current => ({ ...current, [key]: isOptionObject ? { value: value.value, label: value.label } : value }));
     };
     
     const handleSubmit = async () => {
         if (!template) return;
-        try {
-            const finalTheme = selectedThemeId ? themeIdMap.get(selectedThemeId) : undefined;
-            await svc.executeTemplate(template, formData, finalTheme);
-            new Notice(`✅ 已保存`);
-            DataStore.instance?.notifyChange?.();
+        const finalTheme = selectedThemeId ? themeIdMap.get(selectedThemeId) : undefined;
+
+        if (onSave) {
+            // **计时器模式**: 调用回调，将数据传出，然后关闭模态框
+            onSave({ template, formData, theme: finalTheme });
             closeModal();
-        } catch (e: any) {
-            new Notice(`❌ 保存失败: ${e.message || e}`, 10000);
+        } else {
+            // **普通快速输入模式**: 直接执行写入操作
+            try {
+                await svc.executeTemplate(template, formData, finalTheme);
+                new Notice(`✅ 已保存`);
+                DataStore.instance?.notifyChange?.();
+                closeModal();
+            } catch (e: any) {
+                new Notice(`❌ 保存失败: ${e.message || e}`, 10000);
+            }
         }
     };
 
-    // ... renderField 函数保持不变 ...
     const renderField = (field: TemplateField) => {
         const isComplex = typeof formData[field.key] === 'object' && formData[field.key] !== null;
         const value = isComplex ? formData[field.key]?.value : formData[field.key];
@@ -219,73 +260,25 @@ function QuickInputForm({ app, blockId, context, themeId, closeModal }: {
         }
     };
     
-    // [新增] 渲染主题选择器的核心函数
-    const renderThemeSelector = useCallback(() => {
-        const activePath = selectedThemeId ? findNodePath(themeTree, selectedThemeId) : [];
-        const levelsToRender: ThemeTreeNode[][] = [themeTree]; // 至少渲染第一层
-
-        activePath.forEach(node => {
-            if (node.children && node.children.length > 0) {
-                levelsToRender.push(node.children);
-            }
-        });
-
-        const handleSelect = (newThemeId: string, parentThemeId: string | null) => {
-            if (selectedThemeId === newThemeId) {
-                setSelectedThemeId(parentThemeId); // 点击已选中的，则返回上一级
-            } else {
-                setSelectedThemeId(newThemeId);
-            }
-        };
-
-        return (
-            <Stack spacing={1}>
-                {levelsToRender.map((nodes, levelIndex) => {
-                    const parentNode = activePath[levelIndex - 1];
-                    const parentThemeId = parentNode ? parentNode.themeId : null;
-
-                    return (
-                        <MuiRadioGroup
-                            key={`level-${levelIndex}`}
-                            row
-                            value={selectedThemeId || ''}
-                        >
-                            {nodes.map(node => (
-                                <FormControlLabel
-                                    key={node.id}
-                                    value={node.themeId}
-                                    // 只有真实主题才可被选中
-                                    disabled={!node.themeId}
-                                    control={
-                                        <Radio
-                                            onClick={() => node.themeId && handleSelect(node.themeId, parentThemeId)}
-                                            size="small"
-                                        />
-                                    }
-                                    label={node.name}
-                                />
-                            ))}
-                        </MuiRadioGroup>
-                    );
-                })}
-            </Stack>
-        );
-    }, [themeTree, selectedThemeId]);
-
-
     if (!template) {
         return <div>错误：找不到ID为 "{blockId}" 的Block模板。</div>;
     }
 
+    const activePath = selectedThemeId ? findNodePath(themeTree, selectedThemeId) : [];
+    const handleSelectTheme = (newThemeId: string, parentThemeId: string | null) => {
+        setSelectedThemeId(selectedThemeId === newThemeId ? parentThemeId : newThemeId);
+    };
+
     return (
         <div class="think-modal" style={{ padding: '0 1rem 1rem 1rem' }}>
-            <h3 style={{ marginBottom: '1rem' }}>快速录入 · {template.name}</h3>
+            <h3 style={{ marginBottom: '1rem' }}>
+                {onSave ? `开始新任务: ${template.name}` : `快速录入 · ${template.name}`}
+            </h3>
             
-            {/* [修改] 渲染逻辑替换为新的横向选择器 */}
             {themeTree.length > 0 && (
                 <FormControl component="fieldset" sx={{ mb: 1, width: '100%' }}>
                     <Typography variant="body2" sx={{ fontWeight: 600 }}>主题分类</Typography>
-                    {renderThemeSelector()}
+                    {renderThemeLevels(themeTree, activePath, handleSelectTheme)}
                 </FormControl>
             )}
             
@@ -294,7 +287,7 @@ function QuickInputForm({ app, blockId, context, themeId, closeModal }: {
                 {template.fields.map(field => <div key={field.id}>{renderField(field)}</div>)}
             </Stack>
             <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '1.5rem', gap: '8px' }}>
-                <Button onClick={handleSubmit} variant="contained">提交</Button>
+                <Button onClick={handleSubmit} variant="contained">{onSave ? '创建并开始计时' : '提交'}</Button>
                 <Button onClick={closeModal}>取消</Button>
             </div>
         </div>
