@@ -11,8 +11,8 @@ import type { InputSettings, BlockTemplate, ThemeDefinition, TemplateField } fro
 import { Button, TextField, RadioGroup as MuiRadioGroup, FormControlLabel, Radio, FormControl, Typography, Stack, Divider } from '@mui/material';
 import { SimpleSelect } from '@shared/ui/SimpleSelect';
 import { buildThemeTree, ThemeTreeNode } from '@core/utils/themeUtils';
+import { dayjs } from '@core/utils/date';
 
-// [新增] 定义 onSave 回调函数的类型
 export interface QuickInputSaveData {
     template: BlockTemplate;
     formData: Record<string, any>;
@@ -20,13 +20,12 @@ export interface QuickInputSaveData {
 }
 
 export class QuickInputModal extends Modal {
-    // [修改] 构造函数增加 onSave 可选参数
     constructor(
         app: App, 
         private blockId: string, 
         private context?: Record<string, any>,
         private themeId?: string,
-        private onSave?: (data: QuickInputSaveData) => void, // 如果提供了这个回调，则进入“计时器创建”模式
+        private onSave?: (data: QuickInputSaveData) => void,
     ) {
         super(app);
     }
@@ -48,7 +47,6 @@ export class QuickInputModal extends Modal {
 
     onClose() {
         const { contentEl } = this;
-        // 确保 Preact 组件被正确卸载
         unmountComponentAtNode(contentEl);
     }
 }
@@ -67,7 +65,6 @@ function getEffectiveTemplate(settings: InputSettings, blockId: string, themeId?
     return { template: baseBlock, theme };
 }
 
-// 查找节点路径的辅助函数
 const findNodePath = (nodes: ThemeTreeNode[], themeId: string): ThemeTreeNode[] => {
     for (const node of nodes) {
         if (node.themeId === themeId) return [node];
@@ -79,11 +76,9 @@ const findNodePath = (nodes: ThemeTreeNode[], themeId: string): ThemeTreeNode[] 
     return [];
 };
 
-// 递归渲染主题层级的辅助函数
 const renderThemeLevels = (nodes: ThemeTreeNode[], activePath: ThemeTreeNode[], onSelect: (id: string, parentId: string | null) => void, level = 0) => {
     const parentNode = activePath[level - 1];
     const parentThemeId = parentNode ? parentNode.themeId : null;
-
     return (
         <div>
             <MuiRadioGroup row value={activePath[level]?.themeId || ''}>
@@ -106,8 +101,6 @@ const renderThemeLevels = (nodes: ThemeTreeNode[], activePath: ThemeTreeNode[], 
     );
 };
 
-
-// QuickInputForm 组件
 function QuickInputForm({ app, blockId, context, themeId, onSave, closeModal }: { 
     app: App; 
     blockId: string; 
@@ -140,28 +133,43 @@ function QuickInputForm({ app, blockId, context, themeId, onSave, closeModal }: 
     }, [settings, blockId, selectedThemeId]);
     
     const [formData, setFormData] = useState<Record<string, any>>({});
+
     useEffect(() => {
         if (!template) return;
         const initialData: Record<string, any> = {};
         template.fields.forEach(field => {
+            let valueAssigned = false;
             if (context && (context[field.key] !== undefined || context[field.label] !== undefined)) {
                 initialData[field.key] = context[field.key] ?? context[field.label];
-                return;
+                valueAssigned = true;
             }
-            const findOption = (val: string | undefined) => (field.options || []).find(o => o.label === val || o.value === val);
-            let defaultOpt = findOption(field.defaultValue);
-            if (!defaultOpt && (field.type === 'radio' || field.type === 'select' || field.type === 'rating')) {
-                defaultOpt = (field.options || [])[0];
+            if (!valueAssigned && !field.defaultValue) {
+                if (field.type === 'date') {
+                    initialData[field.key] = dayjs().format('YYYY-MM-DD');
+                    valueAssigned = true;
+                } else if (field.type === 'time') {
+                    initialData[field.key] = dayjs().format('HH:mm');
+                    valueAssigned = true;
+                }
             }
-            if (defaultOpt) {
-                initialData[field.key] = { value: defaultOpt.value, label: defaultOpt.label || defaultOpt.value };
-            } else {
+            if (!valueAssigned && ['select', 'radio', 'rating'].includes(field.type)) {
+                const findOption = (val: string | undefined) => (field.options || []).find(o => o.label === val || o.value === val);
+                let defaultOpt = findOption(field.defaultValue);
+                if (!defaultOpt && field.options && field.options.length > 0) {
+                    defaultOpt = field.options[0];
+                }
+                if (defaultOpt) {
+                    initialData[field.key] = { value: defaultOpt.value, label: defaultOpt.label || defaultOpt.value };
+                    valueAssigned = true;
+                }
+            }
+            if (!valueAssigned) {
                 initialData[field.key] = field.defaultValue || '';
+                valueAssigned = true;
             }
         });
         setFormData(initialData);
     }, [template, context]);
-
 
     const handleUpdate = (key: string, value: any, isOptionObject = false) => {
         setFormData(current => ({ ...current, [key]: isOptionObject ? { value: value.value, label: value.label } : value }));
@@ -170,13 +178,10 @@ function QuickInputForm({ app, blockId, context, themeId, onSave, closeModal }: 
     const handleSubmit = async () => {
         if (!template) return;
         const finalTheme = selectedThemeId ? themeIdMap.get(selectedThemeId) : undefined;
-
         if (onSave) {
-            // **计时器模式**: 调用回调，将数据传出，然后关闭模态框
             onSave({ template, formData, theme: finalTheme });
             closeModal();
         } else {
-            // **普通快速输入模式**: 直接执行写入操作
             try {
                 await svc.executeTemplate(template, formData, finalTheme);
                 new Notice(`✅ 已保存`);
@@ -226,16 +231,7 @@ function QuickInputForm({ app, blockId, context, themeId, onSave, closeModal }: 
                         </Stack>
                     </FormControl>
                 );
-
-            case 'textarea':
-            case 'date':
-            case 'time':
-            case 'number':
-            case 'text':
-            default:
-                return <TextField label={label} value={value || ''} onChange={e => handleUpdate(field.key, e.target.value)} fullWidth variant="outlined" type={field.type === 'textarea' ? undefined : field.type} multiline={field.type === 'textarea'} rows={field.type === 'textarea' ? 4 : undefined} InputLabelProps={ (field.type === 'date' || field.type === 'time') ? { shrink: true } : undefined} inputProps={ field.type === 'number' ? { min: field.min, max: field.max } : undefined} />;
-            
-            case 'radio':
+            case 'radio': {
                 const selectedOptionObject = formData[field.key];
                 const selectedIndex = field.options?.findIndex(opt => opt.value === selectedOptionObject?.value && opt.label === selectedOptionObject?.label) ?? -1;
                 return (
@@ -248,8 +244,8 @@ function QuickInputForm({ app, blockId, context, themeId, onSave, closeModal }: 
                         </MuiRadioGroup>
                     </FormControl>
                 );
-
-            case 'select':
+            }
+            case 'select': {
                 const selectOptions = (field.options || []).map(opt => ({ value: opt.value, label: opt.label || opt.value }));
                 return (
                     <FormControl fullWidth>
@@ -257,6 +253,20 @@ function QuickInputForm({ app, blockId, context, themeId, onSave, closeModal }: 
                         <SimpleSelect value={value || ''} options={selectOptions} placeholder={`-- 选择 ${label} --`} onChange={selectedValue => { const selectedOption = field.options?.find(opt => opt.value === selectedValue); if (selectedOption) { handleUpdate(field.key, { value: selectedOption.value, label: selectedOption.label || selectedOption.value }, true); } }} />
                     </FormControl>
                 );
+            }
+            default:
+                return <TextField 
+                            label={label} 
+                            value={value || ''} 
+                            onChange={e => handleUpdate(field.key, (e.target as HTMLInputElement).value)}
+                            fullWidth 
+                            variant="outlined" 
+                            type={field.type === 'textarea' ? undefined : field.type} 
+                            multiline={field.type === 'textarea'} 
+                            rows={field.type === 'textarea' ? 4 : undefined} 
+                            InputLabelProps={ (field.type === 'date' || field.type === 'time') ? { shrink: true } : undefined} 
+                            inputProps={ field.type === 'number' ? { min: field.min, max: field.max } : undefined} 
+                        />;
         }
     };
     
