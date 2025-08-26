@@ -1,8 +1,7 @@
 // src/core/settings/ui/DataSourceSettings.tsx
 /** @jsxImportSource preact */
 import { h } from 'preact';
-import { useStore, AppStore } from '@state/AppStore';
-import { DEFAULT_NAMES } from '@core/domain/constants';
+import { useStore } from '@state/AppStore';
 import { Typography, Stack, Box } from '@mui/material';
 import { getAllFields } from '@core/domain/schema';
 import { DataStore } from '@core/services/dataStore';
@@ -10,113 +9,65 @@ import { useMemo } from 'preact/hooks';
 import type { DataSource } from '@core/domain/schema';
 import { RuleBuilder } from './components/RuleBuilder';
 import { SettingsTreeView, TreeItem } from './components/SettingsTreeView';
-import { NamePromptModal } from '@shared/components/dialogs/NamePromptModal';
 import { App } from 'obsidian';
+// [重构] 导入新的自定义 Hook
+import { useSettingsManager } from './hooks/useSettingsManager';
 
+// 这个内部编辑器组件保持不变
 function DataSourceEditor({ ds }: { ds: DataSource }) {
-    const fieldOptions = useMemo(() => {
-        const allItems = DataStore.instance.queryItems();
-        return getAllFields(allItems);
-    }, []);
+    const fieldOptions = useMemo(() => {
+        const allItems = DataStore.instance.queryItems();
+        return getAllFields(allItems);
+    }, []);
 
-    const handleUpdate = (updates: Partial<DataSource>) => {
-        AppStore.instance.updateDataSource(ds.id, updates);
-    };
+    const handleUpdate = (updates: Partial<DataSource>) => {
+        AppStore.instance.updateDataSource(ds.id, updates);
+    };
 
-    return (
-        <Stack spacing={2} sx={{p: '8px 16px 16px 50px'}}>
-            <RuleBuilder title="过滤规则" mode="filter" rows={ds.filters} fieldOptions={fieldOptions} onChange={(rows: any) => handleUpdate({ filters: rows })} />
-            <RuleBuilder title="排序规则" mode="sort" rows={ds.sort} fieldOptions={fieldOptions} onChange={(rows: any) => handleUpdate({ sort: rows })} />
-        </Stack>
-    );
+    return (
+        <Stack spacing={2} sx={{p: '8px 16px 16px 50px'}}>
+            <RuleBuilder title="过滤规则" mode="filter" rows={ds.filters} fieldOptions={fieldOptions} onChange={(rows: any) => handleUpdate({ filters: rows })} />
+            <RuleBuilder title="排序规则" mode="sort" rows={ds.sort} fieldOptions={fieldOptions} onChange={(rows: any) => handleUpdate({ sort: rows })} />
+        </Stack>
+    );
 }
 
 export function DataSourceSettings({ app }: { app: App }) {
-    const dataSources = useStore(state => state.settings.dataSources);
-    const allGroups = useStore(state => state.settings.groups);
-    const dsGroups = useMemo(() => allGroups.filter(g => g.type === 'dataSource'), [allGroups]);
+    const dataSources = useStore(state => state.settings.dataSources);
+    const allGroups = useStore(state => state.settings.groups);
+    const dsGroups = useMemo(() => allGroups.filter(g => g.type === 'dataSource'), [allGroups]);
 
-    const itemsAsTreeItems: TreeItem[] = useMemo(() => dataSources.map(ds => ({
-        ...ds,
-        name: ds.name,
-        isGroup: false,
-    })), [dataSources]);
+    // [重构] 使用一行 Hook 代替之前所有的 handle... 函数
+    const manager = useSettingsManager({ app, type: 'dataSource', itemNoun: '数据源' });
 
-    const handleAddItem = (parentId: string | null) => {
-        new NamePromptModal(
-            app,
-            "创建新数据源",
-            "请输入数据源名称...",
-            DEFAULT_NAMES.NEW_DATASOURCE,
-            (newName) => AppStore.instance.addDataSource(newName, parentId)
-        ).open();
-    };
+    const itemsAsTreeItems: TreeItem[] = useMemo(() => dataSources.map(ds => ({
+        ...ds,
+        name: ds.name,
+        isGroup: false,
+    })), [dataSources]);
 
-    const handleAddGroup = (parentId: string | null) => {
-        new NamePromptModal(
-            app,
-            "创建新分组",
-            "请输入分组名称...",
-            "新分组",
-            (newName) => AppStore.instance.addGroup(newName, parentId, 'dataSource')
-        ).open();
-    };
+    // [重构] 所有的 handle... 函数都已被移除
 
-    const handleDeleteItem = (item: TreeItem) => {
-        const confirmText = item.isGroup
-            ? `确认删除分组 "${item.name}" 吗？\n其内部所有内容将被移至上一级。`
-            : `确认删除数据源 "${item.name}" 吗？\n引用此数据源的视图将失效。`;
-        if (confirm(confirmText)) {
-            if (item.isGroup) {
-                AppStore.instance.deleteGroup(item.id);
-            } else {
-                AppStore.instance.deleteDataSource(item.id);
-            }
-        }
-    };
-    
-    const handleUpdateItemName = (item: TreeItem, newName: string) => {
-        if (item.isGroup) {
-            AppStore.instance.updateGroup(item.id, { name: newName });
-        } else {
-            AppStore.instance.updateDataSource(item.id, { name: newName });
-        }
-    };
-    
-    const handleMoveItem = (item: TreeItem, direction: 'up' | 'down') => {
-        if (!item.isGroup) {
-            AppStore.instance.moveDataSource(item.id, direction);
-        }
-    };
-
-	// [核心修改] 允许复制分组
-    const handleDuplicateItem = (item: TreeItem) => {
-        if (item.isGroup) {
-            AppStore.instance.duplicateGroup(item.id);
-        } else {
-            AppStore.instance.duplicateDataSource(item.id);
-        }
-    };
-
-    return (
-        <Box sx={{ maxWidth: '900px', mx: 'auto' }}>
-            <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 2 }}>
-                <Typography variant="h6">管理数据源</Typography>
-            </Stack>
-            
-            <SettingsTreeView
-                groups={dsGroups}
-                items={itemsAsTreeItems}
-                allGroups={dsGroups}
-                parentId={null}
-                renderItem={(ds: DataSource) => <DataSourceEditor ds={ds} />}
-                onAddItem={handleAddItem}
-                onAddGroup={handleAddGroup}
-                onDeleteItem={handleDeleteItem}
-                onUpdateItemName={handleUpdateItemName}
-                onMoveItem={handleMoveItem}
-                onDuplicateItem={handleDuplicateItem}
-            />
-        </Box>
-    );
+    return (
+        <Box sx={{ maxWidth: '900px', mx: 'auto' }}>
+            <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 2 }}>
+                <Typography variant="h6">管理数据源</Typography>
+            </Stack>
+            
+            <SettingsTreeView
+                groups={dsGroups}
+                items={itemsAsTreeItems}
+                allGroups={dsGroups}
+                parentId={null}
+                renderItem={(ds: DataSource) => <DataSourceEditor ds={ds} />}
+                // [重构] 直接将 manager 中的函数传递给 props
+                onAddItem={manager.onAddItem}
+                onAddGroup={manager.onAddGroup}
+                onDeleteItem={manager.onDeleteItem}
+                onUpdateItemName={manager.onUpdateItemName}
+                onMoveItem={manager.onMoveItem}
+                onDuplicateItem={manager.onDuplicateItem}
+            />
+        </Box>
+    );
 }
