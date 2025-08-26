@@ -9,7 +9,8 @@ import dayjs from 'dayjs';
 import weekOfYear from 'dayjs/plugin/weekOfYear';
 import isoWeek from 'dayjs/plugin/isoWeek';
 import isBetween from 'dayjs/plugin/isBetween';
-import { DEFAULT_CONFIG as DEFAULT_TIMELINE_CONFIG } from '../settings/ModuleEditors/TimelineViewEditor';
+// [修正] 将导入路径从旧的相对路径更新为指向新位置的正确别名路径
+import { DEFAULT_CONFIG as DEFAULT_TIMELINE_CONFIG } from '@features/settings/ui/components/view-editors/TimelineViewEditor';
 import { App, Notice } from 'obsidian';
 import { TaskService } from '@core/services/taskService';
 import { EditTaskModal } from './EditTaskModal';
@@ -43,7 +44,6 @@ const formatTimeMinute = (minute: number) => {
     return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
 };
 
-// --- [FINAL FIX] 智能悬浮提示生成器 ---
 const generateTaskBlockTitle = (block: TaskBlock): string => {
     const isCrossNight = (block.startMinute % 1440) + block.duration > 1440;
 
@@ -51,7 +51,6 @@ const generateTaskBlockTitle = (block: TaskBlock): string => {
         const startDateTime = dayjs(block.actualStartDate).add(block.startMinute, 'minute');
         const endDateTime = startDateTime.add(block.duration, 'minute');
 
-        // [FIX] 只显示时间，去掉冗余的日期
         const startFormat = startDateTime.format('HH:mm');
         const endFormat = endDateTime.format('HH:mm');
 

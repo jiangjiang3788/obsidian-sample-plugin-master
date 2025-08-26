@@ -2,8 +2,8 @@
 import { useState, useEffect } from 'preact/hooks';
 import type { ThinkSettings, DataSource, ViewInstance, Layout, InputSettings, BlockTemplate, ThemeDefinition, ThemeOverride, Group, GroupType, Groupable } from '@core/domain/schema';
 import type ThinkPlugin from '../main';
-import { VIEW_DEFAULT_CONFIGS } from '@features/dashboard/settings/ModuleEditors/registry';
-// [重构] 导入新的工具函数
+// [修正] 将导入路径从旧的 dashboard 目录更新到新的 settings 目录
+import { VIEW_DEFAULT_CONFIGS } from '@features/settings/ui/components/view-editors/registry';
 import { generateId, moveItemInArray, duplicateItemInArray } from '@core/utils/array';
 
 export interface AppState {
@@ -43,8 +43,6 @@ export class AppStore {
         return () => this._listeners.delete(listener);
     }
 
-    // [删除] openQuickInputForView 方法已被移至 ActionService
-
     private _notify() {
         this._listeners.forEach(l => l());
     }
@@ -58,8 +56,6 @@ export class AppStore {
         
         this._notify();
     }
-
-    // [重构] 内部的 _generateId, _moveItemInArray, _duplicateItemInArray 已被删除，将使用导入的纯函数
     
     // --- 分组管理 (Group Management) ---
     public addGroup = async (name: string, parentId: string | null, type: GroupType) => {
@@ -85,7 +81,6 @@ export class AppStore {
 
             const newParentId = groupToDelete.parentId;
 
-            // 将所有子项的 parentId 指向被删除分组的 parentId
             draft.groups.forEach(g => {
                 if (g.parentId === id) g.parentId = newParentId;
             });
@@ -100,12 +95,11 @@ export class AppStore {
         });
     }
     
-    public duplicateGroup = async (groupId: string) => {
+	public duplicateGroup = async (groupId: string) => {
 		await this._updateSettingsAndPersist(draft => {
 			const groupToDuplicate = draft.groups.find(g => g.id === groupId);
 			if (!groupToDuplicate) return;
 
-			// 递归复制函数
 			const deepDuplicate = (originalGroupId: string, newParentId: string | null) => {
 				const originalGroup = draft.groups.find(g => g.id === originalGroupId);
 				if (!originalGroup) return;
@@ -154,7 +148,6 @@ export class AppStore {
 
             if (!itemToMove) return;
 
-            // 防止将分组移动到自己的子分组中
             if (itemId.startsWith('group_')) {
                 let currentParentId = targetParentId;
                 while(currentParentId) {
@@ -186,7 +179,6 @@ export class AppStore {
     public deleteDataSource = async (id: string) => {
         await this._updateSettingsAndPersist(draft => {
             draft.dataSources = draft.dataSources.filter(ds => ds.id !== id);
-            // 解除视图对已删除数据源的引用
             draft.viewInstances.forEach(vi => {
                 if (vi.dataSourceId === id) {
                     vi.dataSourceId = '';
@@ -223,7 +215,6 @@ export class AppStore {
         await this._updateSettingsAndPersist(draft => {
             const index = draft.viewInstances.findIndex(vi => vi.id === id);
             if (index !== -1) {
-                // 如果视图类型改变，重置其专属配置
                 if (updates.viewType && updates.viewType !== draft.viewInstances[index].viewType) {
                     updates.viewConfig = structuredClone(VIEW_DEFAULT_CONFIGS[updates.viewType]);
                 }
@@ -234,7 +225,6 @@ export class AppStore {
     public deleteViewInstance = async (id: string) => {
         await this._updateSettingsAndPersist(draft => {
             draft.viewInstances = draft.viewInstances.filter(vi => vi.id !== id);
-            // 解除布局对已删除视图的引用
             draft.layouts.forEach(layout => {
                 layout.viewInstanceIds = layout.viewInstanceIds.filter(vid => vid !== id);
             });
@@ -318,7 +308,6 @@ export class AppStore {
     }
     public moveBlock = async (id: string, direction: 'up' | 'down') => {
         await this._updateSettingsAndPersist(draft => {
-            // Block Template 没有 parentId，但我们的 move 函数仍然可以处理（它会视其为根级别）
             draft.inputSettings.blocks = moveItemInArray(draft.inputSettings.blocks, id, direction);
         });
     }
@@ -378,15 +367,8 @@ export class AppStore {
     }
 }
 
-
-/**
- * 一个 Preact Hook，用于订阅 AppStore 的状态变化并使组件重渲染。
- * @param selector 一个函数，用于从整个状态中选择组件需要的数据。
- * @returns 选择出的状态数据。
- */
 export function useStore<T>(selector: (state: AppState) => T): T {
     const store = AppStore.instance;
-    // 使用 JSON.stringify 作为快照，用于比较复杂对象/数组是否发生变化
     const getSnapshot = () => JSON.stringify(selector(store.getState()));
 
     const [state, setState] = useState(getSnapshot());
