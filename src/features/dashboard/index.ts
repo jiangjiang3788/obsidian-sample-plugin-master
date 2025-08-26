@@ -1,10 +1,16 @@
 // src/features/dashboard/index.ts
-import type { ThinkContext } from '../../main';
-import { VaultWatcher } from '@core/VaultWatcher';
-import { CodeblockEmbedder } from '@core/CodeblockEmbedder';
 
-/** 负责渲染和交互功能的入口 */
-export function setup(ctx: ThinkContext) { // ctx 参数现在接收的是 ThinkPlugin 的实例
+import type { ThinkContext } from '../../main';
+
+// [FIX] 使用 @features 别名进行导入，代码更清晰
+import { VaultWatcher } from '@features/logic/VaultWatcher';
+import { CodeblockEmbedder } from '@features/logic/CodeblockEmbedder';
+
+/**
+ * 负责 Dashboard 功能的启动和设置。
+ * 它初始化了文件监听器和代码块渲染器。
+ */
+export function setup(ctx: ThinkContext) { 
     const { plugin, dataStore, appStore, rendererService } = ctx;
 
     new VaultWatcher(plugin, dataStore);
