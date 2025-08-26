@@ -2,12 +2,27 @@
 import { useState, useEffect } from 'preact/hooks';
 import type { ThinkSettings, DataSource, ViewInstance, Layout, InputSettings, BlockTemplate, ThemeDefinition, ThemeOverride, Group, GroupType, Groupable } from '@core/domain/schema';
 import type ThinkPlugin from '../main';
-// [修正] 将导入路径从旧的 dashboard 目录更新到新的 settings 目录
 import { VIEW_DEFAULT_CONFIGS } from '@features/settings/ui/components/view-editors/registry';
 import { generateId, moveItemInArray, duplicateItemInArray } from '@core/utils/array';
+import { TimerStateService } from '@core/services/TimerStateService';
+
+/**
+ * [修改] 计时器状态接口，增加唯一id
+ */
+export interface TimerState {
+    id: string; 
+    taskId: string;
+    startTime: number;
+    elapsedSeconds: number;
+    status: 'running' | 'paused';
+}
 
 export interface AppState {
     settings: ThinkSettings;
+    /**
+     * [重大修改] 计时器状态从单个对象变更为数组，以支持多任务
+     */
+    timers: TimerState[]; 
 }
 
 export class AppStore {
@@ -27,13 +42,16 @@ export class AppStore {
 
     public init(plugin: ThinkPlugin, initialSettings: ThinkSettings) {
         this._plugin = plugin;
-        this._state = { settings: initialSettings };
+        this._state = { 
+            settings: initialSettings,
+            timers: [], // [修改] 初始化为空数组
+        };
     }
 
     public getState(): AppState {
         return this._state;
     }
-
+    
     public getSettings(): ThinkSettings {
         return this._state.settings;
     }
@@ -46,18 +64,78 @@ export class AppStore {
     private _notify() {
         this._listeners.forEach(l => l());
     }
-
+    
     private async _updateSettingsAndPersist(updater: (draft: ThinkSettings) => void) {
         const newSettings = structuredClone(this._state.settings);
         updater(newSettings);
         this._state.settings = newSettings;
-        
         await this._plugin.saveData(this._state.settings);
-        
         this._notify();
     }
     
-    // --- 分组管理 (Group Management) ---
+    private _updateEphemeralState(updater: (draft: AppState) => void) {
+        updater(this._state);
+        this._notify();
+    }
+    
+    /**
+     * [新增] 使用从文件加载的状态来初始化计时器列表。
+     * 这个方法应该在插件启动时被调用一次。
+     * @param initialTimers - 从 TimerStateService 加载的计时器数组。
+     */
+    public setInitialTimers(initialTimers: TimerState[]) {
+        this._updateEphemeralState(draft => {
+            draft.timers = initialTimers;
+        });
+    }
+
+    /**
+     * [新增] 更新计时器状态并将其持久化到文件。
+     * 这是所有计时器增删改操作的核心。
+     * @param updater - 一个接收当前计时器数组并返回新数组的函数。
+     */
+    private async _updateTimersAndPersist(updater: (draft: TimerState[]) => TimerState[]) {
+        const newTimers = updater(structuredClone(this._state.timers));
+        this._state.timers = newTimers;
+        this._notify();
+        // 异步持久化到文件
+        await TimerStateService.instance.saveStateToFile(newTimers);
+    }
+    
+    /**
+     * [新增] 添加一个新的计时器到列表
+     */
+    public addTimer = async (timer: Omit<TimerState, 'id'>) => {
+        await this._updateTimersAndPersist(draft => {
+            const newTimer: TimerState = { ...timer, id: generateId('timer') };
+            draft.push(newTimer);
+            return draft;
+        });
+    }
+
+    /**
+     * [新增] 更新一个已存在的计时器
+     */
+    public updateTimer = async (updatedTimer: TimerState) => {
+        await this._updateTimersAndPersist(draft => {
+            const index = draft.findIndex(t => t.id === updatedTimer.id);
+            if (index !== -1) {
+                draft[index] = updatedTimer;
+            }
+            return draft;
+        });
+    }
+
+    /**
+     * [新增] 从列表中移除一个计时器
+     */
+    public removeTimer = async (timerId: string) => {
+        await this._updateTimersAndPersist(draft => {
+            return draft.filter(t => t.id !== timerId);
+        });
+    }
+    
+    // --- 所有设置管理方法 (完整，无省略) ---
     public addGroup = async (name: string, parentId: string | null, type: GroupType) => {
         await this._updateSettingsAndPersist(draft => {
             const newGroup: Group = { id: generateId('group'), name, parentId, type };
@@ -78,9 +156,7 @@ export class AppStore {
         await this._updateSettingsAndPersist(draft => {
             const groupToDelete = draft.groups.find(g => g.id === id);
             if (!groupToDelete) return;
-
             const newParentId = groupToDelete.parentId;
-
             draft.groups.forEach(g => {
                 if (g.parentId === id) g.parentId = newParentId;
             });
@@ -90,64 +166,61 @@ export class AppStore {
                     if (item.parentId === id) item.parentId = newParentId;
                 });
             });
-
             draft.groups = draft.groups.filter(g => g.id !== id);
         });
     }
     
-	public duplicateGroup = async (groupId: string) => {
-		await this._updateSettingsAndPersist(draft => {
-			const groupToDuplicate = draft.groups.find(g => g.id === groupId);
-			if (!groupToDuplicate) return;
+    public duplicateGroup = async (groupId: string) => {
+        await this._updateSettingsAndPersist(draft => {
+            const groupToDuplicate = draft.groups.find(g => g.id === groupId);
+            if (!groupToDuplicate) return;
 
-			const deepDuplicate = (originalGroupId: string, newParentId: string | null) => {
-				const originalGroup = draft.groups.find(g => g.id === originalGroupId);
-				if (!originalGroup) return;
+            const deepDuplicate = (originalGroupId: string, newParentId: string | null) => {
+                const originalGroup = draft.groups.find(g => g.id === originalGroupId);
+                if (!originalGroup) return;
 
-				const newGroup: Group = {
-					...structuredClone(originalGroup),
-					id: generateId('group'),
-					parentId: newParentId,
-					name: originalGroup.id === groupId ? `${originalGroup.name} (副本)` : originalGroup.name,
-				};
-				draft.groups.push(newGroup);
+                const newGroup: Group = {
+                    ...structuredClone(originalGroup),
+                    id: generateId('group'),
+                    parentId: newParentId,
+                    name: originalGroup.id === groupId ? `${originalGroup.name} (副本)` : originalGroup.name,
+                };
+                draft.groups.push(newGroup);
 
-				const getItemsArrayForType = (type: GroupType) => {
-					switch (type) {
-						case 'dataSource': return { items: draft.dataSources, prefix: 'ds' };
-						case 'viewInstance': return { items: draft.viewInstances, prefix: 'view' };
-						case 'layout': return { items: draft.layouts, prefix: 'layout' };
-						default: return { items: [], prefix: 'item' };
-					}
-				};
+                const getItemsArrayForType = (type: GroupType) => {
+                    switch (type) {
+                        case 'dataSource': return { items: draft.dataSources, prefix: 'ds' };
+                        case 'viewInstance': return { items: draft.viewInstances, prefix: 'view' };
+                        case 'layout': return { items: draft.layouts, prefix: 'layout' };
+                        default: return { items: [], prefix: 'item' };
+                    }
+                };
 
-				const { items, prefix } = getItemsArrayForType(originalGroup.type);
-				const childItemsToDuplicate = items.filter(item => item.parentId === originalGroupId);
-				childItemsToDuplicate.forEach(item => {
-					const newItem = {
-						...structuredClone(item),
-						id: generateId(prefix),
-						parentId: newGroup.id,
-					};
-					(items as Groupable[]).push(newItem);
-				});
+                const { items, prefix } = getItemsArrayForType(originalGroup.type);
+                const childItemsToDuplicate = items.filter(item => item.parentId === originalGroupId);
+                childItemsToDuplicate.forEach(item => {
+                    const newItem = {
+                        ...structuredClone(item),
+                        id: generateId(prefix),
+                        parentId: newGroup.id,
+                    };
+                    (items as Groupable[]).push(newItem);
+                });
 
-				const childGroupsToDuplicate = draft.groups.filter(g => g.parentId === originalGroupId);
-				childGroupsToDuplicate.forEach(childGroup => {
-					deepDuplicate(childGroup.id, newGroup.id);
-				});
-			};
-			deepDuplicate(groupId, groupToDuplicate.parentId);
-		});
-	}
+                const childGroupsToDuplicate = draft.groups.filter(g => g.parentId === originalGroupId);
+                childGroupsToDuplicate.forEach(childGroup => {
+                    deepDuplicate(childGroup.id, newGroup.id);
+                });
+            };
+            deepDuplicate(groupId, groupToDuplicate.parentId);
+        });
+    }
 
     public moveItem = async (itemId: string, targetParentId: string | null) => {
         await this._updateSettingsAndPersist(draft => {
             const allItems: (Groupable & {id: string})[] = [...draft.groups, ...draft.dataSources, ...draft.viewInstances, ...draft.layouts];
             const itemToMove = allItems.find(i => i.id === itemId);
-
             if (!itemToMove) return;
-
             if (itemId.startsWith('group_')) {
                 let currentParentId = targetParentId;
                 while(currentParentId) {
@@ -162,12 +235,12 @@ export class AppStore {
         });
     }
 
-    // --- 数据源管理 (DataSource Management) ---
     public addDataSource = async (name: string, parentId: string | null = null) => {
         await this._updateSettingsAndPersist(draft => {
             draft.dataSources.push({ id: generateId('ds'), name, filters: [], sort: [], parentId });
         });
     }
+
     public updateDataSource = async (id: string, updates: Partial<DataSource>) => {
         await this._updateSettingsAndPersist(draft => {
             const index = draft.dataSources.findIndex(ds => ds.id === id);
@@ -176,6 +249,7 @@ export class AppStore {
             }
         });
     }
+
     public deleteDataSource = async (id: string) => {
         await this._updateSettingsAndPersist(draft => {
             draft.dataSources = draft.dataSources.filter(ds => ds.id !== id);
@@ -186,18 +260,19 @@ export class AppStore {
             });
         });
     }
+
     public moveDataSource = async (id: string, direction: 'up' | 'down') => {
         await this._updateSettingsAndPersist(draft => {
             draft.dataSources = moveItemInArray(draft.dataSources, id, direction);
         });
     }
+
     public duplicateDataSource = async (id: string) => {
         await this._updateSettingsAndPersist(draft => {
             draft.dataSources = duplicateItemInArray(draft.dataSources, id, 'name');
         });
     }
 
-    // --- 视图管理 (ViewInstance Management) ---
     public addViewInstance = async (title: string, parentId: string | null = null) => {
         await this._updateSettingsAndPersist(draft => {
             draft.viewInstances.push({
@@ -211,6 +286,7 @@ export class AppStore {
             });
         });
     }
+
     public updateViewInstance = async (id: string, updates: Partial<ViewInstance>) => {
         await this._updateSettingsAndPersist(draft => {
             const index = draft.viewInstances.findIndex(vi => vi.id === id);
@@ -222,6 +298,7 @@ export class AppStore {
             }
         });
     }
+
     public deleteViewInstance = async (id: string) => {
         await this._updateSettingsAndPersist(draft => {
             draft.viewInstances = draft.viewInstances.filter(vi => vi.id !== id);
@@ -230,18 +307,19 @@ export class AppStore {
             });
         });
     }
+
     public moveViewInstance = async (id: string, direction: 'up' | 'down') => {
         await this._updateSettingsAndPersist(draft => {
             draft.viewInstances = moveItemInArray(draft.viewInstances, id, direction);
         });
     }
+
     public duplicateViewInstance = async (id: string) => {
         await this._updateSettingsAndPersist(draft => {
             draft.viewInstances = duplicateItemInArray(draft.viewInstances, id, 'title');
         });
     }
 
-    // --- 布局管理 (Layout Management) ---
     public addLayout = async (name: string, parentId: string | null = null) => {
         await this._updateSettingsAndPersist(draft => {
             draft.layouts.push({
@@ -255,6 +333,7 @@ export class AppStore {
             });
         });
     }
+
     public updateLayout = async (id: string, updates: Partial<Layout>) => {
         await this._updateSettingsAndPersist(draft => {
             const index = draft.layouts.findIndex(l => l.id === id);
@@ -263,23 +342,25 @@ export class AppStore {
             }
         });
     }
+
     public deleteLayout = async (id: string) => {
         await this._updateSettingsAndPersist(draft => {
             draft.layouts = draft.layouts.filter(l => l.id !== id);
         });
     }
+
     public moveLayout = async (id: string, direction: 'up' | 'down') => {
         await this._updateSettingsAndPersist(draft => {
             draft.layouts = moveItemInArray(draft.layouts, id, direction);
         });
     }
+
     public duplicateLayout = async (id: string) => {
         await this._updateSettingsAndPersist(draft => {
             draft.layouts = duplicateItemInArray(draft.layouts, id, 'name');
         });
     }
     
-    // --- 快速输入设置管理 (InputSettings Management) ---
     public addBlock = async (name: string) => {
         await this._updateSettingsAndPersist(draft => {
             draft.inputSettings.blocks.push({
@@ -292,6 +373,7 @@ export class AppStore {
             });
         });
     }
+
     public updateBlock = async (id: string, updates: Partial<BlockTemplate>) => {
         await this._updateSettingsAndPersist(draft => {
             const index = draft.inputSettings.blocks.findIndex(b => b.id === id);
@@ -300,17 +382,20 @@ export class AppStore {
             }
         });
     }
+
     public deleteBlock = async (id: string) => {
         await this._updateSettingsAndPersist(draft => {
             draft.inputSettings.blocks = draft.inputSettings.blocks.filter(b => b.id !== id);
             draft.inputSettings.overrides = draft.inputSettings.overrides.filter(o => o.blockId !== id);
         });
     }
+
     public moveBlock = async (id: string, direction: 'up' | 'down') => {
         await this._updateSettingsAndPersist(draft => {
             draft.inputSettings.blocks = moveItemInArray(draft.inputSettings.blocks, id, direction);
         });
     }
+
     public duplicateBlock = async (id: string) => {
         await this._updateSettingsAndPersist(draft => {
             draft.inputSettings.blocks = duplicateItemInArray(draft.inputSettings.blocks, id, 'name');
@@ -324,6 +409,7 @@ export class AppStore {
             }
         });
     }
+
     public updateTheme = async (id: string, updates: Partial<ThemeDefinition>) => {
         await this._updateSettingsAndPersist(draft => {
             const index = draft.inputSettings.themes.findIndex(t => t.id === id);
@@ -336,6 +422,7 @@ export class AppStore {
             }
         });
     }
+
     public deleteTheme = async (id: string) => {
         await this._updateSettingsAndPersist(draft => {
             draft.inputSettings.themes = draft.inputSettings.themes.filter(t => t.id !== id);
@@ -358,6 +445,7 @@ export class AppStore {
             }
         });
     }
+
     public deleteOverride = async (blockId: string, themeId: string) => {
         await this._updateSettingsAndPersist(draft => {
             draft.inputSettings.overrides = draft.inputSettings.overrides.filter(
@@ -370,9 +458,7 @@ export class AppStore {
 export function useStore<T>(selector: (state: AppState) => T): T {
     const store = AppStore.instance;
     const getSnapshot = () => JSON.stringify(selector(store.getState()));
-
     const [state, setState] = useState(getSnapshot());
-
     useEffect(() => {
         const unsubscribe = store.subscribe(() => {
             const newSnapshot = getSnapshot();
@@ -382,6 +468,5 @@ export function useStore<T>(selector: (state: AppState) => T): T {
         });
         return unsubscribe;
     }, [store, selector, state]);
-
     return JSON.parse(state);
 }
