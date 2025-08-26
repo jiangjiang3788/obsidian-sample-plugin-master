@@ -1,6 +1,6 @@
 // src/shared/components/dialogs/NamePromptModal.tsx
 /** @jsxImportSource preact */
-import { h, render, Fragment } from 'preact';
+import { h, render } from 'preact';
 import { useState } from 'preact/hooks';
 import { App, Modal } from 'obsidian';
 import { TextField, Button } from '@mui/material';
@@ -23,7 +23,9 @@ const PromptComponent = ({ title, placeholder, initialValue, onSubmit, onCancel 
     
     const handleKeyDown = (e: KeyboardEvent) => {
         if (e.key === 'Enter') {
-            e.preventDefault();
+            // [关键] 这里没有调用 e.preventDefault()，是正确的实现
+            // 它只是触发了确认逻辑，并不会阻止字符输入
+            e.currentTarget.blur(); // 让输入框失焦以触发onBlur或表示完成
             handleConfirm();
         }
     };
@@ -52,8 +54,6 @@ const PromptComponent = ({ title, placeholder, initialValue, onSubmit, onCancel 
 
 // Obsidian Modal 封装
 export class NamePromptModal extends Modal {
-    private value: string | null = null;
-    
     constructor(
         app: App,
         private title: string,
@@ -82,6 +82,6 @@ export class NamePromptModal extends Modal {
     }
 
     onClose() {
-        this.contentEl.empty();
+        unmountComponentAtNode(this.containerEl);
     }
 }
