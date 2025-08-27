@@ -1314,7 +1314,7 @@
         "colField": "tags"
       },
       "parentId": "group_memc1a9ofen88",
-      "collapsed": true
+      "collapsed": false
     },
     {
       "id": "view_mer6ll4mtbjry",
@@ -1329,7 +1329,7 @@
         "colField": "date"
       },
       "parentId": "group_memc1a9ofen88",
-      "collapsed": true
+      "collapsed": false
     },
     {
       "id": "view_mepgw6pp1iqso",
@@ -1365,7 +1365,7 @@
         "fields": [],
         "group": "categoryKey"
       },
-      "collapsed": false,
+      "collapsed": true,
       "parentId": "group_memc1a9ofen88",
       "fields": [
         "period",
@@ -1387,7 +1387,7 @@
         "fields": [],
         "group": "categoryKey"
       },
-      "collapsed": false,
+      "collapsed": true,
       "parentId": "group_memc1a9ofen88",
       "fields": [
         "period",
@@ -1409,7 +1409,7 @@
         "fields": [],
         "group": "categoryKey"
       },
-      "collapsed": false,
+      "collapsed": true,
       "parentId": "group_memc1a9ofen88",
       "fields": [
         "period",
@@ -1431,7 +1431,7 @@
         "fields": [],
         "group": "categoryKey"
       },
-      "collapsed": false,
+      "collapsed": true,
       "parentId": "group_memc1a9ofen88",
       "fields": [
         "period",
@@ -1564,6 +1564,10 @@
           {
             "name": "02",
             "color": "#82a3b1"
+          },
+          {
+            "name": "周",
+            "color": "#741e50"
           }
         ]
       },
@@ -2397,7 +2401,7 @@
         "view_mer6oto0gp4ju"
       ],
       "displayMode": "list",
-      "initialView": "月",
+      "initialView": "天",
       "initialDateFollowsNow": true,
       "parentId": "group_memcg1u3us3jc",
       "hideToolbar": false
