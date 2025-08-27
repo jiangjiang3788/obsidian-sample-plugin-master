@@ -131,7 +131,6 @@ export class TimerService {
             const targetFilePath = inputService.renderTemplate(template.targetFile, { ...formData, theme });
             if (!targetFilePath) throw new Error('目标文件路径无效');
             
-            // [撤销修改] 不再强制添加 "- [ ]"，直接使用模板的输出
             const outputContent = inputService.renderTemplate(template.outputTemplate, { ...formData, block: {name: template.name}, theme }).trim();
 
             const file = await inputService.getOrCreateFile(targetFilePath);

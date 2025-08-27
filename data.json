@@ -2576,7 +2576,7 @@
         ],
         "outputTemplate": "\n{{状态.value}} {{icon}} {{任务内容}} (时间::{{时间}}) (时长::{{时长}})  {{重复.value}}  {{状态}} {{moment:YYYY-MM-DD}}",
         "targetFile": "02/01.md",
-        "appendUnderHeader": "## {{theme.path}}"
+        "appendUnderHeader": "## {{theme}}"
       },
       {
         "id": "blk_mejsdvflptluo",
