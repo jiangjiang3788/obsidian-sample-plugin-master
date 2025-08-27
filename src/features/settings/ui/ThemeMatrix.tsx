@@ -80,9 +80,9 @@ export function ThemeMatrix() {
             <Table size="small" sx={{ '& th, & td': { whiteSpace: 'nowrap', py: 1, px: 1.5 } }}>
                 <TableHead>
                     <TableRow>
-                        <TableCell sx={{ width: '5%', fontWeight: 'bold' }}>图标</TableCell>
+                        <TableCell sx={{ width: '10%', fontWeight: 'bold' }}>图标</TableCell>
                         {/* [修改] 将“主题路径”简化为“主题” */}
-                        <TableCell sx={{ width: '25%', fontWeight: 'bold' }}>主题</TableCell>
+                        <TableCell sx={{ width: '20%', fontWeight: 'bold' }}>主题</TableCell>
                         {blocks.map(b => <TableCell key={b.id} align="center" sx={{ fontWeight: 'bold' }}>{b.name}</TableCell>)}
                         <TableCell align="center" sx={{ fontWeight: 'bold' }}>操作</TableCell>
                     </TableRow>
