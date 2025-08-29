@@ -68,3 +68,18 @@ export function duplicateItemInArray<T extends Groupable & { name?: string, titl
     newArray.splice(index + 1, 0, newItem);
     return newArray;
 }
+
+// [NEW] Add this utility function for dnd-kit
+/**
+ * Moves an item from one index to another in an array.
+ * @param array The array to modify.
+ * @param from The index of the item to move.
+ * @param to The index to move the item to.
+ * @returns A new array with the item moved.
+ */
+export function arrayMove<T>(array: T[], from: number, to: number): T[] {
+  const newArray = [...array];
+  const [removed] = newArray.splice(from, 1);
+  newArray.splice(to, 0, removed);
+  return newArray;
+}

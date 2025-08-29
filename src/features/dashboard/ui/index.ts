@@ -4,6 +4,7 @@ import { BlockView } from './BlockView';
 import { ExcelView } from './ExcelView';
 import { StatisticsView } from './StatisticsView';
 import { TimelineView } from './TimelineView';
+import { HeatmapView } from './HeatmapView'; // [NEW] Import HeatmapView
 import type { ComponentType } from 'preact';
 
 // [REFACTOR] Import the authoritative ViewName and VIEW_OPTIONS from the domain layer.
@@ -21,7 +22,8 @@ export const VIEW_REGISTRY: Record<ViewName, ComponentType<any>> = {
   BlockView,
   TimelineView,
   ExcelView,
-  StatisticsView, // [新增]
+  StatisticsView,
+  HeatmapView, // [NEW] Register HeatmapView
 } as const;
 
 /** Dashboard.tsx 动态调用用这个常量 */

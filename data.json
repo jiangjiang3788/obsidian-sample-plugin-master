@@ -1439,7 +1439,8 @@
         "date",
         "icon",
         "content"
-      ]
+      ],
+      "group": "tags"
     },
     {
       "id": "view_mepob3wx8y6de",
@@ -2386,6 +2387,40 @@
         "icon",
         "content"
       ]
+    },
+    {
+      "id": "view_mewr7y1gvq0ro",
+      "title": "打卡视图",
+      "viewType": "HeatmapView",
+      "dataSourceId": "ds_mer6kbdnogrty",
+      "viewConfig": {
+        "displayMode": "habit",
+        "sourceBlockId": "blk_mejsg76atopau",
+        "countColors": [
+          "#ebedf0",
+          "#9be9a8",
+          "#40c463",
+          "#30a14e",
+          "#216e39"
+        ],
+        "themeTags": [
+          "健康/粑粑",
+          "健康/喝水",
+          "健康/身体",
+          "健康/睡眠",
+          "健康/姨妈",
+          "生活",
+          "生活/车车",
+          "生活/读书",
+          "生活/剪头发",
+          "生活/剪指甲",
+          "生活/洗澡",
+          "生活健康/心情",
+          "生活健康/运动"
+        ]
+      },
+      "collapsed": false,
+      "parentId": null
     }
   ],
   "layouts": [
@@ -2497,6 +2532,18 @@
       "name": "excle",
       "viewInstanceIds": [
         "view_mesci2vh386vf"
+      ],
+      "displayMode": "list",
+      "initialView": "月",
+      "initialDateFollowsNow": true,
+      "parentId": null
+    },
+    {
+      "id": "layout_mewrgxwutpa5e",
+      "name": "打卡",
+      "viewInstanceIds": [
+        "view_mer6oto0gp4ju",
+        "view_mewr7y1gvq0ro"
       ],
       "displayMode": "list",
       "initialView": "月",
@@ -2806,7 +2853,7 @@
       },
       {
         "id": "thm_mejsmcngeij2y",
-        "path": "生活/开车",
+        "path": "生活/车车",
         "icon": "🚗"
       },
       {
@@ -9443,6 +9490,237 @@
         ],
         "outputTemplate": "\n{{状态.value}} {{icon}} {{任务内容}} (时间::{{时间}}) (时长::{{时长}})  {{重复.value}}  {{状态}} {{日期}}",
         "targetFile": "01/2-3生活.md",
+        "appendUnderHeader": "## {{theme}}"
+      },
+      {
+        "id": "ovr_mewt2b7za29ik",
+        "blockId": "blk_mejsg76atopau",
+        "themeId": "thm_mejsl0rd9ggip",
+        "status": "enabled",
+        "fields": [
+          {
+            "id": "field_mewjpsd5",
+            "key": "评分",
+            "label": "评分",
+            "type": "rating",
+            "options": [
+              {
+                "value": "📚",
+                "label": "1"
+              }
+            ]
+          },
+          {
+            "id": "field_mewk7o3j",
+            "key": "日期",
+            "label": "日期",
+            "type": "date"
+          },
+          {
+            "id": "field_mewjqtxg",
+            "key": "内容",
+            "label": "内容",
+            "type": "textarea"
+          }
+        ],
+        "outputTemplate": "<!-- start -->\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分}}\npintu::{{评分.value}}\n内容:: {{内容}}\n<!-- end -->",
+        "targetFile": "01/打卡.md",
+        "appendUnderHeader": "## {{theme}}"
+      },
+      {
+        "id": "ovr_mewt595cv52ow",
+        "blockId": "blk_mejsg76atopau",
+        "themeId": "thm_mejsmcngeij2y",
+        "status": "enabled",
+        "fields": [
+          {
+            "id": "field_mewjpsd5",
+            "key": "评分",
+            "label": "评分",
+            "type": "rating",
+            "options": [
+              {
+                "value": "🚗",
+                "label": "1"
+              },
+              {
+                "value": "🚄",
+                "label": "2"
+              }
+            ]
+          },
+          {
+            "id": "field_mewk7o3j",
+            "key": "日期",
+            "label": "日期",
+            "type": "date"
+          },
+          {
+            "id": "field_mewjqtxg",
+            "key": "内容",
+            "label": "内容",
+            "type": "textarea"
+          }
+        ],
+        "outputTemplate": "<!-- start -->\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分}}\npintu::{{评分.value}}\n内容:: {{内容}}\n<!-- end -->",
+        "targetFile": "01/打卡.md",
+        "appendUnderHeader": "## {{theme}}"
+      },
+      {
+        "id": "ovr_mewt6b67umn67",
+        "blockId": "blk_mejsg76atopau",
+        "themeId": "thm_mejspgfly30j8",
+        "status": "enabled",
+        "fields": [
+          {
+            "id": "field_mewjpsd5",
+            "key": "评分",
+            "label": "评分",
+            "type": "rating",
+            "options": [
+              {
+                "value": "DJ\\RELITU\\BB1.png",
+                "label": "1"
+              },
+              {
+                "value": "DJ\\RELITU\\BB2.png",
+                "label": "2"
+              },
+              {
+                "value": "DJ\\RELITU\\BB3.png",
+                "label": "3"
+              }
+            ]
+          },
+          {
+            "id": "field_mewk7o3j",
+            "key": "日期",
+            "label": "日期",
+            "type": "date"
+          },
+          {
+            "id": "field_mewjqtxg",
+            "key": "内容",
+            "label": "内容",
+            "type": "textarea"
+          }
+        ],
+        "outputTemplate": "<!-- start -->\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分}}\npintu::{{评分.value}}\n内容:: {{内容}}\n<!-- end -->",
+        "targetFile": "01/打卡.md",
+        "appendUnderHeader": "## {{theme}}"
+      },
+      {
+        "id": "ovr_mewte5hhuod5g",
+        "blockId": "blk_mejsg76atopau",
+        "themeId": "thm_mejso80owbe8a",
+        "status": "enabled",
+        "fields": [
+          {
+            "id": "field_mewjpsd5",
+            "key": "评分",
+            "label": "评分",
+            "type": "rating",
+            "options": [
+              {
+                "value": "DJ\\RELITU\\S1.png",
+                "label": "1"
+              },
+              {
+                "value": "DJ\\RELITU\\S2.png",
+                "label": "2"
+              },
+              {
+                "value": "DJ\\RELITU\\S3.png",
+                "label": "3"
+              },
+              {
+                "value": "DJ\\RELITU\\S4.png",
+                "label": "4"
+              },
+              {
+                "value": "DJ\\RELITU\\S5.png",
+                "label": "5"
+              },
+              {
+                "value": "DJ\\RELITU\\S6.png",
+                "label": "6"
+              },
+              {
+                "value": "DJ\\RELITU\\S7.png",
+                "label": "7"
+              },
+              {
+                "value": "DJ\\RELITU\\S8.png",
+                "label": "8"
+              }
+            ]
+          },
+          {
+            "id": "field_mewk7o3j",
+            "key": "日期",
+            "label": "日期",
+            "type": "date"
+          },
+          {
+            "id": "field_mewjqtxg",
+            "key": "内容",
+            "label": "内容",
+            "type": "textarea"
+          }
+        ],
+        "outputTemplate": "<!-- start -->\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分}}\npintu::{{评分.value}}\n内容:: {{内容}}\n<!-- end -->",
+        "targetFile": "01/打卡.md",
+        "appendUnderHeader": "## {{theme}}"
+      },
+      {
+        "id": "ovr_mewtfg1txm8nf",
+        "blockId": "blk_mejsg76atopau",
+        "themeId": "thm_mejsosvgm4lcp",
+        "status": "enabled",
+        "fields": [
+          {
+            "id": "field_mewjpsd5",
+            "key": "评分",
+            "label": "评分",
+            "type": "rating",
+            "options": [
+              {
+                "value": "DJ\\RELITU\\DL1.png",
+                "label": "1"
+              },
+              {
+                "value": "DJ\\RELITU\\DL2.png",
+                "label": "2"
+              },
+              {
+                "value": "DJ\\RELITU\\DL3.png",
+                "label": "3"
+              },
+              {
+                "value": "DJ\\RELITU\\DL4.png",
+                "label": "4"
+              },
+              {
+                "value": "DJ\\RELITU\\DL5.png",
+                "label": "5"
+              }
+            ]
+          },
+          {
+            "id": "field_mewk7o3j",
+            "key": "日期",
+            "label": "日期",
+            "type": "date"
+          },
+          {
+            "id": "field_mewjqtxg",
+            "key": "内容",
+            "label": "内容",
+            "type": "textarea"
+          }
+        ],
+        "outputTemplate": "<!-- start -->\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分}}\npintu::{{评分.value}}\n内容:: {{内容}}\n<!-- end -->",
+        "targetFile": "01/打卡.md",
         "appendUnderHeader": "## {{theme}}"
       }
     ]
