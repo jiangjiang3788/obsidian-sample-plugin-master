@@ -3,35 +3,35 @@ import type { RecurrenceInfo } from '@core/utils/mark';
 
 // [新增] 定义可分组项的通用接口
 export interface Groupable {
-    id: string;
-    parentId: string | null;
+    id: string;
+    parentId: string | null;
 }
 
 // [新增] 定义分组的类型
 export type GroupType = 'dataSource' | 'viewInstance' | 'layout';
 export interface Group extends Groupable {
-    name: string;
-    type: GroupType;
-    // [新增] 用于UI状态，表示分组是否折叠
-    collapsed?: boolean; 
+    name: string;
+    type: GroupType;
+    // [新增] 用于UI状态，表示分组是否折叠
+    collapsed?: boolean; 
 }
 
 // [修改] 将插件的顶层设置接口和默认值移到此处，使其成为领域模型的一部分
 export interface ThinkSettings {
-    // [新增] 统一存储所有分组
-    groups: Group[];
-    dataSources: DataSource[];
-    viewInstances: ViewInstance[];
-    layouts: Layout[];
-    inputSettings: InputSettings;
+    // [新增] 统一存储所有分组
+    groups: Group[];
+    dataSources: DataSource[];
+    viewInstances: ViewInstance[];
+    layouts: Layout[];
+    inputSettings: InputSettings;
 }
 
 export const DEFAULT_SETTINGS: ThinkSettings = {
-    groups: [], // [新增]
-    dataSources: [],
-    viewInstances: [],
-    layouts: [],
-    inputSettings: { blocks: [], themes: [], overrides: [] },
+    groups: [], // [新增]
+    dataSources: [],
+    viewInstances: [],
+    layouts: [],
+    inputSettings: { blocks: [], themes: [], overrides: [] },
 };
 
 
@@ -82,41 +82,42 @@ export interface InputSettings {
 
 // ----- 视图与布局定义 (保持不变) ----- //
 
-export const VIEW_OPTIONS = ['BlockView', 'TableView', 'ExcelView', 'TimelineView', 'StatisticsView'] as const;
+// [MODIFIED] 添加 HeatmapView
+export const VIEW_OPTIONS = ['BlockView', 'TableView', 'ExcelView', 'TimelineView', 'StatisticsView', 'HeatmapView'] as const;
 export type ViewName = typeof VIEW_OPTIONS[number];
 
 // [修改] 实现 Groupable 接口
 export interface DataSource extends Groupable {
-    name: string;
-    filters: FilterRule[];
-    sort: SortRule[];
+    name: string;
+    filters: FilterRule[];
+    sort: SortRule[];
 }
 
 // [修改] 实现 Groupable 接口
 export interface ViewInstance extends Groupable {
-    title: string;
-    viewType: ViewName;
-    dataSourceId: string;
-    collapsed?: boolean;
-    fields?: string[];
-    group?: string;
-    viewConfig?: Record<string, any>;
-    actions?: ActionConfig[];
+    title: string;
+    viewType: ViewName;
+    dataSourceId: string;
+    collapsed?: boolean;
+    fields?: string[];
+    group?: string;
+    viewConfig?: Record<string, any>;
+    actions?: ActionConfig[];
 }
 
 // [修改] 实现 Groupable 接口
 export interface Layout extends Groupable {
-    name: string;
-    viewInstanceIds: string[];
-    hideToolbar?: boolean;
-    initialView?: string;
-    initialDate?: string;
-    initialDateFollowsNow?: boolean;
-    isOverviewMode?: boolean; // [新增] 概览模式开关
-    displayMode?: 'list' | 'grid';
-    gridConfig?: {
-        columns?: number;
-    };
+    name: string;
+    viewInstanceIds: string[];
+    hideToolbar?: boolean;
+    initialView?: string;
+    initialDate?: string;
+    initialDateFollowsNow?: boolean;
+    isOverviewMode?: boolean; // [新增] 概览模式开关
+    displayMode?: 'list' | 'grid';
+    gridConfig?: {
+        columns?: number;
+    };
 }
 // ... 文件其余部分无变化 ...
 export interface ActionConfig {

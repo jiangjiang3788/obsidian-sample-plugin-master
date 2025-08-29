@@ -111,6 +111,7 @@ export function LayoutRenderer({ layout, dataStore, plugin }: Props) {
             items: viewItems,
             dateRange: dateRangeForView, 
             module: viewInstance,
+            currentView: layoutView,
             ...viewInstance.viewConfig,
             groupField: viewInstance.group,
             fields: viewInstance.fields,

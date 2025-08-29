@@ -727,5 +727,129 @@ body.theme-dark .module-content {
     /* 例如，确保背景色在不同主题下都清晰可见 */
     background-color: var(--background-secondary) !important;
 }
+/* ============== [REVISED] HeatmapView Styles ============== */
+.heatmap-container {
+    --heatmap-cell-size: 20px; /* You can adjust this base size */
+    width: 100%;
+    padding: 8px;
+}
+.heatmap-view-wrapper.layout-row {
+    display: flex;
+    flex-direction: column;
+    gap: 8px; /* Space between theme rows */
+}
+.heatmap-theme-group {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.heatmap-theme-label {
+    font-size: 0.85em;
+    font-weight: 500;
+    width: 120px; /* Fixed width for alignment */
+    text-align: right;
+    flex-shrink: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.heatmap-theme-content {
+    flex-grow: 1;
+    min-width: 0; /* Important for flexbox to allow shrinking */
+    overflow-x: auto; /* Allow content to scroll if it's too wide */
+    overflow-y: hidden;
+}
+.heatmap-row {
+    display: flex; /* Use flex for single rows */
+    gap: 3px;
+}
+.heatmap-row.single-row {
+    padding-bottom: 4px; /* Space for scrollbar */
+}
+.heatmap-cell {
+    position: relative;
+    width: var(--heatmap-cell-size);
+    height: var(--heatmap-cell-size);
+    border-radius: 3px;
+    cursor: pointer;
+    background-color: #ebedf0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: calc(var(--heatmap-cell-size) * 0.7);
+    transition: transform 0.1s ease-in-out;
+    flex-shrink: 0; /* Prevent cells from shrinking */
+}
+.heatmap-cell:not(.empty):hover {
+    transform: scale(1.15);
+    box-shadow: 0 0 4px rgba(0,0,0,0.2);
+    z-index: 2;
+}
+.heatmap-cell.empty {
+    background-color: transparent;
+    cursor: default;
+}
+.heatmap-cell img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 3px;
+}
+.heatmap-cell-content {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+}
+.heatmap-cell.current-day {
+    outline: 2px solid var(--interactive-accent);
+    outline-offset: 1px;
+}
+.heatmap-cell .current-day-star {
+    /* Removed, the outline is clearer */
+}
+
+/* Styles for Year/Quarter Grid Layout */
+.heatmap-view-wrapper.layout-grid .heatmap-theme-group {
+    flex-direction: column;
+    align-items: stretch;
+}
+.heatmap-view-wrapper.layout-grid .heatmap-theme-label {
+    width: auto;
+    text-align: center;
+    font-size: 1.2em;
+    font-weight: 600;
+    margin-bottom: 16px;
+}
+.heatmap-grid-container {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 24px 12px;
+}
+.month-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+.month-label {
+    font-size: 0.8em;
+    margin-bottom: 4px;
+    color: var(--text-muted);
+}
+.heatmap-row.calendar {
+    display: grid;
+    grid-template-columns: repeat(7, var(--heatmap-cell-size));
+    gap: 3px;
+}
+
+/* Dark mode adjustments */
+body.theme-dark .heatmap-cell {
+    background-color: var(--background-modifier-border);
+}
+body.theme-dark .heatmap-cell.empty {
+    background-color: transparent;
+}
 
 `.trim();
