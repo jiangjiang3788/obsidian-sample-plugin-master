@@ -46,8 +46,7 @@ export class QuickInputModal extends Modal {
     }
 
     onClose() {
-        const { contentEl } = this;
-        unmountComponentAtNode(contentEl);
+        unmountComponentAtNode(this.contentEl);
     }
 }
 
@@ -214,7 +213,14 @@ function QuickInputForm({ app, blockId, context, themeId, onSave, closeModal }: 
                                     displayContent = <span style={{ fontSize: '20px' }}>{opt.value}</span>;
                                 }
                                 return (
-                                    <Button key={opt.label} variant={isSelected ? 'contained' : 'outlined'} onClick={() => handleUpdate(field.key, { value: opt.value, label: opt.label }, true)} title={`评分: ${opt.label}`} sx={{ minWidth: '40px', height: '40px', p: 1 }}>
+                                    <Button
+                                        key={opt.label}
+                                        // [CORE FIX] Swapped the variants to meet the new requirement
+                                        variant={isSelected ? 'outlined' : 'text'}
+                                        onClick={() => handleUpdate(field.key, { value: opt.value, label: opt.label }, true)}
+                                        title={`评分: ${opt.label}`}
+                                        sx={{ minWidth: '40px', height: '40px', p: 1, opacity: isSelected ? 1 : 0.6, '&:hover': { opacity: 1 } }}
+                                    >
                                         {displayContent}
                                     </Button>
                                 );
@@ -294,14 +300,13 @@ function QuickInputForm({ app, blockId, context, themeId, onSave, closeModal }: 
             {themeTree.length > 0 && (
                 <FormControl component="fieldset" sx={{ mb: 1, width: '100%' }}>
                     <Typography variant="body2" sx={{ fontWeight: 600, mb: 1 }}>主题分类</Typography>
-                    {/* [核心修改] 将 maxHeight 改为固定的 height，以确保面板尺寸恒定 */}
                     <Box sx={{
-                        height: '120px', // 使用固定高度，不再是 maxHeight
-                        overflowY: 'auto',   // 当内容超出时显示垂直滚动条
+                        height: '120px',
+                        overflowY: 'auto',
                         borderColor: 'divider',
                         borderRadius: 1,
-                        p: 1, // 增加内边距，避免内容紧贴边框
-                        pr: 0.5 // 右侧内边距稍小，为滚动条留出空间
+                        p: 1,
+                        pr: 0.5
                     }}>
                         {renderThemeLevels(themeTree, activePath, handleSelectTheme)}
                     </Box>

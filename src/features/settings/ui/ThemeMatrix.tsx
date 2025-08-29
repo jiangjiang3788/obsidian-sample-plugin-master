@@ -12,62 +12,26 @@ import DragIndicatorIcon from '@mui/icons-material/DragIndicator';
 import { useState, useMemo } from 'preact/hooks';
 import { TemplateEditorModal } from './components/TemplateEditorModal';
 import type { BlockTemplate, ThemeDefinition, ThemeOverride } from '@core/domain/schema';
-
-// 导入 dnd-kit 和 arrayMove 工具函数
 import { DndContext, closestCenter } from '@dnd-kit/core';
 import { arrayMove, SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 
-// [FIX] 包含了之前省略的 InlineEditor 辅助组件
 function InlineEditor({ value, onSave }: { value: string, onSave: (newValue: string) => void }) {
     const [current, setCurrent] = useState(value);
-
-    const handleBlur = () => {
-        if (current.trim() !== value) {
-            onSave(current.trim());
-        }
-    };
-    
+    const handleBlur = () => { if (current.trim() !== value) { onSave(current.trim()); }};
     const handleKeyDown = (e: KeyboardEvent) => {
         if (e.key === 'Enter') (e.target as HTMLInputElement).blur();
-        if (e.key === 'Escape') {
-            setCurrent(value); // Restore original value
-            (e.target as HTMLInputElement).blur();
-        }
+        if (e.key === 'Escape') { setCurrent(value); (e.target as HTMLInputElement).blur(); }
     };
-
-    return (
-        <TextField
-            autoFocus
-            fullWidth
-            variant="standard"
-            value={current}
-            onChange={e => setCurrent((e.target as HTMLInputElement).value)}
-            onBlur={handleBlur}
-            onKeyDown={handleKeyDown}
-            sx={{ '& .MuiInput-input': { py: '4px' } }}
-        />
-    );
+    return ( <TextField autoFocus fullWidth variant="standard" value={current} onChange={e => setCurrent((e.target as HTMLInputElement).value)} onBlur={handleBlur} onKeyDown={handleKeyDown} sx={{ '& .MuiInput-input': { py: '4px' } }}/>);
 }
 
-// 可排序的 TableRow 组件
 function SortableThemeRow({ theme, blocks, overridesMap, handleCellClick, setEditingThemeId, editingThemeId }) {
-    const {
-        attributes,
-        listeners,
-        setNodeRef,
-        transform,
-        transition,
-    } = useSortable({ id: theme.id });
-
-    const style = {
-        transform: CSS.Transform.toString(transform),
-        transition,
-    };
+    const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: theme.id });
+    const style = { transform: CSS.Transform.toString(transform), transition, display: 'table-row' };
     
     return (
-        <TableRow ref={setNodeRef} style={style} hover sx={{ background: 'var(--background-secondary)'}}>
-            {/* 拖动把手单元格 */}
+        <TableRow ref={setNodeRef} style={style} hover>
             <TableCell sx={{ width: '40px', p: '0 8px', verticalAlign: 'middle' }}>
                 <Tooltip title="拖动排序">
                     <Box component="span" {...attributes} {...listeners} sx={{ cursor: 'grab', display: 'flex', alignItems: 'center' }}>
@@ -75,40 +39,25 @@ function SortableThemeRow({ theme, blocks, overridesMap, handleCellClick, setEdi
                     </Box>
                 </Tooltip>
             </TableCell>
-
-            {/* 图标单元格 */}
             <TableCell onDblClick={() => setEditingThemeId(theme.id)} sx={{ cursor: 'text', verticalAlign: 'middle' }}>
-                {editingThemeId === theme.id ? (
-                    <InlineEditor value={theme.icon || ''} onSave={(newIcon) => { AppStore.instance.updateTheme(theme.id, { icon: newIcon }); setEditingThemeId(null); }} />
-                ) : (
-                    <Typography align="center">{theme.icon || ' '}</Typography>
-                )}
+                {editingThemeId === theme.id ? ( <InlineEditor value={theme.icon || ''} onSave={(newIcon) => { AppStore.instance.updateTheme(theme.id, { icon: newIcon }); setEditingThemeId(null); }} />) : (<Typography align="center">{theme.icon || ' '}</Typography>)}
             </TableCell>
-
-            {/* 路径单元格 */}
             <TableCell onDblClick={() => setEditingThemeId(theme.id)} sx={{ cursor: 'text', verticalAlign: 'middle' }}>
-                 {editingThemeId === theme.id ? (
-                    <InlineEditor value={theme.path} onSave={(newPath) => { AppStore.instance.updateTheme(theme.id, { path: newPath }); setEditingThemeId(null); }} />
-                ) : (
-                    theme.path
-                )}
+                 {editingThemeId === theme.id ? (<InlineEditor value={theme.path} onSave={(newPath) => { AppStore.instance.updateTheme(theme.id, { path: newPath }); setEditingThemeId(null); }} />) : (theme.path)}
             </TableCell>
-
-            {/* Block 状态单元格 */}
             {blocks.map(block => {
                 const override = overridesMap.get(`${theme.id}:${block.id}`);
-                let cellIcon;
-                let cellTitle;
+                let cellIcon, cellTitle;
                 if (override) {
                     if (override.status === 'disabled') {
-                        cellIcon = <CancelIcon sx={{ fontSize: '1.4rem', color: 'error.main', verticalAlign: 'middle' }} />;
+                        cellIcon = <CancelIcon sx={{ fontSize: '1.4rem', color: 'error.main' }} />;
                         cellTitle = '已禁用';
                     } else {
-                        cellIcon = <EditIcon sx={{ fontSize: '1.4rem', color: 'primary.main', verticalAlign: 'middle' }} />;
+                        cellIcon = <EditIcon sx={{ fontSize: '1.4rem', color: 'primary.main' }} />;
                         cellTitle = '已覆写';
                     }
                 } else {
-                    cellIcon = <TaskAltIcon sx={{ fontSize: '1.4rem', color: 'success.main', verticalAlign: 'middle' }} />;
+                    cellIcon = <TaskAltIcon sx={{ fontSize: '1.4rem', color: 'success.main' }} />;
                     cellTitle = '继承';
                 }
                 return (
@@ -117,8 +66,6 @@ function SortableThemeRow({ theme, blocks, overridesMap, handleCellClick, setEdi
                     </TableCell>
                 );
             })}
-
-            {/* 操作单元格 */}
             <TableCell align="center" sx={{ verticalAlign: 'middle' }}>
                 <Tooltip title="删除此主题"><IconButton size="small" onClick={() => {if(confirm(`确定删除主题 "${theme.path}" 吗？`)) AppStore.instance.deleteTheme(theme.id)}}><DeleteIcon fontSize="small" /></IconButton></Tooltip>
             </TableCell>
@@ -174,7 +121,7 @@ export function ThemeMatrix() {
             <Table size="small" sx={{ '& th, & td': { whiteSpace: 'nowrap', py: 1, px: 1.5 } }}>
                 <TableHead>
                     <TableRow>
-                        <TableCell sx={{ width: '40px' }} /> {/* 拖动把手列 */}
+                        <TableCell sx={{ width: '40px' }} />
                         <TableCell sx={{ width: '10%', fontWeight: 'bold' }}>图标</TableCell>
                         <TableCell sx={{ width: '20%', fontWeight: 'bold' }}>主题</TableCell>
                         {blocks.map(b => <TableCell key={b.id} align="center" sx={{ fontWeight: 'bold' }}>{b.name}</TableCell>)}
@@ -183,18 +130,9 @@ export function ThemeMatrix() {
                 </TableHead>
                 <DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
                     <SortableContext items={themes.map(t => t.id)} strategy={verticalListSortingStrategy}>
-                        {/* TableBody 必须是 SortableContext 的直接子元素 */}
                         <TableBody>
                             {themes.map(theme => (
-                                <SortableThemeRow
-                                    key={theme.id}
-                                    theme={theme}
-                                    blocks={blocks}
-                                    overridesMap={overridesMap}
-                                    handleCellClick={handleCellClick}
-                                    editingThemeId={editingThemeId}
-                                    setEditingThemeId={setEditingThemeId}
-                                />
+                                <SortableThemeRow key={theme.id} theme={theme} blocks={blocks} overridesMap={overridesMap} handleCellClick={handleCellClick} editingThemeId={editingThemeId} setEditingThemeId={setEditingThemeId} />
                             ))}
                         </TableBody>
                     </SortableContext>

@@ -851,5 +851,24 @@ body.theme-dark .heatmap-cell {
 body.theme-dark .heatmap-cell.empty {
     background-color: transparent;
 }
+/* [NEW] Dashboard Toolbar Styles */
+.tp-toolbar button {
+    /* Base styles for all buttons */
+    border: 1px solid transparent; /* Add transparent border to prevent layout shift */
+    background-color: var(--background-secondary);
+    transition: all 0.2s ease;
+}
 
+.tp-toolbar button:hover {
+    border-color: var(--background-modifier-border-hover);
+    background-color: var(--background-modifier-hover);
+}
+
+.tp-toolbar button.active {
+    /* Style for the selected button */
+    border: 1px solid var(--interactive-accent);
+    background-color: var(--interactive-accent-hover);
+    color: var(--text-on-accent);
+    font-weight: 600;
+}
 `.trim();

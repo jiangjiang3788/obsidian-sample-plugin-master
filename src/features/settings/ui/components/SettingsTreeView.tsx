@@ -1,6 +1,6 @@
 // src/features/settings/ui/components/SettingsTreeView.tsx
 /** @jsxImportSource preact */
-import { h, ComponentChild, Fragment } from 'preact';
+import { h, ComponentChild } from 'preact';
 import { useState, useEffect } from 'preact/hooks';
 import { Box, Stack, Typography, IconButton, Tooltip, TextField, Collapse, Button } from '@mui/material';
 import ArrowRightIcon from '@mui/icons-material/ArrowRight';
@@ -9,37 +9,20 @@ import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 import DriveFileMoveOutlinedIcon from '@mui/icons-material/DriveFileMoveOutlined';
 import DeleteForeverOutlinedIcon from '@mui/icons-material/DeleteForeverOutlined';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
-import DragIndicatorIcon from '@mui/icons-material/DragIndicator'; // [NEW]
 import type { Group, Groupable } from '@core/domain/schema';
 import { AppStore } from '@state/AppStore';
 import { MoveItemDialog } from '@shared/components/dialogs/MoveItemDialog';
-// [NEW] Import dnd-kit hooks
-import { useSortable, SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
-import { CSS } from '@dnd-kit/utilities';
 
 export interface TreeItem extends Groupable {
     name: string;
     isGroup: boolean; 
 }
 
-// [NEW] Create a SortableNode wrapper component
-function SortableNode({ node, children, ...props }: { node: TreeItem, children: ComponentChild } & any) {
-    const { onUpdateItemName, onDeleteItem, onOpenMoveDialog, onDuplicateItem } = props;
+// 这个内部 Node 组件用于显示每一行
+function Node({ node, children, ...props }: { node: TreeItem, children: ComponentChild } & any) {
+    const { onUpdateItemName, onDeleteItem, onOpenMoveDialog, onDuplicateItem } = props;
     const [isEditing, setIsEditing] = useState(false);
     const [name, setName] = useState(node.name);
-
-    const {
-        attributes,
-        listeners,
-        setNodeRef,
-        transform,
-        transition,
-    } = useSortable({ id: node.id });
-    
-    const style = {
-        transform: CSS.Transform.toString(transform),
-        transition,
-    };
 
     useEffect(() => { setName(node.name); }, [node.name]);
 
@@ -54,7 +37,7 @@ function SortableNode({ node, children, ...props }: { node: TreeItem, children: 
     };
     
     return (
-        <div ref={setNodeRef} style={style}>
+        <Box>
             <Stack 
                 direction="row" 
                 alignItems="center" 
@@ -66,11 +49,6 @@ function SortableNode({ node, children, ...props }: { node: TreeItem, children: 
                     borderTopRightRadius: props.isExpanded && !node.isGroup ? 8 : 0,
                 }}
             >
-                <Tooltip title="拖动排序">
-                    <Box component="span" {...attributes} {...listeners} sx={{ cursor: 'grab', display: 'flex', alignItems: 'center', color: 'text.disabled', px: 0.5 }}>
-                        <DragIndicatorIcon fontSize="small" />
-                    </Box>
-                </Tooltip>
                 <IconButton size="small" onClick={props.onToggle} sx={{ mr: 0.5 }}>
                     {props.isExpanded ? <ArrowDropDownIcon /> : <ArrowRightIcon />}
                 </IconButton>
@@ -90,12 +68,12 @@ function SortableNode({ node, children, ...props }: { node: TreeItem, children: 
                 </Stack>
             </Stack>
             {children}
-        </div>
+        </Box>
     );
 }
 
-
-export function SettingsTreeView({ groups, items, allGroups, parentId, level = 0, renderItem, onAddItem, onAddGroup, onDeleteItem, onUpdateItemName, onMoveItem, onDuplicateItem }: any) {
+export function SettingsTreeView({ groups, items, allGroups, parentId, level = 0, renderItem, onAddItem, onAddGroup, onDeleteItem, onUpdateItemName, onDuplicateItem }: any) {
+    // 这个状态管理确保所有节点初次加载时都是折叠的
     const [collapsedState, setCollapsedState] = useState<Record<string, boolean>>(() => {
         const initialState: Record<string, boolean> = {};
         [...groups, ...items].forEach(node => { initialState[node.id] = true; });
@@ -103,60 +81,48 @@ export function SettingsTreeView({ groups, items, allGroups, parentId, level = 0
     });
     const [movingItem, setMovingItem] = useState<TreeItem | null>(null);
 
-    const toggleCollapse = (itemId: string) => {
-        setCollapsedState(prev => ({ ...prev, [itemId]: !prev[itemId] }));
-    };
-    
-    const handleMoveConfirm = (targetParentId: string | null) => {
-        if (movingItem) { AppStore.instance.moveItem(movingItem.id, targetParentId); }
-    };
+    const toggleCollapse = (itemId: string) => setCollapsedState(prev => ({ ...prev, [itemId]: !prev[itemId] }));
+    const handleMoveConfirm = (targetParentId: string | null) => { if (movingItem) { AppStore.instance.moveItem(movingItem.id, targetParentId); }};
     
     const childGroups = groups.filter(g => g.parentId === parentId);
     const childItems = items.filter(i => i.parentId === parentId);
-    // [NEW] Combine siblings for SortableContext
-    const siblings = [...childGroups, ...childItems];
 
     return (
         <Box>
-            <SortableContext items={siblings.map(s => s.id)} strategy={verticalListSortingStrategy}>
-                {siblings.map((node, index) => {
-                    const isGroup = 'type' in node;
-                    const treeItem: TreeItem = { ...(node as any), isGroup, name: (node as any).name || (node as any).title };
-                    const isExpanded = !collapsedState[node.id];
-
-                    return (
-                        <Box key={node.id} sx={{ borderBottom: '1px solid rgba(0,0,0,0.08)' }}>
-                            <SortableNode
-                                node={treeItem}
-                                isExpanded={isExpanded}
-                                level={level}
-                                onToggle={() => toggleCollapse(node.id)}
-                                onUpdateItemName={onUpdateItemName}
-                                onDeleteItem={onDeleteItem}
-                                onOpenMoveDialog={setMovingItem}
-                                onDuplicateItem={onDuplicateItem}
-                            >
-                                <Collapse in={isExpanded}>
-                                    {isGroup ? (
-                                        <SettingsTreeView
-                                            {...{groups, items, allGroups, renderItem, onAddItem, onAddGroup, onDeleteItem, onUpdateItemName, onMoveItem, onDuplicateItem}}
-                                            parentId={node.id}
-                                            level={level + 1}
-                                        />
-                                    ) : (
-                                        <Box sx={{ bgcolor: 'action.hover', borderTop: '1px solid rgba(0,0,0,0.05)' }}>
-                                            {renderItem(node)}
-                                        </Box>
-                                    )}
-                                </Collapse>
-                            </SortableNode>
-                        </Box>
-                    );
-                })}
-            </SortableContext>
+            {childGroups.map((group) => {
+                const treeItem: TreeItem = { ...group, isGroup: true };
+                const isExpanded = !collapsedState[group.id];
+                return (
+                    <Box key={group.id} sx={{ borderBottom: '1px solid rgba(0,0,0,0.08)' }}>
+                        <Node node={treeItem} isExpanded={isExpanded} level={level} onToggle={() => toggleCollapse(group.id)} onUpdateItemName={onUpdateItemName} onDeleteItem={onDeleteItem} onOpenMoveDialog={setMovingItem} onDuplicateItem={onDuplicateItem}>
+                            {/* [PERFORMANCE] unmountOnExit 确保折叠时，内部的递归组件被完全卸载 */}
+                            <Collapse in={isExpanded} timeout="auto" unmountOnExit>
+                                <SettingsTreeView {...{groups, items, allGroups, renderItem, onAddItem, onAddGroup, onDeleteItem, onUpdateItemName, onDuplicateItem}} parentId={group.id} level={level + 1}/>
+                            </Collapse>
+                        </Node>
+                    </Box>
+                );
+            })}
+            
+            {childItems.map((item) => {
+                const isExpanded = !collapsedState[item.id];
+                const treeItem: TreeItem = { ...item, isGroup: false, name: (item as any).name || (item as any).title };
+                return (
+                    <Box key={item.id} sx={{ borderBottom: '1px solid rgba(0,0,0,0.08)' }}>
+                        <Node node={treeItem} isExpanded={isExpanded} level={level} onToggle={() => toggleCollapse(item.id)} onUpdateItemName={onUpdateItemName} onDeleteItem={onDeleteItem} onOpenMoveDialog={setMovingItem} onDuplicateItem={onDuplicateItem}>
+                            {/* [PERFORMANCE] unmountOnExit 确保折叠时，内部的编辑器组件被完全卸载 */}
+                            <Collapse in={isExpanded} timeout="auto" unmountOnExit>
+                                <Box sx={{ bgcolor: 'action.hover', borderTop: '1px solid rgba(0,0,0,0.05)' }}>
+                                    {renderItem(item)}
+                                </Box>
+                            </Collapse>
+                        </Node>
+                    </Box>
+                );
+            })}
             
             {level === 0 && (
-                <Stack direction="row" spacing={1} sx={{ mt: 2 }}>
+                <Stack direction="row" spacing={1} sx={{ mt: 2, pl: 1 }}>
                     <Button onClick={() => onAddItem(parentId)} startIcon={<AddCircleOutlineIcon />} size="small">添加新项</Button>
                     <Button onClick={() => onAddGroup(parentId)} startIcon={<AddCircleOutlineIcon />} size="small">添加分组</Button>
                 </Stack>
