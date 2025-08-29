@@ -2405,18 +2405,15 @@
         ],
         "themeTags": [
           "健康/粑粑",
-          "健康/喝水",
           "健康/身体",
           "健康/睡眠",
           "健康/姨妈",
-          "生活",
           "生活/车车",
           "生活/读书",
           "生活/剪头发",
           "生活/剪指甲",
-          "生活/洗澡",
-          "生活健康/心情",
-          "生活健康/运动"
+          "健康/心情",
+          "健康/运动"
         ]
       },
       "collapsed": false,
@@ -2995,6 +2992,21 @@
         "id": "thm_mejsye15uvbzi",
         "path": "工作/老板任务",
         "icon": "💥"
+      },
+      {
+        "id": "thm_mewzwlmjw8b7r",
+        "path": "健康/姨妈",
+        "icon": "🩸"
+      },
+      {
+        "id": "thm_mewzx1twrayjd",
+        "path": "生活/剪指甲",
+        "icon": "✋"
+      },
+      {
+        "id": "thm_mewzx8x1h4g1r",
+        "path": "剪头发",
+        "icon": "✂"
       }
     ],
     "overrides": [
@@ -9703,6 +9715,884 @@
               {
                 "value": "DJ\\RELITU\\DL5.png",
                 "label": "5"
+              }
+            ]
+          },
+          {
+            "id": "field_mewk7o3j",
+            "key": "日期",
+            "label": "日期",
+            "type": "date"
+          },
+          {
+            "id": "field_mewjqtxg",
+            "key": "内容",
+            "label": "内容",
+            "type": "textarea"
+          }
+        ],
+        "outputTemplate": "<!-- start -->\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分}}\npintu::{{评分.value}}\n内容:: {{内容}}\n<!-- end -->",
+        "targetFile": "01/打卡.md",
+        "appendUnderHeader": "## {{theme}}"
+      },
+      {
+        "id": "ovr_mewzk79xrolwo",
+        "blockId": "blk_mejsg76atopau",
+        "themeId": "thm_mejstnaohdg8t",
+        "status": "enabled",
+        "fields": [
+          {
+            "id": "field_mewjpsd5",
+            "key": "评分",
+            "label": "评分",
+            "type": "rating",
+            "options": [
+              {
+                "value": "DJ\\RELITU\\01.png",
+                "label": "1"
+              },
+              {
+                "value": "DJ\\RELITU\\02.png",
+                "label": "2"
+              },
+              {
+                "value": "DJ\\RELITU\\03.png",
+                "label": "3"
+              },
+              {
+                "value": "DJ\\RELITU\\04.png",
+                "label": "4"
+              },
+              {
+                "value": "DJ\\RELITU\\05.png",
+                "label": "5"
+              },
+              {
+                "value": "DJ\\RELITU\\06.png",
+                "label": "6"
+              },
+              {
+                "value": "DJ\\RELITU\\07.png",
+                "label": "7"
+              },
+              {
+                "value": "DJ\\RELITU\\08.png",
+                "label": "8"
+              }
+            ]
+          },
+          {
+            "id": "field_mewk7o3j",
+            "key": "日期",
+            "label": "日期",
+            "type": "date"
+          },
+          {
+            "id": "field_mewjqtxg",
+            "key": "内容",
+            "label": "内容",
+            "type": "textarea"
+          }
+        ],
+        "outputTemplate": "<!-- start -->\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分}}\npintu::{{评分.value}}\n内容:: {{内容}}\n<!-- end -->",
+        "targetFile": "01/打卡.md",
+        "appendUnderHeader": "## {{theme}}"
+      },
+      {
+        "id": "ovr_mewzwad0lzntf",
+        "blockId": "blk_mejsg76atopau",
+        "themeId": "thm_mejsp0lukfkh0",
+        "status": "enabled",
+        "fields": [
+          {
+            "id": "field_mewjpsd5",
+            "key": "评分",
+            "label": "评分",
+            "type": "rating",
+            "options": [
+              {
+                "value": "♨️",
+                "label": "1"
+              },
+              {
+                "value": "🧘🏻‍♀️",
+                "label": "2"
+              },
+              {
+                "value": "💪",
+                "label": "3"
+              }
+            ]
+          },
+          {
+            "id": "field_mewk7o3j",
+            "key": "日期",
+            "label": "日期",
+            "type": "date"
+          },
+          {
+            "id": "field_mewjqtxg",
+            "key": "内容",
+            "label": "内容",
+            "type": "textarea"
+          }
+        ],
+        "outputTemplate": "<!-- start -->\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分}}\npintu::{{评分.value}}\n内容:: {{内容}}\n<!-- end -->",
+        "targetFile": "01/打卡.md",
+        "appendUnderHeader": "## {{theme}}"
+      },
+      {
+        "id": "ovr_mewzy0p1xa2ji",
+        "blockId": "blk_mejsdvflptluo",
+        "themeId": "thm_mewzwlmjw8b7r",
+        "status": "disabled",
+        "fields": [
+          {
+            "id": "field_mer92so5",
+            "key": "周期",
+            "label": "周期",
+            "type": "radio",
+            "options": [
+              {
+                "value": "周",
+                "label": "周"
+              },
+              {
+                "value": "月",
+                "label": "月"
+              },
+              {
+                "value": "季",
+                "label": "季"
+              },
+              {
+                "value": "🆕",
+                "label": "年"
+              }
+            ]
+          },
+          {
+            "id": "field_mer94wbx",
+            "key": "日期",
+            "label": "日期",
+            "type": "date"
+          },
+          {
+            "id": "field_mer95h6l",
+            "key": "内容",
+            "label": "内容",
+            "type": "textarea"
+          }
+        ],
+        "outputTemplate": "<!-- start -->\n分类:: 计划\n分类:: {{周期}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n",
+        "targetFile": "01/计划.md",
+        "appendUnderHeader": "## {{theme}}"
+      },
+      {
+        "id": "ovr_mewzy5q8am701",
+        "blockId": "blk_mejsdvflptluo",
+        "themeId": "thm_mewzx1twrayjd",
+        "status": "disabled",
+        "fields": [
+          {
+            "id": "field_mer92so5",
+            "key": "周期",
+            "label": "周期",
+            "type": "radio",
+            "options": [
+              {
+                "value": "周",
+                "label": "周"
+              },
+              {
+                "value": "月",
+                "label": "月"
+              },
+              {
+                "value": "季",
+                "label": "季"
+              },
+              {
+                "value": "🆕",
+                "label": "年"
+              }
+            ]
+          },
+          {
+            "id": "field_mer94wbx",
+            "key": "日期",
+            "label": "日期",
+            "type": "date"
+          },
+          {
+            "id": "field_mer95h6l",
+            "key": "内容",
+            "label": "内容",
+            "type": "textarea"
+          }
+        ],
+        "outputTemplate": "<!-- start -->\n分类:: 计划\n分类:: {{周期}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n",
+        "targetFile": "01/计划.md",
+        "appendUnderHeader": "## {{theme}}"
+      },
+      {
+        "id": "ovr_mewzybmks3bt5",
+        "blockId": "blk_mejsdvflptluo",
+        "themeId": "thm_mewzx8x1h4g1r",
+        "status": "disabled",
+        "fields": [
+          {
+            "id": "field_mer92so5",
+            "key": "周期",
+            "label": "周期",
+            "type": "radio",
+            "options": [
+              {
+                "value": "周",
+                "label": "周"
+              },
+              {
+                "value": "月",
+                "label": "月"
+              },
+              {
+                "value": "季",
+                "label": "季"
+              },
+              {
+                "value": "🆕",
+                "label": "年"
+              }
+            ]
+          },
+          {
+            "id": "field_mer94wbx",
+            "key": "日期",
+            "label": "日期",
+            "type": "date"
+          },
+          {
+            "id": "field_mer95h6l",
+            "key": "内容",
+            "label": "内容",
+            "type": "textarea"
+          }
+        ],
+        "outputTemplate": "<!-- start -->\n分类:: 计划\n分类:: {{周期}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n",
+        "targetFile": "01/计划.md",
+        "appendUnderHeader": "## {{theme}}"
+      },
+      {
+        "id": "ovr_mewzygs8bhtxo",
+        "blockId": "blk_mejsfuehqj4s0",
+        "themeId": "thm_mewzwlmjw8b7r",
+        "status": "disabled",
+        "fields": [
+          {
+            "id": "field_mekrw2ui",
+            "key": "周期",
+            "label": "周期",
+            "type": "radio",
+            "options": [
+              {
+                "value": "周",
+                "label": "周",
+                "extraValues": {
+                  "1.2": "1.2",
+                  "1.1": "1.1"
+                }
+              },
+              {
+                "value": "月",
+                "label": "月"
+              },
+              {
+                "value": "季",
+                "label": "季"
+              },
+              {
+                "value": "年",
+                "label": "年"
+              }
+            ]
+          },
+          {
+            "id": "field_mer983il",
+            "key": "日期",
+            "label": "日期",
+            "type": "date"
+          },
+          {
+            "id": "field_mer989rn",
+            "key": "内容",
+            "label": "内容",
+            "type": "textarea"
+          }
+        ],
+        "outputTemplate": "<!-- start -->\n分类:: 总结\n分类:: {{周期}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->",
+        "targetFile": "01/总结.md",
+        "appendUnderHeader": "## {{theme}}"
+      },
+      {
+        "id": "ovr_mewzylx4x0ohf",
+        "blockId": "blk_mejsfuehqj4s0",
+        "themeId": "thm_mewzx1twrayjd",
+        "status": "disabled",
+        "fields": [
+          {
+            "id": "field_mekrw2ui",
+            "key": "周期",
+            "label": "周期",
+            "type": "radio",
+            "options": [
+              {
+                "value": "周",
+                "label": "周",
+                "extraValues": {
+                  "1.2": "1.2",
+                  "1.1": "1.1"
+                }
+              },
+              {
+                "value": "月",
+                "label": "月"
+              },
+              {
+                "value": "季",
+                "label": "季"
+              },
+              {
+                "value": "年",
+                "label": "年"
+              }
+            ]
+          },
+          {
+            "id": "field_mer983il",
+            "key": "日期",
+            "label": "日期",
+            "type": "date"
+          },
+          {
+            "id": "field_mer989rn",
+            "key": "内容",
+            "label": "内容",
+            "type": "textarea"
+          }
+        ],
+        "outputTemplate": "<!-- start -->\n分类:: 总结\n分类:: {{周期}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->",
+        "targetFile": "01/总结.md",
+        "appendUnderHeader": "## {{theme}}"
+      },
+      {
+        "id": "ovr_mewzyqu472w3a",
+        "blockId": "blk_mejsfuehqj4s0",
+        "themeId": "thm_mewzx8x1h4g1r",
+        "status": "disabled",
+        "fields": [
+          {
+            "id": "field_mekrw2ui",
+            "key": "周期",
+            "label": "周期",
+            "type": "radio",
+            "options": [
+              {
+                "value": "周",
+                "label": "周",
+                "extraValues": {
+                  "1.2": "1.2",
+                  "1.1": "1.1"
+                }
+              },
+              {
+                "value": "月",
+                "label": "月"
+              },
+              {
+                "value": "季",
+                "label": "季"
+              },
+              {
+                "value": "年",
+                "label": "年"
+              }
+            ]
+          },
+          {
+            "id": "field_mer983il",
+            "key": "日期",
+            "label": "日期",
+            "type": "date"
+          },
+          {
+            "id": "field_mer989rn",
+            "key": "内容",
+            "label": "内容",
+            "type": "textarea"
+          }
+        ],
+        "outputTemplate": "<!-- start -->\n分类:: 总结\n分类:: {{周期}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->",
+        "targetFile": "01/总结.md",
+        "appendUnderHeader": "## {{theme}}"
+      },
+      {
+        "id": "ovr_mewzyvzh7l68a",
+        "blockId": "blk_mejsg1dc46fj9",
+        "themeId": "thm_mewzwlmjw8b7r",
+        "status": "disabled",
+        "fields": [
+          {
+            "id": "field_mewjlt4j",
+            "key": "思考分类",
+            "label": "思考分类",
+            "type": "radio",
+            "options": [
+              {
+                "value": "事件",
+                "label": "事件"
+              },
+              {
+                "value": "感受",
+                "label": "感受"
+              },
+              {
+                "value": "思考",
+                "label": "思考"
+              }
+            ]
+          },
+          {
+            "id": "field_mewkyug9",
+            "key": "日期",
+            "label": "日期",
+            "type": "text"
+          },
+          {
+            "id": "field_mewjlypl",
+            "key": "内容",
+            "label": "内容",
+            "type": "textarea"
+          }
+        ],
+        "outputTemplate": "<!-- start -->\n分类:: {{思考分类}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->",
+        "targetFile": "01/思考.md",
+        "appendUnderHeader": "## {{theme}}"
+      },
+      {
+        "id": "ovr_mewzz0szpk1u0",
+        "blockId": "blk_mejsg1dc46fj9",
+        "themeId": "thm_mewzx1twrayjd",
+        "status": "disabled",
+        "fields": [
+          {
+            "id": "field_mewjlt4j",
+            "key": "思考分类",
+            "label": "思考分类",
+            "type": "radio",
+            "options": [
+              {
+                "value": "事件",
+                "label": "事件"
+              },
+              {
+                "value": "感受",
+                "label": "感受"
+              },
+              {
+                "value": "思考",
+                "label": "思考"
+              }
+            ]
+          },
+          {
+            "id": "field_mewkyug9",
+            "key": "日期",
+            "label": "日期",
+            "type": "text"
+          },
+          {
+            "id": "field_mewjlypl",
+            "key": "内容",
+            "label": "内容",
+            "type": "textarea"
+          }
+        ],
+        "outputTemplate": "<!-- start -->\n分类:: {{思考分类}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->",
+        "targetFile": "01/思考.md",
+        "appendUnderHeader": "## {{theme}}"
+      },
+      {
+        "id": "ovr_mewzz5ulkurx1",
+        "blockId": "blk_mejsg1dc46fj9",
+        "themeId": "thm_mewzx8x1h4g1r",
+        "status": "disabled",
+        "fields": [
+          {
+            "id": "field_mewjlt4j",
+            "key": "思考分类",
+            "label": "思考分类",
+            "type": "radio",
+            "options": [
+              {
+                "value": "事件",
+                "label": "事件"
+              },
+              {
+                "value": "感受",
+                "label": "感受"
+              },
+              {
+                "value": "思考",
+                "label": "思考"
+              }
+            ]
+          },
+          {
+            "id": "field_mewkyug9",
+            "key": "日期",
+            "label": "日期",
+            "type": "text"
+          },
+          {
+            "id": "field_mewjlypl",
+            "key": "内容",
+            "label": "内容",
+            "type": "textarea"
+          }
+        ],
+        "outputTemplate": "<!-- start -->\n分类:: {{思考分类}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->",
+        "targetFile": "01/思考.md",
+        "appendUnderHeader": "## {{theme}}"
+      },
+      {
+        "id": "ovr_mex00lg6stu8d",
+        "blockId": "blk_meic1my6m62iu",
+        "themeId": "thm_mewzx1twrayjd",
+        "status": "disabled",
+        "fields": [
+          {
+            "id": "field_mekr8gby",
+            "key": "状态",
+            "label": "状态",
+            "type": "radio",
+            "options": [
+              {
+                "value": "- [x]",
+                "label": "✅",
+                "extraValues": {}
+              },
+              {
+                "value": "- [ ]",
+                "label": "🛫"
+              },
+              {
+                "value": "- [ ]",
+                "label": "📅"
+              }
+            ]
+          },
+          {
+            "id": "field_mekt6ks3",
+            "key": "任务内容",
+            "label": "任务内容",
+            "type": "textarea"
+          },
+          {
+            "id": "field_mewk9zrg",
+            "key": "日期",
+            "label": "日期",
+            "type": "date"
+          },
+          {
+            "id": "field_mekymbeq",
+            "key": "时间",
+            "label": "时间",
+            "type": "time"
+          },
+          {
+            "id": "field_mekymokf",
+            "key": "时长",
+            "label": "时长",
+            "type": "text"
+          },
+          {
+            "id": "field_mekyn4c3",
+            "key": "重复",
+            "label": "重复",
+            "type": "radio",
+            "options": [
+              {
+                "value": " ",
+                "label": "不重复"
+              },
+              {
+                "value": "🔁 every day",
+                "label": "每天"
+              },
+              {
+                "value": "🔁 every mothon",
+                "label": "每周"
+              },
+              {
+                "value": "🔁 every year",
+                "label": "每月"
+              }
+            ]
+          }
+        ],
+        "outputTemplate": "\n{{状态.value}} {{icon}} {{任务内容}} (时间::{{时间}}) (时长::{{时长}})  {{重复.value}}  {{状态}} {{日期}}",
+        "targetFile": "03/01.md",
+        "appendUnderHeader": "## {{theme}}"
+      },
+      {
+        "id": "ovr_mex00r9ptivwf",
+        "blockId": "blk_meic1my6m62iu",
+        "themeId": "thm_mewzx8x1h4g1r",
+        "status": "disabled",
+        "fields": [
+          {
+            "id": "field_mekr8gby",
+            "key": "状态",
+            "label": "状态",
+            "type": "radio",
+            "options": [
+              {
+                "value": "- [x]",
+                "label": "✅",
+                "extraValues": {}
+              },
+              {
+                "value": "- [ ]",
+                "label": "🛫"
+              },
+              {
+                "value": "- [ ]",
+                "label": "📅"
+              }
+            ]
+          },
+          {
+            "id": "field_mekt6ks3",
+            "key": "任务内容",
+            "label": "任务内容",
+            "type": "textarea"
+          },
+          {
+            "id": "field_mewk9zrg",
+            "key": "日期",
+            "label": "日期",
+            "type": "date"
+          },
+          {
+            "id": "field_mekymbeq",
+            "key": "时间",
+            "label": "时间",
+            "type": "time"
+          },
+          {
+            "id": "field_mekymokf",
+            "key": "时长",
+            "label": "时长",
+            "type": "text"
+          },
+          {
+            "id": "field_mekyn4c3",
+            "key": "重复",
+            "label": "重复",
+            "type": "radio",
+            "options": [
+              {
+                "value": " ",
+                "label": "不重复"
+              },
+              {
+                "value": "🔁 every day",
+                "label": "每天"
+              },
+              {
+                "value": "🔁 every mothon",
+                "label": "每周"
+              },
+              {
+                "value": "🔁 every year",
+                "label": "每月"
+              }
+            ]
+          }
+        ],
+        "outputTemplate": "\n{{状态.value}} {{icon}} {{任务内容}} (时间::{{时间}}) (时长::{{时长}})  {{重复.value}}  {{状态}} {{日期}}",
+        "targetFile": "03/01.md",
+        "appendUnderHeader": "## {{theme}}"
+      },
+      {
+        "id": "ovr_mex011wkocux9",
+        "blockId": "blk_meic1my6m62iu",
+        "themeId": "thm_mewzwlmjw8b7r",
+        "status": "disabled",
+        "fields": [
+          {
+            "id": "field_mekr8gby",
+            "key": "状态",
+            "label": "状态",
+            "type": "radio",
+            "options": [
+              {
+                "value": "- [x]",
+                "label": "✅",
+                "extraValues": {}
+              },
+              {
+                "value": "- [ ]",
+                "label": "🛫"
+              },
+              {
+                "value": "- [ ]",
+                "label": "📅"
+              }
+            ]
+          },
+          {
+            "id": "field_mekt6ks3",
+            "key": "任务内容",
+            "label": "任务内容",
+            "type": "textarea"
+          },
+          {
+            "id": "field_mewk9zrg",
+            "key": "日期",
+            "label": "日期",
+            "type": "date"
+          },
+          {
+            "id": "field_mekymbeq",
+            "key": "时间",
+            "label": "时间",
+            "type": "time"
+          },
+          {
+            "id": "field_mekymokf",
+            "key": "时长",
+            "label": "时长",
+            "type": "text"
+          },
+          {
+            "id": "field_mekyn4c3",
+            "key": "重复",
+            "label": "重复",
+            "type": "radio",
+            "options": [
+              {
+                "value": " ",
+                "label": "不重复"
+              },
+              {
+                "value": "🔁 every day",
+                "label": "每天"
+              },
+              {
+                "value": "🔁 every mothon",
+                "label": "每周"
+              },
+              {
+                "value": "🔁 every year",
+                "label": "每月"
+              }
+            ]
+          }
+        ],
+        "outputTemplate": "\n{{状态.value}} {{icon}} {{任务内容}} (时间::{{时间}}) (时长::{{时长}})  {{重复.value}}  {{状态}} {{日期}}",
+        "targetFile": "03/01.md",
+        "appendUnderHeader": "## {{theme}}"
+      },
+      {
+        "id": "ovr_mex01d52zda53",
+        "blockId": "blk_mejsg76atopau",
+        "themeId": "thm_mewzwlmjw8b7r",
+        "status": "enabled",
+        "fields": [
+          {
+            "id": "field_mewjpsd5",
+            "key": "评分",
+            "label": "评分",
+            "type": "rating",
+            "options": [
+              {
+                "value": "🩸",
+                "label": "1"
+              }
+            ]
+          },
+          {
+            "id": "field_mewk7o3j",
+            "key": "日期",
+            "label": "日期",
+            "type": "date"
+          },
+          {
+            "id": "field_mewjqtxg",
+            "key": "内容",
+            "label": "内容",
+            "type": "textarea"
+          }
+        ],
+        "outputTemplate": "<!-- start -->\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分}}\npintu::{{评分.value}}\n内容:: {{内容}}\n<!-- end -->",
+        "targetFile": "01/打卡.md",
+        "appendUnderHeader": "## {{theme}}"
+      },
+      {
+        "id": "ovr_mex01qcs1209t",
+        "blockId": "blk_mejsg76atopau",
+        "themeId": "thm_mewzx1twrayjd",
+        "status": "enabled",
+        "fields": [
+          {
+            "id": "field_mewjpsd5",
+            "key": "评分",
+            "label": "评分",
+            "type": "rating",
+            "options": [
+              {
+                "value": "✋",
+                "label": "1"
+              },
+              {
+                "value": "🦶",
+                "label": "2"
+              }
+            ]
+          },
+          {
+            "id": "field_mewk7o3j",
+            "key": "日期",
+            "label": "日期",
+            "type": "date"
+          },
+          {
+            "id": "field_mewjqtxg",
+            "key": "内容",
+            "label": "内容",
+            "type": "textarea"
+          }
+        ],
+        "outputTemplate": "<!-- start -->\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分}}\npintu::{{评分.value}}\n内容:: {{内容}}\n<!-- end -->",
+        "targetFile": "01/打卡.md",
+        "appendUnderHeader": "## {{theme}}"
+      },
+      {
+        "id": "ovr_mex0206ywz716",
+        "blockId": "blk_mejsg76atopau",
+        "themeId": "thm_mewzx8x1h4g1r",
+        "status": "enabled",
+        "fields": [
+          {
+            "id": "field_mewjpsd5",
+            "key": "评分",
+            "label": "评分",
+            "type": "rating",
+            "options": [
+              {
+                "value": "✂",
+                "label": "1"
               }
             ]
           },

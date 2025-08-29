@@ -450,6 +450,7 @@ export class AppStore {
         });
     }
 
+   
     public upsertOverride = async (overrideData: Omit<ThemeOverride, 'id'>) => {
         await this._updateSettingsAndPersist(draft => {
             const index = draft.inputSettings.overrides.findIndex(o => o.blockId === overrideData.blockId && o.themeId === overrideData.themeId);
