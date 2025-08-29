@@ -4,9 +4,9 @@ import { ObsidianPlatform } from '@platform/obsidian';
 import { DataStore } from '@core/services/dataStore';
 import { AppStore } from '@state/AppStore';
 import { RendererService } from '@core/services/RendererService';
-import { ActionService } from '@core/services/ActionService'; 
+import { ActionService } from '@core/services/ActionService';
 import { TimerStateService } from '@core/services/TimerStateService';
-import { FloatingTimerWidget } from '@features/timer/FloatingTimerWidget'; 
+import { FloatingTimerWidget } from '@features/timer/FloatingTimerWidget';
 import * as DashboardFeature from '@features/dashboard';
 import * as QuickInputFeature from '@features/quick-input';
 import * as SettingsFeature from '@features/settings';
@@ -20,7 +20,7 @@ import { GLOBAL_CSS } from '@features/dashboard/styles/global';
 console.log(`[ThinkPlugin] main.js 文件已加载，版本时间: ${new Date().toLocaleTimeString()}`);
 // =======================================================================
 
-export const DEBUG_MODE = true;
+export const DEBUG_MODE = false; // 已禁用调试模式
 
 export interface ThinkContext {
     app: App;
@@ -46,8 +46,6 @@ export default class ThinkPlugin extends Plugin implements ThinkContext {
     }
 
     async onload(): Promise<void> {
-        if (DEBUG_MODE) console.log('ThinkPlugin: 插件加载 (Debug模式)');
-
         const settings = await this.loadSettings();
         this.injectGlobalCss();
 
@@ -55,14 +53,14 @@ export default class ThinkPlugin extends Plugin implements ThinkContext {
         this.dataStore = new DataStore(this.platform);
         this.appStore = AppStore.instance;
         this.appStore.init(this, settings);
-        
+
         this.timerStateService = new TimerStateService(this.app);
         this.actionService = new ActionService(this.app);
         this.rendererService = new RendererService(this, this.dataStore, this.appStore);
 
         this.timerWidget = new FloatingTimerWidget(this);
         this.timerWidget.load();
-        
+
         this.timerStateService.loadStateFromFile().then(timers => {
             this.appStore.setInitialTimers(timers);
         });
@@ -86,16 +84,15 @@ export default class ThinkPlugin extends Plugin implements ThinkContext {
     }
 
     onunload(): void {
-        if (DEBUG_MODE) console.log('ThinkPlugin: 插件卸载');
         document.getElementById(STYLE_TAG_ID)?.remove();
         this.rendererService.cleanup();
-        this.timerWidget?.unload(); 
+        this.timerWidget?.unload();
     }
 
     private async loadSettings(): Promise<ThinkSettings> {
         const stored = (await this.loadData()) as Partial<ThinkSettings> | null;
         const merged = Object.assign({}, DEFAULT_SETTINGS, stored);
-        
+
         merged.dataSources = merged.dataSources || [];
         merged.viewInstances = merged.viewInstances || [];
         merged.layouts = merged.layouts || [];

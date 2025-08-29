@@ -33,7 +33,7 @@ export class RendererService {
         if (RendererService.instance) {
             return RendererService.instance;
         }
-        
+
         // [核心] 订阅 AppStore 的变化，当设置更新时自动调用 rerenderAll
         this.appStore.subscribe(() => this.rerenderAll());
         RendererService.instance = this;
@@ -45,7 +45,6 @@ export class RendererService {
      * @param layout - 要渲染的布局配置。
      */
     public register(container: HTMLElement, layout: Layout): void {
-        console.log(`[RendererService] Registering layout: "${layout.name}"`);
         // 确保同一个容器不会被重复注册
         this.unregister(container);
 
@@ -70,16 +69,13 @@ export class RendererService {
     public unregister(container: HTMLElement): void {
         const index = this.activeLayouts.findIndex(l => l.container === container);
         if (index > -1) {
-            const { layoutName } = this.activeLayouts[index];
-            console.log(`[RendererService] Unregistering layout: "${layoutName}"`);
-            
             try {
                 render(null, container); // 卸载 Preact 组件
             } catch (e) {
                 // 捕获异常，以防容器已被Obsidian销毁
             }
             container.empty(); // 清空容器
-            
+
             this.activeLayouts.splice(index, 1);
         }
     }
@@ -88,7 +84,6 @@ export class RendererService {
      * 当设置变化时，重新渲染所有当前活动的布局。
      */
     private rerenderAll(): void {
-        console.log('[RendererService] Settings changed, rerendering all active layouts...');
         const latestSettings = this.appStore.getSettings();
 
         // 使用 for...of 循环来处理，因为它比 forEach 更易于阅读和调试
@@ -98,7 +93,6 @@ export class RendererService {
 
             if (newLayoutConfig) {
                 // 如果布局配置依然存在，则重新渲染
-                console.log(`  - Rerendering "${layoutName}"`);
                 render(
                     h(LayoutRenderer, {
                         layout: newLayoutConfig,
@@ -109,18 +103,16 @@ export class RendererService {
                 );
             } else {
                 // 如果布局配置被删除了，则注销并显示提示信息
-                console.log(`  - Layout "${layoutName}" was deleted, unregistering.`);
                 this.unregister(container);
                 container.createDiv({ text: `布局配置 "${layoutName}" 已被删除。` });
             }
         }
     }
-    
+
     /**
      * 在插件卸载时调用，清理所有活动的布局。
      */
     public cleanup(): void {
-        console.log('[RendererService] Cleaning up all active layouts.');
         // 创建一个副本进行迭代，因为 unregister 会修改原始数组
         [...this.activeLayouts].forEach(layout => this.unregister(layout.container));
         this.activeLayouts = [];
