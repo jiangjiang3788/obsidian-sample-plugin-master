@@ -7020,6 +7020,693 @@
         "outputTemplate": "<!-- start -->\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分}}\npintu::{{评分..value}}\n内容:: {{内容}}\n<!-- end -->",
         "targetFile": "01/打卡.md",
         "appendUnderHeader": "## {{theme}}"
+      },
+      {
+        "id": "ovr_mewkjzdq1eqwr",
+        "blockId": "blk_mejsg76atopau",
+        "themeId": "thm_mejswh9v0jpsi",
+        "status": "disabled",
+        "fields": [
+          {
+            "id": "field_mewjpsd5",
+            "key": "评分",
+            "label": "评分",
+            "type": "rating",
+            "options": [
+              {
+                "value": "📚",
+                "label": "1"
+              }
+            ]
+          },
+          {
+            "id": "field_mewk7o3j",
+            "key": "日期",
+            "label": "日期",
+            "type": "date"
+          },
+          {
+            "id": "field_mewjqtxg",
+            "key": "内容",
+            "label": "内容",
+            "type": "textarea"
+          }
+        ],
+        "outputTemplate": "<!-- start -->\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分}}\npintu::{{评分..value}}\n内容:: {{内容}}\n<!-- end -->",
+        "targetFile": "01/打卡.md",
+        "appendUnderHeader": "## {{theme}}"
+      },
+      {
+        "id": "ovr_mewkk1um6adfy",
+        "blockId": "blk_mejsg76atopau",
+        "themeId": "thm_mejswmjkpyrzg",
+        "status": "disabled",
+        "fields": [
+          {
+            "id": "field_mewjpsd5",
+            "key": "评分",
+            "label": "评分",
+            "type": "rating",
+            "options": [
+              {
+                "value": "📚",
+                "label": "1"
+              }
+            ]
+          },
+          {
+            "id": "field_mewk7o3j",
+            "key": "日期",
+            "label": "日期",
+            "type": "date"
+          },
+          {
+            "id": "field_mewjqtxg",
+            "key": "内容",
+            "label": "内容",
+            "type": "textarea"
+          }
+        ],
+        "outputTemplate": "<!-- start -->\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分}}\npintu::{{评分..value}}\n内容:: {{内容}}\n<!-- end -->",
+        "targetFile": "01/打卡.md",
+        "appendUnderHeader": "## {{theme}}"
+      },
+      {
+        "id": "ovr_mewkk4y6b170v",
+        "blockId": "blk_mejsg76atopau",
+        "themeId": "thm_mejsx2qu3g8fi",
+        "status": "disabled",
+        "fields": [
+          {
+            "id": "field_mewjpsd5",
+            "key": "评分",
+            "label": "评分",
+            "type": "rating",
+            "options": [
+              {
+                "value": "📚",
+                "label": "1"
+              }
+            ]
+          },
+          {
+            "id": "field_mewk7o3j",
+            "key": "日期",
+            "label": "日期",
+            "type": "date"
+          },
+          {
+            "id": "field_mewjqtxg",
+            "key": "内容",
+            "label": "内容",
+            "type": "textarea"
+          }
+        ],
+        "outputTemplate": "<!-- start -->\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分}}\npintu::{{评分..value}}\n内容:: {{内容}}\n<!-- end -->",
+        "targetFile": "01/打卡.md",
+        "appendUnderHeader": "## {{theme}}"
+      },
+      {
+        "id": "ovr_mewkk7df5wpms",
+        "blockId": "blk_mejsg76atopau",
+        "themeId": "thm_mejsxbyuursnz",
+        "status": "disabled",
+        "fields": [
+          {
+            "id": "field_mewjpsd5",
+            "key": "评分",
+            "label": "评分",
+            "type": "rating",
+            "options": [
+              {
+                "value": "📚",
+                "label": "1"
+              }
+            ]
+          },
+          {
+            "id": "field_mewk7o3j",
+            "key": "日期",
+            "label": "日期",
+            "type": "date"
+          },
+          {
+            "id": "field_mewjqtxg",
+            "key": "内容",
+            "label": "内容",
+            "type": "textarea"
+          }
+        ],
+        "outputTemplate": "<!-- start -->\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分}}\npintu::{{评分..value}}\n内容:: {{内容}}\n<!-- end -->",
+        "targetFile": "01/打卡.md",
+        "appendUnderHeader": "## {{theme}}"
+      },
+      {
+        "id": "ovr_mewkk9qgrz5ci",
+        "blockId": "blk_mejsg76atopau",
+        "themeId": "thm_mejsxl0soxhxz",
+        "status": "disabled",
+        "fields": [
+          {
+            "id": "field_mewjpsd5",
+            "key": "评分",
+            "label": "评分",
+            "type": "rating",
+            "options": [
+              {
+                "value": "📚",
+                "label": "1"
+              }
+            ]
+          },
+          {
+            "id": "field_mewk7o3j",
+            "key": "日期",
+            "label": "日期",
+            "type": "date"
+          },
+          {
+            "id": "field_mewjqtxg",
+            "key": "内容",
+            "label": "内容",
+            "type": "textarea"
+          }
+        ],
+        "outputTemplate": "<!-- start -->\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分}}\npintu::{{评分..value}}\n内容:: {{内容}}\n<!-- end -->",
+        "targetFile": "01/打卡.md",
+        "appendUnderHeader": "## {{theme}}"
+      },
+      {
+        "id": "ovr_mewkkbv4ilr7a",
+        "blockId": "blk_mejsg76atopau",
+        "themeId": "thm_mejsxtufpvqd3",
+        "status": "disabled",
+        "fields": [
+          {
+            "id": "field_mewjpsd5",
+            "key": "评分",
+            "label": "评分",
+            "type": "rating",
+            "options": [
+              {
+                "value": "📚",
+                "label": "1"
+              }
+            ]
+          },
+          {
+            "id": "field_mewk7o3j",
+            "key": "日期",
+            "label": "日期",
+            "type": "date"
+          },
+          {
+            "id": "field_mewjqtxg",
+            "key": "内容",
+            "label": "内容",
+            "type": "textarea"
+          }
+        ],
+        "outputTemplate": "<!-- start -->\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分}}\npintu::{{评分..value}}\n内容:: {{内容}}\n<!-- end -->",
+        "targetFile": "01/打卡.md",
+        "appendUnderHeader": "## {{theme}}"
+      },
+      {
+        "id": "ovr_mewkkeh9d0vye",
+        "blockId": "blk_mejsg76atopau",
+        "themeId": "thm_mejsy9nvsnd0q",
+        "status": "disabled",
+        "fields": [
+          {
+            "id": "field_mewjpsd5",
+            "key": "评分",
+            "label": "评分",
+            "type": "rating",
+            "options": [
+              {
+                "value": "📚",
+                "label": "1"
+              }
+            ]
+          },
+          {
+            "id": "field_mewk7o3j",
+            "key": "日期",
+            "label": "日期",
+            "type": "date"
+          },
+          {
+            "id": "field_mewjqtxg",
+            "key": "内容",
+            "label": "内容",
+            "type": "textarea"
+          }
+        ],
+        "outputTemplate": "<!-- start -->\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分}}\npintu::{{评分..value}}\n内容:: {{内容}}\n<!-- end -->",
+        "targetFile": "01/打卡.md",
+        "appendUnderHeader": "## {{theme}}"
+      },
+      {
+        "id": "ovr_mewkkgxpkjc6y",
+        "blockId": "blk_mejsg76atopau",
+        "themeId": "thm_mejsye15uvbzi",
+        "status": "disabled",
+        "fields": [
+          {
+            "id": "field_mewjpsd5",
+            "key": "评分",
+            "label": "评分",
+            "type": "rating",
+            "options": [
+              {
+                "value": "📚",
+                "label": "1"
+              }
+            ]
+          },
+          {
+            "id": "field_mewk7o3j",
+            "key": "日期",
+            "label": "日期",
+            "type": "date"
+          },
+          {
+            "id": "field_mewjqtxg",
+            "key": "内容",
+            "label": "内容",
+            "type": "textarea"
+          }
+        ],
+        "outputTemplate": "<!-- start -->\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分}}\npintu::{{评分..value}}\n内容:: {{内容}}\n<!-- end -->",
+        "targetFile": "01/打卡.md",
+        "appendUnderHeader": "## {{theme}}"
+      },
+      {
+        "id": "ovr_mewkkuew9bh4a",
+        "blockId": "blk_mejsg1dc46fj9",
+        "themeId": "thm_mejslgmvm2yym",
+        "status": "disabled",
+        "fields": [
+          {
+            "id": "field_mewjlt4j",
+            "key": "思考分类",
+            "label": "思考分类",
+            "type": "radio",
+            "options": [
+              {
+                "value": "事件",
+                "label": "事件"
+              },
+              {
+                "value": "感受",
+                "label": "感受"
+              },
+              {
+                "value": "思考",
+                "label": "思考"
+              }
+            ]
+          },
+          {
+            "id": "field_mewjlypl",
+            "key": "内容",
+            "label": "内容",
+            "type": "textarea"
+          }
+        ],
+        "outputTemplate": "<!-- start -->\n分类:: {{思考分类}}\n日期:: {{moment:YYYY-MM-DD}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->",
+        "targetFile": "01/思考.md",
+        "appendUnderHeader": "## {{theme}}"
+      },
+      {
+        "id": "ovr_mewkkwp0okx0t",
+        "blockId": "blk_mejsg1dc46fj9",
+        "themeId": "thm_mejsmcngeij2y",
+        "status": "disabled",
+        "fields": [
+          {
+            "id": "field_mewjlt4j",
+            "key": "思考分类",
+            "label": "思考分类",
+            "type": "radio",
+            "options": [
+              {
+                "value": "事件",
+                "label": "事件"
+              },
+              {
+                "value": "感受",
+                "label": "感受"
+              },
+              {
+                "value": "思考",
+                "label": "思考"
+              }
+            ]
+          },
+          {
+            "id": "field_mewjlypl",
+            "key": "内容",
+            "label": "内容",
+            "type": "textarea"
+          }
+        ],
+        "outputTemplate": "<!-- start -->\n分类:: {{思考分类}}\n日期:: {{moment:YYYY-MM-DD}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->",
+        "targetFile": "01/思考.md",
+        "appendUnderHeader": "## {{theme}}"
+      },
+      {
+        "id": "ovr_mewkkz191vnyv",
+        "blockId": "blk_mejsg1dc46fj9",
+        "themeId": "thm_mejsmps6gropq",
+        "status": "disabled",
+        "fields": [
+          {
+            "id": "field_mewjlt4j",
+            "key": "思考分类",
+            "label": "思考分类",
+            "type": "radio",
+            "options": [
+              {
+                "value": "事件",
+                "label": "事件"
+              },
+              {
+                "value": "感受",
+                "label": "感受"
+              },
+              {
+                "value": "思考",
+                "label": "思考"
+              }
+            ]
+          },
+          {
+            "id": "field_mewjlypl",
+            "key": "内容",
+            "label": "内容",
+            "type": "textarea"
+          }
+        ],
+        "outputTemplate": "<!-- start -->\n分类:: {{思考分类}}\n日期:: {{moment:YYYY-MM-DD}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->",
+        "targetFile": "01/思考.md",
+        "appendUnderHeader": "## {{theme}}"
+      },
+      {
+        "id": "ovr_mewkl1e0itp18",
+        "blockId": "blk_mejsg1dc46fj9",
+        "themeId": "thm_mejsn748ryfip",
+        "status": "disabled",
+        "fields": [
+          {
+            "id": "field_mewjlt4j",
+            "key": "思考分类",
+            "label": "思考分类",
+            "type": "radio",
+            "options": [
+              {
+                "value": "事件",
+                "label": "事件"
+              },
+              {
+                "value": "感受",
+                "label": "感受"
+              },
+              {
+                "value": "思考",
+                "label": "思考"
+              }
+            ]
+          },
+          {
+            "id": "field_mewjlypl",
+            "key": "内容",
+            "label": "内容",
+            "type": "textarea"
+          }
+        ],
+        "outputTemplate": "<!-- start -->\n分类:: {{思考分类}}\n日期:: {{moment:YYYY-MM-DD}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->",
+        "targetFile": "01/思考.md",
+        "appendUnderHeader": "## {{theme}}"
+      },
+      {
+        "id": "ovr_mewkl4fdxiwvg",
+        "blockId": "blk_mejsg1dc46fj9",
+        "themeId": "thm_mejsnf4dp61nq",
+        "status": "disabled",
+        "fields": [
+          {
+            "id": "field_mewjlt4j",
+            "key": "思考分类",
+            "label": "思考分类",
+            "type": "radio",
+            "options": [
+              {
+                "value": "事件",
+                "label": "事件"
+              },
+              {
+                "value": "感受",
+                "label": "感受"
+              },
+              {
+                "value": "思考",
+                "label": "思考"
+              }
+            ]
+          },
+          {
+            "id": "field_mewjlypl",
+            "key": "内容",
+            "label": "内容",
+            "type": "textarea"
+          }
+        ],
+        "outputTemplate": "<!-- start -->\n分类:: {{思考分类}}\n日期:: {{moment:YYYY-MM-DD}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->",
+        "targetFile": "01/思考.md",
+        "appendUnderHeader": "## {{theme}}"
+      },
+      {
+        "id": "ovr_mewkl7qfwnlk3",
+        "blockId": "blk_mejsg1dc46fj9",
+        "themeId": "thm_mejso10pwthbr",
+        "status": "disabled",
+        "fields": [
+          {
+            "id": "field_mewjlt4j",
+            "key": "思考分类",
+            "label": "思考分类",
+            "type": "radio",
+            "options": [
+              {
+                "value": "事件",
+                "label": "事件"
+              },
+              {
+                "value": "感受",
+                "label": "感受"
+              },
+              {
+                "value": "思考",
+                "label": "思考"
+              }
+            ]
+          },
+          {
+            "id": "field_mewjlypl",
+            "key": "内容",
+            "label": "内容",
+            "type": "textarea"
+          }
+        ],
+        "outputTemplate": "<!-- start -->\n分类:: {{思考分类}}\n日期:: {{moment:YYYY-MM-DD}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->",
+        "targetFile": "01/思考.md",
+        "appendUnderHeader": "## {{theme}}"
+      },
+      {
+        "id": "ovr_mewklun9j2cns",
+        "blockId": "blk_mejsg1dc46fj9",
+        "themeId": "thm_mejspn5ocowew",
+        "status": "disabled",
+        "fields": [
+          {
+            "id": "field_mewjlt4j",
+            "key": "思考分类",
+            "label": "思考分类",
+            "type": "radio",
+            "options": [
+              {
+                "value": "事件",
+                "label": "事件"
+              },
+              {
+                "value": "感受",
+                "label": "感受"
+              },
+              {
+                "value": "思考",
+                "label": "思考"
+              }
+            ]
+          },
+          {
+            "id": "field_mewjlypl",
+            "key": "内容",
+            "label": "内容",
+            "type": "textarea"
+          }
+        ],
+        "outputTemplate": "<!-- start -->\n分类:: {{思考分类}}\n日期:: {{moment:YYYY-MM-DD}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->",
+        "targetFile": "01/思考.md",
+        "appendUnderHeader": "## {{theme}}"
+      },
+      {
+        "id": "ovr_mewklxna2e4s6",
+        "blockId": "blk_mejsg1dc46fj9",
+        "themeId": "thm_mejspwp4h6de9",
+        "status": "disabled",
+        "fields": [
+          {
+            "id": "field_mewjlt4j",
+            "key": "思考分类",
+            "label": "思考分类",
+            "type": "radio",
+            "options": [
+              {
+                "value": "事件",
+                "label": "事件"
+              },
+              {
+                "value": "感受",
+                "label": "感受"
+              },
+              {
+                "value": "思考",
+                "label": "思考"
+              }
+            ]
+          },
+          {
+            "id": "field_mewjlypl",
+            "key": "内容",
+            "label": "内容",
+            "type": "textarea"
+          }
+        ],
+        "outputTemplate": "<!-- start -->\n分类:: {{思考分类}}\n日期:: {{moment:YYYY-MM-DD}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->",
+        "targetFile": "01/思考.md",
+        "appendUnderHeader": "## {{theme}}"
+      },
+      {
+        "id": "ovr_mewkm0j2tsas2",
+        "blockId": "blk_mejsg1dc46fj9",
+        "themeId": "thm_mejst90wwyoyn",
+        "status": "disabled",
+        "fields": [
+          {
+            "id": "field_mewjlt4j",
+            "key": "思考分类",
+            "label": "思考分类",
+            "type": "radio",
+            "options": [
+              {
+                "value": "事件",
+                "label": "事件"
+              },
+              {
+                "value": "感受",
+                "label": "感受"
+              },
+              {
+                "value": "思考",
+                "label": "思考"
+              }
+            ]
+          },
+          {
+            "id": "field_mewjlypl",
+            "key": "内容",
+            "label": "内容",
+            "type": "textarea"
+          }
+        ],
+        "outputTemplate": "<!-- start -->\n分类:: {{思考分类}}\n日期:: {{moment:YYYY-MM-DD}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->",
+        "targetFile": "01/思考.md",
+        "appendUnderHeader": "## {{theme}}"
+      },
+      {
+        "id": "ovr_mewkm5dqx9852",
+        "blockId": "blk_mejsg1dc46fj9",
+        "themeId": "thm_mejsuv5sylsi0",
+        "status": "disabled",
+        "fields": [
+          {
+            "id": "field_mewjlt4j",
+            "key": "思考分类",
+            "label": "思考分类",
+            "type": "radio",
+            "options": [
+              {
+                "value": "事件",
+                "label": "事件"
+              },
+              {
+                "value": "感受",
+                "label": "感受"
+              },
+              {
+                "value": "思考",
+                "label": "思考"
+              }
+            ]
+          },
+          {
+            "id": "field_mewjlypl",
+            "key": "内容",
+            "label": "内容",
+            "type": "textarea"
+          }
+        ],
+        "outputTemplate": "<!-- start -->\n分类:: {{思考分类}}\n日期:: {{moment:YYYY-MM-DD}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->",
+        "targetFile": "01/思考.md",
+        "appendUnderHeader": "## {{theme}}"
+      },
+      {
+        "id": "ovr_mewkm9b9y1wqw",
+        "blockId": "blk_mejsg1dc46fj9",
+        "themeId": "thm_mejsvgb4hlukj",
+        "status": "disabled",
+        "fields": [
+          {
+            "id": "field_mewjlt4j",
+            "key": "思考分类",
+            "label": "思考分类",
+            "type": "radio",
+            "options": [
+              {
+                "value": "事件",
+                "label": "事件"
+              },
+              {
+                "value": "感受",
+                "label": "感受"
+              },
+              {
+                "value": "思考",
+                "label": "思考"
+              }
+            ]
+          },
+          {
+            "id": "field_mewjlypl",
+            "key": "内容",
+            "label": "内容",
+            "type": "textarea"
+          }
+        ],
+        "outputTemplate": "<!-- start -->\n分类:: {{思考分类}}\n日期:: {{moment:YYYY-MM-DD}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->",
+        "targetFile": "01/思考.md",
+        "appendUnderHeader": "## {{theme}}"
       }
     ]
   }
