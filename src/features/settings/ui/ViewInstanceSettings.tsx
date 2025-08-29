@@ -1,7 +1,7 @@
 // src/features/settings/ui/ViewInstanceSettings.tsx
 /** @jsxImportSource preact */
 import { h } from 'preact';
-import { useStore, AppStore } from '@state/AppStore'; 
+import { useStore, AppStore } from '@state/AppStore';
 import { Box, Stack, Typography, FormControlLabel, Checkbox, Tooltip, Chip } from '@mui/material';
 import { VIEW_OPTIONS, ViewName, getAllFields } from '@core/domain/schema';
 import type { ViewInstance } from '@core/domain/schema';
@@ -12,10 +12,12 @@ import { SimpleSelect } from '@shared/ui/SimpleSelect';
 import { SettingsTreeView, TreeItem } from './components/SettingsTreeView';
 import { App } from 'obsidian';
 import { useSettingsManager } from './hooks/useSettingsManager';
+// [NEW] Import dnd-kit and the arrayMove utility
+import { DndContext, closestCenter } from '@dnd-kit/core';
+import { arrayMove } from '@core/utils/array';
 
 const LABEL_WIDTH = '80px';
 
-// 内部编辑器组件
 function ViewInstanceEditor({ vi }: { vi: ViewInstance }) {
     const dataSources = useStore(state => state.settings.dataSources);
     const fieldOptions = useMemo(() => getAllFields(DataStore.instance.queryItems()), []);
@@ -74,7 +76,6 @@ function ViewInstanceEditor({ vi }: { vi: ViewInstance }) {
             {EditorComponent && (
                 <Box pt={1} mt={1} sx={{borderTop: '1px solid rgba(0,0,0,0.08)'}}>
                     <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 1.5, mt: 1 }}>{vi.viewType.replace('View','')} 专属配置</Typography>
-                    {/* [MODIFIED] Pass the full 'vi' object as 'module' prop */}
                     <EditorComponent module={vi} value={correctedViewConfig} onChange={(patch: any) => handleUpdate({ viewConfig: { ...correctedViewConfig, ...patch } })} fieldOptions={fieldOptions} />
                 </Box>
             )}
@@ -94,25 +95,46 @@ export function ViewInstanceSettings({ app }: { app: App }) {
         isGroup: false,
     })), [viewInstances]);
 
+    const handleDragEnd = (event: any) => {
+        const { active, over } = event;
+        if (active && over && active.id !== over.id) {
+            const activeItem = itemsAsTreeItems.find(i => i.id === active.id) || viewGroups.find(g => g.id === active.id);
+            const overItem = itemsAsTreeItems.find(i => i.id === over.id) || viewGroups.find(g => g.id === over.id);
+
+            if (activeItem && overItem && activeItem.parentId === overItem.parentId) {
+                const siblings = [...viewGroups, ...itemsAsTreeItems].filter(i => i.parentId === activeItem.parentId);
+                const oldIndex = siblings.findIndex(i => i.id === active.id);
+                const newIndex = siblings.findIndex(i => i.id === over.id);
+                
+                if (oldIndex !== -1 && newIndex !== -1) {
+                    const reorderedSiblings = arrayMove(siblings, oldIndex, newIndex);
+                    AppStore.instance.reorderItems(reorderedSiblings, activeItem.isGroup ? 'group' : 'viewInstance');
+                }
+            }
+        }
+    };
+
     return (
         <Box sx={{ maxWidth: '900px', mx: 'auto' }}>
             <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 2 }}>
                 <Typography variant="h6">管理视图</Typography>
             </Stack>
             
-            <SettingsTreeView
-                groups={viewGroups}
-                items={itemsAsTreeItems}
-                allGroups={viewGroups}
-                parentId={null}
-                renderItem={(vi: ViewInstance) => <ViewInstanceEditor vi={vi} />}
-                onAddItem={manager.onAddItem}
-                onAddGroup={manager.onAddGroup}
-                onDeleteItem={manager.onDeleteItem}
-                onUpdateItemName={manager.onUpdateItemName}
-                onMoveItem={manager.onMoveItem}
-                onDuplicateItem={manager.onDuplicateItem}
-            />
+            <DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+                <SettingsTreeView
+                    groups={viewGroups}
+                    items={itemsAsTreeItems}
+                    allGroups={viewGroups}
+                    parentId={null}
+                    renderItem={(vi: ViewInstance) => <ViewInstanceEditor vi={vi} />}
+                    onAddItem={manager.onAddItem}
+                    onAddGroup={manager.onAddGroup}
+                    onDeleteItem={manager.onDeleteItem}
+                    onUpdateItemName={manager.onUpdateItemName}
+                    onMoveItem={manager.onMoveItem}
+                    onDuplicateItem={manager.onDuplicateItem}
+                />
+            </DndContext>
         </Box>
     );
 }

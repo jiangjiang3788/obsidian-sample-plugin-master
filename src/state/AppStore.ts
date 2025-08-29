@@ -317,11 +317,61 @@ export class AppStore {
         });
     }
 
+    
+
     public deleteLayout = async (id: string) => {
         await this._updateSettingsAndPersist(draft => {
             draft.layouts = draft.layouts.filter(l => l.id !== id);
         });
     }
+
+    public updateInputSettings = async (updates: Partial<InputSettings>) => {
+        await this._updateSettingsAndPersist(draft => {
+            draft.inputSettings = { ...draft.inputSettings, ...updates };
+        });
+    }
+
+
+
+
+    // [NEW] A generic method to reorder items after drag-and-drop
+    public reorderItems = async (reorderedSiblings: (Groupable & {isGroup?: boolean})[], itemType: 'group' | 'dataSource' | 'viewInstance' | 'layout') => {
+        await this._updateSettingsAndPersist(draft => {
+            const parentId = reorderedSiblings.length > 0 ? reorderedSiblings[0].parentId : undefined;
+
+            let fullArray: (Groupable & {id: string})[];
+            if (itemType === 'group') {
+                fullArray = draft.groups;
+            } else if (itemType === 'dataSource') {
+                fullArray = draft.dataSources;
+            } else if (itemType === 'viewInstance') {
+                fullArray = draft.viewInstances;
+            } else {
+                fullArray = draft.layouts;
+            }
+            
+            // Get all items that are NOT part of this sibling group
+            const otherItems = fullArray.filter(i => i.parentId !== parentId);
+            
+            // Reconstruct the full array with the reordered siblings
+            const newFullArray = [...otherItems, ...reorderedSiblings];
+            
+            // Assign back to the draft
+            if (itemType === 'group') {
+                draft.groups = newFullArray as Group[];
+            } else if (itemType === 'dataSource') {
+                draft.dataSources = newFullArray as DataSource[];
+            } else if (itemType === 'viewInstance') {
+                draft.viewInstances = newFullArray as ViewInstance[];
+            } else {
+                draft.layouts = newFullArray as Layout[];
+            }
+        });
+    }
+
+
+
+
 
     public moveLayout = async (id: string, direction: 'up' | 'down') => {
         await this._updateSettingsAndPersist(draft => {
@@ -329,11 +379,7 @@ export class AppStore {
         });
     }
 
-    public duplicateLayout = async (id: string) => {
-        await this._updateSettingsAndPersist(draft => {
-            draft.layouts = duplicateItemInArray(draft.layouts, id, 'name');
-        });
-    }
+    
 
     public addBlock = async (name: string) => {
         await this._updateSettingsAndPersist(draft => {
