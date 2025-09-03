@@ -32,27 +32,26 @@ function mapTaskToCategory(
     }
     return taskFileName;
 }
-
 const hexToRgba = (hex: string, alpha = 0.35) => {
     const h = hex.replace("#", "");
     const bigint = parseInt(h, 16);
     return `rgba(${(bigint >> 16) & 255},${(bigint >> 8) & 255},${bigint & 255},${alpha})`;
 };
-
 const formatTimeMinute = (minute: number) => {
     const h = Math.floor(minute / 60);
     const m = minute % 60;
     return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
 };
-
 const generateTaskBlockTitle = (block: TaskBlock): string => {
     const isCrossNight = (block.startMinute % 1440) + block.duration > 1440;
 
     if (isCrossNight) {
         const startDateTime = dayjs(block.actualStartDate).add(block.startMinute, 'minute');
         const endDateTime = startDateTime.add(block.duration, 'minute');
+
         const startFormat = startDateTime.format('HH:mm');
         const endFormat = endDateTime.format('HH:mm');
+
         return `任务: ${block.pureText}\n时间: ${startFormat} - ${endFormat}`;
     } else {
         const startTime = formatTimeMinute(block.startMinute);
@@ -60,6 +59,7 @@ const generateTaskBlockTitle = (block: TaskBlock): string => {
         return `任务: ${block.pureText}\n时间: ${startTime} - ${endTime}`;
     }
 };
+
 
 // --- 子组件 (无变化) ---
 const ProgressBlock = ({ categoryHours, order, totalHours, colorMap, untrackedLabel }: any) => {
@@ -101,7 +101,6 @@ const ProgressBlock = ({ categoryHours, order, totalHours, colorMap, untrackedLa
         </div>
     );
 };
-
 const DayColumnHeader = ({ day, blocks, categoriesConfig, colorMap, untrackedLabel, progressOrder }: any) => {
     const { categoryHours, totalDayHours } = useMemo(() => {
         const hours: Record<string, number> = {};
@@ -135,85 +134,6 @@ const DayColumnHeader = ({ day, blocks, categoriesConfig, colorMap, untrackedLab
         </div>
     );
 };
-
-const DayColumnBody = ({ app, blocks, hourHeight, categoriesConfig, colorMap, maxHours, taskService }: {
-    app: App;
-    blocks: TaskBlock[];
-    hourHeight: number;
-    categoriesConfig: any;
-    colorMap: any;
-    maxHours: number;
-    taskService: TaskService; // [新增] 接收 taskService 实例
-}) => {
-    
-    const handleAlignToPrev = (block: TaskBlock, prevBlock: TaskBlock | null) => {
-        if (!prevBlock) return;
-        const deltaMinutes = prevBlock.blockEndMinute - block.blockStartMinute;
-        const newAbsoluteStartMinute = block.startMinute + deltaMinutes;
-        const newStartTimeString = formatTimeMinute(newAbsoluteStartMinute);
-        // [修改] 使用注入的 service 实例，而不是静态调用
-        taskService.updateTaskTime(block.id, { time: newStartTimeString });
-    };
-
-    const handleAlignToNext = (block: TaskBlock, nextBlock: TaskBlock | null) => {
-        if (!nextBlock) return;
-        const deltaDuration = nextBlock.blockStartMinute - block.blockEndMinute;
-        const newDuration = block.duration + deltaDuration;
-        if (newDuration <= 0) {
-            new Notice('无法对齐：任务时长将变为负数或零');
-            return;
-        }
-        // [修改] 使用注入的 service 实例，而不是静态调用
-        taskService.updateTaskTime(block.id, { duration: newDuration });
-    };
-
-    const handleEdit = (block: TaskBlock) => {
-        // [修改] EditTaskModal 的构造函数可能也需要 taskService，但这取决于它的实现
-        // 假设 EditTaskModal 内部也已更新为使用 taskService 实例
-        new EditTaskModal(app, block).open();
-    };
-
-    return (
-        <div style={{ flex: '0 0 150px', borderLeft: '1px solid var(--background-modifier-border)', position: 'relative', height: `${maxHours * hourHeight}px` }}>
-            {blocks.map((block: TaskBlock, index: number) => {
-                const top = (block.blockStartMinute / 60) * hourHeight;
-                const height = ((block.blockEndMinute - block.blockStartMinute) / 60) * hourHeight;
-                const category = mapTaskToCategory(block.fileName, categoriesConfig);
-                const color = colorMap[category] || '#ccc';
-
-                const prevBlock = index > 0 ? blocks[index - 1] : null;
-                const nextBlock = index < blocks.length - 1 ? blocks[index + 1] : null;
-                const canAlignToNext = nextBlock && (nextBlock.blockStartMinute > block.blockStartMinute);
-
-                return (
-                    <div 
-                        key={block.id + block.day}
-                        class="timeline-task-block"
-                        title={generateTaskBlockTitle(block)}
-                        style={{ position: 'absolute', left: '2px', right: '2px', top: `${top}px`, height: `${Math.max(height, 2)}px` }}
-                    >
-                        {/* [修复] 确保在调用 makeObsUri 时传递 app 实例 */}
-                        <a 
-                            onClick={(e) => { e.preventDefault(); window.open(makeObsUri(block, app)); }}
-                            style={{ display: 'flex', width: '100%', height: '100%', overflow: 'hidden', borderRadius: '2px' }}
-                        >
-                            <div style={{ width: '4px', background: color }}></div>
-                            <div style={{ flex: 1, background: hexToRgba(color), padding: '2px 4px', fontSize: '12px', whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden', color: 'var(--text-normal)' }}>
-                                {block.pureText}
-                            </div>
-                        </a>
-                        <div class="task-buttons">
-                            <button title="向前对齐 (与上一个任务无缝衔接)" disabled={!prevBlock} onClick={() => handleAlignToPrev(block, prevBlock)}>⇡</button>
-                            <button title="向后对齐 (填充到下一个任务开始)" disabled={!canAlignToNext} onClick={() => handleAlignToNext(block, nextBlock)}>⇣</button>
-                            <button title="精确编辑" onClick={() => handleEdit(block)}>✎</button>
-                        </div>
-                    </div>
-                );
-            })}
-        </div>
-    );
-};
-
 const TimelineSummaryTable = ({ summaryData, colorMap, progressOrder, untrackedLabel }: any) => {
     if (!summaryData || summaryData.length === 0) {
         return <div style={{ color: 'var(--text-faint)', textAlign: 'center', padding: '20px' }}>此时间范围内无数据可供总结。</div>
@@ -245,16 +165,97 @@ const TimelineSummaryTable = ({ summaryData, colorMap, progressOrder, untrackedL
 };
 
 
+// [修改] DayColumnBody 组件现在接收 taskService 实例
+const DayColumnBody = ({ app, blocks, hourHeight, categoriesConfig, colorMap, maxHours, taskService }: {
+    app: App;
+    blocks: TaskBlock[];
+    hourHeight: number;
+    categoriesConfig: any;
+    colorMap: any;
+    maxHours: number;
+    taskService: TaskService;
+}) => {
+    
+    const handleAlignToPrev = (block: TaskBlock, prevBlock: TaskBlock | null) => {
+        if (!prevBlock) return;
+        const deltaMinutes = prevBlock.blockEndMinute - block.blockStartMinute;
+        const newAbsoluteStartMinute = block.startMinute + deltaMinutes;
+        const newStartTimeString = formatTimeMinute(newAbsoluteStartMinute);
+        // [修改] 调用 taskService 实例的方法，而不是静态方法
+        taskService.updateTaskTime(block.id, { time: newStartTimeString });
+    };
+
+    const handleAlignToNext = (block: TaskBlock, nextBlock: TaskBlock | null) => {
+        if (!nextBlock) return;
+        const deltaDuration = nextBlock.blockStartMinute - block.blockEndMinute;
+        const newDuration = block.duration + deltaDuration;
+        if (newDuration <= 0) {
+            new Notice('无法对齐：任务时长将变为负数或零');
+            return;
+        }
+        // [修改] 调用 taskService 实例的方法，而不是静态方法
+        taskService.updateTaskTime(block.id, { duration: newDuration });
+    };
+
+    const handleEdit = (block: TaskBlock) => {
+        // 注意：EditTaskModal 内部也依赖 TaskService，需要确保它也能正确访问实例。
+        // 如果 EditTaskModal 仍然使用静态方法，它也会报错，届时也需要一并修改。
+        new EditTaskModal(app, block).open();
+    };
+
+    return (
+        <div style={{ flex: '0 0 150px', borderLeft: '1px solid var(--background-modifier-border)', position: 'relative', height: `${maxHours * hourHeight}px` }}>
+            {blocks.map((block: TaskBlock, index: number) => {
+                const top = (block.blockStartMinute / 60) * hourHeight;
+                const height = ((block.blockEndMinute - block.blockStartMinute) / 60) * hourHeight;
+                const category = mapTaskToCategory(block.fileName, categoriesConfig);
+                const color = colorMap[category] || '#ccc';
+
+                const prevBlock = index > 0 ? blocks[index - 1] : null;
+                const nextBlock = index < blocks.length - 1 ? blocks[index + 1] : null;
+                const canAlignToNext = nextBlock && (nextBlock.blockStartMinute > block.blockStartMinute);
+
+                return (
+                    <div 
+                        key={block.id + block.day}
+                        class="timeline-task-block"
+                        title={generateTaskBlockTitle(block)}
+                        style={{ position: 'absolute', left: '2px', right: '2px', top: `${top}px`, height: `${Math.max(height, 2)}px` }}
+                    >
+                        {/* [修复] 调用 makeObsUri 时传入 app 实例 */}
+                        <a 
+                            onClick={(e) => { e.preventDefault(); window.open(makeObsUri(block, app)); }}
+                            style={{ display: 'flex', width: '100%', height: '100%', overflow: 'hidden', borderRadius: '2px' }}
+                        >
+                            <div style={{ width: '4px', background: color }}></div>
+                            <div style={{ flex: 1, background: hexToRgba(color), padding: '2px 4px', fontSize: '12px', whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden', color: 'var(--text-normal)' }}>
+                                {block.pureText}
+                            </div>
+                        </a>
+                        <div class="task-buttons">
+                            <button title="向前对齐 (与上一个任务无缝衔接)" disabled={!prevBlock} onClick={() => handleAlignToPrev(block, prevBlock)}>⇡</button>
+                            <button title="向后对齐 (填充到下一个任务开始)" disabled={!canAlignToNext} onClick={() => handleAlignToNext(block, nextBlock)}>⇣</button>
+                            <button title="精确编辑" onClick={() => handleEdit(block)}>✎</button>
+                        </div>
+                    </div>
+                );
+            })}
+        </div>
+    );
+};
+
 // --- 主视图组件 ---
+// [修改] Props 接口现在需要接收 taskService
 interface TimelineViewProps {
     items: Item[];
     dateRange: [Date, Date];
     module: any; // ViewInstance
     currentView: '年' | '季' | '月' | '周' | '天';
     app: App;
-    taskService: TaskService; // [新增] 接收 taskService 实例
+    taskService: TaskService;
 }
 
+// [修改] 函数签名解构出 taskService
 export function TimelineView({ items, dateRange, module, currentView, app, taskService }: TimelineViewProps) {
     const config = useMemo(() => {
         const defaults = structuredClone(DEFAULT_TIMELINE_CONFIG);

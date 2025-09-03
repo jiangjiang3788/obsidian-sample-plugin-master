@@ -1,4 +1,5 @@
 // src/features/dashboard/ui/LayoutRenderer.tsx
+
 /** @jsxImportSource preact */
 import { h } from 'preact';
 import { useState, useMemo, useEffect, useCallback } from 'preact/hooks';
@@ -8,21 +9,24 @@ import { ModulePanel } from './ModulePanel';
 import type ThinkPlugin from '../../../main';
 import { ViewComponents } from '@features/dashboard/ui';
 import { getDateRange, dayjs, formatDateForView } from '@core/utils/date';
-import { useStore , AppStore} from '@state/AppStore';
+import { useStore, AppStore } from '@state/AppStore';
 import { TimeNavigator } from './TimeNavigator';
 import type { ActionService } from '@core/services/ActionService';
+import type { TaskService } from '@core/services/taskService'; // [新增] 导入 TaskService 类型
 import { useViewData } from '../hooks/useViewData';
-import { QuickInputModal } from '@features/quick-input/ui/QuickInputModal'; // [新增] 导入 QuickInputModal
+import { QuickInputModal } from '@features/quick-input/ui/QuickInputModal';
 
+// [修改] Props 接口现在需要接收 taskService
 interface Props {
     layout: Layout;
     dataStore: DataStore;
     plugin: ThinkPlugin;
     actionService: ActionService;
+    taskService: TaskService; // [新增]
 }
 
-export function LayoutRenderer({ layout, dataStore, plugin, actionService }: Props) {
-    // ... 大部分代码无变化 ...
+// [修改] 函数签名解构出 taskService
+export function LayoutRenderer({ layout, dataStore, plugin, actionService, taskService }: Props) {
     const allViews = useStore(state => state.settings.viewInstances);
     const allDataSources = useStore(state => state.settings.dataSources);
     
@@ -45,26 +49,27 @@ export function LayoutRenderer({ layout, dataStore, plugin, actionService }: Pro
     const handleOverviewDateChange = (newDate: dayjs.Dayjs) => {
         const newDateString = newDate.format('YYYY-MM-DD');
         setLayoutDate(newDate);
-        AppStore.instance.updateLayout(layout.id, { initialDate: newDateString });
+        // [修改] 直接使用 appStore 实例，而不是单例
+        plugin.appStore.updateLayout(layout.id, { initialDate: newDateString });
     };
 
-    // [修改] handleQuickInputAction 现在调用新的 service 方法并处理返回的配置
     const handleQuickInputAction = (viewInstance: ViewInstance) => {
         const config = actionService.getQuickInputConfigForView(viewInstance, layoutDate, layoutView);
         if (config) {
-            new QuickInputModal(plugin.app, config.blockId, config.context, config.themeId).open();
+            // [修改] 传递 dataStore 和 appStore 实例
+            new QuickInputModal(plugin.app, config.blockId, config.context, config.themeId, undefined, dataStore, plugin.appStore).open();
         }
     };
     
     const handleMarkItemDone = useCallback((itemId: string) => {
-        dataStore.markItemDone(itemId);
-    }, [dataStore]);
+        // [修改] markItemDone 现在由 taskService 处理，dataStore 仅负责查询
+        taskService.completeTask(itemId);
+    }, [taskService]);
 
     const unit = useMemo(() => (v: string) => ({ '年': 'year', '季': 'quarter', '月': 'month', '周': 'week', '天': 'day' }[v] || 'day') as (v:string) => dayjs.ManipulateType, []);
     const fmt = useMemo(() => formatDateForView, []);
 
     const renderViewInstance = (viewId: string) => {
-        // ... 此函数内部无变化，我们只看调用它的地方
         const viewInstance = allViews.find(v => v.id === viewId);
         if (!viewInstance) return <div class="think-module">视图 (ID: {viewId}) 未找到</div>;
 
@@ -95,6 +100,7 @@ export function LayoutRenderer({ layout, dataStore, plugin, actionService }: Pro
         const ViewComponent = (ViewComponents as any)[viewInstance.viewType];
         if (!ViewComponent) return <div class="think-module">未知视图: {viewInstance.viewType}</div>;
 
+        // [修改] 将 taskService 作为 prop 传递给所有视图组件
         const viewProps: any = {
             app: plugin.app,
             items: viewItems,
@@ -105,7 +111,8 @@ export function LayoutRenderer({ layout, dataStore, plugin, actionService }: Pro
             groupField: viewInstance.group,
             fields: viewInstance.fields,
             onMarkDone: handleMarkItemDone,
-            actionService: actionService, // 将 actionService 传递下去，以便其他组件使用
+            actionService: actionService,
+            taskService: taskService, // [新增]
         };
 
         return (

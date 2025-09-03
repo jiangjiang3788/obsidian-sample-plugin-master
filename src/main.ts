@@ -45,10 +45,12 @@ export default class ThinkPlugin extends Plugin {
         registerStore(this.appStore);
 
         this.inputService = new InputService(this.app);
+        // [修改] 创建 TaskService 实例
         this.taskService = new TaskService(this.dataStore);
         this.timerService = new TimerService(this.appStore, this.dataStore, this.taskService);
         this.actionService = new ActionService(this.app, this.dataStore, this.appStore, this.inputService, this.timerService);
-        this.rendererService = new RendererService(this, this.dataStore, this.appStore, this.actionService);
+        // [修改] 将 taskService 注入到 RendererService
+        this.rendererService = new RendererService(this, this.dataStore, this.appStore, this.actionService, this.taskService);
         this.timerStateService = new TimerStateService(this.app);
         
         this.timerWidget = new FloatingTimerWidget(this);
@@ -66,7 +68,9 @@ export default class ThinkPlugin extends Plugin {
             appStore: this.appStore,
             dataStore: this.dataStore,
             rendererService: this.rendererService,
-            actionService: this.actionService
+            actionService: this.actionService,
+            // [新增] 将 taskService 传递给 Dashboard 功能模块
+            taskService: this.taskService 
         });
         QuickInputFeature.setup?.({
             plugin: this,
