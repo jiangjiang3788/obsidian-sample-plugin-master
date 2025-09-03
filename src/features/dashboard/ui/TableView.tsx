@@ -5,21 +5,25 @@ import { Item, readField } from '@core/domain/schema';
 import { makeObsUri } from '@core/utils/obsidian';
 import { EMPTY_LABEL } from '@core/domain/constants';
 import { TaskCheckbox } from '@shared/components/TaskCheckbox';
-import { DataStore } from '@core/services/dataStore';
-import { TaskSendToTimerButton } from '@shared/components/TaskSendToTimerButton'; // 确认导入的是新按钮
+// [移除] 不再需要直接依赖 DataStore
+// import { DataStore } from '@core/services/dataStore';
+import { TaskSendToTimerButton } from '@shared/components/TaskSendToTimerButton';
 
+// [修改] TableViewProps 接口增加了 onMarkDone
 interface TableViewProps {
     items: Item[];
     rowField: string;
     colField: string;
+    onMarkDone: (id: string) => void; // 新增 prop
 }
 
 const isDone = (k?: string) => /\/(done|cancelled)$/i.test(k || '');
 
-export function TableView({ items, rowField, colField }: TableViewProps) {
-    const onMarkItemDone = (itemId: string) => {
-        DataStore.instance.markItemDone(itemId);
-    };
+export function TableView({ items, rowField, colField, onMarkDone }: TableViewProps) {
+    // [移除] 不再需要在组件内部定义 onMarkItemDone
+    // const onMarkItemDone = (itemId: string) => {
+    //     DataStore.instance.markItemDone(itemId);
+    // };
 
     if (!rowField || !colField) {
         return <div>（表格视图需要配置“行字段”和“列字段”）</div>;
@@ -49,7 +53,8 @@ export function TableView({ items, rowField, colField }: TableViewProps) {
                 <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                     <TaskCheckbox
                         done={done}
-                        onMarkDone={() => onMarkItemDone(item.id)}
+                        // [修改] 这里直接调用从 props 传入的 onMarkDone
+                        onMarkDone={() => onMarkDone(item.id)}
                     />
                     {item.icon && <span class="task-icon">{item.icon}</span>}
                     <a href={makeObsUri(item)} target="_blank" rel="noopener" class={done ? 'task-done' : ''} style={{ flexGrow: 1, minWidth: 0, textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>

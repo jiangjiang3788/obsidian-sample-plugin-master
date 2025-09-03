@@ -1,31 +1,30 @@
 // src/features/dashboard/ui/LayoutRenderer.tsx
 /** @jsxImportSource preact */
 import { h } from 'preact';
-import { useState, useMemo, useEffect } from 'preact/hooks';
+import { useState, useMemo, useEffect, useCallback } from 'preact/hooks';
 import { DataStore } from '@core/services/dataStore';
 import { Layout, ViewInstance } from '@core/domain/schema';
 import { ModulePanel } from './ModulePanel';
 import type ThinkPlugin from '../../../main';
 import { ViewComponents } from '@features/dashboard/ui';
 import { getDateRange, dayjs, formatDateForView } from '@core/utils/date';
-import { filterByRules, sortItems, filterByDateRange, filterByKeyword, filterByPeriod } from '@core/utils/itemFilter';
 import { useStore , AppStore} from '@state/AppStore';
 import { TimeNavigator } from './TimeNavigator';
-// [重构] 导入 ActionService
-import { ActionService } from '@core/services/ActionService';
+import type { ActionService } from '@core/services/ActionService';
+import { useViewData } from '../hooks/useViewData';
+import { QuickInputModal } from '@features/quick-input/ui/QuickInputModal'; // [新增] 导入 QuickInputModal
 
 interface Props {
     layout: Layout;
     dataStore: DataStore;
     plugin: ThinkPlugin;
+    actionService: ActionService;
 }
 
-export function LayoutRenderer({ layout, dataStore, plugin }: Props) {
+export function LayoutRenderer({ layout, dataStore, plugin, actionService }: Props) {
+    // ... 大部分代码无变化 ...
     const allViews = useStore(state => state.settings.viewInstances);
     const allDataSources = useStore(state => state.settings.dataSources);
-
-    // [重构] 创建 ActionService 的实例
-    const actionService = useMemo(() => new ActionService(plugin.app), [plugin.app]);
     
     const getInitialDate = () => {
         if (layout.isOverviewMode) {
@@ -37,35 +36,35 @@ export function LayoutRenderer({ layout, dataStore, plugin }: Props) {
     const [layoutView, setLayoutView] = useState(layout.initialView || '月');
     const [layoutDate, setLayoutDate] = useState(getInitialDate());
     const [kw, setKw] = useState('');
-    const [force, forceUpdate] = useState(0);
-
+    
     useEffect(() => {
         setLayoutDate(getInitialDate());
         setLayoutView(layout.initialView || '月');
     }, [layout.id, layout.initialDate, layout.initialDateFollowsNow, layout.isOverviewMode, layout.initialView]);
 
-    useEffect(() => {
-        const listener = () => forceUpdate(v => v + 1);
-        dataStore.subscribe(listener);
-        return () => dataStore.unsubscribe(listener);
-    }, [dataStore]);
-    
     const handleOverviewDateChange = (newDate: dayjs.Dayjs) => {
         const newDateString = newDate.format('YYYY-MM-DD');
         setLayoutDate(newDate);
-        // [注意] 更新布局的 initialDate 仍然是 AppStore 的职责
         AppStore.instance.updateLayout(layout.id, { initialDate: newDateString });
     };
-    
-    // [重构] onActionClick 现在调用 actionService
+
+    // [修改] handleQuickInputAction 现在调用新的 service 方法并处理返回的配置
     const handleQuickInputAction = (viewInstance: ViewInstance) => {
-        actionService.openQuickInputForView(viewInstance, layoutDate, layoutView);
+        const config = actionService.getQuickInputConfigForView(viewInstance, layoutDate, layoutView);
+        if (config) {
+            new QuickInputModal(plugin.app, config.blockId, config.context, config.themeId).open();
+        }
     };
+    
+    const handleMarkItemDone = useCallback((itemId: string) => {
+        dataStore.markItemDone(itemId);
+    }, [dataStore]);
 
     const unit = useMemo(() => (v: string) => ({ '年': 'year', '季': 'quarter', '月': 'month', '周': 'week', '天': 'day' }[v] || 'day') as (v:string) => dayjs.ManipulateType, []);
     const fmt = useMemo(() => formatDateForView, []);
 
     const renderViewInstance = (viewId: string) => {
+        // ... 此函数内部无变化，我们只看调用它的地方
         const viewInstance = allViews.find(v => v.id === viewId);
         if (!viewInstance) return <div class="think-module">视图 (ID: {viewId}) 未找到</div>;
 
@@ -75,7 +74,7 @@ export function LayoutRenderer({ layout, dataStore, plugin }: Props) {
         const dateRangeForView = useMemo(() => {
             let range;
             if (viewInstance.viewType === 'StatisticsView') {
-                range = getDateRange(layoutDate, '年'); 
+                range = getDateRange(layoutDate, '年');  
             } else {
                 const dataSourcePeriodFilter = (dataSource.filters || []).find(f => f.field === 'period');
                 const viewPeriod = dataSourcePeriodFilter ? dataSourcePeriodFilter.value : layoutView;
@@ -84,24 +83,14 @@ export function LayoutRenderer({ layout, dataStore, plugin }: Props) {
             return [range.startDate.toDate(), range.endDate.toDate()] as [Date, Date];
         }, [layoutDate, layoutView, viewInstance.viewType, dataSource.filters]);
 
-        const viewItems = useMemo(() => {
-            const start = dayjs(dateRangeForView[0]).format('YYYY-MM-DD');
-            const end = dayjs(dateRangeForView[1]).format('YYYY-MM-DD');
-
-            let items = dataStore.queryItems();
-			items = filterByRules(items, dataSource.filters || []);
-            items = filterByKeyword(items, kw);
-
-			if (!layout.isOverviewMode) {
-                const dataSourcePeriodFilter = (dataSource.filters || []).find(f => f.field === 'period');
-                if (!dataSourcePeriodFilter) {
-				    items = filterByPeriod(items, layoutView);
-                }
-			}
-
-            items = filterByDateRange(items, start, end);
-            return sortItems(items, dataSource.sort || []);
-        }, [dataStore, force, dataSource, kw, dateRangeForView, layout.isOverviewMode, layoutView]);
+        const viewItems = useViewData({
+            dataStore,
+            dataSource,
+            dateRange: dateRangeForView,
+            keyword: kw,
+            layoutView,
+            isOverviewMode: layout.isOverviewMode,
+        });
 
         const ViewComponent = (ViewComponents as any)[viewInstance.viewType];
         if (!ViewComponent) return <div class="think-module">未知视图: {viewInstance.viewType}</div>;
@@ -115,6 +104,8 @@ export function LayoutRenderer({ layout, dataStore, plugin }: Props) {
             ...viewInstance.viewConfig,
             groupField: viewInstance.group,
             fields: viewInstance.fields,
+            onMarkDone: handleMarkItemDone,
+            actionService: actionService, // 将 actionService 传递下去，以便其他组件使用
         };
 
         return (

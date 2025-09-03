@@ -1,7 +1,7 @@
 // src/core/services/TimerService.ts
 import { AppStore } from '@state/AppStore';
 import { TaskService } from '@core/services/taskService';
-import { Notice } from 'obsidian';
+import { Notice, App } from 'obsidian'; // [新增] 导入 App
 import { DataStore } from './dataStore';
 import { InputService } from './inputService';
 import type { QuickInputSaveData } from '@features/quick-input/ui/QuickInputModal';
@@ -9,6 +9,7 @@ import type { QuickInputSaveData } from '@features/quick-input/ui/QuickInputModa
 export class TimerService {
 
     static async startOrResume(taskId: string): Promise<void> {
+        // ... 此方法无变化
         const store = AppStore.instance;
         const timers = store.getState().timers;
         
@@ -37,6 +38,7 @@ export class TimerService {
     }
 
     static async pause(timerId: string): Promise<void> {
+        // ... 此方法无变化
         const store = AppStore.instance;
         const timer = store.getState().timers.find(t => t.id === timerId);
 
@@ -51,6 +53,7 @@ export class TimerService {
     }
 
     static async resume(timerId: string): Promise<void> {
+        // ... 此方法无变化
         const store = AppStore.instance;
         const timers = store.getState().timers;
 
@@ -70,12 +73,8 @@ export class TimerService {
         }
     }
 
-    /**
-     * [重构] 停止计时器的智能处理方法
-     * 它会检查任务当前的状态，来决定是“完成任务”还是仅仅“更新时长”
-     * @param timerId - 计时器实例的唯一ID
-     */
     static async stopAndApply(timerId: string): Promise<void> {
+        // ... 此方法无变化
         const store = AppStore.instance;
         const timer = store.getState().timers.find(t => t.id === timerId);
 
@@ -95,16 +94,12 @@ export class TimerService {
                 await store.removeTimer(timerId);
                 return;
             }
-
-            // [智能决策] 读取任务行的当前状态来决定执行哪种操作
             const currentLine = await TaskService.getTaskLine(timer.taskId);
 
             if (currentLine && /^\s*-\s*\[ \]\s*/.test(currentLine)) {
-                // 场景一: 这是一个未完成的任务，执行“完成并更新时长”
                 await TaskService.completeTask(timer.taskId, { duration: totalMinutes });
                 new Notice(`任务已完成，时长 ${totalMinutes} 分钟已记录。`);
             } else {
-                // 场景二: 这是一个已完成的任务(或非任务行)，只更新时长
                 await TaskService.updateTaskTime(timer.taskId, { duration: totalMinutes });
                 new Notice(`任务时长已更新为 ${totalMinutes} 分钟。`);
             }
@@ -118,16 +113,20 @@ export class TimerService {
     }
 
     static async cancel(timerId: string): Promise<void> {
+        // ... 此方法无变化
         const store = AppStore.instance;
         await store.removeTimer(timerId);
         new Notice('计时任务已取消。');
     }
 
-    static async createNewTaskAndStart(data: QuickInputSaveData, app: App): Promise<void> {
-        const inputService = new InputService(app);
+    // [修改] 此方法现在接收一个 InputService 实例作为参数，而不是自己创建
+    static async createNewTaskAndStart(data: QuickInputSaveData, app: App, inputService: InputService): Promise<void> {
+        // [移除] 不再在内部创建 InputService 实例
+        // const inputService = new InputService(app); 
         const { template, formData, theme } = data;
 
         try {
+            // [无变化] 后续逻辑保持不变，只是现在使用的 inputService 是从外部传入的
             const targetFilePath = inputService.renderTemplate(template.targetFile, { ...formData, theme });
             if (!targetFilePath) throw new Error('目标文件路径无效');
             

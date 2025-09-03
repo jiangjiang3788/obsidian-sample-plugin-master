@@ -1314,7 +1314,7 @@
         "colField": "tags"
       },
       "parentId": "group_memc1a9ofen88",
-      "collapsed": false
+      "collapsed": true
     },
     {
       "id": "view_mer6ll4mtbjry",
@@ -1532,7 +1532,7 @@
         "categories": [
           {
             "name": "🧠",
-            "color": "#6b6977"
+            "color": "#ffffff"
           },
           {
             "name": "打卡",
@@ -1564,11 +1564,11 @@
           },
           {
             "name": "02",
-            "color": "#82a3b1"
+            "color": "#ffffff"
           },
           {
             "name": "周",
-            "color": "#741e50"
+            "color": "#ffffff"
           }
         ]
       },
@@ -2416,8 +2416,30 @@
           "健康/运动"
         ]
       },
-      "collapsed": false,
+      "collapsed": true,
       "parentId": null
+    },
+    {
+      "id": "view_mf2b6b80nnu6h",
+      "title": "新视图",
+      "viewType": "BlockView",
+      "dataSourceId": "ds_meqt2x9ecim6c",
+      "viewConfig": {
+        "view": "BlockView",
+        "title": "块视图",
+        "collapsed": false,
+        "fields": [],
+        "group": "categoryKey"
+      },
+      "collapsed": true,
+      "parentId": null,
+      "fields": [
+        "date",
+        "categoryKey",
+        "icon",
+        "content"
+      ],
+      "group": "categoryKey"
     }
   ],
   "layouts": [
@@ -2426,14 +2448,15 @@
       "name": "全局布局",
       "viewInstanceIds": [
         "view_membnf1hgjgm3",
+        "view_membbqjam5v63",
         "view_mer6ll4mtbjry",
         "view_mer6n7pwf7suy",
         "view_mer6nwkl1hfxn",
         "view_mer6oglaold8i",
-        "view_mer6oto0gp4ju"
+        "view_mewr7y1gvq0ro"
       ],
       "displayMode": "list",
-      "initialView": "天",
+      "initialView": "周",
       "initialDateFollowsNow": true,
       "parentId": "group_memcg1u3us3jc",
       "hideToolbar": false
@@ -2487,7 +2510,7 @@
         "columns": 5
       },
       "isOverviewMode": true,
-      "initialDate": "2025-06-16"
+      "initialDate": "2025-07-14"
     },
     {
       "id": "layout_mer6y66i78epn",
@@ -2522,7 +2545,7 @@
         "columns": 5
       },
       "isOverviewMode": true,
-      "initialDate": "2025-05-26"
+      "initialDate": "2025-09-01"
     },
     {
       "id": "layout_mescqn3ltmxo3",
@@ -2541,6 +2564,17 @@
       "viewInstanceIds": [
         "view_mer6oto0gp4ju",
         "view_mewr7y1gvq0ro"
+      ],
+      "displayMode": "list",
+      "initialView": "月",
+      "initialDateFollowsNow": true,
+      "parentId": null
+    },
+    {
+      "id": "layout_mf2b8j6hqefef",
+      "name": "01",
+      "viewInstanceIds": [
+        "view_mf2b6b80nnu6h"
       ],
       "displayMode": "list",
       "initialView": "月",
@@ -2750,7 +2784,7 @@
             "id": "field_mewkyug9",
             "key": "日期",
             "label": "日期",
-            "type": "text"
+            "type": "date"
           },
           {
             "id": "field_mewjlypl",

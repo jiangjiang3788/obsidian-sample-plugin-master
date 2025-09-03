@@ -1,15 +1,17 @@
 // src/features/settings/index.ts
-// [注意] 此文件已从 src/core/settings/ 移动到新位置
-
-// [修改] 更新导入路径以反映文件的新位置
+import type { App } from 'obsidian'; // [新增] 导入 App 类型
+import type { ThinkPlugin } from '../../main'; // [新增] 导入 ThinkPlugin 类型
 import { SettingsTab } from './ui/SettingsTab';
-import type { ThinkContext } from '../../main';
 
-export * from './ui/SettingsTab';
+// [新增] 定义 Settings 功能的依赖项
+export interface SettingsDependencies {
+    app: App;
+    plugin: ThinkPlugin;
+}
 
 /**
- * 由 main.ts 统一调用：注册 SettingTab。
+ * [修改] setup 函数接收明确的依赖对象
  */
-export function setup(ctx: ThinkContext): void {
-    ctx.plugin.addSettingTab(new SettingsTab(ctx.app, ctx.plugin));
+export function setup(deps: SettingsDependencies): void {
+    deps.plugin.addSettingTab(new SettingsTab(deps.app, deps.plugin));
 }
