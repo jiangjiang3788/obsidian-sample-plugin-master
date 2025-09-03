@@ -1,20 +1,22 @@
-// src/core/CodeblockEmbedder.ts
-import { h, render } from 'preact';
+// src/features/logic/CodeblockEmbedder.ts
+import { render } from 'preact'; // [修改] 不再需要 h
 import { Notice, Plugin } from 'obsidian';
 import { CODEBLOCK_LANG } from '@core/domain/constants';
 import { DataStore } from '@core/services/dataStore';
-import { LayoutRenderer } from '@features/dashboard/ui/LayoutRenderer';
+// [移除] 不再需要直接导入 LayoutRenderer
+// import { LayoutRenderer } from '@features/dashboard/ui/LayoutRenderer'; 
 import { AppStore } from '@state/AppStore';
-import { RendererService } from '@core/services/RendererService'; // [修改] 导入新服务
+import { RendererService } from '@core/services/RendererService';
 import type { Layout } from '@core/domain/schema';
+import type { ActionService } from '@core/services/ActionService';
 
 export class CodeblockEmbedder {
-    // [修改] 构造函数依赖注入，不再需要完整的 ThinkPlugin 实例
     constructor(
-        private plugin: Plugin, // 只需要 Plugin 基类来注册处理器
+        private plugin: Plugin,
         private appStore: AppStore,
         private dataStore: DataStore,
         private rendererService: RendererService,
+        private actionService: ActionService,
     ) {
         this.registerProcessor();
     }
@@ -23,13 +25,11 @@ export class CodeblockEmbedder {
         this.plugin.registerMarkdownCodeBlockProcessor(
             CODEBLOCK_LANG,
             (source, el, /* ctx */) => {
-                // 清理旧的渲染
                 try { render(null, el); } catch { }
                 el.empty();
                 
                 let layoutName: string | undefined;
 
-                // 解析代码块内容，获取布局名称
                 try {
                     const trimmedSource = source.trim();
                     if (trimmedSource.startsWith('{')) {
@@ -44,7 +44,6 @@ export class CodeblockEmbedder {
                     return;
                 }
                 
-                // [修改] 从 AppStore 获取最新的布局配置
                 const allLayouts = this.appStore.getSettings().layouts;
 
                 if (!layoutName && allLayouts.length > 0) {
@@ -58,17 +57,20 @@ export class CodeblockEmbedder {
                     return;
                 }
 
-                // [修改] 挂载并注册到 RendererService
+                // [修改] mountAndRegister 现在只负责调用服务，不再自己渲染
                 this.mountAndRegister(el, layout);
             },
         );
     }
 
     /**
-     * [修改] 将组件挂载到元素上，并将其注册到 RendererService 进行生命周期管理。
+     * [修改] 此方法现在将渲染工作完全委托给 RendererService
      */
     private mountAndRegister(el: HTMLElement, layout: Layout) {
-        // [修改] 调用 RendererService 进行注册和渲染，不再直接操作 activeLayouts 数组
+        // [移除] 此处不再需要手动调用 render()，因为 register 方法会处理
+        // render( h(LayoutRenderer, { ... }), el );
+
+        // [修改] 只调用服务即可，服务会负责正确的渲染
         this.rendererService.register(el, layout);
     }
 }

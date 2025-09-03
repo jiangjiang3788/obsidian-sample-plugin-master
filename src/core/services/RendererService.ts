@@ -5,115 +5,89 @@ import { DataStore } from '@core/services/dataStore';
 import { AppStore } from '@state/AppStore';
 import { LayoutRenderer } from '@features/dashboard/ui/LayoutRenderer';
 import type ThinkPlugin from '../../main';
+import type { ActionService } from './ActionService'; // [新增] 导入 ActionService 类型
 
 interface ActiveLayout {
     container: HTMLElement;
     layoutName: string;
 }
 
-/**
- * @class RendererService
- * @description 单例服务，负责管理所有活动视图（例如在代码块中渲染的布局）的生命周期。
- * 1. 注册和注销活动布局。
- * 2. 订阅 AppStore 的状态变化。
- * 3. 当设置变化时，自动重新渲染所有受影响的布局。
- * 4. 在插件卸载时，统一清理所有渲染的组件。
- */
 export class RendererService {
     static instance: RendererService;
 
-    private activeLayouts: ActiveLayout[] = [];
-
-    // [新增] 依赖注入 DataStore 和 AppStore
+    // [修改] 构造函数现在接收 ActionService
     constructor(
-        private plugin: ThinkPlugin, // 依然需要 plugin 实例来传递给 LayoutRenderer
+        private plugin: ThinkPlugin,
         private dataStore: DataStore,
         private appStore: AppStore,
+        private actionService: ActionService, // 新增依赖
     ) {
         if (RendererService.instance) {
             return RendererService.instance;
         }
 
-        // [核心] 订阅 AppStore 的变化，当设置更新时自动调用 rerenderAll
         this.appStore.subscribe(() => this.rerenderAll());
         RendererService.instance = this;
     }
 
-    /**
-     * 注册一个新的布局实例，进行初次渲染并纳入管理。
-     * @param container - 承载Preact组件的HTML元素。
-     * @param layout - 要渲染的布局配置。
-     */
+    private activeLayouts: ActiveLayout[] = [];
+
     public register(container: HTMLElement, layout: Layout): void {
-        // 确保同一个容器不会被重复注册
         this.unregister(container);
 
-        // 渲染组件
+        // [修改] 渲染组件时，将 actionService 传递下去
         render(
             h(LayoutRenderer, {
                 layout: layout,
                 dataStore: this.dataStore,
                 plugin: this.plugin,
+                actionService: this.actionService, // 传递 actionService
             }),
             container,
         );
 
-        // 添加到活动布局列表
         this.activeLayouts.push({ container, layoutName: layout.name });
     }
 
-    /**
-     * 注销一个布局实例，从DOM中卸载组件并移出管理列表。
-     * @param container - 目标HTML元素。
-     */
     public unregister(container: HTMLElement): void {
         const index = this.activeLayouts.findIndex(l => l.container === container);
         if (index > -1) {
             try {
-                render(null, container); // 卸载 Preact 组件
+                render(null, container);
             } catch (e) {
-                // 捕获异常，以防容器已被Obsidian销毁
+                // 捕获异常
             }
-            container.empty(); // 清空容器
-
+            container.empty();
             this.activeLayouts.splice(index, 1);
         }
     }
 
-    /**
-     * 当设置变化时，重新渲染所有当前活动的布局。
-     */
     private rerenderAll(): void {
         const latestSettings = this.appStore.getSettings();
 
-        // 使用 for...of 循环来处理，因为它比 forEach 更易于阅读和调试
         for (const activeLayout of [...this.activeLayouts]) {
             const { container, layoutName } = activeLayout;
             const newLayoutConfig = latestSettings.layouts.find(l => l.name === layoutName);
 
             if (newLayoutConfig) {
-                // 如果布局配置依然存在，则重新渲染
+                // [修改] 重新渲染时，也要将 actionService 传递下去
                 render(
                     h(LayoutRenderer, {
                         layout: newLayoutConfig,
                         dataStore: this.dataStore,
                         plugin: this.plugin,
+                        actionService: this.actionService, // 传递 actionService
                     }),
                     container,
                 );
             } else {
-                // 如果布局配置被删除了，则注销并显示提示信息
                 this.unregister(container);
                 container.createDiv({ text: `布局配置 "${layoutName}" 已被删除。` });
             }
         }
     }
 
-    /**
-     * 在插件卸载时调用，清理所有活动的布局。
-     */
     public cleanup(): void {
-        // 创建一个副本进行迭代，因为 unregister 会修改原始数组
         [...this.activeLayouts].forEach(layout => this.unregister(layout.container));
         this.activeLayouts = [];
     }

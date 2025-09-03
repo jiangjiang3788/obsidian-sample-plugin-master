@@ -13,26 +13,13 @@ import * as SettingsFeature from '@features/settings';
 import { ThinkSettings, DEFAULT_SETTINGS } from '@core/domain/schema';
 import { STYLE_TAG_ID } from '@core/domain/constants';
 import { GLOBAL_CSS } from '@features/dashboard/styles/global';
+import { InputService } from '@core/services/inputService';
 
-// =======================================================================
-// [新增] 无条件加载日志
-// 只要这个文件被 Obsidian 加载，下面这行信息就必定会出现在开发者控制台中。
 console.log(`[ThinkPlugin] main.js 文件已加载，版本时间: ${new Date().toLocaleTimeString()}`);
-// =======================================================================
 
-export const DEBUG_MODE = false; // 已禁用调试模式
+export const DEBUG_MODE = false;
 
-export interface ThinkContext {
-    app: App;
-    plugin: ThinkPlugin;
-    platform: ObsidianPlatform;
-    dataStore: DataStore;
-    appStore: AppStore;
-    rendererService: RendererService;
-    actionService: ActionService;
-}
-
-export default class ThinkPlugin extends Plugin implements ThinkContext {
+export default class ThinkPlugin extends Plugin {
     platform!: ObsidianPlatform;
     dataStore!: DataStore;
     appStore!: AppStore;
@@ -40,10 +27,7 @@ export default class ThinkPlugin extends Plugin implements ThinkContext {
     actionService!: ActionService;
     timerStateService!: TimerStateService;
     timerWidget!: FloatingTimerWidget;
-
-    get plugin() {
-        return this;
-    }
+    inputService!: InputService;
 
     async onload(): Promise<void> {
         const settings = await this.loadSettings();
@@ -53,11 +37,13 @@ export default class ThinkPlugin extends Plugin implements ThinkContext {
         this.dataStore = new DataStore(this.platform);
         this.appStore = AppStore.instance;
         this.appStore.init(this, settings);
-
         this.timerStateService = new TimerStateService(this.app);
-        this.actionService = new ActionService(this.app);
-        this.rendererService = new RendererService(this, this.dataStore, this.appStore);
-
+        this.inputService = new InputService(this.app);
+        this.actionService = new ActionService(this.app, this.dataStore, this.appStore, this.inputService);
+        
+        // [修改] 实例化 RendererService 时，将 actionService 注入
+        this.rendererService = new RendererService(this, this.dataStore, this.appStore, this.actionService);
+        
         this.timerWidget = new FloatingTimerWidget(this);
         this.timerWidget.load();
 
@@ -67,9 +53,20 @@ export default class ThinkPlugin extends Plugin implements ThinkContext {
 
         await this.dataStore.initialScan();
 
-        DashboardFeature.setup?.(this);
-        QuickInputFeature.setup?.(this);
-        SettingsFeature.setup?.(this);
+        DashboardFeature.setup?.({
+            plugin: this,
+            appStore: this.appStore,
+            dataStore: this.dataStore,
+            rendererService: this.rendererService,
+            actionService: this.actionService
+        });
+        QuickInputFeature.setup?.({
+            plugin: this
+        });
+        SettingsFeature.setup?.({
+            app: this.app,
+            plugin: this,
+        });
 
         this.addCommand({
             id: 'think-open-settings',
@@ -92,7 +89,6 @@ export default class ThinkPlugin extends Plugin implements ThinkContext {
     private async loadSettings(): Promise<ThinkSettings> {
         const stored = (await this.loadData()) as Partial<ThinkSettings> | null;
         const merged = Object.assign({}, DEFAULT_SETTINGS, stored);
-
         merged.dataSources = merged.dataSources || [];
         merged.viewInstances = merged.viewInstances || [];
         merged.layouts = merged.layouts || [];

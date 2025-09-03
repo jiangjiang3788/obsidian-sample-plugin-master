@@ -6,31 +6,36 @@ import { dayjs } from '@core/utils/date';
 import type { Item, ViewInstance } from '@core/domain/schema';
 import { DataStore } from './dataStore';
 import { TimerService } from './TimerService';
+import { InputService } from './inputService';
+import type { QuickInputConfig } from './types'; // [新增] 导入新的配置类型
 
 export class ActionService {
     private app: App;
     private appStore: AppStore;
     private dataStore: DataStore;
+    private inputService: InputService;
 
-    constructor(app: App) {
+    constructor(app: App, dataStore: DataStore, appStore: AppStore, inputService: InputService) {
         this.app = app;
-        this.appStore = AppStore.instance;
-        this.dataStore = DataStore.instance;
+        this.dataStore = dataStore;
+        this.appStore = appStore;
+        this.inputService = inputService;
     }
 
-    public openQuickInputForView(viewInstance: ViewInstance, dateContext: dayjs.Dayjs, periodContext: string) {
+    // [修改] 方法重命名，并且不再创建Modal，而是返回配置对象或null
+    public getQuickInputConfigForView(viewInstance: ViewInstance, dateContext: dayjs.Dayjs, periodContext: string): QuickInputConfig | null {
         const settings = this.appStore.getSettings();
         const dataSource = settings.dataSources.find(ds => ds.id === viewInstance.dataSourceId);
 
         if (!dataSource) {
             new Notice('快捷输入失败：找不到对应的数据源。');
-            return;
+            return null;
         }
 
         const categoryFilter = dataSource.filters.find(f => f.field === 'categoryKey' && (f.op === '=' || f.op === 'includes'));
         if (!categoryFilter || !categoryFilter.value) {
             new Notice('快捷输入失败：此视图的数据源未按 "categoryKey" 进行筛选。');
-            return;
+            return null;
         }
 
         const blockName = categoryFilter.value as string;
@@ -38,7 +43,7 @@ export class ActionService {
 
         if (!targetBlock) {
             new Notice(`快捷输入失败：找不到名为 "${blockName}" 的Block模板。`);
-            return;
+            return null;
         }
 
         const targetTheme = settings.inputSettings.themes.find(t => t.path === blockName);
@@ -47,22 +52,28 @@ export class ActionService {
             '日期': dateContext.format('YYYY-MM-DD'),
             '周期': periodContext,
         };
-
-        new QuickInputModal(this.app, targetBlock.id, context, targetTheme?.id).open();
+        
+        // [修改] 返回配置对象，而不是打开Modal
+        return {
+            blockId: targetBlock.id,
+            context: context,
+            themeId: targetTheme?.id,
+        };
     }
 
-    public editTaskInQuickInput(taskId: string): void {
+    // [修改] 方法重命名，并返回配置对象或null
+    public getQuickInputConfigForTaskEdit(taskId: string): QuickInputConfig | null {
         const item = this.dataStore.queryItems().find(i => i.id === taskId);
         if (!item) {
             new Notice(`错误：找不到ID为 ${taskId} 的任务。`);
-            return;
+            return null;
         }
         const settings = this.appStore.getSettings();
         const baseCategory = (item.categoryKey || '').split('/')[0];
         const targetBlock = settings.inputSettings.blocks.find(b => b.name === baseCategory);
         if (!targetBlock) {
             new Notice(`找不到与分类 "${baseCategory}" 匹配的Block模板，无法编辑。`);
-            return;
+            return null;
         }
         const context: Record<string, any> = {};
         for (const field of targetBlock.fields) {
@@ -76,28 +87,29 @@ export class ActionService {
         }
         if (!context.title && !context.标题) context['标题'] = item.title;
         if (!context.tags && !context.标签) context['标签'] = item.tags.join(', ');
-        new QuickInputModal(this.app, targetBlock.id, context).open();
+
+        // [修改] 返回配置对象
+        return {
+            blockId: targetBlock.id,
+            context: context
+        };
     }
 
-    public openNewTaskForTimer(): void {
+    // [修改] 这个方法现在也只返回配置，并且需要一个 onSave 回调来处理后续逻辑
+    public getQuickInputConfigForNewTimer(onSave: (data: QuickInputSaveData) => void): { config: QuickInputConfig, onSave: (data: QuickInputSaveData) => void } | null {
         const blocks = this.appStore.getSettings().inputSettings.blocks;
         if (!blocks || blocks.length === 0) {
             new Notice('没有可用的Block模板，请先在设置中创建一个。');
-            return;
+            return null;
         }
 
         const defaultBlockId = blocks[0].id;
-
-        const onSaveCallback = (data: QuickInputSaveData) => {
-            TimerService.createNewTaskAndStart(data, this.app);
+        
+        return {
+            config: {
+                blockId: defaultBlockId,
+            },
+            onSave: onSave, // 将 onSave 回调也一并返回
         };
-
-        new QuickInputModal(
-            this.app,
-            defaultBlockId,
-            undefined, 
-            undefined, 
-            onSaveCallback
-        ).open();
     }
 }

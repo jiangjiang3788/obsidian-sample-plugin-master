@@ -4,29 +4,29 @@ import { h } from 'preact';
 import { Item, readField, ThemeDefinition } from '@core/domain/schema';
 import { makeObsUri } from '@core/utils/obsidian';
 import { TaskCheckbox } from '@shared/components/TaskCheckbox';
-import { DataStore } from '@core/services/dataStore';
+// [移除] 不再需要直接依赖 DataStore
+// import { DataStore } from '@core/services/dataStore';
 import { getFieldLabel } from '@core/domain/fields';
 import { useRef, useState, useEffect } from 'preact/hooks';
 import { App } from 'obsidian';
 import { useStore } from '@state/AppStore';
 import { TagsRenderer } from '@shared/components/TagsRenderer';
 import { getCategoryColor } from '@core/domain/categoryColorMap';
-import { TaskSendToTimerButton } from '@shared/components/TaskSendToTimerButton'; // 确认导入的是新按钮
+import { TaskSendToTimerButton } from '@shared/components/TaskSendToTimerButton';
 
-// 内部辅助组件 1: FieldRenderer
+// 内部辅助组件 1: FieldRenderer (无变化)
 const FieldRenderer = ({ item, fieldKey, app, allThemes }: { item: Item; fieldKey: string; app: App; allThemes: ThemeDefinition[] }) => {
+    // ... 此组件代码无任何变化
     const value = readField(item, fieldKey);
     if (value === null || value === undefined || value === '' || (Array.isArray(value) && value.length === 0)) {
         return null;
     }
     const label = getFieldLabel(fieldKey);
     
-    // 当字段为 tags 时，使用新的专用组件渲染
     if (fieldKey === 'tags') {
         return <TagsRenderer tags={value} allThemes={allThemes} />;
     }
     
-    // 其他字段的渲染逻辑保持不变
     if (fieldKey === 'categoryKey') {
         const baseCategory = (item.categoryKey || '').split('/')[0] || '';
         return (
@@ -55,12 +55,14 @@ const FieldRenderer = ({ item, fieldKey, app, allThemes }: { item: Item; fieldKe
 
 const isDone = (k?: string) => /\/(done|cancelled)$/i.test(k || '');
 
+// [修改] TaskItem 现在接收 onMarkDone 作为 prop
 // 内部辅助组件 2: TaskItem
 const TaskItem = ({ item, fields, onMarkDone, app, allThemes }: { item: Item; fields: string[]; onMarkDone: (id: string) => void; app: App; allThemes: ThemeDefinition[] }) => {
     const done = isDone(item.categoryKey);
     return (
         <div class="bv-item bv-item--task">
             <div class="bv-task-checkbox-wrapper">
+                {/* [修改] TaskCheckbox 现在调用从 prop 传入的 onMarkDone 函数 */}
                 <TaskCheckbox done={done} onMarkDone={() => onMarkDone(item.id)} />
             </div>
             <div class="bv-task-content">
@@ -79,8 +81,9 @@ const TaskItem = ({ item, fields, onMarkDone, app, allThemes }: { item: Item; fi
     );
 };
 
-// 内部辅助组件 3: BlockItem
+// 内部辅助组件 3: BlockItem (无变化)
 const BlockItem = ({ item, fields, isNarrow, app, allThemes }: { item: Item; fields: string[]; isNarrow: boolean; app: App; allThemes: ThemeDefinition[] }) => {
+    // ... 此组件代码无任何变化
     const metadataFields = fields.filter(f => f !== 'title' && f !== 'content');
     const showTitle = fields.includes('title') && item.title;
     const showContent = fields.includes('content') && item.content;
@@ -90,7 +93,7 @@ const BlockItem = ({ item, fields, isNarrow, app, allThemes }: { item: Item; fie
         <div class={`bv-item bv-item--block ${narrowClass}`}>
             <div class="bv-block-metadata">
                 <div class="bv-fields-list-wrapper">
-                     {metadataFields.map(fieldKey => <FieldRenderer key={fieldKey} item={item} fieldKey={fieldKey} app={app} allThemes={allThemes} />)}
+                    {metadataFields.map(fieldKey => <FieldRenderer key={fieldKey} item={item} fieldKey={fieldKey} app={app} allThemes={allThemes} />)}
                 </div>
             </div>
             <div class="bv-block-main">
@@ -111,19 +114,20 @@ const BlockItem = ({ item, fields, isNarrow, app, allThemes }: { item: Item; fie
 
 
 // 主组件: BlockView
+// [修改] BlockViewProps 接口增加了 onMarkDone
 interface BlockViewProps {
     items: Item[];
     groupField?: string;
     fields?: string[];
     app: App;
+    onMarkDone: (id: string) => void; // 新增 prop
 }
 
 export function BlockView(props: BlockViewProps) {
-    const { items, groupField, fields = [], app } = props;
+    // [修改] 从 props 中解构出 onMarkDone
+    const { items, groupField, fields = [], app, onMarkDone } = props;
     
-    // 从 AppStore 中获取所有主题定义，以传递给子组件
     const allThemes = useStore(state => state.settings.inputSettings.themes);
-
     const containerRef = useRef<HTMLDivElement>(null);
     const [isNarrow, setIsNarrow] = useState(false);
 
@@ -135,11 +139,13 @@ export function BlockView(props: BlockViewProps) {
         return () => observer.disconnect();
     }, []);
 
-    const onMarkItemDone = (itemId: string) => DataStore.instance.markItemDone(itemId);
+    // [移除] 不再需要在组件内部定义 onMarkItemDone
+    // const onMarkItemDone = (itemId: string) => DataStore.instance.markItemDone(itemId);
     
     const renderItem = (item: Item) => {
         return item.type === 'task'
-            ? <TaskItem key={item.id} item={item} fields={fields} onMarkDone={onMarkItemDone} app={app} allThemes={allThemes} />
+            // [修改] 将 onMarkDone prop 传递给 TaskItem
+            ? <TaskItem key={item.id} item={item} fields={fields} onMarkDone={onMarkDone} app={app} allThemes={allThemes} />
             : <BlockItem key={item.id} item={item} fields={fields} isNarrow={isNarrow} app={app} allThemes={allThemes} />;
     };
     

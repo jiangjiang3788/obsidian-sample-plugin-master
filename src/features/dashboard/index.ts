@@ -1,18 +1,27 @@
 // src/features/dashboard/index.ts
-
-import type { ThinkContext } from '../../main';
-
-// [FIX] 使用 @features 别名进行导入，代码更清晰
+import type { Plugin } from 'obsidian'; // [新增] 导入 Plugin 类型
+import type { AppStore } from '@state/AppStore'; // [新增] 导入 AppStore 类型
+import type { DataStore } from '@core/services/dataStore'; // [新增] 导入 DataStore 类型
+import type { RendererService } from '@core/services/RendererService'; // [新增] 导入 RendererService 类型
+import type { ActionService } from '@core/services/ActionService'; // [新增] 导入 ActionService 类型
 import { VaultWatcher } from '@features/logic/VaultWatcher';
 import { CodeblockEmbedder } from '@features/logic/CodeblockEmbedder';
 
+// [新增] 为 Dashboard 功能定义一个清晰的依赖项接口
+export interface DashboardDependencies {
+    plugin: Plugin;
+    appStore: AppStore;
+    dataStore: DataStore;
+    rendererService: RendererService;
+    actionService: ActionService;
+}
+
 /**
- * 负责 Dashboard 功能的启动和设置。
- * 它初始化了文件监听器和代码块渲染器。
+ * [修改] setup 函数现在接收一个包含明确依赖的对象，而不是一个笼统的上下文。
  */
-export function setup(ctx: ThinkContext) { 
-    const { plugin, dataStore, appStore, rendererService } = ctx;
+export function setup(deps: DashboardDependencies) {  
+    const { plugin, dataStore, appStore, rendererService, actionService } = deps;
 
     new VaultWatcher(plugin, dataStore);
-    new CodeblockEmbedder(plugin, appStore, dataStore, rendererService);
+    new CodeblockEmbedder(plugin, appStore, dataStore, rendererService, actionService);
 }
