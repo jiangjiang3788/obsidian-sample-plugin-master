@@ -4,7 +4,7 @@ import { h } from 'preact';
 import { App, Modal, Notice } from 'obsidian';
 import { render, unmountComponentAtNode } from 'preact/compat';
 import { useState, useMemo, useEffect } from 'preact/hooks';
-import { AppStore, useStore } from '@state/AppStore';
+import { AppStore, useStore } from '@state/AppStore'; // [修改] AppStore 只用于类型
 import { InputService } from '@core/services/inputService';
 import { DataStore } from '@core/services/dataStore';
 import type { InputSettings, BlockTemplate, ThemeDefinition, TemplateField } from '@core/domain/schema';
@@ -12,6 +12,7 @@ import { Button, RadioGroup as MuiRadioGroup, FormControlLabel, Radio, FormContr
 import { SimpleSelect } from '@shared/ui/SimpleSelect';
 import { buildThemeTree, ThemeTreeNode } from '@core/utils/themeUtils';
 import { dayjs } from '@core/utils/date';
+import { dataStore } from '@core/services/storeRegistry'; // [新增] 导入 dataStore 注册表
 
 export interface QuickInputSaveData {
     template: BlockTemplate;
@@ -20,12 +21,15 @@ export interface QuickInputSaveData {
 }
 
 export class QuickInputModal extends Modal {
+    // [修改] 构造函数现在需要接收 dataStore 和 appStore
     constructor(
         app: App,
         private blockId: string,
         private context?: Record<string, any>,
         private themeId?: string,
         private onSave?: (data: QuickInputSaveData) => void,
+        private dataStore?: DataStore, // 新增
+        private appStore?: AppStore // 新增
     ) {
         super(app);
     }
@@ -40,6 +44,9 @@ export class QuickInputModal extends Modal {
                 themeId={this.themeId}
                 onSave={this.onSave}
                 closeModal={() => this.close()}
+                // [修改] 将 store 实例传递下去
+                dataStore={this.dataStore}
+                appStore={this.appStore}
             />,
             this.contentEl
         );
@@ -50,6 +57,7 @@ export class QuickInputModal extends Modal {
     }
 }
 
+// ... getEffectiveTemplate, findNodePath, renderThemeLevels 辅助函数保持不变 ...
 function getEffectiveTemplate(settings: InputSettings, blockId: string, themeId?: string): { template: BlockTemplate | null; theme: ThemeDefinition | null } {
     const baseBlock = settings.blocks.find(b => b.id === blockId);
     if (!baseBlock) return { template: null, theme: null };
@@ -100,15 +108,19 @@ const renderThemeLevels = (nodes: ThemeTreeNode[], activePath: ThemeTreeNode[], 
     );
 };
 
-function QuickInputForm({ app, blockId, context, themeId, onSave, closeModal }: {
+
+function QuickInputForm({ app, blockId, context, themeId, onSave, closeModal, dataStore, appStore }: {
     app: App;
     blockId: string;
     context?: Record<string, any>;
     themeId?: string;
     onSave?: (data: QuickInputSaveData) => void;
-    closeModal: () => void
+    closeModal: () => void;
+    dataStore?: DataStore; // [新增]
+    appStore?: AppStore; // [新增]
 }) {
     const svc = useMemo(() => new InputService(app), [app]);
+    // [修改] 从 useStore 获取 settings
     const settings = useStore(state => state.settings.inputSettings);
 
     const { themeTree, themeIdMap } = useMemo(() => {
@@ -133,39 +145,39 @@ function QuickInputForm({ app, blockId, context, themeId, onSave, closeModal }: 
 
     const [formData, setFormData] = useState<Record<string, any>>(() => {
         if (!template) return {};
-
+        // ... formData 初始化逻辑不变
         const initialData: Record<string, any> = {};
-        template.fields.forEach(field => {
-            let valueAssigned = false;
-            if (context && (context[field.key] !== undefined || context[field.label] !== undefined)) {
-                initialData[field.key] = context[field.key] ?? context[field.label];
-                valueAssigned = true;
-            }
-            if (!valueAssigned && !field.defaultValue) {
-                if (field.type === 'date') {
-                    initialData[field.key] = dayjs().format('YYYY-MM-DD');
-                    valueAssigned = true;
-                } else if (field.type === 'time') {
-                    initialData[field.key] = dayjs().format('HH:mm');
-                    valueAssigned = true;
-                }
-            }
-            if (!valueAssigned && ['select', 'radio', 'rating'].includes(field.type)) {
-                const findOption = (val: string | undefined) => (field.options || []).find(o => o.label === val || o.value === val);
-                let defaultOpt = findOption(field.defaultValue);
-                if (!defaultOpt && field.options && field.options.length > 0) {
-                    defaultOpt = field.options[0];
-                }
-                if (defaultOpt) {
-                    initialData[field.key] = { value: defaultOpt.value, label: defaultOpt.label || defaultOpt.value };
-                    valueAssigned = true;
-                }
-            }
-            if (!valueAssigned) {
-                initialData[field.key] = field.defaultValue || '';
-                valueAssigned = true;
-            }
-        });
+        template.fields.forEach(field => {
+            let valueAssigned = false;
+            if (context && (context[field.key] !== undefined || context[field.label] !== undefined)) {
+                initialData[field.key] = context[field.key] ?? context[field.label];
+                valueAssigned = true;
+            }
+            if (!valueAssigned && !field.defaultValue) {
+                if (field.type === 'date') {
+                    initialData[field.key] = dayjs().format('YYYY-MM-DD');
+                    valueAssigned = true;
+                } else if (field.type === 'time') {
+                    initialData[field.key] = dayjs().format('HH:mm');
+                    valueAssigned = true;
+                }
+            }
+            if (!valueAssigned && ['select', 'radio', 'rating'].includes(field.type)) {
+                const findOption = (val: string | undefined) => (field.options || []).find(o => o.label === val || o.value === val);
+                let defaultOpt = findOption(field.defaultValue);
+                if (!defaultOpt && field.options && field.options.length > 0) {
+                    defaultOpt = field.options[0];
+                }
+                if (defaultOpt) {
+                    initialData[field.key] = { value: defaultOpt.value, label: defaultOpt.label || defaultOpt.value };
+                    valueAssigned = true;
+                }
+            }
+            if (!valueAssigned) {
+                initialData[field.key] = field.defaultValue || '';
+                valueAssigned = true;
+            }
+        });
         return initialData;
     });
 
@@ -183,7 +195,8 @@ function QuickInputForm({ app, blockId, context, themeId, onSave, closeModal }: 
             try {
                 await svc.executeTemplate(template, formData, finalTheme);
                 new Notice(`✅ 已保存`);
-                DataStore.instance?.notifyChange?.();
+                // [修改] 从注册表获取 dataStore 实例
+                dataStore?.notifyChange?.();
                 closeModal();
             } catch (e: any) {
                 new Notice(`❌ 保存失败: ${e.message || e}`, 10000);
@@ -191,6 +204,7 @@ function QuickInputForm({ app, blockId, context, themeId, onSave, closeModal }: 
         }
     };
 
+    // ... renderField 逻辑不变 ...
     const renderField = (field: TemplateField) => {
         const isComplex = typeof formData[field.key] === 'object' && formData[field.key] !== null;
         const value = isComplex ? formData[field.key]?.value : formData[field.key];

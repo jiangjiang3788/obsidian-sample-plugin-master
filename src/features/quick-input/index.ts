@@ -1,13 +1,14 @@
 // src/features/quick-input/index.ts
-import type { ThinkPlugin } from '../../main'; // 保持 ThinkPlugin 类型以便访问 addCommand
+import type { ThinkPlugin } from '../../main';
+import { AppStore } from '@state/AppStore';
 import { registerQuickInputCommands } from './logic/registerCommands';
 
-// [新增] 定义 QuickInput 功能的依赖项
 export interface QuickInputDependencies {
-    plugin: ThinkPlugin; // registerCommands 需要 plugin 实例来 addCommand
+    plugin: ThinkPlugin;
+    appStore: AppStore;
 }
 
-// [修改] setup 函数接收明确的依赖对象
 export function setup(deps: QuickInputDependencies) {
-    registerQuickInputCommands(deps.plugin); // 直接传递所需的 plugin
+    // 这里的调用是正确的，它将 plugin 和 appStore 实例传递给了 registerQuickInputCommands
+    registerQuickInputCommands(deps.plugin, deps.appStore);
 }

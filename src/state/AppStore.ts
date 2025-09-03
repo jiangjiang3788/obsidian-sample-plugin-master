@@ -1,10 +1,12 @@
 // src/state/AppStore.ts
 import { useState, useEffect, useCallback } from 'preact/hooks';
 import type { ThinkSettings, DataSource, ViewInstance, Layout, InputSettings, BlockTemplate, ThemeDefinition, ThemeOverride, Group, GroupType, Groupable } from '@core/domain/schema';
+import { DEFAULT_SETTINGS } from '@core/domain/schema'; // [新增] 导入默认设置
 import type ThinkPlugin from '../main';
 import { VIEW_DEFAULT_CONFIGS } from '@features/settings/ui/components/view-editors/registry';
 import { generateId, moveItemInArray, duplicateItemInArray } from '@core/utils/array';
 import { TimerStateService } from '@core/services/TimerStateService';
+import { appStore } from './storeRegistry';
 
 export interface TimerState {
     id: string;
@@ -17,22 +19,15 @@ export interface TimerState {
 export interface AppState {
     settings: ThinkSettings;
     timers: TimerState[];
+    activeTimer?: TimerState;
 }
 
 export class AppStore {
-    private static _instance: AppStore;
     private _plugin!: ThinkPlugin;
     private _state!: AppState;
     private _listeners: Set<() => void> = new Set();
 
-    private constructor() { }
-
-    public static get instance(): AppStore {
-        if (!AppStore._instance) {
-            AppStore._instance = new AppStore();
-        }
-        return AppStore._instance;
-    }
+    public constructor() { }
 
     public init(plugin: ThinkPlugin, initialSettings: ThinkSettings) {
         this._plugin = plugin;
@@ -40,6 +35,11 @@ export class AppStore {
             settings: initialSettings,
             timers: [],
         };
+        this._deriveState();
+    }
+    
+    private _deriveState() {
+        this._state.activeTimer = this._state.timers.find(t => t.status === 'running');
     }
 
     public getState(): AppState {
@@ -56,10 +56,11 @@ export class AppStore {
     }
 
     private _notify() {
+        this._deriveState(); // 每次通知前都重新计算派生状态
         this._listeners.forEach(l => l());
     }
-
-    private async _updateSettingsAndPersist(updater: (draft: ThinkSettings) => void) {
+    
+    public _updateSettingsAndPersist = async (updater: (draft: ThinkSettings) => void) => {
         const newSettings = structuredClone(this._state.settings);
         updater(newSettings);
         this._state.settings = newSettings;
@@ -82,6 +83,7 @@ export class AppStore {
         const newTimers = updater(structuredClone(this._state.timers));
         this._state.timers = newTimers;
         this._notify();
+        // 注意：TimerStateService 仍然可以使用单例，因为它是一个非常简单的、无复杂依赖的服务
         await TimerStateService.instance.saveStateToFile(newTimers);
     }
 
@@ -109,7 +111,7 @@ export class AppStore {
         });
     }
 
-    // --- 所有设置管理方法 (完整，无省略) ---
+    // --- 所有设置管理方法 ---
     public addGroup = async (name: string, parentId: string | null, type: GroupType) => {
         await this._updateSettingsAndPersist(draft => {
             const newGroup: Group = { id: generateId('group'), name, parentId, type };
@@ -206,6 +208,37 @@ export class AppStore {
                 }
             }
             itemToMove.parentId = targetParentId;
+        });
+    }
+
+    public reorderItems = async (reorderedSiblings: (Groupable & {isGroup?: boolean})[], itemType: 'group' | 'dataSource' | 'viewInstance' | 'layout') => {
+        await this._updateSettingsAndPersist(draft => {
+            const parentId = reorderedSiblings.length > 0 ? reorderedSiblings[0].parentId : undefined;
+
+            let fullArray: (Groupable & {id: string})[];
+            if (itemType === 'group') {
+                fullArray = draft.groups;
+            } else if (itemType === 'dataSource') {
+                fullArray = draft.dataSources;
+            } else if (itemType === 'viewInstance') {
+                fullArray = draft.viewInstances;
+            } else {
+                fullArray = draft.layouts;
+            }
+            
+            const otherItems = fullArray.filter(i => i.parentId !== parentId);
+            
+            const newFullArray = [...otherItems, ...reorderedSiblings];
+            
+            if (itemType === 'group') {
+                draft.groups = newFullArray as Group[];
+            } else if (itemType === 'dataSource') {
+                draft.dataSources = newFullArray as DataSource[];
+            } else if (itemType === 'viewInstance') {
+                draft.viewInstances = newFullArray as ViewInstance[];
+            } else {
+                draft.layouts = newFullArray as Layout[];
+            }
         });
     }
 
@@ -317,11 +350,21 @@ export class AppStore {
         });
     }
 
-    
-
     public deleteLayout = async (id: string) => {
         await this._updateSettingsAndPersist(draft => {
             draft.layouts = draft.layouts.filter(l => l.id !== id);
+        });
+    }
+
+    public moveLayout = async (id: string, direction: 'up' | 'down') => {
+        await this._updateSettingsAndPersist(draft => {
+            draft.layouts = moveItemInArray(draft.layouts, id, direction);
+        });
+    }
+
+    public duplicateLayout = async (id: string) => {
+        await this._updateSettingsAndPersist(draft => {
+            draft.layouts = duplicateItemInArray(draft.layouts, id, 'name');
         });
     }
 
@@ -330,56 +373,6 @@ export class AppStore {
             draft.inputSettings = { ...draft.inputSettings, ...updates };
         });
     }
-
-
-
-
-    // [NEW] A generic method to reorder items after drag-and-drop
-    public reorderItems = async (reorderedSiblings: (Groupable & {isGroup?: boolean})[], itemType: 'group' | 'dataSource' | 'viewInstance' | 'layout') => {
-        await this._updateSettingsAndPersist(draft => {
-            const parentId = reorderedSiblings.length > 0 ? reorderedSiblings[0].parentId : undefined;
-
-            let fullArray: (Groupable & {id: string})[];
-            if (itemType === 'group') {
-                fullArray = draft.groups;
-            } else if (itemType === 'dataSource') {
-                fullArray = draft.dataSources;
-            } else if (itemType === 'viewInstance') {
-                fullArray = draft.viewInstances;
-            } else {
-                fullArray = draft.layouts;
-            }
-            
-            // Get all items that are NOT part of this sibling group
-            const otherItems = fullArray.filter(i => i.parentId !== parentId);
-            
-            // Reconstruct the full array with the reordered siblings
-            const newFullArray = [...otherItems, ...reorderedSiblings];
-            
-            // Assign back to the draft
-            if (itemType === 'group') {
-                draft.groups = newFullArray as Group[];
-            } else if (itemType === 'dataSource') {
-                draft.dataSources = newFullArray as DataSource[];
-            } else if (itemType === 'viewInstance') {
-                draft.viewInstances = newFullArray as ViewInstance[];
-            } else {
-                draft.layouts = newFullArray as Layout[];
-            }
-        });
-    }
-
-
-
-
-
-    public moveLayout = async (id: string, direction: 'up' | 'down') => {
-        await this._updateSettingsAndPersist(draft => {
-            draft.layouts = moveItemInArray(draft.layouts, id, direction);
-        });
-    }
-
-    
 
     public addBlock = async (name: string) => {
         await this._updateSettingsAndPersist(draft => {
@@ -449,8 +442,7 @@ export class AppStore {
             draft.inputSettings.overrides = draft.inputSettings.overrides.filter(o => o.themeId !== id);
         });
     }
-
-   
+    
     public upsertOverride = async (overrideData: Omit<ThemeOverride, 'id'>) => {
         await this._updateSettingsAndPersist(draft => {
             const index = draft.inputSettings.overrides.findIndex(o => o.blockId === overrideData.blockId && o.themeId === overrideData.themeId);
@@ -476,8 +468,20 @@ export class AppStore {
     }
 }
 
+// [修改] 加固 useStore Hook
 export function useStore<T>(selector: (state: AppState) => T): T {
-    const store = AppStore.instance;
+    const store = appStore;
+
+    // [新增] 安全保护：如果 store 尚未注册，返回一个从默认状态派生出的安全值
+    if (!store) {
+        const safeFallbackState: AppState = {
+            settings: DEFAULT_SETTINGS,
+            timers: [],
+            activeTimer: undefined,
+        };
+        console.warn("useStore called before AppStore was registered. Returning a safe fallback state.");
+        return selector(safeFallbackState);
+    }
 
     const getSnapshot = useCallback(() => JSON.stringify(selector(store.getState())), [store, selector]);
 

@@ -1,17 +1,20 @@
 // src/features/settings/index.ts
-import type { App } from 'obsidian'; // [新增] 导入 App 类型
-import type { ThinkPlugin } from '../../main'; // [新增] 导入 ThinkPlugin 类型
+import { App } from 'obsidian';
+import type { ThinkPlugin } from '../../main';
 import { SettingsTab } from './ui/SettingsTab';
+import { AppStore } from '@state/AppStore'; // [新增]
 
-// [新增] 定义 Settings 功能的依赖项
+// [修改] 依赖项接口
 export interface SettingsDependencies {
     app: App;
     plugin: ThinkPlugin;
+    appStore: AppStore; // 新增
 }
 
 /**
- * [修改] setup 函数接收明确的依赖对象
+ * [修改] setup 函数现在接收 appStore
  */
 export function setup(deps: SettingsDependencies): void {
+    // SettingsTab 构造函数不变，它可以通过 plugin 实例访问到 appStore
     deps.plugin.addSettingTab(new SettingsTab(deps.app, deps.plugin));
 }
