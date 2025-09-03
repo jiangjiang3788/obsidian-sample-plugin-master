@@ -4,24 +4,26 @@ import { h } from 'preact';
 import { useRef, useCallback } from 'preact/hooks';
 import { useStore } from '@state/AppStore';
 import { usePersistentState } from '@shared/hooks/usePersistentState';
-import { Box, Typography, IconButton, Tooltip, Paper, Stack, Button, Divider } from '@mui/material';
+import { Box, Typography, Button, Paper, Stack, Tooltip } from '@mui/material';
 import DragIndicatorIcon from '@mui/icons-material/DragIndicator';
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 import type { ActionService } from '@core/services/ActionService';
+import type { TimerService } from '@core/services/TimerService'; // [新增]
+import type { DataStore } from '@core/services/dataStore'; // [新增]
 import { TimerRow } from './TimerRow';
+import { App } from 'obsidian'; // [新增]
+import { QuickInputModal } from '@features/quick-input/ui/QuickInputModal'; // [新增]
 
 interface TimerViewProps {
+    app: App; // [新增]
     actionService: ActionService;
+    timerService: TimerService; // [新增]
+    dataStore: DataStore;     // [新增]
 }
 
-/**
- * 全局悬浮、可拖拽的计时器面板UI组件 (多任务版本)。
- */
-export function TimerView({ actionService }: TimerViewProps) {
-    // 订阅完整的计时器列表
+export function TimerView({ app, actionService, timerService, dataStore }: TimerViewProps) {
     const timers = useStore(state => state.timers);
     
-    // 位置记忆和拖拽逻辑保持不变
     const [position, setPosition] = usePersistentState('think-timer-position', { x: window.innerWidth - 350, y: 100 });
     const dragStartPos = useRef({ x: 0, y: 0, panelX: 0, panelY: 0 });
 
@@ -42,6 +44,15 @@ export function TimerView({ actionService }: TimerViewProps) {
         window.removeEventListener('mouseup', onDragEnd);
     }, []);
 
+    // [新增] 处理 "新任务" 按钮点击事件
+    const handleNewTask = () => {
+        const result = actionService.getQuickInputConfigForNewTimer();
+        if (result) {
+            const { config, onSave } = result;
+            new QuickInputModal(app, config.blockId, config.context, undefined, onSave).open();
+        }
+    };
+
     return (
         <Paper 
             elevation={4}
@@ -55,7 +66,6 @@ export function TimerView({ actionService }: TimerViewProps) {
             }}
         >
             <Stack>
-                {/* 顶部栏：标题、拖拽手柄和新增按钮 */}
                 <Box sx={{ display: 'flex', alignItems: 'center', p: '4px 8px', borderBottom: '1px solid', borderColor: 'divider' }}>
                     <Box onMouseDown={onDragStart} sx={{ cursor: 'move', display: 'flex', alignItems: 'center' }}>
                         <DragIndicatorIcon sx={{ color: 'text.disabled', fontSize: '1.2rem' }} />
@@ -65,18 +75,25 @@ export function TimerView({ actionService }: TimerViewProps) {
                         <Button
                             size="small"
                             startIcon={<AddCircleOutlineIcon />}
-                            onClick={() => actionService.openNewTaskForTimer()}
+                            onClick={handleNewTask} // [修改] 调用新的处理函数
                         >
                             新任务
                         </Button>
                     </Tooltip>
                 </Box>
                 
-                {/* 任务列表 */}
                 <Stack spacing={1} sx={{ p: '8px', maxHeight: '400px', overflowY: 'auto' }}>
                     {timers.length > 0 ? (
                         timers.map(timer => (
-                            <TimerRow key={timer.id} timer={timer} actionService={actionService} />
+                            // [修改] 将所有需要的实例通过 props 传递给 TimerRow
+                            <TimerRow 
+                                key={timer.id} 
+                                timer={timer} 
+                                actionService={actionService} 
+                                timerService={timerService}
+                                dataStore={dataStore}
+                                app={app}
+                            />
                         ))
                     ) : (
                         <Typography variant="body2" color="text.secondary" sx={{ textAlign: 'center', p: 2 }}>

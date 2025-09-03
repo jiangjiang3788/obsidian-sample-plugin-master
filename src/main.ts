@@ -3,6 +3,7 @@ import { App, Plugin } from 'obsidian';
 import { ObsidianPlatform } from '@platform/obsidian';
 import { DataStore } from '@core/services/dataStore';
 import { AppStore } from '@state/AppStore';
+import { registerStore } from '@state/storeRegistry';
 import { RendererService } from '@core/services/RendererService';
 import { ActionService } from '@core/services/ActionService';
 import { TimerStateService } from '@core/services/TimerStateService';
@@ -14,35 +15,41 @@ import { ThinkSettings, DEFAULT_SETTINGS } from '@core/domain/schema';
 import { STYLE_TAG_ID } from '@core/domain/constants';
 import { GLOBAL_CSS } from '@features/dashboard/styles/global';
 import { InputService } from '@core/services/inputService';
+import { TaskService } from '@core/services/taskService';
+import { TimerService } from '@core/services/TimerService';
 
 console.log(`[ThinkPlugin] main.js 文件已加载，版本时间: ${new Date().toLocaleTimeString()}`);
-
-export const DEBUG_MODE = false;
 
 export default class ThinkPlugin extends Plugin {
     platform!: ObsidianPlatform;
     dataStore!: DataStore;
     appStore!: AppStore;
-    rendererService!: RendererService;
+    inputService!: InputService;
+    taskService!: TaskService;
+    timerService!: TimerService;
     actionService!: ActionService;
+    rendererService!: RendererService;
     timerStateService!: TimerStateService;
     timerWidget!: FloatingTimerWidget;
-    inputService!: InputService;
 
     async onload(): Promise<void> {
         const settings = await this.loadSettings();
         this.injectGlobalCss();
 
+        // --- 服务实例化与依赖注入 ---
         this.platform = new ObsidianPlatform(this.app);
         this.dataStore = new DataStore(this.platform);
-        this.appStore = AppStore.instance;
-        this.appStore.init(this, settings);
-        this.timerStateService = new TimerStateService(this.app);
-        this.inputService = new InputService(this.app);
-        this.actionService = new ActionService(this.app, this.dataStore, this.appStore, this.inputService);
         
-        // [修改] 实例化 RendererService 时，将 actionService 注入
+        this.appStore = new AppStore();
+        this.appStore.init(this, settings);
+        registerStore(this.appStore);
+
+        this.inputService = new InputService(this.app);
+        this.taskService = new TaskService(this.dataStore);
+        this.timerService = new TimerService(this.appStore, this.dataStore, this.taskService);
+        this.actionService = new ActionService(this.app, this.dataStore, this.appStore, this.inputService, this.timerService);
         this.rendererService = new RendererService(this, this.dataStore, this.appStore, this.actionService);
+        this.timerStateService = new TimerStateService(this.app);
         
         this.timerWidget = new FloatingTimerWidget(this);
         this.timerWidget.load();
@@ -53,6 +60,7 @@ export default class ThinkPlugin extends Plugin {
 
         await this.dataStore.initialScan();
 
+        // --- 功能模块设置 (显式依赖注入) ---
         DashboardFeature.setup?.({
             plugin: this,
             appStore: this.appStore,
@@ -61,11 +69,13 @@ export default class ThinkPlugin extends Plugin {
             actionService: this.actionService
         });
         QuickInputFeature.setup?.({
-            plugin: this
+            plugin: this,
+            appStore: this.appStore
         });
         SettingsFeature.setup?.({
             app: this.app,
             plugin: this,
+            appStore: this.appStore
         });
 
         this.addCommand({
@@ -89,6 +99,7 @@ export default class ThinkPlugin extends Plugin {
     private async loadSettings(): Promise<ThinkSettings> {
         const stored = (await this.loadData()) as Partial<ThinkSettings> | null;
         const merged = Object.assign({}, DEFAULT_SETTINGS, stored);
+
         merged.dataSources = merged.dataSources || [];
         merged.viewInstances = merged.viewInstances || [];
         merged.layouts = merged.layouts || [];

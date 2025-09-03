@@ -4,9 +4,6 @@ import { unmountComponentAtNode } from 'preact/compat';
 import type ThinkPlugin from '../../main';
 import { TimerView } from './ui/TimerView';
 
-/**
- * FloatingTimerWidget 负责管理浮动计时器UI的DOM容器和Preact组件的生命周期。
- */
 export class FloatingTimerWidget {
     private plugin: ThinkPlugin;
     private containerEl: HTMLElement | null = null;
@@ -16,10 +13,8 @@ export class FloatingTimerWidget {
     }
 
     public load() {
-        // 1. 创建一个 div 作为 Preact 组件的挂载点
         this.containerEl = document.createElement('div');
         this.containerEl.id = 'think-plugin-floating-timer-container';
-        // 2. 将其附加到 document.body
         document.body.appendChild(this.containerEl);
 
         this.render();
@@ -27,20 +22,24 @@ export class FloatingTimerWidget {
 
     public unload() {
         if (this.containerEl) {
-            // 从DOM中卸载Preact组件
             unmountComponentAtNode(this.containerEl);
-            // 移除DOM容器
             this.containerEl.remove();
         }
     }
 
     private render() {
-        if (!this.containerEl || !this.plugin.actionService) {
+        // [修改] 增加检查，确保所有需要的服务都已加载
+        if (!this.containerEl || !this.plugin.actionService || !this.plugin.timerService || !this.plugin.dataStore) {
             return;
         }
 
-        // 渲染 TimerView 组件到我们创建的容器中
-        const component = h(TimerView, { actionService: this.plugin.actionService });
+        // [修改] 将所有需要的服务实例作为 props 传递给 TimerView
+        const component = h(TimerView, { 
+            app: this.plugin.app,
+            actionService: this.plugin.actionService,
+            timerService: this.plugin.timerService,
+            dataStore: this.plugin.dataStore,
+        });
         render(component, this.containerEl);
     }
 }

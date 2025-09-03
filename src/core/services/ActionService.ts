@@ -7,22 +7,30 @@ import type { Item, ViewInstance } from '@core/domain/schema';
 import { DataStore } from './dataStore';
 import { TimerService } from './TimerService';
 import { InputService } from './inputService';
-import type { QuickInputConfig } from './types'; // [新增] 导入新的配置类型
+import type { QuickInputConfig } from './types';
 
 export class ActionService {
     private app: App;
     private appStore: AppStore;
     private dataStore: DataStore;
     private inputService: InputService;
+    private timerService: TimerService; // [新增] 声明 timerService 依赖
 
-    constructor(app: App, dataStore: DataStore, appStore: AppStore, inputService: InputService) {
+    // [修改] 构造函数现在接收所有依赖项
+    constructor(
+        app: App, 
+        dataStore: DataStore, 
+        appStore: AppStore, 
+        inputService: InputService,
+        timerService: TimerService // [新增] 注入 timerService
+    ) {
         this.app = app;
         this.dataStore = dataStore;
         this.appStore = appStore;
         this.inputService = inputService;
+        this.timerService = timerService; // [新增] 保存 timerService 实例
     }
 
-    // [修改] 方法重命名，并且不再创建Modal，而是返回配置对象或null
     public getQuickInputConfigForView(viewInstance: ViewInstance, dateContext: dayjs.Dayjs, periodContext: string): QuickInputConfig | null {
         const settings = this.appStore.getSettings();
         const dataSource = settings.dataSources.find(ds => ds.id === viewInstance.dataSourceId);
@@ -53,7 +61,6 @@ export class ActionService {
             '周期': periodContext,
         };
         
-        // [修改] 返回配置对象，而不是打开Modal
         return {
             blockId: targetBlock.id,
             context: context,
@@ -61,7 +68,6 @@ export class ActionService {
         };
     }
 
-    // [修改] 方法重命名，并返回配置对象或null
     public getQuickInputConfigForTaskEdit(taskId: string): QuickInputConfig | null {
         const item = this.dataStore.queryItems().find(i => i.id === taskId);
         if (!item) {
@@ -88,28 +94,32 @@ export class ActionService {
         if (!context.title && !context.标题) context['标题'] = item.title;
         if (!context.tags && !context.标签) context['标签'] = item.tags.join(', ');
 
-        // [修改] 返回配置对象
         return {
             blockId: targetBlock.id,
             context: context
         };
     }
-
+    
     // [修改] 这个方法现在也只返回配置，并且需要一个 onSave 回调来处理后续逻辑
-    public getQuickInputConfigForNewTimer(onSave: (data: QuickInputSaveData) => void): { config: QuickInputConfig, onSave: (data: QuickInputSaveData) => void } | null {
+    public getQuickInputConfigForNewTimer(): { config: QuickInputConfig, onSave: (data: QuickInputSaveData) => void } | null {
         const blocks = this.appStore.getSettings().inputSettings.blocks;
-        if (!blocks || blocks.length === 0) {
+        if (!blocks || !blocks.length === 0) {
             new Notice('没有可用的Block模板，请先在设置中创建一个。');
             return null;
         }
-
+    
         const defaultBlockId = blocks[0].id;
-        
+    
+        // [修改] onSave 回调现在调用注入的 timerService 实例
+        const onSaveCallback = (data: QuickInputSaveData) => {
+            this.timerService.createNewTaskAndStart(data, this.app, this.inputService);
+        };
+    
         return {
             config: {
                 blockId: defaultBlockId,
             },
-            onSave: onSave, // 将 onSave 回调也一并返回
+            onSave: onSaveCallback, // 将 onSave 回调也一并返回
         };
     }
 }

@@ -1,17 +1,23 @@
 // src/core/services/TimerService.ts
 import { AppStore } from '@state/AppStore';
 import { TaskService } from '@core/services/taskService';
-import { Notice, App } from 'obsidian'; // [新增] 导入 App
+import { Notice, App } from 'obsidian';
 import { DataStore } from './dataStore';
 import { InputService } from './inputService';
 import type { QuickInputSaveData } from '@features/quick-input/ui/QuickInputModal';
 
+// [修改] TimerService 现在是一个普通类
 export class TimerService {
+    // [修改] 通过构造函数注入所有依赖
+    constructor(
+        private appStore: AppStore,
+        private dataStore: DataStore,
+        private taskService: TaskService
+    ) {}
 
-    static async startOrResume(taskId: string): Promise<void> {
-        // ... 此方法无变化
-        const store = AppStore.instance;
-        const timers = store.getState().timers;
+    // [修改] 所有方法都变为实例方法
+    public async startOrResume(taskId: string): Promise<void> {
+        const timers = this.appStore.getState().timers;
         
         for (const timer of timers) {
             if (timer.status === 'running') {
@@ -23,12 +29,12 @@ export class TimerService {
         if (existingTimer && existingTimer.status === 'paused') {
             await this.resume(existingTimer.id);
         } else if (!existingTimer) {
-            const taskItem = DataStore.instance.queryItems().find(i => i.id === taskId);
+            const taskItem = this.dataStore.queryItems().find(i => i.id === taskId);
             if (!taskItem) {
                 new Notice('找不到要计时的任务');
                 return;
             }
-            await store.addTimer({
+            await this.appStore.addTimer({
                 taskId,
                 startTime: Date.now(),
                 elapsedSeconds: 0,
@@ -37,14 +43,12 @@ export class TimerService {
         }
     }
 
-    static async pause(timerId: string): Promise<void> {
-        // ... 此方法无变化
-        const store = AppStore.instance;
-        const timer = store.getState().timers.find(t => t.id === timerId);
+    public async pause(timerId: string): Promise<void> {
+        const timer = this.appStore.getState().timers.find(t => t.id === timerId);
 
         if (timer && timer.status === 'running') {
             const elapsed = (Date.now() - timer.startTime) / 1000;
-            await store.updateTimer({
+            await this.appStore.updateTimer({
                 ...timer,
                 elapsedSeconds: timer.elapsedSeconds + elapsed,
                 status: 'paused',
@@ -52,10 +56,8 @@ export class TimerService {
         }
     }
 
-    static async resume(timerId: string): Promise<void> {
-        // ... 此方法无变化
-        const store = AppStore.instance;
-        const timers = store.getState().timers;
+    public async resume(timerId: string): Promise<void> {
+        const timers = this.appStore.getState().timers;
 
         for (const t of timers) {
             if (t.id !== timerId && t.status === 'running') {
@@ -65,7 +67,7 @@ export class TimerService {
 
         const timerToResume = timers.find(t => t.id === timerId);
         if (timerToResume && timerToResume.status === 'paused') {
-            await store.updateTimer({
+            await this.appStore.updateTimer({
                 ...timerToResume,
                 startTime: Date.now(),
                 status: 'running',
@@ -73,11 +75,9 @@ export class TimerService {
         }
     }
 
-    static async stopAndApply(timerId: string): Promise<void> {
-        // ... 此方法无变化
-        const store = AppStore.instance;
-        const timer = store.getState().timers.find(t => t.id === timerId);
-
+    // [修正] 此方法现在正确使用注入的服务实例
+    public async stopAndApply(timerId: string): Promise<void> {
+        const timer = this.appStore.getState().timers.find(t => t.id === timerId);
         if (!timer) return;
 
         let totalSeconds = timer.elapsedSeconds;
@@ -88,19 +88,19 @@ export class TimerService {
         const totalMinutes = Math.ceil(totalSeconds / 60);
 
         try {
-            const taskItem = DataStore.instance.queryItems().find(i => i.id === timer.taskId);
+            const taskItem = this.dataStore.queryItems().find(i => i.id === timer.taskId);
             if (!taskItem) {
                 new Notice(`错误：找不到原始任务，可能已被移动或删除。计时时长无法保存。`);
-                await store.removeTimer(timerId);
+                await this.appStore.removeTimer(timerId); // 使用 this.appStore
                 return;
             }
-            const currentLine = await TaskService.getTaskLine(timer.taskId);
+            const currentLine = await this.taskService.getTaskLine(timer.taskId); // 使用 this.taskService
 
             if (currentLine && /^\s*-\s*\[ \]\s*/.test(currentLine)) {
-                await TaskService.completeTask(timer.taskId, { duration: totalMinutes });
+                await this.taskService.completeTask(timer.taskId, { duration: totalMinutes }); // 使用 this.taskService
                 new Notice(`任务已完成，时长 ${totalMinutes} 分钟已记录。`);
             } else {
-                await TaskService.updateTaskTime(timer.taskId, { duration: totalMinutes });
+                await this.taskService.updateTaskTime(timer.taskId, { duration: totalMinutes }); // 使用 this.taskService
                 new Notice(`任务时长已更新为 ${totalMinutes} 分钟。`);
             }
 
@@ -109,24 +109,20 @@ export class TimerService {
             console.error("TimerService Error:", e);
         }
         
-        await store.removeTimer(timerId);
+        await this.appStore.removeTimer(timerId); // 使用 this.appStore
     }
 
-    static async cancel(timerId: string): Promise<void> {
-        // ... 此方法无变化
-        const store = AppStore.instance;
-        await store.removeTimer(timerId);
+    // [修正] 此方法现在是实例方法
+    public async cancel(timerId: string): Promise<void> {
+        await this.appStore.removeTimer(timerId);
         new Notice('计时任务已取消。');
     }
-
-    // [修改] 此方法现在接收一个 InputService 实例作为参数，而不是自己创建
-    static async createNewTaskAndStart(data: QuickInputSaveData, app: App, inputService: InputService): Promise<void> {
-        // [移除] 不再在内部创建 InputService 实例
-        // const inputService = new InputService(app); 
+    
+    // [修正] 此方法现在是实例方法，并正确使用注入的服务
+    public async createNewTaskAndStart(data: QuickInputSaveData, app: App, inputService: InputService): Promise<void> {
         const { template, formData, theme } = data;
 
         try {
-            // [无变化] 后续逻辑保持不变，只是现在使用的 inputService 是从外部传入的
             const targetFilePath = inputService.renderTemplate(template.targetFile, { ...formData, theme });
             if (!targetFilePath) throw new Error('目标文件路径无效');
             
@@ -139,7 +135,7 @@ export class TimerService {
             
             await app.vault.modify(file, newContent);
 
-            await DataStore.instance.scanFile(file);
+            await this.dataStore.scanFile(file); // 使用 this.dataStore
 
             const newLines = outputContent.split('\n').length;
             const totalLines = newContent.split('\n').length;
@@ -147,10 +143,10 @@ export class TimerService {
             for (let i = 0; i < newLines + 2; i++) {
                 const lineNumber = totalLines - i;
                 const taskId = `${targetFilePath}#${lineNumber}`;
-                const newItem = DataStore.instance.queryItems().find(item => item.id === taskId);
+                const newItem = this.dataStore.queryItems().find(item => item.id === taskId); // 使用 this.dataStore
                 
                 if (newItem) {
-                    this.startOrResume(newItem.id);
+                    this.startOrResume(newItem.id); // 'this' 现在是有效的
                     new Notice('新任务已创建并开始计时！');
                     return;
                 }

@@ -1,4 +1,6 @@
 // src/features/dashboard/ui/TableView.tsx
+
+
 /** @jsxImportSource preact */
 import { h } from 'preact';
 import { Item, readField } from '@core/domain/schema';
