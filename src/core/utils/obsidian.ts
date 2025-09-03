@@ -11,13 +11,15 @@ type Ref =
 // [修改] 函数现在接收 app 实例作为参数，并增加了详细的调试日志
 export function makeObsUri(ref: Ref, app: App): string {
     // --- [调试代码开始] ---
-    console.log(' ');
+    console.log('[Think插件调试] makeObsUri 被调用，传入参数:', { ref: JSON.parse(JSON.stringify(ref)), app });
 
     // 核心安全检查：这是捕获问题的关键
     if (!app || !app.vault) {
         console.error(
-             ' ',
-            // 使用 JSON 序列化来深拷贝和清晰打印
+            '[Think插件调试] 致命错误：makeObsUri 函数在被调用时，app 参数无效!',
+            '这几乎可以肯定是某个UI视图组件（如 TableView, BlockView 等）没有正确地将 app 实例传递下来。',
+            '导致问题的项目数据 (ref) 如下，请根据此数据找到渲染它的组件:',
+            JSON.parse(JSON.stringify(ref)) // 使用 JSON 序列化来深拷贝和清晰打印
         );
         // 返回一个无害的链接以防止UI彻底崩溃，方便继续调试
         return '#error-app-not-provided-see-console';
