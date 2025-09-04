@@ -1,22 +1,16 @@
 // src/main.ts
 import { App, Plugin } from 'obsidian';
 import { ObsidianPlatform } from '@platform/obsidian';
-import { DataStore } from '@core/services/dataStore';
+import { DataStore, RendererService, ActionService, TimerStateService, InputService, TaskService, TimerService } from '@core/services';
 import { AppStore } from '@state/AppStore';
 import { registerStore } from '@state/storeRegistry';
-import { RendererService } from '@core/services/RendererService';
-import { ActionService } from '@core/services/ActionService';
-import { TimerStateService } from '@core/services/TimerStateService';
 import { FloatingTimerWidget } from '@features/timer/FloatingTimerWidget';
 import * as DashboardFeature from '@features/dashboard';
 import * as QuickInputFeature from '@features/quick-input';
 import * as SettingsFeature from '@features/settings';
-import { ThinkSettings, DEFAULT_SETTINGS } from '@core/domain/schema';
-import { STYLE_TAG_ID } from '@core/domain/constants';
+import { ThinkSettings, DEFAULT_SETTINGS, STYLE_TAG_ID } from '@core/domain'; // 统一从 @core/domain 导入
 import { GLOBAL_CSS } from '@features/dashboard/styles/global';
-import { InputService } from '@core/services/inputService';
-import { TaskService } from '@core/services/taskService';
-import { TimerService } from '@core/services/TimerService';
+
 
 console.log(`[ThinkPlugin] main.js 文件已加载，版本时间: ${new Date().toLocaleTimeString()}`);
 
