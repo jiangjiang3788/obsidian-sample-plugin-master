@@ -1,31 +1,27 @@
 // src/features/dashboard/ui/TableView.tsx
 
-
 /** @jsxImportSource preact */
 import { h } from 'preact';
 import { Item, readField } from '@core/domain/schema';
 import { makeObsUri } from '@core/utils/obsidian';
 import { EMPTY_LABEL } from '@core/domain/constants';
 import { TaskCheckbox } from '@shared/components/TaskCheckbox';
-// [移除] 不再需要直接依赖 DataStore
-// import { DataStore } from '@core/services/dataStore';
 import { TaskSendToTimerButton } from '@shared/components/TaskSendToTimerButton';
+import { App } from 'obsidian'; // [新增] 导入 App 类型
 
-// [修改] TableViewProps 接口增加了 onMarkDone
+// [修改] 接口现在需要 app 实例
 interface TableViewProps {
     items: Item[];
     rowField: string;
     colField: string;
-    onMarkDone: (id: string) => void; // 新增 prop
+    onMarkDone: (id: string) => void;
+    app: App;
 }
 
 const isDone = (k?: string) => /\/(done|cancelled)$/i.test(k || '');
 
-export function TableView({ items, rowField, colField, onMarkDone }: TableViewProps) {
-    // [移除] 不再需要在组件内部定义 onMarkItemDone
-    // const onMarkItemDone = (itemId: string) => {
-    //     DataStore.instance.markItemDone(itemId);
-    // };
+// [修改] 函数签名现在接收 app
+export function TableView({ items, rowField, colField, onMarkDone, app }: TableViewProps) {
 
     if (!rowField || !colField) {
         return <div>（表格视图需要配置“行字段”和“列字段”）</div>;
@@ -51,23 +47,25 @@ export function TableView({ items, rowField, colField, onMarkDone }: TableViewPr
     function renderCellItem(item: Item) {
         if (item.type === 'task') {
             const done = isDone(item.categoryKey);
+            // [重构] 采用与 BlockView 统一的渲染逻辑，以实现视图间的一致性
             return (
                 <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                     <TaskCheckbox
                         done={done}
-                        // [修改] 这里直接调用从 props 传入的 onMarkDone
                         onMarkDone={() => onMarkDone(item.id)}
                     />
                     {item.icon && <span class="task-icon">{item.icon}</span>}
-                    <a href={makeObsUri(item)} target="_blank" rel="noopener" class={done ? 'task-done' : ''} style={{ flexGrow: 1, minWidth: 0, textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>
+                    {/* [修复] 调用 makeObsUri 时传入 app 实例 */}
+                    <a href={makeObsUri(item, app)} target="_blank" rel="noopener" class={done ? 'task-done' : ''} style={{ flexGrow: 1, minWidth: 0, textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>
                         {item.title}
                     </a>
                     {!done && <TaskSendToTimerButton taskId={item.id} />}
                 </span>
             );
         }
+        // [修复] Block 类型的链接也需要 app 实例
         return (
-            <a href={makeObsUri(item)} target="_blank" rel="noopener">
+            <a href={makeObsUri(item, app)} target="_blank" rel="noopener">
                 {item.title}
             </a>
         );

@@ -15,9 +15,6 @@ interface ActiveLayout {
 }
 
 export class RendererService {
-    // [移除] RendererService 不再需要是单例
-    // static instance: RendererService;
-
     // [修改] 构造函数现在接收 TaskService
     constructor(
         private plugin: ThinkPlugin,
