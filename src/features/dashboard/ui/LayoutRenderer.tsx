@@ -16,20 +16,22 @@ import type { TaskService } from '@core/services/taskService'; // [新增] 导�
 import { useViewData } from '../hooks/useViewData';
 import { QuickInputModal } from '@features/quick-input/ui/QuickInputModal';
 
-// [修改] Props 接口现在需要接收 taskService
+// [修改] Props 接口现在需要接收 plugin 实例和 taskService
 interface Props {
     layout: Layout;
     dataStore: DataStore;
-    plugin: ThinkPlugin;
+    plugin: ThinkPlugin; // [修改] 接收完整的 plugin 实例，它内部包含了 app
     actionService: ActionService;
     taskService: TaskService; // [新增]
 }
 
-// [修改] 函数签名解构出 taskService
+// [修改] 函数签名解构出 plugin 和 taskService
 export function LayoutRenderer({ layout, dataStore, plugin, actionService, taskService }: Props) {
     const allViews = useStore(state => state.settings.viewInstances);
     const allDataSources = useStore(state => state.settings.dataSources);
     
+    // ... (内部 state 和 hooks 逻辑不变)
+
     const getInitialDate = () => {
         if (layout.isOverviewMode) {
             return layout.initialDate ? dayjs(layout.initialDate) : dayjs();
@@ -49,20 +51,17 @@ export function LayoutRenderer({ layout, dataStore, plugin, actionService, taskS
     const handleOverviewDateChange = (newDate: dayjs.Dayjs) => {
         const newDateString = newDate.format('YYYY-MM-DD');
         setLayoutDate(newDate);
-        // [修改] 直接使用 appStore 实例，而不是单例
         plugin.appStore.updateLayout(layout.id, { initialDate: newDateString });
     };
 
     const handleQuickInputAction = (viewInstance: ViewInstance) => {
         const config = actionService.getQuickInputConfigForView(viewInstance, layoutDate, layoutView);
         if (config) {
-            // [修改] 传递 dataStore 和 appStore 实例
             new QuickInputModal(plugin.app, config.blockId, config.context, config.themeId, undefined, dataStore, plugin.appStore).open();
         }
     };
     
     const handleMarkItemDone = useCallback((itemId: string) => {
-        // [修改] markItemDone 现在由 taskService 处理，dataStore 仅负责查询
         taskService.completeTask(itemId);
     }, [taskService]);
 
@@ -100,9 +99,9 @@ export function LayoutRenderer({ layout, dataStore, plugin, actionService, taskS
         const ViewComponent = (ViewComponents as any)[viewInstance.viewType];
         if (!ViewComponent) return <div class="think-module">未知视图: {viewInstance.viewType}</div>;
 
-        // [修改] 将 taskService 作为 prop 传递给所有视图组件
+        // [修改] 将 app 和 taskService 作为 prop 传递给所有视图组件
         const viewProps: any = {
-            app: plugin.app,
+            app: plugin.app, // [新增] 明确传递 app 实例
             items: viewItems,
             dateRange: dateRangeForView, 
             module: viewInstance,
@@ -112,7 +111,7 @@ export function LayoutRenderer({ layout, dataStore, plugin, actionService, taskS
             fields: viewInstance.fields,
             onMarkDone: handleMarkItemDone,
             actionService: actionService,
-            taskService: taskService, // [新增]
+            taskService: taskService, // [新增] 传递 taskService
         };
 
         return (
