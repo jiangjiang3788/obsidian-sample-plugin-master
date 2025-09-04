@@ -4,7 +4,7 @@ import { h } from 'preact';
 import { useMemo } from 'preact/hooks';
 import type { ThemeDefinition } from '@core/domain/schema';
 import { getSimplifiedThemeDisplay } from '@core/utils/themeUtils';
-import { getCategoryColor } from '@core/domain/categoryColorMap';
+import { getCategoryColor } from '@core/domain';
 
 interface TagsRendererProps {
     tags: string[];

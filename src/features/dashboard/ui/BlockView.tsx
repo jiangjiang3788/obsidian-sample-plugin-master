@@ -1,7 +1,8 @@
 // src/features/dashboard/ui/BlockView.tsx
 /** @jsxImportSource preact */
 import { h } from 'preact';
-import { Item, readField, ThemeDefinition } from '@core/domain/schema';
+// [修复] 将导入路径统一到 @core/domain，并加入 getCategoryColor
+import { Item, readField, ThemeDefinition, getCategoryColor } from '@core/domain'; 
 import { makeObsUri } from '@core/utils/obsidian';
 import { TaskCheckbox } from '@shared/components/TaskCheckbox';
 import { getFieldLabel } from '@core/domain/fields';
@@ -9,7 +10,6 @@ import { useRef, useState, useEffect } from 'preact/hooks';
 import { App } from 'obsidian';
 import { useStore } from '@state/AppStore';
 import { TagsRenderer } from '@shared/components/TagsRenderer';
-import { getCategoryColor } from '@core/domain/categoryColorMap';
 import { TaskSendToTimerButton } from '@shared/components/TaskSendToTimerButton';
 
 // FieldRenderer 内部无变化
@@ -89,7 +89,7 @@ const BlockItem = ({ item, fields, isNarrow, app, allThemes }: { item: Item; fie
         <div class={`bv-item bv-item--block ${narrowClass}`}>
             <div class="bv-block-metadata">
                 <div class="bv-fields-list-wrapper">
-                       {metadataFields.map(fieldKey => <FieldRenderer key={fieldKey} item={item} fieldKey={fieldKey} app={app} allThemes={allThemes} />)}
+                        {metadataFields.map(fieldKey => <FieldRenderer key={fieldKey} item={item} fieldKey={fieldKey} app={app} allThemes={allThemes} />)}
                 </div>
             </div>
             <div class="bv-block-main">
