@@ -1,27 +1,29 @@
 // src/core/services/RendererService.ts
-
+import { singleton } from 'tsyringe';
 import { h, render } from 'preact';
 import { Layout } from '@core/domain/schema';
 import { DataStore } from '@core/services/dataStore';
 import { AppStore } from '@state/AppStore';
 import { LayoutRenderer } from '@features/dashboard/ui/LayoutRenderer';
-import type ThinkPlugin from '../../main';
+import { App } from 'obsidian'; // [核心修改 ①] 导入 App 类型
 import type { ActionService } from './ActionService';
-import type { TaskService } from './taskService'; // [新增] 导入 TaskService 类型
+import type { TaskService } from './taskService';
 
 interface ActiveLayout {
     container: HTMLElement;
     layoutName: string;
 }
 
+@singleton()
 export class RendererService {
-    // [修改] 构造函数现在接收 TaskService
+    // [核心修改 ②] 构造函数不再注入 ThinkPlugin，而是直接注入 App
+    // 这就打破了 ThinkPlugin -> RendererService -> ThinkPlugin 的循环依赖
     constructor(
-        private plugin: ThinkPlugin,
+        private app: App,
         private dataStore: DataStore,
         private appStore: AppStore,
         private actionService: ActionService,
-        private taskService: TaskService // [新增] 依赖 taskService
+        private taskService: TaskService
     ) {
         this.appStore.subscribe(() => this.rerenderAll());
     }
@@ -31,14 +33,13 @@ export class RendererService {
     public register(container: HTMLElement, layout: Layout): void {
         this.unregister(container);
 
-        // [修改] 渲染组件时，将 taskService 传递下去
         render(
             h(LayoutRenderer, {
                 layout: layout,
                 dataStore: this.dataStore,
-                plugin: this.plugin,
+                app: this.app, // [核心修改 ③] 直接传递 app 实例
                 actionService: this.actionService,
-                taskService: this.taskService, // [新增] 传递 taskService
+                taskService: this.taskService,
             }),
             container,
         );
@@ -67,14 +68,13 @@ export class RendererService {
             const newLayoutConfig = latestSettings.layouts.find(l => l.name === layoutName);
 
             if (newLayoutConfig) {
-                // [修改] 重新渲染时，也要将 taskService 传递下去
                 render(
                     h(LayoutRenderer, {
                         layout: newLayoutConfig,
                         dataStore: this.dataStore,
-                        plugin: this.plugin,
+                        app: this.app, // [核心修改 ④] 直接传递 app 实例
                         actionService: this.actionService,
-                        taskService: this.taskService, // [新增] 传递 taskService
+                        taskService: this.taskService,
                     }),
                     container,
                 );

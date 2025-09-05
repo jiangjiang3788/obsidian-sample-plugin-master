@@ -1,15 +1,25 @@
 // src/core/services/inputService.ts
+import { singleton } from 'tsyringe';
 import { App, TFile, TFolder, moment } from 'obsidian';
 import type { BlockTemplate, ThemeDefinition } from '@core/domain/schema';
 
+@singleton()
 export class InputService {
-    constructor(private app: App) { }
+    private app!: App;
 
-    // [重构] 移除了此函数中所有的 [Think插件调试] console.log 语句
-    private renderTemplate(templateString: string, data: Record<string, any>): string {
+    // [核心修复] 构造函数变为空
+    constructor() { }
+
+    // [核心修复] 新增 init 方法
+    public init(app: App) {
+        this.app = app;
+    }
+
+    // ... 所有其他方法保持不变 ...
+    public renderTemplate(templateString: string, data: Record<string, any>): string {
         return templateString.replace(/\{\{\s*([^}]+?)\s*\}\}/g, (_, placeholder) => {
             const key = placeholder.trim();
-            let result = ''; // 默认返回空字符串
+            let result = '';
 
             try {
                 if (key === 'block') {
@@ -26,7 +36,7 @@ export class InputService {
                     const rootKey = keys[0];
                     
                     if (!(rootKey in data)) {
-                        return ''; // 根键不存在，直接返回空
+                        return '';
                     }
 
                     let value: any = data[rootKey];
@@ -35,14 +45,13 @@ export class InputService {
                             if (value && typeof value === 'object' && keys[i] in value) {
                                 value = value[keys[i]];
                             } else {
-                                value = ''; // 路径无效
+                                value = '';
                                 break;
                             }
                         }
                     }
 
                     if (typeof value === 'object' && value !== null && 'label' in value) {
-                        // 如果是直接访问复杂对象 {{状态}}, 默认返回 label
                         result = String(value.label);
                     } else {
                         result = value !== null && value !== undefined ? String(value) : '';
@@ -51,7 +60,7 @@ export class InputService {
                 return result;
             } catch (e: any) {
                 console.error(`[ThinkPlugin] 解析模板变量 {{${key}}} 时发生错误:`, e);
-                return `(解析错误: ${key})`; // 保留错误提示，以防模板本身有问题
+                return `(解析错误: ${key})`;
             }
         });
     }
@@ -65,7 +74,6 @@ export class InputService {
             theme: theme ? { path: theme.path, icon: theme.icon || '' } : {}
         };
         
-        // [重构] 移除了此函数中所有的 [Think插件调试] console.log 语句
         const outputContent = this.renderTemplate(template.outputTemplate, renderData).trim();
         const targetFilePath = this.renderTemplate(template.targetFile, renderData).trim();
         const header = template.appendUnderHeader ? this.renderTemplate(template.appendUnderHeader, renderData) : null;
@@ -83,27 +91,8 @@ export class InputService {
         
         return targetFilePath;
     }
-
-    // ... 其余辅助函数保持不变 ...
-    private async ensureFolder(path: string): Promise<void> {
-        const segs = path.split('/').filter(Boolean);
-        let cur = '';
-        for (const seg of segs) {
-            cur = cur ? `${cur}/${seg}` : seg;
-            const af = this.app.vault.getAbstractFileByPath(cur);
-            if (!af) {
-                try {
-                    await this.app.vault.createFolder(cur);
-                } catch (e: any) {
-                    throw new Error(`创建文件夹 "${cur}" 失败。请检查路径是否有效或存在权限问题。原始错误: ${e.message}`);
-                }
-            } else if (af instanceof TFile) {
-                throw new Error(`路径冲突："${cur}" 是一个文件，无法在其下创建文件夹。`);
-            }
-        }
-    }
     
-    private async getOrCreateFile(fp: string): Promise<TFile> {
+    public async getOrCreateFile(fp: string): Promise<TFile> {
         let file = this.app.vault.getAbstractFileByPath(fp);
         if (file instanceof TFile) {
             return file;
@@ -126,6 +115,24 @@ export class InputService {
             } else {
                 console.error("ThinkPlugin: 文件创建失败，并且在捕获错误后仍无法找到该文件。", error);
                 throw new Error(`创建文件 "${fp}" 失败。原始错误: ${error.message}`);
+            }
+        }
+    }
+
+    private async ensureFolder(path: string): Promise<void> {
+        const segs = path.split('/').filter(Boolean);
+        let cur = '';
+        for (const seg of segs) {
+            cur = cur ? `${cur}/${seg}` : seg;
+            const af = this.app.vault.getAbstractFileByPath(cur);
+            if (!af) {
+                try {
+                    await this.app.vault.createFolder(cur);
+                } catch (e: any) {
+                    throw new Error(`创建文件夹 "${cur}" 失败。请检查路径是否有效或存在权限问题。原始错误: ${e.message}`);
+                }
+            } else if (af instanceof TFile) {
+                throw new Error(`路径冲突："${cur}" 是一个文件，无法在其下创建文件夹。`);
             }
         }
     }

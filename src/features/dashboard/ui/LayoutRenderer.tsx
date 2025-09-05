@@ -6,32 +6,32 @@ import { useState, useMemo, useEffect, useCallback } from 'preact/hooks';
 import { DataStore } from '@core/services/dataStore';
 import { Layout, ViewInstance } from '@core/domain/schema';
 import { ModulePanel } from './ModulePanel';
-import type ThinkPlugin from '../../../main';
 import { ViewComponents } from '@features/dashboard/ui';
 import { getDateRange, dayjs, formatDateForView } from '@core/utils/date';
-import { useStore, AppStore } from '@state/AppStore';
+import { useStore } from '@state/AppStore';
 import { TimeNavigator } from './TimeNavigator';
 import type { ActionService } from '@core/services/ActionService';
-import type { TaskService } from '@core/services/taskService'; // [新增] 导入 TaskService 类型
+import type { TaskService } from '@core/services/taskService';
 import { useViewData } from '../hooks/useViewData';
 import { QuickInputModal } from '@features/quick-input/ui/QuickInputModal';
+import { App } from 'obsidian'; // [核心修改 ①] 导入 App 类型
 
-// [修改] Props 接口现在需要接收 plugin 实例和 taskService
+// [核心修改 ②] Props 接口现在接收 app，而不是整个 plugin 实例
 interface Props {
     layout: Layout;
     dataStore: DataStore;
-    plugin: ThinkPlugin; // [修改] 接收完整的 plugin 实例，它内部包含了 app
+    app: App; // 修改这里
     actionService: ActionService;
-    taskService: TaskService; // [新增]
+    taskService: TaskService;
 }
 
-// [修改] 函数签名解构出 plugin 和 taskService
-export function LayoutRenderer({ layout, dataStore, plugin, actionService, taskService }: Props) {
+// [核心修改 ③] 函数签名解构出 app
+export function LayoutRenderer({ layout, dataStore, app, actionService, taskService }: Props) {
     const allViews = useStore(state => state.settings.viewInstances);
     const allDataSources = useStore(state => state.settings.dataSources);
+    const appStore = useStore(state => state); // 获取整个 AppStore 实例以便调用方法
     
     // ... (内部 state 和 hooks 逻辑不变)
-
     const getInitialDate = () => {
         if (layout.isOverviewMode) {
             return layout.initialDate ? dayjs(layout.initialDate) : dayjs();
@@ -51,13 +51,15 @@ export function LayoutRenderer({ layout, dataStore, plugin, actionService, taskS
     const handleOverviewDateChange = (newDate: dayjs.Dayjs) => {
         const newDateString = newDate.format('YYYY-MM-DD');
         setLayoutDate(newDate);
-        plugin.appStore.updateLayout(layout.id, { initialDate: newDateString });
+        // [核心修改 ④] 通过 appStore 实例调用方法
+        appStore.updateLayout(layout.id, { initialDate: newDateString });
     };
 
     const handleQuickInputAction = (viewInstance: ViewInstance) => {
         const config = actionService.getQuickInputConfigForView(viewInstance, layoutDate, layoutView);
         if (config) {
-            new QuickInputModal(plugin.app, config.blockId, config.context, config.themeId, undefined, dataStore, plugin.appStore).open();
+            // [核心修改 ⑤] 传递 app, dataStore 和 appStore 实例
+            new QuickInputModal(app, config.blockId, config.context, config.themeId, undefined, dataStore, appStore).open();
         }
     };
     
@@ -99,9 +101,9 @@ export function LayoutRenderer({ layout, dataStore, plugin, actionService, taskS
         const ViewComponent = (ViewComponents as any)[viewInstance.viewType];
         if (!ViewComponent) return <div class="think-module">未知视图: {viewInstance.viewType}</div>;
 
-        // [修改] 将 app 和 taskService 作为 prop 传递给所有视图组件
+        // [核心修改 ⑥] 将 app 作为 prop 传递给所有视图组件
         const viewProps: any = {
-            app: plugin.app, // [新增] 明确传递 app 实例
+            app: app, // 直接传递 app
             items: viewItems,
             dateRange: dateRangeForView, 
             module: viewInstance,
@@ -111,7 +113,7 @@ export function LayoutRenderer({ layout, dataStore, plugin, actionService, taskS
             fields: viewInstance.fields,
             onMarkDone: handleMarkItemDone,
             actionService: actionService,
-            taskService: taskService, // [新增] 传递 taskService
+            taskService: taskService,
         };
 
         return (
