@@ -1,4 +1,4 @@
-// src/core/services/ActionService.ts
+//src/core/services/ActionService.ts
 import { singleton } from 'tsyringe';
 import { App, Notice } from 'obsidian';
 import { AppStore } from '@state/AppStore';
@@ -13,22 +13,24 @@ import { QuickInputModal } from '@features/quick-input/ui/QuickInputModal';
 @singleton()
 export class ActionService {
     private app!: App;
+    private dataStore!: DataStore;
+    private appStore!: AppStore;
+    private inputService!: InputService;
+    private timerService!: TimerService;
 
-    // [核心修复] 构造函数不再依赖 App
-    constructor(
-        private dataStore: DataStore,
-        private appStore: AppStore,
-        private inputService: InputService,
-        private timerService: TimerService
-    ) {}
+    // [核心修复] 构造函数变为空
+    constructor() { }
 
-    // [核心修复] 新增 init 方法
-    public init(app: App) {
+    // [核心修复] 新增 init 方法用于注入所有依赖
+    public init(app: App, dataStore: DataStore, appStore: AppStore, inputService: InputService, timerService: TimerService) {
         this.app = app;
+        this.dataStore = dataStore;
+        this.appStore = appStore;
+        this.inputService = inputService;
+        this.timerService = timerService;
     }
 
     public getQuickInputConfigForView(viewInstance: ViewInstance, dateContext: dayjs.Dayjs, periodContext: string): QuickInputConfig | null {
-        // ... 此方法内部逻辑不变 ...
         const settings = this.appStore.getSettings();
         const dataSource = settings.dataSources.find(ds => ds.id === viewInstance.dataSourceId);
 
@@ -57,7 +59,7 @@ export class ActionService {
             '日期': dateContext.format('YYYY-MM-DD'),
             '周期': periodContext,
         };
-        
+
         return {
             blockId: targetBlock.id,
             context: context,
@@ -66,7 +68,6 @@ export class ActionService {
     }
 
     public getQuickInputConfigForTaskEdit(taskId: string): QuickInputConfig | null {
-        // ... 此方法内部逻辑不变 ...
         const item = this.dataStore.queryItems().find(i => i.id === taskId);
         if (!item) {
             new Notice(`错误：找不到ID为 ${taskId} 的任务。`);
@@ -97,21 +98,21 @@ export class ActionService {
             context: context
         };
     }
-    
+
     public getQuickInputConfigForNewTimer(): { config: QuickInputConfig, onSave: (data: any) => void } | null {
         const blocks = this.appStore.getSettings().inputSettings.blocks;
         if (!blocks || !blocks.length === 0) {
             new Notice('没有可用的Block模板，请先在设置中创建一个。');
             return null;
         }
-    
+
         const defaultBlockId = blocks[0].id;
-    
+
+        // [核心修复] 回调函数现在直接调用 timerService 的方法，无需传递额外参数
         const onSaveCallback = (data: any) => {
-            // 现在使用 this.app 和 this.inputService
-            this.timerService.createNewTaskAndStart(data, this.app, this.inputService);
+            this.timerService.createNewTaskAndStart(data);
         };
-    
+
         return {
             config: {
                 blockId: defaultBlockId,

@@ -1,34 +1,39 @@
-// src/core/services/RendererService.ts
+//src/core/services/RendererService.ts
 import { singleton } from 'tsyringe';
 import { h, render } from 'preact';
+import { App } from 'obsidian';
 import { Layout } from '@core/domain/schema';
-import { DataStore } from '@core/services/dataStore';
+import { DataStore } from './dataStore';
 import { AppStore } from '@state/AppStore';
 import { LayoutRenderer } from '@features/dashboard/ui/LayoutRenderer';
-import { App } from 'obsidian'; // [核心修改 ①] 导入 App 类型
-import type { ActionService } from './ActionService';
-import type { TaskService } from './taskService';
-
-interface ActiveLayout {
-    container: HTMLElement;
-    layoutName: string;
-}
+import { ActionService } from './ActionService';
+import { TaskService } from './taskService';
 
 @singleton()
 export class RendererService {
-    // [核心修改 ②] 构造函数不再注入 ThinkPlugin，而是直接注入 App
-    // 这就打破了 ThinkPlugin -> RendererService -> ThinkPlugin 的循环依赖
-    constructor(
-        private app: App,
-        private dataStore: DataStore,
-        private appStore: AppStore,
-        private actionService: ActionService,
-        private taskService: TaskService
-    ) {
+    private app!: App;
+    private dataStore!: DataStore;
+    private appStore!: AppStore;
+    private actionService!: ActionService;
+    private taskService!: TaskService;
+    private isInitialized = false;
+
+    // [核心修复] 构造函数变为空
+    constructor() { }
+
+    // [核心修复] 新增 init 方法用于注入所有依赖
+    public init(app: App, dataStore: DataStore, appStore: AppStore, actionService: ActionService, taskService: TaskService) {
+        if (this.isInitialized) return;
+        this.app = app;
+        this.dataStore = dataStore;
+        this.appStore = appStore;
+        this.actionService = actionService;
+        this.taskService = taskService;
         this.appStore.subscribe(() => this.rerenderAll());
+        this.isInitialized = true;
     }
 
-    private activeLayouts: ActiveLayout[] = [];
+    private activeLayouts: { container: HTMLElement; layoutName: string }[] = [];
 
     public register(container: HTMLElement, layout: Layout): void {
         this.unregister(container);
@@ -37,7 +42,7 @@ export class RendererService {
             h(LayoutRenderer, {
                 layout: layout,
                 dataStore: this.dataStore,
-                app: this.app, // [核心修改 ③] 直接传递 app 实例
+                app: this.app,
                 actionService: this.actionService,
                 taskService: this.taskService,
             }),
@@ -61,6 +66,7 @@ export class RendererService {
     }
 
     private rerenderAll(): void {
+        if (!this.isInitialized) return;
         const latestSettings = this.appStore.getSettings();
 
         for (const activeLayout of [...this.activeLayouts]) {
@@ -72,7 +78,7 @@ export class RendererService {
                     h(LayoutRenderer, {
                         layout: newLayoutConfig,
                         dataStore: this.dataStore,
-                        app: this.app, // [核心修改 ④] 直接传递 app 实例
+                        app: this.app,
                         actionService: this.actionService,
                         taskService: this.taskService,
                     }),

@@ -1,5 +1,5 @@
-// src/core/services/TaskService.ts
-import { singleton } from 'tsyringe'; // [核心改造] 导入 singleton
+//src/core/services/TaskService.ts
+import { singleton } from 'tsyringe';
 import { DataStore } from './dataStore';
 import { markTaskDone } from '@core/utils/mark';
 import { TFile } from 'obsidian';
@@ -14,11 +14,17 @@ function upsertKvTag(line: string, key: string, value: string): string {
     }
 }
 
-// [核心改造] 使用 @singleton 装饰器
 @singleton()
 export class TaskService {
-    // [核心改造] 构造函数通过 DI 自动接收 DataStore 实例
-    constructor(private dataStore: DataStore) {}
+    private dataStore!: DataStore;
+
+    // [核心修复] 构造函数变为空
+    constructor() { }
+
+    // [核心修复] 新增 init 方法用于注入依赖
+    public init(dataStore: DataStore) {
+        this.dataStore = dataStore;
+    }
 
     public async getTaskLine(itemId: string): Promise<string | null> {
         const [filePath, lineStr] = itemId.split('#');
@@ -26,10 +32,10 @@ export class TaskService {
         const file = this.dataStore.app.vault.getAbstractFileByPath(filePath);
 
         if (!(file instanceof TFile)) return null;
-        
+
         const content = await this.dataStore.platform.readFile(file);
         const lines = content.split(/\r?\n/);
-        
+
         if (lineNo < 1 || lineNo > lines.length) return null;
 
         return lines[lineNo - 1];
@@ -54,14 +60,14 @@ export class TaskService {
 
         const todayISO = dayjs().format('YYYY-MM-DD');
         const nowTime = dayjs().format('HH:mm');
-        
+
         const { completedLine, nextTaskLine } = markTaskDone(
             rawLine,
             todayISO,
             nowTime,
             options?.duration,
         );
-        
+
         lines[lineNo - 1] = completedLine;
         if (nextTaskLine) {
             lines.splice(lineNo, 0, nextTaskLine);

@@ -1,5 +1,5 @@
-// src/core/services/TimerService.ts
-import { singleton } from 'tsyringe'; // [核心改造] 导入 singleton
+//src/core/services/TimerService.ts
+import { singleton } from 'tsyringe';
 import { AppStore } from '@state/AppStore';
 import { TaskService } from '@core/services/taskService';
 import { Notice, App } from 'obsidian';
@@ -7,20 +7,29 @@ import { DataStore } from './dataStore';
 import { InputService } from './inputService';
 import type { QuickInputSaveData } from '@features/quick-input/ui/QuickInputModal';
 
-// [核心改造] 使用 @singleton 装饰器
 @singleton()
 export class TimerService {
-    // [核心改造] 构造函数通过 DI 自动接收所有依赖
-    constructor(
-        private appStore: AppStore,
-        private dataStore: DataStore,
-        private taskService: TaskService
-    ) {}
-    
-    // ... 所有其他方法保持不变 ...
+    private appStore!: AppStore;
+    private dataStore!: DataStore;
+    private taskService!: TaskService;
+    private inputService!: InputService;
+    private app!: App;
+
+    // [核心修复] 构造函数变为空
+    constructor() { }
+
+    // [核心修复] 新增 init 方法用于注入所有依赖
+    public init(appStore: AppStore, dataStore: DataStore, taskService: TaskService, inputService: InputService, app: App) {
+        this.appStore = appStore;
+        this.dataStore = dataStore;
+        this.taskService = taskService;
+        this.inputService = inputService;
+        this.app = app;
+    }
+
     public async startOrResume(taskId: string): Promise<void> {
         const timers = this.appStore.getState().timers;
-        
+
         for (const timer of timers) {
             if (timer.status === 'running') {
                 await this.pause(timer.id);
@@ -76,7 +85,7 @@ export class TimerService {
             });
         }
     }
-    
+
     public async stopAndApply(timerId: string): Promise<void> {
         const timer = this.appStore.getState().timers.find(t => t.id === timerId);
         if (!timer) return;
@@ -109,7 +118,7 @@ export class TimerService {
             new Notice(`错误：更新任务失败 - ${e.message}`);
             console.error("TimerService Error:", e);
         }
-        
+
         await this.appStore.removeTimer(timerId);
     }
 
@@ -117,45 +126,44 @@ export class TimerService {
         await this.appStore.removeTimer(timerId);
         new Notice('计时任务已取消。');
     }
-    
-    // 注意：这个方法的签名有点奇怪，它接收了 app 和 inputService，
-    // 理论上它也可以通过DI注入 InputService。但为了保持最小改动，我们暂时保留它。
-    public async createNewTaskAndStart(data: QuickInputSaveData, app: App, inputService: InputService): Promise<void> {
+
+    // [核心修复] 此方法签名被简化，不再需要外部传入 app 和 inputService
+    public async createNewTaskAndStart(data: QuickInputSaveData): Promise<void> {
         const { template, formData, theme } = data;
 
         try {
-            const targetFilePath = inputService.renderTemplate(template.targetFile, { ...formData, theme });
+            const targetFilePath = this.inputService.renderTemplate(template.targetFile, { ...formData, theme });
             if (!targetFilePath) throw new Error('目标文件路径无效');
-            
-            const outputContent = inputService.renderTemplate(template.outputTemplate, { ...formData, block: {name: template.name}, theme }).trim();
 
-            const file = await inputService.getOrCreateFile(targetFilePath);
-            const existingContent = await app.vault.read(file);
-            
+            const outputContent = this.inputService.renderTemplate(template.outputTemplate, { ...formData, block: { name: template.name }, theme }).trim();
+
+            const file = await this.inputService.getOrCreateFile(targetFilePath);
+            const existingContent = await this.app.vault.read(file);
+
             const newContent = existingContent.trim() === '' ? outputContent : `${existingContent.trim()}\n${outputContent}`;
-            
-            await app.vault.modify(file, newContent);
+
+            await this.app.vault.modify(file, newContent);
 
             await this.dataStore.scanFile(file);
 
             const newLines = outputContent.split('\n').length;
             const totalLines = newContent.split('\n').length;
-            
+
             for (let i = 0; i < newLines + 2; i++) {
                 const lineNumber = totalLines - i;
                 const taskId = `${targetFilePath}#${lineNumber}`;
                 const newItem = this.dataStore.queryItems().find(item => item.id === taskId);
-                
+
                 if (newItem) {
                     this.startOrResume(newItem.id);
                     new Notice('新任务已创建并开始计时！');
                     return;
                 }
             }
-            
+
             new Notice('任务已创建，但无法自动开始计时。请手动启动。');
 
-        } catch(e: any) {
+        } catch (e: any) {
             new Notice(`创建任务失败: ${e.message}`);
             console.error(e);
         }

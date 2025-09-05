@@ -1,4 +1,4 @@
-// src/main.ts
+//src/main.ts
 import "reflect-metadata";
 import { container } from 'tsyringe';
 import { App, Plugin } from 'obsidian';
@@ -19,6 +19,8 @@ export default class ThinkPlugin extends Plugin {
     appStore!: AppStore;
     dataStore!: DataStore;
     rendererService!: RendererService;
+    actionService!: ActionService;
+    timerService!: TimerService;
     timerStateService!: TimerStateService;
     timerWidget!: FloatingTimerWidget;
 
@@ -26,44 +28,69 @@ export default class ThinkPlugin extends Plugin {
         const settings = await this.loadSettings();
         this.injectGlobalCss();
 
-        // --- 依赖注入容器配置 ---
+        // --- 依赖注入容器配置 (核心改造) ---
 
-        // [核心修复] 手动初始化 Platform 服务
+        // 1. 从容器中解析出所有服务实例 (此时构造函数都是空的，所以不会出错)
         const platform = container.resolve(ObsidianPlatform);
-        platform.init(this.app); // 手动注入 App 实例
-        // 现在，其他任何依赖 ObsidianPlatform 的服务都可以正常工作了
+        const dataStore = container.resolve(DataStore);
+        const inputService = container.resolve(InputService);
+        const taskService = container.resolve(TaskService);
+        const timerService = container.resolve(TimerService);
+        const actionService = container.resolve(ActionService);
+        const rendererService = container.resolve(RendererService);
+        const timerStateService = container.resolve(TimerStateService);
 
+        // 将核心服务实例挂载到 plugin 对象上，以便其他地方访问
+        this.dataStore = dataStore;
+        this.rendererService = rendererService;
+        this.actionService = actionService;
+        this.timerService = timerService;
+        this.timerStateService = timerStateService;
+
+        // 2. 手动创建 AppStore 并注册到容器
         this.appStore = new AppStore();
-        this.appStore.init(this, settings);
         container.registerInstance(AppStore, this.appStore);
 
+        // 3. 按照依赖顺序，手动调用 init() 方法，完成“接线”
+        //    顺序: 无依赖 -> 依赖 platform/app -> 依赖其他服务
+        platform.init(this.app);
+        inputService.init(this.app);
+        timerStateService.init(this.app);
+        this.appStore.init(this, settings); // AppStore 也需要初始化
+
+        dataStore.init(platform);
+        taskService.init(dataStore);
+
+        // TimerService 依赖 AppStore, DataStore, TaskService, InputService, App
+        timerService.init(this.appStore, dataStore, taskService, inputService, this.app);
+
+        // ActionService 依赖 App, DataStore, AppStore, InputService, TimerService
+        actionService.init(this.app, dataStore, this.appStore, inputService, timerService);
+
+        // RendererService 依赖 App, DataStore, AppStore, ActionService, TaskService
+        rendererService.init(this.app, dataStore, this.appStore, actionService, taskService);
+
+        // --- 初始化完成，开始执行业务逻辑 ---
+
         registerStore(this.appStore);
-
-        // 手动初始化 DataStore
-        this.dataStore = container.resolve(DataStore);
-        this.dataStore.init(platform); // 将已初始化的 platform 注入
-
-        // 解析其他服务
-        this.rendererService = container.resolve(RendererService);
-        this.timerStateService = container.resolve(TimerStateService);
 
         this.timerWidget = new FloatingTimerWidget(this);
         this.timerWidget.load();
 
-        this.timerStateService.loadStateFromFile().then(timers => {
+        timerStateService.loadStateFromFile().then(timers => {
             this.appStore.setInitialTimers(timers);
         });
 
-        await this.dataStore.initialScan();
+        await dataStore.initialScan();
 
         // --- 功能模块设置 ---
         DashboardFeature.setup?.({
-            app: this.app,
+            plugin: this,
             appStore: this.appStore,
-            dataStore: this.dataStore,
-            rendererService: this.rendererService,
-            actionService: container.resolve(ActionService),
-            taskService: container.resolve(TaskService)
+            dataStore: dataStore,
+            rendererService: rendererService,
+            actionService: actionService,
+            taskService: taskService
         });
         QuickInputFeature.setup?.({
             plugin: this,
@@ -89,7 +116,6 @@ export default class ThinkPlugin extends Plugin {
 
     onunload(): void {
         document.getElementById(STYLE_TAG_ID)?.remove();
-        // [健壮性修复] 确保服务已创建再调用 cleanup
         this.rendererService?.cleanup();
         this.timerWidget?.unload();
         container.clearInstances();

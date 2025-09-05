@@ -3,9 +3,8 @@ import { useState, useEffect, useMemo } from 'preact/hooks';
 import { DataStore } from '@core/services/dataStore';
 import { filterByRules, sortItems, filterByDateRange, filterByKeyword, filterByPeriod } from '@core/utils/itemFilter';
 import { dayjs } from '@core/utils/date';
-import type { Item, DataSource, Layout } from '@core/domain/schema';
+import type { Item, DataSource } from '@core/domain/schema';
 
-// 定义 Hook 需要的参数类型
 interface UseViewDataProps {
     dataStore: DataStore;
     dataSource: DataSource | undefined;
@@ -15,12 +14,7 @@ interface UseViewDataProps {
     isOverviewMode: boolean | undefined;
 }
 
-/**
- * 这是一个自定义 Hook，专门用于根据各种条件从 DataStore 中获取并处理视图所需的数据。
- * 它封装了所有过滤、排序和订阅逻辑。
- * @param props - 包含所有数据处理所需参数的对象
- * @returns 一个可以直接用于渲染的 Item 数组
- */
+// [最终优化版本 + 中文诊断]
 export function useViewData({
     dataStore,
     dataSource,
@@ -29,50 +23,51 @@ export function useViewData({
     layoutView,
     isOverviewMode,
 }: UseViewDataProps): Item[] {
-    const [items, setItems] = useState<Item[]>([]);
+    const dataSourceName = dataSource?.name || '未知数据源';
 
-    // 这个 useEffect 会在任何依赖项变化时重新计算数据
-    // 它同时处理了对 dataStore 的订阅，确保数据源更新时也能刷新
+    // 步骤 1: 创建一个只响应 DataStore 底层数据变化的 state
+    const [allItems, setAllItems] = useState(() => dataStore.queryItems());
+
     useEffect(() => {
-        // 定义计算数据的函数
-        const calculateItems = () => {
-            if (!dataSource) {
-                return [];
-            }
-            
-            const start = dayjs(dateRange[0]).format('YYYY-MM-DD');
-            const end = dayjs(dateRange[1]).format('YYYY-MM-DD');
-
-            let processedItems = dataStore.queryItems();
-            processedItems = filterByRules(processedItems, dataSource.filters || []);
-            processedItems = filterByKeyword(processedItems, keyword);
-
-            if (!isOverviewMode) {
-                const dataSourcePeriodFilter = (dataSource.filters || []).find(f => f.field === 'period');
-                if (!dataSourcePeriodFilter) {
-                    processedItems = filterByPeriod(processedItems, layoutView);
-                }
-            }
-
-            processedItems = filterByDateRange(processedItems, start, end);
-            return sortItems(processedItems, dataSource.sort || []);
-        };
-
-        // 首次计算
-        setItems(calculateItems());
-
-        // 订阅 dataStore 的变化
         const listener = () => {
-            setItems(calculateItems());
+            console.log(`[DataStore] 发出通知。正在为视图 [${dataSourceName}] 更新源数据...`);
+            setAllItems(dataStore.queryItems());
         };
         dataStore.subscribe(listener);
+        return () => dataStore.unsubscribe(listener);
+    }, [dataStore, dataSourceName]);
 
-        // 返回一个清理函数，在组件卸载或依赖变化时取消订阅
-        return () => {
-            dataStore.unsubscribe(listener);
-        };
-        // 依赖项数组：当其中任何一个值变化时，useEffect 都会重新运行
-    }, [dataStore, dataSource, dateRange, keyword, layoutView, isOverviewMode]);
+    // 步骤 2: 使用 useMemo 来执行昂贵的计算。
+    // 只有当 allItems (源数据) 或过滤/排序条件变化时，才会重新计算。
+    const processedItems = useMemo(() => {
+        console.time(`[useViewData] 为视图 [${dataSourceName}] 计算数据耗时`);
 
-    return items;
+        if (!dataSource) {
+            console.timeEnd(`[useViewData] 为视图 [${dataSourceName}] 计算数据耗时`);
+            return [];
+        }
+
+        const start = dayjs(dateRange[0]).format('YYYY-MM-DD');
+        const end = dayjs(dateRange[1]).format('YYYY-MM-DD');
+
+        let itemsToProcess = allItems;
+        itemsToProcess = filterByRules(itemsToProcess, dataSource.filters || []);
+        itemsToProcess = filterByKeyword(itemsToProcess, keyword);
+
+        if (!isOverviewMode) {
+            const dataSourcePeriodFilter = (dataSource.filters || []).find(f => f.field === 'period');
+            if (!dataSourcePeriodFilter) {
+                itemsToProcess = filterByPeriod(itemsToProcess, layoutView);
+            }
+        }
+
+        itemsToProcess = filterByDateRange(itemsToProcess, start, end);
+        const finalResult = sortItems(itemsToProcess, dataSource.sort || []);
+
+        console.timeEnd(`[useViewData] 为视图 [${dataSourceName}] 计算数据耗时`);
+        return finalResult;
+
+    }, [allItems, dataSource, dateRange, keyword, layoutView, isOverviewMode, dataSourceName]);
+
+    return processedItems;
 }
