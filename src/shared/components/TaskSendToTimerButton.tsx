@@ -2,7 +2,8 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
 import { useStore } from '@state/AppStore';
-import { TimerService } from '@core/services/TimerService';
+// [修改] 从注册表导入 timerService
+import { timerService } from '@state/storeRegistry';
 import { IconButton, Tooltip } from '@mui/material';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import HourglassTopIcon from '@mui/icons-material/HourglassTop';
@@ -20,6 +21,15 @@ export function TaskSendToTimerButton({ taskId }: TaskSendToTimerButtonProps) {
     const timers = useStore(state => state.timers);
     const thisTaskTimer = timers.find(t => t.taskId === taskId);
 
+    const handleStart = () => {
+        // [修复] 使用从注册表导入的 timerService 实例
+        if (timerService) {
+            timerService.startOrResume(taskId);
+        } else {
+            console.error("TimerService is not available.");
+        }
+    };
+
     if (thisTaskTimer) {
         return (
             <Tooltip title={`该任务已在计时面板中 (${thisTaskTimer.status})`}>
@@ -34,7 +44,7 @@ export function TaskSendToTimerButton({ taskId }: TaskSendToTimerButtonProps) {
         <Tooltip title="添加并开始计时">
             <IconButton 
                 size="small" 
-                onClick={() => TimerService.startOrResume(taskId)} 
+                onClick={handleStart} 
             >
                 <PlayArrowIcon fontSize="small" />
             </IconButton>

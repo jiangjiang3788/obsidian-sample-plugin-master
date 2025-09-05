@@ -5,7 +5,7 @@ import { DEFAULT_SETTINGS } from '@core/domain/schema';
 import type ThinkPlugin from '../main';
 import { VIEW_DEFAULT_CONFIGS } from '@features/settings/ui/components/view-editors/registry';
 import { generateId, moveItemInArray, duplicateItemInArray } from '@core/utils/array';
-import { TimerStateService } from '@core/services/TimerStateService';
+// [修改] TimerStateService 不再需要导入，因为它将通过 plugin 实例访问
 import { appStore } from './storeRegistry';
 
 export interface TimerState {
@@ -83,8 +83,10 @@ export class AppStore {
         const newTimers = updater(structuredClone(this._state.timers));
         this._state.timers = newTimers;
         this._notify();
-        // 注意：TimerStateService 仍然可以使用单例，因为它是一个非常简单的、无复杂依赖的服务
-        await TimerStateService.instance.saveStateToFile(newTimers);
+        // [修复] 通过 plugin 实例访问 timerStateService
+        if (this._plugin.timerStateService) {
+            await this._plugin.timerStateService.saveStateToFile(newTimers);
+        }
     }
 
     public addTimer = async (timer: Omit<TimerState, 'id'>) => {

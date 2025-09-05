@@ -5,7 +5,8 @@ import { App, Plugin } from 'obsidian';
 import { ObsidianPlatform } from '@platform/obsidian';
 import { DataStore, RendererService, ActionService, TimerStateService, InputService, TaskService, TimerService } from '@core/services';
 import { AppStore } from '@state/AppStore';
-import { registerStore } from '@state/storeRegistry';
+// [修改] 导入所有注册函数
+import { registerStore, registerDataStore, registerTimerService } from '@state/storeRegistry';
 import { FloatingTimerWidget } from '@features/timer/FloatingTimerWidget';
 import * as DashboardFeature from '@features/dashboard';
 import * as QuickInputFeature from '@features/quick-input';
@@ -72,7 +73,11 @@ export default class ThinkPlugin extends Plugin {
 
         // --- 初始化完成，开始执行业务逻辑 ---
 
+        // [修改] 注册所有需要全局访问的服务
         registerStore(this.appStore);
+        registerDataStore(this.dataStore);
+        registerTimerService(this.timerService);
+
 
         this.timerWidget = new FloatingTimerWidget(this);
         this.timerWidget.load();

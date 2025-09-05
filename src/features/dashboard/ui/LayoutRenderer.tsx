@@ -15,7 +15,6 @@ import type { TaskService } from '@core/services/taskService';
 import { useViewData } from '../hooks/useViewData';
 import { QuickInputModal } from '@features/quick-input/ui/QuickInputModal';
 import { App } from 'obsidian';
-// [BUG修复] 从 storeRegistry 直接导入 AppStore 的主服务实例
 import { appStore } from '@state/storeRegistry';
 
 interface Props {
@@ -26,8 +25,7 @@ interface Props {
     taskService: TaskService;
 }
 
-// 这是一个新的内部组件，它包含了所有昂贵的计算（useViewData）
-// 它只会在被实际渲染时，才会执行内部的 Hooks 和逻辑
+// ViewContent 组件保持不变
 const ViewContent = ({
     viewInstance,
     dataStore,
@@ -54,7 +52,6 @@ const ViewContent = ({
     const allDataSources = useStore(state => state.settings.dataSources);
     const dataSource = allDataSources.find(ds => ds.id === viewInstance.dataSourceId);
 
-    // 昂贵的 useViewData Hook 现在在这里被调用
     const viewItems = useViewData({
         dataStore,
         dataSource,
@@ -91,20 +88,16 @@ export function LayoutRenderer({ layout, dataStore, app, actionService, taskServ
     const allViews = useStore(state => state.settings.viewInstances);
     
     const [expandedState, setExpandedState] = useState<Record<string, boolean>>({});
-    // [体验优化] 增加一个初始化状态，防止闪烁
     const [isStateInitialized, setIsStateInitialized] = useState(false);
 
-    // 当从设置加载时，初始化折叠状态
     useEffect(() => {
         const initialState: Record<string, boolean> = {};
         allViews.forEach(v => {
             if (layout.viewInstanceIds.includes(v.id)) {
-                // 逻辑正确：如果设置中 collapsed 为 true，则展开状态 isExpanded 为 false
                 initialState[v.id] = !v.collapsed;
             }
         });
         setExpandedState(initialState);
-        // [体验优化] 标记为初始化完成
         setIsStateInitialized(true);
     }, [allViews, layout.viewInstanceIds]);
 
@@ -127,14 +120,12 @@ export function LayoutRenderer({ layout, dataStore, app, actionService, taskServ
     const handleOverviewDateChange = (newDate: dayjs.Dayjs) => {
         const newDateString = newDate.format('YYYY-MM-DD');
         setLayoutDate(newDate);
-        // [BUG修复] 使用从 storeRegistry 导入的 appStore 主实例来调用方法
         appStore.updateLayout(layout.id, { initialDate: newDateString });
     };
 
     const handleQuickInputAction = (viewInstance: ViewInstance) => {
         const config = actionService.getQuickInputConfigForView(viewInstance, layoutDate, layoutView);
         if (config) {
-            // [BUG修复] 确保 dataStore 和 appStore 实例被正确传递
             new QuickInputModal(app, config.blockId, config.context, config.themeId, undefined, dataStore, appStore).open();
         }
     };
@@ -143,23 +134,43 @@ export function LayoutRenderer({ layout, dataStore, app, actionService, taskServ
         taskService.completeTask(itemId);
     }, [taskService]);
 
+    // [新增] 统一的切换逻辑处理器
+    const handleToggle = useCallback((viewId: string, event?: MouseEvent) => {
+        const isToggleAll = event?.metaKey || event?.ctrlKey;
+
+        if (isToggleAll) {
+            // 如果按住 Ctrl/Cmd 键，则切换所有模块
+            // 逻辑：如果当前点击的模块是展开的，则全部折叠；否则，全部展开。
+            const shouldExpandAll = !expandedState[viewId];
+            setExpandedState(currentState => {
+                const newState: Record<string, boolean> = {};
+                for (const id in currentState) {
+                    newState[id] = shouldExpandAll;
+                }
+                return newState;
+            });
+        } else {
+            // 普通点击，只切换当前模块
+            setExpandedState(prev => ({ ...prev, [viewId]: !prev[viewId] }));
+        }
+    }, [expandedState]); // 依赖 expandedState 以获取最新状态
+
     const unit = useMemo(() => (v: string) => ({ '年': 'year', '季': 'quarter', '月': 'month', '周': 'week', '天': 'day' }[v] || 'day') as (v:string) => dayjs.ManipulateType, []);
     const fmt = useMemo(() => formatDateForView, []);
 
-    // ... renderViewInstance 内部逻辑现在更简单 ...
     const renderViewInstance = (viewId: string) => {
         const viewInstance = allViews.find(v => v.id === viewId);
         if (!viewInstance) return <div class="think-module">视图 (ID: {viewId}) 未找到</div>;
 
         const isExpanded = !!expandedState[viewId];
-        const toggleExpanded = () => setExpandedState(prev => ({ ...prev, [viewId]: !prev[viewId] }));
 
         return (
             <ModulePanel 
                 key={viewId}
                 title={viewInstance.title} 
                 collapsed={!isExpanded}
-                onToggle={toggleExpanded}
+                // [修改] 将新的统一处理器传递给 onToggle
+                onToggle={(e: MouseEvent) => handleToggle(viewId, e)}
                 onActionClick={() => handleQuickInputAction(viewInstance)}
             >
                 {isExpanded && (
@@ -202,7 +213,6 @@ export function LayoutRenderer({ layout, dataStore, app, actionService, taskServ
                 )
             )}
             <div style={gridStyle}>
-                {/* [体验优化] 仅在初始化完成后才渲染子项，防止闪烁 */}
                 {isStateInitialized && layout.viewInstanceIds.map(renderViewInstance)}
             </div>
         </div>

@@ -4,7 +4,8 @@ import { h } from 'preact';
 import { useStore, AppStore } from '@state/AppStore';
 import { Typography, Stack, Box } from '@mui/material';
 import { getAllFields } from '@core/domain/schema';
-import { DataStore } from '@core/services/dataStore';
+// [修改] 从注册表导入 dataStore
+import { dataStore } from '@state/storeRegistry';
 import { useMemo } from 'preact/hooks';
 import type { DataSource } from '@core/domain/schema';
 import { RuleBuilder } from './components/RuleBuilder';
@@ -17,8 +18,8 @@ import { arrayMove } from '@core/utils/array';
 // [修改] 组件 props 现在需要接收 appStore
 function DataSourceEditor({ ds, appStore }: { ds: DataSource, appStore: AppStore }) {
     const fieldOptions = useMemo(() => {
-        // [修改] 确保 DataStore.instance 存在
-        const currentDataStore = DataStore.instance;
+        // [修复] 直接使用从注册表导入的 dataStore 实例
+        const currentDataStore = dataStore;
         if (!currentDataStore) return [];
         const allItems = currentDataStore.queryItems();
         return getAllFields(allItems);
@@ -68,7 +69,8 @@ export function DataSourceSettings({ app, appStore }: { app: App, appStore: AppS
                     const reorderedSiblings = arrayMove(siblings, oldIndex, newIndex);
                     
                     // Update store with the full reordered list for this type
-                    AppStore.instance.reorderItems(reorderedSiblings, activeItem.isGroup ? 'group' : 'dataSource');
+                    // [修复] 使用 appStore 实例
+                    appStore.reorderItems(reorderedSiblings, activeItem.isGroup ? 'group' : 'dataSource');
                 }
             }
         }

@@ -6,7 +6,8 @@ import { Box, Stack, Typography, FormControlLabel, Checkbox, Tooltip, Chip } fro
 import { VIEW_OPTIONS, ViewName, getAllFields } from '@core/domain/schema';
 import type { ViewInstance } from '@core/domain/schema';
 import { VIEW_EDITORS } from './components/view-editors/registry';
-import { DataStore } from '@core/services/dataStore';
+// [修改] 从注册表导入 dataStore
+import { dataStore } from '@state/storeRegistry';
 import { useMemo } from 'preact/hooks';
 import { SimpleSelect } from '@shared/ui/SimpleSelect';
 import { SettingsTreeView, TreeItem } from './components/SettingsTreeView';
@@ -19,7 +20,8 @@ const LABEL_WIDTH = '80px';
 
 function ViewInstanceEditor({ vi, appStore }: { vi: ViewInstance, appStore: AppStore }) {
     const dataSources = useStore(state => state.settings.dataSources);
-    const fieldOptions = useMemo(() => getAllFields(DataStore.instance?.queryItems() || []), []);
+    // [修复] 从注册表获取 dataStore 实例
+    const fieldOptions = useMemo(() => getAllFields(dataStore?.queryItems() || []), []);
     const EditorComponent = VIEW_EDITORS[vi.viewType];
     
     const correctedViewConfig = useMemo(() => {
