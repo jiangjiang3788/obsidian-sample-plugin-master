@@ -1,4 +1,6 @@
 // src/main.ts
+import "reflect-metadata";
+import { container } from 'tsyringe';
 import { App, Plugin } from 'obsidian';
 import { ObsidianPlatform } from '@platform/obsidian';
 import { DataStore, RendererService, ActionService, TimerStateService, InputService, TaskService, TimerService } from '@core/services';
@@ -8,20 +10,14 @@ import { FloatingTimerWidget } from '@features/timer/FloatingTimerWidget';
 import * as DashboardFeature from '@features/dashboard';
 import * as QuickInputFeature from '@features/quick-input';
 import * as SettingsFeature from '@features/settings';
-import { ThinkSettings, DEFAULT_SETTINGS, STYLE_TAG_ID } from '@core/domain'; // 统一从 @core/domain 导入
+import { ThinkSettings, DEFAULT_SETTINGS, STYLE_TAG_ID } from '@core/domain';
 import { GLOBAL_CSS } from '@features/dashboard/styles/global';
-
 
 console.log(`[ThinkPlugin] main.js 文件已加载，版本时间: ${new Date().toLocaleTimeString()}`);
 
 export default class ThinkPlugin extends Plugin {
-    platform!: ObsidianPlatform;
-    dataStore!: DataStore;
     appStore!: AppStore;
-    inputService!: InputService;
-    taskService!: TaskService;
-    timerService!: TimerService;
-    actionService!: ActionService;
+    dataStore!: DataStore;
     rendererService!: RendererService;
     timerStateService!: TimerStateService;
     timerWidget!: FloatingTimerWidget;
@@ -30,22 +26,27 @@ export default class ThinkPlugin extends Plugin {
         const settings = await this.loadSettings();
         this.injectGlobalCss();
 
-        // --- 服务实例化与依赖注入 ---
-        this.platform = new ObsidianPlatform(this.app);
-        this.dataStore = new DataStore(this.platform);
-        
+        // --- 依赖注入容器配置 ---
+
+        // [核心修复] 手动初始化 Platform 服务
+        const platform = container.resolve(ObsidianPlatform);
+        platform.init(this.app); // 手动注入 App 实例
+        // 现在，其他任何依赖 ObsidianPlatform 的服务都可以正常工作了
+
         this.appStore = new AppStore();
         this.appStore.init(this, settings);
+        container.registerInstance(AppStore, this.appStore);
+
         registerStore(this.appStore);
 
-        this.inputService = new InputService(this.app);
-        this.taskService = new TaskService(this.dataStore);
-        this.timerService = new TimerService(this.appStore, this.dataStore, this.taskService);
-        this.actionService = new ActionService(this.app, this.dataStore, this.appStore, this.inputService, this.timerService);
-        // [修改] 将 taskService 注入到 RendererService，打通依赖链
-        this.rendererService = new RendererService(this, this.dataStore, this.appStore, this.actionService, this.taskService);
-        this.timerStateService = new TimerStateService(this.app);
-        
+        // 手动初始化 DataStore
+        this.dataStore = container.resolve(DataStore);
+        this.dataStore.init(platform); // 将已初始化的 platform 注入
+
+        // 解析其他服务
+        this.rendererService = container.resolve(RendererService);
+        this.timerStateService = container.resolve(TimerStateService);
+
         this.timerWidget = new FloatingTimerWidget(this);
         this.timerWidget.load();
 
@@ -55,14 +56,14 @@ export default class ThinkPlugin extends Plugin {
 
         await this.dataStore.initialScan();
 
-        // --- 功能模块设置 (显式依赖注入) ---
+        // --- 功能模块设置 ---
         DashboardFeature.setup?.({
-            plugin: this,
+            app: this.app,
             appStore: this.appStore,
             dataStore: this.dataStore,
             rendererService: this.rendererService,
-            actionService: this.actionService,
-            taskService: this.taskService 
+            actionService: container.resolve(ActionService),
+            taskService: container.resolve(TaskService)
         });
         QuickInputFeature.setup?.({
             plugin: this,
@@ -88,18 +89,20 @@ export default class ThinkPlugin extends Plugin {
 
     onunload(): void {
         document.getElementById(STYLE_TAG_ID)?.remove();
-        this.rendererService.cleanup();
+        // [健壮性修复] 确保服务已创建再调用 cleanup
+        this.rendererService?.cleanup();
         this.timerWidget?.unload();
+        container.clearInstances();
     }
 
     private async loadSettings(): Promise<ThinkSettings> {
         const stored = (await this.loadData()) as Partial<ThinkSettings> | null;
         const merged = Object.assign({}, DEFAULT_SETTINGS, stored);
-
         merged.dataSources = merged.dataSources || [];
         merged.viewInstances = merged.viewInstances || [];
         merged.layouts = merged.layouts || [];
         merged.inputSettings = merged.inputSettings || { blocks: [], themes: [], overrides: [] };
+        merged.groups = merged.groups || [];
         return merged as ThinkSettings;
     }
 

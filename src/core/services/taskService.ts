@@ -1,10 +1,10 @@
 // src/core/services/TaskService.ts
+import { singleton } from 'tsyringe'; // [核心改造] 导入 singleton
 import { DataStore } from './dataStore';
 import { markTaskDone } from '@core/utils/mark';
 import { TFile } from 'obsidian';
 import { dayjs } from '@core/utils/date';
 
-// ... upsertKvTag 辅助函数保持不变 ...
 function upsertKvTag(line: string, key: string, value: string): string {
     const pattern = new RegExp(`([\\(\\[]\\s*${key}::\\s*)[^\\)\\]]*(\\s*[\\)\\]])`);
     if (pattern.test(line)) {
@@ -14,12 +14,12 @@ function upsertKvTag(line: string, key: string, value: string): string {
     }
 }
 
-// [修改] TaskService 现在是一个普通类
+// [核心改造] 使用 @singleton 装饰器
+@singleton()
 export class TaskService {
-    // [修改] 通过构造函数注入 DataStore 依赖
+    // [核心改造] 构造函数通过 DI 自动接收 DataStore 实例
     constructor(private dataStore: DataStore) {}
 
-    // [修改] 所有方法都变为实例方法
     public async getTaskLine(itemId: string): Promise<string | null> {
         const [filePath, lineStr] = itemId.split('#');
         const lineNo = Number(lineStr);

@@ -1,43 +1,48 @@
 // src/platform/obsidian.ts
+import { singleton } from 'tsyringe'; // [核心修复] 将 injectable 改为 singleton，保持一致性
 import type { App, TFile, TAbstractFile } from 'obsidian';
 
 /**
  * 对 Obsidian API 的最薄包装。
- * 先只暴露本插件真正用到的 4‑5 个方法，后面再补也没问题。
  */
+@singleton()
 export class ObsidianPlatform {
-  constructor(public readonly app: App) {}
+    // [核心修复] 将 app 声明为可选，因为它将在 init 方法中被设置
+    public app!: App;
 
-  /* 下面这些方法名字随便改，只要核心层能用就行 ------------------------ */
+    // [核心修复] 构造函数变为空，不再有任何依赖
+    constructor() {}
 
-  /** 读取文件全文 */
-  async readFile(file: TFile): Promise<string> {
-    return this.app.vault.read(file);
-  }
+    // [核心修复] 新增一个 init 方法，用于在所有服务都创建完毕后手动注入依赖
+    public init(app: App) {
+        this.app = app;
+    }
 
-  getMarkdownFiles(): TFile[] {
-  return this.app.vault.getMarkdownFiles();
-}
+    /* 下面这些方法保持不变 */
 
-  /** 修改文件全文 */
-  async writeFile(file: TFile, content: string) {
-    return this.app.vault.modify(file, content);
-  }
+    async readFile(file: TFile): Promise<string> {
+        return this.app.vault.read(file);
+    }
 
-  /** 根据路径拿到 File/Folder */
-  getByPath(path: string): TAbstractFile | null {
-    return this.app.vault.getAbstractFileByPath(path) ?? null;
-  }
+    getMarkdownFiles(): TFile[] {
+        return this.app.vault.getMarkdownFiles();
+    }
 
-  /** 创建新文件（如已存在则返回原文件） */
-  async ensureFile(path: string, initial = ''): Promise<TFile> {
-    const af = this.getByPath(path);
-    if (af instanceof TFile) return af;
-    return this.app.vault.create(path, initial);
-  }
+    async writeFile(file: TFile, content: string) {
+        return this.app.vault.modify(file, content);
+    }
 
-  /** 监听 Vault 事件 —— 直接把原始 on 代理出去即可 */
-  onVault(event: string, cb: (...a: any[]) => any) {
-    return this.app.vault.on(event as any, cb as any);
-  }
+    getByPath(path: string): TAbstractFile | null {
+        return this.app.vault.getAbstractFileByPath(path) ?? null;
+    }
+
+    async ensureFile(path: string, initial = ''): Promise<TFile> {
+        const af = this.getByPath(path);
+        if (af instanceof TFile) return af;
+        return this.app.vault.create(path, initial);
+    }
+
+    onVault(event: string, cb: (...a: any[]) => any) {
+        return this.app.vault.on(event as any, cb as any);
+    }
 }

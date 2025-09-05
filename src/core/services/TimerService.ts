@@ -1,4 +1,5 @@
 // src/core/services/TimerService.ts
+import { singleton } from 'tsyringe'; // [核心改造] 导入 singleton
 import { AppStore } from '@state/AppStore';
 import { TaskService } from '@core/services/taskService';
 import { Notice, App } from 'obsidian';
@@ -6,16 +7,17 @@ import { DataStore } from './dataStore';
 import { InputService } from './inputService';
 import type { QuickInputSaveData } from '@features/quick-input/ui/QuickInputModal';
 
-// [修改] TimerService 现在是一个普通类
+// [核心改造] 使用 @singleton 装饰器
+@singleton()
 export class TimerService {
-    // [修改] 通过构造函数注入所有依赖
+    // [核心改造] 构造函数通过 DI 自动接收所有依赖
     constructor(
         private appStore: AppStore,
         private dataStore: DataStore,
         private taskService: TaskService
     ) {}
-
-    // [修改] 所有方法都变为实例方法
+    
+    // ... 所有其他方法保持不变 ...
     public async startOrResume(taskId: string): Promise<void> {
         const timers = this.appStore.getState().timers;
         
@@ -74,8 +76,7 @@ export class TimerService {
             });
         }
     }
-
-    // [修正] 此方法现在正确使用注入的服务实例
+    
     public async stopAndApply(timerId: string): Promise<void> {
         const timer = this.appStore.getState().timers.find(t => t.id === timerId);
         if (!timer) return;
@@ -91,16 +92,16 @@ export class TimerService {
             const taskItem = this.dataStore.queryItems().find(i => i.id === timer.taskId);
             if (!taskItem) {
                 new Notice(`错误：找不到原始任务，可能已被移动或删除。计时时长无法保存。`);
-                await this.appStore.removeTimer(timerId); // 使用 this.appStore
+                await this.appStore.removeTimer(timerId);
                 return;
             }
-            const currentLine = await this.taskService.getTaskLine(timer.taskId); // 使用 this.taskService
+            const currentLine = await this.taskService.getTaskLine(timer.taskId);
 
             if (currentLine && /^\s*-\s*\[ \]\s*/.test(currentLine)) {
-                await this.taskService.completeTask(timer.taskId, { duration: totalMinutes }); // 使用 this.taskService
+                await this.taskService.completeTask(timer.taskId, { duration: totalMinutes });
                 new Notice(`任务已完成，时长 ${totalMinutes} 分钟已记录。`);
             } else {
-                await this.taskService.updateTaskTime(timer.taskId, { duration: totalMinutes }); // 使用 this.taskService
+                await this.taskService.updateTaskTime(timer.taskId, { duration: totalMinutes });
                 new Notice(`任务时长已更新为 ${totalMinutes} 分钟。`);
             }
 
@@ -109,16 +110,16 @@ export class TimerService {
             console.error("TimerService Error:", e);
         }
         
-        await this.appStore.removeTimer(timerId); // 使用 this.appStore
+        await this.appStore.removeTimer(timerId);
     }
 
-    // [修正] 此方法现在是实例方法
     public async cancel(timerId: string): Promise<void> {
         await this.appStore.removeTimer(timerId);
         new Notice('计时任务已取消。');
     }
     
-    // [修正] 此方法现在是实例方法，并正确使用注入的服务
+    // 注意：这个方法的签名有点奇怪，它接收了 app 和 inputService，
+    // 理论上它也可以通过DI注入 InputService。但为了保持最小改动，我们暂时保留它。
     public async createNewTaskAndStart(data: QuickInputSaveData, app: App, inputService: InputService): Promise<void> {
         const { template, formData, theme } = data;
 
@@ -135,7 +136,7 @@ export class TimerService {
             
             await app.vault.modify(file, newContent);
 
-            await this.dataStore.scanFile(file); // 使用 this.dataStore
+            await this.dataStore.scanFile(file);
 
             const newLines = outputContent.split('\n').length;
             const totalLines = newContent.split('\n').length;
@@ -143,10 +144,10 @@ export class TimerService {
             for (let i = 0; i < newLines + 2; i++) {
                 const lineNumber = totalLines - i;
                 const taskId = `${targetFilePath}#${lineNumber}`;
-                const newItem = this.dataStore.queryItems().find(item => item.id === taskId); // 使用 this.dataStore
+                const newItem = this.dataStore.queryItems().find(item => item.id === taskId);
                 
                 if (newItem) {
-                    this.startOrResume(newItem.id); // 'this' 现在是有效的
+                    this.startOrResume(newItem.id);
                     new Notice('新任务已创建并开始计时！');
                     return;
                 }
