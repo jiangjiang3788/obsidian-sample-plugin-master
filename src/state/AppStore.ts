@@ -1,7 +1,7 @@
 // src/state/AppStore.ts
 import { useState, useEffect, useCallback } from 'preact/hooks';
 import type { ThinkSettings, DataSource, ViewInstance, Layout, InputSettings, BlockTemplate, ThemeDefinition, ThemeOverride, Group, GroupType, Groupable } from '@core/domain/schema';
-import { DEFAULT_SETTINGS } from '@core/domain/schema'; // [新增] 导入默认设置
+import { DEFAULT_SETTINGS } from '@core/domain/schema';
 import type ThinkPlugin from '../main';
 import { VIEW_DEFAULT_CONFIGS } from '@features/settings/ui/components/view-editors/registry';
 import { generateId, moveItemInArray, duplicateItemInArray } from '@core/utils/array';
@@ -472,39 +472,42 @@ export class AppStore {
 export function useStore<T>(selector: (state: AppState) => T): T {
     const store = appStore;
 
-    // [新增] 安全保护：如果 store 尚未注册，返回一个从默认状态派生出的安全值
     if (!store) {
         const safeFallbackState: AppState = {
             settings: DEFAULT_SETTINGS,
             timers: [],
             activeTimer: undefined,
         };
-        console.warn("useStore called before AppStore was registered. Returning a safe fallback state.");
+        console.warn("useStore 在 AppStore 注册前被调用。返回安全的备用状态。");
         return selector(safeFallbackState);
     }
-
-    const getSnapshot = useCallback(() => JSON.stringify(selector(store.getState())), [store, selector]);
-
-    const [state, setState] = useState(getSnapshot());
+    
+    const memoizedSelector = useCallback(selector, []);
+    
+    const [state, setState] = useState(() => memoizedSelector(store.getState()));
 
     useEffect(() => {
         const unsubscribe = store.subscribe(() => {
-            const newSnapshot = getSnapshot();
-            setState(currentSnapshot => {
-                if (newSnapshot !== currentSnapshot) {
-                    return newSnapshot;
+            const newStateSlice = memoizedSelector(store.getState());
+            
+            setState(currentStateSlice => {
+                if (Object.is(currentStateSlice, newStateSlice)) {
+                    return currentStateSlice;
                 }
-                return currentSnapshot;
+                console.log("一个组件因其订阅的状态变更而计划重渲染。", {
+                    componentHint: memoizedSelector.toString().slice(0, 100)
+                });
+                return newStateSlice;
             });
         });
 
-        const currentState = getSnapshot();
-        if (currentState !== state) {
-            setState(currentState);
+        const initialStateSlice = memoizedSelector(store.getState());
+        if (!Object.is(state, initialStateSlice)) {
+            setState(initialStateSlice);
         }
 
         return unsubscribe;
-    }, [store, selector, getSnapshot]);
+    }, [store, memoizedSelector]);
 
-    return JSON.parse(state);
+    return state;
 }

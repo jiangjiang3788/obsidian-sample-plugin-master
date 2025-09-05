@@ -2991,15 +2991,22 @@ var __decorateClass$6 = (decorators, target, key, kind) => {
   return result;
 };
 let ActionService = class {
-  // [核心改造] 构造函数通过 DI 自动接收所有依赖
-  constructor(app, dataStore, appStore2, inputService, timerService) {
+  app;
+  dataStore;
+  appStore;
+  inputService;
+  timerService;
+  // [核心修复] 构造函数变为空
+  constructor() {
+  }
+  // [核心修复] 新增 init 方法用于注入所有依赖
+  init(app, dataStore, appStore2, inputService, timerService) {
     this.app = app;
     this.dataStore = dataStore;
     this.appStore = appStore2;
     this.inputService = inputService;
     this.timerService = timerService;
   }
-  // ... 所有其他方法保持不变 ...
   getQuickInputConfigForView(viewInstance, dateContext, periodContext) {
     const settings = this.appStore.getSettings();
     const dataSource = settings.dataSources.find((ds) => ds.id === viewInstance.dataSourceId);
@@ -3067,7 +3074,7 @@ let ActionService = class {
     }
     const defaultBlockId = blocks[0].id;
     const onSaveCallback = (data) => {
-      this.timerService.createNewTaskAndStart(data, this.app, this.inputService);
+      this.timerService.createNewTaskAndStart(data);
     };
     return {
       config: {
@@ -4285,8 +4292,12 @@ var __decorateClass$4 = (decorators, target, key, kind) => {
   return result;
 };
 let InputService = class {
-  // [核心改造] 构造函数通过 DI 自动接收 App 实例
-  constructor(app) {
+  app;
+  // [核心修复] 构造函数变为空
+  constructor() {
+  }
+  // [核心修复] 新增 init 方法
+  init(app) {
     this.app = app;
   }
   // ... 所有其他方法保持不变 ...
@@ -4357,23 +4368,6 @@ ${outputContent}` : outputContent;
     }
     return targetFilePath;
   }
-  async ensureFolder(path) {
-    const segs = path.split("/").filter(Boolean);
-    let cur = "";
-    for (const seg of segs) {
-      cur = cur ? `${cur}/${seg}` : seg;
-      const af = this.app.vault.getAbstractFileByPath(cur);
-      if (!af) {
-        try {
-          await this.app.vault.createFolder(cur);
-        } catch (e2) {
-          throw new Error(`创建文件夹 "${cur}" 失败。请检查路径是否有效或存在权限问题。原始错误: ${e2.message}`);
-        }
-      } else if (af instanceof obsidian.TFile) {
-        throw new Error(`路径冲突："${cur}" 是一个文件，无法在其下创建文件夹。`);
-      }
-    }
-  }
   async getOrCreateFile(fp) {
     let file = this.app.vault.getAbstractFileByPath(fp);
     if (file instanceof obsidian.TFile) {
@@ -4397,6 +4391,23 @@ ${outputContent}` : outputContent;
       } else {
         console.error("ThinkPlugin: 文件创建失败，并且在捕获错误后仍无法找到该文件。", error);
         throw new Error(`创建文件 "${fp}" 失败。原始错误: ${error.message}`);
+      }
+    }
+  }
+  async ensureFolder(path) {
+    const segs = path.split("/").filter(Boolean);
+    let cur = "";
+    for (const seg of segs) {
+      cur = cur ? `${cur}/${seg}` : seg;
+      const af = this.app.vault.getAbstractFileByPath(cur);
+      if (!af) {
+        try {
+          await this.app.vault.createFolder(cur);
+        } catch (e2) {
+          throw new Error(`创建文件夹 "${cur}" 失败。请检查路径是否有效或存在权限问题。原始错误: ${e2.message}`);
+        }
+      } else if (af instanceof obsidian.TFile) {
+        throw new Error(`路径冲突："${cur}" 是一个文件，无法在其下创建文件夹。`);
       }
     }
   }
@@ -29209,10 +29220,12 @@ var __decorateClass$3 = (decorators, target, key, kind) => {
 };
 const TIMER_STATE_PATH = "think-plugin-timer-state.json";
 let TimerStateService = class {
-  // [核心改造] 移除静态实例
-  // private static instance: TimerStateService;
-  // [核心改造] 构造函数通过 DI 自动接收 App 实例
-  constructor(app) {
+  app;
+  // [核心修复] 构造函数变为空
+  constructor() {
+  }
+  // [核心修复] 新增 init 方法
+  init(app) {
     this.app = app;
   }
   async loadStateFromFile() {
@@ -29653,28 +29666,31 @@ function useStore(selector) {
       timers: [],
       activeTimer: void 0
     };
-    console.warn("useStore called before AppStore was registered. Returning a safe fallback state.");
+    console.warn("useStore 在 AppStore 注册前被调用。返回安全的备用状态。");
     return selector(safeFallbackState);
   }
-  const getSnapshot = q$1(() => JSON.stringify(selector(store.getState())), [store, selector]);
-  const [state, setState] = d(getSnapshot());
+  const memoizedSelector = q$1(selector, []);
+  const [state, setState] = d(() => memoizedSelector(store.getState()));
   y(() => {
     const unsubscribe = store.subscribe(() => {
-      const newSnapshot = getSnapshot();
-      setState((currentSnapshot) => {
-        if (newSnapshot !== currentSnapshot) {
-          return newSnapshot;
+      const newStateSlice = memoizedSelector(store.getState());
+      setState((currentStateSlice) => {
+        if (Object.is(currentStateSlice, newStateSlice)) {
+          return currentStateSlice;
         }
-        return currentSnapshot;
+        console.log("一个组件因其订阅的状态变更而计划重渲染。", {
+          componentHint: memoizedSelector.toString().slice(0, 100)
+        });
+        return newStateSlice;
       });
     });
-    const currentState = getSnapshot();
-    if (currentState !== state) {
-      setState(currentState);
+    const initialStateSlice = memoizedSelector(store.getState());
+    if (!Object.is(state, initialStateSlice)) {
+      setState(initialStateSlice);
     }
     return unsubscribe;
-  }, [store, selector, getSnapshot]);
-  return JSON.parse(state);
+  }, [store, memoizedSelector]);
+  return state;
 }
 var __getOwnPropDesc$2 = Object.getOwnPropertyDescriptor;
 var __decorateClass$2 = (decorators, target, key, kind) => {
@@ -29685,13 +29701,22 @@ var __decorateClass$2 = (decorators, target, key, kind) => {
   return result;
 };
 let TimerService = class {
-  // [核心改造] 构造函数通过 DI 自动接收所有依赖
-  constructor(appStore2, dataStore, taskService) {
+  appStore;
+  dataStore;
+  taskService;
+  inputService;
+  app;
+  // [核心修复] 构造函数变为空
+  constructor() {
+  }
+  // [核心修复] 新增 init 方法用于注入所有依赖
+  init(appStore2, dataStore, taskService, inputService, app) {
     this.appStore = appStore2;
     this.dataStore = dataStore;
     this.taskService = taskService;
+    this.inputService = inputService;
+    this.app = app;
   }
-  // ... 所有其他方法保持不变 ...
   async startOrResume(taskId) {
     const timers = this.appStore.getState().timers;
     for (const timer of timers) {
@@ -29776,19 +29801,18 @@ let TimerService = class {
     await this.appStore.removeTimer(timerId);
     new obsidian.Notice("计时任务已取消。");
   }
-  // 注意：这个方法的签名有点奇怪，它接收了 app 和 inputService，
-  // 理论上它也可以通过DI注入 InputService。但为了保持最小改动，我们暂时保留它。
-  async createNewTaskAndStart(data, app, inputService) {
+  // [核心修复] 此方法签名被简化，不再需要外部传入 app 和 inputService
+  async createNewTaskAndStart(data) {
     const { template, formData, theme: theme2 } = data;
     try {
-      const targetFilePath = inputService.renderTemplate(template.targetFile, { ...formData, theme: theme2 });
+      const targetFilePath = this.inputService.renderTemplate(template.targetFile, { ...formData, theme: theme2 });
       if (!targetFilePath) throw new Error("目标文件路径无效");
-      const outputContent = inputService.renderTemplate(template.outputTemplate, { ...formData, block: { name: template.name }, theme: theme2 }).trim();
-      const file = await inputService.getOrCreateFile(targetFilePath);
-      const existingContent = await app.vault.read(file);
+      const outputContent = this.inputService.renderTemplate(template.outputTemplate, { ...formData, block: { name: template.name }, theme: theme2 }).trim();
+      const file = await this.inputService.getOrCreateFile(targetFilePath);
+      const existingContent = await this.app.vault.read(file);
       const newContent = existingContent.trim() === "" ? outputContent : `${existingContent.trim()}
 ${outputContent}`;
-      await app.vault.modify(file, newContent);
+      await this.app.vault.modify(file, newContent);
       await this.dataStore.scanFile(file);
       const newLines = outputContent.split("\n").length;
       const totalLines = newContent.split("\n").length;
@@ -31361,41 +31385,101 @@ function useViewData({
   layoutView,
   isOverviewMode
 }) {
-  const [items, setItems] = d([]);
+  const dataSourceName = dataSource?.name || "未知数据源";
+  const [allItems, setAllItems] = d(() => dataStore.queryItems());
   y(() => {
-    const calculateItems = () => {
-      if (!dataSource) {
-        return [];
-      }
-      const start2 = dayjs(dateRange[0]).format("YYYY-MM-DD");
-      const end2 = dayjs(dateRange[1]).format("YYYY-MM-DD");
-      let processedItems = dataStore.queryItems();
-      processedItems = filterByRules(processedItems, dataSource.filters || []);
-      processedItems = filterByKeyword(processedItems, keyword);
-      if (!isOverviewMode) {
-        const dataSourcePeriodFilter = (dataSource.filters || []).find((f2) => f2.field === "period");
-        if (!dataSourcePeriodFilter) {
-          processedItems = filterByPeriod(processedItems, layoutView);
-        }
-      }
-      processedItems = filterByDateRange(processedItems, start2, end2);
-      return sortItems(processedItems, dataSource.sort || []);
-    };
-    setItems(calculateItems());
     const listener = () => {
-      setItems(calculateItems());
+      console.log(`[DataStore] 发出通知。正在为视图 [${dataSourceName}] 更新源数据...`);
+      setAllItems(dataStore.queryItems());
     };
     dataStore.subscribe(listener);
-    return () => {
-      dataStore.unsubscribe(listener);
-    };
-  }, [dataStore, dataSource, dateRange, keyword, layoutView, isOverviewMode]);
-  return items;
+    return () => dataStore.unsubscribe(listener);
+  }, [dataStore, dataSourceName]);
+  const processedItems = T$1(() => {
+    console.time(`[useViewData] 为视图 [${dataSourceName}] 计算数据耗时`);
+    if (!dataSource) {
+      console.timeEnd(`[useViewData] 为视图 [${dataSourceName}] 计算数据耗时`);
+      return [];
+    }
+    const start2 = dayjs(dateRange[0]).format("YYYY-MM-DD");
+    const end2 = dayjs(dateRange[1]).format("YYYY-MM-DD");
+    let itemsToProcess = allItems;
+    itemsToProcess = filterByRules(itemsToProcess, dataSource.filters || []);
+    itemsToProcess = filterByKeyword(itemsToProcess, keyword);
+    if (!isOverviewMode) {
+      const dataSourcePeriodFilter = (dataSource.filters || []).find((f2) => f2.field === "period");
+      if (!dataSourcePeriodFilter) {
+        itemsToProcess = filterByPeriod(itemsToProcess, layoutView);
+      }
+    }
+    itemsToProcess = filterByDateRange(itemsToProcess, start2, end2);
+    const finalResult = sortItems(itemsToProcess, dataSource.sort || []);
+    console.timeEnd(`[useViewData] 为视图 [${dataSourceName}] 计算数据耗时`);
+    return finalResult;
+  }, [allItems, dataSource, dateRange, keyword, layoutView, isOverviewMode, dataSourceName]);
+  return processedItems;
 }
+const ViewContent = ({
+  viewInstance,
+  dataStore,
+  dateRange,
+  keyword,
+  layoutView,
+  isOverviewMode,
+  app,
+  onMarkDone,
+  actionService,
+  taskService
+}) => {
+  const allDataSources = useStore((state) => state.settings.dataSources);
+  const dataSource = allDataSources.find((ds) => ds.id === viewInstance.dataSourceId);
+  const viewItems = useViewData({
+    dataStore,
+    dataSource,
+    dateRange,
+    keyword,
+    layoutView,
+    isOverviewMode: !!isOverviewMode
+  });
+  if (!dataSource) return /* @__PURE__ */ u$1("div", { children: [
+    "数据源 (ID: ",
+    viewInstance.dataSourceId,
+    ") 未找到"
+  ] });
+  const ViewComponent = ViewComponents[viewInstance.viewType];
+  if (!ViewComponent) return /* @__PURE__ */ u$1("div", { children: [
+    "未知视图: ",
+    viewInstance.viewType
+  ] });
+  const viewProps = {
+    app,
+    items: viewItems,
+    dateRange,
+    module: viewInstance,
+    currentView: layoutView,
+    ...viewInstance.viewConfig,
+    groupField: viewInstance.group,
+    fields: viewInstance.fields,
+    onMarkDone,
+    actionService,
+    taskService
+  };
+  return /* @__PURE__ */ u$1(ViewComponent, { ...viewProps });
+};
 function LayoutRenderer({ layout, dataStore, app, actionService, taskService }) {
   const allViews = useStore((state) => state.settings.viewInstances);
-  const allDataSources = useStore((state) => state.settings.dataSources);
-  const appStore2 = useStore((state) => state);
+  const [expandedState, setExpandedState] = d({});
+  const [isStateInitialized, setIsStateInitialized] = d(false);
+  y(() => {
+    const initialState = {};
+    allViews.forEach((v2) => {
+      if (layout.viewInstanceIds.includes(v2.id)) {
+        initialState[v2.id] = !v2.collapsed;
+      }
+    });
+    setExpandedState(initialState);
+    setIsStateInitialized(true);
+  }, [allViews, layout.viewInstanceIds]);
   const getInitialDate = () => {
     if (layout.isOverviewMode) {
       return layout.initialDate ? dayjs(layout.initialDate) : dayjs();
@@ -31412,12 +31496,12 @@ function LayoutRenderer({ layout, dataStore, app, actionService, taskService }) 
   const handleOverviewDateChange = (newDate) => {
     const newDateString = newDate.format("YYYY-MM-DD");
     setLayoutDate(newDate);
-    appStore2.updateLayout(layout.id, { initialDate: newDateString });
+    appStore.updateLayout(layout.id, { initialDate: newDateString });
   };
   const handleQuickInputAction = (viewInstance) => {
     const config2 = actionService.getQuickInputConfigForView(viewInstance, layoutDate, layoutView);
     if (config2) {
-      new QuickInputModal(app, config2.blockId, config2.context, config2.themeId, void 0, dataStore, appStore2).open();
+      new QuickInputModal(app, config2.blockId, config2.context, config2.themeId, void 0, dataStore, appStore).open();
     }
   };
   const handleMarkItemDone = q$1((itemId) => {
@@ -31432,58 +31516,35 @@ function LayoutRenderer({ layout, dataStore, app, actionService, taskService }) 
       viewId,
       ") 未找到"
     ] });
-    const dataSource = allDataSources.find((ds) => ds.id === viewInstance.dataSourceId);
-    if (!dataSource) return /* @__PURE__ */ u$1("div", { class: "think-module", children: [
-      "数据源 (ID: ",
-      viewInstance.dataSourceId,
-      ") 未找到"
-    ] });
-    const dateRangeForView = T$1(() => {
-      let range;
-      if (viewInstance.viewType === "StatisticsView") {
-        range = getDateRange(layoutDate, "年");
-      } else {
-        const dataSourcePeriodFilter = (dataSource.filters || []).find((f2) => f2.field === "period");
-        const viewPeriod = dataSourcePeriodFilter ? dataSourcePeriodFilter.value : layoutView;
-        range = getDateRange(layoutDate, viewPeriod);
-      }
-      return [range.startDate.toDate(), range.endDate.toDate()];
-    }, [layoutDate, layoutView, viewInstance.viewType, dataSource.filters]);
-    const viewItems = useViewData({
-      dataStore,
-      dataSource,
-      dateRange: dateRangeForView,
-      keyword: kw,
-      layoutView,
-      isOverviewMode: layout.isOverviewMode
-    });
-    const ViewComponent = ViewComponents[viewInstance.viewType];
-    if (!ViewComponent) return /* @__PURE__ */ u$1("div", { class: "think-module", children: [
-      "未知视图: ",
-      viewInstance.viewType
-    ] });
-    const viewProps = {
-      app,
-      // 直接传递 app
-      items: viewItems,
-      dateRange: dateRangeForView,
-      module: viewInstance,
-      currentView: layoutView,
-      ...viewInstance.viewConfig,
-      groupField: viewInstance.group,
-      fields: viewInstance.fields,
-      onMarkDone: handleMarkItemDone,
-      actionService,
-      taskService
-    };
+    const isExpanded = !!expandedState[viewId];
+    const toggleExpanded = () => setExpandedState((prev2) => ({ ...prev2, [viewId]: !prev2[viewId] }));
     return /* @__PURE__ */ u$1(
       ModulePanel,
       {
         title: viewInstance.title,
-        collapsed: viewInstance.collapsed,
+        collapsed: !isExpanded,
+        onToggle: toggleExpanded,
         onActionClick: () => handleQuickInputAction(viewInstance),
-        children: /* @__PURE__ */ u$1(ViewComponent, { ...viewProps })
-      }
+        children: isExpanded && /* @__PURE__ */ u$1(
+          ViewContent,
+          {
+            viewInstance,
+            dataStore,
+            dateRange: T$1(() => {
+              const range = getDateRange(layoutDate, layoutView);
+              return [range.startDate.toDate(), range.endDate.toDate()];
+            }, [layoutDate, layoutView]),
+            keyword: kw,
+            layoutView,
+            isOverviewMode: !!layout.isOverviewMode,
+            app,
+            onMarkDone: handleMarkItemDone,
+            actionService,
+            taskService
+          }
+        )
+      },
+      viewId
     );
   };
   const gridStyle = layout.displayMode === "grid" ? { display: "grid", gridTemplateColumns: `repeat(${layout.gridConfig?.columns || 2}, 1fr)`, gap: "8px" } : {};
@@ -31496,7 +31557,7 @@ function LayoutRenderer({ layout, dataStore, app, actionService, taskService }) 
       /* @__PURE__ */ u$1("button", { onClick: () => setLayoutDate(dayjs()), children: "＝" }),
       /* @__PURE__ */ u$1("input", { placeholder: "快速过滤…", style: "margin-left:4px;", value: kw, onInput: (e2) => setKw(e2.target.value) })
     ] })),
-    /* @__PURE__ */ u$1("div", { style: gridStyle, children: layout.viewInstanceIds.map(renderViewInstance) })
+    /* @__PURE__ */ u$1("div", { style: gridStyle, children: isStateInitialized && layout.viewInstanceIds.map(renderViewInstance) })
   ] });
 }
 var __getOwnPropDesc$1 = Object.getOwnPropertyDescriptor;
@@ -31508,15 +31569,25 @@ var __decorateClass$1 = (decorators, target, key, kind) => {
   return result;
 };
 let RendererService = class {
-  // [核心修改 ②] 构造函数不再注入 ThinkPlugin，而是直接注入 App
-  // 这就打破了 ThinkPlugin -> RendererService -> ThinkPlugin 的循环依赖
-  constructor(app, dataStore, appStore2, actionService, taskService) {
+  app;
+  dataStore;
+  appStore;
+  actionService;
+  taskService;
+  isInitialized = false;
+  // [核心修复] 构造函数变为空
+  constructor() {
+  }
+  // [核心修复] 新增 init 方法用于注入所有依赖
+  init(app, dataStore, appStore2, actionService, taskService) {
+    if (this.isInitialized) return;
     this.app = app;
     this.dataStore = dataStore;
     this.appStore = appStore2;
     this.actionService = actionService;
     this.taskService = taskService;
     this.appStore.subscribe(() => this.rerenderAll());
+    this.isInitialized = true;
   }
   activeLayouts = [];
   register(container, layout) {
@@ -31526,7 +31597,6 @@ let RendererService = class {
         layout,
         dataStore: this.dataStore,
         app: this.app,
-        // [核心修改 ③] 直接传递 app 实例
         actionService: this.actionService,
         taskService: this.taskService
       }),
@@ -31546,6 +31616,7 @@ let RendererService = class {
     }
   }
   rerenderAll() {
+    if (!this.isInitialized) return;
     const latestSettings = this.appStore.getSettings();
     for (const activeLayout of [...this.activeLayouts]) {
       const { container, layoutName } = activeLayout;
@@ -31556,7 +31627,6 @@ let RendererService = class {
             layout: newLayoutConfig,
             dataStore: this.dataStore,
             app: this.app,
-            // [核心修改 ④] 直接传递 app 实例
             actionService: this.actionService,
             taskService: this.taskService
           }),
@@ -31593,8 +31663,12 @@ function upsertKvTag(line2, key, value) {
   }
 }
 let TaskService = class {
-  // [核心改造] 构造函数通过 DI 自动接收 DataStore 实例
-  constructor(dataStore) {
+  dataStore;
+  // [核心修复] 构造函数变为空
+  constructor() {
+  }
+  // [核心修复] 新增 init 方法用于注入依赖
+  init(dataStore) {
     this.dataStore = dataStore;
   }
   async getTaskLine(itemId) {
@@ -37945,34 +38019,50 @@ class ThinkPlugin extends obsidian.Plugin {
   appStore;
   dataStore;
   rendererService;
+  actionService;
+  timerService;
   timerStateService;
   timerWidget;
   async onload() {
     const settings = await this.loadSettings();
     this.injectGlobalCss();
     const platform = instance.resolve(ObsidianPlatform);
-    platform.init(this.app);
+    const dataStore = instance.resolve(DataStore);
+    const inputService = instance.resolve(InputService);
+    const taskService = instance.resolve(TaskService);
+    const timerService = instance.resolve(TimerService);
+    const actionService = instance.resolve(ActionService);
+    const rendererService = instance.resolve(RendererService);
+    const timerStateService = instance.resolve(TimerStateService);
+    this.dataStore = dataStore;
+    this.rendererService = rendererService;
+    this.actionService = actionService;
+    this.timerService = timerService;
+    this.timerStateService = timerStateService;
     this.appStore = new AppStore();
-    this.appStore.init(this, settings);
     instance.registerInstance(AppStore, this.appStore);
+    platform.init(this.app);
+    inputService.init(this.app);
+    timerStateService.init(this.app);
+    this.appStore.init(this, settings);
+    dataStore.init(platform);
+    taskService.init(dataStore);
+    timerService.init(this.appStore, dataStore, taskService, inputService, this.app);
+    actionService.init(this.app, dataStore, this.appStore, inputService, timerService);
+    rendererService.init(this.app, dataStore, this.appStore, actionService, taskService);
     registerStore(this.appStore);
-    this.dataStore = instance.resolve(DataStore);
-    this.dataStore.init(platform);
-    this.rendererService = instance.resolve(RendererService);
-    this.timerStateService = instance.resolve(TimerStateService);
     this.timerWidget = new FloatingTimerWidget(this);
     this.timerWidget.load();
-    this.timerStateService.loadStateFromFile().then((timers) => {
+    timerStateService.loadStateFromFile().then((timers) => {
       this.appStore.setInitialTimers(timers);
     });
-    await this.dataStore.initialScan();
+    await dataStore.initialScan();
     setup$2?.({
-      app: this.app,
+      plugin: this,
       appStore: this.appStore,
-      dataStore: this.dataStore,
-      rendererService: this.rendererService,
-      actionService: instance.resolve(ActionService),
-      taskService: instance.resolve(TaskService)
+      dataStore,
+      rendererService,
+      actionService
     });
     setup$1?.({
       plugin: this,
