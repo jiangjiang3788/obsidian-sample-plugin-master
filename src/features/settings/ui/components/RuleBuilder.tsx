@@ -1,17 +1,20 @@
-// src/core/settings/ui/components/RuleBuilder.tsx
+// src/features/settings/ui/components/RuleBuilder.tsx
 /** @jsxImportSource preact */
 import { h } from 'preact';
 import { useMemo, useState } from 'preact/hooks';
 import { Typography, Stack, Tooltip, Chip, Autocomplete, TextField, Button } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import { SimpleSelect } from '@shared/ui/SimpleSelect';
-import { DataStore } from '@core/services/dataStore';
+// [修改] 从注册表导入 dataStore
+import { dataStore } from '@state/storeRegistry';
 import { getAllFields, readField } from '@core/domain/schema';
 
 // 辅助Hook：获取库中所有字段的唯一值，用于自动补全
 function useUniqueFieldValues() {
     return useMemo(() => {
-        const items = DataStore.instance.queryItems();
+        // [修复] 直接使用从注册表导入的 dataStore 实例
+        if (!dataStore) return {}; // 安全保护，防止 dataStore 未初始化
+        const items = dataStore.queryItems();
         const allKnownFields = new Set<string>(getAllFields(items));
         const valueMap: Record<string, Set<string>> = {};
         allKnownFields.forEach(field => valueMap[field] = new Set());

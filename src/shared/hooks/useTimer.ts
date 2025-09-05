@@ -2,10 +2,12 @@
 /** @jsxImportSource preact */
 import { useState, useEffect, useMemo, useCallback } from 'preact/hooks';
 import { useStore } from '@state/AppStore';
-import { TimerService } from '@core/services/TimerService';
+// [修改] 从注册表导入 timerService
+import { timerService } from '@state/storeRegistry';
 import { formatSecondsToHHMMSS } from '@core/utils/date';
 import { Item } from '@core/domain/schema';
-import { DataStore } from '@core/services/dataStore';
+// [修改] 从注册表导入 dataStore
+import { dataStore } from '@state/storeRegistry';
 
 /**
  * 一个 Preact Hook，用于处理计时器的UI逻辑。
@@ -24,7 +26,8 @@ export const useTimer = () => {
         
         // 当 activeTimer 存在时，获取并设置任务信息
         if (activeTimer) {
-            const item = DataStore.instance.queryItems().find(i => i.id === activeTimer.taskId);
+            // [修复] 从注册表获取 dataStore 实例
+            const item = dataStore?.queryItems().find(i => i.id === activeTimer.taskId);
             setTaskItem(item || null);
         } else {
             setTaskItem(null);
@@ -55,12 +58,16 @@ export const useTimer = () => {
     }, [activeTimer]); // 当 activeTimer 对象变化时，重新执行 effect
 
     // 使用 useCallback 避免不必要地重新创建函数，提高性能
-    const actions = useMemo(() => ({
-        start: (taskId: string) => TimerService.start(taskId),
-        pause: () => TimerService.pause(),
-        resume: () => TimerService.resume(),
-        stop: () => TimerService.stopAndApply(),
-    }), []);
+    const actions = useMemo(() => {
+        // [修复] 直接使用导入的 timerService 实例
+        if (!timerService) return { start: ()=>{}, pause: ()=>{}, resume: ()=>{}, stop: ()=>{} };
+        return {
+            start: (taskId: string) => timerService.startOrResume(taskId),
+            pause: () => activeTimer && timerService.pause(activeTimer.id),
+            resume: () => activeTimer && timerService.resume(activeTimer.id),
+            stop: () => activeTimer && timerService.stopAndApply(activeTimer.id),
+        }
+    }, [activeTimer]);
 
     return {
         activeTimer,

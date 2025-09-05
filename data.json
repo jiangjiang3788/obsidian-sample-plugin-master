@@ -1329,7 +1329,7 @@
         "colField": "date"
       },
       "parentId": "group_memc1a9ofen88",
-      "collapsed": false
+      "collapsed": true
     },
     {
       "id": "view_mepgw6pp1iqso",
@@ -2510,7 +2510,7 @@
         "columns": 5
       },
       "isOverviewMode": true,
-      "initialDate": "2025-07-14"
+      "initialDate": "2025-03-10"
     },
     {
       "id": "layout_mer6y66i78epn",

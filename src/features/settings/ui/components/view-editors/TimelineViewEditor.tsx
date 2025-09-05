@@ -1,14 +1,13 @@
-// src/features/dashboard/settings/ModuleEditors/TimelineViewEditor.tsx
+// src/features/settings/ui/components/view-editors/TimelineViewEditor.tsx
 /** @jsxImportSource preact */
 import { h } from 'preact';
-// --- Change: Removed Chip, Select, MenuItem. Added Box for the custom tag. ---
 import { Box, Stack, Typography, TextField, Button, IconButton, Tooltip } from '@mui/material';
 import { ViewEditorProps } from './registry';
 import AddIcon from '@mui/icons-material/AddCircleOutline';
 import DeleteIcon from '@mui/icons-material/RemoveCircleOutline';
 import { useMemo } from 'preact/hooks';
-import { DataStore } from '@core/services/dataStore';
-// --- Change: Imported our custom SimpleSelect component ---
+// [MODIFIED] Import dataStore from the registry
+import { dataStore } from '@state/storeRegistry';
 import { SimpleSelect } from '@shared/ui/SimpleSelect';
 
 export const DEFAULT_CONFIG = {
@@ -36,7 +35,9 @@ export function TimelineViewEditor({ value, onChange }: ViewEditorProps) {
     const progressOrder: string[] = viewConfig.progressOrder || [];
 
     const fileOptions = useMemo(() => {
-        const items = DataStore.instance.queryItems();
+        // [FIXED] Use the imported dataStore instance instead of the old singleton pattern.
+        if (!dataStore) return []; // Add a guard clause in case the store isn't ready.
+        const items = dataStore.queryItems();
         const fileNames = new Set<string>();
         items.forEach(item => {
             if (item.file?.basename) fileNames.add(item.file.basename);
@@ -44,8 +45,6 @@ export function TimelineViewEditor({ value, onChange }: ViewEditorProps) {
         return Array.from(fileNames).sort((a,b) => a.localeCompare(b, 'zh-CN'));
     }, []);
 
-    // All handler functions (handleConfigChange, handleCategoryChange, etc.) remain unchanged
-    // as our new components will plug into the existing logic perfectly.
     const handleConfigChange = (patch: Record<string, any>) => {
         onChange({ ...viewConfig, ...patch });
     };
@@ -119,7 +118,6 @@ export function TimelineViewEditor({ value, onChange }: ViewEditorProps) {
                     const catConfig = categories[name];
                     if (!catConfig) return null;
 
-                    // --- Change: Prepare options for our SimpleSelect component ---
                     const availableFileOptions = fileOptions
                         .filter(f => !(catConfig.files || []).includes(f))
                         .map(f => ({ value: f, label: f }));
@@ -150,7 +148,7 @@ export function TimelineViewEditor({ value, onChange }: ViewEditorProps) {
                             <TextField
                                 type="color" size="small"
                                 value={catConfig.color || '#cccccc'}
-                                onChange={e => handleCategoryChange(name, { color: e.target.value })}
+                                onChange={e => handleCategoryChange(name, { color: (e.target as HTMLInputElement).value })}
                                 sx={{ p: '2px', gridColumn: '2 / 3' }}
                             />
                             <TextField
@@ -161,7 +159,6 @@ export function TimelineViewEditor({ value, onChange }: ViewEditorProps) {
                             />
                             <Box sx={{ minWidth: 0, gridColumn: '4 / 5' }}>
                                 <Stack direction="row" flexWrap="wrap" useFlexGap spacing={0.5} alignItems="center">
-                                    {/* --- Change: Replaced Chip with a styled, clickable Box --- */}
                                     {(catConfig.files || []).map(file => (
                                         <Tooltip key={file} title={`点击移除关键词: ${file}`}>
                                             <Box
@@ -183,7 +180,6 @@ export function TimelineViewEditor({ value, onChange }: ViewEditorProps) {
                                             </Box>
                                         </Tooltip>
                                     ))}
-                                    {/* --- Change: Replaced MUI Select with our SimpleSelect --- */}
                                     <SimpleSelect
                                         value=""
                                         options={availableFileOptions}

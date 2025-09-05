@@ -1,9 +1,10 @@
-// src/features/dashboard/settings/ModuleEditors/StatisticsViewEditor.tsx
+// src/features/settings/ui/components/view-editors/StatisticsViewEditor.tsx
 /** @jsxImportSource preact */
 import { h } from 'preact';
 import { Stack, Typography, Box, IconButton, TextField, Tooltip } from '@mui/material';
 import type { ViewEditorProps } from './registry';
-import { DataStore } from '@core/services/dataStore';
+// [修改] 从注册表导入 dataStore
+import { dataStore } from '@state/storeRegistry';
 import { useMemo, useState, useEffect } from 'preact/hooks';
 import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
 import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
@@ -22,7 +23,9 @@ export function StatisticsViewEditor({ value, onChange }: ViewEditorProps) {
 
     // 自动发现所有基础分类
     const discoveredCategories = useMemo(() => {
-        const allItems = DataStore.instance.queryItems();
+        // [修复] 从注册表获取 dataStore 实例
+        if (!dataStore) return [];
+        const allItems = dataStore.queryItems();
         const categorySet = new Set<string>();
         allItems.forEach(item => {
             const baseCategory = (item.categoryKey || '').split('/')[0];
@@ -71,8 +74,8 @@ export function StatisticsViewEditor({ value, onChange }: ViewEditorProps) {
         onChange({ categories: newCategories });
     };
 
-    return (
-        <Stack spacing={1}>
+    return (
+        <Stack spacing={1}>
             <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>分类配置</Typography>
             <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
                 插件已自动识别出您数据中的所有分类。您可以使用上下按钮调整顺序，或修改颜色。
@@ -97,13 +100,13 @@ export function StatisticsViewEditor({ value, onChange }: ViewEditorProps) {
                         <TextField
                             type="color"
                             value={cat.color}
-                            onChange={(e) => handleColorChange(index, e.target.value)}
+                            onChange={(e) => handleColorChange(index, (e.target as HTMLInputElement).value)}
                             sx={{ minWidth: 60, p: '2px' }}
                         />
                         <Typography sx={{ flexGrow: 1, fontWeight: 500 }}>{cat.name}</Typography>
                     </Stack>
                 ))}
             </div>
-        </Stack>
-    );
+        </Stack>
+    );
 }

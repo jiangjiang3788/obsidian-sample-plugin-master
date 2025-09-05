@@ -1,65 +1,54 @@
 // src/features/dashboard/ui/ModulePanel.tsx
+/** @jsxImportSource preact */
 import { h } from 'preact';
-import { useState, useRef, useEffect } from 'preact/hooks';
-import { EVENT_NAMES } from '@core/domain/constants';
+// [移除] 不再需要 hooks 和常量
+// import { useState, useRef, useEffect } from 'preact/hooks';
+// import { EVENT_NAMES } from '@core/domain/constants';
 
 interface ModulePanelProps {
-  title: string;
-  collapsed?: boolean;
-  children: any;
-  onActionClick?: () => void;
+    title: string;
+    collapsed?: boolean;
+    children: any;
+    onActionClick?: () => void;
+    // [修改] onToggle 现在会接收鼠标事件，以便父组件判断 Ctrl/Cmd 键是否按下
+    onToggle?: (e: MouseEvent) => void;
 }
 
-export function ModulePanel({ title, collapsed: initialCollapsed, children, onActionClick }: ModulePanelProps) {
-  const [collapsed, setCollapsed] = useState<boolean>(!!initialCollapsed);
-  const rootRef = useRef<HTMLDivElement>(null);
+export function ModulePanel({ title, collapsed, children, onActionClick, onToggle }: ModulePanelProps) {
+    // [移除] 所有内部状态和事件监听器都被移除
 
-  const toggleCollapsed = () => setCollapsed(v => !v);
+    const onHeaderClick = (e: MouseEvent) => {
+        // 如果点击的是操作按钮区域，则不触发折叠/展开
+        if ((e.target as HTMLElement).closest('.module-header-actions')) {
+            return;
+        }
+        // 调用从父组件传入的 onToggle 函数，并将事件对象传递过去
+        onToggle?.(e);
+    };
 
-  const onHeaderClick = (e: MouseEvent) => {
-    if ((e.target as HTMLElement).closest('.module-header-actions')) {
-        return;
-    }
-    if (e.metaKey || e.ctrlKey) {
-      const want = !collapsed;
-      const ev = new CustomEvent(EVENT_NAMES.TOGGLE_ALL_MODULES, { detail: want });
-      document.querySelectorAll('.think-module').forEach(el => el.dispatchEvent(ev));
-    } else {
-      toggleCollapsed();
-    }
-  };
-
-  useEffect(() => {
-    const handler = (ev: any) => {
-      setCollapsed(ev.detail);
-    };
-    const el = rootRef.current;
-    if (!el) return;
-    el.addEventListener(EVENT_NAMES.TOGGLE_ALL_MODULES, handler as any);
-    return () => el.removeEventListener(EVENT_NAMES.TOGGLE_ALL_MODULES, handler as any);
-  }, []);
-
-  return (
-    <div class="think-module" ref={rootRef}>
-      <div class="module-header" onClick={onHeaderClick as any} title="点击折叠/展开；Ctrl/⌘ + 点击：全部折叠/展开">
-        <span class="module-title">{title}</span>
-        <div class="module-header-controls">
-            <div class="module-header-actions">
-                <span 
-                    class="module-action-plus" 
-                    title="快捷输入"
-                    onClick={(e) => {
-                        e.stopPropagation();
-                        onActionClick?.();
-                    }}
-                >
-                    +
-                </span>
+    return (
+        <div class="think-module">
+            <div class="module-header" onClick={onHeaderClick as any} title="点击折叠/展开；Ctrl/⌘ + 点击：全部折叠/展开">
+                <span class="module-title">{title}</span>
+                <div class="module-header-controls">
+                    <div class="module-header-actions">
+                        <span 
+                            class="module-action-plus" 
+                            title="快捷输入"
+                            onClick={(e) => {
+                                e.stopPropagation(); // 阻止事件冒泡到 header 的 onClick
+                                onActionClick?.();
+                            }}
+                        >
+                            +
+                        </span>
+                    </div>
+                    {/* [修改] 显示的图标现在直接由 collapsed 属性决定 */}
+                    <div class="module-toggle">{collapsed ? '▶' : '▼'}</div>
+                </div>
             </div>
-            <div class="module-toggle">{collapsed ? '▶' : '▼'}</div>
+            {/* [修改] 子内容的显示也直接由 collapsed 属性决定 */}
+            {!collapsed && <div class="module-content">{children}</div>}
         </div>
-      </div>
-      {!collapsed && <div class="module-content">{children}</div>}
-    </div>
-  );
+    );
 }

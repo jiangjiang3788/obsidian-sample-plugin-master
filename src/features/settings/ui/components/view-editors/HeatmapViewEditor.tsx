@@ -1,13 +1,13 @@
 // src/features/settings/ui/components/view-editors/HeatmapViewEditor.tsx
 /** @jsxImportSource preact */
-// [FINAL FIX] Removed all preact imports like 'h' and 'Fragment'
 import { Stack, Typography, FormControlLabel, Radio, RadioGroup, Box, Button } from '@mui/material';
 import type { ViewEditorProps } from './registry';
 import { SimpleSelect } from '@shared/ui/SimpleSelect';
 import { ListEditor } from '@shared/components/form/ListEditor';
-import { AppStore, useStore } from '@state/AppStore';
+import { useStore } from '@state/AppStore';
 import { useMemo } from 'preact/hooks';
-import { DataStore } from '@core/services/dataStore';
+// [修改] 从注册表导入 dataStore
+import { dataStore } from '@state/storeRegistry';
 import { filterByRules } from '@core/utils/itemFilter';
 import { Notice } from 'obsidian';
 
@@ -40,7 +40,12 @@ export function HeatmapViewEditor({ value, onChange, module }: ViewEditorProps) 
             return;
         }
 
-        const items = DataStore.instance.queryItems();
+        // [修复] 从注册表获取 dataStore 实例
+        if (!dataStore) {
+            new Notice('数据存储服务尚未准备就绪。');
+            return;
+        }
+        const items = dataStore.queryItems();
         const filteredItems = filterByRules(items, dataSource.filters);
         const tagSet = new Set<string>();
         filteredItems.forEach(item => {
@@ -63,7 +68,6 @@ export function HeatmapViewEditor({ value, onChange, module }: ViewEditorProps) 
             </Stack>
 
             {config.displayMode === 'habit' && (
-                // [FINAL FIX] Changed <> to <Fragment>
                 <Fragment>
                     <Stack direction="row" alignItems="center" spacing={2}>
                         <Typography sx={{ width: '80px', flexShrink: 0, fontWeight: 500 }}>源 Block</Typography>
@@ -75,8 +79,8 @@ export function HeatmapViewEditor({ value, onChange, module }: ViewEditorProps) 
                                 placeholder="-- 请选择用于打卡的 Block 模板 --"
                             />
                              <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.5 }}>
-                                视图将从此 Block 模板的“评分”字段中读取 Emoji/图片/颜色映射。
-                            </Typography>
+                                 视图将从此 Block 模板的“评分”字段中读取 Emoji/图片/颜色映射。
+                             </Typography>
                         </Box>
                     </Stack>
                     <Stack direction="row" alignItems="flex-start" spacing={2}>
