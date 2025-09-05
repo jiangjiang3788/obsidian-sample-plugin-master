@@ -871,4 +871,9 @@ body.theme-dark .heatmap-cell.empty {
     color: var(--text-on-accent);
     font-weight: 600;
 }
+
+.module-content {
+  padding: 12px;
+  overflow-x: auto; /* 核心改动：增加这一行 */
+}
 `.trim();
