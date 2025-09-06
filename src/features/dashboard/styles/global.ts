@@ -234,6 +234,7 @@ body.theme-dark .think-pills .think-pill{
     color: var(--text-muted);
 }
 
+
 /* [全新] Time Navigator (概览模式导航器) 样式 - 横向布局 */
 .time-navigator-container {
     display: flex;
@@ -257,6 +258,7 @@ body.theme-dark .think-pills .think-pill{
     border-radius: 6px;
     transition: all 0.2s ease;
     box-sizing: border-box;
+    border: 1px solid transparent; /* [新增] 为所有单元格添加透明边框，防止描边时跳动 */
 }
 
 /* 左侧控制列 */
@@ -324,10 +326,6 @@ body.theme-dark .think-pills .think-pill{
     padding: 4px;
     gap: 4px;
     cursor: pointer;
-    border: 1px solid transparent;
-}
-.tn-quarter-block.is-selected {
-    border-color: #FFD600; /* 黄色高亮选中的季度 */
 }
 .tn-quarter-block .tn-quarter-header {
     text-align: center;
@@ -336,11 +334,8 @@ body.theme-dark .think-pills .think-pill{
     color: var(--text-muted);
     padding-bottom: 2px;
 }
-.tn-quarter-block .tn-quarter-header.is-past {
+.tn-quarter-block.is-past .tn-quarter-header {
     color: #9B7FBD;
-}
-.tn-quarter-block.is-today .tn-quarter-header {
-    color: var(--interactive-accent);
 }
 .tn-months-container {
     display: flex;
@@ -348,27 +343,64 @@ body.theme-dark .think-pills .think-pill{
     gap: 4px;
 }
 
-/* 月份单元格 */
-.tn-month-cell {
-    flex: 1;
+/* [修改] 统一所有单元格的状态样式 */
+
+/* 1. 过去状态 (最弱) - 淡紫色填充 */
+.tn-quarter-block.is-past,
+.tn-month-cell.is-past,
+.tn-week-cell.is-past {
+    background: #EDE6F6; /* 淡紫色 */
+    color: #9B7FBD;
+}
+/* 暗色模式下的过去状态 */
+body.theme-dark .tn-quarter-block.is-past,
+body.theme-dark .tn-month-cell.is-past,
+body.theme-dark .tn-week-cell.is-past {
+    background: #403252;
+    color: #c4b0e0;
+}
+
+/* 2. 当天状态 (中等) - 主题色描边 */
+.tn-quarter-block.is-today,
+.tn-month-cell.is-today,
+.tn-week-cell.is-today {
+    background: transparent;
+    outline: 2px solid var(--interactive-accent);
+    outline-offset: -2px;
+    color: var(--text-normal);
+}
+.tn-quarter-block.is-today .tn-quarter-header {
+    color: var(--interactive-accent);
+}
+
+/* 3. 选中状态 (最强) - 深紫色填充 */
+.tn-quarter-block.is-selected,
+.tn-month-cell.is-selected,
+.tn-week-cell.is-selected {
+    background: #9B7FBD !important; /* 使用 !important 覆盖 is-past 的样式 */
+    color: white !important;
+    border-color: #9B7FBD !important;
+    box-shadow: none;
+}
+.tn-quarter-block.is-selected .tn-quarter-header {
+    color: white !important;
+}
+
+/* 原始周和月单元格样式简化 */
+.tn-month-cell, .tn-week-cell {
     font-weight: 500;
     background: var(--background-secondary);
     color: var(--text-muted);
-    border: 1px solid transparent;
 }
-.tn-month-cell.is-past {
-    background: #9B7FBD;
-    color: white;
-}
-.tn-month-cell.is-today {
-    background: var(--interactive-accent-hover);
-    color: white;
-}
-.tn-month-cell.is-selected {
-    border-color: #FFD600;
+.tn-week-cell {
+    flex-basis: 0;
+    flex-grow: 1;
+    font-size: 10px;
+    cursor: pointer;
+    min-width: 10px;
 }
 
-/* 周单元格 */
+/* 周容器 */
 .tn-weeks-container {
     height: 24px;
     flex-shrink: 0;
@@ -377,30 +409,8 @@ body.theme-dark .think-pills .think-pill{
     padding: 3px;
     overflow: hidden;
 }
-.tn-week-cell {
-    flex-basis: 0;
-    flex-grow: 1;
-    font-size: 10px;
-    background: var(--background-secondary);
-    color: var(--text-muted);
-    cursor: pointer;
-    min-width: 10px;
-    border: 1px solid transparent;
-}
-.tn-week-cell.is-past {
-    background: #EDE6F6; /* 淡紫色 */
-    color: #9B7FBD;
-}
-.tn-week-cell.is-today {
-    background: var(--interactive-accent-hover);
-    color: white;
-    font-weight: bold;
-}
-.tn-week-cell.is-selected {
-    border-color: #FFD600;
-    box-shadow: 0 0 0 1px #FFD600;
-}
-
+ 
+ 
 
 /* [全新] Statistics View (统计视图) 样式 V3.1 */
 .statistics-view {

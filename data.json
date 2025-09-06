@@ -2503,14 +2503,14 @@
         "view_mer5qlrmxm6dv"
       ],
       "displayMode": "grid",
-      "initialView": "月",
+      "initialView": "周",
       "initialDateFollowsNow": false,
       "parentId": null,
       "gridConfig": {
         "columns": 5
       },
       "isOverviewMode": true,
-      "initialDate": "2025-01-01"
+      "initialDate": "2025-06-16"
     },
     {
       "id": "layout_mer6y66i78epn",
