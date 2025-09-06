@@ -1346,7 +1346,7 @@
       "collapsed": false,
       "parentId": "group_mer5oj3wueept",
       "fields": [
-        "period",
+        "periodCount",
         "categoryKey",
         "date",
         "icon",
@@ -1368,7 +1368,7 @@
       "collapsed": true,
       "parentId": "group_memc1a9ofen88",
       "fields": [
-        "period",
+        "periodCount",
         "categoryKey",
         "date",
         "icon",
@@ -1412,7 +1412,7 @@
       "collapsed": true,
       "parentId": "group_memc1a9ofen88",
       "fields": [
-        "period",
+        "periodCount",
         "categoryKey",
         "date",
         "icon",
@@ -1434,7 +1434,7 @@
       "collapsed": true,
       "parentId": "group_memc1a9ofen88",
       "fields": [
-        "period",
+        "periodCount",
         "categoryKey",
         "date",
         "icon",
@@ -1457,7 +1457,7 @@
       "collapsed": false,
       "parentId": "group_mer5oj3wueept",
       "fields": [
-        "period",
+        "periodCount",
         "categoryKey",
         "date",
         "icon",
@@ -1479,7 +1479,7 @@
       "collapsed": false,
       "parentId": "group_mer5oj3wueept",
       "fields": [
-        "period",
+        "periodCount",
         "categoryKey",
         "date",
         "icon",
@@ -1611,7 +1611,7 @@
       "collapsed": false,
       "parentId": "group_mer5qc61xm7ni",
       "fields": [
-        "period",
+        "periodCount",
         "categoryKey",
         "date",
         "icon",
@@ -1633,7 +1633,7 @@
       "collapsed": false,
       "parentId": "group_mer5qc61xm7ni",
       "fields": [
-        "period",
+        "periodCount",
         "categoryKey",
         "date",
         "icon",
@@ -1655,7 +1655,7 @@
       "collapsed": false,
       "parentId": "group_mer5qc61xm7ni",
       "fields": [
-        "period",
+        "periodCount",
         "categoryKey",
         "date",
         "icon",
@@ -1699,7 +1699,7 @@
       "collapsed": false,
       "parentId": "group_mer5qdss3nlkm",
       "fields": [
-        "period",
+        "periodCount",
         "categoryKey",
         "date",
         "icon",
@@ -1721,7 +1721,7 @@
       "collapsed": false,
       "parentId": "group_mer5qdss3nlkm",
       "fields": [
-        "period",
+        "periodCount",
         "categoryKey",
         "date",
         "icon",
@@ -1743,7 +1743,7 @@
       "collapsed": false,
       "parentId": "group_mer5qdss3nlkm",
       "fields": [
-        "period",
+        "periodCount",
         "categoryKey",
         "date",
         "icon",
@@ -1787,7 +1787,7 @@
       "collapsed": false,
       "parentId": "group_mer5qenajiet0",
       "fields": [
-        "period",
+        "periodCount",
         "categoryKey",
         "date",
         "icon",
@@ -1809,7 +1809,7 @@
       "collapsed": false,
       "parentId": "group_mer5qenajiet0",
       "fields": [
-        "period",
+        "periodCount",
         "categoryKey",
         "date",
         "icon",
@@ -1831,7 +1831,7 @@
       "collapsed": false,
       "parentId": "group_mer5qenajiet0",
       "fields": [
-        "period",
+        "periodCount",
         "categoryKey",
         "date",
         "icon",
@@ -1875,7 +1875,7 @@
       "collapsed": false,
       "parentId": "group_mer5qlrm519f9",
       "fields": [
-        "period",
+        "periodCount",
         "categoryKey",
         "date",
         "icon",
@@ -1897,7 +1897,7 @@
       "collapsed": false,
       "parentId": "group_mer5qlrm519f9",
       "fields": [
-        "period",
+        "periodCount",
         "categoryKey",
         "date",
         "icon",
@@ -1919,7 +1919,7 @@
       "collapsed": false,
       "parentId": "group_mer5qlrm519f9",
       "fields": [
-        "period",
+        "periodCount",
         "categoryKey",
         "date",
         "icon",
@@ -1963,7 +1963,7 @@
       "collapsed": false,
       "parentId": "group_mer60bnnssk89",
       "fields": [
-        "period",
+        "periodCount",
         "categoryKey",
         "date",
         "icon",
@@ -1985,7 +1985,7 @@
       "collapsed": false,
       "parentId": "group_mer60bnnssk89",
       "fields": [
-        "period",
+        "periodCount",
         "categoryKey",
         "date",
         "icon",
@@ -2007,7 +2007,7 @@
       "collapsed": false,
       "parentId": "group_mer60bnnssk89",
       "fields": [
-        "period",
+        "periodCount",
         "categoryKey",
         "date",
         "icon",
@@ -2029,7 +2029,7 @@
       "collapsed": false,
       "parentId": "group_mer60bnnssk89",
       "fields": [
-        "period",
+        "periodCount",
         "categoryKey",
         "date",
         "icon",
@@ -2051,7 +2051,7 @@
       "collapsed": false,
       "parentId": "group_mer60bnoootcl",
       "fields": [
-        "period",
+        "periodCount",
         "categoryKey",
         "date",
         "icon",
@@ -2073,7 +2073,7 @@
       "collapsed": false,
       "parentId": "group_mer60bnoootcl",
       "fields": [
-        "period",
+        "periodCount",
         "categoryKey",
         "date",
         "icon",
@@ -2095,7 +2095,7 @@
       "collapsed": false,
       "parentId": "group_mer60bnoootcl",
       "fields": [
-        "period",
+        "periodCount",
         "categoryKey",
         "date",
         "icon",
@@ -2117,7 +2117,7 @@
       "collapsed": false,
       "parentId": "group_mer60bnoootcl",
       "fields": [
-        "period",
+        "periodCount",
         "categoryKey",
         "date",
         "icon",
@@ -2139,7 +2139,7 @@
       "collapsed": false,
       "parentId": "group_mer60bno0hsk0",
       "fields": [
-        "period",
+        "periodCount",
         "categoryKey",
         "date",
         "icon",
@@ -2161,7 +2161,7 @@
       "collapsed": false,
       "parentId": "group_mer60bno0hsk0",
       "fields": [
-        "period",
+        "periodCount",
         "categoryKey",
         "date",
         "icon",
@@ -2183,7 +2183,7 @@
       "collapsed": false,
       "parentId": "group_mer60bno0hsk0",
       "fields": [
-        "period",
+        "periodCount",
         "categoryKey",
         "date",
         "icon",
@@ -2205,7 +2205,7 @@
       "collapsed": false,
       "parentId": "group_mer60bno0hsk0",
       "fields": [
-        "period",
+        "periodCount",
         "categoryKey",
         "date",
         "icon",
@@ -2227,7 +2227,7 @@
       "collapsed": false,
       "parentId": "group_mer60bnort9rv",
       "fields": [
-        "period",
+        "periodCount",
         "categoryKey",
         "date",
         "icon",
@@ -2249,7 +2249,7 @@
       "collapsed": false,
       "parentId": "group_mer60bnort9rv",
       "fields": [
-        "period",
+        "periodCount",
         "categoryKey",
         "date",
         "icon",
@@ -2271,7 +2271,7 @@
       "collapsed": false,
       "parentId": "group_mer60bnort9rv",
       "fields": [
-        "period",
+        "periodCount",
         "categoryKey",
         "date",
         "icon",
@@ -2293,7 +2293,7 @@
       "collapsed": false,
       "parentId": "group_mer60bnort9rv",
       "fields": [
-        "period",
+        "periodCount",
         "categoryKey",
         "date",
         "icon",
@@ -2315,7 +2315,7 @@
       "collapsed": false,
       "parentId": "group_mer60bnom4ztr",
       "fields": [
-        "period",
+        "periodCount",
         "categoryKey",
         "date",
         "icon",
@@ -2337,7 +2337,7 @@
       "collapsed": false,
       "parentId": "group_mer60bnom4ztr",
       "fields": [
-        "period",
+        "periodCount",
         "categoryKey",
         "date",
         "icon",
@@ -2359,7 +2359,7 @@
       "collapsed": false,
       "parentId": "group_mer60bnom4ztr",
       "fields": [
-        "period",
+        "periodCount",
         "categoryKey",
         "date",
         "icon",
@@ -2503,14 +2503,14 @@
         "view_mer5qlrmxm6dv"
       ],
       "displayMode": "grid",
-      "initialView": "季",
+      "initialView": "周",
       "initialDateFollowsNow": false,
       "parentId": null,
       "gridConfig": {
         "columns": 5
       },
       "isOverviewMode": true,
-      "initialDate": "2025-03-31"
+      "initialDate": "2025-03-09"
     },
     {
       "id": "layout_mer6y66i78epn",
