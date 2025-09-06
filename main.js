@@ -31278,7 +31278,7 @@ function TimeNavigator({ currentDate, onDateChange }) {
           {
             class: classes,
             title: `${w2}周 (${getWeekRangeStr(cellMonday)})`,
-            onClick: () => onDateChange(cellMonday, "周"),
+            onClick: () => onDateChange(cellMonday.endOf("isoWeek"), "周"),
             children: w2
           },
           w2
@@ -31299,7 +31299,6 @@ function useViewData({
   const [allItems, setAllItems] = d(() => dataStore2.queryItems());
   y(() => {
     const listener = () => {
-      console.log(`[DataStore] 发出通知。正在为视图 [${dataSourceName}] 更新源数据...`);
       setAllItems(dataStore2.queryItems());
     };
     dataStore2.subscribe(listener);
@@ -31316,14 +31315,37 @@ function useViewData({
     let itemsToProcess = allItems;
     itemsToProcess = filterByRules(itemsToProcess, dataSource.filters || []);
     itemsToProcess = filterByKeyword(itemsToProcess, keyword);
-    if (!isOverviewMode) {
+    let finalItems;
+    if (isOverviewMode) {
+      const contextDate = dayjs(dateRange[1]);
+      const isItemClosed = (it) => /\/(done|cancelled)\b/.test((it.categoryKey || "").toLowerCase());
+      finalItems = itemsToProcess.filter((item) => {
+        const itemDate = item.date ? dayjs(item.date) : null;
+        if (!itemDate || !itemDate.isValid()) {
+          return !isItemClosed(item);
+        }
+        switch (item.period) {
+          case "年":
+            return itemDate.isSame(contextDate, "year");
+          case "季":
+            return itemDate.isSame(contextDate, "quarter");
+          case "月":
+            return itemDate.isSame(contextDate, "month");
+          default:
+            const itemMs = itemDate.valueOf();
+            const startMs = dayjs(start2).startOf("day").valueOf();
+            const endMs = dayjs(end2).endOf("day").valueOf();
+            return itemMs >= startMs && itemMs <= endMs;
+        }
+      });
+    } else {
       const dataSourcePeriodFilter = (dataSource.filters || []).find((f2) => f2.field === "period");
       if (!dataSourcePeriodFilter) {
         itemsToProcess = filterByPeriod(itemsToProcess, layoutView);
       }
+      finalItems = filterByDateRange(itemsToProcess, start2, end2);
     }
-    itemsToProcess = filterByDateRange(itemsToProcess, start2, end2);
-    const finalResult = sortItems(itemsToProcess, dataSource.sort || []);
+    const finalResult = sortItems(finalItems, dataSource.sort || []);
     console.timeEnd(`[useViewData] 为视图 [${dataSourceName}] 计算数据耗时`);
     return finalResult;
   }, [allItems, dataSource, dateRange, keyword, layoutView, isOverviewMode, dataSourceName]);
