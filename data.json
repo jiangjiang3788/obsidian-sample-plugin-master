@@ -1585,7 +1585,7 @@
       "id": "view_mesci2vh386vf",
       "title": "数据汇总 (副本)",
       "viewType": "ExcelView",
-      "dataSourceId": "ds_meqt2x9ecim6c",
+      "dataSourceId": "ds_mer6jowbemiwu",
       "viewConfig": {
         "view": "ExcelView",
         "title": "数据表格",
@@ -2510,7 +2510,7 @@
         "columns": 5
       },
       "isOverviewMode": true,
-      "initialDate": "2025-03-10"
+      "initialDate": "2025-01-01"
     },
     {
       "id": "layout_mer6y66i78epn",

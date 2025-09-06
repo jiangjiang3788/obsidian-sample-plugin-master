@@ -78,7 +78,7 @@ export function formatDateForView(d: dayjs.Dayjs, v: string): string {
         case '月': return d.format('YYYY-MM');
         case '周': {
             // @ts-ignore
-            const isoYear = (d as any).isoWeekYear(); 
+            const isoYear = (d as any).isoWeekYear();
             const isoWeekNum = d.isoWeek();
             return `${isoYear}-W${String(isoWeekNum).padStart(2, '0')}`;
         }
@@ -118,7 +118,7 @@ export const getWeeksOfMonth = (year: number, month: number): { week: number }[]
     const weeks = new Set<number>();
     const startOfMonth = dayjs().year(year).month(month - 1).startOf('month');
     const endOfMonth = dayjs().year(year).month(month - 1).endOf('month');
-    
+
     let currentDay = startOfMonth;
 
     while (currentDay.isSameOrBefore(endOfMonth, 'day')) {
@@ -128,3 +128,27 @@ export const getWeeksOfMonth = (year: number, month: number): { week: number }[]
 
     return Array.from(weeks).sort((a,b) => a - b).map(w => ({ week: w }));
 };
+
+/**
+ * [新增] 根据周期和日期计算周期数
+ * @param period - 周期字符串，如 '年', '季', '月', '周'
+ * @param date - dayjs 日期对象
+ * @returns 对应的周期数值，如果周期无效则返回 undefined
+ */
+export function getPeriodCount(period: string, date: dayjs.Dayjs): number | undefined {
+    if (!date || !date.isValid()) {
+        return undefined;
+    }
+    switch (period) {
+        case '年':
+            return date.year();
+        case '季':
+            return date.quarter();
+        case '月':
+            return date.month() + 1; // dayjs month is 0-indexed
+        case '周':
+            return date.isoWeek();
+        default:
+            return undefined;
+    }
+}

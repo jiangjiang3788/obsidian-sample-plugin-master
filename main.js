@@ -3701,6 +3701,24 @@ const getWeeksInYear$1 = (year) => {
   const endOfYear = dayjs().year(year).endOf("year");
   return endOfYear.isoWeek() === 1 ? 52 : endOfYear.isoWeek();
 };
+function getPeriodCount(period, date) {
+  if (!date || !date.isValid()) {
+    return void 0;
+  }
+  switch (period) {
+    case "年":
+      return date.year();
+    case "季":
+      return date.quarter();
+    case "月":
+      return date.month() + 1;
+    // dayjs month is 0-indexed
+    case "周":
+      return date.isoWeek();
+    default:
+      return void 0;
+  }
+}
 const CODEBLOCK_LANG = "think";
 const EMOJI = {
   done: "✅",
@@ -3749,8 +3767,10 @@ function parseTaskLine(filePath, rawLine, lineNo, parentFolder) {
     created: 0,
     modified: 0,
     extra: {},
-    categoryKey: ""
+    categoryKey: "",
     // 稍后填充
+    // [新增] 填充 folder
+    folder: parentFolder
   };
   const status = isDoneLine(lineText) ? "done" : isCancelledLine(lineText) ? "cancelled" : "open";
   item.categoryKey = `任务/${status}`;
@@ -3883,7 +3903,9 @@ function parseBlockContent(filePath, lines, startIdx, endIdx, parentFolder) {
     created: 0,
     modified: 0,
     extra,
-    categoryKey
+    categoryKey,
+    // [新增] 填充 folder
+    folder: parentFolder
   };
   if (iconVal) item.icon = iconVal;
   if (periodVal) item.period = periodVal;
@@ -3894,6 +3916,9 @@ function parseBlockContent(filePath, lines, startIdx, endIdx, parentFolder) {
   if (item.startISO) item.startMs = Date.parse(item.startISO);
   if (item.endISO) item.endMs = item.startMs;
   item.date = date;
+  if (item.period && item.date) {
+    item.periodCount = getPeriodCount(item.period, dayjs(item.date));
+  }
   return item;
 }
 function throttle(fn3, wait = 250) {
@@ -3952,7 +3977,7 @@ const DEFAULT_SETTINGS = {
   inputSettings: { blocks: [], themes: [], overrides: [] }
 };
 const VIEW_OPTIONS = ["BlockView", "TableView", "ExcelView", "TimelineView", "StatisticsView", "HeatmapView"];
-const CORE_FIELDS = ["id", "type", "title", "content", "categoryKey", "tags", "recurrence", "icon", "priority", "date", "header", "time", "duration", "period", "rating", "pintu"];
+const CORE_FIELDS = ["id", "type", "title", "content", "categoryKey", "tags", "recurrence", "icon", "priority", "date", "header", "time", "duration", "period", "rating", "pintu", "folder", "periodCount"];
 function getAllFields(items) {
   const set = new Set(CORE_FIELDS);
   items.forEach((it) => {
@@ -28876,7 +28901,10 @@ function TimelineViewEditor({ value, onChange }) {
             children: [
               /* @__PURE__ */ u$1(Stack, { direction: "row", gridColumn: "1 / 2", children: [
                 /* @__PURE__ */ u$1(Tooltip, { title: "上移", children: /* @__PURE__ */ u$1("span", { children: /* @__PURE__ */ u$1(IconButton, { size: "small", disabled: index === 0, onClick: () => moveCategory(index, "up"), sx: { p: "4px", fontSize: "0.9rem" }, children: "▲" }) }) }),
-                /* @__PURE__ */ u$1(Tooltip, { title: "下移", children: /* @__PURE__ */ u$1("span", { children: /* @__PURE__ */ u$1(IconButton, { size: "small", disabled: index === progressOrder.length - 1, onClick: () => moveCategory(index, "down"), sx: { p: "4px", fontSize: "0.9rem" }, children: "▼" }) }) })
+                /* @__PURE__ */ u$1(Tooltip, { title: "下移", children: /* @__PURE__ */ u$1("span", { children: [
+                  /* @__PURE__ */ u$1(IconButton, { size: "small", disabled: index === progressOrder.length - 1, onClick: () => moveCategory(index, "down"), sx: { p: "4px", fontSize: "0.9rem" }, children: "▼" }),
+                  "_200c_         "
+                ] }) })
               ] }),
               /* @__PURE__ */ u$1(
                 TextField,
@@ -28899,25 +28927,28 @@ function TimelineViewEditor({ value, onChange }) {
                 }
               ),
               /* @__PURE__ */ u$1(Box, { sx: { minWidth: 0, gridColumn: "4 / 5" }, children: /* @__PURE__ */ u$1(Stack, { direction: "row", flexWrap: "wrap", useFlexGap: true, spacing: 0.5, alignItems: "center", children: [
-                (catConfig.files || []).map((file) => /* @__PURE__ */ u$1(Tooltip, { title: `点击移除关键词: ${file}`, children: /* @__PURE__ */ u$1(
-                  Box,
-                  {
-                    onClick: () => handleCategoryChange(name, { files: (catConfig.files || []).filter((f2) => f2 !== file) }),
-                    sx: {
-                      bgcolor: "action.hover",
-                      color: "text.primary",
-                      p: "3px 8px",
-                      borderRadius: "16px",
-                      fontSize: "0.8125rem",
-                      cursor: "pointer",
-                      "&:hover": {
-                        bgcolor: "action.disabledBackground",
-                        textDecoration: "line-through"
-                      }
-                    },
-                    children: file
-                  }
-                ) }, file)),
+                (catConfig.files || []).map((file) => /* @__PURE__ */ u$1(Tooltip, { title: `点击移除关键词: ${file}`, children: [
+                  /* @__PURE__ */ u$1(
+                    Box,
+                    {
+                      onClick: () => handleCategoryChange(name, { files: (catConfig.files || []).filter((f2) => f2 !== file) }),
+                      sx: {
+                        bgcolor: "action.hover",
+                        color: "text.primary",
+                        p: "3px 8px",
+                        borderRadius: "16px",
+                        fontSize: "0.8125rem",
+                        cursor: "pointer",
+                        "&:hover": {
+                          bgcolor: "action.disabledBackground",
+                          textDecoration: "line-through"
+                        }
+                      },
+                      children: file
+                    }
+                  ),
+                  "_200c_           "
+                ] }, file)),
                 /* @__PURE__ */ u$1(
                   SimpleSelect,
                   {
@@ -29201,7 +29232,7 @@ function duplicateItemInArray(array, id, nameField = "name") {
   const index = newArray.findIndex((item) => item.id === id);
   if (index === -1) return newArray;
   const originalItem = newArray[index];
-  const newItem = structuredClone(originalItem);
+  const newItem = JSON.parse(JSON.stringify(originalItem));
   newItem.id = generateId(originalItem.id.split("_")[0]);
   const currentName = originalItem[nameField] || "";
   newItem[nameField] = `${currentName} (副本)`;
@@ -29247,7 +29278,7 @@ class AppStore {
     this._listeners.forEach((l2) => l2());
   }
   _updateSettingsAndPersist = async (updater) => {
-    const newSettings = structuredClone(this._state.settings);
+    const newSettings = JSON.parse(JSON.stringify(this._state.settings));
     updater(newSettings);
     this._state.settings = newSettings;
     await this._plugin.saveData(this._state.settings);
@@ -29263,7 +29294,7 @@ class AppStore {
     });
   }
   async _updateTimersAndPersist(updater) {
-    const newTimers = updater(structuredClone(this._state.timers));
+    const newTimers = updater(JSON.parse(JSON.stringify(this._state.timers)));
     this._state.timers = newTimers;
     this._notify();
     if (this._plugin.timerStateService) {
@@ -29331,7 +29362,7 @@ class AppStore {
         const originalGroup = draft.groups.find((g2) => g2.id === originalGroupId);
         if (!originalGroup) return;
         const newGroup = {
-          ...structuredClone(originalGroup),
+          ...JSON.parse(JSON.stringify(originalGroup)),
           id: generateId("group"),
           parentId: newParentId,
           name: originalGroup.id === groupId ? `${originalGroup.name} (副本)` : originalGroup.name
@@ -29353,7 +29384,7 @@ class AppStore {
         const childItemsToDuplicate = items.filter((item) => item.parentId === originalGroupId);
         childItemsToDuplicate.forEach((item) => {
           const newItem = {
-            ...structuredClone(item),
+            ...JSON.parse(JSON.stringify(item)),
             id: generateId(prefix2),
             parentId: newGroup.id
           };
@@ -29451,7 +29482,8 @@ class AppStore {
         title,
         viewType: "BlockView",
         dataSourceId: "",
-        viewConfig: structuredClone(VIEW_DEFAULT_CONFIGS.BlockView),
+        // [修改] 将 structuredClone 替换为 JSON.parse(JSON.stringify())
+        viewConfig: JSON.parse(JSON.stringify(VIEW_DEFAULT_CONFIGS.BlockView)),
         collapsed: true,
         parentId
       });
@@ -29462,7 +29494,7 @@ class AppStore {
       const index = draft.viewInstances.findIndex((vi) => vi.id === id);
       if (index !== -1) {
         if (updates.viewType && updates.viewType !== draft.viewInstances[index].viewType) {
-          updates.viewConfig = structuredClone(VIEW_DEFAULT_CONFIGS[updates.viewType]);
+          updates.viewConfig = JSON.parse(JSON.stringify(VIEW_DEFAULT_CONFIGS[updates.viewType]));
         }
         draft.viewInstances[index] = { ...draft.viewInstances[index], ...updates };
       }
@@ -29751,7 +29783,9 @@ const FIELD_REGISTRY = {
   duration: { key: "duration", label: "时长", type: "number", description: "任务或事件的持续分钟数" },
   rating: { key: "rating", label: "评分", type: "number", description: "对块内容的评分" },
   pintu: { key: "pintu", label: "评图", type: "string", description: "与评分关联的图片路径" },
-  // [NEW] 添加评图字段定义
+  // [新增] 新字段定义
+  folder: { key: "folder", label: "文件夹", type: "string", description: "文件所在的父文件夹" },
+  periodCount: { key: "periodCount", label: "周期数", type: "number", description: "周期对应的数值(如周数、月份)" },
   // --- 文件元数据 ---
   "file.path": { key: "file.path", label: "文件路径", type: "string" },
   "file.basename": { key: "file.basename", label: "文件名", type: "string" },
@@ -29950,14 +29984,36 @@ function toText(v2) {
   if (Array.isArray(v2)) return v2.join(", ");
   return v2 == null ? "" : String(v2);
 }
-function ExcelView({ items, fields }) {
+function ExcelView({ items, fields, app }) {
   const rawCols = fields && fields.length ? fields : getAllFields(items);
   const cols = Array.from(new Set(rawCols.map(
     (c2) => c2 === "status" || c2 === "category" ? "categoryKey" : c2
   )));
+  const renderCellContent = (item, field) => {
+    const value = readField(item, field);
+    if (field === "content" && typeof value === "string") {
+      if (!value) {
+        return "";
+      }
+      const displayText = value.length > 20 ? value.substring(0, 20) + "..." : value;
+      const obsUri = makeObsUri(item, app);
+      return /* @__PURE__ */ u$1(
+        "a",
+        {
+          href: obsUri,
+          target: "_blank",
+          rel: "noopener",
+          title: value,
+          style: { color: "var(--text-normal)", textDecoration: "none" },
+          children: displayText
+        }
+      );
+    }
+    return toText(value);
+  };
   return /* @__PURE__ */ u$1("div", { children: /* @__PURE__ */ u$1("table", { class: "think-table", style: "min-width:100%; white-space:nowrap;", children: [
     /* @__PURE__ */ u$1("thead", { children: /* @__PURE__ */ u$1("tr", { children: cols.map((c2) => /* @__PURE__ */ u$1("th", { children: c2 }, c2)) }) }),
-    /* @__PURE__ */ u$1("tbody", { children: items.map((it) => /* @__PURE__ */ u$1("tr", { children: cols.map((c2) => /* @__PURE__ */ u$1("td", { children: toText(readField(it, c2)) }, c2)) }, it.id)) })
+    /* @__PURE__ */ u$1("tbody", { children: items.map((it) => /* @__PURE__ */ u$1("tr", { children: cols.map((c2) => /* @__PURE__ */ u$1("td", { children: renderCellContent(it, c2) }, c2)) }, it.id)) })
   ] }) });
 }
 const Popover2 = ({ target, blocks, title, onClose, app, module: module2 }) => {
@@ -31821,7 +31877,7 @@ function TimerRow({ timer, actionService, timerService: timerService2, dataStore
     if (taskItem) {
       const config2 = actionService.getQuickInputConfigForTaskEdit(taskItem.id);
       if (config2) {
-        new window.obsidian.Modal(app).open();
+        new QuickInputModal(app, config2.blockId, config2.context, void 0, void 0, dataStore2, appStore).open();
       }
     }
   };
@@ -36887,11 +36943,12 @@ function TemplateEditorModal({ isOpen, onClose, block, theme: theme2, existingOv
   y(() => {
     if (existingOverride) {
       setMode(existingOverride.status === "disabled" ? "disabled" : "override");
-      setLocalOverride(structuredClone(existingOverride));
+      setLocalOverride(JSON.parse(JSON.stringify(existingOverride)));
     } else {
       setMode("inherit");
       setLocalOverride({
-        fields: structuredClone(block.fields),
+        // [修改] 将 structuredClone 替换为 JSON.parse(JSON.stringify())
+        fields: JSON.parse(JSON.stringify(block.fields)),
         outputTemplate: block.outputTemplate,
         targetFile: block.targetFile,
         appendUnderHeader: block.appendUnderHeader
@@ -36916,7 +36973,6 @@ function TemplateEditorModal({ isOpen, onClose, block, theme: theme2, existingOv
         blockId: block.id,
         themeId: theme2.id,
         status: mode === "disabled" ? "disabled" : "enabled",
-        // 只有在覆写模式下才保存字段等信息
         fields: mode === "override" ? localOverride.fields : void 0,
         outputTemplate: mode === "override" ? localOverride.outputTemplate : void 0,
         targetFile: mode === "override" ? localOverride.targetFile : void 0,
@@ -38051,65 +38107,75 @@ class ThinkPlugin extends obsidian.Plugin {
   timerStateService;
   timerWidget;
   async onload() {
-    const settings = await this.loadSettings();
-    this.injectGlobalCss();
-    const platform = instance.resolve(ObsidianPlatform);
-    const dataStore2 = instance.resolve(DataStore);
-    const inputService = instance.resolve(InputService);
-    const taskService = instance.resolve(TaskService);
-    const timerService2 = instance.resolve(TimerService);
-    const actionService = instance.resolve(ActionService);
-    const rendererService = instance.resolve(RendererService);
-    const timerStateService = instance.resolve(TimerStateService);
-    this.dataStore = dataStore2;
-    this.rendererService = rendererService;
-    this.actionService = actionService;
-    this.timerService = timerService2;
-    this.timerStateService = timerStateService;
-    this.appStore = new AppStore();
-    instance.registerInstance(AppStore, this.appStore);
-    platform.init(this.app);
-    inputService.init(this.app);
-    timerStateService.init(this.app);
-    this.appStore.init(this, settings);
-    dataStore2.init(platform);
-    taskService.init(dataStore2);
-    timerService2.init(this.appStore, dataStore2, taskService, inputService, this.app);
-    actionService.init(this.app, dataStore2, this.appStore, inputService, timerService2);
-    rendererService.init(this.app, dataStore2, this.appStore, actionService, taskService);
-    registerStore(this.appStore);
-    registerDataStore(this.dataStore);
-    registerTimerService(this.timerService);
-    this.timerWidget = new FloatingTimerWidget(this);
-    this.timerWidget.load();
-    timerStateService.loadStateFromFile().then((timers) => {
-      this.appStore.setInitialTimers(timers);
-    });
-    await dataStore2.initialScan();
-    setup$2?.({
-      plugin: this,
-      appStore: this.appStore,
-      dataStore: dataStore2,
-      rendererService,
-      actionService
-    });
-    setup$1?.({
-      plugin: this,
-      appStore: this.appStore
-    });
-    setup?.({
-      app: this.app,
-      plugin: this,
-      appStore: this.appStore
-    });
-    this.addCommand({
-      id: "think-open-settings",
-      name: "打开 Think 插件设置",
-      callback: () => {
-        this.app.setting.open();
-        this.app.setting.openTabById(this.manifest.id);
-      }
-    });
+    try {
+      const settings = await this.loadSettings();
+      this.injectGlobalCss();
+      const platform = instance.resolve(ObsidianPlatform);
+      const dataStore2 = instance.resolve(DataStore);
+      const inputService = instance.resolve(InputService);
+      const taskService = instance.resolve(TaskService);
+      const timerService2 = instance.resolve(TimerService);
+      const actionService = instance.resolve(ActionService);
+      const rendererService = instance.resolve(RendererService);
+      const timerStateService = instance.resolve(TimerStateService);
+      this.dataStore = dataStore2;
+      this.rendererService = rendererService;
+      this.actionService = actionService;
+      this.timerService = timerService2;
+      this.timerStateService = timerStateService;
+      this.appStore = new AppStore();
+      instance.registerInstance(AppStore, this.appStore);
+      platform.init(this.app);
+      inputService.init(this.app);
+      timerStateService.init(this.app);
+      this.appStore.init(this, settings);
+      dataStore2.init(platform);
+      taskService.init(dataStore2);
+      timerService2.init(this.appStore, dataStore2, taskService, inputService, this.app);
+      actionService.init(this.app, dataStore2, this.appStore, inputService, timerService2);
+      rendererService.init(this.app, dataStore2, this.appStore, actionService, taskService);
+      setTimeout(async () => {
+        registerStore(this.appStore);
+        registerDataStore(this.dataStore);
+        registerTimerService(this.timerService);
+        this.timerWidget = new FloatingTimerWidget(this);
+        this.timerWidget.load();
+        timerStateService.loadStateFromFile().then((timers) => {
+          this.appStore.setInitialTimers(timers);
+        });
+        await dataStore2.initialScan();
+        setup$2?.({
+          plugin: this,
+          appStore: this.appStore,
+          dataStore: dataStore2,
+          rendererService,
+          actionService,
+          taskService
+        });
+        setup$1?.({
+          plugin: this,
+          appStore: this.appStore
+        });
+        setup?.({
+          app: this.app,
+          plugin: this,
+          appStore: this.appStore
+        });
+        this.addCommand({
+          id: "think-open-settings",
+          name: "打开 Think 插件设置",
+          callback: () => {
+            this.app.setting.open();
+            this.app.setting.openTabById(this.manifest.id);
+          }
+        });
+        console.log("[Think Plugin] 插件已成功加载并准备就绪。");
+        new obsidian.Notice("Think Plugin 已成功加载!", 3e3);
+      }, 0);
+    } catch (error) {
+      console.error("[Think Plugin] 插件加载过程中发生严重错误:", error);
+      new obsidian.Notice(`[Think Plugin] 插件加载失败: ${error.message}`, 15e3);
+    }
   }
   onunload() {
     document.getElementById(STYLE_TAG_ID)?.remove();

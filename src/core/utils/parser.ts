@@ -2,10 +2,11 @@
 // 解析任务与块，直接生成 categoryKey（不再生成 status/category）
 import { Item } from '@core/domain/schema';
 import {
-    TAG_RE, KV_IN_PAREN, DATE_YMD_RE, RE_TASK_PREFIX,
+    TAG_RE, KV_IN_PAREN, RE_TASK_PREFIX,
     RE_DONE_BOX, RE_CANCEL_BOX
 } from '@core/utils/regex';
-import { normalizeDateStr, extractDate } from '@core/utils/date';
+// [修改] 导入 getPeriodCount 和 dayjs
+import { normalizeDateStr, extractDate, getPeriodCount, dayjs } from '@core/utils/date';
 import { EMOJI } from '@core/domain/constants';
 import { cleanTaskText } from '@core/utils/text';
 
@@ -33,6 +34,8 @@ export function parseTaskLine(
         modified: 0,
         extra: {},
         categoryKey: '', // 稍后填充
+        // [新增] 填充 folder
+        folder: parentFolder,
     };
 
     /* ---- 状态 → categoryKey ---- */
@@ -135,10 +138,10 @@ export function parseBlockContent(
     let contentText = '';
     let contentStarted = false;
     let iconVal: string | null = null;
-    
+
     let periodVal: string | undefined;
     let ratingVal: number | undefined;
-    let pintuVal: string | undefined; // [NEW] 声明变量
+    let pintuVal: string | undefined;
 
     for (let i = 0; i < contentLines.length; i++) {
         const rawLine = contentLines[i];
@@ -151,14 +154,14 @@ export function parseBlockContent(
                 const key = kv[1].trim();
                 const value = kv[2] || '';
                 const lower = key.toLowerCase();
-                
+
                 if (['分类', '类别', 'category'].includes(lower))      categoryKey = value.trim();
                 else if (['主题', '标签', 'tag', 'tags'].includes(lower)) tags.push(...value.trim().split(/[,，]/).map(t => t.trim().replace(/^#/, '')));
-                else if (['日期', 'date'].includes(lower))             date = normalizeDateStr(value.trim());
-                else if (['周期', 'period'].includes(lower))           periodVal = value.trim();
-                else if (['评分', 'rating'].includes(lower))           ratingVal = Number(value.trim()) || undefined;
-                else if (['图标', 'icon'].includes(lower))             iconVal = value.trim();
-                else if (['评图', 'pintu'].includes(lower))            pintuVal = value.trim(); // [NEW] 解析到pintuVal
+                else if (['日期', 'date'].includes(lower))              date = normalizeDateStr(value.trim());
+                else if (['周期', 'period'].includes(lower))            periodVal = value.trim();
+                else if (['评分', 'rating'].includes(lower))            ratingVal = Number(value.trim()) || undefined;
+                else if (['图标', 'icon'].includes(lower))              iconVal = value.trim();
+                else if (['评图', 'pintu'].includes(lower))             pintuVal = value.trim();
                 else if (['内容', 'content'].includes(lower)) {
                     contentStarted = true; contentText = value;
                 } else {
@@ -172,7 +175,7 @@ export function parseBlockContent(
         } else { contentText += (contentText ? '\n' : '') + rawLine; }
     }
 
-    if (contentText.trim() !== '')      title = contentText.trim().split(/\r?\n/)[0];
+    if (contentText.trim() !== '')       title = contentText.trim().split(/\r?\n/)[0];
     else if (tags.length > 0)          title = tags.join(', ');
     title = title.replace(/^(?:\p{Extended_Pictographic}\uFE0F?\s*)+/u, '').trim().slice(0, 20);
 
@@ -189,11 +192,13 @@ export function parseBlockContent(
         modified: 0,
         extra,
         categoryKey,
+        // [新增] 填充 folder
+        folder: parentFolder,
     };
     if (iconVal) item.icon = iconVal;
     if (periodVal) item.period = periodVal;
     if (ratingVal) item.rating = ratingVal;
-    if (pintuVal) item.pintu = pintuVal; // [NEW] 赋值到 item.pintu
+    if (pintuVal) item.pintu = pintuVal;
 
     item.startISO = date;
     item.endISO   = date;
@@ -201,5 +206,11 @@ export function parseBlockContent(
     if (item.endISO)   item.endMs   = item.startMs;
 
     item.date = date;
+
+    // [新增] 计算周期数
+    if (item.period && item.date) {
+        item.periodCount = getPeriodCount(item.period, dayjs(item.date));
+    }
+
     return item;
 }

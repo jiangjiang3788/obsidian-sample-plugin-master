@@ -1,5 +1,4 @@
 // src/core/domain/fields.ts
-
 /**
  * @file 字段注册表 (Field Registry) - 单一真源
  * ----------------------------------------------------------------
@@ -38,17 +37,20 @@ export const FIELD_REGISTRY: Record<string, FieldDefinition> = {
     time:          { key: 'time',          label: '时间',      type: 'string', description: '记录的时间点，如 HH:mm' },
     duration:      { key: 'duration',      label: '时长',      type: 'number', description: '任务或事件的持续分钟数' },
     rating:        { key: 'rating',        label: '评分',      type: 'number', description: '对块内容的评分' },
-    pintu:         { key: 'pintu',         label: '评图',      type: 'string', description: '与评分关联的图片路径' }, // [NEW] 添加评图字段定义
+    pintu:         { key: 'pintu',         label: '评图',      type: 'string', description: '与评分关联的图片路径' },
+    // [新增] 新字段定义
+    folder:        { key: 'folder',        label: '文件夹',    type: 'string', description: '文件所在的父文件夹' },
+    periodCount:   { key: 'periodCount',   label: '周期数',    type: 'number', description: '周期对应的数值(如周数、月份)' },
 
     // --- 文件元数据 ---
     'file.path':     { key: 'file.path',     label: '文件路径', type: 'string' },
-    'file.basename': { key: 'file.basename', label: '文件名',   type: 'string' },
+    'file.basename': { key: 'file.basename', label: '文件名',    type: 'string' },
     'header':        { key: 'header',        label: '所在章节', type: 'string' },
 
     // --- 时间轴字段 ---
     startISO: { key: 'startISO', label: '开始日期', type: 'date' },
     endISO:   { key: 'endISO',   label: '结束日期', type: 'date' },
-    
+
     // --- 预定义的重要 extra 字段 (示例) ---
     'extra.地点': { key: 'extra.地点', label: '地点', type: 'string', description: '事件或任务发生的地点' },
     'extra.项目': { key: 'extra.项目', label: '所属项目', type: 'string', description: '关联的GTD项目' },
