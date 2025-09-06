@@ -17,15 +17,7 @@ import { QuickInputModal } from '@features/quick-input/ui/QuickInputModal';
 import { App } from 'obsidian';
 import { appStore } from '@state/storeRegistry';
 
-interface Props {
-    layout: Layout;
-    dataStore: DataStore;
-    app: App;
-    actionService: ActionService;
-    taskService: TaskService;
-}
-
-// ViewContent 组件保持不变
+// ViewContent 组件无需修改
 const ViewContent = ({
     viewInstance,
     dataStore,
@@ -86,7 +78,7 @@ const ViewContent = ({
 
 export function LayoutRenderer({ layout, dataStore, app, actionService, taskService }: Props) {
     const allViews = useStore(state => state.settings.viewInstances);
-    
+    
     const [expandedState, setExpandedState] = useState<Record<string, boolean>>({});
     const [isStateInitialized, setIsStateInitialized] = useState(false);
 
@@ -111,18 +103,18 @@ export function LayoutRenderer({ layout, dataStore, app, actionService, taskServ
     const [layoutView, setLayoutView] = useState(layout.initialView || '月');
     const [layoutDate, setLayoutDate] = useState(getInitialDate());
     const [kw, setKw] = useState('');
-    
+    
     useEffect(() => {
         setLayoutDate(getInitialDate());
         setLayoutView(layout.initialView || '月');
     }, [layout.id, layout.initialDate, layout.initialDateFollowsNow, layout.isOverviewMode, layout.initialView]);
 
-    // [修改] 让函数可以同时接收新的日期和新的视图周期，解决核心bug
-    const handleOverviewDateChange = (newDate: dayjs.Dayjs, newView: '季' | '月' | '周') => {
+    // [核心修改] 允许 handleOverviewDateChange 接收 '年' 作为周期
+    const handleOverviewDateChange = (newDate: dayjs.Dayjs, newView: '年' | '季' | '月' | '周') => {
         const newDateString = newDate.format('YYYY-MM-DD');
         setLayoutDate(newDate);
-        setLayoutView(newView); // <-- 关键新增：更新视图周期状态
-        appStore.updateLayout(layout.id, { initialDate: newDateString, initialView: newView }); // 同时保存新的默认周期
+        setLayoutView(newView);
+        appStore.updateLayout(layout.id, { initialDate: newDateString, initialView: newView });
     };
 
     const handleQuickInputAction = (viewInstance: ViewInstance) => {
@@ -131,7 +123,7 @@ export function LayoutRenderer({ layout, dataStore, app, actionService, taskServ
             new QuickInputModal(app, config.blockId, config.context, config.themeId, undefined, dataStore, appStore).open();
         }
     };
-    
+    
     const handleMarkItemDone = useCallback((itemId: string) => {
         taskService.completeTask(itemId);
     }, [taskService]);
@@ -163,9 +155,9 @@ export function LayoutRenderer({ layout, dataStore, app, actionService, taskServ
         const isExpanded = !!expandedState[viewId];
 
         return (
-            <ModulePanel 
+            <ModulePanel 
                 key={viewId}
-                title={viewInstance.title} 
+                title={viewInstance.title} 
                 collapsed={!isExpanded}
                 onToggle={(e: MouseEvent) => handleToggle(viewId, e)}
                 onActionClick={() => handleQuickInputAction(viewInstance)}

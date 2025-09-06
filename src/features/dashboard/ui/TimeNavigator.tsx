@@ -17,19 +17,15 @@ const getWeekRangeStr = (d: dayjs.Dayjs) => `${d.format('MM/DD')}-${d.add(6, 'da
 
 interface TimeNavigatorProps {
     currentDate: dayjs.Dayjs;
-    // 回调函数签名保持不变
-    onDateChange: (newDate: dayjs.Dayjs, newView: '季' | '月' | '周') => void;
+    // [核心修改] 允许 onDateChange 接收 '年' 周期
+    onDateChange: (newDate: dayjs.Dayjs, newView: '年' | '季' | '月' | '周') => void;
 }
 
 export function TimeNavigator({ currentDate, onDateChange }: TimeNavigatorProps) {
-    // “今天”的日期信息，用于“当天”描边
     const today = dayjs();
     const todayYear = today.year();
     const todayWeek = getWeekNumber(today);
-    const todayMonth = today.month() + 1;
-    const todayQuarter = today.quarter();
 
-    // "选中的" 时间点，用于动态判断“过去”和“选中”
     const selectedYear = currentDate.year();
     const selectedWeek = getWeekNumber(currentDate);
     const selectedMonth = currentDate.month() + 1;
@@ -39,10 +35,17 @@ export function TimeNavigator({ currentDate, onDateChange }: TimeNavigatorProps)
 
     return (
         <div class="time-navigator-container">
-            {/* 左侧控制区 */}
             <div class="tn-control-col">
-                {/* 年份按钮逻辑不变（跳转到今天） */}
-                <div class="tn-cell tn-year-cell" title="点击重置到今天" onClick={() => onDateChange(dayjs(), '周')}>
+                {/* [核心修改] 年份按钮增加单击和双击事件 */}
+                <div 
+                    class="tn-cell tn-year-cell" 
+                    title="单击选择全年 / 双击返回本周" 
+                    onClick={() => onDateChange(dayjs().year(selectedYear).endOf('year'), '年')}
+                    onDblClick={(e: MouseEvent) => {
+                        e.stopPropagation();
+                        onDateChange(dayjs(), '周');
+                    }}
+                >
                     {selectedYear}
                 </div>
                 <div class="tn-cell tn-nav-buttons">
@@ -51,34 +54,31 @@ export function TimeNavigator({ currentDate, onDateChange }: TimeNavigatorProps)
                 </div>
             </div>
 
-            {/* 右侧主导航区 */}
             <div class="tn-main-col">
-                {/* 季度和月份行 */}
                 <div class="tn-row tn-row-top">
                     {Array.from({ length: 4 }, (_, i) => i + 1).map(q => {
-                        // [修改] “过去”的判断基准严格使用 selected* 变量
-                        const isPast = selectedYear > todayYear ? false : (selectedYear < todayYear || (selectedYear === todayYear && q < selectedQuarter));
-                        const isTodayContainer = selectedYear === todayYear && q === todayQuarter;
-                        const isSelected = q === selectedQuarter;
+                        const isSelected = q <= selectedQuarter;
+                        const isBeforeSelection = q < selectedQuarter;
 
                         return (
                             <div
                                 key={`q${q}`}
-                                class={`tn-quarter-block ${isSelected ? 'is-selected' : ''} ${isTodayContainer ? 'is-today' : ''} ${isPast ? 'is-past' : ''}`}
-                                onClick={() => onDateChange(dayjs().year(selectedYear).quarter(q).startOf('quarter'), '季')}
+                                class={`tn-quarter-block ${isSelected ? 'is-selected' : ''} ${isBeforeSelection ? 'is-before-selection' : ''}`}
+                                // [核心逻辑修改] 点击时传递季度的最后一天
+                                onClick={() => onDateChange(dayjs().year(selectedYear).quarter(q).endOf('quarter'), '季')}
                             >
                                 <div class={`tn-quarter-header`}>Q{q}</div>
                                 <div class="tn-months-container">
                                     {Array.from({ length: 3 }, (_, j) => (q - 1) * 3 + j + 1).map(m => {
-                                        // [修改] “过去”的判断基准严格使用 selected* 变量
-                                        const isMonthPast = selectedYear > todayYear ? false : (selectedYear < todayYear || (selectedYear === todayYear && m < selectedMonth));
-                                        const isMonthToday = selectedYear === todayYear && m === todayMonth;
-                                        const isMonthSelected = m === selectedMonth;
+                                        const isMonthSelected = m <= selectedMonth;
+                                        const isMonthBeforeSelection = m < selectedMonth;
+
                                         return (
                                             <div
                                                 key={`m${m}`}
-                                                class={`tn-cell tn-month-cell ${isMonthSelected ? 'is-selected' : ''} ${isMonthToday ? 'is-today' : ''} ${isMonthPast ? 'is-past' : ''}`}
-                                                onClick={(e) => { e.stopPropagation(); onDateChange(dayjs().year(selectedYear).month(m - 1).startOf('month'), '月'); }}
+                                                class={`tn-cell tn-month-cell ${isMonthSelected ? 'is-selected' : ''} ${isMonthBeforeSelection ? 'is-before-selection' : ''}`}
+                                                // [核心逻辑修改] 点击时传递月份的最后一天
+                                                onClick={(e) => { e.stopPropagation(); onDateChange(dayjs().year(selectedYear).month(m - 1).endOf('month'), '月'); }}
                                             >
                                                 {m}月
                                             </div>
@@ -90,21 +90,19 @@ export function TimeNavigator({ currentDate, onDateChange }: TimeNavigatorProps)
                     })}
                 </div>
 
-                {/* 周行 */}
                 <div class="tn-row tn-weeks-container">
                     {Array.from({ length: totalWeeksInYear }, (_, i) => i + 1).map(w => {
                         const cellMonday = getMondayByWeek(selectedYear, w);
-
-                        // [修改] “过去”的判断基准严格使用 selected* 变量
-                        const isPast = cellMonday.isBefore(currentDate, 'week');
-                        const isSelected = w === selectedWeek && selectedYear === currentDate.year();
-                        const isToday = w === todayWeek && selectedYear === todayYear;
+                        
+                        const isSelected = w <= selectedWeek;
+                        const isToday = selectedYear === todayYear && w === todayWeek;
+                        const isBeforeSelection = w < selectedWeek;
 
                         const classes = [
                             'tn-cell', 'tn-week-cell',
                             isSelected ? 'is-selected' : '',
                             isToday ? 'is-today' : '',
-                            isPast && !isSelected ? 'is-past' : '' // [修改] 过去和选中不再共存
+                            isBeforeSelection && !isSelected ? 'is-before-selection' : ''
                         ].filter(Boolean).join(' ');
 
                         return (
