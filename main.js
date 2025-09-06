@@ -29955,6 +29955,7 @@ function BlockView(props) {
   const allThemes = useStore((state) => state.settings.inputSettings.themes);
   const containerRef = A$1(null);
   const [isNarrow, setIsNarrow] = d(false);
+  const [collapsedGroups, setCollapsedGroups] = d({});
   y(() => {
     const observer = new ResizeObserver((entries) => {
       for (const entry of entries) setIsNarrow(entry.contentRect.width < 450);
@@ -29962,6 +29963,13 @@ function BlockView(props) {
     if (containerRef.current) observer.observe(containerRef.current);
     return () => observer.disconnect();
   }, []);
+  const toggleGroup = (key) => {
+    setCollapsedGroups((prev2) => ({
+      ...prev2,
+      [key]: !prev2[key]
+      // 切换指定 key 的布尔值
+    }));
+  };
   const renderItem = (item) => {
     return item.type === "task" ? /* @__PURE__ */ u$1(TaskItem, { item, fields, onMarkDone, app, allThemes }, item.id) : /* @__PURE__ */ u$1(BlockItem, { item, fields, isNarrow, app, allThemes }, item.id);
   };
@@ -29975,10 +29983,25 @@ function BlockView(props) {
     grouped[key].push(it);
   }
   const groupKeys = Object.keys(grouped).sort((a2, b2) => a2.localeCompare(b2, "zh-CN"));
-  return /* @__PURE__ */ u$1("div", { class: "bv-container", ref: containerRef, children: groupKeys.map((key) => /* @__PURE__ */ u$1("div", { class: "bv-group", children: [
-    /* @__PURE__ */ u$1("h5", { class: "bv-group-title", children: key }),
-    /* @__PURE__ */ u$1("div", { class: "bv-group-content", children: grouped[key].map(renderItem) })
-  ] }, key)) });
+  return /* @__PURE__ */ u$1("div", { class: "bv-container", ref: containerRef, children: groupKeys.map((key) => {
+    const isCollapsed = collapsedGroups[key];
+    return /* @__PURE__ */ u$1("div", { class: "bv-group", children: [
+      /* @__PURE__ */ u$1(
+        "h5",
+        {
+          class: "bv-group-title",
+          onClick: () => toggleGroup(key),
+          style: { cursor: "pointer", userSelect: "none", display: "flex", alignItems: "center", gap: "0.25em" },
+          title: "点击折叠/展开",
+          children: [
+            /* @__PURE__ */ u$1("span", { style: { display: "inline-block", width: "1.2em", textAlign: "center" }, children: isCollapsed ? "▶" : "▼" }),
+            `${key} (${grouped[key].length})`
+          ]
+        }
+      ),
+      !isCollapsed && /* @__PURE__ */ u$1("div", { class: "bv-group-content", children: grouped[key].map(renderItem) })
+    ] }, key);
+  }) });
 }
 function toText(v2) {
   if (Array.isArray(v2)) return v2.join(", ");
