@@ -2503,14 +2503,14 @@
         "view_mer5qlrmxm6dv"
       ],
       "displayMode": "grid",
-      "initialView": "周",
+      "initialView": "季",
       "initialDateFollowsNow": false,
       "parentId": null,
       "gridConfig": {
         "columns": 5
       },
       "isOverviewMode": true,
-      "initialDate": "2025-06-16"
+      "initialDate": "2025-03-31"
     },
     {
       "id": "layout_mer6y66i78epn",
@@ -2538,14 +2538,14 @@
         "view_mer60bnor9x6r"
       ],
       "displayMode": "grid",
-      "initialView": "月",
+      "initialView": "周",
       "initialDateFollowsNow": false,
       "parentId": null,
       "gridConfig": {
         "columns": 5
       },
       "isOverviewMode": true,
-      "initialDate": "2025-05-26"
+      "initialDate": "2025-06-09"
     },
     {
       "id": "layout_mescqn3ltmxo3",

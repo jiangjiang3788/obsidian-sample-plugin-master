@@ -31198,8 +31198,6 @@ function TimeNavigator({ currentDate, onDateChange }) {
   const today = dayjs();
   const todayYear = today.year();
   const todayWeek = getWeekNumber(today);
-  const todayMonth = today.month() + 1;
-  const todayQuarter = today.quarter();
   const selectedYear = currentDate.year();
   const selectedWeek = getWeekNumber(currentDate);
   const selectedMonth = currentDate.month() + 1;
@@ -31207,7 +31205,19 @@ function TimeNavigator({ currentDate, onDateChange }) {
   const totalWeeksInYear = T$1(() => getWeeksInYear(selectedYear), [selectedYear]);
   return /* @__PURE__ */ u$1("div", { class: "time-navigator-container", children: [
     /* @__PURE__ */ u$1("div", { class: "tn-control-col", children: [
-      /* @__PURE__ */ u$1("div", { class: "tn-cell tn-year-cell", title: "点击重置到今天", onClick: () => onDateChange(dayjs(), "周"), children: selectedYear }),
+      /* @__PURE__ */ u$1(
+        "div",
+        {
+          class: "tn-cell tn-year-cell",
+          title: "单击选择全年 / 双击返回本周",
+          onClick: () => onDateChange(dayjs().year(selectedYear).endOf("year"), "年"),
+          onDblClick: (e2) => {
+            e2.stopPropagation();
+            onDateChange(dayjs(), "周");
+          },
+          children: selectedYear
+        }
+      ),
       /* @__PURE__ */ u$1("div", { class: "tn-cell tn-nav-buttons", children: [
         /* @__PURE__ */ u$1("button", { title: "上一周 (Ctrl+←)", onClick: () => onDateChange(currentDate.subtract(1, "week"), "周"), children: "‹" }),
         /* @__PURE__ */ u$1("button", { title: "下一周 (Ctrl+→)", onClick: () => onDateChange(currentDate.add(1, "week"), "周"), children: "›" })
@@ -31215,30 +31225,28 @@ function TimeNavigator({ currentDate, onDateChange }) {
     ] }),
     /* @__PURE__ */ u$1("div", { class: "tn-main-col", children: [
       /* @__PURE__ */ u$1("div", { class: "tn-row tn-row-top", children: Array.from({ length: 4 }, (_2, i2) => i2 + 1).map((q2) => {
-        const isPast = selectedYear > todayYear ? false : selectedYear < todayYear || selectedYear === todayYear && q2 < selectedQuarter;
-        const isTodayContainer = selectedYear === todayYear && q2 === todayQuarter;
-        const isSelected = q2 === selectedQuarter;
+        const isSelected = q2 <= selectedQuarter;
+        const isBeforeSelection = q2 < selectedQuarter;
         return /* @__PURE__ */ u$1(
           "div",
           {
-            class: `tn-quarter-block ${isSelected ? "is-selected" : ""} ${isTodayContainer ? "is-today" : ""} ${isPast ? "is-past" : ""}`,
-            onClick: () => onDateChange(dayjs().year(selectedYear).quarter(q2).startOf("quarter"), "季"),
+            class: `tn-quarter-block ${isSelected ? "is-selected" : ""} ${isBeforeSelection ? "is-before-selection" : ""}`,
+            onClick: () => onDateChange(dayjs().year(selectedYear).quarter(q2).endOf("quarter"), "季"),
             children: [
               /* @__PURE__ */ u$1("div", { class: `tn-quarter-header`, children: [
                 "Q",
                 q2
               ] }),
               /* @__PURE__ */ u$1("div", { class: "tn-months-container", children: Array.from({ length: 3 }, (_2, j2) => (q2 - 1) * 3 + j2 + 1).map((m2) => {
-                const isMonthPast = selectedYear > todayYear ? false : selectedYear < todayYear || selectedYear === todayYear && m2 < selectedMonth;
-                const isMonthToday = selectedYear === todayYear && m2 === todayMonth;
-                const isMonthSelected = m2 === selectedMonth;
+                const isMonthSelected = m2 <= selectedMonth;
+                const isMonthBeforeSelection = m2 < selectedMonth;
                 return /* @__PURE__ */ u$1(
                   "div",
                   {
-                    class: `tn-cell tn-month-cell ${isMonthSelected ? "is-selected" : ""} ${isMonthToday ? "is-today" : ""} ${isMonthPast ? "is-past" : ""}`,
+                    class: `tn-cell tn-month-cell ${isMonthSelected ? "is-selected" : ""} ${isMonthBeforeSelection ? "is-before-selection" : ""}`,
                     onClick: (e2) => {
                       e2.stopPropagation();
-                      onDateChange(dayjs().year(selectedYear).month(m2 - 1).startOf("month"), "月");
+                      onDateChange(dayjs().year(selectedYear).month(m2 - 1).endOf("month"), "月");
                     },
                     children: [
                       m2,
@@ -31255,16 +31263,15 @@ function TimeNavigator({ currentDate, onDateChange }) {
       }) }),
       /* @__PURE__ */ u$1("div", { class: "tn-row tn-weeks-container", children: Array.from({ length: totalWeeksInYear }, (_2, i2) => i2 + 1).map((w2) => {
         const cellMonday = getMondayByWeek(selectedYear, w2);
-        const isPast = cellMonday.isBefore(currentDate, "week");
-        const isSelected = w2 === selectedWeek && selectedYear === currentDate.year();
-        const isToday = w2 === todayWeek && selectedYear === todayYear;
+        const isSelected = w2 <= selectedWeek;
+        const isToday = selectedYear === todayYear && w2 === todayWeek;
+        const isBeforeSelection = w2 < selectedWeek;
         const classes = [
           "tn-cell",
           "tn-week-cell",
           isSelected ? "is-selected" : "",
           isToday ? "is-today" : "",
-          isPast && !isSelected ? "is-past" : ""
-          // [修改] 过去和选中不再共存
+          isBeforeSelection && !isSelected ? "is-before-selection" : ""
         ].filter(Boolean).join(" ");
         return /* @__PURE__ */ u$1(
           "div",
@@ -37487,10 +37494,14 @@ body.theme-dark .think-pills .think-pill{
 }
 
 
-/* [全新] Time Navigator (概览模式导航器) 样式 - 横向布局 */
+
+/* [最终优化] Time Navigator (概览模式导航器) 样式 v6 */
 .time-navigator-container {
     display: flex;
-    flex-direction: row;
+    /* [核心] 确保主方向是横向 (row)，即 左/右 布局 */
+    flex-direction: row; 
+    /* [核心] 禁止换行，确保 年 和 周期 两列始终并排 */
+    flex-wrap: nowrap; 
     gap: 8px;
     height: 100px;
     font-size: 12px;
@@ -37510,7 +37521,7 @@ body.theme-dark .think-pills .think-pill{
     border-radius: 6px;
     transition: all 0.2s ease;
     box-sizing: border-box;
-    border: 1px solid transparent; /* [新增] 为所有单元格添加透明边框，防止描边时跳动 */
+    border: 1px solid transparent;
 }
 
 /* 左侧控制列 */
@@ -37519,7 +37530,7 @@ body.theme-dark .think-pills .think-pill{
     flex-direction: column;
     gap: 4px;
     width: 60px;
-    flex-shrink: 0;
+    flex-shrink: 0; /* 禁止此列被压缩 */
 }
 .tn-year-cell {
     flex-grow: 1;
@@ -37528,6 +37539,7 @@ body.theme-dark .think-pills .think-pill{
     font-weight: bold;
     font-size: 1.4em;
     cursor: pointer;
+    border: none;
 }
 .tn-year-cell:hover {
     opacity: 0.9;
@@ -37537,6 +37549,7 @@ body.theme-dark .think-pills .think-pill{
     flex-shrink: 0;
     display: flex;
     gap: 4px;
+    border: none;
 }
 .tn-nav-buttons button {
     flex-grow: 1;
@@ -37555,10 +37568,10 @@ body.theme-dark .think-pills .think-pill{
 /* 右侧主内容区 */
 .tn-main-col {
     display: flex;
-    flex-direction: column;
+    flex-direction: column; /* 内部的 季度/月 和 周 是上下排列的 */
     flex-grow: 1;
     gap: 4px;
-    min-width: 0;
+    min-width: 0; /* 允许此列在必要时收缩 */
 }
 .tn-row {
     display: flex;
@@ -37572,7 +37585,7 @@ body.theme-dark .think-pills .think-pill{
 .tn-quarter-block {
     display: flex;
     flex-direction: column;
-    flex: 1; /* 等分宽度 */
+    flex: 1;
     background: var(--background-primary);
     border-radius: 6px;
     padding: 4px;
@@ -37586,63 +37599,61 @@ body.theme-dark .think-pills .think-pill{
     color: var(--text-muted);
     padding-bottom: 2px;
 }
-.tn-quarter-block.is-past .tn-quarter-header {
-    color: #9B7FBD;
-}
 .tn-months-container {
     display: flex;
     flex-grow: 1;
     gap: 4px;
 }
 
-/* [修改] 统一所有单元格的状态样式 */
-
-/* 1. 过去状态 (最弱) - 淡紫色填充 */
-.tn-quarter-block.is-past,
-.tn-month-cell.is-past,
-.tn-week-cell.is-past {
-    background: #EDE6F6; /* 淡紫色 */
+/* 状态样式 (与上一版相同，仅为完整性而包含) */
+.tn-quarter-block.is-before-selection .tn-quarter-header,
+.tn-month-cell.is-before-selection {
     color: #9B7FBD;
 }
-/* 暗色模式下的过去状态 */
-body.theme-dark .tn-quarter-block.is-past,
-body.theme-dark .tn-month-cell.is-past,
-body.theme-dark .tn-week-cell.is-past {
-    background: #403252;
+.tn-week-cell.is-before-selection {
+    background: #f5f1fa;
+    color: #9B7FBD;
+}
+body.theme-dark .tn-quarter-block.is-before-selection .tn-quarter-header,
+body.theme-dark .tn-month-cell.is-before-selection,
+body.theme-dark .tn-week-cell.is-before-selection {
     color: #c4b0e0;
 }
+body.theme-dark .tn-week-cell.is-before-selection {
+    background: rgba(155, 127, 189, 0.15); 
+}
 
-/* 2. 当天状态 (中等) - 主题色描边 */
-.tn-quarter-block.is-today,
-.tn-month-cell.is-today,
 .tn-week-cell.is-today {
-    background: transparent;
-    outline: 2px solid var(--interactive-accent);
-    outline-offset: -2px;
-    color: var(--text-normal);
-}
-.tn-quarter-block.is-today .tn-quarter-header {
-    color: var(--interactive-accent);
+    border-color: #FFD700 !important;
 }
 
-/* 3. 选中状态 (最强) - 深紫色填充 */
 .tn-quarter-block.is-selected,
 .tn-month-cell.is-selected,
 .tn-week-cell.is-selected {
-    background: #9B7FBD !important; /* 使用 !important 覆盖 is-past 的样式 */
-    color: white !important;
     border-color: #9B7FBD !important;
+    background-color: rgba(155, 127, 189, 0.15) !important;
     box-shadow: none;
 }
-.tn-quarter-block.is-selected .tn-quarter-header {
-    color: white !important;
+.tn-quarter-block.is-selected .tn-quarter-header,
+.tn-month-cell.is-selected,
+.tn-week-cell.is-selected {
+    color: #9B7FBD !important;
+    font-weight: bold;
+}
+body.theme-dark .tn-quarter-block.is-selected,
+body.theme-dark .tn-month-cell.is-selected,
+body.theme-dark .tn-week-cell.is-selected {
+    background-color: rgba(155, 127, 189, 0.2) !important;
 }
 
-/* 原始周和月单元格样式简化 */
+/* 单元格基础样式 (与上一版相同) */
 .tn-month-cell, .tn-week-cell {
     font-weight: 500;
     background: var(--background-secondary);
     color: var(--text-muted);
+}
+.tn-month-cell {
+    flex: 1;
 }
 .tn-week-cell {
     flex-basis: 0;
@@ -37652,7 +37663,7 @@ body.theme-dark .tn-week-cell.is-past {
     min-width: 10px;
 }
 
-/* 周容器 */
+/* 周容器 (与上一版相同) */
 .tn-weeks-container {
     height: 24px;
     flex-shrink: 0;
@@ -37661,7 +37672,6 @@ body.theme-dark .tn-week-cell.is-past {
     padding: 3px;
     overflow: hidden;
 }
- 
  
 
 /* [全新] Statistics View (统计视图) 样式 V3.1 */
