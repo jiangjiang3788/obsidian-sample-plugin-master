@@ -1390,12 +1390,12 @@
       "collapsed": true,
       "parentId": "group_memc1a9ofen88",
       "fields": [
-        "period",
         "categoryKey",
         "date",
         "icon",
         "content"
-      ]
+      ],
+      "group": "period"
     },
     {
       "id": "view_mer6oglaold8i",
