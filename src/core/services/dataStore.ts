@@ -1,34 +1,28 @@
 // src/core/services/dataStore.ts
-import { singleton } from 'tsyringe';
-import { HeadingCache, TFile, TFolder } from 'obsidian';
+import { singleton, inject } from 'tsyringe';
+import { HeadingCache, TFile, TFolder, App } from 'obsidian';
 import { Item, FilterRule, SortRule } from '@core/domain/schema';
 import { parseTaskLine, parseBlockContent } from '@core/utils/parser';
 import { throttle } from '@core/utils/timing';
-// [核心修复] 移除这个未使用的导入，因为它导致了和 TaskService 的循环依赖
-// import { TaskService } from '@core/services/taskService';
 import { ObsidianPlatform } from '@platform/obsidian';
 import { normalizeItemDates } from '@core/utils/normalize';
 import { filterByRules, sortItems } from '@core/utils/itemFilter';
 import { parseRecurrence } from '@core/utils/mark';
+// [新增] 导入 App 的注入令牌
+import { AppToken } from './types';
 
 @singleton()
 export class DataStore {
-    // [核心修复] 将 platform 声明为可选，因为它将在 init 方法中被设置
-    public platform!: ObsidianPlatform;
-    get app() { return this.platform.app; }
+    // [核心修改] 为构造函数的每个参数添加 @inject 装饰器
+    constructor(
+        @inject(ObsidianPlatform) private platform: ObsidianPlatform,
+        @inject(AppToken) private app: App
+    ) {}
 
-    // [核心修复] 构造函数变为空，不再有任何依赖，以打破初始化循环
-    constructor() {}
-
-    // [核心修复] 新增一个 init 方法，用于在所有服务都创建完毕后手动注入依赖
-    public init(platform: ObsidianPlatform) {
-        this.platform = platform;
-    }
-
+    // ... 其余方法保持不变 ...
     private items: Item[] = [];
     private fileIndex: Map<string, Item[]> = new Map();
     private changeListeners: Set<() => void> = new Set();
-
     async scanAll() {
         this.items = [];
         this.fileIndex.clear();
@@ -36,9 +30,7 @@ export class DataStore {
         for (const file of files) await this.scanFile(file);
     }
     async initialScan() { return this.scanAll(); }
-
     async scanFile(file: TFile): Promise<Item[]> {
-        // ... 此处 scanFile 的其余代码保持不变 ...
         try {
             const content = await this.platform.readFile(file);
             const lines = content.split(/\r?\n/);
@@ -51,7 +43,6 @@ export class DataStore {
             let currentSectionTags: string[] = [];
             let currentHeader = '';
             const fileName = file.name.toLowerCase().endsWith('.md') ? file.name.slice(0, -3) : file.name;
-
             for (let i = 0; i < lines.length; i++) {
                 const line = lines[i];
                 if (nextHeadingIndex < headingsList.length && headingsList[nextHeadingIndex].position.start.line === i) {
@@ -65,8 +56,8 @@ export class DataStore {
                     nextHeadingIndex++;
                     continue;
                 }
-                if (line.trim() === '<!-- start -->') {
-                    const endIdx = lines.indexOf('<!-- end -->', i + 1);
+                if (line.trim() === '') {
+                    const endIdx = lines.indexOf('', i + 1);
                     if (endIdx !== -1) {
                         const blockItem = parseBlockContent(filePath, lines, i, endIdx, parentFolder);
                         if (blockItem) {
@@ -100,7 +91,6 @@ export class DataStore {
                     fileItems.push(taskItem);
                 }
             }
-
             if (this.fileIndex.has(filePath)) {
                 this.items = this.items.filter(it => it.id && !it.id.startsWith(filePath + '#'));
             }
@@ -112,26 +102,22 @@ export class DataStore {
             return [];
         }
     }
-
     removeFileItems(filePath: string) {
         if (this.fileIndex.has(filePath)) {
             this.fileIndex.delete(filePath);
             this.items = this.items.filter(it => it.id && !it.id.startsWith(filePath + '#'));
         }
     }
-
     queryItems(filters: FilterRule[] = [], sortRules: SortRule[] = []): Item[] {
         const filtered = filterByRules(this.items, filters);
         return sortItems(filtered, sortRules);
     }
-
     private _emitChange() {
         this.changeListeners.forEach(fn => {
             try { fn(); } catch (e) { console.error('ThinkPlugin: 数据变化通知错误', e); }
         });
     }
     private _emitThrottled = throttle(() => this._emitChange(), 250);
-
     subscribe(listener: () => void) { this.changeListeners.add(listener); }
     unsubscribe(listener: () => void) { this.changeListeners.delete(listener); }
     notifyChange() { this._emitThrottled(); }

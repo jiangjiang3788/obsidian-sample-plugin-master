@@ -1,32 +1,24 @@
 // src/core/services/TimerStateService.ts
-import { singleton } from 'tsyringe';
+import { singleton, inject } from 'tsyringe';
 import { App } from 'obsidian';
 import { TimerState } from '@state/AppStore';
+// [新增] 导入 App 的注入令牌
+import { AppToken } from './types';
 
 const TIMER_STATE_PATH = 'think-plugin-timer-state.json';
 
 @singleton()
 export class TimerStateService {
-    private app!: App;
+    // [核心修改] 使用 @inject 装饰器明确指定依赖
+    constructor(@inject(AppToken) private app: App) {}
 
-    // [核心修复] 构造函数变为空
-    constructor() {}
-
-    // [核心修复] 新增 init 方法
-    public init(app: App) {
-        this.app = app;
-    }
-
+    // ... 其余方法保持不变 ...
     async loadStateFromFile(): Promise<TimerState[]> {
         try {
             const fileExists = await this.app.vault.adapter.exists(TIMER_STATE_PATH);
-            if (!fileExists) {
-                return [];
-            }
+            if (!fileExists) { return []; }
             const content = await this.app.vault.adapter.read(TIMER_STATE_PATH);
-            if (!content) {
-                return [];
-            }
+            if (!content) { return []; }
             const timers = JSON.parse(content);
             return Array.isArray(timers) ? timers : [];
         } catch (error) {
@@ -34,7 +26,6 @@ export class TimerStateService {
             return [];
         }
     }
-
     async saveStateToFile(timers: TimerState[]): Promise<void> {
         try {
             const content = JSON.stringify(timers, null, 2);

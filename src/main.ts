@@ -5,7 +5,6 @@ import { App, Plugin, Notice } from 'obsidian';
 import { ObsidianPlatform } from '@platform/obsidian';
 import { DataStore, RendererService, ActionService, TimerStateService, InputService, TaskService, TimerService } from '@core/services';
 import { AppStore } from '@state/AppStore';
-// [修改] 导入新增的 registerInputService
 import { registerStore, registerDataStore, registerTimerService, registerInputService } from '@state/storeRegistry';
 import { FloatingTimerWidget } from '@features/timer/FloatingTimerWidget';
 import * as DashboardFeature from '@features/dashboard';
@@ -13,6 +12,8 @@ import * as QuickInputFeature from '@features/quick-input';
 import * as SettingsFeature from '@features/settings';
 import { ThinkSettings, DEFAULT_SETTINGS, STYLE_TAG_ID } from '@core/domain';
 import { GLOBAL_CSS } from '@features/dashboard/styles/global';
+// [核心修改] 导入 AppToken
+import { AppToken } from '@core/services/types';
 
 console.log(`[ThinkPlugin] main.js 文件已加载，版本时间: ${new Date().toLocaleTimeString()}`);
 
@@ -24,77 +25,60 @@ export default class ThinkPlugin extends Plugin {
     timerService!: TimerService;
     timerStateService!: TimerStateService;
     timerWidget!: FloatingTimerWidget;
-    // [新增] 为 inputService 添加一个类属性，以便在其他地方（如命令注册）访问
     inputService!: InputService;
 
     async onload(): Promise<void> {
         try {
-            // --- 步骤 1: 立即执行的部分 ---
+            // --- 步骤 1: 注册与解析 ---
             const settings = await this.loadSettings();
             this.injectGlobalCss();
 
-            // 解析所有服务实例
-            const platform = container.resolve(ObsidianPlatform);
-            const dataStore = container.resolve(DataStore);
-            const inputService = container.resolve(InputService);
-            const taskService = container.resolve(TaskService);
-            const timerService = container.resolve(TimerService);
-            const actionService = container.resolve(ActionService);
-            const rendererService = container.resolve(RendererService);
-            const timerStateService = container.resolve(TimerStateService);
+            // [核心修改] 使用字符串令牌 (Token) 来注册 App 实例
+            // 这样任何需要 App 的服务都可以通过 @inject(AppToken) 来获取它
+            container.register(AppToken, { useValue: this.app });
 
-            // 挂载核心服务实例
-            this.dataStore = dataStore;
-            this.rendererService = rendererService;
-            this.actionService = actionService;
-            this.timerService = timerService;
-            this.timerStateService = timerStateService;
-            // [新增] 挂载 inputService 实例
-            this.inputService = inputService;
+            // [核心修改] 直接从容器中解析出顶层服务。
+            // tsyringe 会自动处理所有服务之间的依赖关系，不再需要手动调用 init()。
+            this.appStore = container.resolve(AppStore);
+            this.dataStore = container.resolve(DataStore);
+            this.rendererService = container.resolve(RendererService);
+            this.actionService = container.resolve(ActionService);
+            this.timerService = container.resolve(TimerService);
+            this.timerStateService = container.resolve(TimerStateService);
+            this.inputService = container.resolve(InputService);
 
-            // 创建并注册 AppStore
-            this.appStore = new AppStore();
-            container.registerInstance(AppStore, this.appStore);
-
-            // 按照依赖顺序，手动调用 init() 方法，完成服务间的“接线”
-            platform.init(this.app);
-            inputService.init(this.app);
-            timerStateService.init(this.app);
+            // [核心修改] AppStore 是唯一一个需要手动初始化的，因为它需要 plugin 实例。
             this.appStore.init(this, settings);
-            dataStore.init(platform);
-            taskService.init(dataStore);
-            timerService.init(this.appStore, dataStore, taskService, inputService, this.app);
-            actionService.init(this.app, dataStore, this.appStore, inputService, timerService);
-            rendererService.init(this.app, dataStore, this.appStore, actionService, taskService);
 
-            // --- 步骤 2: 延迟执行的部分 ---
+            // [核心修改] 所有 service.init(...) 调用都已删除！
+
+            // --- 步骤 2: 延迟执行 ---
             setTimeout(async () => {
                 // 注册全局可访问的服务
                 registerStore(this.appStore);
                 registerDataStore(this.dataStore);
                 registerTimerService(this.timerService);
-                // [核心修改] 将初始化完成的 inputService 实例注册为全局可用
                 registerInputService(this.inputService);
 
                 // 加载UI组件和数据
                 this.timerWidget = new FloatingTimerWidget(this);
                 this.timerWidget.load();
 
-                timerStateService.loadStateFromFile().then(timers => {
+                this.timerStateService.loadStateFromFile().then(timers => {
                     this.appStore.setInitialTimers(timers);
                 });
                 
                 // 等待全库扫描完成
-                await dataStore.initialScan();
+                await this.dataStore.initialScan();
 
                 // 设置功能模块
                 DashboardFeature.setup?.({
                     plugin: this,
                     appStore: this.appStore,
-                    dataStore: dataStore,
-                    rendererService: rendererService,
-                    actionService: actionService,
-                    taskService: taskService
+                    dataStore: this.dataStore,
+                    rendererService: this.rendererService,
+                    actionService: this.actionService,
+                    taskService: container.resolve(TaskService) 
                 });
                 QuickInputFeature.setup?.({
                     plugin: this,
@@ -128,13 +112,13 @@ export default class ThinkPlugin extends Plugin {
         }
     }
 
+    // ... onunload, loadSettings, saveSettings, injectGlobalCss 方法保持不变 ...
     onunload(): void {
         document.getElementById(STYLE_TAG_ID)?.remove();
         this.rendererService?.cleanup();
         this.timerWidget?.unload();
         container.clearInstances();
     }
-
     private async loadSettings(): Promise<ThinkSettings> {
         const stored = (await this.loadData()) as Partial<ThinkSettings> | null;
         const merged = Object.assign({}, DEFAULT_SETTINGS, stored);
@@ -145,11 +129,9 @@ export default class ThinkPlugin extends Plugin {
         merged.groups = merged.groups || [];
         return merged as ThinkSettings;
     }
-
     async saveSettings() {
         await this.saveData(this.appStore.getSettings());
     }
-
     private injectGlobalCss() {
         let el = document.getElementById(STYLE_TAG_ID) as HTMLStyleElement | null;
         if (!el) {

@@ -1,69 +1,16 @@
 // src/core/services/inputService.ts
-import { singleton } from 'tsyringe';
-import { App, TFile, TFolder, moment } from 'obsidian';
+import { singleton, inject } from 'tsyringe';
+import { App, TFile, TFolder } from 'obsidian';
 import type { BlockTemplate, ThemeDefinition } from '@core/domain/schema';
+import { renderTemplate } from '@core/utils/templateUtils';
+import { AppToken } from './types';
 
 @singleton()
 export class InputService {
-    private app!: App;
+    // [核心修改] 构造函数通过 @inject 装饰器明确声明并接收 App 实例
+    constructor(@inject(AppToken) private app: App) {}
 
-    // [核心修复] 构造函数变为空
-    constructor() { }
-
-    // [核心修复] 新增 init 方法
-    public init(app: App) {
-        this.app = app;
-    }
-
-    // ... 所有其他方法保持不变 ...
-    public renderTemplate(templateString: string, data: Record<string, any>): string {
-        return templateString.replace(/\{\{\s*([^}]+?)\s*\}\}/g, (_, placeholder) => {
-            const key = placeholder.trim();
-            let result = '';
-
-            try {
-                if (key === 'block') {
-                    result = data.block?.name || '';
-                } else if (key === 'theme') {
-                    result = data.theme?.path || '';
-                } else if (key === 'icon') {
-                    result = data.theme?.icon || '';
-                } else if (key.startsWith('moment:')) {
-                    const format = key.substring(7);
-                    result = moment().format(format);
-                } else {
-                    const keys = key.split('.');
-                    const rootKey = keys[0];
-                    
-                    if (!(rootKey in data)) {
-                        return '';
-                    }
-
-                    let value: any = data[rootKey];
-                    if (keys.length > 1) {
-                        for (let i = 1; i < keys.length; i++) {
-                            if (value && typeof value === 'object' && keys[i] in value) {
-                                value = value[keys[i]];
-                            } else {
-                                value = '';
-                                break;
-                            }
-                        }
-                    }
-
-                    if (typeof value === 'object' && value !== null && 'label' in value) {
-                        result = String(value.label);
-                    } else {
-                        result = value !== null && value !== undefined ? String(value) : '';
-                    }
-                }
-                return result;
-            } catch (e: any) {
-                console.error(`[ThinkPlugin] 解析模板变量 {{${key}}} 时发生错误:`, e);
-                return `(解析错误: ${key})`;
-            }
-        });
-    }
+    // [核心修改] init 方法已被彻底删除
 
     public async executeTemplate(template: BlockTemplate, formData: Record<string, any>, theme?: ThemeDefinition): Promise<string> {
         if (!template) throw new Error(`传入了无效的模板对象。`);
@@ -74,9 +21,9 @@ export class InputService {
             theme: theme ? { path: theme.path, icon: theme.icon || '' } : {}
         };
         
-        const outputContent = this.renderTemplate(template.outputTemplate, renderData).trim();
-        const targetFilePath = this.renderTemplate(template.targetFile, renderData).trim();
-        const header = template.appendUnderHeader ? this.renderTemplate(template.appendUnderHeader, renderData) : null;
+        const outputContent = renderTemplate(template.outputTemplate, renderData).trim();
+        const targetFilePath = renderTemplate(template.targetFile, renderData).trim();
+        const header = template.appendUnderHeader ? renderTemplate(template.appendUnderHeader, renderData) : null;
 
         if (!targetFilePath) throw new Error("模板未定义目标文件路径 (targetFile)。");
         
@@ -118,7 +65,6 @@ export class InputService {
             }
         }
     }
-
     private async ensureFolder(path: string): Promise<void> {
         const segs = path.split('/').filter(Boolean);
         let cur = '';
@@ -136,7 +82,6 @@ export class InputService {
             }
         }
     }
-
     private async appendUnderHeader(file: TFile, header: string, payload: string) {
         const esc = header.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
         const regex = new RegExp(`^${esc}\\s*$`, 'm');

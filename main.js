@@ -2357,6 +2357,13 @@ function getParamInfo(target) {
   });
   return params;
 }
+function defineInjectionTokenMetadata(data, transform) {
+  return function(target, _propertyKey, parameterIndex) {
+    var descriptors = Reflect.getOwnMetadata(INJECTION_TOKEN_METADATA_KEY, target) || {};
+    descriptors[parameterIndex] = data;
+    Reflect.defineMetadata(INJECTION_TOKEN_METADATA_KEY, descriptors, target);
+  };
+}
 function isClassProvider(provider) {
   return !!provider.useClass;
 }
@@ -2925,6 +2932,14 @@ var InternalDependencyContainer = (function() {
   return InternalDependencyContainer2;
 })();
 var instance = new InternalDependencyContainer();
+function inject(token2, options) {
+  var data = {
+    token: token2,
+    multiple: false,
+    isOptional: options
+  };
+  return defineInjectionTokenMetadata(data);
+}
 function injectable(options) {
   return function(target) {
     typeInfo.set(target, getParamInfo(target));
@@ -2939,1530 +2954,6 @@ function singleton() {
 if (typeof Reflect === "undefined" || !Reflect.getMetadata) {
   throw new Error(`tsyringe requires a reflect polyfill. Please add 'import "reflect-metadata"' to the top of your entry point.`);
 }
-var __getOwnPropDesc$7 = Object.getOwnPropertyDescriptor;
-var __decorateClass$7 = (decorators, target, key, kind) => {
-  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc$7(target, key) : target;
-  for (var i2 = decorators.length - 1, decorator; i2 >= 0; i2--)
-    if (decorator = decorators[i2])
-      result = decorator(result) || result;
-  return result;
-};
-let ObsidianPlatform = class {
-  // [核心修复] 将 app 声明为可选，因为它将在 init 方法中被设置
-  app;
-  // [核心修复] 构造函数变为空，不再有任何依赖
-  constructor() {
-  }
-  // [核心修复] 新增一个 init 方法，用于在所有服务都创建完毕后手动注入依赖
-  init(app) {
-    this.app = app;
-  }
-  /* 下面这些方法保持不变 */
-  async readFile(file) {
-    return this.app.vault.read(file);
-  }
-  getMarkdownFiles() {
-    return this.app.vault.getMarkdownFiles();
-  }
-  async writeFile(file, content) {
-    return this.app.vault.modify(file, content);
-  }
-  getByPath(path) {
-    return this.app.vault.getAbstractFileByPath(path) ?? null;
-  }
-  async ensureFile(path, initial = "") {
-    const af = this.getByPath(path);
-    if (af instanceof TFile) return af;
-    return this.app.vault.create(path, initial);
-  }
-  onVault(event, cb) {
-    return this.app.vault.on(event, cb);
-  }
-};
-ObsidianPlatform = __decorateClass$7([
-  singleton()
-], ObsidianPlatform);
-var __getOwnPropDesc$6 = Object.getOwnPropertyDescriptor;
-var __decorateClass$6 = (decorators, target, key, kind) => {
-  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc$6(target, key) : target;
-  for (var i2 = decorators.length - 1, decorator; i2 >= 0; i2--)
-    if (decorator = decorators[i2])
-      result = decorator(result) || result;
-  return result;
-};
-let ActionService = class {
-  app;
-  dataStore;
-  appStore;
-  inputService;
-  timerService;
-  // [核心修复] 构造函数变为空
-  constructor() {
-  }
-  // [核心修复] 新增 init 方法用于注入所有依赖
-  init(app, dataStore2, appStore2, inputService2, timerService2) {
-    this.app = app;
-    this.dataStore = dataStore2;
-    this.appStore = appStore2;
-    this.inputService = inputService2;
-    this.timerService = timerService2;
-  }
-  getQuickInputConfigForView(viewInstance, dateContext, periodContext) {
-    const settings = this.appStore.getSettings();
-    const dataSource = settings.dataSources.find((ds) => ds.id === viewInstance.dataSourceId);
-    if (!dataSource) {
-      new obsidian.Notice("快捷输入失败：找不到对应的数据源。");
-      return null;
-    }
-    const categoryFilter = dataSource.filters.find((f2) => f2.field === "categoryKey" && (f2.op === "=" || f2.op === "includes"));
-    if (!categoryFilter || !categoryFilter.value) {
-      new obsidian.Notice('快捷输入失败：此视图的数据源未按 "categoryKey" 进行筛选。');
-      return null;
-    }
-    const blockName = categoryFilter.value;
-    const targetBlock = settings.inputSettings.blocks.find((b2) => b2.name === blockName);
-    if (!targetBlock) {
-      new obsidian.Notice(`快捷输入失败：找不到名为 "${blockName}" 的Block模板。`);
-      return null;
-    }
-    const targetTheme = settings.inputSettings.themes.find((t2) => t2.path === blockName);
-    const context = {
-      "日期": dateContext.format("YYYY-MM-DD"),
-      "周期": periodContext
-    };
-    return {
-      blockId: targetBlock.id,
-      context,
-      themeId: targetTheme?.id
-    };
-  }
-  getQuickInputConfigForTaskEdit(taskId) {
-    const item = this.dataStore.queryItems().find((i2) => i2.id === taskId);
-    if (!item) {
-      new obsidian.Notice(`错误：找不到ID为 ${taskId} 的任务。`);
-      return null;
-    }
-    const settings = this.appStore.getSettings();
-    const baseCategory = (item.categoryKey || "").split("/")[0];
-    const targetBlock = settings.inputSettings.blocks.find((b2) => b2.name === baseCategory);
-    if (!targetBlock) {
-      new obsidian.Notice(`找不到与分类 "${baseCategory}" 匹配的Block模板，无法编辑。`);
-      return null;
-    }
-    const context = {};
-    for (const field of targetBlock.fields) {
-      if (field.key in item) {
-        context[field.key] = item[field.key];
-      } else if (field.label in item) {
-        context[field.label] = item[field.label];
-      } else if (item.extra && field.key in item.extra) {
-        context[field.key] = item.extra[field.key];
-      }
-    }
-    if (!context.title && !context.标题) context["标题"] = item.title;
-    if (!context.tags && !context.标签) context["标签"] = item.tags.join(", ");
-    return {
-      blockId: targetBlock.id,
-      context
-    };
-  }
-  getQuickInputConfigForNewTimer() {
-    const blocks = this.appStore.getSettings().inputSettings.blocks;
-    if (!blocks || !blocks.length === 0) {
-      new obsidian.Notice("没有可用的Block模板，请先在设置中创建一个。");
-      return null;
-    }
-    const defaultBlockId = blocks[0].id;
-    const onSaveCallback = (data) => {
-      this.timerService.createNewTaskAndStart(data);
-    };
-    return {
-      config: {
-        blockId: defaultBlockId
-      },
-      onSave: onSaveCallback
-    };
-  }
-};
-ActionService = __decorateClass$6([
-  singleton()
-], ActionService);
-const DATE_YMD = "\\d{4}[-/]\\d{2}[-/]\\d{2}";
-const DATE_YMD_RE = new RegExp(DATE_YMD);
-const TAG_RE = /#([\p{L}\p{N}_\/-]+)/gu;
-const KV_IN_PAREN = /\(([^:：]+)::\s*([^)]+)\)/g;
-const RE_TASK_PREFIX = /^\s*-\s*\[[ xX-]\]/;
-const RE_DONE_BOX = /^\s*-\s*\[x\]/i;
-const RE_CANCEL_BOX = /^\s*-\s*\[-\]/;
-var dayjs_min$1 = { exports: {} };
-var dayjs_min = dayjs_min$1.exports;
-var hasRequiredDayjs_min;
-function requireDayjs_min() {
-  if (hasRequiredDayjs_min) return dayjs_min$1.exports;
-  hasRequiredDayjs_min = 1;
-  (function(module2, exports2) {
-    !(function(t2, e2) {
-      module2.exports = e2();
-    })(dayjs_min, (function() {
-      var t2 = 1e3, e2 = 6e4, n2 = 36e5, r2 = "millisecond", i2 = "second", s2 = "minute", u2 = "hour", a2 = "day", o2 = "week", c2 = "month", f2 = "quarter", h2 = "year", d2 = "date", l2 = "Invalid Date", $2 = /^(\d{4})[-/]?(\d{1,2})?[-/]?(\d{0,2})[Tt\s]*(\d{1,2})?:?(\d{1,2})?:?(\d{1,2})?[.:]?(\d+)?$/, y2 = /\[([^\]]+)]|Y{1,4}|M{1,4}|D{1,2}|d{1,4}|H{1,2}|h{1,2}|a|A|m{1,2}|s{1,2}|Z{1,2}|SSS/g, M2 = { name: "en", weekdays: "Sunday_Monday_Tuesday_Wednesday_Thursday_Friday_Saturday".split("_"), months: "January_February_March_April_May_June_July_August_September_October_November_December".split("_"), ordinal: function(t3) {
-        var e3 = ["th", "st", "nd", "rd"], n3 = t3 % 100;
-        return "[" + t3 + (e3[(n3 - 20) % 10] || e3[n3] || e3[0]) + "]";
-      } }, m2 = function(t3, e3, n3) {
-        var r3 = String(t3);
-        return !r3 || r3.length >= e3 ? t3 : "" + Array(e3 + 1 - r3.length).join(n3) + t3;
-      }, v2 = { s: m2, z: function(t3) {
-        var e3 = -t3.utcOffset(), n3 = Math.abs(e3), r3 = Math.floor(n3 / 60), i3 = n3 % 60;
-        return (e3 <= 0 ? "+" : "-") + m2(r3, 2, "0") + ":" + m2(i3, 2, "0");
-      }, m: function t3(e3, n3) {
-        if (e3.date() < n3.date()) return -t3(n3, e3);
-        var r3 = 12 * (n3.year() - e3.year()) + (n3.month() - e3.month()), i3 = e3.clone().add(r3, c2), s3 = n3 - i3 < 0, u3 = e3.clone().add(r3 + (s3 ? -1 : 1), c2);
-        return +(-(r3 + (n3 - i3) / (s3 ? i3 - u3 : u3 - i3)) || 0);
-      }, a: function(t3) {
-        return t3 < 0 ? Math.ceil(t3) || 0 : Math.floor(t3);
-      }, p: function(t3) {
-        return { M: c2, y: h2, w: o2, d: a2, D: d2, h: u2, m: s2, s: i2, ms: r2, Q: f2 }[t3] || String(t3 || "").toLowerCase().replace(/s$/, "");
-      }, u: function(t3) {
-        return void 0 === t3;
-      } }, g2 = "en", D2 = {};
-      D2[g2] = M2;
-      var p2 = "$isDayjsObject", S2 = function(t3) {
-        return t3 instanceof _2 || !(!t3 || !t3[p2]);
-      }, w2 = function t3(e3, n3, r3) {
-        var i3;
-        if (!e3) return g2;
-        if ("string" == typeof e3) {
-          var s3 = e3.toLowerCase();
-          D2[s3] && (i3 = s3), n3 && (D2[s3] = n3, i3 = s3);
-          var u3 = e3.split("-");
-          if (!i3 && u3.length > 1) return t3(u3[0]);
-        } else {
-          var a3 = e3.name;
-          D2[a3] = e3, i3 = a3;
-        }
-        return !r3 && i3 && (g2 = i3), i3 || !r3 && g2;
-      }, O2 = function(t3, e3) {
-        if (S2(t3)) return t3.clone();
-        var n3 = "object" == typeof e3 ? e3 : {};
-        return n3.date = t3, n3.args = arguments, new _2(n3);
-      }, b2 = v2;
-      b2.l = w2, b2.i = S2, b2.w = function(t3, e3) {
-        return O2(t3, { locale: e3.$L, utc: e3.$u, x: e3.$x, $offset: e3.$offset });
-      };
-      var _2 = (function() {
-        function M3(t3) {
-          this.$L = w2(t3.locale, null, true), this.parse(t3), this.$x = this.$x || t3.x || {}, this[p2] = true;
-        }
-        var m3 = M3.prototype;
-        return m3.parse = function(t3) {
-          this.$d = (function(t4) {
-            var e3 = t4.date, n3 = t4.utc;
-            if (null === e3) return /* @__PURE__ */ new Date(NaN);
-            if (b2.u(e3)) return /* @__PURE__ */ new Date();
-            if (e3 instanceof Date) return new Date(e3);
-            if ("string" == typeof e3 && !/Z$/i.test(e3)) {
-              var r3 = e3.match($2);
-              if (r3) {
-                var i3 = r3[2] - 1 || 0, s3 = (r3[7] || "0").substring(0, 3);
-                return n3 ? new Date(Date.UTC(r3[1], i3, r3[3] || 1, r3[4] || 0, r3[5] || 0, r3[6] || 0, s3)) : new Date(r3[1], i3, r3[3] || 1, r3[4] || 0, r3[5] || 0, r3[6] || 0, s3);
-              }
-            }
-            return new Date(e3);
-          })(t3), this.init();
-        }, m3.init = function() {
-          var t3 = this.$d;
-          this.$y = t3.getFullYear(), this.$M = t3.getMonth(), this.$D = t3.getDate(), this.$W = t3.getDay(), this.$H = t3.getHours(), this.$m = t3.getMinutes(), this.$s = t3.getSeconds(), this.$ms = t3.getMilliseconds();
-        }, m3.$utils = function() {
-          return b2;
-        }, m3.isValid = function() {
-          return !(this.$d.toString() === l2);
-        }, m3.isSame = function(t3, e3) {
-          var n3 = O2(t3);
-          return this.startOf(e3) <= n3 && n3 <= this.endOf(e3);
-        }, m3.isAfter = function(t3, e3) {
-          return O2(t3) < this.startOf(e3);
-        }, m3.isBefore = function(t3, e3) {
-          return this.endOf(e3) < O2(t3);
-        }, m3.$g = function(t3, e3, n3) {
-          return b2.u(t3) ? this[e3] : this.set(n3, t3);
-        }, m3.unix = function() {
-          return Math.floor(this.valueOf() / 1e3);
-        }, m3.valueOf = function() {
-          return this.$d.getTime();
-        }, m3.startOf = function(t3, e3) {
-          var n3 = this, r3 = !!b2.u(e3) || e3, f3 = b2.p(t3), l3 = function(t4, e4) {
-            var i3 = b2.w(n3.$u ? Date.UTC(n3.$y, e4, t4) : new Date(n3.$y, e4, t4), n3);
-            return r3 ? i3 : i3.endOf(a2);
-          }, $3 = function(t4, e4) {
-            return b2.w(n3.toDate()[t4].apply(n3.toDate("s"), (r3 ? [0, 0, 0, 0] : [23, 59, 59, 999]).slice(e4)), n3);
-          }, y3 = this.$W, M4 = this.$M, m4 = this.$D, v3 = "set" + (this.$u ? "UTC" : "");
-          switch (f3) {
-            case h2:
-              return r3 ? l3(1, 0) : l3(31, 11);
-            case c2:
-              return r3 ? l3(1, M4) : l3(0, M4 + 1);
-            case o2:
-              var g3 = this.$locale().weekStart || 0, D3 = (y3 < g3 ? y3 + 7 : y3) - g3;
-              return l3(r3 ? m4 - D3 : m4 + (6 - D3), M4);
-            case a2:
-            case d2:
-              return $3(v3 + "Hours", 0);
-            case u2:
-              return $3(v3 + "Minutes", 1);
-            case s2:
-              return $3(v3 + "Seconds", 2);
-            case i2:
-              return $3(v3 + "Milliseconds", 3);
-            default:
-              return this.clone();
-          }
-        }, m3.endOf = function(t3) {
-          return this.startOf(t3, false);
-        }, m3.$set = function(t3, e3) {
-          var n3, o3 = b2.p(t3), f3 = "set" + (this.$u ? "UTC" : ""), l3 = (n3 = {}, n3[a2] = f3 + "Date", n3[d2] = f3 + "Date", n3[c2] = f3 + "Month", n3[h2] = f3 + "FullYear", n3[u2] = f3 + "Hours", n3[s2] = f3 + "Minutes", n3[i2] = f3 + "Seconds", n3[r2] = f3 + "Milliseconds", n3)[o3], $3 = o3 === a2 ? this.$D + (e3 - this.$W) : e3;
-          if (o3 === c2 || o3 === h2) {
-            var y3 = this.clone().set(d2, 1);
-            y3.$d[l3]($3), y3.init(), this.$d = y3.set(d2, Math.min(this.$D, y3.daysInMonth())).$d;
-          } else l3 && this.$d[l3]($3);
-          return this.init(), this;
-        }, m3.set = function(t3, e3) {
-          return this.clone().$set(t3, e3);
-        }, m3.get = function(t3) {
-          return this[b2.p(t3)]();
-        }, m3.add = function(r3, f3) {
-          var d3, l3 = this;
-          r3 = Number(r3);
-          var $3 = b2.p(f3), y3 = function(t3) {
-            var e3 = O2(l3);
-            return b2.w(e3.date(e3.date() + Math.round(t3 * r3)), l3);
-          };
-          if ($3 === c2) return this.set(c2, this.$M + r3);
-          if ($3 === h2) return this.set(h2, this.$y + r3);
-          if ($3 === a2) return y3(1);
-          if ($3 === o2) return y3(7);
-          var M4 = (d3 = {}, d3[s2] = e2, d3[u2] = n2, d3[i2] = t2, d3)[$3] || 1, m4 = this.$d.getTime() + r3 * M4;
-          return b2.w(m4, this);
-        }, m3.subtract = function(t3, e3) {
-          return this.add(-1 * t3, e3);
-        }, m3.format = function(t3) {
-          var e3 = this, n3 = this.$locale();
-          if (!this.isValid()) return n3.invalidDate || l2;
-          var r3 = t3 || "YYYY-MM-DDTHH:mm:ssZ", i3 = b2.z(this), s3 = this.$H, u3 = this.$m, a3 = this.$M, o3 = n3.weekdays, c3 = n3.months, f3 = n3.meridiem, h3 = function(t4, n4, i4, s4) {
-            return t4 && (t4[n4] || t4(e3, r3)) || i4[n4].slice(0, s4);
-          }, d3 = function(t4) {
-            return b2.s(s3 % 12 || 12, t4, "0");
-          }, $3 = f3 || function(t4, e4, n4) {
-            var r4 = t4 < 12 ? "AM" : "PM";
-            return n4 ? r4.toLowerCase() : r4;
-          };
-          return r3.replace(y2, (function(t4, r4) {
-            return r4 || (function(t5) {
-              switch (t5) {
-                case "YY":
-                  return String(e3.$y).slice(-2);
-                case "YYYY":
-                  return b2.s(e3.$y, 4, "0");
-                case "M":
-                  return a3 + 1;
-                case "MM":
-                  return b2.s(a3 + 1, 2, "0");
-                case "MMM":
-                  return h3(n3.monthsShort, a3, c3, 3);
-                case "MMMM":
-                  return h3(c3, a3);
-                case "D":
-                  return e3.$D;
-                case "DD":
-                  return b2.s(e3.$D, 2, "0");
-                case "d":
-                  return String(e3.$W);
-                case "dd":
-                  return h3(n3.weekdaysMin, e3.$W, o3, 2);
-                case "ddd":
-                  return h3(n3.weekdaysShort, e3.$W, o3, 3);
-                case "dddd":
-                  return o3[e3.$W];
-                case "H":
-                  return String(s3);
-                case "HH":
-                  return b2.s(s3, 2, "0");
-                case "h":
-                  return d3(1);
-                case "hh":
-                  return d3(2);
-                case "a":
-                  return $3(s3, u3, true);
-                case "A":
-                  return $3(s3, u3, false);
-                case "m":
-                  return String(u3);
-                case "mm":
-                  return b2.s(u3, 2, "0");
-                case "s":
-                  return String(e3.$s);
-                case "ss":
-                  return b2.s(e3.$s, 2, "0");
-                case "SSS":
-                  return b2.s(e3.$ms, 3, "0");
-                case "Z":
-                  return i3;
-              }
-              return null;
-            })(t4) || i3.replace(":", "");
-          }));
-        }, m3.utcOffset = function() {
-          return 15 * -Math.round(this.$d.getTimezoneOffset() / 15);
-        }, m3.diff = function(r3, d3, l3) {
-          var $3, y3 = this, M4 = b2.p(d3), m4 = O2(r3), v3 = (m4.utcOffset() - this.utcOffset()) * e2, g3 = this - m4, D3 = function() {
-            return b2.m(y3, m4);
-          };
-          switch (M4) {
-            case h2:
-              $3 = D3() / 12;
-              break;
-            case c2:
-              $3 = D3();
-              break;
-            case f2:
-              $3 = D3() / 3;
-              break;
-            case o2:
-              $3 = (g3 - v3) / 6048e5;
-              break;
-            case a2:
-              $3 = (g3 - v3) / 864e5;
-              break;
-            case u2:
-              $3 = g3 / n2;
-              break;
-            case s2:
-              $3 = g3 / e2;
-              break;
-            case i2:
-              $3 = g3 / t2;
-              break;
-            default:
-              $3 = g3;
-          }
-          return l3 ? $3 : b2.a($3);
-        }, m3.daysInMonth = function() {
-          return this.endOf(c2).$D;
-        }, m3.$locale = function() {
-          return D2[this.$L];
-        }, m3.locale = function(t3, e3) {
-          if (!t3) return this.$L;
-          var n3 = this.clone(), r3 = w2(t3, e3, true);
-          return r3 && (n3.$L = r3), n3;
-        }, m3.clone = function() {
-          return b2.w(this.$d, this);
-        }, m3.toDate = function() {
-          return new Date(this.valueOf());
-        }, m3.toJSON = function() {
-          return this.isValid() ? this.toISOString() : null;
-        }, m3.toISOString = function() {
-          return this.$d.toISOString();
-        }, m3.toString = function() {
-          return this.$d.toUTCString();
-        }, M3;
-      })(), k2 = _2.prototype;
-      return O2.prototype = k2, [["$ms", r2], ["$s", i2], ["$m", s2], ["$H", u2], ["$W", a2], ["$M", c2], ["$y", h2], ["$D", d2]].forEach((function(t3) {
-        k2[t3[1]] = function(e3) {
-          return this.$g(e3, t3[0], t3[1]);
-        };
-      })), O2.extend = function(t3, e3) {
-        return t3.$i || (t3(e3, _2, O2), t3.$i = true), O2;
-      }, O2.locale = w2, O2.isDayjs = S2, O2.unix = function(t3) {
-        return O2(1e3 * t3);
-      }, O2.en = D2[g2], O2.Ls = D2, O2.p = {}, O2;
-    }));
-  })(dayjs_min$1);
-  return dayjs_min$1.exports;
-}
-var dayjs_minExports = requireDayjs_min();
-const dayjs = /* @__PURE__ */ getDefaultExportFromCjs(dayjs_minExports);
-var quarterOfYear$2 = { exports: {} };
-var quarterOfYear$1 = quarterOfYear$2.exports;
-var hasRequiredQuarterOfYear;
-function requireQuarterOfYear() {
-  if (hasRequiredQuarterOfYear) return quarterOfYear$2.exports;
-  hasRequiredQuarterOfYear = 1;
-  (function(module2, exports2) {
-    !(function(t2, n2) {
-      module2.exports = n2();
-    })(quarterOfYear$1, (function() {
-      var t2 = "month", n2 = "quarter";
-      return function(e2, i2) {
-        var r2 = i2.prototype;
-        r2.quarter = function(t3) {
-          return this.$utils().u(t3) ? Math.ceil((this.month() + 1) / 3) : this.month(this.month() % 3 + 3 * (t3 - 1));
-        };
-        var s2 = r2.add;
-        r2.add = function(e3, i3) {
-          return e3 = Number(e3), this.$utils().p(i3) === n2 ? this.add(3 * e3, t2) : s2.bind(this)(e3, i3);
-        };
-        var u2 = r2.startOf;
-        r2.startOf = function(e3, i3) {
-          var r3 = this.$utils(), s3 = !!r3.u(i3) || i3;
-          if (r3.p(e3) === n2) {
-            var o2 = this.quarter() - 1;
-            return s3 ? this.month(3 * o2).startOf(t2).startOf("day") : this.month(3 * o2 + 2).endOf(t2).endOf("day");
-          }
-          return u2.bind(this)(e3, i3);
-        };
-      };
-    }));
-  })(quarterOfYear$2);
-  return quarterOfYear$2.exports;
-}
-var quarterOfYearExports = requireQuarterOfYear();
-const quarterOfYear = /* @__PURE__ */ getDefaultExportFromCjs(quarterOfYearExports);
-var weekOfYear$2 = { exports: {} };
-var weekOfYear$1 = weekOfYear$2.exports;
-var hasRequiredWeekOfYear;
-function requireWeekOfYear() {
-  if (hasRequiredWeekOfYear) return weekOfYear$2.exports;
-  hasRequiredWeekOfYear = 1;
-  (function(module2, exports2) {
-    !(function(e2, t2) {
-      module2.exports = t2();
-    })(weekOfYear$1, (function() {
-      var e2 = "week", t2 = "year";
-      return function(i2, n2, r2) {
-        var f2 = n2.prototype;
-        f2.week = function(i3) {
-          if (void 0 === i3 && (i3 = null), null !== i3) return this.add(7 * (i3 - this.week()), "day");
-          var n3 = this.$locale().yearStart || 1;
-          if (11 === this.month() && this.date() > 25) {
-            var f3 = r2(this).startOf(t2).add(1, t2).date(n3), s2 = r2(this).endOf(e2);
-            if (f3.isBefore(s2)) return 1;
-          }
-          var a2 = r2(this).startOf(t2).date(n3).startOf(e2).subtract(1, "millisecond"), o2 = this.diff(a2, e2, true);
-          return o2 < 0 ? r2(this).startOf("week").week() : Math.ceil(o2);
-        }, f2.weeks = function(e3) {
-          return void 0 === e3 && (e3 = null), this.week(e3);
-        };
-      };
-    }));
-  })(weekOfYear$2);
-  return weekOfYear$2.exports;
-}
-var weekOfYearExports = requireWeekOfYear();
-const weekOfYear = /* @__PURE__ */ getDefaultExportFromCjs(weekOfYearExports);
-var customParseFormat$1 = { exports: {} };
-var customParseFormat = customParseFormat$1.exports;
-var hasRequiredCustomParseFormat;
-function requireCustomParseFormat() {
-  if (hasRequiredCustomParseFormat) return customParseFormat$1.exports;
-  hasRequiredCustomParseFormat = 1;
-  (function(module2, exports2) {
-    !(function(e2, t2) {
-      module2.exports = t2();
-    })(customParseFormat, (function() {
-      var e2 = { LTS: "h:mm:ss A", LT: "h:mm A", L: "MM/DD/YYYY", LL: "MMMM D, YYYY", LLL: "MMMM D, YYYY h:mm A", LLLL: "dddd, MMMM D, YYYY h:mm A" }, t2 = /(\[[^[]*\])|([-_:/.,()\s]+)|(A|a|Q|YYYY|YY?|ww?|MM?M?M?|Do|DD?|hh?|HH?|mm?|ss?|S{1,3}|z|ZZ?)/g, n2 = /\d/, r2 = /\d\d/, i2 = /\d\d?/, o2 = /\d*[^-_:/,()\s\d]+/, s2 = {}, a2 = function(e3) {
-        return (e3 = +e3) + (e3 > 68 ? 1900 : 2e3);
-      };
-      var f2 = function(e3) {
-        return function(t3) {
-          this[e3] = +t3;
-        };
-      }, h2 = [/[+-]\d\d:?(\d\d)?|Z/, function(e3) {
-        (this.zone || (this.zone = {})).offset = (function(e4) {
-          if (!e4) return 0;
-          if ("Z" === e4) return 0;
-          var t3 = e4.match(/([+-]|\d\d)/g), n3 = 60 * t3[1] + (+t3[2] || 0);
-          return 0 === n3 ? 0 : "+" === t3[0] ? -n3 : n3;
-        })(e3);
-      }], u2 = function(e3) {
-        var t3 = s2[e3];
-        return t3 && (t3.indexOf ? t3 : t3.s.concat(t3.f));
-      }, d2 = function(e3, t3) {
-        var n3, r3 = s2.meridiem;
-        if (r3) {
-          for (var i3 = 1; i3 <= 24; i3 += 1) if (e3.indexOf(r3(i3, 0, t3)) > -1) {
-            n3 = i3 > 12;
-            break;
-          }
-        } else n3 = e3 === (t3 ? "pm" : "PM");
-        return n3;
-      }, c2 = { A: [o2, function(e3) {
-        this.afternoon = d2(e3, false);
-      }], a: [o2, function(e3) {
-        this.afternoon = d2(e3, true);
-      }], Q: [n2, function(e3) {
-        this.month = 3 * (e3 - 1) + 1;
-      }], S: [n2, function(e3) {
-        this.milliseconds = 100 * +e3;
-      }], SS: [r2, function(e3) {
-        this.milliseconds = 10 * +e3;
-      }], SSS: [/\d{3}/, function(e3) {
-        this.milliseconds = +e3;
-      }], s: [i2, f2("seconds")], ss: [i2, f2("seconds")], m: [i2, f2("minutes")], mm: [i2, f2("minutes")], H: [i2, f2("hours")], h: [i2, f2("hours")], HH: [i2, f2("hours")], hh: [i2, f2("hours")], D: [i2, f2("day")], DD: [r2, f2("day")], Do: [o2, function(e3) {
-        var t3 = s2.ordinal, n3 = e3.match(/\d+/);
-        if (this.day = n3[0], t3) for (var r3 = 1; r3 <= 31; r3 += 1) t3(r3).replace(/\[|\]/g, "") === e3 && (this.day = r3);
-      }], w: [i2, f2("week")], ww: [r2, f2("week")], M: [i2, f2("month")], MM: [r2, f2("month")], MMM: [o2, function(e3) {
-        var t3 = u2("months"), n3 = (u2("monthsShort") || t3.map((function(e4) {
-          return e4.slice(0, 3);
-        }))).indexOf(e3) + 1;
-        if (n3 < 1) throw new Error();
-        this.month = n3 % 12 || n3;
-      }], MMMM: [o2, function(e3) {
-        var t3 = u2("months").indexOf(e3) + 1;
-        if (t3 < 1) throw new Error();
-        this.month = t3 % 12 || t3;
-      }], Y: [/[+-]?\d+/, f2("year")], YY: [r2, function(e3) {
-        this.year = a2(e3);
-      }], YYYY: [/\d{4}/, f2("year")], Z: h2, ZZ: h2 };
-      function l2(n3) {
-        var r3, i3;
-        r3 = n3, i3 = s2 && s2.formats;
-        for (var o3 = (n3 = r3.replace(/(\[[^\]]+])|(LTS?|l{1,4}|L{1,4})/g, (function(t3, n4, r4) {
-          var o4 = r4 && r4.toUpperCase();
-          return n4 || i3[r4] || e2[r4] || i3[o4].replace(/(\[[^\]]+])|(MMMM|MM|DD|dddd)/g, (function(e3, t4, n5) {
-            return t4 || n5.slice(1);
-          }));
-        }))).match(t2), a3 = o3.length, f3 = 0; f3 < a3; f3 += 1) {
-          var h3 = o3[f3], u3 = c2[h3], d3 = u3 && u3[0], l3 = u3 && u3[1];
-          o3[f3] = l3 ? { regex: d3, parser: l3 } : h3.replace(/^\[|\]$/g, "");
-        }
-        return function(e3) {
-          for (var t3 = {}, n4 = 0, r4 = 0; n4 < a3; n4 += 1) {
-            var i4 = o3[n4];
-            if ("string" == typeof i4) r4 += i4.length;
-            else {
-              var s3 = i4.regex, f4 = i4.parser, h4 = e3.slice(r4), u4 = s3.exec(h4)[0];
-              f4.call(t3, u4), e3 = e3.replace(u4, "");
-            }
-          }
-          return (function(e4) {
-            var t4 = e4.afternoon;
-            if (void 0 !== t4) {
-              var n5 = e4.hours;
-              t4 ? n5 < 12 && (e4.hours += 12) : 12 === n5 && (e4.hours = 0), delete e4.afternoon;
-            }
-          })(t3), t3;
-        };
-      }
-      return function(e3, t3, n3) {
-        n3.p.customParseFormat = true, e3 && e3.parseTwoDigitYear && (a2 = e3.parseTwoDigitYear);
-        var r3 = t3.prototype, i3 = r3.parse;
-        r3.parse = function(e4) {
-          var t4 = e4.date, r4 = e4.utc, o3 = e4.args;
-          this.$u = r4;
-          var a3 = o3[1];
-          if ("string" == typeof a3) {
-            var f3 = true === o3[2], h3 = true === o3[3], u3 = f3 || h3, d3 = o3[2];
-            h3 && (d3 = o3[2]), s2 = this.$locale(), !f3 && d3 && (s2 = n3.Ls[d3]), this.$d = (function(e5, t5, n4, r5) {
-              try {
-                if (["x", "X"].indexOf(t5) > -1) return new Date(("X" === t5 ? 1e3 : 1) * e5);
-                var i4 = l2(t5)(e5), o4 = i4.year, s3 = i4.month, a4 = i4.day, f4 = i4.hours, h4 = i4.minutes, u4 = i4.seconds, d4 = i4.milliseconds, c4 = i4.zone, m3 = i4.week, M3 = /* @__PURE__ */ new Date(), Y2 = a4 || (o4 || s3 ? 1 : M3.getDate()), p2 = o4 || M3.getFullYear(), v2 = 0;
-                o4 && !s3 || (v2 = s3 > 0 ? s3 - 1 : M3.getMonth());
-                var D2, w2 = f4 || 0, g2 = h4 || 0, y2 = u4 || 0, L2 = d4 || 0;
-                return c4 ? new Date(Date.UTC(p2, v2, Y2, w2, g2, y2, L2 + 60 * c4.offset * 1e3)) : n4 ? new Date(Date.UTC(p2, v2, Y2, w2, g2, y2, L2)) : (D2 = new Date(p2, v2, Y2, w2, g2, y2, L2), m3 && (D2 = r5(D2).week(m3).toDate()), D2);
-              } catch (e6) {
-                return /* @__PURE__ */ new Date("");
-              }
-            })(t4, a3, r4, n3), this.init(), d3 && true !== d3 && (this.$L = this.locale(d3).$L), u3 && t4 != this.format(a3) && (this.$d = /* @__PURE__ */ new Date("")), s2 = {};
-          } else if (a3 instanceof Array) for (var c3 = a3.length, m2 = 1; m2 <= c3; m2 += 1) {
-            o3[1] = a3[m2 - 1];
-            var M2 = n3.apply(this, o3);
-            if (M2.isValid()) {
-              this.$d = M2.$d, this.$L = M2.$L, this.init();
-              break;
-            }
-            m2 === c3 && (this.$d = /* @__PURE__ */ new Date(""));
-          }
-          else i3.call(this, e4);
-        };
-      };
-    }));
-  })(customParseFormat$1);
-  return customParseFormat$1.exports;
-}
-var customParseFormatExports = requireCustomParseFormat();
-const customParse = /* @__PURE__ */ getDefaultExportFromCjs(customParseFormatExports);
-var isoWeek$2 = { exports: {} };
-var isoWeek$1 = isoWeek$2.exports;
-var hasRequiredIsoWeek;
-function requireIsoWeek() {
-  if (hasRequiredIsoWeek) return isoWeek$2.exports;
-  hasRequiredIsoWeek = 1;
-  (function(module2, exports2) {
-    !(function(e2, t2) {
-      module2.exports = t2();
-    })(isoWeek$1, (function() {
-      var e2 = "day";
-      return function(t2, i2, s2) {
-        var a2 = function(t3) {
-          return t3.add(4 - t3.isoWeekday(), e2);
-        }, d2 = i2.prototype;
-        d2.isoWeekYear = function() {
-          return a2(this).year();
-        }, d2.isoWeek = function(t3) {
-          if (!this.$utils().u(t3)) return this.add(7 * (t3 - this.isoWeek()), e2);
-          var i3, d3, n3, o2, r2 = a2(this), u2 = (i3 = this.isoWeekYear(), d3 = this.$u, n3 = (d3 ? s2.utc : s2)().year(i3).startOf("year"), o2 = 4 - n3.isoWeekday(), n3.isoWeekday() > 4 && (o2 += 7), n3.add(o2, e2));
-          return r2.diff(u2, "week") + 1;
-        }, d2.isoWeekday = function(e3) {
-          return this.$utils().u(e3) ? this.day() || 7 : this.day(this.day() % 7 ? e3 : e3 - 7);
-        };
-        var n2 = d2.startOf;
-        d2.startOf = function(e3, t3) {
-          var i3 = this.$utils(), s3 = !!i3.u(t3) || t3;
-          return "isoweek" === i3.p(e3) ? s3 ? this.date(this.date() - (this.isoWeekday() - 1)).startOf("day") : this.date(this.date() - 1 - (this.isoWeekday() - 1) + 7).endOf("day") : n2.bind(this)(e3, t3);
-        };
-      };
-    }));
-  })(isoWeek$2);
-  return isoWeek$2.exports;
-}
-var isoWeekExports = requireIsoWeek();
-const isoWeek = /* @__PURE__ */ getDefaultExportFromCjs(isoWeekExports);
-var isSameOrBefore$2 = { exports: {} };
-var isSameOrBefore$1 = isSameOrBefore$2.exports;
-var hasRequiredIsSameOrBefore;
-function requireIsSameOrBefore() {
-  if (hasRequiredIsSameOrBefore) return isSameOrBefore$2.exports;
-  hasRequiredIsSameOrBefore = 1;
-  (function(module2, exports2) {
-    !(function(e2, i2) {
-      module2.exports = i2();
-    })(isSameOrBefore$1, (function() {
-      return function(e2, i2) {
-        i2.prototype.isSameOrBefore = function(e3, i3) {
-          return this.isSame(e3, i3) || this.isBefore(e3, i3);
-        };
-      };
-    }));
-  })(isSameOrBefore$2);
-  return isSameOrBefore$2.exports;
-}
-var isSameOrBeforeExports = requireIsSameOrBefore();
-const isSameOrBefore = /* @__PURE__ */ getDefaultExportFromCjs(isSameOrBeforeExports);
-dayjs.extend(quarterOfYear);
-dayjs.extend(weekOfYear);
-dayjs.extend(customParse);
-dayjs.extend(isoWeek);
-dayjs.extend(isSameOrBefore);
-function formatSecondsToHHMMSS(totalSeconds) {
-  if (isNaN(totalSeconds) || totalSeconds < 0) {
-    return "00:00:00";
-  }
-  const hours = Math.floor(totalSeconds / 3600);
-  const minutes = Math.floor(totalSeconds % 3600 / 60);
-  const seconds = Math.floor(totalSeconds % 60);
-  const pad = (num) => String(num).padStart(2, "0");
-  return `${pad(hours)}:${pad(minutes)}:${pad(seconds)}`;
-}
-function normalizeDateStr(raw) {
-  const s2 = (raw || "").replace(/\//g, "-");
-  const d2 = dayjs(s2, ["YYYY-MM-DD", "YYYY-M-D", "YYYY/MM/DD", "YYYY/M/D"], true);
-  return d2.isValid() ? d2.format("YYYY-MM-DD") : s2;
-}
-const DATE_FMT = "(\\d{4}[-/]\\d{2}[-/]\\d{2})";
-function extractDate(line2, em) {
-  const list = Array.isArray(em) ? em : [em];
-  for (const e2 of list) {
-    const m2 = line2.match(new RegExp(`${e2}\\s*${DATE_FMT}`));
-    if (m2) return normalizeDateStr(m2[1]);
-  }
-  return void 0;
-}
-function getDateRange(d2, view) {
-  switch (view) {
-    case "年":
-      return { startDate: d2.startOf("year"), endDate: d2.endOf("year") };
-    case "季":
-      return { startDate: d2.startOf("quarter"), endDate: d2.endOf("quarter") };
-    case "月":
-      return { startDate: d2.startOf("month"), endDate: d2.endOf("month") };
-    case "周":
-      return { startDate: d2.startOf("isoWeek"), endDate: d2.endOf("isoWeek") };
-    default:
-      return { startDate: d2.startOf("day"), endDate: d2.endOf("day") };
-  }
-}
-const QTXT = ["一", "二", "三", "四"];
-function formatDateForView(d2, v2) {
-  switch (v2) {
-    case "年":
-      return d2.format("YYYY年");
-    case "季":
-      return `${d2.year()}年${QTXT[d2.quarter() - 1]}季度`;
-    case "月":
-      return d2.format("YYYY-MM");
-    case "周": {
-      const isoYear = d2.isoWeekYear();
-      const isoWeekNum = d2.isoWeek();
-      return `${isoYear}-W${String(isoWeekNum).padStart(2, "0")}`;
-    }
-    default:
-      return d2.format("YYYY-MM-DD");
-  }
-}
-const getWeeksInYear$1 = (year) => {
-  const endOfYear = dayjs().year(year).endOf("year");
-  return endOfYear.isoWeek() === 1 ? 52 : endOfYear.isoWeek();
-};
-function getPeriodCount(period, date) {
-  if (!date || !date.isValid()) {
-    return void 0;
-  }
-  switch (period) {
-    case "年":
-      return date.year();
-    case "季":
-      return date.quarter();
-    case "月":
-      return date.month() + 1;
-    // dayjs month is 0-indexed
-    case "周":
-      return date.isoWeek();
-    default:
-      return void 0;
-  }
-}
-const CODEBLOCK_LANG = "think";
-const EMOJI = {
-  done: "✅",
-  cancelled: "❌",
-  due: "📅",
-  scheduled: "⏳",
-  start: "🛫",
-  created: "➕",
-  repeat: "🔁"
-};
-const EMPTY_LABEL = "无日期";
-const STYLE_TAG_ID = "think-plugin-style";
-const LOCAL_STORAGE_KEYS = {
-  SETTINGS_TABS: "think-settings-active-tab"
-};
-const DEFAULT_NAMES = {
-  NEW_DATASOURCE: "新数据源",
-  NEW_VIEW: "新视图",
-  NEW_LAYOUT: "新布局"
-};
-function cleanTaskText(text) {
-  let result = text.replace(/^\s*-\s*\[[ xX-]\]\s*/, "").trim();
-  result = result.replace(/#[\p{L}\p{N}_-]+/gu, "");
-  let main2 = result.split(/[\s(]/).find((s2) => s2 && s2.trim());
-  main2 = main2?.replace(new RegExp("^\\p{Extended_Pictographic}\\uFE0F?", "u"), "").trim();
-  return main2 ? main2.trim() : "";
-}
-function pick(line2, emoji) {
-  return extractDate(line2, emoji);
-}
-const isDoneLine = (line2) => RE_DONE_BOX.test(line2);
-const isCancelledLine = (line2) => RE_CANCEL_BOX.test(line2);
-function parseTaskLine(filePath, rawLine, lineNo, parentFolder) {
-  const lineText = rawLine;
-  if (!RE_TASK_PREFIX.test(lineText)) return null;
-  const item = {
-    id: `${filePath}#${lineNo}`,
-    title: "",
-    // 稍后填充
-    content: lineText.trim(),
-    type: "task",
-    tags: [],
-    // 稍后填充
-    recurrence: "none",
-    // 稍后填充
-    created: 0,
-    modified: 0,
-    extra: {},
-    categoryKey: "",
-    // 稍后填充
-    // [新增] 填充 folder
-    folder: parentFolder
-  };
-  const status = isDoneLine(lineText) ? "done" : isCancelledLine(lineText) ? "cancelled" : "open";
-  item.categoryKey = `任务/${status}`;
-  const tagMatches = lineText.match(TAG_RE) || [];
-  item.tags = tagMatches.map((t2) => t2.replace("#", ""));
-  const recMatch = lineText.match(/🔁\s*([^\n📅⏳🛫➕✅❌]*)/);
-  if (recMatch && recMatch[1]) item.recurrence = recMatch[1].trim();
-  let m2;
-  while ((m2 = KV_IN_PAREN.exec(lineText)) !== null) {
-    const key = m2[1].trim();
-    const value = m2[2].trim();
-    const lowerKey = key.toLowerCase();
-    if (["主题", "标签", "tag", "tags"].includes(lowerKey)) {
-      value.split(/[,，]/).forEach((v2) => {
-        const t2 = v2.trim().replace(/^#/, "");
-        if (t2) item.tags.push(t2);
-      });
-    } else if (["时间", "time"].includes(key)) {
-      item.time = value;
-    } else if (["时长", "duration"].includes(key)) {
-      item.duration = Number(value) || void 0;
-    } else {
-      const num = Number(value);
-      let parsed = value;
-      if (value !== "" && !isNaN(num)) parsed = num;
-      else if (/^(true|false)$/i.test(value)) parsed = value.toLowerCase() === "true";
-      item.extra[key] = parsed;
-    }
-  }
-  item.tags = Array.from(new Set(item.tags));
-  const doneDate = pick(lineText, EMOJI.done);
-  const cancelledDate = pick(lineText, EMOJI.cancelled);
-  const dueDate = pick(lineText, EMOJI.due);
-  const scheduledDate = pick(lineText, EMOJI.scheduled);
-  const startDate = pick(lineText, EMOJI.start);
-  const createdDate = pick(lineText, EMOJI.created);
-  const pickPriority = (line2) => {
-    if (line2.includes("🔺")) return "highest";
-    if (line2.includes("⏫")) return "high";
-    if (line2.includes("🔼")) return "medium";
-    if (line2.includes("⏽")) return "low";
-    if (line2.includes("⏬")) return "lowest";
-    if (line2.includes("🔽")) return "low";
-    return void 0;
-  };
-  const afterPrefix = lineText.replace(RE_TASK_PREFIX, "").trim();
-  const iconMatch = afterPrefix.match(new RegExp("^(\\p{Extended_Pictographic}\\uFE0F?)", "u"));
-  let titleSrc = afterPrefix;
-  if (iconMatch) {
-    item.icon = iconMatch[1];
-    titleSrc = titleSrc.replace(new RegExp("^(?:\\p{Extended_Pictographic}\\uFE0F?\\s*)+", "u"), "");
-  }
-  item.title = cleanTaskText(titleSrc) || "";
-  item.priority = pickPriority(lineText);
-  if (createdDate) item.createdDate = createdDate;
-  if (scheduledDate) item.scheduledDate = scheduledDate;
-  if (startDate) item.startDate = startDate;
-  if (dueDate) item.dueDate = dueDate;
-  if (doneDate) item.doneDate = doneDate;
-  if (cancelledDate) item.cancelledDate = cancelledDate;
-  item.startISO = startDate || scheduledDate || dueDate || createdDate;
-  item.endISO = doneDate || cancelledDate || dueDate;
-  if (!item.startISO && status === "open") {
-    item.startISO = item.date = item.dueDate || item.scheduledDate || item.startDate || item.createdDate;
-  }
-  if (!item.endISO) item.endISO = item.startISO;
-  if (item.startISO) item.startMs = Date.parse(item.startISO);
-  if (item.endISO) item.endMs = Date.parse(item.endISO);
-  return item;
-}
-function parseBlockContent(filePath, lines, startIdx, endIdx, parentFolder) {
-  const contentLines = lines.slice(startIdx + 1, endIdx);
-  let title = "";
-  let categoryKey = null;
-  let date;
-  const tags2 = [];
-  const extra = {};
-  let contentText = "";
-  let contentStarted = false;
-  let iconVal = null;
-  let periodVal;
-  let ratingVal;
-  let pintuVal;
-  for (let i2 = 0; i2 < contentLines.length; i2++) {
-    const rawLine = contentLines[i2];
-    const line2 = rawLine.trim();
-    if (!contentStarted) {
-      if (line2 === "") continue;
-      const kv = line2.match(/^([^:：]{1,20})::?\s*(.*)$/);
-      if (kv) {
-        const key = kv[1].trim();
-        const value = kv[2] || "";
-        const lower = key.toLowerCase();
-        if (["分类", "类别", "category"].includes(lower)) categoryKey = value.trim();
-        else if (["主题", "标签", "tag", "tags"].includes(lower)) tags2.push(...value.trim().split(/[,，]/).map((t2) => t2.trim().replace(/^#/, "")));
-        else if (["日期", "date"].includes(lower)) date = normalizeDateStr(value.trim());
-        else if (["周期", "period"].includes(lower)) periodVal = value.trim();
-        else if (["评分", "rating"].includes(lower)) ratingVal = Number(value.trim()) || void 0;
-        else if (["图标", "icon"].includes(lower)) iconVal = value.trim();
-        else if (["评图", "pintu"].includes(lower)) pintuVal = value.trim();
-        else if (["内容", "content"].includes(lower)) {
-          contentStarted = true;
-          contentText = value;
-        } else {
-          const num = Number(value.trim());
-          let parsed = value.trim();
-          if (parsed !== "" && !isNaN(num)) parsed = num;
-          else if (/^(true|false)$/i.test(parsed)) parsed = parsed.toLowerCase() === "true";
-          extra[key] = parsed;
-        }
-      } else {
-        contentStarted = true;
-        contentText = rawLine;
-      }
-    } else {
-      contentText += (contentText ? "\n" : "") + rawLine;
-    }
-  }
-  if (contentText.trim() !== "") title = contentText.trim().split(/\r?\n/)[0];
-  else if (tags2.length > 0) title = tags2.join(", ");
-  title = title.replace(new RegExp("^(?:\\p{Extended_Pictographic}\\uFE0F?\\s*)+", "u"), "").trim().slice(0, 20);
-  if (!categoryKey) categoryKey = parentFolder || "";
-  const item = {
-    id: `${filePath}#${startIdx + 1}`,
-    title: title || "",
-    content: contentText.trim(),
-    type: "block",
-    tags: Array.from(new Set(tags2)),
-    recurrence: "none",
-    created: 0,
-    modified: 0,
-    extra,
-    categoryKey,
-    // [新增] 填充 folder
-    folder: parentFolder
-  };
-  if (iconVal) item.icon = iconVal;
-  if (periodVal) item.period = periodVal;
-  if (ratingVal) item.rating = ratingVal;
-  if (pintuVal) item.pintu = pintuVal;
-  item.startISO = date;
-  item.endISO = date;
-  if (item.startISO) item.startMs = Date.parse(item.startISO);
-  if (item.endISO) item.endMs = item.startMs;
-  item.date = date;
-  if (item.period && item.date) {
-    item.periodCount = getPeriodCount(item.period, dayjs(item.date));
-  }
-  return item;
-}
-function throttle(fn3, wait = 250) {
-  let last = 0, timer = null;
-  return function(...args) {
-    const now = Date.now();
-    if (now - last >= wait) {
-      last = now;
-      fn3.apply(this, args);
-    } else {
-      clearTimeout(timer);
-      timer = setTimeout(() => {
-        last = Date.now();
-        fn3.apply(this, args);
-      }, wait - (now - last));
-    }
-  };
-}
-const ORDER = ["done", "due", "scheduled", "start", "created", "end"];
-function normalizeItemDates(it) {
-  if (it.type === "block") {
-    if (it.date) {
-      it.dateSource = "block";
-      const t2 = Date.parse(it.date);
-      if (!isNaN(t2)) it.dateMs = t2;
-    }
-    if (!it.categoryKey) it.categoryKey = "";
-    return;
-  }
-  const pick2 = {
-    done: it.doneDate,
-    due: it.dueDate,
-    scheduled: it.scheduledDate,
-    start: it.startDate ?? it.startISO,
-    created: it.createdDate,
-    end: it.endISO
-  };
-  for (const k2 of ORDER) {
-    const iso = pick2[k2];
-    if (iso) {
-      it.date = iso;
-      it.dateSource = k2;
-      const t2 = Date.parse(iso);
-      if (!isNaN(t2)) it.dateMs = t2;
-      break;
-    }
-  }
-  if (!it.categoryKey) it.categoryKey = "任务/open";
-}
-const DEFAULT_SETTINGS = {
-  groups: [],
-  // [新增]
-  dataSources: [],
-  viewInstances: [],
-  layouts: [],
-  inputSettings: { blocks: [], themes: [], overrides: [] }
-};
-const VIEW_OPTIONS = ["BlockView", "TableView", "ExcelView", "TimelineView", "StatisticsView", "HeatmapView"];
-const CORE_FIELDS = ["id", "type", "title", "content", "categoryKey", "tags", "recurrence", "icon", "priority", "date", "header", "time", "duration", "period", "rating", "pintu", "folder", "periodCount"];
-function getAllFields(items) {
-  const set = new Set(CORE_FIELDS);
-  items.forEach((it) => {
-    Object.keys(it.extra || {}).forEach((k2) => set.add("extra." + k2));
-    const f2 = it.file;
-    if (f2 && typeof f2 === "object") Object.keys(f2).forEach((k2) => set.add("file." + k2));
-  });
-  return Array.from(set).sort();
-}
-function readField(item, field) {
-  if (field.startsWith("extra.")) return item.extra?.[field.slice(6)];
-  if (field.startsWith("file.")) return item.file?.[field.slice(5)];
-  return item[field];
-}
-function coerceForCompare(v2) {
-  if (v2 === null || v2 === void 0) return null;
-  if (typeof v2 === "number") return v2;
-  const s2 = String(v2).trim();
-  const isDateLike = /^\d{4}-\d{1,2}-\d{1,2}/.test(s2) || /^\d{4}\/\d{1,2}\/\d{1,2}/.test(s2);
-  if (isDateLike) {
-    const ts = Date.parse(s2.replace(/\//g, "-"));
-    if (!Number.isNaN(ts)) return ts;
-  }
-  const n2 = Number(s2);
-  if (!Number.isNaN(n2) && /\d/.test(s2) && !/[^\d.\-+eE]/.test(s2)) return n2;
-  return s2;
-}
-function cmpMixed(a2, b2) {
-  if (a2 == null && b2 == null) return 0;
-  if (a2 == null) return 1;
-  if (b2 == null) return -1;
-  const A2 = coerceForCompare(a2);
-  const B2 = coerceForCompare(b2);
-  if (typeof A2 === "number" && typeof B2 === "number") return A2 - B2;
-  return String(a2).localeCompare(String(b2), "zh");
-}
-function filterByRules(items, rules = []) {
-  return rules.length ? items.filter((it) => rules.every((r2) => matchRule(it, r2))) : items;
-}
-function matchRule(item, rule) {
-  const v1 = readField(item, rule.field);
-  const v2 = rule.value;
-  switch (rule.op) {
-    case "=":
-      return cmpMixed(v1, v2) === 0;
-    case "!=":
-      return cmpMixed(v1, v2) !== 0;
-    case "includes":
-      return Array.isArray(v1) ? v1.some((x2) => String(x2).includes(String(v2))) : String(v1).includes(String(v2));
-    case "regex":
-      try {
-        return new RegExp(String(v2)).test(String(v1));
-      } catch {
-        return false;
-      }
-    case ">":
-      return cmpMixed(v1, v2) > 0;
-    case "<":
-      return cmpMixed(v1, v2) < 0;
-    default:
-      return false;
-  }
-}
-function sortItems(items, rules = []) {
-  if (!rules.length) return items;
-  return [...items].sort((a2, b2) => {
-    for (const r2 of rules) {
-      const av = readField(a2, r2.field);
-      const bv = readField(b2, r2.field);
-      if (av == null && bv == null) continue;
-      if (av == null) return r2.dir === "asc" ? 1 : -1;
-      if (bv == null) return r2.dir === "asc" ? -1 : 1;
-      const cmp = cmpMixed(av, bv);
-      if (cmp !== 0) return r2.dir === "asc" ? cmp : -cmp;
-    }
-    return 0;
-  });
-}
-function isClosed(it) {
-  const k2 = (it.categoryKey || "").toLowerCase();
-  return /\/(done|cancelled)\b/.test(k2);
-}
-function filterByDateRange(items, startISO, endISO) {
-  if (!startISO && !endISO) return items;
-  const sMs = startISO ? Date.parse(startISO) : null;
-  const eMs = endISO ? Date.parse(endISO) : null;
-  return items.filter((it) => {
-    const t2 = it.dateMs ?? (it.date ? Date.parse((it.date || "").replace(/\//g, "-")) : NaN);
-    if (isNaN(t2)) {
-      return !isClosed(it);
-    }
-    if (sMs !== null && t2 < sMs) return false;
-    if (eMs !== null && t2 > eMs) return false;
-    return true;
-  });
-}
-function filterByKeyword(items, kw) {
-  if (!kw.trim()) return items;
-  const s2 = kw.trim().toLowerCase();
-  return items.filter((it) => (it.title + " " + it.content).toLowerCase().includes(s2));
-}
-function filterByPeriod(items, period) {
-  if (!period) {
-    return items;
-  }
-  return items.filter((item) => {
-    const itemPeriod = readField(item, "period");
-    return itemPeriod == null || itemPeriod === "" || itemPeriod === period;
-  });
-}
-function toggleToDone(rawLine, todayISO, nowTime, duration2) {
-  let line2 = rawLine;
-  if (duration2 !== void 0) {
-    const upsert = (l2, k2, v2) => {
-      const pattern = new RegExp(`([\\(\\[]\\s*${k2}::\\s*)[^\\)\\]]*(\\s*[\\)\\]])`);
-      if (pattern.test(l2)) {
-        return l2.replace(pattern, `$1${v2}$2`);
-      } else {
-        return `${l2.trim()} (${k2}:: ${v2})`;
-      }
-    };
-    line2 = upsert(line2, "时长", String(duration2));
-  }
-  line2 = line2.replace(
-    /(\s|^)(时长::[^\s()]+)/g,
-    (m2, pre) => m2.includes("(") ? m2 : `${pre}(${m2.trim()})`
-  );
-  if (/\(时长::[^\)]+\)/.test(line2)) {
-    line2 = line2.replace(/\((时长::[^\)]+)\)/, `(时间::${nowTime}) ($1)`);
-  } else if (/时长::[^\s]+/.test(line2)) {
-    line2 = line2.replace(/(时长::[^\s]+)/, `(时间::${nowTime}) ($1)`);
-  } else if (line2.includes(EMOJI.repeat)) {
-    line2 = line2.replace(EMOJI.repeat, `(时间::${nowTime}) ${EMOJI.repeat}`);
-  } else {
-    line2 = `${line2} (时间::${nowTime})`;
-  }
-  line2 = line2.replace(/^(\s*-\s*)\[[ xX-]\]/, "$1[x]");
-  if (!/^-\s*\[x\]/.test(line2)) {
-    line2 = `- [x] ${line2.replace(/^-\s*\[.\]/, "").replace(/^-\s*/, "")}`;
-  }
-  line2 = line2.replace(
-    new RegExp(`\\s*${EMOJI.done}\\s*${DATE_YMD_RE.source}$`),
-    ""
-  );
-  return `${line2.trim()} ${EMOJI.done} ${todayISO}`;
-}
-function parseRecurrence(rawTask) {
-  const m2 = rawTask.match(
-    /🔁\s*every\s+(\d+)?\s*(day|week|month|year)s?\s*(when done)?/i
-  );
-  if (!m2) return null;
-  const interval = m2[1] ? parseInt(m2[1], 10) : 1;
-  const unit = m2[2].toLowerCase();
-  const whenDone = Boolean(m2[3]);
-  return { interval, unit, whenDone };
-}
-function findBaseDateForRecurring(rawTask, whenDone, todayISO) {
-  if (whenDone) return todayISO;
-  const pick2 = (emoji) => {
-    const r2 = new RegExp(`${emoji}\\s*(${DATE_YMD_RE.source})`);
-    const mt = rawTask.match(r2);
-    return mt ? normalizeDateStr(mt[1]) : null;
-  };
-  return pick2(EMOJI.due) || pick2(EMOJI.scheduled) || pick2(EMOJI.start) || todayISO;
-}
-function generateNextRecurringTask(rawTask, baseDateISO) {
-  let next2 = rawTask.replace(/^(\s*-\s*)\[[ xX-]\]/, "$1[ ]").replace(new RegExp(`\\s*${EMOJI.done}\\s*${DATE_YMD_RE.source}`), "").replace(/\(时间::\d{2}:\d{2}\)/, "");
-  const rec = parseRecurrence(rawTask);
-  if (!rec) return next2.trim();
-  const base = dayjs(baseDateISO, ["YYYY-MM-DD", "YYYY/MM/DD"]);
-  const nextDate = base.add(rec.interval, rec.unit);
-  const nextStr = nextDate.format("YYYY-MM-DD");
-  const replaceIf = (emoji) => {
-    const re = new RegExp(`${emoji}\\s*${DATE_YMD_RE.source}`);
-    if (re.test(next2)) next2 = next2.replace(re, `${emoji} ${nextStr}`);
-  };
-  replaceIf(EMOJI.due);
-  replaceIf(EMOJI.scheduled);
-  replaceIf(EMOJI.start);
-  return next2.trim();
-}
-function markTaskDone(rawLine, todayISO, nowTime, duration2) {
-  const completedLine = toggleToDone(rawLine, todayISO, nowTime, duration2);
-  const rec = parseRecurrence(rawLine);
-  if (!rec) return { completedLine };
-  const baseISO = findBaseDateForRecurring(rawLine, rec.whenDone, todayISO);
-  const nextTaskLine = generateNextRecurringTask(rawLine, baseISO);
-  return { completedLine, nextTaskLine };
-}
-var __getOwnPropDesc$5 = Object.getOwnPropertyDescriptor;
-var __decorateClass$5 = (decorators, target, key, kind) => {
-  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc$5(target, key) : target;
-  for (var i2 = decorators.length - 1, decorator; i2 >= 0; i2--)
-    if (decorator = decorators[i2])
-      result = decorator(result) || result;
-  return result;
-};
-let DataStore = class {
-  // [核心修复] 将 platform 声明为可选，因为它将在 init 方法中被设置
-  platform;
-  get app() {
-    return this.platform.app;
-  }
-  // [核心修复] 构造函数变为空，不再有任何依赖，以打破初始化循环
-  constructor() {
-  }
-  // [核心修复] 新增一个 init 方法，用于在所有服务都创建完毕后手动注入依赖
-  init(platform) {
-    this.platform = platform;
-  }
-  items = [];
-  fileIndex = /* @__PURE__ */ new Map();
-  changeListeners = /* @__PURE__ */ new Set();
-  async scanAll() {
-    this.items = [];
-    this.fileIndex.clear();
-    const files = this.platform.getMarkdownFiles();
-    for (const file of files) await this.scanFile(file);
-  }
-  async initialScan() {
-    return this.scanAll();
-  }
-  async scanFile(file) {
-    try {
-      const content = await this.platform.readFile(file);
-      const lines = content.split(/\r?\n/);
-      const filePath = file.path;
-      const parentFolder = file.parent?.name || "";
-      const fileItems = [];
-      const cache = this.app.metadataCache.getFileCache(file);
-      const headingsList = cache?.headings || [];
-      let nextHeadingIndex = 0;
-      let currentSectionTags = [];
-      let currentHeader = "";
-      const fileName = file.name.toLowerCase().endsWith(".md") ? file.name.slice(0, -3) : file.name;
-      for (let i2 = 0; i2 < lines.length; i2++) {
-        const line2 = lines[i2];
-        if (nextHeadingIndex < headingsList.length && headingsList[nextHeadingIndex].position.start.line === i2) {
-          const headingEntry = headingsList[nextHeadingIndex];
-          const headingText = headingEntry.heading;
-          const headingTags = headingText.match(/#([\p{L}\p{N}_\/-]+)/gu) || [];
-          currentSectionTags = headingTags.map((t2) => t2.replace("#", "")).filter(Boolean);
-          let cleanText = headingText;
-          for (const tag of headingTags) cleanText = cleanText.replace(tag, "").trim();
-          currentHeader = cleanText || "";
-          nextHeadingIndex++;
-          continue;
-        }
-        if (line2.trim() === "<!-- start -->") {
-          const endIdx = lines.indexOf("<!-- end -->", i2 + 1);
-          if (endIdx !== -1) {
-            const blockItem = parseBlockContent(filePath, lines, i2, endIdx, parentFolder);
-            if (blockItem) {
-              blockItem.created = file.stat.ctime;
-              blockItem.modified = file.stat.mtime;
-              if (currentHeader) blockItem.header = currentHeader;
-              blockItem.tags = Array.from(/* @__PURE__ */ new Set([...currentSectionTags, ...blockItem.tags]));
-              blockItem.filename = fileName;
-              blockItem.fileName = fileName;
-              normalizeItemDates(blockItem);
-              const hashIdx = blockItem.id.lastIndexOf("#");
-              const lineNo = hashIdx >= 0 ? Number(blockItem.id.slice(hashIdx + 1)) : void 0;
-              blockItem.file = { path: filePath, line: lineNo, basename: fileName };
-              fileItems.push(blockItem);
-            }
-            i2 = endIdx;
-            continue;
-          }
-        }
-        const taskItem = parseTaskLine(filePath, line2, i2 + 1, parentFolder);
-        if (taskItem) {
-          taskItem.tags = Array.from(/* @__PURE__ */ new Set([...currentSectionTags, ...taskItem.tags]));
-          taskItem.created = file.stat.ctime;
-          taskItem.modified = file.stat.mtime;
-          if (currentHeader) taskItem.header = currentHeader;
-          taskItem.filename = fileName;
-          taskItem.fileName = fileName;
-          normalizeItemDates(taskItem);
-          taskItem.file = { path: filePath, line: i2 + 1, basename: fileName };
-          taskItem.recurrenceInfo = parseRecurrence(taskItem.content) || void 0;
-          fileItems.push(taskItem);
-        }
-      }
-      if (this.fileIndex.has(filePath)) {
-        this.items = this.items.filter((it) => it.id && !it.id.startsWith(filePath + "#"));
-      }
-      this.fileIndex.set(filePath, fileItems);
-      this.items.push(...fileItems);
-      return fileItems;
-    } catch (err) {
-      console.error("ThinkPlugin: 扫描文件失败", file.path, err);
-      return [];
-    }
-  }
-  removeFileItems(filePath) {
-    if (this.fileIndex.has(filePath)) {
-      this.fileIndex.delete(filePath);
-      this.items = this.items.filter((it) => it.id && !it.id.startsWith(filePath + "#"));
-    }
-  }
-  queryItems(filters = [], sortRules = []) {
-    const filtered = filterByRules(this.items, filters);
-    return sortItems(filtered, sortRules);
-  }
-  _emitChange() {
-    this.changeListeners.forEach((fn3) => {
-      try {
-        fn3();
-      } catch (e2) {
-        console.error("ThinkPlugin: 数据变化通知错误", e2);
-      }
-    });
-  }
-  _emitThrottled = throttle(() => this._emitChange(), 250);
-  subscribe(listener) {
-    this.changeListeners.add(listener);
-  }
-  unsubscribe(listener) {
-    this.changeListeners.delete(listener);
-  }
-  notifyChange() {
-    this._emitThrottled();
-  }
-};
-DataStore = __decorateClass$5([
-  singleton()
-], DataStore);
-var __getOwnPropDesc$4 = Object.getOwnPropertyDescriptor;
-var __decorateClass$4 = (decorators, target, key, kind) => {
-  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc$4(target, key) : target;
-  for (var i2 = decorators.length - 1, decorator; i2 >= 0; i2--)
-    if (decorator = decorators[i2])
-      result = decorator(result) || result;
-  return result;
-};
-let InputService = class {
-  app;
-  // [核心修复] 构造函数变为空
-  constructor() {
-  }
-  // [核心修复] 新增 init 方法
-  init(app) {
-    this.app = app;
-  }
-  // ... 所有其他方法保持不变 ...
-  renderTemplate(templateString, data) {
-    return templateString.replace(/\{\{\s*([^}]+?)\s*\}\}/g, (_2, placeholder) => {
-      const key = placeholder.trim();
-      let result = "";
-      try {
-        if (key === "block") {
-          result = data.block?.name || "";
-        } else if (key === "theme") {
-          result = data.theme?.path || "";
-        } else if (key === "icon") {
-          result = data.theme?.icon || "";
-        } else if (key.startsWith("moment:")) {
-          const format = key.substring(7);
-          result = obsidian.moment().format(format);
-        } else {
-          const keys = key.split(".");
-          const rootKey = keys[0];
-          if (!(rootKey in data)) {
-            return "";
-          }
-          let value = data[rootKey];
-          if (keys.length > 1) {
-            for (let i2 = 1; i2 < keys.length; i2++) {
-              if (value && typeof value === "object" && keys[i2] in value) {
-                value = value[keys[i2]];
-              } else {
-                value = "";
-                break;
-              }
-            }
-          }
-          if (typeof value === "object" && value !== null && "label" in value) {
-            result = String(value.label);
-          } else {
-            result = value !== null && value !== void 0 ? String(value) : "";
-          }
-        }
-        return result;
-      } catch (e2) {
-        console.error(`[ThinkPlugin] 解析模板变量 {{${key}}} 时发生错误:`, e2);
-        return `(解析错误: ${key})`;
-      }
-    });
-  }
-  async executeTemplate(template, formData, theme2) {
-    if (!template) throw new Error(`传入了无效的模板对象。`);
-    const renderData = {
-      ...formData,
-      block: { name: template.name },
-      theme: theme2 ? { path: theme2.path, icon: theme2.icon || "" } : {}
-    };
-    const outputContent = this.renderTemplate(template.outputTemplate, renderData).trim();
-    const targetFilePath = this.renderTemplate(template.targetFile, renderData).trim();
-    const header = template.appendUnderHeader ? this.renderTemplate(template.appendUnderHeader, renderData) : null;
-    if (!targetFilePath) throw new Error("模板未定义目标文件路径 (targetFile)。");
-    const file = await this.getOrCreateFile(targetFilePath);
-    if (header) {
-      await this.appendUnderHeader(file, header, outputContent);
-    } else {
-      const existingContent = await this.app.vault.read(file);
-      const newContent = existingContent ? `${existingContent.trim()}
-
-${outputContent}` : outputContent;
-      await this.app.vault.modify(file, newContent);
-    }
-    return targetFilePath;
-  }
-  async getOrCreateFile(fp) {
-    let file = this.app.vault.getAbstractFileByPath(fp);
-    if (file instanceof obsidian.TFile) {
-      return file;
-    }
-    if (file instanceof obsidian.TFolder) {
-      throw new Error(`目标路径 "${fp}" 是一个文件夹，无法创建文件。`);
-    }
-    const folder = fp.includes("/") ? fp.slice(0, fp.lastIndexOf("/")) : "";
-    if (folder) {
-      await this.ensureFolder(folder);
-    }
-    try {
-      return await this.app.vault.create(fp, "");
-    } catch (error) {
-      console.warn(`ThinkPlugin: 创建文件时遇到初始错误: ${error.message}. 正在尝试重新获取...`);
-      await new Promise((resolve) => setTimeout(resolve, 100));
-      const existingFile = this.app.vault.getAbstractFileByPath(fp);
-      if (existingFile instanceof obsidian.TFile) {
-        return existingFile;
-      } else {
-        console.error("ThinkPlugin: 文件创建失败，并且在捕获错误后仍无法找到该文件。", error);
-        throw new Error(`创建文件 "${fp}" 失败。原始错误: ${error.message}`);
-      }
-    }
-  }
-  async ensureFolder(path) {
-    const segs = path.split("/").filter(Boolean);
-    let cur = "";
-    for (const seg of segs) {
-      cur = cur ? `${cur}/${seg}` : seg;
-      const af = this.app.vault.getAbstractFileByPath(cur);
-      if (!af) {
-        try {
-          await this.app.vault.createFolder(cur);
-        } catch (e2) {
-          throw new Error(`创建文件夹 "${cur}" 失败。请检查路径是否有效或存在权限问题。原始错误: ${e2.message}`);
-        }
-      } else if (af instanceof obsidian.TFile) {
-        throw new Error(`路径冲突："${cur}" 是一个文件，无法在其下创建文件夹。`);
-      }
-    }
-  }
-  async appendUnderHeader(file, header, payload) {
-    const esc = header.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-    const regex = new RegExp(`^${esc}\\s*$`, "m");
-    const text = await this.app.vault.read(file);
-    const lines = text.split("\n");
-    let headerLineIndex = lines.findIndex((l2) => regex.test(l2));
-    if (headerLineIndex === -1) {
-      if (lines.length && lines[lines.length - 1].trim() !== "") lines.push("");
-      lines.push(header, "");
-      headerLineIndex = lines.length - 2;
-    }
-    let insertAtIndex = lines.length;
-    for (let i2 = headerLineIndex + 1; i2 < lines.length; i2++) {
-      const match2 = lines[i2].match(/^(#+)\s/);
-      if (match2 && match2[1].length <= (header.match(/^(#+)\s/)?.[1].length || 0)) {
-        insertAtIndex = i2;
-        break;
-      }
-    }
-    if (insertAtIndex > 0 && lines[insertAtIndex - 1].trim() !== "") {
-      lines.splice(insertAtIndex, 0, "", payload);
-    } else {
-      lines.splice(insertAtIndex, 0, payload);
-    }
-    await this.app.vault.modify(file, lines.join("\n"));
-  }
-};
-InputService = __decorateClass$4([
-  singleton()
-], InputService);
 var n, l$1, u$2, i$1, r$2, o$1, e$1, f$2, c$1, s$1, a$1, h$1, p$1 = {}, v$1 = [], y$1 = /acit|ex(?:s|g|n|p|$)|rph|grid|ows|mnc|ntw|ine[ch]|zoo|^ord|itera/i, w$2 = Array.isArray;
 function d$1(n2, l2) {
   for (var u2 in l2) n2[u2] = l2[u2];
@@ -4740,16 +3231,7 @@ n = v$1.slice, l$1 = { __e: function(n2, l2, u2, t2) {
 }, x$2.prototype.render = k$2, i$1 = [], o$1 = "function" == typeof Promise ? Promise.prototype.then.bind(Promise.resolve()) : setTimeout, e$1 = function(n2, l2) {
   return n2.__v.__b - l2.__v.__b;
 }, $$1.__r = 0, f$2 = /(PointerCapture)$|Capture$/i, c$1 = 0, s$1 = F$2(false), a$1 = F$2(true), h$1 = 0;
-var f$1 = 0;
-function u$1(e2, t2, n2, o2, i2, u2) {
-  t2 || (t2 = {});
-  var a2, c2, p2 = t2;
-  if ("ref" in p2) for (c2 in p2 = {}, t2) "ref" == c2 ? a2 = t2[c2] : p2[c2] = t2[c2];
-  var l2 = { type: e2, props: p2, key: n2, ref: a2, __k: null, __: null, __b: 0, __e: null, __c: null, constructor: void 0, __v: --f$1, __i: -1, __u: 0, __source: i2, __self: u2 };
-  if ("function" == typeof e2 && (a2 = e2.defaultProps)) for (c2 in a2) void 0 === p2[c2] && (p2[c2] = a2[c2]);
-  return l$1.vnode && l$1.vnode(l2), l2;
-}
-var t, r$1, u, i, o = 0, f = [], c = l$1, e = c.__b, a = c.__r, v = c.diffed, l = c.__c, m = c.unmount, s = c.__;
+var t, r$1, u$1, i, o = 0, f$1 = [], c = l$1, e = c.__b, a = c.__r, v = c.diffed, l = c.__c, m = c.unmount, s = c.__;
 function p(n2, t2) {
   c.__h && c.__h(r$1, n2, o || t2), o = 0;
   var u2 = r$1.__H || (r$1.__H = { __: [], __h: [] });
@@ -4852,7 +3334,7 @@ function g$1() {
   return n2.__;
 }
 function j$1() {
-  for (var n2; n2 = f.shift(); ) if (n2.__P && n2.__H) try {
+  for (var n2; n2 = f$1.shift(); ) if (n2.__P && n2.__H) try {
     n2.__H.__h.forEach(z$1), n2.__H.__h.forEach(B$1), n2.__H.__h = [];
   } catch (t2) {
     n2.__H.__h = [], c.__e(t2, n2.__v);
@@ -4865,15 +3347,15 @@ c.__b = function(n2) {
 }, c.__r = function(n2) {
   a && a(n2), t = 0;
   var i2 = (r$1 = n2.__c).__H;
-  i2 && (u === r$1 ? (i2.__h = [], r$1.__h = [], i2.__.forEach(function(n3) {
+  i2 && (u$1 === r$1 ? (i2.__h = [], r$1.__h = [], i2.__.forEach(function(n3) {
     n3.__N && (n3.__ = n3.__N), n3.u = n3.__N = void 0;
-  })) : (i2.__h.forEach(z$1), i2.__h.forEach(B$1), i2.__h = [], t = 0)), u = r$1;
+  })) : (i2.__h.forEach(z$1), i2.__h.forEach(B$1), i2.__h = [], t = 0)), u$1 = r$1;
 }, c.diffed = function(n2) {
   v && v(n2);
   var t2 = n2.__c;
-  t2 && t2.__H && (t2.__H.__h.length && (1 !== f.push(t2) && i === c.requestAnimationFrame || ((i = c.requestAnimationFrame) || w$1)(j$1)), t2.__H.__.forEach(function(n3) {
+  t2 && t2.__H && (t2.__H.__h.length && (1 !== f$1.push(t2) && i === c.requestAnimationFrame || ((i = c.requestAnimationFrame) || w$1)(j$1)), t2.__H.__.forEach(function(n3) {
     n3.u && (n3.__H = n3.u), n3.u = void 0;
-  })), u = r$1 = null;
+  })), u$1 = r$1 = null;
 }, c.__c = function(n2, t2) {
   t2.some(function(n3) {
     try {
@@ -4920,68 +3402,38 @@ function C$1(n2, t2) {
 function D$1(n2, t2) {
   return "function" == typeof t2 ? t2(n2) : t2;
 }
-function ModulePanel({ title, collapsed, children, onActionClick, onToggle }) {
-  const onHeaderClick = (e2) => {
-    if (e2.target.closest(".module-header-actions")) {
-      return;
-    }
-    onToggle?.(e2);
-  };
-  return /* @__PURE__ */ u$1("div", { class: "think-module", children: [
-    /* @__PURE__ */ u$1("div", { class: "module-header", onClick: onHeaderClick, title: "点击折叠/展开；Ctrl/⌘ + 点击：全部折叠/展开", children: [
-      /* @__PURE__ */ u$1("span", { class: "module-title", children: title }),
-      /* @__PURE__ */ u$1("div", { class: "module-header-controls", children: [
-        /* @__PURE__ */ u$1("div", { class: "module-header-actions", children: /* @__PURE__ */ u$1(
-          "span",
-          {
-            class: "module-action-plus",
-            title: "快捷输入",
-            onClick: (e2) => {
-              e2.stopPropagation();
-              onActionClick?.();
-            },
-            children: "+"
-          }
-        ) }),
-        /* @__PURE__ */ u$1("div", { class: "module-toggle", children: collapsed ? "▶" : "▼" })
-      ] })
-    ] }),
-    !collapsed && /* @__PURE__ */ u$1("div", { class: "module-content", children })
-  ] });
+const DEFAULT_SETTINGS = {
+  groups: [],
+  // [新增]
+  dataSources: [],
+  viewInstances: [],
+  layouts: [],
+  inputSettings: { blocks: [], themes: [], overrides: [] }
+};
+const VIEW_OPTIONS = ["BlockView", "TableView", "ExcelView", "TimelineView", "StatisticsView", "HeatmapView"];
+const CORE_FIELDS = ["id", "type", "title", "content", "categoryKey", "tags", "recurrence", "icon", "priority", "date", "header", "time", "duration", "period", "rating", "pintu", "folder", "periodCount"];
+function getAllFields(items) {
+  const set = new Set(CORE_FIELDS);
+  items.forEach((it) => {
+    Object.keys(it.extra || {}).forEach((k2) => set.add("extra." + k2));
+    const f2 = it.file;
+    if (f2 && typeof f2 === "object") Object.keys(f2).forEach((k2) => set.add("file." + k2));
+  });
+  return Array.from(set).sort();
 }
-function makeObsUri(ref, app) {
-  if (!app || !app.vault) {
-    return "#error-app-not-provided";
-  }
-  let filePath = "";
-  let line2 = "";
-  const anyRef = ref;
-  if (anyRef && anyRef.file && anyRef.file.path) {
-    filePath = String(anyRef.file.path);
-    if (typeof anyRef.file.line === "number") line2 = String(anyRef.file.line);
-  }
-  if (!filePath) {
-    const id = typeof ref === "string" ? ref : anyRef?.id || "";
-    const hashIndex = id.lastIndexOf("#");
-    filePath = hashIndex >= 0 ? id.substring(0, hashIndex) : id;
-    line2 = hashIndex >= 0 ? id.substring(hashIndex + 1) : "";
-  }
-  const vaultName = encodeURIComponent(app.vault.getName());
-  const qp = `vault=${vaultName}&filepath=${encodeURIComponent(filePath)}`;
-  return `obsidian://advanced-uri?${qp}${line2 ? "&line=" + line2 : ""}`;
+function readField(item, field) {
+  if (field.startsWith("extra.")) return item.extra?.[field.slice(6)];
+  if (field.startsWith("file.")) return item.file?.[field.slice(5)];
+  return item[field];
 }
-function TaskCheckbox({ done, onMarkDone }) {
-  const cls = "task-checkbox" + (done ? " done" : "");
-  return /* @__PURE__ */ u$1(
-    "input",
-    {
-      type: "checkbox",
-      class: cls,
-      checked: done,
-      onClick: done ? (e2) => e2.preventDefault() : void 0,
-      onChange: () => !done && onMarkDone?.()
-    }
-  );
+var f = 0;
+function u(e2, t2, n2, o2, i2, u2) {
+  t2 || (t2 = {});
+  var a2, c2, p2 = t2;
+  if ("ref" in p2) for (c2 in p2 = {}, t2) "ref" == c2 ? a2 = t2[c2] : p2[c2] = t2[c2];
+  var l2 = { type: e2, props: p2, key: n2, ref: a2, __k: null, __: null, __b: 0, __e: null, __c: null, constructor: void 0, __v: --f, __i: -1, __u: 0, __source: i2, __self: u2 };
+  if ("function" == typeof e2 && (a2 = e2.defaultProps)) for (c2 in a2) void 0 === p2[c2] && (p2[c2] = a2[c2]);
+  return l$1.vnode && l$1.vnode(l2), l2;
 }
 const common = {
   black: "#000",
@@ -7113,7 +5565,7 @@ function GlobalStyles$3(props) {
     defaultTheme: defaultTheme2 = {}
   } = props;
   const globalStyles = typeof styles2 === "function" ? (themeInput) => styles2(isEmpty$2(themeInput) ? defaultTheme2 : themeInput) : styles2;
-  return /* @__PURE__ */ u$1(Global, {
+  return /* @__PURE__ */ u(Global, {
     styles: globalStyles
   });
 }
@@ -8480,7 +6932,7 @@ function GlobalStyles$2({
       globalStyles = wrapGlobalLayer(globalStyles);
     }
   }
-  return /* @__PURE__ */ u$1(GlobalStyles$3, {
+  return /* @__PURE__ */ u(GlobalStyles$3, {
     styles: globalStyles
   });
 }
@@ -8579,7 +7031,7 @@ function createBox(options = {}) {
       component = "div",
       ...other
     } = extendSxProp$1(inProps);
-    return /* @__PURE__ */ u$1(BoxRoot, {
+    return /* @__PURE__ */ u(BoxRoot, {
       as: component,
       ref,
       className: clsx(className, generateClassName ? generateClassName(defaultClassName) : defaultClassName),
@@ -9148,7 +7600,7 @@ function ThemeProvider$2(props) {
     }
     return output;
   }, [localTheme, outerTheme]);
-  return /* @__PURE__ */ u$1(ThemeContext.Provider, {
+  return /* @__PURE__ */ u(ThemeContext.Provider, {
     value: theme2,
     children
   });
@@ -9158,7 +7610,7 @@ function RtlProvider({
   value,
   ...props
 }) {
-  return /* @__PURE__ */ u$1(RtlContext.Provider, {
+  return /* @__PURE__ */ u(RtlContext.Provider, {
     value: value ?? true,
     ...props
   });
@@ -9172,7 +7624,7 @@ function DefaultPropsProvider({
   value,
   children
 }) {
-  return /* @__PURE__ */ u$1(PropsContext.Provider, {
+  return /* @__PURE__ */ u(PropsContext.Provider, {
     value,
     children
   });
@@ -9266,7 +7718,7 @@ function useLayerOrder(theme2) {
   if (!layerOrder) {
     return null;
   }
-  return /* @__PURE__ */ u$1(GlobalStyles$2, {
+  return /* @__PURE__ */ u(GlobalStyles$2, {
     styles: layerOrder
   });
 }
@@ -9306,13 +7758,13 @@ function ThemeProvider$1(props) {
   const privateTheme = useThemeScoping(themeId, upperPrivateTheme, localTheme, true);
   const rtlValue = (themeId ? engineTheme[themeId] : engineTheme).direction === "rtl";
   const layerOrder = useLayerOrder(engineTheme);
-  return /* @__PURE__ */ u$1(ThemeProvider$2, {
+  return /* @__PURE__ */ u(ThemeProvider$2, {
     theme: privateTheme,
-    children: /* @__PURE__ */ u$1(ThemeContext$1.Provider, {
+    children: /* @__PURE__ */ u(ThemeContext$1.Provider, {
       value: engineTheme,
-      children: /* @__PURE__ */ u$1(RtlProvider, {
+      children: /* @__PURE__ */ u(RtlProvider, {
         value: rtlValue,
-        children: /* @__PURE__ */ u$1(DefaultPropsProvider, {
+        children: /* @__PURE__ */ u(DefaultPropsProvider, {
           value: themeId ? engineTheme[themeId].components : engineTheme.components,
           children: [layerOrder, children]
         })
@@ -9376,7 +7828,7 @@ function InitColorSchemeScript(options) {
   } else {
     setter += `${colorSchemeNode}.setAttribute('${attribute}', colorScheme);`;
   }
-  return /* @__PURE__ */ u$1("script", {
+  return /* @__PURE__ */ u("script", {
     suppressHydrationWarning: true,
     nonce: typeof window === "undefined" ? nonce : "",
     dangerouslySetInnerHTML: {
@@ -9868,19 +8320,19 @@ function createCssVarsProvider(options) {
     if (disableStyleSheetGeneration || restThemeProp.cssVariables === false || nested2 && upperTheme?.cssVarPrefix === cssVarPrefix) {
       shouldGenerateStyleSheet = false;
     }
-    const element = /* @__PURE__ */ u$1(k$2, {
-      children: [/* @__PURE__ */ u$1(ThemeProvider$1, {
+    const element = /* @__PURE__ */ u(k$2, {
+      children: [/* @__PURE__ */ u(ThemeProvider$1, {
         themeId: scopedTheme ? themeId : void 0,
         theme: memoTheme2,
         children
-      }), shouldGenerateStyleSheet && /* @__PURE__ */ u$1(GlobalStyles$3, {
+      }), shouldGenerateStyleSheet && /* @__PURE__ */ u(GlobalStyles$3, {
         styles: memoTheme2.generateStyleSheets?.() || []
       })]
     });
     if (nested2) {
       return element;
     }
-    return /* @__PURE__ */ u$1(ColorSchemeContext.Provider, {
+    return /* @__PURE__ */ u(ColorSchemeContext.Provider, {
       value: contextValue,
       children: element
     });
@@ -10330,7 +8782,7 @@ function createStack(options = {}) {
       useFlexGap
     };
     const classes = useUtilityClasses2();
-    return /* @__PURE__ */ u$1(StackRoot, {
+    return /* @__PURE__ */ u(StackRoot, {
       as: component,
       ownerState,
       ref,
@@ -11538,7 +9990,7 @@ function ThemeProviderNoVars({
   ...props
 }) {
   const scopedTheme = THEME_ID in themeInput ? themeInput[THEME_ID] : void 0;
-  return /* @__PURE__ */ u$1(ThemeProvider$1, {
+  return /* @__PURE__ */ u(ThemeProvider$1, {
     ...props,
     themeId: scopedTheme ? THEME_ID : void 0,
     theme: scopedTheme || themeInput
@@ -11600,12 +10052,12 @@ function ThemeProvider({
     return null;
   }, [theme2]);
   if (noVarsTheme) {
-    return /* @__PURE__ */ u$1(ThemeProviderNoVars, {
+    return /* @__PURE__ */ u(ThemeProviderNoVars, {
       theme: noVarsTheme,
       ...props
     });
   }
-  return /* @__PURE__ */ u$1(CssVarsProvider, {
+  return /* @__PURE__ */ u(CssVarsProvider, {
     theme: theme2,
     ...props
   });
@@ -11623,7 +10075,7 @@ function createChainedFunction(...funcs) {
   });
 }
 function GlobalStyles$1(props) {
-  return /* @__PURE__ */ u$1(GlobalStyles$2, {
+  return /* @__PURE__ */ u(GlobalStyles$2, {
     ...props,
     defaultTheme: defaultTheme$1,
     themeId: THEME_ID
@@ -11633,7 +10085,7 @@ function globalCss(styles2) {
   return function GlobalStylesWrapper(props) {
     return (
       // Pigment CSS `globalCss` support callback with theme inside an object but `GlobalStyles` support theme as a callback value.
-      /* @__PURE__ */ u$1(GlobalStyles$1, {
+      /* @__PURE__ */ u(GlobalStyles$1, {
         styles: typeof styles2 === "function" ? (theme2) => styles2({
           theme: theme2,
           ...props
@@ -11793,7 +10245,7 @@ const SvgIcon = /* @__PURE__ */ D(function SvgIcon2(inProps, ref) {
     more.viewBox = viewBox;
   }
   const classes = useUtilityClasses$R(ownerState);
-  return /* @__PURE__ */ u$1(SvgIconRoot, {
+  return /* @__PURE__ */ u(SvgIconRoot, {
     as: component,
     className: clsx(classes.root, className),
     focusable: "false",
@@ -11805,7 +10257,7 @@ const SvgIcon = /* @__PURE__ */ D(function SvgIcon2(inProps, ref) {
     ...other,
     ...hasSvgAsChild && children.props,
     ownerState,
-    children: [hasSvgAsChild ? children.props.children : children, titleAccess ? /* @__PURE__ */ u$1("title", {
+    children: [hasSvgAsChild ? children.props.children : children, titleAccess ? /* @__PURE__ */ u("title", {
       children: titleAccess
     }) : null]
   });
@@ -11813,7 +10265,7 @@ const SvgIcon = /* @__PURE__ */ D(function SvgIcon2(inProps, ref) {
 SvgIcon.muiName = "SvgIcon";
 function createSvgIcon(path, displayName) {
   function Component(props, ref) {
-    return /* @__PURE__ */ u$1(SvgIcon, {
+    return /* @__PURE__ */ u(SvgIcon, {
       "data-testid": void 0,
       ref,
       ...props,
@@ -12730,7 +11182,7 @@ const Collapse = /* @__PURE__ */ D(function Collapse2(inProps, ref) {
       addEndListener(nodeRef.current, next2);
     }
   };
-  return /* @__PURE__ */ u$1(TransitionComponent, {
+  return /* @__PURE__ */ u(TransitionComponent, {
     in: inProp,
     onEnter: handleEnter,
     onEntered: handleEntered,
@@ -12745,7 +11197,7 @@ const Collapse = /* @__PURE__ */ D(function Collapse2(inProps, ref) {
     children: (state, {
       ownerState: incomingOwnerState,
       ...restChildProps
-    }) => /* @__PURE__ */ u$1(CollapseRoot, {
+    }) => /* @__PURE__ */ u(CollapseRoot, {
       as: component,
       className: clsx(classes.root, className, {
         "entered": classes.entered,
@@ -12761,14 +11213,14 @@ const Collapse = /* @__PURE__ */ D(function Collapse2(inProps, ref) {
         state
       },
       ...restChildProps,
-      children: /* @__PURE__ */ u$1(CollapseWrapper, {
+      children: /* @__PURE__ */ u(CollapseWrapper, {
         ownerState: {
           ...ownerState,
           state
         },
         className: classes.wrapper,
         ref: wrapperRef,
-        children: /* @__PURE__ */ u$1(CollapseWrapperInner, {
+        children: /* @__PURE__ */ u(CollapseWrapperInner, {
           ownerState: {
             ...ownerState,
             state
@@ -12860,7 +11312,7 @@ const Paper = /* @__PURE__ */ D(function Paper2(inProps, ref) {
     variant
   };
   const classes = useUtilityClasses$P(ownerState);
-  return /* @__PURE__ */ u$1(PaperRoot, {
+  return /* @__PURE__ */ u(PaperRoot, {
     as: component,
     ownerState,
     className: clsx(classes.root, className),
@@ -13246,19 +11698,19 @@ const Accordion = /* @__PURE__ */ D(function Accordion2(inProps, ref) {
       role: "region"
     }
   });
-  return /* @__PURE__ */ u$1(RootSlot, {
+  return /* @__PURE__ */ u(RootSlot, {
     ...rootProps,
-    children: [/* @__PURE__ */ u$1(AccordionHeadingSlot, {
+    children: [/* @__PURE__ */ u(AccordionHeadingSlot, {
       ...accordionProps,
-      children: /* @__PURE__ */ u$1(AccordionContext.Provider, {
+      children: /* @__PURE__ */ u(AccordionContext.Provider, {
         value: contextValue,
         children: summary
       })
-    }), /* @__PURE__ */ u$1(TransitionSlot, {
+    }), /* @__PURE__ */ u(TransitionSlot, {
       in: expanded,
       timeout: "auto",
       ...transitionProps,
-      children: /* @__PURE__ */ u$1(AccordionRegionSlot, {
+      children: /* @__PURE__ */ u(AccordionRegionSlot, {
         ...accordionRegionProps,
         children
       })
@@ -13297,7 +11749,7 @@ const AccordionDetails = /* @__PURE__ */ D(function AccordionDetails2(inProps, r
   } = props;
   const ownerState = props;
   const classes = useUtilityClasses$N(ownerState);
-  return /* @__PURE__ */ u$1(AccordionDetailsRoot, {
+  return /* @__PURE__ */ u(AccordionDetailsRoot, {
     className: clsx(classes.root, className),
     ref,
     ownerState,
@@ -13411,10 +11863,10 @@ function Ripple(props) {
     }
     return void 0;
   }, [onExited, inProp, timeout]);
-  return /* @__PURE__ */ u$1("span", {
+  return /* @__PURE__ */ u("span", {
     className: rippleClassName,
     style: rippleStyles,
-    children: /* @__PURE__ */ u$1("span", {
+    children: /* @__PURE__ */ u("span", {
       className: childClassName
     })
   });
@@ -13556,7 +12008,7 @@ const TouchRipple = /* @__PURE__ */ D(function TouchRipple2(inProps, ref) {
       rippleSize,
       cb
     } = params;
-    setRipples((oldRipples) => [...oldRipples, /* @__PURE__ */ u$1(TouchRippleRipple, {
+    setRipples((oldRipples) => [...oldRipples, /* @__PURE__ */ u(TouchRippleRipple, {
       classes: {
         ripple: clsx(classes.ripple, touchRippleClasses.ripple),
         rippleVisible: clsx(classes.rippleVisible, touchRippleClasses.rippleVisible),
@@ -13677,11 +12129,11 @@ const TouchRipple = /* @__PURE__ */ D(function TouchRipple2(inProps, ref) {
     start: start2,
     stop
   }), [pulsate, start2, stop]);
-  return /* @__PURE__ */ u$1(TouchRippleRoot, {
+  return /* @__PURE__ */ u(TouchRippleRoot, {
     className: clsx(touchRippleClasses.root, classes.root, className),
     ref: container,
     ...other,
-    children: /* @__PURE__ */ u$1(TransitionGroup, {
+    children: /* @__PURE__ */ u(TransitionGroup, {
       component: null,
       exit: true,
       children: ripples
@@ -13909,7 +12361,7 @@ const ButtonBase = /* @__PURE__ */ D(function ButtonBase2(inProps, ref) {
     focusVisible
   };
   const classes = useUtilityClasses$M(ownerState);
-  return /* @__PURE__ */ u$1(ButtonBaseRoot, {
+  return /* @__PURE__ */ u(ButtonBaseRoot, {
     as: ComponentProp,
     className: clsx(classes.root, className),
     ownerState,
@@ -13931,7 +12383,7 @@ const ButtonBase = /* @__PURE__ */ D(function ButtonBase2(inProps, ref) {
     type,
     ...buttonProps,
     ...other,
-    children: [children, enableTouchRipple ? /* @__PURE__ */ u$1(TouchRipple, {
+    children: [children, enableTouchRipple ? /* @__PURE__ */ u(TouchRipple, {
       ref: handleRippleRef,
       center: centerRipple,
       ...TouchRippleProps
@@ -14117,12 +12569,12 @@ const AccordionSummary = /* @__PURE__ */ D(function AccordionSummary2(inProps, r
     externalForwardedProps,
     ownerState
   });
-  return /* @__PURE__ */ u$1(RootSlot, {
+  return /* @__PURE__ */ u(RootSlot, {
     ...rootSlotProps,
-    children: [/* @__PURE__ */ u$1(ContentSlot, {
+    children: [/* @__PURE__ */ u(ContentSlot, {
       ...contentSlotProps,
       children
-    }), expandIcon && /* @__PURE__ */ u$1(ExpandIconWrapperSlot, {
+    }), expandIcon && /* @__PURE__ */ u(ExpandIconWrapperSlot, {
       ...expandIconWrapperSlotProps,
       children: expandIcon
     })]
@@ -14314,7 +12766,7 @@ const CircularProgress = /* @__PURE__ */ D(function CircularProgress2(inProps, r
     circleStyle.strokeDashoffset = `${((100 - value) / 100 * circumference).toFixed(3)}px`;
     rootStyle.transform = "rotate(-90deg)";
   }
-  return /* @__PURE__ */ u$1(CircularProgressRoot, {
+  return /* @__PURE__ */ u(CircularProgressRoot, {
     className: clsx(classes.root, className),
     style: {
       width: size,
@@ -14327,11 +12779,11 @@ const CircularProgress = /* @__PURE__ */ D(function CircularProgress2(inProps, r
     role: "progressbar",
     ...rootProps,
     ...other,
-    children: /* @__PURE__ */ u$1(CircularProgressSVG, {
+    children: /* @__PURE__ */ u(CircularProgressSVG, {
       className: classes.svg,
       ownerState,
       viewBox: `${SIZE / 2} ${SIZE / 2} ${SIZE} ${SIZE}`,
-      children: /* @__PURE__ */ u$1(CircularProgressCircle, {
+      children: /* @__PURE__ */ u(CircularProgressCircle, {
         className: classes.circle,
         style: circleStyle,
         ownerState,
@@ -14518,7 +12970,7 @@ const IconButton = /* @__PURE__ */ D(function IconButton2(inProps, ref) {
     ...other
   } = props;
   const loadingId = useId(idProp);
-  const loadingIndicator = loadingIndicatorProp ?? /* @__PURE__ */ u$1(CircularProgress, {
+  const loadingIndicator = loadingIndicatorProp ?? /* @__PURE__ */ u(CircularProgress, {
     "aria-labelledby": loadingId,
     color: "inherit",
     size: 16
@@ -14534,7 +12986,7 @@ const IconButton = /* @__PURE__ */ D(function IconButton2(inProps, ref) {
     size
   };
   const classes = useUtilityClasses$J(ownerState);
-  return /* @__PURE__ */ u$1(IconButtonRoot, {
+  return /* @__PURE__ */ u(IconButtonRoot, {
     id: loading ? loadingId : idProp,
     className: clsx(classes.root, className),
     centerRipple: true,
@@ -14544,12 +12996,12 @@ const IconButton = /* @__PURE__ */ D(function IconButton2(inProps, ref) {
     ...other,
     ownerState,
     children: [typeof loading === "boolean" && // use plain HTML span to minimize the runtime overhead
-    /* @__PURE__ */ u$1("span", {
+    /* @__PURE__ */ u("span", {
       className: classes.loadingWrapper,
       style: {
         display: "contents"
       },
-      children: /* @__PURE__ */ u$1(IconButtonLoadingIndicator, {
+      children: /* @__PURE__ */ u(IconButtonLoadingIndicator, {
         className: classes.loadingIndicator,
         ownerState,
         children: loading && loadingIndicator
@@ -14557,7 +13009,7 @@ const IconButton = /* @__PURE__ */ D(function IconButton2(inProps, ref) {
     }), children]
   });
 });
-const ClearIcon = createSvgIcon(/* @__PURE__ */ u$1("path", {
+const ClearIcon = createSvgIcon(/* @__PURE__ */ u("path", {
   d: "M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"
 }));
 function getTypographyUtilityClass(slot) {
@@ -14717,7 +13169,7 @@ const Typography = /* @__PURE__ */ D(function Typography2(inProps, ref) {
   };
   const Component = component || (paragraph ? "p" : variantMapping[variant] || defaultVariantMapping[variant]) || "span";
   const classes = useUtilityClasses$I(ownerState);
-  return /* @__PURE__ */ u$1(TypographyRoot, {
+  return /* @__PURE__ */ u(TypographyRoot, {
     as: Component,
     ref,
     className: clsx(classes.root, className),
@@ -17212,7 +15664,7 @@ const PopperTooltip = /* @__PURE__ */ D(function PopperTooltip2(props, forwarded
     ownerState: props,
     className: classes.root
   });
-  return /* @__PURE__ */ u$1(Root, {
+  return /* @__PURE__ */ u(Root, {
     ...rootProps,
     children: typeof children === "function" ? children(childProps) : children
   });
@@ -17259,10 +15711,10 @@ const Popper$1 = /* @__PURE__ */ D(function Popper(props, forwardedRef) {
     onEnter: handleEnter,
     onExited: handleExited
   } : void 0;
-  return /* @__PURE__ */ u$1(Portal, {
+  return /* @__PURE__ */ u(Portal, {
     disablePortal,
     container,
-    children: /* @__PURE__ */ u$1(PopperTooltip, {
+    children: /* @__PURE__ */ u(PopperTooltip, {
       anchorEl,
       direction,
       disablePortal,
@@ -17331,7 +15783,7 @@ const Popper2 = /* @__PURE__ */ D(function Popper3(inProps, ref) {
     transition,
     ...other
   };
-  return /* @__PURE__ */ u$1(PopperRoot, {
+  return /* @__PURE__ */ u(PopperRoot, {
     as: component,
     direction: isRtl ? "rtl" : "ltr",
     slots: {
@@ -17442,7 +15894,7 @@ const ListSubheader = /* @__PURE__ */ D(function ListSubheader2(inProps, ref) {
     inset
   };
   const classes = useUtilityClasses$G(ownerState);
-  return /* @__PURE__ */ u$1(ListSubheaderRoot, {
+  return /* @__PURE__ */ u(ListSubheaderRoot, {
     as: component,
     className: clsx(classes.root, className),
     ref,
@@ -17453,7 +15905,7 @@ const ListSubheader = /* @__PURE__ */ D(function ListSubheader2(inProps, ref) {
 if (ListSubheader) {
   ListSubheader.muiSkipListHighlight = true;
 }
-const CancelIcon$1 = createSvgIcon(/* @__PURE__ */ u$1("path", {
+const CancelIcon$1 = createSvgIcon(/* @__PURE__ */ u("path", {
   d: "M12 2C6.47 2 2 6.47 2 12s4.47 10 10 10 10-4.47 10-10S17.53 2 12 2zm5 13.59L15.59 17 12 13.41 8.41 17 7 15.59 10.59 12 7 8.41 8.41 7 12 10.59 15.59 7 17 8.41 13.41 12 17 15.59z"
 }));
 function getChipUtilityClass(slot) {
@@ -17867,7 +16319,7 @@ const Chip = /* @__PURE__ */ D(function Chip2(inProps, ref) {
     deleteIcon = deleteIconProp && /* @__PURE__ */ mn(deleteIconProp) ? /* @__PURE__ */ _n(deleteIconProp, {
       className: clsx(deleteIconProp.props.className, classes.deleteIcon),
       onClick: handleDeleteIconClick
-    }) : /* @__PURE__ */ u$1(CancelIcon$1, {
+    }) : /* @__PURE__ */ u(CancelIcon$1, {
       className: classes.deleteIcon,
       onClick: handleDeleteIconClick
     });
@@ -17926,10 +16378,10 @@ const Chip = /* @__PURE__ */ D(function Chip2(inProps, ref) {
     ownerState,
     className: classes.label
   });
-  return /* @__PURE__ */ u$1(RootSlot, {
+  return /* @__PURE__ */ u(RootSlot, {
     as: component,
     ...rootProps,
-    children: [avatar || icon, /* @__PURE__ */ u$1(LabelSlot, {
+    children: [avatar || icon, /* @__PURE__ */ u(LabelSlot, {
       ...labelProps,
       children: label
     }), deleteIcon]
@@ -18090,15 +16542,15 @@ const TextareaAutosize = /* @__PURE__ */ D(function TextareaAutosize2(props, for
       onChange(event);
     }
   };
-  return /* @__PURE__ */ u$1(k$2, {
-    children: [/* @__PURE__ */ u$1("textarea", {
+  return /* @__PURE__ */ u(k$2, {
+    children: [/* @__PURE__ */ u("textarea", {
       value,
       onChange: handleChange,
       ref: handleRef,
       rows: minRows,
       style: style2,
       ...other
-    }), /* @__PURE__ */ u$1("textarea", {
+    }), /* @__PURE__ */ u("textarea", {
       "aria-hidden": true,
       className: props.className,
       readOnly: true,
@@ -18552,10 +17004,10 @@ const InputBase = /* @__PURE__ */ D(function InputBase2(inProps, ref) {
     ...inputProps,
     ...slotProps.input ?? componentsProps.input
   };
-  return /* @__PURE__ */ u$1(k$2, {
+  return /* @__PURE__ */ u(k$2, {
     children: [!disableInjectingGlobalStyles && typeof InputGlobalStyles === "function" && // For Emotion/Styled-components, InputGlobalStyles will be a function
     // For Pigment CSS, this has no effect because the InputGlobalStyles will be null.
-    (_InputGlobalStyles || (_InputGlobalStyles = /* @__PURE__ */ u$1(InputGlobalStyles, {}))), /* @__PURE__ */ u$1(Root, {
+    (_InputGlobalStyles || (_InputGlobalStyles = /* @__PURE__ */ u(InputGlobalStyles, {}))), /* @__PURE__ */ u(Root, {
       ...rootProps,
       ref,
       onClick: handleClick,
@@ -18567,9 +17019,9 @@ const InputBase = /* @__PURE__ */ D(function InputBase2(inProps, ref) {
         }
       },
       className: clsx(classes.root, rootProps.className, className, readOnly && "MuiInputBase-readOnly"),
-      children: [startAdornment, /* @__PURE__ */ u$1(FormControlContext.Provider, {
+      children: [startAdornment, /* @__PURE__ */ u(FormControlContext.Provider, {
         value: null,
-        children: /* @__PURE__ */ u$1(Input3, {
+        children: /* @__PURE__ */ u(Input3, {
           "aria-invalid": fcs.error,
           "aria-describedby": ariaDescribedby,
           autoComplete,
@@ -18629,7 +17081,7 @@ const filledInputClasses = {
   ...inputBaseClasses,
   ...generateUtilityClasses("MuiFilledInput", ["root", "underline", "input", "adornedStart", "adornedEnd", "sizeSmall", "multiline", "hiddenLabel"])
 };
-const ArrowDropDownIcon$1 = createSvgIcon(/* @__PURE__ */ u$1("path", {
+const ArrowDropDownIcon$1 = createSvgIcon(/* @__PURE__ */ u("path", {
   d: "M7 10l5 5 5-5z"
 }));
 function getAutocompleteUtilityClass(slot) {
@@ -19016,7 +17468,7 @@ const Autocomplete = /* @__PURE__ */ D(function Autocomplete2(inProps, ref) {
     blurOnSelect = false,
     ChipProps: ChipPropsProp,
     className,
-    clearIcon = _ClearIcon || (_ClearIcon = /* @__PURE__ */ u$1(ClearIcon, {
+    clearIcon = _ClearIcon || (_ClearIcon = /* @__PURE__ */ u(ClearIcon, {
       fontSize: "small"
     })),
     clearOnBlur = !props.freeSolo,
@@ -19064,7 +17516,7 @@ const Autocomplete = /* @__PURE__ */ D(function Autocomplete2(inProps, ref) {
     options,
     PaperComponent: PaperComponentProp,
     PopperComponent: PopperComponentProp,
-    popupIcon = _ArrowDropDownIcon || (_ArrowDropDownIcon = /* @__PURE__ */ u$1(ArrowDropDownIcon$1, {})),
+    popupIcon = _ArrowDropDownIcon || (_ArrowDropDownIcon = /* @__PURE__ */ u(ArrowDropDownIcon$1, {})),
     readOnly = false,
     renderGroup: renderGroupProp,
     renderInput,
@@ -19189,7 +17641,7 @@ const Autocomplete = /* @__PURE__ */ D(function Autocomplete2(inProps, ref) {
           } = getCustomizedItemProps({
             index
           });
-          return /* @__PURE__ */ u$1(Chip, {
+          return /* @__PURE__ */ u(Chip, {
             label: getOptionLabel(option),
             size,
             ...customItemProps,
@@ -19205,19 +17657,19 @@ const Autocomplete = /* @__PURE__ */ D(function Autocomplete2(inProps, ref) {
     const more = startAdornment.length - limitTags;
     if (!focused && more > 0) {
       startAdornment = startAdornment.splice(0, limitTags);
-      startAdornment.push(/* @__PURE__ */ u$1("span", {
+      startAdornment.push(/* @__PURE__ */ u("span", {
         className: classes.tag,
         children: getLimitTagsText(more)
       }, startAdornment.length));
     }
   }
-  const defaultRenderGroup = (params) => /* @__PURE__ */ u$1("li", {
-    children: [/* @__PURE__ */ u$1(AutocompleteGroupLabel, {
+  const defaultRenderGroup = (params) => /* @__PURE__ */ u("li", {
+    children: [/* @__PURE__ */ u(AutocompleteGroupLabel, {
       className: classes.groupLabel,
       ownerState,
       component: "div",
       children: params.group
-    }), /* @__PURE__ */ u$1(AutocompleteGroupUl, {
+    }), /* @__PURE__ */ u(AutocompleteGroupUl, {
       className: classes.groupUl,
       ownerState,
       children: params.children
@@ -19229,7 +17681,7 @@ const Autocomplete = /* @__PURE__ */ D(function Autocomplete2(inProps, ref) {
       key,
       ...otherProps
     } = props2;
-    return /* @__PURE__ */ u$1("li", {
+    return /* @__PURE__ */ u("li", {
       ...otherProps,
       children: getOptionLabel(option)
     }, key);
@@ -19251,8 +17703,8 @@ const Autocomplete = /* @__PURE__ */ D(function Autocomplete2(inProps, ref) {
   };
   const clearIndicatorSlotProps = externalForwardedProps.slotProps.clearIndicator;
   const popupIndicatorSlotProps = externalForwardedProps.slotProps.popupIndicator;
-  return /* @__PURE__ */ u$1(k$2, {
-    children: [/* @__PURE__ */ u$1(AutocompleteRoot, {
+  return /* @__PURE__ */ u(k$2, {
+    children: [/* @__PURE__ */ u(AutocompleteRoot, {
       ref,
       className: clsx(classes.root, className),
       ownerState,
@@ -19273,10 +17725,10 @@ const Autocomplete = /* @__PURE__ */ D(function Autocomplete2(inProps, ref) {
             }
           },
           ...(hasClearIcon || hasPopupIcon) && {
-            endAdornment: /* @__PURE__ */ u$1(AutocompleteEndAdornment, {
+            endAdornment: /* @__PURE__ */ u(AutocompleteEndAdornment, {
               className: classes.endAdornment,
               ownerState,
-              children: [hasClearIcon ? /* @__PURE__ */ u$1(AutocompleteClearIndicator, {
+              children: [hasClearIcon ? /* @__PURE__ */ u(AutocompleteClearIndicator, {
                 ...getClearProps(),
                 "aria-label": clearText,
                 title: clearText,
@@ -19284,7 +17736,7 @@ const Autocomplete = /* @__PURE__ */ D(function Autocomplete2(inProps, ref) {
                 ...clearIndicatorSlotProps,
                 className: clsx(classes.clearIndicator, clearIndicatorSlotProps?.className),
                 children: clearIcon
-              }) : null, hasPopupIcon ? /* @__PURE__ */ u$1(AutocompletePopupIndicator, {
+              }) : null, hasPopupIcon ? /* @__PURE__ */ u(AutocompletePopupIndicator, {
                 ...getPopupIndicatorProps(),
                 disabled,
                 "aria-label": popupOpen ? closeText : openText,
@@ -19304,17 +17756,17 @@ const Autocomplete = /* @__PURE__ */ D(function Autocomplete2(inProps, ref) {
           ...getInputProps()
         }
       })
-    }), anchorEl ? /* @__PURE__ */ u$1(AutocompletePopper, {
+    }), anchorEl ? /* @__PURE__ */ u(AutocompletePopper, {
       as: PopperSlot,
       ...popperProps,
-      children: /* @__PURE__ */ u$1(AutocompletePaper, {
+      children: /* @__PURE__ */ u(AutocompletePaper, {
         as: PaperSlot,
         ...paperProps,
-        children: [loading && groupedOptions.length === 0 ? /* @__PURE__ */ u$1(AutocompleteLoading, {
+        children: [loading && groupedOptions.length === 0 ? /* @__PURE__ */ u(AutocompleteLoading, {
           className: classes.loading,
           ownerState,
           children: loadingText
-        }) : null, groupedOptions.length === 0 && !freeSolo && !loading ? /* @__PURE__ */ u$1(AutocompleteNoOptions, {
+        }) : null, groupedOptions.length === 0 && !freeSolo && !loading ? /* @__PURE__ */ u(AutocompleteNoOptions, {
           className: classes.noOptions,
           ownerState,
           role: "presentation",
@@ -19322,7 +17774,7 @@ const Autocomplete = /* @__PURE__ */ D(function Autocomplete2(inProps, ref) {
             event.preventDefault();
           },
           children: noOptionsText
-        }) : null, groupedOptions.length > 0 ? /* @__PURE__ */ u$1(ListboxSlot, {
+        }) : null, groupedOptions.length > 0 ? /* @__PURE__ */ u(ListboxSlot, {
           as: ListboxComponentProp,
           ...listboxProps,
           children: groupedOptions.map((option, index) => {
@@ -19422,7 +17874,7 @@ const Fade = /* @__PURE__ */ D(function Fade2(props, ref) {
       addEndListener(nodeRef.current, next2);
     }
   };
-  return /* @__PURE__ */ u$1(TransitionComponent, {
+  return /* @__PURE__ */ u(TransitionComponent, {
     appear,
     in: inProp,
     nodeRef,
@@ -19546,12 +17998,12 @@ const Backdrop = /* @__PURE__ */ D(function Backdrop2(inProps, ref) {
     externalForwardedProps,
     ownerState
   });
-  return /* @__PURE__ */ u$1(TransitionSlot, {
+  return /* @__PURE__ */ u(TransitionSlot, {
     in: open,
     timeout: transitionDuration,
     ...other,
     ...transitionProps,
-    children: /* @__PURE__ */ u$1(RootSlot, {
+    children: /* @__PURE__ */ u(RootSlot, {
       "aria-hidden": true,
       ...rootProps,
       classes,
@@ -20054,7 +18506,7 @@ const Button = /* @__PURE__ */ D(function Button2(inProps, ref) {
     ...other
   } = props;
   const loadingId = useId(idProp);
-  const loadingIndicator = loadingIndicatorProp ?? /* @__PURE__ */ u$1(CircularProgress, {
+  const loadingIndicator = loadingIndicatorProp ?? /* @__PURE__ */ u(CircularProgress, {
     "aria-labelledby": loadingId,
     color: "inherit",
     size: 16
@@ -20075,18 +18527,18 @@ const Button = /* @__PURE__ */ D(function Button2(inProps, ref) {
     variant
   };
   const classes = useUtilityClasses$B(ownerState);
-  const startIcon = (startIconProp || loading && loadingPosition === "start") && /* @__PURE__ */ u$1(ButtonStartIcon, {
+  const startIcon = (startIconProp || loading && loadingPosition === "start") && /* @__PURE__ */ u(ButtonStartIcon, {
     className: classes.startIcon,
     ownerState,
-    children: startIconProp || /* @__PURE__ */ u$1(ButtonLoadingIconPlaceholder, {
+    children: startIconProp || /* @__PURE__ */ u(ButtonLoadingIconPlaceholder, {
       className: classes.loadingIconPlaceholder,
       ownerState
     })
   });
-  const endIcon = (endIconProp || loading && loadingPosition === "end") && /* @__PURE__ */ u$1(ButtonEndIcon, {
+  const endIcon = (endIconProp || loading && loadingPosition === "end") && /* @__PURE__ */ u(ButtonEndIcon, {
     className: classes.endIcon,
     ownerState,
-    children: endIconProp || /* @__PURE__ */ u$1(ButtonLoadingIconPlaceholder, {
+    children: endIconProp || /* @__PURE__ */ u(ButtonLoadingIconPlaceholder, {
       className: classes.loadingIconPlaceholder,
       ownerState
     })
@@ -20094,19 +18546,19 @@ const Button = /* @__PURE__ */ D(function Button2(inProps, ref) {
   const positionClassName = buttonGroupButtonContextPositionClassName || "";
   const loader = typeof loading === "boolean" ? (
     // use plain HTML span to minimize the runtime overhead
-    /* @__PURE__ */ u$1("span", {
+    /* @__PURE__ */ u("span", {
       className: classes.loadingWrapper,
       style: {
         display: "contents"
       },
-      children: loading && /* @__PURE__ */ u$1(ButtonLoadingIndicator, {
+      children: loading && /* @__PURE__ */ u(ButtonLoadingIndicator, {
         className: classes.loadingIndicator,
         ownerState,
         children: loadingIndicator
       })
     })
   ) : null;
-  return /* @__PURE__ */ u$1(ButtonRoot, {
+  return /* @__PURE__ */ u(ButtonRoot, {
     ownerState,
     className: clsx(contextProps.className, classes.root, className, positionClassName),
     component,
@@ -20332,20 +18784,20 @@ const SwitchBase = /* @__PURE__ */ D(function SwitchBase2(props, ref) {
       }
     }
   });
-  return /* @__PURE__ */ u$1(RootSlot, {
+  return /* @__PURE__ */ u(RootSlot, {
     ...rootSlotProps,
-    children: [/* @__PURE__ */ u$1(InputSlot, {
+    children: [/* @__PURE__ */ u(InputSlot, {
       ...inputSlotProps
     }), checked ? checkedIcon : icon]
   });
 });
-const CheckBoxOutlineBlankIcon = createSvgIcon(/* @__PURE__ */ u$1("path", {
+const CheckBoxOutlineBlankIcon = createSvgIcon(/* @__PURE__ */ u("path", {
   d: "M19 5v14H5V5h14m0-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2z"
 }));
-const CheckBoxIcon = createSvgIcon(/* @__PURE__ */ u$1("path", {
+const CheckBoxIcon = createSvgIcon(/* @__PURE__ */ u("path", {
   d: "M19 3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.11 0 2-.9 2-2V5c0-1.1-.89-2-2-2zm-9 14l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"
 }));
-const IndeterminateCheckBoxIcon = createSvgIcon(/* @__PURE__ */ u$1("path", {
+const IndeterminateCheckBoxIcon = createSvgIcon(/* @__PURE__ */ u("path", {
   d: "M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-2 10H7v-2h10v2z"
 }));
 function getCheckboxUtilityClass(slot) {
@@ -20430,9 +18882,9 @@ const CheckboxRoot = styled(SwitchBase, {
     }
   }]
 })));
-const defaultCheckedIcon$1 = /* @__PURE__ */ u$1(CheckBoxIcon, {});
-const defaultIcon$1 = /* @__PURE__ */ u$1(CheckBoxOutlineBlankIcon, {});
-const defaultIndeterminateIcon = /* @__PURE__ */ u$1(IndeterminateCheckBoxIcon, {});
+const defaultCheckedIcon$1 = /* @__PURE__ */ u(CheckBoxIcon, {});
+const defaultIcon$1 = /* @__PURE__ */ u(CheckBoxOutlineBlankIcon, {});
+const defaultIndeterminateIcon = /* @__PURE__ */ u(IndeterminateCheckBoxIcon, {});
 const Checkbox = /* @__PURE__ */ D(function Checkbox2(inProps, ref) {
   const props = useDefaultProps({
     props: inProps,
@@ -20491,7 +18943,7 @@ const Checkbox = /* @__PURE__ */ D(function Checkbox2(inProps, ref) {
       }
     }
   });
-  return /* @__PURE__ */ u$1(RootSlot, {
+  return /* @__PURE__ */ u(RootSlot, {
     ...rootSlotProps,
     classes
   });
@@ -20609,10 +19061,10 @@ function CssBaseline(inProps) {
     children,
     enableColorScheme = false
   } = props;
-  return /* @__PURE__ */ u$1(k$2, {
-    children: [isDynamicSupport && /* @__PURE__ */ u$1(GlobalStyles, {
+  return /* @__PURE__ */ u(k$2, {
+    children: [isDynamicSupport && /* @__PURE__ */ u(GlobalStyles, {
       enableColorScheme
-    }), !isDynamicSupport && !enableColorScheme && /* @__PURE__ */ u$1("span", {
+    }), !isDynamicSupport && !enableColorScheme && /* @__PURE__ */ u("span", {
       className: SELECTOR$1,
       style: {
         display: "none"
@@ -20995,8 +19447,8 @@ function FocusTrap(props) {
     }
     activated.current = true;
   };
-  return /* @__PURE__ */ u$1(k$2, {
-    children: [/* @__PURE__ */ u$1("div", {
+  return /* @__PURE__ */ u(k$2, {
+    children: [/* @__PURE__ */ u("div", {
       tabIndex: open ? 0 : -1,
       onFocus: handleFocusSentinel,
       ref: sentinelStart,
@@ -21004,7 +19456,7 @@ function FocusTrap(props) {
     }), /* @__PURE__ */ _n(children, {
       ref: handleRef,
       onFocus
-    }), /* @__PURE__ */ u$1("div", {
+    }), /* @__PURE__ */ u("div", {
       tabIndex: open ? 0 : -1,
       onFocus: handleFocusSentinel,
       ref: sentinelEnd,
@@ -21345,15 +19797,15 @@ const Modal = /* @__PURE__ */ D(function Modal2(inProps, ref) {
   if (!keepMounted && !open && (!hasTransition || exited)) {
     return null;
   }
-  return /* @__PURE__ */ u$1(Portal, {
+  return /* @__PURE__ */ u(Portal, {
     ref: portalRef,
     container,
     disablePortal,
-    children: /* @__PURE__ */ u$1(RootSlot, {
+    children: /* @__PURE__ */ u(RootSlot, {
       ...rootProps,
-      children: [!hideBackdrop && BackdropComponent ? /* @__PURE__ */ u$1(BackdropSlot, {
+      children: [!hideBackdrop && BackdropComponent ? /* @__PURE__ */ u(BackdropSlot, {
         ...backdropProps
-      }) : null, /* @__PURE__ */ u$1(FocusTrap, {
+      }) : null, /* @__PURE__ */ u(FocusTrap, {
         disableEnforceFocus,
         disableAutoFocus,
         disableRestoreFocus,
@@ -21655,7 +20107,7 @@ const Dialog = /* @__PURE__ */ D(function Dialog2(inProps, ref) {
       role: "presentation"
     }
   });
-  return /* @__PURE__ */ u$1(RootSlot, {
+  return /* @__PURE__ */ u(RootSlot, {
     closeAfterTransition: true,
     slots: {
       backdrop: BackdropSlot
@@ -21673,12 +20125,12 @@ const Dialog = /* @__PURE__ */ D(function Dialog2(inProps, ref) {
     onClick: handleBackdropClick,
     ...rootSlotProps,
     ...other,
-    children: /* @__PURE__ */ u$1(TransitionSlot, {
+    children: /* @__PURE__ */ u(TransitionSlot, {
       ...transitionSlotProps,
-      children: /* @__PURE__ */ u$1(ContainerSlot, {
+      children: /* @__PURE__ */ u(ContainerSlot, {
         onMouseDown: handleMouseDown,
         ...containerSlotProps,
-        children: /* @__PURE__ */ u$1(PaperSlot, {
+        children: /* @__PURE__ */ u(PaperSlot, {
           as: PaperComponent,
           elevation: 24,
           role: "dialog",
@@ -21686,7 +20138,7 @@ const Dialog = /* @__PURE__ */ D(function Dialog2(inProps, ref) {
           "aria-labelledby": ariaLabelledby,
           "aria-modal": ariaModal,
           ...paperSlotProps,
-          children: /* @__PURE__ */ u$1(DialogContext.Provider, {
+          children: /* @__PURE__ */ u(DialogContext.Provider, {
             value: dialogContextValue,
             children
           })
@@ -21750,7 +20202,7 @@ const DialogActions = /* @__PURE__ */ D(function DialogActions2(inProps, ref) {
     disableSpacing
   };
   const classes = useUtilityClasses$w(ownerState);
-  return /* @__PURE__ */ u$1(DialogActionsRoot, {
+  return /* @__PURE__ */ u(DialogActionsRoot, {
     className: clsx(classes.root, className),
     ownerState,
     ref,
@@ -21827,7 +20279,7 @@ const DialogContent = /* @__PURE__ */ D(function DialogContent2(inProps, ref) {
     dividers
   };
   const classes = useUtilityClasses$v(ownerState);
-  return /* @__PURE__ */ u$1(DialogContentRoot, {
+  return /* @__PURE__ */ u(DialogContentRoot, {
     className: clsx(classes.root, className),
     ownerState,
     ref,
@@ -21865,7 +20317,7 @@ const DialogTitle = /* @__PURE__ */ D(function DialogTitle2(inProps, ref) {
   const {
     titleId = idProp
   } = x$1(DialogContext);
-  return /* @__PURE__ */ u$1(DialogTitleRoot, {
+  return /* @__PURE__ */ u(DialogTitleRoot, {
     component: "h2",
     className: clsx(classes.root, className),
     ownerState,
@@ -22094,7 +20546,7 @@ const Divider = /* @__PURE__ */ D(function Divider2(inProps, ref) {
     variant
   };
   const classes = useUtilityClasses$t(ownerState);
-  return /* @__PURE__ */ u$1(DividerRoot, {
+  return /* @__PURE__ */ u(DividerRoot, {
     as: component,
     className: clsx(classes.root, className),
     role,
@@ -22102,7 +20554,7 @@ const Divider = /* @__PURE__ */ D(function Divider2(inProps, ref) {
     ownerState,
     "aria-orientation": role === "separator" && (component !== "hr" || orientation === "vertical") ? orientation : void 0,
     ...other,
-    children: children ? /* @__PURE__ */ u$1(DividerWrapper, {
+    children: children ? /* @__PURE__ */ u(DividerWrapper, {
       className: classes.wrapper,
       ownerState,
       children
@@ -22403,7 +20855,7 @@ const FilledInput = /* @__PURE__ */ D(function FilledInput2(inProps, ref) {
   const componentsProps = slotProps ?? componentsPropsProp ? deepmerge(filledInputComponentsProps, slotProps ?? componentsPropsProp) : filledInputComponentsProps;
   const RootSlot = slots.root ?? components.Root ?? FilledInputRoot;
   const InputSlot = slots.input ?? components.Input ?? FilledInputInput;
-  return /* @__PURE__ */ u$1(InputBase, {
+  return /* @__PURE__ */ u(InputBase, {
     slots: {
       root: RootSlot,
       input: InputSlot
@@ -22581,9 +21033,9 @@ const FormControl = /* @__PURE__ */ D(function FormControl2(inProps, ref) {
       variant
     };
   }, [adornedStart, color2, disabled, error, filled, focused, fullWidth, hiddenLabel, registerEffect, onEmpty, onFilled, required, size, variant]);
-  return /* @__PURE__ */ u$1(FormControlContext.Provider, {
+  return /* @__PURE__ */ u(FormControlContext.Provider, {
     value: childContext,
-    children: /* @__PURE__ */ u$1(FormControlRoot, {
+    children: /* @__PURE__ */ u(FormControlRoot, {
       as: component,
       ownerState,
       className: clsx(classes.root, className),
@@ -22747,20 +21199,20 @@ const FormControlLabel = /* @__PURE__ */ D(function FormControlLabel2(inProps, r
   });
   let label = labelProp;
   if (label != null && label.type !== Typography && !disableTypography) {
-    label = /* @__PURE__ */ u$1(TypographySlot, {
+    label = /* @__PURE__ */ u(TypographySlot, {
       component: "span",
       ...typographySlotProps,
       className: clsx(classes.label, typographySlotProps?.className),
       children: label
     });
   }
-  return /* @__PURE__ */ u$1(FormControlLabelRoot, {
+  return /* @__PURE__ */ u(FormControlLabelRoot, {
     className: clsx(classes.root, className),
     ownerState,
     ref,
     ...other,
-    children: [/* @__PURE__ */ _n(control, controlProps), required ? /* @__PURE__ */ u$1("div", {
-      children: [label, /* @__PURE__ */ u$1(AsteriskComponent$1, {
+    children: [/* @__PURE__ */ _n(control, controlProps), required ? /* @__PURE__ */ u("div", {
+      children: [label, /* @__PURE__ */ u(AsteriskComponent$1, {
         ownerState,
         "aria-hidden": true,
         className: classes.asterisk,
@@ -22828,7 +21280,7 @@ const FormGroup = /* @__PURE__ */ D(function FormGroup2(inProps, ref) {
     error: fcs.error
   };
   const classes = useUtilityClasses$p(ownerState);
-  return /* @__PURE__ */ u$1(FormGroupRoot, {
+  return /* @__PURE__ */ u(FormGroupRoot, {
     className: clsx(classes.root, className),
     ownerState,
     ref,
@@ -22936,7 +21388,7 @@ const FormHelperText = /* @__PURE__ */ D(function FormHelperText2(inProps, ref) 
   };
   delete ownerState.ownerState;
   const classes = useUtilityClasses$o(ownerState);
-  return /* @__PURE__ */ u$1(FormHelperTextRoot, {
+  return /* @__PURE__ */ u(FormHelperTextRoot, {
     as: component,
     className: clsx(classes.root, className),
     ref,
@@ -22944,7 +21396,7 @@ const FormHelperText = /* @__PURE__ */ D(function FormHelperText2(inProps, ref) 
     ownerState,
     children: children === " " ? (
       // notranslate needed while Google Translate will not fix zero-width space issue
-      _span$2 || (_span$2 = /* @__PURE__ */ u$1("span", {
+      _span$2 || (_span$2 = /* @__PURE__ */ u("span", {
         className: "notranslate",
         "aria-hidden": true,
         children: "​"
@@ -23054,13 +21506,13 @@ const FormLabel = /* @__PURE__ */ D(function FormLabel2(inProps, ref) {
     required: fcs.required
   };
   const classes = useUtilityClasses$n(ownerState);
-  return /* @__PURE__ */ u$1(FormLabelRoot, {
+  return /* @__PURE__ */ u(FormLabelRoot, {
     as: component,
     ownerState,
     className: clsx(classes.root, className),
     ref,
     ...other,
-    children: [children, fcs.required && /* @__PURE__ */ u$1(AsteriskComponent, {
+    children: [children, fcs.required && /* @__PURE__ */ u(AsteriskComponent, {
       ownerState,
       "aria-hidden": true,
       className: classes.asterisk,
@@ -23193,7 +21645,7 @@ const Grow = /* @__PURE__ */ D(function Grow2(props, ref) {
       addEndListener(nodeRef.current, next2);
     }
   };
-  return /* @__PURE__ */ u$1(TransitionComponent, {
+  return /* @__PURE__ */ u(TransitionComponent, {
     appear,
     in: inProp,
     nodeRef,
@@ -23373,7 +21825,7 @@ const Input = /* @__PURE__ */ D(function Input2(inProps, ref) {
   const componentsProps = slotProps ?? componentsPropsProp ? deepmerge(slotProps ?? componentsPropsProp, inputComponentsProps) : inputComponentsProps;
   const RootSlot = slots.root ?? components.Root ?? InputRoot;
   const InputSlot = slots.input ?? components.Input ?? InputInput;
-  return /* @__PURE__ */ u$1(InputBase, {
+  return /* @__PURE__ */ u(InputBase, {
     slots: {
       root: RootSlot,
       input: InputSlot
@@ -23583,7 +22035,7 @@ const InputLabel = /* @__PURE__ */ D(function InputLabel2(inProps, ref) {
     focused: fcs.focused
   };
   const classes = useUtilityClasses$l(ownerState);
-  return /* @__PURE__ */ u$1(InputLabelRoot, {
+  return /* @__PURE__ */ u(InputLabelRoot, {
     "data-shrink": shrink,
     ref,
     className: clsx(classes.root, className),
@@ -23664,9 +22116,9 @@ const List$1 = /* @__PURE__ */ D(function List(inProps, ref) {
     disablePadding
   };
   const classes = useUtilityClasses$k(ownerState);
-  return /* @__PURE__ */ u$1(ListContext.Provider, {
+  return /* @__PURE__ */ u(ListContext.Provider, {
     value: context,
-    children: /* @__PURE__ */ u$1(ListRoot, {
+    children: /* @__PURE__ */ u(ListRoot, {
       as: component,
       className: clsx(classes.root, className),
       ref,
@@ -23829,9 +22281,9 @@ const ListItemButton = /* @__PURE__ */ D(function ListItemButton2(inProps, ref) 
   };
   const classes = useUtilityClasses$j(ownerState);
   const handleRef = useForkRef(listItemRef, ref);
-  return /* @__PURE__ */ u$1(ListContext.Provider, {
+  return /* @__PURE__ */ u(ListContext.Provider, {
     value: childContext,
-    children: /* @__PURE__ */ u$1(ListItemButtonRoot, {
+    children: /* @__PURE__ */ u(ListItemButtonRoot, {
       ref: handleRef,
       href: other.href || other.to,
       component: (other.href || other.to) && component === "div" ? "button" : component,
@@ -23967,7 +22419,7 @@ const ListItemText = /* @__PURE__ */ D(function ListItemText2(inProps, ref) {
     ownerState
   });
   if (primary != null && primary.type !== Typography && !disableTypography) {
-    primary = /* @__PURE__ */ u$1(PrimarySlot, {
+    primary = /* @__PURE__ */ u(PrimarySlot, {
       variant: dense ? "body2" : "body1",
       component: primarySlotProps?.variant ? void 0 : "span",
       ...primarySlotProps,
@@ -23975,14 +22427,14 @@ const ListItemText = /* @__PURE__ */ D(function ListItemText2(inProps, ref) {
     });
   }
   if (secondary != null && secondary.type !== Typography && !disableTypography) {
-    secondary = /* @__PURE__ */ u$1(SecondarySlot, {
+    secondary = /* @__PURE__ */ u(SecondarySlot, {
       variant: "body2",
       color: "textSecondary",
       ...secondarySlotProps,
       children: secondary
     });
   }
-  return /* @__PURE__ */ u$1(RootSlot, {
+  return /* @__PURE__ */ u(RootSlot, {
     ...rootSlotProps,
     children: [primary, secondary]
   });
@@ -24170,7 +22622,7 @@ const MenuList = /* @__PURE__ */ D(function MenuList2(props, ref) {
     }
     return child;
   });
-  return /* @__PURE__ */ u$1(List$1, {
+  return /* @__PURE__ */ u(List$1, {
     role: "menu",
     ref: handleRef,
     className,
@@ -24483,17 +22935,17 @@ const Popover$1 = /* @__PURE__ */ D(function Popover(inProps, ref) {
     },
     ownerState
   });
-  return /* @__PURE__ */ u$1(RootSlot, {
+  return /* @__PURE__ */ u(RootSlot, {
     ...rootProps,
     ...!isHostComponent(RootSlot) && {
       slots: rootSlotsProp,
       slotProps: rootSlotPropsProp,
       disableScrollLock
     },
-    children: /* @__PURE__ */ u$1(TransitionSlot, {
+    children: /* @__PURE__ */ u(TransitionSlot, {
       ...transitionSlotProps,
       timeout: transitionDuration,
-      children: /* @__PURE__ */ u$1(PaperSlot, {
+      children: /* @__PURE__ */ u(PaperSlot, {
         ...paperProps,
         children
       })
@@ -24654,7 +23106,7 @@ const Menu = /* @__PURE__ */ D(function Menu2(inProps, ref) {
     ownerState
   });
   const resolvedTransitionProps = typeof externalForwardedProps.slotProps.transition === "function" ? externalForwardedProps.slotProps.transition(ownerState) : externalForwardedProps.slotProps.transition;
-  return /* @__PURE__ */ u$1(MenuRoot, {
+  return /* @__PURE__ */ u(MenuRoot, {
     onClose,
     anchorOrigin: {
       vertical: "bottom",
@@ -24688,7 +23140,7 @@ const Menu = /* @__PURE__ */ D(function Menu2(inProps, ref) {
     ownerState,
     ...other,
     classes: PopoverClasses,
-    children: /* @__PURE__ */ u$1(ListSlot, {
+    children: /* @__PURE__ */ u(ListSlot, {
       actions: menuListActionsRef,
       autoFocus: autoFocus && (activeItemIndex === -1 || disableAutoFocusItem),
       autoFocusItem,
@@ -24862,14 +23314,14 @@ const NativeSelectInput = /* @__PURE__ */ D(function NativeSelectInput2(props, r
     error
   };
   const classes = useUtilityClasses$f(ownerState);
-  return /* @__PURE__ */ u$1(k$2, {
-    children: [/* @__PURE__ */ u$1(NativeSelectSelect, {
+  return /* @__PURE__ */ u(k$2, {
+    children: [/* @__PURE__ */ u(NativeSelectSelect, {
       ownerState,
       className: clsx(classes.select, className),
       disabled,
       ref: inputRef || ref,
       ...other
-    }), props.multiple ? null : /* @__PURE__ */ u$1(NativeSelectIcon, {
+    }), props.multiple ? null : /* @__PURE__ */ u(NativeSelectIcon, {
       as: IconComponent,
       ownerState,
       className: classes.icon
@@ -24976,18 +23428,18 @@ function NotchedOutline(props) {
     notched,
     withLabel
   };
-  return /* @__PURE__ */ u$1(NotchedOutlineRoot$1, {
+  return /* @__PURE__ */ u(NotchedOutlineRoot$1, {
     "aria-hidden": true,
     className,
     ownerState,
     ...other,
-    children: /* @__PURE__ */ u$1(NotchedOutlineLegend, {
+    children: /* @__PURE__ */ u(NotchedOutlineLegend, {
       ownerState,
-      children: withLabel ? /* @__PURE__ */ u$1("span", {
+      children: withLabel ? /* @__PURE__ */ u("span", {
         children: label
       }) : (
         // notranslate needed while Google Translate will not fix zero-width space issue
-        _span$1 || (_span$1 = /* @__PURE__ */ u$1("span", {
+        _span$1 || (_span$1 = /* @__PURE__ */ u("span", {
           className: "notranslate",
           "aria-hidden": true,
           children: "​"
@@ -25206,18 +23658,18 @@ const OutlinedInput = /* @__PURE__ */ D(function OutlinedInput2(inProps, ref) {
       slotProps
     },
     additionalProps: {
-      label: label != null && label !== "" && fcs.required ? /* @__PURE__ */ u$1(k$2, {
+      label: label != null && label !== "" && fcs.required ? /* @__PURE__ */ u(k$2, {
         children: [label, " ", "*"]
       }) : label
     }
   });
-  return /* @__PURE__ */ u$1(InputBase, {
+  return /* @__PURE__ */ u(InputBase, {
     slots: {
       root: RootSlot,
       input: InputSlot
     },
     slotProps,
-    renderSuffix: (state) => /* @__PURE__ */ u$1(NotchedSlot, {
+    renderSuffix: (state) => /* @__PURE__ */ u(NotchedSlot, {
       ...notchedProps,
       notched: typeof notched !== "undefined" ? notched : Boolean(state.startAdornment || state.filled || state.focused)
     }),
@@ -25234,10 +23686,10 @@ const OutlinedInput = /* @__PURE__ */ D(function OutlinedInput2(inProps, ref) {
   });
 });
 OutlinedInput.muiName = "Input";
-const RadioButtonUncheckedIcon = createSvgIcon(/* @__PURE__ */ u$1("path", {
+const RadioButtonUncheckedIcon = createSvgIcon(/* @__PURE__ */ u("path", {
   d: "M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8z"
 }));
-const RadioButtonCheckedIcon = createSvgIcon(/* @__PURE__ */ u$1("path", {
+const RadioButtonCheckedIcon = createSvgIcon(/* @__PURE__ */ u("path", {
   d: "M8.465 8.465C9.37 7.56 10.62 7 12 7C14.76 7 17 9.24 17 12C17 13.38 16.44 14.63 15.535 15.535C14.63 16.44 13.38 17 12 17C9.24 17 7 14.76 7 12C7 10.62 7.56 9.37 8.465 8.465Z"
 }));
 const RadioButtonIconRoot = styled("span", {
@@ -25288,14 +23740,14 @@ function RadioButtonIcon(props) {
     ...props,
     checked
   };
-  return /* @__PURE__ */ u$1(RadioButtonIconRoot, {
+  return /* @__PURE__ */ u(RadioButtonIconRoot, {
     className: classes.root,
     ownerState,
-    children: [/* @__PURE__ */ u$1(RadioButtonIconBackground, {
+    children: [/* @__PURE__ */ u(RadioButtonIconBackground, {
       fontSize,
       className: classes.background,
       ownerState
-    }), /* @__PURE__ */ u$1(RadioButtonIconDot, {
+    }), /* @__PURE__ */ u(RadioButtonIconDot, {
       fontSize,
       className: classes.dot,
       ownerState
@@ -25394,10 +23846,10 @@ function areEqualValues$1(a2, b2) {
   }
   return String(a2) === String(b2);
 }
-const defaultCheckedIcon = /* @__PURE__ */ u$1(RadioButtonIcon, {
+const defaultCheckedIcon = /* @__PURE__ */ u(RadioButtonIcon, {
   checked: true
 });
-const defaultIcon = /* @__PURE__ */ u$1(RadioButtonIcon, {});
+const defaultIcon = /* @__PURE__ */ u(RadioButtonIcon, {});
 const Radio = /* @__PURE__ */ D(function Radio2(inProps, ref) {
   const props = useDefaultProps({
     props: inProps,
@@ -25484,7 +23936,7 @@ const Radio = /* @__PURE__ */ D(function Radio2(inProps, ref) {
       }
     }
   });
-  return /* @__PURE__ */ u$1(RootSlot, {
+  return /* @__PURE__ */ u(RootSlot, {
     ...rootSlotProps,
     classes
   });
@@ -25547,9 +23999,9 @@ const RadioGroup = /* @__PURE__ */ D(function RadioGroup2(props, ref) {
     },
     value
   }), [name, onChange, setValueState, value]);
-  return /* @__PURE__ */ u$1(RadioGroupContext.Provider, {
+  return /* @__PURE__ */ u(RadioGroupContext.Provider, {
     value: contextValue,
-    children: /* @__PURE__ */ u$1(FormGroup, {
+    children: /* @__PURE__ */ u(FormGroup, {
       role: "radiogroup",
       ref: handleRef,
       className: clsx(classes.root, className),
@@ -25942,8 +24394,8 @@ const SelectInput = /* @__PURE__ */ D(function SelectInput2(props, ref) {
     ...typeof MenuProps.slotProps?.list === "function" ? MenuProps.slotProps.list(ownerState) : MenuProps.slotProps?.list
   };
   const listboxId = useId();
-  return /* @__PURE__ */ u$1(k$2, {
-    children: [/* @__PURE__ */ u$1(SelectSelect, {
+  return /* @__PURE__ */ u(k$2, {
+    children: [/* @__PURE__ */ u(SelectSelect, {
       as: "div",
       ref: handleDisplayRef,
       tabIndex,
@@ -25967,13 +24419,13 @@ const SelectInput = /* @__PURE__ */ D(function SelectInput2(props, ref) {
       id: buttonId,
       children: isEmpty(display) ? (
         // notranslate needed while Google Translate will not fix zero-width space issue
-        _span || (_span = /* @__PURE__ */ u$1("span", {
+        _span || (_span = /* @__PURE__ */ u("span", {
           className: "notranslate",
           "aria-hidden": true,
           children: "​"
         }))
       ) : display
-    }), /* @__PURE__ */ u$1(SelectNativeInput, {
+    }), /* @__PURE__ */ u(SelectNativeInput, {
       "aria-invalid": error,
       value: Array.isArray(value) ? value.join(",") : value,
       name,
@@ -25987,11 +24439,11 @@ const SelectInput = /* @__PURE__ */ D(function SelectInput2(props, ref) {
       required,
       ...other,
       ownerState
-    }), /* @__PURE__ */ u$1(SelectIcon, {
+    }), /* @__PURE__ */ u(SelectIcon, {
       as: IconComponent,
       className: classes.icon,
       ownerState
-    }), /* @__PURE__ */ u$1(Menu, {
+    }), /* @__PURE__ */ u(Menu, {
       id: `menu-${name || ""}`,
       anchorEl: anchorElement,
       open,
@@ -26096,19 +24548,19 @@ const Select = /* @__PURE__ */ D(function Select2(inProps, ref) {
     ...restOfClasses
   } = classes;
   const InputComponent = input || {
-    standard: /* @__PURE__ */ u$1(StyledInput, {
+    standard: /* @__PURE__ */ u(StyledInput, {
       ownerState
     }),
-    outlined: /* @__PURE__ */ u$1(StyledOutlinedInput, {
+    outlined: /* @__PURE__ */ u(StyledOutlinedInput, {
       label,
       ownerState
     }),
-    filled: /* @__PURE__ */ u$1(StyledFilledInput, {
+    filled: /* @__PURE__ */ u(StyledFilledInput, {
       ownerState
     })
   }[variant];
   const inputComponentRef = useForkRef(ref, getReactElementRef(InputComponent));
-  return /* @__PURE__ */ u$1(k$2, {
+  return /* @__PURE__ */ u(k$2, {
     children: /* @__PURE__ */ _n(InputComponent, {
       // Most of the logic is implemented in `SelectInput`.
       // The `Select` component is a simple API wrapper to expose something better to play with.
@@ -26476,7 +24928,7 @@ const Tooltip = /* @__PURE__ */ D(function Tooltip2(inProps, ref) {
     TransitionProps,
     ...other
   } = props;
-  const children = /* @__PURE__ */ mn(childrenProp) ? childrenProp : /* @__PURE__ */ u$1("span", {
+  const children = /* @__PURE__ */ mn(childrenProp) ? childrenProp : /* @__PURE__ */ u("span", {
     children: childrenProp
   });
   const theme2 = useTheme();
@@ -26750,8 +25202,8 @@ const Tooltip = /* @__PURE__ */ D(function Tooltip2(inProps, ref) {
     ownerState,
     ref: setArrowRef
   });
-  return /* @__PURE__ */ u$1(k$2, {
-    children: [/* @__PURE__ */ _n(children, childrenProps), /* @__PURE__ */ u$1(PopperSlot, {
+  return /* @__PURE__ */ u(k$2, {
+    children: [/* @__PURE__ */ _n(children, childrenProps), /* @__PURE__ */ u(PopperSlot, {
       as: PopperComponentProp ?? Popper2,
       placement,
       anchorEl: followCursor ? {
@@ -26773,13 +25225,13 @@ const Tooltip = /* @__PURE__ */ D(function Tooltip2(inProps, ref) {
       popperOptions,
       children: ({
         TransitionProps: TransitionPropsInner
-      }) => /* @__PURE__ */ u$1(TransitionSlot, {
+      }) => /* @__PURE__ */ u(TransitionSlot, {
         timeout: theme2.transitions.duration.shorter,
         ...TransitionPropsInner,
         ...transitionSlotProps,
-        children: /* @__PURE__ */ u$1(TooltipSlot, {
+        children: /* @__PURE__ */ u(TooltipSlot, {
           ...tooltipSlotProps,
-          children: [title, arrow2 ? /* @__PURE__ */ u$1(ArrowSlot, {
+          children: [title, arrow2 ? /* @__PURE__ */ u(ArrowSlot, {
             ...arrowSlotProps
           }) : null]
         })
@@ -27029,7 +25481,7 @@ const Tab = /* @__PURE__ */ D(function Tab2(inProps, ref) {
       onFocus(event);
     }
   };
-  return /* @__PURE__ */ u$1(TabRoot, {
+  return /* @__PURE__ */ u(TabRoot, {
     focusRipple: !disableFocusRipple,
     className: clsx(classes.root, className),
     ref,
@@ -27041,9 +25493,9 @@ const Tab = /* @__PURE__ */ D(function Tab2(inProps, ref) {
     ownerState,
     tabIndex: selected ? 0 : -1,
     ...other,
-    children: [iconPosition === "top" || iconPosition === "start" ? /* @__PURE__ */ u$1(k$2, {
+    children: [iconPosition === "top" || iconPosition === "start" ? /* @__PURE__ */ u(k$2, {
       children: [icon, label]
-    }) : /* @__PURE__ */ u$1(k$2, {
+    }) : /* @__PURE__ */ u(k$2, {
       children: [label, icon]
     }), indicator]
   });
@@ -27122,9 +25574,9 @@ const Table = /* @__PURE__ */ D(function Table2(inProps, ref) {
     size,
     stickyHeader
   }), [padding2, size, stickyHeader]);
-  return /* @__PURE__ */ u$1(TableContext.Provider, {
+  return /* @__PURE__ */ u(TableContext.Provider, {
     value: table,
-    children: /* @__PURE__ */ u$1(TableRoot, {
+    children: /* @__PURE__ */ u(TableRoot, {
       as: component,
       role: component === defaultComponent$3 ? null : "table",
       ref,
@@ -27173,9 +25625,9 @@ const TableBody = /* @__PURE__ */ D(function TableBody2(inProps, ref) {
     component
   };
   const classes = useUtilityClasses$6(ownerState);
-  return /* @__PURE__ */ u$1(Tablelvl2Context.Provider, {
+  return /* @__PURE__ */ u(Tablelvl2Context.Provider, {
     value: tablelvl2$1,
-    children: /* @__PURE__ */ u$1(TableBodyRoot, {
+    children: /* @__PURE__ */ u(TableBodyRoot, {
       className: clsx(classes.root, className),
       as: component,
       ref,
@@ -27368,7 +25820,7 @@ const TableCell = /* @__PURE__ */ D(function TableCell2(inProps, ref) {
   if (sortDirection) {
     ariaSort = sortDirection === "asc" ? "ascending" : "descending";
   }
-  return /* @__PURE__ */ u$1(TableCellRoot, {
+  return /* @__PURE__ */ u(TableCellRoot, {
     as: component,
     ref,
     className: clsx(classes.root, className),
@@ -27416,9 +25868,9 @@ const TableHead = /* @__PURE__ */ D(function TableHead2(inProps, ref) {
     component
   };
   const classes = useUtilityClasses$4(ownerState);
-  return /* @__PURE__ */ u$1(Tablelvl2Context.Provider, {
+  return /* @__PURE__ */ u(Tablelvl2Context.Provider, {
     value: tablelvl2,
-    children: /* @__PURE__ */ u$1(TableHeadRoot, {
+    children: /* @__PURE__ */ u(TableHeadRoot, {
       as: component,
       className: clsx(classes.root, className),
       ref,
@@ -27428,10 +25880,10 @@ const TableHead = /* @__PURE__ */ D(function TableHead2(inProps, ref) {
     })
   });
 });
-const KeyboardArrowLeft = createSvgIcon(/* @__PURE__ */ u$1("path", {
+const KeyboardArrowLeft = createSvgIcon(/* @__PURE__ */ u("path", {
   d: "M15.41 16.09l-4.58-4.59 4.58-4.59L14 5.5l-6 6 6 6z"
 }));
-const KeyboardArrowRight = createSvgIcon(/* @__PURE__ */ u$1("path", {
+const KeyboardArrowRight = createSvgIcon(/* @__PURE__ */ u("path", {
   d: "M8.59 16.34l4.58-4.59-4.58-4.59L10 5.75l6 6-6 6z"
 }));
 function getTableRowUtilityClass(slot) {
@@ -27501,7 +25953,7 @@ const TableRow = /* @__PURE__ */ D(function TableRow2(inProps, ref) {
     footer: tablelvl22 && tablelvl22.variant === "footer"
   };
   const classes = useUtilityClasses$3(ownerState);
-  return /* @__PURE__ */ u$1(TableRowRoot, {
+  return /* @__PURE__ */ u(TableRowRoot, {
     as: component,
     ref,
     className: clsx(classes.root, className),
@@ -27587,7 +26039,7 @@ function ScrollbarSize(props) {
     setMeasurements();
     onChange(scrollbarHeight.current);
   }, [onChange]);
-  return /* @__PURE__ */ u$1("div", {
+  return /* @__PURE__ */ u("div", {
     style: styles,
     ...other,
     ref: nodeRef
@@ -27675,7 +26127,7 @@ const TabScrollButton = /* @__PURE__ */ D(function TabScrollButton2(inProps, ref
     },
     ownerState
   });
-  return /* @__PURE__ */ u$1(TabScrollButtonRoot, {
+  return /* @__PURE__ */ u(TabScrollButtonRoot, {
     component: "div",
     className: clsx(classes.root, className),
     ref,
@@ -27689,9 +26141,9 @@ const TabScrollButton = /* @__PURE__ */ D(function TabScrollButton2(inProps, ref
         "--TabScrollButton-svgRotate": `rotate(${isRtl ? -90 : 90}deg)`
       }
     },
-    children: direction === "left" ? /* @__PURE__ */ u$1(StartButtonIcon, {
+    children: direction === "left" ? /* @__PURE__ */ u(StartButtonIcon, {
       ...startButtonIconProps
-    }) : /* @__PURE__ */ u$1(EndButtonIcon, {
+    }) : /* @__PURE__ */ u(EndButtonIcon, {
       ...endButtonIconProps
     })
   });
@@ -28159,19 +26611,19 @@ const Tabs = /* @__PURE__ */ D(function Tabs2(inProps, ref) {
   });
   const getConditionalElements = () => {
     const conditionalElements2 = {};
-    conditionalElements2.scrollbarSizeListener = scrollable ? /* @__PURE__ */ u$1(ScrollbarSlot, {
+    conditionalElements2.scrollbarSizeListener = scrollable ? /* @__PURE__ */ u(ScrollbarSlot, {
       ...scrollbarSlotProps,
       onChange: handleScrollbarSizeChange
     }) : null;
     const scrollButtonsActive = displayStartScroll || displayEndScroll;
     const showScrollButtons = scrollable && (scrollButtons === "auto" && scrollButtonsActive || scrollButtons === true);
-    conditionalElements2.scrollButtonStart = showScrollButtons ? /* @__PURE__ */ u$1(ScrollButtonsSlot, {
+    conditionalElements2.scrollButtonStart = showScrollButtons ? /* @__PURE__ */ u(ScrollButtonsSlot, {
       direction: isRtl ? "right" : "left",
       onClick: handleStartScrollClick,
       disabled: !displayStartScroll,
       ...scrollButtonSlotProps
     }) : null;
-    conditionalElements2.scrollButtonEnd = showScrollButtons ? /* @__PURE__ */ u$1(ScrollButtonsSlot, {
+    conditionalElements2.scrollButtonEnd = showScrollButtons ? /* @__PURE__ */ u(ScrollButtonsSlot, {
       direction: isRtl ? "left" : "right",
       onClick: handleEndScrollClick,
       disabled: !displayEndScroll,
@@ -28294,7 +26746,7 @@ const Tabs = /* @__PURE__ */ D(function Tabs2(inProps, ref) {
       style: indicatorStyle
     }
   });
-  const indicator = /* @__PURE__ */ u$1(IndicatorSlot, {
+  const indicator = /* @__PURE__ */ u(IndicatorSlot, {
     ...indicatorSlotProps
   });
   let childIndex = 0;
@@ -28393,11 +26845,11 @@ const Tabs = /* @__PURE__ */ D(function Tabs2(inProps, ref) {
       }
     })
   });
-  return /* @__PURE__ */ u$1(RootSlot, {
+  return /* @__PURE__ */ u(RootSlot, {
     ...rootSlotProps,
-    children: [conditionalElements.scrollButtonStart, conditionalElements.scrollbarSizeListener, /* @__PURE__ */ u$1(ScrollerSlot, {
+    children: [conditionalElements.scrollButtonStart, conditionalElements.scrollbarSizeListener, /* @__PURE__ */ u(ScrollerSlot, {
       ...scrollerSlotProps,
-      children: [/* @__PURE__ */ u$1(ListSlot, {
+      children: [/* @__PURE__ */ u(ListSlot, {
         "aria-label": ariaLabel,
         "aria-labelledby": ariaLabelledBy,
         "aria-orientation": orientation === "vertical" ? "vertical" : null,
@@ -28559,7 +27011,7 @@ const TextField = /* @__PURE__ */ D(function TextField2(inProps, ref) {
     externalForwardedProps,
     ownerState
   });
-  const InputElement = /* @__PURE__ */ u$1(InputSlot, {
+  const InputElement = /* @__PURE__ */ u(InputSlot, {
     "aria-describedby": helperTextId,
     autoComplete,
     autoFocus,
@@ -28584,14 +27036,14 @@ const TextField = /* @__PURE__ */ D(function TextField2(inProps, ref) {
     },
     ...inputProps
   });
-  return /* @__PURE__ */ u$1(RootSlot, {
+  return /* @__PURE__ */ u(RootSlot, {
     ...rootProps,
-    children: [label != null && label !== "" && /* @__PURE__ */ u$1(InputLabelSlot, {
+    children: [label != null && label !== "" && /* @__PURE__ */ u(InputLabelSlot, {
       htmlFor: id,
       id: inputLabelId,
       ...inputLabelProps,
       children: label
-    }), select ? /* @__PURE__ */ u$1(SelectSlot, {
+    }), select ? /* @__PURE__ */ u(SelectSlot, {
       "aria-describedby": helperTextId,
       id,
       labelId: inputLabelId,
@@ -28599,7 +27051,7 @@ const TextField = /* @__PURE__ */ D(function TextField2(inProps, ref) {
       input: InputElement,
       ...selectProps,
       children
-    }) : InputElement, helperText && /* @__PURE__ */ u$1(FormHelperTextSlot, {
+    }) : InputElement, helperText && /* @__PURE__ */ u(FormHelperTextSlot, {
       id: helperTextId,
       ...formHelperTextProps,
       children: helperText
@@ -28614,10 +27066,10 @@ const DEFAULT_CONFIG$5 = {
   colField: "date"
 };
 function TableViewEditor({ value, onChange, fieldOptions }) {
-  return /* @__PURE__ */ u$1(Stack, { spacing: 2, children: [
-    /* @__PURE__ */ u$1(Typography, { variant: "body1", color: "text.secondary", sx: { mb: 1 }, children: "交叉表（TableView）根据两个字段来创建二维表格。" }),
-    /* @__PURE__ */ u$1(Stack, { direction: "row", spacing: 2, alignItems: "center", children: [
-      /* @__PURE__ */ u$1(
+  return /* @__PURE__ */ u(Stack, { spacing: 2, children: [
+    /* @__PURE__ */ u(Typography, { variant: "body1", color: "text.secondary", sx: { mb: 1 }, children: "交叉表（TableView）根据两个字段来创建二维表格。" }),
+    /* @__PURE__ */ u(Stack, { direction: "row", spacing: 2, alignItems: "center", children: [
+      /* @__PURE__ */ u(
         Autocomplete,
         {
           freeSolo: true,
@@ -28628,10 +27080,10 @@ function TableViewEditor({ value, onChange, fieldOptions }) {
           options: fieldOptions,
           value: value.rowField ?? "",
           onChange: (_2, v2) => onChange({ rowField: v2 ?? "" }),
-          renderInput: (p2) => /* @__PURE__ */ u$1(TextField, { ...p2, label: "行字段", variant: "outlined" })
+          renderInput: (p2) => /* @__PURE__ */ u(TextField, { ...p2, label: "行字段", variant: "outlined" })
         }
       ),
-      /* @__PURE__ */ u$1(
+      /* @__PURE__ */ u(
         Autocomplete,
         {
           freeSolo: true,
@@ -28642,7 +27094,7 @@ function TableViewEditor({ value, onChange, fieldOptions }) {
           options: fieldOptions,
           value: value.colField ?? "",
           onChange: (_2, v2) => onChange({ colField: v2 ?? "" }),
-          renderInput: (p2) => /* @__PURE__ */ u$1(TextField, { ...p2, label: "列字段", variant: "outlined" })
+          renderInput: (p2) => /* @__PURE__ */ u(TextField, { ...p2, label: "列字段", variant: "outlined" })
         }
       )
     ] })
@@ -28656,7 +27108,7 @@ const DEFAULT_CONFIG$4 = {
   group: "categoryKey"
 };
 function BlockViewEditor() {
-  return /* @__PURE__ */ u$1(Typography, { variant: "body1", color: "text.secondary", children: "块视图（BlockView）没有专属配置项。它的行为主要由上方的 **显示字段** 和 **分组字段** 控制。" });
+  return /* @__PURE__ */ u(Typography, { variant: "body1", color: "text.secondary", children: "块视图（BlockView）没有专属配置项。它的行为主要由上方的 **显示字段** 和 **分组字段** 控制。" });
 }
 const DEFAULT_CONFIG$3 = {
   view: "ExcelView",
@@ -28665,12 +27117,12 @@ const DEFAULT_CONFIG$3 = {
   fields: []
 };
 function ExcelViewEditor() {
-  return /* @__PURE__ */ u$1(Typography, { variant: "body1", color: "text.secondary", children: "数据表格（ExcelView）没有专属配置项。它会自动展示所有 **显示字段** 中指定的列。" });
+  return /* @__PURE__ */ u(Typography, { variant: "body1", color: "text.secondary", children: "数据表格（ExcelView）没有专属配置项。它会自动展示所有 **显示字段** 中指定的列。" });
 }
-const AddCircleOutlineIcon = createSvgIcon(/* @__PURE__ */ u$1("path", {
+const AddCircleOutlineIcon = createSvgIcon(/* @__PURE__ */ u("path", {
   d: "M13 7h-2v4H7v2h4v4h2v-4h4v-2h-4zm-1-5C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2m0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8"
 }));
-const RemoveCircleOutlineIcon = createSvgIcon(/* @__PURE__ */ u$1("path", {
+const RemoveCircleOutlineIcon = createSvgIcon(/* @__PURE__ */ u("path", {
   d: "M7 11v2h10v-2zm5-9C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2m0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8"
 }));
 let appStore;
@@ -28701,7 +27153,7 @@ function registerInputService(service) {
   }
   inputService = service;
 }
-const ArrowDropDownIcon = createSvgIcon(/* @__PURE__ */ u$1("path", {
+const ArrowDropDownIcon = createSvgIcon(/* @__PURE__ */ u("path", {
   d: "m7 10 5 5 5-5z"
 }));
 function SimpleSelect({ value, options, onChange, placeholder, fullWidth, sx }) {
@@ -28723,7 +27175,7 @@ function SimpleSelect({ value, options, onChange, placeholder, fullWidth, sx }) 
     onChange(optionValue);
     setIsOpen(false);
   };
-  return /* @__PURE__ */ u$1(
+  return /* @__PURE__ */ u(
     Box,
     {
       ref: wrapperRef,
@@ -28733,7 +27185,7 @@ function SimpleSelect({ value, options, onChange, placeholder, fullWidth, sx }) 
         ...sx
       },
       children: [
-        /* @__PURE__ */ u$1(
+        /* @__PURE__ */ u(
           Box,
           {
             onClick: () => setIsOpen(!isOpen),
@@ -28752,12 +27204,12 @@ function SimpleSelect({ value, options, onChange, placeholder, fullWidth, sx }) 
               }
             },
             children: [
-              /* @__PURE__ */ u$1(Typography, { sx: { fontSize: 13, color: value ? "text.primary" : "text.secondary" }, children: value ? selectedLabel : /* @__PURE__ */ u$1("em", { children: placeholder }) }),
-              /* @__PURE__ */ u$1(ArrowDropDownIcon, { sx: { color: "text.secondary", transform: isOpen ? "rotate(180deg)" : "rotate(0deg)", transition: "transform 0.2s" } })
+              /* @__PURE__ */ u(Typography, { sx: { fontSize: 13, color: value ? "text.primary" : "text.secondary" }, children: value ? selectedLabel : /* @__PURE__ */ u("em", { children: placeholder }) }),
+              /* @__PURE__ */ u(ArrowDropDownIcon, { sx: { color: "text.secondary", transform: isOpen ? "rotate(180deg)" : "rotate(0deg)", transition: "transform 0.2s" } })
             ]
           }
         ),
-        isOpen && /* @__PURE__ */ u$1(
+        isOpen && /* @__PURE__ */ u(
           Box,
           {
             sx: {
@@ -28775,7 +27227,7 @@ function SimpleSelect({ value, options, onChange, placeholder, fullWidth, sx }) 
               zIndex: 1300
               // 确保在其他元素之上
             },
-            children: options.map((option) => /* @__PURE__ */ u$1(
+            children: options.map((option) => /* @__PURE__ */ u(
               Box,
               {
                 onClick: () => handleOptionClick(option.value),
@@ -28872,10 +27324,10 @@ function TimelineViewEditor({ value, onChange }) {
     [newOrder[index], newOrder[targetIndex]] = [newOrder[targetIndex], newOrder[index]];
     handleConfigChange({ progressOrder: newOrder });
   };
-  return /* @__PURE__ */ u$1(Stack, { spacing: 2.5, children: [
-    /* @__PURE__ */ u$1(Stack, { direction: "row", alignItems: "center", spacing: 2, children: [
-      /* @__PURE__ */ u$1(Typography, { sx: { width: "80px", flexShrink: 0, fontWeight: 500 }, children: "小时高度" }),
-      /* @__PURE__ */ u$1(
+  return /* @__PURE__ */ u(Stack, { spacing: 2.5, children: [
+    /* @__PURE__ */ u(Stack, { direction: "row", alignItems: "center", spacing: 2, children: [
+      /* @__PURE__ */ u(Typography, { sx: { width: "80px", flexShrink: 0, fontWeight: 500 }, children: "小时高度" }),
+      /* @__PURE__ */ u(
         TextField,
         {
           type: "number",
@@ -28888,14 +27340,14 @@ function TimelineViewEditor({ value, onChange }) {
         }
       )
     ] }),
-    /* @__PURE__ */ u$1(Stack, { spacing: 1, children: [
-      /* @__PURE__ */ u$1(Typography, { variant: "subtitle2", sx: { fontWeight: 600 }, children: "分类配置 (可排序)" }),
-      /* @__PURE__ */ u$1(Typography, { variant: "body2", color: "text.secondary", sx: { mb: 1 }, children: "通过 `▲▼` 调整分类在进度条中的显示顺序。" }),
+    /* @__PURE__ */ u(Stack, { spacing: 1, children: [
+      /* @__PURE__ */ u(Typography, { variant: "subtitle2", sx: { fontWeight: 600 }, children: "分类配置 (可排序)" }),
+      /* @__PURE__ */ u(Typography, { variant: "body2", color: "text.secondary", sx: { mb: 1 }, children: "通过 `▲▼` 调整分类在进度条中的显示顺序。" }),
       progressOrder.map((name, index) => {
         const catConfig = categories[name];
         if (!catConfig) return null;
         const availableFileOptions = fileOptions.filter((f2) => !(catConfig.files || []).includes(f2)).map((f2) => ({ value: f2, label: f2 }));
-        return /* @__PURE__ */ u$1(
+        return /* @__PURE__ */ u(
           Box,
           {
             sx: {
@@ -28906,14 +27358,14 @@ function TimelineViewEditor({ value, onChange }) {
               mb: 1
             },
             children: [
-              /* @__PURE__ */ u$1(Stack, { direction: "row", gridColumn: "1 / 2", children: [
-                /* @__PURE__ */ u$1(Tooltip, { title: "上移", children: /* @__PURE__ */ u$1("span", { children: /* @__PURE__ */ u$1(IconButton, { size: "small", disabled: index === 0, onClick: () => moveCategory(index, "up"), sx: { p: "4px", fontSize: "0.9rem" }, children: "▲" }) }) }),
-                /* @__PURE__ */ u$1(Tooltip, { title: "下移", children: /* @__PURE__ */ u$1("span", { children: [
-                  /* @__PURE__ */ u$1(IconButton, { size: "small", disabled: index === progressOrder.length - 1, onClick: () => moveCategory(index, "down"), sx: { p: "4px", fontSize: "0.9rem" }, children: "▼" }),
+              /* @__PURE__ */ u(Stack, { direction: "row", gridColumn: "1 / 2", children: [
+                /* @__PURE__ */ u(Tooltip, { title: "上移", children: /* @__PURE__ */ u("span", { children: /* @__PURE__ */ u(IconButton, { size: "small", disabled: index === 0, onClick: () => moveCategory(index, "up"), sx: { p: "4px", fontSize: "0.9rem" }, children: "▲" }) }) }),
+                /* @__PURE__ */ u(Tooltip, { title: "下移", children: /* @__PURE__ */ u("span", { children: [
+                  /* @__PURE__ */ u(IconButton, { size: "small", disabled: index === progressOrder.length - 1, onClick: () => moveCategory(index, "down"), sx: { p: "4px", fontSize: "0.9rem" }, children: "▼" }),
                   "_200c_         "
                 ] }) })
               ] }),
-              /* @__PURE__ */ u$1(
+              /* @__PURE__ */ u(
                 TextField,
                 {
                   type: "color",
@@ -28923,7 +27375,7 @@ function TimelineViewEditor({ value, onChange }) {
                   sx: { p: "2px", gridColumn: "2 / 3" }
                 }
               ),
-              /* @__PURE__ */ u$1(
+              /* @__PURE__ */ u(
                 TextField,
                 {
                   variant: "outlined",
@@ -28933,9 +27385,9 @@ function TimelineViewEditor({ value, onChange }) {
                   sx: { gridColumn: "3 / 4" }
                 }
               ),
-              /* @__PURE__ */ u$1(Box, { sx: { minWidth: 0, gridColumn: "4 / 5" }, children: /* @__PURE__ */ u$1(Stack, { direction: "row", flexWrap: "wrap", useFlexGap: true, spacing: 0.5, alignItems: "center", children: [
-                (catConfig.files || []).map((file) => /* @__PURE__ */ u$1(Tooltip, { title: `点击移除关键词: ${file}`, children: [
-                  /* @__PURE__ */ u$1(
+              /* @__PURE__ */ u(Box, { sx: { minWidth: 0, gridColumn: "4 / 5" }, children: /* @__PURE__ */ u(Stack, { direction: "row", flexWrap: "wrap", useFlexGap: true, spacing: 0.5, alignItems: "center", children: [
+                (catConfig.files || []).map((file) => /* @__PURE__ */ u(Tooltip, { title: `点击移除关键词: ${file}`, children: [
+                  /* @__PURE__ */ u(
                     Box,
                     {
                       onClick: () => handleCategoryChange(name, { files: (catConfig.files || []).filter((f2) => f2 !== file) }),
@@ -28956,7 +27408,7 @@ function TimelineViewEditor({ value, onChange }) {
                   ),
                   "_200c_           "
                 ] }, file)),
-                /* @__PURE__ */ u$1(
+                /* @__PURE__ */ u(
                   SimpleSelect,
                   {
                     value: "",
@@ -28967,20 +27419,20 @@ function TimelineViewEditor({ value, onChange }) {
                   }
                 )
               ] }) }),
-              /* @__PURE__ */ u$1(IconButton, { onClick: () => removeCategory(name), size: "small", title: "删除此分类", sx: { gridColumn: "5 / 6" }, children: /* @__PURE__ */ u$1(RemoveCircleOutlineIcon, { fontSize: "small" }) })
+              /* @__PURE__ */ u(IconButton, { onClick: () => removeCategory(name), size: "small", title: "删除此分类", sx: { gridColumn: "5 / 6" }, children: /* @__PURE__ */ u(RemoveCircleOutlineIcon, { fontSize: "small" }) })
             ]
           },
           name
         );
       }),
-      /* @__PURE__ */ u$1(Button, { startIcon: /* @__PURE__ */ u$1(AddCircleOutlineIcon, {}), onClick: addCategory, size: "small", sx: { justifyContent: "flex-start", mt: 1 }, children: "添加新分类" })
+      /* @__PURE__ */ u(Button, { startIcon: /* @__PURE__ */ u(AddCircleOutlineIcon, {}), onClick: addCategory, size: "small", sx: { justifyContent: "flex-start", mt: 1 }, children: "添加新分类" })
     ] })
   ] });
 }
-const ArrowUpwardIcon = createSvgIcon(/* @__PURE__ */ u$1("path", {
+const ArrowUpwardIcon = createSvgIcon(/* @__PURE__ */ u("path", {
   d: "m4 12 1.41 1.41L11 7.83V20h2V7.83l5.58 5.59L20 12l-8-8z"
 }));
-const ArrowDownwardIcon = createSvgIcon(/* @__PURE__ */ u$1("path", {
+const ArrowDownwardIcon = createSvgIcon(/* @__PURE__ */ u("path", {
   d: "m20 12-1.41-1.41L13 16.17V4h-2v12.17l-5.58-5.59L4 12l8 8z"
 }));
 const DEFAULT_CONFIG$1 = {
@@ -29033,10 +27485,10 @@ function StatisticsViewEditor({ value, onChange }) {
     setLocalCategories(newCategories);
     onChange({ categories: newCategories });
   };
-  return /* @__PURE__ */ u$1(Stack, { spacing: 1, children: [
-    /* @__PURE__ */ u$1(Typography, { variant: "subtitle2", sx: { fontWeight: 600 }, children: "分类配置" }),
-    /* @__PURE__ */ u$1(Typography, { variant: "body2", color: "text.secondary", sx: { mb: 1 }, children: "插件已自动识别出您数据中的所有分类。您可以使用上下按钮调整顺序，或修改颜色。" }),
-    /* @__PURE__ */ u$1("div", { children: localCategories.map((cat, index) => /* @__PURE__ */ u$1(
+  return /* @__PURE__ */ u(Stack, { spacing: 1, children: [
+    /* @__PURE__ */ u(Typography, { variant: "subtitle2", sx: { fontWeight: 600 }, children: "分类配置" }),
+    /* @__PURE__ */ u(Typography, { variant: "body2", color: "text.secondary", sx: { mb: 1 }, children: "插件已自动识别出您数据中的所有分类。您可以使用上下按钮调整顺序，或修改颜色。" }),
+    /* @__PURE__ */ u("div", { children: localCategories.map((cat, index) => /* @__PURE__ */ u(
       Stack,
       {
         direction: "row",
@@ -29044,11 +27496,11 @@ function StatisticsViewEditor({ value, onChange }) {
         alignItems: "center",
         sx: { mb: 1, p: 1, bgcolor: "action.hover", borderRadius: 1 },
         children: [
-          /* @__PURE__ */ u$1(Stack, { children: [
-            /* @__PURE__ */ u$1(Tooltip, { title: "上移", children: /* @__PURE__ */ u$1("span", { children: /* @__PURE__ */ u$1(IconButton, { size: "small", disabled: index === 0, onClick: () => handleMove(index, "up"), children: /* @__PURE__ */ u$1(ArrowUpwardIcon, { sx: { fontSize: "1rem" } }) }) }) }),
-            /* @__PURE__ */ u$1(Tooltip, { title: "下移", children: /* @__PURE__ */ u$1("span", { children: /* @__PURE__ */ u$1(IconButton, { size: "small", disabled: index === localCategories.length - 1, onClick: () => handleMove(index, "down"), children: /* @__PURE__ */ u$1(ArrowDownwardIcon, { sx: { fontSize: "1rem" } }) }) }) })
+          /* @__PURE__ */ u(Stack, { children: [
+            /* @__PURE__ */ u(Tooltip, { title: "上移", children: /* @__PURE__ */ u("span", { children: /* @__PURE__ */ u(IconButton, { size: "small", disabled: index === 0, onClick: () => handleMove(index, "up"), children: /* @__PURE__ */ u(ArrowUpwardIcon, { sx: { fontSize: "1rem" } }) }) }) }),
+            /* @__PURE__ */ u(Tooltip, { title: "下移", children: /* @__PURE__ */ u("span", { children: /* @__PURE__ */ u(IconButton, { size: "small", disabled: index === localCategories.length - 1, onClick: () => handleMove(index, "down"), children: /* @__PURE__ */ u(ArrowDownwardIcon, { sx: { fontSize: "1rem" } }) }) }) })
           ] }),
-          /* @__PURE__ */ u$1(
+          /* @__PURE__ */ u(
             TextField,
             {
               type: "color",
@@ -29057,7 +27509,7 @@ function StatisticsViewEditor({ value, onChange }) {
               sx: { minWidth: 60, p: "2px" }
             }
           ),
-          /* @__PURE__ */ u$1(Typography, { sx: { flexGrow: 1, fontWeight: 500 }, children: cat.name })
+          /* @__PURE__ */ u(Typography, { sx: { flexGrow: 1, fontWeight: 500 }, children: cat.name })
         ]
       },
       cat.name
@@ -29077,9 +27529,9 @@ function ListEditor({ value, onChange, placeholder = "新项目", type = "text" 
   const removeItem = (index) => {
     onChange(list.filter((_2, i2) => i2 !== index));
   };
-  return /* @__PURE__ */ u$1(Stack, { spacing: 0.5, children: [
-    list.map((item, index) => /* @__PURE__ */ u$1(Stack, { direction: "row", spacing: 0.5, alignItems: "center", children: [
-      /* @__PURE__ */ u$1(
+  return /* @__PURE__ */ u(Stack, { spacing: 0.5, children: [
+    list.map((item, index) => /* @__PURE__ */ u(Stack, { direction: "row", spacing: 0.5, alignItems: "center", children: [
+      /* @__PURE__ */ u(
         TextField,
         {
           value: item,
@@ -29096,10 +27548,106 @@ function ListEditor({ value, onChange, placeholder = "新项目", type = "text" 
           } : {}
         }
       ),
-      /* @__PURE__ */ u$1(IconButton, { onClick: () => removeItem(index), size: "small", color: "error", title: "删除此项", children: /* @__PURE__ */ u$1(RemoveCircleOutlineIcon, { fontSize: "small" }) })
+      /* @__PURE__ */ u(IconButton, { onClick: () => removeItem(index), size: "small", color: "error", title: "删除此项", children: /* @__PURE__ */ u(RemoveCircleOutlineIcon, { fontSize: "small" }) })
     ] }, index)),
-    /* @__PURE__ */ u$1(Stack, { direction: "row", justifyContent: "flex-start", children: /* @__PURE__ */ u$1(IconButton, { onClick: addItem, size: "small", color: "primary", title: "添加新项", children: /* @__PURE__ */ u$1(AddCircleOutlineIcon, {}) }) })
+    /* @__PURE__ */ u(Stack, { direction: "row", justifyContent: "flex-start", children: /* @__PURE__ */ u(IconButton, { onClick: addItem, size: "small", color: "primary", title: "添加新项", children: /* @__PURE__ */ u(AddCircleOutlineIcon, {}) }) })
   ] });
+}
+function coerceForCompare(v2) {
+  if (v2 === null || v2 === void 0) return null;
+  if (typeof v2 === "number") return v2;
+  const s2 = String(v2).trim();
+  const isDateLike = /^\d{4}-\d{1,2}-\d{1,2}/.test(s2) || /^\d{4}\/\d{1,2}\/\d{1,2}/.test(s2);
+  if (isDateLike) {
+    const ts = Date.parse(s2.replace(/\//g, "-"));
+    if (!Number.isNaN(ts)) return ts;
+  }
+  const n2 = Number(s2);
+  if (!Number.isNaN(n2) && /\d/.test(s2) && !/[^\d.\-+eE]/.test(s2)) return n2;
+  return s2;
+}
+function cmpMixed(a2, b2) {
+  if (a2 == null && b2 == null) return 0;
+  if (a2 == null) return 1;
+  if (b2 == null) return -1;
+  const A2 = coerceForCompare(a2);
+  const B2 = coerceForCompare(b2);
+  if (typeof A2 === "number" && typeof B2 === "number") return A2 - B2;
+  return String(a2).localeCompare(String(b2), "zh");
+}
+function filterByRules(items, rules = []) {
+  return rules.length ? items.filter((it) => rules.every((r2) => matchRule(it, r2))) : items;
+}
+function matchRule(item, rule) {
+  const v1 = readField(item, rule.field);
+  const v2 = rule.value;
+  switch (rule.op) {
+    case "=":
+      return cmpMixed(v1, v2) === 0;
+    case "!=":
+      return cmpMixed(v1, v2) !== 0;
+    case "includes":
+      return Array.isArray(v1) ? v1.some((x2) => String(x2).includes(String(v2))) : String(v1).includes(String(v2));
+    case "regex":
+      try {
+        return new RegExp(String(v2)).test(String(v1));
+      } catch {
+        return false;
+      }
+    case ">":
+      return cmpMixed(v1, v2) > 0;
+    case "<":
+      return cmpMixed(v1, v2) < 0;
+    default:
+      return false;
+  }
+}
+function sortItems(items, rules = []) {
+  if (!rules.length) return items;
+  return [...items].sort((a2, b2) => {
+    for (const r2 of rules) {
+      const av = readField(a2, r2.field);
+      const bv = readField(b2, r2.field);
+      if (av == null && bv == null) continue;
+      if (av == null) return r2.dir === "asc" ? 1 : -1;
+      if (bv == null) return r2.dir === "asc" ? -1 : 1;
+      const cmp = cmpMixed(av, bv);
+      if (cmp !== 0) return r2.dir === "asc" ? cmp : -cmp;
+    }
+    return 0;
+  });
+}
+function isClosed(it) {
+  const k2 = (it.categoryKey || "").toLowerCase();
+  return /\/(done|cancelled)\b/.test(k2);
+}
+function filterByDateRange(items, startISO, endISO) {
+  if (!startISO && !endISO) return items;
+  const sMs = startISO ? Date.parse(startISO) : null;
+  const eMs = endISO ? Date.parse(endISO) : null;
+  return items.filter((it) => {
+    const t2 = it.dateMs ?? (it.date ? Date.parse((it.date || "").replace(/\//g, "-")) : NaN);
+    if (isNaN(t2)) {
+      return !isClosed(it);
+    }
+    if (sMs !== null && t2 < sMs) return false;
+    if (eMs !== null && t2 > eMs) return false;
+    return true;
+  });
+}
+function filterByKeyword(items, kw) {
+  if (!kw.trim()) return items;
+  const s2 = kw.trim().toLowerCase();
+  return items.filter((it) => (it.title + " " + it.content).toLowerCase().includes(s2));
+}
+function filterByPeriod(items, period) {
+  if (!period) {
+    return items;
+  }
+  return items.filter((item) => {
+    const itemPeriod = readField(item, "period");
+    return itemPeriod == null || itemPeriod === "" || itemPeriod === period;
+  });
 }
 const DEFAULT_CONFIG = {
   displayMode: "habit",
@@ -29143,19 +27691,19 @@ function HeatmapViewEditor({ value, onChange, module: module2 }) {
     onChange({ themeTags: sortedTags });
     new obsidian.Notice(`扫描完成！已自动添加 ${sortedTags.length} 个主题标签。`);
   };
-  return /* @__PURE__ */ u$1(Stack, { spacing: 2.5, children: [
-    /* @__PURE__ */ u$1(Stack, { direction: "row", alignItems: "center", spacing: 2, children: [
-      /* @__PURE__ */ u$1(Typography, { sx: { width: "80px", flexShrink: 0, fontWeight: 500 }, children: "显示模式" }),
-      /* @__PURE__ */ u$1(RadioGroup, { row: true, value: config2.displayMode, onChange: (e2) => onChange({ displayMode: e2.target.value }), children: [
-        /* @__PURE__ */ u$1(FormControlLabel, { value: "habit", control: /* @__PURE__ */ u$1(Radio, { size: "small" }), label: "打卡模式" }),
-        /* @__PURE__ */ u$1(FormControlLabel, { value: "count", control: /* @__PURE__ */ u$1(Radio, { size: "small" }), label: "数量热力图" })
+  return /* @__PURE__ */ u(Stack, { spacing: 2.5, children: [
+    /* @__PURE__ */ u(Stack, { direction: "row", alignItems: "center", spacing: 2, children: [
+      /* @__PURE__ */ u(Typography, { sx: { width: "80px", flexShrink: 0, fontWeight: 500 }, children: "显示模式" }),
+      /* @__PURE__ */ u(RadioGroup, { row: true, value: config2.displayMode, onChange: (e2) => onChange({ displayMode: e2.target.value }), children: [
+        /* @__PURE__ */ u(FormControlLabel, { value: "habit", control: /* @__PURE__ */ u(Radio, { size: "small" }), label: "打卡模式" }),
+        /* @__PURE__ */ u(FormControlLabel, { value: "count", control: /* @__PURE__ */ u(Radio, { size: "small" }), label: "数量热力图" })
       ] })
     ] }),
-    config2.displayMode === "habit" && /* @__PURE__ */ u$1(k$2, { children: [
-      /* @__PURE__ */ u$1(Stack, { direction: "row", alignItems: "center", spacing: 2, children: [
-        /* @__PURE__ */ u$1(Typography, { sx: { width: "80px", flexShrink: 0, fontWeight: 500 }, children: "源 Block" }),
-        /* @__PURE__ */ u$1(Box, { sx: { flexGrow: 1 }, children: [
-          /* @__PURE__ */ u$1(
+    config2.displayMode === "habit" && /* @__PURE__ */ u(k$2, { children: [
+      /* @__PURE__ */ u(Stack, { direction: "row", alignItems: "center", spacing: 2, children: [
+        /* @__PURE__ */ u(Typography, { sx: { width: "80px", flexShrink: 0, fontWeight: 500 }, children: "源 Block" }),
+        /* @__PURE__ */ u(Box, { sx: { flexGrow: 1 }, children: [
+          /* @__PURE__ */ u(
             SimpleSelect,
             {
               value: config2.sourceBlockId,
@@ -29164,13 +27712,13 @@ function HeatmapViewEditor({ value, onChange, module: module2 }) {
               placeholder: "-- 请选择用于打卡的 Block 模板 --"
             }
           ),
-          /* @__PURE__ */ u$1(Typography, { variant: "caption", color: "text.secondary", sx: { display: "block", mt: 0.5 }, children: "视图将从此 Block 模板的“评分”字段中读取 Emoji/图片/颜色映射。" })
+          /* @__PURE__ */ u(Typography, { variant: "caption", color: "text.secondary", sx: { display: "block", mt: 0.5 }, children: "视图将从此 Block 模板的“评分”字段中读取 Emoji/图片/颜色映射。" })
         ] })
       ] }),
-      /* @__PURE__ */ u$1(Stack, { direction: "row", alignItems: "flex-start", spacing: 2, children: [
-        /* @__PURE__ */ u$1(Typography, { sx: { width: "80px", flexShrink: 0, fontWeight: 500, pt: "8px" }, children: "主题标签" }),
-        /* @__PURE__ */ u$1(Box, { sx: { flexGrow: 1 }, children: [
-          /* @__PURE__ */ u$1(
+      /* @__PURE__ */ u(Stack, { direction: "row", alignItems: "flex-start", spacing: 2, children: [
+        /* @__PURE__ */ u(Typography, { sx: { width: "80px", flexShrink: 0, fontWeight: 500, pt: "8px" }, children: "主题标签" }),
+        /* @__PURE__ */ u(Box, { sx: { flexGrow: 1 }, children: [
+          /* @__PURE__ */ u(
             ListEditor,
             {
               value: config2.themeTags,
@@ -29178,15 +27726,15 @@ function HeatmapViewEditor({ value, onChange, module: module2 }) {
               placeholder: "例如: 生活健康/心情"
             }
           ),
-          /* @__PURE__ */ u$1(Typography, { variant: "caption", color: "text.secondary", sx: { display: "block", mt: 0.5 }, children: "在此处添加的每个标签，在周/月视图下都会成为独立的一行。" }),
-          /* @__PURE__ */ u$1(Button, { onClick: handleScanTags, size: "small", sx: { mt: 1 }, children: "从数据源扫描并添加主题" })
+          /* @__PURE__ */ u(Typography, { variant: "caption", color: "text.secondary", sx: { display: "block", mt: 0.5 }, children: "在此处添加的每个标签，在周/月视图下都会成为独立的一行。" }),
+          /* @__PURE__ */ u(Button, { onClick: handleScanTags, size: "small", sx: { mt: 1 }, children: "从数据源扫描并添加主题" })
         ] })
       ] })
     ] }),
-    config2.displayMode === "count" && /* @__PURE__ */ u$1(Stack, { direction: "row", alignItems: "flex-start", spacing: 2, children: [
-      /* @__PURE__ */ u$1(Typography, { sx: { width: "80px", flexShrink: 0, fontWeight: 500, pt: "8px" }, children: "颜色阶梯" }),
-      /* @__PURE__ */ u$1(Box, { sx: { flexGrow: 1 }, children: [
-        /* @__PURE__ */ u$1(
+    config2.displayMode === "count" && /* @__PURE__ */ u(Stack, { direction: "row", alignItems: "flex-start", spacing: 2, children: [
+      /* @__PURE__ */ u(Typography, { sx: { width: "80px", flexShrink: 0, fontWeight: 500, pt: "8px" }, children: "颜色阶梯" }),
+      /* @__PURE__ */ u(Box, { sx: { flexGrow: 1 }, children: [
+        /* @__PURE__ */ u(
           ListEditor,
           {
             value: config2.countColors,
@@ -29195,7 +27743,7 @@ function HeatmapViewEditor({ value, onChange, module: module2 }) {
             placeholder: "#hexcolor"
           }
         ),
-        /* @__PURE__ */ u$1(Typography, { variant: "caption", color: "text.secondary", sx: { display: "block", mt: 0.5 }, children: "从上到下依次代表 0, 1, 2, ... 个项目的颜色。" })
+        /* @__PURE__ */ u(Typography, { variant: "caption", color: "text.secondary", sx: { display: "block", mt: 0.5 }, children: "从上到下依次代表 0, 1, 2, ... 个项目的颜色。" })
       ] })
     ] })
   ] });
@@ -29684,10 +28232,1390 @@ function useStore(selector) {
   }, [store, memoizedSelector]);
   return state;
 }
-const PlayArrowIcon = createSvgIcon(/* @__PURE__ */ u$1("path", {
+const TAG_RE = /#([\p{L}\p{N}_\/-]+)/gu;
+const KV_IN_PAREN = /\(([^:：]+)::\s*([^)]+)\)/g;
+const RE_TASK_PREFIX = /^\s*-\s*\[[ xX-]\]/;
+const RE_DONE_BOX = /^\s*-\s*\[x\]/i;
+const RE_CANCEL_BOX = /^\s*-\s*\[-\]/;
+var dayjs_min$1 = { exports: {} };
+var dayjs_min = dayjs_min$1.exports;
+var hasRequiredDayjs_min;
+function requireDayjs_min() {
+  if (hasRequiredDayjs_min) return dayjs_min$1.exports;
+  hasRequiredDayjs_min = 1;
+  (function(module2, exports2) {
+    !(function(t2, e2) {
+      module2.exports = e2();
+    })(dayjs_min, (function() {
+      var t2 = 1e3, e2 = 6e4, n2 = 36e5, r2 = "millisecond", i2 = "second", s2 = "minute", u2 = "hour", a2 = "day", o2 = "week", c2 = "month", f2 = "quarter", h2 = "year", d2 = "date", l2 = "Invalid Date", $2 = /^(\d{4})[-/]?(\d{1,2})?[-/]?(\d{0,2})[Tt\s]*(\d{1,2})?:?(\d{1,2})?:?(\d{1,2})?[.:]?(\d+)?$/, y2 = /\[([^\]]+)]|Y{1,4}|M{1,4}|D{1,2}|d{1,4}|H{1,2}|h{1,2}|a|A|m{1,2}|s{1,2}|Z{1,2}|SSS/g, M2 = { name: "en", weekdays: "Sunday_Monday_Tuesday_Wednesday_Thursday_Friday_Saturday".split("_"), months: "January_February_March_April_May_June_July_August_September_October_November_December".split("_"), ordinal: function(t3) {
+        var e3 = ["th", "st", "nd", "rd"], n3 = t3 % 100;
+        return "[" + t3 + (e3[(n3 - 20) % 10] || e3[n3] || e3[0]) + "]";
+      } }, m2 = function(t3, e3, n3) {
+        var r3 = String(t3);
+        return !r3 || r3.length >= e3 ? t3 : "" + Array(e3 + 1 - r3.length).join(n3) + t3;
+      }, v2 = { s: m2, z: function(t3) {
+        var e3 = -t3.utcOffset(), n3 = Math.abs(e3), r3 = Math.floor(n3 / 60), i3 = n3 % 60;
+        return (e3 <= 0 ? "+" : "-") + m2(r3, 2, "0") + ":" + m2(i3, 2, "0");
+      }, m: function t3(e3, n3) {
+        if (e3.date() < n3.date()) return -t3(n3, e3);
+        var r3 = 12 * (n3.year() - e3.year()) + (n3.month() - e3.month()), i3 = e3.clone().add(r3, c2), s3 = n3 - i3 < 0, u3 = e3.clone().add(r3 + (s3 ? -1 : 1), c2);
+        return +(-(r3 + (n3 - i3) / (s3 ? i3 - u3 : u3 - i3)) || 0);
+      }, a: function(t3) {
+        return t3 < 0 ? Math.ceil(t3) || 0 : Math.floor(t3);
+      }, p: function(t3) {
+        return { M: c2, y: h2, w: o2, d: a2, D: d2, h: u2, m: s2, s: i2, ms: r2, Q: f2 }[t3] || String(t3 || "").toLowerCase().replace(/s$/, "");
+      }, u: function(t3) {
+        return void 0 === t3;
+      } }, g2 = "en", D2 = {};
+      D2[g2] = M2;
+      var p2 = "$isDayjsObject", S2 = function(t3) {
+        return t3 instanceof _2 || !(!t3 || !t3[p2]);
+      }, w2 = function t3(e3, n3, r3) {
+        var i3;
+        if (!e3) return g2;
+        if ("string" == typeof e3) {
+          var s3 = e3.toLowerCase();
+          D2[s3] && (i3 = s3), n3 && (D2[s3] = n3, i3 = s3);
+          var u3 = e3.split("-");
+          if (!i3 && u3.length > 1) return t3(u3[0]);
+        } else {
+          var a3 = e3.name;
+          D2[a3] = e3, i3 = a3;
+        }
+        return !r3 && i3 && (g2 = i3), i3 || !r3 && g2;
+      }, O2 = function(t3, e3) {
+        if (S2(t3)) return t3.clone();
+        var n3 = "object" == typeof e3 ? e3 : {};
+        return n3.date = t3, n3.args = arguments, new _2(n3);
+      }, b2 = v2;
+      b2.l = w2, b2.i = S2, b2.w = function(t3, e3) {
+        return O2(t3, { locale: e3.$L, utc: e3.$u, x: e3.$x, $offset: e3.$offset });
+      };
+      var _2 = (function() {
+        function M3(t3) {
+          this.$L = w2(t3.locale, null, true), this.parse(t3), this.$x = this.$x || t3.x || {}, this[p2] = true;
+        }
+        var m3 = M3.prototype;
+        return m3.parse = function(t3) {
+          this.$d = (function(t4) {
+            var e3 = t4.date, n3 = t4.utc;
+            if (null === e3) return /* @__PURE__ */ new Date(NaN);
+            if (b2.u(e3)) return /* @__PURE__ */ new Date();
+            if (e3 instanceof Date) return new Date(e3);
+            if ("string" == typeof e3 && !/Z$/i.test(e3)) {
+              var r3 = e3.match($2);
+              if (r3) {
+                var i3 = r3[2] - 1 || 0, s3 = (r3[7] || "0").substring(0, 3);
+                return n3 ? new Date(Date.UTC(r3[1], i3, r3[3] || 1, r3[4] || 0, r3[5] || 0, r3[6] || 0, s3)) : new Date(r3[1], i3, r3[3] || 1, r3[4] || 0, r3[5] || 0, r3[6] || 0, s3);
+              }
+            }
+            return new Date(e3);
+          })(t3), this.init();
+        }, m3.init = function() {
+          var t3 = this.$d;
+          this.$y = t3.getFullYear(), this.$M = t3.getMonth(), this.$D = t3.getDate(), this.$W = t3.getDay(), this.$H = t3.getHours(), this.$m = t3.getMinutes(), this.$s = t3.getSeconds(), this.$ms = t3.getMilliseconds();
+        }, m3.$utils = function() {
+          return b2;
+        }, m3.isValid = function() {
+          return !(this.$d.toString() === l2);
+        }, m3.isSame = function(t3, e3) {
+          var n3 = O2(t3);
+          return this.startOf(e3) <= n3 && n3 <= this.endOf(e3);
+        }, m3.isAfter = function(t3, e3) {
+          return O2(t3) < this.startOf(e3);
+        }, m3.isBefore = function(t3, e3) {
+          return this.endOf(e3) < O2(t3);
+        }, m3.$g = function(t3, e3, n3) {
+          return b2.u(t3) ? this[e3] : this.set(n3, t3);
+        }, m3.unix = function() {
+          return Math.floor(this.valueOf() / 1e3);
+        }, m3.valueOf = function() {
+          return this.$d.getTime();
+        }, m3.startOf = function(t3, e3) {
+          var n3 = this, r3 = !!b2.u(e3) || e3, f3 = b2.p(t3), l3 = function(t4, e4) {
+            var i3 = b2.w(n3.$u ? Date.UTC(n3.$y, e4, t4) : new Date(n3.$y, e4, t4), n3);
+            return r3 ? i3 : i3.endOf(a2);
+          }, $3 = function(t4, e4) {
+            return b2.w(n3.toDate()[t4].apply(n3.toDate("s"), (r3 ? [0, 0, 0, 0] : [23, 59, 59, 999]).slice(e4)), n3);
+          }, y3 = this.$W, M4 = this.$M, m4 = this.$D, v3 = "set" + (this.$u ? "UTC" : "");
+          switch (f3) {
+            case h2:
+              return r3 ? l3(1, 0) : l3(31, 11);
+            case c2:
+              return r3 ? l3(1, M4) : l3(0, M4 + 1);
+            case o2:
+              var g3 = this.$locale().weekStart || 0, D3 = (y3 < g3 ? y3 + 7 : y3) - g3;
+              return l3(r3 ? m4 - D3 : m4 + (6 - D3), M4);
+            case a2:
+            case d2:
+              return $3(v3 + "Hours", 0);
+            case u2:
+              return $3(v3 + "Minutes", 1);
+            case s2:
+              return $3(v3 + "Seconds", 2);
+            case i2:
+              return $3(v3 + "Milliseconds", 3);
+            default:
+              return this.clone();
+          }
+        }, m3.endOf = function(t3) {
+          return this.startOf(t3, false);
+        }, m3.$set = function(t3, e3) {
+          var n3, o3 = b2.p(t3), f3 = "set" + (this.$u ? "UTC" : ""), l3 = (n3 = {}, n3[a2] = f3 + "Date", n3[d2] = f3 + "Date", n3[c2] = f3 + "Month", n3[h2] = f3 + "FullYear", n3[u2] = f3 + "Hours", n3[s2] = f3 + "Minutes", n3[i2] = f3 + "Seconds", n3[r2] = f3 + "Milliseconds", n3)[o3], $3 = o3 === a2 ? this.$D + (e3 - this.$W) : e3;
+          if (o3 === c2 || o3 === h2) {
+            var y3 = this.clone().set(d2, 1);
+            y3.$d[l3]($3), y3.init(), this.$d = y3.set(d2, Math.min(this.$D, y3.daysInMonth())).$d;
+          } else l3 && this.$d[l3]($3);
+          return this.init(), this;
+        }, m3.set = function(t3, e3) {
+          return this.clone().$set(t3, e3);
+        }, m3.get = function(t3) {
+          return this[b2.p(t3)]();
+        }, m3.add = function(r3, f3) {
+          var d3, l3 = this;
+          r3 = Number(r3);
+          var $3 = b2.p(f3), y3 = function(t3) {
+            var e3 = O2(l3);
+            return b2.w(e3.date(e3.date() + Math.round(t3 * r3)), l3);
+          };
+          if ($3 === c2) return this.set(c2, this.$M + r3);
+          if ($3 === h2) return this.set(h2, this.$y + r3);
+          if ($3 === a2) return y3(1);
+          if ($3 === o2) return y3(7);
+          var M4 = (d3 = {}, d3[s2] = e2, d3[u2] = n2, d3[i2] = t2, d3)[$3] || 1, m4 = this.$d.getTime() + r3 * M4;
+          return b2.w(m4, this);
+        }, m3.subtract = function(t3, e3) {
+          return this.add(-1 * t3, e3);
+        }, m3.format = function(t3) {
+          var e3 = this, n3 = this.$locale();
+          if (!this.isValid()) return n3.invalidDate || l2;
+          var r3 = t3 || "YYYY-MM-DDTHH:mm:ssZ", i3 = b2.z(this), s3 = this.$H, u3 = this.$m, a3 = this.$M, o3 = n3.weekdays, c3 = n3.months, f3 = n3.meridiem, h3 = function(t4, n4, i4, s4) {
+            return t4 && (t4[n4] || t4(e3, r3)) || i4[n4].slice(0, s4);
+          }, d3 = function(t4) {
+            return b2.s(s3 % 12 || 12, t4, "0");
+          }, $3 = f3 || function(t4, e4, n4) {
+            var r4 = t4 < 12 ? "AM" : "PM";
+            return n4 ? r4.toLowerCase() : r4;
+          };
+          return r3.replace(y2, (function(t4, r4) {
+            return r4 || (function(t5) {
+              switch (t5) {
+                case "YY":
+                  return String(e3.$y).slice(-2);
+                case "YYYY":
+                  return b2.s(e3.$y, 4, "0");
+                case "M":
+                  return a3 + 1;
+                case "MM":
+                  return b2.s(a3 + 1, 2, "0");
+                case "MMM":
+                  return h3(n3.monthsShort, a3, c3, 3);
+                case "MMMM":
+                  return h3(c3, a3);
+                case "D":
+                  return e3.$D;
+                case "DD":
+                  return b2.s(e3.$D, 2, "0");
+                case "d":
+                  return String(e3.$W);
+                case "dd":
+                  return h3(n3.weekdaysMin, e3.$W, o3, 2);
+                case "ddd":
+                  return h3(n3.weekdaysShort, e3.$W, o3, 3);
+                case "dddd":
+                  return o3[e3.$W];
+                case "H":
+                  return String(s3);
+                case "HH":
+                  return b2.s(s3, 2, "0");
+                case "h":
+                  return d3(1);
+                case "hh":
+                  return d3(2);
+                case "a":
+                  return $3(s3, u3, true);
+                case "A":
+                  return $3(s3, u3, false);
+                case "m":
+                  return String(u3);
+                case "mm":
+                  return b2.s(u3, 2, "0");
+                case "s":
+                  return String(e3.$s);
+                case "ss":
+                  return b2.s(e3.$s, 2, "0");
+                case "SSS":
+                  return b2.s(e3.$ms, 3, "0");
+                case "Z":
+                  return i3;
+              }
+              return null;
+            })(t4) || i3.replace(":", "");
+          }));
+        }, m3.utcOffset = function() {
+          return 15 * -Math.round(this.$d.getTimezoneOffset() / 15);
+        }, m3.diff = function(r3, d3, l3) {
+          var $3, y3 = this, M4 = b2.p(d3), m4 = O2(r3), v3 = (m4.utcOffset() - this.utcOffset()) * e2, g3 = this - m4, D3 = function() {
+            return b2.m(y3, m4);
+          };
+          switch (M4) {
+            case h2:
+              $3 = D3() / 12;
+              break;
+            case c2:
+              $3 = D3();
+              break;
+            case f2:
+              $3 = D3() / 3;
+              break;
+            case o2:
+              $3 = (g3 - v3) / 6048e5;
+              break;
+            case a2:
+              $3 = (g3 - v3) / 864e5;
+              break;
+            case u2:
+              $3 = g3 / n2;
+              break;
+            case s2:
+              $3 = g3 / e2;
+              break;
+            case i2:
+              $3 = g3 / t2;
+              break;
+            default:
+              $3 = g3;
+          }
+          return l3 ? $3 : b2.a($3);
+        }, m3.daysInMonth = function() {
+          return this.endOf(c2).$D;
+        }, m3.$locale = function() {
+          return D2[this.$L];
+        }, m3.locale = function(t3, e3) {
+          if (!t3) return this.$L;
+          var n3 = this.clone(), r3 = w2(t3, e3, true);
+          return r3 && (n3.$L = r3), n3;
+        }, m3.clone = function() {
+          return b2.w(this.$d, this);
+        }, m3.toDate = function() {
+          return new Date(this.valueOf());
+        }, m3.toJSON = function() {
+          return this.isValid() ? this.toISOString() : null;
+        }, m3.toISOString = function() {
+          return this.$d.toISOString();
+        }, m3.toString = function() {
+          return this.$d.toUTCString();
+        }, M3;
+      })(), k2 = _2.prototype;
+      return O2.prototype = k2, [["$ms", r2], ["$s", i2], ["$m", s2], ["$H", u2], ["$W", a2], ["$M", c2], ["$y", h2], ["$D", d2]].forEach((function(t3) {
+        k2[t3[1]] = function(e3) {
+          return this.$g(e3, t3[0], t3[1]);
+        };
+      })), O2.extend = function(t3, e3) {
+        return t3.$i || (t3(e3, _2, O2), t3.$i = true), O2;
+      }, O2.locale = w2, O2.isDayjs = S2, O2.unix = function(t3) {
+        return O2(1e3 * t3);
+      }, O2.en = D2[g2], O2.Ls = D2, O2.p = {}, O2;
+    }));
+  })(dayjs_min$1);
+  return dayjs_min$1.exports;
+}
+var dayjs_minExports = requireDayjs_min();
+const dayjs = /* @__PURE__ */ getDefaultExportFromCjs(dayjs_minExports);
+var quarterOfYear$2 = { exports: {} };
+var quarterOfYear$1 = quarterOfYear$2.exports;
+var hasRequiredQuarterOfYear;
+function requireQuarterOfYear() {
+  if (hasRequiredQuarterOfYear) return quarterOfYear$2.exports;
+  hasRequiredQuarterOfYear = 1;
+  (function(module2, exports2) {
+    !(function(t2, n2) {
+      module2.exports = n2();
+    })(quarterOfYear$1, (function() {
+      var t2 = "month", n2 = "quarter";
+      return function(e2, i2) {
+        var r2 = i2.prototype;
+        r2.quarter = function(t3) {
+          return this.$utils().u(t3) ? Math.ceil((this.month() + 1) / 3) : this.month(this.month() % 3 + 3 * (t3 - 1));
+        };
+        var s2 = r2.add;
+        r2.add = function(e3, i3) {
+          return e3 = Number(e3), this.$utils().p(i3) === n2 ? this.add(3 * e3, t2) : s2.bind(this)(e3, i3);
+        };
+        var u2 = r2.startOf;
+        r2.startOf = function(e3, i3) {
+          var r3 = this.$utils(), s3 = !!r3.u(i3) || i3;
+          if (r3.p(e3) === n2) {
+            var o2 = this.quarter() - 1;
+            return s3 ? this.month(3 * o2).startOf(t2).startOf("day") : this.month(3 * o2 + 2).endOf(t2).endOf("day");
+          }
+          return u2.bind(this)(e3, i3);
+        };
+      };
+    }));
+  })(quarterOfYear$2);
+  return quarterOfYear$2.exports;
+}
+var quarterOfYearExports = requireQuarterOfYear();
+const quarterOfYear = /* @__PURE__ */ getDefaultExportFromCjs(quarterOfYearExports);
+var weekOfYear$2 = { exports: {} };
+var weekOfYear$1 = weekOfYear$2.exports;
+var hasRequiredWeekOfYear;
+function requireWeekOfYear() {
+  if (hasRequiredWeekOfYear) return weekOfYear$2.exports;
+  hasRequiredWeekOfYear = 1;
+  (function(module2, exports2) {
+    !(function(e2, t2) {
+      module2.exports = t2();
+    })(weekOfYear$1, (function() {
+      var e2 = "week", t2 = "year";
+      return function(i2, n2, r2) {
+        var f2 = n2.prototype;
+        f2.week = function(i3) {
+          if (void 0 === i3 && (i3 = null), null !== i3) return this.add(7 * (i3 - this.week()), "day");
+          var n3 = this.$locale().yearStart || 1;
+          if (11 === this.month() && this.date() > 25) {
+            var f3 = r2(this).startOf(t2).add(1, t2).date(n3), s2 = r2(this).endOf(e2);
+            if (f3.isBefore(s2)) return 1;
+          }
+          var a2 = r2(this).startOf(t2).date(n3).startOf(e2).subtract(1, "millisecond"), o2 = this.diff(a2, e2, true);
+          return o2 < 0 ? r2(this).startOf("week").week() : Math.ceil(o2);
+        }, f2.weeks = function(e3) {
+          return void 0 === e3 && (e3 = null), this.week(e3);
+        };
+      };
+    }));
+  })(weekOfYear$2);
+  return weekOfYear$2.exports;
+}
+var weekOfYearExports = requireWeekOfYear();
+const weekOfYear = /* @__PURE__ */ getDefaultExportFromCjs(weekOfYearExports);
+var customParseFormat$1 = { exports: {} };
+var customParseFormat = customParseFormat$1.exports;
+var hasRequiredCustomParseFormat;
+function requireCustomParseFormat() {
+  if (hasRequiredCustomParseFormat) return customParseFormat$1.exports;
+  hasRequiredCustomParseFormat = 1;
+  (function(module2, exports2) {
+    !(function(e2, t2) {
+      module2.exports = t2();
+    })(customParseFormat, (function() {
+      var e2 = { LTS: "h:mm:ss A", LT: "h:mm A", L: "MM/DD/YYYY", LL: "MMMM D, YYYY", LLL: "MMMM D, YYYY h:mm A", LLLL: "dddd, MMMM D, YYYY h:mm A" }, t2 = /(\[[^[]*\])|([-_:/.,()\s]+)|(A|a|Q|YYYY|YY?|ww?|MM?M?M?|Do|DD?|hh?|HH?|mm?|ss?|S{1,3}|z|ZZ?)/g, n2 = /\d/, r2 = /\d\d/, i2 = /\d\d?/, o2 = /\d*[^-_:/,()\s\d]+/, s2 = {}, a2 = function(e3) {
+        return (e3 = +e3) + (e3 > 68 ? 1900 : 2e3);
+      };
+      var f2 = function(e3) {
+        return function(t3) {
+          this[e3] = +t3;
+        };
+      }, h2 = [/[+-]\d\d:?(\d\d)?|Z/, function(e3) {
+        (this.zone || (this.zone = {})).offset = (function(e4) {
+          if (!e4) return 0;
+          if ("Z" === e4) return 0;
+          var t3 = e4.match(/([+-]|\d\d)/g), n3 = 60 * t3[1] + (+t3[2] || 0);
+          return 0 === n3 ? 0 : "+" === t3[0] ? -n3 : n3;
+        })(e3);
+      }], u2 = function(e3) {
+        var t3 = s2[e3];
+        return t3 && (t3.indexOf ? t3 : t3.s.concat(t3.f));
+      }, d2 = function(e3, t3) {
+        var n3, r3 = s2.meridiem;
+        if (r3) {
+          for (var i3 = 1; i3 <= 24; i3 += 1) if (e3.indexOf(r3(i3, 0, t3)) > -1) {
+            n3 = i3 > 12;
+            break;
+          }
+        } else n3 = e3 === (t3 ? "pm" : "PM");
+        return n3;
+      }, c2 = { A: [o2, function(e3) {
+        this.afternoon = d2(e3, false);
+      }], a: [o2, function(e3) {
+        this.afternoon = d2(e3, true);
+      }], Q: [n2, function(e3) {
+        this.month = 3 * (e3 - 1) + 1;
+      }], S: [n2, function(e3) {
+        this.milliseconds = 100 * +e3;
+      }], SS: [r2, function(e3) {
+        this.milliseconds = 10 * +e3;
+      }], SSS: [/\d{3}/, function(e3) {
+        this.milliseconds = +e3;
+      }], s: [i2, f2("seconds")], ss: [i2, f2("seconds")], m: [i2, f2("minutes")], mm: [i2, f2("minutes")], H: [i2, f2("hours")], h: [i2, f2("hours")], HH: [i2, f2("hours")], hh: [i2, f2("hours")], D: [i2, f2("day")], DD: [r2, f2("day")], Do: [o2, function(e3) {
+        var t3 = s2.ordinal, n3 = e3.match(/\d+/);
+        if (this.day = n3[0], t3) for (var r3 = 1; r3 <= 31; r3 += 1) t3(r3).replace(/\[|\]/g, "") === e3 && (this.day = r3);
+      }], w: [i2, f2("week")], ww: [r2, f2("week")], M: [i2, f2("month")], MM: [r2, f2("month")], MMM: [o2, function(e3) {
+        var t3 = u2("months"), n3 = (u2("monthsShort") || t3.map((function(e4) {
+          return e4.slice(0, 3);
+        }))).indexOf(e3) + 1;
+        if (n3 < 1) throw new Error();
+        this.month = n3 % 12 || n3;
+      }], MMMM: [o2, function(e3) {
+        var t3 = u2("months").indexOf(e3) + 1;
+        if (t3 < 1) throw new Error();
+        this.month = t3 % 12 || t3;
+      }], Y: [/[+-]?\d+/, f2("year")], YY: [r2, function(e3) {
+        this.year = a2(e3);
+      }], YYYY: [/\d{4}/, f2("year")], Z: h2, ZZ: h2 };
+      function l2(n3) {
+        var r3, i3;
+        r3 = n3, i3 = s2 && s2.formats;
+        for (var o3 = (n3 = r3.replace(/(\[[^\]]+])|(LTS?|l{1,4}|L{1,4})/g, (function(t3, n4, r4) {
+          var o4 = r4 && r4.toUpperCase();
+          return n4 || i3[r4] || e2[r4] || i3[o4].replace(/(\[[^\]]+])|(MMMM|MM|DD|dddd)/g, (function(e3, t4, n5) {
+            return t4 || n5.slice(1);
+          }));
+        }))).match(t2), a3 = o3.length, f3 = 0; f3 < a3; f3 += 1) {
+          var h3 = o3[f3], u3 = c2[h3], d3 = u3 && u3[0], l3 = u3 && u3[1];
+          o3[f3] = l3 ? { regex: d3, parser: l3 } : h3.replace(/^\[|\]$/g, "");
+        }
+        return function(e3) {
+          for (var t3 = {}, n4 = 0, r4 = 0; n4 < a3; n4 += 1) {
+            var i4 = o3[n4];
+            if ("string" == typeof i4) r4 += i4.length;
+            else {
+              var s3 = i4.regex, f4 = i4.parser, h4 = e3.slice(r4), u4 = s3.exec(h4)[0];
+              f4.call(t3, u4), e3 = e3.replace(u4, "");
+            }
+          }
+          return (function(e4) {
+            var t4 = e4.afternoon;
+            if (void 0 !== t4) {
+              var n5 = e4.hours;
+              t4 ? n5 < 12 && (e4.hours += 12) : 12 === n5 && (e4.hours = 0), delete e4.afternoon;
+            }
+          })(t3), t3;
+        };
+      }
+      return function(e3, t3, n3) {
+        n3.p.customParseFormat = true, e3 && e3.parseTwoDigitYear && (a2 = e3.parseTwoDigitYear);
+        var r3 = t3.prototype, i3 = r3.parse;
+        r3.parse = function(e4) {
+          var t4 = e4.date, r4 = e4.utc, o3 = e4.args;
+          this.$u = r4;
+          var a3 = o3[1];
+          if ("string" == typeof a3) {
+            var f3 = true === o3[2], h3 = true === o3[3], u3 = f3 || h3, d3 = o3[2];
+            h3 && (d3 = o3[2]), s2 = this.$locale(), !f3 && d3 && (s2 = n3.Ls[d3]), this.$d = (function(e5, t5, n4, r5) {
+              try {
+                if (["x", "X"].indexOf(t5) > -1) return new Date(("X" === t5 ? 1e3 : 1) * e5);
+                var i4 = l2(t5)(e5), o4 = i4.year, s3 = i4.month, a4 = i4.day, f4 = i4.hours, h4 = i4.minutes, u4 = i4.seconds, d4 = i4.milliseconds, c4 = i4.zone, m3 = i4.week, M3 = /* @__PURE__ */ new Date(), Y2 = a4 || (o4 || s3 ? 1 : M3.getDate()), p2 = o4 || M3.getFullYear(), v2 = 0;
+                o4 && !s3 || (v2 = s3 > 0 ? s3 - 1 : M3.getMonth());
+                var D2, w2 = f4 || 0, g2 = h4 || 0, y2 = u4 || 0, L2 = d4 || 0;
+                return c4 ? new Date(Date.UTC(p2, v2, Y2, w2, g2, y2, L2 + 60 * c4.offset * 1e3)) : n4 ? new Date(Date.UTC(p2, v2, Y2, w2, g2, y2, L2)) : (D2 = new Date(p2, v2, Y2, w2, g2, y2, L2), m3 && (D2 = r5(D2).week(m3).toDate()), D2);
+              } catch (e6) {
+                return /* @__PURE__ */ new Date("");
+              }
+            })(t4, a3, r4, n3), this.init(), d3 && true !== d3 && (this.$L = this.locale(d3).$L), u3 && t4 != this.format(a3) && (this.$d = /* @__PURE__ */ new Date("")), s2 = {};
+          } else if (a3 instanceof Array) for (var c3 = a3.length, m2 = 1; m2 <= c3; m2 += 1) {
+            o3[1] = a3[m2 - 1];
+            var M2 = n3.apply(this, o3);
+            if (M2.isValid()) {
+              this.$d = M2.$d, this.$L = M2.$L, this.init();
+              break;
+            }
+            m2 === c3 && (this.$d = /* @__PURE__ */ new Date(""));
+          }
+          else i3.call(this, e4);
+        };
+      };
+    }));
+  })(customParseFormat$1);
+  return customParseFormat$1.exports;
+}
+var customParseFormatExports = requireCustomParseFormat();
+const customParse = /* @__PURE__ */ getDefaultExportFromCjs(customParseFormatExports);
+var isoWeek$2 = { exports: {} };
+var isoWeek$1 = isoWeek$2.exports;
+var hasRequiredIsoWeek;
+function requireIsoWeek() {
+  if (hasRequiredIsoWeek) return isoWeek$2.exports;
+  hasRequiredIsoWeek = 1;
+  (function(module2, exports2) {
+    !(function(e2, t2) {
+      module2.exports = t2();
+    })(isoWeek$1, (function() {
+      var e2 = "day";
+      return function(t2, i2, s2) {
+        var a2 = function(t3) {
+          return t3.add(4 - t3.isoWeekday(), e2);
+        }, d2 = i2.prototype;
+        d2.isoWeekYear = function() {
+          return a2(this).year();
+        }, d2.isoWeek = function(t3) {
+          if (!this.$utils().u(t3)) return this.add(7 * (t3 - this.isoWeek()), e2);
+          var i3, d3, n3, o2, r2 = a2(this), u2 = (i3 = this.isoWeekYear(), d3 = this.$u, n3 = (d3 ? s2.utc : s2)().year(i3).startOf("year"), o2 = 4 - n3.isoWeekday(), n3.isoWeekday() > 4 && (o2 += 7), n3.add(o2, e2));
+          return r2.diff(u2, "week") + 1;
+        }, d2.isoWeekday = function(e3) {
+          return this.$utils().u(e3) ? this.day() || 7 : this.day(this.day() % 7 ? e3 : e3 - 7);
+        };
+        var n2 = d2.startOf;
+        d2.startOf = function(e3, t3) {
+          var i3 = this.$utils(), s3 = !!i3.u(t3) || t3;
+          return "isoweek" === i3.p(e3) ? s3 ? this.date(this.date() - (this.isoWeekday() - 1)).startOf("day") : this.date(this.date() - 1 - (this.isoWeekday() - 1) + 7).endOf("day") : n2.bind(this)(e3, t3);
+        };
+      };
+    }));
+  })(isoWeek$2);
+  return isoWeek$2.exports;
+}
+var isoWeekExports = requireIsoWeek();
+const isoWeek = /* @__PURE__ */ getDefaultExportFromCjs(isoWeekExports);
+var isSameOrBefore$2 = { exports: {} };
+var isSameOrBefore$1 = isSameOrBefore$2.exports;
+var hasRequiredIsSameOrBefore;
+function requireIsSameOrBefore() {
+  if (hasRequiredIsSameOrBefore) return isSameOrBefore$2.exports;
+  hasRequiredIsSameOrBefore = 1;
+  (function(module2, exports2) {
+    !(function(e2, i2) {
+      module2.exports = i2();
+    })(isSameOrBefore$1, (function() {
+      return function(e2, i2) {
+        i2.prototype.isSameOrBefore = function(e3, i3) {
+          return this.isSame(e3, i3) || this.isBefore(e3, i3);
+        };
+      };
+    }));
+  })(isSameOrBefore$2);
+  return isSameOrBefore$2.exports;
+}
+var isSameOrBeforeExports = requireIsSameOrBefore();
+const isSameOrBefore = /* @__PURE__ */ getDefaultExportFromCjs(isSameOrBeforeExports);
+dayjs.extend(quarterOfYear);
+dayjs.extend(weekOfYear);
+dayjs.extend(customParse);
+dayjs.extend(isoWeek);
+dayjs.extend(isSameOrBefore);
+function formatSecondsToHHMMSS(totalSeconds) {
+  if (isNaN(totalSeconds) || totalSeconds < 0) {
+    return "00:00:00";
+  }
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor(totalSeconds % 3600 / 60);
+  const seconds = Math.floor(totalSeconds % 60);
+  const pad = (num) => String(num).padStart(2, "0");
+  return `${pad(hours)}:${pad(minutes)}:${pad(seconds)}`;
+}
+function normalizeDateStr(raw) {
+  const s2 = (raw || "").replace(/\//g, "-");
+  const d2 = dayjs(s2, ["YYYY-MM-DD", "YYYY-M-D", "YYYY/MM/DD", "YYYY/M/D"], true);
+  return d2.isValid() ? d2.format("YYYY-MM-DD") : s2;
+}
+const DATE_FMT = "(\\d{4}[-/]\\d{2}[-/]\\d{2})";
+function extractDate(line2, em) {
+  const list = Array.isArray(em) ? em : [em];
+  for (const e2 of list) {
+    const m2 = line2.match(new RegExp(`${e2}\\s*${DATE_FMT}`));
+    if (m2) return normalizeDateStr(m2[1]);
+  }
+  return void 0;
+}
+function getDateRange(d2, view) {
+  switch (view) {
+    case "年":
+      return { startDate: d2.startOf("year"), endDate: d2.endOf("year") };
+    case "季":
+      return { startDate: d2.startOf("quarter"), endDate: d2.endOf("quarter") };
+    case "月":
+      return { startDate: d2.startOf("month"), endDate: d2.endOf("month") };
+    case "周":
+      return { startDate: d2.startOf("isoWeek"), endDate: d2.endOf("isoWeek") };
+    default:
+      return { startDate: d2.startOf("day"), endDate: d2.endOf("day") };
+  }
+}
+const QTXT = ["一", "二", "三", "四"];
+function formatDateForView(d2, v2) {
+  switch (v2) {
+    case "年":
+      return d2.format("YYYY年");
+    case "季":
+      return `${d2.year()}年${QTXT[d2.quarter() - 1]}季度`;
+    case "月":
+      return d2.format("YYYY-MM");
+    case "周": {
+      const isoYear = d2.isoWeekYear();
+      const isoWeekNum = d2.isoWeek();
+      return `${isoYear}-W${String(isoWeekNum).padStart(2, "0")}`;
+    }
+    default:
+      return d2.format("YYYY-MM-DD");
+  }
+}
+const getWeeksInYear$1 = (year) => {
+  const endOfYear = dayjs().year(year).endOf("year");
+  return endOfYear.isoWeek() === 1 ? 52 : endOfYear.isoWeek();
+};
+function getPeriodCount(period, date) {
+  if (!date || !date.isValid()) {
+    return void 0;
+  }
+  switch (period) {
+    case "年":
+      return date.year();
+    case "季":
+      return date.quarter();
+    case "月":
+      return date.month() + 1;
+    // dayjs month is 0-indexed
+    case "周":
+      return date.isoWeek();
+    default:
+      return void 0;
+  }
+}
+const CODEBLOCK_LANG = "think";
+const EMOJI = {
+  done: "✅",
+  cancelled: "❌",
+  due: "📅",
+  scheduled: "⏳",
+  start: "🛫",
+  created: "➕"
+};
+const EMPTY_LABEL = "无日期";
+const STYLE_TAG_ID = "think-plugin-style";
+const LOCAL_STORAGE_KEYS = {
+  SETTINGS_TABS: "think-settings-active-tab"
+};
+const DEFAULT_NAMES = {
+  NEW_DATASOURCE: "新数据源",
+  NEW_VIEW: "新视图",
+  NEW_LAYOUT: "新布局"
+};
+function cleanTaskText(text) {
+  let result = text.replace(/^\s*-\s*\[[ xX-]\]\s*/, "").trim();
+  result = result.replace(/#[\p{L}\p{N}_-]+/gu, "");
+  let main2 = result.split(/[\s(]/).find((s2) => s2 && s2.trim());
+  main2 = main2?.replace(new RegExp("^\\p{Extended_Pictographic}\\uFE0F?", "u"), "").trim();
+  return main2 ? main2.trim() : "";
+}
+function pick(line2, emoji) {
+  return extractDate(line2, emoji);
+}
+const isDoneLine = (line2) => RE_DONE_BOX.test(line2);
+const isCancelledLine = (line2) => RE_CANCEL_BOX.test(line2);
+function parseTaskLine(filePath, rawLine, lineNo, parentFolder) {
+  const lineText = rawLine;
+  if (!RE_TASK_PREFIX.test(lineText)) return null;
+  const item = {
+    id: `${filePath}#${lineNo}`,
+    title: "",
+    // 稍后填充
+    content: lineText.trim(),
+    type: "task",
+    tags: [],
+    // 稍后填充
+    recurrence: "none",
+    // 稍后填充
+    created: 0,
+    modified: 0,
+    extra: {},
+    categoryKey: "",
+    // 稍后填充
+    // [新增] 填充 folder
+    folder: parentFolder
+  };
+  const status = isDoneLine(lineText) ? "done" : isCancelledLine(lineText) ? "cancelled" : "open";
+  item.categoryKey = `任务/${status}`;
+  const tagMatches = lineText.match(TAG_RE) || [];
+  item.tags = tagMatches.map((t2) => t2.replace("#", ""));
+  const recMatch = lineText.match(/🔁\s*([^\n📅⏳🛫➕✅❌]*)/);
+  if (recMatch && recMatch[1]) item.recurrence = recMatch[1].trim();
+  let m2;
+  while ((m2 = KV_IN_PAREN.exec(lineText)) !== null) {
+    const key = m2[1].trim();
+    const value = m2[2].trim();
+    const lowerKey = key.toLowerCase();
+    if (["主题", "标签", "tag", "tags"].includes(lowerKey)) {
+      value.split(/[,，]/).forEach((v2) => {
+        const t2 = v2.trim().replace(/^#/, "");
+        if (t2) item.tags.push(t2);
+      });
+    } else if (["时间", "time"].includes(key)) {
+      item.time = value;
+    } else if (["时长", "duration"].includes(key)) {
+      item.duration = Number(value) || void 0;
+    } else {
+      const num = Number(value);
+      let parsed = value;
+      if (value !== "" && !isNaN(num)) parsed = num;
+      else if (/^(true|false)$/i.test(value)) parsed = value.toLowerCase() === "true";
+      item.extra[key] = parsed;
+    }
+  }
+  item.tags = Array.from(new Set(item.tags));
+  const doneDate = pick(lineText, EMOJI.done);
+  const cancelledDate = pick(lineText, EMOJI.cancelled);
+  const dueDate = pick(lineText, EMOJI.due);
+  const scheduledDate = pick(lineText, EMOJI.scheduled);
+  const startDate = pick(lineText, EMOJI.start);
+  const createdDate = pick(lineText, EMOJI.created);
+  const pickPriority = (line2) => {
+    if (line2.includes("🔺")) return "highest";
+    if (line2.includes("⏫")) return "high";
+    if (line2.includes("🔼")) return "medium";
+    if (line2.includes("⏽")) return "low";
+    if (line2.includes("⏬")) return "lowest";
+    if (line2.includes("🔽")) return "low";
+    return void 0;
+  };
+  const afterPrefix = lineText.replace(RE_TASK_PREFIX, "").trim();
+  const iconMatch = afterPrefix.match(new RegExp("^(\\p{Extended_Pictographic}\\uFE0F?)", "u"));
+  let titleSrc = afterPrefix;
+  if (iconMatch) {
+    item.icon = iconMatch[1];
+    titleSrc = titleSrc.replace(new RegExp("^(?:\\p{Extended_Pictographic}\\uFE0F?\\s*)+", "u"), "");
+  }
+  item.title = cleanTaskText(titleSrc) || "";
+  item.priority = pickPriority(lineText);
+  if (createdDate) item.createdDate = createdDate;
+  if (scheduledDate) item.scheduledDate = scheduledDate;
+  if (startDate) item.startDate = startDate;
+  if (dueDate) item.dueDate = dueDate;
+  if (doneDate) item.doneDate = doneDate;
+  if (cancelledDate) item.cancelledDate = cancelledDate;
+  item.startISO = startDate || scheduledDate || dueDate || createdDate;
+  item.endISO = doneDate || cancelledDate || dueDate;
+  if (!item.startISO && status === "open") {
+    item.startISO = item.date = item.dueDate || item.scheduledDate || item.startDate || item.createdDate;
+  }
+  if (!item.endISO) item.endISO = item.startISO;
+  if (item.startISO) item.startMs = Date.parse(item.startISO);
+  if (item.endISO) item.endMs = Date.parse(item.endISO);
+  return item;
+}
+function parseBlockContent(filePath, lines, startIdx, endIdx, parentFolder) {
+  const contentLines = lines.slice(startIdx + 1, endIdx);
+  let title = "";
+  let categoryKey = null;
+  let date;
+  const tags2 = [];
+  const extra = {};
+  let contentText = "";
+  let contentStarted = false;
+  let iconVal = null;
+  let periodVal;
+  let ratingVal;
+  let pintuVal;
+  for (let i2 = 0; i2 < contentLines.length; i2++) {
+    const rawLine = contentLines[i2];
+    const line2 = rawLine.trim();
+    if (!contentStarted) {
+      if (line2 === "") continue;
+      const kv = line2.match(/^([^:：]{1,20})::?\s*(.*)$/);
+      if (kv) {
+        const key = kv[1].trim();
+        const value = kv[2] || "";
+        const lower = key.toLowerCase();
+        if (["分类", "类别", "category"].includes(lower)) categoryKey = value.trim();
+        else if (["主题", "标签", "tag", "tags"].includes(lower)) tags2.push(...value.trim().split(/[,，]/).map((t2) => t2.trim().replace(/^#/, "")));
+        else if (["日期", "date"].includes(lower)) date = normalizeDateStr(value.trim());
+        else if (["周期", "period"].includes(lower)) periodVal = value.trim();
+        else if (["评分", "rating"].includes(lower)) ratingVal = Number(value.trim()) || void 0;
+        else if (["图标", "icon"].includes(lower)) iconVal = value.trim();
+        else if (["评图", "pintu"].includes(lower)) pintuVal = value.trim();
+        else if (["内容", "content"].includes(lower)) {
+          contentStarted = true;
+          contentText = value;
+        } else {
+          const num = Number(value.trim());
+          let parsed = value.trim();
+          if (parsed !== "" && !isNaN(num)) parsed = num;
+          else if (/^(true|false)$/i.test(parsed)) parsed = parsed.toLowerCase() === "true";
+          extra[key] = parsed;
+        }
+      } else {
+        contentStarted = true;
+        contentText = rawLine;
+      }
+    } else {
+      contentText += (contentText ? "\n" : "") + rawLine;
+    }
+  }
+  if (contentText.trim() !== "") title = contentText.trim().split(/\r?\n/)[0];
+  else if (tags2.length > 0) title = tags2.join(", ");
+  title = title.replace(new RegExp("^(?:\\p{Extended_Pictographic}\\uFE0F?\\s*)+", "u"), "").trim().slice(0, 20);
+  if (!categoryKey) categoryKey = parentFolder || "";
+  const item = {
+    id: `${filePath}#${startIdx + 1}`,
+    title: title || "",
+    content: contentText.trim(),
+    type: "block",
+    tags: Array.from(new Set(tags2)),
+    recurrence: "none",
+    created: 0,
+    modified: 0,
+    extra,
+    categoryKey,
+    // [新增] 填充 folder
+    folder: parentFolder
+  };
+  if (iconVal) item.icon = iconVal;
+  if (periodVal) item.period = periodVal;
+  if (ratingVal) item.rating = ratingVal;
+  if (pintuVal) item.pintu = pintuVal;
+  item.startISO = date;
+  item.endISO = date;
+  if (item.startISO) item.startMs = Date.parse(item.startISO);
+  if (item.endISO) item.endMs = item.startMs;
+  item.date = date;
+  if (item.period && item.date) {
+    item.periodCount = getPeriodCount(item.period, dayjs(item.date));
+  }
+  return item;
+}
+function throttle(fn3, wait = 250) {
+  let last = 0, timer = null;
+  return function(...args) {
+    const now = Date.now();
+    if (now - last >= wait) {
+      last = now;
+      fn3.apply(this, args);
+    } else {
+      clearTimeout(timer);
+      timer = setTimeout(() => {
+        last = Date.now();
+        fn3.apply(this, args);
+      }, wait - (now - last));
+    }
+  };
+}
+const AppToken = "App";
+var __getOwnPropDesc$7 = Object.getOwnPropertyDescriptor;
+var __decorateClass$7 = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc$7(target, key) : target;
+  for (var i2 = decorators.length - 1, decorator; i2 >= 0; i2--)
+    if (decorator = decorators[i2])
+      result = decorator(result) || result;
+  return result;
+};
+var __decorateParam$7 = (index, decorator) => (target, key) => decorator(target, key, index);
+let ObsidianPlatform = class {
+  // [核心修改] 使用 @inject 装饰器明确指定依赖
+  constructor(app) {
+    this.app = app;
+  }
+  // ... 其余方法保持不变 ...
+  async readFile(file) {
+    return this.app.vault.read(file);
+  }
+  getMarkdownFiles() {
+    return this.app.vault.getMarkdownFiles();
+  }
+  async writeFile(file, content) {
+    return this.app.vault.modify(file, content);
+  }
+  getByPath(path) {
+    return this.app.vault.getAbstractFileByPath(path) ?? null;
+  }
+  async ensureFile(path, initial = "") {
+    const af = this.getByPath(path);
+    if (af instanceof obsidian.TFile) return af;
+    return this.app.vault.create(path, initial);
+  }
+  onVault(event, cb) {
+    return this.app.vault.on(event, cb);
+  }
+};
+ObsidianPlatform = __decorateClass$7([
+  singleton(),
+  __decorateParam$7(0, inject(AppToken))
+], ObsidianPlatform);
+const ORDER = ["done", "due", "scheduled", "start", "created", "end"];
+function normalizeItemDates(it) {
+  if (it.type === "block") {
+    if (it.date) {
+      it.dateSource = "block";
+      const t2 = Date.parse(it.date);
+      if (!isNaN(t2)) it.dateMs = t2;
+    }
+    if (!it.categoryKey) it.categoryKey = "";
+    return;
+  }
+  const pick2 = {
+    done: it.doneDate,
+    due: it.dueDate,
+    scheduled: it.scheduledDate,
+    start: it.startDate ?? it.startISO,
+    created: it.createdDate,
+    end: it.endISO
+  };
+  for (const k2 of ORDER) {
+    const iso = pick2[k2];
+    if (iso) {
+      it.date = iso;
+      it.dateSource = k2;
+      const t2 = Date.parse(iso);
+      if (!isNaN(t2)) it.dateMs = t2;
+      break;
+    }
+  }
+  if (!it.categoryKey) it.categoryKey = "任务/open";
+}
+function parseRecurrence(rawTask) {
+  const m2 = rawTask.match(
+    /🔁\s*every\s+(\d+)?\s*(day|week|month|year)s?\s*(when done)?/i
+  );
+  if (!m2) return null;
+  const interval = m2[1] ? parseInt(m2[1], 10) : 1;
+  const unit = m2[2].toLowerCase();
+  const whenDone = Boolean(m2[3]);
+  return { interval, unit, whenDone };
+}
+var __getOwnPropDesc$6 = Object.getOwnPropertyDescriptor;
+var __decorateClass$6 = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc$6(target, key) : target;
+  for (var i2 = decorators.length - 1, decorator; i2 >= 0; i2--)
+    if (decorator = decorators[i2])
+      result = decorator(result) || result;
+  return result;
+};
+var __decorateParam$6 = (index, decorator) => (target, key) => decorator(target, key, index);
+let DataStore = class {
+  // [核心修改] 为构造函数的每个参数添加 @inject 装饰器
+  constructor(platform, app) {
+    this.platform = platform;
+    this.app = app;
+  }
+  // ... 其余方法保持不变 ...
+  items = [];
+  fileIndex = /* @__PURE__ */ new Map();
+  changeListeners = /* @__PURE__ */ new Set();
+  async scanAll() {
+    this.items = [];
+    this.fileIndex.clear();
+    const files = this.platform.getMarkdownFiles();
+    for (const file of files) await this.scanFile(file);
+  }
+  async initialScan() {
+    return this.scanAll();
+  }
+  async scanFile(file) {
+    try {
+      const content = await this.platform.readFile(file);
+      const lines = content.split(/\r?\n/);
+      const filePath = file.path;
+      const parentFolder = file.parent?.name || "";
+      const fileItems = [];
+      const cache = this.app.metadataCache.getFileCache(file);
+      const headingsList = cache?.headings || [];
+      let nextHeadingIndex = 0;
+      let currentSectionTags = [];
+      let currentHeader = "";
+      const fileName = file.name.toLowerCase().endsWith(".md") ? file.name.slice(0, -3) : file.name;
+      for (let i2 = 0; i2 < lines.length; i2++) {
+        const line2 = lines[i2];
+        if (nextHeadingIndex < headingsList.length && headingsList[nextHeadingIndex].position.start.line === i2) {
+          const headingEntry = headingsList[nextHeadingIndex];
+          const headingText = headingEntry.heading;
+          const headingTags = headingText.match(/#([\p{L}\p{N}_\/-]+)/gu) || [];
+          currentSectionTags = headingTags.map((t2) => t2.replace("#", "")).filter(Boolean);
+          let cleanText = headingText;
+          for (const tag of headingTags) cleanText = cleanText.replace(tag, "").trim();
+          currentHeader = cleanText || "";
+          nextHeadingIndex++;
+          continue;
+        }
+        if (line2.trim() === "") {
+          const endIdx = lines.indexOf("", i2 + 1);
+          if (endIdx !== -1) {
+            const blockItem = parseBlockContent(filePath, lines, i2, endIdx, parentFolder);
+            if (blockItem) {
+              blockItem.created = file.stat.ctime;
+              blockItem.modified = file.stat.mtime;
+              if (currentHeader) blockItem.header = currentHeader;
+              blockItem.tags = Array.from(/* @__PURE__ */ new Set([...currentSectionTags, ...blockItem.tags]));
+              blockItem.filename = fileName;
+              blockItem.fileName = fileName;
+              normalizeItemDates(blockItem);
+              const hashIdx = blockItem.id.lastIndexOf("#");
+              const lineNo = hashIdx >= 0 ? Number(blockItem.id.slice(hashIdx + 1)) : void 0;
+              blockItem.file = { path: filePath, line: lineNo, basename: fileName };
+              fileItems.push(blockItem);
+            }
+            i2 = endIdx;
+            continue;
+          }
+        }
+        const taskItem = parseTaskLine(filePath, line2, i2 + 1, parentFolder);
+        if (taskItem) {
+          taskItem.tags = Array.from(/* @__PURE__ */ new Set([...currentSectionTags, ...taskItem.tags]));
+          taskItem.created = file.stat.ctime;
+          taskItem.modified = file.stat.mtime;
+          if (currentHeader) taskItem.header = currentHeader;
+          taskItem.filename = fileName;
+          taskItem.fileName = fileName;
+          normalizeItemDates(taskItem);
+          taskItem.file = { path: filePath, line: i2 + 1, basename: fileName };
+          taskItem.recurrenceInfo = parseRecurrence(taskItem.content) || void 0;
+          fileItems.push(taskItem);
+        }
+      }
+      if (this.fileIndex.has(filePath)) {
+        this.items = this.items.filter((it) => it.id && !it.id.startsWith(filePath + "#"));
+      }
+      this.fileIndex.set(filePath, fileItems);
+      this.items.push(...fileItems);
+      return fileItems;
+    } catch (err) {
+      console.error("ThinkPlugin: 扫描文件失败", file.path, err);
+      return [];
+    }
+  }
+  removeFileItems(filePath) {
+    if (this.fileIndex.has(filePath)) {
+      this.fileIndex.delete(filePath);
+      this.items = this.items.filter((it) => it.id && !it.id.startsWith(filePath + "#"));
+    }
+  }
+  queryItems(filters = [], sortRules = []) {
+    const filtered = filterByRules(this.items, filters);
+    return sortItems(filtered, sortRules);
+  }
+  _emitChange() {
+    this.changeListeners.forEach((fn3) => {
+      try {
+        fn3();
+      } catch (e2) {
+        console.error("ThinkPlugin: 数据变化通知错误", e2);
+      }
+    });
+  }
+  _emitThrottled = throttle(() => this._emitChange(), 250);
+  subscribe(listener) {
+    this.changeListeners.add(listener);
+  }
+  unsubscribe(listener) {
+    this.changeListeners.delete(listener);
+  }
+  notifyChange() {
+    this._emitThrottled();
+  }
+};
+DataStore = __decorateClass$6([
+  singleton(),
+  __decorateParam$6(0, inject(ObsidianPlatform)),
+  __decorateParam$6(1, inject(AppToken))
+], DataStore);
+function renderTemplate(templateString, data) {
+  return templateString.replace(/\{\{\s*([^}]+?)\s*\}\}/g, (_2, placeholder) => {
+    const key = placeholder.trim();
+    let result = "";
+    try {
+      if (key === "block") {
+        result = data.block?.name || "";
+      } else if (key === "theme") {
+        result = data.theme?.path || "";
+      } else if (key === "icon") {
+        result = data.theme?.icon || "";
+      } else if (key.startsWith("moment:")) {
+        const format = key.substring(7);
+        result = obsidian.moment().format(format);
+      } else {
+        const keys = key.split(".");
+        const rootKey = keys[0];
+        if (!(rootKey in data)) {
+          return "";
+        }
+        let value = data[rootKey];
+        if (keys.length > 1) {
+          for (let i2 = 1; i2 < keys.length; i2++) {
+            if (value && typeof value === "object" && keys[i2] in value) {
+              value = value[keys[i2]];
+            } else {
+              value = "";
+              break;
+            }
+          }
+        }
+        if (typeof value === "object" && value !== null && "label" in value) {
+          result = String(value.label);
+        } else {
+          result = value !== null && value !== void 0 ? String(value) : "";
+        }
+      }
+      return result;
+    } catch (e2) {
+      console.error(`[ThinkPlugin] 解析模板变量 {{${key}}} 时发生错误:`, e2);
+      return `(解析错误: ${key})`;
+    }
+  });
+}
+var __getOwnPropDesc$5 = Object.getOwnPropertyDescriptor;
+var __decorateClass$5 = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc$5(target, key) : target;
+  for (var i2 = decorators.length - 1, decorator; i2 >= 0; i2--)
+    if (decorator = decorators[i2])
+      result = decorator(result) || result;
+  return result;
+};
+var __decorateParam$5 = (index, decorator) => (target, key) => decorator(target, key, index);
+let InputService = class {
+  // [核心修改] 构造函数通过 @inject 装饰器明确声明并接收 App 实例
+  constructor(app) {
+    this.app = app;
+  }
+  // [核心修改] init 方法已被彻底删除
+  async executeTemplate(template, formData, theme2) {
+    if (!template) throw new Error(`传入了无效的模板对象。`);
+    const renderData = {
+      ...formData,
+      block: { name: template.name },
+      theme: theme2 ? { path: theme2.path, icon: theme2.icon || "" } : {}
+    };
+    const outputContent = renderTemplate(template.outputTemplate, renderData).trim();
+    const targetFilePath = renderTemplate(template.targetFile, renderData).trim();
+    const header = template.appendUnderHeader ? renderTemplate(template.appendUnderHeader, renderData) : null;
+    if (!targetFilePath) throw new Error("模板未定义目标文件路径 (targetFile)。");
+    const file = await this.getOrCreateFile(targetFilePath);
+    if (header) {
+      await this.appendUnderHeader(file, header, outputContent);
+    } else {
+      const existingContent = await this.app.vault.read(file);
+      const newContent = existingContent ? `${existingContent.trim()}
+
+${outputContent}` : outputContent;
+      await this.app.vault.modify(file, newContent);
+    }
+    return targetFilePath;
+  }
+  async getOrCreateFile(fp) {
+    let file = this.app.vault.getAbstractFileByPath(fp);
+    if (file instanceof obsidian.TFile) {
+      return file;
+    }
+    if (file instanceof obsidian.TFolder) {
+      throw new Error(`目标路径 "${fp}" 是一个文件夹，无法创建文件。`);
+    }
+    const folder = fp.includes("/") ? fp.slice(0, fp.lastIndexOf("/")) : "";
+    if (folder) {
+      await this.ensureFolder(folder);
+    }
+    try {
+      return await this.app.vault.create(fp, "");
+    } catch (error) {
+      console.warn(`ThinkPlugin: 创建文件时遇到初始错误: ${error.message}. 正在尝试重新获取...`);
+      await new Promise((resolve) => setTimeout(resolve, 100));
+      const existingFile = this.app.vault.getAbstractFileByPath(fp);
+      if (existingFile instanceof obsidian.TFile) {
+        return existingFile;
+      } else {
+        console.error("ThinkPlugin: 文件创建失败，并且在捕获错误后仍无法找到该文件。", error);
+        throw new Error(`创建文件 "${fp}" 失败。原始错误: ${error.message}`);
+      }
+    }
+  }
+  async ensureFolder(path) {
+    const segs = path.split("/").filter(Boolean);
+    let cur = "";
+    for (const seg of segs) {
+      cur = cur ? `${cur}/${seg}` : seg;
+      const af = this.app.vault.getAbstractFileByPath(cur);
+      if (!af) {
+        try {
+          await this.app.vault.createFolder(cur);
+        } catch (e2) {
+          throw new Error(`创建文件夹 "${cur}" 失败。请检查路径是否有效或存在权限问题。原始错误: ${e2.message}`);
+        }
+      } else if (af instanceof obsidian.TFile) {
+        throw new Error(`路径冲突："${cur}" 是一个文件，无法在其下创建文件夹。`);
+      }
+    }
+  }
+  async appendUnderHeader(file, header, payload) {
+    const esc = header.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const regex = new RegExp(`^${esc}\\s*$`, "m");
+    const text = await this.app.vault.read(file);
+    const lines = text.split("\n");
+    let headerLineIndex = lines.findIndex((l2) => regex.test(l2));
+    if (headerLineIndex === -1) {
+      if (lines.length && lines[lines.length - 1].trim() !== "") lines.push("");
+      lines.push(header, "");
+      headerLineIndex = lines.length - 2;
+    }
+    let insertAtIndex = lines.length;
+    for (let i2 = headerLineIndex + 1; i2 < lines.length; i2++) {
+      const match2 = lines[i2].match(/^(#+)\s/);
+      if (match2 && match2[1].length <= (header.match(/^(#+)\s/)?.[1].length || 0)) {
+        insertAtIndex = i2;
+        break;
+      }
+    }
+    if (insertAtIndex > 0 && lines[insertAtIndex - 1].trim() !== "") {
+      lines.splice(insertAtIndex, 0, "", payload);
+    } else {
+      lines.splice(insertAtIndex, 0, payload);
+    }
+    await this.app.vault.modify(file, lines.join("\n"));
+  }
+};
+InputService = __decorateClass$5([
+  singleton(),
+  __decorateParam$5(0, inject(AppToken))
+], InputService);
+var __getOwnPropDesc$4 = Object.getOwnPropertyDescriptor;
+var __decorateClass$4 = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc$4(target, key) : target;
+  for (var i2 = decorators.length - 1, decorator; i2 >= 0; i2--)
+    if (decorator = decorators[i2])
+      result = decorator(result) || result;
+  return result;
+};
+var __decorateParam$4 = (index, decorator) => (target, key) => decorator(target, key, index);
+let ActionService = class {
+  // [核心修改] 构造函数现在通过 @inject 装饰器明确声明并接收所有依赖
+  // 注意：对 TimerService 的依赖已在上一轮重构中移除
+  constructor(app, dataStore2, appStore2, inputService2) {
+    this.app = app;
+    this.dataStore = dataStore2;
+    this.appStore = appStore2;
+    this.inputService = inputService2;
+  }
+  // [核心修改] init 方法已被彻底删除
+  getQuickInputConfigForView(viewInstance, dateContext, periodContext) {
+    const settings = this.appStore.getSettings();
+    const dataSource = settings.dataSources.find((ds) => ds.id === viewInstance.dataSourceId);
+    if (!dataSource) {
+      new obsidian.Notice("快捷输入失败：找不到对应的数据源。");
+      return null;
+    }
+    const categoryFilter = dataSource.filters.find((f2) => f2.field === "categoryKey" && (f2.op === "=" || f2.op === "includes"));
+    if (!categoryFilter || !categoryFilter.value) {
+      new obsidian.Notice('快捷输入失败：此视图的数据源未按 "categoryKey" 进行筛选。');
+      return null;
+    }
+    const blockName = categoryFilter.value;
+    const targetBlock = settings.inputSettings.blocks.find((b2) => b2.name === blockName);
+    if (!targetBlock) {
+      new obsidian.Notice(`快捷输入失败：找不到名为 "${blockName}" 的Block模板。`);
+      return null;
+    }
+    const targetTheme = settings.inputSettings.themes.find((t2) => t2.path === blockName);
+    const context = {
+      "日期": dateContext.format("YYYY-MM-DD"),
+      "周期": periodContext
+    };
+    return {
+      blockId: targetBlock.id,
+      context,
+      themeId: targetTheme?.id
+    };
+  }
+  getQuickInputConfigForTaskEdit(taskId) {
+    const item = this.dataStore.queryItems().find((i2) => i2.id === taskId);
+    if (!item) {
+      new obsidian.Notice(`错误：找不到ID为 ${taskId} 的任务。`);
+      return null;
+    }
+    const settings = this.appStore.getSettings();
+    const baseCategory = (item.categoryKey || "").split("/")[0];
+    const targetBlock = settings.inputSettings.blocks.find((b2) => b2.name === baseCategory);
+    if (!targetBlock) {
+      new obsidian.Notice(`找不到与分类 "${baseCategory}" 匹配的Block模板，无法编辑。`);
+      return null;
+    }
+    const context = {};
+    for (const field of targetBlock.fields) {
+      if (field.key in item) {
+        context[field.key] = item[field.key];
+      } else if (field.label in item) {
+        context[field.label] = item[field.label];
+      } else if (item.extra && field.key in item.extra) {
+        context[field.key] = item.extra[field.key];
+      }
+    }
+    if (!context.title && !context.标题) context["标题"] = item.title;
+    if (!context.tags && !context.标签) context["标签"] = item.tags.join(", ");
+    return {
+      blockId: targetBlock.id,
+      context
+    };
+  }
+  getQuickInputConfigForNewTimer() {
+    const blocks = this.appStore.getSettings().inputSettings.blocks;
+    if (!blocks || blocks.length === 0) {
+      new obsidian.Notice("没有可用的Block模板，请先在设置中创建一个。");
+      return null;
+    }
+    const defaultBlockId = blocks[0].id;
+    return {
+      blockId: defaultBlockId
+    };
+  }
+};
+ActionService = __decorateClass$4([
+  singleton(),
+  __decorateParam$4(0, inject(AppToken)),
+  __decorateParam$4(1, inject(DataStore)),
+  __decorateParam$4(2, inject(AppStore)),
+  __decorateParam$4(3, inject(InputService))
+], ActionService);
+function ModulePanel({ title, collapsed, children, onActionClick, onToggle }) {
+  const onHeaderClick = (e2) => {
+    if (e2.target.closest(".module-header-actions")) {
+      return;
+    }
+    onToggle?.(e2);
+  };
+  return /* @__PURE__ */ u("div", { class: "think-module", children: [
+    /* @__PURE__ */ u("div", { class: "module-header", onClick: onHeaderClick, title: "点击折叠/展开；Ctrl/⌘ + 点击：全部折叠/展开", children: [
+      /* @__PURE__ */ u("span", { class: "module-title", children: title }),
+      /* @__PURE__ */ u("div", { class: "module-header-controls", children: [
+        /* @__PURE__ */ u("div", { class: "module-header-actions", children: /* @__PURE__ */ u(
+          "span",
+          {
+            class: "module-action-plus",
+            title: "快捷输入",
+            onClick: (e2) => {
+              e2.stopPropagation();
+              onActionClick?.();
+            },
+            children: "+"
+          }
+        ) }),
+        /* @__PURE__ */ u("div", { class: "module-toggle", children: collapsed ? "▶" : "▼" })
+      ] })
+    ] }),
+    !collapsed && /* @__PURE__ */ u("div", { class: "module-content", children })
+  ] });
+}
+function makeObsUri(ref, app) {
+  if (!app || !app.vault) {
+    return "#error-app-not-provided";
+  }
+  let filePath = "";
+  let line2 = "";
+  const anyRef = ref;
+  if (anyRef && anyRef.file && anyRef.file.path) {
+    filePath = String(anyRef.file.path);
+    if (typeof anyRef.file.line === "number") line2 = String(anyRef.file.line);
+  }
+  if (!filePath) {
+    const id = typeof ref === "string" ? ref : anyRef?.id || "";
+    const hashIndex = id.lastIndexOf("#");
+    filePath = hashIndex >= 0 ? id.substring(0, hashIndex) : id;
+    line2 = hashIndex >= 0 ? id.substring(hashIndex + 1) : "";
+  }
+  const vaultName = encodeURIComponent(app.vault.getName());
+  const qp = `vault=${vaultName}&filepath=${encodeURIComponent(filePath)}`;
+  return `obsidian://advanced-uri?${qp}${line2 ? "&line=" + line2 : ""}`;
+}
+function TaskCheckbox({ done, onMarkDone }) {
+  const cls = "task-checkbox" + (done ? " done" : "");
+  return /* @__PURE__ */ u(
+    "input",
+    {
+      type: "checkbox",
+      class: cls,
+      checked: done,
+      onClick: done ? (e2) => e2.preventDefault() : void 0,
+      onChange: () => !done && onMarkDone?.()
+    }
+  );
+}
+const PlayArrowIcon = createSvgIcon(/* @__PURE__ */ u("path", {
   d: "M8 5v14l11-7z"
 }));
-const HourglassTopIcon = createSvgIcon(/* @__PURE__ */ u$1("path", {
+const HourglassTopIcon = createSvgIcon(/* @__PURE__ */ u("path", {
   d: "m6 2 .01 6L10 12l-3.99 4.01L6 22h12v-6l-4-4 4-3.99V2zm10 14.5V20H8v-3.5l4-4z"
 }));
 function TaskSendToTimerButton({ taskId }) {
@@ -29701,21 +29629,21 @@ function TaskSendToTimerButton({ taskId }) {
     }
   };
   if (thisTaskTimer) {
-    return /* @__PURE__ */ u$1(Tooltip, { title: `该任务已在计时面板中 (${thisTaskTimer.status})`, children: /* @__PURE__ */ u$1(IconButton, { size: "small", color: "primary", sx: { cursor: "default" }, children: /* @__PURE__ */ u$1(HourglassTopIcon, { fontSize: "small" }) }) });
+    return /* @__PURE__ */ u(Tooltip, { title: `该任务已在计时面板中 (${thisTaskTimer.status})`, children: /* @__PURE__ */ u(IconButton, { size: "small", color: "primary", sx: { cursor: "default" }, children: /* @__PURE__ */ u(HourglassTopIcon, { fontSize: "small" }) }) });
   }
-  return /* @__PURE__ */ u$1(Tooltip, { title: "添加并开始计时", children: /* @__PURE__ */ u$1(
+  return /* @__PURE__ */ u(Tooltip, { title: "添加并开始计时", children: /* @__PURE__ */ u(
     IconButton,
     {
       size: "small",
       onClick: handleStart,
-      children: /* @__PURE__ */ u$1(PlayArrowIcon, { fontSize: "small" })
+      children: /* @__PURE__ */ u(PlayArrowIcon, { fontSize: "small" })
     }
   ) });
 }
 const isDone$1 = (k2) => /\/(done|cancelled)$/i.test(k2 || "");
 function TableView({ items, rowField, colField, onMarkDone, app }) {
   if (!rowField || !colField) {
-    return /* @__PURE__ */ u$1("div", { children: "（表格视图需要配置“行字段”和“列字段”）" });
+    return /* @__PURE__ */ u("div", { children: "（表格视图需要配置“行字段”和“列字段”）" });
   }
   const rowVals = /* @__PURE__ */ new Set();
   const colVals = /* @__PURE__ */ new Set();
@@ -29734,31 +29662,31 @@ function TableView({ items, rowField, colField, onMarkDone, app }) {
   function renderCellItem(item) {
     if (item.type === "task") {
       const done = isDone$1(item.categoryKey);
-      return /* @__PURE__ */ u$1("span", { style: { display: "flex", alignItems: "center", gap: "4px" }, children: [
-        /* @__PURE__ */ u$1(
+      return /* @__PURE__ */ u("span", { style: { display: "flex", alignItems: "center", gap: "4px" }, children: [
+        /* @__PURE__ */ u(
           TaskCheckbox,
           {
             done,
             onMarkDone: () => onMarkDone(item.id)
           }
         ),
-        item.icon && /* @__PURE__ */ u$1("span", { class: "task-icon", children: item.icon }),
-        /* @__PURE__ */ u$1("a", { href: makeObsUri(item, app), target: "_blank", rel: "noopener", class: done ? "task-done" : "", style: { flexGrow: 1, minWidth: 0, textOverflow: "ellipsis", overflow: "hidden", whiteSpace: "nowrap" }, children: item.title }),
-        !done && /* @__PURE__ */ u$1(TaskSendToTimerButton, { taskId: item.id })
+        item.icon && /* @__PURE__ */ u("span", { class: "task-icon", children: item.icon }),
+        /* @__PURE__ */ u("a", { href: makeObsUri(item, app), target: "_blank", rel: "noopener", class: done ? "task-done" : "", style: { flexGrow: 1, minWidth: 0, textOverflow: "ellipsis", overflow: "hidden", whiteSpace: "nowrap" }, children: item.title }),
+        !done && /* @__PURE__ */ u(TaskSendToTimerButton, { taskId: item.id })
       ] });
     }
-    return /* @__PURE__ */ u$1("a", { href: makeObsUri(item, app), target: "_blank", rel: "noopener", children: item.title });
+    return /* @__PURE__ */ u("a", { href: makeObsUri(item, app), target: "_blank", rel: "noopener", children: item.title });
   }
-  return /* @__PURE__ */ u$1("table", { class: "think-table", children: [
-    /* @__PURE__ */ u$1("thead", { children: /* @__PURE__ */ u$1("tr", { children: [
-      /* @__PURE__ */ u$1("th", { children: rowField }),
-      sortedCols.map((c2) => /* @__PURE__ */ u$1("th", { children: c2 }, c2))
+  return /* @__PURE__ */ u("table", { class: "think-table", children: [
+    /* @__PURE__ */ u("thead", { children: /* @__PURE__ */ u("tr", { children: [
+      /* @__PURE__ */ u("th", { children: rowField }),
+      sortedCols.map((c2) => /* @__PURE__ */ u("th", { children: c2 }, c2))
     ] }) }),
-    /* @__PURE__ */ u$1("tbody", { children: sortedRows.map((r2) => /* @__PURE__ */ u$1("tr", { children: [
-      /* @__PURE__ */ u$1("td", { children: /* @__PURE__ */ u$1("strong", { children: r2 }) }),
+    /* @__PURE__ */ u("tbody", { children: sortedRows.map((r2) => /* @__PURE__ */ u("tr", { children: [
+      /* @__PURE__ */ u("td", { children: /* @__PURE__ */ u("strong", { children: r2 }) }),
       sortedCols.map((c2) => {
         const cellItems = matrix[r2]?.[c2] || [];
-        return !cellItems.length ? /* @__PURE__ */ u$1("td", { class: "empty" }, c2) : /* @__PURE__ */ u$1("td", { children: cellItems.map((it) => /* @__PURE__ */ u$1("div", { children: renderCellItem(it) }, it.id)) }, c2);
+        return !cellItems.length ? /* @__PURE__ */ u("td", { class: "empty" }, c2) : /* @__PURE__ */ u("td", { children: cellItems.map((it) => /* @__PURE__ */ u("div", { children: renderCellItem(it) }, it.id)) }, c2);
       })
     ] }, r2)) })
   ] });
@@ -29886,8 +29814,8 @@ function TagsRenderer({ tags: tags2, allThemes }) {
   const { themeLabels, regularTags } = T$1(() => {
     return getSimplifiedThemeDisplay(tags2, allThemes);
   }, [tags2, allThemes]);
-  return /* @__PURE__ */ u$1("div", { class: "bv-fields-list", children: [
-    themeLabels.map(({ fullPath, label }) => /* @__PURE__ */ u$1(
+  return /* @__PURE__ */ u("div", { class: "bv-fields-list", children: [
+    themeLabels.map(({ fullPath, label }) => /* @__PURE__ */ u(
       "span",
       {
         class: "tag-pill",
@@ -29897,7 +29825,7 @@ function TagsRenderer({ tags: tags2, allThemes }) {
       },
       fullPath
     )),
-    regularTags.map((tag) => /* @__PURE__ */ u$1(
+    regularTags.map((tag) => /* @__PURE__ */ u(
       "span",
       {
         class: "tag-pill",
@@ -29915,32 +29843,32 @@ const FieldRenderer = ({ item, fieldKey, app, allThemes }) => {
   }
   const label = getFieldLabel(fieldKey);
   if (fieldKey === "tags") {
-    return /* @__PURE__ */ u$1(TagsRenderer, { tags: value, allThemes });
+    return /* @__PURE__ */ u(TagsRenderer, { tags: value, allThemes });
   }
   if (fieldKey === "categoryKey") {
     const baseCategory = (item.categoryKey || "").split("/")[0] || "";
-    return /* @__PURE__ */ u$1("span", { class: "tag-pill", title: `${label}: ${value}`, style: `background:${getCategoryColor(item.categoryKey)};`, children: baseCategory });
+    return /* @__PURE__ */ u("span", { class: "tag-pill", title: `${label}: ${value}`, style: `background:${getCategoryColor(item.categoryKey)};`, children: baseCategory });
   }
   if (fieldKey === "pintu" && typeof value === "string") {
-    return /* @__PURE__ */ u$1("span", { class: "tag-pill", title: `${label}: ${value}`, children: /* @__PURE__ */ u$1("img", { src: app.vault.adapter.getResourcePath(value), alt: label }) });
+    return /* @__PURE__ */ u("span", { class: "tag-pill", title: `${label}: ${value}`, children: /* @__PURE__ */ u("img", { src: app.vault.adapter.getResourcePath(value), alt: label }) });
   }
   const displayValue = Array.isArray(value) ? value.join(", ") : String(value);
-  return /* @__PURE__ */ u$1("span", { class: "tag-pill", title: `${label}: ${displayValue}`, children: displayValue });
+  return /* @__PURE__ */ u("span", { class: "tag-pill", title: `${label}: ${displayValue}`, children: displayValue });
 };
 const isDone = (k2) => /\/(done|cancelled)$/i.test(k2 || "");
 const TaskItem = ({ item, fields, onMarkDone, app, allThemes }) => {
   const done = isDone(item.categoryKey);
-  return /* @__PURE__ */ u$1("div", { class: "bv-item bv-item--task", children: [
-    /* @__PURE__ */ u$1("div", { class: "bv-task-checkbox-wrapper", children: /* @__PURE__ */ u$1(TaskCheckbox, { done, onMarkDone: () => onMarkDone(item.id) }) }),
-    /* @__PURE__ */ u$1("div", { class: "bv-task-content", children: [
-      /* @__PURE__ */ u$1("div", { style: { display: "flex", alignItems: "center", gap: "8px" }, children: [
-        /* @__PURE__ */ u$1("a", { href: makeObsUri(item, app), target: "_blank", rel: "noopener", class: `bv-task-title ${done ? "task-done" : ""}`, children: [
-          item.icon && /* @__PURE__ */ u$1("span", { class: "icon", style: "margin-right: 4px;", children: item.icon }),
+  return /* @__PURE__ */ u("div", { class: "bv-item bv-item--task", children: [
+    /* @__PURE__ */ u("div", { class: "bv-task-checkbox-wrapper", children: /* @__PURE__ */ u(TaskCheckbox, { done, onMarkDone: () => onMarkDone(item.id) }) }),
+    /* @__PURE__ */ u("div", { class: "bv-task-content", children: [
+      /* @__PURE__ */ u("div", { style: { display: "flex", alignItems: "center", gap: "8px" }, children: [
+        /* @__PURE__ */ u("a", { href: makeObsUri(item, app), target: "_blank", rel: "noopener", class: `bv-task-title ${done ? "task-done" : ""}`, children: [
+          item.icon && /* @__PURE__ */ u("span", { class: "icon", style: "margin-right: 4px;", children: item.icon }),
           item.title
         ] }),
-        !done && /* @__PURE__ */ u$1(TaskSendToTimerButton, { taskId: item.id })
+        !done && /* @__PURE__ */ u(TaskSendToTimerButton, { taskId: item.id })
       ] }),
-      /* @__PURE__ */ u$1("div", { class: "bv-fields-list-wrapper", children: fields.map((fieldKey) => /* @__PURE__ */ u$1(FieldRenderer, { item, fieldKey, app, allThemes }, fieldKey)) })
+      /* @__PURE__ */ u("div", { class: "bv-fields-list-wrapper", children: fields.map((fieldKey) => /* @__PURE__ */ u(FieldRenderer, { item, fieldKey, app, allThemes }, fieldKey)) })
     ] })
   ] });
 };
@@ -29949,11 +29877,11 @@ const BlockItem = ({ item, fields, isNarrow, app, allThemes }) => {
   const showTitle = fields.includes("title") && item.title;
   const showContent = fields.includes("content") && item.content;
   const narrowClass = isNarrow ? "is-narrow" : "";
-  return /* @__PURE__ */ u$1("div", { class: `bv-item bv-item--block ${narrowClass}`, children: [
-    /* @__PURE__ */ u$1("div", { class: "bv-block-metadata", children: /* @__PURE__ */ u$1("div", { class: "bv-fields-list-wrapper", children: metadataFields.map((fieldKey) => /* @__PURE__ */ u$1(FieldRenderer, { item, fieldKey, app, allThemes }, fieldKey)) }) }),
-    /* @__PURE__ */ u$1("div", { class: "bv-block-main", children: [
-      showTitle && /* @__PURE__ */ u$1("div", { class: "bv-block-title", children: /* @__PURE__ */ u$1("a", { href: makeObsUri(item, app), target: "_blank", rel: "noopener", children: item.title }) }),
-      showContent && /* @__PURE__ */ u$1("div", { class: "bv-block-content", children: /* @__PURE__ */ u$1("a", { href: makeObsUri(item, app), target: "_blank", rel: "noopener", children: item.content }) })
+  return /* @__PURE__ */ u("div", { class: `bv-item bv-item--block ${narrowClass}`, children: [
+    /* @__PURE__ */ u("div", { class: "bv-block-metadata", children: /* @__PURE__ */ u("div", { class: "bv-fields-list-wrapper", children: metadataFields.map((fieldKey) => /* @__PURE__ */ u(FieldRenderer, { item, fieldKey, app, allThemes }, fieldKey)) }) }),
+    /* @__PURE__ */ u("div", { class: "bv-block-main", children: [
+      showTitle && /* @__PURE__ */ u("div", { class: "bv-block-title", children: /* @__PURE__ */ u("a", { href: makeObsUri(item, app), target: "_blank", rel: "noopener", children: item.title }) }),
+      showContent && /* @__PURE__ */ u("div", { class: "bv-block-content", children: /* @__PURE__ */ u("a", { href: makeObsUri(item, app), target: "_blank", rel: "noopener", children: item.content }) })
     ] })
   ] });
 };
@@ -29978,10 +29906,10 @@ function BlockView(props) {
     }));
   };
   const renderItem = (item) => {
-    return item.type === "task" ? /* @__PURE__ */ u$1(TaskItem, { item, fields, onMarkDone, app, allThemes }, item.id) : /* @__PURE__ */ u$1(BlockItem, { item, fields, isNarrow, app, allThemes }, item.id);
+    return item.type === "task" ? /* @__PURE__ */ u(TaskItem, { item, fields, onMarkDone, app, allThemes }, item.id) : /* @__PURE__ */ u(BlockItem, { item, fields, isNarrow, app, allThemes }, item.id);
   };
   if (!groupField) {
-    return /* @__PURE__ */ u$1("div", { class: "bv-container", ref: containerRef, children: items.map(renderItem) });
+    return /* @__PURE__ */ u("div", { class: "bv-container", ref: containerRef, children: items.map(renderItem) });
   }
   const grouped = {};
   for (const it of items) {
@@ -29990,10 +29918,10 @@ function BlockView(props) {
     grouped[key].push(it);
   }
   const groupKeys = Object.keys(grouped).sort((a2, b2) => a2.localeCompare(b2, "zh-CN"));
-  return /* @__PURE__ */ u$1("div", { class: "bv-container", ref: containerRef, children: groupKeys.map((key) => {
+  return /* @__PURE__ */ u("div", { class: "bv-container", ref: containerRef, children: groupKeys.map((key) => {
     const isCollapsed = collapsedGroups[key];
-    return /* @__PURE__ */ u$1("div", { class: "bv-group", children: [
-      /* @__PURE__ */ u$1(
+    return /* @__PURE__ */ u("div", { class: "bv-group", children: [
+      /* @__PURE__ */ u(
         "h5",
         {
           class: "bv-group-title",
@@ -30001,12 +29929,12 @@ function BlockView(props) {
           style: { cursor: "pointer", userSelect: "none", display: "flex", alignItems: "center", gap: "0.25em" },
           title: "点击折叠/展开",
           children: [
-            /* @__PURE__ */ u$1("span", { style: { display: "inline-block", width: "1.2em", textAlign: "center" }, children: isCollapsed ? "▶" : "▼" }),
+            /* @__PURE__ */ u("span", { style: { display: "inline-block", width: "1.2em", textAlign: "center" }, children: isCollapsed ? "▶" : "▼" }),
             `${key} (${grouped[key].length})`
           ]
         }
       ),
-      !isCollapsed && /* @__PURE__ */ u$1("div", { class: "bv-group-content", children: grouped[key].map(renderItem) })
+      !isCollapsed && /* @__PURE__ */ u("div", { class: "bv-group-content", children: grouped[key].map(renderItem) })
     ] }, key);
   }) });
 }
@@ -30027,7 +29955,7 @@ function ExcelView({ items, fields, app }) {
       }
       const displayText = value.length > 20 ? value.substring(0, 20) + "..." : value;
       const obsUri = makeObsUri(item, app);
-      return /* @__PURE__ */ u$1(
+      return /* @__PURE__ */ u(
         "a",
         {
           href: obsUri,
@@ -30041,9 +29969,9 @@ function ExcelView({ items, fields, app }) {
     }
     return toText(value);
   };
-  return /* @__PURE__ */ u$1("div", { children: /* @__PURE__ */ u$1("table", { class: "think-table", style: "min-width:100%; white-space:nowrap;", children: [
-    /* @__PURE__ */ u$1("thead", { children: /* @__PURE__ */ u$1("tr", { children: cols.map((c2) => /* @__PURE__ */ u$1("th", { children: c2 }, c2)) }) }),
-    /* @__PURE__ */ u$1("tbody", { children: items.map((it) => /* @__PURE__ */ u$1("tr", { children: cols.map((c2) => /* @__PURE__ */ u$1("td", { children: renderCellContent(it, c2) }, c2)) }, it.id)) })
+  return /* @__PURE__ */ u("div", { children: /* @__PURE__ */ u("table", { class: "think-table", style: "min-width:100%; white-space:nowrap;", children: [
+    /* @__PURE__ */ u("thead", { children: /* @__PURE__ */ u("tr", { children: cols.map((c2) => /* @__PURE__ */ u("th", { children: c2 }, c2)) }) }),
+    /* @__PURE__ */ u("tbody", { children: items.map((it) => /* @__PURE__ */ u("tr", { children: cols.map((c2) => /* @__PURE__ */ u("td", { children: renderCellContent(it, c2) }, c2)) }, it.id)) })
   ] }) });
 }
 const Popover2 = ({ target, blocks, title, onClose, app, module: module2 }) => {
@@ -30067,24 +29995,24 @@ const Popover2 = ({ target, blocks, title, onClose, app, module: module2 }) => {
     transform: "translateX(-50%)",
     zIndex: 99999
   };
-  return /* @__PURE__ */ u$1("div", { ref: popoverRef, style: style2, className: "sv-popover", children: [
-    /* @__PURE__ */ u$1("div", { className: "sv-popover-title", children: [
-      /* @__PURE__ */ u$1("span", { children: title }),
-      /* @__PURE__ */ u$1(Tooltip, { title: "快捷创建 (功能待实现)", children: /* @__PURE__ */ u$1(IconButton, { size: "small", onClick: () => console.log("快捷创建功能待实现", title), children: /* @__PURE__ */ u$1(AddCircleOutlineIcon, { fontSize: "small" }) }) })
+  return /* @__PURE__ */ u("div", { ref: popoverRef, style: style2, className: "sv-popover", children: [
+    /* @__PURE__ */ u("div", { className: "sv-popover-title", children: [
+      /* @__PURE__ */ u("span", { children: title }),
+      /* @__PURE__ */ u(Tooltip, { title: "快捷创建 (功能待实现)", children: /* @__PURE__ */ u(IconButton, { size: "small", onClick: () => console.log("快捷创建功能待实现", title), children: /* @__PURE__ */ u(AddCircleOutlineIcon, { fontSize: "small" }) }) })
     ] }),
-    /* @__PURE__ */ u$1("div", { className: "sv-popover-content", children: blocks.length === 0 ? /* @__PURE__ */ u$1("div", { class: "sv-popover-empty", children: "无内容" }) : /* @__PURE__ */ u$1(BlockView, { items: blocks, app, fields: module2.fields, groupField: module2.group }) })
+    /* @__PURE__ */ u("div", { className: "sv-popover-content", children: blocks.length === 0 ? /* @__PURE__ */ u("div", { class: "sv-popover-empty", children: "无内容" }) : /* @__PURE__ */ u(BlockView, { items: blocks, app, fields: module2.fields, groupField: module2.group }) })
   ] });
 };
 const ChartBlock = ({ data, label, onCellClick, categories, cellIdentifier, isCompact = false }) => {
   const total = Object.values(data.counts).reduce((sum, count) => sum + count, 0);
   const maxCount = Math.max(...Object.values(data.counts), 1);
   const containerClasses = `sv-chart-block ${isCompact ? "is-compact" : ""} ${total === 0 ? "is-empty" : ""}`;
-  return /* @__PURE__ */ u$1("div", { class: containerClasses, onClick: (e2) => onCellClick(cellIdentifier("全部"), e2.currentTarget, data.blocks, `${label} · 全部`), children: [
-    /* @__PURE__ */ u$1("div", { class: "sv-chart-label", children: label }),
-    /* @__PURE__ */ u$1("div", { class: "sv-chart-bars-container", children: categories.map(({ name, color: color2 }) => {
+  return /* @__PURE__ */ u("div", { class: containerClasses, onClick: (e2) => onCellClick(cellIdentifier("全部"), e2.currentTarget, data.blocks, `${label} · 全部`), children: [
+    /* @__PURE__ */ u("div", { class: "sv-chart-label", children: label }),
+    /* @__PURE__ */ u("div", { class: "sv-chart-bars-container", children: categories.map(({ name, color: color2 }) => {
       const count = data.counts[name] || 0;
       const height2 = count / maxCount * 100;
-      return /* @__PURE__ */ u$1(
+      return /* @__PURE__ */ u(
         "div",
         {
           class: "sv-vbar-wrapper",
@@ -30094,8 +30022,8 @@ const ChartBlock = ({ data, label, onCellClick, categories, cellIdentifier, isCo
             onCellClick(cellIdentifier(name), e2.currentTarget, data.blocks.filter((b2) => (b2.categoryKey || "").startsWith(name)), `${label} · ${name}`);
           },
           children: [
-            /* @__PURE__ */ u$1("div", { class: "sv-vbar-bar-label", children: count > 0 ? count : "" }),
-            /* @__PURE__ */ u$1("div", { class: "sv-vbar-bar", style: { height: `${height2}%`, background: color2 || "#ccc" } })
+            /* @__PURE__ */ u("div", { class: "sv-vbar-bar-label", children: count > 0 ? count : "" }),
+            /* @__PURE__ */ u("div", { class: "sv-vbar-bar", style: { height: `${height2}%`, background: color2 || "#ccc" } })
           ]
         },
         name
@@ -30178,22 +30106,22 @@ function StatisticsView({ items, app, dateRange, module: module2 }) {
     }
   };
   if (!categories || categories.length === 0) {
-    return /* @__PURE__ */ u$1("div", { class: "statistics-view-placeholder", children: "请先在视图设置中配置您想统计的分类。" });
+    return /* @__PURE__ */ u("div", { class: "statistics-view-placeholder", children: "请先在视图设置中配置您想统计的分类。" });
   }
-  return /* @__PURE__ */ u$1("div", { class: "statistics-view", children: [
-    /* @__PURE__ */ u$1("div", { class: "sv-timeline", children: [
-      /* @__PURE__ */ u$1("div", { class: "sv-row", children: /* @__PURE__ */ u$1(ChartBlock, { data: processedData.yearData, label: `${year}年`, categories, onCellClick: handleCellClick, cellIdentifier: (cat) => ({ type: "year", year, category: cat }) }) }),
-      /* @__PURE__ */ u$1("div", { class: "sv-row sv-row-quarters", children: processedData.quartersData.map((data, i2) => /* @__PURE__ */ u$1(ChartBlock, { data, label: `Q${i2 + 1}`, categories, onCellClick: handleCellClick, cellIdentifier: (cat) => ({ type: "quarter", year, quarter: i2 + 1, category: cat }) }, i2)) }),
-      /* @__PURE__ */ u$1("div", { class: "sv-row sv-row-months", children: processedData.monthsData.map((data, i2) => /* @__PURE__ */ u$1(ChartBlock, { data, label: `${i2 + 1}月`, categories, onCellClick: handleCellClick, cellIdentifier: (cat) => ({ type: "month", year, month: i2 + 1, category: cat }) }, i2)) }),
-      /* @__PURE__ */ u$1("div", { class: "sv-row-weeks", children: yearlyWeekStructure.map(({ month, weeks }) => /* @__PURE__ */ u$1("div", { class: "sv-month-col", children: [
-        /* @__PURE__ */ u$1("div", { class: "sv-month-col-header", children: [
+  return /* @__PURE__ */ u("div", { class: "statistics-view", children: [
+    /* @__PURE__ */ u("div", { class: "sv-timeline", children: [
+      /* @__PURE__ */ u("div", { class: "sv-row", children: /* @__PURE__ */ u(ChartBlock, { data: processedData.yearData, label: `${year}年`, categories, onCellClick: handleCellClick, cellIdentifier: (cat) => ({ type: "year", year, category: cat }) }) }),
+      /* @__PURE__ */ u("div", { class: "sv-row sv-row-quarters", children: processedData.quartersData.map((data, i2) => /* @__PURE__ */ u(ChartBlock, { data, label: `Q${i2 + 1}`, categories, onCellClick: handleCellClick, cellIdentifier: (cat) => ({ type: "quarter", year, quarter: i2 + 1, category: cat }) }, i2)) }),
+      /* @__PURE__ */ u("div", { class: "sv-row sv-row-months", children: processedData.monthsData.map((data, i2) => /* @__PURE__ */ u(ChartBlock, { data, label: `${i2 + 1}月`, categories, onCellClick: handleCellClick, cellIdentifier: (cat) => ({ type: "month", year, month: i2 + 1, category: cat }) }, i2)) }),
+      /* @__PURE__ */ u("div", { class: "sv-row-weeks", children: yearlyWeekStructure.map(({ month, weeks }) => /* @__PURE__ */ u("div", { class: "sv-month-col", children: [
+        /* @__PURE__ */ u("div", { class: "sv-month-col-header", children: [
           month,
           "月"
         ] }),
-        /* @__PURE__ */ u$1("div", { class: "sv-month-col-weeks", children: weeks.map((week) => {
+        /* @__PURE__ */ u("div", { class: "sv-month-col-weeks", children: weeks.map((week) => {
           const weekIndex = week - 1;
           const weekData = processedData.weeksData[weekIndex] || createPeriodData();
-          return /* @__PURE__ */ u$1(
+          return /* @__PURE__ */ u(
             ChartBlock,
             {
               data: weekData,
@@ -30208,7 +30136,7 @@ function StatisticsView({ items, app, dateRange, module: module2 }) {
         }) })
       ] }, month)) })
     ] }),
-    popover && /* @__PURE__ */ u$1(Popover2, { ...popover, onClose: () => {
+    popover && /* @__PURE__ */ u(Popover2, { ...popover, onClose: () => {
       setPopover(null);
       setSelectedCell(null);
     }, app, module: module2 })
@@ -30336,7 +30264,7 @@ class EditTaskModal extends obsidian.Modal {
   onOpen() {
     this.contentEl.empty();
     G$1(
-      /* @__PURE__ */ u$1(
+      /* @__PURE__ */ u(
         EditForm,
         {
           task: this.task,
@@ -30378,20 +30306,20 @@ function EditForm({ task, close, onSave, taskService }) {
       new obsidian.Notice(`❌ 更新失败: ${e2.message}`);
     }
   };
-  return /* @__PURE__ */ u$1("div", { class: "think-modal", children: [
-    /* @__PURE__ */ u$1("h3", { children: "编辑任务时间" }),
-    /* @__PURE__ */ u$1("p", { style: "font-size: 0.9em; color: var(--text-muted); max-width: 400px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;", children: task.pureText }),
-    /* @__PURE__ */ u$1("div", { style: "margin-top: 1rem;", children: [
-      /* @__PURE__ */ u$1("label", { children: "开始时间" }),
-      /* @__PURE__ */ u$1("input", { type: "time", value: startTime, onInput: (e2) => setStartTime(e2.target.value) })
+  return /* @__PURE__ */ u("div", { class: "think-modal", children: [
+    /* @__PURE__ */ u("h3", { children: "编辑任务时间" }),
+    /* @__PURE__ */ u("p", { style: "font-size: 0.9em; color: var(--text-muted); max-width: 400px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;", children: task.pureText }),
+    /* @__PURE__ */ u("div", { style: "margin-top: 1rem;", children: [
+      /* @__PURE__ */ u("label", { children: "开始时间" }),
+      /* @__PURE__ */ u("input", { type: "time", value: startTime, onInput: (e2) => setStartTime(e2.target.value) })
     ] }),
-    /* @__PURE__ */ u$1("div", { style: "margin-top: 0.5rem;", children: [
-      /* @__PURE__ */ u$1("label", { children: "持续时长 (分钟)" }),
-      /* @__PURE__ */ u$1("input", { type: "number", min: "1", value: duration2, onInput: (e2) => setDuration(e2.target.value) })
+    /* @__PURE__ */ u("div", { style: "margin-top: 0.5rem;", children: [
+      /* @__PURE__ */ u("label", { children: "持续时长 (分钟)" }),
+      /* @__PURE__ */ u("input", { type: "number", min: "1", value: duration2, onInput: (e2) => setDuration(e2.target.value) })
     ] }),
-    /* @__PURE__ */ u$1("div", { style: "display:flex;gap:8px;justify-content:flex-end;margin-top:1.5rem;", children: [
-      /* @__PURE__ */ u$1("button", { class: "mod-cta", onClick: handleSave, children: "保存" }),
-      /* @__PURE__ */ u$1("button", { onClick: close, children: "取消" })
+    /* @__PURE__ */ u("div", { style: "display:flex;gap:8px;justify-content:flex-end;margin-top:1.5rem;", children: [
+      /* @__PURE__ */ u("button", { class: "mod-cta", onClick: handleSave, children: "保存" }),
+      /* @__PURE__ */ u("button", { onClick: close, children: "取消" })
     ] })
   ] });
 }
@@ -30451,15 +30379,15 @@ const ProgressBlock = ({ categoryHours, order: order2, totalHours, colorMap, unt
     return Array.from(presentCategories);
   }, [categoryHours, order2, untrackedLabel]);
   if (sortedCategories.length === 0) return null;
-  return /* @__PURE__ */ u$1("div", { style: { display: "flex", flexDirection: "column", gap: "2px", padding: "4px" }, children: sortedCategories.map((category) => {
+  return /* @__PURE__ */ u("div", { style: { display: "flex", flexDirection: "column", gap: "2px", padding: "4px" }, children: sortedCategories.map((category) => {
     const hours = categoryHours[category];
     const percent = totalHours > 0 ? hours / totalHours * 100 : 0;
     if (percent < 0.1 && hours < 0.01) return null;
     const color2 = colorMap[category] || "#cccccc";
     const displayPercent = Math.max(percent, 0.5);
-    return /* @__PURE__ */ u$1("div", { title: `${category}: ${hours.toFixed(1)}h (${Math.round(percent)}%)`, style: { width: "100%", height: "16px", background: "#e5e7eb", borderRadius: "8px", overflow: "hidden", position: "relative" }, children: [
-      /* @__PURE__ */ u$1("div", { style: { background: color2, width: `${displayPercent}%`, height: "100%" } }),
-      /* @__PURE__ */ u$1("span", { style: { position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "11px", fontWeight: 500, color: displayPercent > 50 ? "#fff" : "#222", whiteSpace: "nowrap" }, children: `${category} ${hours.toFixed(1)}h` })
+    return /* @__PURE__ */ u("div", { title: `${category}: ${hours.toFixed(1)}h (${Math.round(percent)}%)`, style: { width: "100%", height: "16px", background: "#e5e7eb", borderRadius: "8px", overflow: "hidden", position: "relative" }, children: [
+      /* @__PURE__ */ u("div", { style: { background: color2, width: `${displayPercent}%`, height: "100%" } }),
+      /* @__PURE__ */ u("span", { style: { position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "11px", fontWeight: 500, color: displayPercent > 50 ? "#fff" : "#222", whiteSpace: "nowrap" }, children: `${category} ${hours.toFixed(1)}h` })
     ] }, category);
   }) });
 };
@@ -30482,29 +30410,29 @@ const DayColumnHeader = ({ day, blocks, categoriesConfig, colorMap, untrackedLab
       totalDayHours: Math.max(24, trackedHours)
     };
   }, [blocks, categoriesConfig, untrackedLabel]);
-  return /* @__PURE__ */ u$1("div", { class: "day-column-header", style: { flex: "0 0 150px", borderLeft: "1px solid var(--background-modifier-border)" }, children: [
-    /* @__PURE__ */ u$1("div", { style: { fontWeight: "bold", textAlign: "center", height: "24px", lineHeight: "24px", borderBottom: "1px solid var(--background-modifier-border-hover)" }, children: dayjs(day).format("MM-DD ddd") }),
-    /* @__PURE__ */ u$1("div", { class: "daily-progress-bar", style: { minHeight: "60px" }, children: /* @__PURE__ */ u$1(ProgressBlock, { categoryHours, order: progressOrder, totalHours: totalDayHours, colorMap, untrackedLabel }) })
+  return /* @__PURE__ */ u("div", { class: "day-column-header", style: { flex: "0 0 150px", borderLeft: "1px solid var(--background-modifier-border)" }, children: [
+    /* @__PURE__ */ u("div", { style: { fontWeight: "bold", textAlign: "center", height: "24px", lineHeight: "24px", borderBottom: "1px solid var(--background-modifier-border-hover)" }, children: dayjs(day).format("MM-DD ddd") }),
+    /* @__PURE__ */ u("div", { class: "daily-progress-bar", style: { minHeight: "60px" }, children: /* @__PURE__ */ u(ProgressBlock, { categoryHours, order: progressOrder, totalHours: totalDayHours, colorMap, untrackedLabel }) })
   ] });
 };
 const TimelineSummaryTable = ({ summaryData, colorMap, progressOrder, untrackedLabel }) => {
   if (!summaryData || summaryData.length === 0) {
-    return /* @__PURE__ */ u$1("div", { style: { color: "var(--text-faint)", textAlign: "center", padding: "20px" }, children: "此时间范围内无数据可供总结。" });
+    return /* @__PURE__ */ u("div", { style: { color: "var(--text-faint)", textAlign: "center", padding: "20px" }, children: "此时间范围内无数据可供总结。" });
   }
-  return /* @__PURE__ */ u$1("table", { class: "think-table", children: [
-    /* @__PURE__ */ u$1("thead", { children: /* @__PURE__ */ u$1("tr", { children: [
-      /* @__PURE__ */ u$1("th", { children: "月份" }),
-      /* @__PURE__ */ u$1("th", { children: "月度总结" }),
-      /* @__PURE__ */ u$1("th", { children: "W1" }),
-      /* @__PURE__ */ u$1("th", { children: "W2" }),
-      /* @__PURE__ */ u$1("th", { children: "W3" }),
-      /* @__PURE__ */ u$1("th", { children: "W4" }),
-      /* @__PURE__ */ u$1("th", { children: "W5" })
+  return /* @__PURE__ */ u("table", { class: "think-table", children: [
+    /* @__PURE__ */ u("thead", { children: /* @__PURE__ */ u("tr", { children: [
+      /* @__PURE__ */ u("th", { children: "月份" }),
+      /* @__PURE__ */ u("th", { children: "月度总结" }),
+      /* @__PURE__ */ u("th", { children: "W1" }),
+      /* @__PURE__ */ u("th", { children: "W2" }),
+      /* @__PURE__ */ u("th", { children: "W3" }),
+      /* @__PURE__ */ u("th", { children: "W4" }),
+      /* @__PURE__ */ u("th", { children: "W5" })
     ] }) }),
-    /* @__PURE__ */ u$1("tbody", { children: summaryData.map((monthData) => /* @__PURE__ */ u$1("tr", { children: [
-      /* @__PURE__ */ u$1("td", { children: /* @__PURE__ */ u$1("strong", { children: monthData.month }) }),
-      /* @__PURE__ */ u$1("td", { children: /* @__PURE__ */ u$1(ProgressBlock, { categoryHours: monthData.monthlySummary, order: progressOrder, totalHours: monthData.totalMonthHours, colorMap, untrackedLabel }) }),
-      monthData.weeklySummaries.map((weekSummary, index) => /* @__PURE__ */ u$1("td", { children: weekSummary ? /* @__PURE__ */ u$1(ProgressBlock, { categoryHours: weekSummary, order: progressOrder, totalHours: weekSummary.totalWeekHours, colorMap, untrackedLabel }) : null }, index))
+    /* @__PURE__ */ u("tbody", { children: summaryData.map((monthData) => /* @__PURE__ */ u("tr", { children: [
+      /* @__PURE__ */ u("td", { children: /* @__PURE__ */ u("strong", { children: monthData.month }) }),
+      /* @__PURE__ */ u("td", { children: /* @__PURE__ */ u(ProgressBlock, { categoryHours: monthData.monthlySummary, order: progressOrder, totalHours: monthData.totalMonthHours, colorMap, untrackedLabel }) }),
+      monthData.weeklySummaries.map((weekSummary, index) => /* @__PURE__ */ u("td", { children: weekSummary ? /* @__PURE__ */ u(ProgressBlock, { categoryHours: weekSummary, order: progressOrder, totalHours: weekSummary.totalWeekHours, colorMap, untrackedLabel }) : null }, index))
     ] }, monthData.month)) })
   ] });
 };
@@ -30529,7 +30457,7 @@ const DayColumnBody = ({ app, blocks, hourHeight, categoriesConfig, colorMap, ma
   const handleEdit = (block) => {
     new EditTaskModal(app, block, void 0, taskService).open();
   };
-  return /* @__PURE__ */ u$1("div", { style: { flex: "0 0 150px", borderLeft: "1px solid var(--background-modifier-border)", position: "relative", height: `${maxHours * hourHeight}px` }, children: blocks.map((block, index) => {
+  return /* @__PURE__ */ u("div", { style: { flex: "0 0 150px", borderLeft: "1px solid var(--background-modifier-border)", position: "relative", height: `${maxHours * hourHeight}px` }, children: blocks.map((block, index) => {
     const top2 = block.blockStartMinute / 60 * hourHeight;
     const height2 = (block.blockEndMinute - block.blockStartMinute) / 60 * hourHeight;
     const category = mapTaskToCategory(block.fileName, categoriesConfig);
@@ -30537,14 +30465,14 @@ const DayColumnBody = ({ app, blocks, hourHeight, categoriesConfig, colorMap, ma
     const prevBlock = index > 0 ? blocks[index - 1] : null;
     const nextBlock = index < blocks.length - 1 ? blocks[index + 1] : null;
     const canAlignToNext = nextBlock && nextBlock.blockStartMinute > block.blockStartMinute;
-    return /* @__PURE__ */ u$1(
+    return /* @__PURE__ */ u(
       "div",
       {
         class: "timeline-task-block",
         title: generateTaskBlockTitle(block),
         style: { position: "absolute", left: "2px", right: "2px", top: `${top2}px`, height: `${Math.max(height2, 2)}px` },
         children: [
-          /* @__PURE__ */ u$1(
+          /* @__PURE__ */ u(
             "a",
             {
               onClick: (e2) => {
@@ -30553,15 +30481,15 @@ const DayColumnBody = ({ app, blocks, hourHeight, categoriesConfig, colorMap, ma
               },
               style: { display: "flex", width: "100%", height: "100%", overflow: "hidden", borderRadius: "2px" },
               children: [
-                /* @__PURE__ */ u$1("div", { style: { width: "4px", background: color2 } }),
-                /* @__PURE__ */ u$1("div", { style: { flex: 1, background: hexToRgba(color2), padding: "2px 4px", fontSize: "12px", whiteSpace: "nowrap", textOverflow: "ellipsis", overflow: "hidden", color: "var(--text-normal)" }, children: block.pureText })
+                /* @__PURE__ */ u("div", { style: { width: "4px", background: color2 } }),
+                /* @__PURE__ */ u("div", { style: { flex: 1, background: hexToRgba(color2), padding: "2px 4px", fontSize: "12px", whiteSpace: "nowrap", textOverflow: "ellipsis", overflow: "hidden", color: "var(--text-normal)" }, children: block.pureText })
               ]
             }
           ),
-          /* @__PURE__ */ u$1("div", { class: "task-buttons", children: [
-            /* @__PURE__ */ u$1("button", { title: "向前对齐 (与上一个任务无缝衔接)", disabled: !prevBlock, onClick: () => handleAlignToPrev(block, prevBlock), children: "⇡" }),
-            /* @__PURE__ */ u$1("button", { title: "向后对齐 (填充到下一个任务开始)", disabled: !canAlignToNext, onClick: () => handleAlignToNext(block, nextBlock), children: "⇣" }),
-            /* @__PURE__ */ u$1("button", { title: "精确编辑", onClick: () => handleEdit(block), children: "✎" })
+          /* @__PURE__ */ u("div", { class: "task-buttons", children: [
+            /* @__PURE__ */ u("button", { title: "向前对齐 (与上一个任务无缝衔接)", disabled: !prevBlock, onClick: () => handleAlignToPrev(block, prevBlock), children: "⇡" }),
+            /* @__PURE__ */ u("button", { title: "向后对齐 (填充到下一个任务开始)", disabled: !canAlignToNext, onClick: () => handleAlignToNext(block, nextBlock), children: "⇣" }),
+            /* @__PURE__ */ u("button", { title: "精确编辑", onClick: () => handleEdit(block), children: "✎" })
           ] })
         ]
       },
@@ -30586,7 +30514,7 @@ function TimelineView({ items, dateRange, module: module2, currentView, app, tas
     return finalColorMap;
   }, [config2.categories, config2.UNTRACKED_LABEL]);
   if (items.length === 0) {
-    return /* @__PURE__ */ u$1("div", { style: { color: "var(--text-faint)", textAlign: "center", padding: "20px" }, children: "当前范围内没有数据。" });
+    return /* @__PURE__ */ u("div", { style: { color: "var(--text-faint)", textAlign: "center", padding: "20px" }, children: "当前范围内没有数据。" });
   }
   if (currentView === "年" || currentView === "季") {
     const summaryData = T$1(() => {
@@ -30639,7 +30567,7 @@ function TimelineView({ items, dateRange, module: module2, currentView, app, tas
       }
       return data;
     }, [timelineTasks, dateRange, config2]);
-    return /* @__PURE__ */ u$1(TimelineSummaryTable, { summaryData, colorMap, progressOrder: config2.progressOrder, untrackedLabel: config2.UNTRACKED_LABEL });
+    return /* @__PURE__ */ u(TimelineSummaryTable, { summaryData, colorMap, progressOrder: config2.progressOrder, untrackedLabel: config2.UNTRACKED_LABEL });
   }
   const summaryCategoryHours = T$1(() => {
     const hours = {};
@@ -30679,24 +30607,24 @@ function TimelineView({ items, dateRange, module: module2, currentView, app, tas
   if (dailyViewData) {
     const totalSummaryHours = Object.values(summaryCategoryHours || {}).reduce((s2, h2) => s2 + h2, 0);
     const TIME_AXIS_WIDTH = 90;
-    return /* @__PURE__ */ u$1("div", { class: "timeline-view-wrapper", style: { overflowX: "auto" }, children: [
-      /* @__PURE__ */ u$1("div", { class: "timeline-sticky-header", style: { position: "sticky", top: 0, zIndex: 2, background: "var(--background-primary)", display: "flex" }, children: [
-        /* @__PURE__ */ u$1("div", { class: "summary-progress-container", style: { flex: `0 0 ${TIME_AXIS_WIDTH}px`, borderBottom: "1px solid var(--background-modifier-border)" }, children: [
-          /* @__PURE__ */ u$1("div", { style: { height: "24px", lineHeight: "24px", textAlign: "center", fontWeight: "bold", borderBottom: "1px solid var(--background-modifier-border-hover)" }, children: "总结" }),
-          /* @__PURE__ */ u$1("div", { style: { minHeight: "60px" }, children: summaryCategoryHours && totalSummaryHours > 0 && /* @__PURE__ */ u$1(ProgressBlock, { categoryHours: summaryCategoryHours, order: config2.progressOrder, totalHours: totalSummaryHours, colorMap, untrackedLabel: config2.UNTRACKED_LABEL }) })
+    return /* @__PURE__ */ u("div", { class: "timeline-view-wrapper", style: { overflowX: "auto" }, children: [
+      /* @__PURE__ */ u("div", { class: "timeline-sticky-header", style: { position: "sticky", top: 0, zIndex: 2, background: "var(--background-primary)", display: "flex" }, children: [
+        /* @__PURE__ */ u("div", { class: "summary-progress-container", style: { flex: `0 0 ${TIME_AXIS_WIDTH}px`, borderBottom: "1px solid var(--background-modifier-border)" }, children: [
+          /* @__PURE__ */ u("div", { style: { height: "24px", lineHeight: "24px", textAlign: "center", fontWeight: "bold", borderBottom: "1px solid var(--background-modifier-border-hover)" }, children: "总结" }),
+          /* @__PURE__ */ u("div", { style: { minHeight: "60px" }, children: summaryCategoryHours && totalSummaryHours > 0 && /* @__PURE__ */ u(ProgressBlock, { categoryHours: summaryCategoryHours, order: config2.progressOrder, totalHours: totalSummaryHours, colorMap, untrackedLabel: config2.UNTRACKED_LABEL }) })
         ] }),
         dailyViewData.dateRangeDays.map((day) => {
           const dayStr = day.format("YYYY-MM-DD");
           const blocks = dailyViewData.blocksByDay[dayStr] || [];
-          return /* @__PURE__ */ u$1(DayColumnHeader, { day: dayStr, blocks, categoriesConfig: config2.categories, colorMap, untrackedLabel: config2.UNTRACKED_LABEL, progressOrder: config2.progressOrder }, dayStr);
+          return /* @__PURE__ */ u(DayColumnHeader, { day: dayStr, blocks, categoriesConfig: config2.categories, colorMap, untrackedLabel: config2.UNTRACKED_LABEL, progressOrder: config2.progressOrder }, dayStr);
         })
       ] }),
-      /* @__PURE__ */ u$1("div", { class: "timeline-scrollable-body", style: { display: "flex" }, children: [
-        /* @__PURE__ */ u$1("div", { class: "time-axis", style: { flex: `0 0 ${TIME_AXIS_WIDTH}px` }, children: Array.from({ length: config2.MAX_HOURS_PER_DAY + 1 }, (_2, i2) => /* @__PURE__ */ u$1("div", { style: { height: `${config2.defaultHourHeight}px`, borderBottom: "1px dashed var(--background-modifier-border-hover)", position: "relative", boxSizing: "border-box", textAlign: "right", paddingRight: "4px", fontSize: "11px", color: "var(--text-faint)" }, children: i2 > 0 && i2 % 2 === 0 ? `${i2}:00` : "" }, i2)) }),
+      /* @__PURE__ */ u("div", { class: "timeline-scrollable-body", style: { display: "flex" }, children: [
+        /* @__PURE__ */ u("div", { class: "time-axis", style: { flex: `0 0 ${TIME_AXIS_WIDTH}px` }, children: Array.from({ length: config2.MAX_HOURS_PER_DAY + 1 }, (_2, i2) => /* @__PURE__ */ u("div", { style: { height: `${config2.defaultHourHeight}px`, borderBottom: "1px dashed var(--background-modifier-border-hover)", position: "relative", boxSizing: "border-box", textAlign: "right", paddingRight: "4px", fontSize: "11px", color: "var(--text-faint)" }, children: i2 > 0 && i2 % 2 === 0 ? `${i2}:00` : "" }, i2)) }),
         dailyViewData.dateRangeDays.map((day) => {
           const dayStr = day.format("YYYY-MM-DD");
           const blocks = dailyViewData.blocksByDay[dayStr] || [];
-          return /* @__PURE__ */ u$1(DayColumnBody, { app, blocks, hourHeight: config2.defaultHourHeight, categoriesConfig: config2.categories, colorMap, maxHours: config2.MAX_HOURS_PER_DAY, taskService }, dayStr);
+          return /* @__PURE__ */ u(DayColumnBody, { app, blocks, hourHeight: config2.defaultHourHeight, categoriesConfig: config2.categories, colorMap, maxHours: config2.MAX_HOURS_PER_DAY, taskService }, dayStr);
         })
       ] })
     ] });
@@ -30716,7 +30644,7 @@ class QuickInputModal extends obsidian.Modal {
   onOpen() {
     this.contentEl.empty();
     nn(
-      /* @__PURE__ */ u$1(
+      /* @__PURE__ */ u(
         QuickInputForm,
         {
           app: this.app,
@@ -30760,18 +30688,18 @@ const findNodePath = (nodes, themeId) => {
 const renderThemeLevels = (nodes, activePath, onSelect, level = 0) => {
   const parentNode = activePath[level - 1];
   const parentThemeId = parentNode ? parentNode.themeId : null;
-  return /* @__PURE__ */ u$1("div", { children: [
-    /* @__PURE__ */ u$1(RadioGroup, { row: true, value: activePath[level]?.themeId || "", children: nodes.map((node2) => /* @__PURE__ */ u$1(
+  return /* @__PURE__ */ u("div", { children: [
+    /* @__PURE__ */ u(RadioGroup, { row: true, value: activePath[level]?.themeId || "", children: nodes.map((node2) => /* @__PURE__ */ u(
       FormControlLabel,
       {
         value: node2.themeId,
         disabled: !node2.themeId,
-        control: /* @__PURE__ */ u$1(Radio, { onClick: () => node2.themeId && onSelect(node2.themeId, parentThemeId), size: "small" }),
+        control: /* @__PURE__ */ u(Radio, { onClick: () => node2.themeId && onSelect(node2.themeId, parentThemeId), size: "small" }),
         label: node2.name
       },
       node2.id
     )) }),
-    activePath[level] && activePath[level].children.length > 0 && /* @__PURE__ */ u$1("div", { style: { paddingLeft: "20px" }, children: renderThemeLevels(activePath[level].children, activePath, onSelect, level + 1) })
+    activePath[level] && activePath[level].children.length > 0 && /* @__PURE__ */ u("div", { style: { paddingLeft: "20px" }, children: renderThemeLevels(activePath[level].children, activePath, onSelect, level + 1) })
   ] });
 };
 function QuickInputForm({ app, blockId, context, themeId, onSave, closeModal }) {
@@ -30860,19 +30788,19 @@ function QuickInputForm({ app, blockId, context, themeId, onSave, closeModal }) 
     const label = field.label || field.key;
     switch (field.type) {
       case "rating":
-        return /* @__PURE__ */ u$1(FormControl, { component: "fieldset", children: [
-          /* @__PURE__ */ u$1(Typography, { variant: "body2", sx: { fontWeight: 500 }, children: label }),
-          /* @__PURE__ */ u$1(Stack, { direction: "row", spacing: 1, sx: { mt: 1 }, children: (field.options || []).map((opt) => {
+        return /* @__PURE__ */ u(FormControl, { component: "fieldset", children: [
+          /* @__PURE__ */ u(Typography, { variant: "body2", sx: { fontWeight: 500 }, children: label }),
+          /* @__PURE__ */ u(Stack, { direction: "row", spacing: 1, sx: { mt: 1 }, children: (field.options || []).map((opt) => {
             const isSelected = isComplex && formData[field.key]?.label === opt.label && formData[field.key]?.value === opt.value;
             const isImagePath2 = opt.value && (opt.value.endsWith(".png") || opt.value.endsWith(".jpg") || opt.value.endsWith(".svg"));
             let displayContent;
             if (isImagePath2) {
               const imageUrl = app.vault.adapter.getResourcePath(opt.value);
-              displayContent = /* @__PURE__ */ u$1("img", { src: imageUrl, alt: opt.label, style: { width: "24px", height: "24px", objectFit: "contain" } });
+              displayContent = /* @__PURE__ */ u("img", { src: imageUrl, alt: opt.label, style: { width: "24px", height: "24px", objectFit: "contain" } });
             } else {
-              displayContent = /* @__PURE__ */ u$1("span", { style: { fontSize: "20px" }, children: opt.value });
+              displayContent = /* @__PURE__ */ u("span", { style: { fontSize: "20px" }, children: opt.value });
             }
-            return /* @__PURE__ */ u$1(
+            return /* @__PURE__ */ u(
               Button,
               {
                 variant: isSelected ? "outlined" : "text",
@@ -30891,21 +30819,21 @@ function QuickInputForm({ app, blockId, context, themeId, onSave, closeModal }) 
         if (isRadio) {
           const selectedOptionObject = formData[field.key];
           const selectedIndex = field.options?.findIndex((opt) => opt.value === selectedOptionObject?.value && opt.label === selectedOptionObject?.label) ?? -1;
-          return /* @__PURE__ */ u$1(FormControl, { component: "fieldset", children: [
-            /* @__PURE__ */ u$1(Typography, { variant: "body2", sx: { fontWeight: 500 }, children: label }),
-            /* @__PURE__ */ u$1(RadioGroup, { row: true, value: selectedIndex > -1 ? String(selectedIndex) : "", onChange: (e2) => {
+          return /* @__PURE__ */ u(FormControl, { component: "fieldset", children: [
+            /* @__PURE__ */ u(Typography, { variant: "body2", sx: { fontWeight: 500 }, children: label }),
+            /* @__PURE__ */ u(RadioGroup, { row: true, value: selectedIndex > -1 ? String(selectedIndex) : "", onChange: (e2) => {
               const newIndex = parseInt(e2.target.value, 10);
               const newlySelectedOption = field.options?.[newIndex];
               if (newlySelectedOption) {
                 handleUpdate(field.key, { value: newlySelectedOption.value, label: newlySelectedOption.label || newlySelectedOption.value }, true);
               }
-            }, children: (field.options || []).map((opt, index) => /* @__PURE__ */ u$1(FormControlLabel, { value: String(index), control: /* @__PURE__ */ u$1(Radio, {}), label: opt.label || opt.value }, index)) })
+            }, children: (field.options || []).map((opt, index) => /* @__PURE__ */ u(FormControlLabel, { value: String(index), control: /* @__PURE__ */ u(Radio, {}), label: opt.label || opt.value }, index)) })
           ] });
         } else {
           const selectOptions = (field.options || []).map((opt) => ({ value: opt.value, label: opt.label || opt.value }));
-          return /* @__PURE__ */ u$1(FormControl, { fullWidth: true, children: [
-            /* @__PURE__ */ u$1(Typography, { variant: "body2", sx: { fontWeight: 500, mb: 0.5 }, children: label }),
-            /* @__PURE__ */ u$1(SimpleSelect, { value: value || "", options: selectOptions, placeholder: `-- 选择 ${label} --`, onChange: (selectedValue) => {
+          return /* @__PURE__ */ u(FormControl, { fullWidth: true, children: [
+            /* @__PURE__ */ u(Typography, { variant: "body2", sx: { fontWeight: 500, mb: 0.5 }, children: label }),
+            /* @__PURE__ */ u(SimpleSelect, { value: value || "", options: selectOptions, placeholder: `-- 选择 ${label} --`, onChange: (selectedValue) => {
               const selectedOption = field.options?.find((opt) => opt.value === selectedValue);
               if (selectedOption) {
                 handleUpdate(field.key, { value: selectedOption.value, label: selectedOption.label || selectedOption.value }, true);
@@ -30920,9 +30848,9 @@ function QuickInputForm({ app, blockId, context, themeId, onSave, closeModal }) 
           onInput: (e2) => handleUpdate(field.key, e2.target.value),
           onKeyDown: (e2) => e2.stopPropagation()
         };
-        return /* @__PURE__ */ u$1("div", { style: { display: "flex", flexDirection: "column", width: "100%" }, children: [
-          /* @__PURE__ */ u$1("label", { style: { fontWeight: 500, fontSize: "0.875rem", marginBottom: "4px" }, children: label }),
-          field.type === "textarea" ? /* @__PURE__ */ u$1("textarea", { ...commonInputProps, rows: 4 }) : /* @__PURE__ */ u$1(
+        return /* @__PURE__ */ u("div", { style: { display: "flex", flexDirection: "column", width: "100%" }, children: [
+          /* @__PURE__ */ u("label", { style: { fontWeight: 500, fontSize: "0.875rem", marginBottom: "4px" }, children: label }),
+          field.type === "textarea" ? /* @__PURE__ */ u("textarea", { ...commonInputProps, rows: 4 }) : /* @__PURE__ */ u(
             "input",
             {
               ...commonInputProps,
@@ -30936,7 +30864,7 @@ function QuickInputForm({ app, blockId, context, themeId, onSave, closeModal }) 
     }
   };
   if (!template) {
-    return /* @__PURE__ */ u$1("div", { children: [
+    return /* @__PURE__ */ u("div", { children: [
       '错误：找不到ID为 "',
       blockId,
       '" 的Block模板。'
@@ -30946,11 +30874,11 @@ function QuickInputForm({ app, blockId, context, themeId, onSave, closeModal }) 
   const handleSelectTheme = (newThemeId, parentThemeId) => {
     setSelectedThemeId(selectedThemeId === newThemeId ? parentThemeId : newThemeId);
   };
-  return /* @__PURE__ */ u$1("div", { class: "think-modal", style: { padding: "0 1rem 1rem 1rem" }, children: [
-    /* @__PURE__ */ u$1("h3", { style: { marginBottom: "1rem" }, children: onSave ? `开始新任务: ${template.name}` : `快速录入 · ${template.name}` }),
-    themeTree.length > 0 && /* @__PURE__ */ u$1(FormControl, { component: "fieldset", sx: { mb: 1, width: "100%" }, children: [
-      /* @__PURE__ */ u$1(Typography, { variant: "body2", sx: { fontWeight: 600, mb: 1 }, children: "主题分类" }),
-      /* @__PURE__ */ u$1(Box, { sx: {
+  return /* @__PURE__ */ u("div", { class: "think-modal", style: { padding: "0 1rem 1rem 1rem" }, children: [
+    /* @__PURE__ */ u("h3", { style: { marginBottom: "1rem" }, children: onSave ? `开始新任务: ${template.name}` : `快速录入 · ${template.name}` }),
+    themeTree.length > 0 && /* @__PURE__ */ u(FormControl, { component: "fieldset", sx: { mb: 1, width: "100%" }, children: [
+      /* @__PURE__ */ u(Typography, { variant: "body2", sx: { fontWeight: 600, mb: 1 }, children: "主题分类" }),
+      /* @__PURE__ */ u(Box, { sx: {
         height: "120px",
         overflowY: "auto",
         borderColor: "divider",
@@ -30959,11 +30887,11 @@ function QuickInputForm({ app, blockId, context, themeId, onSave, closeModal }) 
         pr: 0.5
       }, children: renderThemeLevels(themeTree, activePath, handleSelectTheme) })
     ] }),
-    /* @__PURE__ */ u$1(Divider, { sx: { mb: 2.5 } }),
-    /* @__PURE__ */ u$1(Stack, { spacing: 2.5, children: template.fields.map((field) => /* @__PURE__ */ u$1("div", { children: renderField(field) }, field.id)) }),
-    /* @__PURE__ */ u$1("div", { style: { display: "flex", justifyContent: "flex-end", marginTop: "1.5rem", gap: "8px" }, children: [
-      /* @__PURE__ */ u$1(Button, { onClick: handleSubmit, variant: "contained", children: onSave ? "创建并开始计时" : "提交" }),
-      /* @__PURE__ */ u$1(Button, { onClick: closeModal, children: "取消" })
+    /* @__PURE__ */ u(Divider, { sx: { mb: 2.5 } }),
+    /* @__PURE__ */ u(Stack, { spacing: 2.5, children: template.fields.map((field) => /* @__PURE__ */ u("div", { children: renderField(field) }, field.id)) }),
+    /* @__PURE__ */ u("div", { style: { display: "flex", justifyContent: "flex-end", marginTop: "1.5rem", gap: "8px" }, children: [
+      /* @__PURE__ */ u(Button, { onClick: handleSubmit, variant: "contained", children: onSave ? "创建并开始计时" : "提交" }),
+      /* @__PURE__ */ u(Button, { onClick: closeModal, children: "取消" })
     ] })
   ] });
 }
@@ -30999,7 +30927,7 @@ function HeatmapCell({ date, item, count, config: config2, ratingMapping, app, o
         cellStyle.backgroundColor = visualValue;
       } else if (isImagePath(visualValue)) {
         const imageUrl = app.vault.adapter.getResourcePath(visualValue);
-        cellContent = /* @__PURE__ */ u$1("img", { src: imageUrl, alt: "" });
+        cellContent = /* @__PURE__ */ u("img", { src: imageUrl, alt: "" });
       } else {
         cellContent = visualValue;
       }
@@ -31017,7 +30945,7 @@ function HeatmapCell({ date, item, count, config: config2, ratingMapping, app, o
     const emptyColor = config2.displayMode === "count" ? config2.countColors[0] : "#E5DDEE";
     cellStyle.backgroundColor = emptyColor;
   }
-  return /* @__PURE__ */ u$1(
+  return /* @__PURE__ */ u(
     "div",
     {
       class: `heatmap-cell ${isToday ? "current-day" : ""}`,
@@ -31025,8 +30953,8 @@ function HeatmapCell({ date, item, count, config: config2, ratingMapping, app, o
       title,
       onClick: () => onCellClick(date, item),
       children: [
-        isToday && /* @__PURE__ */ u$1("span", { class: "current-day-star" }),
-        /* @__PURE__ */ u$1("div", { class: "heatmap-cell-content", children: cellContent })
+        isToday && /* @__PURE__ */ u("span", { class: "current-day-star" }),
+        /* @__PURE__ */ u("div", { class: "heatmap-cell-content", children: cellContent })
       ]
     }
   );
@@ -31101,13 +31029,13 @@ function HeatmapView({ items, app, dateRange, module: module2, currentView }) {
     const firstWeekday = startOfMonth.isoWeekday();
     const days = [];
     for (let i2 = 1; i2 < firstWeekday; i2++) {
-      days.push(/* @__PURE__ */ u$1("div", { class: "heatmap-cell empty" }));
+      days.push(/* @__PURE__ */ u("div", { class: "heatmap-cell empty" }));
     }
     for (let i2 = 1; i2 <= endOfMonth.date(); i2++) {
       const dateStr = startOfMonth.clone().date(i2).format("YYYY-MM-DD");
       const item = dataForMonth.get(dateStr);
       days.push(
-        /* @__PURE__ */ u$1(
+        /* @__PURE__ */ u(
           HeatmapCell,
           {
             date: dateStr,
@@ -31121,9 +31049,9 @@ function HeatmapView({ items, app, dateRange, module: module2, currentView }) {
         )
       );
     }
-    return /* @__PURE__ */ u$1("div", { class: "month-section", children: [
-      /* @__PURE__ */ u$1("div", { class: "month-label", children: monthDate.format("MMMM") }),
-      /* @__PURE__ */ u$1("div", { class: "heatmap-row calendar", children: days })
+    return /* @__PURE__ */ u("div", { class: "month-section", children: [
+      /* @__PURE__ */ u("div", { class: "month-label", children: monthDate.format("MMMM") }),
+      /* @__PURE__ */ u("div", { class: "heatmap-row calendar", children: days })
     ] });
   };
   const renderSingleRow = (startDate, endDate, dataForRow, themeTag) => {
@@ -31133,7 +31061,7 @@ function HeatmapView({ items, app, dateRange, module: module2, currentView }) {
       const dateStr = currentDate.format("YYYY-MM-DD");
       const item = dataForRow.get(dateStr);
       days.push(
-        /* @__PURE__ */ u$1(
+        /* @__PURE__ */ u(
           HeatmapCell,
           {
             date: dateStr,
@@ -31149,16 +31077,16 @@ function HeatmapView({ items, app, dateRange, module: module2, currentView }) {
       );
       currentDate = currentDate.add(1, "day");
     }
-    return /* @__PURE__ */ u$1("div", { class: "heatmap-row single-row", children: days });
+    return /* @__PURE__ */ u("div", { class: "heatmap-row single-row", children: days });
   };
   const renderContent = () => {
     const start2 = dayjs(dateRange[0]);
     const end2 = dayjs(dateRange[1]);
     const themes = Array.from(dataByThemeAndDate.keys());
     const isRowLayout = ["天", "周", "月"].includes(currentView);
-    return /* @__PURE__ */ u$1("div", { class: `heatmap-view-wrapper ${isRowLayout ? "layout-row" : "layout-grid"}`, children: themes.map((theme2) => /* @__PURE__ */ u$1("div", { class: "heatmap-theme-group", children: [
-      theme2 !== "__default__" && /* @__PURE__ */ u$1("div", { class: "heatmap-theme-label", children: theme2 }),
-      /* @__PURE__ */ u$1("div", { class: "heatmap-theme-content", children: (() => {
+    return /* @__PURE__ */ u("div", { class: `heatmap-view-wrapper ${isRowLayout ? "layout-row" : "layout-grid"}`, children: themes.map((theme2) => /* @__PURE__ */ u("div", { class: "heatmap-theme-group", children: [
+      theme2 !== "__default__" && /* @__PURE__ */ u("div", { class: "heatmap-theme-label", children: theme2 }),
+      /* @__PURE__ */ u("div", { class: "heatmap-theme-content", children: (() => {
         const dataForTheme = dataByThemeAndDate.get(theme2);
         switch (currentView) {
           case "天":
@@ -31175,14 +31103,14 @@ function HeatmapView({ items, app, dateRange, module: module2, currentView }) {
               months.push(currentMonth.clone());
               currentMonth = currentMonth.add(1, "month");
             }
-            return /* @__PURE__ */ u$1("div", { class: "heatmap-grid-container", children: months.map((m2) => renderMonthGrid(m2, dataForTheme, theme2)) });
+            return /* @__PURE__ */ u("div", { class: "heatmap-grid-container", children: months.map((m2) => renderMonthGrid(m2, dataForTheme, theme2)) });
           default:
-            return /* @__PURE__ */ u$1("div", { children: "Unsupported view mode for Heatmap." });
+            return /* @__PURE__ */ u("div", { children: "Unsupported view mode for Heatmap." });
         }
       })() })
     ] }, theme2)) });
   };
-  return /* @__PURE__ */ u$1("div", { class: "heatmap-container", children: renderContent() });
+  return /* @__PURE__ */ u("div", { class: "heatmap-container", children: renderContent() });
 }
 const VIEW_REGISTRY = {
   TableView,
@@ -31211,9 +31139,9 @@ function TimeNavigator({ currentDate, onDateChange }) {
   const selectedMonth = currentDate.month() + 1;
   const selectedQuarter = currentDate.quarter();
   const totalWeeksInYear = T$1(() => getWeeksInYear(selectedYear), [selectedYear]);
-  return /* @__PURE__ */ u$1("div", { class: "time-navigator-container", children: [
-    /* @__PURE__ */ u$1("div", { class: "tn-control-col", children: [
-      /* @__PURE__ */ u$1(
+  return /* @__PURE__ */ u("div", { class: "time-navigator-container", children: [
+    /* @__PURE__ */ u("div", { class: "tn-control-col", children: [
+      /* @__PURE__ */ u(
         "div",
         {
           class: "tn-cell tn-year-cell",
@@ -31226,29 +31154,29 @@ function TimeNavigator({ currentDate, onDateChange }) {
           children: selectedYear
         }
       ),
-      /* @__PURE__ */ u$1("div", { class: "tn-cell tn-nav-buttons", children: [
-        /* @__PURE__ */ u$1("button", { title: "上一周 (Ctrl+←)", onClick: () => onDateChange(currentDate.subtract(1, "week"), "周"), children: "‹" }),
-        /* @__PURE__ */ u$1("button", { title: "下一周 (Ctrl+→)", onClick: () => onDateChange(currentDate.add(1, "week"), "周"), children: "›" })
+      /* @__PURE__ */ u("div", { class: "tn-cell tn-nav-buttons", children: [
+        /* @__PURE__ */ u("button", { title: "上一周 (Ctrl+←)", onClick: () => onDateChange(currentDate.subtract(1, "week"), "周"), children: "‹" }),
+        /* @__PURE__ */ u("button", { title: "下一周 (Ctrl+→)", onClick: () => onDateChange(currentDate.add(1, "week"), "周"), children: "›" })
       ] })
     ] }),
-    /* @__PURE__ */ u$1("div", { class: "tn-main-col", children: [
-      /* @__PURE__ */ u$1("div", { class: "tn-row tn-row-top", children: Array.from({ length: 4 }, (_2, i2) => i2 + 1).map((q2) => {
+    /* @__PURE__ */ u("div", { class: "tn-main-col", children: [
+      /* @__PURE__ */ u("div", { class: "tn-row tn-row-top", children: Array.from({ length: 4 }, (_2, i2) => i2 + 1).map((q2) => {
         const isSelected = q2 <= selectedQuarter;
         const isBeforeSelection = q2 < selectedQuarter;
-        return /* @__PURE__ */ u$1(
+        return /* @__PURE__ */ u(
           "div",
           {
             class: `tn-quarter-block ${isSelected ? "is-selected" : ""} ${isBeforeSelection ? "is-before-selection" : ""}`,
             onClick: () => onDateChange(dayjs().year(selectedYear).quarter(q2).endOf("quarter"), "季"),
             children: [
-              /* @__PURE__ */ u$1("div", { class: `tn-quarter-header`, children: [
+              /* @__PURE__ */ u("div", { class: `tn-quarter-header`, children: [
                 "Q",
                 q2
               ] }),
-              /* @__PURE__ */ u$1("div", { class: "tn-months-container", children: Array.from({ length: 3 }, (_2, j2) => (q2 - 1) * 3 + j2 + 1).map((m2) => {
+              /* @__PURE__ */ u("div", { class: "tn-months-container", children: Array.from({ length: 3 }, (_2, j2) => (q2 - 1) * 3 + j2 + 1).map((m2) => {
                 const isMonthSelected = m2 <= selectedMonth;
                 const isMonthBeforeSelection = m2 < selectedMonth;
-                return /* @__PURE__ */ u$1(
+                return /* @__PURE__ */ u(
                   "div",
                   {
                     class: `tn-cell tn-month-cell ${isMonthSelected ? "is-selected" : ""} ${isMonthBeforeSelection ? "is-before-selection" : ""}`,
@@ -31269,7 +31197,7 @@ function TimeNavigator({ currentDate, onDateChange }) {
           `q${q2}`
         );
       }) }),
-      /* @__PURE__ */ u$1("div", { class: "tn-row tn-weeks-container", children: Array.from({ length: totalWeeksInYear }, (_2, i2) => i2 + 1).map((w2) => {
+      /* @__PURE__ */ u("div", { class: "tn-row tn-weeks-container", children: Array.from({ length: totalWeeksInYear }, (_2, i2) => i2 + 1).map((w2) => {
         const cellMonday = getMondayByWeek(selectedYear, w2);
         const isSelected = w2 <= selectedWeek;
         const isToday = selectedYear === todayYear && w2 === todayWeek;
@@ -31281,7 +31209,7 @@ function TimeNavigator({ currentDate, onDateChange }) {
           isToday ? "is-today" : "",
           isBeforeSelection && !isSelected ? "is-before-selection" : ""
         ].filter(Boolean).join(" ");
-        return /* @__PURE__ */ u$1(
+        return /* @__PURE__ */ u(
           "div",
           {
             class: classes,
@@ -31381,13 +31309,13 @@ const ViewContent = ({
     layoutView,
     isOverviewMode: !!isOverviewMode
   });
-  if (!dataSource) return /* @__PURE__ */ u$1("div", { children: [
+  if (!dataSource) return /* @__PURE__ */ u("div", { children: [
     "数据源 (ID: ",
     viewInstance.dataSourceId,
     ") 未找到"
   ] });
   const ViewComponent = ViewComponents[viewInstance.viewType];
-  if (!ViewComponent) return /* @__PURE__ */ u$1("div", { children: [
+  if (!ViewComponent) return /* @__PURE__ */ u("div", { children: [
     "未知视图: ",
     viewInstance.viewType
   ] });
@@ -31404,7 +31332,7 @@ const ViewContent = ({
     actionService,
     taskService
   };
-  return /* @__PURE__ */ u$1(ViewComponent, { ...viewProps });
+  return /* @__PURE__ */ u(ViewComponent, { ...viewProps });
 };
 function LayoutRenderer({ layout, dataStore: dataStore2, app, actionService, taskService }) {
   const allViews = useStore((state) => state.settings.viewInstances);
@@ -31467,20 +31395,20 @@ function LayoutRenderer({ layout, dataStore: dataStore2, app, actionService, tas
   const fmt = T$1(() => formatDateForView, []);
   const renderViewInstance = (viewId) => {
     const viewInstance = allViews.find((v2) => v2.id === viewId);
-    if (!viewInstance) return /* @__PURE__ */ u$1("div", { class: "think-module", children: [
+    if (!viewInstance) return /* @__PURE__ */ u("div", { class: "think-module", children: [
       "视图 (ID: ",
       viewId,
       ") 未找到"
     ] });
     const isExpanded = !!expandedState[viewId];
-    return /* @__PURE__ */ u$1(
+    return /* @__PURE__ */ u(
       ModulePanel,
       {
         title: viewInstance.title,
         collapsed: !isExpanded,
         onToggle: (e2) => handleToggle(viewId, e2),
         onActionClick: () => handleQuickInputAction(viewInstance),
-        children: isExpanded && /* @__PURE__ */ u$1(
+        children: isExpanded && /* @__PURE__ */ u(
           ViewContent,
           {
             viewInstance,
@@ -31503,16 +31431,16 @@ function LayoutRenderer({ layout, dataStore: dataStore2, app, actionService, tas
     );
   };
   const gridStyle = layout.displayMode === "grid" ? { display: "grid", gridTemplateColumns: `repeat(${layout.gridConfig?.columns || 2}, 1fr)`, gap: "8px" } : {};
-  return /* @__PURE__ */ u$1("div", { children: [
-    !layout.hideToolbar && (layout.isOverviewMode ? /* @__PURE__ */ u$1(TimeNavigator, { currentDate: layoutDate, onDateChange: handleOverviewDateChange }) : /* @__PURE__ */ u$1("div", { class: "tp-toolbar", style: "margin-bottom:8px;", children: [
-      ["年", "季", "月", "周", "天"].map((v2) => /* @__PURE__ */ u$1("button", { onClick: () => setLayoutView(v2), class: v2 === layoutView ? "active" : "", children: v2 })),
-      /* @__PURE__ */ u$1("button", { disabled: true, style: "font-weight:bold;margin:0 4px;background:#fff;", children: fmt(layoutDate, layoutView) }),
-      /* @__PURE__ */ u$1("button", { onClick: () => setLayoutDate((prev2) => prev2.clone().subtract(1, unit(layoutView))), children: "←" }),
-      /* @__PURE__ */ u$1("button", { onClick: () => setLayoutDate((prev2) => prev2.clone().add(1, unit(layoutView))), children: "→" }),
-      /* @__PURE__ */ u$1("button", { onClick: () => setLayoutDate(dayjs()), children: "＝" }),
-      /* @__PURE__ */ u$1("input", { placeholder: "快速过滤…", style: "margin-left:4px;", value: kw, onInput: (e2) => setKw(e2.target.value) })
+  return /* @__PURE__ */ u("div", { children: [
+    !layout.hideToolbar && (layout.isOverviewMode ? /* @__PURE__ */ u(TimeNavigator, { currentDate: layoutDate, onDateChange: handleOverviewDateChange }) : /* @__PURE__ */ u("div", { class: "tp-toolbar", style: "margin-bottom:8px;", children: [
+      ["年", "季", "月", "周", "天"].map((v2) => /* @__PURE__ */ u("button", { onClick: () => setLayoutView(v2), class: v2 === layoutView ? "active" : "", children: v2 })),
+      /* @__PURE__ */ u("button", { disabled: true, style: "font-weight:bold;margin:0 4px;background:#fff;", children: fmt(layoutDate, layoutView) }),
+      /* @__PURE__ */ u("button", { onClick: () => setLayoutDate((prev2) => prev2.clone().subtract(1, unit(layoutView))), children: "←" }),
+      /* @__PURE__ */ u("button", { onClick: () => setLayoutDate((prev2) => prev2.clone().add(1, unit(layoutView))), children: "→" }),
+      /* @__PURE__ */ u("button", { onClick: () => setLayoutDate(dayjs()), children: "＝" }),
+      /* @__PURE__ */ u("input", { placeholder: "快速过滤…", style: "margin-left:4px;", value: kw, onInput: (e2) => setKw(e2.target.value) })
     ] })),
-    /* @__PURE__ */ u$1("div", { style: gridStyle, children: isStateInitialized && layout.viewInstanceIds.map(renderViewInstance) })
+    /* @__PURE__ */ u("div", { style: gridStyle, children: isStateInitialized && layout.viewInstanceIds.map(renderViewInstance) })
   ] });
 }
 var __getOwnPropDesc$3 = Object.getOwnPropertyDescriptor;
@@ -31523,19 +31451,31 @@ var __decorateClass$3 = (decorators, target, key, kind) => {
       result = decorator(result) || result;
   return result;
 };
-let RendererService = class {
-  app;
-  dataStore;
-  appStore;
-  actionService;
-  taskService;
-  isInitialized = false;
-  // [核心修复] 构造函数变为空
-  constructor() {
+var __decorateParam$3 = (index, decorator) => (target, key) => decorator(target, key, index);
+let TaskService = class {
+  constructor(dataStore2, app) {
+    this.dataStore = dataStore2;
+    this.app = app;
   }
-  // [核心修复] 新增 init 方法用于注入所有依赖
-  init(app, dataStore2, appStore2, actionService, taskService) {
-    if (this.isInitialized) return;
+  // ... 其余方法不变
+};
+TaskService = __decorateClass$3([
+  singleton(),
+  __decorateParam$3(0, inject(DataStore)),
+  __decorateParam$3(1, inject(AppToken))
+], TaskService);
+var __getOwnPropDesc$2 = Object.getOwnPropertyDescriptor;
+var __decorateClass$2 = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc$2(target, key) : target;
+  for (var i2 = decorators.length - 1, decorator; i2 >= 0; i2--)
+    if (decorator = decorators[i2])
+      result = decorator(result) || result;
+  return result;
+};
+var __decorateParam$2 = (index, decorator) => (target, key) => decorator(target, key, index);
+let RendererService = class {
+  // [核心修改] 为构造函数的每个参数添加 @inject 装饰器
+  constructor(app, dataStore2, appStore2, actionService, taskService) {
     this.app = app;
     this.dataStore = dataStore2;
     this.appStore = appStore2;
@@ -31544,6 +31484,7 @@ let RendererService = class {
     this.appStore.subscribe(() => this.rerenderAll());
     this.isInitialized = true;
   }
+  isInitialized = false;
   activeLayouts = [];
   register(container, layout) {
     this.unregister(container);
@@ -31598,96 +31539,14 @@ let RendererService = class {
     this.activeLayouts = [];
   }
 };
-RendererService = __decorateClass$3([
-  singleton()
+RendererService = __decorateClass$2([
+  singleton(),
+  __decorateParam$2(0, inject(AppToken)),
+  __decorateParam$2(1, inject(DataStore)),
+  __decorateParam$2(2, inject(AppStore)),
+  __decorateParam$2(3, inject(ActionService)),
+  __decorateParam$2(4, inject(TaskService))
 ], RendererService);
-var __getOwnPropDesc$2 = Object.getOwnPropertyDescriptor;
-var __decorateClass$2 = (decorators, target, key, kind) => {
-  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc$2(target, key) : target;
-  for (var i2 = decorators.length - 1, decorator; i2 >= 0; i2--)
-    if (decorator = decorators[i2])
-      result = decorator(result) || result;
-  return result;
-};
-function upsertKvTag(line2, key, value) {
-  const pattern = new RegExp(`([\\(\\[]\\s*${key}::\\s*)[^\\)\\]]*(\\s*[\\)\\]])`);
-  if (pattern.test(line2)) {
-    return line2.replace(pattern, `$1${value}$2`);
-  } else {
-    return `${line2.trim()} (${key}:: ${value})`;
-  }
-}
-let TaskService = class {
-  dataStore;
-  // [核心修复] 构造函数变为空
-  constructor() {
-  }
-  // [核心修复] 新增 init 方法用于注入依赖
-  init(dataStore2) {
-    this.dataStore = dataStore2;
-  }
-  async getTaskLine(itemId) {
-    const [filePath, lineStr] = itemId.split("#");
-    const lineNo = Number(lineStr);
-    const file = this.dataStore.app.vault.getAbstractFileByPath(filePath);
-    if (!(file instanceof obsidian.TFile)) return null;
-    const content = await this.dataStore.platform.readFile(file);
-    const lines = content.split(/\r?\n/);
-    if (lineNo < 1 || lineNo > lines.length) return null;
-    return lines[lineNo - 1];
-  }
-  async completeTask(itemId, options) {
-    const [filePath, lineStr] = itemId.split("#");
-    const lineNo = Number(lineStr);
-    const file = this.dataStore.app.vault.getAbstractFileByPath(filePath);
-    if (!(file instanceof obsidian.TFile)) {
-      console.warn(`[TaskService] File not found or is not a TFile: ${filePath}`);
-      return;
-    }
-    const content = await this.dataStore.platform.readFile(file);
-    const lines = content.split(/\r?\n/);
-    if (lineNo < 1 || lineNo > lines.length) return;
-    const rawLine = lines[lineNo - 1];
-    if (!/^\s*-\s*\[ \]\s*/.test(rawLine)) return;
-    const todayISO = dayjs().format("YYYY-MM-DD");
-    const nowTime = dayjs().format("HH:mm");
-    const { completedLine, nextTaskLine } = markTaskDone(
-      rawLine,
-      todayISO,
-      nowTime,
-      options?.duration
-    );
-    lines[lineNo - 1] = completedLine;
-    if (nextTaskLine) {
-      lines.splice(lineNo, 0, nextTaskLine);
-    }
-    await this.dataStore.platform.writeFile(file, lines.join("\n"));
-  }
-  async updateTaskTime(itemId, newValues) {
-    const [filePath, lineStr] = itemId.split("#");
-    const lineNo = Number(lineStr);
-    const file = this.dataStore.app.vault.getAbstractFileByPath(filePath);
-    if (!(file instanceof obsidian.TFile)) {
-      console.warn(`[TaskService] File not found for updating time: ${filePath}`);
-      return;
-    }
-    const content = await this.dataStore.platform.readFile(file);
-    const lines = content.split(/\r?\n/);
-    if (lineNo < 1 || lineNo > lines.length) return;
-    let targetLine = lines[lineNo - 1];
-    if (newValues.time) {
-      targetLine = upsertKvTag(targetLine, "时间", newValues.time);
-    }
-    if (newValues.duration !== void 0) {
-      targetLine = upsertKvTag(targetLine, "时长", String(newValues.duration));
-    }
-    lines[lineNo - 1] = targetLine;
-    await this.dataStore.platform.writeFile(file, lines.join("\n"));
-  }
-};
-TaskService = __decorateClass$2([
-  singleton()
-], TaskService);
 var __getOwnPropDesc$1 = Object.getOwnPropertyDescriptor;
 var __decorateClass$1 = (decorators, target, key, kind) => {
   var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc$1(target, key) : target;
@@ -31696,23 +31555,17 @@ var __decorateClass$1 = (decorators, target, key, kind) => {
       result = decorator(result) || result;
   return result;
 };
+var __decorateParam$1 = (index, decorator) => (target, key) => decorator(target, key, index);
 let TimerService = class {
-  appStore;
-  dataStore;
-  taskService;
-  inputService;
-  app;
-  // [核心修复] 构造函数变为空
-  constructor() {
-  }
-  // [核心修复] 新增 init 方法用于注入所有依赖
-  init(appStore2, dataStore2, taskService, inputService2, app) {
+  // [核心修改] 为构造函数的每个参数添加 @inject 装饰器
+  constructor(appStore2, dataStore2, taskService, inputService2, app) {
     this.appStore = appStore2;
     this.dataStore = dataStore2;
     this.taskService = taskService;
     this.inputService = inputService2;
     this.app = app;
   }
+  // ... 其余方法保持不变 ...
   async startOrResume(taskId) {
     const timers = this.appStore.getState().timers;
     for (const timer of timers) {
@@ -31797,13 +31650,12 @@ let TimerService = class {
     await this.appStore.removeTimer(timerId);
     new obsidian.Notice("计时任务已取消。");
   }
-  // [核心修复] 此方法签名被简化，不再需要外部传入 app 和 inputService
   async createNewTaskAndStart(data) {
     const { template, formData, theme: theme2 } = data;
     try {
-      const targetFilePath = this.inputService.renderTemplate(template.targetFile, { ...formData, theme: theme2 });
+      const targetFilePath = renderTemplate(template.targetFile, { ...formData, theme: theme2 });
       if (!targetFilePath) throw new Error("目标文件路径无效");
-      const outputContent = this.inputService.renderTemplate(template.outputTemplate, { ...formData, block: { name: template.name }, theme: theme2 }).trim();
+      const outputContent = renderTemplate(template.outputTemplate, { ...formData, block: { name: template.name }, theme: theme2 }).trim();
       const file = await this.inputService.getOrCreateFile(targetFilePath);
       const existingContent = await this.app.vault.read(file);
       const newContent = existingContent.trim() === "" ? outputContent : `${existingContent.trim()}
@@ -31830,7 +31682,12 @@ ${outputContent}`;
   }
 };
 TimerService = __decorateClass$1([
-  singleton()
+  singleton(),
+  __decorateParam$1(0, inject(AppStore)),
+  __decorateParam$1(1, inject(DataStore)),
+  __decorateParam$1(2, inject(TaskService)),
+  __decorateParam$1(3, inject(InputService)),
+  __decorateParam$1(4, inject(AppToken))
 ], TimerService);
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
 var __decorateClass = (decorators, target, key, kind) => {
@@ -31840,16 +31697,14 @@ var __decorateClass = (decorators, target, key, kind) => {
       result = decorator(result) || result;
   return result;
 };
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
 const TIMER_STATE_PATH = "think-plugin-timer-state.json";
 let TimerStateService = class {
-  app;
-  // [核心修复] 构造函数变为空
-  constructor() {
-  }
-  // [核心修复] 新增 init 方法
-  init(app) {
+  // [核心修改] 使用 @inject 装饰器明确指定依赖
+  constructor(app) {
     this.app = app;
   }
+  // ... 其余方法保持不变 ...
   async loadStateFromFile() {
     try {
       const fileExists = await this.app.vault.adapter.exists(TIMER_STATE_PATH);
@@ -31877,7 +31732,8 @@ let TimerStateService = class {
   }
 };
 TimerStateService = __decorateClass([
-  singleton()
+  singleton(),
+  __decorateParam(0, inject(AppToken))
 ], TimerStateService);
 function usePersistentState(key, defaultValue2) {
   const [state, setState] = d(() => {
@@ -31904,19 +31760,19 @@ function usePersistentState(key, defaultValue2) {
   }, [key, state]);
   return [state, setState];
 }
-const DragIndicatorIcon = createSvgIcon(/* @__PURE__ */ u$1("path", {
+const DragIndicatorIcon = createSvgIcon(/* @__PURE__ */ u("path", {
   d: "M11 18c0 1.1-.9 2-2 2s-2-.9-2-2 .9-2 2-2 2 .9 2 2m-2-8c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2m0-6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2m6 4c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2m0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2m0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2"
 }));
-const StopIcon = createSvgIcon(/* @__PURE__ */ u$1("path", {
+const StopIcon = createSvgIcon(/* @__PURE__ */ u("path", {
   d: "M6 6h12v12H6z"
 }));
-const PauseIcon = createSvgIcon(/* @__PURE__ */ u$1("path", {
+const PauseIcon = createSvgIcon(/* @__PURE__ */ u("path", {
   d: "M6 19h4V5H6zm8-14v14h4V5z"
 }));
-const EditIcon = createSvgIcon(/* @__PURE__ */ u$1("path", {
+const EditIcon = createSvgIcon(/* @__PURE__ */ u("path", {
   d: "M3 17.25V21h3.75L17.81 9.94l-3.75-3.75zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34a.996.996 0 0 0-1.41 0l-1.83 1.83 3.75 3.75z"
 }));
-const DeleteForeverIcon = createSvgIcon(/* @__PURE__ */ u$1("path", {
+const DeleteForeverIcon = createSvgIcon(/* @__PURE__ */ u("path", {
   d: "M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6zm2.46-7.12 1.41-1.41L12 12.59l2.12-2.12 1.41 1.41L13.41 14l2.12 2.12-1.41 1.41L12 15.41l-2.12 2.12-1.41-1.41L10.59 14zM15.5 4l-1-1h-5l-1 1H5v2h14V4z"
 }));
 function TimerRow({ timer, actionService, timerService: timerService2, dataStore: dataStore2, app }) {
@@ -31950,13 +31806,13 @@ function TimerRow({ timer, actionService, timerService: timerService2, dataStore
       }
     }
   };
-  return /* @__PURE__ */ u$1(Box, { sx: { display: "flex", alignItems: "center", gap: "8px", width: "100%" }, children: [
-    /* @__PURE__ */ u$1(Tooltip, { title: `点击跳转: ${taskItem?.title}`, children: /* @__PURE__ */ u$1("a", { href: taskItem ? makeObsUri(taskItem, app) : "#", style: { flexGrow: 1, minWidth: 0, textDecoration: "none", color: "inherit", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }, children: /* @__PURE__ */ u$1(Typography, { variant: "body2", noWrap: true, children: taskItem?.title || "任务已不存在" }) }) }),
-    /* @__PURE__ */ u$1(Typography, { variant: "body2", sx: { fontFamily: "monospace" }, children: displayTime }),
-    timer.status === "running" ? /* @__PURE__ */ u$1(Tooltip, { title: "暂停", children: /* @__PURE__ */ u$1(IconButton, { size: "small", onClick: () => timerService2.pause(timer.id), children: /* @__PURE__ */ u$1(PauseIcon, { fontSize: "inherit" }) }) }) : /* @__PURE__ */ u$1(Tooltip, { title: "继续", children: /* @__PURE__ */ u$1(IconButton, { size: "small", onClick: () => timerService2.resume(timer.id), color: "primary", children: /* @__PURE__ */ u$1(PlayArrowIcon, { fontSize: "inherit" }) }) }),
-    /* @__PURE__ */ u$1(Tooltip, { title: "停止并记录", children: /* @__PURE__ */ u$1(IconButton, { size: "small", onClick: () => timerService2.stopAndApply(timer.id), children: /* @__PURE__ */ u$1(StopIcon, { fontSize: "inherit" }) }) }),
-    /* @__PURE__ */ u$1(Tooltip, { title: "编辑任务", children: /* @__PURE__ */ u$1(IconButton, { size: "small", onClick: handleEdit, children: /* @__PURE__ */ u$1(EditIcon, { fontSize: "inherit" }) }) }),
-    /* @__PURE__ */ u$1(Tooltip, { title: "取消任务", children: /* @__PURE__ */ u$1(IconButton, { size: "small", onClick: () => timerService2.cancel(timer.id), color: "error", children: /* @__PURE__ */ u$1(DeleteForeverIcon, { fontSize: "inherit" }) }) })
+  return /* @__PURE__ */ u(Box, { sx: { display: "flex", alignItems: "center", gap: "8px", width: "100%" }, children: [
+    /* @__PURE__ */ u(Tooltip, { title: `点击跳转: ${taskItem?.title}`, children: /* @__PURE__ */ u("a", { href: taskItem ? makeObsUri(taskItem, app) : "#", style: { flexGrow: 1, minWidth: 0, textDecoration: "none", color: "inherit", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }, children: /* @__PURE__ */ u(Typography, { variant: "body2", noWrap: true, children: taskItem?.title || "任务已不存在" }) }) }),
+    /* @__PURE__ */ u(Typography, { variant: "body2", sx: { fontFamily: "monospace" }, children: displayTime }),
+    timer.status === "running" ? /* @__PURE__ */ u(Tooltip, { title: "暂停", children: /* @__PURE__ */ u(IconButton, { size: "small", onClick: () => timerService2.pause(timer.id), children: /* @__PURE__ */ u(PauseIcon, { fontSize: "inherit" }) }) }) : /* @__PURE__ */ u(Tooltip, { title: "继续", children: /* @__PURE__ */ u(IconButton, { size: "small", onClick: () => timerService2.resume(timer.id), color: "primary", children: /* @__PURE__ */ u(PlayArrowIcon, { fontSize: "inherit" }) }) }),
+    /* @__PURE__ */ u(Tooltip, { title: "停止并记录", children: /* @__PURE__ */ u(IconButton, { size: "small", onClick: () => timerService2.stopAndApply(timer.id), children: /* @__PURE__ */ u(StopIcon, { fontSize: "inherit" }) }) }),
+    /* @__PURE__ */ u(Tooltip, { title: "编辑任务", children: /* @__PURE__ */ u(IconButton, { size: "small", onClick: handleEdit, children: /* @__PURE__ */ u(EditIcon, { fontSize: "inherit" }) }) }),
+    /* @__PURE__ */ u(Tooltip, { title: "取消任务", children: /* @__PURE__ */ u(IconButton, { size: "small", onClick: () => timerService2.cancel(timer.id), color: "error", children: /* @__PURE__ */ u(DeleteForeverIcon, { fontSize: "inherit" }) }) })
   ] });
 }
 function TimerView({ app, actionService, timerService: timerService2, dataStore: dataStore2 }) {
@@ -31978,13 +31834,15 @@ function TimerView({ app, actionService, timerService: timerService2, dataStore:
     window.removeEventListener("mouseup", onDragEnd);
   }, []);
   const handleNewTask = () => {
-    const result = actionService.getQuickInputConfigForNewTimer();
-    if (result) {
-      const { config: config2, onSave } = result;
-      new QuickInputModal(app, config2.blockId, config2.context, void 0, onSave).open();
+    const config2 = actionService.getQuickInputConfigForNewTimer();
+    if (config2) {
+      const onSaveCallback = (data) => {
+        timerService2.createNewTaskAndStart(data);
+      };
+      new QuickInputModal(app, config2.blockId, config2.context, void 0, onSaveCallback).open();
     }
   };
-  return /* @__PURE__ */ u$1(
+  return /* @__PURE__ */ u(
     Paper,
     {
       elevation: 4,
@@ -31996,34 +31854,31 @@ function TimerView({ app, actionService, timerService: timerService2, dataStore:
         userSelect: "none",
         minWidth: "320px"
       },
-      children: /* @__PURE__ */ u$1(Stack, { children: [
-        /* @__PURE__ */ u$1(Box, { sx: { display: "flex", alignItems: "center", p: "4px 8px", borderBottom: "1px solid", borderColor: "divider" }, children: [
-          /* @__PURE__ */ u$1(Box, { onMouseDown: onDragStart, sx: { cursor: "move", display: "flex", alignItems: "center" }, children: /* @__PURE__ */ u$1(DragIndicatorIcon, { sx: { color: "text.disabled", fontSize: "1.2rem" } }) }),
-          /* @__PURE__ */ u$1(Typography, { sx: { flexGrow: 1, fontWeight: "bold", ml: 1 }, children: "任务计时器" }),
-          /* @__PURE__ */ u$1(Tooltip, { title: "开始新任务", children: /* @__PURE__ */ u$1(
+      children: /* @__PURE__ */ u(Stack, { children: [
+        /* @__PURE__ */ u(Box, { sx: { display: "flex", alignItems: "center", p: "4px 8px", borderBottom: "1px solid", borderColor: "divider" }, children: [
+          /* @__PURE__ */ u(Box, { onMouseDown: onDragStart, sx: { cursor: "move", display: "flex", alignItems: "center" }, children: /* @__PURE__ */ u(DragIndicatorIcon, { sx: { color: "text.disabled", fontSize: "1.2rem" } }) }),
+          /* @__PURE__ */ u(Typography, { sx: { flexGrow: 1, fontWeight: "bold", ml: 1 }, children: "任务计时器" }),
+          /* @__PURE__ */ u(Tooltip, { title: "开始新任务", children: /* @__PURE__ */ u(
             Button,
             {
               size: "small",
-              startIcon: /* @__PURE__ */ u$1(AddCircleOutlineIcon, {}),
+              startIcon: /* @__PURE__ */ u(AddCircleOutlineIcon, {}),
               onClick: handleNewTask,
               children: "新任务"
             }
           ) })
         ] }),
-        /* @__PURE__ */ u$1(Stack, { spacing: 1, sx: { p: "8px", maxHeight: "400px", overflowY: "auto" }, children: timers.length > 0 ? timers.map((timer) => (
-          // [修改] 将所有需要的实例通过 props 传递给 TimerRow
-          /* @__PURE__ */ u$1(
-            TimerRow,
-            {
-              timer,
-              actionService,
-              timerService: timerService2,
-              dataStore: dataStore2,
-              app
-            },
-            timer.id
-          )
-        )) : /* @__PURE__ */ u$1(Typography, { variant: "body2", color: "text.secondary", sx: { textAlign: "center", p: 2 }, children: "没有正在计时的任务" }) })
+        /* @__PURE__ */ u(Stack, { spacing: 1, sx: { p: "8px", maxHeight: "400px", overflowY: "auto" }, children: timers.length > 0 ? timers.map((timer) => /* @__PURE__ */ u(
+          TimerRow,
+          {
+            timer,
+            actionService,
+            timerService: timerService2,
+            dataStore: dataStore2,
+            app
+          },
+          timer.id
+        )) : /* @__PURE__ */ u(Typography, { variant: "body2", color: "text.secondary", sx: { textAlign: "center", p: 2 }, children: "没有正在计时的任务" }) })
       ] })
     }
   );
@@ -32244,7 +32099,7 @@ const theme = createTheme({
     }
   }
 });
-const AddIcon = createSvgIcon(/* @__PURE__ */ u$1("path", {
+const AddIcon = createSvgIcon(/* @__PURE__ */ u("path", {
   d: "M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6z"
 }));
 function useUniqueFieldValues() {
@@ -32301,32 +32156,32 @@ function RuleBuilder({ title, mode, rows, fieldOptions, onChange }) {
   const fieldSelectOptions = fieldOptions.map((f2) => ({ value: f2, label: f2 }));
   const operatorOptions = ["=", "!=", "includes", "regex", ">", "<"].map((op) => ({ value: op, label: op }));
   const directionOptions = [{ value: "asc", label: "升序" }, { value: "desc", label: "降序" }];
-  return /* @__PURE__ */ u$1(Stack, { direction: "row", spacing: 2, children: [
-    /* @__PURE__ */ u$1(Typography, { sx: { width: "80px", flexShrink: 0, fontWeight: 500, pt: "8px" }, children: title }),
-    /* @__PURE__ */ u$1(Stack, { spacing: 1.5, sx: { flexGrow: 1 }, children: [
-      /* @__PURE__ */ u$1(Stack, { direction: "row", flexWrap: "wrap", spacing: 1, useFlexGap: true, children: rows.map((rule, i2) => /* @__PURE__ */ u$1(Tooltip, { title: `点击删除规则: ${formatRule(rule)}`, children: /* @__PURE__ */ u$1(Chip, { label: formatRule(rule), onClick: () => remove(i2), size: "small" }) }, i2)) }),
-      /* @__PURE__ */ u$1(Stack, { direction: "row", spacing: 1, alignItems: "center", children: [
-        /* @__PURE__ */ u$1(SimpleSelect, { fullWidth: true, placeholder: "选择字段", value: newRule.field, options: fieldSelectOptions, onChange: (val) => updateNewRule({ field: val }) }),
-        isFilterMode ? /* @__PURE__ */ u$1(SimpleSelect, { value: newRule.op, options: operatorOptions, onChange: (val) => updateNewRule({ op: val }), sx: { minWidth: 120 } }) : /* @__PURE__ */ u$1(SimpleSelect, { value: newRule.dir, options: directionOptions, onChange: (val) => updateNewRule({ dir: val }), sx: { minWidth: 100 } }),
-        isFilterMode && /* @__PURE__ */ u$1(Autocomplete, { freeSolo: true, fullWidth: true, size: "small", disableClearable: true, options: uniqueFieldValues[newRule.field] || [], value: newRule.value, onInputChange: (_2, newValue) => updateNewRule({ value: newValue || "" }), renderInput: (params) => /* @__PURE__ */ u$1(TextField, { ...params, variant: "outlined", placeholder: "输入值" }) }),
-        /* @__PURE__ */ u$1(Button, { variant: "contained", size: "small", onClick: handleAddRule, startIcon: /* @__PURE__ */ u$1(AddIcon, {}), children: "添加" })
+  return /* @__PURE__ */ u(Stack, { direction: "row", spacing: 2, children: [
+    /* @__PURE__ */ u(Typography, { sx: { width: "80px", flexShrink: 0, fontWeight: 500, pt: "8px" }, children: title }),
+    /* @__PURE__ */ u(Stack, { spacing: 1.5, sx: { flexGrow: 1 }, children: [
+      /* @__PURE__ */ u(Stack, { direction: "row", flexWrap: "wrap", spacing: 1, useFlexGap: true, children: rows.map((rule, i2) => /* @__PURE__ */ u(Tooltip, { title: `点击删除规则: ${formatRule(rule)}`, children: /* @__PURE__ */ u(Chip, { label: formatRule(rule), onClick: () => remove(i2), size: "small" }) }, i2)) }),
+      /* @__PURE__ */ u(Stack, { direction: "row", spacing: 1, alignItems: "center", children: [
+        /* @__PURE__ */ u(SimpleSelect, { fullWidth: true, placeholder: "选择字段", value: newRule.field, options: fieldSelectOptions, onChange: (val) => updateNewRule({ field: val }) }),
+        isFilterMode ? /* @__PURE__ */ u(SimpleSelect, { value: newRule.op, options: operatorOptions, onChange: (val) => updateNewRule({ op: val }), sx: { minWidth: 120 } }) : /* @__PURE__ */ u(SimpleSelect, { value: newRule.dir, options: directionOptions, onChange: (val) => updateNewRule({ dir: val }), sx: { minWidth: 100 } }),
+        isFilterMode && /* @__PURE__ */ u(Autocomplete, { freeSolo: true, fullWidth: true, size: "small", disableClearable: true, options: uniqueFieldValues[newRule.field] || [], value: newRule.value, onInputChange: (_2, newValue) => updateNewRule({ value: newValue || "" }), renderInput: (params) => /* @__PURE__ */ u(TextField, { ...params, variant: "outlined", placeholder: "输入值" }) }),
+        /* @__PURE__ */ u(Button, { variant: "contained", size: "small", onClick: handleAddRule, startIcon: /* @__PURE__ */ u(AddIcon, {}), children: "添加" })
       ] })
     ] })
   ] });
 }
-const ArrowRightIcon = createSvgIcon(/* @__PURE__ */ u$1("path", {
+const ArrowRightIcon = createSvgIcon(/* @__PURE__ */ u("path", {
   d: "m10 17 5-5-5-5z"
 }));
-const DriveFileMoveOutlinedIcon = createSvgIcon(/* @__PURE__ */ u$1("path", {
+const DriveFileMoveOutlinedIcon = createSvgIcon(/* @__PURE__ */ u("path", {
   d: "M20 6h-8l-2-2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2m0 12H4V6h5.17l1.41 1.41.59.59H20zm-7.84-6H8v2h4.16l-1.59 1.59L11.99 17 16 13.01 11.99 9l-1.41 1.41z"
 }));
-const DeleteForeverOutlinedIcon = createSvgIcon(/* @__PURE__ */ u$1("path", {
+const DeleteForeverOutlinedIcon = createSvgIcon(/* @__PURE__ */ u("path", {
   d: "M14.12 10.47 12 12.59l-2.13-2.12-1.41 1.41L10.59 14l-2.12 2.12 1.41 1.41L12 15.41l2.12 2.12 1.41-1.41L13.41 14l2.12-2.12zM15.5 4l-1-1h-5l-1 1H5v2h14V4zM6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6zM8 9h8v10H8z"
 }));
-const ContentCopyIcon = createSvgIcon(/* @__PURE__ */ u$1("path", {
+const ContentCopyIcon = createSvgIcon(/* @__PURE__ */ u("path", {
   d: "M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2m0 16H8V7h11z"
 }));
-const CloseIcon = createSvgIcon(/* @__PURE__ */ u$1("path", {
+const CloseIcon = createSvgIcon(/* @__PURE__ */ u("path", {
   d: "M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"
 }));
 function ActionDialog({
@@ -32341,30 +32196,30 @@ function ActionDialog({
   if (!isOpen) {
     return null;
   }
-  return /* @__PURE__ */ u$1(Dialog, { open: isOpen, onClose, fullWidth, maxWidth: maxWidth2, disablePortal: true, children: [
-    /* @__PURE__ */ u$1(DialogTitle, { children: /* @__PURE__ */ u$1(Stack, { direction: "row", justifyContent: "space-between", alignItems: "center", children: [
+  return /* @__PURE__ */ u(Dialog, { open: isOpen, onClose, fullWidth, maxWidth: maxWidth2, disablePortal: true, children: [
+    /* @__PURE__ */ u(DialogTitle, { children: /* @__PURE__ */ u(Stack, { direction: "row", justifyContent: "space-between", alignItems: "center", children: [
       title,
-      /* @__PURE__ */ u$1(IconButton, { onClick: onClose, size: "small", children: /* @__PURE__ */ u$1(CloseIcon, {}) })
+      /* @__PURE__ */ u(IconButton, { onClick: onClose, size: "small", children: /* @__PURE__ */ u(CloseIcon, {}) })
     ] }) }),
-    /* @__PURE__ */ u$1(DialogContent, { children }),
-    actions && /* @__PURE__ */ u$1(DialogActions, { children: actions })
+    /* @__PURE__ */ u(DialogContent, { children }),
+    actions && /* @__PURE__ */ u(DialogActions, { children: actions })
   ] });
 }
 const GroupNode = ({ group, allGroups, onSelect, selectedId, disabledIds, level = 0 }) => {
   const children = allGroups.filter((g2) => g2.parentId === group.id);
   const isDisabled = disabledIds.has(group.id);
-  return /* @__PURE__ */ u$1("div", { children: [
-    /* @__PURE__ */ u$1(
+  return /* @__PURE__ */ u("div", { children: [
+    /* @__PURE__ */ u(
       ListItemButton,
       {
         selected: selectedId === group.id,
         onClick: () => !isDisabled && onSelect(group.id),
         disabled: isDisabled,
         sx: { pl: 2 + level * 2 },
-        children: /* @__PURE__ */ u$1(ListItemText, { primary: group.name })
+        children: /* @__PURE__ */ u(ListItemText, { primary: group.name })
       }
     ),
-    children.length > 0 && /* @__PURE__ */ u$1(Box, { sx: { pl: 2 }, children: children.map((child) => /* @__PURE__ */ u$1(
+    children.length > 0 && /* @__PURE__ */ u(Box, { sx: { pl: 2 }, children: children.map((child) => /* @__PURE__ */ u(
       GroupNode,
       {
         group: child,
@@ -32402,11 +32257,11 @@ function MoveItemDialog({ isOpen, onClose, itemToMove, groups, onConfirm }) {
     onConfirm(selectedId);
     onClose();
   };
-  const actions = /* @__PURE__ */ u$1(k$2, { children: [
-    /* @__PURE__ */ u$1(Button, { onClick: onClose, children: "取消" }),
-    /* @__PURE__ */ u$1(Button, { onClick: handleConfirm, variant: "contained", disabled: selectedId === itemToMove.parentId, children: "移动" })
+  const actions = /* @__PURE__ */ u(k$2, { children: [
+    /* @__PURE__ */ u(Button, { onClick: onClose, children: "取消" }),
+    /* @__PURE__ */ u(Button, { onClick: handleConfirm, variant: "contained", disabled: selectedId === itemToMove.parentId, children: "移动" })
   ] });
-  return /* @__PURE__ */ u$1(
+  return /* @__PURE__ */ u(
     ActionDialog,
     {
       isOpen,
@@ -32415,17 +32270,17 @@ function MoveItemDialog({ isOpen, onClose, itemToMove, groups, onConfirm }) {
       actions,
       maxWidth: "xs",
       children: [
-        /* @__PURE__ */ u$1(Typography, { variant: "body2", sx: { mb: 1 }, children: "请选择目标位置:" }),
-        /* @__PURE__ */ u$1(List$1, { component: "nav", dense: true, sx: { bgcolor: "action.hover", borderRadius: 1, maxHeight: 300, overflowY: "auto" }, children: [
-          /* @__PURE__ */ u$1(
+        /* @__PURE__ */ u(Typography, { variant: "body2", sx: { mb: 1 }, children: "请选择目标位置:" }),
+        /* @__PURE__ */ u(List$1, { component: "nav", dense: true, sx: { bgcolor: "action.hover", borderRadius: 1, maxHeight: 300, overflowY: "auto" }, children: [
+          /* @__PURE__ */ u(
             ListItemButton,
             {
               selected: selectedId === null,
               onClick: () => setSelectedId(null),
-              children: /* @__PURE__ */ u$1(ListItemText, { primary: "根目录 (未分组)" })
+              children: /* @__PURE__ */ u(ListItemText, { primary: "根目录 (未分组)" })
             }
           ),
-          rootGroups.map((group) => /* @__PURE__ */ u$1(
+          rootGroups.map((group) => /* @__PURE__ */ u(
             GroupNode,
             {
               group,
@@ -32463,8 +32318,8 @@ function Node({ node: node2, children, ...props }) {
       setIsEditing(false);
     }
   };
-  return /* @__PURE__ */ u$1(Box, { children: [
-    /* @__PURE__ */ u$1(
+  return /* @__PURE__ */ u(Box, { children: [
+    /* @__PURE__ */ u(
       Stack,
       {
         direction: "row",
@@ -32479,12 +32334,12 @@ function Node({ node: node2, children, ...props }) {
           borderTopRightRadius: props.isExpanded && !node2.isGroup ? 8 : 0
         },
         children: [
-          /* @__PURE__ */ u$1(IconButton, { size: "small", onClick: props.onToggle, sx: { mr: 0.5 }, children: props.isExpanded ? /* @__PURE__ */ u$1(ArrowDropDownIcon, {}) : /* @__PURE__ */ u$1(ArrowRightIcon, {}) }),
-          isEditing ? /* @__PURE__ */ u$1(TextField, { autoFocus: true, size: "small", variant: "standard", value: name, onChange: (e2) => setName(e2.target.value), onBlur: handleNameBlur, onKeyDown: handleKeyDown, sx: { flexGrow: 1 } }) : /* @__PURE__ */ u$1(Typography, { onClick: props.onToggle, onDblClick: () => setIsEditing(true), title: "单击展开/折叠，双击重命名", sx: { flexGrow: 1, cursor: "pointer", fontWeight: node2.isGroup ? 600 : 500, color: node2.isGroup ? "primary.main" : "text.primary" }, children: node2.name }),
-          /* @__PURE__ */ u$1(Stack, { direction: "row", className: "actions", sx: { opacity: 0, transition: "opacity 0.2s" }, children: [
-            /* @__PURE__ */ u$1(Tooltip, { title: "复制", children: /* @__PURE__ */ u$1("span", { children: /* @__PURE__ */ u$1(IconButton, { size: "small", onClick: () => onDuplicateItem(node2), children: /* @__PURE__ */ u$1(ContentCopyIcon, { fontSize: "small" }) }) }) }),
-            /* @__PURE__ */ u$1(Tooltip, { title: "移动到...", children: /* @__PURE__ */ u$1(IconButton, { size: "small", onClick: () => onOpenMoveDialog(node2), children: /* @__PURE__ */ u$1(DriveFileMoveOutlinedIcon, { fontSize: "small" }) }) }),
-            /* @__PURE__ */ u$1(Tooltip, { title: "删除", children: /* @__PURE__ */ u$1(IconButton, { size: "small", onClick: () => onDeleteItem(node2), sx: { color: "text.secondary", "&:hover": { color: "error.main" } }, children: /* @__PURE__ */ u$1(DeleteForeverOutlinedIcon, { fontSize: "small" }) }) })
+          /* @__PURE__ */ u(IconButton, { size: "small", onClick: props.onToggle, sx: { mr: 0.5 }, children: props.isExpanded ? /* @__PURE__ */ u(ArrowDropDownIcon, {}) : /* @__PURE__ */ u(ArrowRightIcon, {}) }),
+          isEditing ? /* @__PURE__ */ u(TextField, { autoFocus: true, size: "small", variant: "standard", value: name, onChange: (e2) => setName(e2.target.value), onBlur: handleNameBlur, onKeyDown: handleKeyDown, sx: { flexGrow: 1 } }) : /* @__PURE__ */ u(Typography, { onClick: props.onToggle, onDblClick: () => setIsEditing(true), title: "单击展开/折叠，双击重命名", sx: { flexGrow: 1, cursor: "pointer", fontWeight: node2.isGroup ? 600 : 500, color: node2.isGroup ? "primary.main" : "text.primary" }, children: node2.name }),
+          /* @__PURE__ */ u(Stack, { direction: "row", className: "actions", sx: { opacity: 0, transition: "opacity 0.2s" }, children: [
+            /* @__PURE__ */ u(Tooltip, { title: "复制", children: /* @__PURE__ */ u("span", { children: /* @__PURE__ */ u(IconButton, { size: "small", onClick: () => onDuplicateItem(node2), children: /* @__PURE__ */ u(ContentCopyIcon, { fontSize: "small" }) }) }) }),
+            /* @__PURE__ */ u(Tooltip, { title: "移动到...", children: /* @__PURE__ */ u(IconButton, { size: "small", onClick: () => onOpenMoveDialog(node2), children: /* @__PURE__ */ u(DriveFileMoveOutlinedIcon, { fontSize: "small" }) }) }),
+            /* @__PURE__ */ u(Tooltip, { title: "删除", children: /* @__PURE__ */ u(IconButton, { size: "small", onClick: () => onDeleteItem(node2), sx: { color: "text.secondary", "&:hover": { color: "error.main" } }, children: /* @__PURE__ */ u(DeleteForeverOutlinedIcon, { fontSize: "small" }) }) })
           ] })
         ]
       }
@@ -32509,22 +32364,22 @@ function SettingsTreeView({ groups, items, allGroups, parentId, level = 0, rende
   };
   const childGroups = groups.filter((g2) => g2.parentId === parentId);
   const childItems = items.filter((i2) => i2.parentId === parentId);
-  return /* @__PURE__ */ u$1(Box, { children: [
+  return /* @__PURE__ */ u(Box, { children: [
     childGroups.map((group) => {
       const treeItem = { ...group, isGroup: true };
       const isExpanded = !collapsedState[group.id];
-      return /* @__PURE__ */ u$1(Box, { sx: { borderBottom: "1px solid rgba(0,0,0,0.08)" }, children: /* @__PURE__ */ u$1(Node, { node: treeItem, isExpanded, level, onToggle: () => toggleCollapse(group.id), onUpdateItemName, onDeleteItem, onOpenMoveDialog: setMovingItem, onDuplicateItem, children: /* @__PURE__ */ u$1(Collapse, { in: isExpanded, timeout: "auto", unmountOnExit: true, children: /* @__PURE__ */ u$1(SettingsTreeView, { ...{ groups, items, allGroups, renderItem, onAddItem, onAddGroup, onDeleteItem, onUpdateItemName, onDuplicateItem }, parentId: group.id, level: level + 1 }) }) }) }, group.id);
+      return /* @__PURE__ */ u(Box, { sx: { borderBottom: "1px solid rgba(0,0,0,0.08)" }, children: /* @__PURE__ */ u(Node, { node: treeItem, isExpanded, level, onToggle: () => toggleCollapse(group.id), onUpdateItemName, onDeleteItem, onOpenMoveDialog: setMovingItem, onDuplicateItem, children: /* @__PURE__ */ u(Collapse, { in: isExpanded, timeout: "auto", unmountOnExit: true, children: /* @__PURE__ */ u(SettingsTreeView, { ...{ groups, items, allGroups, renderItem, onAddItem, onAddGroup, onDeleteItem, onUpdateItemName, onDuplicateItem }, parentId: group.id, level: level + 1 }) }) }) }, group.id);
     }),
     childItems.map((item) => {
       const isExpanded = !collapsedState[item.id];
       const treeItem = { ...item, isGroup: false, name: item.name || item.title };
-      return /* @__PURE__ */ u$1(Box, { sx: { borderBottom: "1px solid rgba(0,0,0,0.08)" }, children: /* @__PURE__ */ u$1(Node, { node: treeItem, isExpanded, level, onToggle: () => toggleCollapse(item.id), onUpdateItemName, onDeleteItem, onOpenMoveDialog: setMovingItem, onDuplicateItem, children: /* @__PURE__ */ u$1(Collapse, { in: isExpanded, timeout: "auto", unmountOnExit: true, children: /* @__PURE__ */ u$1(Box, { sx: { bgcolor: "action.hover", borderTop: "1px solid rgba(0,0,0,0.05)" }, children: renderItem(item) }) }) }) }, item.id);
+      return /* @__PURE__ */ u(Box, { sx: { borderBottom: "1px solid rgba(0,0,0,0.08)" }, children: /* @__PURE__ */ u(Node, { node: treeItem, isExpanded, level, onToggle: () => toggleCollapse(item.id), onUpdateItemName, onDeleteItem, onOpenMoveDialog: setMovingItem, onDuplicateItem, children: /* @__PURE__ */ u(Collapse, { in: isExpanded, timeout: "auto", unmountOnExit: true, children: /* @__PURE__ */ u(Box, { sx: { bgcolor: "action.hover", borderTop: "1px solid rgba(0,0,0,0.05)" }, children: renderItem(item) }) }) }) }, item.id);
     }),
-    level === 0 && /* @__PURE__ */ u$1(Stack, { direction: "row", spacing: 1, sx: { mt: 2, pl: 1 }, children: [
-      /* @__PURE__ */ u$1(Button, { onClick: () => onAddItem(parentId), startIcon: /* @__PURE__ */ u$1(AddCircleOutlineIcon, {}), size: "small", children: "添加新项" }),
-      /* @__PURE__ */ u$1(Button, { onClick: () => onAddGroup(parentId), startIcon: /* @__PURE__ */ u$1(AddCircleOutlineIcon, {}), size: "small", children: "添加分组" })
+    level === 0 && /* @__PURE__ */ u(Stack, { direction: "row", spacing: 1, sx: { mt: 2, pl: 1 }, children: [
+      /* @__PURE__ */ u(Button, { onClick: () => onAddItem(parentId), startIcon: /* @__PURE__ */ u(AddCircleOutlineIcon, {}), size: "small", children: "添加新项" }),
+      /* @__PURE__ */ u(Button, { onClick: () => onAddGroup(parentId), startIcon: /* @__PURE__ */ u(AddCircleOutlineIcon, {}), size: "small", children: "添加分组" })
     ] }),
-    movingItem && /* @__PURE__ */ u$1(MoveItemDialog, { isOpen: !!movingItem, onClose: () => setMovingItem(null), itemToMove: movingItem, groups: allGroups, onConfirm: handleMoveConfirm })
+    movingItem && /* @__PURE__ */ u(MoveItemDialog, { isOpen: !!movingItem, onClose: () => setMovingItem(null), itemToMove: movingItem, groups: allGroups, onConfirm: handleMoveConfirm })
   ] });
 }
 const PromptComponent = ({ title, placeholder, initialValue, onSubmit, onCancel }) => {
@@ -32540,9 +32395,9 @@ const PromptComponent = ({ title, placeholder, initialValue, onSubmit, onCancel 
       handleConfirm();
     }
   };
-  return /* @__PURE__ */ u$1("div", { class: "think-modal", children: [
-    /* @__PURE__ */ u$1("h3", { children: title }),
-    /* @__PURE__ */ u$1(
+  return /* @__PURE__ */ u("div", { class: "think-modal", children: [
+    /* @__PURE__ */ u("h3", { children: title }),
+    /* @__PURE__ */ u(
       TextField,
       {
         autoFocus: true,
@@ -32555,9 +32410,9 @@ const PromptComponent = ({ title, placeholder, initialValue, onSubmit, onCancel 
         sx: { mt: 2 }
       }
     ),
-    /* @__PURE__ */ u$1("div", { style: { display: "flex", justifyContent: "flex-end", marginTop: "1.5rem", gap: "8px" }, children: [
-      /* @__PURE__ */ u$1(Button, { onClick: handleConfirm, variant: "contained", children: "确认" }),
-      /* @__PURE__ */ u$1(Button, { onClick: onCancel, children: "取消" })
+    /* @__PURE__ */ u("div", { style: { display: "flex", justifyContent: "flex-end", marginTop: "1.5rem", gap: "8px" }, children: [
+      /* @__PURE__ */ u(Button, { onClick: handleConfirm, variant: "contained", children: "确认" }),
+      /* @__PURE__ */ u(Button, { onClick: onCancel, children: "取消" })
     ] })
   ] });
 };
@@ -32572,7 +32427,7 @@ class NamePromptModal extends obsidian.Modal {
   onOpen() {
     this.contentEl.empty();
     G$1(
-      /* @__PURE__ */ u$1(
+      /* @__PURE__ */ u(
         PromptComponent,
         {
           title: this.title,
@@ -36033,9 +35888,9 @@ function DataSourceEditor({ ds, appStore: appStore2 }) {
   const handleUpdate = (updates) => {
     appStore2.updateDataSource(ds.id, updates);
   };
-  return /* @__PURE__ */ u$1(Stack, { spacing: 2, sx: { p: "8px 16px 16px 50px" }, children: [
-    /* @__PURE__ */ u$1(RuleBuilder, { title: "过滤规则", mode: "filter", rows: ds.filters, fieldOptions, onChange: (rows) => handleUpdate({ filters: rows }) }),
-    /* @__PURE__ */ u$1(RuleBuilder, { title: "排序规则", mode: "sort", rows: ds.sort, fieldOptions, onChange: (rows) => handleUpdate({ sort: rows }) })
+  return /* @__PURE__ */ u(Stack, { spacing: 2, sx: { p: "8px 16px 16px 50px" }, children: [
+    /* @__PURE__ */ u(RuleBuilder, { title: "过滤规则", mode: "filter", rows: ds.filters, fieldOptions, onChange: (rows) => handleUpdate({ filters: rows }) }),
+    /* @__PURE__ */ u(RuleBuilder, { title: "排序规则", mode: "sort", rows: ds.sort, fieldOptions, onChange: (rows) => handleUpdate({ sort: rows }) })
   ] });
 }
 function DataSourceSettings({ app, appStore: appStore2 }) {
@@ -36064,16 +35919,16 @@ function DataSourceSettings({ app, appStore: appStore2 }) {
       }
     }
   };
-  return /* @__PURE__ */ u$1(Box, { sx: { maxWidth: "900px", mx: "auto" }, children: [
-    /* @__PURE__ */ u$1(Stack, { direction: "row", alignItems: "center", spacing: 1, sx: { mb: 2 }, children: /* @__PURE__ */ u$1(Typography, { variant: "h6", children: "管理数据源" }) }),
-    /* @__PURE__ */ u$1(DndContext, { collisionDetection: closestCenter, onDragEnd: handleDragEnd, children: /* @__PURE__ */ u$1(
+  return /* @__PURE__ */ u(Box, { sx: { maxWidth: "900px", mx: "auto" }, children: [
+    /* @__PURE__ */ u(Stack, { direction: "row", alignItems: "center", spacing: 1, sx: { mb: 2 }, children: /* @__PURE__ */ u(Typography, { variant: "h6", children: "管理数据源" }) }),
+    /* @__PURE__ */ u(DndContext, { collisionDetection: closestCenter, onDragEnd: handleDragEnd, children: /* @__PURE__ */ u(
       SettingsTreeView,
       {
         groups: dsGroups,
         items: itemsAsTreeItems,
         allGroups: dsGroups,
         parentId: null,
-        renderItem: (ds) => /* @__PURE__ */ u$1(DataSourceEditor, { ds, appStore: appStore2 }),
+        renderItem: (ds) => /* @__PURE__ */ u(DataSourceEditor, { ds, appStore: appStore2 }),
         onAddItem: manager2.onAddItem,
         onAddGroup: manager2.onAddGroup,
         onDeleteItem: manager2.onDeleteItem,
@@ -36112,28 +35967,28 @@ function ViewInstanceEditor({ vi, appStore: appStore2 }) {
     { value: "", label: "-- 不分组 --" },
     ...fieldOptions.map((f2) => ({ value: f2, label: f2 }))
   ], [fieldOptions]);
-  return /* @__PURE__ */ u$1(Stack, { spacing: 2, sx: { p: "8px 16px 16px 50px" }, children: [
-    /* @__PURE__ */ u$1(Stack, { direction: "row", alignItems: "center", spacing: 2, children: [
-      /* @__PURE__ */ u$1(Typography, { sx: { width: LABEL_WIDTH$1, flexShrink: 0, fontWeight: 500 }, children: "基础配置" }),
-      /* @__PURE__ */ u$1(SimpleSelect, { value: vi.viewType, options: viewTypeOptions, onChange: (val) => handleUpdate({ viewType: val }), sx: { minWidth: 150, flexGrow: 1 } }),
-      /* @__PURE__ */ u$1(SimpleSelect, { value: vi.dataSourceId, options: dataSourceOptions, placeholder: "-- 选择数据源 --", onChange: (val) => handleUpdate({ dataSourceId: val }), sx: { minWidth: 150, flexGrow: 1 } }),
-      /* @__PURE__ */ u$1(FormControlLabel, { control: /* @__PURE__ */ u$1(Checkbox, { size: "small", checked: !!vi.collapsed, onChange: (e2) => handleUpdate({ collapsed: e2.target.checked }) }), label: /* @__PURE__ */ u$1(Typography, { noWrap: true, children: "默认折叠" }) })
+  return /* @__PURE__ */ u(Stack, { spacing: 2, sx: { p: "8px 16px 16px 50px" }, children: [
+    /* @__PURE__ */ u(Stack, { direction: "row", alignItems: "center", spacing: 2, children: [
+      /* @__PURE__ */ u(Typography, { sx: { width: LABEL_WIDTH$1, flexShrink: 0, fontWeight: 500 }, children: "基础配置" }),
+      /* @__PURE__ */ u(SimpleSelect, { value: vi.viewType, options: viewTypeOptions, onChange: (val) => handleUpdate({ viewType: val }), sx: { minWidth: 150, flexGrow: 1 } }),
+      /* @__PURE__ */ u(SimpleSelect, { value: vi.dataSourceId, options: dataSourceOptions, placeholder: "-- 选择数据源 --", onChange: (val) => handleUpdate({ dataSourceId: val }), sx: { minWidth: 150, flexGrow: 1 } }),
+      /* @__PURE__ */ u(FormControlLabel, { control: /* @__PURE__ */ u(Checkbox, { size: "small", checked: !!vi.collapsed, onChange: (e2) => handleUpdate({ collapsed: e2.target.checked }) }), label: /* @__PURE__ */ u(Typography, { noWrap: true, children: "默认折叠" }) })
     ] }),
-    /* @__PURE__ */ u$1(Stack, { direction: "row", flexWrap: "wrap", spacing: 1, useFlexGap: true, alignItems: "center", children: [
-      /* @__PURE__ */ u$1(Typography, { sx: { width: LABEL_WIDTH$1, flexShrink: 0, fontWeight: 500 }, children: "显示字段" }),
-      (vi.fields || []).map((field) => /* @__PURE__ */ u$1(Tooltip, { title: `点击移除字段: ${field}`, children: /* @__PURE__ */ u$1(Chip, { label: field, onClick: () => removeField(field), size: "small" }) }, field)),
-      /* @__PURE__ */ u$1(SimpleSelect, { value: "", options: availableFieldOptions, placeholder: "+ 添加字段...", onChange: (val) => addField(val), sx: { minWidth: 150 } })
+    /* @__PURE__ */ u(Stack, { direction: "row", flexWrap: "wrap", spacing: 1, useFlexGap: true, alignItems: "center", children: [
+      /* @__PURE__ */ u(Typography, { sx: { width: LABEL_WIDTH$1, flexShrink: 0, fontWeight: 500 }, children: "显示字段" }),
+      (vi.fields || []).map((field) => /* @__PURE__ */ u(Tooltip, { title: `点击移除字段: ${field}`, children: /* @__PURE__ */ u(Chip, { label: field, onClick: () => removeField(field), size: "small" }) }, field)),
+      /* @__PURE__ */ u(SimpleSelect, { value: "", options: availableFieldOptions, placeholder: "+ 添加字段...", onChange: (val) => addField(val), sx: { minWidth: 150 } })
     ] }),
-    /* @__PURE__ */ u$1(Stack, { direction: "row", alignItems: "center", spacing: 2, children: [
-      /* @__PURE__ */ u$1(Typography, { sx: { width: LABEL_WIDTH$1, flexShrink: 0, fontWeight: 500 }, children: "分组字段" }),
-      /* @__PURE__ */ u$1(SimpleSelect, { fullWidth: true, value: vi.group || "", options: groupFieldOptions, onChange: (val) => handleUpdate({ group: val || void 0 }) })
+    /* @__PURE__ */ u(Stack, { direction: "row", alignItems: "center", spacing: 2, children: [
+      /* @__PURE__ */ u(Typography, { sx: { width: LABEL_WIDTH$1, flexShrink: 0, fontWeight: 500 }, children: "分组字段" }),
+      /* @__PURE__ */ u(SimpleSelect, { fullWidth: true, value: vi.group || "", options: groupFieldOptions, onChange: (val) => handleUpdate({ group: val || void 0 }) })
     ] }),
-    EditorComponent && /* @__PURE__ */ u$1(Box, { pt: 1, mt: 1, sx: { borderTop: "1px solid rgba(0,0,0,0.08)" }, children: [
-      /* @__PURE__ */ u$1(Typography, { variant: "subtitle2", sx: { fontWeight: 600, mb: 1.5, mt: 1 }, children: [
+    EditorComponent && /* @__PURE__ */ u(Box, { pt: 1, mt: 1, sx: { borderTop: "1px solid rgba(0,0,0,0.08)" }, children: [
+      /* @__PURE__ */ u(Typography, { variant: "subtitle2", sx: { fontWeight: 600, mb: 1.5, mt: 1 }, children: [
         vi.viewType.replace("View", ""),
         " 专属配置"
       ] }),
-      /* @__PURE__ */ u$1(EditorComponent, { module: vi, value: correctedViewConfig, onChange: (patch) => handleUpdate({ viewConfig: { ...correctedViewConfig, ...patch } }), fieldOptions })
+      /* @__PURE__ */ u(EditorComponent, { module: vi, value: correctedViewConfig, onChange: (patch) => handleUpdate({ viewConfig: { ...correctedViewConfig, ...patch } }), fieldOptions })
     ] })
   ] });
 }
@@ -36163,16 +36018,16 @@ function ViewInstanceSettings({ app, appStore: appStore2 }) {
       }
     }
   };
-  return /* @__PURE__ */ u$1(Box, { sx: { maxWidth: "900px", mx: "auto" }, children: [
-    /* @__PURE__ */ u$1(Stack, { direction: "row", alignItems: "center", spacing: 1, sx: { mb: 2 }, children: /* @__PURE__ */ u$1(Typography, { variant: "h6", children: "管理视图" }) }),
-    /* @__PURE__ */ u$1(DndContext, { collisionDetection: closestCenter, onDragEnd: handleDragEnd, children: /* @__PURE__ */ u$1(
+  return /* @__PURE__ */ u(Box, { sx: { maxWidth: "900px", mx: "auto" }, children: [
+    /* @__PURE__ */ u(Stack, { direction: "row", alignItems: "center", spacing: 1, sx: { mb: 2 }, children: /* @__PURE__ */ u(Typography, { variant: "h6", children: "管理视图" }) }),
+    /* @__PURE__ */ u(DndContext, { collisionDetection: closestCenter, onDragEnd: handleDragEnd, children: /* @__PURE__ */ u(
       SettingsTreeView,
       {
         groups: viewGroups,
         items: itemsAsTreeItems,
         allGroups: viewGroups,
         parentId: null,
-        renderItem: (vi) => /* @__PURE__ */ u$1(ViewInstanceEditor, { vi, appStore: appStore2 }),
+        renderItem: (vi) => /* @__PURE__ */ u(ViewInstanceEditor, { vi, appStore: appStore2 }),
         onAddItem: manager2.onAddItem,
         onAddGroup: manager2.onAddGroup,
         onDeleteItem: manager2.onDeleteItem,
@@ -36186,9 +36041,9 @@ function ViewInstanceSettings({ app, appStore: appStore2 }) {
 const PERIOD_OPTIONS = ["年", "季", "月", "周", "天"].map((v2) => ({ value: v2, label: v2 }));
 const DISPLAY_MODE_OPTIONS = [{ value: "list", label: "列表" }, { value: "grid", label: "网格" }];
 const LABEL_WIDTH = "80px";
-const AlignedRadioGroup = ({ label, options, selectedValue, onChange }) => /* @__PURE__ */ u$1(Stack, { direction: "row", alignItems: "center", spacing: 2, children: [
-  /* @__PURE__ */ u$1(Typography, { sx: { width: LABEL_WIDTH, flexShrink: 0, fontWeight: 500 }, children: label }),
-  /* @__PURE__ */ u$1(RadioGroup, { row: true, value: selectedValue, onChange: (e2) => onChange(e2.target.value), children: options.map((opt) => /* @__PURE__ */ u$1(FormControlLabel, { value: opt.value, control: /* @__PURE__ */ u$1(Radio, { size: "small" }), label: opt.label }, opt.value)) })
+const AlignedRadioGroup = ({ label, options, selectedValue, onChange }) => /* @__PURE__ */ u(Stack, { direction: "row", alignItems: "center", spacing: 2, children: [
+  /* @__PURE__ */ u(Typography, { sx: { width: LABEL_WIDTH, flexShrink: 0, fontWeight: 500 }, children: label }),
+  /* @__PURE__ */ u(RadioGroup, { row: true, value: selectedValue, onChange: (e2) => onChange(e2.target.value), children: options.map((opt) => /* @__PURE__ */ u(FormControlLabel, { value: opt.value, control: /* @__PURE__ */ u(Radio, { size: "small" }), label: opt.label }, opt.value)) })
 ] });
 function LayoutEditor({ layout, appStore: appStore2 }) {
   const allViews = useStore((state) => state.settings.viewInstances);
@@ -36212,34 +36067,34 @@ function LayoutEditor({ layout, appStore: appStore2 }) {
     handleUpdate({ viewInstanceIds: layout.viewInstanceIds.filter((id) => id !== viewId) });
   };
   const availableViewOptions = availableViews.map((v2) => ({ value: v2.id, label: v2.title }));
-  return /* @__PURE__ */ u$1(Stack, { spacing: 2, sx: { p: "8px 16px 16px 50px" }, children: [
-    /* @__PURE__ */ u$1(Stack, { direction: "row", alignItems: "center", spacing: 2, children: [
-      /* @__PURE__ */ u$1(Typography, { sx: { width: LABEL_WIDTH, flexShrink: 0, fontWeight: 500 }, children: "模式" }),
-      /* @__PURE__ */ u$1(
+  return /* @__PURE__ */ u(Stack, { spacing: 2, sx: { p: "8px 16px 16px 50px" }, children: [
+    /* @__PURE__ */ u(Stack, { direction: "row", alignItems: "center", spacing: 2, children: [
+      /* @__PURE__ */ u(Typography, { sx: { width: LABEL_WIDTH, flexShrink: 0, fontWeight: 500 }, children: "模式" }),
+      /* @__PURE__ */ u(
         FormControlLabel,
         {
-          control: /* @__PURE__ */ u$1(Checkbox, { size: "small", checked: !!layout.isOverviewMode, onChange: (e2) => handleUpdate({ isOverviewMode: e2.target.checked, initialDateFollowsNow: false }) }),
-          label: /* @__PURE__ */ u$1(Typography, { noWrap: true, children: "启用概览模式" }),
+          control: /* @__PURE__ */ u(Checkbox, { size: "small", checked: !!layout.isOverviewMode, onChange: (e2) => handleUpdate({ isOverviewMode: e2.target.checked, initialDateFollowsNow: false }) }),
+          label: /* @__PURE__ */ u(Typography, { noWrap: true, children: "启用概览模式" }),
           title: "启用后，此布局将变为持久化时间导航模式，工具栏样式将改变，且时间不再跟随今日。"
         }
       )
     ] }),
-    /* @__PURE__ */ u$1(Stack, { direction: "row", alignItems: "center", spacing: 2, children: [
-      /* @__PURE__ */ u$1(Typography, { sx: { width: LABEL_WIDTH, flexShrink: 0, fontWeight: 500 }, children: "工具栏" }),
-      /* @__PURE__ */ u$1(FormControlLabel, { control: /* @__PURE__ */ u$1(Checkbox, { size: "small", checked: !layout.hideToolbar, onChange: (e2) => handleUpdate({ hideToolbar: !e2.target.checked }) }), label: /* @__PURE__ */ u$1(Typography, { noWrap: true, children: "显示工具栏/导航器" }), sx: { flexShrink: 0, mr: 0 } })
+    /* @__PURE__ */ u(Stack, { direction: "row", alignItems: "center", spacing: 2, children: [
+      /* @__PURE__ */ u(Typography, { sx: { width: LABEL_WIDTH, flexShrink: 0, fontWeight: 500 }, children: "工具栏" }),
+      /* @__PURE__ */ u(FormControlLabel, { control: /* @__PURE__ */ u(Checkbox, { size: "small", checked: !layout.hideToolbar, onChange: (e2) => handleUpdate({ hideToolbar: !e2.target.checked }) }), label: /* @__PURE__ */ u(Typography, { noWrap: true, children: "显示工具栏/导航器" }), sx: { flexShrink: 0, mr: 0 } })
     ] }),
-    /* @__PURE__ */ u$1(Stack, { direction: "row", alignItems: "center", spacing: 2, children: [
-      /* @__PURE__ */ u$1(Typography, { sx: { width: LABEL_WIDTH, flexShrink: 0, fontWeight: 500 }, children: "初始日期" }),
-      /* @__PURE__ */ u$1(TextField, { type: "date", size: "small", variant: "outlined", disabled: !!layout.initialDateFollowsNow && !layout.isOverviewMode, value: layout.initialDate || "", onChange: (e2) => handleUpdate({ initialDate: e2.target.value }), sx: { width: "170px" } }),
-      /* @__PURE__ */ u$1(FormControlLabel, { control: /* @__PURE__ */ u$1(Checkbox, { size: "small", disabled: !!layout.isOverviewMode, checked: !!layout.initialDateFollowsNow, onChange: (e2) => handleUpdate({ initialDateFollowsNow: e2.target.checked }) }), label: /* @__PURE__ */ u$1(Typography, { noWrap: true, children: "跟随今日" }) })
+    /* @__PURE__ */ u(Stack, { direction: "row", alignItems: "center", spacing: 2, children: [
+      /* @__PURE__ */ u(Typography, { sx: { width: LABEL_WIDTH, flexShrink: 0, fontWeight: 500 }, children: "初始日期" }),
+      /* @__PURE__ */ u(TextField, { type: "date", size: "small", variant: "outlined", disabled: !!layout.initialDateFollowsNow && !layout.isOverviewMode, value: layout.initialDate || "", onChange: (e2) => handleUpdate({ initialDate: e2.target.value }), sx: { width: "170px" } }),
+      /* @__PURE__ */ u(FormControlLabel, { control: /* @__PURE__ */ u(Checkbox, { size: "small", disabled: !!layout.isOverviewMode, checked: !!layout.initialDateFollowsNow, onChange: (e2) => handleUpdate({ initialDateFollowsNow: e2.target.checked }) }), label: /* @__PURE__ */ u(Typography, { noWrap: true, children: "跟随今日" }) })
     ] }),
-    /* @__PURE__ */ u$1(AlignedRadioGroup, { label: "初始周期", options: PERIOD_OPTIONS, selectedValue: layout.initialView || "月", onChange: (value) => handleUpdate({ initialView: value }) }),
-    /* @__PURE__ */ u$1(AlignedRadioGroup, { label: "排列方式", options: DISPLAY_MODE_OPTIONS, selectedValue: layout.displayMode || "list", onChange: (value) => handleUpdate({ displayMode: value }) }),
-    layout.displayMode === "grid" && /* @__PURE__ */ u$1(Stack, { direction: "row", alignItems: "center", spacing: 2, sx: { pl: `calc(${LABEL_WIDTH} + 16px)` }, children: /* @__PURE__ */ u$1(TextField, { label: "列数", type: "number", size: "small", variant: "outlined", value: layout.gridConfig?.columns || 2, onChange: (e2) => handleUpdate({ gridConfig: { columns: parseInt(e2.target.value, 10) || 2 } }), sx: { width: "100px" } }) }),
-    /* @__PURE__ */ u$1(Stack, { direction: "row", flexWrap: "wrap", spacing: 1, useFlexGap: true, alignItems: "center", children: [
-      /* @__PURE__ */ u$1(Typography, { sx: { width: LABEL_WIDTH, flexShrink: 0, fontWeight: 500 }, children: "包含视图" }),
-      selectedViews.map((view) => /* @__PURE__ */ u$1(Tooltip, { title: `点击移除 "${view.title}"`, children: /* @__PURE__ */ u$1(Chip, { label: view.title, onClick: () => removeView(view.id), size: "small" }) }, view.id)),
-      /* @__PURE__ */ u$1(SimpleSelect, { value: "", options: availableViewOptions, onChange: addView, placeholder: "+ 添加视图...", sx: { minWidth: 150 } })
+    /* @__PURE__ */ u(AlignedRadioGroup, { label: "初始周期", options: PERIOD_OPTIONS, selectedValue: layout.initialView || "月", onChange: (value) => handleUpdate({ initialView: value }) }),
+    /* @__PURE__ */ u(AlignedRadioGroup, { label: "排列方式", options: DISPLAY_MODE_OPTIONS, selectedValue: layout.displayMode || "list", onChange: (value) => handleUpdate({ displayMode: value }) }),
+    layout.displayMode === "grid" && /* @__PURE__ */ u(Stack, { direction: "row", alignItems: "center", spacing: 2, sx: { pl: `calc(${LABEL_WIDTH} + 16px)` }, children: /* @__PURE__ */ u(TextField, { label: "列数", type: "number", size: "small", variant: "outlined", value: layout.gridConfig?.columns || 2, onChange: (e2) => handleUpdate({ gridConfig: { columns: parseInt(e2.target.value, 10) || 2 } }), sx: { width: "100px" } }) }),
+    /* @__PURE__ */ u(Stack, { direction: "row", flexWrap: "wrap", spacing: 1, useFlexGap: true, alignItems: "center", children: [
+      /* @__PURE__ */ u(Typography, { sx: { width: LABEL_WIDTH, flexShrink: 0, fontWeight: 500 }, children: "包含视图" }),
+      selectedViews.map((view) => /* @__PURE__ */ u(Tooltip, { title: `点击移除 "${view.title}"`, children: /* @__PURE__ */ u(Chip, { label: view.title, onClick: () => removeView(view.id), size: "small" }) }, view.id)),
+      /* @__PURE__ */ u(SimpleSelect, { value: "", options: availableViewOptions, onChange: addView, placeholder: "+ 添加视图...", sx: { minWidth: 150 } })
     ] })
   ] });
 }
@@ -36269,16 +36124,16 @@ function LayoutSettings({ app, appStore: appStore2 }) {
       }
     }
   };
-  return /* @__PURE__ */ u$1(Box, { sx: { maxWidth: "900px", mx: "auto" }, children: [
-    /* @__PURE__ */ u$1(Stack, { direction: "row", alignItems: "center", spacing: 1, sx: { mb: 2 }, children: /* @__PURE__ */ u$1(Typography, { variant: "h6", children: "管理布局" }) }),
-    /* @__PURE__ */ u$1(DndContext, { collisionDetection: closestCenter, onDragEnd: handleDragEnd, children: /* @__PURE__ */ u$1(
+  return /* @__PURE__ */ u(Box, { sx: { maxWidth: "900px", mx: "auto" }, children: [
+    /* @__PURE__ */ u(Stack, { direction: "row", alignItems: "center", spacing: 1, sx: { mb: 2 }, children: /* @__PURE__ */ u(Typography, { variant: "h6", children: "管理布局" }) }),
+    /* @__PURE__ */ u(DndContext, { collisionDetection: closestCenter, onDragEnd: handleDragEnd, children: /* @__PURE__ */ u(
       SettingsTreeView,
       {
         groups: layoutGroups,
         items: itemsAsTreeItems,
         allGroups: layoutGroups,
         parentId: null,
-        renderItem: (l2) => /* @__PURE__ */ u$1(LayoutEditor, { layout: l2, appStore: appStore2 }),
+        renderItem: (l2) => /* @__PURE__ */ u(LayoutEditor, { layout: l2, appStore: appStore2 }),
         onAddItem: manager2.onAddItem,
         onAddGroup: manager2.onAddGroup,
         onDeleteItem: manager2.onDeleteItem,
@@ -36289,7 +36144,7 @@ function LayoutSettings({ app, appStore: appStore2 }) {
     ) })
   ] });
 }
-const DeleteIcon = createSvgIcon(/* @__PURE__ */ u$1("path", {
+const DeleteIcon = createSvgIcon(/* @__PURE__ */ u("path", {
   d: "M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6zM19 4h-3.5l-1-1h-5l-1 1H5v2h14z"
 }));
 function OptionRow({ option, onChange, onRemove, fieldType }) {
@@ -36303,10 +36158,10 @@ function OptionRow({ option, onChange, onRemove, fieldType }) {
   const isRating = fieldType === "rating";
   const labelLabel = isRating ? "评分数值" : "选项标签";
   const valueLabel = isRating ? "显示内容 (Emoji/图片路径)" : "选项值";
-  return /* @__PURE__ */ u$1(Stack, { direction: "row", alignItems: "center", spacing: 1.5, children: [
-    /* @__PURE__ */ u$1(TextField, { label: labelLabel, value: localOption.label || "", onChange: (e2) => setLocalOption((o2) => ({ ...o2, label: e2.target.value })), onBlur: handleBlur, size: "small", variant: "outlined", sx: { flex: 1 } }),
-    /* @__PURE__ */ u$1(TextField, { label: valueLabel, value: localOption.value, onChange: (e2) => setLocalOption((o2) => ({ ...o2, value: e2.target.value })), onBlur: handleBlur, size: "small", variant: "outlined", sx: { flex: 1 } }),
-    /* @__PURE__ */ u$1(Tooltip, { title: "删除此选项", children: /* @__PURE__ */ u$1(IconButton, { onClick: onRemove, size: "small", children: /* @__PURE__ */ u$1(RemoveCircleOutlineIcon, { fontSize: "small" }) }) })
+  return /* @__PURE__ */ u(Stack, { direction: "row", alignItems: "center", spacing: 1.5, children: [
+    /* @__PURE__ */ u(TextField, { label: labelLabel, value: localOption.label || "", onChange: (e2) => setLocalOption((o2) => ({ ...o2, label: e2.target.value })), onBlur: handleBlur, size: "small", variant: "outlined", sx: { flex: 1 } }),
+    /* @__PURE__ */ u(TextField, { label: valueLabel, value: localOption.value, onChange: (e2) => setLocalOption((o2) => ({ ...o2, value: e2.target.value })), onBlur: handleBlur, size: "small", variant: "outlined", sx: { flex: 1 } }),
+    /* @__PURE__ */ u(Tooltip, { title: "删除此选项", children: /* @__PURE__ */ u(IconButton, { onClick: onRemove, size: "small", children: /* @__PURE__ */ u(RemoveCircleOutlineIcon, { fontSize: "small" }) }) })
   ] });
 }
 function FieldRow({ field, index, fieldCount, onUpdate, onRemove, onMove }) {
@@ -36347,23 +36202,23 @@ function FieldRow({ field, index, fieldCount, onUpdate, onRemove, onMove }) {
     // [NEW] Added 'rating' type
   ];
   const showOptionsEditor = ["select", "radio", "rating"].includes(field.type);
-  return /* @__PURE__ */ u$1(Box, { children: [
-    /* @__PURE__ */ u$1(Stack, { direction: "row", spacing: 2, alignItems: "center", children: [
-      /* @__PURE__ */ u$1(SimpleSelect, { value: field.type, options: fieldTypeOptions, onChange: (val) => onUpdate({ type: val }), sx: { minWidth: 120, flexShrink: 0 } }),
-      /* @__PURE__ */ u$1(TextField, { label: "字段名称", placeholder: "例如：任务内容", value: localName, onChange: (e2) => setLocalName(e2.target.value), onBlur: handleNameBlur, size: "small", variant: "outlined", sx: { flexGrow: 1 }, title: "该名称将作为表单项的标题，并在模板中通过 {{字段名称}} 的形式引用" }),
-      field.type === "number" && /* @__PURE__ */ u$1(Stack, { direction: "row", spacing: 1, children: [
-        /* @__PURE__ */ u$1(TextField, { label: "Min", type: "number", value: field.min ?? "", onChange: (e2) => onUpdate({ min: e2.target.value === "" ? void 0 : Number(e2.target.value) }), size: "small", variant: "outlined", sx: { width: 80 } }),
-        /* @__PURE__ */ u$1(TextField, { label: "Max", type: "number", value: field.max ?? "", onChange: (e2) => onUpdate({ max: e2.target.value === "" ? void 0 : Number(e2.target.value) }), size: "small", variant: "outlined", sx: { width: 80 } })
+  return /* @__PURE__ */ u(Box, { children: [
+    /* @__PURE__ */ u(Stack, { direction: "row", spacing: 2, alignItems: "center", children: [
+      /* @__PURE__ */ u(SimpleSelect, { value: field.type, options: fieldTypeOptions, onChange: (val) => onUpdate({ type: val }), sx: { minWidth: 120, flexShrink: 0 } }),
+      /* @__PURE__ */ u(TextField, { label: "字段名称", placeholder: "例如：任务内容", value: localName, onChange: (e2) => setLocalName(e2.target.value), onBlur: handleNameBlur, size: "small", variant: "outlined", sx: { flexGrow: 1 }, title: "该名称将作为表单项的标题，并在模板中通过 {{字段名称}} 的形式引用" }),
+      field.type === "number" && /* @__PURE__ */ u(Stack, { direction: "row", spacing: 1, children: [
+        /* @__PURE__ */ u(TextField, { label: "Min", type: "number", value: field.min ?? "", onChange: (e2) => onUpdate({ min: e2.target.value === "" ? void 0 : Number(e2.target.value) }), size: "small", variant: "outlined", sx: { width: 80 } }),
+        /* @__PURE__ */ u(TextField, { label: "Max", type: "number", value: field.max ?? "", onChange: (e2) => onUpdate({ max: e2.target.value === "" ? void 0 : Number(e2.target.value) }), size: "small", variant: "outlined", sx: { width: 80 } })
       ] }),
-      /* @__PURE__ */ u$1(Stack, { direction: "row", children: [
-        /* @__PURE__ */ u$1(Tooltip, { title: "上移", children: /* @__PURE__ */ u$1("span", { children: /* @__PURE__ */ u$1(IconButton, { size: "small", disabled: index === 0, onClick: () => onMove("up"), children: /* @__PURE__ */ u$1(ArrowUpwardIcon, { sx: { fontSize: "1.1rem" } }) }) }) }),
-        /* @__PURE__ */ u$1(Tooltip, { title: "下移", children: /* @__PURE__ */ u$1("span", { children: /* @__PURE__ */ u$1(IconButton, { size: "small", disabled: index === fieldCount - 1, onClick: () => onMove("down"), children: /* @__PURE__ */ u$1(ArrowDownwardIcon, { sx: { fontSize: "1.1rem" } }) }) }) })
+      /* @__PURE__ */ u(Stack, { direction: "row", children: [
+        /* @__PURE__ */ u(Tooltip, { title: "上移", children: /* @__PURE__ */ u("span", { children: /* @__PURE__ */ u(IconButton, { size: "small", disabled: index === 0, onClick: () => onMove("up"), children: /* @__PURE__ */ u(ArrowUpwardIcon, { sx: { fontSize: "1.1rem" } }) }) }) }),
+        /* @__PURE__ */ u(Tooltip, { title: "下移", children: /* @__PURE__ */ u("span", { children: /* @__PURE__ */ u(IconButton, { size: "small", disabled: index === fieldCount - 1, onClick: () => onMove("down"), children: /* @__PURE__ */ u(ArrowDownwardIcon, { sx: { fontSize: "1.1rem" } }) }) }) })
       ] }),
-      /* @__PURE__ */ u$1(Tooltip, { title: "删除此字段", children: /* @__PURE__ */ u$1(IconButton, { onClick: onRemove, size: "small", color: "error", children: /* @__PURE__ */ u$1(DeleteIcon, {}) }) })
+      /* @__PURE__ */ u(Tooltip, { title: "删除此字段", children: /* @__PURE__ */ u(IconButton, { onClick: onRemove, size: "small", color: "error", children: /* @__PURE__ */ u(DeleteIcon, {}) }) })
     ] }),
-    showOptionsEditor && /* @__PURE__ */ u$1(Box, { sx: { mt: 2, pl: 2 }, children: [
-      /* @__PURE__ */ u$1(Stack, { spacing: 1.5, divider: /* @__PURE__ */ u$1(Divider, { flexItem: true, sx: { borderStyle: "dashed" } }), children: (field.options || []).map((option, optIndex) => /* @__PURE__ */ u$1(OptionRow, { option, onChange: (newOpt) => handleOptionChange(optIndex, newOpt), onRemove: () => removeOption(optIndex), fieldType: field.type }, optIndex)) }),
-      /* @__PURE__ */ u$1(Button, { onClick: addOption, startIcon: /* @__PURE__ */ u$1(AddIcon, {}), size: "small", sx: { alignSelf: "flex-start", mt: 1.5 }, children: "添加选项" })
+    showOptionsEditor && /* @__PURE__ */ u(Box, { sx: { mt: 2, pl: 2 }, children: [
+      /* @__PURE__ */ u(Stack, { spacing: 1.5, divider: /* @__PURE__ */ u(Divider, { flexItem: true, sx: { borderStyle: "dashed" } }), children: (field.options || []).map((option, optIndex) => /* @__PURE__ */ u(OptionRow, { option, onChange: (newOpt) => handleOptionChange(optIndex, newOpt), onRemove: () => removeOption(optIndex), fieldType: field.type }, optIndex)) }),
+      /* @__PURE__ */ u(Button, { onClick: addOption, startIcon: /* @__PURE__ */ u(AddIcon, {}), size: "small", sx: { alignSelf: "flex-start", mt: 1.5 }, children: "添加选项" })
     ] })
   ] });
 }
@@ -36387,9 +36242,9 @@ function FieldsEditor({ fields = [], onChange }) {
     [newFields[index], newFields[targetIndex]] = [newFields[targetIndex], newFields[index]];
     onChange(newFields);
   };
-  return /* @__PURE__ */ u$1(Stack, { spacing: 2, divider: /* @__PURE__ */ u$1(Divider, { sx: { my: 1 } }), children: [
-    (fields || []).map((field, index) => /* @__PURE__ */ u$1(FieldRow, { field, index, fieldCount: fields.length, onUpdate: (updates) => handleUpdate(index, updates), onRemove: () => removeField(index), onMove: (dir) => moveField(index, dir) }, field.id)),
-    /* @__PURE__ */ u$1(Button, { onClick: addField, startIcon: /* @__PURE__ */ u$1(AddIcon, {}), variant: "contained", size: "small", sx: { alignSelf: "flex-start" }, children: "添加字段" })
+  return /* @__PURE__ */ u(Stack, { spacing: 2, divider: /* @__PURE__ */ u(Divider, { sx: { my: 1 } }), children: [
+    (fields || []).map((field, index) => /* @__PURE__ */ u(FieldRow, { field, index, fieldCount: fields.length, onUpdate: (updates) => handleUpdate(index, updates), onRemove: () => removeField(index), onMove: (dir) => moveField(index, dir) }, field.id)),
+    /* @__PURE__ */ u(Button, { onClick: addField, startIcon: /* @__PURE__ */ u(AddIcon, {}), variant: "contained", size: "small", sx: { alignSelf: "flex-start" }, children: "添加字段" })
   ] });
 }
 function TemplateVariableCopier({ block }) {
@@ -36414,7 +36269,7 @@ function TemplateVariableCopier({ block }) {
     navigator.clipboard.writeText(variable);
     new obsidian.Notice(`已复制: ${variable}`);
   };
-  return /* @__PURE__ */ u$1(Box, { sx: { maxWidth: 220 }, children: /* @__PURE__ */ u$1(
+  return /* @__PURE__ */ u(Box, { sx: { maxWidth: 220 }, children: /* @__PURE__ */ u(
     SimpleSelect,
     {
       value: "",
@@ -36895,24 +36750,24 @@ function normalizeLocalDisabled(localDisabled, globalDisabled) {
 function SortableBlockItem({ block, openId, setOpenId, handleDelete, appStore: appStore2 }) {
   const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: block.id });
   const style2 = { transform: CSS.Transform.toString(transform), transition };
-  return /* @__PURE__ */ u$1("div", { ref: setNodeRef, style: style2, children: /* @__PURE__ */ u$1(Accordion, { expanded: openId === block.id, onChange: () => setOpenId(openId === block.id ? null : block.id), disableGutters: true, elevation: 1, sx: { "&:before": { display: "none" } }, children: [
-    /* @__PURE__ */ u$1(AccordionSummary, { children: /* @__PURE__ */ u$1(Box, { sx: { display: "flex", justifyContent: "space-between", alignItems: "center", width: "100%" }, children: [
-      /* @__PURE__ */ u$1(Stack, { direction: "row", alignItems: "center", spacing: 0.5, children: [
-        /* @__PURE__ */ u$1(Tooltip, { title: "拖动排序", children: /* @__PURE__ */ u$1(Box, { component: "span", ...attributes, ...listeners, sx: { cursor: "grab", display: "flex", alignItems: "center" }, children: /* @__PURE__ */ u$1(DragIndicatorIcon, { sx: { color: "text.disabled" } }) }) }),
-        /* @__PURE__ */ u$1(Typography, { fontWeight: 500, children: block.name })
+  return /* @__PURE__ */ u("div", { ref: setNodeRef, style: style2, children: /* @__PURE__ */ u(Accordion, { expanded: openId === block.id, onChange: () => setOpenId(openId === block.id ? null : block.id), disableGutters: true, elevation: 1, sx: { "&:before": { display: "none" } }, children: [
+    /* @__PURE__ */ u(AccordionSummary, { children: /* @__PURE__ */ u(Box, { sx: { display: "flex", justifyContent: "space-between", alignItems: "center", width: "100%" }, children: [
+      /* @__PURE__ */ u(Stack, { direction: "row", alignItems: "center", spacing: 0.5, children: [
+        /* @__PURE__ */ u(Tooltip, { title: "拖动排序", children: /* @__PURE__ */ u(Box, { component: "span", ...attributes, ...listeners, sx: { cursor: "grab", display: "flex", alignItems: "center" }, children: /* @__PURE__ */ u(DragIndicatorIcon, { sx: { color: "text.disabled" } }) }) }),
+        /* @__PURE__ */ u(Typography, { fontWeight: 500, children: block.name })
       ] }),
-      /* @__PURE__ */ u$1(Stack, { direction: "row", alignItems: "center", spacing: 0.5, children: [
-        /* @__PURE__ */ u$1(Tooltip, { title: "复制", children: /* @__PURE__ */ u$1(IconButton, { size: "small", onClick: (e2) => {
+      /* @__PURE__ */ u(Stack, { direction: "row", alignItems: "center", spacing: 0.5, children: [
+        /* @__PURE__ */ u(Tooltip, { title: "复制", children: /* @__PURE__ */ u(IconButton, { size: "small", onClick: (e2) => {
           e2.stopPropagation();
           appStore2.duplicateBlock(block.id);
-        }, children: /* @__PURE__ */ u$1(ContentCopyIcon, { fontSize: "small" }) }) }),
-        /* @__PURE__ */ u$1(Tooltip, { title: "删除", children: /* @__PURE__ */ u$1(IconButton, { size: "small", onClick: (e2) => {
+        }, children: /* @__PURE__ */ u(ContentCopyIcon, { fontSize: "small" }) }) }),
+        /* @__PURE__ */ u(Tooltip, { title: "删除", children: /* @__PURE__ */ u(IconButton, { size: "small", onClick: (e2) => {
           e2.stopPropagation();
           handleDelete(block.id, block.name);
-        }, sx: { color: "text.secondary", "&:hover": { color: "error.main" } }, children: /* @__PURE__ */ u$1(DeleteForeverOutlinedIcon, {}) }) })
+        }, sx: { color: "text.secondary", "&:hover": { color: "error.main" } }, children: /* @__PURE__ */ u(DeleteForeverOutlinedIcon, {}) }) })
       ] })
     ] }) }),
-    /* @__PURE__ */ u$1(AccordionDetails, { sx: { bgcolor: "action.hover", borderTop: "1px solid rgba(0,0,0,0.08)" }, children: /* @__PURE__ */ u$1(BlockEditor, { block, appStore: appStore2 }) })
+    /* @__PURE__ */ u(AccordionDetails, { sx: { bgcolor: "action.hover", borderTop: "1px solid rgba(0,0,0,0.08)" }, children: /* @__PURE__ */ u(BlockEditor, { block, appStore: appStore2 }) })
   ] }) });
 }
 function BlockEditor({ block, appStore: appStore2 }) {
@@ -36926,28 +36781,28 @@ function BlockEditor({ block, appStore: appStore2 }) {
   const handleBlur = (key) => {
     if (localBlock[key] !== block[key]) handleUpdate({ [key]: localBlock[key] });
   };
-  return /* @__PURE__ */ u$1(Stack, { spacing: 3, children: [
-    /* @__PURE__ */ u$1(TextField, { label: "Block 名称", value: localBlock.name, onChange: (e2) => setLocalBlock((b2) => ({ ...b2, name: e2.target.value })), onBlur: () => handleBlur("name"), variant: "outlined", size: "small", sx: { maxWidth: 400 } }),
-    /* @__PURE__ */ u$1(Divider, {}),
-    /* @__PURE__ */ u$1(Box, { children: [
-      /* @__PURE__ */ u$1(Typography, { variant: "h6", sx: { fontSize: "1rem", fontWeight: 600, mb: 1 }, children: "输出目标" }),
-      /* @__PURE__ */ u$1(Stack, { spacing: 2, children: [
-        /* @__PURE__ */ u$1(TextField, { label: "目标文件路径", value: localBlock.targetFile, onChange: (e2) => setLocalBlock((b2) => ({ ...b2, targetFile: e2.target.value })), onBlur: () => handleBlur("targetFile"), placeholder: "e.g., {{theme.path}}/{{标题.value}}.md", variant: "outlined", size: "small" }),
-        /* @__PURE__ */ u$1(TextField, { label: "追加到标题下 (可选)", value: localBlock.appendUnderHeader || "", onChange: (e2) => setLocalBlock((b2) => ({ ...b2, appendUnderHeader: e2.target.value })), onBlur: () => handleBlur("appendUnderHeader"), placeholder: "e.g., ## {{block.name}}", variant: "outlined", size: "small" })
+  return /* @__PURE__ */ u(Stack, { spacing: 3, children: [
+    /* @__PURE__ */ u(TextField, { label: "Block 名称", value: localBlock.name, onChange: (e2) => setLocalBlock((b2) => ({ ...b2, name: e2.target.value })), onBlur: () => handleBlur("name"), variant: "outlined", size: "small", sx: { maxWidth: 400 } }),
+    /* @__PURE__ */ u(Divider, {}),
+    /* @__PURE__ */ u(Box, { children: [
+      /* @__PURE__ */ u(Typography, { variant: "h6", sx: { fontSize: "1rem", fontWeight: 600, mb: 1 }, children: "输出目标" }),
+      /* @__PURE__ */ u(Stack, { spacing: 2, children: [
+        /* @__PURE__ */ u(TextField, { label: "目标文件路径", value: localBlock.targetFile, onChange: (e2) => setLocalBlock((b2) => ({ ...b2, targetFile: e2.target.value })), onBlur: () => handleBlur("targetFile"), placeholder: "e.g., {{theme.path}}/{{标题.value}}.md", variant: "outlined", size: "small" }),
+        /* @__PURE__ */ u(TextField, { label: "追加到标题下 (可选)", value: localBlock.appendUnderHeader || "", onChange: (e2) => setLocalBlock((b2) => ({ ...b2, appendUnderHeader: e2.target.value })), onBlur: () => handleBlur("appendUnderHeader"), placeholder: "e.g., ## {{block.name}}", variant: "outlined", size: "small" })
       ] })
     ] }),
-    /* @__PURE__ */ u$1(Divider, {}),
-    /* @__PURE__ */ u$1(Box, { children: [
-      /* @__PURE__ */ u$1(Typography, { variant: "h6", sx: { fontSize: "1rem", fontWeight: 600, mb: 1.5 }, children: "表单字段" }),
-      /* @__PURE__ */ u$1(FieldsEditor, { fields: localBlock.fields, onChange: (newFields) => handleUpdate({ fields: newFields }) })
+    /* @__PURE__ */ u(Divider, {}),
+    /* @__PURE__ */ u(Box, { children: [
+      /* @__PURE__ */ u(Typography, { variant: "h6", sx: { fontSize: "1rem", fontWeight: 600, mb: 1.5 }, children: "表单字段" }),
+      /* @__PURE__ */ u(FieldsEditor, { fields: localBlock.fields, onChange: (newFields) => handleUpdate({ fields: newFields }) })
     ] }),
-    /* @__PURE__ */ u$1(Divider, {}),
-    /* @__PURE__ */ u$1(Box, { children: [
-      /* @__PURE__ */ u$1(Stack, { direction: "row", justifyContent: "space-between", alignItems: "center", sx: { mb: 1 }, children: [
-        /* @__PURE__ */ u$1(Typography, { variant: "h6", sx: { fontSize: "1rem", fontWeight: 600 }, children: "输出模板" }),
-        /* @__PURE__ */ u$1(TemplateVariableCopier, { block: localBlock })
+    /* @__PURE__ */ u(Divider, {}),
+    /* @__PURE__ */ u(Box, { children: [
+      /* @__PURE__ */ u(Stack, { direction: "row", justifyContent: "space-between", alignItems: "center", sx: { mb: 1 }, children: [
+        /* @__PURE__ */ u(Typography, { variant: "h6", sx: { fontSize: "1rem", fontWeight: 600 }, children: "输出模板" }),
+        /* @__PURE__ */ u(TemplateVariableCopier, { block: localBlock })
       ] }),
-      /* @__PURE__ */ u$1(TextField, { label: "Output Template", multiline: true, rows: 8, value: localBlock.outputTemplate, onChange: (e2) => setLocalBlock((b2) => ({ ...b2, outputTemplate: e2.target.value })), onBlur: () => handleBlur("outputTemplate"), placeholder: "使用 {{key}} 引用上面定义的字段", variant: "outlined", sx: { fontFamily: "monospace", "& textarea": { fontSize: "13px" } } })
+      /* @__PURE__ */ u(TextField, { label: "Output Template", multiline: true, rows: 8, value: localBlock.outputTemplate, onChange: (e2) => setLocalBlock((b2) => ({ ...b2, outputTemplate: e2.target.value })), onBlur: () => handleBlur("outputTemplate"), placeholder: "使用 {{key}} 引用上面定义的字段", variant: "outlined", sx: { fontFamily: "monospace", "& textarea": { fontSize: "13px" } } })
     ] })
   ] });
 }
@@ -36981,13 +36836,13 @@ function BlockManager({ appStore: appStore2 }) {
       });
     }
   };
-  return /* @__PURE__ */ u$1(Box, { sx: { maxWidth: "900px", mx: "auto" }, children: [
-    /* @__PURE__ */ u$1(Stack, { direction: "row", alignItems: "center", spacing: 1, sx: { mb: 2 }, children: [
-      /* @__PURE__ */ u$1(Typography, { variant: "h6", children: "1. 管理 Block" }),
-      /* @__PURE__ */ u$1(Tooltip, { title: "新增Block类型", children: /* @__PURE__ */ u$1(IconButton, { onClick: handleAdd, color: "success", children: /* @__PURE__ */ u$1(AddCircleOutlineIcon, {}) }) })
+  return /* @__PURE__ */ u(Box, { sx: { maxWidth: "900px", mx: "auto" }, children: [
+    /* @__PURE__ */ u(Stack, { direction: "row", alignItems: "center", spacing: 1, sx: { mb: 2 }, children: [
+      /* @__PURE__ */ u(Typography, { variant: "h6", children: "1. 管理 Block" }),
+      /* @__PURE__ */ u(Tooltip, { title: "新增Block类型", children: /* @__PURE__ */ u(IconButton, { onClick: handleAdd, color: "success", children: /* @__PURE__ */ u(AddCircleOutlineIcon, {}) }) })
     ] }),
-    /* @__PURE__ */ u$1(Typography, { variant: "body2", color: "text.secondary", sx: { mb: 1.5 }, children: "在这里定义所有快速输入的基础模板，例如任务、打卡、总结等。可拖动排序。" }),
-    /* @__PURE__ */ u$1(DndContext, { collisionDetection: closestCenter, onDragEnd: handleDragEnd, children: /* @__PURE__ */ u$1(SortableContext, { items: blocks.map((b2) => b2.id), strategy: verticalListSortingStrategy, children: /* @__PURE__ */ u$1(Stack, { spacing: 1, children: blocks.map((block) => /* @__PURE__ */ u$1(
+    /* @__PURE__ */ u(Typography, { variant: "body2", color: "text.secondary", sx: { mb: 1.5 }, children: "在这里定义所有快速输入的基础模板，例如任务、打卡、总结等。可拖动排序。" }),
+    /* @__PURE__ */ u(DndContext, { collisionDetection: closestCenter, onDragEnd: handleDragEnd, children: /* @__PURE__ */ u(SortableContext, { items: blocks.map((b2) => b2.id), strategy: verticalListSortingStrategy, children: /* @__PURE__ */ u(Stack, { spacing: 1, children: blocks.map((block) => /* @__PURE__ */ u(
       SortableBlockItem,
       {
         block,
@@ -37000,10 +36855,10 @@ function BlockManager({ appStore: appStore2 }) {
     )) }) }) })
   ] });
 }
-const TaskAltIcon = createSvgIcon(/* @__PURE__ */ u$1("path", {
+const TaskAltIcon = createSvgIcon(/* @__PURE__ */ u("path", {
   d: "M22 5.18 10.59 16.6l-4.24-4.24 1.41-1.41 2.83 2.83 10-10zm-2.21 5.04c.13.57.21 1.17.21 1.78 0 4.42-3.58 8-8 8s-8-3.58-8-8 3.58-8 8-8c1.58 0 3.04.46 4.28 1.25l1.44-1.44C16.1 2.67 14.13 2 12 2 6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10c0-1.19-.22-2.33-.6-3.39z"
 }));
-const CancelIcon = createSvgIcon(/* @__PURE__ */ u$1("path", {
+const CancelIcon = createSvgIcon(/* @__PURE__ */ u("path", {
   d: "M12 2C6.47 2 2 6.47 2 12s4.47 10 10 10 10-4.47 10-10S17.53 2 12 2m5 13.59L15.59 17 12 13.41 8.41 17 7 15.59 10.59 12 7 8.41 8.41 7 12 10.59 15.59 7 17 8.41 13.41 12z"
 }));
 function TemplateEditorModal({ isOpen, onClose, block, theme: theme2, existingOverride, appStore: appStore2 }) {
@@ -37054,43 +36909,43 @@ function TemplateEditorModal({ isOpen, onClose, block, theme: theme2, existingOv
   };
   if (!isOpen) return null;
   const isFormDisabled = mode !== "override";
-  return /* @__PURE__ */ u$1(Dialog, { open: isOpen, onClose, fullWidth: true, maxWidth: "md", disablePortal: true, children: [
-    /* @__PURE__ */ u$1(DialogTitle, { children: /* @__PURE__ */ u$1(Typography, { children: [
+  return /* @__PURE__ */ u(Dialog, { open: isOpen, onClose, fullWidth: true, maxWidth: "md", disablePortal: true, children: [
+    /* @__PURE__ */ u(DialogTitle, { children: /* @__PURE__ */ u(Typography, { children: [
       "配置: ",
-      /* @__PURE__ */ u$1("strong", { children: theme2.path }),
+      /* @__PURE__ */ u("strong", { children: theme2.path }),
       " / ",
-      /* @__PURE__ */ u$1("span", { style: { color: "var(--color-accent)" }, children: block.name })
+      /* @__PURE__ */ u("span", { style: { color: "var(--color-accent)" }, children: block.name })
     ] }) }),
-    /* @__PURE__ */ u$1(DialogContent, { dividers: true, children: /* @__PURE__ */ u$1(Stack, { spacing: 3, children: [
-      /* @__PURE__ */ u$1(FormControl, { component: "fieldset", children: [
-        /* @__PURE__ */ u$1(FormLabel, { component: "legend", children: "配置模式" }),
-        /* @__PURE__ */ u$1(RadioGroup, { row: true, value: mode, onChange: (e2) => setMode(e2.target.value), children: [
-          /* @__PURE__ */ u$1(FormControlLabel, { value: "inherit", control: /* @__PURE__ */ u$1(Radio, {}), label: "继承" }),
-          /* @__PURE__ */ u$1(FormControlLabel, { value: "override", control: /* @__PURE__ */ u$1(Radio, {}), label: "覆写" }),
-          /* @__PURE__ */ u$1(FormControlLabel, { value: "disabled", control: /* @__PURE__ */ u$1(Radio, {}), label: "禁用" })
+    /* @__PURE__ */ u(DialogContent, { dividers: true, children: /* @__PURE__ */ u(Stack, { spacing: 3, children: [
+      /* @__PURE__ */ u(FormControl, { component: "fieldset", children: [
+        /* @__PURE__ */ u(FormLabel, { component: "legend", children: "配置模式" }),
+        /* @__PURE__ */ u(RadioGroup, { row: true, value: mode, onChange: (e2) => setMode(e2.target.value), children: [
+          /* @__PURE__ */ u(FormControlLabel, { value: "inherit", control: /* @__PURE__ */ u(Radio, {}), label: "继承" }),
+          /* @__PURE__ */ u(FormControlLabel, { value: "override", control: /* @__PURE__ */ u(Radio, {}), label: "覆写" }),
+          /* @__PURE__ */ u(FormControlLabel, { value: "disabled", control: /* @__PURE__ */ u(Radio, {}), label: "禁用" })
         ] })
       ] }),
-      /* @__PURE__ */ u$1("fieldset", { disabled: isFormDisabled, style: { border: "none", padding: 0, margin: 0, opacity: isFormDisabled ? 0.6 : 1 }, children: /* @__PURE__ */ u$1(Stack, { spacing: 3, children: [
-        /* @__PURE__ */ u$1(Divider, {}),
-        /* @__PURE__ */ u$1(Box, { children: [
-          /* @__PURE__ */ u$1(Typography, { variant: "h6", sx: { fontSize: "1rem", fontWeight: 600, mb: 1 }, children: "输出目标" }),
-          /* @__PURE__ */ u$1(Stack, { spacing: 2, children: [
-            /* @__PURE__ */ u$1(TextField, { label: "目标文件路径", value: localOverride.targetFile || "", onChange: (e2) => setLocalOverride((o2) => ({ ...o2, targetFile: e2.target.value })), fullWidth: true, variant: "outlined" }),
-            /* @__PURE__ */ u$1(TextField, { label: "追加到标题下 (可选)", value: localOverride.appendUnderHeader || "", onChange: (e2) => setLocalOverride((o2) => ({ ...o2, appendUnderHeader: e2.target.value })), fullWidth: true, variant: "outlined" })
+      /* @__PURE__ */ u("fieldset", { disabled: isFormDisabled, style: { border: "none", padding: 0, margin: 0, opacity: isFormDisabled ? 0.6 : 1 }, children: /* @__PURE__ */ u(Stack, { spacing: 3, children: [
+        /* @__PURE__ */ u(Divider, {}),
+        /* @__PURE__ */ u(Box, { children: [
+          /* @__PURE__ */ u(Typography, { variant: "h6", sx: { fontSize: "1rem", fontWeight: 600, mb: 1 }, children: "输出目标" }),
+          /* @__PURE__ */ u(Stack, { spacing: 2, children: [
+            /* @__PURE__ */ u(TextField, { label: "目标文件路径", value: localOverride.targetFile || "", onChange: (e2) => setLocalOverride((o2) => ({ ...o2, targetFile: e2.target.value })), fullWidth: true, variant: "outlined" }),
+            /* @__PURE__ */ u(TextField, { label: "追加到标题下 (可选)", value: localOverride.appendUnderHeader || "", onChange: (e2) => setLocalOverride((o2) => ({ ...o2, appendUnderHeader: e2.target.value })), fullWidth: true, variant: "outlined" })
           ] })
         ] }),
-        /* @__PURE__ */ u$1(Divider, {}),
-        /* @__PURE__ */ u$1(Box, { children: [
-          /* @__PURE__ */ u$1(Typography, { variant: "h6", sx: { fontSize: "1rem", fontWeight: 600, mb: 1.5 }, children: "表单字段" }),
-          /* @__PURE__ */ u$1(FieldsEditor, { fields: localOverride.fields || [], onChange: (newFields) => setLocalOverride((o2) => ({ ...o2, fields: newFields })) })
+        /* @__PURE__ */ u(Divider, {}),
+        /* @__PURE__ */ u(Box, { children: [
+          /* @__PURE__ */ u(Typography, { variant: "h6", sx: { fontSize: "1rem", fontWeight: 600, mb: 1.5 }, children: "表单字段" }),
+          /* @__PURE__ */ u(FieldsEditor, { fields: localOverride.fields || [], onChange: (newFields) => setLocalOverride((o2) => ({ ...o2, fields: newFields })) })
         ] }),
-        /* @__PURE__ */ u$1(Divider, {}),
-        /* @__PURE__ */ u$1(Box, { children: [
-          /* @__PURE__ */ u$1(Stack, { direction: "row", justifyContent: "space-between", alignItems: "center", sx: { mb: 1 }, children: [
-            /* @__PURE__ */ u$1(Typography, { variant: "h6", sx: { fontSize: "1rem", fontWeight: 600 }, children: "输出模板" }),
-            /* @__PURE__ */ u$1(TemplateVariableCopier, { block: effectiveBlockForCopier })
+        /* @__PURE__ */ u(Divider, {}),
+        /* @__PURE__ */ u(Box, { children: [
+          /* @__PURE__ */ u(Stack, { direction: "row", justifyContent: "space-between", alignItems: "center", sx: { mb: 1 }, children: [
+            /* @__PURE__ */ u(Typography, { variant: "h6", sx: { fontSize: "1rem", fontWeight: 600 }, children: "输出模板" }),
+            /* @__PURE__ */ u(TemplateVariableCopier, { block: effectiveBlockForCopier })
           ] }),
-          /* @__PURE__ */ u$1(
+          /* @__PURE__ */ u(
             TextField,
             {
               multiline: true,
@@ -37105,9 +36960,9 @@ function TemplateEditorModal({ isOpen, onClose, block, theme: theme2, existingOv
         ] })
       ] }) })
     ] }) }),
-    /* @__PURE__ */ u$1(DialogActions, { children: [
-      /* @__PURE__ */ u$1(Button, { onClick: onClose, children: "取消" }),
-      /* @__PURE__ */ u$1(Button, { onClick: handleSave, variant: "contained", children: "保存配置" })
+    /* @__PURE__ */ u(DialogActions, { children: [
+      /* @__PURE__ */ u(Button, { onClick: onClose, children: "取消" }),
+      /* @__PURE__ */ u(Button, { onClick: handleSave, variant: "contained", children: "保存配置" })
     ] })
   ] });
 }
@@ -37125,18 +36980,18 @@ function InlineEditor({ value, onSave }) {
       e2.target.blur();
     }
   };
-  return /* @__PURE__ */ u$1(TextField, { autoFocus: true, fullWidth: true, variant: "standard", value: current, onChange: (e2) => setCurrent(e2.target.value), onBlur: handleBlur, onKeyDown: handleKeyDown, sx: { "& .MuiInput-input": { py: "4px" } } });
+  return /* @__PURE__ */ u(TextField, { autoFocus: true, fullWidth: true, variant: "standard", value: current, onChange: (e2) => setCurrent(e2.target.value), onBlur: handleBlur, onKeyDown: handleKeyDown, sx: { "& .MuiInput-input": { py: "4px" } } });
 }
 function SortableThemeRow({ theme: theme2, blocks, overridesMap, handleCellClick, setEditingThemeId, editingThemeId, appStore: appStore2 }) {
   const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: theme2.id });
   const style2 = { transform: CSS.Transform.toString(transform), transition, display: "table-row" };
-  return /* @__PURE__ */ u$1(TableRow, { ref: setNodeRef, style: style2, hover: true, children: [
-    /* @__PURE__ */ u$1(TableCell, { sx: { width: "40px", p: "0 8px", verticalAlign: "middle" }, children: /* @__PURE__ */ u$1(Tooltip, { title: "拖动排序", children: /* @__PURE__ */ u$1(Box, { component: "span", ...attributes, ...listeners, sx: { cursor: "grab", display: "flex", alignItems: "center" }, children: /* @__PURE__ */ u$1(DragIndicatorIcon, { sx: { color: "text.disabled" } }) }) }) }),
-    /* @__PURE__ */ u$1(TableCell, { onDblClick: () => setEditingThemeId(theme2.id), sx: { cursor: "text", verticalAlign: "middle" }, children: editingThemeId === theme2.id ? /* @__PURE__ */ u$1(InlineEditor, { value: theme2.icon || "", onSave: (newIcon) => {
+  return /* @__PURE__ */ u(TableRow, { ref: setNodeRef, style: style2, hover: true, children: [
+    /* @__PURE__ */ u(TableCell, { sx: { width: "40px", p: "0 8px", verticalAlign: "middle" }, children: /* @__PURE__ */ u(Tooltip, { title: "拖动排序", children: /* @__PURE__ */ u(Box, { component: "span", ...attributes, ...listeners, sx: { cursor: "grab", display: "flex", alignItems: "center" }, children: /* @__PURE__ */ u(DragIndicatorIcon, { sx: { color: "text.disabled" } }) }) }) }),
+    /* @__PURE__ */ u(TableCell, { onDblClick: () => setEditingThemeId(theme2.id), sx: { cursor: "text", verticalAlign: "middle" }, children: editingThemeId === theme2.id ? /* @__PURE__ */ u(InlineEditor, { value: theme2.icon || "", onSave: (newIcon) => {
       appStore2.updateTheme(theme2.id, { icon: newIcon });
       setEditingThemeId(null);
-    } }) : /* @__PURE__ */ u$1(Typography, { align: "center", children: theme2.icon || " " }) }),
-    /* @__PURE__ */ u$1(TableCell, { onDblClick: () => setEditingThemeId(theme2.id), sx: { cursor: "text", verticalAlign: "middle" }, children: editingThemeId === theme2.id ? /* @__PURE__ */ u$1(InlineEditor, { value: theme2.path, onSave: (newPath) => {
+    } }) : /* @__PURE__ */ u(Typography, { align: "center", children: theme2.icon || " " }) }),
+    /* @__PURE__ */ u(TableCell, { onDblClick: () => setEditingThemeId(theme2.id), sx: { cursor: "text", verticalAlign: "middle" }, children: editingThemeId === theme2.id ? /* @__PURE__ */ u(InlineEditor, { value: theme2.path, onSave: (newPath) => {
       appStore2.updateTheme(theme2.id, { path: newPath });
       setEditingThemeId(null);
     } }) : theme2.path }),
@@ -37145,21 +37000,21 @@ function SortableThemeRow({ theme: theme2, blocks, overridesMap, handleCellClick
       let cellIcon, cellTitle;
       if (override) {
         if (override.status === "disabled") {
-          cellIcon = /* @__PURE__ */ u$1(CancelIcon, { sx: { fontSize: "1.4rem", color: "error.main" } });
+          cellIcon = /* @__PURE__ */ u(CancelIcon, { sx: { fontSize: "1.4rem", color: "error.main" } });
           cellTitle = "已禁用";
         } else {
-          cellIcon = /* @__PURE__ */ u$1(EditIcon, { sx: { fontSize: "1.4rem", color: "primary.main" } });
+          cellIcon = /* @__PURE__ */ u(EditIcon, { sx: { fontSize: "1.4rem", color: "primary.main" } });
           cellTitle = "已覆写";
         }
       } else {
-        cellIcon = /* @__PURE__ */ u$1(TaskAltIcon, { sx: { fontSize: "1.4rem", color: "success.main" } });
+        cellIcon = /* @__PURE__ */ u(TaskAltIcon, { sx: { fontSize: "1.4rem", color: "success.main" } });
         cellTitle = "继承";
       }
-      return /* @__PURE__ */ u$1(TableCell, { align: "center", onClick: () => handleCellClick(block, theme2), sx: { cursor: "pointer", verticalAlign: "middle" }, children: /* @__PURE__ */ u$1(Tooltip, { title: cellTitle, children: /* @__PURE__ */ u$1("span", { children: cellIcon }) }) }, block.id);
+      return /* @__PURE__ */ u(TableCell, { align: "center", onClick: () => handleCellClick(block, theme2), sx: { cursor: "pointer", verticalAlign: "middle" }, children: /* @__PURE__ */ u(Tooltip, { title: cellTitle, children: /* @__PURE__ */ u("span", { children: cellIcon }) }) }, block.id);
     }),
-    /* @__PURE__ */ u$1(TableCell, { align: "center", sx: { verticalAlign: "middle" }, children: /* @__PURE__ */ u$1(Tooltip, { title: "删除此主题", children: /* @__PURE__ */ u$1(IconButton, { size: "small", onClick: () => {
+    /* @__PURE__ */ u(TableCell, { align: "center", sx: { verticalAlign: "middle" }, children: /* @__PURE__ */ u(Tooltip, { title: "删除此主题", children: /* @__PURE__ */ u(IconButton, { size: "small", onClick: () => {
       if (confirm(`确定删除主题 "${theme2.path}" 吗？`)) appStore2.deleteTheme(theme2.id);
-    }, children: /* @__PURE__ */ u$1(DeleteIcon, { fontSize: "small" }) }) }) })
+    }, children: /* @__PURE__ */ u(DeleteIcon, { fontSize: "small" }) }) }) })
   ] });
 }
 function ThemeMatrix({ appStore: appStore2 }) {
@@ -37196,18 +37051,18 @@ function ThemeMatrix({ appStore: appStore2 }) {
       appStore2.updateInputSettings({ themes: reorderedThemes });
     }
   };
-  return /* @__PURE__ */ u$1(Box, { sx: { maxWidth: "1000px", mx: "auto" }, children: [
-    /* @__PURE__ */ u$1(Typography, { variant: "h6", gutterBottom: true, children: "2. 主题配置矩阵" }),
-    /* @__PURE__ */ u$1(Typography, { variant: "body2", color: "text.secondary", sx: { mb: 2 }, children: "管理不同主题对各类Block的配置。双击图标或路径可直接编辑。点击单元格可进行高级配置。" }),
-    /* @__PURE__ */ u$1(Table, { size: "small", sx: { "& th, & td": { whiteSpace: "nowrap", py: 1, px: 1.5 } }, children: [
-      /* @__PURE__ */ u$1(TableHead, { children: /* @__PURE__ */ u$1(TableRow, { children: [
-        /* @__PURE__ */ u$1(TableCell, { sx: { width: "40px" } }),
-        /* @__PURE__ */ u$1(TableCell, { sx: { width: "10%", fontWeight: "bold" }, children: "图标" }),
-        /* @__PURE__ */ u$1(TableCell, { sx: { width: "20%", fontWeight: "bold" }, children: "主题" }),
-        blocks.map((b2) => /* @__PURE__ */ u$1(TableCell, { align: "center", sx: { fontWeight: "bold" }, children: b2.name }, b2.id)),
-        /* @__PURE__ */ u$1(TableCell, { align: "center", sx: { fontWeight: "bold" }, children: "操作" })
+  return /* @__PURE__ */ u(Box, { sx: { maxWidth: "1000px", mx: "auto" }, children: [
+    /* @__PURE__ */ u(Typography, { variant: "h6", gutterBottom: true, children: "2. 主题配置矩阵" }),
+    /* @__PURE__ */ u(Typography, { variant: "body2", color: "text.secondary", sx: { mb: 2 }, children: "管理不同主题对各类Block的配置。双击图标或路径可直接编辑。点击单元格可进行高级配置。" }),
+    /* @__PURE__ */ u(Table, { size: "small", sx: { "& th, & td": { whiteSpace: "nowrap", py: 1, px: 1.5 } }, children: [
+      /* @__PURE__ */ u(TableHead, { children: /* @__PURE__ */ u(TableRow, { children: [
+        /* @__PURE__ */ u(TableCell, { sx: { width: "40px" } }),
+        /* @__PURE__ */ u(TableCell, { sx: { width: "10%", fontWeight: "bold" }, children: "图标" }),
+        /* @__PURE__ */ u(TableCell, { sx: { width: "20%", fontWeight: "bold" }, children: "主题" }),
+        blocks.map((b2) => /* @__PURE__ */ u(TableCell, { align: "center", sx: { fontWeight: "bold" }, children: b2.name }, b2.id)),
+        /* @__PURE__ */ u(TableCell, { align: "center", sx: { fontWeight: "bold" }, children: "操作" })
       ] }) }),
-      /* @__PURE__ */ u$1(DndContext, { collisionDetection: closestCenter, onDragEnd: handleDragEnd, children: /* @__PURE__ */ u$1(SortableContext, { items: themes.map((t2) => t2.id), strategy: verticalListSortingStrategy, children: /* @__PURE__ */ u$1(TableBody, { children: themes.map((theme2) => /* @__PURE__ */ u$1(
+      /* @__PURE__ */ u(DndContext, { collisionDetection: closestCenter, onDragEnd: handleDragEnd, children: /* @__PURE__ */ u(SortableContext, { items: themes.map((t2) => t2.id), strategy: verticalListSortingStrategy, children: /* @__PURE__ */ u(TableBody, { children: themes.map((theme2) => /* @__PURE__ */ u(
         SortableThemeRow,
         {
           theme: theme2,
@@ -37221,11 +37076,11 @@ function ThemeMatrix({ appStore: appStore2 }) {
         theme2.id
       )) }) }) })
     ] }),
-    /* @__PURE__ */ u$1(Stack, { direction: "row", spacing: 1, alignItems: "center", sx: { mt: 2 }, children: [
-      /* @__PURE__ */ u$1(TextField, { placeholder: "新主题路径 (如: 个人/习惯)", value: newThemePath, onChange: (e2) => setNewThemePath(e2.target.value), onKeyDown: (e2) => e2.key === "Enter" && handleAddTheme(), size: "small", variant: "outlined", sx: { flexGrow: 1, maxWidth: "400px" } }),
-      /* @__PURE__ */ u$1(Button, { onClick: handleAddTheme, variant: "outlined", size: "small", startIcon: /* @__PURE__ */ u$1(AddIcon, {}), children: "添加主题" })
+    /* @__PURE__ */ u(Stack, { direction: "row", spacing: 1, alignItems: "center", sx: { mt: 2 }, children: [
+      /* @__PURE__ */ u(TextField, { placeholder: "新主题路径 (如: 个人/习惯)", value: newThemePath, onChange: (e2) => setNewThemePath(e2.target.value), onKeyDown: (e2) => e2.key === "Enter" && handleAddTheme(), size: "small", variant: "outlined", sx: { flexGrow: 1, maxWidth: "400px" } }),
+      /* @__PURE__ */ u(Button, { onClick: handleAddTheme, variant: "outlined", size: "small", startIcon: /* @__PURE__ */ u(AddIcon, {}), children: "添加主题" })
     ] }),
-    modalData && /* @__PURE__ */ u$1(
+    modalData && /* @__PURE__ */ u(
       TemplateEditorModal,
       {
         isOpen: modalOpen,
@@ -37239,10 +37094,10 @@ function ThemeMatrix({ appStore: appStore2 }) {
   ] });
 }
 function InputSettings({ appStore: appStore2 }) {
-  return /* @__PURE__ */ u$1(Box, { children: [
-    /* @__PURE__ */ u$1(BlockManager, { appStore: appStore2 }),
-    /* @__PURE__ */ u$1(Divider, { sx: { my: 4, mx: "auto", maxWidth: 900 } }),
-    /* @__PURE__ */ u$1(ThemeMatrix, { appStore: appStore2 })
+  return /* @__PURE__ */ u(Box, { children: [
+    /* @__PURE__ */ u(BlockManager, { appStore: appStore2 }),
+    /* @__PURE__ */ u(Divider, { sx: { my: 4, mx: "auto", maxWidth: 900 } }),
+    /* @__PURE__ */ u(ThemeMatrix, { appStore: appStore2 })
   ] });
 }
 function a11yProps(index) {
@@ -37250,23 +37105,23 @@ function a11yProps(index) {
 }
 function TabPanel(props) {
   const { children, value, index, ...other } = props;
-  return /* @__PURE__ */ u$1("div", { role: "tabpanel", hidden: value !== index, id: `settings-tabpanel-${index}`, ...other, children: value === index && /* @__PURE__ */ u$1(Box, { sx: { p: 2 }, children }) });
+  return /* @__PURE__ */ u("div", { role: "tabpanel", hidden: value !== index, id: `settings-tabpanel-${index}`, ...other, children: value === index && /* @__PURE__ */ u(Box, { sx: { p: 2 }, children }) });
 }
 function SettingsRoot({ app, appStore: appStore2 }) {
   const [tabIndex, setTabIndex] = usePersistentState(LOCAL_STORAGE_KEYS.SETTINGS_TABS, 0);
-  return /* @__PURE__ */ u$1(ThemeProvider, { theme, children: [
-    /* @__PURE__ */ u$1(CssBaseline, {}),
-    /* @__PURE__ */ u$1(Box, { sx: { width: "100%" }, class: "think-setting-root", children: [
-      /* @__PURE__ */ u$1(Box, { sx: { borderBottom: 1, borderColor: "divider" }, children: /* @__PURE__ */ u$1(Tabs, { value: tabIndex, onChange: (_2, newValue) => setTabIndex(newValue), "aria-label": "settings tabs", children: [
-        /* @__PURE__ */ u$1(Tab, { label: "布局", ...a11yProps(0) }),
-        /* @__PURE__ */ u$1(Tab, { label: "视图", ...a11yProps(1) }),
-        /* @__PURE__ */ u$1(Tab, { label: "数据源", ...a11yProps(2) }),
-        /* @__PURE__ */ u$1(Tab, { label: "快速输入", ...a11yProps(3) })
+  return /* @__PURE__ */ u(ThemeProvider, { theme, children: [
+    /* @__PURE__ */ u(CssBaseline, {}),
+    /* @__PURE__ */ u(Box, { sx: { width: "100%" }, class: "think-setting-root", children: [
+      /* @__PURE__ */ u(Box, { sx: { borderBottom: 1, borderColor: "divider" }, children: /* @__PURE__ */ u(Tabs, { value: tabIndex, onChange: (_2, newValue) => setTabIndex(newValue), "aria-label": "settings tabs", children: [
+        /* @__PURE__ */ u(Tab, { label: "布局", ...a11yProps(0) }),
+        /* @__PURE__ */ u(Tab, { label: "视图", ...a11yProps(1) }),
+        /* @__PURE__ */ u(Tab, { label: "数据源", ...a11yProps(2) }),
+        /* @__PURE__ */ u(Tab, { label: "快速输入", ...a11yProps(3) })
       ] }) }),
-      /* @__PURE__ */ u$1(TabPanel, { value: tabIndex, index: 0, children: /* @__PURE__ */ u$1(LayoutSettings, { app, appStore: appStore2 }) }),
-      /* @__PURE__ */ u$1(TabPanel, { value: tabIndex, index: 1, children: /* @__PURE__ */ u$1(ViewInstanceSettings, { app, appStore: appStore2 }) }),
-      /* @__PURE__ */ u$1(TabPanel, { value: tabIndex, index: 2, children: /* @__PURE__ */ u$1(DataSourceSettings, { app, appStore: appStore2 }) }),
-      /* @__PURE__ */ u$1(TabPanel, { value: tabIndex, index: 3, children: /* @__PURE__ */ u$1(InputSettings, { appStore: appStore2 }) })
+      /* @__PURE__ */ u(TabPanel, { value: tabIndex, index: 0, children: /* @__PURE__ */ u(LayoutSettings, { app, appStore: appStore2 }) }),
+      /* @__PURE__ */ u(TabPanel, { value: tabIndex, index: 1, children: /* @__PURE__ */ u(ViewInstanceSettings, { app, appStore: appStore2 }) }),
+      /* @__PURE__ */ u(TabPanel, { value: tabIndex, index: 2, children: /* @__PURE__ */ u(DataSourceSettings, { app, appStore: appStore2 }) }),
+      /* @__PURE__ */ u(TabPanel, { value: tabIndex, index: 3, children: /* @__PURE__ */ u(InputSettings, { appStore: appStore2 }) })
     ] })
   ] });
 }
@@ -37281,7 +37136,7 @@ class SettingsTab extends obsidian.PluginSettingTab {
   display() {
     const { containerEl } = this;
     containerEl.empty();
-    G$1(/* @__PURE__ */ u$1(SettingsRoot, { app: this.app, appStore: this.plugin.appStore }), containerEl);
+    G$1(/* @__PURE__ */ u(SettingsRoot, { app: this.app, appStore: this.plugin.appStore }), containerEl);
   }
   hide() {
     bn(this.containerEl);
@@ -38188,37 +38043,20 @@ class ThinkPlugin extends obsidian.Plugin {
   timerService;
   timerStateService;
   timerWidget;
-  // [新增] 为 inputService 添加一个类属性，以便在其他地方（如命令注册）访问
   inputService;
   async onload() {
     try {
       const settings = await this.loadSettings();
       this.injectGlobalCss();
-      const platform = instance.resolve(ObsidianPlatform);
-      const dataStore2 = instance.resolve(DataStore);
-      const inputService2 = instance.resolve(InputService);
-      const taskService = instance.resolve(TaskService);
-      const timerService2 = instance.resolve(TimerService);
-      const actionService = instance.resolve(ActionService);
-      const rendererService = instance.resolve(RendererService);
-      const timerStateService = instance.resolve(TimerStateService);
-      this.dataStore = dataStore2;
-      this.rendererService = rendererService;
-      this.actionService = actionService;
-      this.timerService = timerService2;
-      this.timerStateService = timerStateService;
-      this.inputService = inputService2;
-      this.appStore = new AppStore();
-      instance.registerInstance(AppStore, this.appStore);
-      platform.init(this.app);
-      inputService2.init(this.app);
-      timerStateService.init(this.app);
+      instance.register(AppToken, { useValue: this.app });
+      this.appStore = instance.resolve(AppStore);
+      this.dataStore = instance.resolve(DataStore);
+      this.rendererService = instance.resolve(RendererService);
+      this.actionService = instance.resolve(ActionService);
+      this.timerService = instance.resolve(TimerService);
+      this.timerStateService = instance.resolve(TimerStateService);
+      this.inputService = instance.resolve(InputService);
       this.appStore.init(this, settings);
-      dataStore2.init(platform);
-      taskService.init(dataStore2);
-      timerService2.init(this.appStore, dataStore2, taskService, inputService2, this.app);
-      actionService.init(this.app, dataStore2, this.appStore, inputService2, timerService2);
-      rendererService.init(this.app, dataStore2, this.appStore, actionService, taskService);
       setTimeout(async () => {
         registerStore(this.appStore);
         registerDataStore(this.dataStore);
@@ -38226,17 +38064,17 @@ class ThinkPlugin extends obsidian.Plugin {
         registerInputService(this.inputService);
         this.timerWidget = new FloatingTimerWidget(this);
         this.timerWidget.load();
-        timerStateService.loadStateFromFile().then((timers) => {
+        this.timerStateService.loadStateFromFile().then((timers) => {
           this.appStore.setInitialTimers(timers);
         });
-        await dataStore2.initialScan();
+        await this.dataStore.initialScan();
         setup$2?.({
           plugin: this,
           appStore: this.appStore,
-          dataStore: dataStore2,
-          rendererService,
-          actionService,
-          taskService
+          dataStore: this.dataStore,
+          rendererService: this.rendererService,
+          actionService: this.actionService,
+          taskService: instance.resolve(TaskService)
         });
         setup$1?.({
           plugin: this,
@@ -38263,6 +38101,7 @@ class ThinkPlugin extends obsidian.Plugin {
       new obsidian.Notice(`[Think Plugin] 插件加载失败: ${error.message}`, 15e3);
     }
   }
+  // ... onunload, loadSettings, saveSettings, injectGlobalCss 方法保持不变 ...
   onunload() {
     document.getElementById(STYLE_TAG_ID)?.remove();
     this.rendererService?.cleanup();

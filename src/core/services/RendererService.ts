@@ -1,5 +1,5 @@
-//src/core/services/RendererService.ts
-import { singleton } from 'tsyringe';
+// src/core/services/RendererService.ts
+import { singleton, inject } from 'tsyringe';
 import { h, render } from 'preact';
 import { App } from 'obsidian';
 import { Layout } from '@core/domain/schema';
@@ -8,32 +8,24 @@ import { AppStore } from '@state/AppStore';
 import { LayoutRenderer } from '@features/dashboard/ui/LayoutRenderer';
 import { ActionService } from './ActionService';
 import { TaskService } from './taskService';
+import { AppToken } from './types';
 
 @singleton()
 export class RendererService {
-    private app!: App;
-    private dataStore!: DataStore;
-    private appStore!: AppStore;
-    private actionService!: ActionService;
-    private taskService!: TaskService;
     private isInitialized = false;
+    private activeLayouts: { container: HTMLElement; layoutName: string }[] = [];
 
-    // [核心修复] 构造函数变为空
-    constructor() { }
-
-    // [核心修复] 新增 init 方法用于注入所有依赖
-    public init(app: App, dataStore: DataStore, appStore: AppStore, actionService: ActionService, taskService: TaskService) {
-        if (this.isInitialized) return;
-        this.app = app;
-        this.dataStore = dataStore;
-        this.appStore = appStore;
-        this.actionService = actionService;
-        this.taskService = taskService;
+    // [核心修改] 为构造函数的每个参数添加 @inject 装饰器
+    constructor(
+        @inject(AppToken) private app: App,
+        @inject(DataStore) private dataStore: DataStore,
+        @inject(AppStore) private appStore: AppStore,
+        @inject(ActionService) private actionService: ActionService,
+        @inject(TaskService) private taskService: TaskService
+    ) {
         this.appStore.subscribe(() => this.rerenderAll());
         this.isInitialized = true;
     }
-
-    private activeLayouts: { container: HTMLElement; layoutName: string }[] = [];
 
     public register(container: HTMLElement, layout: Layout): void {
         this.unregister(container);
