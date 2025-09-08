@@ -3000,11 +3000,11 @@ let ActionService = class {
   constructor() {
   }
   // [核心修复] 新增 init 方法用于注入所有依赖
-  init(app, dataStore2, appStore2, inputService, timerService2) {
+  init(app, dataStore2, appStore2, inputService2, timerService2) {
     this.app = app;
     this.dataStore = dataStore2;
     this.appStore = appStore2;
-    this.inputService = inputService;
+    this.inputService = inputService2;
     this.timerService = timerService2;
   }
   getQuickInputConfigForView(viewInstance, dateContext, periodContext) {
@@ -28676,6 +28676,7 @@ const RemoveCircleOutlineIcon = createSvgIcon(/* @__PURE__ */ u$1("path", {
 let appStore;
 let dataStore;
 let timerService;
+let inputService;
 function registerStore(store) {
   if (appStore) {
     console.warn("ThinkPlugin: AppStore is being registered a second time.");
@@ -28693,6 +28694,12 @@ function registerTimerService(service) {
     console.warn("ThinkPlugin: TimerService is being registered a second time.");
   }
   timerService = service;
+}
+function registerInputService(service) {
+  if (inputService) {
+    console.warn("ThinkPlugin: InputService is being registered a second time.");
+  }
+  inputService = service;
 }
 const ArrowDropDownIcon = createSvgIcon(/* @__PURE__ */ u$1("path", {
   d: "m7 10 5 5 5-5z"
@@ -30697,15 +30704,14 @@ function TimelineView({ items, dateRange, module: module2, currentView, app, tas
   return null;
 }
 class QuickInputModal extends obsidian.Modal {
-  // [修改] 构造函数现在需要接收 dataStore 和 appStore
-  constructor(app, blockId, context, themeId, onSave, dataStore2, appStore2) {
+  // [核心修复] 构造函数被大大简化。
+  // 它不再需要接收 dataStore 和 appStore，因为这些将从全局注册表中获取。
+  constructor(app, blockId, context, themeId, onSave) {
     super(app);
     this.blockId = blockId;
     this.context = context;
     this.themeId = themeId;
     this.onSave = onSave;
-    this.dataStore = dataStore2;
-    this.appStore = appStore2;
   }
   onOpen() {
     this.contentEl.empty();
@@ -30718,9 +30724,7 @@ class QuickInputModal extends obsidian.Modal {
           context: this.context,
           themeId: this.themeId,
           onSave: this.onSave,
-          closeModal: () => this.close(),
-          dataStore: this.dataStore,
-          appStore: this.appStore
+          closeModal: () => this.close()
         }
       ),
       this.contentEl
@@ -30770,8 +30774,7 @@ const renderThemeLevels = (nodes, activePath, onSelect, level = 0) => {
     activePath[level] && activePath[level].children.length > 0 && /* @__PURE__ */ u$1("div", { style: { paddingLeft: "20px" }, children: renderThemeLevels(activePath[level].children, activePath, onSelect, level + 1) })
   ] });
 };
-function QuickInputForm({ app, blockId, context, themeId, onSave, closeModal, dataStore: dataStore2, appStore: appStore2 }) {
-  const svc = T$1(() => new InputService(app), [app]);
+function QuickInputForm({ app, blockId, context, themeId, onSave, closeModal }) {
   const settings = useStore((state) => state.settings.inputSettings);
   const { themeTree, themeIdMap } = T$1(() => {
     const { themes, overrides } = settings;
@@ -30831,15 +30834,20 @@ function QuickInputForm({ app, blockId, context, themeId, onSave, closeModal, da
   };
   const handleSubmit = async () => {
     if (!template) return;
+    if (!inputService) {
+      new obsidian.Notice(`❌ 保存失败: InputService 未初始化`, 1e4);
+      console.error("ThinkPlugin Error: Attempted to save from QuickInputModal, but 'inputService' from storeRegistry is undefined.");
+      return;
+    }
     const finalTheme = selectedThemeId ? themeIdMap.get(selectedThemeId) : void 0;
     if (onSave) {
       onSave({ template, formData, theme: finalTheme });
       closeModal();
     } else {
       try {
-        await svc.executeTemplate(template, formData, finalTheme);
+        await inputService.executeTemplate(template, formData, finalTheme);
         new obsidian.Notice(`✅ 已保存`);
-        dataStore2?.notifyChange?.();
+        dataStore?.notifyChange?.();
         closeModal();
       } catch (e2) {
         new obsidian.Notice(`❌ 保存失败: ${e2.message || e2}`, 1e4);
@@ -31434,7 +31442,7 @@ function LayoutRenderer({ layout, dataStore: dataStore2, app, actionService, tas
   const handleQuickInputAction = (viewInstance) => {
     const config2 = actionService.getQuickInputConfigForView(viewInstance, layoutDate, layoutView);
     if (config2) {
-      new QuickInputModal(app, config2.blockId, config2.context, config2.themeId, void 0, dataStore2, appStore).open();
+      new QuickInputModal(app, config2.blockId, config2.context, config2.themeId).open();
     }
   };
   const handleMarkItemDone = q$1((itemId) => {
@@ -31698,11 +31706,11 @@ let TimerService = class {
   constructor() {
   }
   // [核心修复] 新增 init 方法用于注入所有依赖
-  init(appStore2, dataStore2, taskService, inputService, app) {
+  init(appStore2, dataStore2, taskService, inputService2, app) {
     this.appStore = appStore2;
     this.dataStore = dataStore2;
     this.taskService = taskService;
-    this.inputService = inputService;
+    this.inputService = inputService2;
     this.app = app;
   }
   async startOrResume(taskId) {
@@ -31938,7 +31946,7 @@ function TimerRow({ timer, actionService, timerService: timerService2, dataStore
     if (taskItem) {
       const config2 = actionService.getQuickInputConfigForTaskEdit(taskItem.id);
       if (config2) {
-        new QuickInputModal(app, config2.blockId, config2.context, void 0, void 0, dataStore2, appStore).open();
+        new QuickInputModal(app, config2.blockId, config2.context).open();
       }
     }
   };
@@ -32156,7 +32164,7 @@ function registerQuickInputCommands(plugin, appStore2) {
       id: `think-quick-input-unified-${block.id}`,
       name: `快速录入 - ${block.name}`,
       callback: () => {
-        new QuickInputModal(plugin.app, block.id, void 0, void 0, void 0, plugin.dataStore, plugin.appStore).open();
+        new QuickInputModal(plugin.app, block.id).open();
       }
     });
   });
@@ -38180,13 +38188,15 @@ class ThinkPlugin extends obsidian.Plugin {
   timerService;
   timerStateService;
   timerWidget;
+  // [新增] 为 inputService 添加一个类属性，以便在其他地方（如命令注册）访问
+  inputService;
   async onload() {
     try {
       const settings = await this.loadSettings();
       this.injectGlobalCss();
       const platform = instance.resolve(ObsidianPlatform);
       const dataStore2 = instance.resolve(DataStore);
-      const inputService = instance.resolve(InputService);
+      const inputService2 = instance.resolve(InputService);
       const taskService = instance.resolve(TaskService);
       const timerService2 = instance.resolve(TimerService);
       const actionService = instance.resolve(ActionService);
@@ -38197,21 +38207,23 @@ class ThinkPlugin extends obsidian.Plugin {
       this.actionService = actionService;
       this.timerService = timerService2;
       this.timerStateService = timerStateService;
+      this.inputService = inputService2;
       this.appStore = new AppStore();
       instance.registerInstance(AppStore, this.appStore);
       platform.init(this.app);
-      inputService.init(this.app);
+      inputService2.init(this.app);
       timerStateService.init(this.app);
       this.appStore.init(this, settings);
       dataStore2.init(platform);
       taskService.init(dataStore2);
-      timerService2.init(this.appStore, dataStore2, taskService, inputService, this.app);
-      actionService.init(this.app, dataStore2, this.appStore, inputService, timerService2);
+      timerService2.init(this.appStore, dataStore2, taskService, inputService2, this.app);
+      actionService.init(this.app, dataStore2, this.appStore, inputService2, timerService2);
       rendererService.init(this.app, dataStore2, this.appStore, actionService, taskService);
       setTimeout(async () => {
         registerStore(this.appStore);
         registerDataStore(this.dataStore);
         registerTimerService(this.timerService);
+        registerInputService(this.inputService);
         this.timerWidget = new FloatingTimerWidget(this);
         this.timerWidget.load();
         timerStateService.loadStateFromFile().then((timers) => {
