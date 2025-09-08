@@ -8,17 +8,18 @@ import { Box, Typography, Button, Paper, Stack, Tooltip } from '@mui/material';
 import DragIndicatorIcon from '@mui/icons-material/DragIndicator';
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 import type { ActionService } from '@core/services/ActionService';
-import type { TimerService } from '@core/services/TimerService'; // [新增]
-import type { DataStore } from '@core/services/dataStore'; // [新增]
+import type { TimerService } from '@core/services/TimerService';
+import type { DataStore } from '@core/services/dataStore';
 import { TimerRow } from './TimerRow';
-import { App } from 'obsidian'; // [新增]
-import { QuickInputModal } from '@features/quick-input/ui/QuickInputModal'; // [新增]
+import { App } from 'obsidian';
+// [修改] 导入 QuickInputSaveData 类型
+import { QuickInputModal, QuickInputSaveData } from '@features/quick-input/ui/QuickInputModal'; 
 
 interface TimerViewProps {
-    app: App; // [新增]
+    app: App;
     actionService: ActionService;
-    timerService: TimerService; // [新增]
-    dataStore: DataStore;     // [新增]
+    timerService: TimerService;
+    dataStore: DataStore;
 }
 
 export function TimerView({ app, actionService, timerService, dataStore }: TimerViewProps) {
@@ -44,12 +45,23 @@ export function TimerView({ app, actionService, timerService, dataStore }: Timer
         window.removeEventListener('mouseup', onDragEnd);
     }, []);
 
-    // [新增] 处理 "新任务" 按钮点击事件
+    /**
+     * [核心修改] handleNewTask 现在是服务协调者。
+     * 它负责从 ActionService 获取配置，然后定义自己的 onSave 回调来调用 TimerService。
+     */
     const handleNewTask = () => {
-        const result = actionService.getQuickInputConfigForNewTimer();
-        if (result) {
-            const { config, onSave } = result;
-            new QuickInputModal(app, config.blockId, config.context, undefined, onSave).open();
+        // 1. 从 ActionService 获取纯粹的配置，这一步不再需要 TimerService。
+        const config = actionService.getQuickInputConfigForNewTimer();
+        
+        if (config) {
+            // 2. 在 UI 层（协调者）定义保存后的具体行为。
+            const onSaveCallback = (data: QuickInputSaveData) => {
+                // 3. 调用 TimerService 来执行具体的计时业务逻辑。
+                timerService.createNewTaskAndStart(data);
+            };
+
+            // 4. 将配置和我们自己定义的回调函数传递给 Modal。
+            new QuickInputModal(app, config.blockId, config.context, undefined, onSaveCallback).open();
         }
     };
 
@@ -75,7 +87,7 @@ export function TimerView({ app, actionService, timerService, dataStore }: Timer
                         <Button
                             size="small"
                             startIcon={<AddCircleOutlineIcon />}
-                            onClick={handleNewTask} // [修改] 调用新的处理函数
+                            onClick={handleNewTask} // 调用新的协调函数
                         >
                             新任务
                         </Button>
@@ -85,7 +97,6 @@ export function TimerView({ app, actionService, timerService, dataStore }: Timer
                 <Stack spacing={1} sx={{ p: '8px', maxHeight: '400px', overflowY: 'auto' }}>
                     {timers.length > 0 ? (
                         timers.map(timer => (
-                            // [修改] 将所有需要的实例通过 props 传递给 TimerRow
                             <TimerRow 
                                 key={timer.id} 
                                 timer={timer} 

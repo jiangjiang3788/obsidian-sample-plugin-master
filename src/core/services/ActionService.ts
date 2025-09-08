@@ -1,72 +1,56 @@
-//src/core/services/ActionService.ts
-import { singleton } from 'tsyringe';
+// src/core/services/ActionService.ts
+import { singleton, inject } from 'tsyringe';
 import { App, Notice } from 'obsidian';
 import { AppStore } from '@state/AppStore';
 import { dayjs } from '@core/utils/date';
 import type { Item, ViewInstance } from '@core/domain/schema';
 import { DataStore } from './dataStore';
-import { TimerService } from './TimerService';
 import { InputService } from './inputService';
 import type { QuickInputConfig } from './types';
-import { QuickInputModal } from '@features/quick-input/ui/QuickInputModal';
+import { AppToken } from './types';
 
 @singleton()
 export class ActionService {
-    private app!: App;
-    private dataStore!: DataStore;
-    private appStore!: AppStore;
-    private inputService!: InputService;
-    private timerService!: TimerService;
+    // [核心修改] 构造函数现在通过 @inject 装饰器明确声明并接收所有依赖
+    // 注意：对 TimerService 的依赖已在上一轮重构中移除
+    constructor(
+        @inject(AppToken) private app: App,
+        @inject(DataStore) private dataStore: DataStore,
+        @inject(AppStore) private appStore: AppStore,
+        @inject(InputService) private inputService: InputService
+    ) {}
 
-    // [核心修复] 构造函数变为空
-    constructor() { }
-
-    // [核心修复] 新增 init 方法用于注入所有依赖
-    public init(app: App, dataStore: DataStore, appStore: AppStore, inputService: InputService, timerService: TimerService) {
-        this.app = app;
-        this.dataStore = dataStore;
-        this.appStore = appStore;
-        this.inputService = inputService;
-        this.timerService = timerService;
-    }
+    // [核心修改] init 方法已被彻底删除
 
     public getQuickInputConfigForView(viewInstance: ViewInstance, dateContext: dayjs.Dayjs, periodContext: string): QuickInputConfig | null {
         const settings = this.appStore.getSettings();
         const dataSource = settings.dataSources.find(ds => ds.id === viewInstance.dataSourceId);
-
         if (!dataSource) {
             new Notice('快捷输入失败：找不到对应的数据源。');
             return null;
         }
-
         const categoryFilter = dataSource.filters.find(f => f.field === 'categoryKey' && (f.op === '=' || f.op === 'includes'));
         if (!categoryFilter || !categoryFilter.value) {
             new Notice('快捷输入失败：此视图的数据源未按 "categoryKey" 进行筛选。');
             return null;
         }
-
         const blockName = categoryFilter.value as string;
         const targetBlock = settings.inputSettings.blocks.find(b => b.name === blockName);
-
         if (!targetBlock) {
             new Notice(`快捷输入失败：找不到名为 "${blockName}" 的Block模板。`);
             return null;
         }
-
         const targetTheme = settings.inputSettings.themes.find(t => t.path === blockName);
-
         const context: Record<string, any> = {
             '日期': dateContext.format('YYYY-MM-DD'),
             '周期': periodContext,
         };
-
         return {
             blockId: targetBlock.id,
             context: context,
             themeId: targetTheme?.id,
         };
     }
-
     public getQuickInputConfigForTaskEdit(taskId: string): QuickInputConfig | null {
         const item = this.dataStore.queryItems().find(i => i.id === taskId);
         if (!item) {
@@ -92,32 +76,20 @@ export class ActionService {
         }
         if (!context.title && !context.标题) context['标题'] = item.title;
         if (!context.tags && !context.标签) context['标签'] = item.tags.join(', ');
-
         return {
             blockId: targetBlock.id,
             context: context
         };
     }
-
-    public getQuickInputConfigForNewTimer(): { config: QuickInputConfig, onSave: (data: any) => void } | null {
+    public getQuickInputConfigForNewTimer(): QuickInputConfig | null {
         const blocks = this.appStore.getSettings().inputSettings.blocks;
-        if (!blocks || !blocks.length === 0) {
+        if (!blocks || blocks.length === 0) {
             new Notice('没有可用的Block模板，请先在设置中创建一个。');
             return null;
         }
-
         const defaultBlockId = blocks[0].id;
-
-        // [核心修复] 回调函数现在直接调用 timerService 的方法，无需传递额外参数
-        const onSaveCallback = (data: any) => {
-            this.timerService.createNewTaskAndStart(data);
-        };
-
         return {
-            config: {
-                blockId: defaultBlockId,
-            },
-            onSave: onSaveCallback,
+            blockId: defaultBlockId,
         };
     }
 }
