@@ -4,15 +4,14 @@ import { h } from 'preact';
 import { App, Modal, Notice } from 'obsidian';
 import { render, unmountComponentAtNode } from 'preact/compat';
 import { useState, useMemo, useEffect } from 'preact/hooks';
-import { AppStore, useStore } from '@state/AppStore'; // [修改] AppStore 只用于类型
-import { InputService } from '@core/services/inputService';
-import { DataStore } from '@core/services/dataStore';
+import { useStore } from '@state/AppStore';
 import type { InputSettings, BlockTemplate, ThemeDefinition, TemplateField } from '@core/domain/schema';
 import { Button, RadioGroup as MuiRadioGroup, FormControlLabel, Radio, FormControl, Typography, Stack, Divider, Box } from '@mui/material';
 import { SimpleSelect } from '@shared/ui/SimpleSelect';
 import { buildThemeTree, ThemeTreeNode } from '@core/utils/themeUtils';
 import { dayjs } from '@core/utils/date';
-import { dataStore } from '@core/services/storeRegistry'; // [新增] 导入 dataStore 注册表
+// [核心修改] 导入所有需要的全局服务实例
+import { dataStore, inputService } from '@state/storeRegistry';
 
 export interface QuickInputSaveData {
     template: BlockTemplate;
@@ -21,15 +20,14 @@ export interface QuickInputSaveData {
 }
 
 export class QuickInputModal extends Modal {
-    // [修改] 构造函数现在需要接收 dataStore 和 appStore
+    // [核心修复] 构造函数被大大简化。
+    // 它不再需要接收 dataStore 和 appStore，因为这些将从全局注册表中获取。
     constructor(
         app: App,
         private blockId: string,
         private context?: Record<string, any>,
         private themeId?: string,
-        private onSave?: (data: QuickInputSaveData) => void,
-        private dataStore?: DataStore, // 新增
-        private appStore?: AppStore // 新增
+        private onSave?: (data: QuickInputSaveData) => void
     ) {
         super(app);
     }
@@ -44,9 +42,6 @@ export class QuickInputModal extends Modal {
                 themeId={this.themeId}
                 onSave={this.onSave}
                 closeModal={() => this.close()}
-                // [修改] 将 store 实例传递下去
-                dataStore={this.dataStore}
-                appStore={this.appStore}
             />,
             this.contentEl
         );
@@ -108,21 +103,18 @@ const renderThemeLevels = (nodes: ThemeTreeNode[], activePath: ThemeTreeNode[], 
     );
 };
 
-
-function QuickInputForm({ app, blockId, context, themeId, onSave, closeModal, dataStore, appStore }: {
+// [核心修复] QuickInputForm 的 props 被简化，不再需要 dataStore 和 appStore
+function QuickInputForm({ app, blockId, context, themeId, onSave, closeModal }: {
     app: App;
     blockId: string;
     context?: Record<string, any>;
     themeId?: string;
     onSave?: (data: QuickInputSaveData) => void;
     closeModal: () => void;
-    dataStore?: DataStore; // [新增]
-    appStore?: AppStore; // [新增]
 }) {
-    const svc = useMemo(() => new InputService(app), [app]);
-    // [修改] 从 useStore 获取 settings
     const settings = useStore(state => state.settings.inputSettings);
-
+    // [其他代码保持不变] ...
+    // ...
     const { themeTree, themeIdMap } = useMemo(() => {
         const { themes, overrides } = settings;
         const disabledThemeIds = new Set<string>();
@@ -136,48 +128,47 @@ function QuickInputForm({ app, blockId, context, themeId, onSave, closeModal, da
         const themeIdMap = new Map<string, ThemeDefinition>(themes.map(t => [t.id, t]));
         return { themeTree, themeIdMap };
     }, [settings, blockId]);
-
+ 
     const [selectedThemeId, setSelectedThemeId] = useState<string | null>(themeId || null);
-
+ 
     const { template } = useMemo(() => {
         return getEffectiveTemplate(settings, blockId, selectedThemeId || undefined);
     }, [settings, blockId, selectedThemeId]);
-
+ 
     const [formData, setFormData] = useState<Record<string, any>>(() => {
         if (!template) return {};
-        // ... formData 初始化逻辑不变
         const initialData: Record<string, any> = {};
-        template.fields.forEach(field => {
-            let valueAssigned = false;
-            if (context && (context[field.key] !== undefined || context[field.label] !== undefined)) {
-                initialData[field.key] = context[field.key] ?? context[field.label];
-                valueAssigned = true;
-            }
-            if (!valueAssigned && !field.defaultValue) {
-                if (field.type === 'date') {
-                    initialData[field.key] = dayjs().format('YYYY-MM-DD');
-                    valueAssigned = true;
-                } else if (field.type === 'time') {
-                    initialData[field.key] = dayjs().format('HH:mm');
-                    valueAssigned = true;
-                }
-            }
-            if (!valueAssigned && ['select', 'radio', 'rating'].includes(field.type)) {
-                const findOption = (val: string | undefined) => (field.options || []).find(o => o.label === val || o.value === val);
-                let defaultOpt = findOption(field.defaultValue);
-                if (!defaultOpt && field.options && field.options.length > 0) {
-                    defaultOpt = field.options[0];
-                }
-                if (defaultOpt) {
-                    initialData[field.key] = { value: defaultOpt.value, label: defaultOpt.label || defaultOpt.value };
-                    valueAssigned = true;
-                }
-            }
-            if (!valueAssigned) {
-                initialData[field.key] = field.defaultValue || '';
-                valueAssigned = true;
-            }
-        });
+        template.fields.forEach(field => {
+            let valueAssigned = false;
+            if (context && (context[field.key] !== undefined || context[field.label] !== undefined)) {
+                initialData[field.key] = context[field.key] ?? context[field.label];
+                valueAssigned = true;
+            }
+            if (!valueAssigned && !field.defaultValue) {
+                if (field.type === 'date') {
+                    initialData[field.key] = dayjs().format('YYYY-MM-DD');
+                    valueAssigned = true;
+                } else if (field.type === 'time') {
+                    initialData[field.key] = dayjs().format('HH:mm');
+                    valueAssigned = true;
+                }
+            }
+            if (!valueAssigned && ['select', 'radio', 'rating'].includes(field.type)) {
+                const findOption = (val: string | undefined) => (field.options || []).find(o => o.label === val || o.value === val);
+                let defaultOpt = findOption(field.defaultValue);
+                if (!defaultOpt && field.options && field.options.length > 0) {
+                    defaultOpt = field.options[0];
+                }
+                if (defaultOpt) {
+                    initialData[field.key] = { value: defaultOpt.value, label: defaultOpt.label || defaultOpt.value };
+                    valueAssigned = true;
+                }
+            }
+            if (!valueAssigned) {
+                initialData[field.key] = field.defaultValue || '';
+                valueAssigned = true;
+            }
+        });
         return initialData;
     });
 
@@ -187,15 +178,25 @@ function QuickInputForm({ app, blockId, context, themeId, onSave, closeModal, da
 
     const handleSubmit = async () => {
         if (!template) return;
+
+        // [核心修复] 检查从 storeRegistry 导入的 inputService 是否存在
+        if (!inputService) {
+            new Notice(`❌ 保存失败: InputService 未初始化`, 10000);
+            console.error("ThinkPlugin Error: Attempted to save from QuickInputModal, but 'inputService' from storeRegistry is undefined.");
+            return;
+        }
+
         const finalTheme = selectedThemeId ? themeIdMap.get(selectedThemeId) : undefined;
         if (onSave) {
             onSave({ template, formData, theme: finalTheme });
             closeModal();
         } else {
             try {
-                await svc.executeTemplate(template, formData, finalTheme);
+                // [核心修复] 使用全局注册的 inputService 实例，而不是本地创建的 svc
+                await inputService.executeTemplate(template, formData, finalTheme);
                 new Notice(`✅ 已保存`);
-                // [修改] 从注册表获取 dataStore 实例
+                
+                // [核心修复] 使用全局注册的 dataStore 实例来通知数据变更
                 dataStore?.notifyChange?.();
                 closeModal();
             } catch (e: any) {
@@ -203,13 +204,13 @@ function QuickInputForm({ app, blockId, context, themeId, onSave, closeModal, da
             }
         }
     };
-
+    
     // ... renderField 逻辑不变 ...
     const renderField = (field: TemplateField) => {
         const isComplex = typeof formData[field.key] === 'object' && formData[field.key] !== null;
         const value = isComplex ? formData[field.key]?.value : formData[field.key];
         const label = field.label || field.key;
-
+ 
         switch (field.type) {
             case 'rating':
                 return (
@@ -229,7 +230,6 @@ function QuickInputForm({ app, blockId, context, themeId, onSave, closeModal, da
                                 return (
                                     <Button
                                         key={opt.label}
-                                        // [CORE FIX] Swapped the variants to meet the new requirement
                                         variant={isSelected ? 'outlined' : 'text'}
                                         onClick={() => handleUpdate(field.key, { value: opt.value, label: opt.label }, true)}
                                         title={`评分: ${opt.label}`}
@@ -274,7 +274,7 @@ function QuickInputForm({ app, blockId, context, themeId, onSave, closeModal, da
                     onInput: (e: Event) => handleUpdate(field.key, (e.target as HTMLInputElement).value),
                     onKeyDown: (e: KeyboardEvent) => e.stopPropagation(),
                 };
-
+ 
                 return (
                     <div style={{ display: 'flex', flexDirection: 'column', width: '100%' }}>
                         <label style={{ fontWeight: 500, fontSize: '0.875rem', marginBottom: '4px' }}>
@@ -295,22 +295,22 @@ function QuickInputForm({ app, blockId, context, themeId, onSave, closeModal, da
             }
         }
     };
-
+ 
     if (!template) {
         return <div>错误：找不到ID为 "{blockId}" 的Block模板。</div>;
     }
-
+ 
     const activePath = selectedThemeId ? findNodePath(themeTree, selectedThemeId) : [];
     const handleSelectTheme = (newThemeId: string, parentThemeId: string | null) => {
         setSelectedThemeId(selectedThemeId === newThemeId ? parentThemeId : newThemeId);
     };
-
+ 
     return (
         <div class="think-modal" style={{ padding: '0 1rem 1rem 1rem' }}>
             <h3 style={{ marginBottom: '1rem' }}>
                 {onSave ? `开始新任务: ${template.name}` : `快速录入 · ${template.name}`}
             </h3>
-
+ 
             {themeTree.length > 0 && (
                 <FormControl component="fieldset" sx={{ mb: 1, width: '100%' }}>
                     <Typography variant="body2" sx={{ fontWeight: 600, mb: 1 }}>主题分类</Typography>
@@ -326,7 +326,7 @@ function QuickInputForm({ app, blockId, context, themeId, onSave, closeModal, da
                     </Box>
                 </FormControl>
             )}
-
+ 
             <Divider sx={{ mb: 2.5 }} />
             <Stack spacing={2.5}>
                 {template.fields.map(field => <div key={field.id}>{renderField(field)}</div>)}

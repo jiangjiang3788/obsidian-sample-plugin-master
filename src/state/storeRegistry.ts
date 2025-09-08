@@ -2,6 +2,8 @@
 import { AppStore } from './AppStore';
 import { DataStore } from '@core/services/DataStore';
 import { TimerService } from '@core/services/TimerService';
+// [新增] 导入 InputService 类型
+import { InputService } from '@core/services/InputService';
 
 /**
  * 这是一个简单的服务定位器，用于在应用启动时保存核心服务和Store的单一实例，
@@ -10,6 +12,8 @@ import { TimerService } from '@core/services/TimerService';
 export let appStore: AppStore;
 export let dataStore: DataStore;
 export let timerService: TimerService;
+// [新增] 导出 inputService 全局实例
+export let inputService: InputService;
 
 export function registerStore(store: AppStore) {
     if (appStore) {
@@ -31,4 +35,12 @@ export function registerTimerService(service: TimerService) {
         console.warn("ThinkPlugin: TimerService is being registered a second time.");
     }
     timerService = service;
+}
+
+// [新增] 用于注册 InputService 的函数
+export function registerInputService(service: InputService) {
+    if (inputService) {
+        console.warn("ThinkPlugin: InputService is being registered a second time.");
+    }
+    inputService = service;
 }
