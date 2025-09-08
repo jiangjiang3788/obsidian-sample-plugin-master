@@ -56,8 +56,8 @@ export class DataStore {
                     nextHeadingIndex++;
                     continue;
                 }
-                if (line.trim() === '') {
-                    const endIdx = lines.indexOf('', i + 1);
+                if (line.trim() === '<!-- start -->') {
+                    const endIdx = lines.indexOf('<!-- end -->', i + 1);
                     if (endIdx !== -1) {
                         const blockItem = parseBlockContent(filePath, lines, i, endIdx, parentFolder);
                         if (blockItem) {

@@ -29215,8 +29215,8 @@ let DataStore = class {
           nextHeadingIndex++;
           continue;
         }
-        if (line2.trim() === "") {
-          const endIdx = lines.indexOf("", i2 + 1);
+        if (line2.trim() === "<!-- start -->") {
+          const endIdx = lines.indexOf("<!-- end -->", i2 + 1);
           if (endIdx !== -1) {
             const blockItem = parseBlockContent(filePath, lines, i2, endIdx, parentFolder);
             if (blockItem) {
