@@ -27801,19 +27801,35 @@ function arrayMove$1(array, from2, to) {
   newArray.splice(to, 0, removed);
   return newArray;
 }
-class AppStore {
+const AppToken = "App";
+const SETTINGS_TOKEN = "ThinkSettings";
+var __getOwnPropDesc$8 = Object.getOwnPropertyDescriptor;
+var __decorateClass$8 = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc$8(target, key) : target;
+  for (var i2 = decorators.length - 1, decorator; i2 >= 0; i2--)
+    if (decorator = decorators[i2])
+      result = decorator(result) || result;
+  return result;
+};
+var __decorateParam$8 = (index, decorator) => (target, key) => decorator(target, key, index);
+let AppStore = class {
+  // [核心修改] _plugin 现在是可选的，因为它在构造后才被设置
   _plugin;
   _state;
   _listeners = /* @__PURE__ */ new Set();
-  constructor() {
-  }
-  init(plugin, initialSettings) {
-    this._plugin = plugin;
+  // [核心修改] 通过构造函数注入设置，不再需要 init()
+  constructor(initialSettings) {
     this._state = {
       settings: initialSettings,
       timers: []
     };
     this._deriveState();
+  }
+  // [删除] init 方法已被构造函数取代
+  // public init(plugin: ThinkPlugin, initialSettings: ThinkSettings) { ... }
+  // [核心修改] 添加一个方法来设置 plugin 实例，用于后续保存操作
+  setPlugin(plugin) {
+    this._plugin = plugin;
   }
   _deriveState() {
     this._state.activeTimer = this._state.timers.find((t2) => t2.status === "running");
@@ -27833,6 +27849,10 @@ class AppStore {
     this._listeners.forEach((l2) => l2());
   }
   _updateSettingsAndPersist = async (updater) => {
+    if (!this._plugin) {
+      console.error("AppStore: 插件实例未设置，无法保存设置。");
+      return;
+    }
     const newSettings = JSON.parse(JSON.stringify(this._state.settings));
     updater(newSettings);
     this._state.settings = newSettings;
@@ -27852,10 +27872,13 @@ class AppStore {
     const newTimers = updater(JSON.parse(JSON.stringify(this._state.timers)));
     this._state.timers = newTimers;
     this._notify();
-    if (this._plugin.timerStateService) {
+    if (this._plugin?.timerStateService) {
       await this._plugin.timerStateService.saveStateToFile(newTimers);
     }
   }
+  // --- 之后的所有方法 (addTimer, updateTimer, addGroup, etc.) 保持不变 ---
+  // ... (此处省略所有未修改的方法，保持原样即可)
+  // --- [复制并粘贴 AppStore.ts 中从 addTimer 开始到文件末尾的所有方法] ---
   addTimer = async (timer) => {
     await this._updateTimersAndPersist((draft) => {
       const newTimer = { ...timer, id: generateId("timer") };
@@ -28037,7 +28060,6 @@ class AppStore {
         title,
         viewType: "BlockView",
         dataSourceId: "",
-        // [修改] 将 structuredClone 替换为 JSON.parse(JSON.stringify())
         viewConfig: JSON.parse(JSON.stringify(VIEW_DEFAULT_CONFIGS.BlockView)),
         collapsed: true,
         parentId
@@ -28197,7 +28219,11 @@ class AppStore {
       );
     });
   };
-}
+};
+AppStore = __decorateClass$8([
+  singleton(),
+  __decorateParam$8(0, inject(SETTINGS_TOKEN))
+], AppStore);
 function useStore(selector) {
   const store = appStore;
   if (!store) {
@@ -29079,7 +29105,6 @@ function throttle(fn3, wait = 250) {
     }
   };
 }
-const AppToken = "App";
 var __getOwnPropDesc$7 = Object.getOwnPropertyDescriptor;
 var __decorateClass$7 = (decorators, target, key, kind) => {
   var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc$7(target, key) : target;
@@ -38035,6 +38060,7 @@ body.theme-dark .heatmap-cell.empty {
 }
 `.trim();
 console.log(`[ThinkPlugin] main.js 文件已加载，版本时间: ${(/* @__PURE__ */ new Date()).toLocaleTimeString()}`);
+instance.registerSingleton(AppStore);
 class ThinkPlugin extends obsidian.Plugin {
   appStore;
   dataStore;
@@ -38049,6 +38075,7 @@ class ThinkPlugin extends obsidian.Plugin {
       const settings = await this.loadSettings();
       this.injectGlobalCss();
       instance.register(AppToken, { useValue: this.app });
+      instance.register(SETTINGS_TOKEN, { useValue: settings });
       this.appStore = instance.resolve(AppStore);
       this.dataStore = instance.resolve(DataStore);
       this.rendererService = instance.resolve(RendererService);
@@ -38056,7 +38083,7 @@ class ThinkPlugin extends obsidian.Plugin {
       this.timerService = instance.resolve(TimerService);
       this.timerStateService = instance.resolve(TimerStateService);
       this.inputService = instance.resolve(InputService);
-      this.appStore.init(this, settings);
+      this.appStore.setPlugin(this);
       setTimeout(async () => {
         registerStore(this.appStore);
         registerDataStore(this.dataStore);
@@ -38074,6 +38101,7 @@ class ThinkPlugin extends obsidian.Plugin {
           dataStore: this.dataStore,
           rendererService: this.rendererService,
           actionService: this.actionService,
+          // [修改] taskService 也应从容器中解析以保持一致性
           taskService: instance.resolve(TaskService)
         });
         setup$1?.({
