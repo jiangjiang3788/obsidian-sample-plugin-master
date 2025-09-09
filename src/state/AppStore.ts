@@ -1,11 +1,14 @@
 // src/state/AppStore.ts
 import { useState, useEffect, useCallback } from 'preact/hooks';
+import { singleton, inject } from 'tsyringe';
 import type { ThinkSettings, DataSource, ViewInstance, Layout, InputSettings, BlockTemplate, ThemeDefinition, ThemeOverride, Group, GroupType, Groupable } from '@core/domain/schema';
 import { DEFAULT_SETTINGS } from '@core/domain/schema';
 import type ThinkPlugin from '../main';
 import { VIEW_DEFAULT_CONFIGS } from '@features/settings/ui/components/view-editors/registry';
 import { generateId, moveItemInArray, duplicateItemInArray } from '@core/utils/array';
 import { appStore } from './storeRegistry';
+// [核心修改] 导入 SETTINGS_TOKEN
+import { SETTINGS_TOKEN } from '@core/services/types';
 
 export interface TimerState {
     id: string;
@@ -21,21 +24,32 @@ export interface AppState {
     activeTimer?: TimerState;
 }
 
+// [核心修改] 将 AppStore 标记为单例
+@singleton()
 export class AppStore {
-    private _plugin!: ThinkPlugin;
-    private _state!: AppState;
+    // [核心修改] _plugin 现在是可选的，因为它在构造后才被设置
+    private _plugin?: ThinkPlugin;
+    private _state: AppState;
     private _listeners: Set<() => void> = new Set();
 
-    public constructor() { }
-
-    public init(plugin: ThinkPlugin, initialSettings: ThinkSettings) {
-        this._plugin = plugin;
-        this._state = {
+    // [核心修改] 通过构造函数注入设置，不再需要 init()
+    public constructor(
+        @inject(SETTINGS_TOKEN) initialSettings: ThinkSettings
+    ) {
+        this._state = {
             settings: initialSettings,
             timers: [],
         };
         this._deriveState();
-    }
+    }
+
+    // [删除] init 方法已被构造函数取代
+    // public init(plugin: ThinkPlugin, initialSettings: ThinkSettings) { ... }
+
+    // [核心修改] 添加一个方法来设置 plugin 实例，用于后续保存操作
+    public setPlugin(plugin: ThinkPlugin) {
+        this._plugin = plugin;
+    }
     
     private _deriveState() {
         this._state.activeTimer = this._state.timers.find(t => t.status === 'running');
@@ -55,16 +69,20 @@ export class AppStore {
     }
 
     private _notify() {
-        this._deriveState(); // 每次通知前都重新计算派生状态
+        this._deriveState();
         this._listeners.forEach(l => l());
     }
     
     public _updateSettingsAndPersist = async (updater: (draft: ThinkSettings) => void) => {
-        // [修改] 将 structuredClone 替换为 JSON.parse(JSON.stringify()) 以提高移动端兼容性
+        // [核心修改] 增加对 _plugin 是否存在的检查
+        if (!this._plugin) {
+            console.error("AppStore: 插件实例未设置，无法保存设置。");
+            return;
+        }
         const newSettings = JSON.parse(JSON.stringify(this._state.settings));
         updater(newSettings);
         this._state.settings = newSettings;
-        await this._plugin.saveData(this._state.settings);
+        await this._plugin.saveData(this._state.settings);
         this._notify();
     }
 
@@ -80,15 +98,18 @@ export class AppStore {
     }
 
     private async _updateTimersAndPersist(updater: (draft: TimerState[]) => TimerState[]) {
-        // [修改] 将 structuredClone 替换为 JSON.parse(JSON.stringify()) 以提高移动端兼容性
         const newTimers = updater(JSON.parse(JSON.stringify(this._state.timers)));
         this._state.timers = newTimers;
         this._notify();
-        if (this._plugin.timerStateService) {
+        // [核心修改] 增加对 _plugin 是否存在的检查
+        if (this._plugin?.timerStateService) {
             await this._plugin.timerStateService.saveStateToFile(newTimers);
         }
     }
 
+    // --- 之后的所有方法 (addTimer, updateTimer, addGroup, etc.) 保持不变 ---
+    // ... (此处省略所有未修改的方法，保持原样即可)
+    // --- [复制并粘贴 AppStore.ts 中从 addTimer 开始到文件末尾的所有方法] ---
     public addTimer = async (timer: Omit<TimerState, 'id'>) => {
         await this._updateTimersAndPersist(draft => {
             const newTimer: TimerState = { ...timer, id: generateId('timer') };
@@ -156,8 +177,6 @@ export class AppStore {
             const deepDuplicate = (originalGroupId: string, newParentId: string | null) => {
                 const originalGroup = draft.groups.find(g => g.id === originalGroupId);
                 if (!originalGroup) return;
-
-                // [修改] 将 structuredClone 替换为 JSON.parse(JSON.stringify())
                 const newGroup: Group = {
                     ...JSON.parse(JSON.stringify(originalGroup)),
                     id: generateId('group'),
@@ -178,7 +197,6 @@ export class AppStore {
                 const { items, prefix } = getItemsArrayForType(originalGroup.type);
                 const childItemsToDuplicate = items.filter(item => item.parentId === originalGroupId);
                 childItemsToDuplicate.forEach(item => {
-                    // [修改] 将 structuredClone 替换为 JSON.parse(JSON.stringify())
                     const newItem = {
                         ...JSON.parse(JSON.stringify(item)),
                         id: generateId(prefix),
@@ -291,7 +309,6 @@ export class AppStore {
                 title: title,
                 viewType: 'BlockView',
                 dataSourceId: '',
-                // [修改] 将 structuredClone 替换为 JSON.parse(JSON.stringify())
                 viewConfig: JSON.parse(JSON.stringify(VIEW_DEFAULT_CONFIGS.BlockView)),
                 collapsed: true,
                 parentId
@@ -304,7 +321,6 @@ export class AppStore {
             const index = draft.viewInstances.findIndex(vi => vi.id === id);
             if (index !== -1) {
                 if (updates.viewType && updates.viewType !== draft.viewInstances[index].viewType) {
-                    // [修改] 将 structuredClone 替换为 JSON.parse(JSON.stringify())
                     updates.viewConfig = JSON.parse(JSON.stringify(VIEW_DEFAULT_CONFIGS[updates.viewType]));
                 }
                 draft.viewInstances[index] = { ...draft.viewInstances[index], ...updates };
@@ -473,7 +489,7 @@ export class AppStore {
         });
     }
 }
-
+// ... (useStore hook remains unchanged)
 export function useStore<T>(selector: (state: AppState) => T): T {
     const store = appStore;
 
