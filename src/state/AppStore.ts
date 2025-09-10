@@ -7,528 +7,536 @@ import type ThinkPlugin from '../main';
 import { VIEW_DEFAULT_CONFIGS } from '@features/settings/ui/components/view-editors/registry';
 import { generateId, moveItemInArray, duplicateItemInArray } from '@core/utils/array';
 import { appStore } from './storeRegistry';
-// [核心修改] 导入 SETTINGS_TOKEN
 import { SETTINGS_TOKEN } from '@core/services/types';
 
 export interface TimerState {
-    id: string;
-    taskId: string;
-    startTime: number;
-    elapsedSeconds: number;
-    status: 'running' | 'paused';
+    id: string;
+    taskId: string;
+    startTime: number;
+    elapsedSeconds: number;
+    status: 'running' | 'paused';
 }
 
 export interface AppState {
-    settings: ThinkSettings;
-    timers: TimerState[];
-    activeTimer?: TimerState;
+    settings: ThinkSettings;
+    timers: TimerState[];
+    activeTimer?: TimerState;
+    // [新增] 悬浮计时器是否可见的临时状态
+    isTimerWidgetVisible: boolean;
 }
 
-// [核心修改] 将 AppStore 标记为单例
 @singleton()
 export class AppStore {
-    // [核心修改] _plugin 现在是可选的，因为它在构造后才被设置
-    private _plugin?: ThinkPlugin;
-    private _state: AppState;
-    private _listeners: Set<() => void> = new Set();
+    private _plugin?: ThinkPlugin;
+    private _state: AppState;
+    private _listeners: Set<() => void> = new Set();
 
-    // [核心修改] 通过构造函数注入设置，不再需要 init()
-    public constructor(
+    public constructor(
         @inject(SETTINGS_TOKEN) initialSettings: ThinkSettings
     ) {
         this._state = {
-            settings: initialSettings,
-            timers: [],
-        };
-        this._deriveState();
+            settings: initialSettings,
+            timers: [],
+            // [新增] 初始化时，可见性取决于设置项
+            isTimerWidgetVisible: initialSettings.floatingTimerEnabled,
+        };
+        this._deriveState();
     }
 
-    // [删除] init 方法已被构造函数取代
-    // public init(plugin: ThinkPlugin, initialSettings: ThinkSettings) { ... }
-
-    // [核心修改] 添加一个方法来设置 plugin 实例，用于后续保存操作
     public setPlugin(plugin: ThinkPlugin) {
         this._plugin = plugin;
     }
-    
-    private _deriveState() {
-        this._state.activeTimer = this._state.timers.find(t => t.status === 'running');
-    }
+    
+    private _deriveState() {
+        this._state.activeTimer = this._state.timers.find(t => t.status === 'running');
+    }
 
-    public getState(): AppState {
-        return this._state;
-    }
+    public getState(): AppState {
+        return this._state;
+    }
 
-    public getSettings(): ThinkSettings {
-        return this._state.settings;
-    }
+    public getSettings(): ThinkSettings {
+        return this._state.settings;
+    }
 
-    public subscribe(listener: () => void): () => void {
-        this._listeners.add(listener);
-        return () => this._listeners.delete(listener);
-    }
+    public subscribe(listener: () => void): () => void {
+        this._listeners.add(listener);
+        return () => this._listeners.delete(listener);
+    }
 
-    private _notify() {
-        this._deriveState();
-        this._listeners.forEach(l => l());
-    }
-    
-    public _updateSettingsAndPersist = async (updater: (draft: ThinkSettings) => void) => {
-        // [核心修改] 增加对 _plugin 是否存在的检查
+    private _notify() {
+        this._deriveState();
+        this._listeners.forEach(l => l());
+    }
+    
+    public _updateSettingsAndPersist = async (updater: (draft: ThinkSettings) => void) => {
         if (!this._plugin) {
             console.error("AppStore: 插件实例未设置，无法保存设置。");
             return;
         }
-        const newSettings = JSON.parse(JSON.stringify(this._state.settings));
-        updater(newSettings);
-        this._state.settings = newSettings;
+        const newSettings = JSON.parse(JSON.stringify(this._state.settings));
+        updater(newSettings);
+        this._state.settings = newSettings;
         await this._plugin.saveData(this._state.settings);
-        this._notify();
-    }
+        this._notify();
+    }
 
-    private _updateEphemeralState(updater: (draft: AppState) => void) {
-        updater(this._state);
-        this._notify();
-    }
+    private _updateEphemeralState(updater: (draft: AppState) => void) {
+        updater(this._state);
+        this._notify();
+    }
+    
+    // [新增] 用于切换悬浮窗可见性的方法 (不保存)
+    public toggleTimerWidgetVisibility = () => {
+        this._updateEphemeralState(draft => {
+            draft.isTimerWidgetVisible = !draft.isTimerWidgetVisible;
+        });
+    }
 
-    public setInitialTimers(initialTimers: TimerState[]) {
-        this._updateEphemeralState(draft => {
-            draft.timers = initialTimers;
-        });
-    }
+    // [新增] 用于更新永久设置的方法 (会保存)
+    public updateFloatingTimerEnabled = async (enabled: boolean) => {
+        await this._updateSettingsAndPersist(draft => {
+            draft.floatingTimerEnabled = enabled;
+        });
+        // 当用户启用或禁用时，同步更新当前的可见状态
+        this._updateEphemeralState(draft => {
+            draft.isTimerWidgetVisible = enabled;
+        });
+    }
 
-    private async _updateTimersAndPersist(updater: (draft: TimerState[]) => TimerState[]) {
-        const newTimers = updater(JSON.parse(JSON.stringify(this._state.timers)));
-        this._state.timers = newTimers;
-        this._notify();
-        // [核心修改] 增加对 _plugin 是否存在的检查
-        if (this._plugin?.timerStateService) {
-            await this._plugin.timerStateService.saveStateToFile(newTimers);
-        }
-    }
+    // --- 之后的所有方法 (addTimer, updateTimer, etc.) 保持不变 ---
+    public setInitialTimers(initialTimers: TimerState[]) {
+        this._updateEphemeralState(draft => {
+            draft.timers = initialTimers;
+        });
+    }
 
-    // --- 之后的所有方法 (addTimer, updateTimer, addGroup, etc.) 保持不变 ---
-    // ... (此处省略所有未修改的方法，保持原样即可)
-    // --- [复制并粘贴 AppStore.ts 中从 addTimer 开始到文件末尾的所有方法] ---
-    public addTimer = async (timer: Omit<TimerState, 'id'>) => {
-        await this._updateTimersAndPersist(draft => {
-            const newTimer: TimerState = { ...timer, id: generateId('timer') };
-            draft.push(newTimer);
-            return draft;
-        });
-    }
+    private async _updateTimersAndPersist(updater: (draft: TimerState[]) => TimerState[]) {
+        const newTimers = updater(JSON.parse(JSON.stringify(this._state.timers)));
+        this._state.timers = newTimers;
+        this._notify();
+        if (this._plugin?.timerStateService) {
+            await this._plugin.timerStateService.saveStateToFile(newTimers);
+        }
+    }
+    public addTimer = async (timer: Omit<TimerState, 'id'>) => {
+        await this._updateTimersAndPersist(draft => {
+            const newTimer: TimerState = { ...timer, id: generateId('timer') };
+            draft.push(newTimer);
+            return draft;
+        });
+    }
 
-    public updateTimer = async (updatedTimer: TimerState) => {
-        await this._updateTimersAndPersist(draft => {
-            const index = draft.findIndex(t => t.id === updatedTimer.id);
-            if (index !== -1) {
-                draft[index] = updatedTimer;
-            }
-            return draft;
-        });
-    }
+    public updateTimer = async (updatedTimer: TimerState) => {
+        await this._updateTimersAndPersist(draft => {
+            const index = draft.findIndex(t => t.id === updatedTimer.id);
+            if (index !== -1) {
+                draft[index] = updatedTimer;
+            }
+            return draft;
+        });
+    }
 
-    public removeTimer = async (timerId: string) => {
-        await this._updateTimersAndPersist(draft => {
-            return draft.filter(t => t.id !== timerId);
-        });
-    }
+    public removeTimer = async (timerId: string) => {
+        await this._updateTimersAndPersist(draft => {
+            return draft.filter(t => t.id !== timerId);
+        });
+    }
+    public addGroup = async (name: string, parentId: string | null, type: GroupType) => {
+        await this._updateSettingsAndPersist(draft => {
+            const newGroup: Group = { id: generateId('group'), name, parentId, type };
+            draft.groups.push(newGroup);
+        });
+    }
 
-    // --- 所有设置管理方法 ---
-    public addGroup = async (name: string, parentId: string | null, type: GroupType) => {
-        await this._updateSettingsAndPersist(draft => {
-            const newGroup: Group = { id: generateId('group'), name, parentId, type };
-            draft.groups.push(newGroup);
-        });
-    }
+    public updateGroup = async (id: string, updates: Partial<Group>) => {
+        await this._updateSettingsAndPersist(draft => {
+            const group = draft.groups.find(g => g.id === id);
+            if (group) {
+                Object.assign(group, updates);
+            }
+        });
+    }
 
-    public updateGroup = async (id: string, updates: Partial<Group>) => {
-        await this._updateSettingsAndPersist(draft => {
-            const group = draft.groups.find(g => g.id === id);
-            if (group) {
-                Object.assign(group, updates);
-            }
-        });
-    }
+    public deleteGroup = async (id: string) => {
+        await this._updateSettingsAndPersist(draft => {
+            const groupToDelete = draft.groups.find(g => g.id === id);
+            if (!groupToDelete) return;
+            const newParentId = groupToDelete.parentId;
+            draft.groups.forEach(g => {
+                if (g.parentId === id) g.parentId = newParentId;
+            });
+            const itemArrays: Groupable[][] = [draft.dataSources, draft.viewInstances, draft.layouts];
+            itemArrays.forEach(arr => {
+                arr.forEach(item => {
+                    if (item.parentId === id) item.parentId = newParentId;
+                });
+            });
+            draft.groups = draft.groups.filter(g => g.id !== id);
+        });
+    }
 
-    public deleteGroup = async (id: string) => {
-        await this._updateSettingsAndPersist(draft => {
-            const groupToDelete = draft.groups.find(g => g.id === id);
-            if (!groupToDelete) return;
-            const newParentId = groupToDelete.parentId;
-            draft.groups.forEach(g => {
-                if (g.parentId === id) g.parentId = newParentId;
-            });
-            const itemArrays: Groupable[][] = [draft.dataSources, draft.viewInstances, draft.layouts];
-            itemArrays.forEach(arr => {
-                arr.forEach(item => {
-                    if (item.parentId === id) item.parentId = newParentId;
-                });
-            });
-            draft.groups = draft.groups.filter(g => g.id !== id);
-        });
-    }
+    public duplicateGroup = async (groupId: string) => {
+        await this._updateSettingsAndPersist(draft => {
+            const groupToDuplicate = draft.groups.find(g => g.id === groupId);
+            if (!groupToDuplicate) return;
 
-    public duplicateGroup = async (groupId: string) => {
-        await this._updateSettingsAndPersist(draft => {
-            const groupToDuplicate = draft.groups.find(g => g.id === groupId);
-            if (!groupToDuplicate) return;
+            const deepDuplicate = (originalGroupId: string, newParentId: string | null) => {
+                const originalGroup = draft.groups.find(g => g.id === originalGroupId);
+                if (!originalGroup) return;
+                const newGroup: Group = {
+                    ...JSON.parse(JSON.stringify(originalGroup)),
+                    id: generateId('group'),
+                    parentId: newParentId,
+                    name: originalGroup.id === groupId ? `${originalGroup.name} (副本)` : originalGroup.name,
+                };
+                draft.groups.push(newGroup);
 
-            const deepDuplicate = (originalGroupId: string, newParentId: string | null) => {
-                const originalGroup = draft.groups.find(g => g.id === originalGroupId);
-                if (!originalGroup) return;
-                const newGroup: Group = {
-                    ...JSON.parse(JSON.stringify(originalGroup)),
-                    id: generateId('group'),
-                    parentId: newParentId,
-                    name: originalGroup.id === groupId ? `${originalGroup.name} (副本)` : originalGroup.name,
-                };
-                draft.groups.push(newGroup);
+                const getItemsArrayForType = (type: GroupType) => {
+                    switch (type) {
+                        case 'dataSource': return { items: draft.dataSources, prefix: 'ds' };
+                        case 'viewInstance': return { items: draft.viewInstances, prefix: 'view' };
+                        case 'layout': return { items: draft.layouts, prefix: 'layout' };
+                        default: return { items: [], prefix: 'item' };
+                    }
+                };
 
-                const getItemsArrayForType = (type: GroupType) => {
-                    switch (type) {
-                        case 'dataSource': return { items: draft.dataSources, prefix: 'ds' };
-                        case 'viewInstance': return { items: draft.viewInstances, prefix: 'view' };
-                        case 'layout': return { items: draft.layouts, prefix: 'layout' };
-                        default: return { items: [], prefix: 'item' };
-                    }
-                };
+                const { items, prefix } = getItemsArrayForType(originalGroup.type);
+                const childItemsToDuplicate = items.filter(item => item.parentId === originalGroupId);
+                childItemsToDuplicate.forEach(item => {
+                    const newItem = {
+                        ...JSON.parse(JSON.stringify(item)),
+                        id: generateId(prefix),
+                        parentId: newGroup.id,
+                    };
+                    (items as Groupable[]).push(newItem);
+                });
 
-                const { items, prefix } = getItemsArrayForType(originalGroup.type);
-                const childItemsToDuplicate = items.filter(item => item.parentId === originalGroupId);
-                childItemsToDuplicate.forEach(item => {
-                    const newItem = {
-                        ...JSON.parse(JSON.stringify(item)),
-                        id: generateId(prefix),
-                        parentId: newGroup.id,
-                    };
-                    (items as Groupable[]).push(newItem);
-                });
+                const childGroupsToDuplicate = draft.groups.filter(g => g.parentId === originalGroupId);
+                childGroupsToDuplicate.forEach(childGroup => {
+                    deepDuplicate(childGroup.id, newGroup.id);
+                });
+            };
+            deepDuplicate(groupId, groupToDuplicate.parentId);
+        });
+    }
 
-                const childGroupsToDuplicate = draft.groups.filter(g => g.parentId === originalGroupId);
-                childGroupsToDuplicate.forEach(childGroup => {
-                    deepDuplicate(childGroup.id, newGroup.id);
-                });
-            };
-            deepDuplicate(groupId, groupToDuplicate.parentId);
-        });
-    }
+    public moveItem = async (itemId: string, targetParentId: string | null) => {
+        await this._updateSettingsAndPersist(draft => {
+            const allItems: (Groupable & { id: string })[] = [...draft.groups, ...draft.dataSources, ...draft.viewInstances, ...draft.layouts];
+            const itemToMove = allItems.find(i => i.id === itemId);
+            if (!itemToMove) return;
+            if (itemId.startsWith('group_')) {
+                let currentParentId = targetParentId;
+                while (currentParentId) {
+                    if (currentParentId === itemId) {
+                        console.error("不能将分组移动到其自己的子分组中。");
+                        return;
+                    }
+                    currentParentId = draft.groups.find(g => g.id === currentParentId)?.parentId ?? null;
+                }
+            }
+            itemToMove.parentId = targetParentId;
+        });
+    }
 
-    public moveItem = async (itemId: string, targetParentId: string | null) => {
-        await this._updateSettingsAndPersist(draft => {
-            const allItems: (Groupable & { id: string })[] = [...draft.groups, ...draft.dataSources, ...draft.viewInstances, ...draft.layouts];
-            const itemToMove = allItems.find(i => i.id === itemId);
-            if (!itemToMove) return;
-            if (itemId.startsWith('group_')) {
-                let currentParentId = targetParentId;
-                while (currentParentId) {
-                    if (currentParentId === itemId) {
-                        console.error("不能将分组移动到其自己的子分组中。");
-                        return;
-                    }
-                    currentParentId = draft.groups.find(g => g.id === currentParentId)?.parentId ?? null;
-                }
-            }
-            itemToMove.parentId = targetParentId;
-        });
-    }
+    public reorderItems = async (reorderedSiblings: (Groupable & {isGroup?: boolean})[], itemType: 'group' | 'dataSource' | 'viewInstance' | 'layout') => {
+        await this._updateSettingsAndPersist(draft => {
+            const parentId = reorderedSiblings.length > 0 ? reorderedSiblings[0].parentId : undefined;
 
-    public reorderItems = async (reorderedSiblings: (Groupable & {isGroup?: boolean})[], itemType: 'group' | 'dataSource' | 'viewInstance' | 'layout') => {
-        await this._updateSettingsAndPersist(draft => {
-            const parentId = reorderedSiblings.length > 0 ? reorderedSiblings[0].parentId : undefined;
+            let fullArray: (Groupable & {id: string})[];
+            if (itemType === 'group') {
+                fullArray = draft.groups;
+            } else if (itemType === 'dataSource') {
+                fullArray = draft.dataSources;
+            } else if (itemType === 'viewInstance') {
+                fullArray = draft.viewInstances;
+            } else {
+                fullArray = draft.layouts;
+            }
+            
+            const otherItems = fullArray.filter(i => i.parentId !== parentId);
+            
+            const newFullArray = [...otherItems, ...reorderedSiblings];
+            
+            if (itemType === 'group') {
+                draft.groups = newFullArray as Group[];
+            } else if (itemType === 'dataSource') {
+                draft.dataSources = newFullArray as DataSource[];
+            } else if (itemType === 'viewInstance') {
+                draft.viewInstances = newFullArray as ViewInstance[];
+            } else {
+                draft.layouts = newFullArray as Layout[];
+            }
+        });
+    }
 
-            let fullArray: (Groupable & {id: string})[];
-            if (itemType === 'group') {
-                fullArray = draft.groups;
-            } else if (itemType === 'dataSource') {
-                fullArray = draft.dataSources;
-            } else if (itemType === 'viewInstance') {
-                fullArray = draft.viewInstances;
-            } else {
-                fullArray = draft.layouts;
-            }
-            
-            const otherItems = fullArray.filter(i => i.parentId !== parentId);
-            
-            const newFullArray = [...otherItems, ...reorderedSiblings];
-            
-            if (itemType === 'group') {
-                draft.groups = newFullArray as Group[];
-            } else if (itemType === 'dataSource') {
-                draft.dataSources = newFullArray as DataSource[];
-            } else if (itemType === 'viewInstance') {
-                draft.viewInstances = newFullArray as ViewInstance[];
-            } else {
-                draft.layouts = newFullArray as Layout[];
-            }
-        });
-    }
+    public addDataSource = async (name: string, parentId: string | null = null) => {
+        await this._updateSettingsAndPersist(draft => {
+            draft.dataSources.push({ id: generateId('ds'), name, filters: [], sort: [], parentId });
+        });
+    }
 
-    public addDataSource = async (name: string, parentId: string | null = null) => {
-        await this._updateSettingsAndPersist(draft => {
-            draft.dataSources.push({ id: generateId('ds'), name, filters: [], sort: [], parentId });
-        });
-    }
+    public updateDataSource = async (id: string, updates: Partial<DataSource>) => {
+        await this._updateSettingsAndPersist(draft => {
+            const index = draft.dataSources.findIndex(ds => ds.id === id);
+            if (index !== -1) {
+                draft.dataSources[index] = { ...draft.dataSources[index], ...updates };
+            }
+        });
+    }
 
-    public updateDataSource = async (id: string, updates: Partial<DataSource>) => {
-        await this._updateSettingsAndPersist(draft => {
-            const index = draft.dataSources.findIndex(ds => ds.id === id);
-            if (index !== -1) {
-                draft.dataSources[index] = { ...draft.dataSources[index], ...updates };
-            }
-        });
-    }
+    public deleteDataSource = async (id: string) => {
+        await this._updateSettingsAndPersist(draft => {
+            draft.dataSources = draft.dataSources.filter(ds => ds.id !== id);
+            draft.viewInstances.forEach(vi => {
+                if (vi.dataSourceId === id) {
+                    vi.dataSourceId = '';
+                }
+            });
+        });
+    }
 
-    public deleteDataSource = async (id: string) => {
-        await this._updateSettingsAndPersist(draft => {
-            draft.dataSources = draft.dataSources.filter(ds => ds.id !== id);
-            draft.viewInstances.forEach(vi => {
-                if (vi.dataSourceId === id) {
-                    vi.dataSourceId = '';
-                }
-            });
-        });
-    }
+    public moveDataSource = async (id: string, direction: 'up' | 'down') => {
+        await this._updateSettingsAndPersist(draft => {
+            draft.dataSources = moveItemInArray(draft.dataSources, id, direction);
+        });
+    }
 
-    public moveDataSource = async (id: string, direction: 'up' | 'down') => {
-        await this._updateSettingsAndPersist(draft => {
-            draft.dataSources = moveItemInArray(draft.dataSources, id, direction);
-        });
-    }
+    public duplicateDataSource = async (id: string) => {
+        await this._updateSettingsAndPersist(draft => {
+            draft.dataSources = duplicateItemInArray(draft.dataSources, id, 'name');
+        });
+    }
 
-    public duplicateDataSource = async (id: string) => {
-        await this._updateSettingsAndPersist(draft => {
-            draft.dataSources = duplicateItemInArray(draft.dataSources, id, 'name');
-        });
-    }
+    public addViewInstance = async (title: string, parentId: string | null = null) => {
+        await this._updateSettingsAndPersist(draft => {
+            draft.viewInstances.push({
+                id: generateId('view'),
+                title: title,
+                viewType: 'BlockView',
+                dataSourceId: '',
+                viewConfig: JSON.parse(JSON.stringify(VIEW_DEFAULT_CONFIGS.BlockView)),
+                collapsed: true,
+                parentId
+            });
+        });
+    }
 
-    public addViewInstance = async (title: string, parentId: string | null = null) => {
-        await this._updateSettingsAndPersist(draft => {
-            draft.viewInstances.push({
-                id: generateId('view'),
-                title: title,
-                viewType: 'BlockView',
-                dataSourceId: '',
-                viewConfig: JSON.parse(JSON.stringify(VIEW_DEFAULT_CONFIGS.BlockView)),
-                collapsed: true,
-                parentId
-            });
-        });
-    }
+    public updateViewInstance = async (id: string, updates: Partial<ViewInstance>) => {
+        await this._updateSettingsAndPersist(draft => {
+            const index = draft.viewInstances.findIndex(vi => vi.id === id);
+            if (index !== -1) {
+                if (updates.viewType && updates.viewType !== draft.viewInstances[index].viewType) {
+                    updates.viewConfig = JSON.parse(JSON.stringify(VIEW_DEFAULT_CONFIGS[updates.viewType]));
+                }
+                draft.viewInstances[index] = { ...draft.viewInstances[index], ...updates };
+            }
+        });
+    }
 
-    public updateViewInstance = async (id: string, updates: Partial<ViewInstance>) => {
-        await this._updateSettingsAndPersist(draft => {
-            const index = draft.viewInstances.findIndex(vi => vi.id === id);
-            if (index !== -1) {
-                if (updates.viewType && updates.viewType !== draft.viewInstances[index].viewType) {
-                    updates.viewConfig = JSON.parse(JSON.stringify(VIEW_DEFAULT_CONFIGS[updates.viewType]));
-                }
-                draft.viewInstances[index] = { ...draft.viewInstances[index], ...updates };
-            }
-        });
-    }
+    public deleteViewInstance = async (id: string) => {
+        await this._updateSettingsAndPersist(draft => {
+            draft.viewInstances = draft.viewInstances.filter(vi => vi.id !== id);
+            draft.layouts.forEach(layout => {
+                layout.viewInstanceIds = layout.viewInstanceIds.filter(vid => vid !== id);
+            });
+        });
+    }
 
-    public deleteViewInstance = async (id: string) => {
-        await this._updateSettingsAndPersist(draft => {
-            draft.viewInstances = draft.viewInstances.filter(vi => vi.id !== id);
-            draft.layouts.forEach(layout => {
-                layout.viewInstanceIds = layout.viewInstanceIds.filter(vid => vid !== id);
-            });
-        });
-    }
+    public moveViewInstance = async (id: string, direction: 'up' | 'down') => {
+        await this._updateSettingsAndPersist(draft => {
+            draft.viewInstances = moveItemInArray(draft.viewInstances, id, direction);
+        });
+    }
 
-    public moveViewInstance = async (id: string, direction: 'up' | 'down') => {
-        await this._updateSettingsAndPersist(draft => {
-            draft.viewInstances = moveItemInArray(draft.viewInstances, id, direction);
-        });
-    }
+    public duplicateViewInstance = async (id: string) => {
+        await this._updateSettingsAndPersist(draft => {
+            draft.viewInstances = duplicateItemInArray(draft.viewInstances, id, 'title');
+        });
+    }
 
-    public duplicateViewInstance = async (id: string) => {
-        await this._updateSettingsAndPersist(draft => {
-            draft.viewInstances = duplicateItemInArray(draft.viewInstances, id, 'title');
-        });
-    }
+    public addLayout = async (name: string, parentId: string | null = null) => {
+        await this._updateSettingsAndPersist(draft => {
+            draft.layouts.push({
+                id: generateId('layout'),
+                name,
+                viewInstanceIds: [],
+                displayMode: 'list',
+                initialView: '月',
+                initialDateFollowsNow: true,
+                parentId
+            });
+        });
+    }
 
-    public addLayout = async (name: string, parentId: string | null = null) => {
-        await this._updateSettingsAndPersist(draft => {
-            draft.layouts.push({
-                id: generateId('layout'),
-                name,
-                viewInstanceIds: [],
-                displayMode: 'list',
-                initialView: '月',
-                initialDateFollowsNow: true,
-                parentId
-            });
-        });
-    }
+    public updateLayout = async (id: string, updates: Partial<Layout>) => {
+        await this._updateSettingsAndPersist(draft => {
+            const index = draft.layouts.findIndex(l => l.id === id);
+            if (index !== -1) {
+                draft.layouts[index] = { ...draft.layouts[index], ...updates };
+            }
+        });
+    }
 
-    public updateLayout = async (id: string, updates: Partial<Layout>) => {
-        await this._updateSettingsAndPersist(draft => {
-            const index = draft.layouts.findIndex(l => l.id === id);
-            if (index !== -1) {
-                draft.layouts[index] = { ...draft.layouts[index], ...updates };
-            }
-        });
-    }
+    public deleteLayout = async (id: string) => {
+        await this._updateSettingsAndPersist(draft => {
+            draft.layouts = draft.layouts.filter(l => l.id !== id);
+        });
+    }
 
-    public deleteLayout = async (id: string) => {
-        await this._updateSettingsAndPersist(draft => {
-            draft.layouts = draft.layouts.filter(l => l.id !== id);
-        });
-    }
+    public moveLayout = async (id: string, direction: 'up' | 'down') => {
+        await this._updateSettingsAndPersist(draft => {
+            draft.layouts = moveItemInArray(draft.layouts, id, direction);
+        });
+    }
 
-    public moveLayout = async (id: string, direction: 'up' | 'down') => {
-        await this._updateSettingsAndPersist(draft => {
-            draft.layouts = moveItemInArray(draft.layouts, id, direction);
-        });
-    }
+    public duplicateLayout = async (id: string) => {
+        await this._updateSettingsAndPersist(draft => {
+            draft.layouts = duplicateItemInArray(draft.layouts, id, 'name');
+        });
+    }
 
-    public duplicateLayout = async (id: string) => {
-        await this._updateSettingsAndPersist(draft => {
-            draft.layouts = duplicateItemInArray(draft.layouts, id, 'name');
-        });
-    }
+    public updateInputSettings = async (updates: Partial<InputSettings>) => {
+        await this._updateSettingsAndPersist(draft => {
+            draft.inputSettings = { ...draft.inputSettings, ...updates };
+        });
+    }
 
-    public updateInputSettings = async (updates: Partial<InputSettings>) => {
-        await this._updateSettingsAndPersist(draft => {
-            draft.inputSettings = { ...draft.inputSettings, ...updates };
-        });
-    }
+    public addBlock = async (name: string) => {
+        await this._updateSettingsAndPersist(draft => {
+            draft.inputSettings.blocks.push({
+                id: generateId('blk'),
+                name,
+                fields: [],
+                outputTemplate: ``,
+                targetFile: ``,
+                appendUnderHeader: '',
+            });
+        });
+    }
 
-    public addBlock = async (name: string) => {
-        await this._updateSettingsAndPersist(draft => {
-            draft.inputSettings.blocks.push({
-                id: generateId('blk'),
-                name,
-                fields: [],
-                outputTemplate: ``,
-                targetFile: ``,
-                appendUnderHeader: '',
-            });
-        });
-    }
+    public updateBlock = async (id: string, updates: Partial<BlockTemplate>) => {
+        await this._updateSettingsAndPersist(draft => {
+            const index = draft.inputSettings.blocks.findIndex(b => b.id === id);
+            if (index > -1) {
+                draft.inputSettings.blocks[index] = { ...draft.inputSettings.blocks[index], ...updates };
+            }
+        });
+    }
 
-    public updateBlock = async (id: string, updates: Partial<BlockTemplate>) => {
-        await this._updateSettingsAndPersist(draft => {
-            const index = draft.inputSettings.blocks.findIndex(b => b.id === id);
-            if (index > -1) {
-                draft.inputSettings.blocks[index] = { ...draft.inputSettings.blocks[index], ...updates };
-            }
-        });
-    }
+    public deleteBlock = async (id: string) => {
+        await this._updateSettingsAndPersist(draft => {
+            draft.inputSettings.blocks = draft.inputSettings.blocks.filter(b => b.id !== id);
+            draft.inputSettings.overrides = draft.inputSettings.overrides.filter(o => o.blockId !== id);
+        });
+    }
 
-    public deleteBlock = async (id: string) => {
-        await this._updateSettingsAndPersist(draft => {
-            draft.inputSettings.blocks = draft.inputSettings.blocks.filter(b => b.id !== id);
-            draft.inputSettings.overrides = draft.inputSettings.overrides.filter(o => o.blockId !== id);
-        });
-    }
+    public moveBlock = async (id: string, direction: 'up' | 'down') => {
+        await this._updateSettingsAndPersist(draft => {
+            draft.inputSettings.blocks = moveItemInArray(draft.inputSettings.blocks, id, direction);
+        });
+    }
 
-    public moveBlock = async (id: string, direction: 'up' | 'down') => {
-        await this._updateSettingsAndPersist(draft => {
-            draft.inputSettings.blocks = moveItemInArray(draft.inputSettings.blocks, id, direction);
-        });
-    }
+    public duplicateBlock = async (id: string) => {
+        await this._updateSettingsAndPersist(draft => {
+            draft.inputSettings.blocks = duplicateItemInArray(draft.inputSettings.blocks, id, 'name');
+        });
+    }
 
-    public duplicateBlock = async (id: string) => {
-        await this._updateSettingsAndPersist(draft => {
-            draft.inputSettings.blocks = duplicateItemInArray(draft.inputSettings.blocks, id, 'name');
-        });
-    }
+    public addTheme = async (path: string) => {
+        await this._updateSettingsAndPersist(draft => {
+            if (path && !draft.inputSettings.themes.some(t => t.path === path)) {
+                draft.inputSettings.themes.push({ id: generateId('thm'), path, icon: '' });
+            }
+        });
+    }
 
-    public addTheme = async (path: string) => {
-        await this._updateSettingsAndPersist(draft => {
-            if (path && !draft.inputSettings.themes.some(t => t.path === path)) {
-                draft.inputSettings.themes.push({ id: generateId('thm'), path, icon: '' });
-            }
-        });
-    }
+    public updateTheme = async (id: string, updates: Partial<ThemeDefinition>) => {
+        await this._updateSettingsAndPersist(draft => {
+            const index = draft.inputSettings.themes.findIndex(t => t.id === id);
+            if (index > -1) {
+                if (updates.path && draft.inputSettings.themes.some(t => t.path === updates.path && t.id !== id)) {
+                    console.warn(`主题路径 "${updates.path}" 已存在。`);
+                    return;
+                }
+                draft.inputSettings.themes[index] = { ...draft.inputSettings.themes[index], ...updates };
+            }
+        });
+    }
 
-    public updateTheme = async (id: string, updates: Partial<ThemeDefinition>) => {
-        await this._updateSettingsAndPersist(draft => {
-            const index = draft.inputSettings.themes.findIndex(t => t.id === id);
-            if (index > -1) {
-                if (updates.path && draft.inputSettings.themes.some(t => t.path === updates.path && t.id !== id)) {
-                    console.warn(`主题路径 "${updates.path}" 已存在。`);
-                    return;
-                }
-                draft.inputSettings.themes[index] = { ...draft.inputSettings.themes[index], ...updates };
-            }
-        });
-    }
+    public deleteTheme = async (id: string) => {
+        await this._updateSettingsAndPersist(draft => {
+            draft.inputSettings.themes = draft.inputSettings.themes.filter(t => t.id !== id);
+            draft.inputSettings.overrides = draft.inputSettings.overrides.filter(o => o.themeId !== id);
+        });
+    }
+    
+    public upsertOverride = async (overrideData: Omit<ThemeOverride, 'id'>) => {
+        await this._updateSettingsAndPersist(draft => {
+            const index = draft.inputSettings.overrides.findIndex(o => o.blockId === overrideData.blockId && o.themeId === overrideData.themeId);
+            if (index > -1) {
+                const existingId = draft.inputSettings.overrides[index].id;
+                draft.inputSettings.overrides[index] = { ...overrideData, id: existingId };
+            } else {
+                const newOverride: ThemeOverride = {
+                    id: generateId('ovr'),
+                    ...overrideData,
+                };
+                draft.inputSettings.overrides.push(newOverride);
+            }
+        });
+    }
 
-    public deleteTheme = async (id: string) => {
-        await this._updateSettingsAndPersist(draft => {
-            draft.inputSettings.themes = draft.inputSettings.themes.filter(t => t.id !== id);
-            draft.inputSettings.overrides = draft.inputSettings.overrides.filter(o => o.themeId !== id);
-        });
-    }
-    
-    public upsertOverride = async (overrideData: Omit<ThemeOverride, 'id'>) => {
-        await this._updateSettingsAndPersist(draft => {
-            const index = draft.inputSettings.overrides.findIndex(o => o.blockId === overrideData.blockId && o.themeId === overrideData.themeId);
-            if (index > -1) {
-                const existingId = draft.inputSettings.overrides[index].id;
-                draft.inputSettings.overrides[index] = { ...overrideData, id: existingId };
-            } else {
-                const newOverride: ThemeOverride = {
-                    id: generateId('ovr'),
-                    ...overrideData,
-                };
-                draft.inputSettings.overrides.push(newOverride);
-            }
-        });
-    }
-
-    public deleteOverride = async (blockId: string, themeId: string) => {
-        await this._updateSettingsAndPersist(draft => {
-            draft.inputSettings.overrides = draft.inputSettings.overrides.filter(
-                o => !(o.blockId === blockId && o.themeId === themeId)
-            );
-        });
-    }
+    public deleteOverride = async (blockId: string, themeId: string) => {
+        await this._updateSettingsAndPersist(draft => {
+            draft.inputSettings.overrides = draft.inputSettings.overrides.filter(
+                o => !(o.blockId === blockId && o.themeId === themeId)
+            );
+        });
+    }
 }
-// ... (useStore hook remains unchanged)
 export function useStore<T>(selector: (state: AppState) => T): T {
-    const store = appStore;
+    const store = appStore;
 
-    if (!store) {
-        const safeFallbackState: AppState = {
-            settings: DEFAULT_SETTINGS,
-            timers: [],
-            activeTimer: undefined,
-        };
-        console.warn("useStore 在 AppStore 注册前被调用。返回安全的备用状态。");
-        return selector(safeFallbackState);
-    }
-    
-    const memoizedSelector = useCallback(selector, []);
-    
-    const [state, setState] = useState(() => memoizedSelector(store.getState()));
+    if (!store) {
+        const safeFallbackState: AppState = {
+            settings: DEFAULT_SETTINGS,
+            timers: [],
+            activeTimer: undefined,
+            // [新增] 确保在 store 未加载时也有一个默认值
+            isTimerWidgetVisible: true,
+        };
+        console.warn("useStore 在 AppStore 注册前被调用。返回安全的备用状态。");
+        return selector(safeFallbackState);
+    }
+    
+    const memoizedSelector = useCallback(selector, []);
+    
+    const [state, setState] = useState(() => memoizedSelector(store.getState()));
 
-    useEffect(() => {
-        const unsubscribe = store.subscribe(() => {
-            const newStateSlice = memoizedSelector(store.getState());
-            
-            setState(currentStateSlice => {
-                if (Object.is(currentStateSlice, newStateSlice)) {
-                    return currentStateSlice;
-                }
-                console.log("一个组件因其订阅的状态变更而计划重渲染。", {
-                    componentHint: memoizedSelector.toString().slice(0, 100)
-                });
-                return newStateSlice;
-            });
-        });
+    useEffect(() => {
+        const unsubscribe = store.subscribe(() => {
+            const newStateSlice = memoizedSelector(store.getState());
+            
+            setState(currentStateSlice => {
+                if (Object.is(currentStateSlice, newStateSlice)) {
+                    return currentStateSlice;
+                }
+                console.log("一个组件因其订阅的状态变更而计划重渲染。", {
+                    componentHint: memoizedSelector.toString().slice(0, 100)
+                });
+                return newStateSlice;
+            });
+        });
 
-        const initialStateSlice = memoizedSelector(store.getState());
-        if (!Object.is(state, initialStateSlice)) {
-            setState(initialStateSlice);
-        }
+        const initialStateSlice = memoizedSelector(store.getState());
+        if (!Object.is(state, initialStateSlice)) {
+            setState(initialStateSlice);
+        }
 
-        return unsubscribe;
-    }, [store, memoizedSelector]);
+        return unsubscribe;
+    }, [store, memoizedSelector]);
 
-    return state;
+    return state;
 }

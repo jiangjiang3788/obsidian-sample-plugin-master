@@ -3408,7 +3408,9 @@ const DEFAULT_SETTINGS = {
   dataSources: [],
   viewInstances: [],
   layouts: [],
-  inputSettings: { blocks: [], themes: [], overrides: [] }
+  inputSettings: { blocks: [], themes: [], overrides: [] },
+  // [新增] 悬浮计时器默认启用
+  floatingTimerEnabled: true
 };
 const VIEW_OPTIONS = ["BlockView", "TableView", "ExcelView", "TimelineView", "StatisticsView", "HeatmapView"];
 const CORE_FIELDS = ["id", "type", "title", "content", "categoryKey", "tags", "recurrence", "icon", "priority", "date", "header", "time", "duration", "period", "rating", "pintu", "folder", "periodCount"];
@@ -27813,21 +27815,18 @@ var __decorateClass$8 = (decorators, target, key, kind) => {
 };
 var __decorateParam$8 = (index, decorator) => (target, key) => decorator(target, key, index);
 let AppStore = class {
-  // [核心修改] _plugin 现在是可选的，因为它在构造后才被设置
   _plugin;
   _state;
   _listeners = /* @__PURE__ */ new Set();
-  // [核心修改] 通过构造函数注入设置，不再需要 init()
   constructor(initialSettings) {
     this._state = {
       settings: initialSettings,
-      timers: []
+      timers: [],
+      // [新增] 初始化时，可见性取决于设置项
+      isTimerWidgetVisible: initialSettings.floatingTimerEnabled
     };
     this._deriveState();
   }
-  // [删除] init 方法已被构造函数取代
-  // public init(plugin: ThinkPlugin, initialSettings: ThinkSettings) { ... }
-  // [核心修改] 添加一个方法来设置 plugin 实例，用于后续保存操作
   setPlugin(plugin) {
     this._plugin = plugin;
   }
@@ -27863,6 +27862,22 @@ let AppStore = class {
     updater(this._state);
     this._notify();
   }
+  // [新增] 用于切换悬浮窗可见性的方法 (不保存)
+  toggleTimerWidgetVisibility = () => {
+    this._updateEphemeralState((draft) => {
+      draft.isTimerWidgetVisible = !draft.isTimerWidgetVisible;
+    });
+  };
+  // [新增] 用于更新永久设置的方法 (会保存)
+  updateFloatingTimerEnabled = async (enabled) => {
+    await this._updateSettingsAndPersist((draft) => {
+      draft.floatingTimerEnabled = enabled;
+    });
+    this._updateEphemeralState((draft) => {
+      draft.isTimerWidgetVisible = enabled;
+    });
+  };
+  // --- 之后的所有方法 (addTimer, updateTimer, etc.) 保持不变 ---
   setInitialTimers(initialTimers) {
     this._updateEphemeralState((draft) => {
       draft.timers = initialTimers;
@@ -27876,9 +27891,6 @@ let AppStore = class {
       await this._plugin.timerStateService.saveStateToFile(newTimers);
     }
   }
-  // --- 之后的所有方法 (addTimer, updateTimer, addGroup, etc.) 保持不变 ---
-  // ... (此处省略所有未修改的方法，保持原样即可)
-  // --- [复制并粘贴 AppStore.ts 中从 addTimer 开始到文件末尾的所有方法] ---
   addTimer = async (timer) => {
     await this._updateTimersAndPersist((draft) => {
       const newTimer = { ...timer, id: generateId("timer") };
@@ -27900,7 +27912,6 @@ let AppStore = class {
       return draft.filter((t2) => t2.id !== timerId);
     });
   };
-  // --- 所有设置管理方法 ---
   addGroup = async (name, parentId, type) => {
     await this._updateSettingsAndPersist((draft) => {
       const newGroup = { id: generateId("group"), name, parentId, type };
@@ -28230,7 +28241,9 @@ function useStore(selector) {
     const safeFallbackState = {
       settings: DEFAULT_SETTINGS,
       timers: [],
-      activeTimer: void 0
+      activeTimer: void 0,
+      // [新增] 确保在 store 未加载时也有一个默认值
+      isTimerWidgetVisible: true
     };
     console.warn("useStore 在 AppStore 注册前被调用。返回安全的备用状态。");
     return selector(safeFallbackState);
@@ -31840,24 +31853,43 @@ function TimerRow({ timer, actionService, timerService: timerService2, dataStore
     /* @__PURE__ */ u(Tooltip, { title: "取消任务", children: /* @__PURE__ */ u(IconButton, { size: "small", onClick: () => timerService2.cancel(timer.id), color: "error", children: /* @__PURE__ */ u(DeleteForeverIcon, { fontSize: "inherit" }) }) })
   ] });
 }
+const getEventCoords = (e2) => {
+  if (e2 instanceof MouseEvent) {
+    return { x: e2.clientX, y: e2.clientY };
+  }
+  if (e2.touches && e2.touches.length > 0) {
+    return { x: e2.touches[0].clientX, y: e2.touches[0].clientY };
+  }
+  return null;
+};
 function TimerView({ app, actionService, timerService: timerService2, dataStore: dataStore2 }) {
   const timers = useStore((state) => state.timers);
+  const isVisible = useStore((state) => state.isTimerWidgetVisible);
   const [position2, setPosition] = usePersistentState("think-timer-position", { x: window.innerWidth - 350, y: 100 });
   const dragStartPos = A$1({ x: 0, y: 0, panelX: 0, panelY: 0 });
-  const onDragStart = q$1((e2) => {
-    dragStartPos.current = { x: e2.clientX, y: e2.clientY, panelX: position2.x, panelY: position2.y };
-    window.addEventListener("mousemove", onDragMove);
-    window.addEventListener("mouseup", onDragEnd);
-  }, [position2]);
   const onDragMove = q$1((e2) => {
-    const dx = e2.clientX - dragStartPos.current.x;
-    const dy = e2.clientY - dragStartPos.current.y;
+    e2.preventDefault();
+    const coords = getEventCoords(e2);
+    if (!coords) return;
+    const dx = coords.x - dragStartPos.current.x;
+    const dy = coords.y - dragStartPos.current.y;
     setPosition({ x: dragStartPos.current.panelX + dx, y: dragStartPos.current.panelY + dy });
   }, []);
   const onDragEnd = q$1(() => {
     window.removeEventListener("mousemove", onDragMove);
     window.removeEventListener("mouseup", onDragEnd);
-  }, []);
+    window.removeEventListener("touchmove", onDragMove);
+    window.removeEventListener("touchend", onDragEnd);
+  }, [onDragMove]);
+  const onDragStart = q$1((e2) => {
+    const coords = getEventCoords(e2);
+    if (!coords) return;
+    dragStartPos.current = { x: coords.x, y: coords.y, panelX: position2.x, panelY: position2.y };
+    window.addEventListener("mousemove", onDragMove);
+    window.addEventListener("mouseup", onDragEnd);
+    window.addEventListener("touchmove", onDragMove, { passive: false });
+    window.addEventListener("touchend", onDragEnd);
+  }, [position2, onDragMove, onDragEnd]);
   const handleNewTask = () => {
     const config2 = actionService.getQuickInputConfigForNewTimer();
     if (config2) {
@@ -31877,11 +31909,13 @@ function TimerView({ app, actionService, timerService: timerService2, dataStore:
         left: `${position2.x}px`,
         zIndex: 9999,
         userSelect: "none",
-        minWidth: "320px"
+        minWidth: "320px",
+        // [核心修改] 根据 isVisible 状态控制显示或隐藏
+        display: isVisible ? "block" : "none"
       },
       children: /* @__PURE__ */ u(Stack, { children: [
         /* @__PURE__ */ u(Box, { sx: { display: "flex", alignItems: "center", p: "4px 8px", borderBottom: "1px solid", borderColor: "divider" }, children: [
-          /* @__PURE__ */ u(Box, { onMouseDown: onDragStart, sx: { cursor: "move", display: "flex", alignItems: "center" }, children: /* @__PURE__ */ u(DragIndicatorIcon, { sx: { color: "text.disabled", fontSize: "1.2rem" } }) }),
+          /* @__PURE__ */ u(Box, { onMouseDown: onDragStart, onTouchStart: onDragStart, sx: { cursor: "move", display: "flex", alignItems: "center" }, children: /* @__PURE__ */ u(DragIndicatorIcon, { sx: { color: "text.disabled", fontSize: "1.2rem" } }) }),
           /* @__PURE__ */ u(Typography, { sx: { flexGrow: 1, fontWeight: "bold", ml: 1 }, children: "任务计时器" }),
           /* @__PURE__ */ u(Tooltip, { title: "开始新任务", children: /* @__PURE__ */ u(
             Button,
@@ -37125,12 +37159,32 @@ function InputSettings({ appStore: appStore2 }) {
     /* @__PURE__ */ u(ThemeMatrix, { appStore: appStore2 })
   ] });
 }
+function GeneralSettings({ appStore: appStore2 }) {
+  const floatingTimerEnabled = useStore((state) => state.settings.floatingTimerEnabled);
+  return /* @__PURE__ */ u(Box, { sx: { maxWidth: "900px", mx: "auto" }, children: /* @__PURE__ */ u(Stack, { spacing: 2, children: [
+    /* @__PURE__ */ u(Typography, { variant: "h6", children: "模块开关" }),
+    /* @__PURE__ */ u(
+      FormControlLabel,
+      {
+        control: /* @__PURE__ */ u(
+          Checkbox,
+          {
+            checked: floatingTimerEnabled,
+            onChange: (e2) => appStore2.updateFloatingTimerEnabled(e2.target.checked)
+          }
+        ),
+        label: "启用悬浮计时器"
+      }
+    ),
+    /* @__PURE__ */ u(Typography, { variant: "body2", color: "text.secondary", sx: { pl: 4, mt: -1.5 }, children: "关闭后，下次启动Obsidian将不再加载悬浮计时器。你也可以通过命令面板临时切换它的可见性。" })
+  ] }) });
+}
 function a11yProps(index) {
   return { id: `settings-tab-${index}`, "aria-controls": `settings-tabpanel-${index}` };
 }
 function TabPanel(props) {
   const { children, value, index, ...other } = props;
-  return /* @__PURE__ */ u("div", { role: "tabpanel", hidden: value !== index, id: `settings-tabpanel-${index}`, ...other, children: value === index && /* @__PURE__ */ u(Box, { sx: { p: 2 }, children }) });
+  return /* @__PURE__ */ u("div", { role: "tabpanel", hidden: value !== index, id: `settings-tabpanel-${index}`, ...other, children: value === index && /* @__PURE__ */ u(Box, { sx: { p: 2, pt: 3 }, children }) });
 }
 function SettingsRoot({ app, appStore: appStore2 }) {
   const [tabIndex, setTabIndex] = usePersistentState(LOCAL_STORAGE_KEYS.SETTINGS_TABS, 0);
@@ -37138,15 +37192,17 @@ function SettingsRoot({ app, appStore: appStore2 }) {
     /* @__PURE__ */ u(CssBaseline, {}),
     /* @__PURE__ */ u(Box, { sx: { width: "100%" }, class: "think-setting-root", children: [
       /* @__PURE__ */ u(Box, { sx: { borderBottom: 1, borderColor: "divider" }, children: /* @__PURE__ */ u(Tabs, { value: tabIndex, onChange: (_2, newValue) => setTabIndex(newValue), "aria-label": "settings tabs", children: [
-        /* @__PURE__ */ u(Tab, { label: "布局", ...a11yProps(0) }),
-        /* @__PURE__ */ u(Tab, { label: "视图", ...a11yProps(1) }),
-        /* @__PURE__ */ u(Tab, { label: "数据源", ...a11yProps(2) }),
-        /* @__PURE__ */ u(Tab, { label: "快速输入", ...a11yProps(3) })
+        /* @__PURE__ */ u(Tab, { label: "通用", ...a11yProps(0) }),
+        /* @__PURE__ */ u(Tab, { label: "布局", ...a11yProps(1) }),
+        /* @__PURE__ */ u(Tab, { label: "视图", ...a11yProps(2) }),
+        /* @__PURE__ */ u(Tab, { label: "数据源", ...a11yProps(3) }),
+        /* @__PURE__ */ u(Tab, { label: "快速输入", ...a11yProps(4) })
       ] }) }),
-      /* @__PURE__ */ u(TabPanel, { value: tabIndex, index: 0, children: /* @__PURE__ */ u(LayoutSettings, { app, appStore: appStore2 }) }),
-      /* @__PURE__ */ u(TabPanel, { value: tabIndex, index: 1, children: /* @__PURE__ */ u(ViewInstanceSettings, { app, appStore: appStore2 }) }),
-      /* @__PURE__ */ u(TabPanel, { value: tabIndex, index: 2, children: /* @__PURE__ */ u(DataSourceSettings, { app, appStore: appStore2 }) }),
-      /* @__PURE__ */ u(TabPanel, { value: tabIndex, index: 3, children: /* @__PURE__ */ u(InputSettings, { appStore: appStore2 }) })
+      /* @__PURE__ */ u(TabPanel, { value: tabIndex, index: 0, children: /* @__PURE__ */ u(GeneralSettings, { appStore: appStore2 }) }),
+      /* @__PURE__ */ u(TabPanel, { value: tabIndex, index: 1, children: /* @__PURE__ */ u(LayoutSettings, { app, appStore: appStore2 }) }),
+      /* @__PURE__ */ u(TabPanel, { value: tabIndex, index: 2, children: /* @__PURE__ */ u(ViewInstanceSettings, { app, appStore: appStore2 }) }),
+      /* @__PURE__ */ u(TabPanel, { value: tabIndex, index: 3, children: /* @__PURE__ */ u(DataSourceSettings, { app, appStore: appStore2 }) }),
+      /* @__PURE__ */ u(TabPanel, { value: tabIndex, index: 4, children: /* @__PURE__ */ u(InputSettings, { appStore: appStore2 }) })
     ] })
   ] });
 }
@@ -38089,8 +38145,17 @@ class ThinkPlugin extends obsidian.Plugin {
         registerDataStore(this.dataStore);
         registerTimerService(this.timerService);
         registerInputService(this.inputService);
-        this.timerWidget = new FloatingTimerWidget(this);
-        this.timerWidget.load();
+        if (this.appStore.getSettings().floatingTimerEnabled) {
+          this.timerWidget = new FloatingTimerWidget(this);
+          this.timerWidget.load();
+          this.addCommand({
+            id: "toggle-think-floating-timer",
+            name: "切换悬浮计时器显隐",
+            callback: () => {
+              this.appStore.toggleTimerWidgetVisibility();
+            }
+          });
+        }
         this.timerStateService.loadStateFromFile().then((timers) => {
           this.appStore.setInitialTimers(timers);
         });
@@ -38101,7 +38166,6 @@ class ThinkPlugin extends obsidian.Plugin {
           dataStore: this.dataStore,
           rendererService: this.rendererService,
           actionService: this.actionService,
-          // [修改] taskService 也应从容器中解析以保持一致性
           taskService: instance.resolve(TaskService)
         });
         setup$1?.({
@@ -38129,7 +38193,6 @@ class ThinkPlugin extends obsidian.Plugin {
       new obsidian.Notice(`[Think Plugin] 插件加载失败: ${error.message}`, 15e3);
     }
   }
-  // ... onunload, loadSettings, saveSettings, injectGlobalCss 方法保持不变 ...
   onunload() {
     document.getElementById(STYLE_TAG_ID)?.remove();
     this.rendererService?.cleanup();
