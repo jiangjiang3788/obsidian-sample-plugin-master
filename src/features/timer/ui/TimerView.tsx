@@ -12,7 +12,6 @@ import type { TimerService } from '@core/services/TimerService';
 import type { DataStore } from '@core/services/dataStore';
 import { TimerRow } from './TimerRow';
 import { App } from 'obsidian';
-// [修改] 导入 QuickInputSaveData 类型
 import { QuickInputModal, QuickInputSaveData } from '@features/quick-input/ui/QuickInputModal'; 
 
 interface TimerViewProps {
@@ -22,45 +21,69 @@ interface TimerViewProps {
     dataStore: DataStore;
 }
 
+// [新增] 统一处理鼠标和触摸事件，返回坐标
+const getEventCoords = (e: MouseEvent | TouchEvent) => {
+    if (e instanceof MouseEvent) {
+        return { x: e.clientX, y: e.clientY };
+    }
+    // 检查是否有触摸点
+    if (e.touches && e.touches.length > 0) {
+        return { x: e.touches[0].clientX, y: e.touches[0].clientY };
+    }
+    return null;
+};
+
+
 export function TimerView({ app, actionService, timerService, dataStore }: TimerViewProps) {
     const timers = useStore(state => state.timers);
+    // [新增] 从状态管理获取可见性状态
+    const isVisible = useStore(state => state.isTimerWidgetVisible);
     
     const [position, setPosition] = usePersistentState('think-timer-position', { x: window.innerWidth - 350, y: 100 });
     const dragStartPos = useRef({ x: 0, y: 0, panelX: 0, panelY: 0 });
 
-    const onDragStart = useCallback((e: MouseEvent) => {
-        dragStartPos.current = { x: e.clientX, y: e.clientY, panelX: position.x, panelY: position.y };
-        window.addEventListener('mousemove', onDragMove);
-        window.addEventListener('mouseup', onDragEnd);
-    }, [position]);
+    // [修改] onDragMove 现在能处理触摸事件
+    const onDragMove = useCallback((e: MouseEvent | TouchEvent) => {
+        // 阻止页面滚动等默认触摸行为
+        e.preventDefault(); 
+        const coords = getEventCoords(e);
+        if (!coords) return;
 
-    const onDragMove = useCallback((e: MouseEvent) => {
-        const dx = e.clientX - dragStartPos.current.x;
-        const dy = e.clientY - dragStartPos.current.y;
+        const dx = coords.x - dragStartPos.current.x;
+        const dy = coords.y - dragStartPos.current.y;
         setPosition({ x: dragStartPos.current.panelX + dx, y: dragStartPos.current.panelY + dy });
     }, []);
 
+    // [修改] onDragEnd 现在能处理触摸事件
     const onDragEnd = useCallback(() => {
         window.removeEventListener('mousemove', onDragMove);
         window.removeEventListener('mouseup', onDragEnd);
-    }, []);
+        window.removeEventListener('touchmove', onDragMove);
+        window.removeEventListener('touchend', onDragEnd);
+    }, [onDragMove]);
 
-    /**
-     * [核心修改] handleNewTask 现在是服务协调者。
-     * 它负责从 ActionService 获取配置，然后定义自己的 onSave 回调来调用 TimerService。
-     */
+    // [修改] onDragStart 现在能处理触摸事件
+    const onDragStart = useCallback((e: MouseEvent | TouchEvent) => {
+        const coords = getEventCoords(e);
+        if (!coords) return;
+
+        dragStartPos.current = { x: coords.x, y: coords.y, panelX: position.x, panelY: position.y };
+        
+        // 同时监听鼠标和触摸的移动/结束事件
+        window.addEventListener('mousemove', onDragMove);
+        window.addEventListener('mouseup', onDragEnd);
+        window.addEventListener('touchmove', onDragMove, { passive: false }); // passive: false 允许 preventDefault
+        window.addEventListener('touchend', onDragEnd);
+    }, [position, onDragMove, onDragEnd]);
+
     const handleNewTask = () => {
-        // 1. 从 ActionService 获取纯粹的配置，这一步不再需要 TimerService。
         const config = actionService.getQuickInputConfigForNewTimer();
         
         if (config) {
-            // 2. 在 UI 层（协调者）定义保存后的具体行为。
             const onSaveCallback = (data: QuickInputSaveData) => {
-                // 3. 调用 TimerService 来执行具体的计时业务逻辑。
                 timerService.createNewTaskAndStart(data);
             };
 
-            // 4. 将配置和我们自己定义的回调函数传递给 Modal。
             new QuickInputModal(app, config.blockId, config.context, undefined, onSaveCallback).open();
         }
     };
@@ -75,11 +98,14 @@ export function TimerView({ app, actionService, timerService, dataStore }: Timer
                 zIndex: 9999,
                 userSelect: 'none',
                 minWidth: '320px',
+                // [核心修改] 根据 isVisible 状态控制显示或隐藏
+                display: isVisible ? 'block' : 'none',
             }}
         >
             <Stack>
                 <Box sx={{ display: 'flex', alignItems: 'center', p: '4px 8px', borderBottom: '1px solid', borderColor: 'divider' }}>
-                    <Box onMouseDown={onDragStart} sx={{ cursor: 'move', display: 'flex', alignItems: 'center' }}>
+                    {/* [核心修改] onMouseDown 和 onTouchStart 都绑定到 onDragStart */}
+                    <Box onMouseDown={onDragStart as any} onTouchStart={onDragStart as any} sx={{ cursor: 'move', display: 'flex', alignItems: 'center' }}>
                         <DragIndicatorIcon sx={{ color: 'text.disabled', fontSize: '1.2rem' }} />
                     </Box>
                     <Typography sx={{ flexGrow: 1, fontWeight: 'bold', ml: 1 }}>任务计时器</Typography>
@@ -87,7 +113,7 @@ export function TimerView({ app, actionService, timerService, dataStore }: Timer
                         <Button
                             size="small"
                             startIcon={<AddCircleOutlineIcon />}
-                            onClick={handleNewTask} // 调用新的协调函数
+                            onClick={handleNewTask}
                         >
                             新任务
                         </Button>

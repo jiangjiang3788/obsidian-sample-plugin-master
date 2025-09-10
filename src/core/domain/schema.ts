@@ -24,6 +24,8 @@ export interface ThinkSettings {
     viewInstances: ViewInstance[];
     layouts: Layout[];
     inputSettings: InputSettings;
+    // [新增] 悬浮计时器设置
+    floatingTimerEnabled: boolean;
 }
 
 export const DEFAULT_SETTINGS: ThinkSettings = {
@@ -32,6 +34,8 @@ export const DEFAULT_SETTINGS: ThinkSettings = {
     viewInstances: [],
     layouts: [],
     inputSettings: { blocks: [], themes: [], overrides: [] },
+    // [新增] 悬浮计时器默认启用
+    floatingTimerEnabled: true,
 };
 
 
