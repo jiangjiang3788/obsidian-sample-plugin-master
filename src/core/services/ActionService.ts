@@ -11,16 +11,12 @@ import { AppToken } from './types';
 
 @singleton()
 export class ActionService {
-    // [核心修改] 构造函数现在通过 @inject 装饰器明确声明并接收所有依赖
-    // 注意：对 TimerService 的依赖已在上一轮重构中移除
     constructor(
         @inject(AppToken) private app: App,
         @inject(DataStore) private dataStore: DataStore,
         @inject(AppStore) private appStore: AppStore,
         @inject(InputService) private inputService: InputService
     ) {}
-
-    // [核心修改] init 方法已被彻底删除
 
     public getQuickInputConfigForView(viewInstance: ViewInstance, dateContext: dayjs.Dayjs, periodContext: string): QuickInputConfig | null {
         const settings = this.appStore.getSettings();
@@ -40,15 +36,48 @@ export class ActionService {
             new Notice(`快捷输入失败：找不到名为 "${blockName}" 的Block模板。`);
             return null;
         }
-        const targetTheme = settings.inputSettings.themes.find(t => t.path === blockName);
+
+        // [核心修改开始]
+        
+        // 1. 优先从 `tags includes` 规则中预设主题
+        let preselectedThemeId: string | undefined;
+        const themeFilter = dataSource.filters.find(f => f.field === 'tags' && f.op === 'includes' && typeof f.value === 'string');
+        if (themeFilter) {
+            const themePath = themeFilter.value;
+            const matchedTheme = settings.inputSettings.themes.find(t => t.path === themePath);
+            if (matchedTheme) {
+                preselectedThemeId = matchedTheme.id;
+            }
+        }
+        
+        // 2. 从 `=` 规则中预填充表单字段
         const context: Record<string, any> = {
             '日期': dateContext.format('YYYY-MM-DD'),
             '周期': periodContext,
         };
+        
+        const equalityFilters = dataSource.filters.filter(f => f.op === '=');
+        for (const filter of equalityFilters) {
+            // 跳过我们已经用于确定模板的 categoryKey 过滤器
+            if (filter.field === 'categoryKey') continue;
+
+            // 遍历目标 Block 的所有字段，进行中英文名(key/label)双重匹配
+            for (const templateField of targetBlock.fields) {
+                if (filter.field === templateField.key || filter.field === templateField.label) {
+                    // 匹配成功后，统一使用 templateField.key 作为 context 的键
+                    context[templateField.key] = filter.value;
+                    // 找到后就跳出内层循环，避免重复赋值
+                    break; 
+                }
+            }
+        }
+        // [核心修改结束]
+        
         return {
             blockId: targetBlock.id,
+            // [修改] 传递增强后的 context 和预选的 themeId
             context: context,
-            themeId: targetTheme?.id,
+            themeId: preselectedThemeId,
         };
     }
     public getQuickInputConfigForTaskEdit(taskId: string): QuickInputConfig | null {

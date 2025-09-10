@@ -29500,15 +29500,12 @@ var __decorateClass$4 = (decorators, target, key, kind) => {
 };
 var __decorateParam$4 = (index, decorator) => (target, key) => decorator(target, key, index);
 let ActionService = class {
-  // [核心修改] 构造函数现在通过 @inject 装饰器明确声明并接收所有依赖
-  // 注意：对 TimerService 的依赖已在上一轮重构中移除
   constructor(app, dataStore2, appStore2, inputService2) {
     this.app = app;
     this.dataStore = dataStore2;
     this.appStore = appStore2;
     this.inputService = inputService2;
   }
-  // [核心修改] init 方法已被彻底删除
   getQuickInputConfigForView(viewInstance, dateContext, periodContext) {
     const settings = this.appStore.getSettings();
     const dataSource = settings.dataSources.find((ds) => ds.id === viewInstance.dataSourceId);
@@ -29527,15 +29524,34 @@ let ActionService = class {
       new obsidian.Notice(`快捷输入失败：找不到名为 "${blockName}" 的Block模板。`);
       return null;
     }
-    const targetTheme = settings.inputSettings.themes.find((t2) => t2.path === blockName);
+    let preselectedThemeId;
+    const themeFilter = dataSource.filters.find((f2) => f2.field === "tags" && f2.op === "includes" && typeof f2.value === "string");
+    if (themeFilter) {
+      const themePath = themeFilter.value;
+      const matchedTheme = settings.inputSettings.themes.find((t2) => t2.path === themePath);
+      if (matchedTheme) {
+        preselectedThemeId = matchedTheme.id;
+      }
+    }
     const context = {
       "日期": dateContext.format("YYYY-MM-DD"),
       "周期": periodContext
     };
+    const equalityFilters = dataSource.filters.filter((f2) => f2.op === "=");
+    for (const filter of equalityFilters) {
+      if (filter.field === "categoryKey") continue;
+      for (const templateField of targetBlock.fields) {
+        if (filter.field === templateField.key || filter.field === templateField.label) {
+          context[templateField.key] = filter.value;
+          break;
+        }
+      }
+    }
     return {
       blockId: targetBlock.id,
+      // [修改] 传递增强后的 context 和预选的 themeId
       context,
-      themeId: targetTheme?.id
+      themeId: preselectedThemeId
     };
   }
   getQuickInputConfigForTaskEdit(taskId) {
@@ -30670,8 +30686,6 @@ function TimelineView({ items, dateRange, module: module2, currentView, app, tas
   return null;
 }
 class QuickInputModal extends obsidian.Modal {
-  // [核心修复] 构造函数被大大简化。
-  // 它不再需要接收 dataStore 和 appStore，因为这些将从全局注册表中获取。
   constructor(app, blockId, context, themeId, onSave) {
     super(app);
     this.blockId = blockId;
@@ -30764,33 +30778,34 @@ function QuickInputForm({ app, blockId, context, themeId, onSave, closeModal }) 
     const initialData = {};
     template.fields.forEach((field) => {
       let valueAssigned = false;
-      if (context && (context[field.key] !== void 0 || context[field.label] !== void 0)) {
-        initialData[field.key] = context[field.key] ?? context[field.label];
+      const contextValue = context?.[field.key] ?? context?.[field.label];
+      if (contextValue !== void 0) {
+        if (["select", "radio", "rating"].includes(field.type)) {
+          const matchedOption = (field.options || []).find((opt) => opt.value === contextValue || opt.label === contextValue);
+          if (matchedOption) {
+            initialData[field.key] = { value: matchedOption.value, label: matchedOption.label || matchedOption.value };
+          } else {
+            initialData[field.key] = contextValue;
+          }
+        } else {
+          initialData[field.key] = contextValue;
+        }
         valueAssigned = true;
-      }
-      if (!valueAssigned && !field.defaultValue) {
-        if (field.type === "date") {
-          initialData[field.key] = dayjs().format("YYYY-MM-DD");
-          valueAssigned = true;
-        } else if (field.type === "time") {
-          initialData[field.key] = dayjs().format("HH:mm");
-          valueAssigned = true;
-        }
-      }
-      if (!valueAssigned && ["select", "radio", "rating"].includes(field.type)) {
-        const findOption = (val) => (field.options || []).find((o2) => o2.label === val || o2.value === val);
-        let defaultOpt = findOption(field.defaultValue);
-        if (!defaultOpt && field.options && field.options.length > 0) {
-          defaultOpt = field.options[0];
-        }
-        if (defaultOpt) {
-          initialData[field.key] = { value: defaultOpt.value, label: defaultOpt.label || defaultOpt.value };
-          valueAssigned = true;
-        }
       }
       if (!valueAssigned) {
-        initialData[field.key] = field.defaultValue || "";
-        valueAssigned = true;
+        if (!field.defaultValue) {
+          if (field.type === "date") initialData[field.key] = dayjs().format("YYYY-MM-DD");
+          else if (field.type === "time") initialData[field.key] = dayjs().format("HH:mm");
+        } else if (["select", "radio", "rating"].includes(field.type)) {
+          const findOption = (val) => (field.options || []).find((o2) => o2.label === val || o2.value === val);
+          let defaultOpt = findOption(field.defaultValue);
+          if (!defaultOpt && field.options && field.options.length > 0) defaultOpt = field.options[0];
+          if (defaultOpt) {
+            initialData[field.key] = { value: defaultOpt.value, label: defaultOpt.label || defaultOpt.value };
+          }
+        } else {
+          initialData[field.key] = field.defaultValue || "";
+        }
       }
     });
     return initialData;
