@@ -37193,16 +37193,16 @@ function SettingsRoot({ app, appStore: appStore2 }) {
     /* @__PURE__ */ u(Box, { sx: { width: "100%" }, class: "think-setting-root", children: [
       /* @__PURE__ */ u(Box, { sx: { borderBottom: 1, borderColor: "divider" }, children: /* @__PURE__ */ u(Tabs, { value: tabIndex, onChange: (_2, newValue) => setTabIndex(newValue), "aria-label": "settings tabs", children: [
         /* @__PURE__ */ u(Tab, { label: "通用", ...a11yProps(0) }),
-        /* @__PURE__ */ u(Tab, { label: "布局", ...a11yProps(1) }),
-        /* @__PURE__ */ u(Tab, { label: "视图", ...a11yProps(2) }),
-        /* @__PURE__ */ u(Tab, { label: "数据源", ...a11yProps(3) }),
-        /* @__PURE__ */ u(Tab, { label: "快速输入", ...a11yProps(4) })
+        /* @__PURE__ */ u(Tab, { label: "快速输入", ...a11yProps(1) }),
+        /* @__PURE__ */ u(Tab, { label: "数据源", ...a11yProps(2) }),
+        /* @__PURE__ */ u(Tab, { label: "视图", ...a11yProps(3) }),
+        /* @__PURE__ */ u(Tab, { label: "布局", ...a11yProps(4) })
       ] }) }),
       /* @__PURE__ */ u(TabPanel, { value: tabIndex, index: 0, children: /* @__PURE__ */ u(GeneralSettings, { appStore: appStore2 }) }),
-      /* @__PURE__ */ u(TabPanel, { value: tabIndex, index: 1, children: /* @__PURE__ */ u(LayoutSettings, { app, appStore: appStore2 }) }),
-      /* @__PURE__ */ u(TabPanel, { value: tabIndex, index: 2, children: /* @__PURE__ */ u(ViewInstanceSettings, { app, appStore: appStore2 }) }),
-      /* @__PURE__ */ u(TabPanel, { value: tabIndex, index: 3, children: /* @__PURE__ */ u(DataSourceSettings, { app, appStore: appStore2 }) }),
-      /* @__PURE__ */ u(TabPanel, { value: tabIndex, index: 4, children: /* @__PURE__ */ u(InputSettings, { appStore: appStore2 }) })
+      /* @__PURE__ */ u(TabPanel, { value: tabIndex, index: 1, children: /* @__PURE__ */ u(InputSettings, { appStore: appStore2 }) }),
+      /* @__PURE__ */ u(TabPanel, { value: tabIndex, index: 2, children: /* @__PURE__ */ u(DataSourceSettings, { app, appStore: appStore2 }) }),
+      /* @__PURE__ */ u(TabPanel, { value: tabIndex, index: 3, children: /* @__PURE__ */ u(ViewInstanceSettings, { app, appStore: appStore2 }) }),
+      /* @__PURE__ */ u(TabPanel, { value: tabIndex, index: 4, children: /* @__PURE__ */ u(LayoutSettings, { app, appStore: appStore2 }) })
     ] })
   ] });
 }
