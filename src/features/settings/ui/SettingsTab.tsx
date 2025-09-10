@@ -14,7 +14,6 @@ import { ViewInstanceSettings } from './ViewInstanceSettings';
 import { LayoutSettings } from './LayoutSettings';
 import { InputSettings } from './InputSettings';
 import { AppStore } from '@state/AppStore';
-// [新增] 导入刚刚创建的通用设置组件
 import { GeneralSettings } from './GeneralSettings';
 
 function a11yProps(index: number) {
@@ -38,21 +37,21 @@ function SettingsRoot({ app, appStore }: { app: App, appStore: AppStore }) {
             <CssBaseline />
             <Box sx={{ width: '100%' }} class="think-setting-root">
                 <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
+                    {/* [核心修改] 按照 "通用 -> 快速输入 -> 数据源 -> 视图 -> 布局" 的顺序重新排列 Tabs */}
                     <Tabs value={tabIndex} onChange={(_, newValue) => setTabIndex(newValue)} aria-label="settings tabs">
-                        {/* [新增] 增加一个新的"通用"标签页 */}
                         <Tab label="通用" {...a11yProps(0)} />
-                        <Tab label="布局" {...a11yProps(1)} />
-                        <Tab label="视图" {...a11yProps(2)} />
-                        <Tab label="数据源" {...a11yProps(3)} />
-                        <Tab label="快速输入" {...a11yProps(4)} />
+                        <Tab label="快速输入" {...a11yProps(1)} />
+                        <Tab label="数据源" {...a11yProps(2)} />
+                        <Tab label="视图" {...a11yProps(3)} />
+                        <Tab label="布局" {...a11yProps(4)} />
                     </Tabs>
                 </Box>
-                {/* [修改] 调整所有 TabPanel 的索引，并添加新的通用设置面板 */}
+                {/* [核心修改] 同样，调整 TabPanel 的顺序和 index 来匹配上面的新顺序 */}
                 <TabPanel value={tabIndex} index={0}><GeneralSettings appStore={appStore} /></TabPanel>
-                <TabPanel value={tabIndex} index={1}><LayoutSettings app={app} appStore={appStore} /></TabPanel>
-                <TabPanel value={tabIndex} index={2}><ViewInstanceSettings app={app} appStore={appStore} /></TabPanel>
-                <TabPanel value={tabIndex} index={3}><DataSourceSettings app={app} appStore={appStore} /></TabPanel>
-                <TabPanel value={tabIndex} index={4}><InputSettings appStore={appStore} /></TabPanel>
+                <TabPanel value={tabIndex} index={1}><InputSettings appStore={appStore} /></TabPanel>
+                <TabPanel value={tabIndex} index={2}><DataSourceSettings app={app} appStore={appStore} /></TabPanel>
+                <TabPanel value={tabIndex} index={3}><ViewInstanceSettings app={app} appStore={appStore} /></TabPanel>
+                <TabPanel value={tabIndex} index={4}><LayoutSettings app={app} appStore={appStore} /></TabPanel>
             </Box>
         </ThemeProvider>
     );
