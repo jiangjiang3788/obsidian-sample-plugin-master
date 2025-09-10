@@ -28271,6 +28271,8 @@ function useStore(selector) {
   }, [store, memoizedSelector]);
   return state;
 }
+const DATE_YMD = "\\d{4}[-/]\\d{2}[-/]\\d{2}";
+const DATE_YMD_RE = new RegExp(DATE_YMD);
 const TAG_RE = /#([\p{L}\p{N}_\/-]+)/gu;
 const KV_IN_PAREN = /\(([^:：]+)::\s*([^)]+)\)/g;
 const RE_TASK_PREFIX = /^\s*-\s*\[[ xX-]\]/;
@@ -28823,6 +28825,8 @@ dayjs.extend(weekOfYear);
 dayjs.extend(customParse);
 dayjs.extend(isoWeek);
 dayjs.extend(isSameOrBefore);
+const todayISO = () => dayjs().format("YYYY-MM-DD");
+const nowHHMM = () => dayjs().format("HH:mm");
 function formatSecondsToHHMMSS(totalSeconds) {
   if (isNaN(totalSeconds) || totalSeconds < 0) {
     return "00:00:00";
@@ -28908,7 +28912,8 @@ const EMOJI = {
   due: "📅",
   scheduled: "⏳",
   start: "🛫",
-  created: "➕"
+  created: "➕",
+  repeat: "🔁"
 };
 const EMPTY_LABEL = "无日期";
 const STYLE_TAG_ID = "think-plugin-style";
@@ -29189,6 +29194,42 @@ function normalizeItemDates(it) {
   }
   if (!it.categoryKey) it.categoryKey = "任务/open";
 }
+function toggleToDone(rawLine, todayISO2, nowTime, duration2) {
+  let line2 = rawLine;
+  if (duration2 !== void 0) {
+    const upsert = (l2, k2, v2) => {
+      const pattern = new RegExp(`([\\(\\[]\\s*${k2}::\\s*)[^\\)\\]]*(\\s*[\\)\\]])`);
+      if (pattern.test(l2)) {
+        return l2.replace(pattern, `$1${v2}$2`);
+      } else {
+        return `${l2.trim()} (${k2}:: ${v2})`;
+      }
+    };
+    line2 = upsert(line2, "时长", String(duration2));
+  }
+  line2 = line2.replace(
+    /(\s|^)(时长::[^\s()]+)/g,
+    (m2, pre) => m2.includes("(") ? m2 : `${pre}(${m2.trim()})`
+  );
+  if (/\(时长::[^\)]+\)/.test(line2)) {
+    line2 = line2.replace(/\((时长::[^\)]+)\)/, `(时间::${nowTime}) ($1)`);
+  } else if (/时长::[^\s]+/.test(line2)) {
+    line2 = line2.replace(/(时长::[^\s]+)/, `(时间::${nowTime}) ($1)`);
+  } else if (line2.includes(EMOJI.repeat)) {
+    line2 = line2.replace(EMOJI.repeat, `(时间::${nowTime}) ${EMOJI.repeat}`);
+  } else {
+    line2 = `${line2} (时间::${nowTime})`;
+  }
+  line2 = line2.replace(/^(\s*-\s*)\[[ xX-]\]/, "$1[x]");
+  if (!/^-\s*\[x\]/.test(line2)) {
+    line2 = `- [x] ${line2.replace(/^-\s*\[.\]/, "").replace(/^-\s*/, "")}`;
+  }
+  line2 = line2.replace(
+    new RegExp(`\\s*${EMOJI.done}\\s*${DATE_YMD_RE.source}$`),
+    ""
+  );
+  return `${line2.trim()} ${EMOJI.done} ${todayISO2}`;
+}
 function parseRecurrence(rawTask) {
   const m2 = rawTask.match(
     /🔁\s*every\s+(\d+)?\s*(day|week|month|year)s?\s*(when done)?/i
@@ -29198,6 +29239,39 @@ function parseRecurrence(rawTask) {
   const unit = m2[2].toLowerCase();
   const whenDone = Boolean(m2[3]);
   return { interval, unit, whenDone };
+}
+function findBaseDateForRecurring(rawTask, whenDone, todayISO2) {
+  if (whenDone) return todayISO2;
+  const pick2 = (emoji) => {
+    const r2 = new RegExp(`${emoji}\\s*(${DATE_YMD_RE.source})`);
+    const mt = rawTask.match(r2);
+    return mt ? normalizeDateStr(mt[1]) : null;
+  };
+  return pick2(EMOJI.due) || pick2(EMOJI.scheduled) || pick2(EMOJI.start) || todayISO2;
+}
+function generateNextRecurringTask(rawTask, baseDateISO) {
+  let next2 = rawTask.replace(/^(\s*-\s*)\[[ xX-]\]/, "$1[ ]").replace(new RegExp(`\\s*${EMOJI.done}\\s*${DATE_YMD_RE.source}`), "").replace(/\(时间::\d{2}:\d{2}\)/, "");
+  const rec = parseRecurrence(rawTask);
+  if (!rec) return next2.trim();
+  const base = dayjs(baseDateISO, ["YYYY-MM-DD", "YYYY/MM/DD"]);
+  const nextDate = base.add(rec.interval, rec.unit);
+  const nextStr = nextDate.format("YYYY-MM-DD");
+  const replaceIf = (emoji) => {
+    const re = new RegExp(`${emoji}\\s*${DATE_YMD_RE.source}`);
+    if (re.test(next2)) next2 = next2.replace(re, `${emoji} ${nextStr}`);
+  };
+  replaceIf(EMOJI.due);
+  replaceIf(EMOJI.scheduled);
+  replaceIf(EMOJI.start);
+  return next2.trim();
+}
+function markTaskDone(rawLine, todayISO2, nowTime, duration2) {
+  const completedLine = toggleToDone(rawLine, todayISO2, nowTime, duration2);
+  const rec = parseRecurrence(rawLine);
+  if (!rec) return { completedLine };
+  const baseISO = findBaseDateForRecurring(rawLine, rec.whenDone, todayISO2);
+  const nextTaskLine = generateNextRecurringTask(rawLine, baseISO);
+  return { completedLine, nextTaskLine };
 }
 var __getOwnPropDesc$6 = Object.getOwnPropertyDescriptor;
 var __decorateClass$6 = (decorators, target, key, kind) => {
@@ -29490,6 +29564,56 @@ InputService = __decorateClass$5([
   singleton(),
   __decorateParam$5(0, inject(AppToken))
 ], InputService);
+const CATEGORY_COLOR_MAP = {
+  打卡: "#d2cceb",
+  任务: "#caebf3",
+  计划: "#d8ecb2",
+  总结: "#E5D5B9",
+  事件: "#94e2d6",
+  感受: "#93daf0",
+  思考: "#f09393"
+  // ... 其它类别
+};
+function getCategoryColor(categoryKey) {
+  const base = (categoryKey || "").split("/")[0] || "";
+  return CATEGORY_COLOR_MAP[base] || "#e0e0e0";
+}
+const FIELD_REGISTRY = {
+  // --- 核心字段 ---
+  title: { key: "title", label: "标题", type: "string", description: "任务或块的主要内容" },
+  categoryKey: { key: "categoryKey", label: "类别", type: "string", description: '统一的分类键 (例如 "任务/done")' },
+  date: { key: "date", label: "日期", type: "date", description: "项目的主要关联日期" },
+  tags: { key: "tags", label: "标签", type: "tags", description: "所有关联的标签", formatter: (v2) => Array.isArray(v2) ? v2.join(", ") : "" },
+  priority: { key: "priority", label: "优先级", type: "string" },
+  icon: { key: "icon", label: "图标", type: "icon" },
+  period: { key: "period", label: "周期", type: "string", description: "块的周期属性，如周、月" },
+  time: { key: "time", label: "时间", type: "string", description: "记录的时间点，如 HH:mm" },
+  duration: { key: "duration", label: "时长", type: "number", description: "任务或事件的持续分钟数" },
+  rating: { key: "rating", label: "评分", type: "number", description: "对块内容的评分" },
+  pintu: { key: "pintu", label: "评图", type: "string", description: "与评分关联的图片路径" },
+  // [新增] 新字段定义
+  folder: { key: "folder", label: "文件夹", type: "string", description: "文件所在的父文件夹" },
+  periodCount: { key: "periodCount", label: "周期数", type: "number", description: "周期对应的数值(如周数、月份)" },
+  // --- 文件元数据 ---
+  "file.path": { key: "file.path", label: "文件路径", type: "string" },
+  "file.basename": { key: "file.basename", label: "文件名", type: "string" },
+  "header": { key: "header", label: "所在章节", type: "string" },
+  // --- 时间轴字段 ---
+  startISO: { key: "startISO", label: "开始日期", type: "date" },
+  endISO: { key: "endISO", label: "结束日期", type: "date" },
+  // --- 预定义的重要 extra 字段 (示例) ---
+  "extra.地点": { key: "extra.地点", label: "地点", type: "string", description: "事件或任务发生的地点" },
+  "extra.项目": { key: "extra.项目", label: "所属项目", type: "string", description: "关联的GTD项目" }
+};
+function getFieldLabel(key) {
+  if (FIELD_REGISTRY[key]) {
+    return FIELD_REGISTRY[key].label;
+  }
+  if (key.startsWith("extra.")) {
+    return key.slice(6);
+  }
+  return key;
+}
 var __getOwnPropDesc$4 = Object.getOwnPropertyDescriptor;
 var __decorateClass$4 = (decorators, target, key, kind) => {
   var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc$4(target, key) : target;
@@ -29549,11 +29673,15 @@ let ActionService = class {
     }
     return {
       blockId: targetBlock.id,
-      // [修改] 传递增强后的 context 和预选的 themeId
       context,
       themeId: preselectedThemeId
     };
   }
+  /**
+   * [核心修复]
+   * 重写了此方法，使用 `readField` 工具函数来准确地从任务 Item 中读取所有字段的值。
+   * 这确保了在编辑任务时，所有信息都能被正确地预填充到表单中。
+   */
   getQuickInputConfigForTaskEdit(taskId) {
     const item = this.dataStore.queryItems().find((i2) => i2.id === taskId);
     if (!item) {
@@ -29569,16 +29697,18 @@ let ActionService = class {
     }
     const context = {};
     for (const field of targetBlock.fields) {
-      if (field.key in item) {
-        context[field.key] = item[field.key];
-      } else if (field.label in item) {
-        context[field.label] = item[field.label];
-      } else if (item.extra && field.key in item.extra) {
-        context[field.key] = item.extra[field.key];
+      const value = readField(item, field.key) ?? readField(item, field.label);
+      if (value !== void 0 && value !== null) {
+        context[field.key] = value;
       }
     }
-    if (!context.title && !context.标题) context["标题"] = item.title;
-    if (!context.tags && !context.标签) context["标签"] = item.tags.join(", ");
+    if (!context.title && !context["标题"]) {
+      context[targetBlock.fields.find((f2) => f2.label === "标题")?.key || "标题"] = item.title;
+    }
+    const tagsField = targetBlock.fields.find((f2) => f2.label === "标签" || f2.key === "tags");
+    if (tagsField && !context[tagsField.key]) {
+      context[tagsField.key] = item.tags.join(", ");
+    }
     return {
       blockId: targetBlock.id,
       context
@@ -29744,56 +29874,6 @@ function TableView({ items, rowField, colField, onMarkDone, app }) {
       })
     ] }, r2)) })
   ] });
-}
-const CATEGORY_COLOR_MAP = {
-  打卡: "#d2cceb",
-  任务: "#caebf3",
-  计划: "#d8ecb2",
-  总结: "#E5D5B9",
-  事件: "#94e2d6",
-  感受: "#93daf0",
-  思考: "#f09393"
-  // ... 其它类别
-};
-function getCategoryColor(categoryKey) {
-  const base = (categoryKey || "").split("/")[0] || "";
-  return CATEGORY_COLOR_MAP[base] || "#e0e0e0";
-}
-const FIELD_REGISTRY = {
-  // --- 核心字段 ---
-  title: { key: "title", label: "标题", type: "string", description: "任务或块的主要内容" },
-  categoryKey: { key: "categoryKey", label: "类别", type: "string", description: '统一的分类键 (例如 "任务/done")' },
-  date: { key: "date", label: "日期", type: "date", description: "项目的主要关联日期" },
-  tags: { key: "tags", label: "标签", type: "tags", description: "所有关联的标签", formatter: (v2) => Array.isArray(v2) ? v2.join(", ") : "" },
-  priority: { key: "priority", label: "优先级", type: "string" },
-  icon: { key: "icon", label: "图标", type: "icon" },
-  period: { key: "period", label: "周期", type: "string", description: "块的周期属性，如周、月" },
-  time: { key: "time", label: "时间", type: "string", description: "记录的时间点，如 HH:mm" },
-  duration: { key: "duration", label: "时长", type: "number", description: "任务或事件的持续分钟数" },
-  rating: { key: "rating", label: "评分", type: "number", description: "对块内容的评分" },
-  pintu: { key: "pintu", label: "评图", type: "string", description: "与评分关联的图片路径" },
-  // [新增] 新字段定义
-  folder: { key: "folder", label: "文件夹", type: "string", description: "文件所在的父文件夹" },
-  periodCount: { key: "periodCount", label: "周期数", type: "number", description: "周期对应的数值(如周数、月份)" },
-  // --- 文件元数据 ---
-  "file.path": { key: "file.path", label: "文件路径", type: "string" },
-  "file.basename": { key: "file.basename", label: "文件名", type: "string" },
-  "header": { key: "header", label: "所在章节", type: "string" },
-  // --- 时间轴字段 ---
-  startISO: { key: "startISO", label: "开始日期", type: "date" },
-  endISO: { key: "endISO", label: "结束日期", type: "date" },
-  // --- 预定义的重要 extra 字段 (示例) ---
-  "extra.地点": { key: "extra.地点", label: "地点", type: "string", description: "事件或任务发生的地点" },
-  "extra.项目": { key: "extra.项目", label: "所属项目", type: "string", description: "关联的GTD项目" }
-};
-function getFieldLabel(key) {
-  if (FIELD_REGISTRY[key]) {
-    return FIELD_REGISTRY[key].label;
-  }
-  if (key.startsWith("extra.")) {
-    return key.slice(6);
-  }
-  return key;
 }
 function buildThemeTree(themes) {
   const roots = [];
@@ -30793,18 +30873,27 @@ function QuickInputForm({ app, blockId, context, themeId, onSave, closeModal }) 
         valueAssigned = true;
       }
       if (!valueAssigned) {
-        if (!field.defaultValue) {
-          if (field.type === "date") initialData[field.key] = dayjs().format("YYYY-MM-DD");
-          else if (field.type === "time") initialData[field.key] = dayjs().format("HH:mm");
-        } else if (["select", "radio", "rating"].includes(field.type)) {
-          const findOption = (val) => (field.options || []).find((o2) => o2.label === val || o2.value === val);
-          let defaultOpt = findOption(field.defaultValue);
-          if (!defaultOpt && field.options && field.options.length > 0) defaultOpt = field.options[0];
-          if (defaultOpt) {
-            initialData[field.key] = { value: defaultOpt.value, label: defaultOpt.label || defaultOpt.value };
+        const isSelectable = ["select", "radio", "rating"].includes(field.type);
+        if (field.defaultValue) {
+          if (isSelectable) {
+            const findOption = (val) => (field.options || []).find((o2) => o2.label === val || o2.value === val);
+            let defaultOpt = findOption(field.defaultValue);
+            if (!defaultOpt && field.options && field.options.length > 0) defaultOpt = field.options[0];
+            if (defaultOpt) {
+              initialData[field.key] = { value: defaultOpt.value, label: defaultOpt.label || defaultOpt.value };
+            }
+          } else {
+            initialData[field.key] = field.defaultValue || "";
           }
         } else {
-          initialData[field.key] = field.defaultValue || "";
+          if (field.type === "date") {
+            initialData[field.key] = dayjs().format("YYYY-MM-DD");
+          } else if (field.type === "time") {
+            initialData[field.key] = dayjs().format("HH:mm");
+          } else if (isSelectable && field.options && field.options.length > 0) {
+            const firstOption = field.options[0];
+            initialData[field.key] = { value: firstOption.value, label: firstOption.label || firstOption.value };
+          }
         }
       }
     });
@@ -31510,7 +31599,93 @@ let TaskService = class {
     this.dataStore = dataStore2;
     this.app = app;
   }
-  // ... 其余方法不变
+  /**
+   * 根据任务ID获取其在文件中的原始行文本。
+   * @param taskId - 任务的唯一ID (e.g., 'path/to/file.md#123')
+   * @returns 任务行的文本内容，如果找不到则抛出错误。
+   */
+  async getTaskLine(taskId) {
+    const { path, lineNo } = this.parseTaskId(taskId);
+    const file = this.app.vault.getAbstractFileByPath(path);
+    if (!(file instanceof obsidian.TFile)) throw new Error(`找不到任务文件: ${path}`);
+    const content = await this.app.vault.read(file);
+    const lines = content.split("\n");
+    if (lineNo > lines.length) throw new Error(`文件 ${path} 的行号 ${lineNo} 超出范围。`);
+    return lines[lineNo - 1];
+  }
+  /**
+   * 更新文件中的特定行。这是一个核心的私有方法。
+   * @param path - 文件路径。
+   * @param lineNo - 要替换的行号 (1-based)。
+   * @param newLine - 新的行文本。
+   * @param nextLine - (可选) 如果是周期任务，要在下一行插入的新任务文本。
+   */
+  async updateTaskLine(path, lineNo, newLine, nextLine) {
+    const file = this.app.vault.getAbstractFileByPath(path);
+    if (!(file instanceof obsidian.TFile)) throw new Error(`找不到文件: ${path}`);
+    const content = await this.app.vault.read(file);
+    const lines = content.split("\n");
+    lines[lineNo - 1] = newLine;
+    if (nextLine) {
+      lines.splice(lineNo, 0, nextLine);
+    }
+    await this.app.vault.modify(file, lines.join("\n"));
+    this.dataStore.scanFile(file).then(() => this.dataStore.notifyChange());
+  }
+  /**
+   * 完成一个任务。
+   * @param taskId - 任务ID。
+   * @param options - 包含可选时长等信息的对象。
+   */
+  async completeTask(taskId, options) {
+    const { path, lineNo } = this.parseTaskId(taskId);
+    const rawLine = await this.getTaskLine(taskId);
+    const { completedLine, nextTaskLine } = markTaskDone(
+      rawLine,
+      todayISO(),
+      nowHHMM(),
+      options?.duration
+    );
+    await this.updateTaskLine(path, lineNo, completedLine, nextTaskLine);
+  }
+  /**
+   * 更新任务的时间和/或时长。
+   * @param taskId - 任务ID。
+   * @param updates - 包含要更新的时间和/或时长的对象。
+   */
+  async updateTaskTime(taskId, updates) {
+    const { path, lineNo } = this.parseTaskId(taskId);
+    let line2 = await this.getTaskLine(taskId);
+    if (updates.time !== void 0) {
+      line2 = this.upsertKvTag(line2, "时间", updates.time);
+    }
+    if (updates.duration !== void 0) {
+      line2 = this.upsertKvTag(line2, "时长", String(updates.duration));
+    }
+    await this.updateTaskLine(path, lineNo, line2);
+  }
+  /**
+   * 辅助函数：解析任务ID为路径和行号。
+   */
+  parseTaskId(taskId) {
+    const hashIndex = taskId.lastIndexOf("#");
+    if (hashIndex === -1) throw new Error(`无效的任务ID格式: ${taskId}`);
+    const path = taskId.substring(0, hashIndex);
+    const lineNo = parseInt(taskId.substring(hashIndex + 1), 10);
+    if (isNaN(lineNo)) throw new Error(`无效的任务行号: ${taskId}`);
+    return { path, lineNo };
+  }
+  /**
+   * 辅助函数：在任务行中更新或插入 (key:: value) 格式的标签。
+   */
+  upsertKvTag(line2, key, value) {
+    const pattern = new RegExp(`([\\(\\[]\\s*${key}::\\s*)[^\\)\\]]*(\\s*[\\)\\]])`);
+    if (pattern.test(line2)) {
+      return line2.replace(pattern, `$1${value}$2`);
+    } else {
+      return `${line2.trim()} (${key}:: ${value})`;
+    }
+  }
 };
 TaskService = __decorateClass$3([
   singleton(),
@@ -31610,7 +31785,6 @@ var __decorateClass$1 = (decorators, target, key, kind) => {
 };
 var __decorateParam$1 = (index, decorator) => (target, key) => decorator(target, key, index);
 let TimerService = class {
-  // [核心修改] 为构造函数的每个参数添加 @inject 装饰器
   constructor(appStore2, dataStore2, taskService, inputService2, app) {
     this.appStore = appStore2;
     this.dataStore = dataStore2;
@@ -31618,7 +31792,6 @@ let TimerService = class {
     this.inputService = inputService2;
     this.app = app;
   }
-  // ... 其余方法保持不变 ...
   async startOrResume(taskId) {
     const timers = this.appStore.getState().timers;
     for (const timer of timers) {
@@ -31706,28 +31879,21 @@ let TimerService = class {
   async createNewTaskAndStart(data) {
     const { template, formData, theme: theme2 } = data;
     try {
-      const targetFilePath = renderTemplate(template.targetFile, { ...formData, theme: theme2 });
-      if (!targetFilePath) throw new Error("目标文件路径无效");
-      const outputContent = renderTemplate(template.outputTemplate, { ...formData, block: { name: template.name }, theme: theme2 }).trim();
-      const file = await this.inputService.getOrCreateFile(targetFilePath);
-      const existingContent = await this.app.vault.read(file);
-      const newContent = existingContent.trim() === "" ? outputContent : `${existingContent.trim()}
-${outputContent}`;
-      await this.app.vault.modify(file, newContent);
-      await this.dataStore.scanFile(file);
-      const newLines = outputContent.split("\n").length;
-      const totalLines = newContent.split("\n").length;
-      for (let i2 = 0; i2 < newLines + 2; i2++) {
-        const lineNumber = totalLines - i2;
-        const taskId = `${targetFilePath}#${lineNumber}`;
-        const newItem = this.dataStore.queryItems().find((item) => item.id === taskId);
-        if (newItem) {
-          this.startOrResume(newItem.id);
+      const targetFilePath = await this.inputService.executeTemplate(template, formData, theme2);
+      const file = this.app.vault.getAbstractFileByPath(targetFilePath);
+      if (file instanceof obsidian.TFile) {
+        const newItemsInFile = await this.dataStore.scanFile(file);
+        if (newItemsInFile.length > 0) {
+          const latestItem = newItemsInFile.sort((a2, b2) => (b2.file?.line || 0) - (a2.file?.line || 0))[0];
+          this.startOrResume(latestItem.id);
           new obsidian.Notice("新任务已创建并开始计时！");
-          return;
+        } else {
+          new obsidian.Notice("任务内容已创建，但未识别为可计时的任务项。");
         }
+      } else {
+        new obsidian.Notice("任务已创建，但无法在文件系统中立即找到它以开始计时。");
+        this.dataStore.notifyChange();
       }
-      new obsidian.Notice("任务已创建，但无法自动开始计时。请手动启动。");
     } catch (e2) {
       new obsidian.Notice(`创建任务失败: ${e2.message}`);
       console.error(e2);

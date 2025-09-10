@@ -8,6 +8,7 @@ import { DataStore } from './dataStore';
 import { InputService } from './inputService';
 import type { QuickInputConfig } from './types';
 import { AppToken } from './types';
+import { readField } from '@core/domain';
 
 @singleton()
 export class ActionService {
@@ -36,10 +37,7 @@ export class ActionService {
             new Notice(`快捷输入失败：找不到名为 "${blockName}" 的Block模板。`);
             return null;
         }
-
-        // [核心修改开始]
         
-        // 1. 优先从 `tags includes` 规则中预设主题
         let preselectedThemeId: string | undefined;
         const themeFilter = dataSource.filters.find(f => f.field === 'tags' && f.op === 'includes' && typeof f.value === 'string');
         if (themeFilter) {
@@ -50,7 +48,6 @@ export class ActionService {
             }
         }
         
-        // 2. 从 `=` 规则中预填充表单字段
         const context: Record<string, any> = {
             '日期': dateContext.format('YYYY-MM-DD'),
             '周期': periodContext,
@@ -58,58 +55,67 @@ export class ActionService {
         
         const equalityFilters = dataSource.filters.filter(f => f.op === '=');
         for (const filter of equalityFilters) {
-            // 跳过我们已经用于确定模板的 categoryKey 过滤器
             if (filter.field === 'categoryKey') continue;
 
-            // 遍历目标 Block 的所有字段，进行中英文名(key/label)双重匹配
             for (const templateField of targetBlock.fields) {
                 if (filter.field === templateField.key || filter.field === templateField.label) {
-                    // 匹配成功后，统一使用 templateField.key 作为 context 的键
                     context[templateField.key] = filter.value;
-                    // 找到后就跳出内层循环，避免重复赋值
                     break; 
                 }
             }
         }
-        // [核心修改结束]
         
         return {
             blockId: targetBlock.id,
-            // [修改] 传递增强后的 context 和预选的 themeId
             context: context,
             themeId: preselectedThemeId,
         };
     }
+
+    /**
+     * [核心修复]
+     * 重写了此方法，使用 `readField` 工具函数来准确地从任务 Item 中读取所有字段的值。
+     * 这确保了在编辑任务时，所有信息都能被正确地预填充到表单中。
+     */
     public getQuickInputConfigForTaskEdit(taskId: string): QuickInputConfig | null {
         const item = this.dataStore.queryItems().find(i => i.id === taskId);
         if (!item) {
             new Notice(`错误：找不到ID为 ${taskId} 的任务。`);
             return null;
         }
+
         const settings = this.appStore.getSettings();
         const baseCategory = (item.categoryKey || '').split('/')[0];
         const targetBlock = settings.inputSettings.blocks.find(b => b.name === baseCategory);
+
         if (!targetBlock) {
             new Notice(`找不到与分类 "${baseCategory}" 匹配的Block模板，无法编辑。`);
             return null;
         }
+
         const context: Record<string, any> = {};
         for (const field of targetBlock.fields) {
-            if (field.key in item) {
-                context[field.key] = (item as any)[field.key];
-            } else if (field.label in item) {
-                context[field.label] = (item as any)[field.label];
-            } else if (item.extra && field.key in item.extra) {
-                context[field.key] = item.extra[field.key];
+            const value = readField(item, field.key) ?? readField(item, field.label);
+            if (value !== undefined && value !== null) {
+                context[field.key] = value;
             }
         }
-        if (!context.title && !context.标题) context['标题'] = item.title;
-        if (!context.tags && !context.标签) context['标签'] = item.tags.join(', ');
+
+        // 特殊处理：确保 `title` 和 `tags` 被正确填充
+        if (!context.title && !context['标题']) {
+            context[targetBlock.fields.find(f => f.label === '标题')?.key || '标题'] = item.title;
+        }
+        const tagsField = targetBlock.fields.find(f => f.label === '标签' || f.key === 'tags');
+        if (tagsField && !context[tagsField.key]) {
+            context[tagsField.key] = item.tags.join(', ');
+        }
+        
         return {
             blockId: targetBlock.id,
             context: context
         };
     }
+
     public getQuickInputConfigForNewTimer(): QuickInputConfig | null {
         const blocks = this.appStore.getSettings().inputSettings.blocks;
         if (!blocks || blocks.length === 0) {

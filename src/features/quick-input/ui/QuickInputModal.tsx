@@ -49,7 +49,6 @@ export class QuickInputModal extends Modal {
     }
 }
 
-// ... 辅助函数 getEffectiveTemplate, findNodePath, renderThemeLevels 保持不变 ...
 function getEffectiveTemplate(settings: InputSettings, blockId: string, themeId?: string): { template: BlockTemplate | null; theme: ThemeDefinition | null } {
     const baseBlock = settings.blocks.find(b => b.id === blockId);
     if (!baseBlock) return { template: null, theme: null };
@@ -130,47 +129,52 @@ function QuickInputForm({ app, blockId, context, themeId, onSave, closeModal }: 
         return getEffectiveTemplate(settings, blockId, selectedThemeId || undefined);
     }, [settings, blockId, selectedThemeId]);
 
-    // [核心修改] 增强表单初始化逻辑
     const [formData, setFormData] = useState<Record<string, any>>(() => {
         if (!template) return {};
         const initialData: Record<string, any> = {};
 
         template.fields.forEach(field => {
             let valueAssigned = false;
-            // 优先使用 context 中的预填充数据
             const contextValue = context?.[field.key] ?? context?.[field.label];
 
             if (contextValue !== undefined) {
-                // 如果是选择类字段，需要查找对应的 option 对象来设置"选中"状态
                 if (['select', 'radio', 'rating'].includes(field.type)) {
                     const matchedOption = (field.options || []).find(opt => opt.value === contextValue || opt.label === contextValue);
                     if (matchedOption) {
                         initialData[field.key] = { value: matchedOption.value, label: matchedOption.label || matchedOption.value };
                     } else {
-                        // 如果找不到匹配项，则不设置或设置原始值，让UI自己处理
                         initialData[field.key] = contextValue; 
                     }
                 } else {
-                    // 如果是普通字段，直接赋值
                     initialData[field.key] = contextValue;
                 }
                 valueAssigned = true;
             }
 
-            // 如果 context 中没有值，则按原有逻辑处理默认值
             if (!valueAssigned) {
-                if (!field.defaultValue) {
-                    if (field.type === 'date') initialData[field.key] = dayjs().format('YYYY-MM-DD');
-                    else if (field.type === 'time') initialData[field.key] = dayjs().format('HH:mm');
-                } else if (['select', 'radio', 'rating'].includes(field.type)) {
-                    const findOption = (val: string | undefined) => (field.options || []).find(o => o.label === val || o.value === val);
-                    let defaultOpt = findOption(field.defaultValue);
-                    if (!defaultOpt && field.options && field.options.length > 0) defaultOpt = field.options[0];
-                    if (defaultOpt) {
-                        initialData[field.key] = { value: defaultOpt.value, label: defaultOpt.label || defaultOpt.value };
+                const isSelectable = ['select', 'radio', 'rating'].includes(field.type);
+                if (field.defaultValue) {
+                    if (isSelectable) {
+                        const findOption = (val: string | undefined) => (field.options || []).find(o => o.label === val || o.value === val);
+                        let defaultOpt = findOption(field.defaultValue);
+                        if (!defaultOpt && field.options && field.options.length > 0) defaultOpt = field.options[0];
+                        if (defaultOpt) {
+                            initialData[field.key] = { value: defaultOpt.value, label: defaultOpt.label || defaultOpt.value };
+                        }
+                    } else {
+                        initialData[field.key] = field.defaultValue || '';
                     }
                 } else {
-                    initialData[field.key] = field.defaultValue || '';
+                    // [核心修复] 如果没有默认值，则按类型处理
+                    if (field.type === 'date') {
+                        initialData[field.key] = dayjs().format('YYYY-MM-DD');
+                    } else if (field.type === 'time') {
+                        initialData[field.key] = dayjs().format('HH:mm');
+                    } else if (isSelectable && field.options && field.options.length > 0) {
+                        // 如果是选择类且有选项，默认选中第一项
+                        const firstOption = field.options[0];
+                        initialData[field.key] = { value: firstOption.value, label: firstOption.label || firstOption.value };
+                    }
                 }
             }
         });
@@ -205,7 +209,6 @@ function QuickInputForm({ app, blockId, context, themeId, onSave, closeModal }: 
         }
     };
     
-    // ... renderField 逻辑保持不变 ...
     const renderField = (field: TemplateField) => {
         const isComplex = typeof formData[field.key] === 'object' && formData[field.key] !== null;
         const value = isComplex ? formData[field.key]?.value : formData[field.key];

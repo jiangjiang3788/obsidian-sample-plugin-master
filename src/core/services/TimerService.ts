@@ -2,16 +2,14 @@
 import { singleton, inject } from 'tsyringe';
 import { AppStore } from '@state/AppStore';
 import { TaskService } from './taskService';
-import { Notice, App } from 'obsidian';
+import { Notice, App, TFile } from 'obsidian';
 import { DataStore } from './dataStore';
 import { InputService } from './inputService';
 import type { QuickInputSaveData } from '@features/quick-input/ui/QuickInputModal';
-import { renderTemplate } from '@core/utils/templateUtils';
 import { AppToken } from './types';
 
 @singleton()
 export class TimerService {
-    // [核心修改] 为构造函数的每个参数添加 @inject 装饰器
     constructor(
         @inject(AppStore) private appStore: AppStore,
         @inject(DataStore) private dataStore: DataStore,
@@ -20,7 +18,6 @@ export class TimerService {
         @inject(AppToken) private app: App
     ) {}
 
-    // ... 其余方法保持不变 ...
     public async startOrResume(taskId: string): Promise<void> {
         const timers = this.appStore.getState().timers;
         for (const timer of timers) {
@@ -45,6 +42,7 @@ export class TimerService {
             });
         }
     }
+
     public async pause(timerId: string): Promise<void> {
         const timer = this.appStore.getState().timers.find(t => t.id === timerId);
         if (timer && timer.status === 'running') {
@@ -56,6 +54,7 @@ export class TimerService {
             });
         }
     }
+
     public async resume(timerId: string): Promise<void> {
         const timers = this.appStore.getState().timers;
         for (const t of timers) {
@@ -72,6 +71,7 @@ export class TimerService {
             });
         }
     }
+
     public async stopAndApply(timerId: string): Promise<void> {
         const timer = this.appStore.getState().timers.find(t => t.id === timerId);
         if (!timer) return;
@@ -101,35 +101,45 @@ export class TimerService {
         }
         await this.appStore.removeTimer(timerId);
     }
+
     public async cancel(timerId: string): Promise<void> {
         await this.appStore.removeTimer(timerId);
         new Notice('计时任务已取消。');
     }
+    
     public async createNewTaskAndStart(data: QuickInputSaveData): Promise<void> {
         const { template, formData, theme } = data;
         try {
-            const targetFilePath = renderTemplate(template.targetFile, { ...formData, theme });
-            if (!targetFilePath) throw new Error('目标文件路径无效');
-            const outputContent = renderTemplate(template.outputTemplate, { ...formData, block: { name: template.name }, theme }).trim();
-            const file = await this.inputService.getOrCreateFile(targetFilePath);
-            const existingContent = await this.app.vault.read(file);
-            const newContent = existingContent.trim() === '' ? outputContent : `${existingContent.trim()}\n${outputContent}`;
-            await this.app.vault.modify(file, newContent);
-            await this.dataStore.scanFile(file);
-            const newLines = outputContent.split('\n').length;
-            const totalLines = newContent.split('\n').length;
-            for (let i = 0; i < newLines + 2; i++) {
-                const lineNumber = totalLines - i;
-                const taskId = `${targetFilePath}#${lineNumber}`;
-                const newItem = this.dataStore.queryItems().find(item => item.id === taskId);
-                if (newItem) {
-                    this.startOrResume(newItem.id);
+            // 1. 调用 InputService 执行模板并写入文件，这部分保持不变。
+            const targetFilePath = await this.inputService.executeTemplate(template, formData, theme);
+            
+            // 2. 获取刚刚被修改或创建的文件对象。
+            const file = this.app.vault.getAbstractFileByPath(targetFilePath);
+
+            if (file instanceof TFile) {
+                // 3. [核心修改] 重新扫描文件，并直接捕获从该文件中解析出的新任务项。
+                //    我们不再需要 setTimeout，因为 scanFile 完成后，newItems 就已经是最新的了。
+                const newItemsInFile = await this.dataStore.scanFile(file);
+
+                if (newItemsInFile.length > 0) {
+                    // 4. 对新任务项按行号降序排序，找到最新添加的一项（通常是最后一行）。
+                    const latestItem = newItemsInFile.sort((a, b) => (b.file?.line || 0) - (a.file?.line || 0))[0];
+                    
+                    // 5. 直接开始计时，无需等待。
+                    this.startOrResume(latestItem.id);
                     new Notice('新任务已创建并开始计时！');
-                    return;
+                } else {
+                    // 如果 scanFile 成功但没有返回任何任务项（例如，模板输出的不是任务格式），则提示用户。
+                    new Notice("任务内容已创建，但未识别为可计时的任务项。");
                 }
+            } else {
+                // 如果文件未找到，这是一个异常情况。
+                new Notice("任务已创建，但无法在文件系统中立即找到它以开始计时。");
+                this.dataStore.notifyChange(); // 触发一次全局刷新
             }
-            new Notice('任务已创建，但无法自动开始计时。请手动启动。');
+
         } catch (e: any) {
+            // 只有在 executeTemplate 或 scanFile 真正失败时才会进入这里。
             new Notice(`创建任务失败: ${e.message}`);
             console.error(e);
         }
