@@ -1,185 +1,268 @@
 // src/features/dashboard/styles/global.ts
 
-// [FINAL VERSION]
 export const GLOBAL_CSS = `
-/* 让复选框使用系统外观 */
-.task-checkbox {
-  appearance: auto !important;
-  -webkit-appearance: checkbox !important;
+/*
+ * ===================================================================
+ * Think Plugin 全局样式表 (完整版)
+ * -------------------------------------------------------------------
+ * 本文件统一管理插件的所有自定义CSS。
+ * 结构已按功能模块重新组织，以提高可读性和可维护性。
+ * ===================================================================
+ */
+
+
+/*
+ * --- 1. 全局 MUI & 表单元素覆盖 ---
+ * 此部分用于重置MUI组件的默认样式，使其更符合Obsidian的原生外观。
+ */
+
+/* [核心修改] 重置图标按钮(IconButton)，移除圆形背景、投影，并使其更紧凑 */
+.MuiIconButton-root,
+.MuiIconButton-root:hover {
+    background-color: transparent !important;
+    box-shadow: none !important;
+    border-radius: 4px !important; /* 从圆形(50%)改为小圆角矩形 */
+    width: auto !important;
+    height: auto !important;
+    padding: 2px !important; /* 减小内边距来缩小整体尺寸 */
 }
 
-/* ✅ 已完成 / 勾选时使用亮绿色 */
+/* [核心修改] 将图标按钮中的 SVG 图标颜色设置为 Obsidian 主题强调色 */
+.MuiIconButton-root .MuiSvgIcon-root {
+    color: var(--interactive-accent);
+    font-size: 1.25rem; /* 微调图标大小 */
+}
+
+/* 移除 Autocomplete 组件中标签的背景，以兼容自定义的 pill 样式 */
+.MuiAutocomplete-root .MuiAutocomplete-tag {
+    padding: 0 !important;
+    background: transparent !important;
+    border: 0 !important;
+    box-shadow: none !important;
+}
+
+/* 让原生复选框样式与 Obsidian 保持一致 */
+.task-checkbox {
+    appearance: auto !important;
+    -webkit-appearance: checkbox !important;
+}
+
+/* 已完成的复选框使用醒目的主题色 */
 .task-checkbox.done,
 .task-checkbox:checked {
-  accent-color: #16a34a !important;
+    accent-color: var(--interactive-accent) !important;
 }
 
-/* 已完成的复选框不可再次点击（写在 CSS 里或写在 JSX 都行） */
+/* 已完成的复选框不可再次点击 */
 .task-checkbox.done {
-  pointer-events: none;
+    pointer-events: none;
 }
 .task-checkbox:checked::after {
-  content: none !important;
-  display: none !important;
-  -webkit-mask-image: none !important;
-  background-color: transparent !important;
+    content: none !important;
+    display: none !important;
+    -webkit-mask-image: none !important;
+    background-color: transparent !important;
 }
 
 
-/* ──────────────────────────────────────────────────────────────── */
-/*   放在插件自己的样式文件里；重载插件后立即生效                   */
-/* ──────────────────────────────────────────────────────────────── */
+/*
+ * --- 2. 通用共享组件样式 ---
+ * 用于插件中多个地方复用的自定义小组件。
+ */
 
-/* 设置面板整行字体再大一点（原本 13-14px）*/
-.think-setting-table  { font-size: 15px; }
-
-/* 表头加粗、加大 */
-.think-setting-table thead th {
-  font-size: 16px;
-  font-weight: 700;
+/* 视图元信息条 (DataSource 说明) */
+.view-meta {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    background: #fafafa;
+    border-left: 3px solid var(--c);
+    padding: 4px 8px;
+    border-radius: 6px;
+    margin: .25rem 0 .5rem;
+}
+.view-meta .dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--c);
 }
 
-/* 每一行的 emoji / 图标再放大 25% */
-.think-setting-table td.icon-cell {
-  font-size: 135%;          /* emoji 用字体大小控制 */
-  line-height: 1.2;
+/* 扁平药丸(Pill)样式，用于显示标签等 */
+.think-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+.think-pills .think-pill {
+    display: inline-flex;
+    align-items: center;
+    padding: 0 8px;
+    height: 18px;
+    line-height: 18px;
+    font-size: 12px;
+    border-radius: 9999px;
+    background: var(--think-pill-bg, #eee) !important;
+    border: 1px solid rgba(0,0,0,.08);
+    cursor: pointer;
+    user-select: none;
+}
+.think-pills .think-pill:hover {
+    background: #e3e3e3 !important;
+}
+body.theme-dark .think-pills .think-pill {
+    --think-pill-bg: rgba(255,255,255,.08);
+    border-color: rgba(255,255,255,.12);
 }
 
-/* 如果你用 img 作为图标，可限制高度并增加内边距 */
-.think-setting-table td.icon-cell img {
-  height: 20px;
-  width : 20px;
-  margin-right: 4px;
+
+/*
+ * --- 3. Dashboard 布局与工具栏 ---
+ * Dashboard 视图的整体容器、模块面板和工具栏的样式。
+ */
+
+/* 模块面板 (ModulePanel) 容器 */
+.think-module {
+    border-radius: 8px;
+    margin-bottom: 16px;
+    overflow: hidden;
+    border: 1px solid #E4DCD0;
+}
+body.theme-dark .think-module {
+    border: 1px solid #4a4130;
 }
 
-/* 勾选框列留一点左右间距（更好点触） */
-.think-setting-table td input[type="checkbox"] {
-  transform: scale(1.2);    /* 整体放大勾选框 */
-  margin: 0 4px;
+/* 模块面板头部 */
+.module-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 5px 12px; /* [本次修改] 减小垂直内边距以降低整体高度 */
+    cursor: pointer;
+    background-color: #F0E6D7;
+    color: #5a4b33;
+}
+body.theme-dark .module-header {
+    background-color: #5a4b33;
+    color: #E5D5B9;
+}
+.module-title {
+    font-weight: 600;
+    font-size: 14px; /* [本次修改] 进一步减小模块标题字体大小 */
+}
+.module-header-controls {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.module-action-plus {
+    font-size: 20px;
+    font-weight: 500;
+    line-height: 1;
+    color: inherit;
+    opacity: 0.6;
+    padding: 0 4px;
+    border-radius: 4px;
+    cursor: pointer;
+    user-select: none;
+}
+.module-action-plus:hover {
+    opacity: 1;
+    background-color: rgba(0,0,0,0.08);
+}
+body.theme-dark .module-action-plus:hover {
+    background-color: rgba(255,255,255,0.1);
+}
+.module-toggle {
+    font-size: 14px;
+    line-height: 1;
+    opacity: 0.7;
 }
 
-/* 红色垃圾桶按钮加大 */
-.think-setting-table td .trash-btn {
-  font-size: 18px;
-  padding: 2px 6px;
+/* 模块面板内容区域 */
+.module-content {
+    padding: 12px;
+    overflow-x: auto; /* 允许内容横向滚动，防止表格等超宽元素破坏布局 */
 }
-
-
-
-
-
-/* 视图说明条 */
-.view-meta{
-  display:flex;align-items:center;gap:6px;
-  font-size:12px;background:#fafafa;border-left:3px solid var(--c);
-  padding:4px 8px;border-radius:6px;margin:.25rem 0 .5rem;
-}
-.view-meta .dot{width:6px;height:6px;border-radius:50%;background:var(--c);}
-
-
-/* 让 Autocomplete 包裹的 tag 背景清空，否则会盖掉我们的小 pill */
-.MuiAutocomplete-root .MuiAutocomplete-tag {
-  padding: 0 !important;
-  background: transparent !important;
-  border: 0 !important;
-  box-shadow: none !important;
-}
-
-/* 扁平小 pill：确保出现浅灰色圆角背景块 */
-.think-pills { display:flex; flex-wrap:wrap; gap:6px; }
-
-.think-pills .think-pill{
-  display:inline-flex; align-items:center;
-  padding:0 8px;
-  height:18px; line-height:18px; font-size:12px;
-  border-radius:9999px;
-  background: var(--think-pill-bg, #eee) !important;   /* 关键：强制浅灰 */
-  border: 1px solid rgba(0,0,0,.08);
-  cursor:pointer; user-select:none;
-}
-.think-pills .think-pill:hover{ background:#e3e3e3 !important; }
-
-/* 暗色主题也有对比（Maple/Dark 等） */
-body.theme-dark .think-pills .think-pill{
-  --think-pill-bg: rgba(255,255,255,.08);
-  border-color: rgba(255,255,255,.12);
-}
-
-/* [FINAL VERSION] 专为 BlockView 设计的、高度隔离的、符合您个人风格的最终样式 */
-
-/* 基础设置：移除组件内所有链接的下划线 */
-.block-language-think .module-content a,
-.block-language-think .module-content a:visited,
-.block-language-think .module-content a:hover {
+/* 统一移除模块内容中链接的下划线 */
+.module-content a,
+.module-content a:visited,
+.module-content a:hover {
     text-decoration: none !important;
     box-shadow: none !important;
 }
 
-/* 组标题: [MODIFIED] 移除了 border-bottom，不再有分割线 */
-.block-language-think .module-content .bv-group-title {
+/* Dashboard 工具栏 (tp-toolbar) */
+.tp-toolbar button {
+    border: 1px solid transparent;
+    background-color: var(--background-secondary);
+    transition: all 0.2s ease;
+    font-size: 14px;
+    padding: 4px 10px;
+}
+.tp-toolbar button:hover {
+    border-color: var(--background-modifier-border-hover);
+    background-color: var(--background-modifier-hover);
+}
+.tp-toolbar button.active {
+    border: 1px solid var(--interactive-accent);
+    background-color: var(--interactive-accent-hover);
+    color: var(--text-on-accent);
+    font-weight: 600;
+}
+
+
+/*
+ * --- 4. 各视图 (View) 专属样式 ---
+ */
+
+/* 4a. BlockView 样式 */
+.block-language-think .bv-group-title {
     margin-bottom: 0.8em;
     font-weight: 600;
     color: var(--text-normal);
     padding-bottom: 0.4em;
-    border-bottom: none; 
+    border-bottom: none;
 }
-
-/* Block Item: 移除边框，保留 hover 背景 */
-.block-language-think .module-content .bv-item--block {
+.block-language-think .bv-item--block {
     display: flex;
-    gap: 6px; /* [MODIFIED] 将两栏间距改为 6px，与药丸间距统一 */
+    gap: 6px;
     padding: 8px;
     margin-bottom: 8px;
     border-radius: 6px;
     border: none;
 }
-.block-language-think .module-content .bv-item--block:hover {
+.block-language-think .bv-item--block:hover {
     background-color: var(--background-modifier-hover);
 }
-
-/* 左栏：元数据: [MODIFIED] 移除了固定的 width，使其自适应内容宽度 */
-.block-language-think .module-content .bv-block-metadata {
+.block-language-think .bv-block-metadata {
     flex-shrink: 0;
 }
-
-/* 右栏：主内容 */
-.block-language-think .module-content .bv-block-main {
+.block-language-think .bv-block-main {
     flex-grow: 1;
     min-width: 0;
     display: flex;
     flex-direction: column;
     gap: 6px;
 }
-/* 响应式：窄屏幕下单栏 */
-.block-language-think .module-content .bv-item--block.is-narrow {
-    flex-direction: column;
-    gap: 8px;
-}
-.block-language-think .module-content .bv-item--block.is-narrow .bv-block-metadata {
-    width: 100%;
-}
-
-/* 标题和内容文字样式 */
-.block-language-think .module-content .bv-block-title a {
+.block-language-think .bv-block-title a {
     font-weight: 600;
     color: var(--text-normal);
 }
-.block-language-think .module-content .bv-block-content a {
+.block-language-think .bv-block-content a {
     white-space: pre-wrap;
     line-height: 1.6;
     color: var(--text-muted);
 }
-
-/* 药丸样式: 恢复您喜欢的原始风格，不设置字体大小 */
-.block-language-think .module-content .bv-fields-list {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px; /* 药丸之间的间距是 6px */
-    align-items: center;
-}
-.block-language-think .module-content .tag-pill {
+.block-language-think .bv-fields-list,
+.block-language-think .tag-pill {
     display: inline-flex;
     align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+.block-language-think .tag-pill {
     padding: 2px 8px;
     border-radius: 4px;
     background: var(--background-modifier-hover);
@@ -187,20 +270,34 @@ body.theme-dark .think-pills .think-pill{
     white-space: nowrap;
     line-height: 1.5;
 }
-.block-language-think .module-content .tag-pill img {
+.block-language-think .tag-pill img {
     height: 1.2em;
     width: 1.2em;
     object-fit: contain;
 }
+.block-language-think .bv-item--task {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 4px;
+    border-radius: 6px;
+}
+.block-language-think .bv-item--task:hover {
+    background-color: var(--background-modifier-hover);
+}
+.block-language-think .bv-item--task .bv-task-checkbox-wrapper {
+    margin-top: 2px;
+}
+.block-language-think .bv-item--task .bv-task-title {
+    color: var(--text-normal);
+    line-height: 1.5;
+}
 
-/* Task Item 的样式也需要被精确限定 */
-.block-language-think .module-content .bv-item--task { display: flex; align-items: flex-start; gap: 8px; padding: 4px; border-radius: 6px; }
-.block-language-think .module-content .bv-item--task:hover { background-color: var(--background-modifier-hover); }
-.block-language-think .module-content .bv-item--task .bv-task-checkbox-wrapper { margin-top: 2px; }
-.block-language-think .module-content .bv-item--task .bv-task-content { flex: 1; }
-.block-language-think .module-content .bv-item--task .bv-task-title { color: var(--text-normal); line-height: 1.5; }
-
-/* [MODIFIED] 提高 TimelineView 悬浮按钮的 CSS 优先级 */
+/* 4b. TimelineView 样式 */
+.block-language-think .timeline-task-block:hover .task-buttons {
+    visibility: visible;
+    opacity: 1;
+}
 .block-language-think .timeline-task-block .task-buttons {
     visibility: hidden;
     opacity: 0;
@@ -214,10 +311,6 @@ body.theme-dark .think-pills .think-pill{
     padding: 2px;
     box-shadow: var(--shadow-s);
     transition: opacity 0.1s ease-in-out, visibility 0.1s ease-in-out;
-}
-.block-language-think .timeline-task-block:hover .task-buttons {
-    visibility: visible;
-    opacity: 1;
 }
 .block-language-think .timeline-task-block .task-buttons button {
     all: unset;
@@ -235,187 +328,7 @@ body.theme-dark .think-pills .think-pill{
 }
 
 
-
-/* [最终优化] Time Navigator (概览模式导航器) 样式 v6 */
-.time-navigator-container {
-    display: flex;
-    /* [核心] 确保主方向是横向 (row)，即 左/右 布局 */
-    flex-direction: row; 
-    /* [核心] 禁止换行，确保 年 和 周期 两列始终并排 */
-    flex-wrap: nowrap; 
-    gap: 8px;
-    height: 100px;
-    font-size: 12px;
-    user-select: none;
-    margin-bottom: 16px;
-    width: 100%;
-    background: var(--background-secondary);
-    padding: 8px;
-    border-radius: 8px;
-    box-sizing: border-box;
-}
-
-.tn-cell {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 6px;
-    transition: all 0.2s ease;
-    box-sizing: border-box;
-    border: 1px solid transparent;
-}
-
-/* 左侧控制列 */
-.tn-control-col {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    width: 60px;
-    flex-shrink: 0; /* 禁止此列被压缩 */
-}
-.tn-year-cell {
-    flex-grow: 1;
-    background: #9B7FBD;
-    color: white;
-    font-weight: bold;
-    font-size: 1.4em;
-    cursor: pointer;
-    border: none;
-}
-.tn-year-cell:hover {
-    opacity: 0.9;
-}
-.tn-nav-buttons {
-    height: 28px;
-    flex-shrink: 0;
-    display: flex;
-    gap: 4px;
-    border: none;
-}
-.tn-nav-buttons button {
-    flex-grow: 1;
-    border: 1px solid var(--background-modifier-border);
-    background: var(--background-primary);
-    border-radius: 6px;
-    cursor: pointer;
-    font-size: 1.2em;
-    padding-bottom: 2px;
-}
-.tn-nav-buttons button:hover {
-    background: var(--background-modifier-hover);
-    border-color: var(--interactive-accent);
-}
-
-/* 右侧主内容区 */
-.tn-main-col {
-    display: flex;
-    flex-direction: column; /* 内部的 季度/月 和 周 是上下排列的 */
-    flex-grow: 1;
-    gap: 4px;
-    min-width: 0; /* 允许此列在必要时收缩 */
-}
-.tn-row {
-    display: flex;
-    gap: 4px;
-}
-.tn-row-top {
-    flex-grow: 1;
-}
-
-/* 季度块 */
-.tn-quarter-block {
-    display: flex;
-    flex-direction: column;
-    flex: 1;
-    background: var(--background-primary);
-    border-radius: 6px;
-    padding: 4px;
-    gap: 4px;
-    cursor: pointer;
-}
-.tn-quarter-block .tn-quarter-header {
-    text-align: center;
-    font-weight: bold;
-    font-size: 0.9em;
-    color: var(--text-muted);
-    padding-bottom: 2px;
-}
-.tn-months-container {
-    display: flex;
-    flex-grow: 1;
-    gap: 4px;
-}
-
-/* 状态样式 (与上一版相同，仅为完整性而包含) */
-.tn-quarter-block.is-before-selection .tn-quarter-header,
-.tn-month-cell.is-before-selection {
-    color: #9B7FBD;
-}
-.tn-week-cell.is-before-selection {
-    background: #f5f1fa;
-    color: #9B7FBD;
-}
-body.theme-dark .tn-quarter-block.is-before-selection .tn-quarter-header,
-body.theme-dark .tn-month-cell.is-before-selection,
-body.theme-dark .tn-week-cell.is-before-selection {
-    color: #c4b0e0;
-}
-body.theme-dark .tn-week-cell.is-before-selection {
-    background: rgba(155, 127, 189, 0.15); 
-}
-
-.tn-week-cell.is-today {
-    border-color: #FFD700 !important;
-}
-
-.tn-quarter-block.is-selected,
-.tn-month-cell.is-selected,
-.tn-week-cell.is-selected {
-    border-color: #9B7FBD !important;
-    background-color: rgba(155, 127, 189, 0.15) !important;
-    box-shadow: none;
-}
-.tn-quarter-block.is-selected .tn-quarter-header,
-.tn-month-cell.is-selected,
-.tn-week-cell.is-selected {
-    color: #9B7FBD !important;
-    font-weight: bold;
-}
-body.theme-dark .tn-quarter-block.is-selected,
-body.theme-dark .tn-month-cell.is-selected,
-body.theme-dark .tn-week-cell.is-selected {
-    background-color: rgba(155, 127, 189, 0.2) !important;
-}
-
-/* 单元格基础样式 (与上一版相同) */
-.tn-month-cell, .tn-week-cell {
-    font-weight: 500;
-    background: var(--background-secondary);
-    color: var(--text-muted);
-}
-.tn-month-cell {
-    flex: 1;
-}
-.tn-week-cell {
-    flex-basis: 0;
-    flex-grow: 1;
-    font-size: 10px;
-    cursor: pointer;
-    min-width: 10px;
-}
-
-/* 周容器 (与上一版相同) */
-.tn-weeks-container {
-    height: 24px;
-    flex-shrink: 0;
-    background: var(--background-primary);
-    border-radius: 6px;
-    padding: 3px;
-    overflow: hidden;
-}
- 
-
-/* [全新] Statistics View (统计视图) 样式 V3.1 */
+/* 4c. StatisticsView & Popover 样式 */
 .statistics-view {
     padding: 8px;
     background: var(--background-secondary);
@@ -468,8 +381,6 @@ body.theme-dark .tn-week-cell.is-selected {
     flex-direction: column;
     gap: 4px;
 }
-
-/* 统一的图表块样式 */
 .sv-chart-block {
     position: relative;
     display: flex;
@@ -515,22 +426,20 @@ body.theme-dark .tn-week-cell.is-selected {
     flex-grow: 1;
     align-items: flex-end;
 }
-
-/* [核心修改] 竖向柱状图的样式调整 */
 .sv-vbar-wrapper {
     flex: 1;
     min-width: 0;
     height: 100%;
     display: flex;
-    flex-direction: column; /* 改为正常的列方向 */
-    justify-content: flex-end; /* 内容（标签和柱子）在底部对齐 */
+    flex-direction: column;
+    justify-content: flex-end;
     align-items: center;
 }
 .sv-vbar-bar-label {
     font-size: 10px;
     color: var(--text-muted);
     font-weight: 500;
-    margin-bottom: 2px; /* 在数字和柱子顶部之间创建间距 */
+    margin-bottom: 2px;
 }
 .sv-vbar-bar {
     width: 80%;
@@ -539,8 +448,6 @@ body.theme-dark .tn-week-cell.is-selected {
     min-height: 2px;
     transition: height 0.3s ease;
 }
-
-/* ... 悬浮窗样式保持不变 ... */
 .sv-popover {
     background: var(--background-primary);
     border: 1px solid var(--background-modifier-border);
@@ -551,205 +458,37 @@ body.theme-dark .tn-week-cell.is-selected {
 }
 .sv-popover-title {
     font-weight: bold;
-    padding: 10px 16px;
+    padding: 8px 8px 8px 16px;
     border-bottom: 1px solid var(--background-modifier-border);
-}
-.sv-popover-content {
-    max-height: 450px;
-    overflow-y: auto;
-    padding: 4px;
-}
-.sv-popover-content .block-language-think {
-    padding: 0;
-}
-.sv-popover-empty {
-    color: var(--text-faint);
-    padding: 24px;
-    text-align: center;
-}
-
-
-/* 悬浮窗样式 */
-.sv-popover {
-    background: var(--background-primary);
-    border: 1px solid var(--background-modifier-border);
-    border-radius: 12px;
-    box-shadow: var(--shadow-l);
-    width: 500px;
-    max-width: 90vw;
-}
-.sv-popover-title {
-    font-weight: bold;
-    padding: 8px 8px 8px 16px; /* 调整padding为右侧按钮留出空间 */
-    border-bottom: 1px solid var(--background-modifier-border);
-    display: flex; /* [新增] 使用flex布局 */
-    justify-content: space-between; /* [新增] 两端对齐 */
-    align-items: center; /* [新增] 垂直居中 */
-}
-.sv-popover-content {
-    max-height: 450px;
-    overflow-y: auto;
-    padding: 4px;
-}
-.sv-popover-content .block-language-think {
-    padding: 0;
-}
-.sv-popover-empty {
-    color: var(--text-faint);
-    padding: 24px;
-    text-align: center;
-}
-/* ============== [新增] ModulePanel 自定义样式 (v2) ============== */
-.think-module {
-    border-radius: 8px;
-    margin-bottom: 16px;
-    overflow: hidden;
-    /* 为整个模块添加一个细微的边框，使其更有整体感 */
-    border: 1px solid #E4DCD0; 
-}
-body.theme-dark .think-module {
-    border: 1px solid #4a4130;
-}
-
-.module-header {
     display: flex;
-    align-items: center;
     justify-content: space-between;
-    padding: 8px 12px;
-    cursor: pointer;
-    background-color: #F0E6D7; /* 用户指定的颜色 */
-    color: #5a4b33; /* 为浅色背景搭配深色文字 */
-}
-
-body.theme-dark .module-header {
-    background-color: #5a4b33; /* 适配暗色模式的深棕色 */
-    color: #E5D5B9; /* 适配暗色模式的浅色文字 */
-}
-
-.module-title {
-    font-weight: 600;
-}
-
-.module-header-controls {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    flex-shrink: 0;
-}
-
-.module-header-actions {
-    display: flex;
     align-items: center;
 }
-
-.module-action-plus {
-    font-size: 20px;
-    font-weight: 500;
-    line-height: 1;
-    color: inherit;
-    opacity: 0.6;
-    padding: 0 4px;
-    border-radius: 4px;
-    cursor: pointer;
-    user-select: none;
+.sv-popover-content {
+    max-height: 450px;
+    overflow-y: auto;
+    padding: 4px;
 }
-
-.module-action-plus:hover {
-    opacity: 1;
-    background-color: rgba(0,0,0,0.08);
+.sv-popover-content .block-language-think {
+    padding: 0;
 }
-body.theme-dark .module-action-plus:hover {
-    background-color: rgba(255,255,255,0.1);
-}
-
-.module-toggle {
-    font-size: 14px;
-    line-height: 1;
-    opacity: 0.7;
-}
-
-.module-content {
-    padding: 12px;
-    /* [修改] 下面这行背景色被删除或注释掉了 */
-    /* background-color: #F9F5EF; */
-}
-
-body.theme-dark .module-content {
-    /* [修改] 下面这行背景色被删除或注释掉了 */
-    /* background-color: #2F2A24; */
+.sv-popover-empty {
+    color: var(--text-faint);
+    padding: 24px;
+    text-align: center;
 }
 
 
-
-/* Task Item 的样式也需要被精确限定 */
-.block-language-think .module-content .bv-item--task { display: flex; align-items: flex-start; gap: 8px; padding: 4px; border-radius: 6px; }
-.block-language-think .module-content .bv-item--task:hover { background-color: var(--background-modifier-hover); }
-.block-language-think .module-content .bv-item--task .bv-task-checkbox-wrapper { margin-top: 2px; }
-.block-language-think .module-content .bv-item--task .bv-task-content { flex: 1; }
-.block-language-think .module-content .bv-item--task .bv-task-title { color: var(--text-normal); line-height: 1.5; }
-
-/* [MODIFIED] 提高 TimelineView 悬浮按钮的 CSS 优先级 */
-.block-language-think .timeline-task-block .task-buttons {
-    visibility: hidden;
-    opacity: 0;
-    position: absolute;
-    top: 2px;
-    right: 2px;
-    display: flex;
-    gap: 2px;
-    background: var(--background-secondary);
-    border-radius: 4px;
-    padding: 2px;
-    box-shadow: var(--shadow-s);
-    transition: opacity 0.1s ease-in-out, visibility 0.1s ease-in-out;
-}
-.block-language-think .timeline-task-block:hover .task-buttons {
-    visibility: visible;
-    opacity: 1;
-}
-.block-language-think .timeline-task-block .task-buttons button {
-    all: unset;
-    cursor: pointer;
-    padding: 2px 4px;
-    border-radius: 2px;
-    font-size: 12px;
-}
-.block-language-think .timeline-task-block .task-buttons button:hover {
-    background: var(--background-modifier-hover);
-}
-.block-language-think .timeline-task-block .task-buttons button:disabled {
-    cursor: not-allowed;
-    color: var(--text-muted);
-}
-
-
-
-/* ============== [新增] 全局计时器挂件样式 ============== */
-
-/* 这是状态栏中由 addStatusBarItem() 创建的容器元素的样式 */
-.think-plugin-timer-widget {
-    /* 与状态栏中的其他项保持一点距离 */
-    margin: 0 8px;
-}
-
-/* 我们的 Preact 组件会被渲染到这个容器里 */
-/* MUI 的 Paper 组件自带背景和阴影，所以我们不需要在这里加 */
-/* 主要是确保它能正确显示 */
-.think-plugin-timer-widget > .MuiPaper-root {
-    /* 如果需要，可以在这里覆盖MUI组件的样式 */
-    /* 例如，确保背景色在不同主题下都清晰可见 */
-    background-color: var(--background-secondary) !important;
-}
-/* ============== [REVISED] HeatmapView Styles ============== */
+/* 4d. HeatmapView 样式 */
 .heatmap-container {
-    --heatmap-cell-size: 20px; /* You can adjust this base size */
+    --heatmap-cell-size: 20px;
     width: 100%;
     padding: 8px;
 }
 .heatmap-view-wrapper.layout-row {
     display: flex;
     flex-direction: column;
-    gap: 8px; /* Space between theme rows */
+    gap: 8px;
 }
 .heatmap-theme-group {
     display: flex;
@@ -759,7 +498,7 @@ body.theme-dark .module-content {
 .heatmap-theme-label {
     font-size: 0.85em;
     font-weight: 500;
-    width: 120px; /* Fixed width for alignment */
+    width: 120px;
     text-align: right;
     flex-shrink: 0;
     white-space: nowrap;
@@ -768,16 +507,16 @@ body.theme-dark .module-content {
 }
 .heatmap-theme-content {
     flex-grow: 1;
-    min-width: 0; /* Important for flexbox to allow shrinking */
-    overflow-x: auto; /* Allow content to scroll if it's too wide */
+    min-width: 0;
+    overflow-x: auto;
     overflow-y: hidden;
 }
 .heatmap-row {
-    display: flex; /* Use flex for single rows */
+    display: flex;
     gap: 3px;
 }
 .heatmap-row.single-row {
-    padding-bottom: 4px; /* Space for scrollbar */
+    padding-bottom: 4px;
 }
 .heatmap-cell {
     position: relative;
@@ -791,7 +530,7 @@ body.theme-dark .module-content {
     justify-content: center;
     font-size: calc(var(--heatmap-cell-size) * 0.7);
     transition: transform 0.1s ease-in-out;
-    flex-shrink: 0; /* Prevent cells from shrinking */
+    flex-shrink: 0;
 }
 .heatmap-cell:not(.empty):hover {
     transform: scale(1.15);
@@ -808,22 +547,10 @@ body.theme-dark .module-content {
     object-fit: cover;
     border-radius: 3px;
 }
-.heatmap-cell-content {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 100%;
-    height: 100%;
-}
 .heatmap-cell.current-day {
     outline: 2px solid var(--interactive-accent);
     outline-offset: 1px;
 }
-.heatmap-cell .current-day-star {
-    /* Removed, the outline is clearer */
-}
-
-/* Styles for Year/Quarter Grid Layout */
 .heatmap-view-wrapper.layout-grid .heatmap-theme-group {
     flex-direction: column;
     align-items: stretch;
@@ -856,37 +583,213 @@ body.theme-dark .module-content {
     grid-template-columns: repeat(7, var(--heatmap-cell-size));
     gap: 3px;
 }
-
-/* Dark mode adjustments */
 body.theme-dark .heatmap-cell {
     background-color: var(--background-modifier-border);
 }
 body.theme-dark .heatmap-cell.empty {
     background-color: transparent;
 }
-/* [NEW] Dashboard Toolbar Styles */
-.tp-toolbar button {
-    /* Base styles for all buttons */
-    border: 1px solid transparent; /* Add transparent border to prevent layout shift */
-    background-color: var(--background-secondary);
+
+
+/* 4e. TimeNavigator (概览模式导航器) 样式 */
+.time-navigator-container {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    gap: 8px;
+    height: 100px;
+    font-size: 12px;
+    user-select: none;
+    margin-bottom: 16px;
+    width: 100%;
+    background: var(--background-secondary);
+    padding: 8px;
+    border-radius: 8px;
+    box-sizing: border-box;
+}
+.tn-cell {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
     transition: all 0.2s ease;
+    box-sizing: border-box;
+    border: 1px solid transparent;
+}
+.tn-control-col {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    width: 60px;
+    flex-shrink: 0;
+}
+.tn-year-cell {
+    flex-grow: 1;
+    background: #9B7FBD;
+    color: white;
+    font-weight: bold;
+    font-size: 1.4em;
+    cursor: pointer;
+    border: none;
+}
+.tn-year-cell:hover {
+    opacity: 0.9;
+}
+.tn-nav-buttons {
+    height: 28px;
+    flex-shrink: 0;
+    display: flex;
+    gap: 4px;
+    border: none;
+}
+.tn-nav-buttons button {
+    flex-grow: 1;
+    border: 1px solid var(--background-modifier-border);
+    background: var(--background-primary);
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 1.2em;
+    padding-bottom: 2px;
+}
+.tn-nav-buttons button:hover {
+    background: var(--background-modifier-hover);
+    border-color: var(--interactive-accent);
+}
+.tn-main-col {
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+    gap: 4px;
+    min-width: 0;
+}
+.tn-row {
+    display: flex;
+    gap: 4px;
+}
+.tn-row-top {
+    flex-grow: 1;
+}
+.tn-quarter-block {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    background: var(--background-primary);
+    border-radius: 6px;
+    padding: 4px;
+    gap: 4px;
+    cursor: pointer;
+}
+.tn-quarter-block .tn-quarter-header {
+    text-align: center;
+    font-weight: bold;
+    font-size: 0.9em;
+    color: var(--text-muted);
+    padding-bottom: 2px;
+}
+.tn-months-container {
+    display: flex;
+    flex-grow: 1;
+    gap: 4px;
+}
+.tn-quarter-block.is-before-selection .tn-quarter-header,
+.tn-month-cell.is-before-selection {
+    color: #9B7FBD;
+}
+.tn-week-cell.is-before-selection {
+    background: #f5f1fa;
+    color: #9B7FBD;
+}
+body.theme-dark .tn-quarter-block.is-before-selection .tn-quarter-header,
+body.theme-dark .tn-month-cell.is-before-selection,
+body.theme-dark .tn-week-cell.is-before-selection {
+    color: #c4b0e0;
+}
+body.theme-dark .tn-week-cell.is-before-selection {
+    background: rgba(155, 127, 189, 0.15);
+}
+.tn-week-cell.is-today {
+    border-color: #FFD700 !important;
+}
+.tn-quarter-block.is-selected,
+.tn-month-cell.is-selected,
+.tn-week-cell.is-selected {
+    border-color: #9B7FBD !important;
+    background-color: rgba(155, 127, 189, 0.15) !important;
+    box-shadow: none;
+}
+.tn-quarter-block.is-selected .tn-quarter-header,
+.tn-month-cell.is-selected,
+.tn-week-cell.is-selected {
+    color: #9B7FBD !important;
+    font-weight: bold;
+}
+body.theme-dark .tn-quarter-block.is-selected,
+body.theme-dark .tn-month-cell.is-selected,
+body.theme-dark .tn-week-cell.is-selected {
+    background-color: rgba(155, 127, 189, 0.2) !important;
+}
+.tn-month-cell, .tn-week-cell {
+    font-weight: 500;
+    background: var(--background-secondary);
+    color: var(--text-muted);
+}
+.tn-month-cell {
+    flex: 1;
+}
+.tn-week-cell {
+    flex-basis: 0;
+    flex-grow: 1;
+    font-size: 10px;
+    cursor: pointer;
+    min-width: 10px;
+}
+.tn-weeks-container {
+    height: 24px;
+    flex-shrink: 0;
+    background: var(--background-primary);
+    border-radius: 6px;
+    padding: 3px;
+    overflow: hidden;
 }
 
-.tp-toolbar button:hover {
-    border-color: var(--background-modifier-border-hover);
-    background-color: var(--background-modifier-hover);
+
+/*
+ * --- 5. 设置面板样式 ---
+ */
+.think-setting-table {
+    font-size: 15px;
+}
+.think-setting-table thead th {
+    font-size: 16px;
+    font-weight: 700;
+}
+.think-setting-table td.icon-cell {
+    font-size: 135%;
+    line-height: 1.2;
+}
+.think-setting-table td.icon-cell img {
+    height: 20px;
+    width: 20px;
+    margin-right: 4px;
+}
+.think-setting-table td input[type="checkbox"] {
+    transform: scale(1.2);
+    margin: 0 4px;
+}
+.think-setting-table td .trash-btn {
+    font-size: 18px;
+    padding: 2px 6px;
 }
 
-.tp-toolbar button.active {
-    /* Style for the selected button */
-    border: 1px solid var(--interactive-accent);
-    background-color: var(--interactive-accent-hover);
-    color: var(--text-on-accent);
-    font-weight: 600;
+
+/*
+ * --- 6. 悬浮计时器样式 ---
+ */
+.think-plugin-timer-widget {
+    margin: 0 8px; /* 与状态栏中的其他项保持一点距离 */
+}
+.think-plugin-timer-widget > .MuiPaper-root {
+    background-color: var(--background-secondary) !important;
 }
 
-.module-content {
-  padding: 12px;
-  overflow-x: auto; /* 核心改动：增加这一行 */
-}
 `.trim();
