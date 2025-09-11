@@ -37474,21 +37474,21 @@ const GLOBAL_CSS = `
  * 此部分用于重置MUI组件的默认样式，使其更符合Obsidian的原生外观。
  */
 
-/* [核心修改] 重置图标按钮(IconButton)，移除圆形背景、投影，并使其更紧凑 */
+/* 重置图标按钮(IconButton)，移除圆形背景、投影，并使其更紧凑 */
 .MuiIconButton-root,
 .MuiIconButton-root:hover {
     background-color: transparent !important;
     box-shadow: none !important;
-    border-radius: 4px !important; /* 从圆形(50%)改为小圆角矩形 */
+    border-radius: 4px !important;
     width: auto !important;
     height: auto !important;
-    padding: 2px !important; /* 减小内边距来缩小整体尺寸 */
+    padding: 2px !important;
 }
 
-/* [核心修改] 将图标按钮中的 SVG 图标颜色设置为 Obsidian 主题强调色 */
+/* 将图标按钮中的 SVG 图标颜色设置为 Obsidian 主题强调色 */
 .MuiIconButton-root .MuiSvgIcon-root {
     color: var(--interactive-accent);
-    font-size: 1.25rem; /* 微调图标大小 */
+    font-size: 1.25rem;
 }
 
 /* 移除 Autocomplete 组件中标签的背景，以兼容自定义的 pill 样式 */
@@ -37596,7 +37596,7 @@ body.theme-dark .think-module {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 5px 12px; /* [本次修改] 减小垂直内边距以降低整体高度 */
+    padding: 5px 12px;
     cursor: pointer;
     background-color: #F0E6D7;
     color: #5a4b33;
@@ -37607,7 +37607,7 @@ body.theme-dark .module-header {
 }
 .module-title {
     font-weight: 600;
-    font-size: 14px; /* [本次修改] 进一步减小模块标题字体大小 */
+    font-size: 14px;
 }
 .module-header-controls {
     display: flex;
@@ -37641,9 +37641,8 @@ body.theme-dark .module-action-plus:hover {
 /* 模块面板内容区域 */
 .module-content {
     padding: 12px;
-    overflow-x: auto; /* 允许内容横向滚动，防止表格等超宽元素破坏布局 */
+    overflow-x: auto;
 }
-/* 统一移除模块内容中链接的下划线 */
 .module-content a,
 .module-content a:visited,
 .module-content a:hover {
@@ -37675,7 +37674,8 @@ body.theme-dark .module-action-plus:hover {
  * --- 4. 各视图 (View) 专属样式 ---
  */
 
-/* 4a. BlockView 样式 */
+/* ================== [本次核心修改] ================== */
+/* 4a. BlockView 样式 (全新响应式双栏布局) */
 .block-language-think .bv-group-title {
     margin-bottom: 0.8em;
     font-weight: 600;
@@ -37683,48 +37683,63 @@ body.theme-dark .module-action-plus:hover {
     padding-bottom: 0.4em;
     border-bottom: none;
 }
+
+/* 整体容器：启用 flex wrap 实现自动换行 */
 .block-language-think .bv-item--block {
     display: flex;
-    gap: 6px;
+    flex-wrap: wrap; /* 核心：允许换行 */
+    gap: 8px 12px; /* 垂直间距8px, 水平间距12px */
     padding: 8px;
     margin-bottom: 8px;
     border-radius: 6px;
-    border: none;
 }
 .block-language-think .bv-item--block:hover {
     background-color: var(--background-modifier-hover);
 }
+
+/* 左侧元数据栏：设置一个基础宽度，并允许它增长和收缩 */
 .block-language-think .bv-block-metadata {
-    flex-shrink: 0;
+    flex-basis: 150px; /* 设定一个基础宽度 */
+    flex-grow: 1;      /* 允许它在空间充足时增长 */
 }
+
+/* 右侧主内容栏：设置一个最小触发换行的宽度，并让它优先占据多余空间 */
 .block-language-think .bv-block-main {
-    flex-grow: 1;
+    flex-basis: 180px; /* 核心：当可用空间小于此值时，此元素倾向于换行 */
+    flex-grow: 999;    /* 给一个很大的增长系数，让它优先占据多余空间 */
     min-width: 0;
     display: flex;
     flex-direction: column;
     gap: 6px;
 }
+
+/* 标题和内容样式，确保文本本身可以换行 */
 .block-language-think .bv-block-title a {
     font-weight: 600;
     color: var(--text-normal);
+    word-break: break-word; /* 强制长单词或链接换行 */
 }
 .block-language-think .bv-block-content a {
     white-space: pre-wrap;
     line-height: 1.6;
     color: var(--text-muted);
+    font-size: 0.9em;
 }
-.block-language-think .bv-fields-list,
+
+/* 胶囊容器与胶囊本身样式 */
+.block-language-think .bv-fields-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    align-items: center;
+}
 .block-language-think .tag-pill {
     display: inline-flex;
     align-items: center;
-    gap: 6px;
-    flex-wrap: wrap;
-}
-.block-language-think .tag-pill {
     padding: 2px 8px;
     border-radius: 4px;
     background: var(--background-modifier-hover);
-    border: 1px solid var(--background-modifier-border);
+    border: none; /* 移除描边 */
     white-space: nowrap;
     line-height: 1.5;
 }
@@ -37733,6 +37748,8 @@ body.theme-dark .module-action-plus:hover {
     width: 1.2em;
     object-fit: contain;
 }
+
+/* 任务项样式 (TaskItem) */
 .block-language-think .bv-item--task {
     display: flex;
     align-items: flex-start;
@@ -37750,6 +37767,8 @@ body.theme-dark .module-action-plus:hover {
     color: var(--text-normal);
     line-height: 1.5;
 }
+/* ======================================================= */
+
 
 /* 4b. TimelineView 样式 */
 .block-language-think .timeline-task-block:hover .task-buttons {
