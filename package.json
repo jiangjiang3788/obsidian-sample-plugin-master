@@ -3,7 +3,9 @@
   "version": "1.0.0",
   "scripts": {
     "dev": "vite",
-    "build": "vite build"
+    "build": "vite build",
+    "test:e2e:start-obsidian": "start \"Obsidian for Test\" \"D:\\PROGRA~2\\Obsidian\\Obsidian.exe\" --remote-debugging-port=9222 \"G:\\vikahz\"",
+  "test:e2e:run": "playwright test"
   },
   "dependencies": {
     "@codemirror/state": "^6.5.2",

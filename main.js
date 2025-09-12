@@ -37675,7 +37675,7 @@ body.theme-dark .module-action-plus:hover {
  */
 
 /* ================== [本次核心修改] ================== */
-/* 4a. BlockView 样式 (全新响应式双栏布局) */
+/* 4a. BlockView 样式 (恢复为原始的、由JS控制的响应式双栏布局) */
 .block-language-think .bv-group-title {
     margin-bottom: 0.8em;
     font-weight: 600;
@@ -37684,11 +37684,10 @@ body.theme-dark .module-action-plus:hover {
     border-bottom: none;
 }
 
-/* 整体容器：启用 flex wrap 实现自动换行 */
+/* 整体容器：默认是flex双栏 */
 .block-language-think .bv-item--block {
     display: flex;
-    flex-wrap: wrap; /* 核心：允许换行 */
-    gap: 8px 12px; /* 垂直间距8px, 水平间距12px */
+    gap: 12px;
     padding: 8px;
     margin-bottom: 8px;
     border-radius: 6px;
@@ -37697,27 +37696,34 @@ body.theme-dark .module-action-plus:hover {
     background-color: var(--background-modifier-hover);
 }
 
-/* 左侧元数据栏：设置一个基础宽度，并允许它增长和收缩 */
+/* 左侧元数据栏：宽度由内容决定，且不可压缩 */
 .block-language-think .bv-block-metadata {
-    flex-basis: 150px; /* 设定一个基础宽度 */
-    flex-grow: 1;      /* 允许它在空间充足时增长 */
+    flex-shrink: 0;
 }
 
-/* 右侧主内容栏：设置一个最小触发换行的宽度，并让它优先占据多余空间 */
+/* 右侧主内容栏：弹性增长，占据所有剩余空间 */
 .block-language-think .bv-block-main {
-    flex-basis: 180px; /* 核心：当可用空间小于此值时，此元素倾向于换行 */
-    flex-grow: 999;    /* 给一个很大的增长系数，让它优先占据多余空间 */
-    min-width: 0;
+    flex-grow: 1;
+    min-width: 0; /* 关键：允许此容器收缩，并使其内部文本正确换行 */
     display: flex;
     flex-direction: column;
     gap: 6px;
 }
 
-/* 标题和内容样式，确保文本本身可以换行 */
+/* [重要] 窄屏下的响应式切换：当容器宽度过小时，JS会添加 .is-narrow 类 */
+.block-language-think .bv-item--block.is-narrow {
+    flex-direction: column; /* 切换为垂直堆叠 */
+    gap: 8px;
+}
+.block-language-think .bv-item--block.is-narrow .bv-block-metadata {
+    width: 100%; /* 元数据栏宽度变为100% */
+}
+
+/* 标题和内容样式 (保留之前的优化) */
 .block-language-think .bv-block-title a {
     font-weight: 600;
     color: var(--text-normal);
-    word-break: break-word; /* 强制长单词或链接换行 */
+    word-break: break-word; /* 强制长文本换行 */
 }
 .block-language-think .bv-block-content a {
     white-space: pre-wrap;
@@ -37726,7 +37732,7 @@ body.theme-dark .module-action-plus:hover {
     font-size: 0.9em;
 }
 
-/* 胶囊容器与胶囊本身样式 */
+/* 胶囊容器与胶囊本身样式 (保留之前的优化) */
 .block-language-think .bv-fields-list {
     display: flex;
     flex-wrap: wrap;
@@ -37739,7 +37745,7 @@ body.theme-dark .module-action-plus:hover {
     padding: 2px 8px;
     border-radius: 4px;
     background: var(--background-modifier-hover);
-    border: none; /* 移除描边 */
+    border: none;
     white-space: nowrap;
     line-height: 1.5;
 }
