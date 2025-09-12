@@ -1,0 +1,148 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e1]:
+  - generic [ref=e2]:
+    - img [ref=e4]
+    - img [ref=e7]
+    - img [ref=e10]
+  - generic [ref=e13]:
+    - generic [ref=e15]:
+      - generic [ref=e16]:
+        - generic [ref=e18]:
+          - img
+        - generic [ref=e19]:
+          - generic "打开快速切换" [ref=e20]:
+            - img
+          - generic "新建白板" [ref=e21]:
+            - img
+          - generic "打开命令面板" [ref=e22]:
+            - img
+          - generic "管理工作区布局" [ref=e23]:
+            - img
+      - generic [ref=e24]:
+        - separator [ref=e25]
+        - generic [ref=e26]:
+          - generic [ref=e27]:
+            - img [ref=e29]
+            - generic [ref=e32]: vikahz
+          - generic [ref=e33]:
+            - img [ref=e35]
+            - img [ref=e39]
+        - generic [ref=e42]:
+          - generic [ref=e44]:
+            - generic [ref=e47]:
+              - img
+            - generic [ref=e50]:
+              - img
+          - generic [ref=e54]:
+            - generic [ref=e56]:
+              - generic "新建笔记" [ref=e57]:
+                - img
+              - generic "新建文件夹" [ref=e58]:
+                - img
+              - generic "排序" [ref=e59]:
+                - img
+              - generic "Auto-reveal current file" [ref=e60]:
+                - img
+              - generic "全部折叠" [ref=e61]:
+                - img
+            - generic [ref=e63]:
+              - generic [ref=e65]:
+                - generic [ref=e66] [cursor=pointer]:
+                  - img [ref=e68] [cursor=pointer]
+                  - generic [ref=e69] [cursor=pointer]: "01"
+                - generic [ref=e70]:
+                  - generic [ref=e74]: 2-0其他
+                  - generic [ref=e77]: 2-1健康
+                  - generic [ref=e80]: 2-2三餐
+                  - generic [ref=e83]: 2-3生活
+                  - generic [ref=e86]: 2-4思考
+                  - generic [ref=e89]: 2-5电脑
+                  - generic [ref=e91]:
+                    - generic [ref=e92]: 白板
+                    - generic [ref=e93]: canvas
+                  - generic [ref=e96]: 打卡
+                  - generic [ref=e99]: 计划
+                  - generic [ref=e102]: 记录
+                  - generic [ref=e105]: 思考
+                  - generic [ref=e108]: 总结
+              - generic [ref=e110] [cursor=pointer]:
+                - img [ref=e112] [cursor=pointer]
+                - generic [ref=e113] [cursor=pointer]: "02"
+              - generic [ref=e115] [cursor=pointer]:
+                - img [ref=e117] [cursor=pointer]
+                - generic [ref=e118] [cursor=pointer]: 新建文件夹
+              - generic [ref=e120] [cursor=pointer]:
+                - img [ref=e122] [cursor=pointer]
+                - generic [ref=e123] [cursor=pointer]: DJ
+              - generic [ref=e126]: 0日历
+              - generic [ref=e128]:
+                - generic [ref=e129]: 读取白板
+                - generic [ref=e130]: canvas
+              - generic [ref=e133]: 软件工程知识树
+              - generic [ref=e136]: 设计原则
+              - generic [ref=e139]: 输入设置开发文档
+              - generic [ref=e141]:
+                - generic [ref=e142]: 未命名
+                - generic [ref=e143]: canvas
+              - generic [ref=e146]: 未命名
+              - generic [ref=e149]: 未命名 1
+              - generic [ref=e151]:
+                - generic [ref=e152]: 未命名 2
+                - generic [ref=e153]: canvas
+              - generic [ref=e156]: 未命名 2
+              - generic [ref=e159]: 未命名 6
+              - generic [ref=e162]: E2E-TEST-PAGE.md
+              - generic [ref=e164]:
+                - generic [ref=e165]: think-plugin-timer-state
+                - generic [ref=e166]: json
+      - generic [ref=e168]:
+        - generic [ref=e169]:
+          - generic [ref=e170]:
+            - generic [ref=e172]:
+              - generic [ref=e173]:
+                - img
+              - generic: 白板
+              - generic "取消锁定" [ref=e175]:
+                - img
+            - generic [ref=e178]: 未命名
+            - generic [ref=e181]: 2-4思考
+            - generic [ref=e184]: 2-1健康
+            - generic [ref=e187]: 2-4思考
+            - generic [ref=e190]: 未命名 6
+            - generic [ref=e193]: 2-5电脑
+            - generic [ref=e196]: 2-1健康
+            - generic [ref=e199]: 2-3生活
+            - generic [ref=e201]:
+              - generic [ref=e202]:
+                - img
+              - generic [ref=e203]: 白板
+            - generic [ref=e205]:
+              - generic [ref=e206]: E2E-TEST-PAGE.md
+              - generic "关闭" [ref=e207]:
+                - img
+          - generic "新标签页" [ref=e209]:
+            - img
+          - img [ref=e212]
+          - generic [ref=e215]:
+            - img
+        - generic [ref=e219]:
+          - generic [ref=e221]:
+            - button "返回" [disabled] [ref=e222]:
+              - img
+            - button "前进" [disabled] [ref=e223]:
+              - img
+          - generic [ref=e225]: E2E-TEST-PAGE.md
+          - generic [ref=e226]:
+            - button "该标签页处于阅读视图中 点击此处切换至编辑视图 Ctrl+单击以在新标签页中打开" [ref=e227]:
+              - img
+            - button "更多选项" [ref=e228]:
+              - img
+    - generic [ref=e234]:
+      - generic [ref=e236]:
+        - img
+      - generic [ref=e237]:
+        - generic [ref=e238]: 0 个词
+        - generic [ref=e239]: 0 个字符
+```
