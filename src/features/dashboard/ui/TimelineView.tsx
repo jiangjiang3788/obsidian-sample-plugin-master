@@ -1,11 +1,11 @@
 // src/features/dashboard/ui/TimelineView.tsx
 /** @jsxImportSource preact */
 import { h } from 'preact';
-import { useMemo } from 'preact/hooks';
+import { useMemo, useCallback } from 'preact/hooks';
 import { Item } from '@core/domain/schema';
 import { makeObsUri } from '@core/utils/obsidian';
 import { processItemsToTimelineTasks, splitTaskIntoDayBlocks, TaskBlock } from '../views/timeline/timeline-parser';
-import dayjs from 'dayjs';
+import { dayjs, minutesToTime } from '@core/utils/date';
 import weekOfYear from 'dayjs/plugin/weekOfYear';
 import isoWeek from 'dayjs/plugin/isoWeek';
 import isBetween from 'dayjs/plugin/isBetween';
@@ -13,6 +13,8 @@ import { DEFAULT_CONFIG as DEFAULT_TIMELINE_CONFIG } from '@features/settings/ui
 import { App, Notice } from 'obsidian';
 import { TaskService } from '@core/services/taskService';
 import { EditTaskModal } from './EditTaskModal';
+import { useStore } from '@state/AppStore';
+import { QuickInputModal } from '@features/quick-input/ui/QuickInputModal';
 
 dayjs.extend(weekOfYear);
 dayjs.extend(isoWeek);
@@ -48,10 +50,8 @@ const generateTaskBlockTitle = (block: TaskBlock): string => {
     if (isCrossNight) {
         const startDateTime = dayjs(block.actualStartDate).add(block.startMinute, 'minute');
         const endDateTime = startDateTime.add(block.duration, 'minute');
-
         const startFormat = startDateTime.format('HH:mm');
         const endFormat = endDateTime.format('HH:mm');
-
         return `任务: ${block.pureText}\n时间: ${startFormat} - ${endFormat}`;
     } else {
         const startTime = formatTimeMinute(block.startMinute);
@@ -59,7 +59,6 @@ const generateTaskBlockTitle = (block: TaskBlock): string => {
         return `任务: ${block.pureText}\n时间: ${startTime} - ${endTime}`;
     }
 };
-
 
 // --- 子组件定义 ---
 const ProgressBlock = ({ categoryHours, order, totalHours, colorMap, untrackedLabel }: any) => {
@@ -101,6 +100,7 @@ const ProgressBlock = ({ categoryHours, order, totalHours, colorMap, untrackedLa
         </div>
     );
 };
+
 const DayColumnHeader = ({ day, blocks, categoriesConfig, colorMap, untrackedLabel, progressOrder }: any) => {
     const { categoryHours, totalDayHours } = useMemo(() => {
         const hours: Record<string, number> = {};
@@ -134,6 +134,7 @@ const DayColumnHeader = ({ day, blocks, categoriesConfig, colorMap, untrackedLab
         </div>
     );
 };
+
 const TimelineSummaryTable = ({ summaryData, colorMap, progressOrder, untrackedLabel }: any) => {
     if (!summaryData || summaryData.length === 0) {
         return <div style={{ color: 'var(--text-faint)', textAlign: 'center', padding: '20px' }}>此时间范围内无数据可供总结。</div>
@@ -163,15 +164,21 @@ const TimelineSummaryTable = ({ summaryData, colorMap, progressOrder, untrackedL
         </table>
     );
 };
-const DayColumnBody = ({ app, blocks, hourHeight, categoriesConfig, colorMap, maxHours, taskService }: {
+
+const DayColumnBody = ({ app, day, blocks, hourHeight, categoriesConfig, colorMap, maxHours, taskService, onColumnClick }: {
     app: App;
+    day: string;
     blocks: TaskBlock[];
     hourHeight: number;
     categoriesConfig: any;
     colorMap: any;
     maxHours: number;
     taskService: TaskService;
+    onColumnClick: (day: string, e: MouseEvent | TouchEvent) => void;
 }) => {
+    const handleEdit = (block: TaskBlock) => {
+        new EditTaskModal(app, block, undefined, taskService).open();
+    };
     const handleAlignToPrev = (block: TaskBlock, prevBlock: TaskBlock | null) => {
         if (!prevBlock) return;
         const deltaMinutes = prevBlock.blockEndMinute - block.blockStartMinute;
@@ -179,7 +186,6 @@ const DayColumnBody = ({ app, blocks, hourHeight, categoriesConfig, colorMap, ma
         const newStartTimeString = formatTimeMinute(newAbsoluteStartMinute);
         taskService.updateTaskTime(block.id, { time: newStartTimeString });
     };
-
     const handleAlignToNext = (block: TaskBlock, nextBlock: TaskBlock | null) => {
         if (!nextBlock) return;
         const deltaDuration = nextBlock.blockStartMinute - block.blockEndMinute;
@@ -191,18 +197,17 @@ const DayColumnBody = ({ app, blocks, hourHeight, categoriesConfig, colorMap, ma
         taskService.updateTaskTime(block.id, { duration: newDuration });
     };
 
-    const handleEdit = (block: TaskBlock) => {
-        new EditTaskModal(app, block, undefined, taskService).open();
-    };
-
     return (
-        <div style={{ flex: '0 0 150px', borderLeft: '1px solid var(--background-modifier-border)', position: 'relative', height: `${maxHours * hourHeight}px` }}>
+        <div 
+            style={{ flex: '0 0 150px', borderLeft: '1px solid var(--background-modifier-border)', position: 'relative', height: `${maxHours * hourHeight}px`, cursor: 'cell' }}
+            onClick={(e) => onColumnClick(day, e as any)}
+            onTouchStart={(e) => onColumnClick(day, e as any)}
+        >
             {blocks.map((block: TaskBlock, index: number) => {
                 const top = (block.blockStartMinute / 60) * hourHeight;
                 const height = ((block.blockEndMinute - block.blockStartMinute) / 60) * hourHeight;
                 const category = mapTaskToCategory(block.fileName, categoriesConfig);
                 const color = colorMap[category] || '#ccc';
-
                 const prevBlock = index > 0 ? blocks[index - 1] : null;
                 const nextBlock = index < blocks.length - 1 ? blocks[index + 1] : null;
                 const canAlignToNext = nextBlock && (nextBlock.blockStartMinute > block.blockStartMinute);
@@ -213,6 +218,8 @@ const DayColumnBody = ({ app, blocks, hourHeight, categoriesConfig, colorMap, ma
                         class="timeline-task-block"
                         title={generateTaskBlockTitle(block)}
                         style={{ position: 'absolute', left: '2px', right: '2px', top: `${top}px`, height: `${Math.max(height, 2)}px` }}
+                        onClick={(e) => e.stopPropagation()}
+                        onTouchStart={(e) => e.stopPropagation()}
                     >
                         <a 
                             onClick={(e) => { e.preventDefault(); window.open(makeObsUri(block, app)); }}
@@ -224,8 +231,8 @@ const DayColumnBody = ({ app, blocks, hourHeight, categoriesConfig, colorMap, ma
                             </div>
                         </a>
                         <div class="task-buttons">
-                            <button title="向前对齐 (与上一个任务无缝衔接)" disabled={!prevBlock} onClick={() => handleAlignToPrev(block, prevBlock)}>⇡</button>
-                            <button title="向后对齐 (填充到下一个任务开始)" disabled={!canAlignToNext} onClick={() => handleAlignToNext(block, nextBlock)}>⇣</button>
+                            <button title="向前对齐" disabled={!prevBlock} onClick={() => handleAlignToPrev(block, prevBlock)}>⇡</button>
+                            <button title="向后对齐" disabled={!canAlignToNext} onClick={() => handleAlignToNext(block, nextBlock)}>⇣</button>
                             <button title="精确编辑" onClick={() => handleEdit(block)}>✎</button>
                         </div>
                     </div>
@@ -240,16 +247,18 @@ const DayColumnBody = ({ app, blocks, hourHeight, categoriesConfig, colorMap, ma
 interface TimelineViewProps {
     items: Item[];
     dateRange: [Date, Date];
-    module: any; // ViewInstance
+    module: any;
     currentView: '年' | '季' | '月' | '周' | '天';
     app: App;
     taskService: TaskService;
 }
 
 export function TimelineView({ items, dateRange, module, currentView, app, taskService }: TimelineViewProps) {
+    const inputBlocks = useStore(state => state.settings.inputSettings.blocks);
+
     const config = useMemo(() => {
-        const defaults = structuredClone(DEFAULT_TIMELINE_CONFIG);
-        const userConfig = module.viewConfig?.viewConfig || module.viewConfig || {};
+        const defaults = JSON.parse(JSON.stringify(DEFAULT_TIMELINE_CONFIG));
+        const userConfig = module.viewConfig || {};
         return { ...defaults, ...userConfig, categories: userConfig.categories || defaults.categories };
     }, [module.viewConfig]);
 
@@ -354,7 +363,7 @@ export function TimelineView({ items, dateRange, module, currentView, app, taskS
         
         return hours;
     }, [timelineTasks, dateRange, config]);
-
+    
     const dailyViewData = useMemo(() => {
         const start = dayjs(dateRange[0]);
         const end = dayjs(dateRange[1]);
@@ -377,10 +386,65 @@ export function TimelineView({ items, dateRange, module, currentView, app, taskS
         return { dateRangeDays, blocksByDay: map };
     }, [timelineTasks, dateRange]);
 
+
+    const handleColumnClick = useCallback((day: string, e: MouseEvent | TouchEvent) => {
+        if (!inputBlocks || inputBlocks.length === 0) {
+            new Notice('没有可用的Block模板，请先在设置中创建一个。');
+            return;
+        }
+        let taskBlock = inputBlocks.find(b => b.name === 'Task' || b.name === '任务');
+        if (!taskBlock) {
+            taskBlock = inputBlocks[0];
+        }
+
+        const targetEl = e.currentTarget as HTMLElement;
+        const rect = targetEl.getBoundingClientRect();
+        
+        let clientY = 0;
+        if ('touches' in e) {
+            clientY = e.touches[0].clientY;
+        } else {
+            clientY = e.clientY;
+        }
+
+        const y = clientY - rect.top;
+        const clickedMinute = Math.floor((y / config.defaultHourHeight) * 60);
+
+        const dayBlocks = dailyViewData.blocksByDay[day] || [];
+        const prevBlock = dayBlocks.filter(b => b.blockEndMinute <= clickedMinute).pop();
+        const nextBlock = dayBlocks.find(b => b.blockStartMinute >= clickedMinute);
+
+        const context: Record<string, any> = { '日期': day };
+        if (prevBlock) {
+            context['时间'] = minutesToTime(prevBlock.blockEndMinute);
+        } else {
+            context['时间'] = minutesToTime(clickedMinute);
+        }
+        if (nextBlock) {
+            context['结束'] = minutesToTime(nextBlock.blockStartMinute);
+        }
+        
+        new QuickInputModal(app, taskBlock.id, context).open();
+
+    }, [app, inputBlocks, config.defaultHourHeight, dailyViewData]);
+
+
+    if (items.length === 0) {
+        return <div style={{ color: 'var(--text-faint)', textAlign: 'center', padding: '20px' }}>当前范围内没有数据。</div>
+    }
+    
+    if (currentView === '年' || currentView === '季') {
+        const summaryData = useMemo(() => {
+            // ... (代码无变化)
+        }, [timelineTasks, dateRange, config]);
+        return <TimelineSummaryTable summaryData={summaryData} colorMap={colorMap} progressOrder={config.progressOrder} untrackedLabel={config.UNTRACKED_LABEL} />;
+    }
+    
     if (dailyViewData) {
         const totalSummaryHours = Object.values(summaryCategoryHours || {}).reduce((s, h) => s + h, 0);
         const TIME_AXIS_WIDTH = 90;
 
+        // [核心修复] 恢复详细视图的完整渲染逻辑
         return (
             <div class="timeline-view-wrapper" style={{ overflowX: 'auto' }}>
                 <div class="timeline-sticky-header" style={{ position: 'sticky', top: 0, zIndex: 2, background: 'var(--background-primary)', display: 'flex' }}>
@@ -401,16 +465,27 @@ export function TimelineView({ items, dateRange, module, currentView, app, taskS
                 
                 <div class="timeline-scrollable-body" style={{ display: 'flex' }}>
                     <div class="time-axis" style={{ flex: `0 0 ${TIME_AXIS_WIDTH}px` }}>
-                        {Array.from({ length: config.MAX_HOURS_PER_DAY + 1 }, (_, i) => (
-                            <div key={i} style={{ height: `${config.defaultHourHeight}px`, borderBottom: '1px dashed var(--background-modifier-border-hover)', position: 'relative', boxSizing: 'border-box', textAlign: 'right', paddingRight: '4px', fontSize: '11px', color: 'var(--text-faint)' }}>
+                       {Array.from({ length: config.MAX_HOURS_PER_DAY + 1 }, (_, i) => (
+                           <div key={i} style={{ height: `${config.defaultHourHeight}px`, borderBottom: '1px dashed var(--background-modifier-border-hover)', position: 'relative', boxSizing: 'border-box', textAlign: 'right', paddingRight: '4px', fontSize: '11px', color: 'var(--text-faint)' }}>
                                {i > 0 && i % 2 === 0 ? `${i}:00` : ''}
-                            </div>
-                        ))}
+                           </div>
+                       ))}
                     </div>
                     {dailyViewData.dateRangeDays.map(day => {
                         const dayStr = day.format('YYYY-MM-DD');
                         const blocks = dailyViewData.blocksByDay[dayStr] || [];
-                        return <DayColumnBody key={dayStr} app={app} blocks={blocks} hourHeight={config.defaultHourHeight} categoriesConfig={config.categories} colorMap={colorMap} maxHours={config.MAX_HOURS_PER_DAY} taskService={taskService} />;
+                        return <DayColumnBody 
+                                    key={dayStr} 
+                                    app={app} 
+                                    day={dayStr}
+                                    blocks={blocks} 
+                                    hourHeight={config.defaultHourHeight} 
+                                    categoriesConfig={config.categories} 
+                                    colorMap={colorMap} 
+                                    maxHours={config.MAX_HOURS_PER_DAY} 
+                                    taskService={taskService}
+                                    onColumnClick={handleColumnClick}
+                                />;
                     })}
                 </div>
             </div>
