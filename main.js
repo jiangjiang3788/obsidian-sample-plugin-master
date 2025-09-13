@@ -30516,314 +30516,6 @@ function EditForm({ task, close, onSave, taskService }) {
     ] })
   ] });
 }
-dayjs.extend(weekOfYear);
-dayjs.extend(isoWeek);
-dayjs.extend(isBetween);
-function mapTaskToCategory(taskFileName, categoriesConfig) {
-  if (!taskFileName || !categoriesConfig) return taskFileName;
-  for (const categoryName in categoriesConfig) {
-    const categoryInfo = categoriesConfig[categoryName];
-    if (categoryInfo.files && categoryInfo.files.some((fileKey) => taskFileName.includes(fileKey))) {
-      return categoryName;
-    }
-  }
-  return taskFileName;
-}
-const hexToRgba = (hex, alpha2 = 0.35) => {
-  const h2 = hex.replace("#", "");
-  const bigint = parseInt(h2, 16);
-  return `rgba(${bigint >> 16 & 255},${bigint >> 8 & 255},${bigint & 255},${alpha2})`;
-};
-const formatTimeMinute = (minute) => {
-  const h2 = Math.floor(minute / 60);
-  const m2 = minute % 60;
-  return `${String(h2).padStart(2, "0")}:${String(m2).padStart(2, "0")}`;
-};
-const generateTaskBlockTitle = (block) => {
-  const isCrossNight = block.startMinute % 1440 + block.duration > 1440;
-  if (isCrossNight) {
-    const startDateTime = dayjs(block.actualStartDate).add(block.startMinute, "minute");
-    const endDateTime = startDateTime.add(block.duration, "minute");
-    const startFormat = startDateTime.format("HH:mm");
-    const endFormat = endDateTime.format("HH:mm");
-    return `任务: ${block.pureText}
-时间: ${startFormat} - ${endFormat}`;
-  } else {
-    const startTime = formatTimeMinute(block.startMinute);
-    const endTime = formatTimeMinute(block.endMinute);
-    return `任务: ${block.pureText}
-时间: ${startTime} - ${endTime}`;
-  }
-};
-const ProgressBlock = ({ categoryHours, order: order2, totalHours, colorMap, untrackedLabel }) => {
-  const sortedCategories = T$1(() => {
-    const orderToUse = Array.isArray(order2) ? order2 : [];
-    const presentCategories = /* @__PURE__ */ new Set();
-    orderToUse.forEach((cat) => {
-      if ((categoryHours[cat] || 0) > 0.01) {
-        presentCategories.add(cat);
-      }
-    });
-    Object.keys(categoryHours).forEach((cat) => {
-      if ((categoryHours[cat] || 0) > 0.01) {
-        presentCategories.add(cat);
-      }
-    });
-    return Array.from(presentCategories);
-  }, [categoryHours, order2, untrackedLabel]);
-  if (sortedCategories.length === 0) return null;
-  return /* @__PURE__ */ u("div", { style: { display: "flex", flexDirection: "column", gap: "2px", padding: "4px" }, children: sortedCategories.map((category) => {
-    const hours = categoryHours[category];
-    const percent = totalHours > 0 ? hours / totalHours * 100 : 0;
-    if (percent < 0.1 && hours < 0.01) return null;
-    const color2 = colorMap[category] || "#cccccc";
-    const displayPercent = Math.max(percent, 0.5);
-    return /* @__PURE__ */ u("div", { title: `${category}: ${hours.toFixed(1)}h (${Math.round(percent)}%)`, style: { width: "100%", height: "16px", background: "#e5e7eb", borderRadius: "8px", overflow: "hidden", position: "relative" }, children: [
-      /* @__PURE__ */ u("div", { style: { background: color2, width: `${displayPercent}%`, height: "100%" } }),
-      /* @__PURE__ */ u("span", { style: { position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "11px", fontWeight: 500, color: displayPercent > 50 ? "#fff" : "#222", whiteSpace: "nowrap" }, children: `${category} ${hours.toFixed(1)}h` })
-    ] }, category);
-  }) });
-};
-const DayColumnHeader = ({ day, blocks, categoriesConfig, colorMap, untrackedLabel, progressOrder }) => {
-  const { categoryHours, totalDayHours } = T$1(() => {
-    const hours = {};
-    let trackedHours = 0;
-    blocks.forEach((block) => {
-      const category = mapTaskToCategory(block.fileName, categoriesConfig);
-      const duration2 = (block.blockEndMinute - block.blockStartMinute) / 60;
-      hours[category] = (hours[category] || 0) + duration2;
-      trackedHours += duration2;
-    });
-    const untrackedHours = Math.max(0, 24 - trackedHours);
-    if (untrackedHours > 0.01) {
-      hours[untrackedLabel] = untrackedHours;
-    }
-    return {
-      categoryHours: hours,
-      totalDayHours: Math.max(24, trackedHours)
-    };
-  }, [blocks, categoriesConfig, untrackedLabel]);
-  return /* @__PURE__ */ u("div", { class: "day-column-header", style: { flex: "0 0 150px", borderLeft: "1px solid var(--background-modifier-border)" }, children: [
-    /* @__PURE__ */ u("div", { style: { fontWeight: "bold", textAlign: "center", height: "24px", lineHeight: "24px", borderBottom: "1px solid var(--background-modifier-border-hover)" }, children: dayjs(day).format("MM-DD ddd") }),
-    /* @__PURE__ */ u("div", { class: "daily-progress-bar", style: { minHeight: "60px" }, children: /* @__PURE__ */ u(ProgressBlock, { categoryHours, order: progressOrder, totalHours: totalDayHours, colorMap, untrackedLabel }) })
-  ] });
-};
-const TimelineSummaryTable = ({ summaryData, colorMap, progressOrder, untrackedLabel }) => {
-  if (!summaryData || summaryData.length === 0) {
-    return /* @__PURE__ */ u("div", { style: { color: "var(--text-faint)", textAlign: "center", padding: "20px" }, children: "此时间范围内无数据可供总结。" });
-  }
-  return /* @__PURE__ */ u("table", { class: "think-table", children: [
-    /* @__PURE__ */ u("thead", { children: /* @__PURE__ */ u("tr", { children: [
-      /* @__PURE__ */ u("th", { children: "月份" }),
-      /* @__PURE__ */ u("th", { children: "月度总结" }),
-      /* @__PURE__ */ u("th", { children: "W1" }),
-      /* @__PURE__ */ u("th", { children: "W2" }),
-      /* @__PURE__ */ u("th", { children: "W3" }),
-      /* @__PURE__ */ u("th", { children: "W4" }),
-      /* @__PURE__ */ u("th", { children: "W5" })
-    ] }) }),
-    /* @__PURE__ */ u("tbody", { children: summaryData.map((monthData) => /* @__PURE__ */ u("tr", { children: [
-      /* @__PURE__ */ u("td", { children: /* @__PURE__ */ u("strong", { children: monthData.month }) }),
-      /* @__PURE__ */ u("td", { children: /* @__PURE__ */ u(ProgressBlock, { categoryHours: monthData.monthlySummary, order: progressOrder, totalHours: monthData.totalMonthHours, colorMap, untrackedLabel }) }),
-      monthData.weeklySummaries.map((weekSummary, index) => /* @__PURE__ */ u("td", { children: weekSummary ? /* @__PURE__ */ u(ProgressBlock, { categoryHours: weekSummary, order: progressOrder, totalHours: weekSummary.totalWeekHours, colorMap, untrackedLabel }) : null }, index))
-    ] }, monthData.month)) })
-  ] });
-};
-const DayColumnBody = ({ app, blocks, hourHeight, categoriesConfig, colorMap, maxHours, taskService }) => {
-  const handleAlignToPrev = (block, prevBlock) => {
-    if (!prevBlock) return;
-    const deltaMinutes = prevBlock.blockEndMinute - block.blockStartMinute;
-    const newAbsoluteStartMinute = block.startMinute + deltaMinutes;
-    const newStartTimeString = formatTimeMinute(newAbsoluteStartMinute);
-    taskService.updateTaskTime(block.id, { time: newStartTimeString });
-  };
-  const handleAlignToNext = (block, nextBlock) => {
-    if (!nextBlock) return;
-    const deltaDuration = nextBlock.blockStartMinute - block.blockEndMinute;
-    const newDuration = block.duration + deltaDuration;
-    if (newDuration <= 0) {
-      new obsidian.Notice("无法对齐：任务时长将变为负数或零");
-      return;
-    }
-    taskService.updateTaskTime(block.id, { duration: newDuration });
-  };
-  const handleEdit = (block) => {
-    new EditTaskModal(app, block, void 0, taskService).open();
-  };
-  return /* @__PURE__ */ u("div", { style: { flex: "0 0 150px", borderLeft: "1px solid var(--background-modifier-border)", position: "relative", height: `${maxHours * hourHeight}px` }, children: blocks.map((block, index) => {
-    const top2 = block.blockStartMinute / 60 * hourHeight;
-    const height2 = (block.blockEndMinute - block.blockStartMinute) / 60 * hourHeight;
-    const category = mapTaskToCategory(block.fileName, categoriesConfig);
-    const color2 = colorMap[category] || "#ccc";
-    const prevBlock = index > 0 ? blocks[index - 1] : null;
-    const nextBlock = index < blocks.length - 1 ? blocks[index + 1] : null;
-    const canAlignToNext = nextBlock && nextBlock.blockStartMinute > block.blockStartMinute;
-    return /* @__PURE__ */ u(
-      "div",
-      {
-        class: "timeline-task-block",
-        title: generateTaskBlockTitle(block),
-        style: { position: "absolute", left: "2px", right: "2px", top: `${top2}px`, height: `${Math.max(height2, 2)}px` },
-        children: [
-          /* @__PURE__ */ u(
-            "a",
-            {
-              onClick: (e2) => {
-                e2.preventDefault();
-                window.open(makeObsUri(block, app));
-              },
-              style: { display: "flex", width: "100%", height: "100%", overflow: "hidden", borderRadius: "2px" },
-              children: [
-                /* @__PURE__ */ u("div", { style: { width: "4px", background: color2 } }),
-                /* @__PURE__ */ u("div", { style: { flex: 1, background: hexToRgba(color2), padding: "2px 4px", fontSize: "12px", whiteSpace: "nowrap", textOverflow: "ellipsis", overflow: "hidden", color: "var(--text-normal)" }, children: block.pureText })
-              ]
-            }
-          ),
-          /* @__PURE__ */ u("div", { class: "task-buttons", children: [
-            /* @__PURE__ */ u("button", { title: "向前对齐 (与上一个任务无缝衔接)", disabled: !prevBlock, onClick: () => handleAlignToPrev(block, prevBlock), children: "⇡" }),
-            /* @__PURE__ */ u("button", { title: "向后对齐 (填充到下一个任务开始)", disabled: !canAlignToNext, onClick: () => handleAlignToNext(block, nextBlock), children: "⇣" }),
-            /* @__PURE__ */ u("button", { title: "精确编辑", onClick: () => handleEdit(block), children: "✎" })
-          ] })
-        ]
-      },
-      block.id + block.day
-    );
-  }) });
-};
-function TimelineView({ items, dateRange, module: module2, currentView, app, taskService }) {
-  const config2 = T$1(() => {
-    const defaults = structuredClone(DEFAULT_CONFIG$2);
-    const userConfig = module2.viewConfig?.viewConfig || module2.viewConfig || {};
-    return { ...defaults, ...userConfig, categories: userConfig.categories || defaults.categories };
-  }, [module2.viewConfig]);
-  const timelineTasks = T$1(() => processItemsToTimelineTasks(items), [items]);
-  const colorMap = T$1(() => {
-    const finalColorMap = {};
-    const categoriesConfig = config2.categories || {};
-    for (const categoryName in categoriesConfig) {
-      finalColorMap[categoryName] = categoriesConfig[categoryName].color;
-    }
-    finalColorMap[config2.UNTRACKED_LABEL] = "#9ca3af";
-    return finalColorMap;
-  }, [config2.categories, config2.UNTRACKED_LABEL]);
-  if (items.length === 0) {
-    return /* @__PURE__ */ u("div", { style: { color: "var(--text-faint)", textAlign: "center", padding: "20px" }, children: "当前范围内没有数据。" });
-  }
-  if (currentView === "年" || currentView === "季") {
-    const summaryData = T$1(() => {
-      const data = [];
-      let month = dayjs(dateRange[0]).startOf("month");
-      const end2 = dayjs(dateRange[1]).endOf("month");
-      while (month.isBefore(end2) || month.isSame(end2, "month")) {
-        const monthStr = month.format("YYYY-MM");
-        const tasksInMonth = timelineTasks.filter((t2) => dayjs(t2.doneDate).format("YYYY-MM") === monthStr);
-        const monthlySummary = {};
-        let totalTrackedHoursInMonth = 0;
-        tasksInMonth.forEach((task) => {
-          const category = mapTaskToCategory(task.fileName, config2.categories);
-          const durationHours = task.duration / 60;
-          monthlySummary[category] = (monthlySummary[category] || 0) + durationHours;
-          totalTrackedHoursInMonth += durationHours;
-        });
-        const daysInMonth = month.daysInMonth();
-        const untrackedHoursInMonth = Math.max(0, daysInMonth * 24 - totalTrackedHoursInMonth);
-        if (untrackedHoursInMonth > 0.01) {
-          monthlySummary[config2.UNTRACKED_LABEL] = untrackedHoursInMonth;
-        }
-        if (Object.keys(monthlySummary).length > 0) {
-          const weeklySummaries = Array.from({ length: 5 }).map((_2, i2) => {
-            const weekStartDay = i2 * 7 + 1;
-            if (weekStartDay > daysInMonth) return null;
-            const weeklySummary = {};
-            let totalTrackedHoursInWeek = 0;
-            tasksInMonth.forEach((task) => {
-              const taskDay = dayjs(task.doneDate).date();
-              if (taskDay >= weekStartDay && taskDay < weekStartDay + 7) {
-                const category = mapTaskToCategory(task.fileName, config2.categories);
-                const durationHours = task.duration / 60;
-                weeklySummary[category] = (weeklySummary[category] || 0) + durationHours;
-                totalTrackedHoursInWeek += durationHours;
-              }
-            });
-            if (totalTrackedHoursInWeek < 0.01) return null;
-            weeklySummary.totalWeekHours = totalTrackedHoursInWeek;
-            return weeklySummary;
-          });
-          data.push({
-            month: monthStr,
-            monthlySummary,
-            totalMonthHours: Math.max(daysInMonth * 24, totalTrackedHoursInMonth),
-            weeklySummaries
-          });
-        }
-        month = month.add(1, "month");
-      }
-      return data;
-    }, [timelineTasks, dateRange, config2]);
-    return /* @__PURE__ */ u(TimelineSummaryTable, { summaryData, colorMap, progressOrder: config2.progressOrder, untrackedLabel: config2.UNTRACKED_LABEL });
-  }
-  const summaryCategoryHours = T$1(() => {
-    const hours = {};
-    let totalTrackedHours = 0;
-    timelineTasks.forEach((task) => {
-      const category = mapTaskToCategory(task.fileName, config2.categories);
-      const durationHours = task.duration / 60;
-      hours[category] = (hours[category] || 0) + durationHours;
-      totalTrackedHours += durationHours;
-    });
-    const dayCount = dayjs(dateRange[1]).diff(dayjs(dateRange[0]), "day") + 1;
-    const untrackedHours = Math.max(0, dayCount * 24 - totalTrackedHours);
-    if (untrackedHours > 0.01) {
-      hours[config2.UNTRACKED_LABEL] = untrackedHours;
-    }
-    return hours;
-  }, [timelineTasks, dateRange, config2]);
-  const dailyViewData = T$1(() => {
-    const start2 = dayjs(dateRange[0]);
-    const end2 = dayjs(dateRange[1]);
-    const diff = end2.diff(start2, "day");
-    const dateRangeDays = Array.from({ length: diff + 1 }, (_2, i2) => start2.add(i2, "day"));
-    const map = {};
-    const range = [start2, end2];
-    dateRangeDays.forEach((day) => map[day.format("YYYY-MM-DD")] = []);
-    for (const task of timelineTasks) {
-      const blocks = splitTaskIntoDayBlocks(task, range);
-      for (const block of blocks) {
-        if (map[block.day]) map[block.day].push(block);
-      }
-    }
-    Object.values(map).forEach((dayBlocks) => {
-      dayBlocks.sort((a2, b2) => a2.blockStartMinute - b2.blockStartMinute);
-    });
-    return { dateRangeDays, blocksByDay: map };
-  }, [timelineTasks, dateRange]);
-  if (dailyViewData) {
-    const totalSummaryHours = Object.values(summaryCategoryHours || {}).reduce((s2, h2) => s2 + h2, 0);
-    const TIME_AXIS_WIDTH = 90;
-    return /* @__PURE__ */ u("div", { class: "timeline-view-wrapper", style: { overflowX: "auto" }, children: [
-      /* @__PURE__ */ u("div", { class: "timeline-sticky-header", style: { position: "sticky", top: 0, zIndex: 2, background: "var(--background-primary)", display: "flex" }, children: [
-        /* @__PURE__ */ u("div", { class: "summary-progress-container", style: { flex: `0 0 ${TIME_AXIS_WIDTH}px`, borderBottom: "1px solid var(--background-modifier-border)" }, children: [
-          /* @__PURE__ */ u("div", { style: { height: "24px", lineHeight: "24px", textAlign: "center", fontWeight: "bold", borderBottom: "1px solid var(--background-modifier-border-hover)" }, children: "总结" }),
-          /* @__PURE__ */ u("div", { style: { minHeight: "60px" }, children: summaryCategoryHours && totalSummaryHours > 0 && /* @__PURE__ */ u(ProgressBlock, { categoryHours: summaryCategoryHours, order: config2.progressOrder, totalHours: totalSummaryHours, colorMap, untrackedLabel: config2.UNTRACKED_LABEL }) })
-        ] }),
-        dailyViewData.dateRangeDays.map((day) => {
-          const dayStr = day.format("YYYY-MM-DD");
-          const blocks = dailyViewData.blocksByDay[dayStr] || [];
-          return /* @__PURE__ */ u(DayColumnHeader, { day: dayStr, blocks, categoriesConfig: config2.categories, colorMap, untrackedLabel: config2.UNTRACKED_LABEL, progressOrder: config2.progressOrder }, dayStr);
-        })
-      ] }),
-      /* @__PURE__ */ u("div", { class: "timeline-scrollable-body", style: { display: "flex" }, children: [
-        /* @__PURE__ */ u("div", { class: "time-axis", style: { flex: `0 0 ${TIME_AXIS_WIDTH}px` }, children: Array.from({ length: config2.MAX_HOURS_PER_DAY + 1 }, (_2, i2) => /* @__PURE__ */ u("div", { style: { height: `${config2.defaultHourHeight}px`, borderBottom: "1px dashed var(--background-modifier-border-hover)", position: "relative", boxSizing: "border-box", textAlign: "right", paddingRight: "4px", fontSize: "11px", color: "var(--text-faint)" }, children: i2 > 0 && i2 % 2 === 0 ? `${i2}:00` : "" }, i2)) }),
-        dailyViewData.dateRangeDays.map((day) => {
-          const dayStr = day.format("YYYY-MM-DD");
-          const blocks = dailyViewData.blocksByDay[dayStr] || [];
-          return /* @__PURE__ */ u(DayColumnBody, { app, blocks, hourHeight: config2.defaultHourHeight, categoriesConfig: config2.categories, colorMap, maxHours: config2.MAX_HOURS_PER_DAY, taskService }, dayStr);
-        })
-      ] })
-    ] });
-  }
-  return null;
-}
 const CloseIcon = createSvgIcon(/* @__PURE__ */ u("path", {
   d: "M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"
 }));
@@ -31149,6 +30841,380 @@ function QuickInputForm({ app, blockId, context, themeId, onSave, closeModal }) 
       /* @__PURE__ */ u(Button, { onClick: closeModal, children: "取消" })
     ] })
   ] });
+}
+dayjs.extend(weekOfYear);
+dayjs.extend(isoWeek);
+dayjs.extend(isBetween);
+function mapTaskToCategory(taskFileName, categoriesConfig) {
+  if (!taskFileName || !categoriesConfig) return taskFileName;
+  for (const categoryName in categoriesConfig) {
+    const categoryInfo = categoriesConfig[categoryName];
+    if (categoryInfo.files && categoryInfo.files.some((fileKey) => taskFileName.includes(fileKey))) {
+      return categoryName;
+    }
+  }
+  return taskFileName;
+}
+const hexToRgba = (hex, alpha2 = 0.35) => {
+  const h2 = hex.replace("#", "");
+  const bigint = parseInt(h2, 16);
+  return `rgba(${bigint >> 16 & 255},${bigint >> 8 & 255},${bigint & 255},${alpha2})`;
+};
+const formatTimeMinute = (minute) => {
+  const h2 = Math.floor(minute / 60);
+  const m2 = minute % 60;
+  return `${String(h2).padStart(2, "0")}:${String(m2).padStart(2, "0")}`;
+};
+const generateTaskBlockTitle = (block) => {
+  const isCrossNight = block.startMinute % 1440 + block.duration > 1440;
+  if (isCrossNight) {
+    const startDateTime = dayjs(block.actualStartDate).add(block.startMinute, "minute");
+    const endDateTime = startDateTime.add(block.duration, "minute");
+    const startFormat = startDateTime.format("HH:mm");
+    const endFormat = endDateTime.format("HH:mm");
+    return `任务: ${block.pureText}
+时间: ${startFormat} - ${endFormat}`;
+  } else {
+    const startTime = formatTimeMinute(block.startMinute);
+    const endTime = formatTimeMinute(block.endMinute);
+    return `任务: ${block.pureText}
+时间: ${startTime} - ${endTime}`;
+  }
+};
+const ProgressBlock = ({ categoryHours, order: order2, totalHours, colorMap, untrackedLabel }) => {
+  const sortedCategories = T$1(() => {
+    const orderToUse = Array.isArray(order2) ? order2 : [];
+    const presentCategories = /* @__PURE__ */ new Set();
+    orderToUse.forEach((cat) => {
+      if ((categoryHours[cat] || 0) > 0.01) {
+        presentCategories.add(cat);
+      }
+    });
+    Object.keys(categoryHours).forEach((cat) => {
+      if ((categoryHours[cat] || 0) > 0.01) {
+        presentCategories.add(cat);
+      }
+    });
+    return Array.from(presentCategories);
+  }, [categoryHours, order2, untrackedLabel]);
+  if (sortedCategories.length === 0) return null;
+  return /* @__PURE__ */ u("div", { style: { display: "flex", flexDirection: "column", gap: "2px", padding: "4px" }, children: sortedCategories.map((category) => {
+    const hours = categoryHours[category];
+    const percent = totalHours > 0 ? hours / totalHours * 100 : 0;
+    if (percent < 0.1 && hours < 0.01) return null;
+    const color2 = colorMap[category] || "#cccccc";
+    const displayPercent = Math.max(percent, 0.5);
+    return /* @__PURE__ */ u("div", { title: `${category}: ${hours.toFixed(1)}h (${Math.round(percent)}%)`, style: { width: "100%", height: "16px", background: "#e5e7eb", borderRadius: "8px", overflow: "hidden", position: "relative" }, children: [
+      /* @__PURE__ */ u("div", { style: { background: color2, width: `${displayPercent}%`, height: "100%" } }),
+      /* @__PURE__ */ u("span", { style: { position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "11px", fontWeight: 500, color: displayPercent > 50 ? "#fff" : "#222", whiteSpace: "nowrap" }, children: `${category} ${hours.toFixed(1)}h` })
+    ] }, category);
+  }) });
+};
+const DayColumnHeader = ({ day, blocks, categoriesConfig, colorMap, untrackedLabel, progressOrder }) => {
+  const { categoryHours, totalDayHours } = T$1(() => {
+    const hours = {};
+    let trackedHours = 0;
+    blocks.forEach((block) => {
+      const category = mapTaskToCategory(block.fileName, categoriesConfig);
+      const duration2 = (block.blockEndMinute - block.blockStartMinute) / 60;
+      hours[category] = (hours[category] || 0) + duration2;
+      trackedHours += duration2;
+    });
+    const untrackedHours = Math.max(0, 24 - trackedHours);
+    if (untrackedHours > 0.01) {
+      hours[untrackedLabel] = untrackedHours;
+    }
+    return {
+      categoryHours: hours,
+      totalDayHours: Math.max(24, trackedHours)
+    };
+  }, [blocks, categoriesConfig, untrackedLabel]);
+  return /* @__PURE__ */ u("div", { class: "day-column-header", style: { flex: "0 0 150px", borderLeft: "1px solid var(--background-modifier-border)" }, children: [
+    /* @__PURE__ */ u("div", { style: { fontWeight: "bold", textAlign: "center", height: "24px", lineHeight: "24px", borderBottom: "1px solid var(--background-modifier-border-hover)" }, children: dayjs(day).format("MM-DD ddd") }),
+    /* @__PURE__ */ u("div", { class: "daily-progress-bar", style: { minHeight: "60px" }, children: /* @__PURE__ */ u(ProgressBlock, { categoryHours, order: progressOrder, totalHours: totalDayHours, colorMap, untrackedLabel }) })
+  ] });
+};
+const TimelineSummaryTable = ({ summaryData, colorMap, progressOrder, untrackedLabel }) => {
+  if (!summaryData || summaryData.length === 0) {
+    return /* @__PURE__ */ u("div", { style: { color: "var(--text-faint)", textAlign: "center", padding: "20px" }, children: "此时间范围内无数据可供总结。" });
+  }
+  return /* @__PURE__ */ u("table", { class: "think-table", children: [
+    /* @__PURE__ */ u("thead", { children: /* @__PURE__ */ u("tr", { children: [
+      /* @__PURE__ */ u("th", { children: "月份" }),
+      /* @__PURE__ */ u("th", { children: "月度总结" }),
+      /* @__PURE__ */ u("th", { children: "W1" }),
+      /* @__PURE__ */ u("th", { children: "W2" }),
+      /* @__PURE__ */ u("th", { children: "W3" }),
+      /* @__PURE__ */ u("th", { children: "W4" }),
+      /* @__PURE__ */ u("th", { children: "W5" })
+    ] }) }),
+    /* @__PURE__ */ u("tbody", { children: summaryData.map((monthData) => /* @__PURE__ */ u("tr", { children: [
+      /* @__PURE__ */ u("td", { children: /* @__PURE__ */ u("strong", { children: monthData.month }) }),
+      /* @__PURE__ */ u("td", { children: /* @__PURE__ */ u(ProgressBlock, { categoryHours: monthData.monthlySummary, order: progressOrder, totalHours: monthData.totalMonthHours, colorMap, untrackedLabel }) }),
+      monthData.weeklySummaries.map((weekSummary, index) => /* @__PURE__ */ u("td", { children: weekSummary ? /* @__PURE__ */ u(ProgressBlock, { categoryHours: weekSummary, order: progressOrder, totalHours: weekSummary.totalWeekHours, colorMap, untrackedLabel }) : null }, index))
+    ] }, monthData.month)) })
+  ] });
+};
+const DayColumnBody = ({ app, day, blocks, hourHeight, categoriesConfig, colorMap, maxHours, taskService, onColumnClick }) => {
+  const handleEdit = (block) => {
+    new EditTaskModal(app, block, void 0, taskService).open();
+  };
+  const handleAlignToPrev = (block, prevBlock) => {
+    if (!prevBlock) return;
+    const deltaMinutes = prevBlock.blockEndMinute - block.blockStartMinute;
+    const newAbsoluteStartMinute = block.startMinute + deltaMinutes;
+    const newStartTimeString = formatTimeMinute(newAbsoluteStartMinute);
+    taskService.updateTaskTime(block.id, { time: newStartTimeString });
+  };
+  const handleAlignToNext = (block, nextBlock) => {
+    if (!nextBlock) return;
+    const deltaDuration = nextBlock.blockStartMinute - block.blockEndMinute;
+    const newDuration = block.duration + deltaDuration;
+    if (newDuration <= 0) {
+      new obsidian.Notice("无法对齐：任务时长将变为负数或零");
+      return;
+    }
+    taskService.updateTaskTime(block.id, { duration: newDuration });
+  };
+  return /* @__PURE__ */ u(
+    "div",
+    {
+      style: { flex: "0 0 150px", borderLeft: "1px solid var(--background-modifier-border)", position: "relative", height: `${maxHours * hourHeight}px`, cursor: "cell" },
+      onClick: (e2) => onColumnClick(day, e2),
+      onTouchStart: (e2) => onColumnClick(day, e2),
+      children: blocks.map((block, index) => {
+        const top2 = block.blockStartMinute / 60 * hourHeight;
+        const height2 = (block.blockEndMinute - block.blockStartMinute) / 60 * hourHeight;
+        const category = mapTaskToCategory(block.fileName, categoriesConfig);
+        const color2 = colorMap[category] || "#ccc";
+        const prevBlock = index > 0 ? blocks[index - 1] : null;
+        const nextBlock = index < blocks.length - 1 ? blocks[index + 1] : null;
+        const canAlignToNext = nextBlock && nextBlock.blockStartMinute > block.blockStartMinute;
+        return /* @__PURE__ */ u(
+          "div",
+          {
+            class: "timeline-task-block",
+            title: generateTaskBlockTitle(block),
+            style: { position: "absolute", left: "2px", right: "2px", top: `${top2}px`, height: `${Math.max(height2, 2)}px` },
+            onClick: (e2) => e2.stopPropagation(),
+            onTouchStart: (e2) => e2.stopPropagation(),
+            children: [
+              /* @__PURE__ */ u(
+                "a",
+                {
+                  onClick: (e2) => {
+                    e2.preventDefault();
+                    window.open(makeObsUri(block, app));
+                  },
+                  style: { display: "flex", width: "100%", height: "100%", overflow: "hidden", borderRadius: "2px" },
+                  children: [
+                    /* @__PURE__ */ u("div", { style: { width: "4px", background: color2 } }),
+                    /* @__PURE__ */ u("div", { style: { flex: 1, background: hexToRgba(color2), padding: "2px 4px", fontSize: "12px", whiteSpace: "nowrap", textOverflow: "ellipsis", overflow: "hidden", color: "var(--text-normal)" }, children: block.pureText })
+                  ]
+                }
+              ),
+              /* @__PURE__ */ u("div", { class: "task-buttons", children: [
+                /* @__PURE__ */ u("button", { title: "向前对齐", disabled: !prevBlock, onClick: () => handleAlignToPrev(block, prevBlock), children: "⇡" }),
+                /* @__PURE__ */ u("button", { title: "向后对齐", disabled: !canAlignToNext, onClick: () => handleAlignToNext(block, nextBlock), children: "⇣" }),
+                /* @__PURE__ */ u("button", { title: "精确编辑", onClick: () => handleEdit(block), children: "✎" })
+              ] })
+            ]
+          },
+          block.id + block.day
+        );
+      })
+    }
+  );
+};
+function TimelineView({ items, dateRange, module: module2, currentView, app, taskService }) {
+  const inputBlocks = useStore((state) => state.settings.inputSettings.blocks);
+  const config2 = T$1(() => {
+    const defaults = JSON.parse(JSON.stringify(DEFAULT_CONFIG$2));
+    const userConfig = module2.viewConfig || {};
+    return { ...defaults, ...userConfig, categories: userConfig.categories || defaults.categories };
+  }, [module2.viewConfig]);
+  const timelineTasks = T$1(() => processItemsToTimelineTasks(items), [items]);
+  const colorMap = T$1(() => {
+    const finalColorMap = {};
+    const categoriesConfig = config2.categories || {};
+    for (const categoryName in categoriesConfig) {
+      finalColorMap[categoryName] = categoriesConfig[categoryName].color;
+    }
+    finalColorMap[config2.UNTRACKED_LABEL] = "#9ca3af";
+    return finalColorMap;
+  }, [config2.categories, config2.UNTRACKED_LABEL]);
+  if (items.length === 0) {
+    return /* @__PURE__ */ u("div", { style: { color: "var(--text-faint)", textAlign: "center", padding: "20px" }, children: "当前范围内没有数据。" });
+  }
+  if (currentView === "年" || currentView === "季") {
+    const summaryData = T$1(() => {
+      const data = [];
+      let month = dayjs(dateRange[0]).startOf("month");
+      const end2 = dayjs(dateRange[1]).endOf("month");
+      while (month.isBefore(end2) || month.isSame(end2, "month")) {
+        const monthStr = month.format("YYYY-MM");
+        const tasksInMonth = timelineTasks.filter((t2) => dayjs(t2.doneDate).format("YYYY-MM") === monthStr);
+        const monthlySummary = {};
+        let totalTrackedHoursInMonth = 0;
+        tasksInMonth.forEach((task) => {
+          const category = mapTaskToCategory(task.fileName, config2.categories);
+          const durationHours = task.duration / 60;
+          monthlySummary[category] = (monthlySummary[category] || 0) + durationHours;
+          totalTrackedHoursInMonth += durationHours;
+        });
+        const daysInMonth = month.daysInMonth();
+        const untrackedHoursInMonth = Math.max(0, daysInMonth * 24 - totalTrackedHoursInMonth);
+        if (untrackedHoursInMonth > 0.01) {
+          monthlySummary[config2.UNTRACKED_LABEL] = untrackedHoursInMonth;
+        }
+        if (Object.keys(monthlySummary).length > 0) {
+          const weeklySummaries = Array.from({ length: 5 }).map((_2, i2) => {
+            const weekStartDay = i2 * 7 + 1;
+            if (weekStartDay > daysInMonth) return null;
+            const weeklySummary = {};
+            let totalTrackedHoursInWeek = 0;
+            tasksInMonth.forEach((task) => {
+              const taskDay = dayjs(task.doneDate).date();
+              if (taskDay >= weekStartDay && taskDay < weekStartDay + 7) {
+                const category = mapTaskToCategory(task.fileName, config2.categories);
+                const durationHours = task.duration / 60;
+                weeklySummary[category] = (weeklySummary[category] || 0) + durationHours;
+                totalTrackedHoursInWeek += durationHours;
+              }
+            });
+            if (totalTrackedHoursInWeek < 0.01) return null;
+            weeklySummary.totalWeekHours = totalTrackedHoursInWeek;
+            return weeklySummary;
+          });
+          data.push({
+            month: monthStr,
+            monthlySummary,
+            totalMonthHours: Math.max(daysInMonth * 24, totalTrackedHoursInMonth),
+            weeklySummaries
+          });
+        }
+        month = month.add(1, "month");
+      }
+      return data;
+    }, [timelineTasks, dateRange, config2]);
+    return /* @__PURE__ */ u(TimelineSummaryTable, { summaryData, colorMap, progressOrder: config2.progressOrder, untrackedLabel: config2.UNTRACKED_LABEL });
+  }
+  const summaryCategoryHours = T$1(() => {
+    const hours = {};
+    let totalTrackedHours = 0;
+    timelineTasks.forEach((task) => {
+      const category = mapTaskToCategory(task.fileName, config2.categories);
+      const durationHours = task.duration / 60;
+      hours[category] = (hours[category] || 0) + durationHours;
+      totalTrackedHours += durationHours;
+    });
+    const dayCount = dayjs(dateRange[1]).diff(dayjs(dateRange[0]), "day") + 1;
+    const untrackedHours = Math.max(0, dayCount * 24 - totalTrackedHours);
+    if (untrackedHours > 0.01) {
+      hours[config2.UNTRACKED_LABEL] = untrackedHours;
+    }
+    return hours;
+  }, [timelineTasks, dateRange, config2]);
+  const dailyViewData = T$1(() => {
+    const start2 = dayjs(dateRange[0]);
+    const end2 = dayjs(dateRange[1]);
+    const diff = end2.diff(start2, "day");
+    const dateRangeDays = Array.from({ length: diff + 1 }, (_2, i2) => start2.add(i2, "day"));
+    const map = {};
+    const range = [start2, end2];
+    dateRangeDays.forEach((day) => map[day.format("YYYY-MM-DD")] = []);
+    for (const task of timelineTasks) {
+      const blocks = splitTaskIntoDayBlocks(task, range);
+      for (const block of blocks) {
+        if (map[block.day]) map[block.day].push(block);
+      }
+    }
+    Object.values(map).forEach((dayBlocks) => {
+      dayBlocks.sort((a2, b2) => a2.blockStartMinute - b2.blockStartMinute);
+    });
+    return { dateRangeDays, blocksByDay: map };
+  }, [timelineTasks, dateRange]);
+  const handleColumnClick = q$1((day, e2) => {
+    if (!inputBlocks || inputBlocks.length === 0) {
+      new obsidian.Notice("没有可用的Block模板，请先在设置中创建一个。");
+      return;
+    }
+    let taskBlock = inputBlocks.find((b2) => b2.name === "Task" || b2.name === "任务");
+    if (!taskBlock) {
+      taskBlock = inputBlocks[0];
+    }
+    const targetEl = e2.currentTarget;
+    const rect = targetEl.getBoundingClientRect();
+    let clientY = 0;
+    if ("touches" in e2) {
+      clientY = e2.touches[0].clientY;
+    } else {
+      clientY = e2.clientY;
+    }
+    const y2 = clientY - rect.top;
+    const clickedMinute = Math.floor(y2 / config2.defaultHourHeight * 60);
+    const dayBlocks = dailyViewData.blocksByDay[day] || [];
+    const prevBlock = dayBlocks.filter((b2) => b2.blockEndMinute <= clickedMinute).pop();
+    const nextBlock = dayBlocks.find((b2) => b2.blockStartMinute >= clickedMinute);
+    const context = { "日期": day };
+    if (prevBlock) {
+      context["时间"] = minutesToTime(prevBlock.blockEndMinute);
+    } else {
+      context["时间"] = minutesToTime(clickedMinute);
+    }
+    if (nextBlock) {
+      context["结束"] = minutesToTime(nextBlock.blockStartMinute);
+    }
+    new QuickInputModal(app, taskBlock.id, context).open();
+  }, [app, inputBlocks, config2.defaultHourHeight, dailyViewData]);
+  if (items.length === 0) {
+    return /* @__PURE__ */ u("div", { style: { color: "var(--text-faint)", textAlign: "center", padding: "20px" }, children: "当前范围内没有数据。" });
+  }
+  if (currentView === "年" || currentView === "季") {
+    const summaryData = T$1(() => {
+    }, [timelineTasks, dateRange, config2]);
+    return /* @__PURE__ */ u(TimelineSummaryTable, { summaryData, colorMap, progressOrder: config2.progressOrder, untrackedLabel: config2.UNTRACKED_LABEL });
+  }
+  if (dailyViewData) {
+    const totalSummaryHours = Object.values(summaryCategoryHours || {}).reduce((s2, h2) => s2 + h2, 0);
+    const TIME_AXIS_WIDTH = 90;
+    return /* @__PURE__ */ u("div", { class: "timeline-view-wrapper", style: { overflowX: "auto" }, children: [
+      /* @__PURE__ */ u("div", { class: "timeline-sticky-header", style: { position: "sticky", top: 0, zIndex: 2, background: "var(--background-primary)", display: "flex" }, children: [
+        /* @__PURE__ */ u("div", { class: "summary-progress-container", style: { flex: `0 0 ${TIME_AXIS_WIDTH}px`, borderBottom: "1px solid var(--background-modifier-border)" }, children: [
+          /* @__PURE__ */ u("div", { style: { height: "24px", lineHeight: "24px", textAlign: "center", fontWeight: "bold", borderBottom: "1px solid var(--background-modifier-border-hover)" }, children: "总结" }),
+          /* @__PURE__ */ u("div", { style: { minHeight: "60px" }, children: summaryCategoryHours && totalSummaryHours > 0 && /* @__PURE__ */ u(ProgressBlock, { categoryHours: summaryCategoryHours, order: config2.progressOrder, totalHours: totalSummaryHours, colorMap, untrackedLabel: config2.UNTRACKED_LABEL }) })
+        ] }),
+        dailyViewData.dateRangeDays.map((day) => {
+          const dayStr = day.format("YYYY-MM-DD");
+          const blocks = dailyViewData.blocksByDay[dayStr] || [];
+          return /* @__PURE__ */ u(DayColumnHeader, { day: dayStr, blocks, categoriesConfig: config2.categories, colorMap, untrackedLabel: config2.UNTRACKED_LABEL, progressOrder: config2.progressOrder }, dayStr);
+        })
+      ] }),
+      /* @__PURE__ */ u("div", { class: "timeline-scrollable-body", style: { display: "flex" }, children: [
+        /* @__PURE__ */ u("div", { class: "time-axis", style: { flex: `0 0 ${TIME_AXIS_WIDTH}px` }, children: Array.from({ length: config2.MAX_HOURS_PER_DAY + 1 }, (_2, i2) => /* @__PURE__ */ u("div", { style: { height: `${config2.defaultHourHeight}px`, borderBottom: "1px dashed var(--background-modifier-border-hover)", position: "relative", boxSizing: "border-box", textAlign: "right", paddingRight: "4px", fontSize: "11px", color: "var(--text-faint)" }, children: i2 > 0 && i2 % 2 === 0 ? `${i2}:00` : "" }, i2)) }),
+        dailyViewData.dateRangeDays.map((day) => {
+          const dayStr = day.format("YYYY-MM-DD");
+          const blocks = dailyViewData.blocksByDay[dayStr] || [];
+          return /* @__PURE__ */ u(
+            DayColumnBody,
+            {
+              app,
+              day: dayStr,
+              blocks,
+              hourHeight: config2.defaultHourHeight,
+              categoriesConfig: config2.categories,
+              colorMap,
+              maxHours: config2.MAX_HOURS_PER_DAY,
+              taskService,
+              onColumnClick: handleColumnClick
+            },
+            dayStr
+          );
+        })
+      ] })
+    ] });
+  }
+  return null;
 }
 function getEffectiveTemplate(settings, blockId, themeId) {
   const baseBlock = settings.blocks.find((b2) => b2.id === blockId);
