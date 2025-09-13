@@ -29198,7 +29198,7 @@ function toggleToDone(rawLine, todayISO2, nowTime, duration2) {
   let line2 = rawLine;
   if (duration2 !== void 0) {
     const upsert = (l2, k2, v2) => {
-      const pattern = new RegExp(`([\\(\\[]\\s*${k2}::\\s*)[^\\)\\]]*(\\s*[\\)\\]])`);
+      const pattern = new RegExp(`([(\\[]\\s*${k2}::\\s*)[^\\)\\]]*(\\s*[\\)\\]])`);
       if (pattern.test(l2)) {
         return l2.replace(pattern, `$1${v2}$2`);
       } else {
@@ -29207,18 +29207,20 @@ function toggleToDone(rawLine, todayISO2, nowTime, duration2) {
     };
     line2 = upsert(line2, "时长", String(duration2));
   }
-  line2 = line2.replace(
-    /(\s|^)(时长::[^\s()]+)/g,
-    (m2, pre) => m2.includes("(") ? m2 : `${pre}(${m2.trim()})`
-  );
-  if (/\(时长::[^\)]+\)/.test(line2)) {
-    line2 = line2.replace(/\((时长::[^\)]+)\)/, `(时间::${nowTime}) ($1)`);
-  } else if (/时长::[^\s]+/.test(line2)) {
-    line2 = line2.replace(/(时长::[^\s]+)/, `(时间::${nowTime}) ($1)`);
-  } else if (line2.includes(EMOJI.repeat)) {
-    line2 = line2.replace(EMOJI.repeat, `(时间::${nowTime}) ${EMOJI.repeat}`);
-  } else {
-    line2 = `${line2} (时间::${nowTime})`;
+  if (duration2 === void 0) {
+    line2 = line2.replace(
+      /(\s|^)(时长::[^\s()]+)/g,
+      (m2, pre) => m2.includes("(") ? m2 : `${pre}(${m2.trim()})`
+    );
+    if (/\(时长::[^\)]+\)/.test(line2)) {
+      line2 = line2.replace(/\((时长::[^\)]+)\)/, `(时间::${nowTime}) ($1)`);
+    } else if (/时长::[^\s]+/.test(line2)) {
+      line2 = line2.replace(/(时长::[^\s]+)/, `(时间::${nowTime}) ($1)`);
+    } else if (line2.includes(EMOJI.repeat)) {
+      line2 = line2.replace(EMOJI.repeat, `(时间::${nowTime}) ${EMOJI.repeat}`);
+    } else {
+      line2 = `${line2} (时间::${nowTime})`;
+    }
   }
   line2 = line2.replace(/^(\s*-\s*)\[[ xX-]\]/, "$1[x]");
   if (!/^-\s*\[x\]/.test(line2)) {
@@ -30765,6 +30767,9 @@ function TimelineView({ items, dateRange, module: module2, currentView, app, tas
   }
   return null;
 }
+const CloseIcon = createSvgIcon(/* @__PURE__ */ u("path", {
+  d: "M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"
+}));
 class QuickInputModal extends obsidian.Modal {
   constructor(app, blockId, context, themeId, onSave) {
     super(app);
@@ -30775,6 +30780,7 @@ class QuickInputModal extends obsidian.Modal {
   }
   onOpen() {
     this.contentEl.empty();
+    this.modalEl.addClass("think-quick-input-modal");
     nn(
       /* @__PURE__ */ u(
         QuickInputForm,
@@ -30793,19 +30799,6 @@ class QuickInputModal extends obsidian.Modal {
   onClose() {
     bn(this.contentEl);
   }
-}
-function getEffectiveTemplate$1(settings, blockId, themeId) {
-  const baseBlock = settings.blocks.find((b2) => b2.id === blockId);
-  if (!baseBlock) return { template: null, theme: null };
-  const theme2 = settings.themes.find((t2) => t2.id === themeId) || null;
-  if (themeId) {
-    const override = settings.overrides.find((o2) => o2.blockId === blockId && o2.themeId === themeId);
-    if (override && override.status === "enabled") {
-      const effectiveTemplate = { ...baseBlock, fields: override.fields ?? baseBlock.fields, outputTemplate: override.outputTemplate ?? baseBlock.outputTemplate, targetFile: override.targetFile ?? baseBlock.targetFile, appendUnderHeader: override.appendUnderHeader ?? baseBlock.appendUnderHeader };
-      return { template: effectiveTemplate, theme: theme2 };
-    }
-  }
-  return { template: baseBlock, theme: theme2 };
 }
 const findNodePath = (nodes, themeId) => {
   for (const node2 of nodes) {
@@ -30836,6 +30829,19 @@ const renderThemeLevels = (nodes, activePath, onSelect, level = 0) => {
 };
 function QuickInputForm({ app, blockId, context, themeId, onSave, closeModal }) {
   const settings = useStore((state) => state.settings.inputSettings);
+  const getEffectiveTemplate2 = (settings2, blockId2, themeId2) => {
+    const baseBlock = settings2.blocks.find((b2) => b2.id === blockId2);
+    if (!baseBlock) return { template: null, theme: null };
+    const theme2 = settings2.themes.find((t2) => t2.id === themeId2) || null;
+    if (themeId2) {
+      const override = settings2.overrides.find((o2) => o2.blockId === blockId2 && o2.themeId === themeId2);
+      if (override && override.status === "enabled") {
+        const effectiveTemplate = { ...baseBlock, fields: override.fields ?? baseBlock.fields, outputTemplate: override.outputTemplate ?? baseBlock.outputTemplate, targetFile: override.targetFile ?? baseBlock.targetFile, appendUnderHeader: override.appendUnderHeader ?? baseBlock.appendUnderHeader };
+        return { template: effectiveTemplate, theme: theme2 };
+      }
+    }
+    return { template: baseBlock, theme: theme2 };
+  };
   const { themeTree, themeIdMap } = T$1(() => {
     const { themes, overrides } = settings;
     const disabledThemeIds = /* @__PURE__ */ new Set();
@@ -30851,7 +30857,7 @@ function QuickInputForm({ app, blockId, context, themeId, onSave, closeModal }) 
   }, [settings, blockId]);
   const [selectedThemeId, setSelectedThemeId] = d(themeId || null);
   const { template } = T$1(() => {
-    return getEffectiveTemplate$1(settings, blockId, selectedThemeId || void 0);
+    return getEffectiveTemplate2(settings, blockId, selectedThemeId || void 0);
   }, [settings, blockId, selectedThemeId]);
   const [formData, setFormData] = d(() => {
     if (!template) return {};
@@ -31017,7 +31023,10 @@ function QuickInputForm({ app, blockId, context, themeId, onSave, closeModal }) 
     setSelectedThemeId(selectedThemeId === newThemeId ? parentThemeId : newThemeId);
   };
   return /* @__PURE__ */ u("div", { class: "think-modal", style: { padding: "0 1rem 1rem 1rem" }, children: [
-    /* @__PURE__ */ u("h3", { style: { marginBottom: "1rem" }, children: onSave ? `开始新任务: ${template.name}` : `快速录入 · ${template.name}` }),
+    /* @__PURE__ */ u(Box, { sx: { display: "flex", justifyContent: "space-between", alignItems: "center", mb: "1rem" }, children: [
+      /* @__PURE__ */ u("h3", { style: { margin: 0 }, children: onSave ? `开始新任务: ${template.name}` : `快速录入 · ${template.name}` }),
+      /* @__PURE__ */ u(Tooltip, { title: "关闭", children: /* @__PURE__ */ u(IconButton, { onClick: closeModal, size: "small", children: /* @__PURE__ */ u(CloseIcon, {}) }) })
+    ] }),
     themeTree.length > 0 && /* @__PURE__ */ u(FormControl, { component: "fieldset", sx: { mb: 1, width: "100%" }, children: [
       /* @__PURE__ */ u(Typography, { variant: "body2", sx: { fontWeight: 600, mb: 1 }, children: "主题分类" }),
       /* @__PURE__ */ u(Box, { sx: {
@@ -31808,6 +31817,13 @@ let TimerService = class {
         new obsidian.Notice("找不到要计时的任务");
         return;
       }
+      try {
+        await this.taskService.updateTaskTime(taskId, { time: nowHHMM() });
+        new obsidian.Notice(`计时开始，已记录任务开始时间。`);
+      } catch (error) {
+        console.error("Failed to write start time for task:", error);
+        new obsidian.Notice("记录任务开始时间失败！");
+      }
       await this.appStore.addTimer({
         taskId,
         startTime: Date.now(),
@@ -31886,7 +31902,6 @@ let TimerService = class {
         if (newItemsInFile.length > 0) {
           const latestItem = newItemsInFile.sort((a2, b2) => (b2.file?.line || 0) - (a2.file?.line || 0))[0];
           this.startOrResume(latestItem.id);
-          new obsidian.Notice("新任务已创建并开始计时！");
         } else {
           new obsidian.Notice("任务内容已创建，但未识别为可计时的任务项。");
         }
@@ -32471,9 +32486,6 @@ const DeleteForeverOutlinedIcon = createSvgIcon(/* @__PURE__ */ u("path", {
 }));
 const ContentCopyIcon = createSvgIcon(/* @__PURE__ */ u("path", {
   d: "M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2m0 16H8V7h11z"
-}));
-const CloseIcon = createSvgIcon(/* @__PURE__ */ u("path", {
-  d: "M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"
 }));
 function ActionDialog({
   isOpen,
@@ -38274,6 +38286,18 @@ body.theme-dark .tn-week-cell.is-selected {
 .think-plugin-timer-widget > .MuiPaper-root {
     background-color: var(--background-secondary) !important;
 }
+
+/*
+ * ===================================================================
+ * --- 7. 插件专用模态框微调 (Modal Tweaks) ---
+ * ===================================================================
+ */
+
+/* 隐藏快速输入面板的原生关闭按钮，因为我们已在组件内部实现了一个 */
+.think-quick-input-modal .modal-close-button {
+    display: none !important;
+}
+
 
 `.trim();
 console.log(`[ThinkPlugin] main.js 文件已加载，版本时间: ${(/* @__PURE__ */ new Date()).toLocaleTimeString()}`);

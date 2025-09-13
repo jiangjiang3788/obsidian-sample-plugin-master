@@ -3,7 +3,7 @@
 import { EMOJI } from '@core/domain/constants';
 import { DATE_YMD_RE } from '@core/utils/regex';
 import { normalizeDateStr } from '@core/utils/date';
-import { dayjs } from '@core/utils/date';                       // (#5)
+import { dayjs } from '@core/utils/date';
 
 /* ---------- 周期任务工具类型 ---------- */
 export interface RecurrenceInfo {
@@ -20,7 +20,7 @@ export function toggleToDone(
     rawLine: string,
     todayISO: string,
     nowTime: string,
-    duration?: number, // [重构] 接收可选的 duration 参数
+    duration?: number,
 ): string {
     let line = rawLine;
 
@@ -28,7 +28,7 @@ export function toggleToDone(
     if (duration !== undefined) {
         // 这个函数逻辑和 taskService 里的一样，用于替换或追加 (时长:: value)
         const upsert = (l: string, k: string, v: string) => {
-            const pattern = new RegExp(`([\\(\\[]\\s*${k}::\\s*)[^\\)\\]]*(\\s*[\\)\\]])`);
+            const pattern = new RegExp(`([\(\\[]\\s*${k}::\\s*)[^\\)\\]]*(\\s*[\\)\\]])`);
             if (pattern.test(l)) {
                 return l.replace(pattern, `$1${v}$2`);
             } else {
@@ -38,20 +38,24 @@ export function toggleToDone(
         line = upsert(line, '时长', String(duration));
     }
     
-    // 确保 (时长::x) 在括号里，同时插入时间 (时间::hh:mm)
-    line = line.replace(/(\s|^)(时长::[^\s()]+)/g, (m, pre) =>
-        m.includes('(') ? m : `${pre}(${m.trim()})`,
-    );
+    // [核心修改] 只有在没有传入时长的情况下，才更新时间字段
+    if (duration === undefined) {
+        // 确保 (时长::x) 在括号里，同时插入时间 (时间::hh:mm)
+        line = line.replace(/(\s|^)(时长::[^\s()]+)/g, (m, pre) =>
+            m.includes('(') ? m : `${pre}(${m.trim()})`,
+        );
 
-    if (/\(时长::[^\)]+\)/.test(line)) {
-        line = line.replace(/\((时长::[^\)]+)\)/, `(时间::${nowTime}) ($1)`);
-    } else if (/时长::[^\s]+/.test(line)) {
-        line = line.replace(/(时长::[^\s]+)/, `(时间::${nowTime}) ($1)`);
-    } else if (line.includes(EMOJI.repeat)) {
-        line = line.replace(EMOJI.repeat, `(时间::${nowTime}) ${EMOJI.repeat}`);
-    } else {
-        line = `${line} (时间::${nowTime})`;
+        if (/\(时长::[^\)]+\)/.test(line)) {
+            line = line.replace(/\((时长::[^\)]+)\)/, `(时间::${nowTime}) ($1)`);
+        } else if (/时长::[^\s]+/.test(line)) {
+            line = line.replace(/(时长::[^\s]+)/, `(时间::${nowTime}) ($1)`);
+        } else if (line.includes(EMOJI.repeat)) {
+            line = line.replace(EMOJI.repeat, `(时间::${nowTime}) ${EMOJI.repeat}`);
+        } else {
+            line = `${line} (时间::${nowTime})`;
+        }
     }
+
 
     // 方框 → [x]，若原行缺失前缀则补全
     line = line.replace(/^(\s*-\s*)\[[ xX-]\]/, '$1[x]');
@@ -131,9 +135,8 @@ export function markTaskDone(
     rawLine: string,
     todayISO: string,
     nowTime: string,
-    duration?: number, // [重构] 接收可选的 duration
+    duration?: number,
 ): { completedLine: string; nextTaskLine?: string } {
-    // [重构] 将 duration 传递给 toggleToDone
     const completedLine = toggleToDone(rawLine, todayISO, nowTime, duration);
     const rec = parseRecurrence(rawLine);
     if (!rec) return { completedLine };

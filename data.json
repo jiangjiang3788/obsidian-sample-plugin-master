@@ -10649,5 +10649,5 @@
       }
     ]
   },
-  "floatingTimerEnabled": false
+  "floatingTimerEnabled": true
 }

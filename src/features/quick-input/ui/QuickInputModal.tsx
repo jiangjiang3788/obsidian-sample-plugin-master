@@ -6,7 +6,8 @@ import { render, unmountComponentAtNode } from 'preact/compat';
 import { useState, useMemo, useEffect } from 'preact/hooks';
 import { useStore } from '@state/AppStore';
 import type { InputSettings, BlockTemplate, ThemeDefinition, TemplateField } from '@core/domain/schema';
-import { Button, RadioGroup as MuiRadioGroup, FormControlLabel, Radio, FormControl, Typography, Stack, Divider, Box } from '@mui/material';
+import { Button, RadioGroup as MuiRadioGroup, FormControlLabel, Radio, FormControl, Typography, Stack, Divider, Box, IconButton, Tooltip } from '@mui/material';
+import CloseIcon from '@mui/icons-material/Close';
 import { SimpleSelect } from '@shared/ui/SimpleSelect';
 import { buildThemeTree, ThemeTreeNode } from '@core/utils/themeUtils';
 import { dayjs } from '@core/utils/date';
@@ -31,6 +32,8 @@ export class QuickInputModal extends Modal {
 
     onOpen() {
         this.contentEl.empty();
+        this.modalEl.addClass('think-quick-input-modal');
+        
         render(
             <QuickInputForm
                 app={this.app}
@@ -49,19 +52,7 @@ export class QuickInputModal extends Modal {
     }
 }
 
-function getEffectiveTemplate(settings: InputSettings, blockId: string, themeId?: string): { template: BlockTemplate | null; theme: ThemeDefinition | null } {
-    const baseBlock = settings.blocks.find(b => b.id === blockId);
-    if (!baseBlock) return { template: null, theme: null };
-    const theme = settings.themes.find(t => t.id === themeId) || null;
-    if (themeId) {
-        const override = settings.overrides.find(o => o.blockId === blockId && o.themeId === themeId);
-        if (override && override.status === 'enabled') {
-            const effectiveTemplate: BlockTemplate = { ...baseBlock, fields: override.fields ?? baseBlock.fields, outputTemplate: override.outputTemplate ?? baseBlock.outputTemplate, targetFile: override.targetFile ?? baseBlock.targetFile, appendUnderHeader: override.appendUnderHeader ?? baseBlock.appendUnderHeader };
-            return { template: effectiveTemplate, theme };
-        }
-    }
-    return { template: baseBlock, theme };
-}
+// [1. 移动] getEffectiveTemplate 函数已从此位置移除
 
 const findNodePath = (nodes: ThemeTreeNode[], themeId: string): ThemeTreeNode[] => {
     for (const node of nodes) {
@@ -109,6 +100,21 @@ function QuickInputForm({ app, blockId, context, themeId, onSave, closeModal }: 
 }) {
     const settings = useStore(state => state.settings.inputSettings);
     
+    // [2. 定义] 将 getEffectiveTemplate 函数移动到组件内部
+    const getEffectiveTemplate = (settings: InputSettings, blockId: string, themeId?: string): { template: BlockTemplate | null; theme: ThemeDefinition | null } => {
+        const baseBlock = settings.blocks.find(b => b.id === blockId);
+        if (!baseBlock) return { template: null, theme: null };
+        const theme = settings.themes.find(t => t.id === themeId) || null;
+        if (themeId) {
+            const override = settings.overrides.find(o => o.blockId === blockId && o.themeId === themeId);
+            if (override && override.status === 'enabled') {
+                const effectiveTemplate: BlockTemplate = { ...baseBlock, fields: override.fields ?? baseBlock.fields, outputTemplate: override.outputTemplate ?? baseBlock.outputTemplate, targetFile: override.targetFile ?? baseBlock.targetFile, appendUnderHeader: override.appendUnderHeader ?? baseBlock.appendUnderHeader };
+                return { template: effectiveTemplate, theme };
+            }
+        }
+        return { template: baseBlock, theme };
+    }
+
     const { themeTree, themeIdMap } = useMemo(() => {
         const { themes, overrides } = settings;
         const disabledThemeIds = new Set<string>();
@@ -165,13 +171,11 @@ function QuickInputForm({ app, blockId, context, themeId, onSave, closeModal }: 
                         initialData[field.key] = field.defaultValue || '';
                     }
                 } else {
-                    // [核心修复] 如果没有默认值，则按类型处理
                     if (field.type === 'date') {
                         initialData[field.key] = dayjs().format('YYYY-MM-DD');
                     } else if (field.type === 'time') {
                         initialData[field.key] = dayjs().format('HH:mm');
                     } else if (isSelectable && field.options && field.options.length > 0) {
-                        // 如果是选择类且有选项，默认选中第一项
                         const firstOption = field.options[0];
                         initialData[field.key] = { value: firstOption.value, label: firstOption.label || firstOption.value };
                     }
@@ -298,7 +302,7 @@ function QuickInputForm({ app, blockId, context, themeId, onSave, closeModal }: 
             }
         }
     };
-
+    
     if (!template) {
         return <div>错误：找不到ID为 "{blockId}" 的Block模板。</div>;
     }
@@ -310,9 +314,16 @@ function QuickInputForm({ app, blockId, context, themeId, onSave, closeModal }: 
 
     return (
         <div class="think-modal" style={{ padding: '0 1rem 1rem 1rem' }}>
-            <h3 style={{ marginBottom: '1rem' }}>
-                {onSave ? `开始新任务: ${template.name}` : `快速录入 · ${template.name}`}
-            </h3>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: '1rem'  }}>
+                <h3 style={{ margin: 0 }}>
+                    {onSave ? `开始新任务: ${template.name}` : `快速录入 · ${template.name}`}
+                </h3>
+                <Tooltip title="关闭">
+                    <IconButton onClick={closeModal} size="small">
+                        <CloseIcon />
+                    </IconButton>
+                </Tooltip>
+            </Box>
 
             {themeTree.length > 0 && (
                 <FormControl component="fieldset" sx={{ mb: 1, width: '100%' }}>
