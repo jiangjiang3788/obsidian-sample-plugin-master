@@ -3413,7 +3413,7 @@ const DEFAULT_SETTINGS = {
   floatingTimerEnabled: true
 };
 const VIEW_OPTIONS = ["BlockView", "TableView", "ExcelView", "TimelineView", "StatisticsView", "HeatmapView"];
-const CORE_FIELDS = ["id", "type", "title", "content", "categoryKey", "tags", "recurrence", "icon", "priority", "date", "header", "time", "duration", "period", "rating", "pintu", "folder", "periodCount"];
+const CORE_FIELDS = ["id", "type", "title", "content", "categoryKey", "tags", "recurrence", "icon", "priority", "date", "header", "startTime", "endTime", "duration", "period", "rating", "pintu", "folder", "periodCount"];
 function getAllFields(items) {
   const set = new Set(CORE_FIELDS);
   items.forEach((it) => {
@@ -28837,6 +28837,17 @@ function formatSecondsToHHMMSS(totalSeconds) {
   const pad = (num) => String(num).padStart(2, "0");
   return `${pad(hours)}:${pad(minutes)}:${pad(seconds)}`;
 }
+const timeToMinutes = (time) => {
+  if (!time || !/^\d{1,2}:\d{2}$/.test(time)) return null;
+  const [h2, m2] = time.split(":").map(Number);
+  return h2 * 60 + m2;
+};
+const minutesToTime = (minutes) => {
+  if (isNaN(minutes) || minutes < 0) return "";
+  const h2 = Math.floor(minutes / 60) % 24;
+  const m2 = minutes % 60;
+  return `${String(h2).padStart(2, "0")}:${String(m2).padStart(2, "0")}`;
+};
 function normalizeDateStr(raw) {
   const s2 = (raw || "").replace(/\//g, "-");
   const d2 = dayjs(s2, ["YYYY-MM-DD", "YYYY-M-D", "YYYY/MM/DD", "YYYY/M/D"], true);
@@ -28974,9 +28985,11 @@ function parseTaskLine(filePath, rawLine, lineNo, parentFolder) {
         const t2 = v2.trim().replace(/^#/, "");
         if (t2) item.tags.push(t2);
       });
-    } else if (["时间", "time"].includes(key)) {
-      item.time = value;
-    } else if (["时长", "duration"].includes(key)) {
+    } else if (["时间", "time", "start"].includes(lowerKey)) {
+      item.startTime = value;
+    } else if (["结束", "end"].includes(lowerKey)) {
+      item.endTime = value;
+    } else if (["时长", "duration"].includes(lowerKey)) {
       item.duration = Number(value) || void 0;
     } else {
       const num = Number(value);
@@ -29090,7 +29103,6 @@ function parseBlockContent(filePath, lines, startIdx, endIdx, parentFolder) {
     modified: 0,
     extra,
     categoryKey,
-    // [新增] 填充 folder
     folder: parentFolder
   };
   if (iconVal) item.icon = iconVal;
@@ -29194,20 +29206,25 @@ function normalizeItemDates(it) {
   }
   if (!it.categoryKey) it.categoryKey = "任务/open";
 }
-function toggleToDone(rawLine, todayISO2, nowTime, duration2) {
-  let line2 = rawLine;
-  if (duration2 !== void 0) {
-    const upsert = (l2, k2, v2) => {
-      const pattern = new RegExp(`([(\\[]\\s*${k2}::\\s*)[^\\)\\]]*(\\s*[\\)\\]])`);
-      if (pattern.test(l2)) {
-        return l2.replace(pattern, `$1${v2}$2`);
-      } else {
-        return `${l2.trim()} (${k2}:: ${v2})`;
-      }
-    };
-    line2 = upsert(line2, "时长", String(duration2));
+const upsertKvTag = (line2, key, value) => {
+  const pattern = new RegExp(`([(\\[]\\s*${key}::\\s*)[^\\)\\]]*(\\s*[\\)\\]])`);
+  if (pattern.test(line2)) {
+    return line2.replace(pattern, `$1${value}$2`);
+  } else {
+    return `${line2.trim()} (${key}:: ${value})`;
   }
-  if (duration2 === void 0) {
+};
+function toggleToDone(rawLine, todayISO2, nowTime, options) {
+  let line2 = rawLine;
+  const duration2 = options?.duration;
+  const endTime = options?.endTime;
+  if (duration2 !== void 0) {
+    line2 = upsertKvTag(line2, "时长", String(duration2));
+  }
+  if (endTime !== void 0) {
+    line2 = upsertKvTag(line2, "结束", endTime);
+  }
+  if (duration2 === void 0 && endTime === void 0) {
     line2 = line2.replace(
       /(\s|^)(时长::[^\s()]+)/g,
       (m2, pre) => m2.includes("(") ? m2 : `${pre}(${m2.trim()})`
@@ -29267,8 +29284,8 @@ function generateNextRecurringTask(rawTask, baseDateISO) {
   replaceIf(EMOJI.start);
   return next2.trim();
 }
-function markTaskDone(rawLine, todayISO2, nowTime, duration2) {
-  const completedLine = toggleToDone(rawLine, todayISO2, nowTime, duration2);
+function markTaskDone(rawLine, todayISO2, nowTime, options) {
+  const completedLine = toggleToDone(rawLine, todayISO2, nowTime, options);
   const rec = parseRecurrence(rawLine);
   if (!rec) return { completedLine };
   const baseISO = findBaseDateForRecurring(rawLine, rec.whenDone, todayISO2);
@@ -30279,26 +30296,22 @@ function StatisticsView({ items, app, dateRange, module: module2 }) {
   ] });
 }
 const DATE_FORMAT = "YYYY-MM-DD";
-function parseTimeAndDuration(rawText) {
-  const timeMatch = rawText.match(/[\(\[]\s*时间::\s*([0-2]?\d:[0-5]\d)\s*[\)\]]/);
-  const durationMatch = rawText.match(/[\(\[]\s*时长::\s*(\d+)\s*[\)\]]/);
-  let startMinute = null;
-  let duration2 = null;
-  let endMinute = null;
-  if (timeMatch) {
-    const [h2, m2] = timeMatch[1].split(":").map(Number);
-    startMinute = h2 * 60 + m2;
+function parseAllTimes(item) {
+  const startMinute = item.startTime ? timeToMinutes(item.startTime) : null;
+  const endMinute = item.endTime ? timeToMinutes(item.endTime) : null;
+  const duration2 = item.duration;
+  if (startMinute !== null && endMinute !== null) {
+    let calculatedDuration = endMinute - startMinute;
+    if (calculatedDuration < 0) calculatedDuration += 24 * 60;
+    return { startMinute, duration: calculatedDuration, endMinute };
   }
-  if (durationMatch) {
-    duration2 = parseInt(durationMatch[1], 10);
+  if (startMinute !== null && duration2 !== null && duration2 >= 0) {
+    return { startMinute, duration: duration2, endMinute: startMinute + duration2 };
   }
-  if (startMinute !== null && duration2 !== null) {
-    endMinute = startMinute + duration2;
-  }
-  return { startMinute, duration: duration2, endMinute };
+  return { startMinute: null, duration: null, endMinute: null };
 }
 function extractPureText(rawText) {
-  return rawText.replace(/<!--[\s\S]*?-->/g, "").replace(/[\(\[]\s*时间::\s*([0-2]?\d:[0-5]\d)\s*[\)\]]/g, "").replace(/[\(\[]\s*时长::\s*(\d+)\s*[\)\]]/g, "").replace(/#[\p{L}\d\-_/]+/gu, "").replace(/✅?\s*\d{4}-\d{2}-\d{2}/g, "").replace(/[\(\[]\s*🔁\s*.*?\s*[\)\]]/gi, "").replace(/\s+/g, " ").trim();
+  return rawText.replace(/<!--[\s\S]*?-->/g, "").replace(/[\(\[]\s*(时间|结束|时长)::.*?[\)\]]/g, "").replace(/#[\p{L}\d\-_/]+/gu, "").replace(/✅?\s*\d{4}-\d{2}-\d{2}/g, "").replace(/[\(\[]\s*🔁\s*.*?\s*[\)\]]/gi, "").replace(/\s+/g, " ").trim();
 }
 function processItemsToTimelineTasks(items) {
   const timelineTasks = [];
@@ -30306,7 +30319,7 @@ function processItemsToTimelineTasks(items) {
     const fileName = item.file?.basename || item.filename || "";
     if (!fileName) continue;
     if (item.type !== "task" || !item.categoryKey?.endsWith("/done")) continue;
-    const { startMinute, duration: duration2, endMinute } = parseTimeAndDuration(item.content);
+    const { startMinute, duration: duration2, endMinute } = parseAllTimes(item);
     if (startMinute !== null && duration2 !== null && endMinute !== null && item.doneDate) {
       const doneDate = dayjs(item.doneDate);
       const daysSpanned = Math.floor(startMinute / 1440);
@@ -30380,17 +30393,7 @@ function requireIsBetween() {
 }
 var isBetweenExports = requireIsBetween();
 const isBetween = /* @__PURE__ */ getDefaultExportFromCjs(isBetweenExports);
-const formatTime = (minute) => {
-  const h2 = Math.floor(minute / 60);
-  const m2 = minute % 60;
-  return `${String(h2).padStart(2, "0")}:${String(m2).padStart(2, "0")}`;
-};
-const parseTimeToMinute = (timeStr) => {
-  const [h2, m2] = timeStr.split(":").map(Number);
-  return (h2 || 0) * 60 + (m2 || 0);
-};
 class EditTaskModal extends obsidian.Modal {
-  // [修改] 构造函数现在接收 taskService 实例
   constructor(app, task, onSave, taskService) {
     super(app);
     this.task = task;
@@ -30417,23 +30420,73 @@ class EditTaskModal extends obsidian.Modal {
   }
 }
 function EditForm({ task, close, onSave, taskService }) {
-  const [startTime, setStartTime] = d(formatTime(task.startMinute));
-  const [duration2, setDuration] = d(String(task.duration));
-  const handleSave = async () => {
-    const newStartMinute = parseTimeToMinute(startTime);
-    const newDuration = Number(duration2);
-    if (isNaN(newStartMinute) || isNaN(newDuration) || newDuration <= 0) {
-      new obsidian.Notice("请输入有效的时间和正数时长");
-      return;
+  const [timeData, setTimeData] = d(() => ({
+    startTime: minutesToTime(task.startMinute),
+    endTime: minutesToTime(task.endMinute),
+    duration: String(task.duration),
+    lastChanged: null
+  }));
+  y(() => {
+    const start2 = timeData.startTime;
+    const end2 = timeData.endTime;
+    const durationStr = String(timeData.duration);
+    const duration2 = !isNaN(parseInt(durationStr)) ? parseInt(durationStr) : null;
+    const startMinutes = timeToMinutes(start2);
+    const endMinutes = timeToMinutes(end2);
+    const lastChanged = timeData.lastChanged;
+    let changes = {};
+    if (startMinutes !== null && endMinutes !== null && lastChanged !== "duration") {
+      let newDuration = endMinutes - startMinutes;
+      if (newDuration < 0) newDuration += 24 * 60;
+      if (newDuration !== duration2) {
+        changes.duration = newDuration;
+      }
+    } else if (startMinutes !== null && duration2 !== null && lastChanged !== "endTime") {
+      const newEndTime = minutesToTime(startMinutes + duration2);
+      if (newEndTime !== end2) {
+        changes.endTime = newEndTime;
+      }
+    } else if (endMinutes !== null && duration2 !== null && lastChanged !== "startTime") {
+      const newStartTime = minutesToTime(endMinutes - duration2);
+      if (newStartTime !== start2) {
+        changes.startTime = newStartTime;
+      }
     }
+    if (Object.keys(changes).length > 0) {
+      setTimeData((current) => ({ ...current, ...changes, lastChanged: null }));
+    }
+  }, [timeData]);
+  const handleUpdate = (field, value) => {
+    setTimeData((current) => ({
+      ...current,
+      [field]: value,
+      lastChanged: field
+    }));
+  };
+  const handleSave = async () => {
     if (!taskService) {
       new obsidian.Notice("❌ 内部错误：TaskService 未提供，无法保存。");
       return;
     }
+    const finalStartTime = timeData.startTime;
+    const finalEndTime = timeData.endTime;
+    let finalDuration = Number(timeData.duration);
+    const startM = timeToMinutes(finalStartTime);
+    const endM = timeToMinutes(finalEndTime);
+    if (startM === null || finalEndTime && endM === null || isNaN(finalDuration)) {
+      new obsidian.Notice("请输入有效的时间和时长");
+      return;
+    }
+    if (startM !== null && endM !== null) {
+      let calculatedDuration = endM - startM;
+      if (calculatedDuration < 0) calculatedDuration += 24 * 60;
+      finalDuration = calculatedDuration;
+    }
     try {
       await taskService.updateTaskTime(task.id, {
-        time: startTime,
-        duration: newDuration
+        time: finalStartTime,
+        endTime: finalEndTime,
+        duration: finalDuration
       });
       new obsidian.Notice("✅ 任务时间已更新");
       onSave?.();
@@ -30447,11 +30500,15 @@ function EditForm({ task, close, onSave, taskService }) {
     /* @__PURE__ */ u("p", { style: "font-size: 0.9em; color: var(--text-muted); max-width: 400px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;", children: task.pureText }),
     /* @__PURE__ */ u("div", { style: "margin-top: 1rem;", children: [
       /* @__PURE__ */ u("label", { children: "开始时间" }),
-      /* @__PURE__ */ u("input", { type: "time", value: startTime, onInput: (e2) => setStartTime(e2.target.value) })
+      /* @__PURE__ */ u("input", { type: "time", value: timeData.startTime, onInput: (e2) => handleUpdate("startTime", e2.target.value) })
+    ] }),
+    /* @__PURE__ */ u("div", { style: "margin-top: 0.5rem;", children: [
+      /* @__PURE__ */ u("label", { children: "结束时间" }),
+      /* @__PURE__ */ u("input", { type: "time", value: timeData.endTime, onInput: (e2) => handleUpdate("endTime", e2.target.value) })
     ] }),
     /* @__PURE__ */ u("div", { style: "margin-top: 0.5rem;", children: [
       /* @__PURE__ */ u("label", { children: "持续时长 (分钟)" }),
-      /* @__PURE__ */ u("input", { type: "number", min: "1", value: duration2, onInput: (e2) => setDuration(e2.target.value) })
+      /* @__PURE__ */ u("input", { type: "number", min: "0", value: timeData.duration, onInput: (e2) => handleUpdate("duration", e2.target.value) })
     ] }),
     /* @__PURE__ */ u("div", { style: "display:flex;gap:8px;justify-content:flex-end;margin-top:1.5rem;", children: [
       /* @__PURE__ */ u("button", { class: "mod-cta", onClick: handleSave, children: "保存" }),
@@ -30905,23 +30962,70 @@ function QuickInputForm({ app, blockId, context, themeId, onSave, closeModal }) 
     });
     return initialData;
   });
+  y(() => {
+    const data = { ...formData };
+    const start2 = data.时间;
+    const end2 = data.结束;
+    const durationStr = String(data.时长);
+    const duration2 = !isNaN(parseInt(durationStr)) ? parseInt(durationStr) : null;
+    const startMinutes = timeToMinutes(start2);
+    const endMinutes = timeToMinutes(end2);
+    const lastChanged = data.lastChanged;
+    let changes = {};
+    if (startMinutes !== null && endMinutes !== null && lastChanged !== "时长") {
+      let newDuration = endMinutes - startMinutes;
+      if (newDuration < 0) newDuration += 24 * 60;
+      if (newDuration !== duration2) {
+        changes.时长 = newDuration;
+      }
+    } else if (startMinutes !== null && duration2 !== null && lastChanged !== "结束") {
+      const newEndTime = minutesToTime(startMinutes + duration2);
+      if (newEndTime !== end2) {
+        changes.结束 = newEndTime;
+      }
+    } else if (endMinutes !== null && duration2 !== null && lastChanged !== "时间") {
+      const newStartTime = minutesToTime(endMinutes - duration2);
+      if (newStartTime !== start2) {
+        changes.时间 = newStartTime;
+      }
+    }
+    if (Object.keys(changes).length > 0) {
+      setFormData((current) => ({ ...current, ...changes, lastChanged: void 0 }));
+    }
+  }, [formData]);
   const handleUpdate = (key, value, isOptionObject = false) => {
-    setFormData((current) => ({ ...current, [key]: isOptionObject ? { value: value.value, label: value.label } : value }));
+    setFormData((current) => ({
+      ...current,
+      [key]: isOptionObject ? { value: value.value, label: value.label } : value,
+      lastChanged: key
+    }));
   };
   const handleSubmit = async () => {
     if (!template) return;
     if (!inputService) {
-      new obsidian.Notice(`❌ 保存失败: InputService 未初始化`, 1e4);
-      console.error("ThinkPlugin Error: Attempted to save from QuickInputModal, but 'inputService' from storeRegistry is undefined.");
+      new obsidian.Notice(`❌ 保存失败: InputService 未初始化`);
       return;
+    }
+    const finalData = { ...formData };
+    const startM = timeToMinutes(finalData.时间);
+    const endM = timeToMinutes(finalData.结束);
+    let durM = !isNaN(parseInt(finalData.时长)) ? parseInt(finalData.时长) : null;
+    if (startM !== null && endM !== null) {
+      let finalDuration = endM - startM;
+      if (finalDuration < 0) finalDuration += 24 * 60;
+      finalData.时长 = finalDuration;
+    } else if (startM !== null && durM !== null) {
+      finalData.结束 = minutesToTime(startM + durM);
+    } else if (endM !== null && durM !== null) {
+      finalData.时间 = minutesToTime(endM - durM);
     }
     const finalTheme = selectedThemeId ? themeIdMap.get(selectedThemeId) : void 0;
     if (onSave) {
-      onSave({ template, formData, theme: finalTheme });
+      onSave({ template, formData: finalData, theme: finalTheme });
       closeModal();
     } else {
       try {
-        await inputService.executeTemplate(template, formData, finalTheme);
+        await inputService.executeTemplate(template, finalData, finalTheme);
         new obsidian.Notice(`✅ 已保存`);
         dataStore?.notifyChange?.();
         closeModal();
@@ -31610,8 +31714,6 @@ let TaskService = class {
   }
   /**
    * 根据任务ID获取其在文件中的原始行文本。
-   * @param taskId - 任务的唯一ID (e.g., 'path/to/file.md#123')
-   * @returns 任务行的文本内容，如果找不到则抛出错误。
    */
   async getTaskLine(taskId) {
     const { path, lineNo } = this.parseTaskId(taskId);
@@ -31623,11 +31725,7 @@ let TaskService = class {
     return lines[lineNo - 1];
   }
   /**
-   * 更新文件中的特定行。这是一个核心的私有方法。
-   * @param path - 文件路径。
-   * @param lineNo - 要替换的行号 (1-based)。
-   * @param newLine - 新的行文本。
-   * @param nextLine - (可选) 如果是周期任务，要在下一行插入的新任务文本。
+   * 更新文件中的特定行。
    */
   async updateTaskLine(path, lineNo, newLine, nextLine) {
     const file = this.app.vault.getAbstractFileByPath(path);
@@ -31643,8 +31741,6 @@ let TaskService = class {
   }
   /**
    * 完成一个任务。
-   * @param taskId - 任务ID。
-   * @param options - 包含可选时长等信息的对象。
    */
   async completeTask(taskId, options) {
     const { path, lineNo } = this.parseTaskId(taskId);
@@ -31653,20 +31749,21 @@ let TaskService = class {
       rawLine,
       todayISO(),
       nowHHMM(),
-      options?.duration
+      options
     );
     await this.updateTaskLine(path, lineNo, completedLine, nextTaskLine);
   }
   /**
    * 更新任务的时间和/或时长。
-   * @param taskId - 任务ID。
-   * @param updates - 包含要更新的时间和/或时长的对象。
    */
   async updateTaskTime(taskId, updates) {
     const { path, lineNo } = this.parseTaskId(taskId);
     let line2 = await this.getTaskLine(taskId);
     if (updates.time !== void 0) {
       line2 = this.upsertKvTag(line2, "时间", updates.time);
+    }
+    if (updates.endTime !== void 0) {
+      line2 = this.upsertKvTag(line2, "结束", updates.endTime);
     }
     if (updates.duration !== void 0) {
       line2 = this.upsertKvTag(line2, "时长", String(updates.duration));
@@ -31688,7 +31785,7 @@ let TaskService = class {
    * 辅助函数：在任务行中更新或插入 (key:: value) 格式的标签。
    */
   upsertKvTag(line2, key, value) {
-    const pattern = new RegExp(`([\\(\\[]\\s*${key}::\\s*)[^\\)\\]]*(\\s*[\\)\\]])`);
+    const pattern = new RegExp(`([(\\[]\\s*${key}::\\s*)[^\\)\\]]*(\\s*[\\)\\]])`);
     if (pattern.test(line2)) {
       return line2.replace(pattern, `$1${value}$2`);
     } else {
@@ -31818,8 +31915,12 @@ let TimerService = class {
         return;
       }
       try {
-        await this.taskService.updateTaskTime(taskId, { time: nowHHMM() });
-        new obsidian.Notice(`计时开始，已记录任务开始时间。`);
+        if (!taskItem.startTime) {
+          await this.taskService.updateTaskTime(taskId, { time: nowHHMM() });
+          new obsidian.Notice(`计时开始，已记录任务开始时间。`);
+        } else {
+          new obsidian.Notice(`计时开始。`);
+        }
       } catch (error) {
         console.error("Failed to write start time for task:", error);
         new obsidian.Notice("记录任务开始时间失败！");
@@ -31874,12 +31975,20 @@ let TimerService = class {
         await this.appStore.removeTimer(timerId);
         return;
       }
+      let endTime;
+      if (taskItem.startTime) {
+        const startMinutes = timeToMinutes(taskItem.startTime);
+        if (startMinutes !== null) {
+          const endMinutes = startMinutes + totalMinutes;
+          endTime = minutesToTime(endMinutes);
+        }
+      }
       const currentLine = await this.taskService.getTaskLine(timer.taskId);
       if (currentLine && /^\s*-\s*\[ \]\s*/.test(currentLine)) {
-        await this.taskService.completeTask(timer.taskId, { duration: totalMinutes });
+        await this.taskService.completeTask(timer.taskId, { duration: totalMinutes, endTime });
         new obsidian.Notice(`任务已完成，时长 ${totalMinutes} 分钟已记录。`);
       } else {
-        await this.taskService.updateTaskTime(timer.taskId, { duration: totalMinutes });
+        await this.taskService.updateTaskTime(timer.taskId, { duration: totalMinutes, endTime });
         new obsidian.Notice(`任务时长已更新为 ${totalMinutes} 分钟。`);
       }
     } catch (e2) {

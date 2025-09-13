@@ -62,9 +62,11 @@ export function parseTaskLine(
                 const t = v.trim().replace(/^#/, '');
                 if (t) item.tags.push(t);
             });
-        } else if (['时间', 'time'].includes(key)) {
-            item.time = value;
-        } else if (['时长', 'duration'].includes(key)) {
+        } else if (['时间', 'time', 'start'].includes(lowerKey)) { // [核心修改]
+            item.startTime = value;
+        } else if (['结束', 'end'].includes(lowerKey)) { // [核心修改]
+            item.endTime = value;
+        } else if (['时长', 'duration'].includes(lowerKey)) { // [核心修改]
             item.duration = Number(value) || undefined;
         } else {
             const num = Number(value);
@@ -125,7 +127,8 @@ export function parseTaskLine(
     return item;
 }
 
-/** 解析块内容 */
+/** 解析块内容 (无变化) */
+// ... parseBlockContent function remains unchanged ...
 export function parseBlockContent(
     filePath: string, lines: string[], startIdx: number, endIdx: number, parentFolder: string
 ): Item | null {
@@ -148,7 +151,6 @@ export function parseBlockContent(
         const line = rawLine.trim();
         if (!contentStarted) {
             if (line === '') continue;
-            // [MODIFIED] 正则表达式 `::?` 允许单冒号或双冒号
             const kv = line.match(/^([^:：]{1,20})::?\s*(.*)$/);
             if (kv) {
                 const key = kv[1].trim();
@@ -175,8 +177,8 @@ export function parseBlockContent(
         } else { contentText += (contentText ? '\n' : '') + rawLine; }
     }
 
-    if (contentText.trim() !== '')       title = contentText.trim().split(/\r?\n/)[0];
-    else if (tags.length > 0)          title = tags.join(', ');
+    if (contentText.trim() !== '')      title = contentText.trim().split(/\r?\n/)[0];
+    else if (tags.length > 0)        title = tags.join(', ');
     title = title.replace(/^(?:\p{Extended_Pictographic}\uFE0F?\s*)+/u, '').trim().slice(0, 20);
 
     if (!categoryKey) categoryKey = parentFolder || '';
@@ -192,7 +194,6 @@ export function parseBlockContent(
         modified: 0,
         extra,
         categoryKey,
-        // [新增] 填充 folder
         folder: parentFolder,
     };
     if (iconVal) item.icon = iconVal;
@@ -207,7 +208,6 @@ export function parseBlockContent(
 
     item.date = date;
 
-    // [新增] 计算周期数
     if (item.period && item.date) {
         item.periodCount = getPeriodCount(item.period, dayjs(item.date));
     }

@@ -1,152 +1,143 @@
 // src/features/dashboard/views/timeline/timeline-parser.ts
 import { Item } from '@core/domain/schema';
-import dayjs from 'dayjs';
+import { dayjs, timeToMinutes } from '@core/utils/date';
 
 /**
  * 增强后的任务项，包含用于时间轴视图的额外信息
  */
 export interface TimelineTask extends Item {
-  startMinute: number;
-  endMinute: number;
-  duration: number;
-  pureText: string;
-  actualStartDate: string; // 任务真实的开始日期
+    startMinute: number;
+    endMinute: number;
+    duration: number;
+    pureText: string;
+    actualStartDate: string; // 任务真实的开始日期
 }
 
 /**
  * 表示在时间轴上渲染的单个任务块，可能是一个跨天任务的一部分
  */
 export interface TaskBlock extends TimelineTask {
-  day: string; // YYYY-MM-DD
-  blockStartMinute: number;
-  blockEndMinute: number;
+    day: string; // YYYY-MM-DD
+    blockStartMinute: number;
+    blockEndMinute: number;
 }
 
 const DATE_FORMAT = 'YYYY-MM-DD';
 
 /**
- * 从任务文本中解析 [时间:: HH:mm] 和 [时长:: mm]
- * @param rawText - 原始任务文本
- * @returns 解析出的开始分钟数、时长和结束分钟数
+ * [新函数] 从 Item 对象解析出一致的时间信息
  */
-function parseTimeAndDuration(rawText: string): { startMinute: number | null; duration: number | null; endMinute: number | null } {
-  const timeMatch = rawText.match(/[\(\[]\s*时间::\s*([0-2]?\d:[0-5]\d)\s*[\)\]]/);
-  const durationMatch = rawText.match(/[\(\[]\s*时长::\s*(\d+)\s*[\)\]]/);
+function parseAllTimes(item: Item): { startMinute: number | null; duration: number | null; endMinute: number | null } {
+    const startMinute = item.startTime ? timeToMinutes(item.startTime) : null;
+    const endMinute = item.endTime ? timeToMinutes(item.endTime) : null;
+    const duration = item.duration; // duration is already a number
 
-  let startMinute: number | null = null;
-  let duration: number | null = null;
-  let endMinute: number | null = null;
+    // 优先级 1: 有开始和结束，计算并覆盖时长
+    if (startMinute !== null && endMinute !== null) {
+        let calculatedDuration = endMinute - startMinute;
+        if (calculatedDuration < 0) calculatedDuration += 24 * 60; // 跨天
+        return { startMinute, duration: calculatedDuration, endMinute };
+    }
+    
+    // 优先级 2: 有开始和时长，计算结束
+    if (startMinute !== null && duration !== null && duration >= 0) {
+        return { startMinute, duration, endMinute: startMinute + duration };
+    }
 
-  if (timeMatch) {
-    const [h, m] = timeMatch[1].split(':').map(Number);
-    startMinute = h * 60 + m;
-  }
-  if (durationMatch) {
-    duration = parseInt(durationMatch[1], 10);
-  }
-  if (startMinute !== null && duration !== null) {
-    endMinute = startMinute + duration;
-  }
-  return { startMinute, duration, endMinute };
+    return { startMinute: null, duration: null, endMinute: null };
 }
 
 /**
  * 从原始任务文本中提取纯净的显示文本
- * @param rawText - 原始任务文本
- * @returns 清理后的任务标题
  */
 function extractPureText(rawText: string): string {
-  return rawText
-    .replace(/<!--[\s\S]*?-->/g, '') // 移除 HTML 注释
-    .replace(/[\(\[]\s*时间::\s*([0-2]?\d:[0-5]\d)\s*[\)\]]/g, '')
-    .replace(/[\(\[]\s*时长::\s*(\d+)\s*[\)\]]/g, '')
-    .replace(/#[\p{L}\d\-_/]+/gu, '') // 移除 tags
-    .replace(/✅?\s*\d{4}-\d{2}-\d{2}/g, '') // 移除完成日期
-    .replace(/[\(\[]\s*🔁\s*.*?\s*[\)\]]/gi, '') // 移除重复任务
-    .replace(/\s+/g, ' ')
-    .trim();
+    return rawText
+        .replace(/<!--[\s\S]*?-->/g, '') // [核心修复] 恢复此行，移除 HTML 注释
+        .replace(/[\(\[]\s*(时间|结束|时长)::.*?[\)\]]/g, '') // 移除所有时间相关标签
+        .replace(/#[\p{L}\d\-_/]+/gu, '') // 移除 tags
+        .replace(/✅?\s*\d{4}-\d{2}-\d{2}/g, '') // 移除完成日期
+        .replace(/[\(\[]\s*🔁\s*.*?\s*[\)\]]/gi, '') // 移除重复任务
+        .replace(/\s+/g, ' ')
+        .trim();
 }
 
 /**
  * 过滤并转换原始 Item 为 TimelineTask
- * @param items - 从 DataStore 获取的原始 Item 数组
- * @returns 只包含有效时间信息的 TimelineTask 数组
  */
 export function processItemsToTimelineTasks(items: Item[]): TimelineTask[] {
-  const timelineTasks: TimelineTask[] = [];
+    const timelineTasks: TimelineTask[] = [];
 
-  for (const item of items) {
-    const fileName = item.file?.basename || item.filename || '';
-    if (!fileName) continue;
+    for (const item of items) {
+        const fileName = item.file?.basename || item.filename || '';
+        if (!fileName) continue;
 
-    if (item.type !== 'task' || !item.categoryKey?.endsWith('/done')) continue;
+        if (item.type !== 'task' || !item.categoryKey?.endsWith('/done')) continue;
 
-    const { startMinute, duration, endMinute } = parseTimeAndDuration(item.content);
+        const { startMinute, duration, endMinute } = parseAllTimes(item);
 
-    if (startMinute !== null && duration !== null && endMinute !== null && item.doneDate) {
-      
-      const doneDate = dayjs(item.doneDate);
-      const daysSpanned = Math.floor(startMinute / 1440);
-      const actualStartDate = doneDate.subtract(daysSpanned, 'day').format(DATE_FORMAT);
+        if (startMinute !== null && duration !== null && endMinute !== null && item.doneDate) {
+            
+            const doneDate = dayjs(item.doneDate);
+            // 修正跨天任务的实际开始日期
+            const daysSpanned = Math.floor(startMinute / 1440);
+            const actualStartDate = doneDate.subtract(daysSpanned, 'day').format(DATE_FORMAT);
 
-      timelineTasks.push({
-        ...item,
-        startMinute,
-        duration,
-        endMinute,
-        pureText: extractPureText(item.content),
-        fileName: fileName,
-        actualStartDate: actualStartDate,
-      });
+            timelineTasks.push({
+                ...item,
+                startMinute,
+                duration,
+                endMinute,
+                pureText: extractPureText(item.content),
+                fileName: fileName,
+                actualStartDate: actualStartDate,
+            });
+        }
     }
-  }
-  return timelineTasks;
+    return timelineTasks;
 }
 
 /**
  * 将单个任务（可能跨天）拆分为多个按天对齐的 TaskBlock
- * @param task - 一个 TimelineTask
- * @param dateRange - [startDate, endDate]，用于确定拆分范围
- * @returns 拆分后的 TaskBlock 数组
  */
 export function splitTaskIntoDayBlocks(task: TimelineTask, dateRange: [dayjs.Dayjs, dayjs.Dayjs]): TaskBlock[] {
-  const blocks: TaskBlock[] = [];
-  if (task.startMinute === null || task.endMinute === null || !task.doneDate) {
-    return [];
-  }
+    const blocks: TaskBlock[] = [];
+    if (task.startMinute === null || task.endMinute === null || !task.doneDate) {
+        return [];
+    }
 
-  let currentDate = dayjs(task.actualStartDate);
-  let currentStartMinute = task.startMinute % 1440;
-  let remainingDuration = task.duration;
-  
-  while (remainingDuration > 0 && currentDate.isBefore(dateRange[1].add(1, 'day'))) {
-    const dayStr = currentDate.format(DATE_FORMAT);
+    let currentDate = dayjs(task.actualStartDate);
+    let currentStartMinute = task.startMinute % 1440;
+    let remainingDuration = task.duration;
+    
+    while (remainingDuration > 0 && currentDate.isBefore(dateRange[1].add(1, 'day'))) {
+        const dayStr = currentDate.format(DATE_FORMAT);
 
-    if (currentDate.isBefore(dateRange[0], 'day')) {
-        const minutesInDay = Math.min(1440 - currentStartMinute, remainingDuration);
-        remainingDuration -= minutesInDay;
+        // 如果任务块在当前视图范围之前，快速跳过
+        if (currentDate.isBefore(dateRange[0], 'day')) {
+            const minutesInDay = Math.min(1440 - currentStartMinute, remainingDuration);
+            remainingDuration -= minutesInDay;
+            currentStartMinute = 0;
+            currentDate = currentDate.add(1, 'day');
+            continue;
+        }
+        
+        const blockStartMinute = currentStartMinute;
+        const blockEndMinute = Math.min(1440, currentStartMinute + remainingDuration);
+
+        if (blockStartMinute < blockEndMinute) {
+            blocks.push({
+                ...task,
+                day: dayStr,
+                blockStartMinute: blockStartMinute,
+                blockEndMinute: blockEndMinute,
+            });
+        }
+
+        const durationInDay = blockEndMinute - blockStartMinute;
+        remainingDuration -= durationInDay;
         currentStartMinute = 0;
         currentDate = currentDate.add(1, 'day');
-        continue;
-    }
-    
-    const blockStartMinute = currentStartMinute;
-    const blockEndMinute = Math.min(1440, currentStartMinute + remainingDuration);
-
-    if (blockStartMinute < blockEndMinute) {
-      blocks.push({
-        ...task,
-        day: dayStr,
-        blockStartMinute: blockStartMinute,
-        blockEndMinute: blockEndMinute,
-      });
     }
 
-    const durationInDay = blockEndMinute - blockStartMinute;
-    remainingDuration -= durationInDay;
-    currentStartMinute = 0;
-    currentDate = currentDate.add(1, 'day');
-  }
-
-  return blocks;
+    return blocks;
 }

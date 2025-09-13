@@ -12,35 +12,38 @@ export interface RecurrenceInfo {
     whenDone: boolean;
 }
 
-// [内部辅助函数] 声明 upsertKvTag 的类型，因为是从 taskService.ts 移动过来的逻辑
-declare function upsertKvTag(line: string, key: string, value: string): string;
+// [内部辅助函数]
+const upsertKvTag = (line: string, key: string, value: string): string => {
+    const pattern = new RegExp(`([\(\\[]\\s*${key}::\\s*)[^\\)\\]]*(\\s*[\\)\\]])`);
+    if (pattern.test(line)) {
+        return line.replace(pattern, `$1${value}$2`);
+    } else {
+        return `${line.trim()} (${key}:: ${value})`;
+    }
+};
 
 /* ---------- 单行任务完成 ---------- */
 export function toggleToDone(
     rawLine: string,
     todayISO: string,
     nowTime: string,
-    duration?: number,
+    options?: { duration?: number; endTime?: string } // [修改] 使用 options 对象
 ): string {
     let line = rawLine;
 
-    // [重构] 如果传入了 duration，则先更新或插入时长标签
+    const duration = options?.duration;
+    const endTime = options?.endTime;
+
     if (duration !== undefined) {
-        // 这个函数逻辑和 taskService 里的一样，用于替换或追加 (时长:: value)
-        const upsert = (l: string, k: string, v: string) => {
-            const pattern = new RegExp(`([\(\\[]\\s*${k}::\\s*)[^\\)\\]]*(\\s*[\\)\\]])`);
-            if (pattern.test(l)) {
-                return l.replace(pattern, `$1${v}$2`);
-            } else {
-                return `${l.trim()} (${k}:: ${v})`;
-            }
-        };
-        line = upsert(line, '时长', String(duration));
+        line = upsertKvTag(line, '时长', String(duration));
+    }
+
+    if (endTime !== undefined) {
+        line = upsertKvTag(line, '结束', endTime);
     }
     
-    // [核心修改] 只有在没有传入时长的情况下，才更新时间字段
-    if (duration === undefined) {
-        // 确保 (时长::x) 在括号里，同时插入时间 (时间::hh:mm)
+    // [核心修改] 只有在没有传入任何时间选项时，才自动写入当前时间
+    if (duration === undefined && endTime === undefined) {
         line = line.replace(/(\s|^)(时长::[^\s()]+)/g, (m, pre) =>
             m.includes('(') ? m : `${pre}(${m.trim()})`,
         );
@@ -56,7 +59,6 @@ export function toggleToDone(
         }
     }
 
-
     // 方框 → [x]，若原行缺失前缀则补全
     line = line.replace(/^(\s*-\s*)\[[ xX-]\]/, '$1[x]');
     if (!/^-\s*\[x\]/.test(line)) {
@@ -71,7 +73,8 @@ export function toggleToDone(
     return `${line.trim()} ${EMOJI.done} ${todayISO}`;
 }
 
-/* ---------- 周期任务 ---------- */
+/* ---------- 周期任务 (无变化) ---------- */
+// ... parseRecurrence, findBaseDateForRecurring, generateNextRecurringTask ...
 export function parseRecurrence(rawTask: string): RecurrenceInfo | null {
     const m = rawTask.match(
         /🔁\s*every\s+(\d+)?\s*(day|week|month|year)s?\s*(when done)?/i,
@@ -130,14 +133,15 @@ export function generateNextRecurringTask(
     return next.trim();
 }
 
+
 /* ---------- 一次性完成标记 + 生成下一条 ---------- */
 export function markTaskDone(
     rawLine: string,
     todayISO: string,
     nowTime: string,
-    duration?: number,
+    options?: { duration?: number; endTime?: string }
 ): { completedLine: string; nextTaskLine?: string } {
-    const completedLine = toggleToDone(rawLine, todayISO, nowTime, duration);
+    const completedLine = toggleToDone(rawLine, todayISO, nowTime, options);
     const rec = parseRecurrence(rawLine);
     if (!rec) return { completedLine };
 

@@ -15,8 +15,6 @@ export class TaskService {
 
     /**
      * 根据任务ID获取其在文件中的原始行文本。
-     * @param taskId - 任务的唯一ID (e.g., 'path/to/file.md#123')
-     * @returns 任务行的文本内容，如果找不到则抛出错误。
      */
     public async getTaskLine(taskId: string): Promise<string> {
         const { path, lineNo } = this.parseTaskId(taskId);
@@ -31,11 +29,7 @@ export class TaskService {
     }
 
     /**
-     * 更新文件中的特定行。这是一个核心的私有方法。
-     * @param path - 文件路径。
-     * @param lineNo - 要替换的行号 (1-based)。
-     * @param newLine - 新的行文本。
-     * @param nextLine - (可选) 如果是周期任务，要在下一行插入的新任务文本。
+     * 更新文件中的特定行。
      */
     private async updateTaskLine(path: string, lineNo: number, newLine: string, nextLine?: string): Promise<void> {
         const file = this.app.vault.getAbstractFileByPath(path);
@@ -55,10 +49,8 @@ export class TaskService {
 
     /**
      * 完成一个任务。
-     * @param taskId - 任务ID。
-     * @param options - 包含可选时长等信息的对象。
      */
-    public async completeTask(taskId: string, options?: { duration?: number }): Promise<void> {
+    public async completeTask(taskId: string, options?: { duration?: number; endTime?: string }): Promise<void> {
         const { path, lineNo } = this.parseTaskId(taskId);
         const rawLine = await this.getTaskLine(taskId);
 
@@ -66,7 +58,7 @@ export class TaskService {
             rawLine,
             todayISO(),
             nowHHMM(),
-            options?.duration
+            options
         );
 
         await this.updateTaskLine(path, lineNo, completedLine, nextTaskLine);
@@ -74,15 +66,16 @@ export class TaskService {
 
     /**
      * 更新任务的时间和/或时长。
-     * @param taskId - 任务ID。
-     * @param updates - 包含要更新的时间和/或时长的对象。
      */
-    public async updateTaskTime(taskId: string, updates: { time?: string; duration?: number }): Promise<void> {
+    public async updateTaskTime(taskId: string, updates: { time?: string; endTime?: string; duration?: number }): Promise<void> {
         const { path, lineNo } = this.parseTaskId(taskId);
         let line = await this.getTaskLine(taskId);
 
         if (updates.time !== undefined) {
             line = this.upsertKvTag(line, '时间', updates.time);
+        }
+        if (updates.endTime !== undefined) {
+            line = this.upsertKvTag(line, '结束', updates.endTime);
         }
         if (updates.duration !== undefined) {
             line = this.upsertKvTag(line, '时长', String(updates.duration));
@@ -109,7 +102,7 @@ export class TaskService {
      * 辅助函数：在任务行中更新或插入 (key:: value) 格式的标签。
      */
     private upsertKvTag(line: string, key: string, value: string): string {
-        const pattern = new RegExp(`([\\(\\[]\\s*${key}::\\s*)[^\\)\\]]*(\\s*[\\)\\]])`);
+        const pattern = new RegExp(`([\(\\[]\\s*${key}::\\s*)[^\\)\\]]*(\\s*[\\)\\]])`);
         if (pattern.test(line)) {
             // 如果已存在，则替换值
             return line.replace(pattern, `$1${value}$2`);

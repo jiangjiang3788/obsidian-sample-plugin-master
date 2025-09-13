@@ -181,7 +181,8 @@ export interface Item {
         basename?: string;
     };
     fileName?: string;
-    time?: string;
+    startTime?: string; // [核心修改] time 重命名为 startTime
+    endTime?: string;   // [核心修改] 新增 endTime
     duration?: number;
     period?: string;
     rating?: number;
@@ -192,7 +193,7 @@ export interface Item {
 }
 
 // [修改] 将新字段加入核心字段列表
-export const CORE_FIELDS = ['id', 'type', 'title', 'content', 'categoryKey', 'tags', 'recurrence', 'icon', 'priority', 'date', 'header', 'time', 'duration', 'period', 'rating', 'pintu', 'folder', 'periodCount'] as const;
+export const CORE_FIELDS = ['id', 'type', 'title', 'content', 'categoryKey', 'tags', 'recurrence', 'icon', 'priority', 'date', 'header', 'startTime', 'endTime', 'duration', 'period', 'rating', 'pintu', 'folder', 'periodCount'] as const;
 
 export type CoreField = typeof CORE_FIELDS[number];
 export function getAllFields(items: Item[]): string[] {

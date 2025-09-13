@@ -24,8 +24,6 @@ export const nowHHMM = () => dayjs().format('HH:mm');
 
 /**
  * [新增] 将总秒数格式化为 HH:MM:SS 字符串
- * @param totalSeconds - 总秒数
- * @returns 格式化后的时间字符串
  */
 export function formatSecondsToHHMMSS(totalSeconds: number): string {
     if (isNaN(totalSeconds) || totalSeconds < 0) {
@@ -39,6 +37,21 @@ export function formatSecondsToHHMMSS(totalSeconds: number): string {
 
     return `${pad(hours)}:${pad(minutes)}:${pad(seconds)}`;
 }
+
+// [核心新增] 时间与分钟的转换工具
+export const timeToMinutes = (time: string): number | null => {
+    if (!time || !/^\d{1,2}:\d{2}$/.test(time)) return null;
+    const [h, m] = time.split(':').map(Number);
+    return h * 60 + m;
+};
+
+export const minutesToTime = (minutes: number): string => {
+    if (isNaN(minutes) || minutes < 0) return '';
+    const h = Math.floor(minutes / 60) % 24;
+    const m = minutes % 60;
+    return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+};
+
 
 /* ---------- normalize ---------- */
 export function normalizeDateStr(raw: string) {
@@ -87,33 +100,14 @@ export function formatDateForView(d: dayjs.Dayjs, v: string): string {
 }
 
 // --- 为新视图提取的公共周、年计算函数 ---
-
-/**
- * 获取指定日期在当年的ISO周数.
- */
 export const getWeekNumber = (d: dayjs.Dayjs): number => d.isoWeek();
-
-/**
- * 获取指定年份的总周数.
- */
 export const getWeeksInYear = (year: number): number => {
     const endOfYear = dayjs().year(year).endOf('year');
     return endOfYear.isoWeek() === 1 ? 52 : endOfYear.isoWeek();
 };
-
-/**
- * 根据年份和周数获取该周的周一.
- */
 export const getMondayByWeek = (year: number, week: number): dayjs.Dayjs => {
     return dayjs().year(year).isoWeek(week).startOf('isoWeek');
 };
-
-/**
- * [核心修复] 获取指定月份包含的所有周 (新版健壮逻辑).
- * @param year - 年份.
- * @param month - 月份 (1-12).
- * @returns {{ week: number }[]} 一个包含周序号的数组.
- */
 export const getWeeksOfMonth = (year: number, month: number): { week: number }[] => {
     const weeks = new Set<number>();
     const startOfMonth = dayjs().year(year).month(month - 1).startOf('month');
@@ -128,13 +122,6 @@ export const getWeeksOfMonth = (year: number, month: number): { week: number }[]
 
     return Array.from(weeks).sort((a,b) => a - b).map(w => ({ week: w }));
 };
-
-/**
- * [新增] 根据周期和日期计算周期数
- * @param period - 周期字符串，如 '年', '季', '月', '周'
- * @param date - dayjs 日期对象
- * @returns 对应的周期数值，如果周期无效则返回 undefined
- */
 export function getPeriodCount(period: string, date: dayjs.Dayjs): number | undefined {
     if (!date || !date.isValid()) {
         return undefined;
