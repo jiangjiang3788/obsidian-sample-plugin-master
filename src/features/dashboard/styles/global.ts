@@ -817,4 +817,16 @@ body.theme-dark .tn-week-cell.is-selected {
     background-color: var(--background-secondary) !important;
 }
 
+/*
+ * ===================================================================
+ * --- 7. 插件专用模态框微调 (Modal Tweaks) ---
+ * ===================================================================
+ */
+
+/* 隐藏快速输入面板的原生关闭按钮，因为我们已在组件内部实现了一个 */
+.think-quick-input-modal .modal-close-button {
+    display: none !important;
+}
+
+
 `.trim();
