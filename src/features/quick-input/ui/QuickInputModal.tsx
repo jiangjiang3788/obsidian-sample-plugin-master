@@ -10,7 +10,7 @@ import { Button, RadioGroup as MuiRadioGroup, FormControlLabel, Radio, FormContr
 import CloseIcon from '@mui/icons-material/Close';
 import { SimpleSelect } from '@shared/ui/SimpleSelect';
 import { buildThemeTree, ThemeTreeNode } from '@core/utils/themeUtils';
-import { dayjs } from '@core/utils/date';
+import { dayjs, timeToMinutes, minutesToTime } from '@core/utils/date';
 import { dataStore, inputService } from '@state/storeRegistry';
 
 export interface QuickInputSaveData {
@@ -52,7 +52,20 @@ export class QuickInputModal extends Modal {
     }
 }
 
-// [1. 移动] getEffectiveTemplate 函数已从此位置移除
+// ... findNodePath, renderThemeLevels (no changes) ...
+function getEffectiveTemplate(settings: InputSettings, blockId: string, themeId?: string): { template: BlockTemplate | null; theme: ThemeDefinition | null } {
+    const baseBlock = settings.blocks.find(b => b.id === blockId);
+    if (!baseBlock) return { template: null, theme: null };
+    const theme = settings.themes.find(t => t.id === themeId) || null;
+    if (themeId) {
+        const override = settings.overrides.find(o => o.blockId === blockId && o.themeId === themeId);
+        if (override && override.status === 'enabled') {
+            const effectiveTemplate: BlockTemplate = { ...baseBlock, fields: override.fields ?? baseBlock.fields, outputTemplate: override.outputTemplate ?? baseBlock.outputTemplate, targetFile: override.targetFile ?? baseBlock.targetFile, appendUnderHeader: override.appendUnderHeader ?? baseBlock.appendUnderHeader };
+            return { template: effectiveTemplate, theme };
+        }
+    }
+    return { template: baseBlock, theme };
+}
 
 const findNodePath = (nodes: ThemeTreeNode[], themeId: string): ThemeTreeNode[] => {
     for (const node of nodes) {
@@ -90,6 +103,7 @@ const renderThemeLevels = (nodes: ThemeTreeNode[], activePath: ThemeTreeNode[], 
     );
 };
 
+
 function QuickInputForm({ app, blockId, context, themeId, onSave, closeModal }: {
     app: App;
     blockId: string;
@@ -99,8 +113,7 @@ function QuickInputForm({ app, blockId, context, themeId, onSave, closeModal }: 
     closeModal: () => void;
 }) {
     const settings = useStore(state => state.settings.inputSettings);
-    
-    // [2. 定义] 将 getEffectiveTemplate 函数移动到组件内部
+
     const getEffectiveTemplate = (settings: InputSettings, blockId: string, themeId?: string): { template: BlockTemplate | null; theme: ThemeDefinition | null } => {
         const baseBlock = settings.blocks.find(b => b.id === blockId);
         if (!baseBlock) return { template: null, theme: null };
@@ -114,7 +127,7 @@ function QuickInputForm({ app, blockId, context, themeId, onSave, closeModal }: 
         }
         return { template: baseBlock, theme };
     }
-
+    
     const { themeTree, themeIdMap } = useMemo(() => {
         const { themes, overrides } = settings;
         const disabledThemeIds = new Set<string>();
@@ -185,25 +198,77 @@ function QuickInputForm({ app, blockId, context, themeId, onSave, closeModal }: 
         return initialData;
     });
 
+    useEffect(() => {
+        const data = { ...formData };
+        const start = data.时间;
+        const end = data.结束;
+        const durationStr = String(data.时长);
+        const duration = !isNaN(parseInt(durationStr)) ? parseInt(durationStr) : null;
+        
+        const startMinutes = timeToMinutes(start);
+        const endMinutes = timeToMinutes(end);
+        
+        const lastChanged = data.lastChanged;
+        let changes: Record<string, any> = {};
+
+        if (startMinutes !== null && endMinutes !== null && lastChanged !== '时长') {
+            let newDuration = endMinutes - startMinutes;
+            if (newDuration < 0) newDuration += 24 * 60;
+            if (newDuration !== duration) {
+                changes.时长 = newDuration;
+            }
+        } else if (startMinutes !== null && duration !== null && lastChanged !== '结束') {
+            const newEndTime = minutesToTime(startMinutes + duration);
+            if (newEndTime !== end) {
+                changes.结束 = newEndTime;
+            }
+        } else if (endMinutes !== null && duration !== null && lastChanged !== '时间') {
+            const newStartTime = minutesToTime(endMinutes - duration);
+            if (newStartTime !== start) {
+                changes.时间 = newStartTime;
+            }
+        }
+
+        if (Object.keys(changes).length > 0) {
+            setFormData(current => ({ ...current, ...changes, lastChanged: undefined }));
+        }
+
+    }, [formData]);
+    
     const handleUpdate = (key: string, value: any, isOptionObject = false) => {
-        setFormData(current => ({ ...current, [key]: isOptionObject ? { value: value.value, label: value.label } : value }));
+        setFormData(current => ({
+            ...current,
+            [key]: isOptionObject ? { value: value.value, label: value.label } : value,
+            lastChanged: key
+        }));
     };
 
     const handleSubmit = async () => {
         if (!template) return;
-        if (!inputService) {
-            new Notice(`❌ 保存失败: InputService 未初始化`, 10000);
-            console.error("ThinkPlugin Error: Attempted to save from QuickInputModal, but 'inputService' from storeRegistry is undefined.");
-            return;
+        if (!inputService) { new Notice(`❌ 保存失败: InputService 未初始化`); return; }
+
+        const finalData = { ...formData };
+        const startM = timeToMinutes(finalData.时间);
+        const endM = timeToMinutes(finalData.结束);
+        let durM = !isNaN(parseInt(finalData.时长)) ? parseInt(finalData.时长) : null;
+
+        if (startM !== null && endM !== null) {
+            let finalDuration = endM - startM;
+            if (finalDuration < 0) finalDuration += 24 * 60;
+            finalData.时长 = finalDuration;
+        } else if (startM !== null && durM !== null) {
+            finalData.结束 = minutesToTime(startM + durM);
+        } else if (endM !== null && durM !== null) {
+            finalData.时间 = minutesToTime(endM - durM);
         }
 
         const finalTheme = selectedThemeId ? themeIdMap.get(selectedThemeId) : undefined;
         if (onSave) {
-            onSave({ template, formData, theme: finalTheme });
+            onSave({ template, formData: finalData, theme: finalTheme });
             closeModal();
         } else {
             try {
-                await inputService.executeTemplate(template, formData, finalTheme);
+                await inputService.executeTemplate(template, finalData, finalTheme);
                 new Notice(`✅ 已保存`);
                 dataStore?.notifyChange?.();
                 closeModal();

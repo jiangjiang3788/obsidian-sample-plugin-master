@@ -7,7 +7,7 @@ import { DataStore } from './dataStore';
 import { InputService } from './inputService';
 import type { QuickInputSaveData } from '@features/quick-input/ui/QuickInputModal';
 import { AppToken } from './types';
-import { nowHHMM } from '@core/utils/date'; // [1. 新增导入]
+import { nowHHMM, timeToMinutes, minutesToTime } from '@core/utils/date';
 
 @singleton()
 export class TimerService {
@@ -36,10 +36,14 @@ export class TimerService {
                 return;
             }
 
-            // [2. 核心修改] 在创建新计时器时，立即将开始时间写入文件
             try {
-                await this.taskService.updateTaskTime(taskId, { time: nowHHMM() });
-                new Notice(`计时开始，已记录任务开始时间。`);
+                // 如果任务本身没有开始时间，才写入当前时间
+                if (!taskItem.startTime) {
+                    await this.taskService.updateTaskTime(taskId, { time: nowHHMM() });
+                    new Notice(`计时开始，已记录任务开始时间。`);
+                } else {
+                    new Notice(`计时开始。`);
+                }
             } catch (error) {
                 console.error("Failed to write start time for task:", error);
                 new Notice("记录任务开始时间失败！");
@@ -91,19 +95,33 @@ export class TimerService {
             totalSeconds += (Date.now() - timer.startTime) / 1000;
         }
         const totalMinutes = Math.ceil(totalSeconds / 60);
+
         try {
+            // 重新扫描以获取最新的任务信息，特别是 startTime
             const taskItem = this.dataStore.queryItems().find(i => i.id === timer.taskId);
+            
             if (!taskItem) {
                 new Notice(`错误：找不到原始任务，可能已被移动或删除。计时时长无法保存。`);
                 await this.appStore.removeTimer(timerId);
                 return;
             }
+            
+            // [核心修改] 计算结束时间
+            let endTime: string | undefined;
+            if (taskItem.startTime) {
+                const startMinutes = timeToMinutes(taskItem.startTime);
+                if (startMinutes !== null) {
+                    const endMinutes = startMinutes + totalMinutes;
+                    endTime = minutesToTime(endMinutes);
+                }
+            }
+
             const currentLine = await this.taskService.getTaskLine(timer.taskId);
             if (currentLine && /^\s*-\s*\[ \]\s*/.test(currentLine)) {
-                await this.taskService.completeTask(timer.taskId, { duration: totalMinutes });
+                await this.taskService.completeTask(timer.taskId, { duration: totalMinutes, endTime: endTime });
                 new Notice(`任务已完成，时长 ${totalMinutes} 分钟已记录。`);
             } else {
-                await this.taskService.updateTaskTime(timer.taskId, { duration: totalMinutes });
+                await this.taskService.updateTaskTime(timer.taskId, { duration: totalMinutes, endTime: endTime });
                 new Notice(`任务时长已更新为 ${totalMinutes} 分钟。`);
             }
         } catch (e: any) {
@@ -122,7 +140,6 @@ export class TimerService {
         const { template, formData, theme } = data;
         try {
             const targetFilePath = await this.inputService.executeTemplate(template, formData, theme);
-            
             const file = this.app.vault.getAbstractFileByPath(targetFilePath);
 
             if (file instanceof TFile) {
@@ -130,10 +147,7 @@ export class TimerService {
 
                 if (newItemsInFile.length > 0) {
                     const latestItem = newItemsInFile.sort((a, b) => (b.file?.line || 0) - (a.file?.line || 0))[0];
-                    
-                    // 因为 startOrResume 现在会自动写入开始时间，所以这里无需额外操作
                     this.startOrResume(latestItem.id);
-                    // new Notice('新任务已创建并开始计时！'); // startOrResume 内部会发出通知
                 } else {
                     new Notice("任务内容已创建，但未识别为可计时的任务项。");
                 }
