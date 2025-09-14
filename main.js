@@ -28923,8 +28923,7 @@ const EMOJI = {
   due: "📅",
   scheduled: "⏳",
   start: "🛫",
-  created: "➕",
-  repeat: "🔁"
+  created: "➕"
 };
 const EMPTY_LABEL = "无日期";
 const STYLE_TAG_ID = "think-plugin-style";
@@ -29206,39 +29205,27 @@ function normalizeItemDates(it) {
   }
   if (!it.categoryKey) it.categoryKey = "任务/open";
 }
-const upsertKvTag = (line2, key, value) => {
-  const pattern = new RegExp(`([(\\[]\\s*${key}::\\s*)[^\\)\\]]*(\\s*[\\)\\]])`);
-  if (pattern.test(line2)) {
-    return line2.replace(pattern, `$1${value}$2`);
-  } else {
-    return `${line2.trim()} (${key}:: ${value})`;
-  }
+const cleanTimeAndDurationTags = (line2) => {
+  return line2.replace(/\s*[\(\[]时间::[^)\]]*[\)\]]/g, "").replace(/\s*[\(\[]结束::[^)\]]*[\)\]]/g, "").replace(/\s*[\(\[]时长::[^)\]]*[\)\]]/g, "").trim();
 };
 function toggleToDone(rawLine, todayISO2, nowTime, options) {
-  let line2 = rawLine;
+  let line2 = cleanTimeAndDurationTags(rawLine);
   const duration2 = options?.duration;
+  const startTime = options?.startTime;
   const endTime = options?.endTime;
-  if (duration2 !== void 0) {
-    line2 = upsertKvTag(line2, "时长", String(duration2));
+  const tagsToAppend = [];
+  if (startTime !== void 0) {
+    tagsToAppend.push(`(时间:: ${startTime})`);
+  } else if (duration2 === void 0 && endTime === void 0) {
+    tagsToAppend.push(`(时间:: ${nowTime})`);
   }
   if (endTime !== void 0) {
-    line2 = upsertKvTag(line2, "结束", endTime);
+    tagsToAppend.push(`(结束:: ${endTime})`);
   }
-  if (duration2 === void 0 && endTime === void 0) {
-    line2 = line2.replace(
-      /(\s|^)(时长::[^\s()]+)/g,
-      (m2, pre) => m2.includes("(") ? m2 : `${pre}(${m2.trim()})`
-    );
-    if (/\(时长::[^\)]+\)/.test(line2)) {
-      line2 = line2.replace(/\((时长::[^\)]+)\)/, `(时间::${nowTime}) ($1)`);
-    } else if (/时长::[^\s]+/.test(line2)) {
-      line2 = line2.replace(/(时长::[^\s]+)/, `(时间::${nowTime}) ($1)`);
-    } else if (line2.includes(EMOJI.repeat)) {
-      line2 = line2.replace(EMOJI.repeat, `(时间::${nowTime}) ${EMOJI.repeat}`);
-    } else {
-      line2 = `${line2} (时间::${nowTime})`;
-    }
+  if (duration2 !== void 0) {
+    tagsToAppend.push(`(时长:: ${duration2})`);
   }
+  line2 = [line2, ...tagsToAppend].join(" ").replace(/\s+/g, " ").trim();
   line2 = line2.replace(/^(\s*-\s*)\[[ xX-]\]/, "$1[x]");
   if (!/^-\s*\[x\]/.test(line2)) {
     line2 = `- [x] ${line2.replace(/^-\s*\[.\]/, "").replace(/^-\s*/, "")}`;
@@ -29269,7 +29256,7 @@ function findBaseDateForRecurring(rawTask, whenDone, todayISO2) {
   return pick2(EMOJI.due) || pick2(EMOJI.scheduled) || pick2(EMOJI.start) || todayISO2;
 }
 function generateNextRecurringTask(rawTask, baseDateISO) {
-  let next2 = rawTask.replace(/^(\s*-\s*)\[[ xX-]\]/, "$1[ ]").replace(new RegExp(`\\s*${EMOJI.done}\\s*${DATE_YMD_RE.source}`), "").replace(/\(时间::\d{2}:\d{2}\)/, "");
+  let next2 = rawTask.replace(/^(\s*-\s*)\[[ xX-]\]/, "$1[ ]").replace(new RegExp(`\\s*${EMOJI.done}\\s*${DATE_YMD_RE.source}`), "").replace(/\s*[\(\[]时间::[^)\]]*[\)\]]/g, "").replace(/\s*[\(\[]结束::[^)\]]*[\)\]]/g, "").replace(/\s*[\(\[]时长::[^)\]]*[\)\]]/g, "");
   const rec = parseRecurrence(rawTask);
   if (!rec) return next2.trim();
   const base = dayjs(baseDateISO, ["YYYY-MM-DD", "YYYY/MM/DD"]);
@@ -31779,8 +31766,8 @@ let TaskService = class {
     this.app = app;
   }
   /**
-   * 根据任务ID获取其在文件中的原始行文本。
-   */
+       * 根据任务ID获取其在文件中的原始行文本。
+       */
   async getTaskLine(taskId) {
     const { path, lineNo } = this.parseTaskId(taskId);
     const file = this.app.vault.getAbstractFileByPath(path);
@@ -31791,8 +31778,8 @@ let TaskService = class {
     return lines[lineNo - 1];
   }
   /**
-   * 更新文件中的特定行。
-   */
+       * 更新文件中的特定行。
+       */
   async updateTaskLine(path, lineNo, newLine, nextLine) {
     const file = this.app.vault.getAbstractFileByPath(path);
     if (!(file instanceof obsidian.TFile)) throw new Error(`找不到文件: ${path}`);
@@ -31806,22 +31793,53 @@ let TaskService = class {
     this.dataStore.scanFile(file).then(() => this.dataStore.notifyChange());
   }
   /**
-   * 完成一个任务。
-   */
+       * 完成一个任务。
+       */
   async completeTask(taskId, options) {
     const { path, lineNo } = this.parseTaskId(taskId);
     const rawLine = await this.getTaskLine(taskId);
-    const { completedLine, nextTaskLine } = markTaskDone(
-      rawLine,
-      todayISO(),
-      nowHHMM(),
-      options
-    );
-    await this.updateTaskLine(path, lineNo, completedLine, nextTaskLine);
+    if (options) {
+      const { completedLine, nextTaskLine } = markTaskDone(
+        rawLine,
+        todayISO(),
+        options.endTime || nowHHMM(),
+        options
+      );
+      await this.updateTaskLine(path, lineNo, completedLine, nextTaskLine);
+      return;
+    }
+    const item = this.dataStore.queryItems().find((i2) => i2.id === taskId);
+    if (item && item.duration) {
+      const durationMinutes = item.duration;
+      const endTime = nowHHMM();
+      const endMinutes = timeToMinutes(endTime);
+      if (endMinutes !== null) {
+        const startMinutes = endMinutes - durationMinutes;
+        const startTime = minutesToTime(startMinutes);
+        const calculatedOptions = {
+          duration: durationMinutes,
+          startTime,
+          endTime
+        };
+        const { completedLine, nextTaskLine } = markTaskDone(
+          rawLine,
+          todayISO(),
+          endTime,
+          calculatedOptions
+        );
+        await this.updateTaskLine(path, lineNo, completedLine, nextTaskLine);
+      } else {
+        const { completedLine, nextTaskLine } = markTaskDone(rawLine, todayISO(), nowHHMM());
+        await this.updateTaskLine(path, lineNo, completedLine, nextTaskLine);
+      }
+    } else {
+      const { completedLine, nextTaskLine } = markTaskDone(rawLine, todayISO(), nowHHMM());
+      await this.updateTaskLine(path, lineNo, completedLine, nextTaskLine);
+    }
   }
   /**
-   * 更新任务的时间和/或时长。
-   */
+       * 更新任务的时间和/或时长。
+       */
   async updateTaskTime(taskId, updates) {
     const { path, lineNo } = this.parseTaskId(taskId);
     let line2 = await this.getTaskLine(taskId);
@@ -31837,8 +31855,8 @@ let TaskService = class {
     await this.updateTaskLine(path, lineNo, line2);
   }
   /**
-   * 辅助函数：解析任务ID为路径和行号。
-   */
+       * 辅助函数：解析任务ID为路径和行号。
+       */
   parseTaskId(taskId) {
     const hashIndex = taskId.lastIndexOf("#");
     if (hashIndex === -1) throw new Error(`无效的任务ID格式: ${taskId}`);
@@ -31848,8 +31866,8 @@ let TaskService = class {
     return { path, lineNo };
   }
   /**
-   * 辅助函数：在任务行中更新或插入 (key:: value) 格式的标签。
-   */
+       * 辅助函数：在任务行中更新或插入 (key:: value) 格式的标签。
+       */
   upsertKvTag(line2, key, value) {
     const pattern = new RegExp(`([(\\[]\\s*${key}::\\s*)[^\\)\\]]*(\\s*[\\)\\]])`);
     if (pattern.test(line2)) {
@@ -31980,17 +31998,7 @@ let TimerService = class {
         new obsidian.Notice("找不到要计时的任务");
         return;
       }
-      try {
-        if (!taskItem.startTime) {
-          await this.taskService.updateTaskTime(taskId, { time: nowHHMM() });
-          new obsidian.Notice(`计时开始，已记录任务开始时间。`);
-        } else {
-          new obsidian.Notice(`计时开始。`);
-        }
-      } catch (error) {
-        console.error("Failed to write start time for task:", error);
-        new obsidian.Notice("记录任务开始时间失败！");
-      }
+      new obsidian.Notice(`计时开始。`);
       await this.appStore.addTimer({
         taskId,
         startTime: Date.now(),
@@ -32041,20 +32049,19 @@ let TimerService = class {
         await this.appStore.removeTimer(timerId);
         return;
       }
-      let endTime;
-      if (taskItem.startTime) {
-        const startMinutes = timeToMinutes(taskItem.startTime);
-        if (startMinutes !== null) {
-          const endMinutes = startMinutes + totalMinutes;
-          endTime = minutesToTime(endMinutes);
-        }
+      const endTime = nowHHMM();
+      const endMinutes = timeToMinutes(endTime);
+      let startTime;
+      if (endMinutes !== null && totalMinutes > 0) {
+        const startMinutes = endMinutes - totalMinutes;
+        startTime = minutesToTime(startMinutes);
       }
       const currentLine = await this.taskService.getTaskLine(timer.taskId);
       if (currentLine && /^\s*-\s*\[ \]\s*/.test(currentLine)) {
-        await this.taskService.completeTask(timer.taskId, { duration: totalMinutes, endTime });
+        await this.taskService.completeTask(timer.taskId, { duration: totalMinutes, startTime, endTime });
         new obsidian.Notice(`任务已完成，时长 ${totalMinutes} 分钟已记录。`);
       } else {
-        await this.taskService.updateTaskTime(timer.taskId, { duration: totalMinutes, endTime });
+        await this.taskService.updateTaskTime(timer.taskId, { duration: totalMinutes, time: startTime, endTime });
         new obsidian.Notice(`任务时长已更新为 ${totalMinutes} 分钟。`);
       }
     } catch (e2) {
