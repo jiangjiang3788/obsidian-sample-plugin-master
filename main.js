@@ -30309,8 +30309,10 @@ function processItemsToTimelineTasks(items) {
     const { startMinute, duration: duration2, endMinute } = parseAllTimes(item);
     if (startMinute !== null && duration2 !== null && endMinute !== null && item.doneDate) {
       const doneDate = dayjs(item.doneDate);
-      const daysSpanned = Math.floor(startMinute / 1440);
-      const actualStartDate = doneDate.subtract(daysSpanned, "day").format(DATE_FORMAT);
+      const startOfDayMinute = timeToMinutes(item.startTime || "");
+      const endOfDayMinute = timeToMinutes(item.endTime || "");
+      const isCrossNight = startOfDayMinute !== null && endOfDayMinute !== null && startOfDayMinute > endOfDayMinute;
+      const actualStartDate = isCrossNight ? doneDate.subtract(1, "day").format(DATE_FORMAT) : doneDate.format(DATE_FORMAT);
       timelineTasks.push({
         ...item,
         startMinute,
@@ -31015,12 +31017,18 @@ const DayColumnBody = ({ app, day, blocks, hourHeight, categoriesConfig, colorMa
 };
 function TimelineView({ items, dateRange, module: module2, currentView, app, taskService }) {
   const inputBlocks = useStore((state) => state.settings.inputSettings.blocks);
+  const allDataSources = useStore((state) => state.settings.dataSources);
   const config2 = T$1(() => {
     const defaults = JSON.parse(JSON.stringify(DEFAULT_CONFIG$2));
     const userConfig = module2.viewConfig || {};
     return { ...defaults, ...userConfig, categories: userConfig.categories || defaults.categories };
   }, [module2.viewConfig]);
-  const timelineTasks = T$1(() => processItemsToTimelineTasks(items), [items]);
+  const timelineTasks = T$1(() => {
+    const dataSource = allDataSources.find((ds) => ds.id === module2.dataSourceId);
+    if (!dataSource) return [];
+    const baseItems = dataStore.queryItems(dataSource.filters);
+    return processItemsToTimelineTasks(baseItems);
+  }, [module2.dataSourceId, allDataSources, dataStore]);
   const colorMap = T$1(() => {
     const finalColorMap = {};
     const categoriesConfig = config2.categories || {};
@@ -31030,7 +31038,7 @@ function TimelineView({ items, dateRange, module: module2, currentView, app, tas
     finalColorMap[config2.UNTRACKED_LABEL] = "#9ca3af";
     return finalColorMap;
   }, [config2.categories, config2.UNTRACKED_LABEL]);
-  if (items.length === 0) {
+  if (timelineTasks.length === 0) {
     return /* @__PURE__ */ u("div", { style: { color: "var(--text-faint)", textAlign: "center", padding: "20px" }, children: "当前范围内没有数据。" });
   }
   if (currentView === "年" || currentView === "季") {
@@ -31154,14 +31162,6 @@ function TimelineView({ items, dateRange, module: module2, currentView, app, tas
     }
     new QuickInputModal(app, taskBlock.id, context).open();
   }, [app, inputBlocks, config2.defaultHourHeight, dailyViewData]);
-  if (items.length === 0) {
-    return /* @__PURE__ */ u("div", { style: { color: "var(--text-faint)", textAlign: "center", padding: "20px" }, children: "当前范围内没有数据。" });
-  }
-  if (currentView === "年" || currentView === "季") {
-    const summaryData = T$1(() => {
-    }, [timelineTasks, dateRange, config2]);
-    return /* @__PURE__ */ u(TimelineSummaryTable, { summaryData, colorMap, progressOrder: config2.progressOrder, untrackedLabel: config2.UNTRACKED_LABEL });
-  }
   if (dailyViewData) {
     const totalSummaryHours = Object.values(summaryCategoryHours || {}).reduce((s2, h2) => s2 + h2, 0);
     const TIME_AXIS_WIDTH = 90;
@@ -38512,17 +38512,15 @@ class ThinkPlugin extends obsidian.Plugin {
         registerDataStore(this.dataStore);
         registerTimerService(this.timerService);
         registerInputService(this.inputService);
-        if (this.appStore.getSettings().floatingTimerEnabled) {
-          this.timerWidget = new FloatingTimerWidget(this);
-          this.timerWidget.load();
-          this.addCommand({
-            id: "toggle-think-floating-timer",
-            name: "切换悬浮计时器显隐",
-            callback: () => {
-              this.appStore.toggleTimerWidgetVisibility();
-            }
-          });
-        }
+        this.timerWidget = new FloatingTimerWidget(this);
+        this.timerWidget.load();
+        this.addCommand({
+          id: "toggle-think-floating-timer",
+          name: "切换悬浮计时器显隐",
+          callback: () => {
+            this.appStore.toggleTimerWidgetVisibility();
+          }
+        });
         this.timerStateService.loadStateFromFile().then((timers) => {
           this.appStore.setInitialTimers(timers);
         });
