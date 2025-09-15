@@ -31026,15 +31026,24 @@ function TimelineView({ items, dateRange, module: module2, currentView, app, tas
   const [hourHeight, setHourHeight] = d(config2.defaultHourHeight);
   const initialPinchDistanceRef = A$1(null);
   const initialHourHeightRef = A$1(null);
+  const [allItems, setAllItems] = d(() => dataStore?.queryItems() || []);
+  y(() => {
+    if (!dataStore) return;
+    const listener = () => {
+      setAllItems(dataStore.queryItems());
+    };
+    dataStore.subscribe(listener);
+    return () => dataStore.unsubscribe(listener);
+  }, []);
   y(() => {
     setHourHeight(config2.defaultHourHeight);
   }, [config2.defaultHourHeight]);
   const timelineTasks = T$1(() => {
     const dataSource = allDataSources.find((ds) => ds.id === module2.dataSourceId);
     if (!dataSource) return [];
-    const baseItems = dataStore.queryItems(dataSource.filters);
+    const baseItems = filterByRules(allItems, dataSource.filters);
     return processItemsToTimelineTasks(baseItems);
-  }, [module2.dataSourceId, allDataSources, dataStore]);
+  }, [module2.dataSourceId, allDataSources, allItems]);
   const colorMap = T$1(() => {
     const finalColorMap = {};
     const categoriesConfig = config2.categories || {};

@@ -16,6 +16,7 @@ import { EditTaskModal } from './EditTaskModal';
 import { useStore } from '@state/AppStore';
 import { QuickInputModal } from '@features/quick-input/ui/QuickInputModal';
 import { dataStore } from '@state/storeRegistry';
+import { filterByRules } from '@core/utils/itemFilter';
 
 dayjs.extend(weekOfYear);
 dayjs.extend(isoWeek);
@@ -64,6 +65,7 @@ const generateTaskBlockTitle = (block: TaskBlock): string => {
 
 
 // --- 子组件定义 (无变化) ---
+// ... 此处省略未改变的子组件 ...
 const ProgressBlock = ({ categoryHours, order, totalHours, colorMap, untrackedLabel }: any) => {
     const sortedCategories = useMemo(() => {
         const orderToUse = Array.isArray(order) ? order : [];
@@ -136,7 +138,6 @@ const DayColumnHeader = ({ day, blocks, categoriesConfig, colorMap, untrackedLab
         </div>
     );
 };
-// [核心修改] 更新 TimelineSummaryTable 以正确解构 props
 const TimelineSummaryTable = ({ summaryData, colorMap, progressOrder, untrackedLabel }: any) => {
     if (!summaryData || summaryData.length === 0) {
         return <div style={{ color: 'var(--text-faint)', textAlign: 'center', padding: '20px' }}>此时间范围内无数据可供总结。</div>
@@ -157,7 +158,6 @@ const TimelineSummaryTable = ({ summaryData, colorMap, progressOrder, untrackedL
                         <td><ProgressBlock categoryHours={monthData.monthlySummary} order={progressOrder} totalHours={monthData.totalMonthHours} colorMap={colorMap} untrackedLabel={untrackedLabel} /></td>
                         {monthData.weeklySummaries.map((weekData: any, index: number) => (
                             <td key={index}>
-                                {/* [核心修改] 从 weekData 中解构出 summary 和 totalHours */}
                                 {weekData ? <ProgressBlock categoryHours={weekData.summary} order={progressOrder} totalHours={weekData.totalHours} colorMap={colorMap} untrackedLabel={untrackedLabel} /> : null}
                             </td>
                         ))}
@@ -269,6 +269,24 @@ export function TimelineView({ items, dateRange, module, currentView, app, taskS
     const initialPinchDistanceRef = useRef<number | null>(null);
     const initialHourHeightRef = useRef<number | null>(null);
 
+    // [核心修改] 创建一个 state 来存储从 DataStore 来的所有 items，并初始化
+    const [allItems, setAllItems] = useState(() => dataStore?.queryItems() || []);
+
+    // [核心修改] 创建一个 effect 来订阅 DataStore 的变化
+    useEffect(() => {
+        if (!dataStore) return;
+
+        // 定义监听器：当 dataStore 通知变化时，用最新数据更新我们的 state
+        const listener = () => {
+            setAllItems(dataStore.queryItems());
+        };
+
+        dataStore.subscribe(listener); // 订阅
+
+        // 组件卸载时，取消订阅以防止内存泄漏
+        return () => dataStore.unsubscribe(listener);
+    }, []); // 空依赖数组 `[]` 意味着这个 effect 只会在组件挂载时运行一次
+
     useEffect(() => {
         setHourHeight(config.defaultHourHeight);
     }, [config.defaultHourHeight]);
@@ -276,9 +294,13 @@ export function TimelineView({ items, dateRange, module, currentView, app, taskS
     const timelineTasks = useMemo(() => {
         const dataSource = allDataSources.find(ds => ds.id === module.dataSourceId);
         if (!dataSource) return [];
-        const baseItems = dataStore.queryItems(dataSource.filters);
+
+        // [核心修改] 使用我们可响应的 allItems state，并调用正确的 filterByRules 函数
+        const baseItems = filterByRules(allItems, dataSource.filters);
+
         return processItemsToTimelineTasks(baseItems);
-    }, [module.dataSourceId, allDataSources, dataStore]);
+    // [核心修改] 将 allItems 添加到依赖数组，这样当 allItems 更新时，本 useMemo 会重新计算
+    }, [module.dataSourceId, allDataSources, allItems]);
 
     const colorMap = useMemo(() => {
         const finalColorMap: Record<string, string> = {};
@@ -389,7 +411,6 @@ export function TimelineView({ items, dateRange, module, currentView, app, taskS
                             weeklySummary[config.UNTRACKED_LABEL] = untrackedHoursInWeek;
                         }
 
-                        // [核心修改] 返回一个结构化对象，而不是将 totalWeekHours 混入 summary
                         return {
                             summary: weeklySummary,
                             totalHours: daysInThisWeekSlice * 24,

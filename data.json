@@ -185,6 +185,11 @@
           "field": "categoryKey",
           "op": "=",
           "value": "任务/done"
+        },
+        {
+          "field": "folder",
+          "op": "=",
+          "value": "01"
         }
       ],
       "sort": [],
@@ -1475,6 +1480,12 @@
             "files": [
               "2-0其他"
             ]
+          },
+          "思考": {
+            "color": "#fb8c32",
+            "files": [
+              "2-4思考"
+            ]
           }
         },
         "colorPalette": [
@@ -1486,6 +1497,7 @@
           "#a1a1aa"
         ],
         "progressOrder": [
+          "思考",
           "健康",
           "生活",
           "电脑",
@@ -2996,6 +3008,21 @@
         "icon": "🧠"
       },
       {
+        "id": "thm_mejswaiozga40",
+        "path": "思考/时间整理",
+        "icon": "🧠"
+      },
+      {
+        "id": "thm_mejswh9v0jpsi",
+        "path": "思考/复盘整理",
+        "icon": "🧠"
+      },
+      {
+        "id": "thm_mejswmjkpyrzg",
+        "path": "思考/思路整理",
+        "icon": "🧠"
+      },
+      {
         "id": "thm_mejsj5pzfonlh",
         "path": "思考/自我",
         "icon": "🐈"
@@ -3138,21 +3165,6 @@
       {
         "id": "thm_mejsvz19l0804",
         "path": "电脑/整理",
-        "icon": "✒"
-      },
-      {
-        "id": "thm_mejswaiozga40",
-        "path": "电脑/整理/时间整理",
-        "icon": "✒"
-      },
-      {
-        "id": "thm_mejswh9v0jpsi",
-        "path": "电脑/整理/复盘整理",
-        "icon": "✒"
-      },
-      {
-        "id": "thm_mejswmjkpyrzg",
-        "path": "电脑/整理/思路整理",
         "icon": "✒"
       },
       {
@@ -8847,7 +8859,6 @@
         "appendUnderHeader": "## {{theme}}"
       },
       {
-        "id": "ovr_mfhzwkwivqho3",
         "blockId": "blk_meic1my6m62iu",
         "themeId": "thm_mejswmjkpyrzg",
         "status": "enabled",
@@ -8929,8 +8940,9 @@
           }
         ],
         "outputTemplate": "\n{{状态.value}} {{icon}} {{任务内容}} (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}})  {{重复.value}}  {{状态}} {{日期}}",
-        "targetFile": "01/2-5电脑.md",
-        "appendUnderHeader": "## {{theme}}"
+        "targetFile": "01/2-4思考.md",
+        "appendUnderHeader": "## {{theme}}",
+        "id": "ovr_mfhzwkwivqho3"
       },
       {
         "id": "ovr_mfhzwoqz4223c",
@@ -9449,7 +9461,6 @@
         "appendUnderHeader": "## {{theme}}"
       },
       {
-        "id": "ovr_mfhzxpuhe0flz",
         "blockId": "blk_meic1my6m62iu",
         "themeId": "thm_mejswaiozga40",
         "status": "enabled",
@@ -9531,8 +9542,9 @@
           }
         ],
         "outputTemplate": "\n{{状态.value}} {{icon}} {{任务内容}} (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}})  {{重复.value}}  {{状态}} {{日期}}",
-        "targetFile": "01/2-5电脑.md",
-        "appendUnderHeader": "## {{theme}}"
+        "targetFile": "01/2-4思考.md",
+        "appendUnderHeader": "## {{theme}}",
+        "id": "ovr_mfhzxpuhe0flz"
       },
       {
         "id": "ovr_mfhzy0ykf8a08",
@@ -11090,5 +11102,5 @@
       }
     ]
   },
-  "floatingTimerEnabled": false
+  "floatingTimerEnabled": true
 }
