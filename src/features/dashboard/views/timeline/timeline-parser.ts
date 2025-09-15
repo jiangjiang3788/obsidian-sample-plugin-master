@@ -25,7 +25,7 @@ export interface TaskBlock extends TimelineTask {
 const DATE_FORMAT = 'YYYY-MM-DD';
 
 /**
- * [新函数] 从 Item 对象解析出一致的时间信息
+ * 从 Item 对象解析出一致的时间信息
  */
 function parseAllTimes(item: Item): { startMinute: number | null; duration: number | null; endMinute: number | null } {
     const startMinute = item.startTime ? timeToMinutes(item.startTime) : null;
@@ -78,9 +78,14 @@ export function processItemsToTimelineTasks(items: Item[]): TimelineTask[] {
         if (startMinute !== null && duration !== null && endMinute !== null && item.doneDate) {
             
             const doneDate = dayjs(item.doneDate);
-            // 修正跨天任务的实际开始日期
-            const daysSpanned = Math.floor(startMinute / 1440);
-            const actualStartDate = doneDate.subtract(daysSpanned, 'day').format(DATE_FORMAT);
+
+            // [上次的正确修改] 修复跨天任务的实际开始日期计算逻辑
+            const startOfDayMinute = timeToMinutes(item.startTime || '');
+            const endOfDayMinute = timeToMinutes(item.endTime || '');
+            const isCrossNight = startOfDayMinute !== null && endOfDayMinute !== null && startOfDayMinute > endOfDayMinute;
+            const actualStartDate = isCrossNight 
+                ? doneDate.subtract(1, 'day').format(DATE_FORMAT) 
+                : doneDate.format(DATE_FORMAT);
 
             timelineTasks.push({
                 ...item,

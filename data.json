@@ -11090,5 +11090,5 @@
       }
     ]
   },
-  "floatingTimerEnabled": true
+  "floatingTimerEnabled": false
 }
