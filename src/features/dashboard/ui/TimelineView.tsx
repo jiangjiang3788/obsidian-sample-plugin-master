@@ -1,7 +1,7 @@
 // src/features/dashboard/ui/TimelineView.tsx
 /** @jsxImportSource preact */
 import { h } from 'preact';
-import { useMemo, useCallback } from 'preact/hooks';
+import { useMemo, useCallback, useState, useEffect, useRef } from 'preact/hooks';
 import { Item } from '@core/domain/schema';
 import { makeObsUri } from '@core/utils/obsidian';
 import { processItemsToTimelineTasks, splitTaskIntoDayBlocks, TaskBlock } from '../views/timeline/timeline-parser';
@@ -15,7 +15,6 @@ import { TaskService } from '@core/services/taskService';
 import { EditTaskModal } from './EditTaskModal';
 import { useStore } from '@state/AppStore';
 import { QuickInputModal } from '@features/quick-input/ui/QuickInputModal';
-// [核心修改] 直接从注册表导入 dataStore，以便自主获取数据
 import { dataStore } from '@state/storeRegistry';
 
 dayjs.extend(weekOfYear);
@@ -23,6 +22,7 @@ dayjs.extend(isoWeek);
 dayjs.extend(isBetween);
 
 // --- 辅助函数 (无变化) ---
+// ... 此处省略未改变的辅助函数 ...
 function mapTaskToCategory(
     taskFileName: string,
     categoriesConfig: Record<string, { files?: string[] }>,
@@ -61,6 +61,7 @@ const generateTaskBlockTitle = (block: TaskBlock): string => {
         return `任务: ${block.pureText}\n时间: ${startTime} - ${endTime}`;
     }
 };
+
 
 // --- 子组件定义 (无变化) ---
 const ProgressBlock = ({ categoryHours, order, totalHours, colorMap, untrackedLabel }: any) => {
@@ -135,6 +136,7 @@ const DayColumnHeader = ({ day, blocks, categoriesConfig, colorMap, untrackedLab
         </div>
     );
 };
+// [核心修改] 更新 TimelineSummaryTable 以正确解构 props
 const TimelineSummaryTable = ({ summaryData, colorMap, progressOrder, untrackedLabel }: any) => {
     if (!summaryData || summaryData.length === 0) {
         return <div style={{ color: 'var(--text-faint)', textAlign: 'center', padding: '20px' }}>此时间范围内无数据可供总结。</div>
@@ -153,9 +155,10 @@ const TimelineSummaryTable = ({ summaryData, colorMap, progressOrder, untrackedL
                     <tr key={monthData.month}>
                         <td><strong>{monthData.month}</strong></td>
                         <td><ProgressBlock categoryHours={monthData.monthlySummary} order={progressOrder} totalHours={monthData.totalMonthHours} colorMap={colorMap} untrackedLabel={untrackedLabel} /></td>
-                        {monthData.weeklySummaries.map((weekSummary: any, index: number) => (
+                        {monthData.weeklySummaries.map((weekData: any, index: number) => (
                             <td key={index}>
-                                {weekSummary ? <ProgressBlock categoryHours={weekSummary} order={progressOrder} totalHours={weekSummary.totalWeekHours} colorMap={colorMap} untrackedLabel={untrackedLabel} /> : null}
+                                {/* [核心修改] 从 weekData 中解构出 summary 和 totalHours */}
+                                {weekData ? <ProgressBlock categoryHours={weekData.summary} order={progressOrder} totalHours={weekData.totalHours} colorMap={colorMap} untrackedLabel={untrackedLabel} /> : null}
                             </td>
                         ))}
                     </tr>
@@ -244,7 +247,6 @@ const DayColumnBody = ({ app, day, blocks, hourHeight, categoriesConfig, colorMa
 
 // --- 主视图组件 ---
 interface TimelineViewProps {
-    // [核心修改] items 属性虽然还存在，但我们不再直接使用它
     items: Item[];
     dateRange: [Date, Date];
     module: any;
@@ -255,7 +257,6 @@ interface TimelineViewProps {
 
 export function TimelineView({ items, dateRange, module, currentView, app, taskService }: TimelineViewProps) {
     const inputBlocks = useStore(state => state.settings.inputSettings.blocks);
-    // [核心修改] 从 store 中获取所有数据源的配置
     const allDataSources = useStore(state => state.settings.dataSources);
 
     const config = useMemo(() => {
@@ -263,19 +264,21 @@ export function TimelineView({ items, dateRange, module, currentView, app, taskS
         const userConfig = module.viewConfig || {};
         return { ...defaults, ...userConfig, categories: userConfig.categories || defaults.categories };
     }, [module.viewConfig]);
+    
+    const [hourHeight, setHourHeight] = useState(config.defaultHourHeight);
+    const initialPinchDistanceRef = useRef<number | null>(null);
+    const initialHourHeightRef = useRef<number | null>(null);
 
-    // [核心修改] 重写数据获取和处理逻辑
-    const timelineTasks = useMemo(() => {
-        // 1. 根据视图配置的 dataSourceId 找到对应的数据源
+    useEffect(() => {
+        setHourHeight(config.defaultHourHeight);
+    }, [config.defaultHourHeight]);
+
+    const timelineTasks = useMemo(() => {
         const dataSource = allDataSources.find(ds => ds.id === module.dataSourceId);
         if (!dataSource) return [];
-
-        // 2. 直接从 dataStore 中根据数据源的过滤规则查询，绕过父组件的日期过滤
         const baseItems = dataStore.queryItems(dataSource.filters);
-
-        // 3. 将完整的、未经错误过滤的条目列表送去解析
         return processItemsToTimelineTasks(baseItems);
-    }, [module.dataSourceId, allDataSources, dataStore]); // 依赖项现在是数据源ID和全局数据
+    }, [module.dataSourceId, allDataSources, dataStore]);
 
     const colorMap = useMemo(() => {
         const finalColorMap: Record<string, string> = {};
@@ -287,12 +290,54 @@ export function TimelineView({ items, dateRange, module, currentView, app, taskS
         return finalColorMap;
     }, [config.categories, config.UNTRACKED_LABEL]);
 
-    // [核心修改] 因为我们已经绕过了父组件的 items，所以需要在这里判断 timelineTasks 是否为空
+    const handleWheel = useCallback((e: WheelEvent) => {
+        if (!e.altKey) return;
+        e.preventDefault();
+        const step = 5;
+        const minHeight = 10;
+        const maxHeight = 200;
+        setHourHeight(currentHeight => {
+            const newHeight = e.deltaY < 0 ? currentHeight + step : currentHeight - step;
+            return Math.max(minHeight, Math.min(maxHeight, newHeight));
+        });
+    }, []);
+
+    const handleTouchStart = useCallback((e: TouchEvent) => {
+        if (e.touches.length === 2) {
+            e.preventDefault();
+            const t1 = e.touches[0];
+            const t2 = e.touches[1];
+            const distance = Math.hypot(t1.clientX - t2.clientX, t1.clientY - t2.clientY);
+            initialPinchDistanceRef.current = distance;
+            initialHourHeightRef.current = hourHeight;
+        }
+    }, [hourHeight]);
+
+    const handleTouchMove = useCallback((e: TouchEvent) => {
+        if (e.touches.length === 2 && initialPinchDistanceRef.current) {
+            e.preventDefault();
+            const t1 = e.touches[0];
+            const t2 = e.touches[1];
+            const currentDistance = Math.hypot(t1.clientX - t2.clientX, t1.clientY - t2.clientY);
+            
+            const scale = currentDistance / initialPinchDistanceRef.current;
+            const newHeight = (initialHourHeightRef.current || config.defaultHourHeight) * scale;
+
+            const minHeight = 10;
+            const maxHeight = 200;
+            setHourHeight(Math.max(minHeight, Math.min(maxHeight, newHeight)));
+        }
+    }, []);
+
+    const handleTouchEnd = useCallback(() => {
+        initialPinchDistanceRef.current = null;
+        initialHourHeightRef.current = null;
+    }, []);
+
     if (timelineTasks.length === 0) {
         return <div style={{ color: 'var(--text-faint)', textAlign: 'center', padding: '20px' }}>当前范围内没有数据。</div>
     }
     
-    // -- 总结视图渲染路径 (年/季) (无变化) --
     if (currentView === '年' || currentView === '季') {
         const summaryData = useMemo(() => {
             const data: any[] = [];
@@ -335,17 +380,26 @@ export function TimelineView({ items, dateRange, module, currentView, app, taskS
                                 totalTrackedHoursInWeek += durationHours;
                             }
                         });
+                        
+                        if (totalTrackedHoursInWeek < 0.01) return null;
 
-                        if (totalTrackedHoursInWeek < 0.01) return null;
+                        const daysInThisWeekSlice = Math.min(7, daysInMonth - weekStartDay + 1);
+                        const untrackedHoursInWeek = Math.max(0, daysInThisWeekSlice * 24 - totalTrackedHoursInWeek);
+                        if (untrackedHoursInWeek > 0.01) {
+                            weeklySummary[config.UNTRACKED_LABEL] = untrackedHoursInWeek;
+                        }
 
-                        (weeklySummary as any).totalWeekHours = totalTrackedHoursInWeek;
-                        return weeklySummary;
+                        // [核心修改] 返回一个结构化对象，而不是将 totalWeekHours 混入 summary
+                        return {
+                            summary: weeklySummary,
+                            totalHours: daysInThisWeekSlice * 24,
+                        };
                     });
 
                     data.push({
                         month: monthStr,
                         monthlySummary,
-                        totalMonthHours: Math.max(daysInMonth * 24, totalTrackedHoursInMonth),
+                        totalMonthHours: daysInMonth * 24,
                         weeklySummaries,
                     });
                 }
@@ -356,12 +410,18 @@ export function TimelineView({ items, dateRange, module, currentView, app, taskS
         }, [timelineTasks, dateRange, config]);
         return <TimelineSummaryTable summaryData={summaryData} colorMap={colorMap} progressOrder={config.progressOrder} untrackedLabel={config.UNTRACKED_LABEL} />;
     }
-
-    // -- 详细视图渲染路径 (月/周/天) (逻辑无变化，但现在基于更准确的数据) --
+    
     const summaryCategoryHours = useMemo(() => {
+        const viewStart = dayjs(dateRange[0]);
+        const viewEnd = dayjs(dateRange[1]);
+        const tasksInCurrentRange = timelineTasks.filter(task => {
+            const taskDate = dayjs(task.doneDate);
+            return taskDate.isBetween(viewStart, viewEnd, 'day', '[]');
+        });
+
         const hours: Record<string, number> = {};
         let totalTrackedHours = 0;
-        timelineTasks.forEach(task => {
+        tasksInCurrentRange.forEach(task => {
             const category = mapTaskToCategory(task.fileName, config.categories);
             const durationHours = task.duration / 60;
             hours[category] = (hours[category] || 0) + durationHours;
@@ -421,7 +481,7 @@ export function TimelineView({ items, dateRange, module, currentView, app, taskS
         }
 
         const y = clientY - rect.top;
-        const clickedMinute = Math.floor((y / config.defaultHourHeight) * 60);
+        const clickedMinute = Math.floor((y / hourHeight) * 60);
 
         const dayBlocks = dailyViewData.blocksByDay[day] || [];
         const prevBlock = dayBlocks.filter(b => b.blockEndMinute <= clickedMinute).pop();
@@ -439,7 +499,7 @@ export function TimelineView({ items, dateRange, module, currentView, app, taskS
         
         new QuickInputModal(app, taskBlock.id, context).open();
 
-    }, [app, inputBlocks, config.defaultHourHeight, dailyViewData]);
+    }, [app, inputBlocks, hourHeight, dailyViewData]);
 
 
     if (dailyViewData) {
@@ -447,7 +507,14 @@ export function TimelineView({ items, dateRange, module, currentView, app, taskS
         const TIME_AXIS_WIDTH = 90;
 
         return (
-            <div class="timeline-view-wrapper" style={{ overflowX: 'auto' }}>
+            <div 
+                class="timeline-view-wrapper" 
+                style={{ overflowX: 'auto' }} 
+                onWheel={handleWheel as any}
+                onTouchStart={handleTouchStart as any}
+                onTouchMove={handleTouchMove as any}
+                onTouchEnd={handleTouchEnd as any}
+            >
                 <div class="timeline-sticky-header" style={{ position: 'sticky', top: 0, zIndex: 2, background: 'var(--background-primary)', display: 'flex' }}>
                     <div class="summary-progress-container" style={{ flex: `0 0 ${TIME_AXIS_WIDTH}px`, borderBottom: '1px solid var(--background-modifier-border)' }}>
                         <div style={{height: '24px', lineHeight: '24px', textAlign:'center', fontWeight:'bold', borderBottom: '1px solid var(--background-modifier-border-hover)'}}>总结</div>
@@ -467,7 +534,7 @@ export function TimelineView({ items, dateRange, module, currentView, app, taskS
                 <div class="timeline-scrollable-body" style={{ display: 'flex' }}>
                     <div class="time-axis" style={{ flex: `0 0 ${TIME_AXIS_WIDTH}px` }}>
                        {Array.from({ length: config.MAX_HOURS_PER_DAY + 1 }, (_, i) => (
-                           <div key={i} style={{ height: `${config.defaultHourHeight}px`, borderBottom: '1px dashed var(--background-modifier-border-hover)', position: 'relative', boxSizing: 'border-box', textAlign: 'right', paddingRight: '4px', fontSize: '11px', color: 'var(--text-faint)' }}>
+                           <div key={i} style={{ height: `${hourHeight}px`, borderBottom: '1px dashed var(--background-modifier-border-hover)', position: 'relative', boxSizing: 'border-box', textAlign: 'right', paddingRight: '4px', fontSize: '11px', color: 'var(--text-faint)' }}>
                                {i > 0 && i % 2 === 0 ? `${i}:00` : ''}
                            </div>
                        ))}
@@ -480,7 +547,7 @@ export function TimelineView({ items, dateRange, module, currentView, app, taskS
                                     app={app} 
                                     day={dayStr}
                                     blocks={blocks} 
-                                    hourHeight={config.defaultHourHeight} 
+                                    hourHeight={hourHeight} 
                                     categoriesConfig={config.categories} 
                                     colorMap={colorMap} 
                                     maxHours={config.MAX_HOURS_PER_DAY} 
