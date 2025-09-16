@@ -1,4 +1,4 @@
-// src/core/settings/ui/components/FieldsEditor.tsx
+// src/features/settings/ui/components/FieldsEditor.tsx
 /** @jsxImportSource preact */
 import { h } from 'preact';
 import { useState, useEffect } from 'preact/hooks';
@@ -12,7 +12,7 @@ import type { TemplateField, TemplateFieldOption } from '@core/domain/schema';
 import { SimpleSelect } from '@shared/ui/SimpleSelect';
 import { Notice } from 'obsidian';
 
-// [MODIFIED] OptionRow component with updated labels
+// OptionRow 组件没有变化
 function OptionRow({ option, onChange, onRemove, fieldType }: { option: TemplateFieldOption, onChange: (newOption: TemplateFieldOption) => void, onRemove: () => void, fieldType: TemplateField['type'] }) {
     const [localOption, setLocalOption] = useState(option);
     useEffect(() => { setLocalOption(option); }, [option]);
@@ -32,7 +32,6 @@ function OptionRow({ option, onChange, onRemove, fieldType }: { option: Template
     );
 }
 
-// [MODIFIED] FieldRow component with new 'rating' type
 function FieldRow({ field, index, fieldCount, onUpdate, onRemove, onMove }: { field: TemplateField, index: number, fieldCount: number, onUpdate: (updates: Partial<TemplateField>) => void, onRemove: () => void, onMove: (direction: 'up' | 'down') => void }) {
     const [localName, setLocalName] = useState(field.label || field.key);
     useEffect(() => { setLocalName(field.label || field.key); }, [field.label, field.key]);
@@ -44,6 +43,7 @@ function FieldRow({ field, index, fieldCount, onUpdate, onRemove, onMove }: { fi
         } else {
             setLocalName(field.label || field.key);
         }
+        setIsEditing(false);
     };
 
     const handleOptionChange = (optIndex: number, newOption: TemplateFieldOption) => {
@@ -65,10 +65,12 @@ function FieldRow({ field, index, fieldCount, onUpdate, onRemove, onMove }: { fi
     const fieldTypeOptions = [
         { value: "text", label: "单行文本" }, { value: "textarea", label: "多行文本" }, { value: "number", label: "数字" },
         { value: "date", label: "日期" }, { value: "time", label: "时间" }, { value: "select", label: "下拉选择" }, { value: "radio", label: "单选按钮" },
-        { value: "rating", label: "评分" }, // [NEW] Added 'rating' type
+        { value: "rating", label: "评分" },
     ];
 
     const showOptionsEditor = ['select', 'radio', 'rating'].includes(field.type);
+    // [核心修改 1] 判断是否应该显示 defaultValue 输入框
+    const showDefaultValueEditor = ['text', 'textarea', 'number', 'date', 'time'].includes(field.type);
 
     return (
         <Box>
@@ -89,8 +91,30 @@ function FieldRow({ field, index, fieldCount, onUpdate, onRemove, onMove }: { fi
                 <Tooltip title="删除此字段"><IconButton onClick={onRemove} size="small" color="error"><DeleteIcon /></IconButton></Tooltip>
             </Stack>
 
+            {/* ===================== [核心修改 2: 新增UI] ===================== */}
+            {/* 根据字段类型，条件渲染默认值输入框 */}
+            {showDefaultValueEditor && (
+                <TextField
+                    label="默认值"
+                    // 当类型是 textarea 时，允许多行输入
+                    multiline={field.type === 'textarea'}
+                    rows={field.type === 'textarea' ? 3 : 1}
+                    // 对于 date 和 time 类型，使用对应的 HTML5 输入类型
+                    type={field.type === 'date' || field.type === 'time' ? field.type : 'text'}
+                    value={field.defaultValue || ''}
+                    // 使用 onBlur 在失焦时更新，避免高频重渲染
+                    onBlur={e => onUpdate({ defaultValue: (e.target as HTMLInputElement).value })}
+                    size="small"
+                    variant="outlined"
+                    fullWidth
+                    placeholder="可使用 {{moment:YYYY-MM-DD}}、{{theme}} 等模板变量"
+                    sx={{ mt: 1.5, ml: 6 }} // 增加左边距使其与字段名称对齐
+                />
+            )}
+            {/* ===================== [核心修改结束] ===================== */}
+
             {showOptionsEditor && (
-                <Box sx={{ mt: 2, pl: 2 }}>
+                <Box sx={{ mt: 2, pl: 2, ml: 6 }}>
                     <Stack spacing={1.5} divider={<Divider flexItem sx={{ borderStyle: 'dashed' }} />}>
                         {(field.options || []).map((option, optIndex) => <OptionRow key={optIndex} option={option} onChange={(newOpt) => handleOptionChange(optIndex, newOpt)} onRemove={() => removeOption(optIndex)} fieldType={field.type} />)}
                     </Stack>
@@ -101,9 +125,8 @@ function FieldRow({ field, index, fieldCount, onUpdate, onRemove, onMove }: { fi
     );
 }
 
-// Main FieldsEditor component remains largely unchanged
+// 主组件 FieldsEditor 没有变化
 export function FieldsEditor({ fields = [], onChange }: { fields: TemplateField[], onChange: (fields: TemplateField[]) => void }) {
-    // ... all logic inside here is the same ...
     const handleUpdate = (index: number, updates: Partial<TemplateField>) => {
         const newFields = [...(fields || [])];
         newFields[index] = { ...newFields[index], ...updates };

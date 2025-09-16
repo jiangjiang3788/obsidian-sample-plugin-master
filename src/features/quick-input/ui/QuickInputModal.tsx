@@ -5,13 +5,15 @@ import { App, Modal, Notice } from 'obsidian';
 import { render, unmountComponentAtNode } from 'preact/compat';
 import { useState, useMemo, useEffect } from 'preact/hooks';
 import { useStore } from '@state/AppStore';
-import type { InputSettings, BlockTemplate, ThemeDefinition, TemplateField } from '@core/domain/schema';
+import type { InputSettings, BlockTemplate, ThemeDefinition, TemplateField, TemplateFieldOption } from '@core/domain/schema';
 import { Button, RadioGroup as MuiRadioGroup, FormControlLabel, Radio, FormControl, Typography, Stack, Divider, Box, IconButton, Tooltip } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import { SimpleSelect } from '@shared/ui/SimpleSelect';
 import { buildThemeTree, ThemeTreeNode } from '@core/utils/themeUtils';
 import { dayjs, timeToMinutes, minutesToTime } from '@core/utils/date';
 import { dataStore, inputService } from '@state/storeRegistry';
+// [核心修改 1] 导入模板渲染工具
+import { renderTemplate } from '@core/utils/templateUtils';
 
 export interface QuickInputSaveData {
     template: BlockTemplate;
@@ -52,7 +54,7 @@ export class QuickInputModal extends Modal {
     }
 }
 
-// ... findNodePath, renderThemeLevels (no changes) ...
+// ... 辅助函数 findNodePath, renderThemeLevels, getEffectiveTemplate 保持不变 ...
 function getEffectiveTemplate(settings: InputSettings, blockId: string, themeId?: string): { template: BlockTemplate | null; theme: ThemeDefinition | null } {
     const baseBlock = settings.blocks.find(b => b.id === blockId);
     if (!baseBlock) return { template: null, theme: null };
@@ -66,7 +68,6 @@ function getEffectiveTemplate(settings: InputSettings, blockId: string, themeId?
     }
     return { template: baseBlock, theme };
 }
-
 const findNodePath = (nodes: ThemeTreeNode[], themeId: string): ThemeTreeNode[] => {
     for (const node of nodes) {
         if (node.themeId === themeId) return [node];
@@ -77,7 +78,6 @@ const findNodePath = (nodes: ThemeTreeNode[], themeId: string): ThemeTreeNode[] 
     }
     return [];
 };
-
 const renderThemeLevels = (nodes: ThemeTreeNode[], activePath: ThemeTreeNode[], onSelect: (id: string, parentId: string | null) => void, level = 0) => {
     const parentNode = activePath[level - 1];
     const parentThemeId = parentNode ? parentNode.themeId : null;
@@ -103,7 +103,6 @@ const renderThemeLevels = (nodes: ThemeTreeNode[], activePath: ThemeTreeNode[], 
     );
 };
 
-
 function QuickInputForm({ app, blockId, context, themeId, onSave, closeModal }: {
     app: App;
     blockId: string;
@@ -113,21 +112,8 @@ function QuickInputForm({ app, blockId, context, themeId, onSave, closeModal }: 
     closeModal: () => void;
 }) {
     const settings = useStore(state => state.settings.inputSettings);
-
-    const getEffectiveTemplate = (settings: InputSettings, blockId: string, themeId?: string): { template: BlockTemplate | null; theme: ThemeDefinition | null } => {
-        const baseBlock = settings.blocks.find(b => b.id === blockId);
-        if (!baseBlock) return { template: null, theme: null };
-        const theme = settings.themes.find(t => t.id === themeId) || null;
-        if (themeId) {
-            const override = settings.overrides.find(o => o.blockId === blockId && o.themeId === themeId);
-            if (override && override.status === 'enabled') {
-                const effectiveTemplate: BlockTemplate = { ...baseBlock, fields: override.fields ?? baseBlock.fields, outputTemplate: override.outputTemplate ?? baseBlock.outputTemplate, targetFile: override.targetFile ?? baseBlock.targetFile, appendUnderHeader: override.appendUnderHeader ?? baseBlock.appendUnderHeader };
-                return { template: effectiveTemplate, theme };
-            }
-        }
-        return { template: baseBlock, theme };
-    }
     
+    // ... themeTree, themeIdMap 的 useMemo 保持不变 ...
     const { themeTree, themeIdMap } = useMemo(() => {
         const { themes, overrides } = settings;
         const disabledThemeIds = new Set<string>();
@@ -142,14 +128,27 @@ function QuickInputForm({ app, blockId, context, themeId, onSave, closeModal }: 
         return { themeTree, themeIdMap };
     }, [settings, blockId]);
 
+
     const [selectedThemeId, setSelectedThemeId] = useState<string | null>(themeId || null);
 
-    const { template } = useMemo(() => {
+    // [核心修改 2] `template` 和 `theme` 的计算保持不变
+    const { template, theme } = useMemo(() => {
         return getEffectiveTemplate(settings, blockId, selectedThemeId || undefined);
     }, [settings, blockId, selectedThemeId]);
 
-    const [formData, setFormData] = useState<Record<string, any>>(() => {
-        if (!template) return {};
+    // [核心修改 3] `formData` 初始化为空对象，具体值由下面的 `useEffect` 动态填充
+    const [formData, setFormData] = useState<Record<string, any>>({});
+
+    // [核心修改 4] 使用 useEffect 来响应 `template` 的变化，并重新计算表单的初始/默认值
+    useEffect(() => {
+        if (!template) return;
+
+        // 构建一个用于模板解析的完整上下文，包含基础 context 和当前选择的 theme
+        const dataForParsing = {
+            ...context,
+            theme: theme ? { path: theme.path, icon: theme.icon || '' } : {}
+        };
+        
         const initialData: Record<string, any> = {};
 
         template.fields.forEach(field => {
@@ -157,6 +156,7 @@ function QuickInputForm({ app, blockId, context, themeId, onSave, closeModal }: 
             const contextValue = context?.[field.key] ?? context?.[field.label];
 
             if (contextValue !== undefined) {
+                // ... (处理 context 值的逻辑保持不变) ...
                 if (['select', 'radio', 'rating'].includes(field.type)) {
                     const matchedOption = (field.options || []).find(opt => opt.value === contextValue || opt.label === contextValue);
                     if (matchedOption) {
@@ -175,13 +175,18 @@ function QuickInputForm({ app, blockId, context, themeId, onSave, closeModal }: 
                 if (field.defaultValue) {
                     if (isSelectable) {
                         const findOption = (val: string | undefined) => (field.options || []).find(o => o.label === val || o.value === val);
-                        let defaultOpt = findOption(field.defaultValue);
+                        let defaultOpt = findOption(field.defaultValue as string);
                         if (!defaultOpt && field.options && field.options.length > 0) defaultOpt = field.options[0];
                         if (defaultOpt) {
                             initialData[field.key] = { value: defaultOpt.value, label: defaultOpt.label || defaultOpt.value };
                         }
                     } else {
-                        initialData[field.key] = field.defaultValue || '';
+                        // 这是我们增强的解析逻辑
+                        let finalDefaultValue = field.defaultValue || '';
+                        if (typeof finalDefaultValue === 'string') { // 确保是字符串再解析
+                            finalDefaultValue = renderTemplate(finalDefaultValue, dataForParsing);
+                        }
+                        initialData[field.key] = finalDefaultValue;
                     }
                 } else {
                     if (field.type === 'date') {
@@ -195,9 +200,14 @@ function QuickInputForm({ app, blockId, context, themeId, onSave, closeModal }: 
                 }
             }
         });
-        return initialData;
-    });
+        
+        // 设置表单数据，这种方式可以确保每次主题变化都刷新默认值，但会重置用户输入。
+        // 这在“主题决定表单结构”的场景下是符合预期的行为。
+        setFormData(initialData);
 
+    }, [template, theme, context]); // 依赖项：当 template, theme 或 context 变化时，重新运行此 effect
+
+    // ... useEffect for time calculation, handleUpdate, handleSubmit, 和 renderField 保持不变 ...
     useEffect(() => {
         const data = { ...formData };
         const start = data.时间;
@@ -367,7 +377,7 @@ function QuickInputForm({ app, blockId, context, themeId, onSave, closeModal }: 
             }
         }
     };
-    
+    // ... return JSX 保持不变 ...
     if (!template) {
         return <div>错误：找不到ID为 "{blockId}" 的Block模板。</div>;
     }

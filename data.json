@@ -9490,7 +9490,8 @@
             "id": "field_mekt6ks3",
             "key": "任务内容",
             "label": "任务内容",
-            "type": "textarea"
+            "type": "textarea",
+            "defaultValue": "时间整理-{{theme}}"
           },
           {
             "id": "field_mewk9zrg",
@@ -9662,7 +9663,8 @@
             "id": "field_mekt6ks3",
             "key": "任务内容",
             "label": "任务内容",
-            "type": "textarea"
+            "type": "textarea",
+            "defaultValue": "思考={{theme}}-1111111111111111111111111111111111\n冻干粉老顾客"
           },
           {
             "id": "field_mewk9zrg",
@@ -9686,7 +9688,8 @@
             "id": "field_mekymokf",
             "key": "时长",
             "label": "时长",
-            "type": "text"
+            "type": "text",
+            "defaultValue": ""
           },
           {
             "id": "field_mekyn4c3",
