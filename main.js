@@ -30538,6 +30538,19 @@ class QuickInputModal extends obsidian.Modal {
     bn(this.contentEl);
   }
 }
+function getEffectiveTemplate$1(settings, blockId, themeId) {
+  const baseBlock = settings.blocks.find((b2) => b2.id === blockId);
+  if (!baseBlock) return { template: null, theme: null };
+  const theme2 = settings.themes.find((t2) => t2.id === themeId) || null;
+  if (themeId) {
+    const override = settings.overrides.find((o2) => o2.blockId === blockId && o2.themeId === themeId);
+    if (override && override.status === "enabled") {
+      const effectiveTemplate = { ...baseBlock, fields: override.fields ?? baseBlock.fields, outputTemplate: override.outputTemplate ?? baseBlock.outputTemplate, targetFile: override.targetFile ?? baseBlock.targetFile, appendUnderHeader: override.appendUnderHeader ?? baseBlock.appendUnderHeader };
+      return { template: effectiveTemplate, theme: theme2 };
+    }
+  }
+  return { template: baseBlock, theme: theme2 };
+}
 const findNodePath = (nodes, themeId) => {
   for (const node2 of nodes) {
     if (node2.themeId === themeId) return [node2];
@@ -30567,19 +30580,6 @@ const renderThemeLevels = (nodes, activePath, onSelect, level = 0) => {
 };
 function QuickInputForm({ app, blockId, context, themeId, onSave, closeModal }) {
   const settings = useStore((state) => state.settings.inputSettings);
-  const getEffectiveTemplate2 = (settings2, blockId2, themeId2) => {
-    const baseBlock = settings2.blocks.find((b2) => b2.id === blockId2);
-    if (!baseBlock) return { template: null, theme: null };
-    const theme2 = settings2.themes.find((t2) => t2.id === themeId2) || null;
-    if (themeId2) {
-      const override = settings2.overrides.find((o2) => o2.blockId === blockId2 && o2.themeId === themeId2);
-      if (override && override.status === "enabled") {
-        const effectiveTemplate = { ...baseBlock, fields: override.fields ?? baseBlock.fields, outputTemplate: override.outputTemplate ?? baseBlock.outputTemplate, targetFile: override.targetFile ?? baseBlock.targetFile, appendUnderHeader: override.appendUnderHeader ?? baseBlock.appendUnderHeader };
-        return { template: effectiveTemplate, theme: theme2 };
-      }
-    }
-    return { template: baseBlock, theme: theme2 };
-  };
   const { themeTree, themeIdMap } = T$1(() => {
     const { themes, overrides } = settings;
     const disabledThemeIds = /* @__PURE__ */ new Set();
@@ -30588,17 +30588,22 @@ function QuickInputForm({ app, blockId, context, themeId, onSave, closeModal }) 
         disabledThemeIds.add(override.themeId);
       }
     });
-    const availableThemes = themes.filter((theme2) => !disabledThemeIds.has(theme2.id));
+    const availableThemes = themes.filter((theme22) => !disabledThemeIds.has(theme22.id));
     const themeTree2 = buildThemeTree(availableThemes);
     const themeIdMap2 = new Map(themes.map((t2) => [t2.id, t2]));
     return { themeTree: themeTree2, themeIdMap: themeIdMap2 };
   }, [settings, blockId]);
   const [selectedThemeId, setSelectedThemeId] = d(themeId || null);
-  const { template } = T$1(() => {
-    return getEffectiveTemplate2(settings, blockId, selectedThemeId || void 0);
+  const { template, theme: theme2 } = T$1(() => {
+    return getEffectiveTemplate$1(settings, blockId, selectedThemeId || void 0);
   }, [settings, blockId, selectedThemeId]);
-  const [formData, setFormData] = d(() => {
-    if (!template) return {};
+  const [formData, setFormData] = d({});
+  y(() => {
+    if (!template) return;
+    const dataForParsing = {
+      ...context,
+      theme: theme2 ? { path: theme2.path, icon: theme2.icon || "" } : {}
+    };
     const initialData = {};
     template.fields.forEach((field) => {
       let valueAssigned = false;
@@ -30627,7 +30632,11 @@ function QuickInputForm({ app, blockId, context, themeId, onSave, closeModal }) 
               initialData[field.key] = { value: defaultOpt.value, label: defaultOpt.label || defaultOpt.value };
             }
           } else {
-            initialData[field.key] = field.defaultValue || "";
+            let finalDefaultValue = field.defaultValue || "";
+            if (typeof finalDefaultValue === "string") {
+              finalDefaultValue = renderTemplate(finalDefaultValue, dataForParsing);
+            }
+            initialData[field.key] = finalDefaultValue;
           }
         } else {
           if (field.type === "date") {
@@ -30641,8 +30650,8 @@ function QuickInputForm({ app, blockId, context, themeId, onSave, closeModal }) 
         }
       }
     });
-    return initialData;
-  });
+    setFormData(initialData);
+  }, [template, theme2, context]);
   y(() => {
     const data = { ...formData };
     const start2 = data.时间;
@@ -32860,7 +32869,7 @@ function MoveItemDialog({ isOpen, onClose, itemToMove, groups, onConfirm }) {
 }
 function Node({ node: node2, children, ...props }) {
   const { onUpdateItemName, onDeleteItem, onOpenMoveDialog, onDuplicateItem } = props;
-  const [isEditing, setIsEditing] = d(false);
+  const [isEditing, setIsEditing2] = d(false);
   const [name, setName] = d(node2.name);
   y(() => {
     setName(node2.name);
@@ -32871,13 +32880,13 @@ function Node({ node: node2, children, ...props }) {
     } else {
       setName(node2.name);
     }
-    setIsEditing(false);
+    setIsEditing2(false);
   };
   const handleKeyDown = (e2) => {
     if (e2.key === "Enter") e2.target.blur();
     if (e2.key === "Escape") {
       setName(node2.name);
-      setIsEditing(false);
+      setIsEditing2(false);
     }
   };
   return /* @__PURE__ */ u(Box, { children: [
@@ -32897,7 +32906,7 @@ function Node({ node: node2, children, ...props }) {
         },
         children: [
           /* @__PURE__ */ u(IconButton, { size: "small", onClick: props.onToggle, sx: { mr: 0.5 }, children: props.isExpanded ? /* @__PURE__ */ u(ArrowDropDownIcon, {}) : /* @__PURE__ */ u(ArrowRightIcon, {}) }),
-          isEditing ? /* @__PURE__ */ u(TextField, { autoFocus: true, size: "small", variant: "standard", value: name, onChange: (e2) => setName(e2.target.value), onBlur: handleNameBlur, onKeyDown: handleKeyDown, sx: { flexGrow: 1 } }) : /* @__PURE__ */ u(Typography, { onClick: props.onToggle, onDblClick: () => setIsEditing(true), title: "单击展开/折叠，双击重命名", sx: { flexGrow: 1, cursor: "pointer", fontWeight: node2.isGroup ? 600 : 500, color: node2.isGroup ? "primary.main" : "text.primary" }, children: node2.name }),
+          isEditing ? /* @__PURE__ */ u(TextField, { autoFocus: true, size: "small", variant: "standard", value: name, onChange: (e2) => setName(e2.target.value), onBlur: handleNameBlur, onKeyDown: handleKeyDown, sx: { flexGrow: 1 } }) : /* @__PURE__ */ u(Typography, { onClick: props.onToggle, onDblClick: () => setIsEditing2(true), title: "单击展开/折叠，双击重命名", sx: { flexGrow: 1, cursor: "pointer", fontWeight: node2.isGroup ? 600 : 500, color: node2.isGroup ? "primary.main" : "text.primary" }, children: node2.name }),
           /* @__PURE__ */ u(Stack, { direction: "row", className: "actions", sx: { opacity: 0, transition: "opacity 0.2s" }, children: [
             /* @__PURE__ */ u(Tooltip, { title: "复制", children: /* @__PURE__ */ u("span", { children: /* @__PURE__ */ u(IconButton, { size: "small", onClick: () => onDuplicateItem(node2), children: /* @__PURE__ */ u(ContentCopyIcon, { fontSize: "small" }) }) }) }),
             /* @__PURE__ */ u(Tooltip, { title: "移动到...", children: /* @__PURE__ */ u(IconButton, { size: "small", onClick: () => onOpenMoveDialog(node2), children: /* @__PURE__ */ u(DriveFileMoveOutlinedIcon, { fontSize: "small" }) }) }),
@@ -36738,6 +36747,7 @@ function FieldRow({ field, index, fieldCount, onUpdate, onRemove, onMove }) {
     } else {
       setLocalName(field.label || field.key);
     }
+    setIsEditing(false);
   };
   const handleOptionChange = (optIndex, newOption) => {
     const newOptions = [...field.options || []];
@@ -36761,9 +36771,9 @@ function FieldRow({ field, index, fieldCount, onUpdate, onRemove, onMove }) {
     { value: "select", label: "下拉选择" },
     { value: "radio", label: "单选按钮" },
     { value: "rating", label: "评分" }
-    // [NEW] Added 'rating' type
   ];
   const showOptionsEditor = ["select", "radio", "rating"].includes(field.type);
+  const showDefaultValueEditor = ["text", "textarea", "number", "date", "time"].includes(field.type);
   return /* @__PURE__ */ u(Box, { children: [
     /* @__PURE__ */ u(Stack, { direction: "row", spacing: 2, alignItems: "center", children: [
       /* @__PURE__ */ u(SimpleSelect, { value: field.type, options: fieldTypeOptions, onChange: (val) => onUpdate({ type: val }), sx: { minWidth: 120, flexShrink: 0 } }),
@@ -36778,7 +36788,23 @@ function FieldRow({ field, index, fieldCount, onUpdate, onRemove, onMove }) {
       ] }),
       /* @__PURE__ */ u(Tooltip, { title: "删除此字段", children: /* @__PURE__ */ u(IconButton, { onClick: onRemove, size: "small", color: "error", children: /* @__PURE__ */ u(DeleteIcon, {}) }) })
     ] }),
-    showOptionsEditor && /* @__PURE__ */ u(Box, { sx: { mt: 2, pl: 2 }, children: [
+    showDefaultValueEditor && /* @__PURE__ */ u(
+      TextField,
+      {
+        label: "默认值",
+        multiline: field.type === "textarea",
+        rows: field.type === "textarea" ? 3 : 1,
+        type: field.type === "date" || field.type === "time" ? field.type : "text",
+        value: field.defaultValue || "",
+        onBlur: (e2) => onUpdate({ defaultValue: e2.target.value }),
+        size: "small",
+        variant: "outlined",
+        fullWidth: true,
+        placeholder: "可使用 {{moment:YYYY-MM-DD}}、{{theme}} 等模板变量",
+        sx: { mt: 1.5, ml: 6 }
+      }
+    ),
+    showOptionsEditor && /* @__PURE__ */ u(Box, { sx: { mt: 2, pl: 2, ml: 6 }, children: [
       /* @__PURE__ */ u(Stack, { spacing: 1.5, divider: /* @__PURE__ */ u(Divider, { flexItem: true, sx: { borderStyle: "dashed" } }), children: (field.options || []).map((option, optIndex) => /* @__PURE__ */ u(OptionRow, { option, onChange: (newOpt) => handleOptionChange(optIndex, newOpt), onRemove: () => removeOption(optIndex), fieldType: field.type }, optIndex)) }),
       /* @__PURE__ */ u(Button, { onClick: addOption, startIcon: /* @__PURE__ */ u(AddIcon, {}), size: "small", sx: { alignSelf: "flex-start", mt: 1.5 }, children: "添加选项" })
     ] })
