@@ -29739,7 +29739,10 @@ ActionService = __decorateClass$4([
   __decorateParam$4(2, inject(AppStore)),
   __decorateParam$4(3, inject(InputService))
 ], ActionService);
-function ModulePanel({ title, collapsed, children, onActionClick, onToggle }) {
+const IosShareIcon = createSvgIcon(/* @__PURE__ */ u("path", {
+  d: "m16 5-1.42 1.42-1.59-1.59V16h-1.98V4.83L9.42 6.42 8 5l4-4zm4 5v11c0 1.1-.9 2-2 2H6c-1.11 0-2-.9-2-2V10c0-1.11.89-2 2-2h3v2H6v11h12V10h-3V8h3c1.1 0 2 .89 2 2"
+}));
+function ModulePanel({ title, collapsed, children, onActionClick, onToggle, onExport }) {
   const onHeaderClick = (e2) => {
     if (e2.target.closest(".module-header-actions")) {
       return;
@@ -29750,18 +29753,32 @@ function ModulePanel({ title, collapsed, children, onActionClick, onToggle }) {
     /* @__PURE__ */ u("div", { class: "module-header", onClick: onHeaderClick, title: "点击折叠/展开；Ctrl/⌘ + 点击：全部折叠/展开", children: [
       /* @__PURE__ */ u("span", { class: "module-title", children: title }),
       /* @__PURE__ */ u("div", { class: "module-header-controls", children: [
-        /* @__PURE__ */ u("div", { class: "module-header-actions", children: /* @__PURE__ */ u(
-          "span",
-          {
-            class: "module-action-plus",
-            title: "快捷输入",
-            onClick: (e2) => {
-              e2.stopPropagation();
-              onActionClick?.();
-            },
-            children: "+"
-          }
-        ) }),
+        /* @__PURE__ */ u("div", { class: "module-header-actions", children: [
+          onExport && /* @__PURE__ */ u(Tooltip, { title: "导出为 Markdown", children: /* @__PURE__ */ u(
+            IconButton,
+            {
+              size: "small",
+              onClick: (e2) => {
+                e2.stopPropagation();
+                onExport();
+              },
+              sx: { padding: "4px" },
+              children: /* @__PURE__ */ u(IosShareIcon, { sx: { fontSize: "1rem" } })
+            }
+          ) }),
+          /* @__PURE__ */ u(
+            "span",
+            {
+              class: "module-action-plus",
+              title: "快捷输入",
+              onClick: (e2) => {
+                e2.stopPropagation();
+                onActionClick?.();
+              },
+              children: "+"
+            }
+          )
+        ] }),
         /* @__PURE__ */ u("div", { class: "module-toggle", children: collapsed ? "▶" : "▼" })
       ] })
     ] }),
@@ -31681,6 +31698,61 @@ function useViewData({
   }, [allItems, dataSource, dateRange, keyword, layoutView, isOverviewMode, dataSourceName]);
   return processedItems;
 }
+function exportItemsToMarkdown(items, title) {
+  const lines = [];
+  items.forEach((item) => {
+    if (item.type === "task") {
+      const isDone2 = item.categoryKey.includes("/done");
+      const isCancelled = item.categoryKey.includes("/cancelled");
+      const checkbox = isDone2 ? "[x]" : isCancelled ? "[-]" : "[ ]";
+      let taskLine = `- ${checkbox} ${item.title}`;
+      if (item.tags && item.tags.length > 0) {
+        taskLine += ` ${item.tags.map((t2) => `#${t2}`).join(" ")}`;
+      }
+      const extraFields = {
+        "周期": item.period,
+        "评分": item.rating,
+        "时间": item.startTime,
+        "结束": item.endTime,
+        "时长": item.duration,
+        ...item.extra
+      };
+      for (const key in extraFields) {
+        const value = extraFields[key];
+        if (value !== null && value !== void 0 && value !== "") {
+          taskLine += ` (${key}:: ${value})`;
+        }
+      }
+      if (item.dueDate) taskLine += ` ${EMOJI.due} ${item.dueDate}`;
+      if (item.scheduledDate) taskLine += ` ${EMOJI.scheduled} ${item.scheduledDate}`;
+      if (item.startDate) taskLine += ` ${EMOJI.start} ${item.startDate}`;
+      if (item.createdDate) taskLine += ` ${EMOJI.created} ${item.createdDate}`;
+      if (item.doneDate) taskLine += ` ${EMOJI.done} ${item.doneDate}`;
+      if (item.cancelledDate) taskLine += ` ${EMOJI.cancelled} ${item.cancelledDate}`;
+      lines.push(taskLine.replace(/\s+/g, " ").trim());
+    } else if (item.type === "block") {
+      lines.push(`##### ID ${item.id}`);
+      if (item.categoryKey) lines.push(`**分类**: ${item.categoryKey}`);
+      if (item.date) lines.push(`**日期**: ${item.date}`);
+      if (item.tags && item.tags.length > 0) lines.push(`**标签**: ${item.tags.join(", ")}`);
+      if (item.period) lines.push(`**周期**: ${item.period}`);
+      if (item.rating !== void 0) lines.push(`**评分**: ${item.rating}`);
+      if (item.pintu) lines.push(`**评图**: ![[${item.pintu}]]`);
+      for (const key in item.extra) {
+        lines.push(`**${key}**: ${item.extra[key]}`);
+      }
+      if (item.content && item.content.trim()) {
+        lines.push(`**内容**:`);
+        const contentLines = item.content.trim().split("\n");
+        contentLines.forEach((line2) => {
+          lines.push(`> ${line2}`);
+        });
+      }
+      lines.push("<br>");
+    }
+  });
+  return lines.join("\n");
+}
 const ViewContent = ({
   viewInstance,
   dataStore: dataStore2,
@@ -31691,7 +31763,9 @@ const ViewContent = ({
   app,
   onMarkDone,
   actionService,
-  taskService
+  taskService,
+  onDataLoaded
+  // [新增]
 }) => {
   const allDataSources = useStore((state) => state.settings.dataSources);
   const dataSource = allDataSources.find((ds) => ds.id === viewInstance.dataSourceId);
@@ -31703,6 +31777,11 @@ const ViewContent = ({
     layoutView,
     isOverviewMode: !!isOverviewMode
   });
+  y(() => {
+    if (onDataLoaded) {
+      onDataLoaded(viewItems);
+    }
+  }, [viewItems, onDataLoaded]);
   if (!dataSource) return /* @__PURE__ */ u("div", { children: [
     "数据源 (ID: ",
     viewInstance.dataSourceId,
@@ -31732,6 +31811,7 @@ function LayoutRenderer({ layout, dataStore: dataStore2, app, actionService, tas
   const allViews = useStore((state) => state.settings.viewInstances);
   const [expandedState, setExpandedState] = d({});
   const [isStateInitialized, setIsStateInitialized] = d(false);
+  const modulesDataCache = A$1({});
   y(() => {
     const initialState = {};
     allViews.forEach((v2) => {
@@ -31755,6 +31835,16 @@ function LayoutRenderer({ layout, dataStore: dataStore2, app, actionService, tas
     setLayoutDate(getInitialDate());
     setLayoutView(layout.initialView || "月");
   }, [layout.id, layout.initialDate, layout.initialDateFollowsNow, layout.isOverviewMode, layout.initialView]);
+  const handleExport = q$1((viewId, viewTitle) => {
+    const items = modulesDataCache.current[viewId];
+    if (!items || items.length === 0) {
+      new obsidian.Notice("没有内容可导出");
+      return;
+    }
+    const markdownContent = exportItemsToMarkdown(items);
+    navigator.clipboard.writeText(markdownContent);
+    new obsidian.Notice(`"${viewTitle}" 的内容已复制到剪贴板！`);
+  }, []);
   const handleOverviewDateChange = (newDate, newView) => {
     const newDateString = newDate.format("YYYY-MM-DD");
     setLayoutDate(newDate);
@@ -31802,6 +31892,7 @@ function LayoutRenderer({ layout, dataStore: dataStore2, app, actionService, tas
         collapsed: !isExpanded,
         onToggle: (e2) => handleToggle(viewId, e2),
         onActionClick: () => handleQuickInputAction(viewInstance),
+        onExport: () => handleExport(viewInstance.id, viewInstance.title),
         children: isExpanded && /* @__PURE__ */ u(
           ViewContent,
           {
@@ -31817,7 +31908,10 @@ function LayoutRenderer({ layout, dataStore: dataStore2, app, actionService, tas
             app,
             onMarkDone: handleMarkItemDone,
             actionService,
-            taskService
+            taskService,
+            onDataLoaded: (items) => {
+              modulesDataCache.current[viewInstance.id] = items;
+            }
           }
         )
       },
