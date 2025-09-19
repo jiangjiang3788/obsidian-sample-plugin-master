@@ -1,40 +1,42 @@
 // e2e/mvp-test.spec.ts
-import { test, expect, chromium } from '@playwright/test';
+import { browser, $ } from '@wdio/globals'; // 从 @wdio/globals 导入
 
-test('MVP Test: Final and Corrected Version', async () => {
-  const browser = await chromium.connectOverCDP('http://localhost:9222');
-  const page = browser.contexts()[0].pages()[0];
+describe('My Obsidian Plugin MVP Test', () => {
+    it('should correctly render the think block', async () => {
+        // --- 步骤 1: 打开快速切换器并创建/打开文件 ---
+        // 1. 按下快捷键 Ctrl+O
+        // 注意：wdio-obsidian-service 已自动完成Obsidian启动和工作区加载
+        await browser.keys(['Control', 'o']);
 
-  // Wait for the workspace to be ready
-  await page.locator('.workspace-leaf.mod-active').waitFor({ state: 'visible', timeout: 30000 });
-  console.log('Workspace loaded, continuing test!');
+        // 2. 定位输入框并输入文件名
+        const fileInput = await $('input[placeholder="输入以切换或创建文件…"]');
+        await fileInput.setValue('E2E-TEST-PAGE.md'); // 使用 setValue 代替 fill
+        await browser.keys('Enter');
 
-  // --- Use Ctrl+O to open the quick switcher ---
+        // --- 步骤 2: 编辑文件内容 ---
+        await browser.pause(500); // 使用 browser.pause 代替 waitForTimeout
+        
+        // 全选并删除已有内容
+        await browser.keys(['Control', 'a']);
+        await browser.keys('Delete');
 
-  // 1. Press the hotkey
-  await page.keyboard.press('Control+o');
+        // 3. 点击编辑器并输入代码块
+        const editor = await $('.cm-content');
+        await editor.click();
+        // 直接用 setValue 可以更快地粘贴内容
+        await editor.setValue('```think\n{"layout": "默认布局"}\n```');
+        await browser.pause(1000);
 
-  // 2. Locate the input and fill in the filename
-  // CORE FIX: Use the exact placeholder text discovered from the trace file
-  const fileInput = page.getByPlaceholder('输入以切换或创建文件…'); 
-  await fileInput.fill('E2E-TEST-PAGE.md');
-  await page.keyboard.press('Enter');
-  
-  // --- The file is now open, begin testing plugin functionality ---
+        // --- 步骤 3: 断言插件UI是否正确渲染 ---
+        const renderedBlock = await $('.block-language-think');
+        // WebdriverIO 的断言风格是等待元素出现，如果超时未出现则测试失败
+        await renderedBlock.waitForDisplayed({ timeout: 5000 });
 
-  await page.waitForTimeout(500);
-  await page.keyboard.press('Control+a');
-  await page.keyboard.press('Delete');
-  await page.locator('.cm-content').click();
-  await page.keyboard.type('```think\n{"layout": "默认布局"}\n```');
-  await page.waitForTimeout(1000);
-
-  // Assertions
-  const renderedBlock = page.locator('.block-language-think');
-  await expect(renderedBlock).toBeVisible();
-  const layoutContainer = renderedBlock.locator('.think-module');
-  await expect(layoutContainer).toBeVisible();
-  console.log('✅ Assertion successful! Plugin UI rendered correctly!');
-
-  await browser.close();
+        const layoutContainer = await renderedBlock.$('.think-module');
+        await layoutContainer.waitForDisplayed({ timeout: 5000 });
+        
+        console.log('✅ Assertion successful! Plugin UI rendered correctly!');
+        
+        // 不需要 browser.close()，测试运行器会自动处理
+    });
 });
