@@ -1,0 +1,98 @@
+{
+  "confirmDeletion": false,
+  "showAddCommand": true,
+  "debug": false,
+  "editorMenu": [
+    {
+      "id": "obsidian-tasks-plugin:edit-task",
+      "icon": "pencil",
+      "name": "Tasks: Create or edit task",
+      "mode": "any"
+    }
+  ],
+  "fileMenu": [],
+  "leftRibbon": [
+    {
+      "id": "quickadd:choice:b56028e9-1fae-4c87-aef9-0fc4e81e7fa5",
+      "icon": "lucide-a-arrow-down",
+      "name": "QuickAdd: 电脑记录",
+      "mode": "any"
+    }
+  ],
+  "rightRibbon": [],
+  "titleBar": [],
+  "statusBar": [],
+  "pageHeader": [
+    {
+      "id": "workspace:close-others",
+      "icon": "lucide-x",
+      "name": "关闭其他标签页",
+      "mode": "desktop"
+    },
+    {
+      "id": "app:toggle-left-sidebar",
+      "icon": "lucide-arrow-big-left",
+      "name": "折叠/展开左侧边栏",
+      "mode": "desktop"
+    },
+    {
+      "id": "app:toggle-right-sidebar",
+      "icon": "lucide-arrow-big-right",
+      "name": "折叠/展开右侧边栏",
+      "mode": "desktop"
+    },
+    {
+      "id": "workspace:toggle-pin",
+      "icon": "lucide-pin",
+      "name": "解锁/锁定",
+      "mode": "desktop"
+    },
+    {
+      "id": "form-flow:@CFORM_DJ/CP/打开日历.cform",
+      "icon": "lucide-airplay",
+      "name": "Form Flow: @打开日历",
+      "mode": "any"
+    }
+  ],
+  "macros": [
+    {
+      "macro": [
+        {
+          "action": 0,
+          "commandId": "obsidian-style-settings:show-style-settings-leaf"
+        },
+        {
+          "action": 1,
+          "delay": "400"
+        },
+        {
+          "action": 0,
+          "commandId": "obsidian-hover-editor:convert-active-pane-to-popover"
+        }
+      ],
+      "name": "样式设置",
+      "icon": "star",
+      "startup": false
+    }
+  ],
+  "explorer": [],
+  "hide": {
+    "statusbar": [],
+    "leftRibbon": [
+      "查看关系图谱",
+      "Components: 创建组件",
+      "Remotely Save"
+    ]
+  },
+  "spacing": "0",
+  "advancedToolbar": {
+    "rowHeight": 48,
+    "rowCount": 1,
+    "spacing": 0,
+    "buttonWidth": 48,
+    "columnLayout": false,
+    "mappedIcons": [],
+    "tooltips": false,
+    "heightOffset": 0
+  }
+}

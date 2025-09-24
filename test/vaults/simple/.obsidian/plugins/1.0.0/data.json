@@ -1,0 +1,31 @@
+{
+  "createComponentSilent": true,
+  "receiveBetaVersion": true,
+  "folder": "DJ/CP",
+  "formFolder": "DJ/CP",
+  "scriptFolder": "DJ/CP",
+  "enableDebug": false,
+  "debugLogOutputFolder": "",
+  "fileEntrypoints": {
+    "DJ/CP/任务.cform": {
+      "asCommand": true
+    },
+    "DJ/CP/计划总结思考.cform": {
+      "asCommand": true
+    },
+    "DJ/CP/不弹窗导入.cform": {
+      "asCommand": true
+    },
+    "DJ/CP/弹窗导入.cform": {
+      "asCommand": true
+    },
+    "DJ/CP/页头.cform": {
+      "asCommand": true
+    }
+  },
+  "DEFAULT_SETTINGS": {
+    "folder": "",
+    "createComponentSilent": false,
+    "scriptFolder": "components/scripts"
+  }
+}

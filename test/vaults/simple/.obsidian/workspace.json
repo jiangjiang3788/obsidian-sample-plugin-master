@@ -1,0 +1,315 @@
+{
+  "main": {
+    "id": "6be0bfe2280c36c1",
+    "type": "split",
+    "children": [
+      {
+        "id": "29b1eec7af849adc",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "6519bba56773c2e8",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "未命名 6.md",
+                "mode": "preview",
+                "source": true,
+                "backlinks": false
+              },
+              "icon": "lucide-file",
+              "title": "未命名 6"
+            }
+          },
+          {
+            "id": "7038dfdcc17a0d5c",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "0日历.md",
+                "mode": "preview",
+                "source": true,
+                "backlinks": false
+              },
+              "icon": "lucide-file",
+              "title": "0日历"
+            }
+          },
+          {
+            "id": "ec4d19e4999686df",
+            "type": "leaf",
+            "pinned": true,
+            "state": {
+              "type": "canvas",
+              "state": {
+                "file": "01/白板.canvas",
+                "viewState": {
+                  "x": 1582.001087740478,
+                  "y": -399.7190647825879,
+                  "zoom": 1
+                }
+              },
+              "pinned": true,
+              "icon": "lucide-layout-dashboard",
+              "title": "白板"
+            }
+          },
+          {
+            "id": "c0faf324e777fad5",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "未命名 6.md",
+                "mode": "preview",
+                "source": true,
+                "backlinks": false
+              },
+              "icon": "lucide-file",
+              "title": "未命名 6"
+            }
+          },
+          {
+            "id": "0a6587c3f43a6208",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "未命名 6.md",
+                "mode": "preview",
+                "source": true,
+                "backlinks": false
+              },
+              "icon": "lucide-file",
+              "title": "未命名 6"
+            }
+          },
+          {
+            "id": "ee3a22c69699d57a",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "E2E-TEST-PAGE.md.md",
+                "mode": "preview",
+                "source": true
+              },
+              "icon": "lucide-file",
+              "title": "E2E-TEST-PAGE.md"
+            }
+          },
+          {
+            "id": "a4e4e6b66199e48f",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "未命名.md",
+                "mode": "preview",
+                "source": true
+              },
+              "icon": "lucide-file",
+              "title": "未命名"
+            }
+          },
+          {
+            "id": "158967dc9db26c29",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "01/2-4思考.md",
+                "mode": "source",
+                "source": true,
+                "backlinks": false
+              },
+              "icon": "lucide-file",
+              "title": "2-4思考"
+            }
+          },
+          {
+            "id": "6a6fa782f770476e",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "01/2-6工作.md",
+                "mode": "source",
+                "source": true,
+                "backlinks": false
+              },
+              "icon": "lucide-file",
+              "title": "2-6工作"
+            }
+          }
+        ],
+        "currentTab": 6
+      }
+    ],
+    "direction": "vertical"
+  },
+  "left": {
+    "id": "c55d6e821c57a927",
+    "type": "split",
+    "children": [
+      {
+        "id": "79903ebd45e1b75e",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "8f0d4aa27e292cee",
+            "type": "leaf",
+            "state": {
+              "type": "file-explorer",
+              "state": {
+                "sortOrder": "alphabetical",
+                "autoReveal": false
+              },
+              "icon": "lucide-folder-closed",
+              "title": "文件列表"
+            }
+          },
+          {
+            "id": "6a0a1b53e75745e3",
+            "type": "leaf",
+            "state": {
+              "type": "search",
+              "state": {
+                "query": "沙发垫",
+                "matchingCase": false,
+                "explainSearch": false,
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical"
+              },
+              "icon": "lucide-search",
+              "title": "搜索"
+            }
+          },
+          {
+            "id": "63364682bef7ef95",
+            "type": "leaf",
+            "state": {
+              "type": "bookmarks",
+              "state": {},
+              "icon": "lucide-bookmark",
+              "title": "书签"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300
+  },
+  "right": {
+    "id": "ae10c9e6472222ca",
+    "type": "split",
+    "children": [
+      {
+        "id": "8fb463555bccc7b4",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "1499c3019dd7107d",
+            "type": "leaf",
+            "state": {
+              "type": "outline",
+              "state": {
+                "file": "0日历.md",
+                "followCursor": false,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-ghost",
+              "title": "outline"
+            }
+          },
+          {
+            "id": "2af09086d1135582",
+            "type": "leaf",
+            "state": {
+              "type": "backlink",
+              "state": {
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical",
+                "showSearch": false,
+                "searchQuery": "",
+                "backlinkCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-coming-in",
+              "title": "反向链接"
+            }
+          },
+          {
+            "id": "2ae014c41e6c4b25",
+            "type": "leaf",
+            "state": {
+              "type": "all-properties",
+              "state": {
+                "sortOrder": "frequency",
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-archive",
+              "title": "添加笔记属性"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300,
+    "collapsed": true
+  },
+  "left-ribbon": {
+    "hiddenItems": {
+      "cmdr:QuickAdd: 电脑记录": false,
+      "graph:查看关系图谱": false,
+      "bases:创建新数据库": false,
+      "switcher:打开快速切换": false,
+      "canvas:新建白板": false,
+      "command-palette:打开命令面板": false,
+      "workspaces:管理工作区布局": false
+    }
+  },
+  "active": "a4e4e6b66199e48f",
+  "lastOpenFiles": [
+    "E2E-TEST-PAGE.md.md",
+    "未命名.md",
+    "Welcome.md",
+    "未命名 6.md",
+    "未命名 5.md",
+    "未命名 4.md",
+    "01/白板.canvas",
+    "0日历.md",
+    "未命名 3.md",
+    "01/2-3生活.md",
+    "01/2-4思考.md",
+    "01/2-6工作.md",
+    "01/2-2三餐.md",
+    "01/2-1健康.md",
+    "01/2-5电脑.md",
+    "01/总结.md",
+    "03/01.md",
+    "03",
+    "02/2-2三餐.md",
+    "02/2-1健康.md",
+    "01/计划.md",
+    "读取白板.canvas",
+    "未命名 2.md",
+    "未命名 1.md",
+    "未命名 2.canvas",
+    "未命名.canvas",
+    "think-plugin-timer-state.json",
+    "02",
+    "软件工程知识树.md",
+    "输入设置开发文档.md",
+    "设计原则.md",
+    "DJ/文件/提示词-个人助理提示词.md"
+  ]
+}
