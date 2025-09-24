@@ -1,0 +1,31 @@
+{
+  "accentColor": "#86b9ca",
+  "cssTheme": "Maple",
+  "enabledCssSnippets": [
+    "新建文本",
+    "yebianju",
+    "hanggao",
+    "TimeLine",
+    "ChatBubble",
+    "引用背景",
+    "zihao - 副本",
+    "图片",
+    "链接图标",
+    "乱码",
+    "热力图按钮",
+    "MCL Multi Column",
+    "热力图年份",
+    "热力图月份",
+    "热力图显示月份",
+    "列表 - 副本",
+    "任务链接",
+    "任务标题",
+    "白板描边框隐藏"
+  ],
+  "theme": "moonstone",
+  "showViewHeader": true,
+  "baseFontSizeAction": true,
+  "baseFontSize": 14,
+  "nativeMenus": false,
+  "showRibbon": true
+}
