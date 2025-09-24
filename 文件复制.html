@@ -94,6 +94,7 @@
 
 <script>
 const $ = id=>document.getElementById(id);
+const ignoreDirs = new Set(['.obsidian-cache', 'node_modules', 'dist']);
 let rootHandle=null;
 let selected={handle:null,path:'',element:null};
 let isDirty=false;
@@ -284,6 +285,7 @@ async function renderTree(dirHandle,relativePath,container){
   });
   
   for (const {name,handle} of entries) {
+    if (ignoreDirs.has(name)) continue; //  <-- 忽略指定文件夹
     const fullPath=relativePath+name;
     if(handle.kind==='file'){
       container.appendChild(createFileRow(handle,fullPath,name));
@@ -419,6 +421,7 @@ async function traverseAndConcat(dirHandle,prefix=''){
     return a.name.localeCompare(b.name);
   });
   for(const {name,hdl} of entries){
+    if (ignoreDirs.has(name)) continue; // <-- 忽略指定文件夹
     if(hdl.kind==='file'){
       out+=`\n\n===== ${prefix}${name} =====\n${await (await hdl.getFile()).text()}`;
     }else{
