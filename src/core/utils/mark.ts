@@ -115,7 +115,7 @@ export function generateNextRecurringTask(
         .replace(new RegExp(`\\s*${EMOJI.done}\\s*${DATE_YMD_RE.source}`), '')
         .replace(/\s*[\(\[]时间::[^)\]]*[\)\]]/g, '') // 清理所有时间相关标签
         .replace(/\s*[\(\[]结束::[^)\]]*[\)\]]/g, '')
-        .replace(/\s*[\(\[]时长::[^)\]]*[\)\]]/g, '');
+        // .replace(/\s*[\(\[]时长::[^)\]]*[\)\]]/g, '');
 
     const rec = parseRecurrence(rawTask);
     if (!rec) return next.trim();
