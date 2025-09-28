@@ -2,11 +2,11 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
 import { useStore, AppStore } from '@state/AppStore';
-import { Box, Stack, Typography, FormControlLabel, Checkbox, Tooltip, Chip } from '@mui/material';
+// [修改] 导入 Autocomplete 和 TextField
+import { Box, Stack, Typography, FormControlLabel, Checkbox, Tooltip, Chip, Autocomplete, TextField } from '@mui/material';
 import { VIEW_OPTIONS, ViewName, getAllFields } from '@core/domain/schema';
 import type { ViewInstance } from '@core/domain/schema';
 import { VIEW_EDITORS } from './components/view-editors/registry';
-// [修改] 从注册表导入 dataStore
 import { dataStore } from '@state/storeRegistry';
 import { useMemo } from 'preact/hooks';
 import { SimpleSelect } from '@shared/ui/SimpleSelect';
@@ -20,7 +20,6 @@ const LABEL_WIDTH = '80px';
 
 function ViewInstanceEditor({ vi, appStore }: { vi: ViewInstance, appStore: AppStore }) {
     const dataSources = useStore(state => state.settings.dataSources);
-    // [修复] 从注册表获取 dataStore 实例
     const fieldOptions = useMemo(() => getAllFields(dataStore?.queryItems() || []), []);
     const EditorComponent = VIEW_EDITORS[vi.viewType];
 
@@ -58,7 +57,18 @@ function ViewInstanceEditor({ vi, appStore }: { vi: ViewInstance, appStore: AppS
             <Stack direction="row" alignItems="center" spacing={2}>
                 <Typography sx={{ width: LABEL_WIDTH, flexShrink: 0, fontWeight: 500 }}>基础配置</Typography>
                 <SimpleSelect value={vi.viewType} options={viewTypeOptions} onChange={val => handleUpdate({ viewType: val as ViewName })} sx={{ minWidth: 150, flexGrow: 1 }} />
-                <SimpleSelect value={vi.dataSourceId} options={dataSourceOptions} placeholder="-- 选择数据源 --" onChange={val => handleUpdate({ dataSourceId: val })} sx={{ minWidth: 150, flexGrow: 1 }} />
+                
+                {/* [核心修改] 将 SimpleSelect 替换为 Autocomplete */}
+                <Autocomplete
+                    options={dataSourceOptions}
+                    getOptionLabel={(option) => option.label || ''}
+                    value={dataSourceOptions.find(opt => opt.value === vi.dataSourceId) || null}
+                    onChange={(_, newValue) => handleUpdate({ dataSourceId: newValue ? newValue.value : '' })}
+                    renderInput={(params) => <TextField {...params} variant="outlined" placeholder="-- 搜索数据源 --" />}
+                    sx={{ minWidth: 150, flexGrow: 1 }}
+                    size="small"
+                />
+
                 <FormControlLabel control={<Checkbox size="small" checked={!!vi.collapsed} onChange={e => handleUpdate({ collapsed: e.target.checked })} />} label={<Typography noWrap>默认折叠</Typography>} />
             </Stack>
             <Stack direction="row" flexWrap="wrap" spacing={1} useFlexGap alignItems="center">
@@ -84,6 +94,7 @@ function ViewInstanceEditor({ vi, appStore }: { vi: ViewInstance, appStore: AppS
     );
 }
 
+// ... 文件剩余部分无需修改 ...
 export function ViewInstanceSettings({ app, appStore }: { app: App, appStore: AppStore }) {
     const viewInstances = useStore(state => state.settings.viewInstances);
     const allGroups = useStore(state => state.settings.groups);
@@ -127,7 +138,6 @@ export function ViewInstanceSettings({ app, appStore }: { app: App, appStore: Ap
                     items={itemsAsTreeItems}
                     allGroups={viewGroups}
                     parentId={null}
-                    // [修改] 在此将 appStore 实例传递给 SettingsTreeView
                     appStore={appStore}
                     renderItem={(vi: ViewInstance) => <ViewInstanceEditor vi={vi} appStore={appStore} />}
                     onAddItem={manager.onAddItem}

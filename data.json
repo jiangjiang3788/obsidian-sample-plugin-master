@@ -2619,6 +2619,21 @@
       },
       "collapsed": true,
       "parentId": "group_memc1a9ofen88"
+    },
+    {
+      "id": "view_mg3dtsixz49u3",
+      "title": "新视图",
+      "viewType": "BlockView",
+      "dataSourceId": "",
+      "viewConfig": {
+        "view": "BlockView",
+        "title": "块视图",
+        "collapsed": false,
+        "fields": [],
+        "group": "categoryKey"
+      },
+      "collapsed": true,
+      "parentId": null
     }
   ],
   "layouts": [
@@ -2753,7 +2768,11 @@
       "id": "layout_mf2b8j6hqefef",
       "name": "01",
       "viewInstanceIds": [
-        "view_mf2b6b80nnu6h"
+        "view_mf2b6b80nnu6h",
+        "view_mer5qenavnxxt",
+        "view_mer5qena23btv",
+        "view_mesci2vh386vf",
+        "view_mer5qlrm3xnu6"
       ],
       "displayMode": "list",
       "initialView": "月",
