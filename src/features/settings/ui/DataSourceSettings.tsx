@@ -88,6 +88,8 @@ export function DataSourceSettings({ app, appStore }: { app: App, appStore: AppS
                     items={itemsAsTreeItems}
                     allGroups={dsGroups}
                     parentId={null}
+                    // [修改] 在此将 appStore 实例传递给 SettingsTreeView
+                    appStore={appStore}
                     // [修改] 渲染子项时传入 appStore
                     renderItem={(ds: DataSource) => <DataSourceEditor ds={ds} appStore={appStore} />}
                     onAddItem={manager.onAddItem}
