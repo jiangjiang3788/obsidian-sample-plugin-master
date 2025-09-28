@@ -36661,7 +36661,18 @@ function ViewInstanceEditor({ vi, appStore: appStore2 }) {
     /* @__PURE__ */ u(Stack, { direction: "row", alignItems: "center", spacing: 2, children: [
       /* @__PURE__ */ u(Typography, { sx: { width: LABEL_WIDTH$1, flexShrink: 0, fontWeight: 500 }, children: "基础配置" }),
       /* @__PURE__ */ u(SimpleSelect, { value: vi.viewType, options: viewTypeOptions, onChange: (val) => handleUpdate({ viewType: val }), sx: { minWidth: 150, flexGrow: 1 } }),
-      /* @__PURE__ */ u(SimpleSelect, { value: vi.dataSourceId, options: dataSourceOptions, placeholder: "-- 选择数据源 --", onChange: (val) => handleUpdate({ dataSourceId: val }), sx: { minWidth: 150, flexGrow: 1 } }),
+      /* @__PURE__ */ u(
+        Autocomplete,
+        {
+          options: dataSourceOptions,
+          getOptionLabel: (option) => option.label || "",
+          value: dataSourceOptions.find((opt) => opt.value === vi.dataSourceId) || null,
+          onChange: (_2, newValue) => handleUpdate({ dataSourceId: newValue ? newValue.value : "" }),
+          renderInput: (params) => /* @__PURE__ */ u(TextField, { ...params, variant: "outlined", placeholder: "-- 搜索数据源 --" }),
+          sx: { minWidth: 150, flexGrow: 1 },
+          size: "small"
+        }
+      ),
       /* @__PURE__ */ u(FormControlLabel, { control: /* @__PURE__ */ u(Checkbox, { size: "small", checked: !!vi.collapsed, onChange: (e2) => handleUpdate({ collapsed: e2.target.checked }) }), label: /* @__PURE__ */ u(Typography, { noWrap: true, children: "默认折叠" }) })
     ] }),
     /* @__PURE__ */ u(Stack, { direction: "row", flexWrap: "wrap", spacing: 1, useFlexGap: true, alignItems: "center", children: [
@@ -36785,7 +36796,22 @@ function LayoutEditor({ layout, appStore: appStore2 }) {
     /* @__PURE__ */ u(Stack, { direction: "row", flexWrap: "wrap", spacing: 1, useFlexGap: true, alignItems: "center", children: [
       /* @__PURE__ */ u(Typography, { sx: { width: LABEL_WIDTH, flexShrink: 0, fontWeight: 500 }, children: "包含视图" }),
       selectedViews.map((view) => /* @__PURE__ */ u(Tooltip, { title: `点击移除 "${view.title}"`, children: /* @__PURE__ */ u(Chip, { label: view.title, onClick: () => removeView(view.id), size: "small" }) }, view.id)),
-      /* @__PURE__ */ u(SimpleSelect, { value: "", options: availableViewOptions, onChange: addView, placeholder: "+ 添加视图...", sx: { minWidth: 150 } })
+      /* @__PURE__ */ u(
+        Autocomplete,
+        {
+          value: null,
+          options: availableViewOptions,
+          getOptionLabel: (option) => option.label || "",
+          onChange: (_2, newValue) => {
+            if (newValue) {
+              addView(newValue.value);
+            }
+          },
+          renderInput: (params) => /* @__PURE__ */ u(TextField, { ...params, variant: "outlined", placeholder: "+ 搜索并添加视图..." }),
+          sx: { minWidth: 150 },
+          size: "small"
+        }
+      )
     ] })
   ] });
 }

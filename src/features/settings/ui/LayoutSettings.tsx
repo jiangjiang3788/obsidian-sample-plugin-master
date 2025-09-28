@@ -2,7 +2,8 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
 import { useStore, AppStore } from '@state/AppStore';
-import { Box, Stack, Typography, TextField, Checkbox, FormControlLabel, Tooltip, Chip, Radio, RadioGroup as MuiRadioGroup } from '@mui/material';
+// [MODIFIED] Import Autocomplete
+import { Box, Stack, Typography, TextField, Checkbox, FormControlLabel, Tooltip, Chip, Radio, RadioGroup as MuiRadioGroup, Autocomplete } from '@mui/material';
 import type { Layout } from '@core/domain/schema';
 import { useMemo, useCallback } from 'preact/hooks';
 import { SimpleSelect } from '@shared/ui/SimpleSelect';
@@ -85,7 +86,21 @@ function LayoutEditor({ layout, appStore }: { layout: Layout, appStore: AppStore
                         <Chip label={view.title} onClick={() => removeView(view.id)} size="small" />
                     </Tooltip>
                 ))}
-                <SimpleSelect value="" options={availableViewOptions} onChange={addView} placeholder="+ 添加视图..." sx={{ minWidth: 150 }} />
+                
+                {/* [CORE CHANGE] Replaced SimpleSelect with Autocomplete for adding views */}
+                <Autocomplete
+                    value={null} // Always reset after selection
+                    options={availableViewOptions}
+                    getOptionLabel={(option) => option.label || ''}
+                    onChange={(_, newValue) => {
+                        if (newValue) {
+                            addView(newValue.value);
+                        }
+                    }}
+                    renderInput={(params) => <TextField {...params} variant="outlined" placeholder="+ 搜索并添加视图..." />}
+                    sx={{ minWidth: 150 }}
+                    size="small"
+                />
             </Stack>
         </Stack>
     );
@@ -135,7 +150,6 @@ export function LayoutSettings({ app, appStore }: { app: App, appStore: AppStore
                     items={itemsAsTreeItems}
                     allGroups={layoutGroups}
                     parentId={null}
-                    // [修改] 在此将 appStore 实例传递给 SettingsTreeView
                     appStore={appStore}
                     renderItem={(l: Layout) => <LayoutEditor layout={l} appStore={appStore} />}
                     onAddItem={manager.onAddItem}
