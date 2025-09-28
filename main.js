@@ -31700,56 +31700,80 @@ function useViewData({
 }
 function exportItemsToMarkdown(items, title) {
   const lines = [];
+  const groupedByFile = /* @__PURE__ */ new Map();
+  const UNGROUPED_FILE_KEY = "未分类文件";
+  const UNGROUPED_HEADER_KEY = "正文内容";
   items.forEach((item) => {
-    if (item.type === "task") {
-      const isDone2 = item.categoryKey.includes("/done");
-      const isCancelled = item.categoryKey.includes("/cancelled");
-      const checkbox = isDone2 ? "[x]" : isCancelled ? "[-]" : "[ ]";
-      let taskLine = `- ${checkbox} ${item.title}`;
-      if (item.tags && item.tags.length > 0) {
-        taskLine += ` ${item.tags.map((t2) => `#${t2}`).join(" ")}`;
-      }
-      const extraFields = {
-        "周期": item.period,
-        "评分": item.rating,
-        "时间": item.startTime,
-        "结束": item.endTime,
-        "时长": item.duration,
-        ...item.extra
-      };
-      for (const key in extraFields) {
-        const value = extraFields[key];
-        if (value !== null && value !== void 0 && value !== "") {
-          taskLine += ` (${key}:: ${value})`;
-        }
-      }
-      if (item.dueDate) taskLine += ` ${EMOJI.due} ${item.dueDate}`;
-      if (item.scheduledDate) taskLine += ` ${EMOJI.scheduled} ${item.scheduledDate}`;
-      if (item.startDate) taskLine += ` ${EMOJI.start} ${item.startDate}`;
-      if (item.createdDate) taskLine += ` ${EMOJI.created} ${item.createdDate}`;
-      if (item.doneDate) taskLine += ` ${EMOJI.done} ${item.doneDate}`;
-      if (item.cancelledDate) taskLine += ` ${EMOJI.cancelled} ${item.cancelledDate}`;
-      lines.push(taskLine.replace(/\s+/g, " ").trim());
-    } else if (item.type === "block") {
-      lines.push(`##### ID ${item.id}`);
-      if (item.categoryKey) lines.push(`**分类**: ${item.categoryKey}`);
-      if (item.date) lines.push(`**日期**: ${item.date}`);
-      if (item.tags && item.tags.length > 0) lines.push(`**标签**: ${item.tags.join(", ")}`);
-      if (item.period) lines.push(`**周期**: ${item.period}`);
-      if (item.rating !== void 0) lines.push(`**评分**: ${item.rating}`);
-      if (item.pintu) lines.push(`**评图**: ![[${item.pintu}]]`);
-      for (const key in item.extra) {
-        lines.push(`**${key}**: ${item.extra[key]}`);
-      }
-      if (item.content && item.content.trim()) {
-        lines.push(`**内容**:`);
-        const contentLines = item.content.trim().split("\n");
-        contentLines.forEach((line2) => {
-          lines.push(`> ${line2}`);
-        });
-      }
-      lines.push("<br>");
+    const filename = readField(item, "filename") || UNGROUPED_FILE_KEY;
+    const header = readField(item, "header") || UNGROUPED_HEADER_KEY;
+    if (!groupedByFile.has(filename)) {
+      groupedByFile.set(filename, /* @__PURE__ */ new Map());
     }
+    const fileGroup = groupedByFile.get(filename);
+    if (!fileGroup.has(header)) {
+      fileGroup.set(header, []);
+    }
+    fileGroup.get(header).push(item);
+  });
+  groupedByFile.forEach((headers, filename) => {
+    lines.push(`## ${filename}`);
+    lines.push("");
+    headers.forEach((groupedItems, header) => {
+      if (header !== UNGROUPED_HEADER_KEY) {
+        lines.push(`### ${header}`);
+        lines.push("");
+      }
+      groupedItems.forEach((item) => {
+        if (item.type === "task") {
+          const isDone2 = item.categoryKey.includes("/done");
+          const isCancelled = item.categoryKey.includes("/cancelled");
+          const checkbox = isDone2 ? "[x]" : isCancelled ? "[-]" : "[ ]";
+          let taskLine = `- ${checkbox} ${item.title}`;
+          const extraFields = {
+            "周期": item.period,
+            "评分": item.rating,
+            "时间": item.startTime,
+            "结束": item.endTime,
+            "时长": item.duration,
+            ...item.extra
+          };
+          for (const key in extraFields) {
+            const value = extraFields[key];
+            if (key === "filename" || key === "header") continue;
+            if (value !== null && value !== void 0 && value !== "") {
+              taskLine += ` (${key}:: ${value})`;
+            }
+          }
+          if (item.dueDate) taskLine += ` ${EMOJI.due} ${item.dueDate}`;
+          if (item.scheduledDate) taskLine += ` ${EMOJI.scheduled} ${item.scheduledDate}`;
+          if (item.startDate) taskLine += ` ${EMOJI.start} ${item.startDate}`;
+          if (item.createdDate) taskLine += ` ${EMOJI.created} ${item.createdDate}`;
+          if (item.doneDate) taskLine += ` ${EMOJI.done} ${item.doneDate}`;
+          if (item.cancelledDate) taskLine += ` ${EMOJI.cancelled} ${item.cancelledDate}`;
+          lines.push(taskLine.replace(/\s+/g, " ").trim());
+        } else if (item.type === "block") {
+          lines.push(`##### ID ${item.id}`);
+          if (item.categoryKey) lines.push(`**分类**: ${item.categoryKey}`);
+          if (item.date) lines.push(`**日期**: ${item.date}`);
+          if (item.tags && item.tags.length > 0) lines.push(`**标签**: ${item.tags.join(", ")}`);
+          if (item.period) lines.push(`**周期**: ${item.period}`);
+          if (item.rating !== void 0) lines.push(`**评分**: ${item.rating}`);
+          if (item.pintu) lines.push(`**评图**: ![[${item.pintu}]]`);
+          for (const key in item.extra) {
+            if (key === "filename" || key === "header") continue;
+            lines.push(`**${key}**: ${item.extra[key]}`);
+          }
+          if (item.content && item.content.trim()) {
+            lines.push(`**内容**:`);
+            const contentLines = item.content.trim().split("\n");
+            contentLines.forEach((line2) => {
+              lines.push(`> ${line2}`);
+            });
+          }
+          lines.push("<br>");
+        }
+      });
+    });
   });
   return lines.join("\n");
 }
