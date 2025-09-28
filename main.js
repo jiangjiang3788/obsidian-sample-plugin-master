@@ -29256,7 +29256,7 @@ function findBaseDateForRecurring(rawTask, whenDone, todayISO2) {
   return pick2(EMOJI.due) || pick2(EMOJI.scheduled) || pick2(EMOJI.start) || todayISO2;
 }
 function generateNextRecurringTask(rawTask, baseDateISO) {
-  let next2 = rawTask.replace(/^(\s*-\s*)\[[ xX-]\]/, "$1[ ]").replace(new RegExp(`\\s*${EMOJI.done}\\s*${DATE_YMD_RE.source}`), "").replace(/\s*[\(\[]时间::[^)\]]*[\)\]]/g, "").replace(/\s*[\(\[]结束::[^)\]]*[\)\]]/g, "").replace(/\s*[\(\[]时长::[^)\]]*[\)\]]/g, "");
+  let next2 = rawTask.replace(/^(\s*-\s*)\[[ xX-]\]/, "$1[ ]").replace(new RegExp(`\\s*${EMOJI.done}\\s*${DATE_YMD_RE.source}`), "").replace(/\s*[\(\[]时间::[^)\]]*[\)\]]/g, "").replace(/\s*[\(\[]结束::[^)\]]*[\)\]]/g, "");
   const rec = parseRecurrence(rawTask);
   if (!rec) return next2.trim();
   const base = dayjs(baseDateISO, ["YYYY-MM-DD", "YYYY/MM/DD"]);
@@ -33012,7 +33012,7 @@ function Node({ node: node2, children, ...props }) {
     children
   ] });
 }
-function SettingsTreeView({ groups, items, allGroups, parentId, level = 0, renderItem, onAddItem, onAddGroup, onDeleteItem, onUpdateItemName, onDuplicateItem }) {
+function SettingsTreeView({ groups, items, allGroups, parentId, level = 0, renderItem, onAddItem, onAddGroup, onDeleteItem, onUpdateItemName, onDuplicateItem, appStore: appStore2 }) {
   const [collapsedState, setCollapsedState] = d(() => {
     const initialState = {};
     [...groups, ...items].forEach((node2) => {
@@ -33023,8 +33023,8 @@ function SettingsTreeView({ groups, items, allGroups, parentId, level = 0, rende
   const [movingItem, setMovingItem] = d(null);
   const toggleCollapse = (itemId) => setCollapsedState((prev2) => ({ ...prev2, [itemId]: !prev2[itemId] }));
   const handleMoveConfirm = (targetParentId) => {
-    if (movingItem) {
-      AppStore.instance.moveItem(movingItem.id, targetParentId);
+    if (movingItem && appStore2) {
+      appStore2.moveItem(movingItem.id, targetParentId);
     }
   };
   const childGroups = groups.filter((g2) => g2.parentId === parentId);
@@ -33033,7 +33033,7 @@ function SettingsTreeView({ groups, items, allGroups, parentId, level = 0, rende
     childGroups.map((group) => {
       const treeItem = { ...group, isGroup: true };
       const isExpanded = !collapsedState[group.id];
-      return /* @__PURE__ */ u(Box, { sx: { borderBottom: "1px solid rgba(0,0,0,0.08)" }, children: /* @__PURE__ */ u(Node, { node: treeItem, isExpanded, level, onToggle: () => toggleCollapse(group.id), onUpdateItemName, onDeleteItem, onOpenMoveDialog: setMovingItem, onDuplicateItem, children: /* @__PURE__ */ u(Collapse, { in: isExpanded, timeout: "auto", unmountOnExit: true, children: /* @__PURE__ */ u(SettingsTreeView, { ...{ groups, items, allGroups, renderItem, onAddItem, onAddGroup, onDeleteItem, onUpdateItemName, onDuplicateItem }, parentId: group.id, level: level + 1 }) }) }) }, group.id);
+      return /* @__PURE__ */ u(Box, { sx: { borderBottom: "1px solid rgba(0,0,0,0.08)" }, children: /* @__PURE__ */ u(Node, { node: treeItem, isExpanded, level, onToggle: () => toggleCollapse(group.id), onUpdateItemName, onDeleteItem, onOpenMoveDialog: setMovingItem, onDuplicateItem, children: /* @__PURE__ */ u(Collapse, { in: isExpanded, timeout: "auto", unmountOnExit: true, children: /* @__PURE__ */ u(SettingsTreeView, { ...{ groups, items, allGroups, renderItem, onAddItem, onAddGroup, onDeleteItem, onUpdateItemName, onDuplicateItem, appStore: appStore2 }, parentId: group.id, level: level + 1 }) }) }) }, group.id);
     }),
     childItems.map((item) => {
       const isExpanded = !collapsedState[item.id];
@@ -36593,6 +36593,7 @@ function DataSourceSettings({ app, appStore: appStore2 }) {
         items: itemsAsTreeItems,
         allGroups: dsGroups,
         parentId: null,
+        appStore: appStore2,
         renderItem: (ds) => /* @__PURE__ */ u(DataSourceEditor, { ds, appStore: appStore2 }),
         onAddItem: manager2.onAddItem,
         onAddGroup: manager2.onAddGroup,
@@ -36692,6 +36693,7 @@ function ViewInstanceSettings({ app, appStore: appStore2 }) {
         items: itemsAsTreeItems,
         allGroups: viewGroups,
         parentId: null,
+        appStore: appStore2,
         renderItem: (vi) => /* @__PURE__ */ u(ViewInstanceEditor, { vi, appStore: appStore2 }),
         onAddItem: manager2.onAddItem,
         onAddGroup: manager2.onAddGroup,
@@ -36798,6 +36800,7 @@ function LayoutSettings({ app, appStore: appStore2 }) {
         items: itemsAsTreeItems,
         allGroups: layoutGroups,
         parentId: null,
+        appStore: appStore2,
         renderItem: (l2) => /* @__PURE__ */ u(LayoutEditor, { layout: l2, appStore: appStore2 }),
         onAddItem: manager2.onAddItem,
         onAddGroup: manager2.onAddGroup,

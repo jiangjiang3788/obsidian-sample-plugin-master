@@ -23,7 +23,7 @@ function ViewInstanceEditor({ vi, appStore }: { vi: ViewInstance, appStore: AppS
     // [修复] 从注册表获取 dataStore 实例
     const fieldOptions = useMemo(() => getAllFields(dataStore?.queryItems() || []), []);
     const EditorComponent = VIEW_EDITORS[vi.viewType];
-    
+
     const correctedViewConfig = useMemo(() => {
         if (vi.viewConfig && typeof (vi.viewConfig as any).categories === 'object') return vi.viewConfig;
         if (vi.viewConfig && (vi.viewConfig as any).viewConfig) return (vi.viewConfig as any).viewConfig;
@@ -33,7 +33,7 @@ function ViewInstanceEditor({ vi, appStore }: { vi: ViewInstance, appStore: AppS
     const handleUpdate = (updates: Partial<ViewInstance>) => {
         appStore.updateViewInstance(vi.id, updates);
     };
-    
+
     const addField = (field: string) => {
         if (field && !vi.fields?.includes(field)) {
             handleUpdate({ fields: [...(vi.fields || []), field] });
@@ -47,7 +47,7 @@ function ViewInstanceEditor({ vi, appStore }: { vi: ViewInstance, appStore: AppS
     const viewTypeOptions = VIEW_OPTIONS.map(v => ({ value: v, label: v.replace('View', '') }));
     const dataSourceOptions = dataSources.map(ds => ({ value: ds.id, label: ds.name }));
     const availableFieldOptions = fieldOptions.filter(f => !vi.fields?.includes(f)).map(f => ({ value: f, label: f }));
-    
+
     const groupFieldOptions = useMemo(() => [
         { value: '', label: '-- 不分组 --' },
         ...fieldOptions.map(f => ({ value: f, label: f }))
@@ -75,8 +75,8 @@ function ViewInstanceEditor({ vi, appStore }: { vi: ViewInstance, appStore: AppS
                 <SimpleSelect fullWidth value={vi.group || ''} options={groupFieldOptions} onChange={val => handleUpdate({ group: val || undefined })} />
             </Stack>
             {EditorComponent && (
-                <Box pt={1} mt={1} sx={{borderTop: '1px solid rgba(0,0,0,0.08)'}}>
-                    <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 1.5, mt: 1 }}>{vi.viewType.replace('View','')} 专属配置</Typography>
+                <Box pt={1} mt={1} sx={{ borderTop: '1px solid rgba(0,0,0,0.08)' }}>
+                    <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 1.5, mt: 1 }}>{vi.viewType.replace('View', '')} 专属配置</Typography>
                     <EditorComponent module={vi} value={correctedViewConfig} onChange={(patch: any) => handleUpdate({ viewConfig: { ...correctedViewConfig, ...patch } })} fieldOptions={fieldOptions} />
                 </Box>
             )}
@@ -92,7 +92,7 @@ export function ViewInstanceSettings({ app, appStore }: { app: App, appStore: Ap
 
     const itemsAsTreeItems: TreeItem[] = useMemo(() => viewInstances.map(vi => ({
         ...vi,
-        name: vi.title, 
+        name: vi.title,
         isGroup: false,
     })), [viewInstances]);
 
@@ -106,7 +106,7 @@ export function ViewInstanceSettings({ app, appStore }: { app: App, appStore: Ap
                 const siblings = [...viewGroups, ...itemsAsTreeItems].filter(i => i.parentId === activeItem.parentId);
                 const oldIndex = siblings.findIndex(i => i.id === active.id);
                 const newIndex = siblings.findIndex(i => i.id === over.id);
-                
+
                 if (oldIndex !== -1 && newIndex !== -1) {
                     const reorderedSiblings = arrayMove(siblings, oldIndex, newIndex);
                     appStore.reorderItems(reorderedSiblings, activeItem.isGroup ? 'group' : 'viewInstance');
@@ -120,13 +120,15 @@ export function ViewInstanceSettings({ app, appStore }: { app: App, appStore: Ap
             <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 2 }}>
                 <Typography variant="h6">管理视图</Typography>
             </Stack>
-            
+
             <DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
                 <SettingsTreeView
                     groups={viewGroups}
                     items={itemsAsTreeItems}
                     allGroups={viewGroups}
                     parentId={null}
+                    // [修改] 在此将 appStore 实例传递给 SettingsTreeView
+                    appStore={appStore}
                     renderItem={(vi: ViewInstance) => <ViewInstanceEditor vi={vi} appStore={appStore} />}
                     onAddItem={manager.onAddItem}
                     onAddGroup={manager.onAddGroup}

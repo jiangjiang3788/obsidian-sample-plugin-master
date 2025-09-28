@@ -56,9 +56,9 @@ function LayoutEditor({ layout, appStore }: { layout: Layout, appStore: AppStore
         <Stack spacing={2} sx={{ p: '8px 16px 16px 50px' }}>
             <Stack direction="row" alignItems="center" spacing={2}>
                 <Typography sx={{ width: LABEL_WIDTH, flexShrink: 0, fontWeight: 500 }}>模式</Typography>
-                <FormControlLabel 
-                    control={<Checkbox size="small" checked={!!layout.isOverviewMode} onChange={e => handleUpdate({ isOverviewMode: e.target.checked, initialDateFollowsNow: false })} />} 
-                    label={<Typography noWrap>启用概览模式</Typography>} 
+                <FormControlLabel
+                    control={<Checkbox size="small" checked={!!layout.isOverviewMode} onChange={e => handleUpdate({ isOverviewMode: e.target.checked, initialDateFollowsNow: false })} />}
+                    label={<Typography noWrap>启用概览模式</Typography>}
                     title="启用后，此布局将变为持久化时间导航模式，工具栏样式将改变，且时间不再跟随今日。"
                 />
             </Stack>
@@ -95,7 +95,7 @@ export function LayoutSettings({ app, appStore }: { app: App, appStore: AppStore
     const layouts = useStore(state => state.settings.layouts);
     const allGroups = useStore(state => state.settings.groups);
     const layoutGroups = useMemo(() => allGroups.filter(g => g.type === 'layout'), [allGroups]);
-    
+
     const manager = useSettingsManager({ app, appStore, type: 'layout', itemNoun: '布局' });
 
     const itemsAsTreeItems: TreeItem[] = useMemo(() => layouts.map(l => ({
@@ -114,7 +114,7 @@ export function LayoutSettings({ app, appStore }: { app: App, appStore: AppStore
                 const siblings = [...layoutGroups, ...itemsAsTreeItems].filter(i => i.parentId === activeItem.parentId);
                 const oldIndex = siblings.findIndex(i => i.id === active.id);
                 const newIndex = siblings.findIndex(i => i.id === over.id);
-                
+
                 if (oldIndex !== -1 && newIndex !== -1) {
                     const reorderedSiblings = arrayMove(siblings, oldIndex, newIndex);
                     appStore.reorderItems(reorderedSiblings, activeItem.isGroup ? 'group' : 'layout');
@@ -135,6 +135,8 @@ export function LayoutSettings({ app, appStore }: { app: App, appStore: AppStore
                     items={itemsAsTreeItems}
                     allGroups={layoutGroups}
                     parentId={null}
+                    // [修改] 在此将 appStore 实例传递给 SettingsTreeView
+                    appStore={appStore}
                     renderItem={(l: Layout) => <LayoutEditor layout={l} appStore={appStore} />}
                     onAddItem={manager.onAddItem}
                     onAddGroup={manager.onAddGroup}

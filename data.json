@@ -2604,6 +2604,21 @@
         "content"
       ],
       "group": "categoryKey"
+    },
+    {
+      "id": "view_mg33j81crcbkj",
+      "title": "新视图000000000",
+      "viewType": "BlockView",
+      "dataSourceId": "",
+      "viewConfig": {
+        "view": "BlockView",
+        "title": "块视图",
+        "collapsed": false,
+        "fields": [],
+        "group": "categoryKey"
+      },
+      "collapsed": true,
+      "parentId": "group_memc1a9ofen88"
     }
   ],
   "layouts": [
