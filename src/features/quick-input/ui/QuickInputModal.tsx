@@ -1,6 +1,6 @@
 // src/features/quick-input/ui/QuickInputModal.tsx
 /** @jsxImportSource preact */
-import { h } from 'preact';
+import { h, Fragment } from 'preact';
 import { App, Modal, Notice } from 'obsidian';
 import { render, unmountComponentAtNode } from 'preact/compat';
 import { useState, useMemo, useEffect } from 'preact/hooks';
@@ -36,6 +36,9 @@ export class QuickInputModal extends Modal {
         this.contentEl.empty();
         this.modalEl.addClass('think-quick-input-modal');
         
+        // 添加输入法检测
+        this.setupKeyboardDetection();
+        
         render(
             <QuickInputForm
                 app={this.app}
@@ -47,6 +50,132 @@ export class QuickInputModal extends Modal {
             />,
             this.contentEl
         );
+    }
+
+    private setupKeyboardDetection() {
+        let initialViewportHeight = window.innerHeight;
+        let keyboardHeight = 300; // 默认输入法高度
+
+        // 动态设置CSS变量
+        const setKeyboardHeight = (height: number) => {
+            keyboardHeight = height;
+            this.modalEl.style.setProperty('--keyboard-height', `${height}px`);
+            
+            // 同时设置在document root上，让CSS可以访问
+            document.documentElement.style.setProperty('--keyboard-height', `${height}px`);
+        };
+
+        // 检测输入法激活状态
+        const handleFocusIn = (e: FocusEvent) => {
+            const target = e.target as HTMLElement;
+            if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') {
+                this.modalEl.addClass('keyboard-active');
+                
+                // 尝试滚动到输入框位置
+                setTimeout(() => {
+                    target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }, 300);
+            }
+        };
+
+        const handleFocusOut = (e: FocusEvent) => {
+            const target = e.target as HTMLElement;
+            if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') {
+                // 延迟移除类，避免输入法切换时的闪烁
+                setTimeout(() => {
+                    this.modalEl.removeClass('keyboard-active');
+                }, 100);
+            }
+        };
+
+        // 监听窗口大小变化（输入法弹出时）
+        const handleResize = () => {
+            const currentHeight = window.visualViewport?.height || window.innerHeight;
+            const heightDiff = initialViewportHeight - currentHeight;
+            
+            if (heightDiff > 150) { // 输入法通常至少150px高
+                // 输入法弹出了
+                this.modalEl.addClass('keyboard-active');
+                setKeyboardHeight(heightDiff);
+                
+                // 确保面板内容可滚动
+                const modalContent = this.contentEl.querySelector('.modal-content, .think-modal') as HTMLElement;
+                if (modalContent) {
+                    modalContent.scrollTop = modalContent.scrollHeight;
+                }
+            } else {
+                // 输入法收起了
+                this.modalEl.removeClass('keyboard-active');
+                setKeyboardHeight(300); // 重置为默认值
+            }
+        };
+
+        // 使用Visual Viewport API进行更精确的检测
+        const handleVisualViewportResize = () => {
+            if (window.visualViewport) {
+                const viewportHeight = window.visualViewport.height;
+                const heightDiff = initialViewportHeight - viewportHeight;
+                
+                if (heightDiff > 150) {
+                    this.modalEl.addClass('keyboard-active');
+                    setKeyboardHeight(heightDiff);
+                    
+                    // 考虑Visual Viewport的偏移
+                    const offsetTop = window.visualViewport.offsetTop || 0;
+                    if (offsetTop > 0) {
+                        this.modalEl.style.setProperty('--keyboard-offset', `${offsetTop}px`);
+                    }
+                } else {
+                    this.modalEl.removeClass('keyboard-active');
+                    setKeyboardHeight(300);
+                }
+            }
+        };
+
+        // 监听焦点事件
+        this.contentEl.addEventListener('focusin', handleFocusIn);
+        this.contentEl.addEventListener('focusout', handleFocusOut);
+
+        // 监听视口变化
+        if (window.visualViewport) {
+            window.visualViewport.addEventListener('resize', handleVisualViewportResize);
+        } else {
+            window.addEventListener('resize', handleResize);
+        }
+
+        // 监听屏幕方向变化
+        const handleOrientationChange = () => {
+            setTimeout(() => {
+                initialViewportHeight = window.innerHeight;
+                setKeyboardHeight(300); // 重置输入法高度
+            }, 500);
+        };
+
+        window.addEventListener('orientationchange', handleOrientationChange);
+
+        // 初始化CSS变量
+        setKeyboardHeight(300);
+
+        // 清理函数
+        this.onClose = () => {
+            this.contentEl.removeEventListener('focusin', handleFocusIn);
+            this.contentEl.removeEventListener('focusout', handleFocusOut);
+            
+            if (window.visualViewport) {
+                window.visualViewport.removeEventListener('resize', handleVisualViewportResize);
+            } else {
+                window.removeEventListener('resize', handleResize);
+            }
+            
+            window.removeEventListener('orientationchange', handleOrientationChange);
+            
+            // 清理CSS变量
+            document.documentElement.style.removeProperty('--keyboard-height');
+            this.modalEl.style.removeProperty('--keyboard-height');
+            this.modalEl.style.removeProperty('--keyboard-offset');
+            
+            unmountComponentAtNode(this.contentEl);
+        };
     }
 
     onClose() {
