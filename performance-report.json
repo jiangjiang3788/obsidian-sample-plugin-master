@@ -1,5 +1,5 @@
 {
-  "timestamp": "2025-10-06T08:54:12.125Z",
+  "timestamp": "2025-10-06T09:08:48.466Z",
   "results": {
     "dependencies": {
       "allCriticalDeps": true,
@@ -18,7 +18,7 @@
       },
       "score": 87.5
     },
-    "buildTime": 6040,
+    "buildTime": 5586,
     "bundleAnalysis": {
       "sizeKB": 1260.46,
       "lineCount": 38941,
@@ -32,7 +32,7 @@
     }
   },
   "summary": {
-    "buildTime": 6040,
+    "buildTime": 5586,
     "bundleSize": 1260.46,
     "optimizationScore": 87.5,
     "unitTestsPassed": 0,

@@ -7,11 +7,6 @@ module.exports = {
     '**/tests/**/*.spec.js',
     '**/tests/**/*.spec.ts'
   ],
-  moduleNameMapper: {
-    '^@/(.*)$': '../src/$1',
-    '^@tests/(.*)$': '../tests/$1',
-    '^@test-utils/(.*)$': '../test-utils/$1'
-  },
   setupFilesAfterEnv: ['../test-utils/setup/jest-setup.js'],
   collectCoverageFrom: [
     '../src/**/*.{js,jsx,ts,tsx}',
@@ -21,20 +16,18 @@ module.exports = {
   coverageDirectory: '../coverage',
   coverageReporters: ['text', 'lcov', 'html'],
   transform: {
-    '^.+\\.(ts|tsx)$': 'ts-jest',
-    '^.+\\.(js|jsx)$': 'babel-jest'
-  },
-  extensionsToTreatAsEsm: ['.ts', '.tsx'],
-  globals: {
-    'ts-jest': {
-      useESM: true,
+    '^.+\\.(ts|tsx)$': ['ts-jest', {
+      useESM: false,
       tsconfig: {
         esModuleInterop: true,
-        allowSyntheticDefaultImports: true
+        allowSyntheticDefaultImports: true,
+        module: 'commonjs'
       }
-    }
+    }],
+    '^.+\\.(js|jsx)$': 'babel-jest'
   },
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json'],
   testTimeout: 10000,
-  verbose: true
+  verbose: true,
+  modulePathIgnorePatterns: ['<rootDir>/dist/']
 };

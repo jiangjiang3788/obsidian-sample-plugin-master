@@ -77,7 +77,12 @@ export class AppStore {
         const newSettings = JSON.parse(JSON.stringify(this._state.settings));
         updater(newSettings);
         this._state.settings = newSettings;
-        await this._plugin.saveData(this._state.settings);
+        try {
+            await this._plugin.saveData(this._state.settings);
+        } catch (error) {
+            console.error("AppStore: 保存设置失败", error);
+            // 不重新抛出错误，让应用继续运行
+        }
         this._notify();
     }
 
