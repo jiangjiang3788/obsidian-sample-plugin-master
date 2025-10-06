@@ -33,7 +33,7 @@ describe('数据流集成测试', () => {
   describe('基本集成测试', () => {
     it('应该能够加载和初始化 AppStore', async () => {
       // 动态导入 AppStore
-      const { AppStore } = require('@state/store/AppStore');
+      const { AppStore } = require('../../src/state/AppStore');
       
       const appStore = new AppStore(mockPlugin);
       expect(appStore).toBeDefined();
@@ -47,7 +47,7 @@ describe('数据流集成测试', () => {
     });
 
     it('应该能够更新设置', async () => {
-      const { AppStore } = require('@state/store/AppStore');
+      const { AppStore } = require('../../src/state/AppStore');
       
       const appStore = new AppStore(mockPlugin);
       
@@ -65,7 +65,7 @@ describe('数据流集成测试', () => {
     });
 
     it('应该能够管理计时器', async () => {
-      const { AppStore } = require('../../src/state/store/AppStore');
+      const { AppStore } = require('../../src/state/AppStore');
       
       const appStore = new AppStore(mockPlugin);
       
@@ -91,7 +91,7 @@ describe('数据流集成测试', () => {
     });
 
     it('应该能够注册和管理视图实例', () => {
-      const { AppStore } = require('../../src/state/store/AppStore');
+      const { AppStore } = require('../../src/state/AppStore');
       
       const appStore = new AppStore(mockPlugin);
       
@@ -114,7 +114,7 @@ describe('数据流集成测试', () => {
     });
 
     it('应该能够设置数据源', () => {
-      const { AppStore } = require('../../src/state/store/AppStore');
+      const { AppStore } = require('../../src/state/AppStore');
       
       const appStore = new AppStore(mockPlugin);
       
@@ -137,7 +137,7 @@ describe('数据流集成测试', () => {
     });
 
     it('应该能够处理订阅通知', () => {
-      const { AppStore } = require('../../src/state/store/AppStore');
+      const { AppStore } = require('../../src/state/AppStore');
       
       const appStore = new AppStore(mockPlugin);
       
@@ -162,7 +162,7 @@ describe('数据流集成测试', () => {
 
   describe('错误处理集成测试', () => {
     it('应该能够处理保存设置失败', async () => {
-      const { AppStore } = require('../../src/state/store/AppStore');
+      const { AppStore } = require('../../src/state/AppStore');
       
       // Mock 保存失败
       mockPlugin.saveData.mockRejectedValue(new Error('保存失败'));
@@ -179,7 +179,7 @@ describe('数据流集成测试', () => {
     });
 
     it('应该能够处理加载设置失败', async () => {
-      const { AppStore } = require('../../src/state/store/AppStore');
+      const { AppStore } = require('../../src/state/AppStore');
       
       // Mock 加载失败
       mockPlugin.loadData.mockRejectedValue(new Error('加载失败'));
@@ -192,7 +192,7 @@ describe('数据流集成测试', () => {
 
   describe('性能集成测试', () => {
     it('应该在合理时间内处理大量数据', () => {
-      const { AppStore } = require('../../src/state/store/AppStore');
+      const { AppStore } = require('../../src/state/AppStore');
       
       const appStore = new AppStore(mockPlugin);
       
@@ -225,7 +225,7 @@ describe('数据流集成测试', () => {
     });
 
     it('应该能够处理频繁的状态更新', () => {
-      const { AppStore } = require('../../src/state/store/AppStore');
+      const { AppStore } = require('../../src/state/AppStore');
       
       const appStore = new AppStore(mockPlugin);
       
