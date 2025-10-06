@@ -1464,13 +1464,13 @@
             ]
           },
           "电脑": {
-            "color": "#ff6a1a",
+            "color": "#fb606f",
             "files": [
               "2-5电脑"
             ]
           },
           "工作": {
-            "color": "#ffd261",
+            "color": "#fbbf24",
             "files": [
               "2-6工作"
             ]
@@ -1482,7 +1482,7 @@
             ]
           },
           "思考": {
-            "color": "#ff4d4d",
+            "color": "#fb8c32",
             "files": [
               "2-4思考"
             ]
@@ -1507,7 +1507,7 @@
       },
       "parentId": "group_memc1a9ofen88",
       "fields": [],
-      "collapsed": false
+      "collapsed": true
     },
     {
       "id": "view_membnf1hgjgm3",
@@ -2604,6 +2604,36 @@
         "content"
       ],
       "group": "categoryKey"
+    },
+    {
+      "id": "view_mg33j81crcbkj",
+      "title": "新视图000000000",
+      "viewType": "BlockView",
+      "dataSourceId": "",
+      "viewConfig": {
+        "view": "BlockView",
+        "title": "块视图",
+        "collapsed": false,
+        "fields": [],
+        "group": "categoryKey"
+      },
+      "collapsed": true,
+      "parentId": "group_memc1a9ofen88"
+    },
+    {
+      "id": "view_mg3dtsixz49u3",
+      "title": "新视图",
+      "viewType": "BlockView",
+      "dataSourceId": "",
+      "viewConfig": {
+        "view": "BlockView",
+        "title": "块视图",
+        "collapsed": false,
+        "fields": [],
+        "group": "categoryKey"
+      },
+      "collapsed": true,
+      "parentId": null
     }
   ],
   "layouts": [
@@ -2738,7 +2768,11 @@
       "id": "layout_mf2b8j6hqefef",
       "name": "01",
       "viewInstanceIds": [
-        "view_mf2b6b80nnu6h"
+        "view_mf2b6b80nnu6h",
+        "view_mer5qenavnxxt",
+        "view_mer5qena23btv",
+        "view_mesci2vh386vf",
+        "view_mer5qlrm3xnu6"
       ],
       "displayMode": "list",
       "initialView": "月",
@@ -8687,6 +8721,7 @@
         "appendUnderHeader": "## {{theme}}"
       },
       {
+        "id": "ovr_mfhzw9d975by6",
         "blockId": "blk_meic1my6m62iu",
         "themeId": "thm_mejsxbyuursnz",
         "status": "enabled",
@@ -8716,8 +8751,7 @@
             "id": "field_mekt6ks3",
             "key": "任务内容",
             "label": "任务内容",
-            "type": "textarea",
-            "defaultValue": "设计"
+            "type": "textarea"
           },
           {
             "id": "field_mewk9zrg",
@@ -8770,8 +8804,7 @@
         ],
         "outputTemplate": "\n{{状态.value}} {{icon}} {{任务内容}} (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}})  {{重复.value}}  {{状态}} {{日期}}",
         "targetFile": "01/2-6工作.md",
-        "appendUnderHeader": "## {{theme}}",
-        "id": "ovr_mfhzw9d975by6"
+        "appendUnderHeader": "## {{theme}}"
       },
       {
         "id": "ovr_mfhzwdwyp8ewj",
@@ -8889,8 +8922,7 @@
             "id": "field_mekt6ks3",
             "key": "任务内容",
             "label": "任务内容",
-            "type": "textarea",
-            "defaultValue": "思路整理"
+            "type": "textarea"
           },
           {
             "id": "field_mewk9zrg",
@@ -8947,6 +8979,7 @@
         "id": "ovr_mfhzwkwivqho3"
       },
       {
+        "id": "ovr_mfhzwoqz4223c",
         "blockId": "blk_meic1my6m62iu",
         "themeId": "thm_mejswh9v0jpsi",
         "status": "enabled",
@@ -8976,8 +9009,7 @@
             "id": "field_mekt6ks3",
             "key": "任务内容",
             "label": "任务内容",
-            "type": "textarea",
-            "defaultValue": "复盘整理"
+            "type": "textarea"
           },
           {
             "id": "field_mewk9zrg",
@@ -9030,10 +9062,10 @@
         ],
         "outputTemplate": "\n{{状态.value}} {{icon}} {{任务内容}} (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}})  {{重复.value}}  {{状态}} {{日期}}",
         "targetFile": "01/2-5电脑.md",
-        "appendUnderHeader": "## {{theme}}",
-        "id": "ovr_mfhzwoqz4223c"
+        "appendUnderHeader": "## {{theme}}"
       },
       {
+        "id": "ovr_mfhzwx24q1kpc",
         "blockId": "blk_meic1my6m62iu",
         "themeId": "thm_mejstzgoiocwm",
         "status": "enabled",
@@ -9063,8 +9095,7 @@
             "id": "field_mekt6ks3",
             "key": "任务内容",
             "label": "任务内容",
-            "type": "textarea",
-            "defaultValue": "电脑"
+            "type": "textarea"
           },
           {
             "id": "field_mewk9zrg",
@@ -9117,10 +9148,10 @@
         ],
         "outputTemplate": "\n{{状态.value}} {{icon}} {{任务内容}} (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}})  {{重复.value}}  {{状态}} {{日期}}",
         "targetFile": "01/2-5电脑.md",
-        "appendUnderHeader": "## {{theme}}",
-        "id": "ovr_mfhzwx24q1kpc"
+        "appendUnderHeader": "## {{theme}}"
       },
       {
+        "id": "ovr_mfhzx4hvl9s27",
         "blockId": "blk_meic1my6m62iu",
         "themeId": "thm_mejsuv5sylsi0",
         "status": "enabled",
@@ -9150,8 +9181,7 @@
             "id": "field_mekt6ks3",
             "key": "任务内容",
             "label": "任务内容",
-            "type": "textarea",
-            "defaultValue": "ob"
+            "type": "textarea"
           },
           {
             "id": "field_mewk9zrg",
@@ -9204,10 +9234,10 @@
         ],
         "outputTemplate": "\n{{状态.value}} {{icon}} {{任务内容}} (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}})  {{重复.value}}  {{状态}} {{日期}}",
         "targetFile": "01/2-5电脑.md",
-        "appendUnderHeader": "## {{theme}}",
-        "id": "ovr_mfhzx4hvl9s27"
+        "appendUnderHeader": "## {{theme}}"
       },
       {
+        "id": "ovr_mfhzxac3hz906",
         "blockId": "blk_meic1my6m62iu",
         "themeId": "thm_mejsvgb4hlukj",
         "status": "enabled",
@@ -9237,8 +9267,7 @@
             "id": "field_mekt6ks3",
             "key": "任务内容",
             "label": "任务内容",
-            "type": "textarea",
-            "defaultValue": "笔记系统"
+            "type": "textarea"
           },
           {
             "id": "field_mewk9zrg",
@@ -9291,10 +9320,10 @@
         ],
         "outputTemplate": "\n{{状态.value}} {{icon}} {{任务内容}} (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}})  {{重复.value}}  {{状态}} {{日期}}",
         "targetFile": "01/2-5电脑.md",
-        "appendUnderHeader": "## {{theme}}",
-        "id": "ovr_mfhzxac3hz906"
+        "appendUnderHeader": "## {{theme}}"
       },
       {
+        "id": "ovr_mfhzxf5uox0gu",
         "blockId": "blk_meic1my6m62iu",
         "themeId": "thm_mejsvlfjaerh5",
         "status": "enabled",
@@ -9324,8 +9353,7 @@
             "id": "field_mekt6ks3",
             "key": "任务内容",
             "label": "任务内容",
-            "type": "textarea",
-            "defaultValue": "插件"
+            "type": "textarea"
           },
           {
             "id": "field_mewk9zrg",
@@ -9378,8 +9406,7 @@
         ],
         "outputTemplate": "\n{{状态.value}} {{icon}} {{任务内容}} (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}})  {{重复.value}}  {{状态}} {{日期}}",
         "targetFile": "01/2-5电脑.md",
-        "appendUnderHeader": "## {{theme}}",
-        "id": "ovr_mfhzxf5uox0gu"
+        "appendUnderHeader": "## {{theme}}"
       },
       {
         "id": "ovr_mfhzxlc4yemiz",
@@ -9498,7 +9525,7 @@
             "key": "任务内容",
             "label": "任务内容",
             "type": "textarea",
-            "defaultValue": "时间整理"
+            "defaultValue": "时间整理-{{theme}}"
           },
           {
             "id": "field_mewk9zrg",
@@ -9555,6 +9582,7 @@
         "id": "ovr_mfhzxpuhe0flz"
       },
       {
+        "id": "ovr_mfhzy0ykf8a08",
         "blockId": "blk_meic1my6m62iu",
         "themeId": "thm_mejsl7i17il4q",
         "status": "enabled",
@@ -9584,8 +9612,7 @@
             "id": "field_mekt6ks3",
             "key": "任务内容",
             "label": "任务内容",
-            "type": "textarea",
-            "defaultValue": "生活"
+            "type": "textarea"
           },
           {
             "id": "field_mewk9zrg",
@@ -9638,8 +9665,7 @@
         ],
         "outputTemplate": "\n{{状态.value}} {{icon}} {{任务内容}} (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}})  {{重复.value}}  {{状态}} {{日期}}",
         "targetFile": "01/2-3生活.md",
-        "appendUnderHeader": "## {{theme}}",
-        "id": "ovr_mfhzy0ykf8a08"
+        "appendUnderHeader": "## {{theme}}"
       },
       {
         "blockId": "blk_meic1my6m62iu",
@@ -9672,7 +9698,7 @@
             "key": "任务内容",
             "label": "任务内容",
             "type": "textarea",
-            "defaultValue": "思考"
+            "defaultValue": "思考={{theme}}-1111111111111111111111111111111111\n冻干粉老顾客"
           },
           {
             "id": "field_mewk9zrg",
@@ -9696,7 +9722,8 @@
             "id": "field_mekymokf",
             "key": "时长",
             "label": "时长",
-            "type": "text"
+            "type": "text",
+            "defaultValue": ""
           },
           {
             "id": "field_mekyn4c3",
@@ -9729,6 +9756,7 @@
         "id": "ovr_mfhzy8wjn37t5"
       },
       {
+        "id": "ovr_mfhzz4r56gn7k",
         "blockId": "blk_meic1my6m62iu",
         "themeId": "thm_mejslgmvm2yym",
         "status": "enabled",
@@ -9758,8 +9786,7 @@
             "id": "field_mekt6ks3",
             "key": "任务内容",
             "label": "任务内容",
-            "type": "textarea",
-            "defaultValue": "玩手机"
+            "type": "textarea"
           },
           {
             "id": "field_mewk9zrg",
@@ -9812,10 +9839,10 @@
         ],
         "outputTemplate": "\n{{状态.value}} {{icon}} {{任务内容}} (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}})  {{重复.value}}  {{状态}} {{日期}}",
         "targetFile": "01/2-3生活.md",
-        "appendUnderHeader": "## {{theme}}",
-        "id": "ovr_mfhzz4r56gn7k"
+        "appendUnderHeader": "## {{theme}}"
       },
       {
+        "id": "ovr_mfhzzaeanezaa",
         "blockId": "blk_meic1my6m62iu",
         "themeId": "thm_mejsmcngeij2y",
         "status": "enabled",
@@ -9845,8 +9872,7 @@
             "id": "field_mekt6ks3",
             "key": "任务内容",
             "label": "任务内容",
-            "type": "textarea",
-            "defaultValue": "听小说"
+            "type": "textarea"
           },
           {
             "id": "field_mewk9zrg",
@@ -9899,10 +9925,10 @@
         ],
         "outputTemplate": "\n{{状态.value}} {{icon}} {{任务内容}} (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}})  {{重复.value}}  {{状态}} {{日期}}",
         "targetFile": "01/2-3生活.md",
-        "appendUnderHeader": "## {{theme}}",
-        "id": "ovr_mfhzzaeanezaa"
+        "appendUnderHeader": "## {{theme}}"
       },
       {
+        "id": "ovr_mfhzzedvyx5e3",
         "blockId": "blk_meic1my6m62iu",
         "themeId": "thm_mejsmps6gropq",
         "status": "enabled",
@@ -9932,8 +9958,7 @@
             "id": "field_mekt6ks3",
             "key": "任务内容",
             "label": "任务内容",
-            "type": "textarea",
-            "defaultValue": "和垚垚玩"
+            "type": "textarea"
           },
           {
             "id": "field_mewk9zrg",
@@ -9986,10 +10011,10 @@
         ],
         "outputTemplate": "\n{{状态.value}} {{icon}} {{任务内容}} (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}})  {{重复.value}}  {{状态}} {{日期}}",
         "targetFile": "01/2-3生活.md",
-        "appendUnderHeader": "## {{theme}}",
-        "id": "ovr_mfhzzedvyx5e3"
+        "appendUnderHeader": "## {{theme}}"
       },
       {
+        "id": "ovr_mfhzzih02q1gy",
         "blockId": "blk_meic1my6m62iu",
         "themeId": "thm_mejsn748ryfip",
         "status": "enabled",
@@ -10019,8 +10044,7 @@
             "id": "field_mekt6ks3",
             "key": "任务内容",
             "label": "任务内容",
-            "type": "textarea",
-            "defaultValue": "打扫卫生"
+            "type": "textarea"
           },
           {
             "id": "field_mewk9zrg",
@@ -10073,10 +10097,10 @@
         ],
         "outputTemplate": "\n{{状态.value}} {{icon}} {{任务内容}} (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}})  {{重复.value}}  {{状态}} {{日期}}",
         "targetFile": "01/2-3生活.md",
-        "appendUnderHeader": "## {{theme}}",
-        "id": "ovr_mfhzzih02q1gy"
+        "appendUnderHeader": "## {{theme}}"
       },
       {
+        "id": "ovr_mfhzzn3vwjnxg",
         "blockId": "blk_meic1my6m62iu",
         "themeId": "thm_mejsnf4dp61nq",
         "status": "enabled",
@@ -10106,8 +10130,7 @@
             "id": "field_mekt6ks3",
             "key": "任务内容",
             "label": "任务内容",
-            "type": "textarea",
-            "defaultValue": "整理家"
+            "type": "textarea"
           },
           {
             "id": "field_mewk9zrg",
@@ -10160,8 +10183,7 @@
         ],
         "outputTemplate": "\n{{状态.value}} {{icon}} {{任务内容}} (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}})  {{重复.value}}  {{状态}} {{日期}}",
         "targetFile": "01/2-3生活.md",
-        "appendUnderHeader": "## {{theme}}",
-        "id": "ovr_mfhzzn3vwjnxg"
+        "appendUnderHeader": "## {{theme}}"
       },
       {
         "id": "ovr_mfi00ahn87zal",
@@ -10250,6 +10272,7 @@
         "appendUnderHeader": "## {{theme}}"
       },
       {
+        "id": "ovr_mfi00peyoa7fx",
         "blockId": "blk_meic1my6m62iu",
         "themeId": "thm_mejspgfly30j8",
         "status": "enabled",
@@ -10279,8 +10302,7 @@
             "id": "field_mekt6ks3",
             "key": "任务内容",
             "label": "任务内容",
-            "type": "textarea",
-            "defaultValue": "拉粑粑"
+            "type": "textarea"
           },
           {
             "id": "field_mewk9zrg",
@@ -10333,10 +10355,10 @@
         ],
         "outputTemplate": "\n{{状态.value}} {{icon}} {{任务内容}} (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}})  {{重复.value}}  {{状态}} {{日期}}",
         "targetFile": "01/2-1健康.md",
-        "appendUnderHeader": "## {{theme}}",
-        "id": "ovr_mfi00peyoa7fx"
+        "appendUnderHeader": "## {{theme}}"
       },
       {
+        "id": "ovr_mfi00txo5ux1g",
         "blockId": "blk_meic1my6m62iu",
         "themeId": "thm_mejsp0lukfkh0",
         "status": "enabled",
@@ -10366,8 +10388,7 @@
             "id": "field_mekt6ks3",
             "key": "任务内容",
             "label": "任务内容",
-            "type": "textarea",
-            "defaultValue": "八段锦"
+            "type": "textarea"
           },
           {
             "id": "field_mewk9zrg",
@@ -10420,8 +10441,7 @@
         ],
         "outputTemplate": "\n{{状态.value}} {{icon}} {{任务内容}} (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}})  {{重复.value}}  {{状态}} {{日期}}",
         "targetFile": "01/2-1健康.md",
-        "appendUnderHeader": "## {{theme}}",
-        "id": "ovr_mfi00txo5ux1g"
+        "appendUnderHeader": "## {{theme}}"
       },
       {
         "id": "ovr_mfi00xwcelsw5",
@@ -10596,6 +10616,7 @@
         "appendUnderHeader": "## {{theme}}"
       },
       {
+        "id": "ovr_mfi015kb2hw7a",
         "blockId": "blk_meic1my6m62iu",
         "themeId": "thm_mejso80owbe8a",
         "status": "enabled",
@@ -10625,8 +10646,7 @@
             "id": "field_mekt6ks3",
             "key": "任务内容",
             "label": "任务内容",
-            "type": "textarea",
-            "defaultValue": "睡觉"
+            "type": "textarea"
           },
           {
             "id": "field_mewk9zrg",
@@ -10679,10 +10699,10 @@
         ],
         "outputTemplate": "\n{{状态.value}} {{icon}} {{任务内容}} (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}})  {{重复.value}}  {{状态}} {{日期}}",
         "targetFile": "01/2-1健康.md",
-        "appendUnderHeader": "## {{theme}}",
-        "id": "ovr_mfi015kb2hw7a"
+        "appendUnderHeader": "## {{theme}}"
       },
       {
+        "id": "ovr_mfi019n9qc5c0",
         "blockId": "blk_meic1my6m62iu",
         "themeId": "thm_mejso10pwthbr",
         "status": "enabled",
@@ -10712,8 +10732,7 @@
             "id": "field_mekt6ks3",
             "key": "任务内容",
             "label": "任务内容",
-            "type": "textarea",
-            "defaultValue": "洗澡"
+            "type": "textarea"
           },
           {
             "id": "field_mewk9zrg",
@@ -10766,10 +10785,10 @@
         ],
         "outputTemplate": "\n{{状态.value}} {{icon}} {{任务内容}} (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}})  {{重复.value}}  {{状态}} {{日期}}",
         "targetFile": "01/2-1健康.md",
-        "appendUnderHeader": "## {{theme}}",
-        "id": "ovr_mfi019n9qc5c0"
+        "appendUnderHeader": "## {{theme}}"
       },
       {
+        "id": "ovr_mfi01w2yaf99z",
         "blockId": "blk_meic1my6m62iu",
         "themeId": "thm_mejspn5ocowew",
         "status": "enabled",
@@ -10799,8 +10818,7 @@
             "id": "field_mekt6ks3",
             "key": "任务内容",
             "label": "任务内容",
-            "type": "textarea",
-            "defaultValue": "早餐"
+            "type": "textarea"
           },
           {
             "id": "field_mewk9zrg",
@@ -10853,8 +10871,7 @@
         ],
         "outputTemplate": "\n{{状态.value}} {{icon}} {{任务内容}} (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}})  {{重复.value}}  {{状态}} {{日期}}",
         "targetFile": "01/2-2三餐.md",
-        "appendUnderHeader": "## {{theme}}",
-        "id": "ovr_mfi01w2yaf99z"
+        "appendUnderHeader": "## {{theme}}"
       },
       {
         "blockId": "blk_meic1my6m62iu",
@@ -10886,8 +10903,7 @@
             "id": "field_mekt6ks3",
             "key": "任务内容",
             "label": "任务内容",
-            "type": "textarea",
-            "defaultValue": "午餐"
+            "type": "textarea"
           },
           {
             "id": "field_mewk9zrg",
@@ -10944,6 +10960,7 @@
         "id": "ovr_mfi020mjezkyy"
       },
       {
+        "id": "ovr_mfi025rhepqgs",
         "blockId": "blk_meic1my6m62iu",
         "themeId": "thm_mejst90wwyoyn",
         "status": "enabled",
@@ -10973,8 +10990,7 @@
             "id": "field_mekt6ks3",
             "key": "任务内容",
             "label": "任务内容",
-            "type": "textarea",
-            "defaultValue": "晚餐"
+            "type": "textarea"
           },
           {
             "id": "field_mewk9zrg",
@@ -11027,10 +11043,10 @@
         ],
         "outputTemplate": "\n{{状态.value}} {{icon}} {{任务内容}} (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}})  {{重复.value}}  {{状态}} {{日期}}",
         "targetFile": "01/2-2三餐.md",
-        "appendUnderHeader": "## {{theme}}",
-        "id": "ovr_mfi025rhepqgs"
+        "appendUnderHeader": "## {{theme}}"
       },
       {
+        "id": "ovr_mfj18fupymfx4",
         "blockId": "blk_meic1my6m62iu",
         "themeId": "thm_mfj17uymay4u6",
         "status": "enabled",
@@ -11060,8 +11076,7 @@
             "id": "field_mekt6ks3",
             "key": "任务内容",
             "label": "任务内容",
-            "type": "textarea",
-            "defaultValue": "通勤"
+            "type": "textarea"
           },
           {
             "id": "field_mewk9zrg",
@@ -11114,8 +11129,7 @@
         ],
         "outputTemplate": "\n{{状态.value}} {{icon}} {{任务内容}} (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}})  {{重复.value}}  {{状态}} {{日期}}",
         "targetFile": "01/2-6工作.md",
-        "appendUnderHeader": "## {{theme}}",
-        "id": "ovr_mfj18fupymfx4"
+        "appendUnderHeader": "## {{theme}}"
       },
       {
         "id": "ovr_mfj18ndf1orek",
@@ -11125,5 +11139,5 @@
       }
     ]
   },
-  "floatingTimerEnabled": false
+  "floatingTimerEnabled": true
 }
