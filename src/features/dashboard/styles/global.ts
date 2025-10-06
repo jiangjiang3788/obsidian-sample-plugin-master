@@ -829,8 +829,9 @@ body.theme-dark .tn-week-cell.is-selected {
 }
 
 /* 移动端快捷输入面板适配 - 避免被输入法覆盖 */
-@media (max-width: 768px) {
-    .think-quick-input-modal .modal {
+/* 竖屏模式适配 */
+@media screen and (orientation: portrait) {
+    .think-quick-input-modal {
         position: fixed !important;
         top: 20px !important;
         left: 10px !important;
@@ -841,23 +842,70 @@ body.theme-dark .tn-week-cell.is-selected {
         margin: 0 !important;
         border-radius: 12px !important;
         box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2) !important;
+        width: auto !important;
+        height: auto !important;
+        display: flex !important;
+        flex-direction: column !important;
     }
     
     .think-quick-input-modal .modal-content {
-        max-height: calc(100vh - 140px) !important;
+        flex: 1 !important;
         overflow-y: auto !important;
+        overflow-x: hidden !important;
         padding: 16px !important;
+        /* 确保滚动条样式美观 */
+        scrollbar-width: thin !important;
+        scrollbar-color: var(--background-modifier-border) transparent !important;
     }
     
-    /* 当输入法激活时，进一步调整位置 */
-    .think-quick-input-modal.keyboard-active .modal {
+    .think-quick-input-modal .modal-content::-webkit-scrollbar {
+        width: 6px !important;
+    }
+    
+    .think-quick-input-modal .modal-content::-webkit-scrollbar-track {
+        background: transparent !important;
+    }
+    
+    .think-quick-input-modal .modal-content::-webkit-scrollbar-thumb {
+        background-color: var(--background-modifier-border) !important;
+        border-radius: 3px !important;
+    }
+    
+    /* 当输入法激活时，让面板底部与输入法顶部齐平 */
+    .think-quick-input-modal.keyboard-active {
         top: 10px !important;
-        max-height: calc(100vh - 160px) !important;
+        /* 使用环境变量来动态计算输入法高度 */
+        max-height: calc(100vh - var(--keyboard-height, 300px) - 20px) !important;
+        /* 如果不支持环境变量，使用默认值 */
+        max-height: calc(100vh - 320px) !important;
+        max-height: calc(100vh - var(--keyboard-height, 300px) - 20px) !important;
+    }
+    
+    /* iPhone 13 Pro Max 等大屏手机适配 (428px 宽度) */
+    @media screen and (max-width: 430px) and (orientation: portrait) {
+        .think-quick-input-modal {
+            top: 15px !important;
+            left: 8px !important;
+            right: 8px !important;
+            max-height: calc(100vh - 130px) !important;
+        }
+        
+        .think-quick-input-modal .modal-content {
+            padding: 14px !important;
+        }
+        
+        .think-quick-input-modal.keyboard-active {
+            top: 8px !important;
+            /* 大屏手机输入法通常更高 */
+            max-height: calc(100vh - var(--keyboard-height, 350px) - 16px) !important;
+            max-height: calc(100vh - 366px) !important;
+            max-height: calc(100vh - var(--keyboard-height, 350px) - 16px) !important;
+        }
     }
     
     /* 小屏手机适配 */
-    @media (max-width: 480px) {
-        .think-quick-input-modal .modal {
+    @media screen and (max-width: 375px) and (orientation: portrait) {
+        .think-quick-input-modal {
             top: 10px !important;
             left: 5px !important;
             right: 5px !important;
@@ -867,16 +915,63 @@ body.theme-dark .tn-week-cell.is-selected {
         .think-quick-input-modal .modal-content {
             padding: 12px !important;
         }
+        
+        .think-quick-input-modal.keyboard-active {
+            top: 5px !important;
+            /* 小屏手机输入法相对较小 */
+            max-height: calc(100vh - var(--keyboard-height, 280px) - 10px) !important;
+            max-height: calc(100vh - 290px) !important;
+            max-height: calc(100vh - var(--keyboard-height, 280px) - 10px) !important;
+        }
     }
 }
 
-/* 平板横屏适配 */
-@media (max-width: 1024px) and (orientation: landscape) {
-    .think-quick-input-modal .modal {
-        top: 20px !important;
-        max-height: calc(100vh - 80px) !important;
-        left: 20% !important;
-        right: 20% !important;
+/* 横屏模式适配 */
+@media screen and (orientation: landscape) and (max-height: 500px) {
+    .think-quick-input-modal {
+        top: 10px !important;
+        left: 10% !important;
+        right: 10% !important;
+        max-height: calc(100vh - 60px) !important;
+        display: flex !important;
+        flex-direction: column !important;
+    }
+    
+    .think-quick-input-modal .modal-content {
+        flex: 1 !important;
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
+    }
+    
+    .think-quick-input-modal.keyboard-active {
+        top: 5px !important;
+        /* 横屏时输入法高度较小 */
+        max-height: calc(100vh - var(--keyboard-height, 200px) - 10px) !important;
+        max-height: calc(100vh - 210px) !important;
+        max-height: calc(100vh - var(--keyboard-height, 200px) - 10px) !important;
+    }
+}
+
+/* 动态输入法高度检测支持 */
+@supports (height: 100dvh) {
+    .think-quick-input-modal.keyboard-active {
+        /* 使用动态视口高度 */
+        max-height: calc(100dvh - var(--keyboard-height, 300px) - 20px) !important;
+    }
+}
+
+/* iOS Safari 特殊处理 */
+@supports (-webkit-touch-callout: none) {
+    .think-quick-input-modal {
+        /* iOS 安全区域适配 */
+        padding-top: env(safe-area-inset-top, 0) !important;
+        padding-left: env(safe-area-inset-left, 0) !important;
+        padding-right: env(safe-area-inset-right, 0) !important;
+    }
+    
+    .think-quick-input-modal.keyboard-active {
+        /* iOS 输入法高度通常为 300px 左右 */
+        max-height: calc(100vh - 300px - env(safe-area-inset-bottom, 0) - 20px) !important;
     }
 }
 

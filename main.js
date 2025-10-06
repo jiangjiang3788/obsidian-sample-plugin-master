@@ -27855,7 +27855,11 @@ let AppStore = class {
     const newSettings = JSON.parse(JSON.stringify(this._state.settings));
     updater(newSettings);
     this._state.settings = newSettings;
-    await this._plugin.saveData(this._state.settings);
+    try {
+      await this._plugin.saveData(this._state.settings);
+    } catch (error) {
+      console.error("AppStore: 保存设置失败", error);
+    }
     this._notify();
   };
   _updateEphemeralState(updater) {
@@ -30536,6 +30540,7 @@ class QuickInputModal extends obsidian.Modal {
   onOpen() {
     this.contentEl.empty();
     this.modalEl.addClass("think-quick-input-modal");
+    this.setupKeyboardDetection();
     nn(
       /* @__PURE__ */ u(
         QuickInputForm,
@@ -30550,6 +30555,91 @@ class QuickInputModal extends obsidian.Modal {
       ),
       this.contentEl
     );
+  }
+  setupKeyboardDetection() {
+    let initialViewportHeight = window.innerHeight;
+    const setKeyboardHeight = (height2) => {
+      this.modalEl.style.setProperty("--keyboard-height", `${height2}px`);
+      document.documentElement.style.setProperty("--keyboard-height", `${height2}px`);
+    };
+    const handleFocusIn = (e2) => {
+      const target = e2.target;
+      if (target.tagName === "INPUT" || target.tagName === "TEXTAREA") {
+        this.modalEl.addClass("keyboard-active");
+        setTimeout(() => {
+          target.scrollIntoView({ behavior: "smooth", block: "center" });
+        }, 300);
+      }
+    };
+    const handleFocusOut = (e2) => {
+      const target = e2.target;
+      if (target.tagName === "INPUT" || target.tagName === "TEXTAREA") {
+        setTimeout(() => {
+          this.modalEl.removeClass("keyboard-active");
+        }, 100);
+      }
+    };
+    const handleResize = () => {
+      const currentHeight = window.visualViewport?.height || window.innerHeight;
+      const heightDiff = initialViewportHeight - currentHeight;
+      if (heightDiff > 150) {
+        this.modalEl.addClass("keyboard-active");
+        setKeyboardHeight(heightDiff);
+        const modalContent = this.contentEl.querySelector(".modal-content, .think-modal");
+        if (modalContent) {
+          modalContent.scrollTop = modalContent.scrollHeight;
+        }
+      } else {
+        this.modalEl.removeClass("keyboard-active");
+        setKeyboardHeight(300);
+      }
+    };
+    const handleVisualViewportResize = () => {
+      if (window.visualViewport) {
+        const viewportHeight = window.visualViewport.height;
+        const heightDiff = initialViewportHeight - viewportHeight;
+        if (heightDiff > 150) {
+          this.modalEl.addClass("keyboard-active");
+          setKeyboardHeight(heightDiff);
+          const offsetTop = window.visualViewport.offsetTop || 0;
+          if (offsetTop > 0) {
+            this.modalEl.style.setProperty("--keyboard-offset", `${offsetTop}px`);
+          }
+        } else {
+          this.modalEl.removeClass("keyboard-active");
+          setKeyboardHeight(300);
+        }
+      }
+    };
+    this.contentEl.addEventListener("focusin", handleFocusIn);
+    this.contentEl.addEventListener("focusout", handleFocusOut);
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener("resize", handleVisualViewportResize);
+    } else {
+      window.addEventListener("resize", handleResize);
+    }
+    const handleOrientationChange = () => {
+      setTimeout(() => {
+        initialViewportHeight = window.innerHeight;
+        setKeyboardHeight(300);
+      }, 500);
+    };
+    window.addEventListener("orientationchange", handleOrientationChange);
+    setKeyboardHeight(300);
+    this.onClose = () => {
+      this.contentEl.removeEventListener("focusin", handleFocusIn);
+      this.contentEl.removeEventListener("focusout", handleFocusOut);
+      if (window.visualViewport) {
+        window.visualViewport.removeEventListener("resize", handleVisualViewportResize);
+      } else {
+        window.removeEventListener("resize", handleResize);
+      }
+      window.removeEventListener("orientationchange", handleOrientationChange);
+      document.documentElement.style.removeProperty("--keyboard-height");
+      this.modalEl.style.removeProperty("--keyboard-height");
+      this.modalEl.style.removeProperty("--keyboard-offset");
+      bn(this.contentEl);
+    };
   }
   onClose() {
     bn(this.contentEl);
@@ -38728,6 +38818,153 @@ body.theme-dark .tn-week-cell.is-selected {
 /* 隐藏快速输入面板的原生关闭按钮，因为我们已在组件内部实现了一个 */
 .think-quick-input-modal .modal-close-button {
     display: none !important;
+}
+
+/* 移动端快捷输入面板适配 - 避免被输入法覆盖 */
+/* 竖屏模式适配 */
+@media screen and (orientation: portrait) {
+    .think-quick-input-modal {
+        position: fixed !important;
+        top: 20px !important;
+        left: 10px !important;
+        right: 10px !important;
+        bottom: auto !important;
+        max-height: calc(100vh - 120px) !important;
+        transform: none !important;
+        margin: 0 !important;
+        border-radius: 12px !important;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2) !important;
+        width: auto !important;
+        height: auto !important;
+        display: flex !important;
+        flex-direction: column !important;
+    }
+    
+    .think-quick-input-modal .modal-content {
+        flex: 1 !important;
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
+        padding: 16px !important;
+        /* 确保滚动条样式美观 */
+        scrollbar-width: thin !important;
+        scrollbar-color: var(--background-modifier-border) transparent !important;
+    }
+    
+    .think-quick-input-modal .modal-content::-webkit-scrollbar {
+        width: 6px !important;
+    }
+    
+    .think-quick-input-modal .modal-content::-webkit-scrollbar-track {
+        background: transparent !important;
+    }
+    
+    .think-quick-input-modal .modal-content::-webkit-scrollbar-thumb {
+        background-color: var(--background-modifier-border) !important;
+        border-radius: 3px !important;
+    }
+    
+    /* 当输入法激活时，让面板底部与输入法顶部齐平 */
+    .think-quick-input-modal.keyboard-active {
+        top: 10px !important;
+        /* 使用环境变量来动态计算输入法高度 */
+        max-height: calc(100vh - var(--keyboard-height, 300px) - 20px) !important;
+        /* 如果不支持环境变量，使用默认值 */
+        max-height: calc(100vh - 320px) !important;
+        max-height: calc(100vh - var(--keyboard-height, 300px) - 20px) !important;
+    }
+    
+    /* iPhone 13 Pro Max 等大屏手机适配 (428px 宽度) */
+    @media screen and (max-width: 430px) and (orientation: portrait) {
+        .think-quick-input-modal {
+            top: 15px !important;
+            left: 8px !important;
+            right: 8px !important;
+            max-height: calc(100vh - 130px) !important;
+        }
+        
+        .think-quick-input-modal .modal-content {
+            padding: 14px !important;
+        }
+        
+        .think-quick-input-modal.keyboard-active {
+            top: 8px !important;
+            /* 大屏手机输入法通常更高 */
+            max-height: calc(100vh - var(--keyboard-height, 350px) - 16px) !important;
+            max-height: calc(100vh - 366px) !important;
+            max-height: calc(100vh - var(--keyboard-height, 350px) - 16px) !important;
+        }
+    }
+    
+    /* 小屏手机适配 */
+    @media screen and (max-width: 375px) and (orientation: portrait) {
+        .think-quick-input-modal {
+            top: 10px !important;
+            left: 5px !important;
+            right: 5px !important;
+            max-height: calc(100vh - 100px) !important;
+        }
+        
+        .think-quick-input-modal .modal-content {
+            padding: 12px !important;
+        }
+        
+        .think-quick-input-modal.keyboard-active {
+            top: 5px !important;
+            /* 小屏手机输入法相对较小 */
+            max-height: calc(100vh - var(--keyboard-height, 280px) - 10px) !important;
+            max-height: calc(100vh - 290px) !important;
+            max-height: calc(100vh - var(--keyboard-height, 280px) - 10px) !important;
+        }
+    }
+}
+
+/* 横屏模式适配 */
+@media screen and (orientation: landscape) and (max-height: 500px) {
+    .think-quick-input-modal {
+        top: 10px !important;
+        left: 10% !important;
+        right: 10% !important;
+        max-height: calc(100vh - 60px) !important;
+        display: flex !important;
+        flex-direction: column !important;
+    }
+    
+    .think-quick-input-modal .modal-content {
+        flex: 1 !important;
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
+    }
+    
+    .think-quick-input-modal.keyboard-active {
+        top: 5px !important;
+        /* 横屏时输入法高度较小 */
+        max-height: calc(100vh - var(--keyboard-height, 200px) - 10px) !important;
+        max-height: calc(100vh - 210px) !important;
+        max-height: calc(100vh - var(--keyboard-height, 200px) - 10px) !important;
+    }
+}
+
+/* 动态输入法高度检测支持 */
+@supports (height: 100dvh) {
+    .think-quick-input-modal.keyboard-active {
+        /* 使用动态视口高度 */
+        max-height: calc(100dvh - var(--keyboard-height, 300px) - 20px) !important;
+    }
+}
+
+/* iOS Safari 特殊处理 */
+@supports (-webkit-touch-callout: none) {
+    .think-quick-input-modal {
+        /* iOS 安全区域适配 */
+        padding-top: env(safe-area-inset-top, 0) !important;
+        padding-left: env(safe-area-inset-left, 0) !important;
+        padding-right: env(safe-area-inset-right, 0) !important;
+    }
+    
+    .think-quick-input-modal.keyboard-active {
+        /* iOS 输入法高度通常为 300px 左右 */
+        max-height: calc(100vh - 300px - env(safe-area-inset-bottom, 0) - 20px) !important;
+    }
 }
 
 
