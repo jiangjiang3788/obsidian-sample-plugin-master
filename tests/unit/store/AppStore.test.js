@@ -1,6 +1,6 @@
 const { describe, it, expect, beforeEach, afterEach } = require('@jest/globals');
 const { AppStore } = require('../../../src/state/AppStore.ts');
-const { createMockObsidianAPI } = require('../../../test-utils/mocks/obsidian-api-mock.js');
+const { DEFAULT_SETTINGS } = require('../../../src/core/domain/schema.ts');
 
 describe('AppStore', () => {
   let appStore;
@@ -436,9 +436,9 @@ describe('AppStore', () => {
     it('应该处理保存失败的情况', async () => {
       mockPlugin.saveData.mockRejectedValue(new Error('保存失败'));
       
-      // 应该不抛出错误
+      // 应该不抛出错误（错误应该被捕获并处理）
       await expect(appStore.updateFloatingTimerEnabled(false))
-        .resolves.not.toThrow();
+        .resolves.toBeUndefined();
     });
   });
 
