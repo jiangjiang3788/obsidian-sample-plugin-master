@@ -3000,7 +3000,7 @@ function M$1(n2) {
   (!n2.__d && (n2.__d = true) && i$1.push(n2) && !$$1.__r++ || r$2 != l$1.debounceRendering) && ((r$2 = l$1.debounceRendering) || o$1)($$1);
 }
 function $$1() {
-  for (var n2, u2, t2, r2, o2, f2, c2, s2 = 1; i$1.length; ) i$1.length > s2 && i$1.sort(e$1), n2 = i$1.shift(), s2 = i$1.length, n2.__d && (t2 = void 0, o2 = (r2 = (u2 = n2).__v).__e, f2 = [], c2 = [], u2.__P && ((t2 = d$1({}, r2)).__v = r2.__v + 1, l$1.vnode && l$1.vnode(t2), O$1(u2.__P, t2, r2, u2.__n, u2.__P.namespaceURI, 32 & r2.__u ? [o2] : null, f2, null == o2 ? S(r2) : o2, !!(32 & r2.__u), c2), t2.__v = r2.__v, t2.__.__k[t2.__i] = t2, N$1(f2, t2, c2), t2.__e != o2 && C$2(t2)));
+  for (var n2, u2, t2, r2, o2, f2, c2, s2 = 1; i$1.length; ) i$1.length > s2 && i$1.sort(e$1), n2 = i$1.shift(), s2 = i$1.length, n2.__d && (t2 = void 0, r2 = void 0, o2 = (r2 = (u2 = n2).__v).__e, f2 = [], c2 = [], u2.__P && ((t2 = d$1({}, r2)).__v = r2.__v + 1, l$1.vnode && l$1.vnode(t2), O$1(u2.__P, t2, r2, u2.__n, u2.__P.namespaceURI, 32 & r2.__u ? [o2] : null, f2, null == o2 ? S(r2) : o2, !!(32 & r2.__u), c2), t2.__v = r2.__v, t2.__.__k[t2.__i] = t2, N$1(f2, t2, c2), r2.__e = r2.__ = null, t2.__e != o2 && C$2(t2)));
   $$1.__r = 0;
 }
 function I$1(n2, l2, u2, t2, i2, r2, o2, e2, f2, c2, s2) {
@@ -29256,7 +29256,7 @@ function findBaseDateForRecurring(rawTask, whenDone, todayISO2) {
   return pick2(EMOJI.due) || pick2(EMOJI.scheduled) || pick2(EMOJI.start) || todayISO2;
 }
 function generateNextRecurringTask(rawTask, baseDateISO) {
-  let next2 = rawTask.replace(/^(\s*-\s*)\[[ xX-]\]/, "$1[ ]").replace(new RegExp(`\\s*${EMOJI.done}\\s*${DATE_YMD_RE.source}`), "").replace(/\s*[\(\[]时间::[^)\]]*[\)\]]/g, "").replace(/\s*[\(\[]结束::[^)\]]*[\)\]]/g, "").replace(/\s*[\(\[]时长::[^)\]]*[\)\]]/g, "");
+  let next2 = rawTask.replace(/^(\s*-\s*)\[[ xX-]\]/, "$1[ ]").replace(new RegExp(`\\s*${EMOJI.done}\\s*${DATE_YMD_RE.source}`), "").replace(/\s*[\(\[]时间::[^)\]]*[\)\]]/g, "").replace(/\s*[\(\[]结束::[^)\]]*[\)\]]/g, "");
   const rec = parseRecurrence(rawTask);
   if (!rec) return next2.trim();
   const base = dayjs(baseDateISO, ["YYYY-MM-DD", "YYYY/MM/DD"]);
@@ -31700,56 +31700,80 @@ function useViewData({
 }
 function exportItemsToMarkdown(items, title) {
   const lines = [];
+  const groupedByFile = /* @__PURE__ */ new Map();
+  const UNGROUPED_FILE_KEY = "未分类文件";
+  const UNGROUPED_HEADER_KEY = "正文内容";
   items.forEach((item) => {
-    if (item.type === "task") {
-      const isDone2 = item.categoryKey.includes("/done");
-      const isCancelled = item.categoryKey.includes("/cancelled");
-      const checkbox = isDone2 ? "[x]" : isCancelled ? "[-]" : "[ ]";
-      let taskLine = `- ${checkbox} ${item.title}`;
-      if (item.tags && item.tags.length > 0) {
-        taskLine += ` ${item.tags.map((t2) => `#${t2}`).join(" ")}`;
-      }
-      const extraFields = {
-        "周期": item.period,
-        "评分": item.rating,
-        "时间": item.startTime,
-        "结束": item.endTime,
-        "时长": item.duration,
-        ...item.extra
-      };
-      for (const key in extraFields) {
-        const value = extraFields[key];
-        if (value !== null && value !== void 0 && value !== "") {
-          taskLine += ` (${key}:: ${value})`;
-        }
-      }
-      if (item.dueDate) taskLine += ` ${EMOJI.due} ${item.dueDate}`;
-      if (item.scheduledDate) taskLine += ` ${EMOJI.scheduled} ${item.scheduledDate}`;
-      if (item.startDate) taskLine += ` ${EMOJI.start} ${item.startDate}`;
-      if (item.createdDate) taskLine += ` ${EMOJI.created} ${item.createdDate}`;
-      if (item.doneDate) taskLine += ` ${EMOJI.done} ${item.doneDate}`;
-      if (item.cancelledDate) taskLine += ` ${EMOJI.cancelled} ${item.cancelledDate}`;
-      lines.push(taskLine.replace(/\s+/g, " ").trim());
-    } else if (item.type === "block") {
-      lines.push(`##### ID ${item.id}`);
-      if (item.categoryKey) lines.push(`**分类**: ${item.categoryKey}`);
-      if (item.date) lines.push(`**日期**: ${item.date}`);
-      if (item.tags && item.tags.length > 0) lines.push(`**标签**: ${item.tags.join(", ")}`);
-      if (item.period) lines.push(`**周期**: ${item.period}`);
-      if (item.rating !== void 0) lines.push(`**评分**: ${item.rating}`);
-      if (item.pintu) lines.push(`**评图**: ![[${item.pintu}]]`);
-      for (const key in item.extra) {
-        lines.push(`**${key}**: ${item.extra[key]}`);
-      }
-      if (item.content && item.content.trim()) {
-        lines.push(`**内容**:`);
-        const contentLines = item.content.trim().split("\n");
-        contentLines.forEach((line2) => {
-          lines.push(`> ${line2}`);
-        });
-      }
-      lines.push("<br>");
+    const filename = readField(item, "filename") || UNGROUPED_FILE_KEY;
+    const header = readField(item, "header") || UNGROUPED_HEADER_KEY;
+    if (!groupedByFile.has(filename)) {
+      groupedByFile.set(filename, /* @__PURE__ */ new Map());
     }
+    const fileGroup = groupedByFile.get(filename);
+    if (!fileGroup.has(header)) {
+      fileGroup.set(header, []);
+    }
+    fileGroup.get(header).push(item);
+  });
+  groupedByFile.forEach((headers, filename) => {
+    lines.push(`## ${filename}`);
+    lines.push("");
+    headers.forEach((groupedItems, header) => {
+      if (header !== UNGROUPED_HEADER_KEY) {
+        lines.push(`### ${header}`);
+        lines.push("");
+      }
+      groupedItems.forEach((item) => {
+        if (item.type === "task") {
+          const isDone2 = item.categoryKey.includes("/done");
+          const isCancelled = item.categoryKey.includes("/cancelled");
+          const checkbox = isDone2 ? "[x]" : isCancelled ? "[-]" : "[ ]";
+          let taskLine = `- ${checkbox} ${item.title}`;
+          const extraFields = {
+            "周期": item.period,
+            "评分": item.rating,
+            "时间": item.startTime,
+            "结束": item.endTime,
+            "时长": item.duration,
+            ...item.extra
+          };
+          for (const key in extraFields) {
+            const value = extraFields[key];
+            if (key === "filename" || key === "header") continue;
+            if (value !== null && value !== void 0 && value !== "") {
+              taskLine += ` (${key}:: ${value})`;
+            }
+          }
+          if (item.dueDate) taskLine += ` ${EMOJI.due} ${item.dueDate}`;
+          if (item.scheduledDate) taskLine += ` ${EMOJI.scheduled} ${item.scheduledDate}`;
+          if (item.startDate) taskLine += ` ${EMOJI.start} ${item.startDate}`;
+          if (item.createdDate) taskLine += ` ${EMOJI.created} ${item.createdDate}`;
+          if (item.doneDate) taskLine += ` ${EMOJI.done} ${item.doneDate}`;
+          if (item.cancelledDate) taskLine += ` ${EMOJI.cancelled} ${item.cancelledDate}`;
+          lines.push(taskLine.replace(/\s+/g, " ").trim());
+        } else if (item.type === "block") {
+          lines.push(`##### ID ${item.id}`);
+          if (item.categoryKey) lines.push(`**分类**: ${item.categoryKey}`);
+          if (item.date) lines.push(`**日期**: ${item.date}`);
+          if (item.tags && item.tags.length > 0) lines.push(`**标签**: ${item.tags.join(", ")}`);
+          if (item.period) lines.push(`**周期**: ${item.period}`);
+          if (item.rating !== void 0) lines.push(`**评分**: ${item.rating}`);
+          if (item.pintu) lines.push(`**评图**: ![[${item.pintu}]]`);
+          for (const key in item.extra) {
+            if (key === "filename" || key === "header") continue;
+            lines.push(`**${key}**: ${item.extra[key]}`);
+          }
+          if (item.content && item.content.trim()) {
+            lines.push(`**内容**:`);
+            const contentLines = item.content.trim().split("\n");
+            contentLines.forEach((line2) => {
+              lines.push(`> ${line2}`);
+            });
+          }
+          lines.push("<br>");
+        }
+      });
+    });
   });
   return lines.join("\n");
 }
@@ -33012,7 +33036,7 @@ function Node({ node: node2, children, ...props }) {
     children
   ] });
 }
-function SettingsTreeView({ groups, items, allGroups, parentId, level = 0, renderItem, onAddItem, onAddGroup, onDeleteItem, onUpdateItemName, onDuplicateItem }) {
+function SettingsTreeView({ groups, items, allGroups, parentId, level = 0, renderItem, onAddItem, onAddGroup, onDeleteItem, onUpdateItemName, onDuplicateItem, appStore: appStore2 }) {
   const [collapsedState, setCollapsedState] = d(() => {
     const initialState = {};
     [...groups, ...items].forEach((node2) => {
@@ -33023,8 +33047,8 @@ function SettingsTreeView({ groups, items, allGroups, parentId, level = 0, rende
   const [movingItem, setMovingItem] = d(null);
   const toggleCollapse = (itemId) => setCollapsedState((prev2) => ({ ...prev2, [itemId]: !prev2[itemId] }));
   const handleMoveConfirm = (targetParentId) => {
-    if (movingItem) {
-      AppStore.instance.moveItem(movingItem.id, targetParentId);
+    if (movingItem && appStore2) {
+      appStore2.moveItem(movingItem.id, targetParentId);
     }
   };
   const childGroups = groups.filter((g2) => g2.parentId === parentId);
@@ -33033,7 +33057,7 @@ function SettingsTreeView({ groups, items, allGroups, parentId, level = 0, rende
     childGroups.map((group) => {
       const treeItem = { ...group, isGroup: true };
       const isExpanded = !collapsedState[group.id];
-      return /* @__PURE__ */ u(Box, { sx: { borderBottom: "1px solid rgba(0,0,0,0.08)" }, children: /* @__PURE__ */ u(Node, { node: treeItem, isExpanded, level, onToggle: () => toggleCollapse(group.id), onUpdateItemName, onDeleteItem, onOpenMoveDialog: setMovingItem, onDuplicateItem, children: /* @__PURE__ */ u(Collapse, { in: isExpanded, timeout: "auto", unmountOnExit: true, children: /* @__PURE__ */ u(SettingsTreeView, { ...{ groups, items, allGroups, renderItem, onAddItem, onAddGroup, onDeleteItem, onUpdateItemName, onDuplicateItem }, parentId: group.id, level: level + 1 }) }) }) }, group.id);
+      return /* @__PURE__ */ u(Box, { sx: { borderBottom: "1px solid rgba(0,0,0,0.08)" }, children: /* @__PURE__ */ u(Node, { node: treeItem, isExpanded, level, onToggle: () => toggleCollapse(group.id), onUpdateItemName, onDeleteItem, onOpenMoveDialog: setMovingItem, onDuplicateItem, children: /* @__PURE__ */ u(Collapse, { in: isExpanded, timeout: "auto", unmountOnExit: true, children: /* @__PURE__ */ u(SettingsTreeView, { ...{ groups, items, allGroups, renderItem, onAddItem, onAddGroup, onDeleteItem, onUpdateItemName, onDuplicateItem, appStore: appStore2 }, parentId: group.id, level: level + 1 }) }) }) }, group.id);
     }),
     childItems.map((item) => {
       const isExpanded = !collapsedState[item.id];
@@ -36593,6 +36617,7 @@ function DataSourceSettings({ app, appStore: appStore2 }) {
         items: itemsAsTreeItems,
         allGroups: dsGroups,
         parentId: null,
+        appStore: appStore2,
         renderItem: (ds) => /* @__PURE__ */ u(DataSourceEditor, { ds, appStore: appStore2 }),
         onAddItem: manager2.onAddItem,
         onAddGroup: manager2.onAddGroup,
@@ -36636,7 +36661,18 @@ function ViewInstanceEditor({ vi, appStore: appStore2 }) {
     /* @__PURE__ */ u(Stack, { direction: "row", alignItems: "center", spacing: 2, children: [
       /* @__PURE__ */ u(Typography, { sx: { width: LABEL_WIDTH$1, flexShrink: 0, fontWeight: 500 }, children: "基础配置" }),
       /* @__PURE__ */ u(SimpleSelect, { value: vi.viewType, options: viewTypeOptions, onChange: (val) => handleUpdate({ viewType: val }), sx: { minWidth: 150, flexGrow: 1 } }),
-      /* @__PURE__ */ u(SimpleSelect, { value: vi.dataSourceId, options: dataSourceOptions, placeholder: "-- 选择数据源 --", onChange: (val) => handleUpdate({ dataSourceId: val }), sx: { minWidth: 150, flexGrow: 1 } }),
+      /* @__PURE__ */ u(
+        Autocomplete,
+        {
+          options: dataSourceOptions,
+          getOptionLabel: (option) => option.label || "",
+          value: dataSourceOptions.find((opt) => opt.value === vi.dataSourceId) || null,
+          onChange: (_2, newValue) => handleUpdate({ dataSourceId: newValue ? newValue.value : "" }),
+          renderInput: (params) => /* @__PURE__ */ u(TextField, { ...params, variant: "outlined", placeholder: "-- 搜索数据源 --" }),
+          sx: { minWidth: 150, flexGrow: 1 },
+          size: "small"
+        }
+      ),
       /* @__PURE__ */ u(FormControlLabel, { control: /* @__PURE__ */ u(Checkbox, { size: "small", checked: !!vi.collapsed, onChange: (e2) => handleUpdate({ collapsed: e2.target.checked }) }), label: /* @__PURE__ */ u(Typography, { noWrap: true, children: "默认折叠" }) })
     ] }),
     /* @__PURE__ */ u(Stack, { direction: "row", flexWrap: "wrap", spacing: 1, useFlexGap: true, alignItems: "center", children: [
@@ -36692,6 +36728,7 @@ function ViewInstanceSettings({ app, appStore: appStore2 }) {
         items: itemsAsTreeItems,
         allGroups: viewGroups,
         parentId: null,
+        appStore: appStore2,
         renderItem: (vi) => /* @__PURE__ */ u(ViewInstanceEditor, { vi, appStore: appStore2 }),
         onAddItem: manager2.onAddItem,
         onAddGroup: manager2.onAddGroup,
@@ -36759,7 +36796,22 @@ function LayoutEditor({ layout, appStore: appStore2 }) {
     /* @__PURE__ */ u(Stack, { direction: "row", flexWrap: "wrap", spacing: 1, useFlexGap: true, alignItems: "center", children: [
       /* @__PURE__ */ u(Typography, { sx: { width: LABEL_WIDTH, flexShrink: 0, fontWeight: 500 }, children: "包含视图" }),
       selectedViews.map((view) => /* @__PURE__ */ u(Tooltip, { title: `点击移除 "${view.title}"`, children: /* @__PURE__ */ u(Chip, { label: view.title, onClick: () => removeView(view.id), size: "small" }) }, view.id)),
-      /* @__PURE__ */ u(SimpleSelect, { value: "", options: availableViewOptions, onChange: addView, placeholder: "+ 添加视图...", sx: { minWidth: 150 } })
+      /* @__PURE__ */ u(
+        Autocomplete,
+        {
+          value: null,
+          options: availableViewOptions,
+          getOptionLabel: (option) => option.label || "",
+          onChange: (_2, newValue) => {
+            if (newValue) {
+              addView(newValue.value);
+            }
+          },
+          renderInput: (params) => /* @__PURE__ */ u(TextField, { ...params, variant: "outlined", placeholder: "+ 搜索并添加视图..." }),
+          sx: { minWidth: 150 },
+          size: "small"
+        }
+      )
     ] })
   ] });
 }
@@ -36798,6 +36850,7 @@ function LayoutSettings({ app, appStore: appStore2 }) {
         items: itemsAsTreeItems,
         allGroups: layoutGroups,
         parentId: null,
+        appStore: appStore2,
         renderItem: (l2) => /* @__PURE__ */ u(LayoutEditor, { layout: l2, appStore: appStore2 }),
         onAddItem: manager2.onAddItem,
         onAddGroup: manager2.onAddGroup,

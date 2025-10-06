@@ -38733,85 +38733,177 @@ body.theme-dark .tn-week-cell.is-selected {
 
 `.trim();
 console.log(`[ThinkPlugin] main.js 文件已加载，版本时间: ${(/* @__PURE__ */ new Date()).toLocaleTimeString()}`);
+class ServiceManager {
+  plugin;
+  services = {};
+  constructor(plugin) {
+    this.plugin = plugin;
+  }
+  // 启动必需的核心服务
+  async initializeCore() {
+    console.time("[ThinkPlugin] 核心服务初始化");
+    this.services.appStore = instance.resolve(AppStore);
+    this.services.timerStateService = instance.resolve(TimerStateService);
+    this.services.appStore.setPlugin(this.plugin);
+    console.timeEnd("[ThinkPlugin] 核心服务初始化");
+  }
+  // 懒加载计时器相关服务
+  async loadTimerServices() {
+    if (this.services.timerService) return;
+    console.time("[ThinkPlugin] 计时器服务加载");
+    this.services.timerService = instance.resolve(TimerService);
+    this.services.timerWidget = new FloatingTimerWidget(this.plugin);
+    this.plugin.addCommand({
+      id: "toggle-think-floating-timer",
+      name: "切换悬浮计时器显隐",
+      callback: () => {
+        this.services.appStore.toggleTimerWidgetVisibility();
+      }
+    });
+    this.services.timerStateService.loadStateFromFile().then((timers) => {
+      this.services.appStore.setInitialTimers(timers);
+    });
+    this.services.timerWidget.load();
+    console.timeEnd("[ThinkPlugin] 计时器服务加载");
+  }
+  // 懒载数据存储服务
+  async loadDataServices() {
+    if (this.services.dataStore) return;
+    console.time("[ThinkPlugin] 数据服务加载");
+    this.services.dataStore = instance.resolve(DataStore);
+    this.services.rendererService = instance.resolve(RendererService);
+    this.services.actionService = instance.resolve(ActionService);
+    this.services.inputService = instance.resolve(InputService);
+    this.services.taskService = instance.resolve(TaskService);
+    registerStore(this.services.appStore);
+    registerDataStore(this.services.dataStore);
+    registerTimerService(this.services.timerService);
+    registerInputService(this.services.inputService);
+    this.scanDataInBackground();
+    console.timeEnd("[ThinkPlugin] 数据服务加载");
+  }
+  // 后台扫描数据
+  async scanDataInBackground() {
+    if ("requestIdleCallback" in window) {
+      requestIdleCallback(async () => {
+        console.time("[ThinkPlugin] 数据扫描");
+        await this.services.dataStore.initialScan();
+        console.timeEnd("[ThinkPlugin] 数据扫描");
+      });
+    } else {
+      setTimeout(async () => {
+        console.time("[ThinkPlugin] 数据扫描");
+        await this.services.dataStore.initialScan();
+        console.timeEnd("[ThinkPlugin] 数据扫描");
+      }, 100);
+    }
+  }
+  // 懒加载UI特性
+  async loadUIFeatures() {
+    console.time("[ThinkPlugin] UI特性加载");
+    await this.loadDataServices();
+    this.loadDashboardFeature();
+    this.loadQuickInputFeature();
+    this.loadSettingsFeature();
+    console.timeEnd("[ThinkPlugin] UI特性加载");
+  }
+  loadDashboardFeature() {
+    setTimeout(() => {
+      console.time("[ThinkPlugin] Dashboard特性加载");
+      setup$2?.({
+        plugin: this.plugin,
+        appStore: this.services.appStore,
+        dataStore: this.services.dataStore,
+        rendererService: this.services.rendererService,
+        actionService: this.services.actionService,
+        taskService: this.services.taskService
+      });
+      console.timeEnd("[ThinkPlugin] Dashboard特性加载");
+    }, 50);
+  }
+  loadQuickInputFeature() {
+    setTimeout(() => {
+      console.time("[ThinkPlugin] QuickInput特性加载");
+      setup$1?.({
+        plugin: this.plugin,
+        appStore: this.services.appStore
+      });
+      console.timeEnd("[ThinkPlugin] QuickInput特性加载");
+    }, 100);
+  }
+  loadSettingsFeature() {
+    setTimeout(() => {
+      console.time("[ThinkPlugin] Settings特性加载");
+      setup?.({
+        app: this.plugin.app,
+        plugin: this.plugin,
+        appStore: this.services.appStore
+      });
+      this.plugin.addCommand({
+        id: "think-open-settings",
+        name: "打开 Think 插件设置",
+        callback: () => {
+          this.plugin.app.setting.open();
+          this.plugin.app.setting.openTabById(this.plugin.manifest.id);
+        }
+      });
+      console.timeEnd("[ThinkPlugin] Settings特性加载");
+    }, 150);
+  }
+  // 获取服务的方法
+  get appStore() {
+    if (!this.services.appStore) {
+      throw new Error("AppStore 未初始化");
+    }
+    return this.services.appStore;
+  }
+  get dataStore() {
+    if (!this.services.dataStore) {
+      throw new Error("DataStore 未初始化，请先调用 loadDataServices");
+    }
+    return this.services.dataStore;
+  }
+  cleanup() {
+    this.services.timerWidget?.unload();
+    this.services.rendererService?.cleanup();
+  }
+}
 instance.registerSingleton(AppStore);
 class ThinkPlugin extends obsidian.Plugin {
-  appStore;
-  dataStore;
-  rendererService;
-  actionService;
-  timerService;
-  timerStateService;
-  timerWidget;
-  inputService;
+  serviceManager;
   async onload() {
     try {
+      console.time("[ThinkPlugin] 总启动时间");
       const settings = await this.loadSettings();
       this.injectGlobalCss();
       instance.register(AppToken, { useValue: this.app });
       instance.register(SETTINGS_TOKEN, { useValue: settings });
-      this.appStore = instance.resolve(AppStore);
-      this.dataStore = instance.resolve(DataStore);
-      this.rendererService = instance.resolve(RendererService);
-      this.actionService = instance.resolve(ActionService);
-      this.timerService = instance.resolve(TimerService);
-      this.timerStateService = instance.resolve(TimerStateService);
-      this.inputService = instance.resolve(InputService);
-      this.appStore.setPlugin(this);
-      setTimeout(async () => {
-        registerStore(this.appStore);
-        registerDataStore(this.dataStore);
-        registerTimerService(this.timerService);
-        registerInputService(this.inputService);
-        this.timerWidget = new FloatingTimerWidget(this);
-        this.timerWidget.load();
-        this.addCommand({
-          id: "toggle-think-floating-timer",
-          name: "切换悬浮计时器显隐",
-          callback: () => {
-            this.appStore.toggleTimerWidgetVisibility();
-          }
-        });
-        this.timerStateService.loadStateFromFile().then((timers) => {
-          this.appStore.setInitialTimers(timers);
-        });
-        await this.dataStore.initialScan();
-        setup$2?.({
-          plugin: this,
-          appStore: this.appStore,
-          dataStore: this.dataStore,
-          rendererService: this.rendererService,
-          actionService: this.actionService,
-          taskService: instance.resolve(TaskService)
-        });
-        setup$1?.({
-          plugin: this,
-          appStore: this.appStore
-        });
-        setup?.({
-          app: this.app,
-          plugin: this,
-          appStore: this.appStore
-        });
-        this.addCommand({
-          id: "think-open-settings",
-          name: "打开 Think 插件设置",
-          callback: () => {
-            this.app.setting.open();
-            this.app.setting.openTabById(this.manifest.id);
-          }
-        });
-        console.log("[Think Plugin] 插件已成功加载并准备就绪。");
-        new obsidian.Notice("Think Plugin 已成功加载!", 3e3);
-      }, 0);
+      this.serviceManager = new ServiceManager(this);
+      await this.serviceManager.initializeCore();
+      await this.serviceManager.loadTimerServices();
+      this.loadRemainingServicesAsync();
+      console.timeEnd("[ThinkPlugin] 总启动时间");
+      console.log("[Think Plugin] 核心功能已加载完成");
+      new obsidian.Notice("Think Plugin 核心功能已加载!", 2e3);
     } catch (error) {
       console.error("[Think Plugin] 插件加载过程中发生严重错误:", error);
       new obsidian.Notice(`[Think Plugin] 插件加载失败: ${error.message}`, 15e3);
     }
   }
+  async loadRemainingServicesAsync() {
+    Promise.resolve().then(async () => {
+      try {
+        await this.serviceManager.loadUIFeatures();
+        console.log("[Think Plugin] 所有功能已完全加载");
+        new obsidian.Notice("Think Plugin 完全加载完成!", 3e3);
+      } catch (error) {
+        console.error("[Think Plugin] 延迟加载失败:", error);
+      }
+    });
+  }
   onunload() {
     document.getElementById(STYLE_TAG_ID)?.remove();
-    this.rendererService?.cleanup();
-    this.timerWidget?.unload();
+    this.serviceManager?.cleanup();
     instance.clearInstances();
   }
   async loadSettings() {
@@ -38825,7 +38917,7 @@ class ThinkPlugin extends obsidian.Plugin {
     return merged;
   }
   async saveSettings() {
-    await this.saveData(this.appStore.getSettings());
+    await this.saveData(this.serviceManager.appStore.getSettings());
   }
   injectGlobalCss() {
     let el = document.getElementById(STYLE_TAG_ID);
@@ -38835,6 +38927,13 @@ class ThinkPlugin extends obsidian.Plugin {
       document.head.appendChild(el);
     }
     el.textContent = GLOBAL_CSS;
+  }
+  // 提供服务访问方法
+  get appStore() {
+    return this.serviceManager.appStore;
+  }
+  get dataStore() {
+    return this.serviceManager.dataStore;
   }
 }
 module.exports = ThinkPlugin;
