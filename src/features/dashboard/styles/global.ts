@@ -828,5 +828,57 @@ body.theme-dark .tn-week-cell.is-selected {
     display: none !important;
 }
 
+/* 移动端快捷输入面板适配 - 避免被输入法覆盖 */
+@media (max-width: 768px) {
+    .think-quick-input-modal .modal {
+        position: fixed !important;
+        top: 20px !important;
+        left: 10px !important;
+        right: 10px !important;
+        bottom: auto !important;
+        max-height: calc(100vh - 120px) !important;
+        transform: none !important;
+        margin: 0 !important;
+        border-radius: 12px !important;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2) !important;
+    }
+    
+    .think-quick-input-modal .modal-content {
+        max-height: calc(100vh - 140px) !important;
+        overflow-y: auto !important;
+        padding: 16px !important;
+    }
+    
+    /* 当输入法激活时，进一步调整位置 */
+    .think-quick-input-modal.keyboard-active .modal {
+        top: 10px !important;
+        max-height: calc(100vh - 160px) !important;
+    }
+    
+    /* 小屏手机适配 */
+    @media (max-width: 480px) {
+        .think-quick-input-modal .modal {
+            top: 10px !important;
+            left: 5px !important;
+            right: 5px !important;
+            max-height: calc(100vh - 100px) !important;
+        }
+        
+        .think-quick-input-modal .modal-content {
+            padding: 12px !important;
+        }
+    }
+}
+
+/* 平板横屏适配 */
+@media (max-width: 1024px) and (orientation: landscape) {
+    .think-quick-input-modal .modal {
+        top: 20px !important;
+        max-height: calc(100vh - 80px) !important;
+        left: 20% !important;
+        right: 20% !important;
+    }
+}
+
 
 `.trim();
