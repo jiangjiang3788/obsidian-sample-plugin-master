@@ -17,7 +17,7 @@ const isCancelledLine = (line: string) => RE_CANCEL_BOX.test(line);
 
 /** 解析任务行 */
 export function parseTaskLine(
-    filePath: string, rawLine: string, lineNo: number, parentFolder: string
+    filePath: string, rawLine: string, lineNo: number, parentFolder: string, currentHeader?: string
 ): Item | null {
     const lineText = rawLine;
     if (!RE_TASK_PREFIX.test(lineText)) return null;
@@ -36,6 +36,8 @@ export function parseTaskLine(
         categoryKey: '', // 稍后填充
         // [新增] 填充 folder
         folder: parentFolder,
+        // [Day2新增] 主题字段，稍后从标题填充
+        theme: undefined,
     };
 
     /* ---- 状态 → categoryKey ---- */
@@ -106,6 +108,10 @@ export function parseTaskLine(
     }
     item.title = cleanTaskText(titleSrc) || '';
     item.priority = pickPriority(lineText);
+    
+    // [Day2新增] 任务的主题是当前章节标题，而不是任务标题
+    // 注意：header 会在 dataStore 中设置，这里先不设置
+    // item.theme 将在 dataStore 扫描后设置为 header
 
     if (createdDate)   item.createdDate = createdDate;
     if (scheduledDate) item.scheduledDate = scheduledDate;
@@ -145,20 +151,26 @@ export function parseBlockContent(
     let periodVal: string | undefined;
     let ratingVal: number | undefined;
     let pintuVal: string | undefined;
+    // [Day2新增] 主题字段
+    let themeVal: string | undefined;
 
     for (let i = 0; i < contentLines.length; i++) {
         const rawLine = contentLines[i];
         const line = rawLine.trim();
         if (!contentStarted) {
             if (line === '') continue;
-            const kv = line.match(/^([^:：]{1,20})::?\s*(.*)$/);
+            const kv = line.match(/^([^:：]{1,20})[:：]{1,2}\s*(.*)$/);
             if (kv) {
                 const key = kv[1].trim();
                 const value = kv[2] || '';
                 const lower = key.toLowerCase();
 
                 if (['分类', '类别', 'category'].includes(lower))      categoryKey = value.trim();
-                else if (['主题', '标签', 'tag', 'tags'].includes(lower)) tags.push(...value.trim().split(/[,，]/).map(t => t.trim().replace(/^#/, '')));
+                else if (['主题'].includes(lower)) {
+                    // [Day2新增] 主题字段单独处理
+                    themeVal = value.trim();
+                }
+                else if (['标签', 'tag', 'tags'].includes(lower)) tags.push(...value.trim().split(/[,，]/).map(t => t.trim().replace(/^#/, '')));
                 else if (['日期', 'date'].includes(lower))              date = normalizeDateStr(value.trim());
                 else if (['周期', 'period'].includes(lower))            periodVal = value.trim();
                 else if (['评分', 'rating'].includes(lower))            ratingVal = Number(value.trim()) || undefined;
@@ -195,6 +207,8 @@ export function parseBlockContent(
         extra,
         categoryKey,
         folder: parentFolder,
+        // [Day2新增] 主题字段
+        theme: themeVal,
     };
     if (iconVal) item.icon = iconVal;
     if (periodVal) item.period = periodVal;

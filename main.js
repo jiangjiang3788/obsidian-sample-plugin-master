@@ -3413,7 +3413,7 @@ const DEFAULT_SETTINGS = {
   floatingTimerEnabled: true
 };
 const VIEW_OPTIONS = ["BlockView", "TableView", "ExcelView", "TimelineView", "StatisticsView", "HeatmapView"];
-const CORE_FIELDS = ["id", "type", "title", "content", "categoryKey", "tags", "recurrence", "icon", "priority", "date", "header", "startTime", "endTime", "duration", "period", "rating", "pintu", "folder", "periodCount"];
+const CORE_FIELDS = ["id", "type", "title", "content", "categoryKey", "tags", "theme", "recurrence", "icon", "priority", "date", "header", "startTime", "endTime", "duration", "period", "rating", "pintu", "folder", "periodCount"];
 function getAllFields(items) {
   const set = new Set(CORE_FIELDS);
   items.forEach((it) => {
@@ -28951,7 +28951,7 @@ function pick(line2, emoji) {
 }
 const isDoneLine = (line2) => RE_DONE_BOX.test(line2);
 const isCancelledLine = (line2) => RE_CANCEL_BOX.test(line2);
-function parseTaskLine(filePath, rawLine, lineNo, parentFolder) {
+function parseTaskLine(filePath, rawLine, lineNo, parentFolder, currentHeader) {
   const lineText = rawLine;
   if (!RE_TASK_PREFIX.test(lineText)) return null;
   const item = {
@@ -28970,7 +28970,9 @@ function parseTaskLine(filePath, rawLine, lineNo, parentFolder) {
     categoryKey: "",
     // 稍后填充
     // [新增] 填充 folder
-    folder: parentFolder
+    folder: parentFolder,
+    // [Day2新增] 主题字段，稍后从标题填充
+    theme: void 0
   };
   const status = isDoneLine(lineText) ? "done" : isCancelledLine(lineText) ? "cancelled" : "open";
   item.categoryKey = `任务/${status}`;
@@ -29056,18 +29058,21 @@ function parseBlockContent(filePath, lines, startIdx, endIdx, parentFolder) {
   let periodVal;
   let ratingVal;
   let pintuVal;
+  let themeVal;
   for (let i2 = 0; i2 < contentLines.length; i2++) {
     const rawLine = contentLines[i2];
     const line2 = rawLine.trim();
     if (!contentStarted) {
       if (line2 === "") continue;
-      const kv = line2.match(/^([^:：]{1,20})::?\s*(.*)$/);
+      const kv = line2.match(/^([^:：]{1,20})[:：]{1,2}\s*(.*)$/);
       if (kv) {
         const key = kv[1].trim();
         const value = kv[2] || "";
         const lower = key.toLowerCase();
         if (["分类", "类别", "category"].includes(lower)) categoryKey = value.trim();
-        else if (["主题", "标签", "tag", "tags"].includes(lower)) tags2.push(...value.trim().split(/[,，]/).map((t2) => t2.trim().replace(/^#/, "")));
+        else if (["主题"].includes(lower)) {
+          themeVal = value.trim();
+        } else if (["标签", "tag", "tags"].includes(lower)) tags2.push(...value.trim().split(/[,，]/).map((t2) => t2.trim().replace(/^#/, "")));
         else if (["日期", "date"].includes(lower)) date = normalizeDateStr(value.trim());
         else if (["周期", "period"].includes(lower)) periodVal = value.trim();
         else if (["评分", "rating"].includes(lower)) ratingVal = Number(value.trim()) || void 0;
@@ -29106,7 +29111,9 @@ function parseBlockContent(filePath, lines, startIdx, endIdx, parentFolder) {
     modified: 0,
     extra,
     categoryKey,
-    folder: parentFolder
+    folder: parentFolder,
+    // [Day2新增] 主题字段
+    theme: themeVal
   };
   if (iconVal) item.icon = iconVal;
   if (periodVal) item.period = periodVal;
@@ -29363,7 +29370,10 @@ let DataStore = class {
           taskItem.tags = Array.from(/* @__PURE__ */ new Set([...currentSectionTags, ...taskItem.tags]));
           taskItem.created = file.stat.ctime;
           taskItem.modified = file.stat.mtime;
-          if (currentHeader) taskItem.header = currentHeader;
+          if (currentHeader) {
+            taskItem.header = currentHeader;
+            taskItem.theme = currentHeader;
+          }
           taskItem.filename = fileName;
           taskItem.fileName = fileName;
           normalizeItemDates(taskItem);
