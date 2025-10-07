@@ -82,7 +82,11 @@ export class DataStore {
                     taskItem.tags = Array.from(new Set([...currentSectionTags, ...taskItem.tags]));
                     taskItem.created = file.stat.ctime;
                     taskItem.modified = file.stat.mtime;
-                    if (currentHeader) taskItem.header = currentHeader;
+                    if (currentHeader) {
+                        taskItem.header = currentHeader;
+                        // [Day2新增] 任务的主题是当前章节标题
+                        taskItem.theme = currentHeader;
+                    }
                     taskItem.filename = fileName;
                     taskItem.fileName = fileName;
                     normalizeItemDates(taskItem);

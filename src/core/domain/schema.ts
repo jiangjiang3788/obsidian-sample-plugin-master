@@ -152,6 +152,7 @@ export interface Item {
     content: string;
     type: 'task' | 'block';
     tags: string[];
+    theme?: string;     // [新增] 主题字段，用于统一的主题管理
     categoryKey: string;
     recurrence: string;
     recurrenceInfo?: RecurrenceInfo;
@@ -192,8 +193,8 @@ export interface Item {
     periodCount?: number;
 }
 
-// [修改] 将新字段加入核心字段列表
-export const CORE_FIELDS = ['id', 'type', 'title', 'content', 'categoryKey', 'tags', 'recurrence', 'icon', 'priority', 'date', 'header', 'startTime', 'endTime', 'duration', 'period', 'rating', 'pintu', 'folder', 'periodCount'] as const;
+// [修改] 将新字段加入核心字段列表，包括theme字段
+export const CORE_FIELDS = ['id', 'type', 'title', 'content', 'categoryKey', 'tags', 'theme', 'recurrence', 'icon', 'priority', 'date', 'header', 'startTime', 'endTime', 'duration', 'period', 'rating', 'pintu', 'folder', 'periodCount'] as const;
 
 export type CoreField = typeof CORE_FIELDS[number];
 export function getAllFields(items: Item[]): string[] {
