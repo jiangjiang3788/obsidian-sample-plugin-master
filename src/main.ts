@@ -18,6 +18,7 @@ console.log(`[ThinkPlugin] main.js 文件已加载，版本时间: ${new Date().
 // 服务懒加载管理器
 class ServiceManager {
     private plugin: ThinkPlugin;
+    private scanDataPromise: Promise<void> | null = null;
     private services: Partial<{
         appStore: AppStore;
         dataStore: DataStore;
@@ -90,29 +91,32 @@ class ServiceManager {
         registerTimerService(this.services.timerService!);
         registerInputService(this.services.inputService);
 
-        // 异步扫描数据，不阻塞启动
+        // 立即开始扫描数据，不再延迟
         this.scanDataInBackground();
         
         console.timeEnd('[ThinkPlugin] 数据服务加载');
     }
 
-    // 后台扫描数据
+    // 后台扫描数据（修改：返回 Promise 以便等待）
     private async scanDataInBackground(): Promise<void> {
-        // 使用 requestIdleCallback 在浏览器空闲时扫描
-        if ('requestIdleCallback' in window) {
-            requestIdleCallback(async () => {
-                console.time('[ThinkPlugin] 数据扫描');
-                await this.services.dataStore!.initialScan();
+        // 如果已经在扫描，返回现有的 Promise
+        if (this.scanDataPromise) return this.scanDataPromise;
+        
+        // 创建扫描 Promise，立即开始扫描
+        this.scanDataPromise = new Promise<void>((resolve) => {
+            console.time('[ThinkPlugin] 数据扫描');
+            this.services.dataStore!.initialScan().then(() => {
                 console.timeEnd('[ThinkPlugin] 数据扫描');
+                // 数据扫描完成后，通知 DataStore 触发更新
+                this.services.dataStore!.notifyChange();
+                resolve();
+            }).catch((error) => {
+                console.error('[ThinkPlugin] 数据扫描失败:', error);
+                resolve(); // 即使失败也要 resolve，避免阻塞
             });
-        } else {
-            // 降级到 setTimeout
-            setTimeout(async () => {
-                console.time('[ThinkPlugin] 数据扫描');
-                await this.services.dataStore!.initialScan();
-                console.timeEnd('[ThinkPlugin] 数据扫描');
-            }, 100);
-        }
+        });
+        
+        return this.scanDataPromise;
     }
 
     // 懒加载UI特性
@@ -122,27 +126,32 @@ class ServiceManager {
         // 确保数据服务已加载
         await this.loadDataServices();
 
-        // 延迟加载各个特性
-        this.loadDashboardFeature();
+        // 等待数据扫描完成后再加载 Dashboard
+        await this.loadDashboardFeature();
+        
+        // 其他特性可以并行加载
         this.loadQuickInputFeature();
         this.loadSettingsFeature();
         
         console.timeEnd('[ThinkPlugin] UI特性加载');
     }
 
-    private loadDashboardFeature(): void {
-        setTimeout(() => {
-            console.time('[ThinkPlugin] Dashboard特性加载');
-            DashboardFeature.setup?.({
-                plugin: this.plugin,
-                appStore: this.services.appStore!,
-                dataStore: this.services.dataStore!,
-                rendererService: this.services.rendererService!,
-                actionService: this.services.actionService!,
-                taskService: this.services.taskService!
-            });
-            console.timeEnd('[ThinkPlugin] Dashboard特性加载');
-        }, 50);
+    private async loadDashboardFeature(): Promise<void> {
+        // 等待数据扫描完成
+        if (this.scanDataPromise) {
+            await this.scanDataPromise;
+        }
+        
+        // 数据准备好后再加载 Dashboard
+        console.time('[ThinkPlugin] Dashboard特性加载');
+        DashboardFeature.setup?.({
+            plugin: this.plugin,
+            appStore: this.services.appStore!,
+            dataStore: this.services.dataStore!,
+            rendererService: this.services.rendererService!,
+            actionService: this.services.actionService!
+        });
+        console.timeEnd('[ThinkPlugin] Dashboard特性加载');
     }
 
     private loadQuickInputFeature(): void {
@@ -235,7 +244,8 @@ export default class ThinkPlugin extends Plugin {
 
         } catch (error) {
             console.error('[Think Plugin] 插件加载过程中发生严重错误:', error);
-            new Notice(`[Think Plugin] 插件加载失败: ${error.message}`, 15000);
+            const errorMessage = error instanceof Error ? error.message : String(error);
+            new Notice(`[Think Plugin] 插件加载失败: ${errorMessage}`, 15000);
         }
     }
 
@@ -245,9 +255,11 @@ export default class ThinkPlugin extends Plugin {
             try {
                 await this.serviceManager.loadUIFeatures();
                 console.log('[Think Plugin] 所有功能已完全加载');
-                new Notice('Think Plugin 完全加载完成!', 3000);
+                // 移除过多的通知，数据加载完成时用户能看到数据即可
             } catch (error) {
                 console.error('[Think Plugin] 延迟加载失败:', error);
+                const errorMessage = error instanceof Error ? error.message : String(error);
+                new Notice(`[Think Plugin] 加载失败: ${errorMessage}`, 5000);
             }
         });
     }

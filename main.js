@@ -38972,6 +38972,7 @@ body.theme-dark .tn-week-cell.is-selected {
 console.log(`[ThinkPlugin] main.js 文件已加载，版本时间: ${(/* @__PURE__ */ new Date()).toLocaleTimeString()}`);
 class ServiceManager {
   plugin;
+  scanDataPromise = null;
   services = {};
   constructor(plugin) {
     this.plugin = plugin;
@@ -39019,44 +39020,44 @@ class ServiceManager {
     this.scanDataInBackground();
     console.timeEnd("[ThinkPlugin] 数据服务加载");
   }
-  // 后台扫描数据
+  // 后台扫描数据（修改：返回 Promise 以便等待）
   async scanDataInBackground() {
-    if ("requestIdleCallback" in window) {
-      requestIdleCallback(async () => {
-        console.time("[ThinkPlugin] 数据扫描");
-        await this.services.dataStore.initialScan();
+    if (this.scanDataPromise) return this.scanDataPromise;
+    this.scanDataPromise = new Promise((resolve) => {
+      console.time("[ThinkPlugin] 数据扫描");
+      this.services.dataStore.initialScan().then(() => {
         console.timeEnd("[ThinkPlugin] 数据扫描");
+        this.services.dataStore.notifyChange();
+        resolve();
+      }).catch((error) => {
+        console.error("[ThinkPlugin] 数据扫描失败:", error);
+        resolve();
       });
-    } else {
-      setTimeout(async () => {
-        console.time("[ThinkPlugin] 数据扫描");
-        await this.services.dataStore.initialScan();
-        console.timeEnd("[ThinkPlugin] 数据扫描");
-      }, 100);
-    }
+    });
+    return this.scanDataPromise;
   }
   // 懒加载UI特性
   async loadUIFeatures() {
     console.time("[ThinkPlugin] UI特性加载");
     await this.loadDataServices();
-    this.loadDashboardFeature();
+    await this.loadDashboardFeature();
     this.loadQuickInputFeature();
     this.loadSettingsFeature();
     console.timeEnd("[ThinkPlugin] UI特性加载");
   }
-  loadDashboardFeature() {
-    setTimeout(() => {
-      console.time("[ThinkPlugin] Dashboard特性加载");
-      setup$2?.({
-        plugin: this.plugin,
-        appStore: this.services.appStore,
-        dataStore: this.services.dataStore,
-        rendererService: this.services.rendererService,
-        actionService: this.services.actionService,
-        taskService: this.services.taskService
-      });
-      console.timeEnd("[ThinkPlugin] Dashboard特性加载");
-    }, 50);
+  async loadDashboardFeature() {
+    if (this.scanDataPromise) {
+      await this.scanDataPromise;
+    }
+    console.time("[ThinkPlugin] Dashboard特性加载");
+    setup$2?.({
+      plugin: this.plugin,
+      appStore: this.services.appStore,
+      dataStore: this.services.dataStore,
+      rendererService: this.services.rendererService,
+      actionService: this.services.actionService
+    });
+    console.timeEnd("[ThinkPlugin] Dashboard特性加载");
   }
   loadQuickInputFeature() {
     setTimeout(() => {
@@ -39124,7 +39125,8 @@ class ThinkPlugin extends obsidian.Plugin {
       new obsidian.Notice("Think Plugin 核心功能已加载!", 2e3);
     } catch (error) {
       console.error("[Think Plugin] 插件加载过程中发生严重错误:", error);
-      new obsidian.Notice(`[Think Plugin] 插件加载失败: ${error.message}`, 15e3);
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      new obsidian.Notice(`[Think Plugin] 插件加载失败: ${errorMessage}`, 15e3);
     }
   }
   async loadRemainingServicesAsync() {
@@ -39132,9 +39134,10 @@ class ThinkPlugin extends obsidian.Plugin {
       try {
         await this.serviceManager.loadUIFeatures();
         console.log("[Think Plugin] 所有功能已完全加载");
-        new obsidian.Notice("Think Plugin 完全加载完成!", 3e3);
       } catch (error) {
         console.error("[Think Plugin] 延迟加载失败:", error);
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        new obsidian.Notice(`[Think Plugin] 加载失败: ${errorMessage}`, 5e3);
       }
     });
   }
