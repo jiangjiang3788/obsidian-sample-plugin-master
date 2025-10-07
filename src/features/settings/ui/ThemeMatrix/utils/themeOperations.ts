@@ -1,0 +1,232 @@
+/**
+ * 主题操作辅助函数
+ */
+import type { ExtendedTheme, ThemeTreeNode, ThemeOverrideKey } from '../types';
+import type { ThemeOverride } from '@core/domain/schema';
+import { findNodeInTree, getDescendantIds } from './themeTreeBuilder';
+
+/**
+ * 创建主题覆盖映射键
+ * @param themeId - 主题ID
+ * @param blockId - Block ID
+ * @returns 映射键
+ */
+export function createOverrideKey(themeId: string, blockId: string): ThemeOverrideKey {
+    return `${themeId}:${blockId}`;
+}
+
+/**
+ * 解析主题覆盖映射键
+ * @param key - 映射键
+ * @returns 主题ID和Block ID
+ */
+export function parseOverrideKey(key: ThemeOverrideKey): { themeId: string; blockId: string } {
+    const [themeId, blockId] = key.split(':');
+    return { themeId, blockId };
+}
+
+/**
+ * 创建覆盖配置映射
+ * @param overrides - 覆盖配置数组
+ * @returns 覆盖配置映射
+ */
+export function createOverridesMap(overrides: ThemeOverride[]): Map<ThemeOverrideKey, ThemeOverride> {
+    const map = new Map<ThemeOverrideKey, ThemeOverride>();
+    overrides.forEach(override => {
+        const key = createOverrideKey(override.themeId, override.blockId);
+        map.set(key, override);
+    });
+    return map;
+}
+
+/**
+ * 验证主题路径
+ * @param path - 主题路径
+ * @returns 是否有效
+ */
+export function validateThemePath(path: string): boolean {
+    if (!path || path.trim() === '') {
+        return false;
+    }
+    
+    // 检查路径格式
+    const pathRegex = /^[a-zA-Z0-9\u4e00-\u9fa5]+([\/][a-zA-Z0-9\u4e00-\u9fa5]+)*$/;
+    return pathRegex.test(path.trim());
+}
+
+/**
+ * 获取主题的父路径
+ * @param path - 主题路径
+ * @returns 父路径或null
+ */
+export function getParentPath(path: string): string | null {
+    const lastSlashIndex = path.lastIndexOf('/');
+    if (lastSlashIndex === -1) {
+        return null;
+    }
+    return path.substring(0, lastSlashIndex);
+}
+
+/**
+ * 获取主题的显示名称
+ * @param path - 主题路径
+ * @returns 显示名称
+ */
+export function getThemeDisplayName(path: string): string {
+    const lastSlashIndex = path.lastIndexOf('/');
+    if (lastSlashIndex === -1) {
+        return path;
+    }
+    return path.substring(lastSlashIndex + 1);
+}
+
+/**
+ * 检查主题是否有子主题
+ * @param theme - 主题
+ * @param allThemes - 所有主题列表
+ * @returns 是否有子主题
+ */
+export function hasChildren(theme: ExtendedTheme, allThemes: ExtendedTheme[]): boolean {
+    return allThemes.some(t => t.path.startsWith(theme.path + '/'));
+}
+
+/**
+ * 获取选择状态（包含级联）
+ * @param themeId - 主题ID
+ * @param tree - 主题树
+ * @param selectedThemes - 选中的主题集合
+ * @returns 选择状态：'checked' | 'unchecked' | 'indeterminate'
+ */
+export function getSelectionState(
+    themeId: string,
+    tree: ThemeTreeNode[],
+    selectedThemes: Set<string>
+): 'checked' | 'unchecked' | 'indeterminate' {
+    const node = findNodeInTree(tree, themeId);
+    if (!node) {
+        return 'unchecked';
+    }
+    
+    const isSelected = selectedThemes.has(themeId);
+    if (isSelected) {
+        return 'checked';
+    }
+    
+    // 检查是否有子节点被选中
+    const descendantIds = getDescendantIds(node);
+    const hasSelectedDescendants = descendantIds.some(id => selectedThemes.has(id));
+    
+    return hasSelectedDescendants ? 'indeterminate' : 'unchecked';
+}
+
+/**
+ * 切换主题选择（包含子节点）
+ * @param themeId - 主题ID
+ * @param tree - 主题树
+ * @param selectedThemes - 当前选中的主题集合
+ * @param includeChildren - 是否包含子节点
+ * @returns 新的选中主题集合
+ */
+export function toggleThemeSelection(
+    themeId: string,
+    tree: ThemeTreeNode[],
+    selectedThemes: Set<string>,
+    includeChildren: boolean = true
+): Set<string> {
+    const newSelected = new Set(selectedThemes);
+    const node = findNodeInTree(tree, themeId);
+    
+    if (!node) {
+        return newSelected;
+    }
+    
+    const isSelected = newSelected.has(themeId);
+    
+    if (isSelected) {
+        // 取消选择
+        newSelected.delete(themeId);
+        if (includeChildren) {
+            const descendantIds = getDescendantIds(node);
+            descendantIds.forEach(id => newSelected.delete(id));
+        }
+    } else {
+        // 选择
+        newSelected.add(themeId);
+        if (includeChildren) {
+            const descendantIds = getDescendantIds(node);
+            descendantIds.forEach(id => newSelected.add(id));
+        }
+    }
+    
+    return newSelected;
+}
+
+/**
+ * 过滤主题列表
+ * @param themes - 主题列表
+ * @param filter - 过滤条件
+ * @returns 过滤后的主题列表
+ */
+export function filterThemes(
+    themes: ExtendedTheme[],
+    filter: {
+        status?: 'active' | 'inactive';
+        searchText?: string;
+        hasOverrides?: boolean;
+    }
+): ExtendedTheme[] {
+    return themes.filter(theme => {
+        // 状态过滤
+        if (filter.status && theme.status !== filter.status) {
+            return false;
+        }
+        
+        // 搜索文本过滤
+        if (filter.searchText) {
+            const searchLower = filter.searchText.toLowerCase();
+            const pathLower = theme.path.toLowerCase();
+            const iconLower = (theme.icon || '').toLowerCase();
+            if (!pathLower.includes(searchLower) && !iconLower.includes(searchLower)) {
+                return false;
+            }
+        }
+        
+        return true;
+    });
+}
+
+/**
+ * 排序主题列表
+ * @param themes - 主题列表
+ * @param sortBy - 排序字段
+ * @param order - 排序顺序
+ * @returns 排序后的主题列表
+ */
+export function sortThemes(
+    themes: ExtendedTheme[],
+    sortBy: 'path' | 'status' | 'usageCount' | 'lastUsed' = 'path',
+    order: 'asc' | 'desc' = 'asc'
+): ExtendedTheme[] {
+    const sorted = [...themes].sort((a, b) => {
+        let comparison = 0;
+        
+        switch (sortBy) {
+            case 'path':
+                comparison = a.path.localeCompare(b.path);
+                break;
+            case 'status':
+                comparison = (a.status || '').localeCompare(b.status || '');
+                break;
+            case 'usageCount':
+                comparison = (a.usageCount || 0) - (b.usageCount || 0);
+                break;
+            case 'lastUsed':
+                comparison = (a.lastUsed || 0) - (b.lastUsed || 0);
+                break;
+        }
+        
+        return order === 'asc' ? comparison : -comparison;
+    });
+    
+    return sorted;
+}
