@@ -10107,7 +10107,7 @@ function getSvgIconUtilityClass(slot) {
   return generateUtilityClass("MuiSvgIcon", slot);
 }
 generateUtilityClasses("MuiSvgIcon", ["root", "colorPrimary", "colorSecondary", "colorAction", "colorError", "colorDisabled", "fontSizeInherit", "fontSizeSmall", "fontSizeMedium", "fontSizeLarge"]);
-const useUtilityClasses$R = (ownerState) => {
+const useUtilityClasses$T = (ownerState) => {
   const {
     color: color2,
     fontSize,
@@ -10246,7 +10246,7 @@ const SvgIcon = /* @__PURE__ */ D(function SvgIcon2(inProps, ref) {
   if (!inheritViewBox) {
     more.viewBox = viewBox;
   }
-  const classes = useUtilityClasses$R(ownerState);
+  const classes = useUtilityClasses$T(ownerState);
   return /* @__PURE__ */ u(SvgIconRoot, {
     as: component,
     className: clsx(classes.root, className),
@@ -10954,7 +10954,7 @@ function getCollapseUtilityClass(slot) {
   return generateUtilityClass("MuiCollapse", slot);
 }
 generateUtilityClasses("MuiCollapse", ["root", "horizontal", "vertical", "entered", "hidden", "wrapper", "wrapperInner"]);
-const useUtilityClasses$Q = (ownerState) => {
+const useUtilityClasses$S = (ownerState) => {
   const {
     orientation,
     classes
@@ -11080,7 +11080,7 @@ const Collapse = /* @__PURE__ */ D(function Collapse2(inProps, ref) {
     orientation,
     collapsedSize: collapsedSizeProp
   };
-  const classes = useUtilityClasses$Q(ownerState);
+  const classes = useUtilityClasses$S(ownerState);
   const theme2 = useTheme();
   const timer = useTimeout();
   const wrapperRef = A$1(null);
@@ -11241,7 +11241,7 @@ function getPaperUtilityClass(slot) {
   return generateUtilityClass("MuiPaper", slot);
 }
 generateUtilityClasses("MuiPaper", ["root", "rounded", "outlined", "elevation", "elevation0", "elevation1", "elevation2", "elevation3", "elevation4", "elevation5", "elevation6", "elevation7", "elevation8", "elevation9", "elevation10", "elevation11", "elevation12", "elevation13", "elevation14", "elevation15", "elevation16", "elevation17", "elevation18", "elevation19", "elevation20", "elevation21", "elevation22", "elevation23", "elevation24"]);
-const useUtilityClasses$P = (ownerState) => {
+const useUtilityClasses$R = (ownerState) => {
   const {
     square,
     elevation,
@@ -11313,7 +11313,7 @@ const Paper = /* @__PURE__ */ D(function Paper2(inProps, ref) {
     square,
     variant
   };
-  const classes = useUtilityClasses$P(ownerState);
+  const classes = useUtilityClasses$R(ownerState);
   return /* @__PURE__ */ u(PaperRoot, {
     as: component,
     ownerState,
@@ -11492,7 +11492,7 @@ function getAccordionUtilityClass(slot) {
   return generateUtilityClass("MuiAccordion", slot);
 }
 const accordionClasses = generateUtilityClasses("MuiAccordion", ["root", "heading", "rounded", "expanded", "disabled", "gutters", "region"]);
-const useUtilityClasses$O = (ownerState) => {
+const useUtilityClasses$Q = (ownerState) => {
   const {
     classes,
     square,
@@ -11651,7 +11651,7 @@ const Accordion = /* @__PURE__ */ D(function Accordion2(inProps, ref) {
     disableGutters,
     expanded
   };
-  const classes = useUtilityClasses$O(ownerState);
+  const classes = useUtilityClasses$Q(ownerState);
   const backwardCompatibleSlots = {
     transition: TransitionComponentProp,
     ...slots
@@ -11723,7 +11723,7 @@ function getAccordionDetailsUtilityClass(slot) {
   return generateUtilityClass("MuiAccordionDetails", slot);
 }
 generateUtilityClasses("MuiAccordionDetails", ["root"]);
-const useUtilityClasses$N = (ownerState) => {
+const useUtilityClasses$P = (ownerState) => {
   const {
     classes
   } = ownerState;
@@ -11750,7 +11750,7 @@ const AccordionDetails = /* @__PURE__ */ D(function AccordionDetails2(inProps, r
     ...other
   } = props;
   const ownerState = props;
-  const classes = useUtilityClasses$N(ownerState);
+  const classes = useUtilityClasses$P(ownerState);
   return /* @__PURE__ */ u(AccordionDetailsRoot, {
     className: clsx(classes.root, className),
     ref,
@@ -12146,7 +12146,7 @@ function getButtonBaseUtilityClass(slot) {
   return generateUtilityClass("MuiButtonBase", slot);
 }
 const buttonBaseClasses = generateUtilityClasses("MuiButtonBase", ["root", "disabled", "focusVisible"]);
-const useUtilityClasses$M = (ownerState) => {
+const useUtilityClasses$O = (ownerState) => {
   const {
     disabled,
     focusVisible,
@@ -12362,7 +12362,7 @@ const ButtonBase = /* @__PURE__ */ D(function ButtonBase2(inProps, ref) {
     tabIndex,
     focusVisible
   };
-  const classes = useUtilityClasses$M(ownerState);
+  const classes = useUtilityClasses$O(ownerState);
   return /* @__PURE__ */ u(ButtonBaseRoot, {
     as: ComponentProp,
     className: clsx(classes.root, className),
@@ -12407,7 +12407,7 @@ function getAccordionSummaryUtilityClass(slot) {
   return generateUtilityClass("MuiAccordionSummary", slot);
 }
 const accordionSummaryClasses = generateUtilityClasses("MuiAccordionSummary", ["root", "expanded", "focusVisible", "disabled", "gutters", "contentGutters", "content", "expandIconWrapper"]);
-const useUtilityClasses$L = (ownerState) => {
+const useUtilityClasses$N = (ownerState) => {
   const {
     classes,
     expanded,
@@ -12529,7 +12529,7 @@ const AccordionSummary = /* @__PURE__ */ D(function AccordionSummary2(inProps, r
     disabled,
     disableGutters
   };
-  const classes = useUtilityClasses$L(ownerState);
+  const classes = useUtilityClasses$N(ownerState);
   const externalForwardedProps = {
     slots,
     slotProps
@@ -12635,7 +12635,7 @@ const rotateAnimation = typeof circularRotateKeyframe !== "string" ? css`
 const dashAnimation = typeof circularDashKeyframe !== "string" ? css`
         animation: ${circularDashKeyframe} 1.4s ease-in-out infinite;
       ` : null;
-const useUtilityClasses$K = (ownerState) => {
+const useUtilityClasses$M = (ownerState) => {
   const {
     classes,
     variant,
@@ -12757,7 +12757,7 @@ const CircularProgress = /* @__PURE__ */ D(function CircularProgress2(inProps, r
     value,
     variant
   };
-  const classes = useUtilityClasses$K(ownerState);
+  const classes = useUtilityClasses$M(ownerState);
   const circleStyle = {};
   const rootStyle = {};
   const rootProps = {};
@@ -12802,7 +12802,7 @@ function getIconButtonUtilityClass(slot) {
   return generateUtilityClass("MuiIconButton", slot);
 }
 const iconButtonClasses = generateUtilityClasses("MuiIconButton", ["root", "disabled", "colorInherit", "colorPrimary", "colorSecondary", "colorError", "colorInfo", "colorSuccess", "colorWarning", "edgeStart", "edgeEnd", "sizeSmall", "sizeMedium", "sizeLarge", "loading", "loadingIndicator", "loadingWrapper"]);
-const useUtilityClasses$J = (ownerState) => {
+const useUtilityClasses$L = (ownerState) => {
   const {
     classes,
     disabled,
@@ -12987,7 +12987,7 @@ const IconButton = /* @__PURE__ */ D(function IconButton2(inProps, ref) {
     loadingIndicator,
     size
   };
-  const classes = useUtilityClasses$J(ownerState);
+  const classes = useUtilityClasses$L(ownerState);
   return /* @__PURE__ */ u(IconButtonRoot, {
     id: loading ? loadingId : idProp,
     className: clsx(classes.root, className),
@@ -13030,7 +13030,7 @@ const v6Colors = {
   textDisabled: true
 };
 const extendSxProp = internal_createExtendSxProp();
-const useUtilityClasses$I = (ownerState) => {
+const useUtilityClasses$K = (ownerState) => {
   const {
     align,
     gutterBottom,
@@ -13170,7 +13170,7 @@ const Typography = /* @__PURE__ */ D(function Typography2(inProps, ref) {
     variantMapping
   };
   const Component = component || (paragraph ? "p" : variantMapping[variant] || defaultVariantMapping[variant]) || "span";
-  const classes = useUtilityClasses$I(ownerState);
+  const classes = useUtilityClasses$K(ownerState);
   return /* @__PURE__ */ u(TypographyRoot, {
     as: Component,
     ref,
@@ -15552,7 +15552,7 @@ function resolveAnchorEl$1(anchorEl) {
 function isHTMLElement$1(element) {
   return element.nodeType !== void 0;
 }
-const useUtilityClasses$H = (ownerState) => {
+const useUtilityClasses$J = (ownerState) => {
   const {
     classes
   } = ownerState;
@@ -15653,7 +15653,7 @@ const PopperTooltip = /* @__PURE__ */ D(function PopperTooltip2(props, forwarded
   if (TransitionProps !== null) {
     childProps.TransitionProps = TransitionProps;
   }
-  const classes = useUtilityClasses$H(props);
+  const classes = useUtilityClasses$J(props);
   const Root = slots.root ?? "div";
   const rootProps = useSlotProps({
     elementType: Root,
@@ -15800,7 +15800,7 @@ function getListSubheaderUtilityClass(slot) {
   return generateUtilityClass("MuiListSubheader", slot);
 }
 generateUtilityClasses("MuiListSubheader", ["root", "colorPrimary", "colorInherit", "gutters", "inset", "sticky"]);
-const useUtilityClasses$G = (ownerState) => {
+const useUtilityClasses$I = (ownerState) => {
   const {
     classes,
     color: color2,
@@ -15895,7 +15895,7 @@ const ListSubheader = /* @__PURE__ */ D(function ListSubheader2(inProps, ref) {
     disableSticky,
     inset
   };
-  const classes = useUtilityClasses$G(ownerState);
+  const classes = useUtilityClasses$I(ownerState);
   return /* @__PURE__ */ u(ListSubheaderRoot, {
     as: component,
     className: clsx(classes.root, className),
@@ -15914,7 +15914,7 @@ function getChipUtilityClass(slot) {
   return generateUtilityClass("MuiChip", slot);
 }
 const chipClasses = generateUtilityClasses("MuiChip", ["root", "sizeSmall", "sizeMedium", "colorDefault", "colorError", "colorInfo", "colorPrimary", "colorSecondary", "colorSuccess", "colorWarning", "disabled", "clickable", "clickableColorPrimary", "clickableColorSecondary", "deletable", "deletableColorPrimary", "deletableColorSecondary", "outlined", "filled", "outlinedPrimary", "outlinedSecondary", "filledPrimary", "filledSecondary", "avatar", "avatarSmall", "avatarMedium", "avatarColorPrimary", "avatarColorSecondary", "icon", "iconSmall", "iconMedium", "iconColorPrimary", "iconColorSecondary", "label", "labelSmall", "labelMedium", "deleteIcon", "deleteIconSmall", "deleteIconMedium", "deleteIconColorPrimary", "deleteIconColorSecondary", "deleteIconOutlinedColorPrimary", "deleteIconOutlinedColorSecondary", "deleteIconFilledColorPrimary", "deleteIconFilledColorSecondary", "focusVisible"]);
-const useUtilityClasses$F = (ownerState) => {
+const useUtilityClasses$H = (ownerState) => {
   const {
     classes,
     disabled,
@@ -16308,7 +16308,7 @@ const Chip = /* @__PURE__ */ D(function Chip2(inProps, ref) {
     clickable,
     variant
   };
-  const classes = useUtilityClasses$F(ownerState);
+  const classes = useUtilityClasses$H(ownerState);
   const moreProps = component === ButtonBase ? {
     component: ComponentProp || "div",
     focusVisibleClassName: classes.focusVisible,
@@ -16612,7 +16612,7 @@ const inputOverridesResolver = (props, styles2) => {
   } = props;
   return [styles2.input, ownerState.size === "small" && styles2.inputSizeSmall, ownerState.multiline && styles2.inputMultiline, ownerState.type === "search" && styles2.inputTypeSearch, ownerState.startAdornment && styles2.inputAdornedStart, ownerState.endAdornment && styles2.inputAdornedEnd, ownerState.hiddenLabel && styles2.inputHiddenLabel];
 };
-const useUtilityClasses$E = (ownerState) => {
+const useUtilityClasses$G = (ownerState) => {
   const {
     classes,
     color: color2,
@@ -16998,7 +16998,7 @@ const InputBase = /* @__PURE__ */ D(function InputBase2(inProps, ref) {
     startAdornment,
     type
   };
-  const classes = useUtilityClasses$E(ownerState);
+  const classes = useUtilityClasses$G(ownerState);
   const Root = slots.root || components.Root || InputBaseRoot;
   const rootProps = slotProps.root || componentsProps.root || {};
   const Input3 = slots.input || components.Input || InputBaseInput;
@@ -17091,7 +17091,7 @@ function getAutocompleteUtilityClass(slot) {
 }
 const autocompleteClasses = generateUtilityClasses("MuiAutocomplete", ["root", "expanded", "fullWidth", "focused", "focusVisible", "tag", "tagSizeSmall", "tagSizeMedium", "hasPopupIcon", "hasClearIcon", "inputRoot", "input", "inputFocused", "endAdornment", "clearIndicator", "popupIndicator", "popupIndicatorOpen", "popper", "popperDisablePortal", "paper", "listbox", "loading", "noOptions", "option", "groupLabel", "groupUl"]);
 var _ClearIcon, _ArrowDropDownIcon;
-const useUtilityClasses$D = (ownerState) => {
+const useUtilityClasses$F = (ownerState) => {
   const {
     classes,
     disablePortal,
@@ -17580,7 +17580,7 @@ const Autocomplete = /* @__PURE__ */ D(function Autocomplete2(inProps, ref) {
     popupOpen,
     size
   };
-  const classes = useUtilityClasses$D(ownerState);
+  const classes = useUtilityClasses$F(ownerState);
   const externalForwardedProps = {
     slots: {
       paper: PaperComponentProp,
@@ -17911,7 +17911,7 @@ function getBackdropUtilityClass(slot) {
   return generateUtilityClass("MuiBackdrop", slot);
 }
 generateUtilityClasses("MuiBackdrop", ["root", "invisible"]);
-const useUtilityClasses$C = (ownerState) => {
+const useUtilityClasses$E = (ownerState) => {
   const {
     classes,
     invisible
@@ -17974,7 +17974,7 @@ const Backdrop = /* @__PURE__ */ D(function Backdrop2(inProps, ref) {
     component,
     invisible
   };
-  const classes = useUtilityClasses$C(ownerState);
+  const classes = useUtilityClasses$E(ownerState);
   const backwardCompatibleSlots = {
     transition: TransitionComponentProp,
     root: components.Root,
@@ -18028,7 +18028,7 @@ function getButtonUtilityClass(slot) {
 const buttonClasses = generateUtilityClasses("MuiButton", ["root", "text", "textInherit", "textPrimary", "textSecondary", "textSuccess", "textError", "textInfo", "textWarning", "outlined", "outlinedInherit", "outlinedPrimary", "outlinedSecondary", "outlinedSuccess", "outlinedError", "outlinedInfo", "outlinedWarning", "contained", "containedInherit", "containedPrimary", "containedSecondary", "containedSuccess", "containedError", "containedInfo", "containedWarning", "disableElevation", "focusVisible", "disabled", "colorInherit", "colorPrimary", "colorSecondary", "colorSuccess", "colorError", "colorInfo", "colorWarning", "textSizeSmall", "textSizeMedium", "textSizeLarge", "outlinedSizeSmall", "outlinedSizeMedium", "outlinedSizeLarge", "containedSizeSmall", "containedSizeMedium", "containedSizeLarge", "sizeMedium", "sizeSmall", "sizeLarge", "fullWidth", "startIcon", "endIcon", "icon", "iconSizeSmall", "iconSizeMedium", "iconSizeLarge", "loading", "loadingWrapper", "loadingIconPlaceholder", "loadingIndicator", "loadingPositionCenter", "loadingPositionStart", "loadingPositionEnd"]);
 const ButtonGroupContext = /* @__PURE__ */ Q$1({});
 const ButtonGroupButtonContext = /* @__PURE__ */ Q$1(void 0);
-const useUtilityClasses$B = (ownerState) => {
+const useUtilityClasses$D = (ownerState) => {
   const {
     color: color2,
     disableElevation,
@@ -18528,7 +18528,7 @@ const Button = /* @__PURE__ */ D(function Button2(inProps, ref) {
     type,
     variant
   };
-  const classes = useUtilityClasses$B(ownerState);
+  const classes = useUtilityClasses$D(ownerState);
   const startIcon = (startIconProp || loading && loadingPosition === "start") && /* @__PURE__ */ u(ButtonStartIcon, {
     className: classes.startIcon,
     ownerState,
@@ -18579,7 +18579,7 @@ function getSwitchBaseUtilityClass(slot) {
   return generateUtilityClass("PrivateSwitchBase", slot);
 }
 generateUtilityClasses("PrivateSwitchBase", ["root", "checked", "disabled", "input", "edgeStart", "edgeEnd"]);
-const useUtilityClasses$A = (ownerState) => {
+const useUtilityClasses$C = (ownerState) => {
   const {
     classes,
     checked,
@@ -18719,7 +18719,7 @@ const SwitchBase = /* @__PURE__ */ D(function SwitchBase2(props, ref) {
     disableFocusRipple,
     edge
   };
-  const classes = useUtilityClasses$A(ownerState);
+  const classes = useUtilityClasses$C(ownerState);
   const externalForwardedProps = {
     slots,
     slotProps: {
@@ -18793,20 +18793,20 @@ const SwitchBase = /* @__PURE__ */ D(function SwitchBase2(props, ref) {
     }), checked ? checkedIcon : icon]
   });
 });
-const CheckBoxOutlineBlankIcon = createSvgIcon(/* @__PURE__ */ u("path", {
+const CheckBoxOutlineBlankIcon$1 = createSvgIcon(/* @__PURE__ */ u("path", {
   d: "M19 5v14H5V5h14m0-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2z"
 }));
-const CheckBoxIcon = createSvgIcon(/* @__PURE__ */ u("path", {
+const CheckBoxIcon$1 = createSvgIcon(/* @__PURE__ */ u("path", {
   d: "M19 3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.11 0 2-.9 2-2V5c0-1.1-.89-2-2-2zm-9 14l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"
 }));
-const IndeterminateCheckBoxIcon = createSvgIcon(/* @__PURE__ */ u("path", {
+const IndeterminateCheckBoxIcon$1 = createSvgIcon(/* @__PURE__ */ u("path", {
   d: "M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-2 10H7v-2h10v2z"
 }));
 function getCheckboxUtilityClass(slot) {
   return generateUtilityClass("MuiCheckbox", slot);
 }
 const checkboxClasses = generateUtilityClasses("MuiCheckbox", ["root", "checked", "disabled", "indeterminate", "colorPrimary", "colorSecondary", "sizeSmall", "sizeMedium"]);
-const useUtilityClasses$z = (ownerState) => {
+const useUtilityClasses$B = (ownerState) => {
   const {
     classes,
     indeterminate,
@@ -18884,9 +18884,9 @@ const CheckboxRoot = styled(SwitchBase, {
     }
   }]
 })));
-const defaultCheckedIcon$1 = /* @__PURE__ */ u(CheckBoxIcon, {});
-const defaultIcon$1 = /* @__PURE__ */ u(CheckBoxOutlineBlankIcon, {});
-const defaultIndeterminateIcon = /* @__PURE__ */ u(IndeterminateCheckBoxIcon, {});
+const defaultCheckedIcon$1 = /* @__PURE__ */ u(CheckBoxIcon$1, {});
+const defaultIcon$1 = /* @__PURE__ */ u(CheckBoxOutlineBlankIcon$1, {});
+const defaultIndeterminateIcon = /* @__PURE__ */ u(IndeterminateCheckBoxIcon$1, {});
 const Checkbox = /* @__PURE__ */ D(function Checkbox2(inProps, ref) {
   const props = useDefaultProps({
     props: inProps,
@@ -18915,7 +18915,7 @@ const Checkbox = /* @__PURE__ */ D(function Checkbox2(inProps, ref) {
     indeterminate,
     size
   };
-  const classes = useUtilityClasses$z(ownerState);
+  const classes = useUtilityClasses$B(ownerState);
   const externalInputProps = slotProps.input ?? inputProps;
   const [RootSlot, rootSlotProps] = useSlot("root", {
     ref,
@@ -19634,7 +19634,7 @@ function getModalUtilityClass(slot) {
   return generateUtilityClass("MuiModal", slot);
 }
 generateUtilityClasses("MuiModal", ["root", "hidden", "backdrop"]);
-const useUtilityClasses$y = (ownerState) => {
+const useUtilityClasses$A = (ownerState) => {
   const {
     open,
     exited,
@@ -19741,7 +19741,7 @@ const Modal = /* @__PURE__ */ D(function Modal2(inProps, ref) {
     ...propsWithDefaults,
     exited
   };
-  const classes = useUtilityClasses$y(ownerState);
+  const classes = useUtilityClasses$A(ownerState);
   const childProps = {};
   if (children.props.tabIndex === void 0) {
     childProps.tabIndex = "-1";
@@ -19831,7 +19831,7 @@ const DialogBackdrop = styled(Backdrop, {
   // Improve scrollable dialog support.
   zIndex: -1
 });
-const useUtilityClasses$x = (ownerState) => {
+const useUtilityClasses$z = (ownerState) => {
   const {
     classes,
     scroll,
@@ -20034,7 +20034,7 @@ const Dialog = /* @__PURE__ */ D(function Dialog2(inProps, ref) {
     maxWidth: maxWidth2,
     scroll
   };
-  const classes = useUtilityClasses$x(ownerState);
+  const classes = useUtilityClasses$z(ownerState);
   const backdropClick = A$1();
   const handleMouseDown = (event) => {
     backdropClick.current = event.target === event.currentTarget;
@@ -20153,7 +20153,7 @@ function getDialogActionsUtilityClass(slot) {
   return generateUtilityClass("MuiDialogActions", slot);
 }
 generateUtilityClasses("MuiDialogActions", ["root", "spacing"]);
-const useUtilityClasses$w = (ownerState) => {
+const useUtilityClasses$y = (ownerState) => {
   const {
     classes,
     disableSpacing
@@ -20203,7 +20203,7 @@ const DialogActions = /* @__PURE__ */ D(function DialogActions2(inProps, ref) {
     ...props,
     disableSpacing
   };
-  const classes = useUtilityClasses$w(ownerState);
+  const classes = useUtilityClasses$y(ownerState);
   return /* @__PURE__ */ u(DialogActionsRoot, {
     className: clsx(classes.root, className),
     ownerState,
@@ -20219,7 +20219,7 @@ function getDialogTitleUtilityClass(slot) {
   return generateUtilityClass("MuiDialogTitle", slot);
 }
 const dialogTitleClasses = generateUtilityClasses("MuiDialogTitle", ["root"]);
-const useUtilityClasses$v = (ownerState) => {
+const useUtilityClasses$x = (ownerState) => {
   const {
     classes,
     dividers
@@ -20280,7 +20280,7 @@ const DialogContent = /* @__PURE__ */ D(function DialogContent2(inProps, ref) {
     ...props,
     dividers
   };
-  const classes = useUtilityClasses$v(ownerState);
+  const classes = useUtilityClasses$x(ownerState);
   return /* @__PURE__ */ u(DialogContentRoot, {
     className: clsx(classes.root, className),
     ownerState,
@@ -20288,7 +20288,7 @@ const DialogContent = /* @__PURE__ */ D(function DialogContent2(inProps, ref) {
     ...other
   });
 });
-const useUtilityClasses$u = (ownerState) => {
+const useUtilityClasses$w = (ownerState) => {
   const {
     classes
   } = ownerState;
@@ -20315,7 +20315,7 @@ const DialogTitle = /* @__PURE__ */ D(function DialogTitle2(inProps, ref) {
     ...other
   } = props;
   const ownerState = props;
-  const classes = useUtilityClasses$u(ownerState);
+  const classes = useUtilityClasses$w(ownerState);
   const {
     titleId = idProp
   } = x$1(DialogContext);
@@ -20332,8 +20332,8 @@ const DialogTitle = /* @__PURE__ */ D(function DialogTitle2(inProps, ref) {
 function getDividerUtilityClass(slot) {
   return generateUtilityClass("MuiDivider", slot);
 }
-generateUtilityClasses("MuiDivider", ["root", "absolute", "fullWidth", "inset", "middle", "flexItem", "light", "vertical", "withChildren", "withChildrenVertical", "textAlignRight", "textAlignLeft", "wrapper", "wrapperVertical"]);
-const useUtilityClasses$t = (ownerState) => {
+const dividerClasses = generateUtilityClasses("MuiDivider", ["root", "absolute", "fullWidth", "inset", "middle", "flexItem", "light", "vertical", "withChildren", "withChildrenVertical", "textAlignRight", "textAlignLeft", "wrapper", "wrapperVertical"]);
+const useUtilityClasses$v = (ownerState) => {
   const {
     absolute,
     children,
@@ -20547,7 +20547,7 @@ const Divider = /* @__PURE__ */ D(function Divider2(inProps, ref) {
     textAlign,
     variant
   };
-  const classes = useUtilityClasses$t(ownerState);
+  const classes = useUtilityClasses$v(ownerState);
   return /* @__PURE__ */ u(DividerRoot, {
     as: component,
     className: clsx(classes.root, className),
@@ -20566,7 +20566,7 @@ const Divider = /* @__PURE__ */ D(function Divider2(inProps, ref) {
 if (Divider) {
   Divider.muiSkipListHighlight = true;
 }
-const useUtilityClasses$s = (ownerState) => {
+const useUtilityClasses$u = (ownerState) => {
   const {
     classes,
     disableUnderline,
@@ -20845,7 +20845,7 @@ const FilledInput = /* @__PURE__ */ D(function FilledInput2(inProps, ref) {
     multiline,
     type
   };
-  const classes = useUtilityClasses$s(props);
+  const classes = useUtilityClasses$u(props);
   const filledInputComponentsProps = {
     root: {
       ownerState
@@ -20877,7 +20877,7 @@ function getFormControlUtilityClasses(slot) {
   return generateUtilityClass("MuiFormControl", slot);
 }
 generateUtilityClasses("MuiFormControl", ["root", "marginNone", "marginNormal", "marginDense", "fullWidth", "disabled"]);
-const useUtilityClasses$r = (ownerState) => {
+const useUtilityClasses$t = (ownerState) => {
   const {
     classes,
     margin: margin2,
@@ -20967,7 +20967,7 @@ const FormControl = /* @__PURE__ */ D(function FormControl2(inProps, ref) {
     size,
     variant
   };
-  const classes = useUtilityClasses$r(ownerState);
+  const classes = useUtilityClasses$t(ownerState);
   const [adornedStart, setAdornedStart] = d(() => {
     let initialAdornedStart = false;
     if (children) {
@@ -21051,7 +21051,7 @@ function getFormControlLabelUtilityClasses(slot) {
   return generateUtilityClass("MuiFormControlLabel", slot);
 }
 const formControlLabelClasses = generateUtilityClasses("MuiFormControlLabel", ["root", "labelPlacementStart", "labelPlacementTop", "labelPlacementBottom", "disabled", "label", "error", "required", "asterisk"]);
-const useUtilityClasses$q = (ownerState) => {
+const useUtilityClasses$s = (ownerState) => {
   const {
     classes,
     disabled,
@@ -21186,7 +21186,7 @@ const FormControlLabel = /* @__PURE__ */ D(function FormControlLabel2(inProps, r
     required,
     error: fcs.error
   };
-  const classes = useUtilityClasses$q(ownerState);
+  const classes = useUtilityClasses$s(ownerState);
   const externalForwardedProps = {
     slots,
     slotProps: {
@@ -21227,7 +21227,7 @@ function getFormGroupUtilityClass(slot) {
   return generateUtilityClass("MuiFormGroup", slot);
 }
 generateUtilityClasses("MuiFormGroup", ["root", "row", "error"]);
-const useUtilityClasses$p = (ownerState) => {
+const useUtilityClasses$r = (ownerState) => {
   const {
     classes,
     row,
@@ -21281,7 +21281,7 @@ const FormGroup = /* @__PURE__ */ D(function FormGroup2(inProps, ref) {
     row,
     error: fcs.error
   };
-  const classes = useUtilityClasses$p(ownerState);
+  const classes = useUtilityClasses$r(ownerState);
   return /* @__PURE__ */ u(FormGroupRoot, {
     className: clsx(classes.root, className),
     ownerState,
@@ -21294,7 +21294,7 @@ function getFormHelperTextUtilityClasses(slot) {
 }
 const formHelperTextClasses = generateUtilityClasses("MuiFormHelperText", ["root", "error", "disabled", "sizeSmall", "sizeMedium", "contained", "focused", "filled", "required"]);
 var _span$2;
-const useUtilityClasses$o = (ownerState) => {
+const useUtilityClasses$q = (ownerState) => {
   const {
     classes,
     contained,
@@ -21389,7 +21389,7 @@ const FormHelperText = /* @__PURE__ */ D(function FormHelperText2(inProps, ref) 
     required: fcs.required
   };
   delete ownerState.ownerState;
-  const classes = useUtilityClasses$o(ownerState);
+  const classes = useUtilityClasses$q(ownerState);
   return /* @__PURE__ */ u(FormHelperTextRoot, {
     as: component,
     className: clsx(classes.root, className),
@@ -21410,7 +21410,7 @@ function getFormLabelUtilityClasses(slot) {
   return generateUtilityClass("MuiFormLabel", slot);
 }
 const formLabelClasses = generateUtilityClasses("MuiFormLabel", ["root", "colorSecondary", "focused", "disabled", "error", "filled", "required", "asterisk"]);
-const useUtilityClasses$n = (ownerState) => {
+const useUtilityClasses$p = (ownerState) => {
   const {
     classes,
     color: color2,
@@ -21507,7 +21507,7 @@ const FormLabel = /* @__PURE__ */ D(function FormLabel2(inProps, ref) {
     focused: fcs.focused,
     required: fcs.required
   };
-  const classes = useUtilityClasses$n(ownerState);
+  const classes = useUtilityClasses$p(ownerState);
   return /* @__PURE__ */ u(FormLabelRoot, {
     as: component,
     ownerState,
@@ -21682,7 +21682,7 @@ const Grow = /* @__PURE__ */ D(function Grow2(props, ref) {
 if (Grow) {
   Grow.muiSupportAuto = true;
 }
-const useUtilityClasses$m = (ownerState) => {
+const useUtilityClasses$o = (ownerState) => {
   const {
     classes,
     disableUnderline
@@ -21815,7 +21815,7 @@ const Input = /* @__PURE__ */ D(function Input2(inProps, ref) {
     type = "text",
     ...other
   } = props;
-  const classes = useUtilityClasses$m(props);
+  const classes = useUtilityClasses$o(props);
   const ownerState = {
     disableUnderline
   };
@@ -21847,7 +21847,7 @@ function getInputLabelUtilityClasses(slot) {
   return generateUtilityClass("MuiInputLabel", slot);
 }
 generateUtilityClasses("MuiInputLabel", ["root", "focused", "disabled", "error", "required", "asterisk", "formControl", "sizeSmall", "shrink", "animated", "standard", "filled", "outlined"]);
-const useUtilityClasses$l = (ownerState) => {
+const useUtilityClasses$n = (ownerState) => {
   const {
     classes,
     formControl,
@@ -22036,7 +22036,7 @@ const InputLabel = /* @__PURE__ */ D(function InputLabel2(inProps, ref) {
     required: fcs.required,
     focused: fcs.focused
   };
-  const classes = useUtilityClasses$l(ownerState);
+  const classes = useUtilityClasses$n(ownerState);
   return /* @__PURE__ */ u(InputLabelRoot, {
     "data-shrink": shrink,
     ref,
@@ -22051,7 +22051,7 @@ function getListUtilityClass(slot) {
   return generateUtilityClass("MuiList", slot);
 }
 generateUtilityClasses("MuiList", ["root", "padding", "dense", "subheader"]);
-const useUtilityClasses$k = (ownerState) => {
+const useUtilityClasses$m = (ownerState) => {
   const {
     classes,
     disablePadding,
@@ -22117,7 +22117,7 @@ const List$1 = /* @__PURE__ */ D(function List(inProps, ref) {
     dense,
     disablePadding
   };
-  const classes = useUtilityClasses$k(ownerState);
+  const classes = useUtilityClasses$m(ownerState);
   return /* @__PURE__ */ u(ListContext.Provider, {
     value: context,
     children: /* @__PURE__ */ u(ListRoot, {
@@ -22134,13 +22134,13 @@ function getListItemButtonUtilityClass(slot) {
   return generateUtilityClass("MuiListItemButton", slot);
 }
 const listItemButtonClasses = generateUtilityClasses("MuiListItemButton", ["root", "focusVisible", "dense", "alignItemsFlexStart", "disabled", "divider", "gutters", "selected"]);
-const overridesResolver = (props, styles2) => {
+const overridesResolver$1 = (props, styles2) => {
   const {
     ownerState
   } = props;
   return [styles2.root, ownerState.dense && styles2.dense, ownerState.alignItems === "flex-start" && styles2.alignItemsFlexStart, ownerState.divider && styles2.divider, !ownerState.disableGutters && styles2.gutters];
 };
-const useUtilityClasses$j = (ownerState) => {
+const useUtilityClasses$l = (ownerState) => {
   const {
     alignItems,
     classes,
@@ -22163,7 +22163,7 @@ const ListItemButtonRoot = styled(ButtonBase, {
   shouldForwardProp: (prop) => rootShouldForwardProp(prop) || prop === "classes",
   name: "MuiListItemButton",
   slot: "Root",
-  overridesResolver
+  overridesResolver: overridesResolver$1
 })(memoTheme(({
   theme: theme2
 }) => ({
@@ -22281,7 +22281,7 @@ const ListItemButton = /* @__PURE__ */ D(function ListItemButton2(inProps, ref) 
     divider,
     selected
   };
-  const classes = useUtilityClasses$j(ownerState);
+  const classes = useUtilityClasses$l(ownerState);
   const handleRef = useForkRef(listItemRef, ref);
   return /* @__PURE__ */ u(ListContext.Provider, {
     value: childContext,
@@ -22298,11 +22298,12 @@ const ListItemButton = /* @__PURE__ */ D(function ListItemButton2(inProps, ref) 
     })
   });
 });
+const listItemIconClasses = generateUtilityClasses("MuiListItemIcon", ["root", "alignItemsFlexStart"]);
 function getListItemTextUtilityClass(slot) {
   return generateUtilityClass("MuiListItemText", slot);
 }
 const listItemTextClasses = generateUtilityClasses("MuiListItemText", ["root", "multiline", "dense", "inset", "primary", "secondary"]);
-const useUtilityClasses$i = (ownerState) => {
+const useUtilityClasses$k = (ownerState) => {
   const {
     classes,
     inset,
@@ -22389,7 +22390,7 @@ const ListItemText = /* @__PURE__ */ D(function ListItemText2(inProps, ref) {
     secondary: !!secondary,
     dense
   };
-  const classes = useUtilityClasses$i(ownerState);
+  const classes = useUtilityClasses$k(ownerState);
   const externalForwardedProps = {
     slots,
     slotProps: {
@@ -22666,7 +22667,7 @@ function getTransformOriginValue(transformOrigin) {
 function resolveAnchorEl(anchorEl) {
   return typeof anchorEl === "function" ? anchorEl() : anchorEl;
 }
-const useUtilityClasses$h = (ownerState) => {
+const useUtilityClasses$j = (ownerState) => {
   const {
     classes
   } = ownerState;
@@ -22744,7 +22745,7 @@ const Popover$1 = /* @__PURE__ */ D(function Popover(inProps, ref) {
     transitionDuration: transitionDurationProp,
     TransitionProps
   };
-  const classes = useUtilityClasses$h(ownerState);
+  const classes = useUtilityClasses$j(ownerState);
   const getAnchorOffset = q$1(() => {
     if (anchorReference === "anchorPosition") {
       return anchorPosition;
@@ -22966,7 +22967,7 @@ const LTR_ORIGIN = {
   vertical: "top",
   horizontal: "left"
 };
-const useUtilityClasses$g = (ownerState) => {
+const useUtilityClasses$i = (ownerState) => {
   const {
     classes
   } = ownerState;
@@ -23037,7 +23038,7 @@ const Menu = /* @__PURE__ */ D(function Menu2(inProps, ref) {
     TransitionProps,
     variant
   };
-  const classes = useUtilityClasses$g(ownerState);
+  const classes = useUtilityClasses$i(ownerState);
   const autoFocusItem = autoFocus && !disableAutoFocusItem && open;
   const menuListActionsRef = A$1(null);
   const handleEntering = (element, isAppearing) => {
@@ -23152,11 +23153,200 @@ const Menu = /* @__PURE__ */ D(function Menu2(inProps, ref) {
     })
   });
 });
+function getMenuItemUtilityClass(slot) {
+  return generateUtilityClass("MuiMenuItem", slot);
+}
+const menuItemClasses = generateUtilityClasses("MuiMenuItem", ["root", "focusVisible", "dense", "disabled", "divider", "gutters", "selected"]);
+const overridesResolver = (props, styles2) => {
+  const {
+    ownerState
+  } = props;
+  return [styles2.root, ownerState.dense && styles2.dense, ownerState.divider && styles2.divider, !ownerState.disableGutters && styles2.gutters];
+};
+const useUtilityClasses$h = (ownerState) => {
+  const {
+    disabled,
+    dense,
+    divider,
+    disableGutters,
+    selected,
+    classes
+  } = ownerState;
+  const slots = {
+    root: ["root", dense && "dense", disabled && "disabled", !disableGutters && "gutters", divider && "divider", selected && "selected"]
+  };
+  const composedClasses = composeClasses(slots, getMenuItemUtilityClass, classes);
+  return {
+    ...classes,
+    ...composedClasses
+  };
+};
+const MenuItemRoot = styled(ButtonBase, {
+  shouldForwardProp: (prop) => rootShouldForwardProp(prop) || prop === "classes",
+  name: "MuiMenuItem",
+  slot: "Root",
+  overridesResolver
+})(memoTheme(({
+  theme: theme2
+}) => ({
+  ...theme2.typography.body1,
+  display: "flex",
+  justifyContent: "flex-start",
+  alignItems: "center",
+  position: "relative",
+  textDecoration: "none",
+  minHeight: 48,
+  paddingTop: 6,
+  paddingBottom: 6,
+  boxSizing: "border-box",
+  whiteSpace: "nowrap",
+  "&:hover": {
+    textDecoration: "none",
+    backgroundColor: (theme2.vars || theme2).palette.action.hover,
+    // Reset on touch devices, it doesn't add specificity
+    "@media (hover: none)": {
+      backgroundColor: "transparent"
+    }
+  },
+  [`&.${menuItemClasses.selected}`]: {
+    backgroundColor: theme2.alpha((theme2.vars || theme2).palette.primary.main, (theme2.vars || theme2).palette.action.selectedOpacity),
+    [`&.${menuItemClasses.focusVisible}`]: {
+      backgroundColor: theme2.alpha((theme2.vars || theme2).palette.primary.main, `${(theme2.vars || theme2).palette.action.selectedOpacity} + ${(theme2.vars || theme2).palette.action.focusOpacity}`)
+    }
+  },
+  [`&.${menuItemClasses.selected}:hover`]: {
+    backgroundColor: theme2.alpha((theme2.vars || theme2).palette.primary.main, `${(theme2.vars || theme2).palette.action.selectedOpacity} + ${(theme2.vars || theme2).palette.action.hoverOpacity}`),
+    // Reset on touch devices, it doesn't add specificity
+    "@media (hover: none)": {
+      backgroundColor: theme2.alpha((theme2.vars || theme2).palette.primary.main, (theme2.vars || theme2).palette.action.selectedOpacity)
+    }
+  },
+  [`&.${menuItemClasses.focusVisible}`]: {
+    backgroundColor: (theme2.vars || theme2).palette.action.focus
+  },
+  [`&.${menuItemClasses.disabled}`]: {
+    opacity: (theme2.vars || theme2).palette.action.disabledOpacity
+  },
+  [`& + .${dividerClasses.root}`]: {
+    marginTop: theme2.spacing(1),
+    marginBottom: theme2.spacing(1)
+  },
+  [`& + .${dividerClasses.inset}`]: {
+    marginLeft: 52
+  },
+  [`& .${listItemTextClasses.root}`]: {
+    marginTop: 0,
+    marginBottom: 0
+  },
+  [`& .${listItemTextClasses.inset}`]: {
+    paddingLeft: 36
+  },
+  [`& .${listItemIconClasses.root}`]: {
+    minWidth: 36
+  },
+  variants: [{
+    props: ({
+      ownerState
+    }) => !ownerState.disableGutters,
+    style: {
+      paddingLeft: 16,
+      paddingRight: 16
+    }
+  }, {
+    props: ({
+      ownerState
+    }) => ownerState.divider,
+    style: {
+      borderBottom: `1px solid ${(theme2.vars || theme2).palette.divider}`,
+      backgroundClip: "padding-box"
+    }
+  }, {
+    props: ({
+      ownerState
+    }) => !ownerState.dense,
+    style: {
+      [theme2.breakpoints.up("sm")]: {
+        minHeight: "auto"
+      }
+    }
+  }, {
+    props: ({
+      ownerState
+    }) => ownerState.dense,
+    style: {
+      minHeight: 32,
+      // https://m2.material.io/components/menus#specs > Dense
+      paddingTop: 4,
+      paddingBottom: 4,
+      ...theme2.typography.body2,
+      [`& .${listItemIconClasses.root} svg`]: {
+        fontSize: "1.25rem"
+      }
+    }
+  }]
+})));
+const MenuItem = /* @__PURE__ */ D(function MenuItem2(inProps, ref) {
+  const props = useDefaultProps({
+    props: inProps,
+    name: "MuiMenuItem"
+  });
+  const {
+    autoFocus = false,
+    component = "li",
+    dense = false,
+    divider = false,
+    disableGutters = false,
+    focusVisibleClassName,
+    role = "menuitem",
+    tabIndex: tabIndexProp,
+    className,
+    ...other
+  } = props;
+  const context = x$1(ListContext);
+  const childContext = T$1(() => ({
+    dense: dense || context.dense || false,
+    disableGutters
+  }), [context.dense, dense, disableGutters]);
+  const menuItemRef = A$1(null);
+  useEnhancedEffect(() => {
+    if (autoFocus) {
+      if (menuItemRef.current) {
+        menuItemRef.current.focus();
+      }
+    }
+  }, [autoFocus]);
+  const ownerState = {
+    ...props,
+    dense: childContext.dense,
+    divider,
+    disableGutters
+  };
+  const classes = useUtilityClasses$h(props);
+  const handleRef = useForkRef(menuItemRef, ref);
+  let tabIndex;
+  if (!props.disabled) {
+    tabIndex = tabIndexProp !== void 0 ? tabIndexProp : -1;
+  }
+  return /* @__PURE__ */ u(ListContext.Provider, {
+    value: childContext,
+    children: /* @__PURE__ */ u(MenuItemRoot, {
+      ref: handleRef,
+      role,
+      tabIndex,
+      component,
+      focusVisibleClassName: clsx(classes.focusVisible, focusVisibleClassName),
+      className: clsx(classes.root, className),
+      ...other,
+      ownerState,
+      classes
+    })
+  });
+});
 function getNativeSelectUtilityClasses(slot) {
   return generateUtilityClass("MuiNativeSelect", slot);
 }
 const nativeSelectClasses = generateUtilityClasses("MuiNativeSelect", ["root", "select", "multiple", "filled", "outlined", "standard", "disabled", "icon", "iconOpen", "iconFilled", "iconOutlined", "iconStandard", "nativeInput", "error"]);
-const useUtilityClasses$f = (ownerState) => {
+const useUtilityClasses$g = (ownerState) => {
   const {
     classes,
     variant,
@@ -23315,7 +23505,7 @@ const NativeSelectInput = /* @__PURE__ */ D(function NativeSelectInput2(props, r
     variant,
     error
   };
-  const classes = useUtilityClasses$f(ownerState);
+  const classes = useUtilityClasses$g(ownerState);
   return /* @__PURE__ */ u(k$2, {
     children: [/* @__PURE__ */ u(NativeSelectSelect, {
       ownerState,
@@ -23450,7 +23640,7 @@ function NotchedOutline(props) {
     })
   });
 }
-const useUtilityClasses$e = (ownerState) => {
+const useUtilityClasses$f = (ownerState) => {
   const {
     classes
   } = ownerState;
@@ -23628,7 +23818,7 @@ const OutlinedInput = /* @__PURE__ */ D(function OutlinedInput2(inProps, ref) {
     type = "text",
     ...other
   } = props;
-  const classes = useUtilityClasses$e(props);
+  const classes = useUtilityClasses$f(props);
   const muiFormControl = useFormControl();
   const fcs = formControlState({
     props,
@@ -23764,7 +23954,7 @@ function getRadioUtilityClass(slot) {
   return generateUtilityClass("MuiRadio", slot);
 }
 const radioClasses = generateUtilityClasses("MuiRadio", ["root", "checked", "disabled", "colorPrimary", "colorSecondary", "sizeSmall"]);
-const useUtilityClasses$d = (ownerState) => {
+const useUtilityClasses$e = (ownerState) => {
   const {
     classes,
     color: color2,
@@ -23888,7 +24078,7 @@ const Radio = /* @__PURE__ */ D(function Radio2(inProps, ref) {
     color: color2,
     size
   };
-  const classes = useUtilityClasses$d(ownerState);
+  const classes = useUtilityClasses$e(ownerState);
   const radioGroup = useRadioGroup();
   let checked = checkedProp;
   const onChange = createChainedFunction(onChangeProp, radioGroup && radioGroup.onChange);
@@ -23947,7 +24137,7 @@ function getRadioGroupUtilityClass(slot) {
   return generateUtilityClass("MuiRadioGroup", slot);
 }
 generateUtilityClasses("MuiRadioGroup", ["root", "row", "error"]);
-const useUtilityClasses$c = (props) => {
+const useUtilityClasses$d = (props) => {
   const {
     classes,
     row,
@@ -23972,7 +24162,7 @@ const RadioGroup = /* @__PURE__ */ D(function RadioGroup2(props, ref) {
     ...other
   } = props;
   const rootRef = A$1(null);
-  const classes = useUtilityClasses$c(props);
+  const classes = useUtilityClasses$d(props);
   const [value, setValueState] = useControlled({
     controlled: valueProp,
     default: defaultValue2,
@@ -24084,7 +24274,7 @@ function areEqualValues(a2, b2) {
 function isEmpty(display) {
   return display == null || typeof display === "string" && !display.trim();
 }
-const useUtilityClasses$b = (ownerState) => {
+const useUtilityClasses$c = (ownerState) => {
   const {
     classes,
     variant,
@@ -24386,7 +24576,7 @@ const SelectInput = /* @__PURE__ */ D(function SelectInput2(props, ref) {
     open,
     error
   };
-  const classes = useUtilityClasses$b(ownerState);
+  const classes = useUtilityClasses$c(ownerState);
   const paperProps = {
     ...MenuProps.PaperProps,
     ...typeof MenuProps.slotProps?.paper === "function" ? MenuProps.slotProps.paper(ownerState) : MenuProps.slotProps?.paper
@@ -24481,7 +24671,7 @@ const SelectInput = /* @__PURE__ */ D(function SelectInput2(props, ref) {
     })]
   });
 });
-const useUtilityClasses$a = (ownerState) => {
+const useUtilityClasses$b = (ownerState) => {
   const {
     classes
   } = ownerState;
@@ -24544,7 +24734,7 @@ const Select = /* @__PURE__ */ D(function Select2(inProps, ref) {
     variant,
     classes: classesProp
   };
-  const classes = useUtilityClasses$a(ownerState);
+  const classes = useUtilityClasses$b(ownerState);
   const {
     root,
     ...restOfClasses
@@ -24617,7 +24807,7 @@ const tooltipClasses = generateUtilityClasses("MuiTooltip", ["popper", "popperIn
 function round(value) {
   return Math.round(value * 1e5) / 1e5;
 }
-const useUtilityClasses$9 = (ownerState) => {
+const useUtilityClasses$a = (ownerState) => {
   const {
     classes,
     disableInteractive,
@@ -25156,7 +25346,7 @@ const Tooltip = /* @__PURE__ */ D(function Tooltip2(inProps, ref) {
       modifiers: tooltipModifiers
     };
   }, [arrowRef, PopperProps.popperOptions, resolvedPopperProps?.popperOptions]);
-  const classes = useUtilityClasses$9(ownerState);
+  const classes = useUtilityClasses$a(ownerState);
   const resolvedTransitionProps = typeof slotProps.transition === "function" ? slotProps.transition(ownerState) : slotProps.transition;
   const externalForwardedProps = {
     slots: {
@@ -25250,6 +25440,280 @@ const Stack = createStack({
     props: inProps,
     name: "MuiStack"
   })
+});
+function getSwitchUtilityClass(slot) {
+  return generateUtilityClass("MuiSwitch", slot);
+}
+const switchClasses = generateUtilityClasses("MuiSwitch", ["root", "edgeStart", "edgeEnd", "switchBase", "colorPrimary", "colorSecondary", "sizeSmall", "sizeMedium", "checked", "disabled", "input", "thumb", "track"]);
+const useUtilityClasses$9 = (ownerState) => {
+  const {
+    classes,
+    edge,
+    size,
+    color: color2,
+    checked,
+    disabled
+  } = ownerState;
+  const slots = {
+    root: ["root", edge && `edge${capitalize(edge)}`, `size${capitalize(size)}`],
+    switchBase: ["switchBase", `color${capitalize(color2)}`, checked && "checked", disabled && "disabled"],
+    thumb: ["thumb"],
+    track: ["track"],
+    input: ["input"]
+  };
+  const composedClasses = composeClasses(slots, getSwitchUtilityClass, classes);
+  return {
+    ...classes,
+    // forward the disabled and checked classes to the SwitchBase
+    ...composedClasses
+  };
+};
+const SwitchRoot = styled("span", {
+  name: "MuiSwitch",
+  slot: "Root",
+  overridesResolver: (props, styles2) => {
+    const {
+      ownerState
+    } = props;
+    return [styles2.root, ownerState.edge && styles2[`edge${capitalize(ownerState.edge)}`], styles2[`size${capitalize(ownerState.size)}`]];
+  }
+})({
+  display: "inline-flex",
+  width: 34 + 12 * 2,
+  height: 14 + 12 * 2,
+  overflow: "hidden",
+  padding: 12,
+  boxSizing: "border-box",
+  position: "relative",
+  flexShrink: 0,
+  zIndex: 0,
+  // Reset the stacking context.
+  verticalAlign: "middle",
+  // For correct alignment with the text.
+  "@media print": {
+    colorAdjust: "exact"
+  },
+  variants: [{
+    props: {
+      edge: "start"
+    },
+    style: {
+      marginLeft: -8
+    }
+  }, {
+    props: {
+      edge: "end"
+    },
+    style: {
+      marginRight: -8
+    }
+  }, {
+    props: {
+      size: "small"
+    },
+    style: {
+      width: 40,
+      height: 24,
+      padding: 7,
+      [`& .${switchClasses.thumb}`]: {
+        width: 16,
+        height: 16
+      },
+      [`& .${switchClasses.switchBase}`]: {
+        padding: 4,
+        [`&.${switchClasses.checked}`]: {
+          transform: "translateX(16px)"
+        }
+      }
+    }
+  }]
+});
+const SwitchSwitchBase = styled(SwitchBase, {
+  name: "MuiSwitch",
+  slot: "SwitchBase",
+  overridesResolver: (props, styles2) => {
+    const {
+      ownerState
+    } = props;
+    return [styles2.switchBase, {
+      [`& .${switchClasses.input}`]: styles2.input
+    }, ownerState.color !== "default" && styles2[`color${capitalize(ownerState.color)}`]];
+  }
+})(memoTheme(({
+  theme: theme2
+}) => ({
+  position: "absolute",
+  top: 0,
+  left: 0,
+  zIndex: 1,
+  // Render above the focus ripple.
+  color: theme2.vars ? theme2.vars.palette.Switch.defaultColor : `${theme2.palette.mode === "light" ? theme2.palette.common.white : theme2.palette.grey[300]}`,
+  transition: theme2.transitions.create(["left", "transform"], {
+    duration: theme2.transitions.duration.shortest
+  }),
+  [`&.${switchClasses.checked}`]: {
+    transform: "translateX(20px)"
+  },
+  [`&.${switchClasses.disabled}`]: {
+    color: theme2.vars ? theme2.vars.palette.Switch.defaultDisabledColor : `${theme2.palette.mode === "light" ? theme2.palette.grey[100] : theme2.palette.grey[600]}`
+  },
+  [`&.${switchClasses.checked} + .${switchClasses.track}`]: {
+    opacity: 0.5
+  },
+  [`&.${switchClasses.disabled} + .${switchClasses.track}`]: {
+    opacity: theme2.vars ? theme2.vars.opacity.switchTrackDisabled : `${theme2.palette.mode === "light" ? 0.12 : 0.2}`
+  },
+  [`& .${switchClasses.input}`]: {
+    left: "-100%",
+    width: "300%"
+  }
+})), memoTheme(({
+  theme: theme2
+}) => ({
+  "&:hover": {
+    backgroundColor: theme2.alpha((theme2.vars || theme2).palette.action.active, (theme2.vars || theme2).palette.action.hoverOpacity),
+    // Reset on touch devices, it doesn't add specificity
+    "@media (hover: none)": {
+      backgroundColor: "transparent"
+    }
+  },
+  variants: [...Object.entries(theme2.palette).filter(createSimplePaletteValueFilter(["light"])).map(([color2]) => ({
+    props: {
+      color: color2
+    },
+    style: {
+      [`&.${switchClasses.checked}`]: {
+        color: (theme2.vars || theme2).palette[color2].main,
+        "&:hover": {
+          backgroundColor: theme2.alpha((theme2.vars || theme2).palette[color2].main, (theme2.vars || theme2).palette.action.hoverOpacity),
+          "@media (hover: none)": {
+            backgroundColor: "transparent"
+          }
+        },
+        [`&.${switchClasses.disabled}`]: {
+          color: theme2.vars ? theme2.vars.palette.Switch[`${color2}DisabledColor`] : `${theme2.palette.mode === "light" ? theme2.lighten(theme2.palette[color2].main, 0.62) : theme2.darken(theme2.palette[color2].main, 0.55)}`
+        }
+      },
+      [`&.${switchClasses.checked} + .${switchClasses.track}`]: {
+        backgroundColor: (theme2.vars || theme2).palette[color2].main
+      }
+    }
+  }))]
+})));
+const SwitchTrack = styled("span", {
+  name: "MuiSwitch",
+  slot: "Track"
+})(memoTheme(({
+  theme: theme2
+}) => ({
+  height: "100%",
+  width: "100%",
+  borderRadius: 14 / 2,
+  zIndex: -1,
+  transition: theme2.transitions.create(["opacity", "background-color"], {
+    duration: theme2.transitions.duration.shortest
+  }),
+  backgroundColor: theme2.vars ? theme2.vars.palette.common.onBackground : `${theme2.palette.mode === "light" ? theme2.palette.common.black : theme2.palette.common.white}`,
+  opacity: theme2.vars ? theme2.vars.opacity.switchTrack : `${theme2.palette.mode === "light" ? 0.38 : 0.3}`
+})));
+const SwitchThumb = styled("span", {
+  name: "MuiSwitch",
+  slot: "Thumb"
+})(memoTheme(({
+  theme: theme2
+}) => ({
+  boxShadow: (theme2.vars || theme2).shadows[1],
+  backgroundColor: "currentColor",
+  width: 20,
+  height: 20,
+  borderRadius: "50%"
+})));
+const Switch = /* @__PURE__ */ D(function Switch2(inProps, ref) {
+  const props = useDefaultProps({
+    props: inProps,
+    name: "MuiSwitch"
+  });
+  const {
+    className,
+    color: color2 = "primary",
+    edge = false,
+    size = "medium",
+    sx,
+    slots = {},
+    slotProps = {},
+    ...other
+  } = props;
+  const ownerState = {
+    ...props,
+    color: color2,
+    edge,
+    size
+  };
+  const classes = useUtilityClasses$9(ownerState);
+  const externalForwardedProps = {
+    slots,
+    slotProps
+  };
+  const [RootSlot, rootSlotProps] = useSlot("root", {
+    className: clsx(classes.root, className),
+    elementType: SwitchRoot,
+    externalForwardedProps,
+    ownerState,
+    additionalProps: {
+      sx
+    }
+  });
+  const [ThumbSlot, thumbSlotProps] = useSlot("thumb", {
+    className: classes.thumb,
+    elementType: SwitchThumb,
+    externalForwardedProps,
+    ownerState
+  });
+  const icon = /* @__PURE__ */ u(ThumbSlot, {
+    ...thumbSlotProps
+  });
+  const [TrackSlot, trackSlotProps] = useSlot("track", {
+    className: classes.track,
+    elementType: SwitchTrack,
+    externalForwardedProps,
+    ownerState
+  });
+  return /* @__PURE__ */ u(RootSlot, {
+    ...rootSlotProps,
+    children: [/* @__PURE__ */ u(SwitchSwitchBase, {
+      type: "checkbox",
+      icon,
+      checkedIcon: icon,
+      ref,
+      ownerState,
+      ...other,
+      classes: {
+        ...classes,
+        root: classes.switchBase
+      },
+      slots: {
+        ...slots.switchBase && {
+          root: slots.switchBase
+        },
+        ...slots.input && {
+          input: slots.input
+        }
+      },
+      slotProps: {
+        ...slotProps.switchBase && {
+          root: typeof slotProps.switchBase === "function" ? slotProps.switchBase(ownerState) : slotProps.switchBase
+        },
+        input: {
+          role: "switch"
+        },
+        ...slotProps.input && {
+          input: typeof slotProps.input === "function" ? slotProps.input(ownerState) : slotProps.input
+        }
+      }
+    }), /* @__PURE__ */ u(TrackSlot, {
+      ...trackSlotProps
+    })]
+  });
 });
 function getTabUtilityClass(slot) {
   return generateUtilityClass("MuiTab", slot);
@@ -27805,9 +28269,9 @@ function arrayMove$1(array, from2, to) {
 }
 const AppToken = "App";
 const SETTINGS_TOKEN = "ThinkSettings";
-var __getOwnPropDesc$8 = Object.getOwnPropertyDescriptor;
-var __decorateClass$8 = (decorators, target, key, kind) => {
-  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc$8(target, key) : target;
+var __getOwnPropDesc$9 = Object.getOwnPropertyDescriptor;
+var __decorateClass$9 = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc$9(target, key) : target;
   for (var i2 = decorators.length - 1, decorator; i2 >= 0; i2--)
     if (decorator = decorators[i2])
       result = decorator(result) || result;
@@ -28235,7 +28699,7 @@ let AppStore = class {
     });
   };
 };
-AppStore = __decorateClass$8([
+AppStore = __decorateClass$9([
   singleton(),
   __decorateParam$8(0, inject(SETTINGS_TOKEN))
 ], AppStore);
@@ -29145,9 +29609,9 @@ function throttle(fn3, wait = 250) {
     }
   };
 }
-var __getOwnPropDesc$7 = Object.getOwnPropertyDescriptor;
-var __decorateClass$7 = (decorators, target, key, kind) => {
-  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc$7(target, key) : target;
+var __getOwnPropDesc$8 = Object.getOwnPropertyDescriptor;
+var __decorateClass$8 = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc$8(target, key) : target;
   for (var i2 = decorators.length - 1, decorator; i2 >= 0; i2--)
     if (decorator = decorators[i2])
       result = decorator(result) || result;
@@ -29181,7 +29645,7 @@ let ObsidianPlatform = class {
     return this.app.vault.on(event, cb);
   }
 };
-ObsidianPlatform = __decorateClass$7([
+ObsidianPlatform = __decorateClass$8([
   singleton(),
   __decorateParam$7(0, inject(AppToken))
 ], ObsidianPlatform);
@@ -29290,9 +29754,9 @@ function markTaskDone(rawLine, todayISO2, nowTime, options) {
   const nextTaskLine = generateNextRecurringTask(rawLine, baseISO);
   return { completedLine, nextTaskLine };
 }
-var __getOwnPropDesc$6 = Object.getOwnPropertyDescriptor;
-var __decorateClass$6 = (decorators, target, key, kind) => {
-  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc$6(target, key) : target;
+var __getOwnPropDesc$7 = Object.getOwnPropertyDescriptor;
+var __decorateClass$7 = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc$7(target, key) : target;
   for (var i2 = decorators.length - 1, decorator; i2 >= 0; i2--)
     if (decorator = decorators[i2])
       result = decorator(result) || result;
@@ -29423,7 +29887,7 @@ let DataStore = class {
     this._emitThrottled();
   }
 };
-DataStore = __decorateClass$6([
+DataStore = __decorateClass$7([
   singleton(),
   __decorateParam$6(0, inject(ObsidianPlatform)),
   __decorateParam$6(1, inject(AppToken))
@@ -29472,9 +29936,9 @@ function renderTemplate(templateString, data) {
     }
   });
 }
-var __getOwnPropDesc$5 = Object.getOwnPropertyDescriptor;
-var __decorateClass$5 = (decorators, target, key, kind) => {
-  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc$5(target, key) : target;
+var __getOwnPropDesc$6 = Object.getOwnPropertyDescriptor;
+var __decorateClass$6 = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc$6(target, key) : target;
   for (var i2 = decorators.length - 1, decorator; i2 >= 0; i2--)
     if (decorator = decorators[i2])
       result = decorator(result) || result;
@@ -29580,7 +30044,7 @@ ${outputContent}` : outputContent;
     await this.app.vault.modify(file, lines.join("\n"));
   }
 };
-InputService = __decorateClass$5([
+InputService = __decorateClass$6([
   singleton(),
   __decorateParam$5(0, inject(AppToken))
 ], InputService);
@@ -29634,9 +30098,9 @@ function getFieldLabel(key) {
   }
   return key;
 }
-var __getOwnPropDesc$4 = Object.getOwnPropertyDescriptor;
-var __decorateClass$4 = (decorators, target, key, kind) => {
-  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc$4(target, key) : target;
+var __getOwnPropDesc$5 = Object.getOwnPropertyDescriptor;
+var __decorateClass$5 = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc$5(target, key) : target;
   for (var i2 = decorators.length - 1, decorator; i2 >= 0; i2--)
     if (decorator = decorators[i2])
       result = decorator(result) || result;
@@ -29746,7 +30210,7 @@ let ActionService = class {
     };
   }
 };
-ActionService = __decorateClass$4([
+ActionService = __decorateClass$5([
   singleton(),
   __decorateParam$4(0, inject(AppToken)),
   __decorateParam$4(1, inject(DataStore)),
@@ -32055,9 +32519,9 @@ function LayoutRenderer({ layout, dataStore: dataStore2, app, actionService, tas
     /* @__PURE__ */ u("div", { style: gridStyle, children: isStateInitialized && layout.viewInstanceIds.map(renderViewInstance) })
   ] });
 }
-var __getOwnPropDesc$3 = Object.getOwnPropertyDescriptor;
-var __decorateClass$3 = (decorators, target, key, kind) => {
-  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc$3(target, key) : target;
+var __getOwnPropDesc$4 = Object.getOwnPropertyDescriptor;
+var __decorateClass$4 = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc$4(target, key) : target;
   for (var i2 = decorators.length - 1, decorator; i2 >= 0; i2--)
     if (decorator = decorators[i2])
       result = decorator(result) || result;
@@ -32181,14 +32645,14 @@ let TaskService = class {
     }
   }
 };
-TaskService = __decorateClass$3([
+TaskService = __decorateClass$4([
   singleton(),
   __decorateParam$3(0, inject(DataStore)),
   __decorateParam$3(1, inject(AppToken))
 ], TaskService);
-var __getOwnPropDesc$2 = Object.getOwnPropertyDescriptor;
-var __decorateClass$2 = (decorators, target, key, kind) => {
-  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc$2(target, key) : target;
+var __getOwnPropDesc$3 = Object.getOwnPropertyDescriptor;
+var __decorateClass$3 = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc$3(target, key) : target;
   for (var i2 = decorators.length - 1, decorator; i2 >= 0; i2--)
     if (decorator = decorators[i2])
       result = decorator(result) || result;
@@ -32261,7 +32725,7 @@ let RendererService = class {
     this.activeLayouts = [];
   }
 };
-RendererService = __decorateClass$2([
+RendererService = __decorateClass$3([
   singleton(),
   __decorateParam$2(0, inject(AppToken)),
   __decorateParam$2(1, inject(DataStore)),
@@ -32269,9 +32733,9 @@ RendererService = __decorateClass$2([
   __decorateParam$2(3, inject(ActionService)),
   __decorateParam$2(4, inject(TaskService))
 ], RendererService);
-var __getOwnPropDesc$1 = Object.getOwnPropertyDescriptor;
-var __decorateClass$1 = (decorators, target, key, kind) => {
-  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc$1(target, key) : target;
+var __getOwnPropDesc$2 = Object.getOwnPropertyDescriptor;
+var __decorateClass$2 = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc$2(target, key) : target;
   for (var i2 = decorators.length - 1, decorator; i2 >= 0; i2--)
     if (decorator = decorators[i2])
       result = decorator(result) || result;
@@ -32401,7 +32865,7 @@ let TimerService = class {
     }
   }
 };
-TimerService = __decorateClass$1([
+TimerService = __decorateClass$2([
   singleton(),
   __decorateParam$1(0, inject(AppStore)),
   __decorateParam$1(1, inject(DataStore)),
@@ -32409,9 +32873,9 @@ TimerService = __decorateClass$1([
   __decorateParam$1(3, inject(InputService)),
   __decorateParam$1(4, inject(AppToken))
 ], TimerService);
-var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
-var __decorateClass = (decorators, target, key, kind) => {
-  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+var __getOwnPropDesc$1 = Object.getOwnPropertyDescriptor;
+var __decorateClass$1 = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc$1(target, key) : target;
   for (var i2 = decorators.length - 1, decorator; i2 >= 0; i2--)
     if (decorator = decorators[i2])
       result = decorator(result) || result;
@@ -32451,7 +32915,7 @@ let TimerStateService = class {
     }
   }
 };
-TimerStateService = __decorateClass([
+TimerStateService = __decorateClass$1([
   singleton(),
   __decorateParam(0, inject(AppToken))
 ], TimerStateService);
@@ -37696,6 +38160,36 @@ const TaskAltIcon = createSvgIcon(/* @__PURE__ */ u("path", {
 const CancelIcon = createSvgIcon(/* @__PURE__ */ u("path", {
   d: "M12 2C6.47 2 2 6.47 2 12s4.47 10 10 10 10-4.47 10-10S17.53 2 12 2m5 13.59L15.59 17 12 13.41 8.41 17 7 15.59 10.59 12 7 8.41 8.41 7 12 10.59 15.59 7 17 8.41 13.41 12z"
 }));
+const FolderIcon = createSvgIcon(/* @__PURE__ */ u("path", {
+  d: "M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8z"
+}));
+const FolderOpenIcon = createSvgIcon(/* @__PURE__ */ u("path", {
+  d: "M20 6h-8l-2-2H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2m0 12H4V8h16z"
+}));
+const ExpandMoreIcon = createSvgIcon(/* @__PURE__ */ u("path", {
+  d: "M16.59 8.59 12 13.17 7.41 8.59 6 10l6 6 6-6z"
+}));
+const ChevronRightIcon = createSvgIcon(/* @__PURE__ */ u("path", {
+  d: "M10 6 8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"
+}));
+const ArchiveIcon = createSvgIcon(/* @__PURE__ */ u("path", {
+  d: "m20.54 5.23-1.39-1.68C18.88 3.21 18.47 3 18 3H6c-.47 0-.88.21-1.16.55L3.46 5.23C3.17 5.57 3 6.02 3 6.5V19c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V6.5c0-.48-.17-.93-.46-1.27M12 17.5 6.5 12H10v-2h4v2h3.5zM5.12 5l.81-1h12l.94 1z"
+}));
+const UnarchiveIcon = createSvgIcon(/* @__PURE__ */ u("path", {
+  d: "m20.55 5.22-1.39-1.68C18.88 3.21 18.47 3 18 3H6c-.47 0-.88.21-1.15.55L3.46 5.22C3.17 5.57 3 6.01 3 6.5V19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V6.5c0-.49-.17-.93-.45-1.28M12 9.5l5.5 5.5H14v2h-4v-2H6.5zM5.12 5l.82-1h12l.93 1z"
+}));
+const MoreVertIcon = createSvgIcon(/* @__PURE__ */ u("path", {
+  d: "M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2m0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2m0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2"
+}));
+const CheckBoxIcon = createSvgIcon(/* @__PURE__ */ u("path", {
+  d: "M19 3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.11 0 2-.9 2-2V5c0-1.1-.89-2-2-2m-9 14-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8z"
+}));
+const CheckBoxOutlineBlankIcon = createSvgIcon(/* @__PURE__ */ u("path", {
+  d: "M19 5v14H5V5zm0-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2"
+}));
+const IndeterminateCheckBoxIcon = createSvgIcon(/* @__PURE__ */ u("path", {
+  d: "M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2m-2 10H7v-2h10z"
+}));
 function TemplateEditorModal({ isOpen, onClose, block, theme: theme2, existingOverride, appStore: appStore2 }) {
   const [mode, setMode] = d("inherit");
   const [localOverride, setLocalOverride] = d({});
@@ -37801,6 +38295,274 @@ function TemplateEditorModal({ isOpen, onClose, block, theme: theme2, existingOv
     ] })
   ] });
 }
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i2 = decorators.length - 1, decorator; i2 >= 0; i2--)
+    if (decorator = decorators[i2])
+      result = decorator(result) || result;
+  return result;
+};
+let ThemeManager = class {
+  themes = /* @__PURE__ */ new Map();
+  themeIdCounter = 0;
+  constructor() {
+  }
+  /**
+   * 初始化默认的预定义主题
+   */
+  initializeDefaultThemes() {
+  }
+  /**
+   * 添加常用的默认主题
+   */
+  addDefaultThemes() {
+    this.addPredefinedTheme("工作", "💼");
+    this.addPredefinedTheme("生活", "🏠");
+    this.addPredefinedTheme("学习", "📚");
+    this.addPredefinedTheme("健康", "💪");
+    this.addPredefinedTheme("项目", "📁");
+  }
+  /**
+   * 生成唯一的主题ID
+   */
+  generateThemeId() {
+    return `theme_${++this.themeIdCounter}`;
+  }
+  /**
+   * 根据路径查找父主题
+   */
+  findParentTheme(path) {
+    const parts = path.split("/");
+    if (parts.length <= 1) return null;
+    const parentPath = parts.slice(0, -1).join("/");
+    const parentTheme = Array.from(this.themes.values()).find((theme2) => theme2.path === parentPath);
+    return parentTheme?.id || null;
+  }
+  /**
+   * 添加预定义主题
+   */
+  addPredefinedTheme(path, icon) {
+    const existing = Array.from(this.themes.values()).find((theme22) => theme22.path === path);
+    if (existing) {
+      existing.icon = icon || existing.icon;
+      existing.source = "predefined";
+      existing.status = "active";
+      existing.originallyPredefined = true;
+      return existing;
+    }
+    const theme2 = {
+      id: this.generateThemeId(),
+      path,
+      name: path.split("/").pop() || path,
+      icon,
+      parentId: this.findParentTheme(path),
+      status: "active",
+      source: "predefined",
+      usageCount: 0,
+      order: this.themes.size,
+      originallyPredefined: true
+      // 标记为原始预定义
+    };
+    this.themes.set(theme2.id, theme2);
+    return theme2;
+  }
+  /**
+   * 发现新主题（从数据中提取）
+   */
+  discoverTheme(path) {
+    if (!path || path.trim() === "") {
+      throw new Error("主题路径不能为空");
+    }
+    const existing = Array.from(this.themes.values()).find((theme22) => theme22.path === path);
+    if (existing) {
+      existing.usageCount++;
+      existing.lastUsed = Date.now();
+      return existing;
+    }
+    const theme2 = {
+      id: this.generateThemeId(),
+      path,
+      name: path.split("/").pop() || path,
+      parentId: this.findParentTheme(path),
+      status: "inactive",
+      source: "discovered",
+      usageCount: 1,
+      lastUsed: Date.now(),
+      order: this.themes.size
+    };
+    this.themes.set(theme2.id, theme2);
+    return theme2;
+  }
+  /**
+   * 激活主题（使其在快速输入中可用）
+   */
+  activateTheme(path) {
+    const theme2 = Array.from(this.themes.values()).find((t2) => t2.path === path);
+    if (theme2) {
+      theme2.status = "active";
+      if (theme2.source === "discovered") {
+        theme2.source = "predefined";
+      }
+    }
+  }
+  /**
+   * 停用主题
+   */
+  deactivateTheme(path) {
+    const theme2 = Array.from(this.themes.values()).find((t2) => t2.path === path);
+    if (theme2 && !theme2.originallyPredefined) {
+      theme2.status = "inactive";
+    }
+  }
+  /**
+   * 获取所有激活的主题
+   */
+  getActiveThemes() {
+    return Array.from(this.themes.values()).filter((theme2) => theme2.status === "active").sort((a2, b2) => {
+      if (a2.usageCount !== b2.usageCount) {
+        return b2.usageCount - a2.usageCount;
+      }
+      if (a2.lastUsed && b2.lastUsed) {
+        return b2.lastUsed - a2.lastUsed;
+      }
+      return a2.order - b2.order;
+    });
+  }
+  /**
+   * 获取所有主题（分类）
+   */
+  getAllThemes() {
+    const themes = Array.from(this.themes.values());
+    return {
+      active: themes.filter((t2) => t2.status === "active"),
+      inactive: themes.filter((t2) => t2.status === "inactive"),
+      discovered: themes.filter((t2) => t2.source === "discovered")
+    };
+  }
+  /**
+   * 从Item中提取主题
+   */
+  extractTheme(item) {
+    if (item.theme) {
+      return item.theme;
+    }
+    if (item.type === "task" && item.header) {
+      return item.header;
+    }
+    if (item.type === "block" && item.theme) {
+      return item.theme;
+    }
+    return null;
+  }
+  /**
+   * 扫描数据项，发现新主题
+   */
+  scanDataForThemes(items) {
+    const themeSet = /* @__PURE__ */ new Set();
+    for (const item of items) {
+      const theme2 = this.extractTheme(item);
+      if (theme2) {
+        themeSet.add(theme2);
+      }
+    }
+    for (const themePath of themeSet) {
+      this.discoverTheme(themePath);
+    }
+  }
+  /**
+   * 获取主题统计信息
+   */
+  getThemeStats() {
+    const themes = Array.from(this.themes.values());
+    return {
+      total: themes.length,
+      active: themes.filter((t2) => t2.status === "active").length,
+      inactive: themes.filter((t2) => t2.status === "inactive").length,
+      predefined: themes.filter((t2) => t2.source === "predefined").length,
+      discovered: themes.filter((t2) => t2.source === "discovered").length
+    };
+  }
+  /**
+   * 删除主题
+   */
+  removeTheme(path) {
+    const theme2 = Array.from(this.themes.values()).find((t2) => t2.path === path);
+    if (theme2 && !theme2.originallyPredefined) {
+      return this.themes.delete(theme2.id);
+    }
+    return false;
+  }
+  /**
+   * 更新主题图标
+   */
+  updateThemeIcon(path, icon) {
+    const theme2 = Array.from(this.themes.values()).find((t2) => t2.path === path);
+    if (theme2) {
+      theme2.icon = icon;
+    }
+  }
+  /**
+   * 获取主题层级结构
+   */
+  getThemeHierarchy() {
+    const hierarchy = /* @__PURE__ */ new Map();
+    for (const theme2 of this.themes.values()) {
+      const parentId = theme2.parentId;
+      if (!hierarchy.has(parentId)) {
+        hierarchy.set(parentId, []);
+      }
+      hierarchy.get(parentId).push(theme2);
+    }
+    return hierarchy;
+  }
+  /**
+   * 清除所有主题
+   */
+  clearThemes() {
+    this.themes.clear();
+    this.themeIdCounter = 0;
+  }
+  /**
+   * 导出主题配置
+   */
+  exportThemes() {
+    return Array.from(this.themes.values());
+  }
+  /**
+   * 导入主题配置
+   */
+  importThemes(themes) {
+    for (const theme2 of themes) {
+      if (!this.themes.has(theme2.id)) {
+        this.themes.set(theme2.id, theme2);
+        const idNum = parseInt(theme2.id.replace("theme_", ""));
+        if (!isNaN(idNum) && idNum > this.themeIdCounter) {
+          this.themeIdCounter = idNum;
+        }
+      }
+    }
+  }
+  /**
+   * 根据路径获取主题
+   */
+  getThemeByPath(path) {
+    return Array.from(this.themes.values()).find((t2) => t2.path === path);
+  }
+  /**
+   * 更新主题使用统计
+   */
+  updateThemeUsage(path) {
+    const theme2 = this.getThemeByPath(path);
+    if (theme2) {
+      theme2.usageCount++;
+      theme2.lastUsed = Date.now();
+    }
+  }
+};
+ThemeManager = __decorateClass([
+  singleton()
+], ThemeManager);
 function InlineEditor({ value, onSave }) {
   const [current, setCurrent] = d(value);
   const handleBlur = () => {
@@ -37815,41 +38577,220 @@ function InlineEditor({ value, onSave }) {
       e2.target.blur();
     }
   };
-  return /* @__PURE__ */ u(TextField, { autoFocus: true, fullWidth: true, variant: "standard", value: current, onChange: (e2) => setCurrent(e2.target.value), onBlur: handleBlur, onKeyDown: handleKeyDown, sx: { "& .MuiInput-input": { py: "4px" } } });
+  return /* @__PURE__ */ u(
+    TextField,
+    {
+      autoFocus: true,
+      fullWidth: true,
+      variant: "standard",
+      value: current,
+      onChange: (e2) => setCurrent(e2.target.value),
+      onBlur: handleBlur,
+      onKeyDown: handleKeyDown,
+      sx: { "& .MuiInput-input": { py: "4px" } }
+    }
+  );
 }
-function SortableThemeRow({ theme: theme2, blocks, overridesMap, handleCellClick, setEditingThemeId, editingThemeId, appStore: appStore2 }) {
-  const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: theme2.id });
-  const style2 = { transform: CSS.Transform.toString(transform), transition, display: "table-row" };
-  return /* @__PURE__ */ u(TableRow, { ref: setNodeRef, style: style2, hover: true, children: [
-    /* @__PURE__ */ u(TableCell, { sx: { width: "40px", p: "0 8px", verticalAlign: "middle" }, children: /* @__PURE__ */ u(Tooltip, { title: "拖动排序", children: /* @__PURE__ */ u(Box, { component: "span", ...attributes, ...listeners, sx: { cursor: "grab", display: "flex", alignItems: "center" }, children: /* @__PURE__ */ u(DragIndicatorIcon, { sx: { color: "text.disabled" } }) }) }) }),
-    /* @__PURE__ */ u(TableCell, { onDblClick: () => setEditingThemeId(theme2.id), sx: { cursor: "text", verticalAlign: "middle" }, children: editingThemeId === theme2.id ? /* @__PURE__ */ u(InlineEditor, { value: theme2.icon || "", onSave: (newIcon) => {
-      appStore2.updateTheme(theme2.id, { icon: newIcon });
-      setEditingThemeId(null);
-    } }) : /* @__PURE__ */ u(Typography, { align: "center", children: theme2.icon || " " }) }),
-    /* @__PURE__ */ u(TableCell, { onDblClick: () => setEditingThemeId(theme2.id), sx: { cursor: "text", verticalAlign: "middle" }, children: editingThemeId === theme2.id ? /* @__PURE__ */ u(InlineEditor, { value: theme2.path, onSave: (newPath) => {
-      appStore2.updateTheme(theme2.id, { path: newPath });
-      setEditingThemeId(null);
-    } }) : theme2.path }),
-    blocks.map((block) => {
-      const override = overridesMap.get(`${theme2.id}:${block.id}`);
-      let cellIcon, cellTitle;
-      if (override) {
-        if (override.status === "disabled") {
-          cellIcon = /* @__PURE__ */ u(CancelIcon, { sx: { fontSize: "1.4rem", color: "error.main" } });
-          cellTitle = "已禁用";
-        } else {
-          cellIcon = /* @__PURE__ */ u(EditIcon, { sx: { fontSize: "1.4rem", color: "primary.main" } });
-          cellTitle = "已覆写";
-        }
-      } else {
-        cellIcon = /* @__PURE__ */ u(TaskAltIcon, { sx: { fontSize: "1.4rem", color: "success.main" } });
-        cellTitle = "继承";
+function BatchOperationDialog({
+  open,
+  onClose,
+  selectedCount,
+  onConfirm
+}) {
+  const [operation, setOperation] = d("activate");
+  return /* @__PURE__ */ u(Dialog, { open, onClose, children: [
+    /* @__PURE__ */ u(DialogTitle, { children: "批量操作" }),
+    /* @__PURE__ */ u(DialogContent, { children: [
+      /* @__PURE__ */ u(Typography, { variant: "body2", sx: { mb: 2 }, children: [
+        "已选择 ",
+        selectedCount,
+        " 个主题"
+      ] }),
+      /* @__PURE__ */ u(Stack, { spacing: 2, children: [
+        /* @__PURE__ */ u(
+          FormControlLabel,
+          {
+            control: /* @__PURE__ */ u(Switch, { checked: operation === "activate", onChange: () => setOperation("activate") }),
+            label: "批量激活"
+          }
+        ),
+        /* @__PURE__ */ u(
+          FormControlLabel,
+          {
+            control: /* @__PURE__ */ u(Switch, { checked: operation === "archive", onChange: () => setOperation("archive") }),
+            label: "批量归档"
+          }
+        ),
+        /* @__PURE__ */ u(
+          FormControlLabel,
+          {
+            control: /* @__PURE__ */ u(Switch, { checked: operation === "delete", onChange: () => setOperation("delete") }),
+            label: "批量删除（仅限非预定义主题）"
+          }
+        )
+      ] })
+    ] }),
+    /* @__PURE__ */ u(DialogActions, { children: [
+      /* @__PURE__ */ u(Button, { onClick: onClose, children: "取消" }),
+      /* @__PURE__ */ u(Button, { onClick: () => {
+        onConfirm(operation);
+        onClose();
+      }, variant: "contained", children: "确认" })
+    ] })
+  ] });
+}
+function ThemeTreeNodeRow({
+  node: node2,
+  blocks,
+  overridesMap,
+  handleCellClick,
+  editingThemeId,
+  setEditingThemeId,
+  appStore: appStore2,
+  selectedThemes,
+  onToggleSelect,
+  onToggleExpand,
+  onContextMenu
+}) {
+  const { theme: theme2, children, expanded, level } = node2;
+  const isSelected = selectedThemes.has(theme2.id);
+  const hasSelectedChildren = children.some(
+    (child) => selectedThemes.has(child.theme.id) || child.children.some((grandchild) => selectedThemes.has(grandchild.theme.id))
+  );
+  const checkboxIcon = isSelected ? /* @__PURE__ */ u(CheckBoxIcon, {}) : hasSelectedChildren ? /* @__PURE__ */ u(IndeterminateCheckBoxIcon, {}) : /* @__PURE__ */ u(CheckBoxOutlineBlankIcon, {});
+  return /* @__PURE__ */ u("div", { children: [
+    /* @__PURE__ */ u(
+      TableRow,
+      {
+        hover: true,
+        sx: {
+          opacity: theme2.status === "inactive" ? 0.6 : 1,
+          backgroundColor: theme2.status === "inactive" ? "action.hover" : "inherit"
+        },
+        onContextMenu: (e2) => onContextMenu(e2, theme2),
+        children: [
+          /* @__PURE__ */ u(TableCell, { sx: { width: "40px", p: "0 8px" }, children: /* @__PURE__ */ u(
+            Checkbox,
+            {
+              checked: isSelected,
+              indeterminate: !isSelected && hasSelectedChildren,
+              icon: checkboxIcon,
+              onChange: () => onToggleSelect(theme2.id, true),
+              sx: { padding: "4px" }
+            }
+          ) }),
+          /* @__PURE__ */ u(TableCell, { children: /* @__PURE__ */ u(Box, { sx: { display: "flex", alignItems: "center", pl: level * 3 }, children: [
+            children.length > 0 && /* @__PURE__ */ u(
+              IconButton,
+              {
+                size: "small",
+                onClick: () => onToggleExpand(theme2.id),
+                sx: { mr: 0.5 },
+                children: expanded ? /* @__PURE__ */ u(ExpandMoreIcon, {}) : /* @__PURE__ */ u(ChevronRightIcon, {})
+              }
+            ),
+            children.length > 0 ? expanded ? /* @__PURE__ */ u(FolderOpenIcon, { sx: { mr: 1 } }) : /* @__PURE__ */ u(FolderIcon, { sx: { mr: 1 } }) : /* @__PURE__ */ u(Box, { sx: { width: "24px", mr: 1 } }),
+            /* @__PURE__ */ u(Box, { sx: { flex: 1, display: "flex", alignItems: "center", gap: 1 }, children: [
+              editingThemeId === theme2.id ? /* @__PURE__ */ u(
+                InlineEditor,
+                {
+                  value: theme2.path,
+                  onSave: (newPath) => {
+                    appStore2.updateTheme(theme2.id, { path: newPath });
+                    setEditingThemeId(null);
+                  }
+                }
+              ) : /* @__PURE__ */ u(
+                Typography,
+                {
+                  onDoubleClick: () => setEditingThemeId(theme2.id),
+                  sx: { cursor: "text" },
+                  children: theme2.path
+                }
+              ),
+              theme2.usageCount !== void 0 && theme2.usageCount > 0 && /* @__PURE__ */ u(
+                Chip,
+                {
+                  label: `使用 ${theme2.usageCount} 次`,
+                  size: "small",
+                  variant: "outlined"
+                }
+              ),
+              theme2.status === "inactive" && /* @__PURE__ */ u(
+                Chip,
+                {
+                  label: "归档",
+                  size: "small",
+                  color: "default",
+                  icon: /* @__PURE__ */ u(ArchiveIcon, {})
+                }
+              )
+            ] })
+          ] }) }),
+          /* @__PURE__ */ u(TableCell, { align: "center", children: editingThemeId === theme2.id ? /* @__PURE__ */ u(
+            InlineEditor,
+            {
+              value: theme2.icon || "",
+              onSave: (newIcon) => {
+                appStore2.updateTheme(theme2.id, { icon: newIcon });
+                setEditingThemeId(null);
+              }
+            }
+          ) : /* @__PURE__ */ u(Typography, { children: theme2.icon || " " }) }),
+          blocks.map((block) => {
+            const override = overridesMap.get(`${theme2.id}:${block.id}`);
+            let cellIcon, cellTitle;
+            if (override) {
+              if (override.status === "disabled") {
+                cellIcon = /* @__PURE__ */ u(CancelIcon, { sx: { fontSize: "1.4rem", color: "error.main" } });
+                cellTitle = "已禁用";
+              } else {
+                cellIcon = /* @__PURE__ */ u(EditIcon, { sx: { fontSize: "1.4rem", color: "primary.main" } });
+                cellTitle = "已覆写";
+              }
+            } else {
+              cellIcon = /* @__PURE__ */ u(TaskAltIcon, { sx: { fontSize: "1.4rem", color: "success.main" } });
+              cellTitle = "继承";
+            }
+            return /* @__PURE__ */ u(
+              TableCell,
+              {
+                align: "center",
+                onClick: () => handleCellClick(block, theme2),
+                sx: { cursor: "pointer" },
+                children: /* @__PURE__ */ u(Tooltip, { title: cellTitle, children: /* @__PURE__ */ u("span", { children: cellIcon }) })
+              },
+              block.id
+            );
+          }),
+          /* @__PURE__ */ u(TableCell, { align: "center", children: /* @__PURE__ */ u(
+            IconButton,
+            {
+              size: "small",
+              onClick: (e2) => onContextMenu(e2, theme2),
+              children: /* @__PURE__ */ u(MoreVertIcon, {})
+            }
+          ) })
+        ]
       }
-      return /* @__PURE__ */ u(TableCell, { align: "center", onClick: () => handleCellClick(block, theme2), sx: { cursor: "pointer", verticalAlign: "middle" }, children: /* @__PURE__ */ u(Tooltip, { title: cellTitle, children: /* @__PURE__ */ u("span", { children: cellIcon }) }) }, block.id);
-    }),
-    /* @__PURE__ */ u(TableCell, { align: "center", sx: { verticalAlign: "middle" }, children: /* @__PURE__ */ u(Tooltip, { title: "删除此主题", children: /* @__PURE__ */ u(IconButton, { size: "small", onClick: () => {
-      if (confirm(`确定删除主题 "${theme2.path}" 吗？`)) appStore2.deleteTheme(theme2.id);
-    }, children: /* @__PURE__ */ u(DeleteIcon, { fontSize: "small" }) }) }) })
+    ),
+    expanded && children.map((child) => /* @__PURE__ */ u(
+      ThemeTreeNodeRow,
+      {
+        node: child,
+        blocks,
+        overridesMap,
+        handleCellClick,
+        editingThemeId,
+        setEditingThemeId,
+        appStore: appStore2,
+        selectedThemes,
+        onToggleSelect,
+        onToggleExpand,
+        onContextMenu
+      },
+      child.theme.id
+    ))
   ] });
 }
 function ThemeMatrix({ appStore: appStore2 }) {
@@ -37858,11 +38799,128 @@ function ThemeMatrix({ appStore: appStore2 }) {
   const [editingThemeId, setEditingThemeId] = d(null);
   const [modalOpen, setModalOpen] = d(false);
   const [modalData, setModalData] = d(null);
+  const [selectedThemes, setSelectedThemes] = d(/* @__PURE__ */ new Set());
+  const [expandedNodes, setExpandedNodes] = d(/* @__PURE__ */ new Set());
+  const [contextMenu, setContextMenu] = d(null);
+  const [showArchived, setShowArchived] = d(false);
+  const [batchDialogOpen, setBatchDialogOpen] = d(false);
+  const themeManager = T$1(() => new ThemeManager(), []);
+  const extendedThemes = T$1(() => {
+    return themes.map((theme2) => {
+      const themeData = themeManager.getThemeByPath(theme2.path);
+      return {
+        ...theme2,
+        status: themeData?.status || "active",
+        source: "predefined",
+        usageCount: themeData?.usageCount || 0,
+        lastUsed: themeData?.lastUsed
+      };
+    });
+  }, [themes, themeManager]);
+  const themeTree = T$1(() => {
+    const buildTree = (themes2, parentPath = "", level = 0) => {
+      const nodes = [];
+      const directChildren = themes2.filter((theme2) => {
+        const path = theme2.path;
+        if (parentPath === "") {
+          return !path.includes("/");
+        }
+        return path.startsWith(parentPath + "/") && path.slice(parentPath.length + 1).indexOf("/") === -1;
+      });
+      directChildren.forEach((theme2) => {
+        const children = buildTree(
+          themes2.filter((t2) => t2.path.startsWith(theme2.path + "/")),
+          theme2.path,
+          level + 1
+        );
+        nodes.push({
+          theme: theme2,
+          children,
+          expanded: expandedNodes.has(theme2.id),
+          level
+        });
+      });
+      return nodes;
+    };
+    return buildTree(extendedThemes);
+  }, [extendedThemes, expandedNodes]);
+  const { activeThemes, archivedThemes } = T$1(() => {
+    const active = [];
+    const archived = [];
+    themeTree.forEach((node2) => {
+      if (node2.theme.status === "active") {
+        active.push(node2);
+      } else {
+        archived.push(node2);
+      }
+    });
+    return { activeThemes: active, archivedThemes: archived };
+  }, [themeTree]);
   const overridesMap = T$1(() => {
     const map = /* @__PURE__ */ new Map();
     overrides.forEach((o2) => map.set(`${o2.themeId}:${o2.blockId}`, o2));
     return map;
   }, [overrides]);
+  const handleToggleSelect = (themeId, includeChildren) => {
+    const newSelected = new Set(selectedThemes);
+    const toggleNode = (nodeId) => {
+      if (newSelected.has(nodeId)) {
+        newSelected.delete(nodeId);
+      } else {
+        newSelected.add(nodeId);
+      }
+    };
+    toggleNode(themeId);
+    if (includeChildren) {
+      const findAndToggleChildren = (nodes) => {
+        nodes.forEach((node2) => {
+          if (node2.theme.id === themeId || newSelected.has(node2.theme.id)) {
+            node2.children.forEach((child) => {
+              toggleNode(child.theme.id);
+              findAndToggleChildren([child]);
+            });
+          }
+        });
+      };
+      findAndToggleChildren(themeTree);
+    }
+    setSelectedThemes(newSelected);
+  };
+  const handleSelectAll = () => {
+    if (selectedThemes.size === extendedThemes.length) {
+      setSelectedThemes(/* @__PURE__ */ new Set());
+    } else {
+      setSelectedThemes(new Set(extendedThemes.map((t2) => t2.id)));
+    }
+  };
+  const handleToggleExpand = (themeId) => {
+    const newExpanded = new Set(expandedNodes);
+    if (newExpanded.has(themeId)) {
+      newExpanded.delete(themeId);
+    } else {
+      newExpanded.add(themeId);
+    }
+    setExpandedNodes(newExpanded);
+  };
+  const handleContextMenu = (event, theme2) => {
+    event.preventDefault();
+    setContextMenu({ x: event.clientX, y: event.clientY, theme: theme2 });
+  };
+  const handleBatchOperation = (operation) => {
+    selectedThemes.forEach((themeId) => {
+      const theme2 = extendedThemes.find((t2) => t2.id === themeId);
+      if (theme2) {
+        if (operation === "activate") {
+          themeManager.activateTheme(theme2.path);
+        } else if (operation === "archive") {
+          themeManager.deactivateTheme(theme2.path);
+        } else if (operation === "delete" && theme2.source !== "predefined") {
+          appStore2.deleteTheme(themeId);
+        }
+      }
+    });
+    setSelectedThemes(/* @__PURE__ */ new Set());
+  };
   const handleAddTheme = () => {
     const path = newThemePath.trim();
     if (path && !themes.some((t2) => t2.path === path)) {
@@ -37876,45 +38934,182 @@ function ThemeMatrix({ appStore: appStore2 }) {
     setModalData({ block, theme: theme2, override });
     setModalOpen(true);
   };
-  const handleDragEnd = (event) => {
-    const { active, over } = event;
-    if (active && over && active.id !== over.id) {
-      const oldIndex = themes.findIndex((t2) => t2.id === active.id);
-      const newIndex = themes.findIndex((t2) => t2.id === over.id);
-      if (oldIndex === -1 || newIndex === -1) return;
-      const reorderedThemes = arrayMove(themes, oldIndex, newIndex);
-      appStore2.updateInputSettings({ themes: reorderedThemes });
-    }
-  };
-  return /* @__PURE__ */ u(Box, { sx: { maxWidth: "1000px", mx: "auto" }, children: [
-    /* @__PURE__ */ u(Typography, { variant: "h6", gutterBottom: true, children: "2. 主题配置矩阵" }),
-    /* @__PURE__ */ u(Typography, { variant: "body2", color: "text.secondary", sx: { mb: 2 }, children: "管理不同主题对各类Block的配置。双击图标或路径可直接编辑。点击单元格可进行高级配置。" }),
+  return /* @__PURE__ */ u(Box, { sx: { maxWidth: "1200px", mx: "auto" }, children: [
+    /* @__PURE__ */ u(Typography, { variant: "h6", gutterBottom: true, children: "主题配置矩阵" }),
+    /* @__PURE__ */ u(Typography, { variant: "body2", color: "text.secondary", sx: { mb: 2 }, children: "管理不同主题对各类Block的配置。支持树状管理、批量操作和激活/归档功能。" }),
+    /* @__PURE__ */ u(Paper, { sx: { p: 2, mb: 2 }, children: /* @__PURE__ */ u(Stack, { direction: "row", spacing: 2, alignItems: "center", children: [
+      /* @__PURE__ */ u(
+        Button,
+        {
+          variant: "outlined",
+          onClick: handleSelectAll,
+          startIcon: selectedThemes.size === extendedThemes.length ? /* @__PURE__ */ u(CheckBoxIcon, {}) : /* @__PURE__ */ u(CheckBoxOutlineBlankIcon, {}),
+          children: selectedThemes.size === extendedThemes.length ? "取消全选" : "全选"
+        }
+      ),
+      selectedThemes.size > 0 && /* @__PURE__ */ u("div", { style: { display: "contents" }, children: [
+        /* @__PURE__ */ u(
+          Button,
+          {
+            variant: "outlined",
+            onClick: () => setBatchDialogOpen(true),
+            children: [
+              "批量操作 (",
+              selectedThemes.size,
+              ")"
+            ]
+          }
+        ),
+        /* @__PURE__ */ u(
+          Button,
+          {
+            variant: "outlined",
+            color: "error",
+            onClick: () => setSelectedThemes(/* @__PURE__ */ new Set()),
+            children: "清除选择"
+          }
+        )
+      ] }),
+      /* @__PURE__ */ u(Box, { sx: { flex: 1 } }),
+      /* @__PURE__ */ u(
+        FormControlLabel,
+        {
+          control: /* @__PURE__ */ u(Switch, { checked: showArchived, onChange: (e2) => setShowArchived(e2.target.checked) }),
+          label: "显示归档主题"
+        }
+      )
+    ] }) }),
     /* @__PURE__ */ u(Table, { size: "small", sx: { "& th, & td": { whiteSpace: "nowrap", py: 1, px: 1.5 } }, children: [
       /* @__PURE__ */ u(TableHead, { children: /* @__PURE__ */ u(TableRow, { children: [
-        /* @__PURE__ */ u(TableCell, { sx: { width: "40px" } }),
-        /* @__PURE__ */ u(TableCell, { sx: { width: "10%", fontWeight: "bold" }, children: "图标" }),
-        /* @__PURE__ */ u(TableCell, { sx: { width: "20%", fontWeight: "bold" }, children: "主题" }),
+        /* @__PURE__ */ u(TableCell, { sx: { width: "40px" }, children: /* @__PURE__ */ u(
+          Checkbox,
+          {
+            checked: selectedThemes.size === extendedThemes.length,
+            indeterminate: selectedThemes.size > 0 && selectedThemes.size < extendedThemes.length,
+            onChange: handleSelectAll,
+            sx: { padding: "4px" }
+          }
+        ) }),
+        /* @__PURE__ */ u(TableCell, { sx: { fontWeight: "bold" }, children: "主题路径" }),
+        /* @__PURE__ */ u(TableCell, { align: "center", sx: { fontWeight: "bold", width: "80px" }, children: "图标" }),
         blocks.map((b2) => /* @__PURE__ */ u(TableCell, { align: "center", sx: { fontWeight: "bold" }, children: b2.name }, b2.id)),
-        /* @__PURE__ */ u(TableCell, { align: "center", sx: { fontWeight: "bold" }, children: "操作" })
+        /* @__PURE__ */ u(TableCell, { align: "center", sx: { fontWeight: "bold", width: "60px" }, children: "操作" })
       ] }) }),
-      /* @__PURE__ */ u(DndContext, { collisionDetection: closestCenter, onDragEnd: handleDragEnd, children: /* @__PURE__ */ u(SortableContext, { items: themes.map((t2) => t2.id), strategy: verticalListSortingStrategy, children: /* @__PURE__ */ u(TableBody, { children: themes.map((theme2) => /* @__PURE__ */ u(
-        SortableThemeRow,
-        {
-          theme: theme2,
-          blocks,
-          overridesMap,
-          handleCellClick,
-          editingThemeId,
-          setEditingThemeId,
-          appStore: appStore2
-        },
-        theme2.id
-      )) }) }) })
+      /* @__PURE__ */ u(TableBody, { children: [
+        activeThemes.length > 0 && /* @__PURE__ */ u("div", { style: { display: "contents" }, children: [
+          /* @__PURE__ */ u(TableRow, { children: /* @__PURE__ */ u(TableCell, { colSpan: blocks.length + 4, sx: { backgroundColor: "action.hover" }, children: /* @__PURE__ */ u(Typography, { variant: "subtitle2", sx: { fontWeight: "bold" }, children: [
+            "激活主题 (",
+            activeThemes.length,
+            ")"
+          ] }) }) }),
+          activeThemes.map((node2) => /* @__PURE__ */ u(
+            ThemeTreeNodeRow,
+            {
+              node: node2,
+              blocks,
+              overridesMap,
+              handleCellClick,
+              editingThemeId,
+              setEditingThemeId,
+              appStore: appStore2,
+              selectedThemes,
+              onToggleSelect: handleToggleSelect,
+              onToggleExpand: handleToggleExpand,
+              onContextMenu: handleContextMenu
+            },
+            node2.theme.id
+          ))
+        ] }),
+        showArchived && archivedThemes.length > 0 && /* @__PURE__ */ u("div", { style: { display: "contents" }, children: [
+          /* @__PURE__ */ u(TableRow, { children: /* @__PURE__ */ u(TableCell, { colSpan: blocks.length + 4, sx: { backgroundColor: "action.hover" }, children: /* @__PURE__ */ u(Typography, { variant: "subtitle2", sx: { fontWeight: "bold" }, children: [
+            "归档主题 (",
+            archivedThemes.length,
+            ")"
+          ] }) }) }),
+          archivedThemes.map((node2) => /* @__PURE__ */ u(
+            ThemeTreeNodeRow,
+            {
+              node: node2,
+              blocks,
+              overridesMap,
+              handleCellClick,
+              editingThemeId,
+              setEditingThemeId,
+              appStore: appStore2,
+              selectedThemes,
+              onToggleSelect: handleToggleSelect,
+              onToggleExpand: handleToggleExpand,
+              onContextMenu: handleContextMenu
+            },
+            node2.theme.id
+          ))
+        ] })
+      ] })
     ] }),
     /* @__PURE__ */ u(Stack, { direction: "row", spacing: 1, alignItems: "center", sx: { mt: 2 }, children: [
-      /* @__PURE__ */ u(TextField, { placeholder: "新主题路径 (如: 个人/习惯)", value: newThemePath, onChange: (e2) => setNewThemePath(e2.target.value), onKeyDown: (e2) => e2.key === "Enter" && handleAddTheme(), size: "small", variant: "outlined", sx: { flexGrow: 1, maxWidth: "400px" } }),
+      /* @__PURE__ */ u(
+        TextField,
+        {
+          placeholder: "新主题路径 (如: 个人/习惯)",
+          value: newThemePath,
+          onChange: (e2) => setNewThemePath(e2.target.value),
+          onKeyDown: (e2) => e2.key === "Enter" && handleAddTheme(),
+          size: "small",
+          variant: "outlined",
+          sx: { flexGrow: 1, maxWidth: "400px" }
+        }
+      ),
       /* @__PURE__ */ u(Button, { onClick: handleAddTheme, variant: "outlined", size: "small", startIcon: /* @__PURE__ */ u(AddIcon, {}), children: "添加主题" })
     ] }),
+    /* @__PURE__ */ u(
+      Menu,
+      {
+        open: Boolean(contextMenu),
+        onClose: () => setContextMenu(null),
+        anchorReference: "anchorPosition",
+        anchorPosition: contextMenu ? { top: contextMenu.y, left: contextMenu.x } : void 0,
+        children: [
+          contextMenu?.theme.status === "active" ? /* @__PURE__ */ u(MenuItem, { onClick: () => {
+            themeManager.deactivateTheme(contextMenu.theme.path);
+            setContextMenu(null);
+          }, children: [
+            /* @__PURE__ */ u(ArchiveIcon, { sx: { mr: 1 } }),
+            " 归档"
+          ] }) : /* @__PURE__ */ u(MenuItem, { onClick: () => {
+            themeManager.activateTheme(contextMenu.theme.path);
+            setContextMenu(null);
+          }, children: [
+            /* @__PURE__ */ u(UnarchiveIcon, { sx: { mr: 1 } }),
+            " 激活"
+          ] }),
+          /* @__PURE__ */ u(MenuItem, { onClick: () => {
+            setEditingThemeId(contextMenu.theme.id);
+            setContextMenu(null);
+          }, children: [
+            /* @__PURE__ */ u(EditIcon, { sx: { mr: 1 } }),
+            " 编辑"
+          ] }),
+          /* @__PURE__ */ u(MenuItem, { onClick: () => {
+            if (confirm(`确定删除主题 "${contextMenu.theme.path}" 吗？`)) {
+              appStore2.deleteTheme(contextMenu.theme.id);
+            }
+            setContextMenu(null);
+          }, children: [
+            /* @__PURE__ */ u(DeleteIcon, { sx: { mr: 1 } }),
+            " 删除"
+          ] })
+        ]
+      }
+    ),
+    /* @__PURE__ */ u(
+      BatchOperationDialog,
+      {
+        open: batchDialogOpen,
+        onClose: () => setBatchDialogOpen(false),
+        selectedCount: selectedThemes.size,
+        onConfirm: handleBatchOperation
+      }
+    ),
     modalData && /* @__PURE__ */ u(
       TemplateEditorModal,
       {

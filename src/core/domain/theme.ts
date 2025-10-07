@@ -113,7 +113,7 @@ export function createTheme(
     name,
     icon: options?.icon,
     parentId: options?.parentId || null,
-    status: source === 'predefined' ? 'active' : 'inactive',
+    status: options?.status || (source === 'predefined' ? 'active' : 'inactive'),
     source,
     usageCount: options?.usageCount || 0,
     lastUsed: options?.lastUsed,
@@ -161,7 +161,7 @@ export function isValidThemePath(path: string): boolean {
  * 主题排序函数
  */
 export function sortThemes(themes: Theme[]): Theme[] {
-  return themes.sort((a, b) => {
+  return [...themes].sort((a, b) => {
     // 首先按状态排序（active优先）
     if (a.status !== b.status) {
       return a.status === 'active' ? -1 : 1;
@@ -173,8 +173,12 @@ export function sortThemes(themes: Theme[]): Theme[] {
     }
     
     // 然后按最后使用时间降序
-    if (a.lastUsed && b.lastUsed) {
+    if (a.lastUsed !== undefined && b.lastUsed !== undefined) {
       return b.lastUsed - a.lastUsed;
+    } else if (a.lastUsed !== undefined) {
+      return -1;
+    } else if (b.lastUsed !== undefined) {
+      return 1;
     }
     
     // 然后按order升序
