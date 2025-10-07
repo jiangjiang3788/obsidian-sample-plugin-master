@@ -1,7 +1,7 @@
 // src/features/quick-input/logic/registerCommands.ts
-import type { ThinkPlugin } from '../../../main';
+import type ThinkPlugin from '@/main';
 import { QuickInputModal } from '../ui/QuickInputModal';
-import { AppStore } from '@state/AppStore';
+import { AppStore } from '@state';
 
 export function registerQuickInputCommands(plugin: ThinkPlugin, appStore: AppStore) {
     const settings = appStore.getSettings().inputSettings;
