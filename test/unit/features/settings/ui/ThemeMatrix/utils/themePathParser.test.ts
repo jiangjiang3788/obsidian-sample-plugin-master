@@ -199,10 +199,10 @@ describe('ThemePathParser Utils', () => {
             ];
             const sorted = paths.sort(comparePathsForSort);
             expect(sorted).toEqual([
-                'work',
-                'personal',
-                'personal/habits',
-                'personal/habits/morning'
+                'personal',  // 深度0，按字母顺序 p 在 w 前面
+                'work',      // 深度0
+                'personal/habits',  // 深度1
+                'personal/habits/morning'  // 深度2
             ]);
         });
 

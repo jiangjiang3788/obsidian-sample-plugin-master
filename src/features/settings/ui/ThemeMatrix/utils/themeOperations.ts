@@ -207,7 +207,12 @@ export function sortThemes(
     sortBy: 'path' | 'status' | 'usageCount' | 'lastUsed' = 'path',
     order: 'asc' | 'desc' = 'asc'
 ): ExtendedTheme[] {
-    const sorted = [...themes].sort((a, b) => {
+    const sorted = [...themes].map(theme => ({
+        ...theme,
+        // 确保 undefined 值被转换为 0
+        usageCount: theme.usageCount ?? 0,
+        lastUsed: theme.lastUsed ?? 0
+    })).sort((a, b) => {
         let comparison = 0;
         
         switch (sortBy) {

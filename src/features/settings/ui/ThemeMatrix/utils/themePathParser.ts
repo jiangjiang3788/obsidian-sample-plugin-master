@@ -186,7 +186,7 @@ export function comparePathsForSort(a: string, b: string): number {
     const depthA = getPathDepth(a);
     const depthB = getPathDepth(b);
     
-    // 先按深度排序
+    // 先按深度排序（深度小的在前）
     if (depthA !== depthB) {
         return depthA - depthB;
     }

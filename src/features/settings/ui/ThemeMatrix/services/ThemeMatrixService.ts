@@ -60,10 +60,14 @@ export class ThemeMatrixService {
     getExtendedThemes(themes: ThemeDefinition[]): ExtendedTheme[] {
         return themes.map(theme => {
             const themeData = this.themeManager.getThemeByPath(theme.path);
+            // 如果主题已经有 source 属性，保留它；否则根据 themeData 判断
+            const source = (theme as any).source || 
+                          (themeData?.source) || 
+                          'predefined';
             return {
                 ...theme,
                 status: themeData?.status || 'active',
-                source: 'predefined' as const,
+                source: source as 'predefined' | 'discovered',
                 usageCount: themeData?.usageCount || 0,
                 lastUsed: themeData?.lastUsed
             } as ExtendedTheme;
