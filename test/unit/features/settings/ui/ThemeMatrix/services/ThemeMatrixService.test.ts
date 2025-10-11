@@ -232,7 +232,7 @@ describe('ThemeMatrixService', () => {
                 path: 'work',
                 icon: '💼',
                 status: 'inactive',
-                source: 'custom',
+                source: 'discovered',
                 usageCount: 0
             }
         ];
