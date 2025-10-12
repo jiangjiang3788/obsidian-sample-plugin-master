@@ -477,6 +477,33 @@ export class AppStore {
         });
     }
     
+    // 批量更新主题
+    public batchUpdateThemes = async (
+        themeIds: string[], 
+        updates: Partial<ThemeDefinition>
+    ) => {
+        await this._updateSettingsAndPersist(draft => {
+            themeIds.forEach(id => {
+                const index = draft.inputSettings.themes.findIndex(t => t.id === id);
+                if (index > -1) {
+                    Object.assign(draft.inputSettings.themes[index], updates);
+                }
+            });
+        });
+    }
+    
+    // 批量删除主题
+    public batchDeleteThemes = async (themeIds: string[]) => {
+        await this._updateSettingsAndPersist(draft => {
+            draft.inputSettings.themes = draft.inputSettings.themes.filter(
+                t => !themeIds.includes(t.id)
+            );
+            draft.inputSettings.overrides = draft.inputSettings.overrides.filter(
+                o => !themeIds.includes(o.themeId)
+            );
+        });
+    }
+    
     public upsertOverride = async (overrideData: Omit<ThemeOverride, 'id'>) => {
         await this._updateSettingsAndPersist(draft => {
             const index = draft.inputSettings.overrides.findIndex(o => o.blockId === overrideData.blockId && o.themeId === overrideData.themeId);
@@ -498,6 +525,47 @@ export class AppStore {
             draft.inputSettings.overrides = draft.inputSettings.overrides.filter(
                 o => !(o.blockId === blockId && o.themeId === themeId)
             );
+        });
+    }
+    
+    // 批量更新覆盖配置
+    public batchUpsertOverrides = async (
+        overrides: Array<Omit<ThemeOverride, 'id'>>
+    ) => {
+        await this._updateSettingsAndPersist(draft => {
+            overrides.forEach(override => {
+                const existingIndex = draft.inputSettings.overrides.findIndex(
+                    o => o.blockId === override.blockId && o.themeId === override.themeId
+                );
+                
+                if (existingIndex > -1) {
+                    // 更新现有覆盖
+                    const existingId = draft.inputSettings.overrides[existingIndex].id;
+                    draft.inputSettings.overrides[existingIndex] = {
+                        ...override,
+                        id: existingId
+                    };
+                } else {
+                    // 添加新覆盖
+                    draft.inputSettings.overrides.push({
+                        ...override,
+                        id: generateId('ovr')
+                    });
+                }
+            });
+        });
+    }
+    
+    // 批量删除覆盖配置
+    public batchDeleteOverrides = async (
+        selections: Array<{blockId: string; themeId: string}>
+    ) => {
+        await this._updateSettingsAndPersist(draft => {
+            selections.forEach(({ blockId, themeId }) => {
+                draft.inputSettings.overrides = draft.inputSettings.overrides.filter(
+                    o => !(o.blockId === blockId && o.themeId === themeId)
+                );
+            });
         });
     }
 }

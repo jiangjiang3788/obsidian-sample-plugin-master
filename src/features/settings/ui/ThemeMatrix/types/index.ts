@@ -21,3 +21,39 @@ export type {
     ThemeToolbarProps,
     ModalData
 } from './props.types';
+
+// 批量操作类型
+export type {
+    BatchOperationType as EnhancedBatchOperationType,
+    BatchOperationParams,
+    BatchOperationResult,
+    BatchOperationConfig
+} from './batch.types';
+
+export {
+    BATCH_OPERATION_CONFIGS,
+    getAvailableOperations,
+    isThemeOperation,
+    isBlockOperation
+} from './batch.types';
+
+// 选择状态类型
+export type {
+    SelectionMode,
+    SelectionState,
+    SelectionStats,
+    SelectionAction,
+    SelectionEvent
+} from './selection.types';
+
+export {
+    createEmptySelectionState,
+    getSelectionStats,
+    clearSelectionByMode,
+    clearAllSelections,
+    createCellKey,
+    parseCellKey,
+    getTargetsFromSelection,
+    isItemSelected,
+    toggleItemSelection
+} from './selection.types';

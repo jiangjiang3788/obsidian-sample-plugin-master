@@ -377,4 +377,35 @@ export class ThemeMatrixService {
         
         return result;
     }
+    
+    /**
+     * 获取 ThemeManager 实例
+     * @returns ThemeManager 实例
+     */
+    getThemeManager(): ThemeManager {
+        return this.themeManager;
+    }
+    
+    /**
+     * 根据状态分组主题
+     * @param tree - 主题树
+     * @returns 分组后的主题
+     */
+    groupThemesByStatus(tree: ThemeTreeNode[]): {
+        activeThemes: ThemeTreeNode[];
+        archivedThemes: ThemeTreeNode[];
+    } {
+        const activeThemes: ThemeTreeNode[] = [];
+        const archivedThemes: ThemeTreeNode[] = [];
+        
+        tree.forEach(node => {
+            if (node.theme.status === 'active') {
+                activeThemes.push(node);
+            } else {
+                archivedThemes.push(node);
+            }
+        });
+        
+        return { activeThemes, archivedThemes };
+    }
 }

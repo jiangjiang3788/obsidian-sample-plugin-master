@@ -71,21 +71,26 @@ export interface ThemeMatrixProps {
 export interface ThemeTableProps {
     /** Block模板列表 */
     blocks: BlockTemplate[];
-    /** 主题树节点列表 */
-    themeNodes: ThemeTreeNode[];
+    /** 激活的主题节点 */
+    activeThemes: ThemeTreeNode[];
+    /** 归档的主题节点 */
+    archivedThemes: ThemeTreeNode[];
+    /** 是否显示归档主题 */
+    showArchived: boolean;
     /** 覆盖配置映射 */
     overridesMap: Map<string, ThemeOverride>;
     /** 选中的主题集合 */
     selectedThemes: Set<string>;
     /** 正在编辑的主题ID */
     editingThemeId: string | null;
+    /** 应用状态存储 */
+    appStore: AppStore;
     /** 事件处理器 */
     onCellClick: (block: BlockTemplate, theme: ThemeDefinition) => void;
     onToggleSelect: (themeId: string, includeChildren: boolean) => void;
     onToggleExpand: (themeId: string) => void;
     onContextMenu: (event: MouseEvent, theme: ExtendedTheme) => void;
-    onEditTheme: (themeId: string | null) => void;
-    onUpdateTheme: (themeId: string, updates: Partial<ThemeDefinition>) => void;
+    onSetEditingThemeId: (id: string | null) => void;
 }
 
 /**
@@ -105,7 +110,7 @@ export interface ThemeToolbarProps {
     /** 批量操作处理 */
     onBatchOperation: () => void;
     /** 切换显示归档 */
-    onToggleShowArchived: (show: boolean) => void;
+    onToggleArchived: (show: boolean) => void;
 }
 
 /**

@@ -235,3 +235,65 @@ export function sortThemes(
     
     return sorted;
 }
+
+/**
+ * 处理主题选择（新的函数名）
+ * @param themeId - 主题ID
+ * @param includeChildren - 是否包含子节点
+ * @param selectedThemes - 当前选中的主题集合
+ * @param tree - 主题树
+ * @returns 新的选中主题集合
+ */
+export function handleThemeSelection(
+    themeId: string,
+    includeChildren: boolean,
+    selectedThemes: Set<string>,
+    tree: ThemeTreeNode[]
+): Set<string> {
+    return toggleThemeSelection(themeId, tree, selectedThemes, includeChildren);
+}
+
+/**
+ * 处理批量操作
+ * @param operation - 操作类型
+ * @param selectedThemes - 选中的主题集合
+ * @param extendedThemes - 扩展主题列表
+ * @param themeService - 主题服务
+ * @param appStore - 应用存储
+ */
+export function handleBatchOperation(
+    operation: 'activate' | 'archive' | 'delete',
+    selectedThemes: Set<string>,
+    extendedThemes: ExtendedTheme[],
+    themeService: any,
+    appStore: any
+): void {
+    selectedThemes.forEach(themeId => {
+        const theme = extendedThemes.find(t => t.id === themeId);
+        if (theme) {
+            if (operation === 'activate') {
+                // 激活主题的逻辑
+                if (themeService.getThemeManager) {
+                    themeService.getThemeManager().activateTheme(theme.path);
+                }
+            } else if (operation === 'archive') {
+                // 归档主题的逻辑
+                if (themeService.getThemeManager) {
+                    themeService.getThemeManager().deactivateTheme(theme.path);
+                }
+            } else if (operation === 'delete' && theme.source !== 'predefined') {
+                // 删除主题的逻辑（仅限非预定义主题）
+                appStore.deleteTheme(themeId);
+            }
+        }
+    });
+}
+
+/**
+ * 获取所有子节点ID
+ * @param node - 主题树节点
+ * @returns 子节点ID数组
+ */
+export function getAllChildIds(node: ThemeTreeNode): string[] {
+    return getDescendantIds(node);
+}
