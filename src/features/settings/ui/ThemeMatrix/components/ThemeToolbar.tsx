@@ -8,55 +8,75 @@ import {
     Switch,
     Box
 } from '@mui/material';
-import CheckBoxIcon from '@mui/icons-material/CheckBox';
-import CheckBoxOutlineBlankIcon from '@mui/icons-material/CheckBoxOutlineBlank';
 import type { ThemeToolbarProps } from '../types';
+import { ModeToggle } from './ModeToggle';
 
 export function ThemeToolbar({
-    selectedCount,
-    totalCount,
+    mode,
+    onModeChange,
+    selectionStats,
     showArchived,
     onSelectAll,
     onBatchOperation,
     onClearSelection,
     onToggleArchived
 }: ThemeToolbarProps) {
+    // 判断是否全选状态
+    const isAllSelected = mode === 'theme' 
+        ? selectionStats.themes > 0 // 在主题模式下，有选中的主题就算全选（因为我们不知道总数）
+        : selectionStats.blocks > 0; // 在Block模式下，有选中的Block就算全选
+
     return (
-        <Paper sx={{ p: 2, mb: 2 }}>
-            <Stack direction="row" spacing={2} alignItems="center">
-                <Button 
-                    variant="outlined" 
-                    onClick={onSelectAll}
-                    startIcon={selectedCount === totalCount ? <CheckBoxIcon /> : <CheckBoxOutlineBlankIcon />}
-                >
-                    {selectedCount === totalCount ? '取消全选' : '全选'}
-                </Button>
-                
-                {selectedCount > 0 && (
-                    <div style={{ display: 'contents' }}>
-                        <Button
-                            variant="outlined" 
-                            onClick={onBatchOperation}
-                        >
-                            批量操作 ({selectedCount})
-                        </Button>
-                        <Button 
-                            variant="outlined" 
-                            color="error"
-                            onClick={onClearSelection}
-                        >
-                            清除选择
-                        </Button>
-                    </div>
-                )}
-                
-                <Box sx={{ flex: 1 }} />
-                
-                <FormControlLabel
-                    control={<Switch checked={showArchived} onChange={(e) => onToggleArchived((e.target as any).checked)} />}
-                    label="显示归档主题"
-                />
-            </Stack>
-        </Paper>
+        <div>
+            {/* 模式切换组件 */}
+            <ModeToggle
+                mode={mode}
+                onChange={onModeChange}
+                selectionStats={selectionStats}
+            />
+            
+            {/* 工具栏 */}
+            {/* @ts-ignore */}
+            <Paper sx={{ p: 2, mb: 2 }}>
+                {/* @ts-ignore */}
+                <Stack direction="row" spacing={2} alignItems="center">
+                    <Button 
+                        variant="outlined" 
+                        onClick={onSelectAll}
+                    >
+                        {isAllSelected ? '✓ 取消全选' : '☐ 全选'}
+                    </Button>
+                    
+                    {selectionStats.total > 0 && (
+                        <div style={{ display: 'contents' }}>
+                            {/* @ts-ignore */}
+                            <Button
+                                variant="outlined" 
+                                onClick={onBatchOperation}
+                            >
+                                批量操作 ({selectionStats.total})
+                            </Button>
+                            {/* @ts-ignore */}
+                            <Button 
+                                variant="outlined" 
+                                color="error"
+                                onClick={onClearSelection}
+                            >
+                                清除选择
+                            </Button>
+                        </div>
+                    )}
+                    
+                    {/* @ts-ignore */}
+                    <Box sx={{ flex: 1 }} />
+                    
+                    {/* @ts-ignore */}
+                    <FormControlLabel
+                        control={<Switch checked={showArchived} onChange={(e) => onToggleArchived((e.target as any).checked)} />}
+                        label="显示归档主题"
+                    />
+                </Stack>
+            </Paper>
+        </div>
     );
 }
