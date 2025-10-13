@@ -23,24 +23,24 @@ export function ThemeTreeNodeRow({
     node, 
     blocks, 
     overridesMap, 
-    handleCellClick, 
+    onCellClick, 
     editingThemeId,
-    setEditingThemeId,
+    onSetEditingThemeId,
     appStore,
-    selectedThemes,
-    onToggleSelect,
     onToggleExpand,
-    onContextMenu
+    onContextMenu,
+    isThemeSelected,
+    isPartiallySelected,
+    onThemeSelect
 }: ThemeTreeNodeRowProps) {
     const { theme, children, expanded, level } = node;
-    const isSelected = selectedThemes.has(theme.id);
-    const hasSelectedChildren = children.some(child => 
-        selectedThemes.has(child.theme.id) || 
-        child.children.some(grandchild => selectedThemes.has(grandchild.theme.id))
-    );
+    
+    // 使用传入的检查函数判断是否选中
+    const themeSelected = isThemeSelected(theme.id);
+    const hasSelectedChildren = isPartiallySelected(theme.id);
     
     // 计算复选框状态
-    const checkboxIcon = isSelected 
+    const checkboxIcon = themeSelected 
         ? <CheckBoxIcon />
         : hasSelectedChildren 
             ? <IndeterminateCheckBoxIcon />
@@ -58,14 +58,14 @@ export function ThemeTreeNodeRow({
             >
                 <TableCell sx={{ width: '40px', p: '0 8px' }}>
                     <Checkbox
-                        checked={isSelected}
-                        indeterminate={!isSelected && hasSelectedChildren}
+                        checked={themeSelected}
+                        indeterminate={!themeSelected && hasSelectedChildren}
                         icon={checkboxIcon}
-                        onChange={() => onToggleSelect(theme.id, true)}
-                        sx={{ padding: '4px' }}
-                        onClick={(e: any) => {
+                        onChange={(e) => {
                             e.stopPropagation();
+                            onThemeSelect(theme.id, false, e);
                         }}
+                        sx={{ padding: '4px' }}
                     />
                 </TableCell>
                 
@@ -90,12 +90,12 @@ export function ThemeTreeNodeRow({
                                     value={theme.path} 
                                     onSave={(newPath) => { 
                                         appStore.updateTheme(theme.id, { path: newPath }); 
-                                        setEditingThemeId(null); 
-                                    }} 
+                                        onSetEditingThemeId(null); 
+                                    }}
                                 />
                             ) : (
                                 <Typography 
-                                    onDoubleClick={() => setEditingThemeId(theme.id)}
+                                    onDoubleClick={() => onSetEditingThemeId(theme.id)}
                                     sx={{ cursor: 'text' }}
                                 >
                                     {theme.path}
@@ -126,8 +126,8 @@ export function ThemeTreeNodeRow({
                             value={theme.icon || ''} 
                             onSave={(newIcon) => { 
                                 appStore.updateTheme(theme.id, { icon: newIcon }); 
-                                setEditingThemeId(null); 
-                            }} 
+                                onSetEditingThemeId(null); 
+                            }}
                         />
                     ) : (
                         <Typography>{theme.icon || ' '}</Typography>
@@ -136,6 +136,7 @@ export function ThemeTreeNodeRow({
                 
                 {blocks.map(block => {
                     const override = overridesMap.get(`${theme.id}:${block.id}`);
+                    
                     let cellIcon, cellTitle;
                     if (override) {
                         if (override.status === 'disabled') {
@@ -149,14 +150,24 @@ export function ThemeTreeNodeRow({
                         cellIcon = <TaskAltIcon sx={{ fontSize: '1.4rem', color: 'success.main' }} />;
                         cellTitle = '继承';
                     }
+                    
                     return (
                         <TableCell 
                             key={block.id} 
                             align="center" 
-                            onClick={() => handleCellClick(block, theme)} 
-                            sx={{ cursor: 'pointer' }}
+                            onClick={(e) => onCellClick(block, theme)}
+                            sx={{ 
+                                cursor: 'pointer',
+                                '&:hover': {
+                                    backgroundColor: 'action.hover'
+                                }
+                            }}
                         >
-                            <Tooltip title={cellTitle}><span>{cellIcon}</span></Tooltip>
+                            <Tooltip title={cellTitle}>
+                                <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                    {cellIcon}
+                                </span>
+                            </Tooltip>
                         </TableCell>
                     );
                 })}
@@ -177,14 +188,15 @@ export function ThemeTreeNodeRow({
                     node={child}
                     blocks={blocks}
                     overridesMap={overridesMap}
-                    handleCellClick={handleCellClick}
+                    onCellClick={onCellClick}
                     editingThemeId={editingThemeId}
-                    setEditingThemeId={setEditingThemeId}
+                    onSetEditingThemeId={onSetEditingThemeId}
                     appStore={appStore}
-                    selectedThemes={selectedThemes}
-                    onToggleSelect={onToggleSelect}
                     onToggleExpand={onToggleExpand}
                     onContextMenu={onContextMenu}
+                    isThemeSelected={isThemeSelected}
+                    isPartiallySelected={isPartiallySelected}
+                    onThemeSelect={onThemeSelect}
                 />
             ))}
         </div>

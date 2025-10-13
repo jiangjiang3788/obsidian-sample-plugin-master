@@ -4,6 +4,7 @@
 import type { AppStore } from '@state/AppStore';
 import type { BlockTemplate, ThemeDefinition, ThemeOverride } from '@core/domain/schema';
 import type { ExtendedTheme, ThemeTreeNode, BatchOperationType } from './theme.types';
+import type { ThemeMatrixMode, SelectionStats } from '../hooks/useThemeMatrixSelection';
 
 /**
  * InlineEditor 组件属性
@@ -30,7 +31,7 @@ export interface BatchOperationDialogProps {
 }
 
 /**
- * ThemeTreeNodeRow 组件属性
+ * ThemeTreeNodeRow 组件属性 (简化版)
  */
 export interface ThemeTreeNodeRowProps {
     /** 树节点数据 */
@@ -40,21 +41,22 @@ export interface ThemeTreeNodeRowProps {
     /** 覆盖配置映射 */
     overridesMap: Map<string, ThemeOverride>;
     /** 单元格点击处理 */
-    handleCellClick: (block: BlockTemplate, theme: ThemeDefinition) => void;
+    onCellClick: (block: BlockTemplate, theme: ThemeDefinition) => void;
     /** 正在编辑的主题ID */
     editingThemeId: string | null;
     /** 设置编辑主题ID */
-    setEditingThemeId: (id: string | null) => void;
+    onSetEditingThemeId: (id: string | null) => void;
     /** 应用状态存储 */
     appStore: AppStore;
-    /** 选中的主题集合 */
-    selectedThemes: Set<string>;
-    /** 切换选择状态 */
-    onToggleSelect: (themeId: string, includeChildren: boolean) => void;
     /** 切换展开状态 */
     onToggleExpand: (themeId: string) => void;
     /** 右键菜单处理 */
     onContextMenu: (event: MouseEvent, theme: ExtendedTheme) => void;
+    /** 选择检查函数 */
+    isThemeSelected: (themeId: string) => boolean;
+    isPartiallySelected: (themeId: string) => boolean;
+    /** 选择操作回调 */
+    onThemeSelect: (themeId: string, includeChildren: boolean, event?: any) => void;
 }
 
 /**
@@ -66,7 +68,7 @@ export interface ThemeMatrixProps {
 }
 
 /**
- * ThemeTable 组件属性
+ * ThemeTable 组件属性 (简化版)
  */
 export interface ThemeTableProps {
     /** Block模板列表 */
@@ -79,28 +81,35 @@ export interface ThemeTableProps {
     showArchived: boolean;
     /** 覆盖配置映射 */
     overridesMap: Map<string, ThemeOverride>;
-    /** 选中的主题集合 */
-    selectedThemes: Set<string>;
+    /** 选择状态 */
+    selection: import('../hooks/useThemeMatrixSelection').ThemeMatrixSelection;
     /** 正在编辑的主题ID */
     editingThemeId: string | null;
     /** 应用状态存储 */
     appStore: AppStore;
     /** 事件处理器 */
     onCellClick: (block: BlockTemplate, theme: ThemeDefinition) => void;
-    onToggleSelect: (themeId: string, includeChildren: boolean) => void;
     onToggleExpand: (themeId: string) => void;
     onContextMenu: (event: MouseEvent, theme: ExtendedTheme) => void;
     onSetEditingThemeId: (id: string | null) => void;
+    /** 选择检查函数 */
+    isThemeSelected: (themeId: string) => boolean;
+    isBlockSelected: (blockId: string) => boolean;
+    /** 选择操作回调 */
+    onThemeSelect: (themeId: string, includeChildren: boolean, event?: any) => void;
+    onBlockSelect: (blockId: string, event?: any) => void;
 }
 
 /**
  * ThemeToolbar 组件属性
  */
 export interface ThemeToolbarProps {
-    /** 选中的主题数量 */
-    selectedCount: number;
-    /** 总主题数量 */
-    totalCount: number;
+    /** 当前选择模式 */
+    mode: ThemeMatrixMode;
+    /** 模式切换回调 */
+    onModeChange: (mode: ThemeMatrixMode) => void;
+    /** 选择统计信息 */
+    selectionStats: SelectionStats;
     /** 是否显示归档主题 */
     showArchived: boolean;
     /** 全选处理 */

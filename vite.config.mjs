@@ -32,8 +32,8 @@ export default defineConfig({
     },
 
     build: {
-        // [核心调试步骤] 暂时禁用代码压缩，以便在控制台看到真实的类名
-        minify: false,
+        // 启用代码压缩
+        minify: true,
         
         outDir: 'dist',
         lib: {
