@@ -1,4 +1,5 @@
 /** @jsxImportSource preact */
+import { h } from 'preact';
 import {
     Box, TableRow, TableCell, IconButton, Tooltip,
     Typography, Checkbox, Chip
@@ -113,16 +114,18 @@ export function ThemeTreeNodeRow({
 
                 <AnyTableCell align="center" sx={{ width: '100px' }}>
                     {isEditMode ? (
-                        <AnyCheckbox
-                            size="small"
+                        <input
+                            type="checkbox"
                             checked={isThemeSelected}
-                            disabled={editorState.selectionType === 'block'}
-                            onChange={(e: any) => {
-                                const target = e.target as HTMLInputElement;
-                                console.log('【调试】主题 Checkbox 点击', { themeId: theme.id, checked: target.checked });
-                                onSelectionChange('theme', theme.id, target.checked);
+                            onChange={(e) => {
+                                console.log('【调试】主题 Checkbox 点击', { themeId: theme.id, checked: (e.target as HTMLInputElement).checked });
+                                onSelectionChange('theme', theme.id, (e.target as HTMLInputElement).checked);
                             }}
-                            sx={{ p: 0 }}
+                            style={{ 
+                                margin: 0, 
+                                cursor: 'pointer',
+                                transform: 'scale(1.2)'
+                            }}
                         />
                     ) : (
                         <AnyChip 
@@ -139,15 +142,18 @@ export function ThemeTreeNodeRow({
                     
                     if (isEditMode) {
                         return (
-                            <AnyTableCell key={block.id} align="center" sx={{ p: 0, width: '80px' }}>
-                                <AnyCheckbox
-                                    size="small"
+                            <AnyTableCell key={block.id} align="center" sx={{ p: 0, width: '60px' }}>
+                                <input
+                                    type="checkbox"
                                     checked={isCellSelected}
-                                    disabled={editorState.selectionType === 'theme'}
-                                    onChange={(e: any) => {
-                                        const target = e.target as HTMLInputElement;
-                                        console.log('【调试】单元格 Checkbox 点击', { cellId, checked: target.checked });
-                                        onSelectionChange('block', cellId, target.checked);
+                                    onChange={(e) => {
+                                        console.log('【调试】单元格 Checkbox 点击', { cellId, checked: (e.target as HTMLInputElement).checked });
+                                        onSelectionChange('block', cellId, (e.target as HTMLInputElement).checked);
+                                    }}
+                                    style={{ 
+                                        margin: 0, 
+                                        cursor: 'pointer',
+                                        transform: 'scale(1.2)'
                                     }}
                                 />
                             </AnyTableCell>
@@ -174,7 +180,7 @@ export function ThemeTreeNodeRow({
                             key={block.id} 
                             align="center" 
                             onClick={() => onCellClick(block, theme)}
-                            sx={{ cursor: 'pointer', '&:hover': { backgroundColor: 'action.hover' }, width: '80px' }}
+                            sx={{ cursor: 'pointer', '&:hover': { backgroundColor: 'action.hover' }, width: '60px' }}
                         >
                             <AnyTooltip title={cellTitle}>
                                 <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>

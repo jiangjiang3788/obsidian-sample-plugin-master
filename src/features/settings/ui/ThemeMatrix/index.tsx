@@ -41,9 +41,11 @@ export function ThemeMatrix({ appStore }: ThemeMatrixProps) {
     const {
         editorState,
         toggleEditMode,
-        handleSelection,
+        handleSelectionChange,
         clearSelection,
         getSelectionStats,
+        handleSelectAll,
+        handleSelectBlockColumn,
     } = useThemeMatrixEditor();
 
     // 初始化服务
@@ -61,6 +63,9 @@ export function ThemeMatrix({ appStore }: ThemeMatrixProps) {
     const extendedThemes = useMemo(() => {
         return themeService.getExtendedThemes(themes);
     }, [themes, themeService]);
+    
+    // 提取所有主题ID，用于全选操作
+    const allThemeIds = useMemo(() => extendedThemes.map(t => t.id), [extendedThemes]);
     
     // 构建主题树
     const themeTree = useMemo(() => {
@@ -102,7 +107,7 @@ export function ThemeMatrix({ appStore }: ThemeMatrixProps) {
         if (editorState.mode === 'edit') {
             const cellId = `${theme.id}:${block.id}`;
             const isSelected = editorState.selectedCells.has(cellId);
-            handleSelection('block', cellId, !isSelected);
+            handleSelectionChange('block', cellId, !isSelected);
             return;
         }
         // 只有在预览模式下才打开编辑器
@@ -160,7 +165,9 @@ export function ThemeMatrix({ appStore }: ThemeMatrixProps) {
                 editorState={editorState}
                 onCellClick={handleCellClick}
                 onToggleExpand={handleToggleExpand}
-                onSelectionChange={handleSelection}
+                onSelectionChange={handleSelectionChange}
+                onSelectAllThemes={(isSelected: boolean) => handleSelectAll(allThemeIds, isSelected)}
+                onSelectBlockColumn={(blockId: string, isSelected: boolean) => handleSelectBlockColumn(blockId, allThemeIds, isSelected)}
                 // 传递 appStore 用于内联编辑等
                 appStore={appStore}
             />

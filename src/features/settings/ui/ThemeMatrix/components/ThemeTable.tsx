@@ -28,6 +28,8 @@ interface NewThemeTableProps {
     onCellClick: (block: BlockTemplate, theme: ThemeDefinition) => void;
     onToggleExpand: (themeId: string) => void;
     onSelectionChange: (type: 'theme' | 'block', id: string, isSelected: boolean) => void;
+    onSelectAllThemes: (isSelected: boolean) => void;
+    onSelectBlockColumn: (blockId: string, isSelected: boolean) => void;
 }
 
 
@@ -42,10 +44,20 @@ export function ThemeTable({
     onCellClick,
     onToggleExpand,
     onSelectionChange,
+    onSelectAllThemes,
+    onSelectBlockColumn,
 }: NewThemeTableProps) {
     const isEditMode = editorState.mode === 'edit';
     const isThemeSelection = editorState.selectionType === 'theme';
     const isBlockSelection = editorState.selectionType === 'block';
+
+    // Derived state for header checkboxes
+    const allVisibleThemes = showArchived ? [...activeThemes, ...archivedThemes] : activeThemes;
+    const allVisibleThemeIds = allVisibleThemes.map(node => node.theme.id);
+    const selectedThemeCount = editorState.selectedThemes.size;
+    const totalThemeCount = allVisibleThemeIds.length;
+    const areAllThemesSelected = totalThemeCount > 0 && selectedThemeCount === totalThemeCount;
+    const areSomeThemesSelected = selectedThemeCount > 0 && selectedThemeCount < totalThemeCount;
 
     // HACK: Cast all MUI components to `any` to resolve Preact/React type conflicts.
     const AnyTable = Table as any;
@@ -116,42 +128,76 @@ export function ThemeTable({
     };
 
     return (
-        <AnyTable size="small" sx={{ tableLayout: 'fixed', '& th, & td': { whiteSpace: 'nowrap', py: 1, px: 1.5 } }}>
+        <AnyTable size="small" sx={{ tableLayout: 'auto', '& th, & td': { whiteSpace: 'nowrap', py: 1, px: 1.5 } }}>
             <AnyTableHead>
                 <AnyTableRow>
-                    <AnyTableCell sx={{ fontWeight: 'bold', width: '300px', minWidth: '300px' }}>
+                    <AnyTableCell sx={{ fontWeight: 'bold', minWidth: '200px' }}>
                         主题路径
                     </AnyTableCell>
                     <AnyTableCell align="center" sx={{ fontWeight: 'bold', width: '100px' }}>
-                        {isEditMode ? (
-                            <AnyCheckbox
-                                size="small"
-                                disabled={isBlockSelection}
-                                // indeterminate={} // TODO: Add indeterminate state
-                                // checked={} // TODO: Add checked state
-                                // onChange={} // TODO: Add select all themes
-                                sx={{ p: 0 }}
-                            />
-                        ) : '状态'}
-                    </AnyTableCell>
-                    {blocks.map(b => (
-                        <AnyTableCell 
-                            key={b.id} 
-                            align="center" 
-                            sx={{ fontWeight: 'bold', width: '80px', minWidth: '80px' }}
-                        >
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
                             {isEditMode && (
-                                <AnyCheckbox
-                                    size="small"
-                                    disabled={isThemeSelection}
-                                    // checked={} // TODO
-                                    // onChange={} // TODO
-                                    sx={{ p: 0, mr: 0.5 }}
+                                <input
+                                    type="checkbox"
+                                    disabled={isBlockSelection}
+                                    ref={(el) => {
+                                        if (el) {
+                                            el.indeterminate = areSomeThemesSelected;
+                                        }
+                                    }}
+                                    checked={areAllThemesSelected}
+                                    onChange={(e) => onSelectAllThemes((e.target as HTMLInputElement).checked)}
+                                    style={{ 
+                                        margin: 0, 
+                                        cursor: isBlockSelection ? 'not-allowed' : 'pointer',
+                                        transform: 'scale(1.2)',
+                                        opacity: isBlockSelection ? 0.5 : 1
+                                    }}
                                 />
                             )}
-                            {b.name}
-                        </AnyTableCell>
-                    ))}
+                            状态
+                        </div>
+                    </AnyTableCell>
+                    {blocks.map(b => {
+                        const allCellIdsForBlock = allVisibleThemeIds.map(themeId => `${themeId}:${b.id}`);
+                        const selectedCellCountForBlock = allCellIdsForBlock.filter(cellId =>
+                            editorState.selectedCells.has(cellId)
+                        ).length;
+                        const totalCellCountForBlock = allVisibleThemeIds.length;
+                        const areAllWindowsBlockSelected =
+                            totalCellCountForBlock > 0 && selectedCellCountForBlock === totalCellCountForBlock;
+                        const areSomeWindowsBlockSelected =
+                            selectedCellCountForBlock > 0 && selectedCellCountForBlock < totalCellCountForBlock;
+
+                        return (
+                            <AnyTableCell
+                                key={b.id}
+                                align="center"
+                                sx={{ fontWeight: 'bold', width: '40px', minWidth: '40px' }}
+                            >
+                                {isEditMode && (
+                                    <input
+                                        type="checkbox"
+                                        disabled={isThemeSelection}
+                                        ref={(el) => {
+                                            if (el) {
+                                                el.indeterminate = areSomeWindowsBlockSelected;
+                                            }
+                                        }}
+                                        checked={areAllWindowsBlockSelected}
+                                        onChange={(e) => onSelectBlockColumn(b.id, (e.target as HTMLInputElement).checked)}
+                                        style={{ 
+                                            margin: '0 4px 0 0', 
+                                            cursor: isThemeSelection ? 'not-allowed' : 'pointer',
+                                            transform: 'scale(1.2)',
+                                            opacity: isThemeSelection ? 0.5 : 1
+                                        }}
+                                    />
+                                )}
+                                {b.name}
+                            </AnyTableCell>
+                        );
+                    })}
                 </AnyTableRow>
             </AnyTableHead>
             <AnyTableBody>
