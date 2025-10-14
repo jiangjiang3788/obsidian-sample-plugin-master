@@ -26,6 +26,8 @@ export interface ThinkSettings {
     inputSettings: InputSettings;
     // [新增] 悬浮计时器设置
     floatingTimerEnabled: boolean;
+    // [新增] 激活的主题路径
+    activeThemePaths?: string[];
 }
 
 export const DEFAULT_SETTINGS: ThinkSettings = {
@@ -36,6 +38,8 @@ export const DEFAULT_SETTINGS: ThinkSettings = {
     inputSettings: { blocks: [], themes: [], overrides: [] },
     // [新增] 悬浮计时器默认启用
     floatingTimerEnabled: true,
+    // [新增]
+    activeThemePaths: [],
 };
 
 
@@ -72,7 +76,7 @@ export interface ThemeOverride {
     id: string;
     blockId: string;
     themeId: string;
-    status: 'enabled' | 'disabled';
+    disabled?: boolean;
     fields?: TemplateField[];
     outputTemplate?: string;
     targetFile?: string;

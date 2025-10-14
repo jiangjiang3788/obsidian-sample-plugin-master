@@ -53,10 +53,4 @@ export default defineConfig({
     optimizeDeps: {
         include: ['preact', 'preact/hooks'],
     },
-
-    esbuild: {
-        jsxFactory: 'h',
-        jsxFragment: 'Fragment',
-        jsxInject: `import { h, Fragment } from 'preact'`,
-    },
 });
