@@ -6,16 +6,25 @@ import { useState, useCallback, useMemo } from 'preact/hooks';
 import type { AppStore } from '@state/AppStore';
 import type { ThemeManager } from '@core/services/ThemeManager';
 import { BatchOperationService } from '../services/BatchOperationService';
-import type { 
-  ThemeMatrixSelection, 
-  BatchOperationType, 
-  BatchOperationParams 
-} from './useThemeMatrixSelection';
+import type { EditorState } from './useThemeMatrixEditor';
+
+// 定义新的参数类型
+export type BatchOperation = 
+  | 'activate' | 'archive' | 'delete' | 'setIcon'
+  | 'setInherit' | 'setOverride' | 'setDisabled';
+
+export interface BatchOperationParams {
+  operation: BatchOperation;
+  themeIds?: string[];
+  cellIds?: string[];
+  params?: {
+    icon?: string;
+  };
+}
 
 export interface UseBatchOperationsConfig {
   appStore: AppStore;
   themeManager: ThemeManager;
-  selection: ThemeMatrixSelection;
   onOperationComplete?: () => void;
 }
 
@@ -25,7 +34,6 @@ export interface UseBatchOperationsConfig {
 export function useBatchOperations({
   appStore,
   themeManager,
-  selection,
   onOperationComplete
 }: UseBatchOperationsConfig) {
   const [isProcessing, setIsProcessing] = useState(false);
@@ -43,169 +51,63 @@ export function useBatchOperations({
     
     setIsProcessing(true);
     try {
-      await batchService.executeBatchOperation(params);
+      // 在这里，我们可以根据 params 调用不同的 appStore 方法
+      // 这是简化的实现，实际应使用更健壮的服务层
+      const { operation, themeIds, cellIds, params: operationParams } = params;
+
+      if (themeIds && themeIds.length > 0) {
+        switch (operation) {
+          case 'activate':
+            await appStore.batchUpdateThemeStatus(themeIds, 'active');
+            break;
+          case 'archive':
+            await appStore.batchUpdateThemeStatus(themeIds, 'archived');
+            break;
+          case 'delete':
+            if (confirm(`确定要删除 ${themeIds.length} 个主题吗？`)) {
+              await appStore.batchDeleteThemes(themeIds);
+            }
+            break;
+          case 'setIcon':
+            const icon = prompt('请输入新的图标:', '📁');
+            if (icon !== null) {
+              await appStore.batchUpdateThemeIcon(themeIds, icon);
+            }
+            break;
+        }
+      }
+
+      if (cellIds && cellIds.length > 0) {
+        const cells = cellIds.map(id => {
+            const [themeId, blockId] = id.split(':');
+            return { themeId, blockId };
+        });
+
+        switch (operation) {
+          case 'setInherit':
+            await appStore.batchDeleteOverrides(cells);
+            break;
+          case 'setDisabled':
+            await appStore.batchSetOverrideStatus(cells, 'disabled');
+            break;
+          case 'setOverride':
+             // 对于覆盖，可能需要一个模态框来输入通用配置
+            console.log('批量覆盖操作需要UI支持');
+            break;
+        }
+      }
+
       onOperationComplete?.();
     } catch (error) {
       console.error('批量操作失败:', error);
-      throw error;
+      // 可以在这里添加用户通知
     } finally {
       setIsProcessing(false);
     }
-  }, [batchService, isProcessing, onOperationComplete]);
-  
-  /**
-   * 批量激活主题
-   */
-  const batchActivate = useCallback(async () => {
-    if (selection.mode !== 'theme' || selection.selectedThemes.size === 0) return;
-    
-    const targets = Array.from(selection.selectedThemes);
-    await executeBatchOperation({
-      mode: 'theme',
-      operation: 'activate',
-      targets
-    });
-  }, [selection, executeBatchOperation]);
-  
-  /**
-   * 批量归档主题
-   */
-  const batchArchive = useCallback(async () => {
-    if (selection.mode !== 'theme' || selection.selectedThemes.size === 0) return;
-    
-    const targets = Array.from(selection.selectedThemes);
-    await executeBatchOperation({
-      mode: 'theme',
-      operation: 'archive',
-      targets
-    });
-  }, [selection, executeBatchOperation]);
-  
-  /**
-   * 批量删除主题
-   */
-  const batchDelete = useCallback(async () => {
-    if (selection.mode !== 'theme' || selection.selectedThemes.size === 0) return;
-    
-    const targets = Array.from(selection.selectedThemes);
-    await executeBatchOperation({
-      mode: 'theme',
-      operation: 'delete',
-      targets
-    });
-  }, [selection, executeBatchOperation]);
-  
-  /**
-   * 批量设置图标
-   */
-  const batchSetIcon = useCallback(async (icon: string) => {
-    if (selection.mode !== 'theme' || selection.selectedThemes.size === 0) return;
-    
-    const targets = Array.from(selection.selectedThemes);
-    await executeBatchOperation({
-      mode: 'theme',
-      operation: 'setIcon',
-      targets,
-      params: { icon }
-    });
-  }, [selection, executeBatchOperation]);
-  
-  /**
-   * 批量设置Block为继承状态
-   */
-  const batchSetBlockInherit = useCallback(async () => {
-    if (selection.mode !== 'block' || selection.selectedBlocks.size === 0) return;
-    
-    const targets = BatchOperationService.getOperationTargets(selection, 'setInherit');
-    await executeBatchOperation({
-      mode: 'block',
-      operation: 'setInherit',
-      targets
-    });
-  }, [selection, executeBatchOperation]);
-  
-  /**
-   * 批量设置Block为覆盖状态
-   */
-  const batchSetBlockOverride = useCallback(async (template?: any) => {
-    if (selection.mode !== 'block' || selection.selectedBlocks.size === 0) return;
-    
-    const targets = BatchOperationService.getOperationTargets(selection, 'setOverride');
-    await executeBatchOperation({
-      mode: 'block',
-      operation: 'setOverride',
-      targets,
-      params: { template }
-    });
-  }, [selection, executeBatchOperation]);
-  
-  /**
-   * 批量设置Block为禁用状态
-   */
-  const batchSetBlockDisabled = useCallback(async () => {
-    if (selection.mode !== 'block' || selection.selectedBlocks.size === 0) return;
-    
-    const targets = BatchOperationService.getOperationTargets(selection, 'setDisabled');
-    await executeBatchOperation({
-      mode: 'block',
-      operation: 'setDisabled',
-      targets
-    });
-  }, [selection, executeBatchOperation]);
-  
-  /**
-   * 批量应用模板
-   */
-  const batchApplyTemplate = useCallback(async (template: any) => {
-    if (selection.mode !== 'block' || selection.selectedBlocks.size === 0) return;
-    
-    const targets = BatchOperationService.getOperationTargets(selection, 'applyTemplate');
-    await executeBatchOperation({
-      mode: 'block',
-      operation: 'applyTemplate',
-      targets,
-      params: { template }
-    });
-  }, [selection, executeBatchOperation]);
-  
-  /**
-   * 检查操作是否可用
-   */
-  const isOperationAvailable = useCallback((operation: BatchOperationType): boolean => {
-    return BatchOperationService.isOperationAvailable(selection, operation);
-  }, [selection]);
-  
-  /**
-   * 获取可用的操作列表
-   */
-  const availableOperations = useMemo((): BatchOperationType[] => {
-    const allOperations: BatchOperationType[] = [
-      'activate', 'archive', 'delete', 'setIcon', 'toggleEdit',
-      'setInherit', 'setOverride', 'setDisabled', 'applyTemplate'
-    ];
-    
-    return allOperations.filter(op => isOperationAvailable(op));
-  }, [isOperationAvailable]);
+  }, [appStore, isProcessing, onOperationComplete]);
   
   return {
-    // 状态
     isProcessing,
-    availableOperations,
-    
-    // 通用方法
     executeBatchOperation,
-    isOperationAvailable,
-    
-    // 主题操作
-    batchActivate,
-    batchArchive,
-    batchDelete,
-    batchSetIcon,
-    
-    // Block操作
-    batchSetBlockInherit,
-    batchSetBlockOverride,
-    batchSetBlockDisabled,
-    batchApplyTemplate
   };
 }

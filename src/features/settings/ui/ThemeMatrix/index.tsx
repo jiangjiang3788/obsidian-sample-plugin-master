@@ -2,13 +2,9 @@
 import { h } from 'preact';
 import { useStore } from '@state/AppStore';
 import { 
-    Box, Typography, TextField, Button, Stack, Menu, MenuItem
+    Box, Typography, TextField, Button, Stack 
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
-import DeleteIcon from '@mui/icons-material/Delete';
-import EditIcon from '@mui/icons-material/Edit';
-import ArchiveIcon from '@mui/icons-material/Archive';
-import UnarchiveIcon from '@mui/icons-material/Unarchive';
 import { useState, useMemo } from 'preact/hooks';
 import { TemplateEditorModal } from '../components/TemplateEditorModal';
 import type { BlockTemplate, ThemeDefinition, ThemeOverride } from '@core/domain/schema';
@@ -18,34 +14,47 @@ import { ThemeManager } from '@core/services/ThemeManager';
 import { ThemeMatrixService } from './services/ThemeMatrixService';
 
 // 导入类型
-import type { ExtendedTheme, ThemeMatrixProps } from './types';
+import type { ThemeMatrixProps } from './types';
 
 // 导入工具函数
 import { buildThemeTree } from './utils/themeTreeBuilder';
 
 // 导入组件
-import { BatchOperationDialog } from './components/BatchOperationDialog';
 import { ThemeToolbar } from './components/ThemeToolbar';
+import { ContextualToolbar } from './components/ContextualToolbar';
 import { ThemeTable } from './components/ThemeTable';
 
 // 导入新的Hooks
-import { useThemeMatrixSelection, type BatchOperationParams } from './hooks/useThemeMatrixSelection';
-import { useBatchOperations } from './hooks/useBatchOperations';
+import { useThemeMatrixEditor } from './hooks/useThemeMatrixEditor';
+import { useBatchOperations, type BatchOperation } from './hooks/useBatchOperations';
 
 // 主组件
 export function ThemeMatrix({ appStore }: ThemeMatrixProps) {
     const { blocks, themes, overrides } = useStore(state => state.settings.inputSettings);
     const [newThemePath, setNewThemePath] = useState('');
-    const [editingThemeId, setEditingThemeId] = useState<string | null>(null);
     const [modalOpen, setModalOpen] = useState(false);
     const [modalData, setModalData] = useState<{ block: BlockTemplate; theme: ThemeDefinition; override: ThemeOverride | null } | null>(null);
     const [expandedNodes, setExpandedNodes] = useState<Set<string>>(new Set());
-    const [contextMenu, setContextMenu] = useState<{ x: number; y: number; theme: ExtendedTheme } | null>(null);
-    const [showArchived, setShowArchived] = useState(false);
-    const [batchDialogOpen, setBatchDialogOpen] = useState(false);
+    const [showArchived, setShowArchived] = useState(false); // 暂时保留，后续会移到过滤菜单
     
+    // 新的编辑器状态 Hook
+    const {
+        editorState,
+        toggleEditMode,
+        handleSelection,
+        clearSelection,
+        getSelectionStats,
+    } = useThemeMatrixEditor();
+
     // 初始化服务
     const themeManager = useMemo(() => new ThemeManager(), []);
+    
+    // 批量操作 Hook
+    const { executeBatchOperation, isProcessing } = useBatchOperations({
+        appStore,
+        themeManager,
+        onOperationComplete: clearSelection,
+    });
     const themeService = useMemo(() => new ThemeMatrixService({ appStore, themeManager }), [appStore, themeManager]);
     
     // 获取扩展的主题信息
@@ -58,34 +67,6 @@ export function ThemeMatrix({ appStore }: ThemeMatrixProps) {
         return buildThemeTree(extendedThemes, expandedNodes);
     }, [extendedThemes, expandedNodes]);
     
-    // 使用新的选择模式Hook
-    const {
-        selection,
-        selectionStats,
-        mode: selectionMode,
-        setMode: setSelectionMode,
-        toggleThemeSelection,
-        toggleBlockSelection,
-        selectAll,
-        clearSelection,
-        isThemeSelected,
-        isBlockSelected,
-        isPartiallySelected
-    } = useThemeMatrixSelection(themeTree);
-    
-    // 使用批量操作Hook
-    const {
-        isProcessing,
-        executeBatchOperation
-    } = useBatchOperations({
-        appStore,
-        themeManager,
-        selection,
-        onOperationComplete: () => {
-            clearSelection();
-        }
-    });
-    
     // 分组主题（激活和归档）
     const { activeThemes, archivedThemes } = useMemo(() => {
         return themeService.groupThemesByStatus(themeTree);
@@ -96,32 +77,6 @@ export function ThemeMatrix({ appStore }: ThemeMatrixProps) {
         overrides.forEach(o => map.set(`${o.themeId}:${o.blockId}`, o));
         return map;
     }, [overrides]);
-    
-    // 处理主题选择
-    const handleToggleSelect = (themeId: string, includeChildren: boolean, event?: any) => {
-        if (selectionMode === 'theme') {
-            toggleThemeSelection(themeId, includeChildren, event);
-        }
-    };
-    
-    // 处理Block列选择
-    const handleToggleBlockSelect = (blockId: string, event?: any) => {
-        if (selectionMode === 'block') {
-            const allThemeIds = extendedThemes.map(t => t.id);
-            toggleBlockSelection(blockId, allThemeIds, event);
-        }
-    };
-    
-    // 处理全选/取消全选
-    const handleSelectAll = () => {
-        if (selectionMode === 'theme') {
-            if (selection.selectedThemes.size === extendedThemes.length) {
-                clearSelection();
-            } else {
-                selectAll();
-            }
-        }
-    };
     
     // 处理节点展开/折叠
     const handleToggleExpand = (themeId: string) => {
@@ -134,12 +89,6 @@ export function ThemeMatrix({ appStore }: ThemeMatrixProps) {
         setExpandedNodes(newExpanded);
     };
     
-    // 处理右键菜单
-    const handleContextMenu = (event: MouseEvent, theme: ExtendedTheme) => {
-        event.preventDefault();
-        setContextMenu({ x: event.clientX, y: event.clientY, theme });
-    };
-    
     const handleAddTheme = () => {
         const path = newThemePath.trim();
         if (path && !themes.some(t => t.path === path)) {
@@ -148,13 +97,35 @@ export function ThemeMatrix({ appStore }: ThemeMatrixProps) {
         }
     };
     
-    const handleCellClick = (block: BlockTemplate, theme: ThemeDefinition, event?: any) => {
-        if (editingThemeId) return;
+    const handleCellClick = (block: BlockTemplate, theme: ThemeDefinition) => {
+        // 在编辑模式下，点击单元格是用于选择，而不是打开模态框
+        if (editorState.mode === 'edit') {
+            const cellId = `${theme.id}:${block.id}`;
+            const isSelected = editorState.selectedCells.has(cellId);
+            handleSelection('block', cellId, !isSelected);
+            return;
+        }
+        // 只有在预览模式下才打开编辑器
         const override = overridesMap.get(`${theme.id}:${block.id}`) || null;
         setModalData({ block, theme, override });
         setModalOpen(true);
     };
-    
+
+    const handleBatchAction = (operation: BatchOperation) => {
+        const { selectionType, selectedThemes, selectedCells } = editorState;
+
+        if (selectionType === 'theme') {
+            executeBatchOperation({
+                operation,
+                themeIds: Array.from(selectedThemes),
+            });
+        } else if (selectionType === 'block') {
+            executeBatchOperation({
+                operation,
+                cellIds: Array.from(selectedCells),
+            });
+        }
+    };
 
     return (
         // @ts-ignore - MUI与Preact类型兼容性问题
@@ -163,21 +134,22 @@ export function ThemeMatrix({ appStore }: ThemeMatrixProps) {
                 主题配置矩阵
             </Typography>
             <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                管理不同主题对各类Block的配置。支持树状管理、批量操作和激活/归档功能。
+                管理不同主题对各类Block的配置。进入编辑模式以进行批量操作。
             </Typography>
             
             {/* 工具栏 */}
             <ThemeToolbar
-                mode={selectionMode}
-                onModeChange={setSelectionMode}
-                selectionStats={selectionStats}
-                showArchived={showArchived}
-                onSelectAll={handleSelectAll}
-                onBatchOperation={() => setBatchDialogOpen(true)}
-                onClearSelection={clearSelection}
-                onToggleArchived={setShowArchived}
+                mode={editorState.mode}
+                onToggleEditMode={toggleEditMode}
             />
             
+            {/* @ts-ignore - MUI与Preact类型兼容性问题 */}
+            <ContextualToolbar
+                editorState={editorState}
+                onAction={handleBatchAction}
+                onClearSelection={clearSelection}
+            />
+
             {/* 主题表格 */}
             <ThemeTable
                 blocks={blocks}
@@ -185,17 +157,12 @@ export function ThemeMatrix({ appStore }: ThemeMatrixProps) {
                 archivedThemes={archivedThemes}
                 showArchived={showArchived}
                 overridesMap={overridesMap}
-                selection={selection}
-                editingThemeId={editingThemeId}
-                appStore={appStore}
+                editorState={editorState}
                 onCellClick={handleCellClick}
                 onToggleExpand={handleToggleExpand}
-                onContextMenu={handleContextMenu}
-                onSetEditingThemeId={setEditingThemeId}
-                isThemeSelected={isThemeSelected}
-                isBlockSelected={isBlockSelected}
-                onThemeSelect={handleToggleSelect}
-                onBlockSelect={handleToggleBlockSelect}
+                onSelectionChange={handleSelection}
+                // 传递 appStore 用于内联编辑等
+                appStore={appStore}
             />
             
             {/* 添加新主题 */}
@@ -215,60 +182,6 @@ export function ThemeMatrix({ appStore }: ThemeMatrixProps) {
                     添加主题
                 </Button>
             </Stack>
-            
-            {/* 右键菜单 */}
-            {/* @ts-ignore - MUI与Preact类型兼容性问题 */}
-            <Menu
-                open={Boolean(contextMenu)}
-                onClose={() => setContextMenu(null)}
-                anchorReference="anchorPosition"
-                anchorPosition={contextMenu ? { top: contextMenu.y, left: contextMenu.x } : undefined}
-            >
-                {contextMenu?.theme.status === 'active' ? (
-                    // @ts-ignore - MUI与Preact类型兼容性问题
-                    <MenuItem onClick={() => {
-                        themeService.getThemeManager().deactivateTheme(contextMenu.theme.path);
-                        setContextMenu(null);
-                    }}>
-                        <ArchiveIcon sx={{ mr: 1 }} /> 归档
-                    </MenuItem>
-                ) : (
-                    // @ts-ignore - MUI与Preact类型兼容性问题
-                    <MenuItem onClick={() => {
-                        themeService.getThemeManager().activateTheme(contextMenu!.theme.path);
-                        setContextMenu(null);
-                    }}>
-                        <UnarchiveIcon sx={{ mr: 1 }} /> 激活
-                    </MenuItem>
-                )}
-                {/* @ts-ignore - MUI与Preact类型兼容性问题 */}
-                <MenuItem onClick={() => {
-                    setEditingThemeId(contextMenu!.theme.id);
-                    setContextMenu(null);
-                }}>
-                    <EditIcon sx={{ mr: 1 }} /> 编辑
-                </MenuItem>
-                {/* @ts-ignore - MUI与Preact类型兼容性问题 */}
-                <MenuItem onClick={() => {
-                    if (confirm(`确定删除主题 "${contextMenu!.theme.path}" 吗？`)) {
-                        appStore.deleteTheme(contextMenu!.theme.id);
-                    }
-                    setContextMenu(null);
-                }}>
-                    <DeleteIcon sx={{ mr: 1 }} /> 删除
-                </MenuItem>
-            </Menu>
-            
-            {/* 批量操作对话框 */}
-            <BatchOperationDialog
-                open={batchDialogOpen}
-                onClose={() => setBatchDialogOpen(false)}
-                selectedCount={selection.selectedThemes.size}
-                onConfirm={async (operation) => {
-                    await executeBatchOperation({ operation });
-                    setBatchDialogOpen(false);
-                }}
-            />
             
             {/* 模板编辑器模态框 */}
             {modalData && (

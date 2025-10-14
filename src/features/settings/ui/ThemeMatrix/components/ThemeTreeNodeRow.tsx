@@ -1,145 +1,163 @@
 /** @jsxImportSource preact */
-import { h } from 'preact';
 import {
     Box, TableRow, TableCell, IconButton, Tooltip,
     Typography, Checkbox, Chip
 } from '@mui/material';
+// HACK: Cast all MUI components to `any` to resolve Preact/React type conflicts.
+const AnyTableRow = TableRow as any;
+const AnyTableCell = TableCell as any;
+const AnyIconButton = IconButton as any;
+const AnyTooltip = Tooltip as any;
+const AnyTypography = Typography as any;
+const AnyCheckbox = Checkbox as any;
+const AnyChip = Chip as any;
+const AnyBox = Box as any;
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
-import FolderIcon from '@mui/icons-material/Folder';
-import FolderOpenIcon from '@mui/icons-material/FolderOpen';
-import ArchiveIcon from '@mui/icons-material/Archive';
-import MoreVertIcon from '@mui/icons-material/MoreVert';
-import CheckBoxIcon from '@mui/icons-material/CheckBox';
-import CheckBoxOutlineBlankIcon from '@mui/icons-material/CheckBoxOutlineBlank';
-import IndeterminateCheckBoxIcon from '@mui/icons-material/IndeterminateCheckBox';
 import TaskAltIcon from '@mui/icons-material/TaskAlt';
 import CancelIcon from '@mui/icons-material/Cancel';
 import EditIcon from '@mui/icons-material/Edit';
+import { useState } from 'preact/hooks';
 import { InlineEditor } from './InlineEditor';
-import type { ThemeTreeNodeRowProps } from '../types';
+import type { EditorState } from '../hooks/useThemeMatrixEditor';
+import type { BlockTemplate, ThemeDefinition, ThemeOverride } from '@core/domain/schema';
+import type { AppStore } from '@state/AppStore';
+import type { ThemeTreeNode } from '../types';
+
+// Define new props inline for now
+interface NewThemeTreeNodeRowProps {
+    node: ThemeTreeNode;
+    blocks: BlockTemplate[];
+    overridesMap: Map<string, ThemeOverride>;
+    appStore: AppStore;
+    onCellClick: (block: BlockTemplate, theme: ThemeDefinition) => void;
+    onToggleExpand: (themeId: string) => void;
+    editorState: EditorState;
+    onSelectionChange: (type: 'theme' | 'block', id: string, isSelected: boolean) => void;
+}
 
 export function ThemeTreeNodeRow({ 
     node, 
     blocks, 
     overridesMap, 
     onCellClick, 
-    editingThemeId,
-    onSetEditingThemeId,
     appStore,
     onToggleExpand,
-    onContextMenu,
-    isThemeSelected,
-    isPartiallySelected,
-    onThemeSelect
-}: ThemeTreeNodeRowProps) {
+    editorState,
+    onSelectionChange
+}: NewThemeTreeNodeRowProps) {
     const { theme, children, expanded, level } = node;
-    
-    // 使用传入的检查函数判断是否选中
-    const themeSelected = isThemeSelected(theme.id);
-    const hasSelectedChildren = isPartiallySelected(theme.id);
-    
-    // 计算复选框状态
-    const checkboxIcon = themeSelected 
-        ? <CheckBoxIcon />
-        : hasSelectedChildren 
-            ? <IndeterminateCheckBoxIcon />
-            : <CheckBoxOutlineBlankIcon />;
+    const [isEditingPath, setIsEditingPath] = useState(false);
+    const [isEditingIcon, setIsEditingIcon] = useState(false);
+
+    const isEditMode = editorState.mode === 'edit';
+    const isThemeSelected = editorState.selectedThemes.has(theme.id);
+    const isThemeSelectionMode = editorState.selectionType === 'theme' || editorState.selectionType === 'none';
+    const isBlockSelectionMode = editorState.selectionType === 'block' || editorState.selectionType === 'none';
     
     return (
-        <div>
-            <TableRow
+        <>
+            <AnyTableRow
                 hover
                 sx={{ 
                     opacity: theme.status === 'inactive' ? 0.6 : 1,
-                    backgroundColor: theme.status === 'inactive' ? 'action.hover' : 'inherit'
+                    backgroundColor: isThemeSelected ? 'action.selected' : 'inherit'
                 }}
-                onContextMenu={(e) => onContextMenu(e as any, theme)}
             >
-                <TableCell sx={{ width: '40px', p: '0 8px' }}>
-                    <Checkbox
-                        checked={themeSelected}
-                        indeterminate={!themeSelected && hasSelectedChildren}
-                        icon={checkboxIcon}
-                        onChange={(e) => {
-                            e.stopPropagation();
-                            onThemeSelect(theme.id, false, e);
-                        }}
-                        sx={{ padding: '4px' }}
-                    />
-                </TableCell>
-                
-                <TableCell>
-                    <Box sx={{ display: 'flex', alignItems: 'center', pl: level * 3 }}>
+                <AnyTableCell>
+                    <AnyBox sx={{ display: 'flex', alignItems: 'center', pl: level * 2 }}>
                         {children.length > 0 && (
-                            <IconButton 
+                            <AnyIconButton 
                                 size="small" 
                                 onClick={() => onToggleExpand(theme.id)}
                                 sx={{ mr: 0.5 }}
                             >
                                 {expanded ? <ExpandMoreIcon /> : <ChevronRightIcon />}
-                            </IconButton>
+                            </AnyIconButton>
                         )}
-                        {children.length > 0 
-                            ? (expanded ? <FolderOpenIcon sx={{ mr: 1 }} /> : <FolderIcon sx={{ mr: 1 }} />)
-                            : <Box sx={{ width: '24px', mr: 1 }} />
-                        }
-                        <Box sx={{ flex: 1, display: 'flex', alignItems: 'center', gap: 1 }}>
-                            {editingThemeId === theme.id ? (
+                        {children.length === 0 && <AnyBox sx={{ width: '28px' }} />}
+                        
+                        <AnyBox sx={{ flex: 1, display: 'flex', alignItems: 'center', gap: 1 }}>
+                            {isEditingIcon ? (
+                                <InlineEditor 
+                                    value={theme.icon || ''} 
+                                    onSave={(newIcon) => { 
+                                        appStore.updateTheme(theme.id, { icon: newIcon });
+                                        setIsEditingIcon(false);
+                                    }}
+                                />
+                            ) : (
+                                <AnyTypography sx={{ cursor: 'text', width: '24px', textAlign: 'center' }} onDoubleClick={() => setIsEditingIcon(true)}>
+                                    {theme.icon || ' '}
+                                </AnyTypography>
+                            )}
+                            {isEditingPath ? (
                                 <InlineEditor 
                                     value={theme.path} 
                                     onSave={(newPath) => { 
                                         appStore.updateTheme(theme.id, { path: newPath }); 
-                                        onSetEditingThemeId(null); 
+                                        setIsEditingPath(false);
                                     }}
                                 />
                             ) : (
-                                <Typography 
-                                    onDoubleClick={() => onSetEditingThemeId(theme.id)}
+                                <AnyTypography 
+                                    onDoubleClick={() => setIsEditingPath(true)}
                                     sx={{ cursor: 'text' }}
                                 >
-                                    {theme.path}
-                                </Typography>
+                                    {theme.path.split('/').pop()}
+                                </AnyTypography>
                             )}
-                            {theme.usageCount !== undefined && theme.usageCount > 0 && (
-                                <Chip 
-                                    label={`使用 ${theme.usageCount} 次`} 
-                                    size="small" 
-                                    variant="outlined" 
-                                />
-                            )}
-                            {theme.status === 'inactive' && (
-                                <Chip 
-                                    label="归档" 
-                                    size="small" 
-                                    color="default" 
-                                    icon={<ArchiveIcon />}
-                                />
-                            )}
-                        </Box>
-                    </Box>
-                </TableCell>
-                
-                <TableCell align="center">
-                    {editingThemeId === theme.id ? (
-                        <InlineEditor 
-                            value={theme.icon || ''} 
-                            onSave={(newIcon) => { 
-                                appStore.updateTheme(theme.id, { icon: newIcon }); 
-                                onSetEditingThemeId(null); 
+                        </AnyBox>
+                    </AnyBox>
+                </AnyTableCell>
+
+                <AnyTableCell align="center" sx={{ width: '100px' }}>
+                    {isEditMode ? (
+                        <AnyCheckbox
+                            size="small"
+                            checked={isThemeSelected}
+                            disabled={editorState.selectionType === 'block'}
+                            onChange={(e: any) => {
+                                const target = e.target as HTMLInputElement;
+                                console.log('【调试】主题 Checkbox 点击', { themeId: theme.id, checked: target.checked });
+                                onSelectionChange('theme', theme.id, target.checked);
                             }}
+                            sx={{ p: 0 }}
                         />
                     ) : (
-                        <Typography>{theme.icon || ' '}</Typography>
+                        <AnyChip 
+                            label={theme.status === 'active' ? '激活' : '归档'}
+                            size="small"
+                            color={theme.status === 'active' ? 'success' : 'default'}
+                        />
                     )}
-                </TableCell>
+                </AnyTableCell>
                 
                 {blocks.map(block => {
-                    const override = overridesMap.get(`${theme.id}:${block.id}`);
+                    const cellId = `${theme.id}:${block.id}`;
+                    const isCellSelected = editorState.selectedCells.has(cellId);
                     
+                    if (isEditMode) {
+                        return (
+                            <AnyTableCell key={block.id} align="center" sx={{ p: 0, width: '80px' }}>
+                                <AnyCheckbox
+                                    size="small"
+                                    checked={isCellSelected}
+                                    disabled={editorState.selectionType === 'theme'}
+                                    onChange={(e: any) => {
+                                        const target = e.target as HTMLInputElement;
+                                        console.log('【调试】单元格 Checkbox 点击', { cellId, checked: target.checked });
+                                        onSelectionChange('block', cellId, target.checked);
+                                    }}
+                                />
+                            </AnyTableCell>
+                        );
+                    }
+
+                    const override = overridesMap.get(cellId);
                     let cellIcon, cellTitle;
                     if (override) {
-                        if (override.status === 'disabled') {
+                        if (override.disabled) {
                             cellIcon = <CancelIcon sx={{ fontSize: '1.4rem', color: 'error.main' }} />;
                             cellTitle = '已禁用';
                         } else {
@@ -152,53 +170,35 @@ export function ThemeTreeNodeRow({
                     }
                     
                     return (
-                        <TableCell 
+                        <AnyTableCell 
                             key={block.id} 
                             align="center" 
-                            onClick={(e) => onCellClick(block, theme)}
-                            sx={{ 
-                                cursor: 'pointer',
-                                '&:hover': {
-                                    backgroundColor: 'action.hover'
-                                }
-                            }}
+                            onClick={() => onCellClick(block, theme)}
+                            sx={{ cursor: 'pointer', '&:hover': { backgroundColor: 'action.hover' }, width: '80px' }}
                         >
-                            <Tooltip title={cellTitle}>
+                            <AnyTooltip title={cellTitle}>
                                 <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                                     {cellIcon}
                                 </span>
-                            </Tooltip>
-                        </TableCell>
+                            </AnyTooltip>
+                        </AnyTableCell>
                     );
                 })}
-                
-                <TableCell align="center">
-                    <IconButton
-                        size="small"
-                        onClick={(e) => onContextMenu(e as any, theme)}
-                    >
-                        <MoreVertIcon />
-                    </IconButton>
-                </TableCell>
-            </TableRow>
+            </AnyTableRow>
             
-            {expanded && children.map(child => (
+            {expanded && children.map((child: ThemeTreeNode) => (
                 <ThemeTreeNodeRow
                     key={child.theme.id}
                     node={child}
                     blocks={blocks}
                     overridesMap={overridesMap}
                     onCellClick={onCellClick}
-                    editingThemeId={editingThemeId}
-                    onSetEditingThemeId={onSetEditingThemeId}
                     appStore={appStore}
                     onToggleExpand={onToggleExpand}
-                    onContextMenu={onContextMenu}
-                    isThemeSelected={isThemeSelected}
-                    isPartiallySelected={isPartiallySelected}
-                    onThemeSelect={onThemeSelect}
+                    editorState={editorState}
+                    onSelectionChange={onSelectionChange}
                 />
             ))}
-        </div>
+        </>
     );
 }

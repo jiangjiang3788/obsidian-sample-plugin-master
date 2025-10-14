@@ -503,6 +503,79 @@ export class AppStore {
             );
         });
     }
+
+    public batchUpdateThemeStatus = async (themeIds: string[], status: 'active' | 'archived') => {
+        await this._updateSettingsAndPersist(draft => {
+            const themePaths = themeIds.map(id => draft.inputSettings.themes.find(t => t.id === id)?.path).filter(Boolean) as string[];
+            
+            if (!draft.activeThemePaths) {
+                draft.activeThemePaths = [];
+            }
+
+            if (status === 'active') {
+                themePaths.forEach(path => {
+                    if (!draft.activeThemePaths!.includes(path)) {
+                        draft.activeThemePaths!.push(path);
+                    }
+                });
+            } else { // 'archived'
+                draft.activeThemePaths = draft.activeThemePaths!.filter(path => !themePaths.includes(path));
+            }
+        });
+    }
+
+    public batchUpdateThemeIcon = async (themeIds: string[], icon: string) => {
+        await this._updateSettingsAndPersist(draft => {
+            themeIds.forEach(id => {
+                const theme = draft.inputSettings.themes.find(t => t.id === id);
+                if (theme) {
+                    theme.icon = icon;
+                }
+            });
+        });
+    }
+
+    public batchSetOverrideStatus = async (
+        cells: Array<{ themeId: string; blockId: string }>,
+        status: 'inherit' | 'override' | 'disabled'
+    ) => {
+        await this._updateSettingsAndPersist(draft => {
+            if (status === 'inherit') {
+                const cellKeys = new Set(cells.map(c => `${c.themeId}:${c.blockId}`));
+                draft.inputSettings.overrides = draft.inputSettings.overrides.filter(
+                    o => !cellKeys.has(`${o.themeId}:${o.blockId}`)
+                );
+            } else { // 'override' or 'disabled'
+                cells.forEach(cell => {
+                    const existingIndex = draft.inputSettings.overrides.findIndex(
+                        o => o.blockId === cell.blockId && o.themeId === cell.themeId
+                    );
+                    
+                    if (existingIndex > -1) {
+                        const existingOverride = draft.inputSettings.overrides[existingIndex];
+                        if (status === 'disabled') {
+                            existingOverride.disabled = true;
+                        } else { // 'override'
+                           delete existingOverride.disabled;
+                        }
+                    } else {
+                        // Only create new override if not inheriting
+                        const newOverride: Partial<ThemeOverride> & { themeId: string; blockId: string } = {
+                            themeId: cell.themeId,
+                            blockId: cell.blockId,
+                        };
+                        if (status === 'disabled') {
+                            newOverride.disabled = true;
+                        }
+                        draft.inputSettings.overrides.push({
+                            ...newOverride,
+                            id: generateId('ovr')
+                        } as ThemeOverride);
+                    }
+                });
+            }
+        });
+    }
     
     public upsertOverride = async (overrideData: Omit<ThemeOverride, 'id'>) => {
         await this._updateSettingsAndPersist(draft => {
