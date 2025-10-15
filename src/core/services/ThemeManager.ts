@@ -193,21 +193,63 @@ export class ThemeManager {
      * 从Item中提取主题
      */
     extractTheme(item: Item): string | null {
-        // 如果item有明确的theme字段，直接返回
-        if (item.theme) {
-            return item.theme;
+        // 根据数据类型使用不同字段提取主题
+        if (item.type === 'task') {
+            // 任务类型从theme字段提取主题（已经经过智能匹配）
+            return item.theme || null;
+        } else if (item.type === 'block') {
+            // Block类型从theme字段提取主题
+            return item.theme || null;
         }
         
-        // 对于任务，theme应该是header
-        if (item.type === 'task' && item.header) {
-            return item.header;
+        // 其他类型优先使用theme字段
+        return item.theme || null;
+    }
+
+    /**
+     * 根据部分文本匹配完整主题路径
+     * 例如：headerText = "娱乐"，匹配到 "生活/娱乐"
+     */
+    findThemeByPartialMatch(headerText: string): string | null {
+        if (!headerText || headerText.trim() === '') {
+            return null;
+        }
+
+        const normalizedHeader = headerText.trim().toLowerCase();
+        const allThemes = Array.from(this.themes.values());
+        
+        // 优先级匹配策略
+        // 1. 精确匹配完整路径
+        for (const theme of allThemes) {
+            if (theme.path.toLowerCase() === normalizedHeader) {
+                return theme.path;
+            }
         }
         
-        // 对于块，theme可能在theme字段中
-        if (item.type === 'block' && item.theme) {
-            return item.theme;
+        // 2. 精确匹配主题名称（路径最后一部分）
+        for (const theme of allThemes) {
+            const themeName = theme.path.split('/').pop()?.toLowerCase();
+            if (themeName === normalizedHeader) {
+                return theme.path;
+            }
         }
         
+        // 3. 包含匹配（主题路径包含header文本）
+        for (const theme of allThemes) {
+            if (theme.path.toLowerCase().includes(normalizedHeader)) {
+                return theme.path;
+            }
+        }
+        
+        // 4. 模糊匹配（主题名称包含header文本）
+        for (const theme of allThemes) {
+            const themeName = theme.path.split('/').pop()?.toLowerCase();
+            if (themeName && themeName.includes(normalizedHeader)) {
+                return theme.path;
+            }
+        }
+        
+        // 未找到匹配项
         return null;
     }
 

@@ -42,7 +42,8 @@ export function parseTaskLine(
 
     /* ---- 状态 → categoryKey ---- */
     const status = isDoneLine(lineText) ? 'done' : isCancelledLine(lineText) ? 'cancelled' : 'open';
-    item.categoryKey = `任务/${status}`;
+    // [修改] 简化分类：完成任务 vs 未完成任务
+    item.categoryKey = (status === 'done' || status === 'cancelled') ? '完成任务' : '未完成任务';
 
     /* ---- 标签 ---- */
     const tagMatches = lineText.match(TAG_RE) || [];
