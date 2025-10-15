@@ -2,7 +2,7 @@
   "groups": [
     {
       "id": "group_mem9c0yqeumgu",
-      "name": "全局",
+      "name": "📂全局",
       "parentId": null,
       "type": "dataSource"
     },
@@ -14,7 +14,7 @@
     },
     {
       "id": "group_memcg1u3us3jc",
-      "name": "新分组",
+      "name": "📂全局",
       "parentId": null,
       "type": "layout"
     },
@@ -39,7 +39,7 @@
     {
       "id": "group_mer2v7dzwuyb0",
       "name": "总结",
-      "parentId": null,
+      "parentId": "group_mg3d1275d704w",
       "type": "dataSource"
     },
     {
@@ -57,7 +57,7 @@
     {
       "id": "group_mer53hxzlkqcl",
       "name": "计划",
-      "parentId": null,
+      "parentId": "group_mg3d1275d704w",
       "type": "dataSource"
     },
     {
@@ -92,74 +92,182 @@
     },
     {
       "id": "group_mer5oj3wueept",
-      "name": "思考总结",
+      "name": "📂思考总结",
       "parentId": "group_mer5qz4odo1fi",
       "type": "viewInstance"
     },
     {
       "id": "group_mer5qc61xm7ni",
-      "name": "生活总结",
+      "name": "📂生活总结",
       "parentId": "group_mer5qz4odo1fi",
       "type": "viewInstance"
     },
     {
       "id": "group_mer5qdss3nlkm",
-      "name": "健康总结",
+      "name": "📂健康总结",
       "parentId": "group_mer5qz4odo1fi",
       "type": "viewInstance"
     },
     {
       "id": "group_mer5qenajiet0",
-      "name": "电脑总结",
+      "name": "📂电脑总结",
       "parentId": "group_mer5qz4odo1fi",
       "type": "viewInstance"
     },
     {
       "id": "group_mer5qlrm519f9",
-      "name": "工作总结",
+      "name": "📂工作总结",
       "parentId": "group_mer5qz4odo1fi",
       "type": "viewInstance"
     },
     {
       "id": "group_mer5qz4odo1fi",
-      "name": "总结视图",
-      "parentId": null,
+      "name": "📂总结视图",
+      "parentId": "group_mg3dd4fl661b3",
       "type": "viewInstance"
     },
     {
       "id": "group_mer60bnntsb03",
-      "name": "计划视图",
-      "parentId": null,
+      "name": "📂计划视图",
+      "parentId": "group_mg3dd4fl661b3",
       "type": "viewInstance"
     },
     {
       "id": "group_mer60bnnssk89",
-      "name": "思考计划",
+      "name": "📂思考计划",
       "parentId": "group_mer60bnntsb03",
       "type": "viewInstance"
     },
     {
       "id": "group_mer60bnoootcl",
-      "name": "生活计划",
+      "name": "📂生活计划",
       "parentId": "group_mer60bnntsb03",
       "type": "viewInstance"
     },
     {
       "id": "group_mer60bno0hsk0",
-      "name": "健康计划",
+      "name": "📂健康计划",
       "parentId": "group_mer60bnntsb03",
       "type": "viewInstance"
     },
     {
       "id": "group_mer60bnort9rv",
-      "name": "电脑计划",
+      "name": "📂电脑计划",
       "parentId": "group_mer60bnntsb03",
       "type": "viewInstance"
     },
     {
       "id": "group_mer60bnom4ztr",
-      "name": "工作计划",
+      "name": "📂工作计划",
       "parentId": "group_mer60bnntsb03",
+      "type": "viewInstance"
+    },
+    {
+      "id": "group_mg1nbai2etnf7",
+      "name": "📂思考",
+      "parentId": "group_mg3dd4fl661b3",
+      "type": "viewInstance"
+    },
+    {
+      "id": "group_mg34xqenwy09x",
+      "name": "思考",
+      "parentId": "group_mg3d1275d704w",
+      "type": "dataSource"
+    },
+    {
+      "id": "group_mg3d069es81n9",
+      "name": "📂思考主题",
+      "parentId": "group_mg3dl1op6vkdy",
+      "type": "dataSource"
+    },
+    {
+      "id": "group_mg3d1275d704w",
+      "name": "📂周期",
+      "parentId": null,
+      "type": "dataSource"
+    },
+    {
+      "id": "group_mg3dd4fl661b3",
+      "name": "📂周期",
+      "parentId": null,
+      "type": "viewInstance"
+    },
+    {
+      "id": "group_mg3dh5ob6qoum",
+      "name": "📂周期",
+      "parentId": null,
+      "type": "layout"
+    },
+    {
+      "id": "group_mg3dj3u9faw2x",
+      "name": "📂主题",
+      "parentId": null,
+      "type": "layout"
+    },
+    {
+      "id": "group_mg3dl1op6vkdy",
+      "name": "📂主题",
+      "parentId": null,
+      "type": "dataSource"
+    },
+    {
+      "id": "group_mg3dm9jdytrs0",
+      "name": "📂主题",
+      "parentId": null,
+      "type": "viewInstance"
+    },
+    {
+      "id": "group_mg3dmyfcbmuw6",
+      "name": "📂思考主题",
+      "parentId": "group_mg3dm9jdytrs0",
+      "type": "viewInstance"
+    },
+    {
+      "id": "group_mg3eehnrrhjyv",
+      "name": "📂生活主题",
+      "parentId": "group_mg3dl1op6vkdy",
+      "type": "dataSource"
+    },
+    {
+      "id": "group_mg3eeizzmgy7n",
+      "name": "📂健康主题",
+      "parentId": "group_mg3dl1op6vkdy",
+      "type": "dataSource"
+    },
+    {
+      "id": "group_mg3eejtref8j1",
+      "name": "📂电脑主题",
+      "parentId": "group_mg3dl1op6vkdy",
+      "type": "dataSource"
+    },
+    {
+      "id": "group_mg3eeken77x2x",
+      "name": "📂工作主题",
+      "parentId": "group_mg3dl1op6vkdy",
+      "type": "dataSource"
+    },
+    {
+      "id": "group_mg3efhaom4lqn",
+      "name": "📂生活主题",
+      "parentId": "group_mg3dm9jdytrs0",
+      "type": "viewInstance"
+    },
+    {
+      "id": "group_mg3efi3lkg468",
+      "name": "📂健康主题",
+      "parentId": "group_mg3dm9jdytrs0",
+      "type": "viewInstance"
+    },
+    {
+      "id": "group_mg3efivkfe06c",
+      "name": "📂电脑主题",
+      "parentId": "group_mg3dm9jdytrs0",
+      "type": "viewInstance"
+    },
+    {
+      "id": "group_mg3efjhr0b1xi",
+      "name": "📂工作主题",
+      "parentId": "group_mg3dm9jdytrs0",
       "type": "viewInstance"
     }
   ],
@@ -184,7 +292,7 @@
         {
           "field": "categoryKey",
           "op": "=",
-          "value": "任务/done"
+          "value": "完成任务"
         },
         {
           "field": "folder",
@@ -228,7 +336,12 @@
           "value": "打卡"
         }
       ],
-      "sort": [],
+      "sort": [
+        {
+          "field": "date",
+          "dir": "asc"
+        }
+      ],
       "parentId": "group_mem9c0yqeumgu"
     },
     {
@@ -347,12 +460,7 @@
       "id": "ds_meqt2x9ecim6c",
       "name": "不筛选数据",
       "filters": [],
-      "sort": [
-        {
-          "field": "periodCount",
-          "dir": "asc"
-        }
-      ],
+      "sort": [],
       "parentId": null
     },
     {
@@ -1364,11 +1472,468 @@
       "parentId": "group_mer53hxzs9hkh"
     },
     {
-      "id": "ds_mff4zntd4ca7q",
-      "name": "新数据源",
-      "filters": [],
+      "id": "ds_mg1n2vezuzsha",
+      "name": "思考思考",
+      "filters": [
+        {
+          "field": "tags",
+          "op": "includes",
+          "value": "思考"
+        },
+        {
+          "field": "file.path",
+          "op": "=",
+          "value": "01/闪念.md"
+        }
+      ],
+      "sort": [
+        {
+          "field": "date",
+          "dir": "asc"
+        }
+      ],
+      "parentId": "group_mg34xqenwy09x"
+    },
+    {
+      "id": "ds_mg1n6g5gc6i3y",
+      "name": "生活思考",
+      "filters": [
+        {
+          "field": "tags",
+          "op": "includes",
+          "value": "生活"
+        },
+        {
+          "field": "file.path",
+          "op": "=",
+          "value": "01/闪念.md"
+        }
+      ],
+      "sort": [
+        {
+          "field": "date",
+          "dir": "asc"
+        }
+      ],
+      "parentId": "group_mg34xqenwy09x"
+    },
+    {
+      "id": "ds_mg1n813u5wxjn",
+      "name": "健康思考 ",
+      "filters": [
+        {
+          "field": "file.path",
+          "op": "=",
+          "value": "01/闪念.md"
+        },
+        {
+          "field": "tags",
+          "op": "includes",
+          "value": "健康"
+        }
+      ],
+      "sort": [
+        {
+          "field": "date",
+          "dir": "asc"
+        }
+      ],
+      "parentId": "group_mg34xqenwy09x"
+    },
+    {
+      "id": "ds_mg1n7z6ziqasr",
+      "name": "电脑思考",
+      "filters": [
+        {
+          "field": "tags",
+          "op": "includes",
+          "value": "电脑"
+        },
+        {
+          "field": "file.path",
+          "op": "=",
+          "value": "01/闪念.md"
+        }
+      ],
+      "sort": [
+        {
+          "field": "date",
+          "dir": "asc"
+        }
+      ],
+      "parentId": "group_mg34xqenwy09x"
+    },
+    {
+      "id": "ds_mg1n7y3fcs86o",
+      "name": "工作思考",
+      "filters": [
+        {
+          "field": "tags",
+          "op": "includes",
+          "value": "工作"
+        },
+        {
+          "field": "file.path",
+          "op": "=",
+          "value": "01/闪念.md"
+        }
+      ],
+      "sort": [
+        {
+          "field": "date",
+          "dir": "asc"
+        }
+      ],
+      "parentId": "group_mg34xqenwy09x"
+    },
+    {
+      "id": "ds_mg2336c01t615",
+      "name": "思考未完成任务",
+      "filters": [
+        {
+          "field": "categoryKey",
+          "op": "=",
+          "value": "未完成任务"
+        },
+        {
+          "field": "theme",
+          "op": "includes",
+          "value": "思考"
+        }
+      ],
       "sort": [],
-      "parentId": null
+      "parentId": "group_mg3d069es81n9"
+    },
+    {
+      "id": "ds_mg234zgoxblv5",
+      "name": "思考完成任务",
+      "filters": [
+        {
+          "field": "categoryKey",
+          "op": "=",
+          "value": "完成任务"
+        },
+        {
+          "field": "file.path",
+          "op": "=",
+          "value": "01/2-4思考.md"
+        }
+      ],
+      "sort": [],
+      "parentId": "group_mg3d069es81n9"
+    },
+    {
+      "id": "ds_mg23st3kp6cef",
+      "name": "思考三项",
+      "filters": [
+        {
+          "field": "type",
+          "op": "=",
+          "value": "block"
+        },
+        {
+          "field": "categoryKey",
+          "op": "!=",
+          "value": "打卡"
+        },
+        {
+          "field": "theme",
+          "op": "includes",
+          "value": "思考"
+        }
+      ],
+      "sort": [],
+      "parentId": "group_mg3d069es81n9"
+    },
+    {
+      "id": "ds_mg2438rllnmx9",
+      "name": "思考打卡",
+      "filters": [
+        {
+          "field": "categoryKey",
+          "op": "=",
+          "value": "打卡"
+        },
+        {
+          "field": "tags",
+          "op": "=",
+          "value": "思考/读书"
+        }
+      ],
+      "sort": [],
+      "parentId": "group_mg3d069es81n9"
+    },
+    {
+      "id": "ds_mg3eehnrs8zr5",
+      "name": "生活未完成任务",
+      "filters": [
+        {
+          "field": "categoryKey",
+          "op": "=",
+          "value": "未完成任务"
+        },
+        {
+          "field": "file.path",
+          "op": "=",
+          "value": "01/2-3生活.md"
+        }
+      ],
+      "sort": [],
+      "parentId": "group_mg3eehnrrhjyv"
+    },
+    {
+      "id": "ds_mg3eehnr3vhyq",
+      "name": "生活完成任务",
+      "filters": [
+        {
+          "field": "categoryKey",
+          "op": "=",
+          "value": "完成任务"
+        },
+        {
+          "field": "file.path",
+          "op": "=",
+          "value": "01/2-3生活.md"
+        }
+      ],
+      "sort": [],
+      "parentId": "group_mg3eehnrrhjyv"
+    },
+    {
+      "id": "ds_mg3eehnrihbsy",
+      "name": "生活三项",
+      "filters": [
+        {
+          "field": "type",
+          "op": "=",
+          "value": "block"
+        },
+        {
+          "field": "categoryKey",
+          "op": "!=",
+          "value": "打卡"
+        },
+        {
+          "field": "tags",
+          "op": "includes",
+          "value": "生活"
+        }
+      ],
+      "sort": [],
+      "parentId": "group_mg3eehnrrhjyv"
+    },
+    {
+      "id": "ds_mg3eehnrzyqbt",
+      "name": "生活打卡",
+      "filters": [
+        {
+          "field": "categoryKey",
+          "op": "=",
+          "value": "打卡"
+        },
+        {
+          "field": "tags",
+          "op": "includes",
+          "value": "生活"
+        }
+      ],
+      "sort": [],
+      "parentId": "group_mg3eehnrrhjyv"
+    },
+    {
+      "id": "ds_mg3eeizz52dku",
+      "name": "健康未完成任务",
+      "filters": [
+        {
+          "field": "categoryKey",
+          "op": "=",
+          "value": "未完成任务"
+        },
+        {
+          "field": "file.path",
+          "op": "=",
+          "value": "01/2-1健康.md"
+        }
+      ],
+      "sort": [],
+      "parentId": "group_mg3eeizzmgy7n"
+    },
+    {
+      "id": "ds_mg3eeizzaeerh",
+      "name": "健康完成任务",
+      "filters": [
+        {
+          "field": "categoryKey",
+          "op": "=",
+          "value": "完成任务"
+        },
+        {
+          "field": "file.path",
+          "op": "=",
+          "value": "01/2-1健康.md"
+        }
+      ],
+      "sort": [],
+      "parentId": "group_mg3eeizzmgy7n"
+    },
+    {
+      "id": "ds_mg3eeizz7ptyz",
+      "name": "健康三项",
+      "filters": [
+        {
+          "field": "type",
+          "op": "=",
+          "value": "block"
+        },
+        {
+          "field": "categoryKey",
+          "op": "!=",
+          "value": "打卡"
+        },
+        {
+          "field": "tags",
+          "op": "includes",
+          "value": "健康"
+        }
+      ],
+      "sort": [],
+      "parentId": "group_mg3eeizzmgy7n"
+    },
+    {
+      "id": "ds_mg3ghp9onqw2p",
+      "name": "电脑三项",
+      "filters": [
+        {
+          "field": "type",
+          "op": "=",
+          "value": "block"
+        },
+        {
+          "field": "categoryKey",
+          "op": "!=",
+          "value": "打卡"
+        },
+        {
+          "field": "tags",
+          "op": "includes",
+          "value": "电脑"
+        }
+      ],
+      "sort": [],
+      "parentId": "group_mg3eejtref8j1"
+    },
+    {
+      "id": "ds_mg3eeizz49pwk",
+      "name": "健康打卡",
+      "filters": [
+        {
+          "field": "categoryKey",
+          "op": "=",
+          "value": "打卡"
+        },
+        {
+          "field": "tags",
+          "op": "includes",
+          "value": "健康"
+        }
+      ],
+      "sort": [],
+      "parentId": "group_mg3eeizzmgy7n"
+    },
+    {
+      "id": "ds_mg3eejtrifmd8",
+      "name": "电脑未完成任务",
+      "filters": [
+        {
+          "field": "categoryKey",
+          "op": "=",
+          "value": "未完成任务"
+        },
+        {
+          "field": "file.path",
+          "op": "=",
+          "value": "01/2-5电脑.md"
+        }
+      ],
+      "sort": [],
+      "parentId": "group_mg3eejtref8j1"
+    },
+    {
+      "id": "ds_mg3eejtrcp81o",
+      "name": "电脑完成任务",
+      "filters": [
+        {
+          "field": "categoryKey",
+          "op": "=",
+          "value": "完成任务"
+        },
+        {
+          "field": "file.path",
+          "op": "=",
+          "value": "01/2-5电脑.md"
+        }
+      ],
+      "sort": [],
+      "parentId": "group_mg3eejtref8j1"
+    },
+    {
+      "id": "ds_mg3eeken5az3m",
+      "name": "工作未完成任务",
+      "filters": [
+        {
+          "field": "categoryKey",
+          "op": "=",
+          "value": "未完成任务"
+        },
+        {
+          "field": "tags",
+          "op": "includes",
+          "value": "工作"
+        }
+      ],
+      "sort": [],
+      "parentId": "group_mg3eeken77x2x"
+    },
+    {
+      "id": "ds_mg3eeken8srdn",
+      "name": "工作完成任务",
+      "filters": [
+        {
+          "field": "categoryKey",
+          "op": "=",
+          "value": "完成任务"
+        },
+        {
+          "field": "file.path",
+          "op": "=",
+          "value": "01/2-6工作.md"
+        }
+      ],
+      "sort": [],
+      "parentId": "group_mg3eeken77x2x"
+    },
+    {
+      "id": "ds_mg3eeken1eqsd",
+      "name": "工作三项",
+      "filters": [
+        {
+          "field": "type",
+          "op": "=",
+          "value": "block"
+        },
+        {
+          "field": "categoryKey",
+          "op": "!=",
+          "value": "打卡"
+        },
+        {
+          "field": "tags",
+          "op": "includes",
+          "value": "工作"
+        }
+      ],
+      "sort": [],
+      "parentId": "group_mg3eeken77x2x"
     }
   ],
   "viewInstances": [
@@ -1444,7 +2009,7 @@
       "viewType": "TimelineView",
       "dataSourceId": "ds_mer6herh46uji",
       "viewConfig": {
-        "defaultHourHeight": 50,
+        "defaultHourHeight": 60,
         "MAX_HOURS_PER_DAY": 24,
         "UNTRACKED_LABEL": "未记录",
         "categoryMap": {},
@@ -1464,13 +2029,13 @@
             ]
           },
           "电脑": {
-            "color": "#fb606f",
+            "color": "#ff6a1a",
             "files": [
               "2-5电脑"
             ]
           },
           "工作": {
-            "color": "#fbbf24",
+            "color": "#fde19b",
             "files": [
               "2-6工作"
             ]
@@ -1482,7 +2047,7 @@
             ]
           },
           "思考": {
-            "color": "#fb8c32",
+            "color": "#ff4d4d",
             "files": [
               "2-4思考"
             ]
@@ -1507,7 +2072,7 @@
       },
       "parentId": "group_memc1a9ofen88",
       "fields": [],
-      "collapsed": true
+      "collapsed": false
     },
     {
       "id": "view_membnf1hgjgm3",
@@ -1581,30 +2146,7 @@
         "icon",
         "content"
       ],
-      "group": "tags"
-    },
-    {
-      "id": "view_mer6oto0gp4ju",
-      "title": "打卡",
-      "viewType": "BlockView",
-      "dataSourceId": "ds_mer6kbdnogrty",
-      "viewConfig": {
-        "view": "BlockView",
-        "title": "块视图",
-        "collapsed": false,
-        "fields": [],
-        "group": "categoryKey"
-      },
-      "collapsed": true,
-      "parentId": "group_memc1a9ofen88",
-      "fields": [
-        "categoryKey",
-        "periodCount",
-        "date",
-        "icon",
-        "content"
-      ],
-      "group": "tags"
+      "group": "categoryKey"
     },
     {
       "id": "view_mepob3wx8y6de",
@@ -1675,81 +2217,8 @@
     {
       "id": "view_meqt389ufhx91",
       "title": "数据汇总",
-      "viewType": "StatisticsView",
-      "dataSourceId": "ds_meqt2x9ecim6c",
-      "viewConfig": {
-        "categoryOrder": [
-          "总结",
-          "计划",
-          "事件",
-          "感受",
-          "思考",
-          ""
-        ],
-        "categoryColors": {
-          "总结": "#FFD6E0",
-          "计划": "#B5EAD7",
-          "事件": "#FFFACD",
-          "感受": "#FFDAC1",
-          "思考": "#C7CEEA"
-        },
-        "categories": [
-          {
-            "name": "🧠",
-            "color": "#ffffff"
-          },
-          {
-            "name": "打卡",
-            "color": "#f5bb0b"
-          },
-          {
-            "name": "感受",
-            "color": "#fb732d"
-          },
-          {
-            "name": "计划",
-            "color": "#61d982"
-          },
-          {
-            "name": "任务",
-            "color": "#8e0dbd"
-          },
-          {
-            "name": "事件",
-            "color": "#c5c0af"
-          },
-          {
-            "name": "思考",
-            "color": "#dae735"
-          },
-          {
-            "name": "总结",
-            "color": "#59ac9b"
-          },
-          {
-            "name": "02",
-            "color": "#ffffff"
-          },
-          {
-            "name": "周",
-            "color": "#ffffff"
-          }
-        ]
-      },
-      "collapsed": false,
-      "parentId": null,
-      "fields": [
-        "categoryKey",
-        "icon",
-        "tags",
-        "content"
-      ]
-    },
-    {
-      "id": "view_mesci2vh386vf",
-      "title": "数据汇总 (副本)",
       "viewType": "ExcelView",
-      "dataSourceId": "ds_mer6iqguhcilh",
+      "dataSourceId": "ds_meqt2x9ecim6c",
       "viewConfig": {
         "view": "ExcelView",
         "title": "数据表格",
@@ -1757,8 +2226,13 @@
         "fields": []
       },
       "collapsed": false,
-      "parentId": null,
-      "fields": []
+      "parentId": "group_memc1a9ofen88",
+      "fields": [
+        "categoryKey",
+        "icon",
+        "tags",
+        "content"
+      ]
     },
     {
       "id": "view_mer5qc61gnav2",
@@ -2570,24 +3044,77 @@
         "themeTags": [
           "健康/心情",
           "健康/身体",
-          "健康/睡眠",
           "健康/运动",
           "思考/读书",
           "健康/粑粑",
           "健康/剪头发",
           "健康/剪指甲",
           "健康/姨妈",
-          "生活/车车"
+          "生活/车车",
+          "健康/睡眠"
         ]
       },
-      "collapsed": true,
-      "parentId": null
+      "collapsed": false,
+      "parentId": "group_memc1a9ofen88"
     },
     {
-      "id": "view_mf2b6b80nnu6h",
-      "title": "新视图",
+      "id": "view_mgrsdu4e5nn6r",
+      "title": "打卡视图 (副本)",
+      "viewType": "HeatmapView",
+      "dataSourceId": "ds_mer6kbdnogrty",
+      "viewConfig": {
+        "displayMode": "habit",
+        "sourceBlockId": "blk_mejsg76atopau",
+        "countColors": [
+          "#ebedf0",
+          "#9be9a8",
+          "#40c463",
+          "#30a14e",
+          "#216e39"
+        ],
+        "themeTags": [
+          "健康/心情",
+          "健康/身体",
+          "健康/运动",
+          "思考/读书",
+          "健康/粑粑",
+          "健康/剪头发",
+          "健康/剪指甲",
+          "健康/姨妈",
+          "生活/车车",
+          "健康/睡眠"
+        ]
+      },
+      "collapsed": false,
+      "parentId": "group_memc1a9ofen88"
+    },
+    {
+      "id": "view_mg246oap2r1i2",
+      "title": "思考打卡",
+      "viewType": "HeatmapView",
+      "dataSourceId": "ds_mer6kbdnogrty",
+      "viewConfig": {
+        "displayMode": "habit",
+        "sourceBlockId": "blk_mejsg76atopau",
+        "countColors": [
+          "#ebedf0",
+          "#9be9a8",
+          "#40c463",
+          "#30a14e",
+          "#216e39"
+        ],
+        "themeTags": [
+          "思考/读书"
+        ]
+      },
+      "collapsed": false,
+      "parentId": "group_mg3dmyfcbmuw6"
+    },
+    {
+      "id": "view_mg1zanri06mhu",
+      "title": "打卡block",
       "viewType": "BlockView",
-      "dataSourceId": "ds_meqt2x9ecim6c",
+      "dataSourceId": "ds_mer6kbdnogrty",
       "viewConfig": {
         "view": "BlockView",
         "title": "块视图",
@@ -2595,21 +3122,65 @@
         "fields": [],
         "group": "categoryKey"
       },
-      "collapsed": true,
-      "parentId": null,
+      "collapsed": false,
+      "parentId": "group_memc1a9ofen88",
       "fields": [
-        "date",
         "categoryKey",
+        "pintu",
+        "date",
+        "content"
+      ],
+      "group": "tags"
+    },
+    {
+      "id": "view_mg23jnryg9byb",
+      "title": "思考打卡block",
+      "viewType": "BlockView",
+      "dataSourceId": "ds_mg2438rllnmx9",
+      "viewConfig": {
+        "view": "BlockView",
+        "title": "块视图",
+        "collapsed": false,
+        "fields": [],
+        "group": "categoryKey"
+      },
+      "collapsed": false,
+      "parentId": "group_mg3dmyfcbmuw6",
+      "fields": [
+        "categoryKey",
+        "pintu",
+        "date",
+        "content"
+      ],
+      "group": "tags"
+    },
+    {
+      "id": "view_mf2b6b80nnu6h",
+      "title": "思考思考",
+      "viewType": "BlockView",
+      "dataSourceId": "ds_mg1n2vezuzsha",
+      "viewConfig": {
+        "view": "BlockView",
+        "title": "块视图",
+        "collapsed": false,
+        "fields": [],
+        "group": "categoryKey"
+      },
+      "collapsed": false,
+      "parentId": "group_mg1nbai2etnf7",
+      "fields": [
+        "categoryKey",
+        "date",
         "icon",
         "content"
       ],
       "group": "categoryKey"
     },
     {
-      "id": "view_mg33j81crcbkj",
-      "title": "新视图000000000",
+      "id": "view_mg1nei0zv424h",
+      "title": "生活思考",
       "viewType": "BlockView",
-      "dataSourceId": "",
+      "dataSourceId": "ds_mg1n6g5gc6i3y",
       "viewConfig": {
         "view": "BlockView",
         "title": "块视图",
@@ -2617,14 +3188,21 @@
         "fields": [],
         "group": "categoryKey"
       },
-      "collapsed": true,
-      "parentId": "group_memc1a9ofen88"
+      "collapsed": false,
+      "parentId": "group_mg1nbai2etnf7",
+      "fields": [
+        "categoryKey",
+        "date",
+        "icon",
+        "content"
+      ],
+      "group": "categoryKey"
     },
     {
-      "id": "view_mg3dtsixz49u3",
-      "title": "新视图",
+      "id": "view_mg1nehk33e9hw",
+      "title": "健康思考",
       "viewType": "BlockView",
-      "dataSourceId": "",
+      "dataSourceId": "ds_mg1n813u5wxjn",
       "viewConfig": {
         "view": "BlockView",
         "title": "块视图",
@@ -2632,8 +3210,582 @@
         "fields": [],
         "group": "categoryKey"
       },
-      "collapsed": true,
-      "parentId": null
+      "collapsed": false,
+      "parentId": "group_mg1nbai2etnf7",
+      "fields": [
+        "categoryKey",
+        "date",
+        "icon",
+        "content"
+      ],
+      "group": "categoryKey"
+    },
+    {
+      "id": "view_mg1negwzlqdxz",
+      "title": "电脑思考",
+      "viewType": "BlockView",
+      "dataSourceId": "ds_mg1n7z6ziqasr",
+      "viewConfig": {
+        "view": "BlockView",
+        "title": "块视图",
+        "collapsed": false,
+        "fields": [],
+        "group": "categoryKey"
+      },
+      "collapsed": false,
+      "parentId": "group_mg1nbai2etnf7",
+      "fields": [
+        "categoryKey",
+        "date",
+        "icon",
+        "content"
+      ],
+      "group": "categoryKey"
+    },
+    {
+      "id": "view_mg1nefpgfsfqj",
+      "title": "工作思考",
+      "viewType": "BlockView",
+      "dataSourceId": "ds_mg1n7y3fcs86o",
+      "viewConfig": {
+        "view": "BlockView",
+        "title": "块视图",
+        "collapsed": false,
+        "fields": [],
+        "group": "categoryKey"
+      },
+      "collapsed": false,
+      "parentId": "group_mg1nbai2etnf7",
+      "fields": [
+        "categoryKey",
+        "date",
+        "icon",
+        "content"
+      ],
+      "group": "categoryKey"
+    },
+    {
+      "id": "view_mg236ljzrwaqu",
+      "title": "思考未完成任务",
+      "viewType": "TableView",
+      "dataSourceId": "ds_mg2336c01t615",
+      "viewConfig": {
+        "view": "TableView",
+        "title": "表格视图",
+        "collapsed": false,
+        "rowField": "recurrence",
+        "colField": "header"
+      },
+      "collapsed": false,
+      "parentId": "group_mg3dmyfcbmuw6"
+    },
+    {
+      "id": "view_mg239n47213f2",
+      "title": "思考完成任务",
+      "viewType": "TimelineView",
+      "dataSourceId": "ds_mg234zgoxblv5",
+      "viewConfig": {
+        "defaultHourHeight": 10,
+        "MAX_HOURS_PER_DAY": 24,
+        "UNTRACKED_LABEL": "未记录",
+        "categories": {
+          "思考": {
+            "color": "#ff4d4d",
+            "files": [
+              "2-4思考"
+            ]
+          }
+        },
+        "progressOrder": [
+          "思考"
+        ]
+      },
+      "collapsed": false,
+      "parentId": "group_mg3dmyfcbmuw6",
+      "group": "header"
+    },
+    {
+      "id": "view_mg23u59l0ni9a",
+      "title": "思考三项",
+      "viewType": "BlockView",
+      "dataSourceId": "ds_mg23st3kp6cef",
+      "viewConfig": {
+        "view": "BlockView",
+        "title": "块视图",
+        "collapsed": false,
+        "fields": [],
+        "group": "categoryKey"
+      },
+      "collapsed": false,
+      "parentId": "group_mg3dmyfcbmuw6",
+      "fields": [
+        "categoryKey",
+        "icon",
+        "date",
+        "content"
+      ],
+      "group": "categoryKey"
+    },
+    {
+      "id": "view_mg23w881hshrd",
+      "title": "思考完成任务表格",
+      "viewType": "BlockView",
+      "dataSourceId": "ds_mg234zgoxblv5",
+      "viewConfig": {
+        "view": "BlockView",
+        "title": "块视图",
+        "collapsed": false,
+        "fields": [],
+        "group": "categoryKey"
+      },
+      "collapsed": false,
+      "parentId": "group_mg3dmyfcbmuw6",
+      "group": "header"
+    },
+    {
+      "id": "view_mg3efhaoxusmb",
+      "title": "生活打卡",
+      "viewType": "HeatmapView",
+      "dataSourceId": "ds_mer6kbdnogrty",
+      "viewConfig": {
+        "displayMode": "habit",
+        "sourceBlockId": "blk_mejsg76atopau",
+        "countColors": [
+          "#ebedf0",
+          "#9be9a8",
+          "#40c463",
+          "#30a14e",
+          "#216e39"
+        ],
+        "themeTags": [
+          "思考/读书"
+        ]
+      },
+      "collapsed": false,
+      "parentId": "group_mg3efhaom4lqn"
+    },
+    {
+      "id": "view_mg3efhaoz79uq",
+      "title": "生活打卡block",
+      "viewType": "BlockView",
+      "dataSourceId": "ds_mg3eehnrzyqbt",
+      "viewConfig": {
+        "view": "BlockView",
+        "title": "块视图",
+        "collapsed": false,
+        "fields": [],
+        "group": "categoryKey"
+      },
+      "collapsed": false,
+      "parentId": "group_mg3efhaom4lqn",
+      "fields": [
+        "categoryKey",
+        "pintu",
+        "date",
+        "content"
+      ],
+      "group": "tags"
+    },
+    {
+      "id": "view_mg3efhaoo0xzu",
+      "title": "生活未完成任务",
+      "viewType": "TableView",
+      "dataSourceId": "ds_mg3eehnrs8zr5",
+      "viewConfig": {
+        "view": "TableView",
+        "title": "表格视图",
+        "collapsed": false,
+        "rowField": "recurrence",
+        "colField": "header"
+      },
+      "collapsed": false,
+      "parentId": "group_mg3efhaom4lqn"
+    },
+    {
+      "id": "view_mg3efhaol9p1l",
+      "title": "生活完成任务",
+      "viewType": "TimelineView",
+      "dataSourceId": "ds_mg3eehnr3vhyq",
+      "viewConfig": {
+        "defaultHourHeight": 10,
+        "MAX_HOURS_PER_DAY": 24,
+        "UNTRACKED_LABEL": "未记录",
+        "categories": {
+          "生活": {
+            "color": "#34d399",
+            "files": [
+              "2-3生活"
+            ]
+          }
+        },
+        "progressOrder": [
+          "生活"
+        ]
+      },
+      "collapsed": false,
+      "parentId": "group_mg3efhaom4lqn",
+      "group": "header"
+    },
+    {
+      "id": "view_mg3efhaoc99bo",
+      "title": "生活三项",
+      "viewType": "BlockView",
+      "dataSourceId": "ds_mg3eehnrihbsy",
+      "viewConfig": {
+        "view": "BlockView",
+        "title": "块视图",
+        "collapsed": false,
+        "fields": [],
+        "group": "categoryKey"
+      },
+      "collapsed": false,
+      "parentId": "group_mg3efhaom4lqn",
+      "fields": [
+        "categoryKey",
+        "icon",
+        "date",
+        "content"
+      ],
+      "group": "categoryKey"
+    },
+    {
+      "id": "view_mg3efhaoxhbuh",
+      "title": "生活完成任务表格",
+      "viewType": "BlockView",
+      "dataSourceId": "ds_mg3eehnr3vhyq",
+      "viewConfig": {
+        "view": "BlockView",
+        "title": "块视图",
+        "collapsed": false,
+        "fields": [],
+        "group": "categoryKey"
+      },
+      "collapsed": false,
+      "parentId": "group_mg3efhaom4lqn",
+      "group": "header"
+    },
+    {
+      "id": "view_mg3efi3lf7202",
+      "title": "健康打卡",
+      "viewType": "HeatmapView",
+      "dataSourceId": "ds_mer6kbdnogrty",
+      "viewConfig": {
+        "displayMode": "habit",
+        "sourceBlockId": "blk_mejsg76atopau",
+        "countColors": [
+          "#ebedf0",
+          "#9be9a8",
+          "#40c463",
+          "#30a14e",
+          "#216e39"
+        ],
+        "themeTags": [
+          "思考/读书"
+        ]
+      },
+      "collapsed": false,
+      "parentId": "group_mg3efi3lkg468"
+    },
+    {
+      "id": "view_mg3efi3l2ktm9",
+      "title": "健康打卡block",
+      "viewType": "BlockView",
+      "dataSourceId": "ds_mg3eeizz49pwk",
+      "viewConfig": {
+        "view": "BlockView",
+        "title": "块视图",
+        "collapsed": false,
+        "fields": [],
+        "group": "categoryKey"
+      },
+      "collapsed": false,
+      "parentId": "group_mg3efi3lkg468",
+      "fields": [
+        "categoryKey",
+        "pintu",
+        "date",
+        "content"
+      ],
+      "group": "tags"
+    },
+    {
+      "id": "view_mg3efi3lyytx6",
+      "title": "健康未完成任务",
+      "viewType": "TableView",
+      "dataSourceId": "ds_mg3eeizz52dku",
+      "viewConfig": {
+        "view": "TableView",
+        "title": "表格视图",
+        "collapsed": false,
+        "rowField": "recurrence",
+        "colField": "header"
+      },
+      "collapsed": false,
+      "parentId": "group_mg3efi3lkg468"
+    },
+    {
+      "id": "view_mg3efi3l2zkon",
+      "title": "健康完成任务",
+      "viewType": "TimelineView",
+      "dataSourceId": "ds_mg3eeizzaeerh",
+      "viewConfig": {
+        "defaultHourHeight": 10,
+        "MAX_HOURS_PER_DAY": 24,
+        "UNTRACKED_LABEL": "未记录",
+        "categories": {
+          "思考": {
+            "color": "#60a5fa",
+            "files": [
+              "2-1健康",
+              "2-2三餐"
+            ]
+          }
+        },
+        "progressOrder": [
+          "思考"
+        ]
+      },
+      "collapsed": false,
+      "parentId": "group_mg3efi3lkg468",
+      "group": "header"
+    },
+    {
+      "id": "view_mg3efi3loagiv",
+      "title": "健康三项",
+      "viewType": "BlockView",
+      "dataSourceId": "ds_mg3eeizz7ptyz",
+      "viewConfig": {
+        "view": "BlockView",
+        "title": "块视图",
+        "collapsed": false,
+        "fields": [],
+        "group": "categoryKey"
+      },
+      "collapsed": false,
+      "parentId": "group_mg3efi3lkg468",
+      "fields": [
+        "categoryKey",
+        "icon",
+        "date",
+        "content"
+      ],
+      "group": "categoryKey"
+    },
+    {
+      "id": "view_mg3efi3lf9gji",
+      "title": "健康完成任务表格",
+      "viewType": "BlockView",
+      "dataSourceId": "ds_mg3eeizzaeerh",
+      "viewConfig": {
+        "view": "BlockView",
+        "title": "块视图",
+        "collapsed": false,
+        "fields": [],
+        "group": "categoryKey"
+      },
+      "collapsed": false,
+      "parentId": "group_mg3efi3lkg468",
+      "group": "header"
+    },
+    {
+      "id": "view_mg3efivkzolq4",
+      "title": "电脑打卡",
+      "viewType": "HeatmapView",
+      "dataSourceId": "ds_mer6kbdnogrty",
+      "viewConfig": {
+        "displayMode": "habit",
+        "sourceBlockId": "blk_mejsg76atopau",
+        "countColors": [
+          "#ebedf0",
+          "#9be9a8",
+          "#40c463",
+          "#30a14e",
+          "#216e39"
+        ],
+        "themeTags": [
+          "思考/读书"
+        ]
+      },
+      "collapsed": false,
+      "parentId": "group_mg3efivkfe06c"
+    },
+    {
+      "id": "view_mg3efivkjosv8",
+      "title": "电脑未完成任务",
+      "viewType": "TableView",
+      "dataSourceId": "ds_mg3eejtrifmd8",
+      "viewConfig": {
+        "view": "TableView",
+        "title": "表格视图",
+        "collapsed": false,
+        "rowField": "recurrence",
+        "colField": "header"
+      },
+      "collapsed": false,
+      "parentId": "group_mg3efivkfe06c"
+    },
+    {
+      "id": "view_mg3efivk0ampd",
+      "title": "电脑完成任务",
+      "viewType": "TimelineView",
+      "dataSourceId": "ds_mg3eejtrcp81o",
+      "viewConfig": {
+        "defaultHourHeight": 10,
+        "MAX_HOURS_PER_DAY": 24,
+        "UNTRACKED_LABEL": "未记录",
+        "categories": {
+          "电脑": {
+            "color": "#ff6a1a",
+            "files": [
+              "2-5电脑"
+            ]
+          }
+        },
+        "progressOrder": [
+          "电脑"
+        ]
+      },
+      "collapsed": false,
+      "parentId": "group_mg3efivkfe06c",
+      "group": "header"
+    },
+    {
+      "id": "view_mg3efivk55ory",
+      "title": "电脑三项",
+      "viewType": "BlockView",
+      "dataSourceId": "ds_mg3ghp9onqw2p",
+      "viewConfig": {
+        "view": "BlockView",
+        "title": "块视图",
+        "collapsed": false,
+        "fields": [],
+        "group": "categoryKey"
+      },
+      "collapsed": false,
+      "parentId": "group_mg3efivkfe06c",
+      "fields": [
+        "categoryKey",
+        "icon",
+        "date",
+        "content"
+      ],
+      "group": "categoryKey"
+    },
+    {
+      "id": "view_mg3efivklhn6l",
+      "title": "电脑完成任务表格",
+      "viewType": "BlockView",
+      "dataSourceId": "ds_mg234zgoxblv5",
+      "viewConfig": {
+        "view": "BlockView",
+        "title": "块视图",
+        "collapsed": false,
+        "fields": [],
+        "group": "categoryKey"
+      },
+      "collapsed": false,
+      "parentId": "group_mg3efivkfe06c",
+      "group": "header"
+    },
+    {
+      "id": "view_mg3efjhro4lnw",
+      "title": "工作打卡",
+      "viewType": "HeatmapView",
+      "dataSourceId": "ds_mer6kbdnogrty",
+      "viewConfig": {
+        "displayMode": "habit",
+        "sourceBlockId": "blk_mejsg76atopau",
+        "countColors": [
+          "#ebedf0",
+          "#9be9a8",
+          "#40c463",
+          "#30a14e",
+          "#216e39"
+        ],
+        "themeTags": [
+          "思考/读书"
+        ]
+      },
+      "collapsed": false,
+      "parentId": "group_mg3efjhr0b1xi"
+    },
+    {
+      "id": "view_mg3efjhrbkyux",
+      "title": "工作未完成任务",
+      "viewType": "TableView",
+      "dataSourceId": "ds_mg3eeken5az3m",
+      "viewConfig": {
+        "view": "TableView",
+        "title": "表格视图",
+        "collapsed": false,
+        "rowField": "recurrence",
+        "colField": "header"
+      },
+      "collapsed": false,
+      "parentId": "group_mg3efjhr0b1xi"
+    },
+    {
+      "id": "view_mg3efjhrxp5jk",
+      "title": "工作完成任务",
+      "viewType": "TimelineView",
+      "dataSourceId": "ds_mg3eeken8srdn",
+      "viewConfig": {
+        "defaultHourHeight": 10,
+        "MAX_HOURS_PER_DAY": 24,
+        "UNTRACKED_LABEL": "未记录",
+        "categories": {
+          "思考": {
+            "color": "#fde19b",
+            "files": [
+              "2-6工作"
+            ]
+          }
+        },
+        "progressOrder": [
+          "思考"
+        ]
+      },
+      "collapsed": false,
+      "parentId": "group_mg3efjhr0b1xi",
+      "group": "header"
+    },
+    {
+      "id": "view_mg3efjhrahjd9",
+      "title": "工作三项",
+      "viewType": "BlockView",
+      "dataSourceId": "ds_mg3eeken1eqsd",
+      "viewConfig": {
+        "view": "BlockView",
+        "title": "块视图",
+        "collapsed": false,
+        "fields": [],
+        "group": "categoryKey"
+      },
+      "collapsed": false,
+      "parentId": "group_mg3efjhr0b1xi",
+      "fields": [
+        "categoryKey",
+        "icon",
+        "date",
+        "content"
+      ],
+      "group": "categoryKey"
+    },
+    {
+      "id": "view_mg3efjhr8rx23",
+      "title": "工作完成任务表格",
+      "viewType": "BlockView",
+      "dataSourceId": "ds_mg3eeken8srdn",
+      "viewConfig": {
+        "view": "BlockView",
+        "title": "块视图",
+        "collapsed": false,
+        "fields": [],
+        "group": "categoryKey"
+      },
+      "collapsed": false,
+      "parentId": "group_mg3efjhr0b1xi",
+      "group": "header"
     }
   ],
   "layouts": [
@@ -2641,11 +3793,11 @@
       "id": "layout_memcg9jjoq6j4",
       "name": "全局布局",
       "viewInstanceIds": [
+        "view_mewr7y1gvq0ro",
         "view_membnf1hgjgm3",
-        "view_membbqjam5v63",
         "view_mer6ll4mtbjry",
         "view_mer6n7pwf7suy",
-        "view_mewr7y1gvq0ro"
+        "view_membbqjam5v63"
       ],
       "displayMode": "list",
       "initialView": "周",
@@ -2664,8 +3816,8 @@
       "displayMode": "list",
       "initialView": "年",
       "initialDateFollowsNow": false,
-      "parentId": null,
-      "isOverviewMode": true,
+      "parentId": "group_memcg1u3us3jc",
+      "isOverviewMode": false,
       "initialDate": "2025-12-31",
       "gridConfig": {
         "columns": 2
@@ -2699,12 +3851,12 @@
       "displayMode": "grid",
       "initialView": "周",
       "initialDateFollowsNow": false,
-      "parentId": null,
+      "parentId": "group_mg3dh5ob6qoum",
       "gridConfig": {
         "columns": 5
       },
       "isOverviewMode": true,
-      "initialDate": "2025-07-06"
+      "initialDate": "2025-09-21"
     },
     {
       "id": "layout_mer6y66i78epn",
@@ -2734,18 +3886,18 @@
       "displayMode": "grid",
       "initialView": "周",
       "initialDateFollowsNow": false,
-      "parentId": null,
+      "parentId": "group_mg3dh5ob6qoum",
       "gridConfig": {
         "columns": 5
       },
       "isOverviewMode": true,
-      "initialDate": "2025-09-28"
+      "initialDate": "2025-10-12"
     },
     {
       "id": "layout_mescqn3ltmxo3",
       "name": "excle",
       "viewInstanceIds": [
-        "view_mesci2vh386vf"
+        "view_meqt389ufhx91"
       ],
       "displayMode": "list",
       "initialView": "月",
@@ -2753,31 +3905,115 @@
       "parentId": null
     },
     {
-      "id": "layout_mewrgxwutpa5e",
-      "name": "打卡",
-      "viewInstanceIds": [
-        "view_mer6oto0gp4ju",
-        "view_mewr7y1gvq0ro"
-      ],
-      "displayMode": "list",
-      "initialView": "月",
-      "initialDateFollowsNow": true,
-      "parentId": null
-    },
-    {
-      "id": "layout_mf2b8j6hqefef",
-      "name": "01",
+      "id": "layout_mg1ngnhxypp7y",
+      "name": "思考",
       "viewInstanceIds": [
         "view_mf2b6b80nnu6h",
-        "view_mer5qenavnxxt",
-        "view_mer5qena23btv",
-        "view_mesci2vh386vf",
-        "view_mer5qlrm3xnu6"
+        "view_mg1nei0zv424h",
+        "view_mg1nehk33e9hw",
+        "view_mg1negwzlqdxz",
+        "view_mg1nefpgfsfqj"
       ],
-      "displayMode": "list",
-      "initialView": "月",
+      "displayMode": "grid",
+      "initialView": "周",
+      "initialDateFollowsNow": false,
+      "parentId": "group_mg3dh5ob6qoum",
+      "isOverviewMode": true,
+      "gridConfig": {
+        "columns": 5
+      },
+      "initialDate": "2025-09-29"
+    },
+    {
+      "id": "layout_mg231xprn1vj4",
+      "name": "思考主题",
+      "viewInstanceIds": [
+        "view_mewr7y1gvq0ro",
+        "view_mg23jnryg9byb",
+        "view_mg23w881hshrd",
+        "view_mg236ljzrwaqu",
+        "view_mg239n47213f2",
+        "view_mg23u59l0ni9a"
+      ],
+      "displayMode": "grid",
+      "initialView": "周",
       "initialDateFollowsNow": true,
-      "parentId": null
+      "parentId": "group_mg3dj3u9faw2x",
+      "gridConfig": {
+        "columns": 2
+      }
+    },
+    {
+      "id": "layout_mg3ehi9c3066u",
+      "name": "生活主题",
+      "viewInstanceIds": [
+        "view_mewr7y1gvq0ro",
+        "view_mg3efhaoz79uq",
+        "view_mg3efhaoxhbuh",
+        "view_mg3efhaoo0xzu",
+        "view_mg3efhaol9p1l",
+        "view_mg3efhaoc99bo"
+      ],
+      "displayMode": "grid",
+      "initialView": "周",
+      "initialDateFollowsNow": true,
+      "parentId": "group_mg3dj3u9faw2x",
+      "gridConfig": {
+        "columns": 2
+      }
+    },
+    {
+      "id": "layout_mg3ehhsg9rvcn",
+      "name": "健康主题",
+      "viewInstanceIds": [
+        "view_mewr7y1gvq0ro",
+        "view_mg3efi3l2ktm9",
+        "view_mg3efi3lf9gji",
+        "view_mg3efi3lyytx6",
+        "view_mg3efi3l2zkon",
+        "view_mg3efi3loagiv"
+      ],
+      "displayMode": "grid",
+      "initialView": "周",
+      "initialDateFollowsNow": true,
+      "parentId": "group_mg3dj3u9faw2x",
+      "gridConfig": {
+        "columns": 2
+      }
+    },
+    {
+      "id": "layout_mg3ehhbkvtfbh",
+      "name": "电脑主题",
+      "viewInstanceIds": [
+        "view_mg3efivklhn6l",
+        "view_mg3efivkjosv8",
+        "view_mg3efivk0ampd",
+        "view_mg3efivk55ory"
+      ],
+      "displayMode": "grid",
+      "initialView": "周",
+      "initialDateFollowsNow": true,
+      "parentId": "group_mg3dj3u9faw2x",
+      "gridConfig": {
+        "columns": 2
+      }
+    },
+    {
+      "id": "layout_mg3ehghk7gbth",
+      "name": "工作主题",
+      "viewInstanceIds": [
+        "view_mg3efjhr8rx23",
+        "view_mg3efjhrbkyux",
+        "view_mg3efjhrxp5jk",
+        "view_mg3efjhrahjd9"
+      ],
+      "displayMode": "grid",
+      "initialView": "周",
+      "initialDateFollowsNow": true,
+      "parentId": "group_mg3dj3u9faw2x",
+      "gridConfig": {
+        "columns": 2
+      }
     }
   ],
   "inputSettings": {
@@ -2862,8 +4098,49 @@
             ]
           }
         ],
-        "outputTemplate": "\n{{状态.value}} {{icon}} {{任务内容}} (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}})  {{重复.value}}  {{状态}} {{日期}}",
+        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) {{重复.value}} {{状态}} {{日期}}\n\n",
         "targetFile": "03/01.md",
+        "appendUnderHeader": "## {{theme}}"
+      },
+      {
+        "id": "blk_mejsg1dc46fj9",
+        "name": "闪念",
+        "fields": [
+          {
+            "id": "field_mewjlt4j",
+            "key": "思考分类",
+            "label": "思考分类",
+            "type": "radio",
+            "options": [
+              {
+                "value": "事件",
+                "label": "事件"
+              },
+              {
+                "value": "感受",
+                "label": "感受"
+              },
+              {
+                "value": "思考",
+                "label": "思考"
+              }
+            ]
+          },
+          {
+            "id": "field_mewkyug9",
+            "key": "日期",
+            "label": "日期",
+            "type": "date"
+          },
+          {
+            "id": "field_mewjlypl",
+            "key": "内容",
+            "label": "内容",
+            "type": "textarea"
+          }
+        ],
+        "outputTemplate": "<!-- start -->\n分类:: {{思考分类}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n",
+        "targetFile": "01/闪念.md",
         "appendUnderHeader": "## {{theme}}"
       },
       {
@@ -2907,7 +4184,7 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n分类:: 计划\n周期:: {{周期}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n",
+        "outputTemplate": "<!-- start -->\n分类:: 计划\n周期:: {{周期}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n\n",
         "targetFile": "01/计划.md",
         "appendUnderHeader": "## {{theme}}"
       },
@@ -2956,49 +4233,8 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n分类:: 总结\n周期:: {{周期}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->",
+        "outputTemplate": "<!-- start -->\n分类:: 总结\n周期:: {{周期}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/总结.md",
-        "appendUnderHeader": "## {{theme}}"
-      },
-      {
-        "id": "blk_mejsg1dc46fj9",
-        "name": "思考",
-        "fields": [
-          {
-            "id": "field_mewjlt4j",
-            "key": "思考分类",
-            "label": "思考分类",
-            "type": "radio",
-            "options": [
-              {
-                "value": "事件",
-                "label": "事件"
-              },
-              {
-                "value": "感受",
-                "label": "感受"
-              },
-              {
-                "value": "思考",
-                "label": "思考"
-              }
-            ]
-          },
-          {
-            "id": "field_mewkyug9",
-            "key": "日期",
-            "label": "日期",
-            "type": "date"
-          },
-          {
-            "id": "field_mewjlypl",
-            "key": "内容",
-            "label": "内容",
-            "type": "textarea"
-          }
-        ],
-        "outputTemplate": "<!-- start -->\n分类:: {{思考分类}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->",
-        "targetFile": "01/思考.md",
         "appendUnderHeader": "## {{theme}}"
       },
       {
@@ -3030,7 +4266,7 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分}}\npintu::{{评分.value}}\n内容:: {{内容}}\n<!-- end -->",
+        "outputTemplate": "<!-- start -->\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分}}\npintu::{{评分.value}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/打卡.md",
         "appendUnderHeader": "## {{theme}}"
       }
@@ -3055,6 +4291,11 @@
         "id": "thm_mejswmjkpyrzg",
         "path": "思考/思路整理",
         "icon": "🧠"
+      },
+      {
+        "id": "thm_mejsl0rd9ggip",
+        "path": "思考/读书",
+        "icon": "📚"
       },
       {
         "id": "thm_mejsj5pzfonlh",
@@ -3087,24 +4328,19 @@
         "icon": "👪"
       },
       {
-        "id": "thm_mejsl0rd9ggip",
-        "path": "思考/读书",
-        "icon": "📚"
-      },
-      {
         "id": "thm_mejsl7i17il4q",
         "path": "生活",
         "icon": "✨"
       },
       {
+        "id": "thm_mg1ytgzlrkbv8",
+        "path": "生活/高级生活",
+        "icon": "🔆"
+      },
+      {
         "id": "thm_mejslgmvm2yym",
         "path": "生活/娱乐",
         "icon": "📺"
-      },
-      {
-        "id": "thm_mejsmcngeij2y",
-        "path": "生活/车车",
-        "icon": "🚗"
       },
       {
         "id": "thm_mejsmps6gropq",
@@ -3120,6 +4356,11 @@
         "id": "thm_mejsnf4dp61nq",
         "path": "生活/整理",
         "icon": "📦"
+      },
+      {
+        "id": "thm_mejsmcngeij2y",
+        "path": "生活/车车",
+        "icon": "🚗"
       },
       {
         "id": "thm_mejsnu4ekns46",
@@ -3177,6 +4418,21 @@
         "icon": "😄"
       },
       {
+        "id": "thm_mewzwlmjw8b7r",
+        "path": "健康/姨妈",
+        "icon": "🩸"
+      },
+      {
+        "id": "thm_mewzx8x1h4g1r",
+        "path": "健康/剪头发",
+        "icon": "✂"
+      },
+      {
+        "id": "thm_mewzx1twrayjd",
+        "path": "健康/剪指甲",
+        "icon": "✋"
+      },
+      {
         "id": "thm_mejstzgoiocwm",
         "path": "电脑",
         "icon": "🖥"
@@ -3230,21 +4486,6 @@
         "id": "thm_mejsye15uvbzi",
         "path": "工作/老板任务",
         "icon": "💥"
-      },
-      {
-        "id": "thm_mewzwlmjw8b7r",
-        "path": "健康/姨妈",
-        "icon": "🩸"
-      },
-      {
-        "id": "thm_mewzx1twrayjd",
-        "path": "健康/剪指甲",
-        "icon": "✋"
-      },
-      {
-        "id": "thm_mewzx8x1h4g1r",
-        "path": "健康/剪头发",
-        "icon": "✂"
       },
       {
         "id": "thm_mfj17uymay4u6",
@@ -3772,7 +5013,7 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n分类:: 计划\n分类:: {{周期}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n",
+        "outputTemplate": "<!-- start -->\n分类:: 计划\n分类:: {{周期}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n\n",
         "targetFile": "01/计划.md",
         "appendUnderHeader": "## {{theme}}"
       },
@@ -3819,7 +5060,7 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n分类:: 计划\n分类:: {{周期}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n",
+        "outputTemplate": "<!-- start -->\n分类:: 计划\n分类:: {{周期}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n\n",
         "targetFile": "01/计划.md",
         "appendUnderHeader": "## {{theme}}"
       },
@@ -3866,7 +5107,7 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n分类:: 计划\n分类:: {{周期}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n",
+        "outputTemplate": "<!-- start -->\n分类:: 计划\n分类:: {{周期}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n\n",
         "targetFile": "01/计划.md",
         "appendUnderHeader": "## {{theme}}"
       },
@@ -3913,7 +5154,7 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n分类:: 计划\n分类:: {{周期}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n",
+        "outputTemplate": "<!-- start -->\n分类:: 计划\n分类:: {{周期}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n\n",
         "targetFile": "01/计划.md",
         "appendUnderHeader": "## {{theme}}"
       },
@@ -3960,7 +5201,7 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n分类:: 计划\n分类:: {{周期}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n",
+        "outputTemplate": "<!-- start -->\n分类:: 计划\n分类:: {{周期}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n\n",
         "targetFile": "01/计划.md",
         "appendUnderHeader": "## {{theme}}"
       },
@@ -4007,7 +5248,7 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n分类:: 计划\n分类:: {{周期}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n",
+        "outputTemplate": "<!-- start -->\n分类:: 计划\n分类:: {{周期}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n\n",
         "targetFile": "01/计划.md",
         "appendUnderHeader": "## {{theme}}"
       },
@@ -4042,7 +5283,7 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分}}\npintu::{{评分..value}}\n内容:: {{内容}}\n<!-- end -->",
+        "outputTemplate": "<!-- start -->\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分}}\npintu::{{评分..value}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/打卡.md",
         "appendUnderHeader": "## {{theme}}"
       },
@@ -4077,7 +5318,7 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分}}\npintu::{{评分..value}}\n内容:: {{内容}}\n<!-- end -->",
+        "outputTemplate": "<!-- start -->\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分}}\npintu::{{评分..value}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/打卡.md",
         "appendUnderHeader": "## {{theme}}"
       },
@@ -4112,7 +5353,7 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分}}\npintu::{{评分..value}}\n内容:: {{内容}}\n<!-- end -->",
+        "outputTemplate": "<!-- start -->\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分}}\npintu::{{评分..value}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/打卡.md",
         "appendUnderHeader": "## {{theme}}"
       },
@@ -4147,7 +5388,7 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分}}\npintu::{{评分..value}}\n内容:: {{内容}}\n<!-- end -->",
+        "outputTemplate": "<!-- start -->\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分}}\npintu::{{评分..value}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/打卡.md",
         "appendUnderHeader": "## {{theme}}"
       },
@@ -4182,7 +5423,7 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分}}\npintu::{{评分..value}}\n内容:: {{内容}}\n<!-- end -->",
+        "outputTemplate": "<!-- start -->\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分}}\npintu::{{评分..value}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/打卡.md",
         "appendUnderHeader": "## {{theme}}"
       },
@@ -4217,7 +5458,7 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分}}\npintu::{{评分..value}}\n内容:: {{内容}}\n<!-- end -->",
+        "outputTemplate": "<!-- start -->\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分}}\npintu::{{评分..value}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/打卡.md",
         "appendUnderHeader": "## {{theme}}"
       },
@@ -4252,7 +5493,7 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分}}\npintu::{{评分..value}}\n内容:: {{内容}}\n<!-- end -->",
+        "outputTemplate": "<!-- start -->\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分}}\npintu::{{评分..value}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/打卡.md",
         "appendUnderHeader": "## {{theme}}"
       },
@@ -4287,7 +5528,7 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分}}\npintu::{{评分..value}}\n内容:: {{内容}}\n<!-- end -->",
+        "outputTemplate": "<!-- start -->\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分}}\npintu::{{评分..value}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/打卡.md",
         "appendUnderHeader": "## {{theme}}"
       },
@@ -4322,7 +5563,7 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分}}\npintu::{{评分..value}}\n内容:: {{内容}}\n<!-- end -->",
+        "outputTemplate": "<!-- start -->\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分}}\npintu::{{评分..value}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/打卡.md",
         "appendUnderHeader": "## {{theme}}"
       },
@@ -4357,7 +5598,7 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分}}\npintu::{{评分..value}}\n内容:: {{内容}}\n<!-- end -->",
+        "outputTemplate": "<!-- start -->\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分}}\npintu::{{评分..value}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/打卡.md",
         "appendUnderHeader": "## {{theme}}"
       },
@@ -4392,7 +5633,7 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分}}\npintu::{{评分..value}}\n内容:: {{内容}}\n<!-- end -->",
+        "outputTemplate": "<!-- start -->\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分}}\npintu::{{评分..value}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/打卡.md",
         "appendUnderHeader": "## {{theme}}"
       },
@@ -4427,7 +5668,7 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分}}\npintu::{{评分..value}}\n内容:: {{内容}}\n<!-- end -->",
+        "outputTemplate": "<!-- start -->\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分}}\npintu::{{评分..value}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/打卡.md",
         "appendUnderHeader": "## {{theme}}"
       },
@@ -4462,7 +5703,7 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分}}\npintu::{{评分..value}}\n内容:: {{内容}}\n<!-- end -->",
+        "outputTemplate": "<!-- start -->\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分}}\npintu::{{评分..value}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/打卡.md",
         "appendUnderHeader": "## {{theme}}"
       },
@@ -4497,7 +5738,7 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分}}\npintu::{{评分..value}}\n内容:: {{内容}}\n<!-- end -->",
+        "outputTemplate": "<!-- start -->\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分}}\npintu::{{评分..value}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/打卡.md",
         "appendUnderHeader": "## {{theme}}"
       },
@@ -4532,7 +5773,7 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分}}\npintu::{{评分..value}}\n内容:: {{内容}}\n<!-- end -->",
+        "outputTemplate": "<!-- start -->\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分}}\npintu::{{评分..value}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/打卡.md",
         "appendUnderHeader": "## {{theme}}"
       },
@@ -4567,7 +5808,7 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分}}\npintu::{{评分..value}}\n内容:: {{内容}}\n<!-- end -->",
+        "outputTemplate": "<!-- start -->\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分}}\npintu::{{评分..value}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/打卡.md",
         "appendUnderHeader": "## {{theme}}"
       },
@@ -4602,7 +5843,7 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分}}\npintu::{{评分..value}}\n内容:: {{内容}}\n<!-- end -->",
+        "outputTemplate": "<!-- start -->\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分}}\npintu::{{评分..value}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/打卡.md",
         "appendUnderHeader": "## {{theme}}"
       },
@@ -4637,7 +5878,7 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分}}\npintu::{{评分..value}}\n内容:: {{内容}}\n<!-- end -->",
+        "outputTemplate": "<!-- start -->\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分}}\npintu::{{评分..value}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/打卡.md",
         "appendUnderHeader": "## {{theme}}"
       },
@@ -4672,7 +5913,7 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分}}\npintu::{{评分..value}}\n内容:: {{内容}}\n<!-- end -->",
+        "outputTemplate": "<!-- start -->\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分}}\npintu::{{评分..value}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/打卡.md",
         "appendUnderHeader": "## {{theme}}"
       },
@@ -4707,7 +5948,7 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分}}\npintu::{{评分..value}}\n内容:: {{内容}}\n<!-- end -->",
+        "outputTemplate": "<!-- start -->\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分}}\npintu::{{评分..value}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/打卡.md",
         "appendUnderHeader": "## {{theme}}"
       },
@@ -4742,7 +5983,7 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分}}\npintu::{{评分..value}}\n内容:: {{内容}}\n<!-- end -->",
+        "outputTemplate": "<!-- start -->\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分}}\npintu::{{评分..value}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/打卡.md",
         "appendUnderHeader": "## {{theme}}"
       },
@@ -4777,7 +6018,7 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分}}\npintu::{{评分..value}}\n内容:: {{内容}}\n<!-- end -->",
+        "outputTemplate": "<!-- start -->\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分}}\npintu::{{评分..value}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/打卡.md",
         "appendUnderHeader": "## {{theme}}"
       },
@@ -4812,7 +6053,7 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分}}\npintu::{{评分..value}}\n内容:: {{内容}}\n<!-- end -->",
+        "outputTemplate": "<!-- start -->\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分}}\npintu::{{评分..value}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/打卡.md",
         "appendUnderHeader": "## {{theme}}"
       },
@@ -4847,7 +6088,7 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分}}\npintu::{{评分..value}}\n内容:: {{内容}}\n<!-- end -->",
+        "outputTemplate": "<!-- start -->\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分}}\npintu::{{评分..value}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/打卡.md",
         "appendUnderHeader": "## {{theme}}"
       },
@@ -4882,7 +6123,7 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分}}\npintu::{{评分..value}}\n内容:: {{内容}}\n<!-- end -->",
+        "outputTemplate": "<!-- start -->\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分}}\npintu::{{评分..value}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/打卡.md",
         "appendUnderHeader": "## {{theme}}"
       },
@@ -4917,7 +6158,7 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分}}\npintu::{{评分..value}}\n内容:: {{内容}}\n<!-- end -->",
+        "outputTemplate": "<!-- start -->\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分}}\npintu::{{评分..value}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/打卡.md",
         "appendUnderHeader": "## {{theme}}"
       },
@@ -4952,7 +6193,7 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分}}\npintu::{{评分..value}}\n内容:: {{内容}}\n<!-- end -->",
+        "outputTemplate": "<!-- start -->\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分}}\npintu::{{评分..value}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/打卡.md",
         "appendUnderHeader": "## {{theme}}"
       },
@@ -4987,7 +6228,7 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分}}\npintu::{{评分..value}}\n内容:: {{内容}}\n<!-- end -->",
+        "outputTemplate": "<!-- start -->\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分}}\npintu::{{评分..value}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/打卡.md",
         "appendUnderHeader": "## {{theme}}"
       },
@@ -5022,7 +6263,7 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分}}\npintu::{{评分..value}}\n内容:: {{内容}}\n<!-- end -->",
+        "outputTemplate": "<!-- start -->\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分}}\npintu::{{评分..value}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/打卡.md",
         "appendUnderHeader": "## {{theme}}"
       },
@@ -5059,8 +6300,8 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n分类:: {{思考分类}}\n日期:: {{moment:YYYY-MM-DD}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->",
-        "targetFile": "01/思考.md",
+        "outputTemplate": "<!-- start -->\n分类:: {{思考分类}}\n日期:: {{moment:YYYY-MM-DD}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n",
+        "targetFile": "01/闪念.md",
         "appendUnderHeader": "## {{theme}}"
       },
       {
@@ -5096,8 +6337,8 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n分类:: {{思考分类}}\n日期:: {{moment:YYYY-MM-DD}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->",
-        "targetFile": "01/思考.md",
+        "outputTemplate": "<!-- start -->\n分类:: {{思考分类}}\n日期:: {{moment:YYYY-MM-DD}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n",
+        "targetFile": "01/闪念.md",
         "appendUnderHeader": "## {{theme}}"
       },
       {
@@ -5133,8 +6374,8 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n分类:: {{思考分类}}\n日期:: {{moment:YYYY-MM-DD}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->",
-        "targetFile": "01/思考.md",
+        "outputTemplate": "<!-- start -->\n分类:: {{思考分类}}\n日期:: {{moment:YYYY-MM-DD}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n",
+        "targetFile": "01/闪念.md",
         "appendUnderHeader": "## {{theme}}"
       },
       {
@@ -5170,8 +6411,8 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n分类:: {{思考分类}}\n日期:: {{moment:YYYY-MM-DD}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->",
-        "targetFile": "01/思考.md",
+        "outputTemplate": "<!-- start -->\n分类:: {{思考分类}}\n日期:: {{moment:YYYY-MM-DD}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n",
+        "targetFile": "01/闪念.md",
         "appendUnderHeader": "## {{theme}}"
       },
       {
@@ -5207,8 +6448,8 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n分类:: {{思考分类}}\n日期:: {{moment:YYYY-MM-DD}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->",
-        "targetFile": "01/思考.md",
+        "outputTemplate": "<!-- start -->\n分类:: {{思考分类}}\n日期:: {{moment:YYYY-MM-DD}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n",
+        "targetFile": "01/闪念.md",
         "appendUnderHeader": "## {{theme}}"
       },
       {
@@ -5244,8 +6485,8 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n分类:: {{思考分类}}\n日期:: {{moment:YYYY-MM-DD}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->",
-        "targetFile": "01/思考.md",
+        "outputTemplate": "<!-- start -->\n分类:: {{思考分类}}\n日期:: {{moment:YYYY-MM-DD}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n",
+        "targetFile": "01/闪念.md",
         "appendUnderHeader": "## {{theme}}"
       },
       {
@@ -5281,8 +6522,8 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n分类:: {{思考分类}}\n日期:: {{moment:YYYY-MM-DD}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->",
-        "targetFile": "01/思考.md",
+        "outputTemplate": "<!-- start -->\n分类:: {{思考分类}}\n日期:: {{moment:YYYY-MM-DD}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n",
+        "targetFile": "01/闪念.md",
         "appendUnderHeader": "## {{theme}}"
       },
       {
@@ -5318,8 +6559,8 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n分类:: {{思考分类}}\n日期:: {{moment:YYYY-MM-DD}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->",
-        "targetFile": "01/思考.md",
+        "outputTemplate": "<!-- start -->\n分类:: {{思考分类}}\n日期:: {{moment:YYYY-MM-DD}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n",
+        "targetFile": "01/闪念.md",
         "appendUnderHeader": "## {{theme}}"
       },
       {
@@ -5355,8 +6596,8 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n分类:: {{思考分类}}\n日期:: {{moment:YYYY-MM-DD}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->",
-        "targetFile": "01/思考.md",
+        "outputTemplate": "<!-- start -->\n分类:: {{思考分类}}\n日期:: {{moment:YYYY-MM-DD}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n",
+        "targetFile": "01/闪念.md",
         "appendUnderHeader": "## {{theme}}"
       },
       {
@@ -5392,8 +6633,8 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n分类:: {{思考分类}}\n日期:: {{moment:YYYY-MM-DD}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->",
-        "targetFile": "01/思考.md",
+        "outputTemplate": "<!-- start -->\n分类:: {{思考分类}}\n日期:: {{moment:YYYY-MM-DD}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n",
+        "targetFile": "01/闪念.md",
         "appendUnderHeader": "## {{theme}}"
       },
       {
@@ -5429,8 +6670,8 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n分类:: {{思考分类}}\n日期:: {{moment:YYYY-MM-DD}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->",
-        "targetFile": "01/思考.md",
+        "outputTemplate": "<!-- start -->\n分类:: {{思考分类}}\n日期:: {{moment:YYYY-MM-DD}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n",
+        "targetFile": "01/闪念.md",
         "appendUnderHeader": "## {{theme}}"
       },
       {
@@ -5466,8 +6707,8 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n分类:: {{思考分类}}\n日期:: {{moment:YYYY-MM-DD}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->",
-        "targetFile": "01/思考.md",
+        "outputTemplate": "<!-- start -->\n分类:: {{思考分类}}\n日期:: {{moment:YYYY-MM-DD}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n",
+        "targetFile": "01/闪念.md",
         "appendUnderHeader": "## {{theme}}"
       },
       {
@@ -5503,8 +6744,8 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n分类:: {{思考分类}}\n日期:: {{moment:YYYY-MM-DD}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->",
-        "targetFile": "01/思考.md",
+        "outputTemplate": "<!-- start -->\n分类:: {{思考分类}}\n日期:: {{moment:YYYY-MM-DD}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n",
+        "targetFile": "01/闪念.md",
         "appendUnderHeader": "## {{theme}}"
       },
       {
@@ -5540,8 +6781,8 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n分类:: {{思考分类}}\n日期:: {{moment:YYYY-MM-DD}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->",
-        "targetFile": "01/思考.md",
+        "outputTemplate": "<!-- start -->\n分类:: {{思考分类}}\n日期:: {{moment:YYYY-MM-DD}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n",
+        "targetFile": "01/闪念.md",
         "appendUnderHeader": "## {{theme}}"
       },
       {
@@ -5577,8 +6818,8 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n分类:: {{思考分类}}\n日期:: {{moment:YYYY-MM-DD}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->",
-        "targetFile": "01/思考.md",
+        "outputTemplate": "<!-- start -->\n分类:: {{思考分类}}\n日期:: {{moment:YYYY-MM-DD}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n",
+        "targetFile": "01/闪念.md",
         "appendUnderHeader": "## {{theme}}"
       },
       {
@@ -5614,8 +6855,8 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n分类:: {{思考分类}}\n日期:: {{moment:YYYY-MM-DD}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->",
-        "targetFile": "01/思考.md",
+        "outputTemplate": "<!-- start -->\n分类:: {{思考分类}}\n日期:: {{moment:YYYY-MM-DD}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n",
+        "targetFile": "01/闪念.md",
         "appendUnderHeader": "## {{theme}}"
       },
       {
@@ -5651,8 +6892,8 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n分类:: {{思考分类}}\n日期:: {{moment:YYYY-MM-DD}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->",
-        "targetFile": "01/思考.md",
+        "outputTemplate": "<!-- start -->\n分类:: {{思考分类}}\n日期:: {{moment:YYYY-MM-DD}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n",
+        "targetFile": "01/闪念.md",
         "appendUnderHeader": "## {{theme}}"
       },
       {
@@ -5688,8 +6929,8 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n分类:: {{思考分类}}\n日期:: {{moment:YYYY-MM-DD}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->",
-        "targetFile": "01/思考.md",
+        "outputTemplate": "<!-- start -->\n分类:: {{思考分类}}\n日期:: {{moment:YYYY-MM-DD}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n",
+        "targetFile": "01/闪念.md",
         "appendUnderHeader": "## {{theme}}"
       },
       {
@@ -5725,8 +6966,8 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n分类:: {{思考分类}}\n日期:: {{moment:YYYY-MM-DD}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->",
-        "targetFile": "01/思考.md",
+        "outputTemplate": "<!-- start -->\n分类:: {{思考分类}}\n日期:: {{moment:YYYY-MM-DD}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n",
+        "targetFile": "01/闪念.md",
         "appendUnderHeader": "## {{theme}}"
       },
       {
@@ -5762,8 +7003,8 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n分类:: {{思考分类}}\n日期:: {{moment:YYYY-MM-DD}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->",
-        "targetFile": "01/思考.md",
+        "outputTemplate": "<!-- start -->\n分类:: {{思考分类}}\n日期:: {{moment:YYYY-MM-DD}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n",
+        "targetFile": "01/闪念.md",
         "appendUnderHeader": "## {{theme}}"
       },
       {
@@ -5799,8 +7040,8 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n分类:: {{思考分类}}\n日期:: {{moment:YYYY-MM-DD}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->",
-        "targetFile": "01/思考.md",
+        "outputTemplate": "<!-- start -->\n分类:: {{思考分类}}\n日期:: {{moment:YYYY-MM-DD}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n",
+        "targetFile": "01/闪念.md",
         "appendUnderHeader": "## {{theme}}"
       },
       {
@@ -5850,7 +7091,7 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n分类:: 总结\n分类:: {{周期}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->",
+        "outputTemplate": "<!-- start -->\n分类:: 总结\n分类:: {{周期}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/总结.md",
         "appendUnderHeader": "## {{theme}}"
       },
@@ -5901,7 +7142,7 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n分类:: 总结\n分类:: {{周期}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->",
+        "outputTemplate": "<!-- start -->\n分类:: 总结\n分类:: {{周期}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/总结.md",
         "appendUnderHeader": "## {{theme}}"
       },
@@ -5948,7 +7189,7 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n分类:: 计划\n分类:: {{周期}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n",
+        "outputTemplate": "<!-- start -->\n分类:: 计划\n分类:: {{周期}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n\n",
         "targetFile": "01/计划.md",
         "appendUnderHeader": "## {{theme}}"
       },
@@ -5995,7 +7236,7 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n分类:: 计划\n分类:: {{周期}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n",
+        "outputTemplate": "<!-- start -->\n分类:: 计划\n分类:: {{周期}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n\n",
         "targetFile": "01/计划.md",
         "appendUnderHeader": "## {{theme}}"
       },
@@ -6046,7 +7287,7 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n分类:: 总结\n分类:: {{周期}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->",
+        "outputTemplate": "<!-- start -->\n分类:: 总结\n分类:: {{周期}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/总结.md",
         "appendUnderHeader": "## {{theme}}"
       },
@@ -6093,7 +7334,7 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n分类:: 计划\n分类:: {{周期}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n",
+        "outputTemplate": "<!-- start -->\n分类:: 计划\n分类:: {{周期}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n\n",
         "targetFile": "01/计划.md",
         "appendUnderHeader": "## {{theme}}"
       },
@@ -6144,7 +7385,7 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n分类:: 总结\n分类:: {{周期}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->",
+        "outputTemplate": "<!-- start -->\n分类:: 总结\n分类:: {{周期}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/总结.md",
         "appendUnderHeader": "## {{theme}}"
       },
@@ -6191,7 +7432,7 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n分类:: 计划\n分类:: {{周期}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n",
+        "outputTemplate": "<!-- start -->\n分类:: 计划\n分类:: {{周期}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n\n",
         "targetFile": "01/计划.md",
         "appendUnderHeader": "## {{theme}}"
       },
@@ -6238,7 +7479,7 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n分类:: 计划\n分类:: {{周期}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n",
+        "outputTemplate": "<!-- start -->\n分类:: 计划\n分类:: {{周期}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n\n",
         "targetFile": "01/计划.md",
         "appendUnderHeader": "## {{theme}}"
       },
@@ -6285,7 +7526,7 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n分类:: 计划\n分类:: {{周期}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n",
+        "outputTemplate": "<!-- start -->\n分类:: 计划\n分类:: {{周期}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n\n",
         "targetFile": "01/计划.md",
         "appendUnderHeader": "## {{theme}}"
       },
@@ -6332,7 +7573,7 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n分类:: 计划\n分类:: {{周期}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n",
+        "outputTemplate": "<!-- start -->\n分类:: 计划\n分类:: {{周期}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n\n",
         "targetFile": "01/计划.md",
         "appendUnderHeader": "## {{theme}}"
       },
@@ -6379,7 +7620,7 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n分类:: 计划\n分类:: {{周期}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n",
+        "outputTemplate": "<!-- start -->\n分类:: 计划\n分类:: {{周期}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n\n",
         "targetFile": "01/计划.md",
         "appendUnderHeader": "## {{theme}}"
       },
@@ -6426,10 +7667,9 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n分类:: 计划\n分类:: {{周期}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n",
+        "outputTemplate": "<!-- start -->\n分类:: 计划\n分类:: {{周期}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n\n",
         "targetFile": "01/计划.md",
-        "appendUnderHeader": "## {{theme}}",
-        "disabled": true
+        "appendUnderHeader": "## {{theme}}"
       },
       {
         "id": "ovr_mewkqh4dz6vk3",
@@ -6474,10 +7714,9 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n分类:: 计划\n分类:: {{周期}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n",
+        "outputTemplate": "<!-- start -->\n分类:: 计划\n分类:: {{周期}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n\n",
         "targetFile": "01/计划.md",
-        "appendUnderHeader": "## {{theme}}",
-        "disabled": true
+        "appendUnderHeader": "## {{theme}}"
       },
       {
         "id": "ovr_mewkqmk0ntarr",
@@ -6526,7 +7765,7 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n分类:: 总结\n分类:: {{周期}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->",
+        "outputTemplate": "<!-- start -->\n分类:: 总结\n分类:: {{周期}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/总结.md",
         "appendUnderHeader": "## {{theme}}"
       },
@@ -6577,7 +7816,7 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n分类:: 总结\n分类:: {{周期}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->",
+        "outputTemplate": "<!-- start -->\n分类:: 总结\n分类:: {{周期}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/总结.md",
         "appendUnderHeader": "## {{theme}}"
       },
@@ -6628,7 +7867,7 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n分类:: 总结\n分类:: {{周期}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->",
+        "outputTemplate": "<!-- start -->\n分类:: 总结\n分类:: {{周期}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/总结.md",
         "appendUnderHeader": "## {{theme}}"
       },
@@ -6679,7 +7918,7 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n分类:: 总结\n分类:: {{周期}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->",
+        "outputTemplate": "<!-- start -->\n分类:: 总结\n分类:: {{周期}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/总结.md",
         "appendUnderHeader": "## {{theme}}"
       },
@@ -6730,7 +7969,7 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n分类:: 总结\n分类:: {{周期}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->",
+        "outputTemplate": "<!-- start -->\n分类:: 总结\n分类:: {{周期}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/总结.md",
         "appendUnderHeader": "## {{theme}}"
       },
@@ -6781,10 +8020,9 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n分类:: 总结\n分类:: {{周期}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->",
+        "outputTemplate": "<!-- start -->\n分类:: 总结\n分类:: {{周期}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/总结.md",
-        "appendUnderHeader": "## {{theme}}",
-        "disabled": true
+        "appendUnderHeader": "## {{theme}}"
       },
       {
         "id": "ovr_mewkr1h7zenjp",
@@ -6833,10 +8071,9 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n分类:: 总结\n分类:: {{周期}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->",
+        "outputTemplate": "<!-- start -->\n分类:: 总结\n分类:: {{周期}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/总结.md",
-        "appendUnderHeader": "## {{theme}}",
-        "disabled": true
+        "appendUnderHeader": "## {{theme}}"
       },
       {
         "id": "ovr_mewkr5co3rrce",
@@ -6885,7 +8122,7 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n分类:: 总结\n分类:: {{周期}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->",
+        "outputTemplate": "<!-- start -->\n分类:: 总结\n分类:: {{周期}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/总结.md",
         "appendUnderHeader": "## {{theme}}"
       },
@@ -6936,7 +8173,7 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n分类:: 总结\n分类:: {{周期}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->",
+        "outputTemplate": "<!-- start -->\n分类:: 总结\n分类:: {{周期}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/总结.md",
         "appendUnderHeader": "## {{theme}}"
       },
@@ -6987,7 +8224,7 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n分类:: 总结\n分类:: {{周期}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->",
+        "outputTemplate": "<!-- start -->\n分类:: 总结\n分类:: {{周期}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/总结.md",
         "appendUnderHeader": "## {{theme}}"
       },
@@ -7038,7 +8275,7 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n分类:: 总结\n分类:: {{周期}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->",
+        "outputTemplate": "<!-- start -->\n分类:: 总结\n分类:: {{周期}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/总结.md",
         "appendUnderHeader": "## {{theme}}"
       },
@@ -7089,7 +8326,7 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n分类:: 总结\n分类:: {{周期}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->",
+        "outputTemplate": "<!-- start -->\n分类:: 总结\n分类:: {{周期}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/总结.md",
         "appendUnderHeader": "## {{theme}}"
       },
@@ -7136,7 +8373,7 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n分类:: 计划\n分类:: {{周期}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n",
+        "outputTemplate": "<!-- start -->\n分类:: 计划\n分类:: {{周期}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n\n",
         "targetFile": "01/计划.md",
         "appendUnderHeader": "## {{theme}}"
       },
@@ -7187,88 +8424,8 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n分类:: 总结\n分类:: {{周期}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->",
+        "outputTemplate": "<!-- start -->\n分类:: 总结\n分类:: {{周期}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/总结.md",
-        "appendUnderHeader": "## {{theme}}"
-      },
-      {
-        "id": "ovr_mewlal544uey6",
-        "blockId": "blk_meic1my6m62iu",
-        "themeId": "thm_mejsl0rd9ggip",
-        "status": "disabled",
-        "fields": [
-          {
-            "id": "field_mekr8gby",
-            "key": "状态",
-            "label": "状态",
-            "type": "radio",
-            "options": [
-              {
-                "value": "- [x]",
-                "label": "✅",
-                "extraValues": {}
-              },
-              {
-                "value": "- [ ]",
-                "label": "🛫"
-              },
-              {
-                "value": "- [ ]",
-                "label": "📅"
-              }
-            ]
-          },
-          {
-            "id": "field_mekt6ks3",
-            "key": "任务内容",
-            "label": "任务内容",
-            "type": "textarea"
-          },
-          {
-            "id": "field_mewk9zrg",
-            "key": "日期",
-            "label": "日期",
-            "type": "date"
-          },
-          {
-            "id": "field_mekymbeq",
-            "key": "时间",
-            "label": "时间",
-            "type": "time"
-          },
-          {
-            "id": "field_mekymokf",
-            "key": "时长",
-            "label": "时长",
-            "type": "text"
-          },
-          {
-            "id": "field_mekyn4c3",
-            "key": "重复",
-            "label": "重复",
-            "type": "radio",
-            "options": [
-              {
-                "value": " ",
-                "label": "不重复"
-              },
-              {
-                "value": "🔁 every day",
-                "label": "每天"
-              },
-              {
-                "value": "🔁 every mothon",
-                "label": "每周"
-              },
-              {
-                "value": "🔁 every year",
-                "label": "每月"
-              }
-            ]
-          }
-        ],
-        "outputTemplate": "\n{{状态.value}} {{icon}} {{任务内容}} (时间::{{时间}}) (时长::{{时长}})  {{重复.value}}  {{状态}} {{日期}}",
-        "targetFile": "03/01.md",
         "appendUnderHeader": "## {{theme}}"
       },
       {
@@ -7302,7 +8459,7 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分}}\npintu::{{评分.value}}\n内容:: {{内容}}\n<!-- end -->",
+        "outputTemplate": "<!-- start -->\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分}}\npintu::{{评分.value}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/打卡.md",
         "appendUnderHeader": "## {{theme}}"
       },
@@ -7341,7 +8498,7 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分}}\npintu::{{评分.value}}\n内容:: {{内容}}\n<!-- end -->",
+        "outputTemplate": "<!-- start -->\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分}}\npintu::{{评分.value}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/打卡.md",
         "appendUnderHeader": "## {{theme}}"
       },
@@ -7384,7 +8541,7 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分}}\npintu::{{评分.value}}\n内容:: {{内容}}\n<!-- end -->",
+        "outputTemplate": "<!-- start -->\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分}}\npintu::{{评分.value}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/打卡.md",
         "appendUnderHeader": "## {{theme}}"
       },
@@ -7447,7 +8604,7 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分}}\npintu::{{评分.value}}\n内容:: {{内容}}\n<!-- end -->",
+        "outputTemplate": "<!-- start -->\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分}}\npintu::{{评分.value}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/打卡.md",
         "appendUnderHeader": "## {{theme}}"
       },
@@ -7498,7 +8655,7 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分}}\npintu::{{评分.value}}\n内容:: {{内容}}\n<!-- end -->",
+        "outputTemplate": "<!-- start -->\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分}}\npintu::{{评分.value}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/打卡.md",
         "appendUnderHeader": "## {{theme}}"
       },
@@ -7561,7 +8718,7 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分}}\npintu::{{评分.value}}\n内容:: {{内容}}\n<!-- end -->",
+        "outputTemplate": "<!-- start -->\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分}}\npintu::{{评分.value}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/打卡.md",
         "appendUnderHeader": "## {{theme}}"
       },
@@ -7604,7 +8761,7 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分}}\npintu::{{评分.value}}\n内容:: {{内容}}\n<!-- end -->",
+        "outputTemplate": "<!-- start -->\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分}}\npintu::{{评分.value}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/打卡.md",
         "appendUnderHeader": "## {{theme}}"
       },
@@ -7651,7 +8808,7 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n分类:: 计划\n分类:: {{周期}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n",
+        "outputTemplate": "<!-- start -->\n分类:: 计划\n分类:: {{周期}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n\n",
         "targetFile": "01/计划.md",
         "appendUnderHeader": "## {{theme}}"
       },
@@ -7698,7 +8855,7 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n分类:: 计划\n分类:: {{周期}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n",
+        "outputTemplate": "<!-- start -->\n分类:: 计划\n分类:: {{周期}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n\n",
         "targetFile": "01/计划.md",
         "appendUnderHeader": "## {{theme}}"
       },
@@ -7745,7 +8902,7 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n分类:: 计划\n分类:: {{周期}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n",
+        "outputTemplate": "<!-- start -->\n分类:: 计划\n分类:: {{周期}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n\n",
         "targetFile": "01/计划.md",
         "appendUnderHeader": "## {{theme}}"
       },
@@ -7796,7 +8953,7 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n分类:: 总结\n分类:: {{周期}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->",
+        "outputTemplate": "<!-- start -->\n分类:: 总结\n分类:: {{周期}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/总结.md",
         "appendUnderHeader": "## {{theme}}"
       },
@@ -7847,7 +9004,7 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n分类:: 总结\n分类:: {{周期}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->",
+        "outputTemplate": "<!-- start -->\n分类:: 总结\n分类:: {{周期}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/总结.md",
         "appendUnderHeader": "## {{theme}}"
       },
@@ -7898,7 +9055,7 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n分类:: 总结\n分类:: {{周期}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->",
+        "outputTemplate": "<!-- start -->\n分类:: 总结\n分类:: {{周期}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/总结.md",
         "appendUnderHeader": "## {{theme}}"
       },
@@ -7941,8 +9098,8 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n分类:: {{思考分类}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->",
-        "targetFile": "01/思考.md",
+        "outputTemplate": "<!-- start -->\n分类:: {{思考分类}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n",
+        "targetFile": "01/闪念.md",
         "appendUnderHeader": "## {{theme}}"
       },
       {
@@ -7984,8 +9141,8 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n分类:: {{思考分类}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->",
-        "targetFile": "01/思考.md",
+        "outputTemplate": "<!-- start -->\n分类:: {{思考分类}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n",
+        "targetFile": "01/闪念.md",
         "appendUnderHeader": "## {{theme}}"
       },
       {
@@ -8027,8 +9184,8 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n分类:: {{思考分类}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->",
-        "targetFile": "01/思考.md",
+        "outputTemplate": "<!-- start -->\n分类:: {{思考分类}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n",
+        "targetFile": "01/闪念.md",
         "appendUnderHeader": "## {{theme}}"
       },
       {
@@ -8302,7 +9459,7 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分}}\npintu::{{评分.value}}\n内容:: {{内容}}\n<!-- end -->",
+        "outputTemplate": "<!-- start -->\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分}}\npintu::{{评分.value}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/打卡.md",
         "appendUnderHeader": "## {{theme}}"
       },
@@ -8341,7 +9498,7 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分}}\npintu::{{评分.value}}\n内容:: {{内容}}\n<!-- end -->",
+        "outputTemplate": "<!-- start -->\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分}}\npintu::{{评分.value}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/打卡.md",
         "appendUnderHeader": "## {{theme}}"
       },
@@ -8376,7 +9533,7 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分}}\npintu::{{评分.value}}\n内容:: {{内容}}\n<!-- end -->",
+        "outputTemplate": "<!-- start -->\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分}}\npintu::{{评分.value}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/打卡.md",
         "appendUnderHeader": "## {{theme}}"
       },
@@ -8462,7 +9619,7 @@
             ]
           }
         ],
-        "outputTemplate": "\n{{状态.value}} {{icon}} {{任务内容}} (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}})  {{重复.value}}  {{状态}} {{日期}}",
+        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) {{重复.value}} {{状态}} {{日期}}\n\n",
         "targetFile": "01/2-6工作.md",
         "appendUnderHeader": "## {{theme}}"
       },
@@ -8548,7 +9705,7 @@
             ]
           }
         ],
-        "outputTemplate": "\n{{状态.value}} {{icon}} {{任务内容}} (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}})  {{重复.value}}  {{状态}} {{日期}}",
+        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) {{重复.value}} {{状态}} {{日期}}\n\n",
         "targetFile": "01/2-6工作.md",
         "appendUnderHeader": "## {{theme}}"
       },
@@ -8634,7 +9791,7 @@
             ]
           }
         ],
-        "outputTemplate": "\n{{状态.value}} {{icon}} {{任务内容}} (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}})  {{重复.value}}  {{状态}} {{日期}}",
+        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) {{重复.value}} {{状态}} {{日期}}\n\n",
         "targetFile": "01/2-6工作.md",
         "appendUnderHeader": "## {{theme}}"
       },
@@ -8720,12 +9877,11 @@
             ]
           }
         ],
-        "outputTemplate": "\n{{状态.value}} {{icon}} {{任务内容}} (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}})  {{重复.value}}  {{状态}} {{日期}}",
+        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) {{重复.value}} {{状态}} {{日期}}\n\n",
         "targetFile": "01/2-6工作.md",
         "appendUnderHeader": "## {{theme}}"
       },
       {
-        "id": "ovr_mfhzw9d975by6",
         "blockId": "blk_meic1my6m62iu",
         "themeId": "thm_mejsxbyuursnz",
         "status": "enabled",
@@ -8755,7 +9911,8 @@
             "id": "field_mekt6ks3",
             "key": "任务内容",
             "label": "任务内容",
-            "type": "textarea"
+            "type": "textarea",
+            "defaultValue": "设计"
           },
           {
             "id": "field_mewk9zrg",
@@ -8806,9 +9963,10 @@
             ]
           }
         ],
-        "outputTemplate": "\n{{状态.value}} {{icon}} {{任务内容}} (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}})  {{重复.value}}  {{状态}} {{日期}}",
+        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) {{重复.value}} {{状态}} {{日期}}\n\n",
         "targetFile": "01/2-6工作.md",
-        "appendUnderHeader": "## {{theme}}"
+        "appendUnderHeader": "## {{theme}}",
+        "id": "ovr_mfhzw9d975by6"
       },
       {
         "id": "ovr_mfhzwdwyp8ewj",
@@ -8892,7 +10050,7 @@
             ]
           }
         ],
-        "outputTemplate": "\n{{状态.value}} {{icon}} {{任务内容}} (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}})  {{重复.value}}  {{状态}} {{日期}}",
+        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) {{重复.value}} {{状态}} {{日期}}\n\n",
         "targetFile": "01/2-6工作.md",
         "appendUnderHeader": "## {{theme}}"
       },
@@ -8926,7 +10084,8 @@
             "id": "field_mekt6ks3",
             "key": "任务内容",
             "label": "任务内容",
-            "type": "textarea"
+            "type": "textarea",
+            "defaultValue": "思路整理"
           },
           {
             "id": "field_mewk9zrg",
@@ -8977,13 +10136,12 @@
             ]
           }
         ],
-        "outputTemplate": "\n{{状态.value}} {{icon}} {{任务内容}} (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}})  {{重复.value}}  {{状态}} {{日期}}",
+        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) {{重复.value}} {{状态}} {{日期}}\n\n",
         "targetFile": "01/2-4思考.md",
         "appendUnderHeader": "## {{theme}}",
         "id": "ovr_mfhzwkwivqho3"
       },
       {
-        "id": "ovr_mfhzwoqz4223c",
         "blockId": "blk_meic1my6m62iu",
         "themeId": "thm_mejswh9v0jpsi",
         "status": "enabled",
@@ -9013,7 +10171,8 @@
             "id": "field_mekt6ks3",
             "key": "任务内容",
             "label": "任务内容",
-            "type": "textarea"
+            "type": "textarea",
+            "defaultValue": "复盘整理"
           },
           {
             "id": "field_mewk9zrg",
@@ -9064,13 +10223,12 @@
             ]
           }
         ],
-        "outputTemplate": "\n{{状态.value}} {{icon}} {{任务内容}} (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}})  {{重复.value}}  {{状态}} {{日期}}",
-        "targetFile": "01/2-5电脑.md",
+        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) {{重复.value}} {{状态}} {{日期}}\n\n",
+        "targetFile": "01/2-4思考.md",
         "appendUnderHeader": "## {{theme}}",
-        "disabled": true
+        "id": "ovr_mfhzwoqz4223c"
       },
       {
-        "id": "ovr_mfhzwx24q1kpc",
         "blockId": "blk_meic1my6m62iu",
         "themeId": "thm_mejstzgoiocwm",
         "status": "enabled",
@@ -9100,7 +10258,8 @@
             "id": "field_mekt6ks3",
             "key": "任务内容",
             "label": "任务内容",
-            "type": "textarea"
+            "type": "textarea",
+            "defaultValue": "电脑"
           },
           {
             "id": "field_mewk9zrg",
@@ -9151,12 +10310,12 @@
             ]
           }
         ],
-        "outputTemplate": "\n{{状态.value}} {{icon}} {{任务内容}} (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}})  {{重复.value}}  {{状态}} {{日期}}",
+        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) {{重复.value}} {{状态}} {{日期}}\n\n",
         "targetFile": "01/2-5电脑.md",
-        "appendUnderHeader": "## {{theme}}"
+        "appendUnderHeader": "## {{theme}}",
+        "id": "ovr_mfhzwx24q1kpc"
       },
       {
-        "id": "ovr_mfhzx4hvl9s27",
         "blockId": "blk_meic1my6m62iu",
         "themeId": "thm_mejsuv5sylsi0",
         "status": "enabled",
@@ -9186,7 +10345,8 @@
             "id": "field_mekt6ks3",
             "key": "任务内容",
             "label": "任务内容",
-            "type": "textarea"
+            "type": "textarea",
+            "defaultValue": "ob"
           },
           {
             "id": "field_mewk9zrg",
@@ -9237,12 +10397,12 @@
             ]
           }
         ],
-        "outputTemplate": "\n{{状态.value}} {{icon}} {{任务内容}} (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}})  {{重复.value}}  {{状态}} {{日期}}",
+        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) {{重复.value}} {{状态}} {{日期}}\n\n",
         "targetFile": "01/2-5电脑.md",
-        "appendUnderHeader": "## {{theme}}"
+        "appendUnderHeader": "## {{theme}}",
+        "id": "ovr_mfhzx4hvl9s27"
       },
       {
-        "id": "ovr_mfhzxac3hz906",
         "blockId": "blk_meic1my6m62iu",
         "themeId": "thm_mejsvgb4hlukj",
         "status": "enabled",
@@ -9272,7 +10432,8 @@
             "id": "field_mekt6ks3",
             "key": "任务内容",
             "label": "任务内容",
-            "type": "textarea"
+            "type": "textarea",
+            "defaultValue": "笔记系统"
           },
           {
             "id": "field_mewk9zrg",
@@ -9323,12 +10484,12 @@
             ]
           }
         ],
-        "outputTemplate": "\n{{状态.value}} {{icon}} {{任务内容}} (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}})  {{重复.value}}  {{状态}} {{日期}}",
+        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) {{重复.value}} {{状态}} {{日期}}\n\n",
         "targetFile": "01/2-5电脑.md",
-        "appendUnderHeader": "## {{theme}}"
+        "appendUnderHeader": "## {{theme}}",
+        "id": "ovr_mfhzxac3hz906"
       },
       {
-        "id": "ovr_mfhzxf5uox0gu",
         "blockId": "blk_meic1my6m62iu",
         "themeId": "thm_mejsvlfjaerh5",
         "status": "enabled",
@@ -9358,7 +10519,8 @@
             "id": "field_mekt6ks3",
             "key": "任务内容",
             "label": "任务内容",
-            "type": "textarea"
+            "type": "textarea",
+            "defaultValue": "插件"
           },
           {
             "id": "field_mewk9zrg",
@@ -9409,9 +10571,10 @@
             ]
           }
         ],
-        "outputTemplate": "\n{{状态.value}} {{icon}} {{任务内容}} (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}})  {{重复.value}}  {{状态}} {{日期}}",
+        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) {{重复.value}} {{状态}} {{日期}}\n\n",
         "targetFile": "01/2-5电脑.md",
-        "appendUnderHeader": "## {{theme}}"
+        "appendUnderHeader": "## {{theme}}",
+        "id": "ovr_mfhzxf5uox0gu"
       },
       {
         "id": "ovr_mfhzxlc4yemiz",
@@ -9495,7 +10658,7 @@
             ]
           }
         ],
-        "outputTemplate": "\n{{状态.value}} {{icon}} {{任务内容}} (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}})  {{重复.value}}  {{状态}} {{日期}}",
+        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) {{重复.value}} {{状态}} {{日期}}\n\n",
         "targetFile": "01/2-5电脑.md",
         "appendUnderHeader": "## {{theme}}"
       },
@@ -9530,7 +10693,7 @@
             "key": "任务内容",
             "label": "任务内容",
             "type": "textarea",
-            "defaultValue": "时间整理-{{theme}}"
+            "defaultValue": "时间整理"
           },
           {
             "id": "field_mewk9zrg",
@@ -9581,14 +10744,12 @@
             ]
           }
         ],
-        "outputTemplate": "\n{{状态.value}} {{icon}} {{任务内容}} (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}})  {{重复.value}}  {{状态}} {{日期}}",
+        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) {{重复.value}} {{状态}} {{日期}}\n\n",
         "targetFile": "01/2-4思考.md",
         "appendUnderHeader": "## {{theme}}",
-        "id": "ovr_mfhzxpuhe0flz",
-        "disabled": true
+        "id": "ovr_mfhzxpuhe0flz"
       },
       {
-        "id": "ovr_mfhzy0ykf8a08",
         "blockId": "blk_meic1my6m62iu",
         "themeId": "thm_mejsl7i17il4q",
         "status": "enabled",
@@ -9618,7 +10779,8 @@
             "id": "field_mekt6ks3",
             "key": "任务内容",
             "label": "任务内容",
-            "type": "textarea"
+            "type": "textarea",
+            "defaultValue": "生活"
           },
           {
             "id": "field_mewk9zrg",
@@ -9669,12 +10831,99 @@
             ]
           }
         ],
-        "outputTemplate": "\n{{状态.value}} {{icon}} {{任务内容}} (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}})  {{重复.value}}  {{状态}} {{日期}}",
+        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) {{重复.value}} {{状态}} {{日期}}\n\n",
         "targetFile": "01/2-3生活.md",
-        "appendUnderHeader": "## {{theme}}"
+        "appendUnderHeader": "## {{theme}}",
+        "id": "ovr_mfhzy0ykf8a08"
       },
       {
-        "id": "ovr_mfhzz4r56gn7k",
+        "blockId": "blk_meic1my6m62iu",
+        "themeId": "thm_mejsim4o4c2mw",
+        "status": "enabled",
+        "fields": [
+          {
+            "id": "field_mekr8gby",
+            "key": "状态",
+            "label": "状态",
+            "type": "radio",
+            "options": [
+              {
+                "value": "- [x]",
+                "label": "✅",
+                "extraValues": {}
+              },
+              {
+                "value": "- [ ]",
+                "label": "🛫"
+              },
+              {
+                "value": "- [ ]",
+                "label": "📅"
+              }
+            ]
+          },
+          {
+            "id": "field_mekt6ks3",
+            "key": "任务内容",
+            "label": "任务内容",
+            "type": "textarea",
+            "defaultValue": "思考"
+          },
+          {
+            "id": "field_mewk9zrg",
+            "key": "日期",
+            "label": "日期",
+            "type": "date"
+          },
+          {
+            "id": "field_mekymbeq",
+            "key": "时间",
+            "label": "时间",
+            "type": "time"
+          },
+          {
+            "id": "field_mfhzo6vd",
+            "key": "结束",
+            "label": "结束",
+            "type": "time"
+          },
+          {
+            "id": "field_mekymokf",
+            "key": "时长",
+            "label": "时长",
+            "type": "text"
+          },
+          {
+            "id": "field_mekyn4c3",
+            "key": "重复",
+            "label": "重复",
+            "type": "radio",
+            "options": [
+              {
+                "value": " ",
+                "label": "不重复"
+              },
+              {
+                "value": "🔁 every day",
+                "label": "每天"
+              },
+              {
+                "value": "🔁 every mothon",
+                "label": "每周"
+              },
+              {
+                "value": "🔁 every year",
+                "label": "每月"
+              }
+            ]
+          }
+        ],
+        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) {{重复.value}} {{状态}} {{日期}}\n\n",
+        "targetFile": "01/2-4思考.md",
+        "appendUnderHeader": "## {{theme}}",
+        "id": "ovr_mfhzy8wjn37t5"
+      },
+      {
         "blockId": "blk_meic1my6m62iu",
         "themeId": "thm_mejslgmvm2yym",
         "status": "enabled",
@@ -9704,7 +10953,8 @@
             "id": "field_mekt6ks3",
             "key": "任务内容",
             "label": "任务内容",
-            "type": "textarea"
+            "type": "textarea",
+            "defaultValue": "玩手机"
           },
           {
             "id": "field_mewk9zrg",
@@ -9755,12 +11005,12 @@
             ]
           }
         ],
-        "outputTemplate": "\n{{状态.value}} {{icon}} {{任务内容}} (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}})  {{重复.value}}  {{状态}} {{日期}}",
+        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) {{重复.value}} {{状态}} {{日期}}\n\n",
         "targetFile": "01/2-3生活.md",
-        "appendUnderHeader": "## {{theme}}"
+        "appendUnderHeader": "## {{theme}}",
+        "id": "ovr_mfhzz4r56gn7k"
       },
       {
-        "id": "ovr_mfhzzaeanezaa",
         "blockId": "blk_meic1my6m62iu",
         "themeId": "thm_mejsmcngeij2y",
         "status": "enabled",
@@ -9790,7 +11040,8 @@
             "id": "field_mekt6ks3",
             "key": "任务内容",
             "label": "任务内容",
-            "type": "textarea"
+            "type": "textarea",
+            "defaultValue": "听小说"
           },
           {
             "id": "field_mewk9zrg",
@@ -9841,12 +11092,12 @@
             ]
           }
         ],
-        "outputTemplate": "\n{{状态.value}} {{icon}} {{任务内容}} (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}})  {{重复.value}}  {{状态}} {{日期}}",
+        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) {{重复.value}} {{状态}} {{日期}}\n\n",
         "targetFile": "01/2-3生活.md",
-        "appendUnderHeader": "## {{theme}}"
+        "appendUnderHeader": "## {{theme}}",
+        "id": "ovr_mfhzzaeanezaa"
       },
       {
-        "id": "ovr_mfhzzedvyx5e3",
         "blockId": "blk_meic1my6m62iu",
         "themeId": "thm_mejsmps6gropq",
         "status": "enabled",
@@ -9876,7 +11127,8 @@
             "id": "field_mekt6ks3",
             "key": "任务内容",
             "label": "任务内容",
-            "type": "textarea"
+            "type": "textarea",
+            "defaultValue": "和垚垚玩"
           },
           {
             "id": "field_mewk9zrg",
@@ -9927,12 +11179,12 @@
             ]
           }
         ],
-        "outputTemplate": "\n{{状态.value}} {{icon}} {{任务内容}} (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}})  {{重复.value}}  {{状态}} {{日期}}",
+        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) {{重复.value}} {{状态}} {{日期}}\n\n",
         "targetFile": "01/2-3生活.md",
-        "appendUnderHeader": "## {{theme}}"
+        "appendUnderHeader": "## {{theme}}",
+        "id": "ovr_mfhzzedvyx5e3"
       },
       {
-        "id": "ovr_mfhzzih02q1gy",
         "blockId": "blk_meic1my6m62iu",
         "themeId": "thm_mejsn748ryfip",
         "status": "enabled",
@@ -9962,7 +11214,8 @@
             "id": "field_mekt6ks3",
             "key": "任务内容",
             "label": "任务内容",
-            "type": "textarea"
+            "type": "textarea",
+            "defaultValue": "打扫卫生"
           },
           {
             "id": "field_mewk9zrg",
@@ -10013,12 +11266,12 @@
             ]
           }
         ],
-        "outputTemplate": "\n{{状态.value}} {{icon}} {{任务内容}} (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}})  {{重复.value}}  {{状态}} {{日期}}",
+        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) {{重复.value}} {{状态}} {{日期}}\n\n",
         "targetFile": "01/2-3生活.md",
-        "appendUnderHeader": "## {{theme}}"
+        "appendUnderHeader": "## {{theme}}",
+        "id": "ovr_mfhzzih02q1gy"
       },
       {
-        "id": "ovr_mfhzzn3vwjnxg",
         "blockId": "blk_meic1my6m62iu",
         "themeId": "thm_mejsnf4dp61nq",
         "status": "enabled",
@@ -10048,7 +11301,8 @@
             "id": "field_mekt6ks3",
             "key": "任务内容",
             "label": "任务内容",
-            "type": "textarea"
+            "type": "textarea",
+            "defaultValue": "整理家"
           },
           {
             "id": "field_mewk9zrg",
@@ -10099,9 +11353,10 @@
             ]
           }
         ],
-        "outputTemplate": "\n{{状态.value}} {{icon}} {{任务内容}} (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}})  {{重复.value}}  {{状态}} {{日期}}",
+        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) {{重复.value}} {{状态}} {{日期}}\n\n",
         "targetFile": "01/2-3生活.md",
-        "appendUnderHeader": "## {{theme}}"
+        "appendUnderHeader": "## {{theme}}",
+        "id": "ovr_mfhzzn3vwjnxg"
       },
       {
         "id": "ovr_mfi00ahn87zal",
@@ -10185,12 +11440,11 @@
             ]
           }
         ],
-        "outputTemplate": "\n{{状态.value}} {{icon}} {{任务内容}} (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}})  {{重复.value}}  {{状态}} {{日期}}",
+        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) {{重复.value}} {{状态}} {{日期}}\n\n",
         "targetFile": "01/2-1健康.md",
         "appendUnderHeader": "## {{theme}}"
       },
       {
-        "id": "ovr_mfi00peyoa7fx",
         "blockId": "blk_meic1my6m62iu",
         "themeId": "thm_mejspgfly30j8",
         "status": "enabled",
@@ -10220,7 +11474,8 @@
             "id": "field_mekt6ks3",
             "key": "任务内容",
             "label": "任务内容",
-            "type": "textarea"
+            "type": "textarea",
+            "defaultValue": "拉粑粑"
           },
           {
             "id": "field_mewk9zrg",
@@ -10271,12 +11526,12 @@
             ]
           }
         ],
-        "outputTemplate": "\n{{状态.value}} {{icon}} {{任务内容}} (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}})  {{重复.value}}  {{状态}} {{日期}}",
+        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) {{重复.value}} {{状态}} {{日期}}\n\n",
         "targetFile": "01/2-1健康.md",
-        "appendUnderHeader": "## {{theme}}"
+        "appendUnderHeader": "## {{theme}}",
+        "id": "ovr_mfi00peyoa7fx"
       },
       {
-        "id": "ovr_mfi00txo5ux1g",
         "blockId": "blk_meic1my6m62iu",
         "themeId": "thm_mejsp0lukfkh0",
         "status": "enabled",
@@ -10306,7 +11561,8 @@
             "id": "field_mekt6ks3",
             "key": "任务内容",
             "label": "任务内容",
-            "type": "textarea"
+            "type": "textarea",
+            "defaultValue": "八段锦"
           },
           {
             "id": "field_mewk9zrg",
@@ -10357,9 +11613,10 @@
             ]
           }
         ],
-        "outputTemplate": "\n{{状态.value}} {{icon}} {{任务内容}} (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}})  {{重复.value}}  {{状态}} {{日期}}",
+        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) {{重复.value}} {{状态}} {{日期}}\n\n",
         "targetFile": "01/2-1健康.md",
-        "appendUnderHeader": "## {{theme}}"
+        "appendUnderHeader": "## {{theme}}",
+        "id": "ovr_mfi00txo5ux1g"
       },
       {
         "id": "ovr_mfi00xwcelsw5",
@@ -10443,98 +11700,17 @@
             ]
           }
         ],
-        "outputTemplate": "\n{{状态.value}} {{icon}} {{任务内容}} (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}})  {{重复.value}}  {{状态}} {{日期}}",
+        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) {{重复.value}} {{状态}} {{日期}}\n\n",
         "targetFile": "01/2-1健康.md",
         "appendUnderHeader": "## {{theme}}"
       },
       {
-        "id": "ovr_mfi011sly54z0",
         "blockId": "blk_meic1my6m62iu",
         "themeId": "thm_mejsosvgm4lcp",
-        "status": "enabled",
-        "fields": [
-          {
-            "id": "field_mekr8gby",
-            "key": "状态",
-            "label": "状态",
-            "type": "radio",
-            "options": [
-              {
-                "value": "- [x]",
-                "label": "✅",
-                "extraValues": {}
-              },
-              {
-                "value": "- [ ]",
-                "label": "🛫"
-              },
-              {
-                "value": "- [ ]",
-                "label": "📅"
-              }
-            ]
-          },
-          {
-            "id": "field_mekt6ks3",
-            "key": "任务内容",
-            "label": "任务内容",
-            "type": "textarea"
-          },
-          {
-            "id": "field_mewk9zrg",
-            "key": "日期",
-            "label": "日期",
-            "type": "date"
-          },
-          {
-            "id": "field_mekymbeq",
-            "key": "时间",
-            "label": "时间",
-            "type": "time"
-          },
-          {
-            "id": "field_mfhzo6vd",
-            "key": "结束",
-            "label": "结束",
-            "type": "time"
-          },
-          {
-            "id": "field_mekymokf",
-            "key": "时长",
-            "label": "时长",
-            "type": "text"
-          },
-          {
-            "id": "field_mekyn4c3",
-            "key": "重复",
-            "label": "重复",
-            "type": "radio",
-            "options": [
-              {
-                "value": " ",
-                "label": "不重复"
-              },
-              {
-                "value": "🔁 every day",
-                "label": "每天"
-              },
-              {
-                "value": "🔁 every mothon",
-                "label": "每周"
-              },
-              {
-                "value": "🔁 every year",
-                "label": "每月"
-              }
-            ]
-          }
-        ],
-        "outputTemplate": "\n{{状态.value}} {{icon}} {{任务内容}} (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}})  {{重复.value}}  {{状态}} {{日期}}",
-        "targetFile": "01/2-1健康.md",
-        "appendUnderHeader": "## {{theme}}"
+        "status": "disabled",
+        "id": "ovr_mfi011sly54z0"
       },
       {
-        "id": "ovr_mfi015kb2hw7a",
         "blockId": "blk_meic1my6m62iu",
         "themeId": "thm_mejso80owbe8a",
         "status": "enabled",
@@ -10564,7 +11740,8 @@
             "id": "field_mekt6ks3",
             "key": "任务内容",
             "label": "任务内容",
-            "type": "textarea"
+            "type": "textarea",
+            "defaultValue": "睡觉"
           },
           {
             "id": "field_mewk9zrg",
@@ -10615,12 +11792,12 @@
             ]
           }
         ],
-        "outputTemplate": "\n{{状态.value}} {{icon}} {{任务内容}} (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}})  {{重复.value}}  {{状态}} {{日期}}",
+        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) {{重复.value}} {{状态}} {{日期}}\n\n",
         "targetFile": "01/2-1健康.md",
-        "appendUnderHeader": "## {{theme}}"
+        "appendUnderHeader": "## {{theme}}",
+        "id": "ovr_mfi015kb2hw7a"
       },
       {
-        "id": "ovr_mfi019n9qc5c0",
         "blockId": "blk_meic1my6m62iu",
         "themeId": "thm_mejso10pwthbr",
         "status": "enabled",
@@ -10650,7 +11827,8 @@
             "id": "field_mekt6ks3",
             "key": "任务内容",
             "label": "任务内容",
-            "type": "textarea"
+            "type": "textarea",
+            "defaultValue": "洗漱"
           },
           {
             "id": "field_mewk9zrg",
@@ -10701,12 +11879,12 @@
             ]
           }
         ],
-        "outputTemplate": "\n{{状态.value}} {{icon}} {{任务内容}} (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}})  {{重复.value}}  {{状态}} {{日期}}",
+        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) {{重复.value}} {{状态}} {{日期}}\n\n",
         "targetFile": "01/2-1健康.md",
-        "appendUnderHeader": "## {{theme}}"
+        "appendUnderHeader": "## {{theme}}",
+        "id": "ovr_mfi019n9qc5c0"
       },
       {
-        "id": "ovr_mfi01w2yaf99z",
         "blockId": "blk_meic1my6m62iu",
         "themeId": "thm_mejspn5ocowew",
         "status": "enabled",
@@ -10736,7 +11914,8 @@
             "id": "field_mekt6ks3",
             "key": "任务内容",
             "label": "任务内容",
-            "type": "textarea"
+            "type": "textarea",
+            "defaultValue": "早餐"
           },
           {
             "id": "field_mewk9zrg",
@@ -10787,9 +11966,10 @@
             ]
           }
         ],
-        "outputTemplate": "\n{{状态.value}} {{icon}} {{任务内容}} (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}})  {{重复.value}}  {{状态}} {{日期}}",
+        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) {{重复.value}} {{状态}} {{日期}}\n\n",
         "targetFile": "01/2-2三餐.md",
-        "appendUnderHeader": "## {{theme}}"
+        "appendUnderHeader": "## {{theme}}",
+        "id": "ovr_mfi01w2yaf99z"
       },
       {
         "blockId": "blk_meic1my6m62iu",
@@ -10821,7 +12001,8 @@
             "id": "field_mekt6ks3",
             "key": "任务内容",
             "label": "任务内容",
-            "type": "textarea"
+            "type": "textarea",
+            "defaultValue": "午餐"
           },
           {
             "id": "field_mewk9zrg",
@@ -10872,13 +12053,12 @@
             ]
           }
         ],
-        "outputTemplate": "\n{{状态.value}} {{icon}} {{任务内容}} (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}})  {{重复.value}}  {{状态}} {{日期}}",
+        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) {{重复.value}} {{状态}} {{日期}}\n\n",
         "targetFile": "01/2-2三餐.md",
         "appendUnderHeader": "## {{theme}}",
         "id": "ovr_mfi020mjezkyy"
       },
       {
-        "id": "ovr_mfi025rhepqgs",
         "blockId": "blk_meic1my6m62iu",
         "themeId": "thm_mejst90wwyoyn",
         "status": "enabled",
@@ -10908,7 +12088,8 @@
             "id": "field_mekt6ks3",
             "key": "任务内容",
             "label": "任务内容",
-            "type": "textarea"
+            "type": "textarea",
+            "defaultValue": "晚餐"
           },
           {
             "id": "field_mewk9zrg",
@@ -10959,14 +12140,109 @@
             ]
           }
         ],
-        "outputTemplate": "\n{{状态.value}} {{icon}} {{任务内容}} (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}})  {{重复.value}}  {{状态}} {{日期}}",
+        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) {{重复.value}} {{状态}} {{日期}}\n\n",
         "targetFile": "01/2-2三餐.md",
-        "appendUnderHeader": "## {{theme}}"
+        "appendUnderHeader": "## {{theme}}",
+        "id": "ovr_mfi025rhepqgs"
       },
       {
-        "id": "ovr_mfj18fupymfx4",
         "blockId": "blk_meic1my6m62iu",
         "themeId": "thm_mfj17uymay4u6",
+        "status": "enabled",
+        "fields": [
+          {
+            "id": "field_mekr8gby",
+            "key": "状态",
+            "label": "状态",
+            "type": "radio",
+            "options": [
+              {
+                "value": "- [x]",
+                "label": "✅",
+                "extraValues": {}
+              },
+              {
+                "value": "- [ ]",
+                "label": "🛫"
+              },
+              {
+                "value": "- [ ]",
+                "label": "📅"
+              }
+            ]
+          },
+          {
+            "id": "field_mekt6ks3",
+            "key": "任务内容",
+            "label": "任务内容",
+            "type": "textarea",
+            "defaultValue": "通勤"
+          },
+          {
+            "id": "field_mewk9zrg",
+            "key": "日期",
+            "label": "日期",
+            "type": "date"
+          },
+          {
+            "id": "field_mekymbeq",
+            "key": "时间",
+            "label": "时间",
+            "type": "time"
+          },
+          {
+            "id": "field_mfhzo6vd",
+            "key": "结束",
+            "label": "结束",
+            "type": "time"
+          },
+          {
+            "id": "field_mekymokf",
+            "key": "时长",
+            "label": "时长",
+            "type": "text",
+            "defaultValue": "15"
+          },
+          {
+            "id": "field_mekyn4c3",
+            "key": "重复",
+            "label": "重复",
+            "type": "radio",
+            "options": [
+              {
+                "value": " ",
+                "label": "不重复"
+              },
+              {
+                "value": "🔁 every day",
+                "label": "每天"
+              },
+              {
+                "value": "🔁 every mothon",
+                "label": "每周"
+              },
+              {
+                "value": "🔁 every year",
+                "label": "每月"
+              }
+            ]
+          }
+        ],
+        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) {{重复.value}} {{状态}} {{日期}}\n\n",
+        "targetFile": "01/2-6工作.md",
+        "appendUnderHeader": "## {{theme}}",
+        "id": "ovr_mfj18fupymfx4"
+      },
+      {
+        "id": "ovr_mfj18ndf1orek",
+        "blockId": "blk_mejsg76atopau",
+        "themeId": "thm_mfj17uymay4u6",
+        "status": "disabled"
+      },
+      {
+        "id": "ovr_mg1mbjvbx9yzq",
+        "blockId": "blk_meic1my6m62iu",
+        "themeId": "thm_mejsl0rd9ggip",
         "status": "enabled",
         "fields": [
           {
@@ -11045,42 +12321,116 @@
             ]
           }
         ],
-        "outputTemplate": "\n{{状态.value}} {{icon}} {{任务内容}} (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}})  {{重复.value}}  {{状态}} {{日期}}",
-        "targetFile": "01/2-6工作.md",
+        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) {{重复.value}} {{状态}} {{日期}}\n\n",
+        "targetFile": "01/2-4思考.md",
         "appendUnderHeader": "## {{theme}}"
       },
       {
-        "id": "ovr_mfj18ndf1orek",
-        "blockId": "blk_mejsg76atopau",
-        "themeId": "thm_mfj17uymay4u6",
+        "id": "ovr_mg1mdk3jubw7t",
+        "blockId": "blk_mejsfuehqj4s0",
+        "themeId": "thm_mejso10pwthbr",
         "status": "disabled"
       },
       {
-        "themeId": "thm_mejsim4o4c2mw",
+        "id": "ovr_mg1mduuqopp4e",
+        "blockId": "blk_mejsdvflptluo",
+        "themeId": "thm_mejso10pwthbr",
+        "status": "disabled"
+      },
+      {
+        "id": "ovr_mg1yvqf11f4co",
         "blockId": "blk_meic1my6m62iu",
-        "disabled": true,
-        "id": "ovr_mgqa07ms259ba"
+        "themeId": "thm_mg1ytgzlrkbv8",
+        "status": "enabled",
+        "fields": [
+          {
+            "id": "field_mekr8gby",
+            "key": "状态",
+            "label": "状态",
+            "type": "radio",
+            "options": [
+              {
+                "value": "- [x]",
+                "label": "✅",
+                "extraValues": {}
+              },
+              {
+                "value": "- [ ]",
+                "label": "🛫"
+              },
+              {
+                "value": "- [ ]",
+                "label": "📅"
+              }
+            ]
+          },
+          {
+            "id": "field_mekt6ks3",
+            "key": "任务内容",
+            "label": "任务内容",
+            "type": "textarea"
+          },
+          {
+            "id": "field_mewk9zrg",
+            "key": "日期",
+            "label": "日期",
+            "type": "date"
+          },
+          {
+            "id": "field_mekymbeq",
+            "key": "时间",
+            "label": "时间",
+            "type": "time"
+          },
+          {
+            "id": "field_mfhzo6vd",
+            "key": "结束",
+            "label": "结束",
+            "type": "time"
+          },
+          {
+            "id": "field_mekymokf",
+            "key": "时长",
+            "label": "时长",
+            "type": "text"
+          },
+          {
+            "id": "field_mekyn4c3",
+            "key": "重复",
+            "label": "重复",
+            "type": "radio",
+            "options": [
+              {
+                "value": " ",
+                "label": "不重复"
+              },
+              {
+                "value": "🔁 every day",
+                "label": "每天"
+              },
+              {
+                "value": "🔁 every mothon",
+                "label": "每周"
+              },
+              {
+                "value": "🔁 every year",
+                "label": "每月"
+              }
+            ]
+          }
+        ],
+        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) {{重复.value}} {{状态}} {{日期}}\n\n",
+        "targetFile": "01/2-3生活.md",
+        "appendUnderHeader": "## {{theme}}"
       },
       {
-        "themeId": "thm_mejsl7i17il4q",
-        "blockId": "blk_mejsfuehqj4s0",
-        "disabled": true,
-        "id": "ovr_mgqaoqbeb3ec5"
-      },
-      {
-        "themeId": "thm_mejsnu4ekns46",
-        "blockId": "blk_mejsfuehqj4s0",
-        "disabled": true,
-        "id": "ovr_mgqaoqbe9498y"
-      },
-      {
-        "themeId": "thm_mejstzgoiocwm",
-        "blockId": "blk_mejsfuehqj4s0",
-        "disabled": true,
-        "id": "ovr_mgqaoqbe5dnlp"
+        "blockId": "blk_mejsg76atopau",
+        "themeId": "thm_mg1ytgzlrkbv8",
+        "status": "disabled",
+        "id": "ovr_mg1ywps5oufp4"
       }
     ]
   },
-  "floatingTimerEnabled": true,
+  "floatingTimerEnabled": false,
   "activeThemePaths": []
 }

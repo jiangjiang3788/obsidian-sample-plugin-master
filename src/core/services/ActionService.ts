@@ -4,7 +4,7 @@ import { App, Notice } from 'obsidian';
 import { AppStore } from '@state/AppStore';
 import { dayjs } from '@core/utils/date';
 import type { Item, ViewInstance } from '@core/domain/schema';
-import { DataStore } from './dataStore';
+import { DataStore } from './DataStore';
 import { InputService } from './inputService';
 import type { QuickInputConfig } from './types';
 import { AppToken } from './types';
@@ -32,9 +32,19 @@ export class ActionService {
             return null;
         }
         const blockName = categoryFilter.value as string;
-        const targetBlock = settings.inputSettings.blocks.find(b => b.name === blockName);
+        let targetBlock = settings.inputSettings.blocks.find(b => b.name === blockName);
+        
+        // 特殊处理：如果是任务相关的 categoryKey，尝试匹配包含"任务"的模板
+        if (!targetBlock && (blockName === '完成任务' || blockName === '未完成任务')) {
+            targetBlock = settings.inputSettings.blocks.find(b => b.name.includes('任务'));
+        }
+        
         if (!targetBlock) {
-            new Notice(`快捷输入失败：找不到名为 "${blockName}" 的Block模板。`);
+            if (blockName === '完成任务' || blockName === '未完成任务') {
+                new Notice(`快捷输入失败：找不到名称包含"任务"的Block模板。请在设置中创建一个任务类型的模板。`);
+            } else {
+                new Notice(`快捷输入失败：找不到名为 "${blockName}" 的Block模板。`);
+            }
             return null;
         }
         
