@@ -1,5 +1,6 @@
 // src/features/settings/ui/components/view-editors/HeatmapViewEditor.tsx
 /** @jsxImportSource preact */
+import { h } from 'preact';
 import { Stack, Typography, FormControlLabel, Radio, RadioGroup, Box, Button } from '@mui/material';
 import type { ViewEditorProps } from './registry';
 import { SimpleSelect } from '@shared/ui/SimpleSelect';
@@ -68,7 +69,7 @@ export function HeatmapViewEditor({ value, onChange, module }: ViewEditorProps) 
             </Stack>
 
             {config.displayMode === 'habit' && (
-                <Fragment>
+                <div>
                     <Stack direction="row" alignItems="center" spacing={2}>
                         <Typography sx={{ width: '80px', flexShrink: 0, fontWeight: 500 }}>源 Block</Typography>
                         <Box sx={{ flexGrow: 1 }}>
@@ -79,7 +80,7 @@ export function HeatmapViewEditor({ value, onChange, module }: ViewEditorProps) 
                                 placeholder="-- 请选择用于打卡的 Block 模板 --"
                             />
                              <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.5 }}>
-                                 视图将从此 Block 模板的“评分”字段中读取 Emoji/图片/颜色映射。
+                                 视图将从此 Block 模板的"评分"字段中读取 Emoji/图片/颜色映射。
                              </Typography>
                         </Box>
                     </Stack>
@@ -97,7 +98,7 @@ export function HeatmapViewEditor({ value, onChange, module }: ViewEditorProps) 
                            <Button onClick={handleScanTags} size="small" sx={{mt: 1}}>从数据源扫描并添加主题</Button>
                         </Box>
                     </Stack>
-                </Fragment>
+                </div>
             )}
 
             {config.displayMode === 'count' && (
