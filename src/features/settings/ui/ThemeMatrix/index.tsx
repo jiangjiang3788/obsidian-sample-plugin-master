@@ -9,9 +9,11 @@ import { useState, useMemo } from 'preact/hooks';
 import { TemplateEditorModal } from '../components/TemplateEditorModal';
 import type { BlockTemplate, ThemeDefinition, ThemeOverride } from '@core/domain/schema';
 import { ThemeManager } from '@core/services/ThemeManager';
+import { dataStore } from '@state/storeRegistry';
 
 // 导入服务
 import { ThemeMatrixService } from './services/ThemeMatrixService';
+import { ThemeScanService } from './services/ThemeScanService';
 
 // 导入类型
 import type { ThemeMatrixProps } from './types';
@@ -23,6 +25,7 @@ import { buildThemeTree } from './utils/themeTreeBuilder';
 import { ThemeToolbar } from './components/ThemeToolbar';
 import { ContextualToolbar } from './components/ContextualToolbar';
 import { ThemeTable } from './components/ThemeTable';
+import { ThemeImportButton } from './components/ThemeImportButton';
 
 // 导入新的Hooks
 import { useThemeMatrixEditor } from './hooks/useThemeMatrixEditor';
@@ -58,6 +61,13 @@ export function ThemeMatrix({ appStore }: ThemeMatrixProps) {
         onOperationComplete: clearSelection,
     });
     const themeService = useMemo(() => new ThemeMatrixService({ appStore, themeManager }), [appStore, themeManager]);
+    
+    // 主题扫描服务
+    const themeScanService = useMemo(() => new ThemeScanService({ 
+        appStore, 
+        dataStore, 
+        themeManager 
+    }), [appStore, themeManager]);
     
     // 获取扩展的主题信息
     const extendedThemes = useMemo(() => {
@@ -132,6 +142,16 @@ export function ThemeMatrix({ appStore }: ThemeMatrixProps) {
         }
     };
 
+    // 主题扫描处理函数
+    const handleThemeScan = async (config: any) => {
+        return await themeScanService.scanThemesFromData(config);
+    };
+
+    // 主题导入处理函数
+    const handleThemeImport = async (themes: string[]) => {
+        return await themeScanService.importThemes(themes);
+    };
+
     return (
         // @ts-ignore - MUI与Preact类型兼容性问题
         <Box sx={{ maxWidth: '1200px', mx: 'auto', padding: 2 }}>
@@ -188,6 +208,11 @@ export function ThemeMatrix({ appStore }: ThemeMatrixProps) {
                 <Button onClick={handleAddTheme} variant="outlined" size="small" startIcon={<AddIcon />}>
                     添加主题
                 </Button>
+                
+                <ThemeImportButton 
+                    onScan={handleThemeScan}
+                    onImport={handleThemeImport}
+                />
             </Stack>
             
             {/* 模板编辑器模态框 */}

@@ -8,15 +8,17 @@ import { ObsidianPlatform } from '@platform/obsidian';
 import { normalizeItemDates } from '@core/utils/normalize';
 import { filterByRules, sortItems } from '@core/utils/itemFilter';
 import { parseRecurrence } from '@core/utils/mark';
-// [新增] 导入 App 的注入令牌
+// [新增] 导入 App 的注入令牌和 ThemeManager
 import { AppToken } from './types';
+import { ThemeManager } from './ThemeManager';
 
 @singleton()
 export class DataStore {
     // [核心修改] 为构造函数的每个参数添加 @inject 装饰器
     constructor(
         @inject(ObsidianPlatform) private platform: ObsidianPlatform,
-        @inject(AppToken) private app: App
+        @inject(AppToken) private app: App,
+        @inject(ThemeManager) private themeManager: ThemeManager
     ) {}
 
     // ... 其余方法保持不变 ...
@@ -84,8 +86,9 @@ export class DataStore {
                     taskItem.modified = file.stat.mtime;
                     if (currentHeader) {
                         taskItem.header = currentHeader;
-                        // [Day2新增] 任务的主题是当前章节标题
-                        taskItem.theme = currentHeader;
+                        // [修改] 使用智能匹配获取完整主题路径
+                        const matchedTheme = this.themeManager.findThemeByPartialMatch(currentHeader);
+                        taskItem.theme = matchedTheme || currentHeader; // 如果找不到匹配则回退到原始值
                     }
                     taskItem.filename = fileName;
                     taskItem.fileName = fileName;
