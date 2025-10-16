@@ -13,7 +13,7 @@ import type { ActionService } from '@core/services/ActionService';
 import type { TaskService } from '@core/services/taskService';
 import { useViewData } from '../hooks/useViewData';
 import { QuickInputModal } from '@features/quick-input/ui/QuickInputModal';
-import { ViewSettingsModal } from './ViewSettingsModal'; // [新增] 导入设置模态框
+import { ModuleSettingsModal } from './ModuleSettingsModal'; // [新增] 导入设置模态框
 import { App, Notice } from 'obsidian'; // [修改] 导入 Notice
 import { appStore } from '@state/storeRegistry';
 import { exportItemsToMarkdown } from '@core/utils/exportUtils'; // [新增] 导入导出函数
@@ -251,7 +251,7 @@ export function LayoutRenderer({ layout, dataStore, app, actionService, taskServ
             
             {/* [新增] 设置模态框 */}
             {settingsModalOpen && currentViewInstance && (
-                <ViewSettingsModal
+                <ModuleSettingsModal
                     isOpen={settingsModalOpen}
                     onClose={handleSettingsClose}
                     module={currentViewInstance}

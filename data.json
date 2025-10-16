@@ -311,11 +311,6 @@
           "field": "type",
           "op": "=",
           "value": "block"
-        },
-        {
-          "field": "categoryKey",
-          "op": "!=",
-          "value": "打卡"
         }
       ],
       "sort": [
@@ -1614,9 +1609,9 @@
           "value": "完成任务"
         },
         {
-          "field": "file.path",
-          "op": "=",
-          "value": "01/2-4思考.md"
+          "field": "theme",
+          "op": "includes",
+          "value": "思考"
         }
       ],
       "sort": [],
@@ -1630,11 +1625,6 @@
           "field": "type",
           "op": "=",
           "value": "block"
-        },
-        {
-          "field": "categoryKey",
-          "op": "!=",
-          "value": "打卡"
         },
         {
           "field": "theme",
@@ -1655,7 +1645,7 @@
           "value": "打卡"
         },
         {
-          "field": "tags",
+          "field": "theme",
           "op": "=",
           "value": "思考/读书"
         }
@@ -3271,7 +3261,7 @@
         "rowField": "recurrence",
         "colField": "header"
       },
-      "collapsed": false,
+      "collapsed": true,
       "parentId": "group_mg3dmyfcbmuw6"
     },
     {
@@ -3280,7 +3270,7 @@
       "viewType": "TimelineView",
       "dataSourceId": "ds_mg234zgoxblv5",
       "viewConfig": {
-        "defaultHourHeight": 10,
+        "defaultHourHeight": 30,
         "MAX_HOURS_PER_DAY": 24,
         "UNTRACKED_LABEL": "未记录",
         "categories": {
@@ -3333,7 +3323,7 @@
         "fields": [],
         "group": "categoryKey"
       },
-      "collapsed": false,
+      "collapsed": true,
       "parentId": "group_mg3dmyfcbmuw6",
       "group": "header"
     },
@@ -3402,7 +3392,7 @@
       "viewType": "TimelineView",
       "dataSourceId": "ds_mg3eehnr3vhyq",
       "viewConfig": {
-        "defaultHourHeight": 10,
+        "defaultHourHeight": 100,
         "MAX_HOURS_PER_DAY": 24,
         "UNTRACKED_LABEL": "未记录",
         "categories": {
@@ -3455,7 +3445,7 @@
         "fields": [],
         "group": "categoryKey"
       },
-      "collapsed": false,
+      "collapsed": true,
       "parentId": "group_mg3efhaom4lqn",
       "group": "header"
     },
