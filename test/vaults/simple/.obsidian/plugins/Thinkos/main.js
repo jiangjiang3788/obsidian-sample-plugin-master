@@ -27364,7 +27364,7 @@ function TimelineViewEditor({ value, onChange }) {
                 /* @__PURE__ */ u(Tooltip, { title: "上移", children: /* @__PURE__ */ u("span", { children: /* @__PURE__ */ u(IconButton, { size: "small", disabled: index === 0, onClick: () => moveCategory(index, "up"), sx: { p: "4px", fontSize: "0.9rem" }, children: "▲" }) }) }),
                 /* @__PURE__ */ u(Tooltip, { title: "下移", children: /* @__PURE__ */ u("span", { children: [
                   /* @__PURE__ */ u(IconButton, { size: "small", disabled: index === progressOrder.length - 1, onClick: () => moveCategory(index, "down"), sx: { p: "4px", fontSize: "0.9rem" }, children: "▼" }),
-                  "_200c_         "
+                  "_200c_         "
                 ] }) })
               ] }),
               /* @__PURE__ */ u(
@@ -27408,7 +27408,7 @@ function TimelineViewEditor({ value, onChange }) {
                       children: file
                     }
                   ),
-                  "_200c_           "
+                  "_200c_           "
                 ] }, file)),
                 /* @__PURE__ */ u(
                   SimpleSelect,
@@ -31970,8 +31970,8 @@ let TaskService = class {
     this.app = app;
   }
   /**
-       * 根据任务ID获取其在文件中的原始行文本。
-       */
+       * 根据任务ID获取其在文件中的原始行文本。
+       */
   async getTaskLine(taskId) {
     const { path, lineNo } = this.parseTaskId(taskId);
     const file = this.app.vault.getAbstractFileByPath(path);
@@ -31982,8 +31982,8 @@ let TaskService = class {
     return lines[lineNo - 1];
   }
   /**
-       * 更新文件中的特定行。
-       */
+       * 更新文件中的特定行。
+       */
   async updateTaskLine(path, lineNo, newLine, nextLine) {
     const file = this.app.vault.getAbstractFileByPath(path);
     if (!(file instanceof obsidian.TFile)) throw new Error(`找不到文件: ${path}`);
@@ -31997,8 +31997,8 @@ let TaskService = class {
     this.dataStore.scanFile(file).then(() => this.dataStore.notifyChange());
   }
   /**
-       * 完成一个任务。
-       */
+       * 完成一个任务。
+       */
   async completeTask(taskId, options) {
     const { path, lineNo } = this.parseTaskId(taskId);
     const rawLine = await this.getTaskLine(taskId);
@@ -32042,8 +32042,8 @@ let TaskService = class {
     }
   }
   /**
-       * 更新任务的时间和/或时长。
-       */
+       * 更新任务的时间和/或时长。
+       */
   async updateTaskTime(taskId, updates) {
     const { path, lineNo } = this.parseTaskId(taskId);
     let line2 = await this.getTaskLine(taskId);
@@ -32059,8 +32059,8 @@ let TaskService = class {
     await this.updateTaskLine(path, lineNo, line2);
   }
   /**
-       * 辅助函数：解析任务ID为路径和行号。
-       */
+       * 辅助函数：解析任务ID为路径和行号。
+       */
   parseTaskId(taskId) {
     const hashIndex = taskId.lastIndexOf("#");
     if (hashIndex === -1) throw new Error(`无效的任务ID格式: ${taskId}`);
@@ -32070,8 +32070,8 @@ let TaskService = class {
     return { path, lineNo };
   }
   /**
-       * 辅助函数：在任务行中更新或插入 (key:: value) 格式的标签。
-       */
+       * 辅助函数：在任务行中更新或插入 (key:: value) 格式的标签。
+       */
   upsertKvTag(line2, key, value) {
     const pattern = new RegExp(`([(\\[]\\s*${key}::\\s*)[^\\)\\]]*(\\s*[\\)\\]])`);
     if (pattern.test(line2)) {
