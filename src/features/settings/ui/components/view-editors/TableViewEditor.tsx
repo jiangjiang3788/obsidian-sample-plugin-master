@@ -5,15 +5,15 @@ import { Stack, TextField, Autocomplete, Typography } from '@mui/material';
 import type { ViewEditorProps } from './registry';
 
 export const DEFAULT_CONFIG = {
-  view: 'TableView' as const,
-  title: '表格视图',
-  collapsed: false,
-  rowField: 'categoryKey',
-  colField: 'date',
+  view: 'TableView' as const,
+  title: '表格视图',
+  collapsed: false,
+  rowField: 'categoryKey',
+  colField: 'date',
 };
 
 export function TableViewEditor({ value, onChange, fieldOptions }: ViewEditorProps) {
-  return (
+  return (
     <Stack spacing={2}>
         <Typography variant="body1" color="text.secondary" sx={{ mb: 1 }}>
             交叉表（TableView）根据两个字段来创建二维表格。
@@ -37,5 +37,5 @@ export function TableViewEditor({ value, onChange, fieldOptions }: ViewEditorPro
             />
         </Stack>
     </Stack>
-  );
+  );
 }

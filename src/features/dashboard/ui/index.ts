@@ -18,12 +18,12 @@ import { VIEW_OPTIONS as DOMAIN_VIEW_OPTIONS } from '@core/domain/schema';
 // [REFACTOR] This registry must now implement all views defined in the domain's ViewName type.
 // The `Record<ViewName, any>` provides type-safety.
 export const VIEW_REGISTRY: Record<ViewName, ComponentType<any>> = {
-  TableView,
-  BlockView,
-  TimelineView,
-  ExcelView,
-  StatisticsView,
-  HeatmapView, // [NEW] Register HeatmapView
+  TableView,
+  BlockView,
+  TimelineView,
+  ExcelView,
+  StatisticsView,
+  HeatmapView, // [NEW] Register HeatmapView
 } as const;
 
 /** Dashboard.tsx 动态调用用这个常量 */

@@ -60,28 +60,28 @@ function BlockEditor({ block, appStore }: { block: BlockTemplate, appStore: AppS
     };
     return (
         <Stack spacing={3}>
-            <TextField label="Block 名称" value={localBlock.name} onChange={e => setLocalBlock(b => ({ ...b, name: (e.target as HTMLInputElement).value }))} onBlur={() => handleBlur('name')} variant="outlined" size="small" sx={{ maxWidth: 400 }} />
-            <Divider />
-            <Box>
-                <Typography variant="h6" sx={{ fontSize: '1rem', fontWeight: 600, mb: 1 }}>输出目标</Typography>
-                <Stack spacing={2}>
-                    <TextField label="目标文件路径" value={localBlock.targetFile} onChange={e => setLocalBlock(b => ({ ...b, targetFile: (e.target as HTMLInputElement).value }))} onBlur={() => handleBlur('targetFile')} placeholder="e.g., {{theme.path}}/{{标题.value}}.md" variant="outlined" size="small" />
-                    <TextField label="追加到标题下 (可选)" value={localBlock.appendUnderHeader || ''} onChange={e => setLocalBlock(b => ({ ...b, appendUnderHeader: (e.target as HTMLInputElement).value }))} onBlur={() => handleBlur('appendUnderHeader')} placeholder="e.g., ## {{block.name}}" variant="outlined" size="small" />
-                </Stack>
-            </Box>
-            <Divider />
-            <Box>
-                <Typography variant="h6" sx={{ fontSize: '1rem', fontWeight: 600, mb: 1.5 }}>表单字段</Typography>
-                <FieldsEditor fields={localBlock.fields} onChange={(newFields) => handleUpdate({ fields: newFields })} />
-            </Box>
-            <Divider />
-            <Box>
-                <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 1 }}>
-                    <Typography variant="h6" sx={{ fontSize: '1rem', fontWeight: 600 }}>输出模板</Typography>
-                    <TemplateVariableCopier block={localBlock} />
-                </Stack>
-                <TextField label="Output Template" multiline rows={8} value={localBlock.outputTemplate} onChange={e => setLocalBlock(b => ({ ...b, outputTemplate: (e.target as HTMLInputElement).value }))} onBlur={() => handleBlur('outputTemplate')} placeholder="使用 {{key}} 引用上面定义的字段" variant="outlined" sx={{ fontFamily: 'monospace', '& textarea': { fontSize: '13px' } }} />
-            </Box>
+            <TextField label="Block 名称" value={localBlock.name} onChange={e => setLocalBlock(b => ({ ...b, name: (e.target as HTMLInputElement).value }))} onBlur={() => handleBlur('name')} variant="outlined" size="small" sx={{ maxWidth: 400 }} />
+            <Divider />
+            <Box>
+                <Typography variant="h6" sx={{ fontSize: '1rem', fontWeight: 600, mb: 1 }}>输出目标</Typography>
+                <Stack spacing={2}>
+                    <TextField label="目标文件路径" value={localBlock.targetFile} onChange={e => setLocalBlock(b => ({ ...b, targetFile: (e.target as HTMLInputElement).value }))} onBlur={() => handleBlur('targetFile')} placeholder="e.g., {{theme.path}}/{{标题.value}}.md" variant="outlined" size="small" />
+                    <TextField label="追加到标题下 (可选)" value={localBlock.appendUnderHeader || ''} onChange={e => setLocalBlock(b => ({ ...b, appendUnderHeader: (e.target as HTMLInputElement).value }))} onBlur={() => handleBlur('appendUnderHeader')} placeholder="e.g., ## {{block.name}}" variant="outlined" size="small" />
+                </Stack>
+            </Box>
+            <Divider />
+            <Box>
+                <Typography variant="h6" sx={{ fontSize: '1rem', fontWeight: 600, mb: 1.5 }}>表单字段</Typography>
+                <FieldsEditor fields={localBlock.fields} onChange={(newFields) => handleUpdate({ fields: newFields })} />
+            </Box>
+            <Divider />
+            <Box>
+                <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 1 }}>
+                    <Typography variant="h6" sx={{ fontSize: '1rem', fontWeight: 600 }}>输出模板</Typography>
+                    <TemplateVariableCopier block={localBlock} />
+                </Stack>
+                <TextField label="Output Template" multiline rows={8} value={localBlock.outputTemplate} onChange={e => setLocalBlock(b => ({ ...b, outputTemplate: (e.target as HTMLInputElement).value }))} onBlur={() => handleBlur('outputTemplate')} placeholder="使用 {{key}} 引用上面定义的字段" variant="outlined" sx={{ fontFamily: 'monospace', '& textarea': { fontSize: '13px' } }} />
+            </Box>
         </Stack>
     );
 }
