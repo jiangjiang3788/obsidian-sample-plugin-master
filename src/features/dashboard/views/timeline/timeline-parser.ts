@@ -30,7 +30,7 @@ const DATE_FORMAT = 'YYYY-MM-DD';
 function parseAllTimes(item: Item): { startMinute: number | null; duration: number | null; endMinute: number | null } {
     const startMinute = item.startTime ? timeToMinutes(item.startTime) : null;
     const endMinute = item.endTime ? timeToMinutes(item.endTime) : null;
-    const duration = item.duration; // duration is already a number
+    const duration = item.duration ?? null; // 正确处理undefined情况
 
     // 优先级 1: 有开始和结束，计算并覆盖时长
     if (startMinute !== null && endMinute !== null) {
@@ -71,7 +71,11 @@ export function processItemsToTimelineTasks(items: Item[]): TimelineTask[] {
         const fileName = item.file?.basename || item.filename || '';
         if (!fileName) continue;
 
-        if (item.type !== 'task' || !item.categoryKey?.endsWith('/done')) continue;
+        // 检查是否为已完成的任务（支持新旧格式）
+        const isCompletedTask = item.categoryKey?.endsWith('/done') || 
+                               item.categoryKey?.endsWith('/cancelled') || 
+                               item.categoryKey === '完成任务';
+        if (item.type !== 'task' || !isCompletedTask) continue;
 
         const { startMinute, duration, endMinute } = parseAllTimes(item);
 
