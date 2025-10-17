@@ -15,32 +15,34 @@ import { Notice } from 'obsidian';
 // 视图设置编辑器组件
 function ViewInstanceEditor({ vi, appStore }: { vi: ViewInstance, appStore: AppStore }) {
     const dataSources = useStore(state => state.settings.dataSources);
+    // 从store中获取最新的viewInstance状态，而不是使用传入的props
+    const currentVi = useStore(state => state.settings.viewInstances.find(v => v.id === vi.id)) || vi;
     const fieldOptions = useMemo(() => getAllFields(dataStore?.queryItems() || []), []);
-    const EditorComponent = VIEW_EDITORS[vi.viewType];
+    const EditorComponent = VIEW_EDITORS[currentVi.viewType];
 
     const correctedViewConfig = useMemo(() => {
-        if (vi.viewConfig && typeof (vi.viewConfig as any).categories === 'object') return vi.viewConfig;
-        if (vi.viewConfig && (vi.viewConfig as any).viewConfig) return (vi.viewConfig as any).viewConfig;
-        return vi.viewConfig || {};
-    }, [vi.viewConfig]);
+        if (currentVi.viewConfig && typeof (currentVi.viewConfig as any).categories === 'object') return currentVi.viewConfig;
+        if (currentVi.viewConfig && (currentVi.viewConfig as any).viewConfig) return (currentVi.viewConfig as any).viewConfig;
+        return currentVi.viewConfig || {};
+    }, [currentVi.viewConfig]);
 
     const handleUpdate = (updates: Partial<ViewInstance>) => {
-        appStore.updateViewInstance(vi.id, updates);
+        appStore.updateViewInstance(currentVi.id, updates);
     };
 
     const addField = (field: string) => {
-        if (field && !vi.fields?.includes(field)) {
-            handleUpdate({ fields: [...(vi.fields || []), field] });
+        if (field && !currentVi.fields?.includes(field)) {
+            handleUpdate({ fields: [...(currentVi.fields || []), field] });
         }
     };
 
     const removeField = (field: string) => {
-        handleUpdate({ fields: vi.fields?.filter(f => f !== field) });
+        handleUpdate({ fields: currentVi.fields?.filter(f => f !== field) });
     };
 
     const viewTypeOptions = VIEW_OPTIONS.map(v => ({ value: v, label: v.replace('View', '') }));
     const dataSourceOptions = dataSources.map(ds => ({ value: ds.id, label: ds.name }));
-    const availableFieldOptions = fieldOptions.filter(f => !vi.fields?.includes(f)).map(f => ({ value: f, label: f }));
+    const availableFieldOptions = fieldOptions.filter(f => !currentVi.fields?.includes(f)).map(f => ({ value: f, label: f }));
 
     const groupFieldOptions = useMemo(() => [
         { value: '', label: '-- 不分组 --' },
@@ -54,7 +56,7 @@ function ViewInstanceEditor({ vi, appStore }: { vi: ViewInstance, appStore: AppS
                 <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1rem' }}>
                     <label style={{ width: '80px', fontWeight: 'bold' }}>视图类型:</label>
                     <SimpleSelect 
-                        value={vi.viewType} 
+                        value={currentVi.viewType} 
                         options={viewTypeOptions} 
                         onChange={val => handleUpdate({ viewType: val as ViewName })} 
                         sx={{ flex: 1, minWidth: '150px' }}
@@ -63,7 +65,7 @@ function ViewInstanceEditor({ vi, appStore }: { vi: ViewInstance, appStore: AppS
                         control={
                             <Checkbox 
                                 size="small" 
-                                checked={!!vi.collapsed} 
+                                checked={!!currentVi.collapsed} 
                                 onChange={e => handleUpdate({ collapsed: e.target.checked })} 
                             />
                         } 
@@ -74,7 +76,7 @@ function ViewInstanceEditor({ vi, appStore }: { vi: ViewInstance, appStore: AppS
                 <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1rem' }}>
                     <label style={{ width: '80px', fontWeight: 'bold' }}>数据源:</label>
                     <SimpleSelect 
-                        value={vi.dataSourceId} 
+                        value={currentVi.dataSourceId} 
                         options={dataSourceOptions} 
                         onChange={val => handleUpdate({ dataSourceId: val })} 
                         placeholder="-- 选择数据源 --"
@@ -86,7 +88,7 @@ function ViewInstanceEditor({ vi, appStore }: { vi: ViewInstance, appStore: AppS
                     <label style={{ width: '80px', fontWeight: 'bold', paddingTop: '8px' }}>显示字段:</label>
                     <div style={{ flex: 1 }}>
                         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '0.5rem' }}>
-                            {(vi.fields || []).map(field => (
+                            {(currentVi.fields || []).map(field => (
                                 <span 
                                     key={field} 
                                     style={{ 
@@ -116,7 +118,7 @@ function ViewInstanceEditor({ vi, appStore }: { vi: ViewInstance, appStore: AppS
                 <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1rem' }}>
                     <label style={{ width: '80px', fontWeight: 'bold' }}>分组字段:</label>
                     <SimpleSelect 
-                        value={vi.group || ''} 
+                        value={currentVi.group || ''} 
                         options={groupFieldOptions} 
                         onChange={val => handleUpdate({ group: val || undefined })} 
                         sx={{ flex: 1 }}
@@ -127,9 +129,9 @@ function ViewInstanceEditor({ vi, appStore }: { vi: ViewInstance, appStore: AppS
             {/* 专属配置 */}
             {EditorComponent && (
                 <div style={{ borderTop: '1px solid var(--background-modifier-border)', paddingTop: '1rem' }}>
-                    <h4 style={{ marginBottom: '1rem' }}>{vi.viewType.replace('View', '')} 专属配置</h4>
+                    <h4 style={{ marginBottom: '1rem' }}>{currentVi.viewType.replace('View', '')} 专属配置</h4>
                     <EditorComponent 
-                        module={vi} 
+                        module={currentVi} 
                         value={correctedViewConfig} 
                         onChange={(patch: any) => handleUpdate({ viewConfig: { ...correctedViewConfig, ...patch } })} 
                         fieldOptions={fieldOptions} 
@@ -142,6 +144,8 @@ function ViewInstanceEditor({ vi, appStore }: { vi: ViewInstance, appStore: AppS
 
 // 数据源设置编辑器组件
 function DataSourceEditor({ ds, appStore }: { ds: DataSource, appStore: AppStore }) {
+    // 从store中获取最新的dataSource状态，而不是使用传入的props
+    const currentDs = useStore(state => state.settings.dataSources.find(d => d.id === ds.id)) || ds;
     const fieldOptions = useMemo(() => {
         const currentDataStore = dataStore;
         if (!currentDataStore) return [];
@@ -150,7 +154,7 @@ function DataSourceEditor({ ds, appStore }: { ds: DataSource, appStore: AppStore
     }, []);
 
     const handleUpdate = (updates: Partial<DataSource>) => {
-        appStore.updateDataSource(ds.id, updates);
+        appStore.updateDataSource(currentDs.id, updates);
     };
 
     return (
@@ -159,7 +163,7 @@ function DataSourceEditor({ ds, appStore }: { ds: DataSource, appStore: AppStore
                 <RuleBuilder 
                     title="过滤规则" 
                     mode="filter" 
-                    rows={ds.filters} 
+                    rows={currentDs.filters} 
                     fieldOptions={fieldOptions} 
                     onChange={(rows: any) => handleUpdate({ filters: rows })} 
                 />
@@ -168,7 +172,7 @@ function DataSourceEditor({ ds, appStore }: { ds: DataSource, appStore: AppStore
                 <RuleBuilder 
                     title="排序规则" 
                     mode="sort" 
-                    rows={ds.sort} 
+                    rows={currentDs.sort} 
                     fieldOptions={fieldOptions} 
                     onChange={(rows: any) => handleUpdate({ sort: rows })} 
                 />
@@ -188,12 +192,25 @@ export function ModuleSettingsModal({ isOpen, onClose, module, appStore }: Props
     const [activeTab, setActiveTab] = useState('datasource');
     const dataSources = useStore(state => state.settings.dataSources);
     
+    // 从store中获取最新的模块状态
+    const currentModule = useStore(state => state.settings.viewInstances.find(v => v.id === module.id)) || module;
+    
     // 找到当前模块使用的数据源
-    const currentDataSource = dataSources.find(ds => ds.id === module.dataSourceId);
+    const currentDataSource = dataSources.find(ds => ds.id === currentModule.dataSourceId);
 
-    const handleSave = () => {
-        new Notice(`已保存模块 "${module.title}" 的设置`);
-        onClose();
+    const handleSave = async () => {
+        try {
+            // 确保所有待保存的更改都已经通过 appStore 的方法处理了
+            // 由于每次更改都会立即调用 updateViewInstance 或 updateDataSource
+            // 这里我们只需要等待一小段时间确保最后的更新完成
+            await new Promise(resolve => setTimeout(resolve, 100));
+            
+            new Notice(`已保存模块 "${module.title}" 的设置`);
+            onClose();
+        } catch (error) {
+            console.error('保存设置时出错:', error);
+            new Notice('保存设置失败，请重试');
+        }
     };
 
     if (!isOpen) return null;
