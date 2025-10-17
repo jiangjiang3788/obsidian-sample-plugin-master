@@ -239,29 +239,26 @@ export function StatisticsView({ items, app, dateRange, module, currentView }: S
     }
 
     if (currentView === '周') {
-        // 周视图：显示一周7天的柱状图
+        // 周视图：显示选定周的整体统计数据
         const weekStart = startDate.startOf('isoWeek');
-        const daysData = Array.from({ length: 7 }, (_, i) => {
-            const day = weekStart.add(i, 'day');
-            const dayItems = items.filter(item => dayjs(item.date).isSame(day, 'day'));
-            const data = processDataForItems(dayItems, '天');
-            return { day, data };
+        const weekEnd = startDate.endOf('isoWeek');
+        const weekItems = items.filter(item => {
+            const itemDate = dayjs(item.date);
+            return itemDate.isBetween(weekStart, weekEnd, 'day', '[]');
         });
+        const data = processDataForItems(weekItems);
 
         return (
             <div class="statistics-view">
                 <div class="sv-timeline">
-                    <div class="sv-row sv-row-week-days" style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '8px' }}>
-                        {daysData.map(({ day, data }) => (
-                            <ChartBlock
-                                key={day.format('YYYY-MM-DD')}
-                                data={data}
-                                label={day.format('MM-DD ddd')}
-                                categories={categories}
-                                onCellClick={handleCellClick}
-                                cellIdentifier={(cat: string) => ({ type: 'day', date: day.format('YYYY-MM-DD'), category: cat })}
-                            />
-                        ))}
+                    <div class="sv-row">
+                        <ChartBlock
+                            data={data}
+                            label={`${weekStart.format('YYYY年MM月DD日')} ~ ${weekEnd.format('MM月DD日')} (第${weekStart.isoWeek()}周)`}
+                            categories={categories}
+                            onCellClick={handleCellClick}
+                            cellIdentifier={(cat: string) => ({ type: 'week', week: weekStart.isoWeek(), year: weekStart.year(), category: cat })}
+                        />
                     </div>
                 </div>
                 {popover && <Popover {...popover} onClose={() => { setPopover(null); setSelectedCell(null); }} app={app} module={module} />}
@@ -295,7 +292,7 @@ export function StatisticsView({ items, app, dateRange, module, currentView }: S
         return (
             <div class="statistics-view">
                 <div class="sv-timeline">
-                    <div class="sv-row sv-row-month-weeks" style={{ display: 'grid', gridTemplateColumns: `repeat(${Math.min(weeksData.length, 6)}, 1fr)`, gap: '8px' }}>
+                    <div class="sv-row sv-row-month-weeks">
                         {weeksData.map(({ weekStart, data, label }, index) => (
                             <ChartBlock
                                 key={weekStart.format('YYYY-MM-DD')}
@@ -304,6 +301,7 @@ export function StatisticsView({ items, app, dateRange, module, currentView }: S
                                 categories={categories}
                                 onCellClick={handleCellClick}
                                 cellIdentifier={(cat: string) => ({ type: 'week', week: weekStart.isoWeek(), year: weekStart.year(), category: cat })}
+                                isCompact={true}
                             />
                         ))}
                     </div>
@@ -345,7 +343,7 @@ export function StatisticsView({ items, app, dateRange, module, currentView }: S
             <div class="statistics-view">
                 <div class="sv-timeline">
                     {/* 季度总览 */}
-                    <div class="sv-row sv-row-quarter-months" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px' }}>
+                    <div class="sv-row sv-row-quarter-months">
                         {monthsData.map(({ month, data }) => (
                             <ChartBlock
                                 key={month.format('YYYY-MM')}
@@ -360,11 +358,11 @@ export function StatisticsView({ items, app, dateRange, module, currentView }: S
                     
                     {/* 每月的周视图 */}
                     {monthsData.map(({ month, weeksData }) => (
-                        <div key={month.format('YYYY-MM')} class="sv-month-weeks-section" style={{ marginTop: '16px' }}>
-                            <div class="sv-month-header" style={{ fontWeight: 'bold', marginBottom: '8px', textAlign: 'center' }}>
+                        <div key={month.format('YYYY-MM')} class="sv-month-weeks-section">
+                            <div class="sv-month-header">
                                 {month.format('YYYY年MM月')} 周视图
                             </div>
-                            <div class="sv-row sv-row-weeks" style={{ display: 'grid', gridTemplateColumns: `repeat(${Math.min(weeksData.length, 6)}, 1fr)`, gap: '6px' }}>
+                            <div class="sv-row sv-row-month-weeks">
                                 {weeksData.map(({ weekStart, data }) => (
                                     <ChartBlock
                                         key={weekStart.format('YYYY-MM-DD')}
