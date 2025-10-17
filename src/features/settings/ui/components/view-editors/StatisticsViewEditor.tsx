@@ -11,7 +11,7 @@ import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
 
 // 视图的默认配置
 export const DEFAULT_CONFIG = {
-    categories: [] as { name: string; color: string; }[],
+    categories: [] as { name: string; color: string; alias?: string; scaleFactor?: number; }[],
 };
 
 // 随机生成一个颜色
@@ -74,39 +74,122 @@ export function StatisticsViewEditor({ value, onChange }: ViewEditorProps) {
         onChange({ categories: newCategories });
     };
 
+    const handleAliasChange = (index: number, alias: string) => {
+        const newCategories = [...localCategories];
+        newCategories[index].alias = alias;
+        setLocalCategories(newCategories);
+        onChange({ categories: newCategories });
+    };
+
+    const handleScaleFactorChange = (index: number, scaleFactor: number) => {
+        const newCategories = [...localCategories];
+        newCategories[index].scaleFactor = scaleFactor;
+        setLocalCategories(newCategories);
+        onChange({ categories: newCategories });
+    };
+
     return (
-        <Stack spacing={1}>
-            <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>分类配置</Typography>
-            <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-                插件已自动识别出您数据中的所有分类。您可以使用上下按钮调整顺序，或修改颜色。
-            </Typography>
+        <div>
+            <div style={{ marginBottom: '12px' }}>
+                <div style={{ fontWeight: 600, fontSize: '14px', marginBottom: '4px' }}>分类配置</div>
+                <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '8px' }}>
+                    每个分类的所有配置都在一行内：颜色、名称、别名、缩放因子。您可以使用上下按钮调整顺序。
+                </div>
+            </div>
             <div>
                 {localCategories.map((cat, index) => (
-                    <Stack 
+                    <div 
                         key={cat.name}
-                        direction="row" 
-                        spacing={1.5} 
-                        alignItems="center"
-                        sx={{ mb: 1, p:1, bgcolor: 'action.hover', borderRadius: 1 }}
+                        style={{ 
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '8px',
+                            marginBottom: '8px',
+                            padding: '8px',
+                            backgroundColor: 'var(--background-modifier-hover)',
+                            borderRadius: '6px'
+                        }}
                     >
-                        <Stack>
-                            <Tooltip title="上移"><span>
-                                <IconButton size="small" disabled={index === 0} onClick={() => handleMove(index, 'up')}><ArrowUpwardIcon sx={{ fontSize: '1rem' }} /></IconButton>
-                            </span></Tooltip>
-                            <Tooltip title="下移"><span>
-                                <IconButton size="small" disabled={index === localCategories.length - 1} onClick={() => handleMove(index, 'down')}><ArrowDownwardIcon sx={{ fontSize: '1rem' }} /></IconButton>
-                            </span></Tooltip>
-                        </Stack>
-                        <TextField
+                        {/* 上下移动按钮 */}
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                            <button
+                                title="上移"
+                                disabled={index === 0}
+                                onClick={() => handleMove(index, 'up')}
+                                style={{
+                                    border: 'none',
+                                    background: 'transparent',
+                                    cursor: index === 0 ? 'not-allowed' : 'pointer',
+                                    padding: '2px',
+                                    opacity: index === 0 ? 0.3 : 1
+                                }}
+                            >↑</button>
+                            <button
+                                title="下移"
+                                disabled={index === localCategories.length - 1}
+                                onClick={() => handleMove(index, 'down')}
+                                style={{
+                                    border: 'none',
+                                    background: 'transparent',
+                                    cursor: index === localCategories.length - 1 ? 'not-allowed' : 'pointer',
+                                    padding: '2px',
+                                    opacity: index === localCategories.length - 1 ? 0.3 : 1
+                                }}
+                            >↓</button>
+                        </div>
+
+                        {/* 颜色选择器 */}
+                        <input
                             type="color"
                             value={cat.color}
                             onChange={(e) => handleColorChange(index, (e.target as HTMLInputElement).value)}
-                            sx={{ minWidth: 60, p: '2px' }}
+                            style={{ width: '40px', height: '32px', border: 'none', borderRadius: '4px' }}
                         />
-                        <Typography sx={{ flexGrow: 1, fontWeight: 500 }}>{cat.name}</Typography>
-                    </Stack>
+
+                        {/* 分类名称 */}
+                        <div style={{ 
+                            fontWeight: 500, 
+                            minWidth: '80px',
+                            flex: '0 0 auto'
+                        }}>
+                            {cat.name}
+                        </div>
+
+                        {/* 别名输入 */}
+                        <input
+                            type="text"
+                            placeholder="别名"
+                            value={cat.alias || ''}
+                            onChange={(e) => handleAliasChange(index, (e.target as HTMLInputElement).value)}
+                            style={{
+                                flex: '1 1 100px',
+                                padding: '4px 8px',
+                                border: '1px solid var(--background-modifier-border)',
+                                borderRadius: '4px',
+                                fontSize: '12px',
+                                backgroundColor: 'var(--background-primary)'
+                            }}
+                        />
+
+                        {/* 缩放因子滑块 */}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flex: '0 0 120px' }}>
+                            <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>×</span>
+                            <input
+                                type="range"
+                                min="0.5"
+                                max="3.0"
+                                step="0.1"
+                                value={cat.scaleFactor || 1.0}
+                                onChange={(e) => handleScaleFactorChange(index, parseFloat((e.target as HTMLInputElement).value))}
+                                style={{ flex: 1 }}
+                            />
+                            <span style={{ fontSize: '11px', fontWeight: 500, minWidth: '30px' }}>
+                                {(cat.scaleFactor || 1.0).toFixed(1)}
+                            </span>
+                        </div>
+                    </div>
                 ))}
             </div>
-        </Stack>
+        </div>
     );
 }

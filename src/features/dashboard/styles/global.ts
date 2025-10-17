@@ -381,6 +381,8 @@ body.theme-dark .module-action-plus:hover {
     border-top: none;
     padding-top: 0;
 }
+
+/* 原有的年视图样式 */
 .sv-row-quarters { grid-template-columns: repeat(4, 1fr); }
 .sv-row-months { grid-template-columns: repeat(12, 1fr); }
 .sv-row-weeks {
@@ -390,6 +392,34 @@ body.theme-dark .module-action-plus:hover {
     border-top: 1px solid var(--background-modifier-border);
     padding-top: 12px;
 }
+
+/* 新增的专属视图样式 */
+.sv-row-week-days {
+    grid-template-columns: repeat(7, 1fr);
+    gap: 8px;
+}
+.sv-row-month-weeks {
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 8px;
+}
+.sv-row-quarter-months {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+}
+
+/* 季度视图的月份周视图部分 */
+.sv-month-weeks-section {
+    border-top: 1px solid var(--background-modifier-border-hover);
+    padding-top: 12px;
+}
+.sv-month-header {
+    font-weight: 600;
+    margin-bottom: 8px;
+    text-align: center;
+    color: var(--text-normal);
+    font-size: 14px;
+}
+
 .sv-month-col {
     display: flex;
     flex-direction: column;
@@ -406,22 +436,25 @@ body.theme-dark .module-action-plus:hover {
     flex-direction: column;
     gap: 4px;
 }
+
+/* 图表块样式优化 */
 .sv-chart-block {
     position: relative;
     display: flex;
     flex-direction: column;
     border-radius: 6px;
-    overflow: hidden;
+    overflow: visible;
     background: var(--background-primary);
     border: 1px solid var(--background-modifier-border);
     cursor: pointer;
     transition: all 0.2s ease;
-    padding: 8px;
-    height: 120px;
+    padding: 8px 8px 25px 8px;
+    height: 140px;
+    min-width: 0;
 }
 .sv-chart-block.is-compact {
-    height: 60px;
-    padding: 4px;
+    height: 80px;
+    padding: 4px 4px 20px 4px;
 }
 .sv-chart-block:hover {
     border-color: var(--interactive-accent);
@@ -444,12 +477,16 @@ body.theme-dark .module-action-plus:hover {
     text-align: center;
     margin-bottom: 4px;
     flex-shrink: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 .sv-chart-bars-container {
     display: flex;
-    gap: 4px;
+    gap: 2px;
     flex-grow: 1;
     align-items: flex-end;
+    min-height: 0;
 }
 .sv-vbar-wrapper {
     flex: 1;
@@ -459,20 +496,48 @@ body.theme-dark .module-action-plus:hover {
     flex-direction: column;
     justify-content: flex-end;
     align-items: center;
+    cursor: pointer;
+    position: relative;
+}
+.sv-vbar-wrapper:hover {
+    opacity: 0.8;
 }
 .sv-vbar-bar-label {
     font-size: 10px;
     color: var(--text-muted);
     font-weight: 500;
     margin-bottom: 2px;
+    white-space: nowrap;
+    position: absolute;
+    top: -16px;
+    left: 50%;
+    transform: translateX(-50%);
 }
 .sv-vbar-bar {
-    width: 80%;
+    width: 100%;
+    max-width: 24px;
     border-radius: 3px 3px 0 0;
     background: #ccc;
     min-height: 2px;
-    transition: height 0.3s ease;
+    transition: all 0.3s ease;
 }
+.sv-vbar-category-label {
+    font-size: 9px;
+    color: var(--text-muted);
+    font-weight: 400;
+    margin-top: 4px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+    text-align: center;
+    position: absolute;
+    bottom: -18px;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+/* 弹窗样式 */
 .sv-popover {
     background: var(--background-primary);
     border: 1px solid var(--background-modifier-border);
@@ -480,6 +545,7 @@ body.theme-dark .module-action-plus:hover {
     box-shadow: var(--shadow-l);
     width: 500px;
     max-width: 90vw;
+    z-index: 99999;
 }
 .sv-popover-title {
     font-weight: bold;
@@ -488,6 +554,12 @@ body.theme-dark .module-action-plus:hover {
     display: flex;
     justify-content: space-between;
     align-items: center;
+}
+.sv-popover-title button {
+    transition: background-color 0.2s ease;
+}
+.sv-popover-title button:hover {
+    background-color: var(--background-modifier-hover) !important;
 }
 .sv-popover-content {
     max-height: 450px;
@@ -501,6 +573,67 @@ body.theme-dark .module-action-plus:hover {
     color: var(--text-faint);
     padding: 24px;
     text-align: center;
+}
+
+/* 响应式设计 */
+@media screen and (max-width: 768px) {
+    .sv-row-quarters {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    .sv-row-months {
+        grid-template-columns: repeat(6, 1fr);
+    }
+    .sv-row-weeks {
+        grid-template-columns: repeat(6, 1fr);
+    }
+    .sv-row-week-days {
+        grid-template-columns: repeat(7, 1fr);
+        gap: 4px;
+    }
+    .sv-row-month-weeks {
+        grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    }
+    .sv-chart-block {
+        height: 100px;
+        padding: 6px;
+    }
+    .sv-chart-block.is-compact {
+        height: 50px;
+        padding: 3px;
+    }
+}
+
+@media screen and (max-width: 480px) {
+    .sv-row-quarters {
+        grid-template-columns: repeat(1, 1fr);
+    }
+    .sv-row-months {
+        grid-template-columns: repeat(4, 1fr);
+    }
+    .sv-row-weeks {
+        grid-template-columns: repeat(4, 1fr);
+    }
+    .sv-row-week-days {
+        grid-template-columns: repeat(7, 1fr);
+        gap: 2px;
+    }
+    .sv-row-month-weeks {
+        grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+    }
+    .sv-chart-block {
+        height: 80px;
+        padding: 4px;
+    }
+    .sv-chart-block.is-compact {
+        height: 40px;
+        padding: 2px;
+    }
+    .sv-chart-label {
+        font-size: 10px;
+    }
+    .sv-vbar-bar-label {
+        font-size: 9px;
+    }
 }
 
 
