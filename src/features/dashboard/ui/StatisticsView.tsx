@@ -78,7 +78,7 @@ const Popover = ({ target, blocks, title, onClose, app, module }: PopoverState &
                     <BlockView 
                         items={blocks} 
                         app={app} 
-                        fields={module.fields || ['title', 'content', 'categoryKey', 'tags', 'date']} 
+                        fields={module.fields || ['title', 'content', 'categoryKey', 'tags', 'date', 'period']} 
                         groupField={module.group} 
                         onMarkDone={() => {}} 
                     />
@@ -109,26 +109,47 @@ const ChartBlock = ({ data, label, onCellClick, categories, cellIdentifier, isCo
     return (
         <div class={containerClasses} onClick={(e) => onCellClick(cellIdentifier('全部'), e.currentTarget, data.blocks, `${label} · 全部`)}>
             <div class="sv-chart-label">{label}</div>
-            <div class="sv-chart-bars-container">
-                {categories.map(({name, color, alias, scaleFactor: catScale}: {name: string, color: string, alias?: string, scaleFactor?: number}) => {
-                    const count = counts[name] || 0;
-                    const scale = catScale || 1.0;
-                    const scaledCount = count * scale;
-                    const height = (scaledCount / maxScaledCount) * 100;
-                    const displayName = alias || name;
-                    
-                    return (
-                         <div key={name} class="sv-vbar-wrapper" title={`${name}: ${count} (×${scale.toFixed(1)})`}
-                            onClick={(e) => { 
-                                e.stopPropagation(); 
-                                onCellClick(cellIdentifier(name), e.currentTarget, data.blocks.filter((b:Item) => (b.categoryKey || '').startsWith(name)), `${label} · ${displayName}`); 
-                            }}>
-                            <div class="sv-vbar-bar-label">{count > 0 ? count : ''}</div>
-                            <div class="sv-vbar-bar" style={{ height: `${height}%`, background: color || '#ccc' }}/>
-                            <div class="sv-vbar-category-label" title={`${name}${alias ? ` (${name})` : ''}`}>{displayName}</div>
-                        </div>
-                    )
-                })}
+            <div class="sv-chart-content">
+                <div class="sv-chart-numbers">
+                    {categories.map(({name, scaleFactor: catScale}: {name: string, scaleFactor?: number}) => {
+                        const count = counts[name] || 0;
+                        const scale = catScale || 1.0;
+                        return (
+                            <div key={`num-${name}`} class="sv-chart-number">
+                                {count > 0 ? count : ''}
+                            </div>
+                        );
+                    })}
+                </div>
+                <div class="sv-chart-bars-container">
+                    {categories.map(({name, color, alias, scaleFactor: catScale}: {name: string, color: string, alias?: string, scaleFactor?: number}) => {
+                        const count = counts[name] || 0;
+                        const scale = catScale || 1.0;
+                        const scaledCount = count * scale;
+                        const height = (scaledCount / maxScaledCount) * 100;
+                        const displayName = alias || name;
+                        
+                        return (
+                            <div key={name} class="sv-vbar-wrapper" title={`${name}: ${count} (×${scale.toFixed(1)})`}
+                                onClick={(e) => { 
+                                    e.stopPropagation(); 
+                                    onCellClick(cellIdentifier(name), e.currentTarget, data.blocks.filter((b:Item) => (b.categoryKey || '').startsWith(name)), `${label} · ${displayName}`); 
+                                }}>
+                                <div class="sv-vbar-bar" style={{ height: `${height}%`, background: color || '#ccc' }}/>
+                            </div>
+                        );
+                    })}
+                </div>
+                <div class="sv-chart-categories">
+                    {categories.map(({name, alias}: {name: string, alias?: string}) => {
+                        const displayName = alias || name;
+                        return (
+                            <div key={`cat-${name}`} class="sv-chart-category" title={`${name}${alias ? ` (${name})` : ''}`}>
+                                {displayName}
+                            </div>
+                        );
+                    })}
+                </div>
             </div>
         </div>
     )
@@ -193,6 +214,30 @@ export function StatisticsView({ items, app, dateRange, module, currentView }: S
     }
 
     // 根据 currentView 渲染不同的专属视图
+    if (currentView === '天') {
+        // 天视图：显示选定日期的统计数据
+        const selectedDate = startDate;
+        const dayItems = items.filter(item => dayjs(item.date).isSame(selectedDate, 'day'));
+        const data = processDataForItems(dayItems);
+
+        return (
+            <div class="statistics-view">
+                <div class="sv-timeline">
+                    <div class="sv-row">
+                        <ChartBlock
+                            data={data}
+                            label={selectedDate.format('YYYY年MM月DD日 dddd')}
+                            categories={categories}
+                            onCellClick={handleCellClick}
+                            cellIdentifier={(cat: string) => ({ type: 'day', date: selectedDate.format('YYYY-MM-DD'), category: cat })}
+                        />
+                    </div>
+                </div>
+                {popover && <Popover {...popover} onClose={() => { setPopover(null); setSelectedCell(null); }} app={app} module={module} />}
+            </div>
+        );
+    }
+
     if (currentView === '周') {
         // 周视图：显示一周7天的柱状图
         const weekStart = startDate.startOf('isoWeek');
