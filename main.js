@@ -670,8 +670,9 @@ body.theme-dark .module-action-plus:hover {
     gap: 8px;
 }
 .sv-row-month-weeks {
-    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-    gap: 8px;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 12px;
+    max-width: calc(4 * 200px + 3 * 12px); /* 最多4个，间距固定 */
 }
 .sv-row-quarter-months {
     grid-template-columns: repeat(3, 1fr);
@@ -811,19 +812,19 @@ body.theme-dark .module-action-plus:hover {
     gap: 4px;
     justify-content: space-between;
     align-items: center;
-    min-height: 16px;
+    min-height: 18px;
 }
 .sv-chart-category {
     flex: 1;
     text-align: center;
-    font-size: 9px;
+    font-size: 11px;
     color: var(--text-muted);
-    font-weight: 400;
+    font-weight: 500;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    min-height: 16px;
-    line-height: 16px;
+    min-height: 18px;
+    line-height: 18px;
 }
 
 /* 弹窗样式 */
