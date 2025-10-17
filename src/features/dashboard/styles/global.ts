@@ -437,24 +437,24 @@ body.theme-dark .module-action-plus:hover {
     gap: 4px;
 }
 
-/* 图表块样式优化 */
+/* 图表块样式优化 - 重构为直观的flex布局 */
 .sv-chart-block {
-    position: relative;
     display: flex;
     flex-direction: column;
+    gap: 8px;
     border-radius: 6px;
-    overflow: visible;
     background: var(--background-primary);
     border: 1px solid var(--background-modifier-border);
     cursor: pointer;
     transition: all 0.2s ease;
-    padding: 8px 8px 25px 8px;
-    height: 140px;
+    padding: 12px;
+    height: 220px;
     min-width: 0;
 }
 .sv-chart-block.is-compact {
-    height: 80px;
-    padding: 4px 4px 20px 4px;
+    height: 130px;
+    padding: 8px;
+    gap: 6px;
 }
 .sv-chart-block:hover {
     border-color: var(--interactive-accent);
@@ -462,56 +462,68 @@ body.theme-dark .module-action-plus:hover {
     box-shadow: var(--shadow-s);
 }
 .sv-chart-block.is-empty .sv-chart-label {
-    width: 100%;
-    height: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
     color: var(--text-faint);
-    font-size: 12px;
 }
+
+/* 图表标题 - 加粗放大 */
 .sv-chart-label {
-    font-size: 11px;
-    font-weight: 500;
-    color: var(--text-muted);
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-normal);
     text-align: center;
-    margin-bottom: 4px;
     flex-shrink: 0;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
 }
+
+/* 图表内容容器 */
+.sv-chart-content {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    flex-grow: 1;
+    min-height: 0;
+}
+
+/* 数字标签行 */
+.sv-chart-numbers {
+    display: flex;
+    gap: 4px;
+    justify-content: space-between;
+    align-items: center;
+    min-height: 16px;
+}
+.sv-chart-number {
+    flex: 1;
+    text-align: center;
+    font-size: 12px;
+    color: var(--text-muted);
+    font-weight: 600;
+    white-space: nowrap;
+    min-height: 16px;
+    line-height: 16px;
+}
+
+/* 柱状图容器 */
 .sv-chart-bars-container {
     display: flex;
-    gap: 2px;
+    gap: 4px;
     flex-grow: 1;
     align-items: flex-end;
-    min-height: 0;
+    min-height: 60px;
 }
 .sv-vbar-wrapper {
     flex: 1;
     min-width: 0;
     height: 100%;
     display: flex;
-    flex-direction: column;
-    justify-content: flex-end;
-    align-items: center;
+    justify-content: center;
+    align-items: flex-end;
     cursor: pointer;
-    position: relative;
 }
 .sv-vbar-wrapper:hover {
     opacity: 0.8;
-}
-.sv-vbar-bar-label {
-    font-size: 10px;
-    color: var(--text-muted);
-    font-weight: 500;
-    margin-bottom: 2px;
-    white-space: nowrap;
-    position: absolute;
-    top: -16px;
-    left: 50%;
-    transform: translateX(-50%);
 }
 .sv-vbar-bar {
     width: 100%;
@@ -521,20 +533,26 @@ body.theme-dark .module-action-plus:hover {
     min-height: 2px;
     transition: all 0.3s ease;
 }
-.sv-vbar-category-label {
+
+/* 分类标签行 */
+.sv-chart-categories {
+    display: flex;
+    gap: 4px;
+    justify-content: space-between;
+    align-items: center;
+    min-height: 16px;
+}
+.sv-chart-category {
+    flex: 1;
+    text-align: center;
     font-size: 9px;
     color: var(--text-muted);
     font-weight: 400;
-    margin-top: 4px;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    max-width: 100%;
-    text-align: center;
-    position: absolute;
-    bottom: -18px;
-    left: 50%;
-    transform: translateX(-50%);
+    min-height: 16px;
+    line-height: 16px;
 }
 
 /* 弹窗样式 */

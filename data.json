@@ -3013,17 +3013,19 @@
       "viewConfig": {
         "categories": [
           {
-            "name": "打卡",
-            "color": "#ec8de9",
+            "name": "未完成任务",
+            "color": "#5cdc45",
+            "alias": "未完",
             "scaleFactor": 1
+          },
+          {
+            "name": "完成任务",
+            "color": "#6d1623",
+            "alias": "完任"
           },
           {
             "name": "感受",
             "color": "#48e6f2"
-          },
-          {
-            "name": "计划",
-            "color": "#2cc3ec"
           },
           {
             "name": "事件",
@@ -3034,15 +3036,13 @@
             "color": "#c88717"
           },
           {
-            "name": "完成任务",
-            "color": "#6d1623",
-            "alias": "完任"
+            "name": "打卡",
+            "color": "#ec8de9",
+            "scaleFactor": 1
           },
           {
-            "name": "未完成任务",
-            "color": "#5cdc45",
-            "alias": "未完",
-            "scaleFactor": 0.5
+            "name": "计划",
+            "color": "#2cc3ec"
           },
           {
             "name": "总结",
