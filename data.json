@@ -3066,7 +3066,7 @@
         "showGoalBadge": true,
         "showGoalLine": false,
         "exceedColor": "#d32f2f",
-        "displayMode": "logarithmic",
+        "displayMode": "linear",
         "minVisibleHeight": 16
       },
       "collapsed": false,
@@ -3821,7 +3821,7 @@
       "hideToolbar": false,
       "isOverviewMode": false,
       "initialDate": "2025-05-26",
-      "useFieldGranularity": false
+      "useFieldGranularity": true
     },
     {
       "id": "layout_mepgxvhes0ghq",

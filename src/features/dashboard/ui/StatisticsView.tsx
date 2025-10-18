@@ -316,11 +316,18 @@ export function StatisticsView({ items, app, dateRange, module, currentView, use
     }
 
     if (currentView === '月') {
-        // 月视图：显示该月所有周的柱状图
+        // 月视图：显示月度汇总和该月所有周的柱状图
         const monthStart = startDate.startOf('month');
         const monthEnd = startDate.endOf('month');
-        const weeksData = [];
         
+        // 月度汇总数据
+        const monthItems = items.filter(item => {
+            const itemDate = dayjs(item.date);
+            return itemDate.isBetween(monthStart, monthEnd, 'day', '[]');
+        });
+        const monthData = processDataForItems(monthItems);
+        
+        const weeksData = [];
         let weekStart = monthStart.startOf('isoWeek');
         while (weekStart.isBefore(monthEnd) || weekStart.isSame(monthEnd, 'week')) {
             const weekEnd = weekStart.endOf('isoWeek');
@@ -341,6 +348,20 @@ export function StatisticsView({ items, app, dateRange, module, currentView, use
         return (
             <div class="statistics-view">
                 <div class="sv-timeline">
+                    {/* 月度汇总 */}
+                    <div class="sv-row">
+                        <ChartBlock
+                            data={monthData}
+                            label={startDate.format('YYYY年MM月')}
+                            categories={categories}
+                            onCellClick={handleCellClick}
+                            cellIdentifier={(cat: string) => ({ type: 'month', month: startDate.month() + 1, year: startDate.year(), category: cat })}
+                            displayMode={displayMode}
+                            minVisibleHeight={minVisibleHeight}
+                        />
+                    </div>
+                    
+                    {/* 月度周视图 */}
                     <div class="sv-row sv-row-month-weeks">
                         {weeksData.map(({ weekStart, data, label }, index) => (
                             <ChartBlock
@@ -363,8 +384,17 @@ export function StatisticsView({ items, app, dateRange, module, currentView, use
     }
 
     if (currentView === '季') {
-        // 季度视图：显示3个月及其下属周
+        // 季度视图：显示季度汇总、3个月及其下属周
         const quarterStart = startDate.startOf('quarter');
+        const quarterEnd = startDate.endOf('quarter');
+        
+        // 季度汇总数据
+        const quarterItems = items.filter(item => {
+            const itemDate = dayjs(item.date);
+            return itemDate.isBetween(quarterStart, quarterEnd, 'day', '[]');
+        });
+        const quarterData = processDataForItems(quarterItems);
+        
         const monthsData = Array.from({ length: 3 }, (_, i) => {
             const month = quarterStart.add(i, 'month');
             const monthItems = items.filter(item => dayjs(item.date).isSame(month, 'month'));
@@ -393,7 +423,20 @@ export function StatisticsView({ items, app, dateRange, module, currentView, use
         return (
             <div class="statistics-view">
                 <div class="sv-timeline">
-                    {/* 季度总览 */}
+                    {/* 季度汇总 */}
+                    <div class="sv-row">
+                        <ChartBlock
+                            data={quarterData}
+                            label={`${startDate.format('YYYY年')} 第${startDate.quarter()}季度`}
+                            categories={categories}
+                            onCellClick={handleCellClick}
+                            cellIdentifier={(cat: string) => ({ type: 'quarter', quarter: startDate.quarter(), year: startDate.year(), category: cat })}
+                            displayMode={displayMode}
+                            minVisibleHeight={minVisibleHeight}
+                        />
+                    </div>
+                    
+                    {/* 季度月份总览 */}
                     <div class="sv-row sv-row-quarter-months">
                         {monthsData.map(({ month, data }) => (
                             <ChartBlock

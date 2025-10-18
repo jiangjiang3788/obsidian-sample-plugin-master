@@ -399,9 +399,10 @@ body.theme-dark .module-action-plus:hover {
     gap: 8px;
 }
 .sv-row-month-weeks {
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 12px;
-    max-width: calc(4 * 200px + 3 * 12px); /* 最多4个，间距固定 */
+    /* 移除最大宽度限制，让周列表占满整行 */
+    display: flex;
+    gap: 8px;
+    width: 100%;
 }
 .sv-row-quarter-months {
     grid-template-columns: repeat(3, 1fr);
@@ -528,7 +529,6 @@ body.theme-dark .module-action-plus:hover {
 }
 .sv-vbar-bar {
     width: 100%;
-    max-width: 24px;
     border-radius: 3px 3px 0 0;
     background: #ccc;
     min-height: 2px;
