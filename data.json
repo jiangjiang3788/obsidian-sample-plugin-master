@@ -3048,7 +3048,26 @@
             "name": "总结",
             "color": "#f10b84"
           }
-        ]
+        ],
+        "showLegend": true,
+        "enableLegendFilter": true,
+        "showTotals": true,
+        "showPercent": true,
+        "showGridLines": true,
+        "hideZeroCategories": false,
+        "sortBy": "order",
+        "labelNumberFormat": "short",
+        "countDisplayMode": "raw",
+        "scaleMode": "auto",
+        "scaleRef": "p95",
+        "absoluteMax": 100,
+        "capRatio": 3,
+        "goalPerWeek": 5,
+        "showGoalBadge": true,
+        "showGoalLine": false,
+        "exceedColor": "#d32f2f",
+        "displayMode": "logarithmic",
+        "minVisibleHeight": 16
       },
       "collapsed": false,
       "parentId": "group_memc1a9ofen88"
@@ -3802,7 +3821,7 @@
       "hideToolbar": false,
       "isOverviewMode": false,
       "initialDate": "2025-05-26",
-      "useFieldGranularity": true
+      "useFieldGranularity": false
     },
     {
       "id": "layout_mepgxvhes0ghq",

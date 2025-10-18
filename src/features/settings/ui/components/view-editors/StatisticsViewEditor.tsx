@@ -11,7 +11,9 @@ import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
 
 // 视图的默认配置
 export const DEFAULT_CONFIG = {
-    categories: [] as { name: string; color: string; alias?: string; scaleFactor?: number; }[],
+    categories: [] as { name: string; color: string; alias?: string; }[],
+    displayMode: 'smart' as 'linear' | 'logarithmic' | 'smart',
+    minVisibleHeight: 15, // 最小可见高度百分比
 };
 
 // 随机生成一个颜色
@@ -81,19 +83,68 @@ export function StatisticsViewEditor({ value, onChange }: ViewEditorProps) {
         onChange({ categories: newCategories });
     };
 
-    const handleScaleFactorChange = (index: number, scaleFactor: number) => {
-        const newCategories = [...localCategories];
-        newCategories[index].scaleFactor = scaleFactor;
-        setLocalCategories(newCategories);
-        onChange({ categories: newCategories });
-    };
 
     return (
         <div>
+            {/* 显示模式配置 */}
+            <div style={{ marginBottom: '16px' }}>
+                <div style={{ fontWeight: 600, fontSize: '14px', marginBottom: '8px' }}>显示模式</div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer' }}>
+                        <input
+                            type="radio"
+                            name="displayMode"
+                            value="smart"
+                            checked={config.displayMode === 'smart'}
+                            onChange={() => onChange({ displayMode: 'smart' })}
+                        />
+                        <span>智能模式</span>
+                    </label>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer' }}>
+                        <input
+                            type="radio"
+                            name="displayMode"
+                            value="linear"
+                            checked={config.displayMode === 'linear'}
+                            onChange={() => onChange({ displayMode: 'linear' })}
+                        />
+                        <span>线性模式</span>
+                    </label>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer' }}>
+                        <input
+                            type="radio"
+                            name="displayMode"
+                            value="logarithmic"
+                            checked={config.displayMode === 'logarithmic'}
+                            onChange={() => onChange({ displayMode: 'logarithmic' })}
+                        />
+                        <span>对数模式</span>
+                    </label>
+                </div>
+                <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '8px' }}>
+                    智能模式：自动选择最佳显示方式 | 线性模式：按实际比例显示 | 对数模式：适合数据差异很大的情况
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <label style={{ fontSize: '12px', color: 'var(--text-muted)' }}>最小可见高度:</label>
+                    <input
+                        type="range"
+                        min="10"
+                        max="30"
+                        step="1"
+                        value={config.minVisibleHeight || 15}
+                        onChange={(e) => onChange({ minVisibleHeight: parseInt((e.target as HTMLInputElement).value) })}
+                        style={{ width: '100px' }}
+                    />
+                    <span style={{ fontSize: '12px', fontWeight: 500, minWidth: '30px' }}>
+                        {config.minVisibleHeight || 15}%
+                    </span>
+                </div>
+            </div>
+
             <div style={{ marginBottom: '12px' }}>
                 <div style={{ fontWeight: 600, fontSize: '14px', marginBottom: '4px' }}>分类配置</div>
                 <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '8px' }}>
-                    每个分类的所有配置都在一行内：颜色、名称、别名、缩放因子。您可以使用上下按钮调整顺序。
+                    每个分类的配置：颜色、名称、别名。您可以使用上下按钮调整顺序。
                 </div>
             </div>
             <div>
@@ -170,23 +221,6 @@ export function StatisticsViewEditor({ value, onChange }: ViewEditorProps) {
                                 backgroundColor: 'var(--background-primary)'
                             }}
                         />
-
-                        {/* 缩放因子滑块 */}
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flex: '0 0 120px' }}>
-                            <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>×</span>
-                            <input
-                                type="range"
-                                min="0.5"
-                                max="3.0"
-                                step="0.1"
-                                value={cat.scaleFactor || 1.0}
-                                onChange={(e) => handleScaleFactorChange(index, parseFloat((e.target as HTMLInputElement).value))}
-                                style={{ flex: 1 }}
-                            />
-                            <span style={{ fontSize: '11px', fontWeight: 500, minWidth: '30px' }}>
-                                {(cat.scaleFactor || 1.0).toFixed(1)}
-                            </span>
-                        </div>
                     </div>
                 ))}
             </div>

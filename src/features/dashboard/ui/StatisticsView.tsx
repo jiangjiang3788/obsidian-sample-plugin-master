@@ -91,19 +91,66 @@ const Popover = ({ target, blocks, title, onClose, app, module }: PopoverState &
 
 
 // =============== 图表子组件 ===============
-const ChartBlock = ({ data, label, onCellClick, categories, cellIdentifier, isCompact = false, scaleFactor = 1 }: any) => {
+const ChartBlock = ({ data, label, onCellClick, categories, cellIdentifier, isCompact = false, displayMode = 'smart', minVisibleHeight = 15 }: any) => {
     const counts = data.counts as Record<string, number>;
     const total = Object.values(counts).reduce((sum, count) => sum + count, 0);
     
-    // 计算缩放后的最大值用于高度计算
-    let maxScaledCount = 1;
-    categories.forEach(({name, scaleFactor: catScale}: {name: string, scaleFactor?: number}) => {
-        const count = counts[name] || 0;
-        const scaledCount = count * (catScale || 1.0);
-        if (scaledCount > maxScaledCount) {
-            maxScaledCount = scaledCount;
+    // 智能高度计算算法
+    const calculateHeight = (count: number) => {
+        if (count === 0) return 0;
+        
+        // 收集所有非零数值
+        const nonZeroCounts: number[] = [];
+        categories.forEach(({name}: {name: string}) => {
+            const c = counts[name] || 0;
+            if (c > 0) {
+                nonZeroCounts.push(c);
+            }
+        });
+        
+        if (nonZeroCounts.length === 0) return 0;
+        
+        const maxCount = Math.max(...nonZeroCounts);
+        const minCount = Math.min(...nonZeroCounts);
+        const ratio = maxCount / Math.max(minCount, 1);
+        
+        let height = 0;
+        
+        switch (displayMode) {
+            case 'logarithmic':
+                // 对数模式：使用对数缩放
+                height = (Math.log(count + 1) / Math.log(maxCount + 1)) * 100;
+                break;
+                
+            case 'linear':
+                // 线性模式：严格按比例
+                height = (count / maxCount) * 100;
+                break;
+                
+            case 'smart':
+            default:
+                // 智能模式：根据数据分布自动选择
+                if (ratio > 10) {
+                    // 数据差异很大时，使用混合算法
+                    const logHeight = (Math.log(count + 1) / Math.log(maxCount + 1)) * 100;
+                    const linearHeight = (count / maxCount) * 100;
+                    // 按比例混合对数和线性高度
+                    const logWeight = Math.min(ratio / 20, 0.7); // 最大70%对数权重
+                    height = logHeight * logWeight + linearHeight * (1 - logWeight);
+                } else {
+                    // 数据差异不大时，使用线性模式
+                    height = (count / maxCount) * 100;
+                }
+                break;
         }
-    });
+        
+        // 确保最小可见高度
+        if (height > 0 && height < minVisibleHeight) {
+            height = minVisibleHeight;
+        }
+        
+        return Math.min(height, 100);
+    };
 
     const containerClasses = `sv-chart-block ${isCompact ? 'is-compact' : ''} ${total === 0 ? 'is-empty' : ''}`;
 
@@ -112,9 +159,8 @@ const ChartBlock = ({ data, label, onCellClick, categories, cellIdentifier, isCo
             <div class="sv-chart-label">{label}</div>
             <div class="sv-chart-content">
                 <div class="sv-chart-numbers">
-                    {categories.map(({name, scaleFactor: catScale}: {name: string, scaleFactor?: number}) => {
+                    {categories.map(({name}: {name: string}) => {
                         const count = counts[name] || 0;
-                        const scale = catScale || 1.0;
                         return (
                             <div key={`num-${name}`} class="sv-chart-number">
                                 {count > 0 ? count : ''}
@@ -123,15 +169,13 @@ const ChartBlock = ({ data, label, onCellClick, categories, cellIdentifier, isCo
                     })}
                 </div>
                 <div class="sv-chart-bars-container">
-                    {categories.map(({name, color, alias, scaleFactor: catScale}: {name: string, color: string, alias?: string, scaleFactor?: number}) => {
+                    {categories.map(({name, color, alias}: {name: string, color: string, alias?: string}) => {
                         const count = counts[name] || 0;
-                        const scale = catScale || 1.0;
-                        const scaledCount = count * scale;
-                        const height = (scaledCount / maxScaledCount) * 100;
+                        const height = calculateHeight(count);
                         const displayName = alias || name;
                         
                         return (
-                            <div key={name} class="sv-vbar-wrapper" title={`${name}: ${count} (×${scale.toFixed(1)})`}
+                            <div key={name} class="sv-vbar-wrapper" title={`${name}: ${count}`}
                                 onClick={(e) => { 
                                     e.stopPropagation(); 
                                     onCellClick(cellIdentifier(name), e.currentTarget, data.blocks.filter((b:Item) => (b.categoryKey || '').startsWith(name)), `${label} · ${displayName}`); 
@@ -159,7 +203,7 @@ const ChartBlock = ({ data, label, onCellClick, categories, cellIdentifier, isCo
 
 // =============== 主视图组件 ===============
 export function StatisticsView({ items, app, dateRange, module, currentView, useFieldGranularity = false }: StatisticsViewProps) {
-    const { categories = [] } = { ...DEFAULT_CONFIG, ...module.viewConfig };
+    const { categories = [], displayMode = 'smart', minVisibleHeight = 15 } = { ...DEFAULT_CONFIG, ...module.viewConfig };
     const categoryOrder = useMemo(() => categories.map((c: any) => c.name), [categories]);
     const [selectedCell, setSelectedCell] = useState<any>(null);
     const [popover, setPopover] = useState<PopoverState | null>(null);
@@ -231,6 +275,8 @@ export function StatisticsView({ items, app, dateRange, module, currentView, use
                             categories={categories}
                             onCellClick={handleCellClick}
                             cellIdentifier={(cat: string) => ({ type: 'day', date: selectedDate.format('YYYY-MM-DD'), category: cat })}
+                            displayMode={displayMode}
+                            minVisibleHeight={minVisibleHeight}
                         />
                     </div>
                 </div>
@@ -259,6 +305,8 @@ export function StatisticsView({ items, app, dateRange, module, currentView, use
                             categories={categories}
                             onCellClick={handleCellClick}
                             cellIdentifier={(cat: string) => ({ type: 'week', week: weekStart.isoWeek(), year: weekStart.year(), category: cat })}
+                            displayMode={displayMode}
+                            minVisibleHeight={minVisibleHeight}
                         />
                     </div>
                 </div>
@@ -303,6 +351,8 @@ export function StatisticsView({ items, app, dateRange, module, currentView, use
                                 onCellClick={handleCellClick}
                                 cellIdentifier={(cat: string) => ({ type: 'week', week: weekStart.isoWeek(), year: weekStart.year(), category: cat })}
                                 isCompact={true}
+                                displayMode={displayMode}
+                                minVisibleHeight={minVisibleHeight}
                             />
                         ))}
                     </div>
@@ -353,6 +403,8 @@ export function StatisticsView({ items, app, dateRange, module, currentView, use
                                 categories={categories}
                                 onCellClick={handleCellClick}
                                 cellIdentifier={(cat: string) => ({ type: 'month', month: month.month() + 1, year: month.year(), category: cat })}
+                                displayMode={displayMode}
+                                minVisibleHeight={minVisibleHeight}
                             />
                         ))}
                     </div>
@@ -373,6 +425,8 @@ export function StatisticsView({ items, app, dateRange, module, currentView, use
                                         onCellClick={handleCellClick}
                                         cellIdentifier={(cat: string) => ({ type: 'week', week: weekStart.isoWeek(), year: weekStart.year(), category: cat })}
                                         isCompact={true}
+                                        displayMode={displayMode}
+                                        minVisibleHeight={minVisibleHeight}
                                     />
                                 ))}
                             </div>
@@ -459,9 +513,9 @@ export function StatisticsView({ items, app, dateRange, module, currentView, use
     return (
         <div class="statistics-view">
             <div class="sv-timeline">
-                <div class="sv-row"><ChartBlock data={processedData.yearData} label={`${year}年`} categories={categories} onCellClick={handleCellClick} cellIdentifier={(cat:string) => ({type:'year', year, category:cat})} /></div>
-                <div class="sv-row sv-row-quarters">{processedData.quartersData.map((data, i) => (<ChartBlock key={i} data={data} label={`Q${i+1}`} categories={categories} onCellClick={handleCellClick} cellIdentifier={(cat:string) => ({type:'quarter', year, quarter:i+1, category:cat})} />))}</div>
-                <div class="sv-row sv-row-months">{processedData.monthsData.map((data, i) => (<ChartBlock key={i} data={data} label={`${i+1}月`} categories={categories} onCellClick={handleCellClick} cellIdentifier={(cat:string) => ({type:'month', year, month:i+1, category:cat})} />))}</div>
+                <div class="sv-row"><ChartBlock data={processedData.yearData} label={`${year}年`} categories={categories} onCellClick={handleCellClick} cellIdentifier={(cat:string) => ({type:'year', year, category:cat})} displayMode={displayMode} minVisibleHeight={minVisibleHeight} /></div>
+                <div class="sv-row sv-row-quarters">{processedData.quartersData.map((data, i) => (<ChartBlock key={i} data={data} label={`Q${i+1}`} categories={categories} onCellClick={handleCellClick} cellIdentifier={(cat:string) => ({type:'quarter', year, quarter:i+1, category:cat})} displayMode={displayMode} minVisibleHeight={minVisibleHeight} />))}</div>
+                <div class="sv-row sv-row-months">{processedData.monthsData.map((data, i) => (<ChartBlock key={i} data={data} label={`${i+1}月`} categories={categories} onCellClick={handleCellClick} cellIdentifier={(cat:string) => ({type:'month', year, month:i+1, category:cat})} displayMode={displayMode} minVisibleHeight={minVisibleHeight} />))}</div>
                 
                 <div class="sv-row-weeks">
                     {yearlyWeekStructure.map(({ month, weeks }) => (
@@ -480,6 +534,8 @@ export function StatisticsView({ items, app, dateRange, module, currentView, use
                                             onCellClick={handleCellClick} 
                                             cellIdentifier={(cat:string) => ({type:'week', year, week, category:cat})} 
                                             isCompact={true} 
+                                            displayMode={displayMode} 
+                                            minVisibleHeight={minVisibleHeight}
                                         />
                                     );
                                 })}
