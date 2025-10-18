@@ -158,7 +158,7 @@ const ChartBlock = ({ data, label, onCellClick, categories, cellIdentifier, isCo
 
 
 // =============== 主视图组件 ===============
-export function StatisticsView({ items, app, dateRange, module, currentView }: StatisticsViewProps) {
+export function StatisticsView({ items, app, dateRange, module, currentView, useFieldGranularity = false }: StatisticsViewProps) {
     const { categories = [] } = { ...DEFAULT_CONFIG, ...module.viewConfig };
     const categoryOrder = useMemo(() => categories.map((c: any) => c.name), [categories]);
     const [selectedCell, setSelectedCell] = useState<any>(null);
@@ -417,16 +417,44 @@ export function StatisticsView({ items, app, dateRange, module, currentView }: S
             const baseCategory = (item.categoryKey || '').split('/')[0];
             if (!categoryOrder.includes(baseCategory)) continue;
 
-            if (itemPeriod === '年') { yearData.counts[baseCategory]++; yearData.blocks.push(item); }
-            if (itemPeriod === '季') { const qIndex = itemDate.quarter() - 1; if (quartersData[qIndex]) { quartersData[qIndex].counts[baseCategory]++; quartersData[qIndex].blocks.push(item); }}
-            if (itemPeriod === '月') { const mIndex = itemDate.month(); if (monthsData[mIndex]) { monthsData[mIndex].counts[baseCategory]++; monthsData[mIndex].blocks.push(item); }}
+            if (useFieldGranularity) {
+                // 开关开启：使用字段粒度过滤（保持原有period门槛逻辑）
+                if (itemPeriod === '年') { yearData.counts[baseCategory]++; yearData.blocks.push(item); }
+                if (itemPeriod === '季') { const qIndex = itemDate.quarter() - 1; if (quartersData[qIndex]) { quartersData[qIndex].counts[baseCategory]++; quartersData[qIndex].blocks.push(item); }}
+                if (itemPeriod === '月') { const mIndex = itemDate.month(); if (monthsData[mIndex]) { monthsData[mIndex].counts[baseCategory]++; monthsData[mIndex].blocks.push(item); }}
+            } else {
+                // 开关关闭：按日期归属统计（不看period字段，按时间窗口归属）
+                // 年层：统计所有该年的条目
+                yearData.counts[baseCategory]++;
+                yearData.blocks.push(item);
+                
+                // 季层：按日期归属到对应季度
+                const qIndex = itemDate.quarter() - 1;
+                if (quartersData[qIndex]) { 
+                    quartersData[qIndex].counts[baseCategory]++; 
+                    quartersData[qIndex].blocks.push(item); 
+                }
+                
+                // 月层：按日期归属到对应月份
+                const mIndex = itemDate.month();
+                if (monthsData[mIndex]) { 
+                    monthsData[mIndex].counts[baseCategory]++; 
+                    monthsData[mIndex].blocks.push(item); 
+                }
+            }
 
+            // 周层：始终按日期归属统计（不受开关影响，与现有行为保持一致）
             const wIndex = itemDate.isoWeek() - 1;
-            if (wIndex >= 0 && wIndex < totalWeeks) { if (weeksData[wIndex]) { weeksData[wIndex].counts[baseCategory]++; weeksData[wIndex].blocks.push(item); }}
+            if (wIndex >= 0 && wIndex < totalWeeks) { 
+                if (weeksData[wIndex]) { 
+                    weeksData[wIndex].counts[baseCategory]++; 
+                    weeksData[wIndex].blocks.push(item); 
+                }
+            }
         }
         
         return { yearData, quartersData, monthsData, weeksData };
-    }, [items, year, categoryOrder]);
+    }, [items, year, categoryOrder, useFieldGranularity]);
 
     return (
         <div class="statistics-view">

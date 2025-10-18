@@ -240,7 +240,22 @@ export function LayoutRenderer({ layout, dataStore, app, actionService, taskServ
         <div>
             {!layout.hideToolbar && (
                 layout.isOverviewMode ? (
-                    <TimeNavigator currentDate={layoutDate} onDateChange={handleOverviewDateChange} />
+                    <div class="tp-toolbar" style="margin-bottom:8px;">
+                        <TimeNavigator currentDate={layoutDate} onDateChange={handleOverviewDateChange} />
+                        <label style="margin-left:8px; display:inline-flex; align-items:center; cursor:pointer;" title="勾选后，将条目的字段粒度（年/季/月/周/天）与当前视图的时间窗口同时作为筛选条件。未勾选仅按时间窗口筛选。未设置粒度的条目默认当天。">
+                            <input 
+                                type="checkbox" 
+                                checked={useFieldGranularity} 
+                                onChange={e => {
+                                    const newValue = (e.target as HTMLInputElement).checked;
+                                    setUseFieldGranularity(newValue);
+                                    appStore.updateLayout(layout.id, { useFieldGranularity: newValue });
+                                }}
+                                style="margin-right:4px;" 
+                            />
+                            按字段粒度过滤
+                        </label>
+                    </div>
                 ) : (
                     <div class="tp-toolbar" style="margin-bottom:8px;">
                         {['年', '季', '月', '周', '天'].map(v => ( <button onClick={() => setLayoutView(v)} class={v === layoutView ? 'active' : ''}>{v}</button>))}
