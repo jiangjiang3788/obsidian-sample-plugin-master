@@ -122,6 +122,7 @@ export interface Layout extends Groupable {
     initialDate?: string;
     initialDateFollowsNow?: boolean;
     isOverviewMode?: boolean; // [新增] 概览模式开关
+    useFieldGranularity?: boolean; // [新增] 按字段粒度过滤开关
     displayMode?: 'list' | 'grid';
     gridConfig?: {
         columns?: number;

@@ -26,6 +26,7 @@ const ViewContent = ({
     keyword,
     layoutView,
     isOverviewMode,
+    useFieldGranularity,
     app,
     onMarkDone,
     actionService,
@@ -38,6 +39,7 @@ const ViewContent = ({
     keyword: string;
     layoutView: string;
     isOverviewMode: boolean;
+    useFieldGranularity: boolean;
     app: App;
     onMarkDone: (id: string) => void;
     actionService: ActionService;
@@ -54,6 +56,7 @@ const ViewContent = ({
         keyword,
         layoutView,
         isOverviewMode: !!isOverviewMode,
+        useFieldGranularity,
     });
 
     // [新增] 使用 useEffect 将数据传递给父组件
@@ -75,6 +78,7 @@ const ViewContent = ({
         dateRange,
         module: viewInstance,
         currentView: layoutView,
+        useFieldGranularity,
         ...viewInstance.viewConfig,
         groupField: viewInstance.group,
         fields: viewInstance.fields,
@@ -116,11 +120,13 @@ export function LayoutRenderer({ layout, dataStore, app, actionService, taskServ
     const [layoutView, setLayoutView] = useState(layout.initialView || '月');
     const [layoutDate, setLayoutDate] = useState(getInitialDate());
     const [kw, setKw] = useState('');
+    const [useFieldGranularity, setUseFieldGranularity] = useState(!!layout.useFieldGranularity);
     
     useEffect(() => {
         setLayoutDate(getInitialDate());
         setLayoutView(layout.initialView || '月');
-    }, [layout.id, layout.initialDate, layout.initialDateFollowsNow, layout.isOverviewMode, layout.initialView]);
+        setUseFieldGranularity(!!layout.useFieldGranularity);
+    }, [layout.id, layout.initialDate, layout.initialDateFollowsNow, layout.isOverviewMode, layout.initialView, layout.useFieldGranularity]);
 
     // [新增] 处理导出的函数
     const handleExport = useCallback((viewId: string, viewTitle: string) => {
@@ -216,6 +222,7 @@ export function LayoutRenderer({ layout, dataStore, app, actionService, taskServ
                         keyword={kw}
                         layoutView={layoutView}
                         isOverviewMode={!!layout.isOverviewMode}
+                        useFieldGranularity={useFieldGranularity}
                         app={app}
                         onMarkDone={handleMarkItemDone}
                         actionService={actionService}
@@ -242,6 +249,19 @@ export function LayoutRenderer({ layout, dataStore, app, actionService, taskServ
                         <button onClick={() => setLayoutDate(prev => prev.clone().add(1, unit(layoutView)))}>→</button>
                         <button onClick={() => setLayoutDate(dayjs())}>＝</button>
                         <input placeholder="快速过滤…" style="margin-left:4px;" value={kw} onInput={e => setKw((e.target as HTMLInputElement).value)} />
+                        <label style="margin-left:8px; display:inline-flex; align-items:center; cursor:pointer;" title="勾选后，将条目的字段粒度（年/季/月/周/天）与当前视图的时间窗口同时作为筛选条件。未勾选仅按时间窗口筛选。未设置粒度的条目默认当天。">
+                            <input 
+                                type="checkbox" 
+                                checked={useFieldGranularity} 
+                                onChange={e => {
+                                    const newValue = (e.target as HTMLInputElement).checked;
+                                    setUseFieldGranularity(newValue);
+                                    appStore.updateLayout(layout.id, { useFieldGranularity: newValue });
+                                }}
+                                style="margin-right:4px;" 
+                            />
+                            按字段粒度过滤
+                        </label>
                     </div>
                 )
             )}

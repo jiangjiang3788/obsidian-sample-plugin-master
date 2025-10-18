@@ -33,14 +33,14 @@ export const FIELD_REGISTRY: Record<string, FieldDefinition> = {
     tags:          { key: 'tags',          label: '标签',      type: 'tags',   description: '所有关联的标签', formatter: (v) => Array.isArray(v) ? v.join(', ') : '' },
     priority:      { key: 'priority',      label: '优先级',    type: 'string' },
     icon:          { key: 'icon',          label: '图标',      type: 'icon' },
-    period:        { key: 'period',        label: '周期',      type: 'string', description: '块的周期属性，如周、月' },
+    period:        { key: 'period',        label: '字段粒度',      type: 'string', description: '该条目归属的时间粒度：年/季/月/周/天（未设置默认天）' },
     time:          { key: 'time',          label: '时间',      type: 'string', description: '记录的时间点，如 HH:mm' },
     duration:      { key: 'duration',      label: '时长',      type: 'number', description: '任务或事件的持续分钟数' },
     rating:        { key: 'rating',        label: '评分',      type: 'number', description: '对块内容的评分' },
     pintu:         { key: 'pintu',         label: '评图',      type: 'string', description: '与评分关联的图片路径' },
     // [新增] 新字段定义
     folder:        { key: 'folder',        label: '文件夹',    type: 'string', description: '文件所在的父文件夹' },
-    periodCount:   { key: 'periodCount',   label: '周期数',    type: 'number', description: '周期对应的数值(如周数、月份)' },
+    periodCount:   { key: 'periodCount',   label: '粒度序号',    type: 'number', description: '与日期结合计算出的序号，如第几周/第几月' },
 
     // --- 文件元数据 ---
     'file.path':     { key: 'file.path',     label: '文件路径', type: 'string' },

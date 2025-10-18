@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo } from 'preact/hooks';
 
-import { DataStore } from '@core/services/dataStore';
+import { DataStore } from '@core/services/DataStore';
 
 // [核心修复] 将 filterByKeyword 添加回 import 列表
 
@@ -28,6 +28,15 @@ interface UseViewDataProps {
 
     isOverviewMode: boolean | undefined;
 
+    useFieldGranularity?: boolean; // [新增] 按字段粒度过滤开关
+
+}
+
+
+
+// [新增] 获取条目粒度的辅助函数，未设置默认为"天"
+function getItemGranularity(item: Item): string {
+    return item.period || '天';
 }
 
 
@@ -45,6 +54,8 @@ export function useViewData({
     layoutView,
 
     isOverviewMode,
+
+    useFieldGranularity = false, // [新增] 默认为 false
 
 }: UseViewDataProps): Item[] {
 
@@ -132,33 +143,57 @@ export function useViewData({
 
 
 
-                // 2. 根据条目自身的周期属性进行分层判断
+                // [修改] 2. 根据字段粒度过滤开关决定过滤逻辑
 
-                switch (item.period) {
+                if (useFieldGranularity) {
 
-                    case '年':
+                    // 勾选了字段粒度过滤：优先用字段粒度匹配当前上下文的视图粒度
 
-                        return itemDate.isSame(contextDate, 'year');
+                    const itemGranularity = getItemGranularity(item);
 
-                    case '季':
+                    switch (itemGranularity) {
 
-                        return itemDate.isSame(contextDate, 'quarter');
+                        case '年':
 
-                    case '月':
+                            return itemDate.isSame(contextDate, 'year');
 
-                        return itemDate.isSame(contextDate, 'month');
+                        case '季':
 
-                    default:
+                            return itemDate.isSame(contextDate, 'quarter');
 
-                        // 3. 对于周、天或未定义周期的条目，使用精确的日期范围过滤
+                        case '月':
 
-                        const itemMs = itemDate.valueOf();
+                            return itemDate.isSame(contextDate, 'month');
 
-                        const startMs = dayjs(start).startOf('day').valueOf();
+                        case '周':
 
-                        const endMs = dayjs(end).endOf('day').valueOf();
+                            return itemDate.isSame(contextDate, 'week');
 
-                        return itemMs >= startMs && itemMs <= endMs;
+                        default: // '天' 或其他
+
+                            // 对于"天"粒度的条目，使用精确的日期范围过滤
+
+                            const itemMs = itemDate.valueOf();
+
+                            const startMs = dayjs(start).startOf('day').valueOf();
+
+                            const endMs = dayjs(end).endOf('day').valueOf();
+
+                            return itemMs >= startMs && itemMs <= endMs;
+
+                    }
+
+                } else {
+
+                    // 未勾选字段粒度过滤：仅按日期范围（保持原有概览逻辑对等效果）
+
+                    const itemMs = itemDate.valueOf();
+
+                    const startMs = dayjs(start).startOf('day').valueOf();
+
+                    const endMs = dayjs(end).endOf('day').valueOf();
+
+                    return itemMs >= startMs && itemMs <= endMs;
 
                 }
 
@@ -168,15 +203,35 @@ export function useViewData({
 
         } else {
 
-            // 非概览模式下的原始逻辑
+            // [修改] 非概览模式下的新逻辑：移除兜底 period 过滤
 
             const dataSourcePeriodFilter = (dataSource.filters || []).find(f => f.field === 'period');
 
-            if (!dataSourcePeriodFilter) {
+            
+
+            // 只在两种情况下应用字段粒度过滤：
+
+            // 1. 数据源显式配置了 period 过滤规则
+
+            // 2. 用户勾选了"按字段粒度过滤"开关
+
+            if (dataSourcePeriodFilter) {
+
+                // 数据源显式配置了 period 过滤，按原逻辑应用
+
+                itemsToProcess = filterByPeriod(itemsToProcess, dataSourcePeriodFilter.value);
+
+            } else if (useFieldGranularity) {
+
+                // 用户勾选了"按字段粒度过滤"开关，用当前视图粒度作为期望粒度
 
                 itemsToProcess = filterByPeriod(itemsToProcess, layoutView);
 
             }
+
+            // 否则不应用字段粒度过滤，避免混淆
+
+            
 
             finalItems = filterByDateRange(itemsToProcess, start, end);
 
@@ -194,7 +249,7 @@ export function useViewData({
 
 
 
-    }, [allItems, dataSource, dateRange, keyword, layoutView, isOverviewMode, dataSourceName]);
+    }, [allItems, dataSource, dateRange, keyword, layoutView, isOverviewMode, useFieldGranularity, dataSourceName]);
 
 
 

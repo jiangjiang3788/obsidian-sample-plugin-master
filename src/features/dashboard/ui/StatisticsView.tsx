@@ -19,6 +19,7 @@ interface StatisticsViewProps {
     dateRange: [Date, Date];
     module: ViewInstance;
     currentView: '年' | '季' | '月' | '周' | '天';
+    useFieldGranularity?: boolean;
 }
 interface PeriodData {
     counts: Record<string, number>;
