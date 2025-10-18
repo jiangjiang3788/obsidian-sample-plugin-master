@@ -62,6 +62,11 @@ function LayoutEditor({ layout, appStore }: { layout: Layout, appStore: AppStore
                     label={<Typography noWrap>启用概览模式</Typography>}
                     title="启用后，此布局将变为持久化时间导航模式，工具栏样式将改变，且时间不再跟随今日。"
                 />
+                <FormControlLabel
+                    control={<Checkbox size="small" checked={!!layout.useFieldGranularity} onChange={e => handleUpdate({ useFieldGranularity: e.target.checked })} />}
+                    label={<Typography noWrap>按字段粒度过滤</Typography>}
+                    title="勾选后，将条目的字段粒度（年/季/月/周/天）与当前视图的时间窗口同时作为筛选条件。未勾选仅按时间窗口筛选。未设置粒度的条目默认当天。"
+                />
             </Stack>
             <Stack direction="row" alignItems="center" spacing={2}>
                 <Typography sx={{ width: LABEL_WIDTH, flexShrink: 0, fontWeight: 500 }}>工具栏</Typography>
@@ -72,7 +77,7 @@ function LayoutEditor({ layout, appStore }: { layout: Layout, appStore: AppStore
                 <TextField type="date" size="small" variant="outlined" disabled={!!layout.initialDateFollowsNow && !layout.isOverviewMode} value={layout.initialDate || ''} onChange={e => handleUpdate({ initialDate: (e.target as HTMLInputElement).value })} sx={{ width: '170px' }} />
                 <FormControlLabel control={<Checkbox size="small" disabled={!!layout.isOverviewMode} checked={!!layout.initialDateFollowsNow} onChange={e => handleUpdate({ initialDateFollowsNow: e.target.checked })} />} label={<Typography noWrap>跟随今日</Typography>} />
             </Stack>
-            <AlignedRadioGroup label="初始周期" options={PERIOD_OPTIONS} selectedValue={layout.initialView || '月'} onChange={(value: string) => handleUpdate({ initialView: value })} />
+            <AlignedRadioGroup label="初始视图（时间窗）" options={PERIOD_OPTIONS} selectedValue={layout.initialView || '月'} onChange={(value: string) => handleUpdate({ initialView: value })} />
             <AlignedRadioGroup label="排列方式" options={DISPLAY_MODE_OPTIONS} selectedValue={layout.displayMode || 'list'} onChange={(value: string) => handleUpdate({ displayMode: value as 'list' | 'grid' })} />
             {layout.displayMode === 'grid' && (
                 <Stack direction="row" alignItems="center" spacing={2} sx={{ pl: `calc(${LABEL_WIDTH} + 16px)` }}>
