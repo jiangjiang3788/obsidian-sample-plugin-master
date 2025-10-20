@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo } from 'preact/hooks';
 
-import { DataStore } from '@core/services/DataStore';
+import { DataStore } from '@core/services';
 
 // [核心修复] 将 filterByKeyword 添加回 import 列表
 

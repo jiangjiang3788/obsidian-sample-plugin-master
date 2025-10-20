@@ -1,9 +1,9 @@
 // src/state/storeRegistry.ts
 import { AppStore } from './AppStore';
-import { DataStore } from '@core/services/DataStore';
-import { TimerService } from '@core/services/TimerService';
+import { DataStore } from '@core/services';
+import { TimerService } from '@core/services';
 // [新增] 导入 InputService 类型
-import { InputService } from '@core/services/InputService';
+import { InputService } from '@core/services';
 
 /**
  * 这是一个简单的服务定位器，用于在应用启动时保存核心服务和Store的单一实例，
