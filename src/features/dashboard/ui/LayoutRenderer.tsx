@@ -2,7 +2,7 @@
 /** @jsxImportSource preact */
 import { h, Fragment } from 'preact';
 import { useState, useMemo, useEffect, useCallback, useRef } from 'preact/hooks'; // [修改] 导入 useRef
-import { DataStore } from '@core/services/DataStore';
+import { DataStore } from '@core/services';
 import { Layout, ViewInstance, Item } from '@core/domain/schema'; // [修改] 导入 Item 类型
 import { ModulePanel } from './ModulePanel';
 import { ViewComponents } from '@features/dashboard/ui';
@@ -98,6 +98,20 @@ export function LayoutRenderer({ layout, dataStore, app, actionService, taskServ
     
     // [新增] 创建一个 ref 来缓存每个模块的数据
     const modulesDataCache = useRef<Record<string, Item[]>>({});
+
+    // [新增] 首屏就绪埋点：Dashboard 首次完成渲染后记录一次
+    const firstScreenReportedRef = useRef(false);
+    useEffect(() => {
+        if (firstScreenReportedRef.current) return;
+        firstScreenReportedRef.current = true;
+        requestAnimationFrame(() => {
+            dataStore.writePerformanceReport('firstScreenReady', {
+                layoutId: layout.id,
+                viewCount: layout.viewInstanceIds.length
+            });
+            console.log('[ThinkPlugin] 首屏就绪');
+        });
+    }, []);
 
     useEffect(() => {
         const initialState: Record<string, boolean> = {};

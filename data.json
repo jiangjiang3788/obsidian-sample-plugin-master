@@ -324,7 +324,13 @@
     {
       "id": "ds_mer6kbdnogrty",
       "name": "打卡",
-      "filters": [],
+      "filters": [
+        {
+          "field": "theme",
+          "op": "=",
+          "value": "生活"
+        }
+      ],
       "sort": [
         {
           "field": "date",
@@ -1600,15 +1606,19 @@
         {
           "field": "categoryKey",
           "op": "=",
-          "value": "完成任务"
-        },
-        {
-          "field": "theme",
-          "op": "includes",
-          "value": "思考"
+          "value": "总结"
         }
       ],
-      "sort": [],
+      "sort": [
+        {
+          "field": "theme",
+          "dir": "asc"
+        },
+        {
+          "field": "periodCount",
+          "dir": "asc"
+        }
+      ],
       "parentId": "group_mg3d069es81n9"
     },
     {
@@ -1616,17 +1626,21 @@
       "name": "思考三项",
       "filters": [
         {
-          "field": "type",
+          "field": "categoryKey",
           "op": "=",
-          "value": "block"
-        },
-        {
-          "field": "theme",
-          "op": "includes",
-          "value": "思考"
+          "value": "计划"
         }
       ],
-      "sort": [],
+      "sort": [
+        {
+          "field": "theme",
+          "dir": "asc"
+        },
+        {
+          "field": "periodCount",
+          "dir": "asc"
+        }
+      ],
       "parentId": "group_mg3d069es81n9"
     },
     {
@@ -2056,7 +2070,7 @@
       },
       "parentId": "group_memc1a9ofen88",
       "fields": [],
-      "collapsed": false
+      "collapsed": true
     },
     {
       "id": "view_membnf1hgjgm3",
@@ -3014,60 +3028,39 @@
         "categories": [
           {
             "name": "未完成任务",
-            "color": "#5cdc45",
-            "alias": "未完",
-            "scaleFactor": 1
+            "color": "#776f25"
           },
           {
             "name": "完成任务",
-            "color": "#6d1623",
-            "alias": "完任"
-          },
-          {
-            "name": "感受",
-            "color": "#48e6f2"
-          },
-          {
-            "name": "事件",
-            "color": "#abe194"
-          },
-          {
-            "name": "思考",
-            "color": "#c88717"
+            "color": "#32335e"
           },
           {
             "name": "打卡",
-            "color": "#ec8de9",
-            "scaleFactor": 1
+            "color": "#ffecf4"
+          },
+          {
+            "name": "事件",
+            "color": "#fddb94"
+          },
+          {
+            "name": "感受",
+            "color": "#d430bc"
+          },
+          {
+            "name": "思考",
+            "color": "#9b0d26"
           },
           {
             "name": "计划",
-            "color": "#2cc3ec"
+            "color": "#dac88d"
           },
           {
             "name": "总结",
-            "color": "#f10b84"
+            "color": "#dc71c2"
           }
         ],
-        "showLegend": true,
-        "enableLegendFilter": true,
-        "showTotals": true,
-        "showPercent": true,
-        "showGridLines": true,
-        "hideZeroCategories": false,
-        "sortBy": "order",
-        "labelNumberFormat": "short",
-        "countDisplayMode": "raw",
-        "scaleMode": "auto",
-        "scaleRef": "p95",
-        "absoluteMax": 100,
-        "capRatio": 3,
-        "goalPerWeek": 5,
-        "showGoalBadge": true,
-        "showGoalLine": false,
-        "exceedColor": "#d32f2f",
-        "displayMode": "linear",
-        "minVisibleHeight": 16
+        "displayMode": "smart",
+        "minVisibleHeight": 15
       },
       "collapsed": false,
       "parentId": "group_memc1a9ofen88"
@@ -3159,7 +3152,7 @@
         "fields": [],
         "group": "categoryKey"
       },
-      "collapsed": false,
+      "collapsed": true,
       "parentId": "group_mg3dmyfcbmuw6",
       "fields": [
         "categoryKey",
@@ -3297,27 +3290,26 @@
     {
       "id": "view_mg239n47213f2",
       "title": "思考完成任务",
-      "viewType": "TimelineView",
+      "viewType": "BlockView",
       "dataSourceId": "ds_mg234zgoxblv5",
       "viewConfig": {
-        "defaultHourHeight": 30,
-        "MAX_HOURS_PER_DAY": 24,
-        "UNTRACKED_LABEL": "未记录",
-        "categories": {
-          "思考": {
-            "color": "#ff4d4d",
-            "files": [
-              "2-4思考"
-            ]
-          }
-        },
-        "progressOrder": [
-          "思考"
-        ]
+        "view": "BlockView",
+        "title": "块视图",
+        "collapsed": false,
+        "fields": [],
+        "group": "categoryKey"
       },
       "collapsed": false,
       "parentId": "group_mg3dmyfcbmuw6",
-      "group": "header"
+      "fields": [
+        "categoryKey",
+        "icon",
+        "date",
+        "period",
+        "periodCount",
+        "content"
+      ],
+      "group": "period"
     },
     {
       "id": "view_mg23u59l0ni9a",
@@ -3337,9 +3329,11 @@
         "categoryKey",
         "icon",
         "date",
+        "period",
+        "periodCount",
         "content"
       ],
-      "group": "categoryKey"
+      "group": "period"
     },
     {
       "id": "view_mg23w881hshrd",
@@ -3815,12 +3809,12 @@
         "view_membbqjam5v63"
       ],
       "displayMode": "list",
-      "initialView": "周",
+      "initialView": "月",
       "initialDateFollowsNow": false,
       "parentId": "group_memcg1u3us3jc",
       "hideToolbar": false,
       "isOverviewMode": false,
-      "initialDate": "2025-05-26",
+      "initialDate": "2025-03-31",
       "useFieldGranularity": true
     },
     {
@@ -3957,7 +3951,8 @@
       "parentId": "group_mg3dj3u9faw2x",
       "gridConfig": {
         "columns": 2
-      }
+      },
+      "useFieldGranularity": false
     },
     {
       "id": "layout_mg3ehi9c3066u",

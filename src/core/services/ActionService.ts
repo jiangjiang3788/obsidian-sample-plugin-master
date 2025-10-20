@@ -4,7 +4,7 @@ import { App, Notice } from 'obsidian';
 import { AppStore } from '@state/AppStore';
 import { dayjs } from '@core/utils/date';
 import type { Item, ViewInstance } from '@core/domain/schema';
-import { DataStore } from './DataStore';
+import { DataStore } from './dataStore';
 import { InputService } from './inputService';
 import type { QuickInputConfig } from './types';
 import { AppToken } from './types';

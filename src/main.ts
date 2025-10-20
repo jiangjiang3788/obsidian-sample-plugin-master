@@ -12,6 +12,7 @@ import * as SettingsFeature from '@features/settings';
 import { ThinkSettings, DEFAULT_SETTINGS, STYLE_TAG_ID } from '@core/domain';
 import { GLOBAL_CSS } from '@features/dashboard/styles/global';
 import { AppToken, SETTINGS_TOKEN } from '@core/services/types';
+import { VaultFileStorage, STORAGE_TOKEN } from '@core/services/storage';
 
 console.log(`[ThinkPlugin] main.js 文件已加载，版本时间: ${new Date().toLocaleTimeString()}`);
 
@@ -109,6 +110,8 @@ class ServiceManager {
                 console.timeEnd('[ThinkPlugin] 数据扫描');
                 // 数据扫描完成后，通知 DataStore 触发更新
                 this.services.dataStore!.notifyChange();
+                // 将性能报告写入 Vault
+                this.services.dataStore!.writePerformanceReport('initialScan');
                 resolve();
             }).catch((error) => {
                 console.error('[ThinkPlugin] 数据扫描失败:', error);
@@ -225,6 +228,7 @@ export default class ThinkPlugin extends Plugin {
             // 注册基础依赖
             container.register(AppToken, { useValue: this.app });
             container.register(SETTINGS_TOKEN, { useValue: settings });
+            container.register(STORAGE_TOKEN, { useClass: VaultFileStorage });
 
             // 步骤 2: 初始化服务管理器
             this.serviceManager = new ServiceManager(this);
