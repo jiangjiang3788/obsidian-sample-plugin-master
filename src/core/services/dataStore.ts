@@ -1,7 +1,7 @@
 // src/core/services/dataStore.ts
 import { singleton, inject } from 'tsyringe';
 import type { HeadingCache, TFile, App } from 'obsidian';
-import { Item, FilterRule, SortRule } from '@core/domain/schema';
+import type { Item, FilterRule, SortRule } from '@core/domain/schema';
 import { parseTaskLine, parseBlockContent } from '@core/utils/parser';
 import { throttle } from '@core/utils/timing';
 import { ObsidianPlatform } from '@platform/obsidian';
@@ -11,7 +11,8 @@ import { parseRecurrence } from '@core/utils/mark';
 // [新增] 注入令牌与服务
 import { AppToken } from './types';
 import { ThemeManager } from './ThemeManager';
-import { IPluginStorage, STORAGE_TOKEN } from './storage';
+import type { IPluginStorage } from './storage';
+import { STORAGE_TOKEN } from './storage';
 import {
   CacheV1,
   CURRENT_CACHE_SCHEMA_VERSION,
@@ -32,6 +33,7 @@ export class DataStore {
   private items: Item[] = [];
   private fileIndex: Map<string, Item[]> = new Map();
   private changeListeners: Set<() => void> = new Set();
+  private queryCache: Map<string, Item[]> = new Map();
 
   // 缓存/性能
   private cache: CacheV1 | null = null;
@@ -51,7 +53,7 @@ export class DataStore {
       this._perf.scannedFiles += 1;
       this._perf.scannedItems += scanned.length;
     }
-    this.dataVersion++;
+    this.bumpVersion();
   }
 
   // 初始扫描改为暖启动
@@ -102,7 +104,7 @@ export class DataStore {
 
     // 5) 仅扫描变更文件
     for (const f of changedFiles) {
-      const scanned = await this.scanFile(f);
+      const scanned = await this.scanFile(f, { bumpVersion: false });
       this._perf.scannedFiles += 1;
       this._perf.scannedItems += scanned.length;
       // 扫描完成时 scanFile 会同步更新 cache.files[path]
@@ -116,7 +118,7 @@ export class DataStore {
     }
 
     // 7) 合并、保存与通知
-    this.dataVersion++;
+    this.bumpVersion();
     this._perf.end = Date.now();
     this._scheduleCacheSave();
     this.notifyChange();
@@ -124,7 +126,7 @@ export class DataStore {
 
   /* ---------------- 单文件扫描 ---------------- */
 
-  async scanFile(file: TFile): Promise<Item[]> {
+  async scanFile(file: TFile, opts: { bumpVersion?: boolean } = {}): Promise<Item[]> {
     try {
       const content = await this.platform.readFile(file);
       const lines = content.split(/\r?\n/);
@@ -171,6 +173,14 @@ export class DataStore {
               const hashIdx = blockItem.id.lastIndexOf('#');
               const lineNo = hashIdx >= 0 ? Number(blockItem.id.slice(hashIdx + 1)) : undefined;
               (blockItem as any).file = { path: filePath, line: lineNo, basename: fileName };
+              if (currentHeader) {
+                const matchedTheme = this.themeManager.findThemeByPartialMatch(currentHeader);
+                (blockItem as any).theme = matchedTheme || currentHeader;
+              }
+              (blockItem as any).titleLower = (blockItem.title || '').toLowerCase();
+              (blockItem as any).contentLower = (blockItem.content || '').toLowerCase();
+              (blockItem as any).tagsLower = (blockItem.tags || []).map(t => t.toLowerCase());
+              (blockItem as any).themePathNormalized = (blockItem as any).theme || undefined;
               fileItems.push(blockItem);
             }
             i = endIdx;
@@ -195,6 +205,10 @@ export class DataStore {
           normalizeItemDates(taskItem);
           (taskItem as any).file = { path: filePath, line: i + 1, basename: fileName };
           (taskItem as any).recurrenceInfo = parseRecurrence(taskItem.content) || undefined;
+          (taskItem as any).titleLower = (taskItem.title || '').toLowerCase();
+          (taskItem as any).contentLower = (taskItem.content || '').toLowerCase();
+          (taskItem as any).tagsLower = (taskItem.tags || []).map(t => t.toLowerCase());
+          (taskItem as any).themePathNormalized = taskItem.theme || undefined;
           fileItems.push(taskItem);
         }
       }
@@ -217,6 +231,10 @@ export class DataStore {
       };
       this._scheduleCacheSave();
 
+      if (opts.bumpVersion !== false) {
+        this.bumpVersion();
+      }
+
       return fileItems;
     } catch (err) {
       console.error('ThinkPlugin: 扫描文件失败', file.path, err);
@@ -233,14 +251,28 @@ export class DataStore {
       delete this.cache.files[filePath];
       this._scheduleCacheSave();
     }
-    this.dataVersion++;
+    this.bumpVersion();
   }
 
   /* ---------------- 查询 ---------------- */
 
   queryItems(filters: FilterRule[] = [], sortRules: SortRule[] = []): Item[] {
+    const key = this._makeQueryKey(filters, sortRules);
+    const cached = this.queryCache.get(key);
+    if (cached) return cached;
+
     const filtered = filterByRules(this.items, filters);
-    return sortItems(filtered, sortRules);
+    const result = sortItems(filtered, sortRules);
+    this.queryCache.set(key, result);
+    return result;
+  }
+
+  private _makeQueryKey(filters: FilterRule[] = [], sortRules: SortRule[] = []): string {
+    return JSON.stringify({ f: filters, s: sortRules, v: this.dataVersion });
+  }
+  private bumpVersion() {
+    this.dataVersion++;
+    this.queryCache.clear();
   }
 
   /* ---------------- 变更通知 ---------------- */

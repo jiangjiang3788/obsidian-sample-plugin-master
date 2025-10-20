@@ -44,8 +44,34 @@ export function filterByRules(items: Item[], rules: FilterRule[] = []) {
 }
 
 function matchRule(item: Item, rule: FilterRule): boolean {
-  const v1 = readField(item, rule.field);
-  const v2 = rule.value;
+  let v1: any = readField(item, rule.field);
+  let v2: any = rule.value;
+
+  // 优先使用预处理字段进行大小写无关的比较
+  if (rule.field === 'title') {
+    v1 = (item as any).titleLower ?? String(v1 ?? '').toLowerCase();
+    v2 = String(v2 ?? '').toLowerCase();
+  } else if (rule.field === 'content') {
+    v1 = (item as any).contentLower ?? String(v1 ?? '').toLowerCase();
+    v2 = String(v2 ?? '').toLowerCase();
+  } else if (rule.field === 'theme') {
+    const themeNorm = (item as any).themePathNormalized ?? (item as any).theme ?? v1;
+    v1 = String(themeNorm ?? '').toLowerCase();
+    v2 = String(v2 ?? '').toLowerCase();
+  } else if (rule.field === 'tags') {
+    const tagsLower: string[] = (item as any).tagsLower
+      ?? (Array.isArray(v1) ? v1.map(x => String(x).toLowerCase()) : []);
+    const needle = String(v2 ?? '').toLowerCase();
+    if (rule.op === 'includes' || rule.op === '=') {
+      return tagsLower.includes(needle);
+    }
+    if (rule.op === '!=') {
+      return !tagsLower.includes(needle);
+    }
+    // 其他操作回退为字符串比较
+    v1 = tagsLower.join(',');
+    v2 = needle;
+  }
 
   switch (rule.op) {
     case '='   : return cmpMixed(v1, v2) === 0;
@@ -111,7 +137,11 @@ export function filterByDateRange(items: Item[], startISO?: string, endISO?: str
 export function filterByKeyword(items: Item[], kw: string) {
   if (!kw.trim()) return items;
   const s = kw.trim().toLowerCase();
-  return items.filter(it => (it.title + ' ' + it.content).toLowerCase().includes(s));
+  return items.filter(it => {
+    const titleLower = (it as any).titleLower ?? (it.title || '').toLowerCase();
+    const contentLower = (it as any).contentLower ?? (it.content || '').toLowerCase();
+    return (titleLower + ' ' + contentLower).includes(s);
+  });
 }
 
 /* ---------- [新增] 周期字段过滤器 ---------- */

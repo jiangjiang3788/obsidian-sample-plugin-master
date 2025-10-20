@@ -64,7 +64,7 @@ export function toCachedItem(it: Item): CachedItem {
 
 // 将缓存的 CachedItem 恢复为最小可用的 Item（原文内容仍需懒加载时再读取）
 export function fromCachedItem(c: CachedItem): Item {
-  return {
+  const it = {
     id: c.id,
     title: '', // 恢复后可按需懒加载原文
     content: '',
@@ -79,5 +79,13 @@ export function fromCachedItem(c: CachedItem): Item {
     filename: c.filename,
     file: { path: c.filePath },
     extra: {},
-  } as unknown as Item;
+  } as any;
+
+  // 恢复预处理字段，避免启动后重复计算
+  it.titleLower = c.titleLower ?? '';
+  it.contentLower = c.contentLower ?? '';
+  it.tagsLower = c.tagsLower ?? [];
+  it.themePathNormalized = c.themePathNormalized;
+
+  return it as Item;
 }
