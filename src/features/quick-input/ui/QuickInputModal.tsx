@@ -190,7 +190,7 @@ function getEffectiveTemplate(settings: InputSettings, blockId: string, themeId?
     const theme = settings.themes.find(t => t.id === themeId) || null;
     if (themeId) {
         const override = settings.overrides.find(o => o.blockId === blockId && o.themeId === themeId);
-        if (override && override.status === 'enabled') {
+        if (override && !override.disabled) {
             const effectiveTemplate: BlockTemplate = { ...baseBlock, fields: override.fields ?? baseBlock.fields, outputTemplate: override.outputTemplate ?? baseBlock.outputTemplate, targetFile: override.targetFile ?? baseBlock.targetFile, appendUnderHeader: override.appendUnderHeader ?? baseBlock.appendUnderHeader };
             return { template: effectiveTemplate, theme };
         }
@@ -247,7 +247,7 @@ function QuickInputForm({ app, blockId, context, themeId, onSave, closeModal }: 
         const { themes, overrides } = settings;
         const disabledThemeIds = new Set<string>();
         overrides.forEach(override => {
-            if (override.blockId === blockId && override.status === 'disabled') {
+            if (override.blockId === blockId && override.disabled) {
                 disabledThemeIds.add(override.themeId);
             }
         });
@@ -281,6 +281,12 @@ function QuickInputForm({ app, blockId, context, themeId, onSave, closeModal }: 
         const initialData: Record<string, any> = {};
 
         template.fields.forEach(field => {
+            // 优先保留用户已输入的值
+            if (formData[field.key] !== undefined && formData[field.key] !== '') {
+                initialData[field.key] = formData[field.key];
+                return;
+            }
+
             let valueAssigned = false;
             const contextValue = context?.[field.key] ?? context?.[field.label];
 
@@ -330,8 +336,7 @@ function QuickInputForm({ app, blockId, context, themeId, onSave, closeModal }: 
             }
         });
         
-        // 设置表单数据，这种方式可以确保每次主题变化都刷新默认值，但会重置用户输入。
-        // 这在“主题决定表单结构”的场景下是符合预期的行为。
+        // 设置表单数据，保留用户已输入的值
         setFormData(initialData);
 
     }, [template, theme, context]); // 依赖项：当 template, theme 或 context 变化时，重新运行此 effect
@@ -546,8 +551,51 @@ function QuickInputForm({ app, blockId, context, themeId, onSave, closeModal }: 
             )}
 
             <Divider sx={{ mb: 2.5 }} />
-            <Stack spacing={2.5}>
-                {template.fields.map(field => <div key={field.id}>{renderField(field)}</div>)}
+            <Stack spacing={2.5} sx={{ minHeight: '300px' }}>
+                {(() => {
+                    const timeFieldKeys = ['时间', '结束', '时长'];
+                    const dateFieldKey = '日期';
+                    
+                    // 按原始顺序获取字段，但重新组织显示顺序
+                    const fieldsToRender: h.JSX.Element[] = [];
+                    const dateField = template.fields.find(f => f.key === dateFieldKey);
+                    const timeFields: TemplateField[] = [];
+                    const processedKeys = new Set<string>();
+                    
+                    // 先渲染非日期和非时间的字段
+                    template.fields.forEach(field => {
+                        if (field.key !== dateFieldKey && !timeFieldKeys.includes(field.key)) {
+                            fieldsToRender.push(<div key={field.id}>{renderField(field)}</div>);
+                            processedKeys.add(field.key);
+                        } else if (timeFieldKeys.includes(field.key)) {
+                            timeFields.push(field);
+                            processedKeys.add(field.key);
+                        } else if (field.key === dateFieldKey) {
+                            processedKeys.add(field.key);
+                        }
+                    });
+                    
+                    // 然后添加日期字段
+                    if (dateField) {
+                        fieldsToRender.push(<div key={dateField.id}>{renderField(dateField)}</div>);
+                    }
+                    
+                    // 最后添加时间三项（按指定顺序）
+                    if (timeFields.length > 0) {
+                        // 按照 timeFieldKeys 的顺序排序
+                        const sortedTimeFields = timeFieldKeys
+                            .map(key => timeFields.find(f => f.key === key))
+                            .filter(f => f !== undefined) as TemplateField[];
+                        
+                        fieldsToRender.push(
+                            <Box key="time-fields" sx={{ display: 'flex', gap: 1, flexWrap: 'nowrap', '& > div': { flex: 1, minWidth: 0 } }}>
+                                {sortedTimeFields.map(field => <div key={field.id}>{renderField(field)}</div>)}
+                            </Box>
+                        );
+                    }
+                    
+                    return fieldsToRender;
+                })()}
             </Stack>
             <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '1.5rem', gap: '8px' }}>
                 <Button onClick={handleSubmit} variant="contained">{onSave ? '创建并开始计时' : '提交'}</Button>

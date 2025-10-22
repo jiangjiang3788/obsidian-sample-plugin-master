@@ -26,7 +26,7 @@ export function TemplateEditorModal({ isOpen, onClose, block, theme, existingOve
 
     useEffect(() => {
         if (existingOverride) {
-            setMode(existingOverride.status === 'disabled' ? 'disabled' : 'override');
+            setMode(existingOverride.disabled ? 'disabled' : 'override');
             // [修改] 将 structuredClone 替换为 JSON.parse(JSON.stringify())
             setLocalOverride(JSON.parse(JSON.stringify(existingOverride)));
         } else {
@@ -60,7 +60,7 @@ export function TemplateEditorModal({ isOpen, onClose, block, theme, existingOve
             const dataToSave: Omit<ThemeOverride, 'id'> = {
                 blockId: block.id,
                 themeId: theme.id,
-                status: mode === 'disabled' ? 'disabled' : 'enabled',
+                disabled: mode === 'disabled',
                 fields: mode === 'override' ? localOverride.fields : undefined,
                 outputTemplate: mode === 'override' ? localOverride.outputTemplate : undefined,
                 targetFile: mode === 'override' ? localOverride.targetFile : undefined,
