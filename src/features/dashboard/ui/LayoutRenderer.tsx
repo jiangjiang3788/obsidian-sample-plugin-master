@@ -17,8 +17,9 @@ import { ModuleSettingsModal } from './ModuleSettingsModal'; // [新增] 导入�
 import { App, Notice } from 'obsidian'; // [修改] 导入 Notice
 import { appStore } from '@state/storeRegistry';
 import { exportItemsToMarkdown } from '@core/utils/exportUtils'; // [新增] 导入导出函数
+import { ThemeFilter } from './ThemeFilter'; // [新增] 导入主题筛选组件
 
-// [修改] ViewContent 组件增加 onDataLoaded prop
+// [修改] ViewContent 组件增加 onDataLoaded 和 selectedThemes props
 const ViewContent = ({
     viewInstance,
     dataStore,
@@ -27,6 +28,7 @@ const ViewContent = ({
     layoutView,
     isOverviewMode,
     useFieldGranularity,
+    selectedThemes, // [新增]
     app,
     onMarkDone,
     actionService,
@@ -40,6 +42,7 @@ const ViewContent = ({
     layoutView: string;
     isOverviewMode: boolean;
     useFieldGranularity: boolean;
+    selectedThemes: string[]; // [新增]
     app: App;
     onMarkDone: (id: string) => void;
     actionService: ActionService;
@@ -57,6 +60,7 @@ const ViewContent = ({
         layoutView,
         isOverviewMode: !!isOverviewMode,
         useFieldGranularity,
+        selectedThemes, // [新增]
     });
 
     // [新增] 使用 useEffect 将数据传递给父组件
@@ -135,12 +139,14 @@ export function LayoutRenderer({ layout, dataStore, app, actionService, taskServ
     const [layoutDate, setLayoutDate] = useState(getInitialDate());
     const [kw, setKw] = useState('');
     const [useFieldGranularity, setUseFieldGranularity] = useState(!!layout.useFieldGranularity);
+    const [selectedThemes, setSelectedThemes] = useState<string[]>(layout.selectedThemes || []); // [新增] 主题筛选状态
     
     useEffect(() => {
         setLayoutDate(getInitialDate());
         setLayoutView(layout.initialView || '月');
         setUseFieldGranularity(!!layout.useFieldGranularity);
-    }, [layout.id, layout.initialDate, layout.initialDateFollowsNow, layout.isOverviewMode, layout.initialView, layout.useFieldGranularity]);
+        setSelectedThemes(layout.selectedThemes || []);
+    }, [layout.id, layout.initialDate, layout.initialDateFollowsNow, layout.isOverviewMode, layout.initialView, layout.useFieldGranularity, layout.selectedThemes]);
 
     // [新增] 处理导出的函数
     const handleExport = useCallback((viewId: string, viewTitle: string) => {
@@ -209,6 +215,12 @@ export function LayoutRenderer({ layout, dataStore, app, actionService, taskServ
         setCurrentViewInstance(null);
     }, []);
 
+    // [新增] 处理主题筛选变化
+    const handleThemeSelectionChange = useCallback((themes: string[]) => {
+        setSelectedThemes(themes);
+        appStore.updateLayout(layout.id, { selectedThemes: themes });
+    }, [layout.id]);
+
     const renderViewInstance = (viewId: string) => {
         const viewInstance = allViews.find(v => v.id === viewId);
         if (!viewInstance) return <div class="think-module">视图 (ID: {viewId}) 未找到</div>;
@@ -237,6 +249,7 @@ export function LayoutRenderer({ layout, dataStore, app, actionService, taskServ
                         layoutView={layoutView}
                         isOverviewMode={!!layout.isOverviewMode}
                         useFieldGranularity={useFieldGranularity}
+                        selectedThemes={selectedThemes} // [新增] 传递主题筛选
                         app={app}
                         onMarkDone={handleMarkItemDone}
                         actionService={actionService}
@@ -269,6 +282,10 @@ export function LayoutRenderer({ layout, dataStore, app, actionService, taskServ
                             />
                             按字段粒度过滤
                         </label>
+                        <ThemeFilter
+                            selectedThemes={selectedThemes}
+                            onSelectionChange={handleThemeSelectionChange}
+                        />
                     </div>
                 ) : (
                     <div class="tp-toolbar" style="margin-bottom:8px;">
@@ -291,6 +308,10 @@ export function LayoutRenderer({ layout, dataStore, app, actionService, taskServ
                             />
                             按字段粒度过滤
                         </label>
+                        <ThemeFilter
+                            selectedThemes={selectedThemes}
+                            onSelectionChange={handleThemeSelectionChange}
+                        />
                     </div>
                 )
             )}
