@@ -5735,39 +5735,10 @@
         "disabled": true
       },
       {
-        "id": "ovr_mewkhtl154rmb",
         "blockId": "blk_mejsg76atopau",
         "themeId": "thm_mejstzgoiocwm",
-        "status": "disabled",
-        "fields": [
-          {
-            "id": "field_mewjpsd5",
-            "key": "评分",
-            "label": "评分",
-            "type": "rating",
-            "options": [
-              {
-                "value": "📚",
-                "label": "1"
-              }
-            ]
-          },
-          {
-            "id": "field_mewk7o3j",
-            "key": "日期",
-            "label": "日期",
-            "type": "date"
-          },
-          {
-            "id": "field_mewjqtxg",
-            "key": "内容",
-            "label": "内容",
-            "type": "textarea"
-          }
-        ],
-        "outputTemplate": "<!-- start -->\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分}}\npintu::{{评分..value}}\n内容:: {{内容}}\n<!-- end -->\n\n",
-        "targetFile": "01/打卡.md",
-        "appendUnderHeader": "## {{theme}}"
+        "disabled": true,
+        "id": "ovr_mewkhtl154rmb"
       },
       {
         "id": "ovr_mewkhvvxxed3x",
@@ -12077,6 +12048,6 @@
       }
     ]
   },
-  "floatingTimerEnabled": false,
+  "floatingTimerEnabled": true,
   "activeThemePaths": []
 }

@@ -3,7 +3,7 @@
 import { h } from 'preact';
 import { useRef, useCallback } from 'preact/hooks';
 import { useStore } from '@state/AppStore';
-import { usePersistentState } from '@shared/hooks/usePersistentState';
+import { useLocalStorage } from '@shared/hooks';
 import { Box, Typography, Button, Paper, Stack, Tooltip } from '@mui/material';
 import DragIndicatorIcon from '@mui/icons-material/DragIndicator';
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
@@ -39,7 +39,7 @@ export function TimerView({ app, actionService, timerService, dataStore }: Timer
     // [新增] 从状态管理获取可见性状态
     const isVisible = useStore(state => state.isTimerWidgetVisible);
     
-    const [position, setPosition] = usePersistentState('think-timer-position', { x: window.innerWidth - 350, y: 100 });
+    const [position, setPosition] = useLocalStorage('think-timer-position', { x: window.innerWidth - 350, y: 100 });
     const dragStartPos = useRef({ x: 0, y: 0, panelX: 0, panelY: 0 });
 
     // [修改] onDragMove 现在能处理触摸事件
