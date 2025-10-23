@@ -34,7 +34,8 @@ function getEffectiveTemplate(settings: InputSettings, blockId: string, themeId?
     if (!baseBlock) return null;
     if (themeId) {
         const override = settings.overrides.find(o => o.blockId === blockId && o.themeId === themeId);
-        if (override && override.status === 'enabled') {
+        // [修复] ThemeOverride使用disabled字段，不是status
+        if (override && !override.disabled) {
             return { ...baseBlock, fields: override.fields ?? baseBlock.fields, outputTemplate: override.outputTemplate ?? baseBlock.outputTemplate, targetFile: override.targetFile ?? baseBlock.targetFile, appendUnderHeader: override.appendUnderHeader ?? baseBlock.appendUnderHeader };
         }
     }
@@ -115,12 +116,16 @@ export function HeatmapView({ items, app, dateRange, module, currentView }: Heat
     const getMappingForItem = (item?: Item): Map<string, string> => {
         const blockId = config.sourceBlockId;
         if (!blockId) return new Map();
-        const themeTag = item?.tags.find(tag => themesByPath.has(tag));
-        const themeId = themeTag ? themesByPath.get(themeTag)?.id : undefined;
+        
+        // [修复] 直接使用 item.theme 字段，而不是从 tags 中查找
+        const themePath = item?.theme;
+        const themeId = themePath ? themesByPath.get(themePath)?.id : undefined;
         const cacheKey = `${blockId}:${themeId || 'default'}`;
+        
         if (ratingMappingsCache.has(cacheKey)) {
             return ratingMappingsCache.get(cacheKey)!;
         }
+        
         const effectiveTemplate = getEffectiveTemplate(settings.inputSettings, blockId, themeId);
         const ratingField = effectiveTemplate?.fields.find(f => f.type === 'rating');
         const newMapping = new Map<string, string>(
@@ -132,38 +137,51 @@ export function HeatmapView({ items, app, dateRange, module, currentView }: Heat
     
     const dataByThemeAndDate = useMemo(() => {
         const themeMap = new Map<string, Map<string, any>>();
-        const themesToTrack = config.displayMode === 'habit' && config.themeTags.length > 0 ? config.themeTags : ['__default__'];
+        
+        // [修复] 使用 themePaths 替代 themeTags，表示主题路径列表
+        const themesToTrack = config.displayMode === 'habit' && config.themePaths && config.themePaths.length > 0 
+            ? config.themePaths 
+            : ['__default__'];
+        
         themesToTrack.forEach(theme => themeMap.set(theme, new Map()));
 
         if (config.displayMode === 'count') {
-             items.forEach(item => {
+            items.forEach(item => {
                 if (item.date) {
                     const map = themeMap.get('__default__')!;
                     map.set(item.date, (map.get(item.date) || 0) + 1);
                 }
             });
         } else {
-             items.forEach(item => {
+            // [修复] 基于 item.theme 字段进行分组，而不是 item.tags
+            items.forEach(item => {
                 if (!item.date) return;
-                const itemThemes = themesToTrack.length > 1 ? item.tags.filter(t => themesToTrack.includes(t)) : ['__default__'];
-                const targetThemes = itemThemes.length > 0 ? itemThemes : ['__default__'];
-                targetThemes.forEach(theme => {
-                    themeMap.get(theme)?.set(item.date, item);
-                });
+                
+                // 如果配置了多个主题路径，检查item的theme是否匹配
+                if (themesToTrack.length > 1 && themesToTrack[0] !== '__default__') {
+                    // item.theme 必须在配置的主题列表中
+                    if (item.theme && themesToTrack.includes(item.theme)) {
+                        themeMap.get(item.theme)?.set(item.date, item);
+                    }
+                } else {
+                    // 默认模式：所有item归入__default__
+                    themeMap.get('__default__')?.set(item.date, item);
+                }
             });
         }
         return themeMap;
-    }, [items, config.displayMode, config.themeTags]);
+    }, [items, config.displayMode, config.themePaths]);
 
-    const handleCellClick = (date: string, item?: Item, themeTag?: string) => {
+    const handleCellClick = (date: string, item?: Item, themePath?: string) => {
         if (config.displayMode !== 'habit' || !config.sourceBlockId) return;
         
         let themeToPreselect: ThemeDefinition | undefined;
 
-        if (themeTag && themeTag !== '__default__') {
-            themeToPreselect = themesByPath.get(themeTag);
-        } else {
-            themeToPreselect = item?.tags.map(tag => themesByPath.get(tag)).find(Boolean);
+        // [修复] 优先使用传入的themePath，否则使用item.theme
+        if (themePath && themePath !== '__default__') {
+            themeToPreselect = themesByPath.get(themePath);
+        } else if (item?.theme) {
+            themeToPreselect = themesByPath.get(item.theme);
         }
         
         const context = {
@@ -175,7 +193,7 @@ export function HeatmapView({ items, app, dateRange, module, currentView }: Heat
         new QuickInputModal(app, config.sourceBlockId, context, themeToPreselect?.id).open();
     };
 
-    const renderMonthGrid = (monthDate: dayjs.Dayjs, dataForMonth: Map<string, any>, themeTag: string) => {
+    const renderMonthGrid = (monthDate: dayjs.Dayjs, dataForMonth: Map<string, any>, themePath: string) => {
         const startOfMonth = monthDate.startOf('month');
         const endOfMonth = monthDate.endOf('month');
         const firstWeekday = startOfMonth.isoWeekday();
@@ -192,14 +210,14 @@ export function HeatmapView({ items, app, dateRange, module, currentView }: Heat
                     config={config} 
                     ratingMapping={getMappingForItem(item)} 
                     app={app} 
-                    onCellClick={(date, item) => handleCellClick(date, item, themeTag)}
+                    onCellClick={(date, item) => handleCellClick(date, item, themePath)}
                 />
             );
         }
         return <div class="month-section"><div class="month-label">{monthDate.format('MMMM')}</div><div class="heatmap-row calendar">{days}</div></div>;
     };
 
-    const renderSingleRow = (startDate: dayjs.Dayjs, endDate: dayjs.Dayjs, dataForRow: Map<string, any>, themeTag: string) => {
+    const renderSingleRow = (startDate: dayjs.Dayjs, endDate: dayjs.Dayjs, dataForRow: Map<string, any>, themePath: string) => {
         const days = [];
         let currentDate = startDate.clone();
         while(currentDate.isSameOrBefore(endDate, 'day')) {
@@ -214,7 +232,7 @@ export function HeatmapView({ items, app, dateRange, module, currentView }: Heat
                     config={config} 
                     ratingMapping={getMappingForItem(item)} 
                     app={app} 
-                    onCellClick={(date, item) => handleCellClick(date, item, themeTag)}
+                    onCellClick={(date, item) => handleCellClick(date, item, themePath)}
                 />
             );
             currentDate = currentDate.add(1, 'day');

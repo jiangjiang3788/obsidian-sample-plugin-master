@@ -16,7 +16,7 @@ import { Notice } from 'obsidian';
 export const DEFAULT_CONFIG = {
     displayMode: 'habit', // 'habit' or 'count'
     sourceBlockId: '', // For 'habit' mode
-    themeTags: [], // For multi-row display in habit mode
+    themePaths: [] as string[], // [修复] 主题路径列表（用于多行显示）
     countColors: ['#ebedf0', '#9be9a8', '#40c463', '#30a14e', '#216e39'], // For 'count' mode
 };
 
@@ -30,7 +30,7 @@ export function HeatmapViewEditor({ value, onChange, module }: ViewEditorProps) 
         [allBlocks]
     );
 
-    const handleScanTags = () => {
+    const handleScanThemes = () => {
         if (!module?.dataSourceId) {
             new Notice('请先为此视图选择一个数据源。');
             return;
@@ -48,14 +48,17 @@ export function HeatmapViewEditor({ value, onChange, module }: ViewEditorProps) 
         }
         const items = dataStore.queryItems();
         const filteredItems = filterByRules(items, dataSource.filters);
-        const tagSet = new Set<string>();
+        // [修复] 扫描theme字段而不是tags
+        const themeSet = new Set<string>();
         filteredItems.forEach(item => {
-            item.tags.forEach(tag => tagSet.add(tag));
+            if (item.theme) {
+                themeSet.add(item.theme);
+            }
         });
         
-        const sortedTags = Array.from(tagSet).sort((a,b) => a.localeCompare(b, 'zh-CN'));
-        onChange({ themeTags: sortedTags });
-        new Notice(`扫描完成！已自动添加 ${sortedTags.length} 个主题标签。`);
+        const sortedThemes = Array.from(themeSet).sort((a,b) => a.localeCompare(b, 'zh-CN'));
+        onChange({ themePaths: sortedThemes });
+        new Notice(`扫描完成！已自动添加 ${sortedThemes.length} 个主题路径。`);
     };
 
     return (
@@ -85,17 +88,17 @@ export function HeatmapViewEditor({ value, onChange, module }: ViewEditorProps) 
                         </Box>
                     </Stack>
                     <Stack direction="row" alignItems="flex-start" spacing={2}>
-                        <Typography sx={{ width: '80px', flexShrink: 0, fontWeight: 500, pt: '8px' }}>主题标签</Typography>
+                        <Typography sx={{ width: '80px', flexShrink: 0, fontWeight: 500, pt: '8px' }}>主题路径</Typography>
                         <Box sx={{ flexGrow: 1 }}>
                            <ListEditor
-                               value={config.themeTags}
-                               onChange={val => onChange({ themeTags: val })}
-                               placeholder="例如: 生活健康/心情"
+                               value={config.themePaths}
+                               onChange={val => onChange({ themePaths: val })}
+                               placeholder="例如: 生活/健康, 工作/项目"
                            />
                            <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.5 }}>
-                               在此处添加的每个标签，在周/月视图下都会成为独立的一行。
+                               在此处添加的每个主题路径，在周/月视图下都会成为独立的一行。留空则显示所有打卡。
                            </Typography>
-                           <Button onClick={handleScanTags} size="small" sx={{mt: 1}}>从数据源扫描并添加主题</Button>
+                           <Button onClick={handleScanThemes} size="small" sx={{mt: 1}}>从数据源扫描并添加主题</Button>
                         </Box>
                     </Stack>
                 </div>
