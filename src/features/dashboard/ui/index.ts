@@ -7,6 +7,9 @@ import { TimelineView } from './TimelineView';
 import { HeatmapView } from './HeatmapView'; // [NEW] Import HeatmapView
 import type { ComponentType } from 'preact';
 
+// [NEW] Export ThemeFilter component
+export { ThemeFilter } from './ThemeFilter';
+
 // [REFACTOR] Import the authoritative ViewName and VIEW_OPTIONS from the domain layer.
 import type { ViewName } from '@core/domain/schema';
 import { VIEW_OPTIONS as DOMAIN_VIEW_OPTIONS } from '@core/domain/schema';

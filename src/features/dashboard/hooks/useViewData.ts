@@ -30,6 +30,8 @@ interface UseViewDataProps {
 
     useFieldGranularity?: boolean; // [新增] 按字段粒度过滤开关
 
+    selectedThemes?: string[]; // [新增] 选中的主题路径列表
+
 }
 
 
@@ -56,6 +58,8 @@ export function useViewData({
     isOverviewMode,
 
     useFieldGranularity = false, // [新增] 默认为 false
+
+    selectedThemes, // [新增] 选中的主题列表
 
 }: UseViewDataProps): Item[] {
 
@@ -110,6 +114,22 @@ export function useViewData({
         itemsToProcess = filterByRules(itemsToProcess, dataSource.filters || []);
 
         itemsToProcess = filterByKeyword(itemsToProcess, keyword);
+
+        
+
+        // [新增] 主题筛选：如果有选中的主题，只显示这些主题的条目
+
+        if (selectedThemes && selectedThemes.length > 0) {
+
+            itemsToProcess = itemsToProcess.filter(item => {
+
+                // 如果条目有theme字段，检查是否在选中的主题列表中
+
+                return item.theme && selectedThemes.includes(item.theme);
+
+            });
+
+        }
 
 
 
@@ -249,7 +269,7 @@ export function useViewData({
 
 
 
-    }, [allItems, dataSource, dateRange, keyword, layoutView, isOverviewMode, useFieldGranularity, dataSourceName]);
+    }, [allItems, dataSource, dateRange, keyword, layoutView, isOverviewMode, useFieldGranularity, selectedThemes, dataSourceName]);
 
 
 
