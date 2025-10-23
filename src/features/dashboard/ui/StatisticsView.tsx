@@ -207,12 +207,51 @@ export function StatisticsView({ items, app, dateRange, module, currentView, use
     const categoryOrder = useMemo(() => categories.map((c: any) => c.name), [categories]);
     const [selectedCell, setSelectedCell] = useState<any>(null);
     const [popover, setPopover] = useState<PopoverState | null>(null);
+    // 分类过滤状态：存储选中的分类名称
+    const [selectedCategories, setSelectedCategories] = useState<Set<string>>(new Set(categoryOrder));
     
     const startDate = useMemo(() => dayjs(dateRange[0]), [dateRange]);
     const endDate = useMemo(() => dayjs(dateRange[1]), [dateRange]);
 
+    // 当分类配置变化时，更新选中状态
+    useEffect(() => {
+        setSelectedCategories(new Set(categoryOrder));
+    }, [categoryOrder]);
+
+    // 过滤后的分类列表
+    const filteredCategories = useMemo(() => {
+        return categories.filter((c: any) => selectedCategories.has(c.name));
+    }, [categories, selectedCategories]);
+
+    // 切换分类选中状态
+    const toggleCategory = (categoryName: string) => {
+        setSelectedCategories(prev => {
+            const newSet = new Set(prev);
+            if (newSet.has(categoryName)) {
+                // 至少保留一个分类
+                if (newSet.size > 1) {
+                    newSet.delete(categoryName);
+                }
+            } else {
+                newSet.add(categoryName);
+            }
+            return newSet;
+        });
+    };
+
+    // 全选/全不选
+    const toggleAll = () => {
+        if (selectedCategories.size === categoryOrder.length) {
+            // 当前全选，切换为只选第一个
+            setSelectedCategories(new Set([categoryOrder[0]]));
+        } else {
+            // 未全选，切换为全选
+            setSelectedCategories(new Set(categoryOrder));
+        }
+    };
+
     const createPeriodData = (): PeriodData => ({
-        counts: Object.fromEntries(categoryOrder.map(c => [c, 0])),
+        counts: Object.fromEntries(filteredCategories.map((c: any) => [c.name, 0])),
         blocks: [],
     });
 
@@ -258,6 +297,44 @@ export function StatisticsView({ items, app, dateRange, module, currentView, use
         return <div class="statistics-view-placeholder">请先在视图设置中配置您想统计的分类。</div>;
     }
 
+    // 分类过滤器UI组件
+    const CategoryFilter = () => (
+        <div class="sv-category-filter">
+            <div class="sv-filter-header">
+                <span class="sv-filter-title">显示分类：</span>
+                <button 
+                    class="sv-filter-toggle-all"
+                    onClick={toggleAll}
+                    title={selectedCategories.size === categoryOrder.length ? "取消全选" : "全选"}
+                >
+                    {selectedCategories.size === categoryOrder.length ? "取消全选" : "全选"}
+                </button>
+            </div>
+            <div class="sv-filter-buttons">
+                {categories.map(({ name, color, alias }: any) => {
+                    const isSelected = selectedCategories.has(name);
+                    const displayName = alias || name;
+                    return (
+                        <button
+                            key={name}
+                            class={`sv-filter-btn ${isSelected ? 'is-selected' : ''}`}
+                            style={{
+                                '--category-color': color,
+                                backgroundColor: isSelected ? color : 'transparent',
+                                borderColor: color,
+                                color: isSelected ? '#fff' : color,
+                            } as any}
+                            onClick={() => toggleCategory(name)}
+                            title={`${name}${alias ? ` (${alias})` : ''}`}
+                        >
+                            {displayName}
+                        </button>
+                    );
+                })}
+            </div>
+        </div>
+    );
+
     // 根据 currentView 渲染不同的专属视图
     if (currentView === '天') {
         // 天视图：显示选定日期的统计数据
@@ -267,12 +344,13 @@ export function StatisticsView({ items, app, dateRange, module, currentView, use
 
         return (
             <div class="statistics-view">
+                <CategoryFilter />
                 <div class="sv-timeline">
                     <div class="sv-row">
                         <ChartBlock
                             data={data}
                             label={selectedDate.format('YYYY年MM月DD日 dddd')}
-                            categories={categories}
+                            categories={filteredCategories}
                             onCellClick={handleCellClick}
                             cellIdentifier={(cat: string) => ({ type: 'day', date: selectedDate.format('YYYY-MM-DD'), category: cat })}
                             displayMode={displayMode}
@@ -297,12 +375,13 @@ export function StatisticsView({ items, app, dateRange, module, currentView, use
 
         return (
             <div class="statistics-view">
+                <CategoryFilter />
                 <div class="sv-timeline">
                     <div class="sv-row">
                         <ChartBlock
                             data={data}
                             label={`${weekStart.format('YYYY年MM月DD日')} ~ ${weekEnd.format('MM月DD日')} (第${weekStart.isoWeek()}周)`}
-                            categories={categories}
+                            categories={filteredCategories}
                             onCellClick={handleCellClick}
                             cellIdentifier={(cat: string) => ({ type: 'week', week: weekStart.isoWeek(), year: weekStart.year(), category: cat })}
                             displayMode={displayMode}
@@ -347,13 +426,14 @@ export function StatisticsView({ items, app, dateRange, module, currentView, use
 
         return (
             <div class="statistics-view">
+                <CategoryFilter />
                 <div class="sv-timeline">
                     {/* 月度汇总 */}
                     <div class="sv-row">
                         <ChartBlock
                             data={monthData}
                             label={startDate.format('YYYY年MM月')}
-                            categories={categories}
+                            categories={filteredCategories}
                             onCellClick={handleCellClick}
                             cellIdentifier={(cat: string) => ({ type: 'month', month: startDate.month() + 1, year: startDate.year(), category: cat })}
                             displayMode={displayMode}
@@ -368,7 +448,7 @@ export function StatisticsView({ items, app, dateRange, module, currentView, use
                                 key={weekStart.format('YYYY-MM-DD')}
                                 data={data}
                                 label={`第${index + 1}周`}
-                                categories={categories}
+                                categories={filteredCategories}
                                 onCellClick={handleCellClick}
                                 cellIdentifier={(cat: string) => ({ type: 'week', week: weekStart.isoWeek(), year: weekStart.year(), category: cat })}
                                 isCompact={true}
@@ -422,13 +502,14 @@ export function StatisticsView({ items, app, dateRange, module, currentView, use
 
         return (
             <div class="statistics-view">
+                <CategoryFilter />
                 <div class="sv-timeline">
                     {/* 季度汇总 */}
                     <div class="sv-row">
                         <ChartBlock
                             data={quarterData}
                             label={`${startDate.format('YYYY年')} 第${startDate.quarter()}季度`}
-                            categories={categories}
+                            categories={filteredCategories}
                             onCellClick={handleCellClick}
                             cellIdentifier={(cat: string) => ({ type: 'quarter', quarter: startDate.quarter(), year: startDate.year(), category: cat })}
                             displayMode={displayMode}
@@ -443,7 +524,7 @@ export function StatisticsView({ items, app, dateRange, module, currentView, use
                                 key={month.format('YYYY-MM')}
                                 data={data}
                                 label={month.format('MM月')}
-                                categories={categories}
+                                categories={filteredCategories}
                                 onCellClick={handleCellClick}
                                 cellIdentifier={(cat: string) => ({ type: 'month', month: month.month() + 1, year: month.year(), category: cat })}
                                 displayMode={displayMode}
@@ -464,7 +545,7 @@ export function StatisticsView({ items, app, dateRange, module, currentView, use
                                         key={weekStart.format('YYYY-MM-DD')}
                                         data={data}
                                         label={`${weekStart.isoWeek()}W`}
-                                        categories={categories}
+                                        categories={filteredCategories}
                                         onCellClick={handleCellClick}
                                         cellIdentifier={(cat: string) => ({ type: 'week', week: weekStart.isoWeek(), year: weekStart.year(), category: cat })}
                                         isCompact={true}
@@ -555,10 +636,11 @@ export function StatisticsView({ items, app, dateRange, module, currentView, use
 
     return (
         <div class="statistics-view">
+            <CategoryFilter />
             <div class="sv-timeline">
-                <div class="sv-row"><ChartBlock data={processedData.yearData} label={`${year}年`} categories={categories} onCellClick={handleCellClick} cellIdentifier={(cat:string) => ({type:'year', year, category:cat})} displayMode={displayMode} minVisibleHeight={minVisibleHeight} /></div>
-                <div class="sv-row sv-row-quarters">{processedData.quartersData.map((data, i) => (<ChartBlock key={i} data={data} label={`Q${i+1}`} categories={categories} onCellClick={handleCellClick} cellIdentifier={(cat:string) => ({type:'quarter', year, quarter:i+1, category:cat})} displayMode={displayMode} minVisibleHeight={minVisibleHeight} />))}</div>
-                <div class="sv-row sv-row-months">{processedData.monthsData.map((data, i) => (<ChartBlock key={i} data={data} label={`${i+1}月`} categories={categories} onCellClick={handleCellClick} cellIdentifier={(cat:string) => ({type:'month', year, month:i+1, category:cat})} displayMode={displayMode} minVisibleHeight={minVisibleHeight} />))}</div>
+                <div class="sv-row"><ChartBlock data={processedData.yearData} label={`${year}年`} categories={filteredCategories} onCellClick={handleCellClick} cellIdentifier={(cat:string) => ({type:'year', year, category:cat})} displayMode={displayMode} minVisibleHeight={minVisibleHeight} /></div>
+                <div class="sv-row sv-row-quarters">{processedData.quartersData.map((data, i) => (<ChartBlock key={i} data={data} label={`Q${i+1}`} categories={filteredCategories} onCellClick={handleCellClick} cellIdentifier={(cat:string) => ({type:'quarter', year, quarter:i+1, category:cat})} displayMode={displayMode} minVisibleHeight={minVisibleHeight} />))}</div>
+                <div class="sv-row sv-row-months">{processedData.monthsData.map((data, i) => (<ChartBlock key={i} data={data} label={`${i+1}月`} categories={filteredCategories} onCellClick={handleCellClick} cellIdentifier={(cat:string) => ({type:'month', year, month:i+1, category:cat})} displayMode={displayMode} minVisibleHeight={minVisibleHeight} />))}</div>
                 
                 <div class="sv-row-weeks">
                     {yearlyWeekStructure.map(({ month, weeks }) => (
@@ -573,7 +655,7 @@ export function StatisticsView({ items, app, dateRange, module, currentView, use
                                             key={week} 
                                             data={weekData} 
                                             label={`${week}W`} 
-                                            categories={categories} 
+                                            categories={filteredCategories} 
                                             onCellClick={handleCellClick} 
                                             cellIdentifier={(cat:string) => ({type:'week', year, week, category:cat})} 
                                             isCompact={true} 
