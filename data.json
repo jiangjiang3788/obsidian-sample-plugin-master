@@ -329,13 +329,7 @@
     {
       "id": "ds_mer6kbdnogrty",
       "name": "打卡",
-      "filters": [
-        {
-          "field": "categoryKey",
-          "op": "=",
-          "value": "打卡"
-        }
-      ],
+      "filters": [],
       "sort": [
         {
           "field": "date",
@@ -3055,43 +3049,45 @@
     {
       "id": "view_mewr7y1gvq0ro",
       "title": "打卡视图",
-      "viewType": "HeatmapView",
+      "viewType": "StatisticsView",
       "dataSourceId": "ds_mer6kbdnogrty",
       "viewConfig": {
-        "displayMode": "habit",
-        "sourceBlockId": "blk_mejsg76atopau",
-        "countColors": [
-          "#ebedf0",
-          "#9be9a8",
-          "#40c463",
-          "#30a14e",
-          "#216e39"
+        "categories": [
+          {
+            "name": "打卡",
+            "color": "#6546e9"
+          },
+          {
+            "name": "感受",
+            "color": "#09c7f9"
+          },
+          {
+            "name": "计划",
+            "color": "#06f7c6"
+          },
+          {
+            "name": "事件",
+            "color": "#ba8bbe"
+          },
+          {
+            "name": "思考",
+            "color": "#06341f"
+          },
+          {
+            "name": "完成任务",
+            "color": "#acea51"
+          },
+          {
+            "name": "未完成任务",
+            "color": "#dc2602"
+          },
+          {
+            "name": "总结",
+            "color": "#d295b8"
+          }
         ],
-        "themeTags": [
-          "健康/心情",
-          "健康/身体",
-          "健康/运动",
-          "思考/读书",
-          "健康/粑粑",
-          "健康/剪头发",
-          "健康/剪指甲",
-          "健康/姨妈",
-          "生活/车车",
-          "健康/睡眠"
-        ],
-        "themePaths": [
-          "健康/粑粑",
-          "健康/喝水",
-          "健康/剪头发",
-          "健康/剪指甲",
-          "健康/身体",
-          "健康/睡眠",
-          "健康/心情",
-          "健康/姨妈",
-          "健康/运动",
-          "生活/车车",
-          "思考/读书"
-        ]
+        "displayMode": "smart",
+        "minVisibleHeight": 15
       },
       "collapsed": false,
       "parentId": "group_memc1a9ofen88"
@@ -3813,7 +3809,8 @@
       "parentId": "group_memcg1u3us3jc",
       "hideToolbar": false,
       "isOverviewMode": false,
-      "initialDate": "2025-05-26"
+      "initialDate": "2025-05-26",
+      "useFieldGranularity": false
     },
     {
       "id": "layout_mepgxvhes0ghq",

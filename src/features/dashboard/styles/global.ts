@@ -211,6 +211,43 @@ body.theme-dark .module-action-plus:hover {
     font-weight: 600;
 }
 
+/* 主题筛选器样式 (ThemeFilter) */
+.theme-filter {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 8px;
+    background: var(--background-primary);
+    border-radius: 6px;
+    border: 1px solid var(--background-modifier-border);
+}
+.theme-filter > span {
+    font-size: 13px;
+    color: var(--text-muted);
+    white-space: nowrap;
+}
+.theme-filter button {
+    padding: 4px 10px;
+    font-size: 13px;
+    border: 1px solid var(--background-modifier-border);
+    background: var(--background-secondary);
+    color: var(--text-normal);
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+}
+.theme-filter button:hover {
+    background: var(--background-modifier-hover);
+    border-color: var(--interactive-accent);
+}
+.theme-filter button.active {
+    background: var(--interactive-accent);
+    color: var(--text-on-accent);
+    border-color: var(--interactive-accent);
+    font-weight: 600;
+}
+
 
 /*
  * --- 4. 各视图 (View) 专属样式 ---
@@ -365,6 +402,73 @@ body.theme-dark .module-action-plus:hover {
     text-align: center;
     color: var(--text-faint);
     font-size: 1.1em;
+}
+
+/* 分类过滤器样式 */
+.sv-category-filter {
+    margin-bottom: 16px;
+    padding: 12px;
+    background: var(--background-primary);
+    border-radius: 8px;
+    border: 1px solid var(--background-modifier-border);
+}
+.sv-filter-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+}
+.sv-filter-title {
+    font-weight: 600;
+    font-size: 14px;
+    color: var(--text-normal);
+}
+.sv-filter-toggle-all {
+    padding: 4px 12px;
+    font-size: 12px;
+    border: 1px solid var(--background-modifier-border);
+    background: var(--background-secondary);
+    color: var(--text-muted);
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+.sv-filter-toggle-all:hover {
+    background: var(--background-modifier-hover);
+    border-color: var(--interactive-accent);
+    color: var(--text-normal);
+}
+.sv-filter-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+.sv-filter-btn {
+    padding: 6px 14px;
+    font-size: 13px;
+    font-weight: 500;
+    border-radius: 6px;
+    border: 2px solid;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    background: transparent;
+    white-space: nowrap;
+    user-select: none;
+}
+.sv-filter-btn:hover {
+    opacity: 0.85;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+.sv-filter-btn.is-selected {
+    font-weight: 600;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+body.theme-dark .sv-filter-btn:hover {
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+body.theme-dark .sv-filter-btn.is-selected {
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
 }
 .sv-timeline {
     display: flex;
