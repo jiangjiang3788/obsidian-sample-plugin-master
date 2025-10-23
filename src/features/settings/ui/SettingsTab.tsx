@@ -5,7 +5,7 @@ import { unmountComponentAtNode } from 'preact/compat';
 import { PluginSettingTab, App } from 'obsidian';
 import { ThemeProvider, CssBaseline, Box, Tabs, Tab } from '@mui/material';
 import type ThinkPlugin from '../../../main';
-import { usePersistentState } from '@shared/hooks/usePersistentState';
+import { useLocalStorage } from '@shared/hooks';
 import { LOCAL_STORAGE_KEYS } from '@core/domain/constants';
 import { theme as baseTheme } from '@shared/styles/mui-theme';
 
@@ -30,7 +30,7 @@ function TabPanel(props: { children?: any; value: number; index: number; }) {
 }
 
 function SettingsRoot({ app, appStore }: { app: App, appStore: AppStore }) {
-    const [tabIndex, setTabIndex] = usePersistentState(LOCAL_STORAGE_KEYS.SETTINGS_TABS, 0);
+    const [tabIndex, setTabIndex] = useLocalStorage(LOCAL_STORAGE_KEYS.SETTINGS_TABS, 0);
 
     return (
         <ThemeProvider theme={baseTheme}>
