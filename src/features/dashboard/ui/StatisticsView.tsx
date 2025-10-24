@@ -4,12 +4,19 @@ import { h, Fragment } from 'preact';
 import { useState, useMemo, useEffect, useRef } from 'preact/hooks';
 import { Item, readField, ViewInstance } from '@core/domain/schema';
 import { dayjs, getWeeksInYear } from '@core/utils/date';
-import { App } from 'obsidian';
+import { App, Notice } from 'obsidian';
 // [最终修正] 使用别名路径，代码更清晰且稳定
 import { DEFAULT_CONFIG } from '@features/settings/ui/components/view-editors/StatisticsViewEditor';
 import { BlockView } from './BlockView';
 import { IconButton, Tooltip } from '@mui/material';
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
+import IosShareIcon from '@mui/icons-material/IosShare';
+import { exportItemsToMarkdown } from '@core/utils/exportUtils';
+import { QuickInputModal } from '@features/quick-input/ui/QuickInputModal';
+import { dayjs as dayjsUtil } from '@core/utils/date';
+
+// 解决 Preact 和 Material-UI 的类型兼容性问题
+const AnyIconButton = IconButton as any;
 
 // ... 文件剩余部分代码保持不变 ...
 // =============== 类型定义 ===============
@@ -20,6 +27,7 @@ interface StatisticsViewProps {
     module: ViewInstance;
     currentView: '年' | '季' | '月' | '周' | '天';
     useFieldGranularity?: boolean;
+    actionService?: any;
 }
 interface PeriodData {
     counts: Record<string, number>;
@@ -32,9 +40,27 @@ interface PopoverState {
 }
 
 // =============== 悬浮窗组件 ===============
-const Popover = ({ target, blocks, title, onClose, app, module }: PopoverState & { onClose: () => void, app: App, module: ViewInstance }) => {
+const Popover = ({ target, blocks, title, onClose, app, module, actionService, dateRange, currentView }: PopoverState & { 
+    onClose: () => void; 
+    app: App; 
+    module: ViewInstance;
+    actionService?: any;
+    dateRange: [Date, Date];
+    currentView: string;
+}) => {
     const popoverRef = useRef<HTMLDivElement>(null);
+    const [position, setPosition] = useState({ x: 0, y: 0 });
+    const [isDragging, setIsDragging] = useState(false);
+    const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
 
+    // 初始化位置为屏幕中央
+    useEffect(() => {
+        const centerX = window.innerWidth / 2;
+        const centerY = window.innerHeight / 2;
+        setPosition({ x: centerX, y: centerY });
+    }, []);
+
+    // 点击外部关闭
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
             if (popoverRef.current && !popoverRef.current.contains(event.target as Node)) {
@@ -45,34 +71,101 @@ const Popover = ({ target, blocks, title, onClose, app, module }: PopoverState &
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, [onClose]);
 
-    const rect = target.getBoundingClientRect();
-    let left = rect.left + rect.width / 2;
-    let top = rect.bottom + 8;
+    // 拖动功能
+    const handleMouseDown = (e: MouseEvent) => {
+        // 只在标题栏上才能拖动
+        if ((e.target as HTMLElement).closest('.sv-popover-title')) {
+            setIsDragging(true);
+            setDragStart({
+                x: e.clientX - position.x,
+                y: e.clientY - position.y
+            });
+        }
+    };
+
+    useEffect(() => {
+        const handleMouseMove = (e: MouseEvent) => {
+            if (isDragging) {
+                setPosition({
+                    x: e.clientX - dragStart.x,
+                    y: e.clientY - dragStart.y
+                });
+            }
+        };
+
+        const handleMouseUp = () => {
+            setIsDragging(false);
+        };
+
+        if (isDragging) {
+            document.addEventListener('mousemove', handleMouseMove);
+            document.addEventListener('mouseup', handleMouseUp);
+        }
+
+        return () => {
+            document.removeEventListener('mousemove', handleMouseMove);
+            document.removeEventListener('mouseup', handleMouseUp);
+        };
+    }, [isDragging, dragStart]);
+
     const style = {
         position: 'fixed',
-        top: `${top}px`,
-        left: `${left}px`,
-        transform: 'translateX(-50%)',
+        top: `${position.y}px`,
+        left: `${position.x}px`,
+        transform: 'translate(-50%, -50%)',
         zIndex: 99999,
+        cursor: isDragging ? 'grabbing' : 'default',
+    };
+
+    // 导出功能
+    const handleExport = () => {
+        if (blocks.length === 0) {
+            new Notice('没有内容可导出');
+            return;
+        }
+        const markdownContent = exportItemsToMarkdown(blocks, title);
+        navigator.clipboard.writeText(markdownContent);
+        new Notice(`"${title}" 的内容已复制到剪贴板！`);
     };
 
     return (
-        <div ref={popoverRef} style={style} className="sv-popover">
-            <div className="sv-popover-title">
+        <div ref={popoverRef} style={style} className="sv-popover" onMouseDown={handleMouseDown}>
+            <div className="sv-popover-title" style={{ cursor: 'grab' }}>
                 <span>{title}</span>
-                <button 
-                    title="快捷创建 (功能待实现)"
-                    onClick={() => console.log("快捷创建功能待实现", title)}
-                    style={{ 
-                        border: 'none', 
-                        background: 'transparent', 
-                        cursor: 'pointer',
-                        padding: '4px',
-                        borderRadius: '4px'
-                    }}
-                >
-                    +
-                </button>
+                <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
+                    {/* 导出按钮 */}
+                    <Tooltip title="导出为 Markdown">
+                        <AnyIconButton
+                            size="small"
+                            onClick={(e: any) => {
+                                e.stopPropagation();
+                                handleExport();
+                            }}
+                            sx={{ padding: '4px' }}
+                        >
+                            <IosShareIcon sx={{ fontSize: '1rem' }} />
+                        </AnyIconButton>
+                    </Tooltip>
+                    {/* 快捷创建按钮 */}
+                    <Tooltip title="快捷创建">
+                        <AnyIconButton
+                            size="small"
+                            onClick={(e: any) => {
+                                e.stopPropagation();
+                                if (actionService) {
+                                    const layoutDate = dayjsUtil(dateRange[0]);
+                                    const config = actionService.getQuickInputConfigForView(module, layoutDate, currentView);
+                                    if (config) {
+                                        new QuickInputModal(app, config.blockId, config.context, config.themeId).open();
+                                    }
+                                }
+                            }}
+                            sx={{ padding: '4px' }}
+                        >
+                            <AddCircleOutlineIcon sx={{ fontSize: '1rem' }} />
+                        </AnyIconButton>
+                    </Tooltip>
+                </div>
             </div>
             <div className="sv-popover-content">
                 {blocks.length === 0 ? <div class="sv-popover-empty">无内容</div> :
@@ -202,7 +295,7 @@ const ChartBlock = ({ data, label, onCellClick, categories, cellIdentifier, isCo
 
 
 // =============== 主视图组件 ===============
-export function StatisticsView({ items, app, dateRange, module, currentView, useFieldGranularity = false }: StatisticsViewProps) {
+export function StatisticsView({ items, app, dateRange, module, currentView, useFieldGranularity = false, actionService }: StatisticsViewProps) {
     const { categories = [], displayMode = 'smart', minVisibleHeight = 15, usePeriodField = false } = { ...DEFAULT_CONFIG, ...module.viewConfig };
     const categoryOrder = useMemo(() => categories.map((c: any) => c.name), [categories]);
     const [selectedCell, setSelectedCell] = useState<any>(null);
@@ -215,10 +308,18 @@ export function StatisticsView({ items, app, dateRange, module, currentView, use
     const startDate = useMemo(() => dayjs(dateRange[0]), [dateRange]);
     const endDate = useMemo(() => dayjs(dateRange[1]), [dateRange]);
 
-    // 当分类配置变化时，更新选中状态
+    // [修复] 只在分类配置实际改变时才更新选中状态，避免主题筛选时重置
+    const categoryOrderKey = useMemo(() => categoryOrder.join(','), [categoryOrder]);
+    const prevCategoryOrderKeyRef = useRef<string>('');
+    
     useEffect(() => {
-        setSelectedCategories(new Set(categoryOrder));
-    }, [categoryOrder]);
+        const currentKey = categoryOrderKey;
+        if (prevCategoryOrderKeyRef.current !== '' && prevCategoryOrderKeyRef.current !== currentKey) {
+            // 分类配置真的改变了，重置选中状态
+            setSelectedCategories(new Set(categoryOrder));
+        }
+        prevCategoryOrderKeyRef.current = currentKey;
+    }, [categoryOrderKey, categoryOrder]);
 
     // 过滤后的分类列表
     const filteredCategories = useMemo(() => {
@@ -369,7 +470,7 @@ export function StatisticsView({ items, app, dateRange, module, currentView, use
                         />
                     </div>
                 </div>
-                {popover && <Popover {...popover} onClose={() => { setPopover(null); setSelectedCell(null); }} app={app} module={module} />}
+                {popover && <Popover {...popover} onClose={() => { setPopover(null); setSelectedCell(null); }} app={app} module={module} actionService={actionService} dateRange={dateRange} currentView={currentView} />}
             </div>
         );
     }
@@ -400,7 +501,7 @@ export function StatisticsView({ items, app, dateRange, module, currentView, use
                         />
                     </div>
                 </div>
-                {popover && <Popover {...popover} onClose={() => { setPopover(null); setSelectedCell(null); }} app={app} module={module} />}
+                {popover && <Popover {...popover} onClose={() => { setPopover(null); setSelectedCell(null); }} app={app} module={module} actionService={actionService} dateRange={dateRange} currentView={currentView} />}
             </div>
         );
     }
@@ -469,7 +570,7 @@ export function StatisticsView({ items, app, dateRange, module, currentView, use
                         ))}
                     </div>
                 </div>
-                {popover && <Popover {...popover} onClose={() => { setPopover(null); setSelectedCell(null); }} app={app} module={module} />}
+                {popover && <Popover {...popover} onClose={() => { setPopover(null); setSelectedCell(null); }} app={app} module={module} actionService={actionService} dateRange={dateRange} currentView={currentView} />}
             </div>
         );
     }
@@ -568,10 +669,10 @@ export function StatisticsView({ items, app, dateRange, module, currentView, use
                         </div>
                     ))}
                 </div>
-                {popover && <Popover {...popover} onClose={() => { setPopover(null); setSelectedCell(null); }} app={app} module={module} />}
-            </div>
-        );
-    }
+            {popover && <Popover {...popover} onClose={() => { setPopover(null); setSelectedCell(null); }} app={app} module={module} actionService={actionService} dateRange={dateRange} currentView={currentView} />}
+        </div>
+    );
+}
 
     // 年视图：保持原有的层级结构
     const year = startDate.year();
@@ -681,7 +782,7 @@ export function StatisticsView({ items, app, dateRange, module, currentView, use
                 </div>
             </div>
             
-            {popover && <Popover {...popover} onClose={() => { setPopover(null); setSelectedCell(null); }} app={app} module={module} />}
+            {popover && <Popover {...popover} onClose={() => { setPopover(null); setSelectedCell(null); }} app={app} module={module} dateRange={dateRange} currentView={currentView} />}
         </div>
     );
 }

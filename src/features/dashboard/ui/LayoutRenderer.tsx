@@ -48,18 +48,15 @@ const ViewContent = ({
     taskService: TaskService;
     onDataLoaded: (items: Item[]) => void; // [新增]
 }) => {
-    const allDataSources = useStore(state => state.settings.dataSources);
-    const dataSource = allDataSources.find(ds => ds.id === viewInstance.dataSourceId);
-
     const viewItems = useViewData({
         dataStore,
-        dataSource,
+        viewInstance,
         dateRange,
         keyword,
         layoutView,
         isOverviewMode: !!isOverviewMode,
         useFieldGranularity,
-        selectedThemes, // [新增]
+        selectedThemes,
     });
 
     // [新增] 使用 useEffect 将数据传递给父组件
@@ -68,9 +65,6 @@ const ViewContent = ({
             onDataLoaded(viewItems);
         }
     }, [viewItems, onDataLoaded]);
-
-
-    if (!dataSource) return <div>数据源 (ID: {viewInstance.dataSourceId}) 未找到</div>;
 
     const ViewComponent = (ViewComponents as any)[viewInstance.viewType];
     if (!ViewComponent) return <div>未知视图: {viewInstance.viewType}</div>;
