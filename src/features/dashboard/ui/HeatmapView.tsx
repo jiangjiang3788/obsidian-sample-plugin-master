@@ -102,8 +102,13 @@ function HeatmapCell({ date, item, count, config, ratingMapping, app, onCellClic
 
 // ========== Main View Component ==========
 export function HeatmapView({ items, app, dateRange, module, currentView }: HeatmapViewProps) {
-    const config = { ...DEFAULT_CONFIG, ...module.viewConfig };
     const settings = useStore(state => state.settings);
+    
+    // [修复] 将 config 对象移入 useMemo，确保响应式更新
+    const config = useMemo(
+        () => ({ ...DEFAULT_CONFIG, ...module.viewConfig }), 
+        [module.viewConfig]
+    );
     
     const themesByPath = useMemo(() => {
         const map = new Map<string, ThemeDefinition>();
@@ -111,7 +116,11 @@ export function HeatmapView({ items, app, dateRange, module, currentView }: Heat
         return map;
     }, [settings.inputSettings.themes]);
 
-    const ratingMappingsCache = useMemo(() => new Map<string, Map<string, string>>(), []);
+    // [修复] 添加正确的依赖项，当配置变化时清空缓存
+    const ratingMappingsCache = useMemo(
+        () => new Map<string, Map<string, string>>(), 
+        [settings.inputSettings.themes, settings.inputSettings.blocks, settings.inputSettings.overrides]
+    );
 
     const getMappingForItem = (item?: Item): Map<string, string> => {
         const blockId = config.sourceBlockId;
@@ -143,6 +152,8 @@ export function HeatmapView({ items, app, dateRange, module, currentView }: Heat
             ? config.themePaths 
             : ['__default__'];
         
+        console.log('🔍 [HeatmapView] 配置的主题列表:', themesToTrack);
+        
         themesToTrack.forEach(theme => themeMap.set(theme, new Map()));
 
         if (config.displayMode === 'count') {
@@ -157,18 +168,30 @@ export function HeatmapView({ items, app, dateRange, module, currentView }: Heat
             items.forEach(item => {
                 if (!item.date) return;
                 
+                console.log(`📝 处理 item: date=${item.date}, theme="${item.theme}", content="${item.content?.substring(0, 20)}"`);
+                
                 // 如果配置了多个主题路径，检查item的theme是否匹配
                 if (themesToTrack.length > 1 && themesToTrack[0] !== '__default__') {
                     // item.theme 必须在配置的主题列表中
                     if (item.theme && themesToTrack.includes(item.theme)) {
+                        console.log(`  ✅ 添加到主题 "${item.theme}"`);
                         themeMap.get(item.theme)?.set(item.date, item);
+                    } else {
+                        console.log(`  ❌ 跳过: theme="${item.theme}" 不在配置列表中`);
                     }
                 } else {
                     // 默认模式：所有item归入__default__
+                    console.log(`  ✅ 添加到 __default__`);
                     themeMap.get('__default__')?.set(item.date, item);
                 }
             });
         }
+        
+        console.log('📊 [HeatmapView] 分组结果:');
+        themeMap.forEach((dateMap, themePath) => {
+            console.log(`  主题 "${themePath}": ${dateMap.size} 条记录`);
+        });
+        
         return themeMap;
     }, [items, config.displayMode, config.themePaths]);
 
@@ -197,6 +220,27 @@ export function HeatmapView({ items, app, dateRange, module, currentView }: Heat
         const startOfMonth = monthDate.startOf('month');
         const endOfMonth = monthDate.endOf('month');
         const firstWeekday = startOfMonth.isoWeekday();
+        // [修复] 使用 themePath 作为 cacheKey 的一部分，而不是 themeId
+        // 这样即使 theme 定义缺失，每个 themePath 也有独立的映射
+        const themeId = themePath !== '__default__' ? themesByPath.get(themePath)?.id : undefined;
+        const cacheKey = `${config.sourceBlockId}:${themePath}`;
+        
+        console.log(`🎨 [renderMonthGrid] 渲染主题行 "${themePath}"`);
+        console.log(`  themeId=${themeId}, cacheKey=${cacheKey}`);
+        console.log(`  该主题数据条数: ${dataForMonth.size}`);
+        
+        const themRatingMapping = ratingMappingsCache.get(cacheKey) || (() => {
+            console.log(`  ⚠️ 缓存未命中，创建新映射`);
+            const effectiveTemplate = getEffectiveTemplate(settings.inputSettings, config.sourceBlockId || '', themeId);
+            const ratingField = effectiveTemplate?.fields.find(f => f.type === 'rating');
+            const newMapping = new Map<string, string>(
+                ratingField?.options?.map(opt => [opt.label || '', opt.value]) || []
+            );
+            console.log(`  映射内容:`, Array.from(newMapping.entries()));
+            ratingMappingsCache.set(cacheKey, newMapping);
+            return newMapping;
+        })();
+        
         const days = [];
         for (let i = 1; i < firstWeekday; i++) { days.push(<div class="heatmap-cell empty"></div>); }
         for (let i = 1; i <= endOfMonth.date(); i++) {
@@ -208,7 +252,7 @@ export function HeatmapView({ items, app, dateRange, module, currentView }: Heat
                     date={dateStr} 
                     item={item} 
                     config={config} 
-                    ratingMapping={getMappingForItem(item)} 
+                    ratingMapping={themRatingMapping} 
                     app={app} 
                     onCellClick={(date, item) => handleCellClick(date, item, themePath)}
                 />
@@ -218,6 +262,27 @@ export function HeatmapView({ items, app, dateRange, module, currentView }: Heat
     };
 
     const renderSingleRow = (startDate: dayjs.Dayjs, endDate: dayjs.Dayjs, dataForRow: Map<string, any>, themePath: string) => {
+        // [修复] 使用 themePath 作为 cacheKey 的一部分，而不是 themeId
+        // 这样即使 theme 定义缺失，每个 themePath 也有独立的映射
+        const themeId = themePath !== '__default__' ? themesByPath.get(themePath)?.id : undefined;
+        const cacheKey = `${config.sourceBlockId}:${themePath}`;
+        
+        console.log(`🎨 [renderSingleRow] 渲染主题行 "${themePath}"`);
+        console.log(`  themeId=${themeId}, cacheKey=${cacheKey}`);
+        console.log(`  该主题数据条数: ${dataForRow.size}`);
+        
+        const themeRatingMapping = ratingMappingsCache.get(cacheKey) || (() => {
+            console.log(`  ⚠️ 缓存未命中，创建新映射`);
+            const effectiveTemplate = getEffectiveTemplate(settings.inputSettings, config.sourceBlockId || '', themeId);
+            const ratingField = effectiveTemplate?.fields.find(f => f.type === 'rating');
+            const newMapping = new Map<string, string>(
+                ratingField?.options?.map(opt => [opt.label || '', opt.value]) || []
+            );
+            console.log(`  映射内容:`, Array.from(newMapping.entries()));
+            ratingMappingsCache.set(cacheKey, newMapping);
+            return newMapping;
+        })();
+        
         const days = [];
         let currentDate = startDate.clone();
         while(currentDate.isSameOrBefore(endDate, 'day')) {
@@ -230,7 +295,7 @@ export function HeatmapView({ items, app, dateRange, module, currentView }: Heat
                     item={config.displayMode === 'habit' ? item : undefined}
                     count={config.displayMode === 'count' ? item : undefined}
                     config={config} 
-                    ratingMapping={getMappingForItem(item)} 
+                    ratingMapping={themeRatingMapping} 
                     app={app} 
                     onCellClick={(date, item) => handleCellClick(date, item, themePath)}
                 />
@@ -243,12 +308,15 @@ export function HeatmapView({ items, app, dateRange, module, currentView }: Heat
     const renderContent = () => {
         const start = dayjs(dateRange[0]);
         const end = dayjs(dateRange[1]);
-        const themes = Array.from(dataByThemeAndDate.keys());
+        // [修复] 使用 config.themePaths 的顺序而不是 Map.keys() 的顺序，确保主题行顺序稳定
+        const themesToDisplay = config.displayMode === 'habit' && config.themePaths && config.themePaths.length > 0 
+            ? config.themePaths 
+            : ['__default__'];
         const isRowLayout = ['天', '周', '月'].includes(currentView);
 
         return (
             <div class={`heatmap-view-wrapper ${isRowLayout ? 'layout-row' : 'layout-grid'}`}>
-                {themes.map(theme => (
+                {themesToDisplay.map(theme => (
                     <div class="heatmap-theme-group" key={theme}>
                         {theme !== '__default__' && <div class="heatmap-theme-label">{theme}</div>}
                         <div class="heatmap-theme-content">

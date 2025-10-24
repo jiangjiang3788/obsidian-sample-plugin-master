@@ -17,258 +17,6 @@
       "name": "📂全局",
       "parentId": null,
       "type": "layout"
-    },
-    {
-      "id": "group_mepgtz1okfmfo",
-      "name": "思考总结",
-      "parentId": "group_mer2v7dzwuyb0",
-      "type": "dataSource"
-    },
-    {
-      "id": "group_mer2ooqzcy2vz",
-      "name": "生活总结",
-      "parentId": "group_mer2v7dzwuyb0",
-      "type": "dataSource"
-    },
-    {
-      "id": "group_mer2r9nn2gkx5",
-      "name": "健康总结",
-      "parentId": "group_mer2v7dzwuyb0",
-      "type": "dataSource"
-    },
-    {
-      "id": "group_mer2v7dzwuyb0",
-      "name": "总结",
-      "parentId": "group_mg3d1275d704w",
-      "type": "dataSource"
-    },
-    {
-      "id": "group_mer2wj4v6vbmv",
-      "name": "电脑总结",
-      "parentId": "group_mer2v7dzwuyb0",
-      "type": "dataSource"
-    },
-    {
-      "id": "group_mer2wkh2hfu3t",
-      "name": "工作总结",
-      "parentId": "group_mer2v7dzwuyb0",
-      "type": "dataSource"
-    },
-    {
-      "id": "group_mer53hxzlkqcl",
-      "name": "计划",
-      "parentId": "group_mg3d1275d704w",
-      "type": "dataSource"
-    },
-    {
-      "id": "group_mer53hxzk1xpz",
-      "name": "思考计划",
-      "parentId": "group_mer53hxzlkqcl",
-      "type": "dataSource"
-    },
-    {
-      "id": "group_mer53hxz8ywpq",
-      "name": "生活计划",
-      "parentId": "group_mer53hxzlkqcl",
-      "type": "dataSource"
-    },
-    {
-      "id": "group_mer53hxzejm0s",
-      "name": "健康计划",
-      "parentId": "group_mer53hxzlkqcl",
-      "type": "dataSource"
-    },
-    {
-      "id": "group_mer53hxzp9l4g",
-      "name": "电脑计划",
-      "parentId": "group_mer53hxzlkqcl",
-      "type": "dataSource"
-    },
-    {
-      "id": "group_mer53hxzs9hkh",
-      "name": "工作计划",
-      "parentId": "group_mer53hxzlkqcl",
-      "type": "dataSource"
-    },
-    {
-      "id": "group_mer5oj3wueept",
-      "name": "📂思考总结",
-      "parentId": "group_mer5qz4odo1fi",
-      "type": "viewInstance"
-    },
-    {
-      "id": "group_mer5qc61xm7ni",
-      "name": "📂生活总结",
-      "parentId": "group_mer5qz4odo1fi",
-      "type": "viewInstance"
-    },
-    {
-      "id": "group_mer5qdss3nlkm",
-      "name": "📂健康总结",
-      "parentId": "group_mer5qz4odo1fi",
-      "type": "viewInstance"
-    },
-    {
-      "id": "group_mer5qenajiet0",
-      "name": "📂电脑总结",
-      "parentId": "group_mer5qz4odo1fi",
-      "type": "viewInstance"
-    },
-    {
-      "id": "group_mer5qlrm519f9",
-      "name": "📂工作总结",
-      "parentId": "group_mer5qz4odo1fi",
-      "type": "viewInstance"
-    },
-    {
-      "id": "group_mer5qz4odo1fi",
-      "name": "📂总结视图",
-      "parentId": "group_mg3dd4fl661b3",
-      "type": "viewInstance"
-    },
-    {
-      "id": "group_mer60bnntsb03",
-      "name": "📂计划视图",
-      "parentId": "group_mg3dd4fl661b3",
-      "type": "viewInstance"
-    },
-    {
-      "id": "group_mer60bnnssk89",
-      "name": "📂思考计划",
-      "parentId": "group_mer60bnntsb03",
-      "type": "viewInstance"
-    },
-    {
-      "id": "group_mer60bnoootcl",
-      "name": "📂生活计划",
-      "parentId": "group_mer60bnntsb03",
-      "type": "viewInstance"
-    },
-    {
-      "id": "group_mer60bno0hsk0",
-      "name": "📂健康计划",
-      "parentId": "group_mer60bnntsb03",
-      "type": "viewInstance"
-    },
-    {
-      "id": "group_mer60bnort9rv",
-      "name": "📂电脑计划",
-      "parentId": "group_mer60bnntsb03",
-      "type": "viewInstance"
-    },
-    {
-      "id": "group_mer60bnom4ztr",
-      "name": "📂工作计划",
-      "parentId": "group_mer60bnntsb03",
-      "type": "viewInstance"
-    },
-    {
-      "id": "group_mg1nbai2etnf7",
-      "name": "📂思考",
-      "parentId": "group_mg3dd4fl661b3",
-      "type": "viewInstance"
-    },
-    {
-      "id": "group_mg34xqenwy09x",
-      "name": "思考",
-      "parentId": "group_mg3d1275d704w",
-      "type": "dataSource"
-    },
-    {
-      "id": "group_mg3d069es81n9",
-      "name": "📂思考主题",
-      "parentId": "group_mg3dl1op6vkdy",
-      "type": "dataSource"
-    },
-    {
-      "id": "group_mg3d1275d704w",
-      "name": "📂周期",
-      "parentId": null,
-      "type": "dataSource"
-    },
-    {
-      "id": "group_mg3dd4fl661b3",
-      "name": "📂周期",
-      "parentId": null,
-      "type": "viewInstance"
-    },
-    {
-      "id": "group_mg3dh5ob6qoum",
-      "name": "📂周期",
-      "parentId": null,
-      "type": "layout"
-    },
-    {
-      "id": "group_mg3dj3u9faw2x",
-      "name": "📂主题",
-      "parentId": null,
-      "type": "layout"
-    },
-    {
-      "id": "group_mg3dl1op6vkdy",
-      "name": "📂主题",
-      "parentId": null,
-      "type": "dataSource"
-    },
-    {
-      "id": "group_mg3dm9jdytrs0",
-      "name": "📂主题",
-      "parentId": null,
-      "type": "viewInstance"
-    },
-    {
-      "id": "group_mg3dmyfcbmuw6",
-      "name": "📂思考主题",
-      "parentId": "group_mg3dm9jdytrs0",
-      "type": "viewInstance"
-    },
-    {
-      "id": "group_mg3eehnrrhjyv",
-      "name": "📂生活主题",
-      "parentId": "group_mg3dl1op6vkdy",
-      "type": "dataSource"
-    },
-    {
-      "id": "group_mg3eeizzmgy7n",
-      "name": "📂健康主题",
-      "parentId": "group_mg3dl1op6vkdy",
-      "type": "dataSource"
-    },
-    {
-      "id": "group_mg3eejtref8j1",
-      "name": "📂电脑主题",
-      "parentId": "group_mg3dl1op6vkdy",
-      "type": "dataSource"
-    },
-    {
-      "id": "group_mg3eeken77x2x",
-      "name": "📂工作主题",
-      "parentId": "group_mg3dl1op6vkdy",
-      "type": "dataSource"
-    },
-    {
-      "id": "group_mg3efhaom4lqn",
-      "name": "📂生活主题",
-      "parentId": "group_mg3dm9jdytrs0",
-      "type": "viewInstance"
-    },
-    {
-      "id": "group_mg3efi3lkg468",
-      "name": "📂健康主题",
-      "parentId": "group_mg3dm9jdytrs0",
-      "type": "viewInstance"
-    },
-    {
-      "id": "group_mg3efivkfe06c",
-      "name": "📂电脑主题",
-      "parentId": "group_mg3dm9jdytrs0",
-      "type": "viewInstance"
-    },
-    {
-      "id": "group_mg3efjhr0b1xi",
-      "name": "📂工作主题",
-      "parentId": "group_mg3dm9jdytrs0",
-      "type": "viewInstance"
     }
   ],
   "dataSources": [
@@ -337,1597 +85,6 @@
         }
       ],
       "parentId": "group_mem9c0yqeumgu"
-    },
-    {
-      "id": "ds_mepgu823uydpz",
-      "name": "1️⃣思考总结",
-      "filters": [
-        {
-          "field": "categoryKey",
-          "op": "=",
-          "value": "总结"
-        },
-        {
-          "field": "period",
-          "op": "=",
-          "value": "周"
-        },
-        {
-          "field": "tags",
-          "op": "includes",
-          "value": "思考"
-        }
-      ],
-      "sort": [
-        {
-          "field": "periodCount",
-          "dir": "asc"
-        }
-      ],
-      "parentId": "group_mepgtz1okfmfo"
-    },
-    {
-      "id": "ds_mepo8pkir629r",
-      "name": "2️⃣思考总结",
-      "filters": [
-        {
-          "field": "categoryKey",
-          "op": "=",
-          "value": "总结"
-        },
-        {
-          "field": "tags",
-          "op": "includes",
-          "value": "思考"
-        },
-        {
-          "field": "period",
-          "op": "=",
-          "value": "月"
-        }
-      ],
-      "sort": [
-        {
-          "field": "periodCount",
-          "dir": "asc"
-        }
-      ],
-      "parentId": "group_mepgtz1okfmfo"
-    },
-    {
-      "id": "ds_mepo8ov7p2sup",
-      "name": "3️⃣思考总结 ",
-      "filters": [
-        {
-          "field": "categoryKey",
-          "op": "=",
-          "value": "总结"
-        },
-        {
-          "field": "tags",
-          "op": "includes",
-          "value": "思考"
-        },
-        {
-          "field": "period",
-          "op": "=",
-          "value": "季"
-        }
-      ],
-      "sort": [
-        {
-          "field": "periodCount",
-          "dir": "asc"
-        }
-      ],
-      "parentId": "group_mepgtz1okfmfo"
-    },
-    {
-      "id": "ds_mepo8nxuzsrst",
-      "name": "4️⃣思考总结 ",
-      "filters": [
-        {
-          "field": "categoryKey",
-          "op": "=",
-          "value": "总结"
-        },
-        {
-          "field": "tags",
-          "op": "includes",
-          "value": "思考"
-        },
-        {
-          "field": "period",
-          "op": "=",
-          "value": "年"
-        }
-      ],
-      "sort": [
-        {
-          "field": "periodCount",
-          "dir": "asc"
-        }
-      ],
-      "parentId": "group_mepgtz1okfmfo"
-    },
-    {
-      "id": "ds_meqt2x9ecim6c",
-      "name": "不筛选数据",
-      "filters": [],
-      "sort": [],
-      "parentId": null
-    },
-    {
-      "id": "ds_mer2ooqzzdgam",
-      "name": "1️⃣生活总结",
-      "filters": [
-        {
-          "field": "categoryKey",
-          "op": "=",
-          "value": "总结"
-        },
-        {
-          "field": "period",
-          "op": "=",
-          "value": "周"
-        },
-        {
-          "field": "tags",
-          "op": "includes",
-          "value": "生活"
-        }
-      ],
-      "sort": [
-        {
-          "field": "periodCount",
-          "dir": "asc"
-        }
-      ],
-      "parentId": "group_mer2ooqzcy2vz"
-    },
-    {
-      "id": "ds_mer2ooqzombzz",
-      "name": "2️⃣生活总结",
-      "filters": [
-        {
-          "field": "categoryKey",
-          "op": "=",
-          "value": "总结"
-        },
-        {
-          "field": "period",
-          "op": "=",
-          "value": "月"
-        },
-        {
-          "field": "tags",
-          "op": "includes",
-          "value": "生活"
-        }
-      ],
-      "sort": [
-        {
-          "field": "periodCount",
-          "dir": "asc"
-        }
-      ],
-      "parentId": "group_mer2ooqzcy2vz"
-    },
-    {
-      "id": "ds_mer2ooqz9017g",
-      "name": "3️⃣生活总结 ",
-      "filters": [
-        {
-          "field": "categoryKey",
-          "op": "=",
-          "value": "总结"
-        },
-        {
-          "field": "period",
-          "op": "=",
-          "value": "季"
-        },
-        {
-          "field": "tags",
-          "op": "includes",
-          "value": "生活"
-        }
-      ],
-      "sort": [
-        {
-          "field": "periodCount",
-          "dir": "asc"
-        }
-      ],
-      "parentId": "group_mer2ooqzcy2vz"
-    },
-    {
-      "id": "ds_mer2ooqz14p1v",
-      "name": "4️⃣生活总结 ",
-      "filters": [
-        {
-          "field": "categoryKey",
-          "op": "=",
-          "value": "总结"
-        },
-        {
-          "field": "period",
-          "op": "=",
-          "value": "年"
-        },
-        {
-          "field": "tags",
-          "op": "includes",
-          "value": "生活"
-        }
-      ],
-      "sort": [
-        {
-          "field": "periodCount",
-          "dir": "asc"
-        }
-      ],
-      "parentId": "group_mer2ooqzcy2vz"
-    },
-    {
-      "id": "ds_mer2r9nnu5a4q",
-      "name": "1️⃣健康总结",
-      "filters": [
-        {
-          "field": "categoryKey",
-          "op": "=",
-          "value": "总结"
-        },
-        {
-          "field": "period",
-          "op": "=",
-          "value": "周"
-        },
-        {
-          "field": "tags",
-          "op": "includes",
-          "value": "健康"
-        }
-      ],
-      "sort": [
-        {
-          "field": "periodCount",
-          "dir": "asc"
-        }
-      ],
-      "parentId": "group_mer2r9nn2gkx5"
-    },
-    {
-      "id": "ds_mer2r9nno8qkz",
-      "name": "2️⃣健康总结",
-      "filters": [
-        {
-          "field": "categoryKey",
-          "op": "=",
-          "value": "总结"
-        },
-        {
-          "field": "period",
-          "op": "=",
-          "value": "月"
-        },
-        {
-          "field": "tags",
-          "op": "includes",
-          "value": "健康"
-        }
-      ],
-      "sort": [
-        {
-          "field": "periodCount",
-          "dir": "asc"
-        }
-      ],
-      "parentId": "group_mer2r9nn2gkx5"
-    },
-    {
-      "id": "ds_mer2r9nnqh2rw",
-      "name": "3️⃣健康总结 ",
-      "filters": [
-        {
-          "field": "categoryKey",
-          "op": "=",
-          "value": "总结"
-        },
-        {
-          "field": "period",
-          "op": "=",
-          "value": "季"
-        },
-        {
-          "field": "tags",
-          "op": "includes",
-          "value": "健康"
-        }
-      ],
-      "sort": [
-        {
-          "field": "periodCount",
-          "dir": "asc"
-        }
-      ],
-      "parentId": "group_mer2r9nn2gkx5"
-    },
-    {
-      "id": "ds_mer2r9nn3mimd",
-      "name": "4️⃣健康总结 ",
-      "filters": [
-        {
-          "field": "categoryKey",
-          "op": "=",
-          "value": "总结"
-        },
-        {
-          "field": "period",
-          "op": "=",
-          "value": "年"
-        },
-        {
-          "field": "tags",
-          "op": "includes",
-          "value": "健康"
-        }
-      ],
-      "sort": [
-        {
-          "field": "periodCount",
-          "dir": "asc"
-        }
-      ],
-      "parentId": "group_mer2r9nn2gkx5"
-    },
-    {
-      "id": "ds_mer2wj4v1yhol",
-      "name": "1️⃣电脑总结",
-      "filters": [
-        {
-          "field": "categoryKey",
-          "op": "=",
-          "value": "总结"
-        },
-        {
-          "field": "period",
-          "op": "=",
-          "value": "周"
-        },
-        {
-          "field": "tags",
-          "op": "includes",
-          "value": "电脑"
-        }
-      ],
-      "sort": [
-        {
-          "field": "periodCount",
-          "dir": "asc"
-        }
-      ],
-      "parentId": "group_mer2wj4v6vbmv"
-    },
-    {
-      "id": "ds_mer2wj4v61q9o",
-      "name": "2️⃣电脑总结",
-      "filters": [
-        {
-          "field": "categoryKey",
-          "op": "=",
-          "value": "总结"
-        },
-        {
-          "field": "period",
-          "op": "=",
-          "value": "月"
-        },
-        {
-          "field": "tags",
-          "op": "includes",
-          "value": "电脑"
-        }
-      ],
-      "sort": [
-        {
-          "field": "periodCount",
-          "dir": "asc"
-        }
-      ],
-      "parentId": "group_mer2wj4v6vbmv"
-    },
-    {
-      "id": "ds_mer2wj4v93yfe",
-      "name": "3️⃣电脑总结 ",
-      "filters": [
-        {
-          "field": "categoryKey",
-          "op": "=",
-          "value": "总结"
-        },
-        {
-          "field": "period",
-          "op": "=",
-          "value": "季"
-        },
-        {
-          "field": "tags",
-          "op": "includes",
-          "value": "电脑"
-        }
-      ],
-      "sort": [
-        {
-          "field": "periodCount",
-          "dir": "asc"
-        }
-      ],
-      "parentId": "group_mer2wj4v6vbmv"
-    },
-    {
-      "id": "ds_mer2wj4vq3tjx",
-      "name": "4️⃣电脑总结 ",
-      "filters": [
-        {
-          "field": "categoryKey",
-          "op": "=",
-          "value": "总结"
-        },
-        {
-          "field": "period",
-          "op": "=",
-          "value": "年"
-        },
-        {
-          "field": "tags",
-          "op": "includes",
-          "value": "电脑"
-        }
-      ],
-      "sort": [
-        {
-          "field": "periodCount",
-          "dir": "asc"
-        }
-      ],
-      "parentId": "group_mer2wj4v6vbmv"
-    },
-    {
-      "id": "ds_mer2wkh265u5u",
-      "name": "1️⃣工作总结",
-      "filters": [
-        {
-          "field": "categoryKey",
-          "op": "=",
-          "value": "总结"
-        },
-        {
-          "field": "period",
-          "op": "=",
-          "value": "周"
-        },
-        {
-          "field": "tags",
-          "op": "includes",
-          "value": "工作"
-        }
-      ],
-      "sort": [
-        {
-          "field": "periodCount",
-          "dir": "asc"
-        }
-      ],
-      "parentId": "group_mer2wkh2hfu3t"
-    },
-    {
-      "id": "ds_mer2wkh289gh3",
-      "name": "2️⃣工作总结",
-      "filters": [
-        {
-          "field": "categoryKey",
-          "op": "=",
-          "value": "总结"
-        },
-        {
-          "field": "period",
-          "op": "=",
-          "value": "月"
-        },
-        {
-          "field": "tags",
-          "op": "includes",
-          "value": "工作"
-        }
-      ],
-      "sort": [
-        {
-          "field": "periodCount",
-          "dir": "asc"
-        }
-      ],
-      "parentId": "group_mer2wkh2hfu3t"
-    },
-    {
-      "id": "ds_mer2wkh23qp7i",
-      "name": "3️⃣工作总结 ",
-      "filters": [
-        {
-          "field": "categoryKey",
-          "op": "=",
-          "value": "总结"
-        },
-        {
-          "field": "period",
-          "op": "=",
-          "value": "季"
-        },
-        {
-          "field": "tags",
-          "op": "includes",
-          "value": "工作"
-        }
-      ],
-      "sort": [
-        {
-          "field": "periodCount",
-          "dir": "asc"
-        }
-      ],
-      "parentId": "group_mer2wkh2hfu3t"
-    },
-    {
-      "id": "ds_mer2wkh2ljiw5",
-      "name": "4️⃣工作总结 ",
-      "filters": [
-        {
-          "field": "categoryKey",
-          "op": "=",
-          "value": "总结"
-        },
-        {
-          "field": "period",
-          "op": "=",
-          "value": "年"
-        },
-        {
-          "field": "tags",
-          "op": "includes",
-          "value": "工作"
-        }
-      ],
-      "sort": [
-        {
-          "field": "periodCount",
-          "dir": "asc"
-        }
-      ],
-      "parentId": "group_mer2wkh2hfu3t"
-    },
-    {
-      "id": "ds_mer53hxz55fva",
-      "name": "1️⃣思考计划",
-      "filters": [
-        {
-          "field": "period",
-          "op": "=",
-          "value": "周"
-        },
-        {
-          "field": "tags",
-          "op": "includes",
-          "value": "思考"
-        },
-        {
-          "field": "categoryKey",
-          "op": "=",
-          "value": "计划"
-        }
-      ],
-      "sort": [
-        {
-          "field": "periodCount",
-          "dir": "asc"
-        }
-      ],
-      "parentId": "group_mer53hxzk1xpz"
-    },
-    {
-      "id": "ds_mer53hxzn8vwi",
-      "name": "2️⃣思考计划",
-      "filters": [
-        {
-          "field": "tags",
-          "op": "includes",
-          "value": "思考"
-        },
-        {
-          "field": "period",
-          "op": "=",
-          "value": "月"
-        },
-        {
-          "field": "categoryKey",
-          "op": "=",
-          "value": "计划"
-        }
-      ],
-      "sort": [
-        {
-          "field": "periodCount",
-          "dir": "asc"
-        }
-      ],
-      "parentId": "group_mer53hxzk1xpz"
-    },
-    {
-      "id": "ds_mer53hxz61jj4",
-      "name": "3️⃣思考计划",
-      "filters": [
-        {
-          "field": "tags",
-          "op": "includes",
-          "value": "思考"
-        },
-        {
-          "field": "period",
-          "op": "=",
-          "value": "季"
-        },
-        {
-          "field": "categoryKey",
-          "op": "=",
-          "value": "计划"
-        }
-      ],
-      "sort": [
-        {
-          "field": "periodCount",
-          "dir": "asc"
-        }
-      ],
-      "parentId": "group_mer53hxzk1xpz"
-    },
-    {
-      "id": "ds_mer53hxzk0ni0",
-      "name": "4️⃣思考计划",
-      "filters": [
-        {
-          "field": "tags",
-          "op": "includes",
-          "value": "思考"
-        },
-        {
-          "field": "period",
-          "op": "=",
-          "value": "年"
-        },
-        {
-          "field": "categoryKey",
-          "op": "=",
-          "value": "计划"
-        }
-      ],
-      "sort": [
-        {
-          "field": "periodCount",
-          "dir": "asc"
-        }
-      ],
-      "parentId": "group_mer53hxzk1xpz"
-    },
-    {
-      "id": "ds_mer53hxzcbokq",
-      "name": "1️⃣生活计划",
-      "filters": [
-        {
-          "field": "period",
-          "op": "=",
-          "value": "周"
-        },
-        {
-          "field": "tags",
-          "op": "includes",
-          "value": "生活"
-        },
-        {
-          "field": "categoryKey",
-          "op": "=",
-          "value": "计划"
-        }
-      ],
-      "sort": [
-        {
-          "field": "periodCount",
-          "dir": "asc"
-        }
-      ],
-      "parentId": "group_mer53hxz8ywpq"
-    },
-    {
-      "id": "ds_mer53hxzo1ft6",
-      "name": "2️⃣生活计划",
-      "filters": [
-        {
-          "field": "period",
-          "op": "=",
-          "value": "月"
-        },
-        {
-          "field": "tags",
-          "op": "includes",
-          "value": "生活"
-        },
-        {
-          "field": "categoryKey",
-          "op": "=",
-          "value": "计划"
-        }
-      ],
-      "sort": [
-        {
-          "field": "periodCount",
-          "dir": "asc"
-        }
-      ],
-      "parentId": "group_mer53hxz8ywpq"
-    },
-    {
-      "id": "ds_mer53hxz8hqi9",
-      "name": "3️⃣生活计划",
-      "filters": [
-        {
-          "field": "period",
-          "op": "=",
-          "value": "季"
-        },
-        {
-          "field": "tags",
-          "op": "includes",
-          "value": "生活"
-        },
-        {
-          "field": "categoryKey",
-          "op": "=",
-          "value": "计划"
-        }
-      ],
-      "sort": [
-        {
-          "field": "periodCount",
-          "dir": "asc"
-        }
-      ],
-      "parentId": "group_mer53hxz8ywpq"
-    },
-    {
-      "id": "ds_mer53hxzci0o5",
-      "name": "4️⃣生活计划",
-      "filters": [
-        {
-          "field": "period",
-          "op": "=",
-          "value": "年"
-        },
-        {
-          "field": "tags",
-          "op": "includes",
-          "value": "生活"
-        },
-        {
-          "field": "categoryKey",
-          "op": "=",
-          "value": "计划"
-        }
-      ],
-      "sort": [
-        {
-          "field": "periodCount",
-          "dir": "asc"
-        }
-      ],
-      "parentId": "group_mer53hxz8ywpq"
-    },
-    {
-      "id": "ds_mer53hxzowvgh",
-      "name": "1️⃣健康计划",
-      "filters": [
-        {
-          "field": "period",
-          "op": "=",
-          "value": "周"
-        },
-        {
-          "field": "tags",
-          "op": "includes",
-          "value": "健康"
-        },
-        {
-          "field": "categoryKey",
-          "op": "=",
-          "value": "计划"
-        }
-      ],
-      "sort": [
-        {
-          "field": "periodCount",
-          "dir": "asc"
-        }
-      ],
-      "parentId": "group_mer53hxzejm0s"
-    },
-    {
-      "id": "ds_mer53hxzpc2mv",
-      "name": "2️⃣健康计划",
-      "filters": [
-        {
-          "field": "period",
-          "op": "=",
-          "value": "月"
-        },
-        {
-          "field": "tags",
-          "op": "includes",
-          "value": "健康"
-        },
-        {
-          "field": "categoryKey",
-          "op": "=",
-          "value": "计划"
-        }
-      ],
-      "sort": [
-        {
-          "field": "periodCount",
-          "dir": "asc"
-        }
-      ],
-      "parentId": "group_mer53hxzejm0s"
-    },
-    {
-      "id": "ds_mer53hxzxkv8m",
-      "name": "3️⃣健康计划",
-      "filters": [
-        {
-          "field": "period",
-          "op": "=",
-          "value": "季"
-        },
-        {
-          "field": "tags",
-          "op": "includes",
-          "value": "健康"
-        },
-        {
-          "field": "categoryKey",
-          "op": "=",
-          "value": "计划"
-        }
-      ],
-      "sort": [
-        {
-          "field": "periodCount",
-          "dir": "asc"
-        }
-      ],
-      "parentId": "group_mer53hxzejm0s"
-    },
-    {
-      "id": "ds_mer53hxz648xm",
-      "name": "4️⃣健康计划",
-      "filters": [
-        {
-          "field": "period",
-          "op": "=",
-          "value": "年"
-        },
-        {
-          "field": "tags",
-          "op": "includes",
-          "value": "健康"
-        },
-        {
-          "field": "categoryKey",
-          "op": "=",
-          "value": "计划"
-        }
-      ],
-      "sort": [
-        {
-          "field": "periodCount",
-          "dir": "asc"
-        }
-      ],
-      "parentId": "group_mer53hxzejm0s"
-    },
-    {
-      "id": "ds_mer53hxzzbifa",
-      "name": "1️⃣电脑计划",
-      "filters": [
-        {
-          "field": "period",
-          "op": "=",
-          "value": "周"
-        },
-        {
-          "field": "tags",
-          "op": "includes",
-          "value": "电脑"
-        },
-        {
-          "field": "categoryKey",
-          "op": "=",
-          "value": "计划"
-        }
-      ],
-      "sort": [
-        {
-          "field": "periodCount",
-          "dir": "asc"
-        }
-      ],
-      "parentId": "group_mer53hxzp9l4g"
-    },
-    {
-      "id": "ds_mer53hxzset0r",
-      "name": "2️⃣电脑计划",
-      "filters": [
-        {
-          "field": "period",
-          "op": "=",
-          "value": "月"
-        },
-        {
-          "field": "tags",
-          "op": "includes",
-          "value": "电脑"
-        },
-        {
-          "field": "categoryKey",
-          "op": "=",
-          "value": "计划"
-        }
-      ],
-      "sort": [
-        {
-          "field": "periodCount",
-          "dir": "asc"
-        }
-      ],
-      "parentId": "group_mer53hxzp9l4g"
-    },
-    {
-      "id": "ds_mer53hxzzalmt",
-      "name": "3️⃣电脑计划",
-      "filters": [
-        {
-          "field": "period",
-          "op": "=",
-          "value": "季"
-        },
-        {
-          "field": "tags",
-          "op": "includes",
-          "value": "电脑"
-        },
-        {
-          "field": "categoryKey",
-          "op": "=",
-          "value": "计划"
-        }
-      ],
-      "sort": [
-        {
-          "field": "periodCount",
-          "dir": "asc"
-        }
-      ],
-      "parentId": "group_mer53hxzp9l4g"
-    },
-    {
-      "id": "ds_mer53hxzulzpz",
-      "name": "4️⃣电脑计划",
-      "filters": [
-        {
-          "field": "period",
-          "op": "=",
-          "value": "年"
-        },
-        {
-          "field": "tags",
-          "op": "includes",
-          "value": "电脑"
-        },
-        {
-          "field": "categoryKey",
-          "op": "=",
-          "value": "计划"
-        }
-      ],
-      "sort": [
-        {
-          "field": "periodCount",
-          "dir": "asc"
-        }
-      ],
-      "parentId": "group_mer53hxzp9l4g"
-    },
-    {
-      "id": "ds_mer53hxzj7z87",
-      "name": "1️⃣工作计划",
-      "filters": [
-        {
-          "field": "period",
-          "op": "=",
-          "value": "周"
-        },
-        {
-          "field": "tags",
-          "op": "includes",
-          "value": "工作"
-        },
-        {
-          "field": "categoryKey",
-          "op": "=",
-          "value": "计划"
-        }
-      ],
-      "sort": [
-        {
-          "field": "periodCount",
-          "dir": "asc"
-        }
-      ],
-      "parentId": "group_mer53hxzs9hkh"
-    },
-    {
-      "id": "ds_mer53hxzh8pgc",
-      "name": "2️⃣工作计划",
-      "filters": [
-        {
-          "field": "period",
-          "op": "=",
-          "value": "月"
-        },
-        {
-          "field": "tags",
-          "op": "includes",
-          "value": "工作"
-        },
-        {
-          "field": "categoryKey",
-          "op": "=",
-          "value": "计划"
-        }
-      ],
-      "sort": [
-        {
-          "field": "periodCount",
-          "dir": "asc"
-        }
-      ],
-      "parentId": "group_mer53hxzs9hkh"
-    },
-    {
-      "id": "ds_mer53hxzp1h3k",
-      "name": "3️⃣工作计划",
-      "filters": [
-        {
-          "field": "period",
-          "op": "=",
-          "value": "季"
-        },
-        {
-          "field": "tags",
-          "op": "includes",
-          "value": "工作"
-        },
-        {
-          "field": "categoryKey",
-          "op": "=",
-          "value": "计划"
-        }
-      ],
-      "sort": [
-        {
-          "field": "periodCount",
-          "dir": "asc"
-        }
-      ],
-      "parentId": "group_mer53hxzs9hkh"
-    },
-    {
-      "id": "ds_mer53hxz1d5hz",
-      "name": "4️⃣工作计划",
-      "filters": [
-        {
-          "field": "period",
-          "op": "=",
-          "value": "年"
-        },
-        {
-          "field": "tags",
-          "op": "includes",
-          "value": "工作"
-        },
-        {
-          "field": "categoryKey",
-          "op": "=",
-          "value": "计划"
-        }
-      ],
-      "sort": [
-        {
-          "field": "periodCount",
-          "dir": "asc"
-        }
-      ],
-      "parentId": "group_mer53hxzs9hkh"
-    },
-    {
-      "id": "ds_mg1n2vezuzsha",
-      "name": "思考思考",
-      "filters": [
-        {
-          "field": "tags",
-          "op": "includes",
-          "value": "思考"
-        },
-        {
-          "field": "file.path",
-          "op": "=",
-          "value": "01/闪念.md"
-        }
-      ],
-      "sort": [
-        {
-          "field": "date",
-          "dir": "asc"
-        }
-      ],
-      "parentId": "group_mg34xqenwy09x"
-    },
-    {
-      "id": "ds_mg1n6g5gc6i3y",
-      "name": "生活思考",
-      "filters": [
-        {
-          "field": "tags",
-          "op": "includes",
-          "value": "生活"
-        },
-        {
-          "field": "file.path",
-          "op": "=",
-          "value": "01/闪念.md"
-        }
-      ],
-      "sort": [
-        {
-          "field": "date",
-          "dir": "asc"
-        }
-      ],
-      "parentId": "group_mg34xqenwy09x"
-    },
-    {
-      "id": "ds_mg1n813u5wxjn",
-      "name": "健康思考 ",
-      "filters": [
-        {
-          "field": "file.path",
-          "op": "=",
-          "value": "01/闪念.md"
-        },
-        {
-          "field": "tags",
-          "op": "includes",
-          "value": "健康"
-        }
-      ],
-      "sort": [
-        {
-          "field": "date",
-          "dir": "asc"
-        }
-      ],
-      "parentId": "group_mg34xqenwy09x"
-    },
-    {
-      "id": "ds_mg1n7z6ziqasr",
-      "name": "电脑思考",
-      "filters": [
-        {
-          "field": "tags",
-          "op": "includes",
-          "value": "电脑"
-        },
-        {
-          "field": "file.path",
-          "op": "=",
-          "value": "01/闪念.md"
-        }
-      ],
-      "sort": [
-        {
-          "field": "date",
-          "dir": "asc"
-        }
-      ],
-      "parentId": "group_mg34xqenwy09x"
-    },
-    {
-      "id": "ds_mg1n7y3fcs86o",
-      "name": "工作思考",
-      "filters": [
-        {
-          "field": "tags",
-          "op": "includes",
-          "value": "工作"
-        },
-        {
-          "field": "file.path",
-          "op": "=",
-          "value": "01/闪念.md"
-        }
-      ],
-      "sort": [
-        {
-          "field": "date",
-          "dir": "asc"
-        }
-      ],
-      "parentId": "group_mg34xqenwy09x"
-    },
-    {
-      "id": "ds_mg2336c01t615",
-      "name": "思考未完成任务",
-      "filters": [
-        {
-          "field": "categoryKey",
-          "op": "=",
-          "value": "任务/open"
-        },
-        {
-          "field": "file.path",
-          "op": "=",
-          "value": "01/2-4思考.md"
-        }
-      ],
-      "sort": [],
-      "parentId": "group_mg3d069es81n9"
-    },
-    {
-      "id": "ds_mg234zgoxblv5",
-      "name": "思考完成任务",
-      "filters": [
-        {
-          "field": "categoryKey",
-          "op": "=",
-          "value": "任务/done"
-        },
-        {
-          "field": "file.path",
-          "op": "=",
-          "value": "01/2-4思考.md"
-        }
-      ],
-      "sort": [],
-      "parentId": "group_mg3d069es81n9"
-    },
-    {
-      "id": "ds_mg23st3kp6cef",
-      "name": "思考三项",
-      "filters": [
-        {
-          "field": "tags",
-          "op": "includes",
-          "value": "思考"
-        },
-        {
-          "field": "type",
-          "op": "=",
-          "value": "block"
-        },
-        {
-          "field": "categoryKey",
-          "op": "!=",
-          "value": "打卡"
-        }
-      ],
-      "sort": [],
-      "parentId": "group_mg3d069es81n9"
-    },
-    {
-      "id": "ds_mg2438rllnmx9",
-      "name": "思考打卡",
-      "filters": [
-        {
-          "field": "categoryKey",
-          "op": "=",
-          "value": "打卡"
-        },
-        {
-          "field": "tags",
-          "op": "=",
-          "value": "思考/读书"
-        }
-      ],
-      "sort": [],
-      "parentId": "group_mg3d069es81n9"
-    },
-    {
-      "id": "ds_mg3eehnrs8zr5",
-      "name": "生活未完成任务",
-      "filters": [
-        {
-          "field": "categoryKey",
-          "op": "=",
-          "value": "任务/open"
-        },
-        {
-          "field": "file.path",
-          "op": "=",
-          "value": "01/2-3生活.md"
-        }
-      ],
-      "sort": [],
-      "parentId": "group_mg3eehnrrhjyv"
-    },
-    {
-      "id": "ds_mg3eehnr3vhyq",
-      "name": "生活完成任务",
-      "filters": [
-        {
-          "field": "categoryKey",
-          "op": "=",
-          "value": "任务/done"
-        },
-        {
-          "field": "file.path",
-          "op": "=",
-          "value": "01/2-3生活.md"
-        }
-      ],
-      "sort": [],
-      "parentId": "group_mg3eehnrrhjyv"
-    },
-    {
-      "id": "ds_mg3eehnrihbsy",
-      "name": "生活三项",
-      "filters": [
-        {
-          "field": "type",
-          "op": "=",
-          "value": "block"
-        },
-        {
-          "field": "categoryKey",
-          "op": "!=",
-          "value": "打卡"
-        },
-        {
-          "field": "tags",
-          "op": "includes",
-          "value": "生活"
-        }
-      ],
-      "sort": [],
-      "parentId": "group_mg3eehnrrhjyv"
-    },
-    {
-      "id": "ds_mg3eehnrzyqbt",
-      "name": "生活打卡",
-      "filters": [
-        {
-          "field": "categoryKey",
-          "op": "=",
-          "value": "打卡"
-        },
-        {
-          "field": "tags",
-          "op": "includes",
-          "value": "生活"
-        }
-      ],
-      "sort": [],
-      "parentId": "group_mg3eehnrrhjyv"
-    },
-    {
-      "id": "ds_mg3eeizz52dku",
-      "name": "健康未完成任务",
-      "filters": [
-        {
-          "field": "categoryKey",
-          "op": "=",
-          "value": "任务/open"
-        },
-        {
-          "field": "file.path",
-          "op": "=",
-          "value": "01/2-1健康.md"
-        }
-      ],
-      "sort": [],
-      "parentId": "group_mg3eeizzmgy7n"
-    },
-    {
-      "id": "ds_mg3eeizzaeerh",
-      "name": "健康完成任务",
-      "filters": [
-        {
-          "field": "categoryKey",
-          "op": "=",
-          "value": "任务/done"
-        },
-        {
-          "field": "file.path",
-          "op": "=",
-          "value": "01/2-1健康.md"
-        }
-      ],
-      "sort": [],
-      "parentId": "group_mg3eeizzmgy7n"
-    },
-    {
-      "id": "ds_mg3eeizz7ptyz",
-      "name": "健康三项",
-      "filters": [
-        {
-          "field": "type",
-          "op": "=",
-          "value": "block"
-        },
-        {
-          "field": "categoryKey",
-          "op": "!=",
-          "value": "打卡"
-        },
-        {
-          "field": "tags",
-          "op": "includes",
-          "value": "健康"
-        }
-      ],
-      "sort": [],
-      "parentId": "group_mg3eeizzmgy7n"
-    },
-    {
-      "id": "ds_mg3ghp9onqw2p",
-      "name": "电脑三项",
-      "filters": [
-        {
-          "field": "type",
-          "op": "=",
-          "value": "block"
-        },
-        {
-          "field": "categoryKey",
-          "op": "!=",
-          "value": "打卡"
-        },
-        {
-          "field": "tags",
-          "op": "includes",
-          "value": "电脑"
-        }
-      ],
-      "sort": [],
-      "parentId": "group_mg3eejtref8j1"
-    },
-    {
-      "id": "ds_mg3eeizz49pwk",
-      "name": "健康打卡",
-      "filters": [
-        {
-          "field": "categoryKey",
-          "op": "=",
-          "value": "打卡"
-        },
-        {
-          "field": "tags",
-          "op": "includes",
-          "value": "健康"
-        }
-      ],
-      "sort": [],
-      "parentId": "group_mg3eeizzmgy7n"
-    },
-    {
-      "id": "ds_mg3eejtrifmd8",
-      "name": "电脑未完成任务",
-      "filters": [
-        {
-          "field": "categoryKey",
-          "op": "=",
-          "value": "任务/open"
-        },
-        {
-          "field": "file.path",
-          "op": "=",
-          "value": "01/2-5电脑.md"
-        }
-      ],
-      "sort": [],
-      "parentId": "group_mg3eejtref8j1"
-    },
-    {
-      "id": "ds_mg3eejtrcp81o",
-      "name": "电脑完成任务",
-      "filters": [
-        {
-          "field": "categoryKey",
-          "op": "=",
-          "value": "任务/done"
-        },
-        {
-          "field": "file.path",
-          "op": "=",
-          "value": "01/2-5电脑.md"
-        }
-      ],
-      "sort": [],
-      "parentId": "group_mg3eejtref8j1"
-    },
-    {
-      "id": "ds_mg3eeken5az3m",
-      "name": "工作未完成任务",
-      "filters": [
-        {
-          "field": "categoryKey",
-          "op": "=",
-          "value": "任务/open"
-        },
-        {
-          "field": "tags",
-          "op": "includes",
-          "value": "工作"
-        }
-      ],
-      "sort": [],
-      "parentId": "group_mg3eeken77x2x"
-    },
-    {
-      "id": "ds_mg3eeken8srdn",
-      "name": "工作完成任务",
-      "filters": [
-        {
-          "field": "categoryKey",
-          "op": "=",
-          "value": "任务/done"
-        },
-        {
-          "field": "file.path",
-          "op": "=",
-          "value": "01/2-6工作.md"
-        }
-      ],
-      "sort": [],
-      "parentId": "group_mg3eeken77x2x"
-    },
-    {
-      "id": "ds_mg3eeken1eqsd",
-      "name": "工作三项",
-      "filters": [
-        {
-          "field": "type",
-          "op": "=",
-          "value": "block"
-        },
-        {
-          "field": "categoryKey",
-          "op": "!=",
-          "value": "打卡"
-        },
-        {
-          "field": "tags",
-          "op": "includes",
-          "value": "工作"
-        }
-      ],
-      "sort": [],
-      "parentId": "group_mg3eeken77x2x"
     }
   ],
   "viewInstances": [
@@ -2099,28 +256,6 @@
       "collapsed": true
     },
     {
-      "id": "view_mepgw6pp1iqso",
-      "title": "1️⃣思考总结",
-      "viewType": "BlockView",
-      "dataSourceId": "ds_mepgu823uydpz",
-      "viewConfig": {
-        "view": "BlockView",
-        "title": "块视图",
-        "collapsed": false,
-        "fields": [],
-        "group": "categoryKey"
-      },
-      "collapsed": false,
-      "parentId": "group_mer5oj3wueept",
-      "fields": [
-        "categoryKey",
-        "periodCount",
-        "date",
-        "icon",
-        "content"
-      ]
-    },
-    {
       "id": "view_mer6n7pwf7suy",
       "title": "计划总结思考",
       "viewType": "BlockView",
@@ -2143,76 +278,10 @@
       "group": "categoryKey"
     },
     {
-      "id": "view_mepob3wx8y6de",
-      "title": "2️⃣思考总结",
-      "viewType": "BlockView",
-      "dataSourceId": "ds_mepo8pkir629r",
-      "viewConfig": {
-        "view": "BlockView",
-        "title": "块视图",
-        "collapsed": false,
-        "fields": [],
-        "group": "categoryKey"
-      },
-      "collapsed": false,
-      "parentId": "group_mer5oj3wueept",
-      "fields": [
-        "categoryKey",
-        "periodCount",
-        "date",
-        "icon",
-        "content"
-      ]
-    },
-    {
-      "id": "view_mepob31qw4rkw",
-      "title": "3️⃣思考总结 ",
-      "viewType": "BlockView",
-      "dataSourceId": "ds_mepo8ov7p2sup",
-      "viewConfig": {
-        "view": "BlockView",
-        "title": "块视图",
-        "collapsed": false,
-        "fields": [],
-        "group": "categoryKey"
-      },
-      "collapsed": false,
-      "parentId": "group_mer5oj3wueept",
-      "fields": [
-        "categoryKey",
-        "periodCount",
-        "date",
-        "icon",
-        "content"
-      ]
-    },
-    {
-      "id": "view_mepob2tblbjjz",
-      "title": "4️⃣思考总结",
-      "viewType": "BlockView",
-      "dataSourceId": "ds_mepo8nxuzsrst",
-      "viewConfig": {
-        "view": "BlockView",
-        "title": "块视图",
-        "collapsed": false,
-        "fields": [],
-        "group": "categoryKey"
-      },
-      "collapsed": false,
-      "parentId": "group_mer5oj3wueept",
-      "fields": [
-        "categoryKey",
-        "periodCount",
-        "date",
-        "icon",
-        "content"
-      ]
-    },
-    {
       "id": "view_meqt389ufhx91",
       "title": "数据汇总",
       "viewType": "StatisticsView",
-      "dataSourceId": "ds_meqt2x9ecim6c",
+      "dataSourceId": "",
       "viewConfig": {
         "categories": [
           {
@@ -2255,384 +324,10 @@
       ]
     },
     {
-      "id": "view_mer5qc61gnav2",
-      "title": "1️⃣生活总结",
-      "viewType": "BlockView",
-      "dataSourceId": "ds_mer2ooqzzdgam",
-      "viewConfig": {
-        "view": "BlockView",
-        "title": "块视图",
-        "collapsed": false,
-        "fields": [],
-        "group": "categoryKey"
-      },
-      "collapsed": false,
-      "parentId": "group_mer5qc61xm7ni",
-      "fields": [
-        "categoryKey",
-        "periodCount",
-        "date",
-        "icon",
-        "content"
-      ]
-    },
-    {
-      "id": "view_mer5qc61jfxaw",
-      "title": "2️⃣生活总结",
-      "viewType": "BlockView",
-      "dataSourceId": "ds_mer2ooqzombzz",
-      "viewConfig": {
-        "view": "BlockView",
-        "title": "块视图",
-        "collapsed": false,
-        "fields": [],
-        "group": "categoryKey"
-      },
-      "collapsed": false,
-      "parentId": "group_mer5qc61xm7ni",
-      "fields": [
-        "categoryKey",
-        "periodCount",
-        "date",
-        "icon",
-        "content"
-      ]
-    },
-    {
-      "id": "view_mer5qc61hph6b",
-      "title": "3️⃣生活总结 ",
-      "viewType": "BlockView",
-      "dataSourceId": "ds_mer2ooqz9017g",
-      "viewConfig": {
-        "view": "BlockView",
-        "title": "块视图",
-        "collapsed": false,
-        "fields": [],
-        "group": "categoryKey"
-      },
-      "collapsed": false,
-      "parentId": "group_mer5qc61xm7ni",
-      "fields": [
-        "categoryKey",
-        "periodCount",
-        "date",
-        "icon",
-        "content"
-      ]
-    },
-    {
-      "id": "view_mer5qc617rq9u",
-      "title": "4️⃣生活总结",
-      "viewType": "BlockView",
-      "dataSourceId": "ds_mer2ooqz14p1v",
-      "viewConfig": {
-        "view": "BlockView",
-        "title": "块视图",
-        "collapsed": false,
-        "fields": [],
-        "group": "categoryKey"
-      },
-      "collapsed": false,
-      "parentId": "group_mer5qc61xm7ni",
-      "fields": [
-        "categoryKey",
-        "periodCount",
-        "date",
-        "icon",
-        "content"
-      ]
-    },
-    {
-      "id": "view_mer5qdssxdd2f",
-      "title": "1️⃣健康总结",
-      "viewType": "BlockView",
-      "dataSourceId": "ds_mer2r9nnu5a4q",
-      "viewConfig": {
-        "view": "BlockView",
-        "title": "块视图",
-        "collapsed": false,
-        "fields": [],
-        "group": "categoryKey"
-      },
-      "collapsed": false,
-      "parentId": "group_mer5qdss3nlkm",
-      "fields": [
-        "categoryKey",
-        "periodCount",
-        "date",
-        "icon",
-        "content"
-      ]
-    },
-    {
-      "id": "view_mer5qdss5fz9m",
-      "title": "2️⃣健康总结",
-      "viewType": "BlockView",
-      "dataSourceId": "ds_mer2r9nno8qkz",
-      "viewConfig": {
-        "view": "BlockView",
-        "title": "块视图",
-        "collapsed": false,
-        "fields": [],
-        "group": "categoryKey"
-      },
-      "collapsed": false,
-      "parentId": "group_mer5qdss3nlkm",
-      "fields": [
-        "categoryKey",
-        "periodCount",
-        "date",
-        "icon",
-        "content"
-      ]
-    },
-    {
-      "id": "view_mer5qdss3iyvk",
-      "title": "3️⃣健康总结 ",
-      "viewType": "BlockView",
-      "dataSourceId": "ds_mer2r9nnqh2rw",
-      "viewConfig": {
-        "view": "BlockView",
-        "title": "块视图",
-        "collapsed": false,
-        "fields": [],
-        "group": "categoryKey"
-      },
-      "collapsed": false,
-      "parentId": "group_mer5qdss3nlkm",
-      "fields": [
-        "categoryKey",
-        "periodCount",
-        "date",
-        "icon",
-        "content"
-      ]
-    },
-    {
-      "id": "view_mer5qdsszcvn5",
-      "title": "4️⃣健康总结",
-      "viewType": "BlockView",
-      "dataSourceId": "ds_mer2r9nn3mimd",
-      "viewConfig": {
-        "view": "BlockView",
-        "title": "块视图",
-        "collapsed": false,
-        "fields": [],
-        "group": "categoryKey"
-      },
-      "collapsed": false,
-      "parentId": "group_mer5qdss3nlkm",
-      "fields": [
-        "categoryKey",
-        "periodCount",
-        "date",
-        "icon",
-        "content"
-      ]
-    },
-    {
-      "id": "view_mer5qenaak5oq",
-      "title": "1️⃣电脑总结",
-      "viewType": "BlockView",
-      "dataSourceId": "ds_mer2wj4v1yhol",
-      "viewConfig": {
-        "view": "BlockView",
-        "title": "块视图",
-        "collapsed": false,
-        "fields": [],
-        "group": "categoryKey"
-      },
-      "collapsed": false,
-      "parentId": "group_mer5qenajiet0",
-      "fields": [
-        "categoryKey",
-        "periodCount",
-        "date",
-        "icon",
-        "content"
-      ]
-    },
-    {
-      "id": "view_mer5qena23btv",
-      "title": "2️⃣电脑总结",
-      "viewType": "BlockView",
-      "dataSourceId": "ds_mer2wj4v61q9o",
-      "viewConfig": {
-        "view": "BlockView",
-        "title": "块视图",
-        "collapsed": false,
-        "fields": [],
-        "group": "categoryKey"
-      },
-      "collapsed": false,
-      "parentId": "group_mer5qenajiet0",
-      "fields": [
-        "categoryKey",
-        "periodCount",
-        "date",
-        "icon",
-        "content"
-      ]
-    },
-    {
-      "id": "view_mer5qenavnxxt",
-      "title": "3️⃣电脑总结 ",
-      "viewType": "BlockView",
-      "dataSourceId": "ds_mer2wj4v93yfe",
-      "viewConfig": {
-        "view": "BlockView",
-        "title": "块视图",
-        "collapsed": false,
-        "fields": [],
-        "group": "categoryKey"
-      },
-      "collapsed": false,
-      "parentId": "group_mer5qenajiet0",
-      "fields": [
-        "categoryKey",
-        "periodCount",
-        "date",
-        "icon",
-        "content"
-      ]
-    },
-    {
-      "id": "view_mer5qenaqlltt",
-      "title": "4️⃣电脑总结",
-      "viewType": "BlockView",
-      "dataSourceId": "ds_mer2wj4vq3tjx",
-      "viewConfig": {
-        "view": "BlockView",
-        "title": "块视图",
-        "collapsed": false,
-        "fields": [],
-        "group": "categoryKey"
-      },
-      "collapsed": false,
-      "parentId": "group_mer5qenajiet0",
-      "fields": [
-        "categoryKey",
-        "periodCount",
-        "date",
-        "icon",
-        "content"
-      ]
-    },
-    {
-      "id": "view_mer5qlrm3xnu6",
-      "title": "1️⃣工作总结",
-      "viewType": "BlockView",
-      "dataSourceId": "ds_mer2wkh265u5u",
-      "viewConfig": {
-        "view": "BlockView",
-        "title": "块视图",
-        "collapsed": false,
-        "fields": [],
-        "group": "categoryKey"
-      },
-      "collapsed": false,
-      "parentId": "group_mer5qlrm519f9",
-      "fields": [
-        "categoryKey",
-        "periodCount",
-        "date",
-        "icon",
-        "content"
-      ]
-    },
-    {
-      "id": "view_mer5qlrmishnl",
-      "title": "2️⃣工作总结",
-      "viewType": "BlockView",
-      "dataSourceId": "ds_mer2wkh289gh3",
-      "viewConfig": {
-        "view": "BlockView",
-        "title": "块视图",
-        "collapsed": false,
-        "fields": [],
-        "group": "categoryKey"
-      },
-      "collapsed": false,
-      "parentId": "group_mer5qlrm519f9",
-      "fields": [
-        "categoryKey",
-        "periodCount",
-        "date",
-        "icon",
-        "content"
-      ]
-    },
-    {
-      "id": "view_mer5qlrmy8s09",
-      "title": "3️⃣工作总结 ",
-      "viewType": "BlockView",
-      "dataSourceId": "ds_mer2wkh23qp7i",
-      "viewConfig": {
-        "view": "BlockView",
-        "title": "块视图",
-        "collapsed": false,
-        "fields": [],
-        "group": "categoryKey"
-      },
-      "collapsed": false,
-      "parentId": "group_mer5qlrm519f9",
-      "fields": [
-        "categoryKey",
-        "periodCount",
-        "date",
-        "icon",
-        "content"
-      ]
-    },
-    {
-      "id": "view_mer5qlrmxm6dv",
-      "title": "4️⃣工作总结",
-      "viewType": "BlockView",
-      "dataSourceId": "ds_mer2wkh2ljiw5",
-      "viewConfig": {
-        "view": "BlockView",
-        "title": "块视图",
-        "collapsed": false,
-        "fields": [],
-        "group": "categoryKey"
-      },
-      "collapsed": false,
-      "parentId": "group_mer5qlrm519f9",
-      "fields": [
-        "categoryKey",
-        "periodCount",
-        "date",
-        "icon",
-        "content"
-      ]
-    },
-    {
-      "id": "view_mer60bnnknqug",
-      "title": "1️⃣思考计划",
-      "viewType": "BlockView",
-      "dataSourceId": "ds_mer53hxz55fva",
-      "viewConfig": {
-        "view": "BlockView",
-        "title": "块视图",
-        "collapsed": false,
-        "fields": [],
-        "group": "categoryKey"
-      },
-      "collapsed": false,
-      "parentId": "group_mer60bnnssk89",
-      "fields": [
-        "categoryKey",
-        "periodCount",
-        "date",
-        "icon",
-        "content"
-      ]
-    },
-    {
       "id": "view_mer60bnnvblx5",
       "title": "2️⃣思考计划",
       "viewType": "BlockView",
-      "dataSourceId": "ds_mer53hxzn8vwi",
+      "dataSourceId": "",
       "viewConfig": {
         "view": "BlockView",
         "title": "块视图",
@@ -2641,95 +336,7 @@
         "group": "categoryKey"
       },
       "collapsed": false,
-      "parentId": "group_mer60bnnssk89",
-      "fields": [
-        "categoryKey",
-        "periodCount",
-        "date",
-        "icon",
-        "content"
-      ]
-    },
-    {
-      "id": "view_mer60bnn8haqj",
-      "title": "3️⃣思考计划",
-      "viewType": "BlockView",
-      "dataSourceId": "ds_mer53hxz61jj4",
-      "viewConfig": {
-        "view": "BlockView",
-        "title": "块视图",
-        "collapsed": false,
-        "fields": [],
-        "group": "categoryKey"
-      },
-      "collapsed": false,
-      "parentId": "group_mer60bnnssk89",
-      "fields": [
-        "categoryKey",
-        "periodCount",
-        "date",
-        "icon",
-        "content"
-      ]
-    },
-    {
-      "id": "view_mer60bnoftke2",
-      "title": "4️⃣思考计划",
-      "viewType": "BlockView",
-      "dataSourceId": "ds_mer53hxzk0ni0",
-      "viewConfig": {
-        "view": "BlockView",
-        "title": "块视图",
-        "collapsed": false,
-        "fields": [],
-        "group": "categoryKey"
-      },
-      "collapsed": false,
-      "parentId": "group_mer60bnnssk89",
-      "fields": [
-        "categoryKey",
-        "periodCount",
-        "date",
-        "icon",
-        "content"
-      ]
-    },
-    {
-      "id": "view_mer60bno9eenu",
-      "title": "1️⃣生活计划",
-      "viewType": "BlockView",
-      "dataSourceId": "ds_mer53hxzcbokq",
-      "viewConfig": {
-        "view": "BlockView",
-        "title": "块视图",
-        "collapsed": false,
-        "fields": [],
-        "group": "categoryKey"
-      },
-      "collapsed": false,
-      "parentId": "group_mer60bnoootcl",
-      "fields": [
-        "categoryKey",
-        "periodCount",
-        "date",
-        "icon",
-        "content"
-      ]
-    },
-    {
-      "id": "view_mer60bnonxojo",
-      "title": "2️⃣生活计划",
-      "viewType": "BlockView",
-      "dataSourceId": "ds_mer53hxzo1ft6",
-      "viewConfig": {
-        "view": "BlockView",
-        "title": "块视图",
-        "collapsed": false,
-        "fields": [],
-        "group": "categoryKey"
-      },
-      "collapsed": false,
-      "parentId": "group_mer60bnoootcl",
+      "parentId": null,
       "fields": [
         "categoryKey",
         "periodCount",
@@ -2742,7 +349,7 @@
       "id": "view_mer60bnot3klw",
       "title": "3️⃣生活计划",
       "viewType": "BlockView",
-      "dataSourceId": "ds_mer53hxz8hqi9",
+      "dataSourceId": "",
       "viewConfig": {
         "view": "BlockView",
         "title": "块视图",
@@ -2751,7 +358,7 @@
         "group": "categoryKey"
       },
       "collapsed": false,
-      "parentId": "group_mer60bnoootcl",
+      "parentId": null,
       "fields": [
         "categoryKey",
         "periodCount",
@@ -2764,7 +371,7 @@
       "id": "view_mer60bno7dsek",
       "title": "4️⃣生活计划",
       "viewType": "BlockView",
-      "dataSourceId": "ds_mer53hxzci0o5",
+      "dataSourceId": "",
       "viewConfig": {
         "view": "BlockView",
         "title": "块视图",
@@ -2773,7 +380,7 @@
         "group": "categoryKey"
       },
       "collapsed": false,
-      "parentId": "group_mer60bnoootcl",
+      "parentId": null,
       "fields": [
         "categoryKey",
         "periodCount",
@@ -2786,7 +393,7 @@
       "id": "view_mer60bnotqdt6",
       "title": "1️⃣健康计划",
       "viewType": "BlockView",
-      "dataSourceId": "ds_mer53hxzowvgh",
+      "dataSourceId": "",
       "viewConfig": {
         "view": "BlockView",
         "title": "块视图",
@@ -2795,7 +402,7 @@
         "group": "categoryKey"
       },
       "collapsed": false,
-      "parentId": "group_mer60bno0hsk0",
+      "parentId": null,
       "fields": [
         "categoryKey",
         "periodCount",
@@ -2808,7 +415,7 @@
       "id": "view_mer60bnom80n2",
       "title": "2️⃣健康计划",
       "viewType": "BlockView",
-      "dataSourceId": "ds_mer53hxzpc2mv",
+      "dataSourceId": "",
       "viewConfig": {
         "view": "BlockView",
         "title": "块视图",
@@ -2817,7 +424,7 @@
         "group": "categoryKey"
       },
       "collapsed": false,
-      "parentId": "group_mer60bno0hsk0",
+      "parentId": null,
       "fields": [
         "categoryKey",
         "periodCount",
@@ -2830,7 +437,7 @@
       "id": "view_mer60bno1632k",
       "title": "3️⃣健康计划",
       "viewType": "BlockView",
-      "dataSourceId": "ds_mer53hxzxkv8m",
+      "dataSourceId": "",
       "viewConfig": {
         "view": "BlockView",
         "title": "块视图",
@@ -2839,7 +446,7 @@
         "group": "categoryKey"
       },
       "collapsed": false,
-      "parentId": "group_mer60bno0hsk0",
+      "parentId": null,
       "fields": [
         "categoryKey",
         "periodCount",
@@ -2852,7 +459,7 @@
       "id": "view_mer60bnopn0k0",
       "title": "4️⃣健康计划",
       "viewType": "BlockView",
-      "dataSourceId": "ds_mer53hxz648xm",
+      "dataSourceId": "",
       "viewConfig": {
         "view": "BlockView",
         "title": "块视图",
@@ -2861,7 +468,7 @@
         "group": "categoryKey"
       },
       "collapsed": false,
-      "parentId": "group_mer60bno0hsk0",
+      "parentId": null,
       "fields": [
         "categoryKey",
         "periodCount",
@@ -2874,7 +481,7 @@
       "id": "view_mer60bnoqjuvd",
       "title": "1️⃣电脑计划",
       "viewType": "BlockView",
-      "dataSourceId": "ds_mer53hxzzbifa",
+      "dataSourceId": "",
       "viewConfig": {
         "view": "BlockView",
         "title": "块视图",
@@ -2883,7 +490,7 @@
         "group": "categoryKey"
       },
       "collapsed": false,
-      "parentId": "group_mer60bnort9rv",
+      "parentId": null,
       "fields": [
         "categoryKey",
         "periodCount",
@@ -2896,7 +503,7 @@
       "id": "view_mer60bnolot1w",
       "title": "2️⃣电脑计划",
       "viewType": "BlockView",
-      "dataSourceId": "ds_mer53hxzset0r",
+      "dataSourceId": "",
       "viewConfig": {
         "view": "BlockView",
         "title": "块视图",
@@ -2905,7 +512,7 @@
         "group": "categoryKey"
       },
       "collapsed": false,
-      "parentId": "group_mer60bnort9rv",
+      "parentId": null,
       "fields": [
         "categoryKey",
         "periodCount",
@@ -2918,7 +525,7 @@
       "id": "view_mer60bno49f5p",
       "title": "3️⃣电脑计划",
       "viewType": "BlockView",
-      "dataSourceId": "ds_mer53hxzzalmt",
+      "dataSourceId": "",
       "viewConfig": {
         "view": "BlockView",
         "title": "块视图",
@@ -2927,7 +534,7 @@
         "group": "categoryKey"
       },
       "collapsed": false,
-      "parentId": "group_mer60bnort9rv",
+      "parentId": null,
       "fields": [
         "categoryKey",
         "periodCount",
@@ -2940,7 +547,7 @@
       "id": "view_mer60bnobvo0w",
       "title": "4️⃣电脑计划",
       "viewType": "BlockView",
-      "dataSourceId": "ds_mer53hxzulzpz",
+      "dataSourceId": "",
       "viewConfig": {
         "view": "BlockView",
         "title": "块视图",
@@ -2949,7 +556,7 @@
         "group": "categoryKey"
       },
       "collapsed": false,
-      "parentId": "group_mer60bnort9rv",
+      "parentId": null,
       "fields": [
         "categoryKey",
         "periodCount",
@@ -2962,7 +569,7 @@
       "id": "view_mer60bnoowtde",
       "title": "1️⃣工作计划",
       "viewType": "BlockView",
-      "dataSourceId": "ds_mer53hxzj7z87",
+      "dataSourceId": "",
       "viewConfig": {
         "view": "BlockView",
         "title": "块视图",
@@ -2971,7 +578,7 @@
         "group": "categoryKey"
       },
       "collapsed": false,
-      "parentId": "group_mer60bnom4ztr",
+      "parentId": null,
       "fields": [
         "categoryKey",
         "periodCount",
@@ -2984,7 +591,7 @@
       "id": "view_mer60bnob6mvt",
       "title": "2️⃣工作计划",
       "viewType": "BlockView",
-      "dataSourceId": "ds_mer53hxzh8pgc",
+      "dataSourceId": "",
       "viewConfig": {
         "view": "BlockView",
         "title": "块视图",
@@ -2993,7 +600,7 @@
         "group": "categoryKey"
       },
       "collapsed": false,
-      "parentId": "group_mer60bnom4ztr",
+      "parentId": null,
       "fields": [
         "categoryKey",
         "periodCount",
@@ -3006,7 +613,7 @@
       "id": "view_mer60bnosncfs",
       "title": "3️⃣工作计划",
       "viewType": "BlockView",
-      "dataSourceId": "ds_mer53hxzp1h3k",
+      "dataSourceId": "",
       "viewConfig": {
         "view": "BlockView",
         "title": "块视图",
@@ -3015,7 +622,7 @@
         "group": "categoryKey"
       },
       "collapsed": false,
-      "parentId": "group_mer60bnom4ztr",
+      "parentId": null,
       "fields": [
         "categoryKey",
         "periodCount",
@@ -3028,7 +635,7 @@
       "id": "view_mer60bnor9x6r",
       "title": "4️⃣工作计划",
       "viewType": "BlockView",
-      "dataSourceId": "ds_mer53hxz1d5hz",
+      "dataSourceId": "",
       "viewConfig": {
         "view": "BlockView",
         "title": "块视图",
@@ -3037,7 +644,7 @@
         "group": "categoryKey"
       },
       "collapsed": false,
-      "parentId": "group_mer60bnom4ztr",
+      "parentId": null,
       "fields": [
         "categoryKey",
         "periodCount",
@@ -3055,89 +662,16 @@
         "displayMode": "habit",
         "sourceBlockId": "blk_mejsg76atopau",
         "themePaths": [
-          "2. 任务属性举例",
-          "3. 记录格式",
-          "5.1 熬夜",
-          "5.2 生活任务",
-          "5.3 设计",
-          "5.4 自动衔接示例",
-          "6.1 睡眠（含熬夜）",
-          "6.4 自动衔接示例",
-          "笔记系统",
-          "点读 X",
-          "电脑",
-          "电脑/笔记系统",
-          "电脑/记录系统",
-          "电脑/ob基础",
-          "儿童活动室 [X]",
-          "防暑降温 [X]",
-          "工作",
-          "工作/其他",
-          "工作/设计",
-          "工作/手续、对账",
-          "工作/通勤",
-          "工作/投标",
-          "记录系统",
-          "健康",
-          "健康 身体",
           "健康/粑粑",
-          "健康/喝水",
           "健康/剪头发",
           "健康/剪指甲",
-          "健康/任务",
-          "健康/三餐",
           "健康/身体",
           "健康/睡眠",
-          "健康/晚餐",
-          "健康/卫生",
-          "健康/午餐",
-          "健康/洗澡",
           "健康/心情",
           "健康/姨妈",
-          "健康/瑜伽",
           "健康/运动",
-          "教育宣传栏 [X]",
-          "老板任务",
-          "其他",
-          "散客 [X]",
-          "设计",
-          "生活",
           "生活/车车",
-          "生活/家务",
-          "生活/开车",
-          "生活/收纳",
-          "生活/垚垚",
-          "生活/娱乐",
-          "生活/整理",
-          "手续、对账",
-          "司马 删",
-          "司马2024篮球赛  [X]",
-          "司马人口日活动 [X]",
-          "司马宣传月  [X]",
-          "思考",
-          "思考/读书",
-          "思考/家庭",
-          "思考/芦苇",
-          "思考/婆婆",
-          "思考/时间整理",
-          "思考/思路整理",
-          "思考/阳阳",
-          "思考/垚垚",
-          "思考/整理笔记",
-          "思考/整理复盘",
-          "思考/自我",
-          "太西街道等 [X]",
-          "投标",
-          "晚餐",
-          "威中 [X]",
-          "午餐",
-          "元气植 [X]",
-          "早餐",
-          "早二二",
-          "长治学院 [X]",
-          "长治学院20年同学聚会  [X]",
-          "MediaPro X",
-          "ob 基础"
+          "思考/读书"
         ],
         "countColors": [
           "#ebedf0",
@@ -3170,7 +704,7 @@
         ]
       },
       "collapsed": false,
-      "parentId": "group_mg3dmyfcbmuw6"
+      "parentId": null
     },
     {
       "id": "view_mg1zanri06mhu",
@@ -3198,7 +732,7 @@
       "id": "view_mg23jnryg9byb",
       "title": "思考打卡block",
       "viewType": "BlockView",
-      "dataSourceId": "ds_mg2438rllnmx9",
+      "dataSourceId": "",
       "viewConfig": {
         "view": "BlockView",
         "title": "块视图",
@@ -3207,7 +741,7 @@
         "group": "categoryKey"
       },
       "collapsed": false,
-      "parentId": "group_mg3dmyfcbmuw6",
+      "parentId": null,
       "fields": [
         "categoryKey",
         "pintu",
@@ -3220,7 +754,7 @@
       "id": "view_mf2b6b80nnu6h",
       "title": "思考思考",
       "viewType": "BlockView",
-      "dataSourceId": "ds_mg1n2vezuzsha",
+      "dataSourceId": "",
       "viewConfig": {
         "view": "BlockView",
         "title": "块视图",
@@ -3229,7 +763,7 @@
         "group": "categoryKey"
       },
       "collapsed": false,
-      "parentId": "group_mg1nbai2etnf7",
+      "parentId": null,
       "fields": [
         "categoryKey",
         "date",
@@ -3242,7 +776,7 @@
       "id": "view_mg1nei0zv424h",
       "title": "生活思考",
       "viewType": "BlockView",
-      "dataSourceId": "ds_mg1n6g5gc6i3y",
+      "dataSourceId": "",
       "viewConfig": {
         "view": "BlockView",
         "title": "块视图",
@@ -3251,7 +785,7 @@
         "group": "categoryKey"
       },
       "collapsed": false,
-      "parentId": "group_mg1nbai2etnf7",
+      "parentId": null,
       "fields": [
         "categoryKey",
         "date",
@@ -3264,7 +798,7 @@
       "id": "view_mg1nehk33e9hw",
       "title": "健康思考",
       "viewType": "BlockView",
-      "dataSourceId": "ds_mg1n813u5wxjn",
+      "dataSourceId": "",
       "viewConfig": {
         "view": "BlockView",
         "title": "块视图",
@@ -3273,7 +807,7 @@
         "group": "categoryKey"
       },
       "collapsed": false,
-      "parentId": "group_mg1nbai2etnf7",
+      "parentId": null,
       "fields": [
         "categoryKey",
         "date",
@@ -3286,7 +820,7 @@
       "id": "view_mg1negwzlqdxz",
       "title": "电脑思考",
       "viewType": "BlockView",
-      "dataSourceId": "ds_mg1n7z6ziqasr",
+      "dataSourceId": "",
       "viewConfig": {
         "view": "BlockView",
         "title": "块视图",
@@ -3295,7 +829,7 @@
         "group": "categoryKey"
       },
       "collapsed": false,
-      "parentId": "group_mg1nbai2etnf7",
+      "parentId": null,
       "fields": [
         "categoryKey",
         "date",
@@ -3308,7 +842,7 @@
       "id": "view_mg1nefpgfsfqj",
       "title": "工作思考",
       "viewType": "BlockView",
-      "dataSourceId": "ds_mg1n7y3fcs86o",
+      "dataSourceId": "",
       "viewConfig": {
         "view": "BlockView",
         "title": "块视图",
@@ -3317,7 +851,7 @@
         "group": "categoryKey"
       },
       "collapsed": false,
-      "parentId": "group_mg1nbai2etnf7",
+      "parentId": null,
       "fields": [
         "categoryKey",
         "date",
@@ -3330,7 +864,7 @@
       "id": "view_mg236ljzrwaqu",
       "title": "思考未完成任务",
       "viewType": "TableView",
-      "dataSourceId": "ds_mg2336c01t615",
+      "dataSourceId": "",
       "viewConfig": {
         "view": "TableView",
         "title": "表格视图",
@@ -3339,13 +873,13 @@
         "colField": "header"
       },
       "collapsed": false,
-      "parentId": "group_mg3dmyfcbmuw6"
+      "parentId": null
     },
     {
       "id": "view_mg239n47213f2",
       "title": "思考完成任务",
       "viewType": "TimelineView",
-      "dataSourceId": "ds_mg234zgoxblv5",
+      "dataSourceId": "",
       "viewConfig": {
         "defaultHourHeight": 10,
         "MAX_HOURS_PER_DAY": 24,
@@ -3363,14 +897,14 @@
         ]
       },
       "collapsed": false,
-      "parentId": "group_mg3dmyfcbmuw6",
+      "parentId": null,
       "group": "header"
     },
     {
       "id": "view_mg23u59l0ni9a",
       "title": "思考三项",
       "viewType": "BlockView",
-      "dataSourceId": "ds_mg23st3kp6cef",
+      "dataSourceId": "",
       "viewConfig": {
         "view": "BlockView",
         "title": "块视图",
@@ -3379,7 +913,7 @@
         "group": "categoryKey"
       },
       "collapsed": false,
-      "parentId": "group_mg3dmyfcbmuw6",
+      "parentId": null,
       "fields": [
         "categoryKey",
         "icon",
@@ -3392,7 +926,7 @@
       "id": "view_mg23w881hshrd",
       "title": "思考完成任务表格",
       "viewType": "BlockView",
-      "dataSourceId": "ds_mg234zgoxblv5",
+      "dataSourceId": "",
       "viewConfig": {
         "view": "BlockView",
         "title": "块视图",
@@ -3401,7 +935,7 @@
         "group": "categoryKey"
       },
       "collapsed": false,
-      "parentId": "group_mg3dmyfcbmuw6",
+      "parentId": null,
       "group": "header"
     },
     {
@@ -3424,13 +958,13 @@
         ]
       },
       "collapsed": false,
-      "parentId": "group_mg3efhaom4lqn"
+      "parentId": null
     },
     {
       "id": "view_mg3efhaoz79uq",
       "title": "生活打卡block",
       "viewType": "BlockView",
-      "dataSourceId": "ds_mg3eehnrzyqbt",
+      "dataSourceId": "",
       "viewConfig": {
         "view": "BlockView",
         "title": "块视图",
@@ -3439,7 +973,7 @@
         "group": "categoryKey"
       },
       "collapsed": false,
-      "parentId": "group_mg3efhaom4lqn",
+      "parentId": null,
       "fields": [
         "categoryKey",
         "pintu",
@@ -3452,7 +986,7 @@
       "id": "view_mg3efhaoo0xzu",
       "title": "生活未完成任务",
       "viewType": "TableView",
-      "dataSourceId": "ds_mg3eehnrs8zr5",
+      "dataSourceId": "",
       "viewConfig": {
         "view": "TableView",
         "title": "表格视图",
@@ -3461,13 +995,13 @@
         "colField": "header"
       },
       "collapsed": false,
-      "parentId": "group_mg3efhaom4lqn"
+      "parentId": null
     },
     {
       "id": "view_mg3efhaol9p1l",
       "title": "生活完成任务",
       "viewType": "TimelineView",
-      "dataSourceId": "ds_mg3eehnr3vhyq",
+      "dataSourceId": "",
       "viewConfig": {
         "defaultHourHeight": 10,
         "MAX_HOURS_PER_DAY": 24,
@@ -3485,14 +1019,14 @@
         ]
       },
       "collapsed": false,
-      "parentId": "group_mg3efhaom4lqn",
+      "parentId": null,
       "group": "header"
     },
     {
       "id": "view_mg3efhaoc99bo",
       "title": "生活三项",
       "viewType": "BlockView",
-      "dataSourceId": "ds_mg3eehnrihbsy",
+      "dataSourceId": "",
       "viewConfig": {
         "view": "BlockView",
         "title": "块视图",
@@ -3501,7 +1035,7 @@
         "group": "categoryKey"
       },
       "collapsed": false,
-      "parentId": "group_mg3efhaom4lqn",
+      "parentId": null,
       "fields": [
         "categoryKey",
         "icon",
@@ -3514,7 +1048,7 @@
       "id": "view_mg3efhaoxhbuh",
       "title": "生活完成任务表格",
       "viewType": "BlockView",
-      "dataSourceId": "ds_mg3eehnr3vhyq",
+      "dataSourceId": "",
       "viewConfig": {
         "view": "BlockView",
         "title": "块视图",
@@ -3523,7 +1057,7 @@
         "group": "categoryKey"
       },
       "collapsed": false,
-      "parentId": "group_mg3efhaom4lqn",
+      "parentId": null,
       "group": "header"
     },
     {
@@ -3546,13 +1080,13 @@
         ]
       },
       "collapsed": false,
-      "parentId": "group_mg3efi3lkg468"
+      "parentId": null
     },
     {
       "id": "view_mg3efi3l2ktm9",
       "title": "健康打卡block",
       "viewType": "BlockView",
-      "dataSourceId": "ds_mg3eeizz49pwk",
+      "dataSourceId": "",
       "viewConfig": {
         "view": "BlockView",
         "title": "块视图",
@@ -3561,7 +1095,7 @@
         "group": "categoryKey"
       },
       "collapsed": false,
-      "parentId": "group_mg3efi3lkg468",
+      "parentId": null,
       "fields": [
         "categoryKey",
         "pintu",
@@ -3574,7 +1108,7 @@
       "id": "view_mg3efi3lyytx6",
       "title": "健康未完成任务",
       "viewType": "TableView",
-      "dataSourceId": "ds_mg3eeizz52dku",
+      "dataSourceId": "",
       "viewConfig": {
         "view": "TableView",
         "title": "表格视图",
@@ -3583,13 +1117,13 @@
         "colField": "header"
       },
       "collapsed": false,
-      "parentId": "group_mg3efi3lkg468"
+      "parentId": null
     },
     {
       "id": "view_mg3efi3l2zkon",
       "title": "健康完成任务",
       "viewType": "TimelineView",
-      "dataSourceId": "ds_mg3eeizzaeerh",
+      "dataSourceId": "",
       "viewConfig": {
         "defaultHourHeight": 10,
         "MAX_HOURS_PER_DAY": 24,
@@ -3608,14 +1142,14 @@
         ]
       },
       "collapsed": false,
-      "parentId": "group_mg3efi3lkg468",
+      "parentId": null,
       "group": "header"
     },
     {
       "id": "view_mg3efi3loagiv",
       "title": "健康三项",
       "viewType": "BlockView",
-      "dataSourceId": "ds_mg3eeizz7ptyz",
+      "dataSourceId": "",
       "viewConfig": {
         "view": "BlockView",
         "title": "块视图",
@@ -3624,7 +1158,7 @@
         "group": "categoryKey"
       },
       "collapsed": false,
-      "parentId": "group_mg3efi3lkg468",
+      "parentId": null,
       "fields": [
         "categoryKey",
         "icon",
@@ -3637,7 +1171,7 @@
       "id": "view_mg3efi3lf9gji",
       "title": "健康完成任务表格",
       "viewType": "BlockView",
-      "dataSourceId": "ds_mg3eeizzaeerh",
+      "dataSourceId": "",
       "viewConfig": {
         "view": "BlockView",
         "title": "块视图",
@@ -3646,7 +1180,7 @@
         "group": "categoryKey"
       },
       "collapsed": false,
-      "parentId": "group_mg3efi3lkg468",
+      "parentId": null,
       "group": "header"
     },
     {
@@ -3669,13 +1203,13 @@
         ]
       },
       "collapsed": false,
-      "parentId": "group_mg3efivkfe06c"
+      "parentId": null
     },
     {
       "id": "view_mg3efivkjosv8",
       "title": "电脑未完成任务",
       "viewType": "TableView",
-      "dataSourceId": "ds_mg3eejtrifmd8",
+      "dataSourceId": "",
       "viewConfig": {
         "view": "TableView",
         "title": "表格视图",
@@ -3684,13 +1218,13 @@
         "colField": "header"
       },
       "collapsed": false,
-      "parentId": "group_mg3efivkfe06c"
+      "parentId": null
     },
     {
       "id": "view_mg3efivk0ampd",
       "title": "电脑完成任务",
       "viewType": "TimelineView",
-      "dataSourceId": "ds_mg3eejtrcp81o",
+      "dataSourceId": "",
       "viewConfig": {
         "defaultHourHeight": 10,
         "MAX_HOURS_PER_DAY": 24,
@@ -3708,14 +1242,14 @@
         ]
       },
       "collapsed": false,
-      "parentId": "group_mg3efivkfe06c",
+      "parentId": null,
       "group": "header"
     },
     {
       "id": "view_mg3efivk55ory",
       "title": "电脑三项",
       "viewType": "BlockView",
-      "dataSourceId": "ds_mg3ghp9onqw2p",
+      "dataSourceId": "",
       "viewConfig": {
         "view": "BlockView",
         "title": "块视图",
@@ -3724,7 +1258,7 @@
         "group": "categoryKey"
       },
       "collapsed": false,
-      "parentId": "group_mg3efivkfe06c",
+      "parentId": null,
       "fields": [
         "categoryKey",
         "icon",
@@ -3737,7 +1271,7 @@
       "id": "view_mg3efivklhn6l",
       "title": "电脑完成任务表格",
       "viewType": "BlockView",
-      "dataSourceId": "ds_mg234zgoxblv5",
+      "dataSourceId": "",
       "viewConfig": {
         "view": "BlockView",
         "title": "块视图",
@@ -3746,7 +1280,7 @@
         "group": "categoryKey"
       },
       "collapsed": false,
-      "parentId": "group_mg3efivkfe06c",
+      "parentId": null,
       "group": "header"
     },
     {
@@ -3769,13 +1303,13 @@
         ]
       },
       "collapsed": false,
-      "parentId": "group_mg3efjhr0b1xi"
+      "parentId": null
     },
     {
       "id": "view_mg3efjhrbkyux",
       "title": "工作未完成任务",
       "viewType": "TableView",
-      "dataSourceId": "ds_mg3eeken5az3m",
+      "dataSourceId": "",
       "viewConfig": {
         "view": "TableView",
         "title": "表格视图",
@@ -3784,13 +1318,13 @@
         "colField": "header"
       },
       "collapsed": false,
-      "parentId": "group_mg3efjhr0b1xi"
+      "parentId": null
     },
     {
       "id": "view_mg3efjhrxp5jk",
       "title": "工作完成任务",
       "viewType": "TimelineView",
-      "dataSourceId": "ds_mg3eeken8srdn",
+      "dataSourceId": "",
       "viewConfig": {
         "defaultHourHeight": 10,
         "MAX_HOURS_PER_DAY": 24,
@@ -3808,14 +1342,14 @@
         ]
       },
       "collapsed": false,
-      "parentId": "group_mg3efjhr0b1xi",
+      "parentId": null,
       "group": "header"
     },
     {
       "id": "view_mg3efjhrahjd9",
       "title": "工作三项",
       "viewType": "BlockView",
-      "dataSourceId": "ds_mg3eeken1eqsd",
+      "dataSourceId": "",
       "viewConfig": {
         "view": "BlockView",
         "title": "块视图",
@@ -3824,7 +1358,7 @@
         "group": "categoryKey"
       },
       "collapsed": false,
-      "parentId": "group_mg3efjhr0b1xi",
+      "parentId": null,
       "fields": [
         "categoryKey",
         "icon",
@@ -3837,7 +1371,7 @@
       "id": "view_mg3efjhr8rx23",
       "title": "工作完成任务表格",
       "viewType": "BlockView",
-      "dataSourceId": "ds_mg3eeken8srdn",
+      "dataSourceId": "",
       "viewConfig": {
         "view": "BlockView",
         "title": "块视图",
@@ -3846,7 +1380,7 @@
         "group": "categoryKey"
       },
       "collapsed": false,
-      "parentId": "group_mg3efjhr0b1xi",
+      "parentId": null,
       "group": "header"
     }
   ],
@@ -3869,40 +1403,7 @@
       "isOverviewMode": false,
       "initialDate": "2025-05-26",
       "useFieldGranularity": false,
-      "selectedThemes": [
-        "思考",
-        "思考/时间整理",
-        "思考/复盘整理",
-        "思考/思路整理",
-        "思考/读书",
-        "思考/自我",
-        "思考/垚垚",
-        "思考/阳阳",
-        "思考/婆婆",
-        "思考/芦苇",
-        "思考/家庭",
-        "生活",
-        "生活/高级生活",
-        "生活/娱乐",
-        "生活/垚垚",
-        "生活/家务",
-        "生活/整理",
-        "生活/车车",
-        "健康",
-        "健康/卫生",
-        "健康/睡眠",
-        "健康/身体",
-        "健康/习惯",
-        "健康/运动",
-        "健康/粑粑",
-        "健康/早餐",
-        "健康/午餐",
-        "健康/晚餐",
-        "健康/心情",
-        "健康/姨妈",
-        "健康/剪头发",
-        "健康/剪指甲"
-      ]
+      "selectedThemes": []
     },
     {
       "id": "layout_mepgxvhes0ghq",
@@ -3916,196 +1417,6 @@
       "parentId": "group_memcg1u3us3jc",
       "isOverviewMode": false,
       "initialDate": "2025-12-31",
-      "gridConfig": {
-        "columns": 2
-      }
-    },
-    {
-      "id": "layout_mer6a23a8isuw",
-      "name": "总结布局",
-      "viewInstanceIds": [
-        "view_mepgw6pp1iqso",
-        "view_mer5qc61gnav2",
-        "view_mer5qdssxdd2f",
-        "view_mer5qenaak5oq",
-        "view_mer5qlrm3xnu6",
-        "view_mepob3wx8y6de",
-        "view_mer5qc61jfxaw",
-        "view_mer5qdss5fz9m",
-        "view_mer5qena23btv",
-        "view_mer5qlrmishnl",
-        "view_mepob31qw4rkw",
-        "view_mer5qc61hph6b",
-        "view_mer5qdss3iyvk",
-        "view_mer5qenavnxxt",
-        "view_mer5qlrmy8s09",
-        "view_mepob2tblbjjz",
-        "view_mer5qc617rq9u",
-        "view_mer5qdsszcvn5",
-        "view_mer5qenaqlltt",
-        "view_mer5qlrmxm6dv"
-      ],
-      "displayMode": "grid",
-      "initialView": "周",
-      "initialDateFollowsNow": false,
-      "parentId": "group_mg3dh5ob6qoum",
-      "gridConfig": {
-        "columns": 5
-      },
-      "isOverviewMode": true,
-      "initialDate": "2025-09-21"
-    },
-    {
-      "id": "layout_mer6y66i78epn",
-      "name": "计划布局",
-      "viewInstanceIds": [
-        "view_mer60bnnknqug",
-        "view_mer60bno9eenu",
-        "view_mer60bnotqdt6",
-        "view_mer60bnoqjuvd",
-        "view_mer60bnoowtde",
-        "view_mer60bnnvblx5",
-        "view_mer60bnonxojo",
-        "view_mer60bnom80n2",
-        "view_mer60bnolot1w",
-        "view_mer60bnob6mvt",
-        "view_mer60bnn8haqj",
-        "view_mer60bnot3klw",
-        "view_mer60bno1632k",
-        "view_mer60bno49f5p",
-        "view_mer60bnosncfs",
-        "view_mer60bnoftke2",
-        "view_mer60bno7dsek",
-        "view_mer60bnopn0k0",
-        "view_mer60bnobvo0w",
-        "view_mer60bnor9x6r"
-      ],
-      "displayMode": "grid",
-      "initialView": "周",
-      "initialDateFollowsNow": false,
-      "parentId": "group_mg3dh5ob6qoum",
-      "gridConfig": {
-        "columns": 5
-      },
-      "isOverviewMode": true,
-      "initialDate": "2025-10-12"
-    },
-    {
-      "id": "layout_mescqn3ltmxo3",
-      "name": "excle",
-      "viewInstanceIds": [],
-      "displayMode": "list",
-      "initialView": "月",
-      "initialDateFollowsNow": true,
-      "parentId": null
-    },
-    {
-      "id": "layout_mg1ngnhxypp7y",
-      "name": "思考",
-      "viewInstanceIds": [
-        "view_mf2b6b80nnu6h",
-        "view_mg1nei0zv424h",
-        "view_mg1nehk33e9hw",
-        "view_mg1negwzlqdxz",
-        "view_mg1nefpgfsfqj"
-      ],
-      "displayMode": "grid",
-      "initialView": "周",
-      "initialDateFollowsNow": false,
-      "parentId": "group_mg3dh5ob6qoum",
-      "isOverviewMode": true,
-      "gridConfig": {
-        "columns": 5
-      },
-      "initialDate": "2025-09-29"
-    },
-    {
-      "id": "layout_mg231xprn1vj4",
-      "name": "思考主题",
-      "viewInstanceIds": [
-        "view_mewr7y1gvq0ro",
-        "view_mg23jnryg9byb",
-        "view_mg23w881hshrd",
-        "view_mg236ljzrwaqu",
-        "view_mg239n47213f2",
-        "view_mg23u59l0ni9a"
-      ],
-      "displayMode": "grid",
-      "initialView": "周",
-      "initialDateFollowsNow": true,
-      "parentId": "group_mg3dj3u9faw2x",
-      "gridConfig": {
-        "columns": 2
-      }
-    },
-    {
-      "id": "layout_mg3ehi9c3066u",
-      "name": "生活主题",
-      "viewInstanceIds": [
-        "view_mewr7y1gvq0ro",
-        "view_mg3efhaoz79uq",
-        "view_mg3efhaoxhbuh",
-        "view_mg3efhaoo0xzu",
-        "view_mg3efhaol9p1l",
-        "view_mg3efhaoc99bo"
-      ],
-      "displayMode": "grid",
-      "initialView": "周",
-      "initialDateFollowsNow": true,
-      "parentId": "group_mg3dj3u9faw2x",
-      "gridConfig": {
-        "columns": 2
-      }
-    },
-    {
-      "id": "layout_mg3ehhsg9rvcn",
-      "name": "健康主题",
-      "viewInstanceIds": [
-        "view_mewr7y1gvq0ro",
-        "view_mg3efi3l2ktm9",
-        "view_mg3efi3lf9gji",
-        "view_mg3efi3lyytx6",
-        "view_mg3efi3l2zkon",
-        "view_mg3efi3loagiv"
-      ],
-      "displayMode": "grid",
-      "initialView": "周",
-      "initialDateFollowsNow": true,
-      "parentId": "group_mg3dj3u9faw2x",
-      "gridConfig": {
-        "columns": 2
-      }
-    },
-    {
-      "id": "layout_mg3ehhbkvtfbh",
-      "name": "电脑主题",
-      "viewInstanceIds": [
-        "view_mg3efivklhn6l",
-        "view_mg3efivkjosv8",
-        "view_mg3efivk0ampd",
-        "view_mg3efivk55ory"
-      ],
-      "displayMode": "grid",
-      "initialView": "周",
-      "initialDateFollowsNow": true,
-      "parentId": "group_mg3dj3u9faw2x",
-      "gridConfig": {
-        "columns": 2
-      }
-    },
-    {
-      "id": "layout_mg3ehghk7gbth",
-      "name": "工作主题",
-      "viewInstanceIds": [
-        "view_mg3efjhr8rx23",
-        "view_mg3efjhrbkyux",
-        "view_mg3efjhrxp5jk",
-        "view_mg3efjhrahjd9"
-      ],
-      "displayMode": "grid",
-      "initialView": "周",
-      "initialDateFollowsNow": true,
-      "parentId": "group_mg3dj3u9faw2x",
       "gridConfig": {
         "columns": 2
       }
