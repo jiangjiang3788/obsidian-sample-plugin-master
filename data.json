@@ -19,63 +19,6 @@
       "type": "layout"
     }
   ],
-  "dataSources": [
-    {
-      "id": "ds_membld9cc3oj6",
-      "name": "未完成任务",
-      "filters": [
-        {
-          "field": "categoryKey",
-          "op": "=",
-          "value": "未完成任务"
-        }
-      ],
-      "sort": [],
-      "parentId": "group_mem9c0yqeumgu"
-    },
-    {
-      "id": "ds_mer6herh46uji",
-      "name": "完成任务",
-      "filters": [],
-      "sort": [],
-      "parentId": "group_mem9c0yqeumgu"
-    },
-    {
-      "id": "ds_mer6iqguhcilh",
-      "name": "计划总结思考",
-      "filters": [
-        {
-          "field": "type",
-          "op": "=",
-          "value": "block"
-        },
-        {
-          "field": "categoryKey",
-          "op": "!=",
-          "value": "打卡"
-        }
-      ],
-      "sort": [
-        {
-          "field": "categoryKey",
-          "dir": "asc"
-        }
-      ],
-      "parentId": "group_mem9c0yqeumgu"
-    },
-    {
-      "id": "ds_mer6kbdnogrty",
-      "name": "打卡",
-      "filters": [],
-      "sort": [
-        {
-          "field": "date",
-          "dir": "asc"
-        }
-      ],
-      "parentId": "group_mem9c0yqeumgu"
-    }
-  ],
   "viewInstances": [
     {
       "id": "view_me9ykdhhufm5i",
@@ -227,7 +170,14 @@
         "colField": "file.basename"
       },
       "parentId": "group_memc1a9ofen88",
-      "collapsed": true
+      "collapsed": true,
+      "filters": [
+        {
+          "field": "categoryKey",
+          "op": "=",
+          "value": "未完成任务"
+        }
+      ]
     },
     {
       "id": "view_mer6ll4mtbjry",
@@ -395,6 +345,47 @@
         "content"
       ],
       "group": "tags"
+    },
+    {
+      "id": "view_mh4itucqmm9rt",
+      "title": "新视图",
+      "viewType": "TimelineView",
+      "dataSourceId": "",
+      "viewConfig": {
+        "defaultHourHeight": 50,
+        "MAX_HOURS_PER_DAY": 24,
+        "UNTRACKED_LABEL": "未记录",
+        "categories": {
+          "工作": {
+            "color": "#60a5fa",
+            "files": [
+              "工作",
+              "Work"
+            ]
+          },
+          "学习": {
+            "color": "#34d399",
+            "files": [
+              "学习",
+              "Study"
+            ]
+          },
+          "生活": {
+            "color": "#fbbf24",
+            "files": [
+              "生活",
+              "Life"
+            ]
+          }
+        },
+        "progressOrder": [
+          "工作",
+          "学习",
+          "生活"
+        ]
+      },
+      "collapsed": true,
+      "parentId": null
     }
   ],
   "layouts": [
@@ -8521,5 +8512,62 @@
     ]
   },
   "floatingTimerEnabled": true,
-  "activeThemePaths": []
+  "activeThemePaths": [],
+  "dataSources": [
+    {
+      "id": "ds_membld9cc3oj6",
+      "name": "未完成任务",
+      "filters": [
+        {
+          "field": "categoryKey",
+          "op": "=",
+          "value": "未完成任务"
+        }
+      ],
+      "sort": [],
+      "parentId": "group_mem9c0yqeumgu"
+    },
+    {
+      "id": "ds_mer6herh46uji",
+      "name": "完成任务",
+      "filters": [],
+      "sort": [],
+      "parentId": "group_mem9c0yqeumgu"
+    },
+    {
+      "id": "ds_mer6iqguhcilh",
+      "name": "计划总结思考",
+      "filters": [
+        {
+          "field": "type",
+          "op": "=",
+          "value": "block"
+        },
+        {
+          "field": "categoryKey",
+          "op": "!=",
+          "value": "打卡"
+        }
+      ],
+      "sort": [
+        {
+          "field": "categoryKey",
+          "dir": "asc"
+        }
+      ],
+      "parentId": "group_mem9c0yqeumgu"
+    },
+    {
+      "id": "ds_mer6kbdnogrty",
+      "name": "打卡",
+      "filters": [],
+      "sort": [
+        {
+          "field": "date",
+          "dir": "asc"
+        }
+      ],
+      "parentId": "group_mem9c0yqeumgu"
+    }
+  ]
 }

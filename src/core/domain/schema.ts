@@ -7,8 +7,8 @@ export interface Groupable {
     parentId: string | null;
 }
 
-// [新增] 定义分组的类型
-export type GroupType = 'dataSource' | 'viewInstance' | 'layout';
+// [修改] 定义分组的类型 - 移除 dataSource
+export type GroupType = 'viewInstance' | 'layout';
 export interface Group extends Groupable {
     name: string;
     type: GroupType;
@@ -20,7 +20,6 @@ export interface Group extends Groupable {
 export interface ThinkSettings {
     // [新增] 统一存储所有分组
     groups: Group[];
-    dataSources: DataSource[];
     viewInstances: ViewInstance[];
     layouts: Layout[];
     inputSettings: InputSettings;
@@ -31,8 +30,7 @@ export interface ThinkSettings {
 }
 
 export const DEFAULT_SETTINGS: ThinkSettings = {
-    groups: [], // [新增]
-    dataSources: [],
+    groups: [],
     viewInstances: [],
     layouts: [],
     inputSettings: { blocks: [], themes: [], overrides: [] },
@@ -94,23 +92,19 @@ export interface InputSettings {
 export const VIEW_OPTIONS = ['BlockView', 'TableView', 'ExcelView', 'TimelineView', 'StatisticsView', 'HeatmapView'] as const;
 export type ViewName = typeof VIEW_OPTIONS[number];
 
-// [修改] 实现 Groupable 接口
-export interface DataSource extends Groupable {
-    name: string;
-    filters: FilterRule[];
-    sort: SortRule[];
-}
-
-// [修改] 实现 Groupable 接口
+// [修改] 实现 Groupable 接口，整合数据源功能
 export interface ViewInstance extends Groupable {
     title: string;
     viewType: ViewName;
-    dataSourceId: string;
+    dataSourceId?: string; // [废弃] 保留用于向后兼容，新视图不再使用
     collapsed?: boolean;
     fields?: string[];
     group?: string;
     viewConfig?: Record<string, any>;
     actions?: ActionConfig[];
+    // [新增] 整合数据源的筛选和排序功能
+    filters?: FilterRule[];
+    sort?: SortRule[];
 }
 
 // [修改] 实现 Groupable 接口

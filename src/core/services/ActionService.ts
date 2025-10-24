@@ -21,14 +21,17 @@ export class ActionService {
 
     public getQuickInputConfigForView(viewInstance: ViewInstance, dateContext: dayjs.Dayjs, periodContext: string): QuickInputConfig | null {
         const settings = this.appStore.getSettings();
-        const dataSource = settings.dataSources.find(ds => ds.id === viewInstance.dataSourceId);
-        if (!dataSource) {
-            new Notice('快捷输入失败：找不到对应的数据源。');
-            return null;
+        
+        // 检查是否是统计视图，如果是则使用特殊处理
+        if (viewInstance.viewType === 'StatisticsView') {
+            return this.getQuickInputConfigForStatisticsView(viewInstance, dateContext, periodContext);
         }
-        const categoryFilter = dataSource.filters.find(f => f.field === 'categoryKey' && (f.op === '=' || f.op === 'includes'));
+        
+        // 从视图实例的筛选条件中查找 categoryKey
+        const filters = viewInstance.filters || [];
+        const categoryFilter = filters.find((f: any) => f.field === 'categoryKey' && (f.op === '=' || f.op === 'includes'));
         if (!categoryFilter || !categoryFilter.value) {
-            new Notice('快捷输入失败：此视图的数据源未按 "categoryKey" 进行筛选。');
+            new Notice('快捷输入失败：此视图未按 "categoryKey" 进行筛选。');
             return null;
         }
         const blockName = categoryFilter.value as string;
@@ -49,7 +52,7 @@ export class ActionService {
         }
         
         let preselectedThemeId: string | undefined;
-        const themeFilter = dataSource.filters.find(f => f.field === 'tags' && f.op === 'includes' && typeof f.value === 'string');
+        const themeFilter = filters.find((f: any) => f.field === 'tags' && f.op === 'includes' && typeof f.value === 'string');
         if (themeFilter) {
             const themePath = themeFilter.value;
             const matchedTheme = settings.inputSettings.themes.find(t => t.path === themePath);
@@ -63,7 +66,7 @@ export class ActionService {
             '周期': periodContext,
         };
         
-        const equalityFilters = dataSource.filters.filter(f => f.op === '=');
+        const equalityFilters = filters.filter((f: any) => f.op === '=');
         for (const filter of equalityFilters) {
             if (filter.field === 'categoryKey') continue;
 
@@ -123,6 +126,78 @@ export class ActionService {
         return {
             blockId: targetBlock.id,
             context: context
+        };
+    }
+
+    /**
+     * 为统计视图获取快捷输入配置
+     * 统计视图的分类信息存储在 viewConfig.categories 中，而不是数据源筛选条件里
+     */
+    public getQuickInputConfigForStatisticsView(
+        viewInstance: ViewInstance, 
+        dateContext: dayjs.Dayjs, 
+        periodContext: string,
+        categoryName?: string
+    ): QuickInputConfig | null {
+        const settings = this.appStore.getSettings();
+        const viewConfig = viewInstance.viewConfig || {};
+        const categories = viewConfig.categories || [];
+        
+        if (categories.length === 0) {
+            new Notice('快捷输入失败：统计视图未配置分类。');
+            return null;
+        }
+        
+        // 如果指定了分类名称，使用它；否则使用第一个分类
+        const targetCategoryName = categoryName || categories[0].name;
+        let targetBlock = settings.inputSettings.blocks.find(b => b.name === targetCategoryName);
+        
+        // 特殊处理：如果是任务相关的 categoryKey，尝试匹配包含"任务"的模板
+        if (!targetBlock && (targetCategoryName === '完成任务' || targetCategoryName === '未完成任务')) {
+            targetBlock = settings.inputSettings.blocks.find(b => b.name.includes('任务'));
+        }
+        
+        if (!targetBlock) {
+            if (targetCategoryName === '完成任务' || targetCategoryName === '未完成任务') {
+                new Notice(`快捷输入失败：找不到名称包含"任务"的Block模板。请在设置中创建一个任务类型的模板。`);
+            } else {
+                new Notice(`快捷输入失败：找不到名为 "${targetCategoryName}" 的Block模板。`);
+            }
+            return null;
+        }
+        
+        // 检查主题筛选
+        let preselectedThemeId: string | undefined;
+        const filters = viewInstance.filters || [];
+        const themeFilter = filters.find((f: any) => f.field === 'tags' && f.op === 'includes' && typeof f.value === 'string');
+        if (themeFilter) {
+            const themePath = themeFilter.value;
+            const matchedTheme = settings.inputSettings.themes.find(t => t.path === themePath);
+            if (matchedTheme) {
+                preselectedThemeId = matchedTheme.id;
+            }
+        }
+        
+        const context: Record<string, any> = {
+            '日期': dateContext.format('YYYY-MM-DD'),
+            '周期': periodContext,
+        };
+        
+        // 从视图实例的其他筛选条件中提取上下文
+        const equalityFilters = filters.filter((f: any) => f.op === '=' && f.field !== 'categoryKey');
+        for (const filter of equalityFilters) {
+            for (const templateField of targetBlock.fields) {
+                if (filter.field === templateField.key || filter.field === templateField.label) {
+                    context[templateField.key] = filter.value;
+                    break;
+                }
+            }
+        }
+        
+        return {
+            blockId: targetBlock.id,
+            context: context,
+            themeId: preselectedThemeId,
         };
     }
 

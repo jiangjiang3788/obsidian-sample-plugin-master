@@ -11,6 +11,7 @@ import { dataStore } from '@state/storeRegistry';
 import { useMemo } from 'preact/hooks';
 import { SimpleSelect } from '@shared/ui/SimpleSelect';
 import { SettingsTreeView, TreeItem } from './components/SettingsTreeView';
+import { RuleBuilder } from './components/RuleBuilder'; // [新增] 导入 RuleBuilder
 import { App } from 'obsidian';
 import { useSettingsManager } from './hooks/useSettingsManager';
 import { DndContext, closestCenter } from '@dnd-kit/core';
@@ -19,7 +20,6 @@ import { arrayMove } from '@core/utils/array';
 const LABEL_WIDTH = '80px';
 
 function ViewInstanceEditor({ vi, appStore }: { vi: ViewInstance, appStore: AppStore }) {
-    const dataSources = useStore(state => state.settings.dataSources);
     const fieldOptions = useMemo(() => getAllFields(dataStore?.queryItems() || []), []);
     const EditorComponent = VIEW_EDITORS[vi.viewType];
 
@@ -44,7 +44,6 @@ function ViewInstanceEditor({ vi, appStore }: { vi: ViewInstance, appStore: AppS
     };
 
     const viewTypeOptions = VIEW_OPTIONS.map(v => ({ value: v, label: v.replace('View', '') }));
-    const dataSourceOptions = dataSources.map(ds => ({ value: ds.id, label: ds.name }));
     const availableFieldOptions = fieldOptions.filter(f => !vi.fields?.includes(f)).map(f => ({ value: f, label: f }));
 
     const groupFieldOptions = useMemo(() => [
@@ -55,20 +54,8 @@ function ViewInstanceEditor({ vi, appStore }: { vi: ViewInstance, appStore: AppS
     return (
         <Stack spacing={2} sx={{ p: '8px 16px 16px 50px' }}>
             <Stack direction="row" alignItems="center" spacing={2}>
-                <Typography sx={{ width: LABEL_WIDTH, flexShrink: 0, fontWeight: 500 }}>基础配置</Typography>
+                <Typography sx={{ width: LABEL_WIDTH, flexShrink: 0, fontWeight: 500 }}>视图类型</Typography>
                 <SimpleSelect value={vi.viewType} options={viewTypeOptions} onChange={val => handleUpdate({ viewType: val as ViewName })} sx={{ minWidth: 150, flexGrow: 1 }} />
-                
-                {/* [核心修改] 将 SimpleSelect 替换为 Autocomplete */}
-                <Autocomplete
-                    options={dataSourceOptions}
-                    getOptionLabel={(option) => option.label || ''}
-                    value={dataSourceOptions.find(opt => opt.value === vi.dataSourceId) || null}
-                    onChange={(_, newValue) => handleUpdate({ dataSourceId: newValue ? newValue.value : '' })}
-                    renderInput={(params) => <TextField {...params} variant="outlined" placeholder="-- 搜索数据源 --" />}
-                    sx={{ minWidth: 150, flexGrow: 1 }}
-                    size="small"
-                />
-
                 <FormControlLabel control={<Checkbox size="small" checked={!!vi.collapsed} onChange={e => handleUpdate({ collapsed: e.target.checked })} />} label={<Typography noWrap>默认折叠</Typography>} />
             </Stack>
             <Stack direction="row" flexWrap="wrap" spacing={1} useFlexGap alignItems="center">
@@ -84,6 +71,30 @@ function ViewInstanceEditor({ vi, appStore }: { vi: ViewInstance, appStore: AppS
                 <Typography sx={{ width: LABEL_WIDTH, flexShrink: 0, fontWeight: 500 }}>分组字段</Typography>
                 <SimpleSelect fullWidth value={vi.group || ''} options={groupFieldOptions} onChange={val => handleUpdate({ group: val || undefined })} />
             </Stack>
+            
+            {/* 数据筛选和排序 */}
+            <Box pt={1} mt={1} sx={{ borderTop: '1px solid rgba(0,0,0,0.08)' }}>
+                <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 1.5, mt: 1 }}>数据筛选与排序</Typography>
+                <Box mb={2}>
+                    <RuleBuilder 
+                        title="筛选规则" 
+                        mode="filter" 
+                        rows={vi.filters || []} 
+                        fieldOptions={fieldOptions} 
+                        onChange={(rows: any) => handleUpdate({ filters: rows })} 
+                    />
+                </Box>
+                <Box>
+                    <RuleBuilder 
+                        title="排序规则" 
+                        mode="sort" 
+                        rows={vi.sort || []} 
+                        fieldOptions={fieldOptions} 
+                        onChange={(rows: any) => handleUpdate({ sort: rows })} 
+                    />
+                </Box>
+            </Box>
+            
             {EditorComponent && (
                 <Box pt={1} mt={1} sx={{ borderTop: '1px solid rgba(0,0,0,0.08)' }}>
                     <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 1.5, mt: 1 }}>{vi.viewType.replace('View', '')} 专属配置</Typography>
