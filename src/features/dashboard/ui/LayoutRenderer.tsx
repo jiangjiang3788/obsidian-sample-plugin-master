@@ -8,7 +8,6 @@ import { ModulePanel } from './ModulePanel';
 import { ViewComponents } from '@features/dashboard/ui';
 import { getDateRange, dayjs, formatDateForView } from '@core/utils/date';
 import { useStore } from '@state/AppStore';
-import { TimeNavigator } from './TimeNavigator';
 import type { ActionService } from '@core/services/ActionService';
 import type { TaskService } from '@core/services/taskService';
 import { useViewData } from '../hooks/useViewData';
@@ -129,24 +128,19 @@ export function LayoutRenderer({ layout, dataStore, app, actionService, taskServ
     }, [allViews, layout.viewInstanceIds]);
 
     const getInitialDate = () => {
-        if (layout.isOverviewMode) {
-            return layout.initialDate ? dayjs(layout.initialDate) : dayjs();
-        }
         return layout.initialDateFollowsNow ? dayjs() : (layout.initialDate ? dayjs(layout.initialDate) : dayjs());
     };
 
     const [layoutView, setLayoutView] = useState(layout.initialView || '月');
     const [layoutDate, setLayoutDate] = useState(getInitialDate());
-    const [kw, setKw] = useState('');
-    const [useFieldGranularity, setUseFieldGranularity] = useState(!!layout.useFieldGranularity);
     const [selectedThemes, setSelectedThemes] = useState<string[]>(layout.selectedThemes || []); // [新增] 主题筛选状态
     
+    // [修复] 分离布局重置和主题筛选的effect，避免主题筛选时跳转视图
     useEffect(() => {
         setLayoutDate(getInitialDate());
         setLayoutView(layout.initialView || '月');
-        setUseFieldGranularity(!!layout.useFieldGranularity);
         setSelectedThemes(layout.selectedThemes || []);
-    }, [layout.id, layout.initialDate, layout.initialDateFollowsNow, layout.isOverviewMode, layout.initialView, layout.useFieldGranularity, layout.selectedThemes]);
+    }, [layout.id, layout.initialDate, layout.initialDateFollowsNow, layout.initialView]);
 
     // [新增] 处理导出的函数
     const handleExport = useCallback((viewId: string, viewTitle: string) => {
@@ -159,14 +153,6 @@ export function LayoutRenderer({ layout, dataStore, app, actionService, taskServ
         navigator.clipboard.writeText(markdownContent);
         new Notice(`"${viewTitle}" 的内容已复制到剪贴板！`);
     }, []); // 空依赖数组，因为它使用 ref，不会导致不必要的重渲染
-
-
-    const handleOverviewDateChange = (newDate: dayjs.Dayjs, newView: '年' | '季' | '月' | '周') => {
-        const newDateString = newDate.format('YYYY-MM-DD');
-        setLayoutDate(newDate);
-        setLayoutView(newView);
-        appStore.updateLayout(layout.id, { initialDate: newDateString, initialView: newView });
-    };
 
     const handleQuickInputAction = (viewInstance: ViewInstance) => {
         const config = actionService.getQuickInputConfigForView(viewInstance, layoutDate, layoutView);
@@ -245,10 +231,10 @@ export function LayoutRenderer({ layout, dataStore, app, actionService, taskServ
                             const range = getDateRange(layoutDate, layoutView);
                             return [range.startDate.toDate(), range.endDate.toDate()] as [Date, Date];
                         }, [layoutDate, layoutView])}
-                        keyword={kw}
+                        keyword=""
                         layoutView={layoutView}
-                        isOverviewMode={!!layout.isOverviewMode}
-                        useFieldGranularity={useFieldGranularity}
+                        isOverviewMode={false}
+                        useFieldGranularity={false}
                         selectedThemes={selectedThemes} // [新增] 传递主题筛选
                         app={app}
                         onMarkDone={handleMarkItemDone}
@@ -266,54 +252,17 @@ export function LayoutRenderer({ layout, dataStore, app, actionService, taskServ
     return (
         <div>
             {!layout.hideToolbar && (
-                layout.isOverviewMode ? (
-                    <div class="tp-toolbar" style="margin-bottom:8px;">
-                        <TimeNavigator currentDate={layoutDate} onDateChange={handleOverviewDateChange} />
-                        <label style="margin-left:8px; display:inline-flex; align-items:center; cursor:pointer;" title="勾选后，将条目的字段粒度（年/季/月/周/天）与当前视图的时间窗口同时作为筛选条件。未勾选仅按时间窗口筛选。未设置粒度的条目默认当天。">
-                            <input 
-                                type="checkbox" 
-                                checked={useFieldGranularity} 
-                                onChange={e => {
-                                    const newValue = (e.target as HTMLInputElement).checked;
-                                    setUseFieldGranularity(newValue);
-                                    appStore.updateLayout(layout.id, { useFieldGranularity: newValue });
-                                }}
-                                style="margin-right:4px;" 
-                            />
-                            按字段粒度过滤
-                        </label>
-                        <ThemeFilter
-                            selectedThemes={selectedThemes}
-                            onSelectionChange={handleThemeSelectionChange}
-                        />
-                    </div>
-                ) : (
-                    <div class="tp-toolbar" style="margin-bottom:8px;">
-                        {['年', '季', '月', '周', '天'].map(v => ( <button onClick={() => setLayoutView(v)} class={v === layoutView ? 'active' : ''}>{v}</button>))}
-                        <button disabled style="font-weight:bold;margin:0 4px;background:#fff;">{fmt(layoutDate, layoutView)}</button>
-                        <button onClick={() => setLayoutDate(prev => prev.clone().subtract(1, unit(layoutView)))}>←</button>
-                        <button onClick={() => setLayoutDate(prev => prev.clone().add(1, unit(layoutView)))}>→</button>
-                        <button onClick={() => setLayoutDate(dayjs())}>＝</button>
-                        <input placeholder="快速过滤…" style="margin-left:4px;" value={kw} onInput={e => setKw((e.target as HTMLInputElement).value)} />
-                        <label style="margin-left:8px; display:inline-flex; align-items:center; cursor:pointer;" title="勾选后，将条目的字段粒度（年/季/月/周/天）与当前视图的时间窗口同时作为筛选条件。未勾选仅按时间窗口筛选。未设置粒度的条目默认当天。">
-                            <input 
-                                type="checkbox" 
-                                checked={useFieldGranularity} 
-                                onChange={e => {
-                                    const newValue = (e.target as HTMLInputElement).checked;
-                                    setUseFieldGranularity(newValue);
-                                    appStore.updateLayout(layout.id, { useFieldGranularity: newValue });
-                                }}
-                                style="margin-right:4px;" 
-                            />
-                            按字段粒度过滤
-                        </label>
-                        <ThemeFilter
-                            selectedThemes={selectedThemes}
-                            onSelectionChange={handleThemeSelectionChange}
-                        />
-                    </div>
-                )
+                <div class="tp-toolbar" style="margin-bottom:8px;">
+                    {['年', '季', '月', '周', '天'].map(v => ( <button onClick={() => setLayoutView(v)} class={v === layoutView ? 'active' : ''}>{v}</button>))}
+                    <button disabled style="font-weight:bold;margin:0 4px;background:#fff;">{fmt(layoutDate, layoutView)}</button>
+                    <button onClick={() => setLayoutDate(prev => prev.clone().subtract(1, unit(layoutView)))}>←</button>
+                    <button onClick={() => setLayoutDate(prev => prev.clone().add(1, unit(layoutView)))}>→</button>
+                    <button onClick={() => setLayoutDate(dayjs())}>＝</button>
+                    <ThemeFilter
+                        selectedThemes={selectedThemes}
+                        onSelectionChange={handleThemeSelectionChange}
+                    />
+                </div>
             )}
             <div style={gridStyle}>
                 {isStateInitialized && layout.viewInstanceIds.map(renderViewInstance)}
