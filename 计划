@@ -1,0 +1,861 @@
+# Think OS 插件渐进式优化计划
+
+> **指导原则**：由点及面，逐步推进，每步可验证，保持系统稳定性
+
+---
+
+## 🎯 总体策略
+
+### 优化理念
+- ✅ 小步快跑，快速迭代
+- ✅ 向后兼容，不破坏现有功能
+- ✅ 先工具后架构
+- ✅ 测试先行，保障质量
+- ✅ 文档同步，知识沉淀
+
+### 时间规划
+- 第一阶段：2周（基础建设）
+- 第二阶段：3周（局部优化）
+- 第三阶段：4周（模块重构）
+- 第四阶段：持续迭代
+
+---
+
+## 📅 第一阶段：基础建设（第1-2周）
+
+> **目标**：建立开发基础设施，为后续优化铺路，零风险改动
+
+### Week 1: 工具库建设
+
+#### 1.1 创建通用工具函数库 ⭐
+**位置**：`src/shared/utils/`
+
+**任务清单**：
+```typescript
+// 第1天：数组操作工具
+src/shared/utils/array.ts
+- moveInArray(arr, id, direction)
+- duplicateInArray(arr, id, nameField)
+- reorderArray(arr, ids)
+- batchUpdate(arr, ids, updater)
+- batchDelete(arr, ids)
+
+// 第2天：对象操作工具
+src/shared/utils/object.ts
+- deepClone(obj)
+- deepMerge(target, source)
+- pickFields(obj, fields)
+- omitFields(obj, fields)
+
+// 第3天：字符串处理工具
+src/shared/utils/string.ts
+- generateId(prefix)
+- slugify(text)
+- truncate(text, maxLength)
+- highlightText(text, keyword)
+```
+
+**产出**：
+- ✅ 5个工具文件 + 完整单元测试
+- ✅ 使用文档和示例
+
+**验证方式**：
+- 单元测试100%覆盖
+- 现有功能零影响
+
+---
+
+#### 1.2 创建类型定义优化 ⭐
+**位置**：`src/core/types/`
+
+**任务清单**：
+```typescript
+// 第4天：通用类型定义
+src/core/types/common.ts
+- type ID = string
+- type Timestamp = number
+- interface Identifiable { id: ID }
+- interface Timestamped { created: Timestamp; modified: Timestamp }
+- interface Hierarchical { parentId: ID | null }
+
+// 第5天：业务类型精炼
+src/core/types/business.ts
+- 将schema.ts中的核心类型迁移
+- 添加类型保护函数（isDataSource, isViewInstance等）
+- 添加类型验证器
+```
+
+**产出**：
+- ✅ 类型定义文件 + 类型守卫函数
+- ✅ 迁移指南文档
+
+**验证方式**：
+- TypeScript编译零错误
+- 现有代码逐步迁移（非强制）
+
+---
+
+### Week 2: 开发规范和测试基础
+
+#### 2.1 建立代码规范 ⭐
+**任务清单**：
+```bash
+# 第1-2天：配置开发工具
+- 添加ESLint配置（渐进式规则）
+- 添加Prettier配置
+- 配置Git hooks（husky）
+- 添加代码注释规范
+
+# 第3天：创建开发文档
+docs/development/
+├── coding-standards.md    # 编码规范
+├── git-workflow.md        # Git工作流
+├── testing-guide.md       # 测试指南
+└── architecture.md        # 架构说明
+```
+
+**产出**：
+- ✅ 开发工具配置文件
+- ✅ 开发规范文档
+
+**验证方式**：
+- 团队评审通过
+- 试运行一周无阻碍
+
+---
+
+#### 2.2 测试基础设施 ⭐⭐
+**任务清单**：
+```typescript
+// 第4-5天：测试工具库
+test/helpers/
+├── fixtures.ts           // 测试数据工厂
+├── mocks.ts             // Mock对象
+└── assertions.ts        // 自定义断言
+
+// fixtures.ts 示例
+export class TestDataFactory {
+  static createItem(overrides?: Partial<Item>): Item
+  static createDataSource(overrides?: Partial<DataSource>): DataSource
+  static createViewInstance(overrides?: Partial<ViewInstance>): ViewInstance
+  static createSettings(overrides?: Partial<ThinkSettings>): ThinkSettings
+}
+```
+
+**产出**：
+- ✅ 测试辅助工具库
+- ✅ 10个核心功能的测试用例
+
+**验证方式**：
+- 测试覆盖率从57%提升到65%
+- CI/CD集成测试通过
+
+---
+
+## 📅 第二阶段：局部优化（第3-5周）
+
+> **目标**：优化高频使用的模块，提升性能和代码质量
+
+### Week 3: AppStore优化（第一步）
+
+#### 3.1 提取Settings管理逻辑 ⭐⭐⭐
+**位置**：`src/state/stores/SettingsStore.ts`
+
+**任务清单**：
+```typescript
+// 第1-2天：创建SettingsStore
+export class SettingsStore {
+  private settings: ThinkSettings;
+  
+  // 将AppStore中的设置相关方法迁移
+  getSettings(): ThinkSettings
+  updateSettings(updater: (draft: ThinkSettings) => void): Promise<void>
+  
+  // 数据源管理
+  addDataSource(name: string, parentId?: string): Promise<void>
+  updateDataSource(id: string, updates: Partial<DataSource>): Promise<void>
+  deleteDataSource(id: string): Promise<void>
+  
+  // ... 其他设置相关方法
+}
+
+// 第3天：在AppStore中使用SettingsStore
+export class AppStore {
+  private settingsStore: SettingsStore;
+  
+  // 代理方法，保持API兼容
+  getSettings() { return this.settingsStore.getSettings(); }
+  // ... 其他代理方法
+}
+```
+
+**产出**：
+- ✅ SettingsStore独立模块
+- ✅ 保持AppStore API不变（兼容层）
+- ✅ 单元测试
+
+**验证方式**：
+- 所有现有功能正常运行
+- 性能无退化
+- 测试全部通过
+
+---
+
+#### 3.2 优化批量操作 ⭐⭐
+**任务清单**：
+```typescript
+// 第4-5天：创建批量操作基类
+src/shared/patterns/BatchOperations.ts
+
+export class BatchOperationHelper<T extends {id: string}> {
+  batchUpdate(
+    items: T[], 
+    ids: string[], 
+    updater: (item: T) => Partial<T>
+  ): T[]
+  
+  batchDelete(items: T[], ids: string[]): T[]
+  
+  batchMove(items: T[], ids: string[], targetParentId: string): T[]
+}
+
+// 在各Store中复用
+class SettingsStore {
+  private batchHelper = new BatchOperationHelper<DataSource>();
+  
+  async batchUpdateDataSources(ids: string[], updates: Partial<DataSource>) {
+    await this._updateSettingsAndPersist(draft => {
+      draft.dataSources = this.batchHelper.batchUpdate(
+        draft.dataSources, ids, () => updates
+      );
+    });
+  }
+}
+```
+
+**产出**：
+- ✅ 批量操作工具类
+- ✅ 应用到3个以上实体
+- ✅ 性能测试报告
+
+**验证方式**：
+- 批量操作性能提升30%+
+- 代码复用度提升
+
+---
+
+### Week 4: DataStore性能优化
+
+#### 4.1 添加查询索引 ⭐⭐⭐⭐
+**任务清单**：
+```typescript
+// 第1-3天：实现多级索引
+src/core/services/DataStore.ts
+
+class DataStore {
+  // 新增索引
+  private tagIndex = new Map<string, Set<string>>();      // tag -> item IDs
+  private themeIndex = new Map<string, Set<string>>();    // theme -> item IDs
+  private dateIndex = new Map<string, Set<string>>();     // date -> item IDs
+  private fileIndex = new Map<string, Item[]>();          // 保持现有
+  
+  // 索引维护方法
+  private updateIndexes(item: Item, operation: 'add' | 'remove'): void {
+    if (operation === 'add') {
+      // 更新tag索引
+      item.tags.forEach(tag => {
+        if (!this.tagIndex.has(tag)) this.tagIndex.set(tag, new Set());
+        this.tagIndex.get(tag)!.add(item.id);
+      });
+      // 更新theme索引
+      if (item.theme) {
+        if (!this.themeIndex.has(item.theme)) this.themeIndex.set(item.theme, new Set());
+        this.themeIndex.get(item.theme)!.add(item.id);
+      }
+      // ... 其他索引
+    } else {
+      // 移除逻辑
+    }
+  }
+  
+  // 优化查询
+  queryItems(filters: FilterRule[], sortRules: SortRule[]): Item[] {
+    // 1. 使用索引快速过滤
+    let candidateIds: Set<string> | null = null;
+    
+    // 如果有tag过滤，使用tag索引
+    const tagFilter = filters.find(f => f.field === 'tags');
+    if (tagFilter) {
+      candidateIds = this.tagIndex.get(tagFilter.value) || new Set();
+    }
+    
+    // 如果有theme过滤，使用theme索引
+    const themeFilter = filters.find(f => f.field === 'theme');
+    if (themeFilter) {
+      const themeSet = this.themeIndex.get(themeFilter.value) || new Set();
+      candidateIds = candidateIds 
+        ? new Set([...candidateIds].filter(id => themeSet.has(id)))
+        : themeSet;
+    }
+    
+    // 2. 在候选集中应用剩余过滤器
+    const candidates = candidateIds 
+      ? this.items.filter(item => candidateIds.has(item.id))
+      : this.items;
+    
+    // 3. 应用过滤和排序
+    return sortItems(filterByRules(candidates, filters), sortRules);
+  }
+}
+```
+
+**产出**：
+- ✅ 索引系统实现
+- ✅ 查询性能基准测试
+- ✅ 对比测试报告
+
+**验证方式**：
+- 大数据集(1000+ items)查询速度提升3-5倍
+- 内存增长可控（<10%）
+
+---
+
+#### 4.2 优化缓存策略 ⭐⭐⭐
+**任务清单**：
+```typescript
+// 第4-5天：改进缓存管理
+src/core/services/cache/CacheManager.ts
+
+class CacheManager {
+  private saveQueue: Array<{path: string, data: any}> = [];
+  private isSaving = false;
+  
+  // 队列化保存，避免并发冲突
+  async scheduleSave(path: string, data: any, priority: 'high' | 'normal' = 'normal') {
+    this.saveQueue.push({path, data, priority});
+    if (!this.isSaving) {
+      await this.processSaveQueue();
+    }
+  }
+  
+  private async processSaveQueue() {
+    this.isSaving = true;
+    while (this.saveQueue.length > 0) {
+      const task = this.saveQueue.shift()!;
+      try {
+        await this.storage.writeJSON(task.path, task.data);
+      } catch (error) {
+        console.error('缓存保存失败', error);
+        // 重试逻辑
+        if (task.retryCount < 3) {
+          this.saveQueue.push({...task, retryCount: (task.retryCount || 0) + 1});
+        }
+      }
+    }
+    this.isSaving = false;
+  }
+}
+
+// 在DataStore中使用
+class DataStore {
+  private cacheManager = new CacheManager(this.storage);
+  
+  private _scheduleCacheSave() {
+    this.cacheManager.scheduleSave('Think/cache.json', this.cache);
+  }
+}
+```
+
+**产出**：
+- ✅ 可靠的缓存管理器
+- ✅ 重试机制
+- ✅ 数据丢失风险降低
+
+**验证方式**：
+- 压力测试：100次快速保存无数据丢失
+- 异常场景测试通过
+
+---
+
+### Week 5: UI组件复用
+
+#### 5.1 提取通用表单组件 ⭐⭐
+**任务清单**：
+```typescript
+// 第1-3天：创建表单组件库
+src/shared/ui/components/Form/
+
+// FormField.tsx - 通用表单字段
+export const FormField = ({ 
+  label, 
+  type, 
+  value, 
+  onChange,
+  error,
+  ...props 
+}: FormFieldProps) => {
+  return (
+    <div class="form-field">
+      <label>{label}</label>
+      {type === 'text' && <input type="text" value={value} onChange={onChange} {...props} />}
+      {type === 'textarea' && <textarea value={value} onChange={onChange} {...props} />}
+      {type === 'select' && <select value={value} onChange={onChange} {...props}>
+        {props.options?.map(opt => <option value={opt.value}>{opt.label}</option>)}
+      </select>}
+      {error && <span class="error">{error}</span>}
+    </div>
+  );
+};
+
+// useForm.ts - 表单状态管理Hook
+export const useForm = <T extends Record<string, any>>(
+  initialValues: T,
+  onSubmit: (values: T) => void | Promise<void>
+) => {
+  const [values, setValues] = useState(initialValues);
+  const [errors, setErrors] = useState<Partial<Record<keyof T, string>>>({});
+  
+  const handleChange = (field: keyof T) => (e: Event) => {
+    const target = e.target as HTMLInputElement;
+    setValues(prev => ({...prev, [field]: target.value}));
+  };
+  
+  const handleSubmit = async (e: Event) => {
+    e.preventDefault();
+    await onSubmit(values);
+  };
+  
+  return { values, errors, handleChange, handleSubmit };
+};
+```
+
+**产出**：
+- ✅ 5个通用表单组件
+- ✅ useForm Hook
+- ✅ 使用示例和文档
+
+**验证方式**：
+- 改造2-3个现有表单使用新组件
+- 代码减少30%+
+
+---
+
+#### 5.2 创建列表组件库 ⭐⭐
+**任务清单**：
+```typescript
+// 第4-5天：列表组件
+src/shared/ui/components/List/
+
+// VirtualList.tsx - 虚拟滚动列表
+export const VirtualList = <T extends any>({
+  items,
+  itemHeight,
+  renderItem,
+  containerHeight = 500
+}: VirtualListProps<T>) => {
+  const [scrollTop, setScrollTop] = useState(0);
+  
+  const startIndex = Math.floor(scrollTop / itemHeight);
+  const endIndex = Math.min(
+    startIndex + Math.ceil(containerHeight / itemHeight) + 1,
+    items.length
+  );
+  
+  const visibleItems = items.slice(startIndex, endIndex);
+  
+  return (
+    <div 
+      class="virtual-list-container"
+      style={{height: `${containerHeight}px`, overflow: 'auto'}}
+      onScroll={(e) => setScrollTop((e.target as HTMLElement).scrollTop)}
+    >
+      <div style={{height: `${items.length * itemHeight}px`, position: 'relative'}}>
+        {visibleItems.map((item, i) => (
+          <div style={{
+            position: 'absolute',
+            top: `${(startIndex + i) * itemHeight}px`,
+            width: '100%'
+          }}>
+            {renderItem(item, startIndex + i)}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+```
+
+**产出**：
+- ✅ VirtualList组件
+- ✅ DraggableList组件
+- ✅ 性能优化示例
+
+**验证方式**：
+- 大列表(1000+ items)渲染性能提升5倍+
+- 内存占用减少50%
+
+---
+
+## 📅 第三阶段：模块重构（第6-9周）
+
+> **目标**：架构层面优化，基于前期经验进行模块化重构
+
+### Week 6-7: Store分离重构
+
+#### 6.1 完成Store完全拆分 ⭐⭐⭐⭐
+**任务清单**：
+```typescript
+// 第1-4天：创建专职Store
+src/state/stores/
+├── AppStore.ts           // 主Store，协调其他Store
+├── SettingsStore.ts      // 设置管理（已完成）
+├── TimerStore.ts         // 计时器状态
+├── LayoutStore.ts        // 布局和视图
+├── ThemeStore.ts         // 主题管理
+└── GroupStore.ts         // 分组管理
+
+// TimerStore.ts 示例
+export class TimerStore {
+  private timers: TimerState[] = [];
+  private listeners = new Set<() => void>();
+  
+  async addTimer(timer: Omit<TimerState, 'id'>): Promise<TimerState>
+  async updateTimer(id: string, updates: Partial<TimerState>): Promise<void>
+  async removeTimer(id: string): Promise<void>
+  getActiveTimer(): TimerState | undefined
+  
+  subscribe(listener: () => void): () => void
+}
+
+// 第5-7天：重构AppStore为组合模式
+export class AppStore {
+  readonly settings: SettingsStore;
+  readonly timer: TimerStore;
+  readonly layout: LayoutStore;
+  readonly theme: ThemeStore;
+  readonly group: GroupStore;
+  
+  constructor() {
+    this.settings = container.resolve(SettingsStore);
+    this.timer = container.resolve(TimerStore);
+    // ...
+  }
+  
+  // 提供统一订阅接口
+  subscribe(listener: () => void): () => void {
+    const unsubscribes = [
+      this.settings.subscribe(listener),
+      this.timer.subscribe(listener),
+      // ...
+    ];
+    return () => unsubscribes.forEach(fn => fn());
+  }
+}
+```
+
+**产出**：
+- ✅ 5个独立Store模块
+- ✅ 重构AppStore为组合容器
+- ✅ 向后兼容层（逐步废弃旧API）
+- ✅ 迁移文档
+
+**验证方式**：
+- 所有功能正常
+- 每个Store独立可测试
+- 代码行数减少20%+
+
+**风险控制**：
+- 分步骤迁移，每个Store独立完成和测试
+- 保留兼容API 1个版本
+- 详细的迁移日志
+
+---
+
+#### 6.2 创建CRUD基类 ⭐⭐⭐
+**任务清单**：
+```typescript
+// 第8-10天：抽象CRUD模式
+src/shared/patterns/CRUDStore.ts
+
+export abstract class CRUDStore<T extends {id: string}> {
+  protected items: T[] = [];
+  
+  protected abstract getStorageKey(): string;
+  protected abstract validateItem(item: T): boolean;
+  
+  async add(item: Omit<T, 'id'>): Promise<T> {
+    const newItem = {
+      ...item,
+      id: generateId(this.getIdPrefix())
+    } as T;
+    
+    if (!this.validateItem(newItem)) {
+      throw new Error('Invalid item');
+    }
+    
+    this.items.push(newItem);
+    await this.persist();
+    this.notifyListeners();
+    return newItem;
+  }
+  
+  async update(id: string, updates: Partial<T>): Promise<void> {
+    const index = this.items.findIndex(item => item.id === id);
+    if (index === -1) throw new Error('Item not found');
+    
+    this.items[index] = {...this.items[index], ...updates};
+    await this.persist();
+    this.notifyListeners();
+  }
+  
+  async delete(id: string): Promise<void> {
+    this.items = this.items.filter(item => item.id !== id);
+    await this.persist();
+    this.notifyListeners();
+  }
+  
+  // 批量操作
+  async batchUpdate(ids: string[], updater: (item: T) => Partial<T>): Promise<void>
+  async batchDelete(ids: string[]): Promise<void>
+  
+  protected abstract getIdPrefix(): string;
+  protected abstract persist(): Promise<void>;
+  protected abstract notifyListeners(): void;
+}
+
+// 具体实现示例
+export class DataSourceStore extends CRUDStore<DataSource> {
+  protected getStorageKey() { return 'dataSources'; }
+  protected getIdPrefix() { return 'ds'; }
+  protected validateItem(item: DataSource) {
+    return !!item.name && Array.isArray(item.filters);
+  }
+  
+  // 只需实现特定业务逻辑
+  async addFilter(dataSourceId: string, filter: FilterRule): Promise<void> {
+    await this.update(dataSourceId, draft => {
+      draft.filters.push(filter);
+    });
+  }
+}
+```
+
+**产出**：
+- ✅ CRUDStore抽象基类
+- ✅ 3个实体迁移到新模式
+- ✅ 代码复用率提升60%
+
+**验证方式**：
+- 单元测试覆盖率80%+
+- 所有CRUD操作功能正常
+
+---
+
+### Week 8: 查询引擎优化
+
+#### 8.1 实现查询构建器 ⭐⭐⭐⭐
+**任务清单**：
+```typescript
+// 第1-5天：查询系统重构
+src/core/query/
+
+// QueryBuilder.ts
+export class QueryBuilder {
+  private conditions: Condition[] = [];
+  
+  where(field: string, op: Operator, value: any): this {
+    this.conditions.push({field, op, value, type: 'and'});
+    return this;
+  }
+  
+  orWhere(field: string, op: Operator, value: any): this {
+    this.conditions.push({field, op, value, type: 'or'});
+    return this;
+  }
+  
+  orderBy(field: string, direction: 'asc' | 'desc' = 'asc'): this {
+    this.sortRules.push({field, dir: direction});
+    return this;
+  }
+  
+  build(): Query {
+    return {
+      conditions: this.conditions,
+      sortRules: this.sortRules
+    };
+  }
+  
+  // 查询优化
+  optimize(): Query {
+    // 1. 合并相同字段条件
+    // 2. 提取索引字段到最前
+    // 3. 移除冗余条件
+    return optimizedQuery;
+  }
+}
+
+// 使用示例
+const query = new QueryBuilder()
+  .where('theme', 'includes', '工作')
+  .where('date', '>', '2024-01-01')
+  .orderBy('date', 'desc')
+  .build();
+
+const items = dataStore.query(query);
+```
+
+**产出**：
+- ✅ 查询构建器
+- ✅ 查询优化器
+- ✅ 执行计划分析工具
+
+**验证方式**：
+- 复杂查询构建更简单
+- 查询性能提升20%+
+
+---
+
+### Week 9: 错误处理和稳定性
+
+#### 9.1 统一错误处理 ⭐⭐⭐⭐
+**任务清单**：
+```typescript
+// 第1-3天：错误分类和处理
+src/shared/errors/
+
+// ErrorTypes.ts
+export class BusinessError extends Error {
+  constructor(message: string, public code: string) {
+    super(message);
+  }
+}
+
+export class ValidationError extends BusinessError {
+  constructor(field: string, message: string) {
+    super(`${field}: ${message}`, 'VALIDATION_ERROR');
+  }
+}
+
+export class NotFoundError extends BusinessError {
+  constructor(resource: string, id: string) {
+    super(`${resource} not found: ${id}`, 'NOT_FOUND');
+  }
+}
+
+// ErrorHandler.ts
+export class ErrorHandler {
+  handle(error: Error): UserFeedback {
+    if (error instanceof ValidationError) {
+      return {
+        type: 'warning',
+        message: error.message,
+        duration: 3000
+      };
+    }
+    
+    if (error instanceof NotFoundError) {
+      return {
+        type: 'error',
+        message: error.message,
+        duration: 5000
+      };
+    }
+    
+    // 未知错误
+    console.error('Unexpected error:', error);
+    return {
+      type: 'error',
+      message: '操作失败，请重试',
+      duration: 5000
+    };
+  }
+}
+
+// 第4-5天：全局错误边界
+src/shared/ui/components/ErrorBoundary.tsx
+
+export class ErrorBoundary extends Component {
+  state = { error: null };
+  
+  componentDidCatch(error: Error) {
+    this.setState({ error });
+    errorHandler.handle(error);
+  }
+  
+  render() {
+    if (this.state.error) {
+      return <ErrorView error={this.state.error} />;
+    }
+    return this.props.children;
+  }
+}
+```
+
+**产出**：
+- ✅ 错误类型体系
+- ✅ 统一错误处理器
+- ✅ 错误边界组件
+- ✅ 错误日志收集
+
+**验证方式**：
+- 所有异常都被正确捕获和显示
+- 用户体验友好
+- 错误可追踪
+
+---
+
+## 📅 第四阶段：持续优化（第10周+）
+
+> **目标**：基于前期重构，持续迭代和优化
+
+### 10.1 性能监控和分析 ⭐⭐⭐
+**任务**：
+- 集成性能监控工具
+- 建立性能基准
+- 定期性能回归测试
+
+### 10.2 文档完善 ⭐⭐
+**任务**：
+- API文档自动生成
+- 开发者指南更新
+- 最佳实践文档
+
+### 10.3 自动化测试增强 ⭐⭐⭐
+**任务**：
+- E2E测试覆盖关键流程
+- 性能测试自动化
+- 视觉回归测试
+
+### 10.4 用户体验优化 ⭐⭐
+**任务**：
+- 加载状态优化
+- 错误提示优化
+- 快捷键系统
+- 国际化支持准备
+
+---
+
+## 📊 进度追踪
+
+### 每周检查点
+- **周一**：本周计划确认，任务分解
+- **周三**：中期检查，风险识别
+- **周五**：本周总结，问题复盘
+
+### 质量门禁
+每个阶段完成必须满足：
+- ✅ 单元测试通过率 100%
+- ✅ 集成测试通过
+- ✅ 代码审查完成
+- ✅ 文档同步更新
+- ✅ 性能基准达标
+
+### 回滚策略
+- 保持Git分支清晰
+- 每个功能独立分支
+- 合并前充分测试
+- 出现问题立即回滚
+
+---
+
+## 🎯 预期收

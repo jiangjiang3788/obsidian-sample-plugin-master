@@ -35,9 +35,20 @@ export function HeatmapViewEditor({ value, onChange, module }: ViewEditorProps) 
             new Notice('请先为此视图选择一个数据源。');
             return;
         }
+        if (!config.sourceBlockId) {
+            new Notice('请先选择源 Block 模板。');
+            return;
+        }
         const dataSource = allDataSources.find(ds => ds.id === module.dataSourceId);
         if (!dataSource) {
             new Notice('找不到所选的数据源。');
+            return;
+        }
+
+        // 获取源 Block 的名称作为 categoryKey 过滤条件
+        const sourceBlock = allBlocks.find(b => b.id === config.sourceBlockId);
+        if (!sourceBlock) {
+            new Notice('找不到所选的 Block 模板。');
             return;
         }
 
@@ -48,17 +59,19 @@ export function HeatmapViewEditor({ value, onChange, module }: ViewEditorProps) 
         }
         const items = dataStore.queryItems();
         const filteredItems = filterByRules(items, dataSource.filters);
-        // [修复] 扫描theme字段而不是tags
+        
+        // [修复] 只扫描属于选定 Block (categoryKey) 的 items 的 theme 字段
         const themeSet = new Set<string>();
         filteredItems.forEach(item => {
-            if (item.theme) {
+            // 只统计 categoryKey 匹配源 Block 名称的 items
+            if (item.categoryKey === sourceBlock.name && item.theme) {
                 themeSet.add(item.theme);
             }
         });
         
         const sortedThemes = Array.from(themeSet).sort((a,b) => a.localeCompare(b, 'zh-CN'));
         onChange({ themePaths: sortedThemes });
-        new Notice(`扫描完成！已自动添加 ${sortedThemes.length} 个主题路径。`);
+        new Notice(`扫描完成！已自动添加 ${sortedThemes.length} 个主题路径（来自分类"${sourceBlock.name}"）。`);
     };
 
     return (
