@@ -203,12 +203,14 @@ const ChartBlock = ({ data, label, onCellClick, categories, cellIdentifier, isCo
 
 // =============== 主视图组件 ===============
 export function StatisticsView({ items, app, dateRange, module, currentView, useFieldGranularity = false }: StatisticsViewProps) {
-    const { categories = [], displayMode = 'smart', minVisibleHeight = 15 } = { ...DEFAULT_CONFIG, ...module.viewConfig };
+    const { categories = [], displayMode = 'smart', minVisibleHeight = 15, usePeriodField = false } = { ...DEFAULT_CONFIG, ...module.viewConfig };
     const categoryOrder = useMemo(() => categories.map((c: any) => c.name), [categories]);
     const [selectedCell, setSelectedCell] = useState<any>(null);
     const [popover, setPopover] = useState<PopoverState | null>(null);
     // 分类过滤状态：存储选中的分类名称
     const [selectedCategories, setSelectedCategories] = useState<Set<string>>(new Set(categoryOrder));
+    // 周期字段使用状态
+    const [usePeriod, setUsePeriod] = useState(usePeriodField);
     
     const startDate = useMemo(() => dayjs(dateRange[0]), [dateRange]);
     const endDate = useMemo(() => dayjs(dateRange[1]), [dateRange]);
@@ -297,40 +299,49 @@ export function StatisticsView({ items, app, dateRange, module, currentView, use
         return <div class="statistics-view-placeholder">请先在视图设置中配置您想统计的分类。</div>;
     }
 
-    // 分类过滤器UI组件
-    const CategoryFilter = () => (
-        <div class="sv-category-filter">
-            <div class="sv-filter-header">
-                <span class="sv-filter-title">显示分类：</span>
-                <button 
-                    class="sv-filter-toggle-all"
-                    onClick={toggleAll}
-                    title={selectedCategories.size === categoryOrder.length ? "取消全选" : "全选"}
-                >
-                    {selectedCategories.size === categoryOrder.length ? "取消全选" : "全选"}
-                </button>
-            </div>
-            <div class="sv-filter-buttons">
-                {categories.map(({ name, color, alias }: any) => {
-                    const isSelected = selectedCategories.has(name);
-                    const displayName = alias || name;
-                    return (
-                        <button
-                            key={name}
-                            class={`sv-filter-btn ${isSelected ? 'is-selected' : ''}`}
-                            style={{
-                                '--category-color': color,
-                                backgroundColor: isSelected ? color : 'transparent',
-                                borderColor: color,
-                                color: isSelected ? '#fff' : color,
-                            } as any}
-                            onClick={() => toggleCategory(name)}
-                            title={`${name}${alias ? ` (${alias})` : ''}`}
-                        >
-                            {displayName}
-                        </button>
-                    );
-                })}
+    // 顶部控制栏组件
+    const TopControls = () => (
+        <div class="sv-top-controls">
+            {currentView === '年' && (
+                <label class="sv-period-toggle" title="勾选后，有周期字段的条目按周期过滤，无周期字段的条目按时间归属显示">
+                    <input 
+                        type="checkbox" 
+                        checked={usePeriod} 
+                        onChange={(e) => setUsePeriod((e.target as HTMLInputElement).checked)}
+                    />
+                    <span>使用周期字段</span>
+                </label>
+            )}
+            <div class="sv-category-filter">
+                <div class="sv-filter-buttons">
+                    <button 
+                        class="sv-filter-toggle-all"
+                        onClick={toggleAll}
+                        title={selectedCategories.size === categoryOrder.length ? "取消全选" : "全选"}
+                    >
+                        {selectedCategories.size === categoryOrder.length ? "取消全选" : "全选"}
+                    </button>
+                    {categories.map(({ name, color, alias }: any) => {
+                        const isSelected = selectedCategories.has(name);
+                        const displayName = alias || name;
+                        return (
+                            <button
+                                key={name}
+                                class={`sv-filter-btn ${isSelected ? 'is-selected' : ''}`}
+                                style={{
+                                    '--category-color': color,
+                                    backgroundColor: isSelected ? color : 'transparent',
+                                    borderColor: color,
+                                    color: isSelected ? '#fff' : color,
+                                } as any}
+                                onClick={() => toggleCategory(name)}
+                                title={`${name}${alias ? ` (${alias})` : ''}`}
+                            >
+                                {displayName}
+                            </button>
+                        );
+                    })}
+                </div>
             </div>
         </div>
     );
@@ -344,7 +355,7 @@ export function StatisticsView({ items, app, dateRange, module, currentView, use
 
         return (
             <div class="statistics-view">
-                <CategoryFilter />
+                <TopControls />
                 <div class="sv-timeline">
                     <div class="sv-row">
                         <ChartBlock
@@ -375,7 +386,7 @@ export function StatisticsView({ items, app, dateRange, module, currentView, use
 
         return (
             <div class="statistics-view">
-                <CategoryFilter />
+                <TopControls />
                 <div class="sv-timeline">
                     <div class="sv-row">
                         <ChartBlock
@@ -426,7 +437,7 @@ export function StatisticsView({ items, app, dateRange, module, currentView, use
 
         return (
             <div class="statistics-view">
-                <CategoryFilter />
+                <TopControls />
                 <div class="sv-timeline">
                     {/* 月度汇总 */}
                     <div class="sv-row">
@@ -502,7 +513,7 @@ export function StatisticsView({ items, app, dateRange, module, currentView, use
 
         return (
             <div class="statistics-view">
-                <CategoryFilter />
+                <TopControls />
                 <div class="sv-timeline">
                     {/* 季度汇总 */}
                     <div class="sv-row">
@@ -595,7 +606,7 @@ export function StatisticsView({ items, app, dateRange, module, currentView, use
             const baseCategory = (item.categoryKey || '').split('/')[0];
             if (!categoryOrder.includes(baseCategory)) continue;
 
-            if (useFieldGranularity) {
+            if (usePeriod) {
                 // 开关开启：使用字段粒度过滤（保持原有period门槛逻辑）
                 if (itemPeriod === '年') { yearData.counts[baseCategory]++; yearData.blocks.push(item); }
                 if (itemPeriod === '季') { const qIndex = itemDate.quarter() - 1; if (quartersData[qIndex]) { quartersData[qIndex].counts[baseCategory]++; quartersData[qIndex].blocks.push(item); }}
@@ -632,11 +643,11 @@ export function StatisticsView({ items, app, dateRange, module, currentView, use
         }
         
         return { yearData, quartersData, monthsData, weeksData };
-    }, [items, year, categoryOrder, useFieldGranularity]);
+    }, [items, year, categoryOrder, usePeriod]);
 
     return (
         <div class="statistics-view">
-            <CategoryFilter />
+            <TopControls />
             <div class="sv-timeline">
                 <div class="sv-row"><ChartBlock data={processedData.yearData} label={`${year}年`} categories={filteredCategories} onCellClick={handleCellClick} cellIdentifier={(cat:string) => ({type:'year', year, category:cat})} displayMode={displayMode} minVisibleHeight={minVisibleHeight} /></div>
                 <div class="sv-row sv-row-quarters">{processedData.quartersData.map((data, i) => (<ChartBlock key={i} data={data} label={`Q${i+1}`} categories={filteredCategories} onCellClick={handleCellClick} cellIdentifier={(cat:string) => ({type:'quarter', year, quarter:i+1, category:cat})} displayMode={displayMode} minVisibleHeight={minVisibleHeight} />))}</div>

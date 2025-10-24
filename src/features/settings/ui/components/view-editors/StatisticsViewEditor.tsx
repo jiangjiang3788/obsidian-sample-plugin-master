@@ -14,6 +14,7 @@ export const DEFAULT_CONFIG = {
     categories: [] as { name: string; color: string; alias?: string; }[],
     displayMode: 'smart' as 'linear' | 'logarithmic' | 'smart',
     minVisibleHeight: 15, // 最小可见高度百分比
+    usePeriodField: false, // 是否使用周期字段过滤
 };
 
 // 随机生成一个颜色

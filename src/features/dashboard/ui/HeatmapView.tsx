@@ -152,8 +152,6 @@ export function HeatmapView({ items, app, dateRange, module, currentView }: Heat
             ? config.themePaths 
             : ['__default__'];
         
-        console.log('🔍 [HeatmapView] 配置的主题列表:', themesToTrack);
-        
         themesToTrack.forEach(theme => themeMap.set(theme, new Map()));
 
         if (config.displayMode === 'count') {
@@ -168,29 +166,18 @@ export function HeatmapView({ items, app, dateRange, module, currentView }: Heat
             items.forEach(item => {
                 if (!item.date) return;
                 
-                console.log(`📝 处理 item: date=${item.date}, theme="${item.theme}", content="${item.content?.substring(0, 20)}"`);
-                
                 // 如果配置了多个主题路径，检查item的theme是否匹配
                 if (themesToTrack.length > 1 && themesToTrack[0] !== '__default__') {
                     // item.theme 必须在配置的主题列表中
                     if (item.theme && themesToTrack.includes(item.theme)) {
-                        console.log(`  ✅ 添加到主题 "${item.theme}"`);
                         themeMap.get(item.theme)?.set(item.date, item);
-                    } else {
-                        console.log(`  ❌ 跳过: theme="${item.theme}" 不在配置列表中`);
                     }
                 } else {
                     // 默认模式：所有item归入__default__
-                    console.log(`  ✅ 添加到 __default__`);
                     themeMap.get('__default__')?.set(item.date, item);
                 }
             });
         }
-        
-        console.log('📊 [HeatmapView] 分组结果:');
-        themeMap.forEach((dateMap, themePath) => {
-            console.log(`  主题 "${themePath}": ${dateMap.size} 条记录`);
-        });
         
         return themeMap;
     }, [items, config.displayMode, config.themePaths]);
@@ -225,18 +212,12 @@ export function HeatmapView({ items, app, dateRange, module, currentView }: Heat
         const themeId = themePath !== '__default__' ? themesByPath.get(themePath)?.id : undefined;
         const cacheKey = `${config.sourceBlockId}:${themePath}`;
         
-        console.log(`🎨 [renderMonthGrid] 渲染主题行 "${themePath}"`);
-        console.log(`  themeId=${themeId}, cacheKey=${cacheKey}`);
-        console.log(`  该主题数据条数: ${dataForMonth.size}`);
-        
         const themRatingMapping = ratingMappingsCache.get(cacheKey) || (() => {
-            console.log(`  ⚠️ 缓存未命中，创建新映射`);
             const effectiveTemplate = getEffectiveTemplate(settings.inputSettings, config.sourceBlockId || '', themeId);
             const ratingField = effectiveTemplate?.fields.find(f => f.type === 'rating');
             const newMapping = new Map<string, string>(
                 ratingField?.options?.map(opt => [opt.label || '', opt.value]) || []
             );
-            console.log(`  映射内容:`, Array.from(newMapping.entries()));
             ratingMappingsCache.set(cacheKey, newMapping);
             return newMapping;
         })();
@@ -267,18 +248,12 @@ export function HeatmapView({ items, app, dateRange, module, currentView }: Heat
         const themeId = themePath !== '__default__' ? themesByPath.get(themePath)?.id : undefined;
         const cacheKey = `${config.sourceBlockId}:${themePath}`;
         
-        console.log(`🎨 [renderSingleRow] 渲染主题行 "${themePath}"`);
-        console.log(`  themeId=${themeId}, cacheKey=${cacheKey}`);
-        console.log(`  该主题数据条数: ${dataForRow.size}`);
-        
         const themeRatingMapping = ratingMappingsCache.get(cacheKey) || (() => {
-            console.log(`  ⚠️ 缓存未命中，创建新映射`);
             const effectiveTemplate = getEffectiveTemplate(settings.inputSettings, config.sourceBlockId || '', themeId);
             const ratingField = effectiveTemplate?.fields.find(f => f.type === 'rating');
             const newMapping = new Map<string, string>(
                 ratingField?.options?.map(opt => [opt.label || '', opt.value]) || []
             );
-            console.log(`  映射内容:`, Array.from(newMapping.entries()));
             ratingMappingsCache.set(cacheKey, newMapping);
             return newMapping;
         })();

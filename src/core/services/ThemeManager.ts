@@ -218,7 +218,7 @@ export class ThemeManager {
         const normalizedHeader = headerText.trim().toLowerCase();
         const allThemes = Array.from(this.themes.values());
         
-        // 优先级匹配策略
+        // 优先级匹配策略（修复：更严格的匹配顺序，避免误匹配）
         // 1. 精确匹配完整路径
         for (const theme of allThemes) {
             if (theme.path.toLowerCase() === normalizedHeader) {
@@ -234,14 +234,26 @@ export class ThemeManager {
             }
         }
         
-        // 3. 包含匹配（主题路径包含header文本）
+        // 3. 路径以 header 结尾（例如：header="娱乐" 匹配 "生活/娱乐"）
         for (const theme of allThemes) {
-            if (theme.path.toLowerCase().includes(normalizedHeader)) {
+            if (theme.path.toLowerCase().endsWith('/' + normalizedHeader)) {
                 return theme.path;
             }
         }
         
-        // 4. 模糊匹配（主题名称包含header文本）
+        // 4. 完整路径包含 header（但要求是完整的单词，不是部分字符）
+        // 例如："运动" 可以匹配 "健康/运动"，但 "剪" 不应该匹配 "剪指甲"
+        for (const theme of allThemes) {
+            const pathLower = theme.path.toLowerCase();
+            // 检查是否作为独立部分存在（前后是 / 或字符串边界）
+            const regex = new RegExp(`(^|/)${normalizedHeader}(/|$)`, 'i');
+            if (regex.test(pathLower)) {
+                return theme.path;
+            }
+        }
+        
+        // 5. 主题名称包含 header（宽松匹配，但排在最后）
+        // 只有当没有更精确的匹配时才使用
         for (const theme of allThemes) {
             const themeName = theme.path.split('/').pop()?.toLowerCase();
             if (themeName && themeName.includes(normalizedHeader)) {
