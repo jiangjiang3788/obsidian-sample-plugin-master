@@ -1,7 +1,7 @@
 // src/core/migration/themeMigration.ts
 
-import { Item } from '@core/domain/schema';
-import { ThemeManager } from '@core/services/ThemeManager';
+import { Item } from '@lib/types/domain/schema';
+import { ThemeManager } from '@lib/services/core/ThemeManager';
 
 /**
  * 主题迁移工具

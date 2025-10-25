@@ -1,8 +1,8 @@
 /**
  * 组件属性类型定义
  */
-import type { AppStore } from '@state/AppStore';
-import type { BlockTemplate, ThemeDefinition, ThemeOverride } from '@core/domain/schema';
+import type { AppStore } from '@store/AppStore';
+import type { BlockTemplate, ThemeDefinition, ThemeOverride } from '@lib/types/domain/schema';
 import type { ExtendedTheme, ThemeTreeNode, BatchOperationType } from './theme.types';
 import type { ThemeMatrixMode, SelectionStats } from '../hooks/useThemeMatrixSelection';
 

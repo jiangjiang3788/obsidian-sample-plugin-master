@@ -2,20 +2,20 @@
 /** @jsxImportSource preact */
 import { h, Fragment } from 'preact';
 import { useState, useMemo, useEffect, useCallback, useRef } from 'preact/hooks'; // [修改] 导入 useRef
-import { DataStore } from '@core/services';
-import { Layout, ViewInstance, Item } from '@core/domain/schema'; // [修改] 导入 Item 类型
+import { DataStore } from '@lib/services';
+import { Layout, ViewInstance, Item } from '@lib/types/domain/schema'; // [修改] 导入 Item 类型
 import { ModulePanel } from './ModulePanel';
-import { ViewComponents } from '@features/dashboard/ui';
-import { getDateRange, dayjs, formatDateForView } from '@core/utils/date';
-import { useStore } from '@state/AppStore';
-import type { ActionService } from '@core/services/ActionService';
-import type { TaskService } from '@core/services/taskService';
+import { ViewComponents } from '@views/Dashboard/ui';
+import { getDateRange, dayjs, formatDateForView } from '@lib/utils/core/date';
+import { useStore } from '@store/AppStore';
+import type { ActionService } from '@lib/services/core/ActionService';
+import type { TaskService } from '@lib/services/core/taskService';
 import { useViewData } from '../hooks/useViewData';
-import { QuickInputModal } from '@features/quick-input/ui/QuickInputModal';
+import { QuickInputModal } from '@views/QuickInput/ui/QuickInputModal';
 import { ModuleSettingsModal } from './ModuleSettingsModal'; // [新增] 导入设置模态框
 import { App, Notice } from 'obsidian'; // [修改] 导入 Notice
-import { appStore } from '@state/storeRegistry';
-import { exportItemsToMarkdown } from '@core/utils/exportUtils'; // [新增] 导入导出函数
+import { appStore } from '@store/storeRegistry';
+import { exportItemsToMarkdown } from '@lib/utils/core/exportUtils'; // [新增] 导入导出函数
 import { ThemeFilter } from './ThemeFilter'; // [新增] 导入主题筛选组件
 
 // [修改] ViewContent 组件增加 onDataLoaded 和 selectedThemes props

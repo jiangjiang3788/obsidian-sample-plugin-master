@@ -1,10 +1,10 @@
 /**
  * ThemeMatrix 业务逻辑服务
  */
-import type { AppStore } from '@state/AppStore';
-import type { ThemeDefinition, ThemeOverride, BlockTemplate } from '@core/domain/schema';
+import type { AppStore } from '@store/AppStore';
+import type { ThemeDefinition, ThemeOverride, BlockTemplate } from '@lib/types/domain/schema';
 import type { ExtendedTheme, BatchOperationType, ThemeTreeNode } from '../types';
-import { ThemeManager } from '@core/services/ThemeManager';
+import { ThemeManager } from '@lib/services/core/ThemeManager';
 import { 
     normalizePath,
     validatePathCharacters 

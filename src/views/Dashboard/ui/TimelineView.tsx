@@ -2,21 +2,21 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
 import { useMemo, useCallback, useState, useEffect, useRef } from 'preact/hooks';
-import { Item } from '@core/domain/schema';
-import { makeObsUri } from '@core/utils/obsidian';
+import { Item } from '@lib/types/domain/schema';
+import { makeObsUri } from '@lib/utils/core/obsidian';
 import { processItemsToTimelineTasks, splitTaskIntoDayBlocks, TaskBlock } from '../views/timeline/timeline-parser';
-import { dayjs, minutesToTime } from '@core/utils/date';
+import { dayjs, minutesToTime } from '@lib/utils/core/date';
 import weekOfYear from 'dayjs/plugin/weekOfYear';
 import isoWeek from 'dayjs/plugin/isoWeek';
 import isBetween from 'dayjs/plugin/isBetween';
-import { DEFAULT_CONFIG as DEFAULT_TIMELINE_CONFIG } from '@features/settings/ui/components/view-editors/TimelineViewEditor';
+import { DEFAULT_CONFIG as DEFAULT_TIMELINE_CONFIG } from '@views/Settings/ui/components/view-editors/TimelineViewEditor';
 import { App, Notice } from 'obsidian';
-import { TaskService } from '@core/services/taskService';
+import { TaskService } from '@lib/services/core/taskService';
 import { EditTaskModal } from './EditTaskModal';
-import { useStore } from '@state/AppStore';
-import { QuickInputModal } from '@features/quick-input/ui/QuickInputModal';
-import { dataStore } from '@state/storeRegistry';
-import { filterByRules } from '@core/utils/itemFilter';
+import { useStore } from '@store/AppStore';
+import { QuickInputModal } from '@views/QuickInput/ui/QuickInputModal';
+import { dataStore } from '@store/storeRegistry';
+import { filterByRules } from '@lib/utils/core/itemFilter';
 
 dayjs.extend(weekOfYear);
 dayjs.extend(isoWeek);

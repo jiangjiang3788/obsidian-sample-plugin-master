@@ -3,8 +3,8 @@
 import { h } from 'preact';
 import { useMemo } from 'preact/hooks';
 import { Notice } from 'obsidian';
-import type { BlockTemplate } from '@core/domain/schema';
-import { SimpleSelect } from '@shared/ui/SimpleSelect';
+import type { BlockTemplate } from '@lib/types/domain/schema';
+import { SimpleSelect } from '@ui/composites/SimpleSelect';
 import { Box } from '@mui/material';
 
 interface Props {

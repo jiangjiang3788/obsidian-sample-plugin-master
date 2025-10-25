@@ -16,12 +16,14 @@
       "isolatedModules": true,
       "baseUrl": ".",
       "paths": {
-        "@/*": ["src/*"],           // 已有就保持
-        "@core/*": ["src/core/*"],  // 后续使用
-        "@platform/*": ["src/platform/*"],
-        "@features/*": ["src/features/*"],
-        "@shared/*": ["src/shared/*"],
-        "@state/*": ["src/state/*"]
+        "@/*": ["src/*"],
+        "@lib/*": ["src/lib/*"],
+        "@store/*": ["src/store/*"],
+        "@ui/*": ["src/ui/*"],
+        "@views/*": ["src/views/*"],
+        "@hooks/*": ["src/hooks/*"],
+        "@config/*": ["src/config/*"],
+        "@platform/*": ["src/platform/*"]
       },
       "types": ["vite/client", "preact"]
     },

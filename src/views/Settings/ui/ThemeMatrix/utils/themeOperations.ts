@@ -2,7 +2,7 @@
  * 主题操作辅助函数
  */
 import type { ExtendedTheme, ThemeTreeNode, ThemeOverrideKey } from '../types';
-import type { ThemeOverride } from '@core/domain/schema';
+import type { ThemeOverride } from '@lib/types/domain/schema';
 import { findNodeInTree, getDescendantIds } from './themeTreeBuilder';
 
 /**
