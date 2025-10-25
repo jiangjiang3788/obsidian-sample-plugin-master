@@ -6,10 +6,10 @@ import { DataStore, RendererService, ActionService, TimerStateService, InputServ
 import { AppStore } from '@store/AppStore';
 import { registerStore, registerDataStore, registerTimerService, registerInputService } from '@store/storeRegistry';
 import { FloatingTimerWidget } from '@views/Timer/FloatingTimerWidget';
-import * as DashboardFeature from '@views/dashboard';
-import * as QuickInputFeature from '@views/quick-input';
-import * as SettingsFeature from '@views/settings';
-import { ThinkSettings, DEFAULT_SETTINGS, STYLE_TAG_ID } from '@lib/domain';
+import * as DashboardFeature from '@views/Dashboard';
+import * as QuickInputFeature from '@views/QuickInput';
+import * as SettingsFeature from '@views/Settings';
+import { ThinkSettings, DEFAULT_SETTINGS, STYLE_TAG_ID } from '@lib/types/domain';
 import { GLOBAL_CSS } from '@views/Dashboard/styles/global';
 import { AppToken, SETTINGS_TOKEN } from '@lib/services/core/types';
 import { VaultFileStorage, STORAGE_TOKEN } from '@lib/services/core/storage';
@@ -311,7 +311,6 @@ export default class ThinkPlugin extends Plugin {
     private async loadSettings(): Promise<ThinkSettings> {
         const stored = (await this.loadData()) as Partial<ThinkSettings> | null;
         const merged = Object.assign({}, DEFAULT_SETTINGS, stored);
-        merged.dataSources = merged.dataSources || [];
         merged.viewInstances = merged.viewInstances || [];
         merged.layouts = merged.layouts || [];
         merged.inputSettings = merged.inputSettings || { blocks: [], themes: [], overrides: [] };
