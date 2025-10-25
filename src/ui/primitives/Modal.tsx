@@ -4,7 +4,7 @@
 
 import { h, ComponentChildren } from 'preact';
 import { useEffect, useRef } from 'preact/hooks';
-import { useClickOutside } from '@shared/hooks';
+import { useClickOutside } from '../../hooks/shared';
 
 export interface ModalProps {
     isOpen: boolean;

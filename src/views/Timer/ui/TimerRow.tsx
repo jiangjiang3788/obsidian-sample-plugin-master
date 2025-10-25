@@ -8,15 +8,15 @@ import StopIcon from '@mui/icons-material/Stop';
 import PauseIcon from '@mui/icons-material/Pause';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
-import { DataStore } from '@lib/services/core/dataStore';
-import { TimerService } from '@lib/services/core/TimerService';
-import type { TimerState } from '@store/AppStore';
-import { formatSecondsToHHMMSS } from '@lib/utils/core/date';
-import { makeObsUri } from '@lib/utils/core/obsidian';
-import type { ActionService } from '@lib/services/core/ActionService';
+import { DataStore } from '../../../lib/services/core/dataStore';
+import { TimerService } from '../../../lib/services/core/TimerService';
+import type { TimerState } from '../../../store/AppStore';
+import { formatSecondsToHHMMSS } from '../../../lib/utils/core/date';
+import { makeObsUri } from '../../../lib/utils/core/obsidian';
+import type { ActionService } from '../../../lib/services/core/ActionService';
 import { App } from 'obsidian';
 // [修改] 导入 QuickInputModal 以修复 handleEdit 功能
-import { QuickInputModal } from '@views/QuickInput/ui/QuickInputModal';
+import { QuickInputModal } from '../../QuickInput/ui/QuickInputModal';
 
 interface TimerRowProps {
     timer: TimerState;

@@ -3,13 +3,13 @@
 import { h } from 'preact';
 import { Stack, Typography, FormControlLabel, Radio, RadioGroup, Box, Button } from '@mui/material';
 import type { ViewEditorProps } from './registry';
-import { SimpleSelect } from '@ui/composites/SimpleSelect';
-import { ListEditor } from '@ui/composites/form/ListEditor';
-import { useStore } from '@store/AppStore';
+import { SimpleSelect } from '../../../../../ui/composites/SimpleSelect';
+import { ListEditor } from '../../../../../ui/composites/form/ListEditor';
+import { useStore } from '../../../../../store/AppStore';
 import { useMemo } from 'preact/hooks';
 // [修改] 从注册表导入 dataStore
-import { dataStore } from '@store/storeRegistry';
-import { filterByRules } from '@lib/utils/core/itemFilter';
+import { dataStore } from '../../../../../store/storeRegistry';
+import { filterByRules } from '../../../../../lib/utils/core/itemFilter';
 import { Notice } from 'obsidian';
 
 // 视图的默认配置

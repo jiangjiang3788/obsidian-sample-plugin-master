@@ -65,6 +65,7 @@
     "ts-node": "^10.9.2",
     "typescript": "^5.9.2",
     "vite": "^7.0.6",
+    "vite-tsconfig-paths": "^5.1.4",
     "wdio-appium-service": "^0.2.3",
     "wdio-obsidian-reporter": "^2.1.2",
     "wdio-obsidian-service": "^2.1.2"

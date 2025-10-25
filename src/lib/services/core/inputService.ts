@@ -1,8 +1,8 @@
 // src/core/services/inputService.ts
 import { singleton, inject } from 'tsyringe';
 import { App, TFile, TFolder } from 'obsidian';
-import type { BlockTemplate, ThemeDefinition } from '@lib/types/domain/schema';
-import { renderTemplate } from '@lib/utils/core/templateUtils';
+import type { BlockTemplate, ThemeDefinition } from '../../types/domain/schema';
+import { renderTemplate } from '../../utils/core/templateUtils';
 import { AppToken } from './types';
 
 @singleton()

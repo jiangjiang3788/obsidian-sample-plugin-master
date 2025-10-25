@@ -8,8 +8,8 @@ import AddIcon from '@mui/icons-material/Add';
 import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
 import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
 import RemoveCircleOutlineIcon from '@mui/icons-material/RemoveCircleOutline';
-import type { TemplateField, TemplateFieldOption } from '@lib/types/domain/schema';
-import { SimpleSelect } from '@ui/composites/SimpleSelect';
+import type { TemplateField, TemplateFieldOption } from '../../../../lib/types/domain/schema';
+import { SimpleSelect } from '../../../../ui/composites/SimpleSelect';
 import { Notice } from 'obsidian';
 
 // OptionRow 组件没有变化

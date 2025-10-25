@@ -5,13 +5,14 @@ import { h } from 'preact';
 import { useRef, useState, useEffect } from 'preact/hooks';
 import { App } from 'obsidian';
 // [修复] 将导入路径统一到 @lib/domain，并加入 getCategoryColor
-import { Item, readField, ThemeDefinition, getCategoryColor } from '@lib/domain';
-import { makeObsUri } from '@lib/utils/core/obsidian';
-import { getFieldLabel } from '@lib/types/domain/fields';
-import { useStore } from '@store/AppStore';
-import { TagsRenderer } from '@ui/TagsRenderer';
-import { TaskCheckbox } from '@ui/TaskCheckbox';
-import { TaskSendToTimerButton } from '@ui/TaskSendToTimerButton';
+import { Item, readField, ThemeDefinition } from '../../../lib/types/domain/schema';
+import { getCategoryColor } from '../../../lib/types/domain/definitions';
+import { makeObsUri } from '../../../lib/utils/core/obsidian';
+import { getFieldLabel } from '../../../lib/types/domain/fields';
+import { useStore } from '../../../store/AppStore';
+import { TagsRenderer } from '../../../ui/composites/TagsRenderer';
+import { TaskCheckbox } from '../../../ui/composites/TaskCheckbox';
+import { TaskSendToTimerButton } from '../../../ui/composites/TaskSendToTimerButton';
 
 // FieldRenderer 组件保持不变
 const FieldRenderer = ({ item, fieldKey, app, allThemes }: { item: Item; fieldKey: string; app: App; allThemes: ThemeDefinition[] }) => {

@@ -1,13 +1,13 @@
 // src/core/services/TimerService.ts
 import { singleton, inject } from 'tsyringe';
-import { AppStore } from '@store/AppStore';
+import { AppStore } from '../../../store/AppStore';
 import { TaskService } from './taskService';
 import { Notice, App, TFile } from 'obsidian';
 import { DataStore } from './dataStore';
 import { InputService } from './inputService';
-import type { QuickInputSaveData } from '@views/QuickInput/ui/QuickInputModal';
+import type { QuickInputSaveData } from '../../../views/QuickInput/ui/QuickInputModal';
 import { AppToken } from './types';
-import { nowHHMM, timeToMinutes, minutesToTime } from '@lib/utils/core/date';
+import { nowHHMM, timeToMinutes, minutesToTime } from '../../utils/core/date';
 
 @singleton()
 export class TimerService {
