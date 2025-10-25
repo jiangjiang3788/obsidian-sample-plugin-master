@@ -1,19 +1,19 @@
 // src/features/settings/ui/DataSourceSettings.tsx
 /** @jsxImportSource preact */
 import { h } from 'preact';
-import { useStore, AppStore } from '@store/AppStore';
+import { useStore, AppStore } from '../../../store/AppStore';
 import { Typography, Stack, Box } from '@mui/material';
-import { getAllFields } from '@lib/types/domain/schema';
+import { getAllFields } from '../../../lib/types/domain/schema';
 // [修改] 从注册表导入 dataStore
-import { dataStore } from '@store/storeRegistry';
+import { dataStore } from '../../../store/storeRegistry';
 import { useMemo } from 'preact/hooks';
-import type { DataSource } from '@lib/types/domain/schema';
+import type { DataSource } from '../../../lib/types/domain/schema';
 import { RuleBuilder } from './components/RuleBuilder';
 import { SettingsTreeView, TreeItem } from './components/SettingsTreeView';
 import { App } from 'obsidian';
 import { useSettingsManager } from './hooks/useSettingsManager';
 import { DndContext, closestCenter } from '@dnd-kit/core';
-import { arrayMove } from '@lib/utils/core/array';
+import { arrayMove } from '../../../lib/utils/core/array';
 
 // [修改] 组件 props 现在需要接收 appStore
 function DataSourceEditor({ ds, appStore }: { ds: DataSource, appStore: AppStore }) {

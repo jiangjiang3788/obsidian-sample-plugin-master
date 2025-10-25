@@ -2,18 +2,18 @@
 /** @jsxImportSource preact */
 import { h, Fragment } from 'preact';
 import { useState, useMemo, useEffect, useRef } from 'preact/hooks';
-import { Item, readField, ViewInstance } from '@lib/types/domain/schema';
-import { dayjs, getWeeksInYear } from '@lib/utils/core/date';
+import { Item, readField, ViewInstance } from '../../../lib/types/domain/schema';
+import { dayjs, getWeeksInYear } from '../../../lib/utils/core/date';
 import { App, Notice } from 'obsidian';
 // [最终修正] 使用别名路径，代码更清晰且稳定
-import { DEFAULT_CONFIG } from '@views/Settings/ui/components/view-editors/StatisticsViewEditor';
+import { DEFAULT_CONFIG } from '../../Settings/ui/components/view-editors/StatisticsViewEditor';
 import { BlockView } from './BlockView';
 import { IconButton, Tooltip } from '@mui/material';
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 import IosShareIcon from '@mui/icons-material/IosShare';
-import { exportItemsToMarkdown } from '@lib/utils/core/exportUtils';
-import { QuickInputModal } from '@views/QuickInput/ui/QuickInputModal';
-import { dayjs as dayjsUtil } from '@lib/utils/core/date';
+import { exportItemsToMarkdown } from '../../../lib/utils/core/exportUtils';
+import { QuickInputModal } from '../../QuickInput/ui/QuickInputModal';
+import { dayjs as dayjsUtil } from '../../../lib/utils/core/date';
 
 // 解决 Preact 和 Material-UI 的类型兼容性问题
 const AnyIconButton = IconButton as any;

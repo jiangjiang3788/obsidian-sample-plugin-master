@@ -4,7 +4,7 @@ import { h, VNode } from 'preact';
 import { useState, useMemo } from 'preact/hooks';
 import { Button, Box, List, ListItemButton, ListItemText, Typography } from '@mui/material';
 import { ActionDialog } from './ActionDialog';
-import type { Group, Groupable } from '@lib/types/domain/schema';
+import type { Group, Groupable } from '../../../lib/types/domain/schema';
 
 // 递归渲染的单个分组节点
 const GroupNode = ({ group, allGroups, onSelect, selectedId, disabledIds, level = 0 }: {

@@ -1,13 +1,13 @@
 // src/state/AppStore.ts
 import { useState, useEffect, useCallback } from 'preact/hooks';
 import { singleton, inject } from 'tsyringe';
-import type { ThinkSettings, DataSource, ViewInstance, Layout, InputSettings, BlockTemplate, ThemeDefinition, ThemeOverride, Group, GroupType, Groupable } from '@lib/types/domain/schema';
-import { DEFAULT_SETTINGS } from '@lib/types/domain/schema';
+import type { ThinkSettings, DataSource, ViewInstance, Layout, InputSettings, BlockTemplate, ThemeDefinition, ThemeOverride, Group, GroupType, Groupable } from '../lib/types/domain/schema';
+import { DEFAULT_SETTINGS } from '../lib/types/domain/schema';
 import type ThinkPlugin from '../main';
-import { VIEW_DEFAULT_CONFIGS } from '@views/Settings/ui/components/view-editors/registry';
-import { generateId, moveItemInArray, duplicateItemInArray } from '@lib/utils/core/array';
+import { VIEW_DEFAULT_CONFIGS } from '../views/Settings/ui/components/view-editors/registry';
+import { generateId, moveItemInArray, duplicateItemInArray } from '../lib/utils/core/array';
 import { appStore } from './storeRegistry';
-import { SETTINGS_TOKEN } from '@lib/services/core/types';
+import { SETTINGS_TOKEN } from '../lib/services/core/types';
 
 export interface TimerState {
     id: string;

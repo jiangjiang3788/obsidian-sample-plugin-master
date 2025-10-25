@@ -1,5 +1,5 @@
 // src/core/utils/array.ts
-import type { Groupable } from '@lib/types/domain/schema';
+import type { Groupable } from '../../types/domain/schema';
 
 /**
  * 生成一个带前缀的唯一ID

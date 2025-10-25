@@ -1,9 +1,9 @@
 // src/shared/components/TaskSendToTimerButton.tsx
 /** @jsxImportSource preact */
 import { h } from 'preact';
-import { useStore } from '@store/AppStore';
+import { useStore } from '../../store/AppStore';
 // [修改] 从注册表导入 timerService
-import { timerService } from '@store/storeRegistry';
+import { timerService } from '../../store/storeRegistry';
 import { IconButton, Tooltip } from '@mui/material';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import HourglassTopIcon from '@mui/icons-material/HourglassTop';

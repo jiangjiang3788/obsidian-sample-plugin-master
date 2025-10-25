@@ -1,7 +1,7 @@
 // src/shared/components/form/RadioGroup.tsx
 /** @jsxImportSource preact */
 import { h } from 'preact';
-import { Field, Radio } from '@ui/FieldRadio';
+import { Field, Radio } from '../../FieldRadio';
 
 interface RadioOption {
   value: string;

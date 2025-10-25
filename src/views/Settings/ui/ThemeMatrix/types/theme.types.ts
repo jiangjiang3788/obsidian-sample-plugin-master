@@ -1,7 +1,7 @@
 /**
  * 主题相关类型定义
  */
-import type { ThemeDefinition, ThemeOverride } from '@lib/types/domain/schema';
+import type { ThemeDefinition, ThemeOverride } from '../../../../../lib/types/domain/schema';
 
 /**
  * 扩展的主题定义，包含运行时状态和元数据

@@ -12,8 +12,8 @@ import {
 import { ThemeTreeNodeRow } from './ThemeTreeNodeRow';
 import type { ThemeTableProps } from '../types'; // This will need to be updated
 import type { EditorState } from '../hooks/useThemeMatrixEditor';
-import type { BlockTemplate, ThemeDefinition, ThemeOverride } from '@lib/types/domain/schema';
-import type { AppStore } from '@store/AppStore';
+import type { BlockTemplate, ThemeDefinition, ThemeOverride } from '../../../../../lib/types/domain/schema';
+import type { AppStore } from '../../../../../store/AppStore';
 import type { ThemeTreeNode } from '../types';
 
 // Define new props inline for now

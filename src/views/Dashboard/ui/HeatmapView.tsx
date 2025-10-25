@@ -3,11 +3,11 @@
 /** @jsxImportSource preact */
 import { useMemo } from 'preact/hooks';
 import { App } from 'obsidian';
-import { Item, ViewInstance, BlockTemplate, InputSettings, ThemeDefinition } from '@lib/types/domain/schema';
-import { dayjs } from '@lib/utils/core/date';
-import { useStore } from '@store/AppStore';
-import { QuickInputModal } from '@views/QuickInput/ui/QuickInputModal';
-import { DEFAULT_CONFIG } from '@views/Settings/ui/components/view-editors/HeatmapViewEditor';
+import { Item, ViewInstance, BlockTemplate, InputSettings, ThemeDefinition } from '../../../lib/types/domain/schema';
+import { dayjs } from '../../../lib/utils/core/date';
+import { useStore } from '../../../store/AppStore';
+import { QuickInputModal } from '../../QuickInput/ui/QuickInputModal';
+import { DEFAULT_CONFIG } from '../../Settings/ui/components/view-editors/HeatmapViewEditor';
 
 // ========== Types ==========
 interface HeatmapViewProps {

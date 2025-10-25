@@ -1,7 +1,7 @@
 // src/core/services/TimerStateService.ts
 import { singleton, inject } from 'tsyringe';
 import { App } from 'obsidian';
-import { TimerState } from '@store/AppStore';
+import { TimerState } from '../../../store/AppStore';
 // [新增] 导入 App 的注入令牌
 import { AppToken } from './types';
 

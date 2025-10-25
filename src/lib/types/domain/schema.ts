@@ -1,5 +1,5 @@
 // src/core/domain/schema.ts
-import type { RecurrenceInfo } from '@lib/utils/core/mark';
+import type { RecurrenceInfo } from '../../utils/core/mark';
 
 // [新增] 定义可分组项的通用接口
 export interface Groupable {
