@@ -21,12 +21,14 @@ export default defineConfig({
             'react-dom/test-utils': 'preact/test-utils',
             'react/jsx-runtime': 'preact/jsx-runtime',
             
-            // [修正] 补全所有 tsconfig.json 中定义的别名
-            '@core':    path.resolve(__dirname, 'src/core'),
+            // 新的扁平化路径别名
+            '@lib':      path.resolve(__dirname, 'src/lib'),
+            '@store':    path.resolve(__dirname, 'src/store'),
+            '@ui':       path.resolve(__dirname, 'src/ui'),
+            '@views':    path.resolve(__dirname, 'src/views'),
+            '@hooks':    path.resolve(__dirname, 'src/hooks'),
+            '@config':   path.resolve(__dirname, 'src/config'),
             '@platform': path.resolve(__dirname, 'src/platform'),
-            '@features': path.resolve(__dirname, 'src/features'),
-            '@shared':  path.resolve(__dirname, 'src/shared'),
-            '@state':   path.resolve(__dirname, 'src/state'), // <--- 增加了这一行
         },
     },
 
