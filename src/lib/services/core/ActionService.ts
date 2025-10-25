@@ -1,14 +1,14 @@
 // src/core/services/ActionService.ts
 import { singleton, inject } from 'tsyringe';
 import { App, Notice } from 'obsidian';
-import { AppStore } from '@state/AppStore';
-import { dayjs } from '@core/utils/date';
-import type { Item, ViewInstance } from '@core/domain/schema';
+import { AppStore } from '@store/AppStore';
+import { dayjs } from '@lib/utils/core/date';
+import type { Item, ViewInstance } from '@lib/types/domain/schema';
 import { DataStore } from './dataStore';
 import { InputService } from './inputService';
 import type { QuickInputConfig } from './types';
 import { AppToken } from './types';
-import { readField } from '@core/domain';
+import { readField } from '@lib/domain';
 
 @singleton()
 export class ActionService {

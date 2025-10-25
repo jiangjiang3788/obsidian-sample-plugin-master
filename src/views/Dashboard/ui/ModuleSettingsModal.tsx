@@ -3,13 +3,13 @@
 import { h } from 'preact';
 import { useState, useMemo } from 'preact/hooks';
 import { Button, FormControlLabel, Checkbox } from '@mui/material';
-import { VIEW_OPTIONS, ViewName, getAllFields } from '@core/domain/schema';
-import type { ViewInstance } from '@core/domain/schema';
-import { VIEW_EDITORS } from '@features/settings/ui/components/view-editors/registry';
-import { dataStore } from '@state/storeRegistry';
-import { useStore, AppStore } from '@state/AppStore';
-import { SimpleSelect } from '@shared/ui/SimpleSelect';
-import { RuleBuilder } from '@features/settings/ui/components/RuleBuilder';
+import { VIEW_OPTIONS, ViewName, getAllFields } from '@lib/types/domain/schema';
+import type { ViewInstance } from '@lib/types/domain/schema';
+import { VIEW_EDITORS } from '@views/Settings/ui/components/view-editors/registry';
+import { dataStore } from '@store/storeRegistry';
+import { useStore, AppStore } from '@store/AppStore';
+import { SimpleSelect } from '@ui/composites/SimpleSelect';
+import { RuleBuilder } from '@views/Settings/ui/components/RuleBuilder';
 import { Notice } from 'obsidian';
 
 // 视图设置编辑器组件

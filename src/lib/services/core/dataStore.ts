@@ -1,13 +1,13 @@
 // src/core/services/dataStore.ts
 import { singleton, inject } from 'tsyringe';
 import type { HeadingCache, TFile, App } from 'obsidian';
-import type { Item, FilterRule, SortRule } from '@core/domain/schema';
-import { parseTaskLine, parseBlockContent } from '@core/utils/parser';
-import { throttle } from '@core/utils/timing';
+import type { Item, FilterRule, SortRule } from '@lib/types/domain/schema';
+import { parseTaskLine, parseBlockContent } from '@lib/utils/core/parser';
+import { throttle } from '@lib/utils/core/timing';
 import { ObsidianPlatform } from '@platform/obsidian';
-import { normalizeItemDates } from '@core/utils/normalize';
-import { filterByRules, sortItems } from '@core/utils/itemFilter';
-import { parseRecurrence } from '@core/utils/mark';
+import { normalizeItemDates } from '@lib/utils/core/normalize';
+import { filterByRules, sortItems } from '@lib/utils/core/itemFilter';
+import { parseRecurrence } from '@lib/utils/core/mark';
 // [新增] 注入令牌与服务
 import { AppToken } from './types';
 import { ThemeManager } from './ThemeManager';
@@ -18,7 +18,7 @@ import {
   CURRENT_CACHE_SCHEMA_VERSION,
   toCachedItem,
   fromCachedItem
-} from '@core/domain/cache';
+} from '@lib/types/domain/cache';
 
 @singleton()
 export class DataStore {

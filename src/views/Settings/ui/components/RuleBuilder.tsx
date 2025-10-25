@@ -4,10 +4,10 @@ import { h } from 'preact';
 import { useMemo, useState } from 'preact/hooks';
 import { Typography, Stack, Tooltip, Chip, Autocomplete, TextField, Button } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
-import { SimpleSelect } from '@shared/ui/SimpleSelect';
+import { SimpleSelect } from '@ui/composites/SimpleSelect';
 // [修改] 从注册表导入 dataStore
-import { dataStore } from '@state/storeRegistry';
-import { getAllFields, readField } from '@core/domain/schema';
+import { dataStore } from '@store/storeRegistry';
+import { getAllFields, readField } from '@lib/types/domain/schema';
 
 // 辅助Hook：获取库中所有字段的唯一值，用于自动补全
 function useUniqueFieldValues() {

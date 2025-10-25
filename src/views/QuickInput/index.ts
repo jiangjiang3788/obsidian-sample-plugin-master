@@ -1,6 +1,6 @@
 // src/features/quick-input/index.ts
 import type { ThinkPlugin } from '../../main';
-import { AppStore } from '@state/AppStore';
+import { AppStore } from '@store/AppStore';
 import { registerQuickInputCommands } from './logic/registerCommands';
 
 export interface QuickInputDependencies {

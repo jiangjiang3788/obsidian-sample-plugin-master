@@ -1,7 +1,7 @@
 // src/core/services/ThemeManager.ts
 import { singleton } from 'tsyringe';
-import { Theme } from '@core/domain/theme';
-import { Item } from '@core/domain/schema';
+import { Theme } from '@lib/types/domain/theme';
+import { Item } from '@lib/types/domain/schema';
 
 /**
  * 主题管理服务

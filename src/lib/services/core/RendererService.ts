@@ -2,10 +2,10 @@
 import { singleton, inject } from 'tsyringe';
 import { h, render } from 'preact';
 import { App } from 'obsidian';
-import { Layout } from '@core/domain/schema';
+import { Layout } from '@lib/types/domain/schema';
 import { DataStore } from './dataStore';
-import { AppStore } from '@state/AppStore';
-import { LayoutRenderer } from '@features/dashboard/ui/LayoutRenderer';
+import { AppStore } from '@store/AppStore';
+import { LayoutRenderer } from '@views/Dashboard/ui/LayoutRenderer';
 import { ActionService } from './ActionService';
 import { TaskService } from './taskService';
 import { AppToken } from './types';

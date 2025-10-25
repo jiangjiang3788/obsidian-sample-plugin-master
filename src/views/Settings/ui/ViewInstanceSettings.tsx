@@ -1,21 +1,21 @@
 // src/features/settings/ui/ViewInstanceSettings.tsx
 /** @jsxImportSource preact */
 import { h } from 'preact';
-import { useStore, AppStore } from '@state/AppStore';
+import { useStore, AppStore } from '@store/AppStore';
 // [修改] 导入 Autocomplete 和 TextField
 import { Box, Stack, Typography, FormControlLabel, Checkbox, Tooltip, Chip, Autocomplete, TextField } from '@mui/material';
-import { VIEW_OPTIONS, ViewName, getAllFields } from '@core/domain/schema';
-import type { ViewInstance } from '@core/domain/schema';
+import { VIEW_OPTIONS, ViewName, getAllFields } from '@lib/types/domain/schema';
+import type { ViewInstance } from '@lib/types/domain/schema';
 import { VIEW_EDITORS } from './components/view-editors/registry';
-import { dataStore } from '@state/storeRegistry';
+import { dataStore } from '@store/storeRegistry';
 import { useMemo } from 'preact/hooks';
-import { SimpleSelect } from '@shared/ui/SimpleSelect';
+import { SimpleSelect } from '@ui/composites/SimpleSelect';
 import { SettingsTreeView, TreeItem } from './components/SettingsTreeView';
 import { RuleBuilder } from './components/RuleBuilder'; // [新增] 导入 RuleBuilder
 import { App } from 'obsidian';
 import { useSettingsManager } from './hooks/useSettingsManager';
 import { DndContext, closestCenter } from '@dnd-kit/core';
-import { arrayMove } from '@core/utils/array';
+import { arrayMove } from '@lib/utils/core/array';
 
 const LABEL_WIDTH = '80px';
 

@@ -6,8 +6,8 @@ import { ViewEditorProps } from './registry';
 import AddIcon from '@mui/icons-material/AddCircleOutline';
 import DeleteIcon from '@mui/icons-material/RemoveCircleOutline';
 import { useMemo } from 'preact/hooks';
-import { dataStore } from '@state/storeRegistry';
-import { SimpleSelect } from '@shared/ui/SimpleSelect';
+import { dataStore } from '@store/storeRegistry';
+import { SimpleSelect } from '@ui/composites/SimpleSelect';
 
 export const DEFAULT_CONFIG = {
     defaultHourHeight: 50,
