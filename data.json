@@ -288,7 +288,8 @@
           "#40c463",
           "#30a14e",
           "#216e39"
-        ]
+        ],
+        "oncePerDayForLevel": true
       },
       "collapsed": false,
       "parentId": "group_memc1a9ofen88"
