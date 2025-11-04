@@ -293,7 +293,7 @@ export function HeatmapView({ items, app, dateRange, module, currentView }: Heat
         const effectiveTemplate = getEffectiveTemplate(settings.inputSettings, blockId, themeId);
         const ratingField = effectiveTemplate?.fields.find(f => f.type === 'rating');
         const newMapping = new Map<string, string>(
-            ratingField?.options?.map(opt => [opt.label || '', opt.value]) || []
+            ratingField?.options?.filter(opt => opt.value).map(opt => [opt.label || '', opt.value as string]) || []
         );
         ratingMappingsCache.set(cacheKey, newMapping);
         return newMapping;
@@ -404,7 +404,7 @@ export function HeatmapView({ items, app, dateRange, module, currentView }: Heat
             const effectiveTemplate = getEffectiveTemplate(settings.inputSettings, config.sourceBlockId || '', themeId);
             const ratingField = effectiveTemplate?.fields.find(f => f.type === 'rating');
             const newMapping = new Map<string, string>(
-                ratingField?.options?.map(opt => [opt.label || '', opt.value]) || []
+                ratingField?.options?.filter(opt => opt.value).map(opt => [opt.label || '', opt.value as string]) || []
             );
             ratingMappingsCache.set(cacheKey, newMapping);
             return newMapping;
@@ -461,7 +461,7 @@ export function HeatmapView({ items, app, dateRange, module, currentView }: Heat
             const effectiveTemplate = getEffectiveTemplate(settings.inputSettings, config.sourceBlockId || '', themeId);
             const ratingField = effectiveTemplate?.fields.find(f => f.type === 'rating');
             const newMapping = new Map<string, string>(
-                ratingField?.options?.map(opt => [opt.label || '', opt.value]) || []
+                ratingField?.options?.filter(opt => opt.value).map(opt => [opt.label || '', opt.value as string]) || []
             );
             ratingMappingsCache.set(cacheKey, newMapping);
             return newMapping;
@@ -630,7 +630,25 @@ export function HeatmapView({ items, app, dateRange, module, currentView }: Heat
                     dataForTheme.forEach(itemsOnDate => {
                         if (itemsOnDate) themeItems.push(...itemsOnDate);
                     });
-                    const levelData = config.enableLeveling && theme !== '__default__' ? getThemeLevelData(themeItems) : null;
+
+                    let itemsForLeveling = themeItems;
+                    if (config.oncePerDayForLevel) {
+                        const dailyItems: Item[] = [];
+                        dataForTheme.forEach((itemsOnDate) => {
+                            if (itemsOnDate && itemsOnDate.length > 0) {
+                                // 创建一个代表这一天的 item，其 levelCount 强制为 1
+                                const representativeItem: Item = {
+                                    ...itemsOnDate[0], // 以第一个 item 为基础，保留 theme 等信息
+                                    levelCount: 1,
+                                    manuallyEdited: true, // 强制使用 levelCount
+                                };
+                                dailyItems.push(representativeItem);
+                            }
+                        });
+                        itemsForLeveling = dailyItems;
+                    }
+                    
+                    const levelData = config.enableLeveling && theme !== '__default__' ? getThemeLevelData(itemsForLeveling) : null;
                     
                     const isVertical = verticalLayouts.has(theme);
                     
