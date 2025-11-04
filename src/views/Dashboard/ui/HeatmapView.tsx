@@ -9,7 +9,7 @@ import { useStore } from '../../../store/AppStore';
 import { QuickInputModal } from '../../QuickInput/ui/QuickInputModal';
 import { DEFAULT_CONFIG } from '../../Settings/ui/components/view-editors/HeatmapViewEditor';
 import { getThemeLevelData, getEffectiveDisplayCount, getEffectiveLevelCount, type LevelResult } from '../../../lib/utils/core/levelingSystem';
-import { CountEditModal } from './CountEditModal';
+import { CheckinManagerModal } from './CheckinManagerModal';
 
 // ========== Types ==========
 interface HeatmapViewProps {
@@ -20,14 +20,15 @@ interface HeatmapViewProps {
     currentView: '年' | '季' | '月' | '周' | '天';
 }
 
+// [修改] item 变为 items 数组
 interface HeatmapCellProps {
     date: string;
-    item?: Item;
+    items?: Item[]; // 改为 items 数组
     count?: number;
     config: typeof DEFAULT_CONFIG;
     app: App;
     onCellClick: (date: string, item?: Item) => void;
-    onEditCount?: (date: string, item?: Item) => void;
+    onEditCount?: (date: string, items?: Item[]) => void; // 改为 items 数组
     ratingMapping: Map<string, string>;
 }
 
@@ -50,7 +51,7 @@ const isHexColor = (value: string) => /^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/.test(
 
 
 // ========== Sub-Components ==========
-function HeatmapCell({ date, item, count, config, ratingMapping, app, onCellClick, onEditCount }: HeatmapCellProps) {
+function HeatmapCell({ date, items, count, config, ratingMapping, app, onCellClick, onEditCount }: HeatmapCellProps) {
     const today = dayjs().format('YYYY-MM-DD');
     const isToday = date === today;
     
@@ -60,16 +61,23 @@ function HeatmapCell({ date, item, count, config, ratingMapping, app, onCellClic
 
     let visualValue: string | null = null;
     
-    if (config.displayMode === 'habit' && item) {
-        const displayCount = getEffectiveDisplayCount(item);
-        const levelCount = getEffectiveLevelCount(item);
-        const wasEdited = item.manuallyEdited;
+    // [修改] 从 items 数组中获取信息
+    const item = items && items.length > 0 ? items[items.length - 1] : undefined;
+
+    if (config.displayMode === 'habit' && item && items) {
+        // [修改] 聚合 displayCount 和 levelCount
+        const displayCount = items.reduce((sum, i) => sum + getEffectiveDisplayCount(i), 0);
+        const levelCount = items.reduce((sum, i) => sum + getEffectiveLevelCount(i), 0);
+        const wasEdited = items.some(i => i.manuallyEdited);
         
-        // 优先显示原有的评分/图片系统
-        if (item.pintu) {
-            visualValue = item.pintu;
-        } else if (item.rating !== undefined) {
-            visualValue = ratingMapping.get(String(item.rating)) || null;
+        // 优先显示最新的评分/图片系统
+        const latestItemWithValue = [...items].reverse().find(i => i.pintu || i.rating !== undefined);
+        if (latestItemWithValue) {
+            if (latestItemWithValue.pintu) {
+                visualValue = latestItemWithValue.pintu;
+            } else if (latestItemWithValue.rating !== undefined) {
+                visualValue = ratingMapping.get(String(latestItemWithValue.rating)) || null;
+            }
         }
 
         if (visualValue) {
@@ -159,13 +167,14 @@ function HeatmapCell({ date, item, count, config, ratingMapping, app, onCellClic
         // 构建详细的提示信息
         title = [
             `📅 ${date}`,
-            `👆 显示次数: ${displayCount}`,
+            `👆 打卡次数: ${displayCount}`,
             levelCount !== displayCount ? `🏆 等级次数: ${levelCount}` : '',
-            wasEdited ? `✏️ 已手动编辑` : '',
-            item.rating !== undefined ? `⭐ 评分: ${item.rating}` : '',
-            item.content ? `💭 ${item.content}` : '',
+            wasEdited ? `✏️ 包含手动编辑` : '',
+            item.rating !== undefined ? `⭐ 最后评分: ${item.rating}` : '',
+            item.content ? `💭 最后内容: ${item.content}` : '',
             '',
-            '💡 点击编辑打卡'
+            '💡 左键点击新增打卡',
+            '💡 右键查看详情或编辑'
         ].filter(Boolean).join('\n');
 
     } else if (config.displayMode === 'count' && (count || 0) > 0) {
@@ -189,7 +198,7 @@ function HeatmapCell({ date, item, count, config, ratingMapping, app, onCellClic
     }
 
     // 空状态处理
-    if (!visualValue && !(config.displayMode === 'count' && count! > 0) && (!item || getEffectiveDisplayCount(item) === 0)) {
+    if (!visualValue && !(config.displayMode === 'count' && count! > 0) && (!items || items.length === 0)) {
         const emptyColor = config.displayMode === 'count' ? config.countColors[0] : '#E5DDEE';
         cellStyle.backgroundColor = emptyColor;
         cellStyle.opacity = 0.3;
@@ -214,8 +223,9 @@ function HeatmapCell({ date, item, count, config, ratingMapping, app, onCellClic
             onClick={() => onCellClick(date, item)}
             onContextMenu={(e) => {
                 e.preventDefault();
-                if (config.allowManualEdit && onEditCount) {
-                    onEditCount(date, item);
+                // [修改] 右键打开详情/编辑
+                if (onEditCount) {
+                    onEditCount(date, items);
                 }
             }}
             onMouseEnter={(e) => {
@@ -290,9 +300,8 @@ export function HeatmapView({ items, app, dateRange, module, currentView }: Heat
     };
     
     const dataByThemeAndDate = useMemo(() => {
-        const themeMap = new Map<string, Map<string, any>>();
+        const themeMap = new Map<string, Map<string, Item[]>>();
         
-        // [修复] 使用 themePaths 替代 themeTags，表示主题路径列表
         const themesToTrack = config.displayMode === 'habit' && config.themePaths && config.themePaths.length > 0 
             ? config.themePaths 
             : ['__default__'];
@@ -300,69 +309,40 @@ export function HeatmapView({ items, app, dateRange, module, currentView }: Heat
         themesToTrack.forEach(theme => themeMap.set(theme, new Map()));
 
         if (config.displayMode === 'count') {
+            // count 模式逻辑不变，但为了统一返回类型，我们将 count 存在 Item[] 的一个伪字段里
+            const countDataMap = new Map<string, number>();
             items.forEach(item => {
                 if (item.date) {
-                    const map = themeMap.get('__default__')!;
-                    const currentCount = map.get(item.date) || 0;
-                    // 支持多次打卡计数
+                    const currentCount = countDataMap.get(item.date) || 0;
                     const itemDisplayCount = getEffectiveDisplayCount(item);
-                    map.set(item.date, currentCount + itemDisplayCount);
+                    countDataMap.set(item.date, currentCount + itemDisplayCount);
                 }
             });
+            const defaultMap = themeMap.get('__default__')!;
+            countDataMap.forEach((count, date) => {
+                // @ts-ignore - 伪造一个Item来存储count
+                defaultMap.set(date, [{ displayCount: count }] as Item[]);
+            });
+
         } else {
-            // [新增] 支持同日期多次打卡的聚合逻辑
+            // [修改] 聚合逻辑：保留原始 items 数组
             items.forEach(item => {
                 if (!item.date) return;
                 
-                // 如果配置了多个主题路径，检查item的theme是否匹配
+                const processItem = (themeKey: string) => {
+                    const targetThemeMap = themeMap.get(themeKey);
+                    if (targetThemeMap) {
+                        const existingItems = targetThemeMap.get(item.date) || [];
+                        targetThemeMap.set(item.date, [...existingItems, item]);
+                    }
+                };
+
                 if (themesToTrack.length > 1 && themesToTrack[0] !== '__default__') {
-                    // item.theme 必须在配置的主题列表中
                     if (item.theme && themesToTrack.includes(item.theme)) {
-                        const targetThemeMap = themeMap.get(item.theme);
-                        if (targetThemeMap) {
-                            const existingItem = targetThemeMap.get(item.date);
-                            if (existingItem) {
-                                // 聚合同日期的多次打卡
-                                existingItem.displayCount = (existingItem.displayCount || 1) + getEffectiveDisplayCount(item);
-                                existingItem.levelCount = (existingItem.levelCount || 1) + getEffectiveLevelCount(item);
-                                existingItem.manuallyEdited = existingItem.manuallyEdited || item.manuallyEdited;
-                                // 保留最新的其他字段
-                                if (item.rating !== undefined) existingItem.rating = item.rating;
-                                if (item.pintu) existingItem.pintu = item.pintu;
-                                if (item.content) existingItem.content = item.content;
-                            } else {
-                                // 新的日期记录
-                                targetThemeMap.set(item.date, {
-                                    ...item,
-                                    displayCount: getEffectiveDisplayCount(item),
-                                    levelCount: getEffectiveLevelCount(item)
-                                });
-                            }
-                        }
+                        processItem(item.theme);
                     }
                 } else {
-                    // 默认模式：所有item归入__default__
-                    const defaultMap = themeMap.get('__default__');
-                    if (defaultMap) {
-                        const existingItem = defaultMap.get(item.date);
-                        if (existingItem) {
-                            // 聚合同日期的多次打卡
-                            existingItem.displayCount = (existingItem.displayCount || 1) + getEffectiveDisplayCount(item);
-                            existingItem.levelCount = (existingItem.levelCount || 1) + getEffectiveLevelCount(item);
-                            existingItem.manuallyEdited = existingItem.manuallyEdited || item.manuallyEdited;
-                            // 保留最新的其他字段
-                            if (item.rating !== undefined) existingItem.rating = item.rating;
-                            if (item.pintu) existingItem.pintu = item.pintu;
-                            if (item.content) existingItem.content = item.content;
-                        } else {
-                            // 新的日期记录
-                            defaultMap.set(item.date, {
-                                ...item,
-                                displayCount: getEffectiveDisplayCount(item),
-                                levelCount: getEffectiveLevelCount(item)
-                            });
-                        }
-                    }
+                    processItem('__default__');
                 }
             });
         }
@@ -384,40 +364,34 @@ export function HeatmapView({ items, app, dateRange, module, currentView }: Heat
         
         const context = {
             '日期': date,
-            ...(item ? { '内容': item.content, '评分': item.rating } : {}),
+            ...(item ? { '内容': item.content || '', '评分': item.rating ?? 0 } : {}),
             ...(themeToPreselect ? { '主题': themeToPreselect.path } : {})
         };
         
         new QuickInputModal(app, config.sourceBlockId, context, themeToPreselect?.id).open();
     };
 
-    const handleEditCount = (date: string, item?: Item) => {
-        const currentDisplayCount = item ? getEffectiveDisplayCount(item) : 0;
-        const currentLevelCount = item ? getEffectiveLevelCount(item) : 0;
-        const countForLevel = item ? !item.manuallyEdited : true;
-        
+    const handleEditCount = (date: string, items?: Item[]) => {
         const handleSave = async (data: { displayCount: number; levelCount: number; countForLevel: boolean }) => {
             try {
                 // TODO: 实现实际的数据更新逻辑
-                // 这里需要调用store的更新方法来保存新的打卡次数
-                new Notice(`已更新 ${date} 的打卡次数：显示${data.displayCount}次，等级${data.levelCount}次`);
+                // 这个逻辑需要连接到你的状态管理（如Zustand store）来持久化数据
+                new Notice(`已更新 ${date} 的打卡数据`);
             } catch (error) {
                 new Notice('保存失败：' + (error as Error).message);
                 throw error; // 重新抛出错误，让模态框处理
             }
         };
-        
-        new CountEditModal(
+
+        new CheckinManagerModal(
             app,
             date,
-            currentDisplayCount,
-            currentLevelCount,
-            countForLevel,
+            items || [],
             handleSave
         ).open();
     };
 
-    const renderMonthGrid = (monthDate: dayjs.Dayjs, dataForMonth: Map<string, any>, themePath: string) => {
+    const renderMonthGrid = (monthDate: dayjs.Dayjs, dataForMonth: Map<string, Item[]>, themePath: string) => {
         const startOfMonth = monthDate.startOf('month');
         const endOfMonth = monthDate.endOf('month');
         const firstWeekday = startOfMonth.isoWeekday();
@@ -440,17 +414,17 @@ export function HeatmapView({ items, app, dateRange, module, currentView }: Heat
         for (let i = 1; i < firstWeekday; i++) { days.push(<div class="heatmap-cell empty"></div>); }
         for (let i = 1; i <= endOfMonth.date(); i++) {
             const dateStr = startOfMonth.clone().date(i).format('YYYY-MM-DD');
-            const item = dataForMonth.get(dateStr);
+            const dayItems = dataForMonth.get(dateStr);
             days.push(
                 <HeatmapCell 
                     key={dateStr} 
                     date={dateStr} 
-                    item={item} 
+                    items={dayItems} 
                     config={config} 
                     ratingMapping={themRatingMapping} 
                     app={app} 
                     onCellClick={(date, item) => handleCellClick(date, item, themePath)}
-                    onEditCount={config.allowManualEdit ? handleEditCount : undefined}
+                    onEditCount={handleEditCount}
                 />
             );
         }
@@ -475,7 +449,7 @@ export function HeatmapView({ items, app, dateRange, module, currentView }: Heat
         );
     };
 
-    const renderHeaderCells = (currentView: string, themePath: string, dataForTheme: Map<string, any>) => {
+    const renderHeaderCells = (currentView: string, themePath: string, dataForTheme: Map<string, Item[]>) => {
         const start = dayjs(dateRange[0]);
         const end = dayjs(dateRange[1]);
         
@@ -496,18 +470,19 @@ export function HeatmapView({ items, app, dateRange, module, currentView }: Heat
         switch (currentView) {
             case '天': {
                 const dateStr = start.format('YYYY-MM-DD');
-                const item = dataForTheme.get(dateStr);
+                const dayItems = dataForTheme.get(dateStr);
+                const count = config.displayMode === 'count' && dayItems && dayItems.length > 0 ? dayItems[0].displayCount : undefined;
                 return [
                     <HeatmapCell 
                         key={dateStr} 
                         date={dateStr} 
-                        item={config.displayMode === 'habit' ? item : undefined}
-                        count={config.displayMode === 'count' ? item : undefined}
+                        items={config.displayMode === 'habit' ? dayItems : undefined}
+                        count={count}
                         config={config} 
                         ratingMapping={themeRatingMapping} 
                         app={app} 
                         onCellClick={(date, item) => handleCellClick(date, item, themePath)}
-                        onEditCount={config.allowManualEdit ? handleEditCount : undefined}
+                        onEditCount={handleEditCount}
                     />
                 ];
             }
@@ -517,18 +492,19 @@ export function HeatmapView({ items, app, dateRange, module, currentView }: Heat
                 const endDate = start.endOf('isoWeek');
                 while(currentDate.isSameOrBefore(endDate, 'day')) {
                     const dateStr = currentDate.format('YYYY-MM-DD');
-                    const item = dataForTheme.get(dateStr);
+                    const dayItems = dataForTheme.get(dateStr);
+                    const count = config.displayMode === 'count' && dayItems && dayItems.length > 0 ? dayItems[0].displayCount : undefined;
                     cells.push(
                         <HeatmapCell 
                             key={dateStr} 
                             date={dateStr} 
-                            item={config.displayMode === 'habit' ? item : undefined}
-                            count={config.displayMode === 'count' ? item : undefined}
+                            items={config.displayMode === 'habit' ? dayItems : undefined}
+                            count={count}
                             config={config} 
                             ratingMapping={themeRatingMapping} 
                             app={app} 
                             onCellClick={(date, item) => handleCellClick(date, item, themePath)}
-                            onEditCount={config.allowManualEdit ? handleEditCount : undefined}
+                            onEditCount={handleEditCount}
                         />
                     );
                     currentDate = currentDate.add(1, 'day');
@@ -541,18 +517,19 @@ export function HeatmapView({ items, app, dateRange, module, currentView }: Heat
                 const endDate = start.endOf('month');
                 while(currentDate.isSameOrBefore(endDate, 'day')) {
                     const dateStr = currentDate.format('YYYY-MM-DD');
-                    const item = dataForTheme.get(dateStr);
+                    const dayItems = dataForTheme.get(dateStr);
+                    const count = config.displayMode === 'count' && dayItems && dayItems.length > 0 ? dayItems[0].displayCount : undefined;
                     cells.push(
                         <HeatmapCell 
                             key={dateStr} 
                             date={dateStr} 
-                            item={config.displayMode === 'habit' ? item : undefined}
-                            count={config.displayMode === 'count' ? item : undefined}
+                            items={config.displayMode === 'habit' ? dayItems : undefined}
+                            count={count}
                             config={config} 
                             ratingMapping={themeRatingMapping} 
                             app={app} 
                             onCellClick={(date, item) => handleCellClick(date, item, themePath)}
-                            onEditCount={config.allowManualEdit ? handleEditCount : undefined}
+                            onEditCount={handleEditCount}
                         />
                     );
                     currentDate = currentDate.add(1, 'day');
@@ -650,8 +627,8 @@ export function HeatmapView({ items, app, dateRange, module, currentView }: Heat
                     
                     // 计算该主题的等级数据
                     const themeItems: Item[] = [];
-                    dataForTheme.forEach(item => {
-                        if (item) themeItems.push(item);
+                    dataForTheme.forEach(itemsOnDate => {
+                        if (itemsOnDate) themeItems.push(...itemsOnDate);
                     });
                     const levelData = config.enableLeveling && theme !== '__default__' ? getThemeLevelData(themeItems) : null;
                     
