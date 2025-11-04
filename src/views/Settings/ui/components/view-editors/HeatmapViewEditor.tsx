@@ -18,6 +18,11 @@ export const DEFAULT_CONFIG = {
     sourceBlockId: '', // For 'habit' mode
     themePaths: [] as string[], // [修复] 主题路径列表（用于多行显示）
     countColors: ['#ebedf0', '#9be9a8', '#40c463', '#30a14e', '#216e39'], // For 'count' mode
+    // [新增] 等级系统配置
+    enableLeveling: true,              // 启用等级系统
+    maxDailyChecks: 10,               // 每日最大显示次数
+    allowManualEdit: true,            // 允许手动编辑次数
+    showLevelProgress: true,          // 显示等级进度条
 };
 
 export function HeatmapViewEditor({ value, onChange, module }: ViewEditorProps) {
