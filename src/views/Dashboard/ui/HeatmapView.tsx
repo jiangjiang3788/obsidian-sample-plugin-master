@@ -1,7 +1,7 @@
 // src/features/dashboard/ui/HeatmapView.tsx
 
 /** @jsxImportSource preact */
-import { useMemo, useState } from 'preact/hooks';
+import { useMemo, useState, useRef, useEffect } from 'preact/hooks';
 import { App, Notice } from 'obsidian';
 import { Item, ViewInstance, BlockTemplate, InputSettings, ThemeDefinition } from '../../../lib/types/domain/schema';
 import { dayjs } from '../../../lib/utils/core/date';
@@ -79,7 +79,18 @@ function HeatmapCell({ date, item, count, config, ratingMapping, app, onCellClic
                 if (displayCount > 1) {
                     cellContent = (
                         <div class="cell-with-count">
-                            <span class="check-count-overlay">×{displayCount}</span>
+                            <span class="check-count-overlay" style={{
+                                fontSize: '10px',
+                                fontWeight: 'bold',
+                                color: 'var(--text-on-accent)',
+                                backgroundColor: 'rgba(0,0,0,0.2)',
+                                borderRadius: '8px',
+                                padding: '1px 4px',
+                                position: 'absolute',
+                                top: '2px',
+                                right: '2px',
+                                lineHeight: '1'
+                            }}>{displayCount}</span>
                         </div>
                     );
                 }
@@ -89,7 +100,18 @@ function HeatmapCell({ date, item, count, config, ratingMapping, app, onCellClic
                     <div class="cell-with-image">
                         <img src={imageUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                         {displayCount > 1 && (
-                            <span class="check-count-overlay">×{displayCount}</span>
+                            <span class="check-count-overlay" style={{
+                                fontSize: '10px',
+                                fontWeight: 'bold',
+                                color: 'var(--text-on-accent)',
+                                backgroundColor: 'rgba(0,0,0,0.2)',
+                                borderRadius: '8px',
+                                padding: '1px 4px',
+                                position: 'absolute',
+                                top: '2px',
+                                right: '2px',
+                                lineHeight: '1'
+                            }}>{displayCount}</span>
                         )}
                     </div>
                 );
@@ -98,7 +120,18 @@ function HeatmapCell({ date, item, count, config, ratingMapping, app, onCellClic
                     <div class="cell-with-text">
                         <span class="visual-content">{visualValue}</span>
                         {displayCount > 1 && (
-                            <span class="check-count-overlay">×{displayCount}</span>
+                            <span class="check-count-overlay" style={{
+                                fontSize: '10px',
+                                fontWeight: 'bold',
+                                color: 'var(--text-on-accent)',
+                                backgroundColor: 'rgba(0,0,0,0.2)',
+                                borderRadius: '8px',
+                                padding: '1px 4px',
+                                position: 'absolute',
+                                top: '2px',
+                                right: '2px',
+                                lineHeight: '1'
+                            }}>{displayCount}</span>
                         )}
                     </div>
                 );
@@ -162,9 +195,10 @@ function HeatmapCell({ date, item, count, config, ratingMapping, app, onCellClic
         cellStyle.opacity = 0.3;
     }
 
-    // 今日特殊标记 - 简化为单一边框
+    // 今日特殊标记 - 使用更subtle的方式
     if (isToday) {
-        cellStyle.border = '2px solid var(--interactive-accent)';
+        cellStyle.boxShadow = '0 0 0 1px var(--interactive-accent)';
+        cellStyle.opacity = 1; // 确保今日不透明
     }
 
     return (
@@ -420,12 +454,32 @@ export function HeatmapView({ items, app, dateRange, module, currentView }: Heat
                 />
             );
         }
-        return <div class="month-section"><div class="month-label">{monthDate.format('MMMM')}</div><div class="heatmap-row calendar">{days}</div></div>;
+        return (
+            <div class="month-section" style={{ marginBottom: '12px' }}>
+                <div class="month-label" style={{ 
+                    fontSize: '12px', 
+                    marginBottom: '4px', 
+                    color: 'var(--text-muted)',
+                    textAlign: 'center'
+                }}>
+                    {monthDate.format('YYYY年M月')}
+                </div>
+                <div class="heatmap-row calendar" style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(7, var(--heatmap-cell-size))',
+                    gap: '3px'
+                }}>
+                    {days}
+                </div>
+            </div>
+        );
     };
 
-    const renderSingleRow = (startDate: dayjs.Dayjs, endDate: dayjs.Dayjs, dataForRow: Map<string, any>, themePath: string) => {
+    const renderHeaderCells = (currentView: string, themePath: string, dataForTheme: Map<string, any>) => {
+        const start = dayjs(dateRange[0]);
+        const end = dayjs(dateRange[1]);
+        
         // [修复] 使用 themePath 作为 cacheKey 的一部分，而不是 themeId
-        // 这样即使 theme 定义缺失，每个 themePath 也有独立的映射
         const themeId = themePath !== '__default__' ? themesByPath.get(themePath)?.id : undefined;
         const cacheKey = `${config.sourceBlockId}:${themePath}`;
         
@@ -439,28 +493,146 @@ export function HeatmapView({ items, app, dateRange, module, currentView }: Heat
             return newMapping;
         })();
         
-        const days = [];
-        let currentDate = startDate.clone();
-        while(currentDate.isSameOrBefore(endDate, 'day')) {
-            const dateStr = currentDate.format('YYYY-MM-DD');
-            const item = dataForRow.get(dateStr);
-            days.push(
-                <HeatmapCell 
-                    key={dateStr} 
-                    date={dateStr} 
-                    item={config.displayMode === 'habit' ? item : undefined}
-                    count={config.displayMode === 'count' ? item : undefined}
-                    config={config} 
-                    ratingMapping={themeRatingMapping} 
-                    app={app} 
-                    onCellClick={(date, item) => handleCellClick(date, item, themePath)}
-                    onEditCount={config.allowManualEdit ? handleEditCount : undefined}
-                />
-            );
-            currentDate = currentDate.add(1, 'day');
+        switch (currentView) {
+            case '天': {
+                const dateStr = start.format('YYYY-MM-DD');
+                const item = dataForTheme.get(dateStr);
+                return [
+                    <HeatmapCell 
+                        key={dateStr} 
+                        date={dateStr} 
+                        item={config.displayMode === 'habit' ? item : undefined}
+                        count={config.displayMode === 'count' ? item : undefined}
+                        config={config} 
+                        ratingMapping={themeRatingMapping} 
+                        app={app} 
+                        onCellClick={(date, item) => handleCellClick(date, item, themePath)}
+                        onEditCount={config.allowManualEdit ? handleEditCount : undefined}
+                    />
+                ];
+            }
+            case '周': {
+                const cells = [];
+                let currentDate = start.startOf('isoWeek');
+                const endDate = start.endOf('isoWeek');
+                while(currentDate.isSameOrBefore(endDate, 'day')) {
+                    const dateStr = currentDate.format('YYYY-MM-DD');
+                    const item = dataForTheme.get(dateStr);
+                    cells.push(
+                        <HeatmapCell 
+                            key={dateStr} 
+                            date={dateStr} 
+                            item={config.displayMode === 'habit' ? item : undefined}
+                            count={config.displayMode === 'count' ? item : undefined}
+                            config={config} 
+                            ratingMapping={themeRatingMapping} 
+                            app={app} 
+                            onCellClick={(date, item) => handleCellClick(date, item, themePath)}
+                            onEditCount={config.allowManualEdit ? handleEditCount : undefined}
+                        />
+                    );
+                    currentDate = currentDate.add(1, 'day');
+                }
+                return cells;
+            }
+            case '月': {
+                const cells = [];
+                let currentDate = start.startOf('month');
+                const endDate = start.endOf('month');
+                while(currentDate.isSameOrBefore(endDate, 'day')) {
+                    const dateStr = currentDate.format('YYYY-MM-DD');
+                    const item = dataForTheme.get(dateStr);
+                    cells.push(
+                        <HeatmapCell 
+                            key={dateStr} 
+                            date={dateStr} 
+                            item={config.displayMode === 'habit' ? item : undefined}
+                            count={config.displayMode === 'count' ? item : undefined}
+                            config={config} 
+                            ratingMapping={themeRatingMapping} 
+                            app={app} 
+                            onCellClick={(date, item) => handleCellClick(date, item, themePath)}
+                            onEditCount={config.allowManualEdit ? handleEditCount : undefined}
+                        />
+                    );
+                    currentDate = currentDate.add(1, 'day');
+                }
+                return cells;
+            }
+            case '年':
+            case '季': {
+                // 对于年视图和季视图，返回月份日历网格
+                const months = [];
+                let currentMonth = start.clone().startOf('month');
+                while (currentMonth.isSameOrBefore(end, 'month')) {
+                    months.push(renderMonthGrid(currentMonth, dataForTheme, themePath));
+                    currentMonth = currentMonth.add(1, 'month');
+                }
+                return months;
+            }
+            default:
+                return [];
         }
-        return <div class="heatmap-row single-row">{days}</div>;
     };
+
+
+    // 响应式布局检测
+    const [verticalLayouts, setVerticalLayouts] = useState<Set<string>>(new Set());
+    const headerRefs = useRef<Map<string, HTMLElement>>(new Map());
+
+    // 检测是否需要垂直布局
+    const checkLayout = (theme: string, headerElement: HTMLElement) => {
+        if (!headerElement || theme === '__default__') return;
+        
+        // 季度和年视图总是使用垂直布局
+        const isGridLayout = ['年', '季'].includes(currentView);
+        
+        let needsVertical = false;
+        
+        if (isGridLayout) {
+            // 季度和年视图强制垂直布局
+            needsVertical = true;
+        } else {
+            // 其他视图根据容器宽度决定
+            const containerWidth = headerElement.clientWidth;
+            const threshold = 600; // 当容器宽度小于600px时切换为垂直布局
+            needsVertical = containerWidth < threshold;
+        }
+        
+        setVerticalLayouts(prev => {
+            const newSet = new Set(prev);
+            if (needsVertical) {
+                newSet.add(theme);
+            } else {
+                newSet.delete(theme);
+            }
+            return newSet;
+        });
+    };
+
+    // 使用ResizeObserver监听容器大小变化
+    useEffect(() => {
+        const resizeObserver = new ResizeObserver(entries => {
+            entries.forEach(entry => {
+                const element = entry.target as HTMLElement;
+                const theme = element.dataset.theme;
+                if (theme) {
+                    checkLayout(theme, element);
+                }
+            });
+        });
+
+        // 监听所有主题头部容器
+        headerRefs.current.forEach((element, theme) => {
+            resizeObserver.observe(element);
+            // 初始检测
+            checkLayout(theme, element);
+        });
+
+        return () => {
+            resizeObserver.disconnect();
+        };
+    }, [config.themePaths]);
 
     const renderContent = () => {
         const start = dayjs(dateRange[0]);
@@ -483,15 +655,21 @@ export function HeatmapView({ items, app, dateRange, module, currentView }: Heat
                     });
                     const levelData = config.enableLeveling && theme !== '__default__' ? getThemeLevelData(themeItems) : null;
                     
+                    const isVertical = verticalLayouts.has(theme);
+                    
                     return (
                         <div class="heatmap-theme-group" key={theme}>
-                            {theme !== '__default__' && (
-                                <div class="heatmap-theme-header" style={{
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'space-between',
-                                    marginBottom: '8px',
-                                    padding: '10px 16px',
+                            <div 
+                                class={`heatmap-theme-header ${isVertical ? 'vertical-layout' : ''}`}
+                                data-theme={theme}
+                                ref={(el) => {
+                                    if (el && theme !== '__default__') {
+                                        headerRefs.current.set(theme, el);
+                                    }
+                                }}
+                                style={{
+                                    marginBottom: '16px',
+                                    padding: '12px 16px',
                                     backgroundColor: 'var(--background-primary)',
                                     borderRadius: '8px',
                                     border: '1px solid var(--background-modifier-border)',
@@ -503,155 +681,86 @@ export function HeatmapView({ items, app, dateRange, module, currentView }: Heat
                                 onMouseLeave={(e) => {
                                     (e.target as HTMLElement).style.backgroundColor = 'var(--background-primary)';
                                 }}
-                                >
-                                    {/* 左侧：等级信息和主题名称 */}
-                                    <div style={{
+                            >
+                                {/* 第一行：等级信息和进度条 */}
+                                {theme !== '__default__' && (
+                                    <div class="heatmap-header-info" style={{
                                         display: 'flex',
                                         alignItems: 'center',
-                                        gap: '8px',
-                                        flex: '0 0 auto'
+                                        justifyContent: 'space-between'
                                     }}>
-                                        {levelData && (
-                                            <>
-                                                <span style={{ fontSize: '16px' }}>
-                                                    {levelData.config.icon}
-                                                </span>
-                                                <span style={{ 
-                                                    fontWeight: 'bold', 
-                                                    fontSize: '13px',
-                                                    color: 'var(--text-normal)'
-                                                }}>
-                                                    Lv.{levelData.level}
-                                                </span>
-                                            </>
-                                        )}
-                                        <span style={{
-                                            fontWeight: 'bold',
-                                            fontSize: '14px',
-                                            color: 'var(--text-normal)'
-                                        }}>
-                                            {theme}
-                                        </span>
-                                    </div>
-
-                                    {/* 中间：进度条 */}
-                                    {levelData && config.showLevelProgress && levelData.nextConfig && (
-                                        <div style={{
-                                            flex: '1 1 auto',
-                                            margin: '0 16px',
-                                            minWidth: '100px'
-                                        }}>
-                                            <div style={{
-                                                width: '100%',
-                                                height: '6px',
-                                                backgroundColor: 'var(--background-modifier-border)',
-                                                borderRadius: '3px',
-                                                overflow: 'hidden',
-                                                position: 'relative'
-                                            }}
-                                            title={`${levelData.totalChecks}${levelData.nextRequirement ? ` / ${levelData.nextRequirement}` : ''}`}
-                                            >
-                                                <div style={{
-                                                    width: `${levelData.progress * 100}%`,
-                                                    height: '100%',
-                                                    backgroundColor: levelData.config.color,
-                                                    transition: 'width 0.3s ease'
-                                                }} />
-                                            </div>
-                                        </div>
-                                    )}
-
-                                    {/* 右侧：统计和快捷按钮 */}
-                                    <div style={{
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        gap: '12px',
-                                        flex: '0 0 auto'
-                                    }}>
-                                        {/* 打卡历史点 */}
+                                        {/* 左侧：等级信息和主题名称 */}
                                         <div style={{
                                             display: 'flex',
-                                            gap: '2px',
-                                            alignItems: 'center'
+                                            alignItems: 'center',
+                                            gap: '8px',
+                                            flex: '0 0 auto'
                                         }}>
-                                            {Array.from({ length: 7 }, (_, i) => {
-                                                const date = dayjs().subtract(6 - i, 'day').format('YYYY-MM-DD');
-                                                const hasData = dataForTheme.has(date);
-                                                return (
-                                                    <div 
-                                                        key={date}
-                                                        style={{
-                                                            width: '8px',
-                                                            height: '8px',
-                                                            borderRadius: '50%',
-                                                            backgroundColor: hasData ? levelData?.config.color || 'var(--interactive-accent)' : 'var(--background-modifier-border)',
-                                                            opacity: hasData ? 1 : 0.3
-                                                        }}
-                                                        title={date}
-                                                    />
-                                                );
-                                            })}
+                                            {levelData && (
+                                                <>
+                                                    <span style={{ fontSize: '16px' }}>
+                                                        {levelData.config.icon}
+                                                    </span>
+                                                    <span style={{ 
+                                                        fontWeight: 'bold', 
+                                                        fontSize: '13px',
+                                                        color: 'var(--text-normal)'
+                                                    }}>
+                                                        Lv.{levelData.level}
+                                                    </span>
+                                                </>
+                                            )}
+                                            <span style={{
+                                                fontWeight: 'bold',
+                                                fontSize: '14px',
+                                                color: 'var(--text-normal)'
+                                            }}>
+                                                {theme}
+                                            </span>
                                         </div>
 
-                                        {/* 快捷打卡按钮 */}
-                                        {config.sourceBlockId && (
-                                            <button
-                                                style={{
-                                                    width: '24px',
-                                                    height: '24px',
-                                                    borderRadius: '4px',
-                                                    border: '1px solid var(--background-modifier-border)',
-                                                    backgroundColor: 'var(--background-secondary)',
-                                                    color: 'var(--text-normal)',
-                                                    fontSize: '16px',
-                                                    lineHeight: '1',
-                                                    cursor: 'pointer',
-                                                    display: 'flex',
-                                                    alignItems: 'center',
-                                                    justifyContent: 'center',
-                                                    transition: 'all 0.2s ease'
+                                        {/* 右侧：进度条 */}
+                                        {levelData && config.showLevelProgress && levelData.nextConfig && (
+                                            <div style={{
+                                                flex: '1 1 auto',
+                                                margin: '0 16px',
+                                                minWidth: '100px'
+                                            }}>
+                                                <div style={{
+                                                    width: '100%',
+                                                    height: '6px',
+                                                    backgroundColor: 'var(--background-modifier-border)',
+                                                    borderRadius: '3px',
+                                                    overflow: 'hidden',
+                                                    position: 'relative',
+                                                    cursor: 'pointer'
                                                 }}
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    handleCellClick(dayjs().format('YYYY-MM-DD'), undefined, theme);
-                                                }}
-                                                onMouseEnter={(e) => {
-                                                    (e.target as HTMLElement).style.backgroundColor = 'var(--interactive-accent)';
-                                                    (e.target as HTMLElement).style.color = 'var(--text-on-accent)';
-                                                    (e.target as HTMLElement).style.borderColor = 'var(--interactive-accent)';
-                                                }}
-                                                onMouseLeave={(e) => {
-                                                    (e.target as HTMLElement).style.backgroundColor = 'var(--background-secondary)';
-                                                    (e.target as HTMLElement).style.color = 'var(--text-normal)';
-                                                    (e.target as HTMLElement).style.borderColor = 'var(--background-modifier-border)';
-                                                }}
-                                                title="快速打卡"
-                                            >
-                                                +
-                                            </button>
+                                                title={`当前进度: ${levelData.totalChecks}${levelData.nextRequirement ? ` / ${levelData.nextRequirement}` : ''} 
+下一等级: ${levelData.nextConfig.title}
+距离升级还需: ${levelData.nextRequirement ? Math.max(0, levelData.nextRequirement - levelData.totalChecks) : 0} 次打卡`}
+                                                >
+                                                    <div style={{
+                                                        width: `${levelData.progress * 100}%`,
+                                                        height: '100%',
+                                                        backgroundColor: levelData.config.color,
+                                                        transition: 'width 0.3s ease'
+                                                    }} />
+                                                </div>
+                                            </div>
                                         )}
                                     </div>
+                                )}
+                                
+                                {/* 第二行：HeatmapCell展示区域 */}
+                                <div class="heatmap-header-cells" style={{
+                                    display: 'flex',
+                                    gap: '2px',
+                                    flexWrap: 'wrap',
+                                    justifyContent: 'flex-start',
+                                    width: '100%'
+                                }}>
+                                    {renderHeaderCells(currentView, theme, dataForTheme)}
                                 </div>
-                            )}
-                            
-                            <div class="heatmap-theme-content">
-                            {(() => {
-                                switch (currentView) {
-                                    case '天': return renderSingleRow(start, start, dataForTheme, theme);
-                                    case '周': return renderSingleRow(start.startOf('isoWeek'), start.endOf('isoWeek'), dataForTheme, theme);
-                                    case '月': return renderSingleRow(start.startOf('month'), start.endOf('month'), dataForTheme, theme);
-                                    case '年':
-                                    case '季':
-                                        const months = [];
-                                        let currentMonth = start.clone().startOf('month');
-                                        while (currentMonth.isSameOrBefore(end, 'month')) {
-                                            months.push(currentMonth.clone());
-                                            currentMonth = currentMonth.add(1, 'month');
-                                        }
-                                        return (<div class="heatmap-grid-container">{months.map(m => renderMonthGrid(m, dataForTheme, theme))}</div>);
-                                    default: return <div>Unsupported view mode for Heatmap.</div>
-                                }
-                            })()}
                             </div>
                         </div>
                     );
