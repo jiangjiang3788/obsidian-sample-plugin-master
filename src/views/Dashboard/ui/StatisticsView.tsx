@@ -14,6 +14,8 @@ import IosShareIcon from '@mui/icons-material/IosShare';
 import { exportItemsToMarkdown } from '../../../lib/utils/core/exportUtils';
 import { QuickInputModal } from '../../QuickInput/ui/QuickInputModal';
 import { dayjs as dayjsUtil } from '../../../lib/utils/core/date';
+// [新增] 统一数据聚合支持
+import { aggregateItems, generateStatisticsData, AggregatedData } from '../../../lib/utils/core/dataAggregation';
 
 // 解决 Preact 和 Material-UI 的类型兼容性问题
 const AnyIconButton = IconButton as any;

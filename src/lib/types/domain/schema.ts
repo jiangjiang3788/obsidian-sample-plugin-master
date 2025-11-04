@@ -191,6 +191,11 @@ export interface Item {
     // [新增] 新的核心字段
     folder?: string;
     periodCount?: number;
+    // [新增] 多次打卡和等级系统字段
+    displayCount?: number;     // 显示的打卡次数（可手动编辑）
+    levelCount?: number;       // 计入等级的次数（可以 < displayCount）
+    countForLevel?: boolean;   // 该次打卡是否计入等级（默认true）
+    manuallyEdited?: boolean;  // 是否被手动编辑过
 }
 
 // [修改] 将新字段加入核心字段列表，包括theme字段
