@@ -766,39 +766,112 @@ body.theme-dark .sv-filter-btn.is-selected {
     width: 100%;
     padding: 8px;
 }
-.heatmap-view-wrapper.layout-row {
+
+/* 主要视图包装器 */
+.heatmap-view-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+/* 主题组容器 */
+.heatmap-theme-group {
     display: flex;
     flex-direction: column;
     gap: 8px;
 }
-.heatmap-theme-group {
+
+/* 主题头部 - 响应式布局结构 */
+.heatmap-theme-header {
+    display: flex;
+    gap: 8px;
+    padding: 10px 16px;
+    background-color: var(--background-primary);
+    border-radius: 8px;
+    border: 1px solid var(--background-modifier-border);
+    transition: all 0.2s ease;
+    /* 默认横向布局 */
+    flex-direction: row;
+    align-items: center;
+}
+
+.heatmap-theme-header:hover {
+    background-color: var(--background-modifier-hover);
+}
+
+/* 当空间不足时，切换为纵向布局 */
+.heatmap-theme-header.vertical-layout {
+    flex-direction: column;
+    align-items: stretch;
+}
+
+/* 头部信息行 - 等级信息和进度条 */
+.heatmap-header-info {
     display: flex;
     align-items: center;
-    gap: 10px;
-}
-.heatmap-theme-label {
-    font-size: 0.85em;
-    font-weight: 500;
-    width: 120px;
-    text-align: right;
+    gap: 8px;
+    min-height: 24px;
+    /* 横向布局时固定宽度 */
     flex-shrink: 0;
-    white-space: nowrap;
+}
+
+/* 纵向布局时调整信息行 */
+.heatmap-theme-header.vertical-layout .heatmap-header-info {
+    justify-content: space-between;
+    width: 100%;
+}
+
+.heatmap-header-info .level-icon {
+    font-size: 16px;
+    flex-shrink: 0;
+}
+
+.heatmap-header-info .level-text {
+    font-weight: bold;
+    font-size: 13px;
+    color: var(--text-normal);
+    flex-shrink: 0;
+}
+
+.heatmap-header-info .theme-name {
+    font-weight: bold;
+    font-size: 14px;
+    color: var(--text-normal);
+    flex-shrink: 0;
+}
+
+.heatmap-header-info .progress-container {
+    flex: 1;
+    margin: 0 16px;
+    min-width: 100px;
+}
+
+.heatmap-header-info .progress-bar {
+    width: 100%;
+    height: 6px;
+    background-color: var(--background-modifier-border);
+    border-radius: 3px;
     overflow: hidden;
-    text-overflow: ellipsis;
+    position: relative;
 }
-.heatmap-theme-content {
-    flex-grow: 1;
-    min-width: 0;
-    overflow-x: auto;
-    overflow-y: hidden;
+
+.heatmap-header-info .progress-fill {
+    height: 100%;
+    transition: width 0.3s ease;
 }
-.heatmap-row {
+
+/* 头部单元格行 - HeatmapCell 显示区域 */
+.heatmap-header-cells {
     display: flex;
     gap: 3px;
+    align-items: center;
+    min-height: var(--heatmap-cell-size);
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding: 2px 0;
 }
-.heatmap-row.single-row {
-    padding-bottom: 4px;
-}
+
+/* HeatmapCell 基础样式 */
 .heatmap-cell {
     position: relative;
     width: var(--heatmap-cell-size);
@@ -810,65 +883,188 @@ body.theme-dark .sv-filter-btn.is-selected {
     align-items: center;
     justify-content: center;
     font-size: calc(var(--heatmap-cell-size) * 0.7);
-    transition: transform 0.1s ease-in-out;
+    transition: all 0.2s ease;
     flex-shrink: 0;
+    box-sizing: border-box;
 }
+
 .heatmap-cell:not(.empty):hover {
-    transform: scale(1.15);
-    box-shadow: 0 0 4px rgba(0,0,0,0.2);
-    z-index: 2;
+    transform: scale(1.05);
+    z-index: 10;
 }
+
 .heatmap-cell.empty {
     background-color: transparent;
     cursor: default;
 }
+
 .heatmap-cell img {
     width: 100%;
     height: 100%;
     object-fit: cover;
     border-radius: 3px;
 }
+
+/* 今日标记 - 使用阴影替代边框 */
 .heatmap-cell.current-day {
-    outline: 2px solid var(--interactive-accent);
-    outline-offset: 1px;
+    box-shadow: 0 0 0 1px var(--interactive-accent);
 }
+
+/* HeatmapCell 内容容器 */
+.heatmap-cell-content {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+}
+
+/* 多次打卡徽章样式 */
+.heatmap-cell .cell-with-count,
+.heatmap-cell .cell-with-image,
+.heatmap-cell .cell-with-text {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.heatmap-cell .check-count-overlay {
+    position: absolute;
+    top: -2px;
+    right: -2px;
+    background: var(--interactive-accent);
+    color: var(--text-on-accent);
+    font-size: 8px;
+    font-weight: bold;
+    padding: 1px 4px;
+    border-radius: 6px;
+    line-height: 1;
+    min-width: 12px;
+    text-align: center;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+}
+
+.heatmap-cell .pure-count {
+    font-weight: bold;
+    text-shadow: 1px 1px 1px rgba(0,0,0,0.3);
+}
+
+.heatmap-cell .count-number {
+    font-weight: bold;
+    color: white;
+    text-shadow: 1px 1px 1px rgba(0,0,0,0.5);
+}
+
+.heatmap-cell .visual-content {
+    font-size: inherit;
+    font-weight: inherit;
+}
+
+/* 网格布局样式（年视图和季视图） */
 .heatmap-view-wrapper.layout-grid .heatmap-theme-group {
-    flex-direction: column;
     align-items: stretch;
 }
-.heatmap-view-wrapper.layout-grid .heatmap-theme-label {
-    width: auto;
-    text-align: center;
-    font-size: 1.2em;
-    font-weight: 600;
-    margin-bottom: 16px;
-}
+
 .heatmap-grid-container {
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
     gap: 24px 12px;
+    margin-top: 8px;
 }
+
 .month-section {
     display: flex;
     flex-direction: column;
     align-items: center;
 }
+
 .month-label {
     font-size: 0.8em;
     margin-bottom: 4px;
     color: var(--text-muted);
 }
+
+.heatmap-row {
+    display: flex;
+    gap: 3px;
+}
+
 .heatmap-row.calendar {
     display: grid;
     grid-template-columns: repeat(7, var(--heatmap-cell-size));
     gap: 3px;
 }
+
+.heatmap-row.single-row {
+    padding-bottom: 4px;
+}
+
+/* 暗色主题适配 */
 body.theme-dark .heatmap-cell {
     background-color: var(--background-modifier-border);
 }
+
 body.theme-dark .heatmap-cell.empty {
     background-color: transparent;
+}
+
+body.theme-dark .heatmap-theme-header {
+    background-color: var(--background-secondary);
+}
+
+body.theme-dark .heatmap-theme-header:hover {
+    background-color: var(--background-modifier-hover);
+}
+
+/* 响应式设计 */
+@media screen and (max-width: 768px) {
+    .heatmap-container {
+        --heatmap-cell-size: 16px;
+        padding: 6px;
+    }
+    
+    .heatmap-theme-header {
+        padding: 8px 12px;
+    }
+    
+    .heatmap-header-info .progress-container {
+        margin: 0 8px;
+        min-width: 60px;
+    }
+}
+
+@media screen and (max-width: 480px) {
+    .heatmap-container {
+        --heatmap-cell-size: 14px;
+        padding: 4px;
+    }
+    
+    .heatmap-theme-header {
+        padding: 6px 8px;
+        gap: 6px;
+    }
+    
+    .heatmap-header-info {
+        gap: 6px;
+    }
+    
+    .heatmap-header-info .progress-container {
+        margin: 0 6px;
+        min-width: 40px;
+    }
+    
+    .heatmap-header-info .theme-name {
+        font-size: 12px;
+    }
+    
+    .heatmap-header-info .level-text {
+        font-size: 11px;
+    }
 }
 
 
