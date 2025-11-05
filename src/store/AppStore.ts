@@ -15,6 +15,8 @@ export interface AppState {
     // [移除] timers和activeTimer已移到TimerStore管理
     // [新增] 悬浮计时器是否可见的临时状态
     isTimerWidgetVisible: boolean;
+    // [新增] TimerStore实例
+    timer: TimerStore;
 }
 
 @singleton()
@@ -35,13 +37,11 @@ export class AppStore {
     public constructor(
         @inject(SETTINGS_TOKEN) initialSettings: ThinkSettings
     ) {
-        this._state = {
-            settings: initialSettings,
-            // [新增] 初始化时，可见性取决于设置项
-            isTimerWidgetVisible: initialSettings.floatingTimerEnabled,
-        };
-
         // 初始化子Store
+        this.timer = new TimerStore(
+            this._notify.bind(this),
+            this._persistTimers.bind(this)
+        );
         this.theme = new ThemeStore(
             this._updateSettingsAndPersist.bind(this),
             this.getSettings.bind(this)
@@ -58,10 +58,6 @@ export class AppStore {
             this._updateSettingsAndPersist.bind(this),
             this.getSettings.bind(this)
         );
-        this.timer = new TimerStore(
-            this._notify.bind(this),
-            this._persistTimers.bind(this)
-        );
         this.viewInstance = new ViewInstanceStore(
             this._updateSettingsAndPersist.bind(this),
             this.getSettings.bind(this)
@@ -70,6 +66,14 @@ export class AppStore {
             this._updateSettingsAndPersist.bind(this),
             this.getSettings.bind(this)
         );
+
+        this._state = {
+            settings: initialSettings,
+            // [新增] 初始化时，可见性取决于设置项
+            isTimerWidgetVisible: initialSettings.floatingTimerEnabled,
+            // [新增] TimerStore实例
+            timer: this.timer,
+        };
     }
 
     private async _persistTimers(timers: TimerState[]): Promise<void> {
@@ -316,10 +320,14 @@ export function useStore<T>(selector: (state: AppState) => T): T {
     const store = appStore;
 
     if (!store) {
+        // 创建一个临时的 TimerStore 实例作为备用
+        const fallbackTimerStore = new TimerStore(() => {}, () => Promise.resolve());
         const safeFallbackState: AppState = {
             settings: DEFAULT_SETTINGS,
             // [移除] timers和activeTimer
             isTimerWidgetVisible: true,
+            // [新增] TimerStore实例
+            timer: fallbackTimerStore,
         };
         console.warn("useStore 在 AppStore 注册前被调用。返回安全的备用状态。");
         return selector(safeFallbackState);

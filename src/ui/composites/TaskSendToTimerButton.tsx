@@ -18,7 +18,7 @@ interface TaskSendToTimerButtonProps {
  * - 否则，显示播放按钮以添加并开始计时。
  */
 export function TaskSendToTimerButton({ taskId }: TaskSendToTimerButtonProps) {
-    const timers = useStore(state => state.timers);
+    const timers = useStore(state => state.timer.getTimers());
     const thisTaskTimer = timers.find(t => t.taskId === taskId);
 
     const handleStart = () => {
