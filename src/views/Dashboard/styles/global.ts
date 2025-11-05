@@ -869,6 +869,27 @@ body.theme-dark .sv-filter-btn.is-selected {
     overflow-x: auto;
     overflow-y: hidden;
     padding: 2px 0;
+    flex-wrap: wrap;
+}
+
+/* 在网格布局（年/季）中为月份网格增加间距 */
+.heatmap-view-wrapper.layout-grid .heatmap-header-cells {
+    gap: 24px 12px;
+    /* 确保月份网格能够正确显示间隔 */
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    align-items: flex-start;
+}
+
+/* 月份网格容器在年/季视图中的特殊处理 */
+.heatmap-view-wrapper.layout-grid .heatmap-header-cells .month-section {
+    /* 确保月份网格不会被压缩 */
+    flex: 0 0 auto;
+    /* 保持原有的月份间隔 */
+    margin-bottom: 32px;
+    margin-right: 12px;
+    margin-left: 12px;
 }
 
 /* HeatmapCell 基础样式 */
@@ -981,6 +1002,8 @@ body.theme-dark .sv-filter-btn.is-selected {
     display: flex;
     flex-direction: column;
     align-items: center;
+    margin-bottom: 32px; /* 增加月份之间的垂直间距 */
+    padding: 8px 0; /* 添加上下内边距 */
 }
 
 .month-label {
