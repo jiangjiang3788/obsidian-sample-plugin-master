@@ -294,7 +294,20 @@
         "themeLevelSystems": {}
       },
       "collapsed": false,
-      "parentId": "group_memc1a9ofen88"
+      "parentId": "group_memc1a9ofen88",
+      "filters": [
+        {
+          "field": "categoryKey",
+          "op": "!=",
+          "value": "打卡",
+          "logic": "and"
+        },
+        {
+          "field": "categoryKey",
+          "op": "!=",
+          "value": "完成任务"
+        }
+      ]
     },
     {
       "id": "view_mg1zanri06mhu",

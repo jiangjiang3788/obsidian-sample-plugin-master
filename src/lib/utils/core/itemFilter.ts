@@ -40,7 +40,32 @@ function cmpMixed(a: any, b: any): number {
 
 /* ---------- 过滤 ---------- */
 export function filterByRules(items: Item[], rules: FilterRule[] = []) {
-  return rules.length ? items.filter(it => rules.every(r => matchRule(it, r))) : items;
+  if (!rules.length) return items;
+  
+  return items.filter(item => {
+    // 如果没有规则，返回所有项目
+    if (rules.length === 0) return true;
+    
+    // 如果只有一个规则，直接匹配
+    if (rules.length === 1) return matchRule(item, rules[0]);
+    
+    // 处理多个规则的逻辑关系
+    let result = matchRule(item, rules[0]);
+    
+    for (let i = 1; i < rules.length; i++) {
+      const currentRule = rules[i];
+      const previousRule = rules[i - 1];
+      const logic = previousRule.logic || 'and';
+      
+      if (logic === 'and') {
+        result = result && matchRule(item, currentRule);
+      } else if (logic === 'or') {
+        result = result || matchRule(item, currentRule);
+      }
+    }
+    
+    return result;
+  });
 }
 
 function matchRule(item: Item, rule: FilterRule): boolean {

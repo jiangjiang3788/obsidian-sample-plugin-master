@@ -424,7 +424,7 @@ export function HeatmapView({ items, app, dateRange, module, currentView }: Heat
         
         const themeRatingMapping = ratingMappingsCache.get(cacheKey) || (() => {
             if (!config.sourceBlockId) return new Map<string, string>();
-            const effectiveTemplate = getEffectiveTemplate(settings.inputSettings, config.sourceBlockId, themeId);
+            const effectiveTemplate = getEffectiveTemplate(settings.inputSettings, config.sourceBlockId, themeId || undefined);
             const ratingField = effectiveTemplate?.fields.find(f => f.type === 'rating');
             const newMapping = new Map<string, string>(
                 ratingField?.options?.filter(opt => opt.value).map(opt => [opt.label || '', opt.value as string]) || []
@@ -523,24 +523,18 @@ export function HeatmapView({ items, app, dateRange, module, currentView }: Heat
     const [verticalLayouts, setVerticalLayouts] = useState<Set<string>>(new Set());
     const headerRefs = useRef<Map<string, HTMLElement>>(new Map());
 
-    // 检测是否需要垂直布局
+    // 检测是否需要垂直布局（仅用于天、周、月视图）
     const checkLayout = (theme: string, headerElement: HTMLElement) => {
         if (!headerElement || theme === '__default__') return;
         
-        // 季度和年视图总是使用垂直布局
+        // 年、季度视图现在通过 CSS 强制垂直布局，不需要 JavaScript 处理
         const isGridLayout = ['年', '季'].includes(currentView);
+        if (isGridLayout) return;
         
-        let needsVertical = false;
-        
-        if (isGridLayout) {
-            // 季度和年视图强制垂直布局
-            needsVertical = true;
-        } else {
-            // 其他视图根据容器宽度决定
-            const containerWidth = headerElement.clientWidth;
-            const threshold = 600; // 当容器宽度小于600px时切换为垂直布局
-            needsVertical = containerWidth < threshold;
-        }
+        // 其他视图根据容器宽度决定
+        const containerWidth = headerElement.clientWidth;
+        const threshold = 600; // 当容器宽度小于600px时切换为垂直布局
+        const needsVertical = containerWidth < threshold;
         
         setVerticalLayouts(prev => {
             const newSet = new Set(prev);

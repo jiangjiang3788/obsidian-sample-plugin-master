@@ -981,9 +981,26 @@ body.theme-dark .sv-filter-btn.is-selected {
     font-weight: inherit;
 }
 
-/* 网格布局样式（年视图和季视图） */
+/* 网格布局样式（年视图和季视图） - 强制垂直布局 */
 .heatmap-view-wrapper.layout-grid .heatmap-theme-group {
     align-items: stretch;
+}
+
+/* 为年、季度视图强制垂直布局 */
+.heatmap-view-wrapper.layout-grid .heatmap-theme-header {
+    flex-direction: column !important;
+    align-items: stretch !important;
+}
+
+.heatmap-view-wrapper.layout-grid .heatmap-header-info {
+    justify-content: space-between;
+    width: 100%;
+    margin-bottom: 12px;
+}
+
+.heatmap-view-wrapper.layout-grid .heatmap-header-cells {
+    width: 100%;
+    justify-content: flex-start;
 }
 
 .heatmap-grid-container {
