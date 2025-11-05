@@ -141,6 +141,7 @@ export interface FilterRule {
     field: string;
     op: '=' | '!=' | 'includes' | 'regex' | '>' | '<';
     value: any;
+    logic?: 'and' | 'or'; // 逻辑关系：且/或
 }
 export interface SortRule {
     field: string;

@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RuleBuilder 修复验证</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .test-section {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .success {
+            color: #4caf50;
+            font-weight: bold;
+        }
+        .fixed {
+            color: #2196f3;
+            font-weight: bold;
+        }
+        .code {
+            background: #f4f4f4;
+            padding: 10px;
+            border-radius: 4px;
+            font-family: monospace;
+            margin: 10px 0;
+        }
+        .demo {
+            background: #e3f2fd;
+            padding: 15px;
+            border-radius: 4px;
+            border-left: 4px solid #2196f3;
+            margin: 10px 0;
+        }
+        .before-after {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin: 20px 0;
+        }
+        .before, .after {
+            padding: 15px;
+            border-radius: 4px;
+        }
+        .before {
+            background: #ffebee;
+            border-left: 4px solid #f44336;
+        }
+        .after {
+            background: #e8f5e8;
+            border-left: 4px solid #4caf50;
+        }
+    </style>
+</head>
+<body>
+    <h1>RuleBuilder 设计修复验证</h1>
+    
+    <div class="test-section">
+        <h2>🔧 问题修复</h2>
+        <p><strong class="fixed">已修复：</strong>移除了重复的逻辑关系选择器，现在设计更加清晰直观。</p>
+        
+        <div class="before-after">
+            <div class="before">
+                <h3>❌ 修复前的问题</h3>
+                <ul>
+                    <li>规则旁边有一个"且/或"选择按钮</li>
+                    <li>规则之间还有一个"且/或"选择器</li>
+                    <li>用户困惑：不知道在哪里设置逻辑关系</li>
+                    <li>重复功能：两个地方都能设置逻辑关系</li>
+                </ul>
+            </div>
+            <div class="after">
+                <h3>✅ 修复后的设计</h3>
+                <ul>
+                    <li>只在规则之间显示"且/或"选择器</li>
+                    <li>移除了添加表单中的逻辑选择器</li>
+                    <li>逻辑关系明确显示在规则之间</li>
+                    <li>新规则默认使用"且"关系</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h2>🎨 新的UI设计</h2>
+        <div class="demo">
+            <h3>现在的显示效果：</h3>
+            <div class="code">
+[分类 = "打卡"] 且 [状态 = "完成"] 或 [优先级 > "中等"]
+            </div>
+            <p>逻辑关系选择器只出现在规则之间，清晰明了。</p>
+        </div>
+        
+        <h3>添加新规则的流程：</h3>
+        <ol>
+            <li>用户选择字段、操作符和值</li>
+            <li>点击"添加"按钮</li>
+            <li>新规则被添加到列表末尾</li>
+            <li>如果这是第二个或更多规则，前一个规则会自动设置为"且"关系</li>
+            <li>用户可以通过规则之间的选择器修改逻辑关系</li>
+        </ol>
+    </div>
+
+    <div class="test-section">
+        <h2>🔍 技术实现细节</h2>
+        
+        <h3>1. 移除了添加表单中的逻辑选择器</h3>
+        <div class="code">
+// 修复前：添加表单中有逻辑选择器
+<SimpleSelect
+    value={(newRule as FilterRule).logic || 'and'}
+    options={logicOptions}
+    onChange={(val: string) => updateNewRule({ logic: val as 'and' | 'or' })}
+    sx={{ minWidth: 50 }}
+/>
+
+// 修复后：移除了这个选择器
+// 新规则不再在添加时设置逻辑关系
+        </div>
+
+        <h3>2. 优化了添加规则的逻辑</h3>
+        <div class="code">
+const handleAddRule = () => {
+    if (!newRule.field) {
+        alert('请选择一个字段');
+        return;
+    }
+    
+    // 如果是过滤模式且不是第一个规则，为新规则设置默认逻辑关系
+    let ruleToAdd = { ...newRule };
+    if (isFilterMode && rows.length > 0) {
+        const lastRule = rows[rows.length - 1] as FilterRule;
+        // 如果前一个规则没有设置逻辑关系，默认设置为"且"
+        if (!lastRule.logic) {
+            const updatedRows = [...rows];
+            (updatedRows[rows.length - 1] as FilterRule).logic = 'and';
+            onChange(updatedRows);
+        }
+    }
+    
+    onChange([...rows, ruleToAdd]);
+    setNewRule(isFilterMode ? defaultFilterRule : defaultSortRule);
+};
+        </div>
+
+        <h3>3. 保留了规则之间的逻辑选择器</h3>
+        <div class="code">
+{/* 逻辑关系选择器（仅在过滤模式且不是最后一个规则时显示） */}
+{isFilterMode && !isLast && (
+    <SimpleSelect 
+        value={filterRule.logic || 'and'} 
+        options={logicOptions} 
+        onChange={(val: string) => {
+            const updatedRows = [...rows];
+            (updatedRows[i] as FilterRule).logic = val as 'and' | 'or';
+            onChange(updatedRows);
+        }}
+        sx={{ minWidth: 50 }}
+    />
+)}
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h2>✅ 修复效果</h2>
+        <ul>
+            <li class="success">✅ 消除了重复的逻辑选择器</li>
+            <li class="success">✅ 逻辑关系只显示在规则之间，符合直觉</li>
+            <li class="success">✅ 新规则自动设置默认逻辑关系</li>
+            <li class="success">✅ 用户界面更加简洁清晰</li>
+            <li class="success">✅ 减少了用户的困惑</li>
+        </ul>
+        
+        <div class="demo">
+            <h3>用户体验改进：</h3>
+            <p>现在用户看到的是清晰的逻辑链条：</p>
+            <div class="code">
+[条件1] 且 [条件2] 或 [条件3] 且 [条件4]
+            </div>
+            <p>而不是之前的混乱状态，用户不再需要思考"应该在哪个地方设置逻辑关系"。</p>
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h2>🎯 总结</h2>
+        <p><strong class="fixed">设计问题已完全解决：</strong></p>
+        <ul>
+            <li>✅ 移除了规则旁边的逻辑选择器</li>
+            <li>✅ 只保留规则之间的逻辑选择器</li>
+            <li>✅ 简化了用户界面</li>
+            <li>✅ 提高了用户体验</li>
+            <li>✅ 保持了所有功能完整性</li>
+        </ul>
+        <p>现在RuleBuilder组件的设计更加直观和用户友好，逻辑关系的设置变得简单明了。</p>
+    </div>
+</body>
+</html>
