@@ -20,13 +20,13 @@ export class TimerService {
     ) {}
 
     public async startOrResume(taskId: string): Promise<void> {
-        const timers = this.appStore.getState().timers;
+        const timers = this.appStore.getState().timer.getTimers();
         for (const timer of timers) {
             if (timer.status === 'running') {
                 await this.pause(timer.id);
             }
         }
-        const existingTimer = timers.find(t => t.taskId === taskId);
+        const existingTimer = timers.find((t: any) => t.taskId === taskId);
         if (existingTimer && existingTimer.status === 'paused') {
             await this.resume(existingTimer.id);
         } else if (!existingTimer) {
@@ -50,7 +50,7 @@ export class TimerService {
     }
 
     public async pause(timerId: string): Promise<void> {
-        const timer = this.appStore.getState().timers.find(t => t.id === timerId);
+        const timer = this.appStore.getState().timer.getTimers().find((t: any) => t.id === timerId);
         if (timer && timer.status === 'running') {
             const elapsed = (Date.now() - timer.startTime) / 1000;
             await this.appStore.updateTimer({
@@ -62,13 +62,13 @@ export class TimerService {
     }
 
     public async resume(timerId: string): Promise<void> {
-        const timers = this.appStore.getState().timers;
+        const timers = this.appStore.getState().timer.getTimers();
         for (const t of timers) {
             if (t.id !== timerId && t.status === 'running') {
                 await this.pause(t.id);
             }
         }
-        const timerToResume = timers.find(t => t.id === timerId);
+        const timerToResume = timers.find((t: any) => t.id === timerId);
         if (timerToResume && timerToResume.status === 'paused') {
             await this.appStore.updateTimer({
                 ...timerToResume,
@@ -79,7 +79,7 @@ export class TimerService {
     }
 
     public async stopAndApply(timerId: string): Promise<void> {
-        const timer = this.appStore.getState().timers.find(t => t.id === timerId);
+        const timer = this.appStore.getState().timer.getTimers().find((t: any) => t.id === timerId);
         if (!timer) return;
         let totalSeconds = timer.elapsedSeconds;
         if (timer.status === 'running') {

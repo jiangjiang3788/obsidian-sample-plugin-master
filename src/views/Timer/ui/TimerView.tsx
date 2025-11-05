@@ -35,7 +35,7 @@ const getEventCoords = (e: MouseEvent | TouchEvent) => {
 
 
 export function TimerView({ app, actionService, timerService, dataStore }: TimerViewProps) {
-    const timers = useStore(state => state.timers);
+    const timers = useStore(state => state.timer.getTimers());
     // [新增] 从状态管理获取可见性状态
     const isVisible = useStore(state => state.isTimerWidgetVisible);
     

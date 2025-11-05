@@ -795,9 +795,6 @@ body.theme-dark .sv-filter-btn.is-selected {
     align-items: center;
 }
 
-.heatmap-theme-header:hover {
-    background-color: var(--background-modifier-hover);
-}
 
 /* 当空间不足时，切换为纵向布局 */
 .heatmap-theme-header.vertical-layout {
@@ -910,8 +907,7 @@ body.theme-dark .sv-filter-btn.is-selected {
 }
 
 .heatmap-cell:not(.empty):hover {
-    transform: scale(1.05);
-    z-index: 10;
+    /* 移除缩放和层级提升效果，避免主题色覆盖导致内容看不清 */
 }
 
 .heatmap-cell.empty {
@@ -1040,9 +1036,6 @@ body.theme-dark .heatmap-theme-header {
     background-color: var(--background-secondary);
 }
 
-body.theme-dark .heatmap-theme-header:hover {
-    background-color: var(--background-modifier-hover);
-}
 
 /* 响应式设计 */
 @media screen and (max-width: 768px) {

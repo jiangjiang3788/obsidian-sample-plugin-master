@@ -22,12 +22,12 @@ export interface LevelResult {
 // 用户定制的等级配置
 const DEFAULT_LEVELS: LevelConfig[] = [
     { level: 0, requiredChecks: 0, icon: '🌱', color: '#90EE90', title: '新手' },
-    { level: 1, requiredChecks: 7, icon: '🌿', color: '#32CD32', title: '初学者' },
-    { level: 2, requiredChecks: 30, icon: '🍃', color: '#228B22', title: '努力者' },
-    { level: 3, requiredChecks: 90, icon: '🌳', color: '#006400', title: '坚持者' },
-    { level: 4, requiredChecks: 180, icon: '👑', color: '#FFD700', title: '大师' },
+    { level: 1, requiredChecks: 3, icon: '🌿', color: '#32CD32', title: '初学者' },
+    { level: 2, requiredChecks: 7, icon: '🍃', color: '#228B22', title: '努力者' },
+    { level: 3, requiredChecks: 30, icon: '🌳', color: '#006400', title: '坚持者' },
+    { level: 4, requiredChecks: 90, icon: '👑', color: '#FFD700', title: '大师' },
     { level: 5, requiredChecks: 365, icon: '🏆', color: '#FF6B35', title: '王者' },
-    { level: 6, requiredChecks: 1000, icon: '⭐', color: '#8A2BE2', title: '超神' }
+    { level: 6, requiredChecks: 800, icon: '⭐', color: '#8A2BE2', title: '超神' }
 ];
 
 // 预定义的等级系统模板
