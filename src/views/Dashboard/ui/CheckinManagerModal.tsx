@@ -6,6 +6,7 @@ import { render, unmountComponentAtNode } from 'preact/compat';
 import { Item } from '../../../lib/types/domain/schema';
 import { dayjs } from '../../../lib/utils/core/date';
 import { getEffectiveDisplayCount, getEffectiveLevelCount } from '../../../lib/utils/core/levelingSystem';
+import { makeObsUri } from '../../../lib/utils/core/obsidian';
 
 // Types
 interface CheckinManagerData {
@@ -65,8 +66,8 @@ function CheckinManagerForm({ app, date, items, onSave, onClose }: CheckinManage
 
     const handleItemClick = (item: Item) => {
         if (item.file?.path) {
-            const link = item.file.line ? `${item.file.path}#${item.file.line}` : item.file.path;
-            app.workspace.openLinkText(link, item.file.path);
+            const obsidianUri = makeObsUri(item, app);
+            window.open(obsidianUri, '_blank');
             onClose();
         }
     };
