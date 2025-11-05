@@ -11,6 +11,7 @@ import { useMemo } from 'preact/hooks';
 // [修改] 从注册表导入 dataStore
 import { dataStore } from '../../../../../store/storeRegistry';
 import { filterByRules } from '../../../../../lib/utils/core/itemFilter';
+import { LEVEL_SYSTEM_PRESETS } from '../../../../../lib/utils/core/levelingSystem';
 import { Notice } from 'obsidian';
 
 // 视图的默认配置
@@ -24,7 +25,6 @@ export const DEFAULT_CONFIG = {
     maxDailyChecks: 10,               // 每日最大显示次数
     allowManualEdit: true,            // 允许手动编辑次数
     showLevelProgress: true,          // 显示等级进度条
-    oncePerDayForLevel: false,        // 等级计算：多次打卡计为一次
 };
 
 export function HeatmapViewEditor({ value, onChange, module }: ViewEditorProps) {
@@ -120,19 +120,6 @@ export function HeatmapViewEditor({ value, onChange, module }: ViewEditorProps) 
                            </Typography>
                            <Button onClick={handleScanThemes} size="small" sx={{mt: 1}}>从数据源扫描并添加主题</Button>
                         </Box>
-                    </Stack>
-                    <Stack direction="row" alignItems="center" spacing={2}>
-                        <Typography sx={{ width: '80px', flexShrink: 0, fontWeight: 500 }}>等级计算</Typography>
-                        <FormControlLabel
-                            control={
-                                <Checkbox
-                                    checked={config.oncePerDayForLevel}
-                                    onChange={e => onChange({ oncePerDayForLevel: (e.target as HTMLInputElement).checked })}
-                                    size="small"
-                                />
-                            }
-                            label="多次打卡计为一次"
-                        />
                     </Stack>
                 </div>
             )}

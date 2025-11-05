@@ -8,7 +8,7 @@ import { dayjs } from '../../../lib/utils/core/date';
 import { useStore } from '../../../store/AppStore';
 import { QuickInputModal } from '../../QuickInput/ui/QuickInputModal';
 import { DEFAULT_CONFIG } from '../../Settings/ui/components/view-editors/HeatmapViewEditor';
-import { getThemeLevelData, getEffectiveDisplayCount, getEffectiveLevelCount, type LevelResult } from '../../../lib/utils/core/levelingSystem';
+import { getThemeLevelData, getEffectiveDisplayCount, getEffectiveLevelCount, type LevelResult, LEVEL_SYSTEM_PRESETS } from '../../../lib/utils/core/levelingSystem';
 import { CheckinManagerModal } from './CheckinManagerModal';
 
 // ========== Types ==========
@@ -81,68 +81,31 @@ function HeatmapCell({ date, items, count, config, ratingMapping, app, onCellCli
         }
 
         if (visualValue) {
+            // 优先处理内容
             if (isHexColor(visualValue)) {
                 cellStyle.backgroundColor = visualValue;
-                // 如果有多次打卡，在颜色上叠加次数标记
-                if (displayCount > 1) {
-                    cellContent = (
-                        <div class="cell-with-count">
-                            <span class="check-count-overlay" style={{
-                                fontSize: '10px',
-                                fontWeight: 'bold',
-                                color: 'var(--text-on-accent)',
-                                backgroundColor: 'rgba(0,0,0,0.2)',
-                                borderRadius: '8px',
-                                padding: '1px 4px',
-                                position: 'absolute',
-                                top: '2px',
-                                right: '2px',
-                                lineHeight: '1'
-                            }}>{displayCount}</span>
-                        </div>
-                    );
-                }
             } else if (isImagePath(visualValue)) {
                 const imageUrl = app.vault.adapter.getResourcePath(visualValue);
                 cellContent = (
                     <div class="cell-with-image">
                         <img src={imageUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                        {displayCount > 1 && (
-                            <span class="check-count-overlay" style={{
-                                fontSize: '10px',
-                                fontWeight: 'bold',
-                                color: 'var(--text-on-accent)',
-                                backgroundColor: 'rgba(0,0,0,0.2)',
-                                borderRadius: '8px',
-                                padding: '1px 4px',
-                                position: 'absolute',
-                                top: '2px',
-                                right: '2px',
-                                lineHeight: '1'
-                            }}>{displayCount}</span>
-                        )}
                     </div>
                 );
             } else {
                 cellContent = (
                     <div class="cell-with-text">
                         <span class="visual-content">{visualValue}</span>
-                        {displayCount > 1 && (
-                            <span class="check-count-overlay" style={{
-                                fontSize: '10px',
-                                fontWeight: 'bold',
-                                color: 'var(--text-on-accent)',
-                                backgroundColor: 'rgba(0,0,0,0.2)',
-                                borderRadius: '8px',
-                                padding: '1px 4px',
-                                position: 'absolute',
-                                top: '2px',
-                                right: '2px',
-                                lineHeight: '1'
-                            }}>{displayCount}</span>
-                        )}
                     </div>
                 );
+            }
+
+            // 如果有多次打卡，使用更明显的描边代替数字
+            if (displayCount > 1) {
+                const colors = ['#4A90E2', '#E74C3C', '#F39C12', '#27AE60']; // 更鲜明的 Blue, Red, Orange, Green for 2, 3, 4, 5+
+                const colorIndex = Math.min(displayCount - 2, colors.length - 1);
+                cellStyle.boxShadow = `0 0 0 1px ${colors[colorIndex]} inset`;
+                // 添加额外的外边框增强视觉效果
+                cellStyle.border = `1px solid ${colors[colorIndex]}`;
             }
         } else {
             // 没有评分/图片时，显示纯次数
@@ -206,7 +169,8 @@ function HeatmapCell({ date, items, count, config, ratingMapping, app, onCellCli
 
     // 今日特殊标记 - 使用更subtle的方式
     if (isToday) {
-        cellStyle.boxShadow = '0 0 0 1px var(--interactive-accent)';
+        const todayShadow = '0 0 0 1px var(--interactive-accent)';
+        cellStyle.boxShadow = cellStyle.boxShadow ? `${cellStyle.boxShadow}, ${todayShadow}` : todayShadow;
         cellStyle.opacity = 1; // 确保今日不透明
     }
 
@@ -401,7 +365,8 @@ export function HeatmapView({ items, app, dateRange, module, currentView }: Heat
         const cacheKey = `${config.sourceBlockId}:${themePath}`;
         
         const themRatingMapping = ratingMappingsCache.get(cacheKey) || (() => {
-            const effectiveTemplate = getEffectiveTemplate(settings.inputSettings, config.sourceBlockId || '', themeId);
+            if (!config.sourceBlockId) return new Map<string, string>();
+            const effectiveTemplate = getEffectiveTemplate(settings.inputSettings, config.sourceBlockId, themeId || undefined);
             const ratingField = effectiveTemplate?.fields.find(f => f.type === 'rating');
             const newMapping = new Map<string, string>(
                 ratingField?.options?.filter(opt => opt.value).map(opt => [opt.label || '', opt.value as string]) || []
@@ -429,7 +394,7 @@ export function HeatmapView({ items, app, dateRange, module, currentView }: Heat
             );
         }
         return (
-            <div class="month-section" style={{ marginBottom: '12px' }}>
+            <div class="month-section">
                 <div class="month-label" style={{ 
                     fontSize: '12px', 
                     marginBottom: '4px', 
@@ -458,7 +423,8 @@ export function HeatmapView({ items, app, dateRange, module, currentView }: Heat
         const cacheKey = `${config.sourceBlockId}:${themePath}`;
         
         const themeRatingMapping = ratingMappingsCache.get(cacheKey) || (() => {
-            const effectiveTemplate = getEffectiveTemplate(settings.inputSettings, config.sourceBlockId || '', themeId);
+            if (!config.sourceBlockId) return new Map<string, string>();
+            const effectiveTemplate = getEffectiveTemplate(settings.inputSettings, config.sourceBlockId, themeId);
             const ratingField = effectiveTemplate?.fields.find(f => f.type === 'rating');
             const newMapping = new Map<string, string>(
                 ratingField?.options?.filter(opt => opt.value).map(opt => [opt.label || '', opt.value as string]) || []
@@ -631,24 +597,7 @@ export function HeatmapView({ items, app, dateRange, module, currentView }: Heat
                         if (itemsOnDate) themeItems.push(...itemsOnDate);
                     });
 
-                    let itemsForLeveling = themeItems;
-                    if (config.oncePerDayForLevel) {
-                        const dailyItems: Item[] = [];
-                        dataForTheme.forEach((itemsOnDate) => {
-                            if (itemsOnDate && itemsOnDate.length > 0) {
-                                // 创建一个代表这一天的 item，其 levelCount 强制为 1
-                                const representativeItem: Item = {
-                                    ...itemsOnDate[0], // 以第一个 item 为基础，保留 theme 等信息
-                                    levelCount: 1,
-                                    manuallyEdited: true, // 强制使用 levelCount
-                                };
-                                dailyItems.push(representativeItem);
-                            }
-                        });
-                        itemsForLeveling = dailyItems;
-                    }
-                    
-                    const levelData = config.enableLeveling && theme !== '__default__' ? getThemeLevelData(itemsForLeveling) : null;
+                    const levelData = config.enableLeveling && theme !== '__default__' ? getThemeLevelData(themeItems) : null;
                     
                     const isVertical = verticalLayouts.has(theme);
                     
@@ -749,7 +698,7 @@ export function HeatmapView({ items, app, dateRange, module, currentView }: Heat
                                 {/* 第二行：HeatmapCell展示区域 */}
                                 <div class="heatmap-header-cells" style={{
                                     display: 'flex',
-                                    gap: '2px',
+                                    gap: '3px',
                                     flexWrap: 'wrap',
                                     justifyContent: 'flex-start',
                                     width: '100%'
