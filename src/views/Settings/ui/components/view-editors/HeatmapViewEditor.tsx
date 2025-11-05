@@ -19,7 +19,6 @@ export const DEFAULT_CONFIG = {
     displayMode: 'habit', // 'habit' or 'count'
     sourceBlockId: '', // For 'habit' mode
     themePaths: [] as string[], // [修复] 主题路径列表（用于多行显示）
-    countColors: ['#ebedf0', '#9be9a8', '#40c463', '#30a14e', '#216e39'], // For 'count' mode
     // [新增] 等级系统配置
     enableLeveling: true,              // 启用等级系统
     maxDailyChecks: 10,               // 每日最大显示次数
@@ -83,63 +82,36 @@ export function HeatmapViewEditor({ value, onChange, module }: ViewEditorProps) 
 
     return (
         <Stack spacing={2.5}>
-            <Stack direction="row" alignItems="center" spacing={2}>
-                <Typography sx={{ width: '80px', flexShrink: 0, fontWeight: 500 }}>显示模式</Typography>
-                <RadioGroup row value={config.displayMode} onChange={e => onChange({ displayMode: e.target.value })}>
-                    <FormControlLabel value="habit" control={<Radio size="small" />} label="打卡模式" />
-                    <FormControlLabel value="count" control={<Radio size="small" />} label="数量热力图" />
-                </RadioGroup>
-            </Stack>
-
-            {config.displayMode === 'habit' && (
-                <div>
-                    <Stack direction="row" alignItems="center" spacing={2}>
-                        <Typography sx={{ width: '80px', flexShrink: 0, fontWeight: 500 }}>源 Block</Typography>
-                        <Box sx={{ flexGrow: 1 }}>
-                            <SimpleSelect
-                                value={config.sourceBlockId}
-                                options={blockOptions}
-                                onChange={val => onChange({ sourceBlockId: val })}
-                                placeholder="-- 请选择用于打卡的 Block 模板 --"
-                            />
-                             <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.5 }}>
-                                 视图将从此 Block 模板的"评分"字段中读取 Emoji/图片/颜色映射。
-                             </Typography>
-                        </Box>
-                    </Stack>
-                    <Stack direction="row" alignItems="flex-start" spacing={2}>
-                        <Typography sx={{ width: '80px', flexShrink: 0, fontWeight: 500, pt: '8px' }}>主题路径</Typography>
-                        <Box sx={{ flexGrow: 1 }}>
-                           <ListEditor
-                               value={config.themePaths}
-                               onChange={val => onChange({ themePaths: val })}
-                               placeholder="例如: 生活/健康, 工作/项目"
-                           />
-                           <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.5 }}>
-                               在此处添加的每个主题路径，在周/月视图下都会成为独立的一行。留空则显示所有打卡。
-                           </Typography>
-                           <Button onClick={handleScanThemes} size="small" sx={{mt: 1}}>从数据源扫描并添加主题</Button>
-                        </Box>
-                    </Stack>
-                </div>
-            )}
-
-            {config.displayMode === 'count' && (
-                <Stack direction="row" alignItems="flex-start" spacing={2}>
-                    <Typography sx={{ width: '80px', flexShrink: 0, fontWeight: 500, pt: '8px' }}>颜色阶梯</Typography>
+            <div>
+                <Stack direction="row" alignItems="center" spacing={2} sx={{ mb: 2 }}>
+                    <Typography sx={{ width: '80px', flexShrink: 0, fontWeight: 500 }}>源 Block</Typography>
                     <Box sx={{ flexGrow: 1 }}>
-                       <ListEditor
-                           value={config.countColors}
-                           onChange={val => onChange({ countColors: val })}
-                           type="color"
-                           placeholder="#hexcolor"
-                       />
-                       <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.5 }}>
-                           从上到下依次代表 0, 1, 2, ... 个项目的颜色。
-                       </Typography>
+                        <SimpleSelect
+                            value={config.sourceBlockId}
+                            options={blockOptions}
+                            onChange={val => onChange({ sourceBlockId: val })}
+                            placeholder="-- 请选择用于打卡的 Block 模板 --"
+                        />
+                         <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.5 }}>
+                             视图将从此 Block 模板的"评分"字段中读取 Emoji/图片/颜色映射。
+                         </Typography>
                     </Box>
                 </Stack>
-            )}
+                <Stack direction="row" alignItems="flex-start" spacing={2}>
+                    <Typography sx={{ width: '80px', flexShrink: 0, fontWeight: 500, pt: '8px' }}>主题路径</Typography>
+                    <Box sx={{ flexGrow: 1 }}>
+                       <ListEditor
+                           value={config.themePaths}
+                           onChange={val => onChange({ themePaths: val })}
+                           placeholder="例如: 生活/健康, 工作/项目"
+                       />
+                       <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.5 }}>
+                           在此处添加的每个主题路径，在周/月视图下都会成为独立的一行。留空则显示所有打卡。
+                       </Typography>
+                       <Button onClick={handleScanThemes} size="small" sx={{mt: 1}}>从数据源扫描并添加主题</Button>
+                    </Box>
+                </Stack>
+            </div>
         </Stack>
     );
 }
