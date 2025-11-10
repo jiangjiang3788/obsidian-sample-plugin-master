@@ -1,6 +1,8 @@
 /**
  * 主题操作辅助函数
  */
+import { BATCH_OPERATIONS } from '../../../../../constants';
+import type { ActiveStatus, BatchOperationType } from '../../../../../types/common';
 import type { ExtendedTheme, ThemeTreeNode, ThemeOverrideKey } from '../types';
 import type { ThemeOverride } from '../../../../../lib/types/domain/schema';
 import { findNodeInTree, getDescendantIds } from './themeTreeBuilder';
@@ -170,7 +172,7 @@ export function toggleThemeSelection(
 export function filterThemes(
     themes: ExtendedTheme[],
     filter: {
-        status?: 'active' | 'inactive';
+        status?: ActiveStatus;
         searchText?: string;
         hasOverrides?: boolean;
     }
@@ -262,7 +264,7 @@ export function handleThemeSelection(
  * @param appStore - 应用存储
  */
 export function handleBatchOperation(
-    operation: 'activate' | 'archive' | 'delete',
+    operation: BatchOperationType,
     selectedThemes: Set<string>,
     extendedThemes: ExtendedTheme[],
     themeService: any,
@@ -271,17 +273,17 @@ export function handleBatchOperation(
     selectedThemes.forEach(themeId => {
         const theme = extendedThemes.find(t => t.id === themeId);
         if (theme) {
-            if (operation === 'activate') {
+            if (operation === BATCH_OPERATIONS.ACTIVATE) {
                 // 激活主题的逻辑
                 if (themeService.getThemeManager) {
                     themeService.getThemeManager().activateTheme(theme.path);
                 }
-            } else if (operation === 'archive') {
+            } else if (operation === BATCH_OPERATIONS.ARCHIVE) {
                 // 归档主题的逻辑
                 if (themeService.getThemeManager) {
                     themeService.getThemeManager().deactivateTheme(theme.path);
                 }
-            } else if (operation === 'delete' && theme.source !== 'predefined') {
+            } else if (operation === BATCH_OPERATIONS.DELETE && theme.source !== 'predefined') {
                 // 删除主题的逻辑（仅限非预定义主题）
                 appStore.deleteTheme(themeId);
             }

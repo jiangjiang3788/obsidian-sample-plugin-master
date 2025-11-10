@@ -1,4 +1,7 @@
 // src/core/domain/theme.ts
+import { STATUS, SOURCE } from '../../../constants';
+import { pathUtils } from '../../../utils/path';
+import type { ActiveStatus, SourceType } from '../../../types/common';
 
 /**
  * 主题系统的核心接口定义
@@ -26,10 +29,10 @@ export interface Theme {
   parentId: string | null;
   
   /** 主题状态：active表示在快速输入中显示，inactive表示已发现但未激活 */
-  status: 'active' | 'inactive';
+  status: ActiveStatus;
   
   /** 主题来源：predefined表示预定义的，discovered表示从数据中发现的 */
-  source: 'predefined' | 'discovered';
+  source: SourceType;
   
   /** 使用次数，用于排序和推荐 */
   usageCount: number;
@@ -101,11 +104,11 @@ export const DEFAULT_THEME_CONFIG: ThemeManagerConfig = {
  */
 export function createTheme(
   path: string,
-  source: 'predefined' | 'discovered',
+  source: SourceType,
   options?: Partial<Theme>
 ): Theme {
   const id = options?.id || `theme_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-  const name = options?.name || path.split('/').pop() || path;
+  const name = options?.name || pathUtils.getDisplayName(path);
   
   return {
     id,
@@ -113,48 +116,12 @@ export function createTheme(
     name,
     icon: options?.icon,
     parentId: options?.parentId || null,
-    status: options?.status || (source === 'predefined' ? 'active' : 'inactive'),
+    status: options?.status || (source === SOURCE.PREDEFINED ? STATUS.ACTIVE : STATUS.INACTIVE),
     source,
     usageCount: options?.usageCount || 0,
     lastUsed: options?.lastUsed,
     order: options?.order || 999,
   };
-}
-
-/**
- * 从路径解析主题层级
- * 例如："生活/日常/购物" -> ["生活", "生活/日常", "生活/日常/购物"]
- */
-export function parseThemeHierarchy(path: string): string[] {
-  const parts = path.split('/').filter(p => p.trim());
-  const hierarchy: string[] = [];
-  
-  for (let i = 0; i < parts.length; i++) {
-    hierarchy.push(parts.slice(0, i + 1).join('/'));
-  }
-  
-  return hierarchy;
-}
-
-/**
- * 检查主题路径是否有效
- */
-export function isValidThemePath(path: string): boolean {
-  if (!path || typeof path !== 'string') return false;
-  
-  // 移除首尾空格
-  const trimmed = path.trim();
-  
-  // 检查是否为空
-  if (trimmed.length === 0) return false;
-  
-  // 检查是否包含非法字符
-  const invalidChars = ['#', '@', '!', '$', '%', '^', '&', '*', '(', ')', '[', ']', '{', '}', '\\', '|', '`', '~'];
-  if (invalidChars.some(char => trimmed.includes(char))) return false;
-  
-  // 检查路径段是否有效
-  const parts = trimmed.split('/');
-  return parts.every(part => part.trim().length > 0);
 }
 
 /**
@@ -164,7 +131,7 @@ export function sortThemes(themes: Theme[]): Theme[] {
   return [...themes].sort((a, b) => {
     // 首先按状态排序（active优先）
     if (a.status !== b.status) {
-      return a.status === 'active' ? -1 : 1;
+      return a.status === STATUS.ACTIVE ? -1 : 1;
     }
     
     // 然后按使用次数降序

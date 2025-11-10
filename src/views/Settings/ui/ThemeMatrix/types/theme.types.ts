@@ -1,6 +1,7 @@
 /**
  * 主题相关类型定义
  */
+import type { BatchOperationType, ActiveStatus, SourceType } from '../../../../../types/common';
 import type { ThemeDefinition, ThemeOverride } from '../../../../../lib/types/domain/schema';
 
 /**
@@ -8,9 +9,9 @@ import type { ThemeDefinition, ThemeOverride } from '../../../../../lib/types/do
  */
 export interface ExtendedTheme extends ThemeDefinition {
     /** 主题状态：激活或归档 */
-    status?: 'active' | 'inactive';
+    status?: ActiveStatus;
     /** 主题来源：预定义或发现的 */
-    source?: 'predefined' | 'discovered';
+    source?: SourceType;
     /** 使用次数统计 */
     usageCount?: number;
     /** 最后使用时间戳 */
@@ -37,11 +38,6 @@ export interface ThemeTreeNode {
  * 主题覆盖映射键
  */
 export type ThemeOverrideKey = `${string}:${string}`;
-
-/**
- * 批量操作类型
- */
-export type BatchOperationType = 'activate' | 'archive' | 'delete';
 
 /**
  * 主题上下文菜单数据
