@@ -1,6 +1,7 @@
 // src/store/stores/ThemeStore.ts
 import type { ThinkSettings, ThemeDefinition, ThemeOverride } from '../../lib/types/domain/schema';
 import { generateId, moveItemInArray, duplicateItemInArray } from '../../lib/utils/core/array';
+import { arrayUtils } from '../../utils/array';
 
 /**
  * ThemeStore - 管理主题相关状态
@@ -30,21 +31,18 @@ export class ThemeStore {
     // 更新主题
     public updateTheme = async (id: string, updates: Partial<ThemeDefinition>) => {
         await this._updateSettings(draft => {
-            const index = draft.inputSettings.themes.findIndex(t => t.id === id);
-            if (index > -1) {
-                if (updates.path && draft.inputSettings.themes.some(t => t.path === updates.path && t.id !== id)) {
-                    console.warn(`主题路径 "${updates.path}" 已存在。`);
-                    return;
-                }
-                draft.inputSettings.themes[index] = { ...draft.inputSettings.themes[index], ...updates };
+            if (updates.path && draft.inputSettings.themes.some(t => t.path === updates.path && t.id !== id)) {
+                console.warn(`主题路径 "${updates.path}" 已存在。`);
+                return;
             }
+            draft.inputSettings.themes = arrayUtils.updateById(draft.inputSettings.themes, id, updates);
         });
     }
 
     // 删除主题
     public deleteTheme = async (id: string) => {
         await this._updateSettings(draft => {
-            draft.inputSettings.themes = draft.inputSettings.themes.filter(t => t.id !== id);
+            draft.inputSettings.themes = arrayUtils.removeByIds(draft.inputSettings.themes, [id]);
             draft.inputSettings.overrides = draft.inputSettings.overrides.filter(o => o.themeId !== id);
         });
     }
@@ -55,23 +53,21 @@ export class ThemeStore {
         updates: Partial<ThemeDefinition>
     ) => {
         await this._updateSettings(draft => {
+            let themes = draft.inputSettings.themes;
             themeIds.forEach(id => {
-                const index = draft.inputSettings.themes.findIndex(t => t.id === id);
-                if (index > -1) {
-                    Object.assign(draft.inputSettings.themes[index], updates);
-                }
+                themes = arrayUtils.updateById(themes, id, updates);
             });
+            draft.inputSettings.themes = themes;
         });
     }
 
     // 批量删除主题
     public batchDeleteThemes = async (themeIds: string[]) => {
         await this._updateSettings(draft => {
-            draft.inputSettings.themes = draft.inputSettings.themes.filter(
-                t => !themeIds.includes(t.id)
-            );
+            draft.inputSettings.themes = arrayUtils.removeByIds(draft.inputSettings.themes, themeIds);
+            const themeIdSet = new Set(themeIds);
             draft.inputSettings.overrides = draft.inputSettings.overrides.filter(
-                o => !themeIds.includes(o.themeId)
+                o => !themeIdSet.has(o.themeId)
             );
         });
     }

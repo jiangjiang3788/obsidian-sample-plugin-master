@@ -2,6 +2,7 @@
  * 主题操作辅助函数
  */
 import { BATCH_OPERATIONS } from '../../../../../constants';
+import { pathUtils } from '../../../../../utils/path';
 import type { ActiveStatus, BatchOperationType } from '../../../../../types/common';
 import type { ExtendedTheme, ThemeTreeNode, ThemeOverrideKey } from '../types';
 import type { ThemeOverride } from '../../../../../lib/types/domain/schema';
@@ -39,47 +40,6 @@ export function createOverridesMap(overrides: ThemeOverride[]): Map<ThemeOverrid
         map.set(key, override);
     });
     return map;
-}
-
-/**
- * 验证主题路径
- * @param path - 主题路径
- * @returns 是否有效
- */
-export function validateThemePath(path: string): boolean {
-    if (!path || path.trim() === '') {
-        return false;
-    }
-    
-    // 检查路径格式
-    const pathRegex = /^[a-zA-Z0-9\u4e00-\u9fa5]+([\/][a-zA-Z0-9\u4e00-\u9fa5]+)*$/;
-    return pathRegex.test(path.trim());
-}
-
-/**
- * 获取主题的父路径
- * @param path - 主题路径
- * @returns 父路径或null
- */
-export function getParentPath(path: string): string | null {
-    const lastSlashIndex = path.lastIndexOf('/');
-    if (lastSlashIndex === -1) {
-        return null;
-    }
-    return path.substring(0, lastSlashIndex);
-}
-
-/**
- * 获取主题的显示名称
- * @param path - 主题路径
- * @returns 显示名称
- */
-export function getThemeDisplayName(path: string): string {
-    const lastSlashIndex = path.lastIndexOf('/');
-    if (lastSlashIndex === -1) {
-        return path;
-    }
-    return path.substring(lastSlashIndex + 1);
 }
 
 /**

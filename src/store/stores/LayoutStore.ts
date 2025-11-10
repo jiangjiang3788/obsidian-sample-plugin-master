@@ -1,6 +1,7 @@
 // src/store/stores/LayoutStore.ts
 import type { ThinkSettings, Layout } from '../../lib/types/domain/schema';
 import { generateId, moveItemInArray, duplicateItemInArray } from '../../lib/utils/core/array';
+import { arrayUtils } from '../../utils/array';
 
 /**
  * LayoutStore - 管理布局相关状态
@@ -36,17 +37,14 @@ export class LayoutStore {
     // 更新布局
     public updateLayout = async (id: string, updates: Partial<Layout>) => {
         await this._updateSettings(draft => {
-            const index = draft.layouts.findIndex(l => l.id === id);
-            if (index !== -1) {
-                draft.layouts[index] = { ...draft.layouts[index], ...updates };
-            }
+            draft.layouts = arrayUtils.updateById(draft.layouts, id, updates);
         });
     }
 
     // 删除布局
     public deleteLayout = async (id: string) => {
         await this._updateSettings(draft => {
-            draft.layouts = draft.layouts.filter(l => l.id !== id);
+            draft.layouts = arrayUtils.removeByIds(draft.layouts, [id]);
         });
     }
 
@@ -70,19 +68,18 @@ export class LayoutStore {
         updates: Partial<Layout>
     ) => {
         await this._updateSettings(draft => {
+            let layouts = draft.layouts;
             layoutIds.forEach(id => {
-                const index = draft.layouts.findIndex(l => l.id === id);
-                if (index > -1) {
-                    Object.assign(draft.layouts[index], updates);
-                }
+                layouts = arrayUtils.updateById(layouts, id, updates);
             });
+            draft.layouts = layouts;
         });
     }
 
     // 批量删除布局
     public batchDeleteLayouts = async (layoutIds: string[]) => {
         await this._updateSettings(draft => {
-            draft.layouts = draft.layouts.filter(l => !layoutIds.includes(l.id));
+            draft.layouts = arrayUtils.removeByIds(draft.layouts, layoutIds);
         });
     }
 
