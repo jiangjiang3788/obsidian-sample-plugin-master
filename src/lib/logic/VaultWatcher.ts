@@ -1,5 +1,5 @@
 // src/core/VaultWatcher.ts
-import { Plugin, TFile } from 'obsidian';
+import { Plugin, TFile, TAbstractFile } from 'obsidian';
 import { DataStore } from '../services/core/dataStore';
 
 /** 监听 Vault 变化并与 DataStore 联动（节流由 DataStore 内部处理） */
@@ -17,7 +17,7 @@ export class VaultWatcher {
      * [重构] 定义一个可复用的文件变更处理函数
      * @param f - 被创建、修改或重命名的文件
      */
-    private handleFileChange = (f: TFile): void => {
+    private handleFileChange = (f: TAbstractFile): void => {
         // 确保是 Markdown 文件，然后执行扫描并通知更新
         if (f instanceof TFile && f.extension === 'md') {
             this.dataStore.scanFile(f).then(() => this.dataStore.notifyChange());

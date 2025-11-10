@@ -395,6 +395,21 @@
       },
       "collapsed": true,
       "parentId": null
+    },
+    {
+      "id": "view_mhsv63xuav78n",
+      "title": "新视图2",
+      "viewType": "BlockView",
+      "dataSourceId": "",
+      "viewConfig": {
+        "view": "BlockView",
+        "title": "块视图",
+        "collapsed": false,
+        "fields": [],
+        "group": "categoryKey"
+      },
+      "collapsed": true,
+      "parentId": null
     }
   ],
   "layouts": [
