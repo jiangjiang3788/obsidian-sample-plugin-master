@@ -1,6 +1,7 @@
 // src/store/stores/BlockStore.ts
 import type { ThinkSettings, BlockTemplate } from '../../lib/types/domain/schema';
 import { generateId, moveItemInArray } from '../../lib/utils/core/array';
+import { arrayUtils } from '../../utils/array';
 
 /**
  * BlockStore - 管理块模板相关状态
@@ -35,17 +36,14 @@ export class BlockStore {
     // 更新块模板
     public updateBlock = async (id: string, updates: Partial<BlockTemplate>) => {
         await this._updateSettings(draft => {
-            const index = draft.inputSettings.blocks.findIndex(b => b.id === id);
-            if (index > -1) {
-                draft.inputSettings.blocks[index] = { ...draft.inputSettings.blocks[index], ...updates };
-            }
+            draft.inputSettings.blocks = arrayUtils.updateById(draft.inputSettings.blocks, id, updates);
         });
     }
 
     // 删除块模板
     public deleteBlock = async (id: string) => {
         await this._updateSettings(draft => {
-            draft.inputSettings.blocks = draft.inputSettings.blocks.filter(b => b.id !== id);
+            draft.inputSettings.blocks = arrayUtils.removeByIds(draft.inputSettings.blocks, [id]);
             // 同时删除相关的覆盖配置
             draft.inputSettings.overrides = draft.inputSettings.overrides.filter(o => o.blockId !== id);
         });
@@ -90,21 +88,21 @@ export class BlockStore {
         updates: Partial<BlockTemplate>
     ) => {
         await this._updateSettings(draft => {
+            let blocks = draft.inputSettings.blocks;
             blockIds.forEach(id => {
-                const index = draft.inputSettings.blocks.findIndex(b => b.id === id);
-                if (index > -1) {
-                    Object.assign(draft.inputSettings.blocks[index], updates);
-                }
+                blocks = arrayUtils.updateById(blocks, id, updates);
             });
+            draft.inputSettings.blocks = blocks;
         });
     }
 
     // 批量删除块模板
     public batchDeleteBlocks = async (blockIds: string[]) => {
         await this._updateSettings(draft => {
-            draft.inputSettings.blocks = draft.inputSettings.blocks.filter(b => !blockIds.includes(b.id));
+            draft.inputSettings.blocks = arrayUtils.removeByIds(draft.inputSettings.blocks, blockIds);
+            const blockIdSet = new Set(blockIds);
             // 同时删除相关的覆盖配置
-            draft.inputSettings.overrides = draft.inputSettings.overrides.filter(o => !blockIds.includes(o.blockId));
+            draft.inputSettings.overrides = draft.inputSettings.overrides.filter(o => !blockIdSet.has(o.blockId));
         });
     }
 }

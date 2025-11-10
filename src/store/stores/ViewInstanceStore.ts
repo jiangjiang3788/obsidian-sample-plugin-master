@@ -1,6 +1,7 @@
 // src/store/stores/ViewInstanceStore.ts
 import type { ThinkSettings, ViewInstance } from '../../lib/types/domain/schema';
 import { generateId, moveItemInArray, duplicateItemInArray } from '../../lib/utils/core/array';
+import { arrayUtils } from '../../utils/array';
 import { VIEW_DEFAULT_CONFIGS } from '../../views/Settings/ui/components/view-editors/registry';
 
 /**
@@ -37,13 +38,11 @@ export class ViewInstanceStore {
     // 更新视图实例
     public updateViewInstance = async (id: string, updates: Partial<ViewInstance>) => {
         await this._updateSettings(draft => {
-            const index = draft.viewInstances.findIndex(vi => vi.id === id);
-            if (index !== -1) {
-                if (updates.viewType && updates.viewType !== draft.viewInstances[index].viewType) {
-                    updates.viewConfig = JSON.parse(JSON.stringify(VIEW_DEFAULT_CONFIGS[updates.viewType]));
-                }
-                draft.viewInstances[index] = { ...draft.viewInstances[index], ...updates };
+            const currentInstance = draft.viewInstances.find(vi => vi.id === id);
+            if (currentInstance && updates.viewType && updates.viewType !== currentInstance.viewType) {
+                updates.viewConfig = JSON.parse(JSON.stringify(VIEW_DEFAULT_CONFIGS[updates.viewType]));
             }
+            draft.viewInstances = arrayUtils.updateById(draft.viewInstances, id, updates);
         });
     }
 
@@ -93,12 +92,11 @@ export class ViewInstanceStore {
         updates: Partial<ViewInstance>
     ) => {
         await this._updateSettings(draft => {
+            let instances = draft.viewInstances;
             viewInstanceIds.forEach(id => {
-                const index = draft.viewInstances.findIndex(vi => vi.id === id);
-                if (index > -1) {
-                    Object.assign(draft.viewInstances[index], updates);
-                }
+                instances = arrayUtils.updateById(instances, id, updates);
             });
+            draft.viewInstances = instances;
         });
     }
 
