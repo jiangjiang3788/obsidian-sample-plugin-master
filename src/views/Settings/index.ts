@@ -1,6 +1,6 @@
 // src/features/settings/index.ts
 import { App } from 'obsidian';
-import type { ThinkPlugin } from '../../main';
+import type { ThinkPlugin } from '@main';
 import { SettingsTab } from './ui/SettingsTab';
 import { AppStore } from '../../store/AppStore'; // [新增]
 
