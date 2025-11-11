@@ -3,10 +3,10 @@ import { h } from 'preact';
 import { useState, useMemo } from 'preact/hooks';
 import { App, Modal, Notice, setIcon } from 'obsidian';
 import { render, unmountComponentAtNode } from 'preact/compat';
-import { Item } from '../../../lib/types/domain/schema';
-import { dayjs } from '../../../lib/utils/core/date';
-import { getEffectiveDisplayCount, getEffectiveLevelCount } from '../../../lib/utils/core/levelingSystem';
-import { makeObsUri } from '../../../lib/utils/core/obsidian';
+import { Item } from '@/lib/types/domain/schema';
+import { dayjs } from '@/lib/utils/core/date';
+import { getEffectiveDisplayCount, getEffectiveLevelCount } from '@/lib/utils/core/levelingSystem';
+import { makeObsUri } from '@/lib/utils/core/obsidian';
 
 // Types
 interface CheckinManagerData {

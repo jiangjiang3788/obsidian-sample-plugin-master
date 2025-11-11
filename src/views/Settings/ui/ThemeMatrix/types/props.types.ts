@@ -1,10 +1,11 @@
 /**
  * 组件属性类型定义
  */
-import type { AppStore } from '../../../../../store/AppStore';
-import type { BlockTemplate, ThemeDefinition, ThemeOverride } from '../../../../../lib/types/domain/schema';
-import type { ExtendedTheme, ThemeTreeNode, BatchOperationType } from './theme.types';
-import type { ThemeMatrixMode, SelectionStats } from '../hooks/useThemeMatrixSelection';
+import { type AppStore } from '@store/AppStore';
+import { type BlockTemplate, type ThemeDefinition, type ThemeOverride } from '@domain/schema';
+import { type ExtendedTheme, type ThemeTreeNode } from './theme.types';
+import { type ThemeMatrixMode, type SelectionStats } from '../hooks/useThemeMatrixSelection';
+import { type BatchOperationType } from '@/types/common';
 
 /**
  * InlineEditor 组件属性

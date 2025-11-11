@@ -2,17 +2,17 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
 import { useRef, useCallback } from 'preact/hooks';
-import { useStore } from '../../../store/AppStore';
-import { useLocalStorage } from '../../../hooks/shared';
+import { useStore } from '@store/AppStore';
+import { useLocalStorage } from '@/hooks/shared';
 import { Box, Typography, Button, Paper, Stack, Tooltip } from '@mui/material';
-import DragIndicatorIcon from '@mui/icons-material/DragIndicator';
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
-import type { ActionService } from '../../../lib/services/core/ActionService';
-import type { TimerService } from '../../../lib/services/core/TimerService';
-import type { DataStore } from '../../../lib/services/core/dataStore';
+import type { ActionService } from '@lib/services/core/ActionService';
+import type { TimerService } from '@lib/services/core/TimerService';
+import type { DataStore } from '@lib/services/core/dataStore';
 import { TimerRow } from './TimerRow';
 import { App } from 'obsidian';
-import { QuickInputModal, QuickInputSaveData } from '../../QuickInput/ui/QuickInputModal'; 
+import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
+import { QuickInputModal, QuickInputSaveData } from '@/views/QuickInput/ui/QuickInputModal';
 
 interface TimerViewProps {
     app: App;

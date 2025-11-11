@@ -1,5 +1,5 @@
 // src/store/stores/SettingsStore.ts
-import type { ThinkSettings, InputSettings } from '../../lib/types/domain/schema';
+import type { ThinkSettings, InputSettings } from '@/lib/types/domain/schema';
 
 /**
  * SettingsStore - 管理应用设置
