@@ -3,12 +3,12 @@
 import { h } from 'preact';
 import { useState, useEffect, useMemo } from 'preact/hooks';
 import { Button, FormControlLabel, Checkbox, TextField } from '@mui/material';
-import { VIEW_OPTIONS, ViewName, getAllFields } from '../../../lib/types/domain/schema';
-import type { ViewInstance } from '../../../lib/types/domain/schema';
-import { VIEW_EDITORS } from '../../Settings/ui/components/view-editors/registry';
-import { dataStore } from '../../../store/storeRegistry';
-import { useStore, AppStore } from '../../../store/AppStore';
-import { SimpleSelect } from '../../../ui/composites/SimpleSelect';
+import { VIEW_OPTIONS, ViewName, getAllFields } from '@/lib/types/domain/schema';
+import type { ViewInstance } from '@/lib/types/domain/schema';
+import { VIEW_EDITORS } from '@views/Settings/ui/components/view-editors/registry';
+import { dataStore } from '@store/storeRegistry';
+import { useStore, AppStore } from '@store/AppStore';
+import { SimpleSelect } from '@/ui/composites/SimpleSelect';
 import { Notice } from 'obsidian';
 
 interface Props {

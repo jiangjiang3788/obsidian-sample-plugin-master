@@ -1,5 +1,5 @@
 // src/store/stores/TimerStore.ts
-import { generateId } from '../../lib/utils/core/array';
+import { generateId } from '@/lib/utils/core/array';
 
 export interface TimerState {
     id: string;

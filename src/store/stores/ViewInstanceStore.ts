@@ -1,8 +1,8 @@
 // src/store/stores/ViewInstanceStore.ts
-import type { ThinkSettings, ViewInstance } from '../../lib/types/domain/schema';
-import { generateId, moveItemInArray, duplicateItemInArray } from '../../lib/utils/core/array';
-import { arrayUtils } from '../../utils/array';
-import { VIEW_DEFAULT_CONFIGS } from '../../views/Settings/ui/components/view-editors/registry';
+import type { ThinkSettings, ViewInstance } from '@/lib/types/domain/schema';
+import { generateId, moveItemInArray, duplicateItemInArray } from '@/lib/utils/core/array';
+import { arrayUtils } from '@/utils/array';
+import { VIEW_DEFAULT_CONFIGS } from '@/views/Settings/ui/components/view-editors/registry';
 
 /**
  * ViewInstanceStore - 管理视图实例相关状态

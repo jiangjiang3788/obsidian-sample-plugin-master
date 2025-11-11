@@ -25,6 +25,12 @@ export default defineConfig({
                 '@hooks': path.resolve(process.cwd(), 'src/hooks'),
                 '@config': path.resolve(process.cwd(), 'src/config'),
                 '@platform': path.resolve(process.cwd(), 'src/platform'),
+                '@types': path.resolve(process.cwd(), 'src/types'),
+                '@domain': path.resolve(process.cwd(), 'src/lib/types/domain'),
+                '@utils': path.resolve(process.cwd(), 'src/utils'),
+                '@services': path.resolve(process.cwd(), 'src/lib/services'),
+                '@constants': path.resolve(process.cwd(), 'src/constants'),
+                '@shared': path.resolve(process.cwd(), 'src/shared'),
             },
         },
 

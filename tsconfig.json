@@ -24,7 +24,13 @@
         "@hooks/*": ["src/hooks/*"],
         "@config/*": ["src/config/*"],
         "@platform/*": ["src/platform/*"],
-        "@main": ["src/main.ts"]
+        "@main": ["src/main.ts"],
+        "@types/*": ["src/types/*"],
+        "@domain/*": ["src/lib/types/domain/*"],
+        "@utils/*": ["src/utils/*"],
+        "@services/*": ["src/lib/services/*"],
+        "@constants/*": ["src/constants/*"],
+        "@shared/*": ["src/shared/*"]
       },
       "types": ["vite/client", "preact"]
     },

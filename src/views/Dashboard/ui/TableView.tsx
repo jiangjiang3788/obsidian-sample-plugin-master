@@ -2,11 +2,11 @@
 
 /** @jsxImportSource preact */
 import { h } from 'preact';
-import { Item, readField } from '../../../lib/types/domain/schema';
-import { makeObsUri } from '../../../lib/utils/core/obsidian';
-import { EMPTY_LABEL } from '../../../lib/types/domain/constants';
-import { TaskCheckbox } from '../../../ui/composites/TaskCheckbox';
-import { TaskSendToTimerButton } from '../../../ui/composites/TaskSendToTimerButton';
+import { Item, readField } from '@/lib/types/domain/schema';
+import { makeObsUri } from '@/lib/utils/core/obsidian';
+import { EMPTY_LABEL } from '@/lib/types/domain/constants';
+import { TaskCheckbox } from '@ui/composites/TaskCheckbox';
+import { TaskSendToTimerButton } from '@ui/composites/TaskSendToTimerButton';
 import { App } from 'obsidian'; // [新增] 导入 App 类型
 
 // [修改] 接口现在需要 app 实例
