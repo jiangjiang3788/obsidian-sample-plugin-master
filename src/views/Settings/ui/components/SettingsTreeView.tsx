@@ -9,8 +9,8 @@ import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 import DriveFileMoveOutlinedIcon from '@mui/icons-material/DriveFileMoveOutlined';
 import DeleteForeverOutlinedIcon from '@mui/icons-material/DeleteForeverOutlined';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
-import type { Group, Groupable } from '../../../../lib/types/domain/schema';
-import { AppStore } from '../../../../store/AppStore';
+import type { Group, Groupable } from '@/lib/types/domain/schema';
+import { AppStore } from '@store/AppStore';
 import { MoveItemDialog } from '../../../../ui/composites/dialogs/MoveItemDialog';
 
 export interface TreeItem extends Groupable {

@@ -1,7 +1,7 @@
 // src/core/domain/theme.ts
-import { STATUS, SOURCE } from '../../../constants';
-import { pathUtils } from '../../../utils/path';
-import type { ActiveStatus, SourceType } from '../../../types/common';
+import { STATUS, SOURCE } from '@constants';
+import { pathUtils } from '@/utils/path';
+import type { ActiveStatus, SourceType } from '@/types/common';
 
 /**
  * 主题系统的核心接口定义

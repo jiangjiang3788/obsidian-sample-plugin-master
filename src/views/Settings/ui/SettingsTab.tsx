@@ -4,15 +4,15 @@ import { render } from 'preact';
 import { unmountComponentAtNode } from 'preact/compat';
 import { PluginSettingTab, App } from 'obsidian';
 import { ThemeProvider, CssBaseline, Box, Tabs, Tab } from '@mui/material';
-import type ThinkPlugin from '../../../main';
-import { useLocalStorage } from '../../../hooks/shared';
-import { LOCAL_STORAGE_KEYS } from '../../../lib/types/domain/constants';
+import type ThinkPlugin from '@main';
+import { useLocalStorage } from '@/hooks/shared';
+import { LOCAL_STORAGE_KEYS } from '@/lib/types/domain/constants';
 import { theme as baseTheme } from '../../../ui/styles/mui-theme';
 
 import { ViewInstanceSettings } from './ViewInstanceSettings';
 import { LayoutSettings } from './LayoutSettings';
 import { InputSettings } from './InputSettings';
-import { AppStore } from '../../../store/AppStore';
+import { AppStore } from '@store/AppStore';
 import { GeneralSettings } from './GeneralSettings';
 
 function a11yProps(index: number) {

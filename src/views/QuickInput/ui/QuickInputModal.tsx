@@ -5,14 +5,14 @@ import { h, Fragment } from 'preact';
 import { App, Modal, Notice } from 'obsidian';
 import { render, unmountComponentAtNode } from 'preact/compat';
 import { useState, useMemo, useEffect } from 'preact/hooks';
-import { useStore } from '../../../store/AppStore';
-import type { InputSettings, BlockTemplate, ThemeDefinition, TemplateField, TemplateFieldOption } from '../../../lib/types/domain/schema';
+import { useStore } from '@store/AppStore';
+import type { InputSettings, BlockTemplate, ThemeDefinition, TemplateField, TemplateFieldOption } from '@/lib/types/domain/schema';
 import { Button, RadioGroup as MuiRadioGroup, FormControlLabel, Radio, FormControl, Typography, Stack, Divider, Box, IconButton, Tooltip } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import { SimpleSelect } from '../../../ui/composites/SimpleSelect';
 import { buildThemeTree, ThemeTreeNode } from '../../../lib/utils/core/themeUtils';
 import { dayjs, timeToMinutes, minutesToTime } from '../../../lib/utils/core/date';
-import { dataStore, inputService } from '../../../store/storeRegistry';
+import { dataStore, inputService } from '@store/storeRegistry';
 // [核心修改 1] 导入模板渲染工具
 import { renderTemplate } from '../../../lib/utils/core/templateUtils';
 

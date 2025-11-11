@@ -1,7 +1,7 @@
 // src/features/settings/ui/GeneralSettings.tsx
 /** @jsxImportSource preact */
 import { h } from 'preact';
-import { useStore, AppStore } from '../../../store/AppStore';
+import { useStore, AppStore } from '@store/AppStore';
 import { Box, Typography, Stack, FormControlLabel, Checkbox } from '@mui/material';
 
 // 组件 props 需要接收 appStore 实例，以便进行状态更新

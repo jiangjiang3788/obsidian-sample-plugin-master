@@ -7,7 +7,7 @@ import { ExcelViewEditor, DEFAULT_CONFIG as ExcelViewDefault } from './ExcelView
 import { TimelineViewEditor, DEFAULT_CONFIG as TimelineViewDefault } from './TimelineViewEditor';
 import { StatisticsViewEditor, DEFAULT_CONFIG as StatisticsViewDefault } from './StatisticsViewEditor';
 import { HeatmapViewEditor, DEFAULT_CONFIG as HeatmapViewDefault } from './HeatmapViewEditor';
-import type { ViewName, ViewInstance } from '../../../../../lib/types/domain/schema';
+import type { ViewName, ViewInstance } from '@/lib/types/domain/schema';
 
 // [REFACTOR] ViewKind is now derived from the domain-level ViewName
 export type ViewKind = ViewName;

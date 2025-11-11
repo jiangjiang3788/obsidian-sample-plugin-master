@@ -1,6 +1,6 @@
 // src/core/utils/mark.ts
 // 任务状态切换与周期任务工具函数
-import { EMOJI } from '../../types/domain/constants';
+import { EMOJI } from '@/lib/types/domain/constants';
 import { DATE_YMD_RE } from './regex';
 import { normalizeDateStr } from './date';
 import { dayjs } from './date';

@@ -1,7 +1,7 @@
 // src/features/settings/ui/BlockManager.tsx
 /** @jsxImportSource preact */
 import { h } from 'preact';
-import { useStore, AppStore } from '../../../store/AppStore';
+import { useStore, AppStore } from '@store/AppStore';
 import { Accordion, AccordionSummary, AccordionDetails, Box, Stack, Typography, IconButton, Tooltip, Divider, TextField } from '@mui/material';
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 import DeleteForeverOutlinedIcon from '@mui/icons-material/DeleteForeverOutlined';
@@ -9,7 +9,7 @@ import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import DragIndicatorIcon from '@mui/icons-material/DragIndicator';
 import { useState, useEffect } from 'preact/hooks';
 import { FieldsEditor } from './components/FieldsEditor';
-import type { BlockTemplate } from '../../../lib/types/domain/schema';
+import type { BlockTemplate } from '@/lib/types/domain/schema';
 import { TemplateVariableCopier } from './components/TemplateVariableCopier';
 import { DndContext, closestCenter } from '@dnd-kit/core';
 import { arrayMove, SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
