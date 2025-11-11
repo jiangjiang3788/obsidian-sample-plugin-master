@@ -1,4 +1,25 @@
-import "reflect-metadata";
+import 'reflect-metadata';
+
+// 检查 reflect-metadata 是否正确加载的函数
+function ensureReflectMetadata(): void {
+    if (typeof Reflect === 'undefined') {
+        console.error('[ThinkPlugin] Reflect 对象未定义!');
+        throw new Error('Reflect object is not available');
+    }
+
+    if (typeof Reflect.getOwnMetadata !== 'function') {
+        console.error('[ThinkPlugin] Reflect.getOwnMetadata 方法不可用!');
+        console.log('[ThinkPlugin] 可用的 Reflect 方法:', Object.getOwnPropertyNames(Reflect));
+        throw new Error('Reflect.getOwnMetadata is not a function - reflect-metadata polyfill not properly loaded');
+    }
+
+    console.log('[ThinkPlugin] reflect-metadata 已正确加载');
+    console.log('[ThinkPlugin] Reflect.getOwnMetadata 可用:', typeof Reflect.getOwnMetadata);
+}
+
+// 立即执行检查
+ensureReflectMetadata();
+
 import { container, singleton } from 'tsyringe';
 import { App, Plugin, Notice } from 'obsidian';
 import { ObsidianPlatform } from '@platform/obsidian';
@@ -241,8 +262,6 @@ class ServiceManager {
     }
 }
 
-container.registerSingleton(AppStore);
-
 export default class ThinkPlugin extends Plugin {
     private serviceManager!: ServiceManager;
 
@@ -259,6 +278,9 @@ export default class ThinkPlugin extends Plugin {
                 container.register(AppToken, { useValue: this.app });
                 container.register(SETTINGS_TOKEN, { useValue: settings });
                 container.register(STORAGE_TOKEN, { useClass: VaultFileStorage });
+                
+                // 注册单例服务（现在 reflect-metadata 已确保可用）
+                container.registerSingleton(AppStore);
 
                 // 步骤 2: 初始化服务管理器
                 this.serviceManager = new ServiceManager(this);

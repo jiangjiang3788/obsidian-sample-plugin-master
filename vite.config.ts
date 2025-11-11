@@ -31,6 +31,10 @@ export default defineConfig({
                 '@services': path.resolve(process.cwd(), 'src/lib/services'),
                 '@constants': path.resolve(process.cwd(), 'src/constants'),
                 '@shared': path.resolve(process.cwd(), 'src/shared'),
+                // React别名到Preact
+                'react': 'preact/compat',
+                'react-dom': 'preact/compat',
+                'react/jsx-runtime': 'preact/jsx-runtime',
             },
         },
 
@@ -44,12 +48,35 @@ export default defineConfig({
         sourcemap: true,
         rollupOptions: {
             external: ['obsidian'],
-            treeshake: { moduleSideEffects: false },
+            treeshake: { 
+                moduleSideEffects: (id) => {
+                    // 保留 reflect-metadata 和 dayjs 的副作用
+                    return id === 'reflect-metadata' || 
+                           id.includes('reflect-metadata') ||
+                           id.includes('dayjs');
+                }
+            },
+            // 确保 reflect-metadata 优先加载
+            output: {
+                manualChunks: undefined,
+                // 强制 reflect-metadata 在最前面
+                inlineDynamicImports: true,
+                // 确保 reflect-metadata 不被优化掉
+                globals: {
+                    'reflect-metadata': 'Reflect'
+                },
+                // 强制包含 reflect-metadata
+                exports: 'named'
+            },
         },
+        // 确保 reflect-metadata 被包含
+        commonjsOptions: {
+            include: [/reflect-metadata/, /hoist-non-react-statics/, /prop-types/, /react-is/]
+        }
     },
 
     optimizeDeps: {
-        include: ['preact', 'preact/hooks'],
+        include: ['preact', 'preact/hooks', 'reflect-metadata', 'tsyringe'],
     },
 
     esbuild: {
