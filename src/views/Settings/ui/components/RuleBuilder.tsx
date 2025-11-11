@@ -1,6 +1,6 @@
 // src/features/settings/ui/components/RuleBuilder.tsx
 /** @jsxImportSource preact */
-import { h, Fragment } from 'preact';
+import { h } from 'preact';
 import { useMemo, useState } from 'preact/hooks';
 import { Typography, Tooltip, Chip, Autocomplete, TextField, Button } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';

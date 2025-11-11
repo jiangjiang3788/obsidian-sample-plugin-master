@@ -23,7 +23,8 @@
         "@views/*": ["src/views/*"],
         "@hooks/*": ["src/hooks/*"],
         "@config/*": ["src/config/*"],
-        "@platform/*": ["src/platform/*"]
+        "@platform/*": ["src/platform/*"],
+        "@main": ["src/main.ts"]
       },
       "types": ["vite/client", "preact"]
     },

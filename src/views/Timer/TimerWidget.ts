@@ -1,7 +1,7 @@
 // src/features/timer/TimerWidget.ts
 import { render, h } from 'preact';
 import { unmountComponentAtNode } from 'preact/compat';
-import type ThinkPlugin from '../../main';
+import type ThinkPlugin from '@main';
 import { TimerView } from './ui/TimerView';
 
 /**
