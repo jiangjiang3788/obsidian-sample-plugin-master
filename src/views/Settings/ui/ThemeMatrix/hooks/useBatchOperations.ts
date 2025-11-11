@@ -3,7 +3,7 @@
  * 整合批量操作服务，提供简化的API
  */
 import { useState, useCallback, useMemo } from 'preact/hooks';
-import type { AppStore } from '../../../../../store/AppStore';
+import type { AppStore } from '@store/AppStore';
 import type { ThemeManager } from '../../../../../lib/services/core/ThemeManager';
 import { BatchOperationService } from '../services/BatchOperationService';
 import type { EditorState } from './useThemeMatrixEditor';

@@ -6,8 +6,8 @@ import { Typography, Tooltip, Chip, Autocomplete, TextField, Button } from '@mui
 import AddIcon from '@mui/icons-material/Add';
 import { SimpleSelect } from '../../../../ui/composites/SimpleSelect';
 // [修改] 从注册表导入 dataStore
-import { dataStore } from '../../../../store/storeRegistry';
-import { getAllFields, readField, FilterRule, SortRule } from '../../../../lib/types/domain/schema';
+import { dataStore } from '@store/storeRegistry';
+import { getAllFields, readField, FilterRule, SortRule } from '@/lib/types/domain/schema';
 
 // 辅助Hook：获取库中所有字段的唯一值，用于自动补全
 function useUniqueFieldValues() {

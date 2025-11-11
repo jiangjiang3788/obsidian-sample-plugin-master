@@ -1,5 +1,5 @@
 // src/core/utils/themeUtils.ts
-import type { ThemeDefinition } from '../../types/domain/schema';
+import type { ThemeDefinition } from '@/lib/types/domain/schema';
 
 // 定义树节点的结构 (这个在上次修改中已添加，保持不变)
 export interface ThemeTreeNode {

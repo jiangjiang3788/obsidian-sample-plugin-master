@@ -9,7 +9,7 @@
  */
 
 import { CRUDStore } from '@/lib/patterns/CRUDStore';
-import type { ThinkSettings, ViewInstance, Layout, Group } from '../../../lib/types/domain/schema';
+import type { ThinkSettings, ViewInstance, Layout, Group } from '@/lib/types/domain/schema';
 
 export class SettingsStore extends CRUDStore<ViewInstance> {
     private settings: ThinkSettings;
