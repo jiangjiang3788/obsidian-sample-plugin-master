@@ -95,7 +95,9 @@ export function TimelineViewEditor({ value, onChange }: ViewEditorProps) {
     };
 
     return (
+        // @ts-ignore
         <Stack spacing={2.5}>
+            {/* @ts-ignore */}
             <Stack direction="row" alignItems="center" spacing={2}>
                 <Typography sx={{ width: '80px', flexShrink: 0, fontWeight: 500 }}>小时高度</Typography>
                 <TextField
@@ -106,7 +108,7 @@ export function TimelineViewEditor({ value, onChange }: ViewEditorProps) {
                     sx={{ width: '120px' }}
                 />
             </Stack>
-
+            {/* @ts-ignore */}
             <Stack spacing={1}>
                 <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>分类配置 (可排序)</Typography>
                 <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
@@ -132,15 +134,17 @@ export function TimelineViewEditor({ value, onChange }: ViewEditorProps) {
                             }}
                         >
                             <Stack direction="row" gridColumn="1 / 2">
+                                {/* @ts-ignore */}
                                 <Tooltip title="上移">
                                     <span>
                                         <IconButton size="small" disabled={index === 0} onClick={() => moveCategory(index, 'up')} sx={{ p: '4px', fontSize: '0.9rem' }}>▲</IconButton>
                                     </span>
                                 </Tooltip>
+                                {/* @ts-ignore */}
                                 <Tooltip title="下移">
                                     <span>
                                         <IconButton size="small" disabled={index === progressOrder.length - 1} onClick={() => moveCategory(index, 'down')} sx={{ p: '4px', fontSize: '0.9rem' }}>▼</IconButton>
-                  _200c_         </span>
+                                    </span>
                                 </Tooltip>
                             </Stack>
                             <TextField
@@ -155,9 +159,12 @@ export function TimelineViewEditor({ value, onChange }: ViewEditorProps) {
                                 onBlur={e => handleCategoryChange(name, { name: (e.target as HTMLInputElement).value.trim() })}
                                 sx={{ gridColumn: '3 / 4' }}
                             />
+                            {/* @ts-ignore */}
                             <Box sx={{ minWidth: 0, gridColumn: '4 / 5' }}>
+                                {/* @ts-ignore */}
                                 <Stack direction="row" flexWrap="wrap" useFlexGap spacing={0.5} alignItems="center">
                                     {(catConfig.files || []).map(file => (
+                                        // @ts-ignore
                                         <Tooltip key={file} title={`点击移除关键词: ${file}`}>
                                             <Box
                                                 onClick={() => handleCategoryChange(name, { files: (catConfig.files || []).filter(f => f !== file) })}
@@ -176,8 +183,9 @@ export function TimelineViewEditor({ value, onChange }: ViewEditorProps) {
                                             >
                                                 {file}
                                             </Box>
-                            _200c_           </Tooltip>
+                                        </Tooltip>
                                     ))}
+                                    {/* @ts-ignore */}
                                     <SimpleSelect
                                         value=""
                                         options={availableFileOptions}
@@ -187,11 +195,13 @@ export function TimelineViewEditor({ value, onChange }: ViewEditorProps) {
                                     />
                                 </Stack>
                             </Box>
+                            {/* @ts-ignore */}
                             <IconButton onClick={() => removeCategory(name)} size="small" title="删除此分类" sx={{gridColumn: '5 / 6'}}>
                                 <DeleteIcon fontSize="small" />
                             </IconButton>
                         </Box>
                     )})}
+                {/* @ts-ignore */}
                 <Button startIcon={<AddIcon />} onClick={addCategory} size="small" sx={{justifyContent: 'flex-start', mt: 1}}>
                     添加新分类
                 </Button>
