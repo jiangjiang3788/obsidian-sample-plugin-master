@@ -1,9 +1,9 @@
 /**
  * 主题操作辅助函数
  */
-import { BATCH_OPERATIONS } from '@constants';
-import { pathUtils } from '@utils/path';
-import type { ActiveStatus, BatchOperationType } from '@types/common';
+import { BATCH_OPERATIONS } from '@/constants';
+import { pathUtils } from '@/lib/utils/core/pathUtils';
+import type { ActiveStatus, BatchOperationType } from '@/types/common';
 import type { ExtendedTheme, ThemeTreeNode, ThemeOverrideKey } from '../types';
 import type { ThemeOverride } from '@domain/schema';
 import { findNodeInTree, getDescendantIds } from './themeTreeBuilder';
