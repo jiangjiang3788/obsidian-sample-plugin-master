@@ -1,5 +1,5 @@
 // src/store/stores/BlockStore.ts
-import type { ThinkSettings, BlockTemplate } from '@/lib/types/domain/schema';
+import type { ThinkSettings, BlockTemplate } from '@core/types/domain/schema';
 import { generateId, moveItemInArray } from '@/lib/utils/core/array';
 import { arrayUtils } from '@/lib/utils/core/array';
 

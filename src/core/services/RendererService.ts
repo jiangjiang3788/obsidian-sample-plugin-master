@@ -2,7 +2,7 @@
 import { singleton, inject } from 'tsyringe';
 import { h, render } from 'preact';
 import { App } from 'obsidian';
-import { Layout } from '@/lib/types/domain/schema';
+import { Layout } from '@core/types/domain/schema';
 import { DataStore } from '@core/services/DataStore';
 import { AppStore } from '@core/stores/AppStore';
 import { LayoutRenderer } from '@views/Dashboard/ui/LayoutRenderer';

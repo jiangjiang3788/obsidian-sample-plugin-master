@@ -2,7 +2,7 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
 import { useMemo, useCallback, useState, useEffect, useRef } from 'preact/hooks';
-import { Item } from '@/lib/types/domain/schema';
+import { Item } from '@core/types/domain/schema';
 import { makeObsUri } from '@/lib/utils/core/obsidian';
 import { processItemsToTimelineTasks, splitTaskIntoDayBlocks, TaskBlock } from '@views/Dashboard/views/timeline/timeline-parser';
 import { dayjs, minutesToTime } from '@/lib/utils/core/date';

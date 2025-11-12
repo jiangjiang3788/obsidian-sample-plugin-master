@@ -3,12 +3,12 @@ import { singleton, inject } from 'tsyringe';
 import { App, Notice } from 'obsidian';
 import { AppStore } from '@core/stores/AppStore';
 import { dayjs } from '@/lib/utils/core/date';
-import type { Item, ViewInstance } from '@/lib/types/domain/schema';
+import type { Item, ViewInstance } from '@core/types/domain/schema';
 import { DataStore } from '@core/services/DataStore';
 import { InputService } from '@core/services/InputService';
 import type { QuickInputConfig } from '@core/services/types';
 import { AppToken } from '@core/services/types';
-import { readField } from '@/lib/types/domain/schema';
+import { readField } from '@core/types/domain/schema';
 
 @singleton()
 export class ActionService {

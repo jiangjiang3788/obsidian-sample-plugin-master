@@ -2,7 +2,7 @@
 /** @jsxImportSource preact */
 import { h, Fragment } from 'preact';
 import { useState, useMemo, useEffect, useRef } from 'preact/hooks';
-import { Item, readField, ViewInstance } from '@/lib/types/domain/schema';
+import { Item, readField, ViewInstance } from '@core/types/domain/schema';
 import { dayjs, getWeeksInYear } from '@/lib/utils/core/date';
 import { App, Notice } from 'obsidian';
 // [最终修正] 使用别名路径，代码更清晰且稳定

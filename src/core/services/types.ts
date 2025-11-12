@@ -1,6 +1,6 @@
 /* src/core/services/types.ts */
 import type { InjectionToken } from 'tsyringe';
-import type { ThinkSettings } from '@/lib/types/domain/schema';
+import type { ThinkSettings } from '@core/types/domain/schema';
 import type { App } from 'obsidian';
 
 // [核心修改] 为 Obsidian App 实例创建一个注入令牌 (Token)

@@ -2,7 +2,7 @@
  * ThemeMatrix 业务逻辑服务
  */
 import { type AppStore } from '@core/stores/AppStore';
-import { type ThemeDefinition, ThemeOverride, BlockTemplate } from '@/lib/types/domain/schema';
+import { type ThemeDefinition, ThemeOverride, BlockTemplate } from '@core/types/domain/schema';
 import { type ExtendedTheme, BatchOperationType, ThemeTreeNode } from '../types';
 import { ThemeManager } from '@features/theme/services/ThemeManager';
 import { 

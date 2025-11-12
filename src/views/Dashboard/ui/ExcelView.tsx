@@ -2,7 +2,7 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
 import { App } from 'obsidian';
-import { Item, getAllFields, readField } from '@/lib/types/domain/schema';
+import { Item, getAllFields, readField } from '@core/types/domain/schema';
 import { makeObsUri } from '@/lib/utils/core/obsidian';
 
 // 接口定义保持不变

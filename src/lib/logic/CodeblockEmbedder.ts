@@ -1,13 +1,13 @@
 // src/features/logic/CodeblockEmbedder.ts
 import { render } from 'preact'; // [修改] 不再需要 h
 import { Notice, Plugin } from 'obsidian';
-import { CODEBLOCK_LANG } from '@/lib/types/domain/constants';
+import { CODEBLOCK_LANG } from '@core/types/domain/constants';
 import { DataStore } from '../services/core/dataStore';
 // [移除] 不再需要直接导入 LayoutRenderer
 // import { LayoutRenderer } from '../../views/Dashboard/ui/LayoutRenderer'; 
 import { AppStore } from '@core/stores/AppStore';
 import { RendererService } from '../services/core/RendererService';
-import type { Layout } from '@/lib/types/domain/schema';
+import type { Layout } from '@core/types/domain/schema';
 import type { ActionService } from '../services/core/ActionService';
 
 export class CodeblockEmbedder {

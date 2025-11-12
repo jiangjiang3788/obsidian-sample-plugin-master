@@ -6,7 +6,7 @@ import { PluginSettingTab, App } from 'obsidian';
 import { ThemeProvider, CssBaseline, Box, Tabs, Tab } from '@mui/material';
 import type ThinkPlugin from '@main';
 import { useLocalStorage } from '@/hooks/shared';
-import { LOCAL_STORAGE_KEYS } from '@/lib/types/domain/constants';
+import { LOCAL_STORAGE_KEYS } from '@core/types/domain/constants';
 import { theme as baseTheme } from '../../../ui/styles/mui-theme';
 
 import { ViewInstanceSettings } from './ViewInstanceSettings';

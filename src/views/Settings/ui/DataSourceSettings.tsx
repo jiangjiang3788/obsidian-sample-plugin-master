@@ -3,11 +3,11 @@
 import { h } from 'preact';
 import { useStore, AppStore } from '@core/stores/AppStore';
 import { Typography, Stack, Box } from '@mui/material';
-import { getAllFields } from '@/lib/types/domain/schema';
+import { getAllFields } from '@core/types/domain/schema';
 // [修改] 从注册表导入 dataStore
 import { dataStore } from '@store/storeRegistry../../store/storeRegistry';
 import { useMemo } from 'preact/hooks';
-import type { DataSource } from '@/lib/types/domain/schema';
+import type { DataSource } from '@core/types/domain/schema';
 import { RuleBuilder } from './components/RuleBuilder';
 import { SettingsTreeView, TreeItem } from './components/SettingsTreeView';
 import { App } from 'obsidian';

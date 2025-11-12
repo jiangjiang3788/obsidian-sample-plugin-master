@@ -4,8 +4,8 @@ import { h } from 'preact';
 import { useStore, AppStore } from '@core/stores/AppStore';
 // [修改] 导入 Autocomplete 和 TextField
 import { Box, Stack, Typography, FormControlLabel, Checkbox, Tooltip, Chip, Autocomplete, TextField } from '@mui/material';
-import { VIEW_OPTIONS, ViewName, getAllFields } from '@/lib/types/domain/schema';
-import type { ViewInstance } from '@/lib/types/domain/schema';
+import { VIEW_OPTIONS, ViewName, getAllFields } from '@core/types/domain/schema';
+import type { ViewInstance } from '@core/types/domain/schema';
 import { VIEW_EDITORS } from './components/view-editors/registry';
 import { dataStore } from '@store/storeRegistry';
 import { useMemo } from 'preact/hooks';

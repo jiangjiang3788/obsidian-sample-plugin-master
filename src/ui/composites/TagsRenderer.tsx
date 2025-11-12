@@ -2,9 +2,9 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
 import { useMemo } from 'preact/hooks';
-import type { ThemeDefinition } from '@/lib/types/domain/schema';
+import type { ThemeDefinition } from '@core/types/domain/schema';
 import { getSimplifiedThemeDisplay } from '../../lib/utils/core/themeUtils';
-import { getCategoryColor } from '@/lib/types/domain/definitions';
+import { getCategoryColor } from '@core/types/domain/definitions';
 
 interface TagsRendererProps {
     tags: string[];
