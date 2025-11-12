@@ -1,7 +1,7 @@
 // src/features/settings/ui/hooks/useSettingsManager.ts
 import { App } from 'obsidian';
 import { useCallback } from 'preact/hooks';
-import { AppStore } from '@store/AppStore';
+import { AppStore } from '@core/stores/AppStore';
 import { NamePromptModal } from '../../../../ui/composites/dialogs/NamePromptModal';
 import { DEFAULT_NAMES } from '@/lib/types/domain/constants';
 import type { GroupType } from '@/lib/types/domain/schema';

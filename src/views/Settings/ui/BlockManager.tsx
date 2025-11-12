@@ -1,7 +1,7 @@
 // src/features/settings/ui/BlockManager.tsx
 /** @jsxImportSource preact */
 import { h } from 'preact';
-import { useStore, AppStore } from '@store/AppStore';
+import { useStore, AppStore } from '@core/stores/AppStore';
 import { Accordion, AccordionSummary, AccordionDetails, Box, Stack, Typography, IconButton, Tooltip, Divider, TextField } from '@mui/material';
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 import DeleteForeverOutlinedIcon from '@mui/icons-material/DeleteForeverOutlined';

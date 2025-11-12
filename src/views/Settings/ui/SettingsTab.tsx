@@ -12,7 +12,7 @@ import { theme as baseTheme } from '../../../ui/styles/mui-theme';
 import { ViewInstanceSettings } from './ViewInstanceSettings';
 import { LayoutSettings } from './LayoutSettings';
 import { InputSettings } from './InputSettings';
-import { AppStore } from '@store/AppStore';
+import { AppStore } from '@core/stores/AppStore';
 import { GeneralSettings } from './GeneralSettings';
 
 function a11yProps(index: number) {

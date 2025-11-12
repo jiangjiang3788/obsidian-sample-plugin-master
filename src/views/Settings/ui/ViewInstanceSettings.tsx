@@ -1,7 +1,7 @@
 // src/features/settings/ui/ViewInstanceSettings.tsx
 /** @jsxImportSource preact */
 import { h } from 'preact';
-import { useStore, AppStore } from '@store/AppStore';
+import { useStore, AppStore } from '@core/stores/AppStore';
 // [修改] 导入 Autocomplete 和 TextField
 import { Box, Stack, Typography, FormControlLabel, Checkbox, Tooltip, Chip, Autocomplete, TextField } from '@mui/material';
 import { VIEW_OPTIONS, ViewName, getAllFields } from '@/lib/types/domain/schema';

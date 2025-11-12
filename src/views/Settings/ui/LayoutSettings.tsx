@@ -1,7 +1,7 @@
 // src/features/settings/ui/LayoutSettings.tsx
 /** @jsxImportSource preact */
 import { h } from 'preact';
-import { useStore, AppStore } from '@store/AppStore';
+import { useStore, AppStore } from '@core/stores/AppStore';
 // [MODIFIED] Import Autocomplete
 import { Box, Stack, Typography, TextField, Checkbox, FormControlLabel, Tooltip, Chip, Radio, RadioGroup as MuiRadioGroup, Autocomplete } from '@mui/material';
 import type { Layout } from '@/lib/types/domain/schema';

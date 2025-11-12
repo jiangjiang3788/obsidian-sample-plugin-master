@@ -16,7 +16,7 @@ import {
 import FilterListIcon from '@mui/icons-material/FilterList';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
-import { useStore } from '@store/AppStore';
+import { useStore } from '@core/stores/AppStore';
 import { buildThemeTree } from '@views/Settings/ui/ThemeMatrix/utils/themeTreeBuilder';
 import type { ThemeTreeNode } from '@views/Settings/ui/ThemeMatrix/types';
 

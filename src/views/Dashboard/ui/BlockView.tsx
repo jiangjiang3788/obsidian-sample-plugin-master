@@ -9,7 +9,7 @@ import { Item, readField, ThemeDefinition } from '@/lib/types/domain/schema';
 import { getCategoryColor } from '@/lib/types/domain/definitions';
 import { makeObsUri } from '@/lib/utils/core/obsidian';
 import { getFieldLabel } from '@/lib/types/domain/fields';
-import { useStore } from '@store/AppStore';
+import { useStore } from '@core/stores/AppStore';
 import { TagsRenderer } from '@ui/composites/TagsRenderer';
 import { TaskCheckbox } from '@ui/composites/TaskCheckbox';
 import { TaskSendToTimerButton } from '@ui/composites/TaskSendToTimerButton';

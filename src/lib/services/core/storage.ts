@@ -2,7 +2,7 @@
 import { singleton, inject } from 'tsyringe';
 import type { InjectionToken } from 'tsyringe';
 import { App, TFile, TFolder } from 'obsidian';
-import { AppToken } from './types';
+import { AppToken } from '@core/services/types';
 
 /**
  * 统一的插件存储接口

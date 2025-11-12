@@ -7,9 +7,9 @@ import { Layout, ViewInstance, Item } from '@/lib/types/domain/schema'; // [修�
 import { ModulePanel } from './ModulePanel';
 import { ViewComponents } from './';
 import { getDateRange, dayjs, formatDateForView } from '@/lib/utils/core/date';
-import { useStore } from '@store/AppStore';
-import type { ActionService } from '@lib/services/core/ActionService';
-import type { TaskService } from '@lib/services/core/taskService';
+import { useStore } from '@core/stores/AppStore';
+import type { ActionService } from '@core/services/ActionService';
+import type { TaskService } from '@core/services/TaskService';
 import { useViewData } from '@/views/Dashboard/hooks/useViewData';
 import { QuickInputModal } from '@views/QuickInput/ui/QuickInputModal';
 import { ModuleSettingsModal } from './ModuleSettingsModal'; // [新增] 导入设置模态框

@@ -7,7 +7,7 @@ import { VIEW_OPTIONS, ViewName, getAllFields } from '@/lib/types/domain/schema'
 import type { ViewInstance } from '@/lib/types/domain/schema';
 import { VIEW_EDITORS } from '@views/Settings/ui/components/view-editors/registry';
 import { dataStore } from '@store/storeRegistry';
-import { useStore, AppStore } from '@store/AppStore';
+import { useStore, AppStore } from '@core/stores/AppStore';
 import { SimpleSelect } from '@ui/composites/SimpleSelect';
 import { RuleBuilder } from '@views/Settings/ui/components/RuleBuilder';
 import { Notice } from 'obsidian';
