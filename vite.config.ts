@@ -31,6 +31,8 @@ export default defineConfig({
                 '@services': path.resolve(process.cwd(), 'src/lib/services'),
                 '@constants': path.resolve(process.cwd(), 'src/constants'),
                 '@shared': path.resolve(process.cwd(), 'src/shared'),
+                '@core': path.resolve(process.cwd(), 'src/core'),
+                '@features': path.resolve(process.cwd(), 'src/features'),
                 // React别名到Preact
                 'react': 'preact/compat',
                 'react-dom': 'preact/compat',

@@ -6,7 +6,7 @@ import { Stack, Typography, FormControlLabel, Radio, RadioGroup, Box, Button, Ch
 import type { ViewEditorProps } from './registry';
 import { SimpleSelect } from '@/ui/composites/SimpleSelect';
 import { ListEditor } from '@/ui/composites/form/ListEditor';
-import { useStore } from '@store/AppStore';
+import { useStore } from '@core/stores/AppStore';
 import { useMemo } from 'preact/hooks';
 // [修改] 从注册表导入 dataStore
 import { dataStore } from '@store/storeRegistry';

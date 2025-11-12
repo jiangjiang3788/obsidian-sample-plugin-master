@@ -7,10 +7,10 @@
  */
 
 export * from './ActionService';
-export * from './dataStore';
-export * from './inputService';
+export * from '@core/services/DataStore';
+export * from '@core/services/InputService';
 export * from './RendererService';
-export * from './taskService';
+export * from '@core/services/TaskService';
 export * from './TimerService';
 export * from './TimerStateService';
-export * from './types';
+export * from '@core/services/types';

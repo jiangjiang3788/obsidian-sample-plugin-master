@@ -5,7 +5,7 @@ import { useState, useEffect, useMemo } from 'preact/hooks';
 import { Dialog, DialogTitle, DialogContent, DialogActions, Button, Stack, TextField, Typography, Box, RadioGroup, FormControlLabel, Radio, FormControl, FormLabel, Divider } from '@mui/material';
 import { FieldsEditor } from './FieldsEditor';
 import type { BlockTemplate, ThemeDefinition, ThemeOverride, TemplateField } from '@/lib/types/domain/schema';
-import { AppStore } from '@store/AppStore';
+import { AppStore } from '@core/stores/AppStore';
 import { Notice } from 'obsidian';
 import { TemplateVariableCopier } from './TemplateVariableCopier';
 

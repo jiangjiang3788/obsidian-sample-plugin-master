@@ -2,7 +2,7 @@
 import { singleton, inject } from 'tsyringe';
 import { App, TFile, TAbstractFile } from 'obsidian';
 // [新增] 导入 App 的注入令牌
-import { AppToken } from '../lib/services/core/types';
+import { AppToken } from '@core/services/types';
 
 /**
  * 对 Obsidian API 的最薄包装。

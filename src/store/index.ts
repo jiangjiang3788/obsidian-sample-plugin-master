@@ -20,4 +20,4 @@ export {
     dataStore,
     timerService,
     inputService
-} from './storeRegistry';
+} from '@store/storeRegistry';

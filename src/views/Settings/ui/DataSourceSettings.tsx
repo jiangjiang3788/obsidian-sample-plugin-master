@@ -1,7 +1,7 @@
 // src/features/settings/ui/DataSourceSettings.tsx
 /** @jsxImportSource preact */
 import { h } from 'preact';
-import { useStore, AppStore } from '@store/AppStore';
+import { useStore, AppStore } from '@core/stores/AppStore';
 import { Typography, Stack, Box } from '@mui/material';
 import { getAllFields } from '@/lib/types/domain/schema';
 // [修改] 从注册表导入 dataStore

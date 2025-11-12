@@ -2,8 +2,8 @@
  * 批量操作服务
  * 处理主题矩阵的批量操作逻辑
  */
-import type { AppStore } from '@store/AppStore';
-import type { ThemeManager } from '../../../../../lib/services/core/ThemeManager';
+import type { AppStore } from '@core/stores/AppStore';
+import type { ThemeManager } from '@features/theme/services/ThemeManager';
 import type { 
   ThemeMatrixSelection, 
   BatchOperationType, 
@@ -175,7 +175,7 @@ export class BatchOperationService {
         overrides.push({
           themeId,
           blockId,
-          status: 'enabled',
+          disabled: false,
           ...template
         });
       }
@@ -198,7 +198,7 @@ export class BatchOperationService {
         overrides.push({
           themeId,
           blockId,
-          status: 'disabled'
+          disabled: true
         });
       }
     }

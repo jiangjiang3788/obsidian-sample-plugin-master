@@ -5,7 +5,7 @@ import { CODEBLOCK_LANG } from '@/lib/types/domain/constants';
 import { DataStore } from '../services/core/dataStore';
 // [移除] 不再需要直接导入 LayoutRenderer
 // import { LayoutRenderer } from '../../views/Dashboard/ui/LayoutRenderer'; 
-import { AppStore } from '@store/AppStore';
+import { AppStore } from '@core/stores/AppStore';
 import { RendererService } from '../services/core/RendererService';
 import type { Layout } from '@/lib/types/domain/schema';
 import type { ActionService } from '../services/core/ActionService';

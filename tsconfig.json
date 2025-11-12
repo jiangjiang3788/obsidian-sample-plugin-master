@@ -31,7 +31,8 @@
         "@services/*": ["src/lib/services/*"],
         "@constants/*": ["src/constants/*"],
         "@shared/*": ["src/shared/*"],
-        "@core/*": ["src/core/*"]
+        "@core/*": ["src/core/*"],
+        "@features/*": ["src/features/*"]
       },
       "types": ["vite/client", "preact"]
     },
