@@ -133,3 +133,42 @@ export type SourceType = 'predefined' | 'discovered';
  * - `layout`: 布局
  */
 export type GroupType = 'viewInstance' | 'layout';
+
+// ---------------------------------------------------------------------------------
+// 通用接口 (Generic Interfaces)
+// ---------------------------------------------------------------------------------
+
+/** 具有唯一 ID 的实体 */
+export interface Identifiable {
+    id: ID;
+}
+
+/** 具有创建和修改时间戳的实体 */
+export interface Timestamped {
+    created: Timestamp;
+    modified: Timestamp;
+}
+
+/** 可分层级的实体 */
+export interface Hierarchical {
+    parentId: ID | null;
+}
+
+// ---------------------------------------------------------------------------------
+// 类型守卫 (Type Guards)
+// ---------------------------------------------------------------------------------
+
+/** 检查对象是否实现了 Identifiable 接口 */
+export function isIdentifiable(obj: any): obj is Identifiable {
+    return obj && typeof obj.id === 'string';
+}
+
+/** 检查对象是否实现了 Timestamped 接口 */
+export function isTimestamped(obj: any): obj is Timestamped {
+    return obj && typeof obj.created === 'number' && typeof obj.modified === 'number';
+}
+
+/** 检查对象是否实现了 Hierarchical 接口 */
+export function isHierarchical(obj: any): obj is Hierarchical {
+    return obj && ('parentId' in obj);
+}

@@ -1,6 +1,6 @@
 // src/core/domain/theme.ts
-import { STATUS, SOURCE } from '@constants';
-import { pathUtils } from '@/utils/path';
+import { STATUS, SOURCE } from '@/constants';
+import { pathUtils } from '@/lib/utils/core/pathUtils';
 import type { ActiveStatus, SourceType } from '@/types/common';
 
 /**

@@ -1,7 +1,7 @@
 // src/store/stores/BlockStore.ts
 import type { ThinkSettings, BlockTemplate } from '@/lib/types/domain/schema';
 import { generateId, moveItemInArray } from '@/lib/utils/core/array';
-import { arrayUtils } from '@/utils/array';
+import { arrayUtils } from '@/lib/utils/core/array';
 
 /**
  * BlockStore - 管理块模板相关状态
