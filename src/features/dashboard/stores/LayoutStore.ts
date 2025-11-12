@@ -1,7 +1,7 @@
 // src/store/stores/LayoutStore.ts
 import type { ThinkSettings, Layout } from '@core/types/domain/schema';
-import { generateId, moveItemInArray, duplicateItemInArray } from '@/lib/utils/core/array';
-import { arrayUtils } from '@/lib/utils/core/array';
+import { generateId, moveItemInArray, duplicateItemInArray } from '@core/utils/array';
+import { arrayUtils } from '@core/utils/array';
 
 /**
  * LayoutStore - 管理布局相关状态

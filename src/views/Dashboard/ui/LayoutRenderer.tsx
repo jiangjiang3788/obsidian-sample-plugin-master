@@ -6,7 +6,7 @@ import { DataStore } from '@lib/services';
 import { Layout, ViewInstance, Item } from '@core/types/domain/schema'; // [修改] 导入 Item 类型
 import { ModulePanel } from './ModulePanel';
 import { ViewComponents } from './';
-import { getDateRange, dayjs, formatDateForView } from '@/lib/utils/core/date';
+import { getDateRange, dayjs, formatDateForView } from '@core/utils/date';
 import { useStore } from '@core/stores/AppStore';
 import type { ActionService } from '@core/services/ActionService';
 import type { TaskService } from '@core/services/TaskService';
@@ -15,7 +15,7 @@ import { QuickInputModal } from '@views/QuickInput/ui/QuickInputModal';
 import { ModuleSettingsModal } from './ModuleSettingsModal'; // [新增] 导入设置模态框
 import { App, Notice } from 'obsidian'; // [修改] 导入 Notice
 import { appStore } from '@store/storeRegistry';
-import { exportItemsToMarkdown } from '@/lib/utils/core/exportUtils'; // [新增] 导入导出函数
+import { exportItemsToMarkdown } from '@core/utils/exportUtils'; // [新增] 导入导出函数
 import { ThemeFilter } from './ThemeFilter'; // [新增] 导入主题筛选组件
 
 // [修改] ViewContent 组件增加 onDataLoaded 和 selectedThemes props

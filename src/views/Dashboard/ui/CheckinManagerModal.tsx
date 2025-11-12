@@ -4,9 +4,9 @@ import { useState, useMemo } from 'preact/hooks';
 import { App, Modal, Notice, setIcon } from 'obsidian';
 import { render, unmountComponentAtNode } from 'preact/compat';
 import { Item } from '@core/types/domain/schema';
-import { dayjs } from '@/lib/utils/core/date';
-import { getEffectiveDisplayCount, getEffectiveLevelCount } from '@/lib/utils/core/levelingSystem';
-import { makeObsUri } from '@/lib/utils/core/obsidian';
+import { dayjs } from '@core/utils/date';
+import { getEffectiveDisplayCount, getEffectiveLevelCount } from '@core/utils/levelingSystem';
+import { makeObsUri } from '@core/utils/obsidian';
 
 // Types
 interface CheckinManagerData {

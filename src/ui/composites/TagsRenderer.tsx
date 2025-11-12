@@ -3,7 +3,7 @@
 import { h } from 'preact';
 import { useMemo } from 'preact/hooks';
 import type { ThemeDefinition } from '@core/types/domain/schema';
-import { getSimplifiedThemeDisplay } from '../../lib/utils/core/themeUtils';
+import { getSimplifiedThemeDisplay } from '@core/utils/themeUtils';
 import { getCategoryColor } from '@core/types/domain/definitions';
 
 interface TagsRendererProps {

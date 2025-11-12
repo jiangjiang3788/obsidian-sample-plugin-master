@@ -3,9 +3,9 @@
 import { h } from 'preact';
 import { useMemo, useCallback, useState, useEffect, useRef } from 'preact/hooks';
 import { Item } from '@core/types/domain/schema';
-import { makeObsUri } from '@/lib/utils/core/obsidian';
+import { makeObsUri } from '@core/utils/obsidian';
 import { processItemsToTimelineTasks, splitTaskIntoDayBlocks, TaskBlock } from '@views/Dashboard/views/timeline/timeline-parser';
-import { dayjs, minutesToTime } from '@/lib/utils/core/date';
+import { dayjs, minutesToTime } from '@core/utils/date';
 import weekOfYear from 'dayjs/esm/plugin/weekOfYear';
 import isoWeek from 'dayjs/esm/plugin/isoWeek';
 import isBetween from 'dayjs/esm/plugin/isBetween';
@@ -16,7 +16,7 @@ import { EditTaskModal } from './EditTaskModal';
 import { useStore } from '@core/stores/AppStore';
 import { QuickInputModal } from '@views/QuickInput/ui/QuickInputModal';
 import { dataStore } from '@store/storeRegistry';
-import { filterByRules } from '@/lib/utils/core/itemFilter';
+import { filterByRules } from '@core/utils/itemFilter';
 
 dayjs.extend(weekOfYear);
 dayjs.extend(isoWeek);

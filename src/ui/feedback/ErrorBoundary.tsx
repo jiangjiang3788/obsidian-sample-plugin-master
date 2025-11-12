@@ -4,7 +4,7 @@
  */
 
 import { h, Component, ComponentChildren } from 'preact';
-import { errorHandler } from '../../lib/utils/shared/errorHandler';
+import { errorHandler } from '@shared/utils/errorHandler';
 
 export interface ErrorBoundaryProps {
     children: ComponentChildren;

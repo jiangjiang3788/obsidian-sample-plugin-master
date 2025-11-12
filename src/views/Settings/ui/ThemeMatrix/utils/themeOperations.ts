@@ -2,7 +2,7 @@
  * 主题操作辅助函数
  */
 import { BATCH_OPERATIONS } from '@/constants';
-import { pathUtils } from '@/lib/utils/core/pathUtils';
+import { pathUtils } from '@core/utils/pathUtils';
 import type { ActiveStatus, BatchOperationType } from '@/shared/types/common';
 import type { ExtendedTheme, ThemeTreeNode, ThemeOverrideKey } from '../types';
 import type { ThemeOverride } from '@domain/schema';

@@ -15,7 +15,7 @@ import { RuleBuilder } from './components/RuleBuilder'; // [新增] 导入 RuleB
 import { App } from 'obsidian';
 import { useSettingsManager } from './hooks/useSettingsManager';
 import { DndContext, closestCenter } from '@dnd-kit/core';
-import { arrayMove } from '@/lib/utils/core/array';
+import { arrayMove } from '@core/utils/array';
 
 const LABEL_WIDTH = '80px';
 

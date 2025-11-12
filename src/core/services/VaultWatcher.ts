@@ -1,6 +1,6 @@
 // src/core/VaultWatcher.ts
 import { Plugin, TFile, TAbstractFile } from 'obsidian';
-import { DataStore } from '../services/core/dataStore';
+import { DataStore } from './DataStore';
 
 /** 监听 Vault 变化并与 DataStore 联动（节流由 DataStore 内部处理） */
 export class VaultWatcher {

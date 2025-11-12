@@ -7,7 +7,7 @@ import { DataStore } from '@core/services/DataStore';
 import { InputService } from '@core/services/InputService';
 import type { QuickInputSaveData } from '@/views/QuickInput/ui/QuickInputModal';
 import { AppToken } from '@core/services/types';
-import { nowHHMM, timeToMinutes, minutesToTime } from '@/lib/utils/core/date';
+import { nowHHMM, timeToMinutes, minutesToTime } from '@core/utils/date';
 
 @singleton()
 export class TimerService {

@@ -5,7 +5,7 @@ import { h, render } from 'preact';
 import { useState, useEffect } from 'preact/hooks';
 import type { TaskBlock } from '@/views/Dashboard/views/timeline/timeline-parser';
 import { TaskService } from '@core/services/TaskService';
-import { timeToMinutes, minutesToTime } from '@/lib/utils/core/date'; // [1. 导入时间转换工具]
+import { timeToMinutes, minutesToTime } from '@core/utils/date'; // [1. 导入时间转换工具]
 
 // [移除] 不再需要旧的、简单的转换函数
 

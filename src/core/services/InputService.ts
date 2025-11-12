@@ -2,7 +2,7 @@
 import { singleton, inject } from 'tsyringe';
 import { App, TFile, TFolder } from 'obsidian';
 import type { BlockTemplate, ThemeDefinition } from '@core/types/domain/schema';
-import { renderTemplate } from '@/lib/utils/core/templateUtils';
+import { renderTemplate } from '@core/utils/templateUtils';
 import { AppToken } from '@core/services/types';
 
 @singleton()

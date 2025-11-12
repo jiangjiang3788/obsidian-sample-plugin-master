@@ -10,8 +10,8 @@ import { useStore } from '@core/stores/AppStore';
 import { useMemo } from 'preact/hooks';
 // [修改] 从注册表导入 dataStore
 import { dataStore } from '@store/storeRegistry';
-import { filterByRules } from '@lib/utils/core/itemFilter';
-import { LEVEL_SYSTEM_PRESETS } from '@lib/utils/core/levelingSystem';
+import { filterByRules } from '@core/utils/itemFilter';
+import { LEVEL_SYSTEM_PRESETS } from '@core/utils/levelingSystem';
 import { Notice } from 'obsidian';
 
 // 视图的默认配置
