@@ -127,12 +127,6 @@ export type BatchOperationType =
  */
 export type SourceType = 'predefined' | 'discovered';
 
-/**
- * 可分组实体的类型。
- * - `viewInstance`: 视图实例
- * - `layout`: 布局
- */
-export type GroupType = 'viewInstance' | 'layout';
 
 // ---------------------------------------------------------------------------------
 // 通用接口 (Generic Interfaces)
