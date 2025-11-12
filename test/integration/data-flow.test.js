@@ -1,5 +1,5 @@
 const { describe, it, expect, beforeEach, afterEach } = require('@jest/globals');
-const { DEFAULT_SETTINGS } = require('../../src/core/domain/schema');
+const { DEFAULT_SETTINGS } = require('@core/domain/schema');
 
 // 创建简化的集成测试，专注于验证核心功能
 describe('数据流集成测试', () => {
@@ -37,7 +37,7 @@ describe('数据流集成测试', () => {
   describe('基本集成测试', () => {
     it('应该能够加载和初始化 AppStore', async () => {
       // 动态导入 AppStore
-      const { AppStore } = require('../../src/state/AppStore');
+      const { AppStore } = require('@store/AppStore');
       
       const appStore = new AppStore(DEFAULT_SETTINGS);
       appStore.setPlugin(mockPlugin);
@@ -53,7 +53,7 @@ describe('数据流集成测试', () => {
     });
 
     it('应该能够更新设置', async () => {
-      const { AppStore } = require('../../src/state/AppStore');
+      const { AppStore } = require('@store/AppStore');
       
       const appStore = new AppStore(DEFAULT_SETTINGS);
       appStore.setPlugin(mockPlugin);
@@ -69,7 +69,7 @@ describe('数据流集成测试', () => {
     });
 
     it('应该能够管理计时器', async () => {
-      const { AppStore } = require('../../src/state/AppStore');
+      const { AppStore } = require('@store/AppStore');
       
       const appStore = new AppStore(DEFAULT_SETTINGS);
       appStore.setPlugin(mockPlugin);
@@ -110,7 +110,7 @@ describe('数据流集成测试', () => {
     });
 
     it('应该能够管理视图实例', async () => {
-      const { AppStore } = require('../../src/state/AppStore');
+      const { AppStore } = require('@store/AppStore');
       
       const appStore = new AppStore(DEFAULT_SETTINGS);
       appStore.setPlugin(mockPlugin);
@@ -138,7 +138,7 @@ describe('数据流集成测试', () => {
     });
 
     it('应该能够管理数据源', async () => {
-      const { AppStore } = require('../../src/state/AppStore');
+      const { AppStore } = require('@store/AppStore');
       
       const appStore = new AppStore(DEFAULT_SETTINGS);
       appStore.setPlugin(mockPlugin);
@@ -166,7 +166,7 @@ describe('数据流集成测试', () => {
     });
 
     it('应该能够处理订阅通知', async () => {
-      const { AppStore } = require('../../src/state/AppStore');
+      const { AppStore } = require('@store/AppStore');
       
       const appStore = new AppStore(DEFAULT_SETTINGS);
       appStore.setPlugin(mockPlugin);
@@ -190,7 +190,7 @@ describe('数据流集成测试', () => {
     });
 
     it('应该能够管理布局', async () => {
-      const { AppStore } = require('../../src/state/AppStore');
+      const { AppStore } = require('@store/AppStore');
       
       const appStore = new AppStore(DEFAULT_SETTINGS);
       appStore.setPlugin(mockPlugin);
@@ -220,7 +220,7 @@ describe('数据流集成测试', () => {
     });
 
     it('应该能够管理分组', async () => {
-      const { AppStore } = require('../../src/state/AppStore');
+      const { AppStore } = require('@store/AppStore');
       
       const appStore = new AppStore(DEFAULT_SETTINGS);
       appStore.setPlugin(mockPlugin);
@@ -249,7 +249,7 @@ describe('数据流集成测试', () => {
     });
 
     it('应该能够切换计时器悬浮窗可见性', () => {
-      const { AppStore } = require('../../src/state/AppStore');
+      const { AppStore } = require('@store/AppStore');
       
       const initialSettings = { ...DEFAULT_SETTINGS, floatingTimerEnabled: false };
       const appStore = new AppStore(initialSettings);
@@ -275,7 +275,7 @@ describe('数据流集成测试', () => {
 
   describe('错误处理集成测试', () => {
     it('应该能够处理保存设置失败', async () => {
-      const { AppStore } = require('../../src/state/AppStore');
+      const { AppStore } = require('@store/AppStore');
       
       // Mock 保存失败
       mockPlugin.saveData.mockRejectedValue(new Error('保存失败'));
@@ -293,7 +293,7 @@ describe('数据流集成测试', () => {
     });
 
     it('应该能够处理插件未设置的情况', async () => {
-      const { AppStore } = require('../../src/state/AppStore');
+      const { AppStore } = require('@store/AppStore');
       
       const appStore = new AppStore(DEFAULT_SETTINGS);
       // 不设置插件
@@ -316,7 +316,7 @@ describe('数据流集成测试', () => {
 
   describe('性能集成测试', () => {
     it('应该在合理时间内处理大量数据', async () => {
-      const { AppStore } = require('../../src/state/AppStore');
+      const { AppStore } = require('@store/AppStore');
       
       const appStore = new AppStore(DEFAULT_SETTINGS);
       appStore.setPlugin(mockPlugin);
@@ -339,7 +339,7 @@ describe('数据流集成测试', () => {
     });
 
     it('应该能够处理频繁的状态更新', async () => {
-      const { AppStore } = require('../../src/state/AppStore');
+      const { AppStore } = require('@store/AppStore');
       
       const appStore = new AppStore(DEFAULT_SETTINGS);
       appStore.setPlugin(mockPlugin);

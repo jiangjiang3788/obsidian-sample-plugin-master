@@ -1,6 +1,6 @@
 const { describe, it, expect, beforeEach, afterEach } = require('@jest/globals');
-const { AppStore } = require('../../../src/state/AppStore.ts');
-const { DEFAULT_SETTINGS } = require('../../../src/core/domain/schema.ts');
+const { AppStore } = require('@store/AppStore.ts');
+const { DEFAULT_SETTINGS } = require('@core/domain/schema.ts');
 
 describe('AppStore', () => {
   let appStore;

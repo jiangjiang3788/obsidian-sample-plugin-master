@@ -1,6 +1,6 @@
 const { describe, it, expect, beforeEach, afterEach } = require('@jest/globals');
 const { performance } = require('perf_hooks');
-const { DEFAULT_SETTINGS } = require('../../src/core/domain/schema');
+const { DEFAULT_SETTINGS } = require('@core/domain/schema');
 
 describe('启动性能测试', () => {
   let mockPlugin, mockApp;
@@ -36,7 +36,7 @@ describe('启动性能测试', () => {
 
   describe('AppStore 启动性能', () => {
     it('应该在合理时间内初始化 AppStore', () => {
-      const { AppStore } = require('../../src/state/AppStore');
+      const { AppStore } = require('@store/AppStore');
       
       const startTime = performance.now();
       
@@ -51,7 +51,7 @@ describe('启动性能测试', () => {
     });
 
     it('应该在合理时间内加载大量设置', async () => {
-      const { AppStore } = require('../../src/state/AppStore');
+      const { AppStore } = require('@store/AppStore');
       
       // 创建包含大量数据的设置
       const largeSettings = {
@@ -88,7 +88,7 @@ describe('启动性能测试', () => {
     });
 
     it('应该处理大量计时器数据', async () => {
-      const { AppStore } = require('../../src/state/AppStore');
+      const { AppStore } = require('@store/AppStore');
       
       const appStore = new AppStore(DEFAULT_SETTINGS);
       appStore.setPlugin(mockPlugin);
@@ -115,7 +115,7 @@ describe('启动性能测试', () => {
 
   describe('状态更新性能', () => {
     it('应该快速处理批量更新', async () => {
-      const { AppStore } = require('../../src/state/AppStore');
+      const { AppStore } = require('@store/AppStore');
       
       const appStore = new AppStore(DEFAULT_SETTINGS);
       appStore.setPlugin(mockPlugin);
@@ -137,7 +137,7 @@ describe('启动性能测试', () => {
     });
 
     it('应该高效处理监听器通知', async () => {
-      const { AppStore } = require('../../src/state/AppStore');
+      const { AppStore } = require('@store/AppStore');
       
       const appStore = new AppStore(DEFAULT_SETTINGS);
       appStore.setPlugin(mockPlugin);
@@ -166,7 +166,7 @@ describe('启动性能测试', () => {
 
   describe('内存使用性能', () => {
     it('应该合理使用内存', async () => {
-      const { AppStore } = require('../../src/state/AppStore');
+      const { AppStore } = require('@store/AppStore');
       
       const initialMemory = process.memoryUsage().heapUsed;
       
@@ -194,7 +194,7 @@ describe('启动性能测试', () => {
     });
 
     it('应该正确释放内存', () => {
-      const { AppStore } = require('../../src/state/AppStore');
+      const { AppStore } = require('@store/AppStore');
       
       let appStore = new AppStore(DEFAULT_SETTINGS);
       appStore.setPlugin(mockPlugin);
@@ -223,7 +223,7 @@ describe('启动性能测试', () => {
 
   describe('并发性能', () => {
     it('应该能处理并发操作', async () => {
-      const { AppStore } = require('../../src/state/AppStore');
+      const { AppStore } = require('@store/AppStore');
       
       const appStore = new AppStore(DEFAULT_SETTINGS);
       appStore.setPlugin(mockPlugin);
@@ -254,7 +254,7 @@ describe('启动性能测试', () => {
     });
 
     it('应该处理大量并发订阅', () => {
-      const { AppStore } = require('../../src/state/AppStore');
+      const { AppStore } = require('@store/AppStore');
       
       const appStore = new AppStore(DEFAULT_SETTINGS);
       appStore.setPlugin(mockPlugin);
@@ -283,7 +283,7 @@ describe('启动性能测试', () => {
 
   describe('性能基准测试', () => {
     it('应该建立性能基准', async () => {
-      const { AppStore } = require('../../src/state/AppStore');
+      const { AppStore } = require('@store/AppStore');
       
       const appStore = new AppStore(DEFAULT_SETTINGS);
       appStore.setPlugin(mockPlugin);
@@ -325,7 +325,7 @@ describe('启动性能测试', () => {
     });
 
     it('应该检测性能改进', async () => {
-      const { AppStore } = require('../../src/state/AppStore');
+      const { AppStore } = require('@store/AppStore');
       
       // 第一次运行
       const appStore1 = new AppStore(DEFAULT_SETTINGS);
