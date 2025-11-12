@@ -6,12 +6,13 @@ import { useStore } from '@store/AppStore';
 import { useLocalStorage } from '@/hooks/shared';
 import { Box, Typography, Button, Paper, Stack, Tooltip } from '@mui/material';
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
+import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
+import DragIndicatorIcon from '@mui/icons-material/DragIndicator';
 import type { ActionService } from '@lib/services/core/ActionService';
 import type { TimerService } from '@lib/services/core/TimerService';
 import type { DataStore } from '@lib/services/core/dataStore';
 import { TimerRow } from './TimerRow';
 import { App } from 'obsidian';
-import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
 import { QuickInputModal, QuickInputSaveData } from '@/views/QuickInput/ui/QuickInputModal';
 
 interface TimerViewProps {
@@ -89,6 +90,7 @@ export function TimerView({ app, actionService, timerService, dataStore }: Timer
     };
 
     return (
+        // @ts-ignore
         <Paper 
             elevation={4}
             sx={{
@@ -103,13 +105,17 @@ export function TimerView({ app, actionService, timerService, dataStore }: Timer
             }}
         >
             <Stack>
+                {/* @ts-ignore */}
                 <Box sx={{ display: 'flex', alignItems: 'center', p: '4px 8px', borderBottom: '1px solid', borderColor: 'divider' }}>
                     {/* [核心修改] onMouseDown 和 onTouchStart 都绑定到 onDragStart */}
+                    {/* @ts-ignore */}
                     <Box onMouseDown={onDragStart as any} onTouchStart={onDragStart as any} sx={{ cursor: 'move', display: 'flex', alignItems: 'center' }}>
                         <DragIndicatorIcon sx={{ color: 'text.disabled', fontSize: '1.2rem' }} />
                     </Box>
                     <Typography sx={{ flexGrow: 1, fontWeight: 'bold', ml: 1 }}>任务计时器</Typography>
+                    {/* @ts-ignore */}
                     <Tooltip title="开始新任务">
+                        {/* @ts-ignore */}
                         <Button
                             size="small"
                             startIcon={<AddCircleOutlineIcon />}
@@ -120,6 +126,7 @@ export function TimerView({ app, actionService, timerService, dataStore }: Timer
                     </Tooltip>
                 </Box>
                 
+                {/* @ts-ignore */}
                 <Stack spacing={1} sx={{ p: '8px', maxHeight: '400px', overflowY: 'auto' }}>
                     {timers.length > 0 ? (
                         timers.map(timer => (

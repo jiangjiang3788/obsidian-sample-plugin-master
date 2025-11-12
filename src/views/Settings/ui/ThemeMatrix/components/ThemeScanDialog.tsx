@@ -27,16 +27,14 @@ import {
     Card,
     CardContent
 } from '@mui/material';
-import {
-    ExpandMore as ExpandMoreIcon,
-    CheckCircle as CheckCircleIcon,
-    Error as ErrorIcon,
-    Warning as WarningIcon,
-    Info as InfoIcon,
-    Refresh as RefreshIcon,
-    Download as DownloadIcon,
-    Close as CloseIcon
-} from '@mui/icons-material';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import ErrorIcon from '@mui/icons-material/Error';
+import WarningIcon from '@mui/icons-material/Warning';
+import InfoIcon from '@mui/icons-material/Info';
+import RefreshIcon from '@mui/icons-material/Refresh';
+import DownloadIcon from '@mui/icons-material/Download';
+import CloseIcon from '@mui/icons-material/Close';
 import type { 
     ScanResult, 
     ScanConfig, 

@@ -2,7 +2,7 @@
 import { h } from 'preact';
 import { useState } from 'preact/hooks';
 import { Button, Tooltip } from '@mui/material';
-import { Scanner as ScannerIcon } from '@mui/icons-material';
+import ScannerIcon from '@mui/icons-material/Scanner';
 import { ThemeScanDialog } from './ThemeScanDialog';
 import type { 
     ScanResult, 
@@ -48,9 +48,7 @@ export function ThemeImportButton({
 
     return (
         <>
-            {/* @ts-ignore - MUI与Preact类型兼容性问题 */}
             <Tooltip title={tooltip}>
-                {/* @ts-ignore - MUI与Preact类型兼容性问题 */}
                 <Button
                     onClick={handleClick}
                     disabled={disabled}
