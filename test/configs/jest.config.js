@@ -37,20 +37,33 @@ module.exports = {
   moduleNameMapper: {
     // Mock Obsidian API
     '^obsidian$': '<rootDir>/../utils/mocks/obsidianMock.js',
+    // Alias React to Preact for testing
+    '^react/jsx-runtime$': 'preact/jsx-runtime',
+    '^react$': 'preact/compat',
+    '^react-dom/test-utils$': 'preact/test-utils',
+    '^react-dom$': 'preact/compat',
     // 映射所有 preact 模块到 CommonJS 版本
     '^preact/hooks$': '<rootDir>/../../node_modules/preact/hooks/dist/hooks.js',
     '^preact/jsx-runtime$': '<rootDir>/../../node_modules/preact/jsx-runtime/dist/jsxRuntime.js',
     '^preact/compat$': '<rootDir>/../../node_modules/preact/compat/dist/compat.js',
     '^preact$': '<rootDir>/../../node_modules/preact/dist/preact.js',
-    // 为 TypeScript 路径别名添加映射
-    '^@core/(.*)$': '<rootDir>/../../src/core/$1',
+    // 手动映射路径别名
+    '^@/(.*)$': '<rootDir>/../../src/$1',
+    '^@lib/(.*)$': '<rootDir>/../../src/lib/$1',
+    '^@store/(.*)$': '<rootDir>/../../src/store/$1',
     '^@ui/(.*)$': '<rootDir>/../../src/ui/$1',
-    '^@features/(.*)$': '<rootDir>/../../src/features/$1',
-    '^@state/(.*)$': '<rootDir>/../../src/state/$1',
-    '^@services/(.*)$': '<rootDir>/../../src/services/$1',
-    '^@utils/(.*)$': '<rootDir>/../../src/utils/$1',
-    '^@shared/(.*)$': '<rootDir>/../../src/shared/$1',
+    '^@views/(.*)$': '<rootDir>/../../src/views/$1',
+    '^@hooks/(.*)$': '<rootDir>/../../src/hooks/$1',
+    '^@config/(.*)$': '<rootDir>/../../src/config/$1',
     '^@platform/(.*)$': '<rootDir>/../../src/platform/$1',
+    '^@main$': '<rootDir>/../../src/main.ts',
+    '^@types/(.*)$': '<rootDir>/../../src/types/$1',
+    '^@domain/(.*)$': '<rootDir>/../../src/lib/types/domain/$1',
+    '^@utils/(.*)$': '<rootDir>/../../src/utils/$1',
+    '^@services/(.*)$': '<rootDir>/../../src/lib/services/$1',
+    '^@constants/(.*)$': '<rootDir>/../../src/constants/$1',
+    '^@shared/(.*)$': '<rootDir>/../../src/shared/$1',
+    '^@core/(.*)$': '<rootDir>/../../src/core/$1',
     // 处理样式文件
     '\\.(css|less|scss|sass)$': '<rootDir>/../utils/mocks/styleMock.js',
     // 处理静态资源

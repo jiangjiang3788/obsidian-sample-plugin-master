@@ -30,7 +30,8 @@
         "@utils/*": ["src/utils/*"],
         "@services/*": ["src/lib/services/*"],
         "@constants/*": ["src/constants/*"],
-        "@shared/*": ["src/shared/*"]
+        "@shared/*": ["src/shared/*"],
+        "@core/*": ["src/core/*"]
       },
       "types": ["vite/client", "preact"]
     },
