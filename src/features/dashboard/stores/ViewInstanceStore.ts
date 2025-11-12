@@ -1,7 +1,7 @@
 // src/store/stores/ViewInstanceStore.ts
 import type { ThinkSettings, ViewInstance } from '@core/types/domain/schema';
-import { generateId, moveItemInArray, duplicateItemInArray } from '@/lib/utils/core/array';
-import { arrayUtils } from '@/lib/utils/core/array';
+import { generateId, moveItemInArray, duplicateItemInArray } from '@core/utils/array';
+import { arrayUtils } from '@core/utils/array';
 import { VIEW_DEFAULT_CONFIGS } from '@/views/Settings/ui/components/view-editors/registry';
 
 /**

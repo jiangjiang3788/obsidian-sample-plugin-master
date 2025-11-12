@@ -2,12 +2,12 @@
 import { singleton, inject } from 'tsyringe';
 import type { HeadingCache, TFile, App } from 'obsidian';
 import type { Item, FilterRule, SortRule } from '@core/types/domain/schema';
-import { parseTaskLine, parseBlockContent } from '@/lib/utils/core/parser';
-import { throttle } from '@/lib/utils/core/timing';
+import { parseTaskLine, parseBlockContent } from '@core/utils/parser';
+import { throttle } from '@core/utils/timing';
 import { ObsidianPlatform } from '@platform/obsidian';
-import { normalizeItemDates } from '@/lib/utils/core/normalize';
-import { filterByRules, sortItems } from '@/lib/utils/core/itemFilter';
-import { parseRecurrence } from '@/lib/utils/core/mark';
+import { normalizeItemDates } from '@core/utils/normalize';
+import { filterByRules, sortItems } from '@core/utils/itemFilter';
+import { parseRecurrence } from '@core/utils/mark';
 // [新增] 注入令牌与服务
 import { AppToken } from '@core/services/types';
 import { ThemeManager } from '@features/theme/services/ThemeManager';

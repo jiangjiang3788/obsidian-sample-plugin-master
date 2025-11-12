@@ -10,11 +10,11 @@ import type { InputSettings, BlockTemplate, ThemeDefinition, TemplateField, Temp
 import { Button, RadioGroup as MuiRadioGroup, FormControlLabel, Radio, FormControl, Typography, Stack, Divider, Box, IconButton, Tooltip } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import { SimpleSelect } from '../../../ui/composites/SimpleSelect';
-import { buildThemeTree, ThemeTreeNode } from '../../../lib/utils/core/themeUtils';
-import { dayjs, timeToMinutes, minutesToTime } from '../../../lib/utils/core/date';
+import { buildThemeTree, ThemeTreeNode } from '@core/utils/themeUtils';
+import { dayjs, timeToMinutes, minutesToTime } from '@core/utils/date';
 import { dataStore, inputService } from '@store/storeRegistry';
 // [核心修改 1] 导入模板渲染工具
-import { renderTemplate } from '../../../lib/utils/core/templateUtils';
+import { renderTemplate } from '@core/utils/templateUtils';
 
 export interface QuickInputSaveData {
     template: BlockTemplate;

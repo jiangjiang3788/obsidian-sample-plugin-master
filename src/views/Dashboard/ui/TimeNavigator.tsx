@@ -6,7 +6,7 @@ import { h } from 'preact';
 
 import { useMemo } from 'preact/hooks';
 
-import { dayjs } from '@/lib/utils/core/date';
+import { dayjs } from '@core/utils/date';
 
 
 

@@ -20,6 +20,69 @@ const config = {
       from: /@\/lib\/types$/g,
       to: '@core/types',
       description: '替换类型总导入路径'
+    },
+    {
+      from: /@\/lib\/utils\/core/g,
+      to: '@core/utils',
+      description: '替换核心工具导入路径'
+    },
+    {
+      from: /@\/lib\/utils\/shared/g,
+      to: '@shared/utils',
+      description: '替换共享工具导入路径'
+    },
+    {
+      from: /@\/lib\/utils\/array/g,
+      to: '@shared/utils/array',
+      description: '替换数组工具导入路径'
+    },
+    // 处理相对路径导入
+    {
+      from: /\.\.\/\.\.\/\.\.\/lib\/utils\/core\//g,
+      to: '@core/utils/',
+      description: '替换相对路径核心工具导入'
+    },
+    {
+      from: /\.\.\/\.\.\/lib\/utils\/core\//g,
+      to: '@core/utils/',
+      description: '替换相对路径核心工具导入(2级)'
+    },
+    {
+      from: /\.\.\/\.\.\/lib\/utils\/shared\//g,
+      to: '@shared/utils/',
+      description: '替换相对路径共享工具导入'
+    },
+    // 处理@lib别名导入
+    {
+      from: /@lib\/utils\/core/g,
+      to: '@core/utils',
+      description: '替换@lib别名核心工具导入'
+    },
+    {
+      from: /@lib\/utils\/shared/g,
+      to: '@shared/utils',
+      description: '替换@lib别名共享工具导入'
+    },
+    // 处理lib/patterns和logic迁移
+    {
+      from: /@\/lib\/patterns/g,
+      to: '@shared/patterns',
+      description: '替换patterns导入路径'
+    },
+    {
+      from: /@\/lib\/logic\/CodeblockEmbedder/g,
+      to: '@features/dashboard/services/CodeblockEmbedder',
+      description: '替换CodeblockEmbedder导入路径'
+    },
+    {
+      from: /@\/lib\/logic\/VaultWatcher/g,
+      to: '@core/services/VaultWatcher',
+      description: '替换VaultWatcher导入路径'
+    },
+    {
+      from: /@\/lib\/migration/g,
+      to: '@core/migration',
+      description: '替换migration导入路径'
     }
   ],
   

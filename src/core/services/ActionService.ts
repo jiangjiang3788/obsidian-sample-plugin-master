@@ -2,7 +2,7 @@
 import { singleton, inject } from 'tsyringe';
 import { App, Notice } from 'obsidian';
 import { AppStore } from '@core/stores/AppStore';
-import { dayjs } from '@/lib/utils/core/date';
+import { dayjs } from '@core/utils/date';
 import type { Item, ViewInstance } from '@core/types/domain/schema';
 import { DataStore } from '@core/services/DataStore';
 import { InputService } from '@core/services/InputService';

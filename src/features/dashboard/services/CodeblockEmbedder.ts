@@ -2,13 +2,13 @@
 import { render } from 'preact'; // [修改] 不再需要 h
 import { Notice, Plugin } from 'obsidian';
 import { CODEBLOCK_LANG } from '@core/types/domain/constants';
-import { DataStore } from '../services/core/dataStore';
+import { DataStore } from '@core/services/DataStore';
 // [移除] 不再需要直接导入 LayoutRenderer
 // import { LayoutRenderer } from '../../views/Dashboard/ui/LayoutRenderer'; 
 import { AppStore } from '@core/stores/AppStore';
-import { RendererService } from '../services/core/RendererService';
+import { RendererService } from '@core/services/RendererService';
 import type { Layout } from '@core/types/domain/schema';
-import type { ActionService } from '../services/core/ActionService';
+import type { ActionService } from '@core/services/ActionService';
 
 export class CodeblockEmbedder {
     constructor(

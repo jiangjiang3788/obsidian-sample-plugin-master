@@ -1,6 +1,6 @@
 // src/features/dashboard/views/timeline/timeline-parser.ts
 import { Item } from '@core/types/domain/schema';
-import { dayjs, timeToMinutes } from '../../../../lib/utils/core/date';
+import { dayjs, timeToMinutes } from '@core/utils/date';
 
 /**
  * 增强后的任务项，包含用于时间轴视图的额外信息

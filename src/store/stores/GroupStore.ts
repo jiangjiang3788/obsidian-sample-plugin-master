@@ -1,6 +1,6 @@
 // src/store/stores/GroupStore.ts
 import type { ThinkSettings, Group, GroupType, Groupable } from '@core/types/domain/schema';
-import { generateId } from '@/lib/utils/core/array';
+import { generateId } from '@core/utils/array';
 
 /**
  * GroupStore - 管理分组相关状态

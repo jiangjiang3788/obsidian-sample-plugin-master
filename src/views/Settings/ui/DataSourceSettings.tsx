@@ -13,7 +13,7 @@ import { SettingsTreeView, TreeItem } from './components/SettingsTreeView';
 import { App } from 'obsidian';
 import { useSettingsManager } from './hooks/useSettingsManager';
 import { DndContext, closestCenter } from '@dnd-kit/core';
-import { arrayMove } from '../../../lib/utils/core/array';
+import { arrayMove } from '@core/utils/array';
 
 // [修改] 组件 props 现在需要接收 appStore
 function DataSourceEditor({ ds, appStore }: { ds: DataSource, appStore: AppStore }) {

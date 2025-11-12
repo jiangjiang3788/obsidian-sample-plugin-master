@@ -11,7 +11,7 @@ import { SettingsTreeView, TreeItem } from './components/SettingsTreeView';
 import { App } from 'obsidian';
 import { useSettingsManager } from './hooks/useSettingsManager';
 import { DndContext, closestCenter } from '@dnd-kit/core';
-import { arrayMove } from '@/lib/utils/core/array';
+import { arrayMove } from '@core/utils/array';
 
 const PERIOD_OPTIONS = ['年', '季', '月', '周', '天'].map(v => ({ value: v, label: v }));
 const DISPLAY_MODE_OPTIONS = [{ value: 'list', label: '列表' }, { value: 'grid', label: '网格' }];

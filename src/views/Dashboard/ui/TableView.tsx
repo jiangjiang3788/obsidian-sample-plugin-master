@@ -3,7 +3,7 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
 import { Item, readField } from '@core/types/domain/schema';
-import { makeObsUri } from '@/lib/utils/core/obsidian';
+import { makeObsUri } from '@core/utils/obsidian';
 import { EMPTY_LABEL } from '@core/types/domain/constants';
 import { TaskCheckbox } from '@ui/composites/TaskCheckbox';
 import { TaskSendToTimerButton } from '@ui/composites/TaskSendToTimerButton';

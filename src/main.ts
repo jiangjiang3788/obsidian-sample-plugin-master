@@ -40,8 +40,8 @@ import { ThinkSettings, DEFAULT_SETTINGS, STYLE_TAG_ID } from '@core/types/domai
 import { GLOBAL_CSS } from '@views/Dashboard/styles/global';
 import { AppToken, SETTINGS_TOKEN } from '@core/services/types';
 import { VaultFileStorage, STORAGE_TOKEN } from '@core/services/StorageService';
-import { handleError, safeAsync, PluginError } from '@lib/utils/shared/errorHandler';
-import { performanceMonitor, startMeasure } from '@lib/utils/shared/performance';
+import { handleError, safeAsync, PluginError } from '@shared/utils/errorHandler';
+import { performanceMonitor, startMeasure } from '@shared/utils/performance';
 
 console.log(`[ThinkPlugin] main.js 文件已加载，版本时间: ${new Date().toLocaleTimeString()}`);
 

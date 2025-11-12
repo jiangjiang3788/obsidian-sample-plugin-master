@@ -4,8 +4,8 @@ import type { AppStore } from '@core/stores/AppStore'; // [新增] 导入 AppSto
 import type { DataStore } from '@core/services/DataStore'; // [新增] 导入 DataStore 类型
 import type { RendererService } from '@core/services/RendererService'; // [新增] 导入 RendererService 类型
 import type { ActionService } from '@core/services/ActionService'; // [新增] 导入 ActionService 类型
-import { VaultWatcher } from '@lib/logic/VaultWatcher';
-import { CodeblockEmbedder } from '@lib/logic/CodeblockEmbedder';
+import { VaultWatcher } from '@core/services/VaultWatcher';
+import { CodeblockEmbedder } from '@features/dashboard/services/CodeblockEmbedder';
 
 // [新增] 为 Dashboard 功能定义一个清晰的依赖项接口
 export interface DashboardDependencies {

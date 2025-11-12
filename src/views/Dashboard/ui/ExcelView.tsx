@@ -3,7 +3,7 @@
 import { h } from 'preact';
 import { App } from 'obsidian';
 import { Item, getAllFields, readField } from '@core/types/domain/schema';
-import { makeObsUri } from '@/lib/utils/core/obsidian';
+import { makeObsUri } from '@core/utils/obsidian';
 
 // 接口定义保持不变
 interface ExcelViewProps {

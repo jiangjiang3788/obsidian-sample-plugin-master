@@ -3,8 +3,8 @@ import { singleton, inject } from 'tsyringe';
 import { App, TFile, Notice } from 'obsidian';
 import { DataStore } from '@core/services/DataStore';
 import { AppToken } from '@core/services/types';
-import { dayjs, nowHHMM, todayISO, timeToMinutes, minutesToTime } from '@/lib/utils/core/date';
-import { markTaskDone } from '@/lib/utils/core/mark';
+import { dayjs, nowHHMM, todayISO, timeToMinutes, minutesToTime } from '@core/utils/date';
+import { markTaskDone } from '@core/utils/mark';
 
 @singleton()
 export class TaskService {

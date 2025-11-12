@@ -11,8 +11,8 @@ import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
 import { DataStore } from '@core/services/DataStore';
 import { TimerService } from '@core/services/TimerService';
 import type { TimerState } from '@core/stores/AppStore';
-import { formatSecondsToHHMMSS } from '@lib/utils/core/date';
-import { makeObsUri } from '@lib/utils/core/obsidian';
+import { formatSecondsToHHMMSS } from '@core/utils/date';
+import { makeObsUri } from '@core/utils/obsidian';
 import type { ActionService } from '@core/services/ActionService';
 import { App } from 'obsidian';
 // [修改] 导入 QuickInputModal 以修复 handleEdit 功能
