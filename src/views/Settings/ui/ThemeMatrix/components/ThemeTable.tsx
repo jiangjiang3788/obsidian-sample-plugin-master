@@ -12,7 +12,7 @@ import {
 import { ThemeTreeNodeRow } from './ThemeTreeNodeRow';
 import type { ThemeTableProps } from '../types'; // This will need to be updated
 import type { EditorState } from '../hooks/useThemeMatrixEditor';
-import type { BlockTemplate, ThemeDefinition, ThemeOverride } from '@/lib/types/domain/schema';
+import type { BlockTemplate, ThemeDefinition, ThemeOverride } from '@core/types/domain/schema';
 import type { AppStore } from '@core/stores/AppStore';
 import type { ThemeTreeNode } from '../types';
 

@@ -1,5 +1,5 @@
 // src/store/stores/LayoutStore.ts
-import type { ThinkSettings, Layout } from '@/lib/types/domain/schema';
+import type { ThinkSettings, Layout } from '@core/types/domain/schema';
 import { generateId, moveItemInArray, duplicateItemInArray } from '@/lib/utils/core/array';
 import { arrayUtils } from '@/lib/utils/core/array';
 

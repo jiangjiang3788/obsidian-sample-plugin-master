@@ -1,5 +1,5 @@
 // src/store/stores/GroupStore.ts
-import type { ThinkSettings, Group, GroupType, Groupable } from '@/lib/types/domain/schema';
+import type { ThinkSettings, Group, GroupType, Groupable } from '@core/types/domain/schema';
 import { generateId } from '@/lib/utils/core/array';
 
 /**

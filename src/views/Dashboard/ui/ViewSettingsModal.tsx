@@ -3,8 +3,8 @@
 import { h } from 'preact';
 import { useState, useEffect, useMemo } from 'preact/hooks';
 import { Button, FormControlLabel, Checkbox, TextField } from '@mui/material';
-import { VIEW_OPTIONS, ViewName, getAllFields } from '@/lib/types/domain/schema';
-import type { ViewInstance } from '@/lib/types/domain/schema';
+import { VIEW_OPTIONS, ViewName, getAllFields } from '@core/types/domain/schema';
+import type { ViewInstance } from '@core/types/domain/schema';
 import { VIEW_EDITORS } from '@views/Settings/ui/components/view-editors/registry';
 import { dataStore } from '@store/storeRegistry';
 import { useStore, AppStore } from '@core/stores/AppStore';

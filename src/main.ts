@@ -36,7 +36,7 @@ import { FloatingTimerWidget } from '@views/Timer/FloatingTimerWidget';
 import * as DashboardFeature from '@views/Dashboard';
 import * as QuickInputFeature from '@views/QuickInput';
 import * as SettingsFeature from '@views/Settings';
-import { ThinkSettings, DEFAULT_SETTINGS, STYLE_TAG_ID } from '@lib/types/domain';
+import { ThinkSettings, DEFAULT_SETTINGS, STYLE_TAG_ID } from '@core/types/domain';
 import { GLOBAL_CSS } from '@views/Dashboard/styles/global';
 import { AppToken, SETTINGS_TOKEN } from '@core/services/types';
 import { VaultFileStorage, STORAGE_TOKEN } from '@core/services/StorageService';

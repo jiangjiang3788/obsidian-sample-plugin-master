@@ -1,5 +1,5 @@
 // src/features/dashboard/views/timeline/timeline-parser.ts
-import { Item } from '@/lib/types/domain/schema';
+import { Item } from '@core/types/domain/schema';
 import { dayjs, timeToMinutes } from '../../../../lib/utils/core/date';
 
 /**

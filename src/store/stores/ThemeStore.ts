@@ -1,5 +1,5 @@
 // src/store/stores/ThemeStore.ts
-import type { ThinkSettings, ThemeDefinition, ThemeOverride } from '@/lib/types/domain/schema';
+import type { ThinkSettings, ThemeDefinition, ThemeOverride } from '@core/types/domain/schema';
 import { generateId, moveItemInArray, duplicateItemInArray } from '@/lib/utils/core/array';
 import { arrayUtils } from '@/lib/utils/core/array';
 

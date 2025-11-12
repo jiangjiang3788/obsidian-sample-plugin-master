@@ -1,6 +1,6 @@
 // src/core/migration/themeMigration.ts
 
-import { Item } from '@/lib/types/domain/schematypes/domain/schema';
+import { Item } from '@core/types/domain/schematypes/domain/schema';
 import { ThemeManager } from '../services/core/ThemeManager';
 
 /**

@@ -9,7 +9,7 @@ import type {
   BatchOperationType, 
   BatchOperationParams 
 } from '../hooks/useThemeMatrixSelection';
-import type { ThemeDefinition, ThemeOverride } from '@/lib/types/domain/schema';
+import type { ThemeDefinition, ThemeOverride } from '@core/types/domain/schema';
 
 export interface BatchOperationConfig {
   appStore: AppStore;

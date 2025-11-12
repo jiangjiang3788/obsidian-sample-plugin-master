@@ -3,7 +3,7 @@
  * 负责从数据中扫描主题并提供智能导入功能
  */
 import type { AppStore } from '@core/stores/AppStore';
-import type { ThemeDefinition, Item } from '@/lib/types/domain/schema';
+import type { ThemeDefinition, Item } from '@core/types/domain/schema';
 import { ThemeManager } from '@features/theme/services/ThemeManager';
 import { DataStore } from '@core/services/DataStore';
 import { 
