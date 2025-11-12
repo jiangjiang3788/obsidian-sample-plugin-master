@@ -5,7 +5,7 @@ import { TaskService } from '@core/services/TaskService';
 import { Notice, App, TFile } from 'obsidian';
 import { DataStore } from '@core/services/DataStore';
 import { InputService } from '@core/services/InputService';
-import type { QuickInputSaveData } from '@/views/QuickInput/ui/QuickInputModal';
+import type { QuickInputSaveData } from '@/features/quickinput/ui/QuickInputModal';
 import { AppToken } from '@core/services/types';
 import { nowHHMM, timeToMinutes, minutesToTime } from '@core/utils/date';
 

@@ -1,1 +1,5 @@
-// TODO: 添加导出
+/**
+ * @file Theme 类型导出
+ */
+
+export * from './theme';
