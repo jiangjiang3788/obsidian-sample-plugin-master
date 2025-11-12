@@ -397,6 +397,47 @@
       "parentId": null
     },
     {
+      "id": "view_mhvmq40gjfboq",
+      "title": "新视图 (副本)",
+      "viewType": "TimelineView",
+      "dataSourceId": "",
+      "viewConfig": {
+        "defaultHourHeight": 50,
+        "MAX_HOURS_PER_DAY": 24,
+        "UNTRACKED_LABEL": "未记录",
+        "categories": {
+          "工作": {
+            "color": "#60a5fa",
+            "files": [
+              "工作",
+              "Work"
+            ]
+          },
+          "学习": {
+            "color": "#34d399",
+            "files": [
+              "学习",
+              "Study"
+            ]
+          },
+          "生活": {
+            "color": "#fbbf24",
+            "files": [
+              "生活",
+              "Life"
+            ]
+          }
+        },
+        "progressOrder": [
+          "工作",
+          "学习",
+          "生活"
+        ]
+      },
+      "collapsed": true,
+      "parentId": null
+    },
+    {
       "id": "view_mhsv63xuav78n",
       "title": "新视图2",
       "viewType": "BlockView",
@@ -6832,7 +6873,7 @@
       {
         "blockId": "blk_meic1my6m62iu",
         "themeId": "thm_mejsim4o4c2mw",
-        "status": "enabled",
+        "disabled": false,
         "fields": [
           {
             "id": "field_mekr8gby",

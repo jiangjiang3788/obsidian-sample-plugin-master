@@ -83,6 +83,28 @@ const config = {
       from: /@\/lib\/migration/g,
       to: '@core/migration',
       description: '替换migration导入路径'
+    },
+    // 处理store目录迁移
+    {
+      from: /@store\/storeRegistry/g,
+      to: '@core/stores/storeRegistry',
+      description: '替换storeRegistry导入路径'
+    },
+    // 具体Store的路径映射
+    {
+      from: /@store\/stores['"]/g,
+      to: '@features/dashboard/stores',
+      description: '替换store/stores整体导入到dashboard'
+    },
+    {
+      from: /ThemeStore.*from\s+['"]@store\/stores['"]/g,
+      to: 'ThemeStore } from \'@features/theme/stores\'',
+      description: '替换ThemeStore导入路径'
+    },
+    {
+      from: /TimerStore.*from\s+['"]@store\/stores['"]/g,  
+      to: 'TimerStore } from \'@features/timer/stores\'',
+      description: '替换TimerStore导入路径'
     }
   ],
   

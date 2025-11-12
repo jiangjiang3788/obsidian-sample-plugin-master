@@ -1,1 +1,1 @@
-// TODO: 添加导出
+export { SettingsStore } from './SettingsStore';

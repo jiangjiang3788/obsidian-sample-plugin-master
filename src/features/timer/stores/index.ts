@@ -1,1 +1,2 @@
-// TODO: 添加导出
+export { TimerStore } from './TimerStore';
+export type { TimerState } from './TimerStore';

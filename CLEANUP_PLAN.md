@@ -7,6 +7,32 @@
 - ✅ 删除 `src/lib/services/index.ts` （无效引用）
 - ✅ 验证构建成功，无破坏性影响
 
+### lib/ 目录完全清理（第二阶段）
+- ✅ 迁移 `src/lib/types/domain/` → `src/core/types/domain/`
+- ✅ 迁移 `src/lib/utils/` → `src/core/utils/` 和 `src/shared/utils/`
+- ✅ 迁移 `src/lib/patterns/` → `src/shared/patterns/`
+- ✅ 迁移 `src/lib/migration/` → `src/core/migration/`
+- ✅ 迁移 `src/lib/logic/` → 各个 `src/features/*/`
+- ✅ 删除整个 `src/lib/` 目录
+- ✅ 验证构建成功，无破坏性影响
+
+### Store 目录整合（第三阶段）
+- ✅ 创建 features/*/stores/index.ts 导出文件
+- ✅ 迁移 GroupStore → `src/features/dashboard/stores/`
+- ✅ 修复 AppStore.ts 中的所有导入路径
+- ✅ 删除重复的 `src/store/` 目录
+- ✅ 验证构建成功，无破坏性影响
+
+### 其他目录整合（第四阶段）
+- ✅ 迁移 `src/types/common.ts` → `src/core/types/common.ts`
+- ✅ 更新 `src/core/types/index.ts` 导出通用类型
+- ✅ 更新 constants 目录中的导入路径
+- ✅ 删除重复的 `src/types/` 和 `src/constants/` 目录
+- ✅ 迁移 `src/hooks/shared/` → `src/shared/hooks/`
+- ✅ 修复所有使用旧 hooks 路径的文件导入
+- ✅ 删除重复的 `src/hooks/` 目录
+- ✅ 验证构建成功，无破坏性影响
+
 ### lib/types/domain/ 迁移（第二阶段）
 - ✅ 成功迁移 `src/lib/types/domain/` → `src/core/types/domain/`
 - ✅ 迁移了7个文件：cache.ts, constants.ts, definitions.ts, fields.ts, schema.ts, theme.ts, index.ts

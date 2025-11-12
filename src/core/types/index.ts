@@ -5,3 +5,4 @@
 
 // 导出域类型
 export * from './domain';
+export * from './common';

@@ -4,11 +4,14 @@ import { singleton, inject } from 'tsyringe';
 import type { ThinkSettings, ViewInstance, Layout, InputSettings, BlockTemplate, ThemeDefinition, ThemeOverride, Group, GroupType, Groupable } from '@core/types/domain/schema';
 import { DEFAULT_SETTINGS } from '@core/types/domain/schema';
 import type ThinkPlugin from '@main';
-import { VIEW_DEFAULT_CONFIGS } from '@/views/Settings/ui/components/view-editors/registry';
+import { VIEW_DEFAULT_CONFIGS } from '@/features/settings/ui/components/view-editors/registry';
 import { generateId, moveItemInArray, duplicateItemInArray } from '@core/utils/array';
-import { appStore } from '@store/storeRegistry';
+import { appStore } from '@core/stores/storeRegistry';
 import { SETTINGS_TOKEN } from '@/core/services/types';
-import { ThemeStore, LayoutStore, GroupStore, SettingsStore, TimerStore, ViewInstanceStore, BlockStore, type TimerState } from '@store/stores';
+import { ThemeStore } from '@features/theme/stores';
+import { TimerStore, type TimerState } from '@features/timer/stores';
+import { LayoutStore, ViewInstanceStore, BlockStore, GroupStore } from '@features/dashboard/stores';
+import { SettingsStore } from '@features/settings/stores';
 
 export interface AppState {
     settings: ThinkSettings;
