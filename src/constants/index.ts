@@ -7,7 +7,7 @@
 //
 // =================================================================================
 
-import type { ActiveStatus, SourceType, BatchOperationType } from '@/types/commontypes/common';
+import type { ActiveStatus, SourceType, BatchOperationType } from '@/types/common';
 
 /**
  * 实体激活状态常量
