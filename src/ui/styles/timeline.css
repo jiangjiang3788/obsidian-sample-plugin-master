@@ -1,10 +1,4 @@
-// src/features/dashboard/styles/views/timeline-view.ts
-// TimelineView 专属样式
-
-export const TIMELINE_VIEW_STYLES = `
-/*
- * --- TimelineView 样式 ---
- */
+/* Timeline View 样式 */
 
 /* ===== 基础样式 ===== */
 .timeline-view-wrapper {
@@ -256,164 +250,132 @@ export const TIMELINE_VIEW_STYLES = `
   background: var(--background-secondary-alt);
 }
 
-/* TimeNavigator (概览模式导航器) 样式 */
-.time-navigator-container {
-    display: flex;
-    flex-direction: row;
-    flex-wrap: nowrap;
-    gap: 8px;
-    height: 100px;
-    font-size: 12px;
-    user-select: none;
-    margin-bottom: 16px;
-    width: 100%;
-    background: var(--background-secondary);
-    padding: 8px;
-    border-radius: 8px;
-    box-sizing: border-box;
+/* ===== 工具类 ===== */
+.flex {
+  display: flex;
 }
-.tn-cell {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 6px;
-    transition: all 0.2s ease;
-    box-sizing: border-box;
-    border: 1px solid transparent;
+
+.flex-col {
+  flex-direction: column;
 }
-.tn-control-col {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    width: 60px;
-    flex-shrink: 0;
+
+.items-center {
+  align-items: center;
 }
-.tn-year-cell {
-    flex-grow: 1;
-    background: #9B7FBD;
-    color: white;
-    font-weight: bold;
-    font-size: 1.4em;
-    cursor: pointer;
-    border: none;
+
+.justify-center {
+  justify-content: center;
 }
-.tn-year-cell:hover {
-    opacity: 0.9;
+
+.text-center {
+  text-align: center;
 }
-.tn-nav-buttons {
-    height: 28px;
-    flex-shrink: 0;
-    display: flex;
-    gap: 4px;
-    border: none;
+
+.text-bold {
+  font-weight: bold;
 }
-.tn-nav-buttons button {
-    flex-grow: 1;
-    border: 1px solid var(--background-modifier-border);
-    background: var(--background-primary);
-    border-radius: 6px;
-    cursor: pointer;
-    font-size: 1.2em;
-    padding-bottom: 2px;
+
+.text-faint {
+  color: var(--text-faint);
 }
-.tn-nav-buttons button:hover {
-    background: var(--background-modifier-hover);
-    border-color: var(--interactive-accent);
+
+.text-normal {
+  color: var(--text-normal);
 }
-.tn-main-col {
-    display: flex;
-    flex-direction: column;
-    flex-grow: 1;
-    gap: 4px;
-    min-width: 0;
+
+.bg-primary {
+  background: var(--background-primary);
 }
-.tn-row {
-    display: flex;
-    gap: 4px;
+
+.bg-secondary {
+  background: var(--background-secondary);
 }
-.tn-row-top {
-    flex-grow: 1;
+
+.border-radius-sm {
+  border-radius: 2px;
 }
-.tn-quarter-block {
-    display: flex;
-    flex-direction: column;
-    flex: 1;
-    background: var(--background-primary);
-    border-radius: 6px;
-    padding: 4px;
-    gap: 4px;
-    cursor: pointer;
+
+.border-radius-md {
+  border-radius: 8px;
 }
-.tn-quarter-block .tn-quarter-header {
-    text-align: center;
-    font-weight: bold;
-    font-size: 0.9em;
-    color: var(--text-muted);
-    padding-bottom: 2px;
+
+.overflow-hidden {
+  overflow: hidden;
 }
-.tn-months-container {
-    display: flex;
-    flex-grow: 1;
-    gap: 4px;
+
+.position-relative {
+  position: relative;
 }
-.tn-quarter-block.is-before-selection .tn-quarter-header,
-.tn-month-cell.is-before-selection {
-    color: #9B7FBD;
+
+.position-absolute {
+  position: absolute;
 }
-.tn-week-cell.is-before-selection {
-    background: #f5f1fa;
-    color: #9B7FBD;
+
+.position-sticky {
+  position: sticky;
 }
-body.theme-dark .tn-quarter-block.is-before-selection .tn-quarter-header,
-body.theme-dark .tn-month-cell.is-before-selection,
-body.theme-dark .tn-week-cell.is-before-selection {
-    color: #c4b0e0;
+
+.cursor-pointer {
+  cursor: pointer;
 }
-body.theme-dark .tn-week-cell.is-before-selection {
-    background: rgba(155, 127, 189, 0.15);
+
+.cursor-cell {
+  cursor: cell;
 }
-.tn-week-cell.is-today {
-    border-color: #FFD700 !important;
+
+.whitespace-nowrap {
+  white-space: nowrap;
 }
-.tn-quarter-block.is-selected,
-.tn-month-cell.is-selected,
-.tn-week-cell.is-selected {
-    border-color: #9B7FBD !important;
-    background-color: rgba(155, 127, 189, 0.15) !important;
-    box-shadow: none;
+
+.text-ellipsis {
+  text-overflow: ellipsis;
 }
-.tn-quarter-block.is-selected .tn-quarter-header,
-.tn-month-cell.is-selected,
-.tn-week-cell.is-selected {
-    color: #9B7FBD !important;
-    font-weight: bold;
-}
-body.theme-dark .tn-quarter-block.is-selected,
-body.theme-dark .tn-month-cell.is-selected,
-body.theme-dark .tn-week-cell.is-selected {
-    background-color: rgba(155, 127, 189, 0.2) !important;
-}
-.tn-month-cell, .tn-week-cell {
-    font-weight: 500;
-    background: var(--background-secondary);
-    color: var(--text-muted);
-}
-.tn-month-cell {
-    flex: 1;
-}
-.tn-week-cell {
-    flex-basis: 0;
-    flex-grow: 1;
-    font-size: 10px;
-    cursor: pointer;
-    min-width: 10px;
-}
-.tn-weeks-container {
-    height: 24px;
-    flex-shrink: 0;
-    background: var(--background-primary);
-    border-radius: 6px;
-    padding: 3px;
-    overflow: hidden;
-}
-`;
+
+/* ===== 间距工具类 ===== */
+.p-1 { padding: 2px; }
+.p-2 { padding: 4px; }
+.p-3 { padding: 8px; }
+.p-4 { padding: 16px; }
+.p-5 { padding: 20px; }
+
+.px-1 { padding-left: 2px; padding-right: 2px; }
+.px-2 { padding-left: 4px; padding-right: 4px; }
+.px-3 { padding-left: 8px; padding-right: 8px; }
+.px-4 { padding-left: 16px; padding-right: 16px; }
+
+.py-1 { padding-top: 2px; padding-bottom: 2px; }
+.py-2 { padding-top: 4px; padding-bottom: 4px; }
+.py-3 { padding-top: 8px; padding-bottom: 8px; }
+.py-4 { padding-top: 16px; padding-bottom: 16px; }
+
+.m-1 { margin: 2px; }
+.m-2 { margin: 4px; }
+.m-3 { margin: 8px; }
+.m-4 { margin: 16px; }
+.m-5 { margin: 20px; }
+
+.gap-1 { gap: 2px; }
+.gap-2 { gap: 4px; }
+.gap-3 { gap: 8px; }
+.gap-4 { gap: 16px; }
+
+/* ===== 尺寸工具类 ===== */
+.w-full { width: 100%; }
+.h-full { height: 100%; }
+.min-h-60 { min-height: 60px; }
+.h-24 { height: 24px; }
+.h-16 { height: 16px; }
+.w-16 { width: 16px; }
+.w-4 { width: 4px; }
+
+/* ===== 字体尺寸工具类 ===== */
+.text-xs { font-size: 10px; }
+.text-sm { font-size: 11px; }
+.text-base { font-size: 12px; }
+.text-md { font-size: 14px; }
+.text-lg { font-size: 16px; }
+
+/* ===== Flex 工具类 ===== */
+.flex-1 { flex: 1; }
+.flex-none { flex: none; }
+.flex-shrink-0 { flex-shrink: 0; }

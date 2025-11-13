@@ -86,141 +86,110 @@ export function StatisticsViewEditor({ value, onChange }: ViewEditorProps) {
 
 
     return (
-        <div>
+        <div class="statistics-editor-container">
             {/* 显示模式配置 */}
-            <div style={{ marginBottom: '16px' }}>
-                <div style={{ fontWeight: 600, fontSize: '14px', marginBottom: '8px' }}>显示模式</div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
-                    <label style={{ display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer' }}>
+            <div class="statistics-section">
+                <div class="statistics-section-title">显示模式</div>
+                <div class="display-mode-options">
+                    <label class="display-mode-label">
                         <input
+                            class="display-mode-input"
                             type="radio"
                             name="displayMode"
                             value="smart"
                             checked={config.displayMode === 'smart'}
                             onChange={() => onChange({ displayMode: 'smart' })}
                         />
-                        <span>智能模式</span>
+                        <span class="display-mode-text">智能模式</span>
                     </label>
-                    <label style={{ display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer' }}>
+                    <label class="display-mode-label">
                         <input
+                            class="display-mode-input"
                             type="radio"
                             name="displayMode"
                             value="linear"
                             checked={config.displayMode === 'linear'}
                             onChange={() => onChange({ displayMode: 'linear' })}
                         />
-                        <span>线性模式</span>
+                        <span class="display-mode-text">线性模式</span>
                     </label>
-                    <label style={{ display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer' }}>
+                    <label class="display-mode-label">
                         <input
+                            class="display-mode-input"
                             type="radio"
                             name="displayMode"
                             value="logarithmic"
                             checked={config.displayMode === 'logarithmic'}
                             onChange={() => onChange({ displayMode: 'logarithmic' })}
                         />
-                        <span>对数模式</span>
+                        <span class="display-mode-text">对数模式</span>
                     </label>
                 </div>
-                <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '8px' }}>
+                <div class="statistics-section-description">
                     智能模式：自动选择最佳显示方式 | 线性模式：按实际比例显示 | 对数模式：适合数据差异很大的情况
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <label style={{ fontSize: '12px', color: 'var(--text-muted)' }}>最小可见高度:</label>
+                <div class="min-height-controls">
+                    <label class="min-height-label">最小可见高度:</label>
                     <input
+                        class="min-height-slider"
                         type="range"
                         min="10"
                         max="30"
                         step="1"
                         value={config.minVisibleHeight || 15}
                         onChange={(e) => onChange({ minVisibleHeight: parseInt((e.target as HTMLInputElement).value) })}
-                        style={{ width: '100px' }}
                     />
-                    <span style={{ fontSize: '12px', fontWeight: 500, minWidth: '30px' }}>
+                    <span class="min-height-value">
                         {config.minVisibleHeight || 15}%
                     </span>
                 </div>
             </div>
 
-            <div style={{ marginBottom: '12px' }}>
-                <div style={{ fontWeight: 600, fontSize: '14px', marginBottom: '4px' }}>分类配置</div>
-                <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '8px' }}>
+            <div class="statistics-section">
+                <div class="categories-section-title">分类配置</div>
+                <div class="categories-description">
                     每个分类的配置：颜色、名称、别名。您可以使用上下按钮调整顺序。
                 </div>
             </div>
             <div>
                 {localCategories.map((cat, index) => (
-                    <div 
-                        key={cat.name}
-                        style={{ 
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '8px',
-                            marginBottom: '8px',
-                            padding: '8px',
-                            backgroundColor: 'var(--background-modifier-hover)',
-                            borderRadius: '6px'
-                        }}
-                    >
+                    <div key={cat.name} class="category-item">
                         {/* 上下移动按钮 */}
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                        <div class="move-buttons-container">
                             <button
+                                class="move-button"
                                 title="上移"
                                 disabled={index === 0}
                                 onClick={() => handleMove(index, 'up')}
-                                style={{
-                                    border: 'none',
-                                    background: 'transparent',
-                                    cursor: index === 0 ? 'not-allowed' : 'pointer',
-                                    padding: '2px',
-                                    opacity: index === 0 ? 0.3 : 1
-                                }}
                             >↑</button>
                             <button
+                                class="move-button"
                                 title="下移"
                                 disabled={index === localCategories.length - 1}
                                 onClick={() => handleMove(index, 'down')}
-                                style={{
-                                    border: 'none',
-                                    background: 'transparent',
-                                    cursor: index === localCategories.length - 1 ? 'not-allowed' : 'pointer',
-                                    padding: '2px',
-                                    opacity: index === localCategories.length - 1 ? 0.3 : 1
-                                }}
                             >↓</button>
                         </div>
 
                         {/* 颜色选择器 */}
                         <input
+                            class="color-picker"
                             type="color"
                             value={cat.color}
                             onChange={(e) => handleColorChange(index, (e.target as HTMLInputElement).value)}
-                            style={{ width: '40px', height: '32px', border: 'none', borderRadius: '4px' }}
                         />
 
                         {/* 分类名称 */}
-                        <div style={{ 
-                            fontWeight: 500, 
-                            minWidth: '80px',
-                            flex: '0 0 auto'
-                        }}>
+                        <div class="category-name">
                             {cat.name}
                         </div>
 
                         {/* 别名输入 */}
                         <input
+                            class="alias-input"
                             type="text"
                             placeholder="别名"
                             value={cat.alias || ''}
                             onChange={(e) => handleAliasChange(index, (e.target as HTMLInputElement).value)}
-                            style={{
-                                flex: '1 1 100px',
-                                padding: '4px 8px',
-                                border: '1px solid var(--background-modifier-border)',
-                                borderRadius: '4px',
-                                fontSize: '12px',
-                                backgroundColor: 'var(--background-primary)'
-                            }}
                         />
                     </div>
                 ))}

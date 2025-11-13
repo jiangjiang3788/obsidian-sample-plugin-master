@@ -10,6 +10,7 @@ import { QuickInputModal } from '@features/quickinput/ui/QuickInputModal';
 import { DEFAULT_CONFIG } from '@features/settings/ui/components/view-editors/HeatmapViewEditor';
 import { getThemeLevelData, getEffectiveDisplayCount, getEffectiveLevelCount, type LevelResult, LEVEL_SYSTEM_PRESETS } from '@core/utils/levelingSystem';
 import { CheckinManagerModal } from './CheckinManagerModal';
+import { HEATMAP_VIEW_STYLES } from '@features/dashboard/styles/views/heatmap-view';
 
 // ========== Types ==========
 interface HeatmapViewProps {
@@ -88,7 +89,7 @@ function HeatmapCell({ date, items, config, ratingMapping, app, onCellClick, onE
                 const imageUrl = app.vault.adapter.getResourcePath(visualValue);
                 cellContent = (
                     <div class="cell-with-image">
-                        <img src={imageUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                        <img src={imageUrl} alt="" class="w-full h-full object-cover" />
                     </div>
                 );
             } else {
@@ -110,13 +111,9 @@ function HeatmapCell({ date, items, config, ratingMapping, app, onCellClick, onE
         } else {
             // 没有评分/图片时，显示纯次数
             if (displayCount > 0) {
+                const sizeClass = displayCount > 99 ? 'large' : displayCount > 9 ? 'medium' : 'small';
                 cellContent = (
-                    <span class="pure-count" style={{
-                        fontSize: displayCount > 99 ? '8px' : displayCount > 9 ? '10px' : '12px',
-                        fontWeight: 'bold',
-                        color: 'var(--text-on-accent)',
-                        textShadow: '1px 1px 1px rgba(0,0,0,0.3)'
-                    }}>
+                    <span class={`pure-count ${sizeClass}`}>
                         {displayCount > 999 ? '999+' : displayCount}
                     </span>
                 );
@@ -159,12 +156,7 @@ function HeatmapCell({ date, items, config, ratingMapping, app, onCellClick, onE
     return (
         <div 
             class={`heatmap-cell ${isToday ? 'current-day' : ''} ${item ? 'has-data' : 'empty'}`}
-            style={{
-                position: 'relative',
-                cursor: 'pointer',
-                transition: 'all 0.2s ease',
-                ...cellStyle
-            }}
+            style={cellStyle}
             title={title}
             onClick={() => onCellClick(date, item)}
             onContextMenu={(e) => {
@@ -174,25 +166,9 @@ function HeatmapCell({ date, items, config, ratingMapping, app, onCellClick, onE
                     onEditCount(date, items);
                 }
             }}
-            onMouseEnter={(e) => {
-                // 悬停效果
-                (e.target as HTMLElement).style.transform = 'scale(1.05)';
-                (e.target as HTMLElement).style.zIndex = '10';
-            }}
-            onMouseLeave={(e) => {
-                (e.target as HTMLElement).style.transform = 'scale(1)';
-                (e.target as HTMLElement).style.zIndex = '1';
-            }}
         >
             {/* 主要内容 */}
-            <div class="heatmap-cell-content" style={{
-                width: '100%',
-                height: '100%',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                position: 'relative'
-            }}>
+            <div class="heatmap-cell-content">
                 {cellContent}
             </div>
         </div>
@@ -375,19 +351,10 @@ export function HeatmapView({ items, app, dateRange, module, currentView }: Heat
         }
         return (
             <div class="month-section">
-                <div class="month-label" style={{ 
-                    fontSize: '12px', 
-                    marginBottom: '4px', 
-                    color: 'var(--text-muted)',
-                    textAlign: 'center'
-                }}>
+                <div class="month-label">
                     {monthDate.format('YYYY年M月')}
                 </div>
-                <div class="heatmap-row calendar" style={{
-                    display: 'grid',
-                    gridTemplateColumns: 'repeat(7, var(--heatmap-cell-size))',
-                    gap: '3px'
-                }}>
+                <div class="heatmap-row calendar">
                     {days}
                 </div>
             </div>
@@ -586,83 +553,38 @@ export function HeatmapView({ items, app, dateRange, module, currentView }: Heat
                                         headerRefs.current.set(theme, el);
                                     }
                                 }}
-                                style={{
-                                    marginBottom: '16px',
-                                    padding: '12px 16px',
-                                    backgroundColor: 'var(--background-primary)',
-                                    borderRadius: '8px',
-                                    border: '1px solid var(--background-modifier-border)',
-                                    transition: 'all 0.2s ease'
-                                }}
-                                onMouseEnter={(e) => {
-                                    (e.target as HTMLElement).style.backgroundColor = 'var(--background-modifier-hover)';
-                                }}
-                                onMouseLeave={(e) => {
-                                    (e.target as HTMLElement).style.backgroundColor = 'var(--background-primary)';
-                                }}
                             >
                                 {/* 第一行：等级信息和进度条 */}
                                 {theme !== '__default__' && (
-                                    <div class="heatmap-header-info" style={{
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        justifyContent: 'space-between'
-                                    }}>
+                                    <div class="heatmap-header-info">
                                         {/* 左侧：等级信息和主题名称 */}
-                                        <div style={{
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            gap: '8px',
-                                            flex: '0 0 auto'
-                                        }}>
+                                        <div class="heatmap-header-info-left">
                                             {levelData && (
                                                 <>
-                                                    <span style={{ fontSize: '16px' }}>
+                                                    <span class="level-icon">
                                                         {levelData.config.icon}
                                                     </span>
-                                                    <span style={{ 
-                                                        fontWeight: 'bold', 
-                                                        fontSize: '13px',
-                                                        color: 'var(--text-normal)'
-                                                    }}>
+                                                    <span class="level-text">
                                                         Lv.{levelData.level}
                                                     </span>
                                                 </>
                                             )}
-                                            <span style={{
-                                                fontWeight: 'bold',
-                                                fontSize: '14px',
-                                                color: 'var(--text-normal)'
-                                            }}>
+                                            <span class="theme-name">
                                                 {theme}
                                             </span>
                                         </div>
 
                                         {/* 右侧：进度条 */}
                                         {levelData && config.showLevelProgress && levelData.nextConfig && (
-                                            <div style={{
-                                                flex: '1 1 auto',
-                                                margin: '0 16px',
-                                                minWidth: '100px'
-                                            }}>
-                                                <div style={{
-                                                    width: '100%',
-                                                    height: '6px',
-                                                    backgroundColor: 'var(--background-modifier-border)',
-                                                    borderRadius: '3px',
-                                                    overflow: 'hidden',
-                                                    position: 'relative',
-                                                    cursor: 'pointer'
-                                                }}
+                                            <div class="heatmap-header-info-right">
+                                                <div class="progress-bar-container"
                                                 title={`当前进度: ${levelData.totalChecks}${levelData.nextRequirement ? ` / ${levelData.nextRequirement}` : ''} 
 下一等级: ${levelData.nextConfig.title}
 距离升级还需: ${levelData.nextRequirement ? Math.max(0, levelData.nextRequirement - levelData.totalChecks) : 0} 次打卡`}
                                                 >
-                                                    <div style={{
+                                                    <div class="progress-bar" style={{
                                                         width: `${levelData.progress * 100}%`,
-                                                        height: '100%',
-                                                        backgroundColor: levelData.config.color,
-                                                        transition: 'width 0.3s ease'
+                                                        backgroundColor: levelData.config.color
                                                     }} />
                                                 </div>
                                             </div>
@@ -671,13 +593,7 @@ export function HeatmapView({ items, app, dateRange, module, currentView }: Heat
                                 )}
                                 
                                 {/* 第二行：HeatmapCell展示区域 */}
-                                <div class="heatmap-header-cells" style={{
-                                    display: 'flex',
-                                    gap: '3px',
-                                    flexWrap: 'wrap',
-                                    justifyContent: 'flex-start',
-                                    width: '100%'
-                                }}>
+                                <div class="heatmap-header-cells">
                                     {renderHeaderCells(currentView, theme, dataForTheme)}
                                 </div>
                             </div>

@@ -53,14 +53,53 @@ export const UTILITY_STYLES = `
 .think-min-w-0 { min-width: 0; }
 .think-min-h-0 { min-height: 0; }
 
-/* 字体工具类 */
-.think-text-xs { font-size: 11px; }
-.think-text-sm { font-size: 12px; }
-.think-text-base { font-size: 14px; }
-.think-text-lg { font-size: 16px; }
-.think-text-bold { font-weight: 600; }
+/* 字体工具类 - 统一字体大小系统 */
+
+/* 基础字体大小 - 遵循 Obsidian 设计规范 */
+.think-text-2xs { font-size: 8px; line-height: 1.2; }   /* 最小字体：图表细节、水印 */
+.think-text-xs { font-size: 10px; line-height: 1.3; }   /* 超小字体：图表标签、辅助信息 */
+.think-text-sm { font-size: 11px; line-height: 1.4; }   /* 小字体：标签、说明文字 */
+.think-text-base { font-size: 12px; line-height: 1.4; } /* 基础字体：正文内容 */
+.think-text-md { font-size: 13px; line-height: 1.4; }   /* 中等字体：按钮、表单标签 */
+.think-text-lg { font-size: 14px; line-height: 1.5; }   /* 大字体：标题、重要内容 */
+.think-text-xl { font-size: 15px; line-height: 1.5; }   /* 超大字体：主标题 */
+.think-text-2xl { font-size: 16px; line-height: 1.5; }  /* 特大字体：页面标题 */
+.think-text-3xl { font-size: 18px; line-height: 1.4; }  /* 巨大字体：重要按钮、图标 */
+.think-text-4xl { font-size: 20px; line-height: 1.3; }  /* 最大字体：操作按钮、主要图标 */
+
+/* 特殊用途字体大小 */
+.think-text-chart-mini { font-size: 9px; line-height: 1.2; }      /* 图表最小标签 */
+.think-text-chart-label { font-size: 10px; line-height: 1.3; }    /* 图表标签 */
+.think-text-chart-value { font-size: 11px; line-height: 1.4; }    /* 图表数值 */
+.think-text-chart-title { font-size: 13px; line-height: 1.4; }    /* 图表标题 */
+
+.think-text-button-sm { font-size: 12px; line-height: 1; }        /* 小按钮文字 */
+.think-text-button-md { font-size: 13px; line-height: 1; }        /* 中等按钮文字 */
+.think-text-button-lg { font-size: 14px; line-height: 1; }        /* 大按钮文字 */
+
+.think-text-icon-sm { font-size: 14px; }                          /* 小图标 */
+.think-text-icon-md { font-size: 16px; }                          /* 中等图标 */
+.think-text-icon-lg { font-size: 18px; }                          /* 大图标 */
+.think-text-icon-xl { font-size: 20px; }                          /* 超大图标 */
+
+/* 字体粗细 */
+.think-text-thin { font-weight: 300; }
+.think-text-normal { font-weight: 400; }
+.think-text-medium { font-weight: 500; }
+.think-text-semibold { font-weight: 600; }
+.think-text-bold { font-weight: 700; }
+
+/* 文本对齐 */
+.think-text-left { text-align: left; }
 .think-text-center { text-align: center; }
 .think-text-right { text-align: right; }
+.think-text-justify { text-align: justify; }
+
+/* 行高调整 */
+.think-leading-none { line-height: 1; }
+.think-leading-tight { line-height: 1.25; }
+.think-leading-normal { line-height: 1.5; }
+.think-leading-relaxed { line-height: 1.75; }
 
 /* 颜色工具类 */
 .think-text-muted { color: var(--text-muted); }

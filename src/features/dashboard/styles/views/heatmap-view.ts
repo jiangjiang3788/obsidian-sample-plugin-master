@@ -9,12 +9,21 @@ export const HEATMAP_VIEW_STYLES = `
     --heatmap-cell-size: 20px;
     width: 100%;
     padding: 8px;
+    font-size: 14px; /* 统一字体大小 */
 }
 
 .heatmap-view-wrapper {
     display: flex;
     flex-direction: column;
     gap: 16px;
+}
+
+.heatmap-view-wrapper.layout-row {
+    flex-direction: column;
+}
+
+.heatmap-view-wrapper.layout-grid {
+    flex-direction: column;
 }
 
 .heatmap-theme-group {
@@ -24,34 +33,48 @@ export const HEATMAP_VIEW_STYLES = `
 }
 
 .heatmap-theme-header {
-    display: flex;
-    gap: 8px;
-    padding: 10px 16px;
+    margin-bottom: 16px;
+    padding: 12px 16px;
     background-color: var(--background-primary);
     border-radius: 8px;
     border: 1px solid var(--background-modifier-border);
     transition: all 0.2s ease;
-    flex-direction: row;
-    align-items: center;
+}
+
+.heatmap-theme-header:hover {
+    background-color: var(--background-modifier-hover);
+}
+
+.heatmap-theme-header.vertical-layout {
+    flex-direction: column;
+    align-items: stretch;
 }
 
 .heatmap-header-info {
     display: flex;
     align-items: center;
+    justify-content: space-between;
+}
+
+.heatmap-header-info-left {
+    display: flex;
+    align-items: center;
     gap: 8px;
-    min-height: 24px;
-    flex-shrink: 0;
+    flex: 0 0 auto;
+}
+
+.heatmap-header-info-right {
+    flex: 1 1 auto;
+    margin: 0 16px;
+    min-width: 100px;
 }
 
 .heatmap-header-cells {
     display: flex;
     gap: 3px;
-    align-items: center;
-    min-height: var(--heatmap-cell-size);
-    overflow-x: auto;
-    overflow-y: hidden;
-    padding: 2px 0;
     flex-wrap: wrap;
+    justify-content: flex-start;
+    width: 100%;
 }
 
 .heatmap-cell {
@@ -70,15 +93,129 @@ export const HEATMAP_VIEW_STYLES = `
     box-sizing: border-box;
 }
 
+.heatmap-cell:hover {
+    transform: scale(1.05);
+    z-index: 10;
+}
+
 .heatmap-cell.current-day {
     box-shadow: 0 0 0 1px var(--interactive-accent);
+    opacity: 1;
 }
 
 .heatmap-cell.empty {
     background-color: transparent;
     cursor: default;
+    opacity: 0.3;
 }
 
+.heatmap-cell.has-data {
+    /* 有数据的单元格样式 */
+}
+
+.heatmap-cell-content {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+}
+
+.cell-with-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.cell-with-text {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+}
+
+.visual-content {
+    /* 视觉内容样式 */
+}
+
+.pure-count {
+    font-weight: bold;
+    color: var(--text-on-accent);
+    text-shadow: 1px 1px 1px rgba(0,0,0,0.3);
+}
+
+.pure-count.small {
+    font-size: 12px;
+}
+
+.pure-count.medium {
+    font-size: 10px;
+}
+
+.pure-count.large {
+    font-size: 8px;
+}
+
+/* 月份视图样式 */
+.month-section {
+    /* 月份区块样式 */
+}
+
+.month-label {
+    font-size: 12px;
+    margin-bottom: 4px;
+    color: var(--text-muted);
+    text-align: center;
+}
+
+.heatmap-row.calendar {
+    display: grid;
+    grid-template-columns: repeat(7, var(--heatmap-cell-size));
+    gap: 3px;
+}
+
+/* 等级相关样式 */
+.level-icon {
+    font-size: 16px;
+}
+
+.level-text {
+    font-weight: bold;
+    font-size: 13px;
+    color: var(--text-normal);
+}
+
+.theme-name {
+    font-weight: bold;
+    font-size: 14px;
+    color: var(--text-normal);
+}
+
+/* 字体尺寸工具类 */
+.text-16 { font-size: 16px; }
+.text-14 { font-size: 14px; }
+.text-13 { font-size: 13px; }
+.text-12 { font-size: 12px; }
+
+/* 进度条样式 */
+.progress-bar-container {
+    width: 100%;
+    height: 6px;
+    background-color: var(--background-modifier-border);
+    border-radius: 3px;
+    overflow: hidden;
+    position: relative;
+    cursor: pointer;
+}
+
+.progress-bar {
+    height: 100%;
+    transition: width 0.3s ease;
+}
+
+/* 主题适配 */
 body.theme-dark .heatmap-cell {
     background-color: var(--background-modifier-border);
 }
@@ -86,4 +223,85 @@ body.theme-dark .heatmap-cell {
 body.theme-dark .heatmap-cell.empty {
     background-color: transparent;
 }
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+    .heatmap-container {
+        --heatmap-cell-size: 16px;
+        padding: 4px;
+    }
+    
+    .heatmap-theme-header {
+        padding: 8px 12px;
+        margin-bottom: 12px;
+    }
+    
+    .heatmap-header-info {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+    
+    .heatmap-header-info-right {
+        margin: 8px 0 0 0;
+        width: 100%;
+    }
+}
+
+@media (max-width: 480px) {
+    .heatmap-container {
+        --heatmap-cell-size: 14px;
+    }
+    
+    .heatmap-view-wrapper {
+        gap: 12px;
+    }
+}
+
+/* 工具类 */
+.mb-16 { margin-bottom: 16px; }
+.mb-12 { margin-bottom: 12px; }
+.mb-8 { margin-bottom: 8px; }
+.mb-4 { margin-bottom: 4px; }
+
+.p-12 { padding: 12px; }
+.px-16 { padding-left: 16px; padding-right: 16px; }
+.py-12 { padding-top: 12px; padding-bottom: 12px; }
+
+.gap-3 { gap: 3px; }
+.gap-8 { gap: 8px; }
+.gap-16 { gap: 16px; }
+
+.flex { display: flex; }
+.flex-col { flex-direction: column; }
+.items-center { align-items: center; }
+.justify-between { justify-content: space-between; }
+.justify-start { justify-content: flex-start; }
+
+.text-center { text-align: center; }
+.text-muted { color: var(--text-muted); }
+.text-normal { color: var(--text-normal); }
+
+.font-bold { font-weight: bold; }
+
+.border-radius-8 { border-radius: 8px; }
+.border-radius-3 { border-radius: 3px; }
+
+.transition-all { transition: all 0.2s ease; }
+.transition-width { transition: width 0.3s ease; }
+
+.cursor-pointer { cursor: pointer; }
+
+.w-full { width: 100%; }
+.h-full { height: 100%; }
+
+.object-cover { object-fit: cover; }
+
+.opacity-30 { opacity: 0.3; }
+.opacity-100 { opacity: 1; }
+
+.z-10 { z-index: 10; }
+
+.flex-none { flex: 0 0 auto; }
+.flex-1 { flex: 1 1 auto; }
 `;
