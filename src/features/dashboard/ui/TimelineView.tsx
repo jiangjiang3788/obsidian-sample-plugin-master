@@ -86,7 +86,7 @@ const ProgressBlock = ({ categoryHours, order, totalHours, colorMap, untrackedLa
     if (sortedCategories.length === 0) return null;
 
     return (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', padding: '4px' }}>
+        <div class="progress-block-container">
             {sortedCategories.map((category) => {
                 const hours = categoryHours[category];
                 const percent = totalHours > 0 ? (hours / totalHours) * 100 : 0;
@@ -94,9 +94,9 @@ const ProgressBlock = ({ categoryHours, order, totalHours, colorMap, untrackedLa
                 const color = colorMap[category] || '#cccccc';
                 const displayPercent = Math.max(percent, 0.5);
                 return (
-                    <div key={category} title={`${category}: ${hours.toFixed(1)}h (${Math.round(percent)}%)`} style={{ width: '100%', height: '16px', background: '#e5e7eb', borderRadius: '8px', overflow: 'hidden', position: 'relative' }}>
-                        <div style={{ background: color, width: `${displayPercent}%`, height: '100%' }} />
-                        <span style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px', fontWeight: 500, color: displayPercent > 50 ? '#fff' : '#222', whiteSpace: 'nowrap' }}>
+                    <div key={category} title={`${category}: ${hours.toFixed(1)}h (${Math.round(percent)}%)`} class="progress-block-item">
+                        <div class="progress-block-bar" style={{ background: color, width: `${displayPercent}%` }} />
+                        <span class={`progress-block-text ${displayPercent > 50 ? 'progress-block-text-light' : 'progress-block-text-dark'}`}>
                             {`${category} ${hours.toFixed(1)}h`}
                         </span>
                     </div>
@@ -128,11 +128,11 @@ const DayColumnHeader = ({ day, blocks, categoriesConfig, colorMap, untrackedLab
     }, [blocks, categoriesConfig, untrackedLabel]);
     
     return (
-        <div class="day-column-header" style={{ flex: '0 0 150px', borderLeft: '1px solid var(--background-modifier-border)' }}>
-            <div style={{ fontWeight: 'bold', textAlign: 'center', height: '24px', lineHeight: '24px', borderBottom: '1px solid var(--background-modifier-border-hover)' }}>
+        <div class="day-column-header">
+            <div class="day-header-title">
                 {dayjs(day).format('MM-DD ddd')}
             </div>
-            <div class="daily-progress-bar" style={{ minHeight: '60px' }}>
+            <div class="daily-progress-bar">
                 <ProgressBlock categoryHours={categoryHours} order={progressOrder} totalHours={totalDayHours} colorMap={colorMap} untrackedLabel={untrackedLabel} />
             </div>
         </div>
@@ -140,10 +140,10 @@ const DayColumnHeader = ({ day, blocks, categoriesConfig, colorMap, untrackedLab
 };
 const TimelineSummaryTable = ({ summaryData, colorMap, progressOrder, untrackedLabel }: any) => {
     if (!summaryData || summaryData.length === 0) {
-        return <div style={{ color: 'var(--text-faint)', textAlign: 'center', padding: '20px' }}>此时间范围内无数据可供总结。</div>
+        return <div class="timeline-empty-state">此时间范围内无数据可供总结。</div>
     }
     return (
-        <table class="think-table">
+        <table class="timeline-summary-table">
             <thead>
                 <tr>
                     <th>月份</th>
@@ -201,7 +201,8 @@ const DayColumnBody = ({ app, day, blocks, hourHeight, categoriesConfig, colorMa
 
     return (
         <div 
-            style={{ flex: '0 0 150px', borderLeft: '1px solid var(--background-modifier-border)', position: 'relative', height: `${maxHours * hourHeight}px`, cursor: 'cell' }}
+            class="day-column-body"
+            style={{ height: `${maxHours * hourHeight}px` }}
             onClick={(e) => onColumnClick(day, e as any)}
             onTouchStart={(e) => onColumnClick(day, e as any)}
         >
@@ -219,23 +220,23 @@ const DayColumnBody = ({ app, day, blocks, hourHeight, categoriesConfig, colorMa
                         key={block.id + block.day}
                         class="timeline-task-block"
                         title={generateTaskBlockTitle(block)}
-                        style={{ position: 'absolute', left: '2px', right: '2px', top: `${top}px`, height: `${Math.max(height, 2)}px` }}
+                        style={{ top: `${top}px`, height: `${Math.max(height, 2)}px` }}
                         onClick={(e) => e.stopPropagation()}
                         onTouchStart={(e) => e.stopPropagation()}
                     >
                         <a 
+                            class="timeline-task-link"
                             onClick={(e) => { e.preventDefault(); window.open(makeObsUri(block, app)); }}
-                            style={{ display: 'flex', width: '100%', height: '100%', overflow: 'hidden', borderRadius: '2px' }}
                         >
-                            <div style={{ width: '4px', background: color }}></div>
-                            <div style={{ flex: 1, background: hexToRgba(color), padding: '2px 4px', fontSize: '12px', whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden', color: 'var(--text-normal)' }}>
+                            <div class="timeline-task-indicator" style={{ background: color }}></div>
+                            <div class="timeline-task-content" style={{ background: hexToRgba(color) }}>
                                 {block.pureText}
                             </div>
                         </a>
                         <div class="task-buttons">
-                            <button title="向前对齐" disabled={!prevBlock} onClick={() => handleAlignToPrev(block, prevBlock)}>⇡</button>
-                            <button title="向后对齐" disabled={!canAlignToNext} onClick={() => handleAlignToNext(block, nextBlock)}>⇣</button>
-                            <button title="精确编辑" onClick={() => handleEdit(block)}>✎</button>
+                            <button class="task-button" title="向前对齐" disabled={!prevBlock} onClick={() => handleAlignToPrev(block, prevBlock)}>⇡</button>
+                            <button class="task-button" title="向后对齐" disabled={!canAlignToNext} onClick={() => handleAlignToNext(block, nextBlock)}>⇣</button>
+                            <button class="task-button" title="精确编辑" onClick={() => handleEdit(block)}>✎</button>
                         </div>
                     </div>
                 );
@@ -357,7 +358,7 @@ export function TimelineView({ items, dateRange, module, currentView, app, taskS
     }, []);
 
     if (timelineTasks.length === 0) {
-        return <div style={{ color: 'var(--text-faint)', textAlign: 'center', padding: '20px' }}>当前范围内没有数据。</div>
+        return <div class="timeline-empty-state">当前范围内没有数据。</div>
     }
     
     if (currentView === '年' || currentView === '季') {
@@ -536,10 +537,10 @@ export function TimelineView({ items, dateRange, module, currentView, app, taskS
                 onTouchMove={handleTouchMove as any}
                 onTouchEnd={handleTouchEnd as any}
             >
-                <div class="timeline-sticky-header" style={{ position: 'sticky', top: 0, zIndex: 2, background: 'var(--background-primary)', display: 'flex' }}>
-                    <div class="summary-progress-container" style={{ flex: `0 0 ${TIME_AXIS_WIDTH}px`, borderBottom: '1px solid var(--background-modifier-border)' }}>
-                        <div style={{height: '24px', lineHeight: '24px', textAlign:'center', fontWeight:'bold', borderBottom: '1px solid var(--background-modifier-border-hover)'}}>总结</div>
-                        <div style={{ minHeight: '60px' }}>
+                <div class="timeline-sticky-header">
+                    <div class="summary-progress-container" style={{ flex: `0 0 ${TIME_AXIS_WIDTH}px` }}>
+                        <div class="summary-title">总结</div>
+                        <div class="summary-content">
                             {summaryCategoryHours && totalSummaryHours > 0 && (
                                 <ProgressBlock categoryHours={summaryCategoryHours} order={config.progressOrder} totalHours={totalSummaryHours} colorMap={colorMap} untrackedLabel={config.UNTRACKED_LABEL} />
                             )}
