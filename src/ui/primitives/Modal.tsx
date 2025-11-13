@@ -3,8 +3,7 @@
  */
 
 import { h, ComponentChildren } from 'preact';
-import { useEffect, useRef } from 'preact/hooks';
-import { useClickOutside } from '@/hooks/shared../hooks/shared';
+import { useEffect, useRef, useState } from 'preact/hooks';
 
 export interface ModalProps {
     isOpen: boolean;
@@ -17,6 +16,26 @@ export interface ModalProps {
     closeOnEscape?: boolean;
     showCloseButton?: boolean;
     className?: string;
+    onSave?: () => Promise<void> | void;
+    saveButtonText?: string;
+    showSaveButton?: boolean;
+    onBeforeClose?: () => boolean;
+}
+
+// 修复类型问题：使用更通用的 HTMLElement 类型
+function useClickOutside(ref: { current: HTMLElement | null }, handler: (event: MouseEvent) => void) {
+    useEffect(() => {
+        const listener = (event: MouseEvent) => {
+            // 确保 event.target 是 Node 类型
+            if (event.target instanceof Node && ref.current && !ref.current.contains(event.target)) {
+                handler(event);
+            }
+        };
+        document.addEventListener('mousedown', listener);
+        return () => {
+            document.removeEventListener('mousedown', listener);
+        };
+    }, [ref, handler]);
 }
 
 export function Modal({
@@ -29,14 +48,19 @@ export function Modal({
     closeOnClickOutside = true,
     closeOnEscape = true,
     showCloseButton = true,
-    className = ''
+    className = '',
+    onSave,
+    saveButtonText = '保存',
+    showSaveButton = true,
+    onBeforeClose
 }: ModalProps) {
     const modalRef = useRef<HTMLDivElement>(null);
+    const [isSaving, setIsSaving] = useState(false);
 
     // 点击外部关闭
     useClickOutside(modalRef, () => {
         if (closeOnClickOutside && isOpen) {
-            onClose();
+            handleClose();
         }
     });
 
@@ -46,13 +70,13 @@ export function Modal({
 
         const handleEscape = (e: KeyboardEvent) => {
             if (e.key === 'Escape') {
-                onClose();
+                handleClose();
             }
         };
 
         document.addEventListener('keydown', handleEscape);
         return () => document.removeEventListener('keydown', handleEscape);
-    }, [closeOnEscape, isOpen, onClose]);
+    }, [closeOnEscape, isOpen, onClose, onBeforeClose]);
 
     // 阻止背景滚动
     useEffect(() => {
@@ -67,6 +91,24 @@ export function Modal({
         };
     }, [isOpen]);
 
+    const handleClose = () => {
+        if (onBeforeClose && !onBeforeClose()) {
+            return;
+        }
+        onClose();
+    };
+
+    const handleSave = async () => {
+        if (!onSave || isSaving) return;
+        
+        try {
+            setIsSaving(true);
+            await onSave();
+        } finally {
+            setIsSaving(false);
+        }
+    };
+
     if (!isOpen) return null;
 
     const modalClasses = [
@@ -74,6 +116,21 @@ export function Modal({
         `think-modal--${size}`,
         className
     ].filter(Boolean).join(' ');
+
+    const defaultFooter = (
+        <div className="think-modal__footer">
+            {onSave && showSaveButton && (
+                <button 
+                    className="mod-cta" 
+                    onClick={handleSave}
+                    disabled={isSaving}
+                >
+                    {isSaving ? '保存中...' : saveButtonText}
+                </button>
+            )}
+            <button onClick={handleClose}>取消</button>
+        </div>
+    );
 
     return (
         <div className="think-modal-overlay">
@@ -84,7 +141,7 @@ export function Modal({
                         {showCloseButton && (
                             <button
                                 className="think-modal__close"
-                                onClick={onClose}
+                                onClick={handleClose}
                                 aria-label="Close modal"
                             >
                                 ×
@@ -97,11 +154,7 @@ export function Modal({
                     {children}
                 </div>
 
-                {footer && (
-                    <div className="think-modal__footer">
-                        {footer}
-                    </div>
-                )}
+                {footer !== undefined ? footer : defaultFooter}
             </div>
         </div>
     );
