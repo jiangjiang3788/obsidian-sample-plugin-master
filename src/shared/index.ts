@@ -1,9 +1,9 @@
 // 导出通用组件
-export { FieldManager } from '@/ui/composites/FieldManager';
-export type { FieldManagerProps } from '@/ui/composites/FieldManager';
+export { FieldManager } from './ui/composites/FieldManager';
+export type { FieldManagerProps } from './ui/composites/FieldManager';
 
-export { FormField } from '@/ui/composites/FormField';
-export type { FormFieldProps } from '@/ui/composites/FormField';
+export { FormField } from './ui/composites/FormField';
+export type { FormFieldProps } from './ui/composites/FormField';
 
 // 导出通用模式
 export { useSaveHandler, useSaveHandlerWithConfirm, useSaveHandlerWithValidation } from './patterns/ModalSavePattern';

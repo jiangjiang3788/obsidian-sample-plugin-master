@@ -11,7 +11,7 @@ import DeleteForeverOutlinedIcon from '@mui/icons-material/DeleteForeverOutlined
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import type { Group, Groupable } from '@core/types/domain/schema';
 import { AppStore } from '@core/stores/AppStore';
-import { MoveItemDialog } from '../../../../ui/composites/dialogs/MoveItemDialog';
+import { MoveItemDialog } from '@shared/ui/composites/dialogs/MoveItemDialog';
 
 export interface TreeItem extends Groupable {
     name: string;

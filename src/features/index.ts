@@ -3,6 +3,9 @@
  * 所有功能模块的统一导出文件
  */
 
+// Views 功能（新增：视图模块）
+export * as Views from './views';
+
 // Dashboard 功能
 export * as Dashboard from './dashboard';
 

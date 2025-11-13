@@ -2,7 +2,7 @@
 import { render, h } from 'preact';
 import { unmountComponentAtNode } from 'preact/compat';
 import type ThinkPlugin from '@main';
-import { TimerView } from './ui/TimerView';
+import { TimerView } from './TimerView';
 
 /**
  * TimerWidget 负责管理状态栏中计时器UI元素的整个生命周期。

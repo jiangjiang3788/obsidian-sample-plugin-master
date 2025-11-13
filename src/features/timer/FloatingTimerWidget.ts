@@ -2,7 +2,7 @@
 import { render, h } from 'preact';
 import { unmountComponentAtNode } from 'preact/compat';
 import type ThinkPlugin from '@main';
-import { TimerView } from './ui/TimerView';
+import { TimerView } from './TimerView';
 
 export class FloatingTimerWidget {
     private plugin: ThinkPlugin;

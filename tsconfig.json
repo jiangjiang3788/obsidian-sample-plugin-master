@@ -32,7 +32,8 @@
         "@constants/*": ["src/constants/*"],
         "@shared/*": ["src/shared/*"],
         "@core/*": ["src/core/*"],
-        "@features/*": ["src/features/*"]
+        "@features/*": ["src/features/*"],
+        "react": ["node_modules/preact/compat"]
       },
       "types": ["vite/client", "preact"]
     },

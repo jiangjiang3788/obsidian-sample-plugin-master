@@ -9,7 +9,7 @@ import { useStore } from '@core/stores/AppStore';
 import type { InputSettings, BlockTemplate, ThemeDefinition, TemplateField, TemplateFieldOption } from '@core/types/domain/schema';
 import { Button, RadioGroup as MuiRadioGroup, FormControlLabel, Radio, FormControl, Typography, Stack, Divider, Box, IconButton, Tooltip } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
-import { SimpleSelect } from '../../../ui/composites/SimpleSelect';
+import { SimpleSelect } from '@shared/ui/composites/SimpleSelect';
 import { buildThemeTree, ThemeTreeNode } from '@core/utils/themeUtils';
 import { dayjs, timeToMinutes, minutesToTime } from '@core/utils/date';
 import { dataStore, inputService } from '@core/stores/storeRegistry';

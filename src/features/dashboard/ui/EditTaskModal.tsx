@@ -2,11 +2,10 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
 import { useEffect } from 'preact/hooks';
-import type { TaskBlock } from '@/features/dashboard/views/timeline/timeline-parser';
+import type { TaskBlock } from '@features/views/timeline-parser';
 import { TaskService } from '@core/services/TaskService';
 import { timeToMinutes, minutesToTime } from '@core/utils/date';
-import { Modal } from '@/ui/primitives/Modal';
-import { FormField } from '@/ui/composites/FormField';
+import { Dialog, DialogTitle, DialogContent, DialogActions, Button, TextField } from '@mui/material';
 import { useTimeFormState, useSaveHandler } from '@shared/index';
 
 interface EditTaskModalProps {
@@ -110,57 +109,56 @@ export function EditTaskModal({ isOpen, onClose, task, taskService, onSave }: Ed
   });
 
   return (
-    <Modal
-      isOpen={isOpen}
-      onClose={onClose}
-      title="编辑任务时间"
-      onSave={handleSave}
-      saveButtonText="保存"
-      size="medium"
-    >
-      <div style={{ marginBottom: '1rem' }}>
-        <p style={{ 
-          fontSize: '0.9em', 
-          color: 'var(--text-muted)', 
-          maxWidth: '400px', 
-          whiteSpace: 'nowrap', 
-          overflow: 'hidden', 
-          textOverflow: 'ellipsis' 
-        }}>
-          {task.pureText}
-        </p>
-      </div>
+    <Dialog open={isOpen} onClose={onClose}>
+      <DialogTitle>编辑任务时间</DialogTitle>
+      <DialogContent>
+        <div style={{ marginBottom: '1rem', marginTop: '0.5rem' }}>
+          <p style={{ 
+            fontSize: '0.9em', 
+            color: 'var(--text-muted)', 
+            maxWidth: '400px', 
+            whiteSpace: 'nowrap', 
+            overflow: 'hidden', 
+            textOverflow: 'ellipsis' 
+          }}>
+            {task.pureText}
+          </p>
+        </div>
 
-      <FormField label="开始时间">
-        <input 
-          type="time" 
-          value={timeData.startTime} 
-          onInput={e => updateField('startTime', (e.target as HTMLInputElement).value)}
-          style={{ width: '100%' }}
+        <TextField
+          label="开始时间"
+          type="time"
+          value={timeData.startTime}
+          onChange={e => updateField('startTime', (e.target as HTMLInputElement).value)}
+          fullWidth
+          margin="normal"
+          InputLabelProps={{ shrink: true }}
         />
-      </FormField>
 
-      <FormField label="结束时间">
-        <input 
-          type="time" 
-          value={timeData.endTime} 
-          onInput={e => updateField('endTime', (e.target as HTMLInputElement).value)}
-          style={{ width: '100%' }}
+        <TextField
+          label="结束时间"
+          type="time"
+          value={timeData.endTime}
+          onChange={e => updateField('endTime', (e.target as HTMLInputElement).value)}
+          fullWidth
+          margin="normal"
+          InputLabelProps={{ shrink: true }}
         />
-      </FormField>
 
-      <FormField 
-        label="持续时长" 
-        help="单位：分钟"
-      >
-        <input 
-          type="number" 
-          min="0" 
-          value={timeData.duration} 
-          onInput={e => updateField('duration', (e.target as HTMLInputElement).value)}
-          style={{ width: '100%' }}
+        <TextField
+          label="持续时长 (分钟)"
+          type="number"
+          value={timeData.duration}
+          onChange={e => updateField('duration', (e.target as HTMLInputElement).value)}
+          fullWidth
+          margin="normal"
+          inputProps={{ min: 0 }}
         />
-      </FormField>
-    </Modal>
+      </DialogContent>
+      <DialogActions>
+        <Button onClick={onClose}>取消</Button>
+        <Button onClick={handleSave} variant="contained">保存</Button>
+      </DialogActions>
+    </Dialog>
   );
 }

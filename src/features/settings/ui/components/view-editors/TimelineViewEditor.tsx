@@ -7,7 +7,7 @@ import AddIcon from '@mui/icons-material/AddCircleOutline';
 import DeleteIcon from '@mui/icons-material/RemoveCircleOutline';
 import { useMemo } from 'preact/hooks';
 import { dataStore } from '@core/stores/storeRegistry';
-import { SimpleSelect } from '@/ui/composites/SimpleSelect';
+import { SimpleSelect } from '@shared/ui/composites/SimpleSelect';
 
 export const DEFAULT_CONFIG = {
     defaultHourHeight: 50,

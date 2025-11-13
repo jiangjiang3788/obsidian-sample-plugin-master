@@ -1,7 +1,7 @@
 // src/features/settings/index.ts
 import { App } from 'obsidian';
-import type { ThinkPlugin } from '@main';
-import { SettingsTab } from './ui/SettingsTab';
+import type ThinkPlugin from '@main';
+import { SettingsTab } from './SettingsTab';
 import { AppStore } from '@core/stores/AppStore'; // [新增]
 
 // [修改] 依赖项接口

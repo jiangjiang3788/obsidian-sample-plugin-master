@@ -9,7 +9,7 @@ import type { ViewInstance } from '@core/types/domain/schema';
 import { VIEW_EDITORS } from './components/view-editors/registry';
 import { dataStore } from '@core/stores/storeRegistry';
 import { useMemo } from 'preact/hooks';
-import { SimpleSelect } from '@/ui/composites/SimpleSelect';
+import { SimpleSelect } from '@shared/ui/composites/SimpleSelect';
 import { SettingsTreeView, TreeItem } from './components/SettingsTreeView';
 import { RuleBuilder } from './components/RuleBuilder'; // [新增] 导入 RuleBuilder
 import { App } from 'obsidian';

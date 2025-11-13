@@ -16,7 +16,7 @@ import { ModuleSettingsModal } from './ModuleSettingsModal'; // [新增] 导入�
 import { App, Notice } from 'obsidian'; // [修改] 导入 Notice
 import { appStore } from '@core/stores/storeRegistry';
 import { exportItemsToMarkdown } from '@core/utils/exportUtils'; // [新增] 导入导出函数
-import { ThemeFilter } from './ThemeFilter'; // [新增] 导入主题筛选组件
+import { ThemeFilter } from '@features/theme/ThemeFilter'; // [新增] 导入主题筛选组件
 
 // [修改] ViewContent 组件增加 onDataLoaded 和 selectedThemes props
 const ViewContent = ({

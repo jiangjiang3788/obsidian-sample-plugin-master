@@ -2,7 +2,7 @@
 import { App } from 'obsidian';
 import { useCallback } from 'preact/hooks';
 import { AppStore } from '@core/stores/AppStore';
-import { NamePromptModal } from '../../../../ui/composites/dialogs/NamePromptModal';
+import { NamePromptModal } from '@shared/ui/composites/dialogs/NamePromptModal';
 import { DEFAULT_NAMES } from '@core/types/domain/constants';
 import type { GroupType } from '@core/types/domain/schema';
 import type { TreeItem } from '../components/SettingsTreeView';

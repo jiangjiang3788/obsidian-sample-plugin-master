@@ -1,14 +1,16 @@
 // src/features/dashboard/ui/index.ts
-import { TableView } from './TableView';
-import { BlockView } from './BlockView';
-import { ExcelView } from './ExcelView';
-import { StatisticsView } from './StatisticsView';
-import { TimelineView } from './TimelineView';
-import { HeatmapView } from './HeatmapView'; // [NEW] Import HeatmapView
+import { 
+    TableView, 
+    BlockView, 
+    ExcelView, 
+    StatisticsView, 
+    TimelineView, 
+    HeatmapView 
+} from '@features/views';
 import type { ComponentType } from 'preact';
 
-// [NEW] Export ThemeFilter component
-export { ThemeFilter } from './ThemeFilter';
+// [MOVED] ThemeFilter moved to theme module
+export { ThemeFilter } from '@features/theme';
 
 // [REFACTOR] Import the authoritative ViewName and VIEW_OPTIONS from the domain layer.
 import type { ViewName } from '@core/types/domain/schema';

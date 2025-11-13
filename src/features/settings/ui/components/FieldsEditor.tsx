@@ -9,7 +9,7 @@ import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
 import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
 import RemoveCircleOutlineIcon from '@mui/icons-material/RemoveCircleOutline';
 import type { TemplateField, TemplateFieldOption } from '@core/types/domain/schema';
-import { SimpleSelect } from '../../../../ui/composites/SimpleSelect';
+import { SimpleSelect } from '@shared/ui/composites/SimpleSelect';
 import { Notice } from 'obsidian';
 
 // OptionRow 组件没有变化
@@ -34,6 +34,7 @@ function OptionRow({ option, onChange, onRemove, fieldType }: { option: Template
 
 function FieldRow({ field, index, fieldCount, onUpdate, onRemove, onMove }: { field: TemplateField, index: number, fieldCount: number, onUpdate: (updates: Partial<TemplateField>) => void, onRemove: () => void, onMove: (direction: 'up' | 'down') => void }) {
     const [localName, setLocalName] = useState(field.label || field.key);
+    const [isEditing, setIsEditing] = useState(false);
     useEffect(() => { setLocalName(field.label || field.key); }, [field.label, field.key]);
 
     const handleNameBlur = () => {
