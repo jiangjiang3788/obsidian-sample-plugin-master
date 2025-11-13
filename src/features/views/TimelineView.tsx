@@ -15,7 +15,6 @@ import { TaskService } from '@core/services/TaskService';
 import { EditTaskModal } from '@features/dashboard/ui/EditTaskModal';
 import { useStore } from '@core/stores/AppStore';
 import { QuickInputModal } from '@features/quickinput/ui/QuickInputModal';
-import { dataStore } from '@core/stores/storeRegistry';
 import { filterByRules } from '@core/utils/itemFilter';
 
 dayjs.extend(weekOfYear);
@@ -284,37 +283,14 @@ export function TimelineView({ items, dateRange, module, currentView, app, taskS
     const initialPinchDistanceRef = useRef<number | null>(null);
     const initialHourHeightRef = useRef<number | null>(null);
 
-    // [核心修改] 创建一个 state 来存储从 DataStore 来的所有 items，并初始化
-    const [allItems, setAllItems] = useState(() => dataStore?.queryItems() || []);
-
-    // [核心修改] 创建一个 effect 来订阅 DataStore 的变化
-    useEffect(() => {
-        if (!dataStore) return;
-
-        // 定义监听器：当 dataStore 通知变化时，用最新数据更新我们的 state
-        const listener = () => {
-            setAllItems(dataStore.queryItems());
-        };
-
-        dataStore.subscribe(listener); // 订阅
-
-        // 组件卸载时，取消订阅以防止内存泄漏
-        return () => dataStore.unsubscribe(listener);
-    }, []); // 空依赖数组 `[]` 意味着这个 effect 只会在组件挂载时运行一次
-
     useEffect(() => {
         setHourHeight(config.defaultHourHeight);
     }, [config.defaultHourHeight]);
 
     const timelineTasks = useMemo(() => {
-        if (!module.filters) return [];
-
-        // [核心修改] 使用我们可响应的 allItems state，并调用正确的 filterByRules 函数
-        const baseItems = filterByRules(allItems, module.filters);
-
-        return processItemsToTimelineTasks(baseItems);
-    // [核心修改] 将 allItems 添加到依赖数组，这样当 allItems 更新时，本 useMemo 会重新计算
-    }, [module.filters, allItems]);
+        const filteredItems = module.filters ? filterByRules(items, module.filters) : items;
+        return processItemsToTimelineTasks(filteredItems);
+    }, [items, module.filters]);
 
     const colorMap = useMemo(() => {
         const finalColorMap: Record<string, string> = {};
