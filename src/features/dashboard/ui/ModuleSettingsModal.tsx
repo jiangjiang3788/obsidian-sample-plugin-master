@@ -8,9 +8,9 @@ import type { ViewInstance } from '@core/types/domain/schema';
 import { VIEW_EDITORS } from '@features/settings/ui/components/view-editors/registry';
 import { dataStore } from '@core/stores/storeRegistry';
 import { useStore, AppStore } from '@core/stores/AppStore';
-import { SimpleSelect } from '@ui/composites/SimpleSelect';
+import { SimpleSelect } from '@shared/ui/composites/SimpleSelect';
 import { RuleBuilder } from '@features/settings/ui/components/RuleBuilder';
-import { Modal } from '@/ui/primitives/Modal';
+import { Modal } from '@shared/ui/primitives/Modal';
 import { FormField, FieldManager, useSaveHandler } from '@shared/index';
 
 // 重构后的视图设置编辑器组件 - 使用通用组件
