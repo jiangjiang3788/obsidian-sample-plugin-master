@@ -30,6 +30,7 @@ interface StatisticsViewProps {
     currentView: '年' | '季' | '月' | '周' | '天';
     useFieldGranularity?: boolean;
     actionService?: any;
+    selectedCategories?: string[];
 }
 interface PeriodData {
     counts: Record<string, number>;
@@ -297,13 +298,11 @@ const ChartBlock = ({ data, label, onCellClick, categories, cellIdentifier, isCo
 
 
 // =============== 主视图组件 ===============
-export function StatisticsView({ items, app, dateRange, module, currentView, useFieldGranularity = false, actionService }: StatisticsViewProps) {
+export function StatisticsView({ items, app, dateRange, module, currentView, useFieldGranularity = false, actionService, selectedCategories }: StatisticsViewProps) {
     const { categories = [], displayMode = 'smart', minVisibleHeight = 15, usePeriodField = false } = { ...DEFAULT_CONFIG, ...module.viewConfig };
     const categoryOrder = useMemo(() => categories.map((c: any) => c.name), [categories]);
     const [selectedCell, setSelectedCell] = useState<any>(null);
     const [popover, setPopover] = useState<PopoverState | null>(null);
-    // 分类过滤状态：存储选中的分类名称
-    const [selectedCategories, setSelectedCategories] = useState<Set<string>>(new Set(categoryOrder));
     // 周期字段使用状态
     const [usePeriod, setUsePeriod] = useState(usePeriodField);
     
@@ -313,54 +312,21 @@ export function StatisticsView({ items, app, dateRange, module, currentView, use
     // [修复] 只在分类配置实际改变时才更新选中状态，避免主题筛选时重置
     const categoryOrderKey = useMemo(() => categoryOrder.join(','), [categoryOrder]);
     const prevCategoryOrderKeyRef = useRef<string>('');
-    
-    useEffect(() => {
-        const currentKey = categoryOrderKey;
-        if (prevCategoryOrderKeyRef.current !== '' && prevCategoryOrderKeyRef.current !== currentKey) {
-            // 分类配置真的改变了，重置选中状态
-            setSelectedCategories(new Set(categoryOrder));
-        }
-        prevCategoryOrderKeyRef.current = currentKey;
-    }, [categoryOrderKey, categoryOrder]);
 
     // 过滤后的分类列表
     const filteredCategories = useMemo(() => {
-        return categories.filter((c: any) => selectedCategories.has(c.name));
-    }, [categories, selectedCategories]);
-
-    // 切换分类选中状态
-    const toggleCategory = (categoryName: string) => {
-        setSelectedCategories(prev => {
-            const newSet = new Set(prev);
-            if (newSet.has(categoryName)) {
-                // 至少保留一个分类
-                if (newSet.size > 1) {
-                    newSet.delete(categoryName);
-                }
-            } else {
-                newSet.add(categoryName);
-            }
-            return newSet;
-        });
-    };
-
-    // 全选/全不选
-    const toggleAll = () => {
-        if (selectedCategories.size === categoryOrder.length) {
-            // 当前全选，切换为只选第一个
-            setSelectedCategories(new Set([categoryOrder[0]]));
-        } else {
-            // 未全选，切换为全选
-            setSelectedCategories(new Set(categoryOrder));
+        if (!selectedCategories || selectedCategories.length === 0) {
+            return categories;
         }
-    };
+        return categories.filter((c: any) => selectedCategories.includes(c.name));
+    }, [categories, selectedCategories]);
 
     const createPeriodData = (): PeriodData => ({
         counts: Object.fromEntries(filteredCategories.map((c: any) => [c.name, 0])),
         blocks: [],
     });
 
-    // 处理所有数据的基础函数 - 修复：周视图应显示所有数据，不按period过滤
+    // 处理所有数据的基础函数 - 支持年、季度、月视图的周期字段功能
     const processDataForItems = (itemList: Item[], period?: string) => {
         const data = createPeriodData();
         itemList.forEach(item => {
@@ -370,13 +336,12 @@ export function StatisticsView({ items, app, dateRange, module, currentView, use
             const baseCategory = (item.categoryKey || '').split('/')[0];
             if (!categoryOrder.includes(baseCategory)) return;
             
-            // 如果是专属视图（周、月、季），直接统计所有数据
-            // 如果是年视图，仍然按period过滤
-            if (!period || currentView !== '年') {
+            // 如果没有指定period或不使用周期字段，直接统计所有数据
+            if (!period || !usePeriod || (currentView !== '年' && currentView !== '季' && currentView !== '月')) {
                 data.counts[baseCategory]++;
                 data.blocks.push(item);
             } else {
-                // 年视图保持原有逻辑
+                // 年、季度、月视图且开启周期字段时，按period过滤
                 const itemPeriod = readField(item, 'period') || '';
                 if (itemPeriod === period) {
                     data.counts[baseCategory]++;
@@ -403,9 +368,14 @@ export function StatisticsView({ items, app, dateRange, module, currentView, use
     }
 
     // 顶部控制栏组件
-    const TopControls = () => (
-        <div class="sv-top-controls">
-            {currentView === '年' && (
+    const TopControls = () => {
+        // 只在年、季度、月视图中显示控制栏，周和天视图不显示任何内容
+        if (!(currentView === '年' || currentView === '季' || currentView === '月')) {
+            return null;
+        }
+        
+        return (
+            <div class="sv-top-controls">
                 <label class="sv-period-toggle" title="勾选后，有周期字段的条目按周期过滤，无周期字段的条目按时间归属显示">
                     <input 
                         type="checkbox" 
@@ -414,40 +384,9 @@ export function StatisticsView({ items, app, dateRange, module, currentView, use
                     />
                     <span>使用周期字段</span>
                 </label>
-            )}
-            <div class="sv-category-filter">
-                <div class="sv-filter-buttons">
-                    <button 
-                        class="sv-filter-toggle-all"
-                        onClick={toggleAll}
-                        title={selectedCategories.size === categoryOrder.length ? "取消全选" : "全选"}
-                    >
-                        {selectedCategories.size === categoryOrder.length ? "取消全选" : "全选"}
-                    </button>
-                    {categories.map(({ name, color, alias }: any) => {
-                        const isSelected = selectedCategories.has(name);
-                        const displayName = alias || name;
-                        return (
-                            <button
-                                key={name}
-                                class={`sv-filter-btn ${isSelected ? 'is-selected' : ''}`}
-                                style={{
-                                    '--category-color': color,
-                                    backgroundColor: isSelected ? color : 'transparent',
-                                    borderColor: color,
-                                    color: isSelected ? '#fff' : color,
-                                } as any}
-                                onClick={() => toggleCategory(name)}
-                                title={`${name}${alias ? ` (${alias})` : ''}`}
-                            >
-                                {displayName}
-                            </button>
-                        );
-                    })}
-                </div>
             </div>
-        </div>
-    );
+        );
+    };
 
     // 根据 currentView 渲染不同的专属视图
     if (currentView === '天') {
@@ -458,7 +397,6 @@ export function StatisticsView({ items, app, dateRange, module, currentView, use
 
         return (
             <div class="statistics-view">
-                <TopControls />
                 <div class="sv-timeline">
                     <div class="sv-row">
                         <ChartBlock
@@ -489,7 +427,6 @@ export function StatisticsView({ items, app, dateRange, module, currentView, use
 
         return (
             <div class="statistics-view">
-                <TopControls />
                 <div class="sv-timeline">
                     <div class="sv-row">
                         <ChartBlock
@@ -518,7 +455,7 @@ export function StatisticsView({ items, app, dateRange, module, currentView, use
             const itemDate = dayjs(item.date);
             return itemDate.isBetween(monthStart, monthEnd, 'day', '[]');
         });
-        const monthData = processDataForItems(monthItems);
+        const monthData = processDataForItems(monthItems, '月');
         
         const weeksData = [];
         let weekStart = monthStart.startOf('isoWeek');
@@ -587,7 +524,7 @@ export function StatisticsView({ items, app, dateRange, module, currentView, use
             const itemDate = dayjs(item.date);
             return itemDate.isBetween(quarterStart, quarterEnd, 'day', '[]');
         });
-        const quarterData = processDataForItems(quarterItems);
+        const quarterData = processDataForItems(quarterItems, '季');
         
         const monthsData = Array.from({ length: 3 }, (_, i) => {
             const month = quarterStart.add(i, 'month');

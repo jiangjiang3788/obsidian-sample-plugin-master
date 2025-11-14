@@ -1,5 +1,5 @@
 // src/core/domain/schema.ts
-import type { RecurrenceInfo } from '../../utils/core/mark';
+import type { RecurrenceInfo } from '@core/utils/mark';
 
 // [新增] 定义可分组项的通用接口
 export interface Groupable {
@@ -118,6 +118,7 @@ export interface Layout extends Groupable {
     isOverviewMode?: boolean; // [新增] 概览模式开关
     useFieldGranularity?: boolean; // [新增] 按字段粒度过滤开关
     selectedThemes?: string[]; // [新增] 选中的主题路径列表，用于主题筛选
+    selectedCategories?: string[];
     displayMode?: 'list' | 'grid';
     gridConfig?: {
         columns?: number;

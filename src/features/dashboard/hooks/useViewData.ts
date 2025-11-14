@@ -16,6 +16,7 @@ interface UseViewDataProps {
     isOverviewMode: boolean | undefined;
     useFieldGranularity?: boolean;
     selectedThemes?: string[];
+    selectedCategories?: string[];
 }
 
 // [新增] 获取条目粒度的辅助函数，未设置默认为"天"
@@ -32,6 +33,7 @@ export function useViewData({
     isOverviewMode,
     useFieldGranularity = false,
     selectedThemes,
+    selectedCategories,
 }: UseViewDataProps): Item[] {
     const filters: FilterRule[] = viewInstance?.filters || [];
     const sort: SortRule[] = viewInstance?.sort || [];
@@ -67,6 +69,14 @@ export function useViewData({
             itemsToProcess = itemsToProcess.filter(item => {
                 // 如果条目有theme字段，检查是否在选中的主题列表中
                 return item.theme && selectedThemes.includes(item.theme);
+            });
+        }
+
+        // [新增] 分类筛选
+        if (selectedCategories && selectedCategories.length > 0) {
+            itemsToProcess = itemsToProcess.filter(item => {
+                const baseCategory = (item.categoryKey || '').split('/')[0];
+                return selectedCategories.includes(baseCategory);
             });
         }
 
@@ -138,7 +148,7 @@ export function useViewData({
         console.timeEnd(`[useViewData] 为视图 [${sourceName}] 计算数据耗时`);
         return finalResult;
 
-    }, [allItems, filters, sort, dateRange, keyword, layoutView, isOverviewMode, useFieldGranularity, selectedThemes, sourceName]);
+    }, [allItems, filters, sort, dateRange, keyword, layoutView, isOverviewMode, useFieldGranularity, selectedThemes, selectedCategories, sourceName]);
 
     return processedItems;
 }

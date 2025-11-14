@@ -17,6 +17,7 @@ import { App, Notice } from 'obsidian'; // [修改] 导入 Notice
 import { appStore } from '@core/stores/storeRegistry';
 import { exportItemsToMarkdown } from '@core/utils/exportUtils'; // [新增] 导入导出函数
 import { ThemeFilter } from '@features/theme/ThemeFilter'; // [新增] 导入主题筛选组件
+import { CategoryFilter } from './CategoryFilter'; // [新增] 导入分类筛选组件
 
 // [修改] ViewContent 组件增加 onDataLoaded 和 selectedThemes props
 const ViewContent = ({
@@ -28,6 +29,7 @@ const ViewContent = ({
     isOverviewMode,
     useFieldGranularity,
     selectedThemes, // [新增]
+    selectedCategories, // [新增]
     app,
     onMarkDone,
     actionService,
@@ -42,6 +44,7 @@ const ViewContent = ({
     isOverviewMode: boolean;
     useFieldGranularity: boolean;
     selectedThemes: string[]; // [新增]
+    selectedCategories: string[]; // [新增]
     app: App;
     onMarkDone: (id: string) => void;
     actionService: ActionService;
@@ -57,6 +60,7 @@ const ViewContent = ({
         isOverviewMode: !!isOverviewMode,
         useFieldGranularity,
         selectedThemes,
+        selectedCategories,
     });
 
     // [新增] 使用 useEffect 将数据传递给父组件
@@ -82,6 +86,7 @@ const ViewContent = ({
         onMarkDone: onMarkDone,
         actionService: actionService,
         taskService: taskService,
+        selectedCategories,
     };
 
     return <ViewComponent {...viewProps} />;
@@ -112,14 +117,32 @@ export function LayoutRenderer({ layout, dataStore, app, actionService, taskServ
 
     useEffect(() => {
         const initialState: Record<string, boolean> = {};
-        allViews.forEach(v => {
-            if (layout.viewInstanceIds.includes(v.id)) {
-                initialState[v.id] = !v.collapsed;
+        layout.viewInstanceIds.forEach((viewId: string) => {
+            const view = allViews.find((v: any) => v.id === viewId);
+            if (view) {
+                initialState[viewId] = !view.collapsed;
             }
         });
         setExpandedState(initialState);
         setIsStateInitialized(true);
-    }, [allViews, layout.viewInstanceIds]);
+    }, [layout.id]); // 移除 allViews 依赖，只在 layout.id 变化时重置折叠状态
+
+    // 单独处理视图实例变化时的折叠状态更新
+    useEffect(() => {
+        if (!isStateInitialized) return;
+        
+        setExpandedState(prevState => {
+            const newState = { ...prevState };
+            layout.viewInstanceIds.forEach((viewId: string) => {
+                const view = allViews.find((v: any) => v.id === viewId);
+                if (view && !(viewId in prevState)) {
+                    // 只为新增的视图实例设置初始状态，保持现有的折叠状态
+                    newState[viewId] = !view.collapsed;
+                }
+            });
+            return newState;
+        });
+    }, [allViews, isStateInitialized, layout.viewInstanceIds]);
 
     const getInitialDate = () => {
         return layout.initialDateFollowsNow ? dayjs() : (layout.initialDate ? dayjs(layout.initialDate) : dayjs());
@@ -128,13 +151,19 @@ export function LayoutRenderer({ layout, dataStore, app, actionService, taskServ
     const [layoutView, setLayoutView] = useState(layout.initialView || '月');
     const [layoutDate, setLayoutDate] = useState(getInitialDate());
     const [selectedThemes, setSelectedThemes] = useState<string[]>(layout.selectedThemes || []); // [新增] 主题筛选状态
+    const [selectedCategories, setSelectedCategories] = useState<string[]>(layout.selectedCategories || []); // [新增] 分类筛选状态
     
     // [修复] 分离布局重置和主题筛选的effect，避免主题筛选时跳转视图
     useEffect(() => {
         setLayoutDate(getInitialDate());
         setLayoutView(layout.initialView || '月');
-        setSelectedThemes(layout.selectedThemes || []);
     }, [layout.id, layout.initialDate, layout.initialDateFollowsNow, layout.initialView]);
+
+    // [新增] 仅当布局中的筛选器设置变化时才更新状态
+    useEffect(() => {
+        setSelectedThemes(layout.selectedThemes || []);
+        setSelectedCategories(layout.selectedCategories || []);
+    }, [layout.selectedThemes, layout.selectedCategories]);
 
     // [新增] 处理导出的函数
     const handleExport = useCallback((viewId: string, viewTitle: string) => {
@@ -163,8 +192,8 @@ export function LayoutRenderer({ layout, dataStore, app, actionService, taskServ
         const isToggleAll = event?.metaKey || event?.ctrlKey;
 
         if (isToggleAll) {
-            const shouldExpandAll = !expandedState[viewId];
             setExpandedState(currentState => {
+                const shouldExpandAll = !currentState[viewId];
                 const newState: Record<string, boolean> = {};
                 for (const id in currentState) {
                     newState[id] = shouldExpandAll;
@@ -174,7 +203,7 @@ export function LayoutRenderer({ layout, dataStore, app, actionService, taskServ
         } else {
             setExpandedState(prev => ({ ...prev, [viewId]: !prev[viewId] }));
         }
-    }, [expandedState]);
+    }, []);
 
     const unit = useMemo(() => (v: string) => ({ '年': 'year', '季': 'quarter', '月': 'month', '周': 'week', '天': 'day' }[v] || 'day') as dayjs.ManipulateType, []);
     const fmt = useMemo(() => formatDateForView, []);
@@ -199,6 +228,12 @@ export function LayoutRenderer({ layout, dataStore, app, actionService, taskServ
     const handleThemeSelectionChange = useCallback((themes: string[]) => {
         setSelectedThemes(themes);
         appStore.updateLayout(layout.id, { selectedThemes: themes });
+    }, [layout.id]);
+
+    // [新增] 处理分类筛选变化
+    const handleCategorySelectionChange = useCallback((categories: string[]) => {
+        setSelectedCategories(categories);
+        appStore.updateLayout(layout.id, { selectedCategories: categories });
     }, [layout.id]);
 
     const renderViewInstance = (viewId: string) => {
@@ -230,6 +265,7 @@ export function LayoutRenderer({ layout, dataStore, app, actionService, taskServ
                         isOverviewMode={false}
                         useFieldGranularity={false}
                         selectedThemes={selectedThemes} // [新增] 传递主题筛选
+                        selectedCategories={selectedCategories} // [新增] 传递分类筛选
                         app={app}
                         onMarkDone={handleMarkItemDone}
                         actionService={actionService}
@@ -255,6 +291,11 @@ export function LayoutRenderer({ layout, dataStore, app, actionService, taskServ
                     <ThemeFilter
                         selectedThemes={selectedThemes}
                         onSelectionChange={handleThemeSelectionChange}
+                    />
+                    <CategoryFilter
+                        selectedCategories={selectedCategories}
+                        onSelectionChange={handleCategorySelectionChange}
+                        viewInstances={layout.viewInstanceIds.map((id: string) => allViews.find((v: any) => v.id === id)).filter(Boolean)}
                     />
                 </div>
             )}
