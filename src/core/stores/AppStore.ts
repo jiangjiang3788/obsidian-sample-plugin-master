@@ -10,7 +10,10 @@ import { appStore } from '@core/stores/storeRegistry';
 import { SETTINGS_TOKEN } from '@/core/services/types';
 import { ThemeStore } from '@features/theme/ThemeStore';
 import { TimerStore, type TimerState } from '@features/timer/TimerStore';
-import { LayoutStore, ViewInstanceStore, BlockStore, GroupStore } from '@features/dashboard/stores';
+import { LayoutStore } from '@features/dashboard/LayoutStore';
+import { ViewInstanceStore } from '@features/dashboard/ViewInstanceStore';
+import { BlockStore } from '@features/dashboard/BlockStore';
+import { GroupStore } from '@features/dashboard/GroupStore';
 import { SettingsStore } from '@features/settings/SettingsStore';
 
 export interface AppState {

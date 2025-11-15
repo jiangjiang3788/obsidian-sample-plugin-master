@@ -8,10 +8,10 @@ import { SETTINGS_STYLES } from './settings';
 import { UTILITY_STYLES } from './utilities';
 
 // 导入视图样式
-import { BLOCK_VIEW_STYLES } from './views/block-view';
-import { TIMELINE_VIEW_STYLES } from './views/timeline-view';
-import { STATISTICS_VIEW_STYLES } from './views/statistics-view';
-import { HEATMAP_VIEW_STYLES } from './views/heatmap-view';
+import { BLOCK_VIEW_STYLES } from '../../features/views/block-view';
+import { TIMELINE_VIEW_STYLES } from '../../features/views/timeline-view';
+import { STATISTICS_VIEW_STYLES } from '../../features/views/statistics-view';
+import { HEATMAP_VIEW_STYLES } from '../../features/views/heatmap-view';
 
 // 计时器组件样式
 const TIMER_STYLES = `

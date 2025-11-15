@@ -10,5 +10,7 @@
 export { FloatingTimerWidget } from './FloatingTimerWidget';
 export { TimerWidget } from './TimerWidget';
 
-// 导出UI组件
-export * from './ui';
+
+
+export { TimerRow } from './TimerRow';
+export { TimerView } from './TimerView';
