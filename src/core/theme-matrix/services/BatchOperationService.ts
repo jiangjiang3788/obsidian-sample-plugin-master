@@ -3,15 +3,16 @@
  * 处理主题矩阵的批量操作逻辑
  */
 import type { AppStore } from '@core/stores/AppStore';
-import type { ThemeManager } from '@features/theme/services/ThemeManager';
+import type { ThemeManager } from '@features/theme/ThemeManager';
 import type { 
-  ThemeMatrixSelection, 
   BatchOperationType, 
-  BatchOperationParams 
-} from '../hooks/useThemeMatrixSelection';
+  BatchOperationParams,
+  BatchOperationResult
+} from '@core/theme-matrix/types';
 import type { ThemeDefinition, ThemeOverride } from '@core/types/domain/schema';
+import type { SelectionState } from '@core/theme-matrix/types';
 
-export interface BatchOperationConfig {
+export interface BatchOperationServiceConfig {
   appStore: AppStore;
   themeManager: ThemeManager;
 }
@@ -23,7 +24,7 @@ export class BatchOperationService {
   private appStore: AppStore;
   private themeManager: ThemeManager;
 
-  constructor(config: BatchOperationConfig) {
+  constructor(config: BatchOperationServiceConfig) {
     this.appStore = config.appStore;
     this.themeManager = config.themeManager;
   }
@@ -31,14 +32,37 @@ export class BatchOperationService {
   /**
    * 执行批量操作
    */
-  async executeBatchOperation(params: BatchOperationParams): Promise<void> {
-    const { mode, operation, targets } = params;
+  async executeBatchOperation(params: BatchOperationParams): Promise<BatchOperationResult> {
+    const { operation, targets } = params;
 
-    if (mode === 'theme') {
-      await this.executeThemeOperation(operation, targets, params.params);
-    } else if (mode === 'block') {
-      await this.executeBlockOperation(operation, targets, params.params);
+    const result: BatchOperationResult = {
+      success: 0,
+      failed: 0,
+      errors: []
+    };
+
+    try {
+      if (targets.themeIds && targets.themeIds.length > 0) {
+        await this.executeThemeOperation(operation, targets.themeIds, params.params);
+        result.success = targets.themeIds.length;
+      }
+
+      if (targets.cells && targets.cells.length > 0) {
+        await this.executeCellOperation(operation, targets.cells, params.params);
+        result.success += targets.cells.length;
+      }
+
+      if (targets.blockIds && targets.blockIds.length > 0) {
+        await this.executeBlockOperation(operation, targets.blockIds, params.params);
+        result.success += targets.blockIds.length;
+      }
+    } catch (error) {
+      const totalTargets = (targets.themeIds?.length || 0) + (targets.cells?.length || 0) + (targets.blockIds?.length || 0);
+      result.failed = totalTargets;
+      result.errors.push(error instanceof Error ? error.message : String(error));
     }
+
+    return result;
   }
 
   /**
@@ -64,12 +88,25 @@ export class BatchOperationService {
           await this.batchSetThemeIcon(themeIds, params.icon);
         }
         break;
-      case 'toggleEdit':
+      case 'editMode':
         // 这个操作是UI状态，不需要持久化
         break;
       default:
         throw new Error(`不支持的主题操作: ${operation}`);
     }
+  }
+
+  /**
+   * 执行单元格相关的批量操作
+   */
+  private async executeCellOperation(
+    operation: BatchOperationType,
+    cells: Array<{themeId: string; blockId: string}>,
+    params?: any
+  ): Promise<void> {
+    // 将单元格转换为 blockId:themeId 格式
+    const blockConfigs = cells.map(cell => `${cell.themeId}:${cell.blockId}`);
+    return this.executeBlockOperation(operation, blockConfigs, params);
   }
 
   /**
@@ -81,14 +118,17 @@ export class BatchOperationService {
     params?: any
   ): Promise<void> {
     switch (operation) {
-      case 'setInherit':
+      case 'setBlockInherit':
         await this.batchSetBlockInherit(blockConfigs);
         break;
-      case 'setOverride':
+      case 'setBlockOverride':
         await this.batchSetBlockOverride(blockConfigs, params?.template);
         break;
-      case 'setDisabled':
+      case 'setBlockDisabled':
         await this.batchSetBlockDisabled(blockConfigs);
+        break;
+      case 'clearBlockOverrides':
+        await this.batchSetBlockInherit(blockConfigs); // 清除覆盖就是设置为继承
         break;
       case 'applyTemplate':
         if (params?.template) {
@@ -221,43 +261,36 @@ export class BatchOperationService {
   /**
    * 从选择状态获取批量操作的目标
    */
-  static getOperationTargets(
-    selection: ThemeMatrixSelection,
-    operation: BatchOperationType
-  ): string[] {
-    if (selection.mode === 'theme') {
-      return Array.from(selection.selectedThemes);
-    } else if (selection.mode === 'block') {
-      // 将Block选择转换为 themeId:blockId 格式
-      const targets: string[] = [];
-      for (const [blockId, themeIds] of selection.selectedBlocks) {
-        for (const themeId of themeIds) {
-          targets.push(`${themeId}:${blockId}`);
-        }
-      }
-      return targets;
-    }
-    return [];
-  }
+  static getOperationTargetsFromSelection(
+    selection: SelectionState
+  ): {
+    themeIds?: string[];
+    blockIds?: string[];
+    cells?: Array<{ themeId: string; blockId: string }>;
+  } {
+    const targets: {
+      themeIds?: string[];
+      blockIds?: string[];
+      cells?: Array<{ themeId: string; blockId: string }>;
+    } = {};
 
-  /**
-   * 检查操作是否可用
-   */
-  static isOperationAvailable(
-    selection: ThemeMatrixSelection,
-    operation: BatchOperationType
-  ): boolean {
-    if (selection.mode === 'theme') {
-      const themeOperations: BatchOperationType[] = [
-        'activate', 'archive', 'delete', 'setIcon', 'toggleEdit'
-      ];
-      return themeOperations.includes(operation) && selection.selectedThemes.size > 0;
-    } else if (selection.mode === 'block') {
-      const blockOperations: BatchOperationType[] = [
-        'setInherit', 'setOverride', 'setDisabled', 'applyTemplate'
-      ];
-      return blockOperations.includes(operation) && selection.selectedBlocks.size > 0;
+    if (selection.selectedThemes.size > 0) {
+      targets.themeIds = Array.from(selection.selectedThemes);
     }
-    return false;
+
+    if (selection.selectedBlocks.size > 0) {
+      targets.blockIds = Array.from(selection.selectedBlocks);
+    }
+
+    if (selection.selectedCells.size > 0) {
+      targets.cells = Array.from(selection.selectedCells)
+        .map(cellKey => {
+          const [themeId, blockId] = cellKey.split(':');
+          return { themeId, blockId };
+        })
+        .filter(cell => cell.themeId && cell.blockId);
+    }
+
+    return targets;
   }
 }

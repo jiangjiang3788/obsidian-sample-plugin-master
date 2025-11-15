@@ -1,7 +1,7 @@
 /**
  * 主题树构建算法
  */
-import type { ExtendedTheme, ThemeTreeNode } from '../types';
+import type { ExtendedTheme, ThemeTreeNode } from '@core/theme-matrix/types';
 
 /**
  * 构建主题树结构

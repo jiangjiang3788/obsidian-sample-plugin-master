@@ -1,11 +1,7 @@
 /**
  * 选择状态相关类型定义
  */
-import { type SelectionMode } from '@types/common';
-
-/**
- * 选择模式
- */
+import { type SelectionMode } from '@shared/types/common';
 
 /**
  * 选择状态

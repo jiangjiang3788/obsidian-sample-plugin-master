@@ -12,14 +12,14 @@ import { ThemeManager } from '../ThemeManager';
 import { dataStore } from '@core/stores/storeRegistry';
 
 // 导入服务
-import { ThemeMatrixService } from './services/ThemeMatrixService';
-import { ThemeScanService } from './services/ThemeScanService';
+import { ThemeMatrixService } from '@core/theme-matrix/services/ThemeMatrixService';
+import { ThemeScanService } from '@core/theme-matrix/services/ThemeScanService';
 
 // 导入类型
-import type { ThemeMatrixProps } from '@core/services/types';
+import type { ThemeMatrixProps } from './types';
 
 // 导入工具函数
-import { buildThemeTree } from './utils/themeTreeBuilder';
+import { buildThemeTree } from '@core/theme-matrix/utils/themeTreeBuilder';
 
 // 导入组件
 import { ThemeToolbar } from './components/ThemeToolbar';
