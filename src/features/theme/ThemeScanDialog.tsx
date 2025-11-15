@@ -40,7 +40,7 @@ import type {
     ScanConfig, 
     ImportResult,
     ScanStats
-} from '../services/ThemeScanService';
+} from '@core/theme-matrix/services/ThemeScanService';
 
 /**
  * 主题扫描对话框属性
@@ -236,55 +236,49 @@ export function ThemeScanDialog({
 
     // 渲染扫描统计
     const renderScanStats = (stats: ScanStats) => {
-        // @ts-ignore
+        const AnyGrid = Grid as any;
+        const AnyCard = Card as any;
+        const AnyCardContent = CardContent as any;
+        
         return (
-            <Grid container spacing={2} sx={{ mb: 2 }}>
-                {/* @ts-ignore */}
-                <Grid item xs={6} sm={3}>
-                    {/* @ts-ignore */}
-                    <Card variant="outlined">
-                        {/* @ts-ignore */}
-                        <CardContent sx={{ textAlign: 'center', py: 1 }}>
+            <AnyGrid container spacing={2} sx={{ mb: 2 }}>
+                <AnyGrid item xs={6} sm={3}>
+                    <AnyCard variant="outlined">
+                        <AnyCardContent sx={{ textAlign: 'center', py: 1 }}>
                             <Typography variant="h6" color="primary">
                                 {stats.totalItems}
                             </Typography>
                             <Typography variant="caption">
                                 总数据项
                             </Typography>
-                        </CardContent>
-                    </Card>
-                </Grid>
-                {/* @ts-ignore */}
-                <Grid item xs={6} sm={3}>
-                    {/* @ts-ignore */}
-                    <Card variant="outlined">
-                        {/* @ts-ignore */}
-                        <CardContent sx={{ textAlign: 'center', py: 1 }}>
+                        </AnyCardContent>
+                    </AnyCard>
+                </AnyGrid>
+                <AnyGrid item xs={6} sm={3}>
+                    <AnyCard variant="outlined">
+                        <AnyCardContent sx={{ textAlign: 'center', py: 1 }}>
                             <Typography variant="h6" color="primary">
                                 {stats.uniqueThemes}
                             </Typography>
                             <Typography variant="caption">
                                 发现主题
                             </Typography>
-                        </CardContent>
-                    </Card>
-                </Grid>
-                {/* @ts-ignore */}
-                <Grid item xs={6} sm={3}>
-                    {/* @ts-ignore */}
-                    <Card variant="outlined">
-                        {/* @ts-ignore */}
-                        <CardContent sx={{ textAlign: 'center', py: 1 }}>
+                        </AnyCardContent>
+                    </AnyCard>
+                </AnyGrid>
+                <AnyGrid item xs={6} sm={3}>
+                    <AnyCard variant="outlined">
+                        <AnyCardContent sx={{ textAlign: 'center', py: 1 }}>
                             <Typography variant="h6" color="success.main">
                                 {stats.newThemes}
                             </Typography>
                             <Typography variant="caption">
                                 新主题
                             </Typography>
-                        </CardContent>
-                    </Card>
-                </Grid>
-            </Grid>
+                        </AnyCardContent>
+                    </AnyCard>
+                </AnyGrid>
+            </AnyGrid>
         );
     };
 
@@ -357,44 +351,32 @@ export function ThemeScanDialog({
                     导入完成
                 </Typography>
 
-                <Grid container spacing={2} sx={{ mb: 2 }}>
-                    <Grid item xs={4}>
-                        <Card variant="outlined">
-                            <CardContent sx={{ textAlign: 'center', py: 1 }}>
-                                <Typography variant="h6" color="success.main">
-                                    {importResult.imported}
-                                </Typography>
-                                <Typography variant="caption">
-                                    成功导入
-                                </Typography>
-                            </CardContent>
-                        </Card>
-                    </Grid>
-                    <Grid item xs={4}>
-                        <Card variant="outlined">
-                            <CardContent sx={{ textAlign: 'center', py: 1 }}>
-                                <Typography variant="h6" color="warning.main">
-                                    {importResult.skipped}
-                                </Typography>
-                                <Typography variant="caption">
-                                    跳过
-                                </Typography>
-                            </CardContent>
-                        </Card>
-                    </Grid>
-                    <Grid item xs={4}>
-                        <Card variant="outlined">
-                            <CardContent sx={{ textAlign: 'center', py: 1 }}>
-                                <Typography variant="h6" color="error.main">
-                                    {importResult.failed}
-                                </Typography>
-                                <Typography variant="caption">
-                                    失败
-                                </Typography>
-                            </CardContent>
-                        </Card>
-                    </Grid>
-                </Grid>
+                <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
+                    <Box sx={{ flex: 1, textAlign: 'center', border: '1px solid', borderColor: 'divider', borderRadius: 1, p: 1 }}>
+                        <Typography variant="h6" color="success.main">
+                            {importResult.imported}
+                        </Typography>
+                        <Typography variant="caption">
+                            成功导入
+                        </Typography>
+                    </Box>
+                    <Box sx={{ flex: 1, textAlign: 'center', border: '1px solid', borderColor: 'divider', borderRadius: 1, p: 1 }}>
+                        <Typography variant="h6" color="warning.main">
+                            {importResult.skipped}
+                        </Typography>
+                        <Typography variant="caption">
+                            跳过
+                        </Typography>
+                    </Box>
+                    <Box sx={{ flex: 1, textAlign: 'center', border: '1px solid', borderColor: 'divider', borderRadius: 1, p: 1 }}>
+                        <Typography variant="h6" color="error.main">
+                            {importResult.failed}
+                        </Typography>
+                        <Typography variant="caption">
+                            失败
+                        </Typography>
+                    </Box>
+                </Box>
 
                 {importResult.errors.length > 0 && (
                     <Alert severity="error" sx={{ mb: 2 }}>

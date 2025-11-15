@@ -2,10 +2,33 @@
  * 组件属性类型定义
  */
 import { type AppStore } from '@core/stores/AppStore';
-import { type BlockTemplate, type ThemeDefinition, type ThemeOverride } from '@domain/schema';
-import { type ExtendedTheme, type ThemeTreeNode } from './theme.types';
-import { type ThemeMatrixMode, type SelectionStats } from '../hooks/useThemeMatrixSelection';
-import { type BatchOperationType } from '@/shared/types/common';
+import { type BlockTemplate, type ThemeDefinition, type ThemeOverride } from '@core/types/domain/schema';
+import { type BatchOperationType } from '@shared/types/common';
+
+// 临时定义类型，直到修复完整的类型系统
+export interface ExtendedTheme extends ThemeDefinition {
+    status: 'active' | 'inactive';
+    source: 'predefined' | 'discovered';
+    usageCount: number;
+    lastUsed?: number;
+    order: number;
+    parentId?: string | null;
+}
+
+export interface ThemeTreeNode {
+    theme: ExtendedTheme;
+    children: ThemeTreeNode[];
+    level: number;
+    expanded: boolean;
+}
+
+export type ThemeMatrixMode = 'theme' | 'block';
+
+export interface SelectionStats {
+    themes: number;
+    blocks: number;
+    total: number;
+}
 
 /**
  * InlineEditor 组件属性
@@ -83,7 +106,7 @@ export interface ThemeTableProps {
     /** 覆盖配置映射 */
     overridesMap: Map<string, ThemeOverride>;
     /** 选择状态 */
-    selection: import('../hooks/useThemeMatrixSelection').ThemeMatrixSelection;
+    selection: import('./useThemeMatrixSelection').ThemeMatrixSelection;
     /** 正在编辑的主题ID */
     editingThemeId: string | null;
     /** 应用状态存储 */

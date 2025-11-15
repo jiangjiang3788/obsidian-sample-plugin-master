@@ -8,7 +8,7 @@ import type {
     ScanResult, 
     ScanConfig, 
     ImportResult 
-} from '../services/ThemeScanService';
+} from '@core/theme-matrix/services/ThemeScanService';
 
 /**
  * 主题导入按钮属性

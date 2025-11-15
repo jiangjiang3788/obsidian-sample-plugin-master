@@ -8,7 +8,7 @@ import AddIcon from '@mui/icons-material/Add';
 import { useState, useMemo } from 'preact/hooks';
 import { TemplateEditorModal } from '@features/settings/ui/components/TemplateEditorModal';
 import type { BlockTemplate, ThemeDefinition, ThemeOverride } from '@core/types/domain/schema';
-import { ThemeManager } from '../ThemeManager';
+import { ThemeManager } from './ThemeManager';
 import { dataStore } from '@core/stores/storeRegistry';
 
 // 导入服务
@@ -22,14 +22,14 @@ import type { ThemeMatrixProps } from './types';
 import { buildThemeTree } from '@core/theme-matrix/utils/themeTreeBuilder';
 
 // 导入组件
-import { ThemeToolbar } from './components/ThemeToolbar';
-import { ContextualToolbar } from './components/ContextualToolbar';
-import { ThemeTable } from './components/ThemeTable';
-import { ThemeImportButton } from './components/ThemeImportButton';
+import { ThemeToolbar } from './ThemeToolbar';
+import { ContextualToolbar } from './ContextualToolbar';
+import { ThemeTable } from './ThemeTable';
+import { ThemeImportButton } from './ThemeImportButton';
 
 // 导入新的Hooks
-import { useThemeMatrixEditor } from './hooks/useThemeMatrixEditor';
-import { useBatchOperations, type BatchOperation } from './hooks/useBatchOperations';
+import { useThemeMatrixEditor } from './useThemeMatrixEditor';
+import { useBatchOperations, type BatchOperation } from './useBatchOperations';
 
 // 主组件
 export function ThemeMatrix({ appStore }: ThemeMatrixProps) {

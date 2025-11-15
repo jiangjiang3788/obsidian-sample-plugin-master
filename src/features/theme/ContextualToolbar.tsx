@@ -1,8 +1,8 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
 import { Box, Typography, Button, Stack, Divider } from '@mui/material';
-import { type EditorState } from '../hooks/useThemeMatrixEditor';
-import type { BatchOperation } from '../hooks/useBatchOperations';
+import { type EditorState } from './useThemeMatrixEditor';
+import type { BatchOperation } from './useBatchOperations';
 
 interface ContextualToolbarProps {
   editorState: EditorState;

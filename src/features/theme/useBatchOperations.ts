@@ -6,7 +6,7 @@ import { useState, useCallback, useMemo } from 'preact/hooks';
 import type { AppStore } from '@core/stores/AppStore';
 import type { ThemeManager } from '@features/theme/ThemeManager';
 import { BatchOperationService } from '@core/theme-matrix/services/BatchOperationService';
-import type { EditorState } from './useThemeMatrixEditor';
+import type { EditorState } from '../../useThemeMatrixEditor';
 
 // 定义新的参数类型
 export type BatchOperation = 
