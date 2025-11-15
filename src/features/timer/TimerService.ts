@@ -1,7 +1,7 @@
 // src/core/services/TimerService.ts
 import { singleton, inject } from 'tsyringe';
 import { AppStore } from '@core/stores/AppStore';
-import { TaskService } from '@core/services/TaskService';
+import { ItemService } from '@core/services/ItemService';
 import { Notice, App, TFile } from 'obsidian';
 import { DataStore } from '@core/services/DataStore';
 import { InputService } from '@core/services/InputService';
@@ -14,7 +14,7 @@ export class TimerService {
     constructor(
         @inject(AppStore) private appStore: AppStore,
         @inject(DataStore) private dataStore: DataStore,
-        @inject(TaskService) private taskService: TaskService,
+        @inject(ItemService) private itemService: ItemService,
         @inject(InputService) private inputService: InputService,
         @inject(AppToken) private app: App
     ) {}
@@ -105,12 +105,12 @@ export class TimerService {
                 startTime = minutesToTime(startMinutes);
             }
 
-            const currentLine = await this.taskService.getTaskLine(timer.taskId);
+            const currentLine = await this.itemService.getItemLine(timer.taskId);
             if (currentLine && /^\s*-\s*\[ \]\s*/.test(currentLine)) {
-                await this.taskService.completeTask(timer.taskId, { duration: totalMinutes, startTime: startTime, endTime: endTime });
+                await this.itemService.completeItem(timer.taskId, { duration: totalMinutes, startTime: startTime, endTime: endTime });
                 new Notice(`任务已完成，时长 ${totalMinutes} 分钟已记录。`);
             } else {
-                await this.taskService.updateTaskTime(timer.taskId, { duration: totalMinutes, time: startTime, endTime: endTime });
+                await this.itemService.updateItemTime(timer.taskId, { duration: totalMinutes, time: startTime, endTime: endTime });
                 new Notice(`任务时长已更新为 ${totalMinutes} 分钟。`);
             }
         } catch (e: any) {
