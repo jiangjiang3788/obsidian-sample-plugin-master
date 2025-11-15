@@ -2,7 +2,7 @@
 import type { ThinkSettings, ViewInstance } from '@core/types/domain/schema';
 import { generateId, moveItemInArray, duplicateItemInArray } from '@core/utils/array';
 import { arrayUtils } from '@core/utils/array';
-import { VIEW_DEFAULT_CONFIGS } from '@/features/settings/ui/components/view-editors/registry';
+import { VIEW_DEFAULT_CONFIGS } from '@features/settings/registry';
 
 /**
  * ViewInstanceStore - 管理视图实例相关状态

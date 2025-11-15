@@ -1,1 +1,0 @@
-export { SettingsStore } from './SettingsStore';

@@ -6,14 +6,14 @@ import { useStore, AppStore } from '@core/stores/AppStore';
 import { Box, Stack, Typography, FormControlLabel, Checkbox, Tooltip, Chip, Autocomplete, TextField } from '@mui/material';
 import { VIEW_OPTIONS, ViewName, getAllFields } from '@core/types/domain/schema';
 import type { ViewInstance } from '@core/types/domain/schema';
-import { VIEW_EDITORS } from './components/view-editors/registry';
+import { VIEW_EDITORS } from './registry';
 import { dataStore } from '@core/stores/storeRegistry';
 import { useMemo } from 'preact/hooks';
 import { SimpleSelect } from '@shared/ui/composites/SimpleSelect';
-import { SettingsTreeView, TreeItem } from './components/SettingsTreeView';
-import { RuleBuilder } from './components/RuleBuilder'; // [新增] 导入 RuleBuilder
+import { SettingsTreeView, TreeItem } from './SettingsTreeView';
+import { RuleBuilder } from './RuleBuilder'; // [新增] 导入 RuleBuilder
 import { App } from 'obsidian';
-import { useSettingsManager } from './hooks/useSettingsManager';
+import { useSettingsManager } from './useSettingsManager';
 import { DndContext, closestCenter } from '@dnd-kit/core';
 import { arrayMove } from '@core/utils/array';
 
