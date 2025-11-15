@@ -9,8 +9,8 @@ import { useStore } from '@core/stores/AppStore';
 import { QuickInputModal } from '@/features/quickinput/QuickInputModal';
 import { DEFAULT_CONFIG } from '@features/settings/ui/components/view-editors/HeatmapViewEditor';
 import { getThemeLevelData, getEffectiveDisplayCount, getEffectiveLevelCount, type LevelResult, LEVEL_SYSTEM_PRESETS } from '@core/utils/levelingSystem';
-import { CheckinManagerModal } from '@features/dashboard/ui/CheckinManagerModal';
-import { HEATMAP_VIEW_STYLES } from '@shared/styles/views/heatmap-view';
+import { CheckinManagerModal } from '@/features/dashboard/CheckinManagerModal';
+import { HEATMAP_VIEW_STYLES } from '@/features/views/heatmap-view';
 
 // ========== Types ==========
 interface HeatmapViewProps {

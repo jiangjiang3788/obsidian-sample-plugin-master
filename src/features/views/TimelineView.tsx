@@ -12,7 +12,7 @@ import isBetween from 'dayjs/esm/plugin/isBetween';
 import { DEFAULT_CONFIG as DEFAULT_TIMELINE_CONFIG } from '@features/settings/ui/components/view-editors/TimelineViewEditor';
 import { App, Notice } from 'obsidian';
 import { TaskService } from '@core/services/TaskService';
-import { EditTaskModal } from '@features/dashboard/ui/EditTaskModal';
+import { EditTaskModal } from '@/features/dashboard/EditTaskModal';
 import { useStore } from '@core/stores/AppStore';
 import { QuickInputModal } from '@/features/quickinput/QuickInputModal';
 import { filterByRules } from '@core/utils/itemFilter';

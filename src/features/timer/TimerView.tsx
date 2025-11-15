@@ -11,7 +11,7 @@ import DragIndicatorIcon from '@mui/icons-material/DragIndicator';
 import type { ActionService } from '@core/services/ActionService';
 import type { TimerService } from '@features/timer/TimerService';
 import type { DataStore } from '@core/services/DataStore';
-import { TimerRow } from './ui/TimerRow';
+import { TimerRow } from './TimerRow';
 import { App } from 'obsidian';
 import { QuickInputModal, QuickInputSaveData } from '@/features/quickinput/QuickInputModal';
 
