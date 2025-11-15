@@ -16,7 +16,7 @@ import { makeObsUri } from '@core/utils/obsidian';
 import type { ActionService } from '@core/services/ActionService';
 import { App } from 'obsidian';
 // [修改] 导入 QuickInputModal 以修复 handleEdit 功能
-import { QuickInputModal } from '../../QuickInput/ui/QuickInputModal';
+import { QuickInputModal } from '../../quickinput/QuickInputModal';
 
 interface TimerRowProps {
     timer: TimerState;

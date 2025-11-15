@@ -12,7 +12,7 @@ import { IconButton, Tooltip } from '@mui/material';
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 import IosShareIcon from '@mui/icons-material/IosShare';
 import { exportItemsToMarkdown } from '@core/utils/exportUtils';
-import { QuickInputModal } from '@features/quickinput/ui/QuickInputModal';
+import { QuickInputModal } from '@/features/quickinput/QuickInputModal';
 import { dayjs as dayjsUtil } from '@core/utils/date';
 // [新增] 统一数据聚合支持
 import { aggregateItems, generateStatisticsData, AggregatedData } from '@core/utils/dataAggregation';
