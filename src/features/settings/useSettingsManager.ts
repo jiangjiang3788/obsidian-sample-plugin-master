@@ -3,8 +3,8 @@ import { App } from 'obsidian';
 import { useCallback } from 'preact/hooks';
 import { AppStore } from '@core/stores/AppStore';
 import { NamePromptModal } from '@shared/ui/composites/dialogs/NamePromptModal';
-import { DEFAULT_NAMES } from '@core/types/domain/constants';
-import type { GroupType } from '@core/types/domain/schema';
+import { DEFAULT_NAMES } from '@/core/types/constants';
+import type { GroupType } from '@/core/types/schema';
 import type { TreeItem } from './SettingsTreeView';
 
 // [修改] Hook 接收的参数类型增加了 appStore

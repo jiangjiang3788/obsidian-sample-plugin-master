@@ -2,7 +2,7 @@
 /** @jsxImportSource preact */
 import { h, Fragment } from 'preact';
 import { useState, useMemo, useEffect, useRef } from 'preact/hooks';
-import { Item, readField, ViewInstance } from '@core/types/domain/schema';
+import { Item, readField, ViewInstance } from '@/core/types/schema';
 import { dayjs, getWeeksInYear } from '@core/utils/date';
 import { App, Notice } from 'obsidian';
 // [架构标准化] 从core配置导入，避免features间依赖违规

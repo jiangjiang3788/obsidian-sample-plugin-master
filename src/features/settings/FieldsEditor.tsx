@@ -8,7 +8,7 @@ import AddIcon from '@mui/icons-material/Add';
 import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
 import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
 import RemoveCircleOutlineIcon from '@mui/icons-material/RemoveCircleOutline';
-import type { TemplateField, TemplateFieldOption } from '@core/types/domain/schema';
+import type { TemplateField, TemplateFieldOption } from '@/core/types/schema';
 import { SimpleSelect } from '@shared/ui/composites/SimpleSelect';
 import { Notice } from 'obsidian';
 

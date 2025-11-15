@@ -1,7 +1,7 @@
 /**
  * 批量操作相关类型定义
  */
-import type { ThemeOverride } from '@core/types/domain/schema';
+import type { ThemeOverride } from '@/core/types/schema';
 
 /**
  * 批量操作类型

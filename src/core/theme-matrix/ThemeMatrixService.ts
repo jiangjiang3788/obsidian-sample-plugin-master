@@ -2,20 +2,20 @@
  * ThemeMatrix 业务逻辑服务
  */
 import { type AppStore } from '@core/stores/AppStore';
-import { type ThemeDefinition, ThemeOverride, BlockTemplate } from '@core/types/domain/schema';
+import { type ThemeDefinition, ThemeOverride, BlockTemplate } from '@/core/types/schema';
 import { type ExtendedTheme, BatchOperationType, ThemeTreeNode } from '@core/theme-matrix/types';
 import { ThemeManager } from '@features/theme/ThemeManager';
 import { 
     normalizePath,
     validatePathCharacters 
-} from '@core/theme-matrix/utils/themePathParser';
+} from '@/core/theme-matrix/themePathParser';
 import {
     createOverridesMap,
     toggleThemeSelection,
     filterThemes,
     sortThemes
-} from '@core/theme-matrix/utils/themeOperations';
-import { buildThemeTree, findNodeInTree, getDescendantIds } from '@core/theme-matrix/utils/themeTreeBuilder';
+} from '@/core/theme-matrix/themeOperations';
+import { buildThemeTree, findNodeInTree, getDescendantIds } from '@/core/theme-matrix/themeTreeBuilder';
 
 /**
  * ThemeMatrix 服务配置

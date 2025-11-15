@@ -1,5 +1,5 @@
 // src/store/stores/LayoutStore.ts
-import type { ThinkSettings, Layout } from '@core/types/domain/schema';
+import type { ThinkSettings, Layout } from '@/core/types/schema';
 import { moveItemInArray, duplicateItemInArray } from '@core/utils/array';
 import { HierarchicalStoreOperations, type StoreKit } from '@core/utils/StoreOperations';
 

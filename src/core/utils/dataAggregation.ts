@@ -1,7 +1,7 @@
 // src/lib/utils/core/dataAggregation.ts
 /** 统一数据聚合处理层 - 解决多次打卡统计问题 */
 
-import { Item } from '@core/types/domain/schema';
+import { Item } from '@/core/types/schema';
 import { dayjs } from './date';
 import { getEffectiveDisplayCount, getEffectiveLevelCount } from './levelingSystem';
 

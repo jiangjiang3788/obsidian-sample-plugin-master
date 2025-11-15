@@ -7,19 +7,19 @@ import {
 import AddIcon from '@mui/icons-material/Add';
 import { useState, useMemo } from 'preact/hooks';
 import { TemplateEditorModal } from '@features/settings/TemplateEditorModal';
-import type { BlockTemplate, ThemeDefinition, ThemeOverride } from '@core/types/domain/schema';
+import type { BlockTemplate, ThemeDefinition, ThemeOverride } from '@/core/types/schema';
 import { ThemeManager } from './ThemeManager';
 import { dataStore } from '@core/stores/storeRegistry';
 
 // 导入服务
-import { ThemeMatrixService } from '@core/theme-matrix/services/ThemeMatrixService';
-import { ThemeScanService } from '@core/theme-matrix/services/ThemeScanService';
+import { ThemeMatrixService } from '@/core/theme-matrix/ThemeMatrixService';
+import { ThemeScanService } from '@/core/theme-matrix/ThemeScanService';
 
 // 导入类型
 import type { ThemeMatrixProps } from './types';
 
 // 导入工具函数
-import { buildThemeTree } from '@core/theme-matrix/utils/themeTreeBuilder';
+import { buildThemeTree } from '@/core/theme-matrix/themeTreeBuilder';
 
 // 导入组件
 import { ThemeToolbar } from './ThemeToolbar';

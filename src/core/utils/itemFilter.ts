@@ -2,7 +2,7 @@
 // 统一的筛选 / 排序 / 日期区间 / 关键字过滤助手
 // —— 删除 status/category 依赖，改用 categoryKey 推断是否“已关闭”
 // —— 修正数字/日期的比较与排序（避免把数值/日期按字符串字典序比较）
-import { Item, FilterRule, SortRule, readField } from '@core/types/domain/schema';
+import { Item, FilterRule, SortRule, readField } from '@/core/types/schema';
 
 /* ---------- 通用比较：数字/日期优先，其次回退字符串 ---------- */
 function coerceForCompare(v: any): number | string | null {

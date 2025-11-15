@@ -1,7 +1,7 @@
 // src/core/services/dataStore.ts
 import { singleton, inject } from 'tsyringe';
 import type { HeadingCache, TFile, App } from 'obsidian';
-import type { Item, FilterRule, SortRule } from '@core/types/domain/schema';
+import type { Item, FilterRule, SortRule } from '@/core/types/schema';
 import { parseTaskLine, parseBlockContent } from '@core/utils/parser';
 import { throttle } from '@core/utils/timing';
 import { ObsidianPlatform } from '@platform/obsidian';
@@ -18,7 +18,7 @@ import {
   CURRENT_CACHE_SCHEMA_VERSION,
   toCachedItem,
   fromCachedItem
-} from '@core/types/domain/cache';
+} from '@/core/types/cache';
 
 @singleton()
 export class DataStore {

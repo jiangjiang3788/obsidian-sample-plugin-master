@@ -5,7 +5,7 @@ import { DataStore } from '@core/services/DataStore';
 // [核心修复] 将 filterByKeyword 添加回 import 列表
 import { filterByRules, sortItems, filterByDateRange, filterByPeriod, filterByKeyword } from '@core/utils/itemFilter';
 import { dayjs } from '@core/utils/date';
-import type { Item, ViewInstance, FilterRule, SortRule } from '@core/types/domain/schema';
+import type { Item, ViewInstance, FilterRule, SortRule } from '@/core/types/schema';
 
 interface UseViewDataProps {
     dataStore: DataStore;

@@ -1,7 +1,7 @@
 // src/core/utils/normalize.ts
 // 统一 date/dateMs/dateSource（categoryKey 已由 parser 决定；此处只兜底）
 
-import { Item } from '@core/types/domain/schema';
+import { Item } from '@/core/types/schema';
 
 const ORDER = ['done','due','scheduled','start','created','end'] as const;
 type DateKey = typeof ORDER[number];

@@ -9,7 +9,7 @@ import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 import DriveFileMoveOutlinedIcon from '@mui/icons-material/DriveFileMoveOutlined';
 import DeleteForeverOutlinedIcon from '@mui/icons-material/DeleteForeverOutlined';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
-import type { Group, Groupable } from '@core/types/domain/schema';
+import type { Group, Groupable } from '@/core/types/schema';
 import { AppStore } from '@core/stores/AppStore';
 import { MoveItemDialog } from '@shared/ui/composites/dialogs/MoveItemDialog';
 

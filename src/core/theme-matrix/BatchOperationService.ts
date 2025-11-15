@@ -9,7 +9,7 @@ import type {
   BatchOperationParams,
   BatchOperationResult
 } from '@core/theme-matrix/types';
-import type { ThemeDefinition, ThemeOverride } from '@core/types/domain/schema';
+import type { ThemeDefinition, ThemeOverride } from '@/core/types/schema';
 import type { SelectionState } from '@core/theme-matrix/types';
 
 export interface BatchOperationServiceConfig {
