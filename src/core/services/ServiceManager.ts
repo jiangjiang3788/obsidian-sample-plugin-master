@@ -6,7 +6,7 @@ import { RendererService } from '@core/services/RendererService';
 import { ActionService } from '@core/services/ActionService';
 import { TimerStateService } from '@features/timer/TimerStateService';
 import { InputService } from '@core/services/InputService';
-import { TaskService } from '@core/services/TaskService';
+import { ItemService } from '@core/services/ItemService';
 import { TimerService } from '@features/timer/TimerService';
 import { AppStore } from '@core/stores/AppStore';
 import { registerStore, registerDataStore, registerTimerService, registerInputService } from '@core/stores/storeRegistry';
@@ -42,7 +42,7 @@ export class ServiceManager {
         timerStateService: TimerStateService;
         inputService: InputService;
         timerWidget: FloatingTimerWidget;
-        taskService: TaskService;
+        itemService: ItemService;
     }> = {};
 
     constructor(plugin: ThinkPlugin) {
@@ -127,7 +127,7 @@ export class ServiceManager {
         this.services.rendererService = container.resolve(RendererService);
         this.services.actionService = container.resolve(ActionService);
         this.services.inputService = container.resolve(InputService);
-        this.services.taskService = container.resolve(TaskService);
+        this.services.itemService = container.resolve(ItemService);
 
         // 注册服务到全局注册表
         registerStore(this.services.appStore!);

@@ -475,9 +475,14 @@
       "useFieldGranularity": false,
       "selectedThemes": [],
       "selectedCategories": [
+        "未完成任务",
+        "完成任务",
+        "打卡",
         "事件",
         "感受",
-        "思考"
+        "思考",
+        "计划",
+        "总结"
       ]
     },
     {

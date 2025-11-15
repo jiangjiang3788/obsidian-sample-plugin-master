@@ -7,7 +7,7 @@ import { DataStore } from '@core/services/DataStore';
 import { AppStore } from '@core/stores/AppStore';
 import { LayoutRenderer } from '@features/dashboard/ui/LayoutRenderer';
 import { ActionService } from './ActionService';
-import { TaskService } from '@core/services/TaskService';
+import { ItemService } from '@core/services/ItemService';
 import { AppToken } from '@core/services/types';
 
 @singleton()
@@ -21,7 +21,7 @@ export class RendererService {
         @inject(DataStore) private dataStore: DataStore,
         @inject(AppStore) private appStore: AppStore,
         @inject(ActionService) private actionService: ActionService,
-        @inject(TaskService) private taskService: TaskService
+        @inject(ItemService) private itemService: ItemService
     ) {
         this.appStore.subscribe(() => this.rerenderAll());
         this.isInitialized = true;
@@ -36,7 +36,7 @@ export class RendererService {
                 dataStore: this.dataStore,
                 app: this.app,
                 actionService: this.actionService,
-                taskService: this.taskService,
+                itemService: this.itemService,
             }),
             container,
         );
@@ -72,7 +72,7 @@ export class RendererService {
                         dataStore: this.dataStore,
                         app: this.app,
                         actionService: this.actionService,
-                        taskService: this.taskService,
+                        itemService: this.itemService,
                     }),
                     container,
                 );

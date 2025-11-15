@@ -9,13 +9,11 @@ import { useMemo, useState, useEffect } from 'preact/hooks';
 import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
 import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
 
-// 视图的默认配置
-export const DEFAULT_CONFIG = {
-    categories: [] as { name: string; color: string; alias?: string; }[],
-    displayMode: 'smart' as 'linear' | 'logarithmic' | 'smart',
-    minVisibleHeight: 15, // 最小可见高度百分比
-    usePeriodField: false, // 是否使用周期字段过滤
-};
+// [架构标准化] 使用 core 层的共享配置，避免重复定义
+import { STATISTICS_VIEW_DEFAULT_CONFIG as DEFAULT_CONFIG } from '../../../../../core/config/viewConfigs';
+
+// 重新导出 DEFAULT_CONFIG 以便于 registry.tsx 使用
+export { DEFAULT_CONFIG };
 
 // 随机生成一个颜色
 const getRandomColor = () => `#${Math.floor(Math.random()*16777215).toString(16).padStart(6, '0')}`;

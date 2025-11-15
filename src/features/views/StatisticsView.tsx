@@ -5,8 +5,8 @@ import { useState, useMemo, useEffect, useRef } from 'preact/hooks';
 import { Item, readField, ViewInstance } from '@core/types/domain/schema';
 import { dayjs, getWeeksInYear } from '@core/utils/date';
 import { App, Notice } from 'obsidian';
-// [最终修正] 使用别名路径，代码更清晰且稳定
-import { DEFAULT_CONFIG } from '@features/settings/ui/components/view-editors/StatisticsViewEditor';
+// [架构标准化] 从core配置导入，避免features间依赖违规
+import { STATISTICS_VIEW_DEFAULT_CONFIG as DEFAULT_CONFIG } from '../../core/config/viewConfigs';
 import { BlockView } from './BlockView';
 import { IconButton, Tooltip } from '@mui/material';
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
