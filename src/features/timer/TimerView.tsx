@@ -13,7 +13,7 @@ import type { TimerService } from '@features/timer/TimerService';
 import type { DataStore } from '@core/services/DataStore';
 import { TimerRow } from './ui/TimerRow';
 import { App } from 'obsidian';
-import { QuickInputModal, QuickInputSaveData } from '@/features/quickinput/ui/QuickInputModal';
+import { QuickInputModal, QuickInputSaveData } from '@/features/quickinput/QuickInputModal';
 
 interface TimerViewProps {
     app: App;

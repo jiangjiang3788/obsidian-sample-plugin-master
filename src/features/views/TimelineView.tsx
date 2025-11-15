@@ -14,7 +14,7 @@ import { App, Notice } from 'obsidian';
 import { TaskService } from '@core/services/TaskService';
 import { EditTaskModal } from '@features/dashboard/ui/EditTaskModal';
 import { useStore } from '@core/stores/AppStore';
-import { QuickInputModal } from '@features/quickinput/ui/QuickInputModal';
+import { QuickInputModal } from '@/features/quickinput/QuickInputModal';
 import { filterByRules } from '@core/utils/itemFilter';
 
 dayjs.extend(weekOfYear);

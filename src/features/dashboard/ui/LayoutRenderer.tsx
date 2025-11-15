@@ -11,7 +11,7 @@ import { useStore } from '@core/stores/AppStore';
 import type { ActionService } from '@core/services/ActionService';
 import type { TaskService } from '@core/services/TaskService';
 import { useViewData } from '@/features/dashboard/hooks/useViewData';
-import { QuickInputModal } from '@features/quickinput/ui/QuickInputModal';
+import { QuickInputModal } from '@/features/quickinput/QuickInputModal';
 import { ModuleSettingsModal } from './ModuleSettingsModal'; // [新增] 导入设置模态框
 import { App, Notice } from 'obsidian'; // [修改] 导入 Notice
 import { appStore } from '@core/stores/storeRegistry';
