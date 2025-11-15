@@ -8,9 +8,9 @@ import DeleteForeverOutlinedIcon from '@mui/icons-material/DeleteForeverOutlined
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import DragIndicatorIcon from '@mui/icons-material/DragIndicator';
 import { useState, useEffect } from 'preact/hooks';
-import { FieldsEditor } from './components/FieldsEditor';
+import { FieldsEditor } from './FieldsEditor';
 import type { BlockTemplate } from '@core/types/domain/schema';
-import { TemplateVariableCopier } from './components/TemplateVariableCopier';
+import { TemplateVariableCopier } from './TemplateVariableCopier';
 import { DndContext, closestCenter } from '@dnd-kit/core';
 import { arrayMove, SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';

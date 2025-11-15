@@ -9,9 +9,9 @@ import { useLocalStorage } from '@shared/hooks';
 import { LOCAL_STORAGE_KEYS } from '@core/types/domain/constants';
 import { theme as baseTheme } from '@shared/styles/mui-theme';
 
-import { ViewInstanceSettings } from './ui/ViewInstanceSettings';
+import { ViewInstanceSettings } from './ViewInstanceSettings';
 import { LayoutSettings } from './LayoutSettings';
-import { InputSettings } from './ui/InputSettings';
+import { InputSettings } from './InputSettings';
 import { AppStore } from '@core/stores/AppStore';
 import { GeneralSettings } from './GeneralSettings';
 

@@ -7,7 +7,7 @@ import { Item, ViewInstance, BlockTemplate, InputSettings, ThemeDefinition } fro
 import { dayjs } from '@core/utils/date';
 import { useStore } from '@core/stores/AppStore';
 import { QuickInputModal } from '@/features/quickinput/QuickInputModal';
-import { DEFAULT_CONFIG } from '@features/settings/ui/components/view-editors/HeatmapViewEditor';
+import { DEFAULT_CONFIG } from '@features/settings/HeatmapViewEditor';
 import { getThemeLevelData, getEffectiveDisplayCount, getEffectiveLevelCount, type LevelResult, LEVEL_SYSTEM_PRESETS } from '@core/utils/levelingSystem';
 import { CheckinManagerModal } from '@/features/dashboard/CheckinManagerModal';
 import { HEATMAP_VIEW_STYLES } from '@/features/views/heatmap-view';

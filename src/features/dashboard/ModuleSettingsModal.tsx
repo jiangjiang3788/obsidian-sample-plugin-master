@@ -5,11 +5,11 @@ import { useMemo } from 'preact/hooks';
 import { FormControlLabel, Checkbox } from '@mui/material';
 import { VIEW_OPTIONS, ViewName, getAllFields } from '@core/types/domain/schema';
 import type { ViewInstance } from '@core/types/domain/schema';
-import { VIEW_EDITORS } from '@features/settings/ui/components/view-editors/registry';
+import { VIEW_EDITORS } from '@features/settings/registry';
 import { dataStore } from '@core/stores/storeRegistry';
 import { useStore, AppStore } from '@core/stores/AppStore';
 import { SimpleSelect } from '@shared/ui/composites/SimpleSelect';
-import { RuleBuilder } from '@features/settings/ui/components/RuleBuilder';
+import { RuleBuilder } from '@features/settings/RuleBuilder';
 import { Modal } from '@shared/ui/primitives/Modal';
 import { FormField, FieldManager, useSaveHandler } from '@shared/index';
 

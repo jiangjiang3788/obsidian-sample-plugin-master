@@ -9,7 +9,7 @@ import { dayjs, minutesToTime } from '@core/utils/date';
 import weekOfYear from 'dayjs/esm/plugin/weekOfYear';
 import isoWeek from 'dayjs/esm/plugin/isoWeek';
 import isBetween from 'dayjs/esm/plugin/isBetween';
-import { DEFAULT_CONFIG as DEFAULT_TIMELINE_CONFIG } from '@features/settings/ui/components/view-editors/TimelineViewEditor';
+import { DEFAULT_CONFIG as DEFAULT_TIMELINE_CONFIG } from '@features/settings/TimelineViewEditor';
 import { App, Notice } from 'obsidian';
 import { TaskService } from '@core/services/TaskService';
 import { EditTaskModal } from '@/features/dashboard/EditTaskModal';

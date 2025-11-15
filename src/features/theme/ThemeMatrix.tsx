@@ -6,7 +6,7 @@ import {
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import { useState, useMemo } from 'preact/hooks';
-import { TemplateEditorModal } from '@features/settings/ui/components/TemplateEditorModal';
+import { TemplateEditorModal } from '@features/settings/TemplateEditorModal';
 import type { BlockTemplate, ThemeDefinition, ThemeOverride } from '@core/types/domain/schema';
 import { ThemeManager } from './ThemeManager';
 import { dataStore } from '@core/stores/storeRegistry';
