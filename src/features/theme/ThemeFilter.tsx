@@ -17,8 +17,8 @@ import FilterListIcon from '@mui/icons-material/FilterList';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import { useStore } from '@core/stores/AppStore';
-import { buildThemeTree } from './ThemeMatrix/utils/themeTreeBuilder';
-import type { ThemeTreeNode } from './ThemeMatrix/types';
+import { buildThemeTree } from '@core/theme-matrix/utils/themeTreeBuilder';
+import type { ThemeTreeNode } from '@core/theme-matrix/types';
 
 // 解决 Preact 和 Material-UI 的类型兼容性问题
 const AnyButton = Button as any;

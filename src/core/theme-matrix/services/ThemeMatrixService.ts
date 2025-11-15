@@ -3,19 +3,19 @@
  */
 import { type AppStore } from '@core/stores/AppStore';
 import { type ThemeDefinition, ThemeOverride, BlockTemplate } from '@core/types/domain/schema';
-import { type ExtendedTheme, BatchOperationType, ThemeTreeNode } from '../types';
-import { ThemeManager } from '../../ThemeManager';
+import { type ExtendedTheme, BatchOperationType, ThemeTreeNode } from '@core/theme-matrix/types';
+import { ThemeManager } from '@features/theme/ThemeManager';
 import { 
     normalizePath,
     validatePathCharacters 
-} from '../utils/themePathParser';
+} from '@core/theme-matrix/utils/themePathParser';
 import {
     createOverridesMap,
     toggleThemeSelection,
     filterThemes,
     sortThemes
-} from '../utils/themeOperations';
-import { buildThemeTree, findNodeInTree, getDescendantIds } from '../utils/themeTreeBuilder';
+} from '@core/theme-matrix/utils/themeOperations';
+import { buildThemeTree, findNodeInTree, getDescendantIds } from '@core/theme-matrix/utils/themeTreeBuilder';
 
 /**
  * ThemeMatrix 服务配置

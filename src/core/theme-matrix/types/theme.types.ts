@@ -1,8 +1,8 @@
 /**
  * 主题相关类型定义
  */
-import { BatchOperationType, ActiveStatus, SourceType } from '@types/common';
-import { ThemeDefinition, ThemeOverride } from '@domain/schema';
+import { ThemeDefinition, ThemeOverride } from '@core/types/domain/schema';
+import { ActiveStatus, SourceType } from '@shared/types/common';
 
 /**
  * 扩展的主题定义，包含运行时状态和元数据

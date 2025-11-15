@@ -4,12 +4,12 @@
  */
 import type { AppStore } from '@core/stores/AppStore';
 import type { ThemeDefinition, Item } from '@core/types/domain/schema';
-import { ThemeManager } from '../../ThemeManager';
+import { ThemeManager } from '@features/theme/ThemeManager';
 import { DataStore } from '@core/services/DataStore';
 import { 
     deduplicateThemes, 
     type DeduplicationResult 
-} from '../utils/themeDeduplication';
+} from '@core/theme-matrix/utils/themeDeduplication';
 
 /**
  * 扫描配置
