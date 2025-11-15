@@ -1,6 +1,6 @@
 // src/core/services/ThemeManager.ts
 import { singleton } from 'tsyringe';
-import { Theme } from '@features/theme/types/theme';
+import { Theme } from './theme-types';
 import { Item } from '@core/types/domain/schema';
 
 /**

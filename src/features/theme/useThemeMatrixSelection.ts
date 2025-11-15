@@ -3,7 +3,7 @@
  * 重构后只支持两种模式：theme 和 block
  */
 import { useState, useCallback, useMemo } from 'preact/hooks';
-import type { ThemeTreeNode } from '../types';
+import type { ThemeTreeNode } from './types';
 import { getDescendantIds } from '../utils/themeTreeBuilder';
 
 /**

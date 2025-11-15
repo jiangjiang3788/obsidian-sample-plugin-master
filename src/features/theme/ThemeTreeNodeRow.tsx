@@ -20,10 +20,10 @@ import CancelIcon from '@mui/icons-material/Cancel';
 import EditIcon from '@mui/icons-material/Edit';
 import { useState } from 'preact/hooks';
 import { InlineEditor } from './InlineEditor';
-import type { EditorState } from '../hooks/useThemeMatrixEditor';
+import type { EditorState } from './useThemeMatrixEditor';
 import type { BlockTemplate, ThemeDefinition, ThemeOverride } from '@core/types/domain/schema';
 import type { AppStore } from '@core/stores/AppStore';
-import type { ThemeTreeNode } from '../types';
+import type { ThemeTreeNode } from './props.types';
 
 // Define new props inline for now
 interface NewThemeTreeNodeRowProps {
@@ -82,7 +82,7 @@ export function ThemeTreeNodeRow({
                             {isEditingIcon ? (
                                 <InlineEditor 
                                     value={theme.icon || ''} 
-                                    onSave={(newIcon) => { 
+                                    onSave={(newIcon: string) => { 
                                         appStore.updateTheme(theme.id, { icon: newIcon });
                                         setIsEditingIcon(false);
                                     }}
@@ -95,7 +95,7 @@ export function ThemeTreeNodeRow({
                             {isEditingPath ? (
                                 <InlineEditor 
                                     value={theme.path} 
-                                    onSave={(newPath) => { 
+                                    onSave={(newPath: string) => { 
                                         appStore.updateTheme(theme.id, { path: newPath }); 
                                         setIsEditingPath(false);
                                     }}

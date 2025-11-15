@@ -11,7 +11,7 @@ import {
   Chip,
   ButtonGroup
 } from '@mui/material';
-import type { ThemeMatrixMode, SelectionStats } from '../hooks/useThemeMatrixSelection';
+import type { ThemeMatrixMode, SelectionStats } from './props.types';
 
 export interface ModeToggleProps {
   /** 当前模式 */

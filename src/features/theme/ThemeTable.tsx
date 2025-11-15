@@ -10,11 +10,11 @@ import {
     Checkbox,
 } from '@mui/material';
 import { ThemeTreeNodeRow } from './ThemeTreeNodeRow';
-import type { ThemeTableProps } from '../types'; // This will need to be updated
-import type { EditorState } from '../hooks/useThemeMatrixEditor';
+import type { ThemeTableProps } from './props.types';
+import type { EditorState } from './useThemeMatrixEditor';
 import type { BlockTemplate, ThemeDefinition, ThemeOverride } from '@core/types/domain/schema';
 import type { AppStore } from '@core/stores/AppStore';
-import type { ThemeTreeNode } from '../types';
+import type { ThemeTreeNode } from './props.types';
 
 // Define new props inline for now
 interface NewThemeTableProps {

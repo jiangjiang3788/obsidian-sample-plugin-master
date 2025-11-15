@@ -12,3 +12,4 @@ export { ThemeMatrix } from './ThemeMatrix';
 
 // 导出类型
 export * from './theme-types';
+export * from './props.types';
