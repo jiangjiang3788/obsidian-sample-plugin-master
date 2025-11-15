@@ -1,5 +1,5 @@
 // src/store/stores/ViewInstanceStore.ts
-import type { ThinkSettings, ViewInstance } from '@core/types/domain/schema';
+import type { ThinkSettings, ViewInstance } from '@/core/types/schema';
 import { generateId, moveItemInArray, duplicateItemInArray } from '@core/utils/array';
 import { arrayUtils } from '@core/utils/array';
 import { VIEW_DEFAULT_CONFIGS } from '@features/settings/registry';

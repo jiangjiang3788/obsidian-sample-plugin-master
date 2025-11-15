@@ -24,7 +24,7 @@ import { container } from 'tsyringe';
 import { Plugin, Notice } from 'obsidian';
 import { AppStore } from '@core/stores/AppStore';
 import { DataStore } from '@core/services/DataStore';
-import { ThinkSettings, DEFAULT_SETTINGS, STYLE_TAG_ID } from '@core/types/domain';
+import { ThinkSettings, DEFAULT_SETTINGS, STYLE_TAG_ID } from '@core/types';
 import { GLOBAL_CSS } from '@shared/styles';
 import { AppToken, SETTINGS_TOKEN } from '@core/services/types';
 import { VaultFileStorage, STORAGE_TOKEN } from '@core/services/StorageService';

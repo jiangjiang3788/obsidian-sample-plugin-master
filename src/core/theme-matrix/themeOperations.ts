@@ -5,7 +5,7 @@ import { pathUtils } from '@core/utils/pathUtils';
 import type { BatchOperationType } from '@core/theme-matrix/types';
 import type { ActiveStatus } from '@shared/types/common';
 import type { ExtendedTheme, ThemeTreeNode, ThemeOverrideKey } from '@core/theme-matrix/types';
-import type { ThemeOverride } from '@core/types/domain/schema';
+import type { ThemeOverride } from '@/core/types/schema';
 import { findNodeInTree, getDescendantIds } from './themeTreeBuilder';
 
 /**

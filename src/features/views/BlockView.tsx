@@ -5,10 +5,10 @@ import { h } from 'preact';
 import { useRef, useState, useEffect } from 'preact/hooks';
 import { App } from 'obsidian';
 // [修复] 将导入路径统一到 @lib/domain，并加入 getCategoryColor
-import { Item, readField, ThemeDefinition } from '@core/types/domain/schema';
-import { getCategoryColor } from '@core/types/domain/definitions';
+import { Item, readField, ThemeDefinition } from '@/core/types/schema';
+import { getCategoryColor } from '@/core/types/definitions';
 import { makeObsUri } from '@core/utils/obsidian';
-import { getFieldLabel } from '@core/types/domain/fields';
+import { getFieldLabel } from '@/core/types/fields';
 import { useStore } from '@core/stores/AppStore';
 import { TagsRenderer } from '@shared/ui/composites/TagsRenderer';
 import { TaskCheckbox } from '@shared/ui/composites/TaskCheckbox';

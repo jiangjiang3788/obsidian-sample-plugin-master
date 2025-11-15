@@ -2,7 +2,7 @@
  * 组件属性类型定义
  */
 import { type AppStore } from '@core/stores/AppStore';
-import { type BlockTemplate, type ThemeDefinition, type ThemeOverride } from '@core/types/domain/schema';
+import { type BlockTemplate, type ThemeDefinition, type ThemeOverride } from '@/core/types/schema';
 import { type BatchOperationType } from '@shared/types/common';
 
 // 临时定义类型，直到修复完整的类型系统

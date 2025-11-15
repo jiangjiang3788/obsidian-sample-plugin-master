@@ -3,7 +3,7 @@
 /** @jsxImportSource preact */
 import { useMemo, useState, useRef, useEffect } from 'preact/hooks';
 import { App, Notice } from 'obsidian';
-import { Item, ViewInstance, BlockTemplate, InputSettings, ThemeDefinition } from '@core/types/domain/schema';
+import { Item, ViewInstance, BlockTemplate, InputSettings, ThemeDefinition } from '@/core/types/schema';
 import { dayjs } from '@core/utils/date';
 import { useStore } from '@core/stores/AppStore';
 import { QuickInputModal } from '@/features/quickinput/QuickInputModal';

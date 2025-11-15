@@ -1,7 +1,7 @@
 /**
  * 主题相关类型定义
  */
-import { ThemeDefinition, ThemeOverride } from '@core/types/domain/schema';
+import { ThemeDefinition, ThemeOverride } from '@/core/types/schema';
 import { ActiveStatus, SourceType } from '@shared/types/common';
 
 /**

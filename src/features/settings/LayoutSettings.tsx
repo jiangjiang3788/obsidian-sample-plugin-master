@@ -4,7 +4,7 @@ import { h } from 'preact';
 import { useStore, AppStore } from '@core/stores/AppStore';
 // [MODIFIED] Import Autocomplete
 import { Box, Stack, Typography, TextField, Checkbox, FormControlLabel, Tooltip, Chip, Radio, RadioGroup as MuiRadioGroup, Autocomplete } from '@mui/material';
-import type { Layout } from '@core/types/domain/schema';
+import type { Layout } from '@/core/types/schema';
 import { useMemo, useCallback } from 'preact/hooks';
 import { SimpleSelect } from '@shared/ui/composites/SimpleSelect';
 import { SettingsTreeView, TreeItem } from './SettingsTreeView';

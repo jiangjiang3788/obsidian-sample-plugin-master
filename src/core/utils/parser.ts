@@ -1,13 +1,13 @@
 // src/core/utils/parser.ts
 // 解析任务与块，直接生成 categoryKey（不再生成 status/category）
-import { Item } from '@core/types/domain/schema';
+import { Item } from '@/core/types/schema';
 import {
     TAG_RE, KV_IN_PAREN, RE_TASK_PREFIX,
     RE_DONE_BOX, RE_CANCEL_BOX
 } from './regex';
 // [修改] 导入 getPeriodCount 和 dayjs
 import { normalizeDateStr, extractDate, getPeriodCount, dayjs } from './date';
-import { EMOJI } from '@core/types/domain/constants';
+import { EMOJI } from '@/core/types/constants';
 import { cleanTaskText } from './text';
 
 /* ---------- 工具 ---------- */

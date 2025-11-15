@@ -1,8 +1,8 @@
 // src/core/utils/exportUtils.ts
 
-import { Item, readField } from '@core/types/domain/schema';
-import { EMOJI } from '@core/types/domain/constants';
-import { getFieldLabel } from '@core/types/domain/fields';
+import { Item, readField } from '@/core/types/schema';
+import { EMOJI } from '@/core/types/constants';
+import { getFieldLabel } from '@/core/types/fields';
 import { dayjs } from './date'; // 导入 dayjs
 
 /**

@@ -14,7 +14,7 @@ import {
 } from '@mui/material';
 import FilterListIcon from '@mui/icons-material/FilterList';
 import { useStore } from '@core/stores/AppStore';
-import type { ViewInstance } from '@core/types/domain/schema';
+import type { ViewInstance } from '@/core/types/schema';
 
 // Type compatibility
 const AnyButton = Button as any;

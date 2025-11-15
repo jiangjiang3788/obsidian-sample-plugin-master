@@ -1,8 +1,8 @@
 // src/state/AppStore.ts
 import { useState, useEffect, useCallback } from 'preact/hooks';
 import { singleton, inject } from 'tsyringe';
-import type { ThinkSettings, ViewInstance, Layout, InputSettings, BlockTemplate, ThemeDefinition, ThemeOverride, Group, GroupType, Groupable } from '@core/types/domain/schema';
-import { DEFAULT_SETTINGS } from '@core/types/domain/schema';
+import type { ThinkSettings, ViewInstance, Layout, InputSettings, BlockTemplate, ThemeDefinition, ThemeOverride, Group, GroupType, Groupable } from '@/core/types/schema';
+import { DEFAULT_SETTINGS } from '@/core/types/schema';
 import type ThinkPlugin from '@main';
 import { VIEW_DEFAULT_CONFIGS } from '@/features/settings/ui/components/view-editors/registry';
 import { generateId, moveItemInArray, duplicateItemInArray } from '@core/utils/array';

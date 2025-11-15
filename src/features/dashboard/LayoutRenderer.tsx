@@ -3,7 +3,7 @@
 import { h, Fragment } from 'preact';
 import { useState, useMemo, useEffect, useCallback, useRef } from 'preact/hooks'; // [修改] 导入 useRef
 import { DataStore } from '@core/services/DataStore';
-import { Layout, ViewInstance, Item } from '@core/types/domain/schema'; // [修改] 导入 Item 类型
+import { Layout, ViewInstance, Item } from '@/core/types/schema'; // [修改] 导入 Item 类型
 import { ModulePanel } from './ModulePanel';
 import { ViewComponents } from './index';
 import { getDateRange, dayjs, formatDateForView } from '@core/utils/date';

@@ -3,13 +3,13 @@
  * 负责从数据中扫描主题并提供智能导入功能
  */
 import type { AppStore } from '@core/stores/AppStore';
-import type { ThemeDefinition, Item } from '@core/types/domain/schema';
+import type { ThemeDefinition, Item } from '@/core/types/schema';
 import { ThemeManager } from '@features/theme/ThemeManager';
 import { DataStore } from '@core/services/DataStore';
 import { 
     deduplicateThemes, 
     type DeduplicationResult 
-} from '@core/theme-matrix/utils/themeDeduplication';
+} from '@/core/theme-matrix/themeDeduplication';
 
 /**
  * 扫描配置

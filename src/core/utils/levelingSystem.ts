@@ -1,6 +1,6 @@
 // src/lib/utils/core/levelingSystem.ts
 
-import type { Item } from '@core/types/domain/schema';
+import type { Item } from '@/core/types/schema';
 
 export interface LevelConfig {
     level: number;

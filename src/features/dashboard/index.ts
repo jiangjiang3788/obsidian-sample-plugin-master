@@ -42,8 +42,8 @@ import type { ComponentType } from 'preact';
 export { ThemeFilter } from '@features/theme';
 
 // [REFACTOR] Import the authoritative ViewName and VIEW_OPTIONS from the domain layer.
-import type { ViewName } from '@core/types/domain/schema';
-import { VIEW_OPTIONS as DOMAIN_VIEW_OPTIONS } from '@core/types/domain/schema';
+import type { ViewName } from '@/core/types/schema';
+import { VIEW_OPTIONS as DOMAIN_VIEW_OPTIONS } from '@/core/types/schema';
 
 
 /* ------------------------------------------------------------------ */

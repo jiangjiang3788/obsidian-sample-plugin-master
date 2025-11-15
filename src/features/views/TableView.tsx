@@ -2,9 +2,9 @@
 
 /** @jsxImportSource preact */
 import { h } from 'preact';
-import { Item, readField } from '@core/types/domain/schema';
+import { Item, readField } from '@/core/types/schema';
 import { makeObsUri } from '@core/utils/obsidian';
-import { EMPTY_LABEL } from '@core/types/domain/constants';
+import { EMPTY_LABEL } from '@/core/types/constants';
 import { TaskCheckbox } from '@shared/ui/composites/TaskCheckbox';
 import { TaskSendToTimerButton } from '@shared/ui/composites/TaskSendToTimerButton';
 import { App } from 'obsidian'; // [新增] 导入 App 类型

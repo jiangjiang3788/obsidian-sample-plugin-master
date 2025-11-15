@@ -3,7 +3,7 @@ import { h } from 'preact';
 import { useState, useMemo } from 'preact/hooks';
 import { App, Modal, Notice, setIcon } from 'obsidian';
 import { render, unmountComponentAtNode } from 'preact/compat';
-import { Item } from '@core/types/domain/schema';
+import { Item } from '@/core/types/schema';
 import { dayjs } from '@core/utils/date';
 import { getEffectiveDisplayCount, getEffectiveLevelCount } from '@core/utils/levelingSystem';
 import { makeObsUri } from '@core/utils/obsidian';
