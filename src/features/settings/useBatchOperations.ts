@@ -4,7 +4,7 @@
  */
 import { useState, useCallback, useMemo } from 'preact/hooks';
 import type { AppStore } from '@/app/AppStore';
-import type { ThemeManager } from '@features/theme/ThemeManager';
+import type { ThemeManager } from '@features/settings/ThemeManager';
 import { BatchOperationService } from '@/core/theme-matrix/BatchOperationService';
 import type { EditorState } from './useThemeMatrixEditor';
 

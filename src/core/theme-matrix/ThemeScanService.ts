@@ -4,7 +4,7 @@
  */
 import type { AppStore } from '@/app//AppStore';
 import type { ThemeDefinition, Item } from '@/core/types/schema';
-import { ThemeManager } from '@features/theme/ThemeManager';
+import { ThemeManager } from '@features/settings/ThemeManager';
 import { DataStore } from '@core/services/DataStore';
 import { 
     deduplicateThemes, 

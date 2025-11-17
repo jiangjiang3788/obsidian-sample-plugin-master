@@ -41,9 +41,7 @@ export const HEATMAP_VIEW_STYLES = `
     transition: all 0.2s ease;
 }
 
-.heatmap-theme-header:hover {
-    background-color: var(--background-modifier-hover);
-}
+
 
 .heatmap-theme-header.vertical-layout {
     flex-direction: column;

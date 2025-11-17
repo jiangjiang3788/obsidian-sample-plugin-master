@@ -2,15 +2,15 @@
  * 批量操作服务
  * 处理主题矩阵的批量操作逻辑
  */
-import type { AppStore } from '@/app/ppStore';
-import type { ThemeManager } from '@features/theme/ThemeManager';
+import type { AppStore } from '@/app/AppStore';
+import type { ThemeManager } from '@features/settings/ThemeManager';
 import type { 
   BatchOperationType, 
   BatchOperationParams,
   BatchOperationResult
-} from '@core/theme-matrix/types';
+} from '@core/theme-matrix';
 import type { ThemeDefinition, ThemeOverride } from '@/core/types/schema';
-import type { SelectionState } from '@core/theme-matrix/types';
+import type { SelectionState } from '@core/theme-matrix';
 
 export interface BatchOperationServiceConfig {
   appStore: AppStore;

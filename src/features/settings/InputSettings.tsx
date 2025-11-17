@@ -3,7 +3,7 @@
 import { h } from 'preact';
 import { Box, Divider } from '@mui/material';
 import { BlockManager } from './BlockManager';
-import { ThemeMatrix } from '@features/theme/ThemeMatrix';
+import { ThemeMatrix } from '@features/settings/ThemeMatrix';
 import { AppStore } from '@/app/AppStore'; // [新增]
 
 // [修改] 组件 props 现在需要接收 appStore

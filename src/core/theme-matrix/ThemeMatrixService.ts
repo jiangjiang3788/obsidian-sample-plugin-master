@@ -3,8 +3,8 @@
  */
 import { type AppStore } from '@/app/AppStore';
 import { type ThemeDefinition, ThemeOverride, BlockTemplate } from '@/core/types/schema';
-import { type ExtendedTheme, BatchOperationType, ThemeTreeNode } from '@core/theme-matrix/types';
-import { ThemeManager } from '@features/theme/ThemeManager';
+import { type ExtendedTheme, BatchOperationType, ThemeTreeNode } from '@core/theme-matrix';
+import { ThemeManager } from '@features/settings/ThemeManager';
 import { 
     normalizePath,
     validatePathCharacters 

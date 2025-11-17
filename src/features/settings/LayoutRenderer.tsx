@@ -5,12 +5,13 @@ import { useState, useMemo, useEffect, useCallback, useRef } from 'preact/hooks'
 import { DataStore } from '@core/services/DataStore';
 import { Layout, ViewInstance, Item } from '@/core/types/schema'; // [修改] 导入 Item 类型
 import { ModulePanel } from './ModulePanel';
-import { ViewComponents } from './index';
+import { DashboardViewComponents as ViewComponents } from './index';
+
 import { getDateRange, dayjs } from '@core/utils/date';
 import { useStore } from '@/app/AppStore';
 import type { ActionService } from '@core/services/ActionService';
 import { ItemService } from '@core/services/ItemService';
-import { useViewData } from '@/features/dashboard/useViewData';
+import { useViewData } from '@/features/settings/useViewData';
 import { QuickInputModal } from '@/features/quickinput/QuickInputModal';
 import { ModuleSettingsModal } from './ModuleSettingsModal'; // [新增] 导入设置模态框
 import { App, Notice } from 'obsidian'; // [修改] 导入 Notice

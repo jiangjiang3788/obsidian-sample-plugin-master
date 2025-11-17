@@ -4,16 +4,16 @@ import { singleton, inject } from 'tsyringe';
 import type { ThinkSettings, ViewInstance, Layout, InputSettings, BlockTemplate, ThemeDefinition, ThemeOverride, Group, GroupType, Groupable } from '@/core/types/schema';
 import { DEFAULT_SETTINGS } from '@/core/types/schema';
 import type ThinkPlugin from '@main';
-import { VIEW_DEFAULT_CONFIGS } from '@/features/settings/ui/components/view-editors/registry';
+import { VIEW_DEFAULT_CONFIGS } from '@/features/settings/registry';
 import { generateId, moveItemInArray, duplicateItemInArray } from '@core/utils/array';
-import { appStore } from '@app/storeRegistry';
+import { appStore } from '@/app/storeRegistry';
 import { SETTINGS_TOKEN } from '@/core/services/types';
-import { ThemeStore } from '@features/theme/ThemeStore';
+import { ThemeStore } from '@features/settings/ThemeStore';
 import { TimerStore, type TimerState } from '@features/timer/TimerStore';
-import { LayoutStore } from '@features/dashboard/LayoutStore';
-import { ViewInstanceStore } from '@features/dashboard/ViewInstanceStore';
-import { BlockStore } from '@features/dashboard/BlockStore';
-import { GroupStore } from '@features/dashboard/GroupStore';
+import { LayoutStore } from '@/features/settings/LayoutStore';
+import { ViewInstanceStore } from '@/features/settings/ViewInstanceStore';
+import { BlockStore } from '@/features/settings/BlockStore';
+import { GroupStore } from '@/features/settings/GroupStore';
 import { SettingsStore } from '@features/settings/SettingsStore';
 
 export interface AppState {

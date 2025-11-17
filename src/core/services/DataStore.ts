@@ -10,7 +10,7 @@ import { filterByRules, sortItems } from '@core/utils/itemFilter';
 import { parseRecurrence } from '@core/utils/mark';
 // [新增] 注入令牌与服务
 import { AppToken } from '@core/services/types';
-import { ThemeManager } from '@features/theme/ThemeManager';
+import { ThemeManager } from '@features/settings/ThemeManager';
 import type { IPluginStorage } from '@core/services/StorageService';
 import { STORAGE_TOKEN } from '@core/services/StorageService';
 import {
