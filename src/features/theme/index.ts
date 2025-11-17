@@ -7,7 +7,6 @@ export { ThemeManager } from './ThemeManager';
 export { ThemeStore } from './ThemeStore';
 
 // 导出UI组件
-export { ThemeFilter } from './ThemeFilter';
 export { ThemeMatrix } from './ThemeMatrix';
 
 // 导出类型
