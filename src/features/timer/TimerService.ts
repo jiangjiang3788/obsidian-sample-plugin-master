@@ -1,6 +1,6 @@
 // src/core/services/TimerService.ts
 import { singleton, inject } from 'tsyringe';
-import { AppStore } from '@core/stores/AppStore';
+import { AppStore } from '@/app/AppStore';
 import { ItemService } from '@core/services/ItemService';
 import { Notice, App, TFile } from 'obsidian';
 import { DataStore } from '@core/services/DataStore';

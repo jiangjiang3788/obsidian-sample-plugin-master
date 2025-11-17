@@ -4,7 +4,7 @@ import { h } from 'preact';
 import { Stack, Typography, Box, IconButton, TextField, Tooltip } from '@mui/material';
 import type { ViewEditorProps } from './registry';
 // [修改] 从注册表导入 dataStore
-import { dataStore } from '@core/stores/storeRegistry';
+import { dataStore } from '@/app/storeRegistry';
 import { useMemo, useState, useEffect } from 'preact/hooks';
 import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
 import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';

@@ -22,7 +22,7 @@ ensureReflectMetadata();
 
 import { container } from 'tsyringe';
 import { Plugin, Notice } from 'obsidian';
-import { AppStore } from '@core/stores/AppStore';
+import { AppStore } from '@/app/AppStore';
 import { DataStore } from '@core/services/DataStore';
 import { ThinkSettings, DEFAULT_SETTINGS, STYLE_TAG_ID } from '@core/types';
 import { GLOBAL_CSS } from '@shared/styles';
@@ -30,7 +30,7 @@ import { AppToken, SETTINGS_TOKEN } from '@core/services/types';
 import { VaultFileStorage, STORAGE_TOKEN } from '@core/services/StorageService';
 import { safeAsync } from '@shared/utils/errorHandler';
 import { performanceMonitor, startMeasure } from '@shared/utils/performance';
-import { ServiceManager } from '@core/services/ServiceManager';
+import { ServiceManager } from '@/app/ServiceManager';
 
 console.log(`[ThinkPlugin] main.js 文件已加载，版本时间: ${new Date().toLocaleTimeString()}`);
 

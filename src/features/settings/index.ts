@@ -2,7 +2,7 @@
 import { App } from 'obsidian';
 import type ThinkPlugin from '@main';
 import { SettingsTab } from './SettingsTab';
-import { AppStore } from '@core/stores/AppStore'; // [新增]
+import { AppStore } from '@/app/AppStore'; // [新增]
 
 // [修改] 依赖项接口
 export interface SettingsDependencies {

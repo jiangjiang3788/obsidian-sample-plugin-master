@@ -1,7 +1,7 @@
 // src/core/services/ActionService.ts
 import { singleton, inject } from 'tsyringe';
 import { App, Notice } from 'obsidian';
-import { AppStore } from '@core/stores/AppStore';
+import { AppStore } from '@/app/AppStore';
 import { dayjs } from '@core/utils/date';
 import type { Item, ViewInstance } from '@/core/types/schema';
 import { DataStore } from '@core/services/DataStore';

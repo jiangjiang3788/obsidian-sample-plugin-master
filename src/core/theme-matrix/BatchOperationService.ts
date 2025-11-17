@@ -2,7 +2,7 @@
  * 批量操作服务
  * 处理主题矩阵的批量操作逻辑
  */
-import type { AppStore } from '@core/stores/AppStore';
+import type { AppStore } from '@/app/ppStore';
 import type { ThemeManager } from '@features/theme/ThemeManager';
 import type { 
   BatchOperationType, 

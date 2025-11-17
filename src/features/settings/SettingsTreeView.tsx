@@ -10,7 +10,7 @@ import DriveFileMoveOutlinedIcon from '@mui/icons-material/DriveFileMoveOutlined
 import DeleteForeverOutlinedIcon from '@mui/icons-material/DeleteForeverOutlined';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import type { Group, Groupable } from '@/core/types/schema';
-import { AppStore } from '@core/stores/AppStore';
+import { AppStore } from '@/app/AppStore';
 import { MoveItemDialog } from '@shared/ui/composites/dialogs/MoveItemDialog';
 
 export interface TreeItem extends Groupable {

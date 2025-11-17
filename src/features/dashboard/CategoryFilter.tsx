@@ -13,7 +13,7 @@ import {
     IconButton
 } from '@mui/material';
 import FilterListIcon from '@mui/icons-material/FilterList';
-import { useStore } from '@core/stores/AppStore';
+import { useStore } from '@/app/AppStore';
 import type { ViewInstance } from '@/core/types/schema';
 
 // Type compatibility

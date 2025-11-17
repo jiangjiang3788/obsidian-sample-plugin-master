@@ -3,9 +3,8 @@ import { render } from 'preact'; // [修改] 不再需要 h
 import { Notice, Plugin } from 'obsidian';
 import { CODEBLOCK_LANG } from '@/core/types/constants';
 import { DataStore } from '@core/services/DataStore';
-// [移除] 不再需要直接导入 LayoutRenderer
-// import { LayoutRenderer } from '../../views/Dashboard/ui/LayoutRenderer'; 
-import { AppStore } from '@core/stores/AppStore';
+
+import { AppStore } from '@/app/AppStore';
 import { RendererService } from '@core/services/RendererService';
 import type { Layout } from '@/core/types/schema';
 import type { ActionService } from '@core/services/ActionService';
@@ -67,10 +66,7 @@ export class CodeblockEmbedder {
      * [修改] 此方法现在将渲染工作完全委托给 RendererService
      */
     private mountAndRegister(el: HTMLElement, layout: Layout) {
-        // [移除] 此处不再需要手动调用 render()，因为 register 方法会处理
-        // render( h(LayoutRenderer, { ... }), el );
 
-        // [修改] 只调用服务即可，服务会负责正确的渲染
         this.rendererService.register(el, layout);
     }
 }

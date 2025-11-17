@@ -1,7 +1,7 @@
 /**
  * 组件属性类型定义
  */
-import { type AppStore } from '@core/stores/AppStore';
+import { type AppStore } from '@/app/AppStore';
 import { type BlockTemplate, type ThemeDefinition, type ThemeOverride } from '@/core/types/schema';
 import { type BatchOperationType } from '@shared/types/common';
 

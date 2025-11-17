@@ -6,7 +6,7 @@ import { Typography, Tooltip, Chip, Autocomplete, TextField, Button } from '@mui
 import AddIcon from '@mui/icons-material/Add';
 import { SimpleSelect } from '@shared/ui/composites/SimpleSelect';
 // [修改] 从注册表导入 dataStore
-import { dataStore } from '@core/stores/storeRegistry';
+import { dataStore } from '@/app/storeRegistry';
 import { getAllFields, readField, FilterRule, SortRule } from '@/core/types/schema';
 
 // 辅助Hook：获取库中所有字段的唯一值，用于自动补全
