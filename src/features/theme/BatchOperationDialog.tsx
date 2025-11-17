@@ -12,7 +12,7 @@ import {
     Switch,
     Button
 } from '@mui/material';
-import type { BatchOperationDialogProps } from '../types';
+import type { BatchOperationDialogProps } from './index';
 
 export function BatchOperationDialog({ 
     open, 

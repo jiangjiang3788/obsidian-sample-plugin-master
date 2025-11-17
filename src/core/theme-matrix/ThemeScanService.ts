@@ -2,7 +2,7 @@
  * 主题扫描服务
  * 负责从数据中扫描主题并提供智能导入功能
  */
-import type { AppStore } from '@core/stores/AppStore';
+import type { AppStore } from '@/app//AppStore';
 import type { ThemeDefinition, Item } from '@/core/types/schema';
 import { ThemeManager } from '@features/theme/ThemeManager';
 import { DataStore } from '@core/services/DataStore';

@@ -1,7 +1,7 @@
 // src/state/storeRegistry.ts
-import { AppStore } from '@core/stores/AppStore';
+import { AppStore } from '@/app/AppStore';
 import { DataStore } from '@core/services/DataStore';
-import { TimerService } from '@features/timer/services/TimerService';
+import { TimerService } from '@features/timer/TimerService';
 // [新增] 导入 InputService 类型
 import { InputService } from '@core/services/InputService';
 

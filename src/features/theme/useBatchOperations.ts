@@ -3,10 +3,10 @@
  * 整合批量操作服务，提供简化的API
  */
 import { useState, useCallback, useMemo } from 'preact/hooks';
-import type { AppStore } from '@core/stores/AppStore';
+import type { AppStore } from '@/app/AppStore';
 import type { ThemeManager } from '@features/theme/ThemeManager';
 import { BatchOperationService } from '@/core/theme-matrix/BatchOperationService';
-import type { EditorState } from '../../useThemeMatrixEditor';
+import type { EditorState } from './useThemeMatrixEditor';
 
 // 定义新的参数类型
 export type BatchOperation = 

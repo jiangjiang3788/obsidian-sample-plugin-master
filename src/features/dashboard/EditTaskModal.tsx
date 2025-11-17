@@ -3,7 +3,7 @@
 import { h } from 'preact';
 import { useEffect } from 'preact/hooks';
 import type { TaskBlock } from '@features/views/timeline-parser';
-import { TaskService } from '@core/services/TaskService';
+import { ItemService } from '@core/services/ItemService';
 import { timeToMinutes, minutesToTime } from '@core/utils/date';
 import { Dialog, DialogTitle, DialogContent, DialogActions, Button, TextField } from '@mui/material';
 import { useTimeFormState, useSaveHandler } from '@shared/index';
@@ -12,11 +12,11 @@ interface EditTaskModalProps {
   isOpen: boolean;
   onClose: () => void;
   task: TaskBlock;
-  taskService?: TaskService;
+  itemService?: ItemService;
   onSave?: () => void;
 }
 
-export function EditTaskModal({ isOpen, onClose, task, taskService, onSave }: EditTaskModalProps) {
+export function EditTaskModal({ isOpen, onClose, task, itemService, onSave }: EditTaskModalProps) {
   // 使用专门的时间表单状态管理
   const formState = useTimeFormState({
     startTime: minutesToTime(task.startMinute),
@@ -70,8 +70,8 @@ export function EditTaskModal({ isOpen, onClose, task, taskService, onSave }: Ed
 
   // 验证函数
   const validateTimeData = () => {
-    if (!taskService) {
-      throw new Error('TaskService 未提供，无法保存');
+    if (!itemService) {
+      throw new Error('ItemService 未提供，无法保存');
     }
 
     const startM = timeToMinutes(timeData.startTime);
@@ -100,7 +100,7 @@ export function EditTaskModal({ isOpen, onClose, task, taskService, onSave }: Ed
   // 使用统一的保存处理模式
   const handleSave = useSaveHandler(async () => {
     const timeUpdateData = validateTimeData();
-    await taskService!.updateTaskTime(task.id, timeUpdateData);
+    await itemService!.updateItemTime(task.id, timeUpdateData);
     onSave?.();
     onClose();
   }, {

@@ -6,7 +6,8 @@ import { ViewEditorProps } from './registry';
 import AddIcon from '@mui/icons-material/AddCircleOutline';
 import DeleteIcon from '@mui/icons-material/RemoveCircleOutline';
 import { useMemo } from 'preact/hooks';
-import { dataStore } from '@core/stores/storeRegistry';
+
+import { dataStore } from '@/app/storeRegistry';
 import { SimpleSelect } from '@shared/ui/composites/SimpleSelect';
 
 export const DEFAULT_CONFIG = {

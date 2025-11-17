@@ -11,9 +11,9 @@ import isoWeek from 'dayjs/esm/plugin/isoWeek';
 import isBetween from 'dayjs/esm/plugin/isBetween';
 import { DEFAULT_CONFIG as DEFAULT_TIMELINE_CONFIG } from '@features/settings/TimelineViewEditor';
 import { App, Notice } from 'obsidian';
-import { TaskService } from '@core/services/TaskService';
+import { ItemService } from '@core/services/ItemService';
 import { EditTaskModal } from '@/features/dashboard/EditTaskModal';
-import { useStore } from '@core/stores/AppStore';
+import { useStore } from '@/app/AppStore';
 import { QuickInputModal } from '@/features/quickinput/QuickInputModal';
 import { filterByRules } from '@core/utils/itemFilter';
 
@@ -166,7 +166,7 @@ const TimelineSummaryTable = ({ summaryData, colorMap, progressOrder, untrackedL
         </table>
     );
 };
-const DayColumnBody = ({ app, day, blocks, hourHeight, categoriesConfig, colorMap, maxHours, taskService, onColumnClick }: {
+const DayColumnBody = ({ app, day, blocks, hourHeight, categoriesConfig, colorMap, maxHours, itemService, onColumnClick }: {
     app: App;
     day: string;
     blocks: TaskBlock[];
@@ -174,7 +174,7 @@ const DayColumnBody = ({ app, day, blocks, hourHeight, categoriesConfig, colorMa
     categoriesConfig: any;
     colorMap: any;
     maxHours: number;
-    taskService: TaskService;
+    itemService: ItemService;
     onColumnClick: (day: string, e: MouseEvent | TouchEvent) => void;
 }) => {
     const [editingTask, setEditingTask] = useState<TaskBlock | null>(null);
@@ -192,7 +192,7 @@ const DayColumnBody = ({ app, day, blocks, hourHeight, categoriesConfig, colorMa
         const deltaMinutes = prevBlock.blockEndMinute - block.blockStartMinute;
         const newAbsoluteStartMinute = block.startMinute + deltaMinutes;
         const newStartTimeString = formatTimeMinute(newAbsoluteStartMinute);
-        taskService.updateTaskTime(block.id, { time: newStartTimeString });
+        itemService.updateItemTime(block.id, { time: newStartTimeString });
     };
     const handleAlignToNext = (block: TaskBlock, nextBlock: TaskBlock | null) => {
         if (!nextBlock) return;
@@ -202,7 +202,7 @@ const DayColumnBody = ({ app, day, blocks, hourHeight, categoriesConfig, colorMa
             new Notice('无法对齐：任务时长将变为负数或零');
             return;
         }
-        taskService.updateTaskTime(block.id, { duration: newDuration });
+        itemService.updateItemTime(block.id, { duration: newDuration });
     };
 
     return (
@@ -217,7 +217,7 @@ const DayColumnBody = ({ app, day, blocks, hourHeight, categoriesConfig, colorMa
                     isOpen={true}
                     onClose={handleCloseModal}
                     task={editingTask}
-                    taskService={taskService}
+                    itemService={itemService}
                 />
             )}
             {blocks.map((block: TaskBlock, index: number) => {
@@ -267,10 +267,10 @@ interface TimelineViewProps {
     module: any;
     currentView: '年' | '季' | '月' | '周' | '天';
     app: App;
-    taskService: TaskService;
+    itemService: ItemService;
 }
 
-export function TimelineView({ items, dateRange, module, currentView, app, taskService }: TimelineViewProps) {
+export function TimelineView({ items, dateRange, module, currentView, app, itemService }: TimelineViewProps) {
     const inputBlocks = useStore(state => state.settings.inputSettings.blocks);
 
     const config = useMemo(() => {
@@ -562,7 +562,7 @@ export function TimelineView({ items, dateRange, module, currentView, app, taskS
                                     categoriesConfig={config.categories} 
                                     colorMap={colorMap} 
                                     maxHours={config.MAX_HOURS_PER_DAY} 
-                                    taskService={taskService}
+                                    itemService={itemService}
                                     onColumnClick={handleColumnClick}
                                 />;
                     })}

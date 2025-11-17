@@ -1,6 +1,6 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
-import { useStore } from '@core/stores/AppStore';
+import { useStore } from '@/app//AppStore';
 import { 
     Box, Typography, TextField, Button, Stack 
 } from '@mui/material';
@@ -9,14 +9,14 @@ import { useState, useMemo } from 'preact/hooks';
 import { TemplateEditorModal } from '@features/settings/TemplateEditorModal';
 import type { BlockTemplate, ThemeDefinition, ThemeOverride } from '@/core/types/schema';
 import { ThemeManager } from './ThemeManager';
-import { dataStore } from '@core/stores/storeRegistry';
+import { dataStore } from '@/app/storeRegistry';
 
 // 导入服务
 import { ThemeMatrixService } from '@/core/theme-matrix/ThemeMatrixService';
 import { ThemeScanService } from '@/core/theme-matrix/ThemeScanService';
 
 // 导入类型
-import type { ThemeMatrixProps } from './types';
+import type { ThemeMatrixProps } from './index';
 
 // 导入工具函数
 import { buildThemeTree } from '@/core/theme-matrix/themeTreeBuilder';

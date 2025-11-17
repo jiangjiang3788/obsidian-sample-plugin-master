@@ -1,7 +1,7 @@
 // src/features/settings/ui/LayoutSettings.tsx
 /** @jsxImportSource preact */
 import { h } from 'preact';
-import { useStore, AppStore } from '@core/stores/AppStore';
+import { useStore, AppStore } from '@/app/AppStore';
 // [MODIFIED] Import Autocomplete
 import { Box, Stack, Typography, TextField, Checkbox, FormControlLabel, Tooltip, Chip, Radio, RadioGroup as MuiRadioGroup, Autocomplete } from '@mui/material';
 import type { Layout } from '@/core/types/schema';
@@ -89,7 +89,7 @@ function LayoutEditor({ layout, appStore }: { layout: Layout, appStore: AppStore
                             addView(newValue.value);
                         }
                     }}
-                    renderInput={(params) => <TextField {...params} variant="outlined" placeholder="+ 搜索并添加视图..." />}
+                    renderInput={(params) => <TextField {...params as any} variant="outlined" placeholder="+ 搜索并添加视图..." />}
                     sx={{ minWidth: 150 }}
                     size="small"
                 />

@@ -4,20 +4,20 @@ import { h, Fragment } from 'preact';
 import { useState, useMemo, useEffect, useCallback, useRef } from 'preact/hooks'; // [修改] 导入 useRef
 import { DataStore } from '@core/services/DataStore';
 import { Layout, ViewInstance, Item } from '@/core/types/schema'; // [修改] 导入 Item 类型
-import { ModulePanel } from './ModulePanel';
-import { ViewComponents } from './index';
+import { ModulePanel } from '../dashboard/ModulePanel';
+import { ViewComponents } from '../dashboard/index';
 import { getDateRange, dayjs, formatDateForView } from '@core/utils/date';
-import { useStore } from '@core/stores/AppStore';
+import { useStore } from '@/app/AppStore';
 import type { ActionService } from '@core/services/ActionService';
-import type { TaskService } from '@core/services/TaskService';
+import { ItemService } from '@core/services/ItemService';
 import { useViewData } from '@/features/dashboard/useViewData';
 import { QuickInputModal } from '@/features/quickinput/QuickInputModal';
-import { ModuleSettingsModal } from './ModuleSettingsModal'; // [新增] 导入设置模态框
+import { ModuleSettingsModal } from '../dashboard/ModuleSettingsModal'; // [新增] 导入设置模态框
 import { App, Notice } from 'obsidian'; // [修改] 导入 Notice
-import { appStore } from '@core/stores/storeRegistry';
+import { appStore } from '@/app/storeRegistry';
 import { exportItemsToMarkdown } from '@core/utils/exportUtils'; // [新增] 导入导出函数
 import { ThemeFilter } from '@features/theme/ThemeFilter'; // [新增] 导入主题筛选组件
-import { CategoryFilter } from './CategoryFilter'; // [新增] 导入分类筛选组件
+import { CategoryFilter } from '../dashboard/CategoryFilter'; // [新增] 导入分类筛选组件
 
 // [修改] ViewContent 组件增加 onDataLoaded 和 selectedThemes props
 const ViewContent = ({
@@ -33,7 +33,7 @@ const ViewContent = ({
     app,
     onMarkDone,
     actionService,
-    taskService,
+    itemService,
     onDataLoaded, // [新增]
 }: {
     viewInstance: ViewInstance;
@@ -48,7 +48,7 @@ const ViewContent = ({
     app: App;
     onMarkDone: (id: string) => void;
     actionService: ActionService;
-    taskService: TaskService;
+    itemService: ItemService;
     onDataLoaded: (items: Item[]) => void; // [新增]
 }) => {
     const viewItems = useViewData({
@@ -85,14 +85,14 @@ const ViewContent = ({
         fields: viewInstance.fields,
         onMarkDone: onMarkDone,
         actionService: actionService,
-        taskService: taskService,
+        itemService: itemService,
         selectedCategories,
     };
 
     return <ViewComponent {...viewProps} />;
 };
 
-export function LayoutRenderer({ layout, dataStore, app, actionService, taskService }: any) {
+export function LayoutRenderer({ layout, dataStore, app, actionService, itemService }: any) {
     const allViews = useStore(state => state.settings.viewInstances);
     
     const [expandedState, setExpandedState] = useState<Record<string, boolean>>({});
@@ -185,8 +185,8 @@ export function LayoutRenderer({ layout, dataStore, app, actionService, taskServ
     };
     
     const handleMarkItemDone = useCallback((itemId: string) => {
-        taskService.completeTask(itemId);
-    }, [taskService]);
+        itemService.completeItem(itemId);
+    }, [itemService]);
 
     const handleToggle = useCallback((viewId: string, event?: MouseEvent) => {
         const isToggleAll = event?.metaKey || event?.ctrlKey;
@@ -269,7 +269,7 @@ export function LayoutRenderer({ layout, dataStore, app, actionService, taskServ
                         app={app}
                         onMarkDone={handleMarkItemDone}
                         actionService={actionService}
-                        taskService={taskService}
+                        itemService={itemService}
                         onDataLoaded={(items) => { modulesDataCache.current[viewInstance.id] = items; }} // [修改] 传递 onDataLoaded
                     />
                 )}

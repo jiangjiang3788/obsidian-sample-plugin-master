@@ -5,7 +5,7 @@ import { useMemo, useState, useRef, useEffect } from 'preact/hooks';
 import { App, Notice } from 'obsidian';
 import { Item, ViewInstance, BlockTemplate, InputSettings, ThemeDefinition } from '@/core/types/schema';
 import { dayjs } from '@core/utils/date';
-import { useStore } from '@core/stores/AppStore';
+import { useStore } from '@/app/AppStore';
 import { QuickInputModal } from '@/features/quickinput/QuickInputModal';
 import { DEFAULT_CONFIG } from '@features/settings/HeatmapViewEditor';
 import { getThemeLevelData, getEffectiveDisplayCount, getEffectiveLevelCount, type LevelResult, LEVEL_SYSTEM_PRESETS } from '@core/utils/levelingSystem';
