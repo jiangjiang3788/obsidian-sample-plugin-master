@@ -36,10 +36,6 @@ function ViewInstanceEditor({ vi, appStore }: { vi: ViewInstance, appStore: AppS
         []
     );
 
-    const groupFieldOptions = useMemo(() => [
-        { value: '', label: '-- 不分组 --' },
-        ...fieldOptions.map(f => ({ value: f, label: f }))
-    ], [fieldOptions]);
 
     // 字段更新处理
     const handleFieldsChange = (fields: string[]) => {
@@ -72,7 +68,7 @@ function ViewInstanceEditor({ vi, appStore }: { vi: ViewInstance, appStore: AppS
                                 <Checkbox 
                                     size="small" 
                                     checked={!!currentVi.collapsed} 
-                                    onChange={e => handleUpdate({ collapsed: e.target.checked })} 
+                                    onChange={e => handleUpdate({ collapsed: (e.target as HTMLInputElement).checked })} 
                                 />
                             } 
                             label="默认折叠" 
@@ -92,14 +88,6 @@ function ViewInstanceEditor({ vi, appStore }: { vi: ViewInstance, appStore: AppS
                     />
                 </FormField>
 
-                <FormField label="分组字段">
-                    <SimpleSelect 
-                        value={currentVi.group || ''} 
-                        options={groupFieldOptions} 
-                        onChange={val => handleUpdate({ group: val || undefined })} 
-                        sx={{ width: '100%' }}
-                    />
-                </FormField>
             </div>
 
             {/* 数据筛选和排序 */}

@@ -4,20 +4,21 @@ import { h, Fragment } from 'preact';
 import { useState, useMemo, useEffect, useCallback, useRef } from 'preact/hooks'; // [修改] 导入 useRef
 import { DataStore } from '@core/services/DataStore';
 import { Layout, ViewInstance, Item } from '@/core/types/schema'; // [修改] 导入 Item 类型
-import { ModulePanel } from '../dashboard/ModulePanel';
-import { ViewComponents } from '../dashboard/index';
+import { ModulePanel } from './ModulePanel';
+import { ViewComponents } from './index';
 import { getDateRange, dayjs, formatDateForView } from '@core/utils/date';
 import { useStore } from '@/app/AppStore';
 import type { ActionService } from '@core/services/ActionService';
 import { ItemService } from '@core/services/ItemService';
 import { useViewData } from '@/features/dashboard/useViewData';
 import { QuickInputModal } from '@/features/quickinput/QuickInputModal';
-import { ModuleSettingsModal } from '../dashboard/ModuleSettingsModal'; // [新增] 导入设置模态框
+import { ModuleSettingsModal } from './ModuleSettingsModal'; // [新增] 导入设置模态框
 import { App, Notice } from 'obsidian'; // [修改] 导入 Notice
 import { appStore } from '@/app/storeRegistry';
+import { AppStore } from '@/app/AppStore';
 import { exportItemsToMarkdown } from '@core/utils/exportUtils'; // [新增] 导入导出函数
 import { ThemeFilter } from '@features/theme/ThemeFilter'; // [新增] 导入主题筛选组件
-import { CategoryFilter } from '../dashboard/CategoryFilter'; // [新增] 导入分类筛选组件
+import { CategoryFilter } from './CategoryFilter'; // [新增] 导入分类筛选组件
 
 // [修改] ViewContent 组件增加 onDataLoaded 和 selectedThemes props
 const ViewContent = ({

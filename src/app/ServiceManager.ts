@@ -2,7 +2,7 @@
 import { container } from 'tsyringe';
 import type { App } from 'obsidian';
 import { DataStore } from '@core/services/DataStore';
-import { RendererService } from '@core/services/RendererService';
+import { RendererService } from '@/features/dashboard/RendererService';
 import { ActionService } from '@core/services/ActionService';
 import { TimerStateService } from '@features/timer/TimerStateService';
 import { InputService } from '@core/services/InputService';

@@ -9,7 +9,6 @@ import { useLocalStorage } from '@shared/hooks';
 import { LOCAL_STORAGE_KEYS } from '@/core/types/constants';
 import { theme as baseTheme } from '@shared/styles/mui-theme';
 
-import { ViewInstanceSettings } from './ViewInstanceSettings';
 import { LayoutSettings } from './LayoutSettings';
 import { InputSettings } from './InputSettings';
 import { AppStore } from '@/app/AppStore';
@@ -39,14 +38,12 @@ function SettingsRoot({ app, appStore }: { app: App, appStore: AppStore }) {
                     <Tabs value={tabIndex} onChange={(_, newValue) => setTabIndex(newValue)} aria-label="settings tabs">
                         <Tab label="通用" {...a11yProps(0)} />
                         <Tab label="快速输入" {...a11yProps(1)} />
-                        <Tab label="视图" {...a11yProps(2)} />
-                        <Tab label="布局" {...a11yProps(3)} />
+                        <Tab label="布局" {...a11yProps(2)} />
                     </Tabs>
                 </Box>
                 <TabPanel value={tabIndex} index={0}><GeneralSettings appStore={appStore} /></TabPanel>
                 <TabPanel value={tabIndex} index={1}><InputSettings appStore={appStore} /></TabPanel>
-                <TabPanel value={tabIndex} index={2}><ViewInstanceSettings app={app} appStore={appStore} /></TabPanel>
-                <TabPanel value={tabIndex} index={3}><LayoutSettings app={app} appStore={appStore} /></TabPanel>
+                <TabPanel value={tabIndex} index={2}><LayoutSettings app={app} appStore={appStore} /></TabPanel>
             </Box>
         </ThemeProvider>
     );

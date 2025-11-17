@@ -120,7 +120,8 @@ function HeatmapCell({ date, items, config, ratingMapping, app, onCellClick, onE
                 
                 // 根据次数设置背景色强度
                 const intensity = Math.min(displayCount / 10, 1);
-                cellStyle.backgroundColor = `rgba(100, 200, 100, ${0.3 + intensity * 0.5})`;
+                // 使用紫色系代替绿色系
+                cellStyle.backgroundColor = `rgba(195, 180, 217, ${0.4 + intensity * 0.6})`;
             }
         }
         
@@ -141,9 +142,9 @@ function HeatmapCell({ date, items, config, ratingMapping, app, onCellClick, onE
 
     // 空状态处理
     if (!visualValue && (!items || items.length === 0)) {
-        const emptyColor = '#E5DDEE';
+        const emptyColor = '#C3B4D9';
         cellStyle.backgroundColor = emptyColor;
-        cellStyle.opacity = 0.3;
+        cellStyle.opacity = 0.4;
     }
 
     // 今日特殊标记 - 使用更subtle的方式
@@ -593,7 +594,7 @@ export function HeatmapView({ items, app, dateRange, module, currentView }: Heat
                                 )}
                                 
                                 {/* 第二行：HeatmapCell展示区域 */}
-                                <div class="heatmap-header-cells">
+                                <div class={`heatmap-header-cells ${isRowLayout ? '' : 'grid-view'}`}>
                                     {renderHeaderCells(currentView, theme, dataForTheme)}
                                 </div>
                             </div>

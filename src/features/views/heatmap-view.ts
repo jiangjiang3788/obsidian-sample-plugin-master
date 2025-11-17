@@ -6,7 +6,7 @@ export const HEATMAP_VIEW_STYLES = `
  * --- HeatmapView 样式 ---
  */
 .heatmap-container {
-    --heatmap-cell-size: 20px;
+    --heatmap-cell-size: 35px;
     width: 100%;
     padding: 8px;
     font-size: 14px; /* 统一字体大小 */
@@ -77,6 +77,10 @@ export const HEATMAP_VIEW_STYLES = `
     width: 100%;
 }
 
+.heatmap-header-cells.grid-view {
+    gap: 26px; /* 为年/季视图的月份之间添加间距 */
+}
+
 .heatmap-cell {
     position: relative;
     width: var(--heatmap-cell-size);
@@ -120,6 +124,14 @@ export const HEATMAP_VIEW_STYLES = `
     align-items: center;
     justify-content: center;
     position: relative;
+}
+
+.cell-with-image {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .cell-with-image img {
@@ -227,7 +239,7 @@ body.theme-dark .heatmap-cell.empty {
 /* 响应式设计 */
 @media (max-width: 768px) {
     .heatmap-container {
-        --heatmap-cell-size: 16px;
+        --heatmap-cell-size: 28px;
         padding: 4px;
     }
     
@@ -250,7 +262,7 @@ body.theme-dark .heatmap-cell.empty {
 
 @media (max-width: 480px) {
     .heatmap-container {
-        --heatmap-cell-size: 14px;
+        --heatmap-cell-size: 24px;
     }
     
     .heatmap-view-wrapper {
