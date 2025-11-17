@@ -527,6 +527,15 @@
         "总结",
         "事件"
       ]
+    },
+    {
+      "name": "新布局",
+      "viewInstanceIds": [],
+      "displayMode": "list",
+      "initialView": "月",
+      "initialDateFollowsNow": true,
+      "parentId": null,
+      "id": "layout_mi2z05gtz4ayw"
     }
   ],
   "inputSettings": {
@@ -1004,6 +1013,21 @@
         "id": "thm_mfj17uymay4u6",
         "path": "工作/通勤",
         "icon": "🛵"
+      },
+      {
+        "path": "5儿童/l",
+        "icon": "",
+        "id": "thm_mi2z4tbiuruua"
+      },
+      {
+        "path": "11",
+        "icon": "",
+        "id": "thm_mi2z55fr1prph"
+      },
+      {
+        "path": "11/22",
+        "icon": "",
+        "id": "thm_mi2z59kmo6vfw"
       }
     ],
     "overrides": [

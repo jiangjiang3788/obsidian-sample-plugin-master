@@ -32,3 +32,5 @@ export * from './BatchOperationService';
 
 // 主题扫描服务
 export * from './ThemeScanService';
+
+export { ThemeManager } from './ThemeManager';
