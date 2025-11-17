@@ -4,6 +4,11 @@ import type ThinkPlugin from '@main';
 import { SettingsTab } from './SettingsTab';
 import { AppStore } from '@/app/AppStore'; // [新增]
 
+// 导出设置组件
+export { LayoutSettings } from './LayoutSettings';
+export { InputSettings } from './InputSettings';
+export { GeneralSettings } from './GeneralSettings';
+
 // [修改] 依赖项接口
 export interface SettingsDependencies {
     app: App;

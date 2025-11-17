@@ -36,14 +36,14 @@ function SettingsRoot({ app, appStore }: { app: App, appStore: AppStore }) {
             <Box sx={{ width: '100%' }} class="think-setting-root">
                 <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
                     <Tabs value={tabIndex} onChange={(_, newValue) => setTabIndex(newValue)} aria-label="settings tabs">
-                        <Tab label="通用" {...a11yProps(0)} />
-                        <Tab label="快速输入" {...a11yProps(1)} />
-                        <Tab label="布局" {...a11yProps(2)} />
+                        <Tab label="快速输入" {...a11yProps(0)} />
+                        <Tab label="布局" {...a11yProps(1)} />
+                        <Tab label="通用" {...a11yProps(2)} />
                     </Tabs>
                 </Box>
-                <TabPanel value={tabIndex} index={0}><GeneralSettings appStore={appStore} /></TabPanel>
-                <TabPanel value={tabIndex} index={1}><InputSettings appStore={appStore} /></TabPanel>
-                <TabPanel value={tabIndex} index={2}><LayoutSettings app={app} appStore={appStore} /></TabPanel>
+                <TabPanel value={tabIndex} index={0}><InputSettings appStore={appStore} /></TabPanel>
+                <TabPanel value={tabIndex} index={1}><LayoutSettings app={app} appStore={appStore} /></TabPanel>
+                <TabPanel value={tabIndex} index={2}><GeneralSettings appStore={appStore} /></TabPanel>
             </Box>
         </ThemeProvider>
     );
