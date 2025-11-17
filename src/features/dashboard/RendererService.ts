@@ -5,8 +5,8 @@ import { App } from 'obsidian';
 import { Layout } from '@/core/types/schema';
 import { DataStore } from '@core/services/DataStore';
 import { AppStore } from '@/app/AppStore';
-import { LayoutRenderer } from '@/features/views/LayoutRenderer';
-import { ActionService } from './ActionService';
+import { LayoutRenderer } from '@/features/dashboard/LayoutRenderer';
+import { ActionService } from '../../core/services/ActionService';
 import { ItemService } from '@core/services/ItemService';
 import { AppToken } from '@core/services/types';
 

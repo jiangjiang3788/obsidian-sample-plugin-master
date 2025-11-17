@@ -3,15 +3,16 @@
 import { h } from 'preact';
 import { useStore, AppStore } from '@/app/AppStore';
 // [MODIFIED] Import Autocomplete
-import { Box, Stack, Typography, TextField, Checkbox, FormControlLabel, Tooltip, Chip, Radio, RadioGroup as MuiRadioGroup, Autocomplete } from '@mui/material';
+import { Box, Stack, Typography, TextField, Checkbox, FormControlLabel, Tooltip, Chip, Radio, RadioGroup as MuiRadioGroup, Autocomplete, Button, Menu, MenuItem } from '@mui/material';
 import type { Layout } from '@/core/types/schema';
-import { useMemo, useCallback } from 'preact/hooks';
+import { useMemo, useCallback, useState } from 'preact/hooks';
 import { SimpleSelect } from '@shared/ui/composites/SimpleSelect';
 import { SettingsTreeView, TreeItem } from './SettingsTreeView';
 import { App } from 'obsidian';
 import { useSettingsManager } from './useSettingsManager';
 import { DndContext, closestCenter } from '@dnd-kit/core';
 import { arrayMove } from '@core/utils/array';
+import { ModuleSettingsModal } from '@features/dashboard/ModuleSettingsModal';
 
 const PERIOD_OPTIONS = ['年', '季', '月', '周', '天'].map(v => ({ value: v, label: v }));
 const DISPLAY_MODE_OPTIONS = [{ value: 'list', label: '列表' }, { value: 'grid', label: '网格' }];
@@ -20,7 +21,7 @@ const LABEL_WIDTH = '80px';
 const AlignedRadioGroup = ({ label, options, selectedValue, onChange }: any) => (
     <Stack direction="row" alignItems="center" spacing={2}>
         <Typography sx={{ width: LABEL_WIDTH, flexShrink: 0, fontWeight: 500 }}>{label}</Typography>
-        <MuiRadioGroup row value={selectedValue} onChange={(e) => onChange(e.target.value)}>
+        <MuiRadioGroup row value={selectedValue} onChange={(e) => onChange((e.target as HTMLInputElement).value)}>
             {options.map((opt: any) => (
                 <FormControlLabel key={opt.value} value={opt.value} control={<Radio size="small" />} label={opt.label} />
             ))}
@@ -30,6 +31,10 @@ const AlignedRadioGroup = ({ label, options, selectedValue, onChange }: any) => 
 
 function LayoutEditor({ layout, appStore }: { layout: Layout, appStore: AppStore }) {
     const allViews = useStore(state => state.settings.viewInstances);
+    const [inputValue, setInputValue] = useState('');
+    const [contextMenu, setContextMenu] = useState<{ mouseX: number; mouseY: number; viewId: string; viewTitle: string } | null>(null);
+    const [settingsModalOpen, setSettingsModalOpen] = useState(false);
+    const [selectedViewForSettings, setSelectedViewForSettings] = useState<any>(null);
 
     const handleUpdate = useCallback((updates: Partial<Layout>) => {
         appStore.updateLayout(layout.id, updates);
@@ -43,15 +48,108 @@ function LayoutEditor({ layout, appStore }: { layout: Layout, appStore: AppStore
         allViews.filter(v => !layout.viewInstanceIds.includes(v.id)),
         [layout.viewInstanceIds, allViews]
     );
+    
     const addView = (viewId: string) => {
         if (viewId) {
             handleUpdate({ viewInstanceIds: [...layout.viewInstanceIds, viewId] });
         }
     };
+    
     const removeView = (viewId: string) => {
         handleUpdate({ viewInstanceIds: layout.viewInstanceIds.filter(id => id !== viewId) });
     };
-    const availableViewOptions = availableViews.map(v => ({ value: v.id, label: v.title }));
+
+    // 动态生成选项列表
+    const autocompleteOptions = useMemo(() => {
+        const existingOptions: Array<{value: string, label: string, type: 'existing' | 'create', newName?: string}> = availableViews.map(v => ({
+            value: v.id,
+            label: v.title,
+            type: 'existing'
+        }));
+
+        // 如果用户有输入且不匹配任何现有视图，添加创建选项
+        if (inputValue.trim() && !availableViews.some(v => 
+            v.title.toLowerCase().includes(inputValue.toLowerCase())
+        )) {
+            existingOptions.push({
+                value: 'create',
+                label: `+ 创建新视图："${inputValue.trim()}"`,
+                type: 'create',
+                newName: inputValue.trim()
+            });
+        }
+
+        return existingOptions;
+    }, [availableViews, inputValue]);
+
+    const handleCreateNewView = useCallback(async (viewName: string) => {
+        try {
+            await appStore.addViewInstance(viewName);
+            setInputValue(''); // 清空输入
+        } catch (error) {
+            console.error('创建新视图失败:', error);
+        }
+    }, [appStore]);
+
+    const handleAutocompleteChange = useCallback(async (event: any, newValue: any) => {
+        if (!newValue) return;
+        
+        if (newValue.type === 'existing') {
+            addView(newValue.value);
+        } else if (newValue.type === 'create') {
+            await handleCreateNewView(newValue.newName);
+        }
+        
+        setInputValue(''); // 重置输入
+    }, [addView, handleCreateNewView]);
+
+    // 右键菜单处理
+    const handleChipRightClick = useCallback((event: MouseEvent, view: any) => {
+        event.preventDefault();
+        setContextMenu({
+            mouseX: event.clientX - 2,
+            mouseY: event.clientY - 4,
+            viewId: view.id,
+            viewTitle: view.title
+        });
+    }, []);
+
+    const handleContextMenuClose = useCallback(() => {
+        setContextMenu(null);
+    }, []);
+
+    const handleViewSettings = useCallback(() => {
+        if (contextMenu) {
+            const view = allViews.find(v => v.id === contextMenu.viewId);
+            if (view) {
+                setSelectedViewForSettings(view);
+                setSettingsModalOpen(true);
+            }
+        }
+        handleContextMenuClose();
+    }, [contextMenu, allViews, handleContextMenuClose]);
+
+    const handleViewRename = useCallback(() => {
+        if (contextMenu) {
+            const newName = prompt('请输入新的视图名称', contextMenu.viewTitle);
+            if (newName && newName.trim()) {
+                appStore.updateViewInstance(contextMenu.viewId, { title: newName.trim() });
+            }
+        }
+        handleContextMenuClose();
+    }, [contextMenu, appStore, handleContextMenuClose]);
+
+    const handleViewRemove = useCallback(() => {
+        if (contextMenu) {
+            removeView(contextMenu.viewId);
+        }
+        handleContextMenuClose();
+    }, [contextMenu, removeView, handleContextMenuClose]);
+
+    const handleSettingsModalClose = useCallback(() => {
+        setSettingsModalOpen(false);
+        setSelectedViewForSettings(null);
+    }, []);
 
     return (
         <Stack spacing={2} sx={{ p: '8px 16px 16px 50px' }}>
@@ -62,7 +160,7 @@ function LayoutEditor({ layout, appStore }: { layout: Layout, appStore: AppStore
             <Stack direction="row" alignItems="center" spacing={2}>
                 <Typography sx={{ width: LABEL_WIDTH, flexShrink: 0, fontWeight: 500 }}>初始日期</Typography>
                 <TextField type="date" size="small" variant="outlined" disabled={!!layout.initialDateFollowsNow} value={layout.initialDate || ''} onChange={e => handleUpdate({ initialDate: (e.target as HTMLInputElement).value })} sx={{ width: '170px' }} />
-                <FormControlLabel control={<Checkbox size="small" checked={!!layout.initialDateFollowsNow} onChange={e => handleUpdate({ initialDateFollowsNow: e.target.checked })} />} label={<Typography noWrap>跟随今日</Typography>} />
+                <FormControlLabel control={<Checkbox size="small" checked={!!layout.initialDateFollowsNow} onChange={e => handleUpdate({ initialDateFollowsNow: (e.target as HTMLInputElement).checked })} />} label={<Typography noWrap>跟随今日</Typography>} />
             </Stack>
             <AlignedRadioGroup label="初始视图（时间窗）" options={PERIOD_OPTIONS} selectedValue={layout.initialView || '月'} onChange={(value: string) => handleUpdate({ initialView: value })} />
             <AlignedRadioGroup label="排列方式" options={DISPLAY_MODE_OPTIONS} selectedValue={layout.displayMode || 'list'} onChange={(value: string) => handleUpdate({ displayMode: value as 'list' | 'grid' })} />
@@ -73,27 +171,57 @@ function LayoutEditor({ layout, appStore }: { layout: Layout, appStore: AppStore
             )}
             <Stack direction="row" flexWrap="wrap" spacing={1} useFlexGap alignItems="center">
                 <Typography sx={{ width: LABEL_WIDTH, flexShrink: 0, fontWeight: 500 }}>包含视图</Typography>
-                {selectedViews.map(view => (
-                    <Tooltip key={view.id} title={`点击移除 "${view.title}"`}>
-                        <Chip label={view.title} onClick={() => removeView(view.id)} size="small" />
+                {selectedViews.map(view => view && (
+                    <Tooltip key={view.id} title={`左键移除，右键更多选项`}>
+                        <Chip 
+                            label={view.title} 
+                            onClick={() => removeView(view.id)} 
+                            onContextMenu={(e) => handleChipRightClick(e, view)}
+                            size="small" 
+                            sx={{ cursor: 'pointer' }}
+                        />
                     </Tooltip>
                 ))}
                 
-                {/* [CORE CHANGE] Replaced SimpleSelect with Autocomplete for adding views */}
+                {/* [CORE CHANGE] Enhanced Autocomplete for adding/creating views */}
                 <Autocomplete
                     value={null} // Always reset after selection
-                    options={availableViewOptions}
-                    getOptionLabel={(option) => option.label || ''}
-                    onChange={(_, newValue) => {
-                        if (newValue) {
-                            addView(newValue.value);
-                        }
-                    }}
-                    renderInput={(params) => <TextField {...params as any} variant="outlined" placeholder="+ 搜索并添加视图..." />}
-                    sx={{ minWidth: 150 }}
+                    inputValue={inputValue}
+                    onInputChange={(_, newInputValue) => setInputValue(newInputValue)}
+                    options={autocompleteOptions}
+                    getOptionLabel={(option) => option ? option.label : ''}
+                    onChange={handleAutocompleteChange}
+                    renderInput={(params) => <TextField {...params as any} variant="outlined" placeholder="+ 搜索添加或创建视图..." />}
+                    sx={{ minWidth: 200 }}
                     size="small"
                 />
             </Stack>
+
+            {/* 右键上下文菜单 */}
+            <Menu
+                open={contextMenu !== null}
+                onClose={handleContextMenuClose}
+                anchorReference="anchorPosition"
+                anchorPosition={
+                    contextMenu !== null
+                        ? { top: contextMenu.mouseY, left: contextMenu.mouseX }
+                        : undefined
+                }
+            >
+                <MenuItem onClick={handleViewSettings}>设置视图</MenuItem>
+                <MenuItem onClick={handleViewRename}>重命名</MenuItem>
+                <MenuItem onClick={handleViewRemove}>移除</MenuItem>
+            </Menu>
+
+            {/* 视图设置模态框 */}
+            {settingsModalOpen && selectedViewForSettings && (
+                <ModuleSettingsModal
+                    isOpen={settingsModalOpen}
+                    onClose={handleSettingsModalClose}
+                    module={selectedViewForSettings}
+                    appStore={appStore}
+                />
+            )}
         </Stack>
     );
 }
@@ -124,7 +252,7 @@ export function LayoutSettings({ app, appStore }: { app: App, appStore: AppStore
 
                 if (oldIndex !== -1 && newIndex !== -1) {
                     const reorderedSiblings = arrayMove(siblings, oldIndex, newIndex);
-                    appStore.reorderItems(reorderedSiblings, activeItem.isGroup ? 'group' : 'layout');
+                    appStore.reorderItems(reorderedSiblings, 'isGroup' in activeItem && activeItem.isGroup ? 'group' : 'layout');
                 }
             }
         }
