@@ -11,6 +11,9 @@ export { ExcelView } from './ExcelView';
 
 // 共享组件
 export { TimeNavigator } from './TimeNavigator';
+export { ViewToolbar } from './ViewToolbar';
+export { ThemeFilter } from './ThemeFilter';
+export { CategoryFilter } from './CategoryFilter';
 
 // 工具函数
 export * from './timeline-parser';

@@ -6,7 +6,7 @@ import { DataStore } from '@core/services/DataStore';
 import { Layout, ViewInstance, Item } from '@/core/types/schema'; // [修改] 导入 Item 类型
 import { ModulePanel } from './ModulePanel';
 import { ViewComponents } from './index';
-import { getDateRange, dayjs, formatDateForView } from '@core/utils/date';
+import { getDateRange, dayjs } from '@core/utils/date';
 import { useStore } from '@/app/AppStore';
 import type { ActionService } from '@core/services/ActionService';
 import { ItemService } from '@core/services/ItemService';
@@ -17,8 +17,7 @@ import { App, Notice } from 'obsidian'; // [修改] 导入 Notice
 import { appStore } from '@/app/storeRegistry';
 import { AppStore } from '@/app/AppStore';
 import { exportItemsToMarkdown } from '@core/utils/exportUtils'; // [新增] 导入导出函数
-import { ThemeFilter } from '@features/theme/ThemeFilter'; // [新增] 导入主题筛选组件
-import { CategoryFilter } from './CategoryFilter'; // [新增] 导入分类筛选组件
+import { ViewToolbar } from '@features/views/ViewToolbar'; // [新增] 导入统一工具栏组件
 
 // [修改] ViewContent 组件增加 onDataLoaded 和 selectedThemes props
 const ViewContent = ({
@@ -206,8 +205,6 @@ export function LayoutRenderer({ layout, dataStore, app, actionService, itemServ
         }
     }, []);
 
-    const unit = useMemo(() => (v: string) => ({ '年': 'year', '季': 'quarter', '月': 'month', '周': 'week', '天': 'day' }[v] || 'day') as dayjs.ManipulateType, []);
-    const fmt = useMemo(() => formatDateForView, []);
 
     // [新增] 设置模态框状态
     const [settingsModalOpen, setSettingsModalOpen] = useState(false);
@@ -282,24 +279,18 @@ export function LayoutRenderer({ layout, dataStore, app, actionService, itemServ
 
     return (
         <div>
-            {!layout.hideToolbar && (
-                <div class="tp-toolbar" style="margin-bottom:8px;">
-                    {['年', '季', '月', '周', '天'].map(v => ( <button onClick={() => setLayoutView(v)} class={v === layoutView ? 'active' : ''}>{v}</button>))}
-                    <button disabled style="font-weight:bold;margin:0 4px;background:#fff;">{fmt(layoutDate, layoutView)}</button>
-                    <button onClick={() => setLayoutDate(prev => prev.clone().subtract(1, unit(layoutView)))}>←</button>
-                    <button onClick={() => setLayoutDate(prev => prev.clone().add(1, unit(layoutView)))}>→</button>
-                    <button onClick={() => setLayoutDate(dayjs())}>＝</button>
-                    <ThemeFilter
-                        selectedThemes={selectedThemes}
-                        onSelectionChange={handleThemeSelectionChange}
-                    />
-                    <CategoryFilter
-                        selectedCategories={selectedCategories}
-                        onSelectionChange={handleCategorySelectionChange}
-                        viewInstances={layout.viewInstanceIds.map((id: string) => allViews.find((v: any) => v.id === id)).filter(Boolean)}
-                    />
-                </div>
-            )}
+            <ViewToolbar
+                currentView={layoutView}
+                currentDate={layoutDate}
+                onViewChange={setLayoutView}
+                onDateChange={setLayoutDate}
+                selectedThemes={selectedThemes}
+                selectedCategories={selectedCategories}
+                onThemeSelectionChange={handleThemeSelectionChange}
+                onCategorySelectionChange={handleCategorySelectionChange}
+                viewInstances={layout.viewInstanceIds.map((id: string) => allViews.find((v: any) => v.id === id)).filter(Boolean)}
+                hideToolbar={layout.hideToolbar}
+            />
             <div style={gridStyle}>
                 {isStateInitialized && layout.viewInstanceIds.map(renderViewInstance)}
             </div>
