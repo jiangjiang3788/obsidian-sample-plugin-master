@@ -12,7 +12,7 @@ import { App } from 'obsidian';
 import { useSettingsManager } from './useSettingsManager';
 import { DndContext, closestCenter } from '@dnd-kit/core';
 import { arrayMove } from '@core/utils/array';
-import { ModuleSettingsModal } from '@features/dashboard/ModuleSettingsModal';
+import { ModuleSettingsModal } from '@/features/settings/ModuleSettingsModal';
 
 const PERIOD_OPTIONS = ['年', '季', '月', '周', '天'].map(v => ({ value: v, label: v }));
 const DISPLAY_MODE_OPTIONS = [{ value: 'list', label: '列表' }, { value: 'grid', label: '网格' }];

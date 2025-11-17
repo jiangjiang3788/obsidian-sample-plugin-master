@@ -5,7 +5,7 @@ import { CODEBLOCK_LANG } from '@/core/types/constants';
 import { DataStore } from '@core/services/DataStore';
 
 import { AppStore } from '@/app/AppStore';
-import { RendererService } from '@/features/dashboard/RendererService';
+import { RendererService } from '@/features/settings/RendererService';
 import type { Layout } from '@/core/types/schema';
 import type { ActionService } from '@core/services/ActionService';
 

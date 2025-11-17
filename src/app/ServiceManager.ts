@@ -2,7 +2,7 @@
 import { container } from 'tsyringe';
 import type { App } from 'obsidian';
 import { DataStore } from '@core/services/DataStore';
-import { RendererService } from '@/features/dashboard/RendererService';
+import { RendererService } from '@/features/settings/RendererService';
 import { ActionService } from '@core/services/ActionService';
 import { TimerStateService } from '@features/timer/TimerStateService';
 import { InputService } from '@core/services/InputService';
@@ -11,11 +11,11 @@ import { TimerService } from '@features/timer/TimerService';
 import { AppStore } from '@/app/AppStore';
 import { registerStore, registerDataStore, registerTimerService, registerInputService } from '@/app/storeRegistry';
 import { FloatingTimerWidget } from '@features/timer/FloatingTimerWidget';
-import * as DashboardFeature from '@features/dashboard';
-import * as QuickInputFeature from '@features/quickinput';
 import * as SettingsFeature from '@features/settings';
+import * as QuickInputFeature from '@features/quickinput';
 import { safeAsync } from '@shared/utils/errorHandler';
 import { startMeasure } from '@shared/utils/performance';
+import { setupSettings, setupDashboard } from '@/features/settings';
 
 import type ThinkPlugin from '@main';
 
@@ -199,14 +199,12 @@ export class ServiceManager {
             await this.scanDataPromise;
         }
         
-        // 数据准备好后再加载 Dashboard
+        // 数据准备好后再加载 Dashboard (实际上调用的是 Settings 功能)
         console.time('[ThinkPlugin] Dashboard特性加载');
-        DashboardFeature.setup?.({
+        SettingsFeature.setupSettings?.({
+            app: this.plugin.app,
             plugin: this.plugin,
-            appStore: this.services.appStore!,
-            dataStore: this.services.dataStore!,
-            rendererService: this.services.rendererService!,
-            actionService: this.services.actionService!
+            appStore: this.services.appStore!
         });
         console.timeEnd('[ThinkPlugin] Dashboard特性加载');
     }
@@ -231,28 +229,41 @@ export class ServiceManager {
      * 设置功能不是核心功能，可以延迟加载
      */
     private loadSettingsFeature(): void {
-        setTimeout(() => {
-            console.time('[ThinkPlugin] Settings特性加载');
-            SettingsFeature.setup?.({
-                app: this.plugin.app,
-                plugin: this.plugin,
-                appStore: this.services.appStore!
-            });
+    setTimeout(() => {
+        console.time('[ThinkPlugin] Settings特性加载');
 
-            // 注册设置相关命令
-            this.plugin.addCommand({
-                id: 'think-open-settings',
-                name: '打开 Think 插件设置',
-                callback: () => {
-                    // @ts-ignore
-                    this.plugin.app.setting.open();
-                    // @ts-ignore
-                    this.plugin.app.setting.openTabById(this.plugin.manifest.id);
-                }
-            });
-            console.timeEnd('[ThinkPlugin] Settings特性加载');
-        }, 150);
-    }
+        // settings = 设置页（SettingTab）
+        setupSettings?.({
+            app: this.plugin.app,
+            plugin: this.plugin,
+            appStore: this.services.appStore!,
+        });
+
+        // dashboard = 仪表盘（真正需要数据）
+        setupDashboard?.({
+            plugin: this.plugin,
+            appStore: this.services.appStore!,
+            dataStore: this.services.dataStore!,              // 必须
+            rendererService: this.services.rendererService!, // 必须
+            actionService: this.services.actionService!,    // 必须
+        });
+
+        // 注册设置命令
+        this.plugin.addCommand({
+            id: 'think-open-settings',
+            name: '打开 Think 插件设置',
+            callback: () => {
+                // @ts-ignore
+                this.plugin.app.setting.open();
+                // @ts-ignore
+                this.plugin.app.setting.openTabById(this.plugin.manifest.id);
+            }
+        });
+
+        console.timeEnd('[ThinkPlugin] Settings特性加载');
+    }, 150);
+}
+
 
     /**
      * 获取服务实例的安全访问器
