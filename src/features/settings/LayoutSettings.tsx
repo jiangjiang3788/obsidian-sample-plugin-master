@@ -9,7 +9,7 @@ import { useMemo, useCallback, useState } from 'preact/hooks';
 import { SimpleSelect } from '@shared/ui/composites/SimpleSelect';
 import { SettingsTreeView, TreeItem } from './SettingsTreeView';
 import { App } from 'obsidian';
-import { useSettingsManager } from './useSettingsManager';
+import { useSettingsManager } from '@core/theme-matrix/useSettingsManager';
 import { DndContext, closestCenter } from '@dnd-kit/core';
 import { arrayMove } from '@core/utils/array';
 import { ModuleSettingsModal } from '@/features/settings/ModuleSettingsModal';
