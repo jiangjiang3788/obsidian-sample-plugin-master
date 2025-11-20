@@ -70,20 +70,20 @@ export function RuleBuilder({ title, mode, rows, fieldOptions, onChange }: RuleB
             alert('请选择一个字段');
             return;
         }
-        
-        // 如果是过滤模式且不是第一个规则，为新规则设置默认逻辑关系
-        let ruleToAdd = { ...newRule };
-        if (isFilterMode && rows.length > 0) {
-            const lastRule = rows[rows.length - 1] as FilterRule;
-            // 如果前一个规则没有设置逻辑关系，默认设置为"且"
+    
+        let updatedRows = [...rows];
+        const ruleToAdd = { ...newRule };
+    
+        // 如果是过滤模式且已有规则，确保最后一条规则有逻辑关系
+        if (isFilterMode && updatedRows.length > 0) {
+            const lastRule = updatedRows[updatedRows.length - 1] as FilterRule;
             if (!lastRule.logic) {
-                const updatedRows = [...rows];
-                (updatedRows[rows.length - 1] as FilterRule).logic = 'and';
-                onChange(updatedRows);
+                lastRule.logic = 'and';
             }
         }
-        
-        onChange([...rows, ruleToAdd]);
+    
+        updatedRows.push(ruleToAdd);
+        onChange(updatedRows);
         setNewRule(isFilterMode ? defaultFilterRule : defaultSortRule);
     };
     
@@ -166,10 +166,11 @@ export function RuleBuilder({ title, mode, rows, fieldOptions, onChange }: RuleB
                                 fullWidth 
                                 size="small" 
                                 disableClearable 
+                                disablePortal
                                 options={uniqueFieldValues[newRule.field] || []} 
                                 value={(newRule as FilterRule).value} 
                                 onInputChange={(_, newValue: string) => updateNewRule({ value: newValue || '' })} 
-                                renderInput={(params) => <TextField {...params} variant="outlined" placeholder="输入值" />} 
+                                renderInput={(params: any) => <TextField {...params} variant="outlined" placeholder="输入值" />} 
                             />
                         </>
                     ) : (

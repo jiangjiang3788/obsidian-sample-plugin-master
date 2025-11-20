@@ -155,7 +155,7 @@
       },
       "parentId": "group_memc1a9ofen88",
       "fields": [],
-      "collapsed": false
+      "collapsed": true
     },
     {
       "id": "view_membnf1hgjgm3",
@@ -170,12 +170,24 @@
         "colField": "file.basename"
       },
       "parentId": "group_memc1a9ofen88",
-      "collapsed": true,
+      "collapsed": false,
       "filters": [
         {
           "field": "categoryKey",
           "op": "=",
-          "value": "未完成任务"
+          "value": "未完成任务",
+          "logic": "and"
+        },
+        {
+          "field": "file.path",
+          "op": "includes",
+          "value": "01",
+          "logic": "and"
+        },
+        {
+          "field": "recurrence",
+          "op": "=",
+          "value": "none"
         }
       ]
     },
@@ -328,7 +340,7 @@
         "allowManualEdit": true,
         "showLevelProgress": true
       },
-      "collapsed": false,
+      "collapsed": true,
       "parentId": "group_memc1a9ofen88",
       "fields": [
         "categoryKey",
