@@ -1,6 +1,6 @@
 // src/core/services/TimerService.ts
 import { singleton, inject } from 'tsyringe';
-import { AppStore } from '@/app/AppStore';
+import { TimerStore } from '@features/timer/TimerStore';
 import { ItemService } from '@core/services/ItemService';
 import { Notice, App, TFile } from 'obsidian';
 import { DataStore } from '@core/services/DataStore';
@@ -12,7 +12,7 @@ import { nowHHMM, timeToMinutes, minutesToTime } from '@core/utils/date';
 @singleton()
 export class TimerService {
     constructor(
-        @inject(AppStore) private appStore: AppStore,
+        @inject(TimerStore) private timerStore: TimerStore,
         @inject(DataStore) private dataStore: DataStore,
         @inject(ItemService) private itemService: ItemService,
         @inject(InputService) private inputService: InputService,
@@ -20,7 +20,7 @@ export class TimerService {
     ) {}
 
     public async startOrResume(taskId: string): Promise<void> {
-        const timers = this.appStore.getState().timer.getTimers();
+        const timers = this.timerStore.getTimers();
         for (const timer of timers) {
             if (timer.status === 'running') {
                 await this.pause(timer.id);
@@ -40,7 +40,7 @@ export class TimerService {
             // 仅显示一个通知，文件将在任务完成时被修改
             new Notice(`计时开始。`);
 
-            await this.appStore.addTimer({
+            await this.timerStore.addTimer({
                 taskId,
                 startTime: Date.now(),
                 elapsedSeconds: 0,
@@ -50,10 +50,10 @@ export class TimerService {
     }
 
     public async pause(timerId: string): Promise<void> {
-        const timer = this.appStore.getState().timer.getTimers().find((t: any) => t.id === timerId);
+        const timer = this.timerStore.getTimers().find((t: any) => t.id === timerId);
         if (timer && timer.status === 'running') {
             const elapsed = (Date.now() - timer.startTime) / 1000;
-            await this.appStore.updateTimer({
+            await this.timerStore.updateTimer({
                 ...timer,
                 elapsedSeconds: timer.elapsedSeconds + elapsed,
                 status: 'paused',
@@ -62,7 +62,7 @@ export class TimerService {
     }
 
     public async resume(timerId: string): Promise<void> {
-        const timers = this.appStore.getState().timer.getTimers();
+        const timers = this.timerStore.getTimers();
         for (const t of timers) {
             if (t.id !== timerId && t.status === 'running') {
                 await this.pause(t.id);
@@ -70,7 +70,7 @@ export class TimerService {
         }
         const timerToResume = timers.find((t: any) => t.id === timerId);
         if (timerToResume && timerToResume.status === 'paused') {
-            await this.appStore.updateTimer({
+            await this.timerStore.updateTimer({
                 ...timerToResume,
                 startTime: Date.now(),
                 status: 'running',
@@ -79,7 +79,7 @@ export class TimerService {
     }
 
     public async stopAndApply(timerId: string): Promise<void> {
-        const timer = this.appStore.getState().timer.getTimers().find((t: any) => t.id === timerId);
+        const timer = this.timerStore.getTimers().find((t: any) => t.id === timerId);
         if (!timer) return;
         let totalSeconds = timer.elapsedSeconds;
         if (timer.status === 'running') {
@@ -92,7 +92,7 @@ export class TimerService {
             
             if (!taskItem) {
                 new Notice(`错误：找不到原始任务，可能已被移动或删除。计时时长无法保存。`);
-                await this.appStore.removeTimer(timerId);
+                await this.timerStore.removeTimer(timerId);
                 return;
             }
             
@@ -117,11 +117,11 @@ export class TimerService {
             new Notice(`错误：更新任务失败 - ${e.message}`);
             console.error("TimerService Error:", e);
         }
-        await this.appStore.removeTimer(timerId);
+        await this.timerStore.removeTimer(timerId);
     }
 
     public async cancel(timerId: string): Promise<void> {
-        await this.appStore.removeTimer(timerId);
+        await this.timerStore.removeTimer(timerId);
         new Notice('计时任务已取消。');
     }
     

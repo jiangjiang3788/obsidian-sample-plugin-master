@@ -11,6 +11,7 @@ import { getDateRange, dayjs } from '@core/utils/date';
 import { useStore } from '@/app/AppStore';
 import type { ActionService } from '@core/services/ActionService';
 import { ItemService } from '@core/services/ItemService';
+import type { TimerService } from '@features/timer/TimerService';
 import { useViewData } from '@/features/settings/useViewData';
 import { QuickInputModal } from '@/features/quickinput/QuickInputModal';
 import { ModuleSettingsModal } from './ModuleSettingsModal'; // [新增] 导入设置模态框
@@ -35,6 +36,10 @@ const ViewContent = ({
     onMarkDone,
     actionService,
     itemService,
+    timerService,
+    timers, // [新增]
+    allThemes, // [新增]
+    inputSettings, // [新增]
     onDataLoaded, // [新增]
 }: {
     viewInstance: ViewInstance;
@@ -50,6 +55,10 @@ const ViewContent = ({
     onMarkDone: (id: string) => void;
     actionService: ActionService;
     itemService: ItemService;
+    timerService: TimerService;
+    timers: any[]; // [新增]
+    allThemes: any[]; // [新增]
+    inputSettings: any; // [新增]
     onDataLoaded: (items: Item[]) => void; // [新增]
 }) => {
     const viewItems = useViewData({
@@ -87,14 +96,21 @@ const ViewContent = ({
         onMarkDone: onMarkDone,
         actionService: actionService,
         itemService: itemService,
+        timerService: timerService,
+        timers: timers, // [新增]
+        allThemes: allThemes, // [新增]
+        inputSettings: inputSettings, // [新增]
         selectedCategories,
     };
 
     return <ViewComponent {...viewProps} />;
 };
 
-export function LayoutRenderer({ layout, dataStore, app, actionService, itemService }: any) {
+export function LayoutRenderer({ layout, dataStore, app, actionService, itemService, timerService }: any) {
     const allViews = useStore(state => state.settings.viewInstances);
+    const timers = useStore(state => state.timer.getTimers());
+    const inputSettings = useStore(state => state.settings.inputSettings); // [修改] 获取完整 inputSettings
+    const allThemes = inputSettings.themes; // [兼容] 保持 allThemes 变量
     
     const [expandedState, setExpandedState] = useState<Record<string, boolean>>({});
     const [isStateInitialized, setIsStateInitialized] = useState(false);
@@ -154,6 +170,11 @@ export function LayoutRenderer({ layout, dataStore, app, actionService, itemServ
     const [selectedThemes, setSelectedThemes] = useState<string[]>(layout.selectedThemes || []); // [新增] 主题筛选状态
     const [selectedCategories, setSelectedCategories] = useState<string[]>(layout.selectedCategories || []); // [新增] 分类筛选状态
     
+    // [新增] 预定义分类列表（从设置中获取）
+    const predefinedCategories = useMemo(() => {
+        return inputSettings.categories || [];
+    }, [inputSettings]);
+
     // [修复] 分离布局重置和主题筛选的effect，避免主题筛选时跳转视图
     useEffect(() => {
         setLayoutDate(getInitialDate());
@@ -269,6 +290,10 @@ export function LayoutRenderer({ layout, dataStore, app, actionService, itemServ
                         onMarkDone={handleMarkItemDone}
                         actionService={actionService}
                         itemService={itemService}
+                        timerService={timerService}
+                        timers={timers} // [新增]
+                        allThemes={allThemes} // [新增]
+                        inputSettings={inputSettings} // [新增]
                         onDataLoaded={(items) => { modulesDataCache.current[viewInstance.id] = items; }} // [修改] 传递 onDataLoaded
                     />
                 )}
@@ -291,6 +316,8 @@ export function LayoutRenderer({ layout, dataStore, app, actionService, itemServ
                 onCategorySelectionChange={handleCategorySelectionChange}
                 viewInstances={layout.viewInstanceIds.map((id: string) => allViews.find((v: any) => v.id === id)).filter(Boolean)}
                 hideToolbar={layout.hideToolbar}
+                themes={allThemes} // [新增] 传递主题列表
+                predefinedCategories={predefinedCategories} // [新增] 传递预定义分类
             />
             <div style={gridStyle}>
                 {isStateInitialized && layout.viewInstanceIds.map(renderViewInstance)}

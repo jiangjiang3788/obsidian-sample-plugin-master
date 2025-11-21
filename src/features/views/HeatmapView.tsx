@@ -5,7 +5,6 @@ import { useMemo, useState, useRef, useEffect } from 'preact/hooks';
 import { App, Notice } from 'obsidian';
 import { Item, ViewInstance, BlockTemplate, InputSettings, ThemeDefinition } from '@/core/types/schema';
 import { dayjs } from '@core/utils/date';
-import { useStore } from '@/app/AppStore';
 import { QuickInputModal } from '@/features/quickinput/QuickInputModal';
 import { DEFAULT_CONFIG } from '@features/settings/HeatmapViewEditor';
 import { getThemeLevelData, getEffectiveDisplayCount, getEffectiveLevelCount, type LevelResult, LEVEL_SYSTEM_PRESETS } from '@core/utils/levelingSystem';
@@ -19,6 +18,7 @@ interface HeatmapViewProps {
     dateRange: [Date, Date];
     module: ViewInstance;
     currentView: '年' | '季' | '月' | '周' | '天';
+    inputSettings: InputSettings;
 }
 
 // [修改] item 变为 items 数组
@@ -177,9 +177,7 @@ function HeatmapCell({ date, items, config, ratingMapping, app, onCellClick, onE
 }
 
 // ========== Main View Component ==========
-export function HeatmapView({ items, app, dateRange, module, currentView }: HeatmapViewProps) {
-    const settings = useStore(state => state.settings);
-    
+export function HeatmapView({ items, app, dateRange, module, currentView, inputSettings }: HeatmapViewProps) {
     // 移除不需要的模态框状态，直接使用Modal实例
     
     // [修复] 将 config 对象移入 useMemo，确保响应式更新
@@ -190,9 +188,9 @@ export function HeatmapView({ items, app, dateRange, module, currentView }: Heat
     
     const themesByPath = useMemo(() => {
         const map = new Map<string, ThemeDefinition>();
-        settings.inputSettings.themes.forEach(t => map.set(t.path, t));
+        inputSettings.themes.forEach(t => map.set(t.path, t));
         return map;
-    }, [settings.inputSettings.themes]);
+    }, [inputSettings.themes]);
 
     // [修复] 稳定的缓存映射，避免不必要的重建
     const ratingMappingsCache = useRef(new Map<string, Map<string, string>>()).current;
@@ -201,7 +199,7 @@ export function HeatmapView({ items, app, dateRange, module, currentView }: Heat
     useEffect(() => {
         // 清空评分映射缓存，因为设置可能已经改变
         ratingMappingsCache.clear();
-    }, [settings.inputSettings.themes, settings.inputSettings.blocks, settings.inputSettings.overrides]);
+    }, [inputSettings.themes, inputSettings.blocks, inputSettings.overrides]);
 
     // [新增] 当items数据发生变化时，确保重新计算数据聚合
     useEffect(() => {
@@ -224,7 +222,7 @@ export function HeatmapView({ items, app, dateRange, module, currentView }: Heat
             return ratingMappingsCache.get(cacheKey)!;
         }
         
-        const effectiveTemplate = getEffectiveTemplate(settings.inputSettings, blockId, themeId);
+        const effectiveTemplate = getEffectiveTemplate(inputSettings, blockId, themeId);
         const ratingField = effectiveTemplate?.fields.find(f => f.type === 'rating');
         const newMapping = new Map<string, string>(
             ratingField?.options?.filter(opt => opt.value).map(opt => [opt.label || '', opt.value as string]) || []
@@ -323,7 +321,7 @@ export function HeatmapView({ items, app, dateRange, module, currentView }: Heat
         
         const themRatingMapping = ratingMappingsCache.get(cacheKey) || (() => {
             if (!config.sourceBlockId) return new Map<string, string>();
-            const effectiveTemplate = getEffectiveTemplate(settings.inputSettings, config.sourceBlockId, themeId || undefined);
+            const effectiveTemplate = getEffectiveTemplate(inputSettings, config.sourceBlockId, themeId || undefined);
             const ratingField = effectiveTemplate?.fields.find(f => f.type === 'rating');
             const newMapping = new Map<string, string>(
                 ratingField?.options?.filter(opt => opt.value).map(opt => [opt.label || '', opt.value as string]) || []
@@ -374,7 +372,7 @@ export function HeatmapView({ items, app, dateRange, module, currentView }: Heat
             if (!config.sourceBlockId) {
                 return new Map<string, string>();
             }
-            const effectiveTemplate = getEffectiveTemplate(settings.inputSettings, config.sourceBlockId, themeId || undefined);
+            const effectiveTemplate = getEffectiveTemplate(inputSettings, config.sourceBlockId, themeId || undefined);
             const ratingField = effectiveTemplate?.fields.find(f => f.type === 'rating');
             
             const newMapping = new Map<string, string>(

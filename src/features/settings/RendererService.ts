@@ -8,6 +8,7 @@ import { AppStore } from '@/app/AppStore';
 import { LayoutRenderer } from '@/features/settings/LayoutRenderer';
 import { ActionService } from '../../core/services/ActionService';
 import { ItemService } from '@core/services/ItemService';
+import { TimerService } from '@features/timer/TimerService';
 import { AppToken } from '@core/services/types';
 
 @singleton()
@@ -21,7 +22,8 @@ export class RendererService {
         @inject(DataStore) private dataStore: DataStore,
         @inject(AppStore) private appStore: AppStore,
         @inject(ActionService) private actionService: ActionService,
-        @inject(ItemService) private itemService: ItemService
+        @inject(ItemService) private itemService: ItemService,
+        @inject(TimerService) private timerService: TimerService
     ) {
         this.appStore.subscribe(() => this.rerenderAll());
         this.isInitialized = true;
@@ -37,6 +39,7 @@ export class RendererService {
                 app: this.app,
                 actionService: this.actionService,
                 itemService: this.itemService,
+                timerService: this.timerService,
             }),
             container,
         );
@@ -73,6 +76,7 @@ export class RendererService {
                         app: this.app,
                         actionService: this.actionService,
                         itemService: this.itemService,
+                        timerService: this.timerService,
                     }),
                     container,
                 );

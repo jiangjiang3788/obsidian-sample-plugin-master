@@ -1,13 +1,12 @@
 // src/core/services/ActionService.ts
 import { singleton, inject } from 'tsyringe';
 import { App, Notice } from 'obsidian';
-import { AppStore } from '@/app/AppStore';
 import { dayjs } from '@core/utils/date';
 import type { Item, ViewInstance } from '@/core/types/schema';
 import { DataStore } from '@core/services/DataStore';
 import { InputService } from '@core/services/InputService';
-import type { QuickInputConfig } from '@core/services/types';
-import { AppToken } from '@core/services/types';
+import type { QuickInputConfig, ISettingsProvider } from '@core/services/types';
+import { AppToken, SettingsProviderToken } from '@core/services/types';
 import { readField } from '@/core/types/schema';
 
 @singleton()
@@ -15,12 +14,12 @@ export class ActionService {
     constructor(
         @inject(AppToken) private app: App,
         @inject(DataStore) private dataStore: DataStore,
-        @inject(AppStore) private appStore: AppStore,
+        @inject(SettingsProviderToken) private settingsProvider: ISettingsProvider,
         @inject(InputService) private inputService: InputService
     ) {}
 
     public getQuickInputConfigForView(viewInstance: ViewInstance, dateContext: dayjs.Dayjs, periodContext: string): QuickInputConfig | null {
-        const settings = this.appStore.getSettings();
+        const settings = this.settingsProvider.getSettings();
         
         // 检查是否是统计视图，如果是则使用特殊处理
         if (viewInstance.viewType === 'StatisticsView') {
@@ -97,7 +96,7 @@ export class ActionService {
             return null;
         }
 
-        const settings = this.appStore.getSettings();
+        const settings = this.settingsProvider.getSettings();
         const baseCategory = (item.categoryKey || '').split('/')[0];
         const targetBlock = settings.inputSettings.blocks.find(b => b.name === baseCategory);
 
@@ -139,7 +138,7 @@ export class ActionService {
         periodContext: string,
         categoryName?: string
     ): QuickInputConfig | null {
-        const settings = this.appStore.getSettings();
+        const settings = this.settingsProvider.getSettings();
         const viewConfig = viewInstance.viewConfig || {};
         const categories = viewConfig.categories || [];
         
@@ -202,7 +201,7 @@ export class ActionService {
     }
 
     public getQuickInputConfigForNewTimer(): QuickInputConfig | null {
-        const blocks = this.appStore.getSettings().inputSettings.blocks;
+        const blocks = this.settingsProvider.getSettings().inputSettings.blocks;
         if (!blocks || blocks.length === 0) {
             new Notice('没有可用的Block模板，请先在设置中创建一个。');
             return null;
