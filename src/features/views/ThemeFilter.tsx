@@ -16,9 +16,9 @@ import {
 import FilterListIcon from '@mui/icons-material/FilterList';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
-import { useStore } from '@/app/AppStore';
 import { buildThemeTree } from '@/core/theme-matrix/themeTreeBuilder';
 import type { ThemeTreeNode } from '@core/theme-matrix';
+import type { ThemeDefinition } from '@/core/types';
 
 // 解决 Preact 和 Material-UI 的类型兼容性问题
 const AnyButton = Button as any;
@@ -34,12 +34,12 @@ const AnyIconButton = IconButton as any;
 interface ThemeFilterProps {
     selectedThemes: string[];
     onSelectionChange: (themes: string[]) => void;
+    themes: ThemeDefinition[];
 }
 
-export function ThemeFilter({ selectedThemes, onSelectionChange }: ThemeFilterProps) {
+export function ThemeFilter({ selectedThemes, onSelectionChange, themes }: ThemeFilterProps) {
     const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
     const [expandedNodes, setExpandedNodes] = useState<Set<string>>(new Set());
-    const themes = useStore(state => state.settings.inputSettings.themes);
 
     // 构建主题树
     const themeTree = useMemo(() => {

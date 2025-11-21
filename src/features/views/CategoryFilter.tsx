@@ -13,7 +13,6 @@ import {
     IconButton
 } from '@mui/material';
 import FilterListIcon from '@mui/icons-material/FilterList';
-import { useStore } from '@/app/AppStore';
 import type { ViewInstance } from '@/core/types/schema';
 
 // Type compatibility
@@ -30,13 +29,16 @@ interface CategoryFilterProps {
     selectedCategories: string[];
     onSelectionChange: (categories: string[]) => void;
     viewInstances: ViewInstance[];
+    predefinedCategories?: string[];
 }
 
-export function CategoryFilter({ selectedCategories, onSelectionChange, viewInstances }: CategoryFilterProps) {
+export function CategoryFilter({ selectedCategories, onSelectionChange, viewInstances, predefinedCategories = [] }: CategoryFilterProps) {
     const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
 
     const allCategories = useMemo(() => {
         const categorySet = new Set<string>();
+        
+        // 从视图实例中收集分类
         viewInstances.forEach(view => {
             if (view.viewType === 'StatisticsView' && view.viewConfig?.categories) {
                 view.viewConfig.categories.forEach((cat: any) => {
@@ -46,8 +48,14 @@ export function CategoryFilter({ selectedCategories, onSelectionChange, viewInst
                 });
             }
         });
-        return Array.from(categorySet);
-    }, [viewInstances]);
+
+        // 从预定义分类中收集
+        if (predefinedCategories) {
+            predefinedCategories.forEach((cat: string) => categorySet.add(cat));
+        }
+
+        return Array.from(categorySet).sort();
+    }, [viewInstances, predefinedCategories]);
 
     const handleClick = (event: any) => {
         setAnchorEl(event.currentTarget);

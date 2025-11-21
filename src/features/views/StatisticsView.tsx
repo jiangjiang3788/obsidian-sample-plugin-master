@@ -16,6 +16,7 @@ import { QuickInputModal } from '@/features/quickinput/QuickInputModal';
 import { dayjs as dayjsUtil } from '@core/utils/date';
 // [新增] 统一数据聚合支持
 import { aggregateItems, generateStatisticsData, AggregatedData } from '@core/utils/dataAggregation';
+import type { TimerService } from '@features/timer/TimerService';
 
 // 解决 Preact 和 Material-UI 的类型兼容性问题
 const AnyIconButton = IconButton as any;
@@ -31,6 +32,9 @@ interface StatisticsViewProps {
     useFieldGranularity?: boolean;
     actionService?: any;
     selectedCategories?: string[];
+    timerService: TimerService;
+    timers: any[];
+    allThemes: any[];
 }
 interface PeriodData {
     counts: Record<string, number>;
@@ -43,13 +47,16 @@ interface PopoverState {
 }
 
 // =============== 悬浮窗组件 ===============
-const Popover = ({ target, blocks, title, onClose, app, module, actionService, dateRange, currentView }: PopoverState & { 
+const Popover = ({ target, blocks, title, onClose, app, module, actionService, dateRange, currentView, timerService, timers, allThemes }: PopoverState & { 
     onClose: () => void; 
     app: App; 
     module: ViewInstance;
     actionService?: any;
     dateRange: [Date, Date];
     currentView: string;
+    timerService: TimerService;
+    timers: any[];
+    allThemes: any[];
 }) => {
     const popoverRef = useRef<HTMLDivElement>(null);
     const [position, setPosition] = useState({ x: 0, y: 0 });
@@ -178,6 +185,9 @@ const Popover = ({ target, blocks, title, onClose, app, module, actionService, d
                         fields={module.fields || ['title', 'content', 'categoryKey', 'tags', 'date', 'period']} 
                         groupField={module.group} 
                         onMarkDone={() => {}} 
+                        timerService={timerService}
+                        timers={timers}
+                        allThemes={allThemes}
                     />
                 }
             </div>
@@ -298,7 +308,7 @@ const ChartBlock = ({ data, label, onCellClick, categories, cellIdentifier, isCo
 
 
 // =============== 主视图组件 ===============
-export function StatisticsView({ items, app, dateRange, module, currentView, useFieldGranularity = false, actionService, selectedCategories }: StatisticsViewProps) {
+export function StatisticsView({ items, app, dateRange, module, currentView, useFieldGranularity = false, actionService, selectedCategories, timerService, timers, allThemes }: StatisticsViewProps) {
     const { categories = [], displayMode = 'smart', minVisibleHeight = 15, usePeriodField = false } = { ...DEFAULT_CONFIG, ...module.viewConfig };
     const categoryOrder = useMemo(() => categories.map((c: any) => c.name), [categories]);
     const [selectedCell, setSelectedCell] = useState<any>(null);
@@ -410,7 +420,7 @@ export function StatisticsView({ items, app, dateRange, module, currentView, use
                         />
                     </div>
                 </div>
-                {popover && <Popover {...popover} onClose={() => { setPopover(null); setSelectedCell(null); }} app={app} module={module} actionService={actionService} dateRange={dateRange} currentView={currentView} />}
+                {popover && <Popover {...popover} onClose={() => { setPopover(null); setSelectedCell(null); }} app={app} module={module} actionService={actionService} dateRange={dateRange} currentView={currentView} timerService={timerService} timers={timers} allThemes={allThemes} />}
             </div>
         );
     }
@@ -440,7 +450,7 @@ export function StatisticsView({ items, app, dateRange, module, currentView, use
                         />
                     </div>
                 </div>
-                {popover && <Popover {...popover} onClose={() => { setPopover(null); setSelectedCell(null); }} app={app} module={module} actionService={actionService} dateRange={dateRange} currentView={currentView} />}
+                {popover && <Popover {...popover} onClose={() => { setPopover(null); setSelectedCell(null); }} app={app} module={module} actionService={actionService} dateRange={dateRange} currentView={currentView} timerService={timerService} timers={timers} allThemes={allThemes} />}
             </div>
         );
     }
@@ -509,7 +519,7 @@ export function StatisticsView({ items, app, dateRange, module, currentView, use
                         ))}
                     </div>
                 </div>
-                {popover && <Popover {...popover} onClose={() => { setPopover(null); setSelectedCell(null); }} app={app} module={module} actionService={actionService} dateRange={dateRange} currentView={currentView} />}
+                {popover && <Popover {...popover} onClose={() => { setPopover(null); setSelectedCell(null); }} app={app} module={module} actionService={actionService} dateRange={dateRange} currentView={currentView} timerService={timerService} timers={timers} allThemes={allThemes} />}
             </div>
         );
     }
@@ -608,7 +618,7 @@ export function StatisticsView({ items, app, dateRange, module, currentView, use
                         </div>
                     ))}
                 </div>
-            {popover && <Popover {...popover} onClose={() => { setPopover(null); setSelectedCell(null); }} app={app} module={module} actionService={actionService} dateRange={dateRange} currentView={currentView} />}
+            {popover && <Popover {...popover} onClose={() => { setPopover(null); setSelectedCell(null); }} app={app} module={module} actionService={actionService} dateRange={dateRange} currentView={currentView} timerService={timerService} timers={timers} allThemes={allThemes} />}
         </div>
     );
 }
@@ -720,8 +730,7 @@ export function StatisticsView({ items, app, dateRange, module, currentView, use
                     ))}
                 </div>
             </div>
-            
-            {popover && <Popover {...popover} onClose={() => { setPopover(null); setSelectedCell(null); }} app={app} module={module} dateRange={dateRange} currentView={currentView} />}
+            {popover && <Popover {...popover} onClose={() => { setPopover(null); setSelectedCell(null); }} app={app} module={module} dateRange={dateRange} currentView={currentView} timerService={timerService} timers={timers} allThemes={allThemes} />}
         </div>
     );
 }

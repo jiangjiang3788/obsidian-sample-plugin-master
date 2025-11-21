@@ -13,7 +13,6 @@ import { DEFAULT_CONFIG as DEFAULT_TIMELINE_CONFIG } from '@features/settings/Ti
 import { App, Notice } from 'obsidian';
 import { ItemService } from '@core/services/ItemService';
 import { EditTaskModal } from '@/features/settings/EditTaskModal';
-import { useStore } from '@/app/AppStore';
 import { QuickInputModal } from '@/features/quickinput/QuickInputModal';
 import { filterByRules } from '@core/utils/itemFilter';
 
@@ -268,10 +267,11 @@ interface TimelineViewProps {
     currentView: '年' | '季' | '月' | '周' | '天';
     app: App;
     itemService: ItemService;
+    inputSettings: any;
 }
 
-export function TimelineView({ items, dateRange, module, currentView, app, itemService }: TimelineViewProps) {
-    const inputBlocks = useStore(state => state.settings.inputSettings.blocks);
+export function TimelineView({ items, dateRange, module, currentView, app, itemService, inputSettings }: TimelineViewProps) {
+    const inputBlocks = inputSettings?.blocks || [];
 
     const config = useMemo(() => {
         const defaults = JSON.parse(JSON.stringify(DEFAULT_TIMELINE_CONFIG));
@@ -476,7 +476,7 @@ export function TimelineView({ items, dateRange, module, currentView, app, itemS
             new Notice('没有可用的Block模板，请先在设置中创建一个。');
             return;
         }
-        let taskBlock = inputBlocks.find(b => b.name === 'Task' || b.name === '任务');
+        let taskBlock = inputBlocks.find((b: any) => b.name === 'Task' || b.name === '任务');
         if (!taskBlock) {
             taskBlock = inputBlocks[0];
         }

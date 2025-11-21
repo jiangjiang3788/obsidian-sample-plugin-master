@@ -7,7 +7,7 @@ import type ThinkPlugin from '@main';
 import { VIEW_DEFAULT_CONFIGS } from '@/features/settings/registry';
 import { generateId, moveItemInArray, duplicateItemInArray } from '@core/utils/array';
 import { appStore } from '@/app/storeRegistry';
-import { SETTINGS_TOKEN } from '@/core/services/types';
+import { SETTINGS_TOKEN, ISettingsProvider } from '@/core/services/types';
 import { ThemeStore } from '@features/settings/ThemeStore';
 import { TimerStore, type TimerState } from '@features/timer/TimerStore';
 import { LayoutStore } from '@/features/settings/LayoutStore';
@@ -26,7 +26,7 @@ export interface AppState {
 }
 
 @singleton()
-export class AppStore {
+export class AppStore implements ISettingsProvider {
     private _plugin?: ThinkPlugin;
     private _state: AppState;
     private _listeners: Set<() => void> = new Set();
@@ -41,13 +41,14 @@ export class AppStore {
     public readonly block: BlockStore;
 
     public constructor(
-        @inject(SETTINGS_TOKEN) initialSettings: ThinkSettings
+        @inject(SETTINGS_TOKEN) initialSettings: ThinkSettings,
+        @inject(TimerStore) timerStore: TimerStore
     ) {
         // 初始化子Store
-        this.timer = new TimerStore(
-            this._notify.bind(this),
-            this._persistTimers.bind(this)
-        );
+        this.timer = timerStore;
+        // 订阅 TimerStore 的变化以触发 AppStore 的更新
+        this.timer.subscribe(this._notify.bind(this));
+
         this.theme = new ThemeStore(
             this._updateSettingsAndPersist.bind(this),
             this.getSettings.bind(this)
@@ -80,12 +81,6 @@ export class AppStore {
             // [新增] TimerStore实例
             timer: this.timer,
         };
-    }
-
-    private async _persistTimers(timers: TimerState[]): Promise<void> {
-        if (this._plugin?.timerStateService) {
-            await this._plugin.timerStateService.saveStateToFile(timers);
-        }
     }
 
     public setPlugin(plugin: ThinkPlugin) {
@@ -327,7 +322,9 @@ export function useStore<T>(selector: (state: AppState) => T): T {
 
     if (!store) {
         // 创建一个临时的 TimerStore 实例作为备用
-        const fallbackTimerStore = new TimerStore(() => {}, () => Promise.resolve());
+        // 注意：这里我们需要模拟 TimerStateService，或者简单地传入 null/undefined 并忽略错误，
+        // 因为这只是一个备用状态。为了类型安全，我们使用类型断言。
+        const fallbackTimerStore = new TimerStore({} as any);
         const safeFallbackState: AppState = {
             settings: DEFAULT_SETTINGS,
             // [移除] timers和activeTimer

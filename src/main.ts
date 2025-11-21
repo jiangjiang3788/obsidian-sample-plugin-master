@@ -26,11 +26,12 @@ import { AppStore } from '@/app/AppStore';
 import { DataStore } from '@core/services/DataStore';
 import { ThinkSettings, DEFAULT_SETTINGS, STYLE_TAG_ID } from '@core/types';
 import { GLOBAL_CSS } from '@shared/styles';
-import { AppToken, SETTINGS_TOKEN } from '@core/services/types';
+import { AppToken, SETTINGS_TOKEN, SettingsProviderToken } from '@core/services/types';
 import { VaultFileStorage, STORAGE_TOKEN } from '@core/services/StorageService';
 import { safeAsync } from '@shared/utils/errorHandler';
 import { performanceMonitor, startMeasure } from '@shared/utils/performance';
 import { ServiceManager } from '@/app/ServiceManager';
+import { TimerStateService } from '@features/timer/TimerStateService';
 
 console.log(`[ThinkPlugin] main.js 文件已加载，版本时间: ${new Date().toLocaleTimeString()}`);
 
@@ -53,6 +54,8 @@ export default class ThinkPlugin extends Plugin {
                 
                 // 注册单例服务（现在 reflect-metadata 已确保可用）
                 container.registerSingleton(AppStore);
+                // 注册 SettingsProviderToken 映射到 AppStore
+                container.register(SettingsProviderToken, { useToken: AppStore });
 
                 // 步骤 2: 初始化服务管理器
                 this.serviceManager = new ServiceManager(this);
@@ -139,5 +142,9 @@ export default class ThinkPlugin extends Plugin {
 
     get dataStore(): DataStore {
         return this.serviceManager.dataStore;
+    }
+
+    get timerStateService(): TimerStateService | undefined {
+        return this.serviceManager.timerStateService;
     }
 }

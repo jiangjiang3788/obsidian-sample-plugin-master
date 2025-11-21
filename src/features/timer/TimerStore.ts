@@ -1,5 +1,7 @@
 // src/store/stores/TimerStore.ts
 import { generateId } from '@core/utils/array';
+import { singleton, inject } from 'tsyringe';
+import { TimerStateService } from '@features/timer/TimerStateService';
 
 export interface TimerState {
     id: string;
@@ -16,17 +18,22 @@ export interface TimerState {
  * 注意：TimerStore是内存存储，不使用Settings持久化
  * 而是通过专门的persistTimers函数进行文件持久化
  */
+@singleton()
 export class TimerStore {
     private _timers: TimerState[] = [];
-    private _persistTimers?: (timers: TimerState[]) => Promise<void>;
-    private _notify: () => void;
+    private _listeners: Set<() => void> = new Set();
 
     constructor(
-        notify: () => void,
-        persistTimers?: (timers: TimerState[]) => Promise<void>
-    ) {
-        this._notify = notify;
-        this._persistTimers = persistTimers;
+        @inject(TimerStateService) private timerStateService: TimerStateService
+    ) {}
+
+    public subscribe(listener: () => void): () => void {
+        this._listeners.add(listener);
+        return () => this._listeners.delete(listener);
+    }
+
+    private _notify() {
+        this._listeners.forEach(l => l());
     }
 
     // 设置初始计时器（从文件加载）
@@ -232,7 +239,7 @@ export class TimerStore {
     // 私有方法：统一的持久化和错误处理
     private async _persistAndHandleError(): Promise<void> {
         try {
-            await this._persistTimers?.(this._timers);
+            await this.timerStateService.saveStateToFile(this._timers);
         } catch (error) {
             console.error('TimerStore: 持久化失败', error);
             // 不重新抛出错误，让应用继续运行

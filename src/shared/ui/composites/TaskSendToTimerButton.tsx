@@ -1,15 +1,14 @@
 // src/shared/components/TaskSendToTimerButton.tsx
 /** @jsxImportSource preact */
 import { h } from 'preact';
-import { useStore } from '@/app/AppStore';
-// [修改] 从注册表导入 timerService
-import { timerService } from '@/app/storeRegistry';
 import { IconButton, Tooltip } from '@mui/material';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import HourglassTopIcon from '@mui/icons-material/HourglassTop';
 
 interface TaskSendToTimerButtonProps {
     taskId: string;
+    timerStatus?: 'running' | 'paused';
+    onStart: () => void;
 }
 
 /**
@@ -17,22 +16,10 @@ interface TaskSendToTimerButtonProps {
  * - 如果任务已在计时器中，显示激活状态。
  * - 否则，显示播放按钮以添加并开始计时。
  */
-export function TaskSendToTimerButton({ taskId }: TaskSendToTimerButtonProps) {
-    const timers = useStore(state => state.timer.getTimers());
-    const thisTaskTimer = timers.find(t => t.taskId === taskId);
-
-    const handleStart = () => {
-        // [修复] 使用从注册表导入的 timerService 实例
-        if (timerService) {
-            timerService.startOrResume(taskId);
-        } else {
-            console.error("TimerService is not available.");
-        }
-    };
-
-    if (thisTaskTimer) {
+export function TaskSendToTimerButton({ taskId, timerStatus, onStart }: TaskSendToTimerButtonProps) {
+    if (timerStatus) {
         return (
-            <Tooltip title={`该任务已在计时面板中 (${thisTaskTimer.status})`}>
+            <Tooltip title={`该任务已在计时面板中 (${timerStatus})`}>
                 <IconButton size="small" color="primary" sx={{ cursor: 'default' }}>
                     <HourglassTopIcon fontSize="small" />
                 </IconButton>
@@ -44,7 +31,10 @@ export function TaskSendToTimerButton({ taskId }: TaskSendToTimerButtonProps) {
         <Tooltip title="添加并开始计时">
             <IconButton 
                 size="small" 
-                onClick={handleStart} 
+                onClick={(e) => {
+                    e.stopPropagation();
+                    onStart();
+                }} 
             >
                 <PlayArrowIcon fontSize="small" />
             </IconButton>

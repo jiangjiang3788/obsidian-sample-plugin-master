@@ -287,6 +287,10 @@ export class ServiceManager {
         return this.services.timerService;
     }
 
+    get timerStateService(): TimerStateService | undefined {
+        return this.services.timerStateService;
+    }
+
     get timerWidget(): FloatingTimerWidget | undefined {
         return this.services.timerWidget;
     }

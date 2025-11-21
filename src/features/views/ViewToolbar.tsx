@@ -5,6 +5,7 @@ import { dayjs, formatDateForView } from '@core/utils/date';
 import { ThemeFilter } from './ThemeFilter';
 import { CategoryFilter } from './CategoryFilter';
 import type { ViewInstance } from '@/core/types/schema';
+import type { ThemeDefinition } from '@/core/types';
 
 export interface ViewToolbarProps {
     // 时间相关
@@ -19,6 +20,8 @@ export interface ViewToolbarProps {
     onThemeSelectionChange: (themes: string[]) => void;
     onCategorySelectionChange: (categories: string[]) => void;
     viewInstances: ViewInstance[];
+    themes: ThemeDefinition[];
+    predefinedCategories?: string[];
     
     // 配置
     hideToolbar?: boolean;
@@ -34,6 +37,8 @@ export function ViewToolbar({
     onThemeSelectionChange,
     onCategorySelectionChange,
     viewInstances,
+    themes,
+    predefinedCategories,
     hideToolbar = false
 }: ViewToolbarProps) {
     // 时间单位映射
@@ -94,6 +99,7 @@ export function ViewToolbar({
             <ThemeFilter
                 selectedThemes={selectedThemes}
                 onSelectionChange={onThemeSelectionChange}
+                themes={themes}
             />
             
             {/* 分类筛选 */}
@@ -101,6 +107,7 @@ export function ViewToolbar({
                 selectedCategories={selectedCategories}
                 onSelectionChange={onCategorySelectionChange}
                 viewInstances={viewInstances}
+                predefinedCategories={predefinedCategories}
             />
         </div>
     );

@@ -8,6 +8,7 @@ import { EMPTY_LABEL } from '@/core/types/constants';
 import { TaskCheckbox } from '@shared/ui/composites/TaskCheckbox';
 import { TaskSendToTimerButton } from '@shared/ui/composites/TaskSendToTimerButton';
 import { App } from 'obsidian'; // [新增] 导入 App 类型
+import type { TimerService } from '@features/timer/TimerService';
 
 // [修改] 接口现在需要 app 实例
 interface TableViewProps {
@@ -16,13 +17,14 @@ interface TableViewProps {
     colField: string;
     onMarkDone: (id: string) => void;
     app: App;
+    timerService: TimerService;
+    timers: any[];
 }
 
 const isDone = (k?: string) => /\/(done|cancelled)$/i.test(k || '');
 
 // [修改] 函数签名现在接收 app
-export function TableView({ items, rowField, colField, onMarkDone, app }: TableViewProps) {
-
+export function TableView({ items, rowField, colField, onMarkDone, app, timerService, timers }: TableViewProps) {
     if (!rowField || !colField) {
         return <div>（表格视图需要配置“行字段”和“列字段”）</div>;
     }
@@ -47,6 +49,8 @@ export function TableView({ items, rowField, colField, onMarkDone, app }: TableV
     function renderCellItem(item: Item) {
         if (item.type === 'task') {
             const done = isDone(item.categoryKey);
+            const timer = timers.find(t => t.taskId === item.id);
+            
             // [重构] 采用与 BlockView 统一的渲染逻辑，以实现视图间的一致性
             return (
                 <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
@@ -59,7 +63,13 @@ export function TableView({ items, rowField, colField, onMarkDone, app }: TableV
                     <a href={makeObsUri(item, app)} target="_blank" rel="noopener" class={done ? 'task-done' : ''} style={{ flexGrow: 1, minWidth: 0, textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>
                         {item.title}
                     </a>
-                    {!done && <TaskSendToTimerButton taskId={item.id} />}
+                    {!done && (
+                        <TaskSendToTimerButton 
+                            taskId={item.id} 
+                            timerStatus={timer?.status}
+                            onStart={() => timerService?.startOrResume(item.id)}
+                        />
+                    )}
                 </span>
             );
         }

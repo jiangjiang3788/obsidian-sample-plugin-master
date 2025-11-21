@@ -9,10 +9,10 @@ import { Item, readField, ThemeDefinition } from '@/core/types/schema';
 import { getCategoryColor } from '@/core/types/definitions';
 import { makeObsUri } from '@core/utils/obsidian';
 import { getFieldLabel } from '@/core/types/fields';
-import { useStore } from '@/app/AppStore';
 import { TagsRenderer } from '@shared/ui/composites/TagsRenderer';
 import { TaskCheckbox } from '@shared/ui/composites/TaskCheckbox';
 import { TaskSendToTimerButton } from '@shared/ui/composites/TaskSendToTimerButton';
+import type { TimerService } from '@features/timer/TimerService';
 
 // FieldRenderer 组件保持不变
 const FieldRenderer = ({ item, fieldKey, app, allThemes }: { item: Item; fieldKey: string; app: App; allThemes: ThemeDefinition[] }) => {
@@ -54,8 +54,10 @@ const FieldRenderer = ({ item, fieldKey, app, allThemes }: { item: Item; fieldKe
 
 // TaskItem 组件保持不变
 const isDone = (k?: string) => /\/(done|cancelled)$/i.test(k || '');
-const TaskItem = ({ item, fields, onMarkDone, app, allThemes }: { item: Item; fields: string[]; onMarkDone: (id: string) => void; app: App; allThemes: ThemeDefinition[] }) => {
+const TaskItem = ({ item, fields, onMarkDone, app, allThemes, timerService, timers }: { item: Item; fields: string[]; onMarkDone: (id: string) => void; app: App; allThemes: ThemeDefinition[]; timerService: TimerService; timers: any[] }) => {
+    const timer = timers.find(t => t.taskId === item.id);
     const done = isDone(item.categoryKey);
+    
     return (
         <div class="bv-item bv-item--task">
             <div class="bv-task-checkbox-wrapper">
@@ -67,7 +69,13 @@ const TaskItem = ({ item, fields, onMarkDone, app, allThemes }: { item: Item; fi
                         {item.icon && <span class="icon" style="margin-right: 4px;">{item.icon}</span>}
                         {item.title}
                     </a>
-                    {!done && <TaskSendToTimerButton taskId={item.id} />}
+                    {!done && (
+                        <TaskSendToTimerButton 
+                            taskId={item.id} 
+                            timerStatus={timer?.status}
+                            onStart={() => timerService?.startOrResume(item.id)}
+                        />
+                    )}
                 </div>
                 <div class="bv-fields-list-wrapper">
                     {fields.map(fieldKey => <FieldRenderer key={fieldKey} item={item} fieldKey={fieldKey} app={app} allThemes={allThemes} />)}
@@ -113,11 +121,13 @@ interface BlockViewProps {
     fields?: string[];
     app: App;
     onMarkDone: (id: string) => void;
+    timerService: TimerService;
+    timers: any[];
+    allThemes: ThemeDefinition[];
 }
 
 export function BlockView(props: BlockViewProps) {
-    const { items, groupField, fields = [], app, onMarkDone } = props;
-    const allThemes = useStore(state => state.settings.inputSettings.themes);
+    const { items, groupField, fields = [], app, onMarkDone, timerService, timers, allThemes } = props;
     const containerRef = useRef<HTMLDivElement>(null);
     const [isNarrow, setIsNarrow] = useState(false);
 
@@ -142,7 +152,7 @@ export function BlockView(props: BlockViewProps) {
     
     const renderItem = (item: Item) => {
         return item.type === 'task'
-            ? <TaskItem key={item.id} item={item} fields={fields} onMarkDone={onMarkDone} app={app} allThemes={allThemes} />
+            ? <TaskItem key={item.id} item={item} fields={fields} onMarkDone={onMarkDone} app={app} allThemes={allThemes} timerService={timerService} timers={timers} />
             : <BlockItem key={item.id} item={item} fields={fields} isNarrow={isNarrow} app={app} allThemes={allThemes} />;
     };
     
