@@ -1,0 +1,40 @@
+/*
+ * ===================================================================
+ * Modal Tweaks
+ * -------------------------------------------------------------------
+ * Adjustments for plugin-specific modals.
+ * ===================================================================
+ */
+
+/* 隐藏快速输入面板的原生关闭按钮，因为我们已在组件内部实现了一个 */
+.think-quick-input-modal .modal-close-button {
+    display: none !important;
+}
+
+/* 移动端快捷输入面板适配 - 避免被输入法覆盖 */
+/* 竖屏模式适配 */
+@media screen and (orientation: portrait) {
+    .think-quick-input-modal {
+        position: fixed !important;
+        top: 20px !important;
+        left: 10px !important;
+        right: 10px !important;
+        bottom: auto !important;
+        max-height: calc(100vh - 120px) !important;
+        transform: none !important;
+        margin: 0 !important;
+        border-radius: 12px !important;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2) !important;
+        width: auto !important;
+        height: auto !important;
+        display: flex !important;
+        flex-direction: column !important;
+    }
+    
+    .think-quick-input-modal .modal-content {
+        flex: 1 !important;
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
+        padding: 16px !important;
+    }
+}

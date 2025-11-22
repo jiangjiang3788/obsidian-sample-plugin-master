@@ -113,9 +113,11 @@ function HeatmapCell({ date, items, config, ratingMapping, app, onCellClick, onE
             if (displayCount > 0) {
                 const sizeClass = displayCount > 99 ? 'large' : displayCount > 9 ? 'medium' : 'small';
                 cellContent = (
-                    <span class={`pure-count ${sizeClass}`}>
-                        {displayCount > 999 ? '999+' : displayCount}
-                    </span>
+                    <div class="cell-with-count">
+                        <span class={`pure-count ${sizeClass}`}>
+                            {displayCount > 999 ? '999+' : displayCount}
+                        </span>
+                    </div>
                 );
                 
                 // 根据次数设置背景色强度
@@ -142,9 +144,9 @@ function HeatmapCell({ date, items, config, ratingMapping, app, onCellClick, onE
 
     // 空状态处理
     if (!visualValue && (!items || items.length === 0)) {
-        const emptyColor = '#C3B4D9';
-        cellStyle.backgroundColor = emptyColor;
-        cellStyle.opacity = 0.4;
+        // 移除硬编码的颜色，使用 CSS 类控制
+        // cellStyle.backgroundColor = emptyColor;
+        // cellStyle.opacity = 0.4;
     }
 
     // 今日特殊标记 - 使用更subtle的方式
@@ -351,7 +353,7 @@ export function HeatmapView({ items, app, dateRange, module, currentView, inputS
         return (
             <div class="month-section">
                 <div class="month-label">
-                    {monthDate.format('YYYY年M月')}
+                    {monthDate.format('M月')}
                 </div>
                 <div class="heatmap-row calendar">
                     {days}
@@ -466,7 +468,22 @@ export function HeatmapView({ items, app, dateRange, module, currentView, inputS
 
     // 响应式布局检测
     const [verticalLayouts, setVerticalLayouts] = useState<Set<string>>(new Set());
+    // [新增] 折叠状态管理
+    const [collapsedThemes, setCollapsedThemes] = useState<Set<string>>(new Set());
     const headerRefs = useRef<Map<string, HTMLElement>>(new Map());
+
+    // [新增] 切换主题折叠状态
+    const toggleThemeCollapse = (theme: string) => {
+        setCollapsedThemes(prev => {
+            const newSet = new Set(prev);
+            if (newSet.has(theme)) {
+                newSet.delete(theme);
+            } else {
+                newSet.add(theme);
+            }
+            return newSet;
+        });
+    };
 
     // 检测是否需要垂直布局（仅用于天、周、月视图）
     const checkLayout = (theme: string, headerElement: HTMLElement) => {
@@ -540,7 +557,7 @@ export function HeatmapView({ items, app, dateRange, module, currentView, inputS
                     const levelData = config.enableLeveling && theme !== '__default__' ? getThemeLevelData(themeItems) : null;
                     
                     const isVertical = verticalLayouts.has(theme);
-                    
+                    const isCollapsed = collapsedThemes.has(theme);
                     
                     return (
                         <div class="heatmap-theme-group" key={theme}>
@@ -555,9 +572,24 @@ export function HeatmapView({ items, app, dateRange, module, currentView, inputS
                             >
                                 {/* 第一行：等级信息和进度条 */}
                                 {theme !== '__default__' && (
-                                    <div class="heatmap-header-info">
+                                    <div 
+                                        class="heatmap-header-info"
+                                        onClick={() => toggleThemeCollapse(theme)}
+                                        title="点击折叠/展开"
+                                    >
                                         {/* 左侧：等级信息和主题名称 */}
                                         <div class="heatmap-header-info-left">
+                                            <span class="heatmap-toggle-icon" style={{ 
+                                                display: 'inline-block', 
+                                                width: '16px', 
+                                                textAlign: 'center',
+                                                transform: isCollapsed ? 'rotate(-90deg)' : 'rotate(0deg)',
+                                                transition: 'transform 0.2s ease',
+                                                marginRight: '4px',
+                                                color: 'var(--text-muted)'
+                                            }}>
+                                                ▼
+                                            </span>
                                             {levelData && (
                                                 <>
                                                     <span class="level-icon">
@@ -581,10 +613,7 @@ export function HeatmapView({ items, app, dateRange, module, currentView, inputS
 下一等级: ${levelData.nextConfig.title}
 距离升级还需: ${levelData.nextRequirement ? Math.max(0, levelData.nextRequirement - levelData.totalChecks) : 0} 次打卡`}
                                                 >
-                                                    <div class="progress-bar" style={{
-                                                        width: `${levelData.progress * 100}%`,
-                                                        backgroundColor: levelData.config.color
-                                                    }} />
+                                                    <div class="progress-bar" style={{ width: `${levelData.progress * 100}%`, backgroundColor: levelData.config.color }} />
                                                 </div>
                                             </div>
                                         )}
@@ -592,9 +621,11 @@ export function HeatmapView({ items, app, dateRange, module, currentView, inputS
                                 )}
                                 
                                 {/* 第二行：HeatmapCell展示区域 */}
-                                <div class={`heatmap-header-cells ${isRowLayout ? '' : 'grid-view'}`}>
-                                    {renderHeaderCells(currentView, theme, dataForTheme)}
-                                </div>
+                                {!isCollapsed && (
+                                    <div class={`heatmap-header-cells ${isRowLayout ? '' : 'grid-view'}`}>
+                                        {renderHeaderCells(currentView, theme, dataForTheme)}
+                                    </div>
+                                )}
                             </div>
                         </div>
                     );

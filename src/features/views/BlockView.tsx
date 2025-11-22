@@ -29,7 +29,7 @@ const FieldRenderer = ({ item, fieldKey, app, allThemes }: { item: Item; fieldKe
     if (fieldKey === 'categoryKey') {
         const baseCategory = (item.categoryKey || '').split('/')[0] || '';
         return (
-            <span class="tag-pill" title={`${label}: ${value}`} style={`background:${getCategoryColor(item.categoryKey)};`}>
+            <span class="tag-pill" title={`${label}: ${value}`} style={{ backgroundColor: getCategoryColor(item.categoryKey) }}>
                 {baseCategory}
             </span>
         );
@@ -64,9 +64,9 @@ const TaskItem = ({ item, fields, onMarkDone, app, allThemes, timerService, time
                 <TaskCheckbox done={done} onMarkDone={() => onMarkDone(item.id)} />
             </div>
             <div class="bv-task-content">
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <div class="flex items-center gap-2">
                     <a href={makeObsUri(item, app)} target="_blank" rel="noopener" class={`bv-task-title ${done ? 'task-done' : ''}`}>
-                        {item.icon && <span class="icon" style="margin-right: 4px;">{item.icon}</span>}
+                        {item.icon && <span class="icon mr-1">{item.icon}</span>}
                         {item.title}
                     </a>
                     {!done && (
@@ -77,9 +77,10 @@ const TaskItem = ({ item, fields, onMarkDone, app, allThemes, timerService, time
                         />
                     )}
                 </div>
-                <div class="bv-fields-list-wrapper">
+                {/* [修改] 任务类型不显示其他字段，只显示复选框、标题和计时器 */}
+                {/* <div class="bv-fields-list-wrapper">
                     {fields.map(fieldKey => <FieldRenderer key={fieldKey} item={item} fieldKey={fieldKey} app={app} allThemes={allThemes} />)}
-                </div>
+                </div> */}
             </div>
         </div>
     );
@@ -185,10 +186,9 @@ export function BlockView(props: BlockViewProps) {
                         <h5 
                             class="bv-group-title" 
                             onClick={() => toggleGroup(key)} 
-                            style={{ cursor: 'pointer', userSelect: 'none', display: 'flex', alignItems: 'center', gap: '0.25em' }}
                             title="点击折叠/展开"
                         >
-                            <span style={{ display: 'inline-block', width: '1.2em', textAlign: 'center' }}>
+                            <span class="bv-group-toggle-icon">
                                 {isCollapsed ? '▶' : '▼'}
                             </span>
                             {`${key} (${grouped[key].length})`}

@@ -53,14 +53,14 @@ export function TableView({ items, rowField, colField, onMarkDone, app, timerSer
             
             // [重构] 采用与 BlockView 统一的渲染逻辑，以实现视图间的一致性
             return (
-                <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <span class="table-view-task-cell">
                     <TaskCheckbox
                         done={done}
                         onMarkDone={() => onMarkDone(item.id)}
                     />
                     {item.icon && <span class="task-icon">{item.icon}</span>}
                     {/* [修复] 调用 makeObsUri 时传入 app 实例 */}
-                    <a href={makeObsUri(item, app)} target="_blank" rel="noopener" class={done ? 'task-done' : ''} style={{ flexGrow: 1, minWidth: 0, textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>
+                    <a href={makeObsUri(item, app)} target="_blank" rel="noopener" class={`table-view-task-title ${done ? 'task-done' : ''}`}>
                         {item.title}
                     </a>
                     {!done && (

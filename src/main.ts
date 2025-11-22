@@ -24,10 +24,10 @@ import { container } from 'tsyringe';
 import { Plugin, Notice } from 'obsidian';
 import { AppStore } from '@/app/AppStore';
 import { DataStore } from '@core/services/DataStore';
-import { ThinkSettings, DEFAULT_SETTINGS, STYLE_TAG_ID } from '@core/types';
-import { GLOBAL_CSS } from '@shared/styles';
+import { ThinkSettings, DEFAULT_SETTINGS } from '@core/types';
 import { AppToken, SETTINGS_TOKEN, SettingsProviderToken } from '@core/services/types';
 import { VaultFileStorage, STORAGE_TOKEN } from '@core/services/StorageService';
+import './styles/main.css';
 import { safeAsync } from '@shared/utils/errorHandler';
 import { performanceMonitor, startMeasure } from '@shared/utils/performance';
 import { ServiceManager } from '@/app/ServiceManager';
@@ -45,7 +45,6 @@ export default class ThinkPlugin extends Plugin {
             async () => {
                 // 步骤 1: 基础初始化
                 const settings = await this.loadSettings();
-                this.injectGlobalCss();
 
                 // 注册基础依赖
                 container.register(AppToken, { useValue: this.app });
@@ -106,7 +105,6 @@ export default class ThinkPlugin extends Plugin {
     }
 
     onunload(): void {
-        document.getElementById(STYLE_TAG_ID)?.remove();
         this.serviceManager?.cleanup();
         container.clearInstances();
     }
@@ -123,16 +121,6 @@ export default class ThinkPlugin extends Plugin {
 
     async saveSettings() {
         await this.saveData(this.serviceManager.appStore.getSettings());
-    }
-
-    private injectGlobalCss() {
-        let el = document.getElementById(STYLE_TAG_ID) as HTMLStyleElement | null;
-        if (!el) {
-            el = document.createElement('style');
-            el.id = STYLE_TAG_ID;
-            document.head.appendChild(el);
-        }
-        el.textContent = GLOBAL_CSS;
     }
 
     // 提供服务访问方法

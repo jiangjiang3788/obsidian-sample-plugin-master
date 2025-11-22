@@ -1,0 +1,224 @@
+/* Statistics View 样式 */
+
+.statistics-view {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding: 8px;
+    height: 100%;
+    overflow-y: auto;
+}
+
+.statistics-view-placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    color: var(--text-muted);
+    font-size: 0.9rem;
+}
+
+/* 顶部控制栏 */
+.sv-top-controls {
+    display: flex;
+    justify-content: flex-end;
+    padding: 0 8px;
+}
+
+.sv-period-toggle {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    cursor: pointer;
+}
+
+/* 时间轴容器 */
+.sv-timeline {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+/* 行布局 */
+.sv-row {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.sv-row-quarters,
+.sv-row-months {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+}
+
+/* 图表块 */
+.sv-chart-block {
+    background-color: var(--background-primary);
+    border: 1px solid var(--background-modifier-border);
+    border-radius: 8px;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    transition: all 0.2s ease;
+}
+
+.sv-chart-block:hover {
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    border-color: var(--interactive-accent);
+}
+
+.sv-chart-block.is-compact {
+    padding: 8px;
+    gap: 8px;
+}
+
+.sv-chart-label {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text-normal);
+}
+
+.sv-chart-content {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+/* 数字行 */
+.sv-chart-numbers {
+    display: flex;
+    justify-content: space-around;
+    height: 16px;
+}
+
+.sv-chart-number {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    text-align: center;
+    width: 100%;
+}
+
+/* 柱状图容器 */
+.sv-chart-bars-container {
+    display: flex;
+    justify-content: space-around;
+    align-items: flex-end;
+    height: 100px; /* 默认高度 */
+    gap: 4px;
+    padding-bottom: 4px;
+    border-bottom: 1px solid var(--background-modifier-border);
+}
+
+.sv-chart-block.is-compact .sv-chart-bars-container {
+    height: 60px;
+}
+
+/* 单个柱子包装器 */
+.sv-vbar-wrapper {
+    flex: 1;
+    height: 100%;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    cursor: pointer;
+    transition: opacity 0.2s ease;
+}
+
+.sv-vbar-wrapper:hover {
+    opacity: 0.8;
+}
+
+/* 柱子本身 */
+.sv-vbar-bar {
+    width: 60%;
+    min-width: 4px;
+    max-width: 20px;
+    border-radius: 2px 2px 0 0;
+    transition: height 0.3s ease;
+}
+
+/* 分类标签行 */
+.sv-chart-categories {
+    display: flex;
+    justify-content: space-around;
+}
+
+.sv-chart-category {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    text-align: center;
+    width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* 周视图网格 */
+.sv-row-weeks {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 16px;
+}
+
+.sv-month-col {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.sv-month-col-header {
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    padding-bottom: 4px;
+    border-bottom: 1px solid var(--background-modifier-border);
+}
+
+.sv-month-col-weeks {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+/* 弹出层 */
+.sv-popover {
+    position: fixed;
+    background-color: var(--background-primary);
+    border: 1px solid var(--background-modifier-border);
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    z-index: 1000;
+    width: 320px;
+    max-height: 400px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.sv-popover-title {
+    padding: 8px 12px;
+    background-color: var(--background-secondary);
+    border-bottom: 1px solid var(--background-modifier-border);
+    font-weight: 600;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: move;
+}
+
+.sv-popover-content {
+    padding: 8px;
+    overflow-y: auto;
+    flex: 1;
+}
+
+.sv-popover-empty {
+    padding: 16px;
+    text-align: center;
+    color: var(--text-muted);
+}

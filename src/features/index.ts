@@ -6,8 +6,6 @@
 // Views 功能（新增：视图模块）
 export * as Views from './views';
 
-// Dashboard 功能
-export * as Dashboard from './dashboard';
 
 // Settings 功能
 export * as Settings from './settings';
@@ -19,5 +17,4 @@ export { FloatingTimerWidget } from './timer/FloatingTimerWidget';
 // Quick Input 功能
 export * as QuickInput from './quickinput';
 
-// Theme 功能
-export * as Theme from './theme';
+

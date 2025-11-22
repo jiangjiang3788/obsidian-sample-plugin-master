@@ -42,7 +42,8 @@ export default defineConfig({
         },
 
     build: {
-        outDir: 'dist',
+        outDir: '.',
+        emptyOutDir: false,
         lib: {
             entry: 'src/main.ts',
             formats: ['cjs'],
@@ -61,6 +62,7 @@ export default defineConfig({
             },
             // 确保 reflect-metadata 优先加载
             output: {
+                assetFileNames: 'styles.css',
                 manualChunks: undefined,
                 // 强制 reflect-metadata 在最前面
                 inlineDynamicImports: true,

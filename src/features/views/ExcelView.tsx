@@ -50,8 +50,7 @@ export function ExcelView({ items, fields, app }: ExcelViewProps) {
           target="_blank" 
           rel="noopener" 
           title={value} // 鼠标悬浮时显示完整内容
-          // [新增] 内联样式，使链接颜色和普通文本一致
-          style={{ color: 'var(--text-normal)', textDecoration: 'none' }}
+          class="excel-view-content-link"
         >
           {displayText}
         </a>
@@ -64,7 +63,7 @@ export function ExcelView({ items, fields, app }: ExcelViewProps) {
 
   return (
     <div>
-      <table class="think-table" style="min-width:100%; white-space:nowrap;">
+      <table class="think-table excel-view-table">
         <thead>
           <tr>{cols.map(c => <th key={c}>{c}</th>)}</tr>
         </thead>

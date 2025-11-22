@@ -1,0 +1,187 @@
+/* BlockView 样式 */
+
+.bv-container {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 4px;
+}
+
+.bv-group {
+    border: 1px solid var(--background-modifier-border);
+    border-radius: 8px;
+    overflow: hidden;
+    background-color: var(--background-primary);
+}
+
+.bv-group-title {
+    margin: 0;
+    padding: 8px 12px;
+    background-color: var(--background-secondary);
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    user-select: none;
+    transition: background-color 0.2s ease;
+}
+
+.bv-group-title:hover {
+    background-color: var(--background-modifier-hover);
+}
+
+.bv-group-toggle-icon {
+    font-size: 0.8em;
+    color: var(--text-muted);
+    transition: transform 0.2s ease;
+}
+
+.bv-group-content {
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+/* 通用条目样式 */
+.bv-item {
+    padding: 8px;
+    border-radius: 6px;
+    background-color: var(--background-primary);
+    /* 移除边框 */
+    /* border: 1px solid var(--background-modifier-border); */
+    transition: all 0.2s ease;
+    font-size: 1rem; /* 增大字号 */
+}
+
+.bv-item:hover {
+    background-color: var(--background-modifier-hover);
+    /* box-shadow: 0 2px 4px rgba(0,0,0,0.05); */
+    /* border-color: var(--interactive-accent); */
+}
+
+/* 任务条目 */
+.bv-item--task {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+}
+
+.bv-task-checkbox-wrapper {
+    padding-top: 2px;
+    flex-shrink: 0;
+}
+
+.bv-task-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.bv-task-title {
+    display: inline-block;
+    color: var(--text-normal);
+    text-decoration: none;
+    line-height: 1.4;
+    margin-bottom: 4px;
+}
+
+.bv-task-title:hover {
+    text-decoration: underline;
+    color: var(--interactive-accent);
+}
+
+.bv-task-title.task-done {
+    color: var(--text-muted);
+    text-decoration: line-through;
+}
+
+/* 块条目 */
+.bv-item--block {
+    display: flex;
+    /* 修改为水平布局：左侧元数据，右侧主要内容 */
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 12px;
+}
+
+.bv-item--block.is-narrow {
+    font-size: 0.9em;
+    flex-direction: column; /* 窄屏时保持垂直堆叠 */
+    gap: 6px;
+}
+
+.bv-block-metadata {
+    display: flex;
+    /* 元数据垂直排列 */
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+    /* 防止元数据挤占太多空间 */
+    flex-shrink: 0;
+    max-width: 30%;
+}
+
+.bv-block-main {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    flex: 1;
+    min-width: 0; /* 关键：防止文本溢出容器 */
+}
+
+.bv-block-title {
+    font-weight: 600;
+    font-size: 1rem;
+}
+
+.bv-block-title a {
+    color: var(--text-normal);
+    text-decoration: none;
+}
+
+.bv-block-title a:hover {
+    color: var(--interactive-accent);
+}
+
+.bv-block-content {
+    /* 修改为正常文本颜色 */
+    color: var(--text-normal);
+    font-size: 0.9rem;
+    line-height: 1.5;
+    /* 支持换行 */
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+/* 字段列表 */
+.bv-fields-list-wrapper {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 4px;
+}
+
+/* 标签药丸 */
+.tag-pill {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 8px;
+    border-radius: 12px;
+    background-color: var(--background-secondary-alt);
+    color: var(--text-muted);
+    font-size: 0.75rem;
+    border: 1px solid transparent;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.tag-pill img {
+    height: 16px;
+    width: 16px;
+    object-fit: cover;
+    border-radius: 2px;
+}

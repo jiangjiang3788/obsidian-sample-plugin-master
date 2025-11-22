@@ -520,7 +520,6 @@ export function TimelineView({ items, dateRange, module, currentView, app, itemS
         return (
             <div 
                 class="timeline-view-wrapper" 
-                style={{ overflowX: 'auto' }} 
                 onWheel={handleWheel as any}
                 onTouchStart={handleTouchStart as any}
                 onTouchMove={handleTouchMove as any}
@@ -542,10 +541,10 @@ export function TimelineView({ items, dateRange, module, currentView, app, itemS
                     })}
                 </div>
                 
-                <div class="timeline-scrollable-body" style={{ display: 'flex' }}>
+                <div class="timeline-scrollable-body">
                     <div class="time-axis" style={{ flex: `0 0 ${TIME_AXIS_WIDTH}px` }}>
                        {Array.from({ length: config.MAX_HOURS_PER_DAY + 1 }, (_, i) => (
-                           <div key={i} style={{ height: `${hourHeight}px`, borderBottom: '1px dashed var(--background-modifier-border-hover)', position: 'relative', boxSizing: 'border-box', textAlign: 'right', paddingRight: '4px', fontSize: '11px', color: 'var(--text-faint)' }}>
+                           <div key={i} class="time-axis-hour" style={{ height: `${hourHeight}px` }}>
                                {i > 0 && i % 2 === 0 ? `${i}:00` : ''}
                            </div>
                        ))}

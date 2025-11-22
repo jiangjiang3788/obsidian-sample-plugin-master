@@ -119,11 +119,8 @@ const Popover = ({ target, blocks, title, onClose, app, module, actionService, d
     }, [isDragging, dragStart]);
 
     const style = {
-        position: 'fixed',
         top: `${position.y}px`,
         left: `${position.x}px`,
-        transform: 'translate(-50%, -50%)',
-        zIndex: 99999,
         cursor: isDragging ? 'grabbing' : 'default',
     };
 
@@ -140,9 +137,9 @@ const Popover = ({ target, blocks, title, onClose, app, module, actionService, d
 
     return (
         <div ref={popoverRef} style={style} className="sv-popover" onMouseDown={handleMouseDown}>
-            <div className="sv-popover-title" style={{ cursor: 'grab' }}>
+            <div className="sv-popover-title">
                 <span>{title}</span>
-                <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
+                <div class="flex items-center gap-1">
                     {/* 导出按钮 */}
                     <Tooltip title="导出为 Markdown">
                         <AnyIconButton
@@ -286,7 +283,7 @@ const ChartBlock = ({ data, label, onCellClick, categories, cellIdentifier, isCo
                                     e.stopPropagation(); 
                                     onCellClick(cellIdentifier(name), e.currentTarget, data.blocks.filter((b:Item) => (b.categoryKey || '').startsWith(name)), `${label} · ${displayName}`); 
                                 }}>
-                                <div class="sv-vbar-bar" style={{ height: `${height}%`, background: color || '#ccc' }}/>
+                                <div class="sv-vbar-bar" style={{ height: `${height}%`, backgroundColor: color || '#ccc' }}/>
                             </div>
                         );
                     })}
