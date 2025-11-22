@@ -1,7 +1,18 @@
-// src/features/dashboard/styles/base.ts
-// 基础样式：MUI重置、全局元素覆盖
+/*
+ * ===================================================================
+ * Base Styles
+ * -------------------------------------------------------------------
+ * - Global element resets
+ * - MUI component overrides
+ * - Font size integration with Obsidian
+ * ===================================================================
+ */
 
-export const BASE_STYLES = `
+/* Set base font size from Obsidian's CSS variable for global scaling */
+body {
+    font-size: var(--font-size-normal);
+}
+
 /*
  * --- 1. 全局 MUI & 表单元素覆盖 ---
  * 此部分用于重置MUI组件的默认样式，使其更符合Obsidian的原生外观。
@@ -54,4 +65,3 @@ export const BASE_STYLES = `
     -webkit-mask-image: none !important;
     background-color: transparent !important;
 }
-`;

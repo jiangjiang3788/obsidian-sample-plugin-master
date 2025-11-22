@@ -85,7 +85,7 @@ export function CategoryFilter({ selectedCategories, onSelectionChange, viewInst
     const totalCount = allCategories.length;
 
     return (
-        <div style={{ display: 'inline-flex', alignItems: 'center', marginLeft: '8px' }}>
+        <div class="category-filter-container">
             <AnyButton
                 size="small"
                 variant={selectedCount > 0 && selectedCount < totalCount ? 'contained' : 'outlined'}
@@ -97,7 +97,7 @@ export function CategoryFilter({ selectedCategories, onSelectionChange, viewInst
             </AnyButton>
 
             {selectedCount > 0 && selectedCount < totalCount && (
-                <div style={{ marginLeft: '8px', display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
+                <div class="selected-categories-list">
                     {selectedCategories.slice(0, 3).map(cat => (
                         <AnyChip
                             key={cat}
@@ -160,7 +160,7 @@ export function CategoryFilter({ selectedCategories, onSelectionChange, viewInst
                                             onChange={() => handleToggleCategory(cat)}
                                         />
                                     }
-                                    label={<span style={{ fontSize: '0.875rem' }}>{cat}</span>}
+                                    label={<span class="text-md">{cat}</span>}
                                 />
                             ))}
                         </AnyFormGroup>

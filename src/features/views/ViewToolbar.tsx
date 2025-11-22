@@ -58,7 +58,7 @@ export function ViewToolbar({
     }
 
     return (
-        <div class="tp-toolbar" style="margin-bottom:8px;">
+        <div class="tp-toolbar">
             {/* 视图切换按钮 */}
             {viewOptions.map(v => (
                 <button 
@@ -73,7 +73,7 @@ export function ViewToolbar({
             {/* 当前日期显示 */}
             <button 
                 disabled 
-                style="font-weight:bold;margin:0 4px;background:#fff;"
+                class="tp-toolbar-date-display"
             >
                 {formatDateForView(currentDate, currentView)}
             </button>

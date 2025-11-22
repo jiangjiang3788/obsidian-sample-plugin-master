@@ -141,7 +141,7 @@ export function ThemeFilter({ selectedThemes, onSelectionChange, themes }: Theme
 
         return (
             <div key={node.theme.id}>
-                <div style={{ display: 'flex', alignItems: 'center', paddingLeft: `${indent}px` }}>
+                <div className="theme-filter-node" style={{ paddingLeft: `${indent}px` }}>
                     {hasChildren && (
                         <AnyIconButton
                             size="small"
@@ -152,7 +152,7 @@ export function ThemeFilter({ selectedThemes, onSelectionChange, themes }: Theme
                             {isExpanded ? <ExpandMoreIcon fontSize="small" /> : <ChevronRightIcon fontSize="small" />}
                         </AnyIconButton>
                     )}
-                    {!hasChildren && <div style={{ width: '28px' }} />}
+                    {!hasChildren && <div className="theme-filter-node-placeholder" />}
                     <AnyFormControlLabel
                         control={
                             <AnyCheckbox
@@ -162,8 +162,8 @@ export function ThemeFilter({ selectedThemes, onSelectionChange, themes }: Theme
                             />
                         }
                         label={
-                            <span 
-                                style={{ fontSize: '0.875rem' }}
+                            <span
+                                className="theme-filter-node-label"
                                 title={hasChildren && !isExpanded ? `${node.theme.path} (折叠时点击选择所有子主题)` : node.theme.path}
                             >
                                 {node.theme.icon && `${node.theme.icon} `}
@@ -187,7 +187,7 @@ export function ThemeFilter({ selectedThemes, onSelectionChange, themes }: Theme
     const totalCount = allThemePaths.length;
 
     return (
-        <div style={{ display: 'inline-flex', alignItems: 'center', marginLeft: '8px' }}>
+        <div className="theme-filter-container">
             <AnyButton
                 size="small"
                 variant={selectedCount > 0 && selectedCount < totalCount ? 'contained' : 'outlined'}
@@ -199,7 +199,7 @@ export function ThemeFilter({ selectedThemes, onSelectionChange, themes }: Theme
             </AnyButton>
 
             {selectedCount > 0 && selectedCount < totalCount && (
-                <div style={{ marginLeft: '8px', display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
+                <div className="theme-filter-selected-chips">
                     {selectedThemes.slice(0, 3).map(themePath => {
                         const theme = themes.find(t => t.path === themePath);
                         return theme ? (

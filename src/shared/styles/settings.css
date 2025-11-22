@@ -1,19 +1,21 @@
-// src/features/dashboard/styles/settings.ts
-// 设置面板样式
-
-export const SETTINGS_STYLES = `
 /*
- * --- 设置面板样式 ---
+ * ===================================================================
+ * Settings Styles
+ * -------------------------------------------------------------------
+ * Styles for settings panels, tables, and editors.
+ * ===================================================================
  */
+
+/* --- 设置面板样式 --- */
 .think-setting-table {
-    font-size: 15px;
+    font-size: 0.9375rem; /* 15px */
 }
 .think-setting-table thead th {
-    font-size: 16px;
+    font-size: 1rem; /* 16px */
     font-weight: 700;
 }
 .think-setting-table td.icon-cell {
-    font-size: 135%;
+    font-size: 1.35em;
     line-height: 1.2;
 }
 .think-setting-table td.icon-cell img {
@@ -26,17 +28,15 @@ export const SETTINGS_STYLES = `
     margin: 0 4px;
 }
 .think-setting-table td .trash-btn {
-    font-size: 18px;
+    font-size: 1.125rem; /* 18px */
     padding: 2px 6px;
 }
 
-/*
- * --- Statistics View Editor 样式 ---
- */
+/* --- Statistics View Editor 样式 --- */
 
 /* ===== 基础样式 ===== */
 .statistics-editor-container {
-  font-size: 14px; /* 统一字体大小 */
+  font-size: 0.875rem; /* 14px */
 }
 
 .statistics-section {
@@ -45,12 +45,12 @@ export const SETTINGS_STYLES = `
 
 .statistics-section-title {
   font-weight: 600;
-  font-size: 14px;
+  font-size: 0.875rem; /* 14px */
   margin-bottom: 8px;
 }
 
 .statistics-section-description {
-  font-size: 12px;
+  font-size: 0.75rem; /* 12px */
   color: var(--text-muted);
   margin-bottom: 8px;
 }
@@ -68,7 +68,7 @@ export const SETTINGS_STYLES = `
   align-items: center;
   gap: 4px;
   cursor: pointer;
-  font-size: 14px;
+  font-size: 0.875rem; /* 14px */
 }
 
 .display-mode-input {
@@ -86,7 +86,7 @@ export const SETTINGS_STYLES = `
 }
 
 .min-height-label {
-  font-size: 12px;
+  font-size: 0.75rem; /* 12px */
   color: var(--text-muted);
 }
 
@@ -95,7 +95,7 @@ export const SETTINGS_STYLES = `
 }
 
 .min-height-value {
-  font-size: 12px;
+  font-size: 0.75rem; /* 12px */
   font-weight: 500;
   min-width: 30px;
 }
@@ -103,12 +103,12 @@ export const SETTINGS_STYLES = `
 /* ===== 分类配置 ===== */
 .categories-section-title {
   font-weight: 600;
-  font-size: 14px;
+  font-size: 0.875rem; /* 14px */
   margin-bottom: 4px;
 }
 
 .categories-description {
-  font-size: 12px;
+  font-size: 0.75rem; /* 12px */
   color: var(--text-muted);
   margin-bottom: 8px;
 }
@@ -134,7 +134,7 @@ export const SETTINGS_STYLES = `
   border: none;
   background: transparent;
   padding: 2px;
-  font-size: 12px;
+  font-size: 0.75rem; /* 12px */
   cursor: pointer;
   transition: opacity 0.2s;
 }
@@ -163,7 +163,7 @@ export const SETTINGS_STYLES = `
   font-weight: 500;
   min-width: 80px;
   flex: 0 0 auto;
-  font-size: 14px;
+  font-size: 0.875rem; /* 14px */
 }
 
 /* ===== 别名输入 ===== */
@@ -172,7 +172,7 @@ export const SETTINGS_STYLES = `
   padding: 4px 8px;
   border: 1px solid var(--background-modifier-border);
   border-radius: 4px;
-  font-size: 12px;
+  font-size: 0.75rem; /* 12px */
   background-color: var(--background-primary);
   color: var(--text-normal);
 }
@@ -221,4 +221,3 @@ export const SETTINGS_STYLES = `
 .theme-dark .move-button:hover:not(:disabled) {
   background-color: var(--background-modifier-border);
 }
-`;

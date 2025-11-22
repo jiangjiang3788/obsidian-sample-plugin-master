@@ -24,9 +24,6 @@ export const EMOJI = {
 /** UI中用于空日期的标签 */
 export const EMPTY_LABEL = '无日期';
 
-/** 注入全局CSS所用的 <style> 标签的ID */
-export const STYLE_TAG_ID = 'think-plugin-style';
-
 /** 用于 localStorage 的键 */
 export const LOCAL_STORAGE_KEYS = {
     SETTINGS_TABS: 'think-settings-active-tab', 
