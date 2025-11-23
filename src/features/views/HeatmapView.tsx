@@ -9,7 +9,6 @@ import { QuickInputModal } from '@/features/quickinput/QuickInputModal';
 import { DEFAULT_CONFIG } from '@features/settings/HeatmapViewEditor';
 import { getThemeLevelData, getEffectiveDisplayCount, getEffectiveLevelCount, type LevelResult, LEVEL_SYSTEM_PRESETS } from '@core/utils/levelingSystem';
 import { CheckinManagerModal } from '@/features/settings/CheckinManagerModal';
-import { HEATMAP_VIEW_STYLES } from '@/features/views/heatmap-view';
 
 // ========== Types ==========
 interface HeatmapViewProps {
