@@ -120,9 +120,9 @@ function HeatmapCell({ date, items, config, ratingMapping, app, onCellClick, onE
                 );
                 
                 // 根据次数设置背景色强度
-                const intensity = Math.min(displayCount / 10, 1);
+                // const intensity = Math.min(displayCount / 10, 1);
                 // 使用紫色系代替绿色系
-                cellStyle.backgroundColor = `rgba(195, 180, 217, ${0.4 + intensity * 0.6})`;
+                // cellStyle.backgroundColor = `rgba(195, 180, 217, ${0.4 + intensity * 0.6})`;
             }
         }
         
@@ -149,11 +149,11 @@ function HeatmapCell({ date, items, config, ratingMapping, app, onCellClick, onE
     }
 
     // 今日特殊标记 - 使用更subtle的方式
-    if (isToday) {
-        const todayShadow = '0 0 0 1px var(--interactive-accent)';
-        cellStyle.boxShadow = cellStyle.boxShadow ? `${cellStyle.boxShadow}, ${todayShadow}` : todayShadow;
-        cellStyle.opacity = 1; // 确保今日不透明
-    }
+    // if (isToday) {
+    //     const todayShadow = '0 0 0 1px var(--interactive-accent)';
+    //     cellStyle.boxShadow = cellStyle.boxShadow ? `${cellStyle.boxShadow}, ${todayShadow}` : todayShadow;
+    //     cellStyle.opacity = 1; // 确保今日不透明
+    // }
 
     return (
         <div 
@@ -332,7 +332,7 @@ export function HeatmapView({ items, app, dateRange, module, currentView, inputS
         })();
         
         const days = [];
-        for (let i = 1; i < firstWeekday; i++) { days.push(<div class="heatmap-cell empty"></div>); }
+        for (let i = 1; i < firstWeekday; i++) { days.push(<div class="heatmap-cell grid-spacer"></div>); }
         for (let i = 1; i <= endOfMonth.date(); i++) {
             const dateStr = startOfMonth.clone().date(i).format('YYYY-MM-DD');
             const dayItems = dataForMonth.get(dateStr);
