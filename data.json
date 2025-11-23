@@ -170,7 +170,7 @@
         "colField": "file.basename"
       },
       "parentId": "group_memc1a9ofen88",
-      "collapsed": false,
+      "collapsed": true,
       "filters": [
         {
           "field": "categoryKey",
@@ -179,15 +179,9 @@
           "logic": "and"
         },
         {
-          "field": "file.path",
-          "op": "includes",
-          "value": "01",
-          "logic": "and"
-        },
-        {
-          "field": "recurrence",
-          "op": "=",
-          "value": "none"
+          "field": "file.basename",
+          "op": "!=",
+          "value": "2-2三餐"
         }
       ]
     },
@@ -200,11 +194,24 @@
         "view": "TableView",
         "title": "表格视图",
         "collapsed": false,
-        "rowField": "file.basename",
+        "rowField": "categoryKey",
         "colField": "date"
       },
       "parentId": "group_memc1a9ofen88",
-      "collapsed": true
+      "collapsed": true,
+      "filters": [
+        {
+          "field": "categoryKey",
+          "op": "=",
+          "value": "完成任务",
+          "logic": "and"
+        },
+        {
+          "field": "file.path",
+          "op": "includes",
+          "value": "01"
+        }
+      ]
     },
     {
       "id": "view_mer6n7pwf7suy",
@@ -226,7 +233,19 @@
         "icon",
         "content"
       ],
-      "group": "categoryKey"
+      "group": "categoryKey",
+      "filters": [
+        {
+          "field": "categoryKey",
+          "op": "!=",
+          "value": "打卡"
+        },
+        {
+          "field": "type",
+          "op": "=",
+          "value": "block"
+        }
+      ]
     },
     {
       "id": "view_meqt389ufhx91",
@@ -262,14 +281,6 @@
           {
             "name": "总结",
             "color": "#e5d5b9"
-          },
-          {
-            "name": "完成任务",
-            "color": "#4f9670"
-          },
-          {
-            "name": "未完成任务",
-            "color": "#8964d4"
           }
         ]
       },
@@ -291,9 +302,10 @@
         "displayMode": "habit",
         "sourceBlockId": "blk_mejsg76atopau",
         "themePaths": [
-          "健康/粑粑",
-          "健康/剪头发",
-          "健康/剪指甲"
+          "健康/身体",
+          "思考/专注",
+          "健康/睡眠",
+          "思考/读书"
         ],
         "countColors": [
           "#ebedf0",
@@ -301,39 +313,75 @@
           "#40c463",
           "#30a14e",
           "#216e39"
-        ],
-        "oncePerDayForLevel": true,
-        "oncePerDayForLevelThemes": [],
-        "themeLevelSystems": {}
+        ]
       },
       "collapsed": false,
       "parentId": "group_memc1a9ofen88",
-      "filters": [
-        {
-          "field": "categoryKey",
-          "op": "!=",
-          "value": "打卡",
-          "logic": "or"
-        },
-        {
-          "field": "categoryKey",
-          "op": "!=",
-          "value": "完成任务"
-        }
-      ]
+      "filters": []
     },
     {
       "id": "view_mg1zanri06mhu",
       "title": "打卡block",
-      "viewType": "HeatmapView",
+      "viewType": "StatisticsView",
       "dataSourceId": "ds_mer6kbdnogrty",
+      "viewConfig": {
+        "categories": [
+          {
+            "name": "未完成任务",
+            "color": "#cfe6f7"
+          },
+          {
+            "name": "完成任务",
+            "color": "#c6ec8d"
+          },
+          {
+            "name": "打卡",
+            "color": "#c2a3f0"
+          },
+          {
+            "name": "事件",
+            "color": "#d1d1d1"
+          },
+          {
+            "name": "感受",
+            "color": "#3db5ff"
+          },
+          {
+            "name": "思考",
+            "color": "#f39090"
+          },
+          {
+            "name": "计划",
+            "color": "#27be13"
+          },
+          {
+            "name": "总结",
+            "color": "#c00c0c"
+          }
+        ],
+        "displayMode": "smart",
+        "minVisibleHeight": 15
+      },
+      "collapsed": true,
+      "parentId": "group_memc1a9ofen88",
+      "fields": [
+        "date",
+        "content"
+      ],
+      "group": "theme"
+    },
+    {
+      "id": "view_mh4itucqmm9rt",
+      "title": "新视图",
+      "viewType": "HeatmapView",
+      "dataSourceId": "",
       "viewConfig": {
         "displayMode": "habit",
         "sourceBlockId": "blk_mejsg76atopau",
         "themePaths": [
+          "健康/运动",
           "健康/身体",
-          "健康/粑粑",
-          "健康/睡眠"
+          "健康/姨妈"
         ],
         "enableLeveling": true,
         "maxDailyChecks": 10,
@@ -341,203 +389,48 @@
         "showLevelProgress": true
       },
       "collapsed": true,
-      "parentId": "group_memc1a9ofen88",
-      "fields": [
-        "categoryKey",
-        "pintu",
-        "date",
-        "content"
+      "parentId": null,
+      "filters": [
+        {
+          "field": "categoryKey",
+          "op": "=",
+          "value": "打卡"
+        }
+      ]
+    },
+    {
+      "id": "view_mi5ep8xvvi5mx",
+      "title": "任务",
+      "viewType": "TableView",
+      "dataSourceId": "",
+      "viewConfig": {
+        "view": "TableView",
+        "title": "表格视图",
+        "collapsed": false,
+        "rowField": "date",
+        "colField": "file.basename"
+      },
+      "collapsed": true,
+      "parentId": null,
+      "sort": [
+        {
+          "field": "categoryKey",
+          "dir": "asc"
+        }
       ],
-      "group": "tags"
-    },
-    {
-      "id": "view_mh4itucqmm9rt",
-      "title": "新视图",
-      "viewType": "TimelineView",
-      "dataSourceId": "",
-      "viewConfig": {
-        "defaultHourHeight": 50,
-        "MAX_HOURS_PER_DAY": 24,
-        "UNTRACKED_LABEL": "未记录",
-        "categories": {
-          "工作": {
-            "color": "#60a5fa",
-            "files": [
-              "工作",
-              "Work"
-            ]
-          },
-          "学习": {
-            "color": "#34d399",
-            "files": [
-              "学习",
-              "Study"
-            ]
-          },
-          "生活": {
-            "color": "#fbbf24",
-            "files": [
-              "生活",
-              "Life"
-            ]
-          }
+      "filters": [
+        {
+          "field": "categoryKey",
+          "op": "=",
+          "value": "未完成任务",
+          "logic": "and"
         },
-        "progressOrder": [
-          "工作",
-          "学习",
-          "生活"
-        ]
-      },
-      "collapsed": true,
-      "parentId": null
-    },
-    {
-      "id": "view_mhvmq40gjfboq",
-      "title": "新视图 (副本)",
-      "viewType": "TimelineView",
-      "dataSourceId": "",
-      "viewConfig": {
-        "defaultHourHeight": 50,
-        "MAX_HOURS_PER_DAY": 24,
-        "UNTRACKED_LABEL": "未记录",
-        "categories": {
-          "工作": {
-            "color": "#60a5fa",
-            "files": [
-              "工作",
-              "Work"
-            ]
-          },
-          "学习": {
-            "color": "#34d399",
-            "files": [
-              "学习",
-              "Study"
-            ]
-          },
-          "生活": {
-            "color": "#fbbf24",
-            "files": [
-              "生活",
-              "Life"
-            ]
-          }
-        },
-        "progressOrder": [
-          "工作",
-          "学习",
-          "生活"
-        ]
-      },
-      "collapsed": true,
-      "parentId": null
-    },
-    {
-      "id": "view_mhsv63xuav78n",
-      "title": "新视图2",
-      "viewType": "BlockView",
-      "dataSourceId": "",
-      "viewConfig": {
-        "view": "BlockView",
-        "title": "块视图",
-        "collapsed": false,
-        "fields": [],
-        "group": "categoryKey"
-      },
-      "collapsed": true,
-      "parentId": null
-    },
-    {
-      "id": "view_mi2lirue9v89a",
-      "title": "新视图 1763350772341",
-      "viewType": "StatisticsView",
-      "dataSourceId": "",
-      "viewConfig": {
-        "categories": [
-          {
-            "name": "打卡",
-            "color": "#39f32d"
-          },
-          {
-            "name": "感受",
-            "color": "#7511fc"
-          },
-          {
-            "name": "计划",
-            "color": "#a95f0d"
-          },
-          {
-            "name": "事件",
-            "color": "#39865d"
-          },
-          {
-            "name": "思考",
-            "color": "#421b73"
-          },
-          {
-            "name": "完成任务",
-            "color": "#1cd838"
-          },
-          {
-            "name": "未完成任务",
-            "color": "#393620"
-          },
-          {
-            "name": "总结",
-            "color": "#8e79de"
-          }
-        ],
-        "displayMode": "smart",
-        "minVisibleHeight": 15,
-        "usePeriodField": false
-      },
-      "collapsed": true,
-      "parentId": null
-    },
-    {
-      "id": "view_mi2lisz472xjx",
-      "title": "新视图 1763350773807",
-      "viewType": "BlockView",
-      "dataSourceId": "",
-      "viewConfig": {
-        "view": "BlockView",
-        "title": "块视图",
-        "collapsed": false,
-        "fields": [],
-        "group": "categoryKey"
-      },
-      "collapsed": true,
-      "parentId": null
-    },
-    {
-      "id": "view_mi2liteu8w7dw",
-      "title": "新视图 1763350774373",
-      "viewType": "BlockView",
-      "dataSourceId": "",
-      "viewConfig": {
-        "view": "BlockView",
-        "title": "块视图",
-        "collapsed": false,
-        "fields": [],
-        "group": "categoryKey"
-      },
-      "collapsed": true,
-      "parentId": null
-    },
-    {
-      "id": "view_mi2lzx86bjf8t",
-      "title": "睡在床上",
-      "viewType": "BlockView",
-      "dataSourceId": "",
-      "viewConfig": {
-        "view": "BlockView",
-        "title": "块视图",
-        "collapsed": false,
-        "fields": [],
-        "group": "categoryKey"
-      },
-      "collapsed": true,
-      "parentId": null
+        {
+          "field": "recurrence",
+          "op": "=",
+          "value": "none"
+        }
+      ]
     }
   ],
   "layouts": [
@@ -545,12 +438,14 @@
       "id": "layout_memcg9jjoq6j4",
       "name": "全局布局",
       "viewInstanceIds": [
-        "view_mg1zanri06mhu",
-        "view_membnf1hgjgm3",
+        "view_mewr7y1gvq0ro",
+        "view_mi5ep8xvvi5mx",
         "view_mer6ll4mtbjry",
         "view_mer6n7pwf7suy",
+        "view_mg1zanri06mhu",
+        "view_membnf1hgjgm3",
         "view_membbqjam5v63",
-        "view_mi2lirue9v89a"
+        "view_mh4itucqmm9rt"
       ],
       "displayMode": "list",
       "initialView": "周",
@@ -560,73 +455,8 @@
       "isOverviewMode": false,
       "initialDate": "2025-05-26",
       "useFieldGranularity": false,
-      "selectedThemes": [
-        "思考",
-        "思考/时间整理",
-        "思考/复盘整理",
-        "思考/思路整理",
-        "思考/读书",
-        "思考/自我",
-        "思考/垚垚",
-        "思考/阳阳",
-        "思考/婆婆",
-        "思考/芦苇",
-        "思考/家庭",
-        "生活",
-        "生活/高级生活",
-        "生活/娱乐",
-        "生活/垚垚",
-        "生活/家务",
-        "生活/整理",
-        "生活/车车",
-        "健康",
-        "健康/卫生",
-        "健康/睡眠",
-        "健康/身体",
-        "健康/习惯",
-        "健康/运动",
-        "健康/粑粑",
-        "健康/早餐",
-        "健康/午餐",
-        "健康/晚餐",
-        "健康/心情",
-        "健康/姨妈",
-        "健康/剪头发",
-        "健康/剪指甲",
-        "电脑",
-        "电脑/ob基础",
-        "电脑/笔记系统",
-        "电脑/记录系统",
-        "电脑/整理",
-        "工作",
-        "工作/设计",
-        "工作/投标",
-        "工作/手续、对账",
-        "工作/其他",
-        "工作/老板任务",
-        "工作/通勤",
-        "5儿童/l",
-        "11",
-        "11/22"
-      ],
-      "selectedCategories": [
-        "思考",
-        "总结",
-        "感受",
-        "打卡",
-        "完成任务",
-        "事件",
-        "未完成任务"
-      ]
-    },
-    {
-      "name": "新布局",
-      "viewInstanceIds": [],
-      "displayMode": "list",
-      "initialView": "月",
-      "initialDateFollowsNow": true,
-      "parentId": null,
-      "id": "layout_mi2z05gtz4ayw"
+      "selectedThemes": [],
+      "selectedCategories": []
     }
   ],
   "inputSettings": {
@@ -1106,19 +936,9 @@
         "icon": "🛵"
       },
       {
-        "path": "5儿童/l",
+        "path": "思考/专注",
         "icon": "",
-        "id": "thm_mi2z4tbiuruua"
-      },
-      {
-        "path": "11",
-        "icon": "",
-        "id": "thm_mi2z55fr1prph"
-      },
-      {
-        "path": "11/22",
-        "icon": "",
-        "id": "thm_mi2z59kmo6vfw"
+        "id": "thm_mi2zaftrvxtv2"
       }
     ],
     "overrides": [
@@ -6807,8 +6627,88 @@
         "blockId": "blk_meic1my6m62iu",
         "themeId": "thm_mejswaiozga40",
         "status": "enabled",
-        "id": "ovr_mfhzxpuhe0flz",
-        "disabled": true
+        "fields": [
+          {
+            "id": "field_mekr8gby",
+            "key": "状态",
+            "label": "状态",
+            "type": "radio",
+            "options": [
+              {
+                "value": "- [x]",
+                "label": "✅",
+                "extraValues": {}
+              },
+              {
+                "value": "- [ ]",
+                "label": "🛫"
+              },
+              {
+                "value": "- [ ]",
+                "label": "📅"
+              }
+            ]
+          },
+          {
+            "id": "field_mekt6ks3",
+            "key": "任务内容",
+            "label": "任务内容",
+            "type": "textarea",
+            "defaultValue": "时间整理"
+          },
+          {
+            "id": "field_mewk9zrg",
+            "key": "日期",
+            "label": "日期",
+            "type": "date"
+          },
+          {
+            "id": "field_mekymbeq",
+            "key": "时间",
+            "label": "时间",
+            "type": "time"
+          },
+          {
+            "id": "field_mfhzo6vd",
+            "key": "结束",
+            "label": "结束",
+            "type": "time"
+          },
+          {
+            "id": "field_mekymokf",
+            "key": "时长",
+            "label": "时长",
+            "type": "text"
+          },
+          {
+            "id": "field_mekyn4c3",
+            "key": "重复",
+            "label": "重复",
+            "type": "radio",
+            "options": [
+              {
+                "value": " ",
+                "label": "不重复"
+              },
+              {
+                "value": "🔁 every day",
+                "label": "每天"
+              },
+              {
+                "value": "🔁 every mothon",
+                "label": "每周"
+              },
+              {
+                "value": "🔁 every year",
+                "label": "每月"
+              }
+            ]
+          }
+        ],
+        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) {{重复.value}} {{状态}} {{日期}}\n\n",
+        "targetFile": "01/2-4思考.md",
+        "appendUnderHeader": "## {{theme}}",
+        "id": "ovr_mfhzxpuhe0flz"
       },
       {
         "blockId": "blk_meic1my6m62iu",
@@ -6900,7 +6800,7 @@
       {
         "blockId": "blk_meic1my6m62iu",
         "themeId": "thm_mejsim4o4c2mw",
-        "disabled": false,
+        "status": "enabled",
         "fields": [
           {
             "id": "field_mekr8gby",
