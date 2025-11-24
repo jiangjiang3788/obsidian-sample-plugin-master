@@ -12,7 +12,7 @@ import CloseIcon from '@mui/icons-material/Close';
 import { SimpleSelect } from '@shared/ui/composites/SimpleSelect';
 import { buildThemeTree, ThemeTreeNode } from '@core/utils/themeUtils';
 import { dayjs, timeToMinutes, minutesToTime } from '@core/utils/date';
-import { inputService } from '@/app/storeRegistry';
+import { inputService, dataStore } from '@/app/storeRegistry';
 // [核心修改 1] 导入模板渲染工具
 import { renderTemplate } from '@core/utils/templateUtils';
 

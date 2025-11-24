@@ -36,7 +36,7 @@ export function HeatmapViewEditor({ value, onChange, module, dataStore }: ViewEd
 
     const handleScanThemes = () => {
         if (!module?.dataSourceId) {
-            new Notice('请先为此视图选择一个数据源。');
+            new Notice('请为视图先选择一个数据源');
             return;
         }
         if (!config.sourceBlockId) {

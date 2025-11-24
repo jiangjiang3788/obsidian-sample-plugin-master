@@ -236,11 +236,6 @@
       "group": "categoryKey",
       "filters": [
         {
-          "field": "categoryKey",
-          "op": "!=",
-          "value": "打卡"
-        },
-        {
           "field": "type",
           "op": "=",
           "value": "block"
