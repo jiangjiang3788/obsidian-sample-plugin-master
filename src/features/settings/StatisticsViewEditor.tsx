@@ -9,6 +9,7 @@ import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
 
 // [架构标准化] 使用 core 层的共享配置，避免重复定义
 import { STATISTICS_VIEW_DEFAULT_CONFIG as DEFAULT_CONFIG } from '@core/config/viewConfigs';
+import { discoverBaseCategories } from '@core/utils/dataAggregation';
 
 // 重新导出 DEFAULT_CONFIG 以便于 registry.tsx 使用
 export { DEFAULT_CONFIG };
@@ -24,14 +25,7 @@ export function StatisticsViewEditor({ value, onChange, dataStore }: ViewEditorP
     const discoveredCategories = useMemo(() => {
         if (!dataStore) return [];
         const allItems = dataStore.queryItems();
-        const categorySet = new Set<string>();
-        allItems.forEach(item => {
-            const baseCategory = (item.categoryKey || '').split('/')[0];
-            if (baseCategory) {
-                categorySet.add(baseCategory);
-            }
-        });
-        return Array.from(categorySet).sort((a, b) => a.localeCompare(b, 'zh-CN'));
+        return discoverBaseCategories(allItems);
     }, [dataStore]);
 
     // 同步发现的分类和已保存的分类

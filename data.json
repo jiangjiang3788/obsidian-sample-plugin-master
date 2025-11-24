@@ -375,9 +375,19 @@
         "displayMode": "habit",
         "sourceBlockId": "blk_mejsg76atopau",
         "themePaths": [
-          "健康/运动",
+          "健康/粑粑",
+          "健康/喝水",
+          "健康/剪头发",
+          "健康/剪指甲",
           "健康/身体",
-          "健康/姨妈"
+          "健康/睡眠",
+          "健康/心情",
+          "健康/姨妈",
+          "健康/运动",
+          "生活/车车",
+          "思考/读书",
+          "思考/阳阳",
+          "思考/专注"
         ],
         "enableLeveling": true,
         "maxDailyChecks": 10,

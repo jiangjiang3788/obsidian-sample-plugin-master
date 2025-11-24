@@ -5,6 +5,18 @@ import { Item } from '@/core/types/schema';
 import { dayjs } from './date';
 import { getEffectiveDisplayCount, getEffectiveLevelCount } from './levelingSystem';
 
+/** 从 items 中抽取所有一级分类（categoryKey 的第一段）并排序 */
+export function discoverBaseCategories(items: Item[]): string[] {
+    const categorySet = new Set<string>();
+    items.forEach(item => {
+        const baseCategory = (item.categoryKey || '').split('/')[0];
+        if (baseCategory) {
+            categorySet.add(baseCategory);
+        }
+    });
+    return Array.from(categorySet).sort((a, b) => a.localeCompare(b, 'zh-CN'));
+}
+
 export interface AggregatedData {
     // 基础统计
     totalCount: number;           // 总打卡次数

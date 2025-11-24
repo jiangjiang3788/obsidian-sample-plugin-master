@@ -2,14 +2,10 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
 import { Typography } from '@mui/material';
+import { BLOCK_VIEW_DEFAULT_CONFIG } from '@core/config/viewConfigs';
 
-export const DEFAULT_CONFIG = {
-  view: 'BlockView' as const,
-  title: '块视图',
-  collapsed: false,
-  fields: [],
-  group: 'categoryKey',
-};
+// 重新导出以保持兼容性
+export { BLOCK_VIEW_DEFAULT_CONFIG as DEFAULT_CONFIG } from '@core/config/viewConfigs';
 
 export function BlockViewEditor() {
   return (
