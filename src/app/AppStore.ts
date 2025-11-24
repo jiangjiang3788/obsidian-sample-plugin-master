@@ -1,4 +1,18 @@
-// src/state/AppStore.ts
+/**
+ * AppStore
+ * Role: Store (状态聚合器) - 应用级状态管理中心
+ * Dependencies: 所有子 Store (TimerStore, ThemeStore, etc.), ThinkPlugin (用于持久化)
+ * 
+ * Do:
+ * - 持有并暴露所有子 Store 的实例 (theme, layout, timer, etc.)
+ * - 聚合应用的总状态 (AppState)
+ * - 提供统一的订阅机制，以便 React 组件 (useStore) 可以监听全局状态变化
+ * - 协调设置的持久化 (_updateSettingsAndPersist)
+ * - 管理一些不属于任何子 Store 的临时 UI 状态 (isTimerWidgetVisible)
+ * 
+ * Don't:
+ * - 具体的业务逻辑 (所有业务逻辑都委托给相应的子 Store)
+ */
 import { useState, useEffect, useCallback } from 'preact/hooks';
 import { singleton, inject } from 'tsyringe';
 import type { ThinkSettings, ViewInstance, Layout, InputSettings, BlockTemplate, ThemeDefinition, ThemeOverride, Group, GroupType, Groupable } from '@/core/types/schema';

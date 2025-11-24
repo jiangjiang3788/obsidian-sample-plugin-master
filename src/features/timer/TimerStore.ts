@@ -1,4 +1,18 @@
-// src/store/stores/TimerStore.ts
+/**
+ * TimerStore - 计时器状态管理
+ * 角色：Store (状态)
+ * 依赖：TimerStateService (用于持久化)
+ * 
+ * 只做：
+ * - 在内存中保存计时器的状态 (增、删、改、查)
+ * - 提供订阅机制，以便 UI 或其他服务可以监听状态变化
+ * - 调用 TimerStateService 将状态持久化到文件
+ * 
+ * 不做：
+ * - 任何业务逻辑 (例如，停止一个计时器时暂停另一个)
+ * - 直接的 IO 操作 (委托给 TimerStateService)
+ * - 与 Obsidian API 的直接交互
+ */
 import { generateId } from '@core/utils/array';
 import { singleton, inject } from 'tsyringe';
 import { TimerStateService } from '@features/timer/TimerStateService';
@@ -11,13 +25,6 @@ export interface TimerState {
     status: 'running' | 'paused';
 }
 
-/**
- * TimerStore - 管理计时器状态
- * 负责计时器的增删改查和状态管理
- * 
- * 注意：TimerStore是内存存储，不使用Settings持久化
- * 而是通过专门的persistTimers函数进行文件持久化
- */
 @singleton()
 export class TimerStore {
     private _timers: TimerState[] = [];

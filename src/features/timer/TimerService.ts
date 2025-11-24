@@ -1,4 +1,19 @@
-// src/core/services/TimerService.ts
+/**
+ * TimerService - 计时器业务逻辑
+ * 角色：Service (业务)
+ * 依赖：TimerStore, DataStore, ItemService, InputService
+ * 
+ * 只做：
+ * - 开始 / 暂停 / 恢复 / 停止计时
+ * - 切换当前任务
+ * - 将计时结果写入文件系统 (通过 ItemService)
+ * - 创建新任务并立即开始计时
+ * 
+ * 不做：
+ * - 直接管理和存储计时器的状态 (这是 TimerStore 的职责)
+ * - 直接渲染 UI
+ * - 直接操作 Obsidian 界面元素
+ */
 import { singleton, inject } from 'tsyringe';
 import { TimerStore } from '@features/timer/TimerStore';
 import { ItemService } from '@core/services/ItemService';

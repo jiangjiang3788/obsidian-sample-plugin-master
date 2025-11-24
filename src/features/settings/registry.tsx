@@ -8,6 +8,7 @@ import { TimelineViewEditor, DEFAULT_CONFIG as TimelineViewDefault } from './Tim
 import { StatisticsViewEditor, DEFAULT_CONFIG as StatisticsViewDefault } from './StatisticsViewEditor';
 import { HeatmapViewEditor, DEFAULT_CONFIG as HeatmapViewDefault } from './HeatmapViewEditor';
 import type { ViewName, ViewInstance } from '@/core/types/schema';
+import type { DataStore } from '@/core/services/DataStore';
 
 // [REFACTOR] ViewKind is now derived from the domain-level ViewName
 export type ViewKind = ViewName;
@@ -18,6 +19,7 @@ export interface ViewEditorProps {
   onChange: (patch: Record<string, any>) => void;
   fieldOptions: string[];
   module?: ViewInstance; // Pass the entire module for context
+  dataStore: DataStore;
 }
 
 // [REFACTOR] The registry is now the Single Source of Truth for both the editor component and its default configuration.

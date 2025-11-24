@@ -29,6 +29,10 @@ export class RendererService {
         this.isInitialized = true;
     }
 
+    /**
+     * [主流程] 注册并渲染布局
+     * 将指定的布局配置渲染到目标容器中，并加入活跃布局列表进行管理。
+     */
     public register(container: HTMLElement, layout: Layout): void {
         this.unregister(container);
 
@@ -60,6 +64,10 @@ export class RendererService {
         }
     }
 
+    /**
+     * [主流程] 重新渲染所有布局
+     * 当 AppStore 设置发生变更时触发，更新所有活跃的布局视图。
+     */
     private rerenderAll(): void {
         if (!this.isInitialized) return;
         const latestSettings = this.appStore.getSettings();
