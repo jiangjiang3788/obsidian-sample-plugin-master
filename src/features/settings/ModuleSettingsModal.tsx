@@ -7,6 +7,7 @@ import { VIEW_OPTIONS, ViewName, getAllFields } from '@/core/types/schema';
 import type { ViewInstance } from '@/core/types/schema';
 import { VIEW_EDITORS } from '@features/settings/registry';
 import { dataStore } from '@/app/storeRegistry';
+import type { DataStore } from '@/core/services/DataStore';
 import { useStore, AppStore } from '@/app/AppStore';
 import { SimpleSelect } from '@shared/ui/composites/SimpleSelect';
 import { RuleBuilder } from '@features/settings/RuleBuilder';
@@ -14,10 +15,10 @@ import { Modal } from '@shared/ui/primitives/Modal';
 import { FormField, FieldManager, useSaveHandler } from '@shared/index';
 
 // 重构后的视图设置编辑器组件 - 使用通用组件
-function ViewInstanceEditor({ vi, appStore }: { vi: ViewInstance, appStore: AppStore }) {
+function ViewInstanceEditor({ vi, appStore, dataStore }: { vi: ViewInstance, appStore: AppStore, dataStore: DataStore }) {
     // 从store中获取最新的viewInstance状态
     const currentVi = useStore(state => state.settings.viewInstances.find(v => v.id === vi.id)) || vi;
-    const fieldOptions = useMemo(() => getAllFields(dataStore?.queryItems() || []), []);
+    const fieldOptions = useMemo(() => getAllFields(dataStore?.queryItems() || []), [dataStore]);
     const EditorComponent = VIEW_EDITORS[currentVi.viewType];
 
     const correctedViewConfig = useMemo(() => {
@@ -150,7 +151,8 @@ function ViewInstanceEditor({ vi, appStore }: { vi: ViewInstance, appStore: AppS
                         module={currentVi} 
                         value={correctedViewConfig} 
                         onChange={(patch: any) => handleUpdate({ viewConfig: { ...correctedViewConfig, ...patch } })} 
-                        fieldOptions={fieldOptions} 
+                        fieldOptions={fieldOptions}
+                        dataStore={dataStore}
                     />
                 </div>
             )}
@@ -189,7 +191,7 @@ export function ModuleSettingsModal({ isOpen, onClose, module, appStore }: Props
             saveButtonText="保存设置"
             size="large"
         >
-            <ViewInstanceEditor vi={currentModule} appStore={appStore} />
+            <ViewInstanceEditor vi={currentModule} appStore={appStore} dataStore={dataStore} />
         </Modal>
     );
 }

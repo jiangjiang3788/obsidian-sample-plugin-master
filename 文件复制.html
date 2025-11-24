@@ -166,7 +166,22 @@ $('copySelected').onclick=async()=>{
   // 对选中的项目按路径排序
   const sortedPaths = Array.from(checkedItems.keys()).sort();
   
+  // 用于记录已处理的文件夹路径，避免重复复制子项目
+  const processedFolders = new Set();
+
   for(const path of sortedPaths){
+    // 检查当前路径是否属于已处理的文件夹
+    // 只要当前路径以某个已处理文件夹路径 + '/' 开头，就说明它是子项目
+    let isSubItem = false;
+    for(const folderPath of processedFolders){
+      if(path.startsWith(folderPath + '/')){
+        isSubItem = true;
+        break;
+      }
+    }
+    
+    if(isSubItem) continue;
+
     const item = checkedItems.get(path);
     if(!item) continue;
     
@@ -179,6 +194,7 @@ $('copySelected').onclick=async()=>{
       }else{
         result += await traverseAndConcat(actualHandle, path+'/');
         folderCount++;
+        processedFolders.add(path);
       }
     }
   }

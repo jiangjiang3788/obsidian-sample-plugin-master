@@ -1,4 +1,21 @@
-// src/core/services/dataStore.ts
+/**
+ * DataStore - 数据存储与查询核心
+ * Role: Service (业务 + IO)
+ * Dependencies: ObsidianPlatform, App, ThemeManager, IPluginStorage
+ * 
+ * Do:
+ * - 扫描 Vault 中的 Markdown 文件，解析成结构化的 Item 对象
+ * - 使用缓存机制 (warmStart) 提升启动速度
+ * - 在内存中维护所有 Item 的索引 (items, fileIndex)
+ * - 提供统一的数据查询接口 (queryItems)
+ * - 管理数据版本和查询缓存
+ * - 提供订阅机制，在数据变更时通知其他部分
+ * 
+ * Don't:
+ * - 直接修改文件内容 (这是 ItemService 的职责)
+ * - 管理应用级别的状态 (这是 AppStore 的职责)
+ * - 渲染 UI
+ */
 import { singleton, inject } from 'tsyringe';
 import type { HeadingCache, TFile, App } from 'obsidian';
 import type { Item, FilterRule, SortRule } from '@/core/types/schema';
@@ -56,12 +73,12 @@ export class DataStore {
     this.bumpVersion();
   }
 
-  // 初始扫描改为暖启动
+  // [主流程] 初始扫描（代理到暖启动）
   async initialScan() {
     return this.warmStart();
   }
 
-  // 暖启动：加载缓存 → 目录 stat → 仅扫描变更 → 合并内存 → 防抖保存
+  // [主流程] 暖启动：加载缓存 → 目录 stat → 仅扫描变更 → 合并内存 → 防抖保存
   async warmStart(): Promise<void> {
     this._perf = { start: Date.now(), end: 0, scannedFiles: 0, scannedItems: 0 };
 
