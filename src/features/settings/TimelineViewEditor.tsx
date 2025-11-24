@@ -8,39 +8,23 @@ import DeleteIcon from '@mui/icons-material/RemoveCircleOutline';
 import { useMemo } from 'preact/hooks';
 
 import { SimpleSelect } from '@shared/ui/composites/SimpleSelect';
+import { TIMELINE_VIEW_DEFAULT_CONFIG, type CategoryConfig } from '@core/config/viewConfigs';
+import { collectFileNames } from '@core/utils/timeline';
 
-export const DEFAULT_CONFIG = {
-    defaultHourHeight: 50,
-    MAX_HOURS_PER_DAY: 24,
-    UNTRACKED_LABEL: "未记录",
-    categories: {
-        "工作": { color: "#60a5fa", files: ["工作", "Work"] },
-        "学习": { color: "#34d399", files: ["学习", "Study"] },
-        "生活": { color: "#fbbf24", files: ["生活", "Life"] },
-    },
-    progressOrder: ["工作", "学习", "生活"],
-};
+// 重新导出以保持兼容性
+export { TIMELINE_VIEW_DEFAULT_CONFIG as DEFAULT_CONFIG } from '@core/config/viewConfigs';
 
-interface CategoryConfig {
-    name?: string;
-    color: string;
-    files: string[];
-}
 type CategoriesMap = Record<string, CategoryConfig>;
 
 export function TimelineViewEditor({ value, onChange, dataStore }: ViewEditorProps) {
-    const viewConfig = { ...DEFAULT_CONFIG, ...value };
+    const viewConfig = { ...TIMELINE_VIEW_DEFAULT_CONFIG, ...value };
     const categories: CategoriesMap = viewConfig.categories || {};
     const progressOrder: string[] = viewConfig.progressOrder || [];
 
     const fileOptions = useMemo(() => {
         if (!dataStore) return [];
         const items = dataStore.queryItems();
-        const fileNames = new Set<string>();
-        items.forEach(item => {
-            if (item.file?.basename) fileNames.add(item.file.basename);
-        });
-        return Array.from(fileNames).sort((a,b) => a.localeCompare(b, 'zh-CN'));
+        return collectFileNames(items);
     }, [dataStore]);
 
     const handleConfigChange = (patch: Record<string, any>) => {
