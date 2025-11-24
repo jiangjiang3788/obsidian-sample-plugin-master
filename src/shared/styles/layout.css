@@ -79,6 +79,10 @@ body.theme-dark .module-action-plus:hover {
 /* Dashboard 工具栏 (tp-toolbar) */
 .tp-toolbar {
     margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 4px;
 }
 
 .tp-toolbar button {
@@ -103,4 +107,16 @@ body.theme-dark .module-action-plus:hover {
     font-weight: bold;
     margin: 0 4px;
     background: #fff;
+    text-align: center;
+}
+
+/* 主题和分类筛选器样式 */
+.theme-filter-container,
+.theme-filter {
+    white-space: nowrap;
+}
+
+.theme-filter-selected-chips {
+    flex-wrap: nowrap;
+    overflow: hidden;
 }
