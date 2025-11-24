@@ -330,6 +330,7 @@ export function LayoutRenderer({ layout, dataStore, app, actionService, itemServ
                     onClose={handleSettingsClose}
                     module={currentViewInstance}
                     appStore={appStore}
+                    dataStore={dataStore}
                 />
             )}
         </div>

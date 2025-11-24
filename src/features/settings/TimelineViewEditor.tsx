@@ -7,7 +7,6 @@ import AddIcon from '@mui/icons-material/AddCircleOutline';
 import DeleteIcon from '@mui/icons-material/RemoveCircleOutline';
 import { useMemo } from 'preact/hooks';
 
-import { dataStore } from '@/app/storeRegistry';
 import { SimpleSelect } from '@shared/ui/composites/SimpleSelect';
 
 export const DEFAULT_CONFIG = {
@@ -29,7 +28,7 @@ interface CategoryConfig {
 }
 type CategoriesMap = Record<string, CategoryConfig>;
 
-export function TimelineViewEditor({ value, onChange }: ViewEditorProps) {
+export function TimelineViewEditor({ value, onChange, dataStore }: ViewEditorProps) {
     const viewConfig = { ...DEFAULT_CONFIG, ...value };
     const categories: CategoriesMap = viewConfig.categories || {};
     const progressOrder: string[] = viewConfig.progressOrder || [];
@@ -42,7 +41,7 @@ export function TimelineViewEditor({ value, onChange }: ViewEditorProps) {
             if (item.file?.basename) fileNames.add(item.file.basename);
         });
         return Array.from(fileNames).sort((a,b) => a.localeCompare(b, 'zh-CN'));
-    }, []);
+    }, [dataStore]);
 
     const handleConfigChange = (patch: Record<string, any>) => {
         onChange({ ...viewConfig, ...patch });

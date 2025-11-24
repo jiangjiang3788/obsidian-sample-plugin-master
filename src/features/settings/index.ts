@@ -21,6 +21,7 @@ import { App } from 'obsidian';
 import type ThinkPlugin from '@main';
 import { SettingsTab } from './SettingsTab';
 import { AppStore as SettingsAppStore } from '@/app/AppStore';
+import { DataStore } from '@/core/services/DataStore';
 
 import { BlockViewEditor } from './BlockViewEditor';
 import { ExcelViewEditor } from './ExcelViewEditor';
@@ -53,6 +54,7 @@ export interface SettingsDependencies {
   app: App;
   plugin: ThinkPlugin;
   appStore: SettingsAppStore;
+  dataStore: DataStore;
 }
 
 /**
@@ -62,7 +64,7 @@ export interface SettingsDependencies {
  */
 export function setupSettings(deps: SettingsDependencies): void {
   // SettingsTab 构造函数不变，它可以通过 plugin 实例访问到 appStore
-  deps.plugin.addSettingTab(new SettingsTab(deps.app, deps.plugin));
+  deps.plugin.addSettingTab(new SettingsTab(deps.app, deps.plugin, deps.dataStore));
 }
 
 /* ========================================================================== */
@@ -70,8 +72,7 @@ export function setupSettings(deps: SettingsDependencies): void {
 /* ========================================================================== */
 
 import type { Plugin } from 'obsidian';
-import type { AppStore as DashboardAppStore } from '@core/stores/AppStore';
-import type { DataStore } from '@core/services/DataStore';
+import type { AppStore as DashboardAppStore } from '@/app/AppStore';
 import type { RendererService } from './RendererService';
 import type { ActionService } from '@core/services/ActionService';
 

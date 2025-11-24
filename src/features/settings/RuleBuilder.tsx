@@ -5,14 +5,12 @@ import { useMemo, useState } from 'preact/hooks';
 import { Typography, Tooltip, Chip, Autocomplete, TextField, Button } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import { SimpleSelect } from '@shared/ui/composites/SimpleSelect';
-// [修改] 从注册表导入 dataStore
-import { dataStore } from '@/app/storeRegistry';
+import { DataStore } from '@/core/services/DataStore';
 import { getAllFields, readField, FilterRule, SortRule } from '@/core/types/schema';
 
 // 辅助Hook：获取库中所有字段的唯一值，用于自动补全
-function useUniqueFieldValues() {
+function useUniqueFieldValues(dataStore: DataStore) {
     return useMemo(() => {
-        // [修复] 直接使用从注册表导入的 dataStore 实例
         if (!dataStore) return {}; // 安全保护，防止 dataStore 未初始化
         const items = dataStore.queryItems();
         const allKnownFields = new Set<string>(getAllFields(items));
@@ -36,7 +34,7 @@ function useUniqueFieldValues() {
             }
         }
         return result;
-    }, []);
+    }, [dataStore]);
 }
 
 // 默认规则常量
@@ -50,14 +48,15 @@ interface RuleBuilderProps {
     rows: (FilterRule | SortRule)[];
     fieldOptions: string[];
     onChange: (rows: (FilterRule | SortRule)[]) => void;
+    dataStore: DataStore;
 }
 
-export function RuleBuilder({ title, mode, rows, fieldOptions, onChange }: RuleBuilderProps) {
+export function RuleBuilder({ title, mode, rows, fieldOptions, onChange, dataStore }: RuleBuilderProps) {
     const isFilterMode = mode === 'filter';
     const [newRule, setNewRule] = useState<FilterRule | SortRule>(
         isFilterMode ? defaultFilterRule : defaultSortRule
     );
-    const uniqueFieldValues = useUniqueFieldValues();
+    const uniqueFieldValues = useUniqueFieldValues(dataStore);
     
     const remove = (i: number) => onChange(rows.filter((_, j: number) => j !== i));
     

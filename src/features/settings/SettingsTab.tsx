@@ -12,6 +12,7 @@ import { theme as baseTheme } from '@shared/styles/mui-theme';
 import { LayoutSettings } from './LayoutSettings';
 import { InputSettings } from './InputSettings';
 import { AppStore } from '@/app/AppStore';
+import { DataStore } from '@/core/services/DataStore';
 import { GeneralSettings } from './GeneralSettings';
 
 function a11yProps(index: number) {
@@ -27,7 +28,7 @@ function TabPanel(props: { children?: any; value: number; index: number; }) {
     );
 }
 
-function SettingsRoot({ app, appStore }: { app: App, appStore: AppStore }) {
+function SettingsRoot({ app, appStore, dataStore }: { app: App, appStore: AppStore, dataStore: DataStore }) {
     const [tabIndex, setTabIndex] = useLocalStorage(LOCAL_STORAGE_KEYS.SETTINGS_TABS, 0);
 
     return (
@@ -41,7 +42,7 @@ function SettingsRoot({ app, appStore }: { app: App, appStore: AppStore }) {
                         <Tab label="通用" {...a11yProps(2)} />
                     </Tabs>
                 </Box>
-                <TabPanel value={tabIndex} index={0}><InputSettings appStore={appStore} /></TabPanel>
+                <TabPanel value={tabIndex} index={0}><InputSettings appStore={appStore} dataStore={dataStore} /></TabPanel>
                 <TabPanel value={tabIndex} index={1}><LayoutSettings app={app} appStore={appStore} /></TabPanel>
                 <TabPanel value={tabIndex} index={2}><GeneralSettings appStore={appStore} /></TabPanel>
             </Box>
@@ -52,7 +53,7 @@ function SettingsRoot({ app, appStore }: { app: App, appStore: AppStore }) {
 export class SettingsTab extends PluginSettingTab {
     id: string;
 
-    constructor(public app: App, private plugin: ThinkPlugin) {
+    constructor(public app: App, private plugin: ThinkPlugin, private dataStore: DataStore) {
         super(app, plugin);
         this.id = plugin.manifest.id;
     }
@@ -60,7 +61,7 @@ export class SettingsTab extends PluginSettingTab {
     display(): void {
         const { containerEl } = this;
         containerEl.empty();
-        render(<SettingsRoot app={this.app} appStore={this.plugin.appStore} />, containerEl);
+        render(<SettingsRoot app={this.app} appStore={this.plugin.appStore} dataStore={this.dataStore} />, containerEl);
     }
 
     hide(): void {

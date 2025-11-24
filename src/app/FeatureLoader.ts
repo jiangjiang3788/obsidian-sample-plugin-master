@@ -76,6 +76,7 @@ export class FeatureLoader {
                 app: this.plugin.app,
                 plugin: this.plugin,
                 appStore: this.appStore,
+                dataStore: this.dataStore,
             });
 
             this.plugin.addCommand({
