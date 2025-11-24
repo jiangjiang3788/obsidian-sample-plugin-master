@@ -9,14 +9,14 @@ import { useState, useMemo } from 'preact/hooks';
 import { TemplateEditorModal } from '@features/settings/TemplateEditorModal';
 import type { BlockTemplate, ThemeDefinition, ThemeOverride } from '@/core/types/schema';
 import { ThemeManager } from './ThemeManager';
-import { dataStore } from '@/app/storeRegistry';
 
 // 导入服务
 import { ThemeMatrixService } from '@/core/theme-matrix/ThemeMatrixService';
 import { ThemeScanService } from '@/core/theme-matrix/ThemeScanService';
 
 // 导入类型
-import type { ThemeMatrixProps } from './index';
+import type { ThemeMatrixProps } from './props.types';
+import type { ThemeTreeNode } from '@/core/theme-matrix/theme.types';
 
 // 导入工具函数
 import { buildThemeTree } from '@/core/theme-matrix/themeTreeBuilder';
@@ -32,7 +32,7 @@ import { useThemeMatrixEditor } from './useThemeMatrixEditor';
 import { useBatchOperations, type BatchOperation } from './useBatchOperations';
 
 // 主组件
-export function ThemeMatrix({ appStore }: ThemeMatrixProps) {
+export function ThemeMatrix({ appStore, dataStore }: ThemeMatrixProps) {
     const { blocks, themes, overrides } = useStore(state => state.settings.inputSettings);
     const [newThemePath, setNewThemePath] = useState('');
     const [modalOpen, setModalOpen] = useState(false);
@@ -67,7 +67,7 @@ export function ThemeMatrix({ appStore }: ThemeMatrixProps) {
         appStore, 
         dataStore, 
         themeManager 
-    }), [appStore, themeManager]);
+    }), [appStore, dataStore, themeManager]);
     
     // 获取扩展的主题信息
     const extendedThemes = useMemo(() => {

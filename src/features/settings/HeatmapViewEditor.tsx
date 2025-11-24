@@ -8,8 +8,6 @@ import { SimpleSelect } from '@shared/ui/composites/SimpleSelect';
 import { ListEditor } from '@shared/ui/composites/form/ListEditor';
 import { useStore } from '@/app/AppStore';
 import { useMemo } from 'preact/hooks';
-// [修改] 从注册表导入 dataStore
-import { dataStore } from '@/app/storeRegistry';
 import { filterByRules } from '@core/utils/itemFilter';
 import { LEVEL_SYSTEM_PRESETS } from '@core/utils/levelingSystem';
 import { Notice } from 'obsidian';
@@ -26,7 +24,7 @@ export const DEFAULT_CONFIG = {
     showLevelProgress: true,          // 显示等级进度条
 };
 
-export function HeatmapViewEditor({ value, onChange, module }: ViewEditorProps) {
+export function HeatmapViewEditor({ value, onChange, module, dataStore }: ViewEditorProps) {
     const config = { ...DEFAULT_CONFIG, ...value };
     const allBlocks = useStore(state => state.settings.inputSettings.blocks);
     const allDataSources = useStore(state => state.settings.viewInstances);
@@ -58,11 +56,6 @@ export function HeatmapViewEditor({ value, onChange, module }: ViewEditorProps) 
             return;
         }
 
-        // [修复] 从注册表获取 dataStore 实例
-        if (!dataStore) {
-            new Notice('数据存储服务尚未准备就绪。');
-            return;
-        }
         const items = dataStore.queryItems();
         const filteredItems = filterByRules(items, dataSource.filters);
         

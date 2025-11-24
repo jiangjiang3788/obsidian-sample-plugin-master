@@ -6,7 +6,6 @@ import { FormControlLabel, Checkbox } from '@mui/material';
 import { VIEW_OPTIONS, ViewName, getAllFields } from '@/core/types/schema';
 import type { ViewInstance } from '@/core/types/schema';
 import { VIEW_EDITORS } from '@features/settings/registry';
-import { dataStore } from '@/app/storeRegistry';
 import type { DataStore } from '@/core/services/DataStore';
 import { useStore, AppStore } from '@/app/AppStore';
 import { SimpleSelect } from '@shared/ui/composites/SimpleSelect';
@@ -116,6 +115,7 @@ function ViewInstanceEditor({ vi, appStore, dataStore }: { vi: ViewInstance, app
                         rows={currentVi.filters || []} 
                         fieldOptions={fieldOptions} 
                         onChange={(rows: any) => handleUpdate({ filters: rows })} 
+                        dataStore={dataStore}
                     />
                 </FormField>
                 
@@ -129,6 +129,7 @@ function ViewInstanceEditor({ vi, appStore, dataStore }: { vi: ViewInstance, app
                         rows={currentVi.sort || []} 
                         fieldOptions={fieldOptions} 
                         onChange={(rows: any) => handleUpdate({ sort: rows })} 
+                        dataStore={dataStore}
                     />
                 </FormField>
             </div>
@@ -165,9 +166,10 @@ interface Props {
     onClose: () => void;
     module: ViewInstance;
     appStore: AppStore;
+    dataStore: DataStore;
 }
 
-export function ModuleSettingsModal({ isOpen, onClose, module, appStore }: Props) {
+export function ModuleSettingsModal({ isOpen, onClose, module, appStore, dataStore }: Props) {
     // 从store中获取最新的模块状态
     const currentModule = useStore(state => state.settings.viewInstances.find(v => v.id === module.id)) || module;
 

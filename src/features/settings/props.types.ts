@@ -2,6 +2,7 @@
  * 组件属性类型定义
  */
 import { type AppStore } from '@/app/AppStore';
+import { type DataStore } from '@/core/services/DataStore';
 import { type BlockTemplate, type ThemeDefinition, type ThemeOverride } from '@/core/types/schema';
 import { type BatchOperationType } from '@shared/types/common';
 
@@ -89,6 +90,8 @@ export interface ThemeTreeNodeRowProps {
 export interface ThemeMatrixProps {
     /** 应用状态存储 */
     appStore: AppStore;
+    /** 数据存储服务 */
+    dataStore: DataStore;
 }
 
 /**

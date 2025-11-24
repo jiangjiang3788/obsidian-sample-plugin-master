@@ -3,8 +3,6 @@
 import { h } from 'preact';
 import { Stack, Typography, Box, IconButton, TextField, Tooltip } from '@mui/material';
 import type { ViewEditorProps } from './registry';
-// [修改] 从注册表导入 dataStore
-import { dataStore } from '@/app/storeRegistry';
 import { useMemo, useState, useEffect } from 'preact/hooks';
 import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
 import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
@@ -18,13 +16,12 @@ export { DEFAULT_CONFIG };
 // 随机生成一个颜色
 const getRandomColor = () => `#${Math.floor(Math.random()*16777215).toString(16).padStart(6, '0')}`;
 
-export function StatisticsViewEditor({ value, onChange }: ViewEditorProps) {
+export function StatisticsViewEditor({ value, onChange, dataStore }: ViewEditorProps) {
     const config = { ...DEFAULT_CONFIG, ...value };
     const [localCategories, setLocalCategories] = useState(config.categories);
 
     // 自动发现所有基础分类
     const discoveredCategories = useMemo(() => {
-        // [修复] 从注册表获取 dataStore 实例
         if (!dataStore) return [];
         const allItems = dataStore.queryItems();
         const categorySet = new Set<string>();
@@ -35,7 +32,7 @@ export function StatisticsViewEditor({ value, onChange }: ViewEditorProps) {
             }
         });
         return Array.from(categorySet).sort((a, b) => a.localeCompare(b, 'zh-CN'));
-    }, []);
+    }, [dataStore]);
 
     // 同步发现的分类和已保存的分类
     useEffect(() => {

@@ -84,6 +84,7 @@ export interface InputSettings {
     blocks: BlockTemplate[];
     themes: ThemeDefinition[];
     overrides: ThemeOverride[];
+    categories?: string[];
 }
 
 // ----- 视图与布局定义 (保持不变) ----- //
