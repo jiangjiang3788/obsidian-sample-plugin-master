@@ -16,6 +16,7 @@ import { QuickInputModal } from '@/features/quickinput/QuickInputModal';
 import { dayjs as dayjsUtil } from '@core/utils/date';
 // [新增] 统一数据聚合支持
 import { aggregateItems, generateStatisticsData, AggregatedData } from '@core/utils/dataAggregation';
+import { getBaseCategory } from '@core/utils/itemGrouping';
 import type { TimerService } from '@features/timer/TimerService';
 
 // 解决 Preact 和 Material-UI 的类型兼容性问题
@@ -340,7 +341,7 @@ export function StatisticsView({ items, app, dateRange, module, currentView, use
             const itemDate = dayjs(item.date);
             if (!itemDate.isValid()) return;
             
-            const baseCategory = (item.categoryKey || '').split('/')[0];
+            const baseCategory = getBaseCategory(item.categoryKey);
             if (!categoryOrder.includes(baseCategory)) return;
             
             // 如果没有指定period或不使用周期字段，直接统计所有数据
@@ -650,7 +651,7 @@ export function StatisticsView({ items, app, dateRange, module, currentView, use
             const itemDate = dayjs(item.date);
             if (!itemDate.isValid() || itemDate.year() !== year) continue;
             const itemPeriod = readField(item, 'period') || '';
-            const baseCategory = (item.categoryKey || '').split('/')[0];
+            const baseCategory = getBaseCategory(item.categoryKey);
             if (!categoryOrder.includes(baseCategory)) continue;
 
             if (usePeriod) {

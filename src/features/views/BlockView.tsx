@@ -13,6 +13,8 @@ import { TagsRenderer } from '@shared/ui/composites/TagsRenderer';
 import { TaskCheckbox } from '@shared/ui/composites/TaskCheckbox';
 import { TaskSendToTimerButton } from '@shared/ui/composites/TaskSendToTimerButton';
 import type { TimerService } from '@features/timer/TimerService';
+import { isDone } from '@core/utils/taskUtils';
+import { groupItemsByField, getSortedGroupKeys, getBaseCategory } from '@core/utils/itemGrouping';
 
 // FieldRenderer 组件保持不变
 const FieldRenderer = ({ item, fieldKey, app, allThemes }: { item: Item; fieldKey: string; app: App; allThemes: ThemeDefinition[] }) => {
@@ -27,7 +29,7 @@ const FieldRenderer = ({ item, fieldKey, app, allThemes }: { item: Item; fieldKe
     }
     
     if (fieldKey === 'categoryKey') {
-        const baseCategory = (item.categoryKey || '').split('/')[0] || '';
+        const baseCategory = getBaseCategory(item.categoryKey);
         return (
             <span class="tag-pill" title={`${label}: ${value}`} style={{ backgroundColor: getCategoryColor(item.categoryKey) }}>
                 {baseCategory}
@@ -53,7 +55,6 @@ const FieldRenderer = ({ item, fieldKey, app, allThemes }: { item: Item; fieldKe
 };
 
 // TaskItem 组件保持不变
-const isDone = (k?: string) => /\/(done|cancelled)$/i.test(k || '');
 const TaskItem = ({ item, fields, onMarkDone, app, allThemes, timerService, timers }: { item: Item; fields: string[]; onMarkDone: (id: string) => void; app: App; allThemes: ThemeDefinition[]; timerService: TimerService; timers: any[] }) => {
     const timer = timers.find(t => t.taskId === item.id);
     const done = isDone(item.categoryKey);
@@ -166,14 +167,9 @@ export function BlockView(props: BlockViewProps) {
         );
     }
 
-    // 分组逻辑保持不变
-    const grouped: Record<string, Item[]> = {};
-    for (const it of items) {
-        const key = String(readField(it, groupField) ?? '(未分类)');
-        if (!grouped[key]) grouped[key] = [];
-        grouped[key].push(it);
-    }
-    const groupKeys = Object.keys(grouped).sort((a,b) => a.localeCompare(b, 'zh-CN'));
+    // 使用 core 工具函数进行分组
+    const grouped = groupItemsByField(items, groupField);
+    const groupKeys = getSortedGroupKeys(grouped);
 
     return (
         <div class="bv-container" ref={containerRef}>
