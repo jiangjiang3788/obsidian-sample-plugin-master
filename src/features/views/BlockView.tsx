@@ -1,94 +1,23 @@
 // src/features/dashboard/ui/BlockView.tsx
 /** @jsxImportSource preact */
 import { h } from 'preact';
-// [1. 导入 useState]
 import { useRef, useState, useEffect } from 'preact/hooks';
 import { App } from 'obsidian';
-// [修复] 将导入路径统一到 @lib/domain，并加入 getCategoryColor
-import { Item, readField, ThemeDefinition } from '@/core/types/schema';
-import { getCategoryColor } from '@/core/types/definitions';
-import { makeObsUri } from '@core/utils/obsidian';
-import { getFieldLabel } from '@/core/types/fields';
-import { TagsRenderer } from '@shared/ui/composites/TagsRenderer';
-import { TaskCheckbox } from '@shared/ui/composites/TaskCheckbox';
-import { TaskSendToTimerButton } from '@shared/ui/composites/TaskSendToTimerButton';
+import { Item, ThemeDefinition } from '@/core/types/schema';
+import { groupItemsByField, getSortedGroupKeys } from '@core/utils/itemGrouping';
+import { TaskRow } from '@shared/ui/items/TaskRow';
+import { FieldPill } from '@shared/ui/items/FieldPill';
+import { ItemLink } from '@shared/ui/items/ItemLink';
 import type { TimerService } from '@features/timer/TimerService';
-import { isDone } from '@core/utils/taskUtils';
-import { groupItemsByField, getSortedGroupKeys, getBaseCategory } from '@core/utils/itemGrouping';
 
-// FieldRenderer 组件保持不变
-const FieldRenderer = ({ item, fieldKey, app, allThemes }: { item: Item; fieldKey: string; app: App; allThemes: ThemeDefinition[] }) => {
-    const value = readField(item, fieldKey);
-    if (value === null || value === undefined || value === '' || (Array.isArray(value) && value.length === 0)) {
-        return null;
-    }
-    const label = getFieldLabel(fieldKey);
-    
-    if (fieldKey === 'tags') {
-        return <TagsRenderer tags={value} allThemes={allThemes} />;
-    }
-    
-    if (fieldKey === 'categoryKey') {
-        const baseCategory = getBaseCategory(item.categoryKey);
-        return (
-            <span class="tag-pill" title={`${label}: ${value}`} style={{ backgroundColor: getCategoryColor(item.categoryKey) }}>
-                {baseCategory}
-            </span>
-        );
-    }
-    
-    if (fieldKey === 'pintu' && typeof value === 'string') {
-        return (
-            <span class="tag-pill" title={`${label}: ${value}`}>
-                <img src={app.vault.adapter.getResourcePath(value)} alt={label} />
-            </span>
-        );
-    }
-
-    const displayValue = Array.isArray(value) ? value.join(', ') : String(value);
-
-    return (
-        <span class="tag-pill" title={`${label}: ${displayValue}`}>
-            {displayValue}
-        </span>
-    );
-};
-
-// TaskItem 组件保持不变
-const TaskItem = ({ item, fields, onMarkDone, app, allThemes, timerService, timers }: { item: Item; fields: string[]; onMarkDone: (id: string) => void; app: App; allThemes: ThemeDefinition[]; timerService: TimerService; timers: any[] }) => {
-    const timer = timers.find(t => t.taskId === item.id);
-    const done = isDone(item.categoryKey);
-    
-    return (
-        <div class="bv-item bv-item--task">
-            <div class="bv-task-checkbox-wrapper">
-                <TaskCheckbox done={done} onMarkDone={() => onMarkDone(item.id)} />
-            </div>
-            <div class="bv-task-content">
-                <div class="flex items-center gap-2">
-                    <a href={makeObsUri(item, app)} target="_blank" rel="noopener" class={`bv-task-title ${done ? 'task-done' : ''}`}>
-                        {item.icon && <span class="icon mr-1">{item.icon}</span>}
-                        {item.title}
-                    </a>
-                    {!done && (
-                        <TaskSendToTimerButton 
-                            taskId={item.id} 
-                            timerStatus={timer?.status}
-                            onStart={() => timerService?.startOrResume(item.id)}
-                        />
-                    )}
-                </div>
-                {/* [修改] 任务类型不显示其他字段，只显示复选框、标题和计时器 */}
-                {/* <div class="bv-fields-list-wrapper">
-                    {fields.map(fieldKey => <FieldRenderer key={fieldKey} item={item} fieldKey={fieldKey} app={app} allThemes={allThemes} />)}
-                </div> */}
-            </div>
-        </div>
-    );
-};
-
-// BlockItem 组件保持不变
-const BlockItem = ({ item, fields, isNarrow, app, allThemes }: { item: Item; fields: string[]; isNarrow: boolean; app: App; allThemes: ThemeDefinition[] }) => {
+// 简化的 Block 项目组件
+const BlockItem = ({ item, fields, isNarrow, app, allThemes }: { 
+    item: Item; 
+    fields: string[]; 
+    isNarrow: boolean; 
+    app: App; 
+    allThemes: ThemeDefinition[] 
+}) => {
     const metadataFields = fields.filter(f => f !== 'title' && f !== 'content');
     const showTitle = fields.includes('title') && item.title;
     const showContent = fields.includes('content') && item.content;
@@ -98,18 +27,26 @@ const BlockItem = ({ item, fields, isNarrow, app, allThemes }: { item: Item; fie
         <div class={`bv-item bv-item--block ${narrowClass}`}>
             <div class="bv-block-metadata">
                 <div class="bv-fields-list-wrapper">
-                        {metadataFields.map(fieldKey => <FieldRenderer key={fieldKey} item={item} fieldKey={fieldKey} app={app} allThemes={allThemes} />)}
+                    {metadataFields.map(fieldKey => (
+                        <FieldPill 
+                            key={fieldKey} 
+                            item={item} 
+                            fieldKey={fieldKey} 
+                            app={app} 
+                            allThemes={allThemes} 
+                        />
+                    ))}
                 </div>
             </div>
             <div class="bv-block-main">
                 {showTitle && (
                     <div class="bv-block-title">
-                        <a href={makeObsUri(item, app)} target="_blank" rel="noopener">{item.title}</a>
+                        <ItemLink item={item} app={app} />
                     </div>
                 )}
                 {showContent && (
                     <div class="bv-block-content">
-                        <a href={makeObsUri(item, app)} target="_blank" rel="noopener">{item.content}</a>
+                        <ItemLink item={item} app={app} className="content-link" />
                     </div>
                 )}
             </div>
@@ -153,9 +90,32 @@ export function BlockView(props: BlockViewProps) {
     };
     
     const renderItem = (item: Item) => {
-        return item.type === 'task'
-            ? <TaskItem key={item.id} item={item} fields={fields} onMarkDone={onMarkDone} app={app} allThemes={allThemes} timerService={timerService} timers={timers} />
-            : <BlockItem key={item.id} item={item} fields={fields} isNarrow={isNarrow} app={app} allThemes={allThemes} />;
+        if (item.type === 'task') {
+            const timer = timers.find(t => t.taskId === item.id);
+            return (
+                <TaskRow 
+                    key={item.id} 
+                    item={item} 
+                    onMarkDone={onMarkDone} 
+                    app={app} 
+                    timerService={timerService} 
+                    timer={timer}
+                    allThemes={allThemes}
+                    showFields={[]} // TaskRow 中任务类型不显示其他字段
+                />
+            );
+        } else {
+            return (
+                <BlockItem 
+                    key={item.id} 
+                    item={item} 
+                    fields={fields} 
+                    isNarrow={isNarrow} 
+                    app={app} 
+                    allThemes={allThemes} 
+                />
+            );
+        }
     };
     
     // 无分组时的渲染逻辑保持不变

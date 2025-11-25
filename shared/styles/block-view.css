@@ -1,0 +1,192 @@
+/* BlockView 样式 */
+
+/* --- 容器与分组样式 --- */
+.bv-container {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 4px;
+}
+
+.bv-group {
+    border: 1px solid var(--background-modifier-border);
+    border-radius: 8px;
+    overflow: hidden;
+    background-color: var(--background-primary);
+}
+
+.bv-group-title {
+    margin: 0;
+    padding: 8px 12px;
+    background-color: var(--background-secondary);
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    user-select: none;
+    transition: background-color 0.2s ease;
+    /* 来自 TS 的补充 */
+    color: var(--text-normal);
+    border-bottom: none;
+    padding-bottom: 0.4em;
+    margin-bottom: 0.8em;
+}
+
+.bv-group-title:hover {
+    background-color: var(--background-modifier-hover);
+}
+
+.bv-group-toggle-icon {
+    font-size: 0.8em;
+    color: var(--text-muted);
+    transition: transform 0.2s ease;
+}
+
+.bv-group-content {
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+/* --- 条目通用样式 --- */
+.bv-item {
+    padding: 8px;
+    border-radius: 6px;
+    background-color: var(--background-primary);
+    transition: all 0.2s ease;
+    font-size: 1rem;
+}
+
+.bv-item:hover {
+    background-color: var(--background-modifier-hover);
+}
+
+/* --- BlockView 核心布局 (合并了 TS 中的响应式逻辑) --- */
+
+/* 整体容器：默认是flex双栏 */
+.bv-item--block {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+}
+
+/* 左侧元数据栏：宽度由内容决定，且不可压缩 */
+.bv-block-metadata {
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+}
+
+/* 右侧主内容栏：弹性增长，占据所有剩余空间 */
+.bv-block-main {
+    flex-grow: 1;
+    min-width: 0; /* 关键：允许此容器收缩，并使其内部文本正确换行 */
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+/* [重要] 窄屏下的响应式切换：当容器宽度过小时，JS会添加 .is-narrow 类 */
+.bv-item--block.is-narrow {
+    flex-direction: column; /* 切换为垂直堆叠 */
+    gap: 8px;
+}
+.bv-item--block.is-narrow .bv-block-metadata {
+    width: 100%; /* 元数据栏宽度变为100% */
+}
+
+/* --- 标题和内容样式 --- */
+.bv-block-title {
+    font-weight: 600;
+    font-size: 1rem;
+}
+.bv-block-title a {
+    color: var(--text-normal);
+    text-decoration: none;
+    word-break: break-word; /* 强制长文本换行 */
+}
+.bv-block-title a:hover {
+    color: var(--interactive-accent);
+}
+
+.bv-block-content {
+    font-size: 0.9rem;
+    color: var(--text-normal);
+}
+.bv-block-content a {
+    white-space: pre-wrap;
+    line-height: 1.6;
+    color: var(--text-muted);
+    font-size: 0.9em;
+    text-decoration: none;
+}
+
+/* --- 胶囊容器与胶囊本身样式 --- */
+.bv-fields-list-wrapper,
+.bv-fields-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    align-items: center;
+    margin-top: 4px;
+}
+
+.tag-pill {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 8px;
+    border-radius: 4px;
+    background-color: var(--background-modifier-hover);
+    color: var(--text-muted);
+    border: none;
+    white-space: nowrap;
+    line-height: 1.5;
+    font-size: 0.75rem;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.tag-pill img {
+    height: 1.2em;
+    width: 1.2em;
+    object-fit: contain;
+    border-radius: 2px;
+}
+
+/* --- 任务项样式 (TaskItem) --- */
+.bv-item--task {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 4px;
+}
+
+.bv-task-checkbox-wrapper {
+    margin-top: 2px;
+    flex-shrink: 0;
+}
+
+.bv-task-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.bv-task-title {
+    color: var(--text-normal);
+    line-height: 1.5;
+    text-decoration: none;
+    display: inline-block;
+}
+.bv-task-title:hover {
+    text-decoration: underline;
+    color: var(--interactive-accent);
+}
+.bv-task-title.task-done {
+    color: var(--text-muted);
+    text-decoration: line-through;
+}
