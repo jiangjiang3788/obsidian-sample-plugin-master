@@ -9,6 +9,8 @@ import { TaskCheckbox } from '@shared/ui/composites/TaskCheckbox';
 import { TaskSendToTimerButton } from '@shared/ui/composites/TaskSendToTimerButton';
 import { App } from 'obsidian'; // [新增] 导入 App 类型
 import type { TimerService } from '@features/timer/TimerService';
+import { isDone } from '@core/utils/taskUtils';
+import { buildTableMatrix } from '@core/utils/itemGrouping';
 
 // [修改] 接口现在需要 app 实例
 interface TableViewProps {
@@ -21,30 +23,13 @@ interface TableViewProps {
     timers: any[];
 }
 
-const isDone = (k?: string) => /\/(done|cancelled)$/i.test(k || '');
-
 // [修改] 函数签名现在接收 app
 export function TableView({ items, rowField, colField, onMarkDone, app, timerService, timers }: TableViewProps) {
     if (!rowField || !colField) {
         return <div>（表格视图需要配置“行字段”和“列字段”）</div>;
     }
 
-    const rowVals: Set<string> = new Set();
-    const colVals: Set<string> = new Set();
-    const matrix: Record<string, Record<string, Item[]>> = {};
-
-    items.forEach(it => {
-        const r = String(readField(it, rowField) ?? EMPTY_LABEL);
-        const c = String(readField(it, colField) ?? EMPTY_LABEL);
-        rowVals.add(r);
-        colVals.add(c);
-        if (!matrix[r]) matrix[r] = {};
-        if (!matrix[r][c]) matrix[r][c] = [];
-        matrix[r][c].push(it);
-    });
-
-    const sortedRows = Array.from(rowVals).sort((a,b) => a.localeCompare(b, 'zh-CN'));
-    const sortedCols = Array.from(colVals).sort((a,b) => a.localeCompare(b, 'zh-CN'));
+    const { matrix, sortedRows, sortedCols } = buildTableMatrix(items, rowField, colField);
 
     function renderCellItem(item: Item) {
         if (item.type === 'task') {
