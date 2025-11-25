@@ -89,8 +89,8 @@ export interface InputSettings {
 
 // ----- 视图与布局定义 (保持不变) ----- //
 
-// [MODIFIED] 添加 HeatmapView
-export const VIEW_OPTIONS = ['BlockView', 'TableView', 'ExcelView', 'TimelineView', 'StatisticsView', 'HeatmapView'] as const;
+// [MODIFIED] 添加 HeatmapView 和 EventTimelineView
+export const VIEW_OPTIONS = ['BlockView', 'TableView', 'ExcelView', 'TimelineView', 'StatisticsView', 'HeatmapView', 'EventTimelineView'] as const;
 export type ViewName = typeof VIEW_OPTIONS[number];
 
 // [修改] 实现 Groupable 接口，整合数据源功能

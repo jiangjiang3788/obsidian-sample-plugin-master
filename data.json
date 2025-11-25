@@ -381,39 +381,26 @@
     {
       "id": "view_mh4itucqmm9rt",
       "title": "新视图",
-      "viewType": "HeatmapView",
+      "viewType": "EventTimelineView",
       "dataSourceId": "",
       "viewConfig": {
-        "displayMode": "habit",
-        "sourceBlockId": "blk_mejsg76atopau",
-        "themePaths": [
-          "健康/粑粑",
-          "健康/喝水",
-          "健康/剪头发",
-          "健康/剪指甲",
-          "健康/身体",
-          "健康/睡眠",
-          "健康/心情",
-          "健康/姨妈",
-          "健康/运动",
-          "生活/车车",
-          "思考/读书",
-          "思考/阳阳",
-          "思考/专注"
-        ],
-        "enableLeveling": true,
-        "maxDailyChecks": 10,
-        "allowManualEdit": true,
-        "showLevelProgress": true
+        "timeField": "date",
+        "titleField": "title",
+        "contentField": "content",
+        "groupByDay": true,
+        "showWeekday": true,
+        "maxContentLength": 160
       },
       "collapsed": true,
       "parentId": null,
-      "filters": [
-        {
-          "field": "categoryKey",
-          "op": "=",
-          "value": "打卡"
-        }
+      "filters": [],
+      "fields": [
+        "categoryKey",
+        "theme",
+        "icon"
+      ],
+      "groupFields": [
+        "categoryKey"
       ]
     },
     {
