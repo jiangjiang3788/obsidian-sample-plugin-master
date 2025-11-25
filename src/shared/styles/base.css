@@ -65,3 +65,81 @@ body {
     -webkit-mask-image: none !important;
     background-color: transparent !important;
 }
+
+
+
+/* --- TaskRow 组件样式 --- */
+.task-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px;
+    background-color: var(--background-primary);
+    border-radius: 6px;
+    transition: all 0.2s ease;
+}
+
+.task-row:hover {
+    background-color: var(--background-modifier-hover);
+}
+
+.task-row-checkbox-wrapper {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+}
+
+.task-row-content {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.task-row-title {
+    color: var(--text-normal);
+    line-height: 1.5;
+    text-decoration: none;
+    display: inline-block;
+    word-break: break-word;
+}
+
+.task-row-title:hover {
+    text-decoration: underline;
+    color: var(--interactive-accent);
+}
+
+.task-row-title.task-done {
+    color: var(--text-muted);
+    text-decoration: line-through;
+}
+
+.task-row-fields {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    align-items: center;
+    margin-top: 4px;
+}
+
+/* 紧凑模式下的任务行样式 */
+.task-row--compact {
+    padding: 2px 4px;
+    gap: 6px;
+}
+
+.task-row--compact .task-row-title {
+    font-size: 0.9rem;
+    line-height: 1.4;
+}
+
+/* 已完成任务的样式 */
+.task-row--done {
+    opacity: 0.7;
+}
+
+.task-row--done .task-row-title {
+    color: var(--text-muted);
+    text-decoration: line-through;
+}
