@@ -26,6 +26,61 @@ export function getSortedGroupKeys(grouped: Record<string, Item[]>): string[] {
 }
 
 /**
+ * 多字段层级分组用的节点结构
+ */
+export interface GroupNode {
+    key: string;           // 当前层的分组 key（字段值）
+    field: string;         // 当前层使用的字段名
+    items?: Item[];        // 叶子节点：具体 items
+    children?: GroupNode[];// 中间节点：子分组
+}
+
+/**
+ * 按多个字段做层级分组，按 fields 的顺序依次分组：
+ *  例如 ['A','B','C'] => A 层 -> B 层 -> C 层 -> items
+ * 每一层复用 groupItemsByField + getSortedGroupKeys 的逻辑。
+ */
+export function groupItemsByFields(items: Item[], fields: string[]): GroupNode[] {
+    if (!fields || fields.length === 0) {
+        // 不分组时，返回一个虚拟根节点，方便视图统一处理
+        return [{
+            key: '__all__',
+            field: '__all__',
+            items,
+        }];
+    }
+
+    const groupLevel = (levelItems: Item[], level: number): GroupNode[] => {
+        const field = fields[level];
+
+        // 复用单字段分组逻辑（包括 defaultLabel 行为）
+        const grouped = groupItemsByField(levelItems, field);
+        const keys = getSortedGroupKeys(grouped);
+
+        return keys.map(key => {
+            const bucket = grouped[key];
+            if (level === fields.length - 1) {
+                // 最后一层：叶子节点，挂 items
+                return {
+                    key,
+                    field,
+                    items: bucket,
+                } as GroupNode;
+            } else {
+                // 中间层：子节点继续按下一字段分组
+                return {
+                    key,
+                    field,
+                    children: groupLevel(bucket, level + 1),
+                } as GroupNode;
+            }
+        });
+    };
+
+    return groupLevel(items, 0);
+}
+
+/**
  * 构建表格矩阵数据结构
  */
 export interface TableMatrix {

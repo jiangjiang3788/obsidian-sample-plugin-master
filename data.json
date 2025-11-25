@@ -240,6 +240,10 @@
           "op": "=",
           "value": "block"
         }
+      ],
+      "groupFields": [
+        "categoryKey",
+        "theme"
       ]
     },
     {
@@ -353,6 +357,10 @@
           {
             "name": "总结",
             "color": "#c00c0c"
+          },
+          {
+            "name": "周",
+            "color": "#11bc7e"
           }
         ],
         "displayMode": "smart",
@@ -364,7 +372,11 @@
         "date",
         "content"
       ],
-      "group": "theme"
+      "group": "theme",
+      "groupFields": [
+        "file.basename",
+        "theme"
+      ]
     },
     {
       "id": "view_mh4itucqmm9rt",

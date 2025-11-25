@@ -51,6 +51,70 @@
     gap: 8px;
 }
 
+/* --- 多层级分组样式 --- */
+.bv-group--level-0 {
+    margin-left: 0;
+}
+
+.bv-group--level-1 {
+    margin-left: 16px;
+    border-left: 3px solid var(--interactive-accent);
+}
+
+.bv-group--level-1 .bv-group-title {
+    background-color: var(--background-modifier-form-field);
+    font-size: 0.85rem;
+    padding-left: 16px;
+}
+
+.bv-group--level-2 {
+    margin-left: 32px;
+    border-left: 2px solid var(--text-accent);
+}
+
+.bv-group--level-2 .bv-group-title {
+    background-color: var(--background-modifier-form-field-highlighted);
+    font-size: 0.8rem;
+    font-weight: 500;
+    padding-left: 20px;
+}
+
+.bv-group--level-3 {
+    margin-left: 48px;
+    border-left: 1px solid var(--text-muted);
+}
+
+.bv-group--level-3 .bv-group-title {
+    background-color: var(--background-modifier-border);
+    font-size: 0.75rem;
+    font-weight: 400;
+    padding-left: 24px;
+    color: var(--text-muted);
+}
+
+/* 更深层级的通用样式 */
+.bv-group[class*="--level-"] {
+    border-radius: 4px;
+}
+
+.bv-group[class*="--level-"] .bv-group-content {
+    padding: 6px 8px;
+}
+
+/* 层级标识（可选：在标题前添加层级指示器） */
+.bv-group--level-1 .bv-group-toggle-icon::before {
+    color: var(--interactive-accent);
+    font-weight: bold;
+}
+
+.bv-group--level-2 .bv-group-toggle-icon::before {
+    color: var(--text-accent);
+}
+
+.bv-group--level-3 .bv-group-toggle-icon::before {
+    color: var(--text-muted);
+}
+
 /* --- 条目通用样式 --- */
 .bv-item {
     padding: 8px;
@@ -161,13 +225,12 @@
 /* --- 任务项样式 (TaskItem) --- */
 .bv-item--task {
     display: flex;
-    align-items: flex-start;
+    align-items: center;
     gap: 8px;
     padding: 4px;
 }
 
 .bv-task-checkbox-wrapper {
-    margin-top: 2px;
     flex-shrink: 0;
 }
 
