@@ -4,6 +4,7 @@
 // 视图组件
 export { BlockView } from './BlockView';
 export { TimelineView } from './TimelineView';
+export { EventTimelineView } from './EventTimelineView';
 export { HeatmapView } from './HeatmapView';
 export { StatisticsView } from './StatisticsView';
 export { TableView } from './TableView';

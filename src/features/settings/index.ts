@@ -113,6 +113,7 @@ import {
   ExcelView,
   StatisticsView,
   TimelineView,
+  EventTimelineView,
   HeatmapView,
 } from '@features/views';
 import type { ComponentType } from 'preact';
@@ -128,6 +129,7 @@ export const VIEW_REGISTRY: Record<ViewName, ComponentType<any>> = {
   TableView,
   BlockView,
   TimelineView,
+  EventTimelineView,
   ExcelView,
   StatisticsView,
   HeatmapView,

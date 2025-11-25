@@ -5,6 +5,7 @@ import { TableViewEditor, DEFAULT_CONFIG as TableViewDefault } from './TableView
 import { BlockViewEditor, DEFAULT_CONFIG as BlockViewDefault } from './BlockViewEditor';
 import { ExcelViewEditor, DEFAULT_CONFIG as ExcelViewDefault } from './ExcelViewEditor';
 import { TimelineViewEditor, DEFAULT_CONFIG as TimelineViewDefault } from './TimelineViewEditor';
+import { EventTimelineViewEditor, DEFAULT_CONFIG as EventTimelineViewDefault } from './EventTimelineViewEditor';
 import { StatisticsViewEditor, DEFAULT_CONFIG as StatisticsViewDefault } from './StatisticsViewEditor';
 import { HeatmapViewEditor, DEFAULT_CONFIG as HeatmapViewDefault } from './HeatmapViewEditor';
 import type { ViewName, ViewInstance } from '@/core/types/schema';
@@ -28,6 +29,7 @@ export const VIEW_INFO_REGISTRY = {
   BlockView:    { component: BlockViewEditor,    defaultConfig: BlockViewDefault },
   ExcelView:    { component: ExcelViewEditor,    defaultConfig: ExcelViewDefault },
   TimelineView: { component: TimelineViewEditor, defaultConfig: TimelineViewDefault },
+  EventTimelineView: { component: EventTimelineViewEditor, defaultConfig: EventTimelineViewDefault },
   StatisticsView: { component: StatisticsViewEditor, defaultConfig: StatisticsViewDefault },
   HeatmapView: { component: HeatmapViewEditor, defaultConfig: HeatmapViewDefault },
 } as const;
