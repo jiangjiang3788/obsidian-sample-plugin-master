@@ -1,0 +1,14 @@
+/*
+ * ===================================================================
+ * Timer Styles
+ * -------------------------------------------------------------------
+ * Styles for the floating timer widget.
+ * ===================================================================
+ */
+
+.think-plugin-timer-widget {
+    margin: 0 8px; /* 与状态栏中的其他项保持一点距离 */
+}
+.think-plugin-timer-widget > .MuiPaper-root {
+    background-color: var(--background-secondary) !important;
+}
