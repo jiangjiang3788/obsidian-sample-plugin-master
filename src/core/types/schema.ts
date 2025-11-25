@@ -101,6 +101,7 @@ export interface ViewInstance extends Groupable {
     collapsed?: boolean;
     fields?: string[];
     group?: string;
+    groupFields?: string[]; // [新增] 多字段分组
     viewConfig?: Record<string, any>;
     actions?: ActionConfig[];
     // [新增] 整合数据源的筛选和排序功能

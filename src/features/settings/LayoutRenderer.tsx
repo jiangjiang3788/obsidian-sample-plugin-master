@@ -92,6 +92,7 @@ const ViewContent = ({
         useFieldGranularity,
         ...viewInstance.viewConfig,
         groupField: viewInstance.group,
+        groupFields: viewInstance.groupFields,
         fields: viewInstance.fields,
         onMarkDone: onMarkDone,
         actionService: actionService,

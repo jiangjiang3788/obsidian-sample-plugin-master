@@ -3,8 +3,9 @@
  * 用于管理可选字段的添加和移除
  */
 
-import { h, ComponentChild } from 'preact';
-import { useState } from 'preact/hooks';
+import { h } from 'preact';
+import { useMemo } from 'preact/hooks';
+import { SimpleSelect } from '@shared/ui/composites/SimpleSelect';
 
 export interface FieldManagerProps {
   fields: string[];
@@ -25,66 +26,80 @@ export function FieldManager({
   maxFields,
   className = ""
 }: FieldManagerProps) {
-  const [searchTerm, setSearchTerm] = useState('');
-  
-  // 过滤可用字段
-  const filteredAvailableFields = availableFields
-    .filter(field => 
-      !fields.includes(field) && 
-      field.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+
+  // 过滤可用字段（排除已选字段）
+  const availableOptions = useMemo(() => {
+    return availableFields
+      .filter(field => !fields.includes(field))
+      .map(field => ({ value: field, label: field }));
+  }, [availableFields, fields]);
 
   const handleAddField = (field: string) => {
     if (maxFields !== undefined && fields.length >= maxFields) {
       return;
     }
     onFieldsChange([...fields, field]);
-    setSearchTerm('');
   };
 
   const handleRemoveField = (field: string) => {
     onFieldsChange(fields.filter(f => f !== field));
   };
 
+  const canAddMore = !disabled && (maxFields === undefined || fields.length < maxFields);
+  const hasAvailableFields = availableOptions.length > 0;
+
   return (
-    <div className={`field-manager ${className}`}>
-      <div className="field-tags">
+    <div className={`field-manager ${className}`} style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+      {/* 已选字段标签 */}
+      <div className="field-tags" style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
         {fields.map(field => (
           <span 
             key={field} 
             className="field-tag" 
             onClick={() => !disabled && handleRemoveField(field)}
             title={`点击移除字段: ${field}`}
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              padding: '4px 8px',
+              backgroundColor: 'var(--background-modifier-form-field)',
+              border: '1px solid var(--background-modifier-border)',
+              borderRadius: '12px',
+              fontSize: '12px',
+              cursor: disabled ? 'default' : 'pointer',
+              userSelect: 'none'
+            }}
           >
             {field} ✕
           </span>
         ))}
       </div>
       
-      <div className="field-selector">
-        <input
-          type="text"
-          className="field-search"
-          placeholder={placeholder}
-          value={searchTerm}
-          onInput={e => setSearchTerm((e.target as HTMLInputElement).value)}
-          disabled={disabled || (maxFields !== undefined && fields.length >= maxFields)}
-        />
-        
-        {searchTerm && filteredAvailableFields.length > 0 && (
-          <div className="field-suggestions">
-            {filteredAvailableFields.map(field => (
-              <div 
-                key={field} 
-                className="field-suggestion" 
-                onClick={() => handleAddField(field)}
-              >
-                {field}
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
+      {/* 字段选择器 */}
+      {canAddMore && hasAvailableFields && (
+        <div className="field-selector">
+          <SimpleSelect 
+            placeholder={placeholder}
+            value=""
+            options={availableOptions}
+            onChange={handleAddField}
+            sx={{ minWidth: '200px' }}
+          />
+        </div>
+      )}
+      
+      {/* 提示信息 */}
+      {!hasAvailableFields && canAddMore && (
+        <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
+          所有可用字段已添加
+        </div>
+      )}
+      
+      {maxFields !== undefined && fields.length >= maxFields && (
+        <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
+          已达到最大字段数量限制 ({maxFields})
+        </div>
+      )}
     </div>
   );
 }

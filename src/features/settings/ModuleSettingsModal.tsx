@@ -36,10 +36,14 @@ function ViewInstanceEditor({ vi, appStore, dataStore }: { vi: ViewInstance, app
         []
     );
 
-
-    // 字段更新处理
+    // 字段更新处理 - 显示字段
     const handleFieldsChange = (fields: string[]) => {
         handleUpdate({ fields });
+    };
+
+    // 字段更新处理 - 分组字段（多字段层级分组）
+    const handleGroupFieldsChange = (groupFields: string[]) => {
+        handleUpdate({ groupFields });
     };
 
     return (
@@ -85,6 +89,18 @@ function ViewInstanceEditor({ vi, appStore, dataStore }: { vi: ViewInstance, app
                         availableFields={fieldOptions}
                         onFieldsChange={handleFieldsChange}
                         placeholder="+ 添加字段..."
+                    />
+                </FormField>
+
+                <FormField
+                    label="分组字段"
+                    help="选择用于分组的字段，顺序即为多级分组层级（A→B→C）"
+                >
+                    <FieldManager
+                        fields={currentVi.groupFields || []}
+                        availableFields={fieldOptions}
+                        onFieldsChange={handleGroupFieldsChange}
+                        placeholder="+ 选择分组字段..."
                     />
                 </FormField>
 
