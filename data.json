@@ -385,11 +385,17 @@
       "dataSourceId": "",
       "viewConfig": {
         "timeField": "date",
-        "titleField": "title",
+        "titleField": "startTime",
         "contentField": "content",
         "groupByDay": true,
         "showWeekday": true,
-        "maxContentLength": 160
+        "maxContentLength": 160,
+        "fields": [
+          "content"
+        ],
+        "groupFields": [
+          "categoryKey"
+        ]
       },
       "collapsed": true,
       "parentId": null,
@@ -397,7 +403,8 @@
       "fields": [
         "categoryKey",
         "theme",
-        "icon"
+        "icon",
+        "content"
       ],
       "groupFields": [
         "categoryKey"
@@ -460,7 +467,20 @@
       "isOverviewMode": false,
       "initialDate": "2025-05-26",
       "useFieldGranularity": false,
-      "selectedThemes": [],
+      "selectedThemes": [
+        "思考",
+        "思考/时间整理",
+        "思考/复盘整理",
+        "思考/思路整理",
+        "思考/读书",
+        "思考/自我",
+        "思考/垚垚",
+        "思考/阳阳",
+        "思考/婆婆",
+        "思考/芦苇",
+        "思考/家庭",
+        "思考/专注"
+      ],
       "selectedCategories": []
     }
   ],

@@ -42,12 +42,27 @@ export function EventTimelineView(props: EventTimelineViewProps) {
         allThemes
     } = props;
 
-    const timeField = (module.viewConfig as any)?.timeField || 'date';
+    // 优先使用视图实例上的通用字段配置，其次使用视图专属配置，最后使用默认值
+    const moduleFields = module.fields || [];
+    const moduleGroupFields = module.groupFields || [];
+
+    // 默认使用任务开始时间作为时间轴时间字段
+    const timeField = (module.viewConfig as any)?.timeField || 'startTime';
     const titleField = (module.viewConfig as any)?.titleField || 'title';
     const contentField = (module.viewConfig as any)?.contentField || 'content';
     const maxContentLength = (module.viewConfig as any)?.maxContentLength || 160;
-    const displayFields = (module.viewConfig as any)?.fields || ['title', 'date'];
-    const groupFields = (module.viewConfig as any)?.groupFields || [];
+
+    // 显示字段与 BlockView 保持一致：优先使用模块级 fields，再使用视图级覆盖，最后使用默认
+    const displayFields =
+        (module.viewConfig as any)?.fields ||
+        moduleFields ||
+        ['title', 'date'];
+
+    // 分组字段与 BlockView 保持一致
+    const groupFields =
+        (module.viewConfig as any)?.groupFields ||
+        moduleGroupFields ||
+        [];
 
     const start = useMemo(() => dayjs(dateRange[0]), [dateRange]);
     const end = useMemo(() => dayjs(dateRange[1]), [dateRange]);
