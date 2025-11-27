@@ -1,7 +1,7 @@
 /** @jsxImportSource preact */
 // src/features/views/EventTimelineView.tsx
 import { h } from 'preact';
-import { useMemo } from 'preact/hooks';
+import { useMemo, useState } from 'preact/hooks';
 import type { App } from 'obsidian';
 import type { Item, ViewInstance } from '@/core/types/schema';
 import { readField } from '@/core/types/schema';
@@ -9,8 +9,8 @@ import { dayjs } from '@core/utils/date';
 import type { TimerService } from '@features/timer/TimerService';
 import { BlockView } from './BlockView';
 import { groupItemsByFields, type GroupNode } from '@core/utils/itemGrouping';
-import { FieldPill } from '@shared/ui/items/FieldPill';
-import { ItemLink } from '@shared/ui/items/ItemLink';
+import { TaskRow } from '@shared/ui/items/TaskRow';
+import { BlockItem } from '@shared/ui/items/BlockItem';
 
 interface EventTimelineViewProps {
     items: Item[];
@@ -27,7 +27,8 @@ interface EventTimelineViewProps {
 /**
  * 事件时间线视图：
  * - 纵向线性展示「这段时间发生了哪些事件」
- * - 按天分组，每天内部按时间升序排列
+ * - 按配置的字段进行多级分组（如有），组内按时间升序排列
+ * - 日期/时间仍然在左侧作为时间线主轴
  */
 export function EventTimelineView(props: EventTimelineViewProps) {
     const {
@@ -42,27 +43,20 @@ export function EventTimelineView(props: EventTimelineViewProps) {
         allThemes
     } = props;
 
-    // 优先使用视图实例上的通用字段配置，其次使用视图专属配置，最后使用默认值
-    const moduleFields = module.fields || [];
-    const moduleGroupFields = module.groupFields || [];
+    // 使用统一配置：优先使用模块级配置
+    const displayFields = module.fields || ['title', 'date'];
+    const groupFields: string[] = module.groupFields || [];
+    
+    // 视图特有配置，fallback 到默认值
+    const viewConfig = (module.viewConfig as any) || {};
+    const timeField = viewConfig.timeField || 'date';
+    const titleField = viewConfig.titleField || 'title';
+    const contentField = viewConfig.contentField || 'content';
+    const maxContentLength = viewConfig.maxContentLength ?? 160;
 
-    // 默认使用任务开始时间作为时间轴时间字段
-    const timeField = (module.viewConfig as any)?.timeField || 'startTime';
-    const titleField = (module.viewConfig as any)?.titleField || 'title';
-    const contentField = (module.viewConfig as any)?.contentField || 'content';
-    const maxContentLength = (module.viewConfig as any)?.maxContentLength || 160;
-
-    // 显示字段与 BlockView 保持一致：优先使用模块级 fields，再使用视图级覆盖，最后使用默认
-    const displayFields =
-        (module.viewConfig as any)?.fields ||
-        moduleFields ||
-        ['title', 'date'];
-
-    // 分组字段与 BlockView 保持一致
-    const groupFields =
-        (module.viewConfig as any)?.groupFields ||
-        moduleGroupFields ||
-        [];
+    // 分组折叠状态管理
+    type GroupPath = string;
+    const [collapsedGroups, setCollapsedGroups] = useState<Record<GroupPath, boolean>>({});
 
     const start = useMemo(() => dayjs(dateRange[0]), [dateRange]);
     const end = useMemo(() => dayjs(dateRange[1]), [dateRange]);
@@ -77,106 +71,204 @@ export function EventTimelineView(props: EventTimelineViewProps) {
         }
     }
 
-    const dayGroups = useMemo(() => {
-        const groups = new Map<string, { date: ReturnType<typeof dayjs>; items: Item[] }>();
+    // 先按时间过滤 + 排序，确保时间线语义正确
+    const filteredItems = useMemo(() => {
+        const result: Item[] = [];
 
         for (const item of items) {
             const t = getItemTime(item);
             if (!t) continue;
             if (!t.isBetween(start, end, 'minute', '[]')) continue;
-
-            const key = t.format('YYYY-MM-DD');
-            if (!groups.has(key)) {
-                groups.set(key, { date: t.startOf('day'), items: [] });
-            }
-            groups.get(key)!.items.push(item);
+            result.push(item);
         }
 
-        const result = Array.from(groups.values())
-            .map(group => ({
-                ...group,
-                items: group.items.sort((a, b) => {
-                    const ta = getItemTime(a)!;
-                    const tb = getItemTime(b)!;
-                    return ta.valueOf() - tb.valueOf();
-                })
-            }))
-            .sort((a, b) => a.date.valueOf() - b.date.valueOf());
-
-        return result;
+        return result.sort((a, b) => {
+            const ta = getItemTime(a)!;
+            const tb = getItemTime(b)!;
+            return ta.valueOf() - tb.valueOf();
+        });
     }, [items, start, end, timeField]);
 
-    if (dayGroups.length === 0) {
+    // 如果配置了分组字段，则按字段进行多级分组；否则仅按时间线顺序展示
+    const groupedTree: GroupNode[] | null = useMemo(() => {
+        if (!groupFields || groupFields.length === 0) return null;
+        return groupItemsByFields(filteredItems, groupFields);
+    }, [filteredItems, groupFields]);
+
+    if (filteredItems.length === 0) {
         return <div class="event-timeline-empty">当前时间范围内没有事件记录。</div>;
     }
 
-    return (
-        <div class="event-timeline-view">
-            {dayGroups.map(group => (
-                <div class="et-day-group" key={group.date.format('YYYY-MM-DD')}>
-                    <div class="et-day-header">
-                        <span class="et-day-date">{group.date.format('YYYY-MM-DD')}</span>
-                        <span class="et-day-weekday">{group.date.format('ddd')}</span>
-                        <span class="et-day-meta">共 {group.items.length} 条事件</span>
-                    </div>
-                    <div class="et-day-body">
-                        <div class="et-line" />
-                        <div class="et-events">
-                            {group.items.map(item => {
-                                const t = getItemTime(item)!;
-                                const timeLabel = t.format('HH:mm');
-                                const title = (readField(item, titleField) as string) || '(无标题)';
-                                const content = (readField(item, contentField) as string) || '';
+    // 分组折叠/展开逻辑
+    const makeGroupPath = (chain: { field: string; key: string }[]): GroupPath =>
+        chain.map(n => `${n.field}=${n.key}`).join('|');
 
-                                return (
-                                    <div class="et-event">
-                                        <div class="et-dot" />
-                                        <div class="et-event-content">
-                                            <div class="et-event-time">{timeLabel}</div>
-                                            
-                                            {/* 显示配置的字段 */}
-                                            <div class="et-event-fields">
-                                                {displayFields.map((fieldKey: string) => {
-                                                    if (fieldKey === timeField) return null; // 时间字段已单独显示
-                                                    
-                                                    if (fieldKey === 'title') {
-                                                        return (
-                                                            <div key="title" class="et-event-title">
-                                                                <ItemLink item={item} app={app} />
-                                                            </div>
-                                                        );
-                                                    }
-                                                    
-                                                    if (fieldKey === 'content' || fieldKey === contentField) {
-                                                        const contentValue = (readField(item, contentField) as string) || '';
-                                                        return contentValue ? (
-                                                            <div key="content" class="et-event-summary">
-                                                                {contentValue.length > maxContentLength ? `${contentValue.slice(0, maxContentLength)}…` : contentValue}
-                                                            </div>
-                                                        ) : null;
-                                                    }
-                                                    
-                                                    // 其他字段使用 FieldPill 显示
-                                                    return (
-                                                        <div key={fieldKey} class="et-event-field">
-                                                            <FieldPill 
-                                                                item={item} 
-                                                                fieldKey={fieldKey} 
-                                                                app={app} 
-                                                                allThemes={allThemes} 
-                                                            />
-                                                        </div>
-                                                    );
-                                                })}
-                                            </div>
-                                        </div>
-                                    </div>
-                                );
-                            })}
-                        </div>
+    const toggleSingleGroup = (path: GroupPath) => {
+        setCollapsedGroups(prev => ({
+            ...prev,
+            [path]: !prev[path]
+        }));
+    };
+
+    // 收集所有分组路径
+    const allGroupPaths: GroupPath[] = [];
+    const collectPaths = (nodes: GroupNode[], parentChain: { field: string; key: string }[] = []) => {
+        for (const node of nodes) {
+            const chain = [...parentChain, { field: node.field, key: node.key }];
+            const path = makeGroupPath(chain);
+            allGroupPaths.push(path);
+            if (node.children && node.children.length > 0) {
+                collectPaths(node.children, chain);
+            }
+        }
+    };
+    if (groupedTree) collectPaths(groupedTree);
+
+    const setAllGroupsCollapsed = (collapsed: boolean) => {
+        setCollapsedGroups(prev => {
+            const next: Record<GroupPath, boolean> = { ...prev };
+            for (const path of allGroupPaths) {
+                next[path] = collapsed;
+            }
+            return next;
+        });
+    };
+
+    const onGroupTitleClick = (path: GroupPath, evt: MouseEvent) => {
+        if (evt.ctrlKey) {
+            const anyExpanded = allGroupPaths.some(p => !collapsedGroups[p]);
+            setAllGroupsCollapsed(anyExpanded);
+        } else {
+            toggleSingleGroup(path);
+        }
+    };
+
+    // 渲染事件列表，处理日期去重
+    const renderEventList = (items: Item[]) => {
+        let lastDate = '';
+        
+        return items.map((item, index) => {
+            const t = getItemTime(item);
+            const dateLabel = t ? t.format('YYYY-MM-DD') : '';
+            const timeLabel = t ? t.format('HH:mm') : '';
+            
+            // 日期去重：相同日期只在第一个显示
+            const showDate = dateLabel !== lastDate;
+            if (showDate) lastDate = dateLabel;
+            
+            const titleForKey =
+                (readField(item, titleField) as string) ||
+                (readField(item, 'title') as string) ||
+                '';
+
+            return (
+                <div class="et-event" key={`${dateLabel}-${timeLabel}-${titleForKey}-${index}`}>
+                    {/* 左侧：日期和时间 */}
+                    <div class="et-event-date">
+                        {showDate && t && (
+                            <div class="et-date-label">
+                                {dateLabel}
+                            </div>
+                        )}
+                        {/* task类型显示时间，block类型不显示时间 */}
+                        {item.type === 'task' && (
+                            <div class="et-time-label">{timeLabel}</div>
+                        )}
+                    </div>
+
+                    {/* 中间：时间线 */}
+                    <div class="et-line">
+                        <div class="et-dot" />
+                    </div>
+
+                    {/* 右侧：内容卡片 */}
+                    <div class="et-event-card">
+                        {item.type === 'task' ? (
+                            <TaskRow
+                                item={item}
+                                onMarkDone={(id: string) => actionService?.markTaskDone?.(id)}
+                                app={app}
+                                timerService={timerService}
+                                timer={timers.find(t => t.taskId === item.id)}
+                                allThemes={allThemes}
+                                showFields={[]} // TaskRow 不显示额外字段
+                            />
+                        ) : (
+                            <BlockItem
+                                item={item}
+                                fields={displayFields}
+                                isNarrow={false}
+                                app={app}
+                                allThemes={allThemes}
+                            />
+                        )}
                     </div>
                 </div>
-            ))}
+            );
+        });
+    };
+
+    // 统计某个分组下的总事件数
+    const countItemsInGroup = (node: GroupNode): number => {
+        const n: any = node as any;
+        if (n.items) return n.items.length;
+        if (!n.children) return 0;
+        return (n.children as GroupNode[]).reduce(
+            (sum: number, child: GroupNode) => sum + countItemsInGroup(child),
+            0
+        );
+    };
+
+    // 递归渲染分组树 - 支持多级缩进和折叠
+    const renderGroupNodes = (nodes: GroupNode[], level: number, parentChain: { field: string; key: string }[] = []) => {
+        return nodes.map(node => {
+            const items = node.items || [];
+            const children = node.children || [];
+            const chain = [...parentChain, { field: node.field, key: node.key }];
+            const path = makeGroupPath(chain);
+            const isCollapsed = collapsedGroups[path];
+            
+            // 标题缩进：基础 12px + 层级 * 24px
+            const indentStyle = { paddingLeft: `${12 + level * 24}px` };
+
+            return (
+                <div class="et-group" key={path}>
+                    <h5
+                        class="et-group-title"
+                        style={indentStyle}
+                        onClick={e => onGroupTitleClick(path, e as any)}
+                        title="点击折叠/展开（Ctrl+点击：全部折叠/展开）"
+                    >
+                        <span class="et-group-toggle-icon">
+                            {isCollapsed ? '▶' : '▼'}
+                        </span>
+                        <span class="et-group-label">
+                            {node.key} ({items.length || countItemsInGroup(node)})
+                        </span>
+                    </h5>
+                    {!isCollapsed && (
+                        <div class="et-group-content">
+                            {items.length > 0 
+                                ? renderEventList(items)
+                                : renderGroupNodes(children, level + 1, chain)
+                            }
+                        </div>
+                    )}
+                </div>
+            );
+        });
+    };
+
+    return (
+        <div class="event-timeline-view">
+            {groupedTree
+                ? renderGroupNodes(groupedTree, 0)
+                : (
+                    <div class="et-ungrouped">
+                        {renderEventList(filteredItems)}
+                    </div>
+                )
+            }
         </div>
     );
 }

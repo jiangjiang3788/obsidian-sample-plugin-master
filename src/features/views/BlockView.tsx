@@ -6,53 +6,11 @@ import { App } from 'obsidian';
 import { Item, ThemeDefinition } from '@/core/types/schema';
 import { groupItemsByField, getSortedGroupKeys, groupItemsByFields, type GroupNode } from '@core/utils/itemGrouping';
 import { TaskRow } from '@shared/ui/items/TaskRow';
-import { FieldPill } from '@shared/ui/items/FieldPill';
-import { ItemLink } from '@shared/ui/items/ItemLink';
+import { BlockItem } from '@shared/ui/items/BlockItem';
 import type { TimerService } from '@features/timer/TimerService';
+import { exportItemsToMarkdown } from '@/core/utils/exportUtils';
+import { Notice } from 'obsidian';
 
-// 简化的 Block 项目组件
-const BlockItem = ({ item, fields, isNarrow, app, allThemes }: { 
-    item: Item; 
-    fields: string[]; 
-    isNarrow: boolean; 
-    app: App; 
-    allThemes: ThemeDefinition[] 
-}) => {
-    const metadataFields = fields.filter(f => f !== 'title' && f !== 'content');
-    const showTitle = fields.includes('title') && item.title;
-    const showContent = fields.includes('content') && item.content;
-    const narrowClass = isNarrow ? 'is-narrow' : '';
-
-    return (
-        <div class={`bv-item bv-item--block ${narrowClass}`}>
-            <div class="bv-block-metadata">
-                <div class="bv-fields-list-wrapper">
-                    {metadataFields.map(fieldKey => (
-                        <FieldPill 
-                            key={fieldKey} 
-                            item={item} 
-                            fieldKey={fieldKey} 
-                            app={app} 
-                            allThemes={allThemes} 
-                        />
-                    ))}
-                </div>
-            </div>
-            <div class="bv-block-main">
-                {showTitle && (
-                    <div class="bv-block-title">
-                        <ItemLink item={item} app={app} />
-                    </div>
-                )}
-                {showContent && (
-                    <div class="bv-block-content">
-                        <ItemLink item={item} app={app} className="content-link" />
-                    </div>
-                )}
-            </div>
-        </div>
-    );
-};
 
 type GroupPath = string;
 
@@ -120,10 +78,13 @@ export function BlockView(props: BlockViewProps) {
         return [];
     })();
 
+
+
     // 无分组时的渲染逻辑保持不变
     if (!effectiveGroupFields.length) {
         return (
             <div class="bv-container" ref={containerRef}>
+
                 {items.map(renderItem)}
             </div>
         );
@@ -233,6 +194,7 @@ export function BlockView(props: BlockViewProps) {
 
     return (
         <div class="bv-container" ref={containerRef}>
+
             {renderGroupNodes(groupTree)}
         </div>
     );
