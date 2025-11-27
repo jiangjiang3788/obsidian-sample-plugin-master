@@ -18,7 +18,7 @@ import { ModuleSettingsModal } from './ModuleSettingsModal'; // [新增] 导入�
 import { App, Notice } from 'obsidian'; // [修改] 导入 Notice
 import { appStore } from '@/app/storeRegistry';
 import { AppStore } from '@/app/AppStore';
-import { exportItemsToMarkdown } from '@core/utils/exportUtils'; // [新增] 导入导出函数
+import { exportItemsToMarkdown, getExportConfigByViewType } from '@core/utils/exportUtils'; // [新增] 导入导出函数
 import { ViewToolbar } from '@features/views/ViewToolbar'; // [新增] 导入统一工具栏组件
 
 // [修改] ViewContent 组件增加 onDataLoaded 和 selectedThemes props
@@ -195,10 +195,15 @@ export function LayoutRenderer({ layout, dataStore, app, actionService, itemServ
             new Notice('没有内容可导出');
             return;
         }
-        const markdownContent = exportItemsToMarkdown(items, viewTitle);
+        
+        // 根据视图类型获取对应的导出配置
+        const viewInstance = allViews.find(v => v.id === viewId);
+        const exportConfig = viewInstance ? getExportConfigByViewType(viewInstance.viewType) : undefined;
+        
+        const markdownContent = exportItemsToMarkdown(items, exportConfig);
         navigator.clipboard.writeText(markdownContent);
         new Notice(`"${viewTitle}" 的内容已复制到剪贴板！`);
-    }, []); // 空依赖数组，因为它使用 ref，不会导致不必要的重渲染
+    }, [allViews]); // 依赖 allViews 来获取视图类型
 
     const handleQuickInputAction = (viewInstance: ViewInstance) => {
         const config = actionService.getQuickInputConfigForView(viewInstance, layoutDate, layoutView);

@@ -11,7 +11,7 @@ import { BlockView } from './BlockView';
 import { IconButton, Tooltip } from '@mui/material';
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 import IosShareIcon from '@mui/icons-material/IosShare';
-import { exportItemsToMarkdown } from '@core/utils/exportUtils';
+import { exportItemsToMarkdown, getExportConfigByViewType } from '@core/utils/exportUtils';
 import { QuickInputModal } from '@/features/quickinput/QuickInputModal';
 import { dayjs as dayjsUtil } from '@core/utils/date';
 import type { CategoryConfig, PeriodData } from '@core/utils/statisticsAggregation';
@@ -135,7 +135,9 @@ const Popover = ({ target, blocks, title, onClose, app, module, actionService, d
             new Notice('没有内容可导出');
             return;
         }
-        const markdownContent = exportItemsToMarkdown(blocks, title);
+        // 使用 StatisticsView 专用的导出配置
+        const exportConfig = getExportConfigByViewType('StatisticsView');
+        const markdownContent = exportItemsToMarkdown(blocks, exportConfig);
         navigator.clipboard.writeText(markdownContent);
         new Notice(`"${title}" 的内容已复制到剪贴板！`);
     };

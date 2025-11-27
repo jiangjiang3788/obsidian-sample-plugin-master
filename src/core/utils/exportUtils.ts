@@ -1,142 +1,189 @@
-// src/core/utils/exportUtils.ts
-
 import { Item, readField } from '@/core/types/schema';
 import { EMOJI } from '@/core/types/constants';
-import { getFieldLabel } from '@/core/types/fields';
-import { dayjs } from './date'; // 导入 dayjs
+import { 
+    BLOCK_EXPORT_DEFAULT_CONFIG, 
+    EVENT_TIMELINE_EXPORT_CONFIG,
+    EXCEL_EXPORT_CONFIG,
+    STATISTICS_EXPORT_CONFIG,
+    HEATMAP_EXPORT_CONFIG,
+    TIMELINE_EXPORT_CONFIG,
+    TABLE_EXPORT_CONFIG,
+    ExportViewConfig 
+} from '@/core/config/viewConfigs';
 
 /**
- * [核心修改] 将 Item 数组增强后导出为更详细、更具可读性的 Markdown 格式。
- * 新版本增加了按 `filename` 和 `header` 字段进行分组的功能。
+ * 根据视图类型获取对应的导出配置
+ */
+export function getExportConfigByViewType(viewType: string): ExportViewConfig {
+    const configMap: Record<string, ExportViewConfig> = {
+        'BlockView': BLOCK_EXPORT_DEFAULT_CONFIG,
+        'EventTimelineView': EVENT_TIMELINE_EXPORT_CONFIG,
+        'ExcelView': EXCEL_EXPORT_CONFIG,
+        'StatisticsView': STATISTICS_EXPORT_CONFIG,
+        'HeatmapView': HEATMAP_EXPORT_CONFIG,
+        'TimelineView': TIMELINE_EXPORT_CONFIG,
+        'TableView': TABLE_EXPORT_CONFIG,
+    };
+    
+    return configMap[viewType] || BLOCK_EXPORT_DEFAULT_CONFIG;
+}
+
+/**
+ * 将 Item 数组导出为 Markdown 格式。
+ * 支持基于配置的分组和自定义字段输出。
+ * 
  * @param items - 要导出的 Item 数组。
- * @param title - 可选的导出标题 (此参数在当前版本中未使用，但保留以兼容旧接口)。
+ * @param config - 导出配置，默认为 BLOCK_EXPORT_DEFAULT_CONFIG。
  * @returns Markdown 格式的字符串。
  */
-export function exportItemsToMarkdown(items: Item[], title?: string): string {
+export function exportItemsToMarkdown(items: Item[], config: ExportViewConfig = BLOCK_EXPORT_DEFAULT_CONFIG): string {
     const lines: string[] = [];
-    
-    // --- 新增：分组逻辑 ---
-    // 1. 定义一个用于存储分组后数据的结构
-    // Map<filename, Map<header, Item[]>>
-    const groupedByFile = new Map<string, Map<string, Item[]>>();
-    const UNGROUPED_FILE_KEY = '未分类文件';
-    const UNGROUPED_HEADER_KEY = '正文内容';
+    const groupedItems = new Map<string, Item[]>();
+    const UNGROUPED_KEY = '未分类';
 
-    // 2. 遍历所有 item，将它们放入对应的分组
+    // 1. 分组
     items.forEach(item => {
-        // 使用 readField 来安全地读取可能不存在的字段
-        const filename = readField(item, 'filename') || UNGROUPED_FILE_KEY;
-        const header = readField(item, 'header') || UNGROUPED_HEADER_KEY;
-
-        // 获取或创建文件分组
-        if (!groupedByFile.has(filename)) {
-            groupedByFile.set(filename, new Map<string, Item[]>());
+        let groupKey = UNGROUPED_KEY;
+        if (config.groupField) {
+            const val = readField(item, config.groupField);
+            if (val) groupKey = String(val);
         }
-        const fileGroup = groupedByFile.get(filename)!;
-
-        // 获取或创建标题分组
-        if (!fileGroup.has(header)) {
-            fileGroup.set(header, []);
+        
+        if (!groupedItems.has(groupKey)) {
+            groupedItems.set(groupKey, []);
         }
-        fileGroup.get(header)!.push(item);
+        groupedItems.get(groupKey)!.push(item);
     });
 
-    // --- 修改：遍历分组后的数据并生成 Markdown ---
-    // 3. 遍历按文件名分组的 Map
-    groupedByFile.forEach((headers, filename) => {
-        lines.push(`## ${filename}`); // 使用二级标题表示文件名
-        lines.push(''); // 添加空行以改善格式
+    // 2. 生成 Markdown
+    let groupIndex = 0;
+    groupedItems.forEach((groupItemsList, groupName) => {
+        // 分组之间的分隔符
+        if (groupIndex > 0) {
+            lines.push('---');
+            lines.push('');
+        }
 
-        // 4. 遍历当前文件下按标题分组的 Map
-        headers.forEach((groupedItems, header) => {
-            // 如果标题不是默认的“正文内容”，则显示标题
-            if (header !== UNGROUPED_HEADER_KEY) {
-                lines.push(`### ${header}`); // 使用三级标题表示 header
-                lines.push('');
+        // 分组标题
+        if (config.useMarkdownHeadingForGroup) {
+            const prefix = config.groupTitlePrefix || '';
+            lines.push(`## ${prefix}${groupName}`);
+            lines.push('');
+        }
+
+        // 遍历分组内的 Items
+        groupItemsList.forEach((item, index) => {
+            if (item.type === 'task') {
+                lines.push(formatTaskItem(item));
+            } else {
+                lines.push(...formatBlockItem(item, index + 1, config));
             }
-
-            // 5. 遍历标题下的所有 item，并使用原有的格式化逻辑
-            groupedItems.forEach(item => {
-                if (item.type === 'task') {
-                    // 对于任务，我们保留并微调原始的单行格式，因为它能很好地还原任务本身
-                    const isDone = item.categoryKey.includes('/done');
-                    const isCancelled = item.categoryKey.includes('/cancelled');
-                    const checkbox = isDone ? '[x]' : isCancelled ? '[-]' : '[ ]';
-                    
-                    // 重新构建任务行，确保所有信息都包含在内
-                    let taskLine = `- ${checkbox} ${item.title}`;
-
-                    // --- 【本次修改】 ---
-                    // 不再为 task 添加标签
-                    /*
-                    if (item.tags && item.tags.length > 0) {
-                        taskLine += ` ${item.tags.map(t => `#${t}`).join(' ')}`;
-                    }
-                    */
-
-                    // 添加核心和自定义字段 (key:: value)
-                    const extraFields: Record<string, any> = {
-                        '周期': item.period,
-                        '评分': item.rating,
-                        '时间': item.startTime,
-                        '结束': item.endTime,
-                        '时长': item.duration,
-                        ...item.extra,
-                    };
-                    for (const key in extraFields) {
-                        const value = extraFields[key];
-                        // 过滤掉 filename 和 header，因为它们已经被用于分组
-                        if (key === 'filename' || key === 'header') continue;
-                        if (value !== null && value !== undefined && value !== '') {
-                            taskLine += ` (${key}:: ${value})`;
-                        }
-                    }
-                    
-                    // 添加日期字段
-                    if (item.dueDate) taskLine += ` ${EMOJI.due} ${item.dueDate}`;
-                    if (item.scheduledDate) taskLine += ` ${EMOJI.scheduled} ${item.scheduledDate}`;
-                    if (item.startDate) taskLine += ` ${EMOJI.start} ${item.startDate}`;
-                    if (item.createdDate) taskLine += ` ${EMOJI.created} ${item.createdDate}`;
-                    if (item.doneDate) taskLine += ` ${EMOJI.done} ${item.doneDate}`;
-                    if (item.cancelledDate) taskLine += ` ${EMOJI.cancelled} ${item.cancelledDate}`;
-
-                    lines.push(taskLine.replace(/\s+/g, ' ').trim());
-
-                } else if (item.type === 'block') {
-                    // [修改] id 作为五级标题
-                    lines.push(`##### ID ${item.id}`);
-                    
-                    // 详情不再使用无序列表
-                    if (item.categoryKey) lines.push(`**分类**: ${item.categoryKey}`);
-                    if (item.date) lines.push(`**日期**: ${item.date}`);
-                    // block 类型的 item 仍然保留标签
-                    if (item.tags && item.tags.length > 0) lines.push(`**标签**: ${item.tags.join(', ')}`);
-                    if (item.period) lines.push(`**周期**: ${item.period}`);
-                    if (item.rating !== undefined) lines.push(`**评分**: ${item.rating}`);
-                    if (item.pintu) lines.push(`**评图**: ![[${item.pintu}]]`);
-                    
-                    // 添加所有 extra 字段
-                    for (const key in item.extra) {
-                         // 过滤掉 filename 和 header
-                        if (key === 'filename' || key === 'header') continue;
-                        lines.push(`**${key}**: ${item.extra[key]}`);
-                    }
-
-                    // 修正 content 字段的引用块格式，去除前置空格
-                    if (item.content && item.content.trim()) {
-                        lines.push(`**内容**:`);
-                        const contentLines = item.content.trim().split('\n');
-                        contentLines.forEach(line => {
-                            lines.push(`> ${line}`);
-                        });
-                    }
-                    
-                    // [修改] 使用 <br> 换行符分隔不同的 block
-                    lines.push('<br>'); 
-                }
-            });
         });
+
+        groupIndex++;
     });
 
     return lines.join('\n');
+}
+
+/**
+ * 格式化 Block 类型的 Item
+ */
+function formatBlockItem(item: Item, index: number, config: ExportViewConfig): string[] {
+    const lines: string[] = [];
+
+    // 1. 构建 ID 行 (第一行)
+    // 模板示例: 'ID {{index}}/{{filename}}#{{id}}'
+    let idLine = config.idTemplate
+        .replace('{{index}}', index.toString().padStart(2, '0'))
+        .replace('{{filename}}', item.filename || '未知文件')
+        .replace('{{id}}', item.id || '');
+    
+    // 支持更多变量替换
+    idLine = idLine.replace(/\{\{(\w+)\}\}/g, (match, key) => {
+        const val = readField(item, key);
+        return val !== undefined ? String(val) : match;
+    });
+
+    lines.push(`- **${idLine}**`);
+
+    // 2. 构建字段列表
+    config.detailFields.forEach(field => {
+        const rawValue = readField(item, field);
+        // 跳过空值，但允许 0
+        if (rawValue === undefined || rawValue === null || rawValue === '') return;
+
+        const label = config.fieldLabels[field] || field;
+        let displayValue = String(rawValue);
+
+        // 特殊字段处理
+        if (field === 'pintu') {
+            // 改进的 emoji 检测：检查是否为纯 emoji
+            const isEmojiOnly = /^[\p{Emoji}\p{Emoji_Presentation}\p{Extended_Pictographic}\s]*$/u.test(displayValue) 
+                               && displayValue.trim().length <= 8 
+                               && !displayValue.includes('.');
+            
+            if (isEmojiOnly) {
+                // 直接显示 emoji
+                displayValue = displayValue.trim();
+            } else if (!displayValue.startsWith('![[') && !displayValue.startsWith('![')) {
+                // 非 emoji 且不是已有图片链接格式，转为图片链接
+                displayValue = `![[${displayValue}]]`;
+            }
+        } else if (field === 'content') {
+            // 内容特殊处理：按您的示例格式
+            lines.push(`  - ${label}:`);
+            displayValue.split('\n').forEach(line => {
+                const trimmedLine = line.trim();
+                if (trimmedLine) {
+                    lines.push(`  - ${trimmedLine}`);
+                }
+            });
+            return; // content 处理完毕，跳过默认 push
+        }
+
+        lines.push(`  - ${label}: ${displayValue}`);
+    });
+    
+    return lines;
+}
+
+/**
+ * 格式化 Task 类型的 Item (保持原有逻辑的简化版)
+ */
+function formatTaskItem(item: Item): string {
+    const isDone = item.categoryKey.includes('/done');
+    const isCancelled = item.categoryKey.includes('/cancelled');
+    const checkbox = isDone ? '[x]' : isCancelled ? '[-]' : '[ ]';
+    
+    let taskLine = `- ${checkbox} ${item.title}`;
+
+    // 添加核心和自定义字段 (key:: value)
+    const extraFields: Record<string, any> = {
+        '周期': item.period,
+        '评分': item.rating,
+        '时间': item.startTime,
+        '结束': item.endTime,
+        '时长': item.duration,
+        ...item.extra,
+    };
+
+    for (const key in extraFields) {
+        const value = extraFields[key];
+        // 过滤掉 filename 和 header，因为它们可能已经被用于分组
+        if (key === 'filename' || key === 'header') continue;
+        if (value !== null && value !== undefined && value !== '') {
+            taskLine += ` (${key}:: ${value})`;
+        }
+    }
+    
+    // 添加日期字段
+    if (item.dueDate) taskLine += ` ${EMOJI.due} ${item.dueDate}`;
+    if (item.scheduledDate) taskLine += ` ${EMOJI.scheduled} ${item.scheduledDate}`;
+    if (item.startDate) taskLine += ` ${EMOJI.start} ${item.startDate}`;
+    if (item.createdDate) taskLine += ` ${EMOJI.created} ${item.createdDate}`;
+    if (item.doneDate) taskLine += ` ${EMOJI.done} ${item.doneDate}`;
+    if (item.cancelledDate) taskLine += ` ${EMOJI.cancelled} ${item.cancelledDate}`;
+
+    return taskLine.replace(/\s+/g, ' ').trim();
 }
