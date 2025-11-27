@@ -22,16 +22,36 @@
 }
 
 /* 分组容器 - 支持多级缩进 */
+/* 调整为类似 Block 分组的“包裹框”效果 */
 .et-group {
-    margin-bottom: 16px;
+    margin-bottom: 12px;
+    padding: 8px 10px;
+    border-radius: 6px;
+    background: var(--background-secondary);
+    border: 1px solid var(--background-modifier-border);
+}
+
+/* 分组层级样式，配合 GroupedContainer 提供的 et-group--level-X  */
+.et-group--level-0 {
+    margin-left: 0;
+}
+
+.et-group--level-1 {
+    margin-left: 8px;
+    background: var(--background-secondary-alt);
+}
+
+.et-group--level-2 {
+    margin-left: 16px;
+    background: var(--background-primary-alt);
 }
 
 /* 分组标题 - 可折叠 */
 .et-group-title {
-    margin: 0 0 12px 0;
-    padding: 8px 12px;
-    background: var(--background-secondary);
-    border-radius: 6px;
+    margin: 0 0 8px 0;
+    padding: 6px 10px;
+    background: transparent;
+    border-radius: 4px;
     border-left: 4px solid var(--interactive-accent);
     cursor: pointer;
     transition: all 0.2s ease;
@@ -43,7 +63,7 @@
 
 .et-group-title:hover {
     background: var(--background-secondary-alt);
-    box-shadow: 0 2px 4px var(--background-modifier-box-shadow);
+    box-shadow: 0 1px 3px var(--background-modifier-box-shadow);
 }
 
 .et-group-toggle-icon {
@@ -65,6 +85,8 @@
     display: flex;
     flex-direction: column;
     gap: 8px;
+    margin-top: 4px;
+    padding-left: 4px;
 }
 
 /* 单个事件 - 三栏 Grid 布局 */

@@ -405,7 +405,8 @@
         "content"
       ],
       "groupFields": [
-        "theme"
+        "theme",
+        "categoryKey"
       ]
     },
     {

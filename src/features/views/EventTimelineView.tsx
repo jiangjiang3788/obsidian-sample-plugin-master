@@ -1,16 +1,16 @@
 /** @jsxImportSource preact */
 // src/features/views/EventTimelineView.tsx
 import { h } from 'preact';
-import { useMemo, useState } from 'preact/hooks';
+import { useMemo } from 'preact/hooks';
 import type { App } from 'obsidian';
 import type { Item, ViewInstance } from '@/core/types/schema';
 import { readField } from '@/core/types/schema';
 import { dayjs } from '@core/utils/date';
 import type { TimerService } from '@features/timer/TimerService';
-import { BlockView } from './BlockView';
 import { groupItemsByFields, type GroupNode } from '@core/utils/itemGrouping';
 import { TaskRow } from '@shared/ui/items/TaskRow';
 import { BlockItem } from '@shared/ui/items/BlockItem';
+import { GroupedContainer } from '@shared/ui/GroupedContainer';
 
 interface EventTimelineViewProps {
     items: Item[];
@@ -54,10 +54,6 @@ export function EventTimelineView(props: EventTimelineViewProps) {
     const contentField = viewConfig.contentField || 'content';
     const maxContentLength = viewConfig.maxContentLength ?? 160;
 
-    // 分组折叠状态管理
-    type GroupPath = string;
-    const [collapsedGroups, setCollapsedGroups] = useState<Record<GroupPath, boolean>>({});
-
     const start = useMemo(() => dayjs(dateRange[0]), [dateRange]);
     const end = useMemo(() => dayjs(dateRange[1]), [dateRange]);
 
@@ -98,50 +94,6 @@ export function EventTimelineView(props: EventTimelineViewProps) {
     if (filteredItems.length === 0) {
         return <div class="event-timeline-empty">当前时间范围内没有事件记录。</div>;
     }
-
-    // 分组折叠/展开逻辑
-    const makeGroupPath = (chain: { field: string; key: string }[]): GroupPath =>
-        chain.map(n => `${n.field}=${n.key}`).join('|');
-
-    const toggleSingleGroup = (path: GroupPath) => {
-        setCollapsedGroups(prev => ({
-            ...prev,
-            [path]: !prev[path]
-        }));
-    };
-
-    // 收集所有分组路径
-    const allGroupPaths: GroupPath[] = [];
-    const collectPaths = (nodes: GroupNode[], parentChain: { field: string; key: string }[] = []) => {
-        for (const node of nodes) {
-            const chain = [...parentChain, { field: node.field, key: node.key }];
-            const path = makeGroupPath(chain);
-            allGroupPaths.push(path);
-            if (node.children && node.children.length > 0) {
-                collectPaths(node.children, chain);
-            }
-        }
-    };
-    if (groupedTree) collectPaths(groupedTree);
-
-    const setAllGroupsCollapsed = (collapsed: boolean) => {
-        setCollapsedGroups(prev => {
-            const next: Record<GroupPath, boolean> = { ...prev };
-            for (const path of allGroupPaths) {
-                next[path] = collapsed;
-            }
-            return next;
-        });
-    };
-
-    const onGroupTitleClick = (path: GroupPath, evt: MouseEvent) => {
-        if (evt.ctrlKey) {
-            const anyExpanded = allGroupPaths.some(p => !collapsedGroups[p]);
-            setAllGroupsCollapsed(anyExpanded);
-        } else {
-            toggleSingleGroup(path);
-        }
-    };
 
     // 渲染事件列表，处理日期去重
     const renderEventList = (items: Item[]) => {
@@ -208,67 +160,30 @@ export function EventTimelineView(props: EventTimelineViewProps) {
         });
     };
 
-    // 统计某个分组下的总事件数
-    const countItemsInGroup = (node: GroupNode): number => {
-        const n: any = node as any;
-        if (n.items) return n.items.length;
-        if (!n.children) return 0;
-        return (n.children as GroupNode[]).reduce(
-            (sum: number, child: GroupNode) => sum + countItemsInGroup(child),
-            0
-        );
-    };
-
-    // 递归渲染分组树 - 支持多级缩进和折叠
-    const renderGroupNodes = (nodes: GroupNode[], level: number, parentChain: { field: string; key: string }[] = []) => {
-        return nodes.map(node => {
-            const items = node.items || [];
-            const children = node.children || [];
-            const chain = [...parentChain, { field: node.field, key: node.key }];
-            const path = makeGroupPath(chain);
-            const isCollapsed = collapsedGroups[path];
-            
-            // 标题缩进：基础 12px + 层级 * 24px
-            const indentStyle = { paddingLeft: `${12 + level * 24}px` };
-
-            return (
-                <div class="et-group" key={path}>
-                    <h5
-                        class="et-group-title"
-                        style={indentStyle}
-                        onClick={e => onGroupTitleClick(path, e as any)}
-                        title="点击折叠/展开（Ctrl+点击：全部折叠/展开）"
-                    >
-                        <span class="et-group-toggle-icon">
-                            {isCollapsed ? '▶' : '▼'}
-                        </span>
-                        <span class="et-group-label">
-                            {node.key} ({items.length || countItemsInGroup(node)})
-                        </span>
-                    </h5>
-                    {!isCollapsed && (
-                        <div class="et-group-content">
-                            {items.length > 0 
-                                ? renderEventList(items)
-                                : renderGroupNodes(children, level + 1, chain)
-                            }
-                        </div>
-                    )}
+    if (!groupedTree) {
+        // 无分组：保持原有结构，使用 .event-timeline-view + .et-ungrouped
+        return (
+            <div class="event-timeline-view">
+                <div class="et-ungrouped">
+                    {renderEventList(filteredItems)}
                 </div>
-            );
-        });
-    };
+            </div>
+        );
+    }
 
+    // 有分组时：使用通用 GroupedContainer 统一分组层级逻辑 + 折叠交互
     return (
-        <div class="event-timeline-view">
-            {groupedTree
-                ? renderGroupNodes(groupedTree, 0)
-                : (
-                    <div class="et-ungrouped">
-                        {renderEventList(filteredItems)}
-                    </div>
-                )
-            }
-        </div>
+        <GroupedContainer
+            nodes={groupedTree}
+            classNames={{
+                root: 'event-timeline-view',
+                group: 'et-group',
+                title: 'et-group-title',
+                content: 'et-group-content',
+                toggleIcon: 'et-group-toggle-icon',
+                label: 'et-group-label',
+            }}
+            renderLeaf={(leafItems) => renderEventList(leafItems)}
+        />
     );
 }
