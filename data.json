@@ -211,6 +211,9 @@
           "op": "includes",
           "value": "01"
         }
+      ],
+      "groupFields": [
+        "date"
       ]
     },
     {
@@ -317,7 +320,16 @@
       },
       "collapsed": true,
       "parentId": "group_memc1a9ofen88",
-      "filters": []
+      "filters": [
+        {
+          "field": "categoryKey",
+          "op": "=",
+          "value": "打卡"
+        }
+      ],
+      "groupFields": [
+        "theme"
+      ]
     },
     {
       "id": "view_mg1zanri06mhu",
@@ -398,7 +410,19 @@
       },
       "collapsed": true,
       "parentId": null,
-      "filters": [],
+      "filters": [
+        {
+          "field": "categoryKey",
+          "op": "!=",
+          "value": "完成任务",
+          "logic": "and"
+        },
+        {
+          "field": "categoryKey",
+          "op": "!=",
+          "value": "未完成任务"
+        }
+      ],
       "fields": [
         "categoryKey",
         "icon",
