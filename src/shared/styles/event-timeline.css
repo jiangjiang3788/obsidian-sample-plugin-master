@@ -21,73 +21,6 @@
     gap: 8px;
 }
 
-/* 分组容器 - 支持多级缩进 */
-/* 调整为类似 Block 分组的“包裹框”效果 */
-.et-group {
-    margin-bottom: 12px;
-    padding: 8px 10px;
-    border-radius: 6px;
-    background: var(--background-secondary);
-    border: 1px solid var(--background-modifier-border);
-}
-
-/* 分组层级样式，配合 GroupedContainer 提供的 et-group--level-X  */
-.et-group--level-0 {
-    margin-left: 0;
-}
-
-.et-group--level-1 {
-    margin-left: 8px;
-    background: var(--background-secondary-alt);
-}
-
-.et-group--level-2 {
-    margin-left: 16px;
-    background: var(--background-primary-alt);
-}
-
-/* 分组标题 - 可折叠 */
-.et-group-title {
-    margin: 0 0 8px 0;
-    padding: 6px 10px;
-    background: transparent;
-    border-radius: 4px;
-    border-left: 4px solid var(--interactive-accent);
-    cursor: pointer;
-    transition: all 0.2s ease;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    user-select: none;
-}
-
-.et-group-title:hover {
-    background: var(--background-secondary-alt);
-    box-shadow: 0 1px 3px var(--background-modifier-box-shadow);
-}
-
-.et-group-toggle-icon {
-    font-size: 0.8rem;
-    color: var(--text-muted);
-    transition: transform 0.2s ease;
-    flex-shrink: 0;
-}
-
-.et-group-label {
-    font-size: 0.95rem;
-    font-weight: 600;
-    color: var(--text-normal);
-    flex: 1;
-}
-
-/* 分组内容 */
-.et-group-content {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    margin-top: 4px;
-    padding-left: 4px;
-}
 
 /* 单个事件 - 三栏 Grid 布局 */
 .et-event {
@@ -278,13 +211,6 @@
     border-right-color: var(--background-secondary);
 }
 
-.theme-dark .et-group-title {
-    background: var(--background-primary-alt);
-}
-
-.theme-dark .et-group-title:hover {
-    background: var(--background-secondary);
-}
 
 /* 无障碍访问 */
 .et-event-card:focus {
@@ -311,10 +237,6 @@
     margin: 0;
 }
 
-/* 分组折叠状态下的间距调整 */
-.et-group-content {
-    margin-top: 8px;
-}
 
 /* 日期缺失时的左侧间距保持 */
 .et-event-date:empty {
@@ -323,15 +245,6 @@
 
 /* 优化移动端的分组标题 */
 @media (max-width: 768px) {
-    .et-group-title {
-        padding: 6px 10px;
-        font-size: 0.9rem;
-    }
-    
-    .et-group-toggle-icon {
-        font-size: 0.75rem;
-    }
-    
     .et-date-label {
         font-size: 0.8rem;
     }
