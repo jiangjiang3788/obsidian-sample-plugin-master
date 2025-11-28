@@ -187,7 +187,6 @@ const Popover = ({ target, blocks, title, onClose, app, module, actionService, d
                         items={blocks} 
                         app={app} 
                         fields={module.fields || ['title', 'content', 'categoryKey', 'tags', 'date', 'period']} 
-                        groupField={module.group}
                         groupFields={module.groupFields}
                         onMarkDone={() => {}} 
                         timerService={timerService}

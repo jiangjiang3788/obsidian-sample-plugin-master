@@ -147,9 +147,21 @@ export const EVENT_TIMELINE_VIEW_DEFAULT_CONFIG: EventTimelineViewConfig = {
 /**
  * 导出配置（供 exportUtils 使用）
  */
+export interface FieldRenderConfig {
+    /**
+     * 字段展示类型：
+     * - normal: 普通 "标签: 值"
+     * - content: 多行内容字段，按行展开
+     * - emojiOrLink: 纯 emoji 直接展示，否则转为 ![[ ]] 图片链接
+     */
+    type?: 'normal' | 'content' | 'emojiOrLink';
+}
+
 export interface ExportViewConfig {
     // 分组：例如 'filename' / 'date' / 'header' 等
-    groupField?: string;            // 用于生成 "## 分组名"
+    /** @deprecated 请使用 groupFields 支持多级分组 */
+    groupField?: string;            // 旧：单字段分组
+    groupFields?: string[];         // 新：多字段层级分组
     groupTitlePrefix?: string;      // 可选，比如空字符串
     useMarkdownHeadingForGroup: boolean; // 是否用 '## '
 
@@ -159,12 +171,17 @@ export interface ExportViewConfig {
 
     // 字段标签映射（中文标签）
     fieldLabels: Record<string, string>; // { categoryKey: '分类', date: '日期', rating: '评分', pintu: '评图', content: '内容' }
+
+    // 字段渲染规则（决定字段展示风格）
+    fieldRender?: Record<string, FieldRenderConfig>;
 }
 
 export const BLOCK_EXPORT_DEFAULT_CONFIG: ExportViewConfig = {
-    groupField: 'filename',                // 先按文件分组
-    groupTitlePrefix: '',                  // 目前不用前缀
-    useMarkdownHeadingForGroup: true,      // 用 '## filename'
+    // 旧：groupField: 'filename',
+    // 新：按 文件 → 分类 两级导出
+    groupFields: ['filename', 'categoryKey'],
+    groupTitlePrefix: '',
+    useMarkdownHeadingForGroup: true,
     idTemplate: 'ID {{index}}/{{filename}}#{{id}}',
     detailFields: ['categoryKey', 'date', 'rating', 'pintu', 'content'],
     fieldLabels: {
@@ -174,15 +191,21 @@ export const BLOCK_EXPORT_DEFAULT_CONFIG: ExportViewConfig = {
         pintu: '评图',
         content: '内容',
     },
+    fieldRender: {
+        pintu: { type: 'emojiOrLink' },
+        content: { type: 'content' },
+    },
 };
 
 /**
  * EventTimelineView 导出配置
  */
 export const EVENT_TIMELINE_EXPORT_CONFIG: ExportViewConfig = {
-    groupField: 'date',                    // 按日期分组
-    groupTitlePrefix: '',                  
-    useMarkdownHeadingForGroup: true,      // 用 '## date'
+    // 旧：groupField: 'date',
+    // 新：按 日期 → 分类 两级导出
+    groupFields: ['date', 'categoryKey'],
+    groupTitlePrefix: '',
+    useMarkdownHeadingForGroup: true,
     idTemplate: 'ID {{index}}/{{filename}}#{{id}}',
     detailFields: ['title', 'date', 'categoryKey', 'content'],
     fieldLabels: {
@@ -190,6 +213,9 @@ export const EVENT_TIMELINE_EXPORT_CONFIG: ExportViewConfig = {
         date: '日期',
         categoryKey: '分类',
         content: '内容',
+    },
+    fieldRender: {
+        content: { type: 'content' },
     },
 };
 
@@ -197,9 +223,11 @@ export const EVENT_TIMELINE_EXPORT_CONFIG: ExportViewConfig = {
  * ExcelView 导出配置
  */
 export const EXCEL_EXPORT_CONFIG: ExportViewConfig = {
-    groupField: 'categoryKey',             // 按分类分组
-    groupTitlePrefix: '',                  
-    useMarkdownHeadingForGroup: true,      // 用 '## categoryKey'
+    // 旧：groupField: 'categoryKey',
+    // 新：按 分类 → 日期 两级导出
+    groupFields: ['categoryKey', 'date'],
+    groupTitlePrefix: '',
+    useMarkdownHeadingForGroup: true,
     idTemplate: 'ID {{index}}/{{filename}}#{{id}}',
     detailFields: ['title', 'date', 'categoryKey', 'content'],
     fieldLabels: {
@@ -208,15 +236,20 @@ export const EXCEL_EXPORT_CONFIG: ExportViewConfig = {
         categoryKey: '分类',
         content: '内容',
     },
+    fieldRender: {
+        content: { type: 'content' },
+    },
 };
 
 /**
  * StatisticsView 导出配置 - 默认按Category分类
  */
 export const STATISTICS_EXPORT_CONFIG: ExportViewConfig = {
-    groupField: 'categoryKey',             // 按分类分组
-    groupTitlePrefix: '',                  
-    useMarkdownHeadingForGroup: true,      // 用 '## categoryKey'
+    // 旧：groupField: 'categoryKey',
+    // 新：按 周期 → 分类 两级导出
+    groupFields: ['period', 'categoryKey'],
+    groupTitlePrefix: '',
+    useMarkdownHeadingForGroup: true,
     idTemplate: 'ID {{index}}/{{filename}}#{{id}}',
     detailFields: ['title', 'date', 'categoryKey', 'period', 'content'],
     fieldLabels: {
@@ -226,15 +259,20 @@ export const STATISTICS_EXPORT_CONFIG: ExportViewConfig = {
         period: '周期',
         content: '内容',
     },
+    fieldRender: {
+        content: { type: 'content' },
+    },
 };
 
 /**
  * HeatmapView 导出配置
  */
 export const HEATMAP_EXPORT_CONFIG: ExportViewConfig = {
-    groupField: 'date',                    // 按日期分组
-    groupTitlePrefix: '',                  
-    useMarkdownHeadingForGroup: true,      // 用 '## date'
+    // 旧：groupField: 'date',
+    // 新：按 日期 → 分类 两级导出
+    groupFields: ['date', 'categoryKey'],
+    groupTitlePrefix: '',
+    useMarkdownHeadingForGroup: true,
     idTemplate: 'ID {{index}}/{{filename}}#{{id}}',
     detailFields: ['date', 'categoryKey', 'rating', 'content'],
     fieldLabels: {
@@ -243,15 +281,20 @@ export const HEATMAP_EXPORT_CONFIG: ExportViewConfig = {
         rating: '评分',
         content: '内容',
     },
+    fieldRender: {
+        content: { type: 'content' },
+    },
 };
 
 /**
  * TimelineView 导出配置
  */
 export const TIMELINE_EXPORT_CONFIG: ExportViewConfig = {
-    groupField: 'filename',                // 按文件分组
-    groupTitlePrefix: '',                  
-    useMarkdownHeadingForGroup: true,      // 用 '## filename'
+    // 旧：groupField: 'filename',
+    // 新：按 文件 → 分类 两级导出
+    groupFields: ['filename', 'categoryKey'],
+    groupTitlePrefix: '',
+    useMarkdownHeadingForGroup: true,
     idTemplate: 'ID {{index}}/{{filename}}#{{id}}',
     detailFields: ['title', 'startTime', 'endTime', 'duration', 'categoryKey', 'content'],
     fieldLabels: {
@@ -262,15 +305,20 @@ export const TIMELINE_EXPORT_CONFIG: ExportViewConfig = {
         categoryKey: '分类',
         content: '内容',
     },
+    fieldRender: {
+        content: { type: 'content' },
+    },
 };
 
 /**
  * TableView 导出配置
  */
 export const TABLE_EXPORT_CONFIG: ExportViewConfig = {
-    groupField: 'categoryKey',             // 按分类分组
-    groupTitlePrefix: '',                  
-    useMarkdownHeadingForGroup: true,      // 用 '## categoryKey'
+    // 旧：groupField: 'categoryKey',
+    // 新：按 分类 → 日期 两级导出
+    groupFields: ['categoryKey', 'date'],
+    groupTitlePrefix: '',
+    useMarkdownHeadingForGroup: true,
     idTemplate: 'ID {{index}}/{{filename}}#{{id}}',
     detailFields: ['title', 'date', 'categoryKey', 'content'],
     fieldLabels: {
@@ -278,5 +326,8 @@ export const TABLE_EXPORT_CONFIG: ExportViewConfig = {
         date: '日期',
         categoryKey: '分类',
         content: '内容',
+    },
+    fieldRender: {
+        content: { type: 'content' },
     },
 };

@@ -198,7 +198,24 @@ export function LayoutRenderer({ layout, dataStore, app, actionService, itemServ
         
         // 根据视图类型获取对应的导出配置
         const viewInstance = allViews.find(v => v.id === viewId);
-        const exportConfig = viewInstance ? getExportConfigByViewType(viewInstance.viewType) : undefined;
+        let exportConfig = viewInstance ? getExportConfigByViewType(viewInstance.viewType) : undefined;
+
+        // [修复] 将视图实例中的动态分组配置合并到导出配置中
+        if (viewInstance && exportConfig) {
+            // 优先使用 viewInstance.groupFields (多级分组)
+            // 其次兼容 viewInstance.group (单级分组)
+            // 最后回退到默认配置
+            const dynamicGroupFields = viewInstance.groupFields && viewInstance.groupFields.length > 0
+                ? viewInstance.groupFields
+                : (viewInstance.group ? [viewInstance.group] : undefined);
+
+            if (dynamicGroupFields) {
+                exportConfig = {
+                    ...exportConfig,
+                    groupFields: dynamicGroupFields
+                };
+            }
+        }
         
         const markdownContent = exportItemsToMarkdown(items, exportConfig);
         navigator.clipboard.writeText(markdownContent);
