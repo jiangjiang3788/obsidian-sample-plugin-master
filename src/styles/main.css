@@ -9,6 +9,7 @@
 @import "../shared/styles/base.css";
 @import "../shared/styles/utilities.css";
 @import "../shared/styles/components.css";
+@import "../shared/styles/common-group.css";
 @import "../shared/styles/layout.css";
 @import "../shared/styles/settings.css";
 @import "../shared/styles/timer.css";

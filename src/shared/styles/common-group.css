@@ -1,0 +1,191 @@
+/* 
+ * 通用分组样式 (Common Group Styles)
+ * 提取自 BlockView，用于统一 BlockView, EventTimeline, Statistics 等视图的分组外观
+ * 
+ * 支持的类名前缀:
+ * .ui-group-* (通用)
+ * .bv-group-* (Block View)
+ * .et-group-* (Event Timeline)
+ * .st-group-* (Statistics)
+ */
+
+/* --- 容器与分组样式 --- */
+
+/* 分组容器 */
+.ui-group,
+.bv-group,
+.et-group,
+.st-group {
+    border: 1px solid var(--background-modifier-border);
+    border-radius: 8px;
+    overflow: hidden;
+    background-color: var(--background-primary);
+    margin-bottom: 12px; /* 统一间距 */
+}
+
+/* 分组标题 */
+.ui-group-title,
+.bv-group-title,
+.et-group-title,
+.st-group-title {
+    margin: 0;
+    padding: 8px 12px;
+    background-color: var(--background-secondary);
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    user-select: none;
+    transition: background-color 0.2s ease;
+    color: var(--text-normal);
+    border-bottom: none;
+    /* 移除可能的旧样式影响 */
+    border-left: none; 
+    border-radius: 0;
+}
+
+.ui-group-title:hover,
+.bv-group-title:hover,
+.et-group-title:hover,
+.st-group-title:hover {
+    background-color: var(--background-modifier-hover);
+    /* 移除可能的旧样式影响 */
+    box-shadow: none;
+}
+
+/* 折叠图标 */
+.ui-group-toggle-icon,
+.bv-group-toggle-icon,
+.et-group-toggle-icon,
+.st-group-toggle-icon {
+    font-size: 0.8em;
+    color: var(--text-muted);
+    transition: transform 0.2s ease;
+    flex-shrink: 0;
+}
+
+/* 分组内容容器 */
+.ui-group-content,
+.bv-group-content,
+.et-group-content,
+.st-group-content {
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+/* --- 多层级分组样式 --- */
+
+/* Level 0 (默认) */
+.ui-group--level-0,
+.bv-group--level-0,
+.et-group--level-0,
+.st-group--level-0 {
+    margin-left: 0;
+}
+
+/* Level 1 */
+.ui-group--level-1,
+.bv-group--level-1,
+.et-group--level-1,
+.st-group--level-1 {
+    margin-left: 16px;
+    border-left: 3px solid var(--interactive-accent);
+}
+
+.ui-group--level-1 .ui-group-title,
+.bv-group--level-1 .bv-group-title,
+.et-group--level-1 .et-group-title,
+.st-group--level-1 .st-group-title {
+    background-color: var(--background-modifier-form-field);
+    font-size: 0.85rem;
+    padding-left: 16px;
+}
+
+/* Level 2 */
+.ui-group--level-2,
+.bv-group--level-2,
+.et-group--level-2,
+.st-group--level-2 {
+    margin-left: 32px;
+    border-left: 2px solid var(--text-accent);
+}
+
+.ui-group--level-2 .ui-group-title,
+.bv-group--level-2 .bv-group-title,
+.et-group--level-2 .et-group-title,
+.st-group--level-2 .st-group-title {
+    background-color: var(--background-modifier-form-field-highlighted);
+    font-size: 0.8rem;
+    font-weight: 500;
+    padding-left: 20px;
+}
+
+/* Level 3 */
+.ui-group--level-3,
+.bv-group--level-3,
+.et-group--level-3,
+.st-group--level-3 {
+    margin-left: 48px;
+    border-left: 1px solid var(--text-muted);
+}
+
+.ui-group--level-3 .ui-group-title,
+.bv-group--level-3 .bv-group-title,
+.et-group--level-3 .et-group-title,
+.st-group--level-3 .st-group-title {
+    background-color: var(--background-modifier-border);
+    font-size: 0.75rem;
+    font-weight: 400;
+    padding-left: 24px;
+    color: var(--text-muted);
+}
+
+/* 更深层级的通用样式 */
+[class*="ui-group--level-"],
+[class*="bv-group--level-"],
+[class*="et-group--level-"],
+[class*="st-group--level-"] {
+    border-radius: 4px;
+}
+
+[class*="ui-group--level-"] .ui-group-content,
+[class*="bv-group--level-"] .bv-group-content,
+[class*="et-group--level-"] .et-group-content,
+[class*="st-group--level-"] .st-group-content {
+    padding: 6px 8px;
+}
+
+/* 层级标识 (Toggle Icon Color) */
+.ui-group--level-1 .ui-group-toggle-icon::before,
+.bv-group--level-1 .bv-group-toggle-icon::before,
+.et-group--level-1 .et-group-toggle-icon::before,
+.st-group--level-1 .st-group-toggle-icon::before {
+    color: var(--interactive-accent);
+    font-weight: bold;
+}
+
+.ui-group--level-2 .ui-group-toggle-icon::before,
+.bv-group--level-2 .bv-group-toggle-icon::before,
+.et-group--level-2 .et-group-toggle-icon::before,
+.st-group--level-2 .st-group-toggle-icon::before {
+    color: var(--text-accent);
+}
+
+.ui-group--level-3 .ui-group-toggle-icon::before,
+.bv-group--level-3 .bv-group-toggle-icon::before,
+.et-group--level-3 .et-group-toggle-icon::before,
+.st-group--level-3 .st-group-toggle-icon::before {
+    color: var(--text-muted);
+}
+
+/* 暗色主题适配 (如果需要特殊处理) */
+.theme-dark .ui-group-title,
+.theme-dark .bv-group-title,
+.theme-dark .et-group-title,
+.theme-dark .st-group-title {
+    /* 保持与背景一致或微调 */
+}
