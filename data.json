@@ -393,20 +393,14 @@
     {
       "id": "view_mh4itucqmm9rt",
       "title": "新视图",
-      "viewType": "EventTimelineView",
+      "viewType": "BlockView",
       "dataSourceId": "",
       "viewConfig": {
-        "timeField": "date",
-        "titleField": "title",
-        "contentField": "content",
-        "groupByDay": true,
-        "showWeekday": true,
-        "maxContentLength": 160,
-        "fields": [
-          "title",
-          "date"
-        ],
-        "groupFields": []
+        "view": "BlockView",
+        "title": "块视图",
+        "collapsed": false,
+        "fields": [],
+        "group": "categoryKey"
       },
       "collapsed": true,
       "parentId": null,
@@ -424,8 +418,6 @@
         }
       ],
       "fields": [
-        "categoryKey",
-        "icon",
         "content"
       ],
       "groupFields": [
@@ -8586,6 +8578,28 @@
   },
   "floatingTimerEnabled": true,
   "activeThemePaths": [],
+  "aiSettings": {
+    "enabled": true,
+    "provider": "openai_compat",
+    "apiEndpoint": "https://api.ricardochat.cn/v1",
+    "apiKey": "sk-9BZGGwd78iHSraAdHtnLDXFoY3bJhxqRwivYazOPoA0dTepV",
+    "model": "[渠道2]gemini-2.5-pro",
+    "temperature": 0.7,
+    "maxTokens": 4096,
+    "requestTimeoutMs": 30000,
+    "enabledBlockIds": [
+      "blk_meic1my6m62iu",
+      "blk_mejsg1dc46fj9",
+      "blk_mejsdvflptluo",
+      "blk_mejsfuehqj4s0",
+      "blk_mejsg76atopau"
+    ],
+    "allowMultipleResults": true,
+    "maxResults": 5,
+    "confirmMode": "single",
+    "preloadConfigOnStartup": true,
+    "configCacheTTLSeconds": 300
+  },
   "dataSources": [
     {
       "id": "ds_membld9cc3oj6",

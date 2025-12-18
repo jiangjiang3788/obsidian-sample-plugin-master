@@ -14,6 +14,7 @@ import { InputSettings } from './InputSettings';
 import { AppStore } from '@/app/AppStore';
 import { DataStore } from '@/core/services/DataStore';
 import { GeneralSettings } from './GeneralSettings';
+import { AiSettings } from './AiSettings';
 
 function a11yProps(index: number) {
     return { id: `settings-tab-${index}`, 'aria-controls': `settings-tabpanel-${index}` };
@@ -40,11 +41,13 @@ function SettingsRoot({ app, appStore, dataStore }: { app: App, appStore: AppSto
                         <Tab label="快速输入" {...a11yProps(0)} />
                         <Tab label="布局" {...a11yProps(1)} />
                         <Tab label="通用" {...a11yProps(2)} />
+                        <Tab label="AI" {...a11yProps(3)} />
                     </Tabs>
                 </Box>
                 <TabPanel value={tabIndex} index={0}><InputSettings appStore={appStore} dataStore={dataStore} /></TabPanel>
                 <TabPanel value={tabIndex} index={1}><LayoutSettings app={app} appStore={appStore} /></TabPanel>
                 <TabPanel value={tabIndex} index={2}><GeneralSettings appStore={appStore} /></TabPanel>
+                <TabPanel value={tabIndex} index={3}><AiSettings appStore={appStore} /></TabPanel>
             </Box>
         </ThemeProvider>
     );
