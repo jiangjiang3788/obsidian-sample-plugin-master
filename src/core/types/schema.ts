@@ -1,5 +1,7 @@
 // src/core/domain/schema.ts
 import type { RecurrenceInfo } from '@core/utils/mark';
+import type { AiSettings } from './ai-schema';
+import { DEFAULT_AI_SETTINGS } from './ai-schema';
 
 // [新增] 定义可分组项的通用接口
 export interface Groupable {
@@ -27,6 +29,8 @@ export interface ThinkSettings {
     floatingTimerEnabled: boolean;
     // [新增] 激活的主题路径
     activeThemePaths?: string[];
+    // [新增] AI 设置
+    aiSettings?: AiSettings;
 }
 
 export const DEFAULT_SETTINGS: ThinkSettings = {
@@ -38,6 +42,8 @@ export const DEFAULT_SETTINGS: ThinkSettings = {
     floatingTimerEnabled: true,
     // [新增]
     activeThemePaths: [],
+    // [新增] AI 默认设置
+    aiSettings: DEFAULT_AI_SETTINGS,
 };
 
 

@@ -13,7 +13,6 @@ import { SimpleSelect } from '@shared/ui/composites/SimpleSelect';
 import { buildThemeTree, ThemeTreeNode } from '@core/utils/themeUtils';
 import { dayjs, timeToMinutes, minutesToTime } from '@core/utils/date';
 import { inputService, dataStore } from '@/app/storeRegistry';
-// [核心修改 1] 导入模板渲染工具
 import { renderTemplate } from '@core/utils/templateUtils';
 
 export interface QuickInputSaveData {
@@ -28,7 +27,8 @@ export class QuickInputModal extends Modal {
         private blockId: string,
         private context?: Record<string, any>,
         private themeId?: string,
-        private onSave?: (data: QuickInputSaveData) => void
+        private onSave?: (data: QuickInputSaveData) => void,
+        private allowBlockSwitch: boolean = false
     ) {
         super(app);
     }
@@ -36,8 +36,6 @@ export class QuickInputModal extends Modal {
     onOpen() {
         this.contentEl.empty();
         this.modalEl.addClass('think-quick-input-modal');
-        
-        // 添加输入法检测
         this.setupKeyboardDetection();
         
         render(
@@ -48,6 +46,7 @@ export class QuickInputModal extends Modal {
                 themeId={this.themeId}
                 onSave={this.onSave}
                 closeModal={() => this.close()}
+                allowBlockSwitch={this.allowBlockSwitch}
             />,
             this.contentEl
         );
@@ -55,24 +54,18 @@ export class QuickInputModal extends Modal {
 
     private setupKeyboardDetection() {
         let initialViewportHeight = window.innerHeight;
-        let keyboardHeight = 300; // 默认输入法高度
+        let keyboardHeight = 300;
 
-        // 动态设置CSS变量
         const setKeyboardHeight = (height: number) => {
             keyboardHeight = height;
             this.modalEl.style.setProperty('--keyboard-height', `${height}px`);
-            
-            // 同时设置在document root上，让CSS可以访问
             document.documentElement.style.setProperty('--keyboard-height', `${height}px`);
         };
 
-        // 检测输入法激活状态
         const handleFocusIn = (e: FocusEvent) => {
             const target = e.target as HTMLElement;
             if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') {
                 this.modalEl.addClass('keyboard-active');
-                
-                // 尝试滚动到输入框位置
                 setTimeout(() => {
                     target.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 }, 300);
@@ -82,36 +75,29 @@ export class QuickInputModal extends Modal {
         const handleFocusOut = (e: FocusEvent) => {
             const target = e.target as HTMLElement;
             if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') {
-                // 延迟移除类，避免输入法切换时的闪烁
                 setTimeout(() => {
                     this.modalEl.removeClass('keyboard-active');
                 }, 100);
             }
         };
 
-        // 监听窗口大小变化（输入法弹出时）
         const handleResize = () => {
             const currentHeight = window.visualViewport?.height || window.innerHeight;
             const heightDiff = initialViewportHeight - currentHeight;
             
-            if (heightDiff > 150) { // 输入法通常至少150px高
-                // 输入法弹出了
+            if (heightDiff > 150) {
                 this.modalEl.addClass('keyboard-active');
                 setKeyboardHeight(heightDiff);
-                
-                // 确保面板内容可滚动
                 const modalContent = this.contentEl.querySelector('.modal-content, .think-modal') as HTMLElement;
                 if (modalContent) {
                     modalContent.scrollTop = modalContent.scrollHeight;
                 }
             } else {
-                // 输入法收起了
                 this.modalEl.removeClass('keyboard-active');
-                setKeyboardHeight(300); // 重置为默认值
+                setKeyboardHeight(300);
             }
         };
 
-        // 使用Visual Viewport API进行更精确的检测
         const handleVisualViewportResize = () => {
             if (window.visualViewport) {
                 const viewportHeight = window.visualViewport.height;
@@ -120,8 +106,6 @@ export class QuickInputModal extends Modal {
                 if (heightDiff > 150) {
                     this.modalEl.addClass('keyboard-active');
                     setKeyboardHeight(heightDiff);
-                    
-                    // 考虑Visual Viewport的偏移
                     const offsetTop = window.visualViewport.offsetTop || 0;
                     if (offsetTop > 0) {
                         this.modalEl.style.setProperty('--keyboard-offset', `${offsetTop}px`);
@@ -133,31 +117,25 @@ export class QuickInputModal extends Modal {
             }
         };
 
-        // 监听焦点事件
         this.contentEl.addEventListener('focusin', handleFocusIn);
         this.contentEl.addEventListener('focusout', handleFocusOut);
 
-        // 监听视口变化
         if (window.visualViewport) {
             window.visualViewport.addEventListener('resize', handleVisualViewportResize);
         } else {
             window.addEventListener('resize', handleResize);
         }
 
-        // 监听屏幕方向变化
         const handleOrientationChange = () => {
             setTimeout(() => {
                 initialViewportHeight = window.innerHeight;
-                setKeyboardHeight(300); // 重置输入法高度
+                setKeyboardHeight(300);
             }, 500);
         };
 
         window.addEventListener('orientationchange', handleOrientationChange);
-
-        // 初始化CSS变量
         setKeyboardHeight(300);
 
-        // 清理函数
         this.onClose = () => {
             this.contentEl.removeEventListener('focusin', handleFocusIn);
             this.contentEl.removeEventListener('focusout', handleFocusOut);
@@ -169,12 +147,9 @@ export class QuickInputModal extends Modal {
             }
             
             window.removeEventListener('orientationchange', handleOrientationChange);
-            
-            // 清理CSS变量
             document.documentElement.style.removeProperty('--keyboard-height');
             this.modalEl.style.removeProperty('--keyboard-height');
             this.modalEl.style.removeProperty('--keyboard-offset');
-            
             unmountComponentAtNode(this.contentEl);
         };
     }
@@ -184,7 +159,6 @@ export class QuickInputModal extends Modal {
     }
 }
 
-// ... 辅助函数 findNodePath, renderThemeLevels, getEffectiveTemplate 保持不变 ...
 function getEffectiveTemplate(settings: InputSettings, blockId: string, themeId?: string): { template: BlockTemplate | null; theme: ThemeDefinition | null } {
     const baseBlock = settings.blocks.find(b => b.id === blockId);
     if (!baseBlock) return { template: null, theme: null };
@@ -198,6 +172,7 @@ function getEffectiveTemplate(settings: InputSettings, blockId: string, themeId?
     }
     return { template: baseBlock, theme };
 }
+
 const findNodePath = (nodes: ThemeTreeNode[], themeId: string): ThemeTreeNode[] => {
     for (const node of nodes) {
         if (node.themeId === themeId) return [node];
@@ -208,6 +183,7 @@ const findNodePath = (nodes: ThemeTreeNode[], themeId: string): ThemeTreeNode[] 
     }
     return [];
 };
+
 const renderThemeLevels = (nodes: ThemeTreeNode[], activePath: ThemeTreeNode[], onSelect: (id: string, parentId: string | null) => void, level = 0) => {
     const parentNode = activePath[level - 1];
     const parentThemeId = parentNode ? parentNode.themeId : null;
@@ -233,22 +209,27 @@ const renderThemeLevels = (nodes: ThemeTreeNode[], activePath: ThemeTreeNode[], 
     );
 };
 
-function QuickInputForm({ app, blockId, context, themeId, onSave, closeModal }: {
+function QuickInputForm({ app, blockId: initialBlockId, context, themeId, onSave, closeModal, allowBlockSwitch }: {
     app: App;
     blockId: string;
     context?: Record<string, any>;
     themeId?: string;
     onSave?: (data: QuickInputSaveData) => void;
     closeModal: () => void;
+    allowBlockSwitch?: boolean;
 }) {
     const settings = useStore(state => state.settings.inputSettings);
+    const [currentBlockId, setCurrentBlockId] = useState(initialBlockId);
     
-    // ... themeTree, themeIdMap 的 useMemo 保持不变 ...
+    const availableBlocks = useMemo(() => {
+        return settings.blocks || [];
+    }, [settings.blocks]);
+    
     const { themeTree, themeIdMap } = useMemo(() => {
         const { themes, overrides } = settings;
         const disabledThemeIds = new Set<string>();
         overrides.forEach(override => {
-            if (override.blockId === blockId && override.disabled) {
+            if (override.blockId === currentBlockId && override.disabled) {
                 disabledThemeIds.add(override.themeId);
             }
         });
@@ -256,24 +237,19 @@ function QuickInputForm({ app, blockId, context, themeId, onSave, closeModal }: 
         const themeTree = buildThemeTree(availableThemes);
         const themeIdMap = new Map<string, ThemeDefinition>(themes.map(t => [t.id, t]));
         return { themeTree, themeIdMap };
-    }, [settings, blockId]);
-
+    }, [settings, currentBlockId]);
 
     const [selectedThemeId, setSelectedThemeId] = useState<string | null>(themeId || null);
 
-    // [核心修改 2] `template` 和 `theme` 的计算保持不变
     const { template, theme } = useMemo(() => {
-        return getEffectiveTemplate(settings, blockId, selectedThemeId || undefined);
-    }, [settings, blockId, selectedThemeId]);
+        return getEffectiveTemplate(settings, currentBlockId, selectedThemeId || undefined);
+    }, [settings, currentBlockId, selectedThemeId]);
 
-    // [核心修改 3] `formData` 初始化为空对象，具体值由下面的 `useEffect` 动态填充
     const [formData, setFormData] = useState<Record<string, any>>({});
 
-    // [核心修改 4] 使用 useEffect 来响应 `template` 的变化，并重新计算表单的初始/默认值
     useEffect(() => {
         if (!template) return;
 
-        // 构建一个用于模板解析的完整上下文，包含基础 context 和当前选择的 theme
         const dataForParsing = {
             ...context,
             theme: theme ? { path: theme.path, icon: theme.icon || '' } : {}
@@ -282,7 +258,6 @@ function QuickInputForm({ app, blockId, context, themeId, onSave, closeModal }: 
         const initialData: Record<string, any> = {};
 
         template.fields.forEach(field => {
-            // 优先保留用户已输入的值
             if (formData[field.key] !== undefined && formData[field.key] !== '') {
                 initialData[field.key] = formData[field.key];
                 return;
@@ -292,7 +267,6 @@ function QuickInputForm({ app, blockId, context, themeId, onSave, closeModal }: 
             const contextValue = context?.[field.key] ?? context?.[field.label];
 
             if (contextValue !== undefined) {
-                // ... (处理 context 值的逻辑保持不变) ...
                 if (['select', 'radio', 'rating'].includes(field.type)) {
                     const matchedOption = (field.options || []).find(opt => opt.value === contextValue || opt.label === contextValue);
                     if (matchedOption) {
@@ -317,9 +291,8 @@ function QuickInputForm({ app, blockId, context, themeId, onSave, closeModal }: 
                             initialData[field.key] = { value: defaultOpt.value, label: defaultOpt.label || defaultOpt.value };
                         }
                     } else {
-                        // 这是我们增强的解析逻辑
                         let finalDefaultValue = field.defaultValue || '';
-                        if (typeof finalDefaultValue === 'string') { // 确保是字符串再解析
+                        if (typeof finalDefaultValue === 'string') {
                             finalDefaultValue = renderTemplate(finalDefaultValue, dataForParsing);
                         }
                         initialData[field.key] = finalDefaultValue;
@@ -337,12 +310,25 @@ function QuickInputForm({ app, blockId, context, themeId, onSave, closeModal }: 
             }
         });
         
-        // 设置表单数据，保留用户已输入的值
         setFormData(initialData);
+    }, [template, theme, context]);
 
-    }, [template, theme, context]); // 依赖项：当 template, theme 或 context 变化时，重新运行此 effect
+    const handleBlockChange = (newBlockId: string) => {
+        if (newBlockId === currentBlockId) return;
+        
+        const preservedData: Record<string, any> = {};
+        const commonFields = ['内容', 'content', '日期', 'date', '时间', 'time', '备注', 'note', 'description'];
+        
+        commonFields.forEach(key => {
+            if (formData[key] !== undefined) {
+                preservedData[key] = formData[key];
+            }
+        });
+        
+        setCurrentBlockId(newBlockId);
+        setFormData(preservedData);
+    };
 
-    // ... useEffect for time calculation, handleUpdate, handleSubmit, 和 renderField 保持不变 ...
     useEffect(() => {
         const data = { ...formData };
         const start = data.时间;
@@ -377,7 +363,6 @@ function QuickInputForm({ app, blockId, context, themeId, onSave, closeModal }: 
         if (Object.keys(changes).length > 0) {
             setFormData(current => ({ ...current, ...changes, lastChanged: undefined }));
         }
-
     }, [formData]);
     
     const handleUpdate = (key: string, value: any, isOptionObject = false) => {
@@ -436,9 +421,7 @@ function QuickInputForm({ app, blockId, context, themeId, onSave, closeModal }: 
                         <Stack direction="row" spacing={1} sx={{ mt: 1 }}>
                             {(field.options || []).map(opt => {
                                 const isSelected = isComplex && formData[field.key]?.label === opt.label && formData[field.key]?.value === opt.value;
-                                // 检查是否为编辑模式（有context且包含评分信息）
                                 const isEditMode = context && (context.评分 !== undefined || context.rating !== undefined);
-                                // 检查当前选项是否为编辑前的原始值
                                 const isOriginalValue = isEditMode && (
                                     (context.评分 !== undefined && context.评分 === opt.label) ||
                                     (context.rating !== undefined && context.rating === opt.value)
@@ -462,11 +445,7 @@ function QuickInputForm({ app, blockId, context, themeId, onSave, closeModal }: 
                                             height: '40px', 
                                             p: 1, 
                                             opacity: isSelected ? 1 : 0.6, 
-                                            '&:hover': { 
-                                                opacity: 1,
-                                                transform: 'scale(1.05)'
-                                            },
-                                            // 编辑模式下，原始值显示描边提示；选择模式下，选中值显示描边
+                                            '&:hover': { opacity: 1, transform: 'scale(1.05)' },
                                             border: isEditMode ? 
                                                 (isOriginalValue ? '2px solid var(--interactive-accent)' : '1px solid transparent') : 
                                                 (isSelected ? '2px solid var(--interactive-accent)' : '1px solid transparent'),
@@ -498,7 +477,7 @@ function QuickInputForm({ app, blockId, context, themeId, onSave, closeModal }: 
                             </MuiRadioGroup>
                         </FormControl>
                     );
-                } else { // select
+                } else {
                     const selectOptions = (field.options || []).map(opt => ({ value: opt.value, label: opt.label || opt.value }));
                     return (
                         <FormControl fullWidth>
@@ -535,9 +514,9 @@ function QuickInputForm({ app, blockId, context, themeId, onSave, closeModal }: 
             }
         }
     };
-    // ... return JSX 保持不变 ...
+
     if (!template) {
-        return <div>错误：找不到ID为 "{blockId}" 的Block模板。</div>;
+        return <div>错误：找不到ID为 "{currentBlockId}" 的Block模板。</div>;
     }
 
     const activePath = selectedThemeId ? findNodePath(themeTree, selectedThemeId) : [];
@@ -545,11 +524,14 @@ function QuickInputForm({ app, blockId, context, themeId, onSave, closeModal }: 
         setSelectedThemeId(selectedThemeId === newThemeId ? parentThemeId : newThemeId);
     };
 
+    const currentBlock = availableBlocks.find(b => b.id === currentBlockId);
+    const currentBlockName = currentBlock?.name || template.name;
+
     return (
         <div class="think-modal" style={{ padding: '0 1rem 1rem 1rem' }}>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: '1rem'  }}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: '1rem' }}>
                 <h3 style={{ margin: 0 }}>
-                    {onSave ? `开始新任务: ${template.name}` : `快速录入 · ${template.name}`}
+                    {onSave ? `开始新任务: ${currentBlockName}` : `快速录入 · ${currentBlockName}`}
                 </h3>
                 <Tooltip title="关闭">
                     <IconButton onClick={closeModal} size="small">
@@ -558,17 +540,30 @@ function QuickInputForm({ app, blockId, context, themeId, onSave, closeModal }: 
                 </Tooltip>
             </Box>
 
+            {/* Block 类型选择器 - 仅在允许切换时显示 */}
+            {allowBlockSwitch && availableBlocks.length > 1 && (
+                <FormControl fullWidth sx={{ mb: 2 }}>
+                    <Typography variant="body2" sx={{ fontWeight: 600, mb: 1 }}>记录类型</Typography>
+                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                        {availableBlocks.map(block => (
+                            <Button
+                                key={block.id}
+                                variant={currentBlockId === block.id ? 'contained' : 'outlined'}
+                                size="small"
+                                onClick={() => handleBlockChange(block.id)}
+                                sx={{ minWidth: 'auto', px: 2, py: 0.5, fontSize: '0.875rem' }}
+                            >
+                                {block.name}
+                            </Button>
+                        ))}
+                    </Box>
+                </FormControl>
+            )}
+
             {themeTree.length > 0 && (
                 <FormControl component="fieldset" sx={{ mb: 1, width: '100%' }}>
                     <Typography variant="body2" sx={{ fontWeight: 600, mb: 1 }}>主题分类</Typography>
-                    <Box sx={{
-                        height: '120px',
-                        overflowY: 'auto',
-                        borderColor: 'divider',
-                        borderRadius: 1,
-                        p: 1,
-                        pr: 0.5
-                    }}>
+                    <Box sx={{ height: '120px', overflowY: 'auto', borderColor: 'divider', borderRadius: 1, p: 1, pr: 0.5 }}>
                         {renderThemeLevels(themeTree, activePath, handleSelectTheme)}
                     </Box>
                 </FormControl>
@@ -580,13 +575,11 @@ function QuickInputForm({ app, blockId, context, themeId, onSave, closeModal }: 
                     const timeFieldKeys = ['时间', '结束', '时长'];
                     const dateFieldKey = '日期';
                     
-                    // 按原始顺序获取字段，但重新组织显示顺序
                     const fieldsToRender: h.JSX.Element[] = [];
                     const dateField = template.fields.find(f => f.key === dateFieldKey);
                     const timeFields: TemplateField[] = [];
                     const processedKeys = new Set<string>();
                     
-                    // 先渲染非日期和非时间的字段
                     template.fields.forEach(field => {
                         if (field.key !== dateFieldKey && !timeFieldKeys.includes(field.key)) {
                             fieldsToRender.push(<div key={field.id}>{renderField(field)}</div>);
@@ -599,14 +592,11 @@ function QuickInputForm({ app, blockId, context, themeId, onSave, closeModal }: 
                         }
                     });
                     
-                    // 然后添加日期字段
                     if (dateField) {
                         fieldsToRender.push(<div key={dateField.id}>{renderField(dateField)}</div>);
                     }
                     
-                    // 最后添加时间三项（按指定顺序）
                     if (timeFields.length > 0) {
-                        // 按照 timeFieldKeys 的顺序排序
                         const sortedTimeFields = timeFieldKeys
                             .map(key => timeFields.find(f => f.key === key))
                             .filter(f => f !== undefined) as TemplateField[];

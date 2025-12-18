@@ -4,6 +4,7 @@ import { DataStore } from '@core/services/DataStore';
 import { RendererService } from '@/features/settings/RendererService';
 import { ActionService } from '@core/services/ActionService';
 import * as QuickInputFeature from '@features/quickinput';
+import * as AiInputFeature from '@features/aiinput';
 import { setupSettings, setupDashboard } from '@/features/settings';
 
 /**
@@ -46,6 +47,9 @@ export class FeatureLoader {
         
         // 3. QuickInput (独立)
         this.loadQuickInputFeature();
+        
+        // 4. AI Input (独立)
+        this.loadAiInputFeature();
         
         console.timeEnd('[ThinkPlugin] UI特性加载');
     }
@@ -103,5 +107,16 @@ export class FeatureLoader {
             });
             console.timeEnd('[ThinkPlugin] QuickInput特性加载');
         }, 100);
+    }
+
+    private loadAiInputFeature(): void {
+        setTimeout(() => {
+            console.time('[ThinkPlugin] AiInput特性加载');
+            AiInputFeature.setup?.({
+                plugin: this.plugin,
+                appStore: this.appStore
+            });
+            console.timeEnd('[ThinkPlugin] AiInput特性加载');
+        }, 120);
     }
 }
