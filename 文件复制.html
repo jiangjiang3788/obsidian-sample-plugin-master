@@ -1,451 +1,284 @@
 <!DOCTYPE html>
-<html lang='zh-CN'>
+<html lang="zh-CN">
 <head>
-<meta charset='UTF-8'>
-<title>Obsidian 插件源码浏览器</title>
+<meta charset="UTF-8">
+<title>源码浏览器（复制专用 · .pyc 完全隐藏）</title>
+
 <style>
-  :root{
-    --bg-sidebar:#ffffff;
-    --bg-preview:#fafafa;
-    --border-color:#e0e0e0;
-    --line-color:#d0d0d0;
-    --btn-bg:#f5f7fa;
-    --btn-border:#cccccc;
-    --btn-hover:#e8ebf0;
-    --text:#333333;
-    --accent:#3f51b5;
-    --accent-light:rgba(63,81,181,.1);
-    --toast-bg:#2196f3;
-  }
-  *{box-sizing:border-box}
-  body{margin:0;display:flex;height:100vh;overflow:hidden;color:var(--text);font-family:system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,'Noto Sans',sans-serif}
-
-  button{margin-left:4px;font-size:12px;padding:3px 8px;border:1px solid var(--btn-border);background:var(--btn-bg);border-radius:4px;cursor:pointer}
-  button:hover{background:var(--btn-hover)}
-  .iconBtn{padding:2px 6px}
-  .selected{background:var(--accent-light)}
-
-  #sidebar{width:340px;overflow:auto;border-right:1px solid var(--border-color);padding:8px 12px;background:var(--bg-sidebar)}
-  
-  /* 顶部按钮组样式 */
-  .toolbar{display:flex;gap:4px;margin-bottom:8px;flex-wrap:wrap;}
-
-  #previewPane{flex:1;display:flex;flex-direction:column;height:100%}
-  #previewHeader{display:flex;align-items:center;border-bottom:1px solid var(--border-color);background:#f0f2f5}
-  #previewTitle{flex:1;padding:6px 10px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  #preview{flex:1;overflow:auto;font-family:monospace;border:none;resize:none;padding:12px;background:var(--bg-preview);white-space:pre;outline:none}
-
-  details{position:relative;margin:2px 0;padding-left:1em}
-  details::before{content:'';position:absolute;left:0.4em;top:0;bottom:0;width:1px;background:var(--line-color)}
-  summary{list-style:none;display:flex;align-items:center;cursor:pointer;user-select:none;position:relative;padding:2px 0}
-  summary::-webkit-details-marker, summary::marker{display:none}
-  summary::before{content:'';position:absolute;left:-0.6em;top:50%;width:0.6em;height:1px;background:var(--line-color)}
-  
-  /* 调整 summary 内部布局，让复制按钮右对齐 */
-  summary .folderName{flex:1;display:flex;align-items:center;}
-  summary .copyBtn{margin-left:auto;}
-  
-  /* 文件行样式调整 */
-  .fileRow{position:relative;display:flex;align-items:center;margin:2px 0 2px 1.6em;padding:2px 0}
-  .fileRow::before{content:'';position:absolute;left:0.4em;height:100%;width:1px;background:var(--line-color)}
-  .fileRow .fileName{flex:1;display:flex;align-items:center;cursor:pointer;user-select:none}
-  .fileRow .copyBtn{margin-left:auto;}
-  
-  /* 复选框样式 */
-  input[type="checkbox"]{margin-right:4px;cursor:pointer;}
-
-  .toast{
-    position:fixed;
-    bottom:16px;
-    left:50%;
-    transform:translateX(-50%);
-    background:var(--toast-bg);
-    color:#fff;
-    padding:8px 14px;
-    border-radius:6px;
-    font-size:14px;
-    opacity:0;
-    pointer-events:none;
-    animation:fadeIn .25s forwards,fadeOut .25s forwards 1.75s
-  }
-  @keyframes fadeIn{to{opacity:1}}
-  @keyframes fadeOut{to{opacity:0}}
+*{box-sizing:border-box}
+body{
+  margin:0;height:100vh;display:flex;overflow:hidden;
+  font-family:system-ui;
+}
+button{
+  font-size:12px;padding:4px 10px;border:1px solid #ccc;
+  border-radius:6px;background:#f5f7fa;cursor:pointer;
+}
+#sidebar{
+  width:460px;border-right:1px solid #ddd;
+  padding:10px;overflow:auto;
+}
+.toolbar{display:flex;flex-direction:column;gap:6px;margin-bottom:10px}
+.toolbar-row{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+#tree details{margin-left:1em}
+.fileRow{margin-left:2em;display:flex;gap:6px;cursor:pointer}
+.selected{background:#e8ebf0}
+#previewPane{flex:1;display:flex;flex-direction:column}
+#previewHeader{padding:6px 10px;border-bottom:1px solid #ddd;font-weight:700}
+#preview{
+  flex:1;border:none;resize:none;padding:12px;
+  font-family:monospace;background:#fafafa;white-space:pre;
+}
+.toast{
+  position:fixed;bottom:16px;left:50%;transform:translateX(-50%);
+  background:#2196f3;color:#fff;padding:8px 14px;border-radius:6px;
+  opacity:0;animation:fadeIn .25s forwards,fadeOut .25s forwards 2s;
+}
+@keyframes fadeIn{to{opacity:1}}
+@keyframes fadeOut{to{opacity:0}}
 </style>
 </head>
-<body>
-  <div id="sidebar">
-    <div class="toolbar">
-      <button id="openDir" type="button">选择文件夹</button>
-      <button id="collapseAll" type="button">折叠全部</button>
-      <button id="copySelected" type="button">复制选中</button>
-      <button id="selectAll" type="button">全选</button>
-      <button id="deselectAll" type="button">取消全选</button>
-    </div>
-    <div id="tree"></div>
-  </div>
 
-  <div id="previewPane">
-    <div id="previewHeader">
-      <div id="previewTitle">（未选择文件）</div>
-      <button id="saveBtn" class="iconBtn" type="button" hidden>保存</button>
+<body>
+
+<div id="sidebar">
+  <div class="toolbar">
+
+    <div class="toolbar-row">
+      <button id="openDir">选择文件夹</button>
     </div>
-    <textarea id="preview" readonly spellcheck="false">// 这里会显示文件内容</textarea>
+
+    <div class="toolbar-row">
+      <button id="copySelected">复制选中内容</button>
+      <button id="copyPaths">复制路径</button>
+    </div>
+
+    <div class="toolbar-row">
+      <label>
+        <input id="skipBinary" type="checkbox" checked>
+        跳过二进制/无关文件
+      </label>
+      <label>
+        单文件上限(KB)
+        <input id="maxKB" type="text" value="512" style="width:80px">
+      </label>
+    </div>
+
+    <div class="toolbar-row">
+      <button id="selectAll">全选</button>
+      <button id="clearAll">取消全选</button>
+    </div>
+
   </div>
+  <div id="tree"></div>
+</div>
+
+<div id="previewPane">
+  <div id="previewHeader">文件预览（只读）</div>
+  <textarea id="preview" readonly>// 点击文件查看内容</textarea>
+</div>
 
 <script>
-const $ = id=>document.getElementById(id);
-const ignoreDirs = new Set(['.obsidian-cache', 'test', 'node_modules', 'dist']);
+const $ = id => document.getElementById(id);
 let rootHandle=null;
-let selected={handle:null,path:'',element:null};
-let isDirty=false;
-let checkedItems = new Map(); // 存储选中的项目 {path: {handle, type: 'file'|'folder'}}
+let checked=new Map();
+let selectedEl=null;
 
-function showToast(msg){
+/* ---------- extensions ---------- */
+function extOf(p){
+  const i=p.lastIndexOf('.');
+  return i>=0?p.slice(i+1).toLowerCase():'';
+}
+
+// ✅ 永久忽略规则（最高优先级）
+function shouldAlwaysIgnore(path){
+  return extOf(path)==='pyc';
+}
+
+const skipExt=new Set([
+ 'db','sqlite','sqlite3','log',
+ 'png','jpg','jpeg','gif','webp','bmp','ico',
+ 'zip','7z','rar','tar','gz','bz2','xz',
+ 'pdf','exe','dll','so','dylib',
+ 'mp3','mp4','mov','mkv','avi',
+ 'pyo','pyd','class','o'
+]);
+
+function toast(msg){
   const t=document.createElement('div');
   t.className='toast';
   t.textContent=msg;
   document.body.appendChild(t);
-  setTimeout(()=>t.remove(),2000);
+  setTimeout(()=>t.remove(),2400);
 }
 
-function createBtn(text,fn,className='iconBtn'){
-  const b=document.createElement('button');
-  b.textContent=text;
-  b.type='button';
-  b.className=className;
-  b.onclick=fn;
-  return b;
+/* ---------- checkbox ---------- */
+function updateChecked(cb){
+  const p=cb.dataset.path;
+  const t=cb.dataset.type;
+  cb.checked?checked.set(p,{type:t}):checked.delete(p);
 }
-
-$('openDir').onclick=async()=>{
-  try{
-    rootHandle=await window.showDirectoryPicker({id:'obsidian-plugin-root'});
-    $('tree').innerHTML='';
-    checkedItems.clear();
-    await renderTree(rootHandle,'',$('tree'));
-    resetPreview();
-  }catch(e){console.error(e);}
-};
-
-$('collapseAll').onclick=()=>{
-  document.querySelectorAll('#tree details').forEach(d=>d.open=false);
-}
-
-// 全选按钮
-$('selectAll').onclick=()=>{
-  document.querySelectorAll('#tree input[type="checkbox"]').forEach(cb=>{
-    cb.checked=true;
-    const path = cb.dataset.path;
-    const type = cb.dataset.type;
-    const handleElem = cb.closest('[data-handle]');
-    if(handleElem){
-      checkedItems.set(path, {handle: handleElem.dataset.handle, type});
-    }
+function setSubtree(details,state){
+  details.querySelectorAll('input[type=checkbox]').forEach(cb=>{
+    cb.checked=state;
+    updateChecked(cb);
   });
 }
 
-// 取消全选按钮
-$('deselectAll').onclick=()=>{
-  document.querySelectorAll('#tree input[type="checkbox"]').forEach(cb=>{
-    cb.checked=false;
-  });
-  checkedItems.clear();
-}
+/* ---------- render ---------- */
+async function render(dir,rel,box){
+  for await(const [name,h] of dir){
+    const path=rel+name;
 
-// 复制选中按钮
-$('copySelected').onclick=async()=>{
-  if(checkedItems.size===0){
-    showToast('请先选择要复制的项目');
-    return;
-  }
-  
-  let result='';
-  let fileCount = 0;
-  let folderCount = 0;
-  
-  // 对选中的项目按路径排序
-  const sortedPaths = Array.from(checkedItems.keys()).sort();
-  
-  // 用于记录已处理的文件夹路径，避免重复复制子项目
-  const processedFolders = new Set();
+    if(h.kind==='file'){
+      if(shouldAlwaysIgnore(path)) continue; // ✅ 树里不显示 pyc
 
-  for(const path of sortedPaths){
-    // 检查当前路径是否属于已处理的文件夹
-    // 只要当前路径以某个已处理文件夹路径 + '/' 开头，就说明它是子项目
-    let isSubItem = false;
-    for(const folderPath of processedFolders){
-      if(path.startsWith(folderPath + '/')){
-        isSubItem = true;
-        break;
-      }
-    }
-    
-    if(isSubItem) continue;
+      const row=document.createElement('div');
+      row.className='fileRow';
 
-    const item = checkedItems.get(path);
-    if(!item) continue;
-    
-    const actualHandle = await findHandleByPath(rootHandle, path, item.type);
-    if(actualHandle){
-      if(item.type === 'file'){
-        const fileContent = await (await actualHandle.getFile()).text();
-        result += `\n\n===== ${path} =====\n${fileContent}`;
-        fileCount++;
-      }else{
-        result += await traverseAndConcat(actualHandle, path+'/');
-        folderCount++;
-        processedFolders.add(path);
-      }
-    }
-  }
-  
-  if(result){
-    await navigator.clipboard.writeText(result);
-    let msg = '已复制到剪贴板：';
-    if(fileCount > 0) msg += `${fileCount}个文件`;
-    if(folderCount > 0) msg += (fileCount > 0 ? '，' : '') + `${folderCount}个文件夹`;
-    showToast(msg);
-  }
-}
+      const cb=document.createElement('input');
+      cb.type='checkbox';
+      cb.dataset.path=path;
+      cb.dataset.type='file';
+      cb.onchange=()=>updateChecked(cb);
 
-// 根据路径查找handle
-async function findHandleByPath(rootHandle, targetPath, type='folder'){
-  if(!targetPath || targetPath==='/') return rootHandle;
-  
-  const parts = targetPath.split('/').filter(p=>p);
-  if(parts.length === 0) return rootHandle;
-  
-  let currentHandle = rootHandle;
-  
-  // 处理文件的情况
-  if(type === 'file'){
-    const fileName = parts.pop(); // 最后一个是文件名
-    // 先导航到父目录
-    for(const part of parts){
-      try{
-        currentHandle = await currentHandle.getDirectoryHandle(part);
-      }catch(e){
-        return null;
-      }
-    }
-    // 获取文件handle
-    try{
-      return await currentHandle.getFileHandle(fileName);
-    }catch(e){
-      return null;
-    }
-  }
-  
-  // 处理文件夹的情况
-  for(const part of parts){
-    try{
-      currentHandle = await currentHandle.getDirectoryHandle(part);
-    }catch(e){
-      return null;
-    }
-  }
-  return currentHandle;
-}
+      const label=document.createElement('span');
+      label.textContent=name;
 
-function resetPreview(){
-  $('previewTitle').textContent='（未选择文件）';
-  $('preview').value='// 这里会显示文件内容';
-  $('preview').readOnly=true;
-  $('saveBtn').hidden=true;
-  isDirty=false;
-}
-
-function setSelected(elem,handle,fullPath){
-  if(selected.element) selected.element.classList.remove('selected');
-  selected={handle,path:fullPath,element:elem};
-  elem.classList.add('selected');
-  $('previewTitle').textContent=fullPath;
-}
-
-async function copyHandle(handle,path){
-  if(handle.kind==='file'){
-    await navigator.clipboard.writeText(await (await handle.getFile()).text());
-  }else{
-    await navigator.clipboard.writeText(await traverseAndConcat(handle,path+'/'));
-  }
-  showToast('已复制到剪贴板');
-}
-
-document.addEventListener('keydown',async e=>{
-  if(e.key==='c'&&(e.ctrlKey||e.metaKey)&&selected.handle){
-    e.preventDefault();
-    await copyHandle(selected.handle,selected.path);
-  }
-  // 新增 Ctrl+Shift+S 快捷键保存功能
-  if(e.key.toLowerCase()==='s' && e.ctrlKey && e.shiftKey){
-    e.preventDefault();
-    if(!selected.handle||selected.handle.kind!=='file'||!isDirty) return;
-    const writable=await selected.handle.createWritable();
-    await writable.write($('preview').value);
-    await writable.close();
-    isDirty=false;
-    showToast('已保存（Ctrl+Shift+S）');
-  }
-});
-
-async function renderTree(dirHandle,relativePath,container){
-  const entries = [];
-  for await(const [name,handle] of dirHandle){
-    entries.push({name,handle});
-  }
-  entries.sort((a,b)=>{
-    if(a.handle.kind !== b.handle.kind){
-      return a.handle.kind === 'file' ? 1 : -1;
-    }
-    return a.name.localeCompare(b.name);
-  });
-  
-  for (const {name,handle} of entries) {
-    if (ignoreDirs.has(name)) continue; //  <-- 忽略指定文件夹
-    const fullPath=relativePath+name;
-    if(handle.kind==='file'){
-      container.appendChild(createFileRow(handle,fullPath,name));
-    }else{
-      const details=document.createElement('details');
-      details.dataset.handle = 'folder';
-      details.dataset.path = fullPath;
-      
-      const summary=document.createElement('summary');
-      
-      // 创建文件夹名称容器
-      const folderName = document.createElement('span');
-      folderName.className = 'folderName';
-      
-      // 添加复选框
-      const checkbox = document.createElement('input');
-      checkbox.type = 'checkbox';
-      checkbox.dataset.path = fullPath;
-      checkbox.dataset.type = 'folder';
-      checkbox.onclick = (e)=>{
-        e.stopPropagation();
-        if(checkbox.checked){
-          checkedItems.set(fullPath, {handle: 'folder', type: 'folder'});
-        }else{
-          checkedItems.delete(fullPath);
-        }
+      row.append(cb,label);
+      row.onclick=async e=>{
+        if(e.target===cb)return;
+        selectedEl?.classList.remove('selected');
+        row.classList.add('selected');
+        selectedEl=row;
+        $('preview').value=await (await h.getFile()).text();
       };
-      
-      const nameText = document.createElement('span');
-      nameText.textContent = name;
-      
-      folderName.appendChild(checkbox);
-      folderName.appendChild(nameText);
-      
-      summary.appendChild(folderName);
-      
-      // 复制按钮右对齐
-      const copyBtn = createBtn('🔁',async e=>{
+      box.appendChild(row);
+    }else{
+      const d=document.createElement('details');
+      const s=document.createElement('summary');
+
+      const cb=document.createElement('input');
+      cb.type='checkbox';
+      cb.dataset.path=path;
+      cb.dataset.type='folder';
+      cb.onclick=e=>{
         e.stopPropagation();
-        await copyHandle(handle,fullPath);
-      }, 'iconBtn copyBtn');
-      summary.appendChild(copyBtn);
-      
-      summary.addEventListener('click',e=>{
-        if(e.target !== checkbox){
-          e.stopPropagation();
-          setSelected(summary,handle,fullPath+'/');
-        }
-      });
-      
-      details.appendChild(summary);
-      const children=document.createElement('div');
-      details.appendChild(children);
-      container.appendChild(details);
-      
-      await renderTree(handle,fullPath+'/',children);
+        updateChecked(cb);
+        setSubtree(d,cb.checked);
+      };
+
+      s.append(cb,name);
+      d.appendChild(s);
+      const inner=document.createElement('div');
+      d.appendChild(inner);
+      box.appendChild(d);
+
+      await render(h,path+'/',inner);
     }
   }
 }
 
-function createFileRow(handle,fullPath,displayName){
-  const row=document.createElement('div');
-  row.className='fileRow';
-  row.dataset.handle = 'file';
-  row.dataset.path = fullPath;
-  
-  // 创建文件名容器
-  const fileName = document.createElement('span');
-  fileName.className = 'fileName';
-  
-  // 添加复选框
-  const checkbox = document.createElement('input');
-  checkbox.type = 'checkbox';
-  checkbox.dataset.path = fullPath;
-  checkbox.dataset.type = 'file';
-  checkbox.onclick = (e)=>{
-    e.stopPropagation();
-    if(checkbox.checked){
-      checkedItems.set(fullPath, {handle: 'file', type: 'file'});
-    }else{
-      checkedItems.delete(fullPath);
-    }
-  };
-  
-  const nameText = document.createElement('span');
-  nameText.textContent = displayName;
-  
-  fileName.appendChild(checkbox);
-  fileName.appendChild(nameText);
-  
-  fileName.addEventListener('click',async(e)=>{
-    if(e.target !== checkbox){
-      setSelected(row,handle,fullPath);
-      $('preview').value=await (await handle.getFile()).text();
-      $('preview').readOnly=false;
-      $('saveBtn').hidden=false;
-      isDirty=false;
-    }
-  });
-  
-  row.appendChild(fileName);
-  
-  // 复制按钮右对齐
-  const copyBtn = createBtn('🔁',async()=>{
-    await copyHandle(handle,fullPath);
-  }, 'iconBtn copyBtn');
-  row.appendChild(copyBtn);
-  
-  return row;
+/* ---------- traversal ---------- */
+async function findHandle(path){
+  const parts=path.split('/').filter(Boolean);
+  let cur=rootHandle;
+  for(let i=0;i<parts.length;i++){
+    cur=i===parts.length-1
+      ? await cur.getFileHandle(parts[i]).catch(()=>null)
+      : await cur.getDirectoryHandle(parts[i]).catch(()=>null);
+    if(!cur)return null;
+  }
+  return cur;
 }
 
-$('preview').addEventListener('input',()=>{if(!$('preview').readOnly) isDirty=true;});
-
-$('saveBtn').onclick=async()=>{
-  if(!selected.handle||selected.handle.kind!=='file'||!isDirty) return;
-  const writable=await selected.handle.createWritable();
-  await writable.write($('preview').value);
-  await writable.close();
-  isDirty=false;
-  showToast('已保存');
-};
-
-async function traverseAndConcat(dirHandle,prefix=''){
-  let out='';
-  const entries=[];
-  for await(const [name,hdl] of dirHandle){
-    entries.push({name,hdl});
-  }
-  entries.sort((a,b)=>{
-    if(a.hdl.kind !== b.hdl.kind){
-      return a.hdl.kind === 'file' ? 1 : -1;
-    }
-    return a.name.localeCompare(b.name);
-  });
-  for(const {name,hdl} of entries){
-    if (ignoreDirs.has(name)) continue; // <-- 忽略指定文件夹
-    if(hdl.kind==='file'){
-      out+=`\n\n===== ${prefix}${name} =====\n${await (await hdl.getFile()).text()}`;
+async function collectFiles(h,p){
+  const out=[];
+  for await(const [n,ch] of h){
+    if(ch.kind==='file'){
+      const fp=p+n;
+      if(shouldAlwaysIgnore(fp)) continue; // ✅ 递归时也过滤
+      out.push(fp);
     }else{
-      out+=await traverseAndConcat(hdl,prefix+name+'/');
+      out.push(...await collectFiles(ch,p+n+'/'));
     }
   }
   return out;
 }
+
+/* ---------- clipboard ---------- */
+async function copyText(t){
+  try{await navigator.clipboard.writeText(t);}
+  catch{
+    const w=window.open('','','width=900,height=700');
+    if(!w)return;
+    w.document.write(`<textarea style="width:100%;height:100%">${t}</textarea>`);
+    w.document.querySelector('textarea').select();
+  }
+}
+
+/* ---------- buttons ---------- */
+$('openDir').onclick=async()=>{
+  rootHandle=await showDirectoryPicker();
+  $('tree').innerHTML='';
+  checked.clear();
+  $('preview').value='// 点击文件查看内容';
+  await render(rootHandle,'',$('tree'));
+  toast('文件夹已打开');
+};
+
+$('copySelected').onclick=async()=>{
+  let files=[];
+  for(const [p,m] of checked){
+    if(m.type==='file') files.push(p);
+    if(m.type==='folder'){
+      const h=await findHandle(p);
+      if(h) files.push(...await collectFiles(h,p+'/'));
+    }
+  }
+  files=[...new Set(files)].sort();
+
+  let out='',used=0,skipped=0;
+  const maxKB=parseInt($('maxKB').value||'0',10);
+
+  for(const f of files){
+    const h=await findHandle(f);
+    if(!h)continue;
+    const file=await h.getFile();
+
+    if($('skipBinary').checked && skipExt.has(extOf(f))){
+      out+=`===== ${f} =====\n[SKIPPED]\n\n`;skipped++;continue;
+    }
+    if(maxKB>0 && file.size>maxKB*1024){
+      out+=`===== ${f} =====\n[SKIPPED: TOO LARGE]\n\n`;skipped++;continue;
+    }
+
+    out+=`===== ${f} =====\n${await file.text()}\n\n`;
+    used++;
+  }
+
+  await copyText(out.trimEnd());
+  toast(`复制完成：${used} 文件，跳过 ${skipped}`);
+};
+
+$('copyPaths').onclick=async()=>{
+  await copyText([...checked.keys()].sort().join('\n'));
+  toast('路径已复制');
+};
+
+$('selectAll').onclick=()=>{
+  document.querySelectorAll('#tree input[type=checkbox]').forEach(cb=>{
+    cb.checked=true;updateChecked(cb);
+  });
+  toast('已全选');
+};
+
+$('clearAll').onclick=()=>{
+  document.querySelectorAll('#tree input[type=checkbox]').forEach(cb=>cb.checked=false);
+  checked.clear();
+  toast('已取消全选');
+};
 </script>
+
 </body>
 </html>
