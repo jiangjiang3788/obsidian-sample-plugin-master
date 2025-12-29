@@ -5,6 +5,7 @@ import { Stack, TextField, IconButton, Tooltip } from '@mui/material';
 import AddIcon from '@mui/icons-material/AddCircleOutline';
 import DeleteIcon from '@mui/icons-material/RemoveCircleOutline';
 import { useState, useEffect } from 'preact/hooks';
+import { replaceAt, removeAt, addAtEnd } from '@/shared/utils/immutableListOps';
 
 interface Props {
   value: Record<string, string>;
@@ -42,28 +43,28 @@ export function KeyValueEditor({ value, onChange, keyLabel = "Key", valueLabel =
   };
 
   const handleKeyChange = (index: number, newKey: string) => {
-    const newEntries = [...entries];
-    newEntries[index][0] = newKey;
+    const entry = entries[index];
+    const newEntries = replaceAt(entries, index, [newKey, entry[1]] as [string, string]);
     setEntries(newEntries);
     handleUpdate(newEntries);
   };
 
   const handleValueChange = (index: number, newValue: string) => {
-    const newEntries = [...entries];
-    newEntries[index][1] = newValue;
+    const entry = entries[index];
+    const newEntries = replaceAt(entries, index, [entry[0], newValue] as [string, string]);
     setEntries(newEntries);
     handleUpdate(newEntries);
   };
 
   const addEntry = () => {
     const newKey = `newKey${entries.length + 1}`;
-    const newEntries = [...entries, [newKey, '']];
+    const newEntries = addAtEnd(entries, [newKey, ''] as [string, string]);
     setEntries(newEntries);
     handleUpdate(newEntries);
   };
 
   const removeEntry = (index: number) => {
-    const newEntries = entries.filter((_, i) => i !== index);
+    const newEntries = removeAt(entries, index);
     setEntries(newEntries);
     handleUpdate(newEntries);
   };

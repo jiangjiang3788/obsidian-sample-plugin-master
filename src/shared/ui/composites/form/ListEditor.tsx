@@ -4,6 +4,7 @@ import { h } from 'preact';
 import { Stack, TextField, IconButton } from '@mui/material';
 import AddIcon from '@mui/icons-material/AddCircleOutline';
 import DeleteIcon from '@mui/icons-material/RemoveCircleOutline';
+import { replaceAt, removeAt, addAtEnd } from '@/shared/utils/immutableListOps';
 
 interface Props {
   value: string[];
@@ -16,17 +17,15 @@ export function ListEditor({ value, onChange, placeholder = "新项目", type = 
   const list = value || [];
 
   const handleChange = (index: number, newValue: string) => {
-    const newList = [...list];
-    newList[index] = newValue;
-    onChange(newList);
+    onChange(replaceAt(list, index, newValue));
   };
 
   const addItem = () => {
-    onChange([...list, '']);
+    onChange(addAtEnd(list, ''));
   };
 
   const removeItem = (index: number) => {
-    onChange(list.filter((_, i) => i !== index));
+    onChange(removeAt(list, index));
   };
 
   return (
