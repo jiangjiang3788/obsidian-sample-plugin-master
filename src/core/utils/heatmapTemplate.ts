@@ -1,30 +1,29 @@
+// src/core/utils/heatmapTemplate.ts
+// Heatmap 模板相关工具函数
+//
+// 注意：模板解析逻辑已统一到 TemplateResolver 中
+// 此文件保留兼容 API，内部调用 TemplateResolver
+
 import type { BlockTemplate, InputSettings, ThemeDefinition } from '@/core/types/schema';
+import { TemplateResolver } from '@/core/services/TemplateResolver';
 
 /**
  * 获取有效的模板配置
+ * 
+ * 此函数是对 TemplateResolver.resolveTemplateOnly 的兼容包装
+ * 保持原有返回类型 BlockTemplate | null
+ * 
+ * @param settings InputSettings 配置
+ * @param blockId Block 模板 ID
+ * @param themeId 可选的主题 ID
+ * @returns BlockTemplate 或 null
  */
 export function getEffectiveTemplate(
     settings: InputSettings, 
     blockId: string, 
     themeId?: string
 ): BlockTemplate | null {
-    const baseBlock = settings.blocks.find(b => b.id === blockId);
-    if (!baseBlock) return null;
-    
-    if (themeId) {
-        const override = settings.overrides.find(o => o.blockId === blockId && o.themeId === themeId);
-        // ThemeOverride使用disabled字段，不是status
-        if (override && !override.disabled) {
-            return { 
-                ...baseBlock, 
-                fields: override.fields ?? baseBlock.fields, 
-                outputTemplate: override.outputTemplate ?? baseBlock.outputTemplate, 
-                targetFile: override.targetFile ?? baseBlock.targetFile, 
-                appendUnderHeader: override.appendUnderHeader ?? baseBlock.appendUnderHeader 
-            };
-        }
-    }
-    return baseBlock;
+    return TemplateResolver.resolveTemplateOnly(settings, blockId, themeId);
 }
 
 /**

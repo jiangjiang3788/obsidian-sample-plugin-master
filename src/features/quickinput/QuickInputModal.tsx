@@ -14,6 +14,7 @@ import { buildThemeTree, ThemeTreeNode } from '@core/utils/themeUtils';
 import { dayjs, timeToMinutes, minutesToTime } from '@core/utils/date';
 import { inputService, dataStore } from '@/app/storeRegistry';
 import { renderTemplate } from '@core/utils/templateUtils';
+import { getEffectiveTemplate } from '@core/utils/inputTemplateUtils';
 
 export interface QuickInputSaveData {
     template: BlockTemplate;
@@ -157,20 +158,6 @@ export class QuickInputModal extends Modal {
     onClose() {
         unmountComponentAtNode(this.contentEl);
     }
-}
-
-function getEffectiveTemplate(settings: InputSettings, blockId: string, themeId?: string): { template: BlockTemplate | null; theme: ThemeDefinition | null } {
-    const baseBlock = settings.blocks.find(b => b.id === blockId);
-    if (!baseBlock) return { template: null, theme: null };
-    const theme = settings.themes.find(t => t.id === themeId) || null;
-    if (themeId) {
-        const override = settings.overrides.find(o => o.blockId === blockId && o.themeId === themeId);
-        if (override && !override.disabled) {
-            const effectiveTemplate: BlockTemplate = { ...baseBlock, fields: override.fields ?? baseBlock.fields, outputTemplate: override.outputTemplate ?? baseBlock.outputTemplate, targetFile: override.targetFile ?? baseBlock.targetFile, appendUnderHeader: override.appendUnderHeader ?? baseBlock.appendUnderHeader };
-            return { template: effectiveTemplate, theme };
-        }
-    }
-    return { template: baseBlock, theme };
 }
 
 const findNodePath = (nodes: ThemeTreeNode[], themeId: string): ThemeTreeNode[] => {
