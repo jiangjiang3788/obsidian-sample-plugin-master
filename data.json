@@ -8582,7 +8582,7 @@
     "enabled": true,
     "provider": "openai_compat",
     "apiEndpoint": "https://api.ricardochat.cn/v1",
-    "apiKey": "sk-9BZGGwd78iHSraAdHtnLDXFoY3bJhxqRwivYazOPoA0dTepV",
+    "apiKey": "sk-2SPzXePSCl9BISBoGzqQoBTd2BDv0mmoRZ3KoSZiMPFWyryn",
     "model": "[渠道2]gemini-2.5-pro",
     "temperature": 0.7,
     "maxTokens": 4096,
@@ -8595,7 +8595,7 @@
       "blk_mejsg76atopau"
     ],
     "allowMultipleResults": true,
-    "maxResults": 5,
+    "maxResults": 99,
     "confirmMode": "single",
     "preloadConfigOnStartup": true,
     "configCacheTTLSeconds": 300

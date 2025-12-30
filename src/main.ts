@@ -14,6 +14,7 @@ import { safeAsync } from '@shared/utils/errorHandler';
 import { performanceMonitor, startMeasure } from '@shared/utils/performance';
 import { ServiceManager } from '@/app/ServiceManager';
 import { TimerStateService } from '@features/timer/TimerStateService';
+import { AiChatModal } from '@features/aichat';
 
 console.log(`[ThinkPlugin] main.js 文件已加载，版本时间: ${new Date().toLocaleTimeString()}`);
 
@@ -64,6 +65,15 @@ export default class ThinkPlugin extends Plugin {
             name: '显示性能报告',
             callback: () => {
                 performanceMonitor.printReport();
+            }
+        });
+
+        // AI 助手对话命令
+        this.addCommand({
+            id: 'think-open-ai-chat',
+            name: '打开 AI 助手对话',
+            callback: () => {
+                new AiChatModal(this.app).open();
             }
         });
     }

@@ -17,4 +17,6 @@ export { FloatingTimerWidget } from './timer/FloatingTimerWidget';
 // Quick Input 功能
 export * as QuickInput from './quickinput';
 
-
+// AI Chat 功能
+export * as AiChat from './aichat';
+export { AiChatModal } from './aichat';

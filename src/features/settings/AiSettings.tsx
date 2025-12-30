@@ -1,7 +1,7 @@
 // src/features/settings/AiSettings.tsx
 /** @jsxImportSource preact */
 import { h } from 'preact';
-import { useState, useMemo } from 'preact/hooks';
+import { useState, useMemo, useRef } from 'preact/hooks';
 import {
     Box,
     Typography,
@@ -28,6 +28,7 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { AppStore, useStore } from '@/app/AppStore';
 import type { AiSettings as AiSettingsType } from '@/core/types/ai-schema';
 import { DEFAULT_AI_SETTINGS, CUSTOM_PROMPT_EXAMPLES } from '@/core/types/ai-schema';
+import { AiHttpClient } from '@/core/ai';
 
 interface AiSettingsProps {
     appStore: AppStore;
@@ -43,6 +44,12 @@ export function AiSettings({ appStore }: AiSettingsProps) {
     const [localSettings, setLocalSettings] = useState<AiSettingsType>(aiSettings);
     const [testStatus, setTestStatus] = useState<'idle' | 'testing' | 'success' | 'error'>('idle');
     const [testMessage, setTestMessage] = useState('');
+    
+    // 复用 AiHttpClient 实例
+    const httpClientRef = useRef<AiHttpClient | null>(null);
+    if (!httpClientRef.current) {
+        httpClientRef.current = new AiHttpClient();
+    }
 
     // 更新本地设置
     const updateLocal = (updates: Partial<AiSettingsType>) => {
@@ -56,7 +63,7 @@ export function AiSettings({ appStore }: AiSettingsProps) {
         });
     };
 
-    // 测试连接
+    // 测试连接 - 使用 AiHttpClient 统一处理鉴权、超时和错误
     const handleTestConnection = async () => {
         if (!localSettings.apiEndpoint || !localSettings.apiKey || !localSettings.model) {
             setTestStatus('error');
@@ -68,34 +75,23 @@ export function AiSettings({ appStore }: AiSettingsProps) {
         setTestMessage('正在测试连接...');
 
         try {
-            const url = localSettings.apiEndpoint.replace(/\/$/, '') + '/chat/completions';
-            const controller = new AbortController();
-            const timeout = setTimeout(() => controller.abort(), localSettings.requestTimeoutMs);
-
-            const response = await fetch(url, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${localSettings.apiKey}`,
-                },
-                body: JSON.stringify({
-                    model: localSettings.model,
-                    messages: [{ role: 'user', content: 'Hello' }],
-                    max_tokens: 10,
-                }),
-                signal: controller.signal,
+            // 调用 AiHttpClient.chatCompletion 进行测试
+            // 使用最小化 payload：简短消息 + 限制 max_tokens
+            await httpClientRef.current!.chatCompletion({
+                baseURL: localSettings.apiEndpoint,
+                apiKey: localSettings.apiKey,
+                model: localSettings.model,
+                temperature: 0,
+                max_tokens: 10,
+                messages: [
+                    { role: 'system', content: 'You are a test assistant.' },
+                    { role: 'user', content: 'ping' }
+                ],
+                timeoutMs: localSettings.requestTimeoutMs,
             });
 
-            clearTimeout(timeout);
-
-            if (response.ok) {
-                setTestStatus('success');
-                setTestMessage('连接成功！API 配置正确。');
-            } else {
-                const text = await response.text();
-                setTestStatus('error');
-                setTestMessage(`连接失败: HTTP ${response.status} - ${text.slice(0, 100)}`);
-            }
+            setTestStatus('success');
+            setTestMessage('连接成功！API 配置正确。');
         } catch (e: any) {
             setTestStatus('error');
             setTestMessage(`连接失败: ${e.message || e}`);
