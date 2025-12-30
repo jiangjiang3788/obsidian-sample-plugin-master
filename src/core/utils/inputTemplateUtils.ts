@@ -1,11 +1,20 @@
 // src/core/utils/inputTemplateUtils.ts
 // 输入模板相关工具函数
+// 
+// 注意：此文件现在是 TemplateResolver 的 thin wrapper
+// 所有模板解析逻辑已统一到 TemplateResolver 中
 
 import type { InputSettings, BlockTemplate, ThemeDefinition, ThemeOverride } from '@/core/types/schema';
+import { TemplateResolver, type TemplateResolveResult } from '@/core/services/TemplateResolver';
+
+// Re-export TemplateResolver 相关类型和函数
+export { TemplateResolver, type TemplateResolveResult } from '@/core/services/TemplateResolver';
 
 /**
  * 获取有效的模板配置
  * 根据 blockId 和可选的 themeId，返回合并了 override 的最终模板
+ * 
+ * 此函数是 TemplateResolver.resolve 的别名，保持向后兼容
  * 
  * @param settings InputSettings 配置
  * @param blockId Block 模板 ID
@@ -17,31 +26,7 @@ export function getEffectiveTemplate(
     blockId: string,
     themeId?: string
 ): { template: BlockTemplate | null; theme: ThemeDefinition | null } {
-    const baseBlock = settings.blocks.find(b => b.id === blockId);
-    if (!baseBlock) {
-        return { template: null, theme: null };
-    }
-
-    const theme = settings.themes.find(t => t.id === themeId) || null;
-
-    if (themeId) {
-        const override = settings.overrides.find(
-            o => o.blockId === blockId && o.themeId === themeId
-        );
-        
-        if (override && !override.disabled) {
-            const effectiveTemplate: BlockTemplate = {
-                ...baseBlock,
-                fields: override.fields ?? baseBlock.fields,
-                outputTemplate: override.outputTemplate ?? baseBlock.outputTemplate,
-                targetFile: override.targetFile ?? baseBlock.targetFile,
-                appendUnderHeader: override.appendUnderHeader ?? baseBlock.appendUnderHeader,
-            };
-            return { template: effectiveTemplate, theme };
-        }
-    }
-
-    return { template: baseBlock, theme };
+    return TemplateResolver.resolve(settings, blockId, themeId);
 }
 
 /**
