@@ -24,10 +24,12 @@
     "@mui/material": "^7.2.0",
     "dayjs": "^1.11.13",
     "immer": "^10.1.1",
+    "minisearch": "^7.2.0",
     "preact": "^10.26.9",
     "reflect-metadata": "^0.2.2",
     "tsyringe": "^4.10.0",
-    "use-immer": "^0.11.0"
+    "use-immer": "^0.11.0",
+    "zod": "^4.2.1"
   },
   "devDependencies": {
     "@babel/plugin-proposal-class-properties": "^7.18.6",
