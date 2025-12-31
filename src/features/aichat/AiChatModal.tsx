@@ -37,19 +37,29 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import SearchIcon from '@mui/icons-material/Search';
 import CloseIcon from '@mui/icons-material/Close';
 import ChatIcon from '@mui/icons-material/Chat';
+import { container } from 'tsyringe';
 import { useStore } from '@/app/AppStore';
 import { ThemeTreeSelect } from '@/shared/components/ThemeTreeSelect';
 import { 
+    ChatSessionStore,
     getChatSessionStore, 
     ChatSession, 
     ChatMessage,
     SessionFilters 
 } from '@/core/ai/ChatSessionStore';
-import { getAiChatService, ChatResponse } from '@/core/ai/AiChatService';
-import { getRetrievalService } from '@/core/ai/RetrievalService';
+import { AiChatService, ChatResponse } from '@/core/ai/AiChatService';
+import { RetrievalService } from '@/core/ai/RetrievalService';
 import type { OpenAIChatMessage } from '@/core/ai/AiHttpClient';
 import { dayjs } from '@core/utils/date';
 import { getMessageRenderService, MessageContentType } from '@/shared/utils/MessageRenderService';
+
+// ============== AI 服务接口（用于依赖注入） ==============
+
+interface AiServices {
+    chatService: AiChatService;
+    retrievalService: RetrievalService;
+    sessionStore: ChatSessionStore;
+}
 
 // 获取全局 app 实例
 declare const app: App;
@@ -57,8 +67,17 @@ declare const app: App;
 // ============== Modal 包装 ==============
 
 export class AiChatModal extends Modal {
+    // Composition root: 在 Modal 构造函数中 resolve 所有服务
+    private services: AiServices;
+
     constructor(app: App) {
         super(app);
+        // DI 仅在此处（composition root）进行 resolve
+        this.services = {
+            chatService: container.resolve(AiChatService),
+            retrievalService: container.resolve(RetrievalService),
+            sessionStore: getChatSessionStore(), // ChatSessionStore 仍使用自己的 getter（内部单例）
+        };
     }
 
     onOpen() {
@@ -74,7 +93,11 @@ export class AiChatModal extends Modal {
         });
 
         render(
-            <AiChatModalContent app={this.app} closeModal={() => this.close()} />,
+            <AiChatModalContent 
+                app={this.app} 
+                closeModal={() => this.close()} 
+                services={this.services}
+            />,
             this.contentEl
         );
     }
@@ -89,16 +112,17 @@ export class AiChatModal extends Modal {
 interface AiChatModalContentProps {
     app: App;
     closeModal: () => void;
+    services: AiServices;
 }
 
-function AiChatModalContent({ app, closeModal }: AiChatModalContentProps) {
+function AiChatModalContent({ app, closeModal, services }: AiChatModalContentProps) {
     const settings = useStore(state => state.settings);
     const themes = settings.inputSettings?.themes ?? [];
     const blocks = settings.inputSettings?.blocks ?? [];
     const aiSettings = settings.aiSettings;
 
-    // 会话状态
-    const sessionStore = useMemo(() => getChatSessionStore(), []);
+    // 从 props 获取服务（已在 composition root 中 resolve）
+    const { chatService, retrievalService, sessionStore } = services;
     const [sessions, setSessions] = useState<ChatSession[]>([]);
     const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
     const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -136,7 +160,6 @@ function AiChatModalContent({ app, closeModal }: AiChatModalContentProps) {
         });
 
         // 确保检索索引已构建
-        const retrievalService = getRetrievalService();
         if (retrievalService.needsRebuild()) {
             console.log('AiChatModal: 构建检索索引...');
             retrievalService.buildIndex();
@@ -216,8 +239,6 @@ function AiChatModalContent({ app, closeModal }: AiChatModalContentProps) {
         sessionStore.appendMessage(sessionId, 'user', userMessage);
 
         try {
-            const chatService = getAiChatService();
-            
             // 构建历史消息
             const currentMessages = sessionStore.getMessages(sessionId);
             const history: OpenAIChatMessage[] = currentMessages
@@ -447,7 +468,7 @@ function AiChatModalContent({ app, closeModal }: AiChatModalContentProps) {
                     {enableRetrieval && (
                         <Chip
                             size="small"
-                            label={`索引: ${getRetrievalService().getIndexStats().itemCount} 条`}
+                            label={`索引: ${retrievalService.getIndexStats().itemCount} 条`}
                             variant="outlined"
                         />
                     )}

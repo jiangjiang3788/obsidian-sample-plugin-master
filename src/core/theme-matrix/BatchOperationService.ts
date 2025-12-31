@@ -11,6 +11,7 @@ import type {
 } from '@core/theme-matrix';
 import type { ThemeDefinition, ThemeOverride } from '@/core/types/schema';
 import type { SelectionState } from '@core/theme-matrix';
+import { parseCellKey } from '@/core/utils/cellKey';
 
 export interface BatchOperationServiceConfig {
   appStore: AppStore;
@@ -104,7 +105,7 @@ export class BatchOperationService {
     cells: Array<{themeId: string; blockId: string}>,
     params?: any
   ): Promise<void> {
-    // 将单元格转换为 blockId:themeId 格式
+    // 将单元格转换为 cellKey 格式：`${themeId}:${blockId}`
     const blockConfigs = cells.map(cell => `${cell.themeId}:${cell.blockId}`);
     return this.executeBlockOperation(operation, blockConfigs, params);
   }
@@ -114,7 +115,7 @@ export class BatchOperationService {
    */
   private async executeBlockOperation(
     operation: BatchOperationType,
-    blockConfigs: string[], // 这里应该是 blockId:themeId 的组合
+    blockConfigs: string[], // cellKey 格式：`${themeId}:${blockId}`
     params?: any
   ): Promise<void> {
     switch (operation) {
@@ -189,10 +190,11 @@ export class BatchOperationService {
     const deletions: Array<{blockId: string; themeId: string}> = [];
     
     for (const config of blockConfigs) {
-      const [themeId, blockId] = config.split(':');
-      if (themeId && blockId) {
-        deletions.push({ blockId, themeId });
-      }
+      const parsed = parseCellKey(config);
+      if (!parsed) continue;
+      
+      const { themeId, blockId } = parsed;
+      deletions.push({ blockId, themeId });
     }
     
     if (deletions.length > 0) {
@@ -210,15 +212,16 @@ export class BatchOperationService {
     const overrides: Array<Omit<ThemeOverride, 'id'>> = [];
     
     for (const config of blockConfigs) {
-      const [themeId, blockId] = config.split(':');
-      if (themeId && blockId) {
-        overrides.push({
-          themeId,
-          blockId,
-          disabled: false,
-          ...template
-        });
-      }
+      const parsed = parseCellKey(config);
+      if (!parsed) continue;
+      
+      const { themeId, blockId } = parsed;
+      overrides.push({
+        themeId,
+        blockId,
+        disabled: false,
+        ...template
+      });
     }
     
     if (overrides.length > 0) {
@@ -233,14 +236,15 @@ export class BatchOperationService {
     const overrides: Array<Omit<ThemeOverride, 'id'>> = [];
     
     for (const config of blockConfigs) {
-      const [themeId, blockId] = config.split(':');
-      if (themeId && blockId) {
-        overrides.push({
-          themeId,
-          blockId,
-          disabled: true
-        });
-      }
+      const parsed = parseCellKey(config);
+      if (!parsed) continue;
+      
+      const { themeId, blockId } = parsed;
+      overrides.push({
+        themeId,
+        blockId,
+        disabled: true
+      });
     }
     
     if (overrides.length > 0) {
@@ -284,11 +288,8 @@ export class BatchOperationService {
 
     if (selection.selectedCells.size > 0) {
       targets.cells = Array.from(selection.selectedCells)
-        .map(cellKey => {
-          const [themeId, blockId] = cellKey.split(':');
-          return { themeId, blockId };
-        })
-        .filter(cell => cell.themeId && cell.blockId);
+        .map(cellKey => parseCellKey(cellKey))
+        .filter((parsed): parsed is { themeId: string; blockId: string } => parsed !== null);
     }
 
     return targets;

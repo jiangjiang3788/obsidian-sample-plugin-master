@@ -7,6 +7,7 @@ import type { ActiveStatus } from '@shared/types/common';
 import type { ExtendedTheme, ThemeTreeNode, ThemeOverrideKey } from '@core/theme-matrix';
 import type { ThemeOverride } from '@/core/types/schema';
 import { findNodeInTree, getDescendantIds } from './themeTreeBuilder';
+import { parseCellKey, makeCellKey } from '@/core/utils/cellKey';
 
 /**
  * 创建主题覆盖映射键
@@ -15,7 +16,7 @@ import { findNodeInTree, getDescendantIds } from './themeTreeBuilder';
  * @returns 映射键
  */
 export function createOverrideKey(themeId: string, blockId: string): ThemeOverrideKey {
-    return `${themeId}:${blockId}`;
+    return makeCellKey(themeId, blockId) as ThemeOverrideKey;
 }
 
 /**
@@ -24,8 +25,11 @@ export function createOverrideKey(themeId: string, blockId: string): ThemeOverri
  * @returns 主题ID和Block ID
  */
 export function parseOverrideKey(key: ThemeOverrideKey): { themeId: string; blockId: string } {
-    const [themeId, blockId] = key.split(':');
-    return { themeId, blockId };
+    const parsed = parseCellKey(key);
+    if (!parsed) {
+        return { themeId: '', blockId: '' };
+    }
+    return parsed;
 }
 
 /**

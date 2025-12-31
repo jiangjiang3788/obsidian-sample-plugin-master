@@ -8,8 +8,8 @@ export { buildAiConfigSnapshot } from './AiConfigSnapshot';
 
 // [新增] AI Chat 相关导出
 export { ChatSessionStore, getChatSessionStore } from './ChatSessionStore';
-export { RetrievalService, getRetrievalService } from './RetrievalService';
-export { AiChatService, getAiChatService } from './AiChatService';
+export { RetrievalService } from './RetrievalService';
+export { AiChatService } from './AiChatService';
 
 export type { AiConfigSnapshot, AiBlockConfig, AiThemeConfig, AiBlockConfigField } from './AiConfigSnapshot';
 export type { INaturalLanguageRecordParser, ParseInput } from './INaturalLanguageRecordParser';

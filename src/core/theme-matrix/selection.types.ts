@@ -2,6 +2,7 @@
  * 选择状态相关类型定义
  */
 import { type SelectionMode } from '@shared/types/common';
+import { parseCellKey as _parseCellKey, makeCellKey } from '@/core/utils/cellKey';
 
 /**
  * 选择状态
@@ -132,24 +133,15 @@ export function clearAllSelections(state: SelectionState): SelectionState {
 
 /**
  * 创建单元格键
+ * @deprecated 请使用 '@/core/utils/cellKey' 中的 makeCellKey
  */
-export function createCellKey(themeId: string, blockId: string): string {
-  return `${themeId}:${blockId}`;
-}
+export const createCellKey = makeCellKey;
 
 /**
  * 解析单元格键
+ * @deprecated 请使用 '@/core/utils/cellKey' 中的 parseCellKey
  */
-export function parseCellKey(key: string): { themeId: string; blockId: string } | null {
-  const parts = key.split(':');
-  if (parts.length !== 2) {
-    return null;
-  }
-  return {
-    themeId: parts[0],
-    blockId: parts[1]
-  };
-}
+export const parseCellKey = _parseCellKey;
 
 /**
  * 从选择状态获取目标
