@@ -37,9 +37,8 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import SearchIcon from '@mui/icons-material/Search';
 import CloseIcon from '@mui/icons-material/Close';
 import ChatIcon from '@mui/icons-material/Chat';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import { useStore } from '@/app/AppStore';
+import { ThemeTreeSelect } from '@/shared/components/ThemeTreeSelect';
 import { 
     getChatSessionStore, 
     ChatSession, 
@@ -98,25 +97,6 @@ function AiChatModalContent({ app, closeModal }: AiChatModalContentProps) {
     const blocks = settings.inputSettings?.blocks ?? [];
     const aiSettings = settings.aiSettings;
 
-    // 构建主题树结构
-    const themeTree = useMemo(() => {
-        const tree: { path: string; depth: number; children: string[] }[] = [];
-        const pathSet = new Set(themes.map(t => t.path));
-        
-        // 按路径排序
-        const sortedPaths = [...pathSet].sort();
-        
-        sortedPaths.forEach(path => {
-            const parts = path.split('/');
-            const depth = parts.length - 1;
-            // 找到所有子主题
-            const children = sortedPaths.filter(p => p.startsWith(path + '/'));
-            tree.push({ path, depth, children });
-        });
-        
-        return tree;
-    }, [themes]);
-
     // 会话状态
     const sessionStore = useMemo(() => getChatSessionStore(), []);
     const [sessions, setSessions] = useState<ChatSession[]>([]);
@@ -133,10 +113,6 @@ function AiChatModalContent({ app, closeModal }: AiChatModalContentProps) {
     const [selectedThemes, setSelectedThemes] = useState<string[]>([]); // 多选主题
     const [selectedType, setSelectedType] = useState<string>(''); // 'task' | '' (全部)
     const [selectedBlockId, setSelectedBlockId] = useState<string>(''); // Block 模板 ID
-
-    // 主题选择器展开状态
-    const [themePopperOpen, setThemePopperOpen] = useState(false);
-    const themeAnchorRef = useRef<HTMLDivElement>(null);
 
     // 滚动引用
     const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -208,39 +184,6 @@ function AiChatModalContent({ app, closeModal }: AiChatModalContentProps) {
             setSelectedType(session.filters.types?.[0] ?? '');
             setSelectedBlockId(session.filters.blockTemplateIds?.[0] ?? '');
         }
-    };
-
-    // 切换主题选择
-    const handleThemeToggle = (path: string) => {
-        setSelectedThemes(prev => {
-            if (prev.includes(path)) {
-                // 移除该主题及其子主题
-                return prev.filter(p => p !== path && !p.startsWith(path + '/'));
-            } else {
-                // 添加该主题
-                return [...prev, path];
-            }
-        });
-    };
-
-    // 选择主题及其所有子主题
-    const handleThemeSelectWithChildren = (path: string) => {
-        const childPaths = themeTree
-            .filter(t => t.path.startsWith(path + '/'))
-            .map(t => t.path);
-        
-        setSelectedThemes(prev => {
-            const allPaths = [path, ...childPaths];
-            const hasAll = allPaths.every(p => prev.includes(p));
-            
-            if (hasAll) {
-                // 全部取消
-                return prev.filter(p => !allPaths.includes(p));
-            } else {
-                // 全部添加
-                return [...new Set([...prev, ...allPaths])];
-            }
-        });
     };
 
     // 删除会话
@@ -453,89 +396,18 @@ function AiChatModalContent({ app, closeModal }: AiChatModalContentProps) {
                         }
                     />
 
-                    {/* 主题过滤 - 多选下拉 */}
+                    {/* 主题过滤 - 使用统一的 ThemeTreeSelect 组件 */}
                     {enableRetrieval && themes.length > 0 && (
-                        <Box ref={themeAnchorRef}>
-                            <Button
-                                size="small"
-                                variant="outlined"
-                                onClick={() => setThemePopperOpen(!themePopperOpen)}
-                                endIcon={themePopperOpen ? <ExpandMoreIcon /> : <ChevronRightIcon />}
-                                sx={{ textTransform: 'none' }}
-                            >
-                                主题 {selectedThemes.length > 0 ? `(${selectedThemes.length})` : ''}
-                            </Button>
-                            <Popper
-                                open={themePopperOpen}
-                                anchorEl={themeAnchorRef.current}
-                                placement="bottom-start"
-                                sx={{ zIndex: 1300 }}
-                            >
-                                <ClickAwayListener onClickAway={() => setThemePopperOpen(false)}>
-                                    <Paper sx={{ 
-                                        maxHeight: 300, 
-                                        overflow: 'auto', 
-                                        minWidth: 200,
-                                        p: 1,
-                                        border: '1px solid var(--background-modifier-border)',
-                                    }}>
-                                        {/* 全选/清空 */}
-                                        <Box sx={{ display: 'flex', gap: 1, mb: 1 }}>
-                                            <Button 
-                                                size="small" 
-                                                onClick={() => setSelectedThemes(themes.map(t => t.path))}
-                                            >
-                                                全选
-                                            </Button>
-                                            <Button 
-                                                size="small" 
-                                                onClick={() => setSelectedThemes([])}
-                                            >
-                                                清空
-                                            </Button>
-                                        </Box>
-                                        <Divider sx={{ mb: 1 }} />
-                                        {/* 主题树列表 */}
-                                        {themeTree.map(item => (
-                                            <Box 
-                                                key={item.path}
-                                                sx={{ 
-                                                    display: 'flex', 
-                                                    alignItems: 'center',
-                                                    pl: item.depth * 2,
-                                                }}
-                                            >
-                                                <Checkbox
-                                                    size="small"
-                                                    checked={selectedThemes.includes(item.path)}
-                                                    onChange={() => handleThemeToggle(item.path)}
-                                                />
-                                                <Typography 
-                                                    variant="body2" 
-                                                    sx={{ 
-                                                        cursor: 'pointer',
-                                                        flex: 1,
-                                                    }}
-                                                    onClick={() => handleThemeToggle(item.path)}
-                                                >
-                                                    {item.path.split('/').pop()}
-                                                </Typography>
-                                                {item.children.length > 0 && (
-                                                    <Tooltip title="包含子主题">
-                                                        <IconButton 
-                                                            size="small"
-                                                            onClick={() => handleThemeSelectWithChildren(item.path)}
-                                                        >
-                                                            <ExpandMoreIcon fontSize="small" />
-                                                        </IconButton>
-                                                    </Tooltip>
-                                                )}
-                                            </Box>
-                                        ))}
-                                    </Paper>
-                                </ClickAwayListener>
-                            </Popper>
-                        </Box>
+                        <ThemeTreeSelect
+                            themes={themes}
+                            selectedPaths={selectedThemes}
+                            onSelectMultiple={setSelectedThemes}
+                            multiSelect={true}
+                            searchable={true}
+                            placeholder="选择主题"
+                            size="small"
+                            sx={{ minWidth: 150 }}
+                        />
                     )}
 
                     {/* 类型过滤 */}
@@ -569,28 +441,6 @@ function AiChatModalContent({ app, closeModal }: AiChatModalContentProps) {
                                 ))}
                             </Select>
                         </FormControl>
-                    )}
-
-                    {/* 已选主题标签 */}
-                    {enableRetrieval && selectedThemes.length > 0 && (
-                        <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
-                            {selectedThemes.slice(0, 3).map(path => (
-                                <Chip
-                                    key={path}
-                                    size="small"
-                                    label={path.split('/').pop()}
-                                    onDelete={() => handleThemeToggle(path)}
-                                    sx={{ height: 24 }}
-                                />
-                            ))}
-                            {selectedThemes.length > 3 && (
-                                <Chip
-                                    size="small"
-                                    label={`+${selectedThemes.length - 3}`}
-                                    sx={{ height: 24 }}
-                                />
-                            )}
-                        </Box>
                     )}
 
                     {/* 索引状态 */}

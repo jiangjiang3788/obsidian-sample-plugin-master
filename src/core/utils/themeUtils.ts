@@ -1,7 +1,19 @@
 // src/core/utils/themeUtils.ts
+/**
+ * 主题工具函数
+ * 
+ * 注意：buildThemeTree 现在是 ThemeTreeBuilder 的兼容 wrapper
+ * 新代码应直接使用 @/core/theme/ThemeTreeBuilder
+ */
 import type { ThemeDefinition } from '@/core/types/schema';
+import { 
+    ThemeTreeBuilder,
+    ThemeTreeNode as UnifiedThemeTreeNode,
+    buildThemeTree as buildThemeTreeFromBuilder,
+} from '@/core/theme/ThemeTreeBuilder';
 
-// 定义树节点的结构 (这个在上次修改中已添加，保持不变)
+// 保留旧的 ThemeTreeNode 类型以保持兼容性
+// 旧结构使用 name，新结构使用 label
 export interface ThemeTreeNode {
     id: string;
     name: string;
@@ -9,50 +21,33 @@ export interface ThemeTreeNode {
     children: ThemeTreeNode[];
 }
 
-// buildThemeTree 函数保持不变，快速输入面板依然需要它
+/**
+ * 构建主题树 - 兼容 wrapper
+ * 
+ * @deprecated 请使用 @/core/theme/ThemeTreeBuilder.buildTree
+ * 
+ * 此函数保留是为了向后兼容，内部调用 ThemeTreeBuilder
+ * 返回结构转换为旧格式（使用 name 而不是 label）
+ */
 export function buildThemeTree(themes: ThemeDefinition[]): ThemeTreeNode[] {
-    const roots: ThemeTreeNode[] = [];
-    const map = new Map<string, ThemeTreeNode>();
-
-    themes.forEach(theme => {
-        const parts = theme.path.split('/');
-        let currentPath = '';
-        let parentNode: ThemeTreeNode | undefined;
-
-        parts.forEach((part, index) => {
-            const isLastName = index === parts.length - 1;
-            currentPath = currentPath ? `${currentPath}/${part}` : part;
-
-            if (!map.has(currentPath)) {
-                const newNode: ThemeTreeNode = {
-                    id: currentPath,
-                    name: part,
-                    themeId: isLastName ? theme.id : null,
-                    children: [],
-                };
-                map.set(currentPath, newNode);
-
-                if (parentNode) {
-                    if (!parentNode.children.some(child => child.id === newNode.id)) {
-                        parentNode.children.push(newNode);
-                    }
-                } else {
-                    if (!roots.some(root => root.id === newNode.id)) {
-                        roots.push(newNode);
-                    }
-                }
-            }
-            else if (isLastName) {
-                const existingNode = map.get(currentPath)!;
-                existingNode.themeId = theme.id;
-            }
-            
-            parentNode = map.get(currentPath)!;
-        });
+    const unifiedNodes = buildThemeTreeFromBuilder(themes);
+    
+    // 转换为旧格式
+    const convertNode = (node: UnifiedThemeTreeNode): ThemeTreeNode => ({
+        id: node.id,
+        name: node.label, // 旧格式使用 name，新格式使用 label
+        themeId: node.themeId,
+        children: node.children.map(convertNode),
     });
-
-    return roots;
+    
+    return unifiedNodes.map(convertNode);
 }
+
+// 重新导出新的类型和函数，方便迁移
+export { 
+    ThemeTreeBuilder,
+    type UnifiedThemeTreeNode as NewThemeTreeNode,
+};
 
 
 /**
