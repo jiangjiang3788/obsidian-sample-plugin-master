@@ -15,7 +15,7 @@
 
 import { singleton, inject } from 'tsyringe';
 import { AiHttpClient, OpenAIChatMessage } from './AiHttpClient';
-import { getRetrievalService, RetrievalFilters } from './RetrievalService';
+import { RetrievalService, RetrievalFilters } from './RetrievalService';
 import type { AiSettings } from '@/core/types/ai-schema';
 import { DEFAULT_AI_SETTINGS } from '@/core/types/ai-schema';
 import type { Item } from '@/core/types/schema';
@@ -83,7 +83,8 @@ export class AiChatService {
     private httpClient: AiHttpClient;
 
     constructor(
-        @inject(SettingsProviderToken) private settingsProvider: ISettingsProvider
+        @inject(SettingsProviderToken) private settingsProvider: ISettingsProvider,
+        @inject(RetrievalService) private retrievalService: RetrievalService
     ) {
         this.httpClient = new AiHttpClient();
     }
@@ -163,7 +164,7 @@ export class AiChatService {
         let retrievalCount = 0;
 
         if (request.enableRetrieval) {
-            const retrievalService = getRetrievalService();
+            const retrievalService = this.retrievalService;
             
             // 处理过滤条件：将 blockTemplateIds 映射为 blockTemplateNames
             const filters = { ...request.retrievalFilters };
@@ -267,14 +268,7 @@ export class AiChatService {
     }
 }
 
-// ============== 单例导出 ==============
-
-import { container } from 'tsyringe';
-
-/**
- * 获取 AiChatService 实例
- * 通过 DI 容器解析，确保正确注入依赖
- */
-export function getAiChatService(): AiChatService {
-    return container.resolve(AiChatService);
-}
+// ============== 类型导出 ==============
+// 注意：不再提供 getAiChatService() 全局导出
+// 业务代码应通过 DI 注入或 Context 获取服务实例
+// 仅在 composition root (Modal 构造函数、ServiceManager) 中允许 container.resolve()

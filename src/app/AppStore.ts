@@ -331,6 +331,9 @@ export class AppStore implements ISettingsProvider {
         return this.theme.batchDeleteOverrides(selections);
     }
 }
+// DEBUG 开关：仅在开发调试时手动开启，生产构建保持 false
+const DEBUG_STORE_SUBSCRIPTIONS = false;
+
 /**
  * useStore Hook
  * 从 Context 获取 AppStore 并订阅状态变化
@@ -353,9 +356,12 @@ export function useStore<T>(selector: (state: AppState) => T): T {
                 if (Object.is(currentStateSlice, newStateSlice)) {
                     return currentStateSlice;
                 }
-                console.log("一个组件因其订阅的状态变更而计划重渲染。", {
-                    componentHint: memoizedSelector.toString().slice(0, 100)
-                });
+                // 调试日志：默认关闭，仅在开发时手动开启
+                if (DEBUG_STORE_SUBSCRIPTIONS) {
+                    console.log("[DEBUG] useStore re-render triggered", {
+                        selectorHint: memoizedSelector.toString().slice(0, 100)
+                    });
+                }
                 return newStateSlice;
             });
         });

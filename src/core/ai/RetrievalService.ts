@@ -13,7 +13,7 @@
  * - 处理 AI 请求
  */
 
-import { singleton, inject, container } from 'tsyringe';
+import { singleton, inject } from 'tsyringe';
 import MiniSearch, { SearchResult } from 'minisearch';
 import type { Item } from '@/core/types/schema';
 import { DataStore } from '@/core/services/DataStore';
@@ -306,8 +306,7 @@ export class RetrievalService {
     }
 }
 
-// ============== 单例导出 ==============
-
-export function getRetrievalService(): RetrievalService {
-    return container.resolve(RetrievalService);
-}
+// ============== 类型导出 ==============
+// 注意：不再提供 getRetrievalService() 全局导出
+// 业务代码应通过 DI 注入或 Context 获取服务实例
+// 仅在 composition root (Modal 构造函数、ServiceManager) 中允许 container.resolve()

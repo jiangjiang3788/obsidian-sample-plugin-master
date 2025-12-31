@@ -6,6 +6,7 @@ import { useState, useCallback, useMemo } from 'preact/hooks';
 import type { AppStore } from '@/app/AppStore';
 import type { ThemeManager } from '@features/settings/ThemeManager';
 import { BatchOperationService } from '@/core/theme-matrix/BatchOperationService';
+import { parseCellKey } from '@/core/utils/cellKey';
 import type { EditorState } from './useThemeMatrixEditor';
 
 // 定义新的参数类型
@@ -78,10 +79,9 @@ export function useBatchOperations({
       }
 
       if (cellIds && cellIds.length > 0) {
-        const cells = cellIds.map(id => {
-            const [themeId, blockId] = id.split(':');
-            return { themeId, blockId };
-        });
+        const cells = cellIds
+            .map(id => parseCellKey(id))
+            .filter((cell): cell is { themeId: string; blockId: string } => cell !== null);
 
         switch (operation) {
           case 'setInherit':
