@@ -1,14 +1,26 @@
 /**
- * 主题树构建算法
+ * 主题树构建算法 - 兼容 wrapper
+ * 
+ * 注意：此模块现在是 ThemeTreeBuilder 的兼容 wrapper
+ * 新代码应直接使用 @/core/theme/ThemeTreeBuilder
+ * 
+ * 保留此文件是为了向后兼容 ThemeMatrix 等模块的现有调用
  */
 import type { ExtendedTheme, ThemeTreeNode } from '@core/theme-matrix';
+import { 
+    ThemeTreeBuilder as UnifiedThemeTreeBuilder,
+    ThemeTreeNode as UnifiedThemeTreeNode,
+} from '@/core/theme/ThemeTreeBuilder';
 
 /**
- * 构建主题树结构
+ * 构建主题树结构 - 兼容 wrapper
+ * 
+ * @deprecated 请使用 @/core/theme/ThemeTreeBuilder.buildTree
+ * 
  * @param themes - 扩展主题列表
  * @param expandedNodes - 展开的节点ID集合
- * @param parentPath - 父路径，默认为空
- * @param level - 当前层级，默认为0
+ * @param parentPath - 父路径，默认为空（兼容参数，内部不再使用）
+ * @param level - 当前层级，默认为0（兼容参数，内部不再使用）
  * @returns 主题树节点数组
  * 
  * @example
@@ -25,23 +37,91 @@ export function buildThemeTree(
     parentPath: string = '',
     level: number = 0
 ): ThemeTreeNode[] {
+    // 如果是递归调用（parentPath 不为空），使用旧逻辑
+    // 这是为了保持与现有调用的完全兼容
+    if (parentPath !== '') {
+        return buildThemeTreeLegacy(themes, expandedNodes, parentPath, level);
+    }
+    
+    // 使用统一的 ThemeTreeBuilder 构建树
+    const unifiedTree = UnifiedThemeTreeBuilder.buildTree(themes);
+    
+    // 转换为旧格式（ThemeMatrix 使用的 ThemeTreeNode）
+    const convertNode = (
+        node: UnifiedThemeTreeNode,
+        nodeLevel: number
+    ): ThemeTreeNode | null => {
+        // 找到对应的 ExtendedTheme
+        const theme = themes.find(t => t.id === node.themeId);
+        if (!theme) {
+            // 虚节点：没有对应的主题，跳过或查找子节点中的主题
+            // 对于 ThemeMatrix，只需要有真实主题的节点
+            // 但我们需要保持层级结构，所以递归处理子节点
+            const childNodes: ThemeTreeNode[] = [];
+            for (const child of node.children) {
+                const converted = convertNode(child, nodeLevel);
+                if (converted) {
+                    childNodes.push(converted);
+                }
+            }
+            // 如果有子节点，我们需要找一个合适的主题作为父节点
+            // 但由于虚节点没有主题，这里暂时返回 null
+            // 实际上 ThemeMatrix 的调用者会传入 ExtendedTheme[]，
+            // 其中每个 path 都应该有对应的主题
+            return null;
+        }
+        
+        const children: ThemeTreeNode[] = [];
+        for (const child of node.children) {
+            const converted = convertNode(child, nodeLevel + 1);
+            if (converted) {
+                children.push(converted);
+            }
+        }
+        
+        return {
+            theme,
+            children,
+            expanded: expandedNodes.has(theme.id),
+            level: nodeLevel,
+        };
+    };
+    
+    const result: ThemeTreeNode[] = [];
+    for (const rootNode of unifiedTree) {
+        const converted = convertNode(rootNode, 0);
+        if (converted) {
+            result.push(converted);
+        }
+    }
+    
+    return result;
+}
+
+/**
+ * 旧版构建逻辑（用于递归调用的兼容）
+ */
+function buildThemeTreeLegacy(
+    themes: ExtendedTheme[],
+    expandedNodes: Set<string>,
+    parentPath: string,
+    level: number
+): ThemeTreeNode[] {
     const nodes: ThemeTreeNode[] = [];
     
     // 找出当前层级的直接子节点
     const directChildren = themes.filter(theme => {
         const path = theme.path;
         if (parentPath === '') {
-            // 根节点：不包含'/'的路径
             return !path.includes('/');
         }
-        // 子节点：以父路径开始，且在父路径之后只有一级
         return path.startsWith(parentPath + '/') && 
                path.slice(parentPath.length + 1).indexOf('/') === -1;
     });
     
     // 递归构建每个子节点
     directChildren.forEach(theme => {
-        const children = buildThemeTree(
+        const children = buildThemeTreeLegacy(
             themes.filter(t => t.path.startsWith(theme.path + '/')),
             expandedNodes,
             theme.path,

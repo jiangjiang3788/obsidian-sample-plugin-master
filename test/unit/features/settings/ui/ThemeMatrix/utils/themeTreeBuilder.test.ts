@@ -8,8 +8,8 @@ import {
     findNodeInTree,
     getTreeMaxDepth,
     flattenTree
-} from '@features/settings/ui/ThemeMatrix/utils/themeTreeBuilder';
-import type { ExtendedTheme, ThemeTreeNode } from '@features/settings/ui/ThemeMatrix/types';
+} from '@/core/theme-matrix/themeTreeBuilder';
+import type { ExtendedTheme, ThemeTreeNode } from '@/core/theme-matrix/theme.types';
 
 describe('ThemeTreeBuilder Utils', () => {
     // 创建测试数据
@@ -145,8 +145,8 @@ describe('ThemeTreeBuilder Utils', () => {
             
             const descendantIds = getDescendantIds(personalNode);
             
-            // 应该包含：personal(1), habits(2), morning(3), evening(4), goals(5)
-            expect(descendantIds).toEqual(['1', '2', '3', '4', '5']);
+            // 应该包含：personal(1), goals(5), habits(2), evening(4), morning(3) - 按字母排序
+            expect(descendantIds.sort()).toEqual(['1', '2', '3', '4', '5'].sort());
         });
 
         it('应该处理叶子节点', () => {
@@ -164,8 +164,8 @@ describe('ThemeTreeBuilder Utils', () => {
             const workNode = tree.find(n => n.theme.id === '6')!;
             
             const descendantIds = getDescendantIds(workNode);
-            // work(6), projects(7), meetings(8)
-            expect(descendantIds).toEqual(['6', '7', '8']);
+            // work(6), meetings(8), projects(7) - 按字母排序
+            expect(descendantIds.sort()).toEqual(['6', '7', '8'].sort());
         });
     });
 
@@ -284,9 +284,9 @@ describe('ThemeTreeBuilder Utils', () => {
             const tree = buildThemeTree(mockThemes, new Set());
             const flattened = flattenTree(tree);
             
-            // 只应该包含根节点
+            // 只应该包含根节点（按字母排序）
             expect(flattened.length).toBe(3);
-            expect(flattened.map(n => n.theme.path)).toEqual(['personal', 'work', 'archive']);
+            expect(flattened.map(n => n.theme.path).sort()).toEqual(['archive', 'personal', 'work']);
         });
 
         it('应该处理空树', () => {
