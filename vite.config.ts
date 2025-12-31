@@ -34,6 +34,13 @@ export default defineConfig({
                 '@core': path.resolve(process.cwd(), 'src/core'),
                 '@app': path.resolve(process.cwd(), 'src/app'),
                 '@features': path.resolve(process.cwd(), 'src/features'),
+                // dayjs ESM 别名
+                'dayjs': 'dayjs/esm',
+                'dayjs/plugin/quarterOfYear': 'dayjs/esm/plugin/quarterOfYear',
+                'dayjs/plugin/weekOfYear': 'dayjs/esm/plugin/weekOfYear',
+                'dayjs/plugin/customParseFormat': 'dayjs/esm/plugin/customParseFormat',
+                'dayjs/plugin/isoWeek': 'dayjs/esm/plugin/isoWeek',
+                'dayjs/plugin/isSameOrBefore': 'dayjs/esm/plugin/isSameOrBefore',
                 // React别名到Preact
                 'react': 'preact/compat',
                 'react-dom': 'preact/compat',

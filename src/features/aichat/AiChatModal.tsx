@@ -42,7 +42,6 @@ import { useStore } from '@/app/AppStore';
 import { ThemeTreeSelect } from '@/shared/components/ThemeTreeSelect';
 import { 
     ChatSessionStore,
-    getChatSessionStore, 
     ChatSession, 
     ChatMessage,
     SessionFilters 
@@ -76,11 +75,11 @@ export class AiChatModal extends Modal {
         this.services = {
             chatService: container.resolve(AiChatService),
             retrievalService: container.resolve(RetrievalService),
-            sessionStore: getChatSessionStore(), // ChatSessionStore 仍使用自己的 getter（内部单例）
+            sessionStore: container.resolve(ChatSessionStore),
         };
     }
 
-    onOpen() {
+    async onOpen() {
         this.contentEl.empty();
         this.modalEl.addClass('think-ai-chat-modal');
         this.modalEl.style.width = '90vw';
@@ -91,6 +90,9 @@ export class AiChatModal extends Modal {
         this.contentEl.addEventListener('keydown', (e) => {
             e.stopPropagation();
         });
+
+        // 初始化 sessionStore
+        await this.services.sessionStore.initialize();
 
         render(
             <AiChatModalContent 
@@ -183,13 +185,13 @@ function AiChatModalContent({ app, closeModal, services }: AiChatModalContentPro
     }, [messages]);
 
     // 创建新会话
-    const handleNewSession = () => {
+    const handleNewSession = async () => {
         const filters: SessionFilters = {};
         if (selectedThemes.length > 0) filters.themePaths = selectedThemes;
         if (selectedType) filters.types = [selectedType as 'task' | 'block'];
         if (selectedBlockId) filters.blockTemplateIds = [selectedBlockId];
 
-        const session = sessionStore.createSession(undefined, filters);
+        const session = await sessionStore.createSession(undefined, filters);
         setCurrentSessionId(session.id);
         setInputText('');
         setError(null);
@@ -210,9 +212,9 @@ function AiChatModalContent({ app, closeModal, services }: AiChatModalContentPro
     };
 
     // 删除会话
-    const handleDeleteSession = (sessionId: string, e: Event) => {
+    const handleDeleteSession = async (sessionId: string, e: Event) => {
         e.stopPropagation();
-        sessionStore.deleteSession(sessionId);
+        await sessionStore.deleteSession(sessionId);
         if (currentSessionId === sessionId) {
             setCurrentSessionId(null);
         }
@@ -225,7 +227,7 @@ function AiChatModalContent({ app, closeModal, services }: AiChatModalContentPro
         // 确保有当前会话
         let sessionId = currentSessionId;
         if (!sessionId) {
-            const session = sessionStore.createSession();
+            const session = await sessionStore.createSession();
             sessionId = session.id;
             setCurrentSessionId(sessionId);
         }
@@ -236,7 +238,7 @@ function AiChatModalContent({ app, closeModal, services }: AiChatModalContentPro
         setIsLoading(true);
 
         // 添加用户消息
-        sessionStore.appendMessage(sessionId, 'user', userMessage);
+        await sessionStore.appendMessage(sessionId, 'user', userMessage);
 
         try {
             // 构建历史消息
@@ -262,7 +264,7 @@ function AiChatModalContent({ app, closeModal, services }: AiChatModalContentPro
             });
 
             // 添加 AI 回复
-            sessionStore.appendMessage(sessionId, 'assistant', response.content, {
+            await sessionStore.appendMessage(sessionId, 'assistant', response.content, {
                 referencedItemIds: response.referencedItemIds,
                 model: response.model,
                 retrievalCount: response.retrievalCount,
@@ -272,7 +274,7 @@ function AiChatModalContent({ app, closeModal, services }: AiChatModalContentPro
             console.error('AiChatModal: 发送失败', e);
             setError(e.message || '发送失败');
             // 添加错误消息
-            sessionStore.appendMessage(sessionId, 'system', `❌ 错误: ${e.message || '发送失败'}`);
+            await sessionStore.appendMessage(sessionId, 'system', `❌ 错误: ${e.message || '发送失败'}`);
         } finally {
             setIsLoading(false);
         }

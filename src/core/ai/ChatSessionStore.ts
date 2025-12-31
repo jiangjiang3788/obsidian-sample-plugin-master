@@ -6,7 +6,7 @@
  * Do:
  * - 管理 AI 聊天会话数据（会话列表、消息）
  * - 使用 zod 校验数据结构
- * - 通过 localStorage 持久化（MVP 方案，可扩展到 IPluginStorage）
+ * - 通过 IPluginStorage 持久化到 Vault 文件
  * 
  * Don't:
  * - 处理 AI 请求逻辑（那是 AiChatService 的职责）
@@ -14,6 +14,9 @@
  */
 
 import { z } from 'zod';
+import { singleton, inject } from 'tsyringe';
+import type { IPluginStorage } from '@/core/services/StorageService';
+import { STORAGE_TOKEN } from '@/core/services/StorageService';
 
 // ============== Zod Schemas ==============
 
@@ -77,7 +80,9 @@ export type ChatStoreData = z.infer<typeof ChatStoreDataSchema>;
 
 // ============== Constants ==============
 
-const STORAGE_KEY = 'think-ai-chat-sessions';
+const LEGACY_STORAGE_KEY = 'think-ai-chat-sessions';
+const DEFAULT_FILE_PATH = 'Think/chat-sessions.json';
+const CORRUPT_SUFFIX = '.corrupt.json';
 const MAX_SESSIONS = 50; // 最多保留的会话数
 
 // ============== Helper ==============
@@ -88,38 +93,118 @@ function generateId(): string {
 
 // ============== ChatSessionStore ==============
 
+@singleton()
 export class ChatSessionStore {
-    private data: ChatStoreData;
+    private data: ChatStoreData = { version: 1, sessions: [] };
     private listeners: Set<() => void> = new Set();
+    private initialized: boolean = false;
+    private initPromise: Promise<void> | null = null;
 
-    constructor() {
-        this.data = this.loadFromStorage();
+    constructor(
+        @inject(STORAGE_TOKEN) private storage: IPluginStorage,
+        private filePath: string = DEFAULT_FILE_PATH
+    ) {}
+
+    // ============== 初始化 ==============
+
+    /**
+     * 初始化 Store（加载数据 + 迁移）
+     * 必须在使用前调用
+     */
+    async initialize(): Promise<void> {
+        if (this.initialized) return;
+        if (this.initPromise) return this.initPromise;
+
+        this.initPromise = this._doInitialize();
+        await this.initPromise;
+        this.initialized = true;
+    }
+
+    private async _doInitialize(): Promise<void> {
+        // 1. 尝试从新文件加载
+        const fileData = await this.loadFromFile();
+        
+        if (fileData) {
+            this.data = fileData;
+            console.log(`ChatSessionStore: 从文件加载 ${this.data.sessions.length} 个会话`);
+            return;
+        }
+
+        // 2. 如果新文件不存在，尝试从 localStorage 迁移
+        const legacyData = this.loadFromLocalStorage();
+        if (legacyData && legacyData.sessions.length > 0) {
+            console.log(`ChatSessionStore: 从 localStorage 迁移 ${legacyData.sessions.length} 个会话`);
+            this.data = legacyData;
+            await this.saveToFile();
+            
+            // 清理 localStorage
+            try {
+                localStorage.removeItem(LEGACY_STORAGE_KEY);
+                console.log('ChatSessionStore: localStorage 数据已清理');
+            } catch (e) {
+                console.warn('ChatSessionStore: 清理 localStorage 失败', e);
+            }
+            return;
+        }
+
+        // 3. 都没有，使用空数据
+        this.data = { version: 1, sessions: [] };
     }
 
     // ============== 持久化 ==============
 
-    private loadFromStorage(): ChatStoreData {
+    private async loadFromFile(): Promise<ChatStoreData | null> {
         try {
-            const raw = localStorage.getItem(STORAGE_KEY);
-            if (!raw) {
-                return { version: 1, sessions: [] };
+            const raw = await this.storage.readJSON<unknown>(this.filePath);
+            if (!raw) return null;
+
+            const result = ChatStoreDataSchema.safeParse(raw);
+            if (result.success) {
+                return result.data;
             }
+
+            // 校验失败，备份损坏数据
+            console.warn('ChatSessionStore: 文件数据校验失败，备份损坏文件', result.error);
+            await this.backupCorruptData(raw);
+            return null;
+        } catch (e) {
+            console.warn('ChatSessionStore: 加载文件失败', e);
+            return null;
+        }
+    }
+
+    private loadFromLocalStorage(): ChatStoreData | null {
+        try {
+            const raw = localStorage.getItem(LEGACY_STORAGE_KEY);
+            if (!raw) return null;
+
             const parsed = JSON.parse(raw);
             const result = ChatStoreDataSchema.safeParse(parsed);
             if (result.success) {
                 return result.data;
             }
-            console.warn('ChatSessionStore: 数据校验失败，重置为空', result.error);
-            return { version: 1, sessions: [] };
+
+            console.warn('ChatSessionStore: localStorage 数据校验失败', result.error);
+            return null;
         } catch (e) {
-            console.warn('ChatSessionStore: 加载存储失败', e);
-            return { version: 1, sessions: [] };
+            console.warn('ChatSessionStore: 解析 localStorage 失败', e);
+            return null;
         }
     }
 
-    private saveToStorage(): void {
+    private async backupCorruptData(data: unknown): Promise<void> {
         try {
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(this.data));
+            const corruptPath = this.filePath.replace('.json', CORRUPT_SUFFIX);
+            await this.storage.writeJSON(corruptPath, data);
+            console.log(`ChatSessionStore: 损坏数据已备份到 ${corruptPath}`);
+        } catch (e) {
+            console.error('ChatSessionStore: 备份损坏数据失败', e);
+        }
+    }
+
+    private async saveToFile(): Promise<void> {
+        try {
+            await this.storage.writeJSON(this.filePath, this.data);
         } catch (e) {
             console.error('ChatSessionStore: 保存失败', e);
         }
@@ -156,7 +241,7 @@ export class ChatSessionStore {
     }
 
     /** 创建新会话 */
-    createSession(title?: string, filters?: SessionFilters): ChatSession {
+    async createSession(title?: string, filters?: SessionFilters): Promise<ChatSession> {
         const now = Date.now();
         const session: ChatSession = {
             id: generateId(),
@@ -174,19 +259,19 @@ export class ChatSessionStore {
             this.data.sessions = this.data.sessions.slice(0, MAX_SESSIONS);
         }
         
-        this.saveToStorage();
+        await this.saveToFile();
         this.notify();
         return session;
     }
 
     /** 添加消息到会话 */
-    appendMessage(
+    async appendMessage(
         sessionId: string,
         role: ChatMessage['role'],
         content: string,
         meta?: ChatMessage['meta'],
         contentType?: MessageContentType
-    ): ChatMessage | null {
+    ): Promise<ChatMessage | null> {
         const session = this.data.sessions.find(s => s.id === sessionId);
         if (!session) {
             console.warn('ChatSessionStore: 会话不存在', sessionId);
@@ -214,13 +299,13 @@ export class ChatSessionStore {
             session.title = content.slice(0, 30) + (content.length > 30 ? '...' : '');
         }
 
-        this.saveToStorage();
+        await this.saveToFile();
         this.notify();
         return message;
     }
 
     /** 更新会话 */
-    updateSession(id: string, updates: Partial<Pick<ChatSession, 'title' | 'filters'>>): boolean {
+    async updateSession(id: string, updates: Partial<Pick<ChatSession, 'title' | 'filters'>>): Promise<boolean> {
         const session = this.data.sessions.find(s => s.id === id);
         if (!session) return false;
 
@@ -228,26 +313,26 @@ export class ChatSessionStore {
         if (updates.filters !== undefined) session.filters = updates.filters;
         session.modified = Date.now();
 
-        this.saveToStorage();
+        await this.saveToFile();
         this.notify();
         return true;
     }
 
     /** 删除会话 */
-    deleteSession(id: string): boolean {
+    async deleteSession(id: string): Promise<boolean> {
         const idx = this.data.sessions.findIndex(s => s.id === id);
         if (idx === -1) return false;
 
         this.data.sessions.splice(idx, 1);
-        this.saveToStorage();
+        await this.saveToFile();
         this.notify();
         return true;
     }
 
     /** 清空所有会话 */
-    clearAllSessions(): void {
+    async clearAllSessions(): Promise<void> {
         this.data.sessions = [];
-        this.saveToStorage();
+        await this.saveToFile();
         this.notify();
     }
 
@@ -256,14 +341,4 @@ export class ChatSessionStore {
         const session = this.getSession(sessionId);
         return session?.messages ?? [];
     }
-}
-
-// 单例导出
-let _instance: ChatSessionStore | null = null;
-
-export function getChatSessionStore(): ChatSessionStore {
-    if (!_instance) {
-        _instance = new ChatSessionStore();
-    }
-    return _instance;
 }
