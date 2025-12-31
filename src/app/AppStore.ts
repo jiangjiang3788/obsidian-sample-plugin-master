@@ -1,26 +1,28 @@
 /**
  * AppStore
  * Role: Store (状态聚合器) - 应用级状态管理中心
- * Dependencies: 所有子 Store (TimerStore, ThemeStore, etc.), ThinkPlugin (用于持久化)
+ * Dependencies: 所有子 Store (TimerStore, ThemeStore, etc.), SettingsRepository (用于持久化)
  * 
  * Do:
  * - 持有并暴露所有子 Store 的实例 (theme, layout, timer, etc.)
  * - 聚合应用的总状态 (AppState)
  * - 提供统一的订阅机制，以便 React 组件 (useStore) 可以监听全局状态变化
- * - 协调设置的持久化 (_updateSettingsAndPersist)
+ * - 协调设置的更新（通过 SettingsRepository）
  * - 管理一些不属于任何子 Store 的临时 UI 状态 (isTimerWidgetVisible)
  * 
  * Don't:
+ * - 直接进行 IO 操作（所有 IO 委托给 SettingsRepository）
+ * - 持有 plugin 实例
  * - 具体的业务逻辑 (所有业务逻辑都委托给相应的子 Store)
  */
 import { useState, useEffect, useCallback } from 'preact/hooks';
 import { singleton, inject } from 'tsyringe';
 import type { ThinkSettings, ViewInstance, Layout, InputSettings, BlockTemplate, ThemeDefinition, ThemeOverride, Group, GroupType, Groupable } from '@/core/types/schema';
 import { DEFAULT_SETTINGS } from '@/core/types/schema';
-import type ThinkPlugin from '@main';
 import { VIEW_DEFAULT_CONFIGS } from '@/features/settings/registry';
 import { generateId, moveItemInArray, duplicateItemInArray } from '@core/utils/array';
 import { SETTINGS_TOKEN, ISettingsProvider } from '@/core/services/types';
+import { SettingsRepository, SETTINGS_PERSISTENCE_TOKEN } from '@/core/services/SettingsRepository';
 import { useAppStore } from '@/app/AppStoreContext';
 import { ThemeStore } from '@features/settings/ThemeStore';
 import { TimerStore, type TimerState } from '@features/timer/TimerStore';
@@ -41,7 +43,6 @@ export interface AppState {
 
 @singleton()
 export class AppStore implements ISettingsProvider {
-    private _plugin?: ThinkPlugin;
     private _state: AppState;
     private _listeners: Set<() => void> = new Set();
 
@@ -54,10 +55,19 @@ export class AppStore implements ISettingsProvider {
     public readonly viewInstance: ViewInstanceStore;
     public readonly block: BlockStore;
 
+    // SettingsRepository 注入
+    private readonly settingsRepository: SettingsRepository;
+
     public constructor(
         @inject(SETTINGS_TOKEN) initialSettings: ThinkSettings,
-        @inject(TimerStore) timerStore: TimerStore
+        @inject(TimerStore) timerStore: TimerStore,
+        @inject(SettingsRepository) settingsRepository: SettingsRepository
     ) {
+        this.settingsRepository = settingsRepository;
+        
+        // 初始化 SettingsRepository 的设置
+        this.settingsRepository.setInitialSettings(initialSettings);
+
         // 初始化子Store
         this.timer = timerStore;
         // 订阅 TimerStore 的变化以触发 AppStore 的更新
@@ -97,12 +107,6 @@ export class AppStore implements ISettingsProvider {
         };
     }
 
-    public setPlugin(plugin: ThinkPlugin) {
-        this._plugin = plugin;
-    }
-    
-    // [移除] _deriveState不再需要，activeTimer由TimerStore直接管理
-
     public getState(): AppState {
         return this._state;
     }
@@ -120,16 +124,15 @@ export class AppStore implements ISettingsProvider {
         this._listeners.forEach(l => l());
     }
     
+    /**
+     * 更新设置并持久化
+     * 使用 SettingsRepository 的 immer/produce 更新
+     */
     public _updateSettingsAndPersist = async (updater: (draft: ThinkSettings) => void) => {
-        if (!this._plugin) {
-            console.error("AppStore: 插件实例未设置，无法保存设置。");
-            return;
-        }
-        const newSettings = JSON.parse(JSON.stringify(this._state.settings));
-        updater(newSettings);
-        this._state.settings = newSettings;
         try {
-            await this._plugin.saveData(this._state.settings);
+            // 通过 SettingsRepository 更新（使用 immer）
+            const newSettings = await this.settingsRepository.update(updater);
+            this._state.settings = newSettings;
         } catch (error) {
             console.error("AppStore: 保存设置失败", error);
             // 不重新抛出错误，让应用继续运行

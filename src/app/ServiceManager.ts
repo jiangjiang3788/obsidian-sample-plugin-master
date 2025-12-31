@@ -11,6 +11,7 @@ import { FloatingTimerWidget } from '@features/timer/FloatingTimerWidget';
 import { FeatureLoader } from '@/app/FeatureLoader';
 import { safeAsync } from '@shared/utils/errorHandler';
 import { startMeasure } from '@shared/utils/performance';
+import { SETTINGS_PERSISTENCE_TOKEN, type ISettingsPersistence } from '@core/services/SettingsRepository';
 import type ThinkPlugin from '@main';
 
 /**
@@ -54,6 +55,9 @@ export class ServiceManager {
     async bootstrap(): Promise<void> {
         const stopMeasure = startMeasure('ServiceManager.bootstrap');
         
+        // 注册 SettingsPersistence（基于 plugin.loadData/saveData）
+        this.registerSettingsPersistence();
+        
         await this.initializeCore();         // 1. 基础状态 (AppStore)
         await this.loadTimerServices();      // 2. 核心业务 (Timer)
         await this.loadDataServices();       // 3. 数据服务 (Data/IO)
@@ -83,6 +87,27 @@ export class ServiceManager {
     // ==================================================================================
 
     /**
+     * 注册 SettingsPersistence 到 DI 容器
+     * 将 plugin.loadData/saveData 封装为 ISettingsPersistence 接口
+     */
+    private registerSettingsPersistence(): void {
+        const plugin = this.plugin;
+        
+        const settingsPersistence: ISettingsPersistence = {
+            async loadData() {
+                return await plugin.loadData();
+            },
+            async saveData(settings) {
+                await plugin.saveData(settings);
+            }
+        };
+        
+        container.register(SETTINGS_PERSISTENCE_TOKEN, {
+            useValue: settingsPersistence
+        });
+    }
+
+    /**
      * [主流程] #2 初始化核心服务
      */
     private async initializeCore(): Promise<void> {
@@ -91,7 +116,7 @@ export class ServiceManager {
             async () => {
                 this.services.appStore = container.resolve(AppStore);
                 this.services.timerStateService = container.resolve(TimerStateService);
-                this.services.appStore.setPlugin(this.plugin);
+                // 注：AppStore 不再需要 plugin 实例，IO 通过 SettingsRepository 处理
                 
                 const duration = stopMeasure();
                 console.log(`[ThinkPlugin] 核心服务初始化完成 (${duration.toFixed(2)}ms)`);

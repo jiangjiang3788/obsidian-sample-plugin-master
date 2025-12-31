@@ -7,7 +7,7 @@ export { AiNaturalLanguageRecordParser } from './AiNaturalLanguageRecordParser';
 export { buildAiConfigSnapshot } from './AiConfigSnapshot';
 
 // [新增] AI Chat 相关导出
-export { ChatSessionStore, getChatSessionStore } from './ChatSessionStore';
+export { ChatSessionStore } from './ChatSessionStore';
 export { RetrievalService } from './RetrievalService';
 export { AiChatService } from './AiChatService';
 

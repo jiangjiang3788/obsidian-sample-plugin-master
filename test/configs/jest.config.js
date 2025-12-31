@@ -32,7 +32,7 @@ module.exports = {
   extensionsToTreatAsEsm: ['.ts', '.tsx'],
   transformIgnorePatterns: [
     // 转换所有 preact 相关模块和其他 ES 模块包
-    'node_modules/(?!(preact|@preact|@mui|tsyringe|reflect-metadata|@dnd-kit|use-immer|immer)/)'
+    'node_modules/(?!(preact|@preact|@mui|tsyringe|reflect-metadata|@dnd-kit|use-immer|immer|dayjs)/)'
   ],
   moduleNameMapper: {
     // Mock Obsidian API
@@ -64,6 +64,10 @@ module.exports = {
     '^@constants/(.*)$': '<rootDir>/../../src/constants/$1',
     '^@shared/(.*)$': '<rootDir>/../../src/shared/$1',
     '^@core/(.*)$': '<rootDir>/../../src/core/$1',
+    '^@app/(.*)$': '<rootDir>/../../src/app/$1',
+    '^@features/(.*)$': '<rootDir>/../../src/features/$1',
+    // dayjs ESM 映射到 CJS
+    '^dayjs/esm(.*)$': 'dayjs$1',
     // 处理样式文件
     '\\.(css|less|scss|sass)$': '<rootDir>/../utils/mocks/styleMock.js',
     // 处理静态资源
