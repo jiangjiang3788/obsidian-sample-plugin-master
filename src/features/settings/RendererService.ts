@@ -5,6 +5,7 @@ import { App } from 'obsidian';
 import { Layout } from '@/core/types/schema';
 import { DataStore } from '@core/services/DataStore';
 import { AppStore } from '@/app/AppStore';
+import { AppStoreProvider } from '@/app/AppStoreContext';
 import { LayoutRenderer } from '@/features/settings/LayoutRenderer';
 import { ActionService } from '../../core/services/ActionService';
 import { ItemService } from '@core/services/ItemService';
@@ -37,13 +38,15 @@ export class RendererService {
         this.unregister(container);
 
         render(
-            h(LayoutRenderer, {
-                layout: layout,
-                dataStore: this.dataStore,
-                app: this.app,
-                actionService: this.actionService,
-                itemService: this.itemService,
-                timerService: this.timerService,
+            h(AppStoreProvider, { store: this.appStore, children: 
+                h(LayoutRenderer, {
+                    layout: layout,
+                    dataStore: this.dataStore,
+                    app: this.app,
+                    actionService: this.actionService,
+                    itemService: this.itemService,
+                    timerService: this.timerService,
+                })
             }),
             container,
         );
@@ -78,13 +81,15 @@ export class RendererService {
 
             if (newLayoutConfig) {
                 render(
-                    h(LayoutRenderer, {
-                        layout: newLayoutConfig,
-                        dataStore: this.dataStore,
-                        app: this.app,
-                        actionService: this.actionService,
-                        itemService: this.itemService,
-                        timerService: this.timerService,
+                    h(AppStoreProvider, { store: this.appStore, children:
+                        h(LayoutRenderer, {
+                            layout: newLayoutConfig,
+                            dataStore: this.dataStore,
+                            app: this.app,
+                            actionService: this.actionService,
+                            itemService: this.itemService,
+                            timerService: this.timerService,
+                        })
                     }),
                     container,
                 );

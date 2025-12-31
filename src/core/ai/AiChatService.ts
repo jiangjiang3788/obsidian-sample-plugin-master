@@ -13,12 +13,14 @@
  * - 管理检索索引（那是 RetrievalService 的职责）
  */
 
+import { singleton, inject } from 'tsyringe';
 import { AiHttpClient, OpenAIChatMessage } from './AiHttpClient';
 import { getRetrievalService, RetrievalFilters } from './RetrievalService';
 import type { AiSettings } from '@/core/types/ai-schema';
 import { DEFAULT_AI_SETTINGS } from '@/core/types/ai-schema';
 import type { Item } from '@/core/types/schema';
-import { appStore } from '@/app/storeRegistry';
+import type { ISettingsProvider } from '@/core/services/types';
+import { SettingsProviderToken } from '@/core/services/types';
 import { dayjs } from '@core/utils/date';
 
 // ============== Types ==============
@@ -76,21 +78,24 @@ const MAX_CONTEXT_LENGTH = 3000; // 上下文最大字符数
 
 // ============== AiChatService ==============
 
+@singleton()
 export class AiChatService {
     private httpClient: AiHttpClient;
 
-    constructor() {
+    constructor(
+        @inject(SettingsProviderToken) private settingsProvider: ISettingsProvider
+    ) {
         this.httpClient = new AiHttpClient();
     }
 
     // ============== 获取配置 ==============
 
     private getAiSettings(): AiSettings {
-        if (!appStore) {
-            console.warn('AiChatService: AppStore 未初始化，使用默认配置');
-            return DEFAULT_AI_SETTINGS;
-        }
-        return appStore.getSettings().aiSettings ?? DEFAULT_AI_SETTINGS;
+        return this.settingsProvider.getSettings().aiSettings ?? DEFAULT_AI_SETTINGS;
+    }
+    
+    private getBlocks() {
+        return this.settingsProvider.getSettings().inputSettings?.blocks ?? [];
     }
 
     // ============== 构建上下文 ==============
@@ -162,8 +167,8 @@ export class AiChatService {
             
             // 处理过滤条件：将 blockTemplateIds 映射为 blockTemplateNames
             const filters = { ...request.retrievalFilters };
-            if (filters.blockTemplateIds && filters.blockTemplateIds.length > 0 && appStore) {
-                const blocks = appStore.getSettings().inputSettings?.blocks ?? [];
+            if (filters.blockTemplateIds && filters.blockTemplateIds.length > 0) {
+                const blocks = this.getBlocks();
                 const blockTemplateNames: string[] = [];
                 for (const id of filters.blockTemplateIds) {
                     const block = blocks.find((b: any) => b.id === id);
@@ -264,11 +269,12 @@ export class AiChatService {
 
 // ============== 单例导出 ==============
 
-let _instance: AiChatService | null = null;
+import { container } from 'tsyringe';
 
+/**
+ * 获取 AiChatService 实例
+ * 通过 DI 容器解析，确保正确注入依赖
+ */
 export function getAiChatService(): AiChatService {
-    if (!_instance) {
-        _instance = new AiChatService();
-    }
-    return _instance;
+    return container.resolve(AiChatService);
 }

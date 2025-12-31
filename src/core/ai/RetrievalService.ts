@@ -13,9 +13,10 @@
  * - 处理 AI 请求
  */
 
+import { singleton, inject, container } from 'tsyringe';
 import MiniSearch, { SearchResult } from 'minisearch';
 import type { Item } from '@/core/types/schema';
-import { dataStore } from '@/app/storeRegistry';
+import { DataStore } from '@/core/services/DataStore';
 
 // ============== Types ==============
 
@@ -50,12 +51,15 @@ const DEFAULT_LIMIT = 10;
 
 // ============== RetrievalService ==============
 
+@singleton()
 export class RetrievalService {
     private miniSearch: MiniSearch<Item> | null = null;
     private indexedItemIds: Set<string> = new Set();
     private lastIndexTime: number = 0;
 
-    constructor() {
+    constructor(
+        @inject(DataStore) private dataStore: DataStore
+    ) {
         // 初始化 MiniSearch
         this.initMiniSearch();
     }
@@ -145,12 +149,12 @@ export class RetrievalService {
      * 从 DataStore 获取 items
      */
     private getItemsFromDataStore(): Item[] {
-        if (!dataStore) {
+        if (!this.dataStore) {
             console.warn('RetrievalService: DataStore 未初始化');
             return [];
         }
         // 使用 queryItems 获取所有 items（无过滤）
-        return dataStore.queryItems([], []);
+        return this.dataStore.queryItems([], []);
     }
 
     /**
@@ -295,8 +299,8 @@ export class RetrievalService {
      * 根据 ID 列表获取完整 Item（从 DataStore）
      */
     getItemsByIds(ids: string[]): Item[] {
-        if (!dataStore) return [];
-        const allItems = dataStore.queryItems([], []);
+        if (!this.dataStore) return [];
+        const allItems = this.dataStore.queryItems([], []);
         const idSet = new Set(ids);
         return allItems.filter(item => idSet.has(item.id));
     }
@@ -304,11 +308,6 @@ export class RetrievalService {
 
 // ============== 单例导出 ==============
 
-let _instance: RetrievalService | null = null;
-
 export function getRetrievalService(): RetrievalService {
-    if (!_instance) {
-        _instance = new RetrievalService();
-    }
-    return _instance;
+    return container.resolve(RetrievalService);
 }

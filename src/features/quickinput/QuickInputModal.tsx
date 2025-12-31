@@ -5,14 +5,17 @@ import { h, Fragment } from 'preact';
 import { App, Modal, Notice } from 'obsidian';
 import { render, unmountComponentAtNode } from 'preact/compat';
 import { useState, useMemo, useEffect } from 'preact/hooks';
-import { useStore } from '@/app/AppStore';
+import { container } from 'tsyringe';
+import { useStore, AppStore } from '@/app/AppStore';
+import { useDataStore, useInputService, ServicesProvider, Services } from '@/app/AppStoreContext';
+import { DataStore } from '@/core/services/DataStore';
+import { InputService } from '@/core/services/InputService';
 import type { InputSettings, BlockTemplate, ThemeDefinition, TemplateField, TemplateFieldOption } from '@/core/types/schema';
 import { Button, RadioGroup as MuiRadioGroup, FormControlLabel, Radio, FormControl, Typography, Stack, Divider, Box, IconButton, Tooltip } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import { SimpleSelect } from '@shared/ui/composites/SimpleSelect';
 import { buildThemeTree, ThemeTreeNode } from '@core/utils/themeUtils';
 import { dayjs, timeToMinutes, minutesToTime } from '@core/utils/date';
-import { inputService, dataStore } from '@/app/storeRegistry';
 import { renderTemplate } from '@core/utils/templateUtils';
 import { getEffectiveTemplate } from '@core/utils/inputTemplateUtils';
 
@@ -23,6 +26,8 @@ export interface QuickInputSaveData {
 }
 
 export class QuickInputModal extends Modal {
+    private services: Services;
+    
     constructor(
         app: App,
         private blockId: string,
@@ -32,6 +37,12 @@ export class QuickInputModal extends Modal {
         private allowBlockSwitch: boolean = false
     ) {
         super(app);
+        // 从 DI 容器获取服务
+        this.services = {
+            appStore: container.resolve(AppStore),
+            dataStore: container.resolve(DataStore),
+            inputService: container.resolve(InputService),
+        };
     }
 
     onOpen() {
@@ -40,15 +51,17 @@ export class QuickInputModal extends Modal {
         this.setupKeyboardDetection();
         
         render(
-            <QuickInputForm
-                app={this.app}
-                blockId={this.blockId}
-                context={this.context}
-                themeId={this.themeId}
-                onSave={this.onSave}
-                closeModal={() => this.close()}
-                allowBlockSwitch={this.allowBlockSwitch}
-            />,
+            <ServicesProvider services={this.services}>
+                <QuickInputForm
+                    app={this.app}
+                    blockId={this.blockId}
+                    context={this.context}
+                    themeId={this.themeId}
+                    onSave={this.onSave}
+                    closeModal={() => this.close()}
+                    allowBlockSwitch={this.allowBlockSwitch}
+                />
+            </ServicesProvider>,
             this.contentEl
         );
     }
@@ -206,6 +219,8 @@ function QuickInputForm({ app, blockId: initialBlockId, context, themeId, onSave
     allowBlockSwitch?: boolean;
 }) {
     const settings = useStore(state => state.settings.inputSettings);
+    const dataStore = useDataStore();
+    const inputService = useInputService();
     const [currentBlockId, setCurrentBlockId] = useState(initialBlockId);
     
     const availableBlocks = useMemo(() => {
