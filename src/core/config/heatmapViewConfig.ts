@@ -1,12 +1,9 @@
-/**
- * HeatmapView 默认配置
- */
-export const DEFAULT_HEATMAP_CONFIG = {
-    sourceBlockId: '',
-    themePaths: [],
-    enableLeveling: true,
-    showLevelProgress: true,
-};
+// src/core/config/heatmapViewConfig.ts
+// 重新导出唯一真源的 Heatmap 默认配置（SSOT）
+// 所有 Heatmap 默认配置必须从 viewConfigs.ts 导入
+
+export { HEATMAP_VIEW_DEFAULT_CONFIG, HEATMAP_VIEW_DEFAULT_CONFIG as DEFAULT_HEATMAP_CONFIG } from './viewConfigs';
+export type { HeatmapViewConfig } from './viewConfigs';
 
 /**
  * 检查图片路径
