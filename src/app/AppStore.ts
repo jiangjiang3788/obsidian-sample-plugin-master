@@ -20,8 +20,8 @@ import { DEFAULT_SETTINGS } from '@/core/types/schema';
 import type ThinkPlugin from '@main';
 import { VIEW_DEFAULT_CONFIGS } from '@/features/settings/registry';
 import { generateId, moveItemInArray, duplicateItemInArray } from '@core/utils/array';
-import { appStore } from '@/app/storeRegistry';
 import { SETTINGS_TOKEN, ISettingsProvider } from '@/core/services/types';
+import { useAppStore } from '@/app/AppStoreContext';
 import { ThemeStore } from '@features/settings/ThemeStore';
 import { TimerStore, type TimerState } from '@features/timer/TimerStore';
 import { LayoutStore } from '@/features/settings/LayoutStore';
@@ -331,24 +331,15 @@ export class AppStore implements ISettingsProvider {
         return this.theme.batchDeleteOverrides(selections);
     }
 }
+/**
+ * useStore Hook
+ * 从 Context 获取 AppStore 并订阅状态变化
+ * @param selector 状态选择器函数
+ * @returns 选择的状态切片
+ */
 export function useStore<T>(selector: (state: AppState) => T): T {
-    const store = appStore;
-
-    if (!store) {
-        // 创建一个临时的 TimerStore 实例作为备用
-        // 注意：这里我们需要模拟 TimerStateService，或者简单地传入 null/undefined 并忽略错误，
-        // 因为这只是一个备用状态。为了类型安全，我们使用类型断言。
-        const fallbackTimerStore = new TimerStore({} as any);
-        const safeFallbackState: AppState = {
-            settings: DEFAULT_SETTINGS,
-            // [移除] timers和activeTimer
-            isTimerWidgetVisible: true,
-            // [新增] TimerStore实例
-            timer: fallbackTimerStore,
-        };
-        console.warn("useStore 在 AppStore 注册前被调用。返回安全的备用状态。");
-        return selector(safeFallbackState);
-    }
+    // 通过 Context 获取 store 实例
+    const store = useAppStore();
     
     const memoizedSelector = useCallback(selector, []);
     

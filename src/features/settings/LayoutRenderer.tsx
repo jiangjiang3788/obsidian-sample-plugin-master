@@ -8,7 +8,8 @@ import { ModulePanel } from './ModulePanel';
 import { DashboardViewComponents as ViewComponents } from './index';
 
 import { getDateRange, dayjs } from '@core/utils/date';
-import { useStore } from '@/app/AppStore';
+import { useStore, AppStore } from '@/app/AppStore';
+import { useAppStore } from '@/app/AppStoreContext';
 import type { ActionService } from '@core/services/ActionService';
 import { ItemService } from '@core/services/ItemService';
 import type { TimerService } from '@features/timer/TimerService';
@@ -16,8 +17,6 @@ import { useViewData } from '@/features/settings/useViewData';
 import { QuickInputModal } from '@/features/quickinput/QuickInputModal';
 import { ModuleSettingsModal } from './ModuleSettingsModal'; // [新增] 导入设置模态框
 import { App, Notice } from 'obsidian'; // [修改] 导入 Notice
-import { appStore } from '@/app/storeRegistry';
-import { AppStore } from '@/app/AppStore';
 import { exportItemsToMarkdown, getExportConfigByViewType } from '@core/utils/exportUtils'; // [新增] 导入导出函数
 import { ViewToolbar } from '@features/views/ViewToolbar'; // [新增] 导入统一工具栏组件
 
@@ -108,6 +107,9 @@ const ViewContent = ({
 };
 
 export function LayoutRenderer({ layout, dataStore, app, actionService, itemService, timerService }: any) {
+    // [修改] 通过 Context 获取 AppStore 实例
+    const appStore = useAppStore();
+    
     const allViews = useStore(state => state.settings.viewInstances);
     const timers = useStore(state => state.timer.getTimers());
     const inputSettings = useStore(state => state.settings.inputSettings); // [修改] 获取完整 inputSettings

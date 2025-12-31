@@ -7,7 +7,6 @@ import { InputService } from '@core/services/InputService';
 import { ItemService } from '@core/services/ItemService';
 import { TimerService } from '@features/timer/TimerService';
 import { AppStore } from '@/app/AppStore';
-import { registerStore, registerDataStore, registerTimerService, registerInputService } from '@/app/storeRegistry';
 import { FloatingTimerWidget } from '@features/timer/FloatingTimerWidget';
 import { FeatureLoader } from '@/app/FeatureLoader';
 import { safeAsync } from '@shared/utils/errorHandler';
@@ -116,12 +115,6 @@ export class ServiceManager {
         this.services.actionService = container.resolve(ActionService);
         this.services.inputService = container.resolve(InputService);
         this.services.itemService = container.resolve(ItemService);
-
-        // 注册到全局注册表 (兼容旧代码)
-        registerStore(this.services.appStore!);
-        registerDataStore(this.services.dataStore);
-        registerTimerService(this.services.timerService!);
-        registerInputService(this.services.inputService);
 
         // 触发后台扫描
         this.scanDataInBackground();

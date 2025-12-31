@@ -4,7 +4,11 @@ import { h } from 'preact';
 import { App, Modal, Notice } from 'obsidian';
 import { render, unmountComponentAtNode } from 'preact/compat';
 import { useState, useMemo, useEffect } from 'preact/hooks';
-import { useStore } from '@/app/AppStore';
+import { container } from 'tsyringe';
+import { useStore, AppStore } from '@/app/AppStore';
+import { useDataStore, useInputService, ServicesProvider, Services } from '@/app/AppStoreContext';
+import { DataStore } from '@/core/services/DataStore';
+import { InputService } from '@/core/services/InputService';
 import type { InputSettings, BlockTemplate, ThemeDefinition, TemplateField } from '@/core/types/schema';
 import type { NaturalRecordCommand } from '@/core/types/ai-schema';
 import { Button, RadioGroup as MuiRadioGroup, FormControlLabel, Radio, FormControl, Typography, Stack, Divider, Box, IconButton, Tooltip, Chip, List, ListItem, ListItemButton, ListItemText, ListItemIcon } from '@mui/material';
@@ -15,7 +19,6 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import { SimpleSelect } from '@shared/ui/composites/SimpleSelect';
 import { buildThemeTree, ThemeTreeNode } from '@core/utils/themeUtils';
 import { dayjs, timeToMinutes, minutesToTime } from '@core/utils/date';
-import { inputService, dataStore } from '@/app/storeRegistry';
 import { renderTemplate } from '@core/utils/templateUtils';
 import { getEffectiveTemplate } from '@core/utils/inputTemplateUtils';
 
@@ -36,12 +39,20 @@ interface AiBatchConfirmModalProps {
 }
 
 export class AiBatchConfirmModal extends Modal {
+    private services: Services;
+    
     constructor(
         app: App,
         private items: NaturalRecordCommand[],
         private onComplete?: () => void
     ) {
         super(app);
+        // 从 DI 容器获取服务
+        this.services = {
+            appStore: container.resolve(AppStore),
+            dataStore: container.resolve(DataStore),
+            inputService: container.resolve(InputService),
+        };
     }
 
     onOpen() {
@@ -52,12 +63,14 @@ export class AiBatchConfirmModal extends Modal {
         this.modalEl.style.height = '80vh';
         
         render(
-            <AiBatchConfirmForm
-                app={this.app}
-                items={this.items}
-                closeModal={() => this.close()}
-                onComplete={this.onComplete}
-            />,
+            <ServicesProvider services={this.services}>
+                <AiBatchConfirmForm
+                    app={this.app}
+                    items={this.items}
+                    closeModal={() => this.close()}
+                    onComplete={this.onComplete}
+                />
+            </ServicesProvider>,
             this.contentEl
         );
     }
@@ -110,6 +123,8 @@ function AiBatchConfirmForm({ app, items: initialItems, closeModal, onComplete }
     onComplete?: () => void;
 }) {
     const settings = useStore(state => state.settings.inputSettings);
+    const dataStore = useDataStore();
+    const inputService = useInputService();
     const blocks = settings.blocks || [];
     const themes = settings.themes || [];
     
