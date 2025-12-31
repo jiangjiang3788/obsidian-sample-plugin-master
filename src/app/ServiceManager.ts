@@ -11,7 +11,9 @@ import { FloatingTimerWidget } from '@features/timer/FloatingTimerWidget';
 import { FeatureLoader } from '@/app/FeatureLoader';
 import { safeAsync } from '@shared/utils/errorHandler';
 import { startMeasure } from '@shared/utils/performance';
-import { SETTINGS_PERSISTENCE_TOKEN, type ISettingsPersistence } from '@core/services/SettingsRepository';
+import { SETTINGS_PERSISTENCE_TOKEN, SettingsRepository, type ISettingsPersistence } from '@core/services/SettingsRepository';
+import { createAppStore, setAppStoreInstance } from '@/app/store/useAppStore';
+import { createUseCases, type UseCases } from '@/app/usecases';
 import type ThinkPlugin from '@main';
 
 /**
@@ -38,6 +40,7 @@ export class ServiceManager {
         inputService: InputService;
         timerWidget: FloatingTimerWidget;
         itemService: ItemService;
+        useCases: UseCases;  // P0 新增
     }> = {};
 
     constructor(plugin: ThinkPlugin) {
@@ -109,14 +112,33 @@ export class ServiceManager {
 
     /**
      * [主流程] #2 初始化核心服务
+     * 
+     * P0 改造：
+     * 1. 解析 AppStore（遗留 Class Store，保持兼容）
+     * 2. 创建 Zustand Store 并初始化
+     * 3. 创建 UseCases
      */
     private async initializeCore(): Promise<void> {
         const stopMeasure = startMeasure('ServiceManager.initializeCore');
         return await safeAsync(
             async () => {
+                // 1. 解析遗留 AppStore（保持兼容）
                 this.services.appStore = container.resolve(AppStore);
                 this.services.timerStateService = container.resolve(TimerStateService);
-                // 注：AppStore 不再需要 plugin 实例，IO 通过 SettingsRepository 处理
+                
+                // 2. P0: 创建 Zustand Store 并初始化
+                const settingsRepository = container.resolve(SettingsRepository);
+                const zustandStore = createAppStore(settingsRepository);
+                setAppStoreInstance(zustandStore);
+                
+                // 使用已加载的 settings 初始化 Zustand store
+                const initialSettings = this.services.appStore.getSettings();
+                zustandStore.getState().initialize(initialSettings);
+                console.log('[ThinkPlugin] Zustand Store 初始化完成');
+                
+                // 3. P0: 创建 UseCases
+                this.services.useCases = createUseCases();
+                console.log('[ThinkPlugin] UseCases 创建完成');
                 
                 const duration = stopMeasure();
                 console.log(`[ThinkPlugin] 核心服务初始化完成 (${duration.toFixed(2)}ms)`);
@@ -186,12 +208,13 @@ export class ServiceManager {
             async () => {
                 this.services.timerService = container.resolve(TimerService);
                 
-                // 注册命令
+                // 注册命令（P0: 使用 UseCases 替代直接调用 appStore）
                 this.plugin.addCommand({
                     id: 'toggle-think-floating-timer',
                     name: '切换悬浮计时器显隐',
                     callback: () => {
-                        this.services.appStore!.toggleTimerWidgetVisibility();
+                        // P0: 通过 UseCases 调用，而非直接调用 appStore
+                        this.services.useCases!.settings.toggleTimerWidgetVisibility();
                     },
                 });
 
@@ -263,6 +286,12 @@ export class ServiceManager {
 
     get timerWidget(): FloatingTimerWidget | undefined {
         return this.services.timerWidget;
+    }
+
+    // P0 新增：获取 UseCases
+    get useCases(): UseCases {
+        if (!this.services.useCases) throw new Error('UseCases 未初始化');
+        return this.services.useCases;
     }
 
     getLoadingStatus() {

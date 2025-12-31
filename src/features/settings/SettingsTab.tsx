@@ -47,7 +47,7 @@ function SettingsRoot({ app, appStore, dataStore }: { app: App, appStore: AppSto
                 <TabPanel value={tabIndex} index={0}><InputSettings appStore={appStore} dataStore={dataStore} /></TabPanel>
                 <TabPanel value={tabIndex} index={1}><LayoutSettings app={app} appStore={appStore} /></TabPanel>
                 <TabPanel value={tabIndex} index={2}><GeneralSettings appStore={appStore} /></TabPanel>
-                <TabPanel value={tabIndex} index={3}><AiSettings appStore={appStore} /></TabPanel>
+                <TabPanel value={tabIndex} index={3}><AiSettings /></TabPanel>
             </Box>
         </ThemeProvider>
     );

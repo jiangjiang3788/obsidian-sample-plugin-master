@@ -40,6 +40,15 @@ export interface ZustandAppActions {
     // 设置更新（通过 SettingsRepository）
     updateSettings: (mutator: (draft: ThinkSettings) => void) => Promise<void>;
     
+    // P0: 悬浮计时器设置（持久化）
+    setFloatingTimerEnabled: (enabled: boolean) => Promise<void>;
+    
+    // P0: Block 重排序（持久化）
+    reorderBlocks: (activeId: string, overId: string) => Promise<void>;
+    
+    // P0: AI 设置更新（持久化）
+    updateAiSettings: (aiSettings: import('@/core/types/ai-schema').AiSettings) => Promise<void>;
+    
     // 临时状态
     toggleTimerWidgetVisibility: () => void;
     setTimerWidgetVisible: (visible: boolean) => void;
@@ -107,6 +116,93 @@ export function createAppStore(settingsRepository: SettingsRepository) {
 
             setTimerWidgetVisible: (visible: boolean) => {
                 set({ isTimerWidgetVisible: visible });
+            },
+
+            // P0: 设置悬浮计时器启用状态（持久化）
+            setFloatingTimerEnabled: async (enabled: boolean) => {
+                const state = get();
+                if (!state.isInitialized) {
+                    console.error('useAppStore: 未初始化，无法设置悬浮计时器状态');
+                    return;
+                }
+
+                set({ isLoading: true, error: null });
+
+                try {
+                    const newSettings = await settingsRepository.update(draft => {
+                        draft.floatingTimerEnabled = enabled;
+                    });
+                    // 同步更新临时可见状态
+                    set({ 
+                        settings: newSettings, 
+                        isTimerWidgetVisible: enabled,
+                        isLoading: false 
+                    });
+                } catch (error: any) {
+                    console.error('useAppStore: 设置悬浮计时器状态失败', error);
+                    set({ 
+                        error: error.message || '设置悬浮计时器状态失败',
+                        isLoading: false 
+                    });
+                }
+            },
+
+            // P0: Block 重排序（持久化）
+            reorderBlocks: async (activeId: string, overId: string) => {
+                const state = get();
+                if (!state.isInitialized) {
+                    console.error('useAppStore: 未初始化，无法重排序 Block');
+                    return;
+                }
+
+                const blocks = state.settings.inputSettings?.blocks || [];
+                const oldIndex = blocks.findIndex(b => b.id === activeId);
+                const newIndex = blocks.findIndex(b => b.id === overId);
+
+                if (oldIndex === -1 || newIndex === -1 || oldIndex === newIndex) {
+                    return;
+                }
+
+                set({ isLoading: true, error: null });
+
+                try {
+                    const newSettings = await settingsRepository.update(draft => {
+                        const blocks = draft.inputSettings?.blocks || [];
+                        const [removed] = blocks.splice(oldIndex, 1);
+                        blocks.splice(newIndex, 0, removed);
+                    });
+                    set({ settings: newSettings, isLoading: false });
+                } catch (error: any) {
+                    console.error('useAppStore: Block 重排序失败', error);
+                    set({ 
+                        error: error.message || 'Block 重排序失败',
+                        isLoading: false 
+                    });
+                }
+            },
+
+            // P0: AI 设置更新（持久化）
+            updateAiSettings: async (aiSettings: import('@/core/types/ai-schema').AiSettings) => {
+                const state = get();
+                if (!state.isInitialized) {
+                    console.error('useAppStore: 未初始化，无法更新 AI 设置');
+                    return;
+                }
+
+                set({ isLoading: true, error: null });
+
+                try {
+                    const newSettings = await settingsRepository.update(draft => {
+                        draft.aiSettings = aiSettings;
+                    });
+                    set({ settings: newSettings, isLoading: false });
+                } catch (error: any) {
+                    console.error('useAppStore: AI 设置更新失败', error);
+                    set({ 
+                        error: error.message || 'AI 设置更新失败',
+                        isLoading: false 
+                    });
+                }
             },
 
             setError: (error: string | null) => {

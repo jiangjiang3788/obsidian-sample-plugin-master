@@ -1,7 +1,15 @@
 // src/features/settings/ui/BlockManager.tsx
+/**
+ * BlockManager - Block 管理组件
+ * 
+ * ⚠️ P0 止血改造：
+ * - 禁止直接调用 appStore['_updateSettingsAndPersist']
+ * - Block 重排序必须通过 useCases.blocks.reorderBlocks
+ */
 /** @jsxImportSource preact */
 import { h } from 'preact';
 import { useStore, AppStore } from '@/app/AppStore';
+import { useUseCases } from '@/app/AppStoreContext';
 import { Accordion, AccordionSummary, AccordionDetails, Box, Stack, Typography, IconButton, Tooltip, Divider, TextField } from '@mui/material';
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 import DeleteForeverOutlinedIcon from '@mui/icons-material/DeleteForeverOutlined';
@@ -14,6 +22,7 @@ import { TemplateVariableCopier } from './TemplateVariableCopier';
 import { DndContext, closestCenter } from '@dnd-kit/core';
 import { arrayMove, SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+import type { UseCases } from '@/app/usecases';
 
 // [修改] 组件 props 现在需要接收 appStore
 function SortableBlockItem({ block, openId, setOpenId, handleDelete, appStore }) {
@@ -86,14 +95,21 @@ function BlockEditor({ block, appStore }: { block: BlockTemplate, appStore: AppS
     );
 }
 
-// [修改] 组件 props 现在需要接收 appStore
+/**
+ * BlockManager 组件
+ * 
+ * ⚠️ P0 止血：禁止直接调用 appStore['_updateSettingsAndPersist']
+ * Block 重排序必须通过 useCases.blocks.reorderBlocks
+ */
 export function BlockManager({ appStore }: { appStore: AppStore }) {
     const blocks = useStore(state => state.settings.inputSettings.blocks);
     const [openId, setOpenId] = useState<string | null>(null);
     
+    // P0: 获取 UseCases
+    const useCases = useUseCases();
+    
     const handleAdd = () => {
         const newName = `新Block ${blocks.length + 1}`;
-        // [修改] 使用 appStore 实例
         appStore.addBlock(newName).then(() => {
             const latestBlock = appStore.getSettings().inputSettings.blocks.at(-1);
             if (latestBlock) setOpenId(latestBlock.id);
@@ -102,25 +118,21 @@ export function BlockManager({ appStore }: { appStore: AppStore }) {
 
     const handleDelete = (id: string, name: string) => {
         if (confirm(`确认删除Block "${name}" 吗？\n所有与此Block相关的主题覆写配置都将被一并删除。`)) {
-            // [修改] 使用 appStore 实例
             appStore.deleteBlock(id);
         }
     };
 
+    /**
+     * P0 止血：拖拽排序处理
+     * 
+     * ⚠️ 禁止：appStore['_updateSettingsAndPersist']
+     * ✅ 改用：useCases.blocks.reorderBlocks
+     */
     const handleDragEnd = (event: any) => {
         const { active, over } = event;
         if (active && over && active.id !== over.id) {
-            const oldIndex = blocks.findIndex(b => b.id === active.id);
-            const newIndex = blocks.findIndex(b => b.id === over.id);
-            if (oldIndex === -1 || newIndex === -1) return;
-            const newSortedBlocks = arrayMove(blocks, oldIndex, newIndex);
-            
-            const currentSettings = appStore.getSettings();
-            const newInputSettings = { ...currentSettings.inputSettings, blocks: newSortedBlocks };
-            // [修改] 使用 appStore 实例
-            appStore['_updateSettingsAndPersist'](draft => {
-                draft.inputSettings = newInputSettings;
-            });
+            // P0: 通过 UseCase 重排序，而非直接操作 appStore 私有方法
+            useCases.blocks.reorderBlocks(active.id, over.id);
         }
     };
 

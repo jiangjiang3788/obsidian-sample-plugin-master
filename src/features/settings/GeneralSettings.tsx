@@ -1,13 +1,29 @@
 // src/features/settings/ui/GeneralSettings.tsx
+/**
+ * GeneralSettings - 通用设置组件
+ * 
+ * ⚠️ P0 止血改造：
+ * - 禁止直接调用 appStore.updateFloatingTimerEnabled
+ * - 必须通过 useCases.settings.setFloatingTimerEnabled
+ */
 /** @jsxImportSource preact */
 import { h } from 'preact';
 import { useStore, AppStore } from '@/app/AppStore';
+import { useUseCases } from '@/app/AppStoreContext';
 import { Box, Typography, Stack, FormControlLabel, Checkbox } from '@mui/material';
 
-// 组件 props 需要接收 appStore 实例，以便进行状态更新
+/**
+ * 通用设置组件
+ * 
+ * ⚠️ P0 止血：禁止直接调用 appStore.updateFloatingTimerEnabled
+ * 必须通过 useCases.settings.setFloatingTimerEnabled
+ */
 export function GeneralSettings({ appStore }: { appStore: AppStore }) {
     // 从 store 中订阅需要的设置状态
     const floatingTimerEnabled = useStore(state => state.settings.floatingTimerEnabled);
+    
+    // P0: 获取 UseCases
+    const useCases = useUseCases();
 
     return (
         <Box sx={{ maxWidth: '900px', mx: 'auto' }}>
@@ -18,8 +34,8 @@ export function GeneralSettings({ appStore }: { appStore: AppStore }) {
                     control={
                         <Checkbox
                             checked={floatingTimerEnabled}
-                            // 当开关状态改变时，调用 appStore 中对应的方法来更新设置
-                            onChange={(e) => appStore.updateFloatingTimerEnabled(e.target.checked)}
+                            // P0: 通过 UseCase 更新设置，而非直接调用 appStore
+                            onChange={(e) => useCases.settings.setFloatingTimerEnabled((e.target as HTMLInputElement).checked)}
                         />
                     }
                     label="启用悬浮计时器"
