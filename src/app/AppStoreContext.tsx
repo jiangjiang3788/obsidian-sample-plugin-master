@@ -4,8 +4,13 @@
  * 职责：
  * 1. 提供 AppStore 的 React/Preact Context
  * 2. 提供 DataStore 和 InputService 的 Context
- * 3. 通过 useAppStore()、useDataStore()、useInputService() Hook 提供类型安全的访问
- * 4. 替代 storeRegistry 中的全局导出
+ * 3. 提供 UseCases 的 Context（P0 新增）
+ * 4. 通过 useAppStore()、useDataStore()、useInputService()、useUseCases() Hook 提供类型安全的访问
+ * 5. 替代 storeRegistry 中的全局导出
+ * 
+ * ⚠️ P0 边界防护：
+ * - UI 层必须通过 useUseCases() 调用业务逻辑
+ * - 禁止 UI 直接调用 AppStore 的私有方法
  */
 import { createContext } from 'preact';
 import { useContext } from 'preact/hooks';
@@ -13,6 +18,7 @@ import type { ComponentChildren } from 'preact';
 import type { AppStore } from './AppStore';
 import type { DataStore } from '@/core/services/DataStore';
 import type { InputService } from '@/core/services/InputService';
+import type { UseCases } from './usecases';
 
 // ============== AppStore Context ==============
 
@@ -106,6 +112,38 @@ export function useInputService(): InputService {
     return store;
 }
 
+// ============== UseCases Context (P0 新增) ==============
+
+/**
+ * UseCases Context
+ * 用于在 UI 层传递 UseCases 实例
+ * 
+ * ⚠️ P0 边界防护：UI 层必须通过此 Context 获取 UseCases
+ */
+export const UseCasesContext = createContext<UseCases | null>(null);
+
+/**
+ * useUseCases Hook
+ * 从 Context 获取 UseCases 实例
+ * 
+ * ⚠️ P0 边界防护：
+ * - UI 层必须通过此 Hook 调用业务逻辑
+ * - 禁止直接调用 AppStore 的私有方法
+ * - 禁止直接调用 appStore['_updateSettingsAndPersist']
+ * 
+ * @throws 如果在 ServicesProvider 外部使用则抛出异常
+ */
+export function useUseCases(): UseCases {
+    const useCases = useContext(UseCasesContext);
+    if (!useCases) {
+        throw new Error(
+            'useUseCases 必须在 ServicesProvider 内部使用。' +
+            '请确保组件树被 ServicesProvider 包裹。'
+        );
+    }
+    return useCases;
+}
+
 // ============== 统一 Services Provider ==============
 
 /**
@@ -115,6 +153,7 @@ export interface Services {
     appStore: AppStore;
     dataStore: DataStore;
     inputService: InputService;
+    useCases: UseCases;  // P0 新增
 }
 
 /**
@@ -128,14 +167,18 @@ interface ServicesProviderProps {
 /**
  * ServicesProvider
  * 统一提供所有 UI 层需要的服务
- * 嵌套提供 AppStore、DataStore、InputService 的 Context
+ * 嵌套提供 AppStore、DataStore、InputService、UseCases 的 Context
+ * 
+ * ⚠️ P0：UI 层通过 useUseCases() 获取业务用例，而非直接调用 store action
  */
 export function ServicesProvider({ services, children }: ServicesProviderProps) {
     return (
         <AppStoreContext.Provider value={services.appStore}>
             <DataStoreContext.Provider value={services.dataStore}>
                 <InputServiceContext.Provider value={services.inputService}>
-                    {children}
+                    <UseCasesContext.Provider value={services.useCases}>
+                        {children}
+                    </UseCasesContext.Provider>
                 </InputServiceContext.Provider>
             </DataStoreContext.Provider>
         </AppStoreContext.Provider>

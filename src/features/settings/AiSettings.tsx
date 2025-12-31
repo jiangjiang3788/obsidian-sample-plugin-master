@@ -25,17 +25,20 @@ import {
     Chip,
 } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import { AppStore, useStore } from '@/app/AppStore';
+import { useStore } from '@/app/AppStore';
+import { useUseCases } from '@/app/AppStoreContext';
 import type { AiSettings as AiSettingsType } from '@/core/types/ai-schema';
 import { DEFAULT_AI_SETTINGS, CUSTOM_PROMPT_EXAMPLES } from '@/core/types/ai-schema';
 import { AiHttpClient } from '@/core/ai';
 
+// P0: 移除 appStore 依赖，改用 useCases
 interface AiSettingsProps {
-    appStore: AppStore;
+    // 保留空接口以便未来扩展
 }
 
-export function AiSettings({ appStore }: AiSettingsProps) {
+export function AiSettings(_props: AiSettingsProps) {
     const settings = useStore(state => state.settings);
+    const useCases = useUseCases();
     const aiSettings = settings.aiSettings ?? DEFAULT_AI_SETTINGS;
     const blocks = settings.inputSettings?.blocks ?? [];
     const themes = settings.inputSettings?.themes ?? [];
@@ -56,11 +59,9 @@ export function AiSettings({ appStore }: AiSettingsProps) {
         setLocalSettings(prev => ({ ...prev, ...updates }));
     };
 
-    // 保存设置
+    // 保存设置 - P0: 通过 useCases 更新，不再直接调用 appStore._updateSettingsAndPersist
     const handleSave = async () => {
-        await appStore._updateSettingsAndPersist(draft => {
-            draft.aiSettings = localSettings;
-        });
+        await useCases.settings.updateAiSettings(localSettings);
     };
 
     // 测试连接 - 使用 AiHttpClient 统一处理鉴权、超时和错误
