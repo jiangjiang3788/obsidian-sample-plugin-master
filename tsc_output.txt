@@ -1,0 +1,559 @@
+src/core/theme-matrix/index.ts(28,1): error TS2308: Module './batch.types' has already exported a member named 'BatchOperationResult'. Consider explicitly re-exporting to resolve the ambiguity.
+src/core/theme-matrix/index.ts(36,30): error TS2307: Cannot find module './ThemeManager' or its corresponding type declarations.
+src/core/theme-matrix/useSettingsManager.ts(8,31): error TS2307: Cannot find module './SettingsTreeView' or its corresponding type declarations.
+src/core/theme-matrix/useSettingsManager.ts(36,26): error TS2678: Type '"dataSource"' is not comparable to type 'GroupType'.
+src/core/theme-matrix/useSettingsManager.ts(36,49): error TS2339: Property 'addDataSource' does not exist on type 'AppStore'.
+src/core/theme-matrix/useSettingsManager.ts(64,26): error TS2678: Type '"dataSource"' is not comparable to type 'GroupType'.
+src/core/theme-matrix/useSettingsManager.ts(64,49): error TS2339: Property 'deleteDataSource' does not exist on type 'AppStore'.
+src/core/theme-matrix/useSettingsManager.ts(77,22): error TS2678: Type '"dataSource"' is not comparable to type 'GroupType'.
+src/core/theme-matrix/useSettingsManager.ts(77,45): error TS2339: Property 'updateDataSource' does not exist on type 'AppStore'.
+src/core/theme-matrix/useSettingsManager.ts(87,22): error TS2678: Type '"dataSource"' is not comparable to type 'GroupType'.
+src/core/theme-matrix/useSettingsManager.ts(87,45): error TS2339: Property 'moveDataSource' does not exist on type 'AppStore'.
+src/core/theme-matrix/useSettingsManager.ts(99,22): error TS2678: Type '"dataSource"' is not comparable to type 'GroupType'.
+src/core/theme-matrix/useSettingsManager.ts(99,45): error TS2339: Property 'duplicateDataSource' does not exist on type 'AppStore'.
+src/core/types/cache.ts(3,27): error TS2307: Cannot find module './domain/schema' or its corresponding type declarations.
+src/core/types/cache.ts(56,36): error TS7006: Parameter 't' implicitly has an 'any' type.
+src/core/types/theme.ts(2,32): error TS2307: Cannot find module '@/constants' or its corresponding type declarations.
+src/core/utils/templateUtils.ts(31,26): error TS2349: This expression is not callable.
+  Type 'typeof moment' has no call signatures.
+src/core/utils/timing.ts(11,16): error TS2683: 'this' implicitly has type 'any' because it does not have a type annotation.
+src/core/utils/timing.ts(16,18): error TS2683: 'this' implicitly has type 'any' because it does not have a type annotation.
+src/features/aiinput/AiBatchConfirmModal.tsx(51,9): error TS2741: Property 'useCases' is missing in type '{ appStore: AppStore; dataStore: DataStore; inputService: InputService; }' but required in type 'Services'.
+src/features/aiinput/AiBatchConfirmModal.tsx(364,147): error TS18047: 'e.target' is possibly 'null'.
+src/features/aiinput/AiBatchConfirmModal.tsx(364,156): error TS2339: Property 'value' does not exist on type 'EventTarget'.
+src/features/settings/BlockManager.tsx(28,30): error TS7031: Binding element 'block' implicitly has an 'any' type.
+src/features/settings/BlockManager.tsx(28,37): error TS7031: Binding element 'openId' implicitly has an 'any' type.
+src/features/settings/BlockManager.tsx(28,45): error TS7031: Binding element 'setOpenId' implicitly has an 'any' type.
+src/features/settings/BlockManager.tsx(28,56): error TS7031: Binding element 'handleDelete' implicitly has an 'any' type.
+src/features/settings/BlockManager.tsx(28,70): error TS7031: Binding element 'appStore' implicitly has an 'any' type.
+src/features/settings/BlockManager.tsx(39,34): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: { component: "span"; } & BoxOwnProps<Theme> & Omit<HTMLAttributes<HTMLSpanElement>, keyof BoxOwnProps<Theme>>): Element | null', gave the following error.
+    Type '{ children: Element; sx: { cursor: "grab"; display: "flex"; alignItems: "center"; }; role: string; tabIndex: number; 'aria-disabled': boolean; 'aria-pressed': boolean | undefined; 'aria-roledescription': string; 'aria-describedby': string; component: "span"; }' is not assignable to type 'IntrinsicAttributes & { component: "span"; } & BoxOwnProps<Theme> & Omit<HTMLAttributes<HTMLSpanElement>, keyof BoxOwnProps<...>>'.
+      Type '{ children: Element; sx: { cursor: "grab"; display: "flex"; alignItems: "center"; }; role: string; tabIndex: number; 'aria-disabled': boolean; 'aria-pressed': boolean | undefined; 'aria-roledescription': string; 'aria-describedby': string; component: "span"; }' is not assignable to type 'Omit<HTMLAttributes<HTMLSpanElement>, keyof BoxOwnProps<Theme>>'.
+        Types of property 'role' are incompatible.
+          Type 'string' is not assignable to type 'Signalish<AriaRole | undefined>'.
+  Overload 2 of 2, '(props: DefaultComponentProps<BoxTypeMap<{}, "div", Theme>>): Element | null', gave the following error.
+    Type '{ children: Element; sx: { cursor: "grab"; display: "flex"; alignItems: "center"; }; role: string; tabIndex: number; 'aria-disabled': boolean; 'aria-pressed': boolean | undefined; 'aria-roledescription': string; 'aria-describedby': string; component: string; }' is not assignable to type 'IntrinsicAttributes & BoxOwnProps<Theme> & Omit<HTMLAttributes<HTMLDivElement>, keyof BoxOwnProps<Theme>>'.
+      Property 'component' does not exist on type 'IntrinsicAttributes & BoxOwnProps<Theme> & Omit<HTMLAttributes<HTMLDivElement>, keyof BoxOwnProps<Theme>>'.
+src/features/settings/GroupStore.ts(244,13): error TS2322: Type 'string | null' is not assignable to type 'string'.
+  Type 'null' is not assignable to type 'string'.
+src/features/settings/InlineEditor.tsx(5,40): error TS2307: Cannot find module './types' or its corresponding type declarations.
+src/features/settings/SettingsTreeView.tsx(94,39): error TS7006: Parameter 'g' implicitly has an 'any' type.
+src/features/settings/SettingsTreeView.tsx(95,37): error TS7006: Parameter 'i' implicitly has an 'any' type.
+src/features/settings/SettingsTreeView.tsx(99,31): error TS7006: Parameter 'group' implicitly has an 'any' type.
+src/features/settings/SettingsTreeView.tsx(115,30): error TS7006: Parameter 'item' implicitly has an 'any' type.
+src/features/settings/TableViewEditor.tsx(24,36): error TS2322: Type '{ label: string; variant: "outlined"; id: string; disabled: boolean; fullWidth: boolean; size: "small" | undefined; InputLabelProps: Omit<HTMLAttributes<HTMLLabelElement>, "color">; InputProps: { ...; }; inputProps: InputHTMLAttributes<...> & { ...; }; }' is not assignable to type 'IntrinsicAttributes & { variant?: "outlined" | undefined; } & Omit<FilledTextFieldProps | OutlinedTextFieldProps | StandardTextFieldProps, "variant">'.
+  Type '{ label: string; variant: "outlined"; id: string; disabled: boolean; fullWidth: boolean; size: "small" | undefined; InputLabelProps: Omit<HTMLAttributes<HTMLLabelElement>, "color">; InputProps: { ...; }; inputProps: InputHTMLAttributes<...> & { ...; }; }' is not assignable to type 'Omit<FilledTextFieldProps | OutlinedTextFieldProps | StandardTextFieldProps, "variant">'.
+    The types of 'InputLabelProps.className' are incompatible between these types.
+      Type 'Signalish<string | undefined>' is not assignable to type 'string | undefined'.
+        Type 'SignalLike<string | undefined>' is not assignable to type 'string'.
+src/features/settings/TableViewEditor.tsx(32,36): error TS2322: Type '{ label: string; variant: "outlined"; id: string; disabled: boolean; fullWidth: boolean; size: "small" | undefined; InputLabelProps: Omit<HTMLAttributes<HTMLLabelElement>, "color">; InputProps: { ...; }; inputProps: InputHTMLAttributes<...> & { ...; }; }' is not assignable to type 'IntrinsicAttributes & { variant?: "outlined" | undefined; } & Omit<FilledTextFieldProps | OutlinedTextFieldProps | StandardTextFieldProps, "variant">'.
+  Type '{ label: string; variant: "outlined"; id: string; disabled: boolean; fullWidth: boolean; size: "small" | undefined; InputLabelProps: Omit<HTMLAttributes<HTMLLabelElement>, "color">; InputProps: { ...; }; inputProps: InputHTMLAttributes<...> & { ...; }; }' is not assignable to type 'Omit<FilledTextFieldProps | OutlinedTextFieldProps | StandardTextFieldProps, "variant">'.
+    The types of 'InputLabelProps.className' are incompatible between these types.
+      Type 'Signalish<string | undefined>' is not assignable to type 'string | undefined'.
+        Type 'SignalLike<string | undefined>' is not assignable to type 'string'.
+src/features/settings/useThemeMatrixSelection.ts(7,34): error TS2307: Cannot find module './themeTreeBuilder' or its corresponding type declarations.
+src/features/settings/useThemeMatrixSelection.ts(133,35): error TS7006: Parameter 'id' implicitly has an 'any' type.
+src/features/settings/useThemeMatrixSelection.ts(143,35): error TS7006: Parameter 'id' implicitly has an 'any' type.
+src/features/settings/useThemeMatrixSelection.ts(161,35): error TS7006: Parameter 'id' implicitly has an 'any' type.
+src/features/settings/useThemeMatrixSelection.ts(170,35): error TS7006: Parameter 'id' implicitly has an 'any' type.
+src/features/settings/useThemeMatrixSelection.ts(275,7): error TS7006: Parameter 'id' implicitly has an 'any' type.
+src/features/timer/FloatingTimerWidget.ts(32,47): error TS2339: Property 'actionService' does not exist on type 'ThinkPlugin'.
+src/features/timer/FloatingTimerWidget.ts(32,77): error TS2339: Property 'timerService' does not exist on type 'ThinkPlugin'.
+src/features/timer/FloatingTimerWidget.ts(39,40): error TS2339: Property 'actionService' does not exist on type 'ThinkPlugin'.
+src/features/timer/FloatingTimerWidget.ts(40,39): error TS2339: Property 'timerService' does not exist on type 'ThinkPlugin'.
+src/features/timer/TimerRow.tsx(12,30): error TS2307: Cannot find module '@core/services/TimerService' or its corresponding type declarations.
+src/features/timer/TimerRow.tsx(13,15): error TS2459: Module '"@/app//AppStore"' declares 'TimerState' locally, but it is not exported.
+src/features/timer/TimerStateService.ts(4,33): error TS2307: Cannot find module '@/store/stores' or its corresponding type declarations.
+src/features/timer/TimerWidget.ts(46,47): error TS2339: Property 'actionService' does not exist on type 'ThinkPlugin'.
+src/features/timer/TimerWidget.ts(52,40): error TS2769: No overload matches this call.
+  The last overload gave the following error.
+    Argument of type '{ actionService: any; }' is not assignable to parameter of type 'Attributes & TimerViewProps'.
+      Type '{ actionService: any; }' is missing the following properties from type 'TimerViewProps': app, timerService, dataStore
+src/features/timer/TimerWidget.ts(52,69): error TS2339: Property 'actionService' does not exist on type 'ThinkPlugin'.
+src/shared/ui/composites/dialogs/MoveItemDialog.tsx(92,10): error TS2304: Cannot find name 'Fragment'.
+src/shared/ui/composites/dialogs/MoveItemDialog.tsx(95,11): error TS2304: Cannot find name 'Fragment'.
+src/shared/ui/composites/dialogs/MoveItemDialog.tsx(106,13): error TS2322: Type 'Element' is not assignable to type 'string'.
+src/shared/ui/composites/dialogs/MoveItemDialog.tsx(107,13): error TS2322: Type 'Element' is not assignable to type 'string'.
+src/shared/ui/composites/dialogs/NamePromptModal.tsx(28,13): error TS18047: 'e.currentTarget' is possibly 'null'.
+src/shared/ui/composites/dialogs/NamePromptModal.tsx(28,29): error TS2339: Property 'blur' does not exist on type 'EventTarget'.
+src/shared/ui/composites/dialogs/NamePromptModal.tsx(85,9): error TS2304: Cannot find name 'unmountComponentAtNode'.
+src/shared/ui/composites/form/PillMultiSelect.tsx(24,32): error TS2322: Type '{ variant: "standard"; placeholder: string; id: string; disabled: boolean; fullWidth: boolean; size: "small" | undefined; InputLabelProps: Omit<HTMLAttributes<HTMLLabelElement>, "color">; InputProps: { ...; }; inputProps: InputHTMLAttributes<...> & { ...; }; }' is not assignable to type 'IntrinsicAttributes & { variant?: "standard" | undefined; } & Omit<FilledTextFieldProps | OutlinedTextFieldProps | StandardTextFieldProps, "variant">'.
+  Type '{ variant: "standard"; placeholder: string; id: string; disabled: boolean; fullWidth: boolean; size: "small" | undefined; InputLabelProps: Omit<HTMLAttributes<HTMLLabelElement>, "color">; InputProps: { ...; }; inputProps: InputHTMLAttributes<...> & { ...; }; }' is not assignable to type 'Omit<FilledTextFieldProps | OutlinedTextFieldProps | StandardTextFieldProps, "variant">'.
+    The types of 'InputLabelProps.className' are incompatible between these types.
+      Type 'Signalish<string | undefined>' is not assignable to type 'string | undefined'.
+        Type 'SignalLike<string | undefined>' is not assignable to type 'string'.
+src/shared/ui/composites/form/RadioGroup.tsx(4,30): error TS2307: Cannot find module '../../FieldRadio' or its corresponding type declarations.
+test/configs/wdio.conf.mts(2,23): error TS2307: Cannot find module 'path' or its corresponding type declarations.
+test/configs/wdio.conf.mts(4,21): error TS7016: Could not find a declaration file for module 'process'. 'G:/vikahz/.obsidian/plugins/obsidian-sample-plugin-master/node_modules/process/index.js' implicitly has an 'any' type.
+  Try `npm i --save-dev @types/process` if it exists or add a new declaration (.d.ts) file containing `declare module 'process';`
+test/configs/wdio.mobile.conf.mts(1,23): error TS2307: Cannot find module 'path' or its corresponding type declarations.
+test/configs/wdio.mobile.conf.mts(3,21): error TS7016: Could not find a declaration file for module 'process'. 'G:/vikahz/.obsidian/plugins/obsidian-sample-plugin-master/node_modules/process/index.js' implicitly has an 'any' type.
+  Try `npm i --save-dev @types/process` if it exists or add a new declaration (.d.ts) file containing `declare module 'process';`
+test/specs/mobile-quick-input.e2e.ts(4,1): error TS2593: Cannot find name 'describe'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+test/specs/mobile-quick-input.e2e.ts(5,5): error TS2593: Cannot find name 'it'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+test/specs/mobile-quick-input.e2e.ts(13,23): error TS2339: Property 'keys' does not exist on type 'Browser'.
+test/specs/mobile-quick-input.e2e.ts(17,23): error TS2339: Property 'keys' does not exist on type 'Browser'.
+test/specs/mobile-quick-input.e2e.ts(18,23): error TS2339: Property 'pause' does not exist on type 'Browser'.
+test/specs/mobile-quick-input.e2e.ts(32,23): error TS2339: Property 'pause' does not exist on type 'Browser'.
+test/specs/mobile-quick-input.e2e.ts(36,23): error TS2339: Property 'keys' does not exist on type 'Browser'.
+test/specs/mobile-quick-input.e2e.ts(37,23): error TS2339: Property 'pause' does not exist on type 'Browser'.
+test/specs/mobile-quick-input.e2e.ts(53,31): error TS2339: Property 'pause' does not exist on type 'Browser'.
+test/specs/mobile-quick-input.e2e.ts(57,31): error TS2339: Property 'keys' does not exist on type 'Browser'.
+test/specs/mobile-quick-input.e2e.ts(61,31): error TS2339: Property 'pause' does not exist on type 'Browser'.
+test/specs/mobile-quick-input.e2e.ts(62,31): error TS2339: Property 'keys' does not exist on type 'Browser'.
+test/specs/mobile-quick-input.e2e.ts(63,31): error TS2339: Property 'pause' does not exist on type 'Browser'.
+test/specs/mobile-quick-input.e2e.ts(84,31): error TS2339: Property 'pause' does not exist on type 'Browser'.
+test/specs/mobile-quick-input.e2e.ts(88,31): error TS2339: Property 'pause' does not exist on type 'Browser'.
+test/specs/mobile-quick-input.e2e.ts(120,35): error TS2339: Property 'pause' does not exist on type 'Browser'.
+test/specs/mobile-quick-input.e2e.ts(128,35): error TS2339: Property 'pause' does not exist on type 'Browser'.
+test/specs/mobile-quick-input.e2e.ts(132,35): error TS2339: Property 'keys' does not exist on type 'Browser'.
+test/specs/mobile-quick-input.e2e.ts(133,35): error TS2339: Property 'pause' does not exist on type 'Browser'.
+test/specs/test.e2e.ts(4,1): error TS2593: Cannot find name 'describe'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+test/specs/test.e2e.ts(5,5): error TS2593: Cannot find name 'it'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+test/specs/test.e2e.ts(13,23): error TS2339: Property 'keys' does not exist on type 'Browser'.
+test/specs/test.e2e.ts(17,23): error TS2339: Property 'keys' does not exist on type 'Browser'.
+test/specs/test.e2e.ts(18,23): error TS2339: Property 'pause' does not exist on type 'Browser'.
+test/specs/test.e2e.ts(25,23): error TS2339: Property 'pause' does not exist on type 'Browser'.
+test/specs/test.e2e.ts(29,23): error TS2339: Property 'keys' does not exist on type 'Browser'.
+test/specs/test.e2e.ts(30,23): error TS2339: Property 'pause' does not exist on type 'Browser'.
+test/unit/features/settings/ui/ThemeMatrix/setup.ts(4,31): error TS2307: Cannot find module '@state/AppStore' or its corresponding type declarations.
+test/unit/features/settings/ui/ThemeMatrix/setup.ts(5,35): error TS2307: Cannot find module '@core/services/ThemeManager' or its corresponding type declarations.
+test/unit/features/settings/ui/ThemeMatrix/setup.ts(6,36): error TS2307: Cannot find module '@core/domain/schema' or its corresponding type declarations.
+test/unit/features/settings/ui/ThemeMatrix/setup.ts(7,34): error TS2307: Cannot find module '@core/domain/schema' or its corresponding type declarations.
+test/unit/features/settings/ui/ThemeMatrix/setup.ts(24,19): error TS2304: Cannot find name 'jest'.
+test/unit/features/settings/ui/ThemeMatrix/setup.ts(29,22): error TS2304: Cannot find name 'jest'.
+test/unit/features/settings/ui/ThemeMatrix/setup.ts(30,19): error TS2304: Cannot find name 'jest'.
+test/unit/features/settings/ui/ThemeMatrix/setup.ts(31,22): error TS2304: Cannot find name 'jest'.
+test/unit/features/settings/ui/ThemeMatrix/setup.ts(32,22): error TS2304: Cannot find name 'jest'.
+test/unit/features/settings/ui/ThemeMatrix/setup.ts(33,25): error TS2304: Cannot find name 'jest'.
+test/unit/features/settings/ui/ThemeMatrix/setup.ts(34,25): error TS2304: Cannot find name 'jest'.
+test/unit/features/settings/ui/ThemeMatrix/setup.ts(35,20): error TS2304: Cannot find name 'jest'.
+test/unit/features/settings/ui/ThemeMatrix/setup.ts(36,36): error TS2304: Cannot find name 'jest'.
+test/unit/features/settings/ui/ThemeMatrix/setup.ts(45,25): error TS2304: Cannot find name 'jest'.
+test/unit/features/settings/ui/ThemeMatrix/setup.ts(51,24): error TS2304: Cannot find name 'jest'.
+test/unit/features/settings/ui/ThemeMatrix/setup.ts(52,26): error TS2304: Cannot find name 'jest'.
+test/unit/features/settings/ui/ThemeMatrix/setup.ts(53,23): error TS2304: Cannot find name 'jest'.
+test/unit/features/settings/ui/ThemeMatrix/setup.ts(54,26): error TS2304: Cannot find name 'jest'.
+test/unit/features/settings/ui/ThemeMatrix/setup.ts(55,28): error TS2304: Cannot find name 'jest'.
+test/unit/features/settings/ui/ThemeMatrix/utils/themeTreeBuilder.test.ts(14,1): error TS2593: Cannot find name 'describe'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+test/unit/features/settings/ui/ThemeMatrix/utils/themeTreeBuilder.test.ts(42,5): error TS2593: Cannot find name 'describe'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+test/unit/features/settings/ui/ThemeMatrix/utils/themeTreeBuilder.test.ts(43,9): error TS2593: Cannot find name 'it'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+test/unit/features/settings/ui/ThemeMatrix/utils/themeTreeBuilder.test.ts(47,13): error TS2304: Cannot find name 'expect'.
+test/unit/features/settings/ui/ThemeMatrix/utils/themeTreeBuilder.test.ts(54,13): error TS2304: Cannot find name 'expect'.
+test/unit/features/settings/ui/ThemeMatrix/utils/themeTreeBuilder.test.ts(55,13): error TS2304: Cannot find name 'expect'.
+test/unit/features/settings/ui/ThemeMatrix/utils/themeTreeBuilder.test.ts(56,13): error TS2304: Cannot find name 'expect'.
+test/unit/features/settings/ui/ThemeMatrix/utils/themeTreeBuilder.test.ts(59,13): error TS2304: Cannot find name 'expect'.
+test/unit/features/settings/ui/ThemeMatrix/utils/themeTreeBuilder.test.ts(63,13): error TS2304: Cannot find name 'expect'.
+test/unit/features/settings/ui/ThemeMatrix/utils/themeTreeBuilder.test.ts(64,13): error TS2304: Cannot find name 'expect'.
+test/unit/features/settings/ui/ThemeMatrix/utils/themeTreeBuilder.test.ts(67,9): error TS2593: Cannot find name 'it'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+test/unit/features/settings/ui/ThemeMatrix/utils/themeTreeBuilder.test.ts(71,13): error TS2304: Cannot find name 'expect'.
+test/unit/features/settings/ui/ThemeMatrix/utils/themeTreeBuilder.test.ts(74,13): error TS2304: Cannot find name 'expect'.
+test/unit/features/settings/ui/ThemeMatrix/utils/themeTreeBuilder.test.ts(77,13): error TS2304: Cannot find name 'expect'.
+test/unit/features/settings/ui/ThemeMatrix/utils/themeTreeBuilder.test.ts(80,9): error TS2593: Cannot find name 'it'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+test/unit/features/settings/ui/ThemeMatrix/utils/themeTreeBuilder.test.ts(88,13): error TS2304: Cannot find name 'expect'.
+test/unit/features/settings/ui/ThemeMatrix/utils/themeTreeBuilder.test.ts(89,13): error TS2304: Cannot find name 'expect'.
+test/unit/features/settings/ui/ThemeMatrix/utils/themeTreeBuilder.test.ts(90,13): error TS2304: Cannot find name 'expect'.
+test/unit/features/settings/ui/ThemeMatrix/utils/themeTreeBuilder.test.ts(93,9): error TS2593: Cannot find name 'it'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+test/unit/features/settings/ui/ThemeMatrix/utils/themeTreeBuilder.test.ts(95,13): error TS2304: Cannot find name 'expect'.
+test/unit/features/settings/ui/ThemeMatrix/utils/themeTreeBuilder.test.ts(98,9): error TS2593: Cannot find name 'it'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+test/unit/features/settings/ui/ThemeMatrix/utils/themeTreeBuilder.test.ts(102,13): error TS2304: Cannot find name 'expect'.
+test/unit/features/settings/ui/ThemeMatrix/utils/themeTreeBuilder.test.ts(103,13): error TS2304: Cannot find name 'expect'.
+test/unit/features/settings/ui/ThemeMatrix/utils/themeTreeBuilder.test.ts(104,13): error TS2304: Cannot find name 'expect'.
+test/unit/features/settings/ui/ThemeMatrix/utils/themeTreeBuilder.test.ts(108,5): error TS2593: Cannot find name 'describe'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+test/unit/features/settings/ui/ThemeMatrix/utils/themeTreeBuilder.test.ts(109,9): error TS2593: Cannot find name 'it'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+test/unit/features/settings/ui/ThemeMatrix/utils/themeTreeBuilder.test.ts(114,13): error TS2304: Cannot find name 'expect'.
+test/unit/features/settings/ui/ThemeMatrix/utils/themeTreeBuilder.test.ts(115,13): error TS2304: Cannot find name 'expect'.
+test/unit/features/settings/ui/ThemeMatrix/utils/themeTreeBuilder.test.ts(117,13): error TS2304: Cannot find name 'expect'.
+test/unit/features/settings/ui/ThemeMatrix/utils/themeTreeBuilder.test.ts(118,13): error TS2304: Cannot find name 'expect'.
+test/unit/features/settings/ui/ThemeMatrix/utils/themeTreeBuilder.test.ts(119,13): error TS2304: Cannot find name 'expect'.
+test/unit/features/settings/ui/ThemeMatrix/utils/themeTreeBuilder.test.ts(122,9): error TS2593: Cannot find name 'it'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+test/unit/features/settings/ui/ThemeMatrix/utils/themeTreeBuilder.test.ts(124,13): error TS2304: Cannot find name 'expect'.
+test/unit/features/settings/ui/ThemeMatrix/utils/themeTreeBuilder.test.ts(125,13): error TS2304: Cannot find name 'expect'.
+test/unit/features/settings/ui/ThemeMatrix/utils/themeTreeBuilder.test.ts(128,9): error TS2593: Cannot find name 'it'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+test/unit/features/settings/ui/ThemeMatrix/utils/themeTreeBuilder.test.ts(136,13): error TS2304: Cannot find name 'expect'.
+test/unit/features/settings/ui/ThemeMatrix/utils/themeTreeBuilder.test.ts(137,13): error TS2304: Cannot find name 'expect'.
+test/unit/features/settings/ui/ThemeMatrix/utils/themeTreeBuilder.test.ts(141,5): error TS2593: Cannot find name 'describe'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+test/unit/features/settings/ui/ThemeMatrix/utils/themeTreeBuilder.test.ts(142,9): error TS2593: Cannot find name 'it'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+test/unit/features/settings/ui/ThemeMatrix/utils/themeTreeBuilder.test.ts(149,13): error TS2304: Cannot find name 'expect'.
+test/unit/features/settings/ui/ThemeMatrix/utils/themeTreeBuilder.test.ts(152,9): error TS2593: Cannot find name 'it'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+test/unit/features/settings/ui/ThemeMatrix/utils/themeTreeBuilder.test.ts(159,13): error TS2304: Cannot find name 'expect'.
+test/unit/features/settings/ui/ThemeMatrix/utils/themeTreeBuilder.test.ts(162,9): error TS2593: Cannot find name 'it'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+test/unit/features/settings/ui/ThemeMatrix/utils/themeTreeBuilder.test.ts(168,13): error TS2304: Cannot find name 'expect'.
+test/unit/features/settings/ui/ThemeMatrix/utils/themeTreeBuilder.test.ts(172,5): error TS2593: Cannot find name 'describe'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+test/unit/features/settings/ui/ThemeMatrix/utils/themeTreeBuilder.test.ts(173,9): error TS2593: Cannot find name 'it'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+test/unit/features/settings/ui/ThemeMatrix/utils/themeTreeBuilder.test.ts(178,13): error TS2304: Cannot find name 'expect'.
+test/unit/features/settings/ui/ThemeMatrix/utils/themeTreeBuilder.test.ts(179,13): error TS2304: Cannot find name 'expect'.
+test/unit/features/settings/ui/ThemeMatrix/utils/themeTreeBuilder.test.ts(183,13): error TS2304: Cannot find name 'expect'.
+test/unit/features/settings/ui/ThemeMatrix/utils/themeTreeBuilder.test.ts(184,13): error TS2304: Cannot find name 'expect'.
+test/unit/features/settings/ui/ThemeMatrix/utils/themeTreeBuilder.test.ts(187,9): error TS2593: Cannot find name 'it'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+test/unit/features/settings/ui/ThemeMatrix/utils/themeTreeBuilder.test.ts(190,13): error TS2304: Cannot find name 'expect'.
+test/unit/features/settings/ui/ThemeMatrix/utils/themeTreeBuilder.test.ts(193,9): error TS2593: Cannot find name 'it'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+test/unit/features/settings/ui/ThemeMatrix/utils/themeTreeBuilder.test.ts(195,13): error TS2304: Cannot find name 'expect'.
+test/unit/features/settings/ui/ThemeMatrix/utils/themeTreeBuilder.test.ts(198,9): error TS2593: Cannot find name 'it'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+test/unit/features/settings/ui/ThemeMatrix/utils/themeTreeBuilder.test.ts(202,13): error TS2304: Cannot find name 'expect'.
+test/unit/features/settings/ui/ThemeMatrix/utils/themeTreeBuilder.test.ts(203,13): error TS2304: Cannot find name 'expect'.
+test/unit/features/settings/ui/ThemeMatrix/utils/themeTreeBuilder.test.ts(204,13): error TS2304: Cannot find name 'expect'.
+test/unit/features/settings/ui/ThemeMatrix/utils/themeTreeBuilder.test.ts(208,5): error TS2593: Cannot find name 'describe'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+test/unit/features/settings/ui/ThemeMatrix/utils/themeTreeBuilder.test.ts(209,9): error TS2593: Cannot find name 'it'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+test/unit/features/settings/ui/ThemeMatrix/utils/themeTreeBuilder.test.ts(214,13): error TS2304: Cannot find name 'expect'.
+test/unit/features/settings/ui/ThemeMatrix/utils/themeTreeBuilder.test.ts(217,9): error TS2593: Cannot find name 'it'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+test/unit/features/settings/ui/ThemeMatrix/utils/themeTreeBuilder.test.ts(219,13): error TS2304: Cannot find name 'expect'.
+test/unit/features/settings/ui/ThemeMatrix/utils/themeTreeBuilder.test.ts(222,9): error TS2593: Cannot find name 'it'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+test/unit/features/settings/ui/ThemeMatrix/utils/themeTreeBuilder.test.ts(226,13): error TS2304: Cannot find name 'expect'.
+test/unit/features/settings/ui/ThemeMatrix/utils/themeTreeBuilder.test.ts(229,9): error TS2593: Cannot find name 'it'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+test/unit/features/settings/ui/ThemeMatrix/utils/themeTreeBuilder.test.ts(239,13): error TS2304: Cannot find name 'expect'.
+test/unit/features/settings/ui/ThemeMatrix/utils/themeTreeBuilder.test.ts(243,5): error TS2593: Cannot find name 'describe'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+test/unit/features/settings/ui/ThemeMatrix/utils/themeTreeBuilder.test.ts(244,9): error TS2593: Cannot find name 'it'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+test/unit/features/settings/ui/ThemeMatrix/utils/themeTreeBuilder.test.ts(254,13): error TS2304: Cannot find name 'expect'.
+test/unit/features/settings/ui/ThemeMatrix/utils/themeTreeBuilder.test.ts(255,13): error TS2304: Cannot find name 'expect'.
+test/unit/features/settings/ui/ThemeMatrix/utils/themeTreeBuilder.test.ts(256,13): error TS2304: Cannot find name 'expect'.
+test/unit/features/settings/ui/ThemeMatrix/utils/themeTreeBuilder.test.ts(257,13): error TS2304: Cannot find name 'expect'.
+test/unit/features/settings/ui/ThemeMatrix/utils/themeTreeBuilder.test.ts(258,13): error TS2304: Cannot find name 'expect'.
+test/unit/features/settings/ui/ThemeMatrix/utils/themeTreeBuilder.test.ts(259,13): error TS2304: Cannot find name 'expect'.
+test/unit/features/settings/ui/ThemeMatrix/utils/themeTreeBuilder.test.ts(260,13): error TS2304: Cannot find name 'expect'.
+test/unit/features/settings/ui/ThemeMatrix/utils/themeTreeBuilder.test.ts(263,9): error TS2593: Cannot find name 'it'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+test/unit/features/settings/ui/ThemeMatrix/utils/themeTreeBuilder.test.ts(271,13): error TS2304: Cannot find name 'expect'.
+test/unit/features/settings/ui/ThemeMatrix/utils/themeTreeBuilder.test.ts(272,13): error TS2304: Cannot find name 'expect'.
+test/unit/features/settings/ui/ThemeMatrix/utils/themeTreeBuilder.test.ts(275,13): error TS2304: Cannot find name 'expect'.
+test/unit/features/settings/ui/ThemeMatrix/utils/themeTreeBuilder.test.ts(276,13): error TS2304: Cannot find name 'expect'.
+test/unit/features/settings/ui/ThemeMatrix/utils/themeTreeBuilder.test.ts(279,13): error TS2304: Cannot find name 'expect'.
+test/unit/features/settings/ui/ThemeMatrix/utils/themeTreeBuilder.test.ts(280,13): error TS2304: Cannot find name 'expect'.
+test/unit/features/settings/ui/ThemeMatrix/utils/themeTreeBuilder.test.ts(283,9): error TS2593: Cannot find name 'it'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+test/unit/features/settings/ui/ThemeMatrix/utils/themeTreeBuilder.test.ts(288,13): error TS2304: Cannot find name 'expect'.
+test/unit/features/settings/ui/ThemeMatrix/utils/themeTreeBuilder.test.ts(289,13): error TS2304: Cannot find name 'expect'.
+test/unit/features/settings/ui/ThemeMatrix/utils/themeTreeBuilder.test.ts(292,9): error TS2593: Cannot find name 'it'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+test/unit/features/settings/ui/ThemeMatrix/utils/themeTreeBuilder.test.ts(294,13): error TS2304: Cannot find name 'expect'.
+test/unit/features/settings/ui/ThemeMatrix/utils/themeTreeBuilder.test.ts(297,9): error TS2593: Cannot find name 'it'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+test/unit/features/settings/ui/ThemeMatrix/utils/themeTreeBuilder.test.ts(309,13): error TS2304: Cannot find name 'expect'.
+test/unit/features/settings/ui/ThemeMatrix/utils/themeTreeBuilder.test.ts(310,13): error TS2304: Cannot find name 'expect'.
+test/unit/heatmapAggregation.test.ts(27,1): error TS2593: Cannot find name 'describe'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+test/unit/heatmapAggregation.test.ts(28,5): error TS2593: Cannot find name 'it'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+test/unit/heatmapAggregation.test.ts(37,9): error TS2304: Cannot find name 'expect'.
+test/unit/heatmapAggregation.test.ts(38,9): error TS2304: Cannot find name 'expect'.
+test/unit/heatmapAggregation.test.ts(41,5): error TS2593: Cannot find name 'it'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+test/unit/heatmapAggregation.test.ts(51,9): error TS2304: Cannot find name 'expect'.
+test/unit/heatmapAggregation.test.ts(52,9): error TS2304: Cannot find name 'expect'.
+test/unit/heatmapAggregation.test.ts(55,5): error TS2593: Cannot find name 'it'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+test/unit/heatmapAggregation.test.ts(64,9): error TS2304: Cannot find name 'expect'.
+test/unit/heatmapAggregation.test.ts(65,9): error TS2304: Cannot find name 'expect'.
+test/unit/heatmapAggregation.test.ts(66,9): error TS2304: Cannot find name 'expect'.
+test/unit/heatmapAggregation.test.ts(69,5): error TS2593: Cannot find name 'it'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+test/unit/heatmapAggregation.test.ts(77,9): error TS2304: Cannot find name 'expect'.
+test/unit/heatmapAggregation.test.ts(78,9): error TS2304: Cannot find name 'expect'.
+test/unit/heatmapAggregation.test.ts(82,1): error TS2593: Cannot find name 'describe'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+test/unit/heatmapAggregation.test.ts(83,5): error TS2593: Cannot find name 'it'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+test/unit/heatmapAggregation.test.ts(93,9): error TS2304: Cannot find name 'expect'.
+test/unit/heatmapAggregation.test.ts(97,9): error TS2304: Cannot find name 'expect'.
+test/unit/heatmapAggregation.test.ts(98,9): error TS2304: Cannot find name 'expect'.
+test/unit/heatmapAggregation.test.ts(99,9): error TS2304: Cannot find name 'expect'.
+test/unit/heatmapAggregation.test.ts(103,13): error TS2304: Cannot find name 'expect'.
+test/unit/heatmapAggregation.test.ts(104,13): error TS2304: Cannot find name 'expect'.
+test/unit/heatmapAggregation.test.ts(105,13): error TS2304: Cannot find name 'expect'.
+test/unit/heatmapAggregation.test.ts(109,5): error TS2593: Cannot find name 'it'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+test/unit/heatmapAggregation.test.ts(117,9): error TS2304: Cannot find name 'expect'.
+test/unit/heatmapAggregation.test.ts(118,9): error TS2304: Cannot find name 'expect'.
+test/unit/heatmapAggregation.test.ts(123,9): error TS2304: Cannot find name 'expect'.
+test/unit/heatmapAggregation.test.ts(124,9): error TS2304: Cannot find name 'expect'.
+test/unit/heatmapAggregation.test.ts(127,5): error TS2593: Cannot find name 'it'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+test/unit/heatmapAggregation.test.ts(134,9): error TS2304: Cannot find name 'expect'.
+test/unit/heatmapAggregation.test.ts(138,1): error TS2593: Cannot find name 'describe'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+test/unit/heatmapAggregation.test.ts(139,5): error TS2593: Cannot find name 'it'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+test/unit/heatmapAggregation.test.ts(148,9): error TS2304: Cannot find name 'expect'.
+test/unit/heatmapAggregation.test.ts(151,9): error TS2304: Cannot find name 'expect'.
+test/unit/heatmapAggregation.test.ts(154,9): error TS2304: Cannot find name 'expect'.
+test/unit/heatmapAggregation.test.ts(158,13): error TS2304: Cannot find name 'expect'.
+test/unit/heatmapAggregation.test.ts(159,13): error TS2304: Cannot find name 'expect'.
+test/unit/heatmapAggregation.test.ts(160,13): error TS2304: Cannot find name 'expect'.
+test/unit/heatmapAggregation.test.ts(165,1): error TS2593: Cannot find name 'describe'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+test/unit/heatmapAggregation.test.ts(166,5): error TS2593: Cannot find name 'it'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+test/unit/heatmapAggregation.test.ts(175,9): error TS2304: Cannot find name 'expect'.
+test/unit/heatmapAggregation.test.ts(176,9): error TS2304: Cannot find name 'expect'.
+test/unit/heatmapAggregation.test.ts(177,9): error TS2304: Cannot find name 'expect'.
+test/unit/heatmapAggregation.test.ts(178,9): error TS2304: Cannot find name 'expect'.
+test/unit/heatmapAggregation.test.ts(181,5): error TS2593: Cannot find name 'it'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+test/unit/heatmapAggregation.test.ts(190,9): error TS2304: Cannot find name 'expect'.
+test/unit/heatmapAggregation.test.ts(191,9): error TS2304: Cannot find name 'expect'.
+test/unit/heatmapAggregation.test.ts(192,9): error TS2304: Cannot find name 'expect'.
+test/unit/heatmapAggregation.test.ts(193,9): error TS2304: Cannot find name 'expect'.
+test/unit/heatmapAggregation.test.ts(197,1): error TS2593: Cannot find name 'describe'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+test/unit/heatmapAggregation.test.ts(198,5): error TS2593: Cannot find name 'it'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+test/unit/heatmapAggregation.test.ts(208,9): error TS2304: Cannot find name 'expect'.
+test/unit/heatmapAggregation.test.ts(210,13): error TS2304: Cannot find name 'expect'.
+test/unit/heatmapAggregation.test.ts(214,5): error TS2593: Cannot find name 'it'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+test/unit/heatmapAggregation.test.ts(222,9): error TS2304: Cannot find name 'expect'.
+test/unit/immutableListOps.test.ts(13,1): error TS2593: Cannot find name 'describe'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+test/unit/immutableListOps.test.ts(14,5): error TS2593: Cannot find name 'it'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+test/unit/immutableListOps.test.ts(18,9): error TS2304: Cannot find name 'expect'.
+test/unit/immutableListOps.test.ts(19,9): error TS2304: Cannot find name 'expect'.
+test/unit/immutableListOps.test.ts(22,5): error TS2593: Cannot find name 'it'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+test/unit/immutableListOps.test.ts(26,9): error TS2304: Cannot find name 'expect'.
+test/unit/immutableListOps.test.ts(30,1): error TS2593: Cannot find name 'describe'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+test/unit/immutableListOps.test.ts(31,5): error TS2593: Cannot find name 'it'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+test/unit/immutableListOps.test.ts(35,9): error TS2304: Cannot find name 'expect'.
+test/unit/immutableListOps.test.ts(36,9): error TS2304: Cannot find name 'expect'.
+test/unit/immutableListOps.test.ts(39,5): error TS2593: Cannot find name 'it'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+test/unit/immutableListOps.test.ts(42,9): error TS2304: Cannot find name 'expect'.
+test/unit/immutableListOps.test.ts(43,9): error TS2304: Cannot find name 'expect'.
+test/unit/immutableListOps.test.ts(46,5): error TS2593: Cannot find name 'it'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+test/unit/immutableListOps.test.ts(50,9): error TS2304: Cannot find name 'expect'.
+test/unit/immutableListOps.test.ts(53,5): error TS2593: Cannot find name 'it'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+test/unit/immutableListOps.test.ts(57,9): error TS2304: Cannot find name 'expect'.
+test/unit/immutableListOps.test.ts(61,1): error TS2593: Cannot find name 'describe'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+test/unit/immutableListOps.test.ts(62,5): error TS2593: Cannot find name 'it'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+test/unit/immutableListOps.test.ts(66,9): error TS2304: Cannot find name 'expect'.
+test/unit/immutableListOps.test.ts(67,9): error TS2304: Cannot find name 'expect'.
+test/unit/immutableListOps.test.ts(70,5): error TS2593: Cannot find name 'it'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+test/unit/immutableListOps.test.ts(74,9): error TS2304: Cannot find name 'expect'.
+test/unit/immutableListOps.test.ts(77,5): error TS2593: Cannot find name 'it'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+test/unit/immutableListOps.test.ts(80,9): error TS2304: Cannot find name 'expect'.
+test/unit/immutableListOps.test.ts(81,9): error TS2304: Cannot find name 'expect'.
+test/unit/immutableListOps.test.ts(85,1): error TS2593: Cannot find name 'describe'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+test/unit/immutableListOps.test.ts(86,5): error TS2593: Cannot find name 'it'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+test/unit/immutableListOps.test.ts(90,9): error TS2304: Cannot find name 'expect'.
+test/unit/immutableListOps.test.ts(91,9): error TS2304: Cannot find name 'expect'.
+test/unit/immutableListOps.test.ts(94,5): error TS2593: Cannot find name 'it'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+test/unit/immutableListOps.test.ts(97,9): error TS2304: Cannot find name 'expect'.
+test/unit/immutableListOps.test.ts(98,9): error TS2304: Cannot find name 'expect'.
+test/unit/immutableListOps.test.ts(102,1): error TS2593: Cannot find name 'describe'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+test/unit/immutableListOps.test.ts(103,5): error TS2593: Cannot find name 'it'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+test/unit/immutableListOps.test.ts(107,9): error TS2304: Cannot find name 'expect'.
+test/unit/immutableListOps.test.ts(108,9): error TS2304: Cannot find name 'expect'.
+test/unit/immutableListOps.test.ts(111,5): error TS2593: Cannot find name 'it'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+test/unit/immutableListOps.test.ts(115,9): error TS2304: Cannot find name 'expect'.
+test/unit/immutableListOps.test.ts(118,5): error TS2593: Cannot find name 'it'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+test/unit/immutableListOps.test.ts(122,9): error TS2304: Cannot find name 'expect'.
+test/unit/immutableListOps.test.ts(125,5): error TS2593: Cannot find name 'it'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+test/unit/immutableListOps.test.ts(129,9): error TS2304: Cannot find name 'expect'.
+test/unit/TemplateResolver.test.ts(7,1): error TS2593: Cannot find name 'describe'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+test/unit/TemplateResolver.test.ts(53,5): error TS2593: Cannot find name 'describe'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+test/unit/TemplateResolver.test.ts(54,9): error TS2593: Cannot find name 'test'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+test/unit/TemplateResolver.test.ts(63,13): error TS2304: Cannot find name 'expect'.
+test/unit/TemplateResolver.test.ts(64,13): error TS2304: Cannot find name 'expect'.
+test/unit/TemplateResolver.test.ts(67,9): error TS2593: Cannot find name 'test'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+test/unit/TemplateResolver.test.ts(76,13): error TS2304: Cannot find name 'expect'.
+test/unit/TemplateResolver.test.ts(77,13): error TS2304: Cannot find name 'expect'.
+test/unit/TemplateResolver.test.ts(78,13): error TS2304: Cannot find name 'expect'.
+test/unit/TemplateResolver.test.ts(79,13): error TS2304: Cannot find name 'expect'.
+test/unit/TemplateResolver.test.ts(80,13): error TS2304: Cannot find name 'expect'.
+test/unit/TemplateResolver.test.ts(83,9): error TS2593: Cannot find name 'test'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+test/unit/TemplateResolver.test.ts(92,13): error TS2304: Cannot find name 'expect'.
+test/unit/TemplateResolver.test.ts(93,13): error TS2304: Cannot find name 'expect'.
+test/unit/TemplateResolver.test.ts(95,13): error TS2304: Cannot find name 'expect'.
+test/unit/TemplateResolver.test.ts(96,13): error TS2304: Cannot find name 'expect'.
+test/unit/TemplateResolver.test.ts(98,13): error TS2304: Cannot find name 'expect'.
+test/unit/TemplateResolver.test.ts(99,13): error TS2304: Cannot find name 'expect'.
+test/unit/TemplateResolver.test.ts(101,13): error TS2304: Cannot find name 'expect'.
+test/unit/TemplateResolver.test.ts(102,13): error TS2304: Cannot find name 'expect'.
+test/unit/TemplateResolver.test.ts(103,13): error TS2304: Cannot find name 'expect'.
+test/unit/TemplateResolver.test.ts(106,9): error TS2593: Cannot find name 'test'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+test/unit/TemplateResolver.test.ts(115,13): error TS2304: Cannot find name 'expect'.
+test/unit/TemplateResolver.test.ts(116,13): error TS2304: Cannot find name 'expect'.
+test/unit/TemplateResolver.test.ts(118,13): error TS2304: Cannot find name 'expect'.
+test/unit/TemplateResolver.test.ts(119,13): error TS2304: Cannot find name 'expect'.
+test/unit/TemplateResolver.test.ts(120,13): error TS2304: Cannot find name 'expect'.
+test/unit/TemplateResolver.test.ts(122,13): error TS2304: Cannot find name 'expect'.
+test/unit/TemplateResolver.test.ts(123,13): error TS2304: Cannot find name 'expect'.
+test/unit/TemplateResolver.test.ts(126,9): error TS2593: Cannot find name 'test'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+test/unit/TemplateResolver.test.ts(135,13): error TS2304: Cannot find name 'expect'.
+test/unit/TemplateResolver.test.ts(136,13): error TS2304: Cannot find name 'expect'.
+test/unit/TemplateResolver.test.ts(137,13): error TS2304: Cannot find name 'expect'.
+test/unit/TemplateResolver.test.ts(138,13): error TS2304: Cannot find name 'expect'.
+test/unit/TemplateResolver.test.ts(141,9): error TS2593: Cannot find name 'test'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+test/unit/TemplateResolver.test.ts(150,13): error TS2304: Cannot find name 'expect'.
+test/unit/TemplateResolver.test.ts(151,13): error TS2304: Cannot find name 'expect'.
+test/unit/TemplateResolver.test.ts(152,13): error TS2304: Cannot find name 'expect'.
+test/unit/TemplateResolver.test.ts(156,5): error TS2593: Cannot find name 'describe'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+test/unit/TemplateResolver.test.ts(157,9): error TS2593: Cannot find name 'test'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+test/unit/TemplateResolver.test.ts(166,13): error TS2304: Cannot find name 'expect'.
+test/unit/TemplateResolver.test.ts(167,13): error TS2304: Cannot find name 'expect'.
+test/unit/TemplateResolver.test.ts(168,13): error TS2304: Cannot find name 'expect'.
+test/unit/TemplateResolver.test.ts(171,9): error TS2593: Cannot find name 'test'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+test/unit/TemplateResolver.test.ts(180,13): error TS2304: Cannot find name 'expect'.
+test/unit/theme-integration.test.ts(4,1): error TS2593: Cannot find name 'describe'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+test/unit/theme-integration.test.ts(5,5): error TS2593: Cannot find name 'describe'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+test/unit/theme-integration.test.ts(6,9): error TS2593: Cannot find name 'describe'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+test/unit/theme-integration.test.ts(7,13): error TS2593: Cannot find name 'test'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+test/unit/theme-integration.test.ts(15,17): error TS2304: Cannot find name 'expect'.
+test/unit/theme-integration.test.ts(16,17): error TS2304: Cannot find name 'expect'.
+test/unit/theme-integration.test.ts(17,17): error TS2304: Cannot find name 'expect'.
+test/unit/theme-integration.test.ts(18,17): error TS2304: Cannot find name 'expect'.
+test/unit/theme-integration.test.ts(21,13): error TS2593: Cannot find name 'test'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+test/unit/theme-integration.test.ts(29,17): error TS2304: Cannot find name 'expect'.
+test/unit/theme-integration.test.ts(31,17): error TS2304: Cannot find name 'expect'.
+test/unit/theme-integration.test.ts(32,17): error TS2304: Cannot find name 'expect'.
+test/unit/theme-integration.test.ts(33,17): error TS2304: Cannot find name 'expect'.
+test/unit/theme-integration.test.ts(37,13): error TS2593: Cannot find name 'test'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+test/unit/theme-integration.test.ts(45,17): error TS2304: Cannot find name 'expect'.
+test/unit/theme-integration.test.ts(47,17): error TS2304: Cannot find name 'expect'.
+test/unit/theme-integration.test.ts(48,17): error TS2304: Cannot find name 'expect'.
+test/unit/theme-integration.test.ts(49,17): error TS2304: Cannot find name 'expect'.
+test/unit/theme-integration.test.ts(52,13): error TS2593: Cannot find name 'test'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+test/unit/theme-integration.test.ts(60,17): error TS2304: Cannot find name 'expect'.
+test/unit/theme-integration.test.ts(61,17): error TS2304: Cannot find name 'expect'.
+test/unit/theme-integration.test.ts(62,17): error TS2304: Cannot find name 'expect'.
+test/unit/theme-integration.test.ts(63,17): error TS2304: Cannot find name 'expect'.
+test/unit/theme-integration.test.ts(66,13): error TS2593: Cannot find name 'test'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+test/unit/theme-integration.test.ts(74,17): error TS2304: Cannot find name 'expect'.
+test/unit/theme-integration.test.ts(75,17): error TS2304: Cannot find name 'expect'.
+test/unit/theme-integration.test.ts(76,17): error TS2304: Cannot find name 'expect'.
+test/unit/theme-integration.test.ts(77,17): error TS2304: Cannot find name 'expect'.
+test/unit/theme-integration.test.ts(81,9): error TS2593: Cannot find name 'describe'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+test/unit/theme-integration.test.ts(82,13): error TS2593: Cannot find name 'test'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+test/unit/theme-integration.test.ts(98,17): error TS2304: Cannot find name 'expect'.
+test/unit/theme-integration.test.ts(99,17): error TS2304: Cannot find name 'expect'.
+test/unit/theme-integration.test.ts(100,17): error TS2304: Cannot find name 'expect'.
+test/unit/theme-integration.test.ts(101,17): error TS2304: Cannot find name 'expect'.
+test/unit/theme-integration.test.ts(104,13): error TS2593: Cannot find name 'test'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+test/unit/theme-integration.test.ts(120,17): error TS2304: Cannot find name 'expect'.
+test/unit/theme-integration.test.ts(121,17): error TS2304: Cannot find name 'expect'.
+test/unit/theme-integration.test.ts(122,17): error TS2304: Cannot find name 'expect'.
+test/unit/theme-integration.test.ts(125,13): error TS2593: Cannot find name 'test'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+test/unit/theme-integration.test.ts(141,17): error TS2304: Cannot find name 'expect'.
+test/unit/theme-integration.test.ts(142,17): error TS2304: Cannot find name 'expect'.
+test/unit/theme-integration.test.ts(145,13): error TS2593: Cannot find name 'test'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+test/unit/theme-integration.test.ts(161,17): error TS2304: Cannot find name 'expect'.
+test/unit/theme-integration.test.ts(162,17): error TS2304: Cannot find name 'expect'.
+test/unit/theme-integration.test.ts(163,17): error TS2304: Cannot find name 'expect'.
+test/unit/theme-integration.test.ts(164,17): error TS2304: Cannot find name 'expect'.
+test/unit/theme-integration.test.ts(167,13): error TS2593: Cannot find name 'test'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+test/unit/theme-integration.test.ts(184,17): error TS2304: Cannot find name 'expect'.
+test/unit/theme-integration.test.ts(185,17): error TS2304: Cannot find name 'expect'.
+test/unit/theme-integration.test.ts(186,17): error TS2304: Cannot find name 'expect'.
+test/unit/theme-integration.test.ts(189,13): error TS2593: Cannot find name 'test'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+test/unit/theme-integration.test.ts(206,17): error TS2304: Cannot find name 'expect'.
+test/unit/theme-integration.test.ts(207,17): error TS2304: Cannot find name 'expect'.
+test/unit/theme-integration.test.ts(208,17): error TS2304: Cannot find name 'expect'.
+test/unit/theme-integration.test.ts(211,13): error TS2593: Cannot find name 'test'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+test/unit/theme-integration.test.ts(228,17): error TS2304: Cannot find name 'expect'.
+test/unit/theme-integration.test.ts(229,17): error TS2304: Cannot find name 'expect'.
+test/unit/theme-integration.test.ts(230,17): error TS2304: Cannot find name 'expect'.
+test/unit/theme-integration.test.ts(233,13): error TS2593: Cannot find name 'test'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+test/unit/theme-integration.test.ts(249,17): error TS2304: Cannot find name 'expect'.
+test/unit/theme-integration.test.ts(250,17): error TS2304: Cannot find name 'expect'.
+test/unit/theme-integration.test.ts(254,9): error TS2593: Cannot find name 'describe'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+test/unit/theme-integration.test.ts(255,13): error TS2593: Cannot find name 'test'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+test/unit/theme-integration.test.ts(263,17): error TS2304: Cannot find name 'expect'.
+test/unit/theme-integration.test.ts(264,17): error TS2304: Cannot find name 'expect'.
+test/unit/theme-integration.test.ts(265,17): error TS2304: Cannot find name 'expect'.
+test/unit/theme-integration.test.ts(268,13): error TS2593: Cannot find name 'test'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+test/unit/theme-integration.test.ts(276,17): error TS2304: Cannot find name 'expect'.
+test/unit/theme-integration.test.ts(277,17): error TS2304: Cannot find name 'expect'.
+test/unit/theme-integration.test.ts(278,17): error TS2304: Cannot find name 'expect'.
+test/unit/theme-integration.test.ts(279,17): error TS2304: Cannot find name 'expect'.
+test/unit/theme-integration.test.ts(280,17): error TS2304: Cannot find name 'expect'.
+test/unit/theme-integration.test.ts(283,13): error TS2593: Cannot find name 'test'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+test/unit/theme-integration.test.ts(298,17): error TS2304: Cannot find name 'expect'.
+test/unit/theme-integration.test.ts(299,17): error TS2304: Cannot find name 'expect'.
+test/unit/theme-integration.test.ts(300,17): error TS2304: Cannot find name 'expect'.
+test/unit/theme-integration.test.ts(305,5): error TS2593: Cannot find name 'describe'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+test/unit/theme-integration.test.ts(306,9): error TS2593: Cannot find name 'test'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+test/unit/theme-integration.test.ts(310,41): error TS2591: Cannot find name 'require'. Do you need to install type definitions for node? Try `npm i --save-dev @types/node` and then add 'node' to the types field in your tsconfig.
+test/unit/theme-integration.test.ts(311,17): error TS2304: Cannot find name 'expect'.
+test/unit/theme-integration.test.ts(314,17): error TS2304: Cannot find name 'expect'.
+test/unit/theme-integration.test.ts(318,9): error TS2593: Cannot find name 'test'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+test/unit/theme-integration.test.ts(331,13): error TS2304: Cannot find name 'expect'.
+test/unit/theme-integration.test.ts(335,5): error TS2593: Cannot find name 'describe'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+test/unit/theme-integration.test.ts(336,9): error TS2593: Cannot find name 'test'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+test/unit/theme-integration.test.ts(345,13): error TS2304: Cannot find name 'expect'.
+test/unit/theme-integration.test.ts(346,13): error TS2304: Cannot find name 'expect'.
+test/unit/theme-integration.test.ts(356,13): error TS2304: Cannot find name 'expect'.
+test/unit/theme-integration.test.ts(357,13): error TS2304: Cannot find name 'expect'.
+test/unit/theme-integration.test.ts(360,9): error TS2593: Cannot find name 'test'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+test/unit/theme-integration.test.ts(376,13): error TS2304: Cannot find name 'expect'.
+test/unit/theme-integration.test.ts(377,13): error TS2304: Cannot find name 'expect'.
+test/unit/ThemeTreeBuilder.test.ts(22,1): error TS2593: Cannot find name 'describe'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+test/unit/ThemeTreeBuilder.test.ts(23,5): error TS2593: Cannot find name 'describe'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+test/unit/ThemeTreeBuilder.test.ts(24,9): error TS2593: Cannot find name 'it'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+test/unit/ThemeTreeBuilder.test.ts(26,13): error TS2304: Cannot find name 'expect'.
+test/unit/ThemeTreeBuilder.test.ts(29,9): error TS2593: Cannot find name 'it'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+test/unit/ThemeTreeBuilder.test.ts(37,13): error TS2304: Cannot find name 'expect'.
+test/unit/ThemeTreeBuilder.test.ts(38,13): error TS2304: Cannot find name 'expect'.
+test/unit/ThemeTreeBuilder.test.ts(39,13): error TS2304: Cannot find name 'expect'.
+test/unit/ThemeTreeBuilder.test.ts(40,13): error TS2304: Cannot find name 'expect'.
+test/unit/ThemeTreeBuilder.test.ts(41,13): error TS2304: Cannot find name 'expect'.
+test/unit/ThemeTreeBuilder.test.ts(42,13): error TS2304: Cannot find name 'expect'.
+test/unit/ThemeTreeBuilder.test.ts(44,13): error TS2304: Cannot find name 'expect'.
+test/unit/ThemeTreeBuilder.test.ts(45,13): error TS2304: Cannot find name 'expect'.
+test/unit/ThemeTreeBuilder.test.ts(48,9): error TS2593: Cannot find name 'it'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+test/unit/ThemeTreeBuilder.test.ts(58,13): error TS2304: Cannot find name 'expect'.
+test/unit/ThemeTreeBuilder.test.ts(59,13): error TS2304: Cannot find name 'expect'.
+test/unit/ThemeTreeBuilder.test.ts(60,13): error TS2304: Cannot find name 'expect'.
+test/unit/ThemeTreeBuilder.test.ts(61,13): error TS2304: Cannot find name 'expect'.
+test/unit/ThemeTreeBuilder.test.ts(64,13): error TS2304: Cannot find name 'expect'.
+test/unit/ThemeTreeBuilder.test.ts(65,13): error TS2304: Cannot find name 'expect'.
+test/unit/ThemeTreeBuilder.test.ts(66,13): error TS2304: Cannot find name 'expect'.
+test/unit/ThemeTreeBuilder.test.ts(67,13): error TS2304: Cannot find name 'expect'.
+test/unit/ThemeTreeBuilder.test.ts(70,13): error TS2304: Cannot find name 'expect'.
+test/unit/ThemeTreeBuilder.test.ts(71,13): error TS2304: Cannot find name 'expect'.
+test/unit/ThemeTreeBuilder.test.ts(72,13): error TS2304: Cannot find name 'expect'.
+test/unit/ThemeTreeBuilder.test.ts(73,13): error TS2304: Cannot find name 'expect'.
+test/unit/ThemeTreeBuilder.test.ts(76,9): error TS2593: Cannot find name 'it'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+test/unit/ThemeTreeBuilder.test.ts(84,13): error TS2304: Cannot find name 'expect'.
+test/unit/ThemeTreeBuilder.test.ts(85,13): error TS2304: Cannot find name 'expect'.
+test/unit/ThemeTreeBuilder.test.ts(87,13): error TS2304: Cannot find name 'expect'.
+test/unit/ThemeTreeBuilder.test.ts(90,9): error TS2593: Cannot find name 'it'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+test/unit/ThemeTreeBuilder.test.ts(99,13): error TS2304: Cannot find name 'expect'.
+test/unit/ThemeTreeBuilder.test.ts(100,13): error TS2304: Cannot find name 'expect'.
+test/unit/ThemeTreeBuilder.test.ts(101,13): error TS2304: Cannot find name 'expect'.
+test/unit/ThemeTreeBuilder.test.ts(102,13): error TS2304: Cannot find name 'expect'.
+test/unit/ThemeTreeBuilder.test.ts(105,9): error TS2593: Cannot find name 'it'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+test/unit/ThemeTreeBuilder.test.ts(114,13): error TS2304: Cannot find name 'expect'.
+test/unit/ThemeTreeBuilder.test.ts(115,13): error TS2304: Cannot find name 'expect'.
+test/unit/ThemeTreeBuilder.test.ts(116,13): error TS2304: Cannot find name 'expect'.
+test/unit/ThemeTreeBuilder.test.ts(118,13): error TS2304: Cannot find name 'expect'.
+test/unit/ThemeTreeBuilder.test.ts(119,13): error TS2304: Cannot find name 'expect'.
+test/unit/ThemeTreeBuilder.test.ts(121,13): error TS2304: Cannot find name 'expect'.
+test/unit/ThemeTreeBuilder.test.ts(122,13): error TS2304: Cannot find name 'expect'.
+test/unit/ThemeTreeBuilder.test.ts(125,9): error TS2593: Cannot find name 'it'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+test/unit/ThemeTreeBuilder.test.ts(136,13): error TS2304: Cannot find name 'expect'.
+test/unit/ThemeTreeBuilder.test.ts(140,13): error TS2304: Cannot find name 'expect'.
+test/unit/ThemeTreeBuilder.test.ts(141,13): error TS2304: Cannot find name 'expect'.
+test/unit/ThemeTreeBuilder.test.ts(142,13): error TS2304: Cannot find name 'expect'.
+test/unit/ThemeTreeBuilder.test.ts(143,13): error TS2304: Cannot find name 'expect'.
+test/unit/ThemeTreeBuilder.test.ts(147,13): error TS2304: Cannot find name 'expect'.
+test/unit/ThemeTreeBuilder.test.ts(148,13): error TS2304: Cannot find name 'expect'.
+test/unit/ThemeTreeBuilder.test.ts(149,13): error TS2304: Cannot find name 'expect'.
+test/unit/ThemeTreeBuilder.test.ts(153,5): error TS2593: Cannot find name 'describe'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+test/unit/ThemeTreeBuilder.test.ts(154,9): error TS2593: Cannot find name 'it'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+test/unit/ThemeTreeBuilder.test.ts(165,13): error TS2304: Cannot find name 'expect'.
+test/unit/ThemeTreeBuilder.test.ts(166,13): error TS2304: Cannot find name 'expect'.
+test/unit/ThemeTreeBuilder.test.ts(167,13): error TS2304: Cannot find name 'expect'.
+test/unit/ThemeTreeBuilder.test.ts(168,13): error TS2304: Cannot find name 'expect'.
+test/unit/ThemeTreeBuilder.test.ts(171,9): error TS2593: Cannot find name 'it'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+test/unit/ThemeTreeBuilder.test.ts(181,13): error TS2304: Cannot find name 'expect'.
+test/unit/ThemeTreeBuilder.test.ts(182,13): error TS2304: Cannot find name 'expect'.
+test/unit/ThemeTreeBuilder.test.ts(183,13): error TS2304: Cannot find name 'expect'.
+test/unit/ThemeTreeBuilder.test.ts(187,5): error TS2593: Cannot find name 'describe'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+test/unit/ThemeTreeBuilder.test.ts(188,9): error TS2593: Cannot find name 'it'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+test/unit/ThemeTreeBuilder.test.ts(198,13): error TS2304: Cannot find name 'expect'.
+test/unit/ThemeTreeBuilder.test.ts(199,13): error TS2304: Cannot find name 'expect'.
+test/unit/ThemeTreeBuilder.test.ts(200,13): error TS2304: Cannot find name 'expect'.
+test/unit/ThemeTreeBuilder.test.ts(203,9): error TS2593: Cannot find name 'it'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+test/unit/ThemeTreeBuilder.test.ts(209,13): error TS2304: Cannot find name 'expect'.
+test/unit/ThemeTreeBuilder.test.ts(212,9): error TS2593: Cannot find name 'it'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+test/unit/ThemeTreeBuilder.test.ts(218,13): error TS2304: Cannot find name 'expect'.
+test/unit/ThemeTreeBuilder.test.ts(222,5): error TS2593: Cannot find name 'describe'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+test/unit/ThemeTreeBuilder.test.ts(223,9): error TS2593: Cannot find name 'it'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+test/unit/ThemeTreeBuilder.test.ts(232,13): error TS2304: Cannot find name 'expect'.
+test/unit/ThemeTreeBuilder.test.ts(233,13): error TS2304: Cannot find name 'expect'.
+test/unit/ThemeTreeBuilder.test.ts(236,9): error TS2593: Cannot find name 'it'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+test/unit/ThemeTreeBuilder.test.ts(242,13): error TS2304: Cannot find name 'expect'.
+test/unit/ThemeTreeBuilder.test.ts(246,5): error TS2593: Cannot find name 'describe'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+test/unit/ThemeTreeBuilder.test.ts(247,9): error TS2593: Cannot find name 'it'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+test/unit/ThemeTreeBuilder.test.ts(250,13): error TS2304: Cannot find name 'expect'.
+test/unit/ThemeTreeBuilder.test.ts(253,9): error TS2593: Cannot find name 'it'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+test/unit/ThemeTreeBuilder.test.ts(256,13): error TS2304: Cannot find name 'expect'.
+test/unit/ThemeTreeBuilder.test.ts(260,5): error TS2593: Cannot find name 'describe'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+test/unit/ThemeTreeBuilder.test.ts(261,9): error TS2593: Cannot find name 'it'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+test/unit/ThemeTreeBuilder.test.ts(270,13): error TS2304: Cannot find name 'expect'.
+test/unit/ThemeTreeBuilder.test.ts(271,13): error TS2304: Cannot find name 'expect'.
+test/unit/ThemeTreeBuilder.test.ts(272,13): error TS2304: Cannot find name 'expect'.
+test/unit/ThemeTreeBuilder.test.ts(276,5): error TS2593: Cannot find name 'describe'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+test/unit/ThemeTreeBuilder.test.ts(277,9): error TS2593: Cannot find name 'it'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+test/unit/ThemeTreeBuilder.test.ts(281,13): error TS2304: Cannot find name 'expect'.
+test/unit/ThemeTreeBuilder.test.ts(282,13): error TS2304: Cannot find name 'expect'.
+test/unit/ThemeTreeBuilder.test.ts(285,9): error TS2593: Cannot find name 'it'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+test/unit/ThemeTreeBuilder.test.ts(290,13): error TS2304: Cannot find name 'expect'.
+test/unit/ThemeTreeBuilder.test.ts(293,9): error TS2593: Cannot find name 'it'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+test/unit/ThemeTreeBuilder.test.ts(298,13): error TS2304: Cannot find name 'expect'.

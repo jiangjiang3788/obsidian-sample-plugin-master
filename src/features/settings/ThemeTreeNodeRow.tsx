@@ -1,4 +1,11 @@
 /** @jsxImportSource preact */
+/**
+ * ThemeTreeNodeRow - 主题树节点行组件
+ * 
+ * ⚠️ P1 UI 适配：
+ * - 不再直接依赖 appStore，改为通过 useCases 进行状态管理
+ * - 遵循单向数据流：UI → UseCase → Zustand Store → UI
+ */
 import { h } from 'preact';
 import {
     Box, TableRow, TableCell, IconButton, Tooltip,
@@ -22,7 +29,7 @@ import { useState } from 'preact/hooks';
 import { InlineEditor } from './InlineEditor';
 import type { EditorState } from './useThemeMatrixEditor';
 import type { BlockTemplate, ThemeDefinition, ThemeOverride } from '@/core/types/schema';
-import type { AppStore } from '@/app/AppStore';
+import type { UseCases } from '@/app/usecases';
 import type { ThemeTreeNode } from '@/core/theme-matrix/theme.types';
 
 // Define new props inline for now
@@ -30,7 +37,8 @@ interface NewThemeTreeNodeRowProps {
     node: ThemeTreeNode;
     blocks: BlockTemplate[];
     overridesMap: Map<string, ThemeOverride>;
-    appStore: AppStore;
+    /** ⚠️ P1: 使用 useCases 替代 appStore */
+    useCases: UseCases;
     onCellClick: (block: BlockTemplate, theme: ThemeDefinition) => void;
     onToggleExpand: (themeId: string) => void;
     editorState: EditorState;
@@ -42,7 +50,7 @@ export function ThemeTreeNodeRow({
     blocks, 
     overridesMap, 
     onCellClick, 
-    appStore,
+    useCases,
     onToggleExpand,
     editorState,
     onSelectionChange
@@ -79,11 +87,12 @@ export function ThemeTreeNodeRow({
                         {children.length === 0 && <AnyBox sx={{ width: '28px' }} />}
                         
                         <AnyBox sx={{ flex: 1, display: 'flex', alignItems: 'center', gap: 1 }}>
-                            {isEditingIcon ? (
+                        {isEditingIcon ? (
                                 <InlineEditor 
                                     value={theme.icon || ''} 
                                     onSave={(newIcon: string) => { 
-                                        appStore.updateTheme(theme.id, { icon: newIcon });
+                                        // ⚠️ P1: 通过 useCases.theme 更新主题
+                                        useCases.theme.updateTheme(theme.id, { icon: newIcon });
                                         setIsEditingIcon(false);
                                     }}
                                 />
@@ -96,7 +105,8 @@ export function ThemeTreeNodeRow({
                                 <InlineEditor 
                                     value={theme.path} 
                                     onSave={(newPath: string) => { 
-                                        appStore.updateTheme(theme.id, { path: newPath }); 
+                                        // ⚠️ P1: 通过 useCases.theme 更新主题
+                                        useCases.theme.updateTheme(theme.id, { path: newPath }); 
                                         setIsEditingPath(false);
                                     }}
                                 />
@@ -199,7 +209,7 @@ export function ThemeTreeNodeRow({
                     blocks={blocks}
                     overridesMap={overridesMap}
                     onCellClick={onCellClick}
-                    appStore={appStore}
+                    useCases={useCases}
                     onToggleExpand={onToggleExpand}
                     editorState={editorState}
                     onSelectionChange={onSelectionChange}

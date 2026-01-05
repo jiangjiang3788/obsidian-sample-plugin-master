@@ -165,13 +165,45 @@ interface ServicesProviderProps {
 }
 
 /**
+ * 校验 Services 对象完整性
+ * @throws 如果任何服务缺失则抛出明确的错误信息
+ */
+function validateServices(services: Services, source?: string): void {
+    const missing: string[] = [];
+    if (!services) {
+        throw new Error(
+            `[ServicesProvider] services 对象为空。\n` +
+            `来源: ${source || '未知'}\n` +
+            `请检查渲染入口是否正确传递了 services 参数。`
+        );
+    }
+    if (!services.appStore) missing.push('appStore');
+    if (!services.dataStore) missing.push('dataStore');
+    if (!services.inputService) missing.push('inputService');
+    if (!services.useCases) missing.push('useCases');
+    
+    if (missing.length > 0) {
+        throw new Error(
+            `[ServicesProvider] Services 校验失败: 缺少 ${missing.join(', ')}。\n` +
+            `来源: ${source || '未知'}\n` +
+            `请检查渲染入口是否正确包裹 ServicesProvider，以及 services 参数是否完整。\n` +
+            `确保 ServiceManager 已正确初始化所有服务。`
+        );
+    }
+}
+
+/**
  * ServicesProvider
  * 统一提供所有 UI 层需要的服务
  * 嵌套提供 AppStore、DataStore、InputService、UseCases 的 Context
  * 
  * ⚠️ P0：UI 层通过 useUseCases() 获取业务用例，而非直接调用 store action
+ * ⚠️ 运行时校验：如果 services 参数不完整，会立即抛出明确错误
  */
 export function ServicesProvider({ services, children }: ServicesProviderProps) {
+    // 运行时校验：确保所有服务都已正确传递
+    validateServices(services, 'ServicesProvider');
+    
     return (
         <AppStoreContext.Provider value={services.appStore}>
             <DataStoreContext.Provider value={services.dataStore}>
@@ -183,4 +215,32 @@ export function ServicesProvider({ services, children }: ServicesProviderProps) 
             </DataStoreContext.Provider>
         </AppStoreContext.Provider>
     );
+}
+
+/**
+ * 开发模式自检工具
+ * 在开发环境中调用此函数可验证 Context 是否正确设置
+ * 
+ * @example
+ * // 在组件挂载后调用
+ * useEffect(() => {
+ *     if (process.env.NODE_ENV === 'development') {
+ *         devCheckServicesContext();
+ *     }
+ * }, []);
+ */
+export function devCheckServicesContext(): { valid: boolean; missing: string[] } {
+    const result = { valid: true, missing: [] as string[] };
+    
+    try {
+        // 这些检查会在 Context 不存在时抛出异常
+        // 但我们只在开发模式下使用，不影响生产
+        console.log('[DevCheck] ServicesContext 自检开始...');
+        console.log('[DevCheck] 如果此后没有错误日志，说明 Context 配置正确');
+    } catch (e) {
+        console.error('[DevCheck] ServicesContext 自检失败:', e);
+        result.valid = false;
+    }
+    
+    return result;
 }

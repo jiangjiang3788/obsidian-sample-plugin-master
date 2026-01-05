@@ -2,6 +2,8 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
 import { useStore, AppStore } from '@/app/AppStore';
+import { useUseCases, type UseCases } from '@/app/usecases';
+import { useDataStore } from '@/app/AppStoreContext';
 // [MODIFIED] Import Autocomplete
 import { Box, Stack, Typography, TextField, Checkbox, FormControlLabel, Tooltip, Chip, Radio, RadioGroup as MuiRadioGroup, Autocomplete, Button, Menu, MenuItem } from '@mui/material';
 import type { Layout } from '@/core/types/schema';
@@ -29,7 +31,8 @@ const AlignedRadioGroup = ({ label, options, selectedValue, onChange }: any) => 
     </Stack>
 );
 
-function LayoutEditor({ layout, appStore }: { layout: Layout, appStore: AppStore }) {
+// ⚠️ P1: 使用 useCases 替代 appStore，但仍需要 appStore 用于 ModuleSettingsModal 兼容
+function LayoutEditor({ layout, useCases, appStore }: { layout: Layout, useCases: UseCases, appStore: AppStore }) {
     const allViews = useStore(state => state.settings.viewInstances);
     const [inputValue, setInputValue] = useState('');
     const [contextMenu, setContextMenu] = useState<{ mouseX: number; mouseY: number; viewId: string; viewTitle: string } | null>(null);
@@ -37,8 +40,9 @@ function LayoutEditor({ layout, appStore }: { layout: Layout, appStore: AppStore
     const [selectedViewForSettings, setSelectedViewForSettings] = useState<any>(null);
 
     const handleUpdate = useCallback((updates: Partial<Layout>) => {
-        appStore.updateLayout(layout.id, updates);
-    }, [layout.id, appStore]);
+        // ⚠️ P1: 通过 UseCase 层调用
+        useCases.layout.updateLayout(layout.id, updates);
+    }, [layout.id, useCases]);
 
     const selectedViews = useMemo(() =>
         layout.viewInstanceIds.map(id => allViews.find(v => v.id === id)).filter(Boolean),
@@ -84,12 +88,13 @@ function LayoutEditor({ layout, appStore }: { layout: Layout, appStore: AppStore
 
     const handleCreateNewView = useCallback(async (viewName: string) => {
         try {
-            await appStore.addViewInstance(viewName);
+            // ⚠️ P1: 通过 UseCase 层调用
+            await useCases.settings.addViewInstance(viewName);
             setInputValue(''); // 清空输入
         } catch (error) {
             console.error('创建新视图失败:', error);
         }
-    }, [appStore]);
+    }, [useCases]);
 
     const handleAutocompleteChange = useCallback(async (event: any, newValue: any) => {
         if (!newValue) return;
@@ -133,11 +138,12 @@ function LayoutEditor({ layout, appStore }: { layout: Layout, appStore: AppStore
         if (contextMenu) {
             const newName = prompt('请输入新的视图名称', contextMenu.viewTitle);
             if (newName && newName.trim()) {
-                appStore.updateViewInstance(contextMenu.viewId, { title: newName.trim() });
+                // ⚠️ P1: 通过 UseCase 层调用
+                useCases.settings.updateViewInstance(contextMenu.viewId, { title: newName.trim() });
             }
         }
         handleContextMenuClose();
-    }, [contextMenu, appStore, handleContextMenuClose]);
+    }, [contextMenu, useCases, handleContextMenuClose]);
 
     const handleViewRemove = useCallback(() => {
         if (contextMenu) {
@@ -150,6 +156,9 @@ function LayoutEditor({ layout, appStore }: { layout: Layout, appStore: AppStore
         setSettingsModalOpen(false);
         setSelectedViewForSettings(null);
     }, []);
+
+    // 获取 dataStore 用于 ModuleSettingsModal
+    const dataStore = useDataStore();
 
     return (
         <Stack spacing={2} sx={{ p: '8px 16px 16px 50px' }}>
@@ -213,20 +222,22 @@ function LayoutEditor({ layout, appStore }: { layout: Layout, appStore: AppStore
                 <MenuItem onClick={handleViewRemove}>移除</MenuItem>
             </Menu>
 
-            {/* 视图设置模态框 */}
+            {/* [P1] 视图设置模态框 - 已迁移到 UseCase 层，无需 appStore */}
             {settingsModalOpen && selectedViewForSettings && (
                 <ModuleSettingsModal
                     isOpen={settingsModalOpen}
                     onClose={handleSettingsModalClose}
                     module={selectedViewForSettings}
-                    appStore={appStore}
+                    dataStore={dataStore}
                 />
             )}
         </Stack>
     );
 }
 
+// ⚠️ P1: 保留 appStore 参数用于兼容性，但优先使用 useCases
 export function LayoutSettings({ app, appStore }: { app: App, appStore: AppStore }) {
+    const useCases = useUseCases();
     const layouts = useStore(state => state.settings.layouts);
     const allGroups = useStore(state => state.settings.groups);
     const layoutGroups = useMemo(() => allGroups.filter(g => g.type === 'layout'), [allGroups]);
@@ -245,16 +256,17 @@ export function LayoutSettings({ app, appStore }: { app: App, appStore: AppStore
             const activeItem = itemsAsTreeItems.find(i => i.id === active.id) || layoutGroups.find(g => g.id === active.id);
             const overItem = itemsAsTreeItems.find(i => i.id === over.id) || layoutGroups.find(g => g.id === over.id);
 
-            if (activeItem && overItem && activeItem.parentId === overItem.parentId) {
-                const siblings = [...layoutGroups, ...itemsAsTreeItems].filter(i => i.parentId === activeItem.parentId);
-                const oldIndex = siblings.findIndex(i => i.id === active.id);
-                const newIndex = siblings.findIndex(i => i.id === over.id);
+                if (activeItem && overItem && activeItem.parentId === overItem.parentId) {
+                    const siblings = [...layoutGroups, ...itemsAsTreeItems].filter(i => i.parentId === activeItem.parentId);
+                    const oldIndex = siblings.findIndex(i => i.id === active.id);
+                    const newIndex = siblings.findIndex(i => i.id === over.id);
 
-                if (oldIndex !== -1 && newIndex !== -1) {
-                    const reorderedSiblings = arrayMove(siblings, oldIndex, newIndex);
-                    appStore.reorderItems(reorderedSiblings, 'isGroup' in activeItem && activeItem.isGroup ? 'group' : 'layout');
+                    if (oldIndex !== -1 && newIndex !== -1) {
+                        const reorderedSiblings = arrayMove(siblings, oldIndex, newIndex);
+                        // ⚠️ P1: 通过 UseCase 层调用
+                        useCases.settings.reorderItems(reorderedSiblings, 'isGroup' in activeItem && activeItem.isGroup ? 'group' : 'layout');
+                    }
                 }
-            }
         }
     };
 
@@ -271,7 +283,7 @@ export function LayoutSettings({ app, appStore }: { app: App, appStore: AppStore
                     allGroups={layoutGroups}
                     parentId={null}
                     appStore={appStore}
-                    renderItem={(l: Layout) => <LayoutEditor layout={l} appStore={appStore} />}
+                    renderItem={(l: Layout) => <LayoutEditor layout={l} useCases={useCases} appStore={appStore} />}
                     onAddItem={manager.onAddItem}
                     onAddGroup={manager.onAddGroup}
                     onDeleteItem={manager.onDeleteItem}

@@ -13,7 +13,7 @@ import { safeAsync } from '@shared/utils/errorHandler';
 import { startMeasure } from '@shared/utils/performance';
 import { SETTINGS_PERSISTENCE_TOKEN, SettingsRepository, type ISettingsPersistence } from '@core/services/SettingsRepository';
 import { createAppStore, setAppStoreInstance } from '@/app/store/useAppStore';
-import { createUseCases, type UseCases } from '@/app/usecases';
+import { createUseCases, USECASES_TOKEN, type UseCases } from '@/app/usecases';
 import type ThinkPlugin from '@main';
 
 /**
@@ -136,8 +136,9 @@ export class ServiceManager {
                 zustandStore.getState().initialize(initialSettings);
                 console.log('[ThinkPlugin] Zustand Store 初始化完成');
                 
-                // 3. P0: 创建 UseCases
+                // 3. P0: 创建 UseCases 并注册到 DI 容器
                 this.services.useCases = createUseCases();
+                container.register(USECASES_TOKEN, { useValue: this.services.useCases });
                 console.log('[ThinkPlugin] UseCases 创建完成');
                 
                 const duration = stopMeasure();
@@ -286,6 +287,11 @@ export class ServiceManager {
 
     get timerWidget(): FloatingTimerWidget | undefined {
         return this.services.timerWidget;
+    }
+
+    get inputService(): InputService {
+        if (!this.services.inputService) throw new Error('InputService 未初始化');
+        return this.services.inputService;
     }
 
     // P0 新增：获取 UseCases

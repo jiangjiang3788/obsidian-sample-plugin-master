@@ -9,7 +9,7 @@ import { DashboardViewComponents as ViewComponents } from './index';
 
 import { getDateRange, dayjs } from '@core/utils/date';
 import { useStore, AppStore } from '@/app/AppStore';
-import { useAppStore } from '@/app/AppStoreContext';
+import { useAppStore, useUseCases } from '@/app/AppStoreContext';
 import type { ActionService } from '@core/services/ActionService';
 import { ItemService } from '@core/services/ItemService';
 import type { TimerService } from '@features/timer/TimerService';
@@ -107,8 +107,9 @@ const ViewContent = ({
 };
 
 export function LayoutRenderer({ layout, dataStore, app, actionService, itemService, timerService }: any) {
-    // [修改] 通过 Context 获取 AppStore 实例
+    // [P1] 通过 Context 获取 AppStore 和 UseCases
     const appStore = useAppStore();
+    const useCases = useUseCases();
     
     const allViews = useStore(state => state.settings.viewInstances);
     const timers = useStore(state => state.timer.getTimers());
@@ -269,17 +270,17 @@ export function LayoutRenderer({ layout, dataStore, app, actionService, itemServ
         setCurrentViewInstance(null);
     }, []);
 
-    // [新增] 处理主题筛选变化
+    // [P1] 处理主题筛选变化 - 通过 UseCase 层
     const handleThemeSelectionChange = useCallback((themes: string[]) => {
         setSelectedThemes(themes);
-        appStore.updateLayout(layout.id, { selectedThemes: themes });
-    }, [layout.id]);
+        useCases.layout.updateLayout(layout.id, { selectedThemes: themes });
+    }, [layout.id, useCases.layout]);
 
-    // [新增] 处理分类筛选变化
+    // [P1] 处理分类筛选变化 - 通过 UseCase 层
     const handleCategorySelectionChange = useCallback((categories: string[]) => {
         setSelectedCategories(categories);
-        appStore.updateLayout(layout.id, { selectedCategories: categories });
-    }, [layout.id]);
+        useCases.layout.updateLayout(layout.id, { selectedCategories: categories });
+    }, [layout.id, useCases.layout]);
 
     const renderViewInstance = (viewId: string) => {
         const viewInstance = allViews.find(v => v.id === viewId);
@@ -348,13 +349,12 @@ export function LayoutRenderer({ layout, dataStore, app, actionService, itemServ
                 {isStateInitialized && layout.viewInstanceIds.map(renderViewInstance)}
             </div>
             
-            {/* [新增] 设置模态框 */}
+            {/* [P1] 设置模态框 - 已迁移到 UseCase 层，无需 appStore */}
             {settingsModalOpen && currentViewInstance && (
                 <ModuleSettingsModal
                     isOpen={settingsModalOpen}
                     onClose={handleSettingsClose}
                     module={currentViewInstance}
-                    appStore={appStore}
                     dataStore={dataStore}
                 />
             )}

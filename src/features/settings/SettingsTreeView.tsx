@@ -10,7 +10,7 @@ import DriveFileMoveOutlinedIcon from '@mui/icons-material/DriveFileMoveOutlined
 import DeleteForeverOutlinedIcon from '@mui/icons-material/DeleteForeverOutlined';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import type { Group, Groupable } from '@/core/types/schema';
-import { AppStore } from '@/app/AppStore';
+import { createGroupUseCase } from '@/app/usecases/group.usecase';
 import { MoveItemDialog } from '@shared/ui/composites/dialogs/MoveItemDialog';
 
 export interface TreeItem extends Groupable {
@@ -72,8 +72,11 @@ function Node({ node, children, ...props }: { node: TreeItem, children: Componen
     );
 }
 
-// [修改 1] 组件 props 类型定义中增加 appStore
-export function SettingsTreeView({ groups, items, allGroups, parentId, level = 0, renderItem, onAddItem, onAddGroup, onDeleteItem, onUpdateItemName, onDuplicateItem, appStore }: any) {
+// [P1 迁移] 移除 appStore prop，使用 UseCase 层
+export function SettingsTreeView({ groups, items, allGroups, parentId, level = 0, renderItem, onAddItem, onAddGroup, onDeleteItem, onUpdateItemName, onDuplicateItem }: any) {
+    // 创建 GroupUseCase 实例（通过 DI 容器获取 AppStore，不依赖 React Context）
+    const groupUseCase = createGroupUseCase();
+    
     // 这个状态管理确保所有节点初次加载时都是折叠的
     const [collapsedState, setCollapsedState] = useState<Record<string, boolean>>(() => {
         const initialState: Record<string, boolean> = {};
@@ -84,10 +87,10 @@ export function SettingsTreeView({ groups, items, allGroups, parentId, level = 0
 
     const toggleCollapse = (itemId: string) => setCollapsedState(prev => ({ ...prev, [itemId]: !prev[itemId] }));
     
-    // [修改 2] 使用从 props 传入的 appStore 实例，而不是错误的 AppStore.instance
-    const handleMoveConfirm = (targetParentId: string | null) => {
-        if (movingItem && appStore) {
-            appStore.moveItem(movingItem.id, targetParentId);
+    // [P1] 通过 UseCase 层调用 moveItem，而不是直接调用 appStore
+    const handleMoveConfirm = async (targetParentId: string | null) => {
+        if (movingItem) {
+            await groupUseCase.moveItem(movingItem.id, targetParentId);
         }
     };
 
@@ -104,8 +107,8 @@ export function SettingsTreeView({ groups, items, allGroups, parentId, level = 0
                         <Node node={treeItem} isExpanded={isExpanded} level={level} onToggle={() => toggleCollapse(group.id)} onUpdateItemName={onUpdateItemName} onDeleteItem={onDeleteItem} onOpenMoveDialog={setMovingItem} onDuplicateItem={onDuplicateItem}>
                             {/* [PERFORMANCE] unmountOnExit 确保折叠时，内部的递归组件被完全卸载 */}
                             <Collapse in={isExpanded} timeout="auto" unmountOnExit>
-                                {/* [修改 3] 在递归调用时，必须把 appStore 继续传递下去 */}
-                                <SettingsTreeView {...{ groups, items, allGroups, renderItem, onAddItem, onAddGroup, onDeleteItem, onUpdateItemName, onDuplicateItem, appStore }} parentId={group.id} level={level + 1} />
+                                {/* [P1] 递归调用无需再传递 appStore，使用 useUseCases hook */}
+                                <SettingsTreeView {...{ groups, items, allGroups, renderItem, onAddItem, onAddGroup, onDeleteItem, onUpdateItemName, onDuplicateItem }} parentId={group.id} level={level + 1} />
                             </Collapse>
                         </Node>
                     </Box>
