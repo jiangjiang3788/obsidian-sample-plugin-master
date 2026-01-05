@@ -15,6 +15,7 @@ import { AppStore } from '@/app/AppStore';
 import { DataStore } from '@/core/services/DataStore';
 import { GeneralSettings } from './GeneralSettings';
 import { AiSettings } from './AiSettings';
+import { ServicesProvider, type Services } from '@/app/AppStoreContext';
 
 function a11yProps(index: number) {
     return { id: `settings-tab-${index}`, 'aria-controls': `settings-tabpanel-${index}` };
@@ -55,16 +56,29 @@ function SettingsRoot({ app, appStore, dataStore }: { app: App, appStore: AppSto
 
 export class SettingsTab extends PluginSettingTab {
     id: string;
+    private services: Services;
 
     constructor(public app: App, private plugin: ThinkPlugin, private dataStore: DataStore) {
         super(app, plugin);
         this.id = plugin.manifest.id;
+        // 初始化 services 对象
+        this.services = {
+            appStore: plugin.appStore,
+            dataStore: plugin.dataStore,
+            inputService: plugin.inputService,
+            useCases: plugin.useCases,
+        };
     }
 
     display(): void {
         const { containerEl } = this;
         containerEl.empty();
-        render(<SettingsRoot app={this.app} appStore={this.plugin.appStore} dataStore={this.dataStore} />, containerEl);
+        render(
+            <ServicesProvider services={this.services}>
+                <SettingsRoot app={this.app} appStore={this.plugin.appStore} dataStore={this.dataStore} />
+            </ServicesProvider>,
+            containerEl
+        );
     }
 
     hide(): void {

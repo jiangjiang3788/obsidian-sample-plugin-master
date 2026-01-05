@@ -1,4 +1,11 @@
 /** @jsxImportSource preact */
+/**
+ * ThemeTable - 主题表格组件
+ * 
+ * ⚠️ P1 UI 适配：
+ * - 不再直接依赖 appStore，改为通过 useCases 进行状态管理
+ * - 遵循单向数据流：UI → UseCase → Zustand Store → UI
+ */
 import { h } from 'preact';
 import {
     Table,
@@ -13,7 +20,7 @@ import { ThemeTreeNodeRow } from './ThemeTreeNodeRow';
 import type { ThemeTableProps } from './props.types';
 import type { EditorState } from './useThemeMatrixEditor';
 import type { BlockTemplate, ThemeDefinition, ThemeOverride } from '@/core/types/schema';
-import type { AppStore } from '@/app/AppStore';
+import type { UseCases } from '@/app/usecases';
 import type { ThemeTreeNode } from '@/core/theme-matrix/theme.types';
 
 // Define new props inline for now
@@ -24,7 +31,8 @@ interface NewThemeTableProps {
     showArchived: boolean;
     overridesMap: Map<string, ThemeOverride>;
     editorState: EditorState;
-    appStore: AppStore;
+    /** ⚠️ P1: 使用 useCases 替代 appStore */
+    useCases: UseCases;
     onCellClick: (block: BlockTemplate, theme: ThemeDefinition) => void;
     onToggleExpand: (themeId: string) => void;
     onSelectionChange: (type: 'theme' | 'block', id: string, isSelected: boolean) => void;
@@ -40,7 +48,7 @@ export function ThemeTable({
     showArchived,
     overridesMap,
     editorState,
-    appStore,
+    useCases,
     onCellClick,
     onToggleExpand,
     onSelectionChange,
@@ -89,7 +97,7 @@ export function ThemeTable({
                         blocks={blocks}
                         overridesMap={overridesMap}
                         onCellClick={onCellClick}
-                        appStore={appStore}
+                        useCases={useCases}
                         onToggleExpand={onToggleExpand}
                         editorState={editorState}
                         onSelectionChange={onSelectionChange}
@@ -116,7 +124,7 @@ export function ThemeTable({
                         blocks={blocks}
                         overridesMap={overridesMap}
                         onCellClick={onCellClick}
-                        appStore={appStore}
+                        useCases={useCases}
                         onToggleExpand={onToggleExpand}
                         editorState={editorState}
                         onSelectionChange={onSelectionChange}

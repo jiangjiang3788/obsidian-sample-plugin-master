@@ -1,6 +1,11 @@
 /**
  * AppStore
  * Role: Store (状态聚合器) - 应用级状态管理中心
+ * 
+ * ⚠️ 兼容层 (DEPRECATED)：
+ * 此类保留作为过渡兼容层，新的状态管理已迁移到 Zustand slices。
+ * 请勿在此类中新增业务逻辑。所有新功能应通过 UseCase 层调用 Zustand store。
+ * 
  * Dependencies: 所有子 Store (TimerStore, ThemeStore, etc.), SettingsRepository (用于持久化)
  * 
  * Do:
@@ -14,15 +19,13 @@
  * - 直接进行 IO 操作（所有 IO 委托给 SettingsRepository）
  * - 持有 plugin 实例
  * - 具体的业务逻辑 (所有业务逻辑都委托给相应的子 Store)
+ * - 新增任何新的业务逻辑（使用 UseCase + Zustand 替代）
  */
 import { useState, useEffect, useCallback } from 'preact/hooks';
 import { singleton, inject } from 'tsyringe';
 import type { ThinkSettings, ViewInstance, Layout, InputSettings, BlockTemplate, ThemeDefinition, ThemeOverride, Group, GroupType, Groupable } from '@/core/types/schema';
-import { DEFAULT_SETTINGS } from '@/core/types/schema';
-import { VIEW_DEFAULT_CONFIGS } from '@/features/settings/registry';
-import { generateId, moveItemInArray, duplicateItemInArray } from '@core/utils/array';
 import { SETTINGS_TOKEN, ISettingsProvider } from '@/core/services/types';
-import { SettingsRepository, SETTINGS_PERSISTENCE_TOKEN } from '@/core/services/SettingsRepository';
+import { SettingsRepository } from '@/core/services/SettingsRepository';
 import { useAppStore } from '@/app/AppStoreContext';
 import { ThemeStore } from '@features/settings/ThemeStore';
 import { TimerStore, type TimerState } from '@features/timer/TimerStore';

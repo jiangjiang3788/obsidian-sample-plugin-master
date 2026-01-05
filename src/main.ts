@@ -7,7 +7,9 @@ import { container } from 'tsyringe';
 import { Plugin, Notice } from 'obsidian';
 import { AppStore } from '@/app/AppStore';
 import { DataStore } from '@core/services/DataStore';
+import { InputService } from '@core/services/InputService';
 import { ThinkSettings, DEFAULT_SETTINGS } from '@core/types';
+import type { UseCases } from '@/app/usecases';
 import { setupCoreContainer } from '@core/di/setupCore';
 import './styles/main.css';
 import { safeAsync } from '@shared/utils/errorHandler';
@@ -108,5 +110,13 @@ export default class ThinkPlugin extends Plugin {
 
     get timerStateService(): TimerStateService | undefined {
         return this.serviceManager.timerStateService;
+    }
+
+    get inputService(): InputService {
+        return this.serviceManager.inputService;
+    }
+
+    get useCases(): UseCases {
+        return this.serviceManager.useCases;
     }
 }

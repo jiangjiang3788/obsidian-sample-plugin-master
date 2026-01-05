@@ -24,8 +24,15 @@ import { arrayMove, SortableContext, useSortable, verticalListSortingStrategy } 
 import { CSS } from '@dnd-kit/utilities';
 import type { UseCases } from '@/app/usecases';
 
-// [修改] 组件 props 现在需要接收 appStore
-function SortableBlockItem({ block, openId, setOpenId, handleDelete, appStore }) {
+// P1: 组件 props 接收 useCases
+function SortableBlockItem({ block, openId, setOpenId, handleDelete, handleDuplicate, useCases }: {
+    block: BlockTemplate;
+    openId: string | null;
+    setOpenId: (id: string | null) => void;
+    handleDelete: (id: string, name: string) => void;
+    handleDuplicate: (id: string) => void;
+    useCases: UseCases;
+}) {
     const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: block.id });
     const style = { transform: CSS.Transform.toString(transform), transition };
 
@@ -43,27 +50,27 @@ function SortableBlockItem({ block, openId, setOpenId, handleDelete, appStore })
                             <Typography fontWeight={500}>{block.name}</Typography>
                         </Stack>
                         <Stack direction="row" alignItems="center" spacing={0.5}>
-                            {/* [修改] 使用 appStore 实例 */}
-                            <Tooltip title="复制"><IconButton size="small" onClick={e => { e.stopPropagation(); appStore.duplicateBlock(block.id); }}><ContentCopyIcon fontSize="small" /></IconButton></Tooltip>
+                            {/* P1: 通过 UseCase 层复制 Block */}
+                            <Tooltip title="复制"><IconButton size="small" onClick={e => { e.stopPropagation(); handleDuplicate(block.id); }}><ContentCopyIcon fontSize="small" /></IconButton></Tooltip>
                             <Tooltip title="删除"><IconButton size="small" onClick={e => { e.stopPropagation(); handleDelete(block.id, block.name); }} sx={{ color: 'text.secondary', '&:hover': { color: 'error.main' } }}><DeleteForeverOutlinedIcon /></IconButton></Tooltip>
                         </Stack>
                     </Box>
                 </AccordionSummary>
                 <AccordionDetails sx={{ bgcolor: 'action.hover', borderTop: '1px solid rgba(0,0,0,0.08)' }}>
-                    {/* [修改] 传递 appStore */}
-                    <BlockEditor block={block} appStore={appStore} />
+                    {/* P1: 传递 useCases */}
+                    <BlockEditor block={block} useCases={useCases} />
                 </AccordionDetails>
             </Accordion>
         </div>
     );
 }
 
-// [修改] 组件 props 现在需要接收 appStore
-function BlockEditor({ block, appStore }: { block: BlockTemplate, appStore: AppStore }) {
+// P1: 组件 props 接收 useCases
+function BlockEditor({ block, useCases }: { block: BlockTemplate, useCases: UseCases }) {
     const [localBlock, setLocalBlock] = useState(block);
     useEffect(() => { setLocalBlock(block); }, [block]);
-    // [修改] 使用 appStore 实例
-    const handleUpdate = (updates: Partial<BlockTemplate>) => { appStore.updateBlock(block.id, updates); };
+    // P1: 通过 UseCase 层更新 Block
+    const handleUpdate = (updates: Partial<BlockTemplate>) => { useCases.blocks.updateBlock(block.id, updates); };
     const handleBlur = (key: keyof BlockTemplate) => {
         if (localBlock[key] !== block[key]) handleUpdate({ [key]: localBlock[key] });
     };
@@ -98,28 +105,35 @@ function BlockEditor({ block, appStore }: { block: BlockTemplate, appStore: AppS
 /**
  * BlockManager 组件
  * 
- * ⚠️ P0 止血：禁止直接调用 appStore['_updateSettingsAndPersist']
- * Block 重排序必须通过 useCases.blocks.reorderBlocks
+ * P1: 所有 Block 操作通过 useCases.blocks 执行
+ * ⚠️ 禁止直接调用 appStore 的任何方法
  */
 export function BlockManager({ appStore }: { appStore: AppStore }) {
     const blocks = useStore(state => state.settings.inputSettings.blocks);
     const [openId, setOpenId] = useState<string | null>(null);
     
-    // P0: 获取 UseCases
+    // P1: 获取 UseCases
     const useCases = useUseCases();
     
-    const handleAdd = () => {
+    // P1: 通过 UseCase 层添加 Block
+    const handleAdd = async () => {
         const newName = `新Block ${blocks.length + 1}`;
-        appStore.addBlock(newName).then(() => {
-            const latestBlock = appStore.getSettings().inputSettings.blocks.at(-1);
-            if (latestBlock) setOpenId(latestBlock.id);
-        });
+        const newBlock = await useCases.blocks.addBlock(newName);
+        if (newBlock) {
+            setOpenId(newBlock.id);
+        }
     };
 
-    const handleDelete = (id: string, name: string) => {
+    // P1: 通过 UseCase 层删除 Block
+    const handleDelete = async (id: string, name: string) => {
         if (confirm(`确认删除Block "${name}" 吗？\n所有与此Block相关的主题覆写配置都将被一并删除。`)) {
-            appStore.deleteBlock(id);
+            await useCases.blocks.deleteBlock(id);
         }
+    };
+
+    // P1: 通过 UseCase 层复制 Block
+    const handleDuplicate = async (id: string) => {
+        await useCases.blocks.duplicateBlock(id);
     };
 
     /**
@@ -154,7 +168,8 @@ export function BlockManager({ appStore }: { appStore: AppStore }) {
                                 openId={openId}
                                 setOpenId={setOpenId}
                                 handleDelete={handleDelete}
-                                appStore={appStore} // [修改] 传递 appStore
+                                handleDuplicate={handleDuplicate}
+                                useCases={useCases}
                            />
                         ))}
                     </Stack>

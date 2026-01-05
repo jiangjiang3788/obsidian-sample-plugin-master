@@ -7,14 +7,18 @@ import { VIEW_OPTIONS, ViewName, getAllFields } from '@/core/types/schema';
 import type { ViewInstance } from '@/core/types/schema';
 import { VIEW_EDITORS } from '@features/settings/registry';
 import type { DataStore } from '@/core/services/DataStore';
-import { useStore, AppStore } from '@/app/AppStore';
+import { useStore } from '@/app/AppStore';
+import { createViewInstanceUseCase } from '@/app/usecases/viewInstance.usecase';
 import { SimpleSelect } from '@shared/ui/composites/SimpleSelect';
 import { RuleBuilder } from '@features/settings/RuleBuilder';
 import { Modal } from '@shared/ui/primitives/Modal';
 import { FormField, FieldManager, useSaveHandler } from '@shared/index';
 
-// 重构后的视图设置编辑器组件 - 使用通用组件
-function ViewInstanceEditor({ vi, appStore, dataStore }: { vi: ViewInstance, appStore: AppStore, dataStore: DataStore }) {
+// [P1 迁移] 重构后的视图设置编辑器组件 - 使用 UseCase 层
+function ViewInstanceEditor({ vi, dataStore }: { vi: ViewInstance, dataStore: DataStore }) {
+    // 创建 ViewInstanceUseCase 实例（通过 DI 容器获取 AppStore，不依赖 React Context）
+    const viewInstanceUseCase = createViewInstanceUseCase();
+    
     // 从store中获取最新的viewInstance状态
     const currentVi = useStore(state => state.settings.viewInstances.find(v => v.id === vi.id)) || vi;
     const fieldOptions = useMemo(() => getAllFields(dataStore?.queryItems() || []), [dataStore]);
@@ -26,8 +30,9 @@ function ViewInstanceEditor({ vi, appStore, dataStore }: { vi: ViewInstance, app
         return currentVi.viewConfig || {};
     }, [currentVi.viewConfig]);
 
+    // [P1] 通过 UseCase 层调用 updateViewInstance
     const handleUpdate = (updates: Partial<ViewInstance>) => {
-        appStore.updateViewInstance(currentVi.id, updates);
+        viewInstanceUseCase.updateViewInstance(currentVi.id, updates);
     };
 
     // 准备选项数据
@@ -181,11 +186,11 @@ interface Props {
     isOpen: boolean;
     onClose: () => void;
     module: ViewInstance;
-    appStore: AppStore;
     dataStore: DataStore;
 }
 
-export function ModuleSettingsModal({ isOpen, onClose, module, appStore, dataStore }: Props) {
+// [P1 迁移] 移除 appStore prop，使用 UseCase 层
+export function ModuleSettingsModal({ isOpen, onClose, module, dataStore }: Props) {
     // 从store中获取最新的模块状态
     const currentModule = useStore(state => state.settings.viewInstances.find(v => v.id === module.id)) || module;
 
@@ -209,7 +214,7 @@ export function ModuleSettingsModal({ isOpen, onClose, module, appStore, dataSto
             saveButtonText="保存设置"
             size="large"
         >
-            <ViewInstanceEditor vi={currentModule} appStore={appStore} dataStore={dataStore} />
+            <ViewInstanceEditor vi={currentModule} dataStore={dataStore} />
         </Modal>
     );
 }

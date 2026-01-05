@@ -5,7 +5,7 @@ import { useState, useEffect, useMemo } from 'preact/hooks';
 import { Dialog, DialogTitle, DialogContent, DialogActions, Button, Stack, TextField, Typography, Box, RadioGroup, FormControlLabel, Radio, FormControl, FormLabel, Divider } from '@mui/material';
 import { FieldsEditor } from './FieldsEditor';
 import type { BlockTemplate, ThemeDefinition, ThemeOverride, TemplateField } from '@/core/types/schema';
-import { AppStore } from '@/app/AppStore';
+import type { UseCases } from '@/app/usecases';
 import { Notice } from 'obsidian';
 import { TemplateVariableCopier } from './TemplateVariableCopier';
 
@@ -17,10 +17,10 @@ interface Props {
     block: BlockTemplate;
     theme: ThemeDefinition;
     existingOverride: ThemeOverride | null;
-    appStore: AppStore;
+    useCases: UseCases;  // ⚠️ P1: 使用 useCases 替代 appStore
 }
 
-export function TemplateEditorModal({ isOpen, onClose, block, theme, existingOverride, appStore }: Props) {
+export function TemplateEditorModal({ isOpen, onClose, block, theme, existingOverride, useCases }: Props) {
     const [mode, setMode] = useState<EditMode>('inherit');
     const [localOverride, setLocalOverride] = useState<Partial<ThemeOverride>>({});
 
@@ -53,7 +53,8 @@ export function TemplateEditorModal({ isOpen, onClose, block, theme, existingOve
     const handleSave = () => {
         if (mode === 'inherit') {
             if (existingOverride) {
-                appStore.deleteOverride(block.id, theme.id);
+                // ⚠️ P1: 通过 UseCase 层调用，而非直接调用 appStore
+                useCases.theme.deleteOverride(block.id, theme.id);
             }
             new Notice(`已设为继承 "${block.name}" 的基础配置`);
         } else {
@@ -66,7 +67,8 @@ export function TemplateEditorModal({ isOpen, onClose, block, theme, existingOve
                 targetFile: mode === 'override' ? localOverride.targetFile : undefined,
                 appendUnderHeader: mode === 'override' ? localOverride.appendUnderHeader : undefined,
             };
-            appStore.upsertOverride(dataToSave);
+            // ⚠️ P1: 通过 UseCase 层调用，而非直接调用 appStore
+            useCases.theme.upsertOverride(dataToSave);
             new Notice(`已保存 "${theme.path}" 对 "${block.name}" 的配置`);
         }
         onClose();

@@ -1,6 +1,14 @@
 /** @jsxImportSource preact */
+/**
+ * ThemeMatrix - 主题配置矩阵组件
+ * 
+ * ⚠️ P1 UI 适配：
+ * - 不再直接依赖 appStore.addTheme，改为通过 useCases.theme 进行状态管理
+ * - 遵循单向数据流：UI → UseCase → Zustand Store → UI
+ */
 import { h } from 'preact';
 import { useStore } from '@/app//AppStore';
+import { useUseCases } from '@/app/AppStoreContext';
 import { 
     Box, Typography, TextField, Button, Stack 
 } from '@mui/material';
@@ -33,6 +41,8 @@ import { useBatchOperations, type BatchOperation } from './useBatchOperations';
 
 // 主组件
 export function ThemeMatrix({ appStore, dataStore }: ThemeMatrixProps) {
+    // ⚠️ P1: 获取 useCases 用于状态管理
+    const useCases = useUseCases();
     const { blocks, themes, overrides } = useStore(state => state.settings.inputSettings);
     const [newThemePath, setNewThemePath] = useState('');
     const [modalOpen, setModalOpen] = useState(false);
@@ -107,7 +117,8 @@ export function ThemeMatrix({ appStore, dataStore }: ThemeMatrixProps) {
     const handleAddTheme = () => {
         const path = newThemePath.trim();
         if (path && !themes.some(t => t.path === path)) {
-            appStore.addTheme(path);
+            // ⚠️ P1: 通过 useCases.theme 添加主题
+            useCases.theme.addTheme(path);
             setNewThemePath('');
         }
     };
@@ -188,8 +199,8 @@ export function ThemeMatrix({ appStore, dataStore }: ThemeMatrixProps) {
                 onSelectionChange={handleSelectionChange}
                 onSelectAllThemes={(isSelected: boolean) => handleSelectAll(allThemeIds, isSelected)}
                 onSelectBlockColumn={(blockId: string, isSelected: boolean) => handleSelectBlockColumn(blockId, allThemeIds, isSelected)}
-                // 传递 appStore 用于内联编辑等
-                appStore={appStore}
+                // ⚠️ P1: 传递 useCases 替代 appStore
+                useCases={useCases}
             />
             
             {/* 添加新主题 */}
@@ -223,7 +234,8 @@ export function ThemeMatrix({ appStore, dataStore }: ThemeMatrixProps) {
                     block={modalData.block} 
                     theme={modalData.theme} 
                     existingOverride={modalData.override} 
-                    appStore={appStore}
+                    // ⚠️ P1: 传递 useCases 替代 appStore
+                    useCases={useCases}
                 />
             )}
         </Box>

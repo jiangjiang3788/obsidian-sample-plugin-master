@@ -16,6 +16,7 @@
 
 import { getAppStoreInstance } from '@/app/store/useAppStore';
 import type { AiSettings } from '@/core/types/ai-schema';
+import type { ViewInstance } from '@/core/types/schema';
 
 /**
  * 设置用例类
@@ -80,6 +81,95 @@ export class SettingsUseCase {
             await state.updateAiSettings(aiSettings);
         } catch (error) {
             console.error('[SettingsUseCase] updateAiSettings 失败:', error);
+            throw error;
+        }
+    }
+
+    // ============== ViewInstance 相关方法 ==============
+
+    /**
+     * 添加视图实例
+     * P1: UI 通过 UseCase 调用，不直接访问 Store
+     * @param title 视图标题
+     */
+    async addViewInstance(title: string): Promise<ViewInstance | null> {
+        try {
+            const store = getAppStoreInstance();
+            const state = store.getState();
+            
+            if (!state.isInitialized) {
+                console.error('[SettingsUseCase] Store 未初始化，无法添加视图实例');
+                return null;
+            }
+            
+            return await state.addViewInstance(title);
+        } catch (error) {
+            console.error('[SettingsUseCase] addViewInstance 失败:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * 更新视图实例
+     * @param id 视图实例ID
+     * @param updates 更新内容
+     */
+    async updateViewInstance(id: string, updates: Partial<ViewInstance>): Promise<void> {
+        try {
+            const store = getAppStoreInstance();
+            const state = store.getState();
+            
+            if (!state.isInitialized) {
+                console.error('[SettingsUseCase] Store 未初始化，无法更新视图实例');
+                return;
+            }
+            
+            await state.updateViewInstance(id, updates);
+        } catch (error) {
+            console.error('[SettingsUseCase] updateViewInstance 失败:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * 删除视图实例
+     * @param id 视图实例ID
+     */
+    async deleteViewInstance(id: string): Promise<void> {
+        try {
+            const store = getAppStoreInstance();
+            const state = store.getState();
+            
+            if (!state.isInitialized) {
+                console.error('[SettingsUseCase] Store 未初始化，无法删除视图实例');
+                return;
+            }
+            
+            await state.deleteViewInstance(id);
+        } catch (error) {
+            console.error('[SettingsUseCase] deleteViewInstance 失败:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * 重排项目（用于拖拽排序）
+     * @param items 重排后的项目数组
+     * @param type 项目类型
+     */
+    async reorderItems(items: { id: string }[], type: string): Promise<void> {
+        try {
+            const store = getAppStoreInstance();
+            const state = store.getState();
+            
+            if (!state.isInitialized) {
+                console.error('[SettingsUseCase] Store 未初始化，无法重排项目');
+                return;
+            }
+            
+            await state.reorderItems(items, type);
+        } catch (error) {
+            console.error('[SettingsUseCase] reorderItems 失败:', error);
             throw error;
         }
     }

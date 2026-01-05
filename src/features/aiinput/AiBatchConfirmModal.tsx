@@ -9,6 +9,7 @@ import { useStore, AppStore } from '@/app/AppStore';
 import { useDataStore, useInputService, ServicesProvider, Services } from '@/app/AppStoreContext';
 import { DataStore } from '@/core/services/DataStore';
 import { InputService } from '@/core/services/InputService';
+import { createUseCases } from '@/app/usecases';
 import type { InputSettings, BlockTemplate, ThemeDefinition, TemplateField } from '@/core/types/schema';
 import type { NaturalRecordCommand } from '@/core/types/ai-schema';
 import { Button, RadioGroup as MuiRadioGroup, FormControlLabel, Radio, FormControl, Typography, Stack, Divider, Box, IconButton, Tooltip, Chip, List, ListItem, ListItemButton, ListItemText, ListItemIcon } from '@mui/material';
@@ -48,10 +49,15 @@ export class AiBatchConfirmModal extends Modal {
     ) {
         super(app);
         // 从 DI 容器获取服务
+        const appStore = container.resolve(AppStore);
+        const dataStore = container.resolve(DataStore);
+        const inputService = container.resolve(InputService);
+        
         this.services = {
-            appStore: container.resolve(AppStore),
-            dataStore: container.resolve(DataStore),
-            inputService: container.resolve(InputService),
+            appStore,
+            dataStore,
+            inputService,
+            useCases: createUseCases(),  // P1: 添加 useCases
         };
     }
 
