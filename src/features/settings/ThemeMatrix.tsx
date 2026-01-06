@@ -64,10 +64,8 @@ export function ThemeMatrix({ appStore, dataStore }: ThemeMatrixProps) {
     // 初始化服务
     const themeManager = useMemo(() => new ThemeManager(), []);
     
-    // 批量操作 Hook
+    // 批量操作 Hook - P1: 不再传递 appStore，内部通过 useUseCases 获取
     const { executeBatchOperation, isProcessing } = useBatchOperations({
-        appStore,
-        themeManager,
         onOperationComplete: clearSelection,
     });
     const themeService = useMemo(() => new ThemeMatrixService({ appStore, themeManager }), [appStore, themeManager]);

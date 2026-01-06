@@ -21,6 +21,10 @@ export function setupCoreContainer(app: App, settings: ThinkSettings): void {
     // 注册单例服务
     container.registerSingleton(AppStore);
     
+    // 注册字符串 Token 别名，用于 Context 回退机制
+    // 这允许 useAppStore() 在没有 ServicesProvider 时通过 DI 容器回退获取
+    container.register('AppStore', { useToken: AppStore });
+    
     // 注册 SettingsProviderToken 映射到 AppStore
     // 这样其他服务可以通过 SettingsProviderToken 获取设置，而不需要直接依赖 AppStore
     container.register(SettingsProviderToken, { useToken: AppStore });

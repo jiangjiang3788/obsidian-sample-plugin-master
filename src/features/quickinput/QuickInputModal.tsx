@@ -10,6 +10,7 @@ import { useStore, AppStore } from '@/app/AppStore';
 import { useDataStore, useInputService, ServicesProvider, Services } from '@/app/AppStoreContext';
 import { DataStore } from '@/core/services/DataStore';
 import { InputService } from '@/core/services/InputService';
+import { USECASES_TOKEN, type UseCases } from '@/app/usecases';
 import type { InputSettings, BlockTemplate, ThemeDefinition, TemplateField, TemplateFieldOption } from '@/core/types/schema';
 import { Button, RadioGroup as MuiRadioGroup, FormControlLabel, Radio, FormControl, Typography, Stack, Divider, Box, IconButton, Tooltip } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
@@ -37,11 +38,12 @@ export class QuickInputModal extends Modal {
         private allowBlockSwitch: boolean = false
     ) {
         super(app);
-        // 从 DI 容器获取服务
+        // 从 DI 容器获取服务 - P0: 必须包含 useCases
         this.services = {
             appStore: container.resolve(AppStore),
             dataStore: container.resolve(DataStore),
             inputService: container.resolve(InputService),
+            useCases: container.resolve(USECASES_TOKEN),
         };
     }
 

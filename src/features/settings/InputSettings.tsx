@@ -11,8 +11,8 @@ import { DataStore } from '@/core/services/DataStore';
 export function InputSettings({ appStore, dataStore }: { appStore: AppStore, dataStore: DataStore }) {
     return (
         <Box>
-            {/* [修改] 将 appStore 传递给子组件 */}
-            <BlockManager appStore={appStore} />
+            {/* BlockManager 通过 useUseCases() 获取依赖 */}
+            <BlockManager />
             <Divider sx={{ my: 4, mx: 'auto', maxWidth: 900 }} />
             <ThemeMatrix appStore={appStore} dataStore={dataStore} />
         </Box>

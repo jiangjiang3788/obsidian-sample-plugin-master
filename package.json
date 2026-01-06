@@ -12,7 +12,8 @@
     "test:performance": "jest --config test/configs/jest.config.js test/performance",
     "test:e2e": "wdio run ./test/configs/wdio.conf.mts",
     "test:e2e:no-proxy": "node test/e2e/run-e2e-no-proxy.js",
-    "test:all": "npm run test && npm run test:e2e"
+    "test:all": "npm run test && npm run test:e2e",
+    "check:boundaries": "npx ts-node --project scripts/tsconfig.json scripts/check-boundaries.ts"
   },
   "dependencies": {
     "@codemirror/state": "^6.5.2",
