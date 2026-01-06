@@ -37,8 +37,15 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import SearchIcon from '@mui/icons-material/Search';
 import CloseIcon from '@mui/icons-material/Close';
 import ChatIcon from '@mui/icons-material/Chat';
+import ContentCopyIcon from '@mui/icons-material/ContentCopy';
+import CheckIcon from '@mui/icons-material/Check';
 import { container } from 'tsyringe';
-import { useStore } from '@/app/AppStore';
+import { AppStore } from '@/app/AppStore';
+import { ServicesProvider, type Services } from '@/app/AppStoreContext';
+import { DataStore } from '@/core/services/DataStore';
+import { InputService } from '@/core/services/InputService';
+import { USECASES_TOKEN } from '@/app/usecases';
+import { useZustandAppStore } from '@/app/store/useAppStore';
 import { ThemeTreeSelect } from '@/shared/components/ThemeTreeSelect';
 import { 
     ChatSessionStore,
@@ -67,15 +74,23 @@ declare const app: App;
 
 export class AiChatModal extends Modal {
     // Composition root: 在 Modal 构造函数中 resolve 所有服务
-    private services: AiServices;
+    private aiServices: AiServices;
+    private services: Services;
 
     constructor(app: App) {
         super(app);
         // DI 仅在此处（composition root）进行 resolve
-        this.services = {
+        this.aiServices = {
             chatService: container.resolve(AiChatService),
             retrievalService: container.resolve(RetrievalService),
             sessionStore: container.resolve(ChatSessionStore),
+        };
+        // P0: 构建 Services 对象供 ServicesProvider 使用
+        this.services = {
+            appStore: container.resolve(AppStore),
+            dataStore: container.resolve(DataStore),
+            inputService: container.resolve(InputService),
+            useCases: container.resolve(USECASES_TOKEN),
         };
     }
 
@@ -92,14 +107,16 @@ export class AiChatModal extends Modal {
         });
 
         // 初始化 sessionStore
-        await this.services.sessionStore.initialize();
+        await this.aiServices.sessionStore.initialize();
 
         render(
-            <AiChatModalContent 
-                app={this.app} 
-                closeModal={() => this.close()} 
-                services={this.services}
-            />,
+            <ServicesProvider services={this.services}>
+                <AiChatModalContent 
+                    app={this.app} 
+                    closeModal={() => this.close()} 
+                    services={this.aiServices}
+                />
+            </ServicesProvider>,
             this.contentEl
         );
     }
@@ -118,7 +135,8 @@ interface AiChatModalContentProps {
 }
 
 function AiChatModalContent({ app, closeModal, services }: AiChatModalContentProps) {
-    const settings = useStore(state => state.settings);
+    // P0: 使用 Zustand store 作为 SSOT
+    const settings = useZustandAppStore(state => state.settings);
     const themes = settings.inputSettings?.themes ?? [];
     const blocks = settings.inputSettings?.blocks ?? [];
     const aiSettings = settings.aiSettings;
@@ -560,6 +578,18 @@ function MessageBubble({ message, app }: MessageBubbleProps) {
     const isUser = message.role === 'user';
     const isSystem = message.role === 'system';
     const contentRef = useRef<HTMLDivElement>(null);
+    const [copied, setCopied] = useState(false);
+
+    // 复制消息内容
+    const handleCopy = async () => {
+        try {
+            await navigator.clipboard.writeText(message.content);
+            setCopied(true);
+            setTimeout(() => setCopied(false), 2000);
+        } catch (err) {
+            console.error('复制失败:', err);
+        }
+    };
 
     // 确定 contentType：优先使用消息自带的，否则按 role 推断
     // 历史数据兼容：assistant/system -> markdown, user -> plain
@@ -610,6 +640,10 @@ function MessageBubble({ message, app }: MessageBubbleProps) {
                             : 'background.paper',
                     color: isUser ? 'primary.contrastText' : 'text.primary',
                     border: isUser ? 'none' : '1px solid var(--background-modifier-border)',
+                    position: 'relative',
+                    '&:hover .copy-button': {
+                        opacity: 1,
+                    },
                     // Markdown 渲染样式
                     '& .message-content': {
                         '& p': { margin: '0.5em 0' },
@@ -650,6 +684,27 @@ function MessageBubble({ message, app }: MessageBubbleProps) {
                     },
                 }}
             >
+                {/* 复制按钮 */}
+                <Tooltip title={copied ? '已复制' : '复制'}>
+                    <IconButton
+                        className="copy-button"
+                        size="small"
+                        onClick={handleCopy}
+                        sx={{
+                            position: 'absolute',
+                            top: 4,
+                            right: 4,
+                            opacity: 0,
+                            transition: 'opacity 0.2s',
+                            bgcolor: 'background.paper',
+                            boxShadow: 1,
+                            '&:hover': { bgcolor: 'action.hover' },
+                        }}
+                    >
+                        {copied ? <CheckIcon fontSize="small" color="success" /> : <ContentCopyIcon fontSize="small" />}
+                    </IconButton>
+                </Tooltip>
+
                 {/* 消息内容容器 */}
                 <Box 
                     ref={contentRef}
@@ -657,6 +712,7 @@ function MessageBubble({ message, app }: MessageBubbleProps) {
                         wordBreak: 'break-word',
                         fontSize: '0.875rem',
                         lineHeight: 1.5,
+                        userSelect: 'text',
                     }}
                 />
                 

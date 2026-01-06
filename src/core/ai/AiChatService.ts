@@ -117,7 +117,7 @@ export class AiChatService {
             const date = item.dateMs ? dayjs(item.dateMs).format('YYYY-MM-DD') : '未知日期';
             const theme = item.theme || '无主题';
             const title = item.title || '无标题';
-            const content = (item.content || '').slice(0, 200); // 限制单条内容长度
+            const content = (item.content || '').slice(0, 5000); // 提高单条内容长度限制
             const type = item.type === 'task' ? '任务' : '记录';
 
             const entry = `- [${type}] ${date} | ${theme} | ${title}${content ? ': ' + content : ''}`;
@@ -205,8 +205,19 @@ export class AiChatService {
 
         // 3. 历史消息
         if (request.history && request.history.length > 0) {
-            // 只保留最近的几轮对话，避免超出 token 限制
-            const recentHistory = request.history.slice(-10);
+            // 按字符预算裁剪历史消息（约 50k tokens）
+            const MAX_HISTORY_CHARS = 100000; // 粗略≈50k tokens（中英文混合估算）
+            let totalChars = 0;
+            const recentHistory: OpenAIChatMessage[] = [];
+
+            for (let i = request.history.length - 1; i >= 0; i--) {
+                const msg = request.history[i];
+                const msgChars = JSON.stringify(msg).length;
+                if (totalChars + msgChars > MAX_HISTORY_CHARS) break;
+                recentHistory.unshift(msg);
+                totalChars += msgChars;
+            }
+
             messages.push(...recentHistory);
         }
 

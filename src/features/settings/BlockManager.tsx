@@ -4,11 +4,12 @@
  * 
  * ⚠️ P0 止血改造：
  * - 禁止直接调用 appStore['_updateSettingsAndPersist']
- * - Block 重排序必须通过 useCases.blocks.reorderBlocks
+ * - 禁止在 props 中传递 appStore
+ * - Block 所有操作必须通过 useCases.blocks.* 执行
  */
 /** @jsxImportSource preact */
 import { h } from 'preact';
-import { useStore, AppStore } from '@/app/AppStore';
+import { useStore } from '@/app/AppStore';
 import { useUseCases } from '@/app/AppStoreContext';
 import { Accordion, AccordionSummary, AccordionDetails, Box, Stack, Typography, IconButton, Tooltip, Divider, TextField } from '@mui/material';
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
@@ -105,10 +106,11 @@ function BlockEditor({ block, useCases }: { block: BlockTemplate, useCases: UseC
 /**
  * BlockManager 组件
  * 
- * P1: 所有 Block 操作通过 useCases.blocks 执行
+ * P0 止血：所有 Block 操作通过 useCases.blocks 执行
  * ⚠️ 禁止直接调用 appStore 的任何方法
+ * ⚠️ 不再接收 appStore 作为 props
  */
-export function BlockManager({ appStore }: { appStore: AppStore }) {
+export function BlockManager() {
     const blocks = useStore(state => state.settings.inputSettings.blocks);
     const [openId, setOpenId] = useState<string | null>(null);
     

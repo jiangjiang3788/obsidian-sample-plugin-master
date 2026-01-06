@@ -14,11 +14,12 @@
  */
 import { createContext } from 'preact';
 import { useContext } from 'preact/hooks';
+import { container } from 'tsyringe';
 import type { ComponentChildren } from 'preact';
 import type { AppStore } from './AppStore';
 import type { DataStore } from '@/core/services/DataStore';
 import type { InputService } from '@/core/services/InputService';
-import type { UseCases } from './usecases';
+import type { UseCases, USECASES_TOKEN } from './usecases';
 
 // ============== AppStore Context ==============
 
@@ -51,17 +52,40 @@ export function AppStoreProvider({ store, children }: AppStoreProviderProps) {
 /**
  * useAppStore Hook
  * 从 Context 获取 AppStore 实例
- * @throws 如果在 AppStoreProvider 外部使用则抛出异常
+ * 
+ * 兼容机制：
+ * - 优先从 Context 获取 AppStore
+ * - Context 不可用时，尝试从 DI 容器回退（仅限紧急兼容，会输出警告）
+ * 
+ * @returns AppStore 实例
  */
 export function useAppStore(): AppStore {
     const store = useContext(AppStoreContext);
-    if (!store) {
-        throw new Error(
-            'useAppStore 必须在 AppStoreProvider 内部使用。' +
-            '请确保组件树被 AppStoreProvider 包裹。'
-        );
+    
+    if (store) {
+        return store;
     }
-    return store;
+    
+    // 兼容回退：尝试从 DI 容器获取
+    // 使用字符串 Token 'AppStore'，由 setupCore 注册
+    try {
+        const fallbackStore = container.resolve<AppStore>('AppStore');
+        if (fallbackStore) {
+            console.warn(
+                '[useAppStore] ⚠️ 正在使用 DI 容器回退获取 AppStore。\n' +
+                '这表明组件未被 ServicesProvider 包裹。\n' +
+                '请检查组件渲染入口并添加 ServicesProvider。'
+            );
+            return fallbackStore;
+        }
+    } catch (e) {
+        // DI 容器也没有注册，抛出原始错误
+    }
+    
+    throw new Error(
+        'useAppStore 必须在 AppStoreProvider 内部使用。' +
+        '请确保组件树被 AppStoreProvider 包裹。'
+    );
 }
 
 // ============== DataStore Context ==============
@@ -131,17 +155,39 @@ export const UseCasesContext = createContext<UseCases | null>(null);
  * - 禁止直接调用 AppStore 的私有方法
  * - 禁止直接调用 appStore['_updateSettingsAndPersist']
  * 
- * @throws 如果在 ServicesProvider 外部使用则抛出异常
+ * 兼容机制：
+ * - 优先从 Context 获取 UseCases
+ * - Context 不可用时，尝试从 DI 容器回退（仅限紧急兼容，会输出警告）
+ * 
+ * @returns UseCases 实例
  */
 export function useUseCases(): UseCases {
     const useCases = useContext(UseCasesContext);
-    if (!useCases) {
-        throw new Error(
-            'useUseCases 必须在 ServicesProvider 内部使用。' +
-            '请确保组件树被 ServicesProvider 包裹。'
-        );
+    
+    if (useCases) {
+        return useCases;
     }
-    return useCases;
+    
+    // 兼容回退：尝试从 DI 容器获取
+    // 仅用于紧急兼容，正常情况下组件应该被 ServicesProvider 包裹
+    try {
+        const fallbackUseCases = container.resolve<UseCases>('UseCases');
+        if (fallbackUseCases) {
+            console.warn(
+                '[useUseCases] ⚠️ 正在使用 DI 容器回退获取 UseCases。\n' +
+                '这表明组件未被 ServicesProvider 包裹。\n' +
+                '请检查组件渲染入口并添加 ServicesProvider。'
+            );
+            return fallbackUseCases;
+        }
+    } catch (e) {
+        // DI 容器也没有注册，抛出原始错误
+    }
+    
+    throw new Error(
+        'useUseCases 必须在 ServicesProvider 内部使用。' +
+        '请确保组件树被 ServicesProvider 包裹。'
+    );
 }
 
 // ============== 统一 Services Provider ==============
