@@ -3,13 +3,20 @@
  * BlocksSlice - Block 状态切片
  * Role: Zustand Slice (状态管理)
  * 
+ * 【S2 规范】Settings 真同源
+ * - SettingsRepository 是 settings 的唯一写入口
+ * - 本 Slice 只调用 settingsRepository.update()，不直接写 settings
+ * - settings 由 ServiceManager 订阅 SettingsRepository 后统一同步到 Zustand
+ * - 本 Slice 只管理辅助状态：isLoading、error
+ * 
  * Do:
- * - 管理 Block 相关状态
- * - 提供 Block CRUD actions
+ * - 管理 Block 相关辅助状态（loading/error）
+ * - 提供 Block CRUD actions，委托写操作给 SettingsRepository
  * - 所有 IO 委托给 SettingsRepository
  * 
  * Don't:
  * - 直接进行 IO 操作
+ * - 直接写 settings（禁止 set({ settings: ... })）
  * - 持有 plugin 实例
  */
 
@@ -66,7 +73,8 @@ export function createBlocksSlice(
                     fields: [],
                 };
 
-                const newSettings = await settingsRepository.update(draft => {
+                // S2: 只调用 settingsRepository.update()，settings 由 ServiceManager 订阅后统一同步
+                await settingsRepository.update(draft => {
                     if (!draft.inputSettings) {
                         draft.inputSettings = { blocks: [], themes: [], overrides: [] };
                     }
@@ -76,7 +84,7 @@ export function createBlocksSlice(
                     draft.inputSettings.blocks.push(newBlock);
                 });
 
-                set({ settings: newSettings, isLoading: false });
+                set({ isLoading: false });
                 return newBlock;
             } catch (error: any) {
                 console.error('[BlocksSlice] addBlock 失败:', error);
@@ -98,7 +106,8 @@ export function createBlocksSlice(
             set({ isLoading: true, error: null });
 
             try {
-                const newSettings = await settingsRepository.update(draft => {
+                // S2: 只调用 settingsRepository.update()，settings 由 ServiceManager 订阅后统一同步
+                await settingsRepository.update(draft => {
                     const blocks = draft.inputSettings?.blocks || [];
                     const index = blocks.findIndex(b => b.id === id);
                     if (index !== -1) {
@@ -106,7 +115,7 @@ export function createBlocksSlice(
                     }
                 });
 
-                set({ settings: newSettings, isLoading: false });
+                set({ isLoading: false });
             } catch (error: any) {
                 console.error('[BlocksSlice] updateBlock 失败:', error);
                 set({ error: error.message || '更新 Block 失败', isLoading: false });
@@ -126,7 +135,8 @@ export function createBlocksSlice(
             set({ isLoading: true, error: null });
 
             try {
-                const newSettings = await settingsRepository.update(draft => {
+                // S2: 只调用 settingsRepository.update()，settings 由 ServiceManager 订阅后统一同步
+                await settingsRepository.update(draft => {
                     const blocks = draft.inputSettings?.blocks || [];
                     const index = blocks.findIndex(b => b.id === id);
                     if (index !== -1) {
@@ -140,7 +150,7 @@ export function createBlocksSlice(
                     }
                 });
 
-                set({ settings: newSettings, isLoading: false });
+                set({ isLoading: false });
             } catch (error: any) {
                 console.error('[BlocksSlice] deleteBlock 失败:', error);
                 set({ error: error.message || '删除 Block 失败', isLoading: false });
@@ -173,7 +183,8 @@ export function createBlocksSlice(
                     name: `${source.name} (副本)`,
                 };
 
-                const newSettings = await settingsRepository.update(draft => {
+                // S2: 只调用 settingsRepository.update()，settings 由 ServiceManager 订阅后统一同步
+                await settingsRepository.update(draft => {
                     const blocks = draft.inputSettings?.blocks || [];
                     const sourceIndex = blocks.findIndex(b => b.id === id);
                     if (sourceIndex !== -1) {
@@ -183,7 +194,7 @@ export function createBlocksSlice(
                     }
                 });
 
-                set({ settings: newSettings, isLoading: false });
+                set({ isLoading: false });
                 return newBlock;
             } catch (error: any) {
                 console.error('[BlocksSlice] duplicateBlock 失败:', error);
@@ -205,7 +216,8 @@ export function createBlocksSlice(
             set({ isLoading: true, error: null });
 
             try {
-                const newSettings = await settingsRepository.update(draft => {
+                // S2: 只调用 settingsRepository.update()，settings 由 ServiceManager 订阅后统一同步
+                await settingsRepository.update(draft => {
                     const blocks = draft.inputSettings?.blocks || [];
                     const index = blocks.findIndex(b => b.id === id);
                     if (index === -1) return;
@@ -217,7 +229,7 @@ export function createBlocksSlice(
                     blocks.splice(newIndex, 0, removed);
                 });
 
-                set({ settings: newSettings, isLoading: false });
+                set({ isLoading: false });
             } catch (error: any) {
                 console.error('[BlocksSlice] moveBlock 失败:', error);
                 set({ error: error.message || '移动 Block 失败', isLoading: false });

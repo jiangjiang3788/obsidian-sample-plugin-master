@@ -8,7 +8,7 @@
  */
 /** @jsxImportSource preact */
 import { h } from 'preact';
-import { useStore, AppStore } from '@/app/AppStore';
+import { useZustandAppStore } from '@/app/store/useAppStore';
 import { useUseCases } from '@/app/AppStoreContext';
 import { Box, Typography, Stack, FormControlLabel, Checkbox } from '@mui/material';
 
@@ -18,9 +18,9 @@ import { Box, Typography, Stack, FormControlLabel, Checkbox } from '@mui/materia
  * ⚠️ P0 止血：禁止直接调用 appStore.updateFloatingTimerEnabled
  * 必须通过 useCases.settings.setFloatingTimerEnabled
  */
-export function GeneralSettings({ appStore }: { appStore: AppStore }) {
-    // 从 store 中订阅需要的设置状态
-    const floatingTimerEnabled = useStore(state => state.settings.floatingTimerEnabled);
+export function GeneralSettings() {
+    // 使用细粒度 selector 订阅设置状态
+    const floatingTimerEnabled = useZustandAppStore(state => state.settings.floatingTimerEnabled);
     
     // P0: 获取 UseCases
     const useCases = useUseCases();

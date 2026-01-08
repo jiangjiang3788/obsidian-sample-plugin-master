@@ -1,114 +1,113 @@
 // src/app/usecases/group.usecase.ts
 /**
  * GroupUseCase - 分组相关用例
- * Role: UseCase (应用层)
  * 
- * Do:
- * - 封装分组相关的业务意图
- * - 调用 Zustand Store 的 group actions（SSOT）
- * - 统一错误处理
+ * 【S5 规范】⛔ Group 功能已完全禁用！
  * 
- * Don't:
- * - 直接操作 SettingsRepository
- * - 持有 UI 相关逻辑
+ * Group 移动/分组存在问题，当前策略是完全禁用。
+ * Layout/ViewInstance 现使用扁平列表管理，通过 useCases.layout 操作。
+ * 
+ * 迁移指引：
+ * - 添加布局 → useCases.layout.addLayout()
+ * - 添加视图 → useCases.layout.addView()
+ * - 移动布局 → useCases.layout.moveLayout()
+ * - 移动视图 → useCases.layout.moveView()
+ * - 重排布局 → useCases.layout.reorderLayouts()
+ * 
+ * @deprecated Group 功能已在 S5 移除
+ * @internal 仅保留接口壳以避免 import 编译错误
  */
 
-import { getAppStoreInstance } from '@/app/store/useAppStore';
 import type { Group, GroupType, Groupable } from '@/core/types/schema';
+
+const DISABLED_ERROR = `
+[S5 规范] Group 功能已完全禁用！
+
+Group 移动/分组存在问题，当前策略是完全禁用。
+请使用 useCases.layout 代替：
+
+  import { createLayoutUseCase } from '@/app/usecases/layout.usecase';
+  const layoutUseCase = createLayoutUseCase();
+  
+  // 布局操作
+  await layoutUseCase.addLayout(name, parentId);
+  await layoutUseCase.moveLayout(id, direction);
+  await layoutUseCase.reorderLayouts(orderedIds);
+  
+  // 视图操作
+  await layoutUseCase.addView(title, parentId);
+  await layoutUseCase.moveView(id, direction);
+
+详见: src/app/ARCH_CONSTRAINTS.md
+`;
 
 /**
  * 分组用例类
- * P1: 封装 moveItem 等分组操作，UI 通过 UseCase 调用
- * 已迁移到 Zustand Store (SSOT)
+ * 
+ * @deprecated 【硬禁用】所有方法直接抛出异常，禁止使用。
  */
 export class GroupUseCase {
-    /**
-     * 移动项目到新的父级
-     * @param itemId 项目ID
-     * @param targetParentId 目标父级ID（null 表示移到顶级）
-     */
-    async moveItem(itemId: string, targetParentId: string | null): Promise<void> {
-        try {
-            const store = getAppStoreInstance();
-            await store.getState().grpMoveItem(itemId, targetParentId);
-        } catch (error) {
-            console.error('[GroupUseCase] moveItem 失败:', error);
-            throw error;
-        }
+    constructor() {
+        console.warn('[S5] GroupUseCase 已禁用，Group 功能已移除');
     }
 
     /**
-     * 添加分组
+     * @deprecated Group feature removed in S5
+     * @throws Error always
      */
-    async addGroup(name: string, parentId: string | null, type: GroupType): Promise<Group | null> {
-        try {
-            const store = getAppStoreInstance();
-            return await store.getState().grpAddGroup(name, parentId, type);
-        } catch (error) {
-            console.error('[GroupUseCase] addGroup 失败:', error);
-            throw error;
-        }
+    async moveItem(_itemId: string, _targetParentId: string | null): Promise<void> {
+        throw new Error(DISABLED_ERROR);
     }
 
     /**
-     * 更新分组
+     * @deprecated Group feature removed in S5
+     * @throws Error always
      */
-    async updateGroup(id: string, updates: Partial<Group>): Promise<void> {
-        try {
-            const store = getAppStoreInstance();
-            await store.getState().grpUpdateGroup(id, updates);
-        } catch (error) {
-            console.error('[GroupUseCase] updateGroup 失败:', error);
-            throw error;
-        }
+    async addGroup(_name: string, _parentId: string | null, _type: GroupType): Promise<Group | null> {
+        throw new Error(DISABLED_ERROR);
     }
 
     /**
-     * 删除分组
+     * @deprecated Group feature removed in S5
+     * @throws Error always
      */
-    async deleteGroup(id: string): Promise<void> {
-        try {
-            const store = getAppStoreInstance();
-            await store.getState().grpDeleteGroup(id);
-        } catch (error) {
-            console.error('[GroupUseCase] deleteGroup 失败:', error);
-            throw error;
-        }
+    async updateGroup(_id: string, _updates: Partial<Group>): Promise<void> {
+        throw new Error(DISABLED_ERROR);
     }
 
     /**
-     * 复制分组
+     * @deprecated Group feature removed in S5
+     * @throws Error always
      */
-    async duplicateGroup(groupId: string): Promise<void> {
-        try {
-            const store = getAppStoreInstance();
-            await store.getState().grpDuplicateGroup(groupId);
-        } catch (error) {
-            console.error('[GroupUseCase] duplicateGroup 失败:', error);
-            throw error;
-        }
+    async deleteGroup(_id: string): Promise<void> {
+        throw new Error(DISABLED_ERROR);
     }
 
     /**
-     * 重排序项目
+     * @deprecated Group feature removed in S5
+     * @throws Error always
+     */
+    async duplicateGroup(_groupId: string): Promise<void> {
+        throw new Error(DISABLED_ERROR);
+    }
+
+    /**
+     * @deprecated Group feature removed in S5
+     * @throws Error always
      */
     async reorderItems(
-        reorderedSiblings: (Groupable & { isGroup?: boolean })[],
-        itemType: 'group' | 'viewInstance' | 'layout'
+        _reorderedSiblings: (Groupable & { isGroup?: boolean })[],
+        _itemType: 'group' | 'viewInstance' | 'layout'
     ): Promise<void> {
-        try {
-            const store = getAppStoreInstance();
-            await store.getState().grpReorderItems(reorderedSiblings, itemType);
-        } catch (error) {
-            console.error('[GroupUseCase] reorderItems 失败:', error);
-            throw error;
-        }
+        throw new Error(DISABLED_ERROR);
     }
 }
 
 /**
  * 创建分组用例实例
+ * @deprecated Group feature removed in S5
  */
 export function createGroupUseCase(): GroupUseCase {
+    console.warn('[S5] createGroupUseCase 已禁用，Group 功能已移除');
     return new GroupUseCase();
 }

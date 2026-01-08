@@ -4,13 +4,18 @@
  * Role: Store Slice (状态管理)
  * 
  * Do:
- * - 管理 Theme 相关状态
- * - 提供 Theme 相关 actions
- * - 委托 IO 给 SettingsRepository
+ * - 管理 Theme 相关的辅助状态（loading/error）
+ * - 提供 Theme 相关 actions（委托给 SettingsRepository）
+ * - 提供查询方法
  * 
  * Don't:
+ * - 直接写 settings（由 ServiceManager 订阅 SettingsRepository 统一更新）
  * - 直接进行 IO 操作
  * - 持有 UI 逻辑
+ * 
+ * S2 规范：
+ * - SettingsRepository 是 settings 的唯一写入口
+ * - Zustand store 只是订阅者，由 ServiceManager 同步
  */
 
 import type { StateCreator } from 'zustand';
@@ -108,14 +113,15 @@ export function createThemeSlice(
                     icon: ''
                 };
 
-                const newSettings = await settingsRepository.update(draft => {
+                await settingsRepository.update(draft => {
                     if (!draft.inputSettings.themes) {
                         draft.inputSettings.themes = [];
                     }
                     draft.inputSettings.themes.push(newTheme);
                 });
 
-                set({ settings: newSettings, themeLoading: false });
+                // S2: settings 由 ServiceManager 订阅 SettingsRepository 统一更新
+                set({ themeLoading: false });
                 return newTheme;
             } catch (error: any) {
                 console.error('[ThemeSlice] addTheme 失败:', error);
@@ -143,13 +149,14 @@ export function createThemeSlice(
             set({ themeLoading: true, themeError: null });
 
             try {
-                const newSettings = await settingsRepository.update(draft => {
+                await settingsRepository.update(draft => {
                     const theme = draft.inputSettings.themes?.find(t => t.id === id);
                     if (theme) {
                         Object.assign(theme, updates);
                     }
                 });
-                set({ settings: newSettings, themeLoading: false });
+                // S2: settings 由 ServiceManager 订阅 SettingsRepository 统一更新
+                set({ themeLoading: false });
             } catch (error: any) {
                 console.error('[ThemeSlice] updateTheme 失败:', error);
                 set({ themeError: error.message || '更新主题失败', themeLoading: false });
@@ -166,13 +173,14 @@ export function createThemeSlice(
             set({ themeLoading: true, themeError: null });
 
             try {
-                const newSettings = await settingsRepository.update(draft => {
+                await settingsRepository.update(draft => {
                     // 删除主题
                     draft.inputSettings.themes = draft.inputSettings.themes?.filter(t => t.id !== id) || [];
                     // 清理相关的 overrides
                     draft.inputSettings.overrides = draft.inputSettings.overrides?.filter(o => o.themeId !== id) || [];
                 });
-                set({ settings: newSettings, themeLoading: false });
+                // S2: settings 由 ServiceManager 订阅 SettingsRepository 统一更新
+                set({ themeLoading: false });
             } catch (error: any) {
                 console.error('[ThemeSlice] deleteTheme 失败:', error);
                 set({ themeError: error.message || '删除主题失败', themeLoading: false });
@@ -188,7 +196,7 @@ export function createThemeSlice(
             set({ themeLoading: true, themeError: null });
 
             try {
-                const newSettings = await settingsRepository.update(draft => {
+                await settingsRepository.update(draft => {
                     themeIds.forEach(id => {
                         const theme = draft.inputSettings.themes?.find(t => t.id === id);
                         if (theme) {
@@ -196,7 +204,8 @@ export function createThemeSlice(
                         }
                     });
                 });
-                set({ settings: newSettings, themeLoading: false });
+                // S2: settings 由 ServiceManager 订阅 SettingsRepository 统一更新
+                set({ themeLoading: false });
             } catch (error: any) {
                 console.error('[ThemeSlice] batchUpdateThemes 失败:', error);
                 set({ themeError: error.message || '批量更新主题失败', themeLoading: false });
@@ -211,11 +220,12 @@ export function createThemeSlice(
 
             try {
                 const themeIdSet = new Set(themeIds);
-                const newSettings = await settingsRepository.update(draft => {
+                await settingsRepository.update(draft => {
                     draft.inputSettings.themes = draft.inputSettings.themes?.filter(t => !themeIdSet.has(t.id)) || [];
                     draft.inputSettings.overrides = draft.inputSettings.overrides?.filter(o => !themeIdSet.has(o.themeId)) || [];
                 });
-                set({ settings: newSettings, themeLoading: false });
+                // S2: settings 由 ServiceManager 订阅 SettingsRepository 统一更新
+                set({ themeLoading: false });
             } catch (error: any) {
                 console.error('[ThemeSlice] batchDeleteThemes 失败:', error);
                 set({ themeError: error.message || '批量删除主题失败', themeLoading: false });
@@ -229,7 +239,7 @@ export function createThemeSlice(
             set({ themeLoading: true, themeError: null });
 
             try {
-                const newSettings = await settingsRepository.update(draft => {
+                await settingsRepository.update(draft => {
                     const themePaths = themeIds
                         .map(id => draft.inputSettings.themes?.find(t => t.id === id)?.path)
                         .filter(Boolean) as string[];
@@ -248,7 +258,8 @@ export function createThemeSlice(
                         draft.activeThemePaths = draft.activeThemePaths.filter(path => !themePaths.includes(path));
                     }
                 });
-                set({ settings: newSettings, themeLoading: false });
+                // S2: settings 由 ServiceManager 订阅 SettingsRepository 统一更新
+                set({ themeLoading: false });
             } catch (error: any) {
                 console.error('[ThemeSlice] batchUpdateThemeStatus 失败:', error);
                 set({ themeError: error.message || '批量更新主题状态失败', themeLoading: false });
@@ -262,7 +273,7 @@ export function createThemeSlice(
             set({ themeLoading: true, themeError: null });
 
             try {
-                const newSettings = await settingsRepository.update(draft => {
+                await settingsRepository.update(draft => {
                     themeIds.forEach(id => {
                         const theme = draft.inputSettings.themes?.find(t => t.id === id);
                         if (theme) {
@@ -270,7 +281,8 @@ export function createThemeSlice(
                         }
                     });
                 });
-                set({ settings: newSettings, themeLoading: false });
+                // S2: settings 由 ServiceManager 订阅 SettingsRepository 统一更新
+                set({ themeLoading: false });
             } catch (error: any) {
                 console.error('[ThemeSlice] batchUpdateThemeIcon 失败:', error);
                 set({ themeError: error.message || '批量更新主题图标失败', themeLoading: false });
@@ -287,7 +299,7 @@ export function createThemeSlice(
 
             try {
                 let resultOverride: ThemeOverride | null = null;
-                const newSettings = await settingsRepository.update(draft => {
+                await settingsRepository.update(draft => {
                     const existingIndex = draft.inputSettings.overrides?.findIndex(
                         o => o.blockId === overrideData.blockId && o.themeId === overrideData.themeId
                     ) ?? -1;
@@ -307,7 +319,8 @@ export function createThemeSlice(
                         resultOverride = newOverride;
                     }
                 });
-                set({ settings: newSettings, themeLoading: false });
+                // S2: settings 由 ServiceManager 订阅 SettingsRepository 统一更新
+                set({ themeLoading: false });
                 return resultOverride;
             } catch (error: any) {
                 console.error('[ThemeSlice] upsertOverride 失败:', error);
@@ -323,12 +336,13 @@ export function createThemeSlice(
             set({ themeLoading: true, themeError: null });
 
             try {
-                const newSettings = await settingsRepository.update(draft => {
+                await settingsRepository.update(draft => {
                     draft.inputSettings.overrides = draft.inputSettings.overrides?.filter(
                         o => !(o.blockId === blockId && o.themeId === themeId)
                     ) || [];
                 });
-                set({ settings: newSettings, themeLoading: false });
+                // S2: settings 由 ServiceManager 订阅 SettingsRepository 统一更新
+                set({ themeLoading: false });
             } catch (error: any) {
                 console.error('[ThemeSlice] deleteOverride 失败:', error);
                 set({ themeError: error.message || '删除覆盖配置失败', themeLoading: false });
@@ -342,7 +356,7 @@ export function createThemeSlice(
             set({ themeLoading: true, themeError: null });
 
             try {
-                const newSettings = await settingsRepository.update(draft => {
+                await settingsRepository.update(draft => {
                     for (const overrideData of overrides) {
                         const existingIndex = draft.inputSettings.overrides?.findIndex(
                             o => o.blockId === overrideData.blockId && o.themeId === overrideData.themeId
@@ -361,7 +375,8 @@ export function createThemeSlice(
                         }
                     }
                 });
-                set({ settings: newSettings, themeLoading: false });
+                // S2: settings 由 ServiceManager 订阅 SettingsRepository 统一更新
+                set({ themeLoading: false });
             } catch (error: any) {
                 console.error('[ThemeSlice] batchUpsertOverrides 失败:', error);
                 set({ themeError: error.message || '批量更新覆盖配置失败', themeLoading: false });
@@ -376,12 +391,13 @@ export function createThemeSlice(
 
             try {
                 const selectionSet = new Set(selections.map(s => `${s.blockId}:${s.themeId}`));
-                const newSettings = await settingsRepository.update(draft => {
+                await settingsRepository.update(draft => {
                     draft.inputSettings.overrides = draft.inputSettings.overrides?.filter(
                         o => !selectionSet.has(`${o.blockId}:${o.themeId}`)
                     ) || [];
                 });
-                set({ settings: newSettings, themeLoading: false });
+                // S2: settings 由 ServiceManager 订阅 SettingsRepository 统一更新
+                set({ themeLoading: false });
             } catch (error: any) {
                 console.error('[ThemeSlice] batchDeleteOverrides 失败:', error);
                 set({ themeError: error.message || '批量删除覆盖配置失败', themeLoading: false });
@@ -395,7 +411,7 @@ export function createThemeSlice(
             set({ themeLoading: true, themeError: null });
 
             try {
-                const newSettings = await settingsRepository.update(draft => {
+                await settingsRepository.update(draft => {
                     if (status === 'inherit') {
                         const cellKeys = new Set(cells.map(c => `${c.themeId}:${c.blockId}`));
                         draft.inputSettings.overrides = draft.inputSettings.overrides?.filter(
@@ -430,7 +446,8 @@ export function createThemeSlice(
                         });
                     }
                 });
-                set({ settings: newSettings, themeLoading: false });
+                // S2: settings 由 ServiceManager 订阅 SettingsRepository 统一更新
+                set({ themeLoading: false });
             } catch (error: any) {
                 console.error('[ThemeSlice] batchSetOverrideStatus 失败:', error);
                 set({ themeError: error.message || '批量设置覆盖状态失败', themeLoading: false });

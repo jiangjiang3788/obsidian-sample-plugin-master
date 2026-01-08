@@ -4,17 +4,16 @@ import { h } from 'preact';
 import { Box, Divider } from '@mui/material';
 import { BlockManager } from './BlockManager';
 import { ThemeMatrix } from '@features/settings/ThemeMatrix';
-import { AppStore } from '@/app/AppStore';
-import { DataStore } from '@/core/services/DataStore';
 
-// [修改] 组件 props 现在需要接收 appStore 和 dataStore
-export function InputSettings({ appStore, dataStore }: { appStore: AppStore, dataStore: DataStore }) {
+// [修改] 组件不再需要 props，依赖统一通过 Context 获取
+export function InputSettings() {
     return (
         <Box>
             {/* BlockManager 通过 useUseCases() 获取依赖 */}
             <BlockManager />
             <Divider sx={{ my: 4, mx: 'auto', maxWidth: 900 }} />
-            <ThemeMatrix appStore={appStore} dataStore={dataStore} />
+            {/* ThemeMatrix 通过 useAppStore() / useDataStore() 获取依赖 */}
+            <ThemeMatrix />
         </Box>
     );
 }

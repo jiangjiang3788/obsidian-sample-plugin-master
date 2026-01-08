@@ -1,8 +1,7 @@
 /**
  * ThemeMatrix 业务逻辑服务
  */
-import { type AppStore } from '@/app/AppStore';
-import { type ThemeDefinition, ThemeOverride, BlockTemplate } from '@/core/types/schema';
+import { type ThemeDefinition, ThemeOverride, BlockTemplate, ThinkSettings } from '@/core/types/schema';
 import { type ExtendedTheme, BatchOperationType, ThemeTreeNode } from '@core/theme-matrix';
 import { ThemeManager } from '@features/settings/ThemeManager';
 import { 
@@ -18,11 +17,25 @@ import {
 import { buildThemeTree, findNodeInTree, getDescendantIds } from '@/core/theme-matrix/themeTreeBuilder';
 
 /**
+ * 写操作回调接口
+ * TODO: 后续迁移到 useCases 层统一调用
+ */
+export interface ThemeMatrixWriteOps {
+    addTheme: (path: string) => void;
+    updateTheme: (themeId: string, updates: Partial<ThemeDefinition>) => void;
+    deleteTheme: (themeId: string) => void;
+    deleteOverride: (blockId: string, themeId: string) => Promise<void>;
+    upsertOverride: (override: ThemeOverride) => Promise<void>;
+}
+
+/**
  * ThemeMatrix 服务配置
  */
 export interface ThemeMatrixServiceConfig {
-    /** 应用状态存储 */
-    appStore: AppStore;
+    /** 获取设置的函数 - 同步返回最新 settings */
+    getSettings: () => ThinkSettings;
+    /** 写操作回调 */
+    writeOps: ThemeMatrixWriteOps;
     /** 主题管理器实例 */
     themeManager?: ThemeManager;
 }
@@ -44,11 +57,13 @@ export interface BatchOperationResult {
  * 封装所有主题矩阵相关的业务逻辑
  */
 export class ThemeMatrixService {
-    private appStore: AppStore;
+    private getSettings: () => ThinkSettings;
+    private writeOps: ThemeMatrixWriteOps;
     private themeManager: ThemeManager;
     
     constructor(config: ThemeMatrixServiceConfig) {
-        this.appStore = config.appStore;
+        this.getSettings = config.getSettings;
+        this.writeOps = config.writeOps;
         this.themeManager = config.themeManager || new ThemeManager();
     }
     
@@ -90,13 +105,13 @@ export class ThemeMatrixService {
         }
         
         // 检查是否已存在
-        const themes = this.appStore.getState().settings.inputSettings.themes;
-        if (themes.some(t => t.path === normalizedPath)) {
+        const themes = this.getSettings().inputSettings.themes;
+        if (themes.some((t: ThemeDefinition) => t.path === normalizedPath)) {
             return { success: false, message: '主题路径已存在' };
         }
         
         // 添加主题
-        this.appStore.addTheme(normalizedPath);
+        this.writeOps.addTheme(normalizedPath);
         return { success: true };
     }
     
@@ -119,8 +134,8 @@ export class ThemeMatrixService {
             }
             
             // 检查路径是否与其他主题冲突
-            const themes = this.appStore.getState().settings.inputSettings.themes;
-            const hasConflict = themes.some(t => 
+            const themes = this.getSettings().inputSettings.themes;
+            const hasConflict = themes.some((t: ThemeDefinition) => 
                 t.id !== themeId && t.path === normalizedPath
             );
             if (hasConflict) {
@@ -130,7 +145,7 @@ export class ThemeMatrixService {
             updates.path = normalizedPath;
         }
         
-        this.appStore.updateTheme(themeId, updates);
+        this.writeOps.updateTheme(themeId, updates);
         return { success: true };
     }
     
@@ -144,7 +159,7 @@ export class ThemeMatrixService {
         themeId: string, 
         includeChildren: boolean = false
     ): { success: boolean; deletedCount: number } {
-        const themes = this.appStore.getState().settings.inputSettings.themes;
+        const themes = this.getSettings().inputSettings.themes;
         const extendedThemes = this.getExtendedThemes(themes);
         const tree = buildThemeTree(extendedThemes, new Set());
         const node = findNodeInTree(tree, themeId);
@@ -160,7 +175,7 @@ export class ThemeMatrixService {
             toDelete.push(...descendants.slice(1)); // 排除自身
         }
         
-        toDelete.forEach(id => this.appStore.deleteTheme(id));
+        toDelete.forEach(id => this.writeOps.deleteTheme(id));
         
         return { success: true, deletedCount: toDelete.length };
     }
@@ -181,7 +196,7 @@ export class ThemeMatrixService {
             errors: []
         };
         
-        const themes = this.appStore.getState().settings.inputSettings.themes;
+        const themes = this.getSettings().inputSettings.themes;
         const extendedThemes = this.getExtendedThemes(themes);
         
         for (const themeId of themeIds) {
@@ -210,7 +225,7 @@ export class ThemeMatrixService {
                             result.failed++;
                             result.errors.push(`无法删除预定义主题 ${theme.path}`);
                         } else {
-                            this.appStore.deleteTheme(themeId);
+                            this.writeOps.deleteTheme(themeId);
                             result.success++;
                         }
                         break;
@@ -237,10 +252,11 @@ export class ThemeMatrixService {
     ): Promise<void> {
         if (override === null) {
             // 删除覆盖
-            await this.appStore.deleteOverride(blockId, themeId);
+            await this.writeOps.deleteOverride(blockId, themeId);
         } else {
             // 使用 upsertOverride 来添加或更新
-            await this.appStore.upsertOverride({
+            await this.writeOps.upsertOverride({
+                id: '', // TODO: 由调用方生成或在 writeOps 内部生成
                 themeId,
                 blockId,
                 disabled: override.disabled || false,
@@ -272,10 +288,10 @@ export class ThemeMatrixService {
         withOverrides: number;
         mostUsed: ExtendedTheme | null;
     } {
-        const overrides = this.appStore.getState().settings.inputSettings.overrides;
+        const overrides = this.getSettings().inputSettings.overrides;
         const overridesByTheme = new Map<string, number>();
         
-        overrides.forEach(o => {
+        overrides.forEach((o: ThemeOverride) => {
             const count = overridesByTheme.get(o.themeId) || 0;
             overridesByTheme.set(o.themeId, count + 1);
         });
@@ -309,11 +325,11 @@ export class ThemeMatrixService {
         themes: ThemeDefinition[];
         overrides: ThemeOverride[];
     } {
-        const allThemes = this.appStore.getState().settings.inputSettings.themes;
-        const allOverrides = this.appStore.getState().settings.inputSettings.overrides;
+        const allThemes = this.getSettings().inputSettings.themes;
+        const allOverrides = this.getSettings().inputSettings.overrides;
         
-        const themes = allThemes.filter(t => themeIds.includes(t.id));
-        const overrides = allOverrides.filter(o => themeIds.includes(o.themeId));
+        const themes = allThemes.filter((t: ThemeDefinition) => themeIds.includes(t.id));
+        const overrides = allOverrides.filter((o: ThemeOverride) => themeIds.includes(o.themeId));
         
         return { themes, overrides };
     }
@@ -323,40 +339,36 @@ export class ThemeMatrixService {
      * @param data - 要导入的配置数据
      * @returns 导入结果
      */
-    importThemeConfigurations(data: {
+    async importThemeConfigurations(data: {
         themes: ThemeDefinition[];
         overrides: ThemeOverride[];
-    }): { 
+    }): Promise<{ 
         imported: number; 
         skipped: number; 
         errors: string[] 
-    } {
+    }> {
         const result = {
             imported: 0,
             skipped: 0,
             errors: [] as string[]
         };
         
-        const existingThemes = this.appStore.getState().settings.inputSettings.themes;
+        const existingThemes = this.getSettings().inputSettings.themes;
         
         // 导入主题
-        data.themes.forEach(theme => {
-            const exists = existingThemes.some(t => t.path === theme.path);
+        for (const theme of data.themes) {
+            const exists = existingThemes.some((t: ThemeDefinition) => t.path === theme.path);
             if (exists) {
                 result.skipped++;
             } else {
                 try {
-                    this.appStore.addTheme(theme.path);
+                    this.writeOps.addTheme(theme.path);
                     if (theme.icon) {
-                        // 更新图标
-                        const newTheme = this.appStore
-                            .getState()
-                            .settings
-                            .inputSettings
-                            .themes
-                            .find(t => t.path === theme.path);
+                        // 更新图标 - 需要重新获取新添加的主题
+                        const updatedThemes = this.getSettings().inputSettings.themes;
+                        const newTheme = updatedThemes.find((t: ThemeDefinition) => t.path === theme.path);
                         if (newTheme) {
-                            this.appStore.updateTheme(newTheme.id, { icon: theme.icon });
+                            this.writeOps.updateTheme(newTheme.id, { icon: theme.icon });
                         }
                     }
                     result.imported++;
@@ -364,16 +376,16 @@ export class ThemeMatrixService {
                     result.errors.push(`导入主题 ${theme.path} 失败: ${error}`);
                 }
             }
-        });
+        }
         
         // 导入覆盖配置
-        data.overrides.forEach(async override => {
+        for (const override of data.overrides) {
             try {
-                await this.appStore.upsertOverride(override);
+                await this.writeOps.upsertOverride(override);
             } catch (error) {
                 result.errors.push(`导入覆盖配置失败: ${error}`);
             }
-        });
+        }
         
         return result;
     }

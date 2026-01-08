@@ -136,6 +136,19 @@ export class ServiceManager {
                 zustandStore.getState().initialize(initialSettings);
                 console.log('[ThinkPlugin] Zustand Store 初始化完成');
                 
+                // MIGRATION: 订阅 SettingsRepository 的变更，同步到双 Store
+                settingsRepository.subscribe((settings) => {
+                    // 同步到 Zustand Store
+                    zustandStore.setState({ settings });
+                    // 同步派生状态：如果 floatingTimerEnabled 变为 false，关闭 widget
+                    if (!settings.floatingTimerEnabled) {
+                        zustandStore.setState({ isTimerWidgetVisible: false });
+                    }
+                    // 同步到 AppStore（遗留兼容）
+                    this.services.appStore?.__syncSettingsFromRepo(settings);
+                });
+                console.log('[ThinkPlugin] SettingsRepository 订阅已建立');
+                
                 // 3. P0: 创建 UseCases 并注册到 DI 容器
                 this.services.useCases = createUseCases();
                 container.register(USECASES_TOKEN, { useValue: this.services.useCases });

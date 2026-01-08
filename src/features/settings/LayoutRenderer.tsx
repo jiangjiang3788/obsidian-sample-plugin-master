@@ -8,7 +8,8 @@ import { ModulePanel } from './ModulePanel';
 import { DashboardViewComponents as ViewComponents } from './index';
 
 import { getDateRange, dayjs } from '@core/utils/date';
-import { useStore, AppStore } from '@/app/AppStore';
+import { useStore } from '@/app/AppStore';
+import { useZustandAppStore } from '@/app/store/useAppStore';
 import { useAppStore, useUseCases } from '@/app/AppStoreContext';
 import type { ActionService } from '@core/services/ActionService';
 import { ItemService } from '@core/services/ItemService';
@@ -111,9 +112,11 @@ export function LayoutRenderer({ layout, dataStore, app, actionService, itemServ
     const appStore = useAppStore();
     const useCases = useUseCases();
     
-    const allViews = useStore(state => state.settings.viewInstances);
+    // 使用 Zustand store 获取 settings 相关状态
+    const allViews = useZustandAppStore(state => state.settings.viewInstances);
+    const inputSettings = useZustandAppStore(state => state.settings.inputSettings); // [修改] 获取完整 inputSettings
+    // 注意: timer 状态仍在旧 AppStore 中管理
     const timers = useStore(state => state.timer.getTimers());
-    const inputSettings = useStore(state => state.settings.inputSettings); // [修改] 获取完整 inputSettings
     const allThemes = inputSettings.themes; // [兼容] 保持 allThemes 变量
     
     const [expandedState, setExpandedState] = useState<Record<string, boolean>>({});
@@ -349,13 +352,12 @@ export function LayoutRenderer({ layout, dataStore, app, actionService, itemServ
                 {isStateInitialized && layout.viewInstanceIds.map(renderViewInstance)}
             </div>
             
-            {/* [P1] 设置模态框 - 已迁移到 UseCase 层，无需 appStore */}
+            {/* [P1] 设置模态框 - 已迁移到 UseCase 层，无需 appStore 和 dataStore */}
             {settingsModalOpen && currentViewInstance && (
                 <ModuleSettingsModal
                     isOpen={settingsModalOpen}
                     onClose={handleSettingsClose}
                     module={currentViewInstance}
-                    dataStore={dataStore}
                 />
             )}
         </div>

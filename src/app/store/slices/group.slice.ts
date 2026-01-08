@@ -3,13 +3,20 @@
  * GroupSlice - 分组状态切片
  * Role: Zustand Slice (状态管理)
  * 
+ * 【S2 规范】Settings 真同源
+ * - SettingsRepository 是 settings 的唯一写入口
+ * - 本 Slice 只调用 settingsRepository.update()，不直接写 settings
+ * - settings 由 ServiceManager 订阅 SettingsRepository 后统一同步到 Zustand
+ * - 本 Slice 只管理辅助状态：isLoading、error
+ * 
  * Do:
- * - 管理 Group 相关状态
- * - 提供 Group CRUD actions
+ * - 管理 Group 相关辅助状态（loading/error）
+ * - 提供 Group CRUD actions，委托写操作给 SettingsRepository
  * - 所有 IO 委托给 SettingsRepository
  * 
  * Don't:
  * - 直接进行 IO 操作
+ * - 直接写 settings（禁止 set({ settings: ... })）
  * - 持有 plugin 实例
  * 
  * Note: 使用 grp 前缀避免与 SettingsSlice 中的方法冲突
@@ -67,14 +74,15 @@ export function createGroupSlice(
                     type,
                 };
 
-                const newSettings = await settingsRepository.update(draft => {
+                // S2: 只调用 settingsRepository.update()，settings 由 ServiceManager 订阅后统一同步
+                await settingsRepository.update(draft => {
                     if (!draft.groups) {
                         draft.groups = [];
                     }
                     draft.groups.push(newGroup);
                 });
 
-                set({ settings: newSettings, isLoading: false });
+                set({ isLoading: false });
                 return newGroup;
             } catch (error: any) {
                 console.error('[GroupSlice] grpAddGroup 失败:', error);
@@ -96,14 +104,15 @@ export function createGroupSlice(
             set({ isLoading: true, error: null });
 
             try {
-                const newSettings = await settingsRepository.update(draft => {
+                // S2: 只调用 settingsRepository.update()，settings 由 ServiceManager 订阅后统一同步
+                await settingsRepository.update(draft => {
                     const group = draft.groups.find(g => g.id === id);
                     if (group) {
                         Object.assign(group, updates);
                     }
                 });
 
-                set({ settings: newSettings, isLoading: false });
+                set({ isLoading: false });
             } catch (error: any) {
                 console.error('[GroupSlice] grpUpdateGroup 失败:', error);
                 set({ error: error.message || '更新分组失败', isLoading: false });
@@ -124,7 +133,8 @@ export function createGroupSlice(
             set({ isLoading: true, error: null });
 
             try {
-                const newSettings = await settingsRepository.update(draft => {
+                // S2: 只调用 settingsRepository.update()，settings 由 ServiceManager 订阅后统一同步
+                await settingsRepository.update(draft => {
                     const groupToDelete = draft.groups.find(g => g.id === id);
                     if (!groupToDelete) return;
                     
@@ -147,7 +157,7 @@ export function createGroupSlice(
                     draft.groups = draft.groups.filter(g => g.id !== id);
                 });
 
-                set({ settings: newSettings, isLoading: false });
+                set({ isLoading: false });
             } catch (error: any) {
                 console.error('[GroupSlice] grpDeleteGroup 失败:', error);
                 set({ error: error.message || '删除分组失败', isLoading: false });
@@ -167,7 +177,8 @@ export function createGroupSlice(
             set({ isLoading: true, error: null });
 
             try {
-                const newSettings = await settingsRepository.update(draft => {
+                // S2: 只调用 settingsRepository.update()，settings 由 ServiceManager 订阅后统一同步
+                await settingsRepository.update(draft => {
                     const groupToDuplicate = draft.groups.find(g => g.id === groupId);
                     if (!groupToDuplicate) return;
 
@@ -211,7 +222,7 @@ export function createGroupSlice(
                     deepDuplicate(groupId, groupToDuplicate.parentId);
                 });
 
-                set({ settings: newSettings, isLoading: false });
+                set({ isLoading: false });
             } catch (error: any) {
                 console.error('[GroupSlice] grpDuplicateGroup 失败:', error);
                 set({ error: error.message || '复制分组失败', isLoading: false });
@@ -231,7 +242,8 @@ export function createGroupSlice(
             set({ isLoading: true, error: null });
 
             try {
-                const newSettings = await settingsRepository.update(draft => {
+                // S2: 只调用 settingsRepository.update()，settings 由 ServiceManager 订阅后统一同步
+                await settingsRepository.update(draft => {
                     const allItems: (Groupable & { id: string })[] = [
                         ...draft.groups,
                         ...draft.viewInstances, 
@@ -255,7 +267,7 @@ export function createGroupSlice(
                     itemToMove.parentId = targetParentId;
                 });
 
-                set({ settings: newSettings, isLoading: false });
+                set({ isLoading: false });
             } catch (error: any) {
                 console.error('[GroupSlice] grpMoveItem 失败:', error);
                 set({ error: error.message || '移动项目失败', isLoading: false });
@@ -278,7 +290,8 @@ export function createGroupSlice(
             set({ isLoading: true, error: null });
 
             try {
-                const newSettings = await settingsRepository.update(draft => {
+                // S2: 只调用 settingsRepository.update()，settings 由 ServiceManager 订阅后统一同步
+                await settingsRepository.update(draft => {
                     const parentId = reorderedSiblings.length > 0 ? reorderedSiblings[0].parentId : undefined;
 
                     let fullArray: (Groupable & {id: string})[];
@@ -302,7 +315,7 @@ export function createGroupSlice(
                     }
                 });
 
-                set({ settings: newSettings, isLoading: false });
+                set({ isLoading: false });
             } catch (error: any) {
                 console.error('[GroupSlice] grpReorderItems 失败:', error);
                 set({ error: error.message || '重排序失败', isLoading: false });

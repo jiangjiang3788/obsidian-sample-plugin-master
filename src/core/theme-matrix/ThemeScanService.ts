@@ -2,8 +2,7 @@
  * 主题扫描服务
  * 负责从数据中扫描主题并提供智能导入功能
  */
-import type { AppStore } from '@/app//AppStore';
-import type { ThemeDefinition, Item } from '@/core/types/schema';
+import type { ThemeDefinition, Item, ThinkSettings } from '@/core/types/schema';
 import { ThemeManager } from '@features/settings/ThemeManager';
 import { DataStore } from '@core/services/DataStore';
 import { 
@@ -69,11 +68,24 @@ export interface ImportResult {
 }
 
 /**
+ * 写操作回调接口
+ * TODO: 后续迁移到 useCases 层统一调用
+ */
+export interface ThemeScanWriteOps {
+    addTheme: (path: string) => void | Promise<void>;
+}
+
+/**
  * 主题扫描服务配置
  */
 export interface ThemeScanServiceConfig {
-    appStore: AppStore;
+    /** 获取设置的函数 - 同步返回最新 settings */
+    getSettings: () => ThinkSettings;
+    /** 写操作回调 */
+    writeOps: ThemeScanWriteOps;
+    /** 数据存储 */
     dataStore: DataStore;
+    /** 主题管理器实例 */
     themeManager?: ThemeManager;
 }
 
@@ -81,12 +93,14 @@ export interface ThemeScanServiceConfig {
  * 主题扫描服务
  */
 export class ThemeScanService {
-    private appStore: AppStore;
+    private getSettings: () => ThinkSettings;
+    private writeOps: ThemeScanWriteOps;
     private dataStore: DataStore;
     private themeManager: ThemeManager;
     
     constructor(config: ThemeScanServiceConfig) {
-        this.appStore = config.appStore;
+        this.getSettings = config.getSettings;
+        this.writeOps = config.writeOps;
         this.dataStore = config.dataStore;
         this.themeManager = config.themeManager || new ThemeManager();
     }
@@ -148,8 +162,8 @@ export class ThemeScanService {
         const rawThemes = Array.from(themeStats.keys());
         
         // 获取现有主题
-        const existingThemes = this.appStore.getState().settings.inputSettings.themes;
-        const existingThemePaths = existingThemes.map(t => t.path);
+        const existingThemes = this.getSettings().inputSettings.themes;
+        const existingThemePaths = existingThemes.map((t: ThemeDefinition) => t.path);
         
         // 执行去重检测
         const deduplicationResult = deduplicateThemes(rawThemes, existingThemePaths);
@@ -198,8 +212,8 @@ export class ThemeScanService {
             errors: []
         };
         
-        const existingThemes = this.appStore.getState().settings.inputSettings.themes;
-        const existingPaths = new Set(existingThemes.map(t => t.path));
+        const existingThemes = this.getSettings().inputSettings.themes;
+        const existingPaths = new Set(existingThemes.map((t: ThemeDefinition) => t.path));
         
         for (const theme of themes) {
             try {
@@ -210,7 +224,7 @@ export class ThemeScanService {
                 }
                 
                 // 添加主题
-                await this.appStore.addTheme(theme);
+                await this.writeOps.addTheme(theme);
                 result.imported++;
                 
                 // 在ThemeManager中发现这个主题
@@ -270,8 +284,8 @@ export class ThemeScanService {
         willSkip: Array<{ theme: string; reason: string; }>;
         estimatedTime: number;
     }> {
-        const existingThemes = this.appStore.getState().settings.inputSettings.themes;
-        const existingPaths = new Set(existingThemes.map(t => t.path));
+        const existingThemes = this.getSettings().inputSettings.themes;
+        const existingPaths = new Set(existingThemes.map((t: ThemeDefinition) => t.path));
         
         const willImport: string[] = [];
         const willSkip: Array<{ theme: string; reason: string; }> = [];

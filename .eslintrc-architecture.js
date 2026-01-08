@@ -87,6 +87,34 @@ module.exports = {
               {
                 group: ['@features/!(shared)/**'],
                 message: 'Features 不能相互依赖 ❌ 只能依赖 core + shared'
+              },
+              // 【S5 规范】禁止 features 层直接 import slices
+              {
+                group: [
+                  '@/app/store/slices/*',
+                  '../app/store/slices/*',
+                  '../../app/store/slices/*',
+                  '../../../app/store/slices/*'
+                ],
+                message: '[S5] features 层禁止直接 import slices ❌ 请使用 useCases.layout，详见 src/app/ARCH_CONSTRAINTS.md'
+              },
+              // 【S5 规范】禁止 features 层直接 import viewInstance.usecase
+              {
+                group: [
+                  '@/app/usecases/viewInstance.usecase',
+                  '../app/usecases/viewInstance.usecase',
+                  '../../app/usecases/viewInstance.usecase'
+                ],
+                message: '[S5] features 层禁止直接 import viewInstance.usecase ❌ 请使用 useCases.layout，详见 src/app/ARCH_CONSTRAINTS.md'
+              },
+              // 【S5 规范】禁止 features 层直接 import group.usecase
+              {
+                group: [
+                  '@/app/usecases/group.usecase',
+                  '../app/usecases/group.usecase',
+                  '../../app/usecases/group.usecase'
+                ],
+                message: '[S5] features 层禁止直接 import group.usecase ❌ Group 功能已禁用，详见 src/app/ARCH_CONSTRAINTS.md'
               }
             ]
           }

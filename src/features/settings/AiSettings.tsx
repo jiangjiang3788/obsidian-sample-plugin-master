@@ -25,7 +25,7 @@ import {
     Chip,
 } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import { useStore } from '@/app/AppStore';
+import { useZustandAppStore } from '@/app/store/useAppStore';
 import { useUseCases } from '@/app/AppStoreContext';
 import type { AiSettings as AiSettingsType } from '@/core/types/ai-schema';
 import { DEFAULT_AI_SETTINGS, CUSTOM_PROMPT_EXAMPLES } from '@/core/types/ai-schema';
@@ -37,11 +37,11 @@ interface AiSettingsProps {
 }
 
 export function AiSettings(_props: AiSettingsProps) {
-    const settings = useStore(state => state.settings);
     const useCases = useUseCases();
-    const aiSettings = settings.aiSettings ?? DEFAULT_AI_SETTINGS;
-    const blocks = settings.inputSettings?.blocks ?? [];
-    const themes = settings.inputSettings?.themes ?? [];
+    // 使用细粒度 selector 避免全量订阅
+    const aiSettings = useZustandAppStore(state => state.settings.aiSettings) ?? DEFAULT_AI_SETTINGS;
+    const blocks = useZustandAppStore(state => state.settings.inputSettings?.blocks) ?? [];
+    const themes = useZustandAppStore(state => state.settings.inputSettings?.themes) ?? [];
 
     // 本地状态用于表单编辑
     const [localSettings, setLocalSettings] = useState<AiSettingsType>(aiSettings);

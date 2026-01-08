@@ -1,16 +1,30 @@
 // src/app/store/slices/layout.slice.ts
 /**
  * LayoutSlice - Zustand Layout 状态切片
- * Role: Store Slice (状态管理)
+ * Role: Store Slice (状态管理) - 底层实现
+ * 
+ * 【S2 规范】Settings 真同源
+ * - SettingsRepository 是 settings 的唯一写入口
+ * - 本 Slice 只调用 settingsRepository.update()，不直接写 settings
+ * - settings 由 ServiceManager 订阅 SettingsRepository 后统一同步到 Zustand
+ * - 本 Slice 只管理辅助状态：layoutLoading、layoutError
+ * 
+ * 【S5 规范】唯一写入口
+ * ⚠️ Layout actions 仅作为 useCases.layout 的底层实现！
+ * - features 层必须通过 useCases.layout.* 调用布局相关操作
+ * - 例如：useCases.layout.addLayout() 内部转调 slice.addLayout()
  * 
  * Do:
- * - 管理 Layout 相关状态
- * - 提供 Layout 相关 actions
+ * - 管理 Layout 相关辅助状态（loading/error）
+ * - 提供 Layout 相关 actions，委托写操作给 SettingsRepository
  * - 委托 IO 给 SettingsRepository
+ * - 作为 layout.usecase.ts 的底层实现被调用
  * 
  * Don't:
  * - 直接进行 IO 操作
+ * - 直接写 settings（禁止 set({ settings: ... })）
  * - 持有 UI 逻辑
+ * - 被 features 层（src/features/*）直接 import 使用
  */
 
 import type { StateCreator } from 'zustand';
@@ -32,6 +46,7 @@ export interface LayoutSliceActions {
     deleteLayout: (id: string) => Promise<void>;
     moveLayout: (id: string, direction: 'up' | 'down') => Promise<void>;
     duplicateLayout: (id: string) => Promise<Layout | null>;
+    reorderLayouts: (orderedIds: string[]) => Promise<void>;
     
     // 批量操作
     batchUpdateLayouts: (layoutIds: string[], updates: Partial<Layout>) => Promise<void>;
@@ -98,14 +113,15 @@ export function createLayoutSlice(
                     parentId
                 };
 
-                const newSettings = await settingsRepository.update(draft => {
+                // S2: 只调用 settingsRepository.update()，settings 由 ServiceManager 订阅后统一同步
+                await settingsRepository.update(draft => {
                     if (!draft.layouts) {
                         draft.layouts = [];
                     }
                     draft.layouts.push(newLayout);
                 });
 
-                set({ settings: newSettings, layoutLoading: false });
+                set({ layoutLoading: false });
                 return newLayout;
             } catch (error: any) {
                 console.error('[LayoutSlice] addLayout 失败:', error);
@@ -124,13 +140,14 @@ export function createLayoutSlice(
             set({ layoutLoading: true, layoutError: null });
 
             try {
-                const newSettings = await settingsRepository.update(draft => {
+                // S2: 只调用 settingsRepository.update()，settings 由 ServiceManager 订阅后统一同步
+                await settingsRepository.update(draft => {
                     const layout = draft.layouts?.find(l => l.id === id);
                     if (layout) {
                         Object.assign(layout, updates);
                     }
                 });
-                set({ settings: newSettings, layoutLoading: false });
+                set({ layoutLoading: false });
             } catch (error: any) {
                 console.error('[LayoutSlice] updateLayout 失败:', error);
                 set({ layoutError: error.message || '更新布局失败', layoutLoading: false });
@@ -147,10 +164,11 @@ export function createLayoutSlice(
             set({ layoutLoading: true, layoutError: null });
 
             try {
-                const newSettings = await settingsRepository.update(draft => {
+                // S2: 只调用 settingsRepository.update()，settings 由 ServiceManager 订阅后统一同步
+                await settingsRepository.update(draft => {
                     draft.layouts = draft.layouts?.filter(l => l.id !== id) || [];
                 });
-                set({ settings: newSettings, layoutLoading: false });
+                set({ layoutLoading: false });
             } catch (error: any) {
                 console.error('[LayoutSlice] deleteLayout 失败:', error);
                 set({ layoutError: error.message || '删除布局失败', layoutLoading: false });
@@ -167,10 +185,11 @@ export function createLayoutSlice(
             set({ layoutLoading: true, layoutError: null });
 
             try {
-                const newSettings = await settingsRepository.update(draft => {
+                // S2: 只调用 settingsRepository.update()，settings 由 ServiceManager 订阅后统一同步
+                await settingsRepository.update(draft => {
                     draft.layouts = moveItemInArray(draft.layouts || [], id, direction);
                 });
-                set({ settings: newSettings, layoutLoading: false });
+                set({ layoutLoading: false });
             } catch (error: any) {
                 console.error('[LayoutSlice] moveLayout 失败:', error);
                 set({ layoutError: error.message || '移动布局失败', layoutLoading: false });
@@ -199,19 +218,50 @@ export function createLayoutSlice(
                     name: `${original.name} (副本)`
                 };
 
-                const newSettings = await settingsRepository.update(draft => {
+                // S2: 只调用 settingsRepository.update()，settings 由 ServiceManager 订阅后统一同步
+                await settingsRepository.update(draft => {
                     if (!draft.layouts) {
                         draft.layouts = [];
                     }
                     draft.layouts.push(newLayout);
                 });
 
-                set({ settings: newSettings, layoutLoading: false });
+                set({ layoutLoading: false });
                 return newLayout;
             } catch (error: any) {
                 console.error('[LayoutSlice] duplicateLayout 失败:', error);
                 set({ layoutError: error.message || '复制布局失败', layoutLoading: false });
                 return null;
+            }
+        },
+
+        reorderLayouts: async (orderedIds: string[]): Promise<void> => {
+            const state = get();
+            if (!state.isInitialized) {
+                console.error('[LayoutSlice] Store 未初始化');
+                return;
+            }
+
+            set({ layoutLoading: true, layoutError: null });
+
+            try {
+                // S2: 只调用 settingsRepository.update()，settings 由 ServiceManager 订阅后统一同步
+                await settingsRepository.update(draft => {
+                    const layouts = draft.layouts || [];
+                    const layoutMap = new Map(layouts.map(l => [l.id, l]));
+                    // 按 orderedIds 顺序重排，保留未在 orderedIds 中的 layouts
+                    const reordered = orderedIds
+                        .map(id => layoutMap.get(id))
+                        .filter((l): l is Layout => l !== undefined);
+                    // 添加未在 orderedIds 中的剩余 layouts
+                    const orderedSet = new Set(orderedIds);
+                    const remaining = layouts.filter(l => !orderedSet.has(l.id));
+                    draft.layouts = [...reordered, ...remaining];
+                });
+                set({ layoutLoading: false });
+            } catch (error: any) {
+                console.error('[LayoutSlice] reorderLayouts 失败:', error);
+                set({ layoutError: error.message || '重排布局失败', layoutLoading: false });
             }
         },
 
@@ -224,7 +274,8 @@ export function createLayoutSlice(
             set({ layoutLoading: true, layoutError: null });
 
             try {
-                const newSettings = await settingsRepository.update(draft => {
+                // S2: 只调用 settingsRepository.update()，settings 由 ServiceManager 订阅后统一同步
+                await settingsRepository.update(draft => {
                     layoutIds.forEach(id => {
                         const layout = draft.layouts?.find(l => l.id === id);
                         if (layout) {
@@ -232,7 +283,7 @@ export function createLayoutSlice(
                         }
                     });
                 });
-                set({ settings: newSettings, layoutLoading: false });
+                set({ layoutLoading: false });
             } catch (error: any) {
                 console.error('[LayoutSlice] batchUpdateLayouts 失败:', error);
                 set({ layoutError: error.message || '批量更新布局失败', layoutLoading: false });
@@ -247,10 +298,11 @@ export function createLayoutSlice(
 
             try {
                 const layoutIdSet = new Set(layoutIds);
-                const newSettings = await settingsRepository.update(draft => {
+                // S2: 只调用 settingsRepository.update()，settings 由 ServiceManager 订阅后统一同步
+                await settingsRepository.update(draft => {
                     draft.layouts = draft.layouts?.filter(l => !layoutIdSet.has(l.id)) || [];
                 });
-                set({ settings: newSettings, layoutLoading: false });
+                set({ layoutLoading: false });
             } catch (error: any) {
                 console.error('[LayoutSlice] batchDeleteLayouts 失败:', error);
                 set({ layoutError: error.message || '批量删除布局失败', layoutLoading: false });
@@ -266,13 +318,14 @@ export function createLayoutSlice(
             set({ layoutLoading: true, layoutError: null });
 
             try {
-                const newSettings = await settingsRepository.update(draft => {
+                // S2: 只调用 settingsRepository.update()，settings 由 ServiceManager 订阅后统一同步
+                await settingsRepository.update(draft => {
                     const layout = draft.layouts?.find(l => l.id === layoutId);
                     if (layout) {
                         layout.parentId = newParentId;
                     }
                 });
-                set({ settings: newSettings, layoutLoading: false });
+                set({ layoutLoading: false });
             } catch (error: any) {
                 console.error('[LayoutSlice] moveLayoutToParent 失败:', error);
                 set({ layoutError: error.message || '移动布局失败', layoutLoading: false });
@@ -288,13 +341,14 @@ export function createLayoutSlice(
             set({ layoutLoading: true, layoutError: null });
 
             try {
-                const newSettings = await settingsRepository.update(draft => {
+                // S2: 只调用 settingsRepository.update()，settings 由 ServiceManager 订阅后统一同步
+                await settingsRepository.update(draft => {
                     const layout = draft.layouts?.find(l => l.id === layoutId);
                     if (layout && !layout.viewInstanceIds.includes(viewInstanceId)) {
                         layout.viewInstanceIds.push(viewInstanceId);
                     }
                 });
-                set({ settings: newSettings, layoutLoading: false });
+                set({ layoutLoading: false });
             } catch (error: any) {
                 console.error('[LayoutSlice] addViewInstanceToLayout 失败:', error);
                 set({ layoutError: error.message || '添加视图实例失败', layoutLoading: false });
@@ -308,13 +362,14 @@ export function createLayoutSlice(
             set({ layoutLoading: true, layoutError: null });
 
             try {
-                const newSettings = await settingsRepository.update(draft => {
+                // S2: 只调用 settingsRepository.update()，settings 由 ServiceManager 订阅后统一同步
+                await settingsRepository.update(draft => {
                     const layout = draft.layouts?.find(l => l.id === layoutId);
                     if (layout) {
                         layout.viewInstanceIds = layout.viewInstanceIds.filter(id => id !== viewInstanceId);
                     }
                 });
-                set({ settings: newSettings, layoutLoading: false });
+                set({ layoutLoading: false });
             } catch (error: any) {
                 console.error('[LayoutSlice] removeViewInstanceFromLayout 失败:', error);
                 set({ layoutError: error.message || '移除视图实例失败', layoutLoading: false });
@@ -328,13 +383,14 @@ export function createLayoutSlice(
             set({ layoutLoading: true, layoutError: null });
 
             try {
-                const newSettings = await settingsRepository.update(draft => {
+                // S2: 只调用 settingsRepository.update()，settings 由 ServiceManager 订阅后统一同步
+                await settingsRepository.update(draft => {
                     const layout = draft.layouts?.find(l => l.id === layoutId);
                     if (layout) {
                         layout.viewInstanceIds = viewInstanceIds;
                     }
                 });
-                set({ settings: newSettings, layoutLoading: false });
+                set({ layoutLoading: false });
             } catch (error: any) {
                 console.error('[LayoutSlice] reorderViewInstancesInLayout 失败:', error);
                 set({ layoutError: error.message || '重排视图实例失败', layoutLoading: false });

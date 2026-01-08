@@ -3,21 +3,27 @@
  * SettingsSlice - Zustand Settings 状态切片
  * Role: Store Slice (状态管理)
  * 
+ * 【S2 规范】Settings 真同源
+ * - SettingsRepository 是 settings 的唯一写入口
+ * - 本 Slice 只调用 settingsRepository.update()，不直接写 settings
+ * - settings 由 ServiceManager 订阅 SettingsRepository 后统一同步到 Zustand
+ * - 本 Slice 只管理辅助状态：settingsLoading、settingsError、isTimerWidgetVisible
+ * 
  * Do:
- * - 管理通用 Settings 相关状态
- * - 提供 Settings 相关 actions
+ * - 管理通用 Settings 相关辅助状态（loading/error/临时UI状态）
+ * - 提供 Settings 相关 actions，委托写操作给 SettingsRepository
  * - 委托 IO 给 SettingsRepository
  * 
  * Don't:
  * - 直接进行 IO 操作
+ * - 直接写 settings（禁止 set({ settings: ... })）
  * - 持有 UI 逻辑
  */
 
 import type { StateCreator } from 'zustand';
-import type { ThinkSettings, InputSettings, ViewInstance } from '@/core/types/schema';
+import type { ThinkSettings, InputSettings } from '@/core/types/schema';
 import type { AiSettings } from '@/core/types/ai-schema';
 import type { SettingsRepository } from '@/core/services/SettingsRepository';
-import { generateId } from '@core/utils/array';
 
 // ============== 类型定义 ==============
 
@@ -49,20 +55,11 @@ export interface SettingsSliceActions {
     updateSettings: (mutator: (draft: ThinkSettings) => void) => Promise<void>;
     batchUpdateSettings: (updates: Partial<ThinkSettings>) => Promise<void>;
     
-    // ViewInstance CRUD
-    addViewInstance: (title: string) => Promise<ViewInstance | null>;
-    updateViewInstance: (id: string, updates: Partial<ViewInstance>) => Promise<void>;
-    deleteViewInstance: (id: string) => Promise<void>;
-    
-    // 重排序
-    reorderItems: (items: { id: string }[], type: string) => Promise<void>;
-    
     // 查询方法
     getFloatingTimerEnabled: () => boolean;
     getActiveThemePaths: () => string[];
     getInputSettings: () => InputSettings | undefined;
     getAiSettings: () => AiSettings | undefined;
-    getViewInstances: () => ViewInstance[];
     
     // 状态管理
     setSettingsError: (error: string | null) => void;
@@ -102,12 +99,12 @@ export function createSettingsSlice(
             set({ settingsLoading: true, settingsError: null });
 
             try {
-                const newSettings = await settingsRepository.update(draft => {
+                // S2: 只调用 settingsRepository.update()，settings 由 ServiceManager 订阅后统一同步
+                await settingsRepository.update(draft => {
                     draft.floatingTimerEnabled = enabled;
                 });
-                // 同步更新临时可见状态
+                // 同步更新临时可见状态（只设置辅助状态，不写 settings）
                 set({ 
-                    settings: newSettings, 
                     isTimerWidgetVisible: enabled,
                     settingsLoading: false 
                 });
@@ -142,10 +139,11 @@ export function createSettingsSlice(
             set({ settingsLoading: true, settingsError: null });
 
             try {
-                const newSettings = await settingsRepository.update(draft => {
+                // S2: 只调用 settingsRepository.update()，settings 由 ServiceManager 订阅后统一同步
+                await settingsRepository.update(draft => {
                     draft.inputSettings = { ...draft.inputSettings, ...updates };
                 });
-                set({ settings: newSettings, settingsLoading: false });
+                set({ settingsLoading: false });
             } catch (error: any) {
                 console.error('[SettingsSlice] updateInputSettings 失败:', error);
                 set({ 
@@ -167,10 +165,11 @@ export function createSettingsSlice(
             set({ settingsLoading: true, settingsError: null });
 
             try {
-                const newSettings = await settingsRepository.update(draft => {
+                // S2: 只调用 settingsRepository.update()，settings 由 ServiceManager 订阅后统一同步
+                await settingsRepository.update(draft => {
                     draft.aiSettings = aiSettings;
                 });
-                set({ settings: newSettings, settingsLoading: false });
+                set({ settingsLoading: false });
             } catch (error: any) {
                 console.error('[SettingsSlice] updateAiSettings 失败:', error);
                 set({ 
@@ -189,10 +188,11 @@ export function createSettingsSlice(
             set({ settingsLoading: true, settingsError: null });
 
             try {
-                const newSettings = await settingsRepository.update(draft => {
+                // S2: 只调用 settingsRepository.update()，settings 由 ServiceManager 订阅后统一同步
+                await settingsRepository.update(draft => {
                     draft.activeThemePaths = paths;
                 });
-                set({ settings: newSettings, settingsLoading: false });
+                set({ settingsLoading: false });
             } catch (error: any) {
                 console.error('[SettingsSlice] updateActiveThemePaths 失败:', error);
                 set({ settingsError: error.message || '更新活跃主题路径失败', settingsLoading: false });
@@ -206,7 +206,8 @@ export function createSettingsSlice(
             set({ settingsLoading: true, settingsError: null });
 
             try {
-                const newSettings = await settingsRepository.update(draft => {
+                // S2: 只调用 settingsRepository.update()，settings 由 ServiceManager 订阅后统一同步
+                await settingsRepository.update(draft => {
                     if (!draft.activeThemePaths) {
                         draft.activeThemePaths = [];
                     }
@@ -214,7 +215,7 @@ export function createSettingsSlice(
                         draft.activeThemePaths.push(path);
                     }
                 });
-                set({ settings: newSettings, settingsLoading: false });
+                set({ settingsLoading: false });
             } catch (error: any) {
                 console.error('[SettingsSlice] addActiveThemePath 失败:', error);
                 set({ settingsError: error.message || '添加活跃主题路径失败', settingsLoading: false });
@@ -228,12 +229,13 @@ export function createSettingsSlice(
             set({ settingsLoading: true, settingsError: null });
 
             try {
-                const newSettings = await settingsRepository.update(draft => {
+                // S2: 只调用 settingsRepository.update()，settings 由 ServiceManager 订阅后统一同步
+                await settingsRepository.update(draft => {
                     if (draft.activeThemePaths) {
                         draft.activeThemePaths = draft.activeThemePaths.filter(p => p !== path);
                     }
                 });
-                set({ settings: newSettings, settingsLoading: false });
+                set({ settingsLoading: false });
             } catch (error: any) {
                 console.error('[SettingsSlice] removeActiveThemePath 失败:', error);
                 set({ settingsError: error.message || '移除活跃主题路径失败', settingsLoading: false });
@@ -252,8 +254,9 @@ export function createSettingsSlice(
             set({ settingsLoading: true, settingsError: null });
 
             try {
-                const newSettings = await settingsRepository.update(mutator);
-                set({ settings: newSettings, settingsLoading: false });
+                // S2: 只调用 settingsRepository.update()，settings 由 ServiceManager 订阅后统一同步
+                await settingsRepository.update(mutator);
+                set({ settingsLoading: false });
             } catch (error: any) {
                 console.error('[SettingsSlice] updateSettings 失败:', error);
                 set({ 
@@ -270,10 +273,11 @@ export function createSettingsSlice(
             set({ settingsLoading: true, settingsError: null });
 
             try {
-                const newSettings = await settingsRepository.update(draft => {
+                // S2: 只调用 settingsRepository.update()，settings 由 ServiceManager 订阅后统一同步
+                await settingsRepository.update(draft => {
                     Object.assign(draft, updates);
                 });
-                set({ settings: newSettings, settingsLoading: false });
+                set({ settingsLoading: false });
             } catch (error: any) {
                 console.error('[SettingsSlice] batchUpdateSettings 失败:', error);
                 set({ settingsError: error.message || '批量更新设置失败', settingsLoading: false });
@@ -302,153 +306,9 @@ export function createSettingsSlice(
             return state.settings.aiSettings;
         },
 
-        // ============== ViewInstance CRUD ==============
-
-        addViewInstance: async (title: string): Promise<ViewInstance | null> => {
-            const state = get();
-            if (!state.isInitialized) {
-                console.error('[SettingsSlice] Store 未初始化');
-                return null;
-            }
-
-            set({ settingsLoading: true, settingsError: null });
-
-            try {
-                const newViewInstance: ViewInstance = {
-                    id: generateId('view'),
-                    title,
-                    viewType: 'BlockView',
-                    parentId: null,
-                };
-
-                const newSettings = await settingsRepository.update(draft => {
-                    if (!draft.viewInstances) {
-                        draft.viewInstances = [];
-                    }
-                    draft.viewInstances.push(newViewInstance);
-                });
-                set({ settings: newSettings, settingsLoading: false });
-                return newViewInstance;
-            } catch (error: any) {
-                console.error('[SettingsSlice] addViewInstance 失败:', error);
-                set({ 
-                    settingsError: error.message || '添加视图实例失败',
-                    settingsLoading: false 
-                });
-                return null;
-            }
-        },
-
-        updateViewInstance: async (id: string, updates: Partial<ViewInstance>): Promise<void> => {
-            const state = get();
-            if (!state.isInitialized) {
-                console.error('[SettingsSlice] Store 未初始化');
-                return;
-            }
-
-            set({ settingsLoading: true, settingsError: null });
-
-            try {
-                const newSettings = await settingsRepository.update(draft => {
-                    const idx = draft.viewInstances?.findIndex(v => v.id === id) ?? -1;
-                    if (idx !== -1 && draft.viewInstances) {
-                        draft.viewInstances[idx] = { ...draft.viewInstances[idx], ...updates };
-                    }
-                });
-                set({ settings: newSettings, settingsLoading: false });
-            } catch (error: any) {
-                console.error('[SettingsSlice] updateViewInstance 失败:', error);
-                set({ 
-                    settingsError: error.message || '更新视图实例失败',
-                    settingsLoading: false 
-                });
-            }
-        },
-
-        deleteViewInstance: async (id: string): Promise<void> => {
-            const state = get();
-            if (!state.isInitialized) {
-                console.error('[SettingsSlice] Store 未初始化');
-                return;
-            }
-
-            set({ settingsLoading: true, settingsError: null });
-
-            try {
-                const newSettings = await settingsRepository.update(draft => {
-                    if (draft.viewInstances) {
-                        draft.viewInstances = draft.viewInstances.filter(v => v.id !== id);
-                    }
-                });
-                set({ settings: newSettings, settingsLoading: false });
-            } catch (error: any) {
-                console.error('[SettingsSlice] deleteViewInstance 失败:', error);
-                set({ 
-                    settingsError: error.message || '删除视图实例失败',
-                    settingsLoading: false 
-                });
-            }
-        },
-
-        // ============== 重排序 ==============
-
-        reorderItems: async (items: { id: string }[], type: string): Promise<void> => {
-            const state = get();
-            if (!state.isInitialized) {
-                console.error('[SettingsSlice] Store 未初始化');
-                return;
-            }
-
-            set({ settingsLoading: true, settingsError: null });
-
-            try {
-                const newSettings = await settingsRepository.update(draft => {
-                    if (type === 'layout' && draft.layouts) {
-                        // 根据 items 的顺序重排 layouts
-                        const orderedIds = items.map(i => i.id);
-                        draft.layouts.sort((a, b) => {
-                            const aIdx = orderedIds.indexOf(a.id);
-                            const bIdx = orderedIds.indexOf(b.id);
-                            if (aIdx === -1) return 1;
-                            if (bIdx === -1) return -1;
-                            return aIdx - bIdx;
-                        });
-                    } else if (type === 'group' && draft.groups) {
-                        const orderedIds = items.map(i => i.id);
-                        draft.groups.sort((a, b) => {
-                            const aIdx = orderedIds.indexOf(a.id);
-                            const bIdx = orderedIds.indexOf(b.id);
-                            if (aIdx === -1) return 1;
-                            if (bIdx === -1) return -1;
-                            return aIdx - bIdx;
-                        });
-                    } else if (type === 'viewInstance' && draft.viewInstances) {
-                        const orderedIds = items.map(i => i.id);
-                        draft.viewInstances.sort((a, b) => {
-                            const aIdx = orderedIds.indexOf(a.id);
-                            const bIdx = orderedIds.indexOf(b.id);
-                            if (aIdx === -1) return 1;
-                            if (bIdx === -1) return -1;
-                            return aIdx - bIdx;
-                        });
-                    }
-                });
-                set({ settings: newSettings, settingsLoading: false });
-            } catch (error: any) {
-                console.error('[SettingsSlice] reorderItems 失败:', error);
-                set({ 
-                    settingsError: error.message || '重排序失败',
-                    settingsLoading: false 
-                });
-            }
-        },
-
-        // ============== 查询方法（续） ==============
-
-        getViewInstances: (): ViewInstance[] => {
-            const state = get();
-            return state.settings.viewInstances || [];
-        },
+        // NOTE: ViewInstance CRUD 已移至 ViewInstanceSlice (viAddViewInstance 等)
+        // NOTE: reorderItems 已移至 GroupUseCase
+        // 使用 useCases.viewInstance.* 和 useCases.group.reorderItems
 
         // ============== 状态管理 ==============
 

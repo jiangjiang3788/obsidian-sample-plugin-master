@@ -3,6 +3,12 @@
  * useAppStore - Zustand 应用状态管理
  * Role: Store (状态管理)
  * 
+ * 【S2 规范】Settings 真同源
+ * - SettingsRepository 是 settings 的唯一写入口
+ * - 本 Store 只调用 settingsRepository.update()，不直接写 settings
+ * - settings 由 ServiceManager 订阅 SettingsRepository 后统一同步到 Zustand
+ * - 本 Store 只管理辅助状态：isLoading、error、isInitialized 等
+ * 
  * Do:
  * - 使用 zustand 管理应用状态
  * - 提供清晰的单向数据流：UI -> action -> state
@@ -11,6 +17,7 @@
  * 
  * Don't:
  * - 直接进行 IO 操作
+ * - 直接写 settings（禁止 set({ settings: ... })，除 initialize 外）
  * - 持有 plugin 实例
  */
 
@@ -97,12 +104,13 @@ export function createAppStore(settingsRepository: SettingsRepository) {
                 set({ isLoading: true, error: null });
 
                 try {
-                    const newSettings = await settingsRepository.update(draft => {
+                    // S2: 只调用 settingsRepository.update()，settings 由 ServiceManager 订阅后统一同步
+                    await settingsRepository.update(draft => {
                         const blocks = draft.inputSettings?.blocks || [];
                         const [removed] = blocks.splice(oldIndex, 1);
                         blocks.splice(newIndex, 0, removed);
                     });
-                    set({ settings: newSettings, isLoading: false });
+                    set({ isLoading: false });
                 } catch (error: any) {
                     console.error('useAppStore: Block 重排序失败', error);
                     set({ 

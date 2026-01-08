@@ -331,3 +331,22 @@ export const TABLE_EXPORT_CONFIG: ExportViewConfig = {
         content: { type: 'content' },
     },
 };
+
+// ============== VIEW_DEFAULT_CONFIGS 聚合导出 ==============
+// 用于 store 层获取默认配置，避免 store 层依赖 features 层
+
+import type { ViewName } from '@/core/types/schema';
+
+/**
+ * 视图默认配置映射表
+ * 供 store/slices 使用，避免 store 层直接依赖 features/settings/registry
+ */
+export const VIEW_DEFAULT_CONFIGS: Record<ViewName, any> = {
+    TableView: TABLE_VIEW_DEFAULT_CONFIG,
+    BlockView: BLOCK_VIEW_DEFAULT_CONFIG,
+    ExcelView: EXCEL_VIEW_DEFAULT_CONFIG,
+    TimelineView: TIMELINE_VIEW_DEFAULT_CONFIG,
+    EventTimelineView: EVENT_TIMELINE_VIEW_DEFAULT_CONFIG,
+    StatisticsView: STATISTICS_VIEW_DEFAULT_CONFIG,
+    HeatmapView: HEATMAP_VIEW_DEFAULT_CONFIG,
+};
