@@ -6,7 +6,8 @@ import { App, Modal, Notice } from 'obsidian';
 import { render, unmountComponentAtNode } from 'preact/compat';
 import { useState, useMemo, useEffect } from 'preact/hooks';
 import { container } from 'tsyringe';
-import { useStore, AppStore } from '@/app/AppStore';
+import { AppStore } from '@/app/AppStore';
+import { useZustandAppStore } from '@/app/store/useAppStore';
 import { useDataStore, useInputService, ServicesProvider, Services } from '@/app/AppStoreContext';
 import { DataStore } from '@/core/services/DataStore';
 import { InputService } from '@/core/services/InputService';
@@ -220,7 +221,7 @@ function QuickInputForm({ app, blockId: initialBlockId, context, themeId, onSave
     closeModal: () => void;
     allowBlockSwitch?: boolean;
 }) {
-    const settings = useStore(state => state.settings.inputSettings);
+    const settings = useZustandAppStore(state => state.settings.inputSettings);
     const dataStore = useDataStore();
     const inputService = useInputService();
     const [currentBlockId, setCurrentBlockId] = useState(initialBlockId);

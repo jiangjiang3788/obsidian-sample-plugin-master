@@ -86,12 +86,12 @@ export interface ThemeTreeNodeRowProps {
 
 /**
  * ThemeMatrix 主组件属性
+ * 
+ * ⚠️ P1 重构：不再需要 props 传递 appStore/dataStore
+ * 组件内部通过 useAppStore() / useDataStore() hooks 获取依赖
  */
 export interface ThemeMatrixProps {
-    /** 应用状态存储 */
-    appStore: AppStore;
-    /** 数据存储服务 */
-    dataStore: DataStore;
+    // 无需 props，依赖通过 Context 获取
 }
 
 /**

@@ -1,147 +1,22 @@
 // src/features/settings/ui/components/SettingsTreeView.tsx
+/**
+ * @deprecated 【S5 已移除】Group 功能已在 S5 移除。
+ * 此文件仅保留作参考，禁止使用。
+ * Layout/ViewInstance 现使用扁平列表管理，请使用 LayoutSettings.tsx。
+ * 
+ * 任何尝试使用此组件都会直接抛出异常。
+ */
 /** @jsxImportSource preact */
 import { h, ComponentChild } from 'preact';
-import { useState, useEffect } from 'preact/hooks';
-import { Box, Stack, Typography, IconButton, Tooltip, TextField, Collapse, Button } from '@mui/material';
-import ArrowRightIcon from '@mui/icons-material/ArrowRight';
-import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
-import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
-import DriveFileMoveOutlinedIcon from '@mui/icons-material/DriveFileMoveOutlined';
-import DeleteForeverOutlinedIcon from '@mui/icons-material/DeleteForeverOutlined';
-import ContentCopyIcon from '@mui/icons-material/ContentCopy';
-import type { Group, Groupable } from '@/core/types/schema';
-import { createGroupUseCase } from '@/app/usecases/group.usecase';
-import { MoveItemDialog } from '@shared/ui/composites/dialogs/MoveItemDialog';
 
-export interface TreeItem extends Groupable {
-    name: string;
-    isGroup: boolean;
+const DEPRECATED_ERROR = 'SettingsTreeView is deprecated. Group feature has been removed in S5. Use LayoutSettings instead.';
+
+/**
+ * @deprecated Group feature removed in S5
+ * @throws Error always - this component is disabled
+ */
+export function SettingsTreeView(props: any): never {
+    throw new Error(DEPRECATED_ERROR);
 }
 
-// 这个内部 Node 组件用于显示每一行
-function Node({ node, children, ...props }: { node: TreeItem, children: ComponentChild } & any) {
-    const { onUpdateItemName, onDeleteItem, onOpenMoveDialog, onDuplicateItem } = props;
-    const [isEditing, setIsEditing] = useState(false);
-    const [name, setName] = useState(node.name);
-
-    useEffect(() => { setName(node.name); }, [node.name]);
-
-    const handleNameBlur = () => {
-        if (name.trim() && name !== node.name) { onUpdateItemName(node, name); }
-        else { setName(node.name); }
-        setIsEditing(false);
-    };
-    const handleKeyDown = (e: KeyboardEvent) => {
-        if (e.key === 'Enter') (e.target as HTMLInputElement).blur();
-        if (e.key === 'Escape') { setName(node.name); setIsEditing(false); }
-    };
-
-    return (
-        <Box>
-            <Stack
-                direction="row"
-                alignItems="center"
-                sx={{
-                    pl: props.level * 2, pr: 1, minHeight: 48,
-                    '&:hover .actions': { opacity: 1 },
-                    bgcolor: props.isExpanded && !node.isGroup ? 'action.hover' : 'transparent',
-                    borderTopLeftRadius: props.isExpanded && !node.isGroup ? 8 : 0,
-                    borderTopRightRadius: props.isExpanded && !node.isGroup ? 8 : 0,
-                }}
-            >
-                <IconButton size="small" onClick={props.onToggle} sx={{ mr: 0.5 }}>
-                    {props.isExpanded ? <ArrowDropDownIcon /> : <ArrowRightIcon />}
-                </IconButton>
-
-                {isEditing ? (
-                    <TextField autoFocus size="small" variant="standard" value={name} onChange={e => setName((e.target as HTMLInputElement).value)} onBlur={handleNameBlur} onKeyDown={handleKeyDown} sx={{ flexGrow: 1 }} />
-                ) : (
-                    <Typography onClick={props.onToggle} onDblClick={() => setIsEditing(true)} title="单击展开/折叠，双击重命名" sx={{ flexGrow: 1, cursor: 'pointer', fontWeight: node.isGroup ? 600 : 500, color: node.isGroup ? 'primary.main' : 'text.primary' }}>
-                        {node.name}
-                    </Typography>
-                )}
-
-                <Stack direction="row" className="actions" sx={{ opacity: 0, transition: 'opacity 0.2s' }}>
-                    <Tooltip title="复制"><span><IconButton size="small" onClick={() => onDuplicateItem(node)}><ContentCopyIcon fontSize="small" /></IconButton></span></Tooltip>
-                    <Tooltip title="移动到..."><IconButton size="small" onClick={() => onOpenMoveDialog(node)}><DriveFileMoveOutlinedIcon fontSize="small" /></IconButton></Tooltip>
-                    <Tooltip title="删除"><IconButton size="small" onClick={() => onDeleteItem(node)} sx={{ color: 'text.secondary', '&:hover': { color: 'error.main' } }}><DeleteForeverOutlinedIcon fontSize="small" /></IconButton></Tooltip>
-                </Stack>
-            </Stack>
-            {children}
-        </Box>
-    );
-}
-
-// [P1 迁移] 移除 appStore prop，使用 UseCase 层
-export function SettingsTreeView({ groups, items, allGroups, parentId, level = 0, renderItem, onAddItem, onAddGroup, onDeleteItem, onUpdateItemName, onDuplicateItem }: any) {
-    // 创建 GroupUseCase 实例（通过 DI 容器获取 AppStore，不依赖 React Context）
-    const groupUseCase = createGroupUseCase();
-    
-    // 这个状态管理确保所有节点初次加载时都是折叠的
-    const [collapsedState, setCollapsedState] = useState<Record<string, boolean>>(() => {
-        const initialState: Record<string, boolean> = {};
-        [...groups, ...items].forEach(node => { initialState[node.id] = true; });
-        return initialState;
-    });
-    const [movingItem, setMovingItem] = useState<TreeItem | null>(null);
-
-    const toggleCollapse = (itemId: string) => setCollapsedState(prev => ({ ...prev, [itemId]: !prev[itemId] }));
-    
-    // [P1] 通过 UseCase 层调用 moveItem，而不是直接调用 appStore
-    const handleMoveConfirm = async (targetParentId: string | null) => {
-        if (movingItem) {
-            await groupUseCase.moveItem(movingItem.id, targetParentId);
-        }
-    };
-
-    const childGroups = groups.filter(g => g.parentId === parentId);
-    const childItems = items.filter(i => i.parentId === parentId);
-
-    return (
-        <Box>
-            {childGroups.map((group) => {
-                const treeItem: TreeItem = { ...group, isGroup: true };
-                const isExpanded = !collapsedState[group.id];
-                return (
-                    <Box key={group.id} sx={{ borderBottom: '1px solid rgba(0,0,0,0.08)' }}>
-                        <Node node={treeItem} isExpanded={isExpanded} level={level} onToggle={() => toggleCollapse(group.id)} onUpdateItemName={onUpdateItemName} onDeleteItem={onDeleteItem} onOpenMoveDialog={setMovingItem} onDuplicateItem={onDuplicateItem}>
-                            {/* [PERFORMANCE] unmountOnExit 确保折叠时，内部的递归组件被完全卸载 */}
-                            <Collapse in={isExpanded} timeout="auto" unmountOnExit>
-                                {/* [P1] 递归调用无需再传递 appStore，使用 useUseCases hook */}
-                                <SettingsTreeView {...{ groups, items, allGroups, renderItem, onAddItem, onAddGroup, onDeleteItem, onUpdateItemName, onDuplicateItem }} parentId={group.id} level={level + 1} />
-                            </Collapse>
-                        </Node>
-                    </Box>
-                );
-            })}
-
-            {childItems.map((item) => {
-                const isExpanded = !collapsedState[item.id];
-                const treeItem: TreeItem = { ...item, isGroup: false, name: (item as any).name || (item as any).title };
-                return (
-                    <Box key={item.id} sx={{ borderBottom: '1px solid rgba(0,0,0,0.08)' }}>
-                        <Node node={treeItem} isExpanded={isExpanded} level={level} onToggle={() => toggleCollapse(item.id)} onUpdateItemName={onUpdateItemName} onDeleteItem={onDeleteItem} onOpenMoveDialog={setMovingItem} onDuplicateItem={onDuplicateItem}>
-                            {/* [PERFORMANCE] unmountOnExit 确保折叠时，内部的编辑器组件被完全卸载 */}
-                            <Collapse in={isExpanded} timeout="auto" unmountOnExit>
-                                <Box sx={{ bgcolor: 'action.hover', borderTop: '1px solid rgba(0,0,0,0.05)' }}>
-                                    {renderItem(item)}
-                                </Box>
-                            </Collapse>
-                        </Node>
-                    </Box>
-                );
-            })}
-
-            {level === 0 && (
-                <Stack direction="row" spacing={1} sx={{ mt: 2, pl: 1 }}>
-                    <Button onClick={() => onAddItem(parentId)} startIcon={<AddCircleOutlineIcon />} size="small">添加新项</Button>
-                    <Button onClick={() => onAddGroup(parentId)} startIcon={<AddCircleOutlineIcon />} size="small">添加分组</Button>
-                </Stack>
-            )}
-
-            {movingItem && (
-                <MoveItemDialog isOpen={!!movingItem} onClose={() => setMovingItem(null)} itemToMove={movingItem} groups={allGroups} onConfirm={handleMoveConfirm} />
-            )}
-        </Box>
-    );
-}
+// ============== 原始实现已移除，详见 S5 迁移说明 ==============

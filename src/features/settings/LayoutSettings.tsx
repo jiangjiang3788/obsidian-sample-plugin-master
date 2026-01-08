@@ -1,20 +1,37 @@
 // src/features/settings/ui/LayoutSettings.tsx
 /** @jsxImportSource preact */
+/**
+ * LayoutSettings - 布局设置页面
+ * 
+ * 【S5 术语统一】
+ * - 所有 Layout 和 View 写操作统一通过 useCases.layout.*
+ * - 禁止直接调用 useCases.viewInstance.*
+ * - 禁止直接调用 store slice 的 CRUD/reorder
+ * 
+ * 【已禁用】Group 功能
+ * - 不再渲染/引用任何 group 组件
+ * - 不再调用 useCases.group.*
+ * - Layout/View 作为扁平列表管理
+ */
 import { h } from 'preact';
-import { useStore, AppStore } from '@/app/AppStore';
+import { useZustandAppStore } from '@/app/store/useAppStore';
 import { useUseCases, type UseCases } from '@/app/usecases';
-import { useDataStore } from '@/app/AppStoreContext';
-// [MODIFIED] Import Autocomplete
-import { Box, Stack, Typography, TextField, Checkbox, FormControlLabel, Tooltip, Chip, Radio, RadioGroup as MuiRadioGroup, Autocomplete, Button, Menu, MenuItem } from '@mui/material';
-import type { Layout } from '@/core/types/schema';
+import { Box, Stack, Typography, TextField, Checkbox, FormControlLabel, Tooltip, Chip, Radio, RadioGroup as MuiRadioGroup, Autocomplete, Button, Menu, MenuItem, IconButton } from '@mui/material';
+import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
+import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
+import ContentCopyIcon from '@mui/icons-material/ContentCopy';
+import DragIndicatorIcon from '@mui/icons-material/DragIndicator';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import ExpandLessIcon from '@mui/icons-material/ExpandLess';
+import type { Layout, ViewInstance } from '@/core/types/schema';
 import { useMemo, useCallback, useState } from 'preact/hooks';
-import { SimpleSelect } from '@shared/ui/composites/SimpleSelect';
-import { SettingsTreeView, TreeItem } from './SettingsTreeView';
 import { App } from 'obsidian';
-import { useSettingsManager } from '@core/theme-matrix/useSettingsManager';
 import { DndContext, closestCenter } from '@dnd-kit/core';
+import { useSortable, SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { arrayMove } from '@core/utils/array';
 import { ModuleSettingsModal } from '@/features/settings/ModuleSettingsModal';
+import { NamePromptModal } from '@shared/ui/composites/dialogs/NamePromptModal';
+import { DEFAULT_NAMES } from '@/core/types/constants';
 
 const PERIOD_OPTIONS = ['年', '季', '月', '周', '天'].map(v => ({ value: v, label: v }));
 const DISPLAY_MODE_OPTIONS = [{ value: 'list', label: '列表' }, { value: 'grid', label: '网格' }];
@@ -31,21 +48,20 @@ const AlignedRadioGroup = ({ label, options, selectedValue, onChange }: any) => 
     </Stack>
 );
 
-// ⚠️ P1: 使用 useCases 替代 appStore，但仍需要 appStore 用于 ModuleSettingsModal 兼容
-function LayoutEditor({ layout, useCases, appStore }: { layout: Layout, useCases: UseCases, appStore: AppStore }) {
-    const allViews = useStore(state => state.settings.viewInstances);
+// Layout 编辑器组件
+function LayoutEditor({ layout, useCases }: { layout: Layout, useCases: UseCases }) {
+    const allViews = useZustandAppStore(state => state.settings.viewInstances);
     const [inputValue, setInputValue] = useState('');
     const [contextMenu, setContextMenu] = useState<{ mouseX: number; mouseY: number; viewId: string; viewTitle: string } | null>(null);
     const [settingsModalOpen, setSettingsModalOpen] = useState(false);
-    const [selectedViewForSettings, setSelectedViewForSettings] = useState<any>(null);
+    const [selectedViewForSettings, setSelectedViewForSettings] = useState<ViewInstance | null>(null);
 
     const handleUpdate = useCallback((updates: Partial<Layout>) => {
-        // ⚠️ P1: 通过 UseCase 层调用
         useCases.layout.updateLayout(layout.id, updates);
     }, [layout.id, useCases]);
 
     const selectedViews = useMemo(() =>
-        layout.viewInstanceIds.map(id => allViews.find(v => v.id === id)).filter(Boolean),
+        layout.viewInstanceIds.map(id => allViews.find(v => v.id === id)).filter(Boolean) as ViewInstance[],
         [layout.viewInstanceIds, allViews]
     );
     const availableViews = useMemo(() =>
@@ -88,9 +104,9 @@ function LayoutEditor({ layout, useCases, appStore }: { layout: Layout, useCases
 
     const handleCreateNewView = useCallback(async (viewName: string) => {
         try {
-            // ⚠️ P1: 通过 UseCase 层调用
-            await useCases.settings.addViewInstance(viewName);
-            setInputValue(''); // 清空输入
+            // S5 术语统一: 通过 useCases.layout.addView 创建
+            await useCases.layout.addView(viewName);
+            setInputValue('');
         } catch (error) {
             console.error('创建新视图失败:', error);
         }
@@ -105,11 +121,11 @@ function LayoutEditor({ layout, useCases, appStore }: { layout: Layout, useCases
             await handleCreateNewView(newValue.newName);
         }
         
-        setInputValue(''); // 重置输入
+        setInputValue('');
     }, [addView, handleCreateNewView]);
 
     // 右键菜单处理
-    const handleChipRightClick = useCallback((event: MouseEvent, view: any) => {
+    const handleChipRightClick = useCallback((event: MouseEvent, view: ViewInstance) => {
         event.preventDefault();
         setContextMenu({
             mouseX: event.clientX - 2,
@@ -138,8 +154,8 @@ function LayoutEditor({ layout, useCases, appStore }: { layout: Layout, useCases
         if (contextMenu) {
             const newName = prompt('请输入新的视图名称', contextMenu.viewTitle);
             if (newName && newName.trim()) {
-                // ⚠️ P1: 通过 UseCase 层调用
-                useCases.settings.updateViewInstance(contextMenu.viewId, { title: newName.trim() });
+                // S5 术语统一: 通过 useCases.layout.updateView 更新
+                useCases.layout.updateView(contextMenu.viewId, { title: newName.trim() });
             }
         }
         handleContextMenuClose();
@@ -156,9 +172,6 @@ function LayoutEditor({ layout, useCases, appStore }: { layout: Layout, useCases
         setSettingsModalOpen(false);
         setSelectedViewForSettings(null);
     }, []);
-
-    // 获取 dataStore 用于 ModuleSettingsModal
-    const dataStore = useDataStore();
 
     return (
         <Stack spacing={2} sx={{ p: '8px 16px 16px 50px' }}>
@@ -192,9 +205,8 @@ function LayoutEditor({ layout, useCases, appStore }: { layout: Layout, useCases
                     </Tooltip>
                 ))}
                 
-                {/* [CORE CHANGE] Enhanced Autocomplete for adding/creating views */}
                 <Autocomplete
-                    value={null} // Always reset after selection
+                    value={null}
                     inputValue={inputValue}
                     onInputChange={(_, newInputValue) => setInputValue(newInputValue)}
                     options={autocompleteOptions}
@@ -206,7 +218,6 @@ function LayoutEditor({ layout, useCases, appStore }: { layout: Layout, useCases
                 />
             </Stack>
 
-            {/* 右键上下文菜单 */}
             <Menu
                 open={contextMenu !== null}
                 onClose={handleContextMenuClose}
@@ -222,76 +233,188 @@ function LayoutEditor({ layout, useCases, appStore }: { layout: Layout, useCases
                 <MenuItem onClick={handleViewRemove}>移除</MenuItem>
             </Menu>
 
-            {/* [P1] 视图设置模态框 - 已迁移到 UseCase 层，无需 appStore */}
             {settingsModalOpen && selectedViewForSettings && (
                 <ModuleSettingsModal
                     isOpen={settingsModalOpen}
                     onClose={handleSettingsModalClose}
                     module={selectedViewForSettings}
-                    dataStore={dataStore}
                 />
             )}
         </Stack>
     );
 }
 
-// ⚠️ P1: 保留 appStore 参数用于兼容性，但优先使用 useCases
-export function LayoutSettings({ app, appStore }: { app: App, appStore: AppStore }) {
+// 可排序的 Layout 项
+function SortableLayoutItem({ layout, useCases, isExpanded, onToggle }: { 
+    layout: Layout; 
+    useCases: UseCases; 
+    isExpanded: boolean;
+    onToggle: () => void;
+}) {
+    const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: layout.id });
+
+    const style = {
+        transform: transform ? `translate3d(${transform.x}px, ${transform.y}px, 0)` : undefined,
+        transition,
+    };
+
+    const handleDelete = useCallback(() => {
+        if (confirm(`确认删除布局 "${layout.name}" 吗？\n相关的引用可能会失效。`)) {
+            useCases.layout.deleteLayout(layout.id);
+        }
+    }, [layout, useCases]);
+
+    const handleDuplicate = useCallback(() => {
+        useCases.layout.duplicateLayout(layout.id);
+    }, [layout.id, useCases]);
+
+    const handleRename = useCallback(() => {
+        const newName = prompt('请输入新的布局名称', layout.name);
+        if (newName && newName.trim()) {
+            useCases.layout.updateLayout(layout.id, { name: newName.trim() });
+        }
+    }, [layout, useCases]);
+
+    // 提取 dnd-kit 属性，避免类型冲突（使用类型断言处理 Preact 兼容性）
+    const dragHandleProps = { ...attributes, ...listeners } as any;
+
+    return (
+        <Box ref={setNodeRef as any} style={style} sx={{ borderBottom: '1px solid rgba(0,0,0,0.08)' }}>
+            <Stack direction="row" alignItems="center" sx={{ p: 1 }}>
+                <div 
+                    {...dragHandleProps}
+                    style={{ 
+                        cursor: 'grab', 
+                        marginRight: 8, 
+                        display: 'inline-flex', 
+                        alignItems: 'center',
+                        padding: 4,
+                        borderRadius: 4
+                    }}
+                >
+                    <DragIndicatorIcon fontSize="small" />
+                </div>
+                
+                <IconButton size="small" onClick={onToggle} sx={{ mr: 1 }}>
+                    {isExpanded ? <ExpandLessIcon fontSize="small" /> : <ExpandMoreIcon fontSize="small" />}
+                </IconButton>
+
+                <Typography 
+                    sx={{ flex: 1, cursor: 'pointer' }} 
+                    onClick={handleRename}
+                >
+                    {layout.name}
+                </Typography>
+
+                <Tooltip title="复制">
+                    <IconButton size="small" onClick={handleDuplicate}>
+                        <ContentCopyIcon fontSize="small" />
+                    </IconButton>
+                </Tooltip>
+
+                <Tooltip title="删除">
+                    <IconButton size="small" onClick={handleDelete} color="error">
+                        <DeleteOutlineIcon fontSize="small" />
+                    </IconButton>
+                </Tooltip>
+            </Stack>
+
+            {isExpanded && (
+                <LayoutEditor layout={layout} useCases={useCases} />
+            )}
+        </Box>
+    );
+}
+
+/**
+ * LayoutSettings - 布局设置主组件
+ * 
+ * 【已禁用】Group 功能
+ * - 不再使用 SettingsTreeView（包含 group 逻辑）
+ * - 使用扁平 Layout 列表 + 拖拽排序
+ */
+export function LayoutSettings({ app }: { app: App }) {
     const useCases = useUseCases();
-    const layouts = useStore(state => state.settings.layouts);
-    const allGroups = useStore(state => state.settings.groups);
-    const layoutGroups = useMemo(() => allGroups.filter(g => g.type === 'layout'), [allGroups]);
+    const layouts = useZustandAppStore(state => state.settings.layouts);
+    const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
 
-    const manager = useSettingsManager({ app, appStore, type: 'layout', itemNoun: '布局' });
+    // 添加新布局（无 parentId，扁平列表）
+    const onAddLayout = useCallback(() => {
+        new NamePromptModal(
+            app,
+            `创建新布局`,
+            `请输入新布局的名称...`,
+            DEFAULT_NAMES.NEW_LAYOUT,
+            (newName) => {
+                // S5: 通过 useCases.layout 创建，parentId = null
+                useCases.layout.addLayout(newName, null);
+            }
+        ).open();
+    }, [app, useCases]);
 
-    const itemsAsTreeItems: TreeItem[] = useMemo(() => layouts.map(l => ({
-        ...l,
-        name: l.name,
-        isGroup: false,
-    })), [layouts]);
+    const toggleExpand = useCallback((id: string) => {
+        setExpandedIds(prev => {
+            const next = new Set(prev);
+            if (next.has(id)) {
+                next.delete(id);
+            } else {
+                next.add(id);
+            }
+            return next;
+        });
+    }, []);
 
-    const handleDragEnd = (event: any) => {
+    // 拖拽排序处理（扁平列表，无 group）
+    const handleDragEnd = useCallback((event: any) => {
         const { active, over } = event;
         if (active && over && active.id !== over.id) {
-            const activeItem = itemsAsTreeItems.find(i => i.id === active.id) || layoutGroups.find(g => g.id === active.id);
-            const overItem = itemsAsTreeItems.find(i => i.id === over.id) || layoutGroups.find(g => g.id === over.id);
+            const oldIndex = layouts.findIndex(l => l.id === active.id);
+            const newIndex = layouts.findIndex(l => l.id === over.id);
 
-                if (activeItem && overItem && activeItem.parentId === overItem.parentId) {
-                    const siblings = [...layoutGroups, ...itemsAsTreeItems].filter(i => i.parentId === activeItem.parentId);
-                    const oldIndex = siblings.findIndex(i => i.id === active.id);
-                    const newIndex = siblings.findIndex(i => i.id === over.id);
-
-                    if (oldIndex !== -1 && newIndex !== -1) {
-                        const reorderedSiblings = arrayMove(siblings, oldIndex, newIndex);
-                        // ⚠️ P1: 通过 UseCase 层调用
-                        useCases.settings.reorderItems(reorderedSiblings, 'isGroup' in activeItem && activeItem.isGroup ? 'group' : 'layout');
-                    }
-                }
+            if (oldIndex !== -1 && newIndex !== -1) {
+                const reorderedLayouts = arrayMove(layouts, oldIndex, newIndex);
+                const orderedIds = reorderedLayouts.map(l => l.id);
+                // S5: 通过 useCases.layout.reorderLayouts 排序
+                useCases.layout.reorderLayouts(orderedIds);
+            }
         }
-    };
+    }, [layouts, useCases]);
+
+    const layoutIds = useMemo(() => layouts.map(l => l.id), [layouts]);
 
     return (
         <Box sx={{ maxWidth: '900px', mx: 'auto' }}>
-            <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 2 }}>
+            <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 2 }}>
                 <Typography variant="h6">管理布局</Typography>
+                <Button 
+                    onClick={onAddLayout} 
+                    startIcon={<AddCircleOutlineIcon />} 
+                    variant="outlined"
+                    size="small"
+                >
+                    添加布局
+                </Button>
             </Stack>
 
             <DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-                <SettingsTreeView
-                    groups={layoutGroups}
-                    items={itemsAsTreeItems}
-                    allGroups={layoutGroups}
-                    parentId={null}
-                    appStore={appStore}
-                    renderItem={(l: Layout) => <LayoutEditor layout={l} useCases={useCases} appStore={appStore} />}
-                    onAddItem={manager.onAddItem}
-                    onAddGroup={manager.onAddGroup}
-                    onDeleteItem={manager.onDeleteItem}
-                    onUpdateItemName={manager.onUpdateItemName}
-                    onMoveItem={manager.onMoveItem}
-                    onDuplicateItem={manager.onDuplicateItem}
-                />
+                <SortableContext items={layoutIds} strategy={verticalListSortingStrategy}>
+                    {layouts.map(layout => (
+                        <SortableLayoutItem
+                            key={layout.id}
+                            layout={layout}
+                            useCases={useCases}
+                            isExpanded={expandedIds.has(layout.id)}
+                            onToggle={() => toggleExpand(layout.id)}
+                        />
+                    ))}
+                </SortableContext>
             </DndContext>
+
+            {layouts.length === 0 && (
+                <Typography color="text.secondary" sx={{ textAlign: 'center', py: 4 }}>
+                    暂无布局，点击"添加布局"创建第一个
+                </Typography>
+            )}
         </Box>
     );
 }

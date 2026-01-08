@@ -6,7 +6,7 @@ import { Stack, Typography, FormControlLabel, Radio, RadioGroup, Box, Button, Ch
 import type { ViewEditorProps } from './registry';
 import { SimpleSelect } from '@shared/ui/composites/SimpleSelect';
 import { ListEditor } from '@shared/ui/composites/form/ListEditor';
-import { useStore } from '@/app/AppStore';
+import { useZustandAppStore } from '@/app/store/useAppStore';
 import { useMemo } from 'preact/hooks';
 import { LEVEL_SYSTEM_PRESETS } from '@core/utils/levelingSystem';
 import { HEATMAP_VIEW_DEFAULT_CONFIG } from '@core/config/viewConfigs';
@@ -18,7 +18,7 @@ export { HEATMAP_VIEW_DEFAULT_CONFIG as DEFAULT_CONFIG } from '@core/config/view
 
 export function HeatmapViewEditor({ value, onChange, module, dataStore }: ViewEditorProps) {
     const config = { ...HEATMAP_VIEW_DEFAULT_CONFIG, ...value };
-    const allBlocks = useStore(state => state.settings.inputSettings.blocks);
+    const allBlocks = useZustandAppStore(state => state.settings.inputSettings?.blocks) ?? [];
 
     const blockOptions = useMemo(() => 
         allBlocks.map(b => ({ value: b.id, label: b.name })), 

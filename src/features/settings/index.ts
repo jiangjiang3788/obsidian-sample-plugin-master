@@ -61,10 +61,13 @@ export interface SettingsDependencies {
  * Settings 初始化函数
  * 原：export function setup(deps: SettingsDependencies)
  * 这里重命名为 setupSettings，避免和 Dashboard 的 setup 冲突
+ * 
+ * ⚠️ P1 重构：SettingsTab 不再需要单独传递 dataStore
+ * 所有依赖通过 plugin 实例获取，再通过 ServicesProvider 注入 Context
  */
 export function setupSettings(deps: SettingsDependencies): void {
-  // SettingsTab 构造函数不变，它可以通过 plugin 实例访问到 appStore
-  deps.plugin.addSettingTab(new SettingsTab(deps.app, deps.plugin, deps.dataStore));
+  // SettingsTab 通过 plugin 实例获取所有依赖
+  deps.plugin.addSettingTab(new SettingsTab(deps.app, deps.plugin));
 }
 
 /* ========================================================================== */

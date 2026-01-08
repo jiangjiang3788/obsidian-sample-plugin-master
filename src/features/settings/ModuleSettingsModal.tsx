@@ -1,26 +1,33 @@
 // src/features/dashboard/ui/ModuleSettingsModal.tsx
 /** @jsxImportSource preact */
+/**
+ * 【S5 术语统一】
+ * - 所有 View 写操作统一通过 useCases.layout.*
+ * - 禁止直接 import viewInstance.usecase
+ */
 import { h } from 'preact';
 import { useMemo } from 'preact/hooks';
 import { FormControlLabel, Checkbox } from '@mui/material';
 import { VIEW_OPTIONS, ViewName, getAllFields } from '@/core/types/schema';
 import type { ViewInstance } from '@/core/types/schema';
 import { VIEW_EDITORS } from '@features/settings/registry';
-import type { DataStore } from '@/core/services/DataStore';
-import { useStore } from '@/app/AppStore';
-import { createViewInstanceUseCase } from '@/app/usecases/viewInstance.usecase';
+import { useZustandAppStore } from '@/app/store/useAppStore';
+import { useDataStore } from '@/app/AppStoreContext';
+import { useUseCases } from '@/app/usecases';
 import { SimpleSelect } from '@shared/ui/composites/SimpleSelect';
 import { RuleBuilder } from '@features/settings/RuleBuilder';
 import { Modal } from '@shared/ui/primitives/Modal';
 import { FormField, FieldManager, useSaveHandler } from '@shared/index';
 
-// [P1 迁移] 重构后的视图设置编辑器组件 - 使用 UseCase 层
-function ViewInstanceEditor({ vi, dataStore }: { vi: ViewInstance, dataStore: DataStore }) {
-    // 创建 ViewInstanceUseCase 实例（通过 DI 容器获取 AppStore，不依赖 React Context）
-    const viewInstanceUseCase = createViewInstanceUseCase();
+// [S5 术语统一] 视图设置编辑器组件 - 通过 useCases.layout 调用
+function ViewInstanceEditor({ vi }: { vi: ViewInstance }) {
+    // 从 Context 获取 DataStore
+    const dataStore = useDataStore();
+    // S5: 通过 useUseCases 获取 useCases.layout
+    const useCases = useUseCases();
     
     // 从store中获取最新的viewInstance状态
-    const currentVi = useStore(state => state.settings.viewInstances.find(v => v.id === vi.id)) || vi;
+    const currentVi = useZustandAppStore(state => state.settings.viewInstances.find(v => v.id === vi.id)) || vi;
     const fieldOptions = useMemo(() => getAllFields(dataStore?.queryItems() || []), [dataStore]);
     const EditorComponent = VIEW_EDITORS[currentVi.viewType];
 
@@ -30,9 +37,9 @@ function ViewInstanceEditor({ vi, dataStore }: { vi: ViewInstance, dataStore: Da
         return currentVi.viewConfig || {};
     }, [currentVi.viewConfig]);
 
-    // [P1] 通过 UseCase 层调用 updateViewInstance
+    // [S5 术语统一] 通过 useCases.layout.updateView 更新
     const handleUpdate = (updates: Partial<ViewInstance>) => {
-        viewInstanceUseCase.updateViewInstance(currentVi.id, updates);
+        useCases.layout.updateView(currentVi.id, updates);
     };
 
     // 准备选项数据
@@ -186,13 +193,12 @@ interface Props {
     isOpen: boolean;
     onClose: () => void;
     module: ViewInstance;
-    dataStore: DataStore;
 }
 
-// [P1 迁移] 移除 appStore prop，使用 UseCase 层
-export function ModuleSettingsModal({ isOpen, onClose, module, dataStore }: Props) {
+// [P1 迁移] 移除 appStore 和 dataStore props，内部获取
+export function ModuleSettingsModal({ isOpen, onClose, module }: Props) {
     // 从store中获取最新的模块状态
-    const currentModule = useStore(state => state.settings.viewInstances.find(v => v.id === module.id)) || module;
+    const currentModule = useZustandAppStore(state => state.settings.viewInstances.find(v => v.id === module.id)) || module;
 
     // 使用统一的保存处理模式
     const handleSave = useSaveHandler(async () => {
@@ -214,7 +220,7 @@ export function ModuleSettingsModal({ isOpen, onClose, module, dataStore }: Prop
             saveButtonText="保存设置"
             size="large"
         >
-            <ViewInstanceEditor vi={currentModule} dataStore={dataStore} />
+            <ViewInstanceEditor vi={currentModule} />
         </Modal>
     );
 }

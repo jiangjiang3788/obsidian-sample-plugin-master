@@ -8,7 +8,7 @@
  */
 import { h } from 'preact';
 import { useStore } from '@/app//AppStore';
-import { useUseCases } from '@/app/AppStoreContext';
+import { useUseCases, useAppStore, useDataStore } from '@/app/AppStoreContext';
 import { 
     Box, Typography, TextField, Button, Stack 
 } from '@mui/material';
@@ -40,7 +40,11 @@ import { useThemeMatrixEditor } from './useThemeMatrixEditor';
 import { useBatchOperations, type BatchOperation } from './useBatchOperations';
 
 // 主组件
-export function ThemeMatrix({ appStore, dataStore }: ThemeMatrixProps) {
+// ⚠️ P1 重构：不再通过 props 传递 appStore/dataStore，改为通过 Context hooks 获取
+export function ThemeMatrix() {
+    // 通过 Context hooks 获取依赖
+    const appStore = useAppStore();
+    const dataStore = useDataStore();
     // ⚠️ P1: 获取 useCases 用于状态管理
     const useCases = useUseCases();
     const { blocks, themes, overrides } = useStore(state => state.settings.inputSettings);
@@ -68,14 +72,29 @@ export function ThemeMatrix({ appStore, dataStore }: ThemeMatrixProps) {
     const { executeBatchOperation, isProcessing } = useBatchOperations({
         onOperationComplete: clearSelection,
     });
-    const themeService = useMemo(() => new ThemeMatrixService({ appStore, themeManager }), [appStore, themeManager]);
     
-    // 主题扫描服务
+    // ThemeMatrixService - 使用新的配置格式
+    const themeService = useMemo(() => new ThemeMatrixService({
+        getSettings: () => appStore.getState().settings,
+        writeOps: {
+            addTheme: (path: string) => { useCases.theme.addTheme(path); },
+            updateTheme: (themeId: string, updates: any) => { useCases.theme.updateTheme(themeId, updates); },
+            deleteTheme: (themeId: string) => { useCases.theme.deleteTheme(themeId); },
+            deleteOverride: async (blockId: string, themeId: string) => { await useCases.theme.deleteOverride(blockId, themeId); },
+            upsertOverride: async (override: any) => { await useCases.theme.upsertOverride(override); },
+        },
+        themeManager,
+    }), [appStore, useCases, themeManager]);
+    
+    // 主题扫描服务 - 使用新的配置格式
     const themeScanService = useMemo(() => new ThemeScanService({ 
-        appStore, 
+        getSettings: () => appStore.getState().settings,
+        writeOps: {
+            addTheme: (path: string) => { useCases.theme.addTheme(path); },
+        },
         dataStore, 
-        themeManager 
-    }), [appStore, dataStore, themeManager]);
+        themeManager,
+    }), [appStore, useCases, dataStore, themeManager]);
     
     // 获取扩展的主题信息
     const extendedThemes = useMemo(() => {

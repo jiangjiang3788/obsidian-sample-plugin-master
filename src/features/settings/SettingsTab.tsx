@@ -11,8 +11,6 @@ import { theme as baseTheme } from '@shared/styles/mui-theme';
 
 import { LayoutSettings } from './LayoutSettings';
 import { InputSettings } from './InputSettings';
-import { AppStore } from '@/app/AppStore';
-import { DataStore } from '@/core/services/DataStore';
 import { GeneralSettings } from './GeneralSettings';
 import { AiSettings } from './AiSettings';
 import { ServicesProvider, type Services } from '@/app/AppStoreContext';
@@ -30,7 +28,7 @@ function TabPanel(props: { children?: any; value: number; index: number; }) {
     );
 }
 
-function SettingsRoot({ app, appStore, dataStore }: { app: App, appStore: AppStore, dataStore: DataStore }) {
+function SettingsRoot({ app }: { app: App }) {
     const [tabIndex, setTabIndex] = useLocalStorage(LOCAL_STORAGE_KEYS.SETTINGS_TABS, 0);
 
     return (
@@ -45,9 +43,9 @@ function SettingsRoot({ app, appStore, dataStore }: { app: App, appStore: AppSto
                         <Tab label="AI" {...a11yProps(3)} />
                     </Tabs>
                 </Box>
-                <TabPanel value={tabIndex} index={0}><InputSettings appStore={appStore} dataStore={dataStore} /></TabPanel>
-                <TabPanel value={tabIndex} index={1}><LayoutSettings app={app} appStore={appStore} /></TabPanel>
-                <TabPanel value={tabIndex} index={2}><GeneralSettings appStore={appStore} /></TabPanel>
+                <TabPanel value={tabIndex} index={0}><InputSettings /></TabPanel>
+                <TabPanel value={tabIndex} index={1}><LayoutSettings app={app} /></TabPanel>
+                <TabPanel value={tabIndex} index={2}><GeneralSettings /></TabPanel>
                 <TabPanel value={tabIndex} index={3}><AiSettings /></TabPanel>
             </Box>
         </ThemeProvider>
@@ -58,10 +56,10 @@ export class SettingsTab extends PluginSettingTab {
     id: string;
     private services: Services;
 
-    constructor(public app: App, private plugin: ThinkPlugin, private dataStore: DataStore) {
+    constructor(public app: App, private plugin: ThinkPlugin) {
         super(app, plugin);
         this.id = plugin.manifest.id;
-        // 初始化 services 对象
+        // 初始化 services 对象，所有依赖从 plugin 获取
         this.services = {
             appStore: plugin.appStore,
             dataStore: plugin.dataStore,
@@ -75,7 +73,7 @@ export class SettingsTab extends PluginSettingTab {
         containerEl.empty();
         render(
             <ServicesProvider services={this.services}>
-                <SettingsRoot app={this.app} appStore={this.plugin.appStore} dataStore={this.dataStore} />
+                <SettingsRoot app={this.app} />
             </ServicesProvider>,
             containerEl
         );

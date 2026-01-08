@@ -1,20 +1,39 @@
 // src/app/usecases/layout.usecase.ts
 /**
- * LayoutUseCase - 布局相关用例
- * Role: UseCase (应用层)
+ * LayoutUseCase - 布局与视图相关用例（Facade）
+ * Role: UseCase (应用层) - 唯一写入口
+ * 
+ * 【S5 规范】真源唯一
+ * ✅ 这是 ViewInstance / Layout 的 CRUD 和 reorder 的唯一写入口！
+ * - features 层（src/features/*）只能调用 useCases.layout.*
+ * - 不允许 features 层直接调用 viewInstance.slice 的 vi* actions
+ * - 不允许 features 层直接调用 viewInstance.usecase
+ * - 不允许 features 层直接调用 AppStore 的已禁用方法
+ * 
+ * 对外暴露：
+ * - Layout CRUD: addLayout, updateLayout, deleteLayout, moveLayout, duplicateLayout
+ * - View CRUD: addView, updateView, deleteView, moveView, duplicateView
+ * - 批量操作: batchUpdateLayouts, batchDeleteLayouts
+ * - 查询方法: getLayouts, getLayout, getLayoutsByParent, getTopLevelLayouts
+ * 
+ * 内部实现：
+ * - Layout 操作转调 layout.slice actions
+ * - View 操作转调 viewInstance.slice 的 vi* actions
  * 
  * Do:
- * - 封装布局相关的业务意图
+ * - 封装布局和视图相关的业务意图
  * - 调用 Zustand Store 的 actions
  * - 统一错误处理
+ * - 作为 features 层的唯一调用入口
  * 
  * Don't:
  * - 直接操作 SettingsRepository
  * - 持有 UI 相关逻辑
+ * - 暴露底层 slice actions 给 features 层
  */
 
 import { getAppStoreInstance } from '@/app/store/useAppStore';
-import type { Layout } from '@/core/types/schema';
+import type { Layout, ViewInstance } from '@/core/types/schema';
 
 /**
  * 布局用例类
@@ -118,6 +137,27 @@ export class LayoutUseCase {
             return await state.duplicateLayout(id);
         } catch (error) {
             console.error('[LayoutUseCase] duplicateLayout 失败:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * 重排布局顺序
+     * @param orderedIds 按新顺序排列的布局ID数组
+     */
+    async reorderLayouts(orderedIds: string[]): Promise<void> {
+        try {
+            const store = getAppStoreInstance();
+            const state = store.getState();
+            
+            if (!state.isInitialized) {
+                console.error('[LayoutUseCase] Store 未初始化');
+                return;
+            }
+            
+            await state.reorderLayouts(orderedIds);
+        } catch (error) {
+            console.error('[LayoutUseCase] reorderLayouts 失败:', error);
             throw error;
         }
     }
@@ -285,6 +325,111 @@ export class LayoutUseCase {
         } catch (error) {
             console.error('[LayoutUseCase] getTopLevelLayouts 失败:', error);
             return [];
+        }
+    }
+
+    // ============== View CRUD (Facade) ==============
+    // 【S5 术语统一】features 层通过 layout.usecase 调用，内部转调 viewInstance actions
+
+    /**
+     * 添加视图
+     * @param title 视图标题
+     * @param parentId 父级ID（可选，用于兼容）
+     */
+    async addView(title: string, parentId: string | null = null): Promise<void> {
+        try {
+            const store = getAppStoreInstance();
+            const state = store.getState();
+            
+            if (!state.isInitialized) {
+                console.error('[LayoutUseCase] Store 未初始化');
+                return;
+            }
+            
+            await state.viAddViewInstance(title, parentId);
+        } catch (error) {
+            console.error('[LayoutUseCase] addView 失败:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * 更新视图
+     * @param id 视图ID
+     * @param updates 更新内容
+     */
+    async updateView(id: string, updates: Partial<ViewInstance>): Promise<void> {
+        try {
+            const store = getAppStoreInstance();
+            const state = store.getState();
+            
+            if (!state.isInitialized) {
+                console.error('[LayoutUseCase] Store 未初始化');
+                return;
+            }
+            
+            await state.viUpdateViewInstance(id, updates);
+        } catch (error) {
+            console.error('[LayoutUseCase] updateView 失败:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * 删除视图
+     * @param id 视图ID
+     */
+    async deleteView(id: string): Promise<void> {
+        try {
+            const store = getAppStoreInstance();
+            const state = store.getState();
+            
+            if (!state.isInitialized) {
+                console.error('[LayoutUseCase] Store 未初始化');
+                return;
+            }
+            
+            await state.viDeleteViewInstance(id);
+        } catch (error) {
+            console.error('[LayoutUseCase] deleteView 失败:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * 移动视图（上下移动）
+     * @param id 视图ID
+     * @param direction 方向
+     */
+    async moveView(id: string, direction: 'up' | 'down'): Promise<void> {
+        try {
+            const store = getAppStoreInstance();
+            const state = store.getState();
+            
+            if (!state.isInitialized) return;
+            
+            await state.viMoveViewInstance(id, direction);
+        } catch (error) {
+            console.error('[LayoutUseCase] moveView 失败:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * 复制视图
+     * @param id 视图ID
+     */
+    async duplicateView(id: string): Promise<void> {
+        try {
+            const store = getAppStoreInstance();
+            const state = store.getState();
+            
+            if (!state.isInitialized) return;
+            
+            await state.viDuplicateViewInstance(id);
+        } catch (error) {
+            console.error('[LayoutUseCase] duplicateView 失败:', error);
+            throw error;
         }
     }
 }

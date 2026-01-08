@@ -6,10 +6,15 @@
  * 此类保留作为过渡兼容层，新的状态管理已迁移到 Zustand slices。
  * 请勿在此类中新增业务逻辑。所有新功能应通过 UseCase 层调用 Zustand store。
  * 
- * Dependencies: 所有子 Store (TimerStore, ThemeStore, etc.), SettingsRepository (用于持久化)
+ * 【S5 收口】
+ * - LayoutStore、ViewInstanceStore、GroupStore 已禁用
+ * - Layout/ViewInstance 的 CRUD 和 reorder 应通过 useCases.layout.* 调用
+ * - AppStore 中的相关委托方法保留接口，但抛出 deprecated 错误
+ * 
+ * Dependencies: TimerStore, ThemeStore, SettingsStore, BlockStore, SettingsRepository
  * 
  * Do:
- * - 持有并暴露所有子 Store 的实例 (theme, layout, timer, etc.)
+ * - 持有并暴露仍在使用的子 Store 的实例 (theme, timer, settings, block)
  * - 聚合应用的总状态 (AppState)
  * - 提供统一的订阅机制，以便 React 组件 (useStore) 可以监听全局状态变化
  * - 协调设置的更新（通过 SettingsRepository）
@@ -18,7 +23,7 @@
  * Don't:
  * - 直接进行 IO 操作（所有 IO 委托给 SettingsRepository）
  * - 持有 plugin 实例
- * - 具体的业务逻辑 (所有业务逻辑都委托给相应的子 Store)
+ * - 实例化已禁用的 Store (LayoutStore, ViewInstanceStore, GroupStore)
  * - 新增任何新的业务逻辑（使用 UseCase + Zustand 替代）
  */
 import { useState, useEffect, useCallback } from 'preact/hooks';
@@ -29,11 +34,13 @@ import { SettingsRepository } from '@/core/services/SettingsRepository';
 import { useAppStore } from '@/app/AppStoreContext';
 import { ThemeStore } from '@features/settings/ThemeStore';
 import { TimerStore, type TimerState } from '@features/timer/TimerStore';
-import { LayoutStore } from '@/features/settings/LayoutStore';
-import { ViewInstanceStore } from '@/features/settings/ViewInstanceStore';
 import { BlockStore } from '@/features/settings/BlockStore';
-import { GroupStore } from '@/features/settings/GroupStore';
 import { SettingsStore } from '@features/settings/SettingsStore';
+
+// S5: Layout/ViewInstance/Group Store 已禁用，不再 import
+const LAYOUT_DEPRECATED_ERROR = 'Layout operations through AppStore are deprecated. Use useCases.layout instead.';
+const VIEW_INSTANCE_DEPRECATED_ERROR = 'ViewInstance operations through AppStore are deprecated. Use useCases.layout.addView/updateView/deleteView instead.';
+const GROUP_DEPRECATED_ERROR = 'Group feature is disabled in S5. Use useCases.layout instead.';
 
 export interface AppState {
     settings: ThinkSettings;
@@ -50,12 +57,10 @@ export class AppStore implements ISettingsProvider {
     private _listeners: Set<() => void> = new Set();
 
     // 子Store实例
+    // S5: layout、viewInstance、group 已禁用，不再持有实例
     public readonly theme: ThemeStore;
-    public readonly layout: LayoutStore;
-    public readonly group: GroupStore;
     public readonly settings: SettingsStore;
     public readonly timer: TimerStore;
-    public readonly viewInstance: ViewInstanceStore;
     public readonly block: BlockStore;
 
     // SettingsRepository 注入
@@ -80,19 +85,11 @@ export class AppStore implements ISettingsProvider {
             this._updateSettingsAndPersist.bind(this),
             this.getSettings.bind(this)
         );
-        this.layout = new LayoutStore(
-            this._updateSettingsAndPersist.bind(this),
-            this.getSettings.bind(this)
-        );
-        this.group = new GroupStore(
-            this._updateSettingsAndPersist.bind(this),
-            this.getSettings.bind(this)
-        );
+        // S5: layout、viewInstance、group 已禁用，不再实例化
+        // this.layout = new LayoutStore(...);
+        // this.viewInstance = new ViewInstanceStore(...);
+        // this.group = new GroupStore(...);
         this.settings = new SettingsStore(
-            this._updateSettingsAndPersist.bind(this),
-            this.getSettings.bind(this)
-        );
-        this.viewInstance = new ViewInstanceStore(
             this._updateSettingsAndPersist.bind(this),
             this.getSettings.bind(this)
         );
@@ -166,6 +163,20 @@ export class AppStore implements ISettingsProvider {
         });
     }
 
+    /**
+     * @deprecated MIGRATION - 仅迁移期使用
+     * 从 SettingsRepository 同步设置到 AppStore
+     * 不做持久化、不触发 repository.update（避免循环）
+     */
+    public __syncSettingsFromRepo(settings: ThinkSettings): void {
+        this._state.settings = settings;
+        // 同步派生状态：如果 floatingTimerEnabled 变为 false，则关闭 widget
+        if (!settings.floatingTimerEnabled) {
+            this._state.isTimerWidgetVisible = false;
+        }
+        this._notify();
+    }
+
     // --- Timer相关方法委托给TimerStore ---
     public setInitialTimers(initialTimers: TimerState[]) {
         this.timer.setInitialTimers(initialTimers);
@@ -192,71 +203,87 @@ export class AppStore implements ISettingsProvider {
     public getActiveTimer = (): TimerState | undefined => {
         return this.timer.getActiveTimer();
     }
-    // --- Group相关方法委托给GroupStore ---
-    public addGroup = async (name: string, parentId: string | null, type: GroupType) => {
-        return this.group.addGroup(name, parentId, type);
+    // --- Group相关方法 - S5 已禁用 ---
+    /** @deprecated Group feature disabled in S5 */
+    public addGroup = async (name: string, parentId: string | null, type: GroupType): Promise<never> => {
+        throw new Error(GROUP_DEPRECATED_ERROR);
     }
 
-    public updateGroup = async (id: string, updates: Partial<Group>) => {
-        return this.group.updateGroup(id, updates);
+    /** @deprecated Group feature disabled in S5 */
+    public updateGroup = async (id: string, updates: Partial<Group>): Promise<never> => {
+        throw new Error(GROUP_DEPRECATED_ERROR);
     }
 
-    public deleteGroup = async (id: string) => {
-        return this.group.deleteGroup(id);
+    /** @deprecated Group feature disabled in S5 */
+    public deleteGroup = async (id: string): Promise<never> => {
+        throw new Error(GROUP_DEPRECATED_ERROR);
     }
 
-    public duplicateGroup = async (groupId: string) => {
-        return this.group.duplicateGroup(groupId);
+    /** @deprecated Group feature disabled in S5 */
+    public duplicateGroup = async (groupId: string): Promise<never> => {
+        throw new Error(GROUP_DEPRECATED_ERROR);
     }
 
-    public moveItem = async (itemId: string, targetParentId: string | null) => {
-        return this.group.moveItem(itemId, targetParentId);
+    /** @deprecated Group feature disabled in S5 */
+    public moveItem = async (itemId: string, targetParentId: string | null): Promise<never> => {
+        throw new Error(GROUP_DEPRECATED_ERROR);
     }
 
-    public reorderItems = async (reorderedSiblings: (Groupable & {isGroup?: boolean})[], itemType: 'group' | 'viewInstance' | 'layout') => {
-        return this.group.reorderItems(reorderedSiblings, itemType);
+    /** @deprecated Group feature disabled in S5 */
+    public reorderItems = async (reorderedSiblings: (Groupable & {isGroup?: boolean})[], itemType: 'group' | 'viewInstance' | 'layout'): Promise<never> => {
+        throw new Error(GROUP_DEPRECATED_ERROR);
     }
 
-    // --- ViewInstance相关方法委托给ViewInstanceStore ---
-    public addViewInstance = async (title: string, parentId: string | null = null) => {
-        return this.viewInstance.addViewInstance(title, parentId);
+    // --- ViewInstance相关方法 - S5 已禁用，请使用 useCases.layout ---
+    /** @deprecated Use useCases.layout.addView instead */
+    public addViewInstance = async (title: string, parentId: string | null = null): Promise<never> => {
+        throw new Error(VIEW_INSTANCE_DEPRECATED_ERROR);
     }
 
-    public updateViewInstance = async (id: string, updates: Partial<ViewInstance>) => {
-        return this.viewInstance.updateViewInstance(id, updates);
+    /** @deprecated Use useCases.layout.updateView instead */
+    public updateViewInstance = async (id: string, updates: Partial<ViewInstance>): Promise<never> => {
+        throw new Error(VIEW_INSTANCE_DEPRECATED_ERROR);
     }
 
-    public deleteViewInstance = async (id: string) => {
-        return this.viewInstance.deleteViewInstance(id);
+    /** @deprecated Use useCases.layout.deleteView instead */
+    public deleteViewInstance = async (id: string): Promise<never> => {
+        throw new Error(VIEW_INSTANCE_DEPRECATED_ERROR);
     }
 
-    public moveViewInstance = async (id: string, direction: 'up' | 'down') => {
-        return this.viewInstance.moveViewInstance(id, direction);
+    /** @deprecated Use useCases.layout.moveView instead */
+    public moveViewInstance = async (id: string, direction: 'up' | 'down'): Promise<never> => {
+        throw new Error(VIEW_INSTANCE_DEPRECATED_ERROR);
     }
 
-    public duplicateViewInstance = async (id: string) => {
-        return this.viewInstance.duplicateViewInstance(id);
+    /** @deprecated Use useCases.layout.duplicateView instead */
+    public duplicateViewInstance = async (id: string): Promise<never> => {
+        throw new Error(VIEW_INSTANCE_DEPRECATED_ERROR);
     }
 
-    // --- Layout相关方法委托给LayoutStore ---
-    public addLayout = async (name: string, parentId: string | null = null) => {
-        return this.layout.addLayout(name, parentId);
+    // --- Layout相关方法 - S5 已禁用，请使用 useCases.layout ---
+    /** @deprecated Use useCases.layout.addLayout instead */
+    public addLayout = async (name: string, parentId: string | null = null): Promise<never> => {
+        throw new Error(LAYOUT_DEPRECATED_ERROR);
     }
 
-    public updateLayout = async (id: string, updates: Partial<Layout>) => {
-        return this.layout.updateLayout(id, updates);
+    /** @deprecated Use useCases.layout.updateLayout instead */
+    public updateLayout = async (id: string, updates: Partial<Layout>): Promise<never> => {
+        throw new Error(LAYOUT_DEPRECATED_ERROR);
     }
 
-    public deleteLayout = async (id: string) => {
-        return this.layout.deleteLayout(id);
+    /** @deprecated Use useCases.layout.deleteLayout instead */
+    public deleteLayout = async (id: string): Promise<never> => {
+        throw new Error(LAYOUT_DEPRECATED_ERROR);
     }
 
-    public moveLayout = async (id: string, direction: 'up' | 'down') => {
-        return this.layout.moveLayout(id, direction);
+    /** @deprecated Use useCases.layout.moveLayout instead */
+    public moveLayout = async (id: string, direction: 'up' | 'down'): Promise<never> => {
+        throw new Error(LAYOUT_DEPRECATED_ERROR);
     }
 
-    public duplicateLayout = async (id: string) => {
-        return this.layout.duplicateLayout(id);
+    /** @deprecated Use useCases.layout.duplicateLayout instead */
+    public duplicateLayout = async (id: string): Promise<never> => {
+        throw new Error(LAYOUT_DEPRECATED_ERROR);
     }
 
     // --- Settings相关方法委托给SettingsStore ---

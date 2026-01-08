@@ -1,113 +1,40 @@
 // src/store/stores/ViewInstanceStore.ts
+/**
+ * @deprecated 【S5 已移除】此独立 Store 已被 Zustand slices + UseCases 取代。
+ * 禁止使用此文件，请使用：
+ * - useCases.layout.addView / updateView / deleteView (写操作)
+ * - useZustandAppStore(state => state.settings.viewInstances) (读操作)
+ * 
+ * 任何尝试实例化此类都会直接抛出异常。
+ */
+
 import type { ThinkSettings, ViewInstance } from '@/core/types/schema';
-import { generateId, moveItemInArray, duplicateItemInArray } from '@core/utils/array';
-import { arrayUtils } from '@core/utils/array';
-import { VIEW_DEFAULT_CONFIGS } from '@features/settings/registry';
+
+const DEPRECATED_ERROR = 'ViewInstanceStore is deprecated. Use Zustand slices + useCases.layout instead. See S5 migration notes.';
 
 /**
- * ViewInstanceStore - 管理视图实例相关状态
- * 负责视图实例的增删改查、移动、复制等操作
+ * @deprecated Use Zustand viewInstance.slice.ts + layout.usecase.ts instead
+ * @throws Error always - this store is disabled
  */
 export class ViewInstanceStore {
-    private _updateSettings: (updater: (draft: ThinkSettings) => void) => Promise<void>;
-    private _getSettings: () => ThinkSettings;
-
     constructor(
         updateSettings: (updater: (draft: ThinkSettings) => void) => Promise<void>,
         getSettings: () => ThinkSettings
     ) {
-        this._updateSettings = updateSettings;
-        this._getSettings = getSettings;
+        throw new Error(DEPRECATED_ERROR);
     }
 
-    // 添加视图实例
-    public addViewInstance = async (title: string, parentId: string | null = null) => {
-        await this._updateSettings(draft => {
-            draft.viewInstances.push({
-                id: generateId('view'),
-                title: title,
-                viewType: 'BlockView',
-                dataSourceId: '',
-                viewConfig: JSON.parse(JSON.stringify(VIEW_DEFAULT_CONFIGS.BlockView)),
-                collapsed: true,
-                parentId
-            });
-        });
-    }
-
-    // 更新视图实例
-    public updateViewInstance = async (id: string, updates: Partial<ViewInstance>) => {
-        await this._updateSettings(draft => {
-            const currentInstance = draft.viewInstances.find(vi => vi.id === id);
-            if (currentInstance && updates.viewType && updates.viewType !== currentInstance.viewType) {
-                updates.viewConfig = JSON.parse(JSON.stringify(VIEW_DEFAULT_CONFIGS[updates.viewType]));
-            }
-            draft.viewInstances = arrayUtils.updateById(draft.viewInstances, id, updates);
-        });
-    }
-
-    // 删除视图实例
-    public deleteViewInstance = async (id: string) => {
-        await this._updateSettings(draft => {
-            draft.viewInstances = draft.viewInstances.filter(vi => vi.id !== id);
-            // 同时从所有布局中移除此视图实例
-            draft.layouts.forEach(layout => {
-                layout.viewInstanceIds = layout.viewInstanceIds.filter(vid => vid !== id);
-            });
-        });
-    }
-
-    // 移动视图实例（上/下）
-    public moveViewInstance = async (id: string, direction: 'up' | 'down') => {
-        await this._updateSettings(draft => {
-            draft.viewInstances = moveItemInArray(draft.viewInstances, id, direction);
-        });
-    }
-
-    // 复制视图实例
-    public duplicateViewInstance = async (id: string) => {
-        await this._updateSettings(draft => {
-            draft.viewInstances = duplicateItemInArray(draft.viewInstances, id, 'title');
-        });
-    }
-
-    // 获取视图实例列表
-    public getViewInstances = (): ViewInstance[] => {
-        return this._getSettings().viewInstances;
-    }
-
-    // 获取单个视图实例
-    public getViewInstance = (id: string): ViewInstance | undefined => {
-        return this._getSettings().viewInstances.find(vi => vi.id === id);
-    }
-
-    // 根据父ID获取视图实例列表
-    public getViewInstancesByParent = (parentId: string | null): ViewInstance[] => {
-        return this._getSettings().viewInstances.filter(vi => vi.parentId === parentId);
-    }
-
-    // 批量更新视图实例
-    public batchUpdateViewInstances = async (
-        viewInstanceIds: string[],
-        updates: Partial<ViewInstance>
-    ) => {
-        await this._updateSettings(draft => {
-            let instances = draft.viewInstances;
-            viewInstanceIds.forEach(id => {
-                instances = arrayUtils.updateById(instances, id, updates);
-            });
-            draft.viewInstances = instances;
-        });
-    }
-
-    // 批量删除视图实例
-    public batchDeleteViewInstances = async (viewInstanceIds: string[]) => {
-        await this._updateSettings(draft => {
-            draft.viewInstances = draft.viewInstances.filter(vi => !viewInstanceIds.includes(vi.id));
-            // 同时从所有布局中移除这些视图实例
-            draft.layouts.forEach(layout => {
-                layout.viewInstanceIds = layout.viewInstanceIds.filter(vid => !viewInstanceIds.includes(vid));
-            });
-        });
-    }
+    // 所有方法都不会被执行，因为构造函数会抛出异常
+    public addViewInstance = async (): Promise<never> => { throw new Error(DEPRECATED_ERROR); };
+    public updateViewInstance = async (): Promise<never> => { throw new Error(DEPRECATED_ERROR); };
+    public deleteViewInstance = async (): Promise<never> => { throw new Error(DEPRECATED_ERROR); };
+    public moveViewInstance = async (): Promise<never> => { throw new Error(DEPRECATED_ERROR); };
+    public duplicateViewInstance = async (): Promise<never> => { throw new Error(DEPRECATED_ERROR); };
+    public getViewInstances = (): never => { throw new Error(DEPRECATED_ERROR); };
+    public getViewInstance = (): never => { throw new Error(DEPRECATED_ERROR); };
+    public getViewInstancesByParent = (): never => { throw new Error(DEPRECATED_ERROR); };
+    public batchUpdateViewInstances = async (): Promise<never> => { throw new Error(DEPRECATED_ERROR); };
+    public batchDeleteViewInstances = async (): Promise<never> => { throw new Error(DEPRECATED_ERROR); };
 }
+
+// ============== 原始实现已移除，详见 S5 迁移说明 ==============

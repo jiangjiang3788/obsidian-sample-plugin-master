@@ -36,6 +36,7 @@ const getEventCoords = (e: MouseEvent | TouchEvent) => {
 
 
 export function TimerView({ app, actionService, timerService, dataStore }: TimerViewProps) {
+    // 注意: timer 状态在旧 AppStore 中管理，暂不迁移
     const timers = useStore(state => state.timer.getTimers());
     // [新增] 从状态管理获取可见性状态
     const isVisible = useStore(state => state.isTimerWidgetVisible);

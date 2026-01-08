@@ -35,10 +35,30 @@ export const SETTINGS_PERSISTENCE_TOKEN = 'SettingsPersistence';
 @singleton()
 export class SettingsRepository {
     private currentSettings: ThinkSettings | null = null;
+    private listeners: Set<(settings: ThinkSettings) => void> = new Set();
 
     constructor(
         @inject(SETTINGS_PERSISTENCE_TOKEN) private persistence: ISettingsPersistence
     ) {}
+
+    /**
+     * 订阅设置变化
+     * @param listener 变化时调用的回调
+     * @returns 取消订阅函数
+     */
+    subscribe(listener: (settings: ThinkSettings) => void): () => void {
+        this.listeners.add(listener);
+        return () => this.listeners.delete(listener);
+    }
+
+    /**
+     * 通知所有订阅者
+     */
+    private notify(): void {
+        if (this.currentSettings) {
+            this.listeners.forEach(listener => listener(this.currentSettings!));
+        }
+    }
 
     /**
      * 加载设置
@@ -52,6 +72,7 @@ export class SettingsRepository {
         const loaded = await this.persistence.loadData();
         if (loaded) {
             this.currentSettings = loaded;
+            this.notify();
             return loaded;
         }
 
@@ -70,10 +91,19 @@ export class SettingsRepository {
     }
 
     /**
+     * 获取当前设置快照（getSettings 的别名，符合 S2 规范）
+     * @returns 当前设置的不可变快照
+     */
+    getSnapshot(): ThinkSettings {
+        return this.getSettings();
+    }
+
+    /**
      * 设置初始值（用于首次加载或重置）
      */
     setInitialSettings(settings: ThinkSettings): void {
         this.currentSettings = settings;
+        this.notify();
     }
 
     /**
@@ -97,10 +127,11 @@ export class SettingsRepository {
         // 使用 immer 进行不可变更新
         const newSettings = produce(this.currentSettings, mutator);
         
-        // 只有真正发生变化时才保存
+        // 只有真正发生变化时才保存并通知
         if (newSettings !== this.currentSettings) {
             this.currentSettings = newSettings;
             await this.persistence.saveData(newSettings);
+            this.notify();
         }
 
         return newSettings;
