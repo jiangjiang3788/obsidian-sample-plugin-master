@@ -43,13 +43,18 @@ export class TimerWidget {
      * 渲染/重渲染 Preact 组件。
      */
     private render() {
-        if (!this.statusBarEl || !this.plugin.actionService) {
+        if (!this.statusBarEl || !this.plugin.actionService || !this.plugin.timerService || !this.plugin.dataStore) {
             return;
         }
 
         // 使用 Preact 将 TimerView 组件渲染到状态栏的DOM元素中
         // 我们需要将 actionService 实例传递给组件，以便处理“编辑”按钮的点击事件
-        const component = h(TimerView, { actionService: this.plugin.actionService });
+        const component = h(TimerView, { 
+            app: this.plugin.app,
+            actionService: this.plugin.actionService,
+            timerService: this.plugin.timerService,
+            dataStore: this.plugin.dataStore
+        });
         render(component, this.statusBarEl);
     }
 }

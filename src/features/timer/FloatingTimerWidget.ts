@@ -33,6 +33,8 @@ export class FloatingTimerWidget {
             return;
         }
 
+        console.log('[FloatingTimerWidget] render 执行：actionService / dataStore 已就绪');
+
         // [修改] 将所有需要的服务实例作为 props 传递给 TimerView
         const component = h(TimerView, { 
             app: this.plugin.app,

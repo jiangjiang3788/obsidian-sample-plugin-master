@@ -2,7 +2,7 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
 import { useRef, useCallback } from 'preact/hooks';
-import { useStore } from '@/app/AppStore';
+import { useZustandAppStore } from '@/app/store/useAppStore';
 import { useLocalStorage } from '@shared/hooks';
 import { Box, Typography, Button, Paper, Stack, Tooltip } from '@mui/material';
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
@@ -36,13 +36,31 @@ const getEventCoords = (e: MouseEvent | TouchEvent) => {
 
 
 export function TimerView({ app, actionService, timerService, dataStore }: TimerViewProps) {
-    // 注意: timer 状态在旧 AppStore 中管理，暂不迁移
-    const timers = useStore(state => state.timer.getTimers());
-    // [新增] 从状态管理获取可见性状态
-    const isVisible = useStore(state => state.isTimerWidgetVisible);
+    // [修改] 从 Zustand Store 获取 timers
+    const timers = useZustandAppStore(state => state.timer.timers);
+    // [修改] 从 Zustand Store 获取可见性状态 (UiSlice)
+    const isVisible = useZustandAppStore(state => state.ui.isTimerWidgetVisible);
     
     const [position, setPosition] = useLocalStorage('think-timer-position', { x: window.innerWidth - 350, y: 100 });
     const dragStartPos = useRef({ x: 0, y: 0, panelX: 0, panelY: 0 });
+
+    console.log("[计时器浮窗] TimerView render", { isVisible, timersCount: timers.length, position });
+
+    // 防止浮窗在屏幕外：在渲染前对 position 做 clamp
+    const clampPosition = (pos: { x: number, y: number }) => {
+        const maxX = Math.max(0, window.innerWidth - 320);
+        const maxY = Math.max(0, window.innerHeight - 80);
+        return {
+            x: Math.min(Math.max(0, pos.x), maxX),
+            y: Math.min(Math.max(0, pos.y), maxY)
+        };
+    };
+
+    const clamped = clampPosition(position);
+    if (clamped.x !== position.x || clamped.y !== position.y) {
+        console.log("[计时器浮窗] 位置超界 -> 自动修正", { from: position, to: clamped });
+        setPosition(clamped);
+    }
 
     // [修改] onDragMove 现在能处理触摸事件
     const onDragMove = useCallback((e: MouseEvent | TouchEvent) => {

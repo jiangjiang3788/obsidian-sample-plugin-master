@@ -11,6 +11,7 @@
 ### 概述
 
 S5（真源唯一）规范确保 ViewInstance / Layout 的 CRUD 和 reorder 只存在一个写入口。
+UseCases 是唯一“对外写入口”；store actions 是内部实现细节；SettingsRepository 是唯一持久化写入口。
 
 ### 核心原则
 

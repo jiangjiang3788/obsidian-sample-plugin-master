@@ -33,7 +33,7 @@ import { SETTINGS_TOKEN, ISettingsProvider } from '@/core/services/types';
 import { SettingsRepository } from '@/core/services/SettingsRepository';
 import { useAppStore } from '@/app/AppStoreContext';
 import { ThemeStore } from '@features/settings/ThemeStore';
-import { TimerStore, type TimerState } from '@features/timer/TimerStore';
+import type { TimerState } from '@/app/store/slices/timer.slice';
 import { BlockStore } from '@/features/settings/BlockStore';
 import { SettingsStore } from '@features/settings/SettingsStore';
 
@@ -44,11 +44,6 @@ const GROUP_DEPRECATED_ERROR = 'Group feature is disabled in S5. Use useCases.la
 
 export interface AppState {
     settings: ThinkSettings;
-    // [移除] timers和activeTimer已移到TimerStore管理
-    // [新增] 悬浮计时器是否可见的临时状态
-    isTimerWidgetVisible: boolean;
-    // [新增] TimerStore实例
-    timer: TimerStore;
 }
 
 @singleton()
@@ -60,7 +55,6 @@ export class AppStore implements ISettingsProvider {
     // S5: layout、viewInstance、group 已禁用，不再持有实例
     public readonly theme: ThemeStore;
     public readonly settings: SettingsStore;
-    public readonly timer: TimerStore;
     public readonly block: BlockStore;
 
     // SettingsRepository 注入
@@ -68,18 +62,12 @@ export class AppStore implements ISettingsProvider {
 
     public constructor(
         @inject(SETTINGS_TOKEN) initialSettings: ThinkSettings,
-        @inject(TimerStore) timerStore: TimerStore,
         @inject(SettingsRepository) settingsRepository: SettingsRepository
     ) {
         this.settingsRepository = settingsRepository;
         
         // 初始化 SettingsRepository 的设置
         this.settingsRepository.setInitialSettings(initialSettings);
-
-        // 初始化子Store
-        this.timer = timerStore;
-        // 订阅 TimerStore 的变化以触发 AppStore 的更新
-        this.timer.subscribe(this._notify.bind(this));
 
         this.theme = new ThemeStore(
             this._updateSettingsAndPersist.bind(this),
@@ -100,10 +88,6 @@ export class AppStore implements ISettingsProvider {
 
         this._state = {
             settings: initialSettings,
-            // [新增] 初始化时，可见性取决于设置项
-            isTimerWidgetVisible: initialSettings.floatingTimerEnabled,
-            // [新增] TimerStore实例
-            timer: this.timer,
         };
     }
 
@@ -144,24 +128,6 @@ export class AppStore implements ISettingsProvider {
         updater(this._state);
         this._notify();
     }
-    
-    // [新增] 用于切换悬浮窗可见性的方法 (不保存)
-    public toggleTimerWidgetVisibility = () => {
-        this._updateEphemeralState(draft => {
-            draft.isTimerWidgetVisible = !draft.isTimerWidgetVisible;
-        });
-    }
-
-    // [新增] 用于更新永久设置的方法 (会保存)
-    public updateFloatingTimerEnabled = async (enabled: boolean) => {
-        await this._updateSettingsAndPersist(draft => {
-            draft.floatingTimerEnabled = enabled;
-        });
-        // 当用户启用或禁用时，同步更新当前的可见状态
-        this._updateEphemeralState(draft => {
-            draft.isTimerWidgetVisible = enabled;
-        });
-    }
 
     /**
      * @deprecated MIGRATION - 仅迁移期使用
@@ -170,38 +136,40 @@ export class AppStore implements ISettingsProvider {
      */
     public __syncSettingsFromRepo(settings: ThinkSettings): void {
         this._state.settings = settings;
-        // 同步派生状态：如果 floatingTimerEnabled 变为 false，则关闭 widget
-        if (!settings.floatingTimerEnabled) {
-            this._state.isTimerWidgetVisible = false;
-        }
         this._notify();
     }
 
     // --- Timer相关方法委托给TimerStore ---
+    /** @deprecated Timer state is now managed by Zustand store (useCases.timer) */
     public setInitialTimers(initialTimers: TimerState[]) {
-        this.timer.setInitialTimers(initialTimers);
+        // No-op
     }
 
+    /** @deprecated Use useCases.timer.addTimer instead */
     public addTimer = async (timer: Omit<TimerState, 'id'>) => {
-        return this.timer.addTimer(timer);
+        throw new Error('AppStore.addTimer is deprecated. Use useCases.timer.addTimer instead.');
     }
 
+    /** @deprecated Use useCases.timer.updateTimer instead */
     public updateTimer = async (updatedTimer: TimerState) => {
-        return this.timer.updateTimer(updatedTimer);
+        throw new Error('AppStore.updateTimer is deprecated. Use useCases.timer.updateTimer instead.');
     }
 
+    /** @deprecated Use useCases.timer.removeTimer instead */
     public removeTimer = async (timerId: string) => {
-        return this.timer.removeTimer(timerId);
+        throw new Error('AppStore.removeTimer is deprecated. Use useCases.timer.removeTimer instead.');
     }
 
     // 获取计时器列表（从TimerStore）
+    /** @deprecated Use useCases.timer.getTimers instead */
     public getTimers = (): TimerState[] => {
-        return this.timer.getTimers();
+        return [];
     }
 
     // 获取活跃计时器（从TimerStore）
+    /** @deprecated Use useCases.timer.getActiveTimer instead */
     public getActiveTimer = (): TimerState | undefined => {
-        return this.timer.getActiveTimer();
+        return undefined;
     }
     // --- Group相关方法 - S5 已禁用 ---
     /** @deprecated Group feature disabled in S5 */

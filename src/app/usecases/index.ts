@@ -25,6 +25,7 @@ import { ThemeUseCase, createThemeUseCase } from './theme.usecase';
 import { LayoutUseCase, createLayoutUseCase } from './layout.usecase';
 import { GroupUseCase, createGroupUseCase } from './group.usecase';
 import { ViewInstanceUseCase, createViewInstanceUseCase } from './viewInstance.usecase';
+import { TimerUseCase, createTimerUseCase } from './timer.usecase';
 
 /**
  * UseCases 集合接口
@@ -36,6 +37,7 @@ export interface UseCases {
     layout: LayoutUseCase;
     group: GroupUseCase;
     viewInstance: ViewInstanceUseCase;
+    timer: TimerUseCase;
 }
 
 /**
@@ -58,6 +60,7 @@ export function createUseCases(): UseCases {
         layout: createLayoutUseCase(),
         group: createGroupUseCase(),
         viewInstance: createViewInstanceUseCase(),
+        timer: createTimerUseCase(),
     };
 }
 
@@ -68,6 +71,7 @@ export { ThemeUseCase } from './theme.usecase';
 export { LayoutUseCase } from './layout.usecase';
 export { GroupUseCase } from './group.usecase';
 export { ViewInstanceUseCase } from './viewInstance.usecase';
+export { TimerUseCase } from './timer.usecase';
 
 // 重新导出 useUseCases hook（从 AppStoreContext）
 export { useUseCases } from '@/app/AppStoreContext';
