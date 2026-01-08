@@ -24,6 +24,8 @@ import type ThinkPlugin from '@main';
  * 2. 管理核心服务 (Store, Data, Timer) 的生命周期
  * 3. 协调特性 (Feature) 的加载与挂载
  * 4. 统一资源清理
+ * 
+ * S7.0: FeatureLoader 不再需要 AppStore 参数
  */
 export class ServiceManager {
     private plugin: ThinkPlugin;
@@ -257,17 +259,21 @@ export class ServiceManager {
 
     /**
      * [主流程] #5 加载UI特性
+     * 
+     * S7.0: FeatureLoader 不再需要 AppStore 参数
+     * - QuickInput/AiInput 通过 zustand store 获取 settings
+     * - Dashboard/Settings 的 appStore 参数已变为可选
      */
     private async loadUIFeatures(): Promise<void> {
         // 确保依赖已就绪
-        if (!this.services.appStore || !this.services.dataStore || !this.services.rendererService || !this.services.actionService) {
+        if (!this.services.dataStore || !this.services.rendererService || !this.services.actionService) {
             console.error('[ThinkPlugin] UI特性加载失败: 依赖服务未就绪');
             return;
         }
 
+        // S7.0: FeatureLoader 构造函数不再接收 appStore
         const featureLoader = new FeatureLoader(
             this.plugin,
-            this.services.appStore,
             this.services.dataStore,
             this.services.rendererService,
             this.services.actionService

@@ -2,9 +2,15 @@
 /**
  * ThemeTreeNodeRow - 主题树节点行组件
  * 
- * ⚠️ P1 UI 适配：
- * - 不再直接依赖 appStore，改为通过 useCases 进行状态管理
+ * 【S6 架构约束】
+ * - 读：通过 props 接收数据（由父组件传递）
+ * - 写：通过 useCases 进行状态管理
  * - 遵循单向数据流：UI → UseCase → Zustand Store → UI
+ * 
+ * ⚠️ 禁止事项：
+ * - 不得直接 import AppStore / useStore
+ * - 不得直接调用 slice actions
+ * - 不得直接调用 SettingsRepository
  */
 import { h } from 'preact';
 import {
@@ -32,12 +38,16 @@ import type { BlockTemplate, ThemeDefinition, ThemeOverride } from '@/core/types
 import type { UseCases } from '@/app/usecases';
 import type { ThemeTreeNode } from '@/core/theme-matrix/theme.types';
 
-// Define new props inline for now
-interface NewThemeTreeNodeRowProps {
+/**
+ * ThemeTreeNodeRow 组件属性
+ * 
+ * 【S6】所有数据通过 props 传入，写操作通过 useCases
+ */
+interface ThemeTreeNodeRowProps {
     node: ThemeTreeNode;
     blocks: BlockTemplate[];
     overridesMap: Map<string, ThemeOverride>;
-    /** ⚠️ P1: 使用 useCases 替代 appStore */
+    /** 【S6】使用 useCases 替代 appStore */
     useCases: UseCases;
     onCellClick: (block: BlockTemplate, theme: ThemeDefinition) => void;
     onToggleExpand: (themeId: string) => void;
@@ -54,8 +64,10 @@ export function ThemeTreeNodeRow({
     onToggleExpand,
     editorState,
     onSelectionChange
-}: NewThemeTreeNodeRowProps) {
+}: ThemeTreeNodeRowProps) {
     const { theme, children, expanded, level } = node;
+    
+    // 【UI 临时态】编辑状态不写入 settings
     const [isEditingPath, setIsEditingPath] = useState(false);
     const [isEditingIcon, setIsEditingIcon] = useState(false);
 
@@ -91,7 +103,7 @@ export function ThemeTreeNodeRow({
                                 <InlineEditor 
                                     value={theme.icon || ''} 
                                     onSave={(newIcon: string) => { 
-                                        // ⚠️ P1: 通过 useCases.theme 更新主题
+                                        // 【S6】通过 useCases.theme 更新主题
                                         useCases.theme.updateTheme(theme.id, { icon: newIcon });
                                         setIsEditingIcon(false);
                                     }}
@@ -105,7 +117,7 @@ export function ThemeTreeNodeRow({
                                 <InlineEditor 
                                     value={theme.path} 
                                     onSave={(newPath: string) => { 
-                                        // ⚠️ P1: 通过 useCases.theme 更新主题
+                                        // 【S6】通过 useCases.theme 更新主题
                                         useCases.theme.updateTheme(theme.id, { path: newPath }); 
                                         setIsEditingPath(false);
                                     }}

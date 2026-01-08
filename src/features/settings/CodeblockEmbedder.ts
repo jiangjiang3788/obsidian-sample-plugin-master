@@ -1,10 +1,17 @@
 // src/features/logic/CodeblockEmbedder.ts
-import { render } from 'preact'; // [修改] 不再需要 h
+/**
+ * S8.2: CodeblockEmbedder - 彻底移除 AppStore 依赖
+ * 
+ * 改动说明：
+ * - 移除构造函数中的 appStore 参数
+ * - 使用 getAppStoreInstance().getState().settings 读取 settings
+ * - 不再有 appStore fallback
+ */
+import { render } from 'preact';
 import { Notice, Plugin } from 'obsidian';
 import { CODEBLOCK_LANG } from '@/core/types/constants';
 import { DataStore } from '@core/services/DataStore';
-
-import { AppStore } from '@/app/AppStore';
+import { getAppStoreInstance } from '@/app/store/useAppStore';
 import { RendererService } from '@/features/settings/RendererService';
 import type { Layout } from '@/core/types/schema';
 import type { ActionService } from '@core/services/ActionService';
@@ -12,12 +19,19 @@ import type { ActionService } from '@core/services/ActionService';
 export class CodeblockEmbedder {
     constructor(
         private plugin: Plugin,
-        private appStore: AppStore,
         private dataStore: DataStore,
         private rendererService: RendererService,
         private actionService: ActionService,
     ) {
         this.registerProcessor();
+    }
+
+    /**
+     * S8.2: 获取 settings - 直接使用 Zustand store
+     * 不再有 appStore fallback
+     */
+    private getSettings() {
+        return getAppStoreInstance().getState().settings;
     }
 
     private registerProcessor() {
@@ -43,7 +57,8 @@ export class CodeblockEmbedder {
                     return;
                 }
                 
-                const allLayouts = this.appStore.getSettings().layouts;
+                const settings = this.getSettings();
+                const allLayouts = settings.layouts;
 
                 if (!layoutName && allLayouts.length > 0) {
                     layoutName = allLayouts[0].name;
@@ -66,7 +81,6 @@ export class CodeblockEmbedder {
      * [修改] 此方法现在将渲染工作完全委托给 RendererService
      */
     private mountAndRegister(el: HTMLElement, layout: Layout) {
-
         this.rendererService.register(el, layout);
     }
 }

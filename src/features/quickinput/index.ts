@@ -1,14 +1,15 @@
 // src/features/quick-input/index.ts
 import type ThinkPlugin from '@main';
-import { AppStore } from '@/app/AppStore';
 import { registerQuickInputCommands } from './registerCommands';
 
+/**
+ * S7.1: QuickInput 依赖接口 - 移除 AppStore
+ * 只需要 plugin 实例，其他依赖通过 DI 或 zustand 获取
+ */
 export interface QuickInputDependencies {
     plugin: ThinkPlugin;
-    appStore: AppStore;
 }
 
 export function setup(deps: QuickInputDependencies) {
-    // 这里的调用是正确的，它将 plugin 和 appStore 实例传递给了 registerQuickInputCommands
-    registerQuickInputCommands(deps.plugin, deps.appStore);
+    registerQuickInputCommands(deps.plugin);
 }

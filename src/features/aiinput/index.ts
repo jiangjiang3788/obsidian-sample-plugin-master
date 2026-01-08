@@ -1,18 +1,19 @@
 // src/features/aiinput/index.ts
-// AI 自然语言快速记录功能模块
+/**
+ * S7.2: AI 自然语言快速记录功能模块 - 移除 AppStore 依赖
+ * 只需要 plugin 实例，其他依赖通过 DI 或 zustand 获取
+ */
 
 import type ThinkPlugin from '@/main';
-import { AppStore } from '@/app/AppStore';
 import { registerAiInputCommands } from './registerCommands';
 
 export interface AiInputDependencies {
     plugin: ThinkPlugin;
-    appStore: AppStore;
 }
 
 /**
  * 设置 AI 输入功能
  */
 export function setup(deps: AiInputDependencies) {
-    registerAiInputCommands(deps.plugin, deps.appStore);
+    registerAiInputCommands(deps.plugin);
 }

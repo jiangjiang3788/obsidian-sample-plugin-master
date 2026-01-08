@@ -1,10 +1,14 @@
 /**
  * 组件属性类型定义
+ * 
+ * 【S6 架构约束】
+ * - 不再使用 AppStore 相关类型
+ * - 写操作通过 UseCases 进行
+ * - 读操作通过 Zustand selector 或 props 传递
  */
-import { type AppStore } from '@/app/AppStore';
-import { type DataStore } from '@/core/services/DataStore';
 import { type BlockTemplate, type ThemeDefinition, type ThemeOverride } from '@/core/types/schema';
 import { type BatchOperationType } from '@shared/types/common';
+import type { UseCases } from '@/app/usecases';
 
 // 临时定义类型，直到修复完整的类型系统
 export interface ExtendedTheme extends ThemeDefinition {
@@ -56,7 +60,9 @@ export interface BatchOperationDialogProps {
 }
 
 /**
- * ThemeTreeNodeRow 组件属性 (简化版)
+ * ThemeTreeNodeRow 组件属性
+ * 
+ * 【S6】使用 useCases 替代 appStore
  */
 export interface ThemeTreeNodeRowProps {
     /** 树节点数据 */
@@ -71,8 +77,8 @@ export interface ThemeTreeNodeRowProps {
     editingThemeId: string | null;
     /** 设置编辑主题ID */
     onSetEditingThemeId: (id: string | null) => void;
-    /** 应用状态存储 */
-    appStore: AppStore;
+    /** 【S6】使用 useCases 替代 appStore */
+    useCases: UseCases;
     /** 切换展开状态 */
     onToggleExpand: (themeId: string) => void;
     /** 右键菜单处理 */
@@ -87,15 +93,17 @@ export interface ThemeTreeNodeRowProps {
 /**
  * ThemeMatrix 主组件属性
  * 
- * ⚠️ P1 重构：不再需要 props 传递 appStore/dataStore
- * 组件内部通过 useAppStore() / useDataStore() hooks 获取依赖
+ * 【S6】不再需要 props 传递 appStore/dataStore
+ * 组件内部通过 useZustandAppStore() / useDataStore() hooks 获取依赖
  */
 export interface ThemeMatrixProps {
     // 无需 props，依赖通过 Context 获取
 }
 
 /**
- * ThemeTable 组件属性 (简化版)
+ * ThemeTable 组件属性
+ * 
+ * 【S6】使用 useCases 替代 appStore
  */
 export interface ThemeTableProps {
     /** Block模板列表 */
@@ -112,8 +120,8 @@ export interface ThemeTableProps {
     selection: import('./useThemeMatrixSelection').ThemeMatrixSelection;
     /** 正在编辑的主题ID */
     editingThemeId: string | null;
-    /** 应用状态存储 */
-    appStore: AppStore;
+    /** 【S6】使用 useCases 替代 appStore */
+    useCases: UseCases;
     /** 事件处理器 */
     onCellClick: (block: BlockTemplate, theme: ThemeDefinition) => void;
     onToggleExpand: (themeId: string) => void;

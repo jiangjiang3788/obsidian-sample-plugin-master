@@ -2,13 +2,20 @@
 /**
  * ThemeMatrix - 主题配置矩阵组件
  * 
- * ⚠️ P1 UI 适配：
- * - 不再直接依赖 appStore.addTheme，改为通过 useCases.theme 进行状态管理
+ * 【S6 架构约束】
+ * - 读：使用 useZustandAppStore selector 读取 theme 相关 settings
+ * - 写：通过 useCases.theme.* 进行状态管理
  * - 遵循单向数据流：UI → UseCase → Zustand Store → UI
+ * 
+ * ⚠️ 禁止事项：
+ * - 不得直接 import AppStore / useStore
+ * - 不得直接调用 slice actions
+ * - 不得直接调用 SettingsRepository
+ * - UI 临时态（选中态/展开态）不得写入 settings
  */
 import { h } from 'preact';
-import { useStore } from '@/app//AppStore';
-import { useUseCases, useAppStore, useDataStore } from '@/app/AppStoreContext';
+import { useZustandAppStore } from '@/app/store/useAppStore';
+import { useUseCases, useDataStore } from '@/app/AppStoreContext';
 import { 
     Box, Typography, TextField, Button, Stack 
 } from '@mui/material';
@@ -23,7 +30,6 @@ import { ThemeMatrixService } from '@/core/theme-matrix/ThemeMatrixService';
 import { ThemeScanService } from '@/core/theme-matrix/ThemeScanService';
 
 // 导入类型
-import type { ThemeMatrixProps } from './props.types';
 import type { ThemeTreeNode } from '@/core/theme-matrix/theme.types';
 
 // 导入工具函数
@@ -39,22 +45,33 @@ import { ThemeImportButton } from './ThemeImportButton';
 import { useThemeMatrixEditor } from './useThemeMatrixEditor';
 import { useBatchOperations, type BatchOperation } from './useBatchOperations';
 
-// 主组件
-// ⚠️ P1 重构：不再通过 props 传递 appStore/dataStore，改为通过 Context hooks 获取
+/**
+ * ThemeMatrix 主组件
+ * 
+ * 【S6 数据流】
+ * - 读取：useZustandAppStore(state => state.settings.inputSettings.*)
+ * - 写入：useCases.theme.*
+ * - UI 临时态：组件内部 useState 管理
+ */
 export function ThemeMatrix() {
-    // 通过 Context hooks 获取依赖
-    const appStore = useAppStore();
-    const dataStore = useDataStore();
-    // ⚠️ P1: 获取 useCases 用于状态管理
+    // 【S6】通过 Zustand selector 读取 theme 相关 settings
+    const blocks = useZustandAppStore(state => state.settings.inputSettings?.blocks || []);
+    const themes = useZustandAppStore(state => state.settings.inputSettings?.themes || []);
+    const overrides = useZustandAppStore(state => state.settings.inputSettings?.overrides || []);
+    const settings = useZustandAppStore(state => state.settings);
+    
+    // 【S6】获取 useCases 用于写操作
     const useCases = useUseCases();
-    const { blocks, themes, overrides } = useStore(state => state.settings.inputSettings);
+    const dataStore = useDataStore();
+    
+    // 【UI 临时态】这些状态不写入 settings
     const [newThemePath, setNewThemePath] = useState('');
     const [modalOpen, setModalOpen] = useState(false);
     const [modalData, setModalData] = useState<{ block: BlockTemplate; theme: ThemeDefinition; override: ThemeOverride | null } | null>(null);
     const [expandedNodes, setExpandedNodes] = useState<Set<string>>(new Set());
-    const [showArchived, setShowArchived] = useState(false); // 暂时保留，后续会移到过滤菜单
+    const [showArchived, setShowArchived] = useState(false);
     
-    // 新的编辑器状态 Hook
+    // 新的编辑器状态 Hook（UI 临时态）
     const {
         editorState,
         toggleEditMode,
@@ -68,14 +85,14 @@ export function ThemeMatrix() {
     // 初始化服务
     const themeManager = useMemo(() => new ThemeManager(), []);
     
-    // 批量操作 Hook - P1: 不再传递 appStore，内部通过 useUseCases 获取
+    // 批量操作 Hook - 通过 useUseCases 获取
     const { executeBatchOperation, isProcessing } = useBatchOperations({
         onOperationComplete: clearSelection,
     });
     
-    // ThemeMatrixService - 使用新的配置格式
+    // 【S6】ThemeMatrixService - 使用 useCases 作为写入口
     const themeService = useMemo(() => new ThemeMatrixService({
-        getSettings: () => appStore.getState().settings,
+        getSettings: () => settings,
         writeOps: {
             addTheme: (path: string) => { useCases.theme.addTheme(path); },
             updateTheme: (themeId: string, updates: any) => { useCases.theme.updateTheme(themeId, updates); },
@@ -84,17 +101,17 @@ export function ThemeMatrix() {
             upsertOverride: async (override: any) => { await useCases.theme.upsertOverride(override); },
         },
         themeManager,
-    }), [appStore, useCases, themeManager]);
+    }), [settings, useCases, themeManager]);
     
-    // 主题扫描服务 - 使用新的配置格式
+    // 【S6】ThemeScanService - 使用 useCases 作为写入口
     const themeScanService = useMemo(() => new ThemeScanService({ 
-        getSettings: () => appStore.getState().settings,
+        getSettings: () => settings,
         writeOps: {
             addTheme: (path: string) => { useCases.theme.addTheme(path); },
         },
         dataStore, 
         themeManager,
-    }), [appStore, useCases, dataStore, themeManager]);
+    }), [settings, useCases, dataStore, themeManager]);
     
     // 获取扩展的主题信息
     const extendedThemes = useMemo(() => {
@@ -120,7 +137,7 @@ export function ThemeMatrix() {
         return map;
     }, [overrides]);
     
-    // 处理节点展开/折叠
+    // 处理节点展开/折叠（UI 临时态）
     const handleToggleExpand = (themeId: string) => {
         const newExpanded = new Set(expandedNodes);
         if (newExpanded.has(themeId)) {
@@ -131,10 +148,10 @@ export function ThemeMatrix() {
         setExpandedNodes(newExpanded);
     };
     
+    // 【S6】添加主题 - 通过 useCases.theme
     const handleAddTheme = () => {
         const path = newThemePath.trim();
         if (path && !themes.some(t => t.path === path)) {
-            // ⚠️ P1: 通过 useCases.theme 添加主题
             useCases.theme.addTheme(path);
             setNewThemePath('');
         }
@@ -216,7 +233,6 @@ export function ThemeMatrix() {
                 onSelectionChange={handleSelectionChange}
                 onSelectAllThemes={(isSelected: boolean) => handleSelectAll(allThemeIds, isSelected)}
                 onSelectBlockColumn={(blockId: string, isSelected: boolean) => handleSelectBlockColumn(blockId, allThemeIds, isSelected)}
-                // ⚠️ P1: 传递 useCases 替代 appStore
                 useCases={useCases}
             />
             
@@ -251,7 +267,6 @@ export function ThemeMatrix() {
                     block={modalData.block} 
                     theme={modalData.theme} 
                     existingOverride={modalData.override} 
-                    // ⚠️ P1: 传递 useCases 替代 appStore
                     useCases={useCases}
                 />
             )}

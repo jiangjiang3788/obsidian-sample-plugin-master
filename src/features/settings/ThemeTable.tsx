@@ -2,9 +2,15 @@
 /**
  * ThemeTable - 主题表格组件
  * 
- * ⚠️ P1 UI 适配：
- * - 不再直接依赖 appStore，改为通过 useCases 进行状态管理
+ * 【S6 架构约束】
+ * - 读：通过 props 接收数据（由父组件 ThemeMatrix 从 Zustand 读取）
+ * - 写：通过 useCases 进行状态管理
  * - 遵循单向数据流：UI → UseCase → Zustand Store → UI
+ * 
+ * ⚠️ 禁止事项：
+ * - 不得直接 import AppStore / useStore
+ * - 不得直接调用 slice actions
+ * - 不得直接调用 SettingsRepository
  */
 import { h } from 'preact';
 import {
@@ -17,21 +23,24 @@ import {
     Checkbox,
 } from '@mui/material';
 import { ThemeTreeNodeRow } from './ThemeTreeNodeRow';
-import type { ThemeTableProps } from './props.types';
 import type { EditorState } from './useThemeMatrixEditor';
 import type { BlockTemplate, ThemeDefinition, ThemeOverride } from '@/core/types/schema';
 import type { UseCases } from '@/app/usecases';
 import type { ThemeTreeNode } from '@/core/theme-matrix/theme.types';
 
-// Define new props inline for now
-interface NewThemeTableProps {
+/**
+ * ThemeTable 组件属性
+ * 
+ * 【S6】所有数据通过 props 传入，写操作通过 useCases
+ */
+interface ThemeTableProps {
     blocks: BlockTemplate[];
     activeThemes: ThemeTreeNode[];
     archivedThemes: ThemeTreeNode[];
     showArchived: boolean;
     overridesMap: Map<string, ThemeOverride>;
     editorState: EditorState;
-    /** ⚠️ P1: 使用 useCases 替代 appStore */
+    /** 【S6】使用 useCases 替代 appStore */
     useCases: UseCases;
     onCellClick: (block: BlockTemplate, theme: ThemeDefinition) => void;
     onToggleExpand: (themeId: string) => void;
@@ -54,7 +63,7 @@ export function ThemeTable({
     onSelectionChange,
     onSelectAllThemes,
     onSelectBlockColumn,
-}: NewThemeTableProps) {
+}: ThemeTableProps) {
     const isEditMode = editorState.mode === 'edit';
     const isThemeSelection = editorState.selectionType === 'theme';
     const isBlockSelection = editorState.selectionType === 'block';

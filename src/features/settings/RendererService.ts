@@ -1,4 +1,13 @@
 // src/core/services/RendererService.ts
+/**
+ * S8.1: RendererService - 使用 Zustand 精准订阅替代 AppStore.subscribe
+ * 
+ * 改动说明：
+ * - 移除 appStore.subscribe 的全量订阅
+ * - 改用 Zustand store.subscribe(selector, listener) 精准订阅 layouts + viewInstances
+ * - 只在 layout/viewInstances 变化时触发 rerenderAll()
+ * - 在 cleanup 时取消订阅，避免内存泄漏
+ */
 import { singleton, inject } from 'tsyringe';
 import { h, render } from 'preact';
 import { App } from 'obsidian';
@@ -13,6 +22,7 @@ import { InputService } from '@core/services/InputService';
 import { TimerService } from '@features/timer/TimerService';
 import { AppToken } from '@core/services/types';
 import { USECASES_TOKEN, type UseCases } from '@/app/usecases';
+import { getAppStoreInstance, type ZustandAppStore } from '@/app/store/useAppStore';
 
 @singleton()
 export class RendererService {
@@ -21,6 +31,9 @@ export class RendererService {
     
     // 缓存的 Services 对象，用于 ServicesProvider
     private services: Services;
+    
+    // S8.1: Zustand 订阅取消函数
+    private unsubscribeZustand: (() => void) | null = null;
 
     // [核心修改] 为构造函数的每个参数添加 @inject 装饰器
     constructor(
@@ -44,7 +57,9 @@ export class RendererService {
         // 运行时校验：确保所有服务都已正确注入
         this.validateServices();
         
-        this.appStore.subscribe(() => this.rerenderAll());
+        // S8.1: 使用 Zustand 精准订阅替代 appStore.subscribe
+        this.setupZustandSubscription();
+        
         this.isInitialized = true;
     }
     
@@ -64,6 +79,43 @@ export class RendererService {
                 `[RendererService] Services 校验失败: 缺少 ${missing.join(', ')}。\n` +
                 `请检查 ServiceManager 是否正确初始化了所有服务，以及 DI 容器是否正确注册。`
             );
+        }
+    }
+    
+    /**
+     * S8.1: 设置 Zustand 精准订阅
+     * 只监听 layouts 和 viewInstances 的变化，避免其他 settings 变化导致全量 rerender
+     */
+    private setupZustandSubscription(): void {
+        try {
+            const store = getAppStoreInstance();
+            
+            // 使用 subscribeWithSelector 的精准订阅
+            // selector 返回 layouts 和 viewInstances 的 JSON 快照，用于深度比较
+            this.unsubscribeZustand = store.subscribe(
+                // Selector: 提取 layouts 和 viewInstances
+                (state: ZustandAppStore) => ({
+                    layouts: state.settings.layouts,
+                    viewInstances: state.settings.viewInstances,
+                }),
+                // Listener: 当 selector 返回值变化时触发
+                (current, previous) => {
+                    // 使用 JSON.stringify 进行深度比较
+                    const currentSnapshot = JSON.stringify(current);
+                    const previousSnapshot = JSON.stringify(previous);
+                    
+                    if (currentSnapshot !== previousSnapshot) {
+                        console.log('[RendererService] layouts/viewInstances 变化，触发 rerenderAll');
+                        this.rerenderAll();
+                    }
+                },
+                // Options: 使用 shallow 比较（但我们在 listener 内做深度比较）
+                { equalityFn: (a, b) => a === b }
+            );
+            
+            console.log('[RendererService] Zustand 精准订阅已建立');
+        } catch (error) {
+            console.error('[RendererService] Zustand 订阅失败:', error);
         }
     }
 
@@ -109,13 +161,13 @@ export class RendererService {
 
     /**
      * [主流程] 重新渲染所有布局
-     * 当 AppStore 设置发生变更时触发，更新所有活跃的布局视图。
-     * 
-     * ⚠️ P0 修复：使用 ServicesProvider 替代 AppStoreProvider
+     * S8.1: 由 Zustand 精准订阅触发，只在 layouts/viewInstances 变化时调用
      */
     private rerenderAll(): void {
         if (!this.isInitialized) return;
-        const latestSettings = this.appStore.getSettings();
+        
+        // S8.1: 从 Zustand store 获取最新 settings
+        const latestSettings = getAppStoreInstance().getState().settings;
 
         for (const activeLayout of [...this.activeLayouts]) {
             const { container, layoutName } = activeLayout;
@@ -142,7 +194,18 @@ export class RendererService {
         }
     }
 
+    /**
+     * 清理所有服务资源
+     * S8.1: 取消 Zustand 订阅，避免内存泄漏
+     */
     public cleanup(): void {
+        // S8.1: 取消 Zustand 订阅
+        if (this.unsubscribeZustand) {
+            this.unsubscribeZustand();
+            this.unsubscribeZustand = null;
+            console.log('[RendererService] Zustand 订阅已取消');
+        }
+        
         [...this.activeLayouts].forEach(layout => this.unregister(layout.container));
         this.activeLayouts = [];
     }

@@ -1,32 +1,33 @@
 import type ThinkPlugin from '@main';
-import { AppStore } from '@/app/AppStore';
 import { DataStore } from '@core/services/DataStore';
 import { RendererService } from '@/features/settings/RendererService';
 import { ActionService } from '@core/services/ActionService';
 import * as QuickInputFeature from '@features/quickinput';
 import * as AiInputFeature from '@features/aiinput';
 import { setupSettings, setupDashboard } from '@/features/settings';
+import { getAppStoreInstance } from '@/app/store/useAppStore';
 
 /**
  * FeatureLoader - UI 特性加载器
  * 职责：负责加载和挂载插件的 UI 特性 (Dashboard, Settings, QuickInput 等)
+ * 
+ * S7.0: 移除对 AppStore 的必选依赖
+ * - 通过 getAppStoreInstance() 获取 zustand store
+ * - 通过 DI container 获取其他服务
  */
 export class FeatureLoader {
     private plugin: ThinkPlugin;
-    private appStore: AppStore;
     private dataStore: DataStore;
     private rendererService: RendererService;
     private actionService: ActionService;
 
     constructor(
         plugin: ThinkPlugin,
-        appStore: AppStore,
         dataStore: DataStore,
         rendererService: RendererService,
         actionService: ActionService
     ) {
         this.plugin = plugin;
-        this.appStore = appStore;
         this.dataStore = dataStore;
         this.rendererService = rendererService;
         this.actionService = actionService;
@@ -63,7 +64,6 @@ export class FeatureLoader {
         console.time('[ThinkPlugin] Dashboard特性加载');
         setupDashboard?.({
             plugin: this.plugin,
-            appStore: this.appStore,
             dataStore: this.dataStore,
             rendererService: this.rendererService,
             actionService: this.actionService,
@@ -79,7 +79,6 @@ export class FeatureLoader {
             setupSettings?.({
                 app: this.plugin.app,
                 plugin: this.plugin,
-                appStore: this.appStore,
                 dataStore: this.dataStore,
             });
 
@@ -102,8 +101,7 @@ export class FeatureLoader {
         setTimeout(() => {
             console.time('[ThinkPlugin] QuickInput特性加载');
             QuickInputFeature.setup?.({
-                plugin: this.plugin,
-                appStore: this.appStore
+                plugin: this.plugin
             });
             console.timeEnd('[ThinkPlugin] QuickInput特性加载');
         }, 100);
@@ -113,8 +111,7 @@ export class FeatureLoader {
         setTimeout(() => {
             console.time('[ThinkPlugin] AiInput特性加载');
             AiInputFeature.setup?.({
-                plugin: this.plugin,
-                appStore: this.appStore
+                plugin: this.plugin
             });
             console.timeEnd('[ThinkPlugin] AiInput特性加载');
         }, 120);
