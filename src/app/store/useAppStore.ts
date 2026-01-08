@@ -31,6 +31,8 @@ import { createSettingsSlice, type SettingsSlice } from './slices/settings.slice
 import { createBlocksSlice, type BlocksSlice } from './slices/blocks.slice';
 import { createGroupSlice, type GroupSlice } from './slices/group.slice';
 import { createViewInstanceSlice, type ViewInstanceSlice } from './slices/viewInstance.slice';
+import { createTimerSlice, type TimerSlice } from './slices/timer.slice';
+import { createUiSlice, type UiSlice } from './slices/ui.slice';
 
 // ============== 类型定义 ==============
 
@@ -57,7 +59,7 @@ export interface ZustandAppCoreActions {
 }
 
 // 组合所有 slices 的类型
-export type ZustandAppStore = ZustandAppCoreState & ZustandAppCoreActions & ThemeSlice & LayoutSlice & SettingsSlice & BlocksSlice & GroupSlice & ViewInstanceSlice;
+export type ZustandAppStore = ZustandAppCoreState & ZustandAppCoreActions & ThemeSlice & LayoutSlice & SettingsSlice & BlocksSlice & GroupSlice & ViewInstanceSlice & TimerSlice & UiSlice;
 
 // ============== Store 工厂 ==============
 
@@ -78,11 +80,11 @@ export function createAppStore(settingsRepository: SettingsRepository) {
             // ============== Core Actions ==============
 
             initialize: (settings: ThinkSettings) => {
-                set({
+                set((state) => ({
                     settings,
-                    isTimerWidgetVisible: settings.floatingTimerEnabled,
+                    ui: { ...state.ui, isTimerWidgetVisible: settings.floatingTimerEnabled },
                     isInitialized: true,
-                });
+                }));
             },
 
             // P0: Block 重排序（持久化）
@@ -145,6 +147,12 @@ export function createAppStore(settingsRepository: SettingsRepository) {
 
             // ============== ViewInstance Slice ==============
             ...createViewInstanceSlice(settingsRepository)(set, get, store),
+
+            // ============== Timer Slice ==============
+            ...createTimerSlice(set, get, store),
+
+            // ============== UI Slice ==============
+            ...createUiSlice(set, get, store),
         }))
     );
 }

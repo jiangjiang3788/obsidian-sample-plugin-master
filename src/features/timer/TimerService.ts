@@ -1,7 +1,7 @@
 /**
  * TimerService - 计时器业务逻辑
  * 角色：Service (业务)
- * 依赖：TimerStore, DataStore, ItemService, InputService
+ * 依赖：UseCases, DataStore, ItemService, InputService
  * 
  * 只做：
  * - 开始 / 暂停 / 恢复 / 停止计时
@@ -10,12 +10,11 @@
  * - 创建新任务并立即开始计时
  * 
  * 不做：
- * - 直接管理和存储计时器的状态 (这是 TimerStore 的职责)
+ * - 直接管理和存储计时器的状态 (这是 Zustand Store 的职责)
  * - 直接渲染 UI
  * - 直接操作 Obsidian 界面元素
  */
 import { singleton, inject } from 'tsyringe';
-import { TimerStore } from '@features/timer/TimerStore';
 import { ItemService } from '@core/services/ItemService';
 import { Notice, App, TFile } from 'obsidian';
 import { DataStore } from '@core/services/DataStore';
@@ -23,11 +22,12 @@ import { InputService } from '@core/services/InputService';
 import type { QuickInputSaveData } from '@/features/quickinput/QuickInputModal';
 import { AppToken } from '@core/services/types';
 import { nowHHMM, timeToMinutes, minutesToTime } from '@core/utils/date';
+import { USECASES_TOKEN, type UseCases } from '@/app/usecases';
 
 @singleton()
 export class TimerService {
     constructor(
-        @inject(TimerStore) private timerStore: TimerStore,
+        @inject(USECASES_TOKEN) private useCases: UseCases,
         @inject(DataStore) private dataStore: DataStore,
         @inject(ItemService) private itemService: ItemService,
         @inject(InputService) private inputService: InputService,
@@ -35,7 +35,7 @@ export class TimerService {
     ) {}
 
     public async startOrResume(taskId: string): Promise<void> {
-        const timers = this.timerStore.getTimers();
+        const timers = this.useCases.timer.getTimers();
         for (const timer of timers) {
             if (timer.status === 'running') {
                 await this.pause(timer.id);
@@ -55,7 +55,7 @@ export class TimerService {
             // 仅显示一个通知，文件将在任务完成时被修改
             new Notice(`计时开始。`);
 
-            await this.timerStore.addTimer({
+            await this.useCases.timer.addTimer({
                 taskId,
                 startTime: Date.now(),
                 elapsedSeconds: 0,
@@ -65,10 +65,10 @@ export class TimerService {
     }
 
     public async pause(timerId: string): Promise<void> {
-        const timer = this.timerStore.getTimers().find((t: any) => t.id === timerId);
+        const timer = this.useCases.timer.getTimers().find((t: any) => t.id === timerId);
         if (timer && timer.status === 'running') {
             const elapsed = (Date.now() - timer.startTime) / 1000;
-            await this.timerStore.updateTimer({
+            await this.useCases.timer.updateTimer({
                 ...timer,
                 elapsedSeconds: timer.elapsedSeconds + elapsed,
                 status: 'paused',
@@ -77,7 +77,7 @@ export class TimerService {
     }
 
     public async resume(timerId: string): Promise<void> {
-        const timers = this.timerStore.getTimers();
+        const timers = this.useCases.timer.getTimers();
         for (const t of timers) {
             if (t.id !== timerId && t.status === 'running') {
                 await this.pause(t.id);
@@ -85,7 +85,7 @@ export class TimerService {
         }
         const timerToResume = timers.find((t: any) => t.id === timerId);
         if (timerToResume && timerToResume.status === 'paused') {
-            await this.timerStore.updateTimer({
+            await this.useCases.timer.updateTimer({
                 ...timerToResume,
                 startTime: Date.now(),
                 status: 'running',
@@ -94,7 +94,7 @@ export class TimerService {
     }
 
     public async stopAndApply(timerId: string): Promise<void> {
-        const timer = this.timerStore.getTimers().find((t: any) => t.id === timerId);
+        const timer = this.useCases.timer.getTimers().find((t: any) => t.id === timerId);
         if (!timer) return;
         let totalSeconds = timer.elapsedSeconds;
         if (timer.status === 'running') {
@@ -107,7 +107,7 @@ export class TimerService {
             
             if (!taskItem) {
                 new Notice(`错误：找不到原始任务，可能已被移动或删除。计时时长无法保存。`);
-                await this.timerStore.removeTimer(timerId);
+                await this.useCases.timer.removeTimer(timerId);
                 return;
             }
             
@@ -132,11 +132,11 @@ export class TimerService {
             new Notice(`错误：更新任务失败 - ${e.message}`);
             console.error("TimerService Error:", e);
         }
-        await this.timerStore.removeTimer(timerId);
+        await this.useCases.timer.removeTimer(timerId);
     }
 
     public async cancel(timerId: string): Promise<void> {
-        await this.timerStore.removeTimer(timerId);
+        await this.useCases.timer.removeTimer(timerId);
         new Notice('计时任务已取消。');
     }
     

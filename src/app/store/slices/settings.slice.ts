@@ -29,7 +29,6 @@ import type { SettingsRepository } from '@/core/services/SettingsRepository';
 
 export interface SettingsSliceState {
     // 临时 UI 状态
-    isTimerWidgetVisible: boolean;
     settingsLoading: boolean;
     settingsError: string | null;
 }
@@ -37,8 +36,6 @@ export interface SettingsSliceState {
 export interface SettingsSliceActions {
     // 悬浮计时器
     setFloatingTimerEnabled: (enabled: boolean) => Promise<void>;
-    toggleTimerWidgetVisibility: () => void;
-    setTimerWidgetVisible: (visible: boolean) => void;
     
     // 输入设置
     updateInputSettings: (updates: Partial<InputSettings>) => Promise<void>;
@@ -83,7 +80,6 @@ export function createSettingsSlice(
 > {
     return (set, get) => ({
         // ============== 初始状态 ==============
-        isTimerWidgetVisible: false,
         settingsLoading: false,
         settingsError: null,
 
@@ -103,11 +99,11 @@ export function createSettingsSlice(
                 await settingsRepository.update(draft => {
                     draft.floatingTimerEnabled = enabled;
                 });
-                // 同步更新临时可见状态（只设置辅助状态，不写 settings）
-                set({ 
-                    isTimerWidgetVisible: enabled,
-                    settingsLoading: false 
-                });
+                
+                // NOTE: isTimerWidgetVisible 已移至 UiSlice，此处不再直接更新
+                // 若需联动，请在 ServiceManager 订阅或 UseCase 中处理
+                
+                set({ settingsLoading: false });
             } catch (error: any) {
                 console.error('[SettingsSlice] setFloatingTimerEnabled 失败:', error);
                 set({ 
@@ -115,16 +111,6 @@ export function createSettingsSlice(
                     settingsLoading: false 
                 });
             }
-        },
-
-        toggleTimerWidgetVisibility: (): void => {
-            set(state => ({
-                isTimerWidgetVisible: !state.isTimerWidgetVisible
-            }));
-        },
-
-        setTimerWidgetVisible: (visible: boolean): void => {
-            set({ isTimerWidgetVisible: visible });
         },
 
         // ============== 输入设置 ==============

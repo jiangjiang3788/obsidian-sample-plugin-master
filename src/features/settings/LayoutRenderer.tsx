@@ -8,7 +8,6 @@ import { ModulePanel } from './ModulePanel';
 import { DashboardViewComponents as ViewComponents } from './index';
 
 import { getDateRange, dayjs } from '@core/utils/date';
-import { useStore } from '@/app/AppStore';
 import { useZustandAppStore } from '@/app/store/useAppStore';
 import { useAppStore, useUseCases } from '@/app/AppStoreContext';
 import type { ActionService } from '@core/services/ActionService';
@@ -115,8 +114,8 @@ export function LayoutRenderer({ layout, dataStore, app, actionService, itemServ
     // 使用 Zustand store 获取 settings 相关状态
     const allViews = useZustandAppStore(state => state.settings.viewInstances);
     const inputSettings = useZustandAppStore(state => state.settings.inputSettings); // [修改] 获取完整 inputSettings
-    // 注意: timer 状态仍在旧 AppStore 中管理
-    const timers = useStore(state => state.timer.getTimers());
+    // [修改] 使用 Zustand store 获取 timers
+    const timers = useZustandAppStore(state => state.timer.timers);
     const allThemes = inputSettings.themes; // [兼容] 保持 allThemes 变量
     
     const [expandedState, setExpandedState] = useState<Record<string, boolean>>({});

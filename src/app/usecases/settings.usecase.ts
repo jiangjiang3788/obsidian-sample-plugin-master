@@ -40,6 +40,10 @@ export class SettingsUseCase {
             }
             
             await state.setFloatingTimerEnabled(enabled);
+            
+            // [新增] 同步更新 UI 可见性
+            // 当用户在设置中明确启用/禁用时，UI 状态应立即跟随
+            state.ui.setTimerWidgetVisible(enabled);
         } catch (error) {
             console.error('[SettingsUseCase] setFloatingTimerEnabled 失败:', error);
             throw error;
@@ -49,7 +53,7 @@ export class SettingsUseCase {
     /**
      * 切换计时器悬浮窗可见性（临时状态，不持久化）
      */
-    toggleTimerWidgetVisibility(): void {
+    async toggleTimerWidgetVisibility(): Promise<void> {
         try {
             const store = getAppStoreInstance();
             const state = store.getState();
@@ -58,8 +62,18 @@ export class SettingsUseCase {
                 console.error('[SettingsUseCase] Store 未初始化，无法切换计时器可见性');
                 return;
             }
+
+            console.log("[计时器浮窗] 命令：toggleTimerWidgetVisibility 触发", { enabled: state.settings.floatingTimerEnabled, visible: state.ui.isTimerWidgetVisible });
             
-            state.toggleTimerWidgetVisibility();
+            if (!state.settings.floatingTimerEnabled) {
+                await state.setFloatingTimerEnabled(true);
+                state.ui.setTimerWidgetVisible(true);
+                console.log("[计时器浮窗] 未启用 -> 已启用并设为可见");
+                return;
+            } else {
+                state.ui.toggleTimerWidgetVisible();
+                console.log("[计时器浮窗] 已启用 -> 切换可见性为", state.ui.isTimerWidgetVisible);
+            }
         } catch (error) {
             console.error('[SettingsUseCase] toggleTimerWidgetVisibility 失败:', error);
         }

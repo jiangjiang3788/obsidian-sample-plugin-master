@@ -64,8 +64,8 @@ export class ServiceManager {
         this.registerSettingsPersistence();
         
         await this.initializeCore();         // 1. 基础状态 (AppStore)
-        await this.loadTimerServices();      // 2. 核心业务 (Timer)
-        await this.loadDataServices();       // 3. 数据服务 (Data/IO)
+        await this.loadDataServices();       // 2. 数据服务 (Data/IO)
+        await this.loadTimerServices();      // 3. 核心业务 (Timer)
         await this.loadUIFeatures();         // 4. UI 特性 (Dashboard/Settings)
         
         const duration = stopMeasure();
@@ -142,9 +142,25 @@ export class ServiceManager {
                 settingsRepository.subscribe((settings) => {
                     // 同步到 Zustand Store
                     zustandStore.setState({ settings });
+                    
+                    // [新增] 动态管理 TimerWidget 的生命周期
+                    // 如果启用且未加载，则加载
+                    if (settings.floatingTimerEnabled && !this.services.timerWidget) {
+                        this.services.timerWidget = new FloatingTimerWidget(this.plugin);
+                        this.services.timerWidget.load();
+                        // 启用时默认显示
+                        zustandStore.setState(s => ({ ui: { ...s.ui, isTimerWidgetVisible: true } }));
+                        console.log("[计时器浮窗] settings 启用 -> 创建并显示浮窗");
+                    }
+
                     // 同步派生状态：如果 floatingTimerEnabled 变为 false，关闭 widget
                     if (!settings.floatingTimerEnabled) {
-                        zustandStore.setState({ isTimerWidgetVisible: false });
+                        zustandStore.setState(s => ({ ui: { ...s.ui, isTimerWidgetVisible: false } }));
+                        if (this.services.timerWidget) {
+                            this.services.timerWidget.unload();
+                            this.services.timerWidget = undefined;
+                        }
+                        console.log("[计时器浮窗] settings 禁用 -> 卸载浮窗");
                     }
                     // 同步到 AppStore（遗留兼容）
                     this.services.appStore?.__syncSettingsFromRepo(settings);
@@ -216,6 +232,12 @@ export class ServiceManager {
      * [主流程] #3 加载计时器服务
      */
     private async loadTimerServices(): Promise<void> {
+        // [Debug] 验证依赖服务是否就绪
+        console.log('[ServiceManager] loadTimerServices: action/data ready', {
+            actionService: !!this.services.actionService,
+            dataStore: !!this.services.dataStore,
+        });
+
         if (this.services.timerService) return;
         
         const stopMeasure = startMeasure('ServiceManager.loadTimerServices');
@@ -238,6 +260,10 @@ export class ServiceManager {
                 const timers = await this.services.timerStateService!.loadStateFromFile();
                 this.services.appStore!.setInitialTimers(timers);
                 
+                // [PR1] 初始化 Zustand Timer Slice
+                await this.services.useCases!.timer.setInitialTimersFromDisk();
+                console.log('[ThinkPlugin] Zustand Timers Loaded:', this.services.useCases!.timer.getTimers());
+
                 // 加载 Widget
                 const settings = this.services.appStore!.getSettings();
                 if (settings.floatingTimerEnabled) {
@@ -311,6 +337,10 @@ export class ServiceManager {
     get inputService(): InputService {
         if (!this.services.inputService) throw new Error('InputService 未初始化');
         return this.services.inputService;
+    }
+
+    get actionService(): ActionService | undefined {
+        return this.services.actionService;
     }
 
     // P0 新增：获取 UseCases

@@ -16,6 +16,8 @@ import { safeAsync } from '@shared/utils/errorHandler';
 import { performanceMonitor, startMeasure } from '@shared/utils/performance';
 import { ServiceManager } from '@/app/ServiceManager';
 import { TimerStateService } from '@features/timer/TimerStateService';
+import { TimerService } from '@features/timer/TimerService';
+import { ActionService } from '@core/services/ActionService';
 import { AiChatModal } from '@features/aichat';
 
 console.log(`[ThinkPlugin] main.js 文件已加载，版本时间: ${new Date().toLocaleTimeString()}`);
@@ -114,6 +116,14 @@ export default class ThinkPlugin extends Plugin {
 
     get inputService(): InputService {
         return this.serviceManager.inputService;
+    }
+
+    get timerService(): TimerService | undefined {
+        return this.serviceManager.timerService;
+    }
+
+    get actionService(): ActionService | undefined {
+        return this.serviceManager.actionService;
     }
 
     get useCases(): UseCases {
