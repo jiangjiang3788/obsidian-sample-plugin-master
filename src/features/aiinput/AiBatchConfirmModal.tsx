@@ -1,11 +1,17 @@
 // src/features/aiinput/AiBatchConfirmModal.tsx
+/**
+ * S7.2: AiBatchConfirmModal - 移除 AppStore 依赖
+ * - 使用 useZustandAppStore 读取 settings
+ * - 使用 useCases 进行写入操作
+ * - ServicesProvider 不再包含 appStore
+ */
 /** @jsxImportSource preact */
 import { h } from 'preact';
 import { App, Modal, Notice } from 'obsidian';
 import { render, unmountComponentAtNode } from 'preact/compat';
 import { useState, useMemo, useEffect } from 'preact/hooks';
 import { container } from 'tsyringe';
-import { useStore, AppStore } from '@/app/AppStore';
+import { useZustandAppStore } from '@/app/store/useAppStore';
 import { useDataStore, useInputService, ServicesProvider, Services } from '@/app/AppStoreContext';
 import { DataStore } from '@/core/services/DataStore';
 import { InputService } from '@/core/services/InputService';
@@ -48,13 +54,11 @@ export class AiBatchConfirmModal extends Modal {
         private onComplete?: () => void
     ) {
         super(app);
-        // 从 DI 容器获取服务
-        const appStore = container.resolve(AppStore);
+        // S7.2: 从 DI 容器获取服务 - 不再包含 appStore
         const dataStore = container.resolve(DataStore);
         const inputService = container.resolve(InputService);
         
         this.services = {
-            appStore,
             dataStore,
             inputService,
             useCases: container.resolve(USECASES_TOKEN),
@@ -128,7 +132,8 @@ function AiBatchConfirmForm({ app, items: initialItems, closeModal, onComplete }
     closeModal: () => void;
     onComplete?: () => void;
 }) {
-    const settings = useStore(state => state.settings.inputSettings);
+    // S7.2: 使用 zustand store 读取 settings
+    const settings = useZustandAppStore(state => state.settings.inputSettings);
     const dataStore = useDataStore();
     const inputService = useInputService();
     const blocks = settings.blocks || [];

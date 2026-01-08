@@ -1,12 +1,17 @@
 // @ts-nocheck
 // src/features/quick-input/ui/QuickInputModal.tsx
+/**
+ * S7.1: QuickInputModal - 移除 AppStore 依赖
+ * - 使用 useZustandAppStore 读取 settings
+ * - 使用 useCases 进行写入操作
+ * - ServicesProvider 不再包含 appStore
+ */
 /** @jsxImportSource preact */
 import { h, Fragment } from 'preact';
 import { App, Modal, Notice } from 'obsidian';
 import { render, unmountComponentAtNode } from 'preact/compat';
 import { useState, useMemo, useEffect } from 'preact/hooks';
 import { container } from 'tsyringe';
-import { AppStore } from '@/app/AppStore';
 import { useZustandAppStore } from '@/app/store/useAppStore';
 import { useDataStore, useInputService, ServicesProvider, Services } from '@/app/AppStoreContext';
 import { DataStore } from '@/core/services/DataStore';
@@ -39,9 +44,8 @@ export class QuickInputModal extends Modal {
         private allowBlockSwitch: boolean = false
     ) {
         super(app);
-        // 从 DI 容器获取服务 - P0: 必须包含 useCases
+        // S7.1: 从 DI 容器获取服务 - 不再包含 appStore
         this.services = {
-            appStore: container.resolve(AppStore),
             dataStore: container.resolve(DataStore),
             inputService: container.resolve(InputService),
             useCases: container.resolve(USECASES_TOKEN),
@@ -221,6 +225,7 @@ function QuickInputForm({ app, blockId: initialBlockId, context, themeId, onSave
     closeModal: () => void;
     allowBlockSwitch?: boolean;
 }) {
+    // S7.1: 使用 zustand store 读取 settings
     const settings = useZustandAppStore(state => state.settings.inputSettings);
     const dataStore = useDataStore();
     const inputService = useInputService();

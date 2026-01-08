@@ -1,12 +1,20 @@
-# S5 架构约束文档
+# 架构约束文档
 
 ## 概述
 
-本文档定义了 S5（真源唯一）规范的架构约束，确保 ViewInstance / Layout 的 CRUD 和 reorder 只存在一个写入口。
+本文档定义了项目的架构约束，确保各模块的写入口唯一性和数据流清晰。
 
-## 核心原则
+---
 
-### 1. 唯一写入口（Facade 模式）
+## S5 架构约束 - Layout/ViewInstance
+
+### 概述
+
+S5（真源唯一）规范确保 ViewInstance / Layout 的 CRUD 和 reorder 只存在一个写入口。
+
+### 核心原则
+
+#### 1. 唯一写入口（Facade 模式）
 
 ```
 features 层 → useCases.layout.* → slice actions → SettingsRepository
@@ -21,7 +29,7 @@ features 层 → useCases.layout.* → slice actions → SettingsRepository
 - `src/features/**` → `group.usecase`
 - `src/features/**` → `AppStore` 的已禁用方法
 
-### 2. 层级职责
+#### 2. 层级职责
 
 | 层级 | 文件 | 职责 | 可被调用者 |
 |------|------|------|-----------|
@@ -33,9 +41,9 @@ features 层 → useCases.layout.* → slice actions → SettingsRepository
 | Slice | `viewInstance.slice.ts` | 底层实现 | useCases |
 | Repository | `SettingsRepository.ts` | 持久化 | slices |
 
-## API 映射
+### API 映射
 
-### Layout 操作
+#### Layout 操作
 
 | 操作 | UseCase API | 内部实现 |
 |------|-------------|----------|
@@ -46,7 +54,7 @@ features 层 → useCases.layout.* → slice actions → SettingsRepository
 | 复制布局 | `layoutUseCase.duplicateLayout()` | `state.duplicateLayout()` |
 | 重排布局 | `layoutUseCase.reorderLayouts()` | `state.reorderLayouts()` |
 
-### View 操作
+#### View 操作
 
 | 操作 | UseCase API | 内部实现 |
 |------|-------------|----------|
@@ -56,18 +64,9 @@ features 层 → useCases.layout.* → slice actions → SettingsRepository
 | 移动视图 | `layoutUseCase.moveView()` | `state.viMoveViewInstance()` |
 | 复制视图 | `layoutUseCase.duplicateView()` | `state.viDuplicateViewInstance()` |
 
-### 查询操作
+### 禁用功能
 
-| 操作 | UseCase API |
-|------|-------------|
-| 获取所有布局 | `layoutUseCase.getLayouts()` |
-| 获取单个布局 | `layoutUseCase.getLayout(id)` |
-| 按父级获取 | `layoutUseCase.getLayoutsByParent(parentId)` |
-| 获取顶级布局 | `layoutUseCase.getTopLevelLayouts()` |
-
-## 禁用功能
-
-### Group 功能
+#### Group 功能
 
 Group 移动/分组存在问题，当前策略是**完全禁用**：
 
@@ -75,7 +74,7 @@ Group 移动/分组存在问题，当前策略是**完全禁用**：
 - `group.slice.ts` - 保留但不使用
 - `GroupStore.ts` - 已禁用
 
-### Legacy Stores
+#### Legacy Stores
 
 以下 legacy stores 已禁用，构造函数会抛出异常：
 
@@ -83,47 +82,178 @@ Group 移动/分组存在问题，当前策略是**完全禁用**：
 - `GroupStore.ts`
 - `LayoutStore.ts`
 
-## 迁移指引
+---
 
-### 从 ViewInstanceStore 迁移
+## S6 架构约束 - ThemeMatrix
+
+### 概述
+
+S6 规范确保 ThemeMatrix 的写操作只存在一个写入口，明确数据边界。
+
+### 核心原则
+
+#### 1. 唯一写入口（Facade 模式）
+
+```
+ThemeMatrix UI → useCases.theme.* → Zustand Store actions → SettingsRepository
+```
+
+**✅ 允许的调用路径：**
+- `src/features/settings/ThemeMatrix.tsx` → `useCases.theme.*`
+- `src/features/settings/ThemeTable.tsx` → `useCases.theme.*`
+- `src/features/settings/ThemeTreeNodeRow.tsx` → `useCases.theme.*`
+
+**⛔ 禁止的调用路径：**
+- `src/features/**` → `theme.slice` 的 actions（直接调用）
+- `src/features/**` → `AppStore.addTheme/updateTheme/deleteTheme`
+- `src/features/**` → `SettingsRepository.update()`（直接调用）
+- `src/features/**` → `useStore(state => state.settings)` 进行写操作
+
+#### 2. 数据边界
+
+| 数据类型 | 存储位置 | 说明 |
+|----------|----------|------|
+| 主题定义 (ThemeDefinition) | settings.inputSettings.themes | 业务数据，持久化 |
+| 覆盖配置 (ThemeOverride) | settings.inputSettings.overrides | 业务数据，持久化 |
+| 选中态 (selectedThemes/selectedCells) | 组件 state | UI 临时态，不持久化 |
+| 展开态 (expandedNodes) | 组件 state | UI 临时态，不持久化 |
+| 编辑模式 (mode) | 组件 state | UI 临时态，不持久化 |
+| hover 状态 | 组件 state | UI 临时态，不持久化 |
+
+#### 3. 层级职责
+
+| 层级 | 文件 | 职责 | 可被调用者 |
+|------|------|------|-----------|
+| Features | `ThemeMatrix.tsx` | UI 组件 | - |
+| Features | `ThemeTable.tsx` | UI 组件 | - |
+| Features | `ThemeTreeNodeRow.tsx` | UI 组件 | - |
+| UseCase (Facade) | `theme.usecase.ts` | 唯一写入口 | features |
+| Slice | `theme.slice.ts` | 底层实现 | useCases |
+| Service | `ThemeMatrixService.ts` | 业务逻辑 | features (只读) |
+| Service | `ThemeScanService.ts` | 扫描逻辑 | features (通过 writeOps) |
+| Repository | `SettingsRepository.ts` | 持久化 | slices |
+
+### API 映射
+
+#### Theme 操作
+
+| 操作 | UseCase API | 内部实现 |
+|------|-------------|----------|
+| 添加主题 | `themeUseCase.addTheme(path)` | `state.addTheme()` |
+| 更新主题 | `themeUseCase.updateTheme(id, updates)` | `state.updateTheme()` |
+| 删除主题 | `themeUseCase.deleteTheme(id)` | `state.deleteTheme()` |
+| 批量更新 | `themeUseCase.batchUpdateThemes(ids, updates)` | `state.batchUpdateThemes()` |
+| 批量删除 | `themeUseCase.batchDeleteThemes(ids)` | `state.batchDeleteThemes()` |
+| 批量更新状态 | `themeUseCase.batchUpdateThemeStatus(ids, status)` | `state.batchUpdateThemeStatus()` |
+| 批量更新图标 | `themeUseCase.batchUpdateThemeIcon(ids, icon)` | `state.batchUpdateThemeIcon()` |
+
+#### Override 操作
+
+| 操作 | UseCase API | 内部实现 |
+|------|-------------|----------|
+| 更新/插入覆盖 | `themeUseCase.upsertOverride(data)` | `state.upsertOverride()` |
+| 删除覆盖 | `themeUseCase.deleteOverride(blockId, themeId)` | `state.deleteOverride()` |
+| 批量更新覆盖 | `themeUseCase.batchUpsertOverrides(overrides)` | `state.batchUpsertOverrides()` |
+| 批量删除覆盖 | `themeUseCase.batchDeleteOverrides(selections)` | `state.batchDeleteOverrides()` |
+| 批量设置状态 | `themeUseCase.batchSetOverrideStatus(cells, status)` | `state.batchSetOverrideStatus()` |
+
+### UI 读取路径
+
+UI 读取 theme 相关数据应使用 Zustand selector：
+
+```typescript
+// ✅ 推荐：使用 useZustandAppStore selector
+import { useZustandAppStore } from '@/app/store/useAppStore';
+
+const themes = useZustandAppStore(state => state.settings.inputSettings.themes);
+const overrides = useZustandAppStore(state => state.settings.inputSettings.overrides);
+
+// ⛔ 禁止：使用旧的 useStore 从 AppStore 读取
+import { useStore } from '@/app/AppStore';
+const { themes } = useStore(state => state.settings.inputSettings); // 已废弃
+```
+
+### 服务层约束
+
+#### ThemeMatrixService / ThemeScanService
+
+这些服务不应直接依赖 AppStore，而是通过配置注入：
+
+```typescript
+// ✅ 推荐：通过配置注入
+const themeService = new ThemeMatrixService({
+    getSettings: () => settingsRepository.getSettings(),
+    writeOps: {
+        addTheme: (path) => useCases.theme.addTheme(path),
+        updateTheme: (id, updates) => useCases.theme.updateTheme(id, updates),
+        // ...
+    },
+    themeManager,
+});
+
+// ⛔ 禁止：直接依赖 AppStore
+const themeService = new ThemeMatrixService({
+    appStore, // 不允许
+});
+```
+
+### 迁移指引
+
+#### 从 AppStore 迁移
 
 ```typescript
 // ❌ 旧代码
-const store = new ViewInstanceStore(app);
-await store.addViewInstance(title);
+import { useStore } from '@/app/AppStore';
+const { themes } = useStore(state => state.settings.inputSettings);
+appStore.addTheme(path);
 
 // ✅ 新代码
-import { createLayoutUseCase } from '@/app/usecases/layout.usecase';
-const layoutUseCase = createLayoutUseCase();
-await layoutUseCase.addView(title);
+import { useZustandAppStore } from '@/app/store/useAppStore';
+import { useUseCases } from '@/app/AppStoreContext';
+
+const themes = useZustandAppStore(state => state.settings.inputSettings.themes);
+const useCases = useUseCases();
+useCases.theme.addTheme(path);
 ```
 
-### 从 viewInstance.usecase 迁移
+#### 从直接调用 slice actions 迁移
 
 ```typescript
 // ❌ 旧代码
-import { createViewInstanceUseCase } from '@/app/usecases/viewInstance.usecase';
-const viUseCase = createViewInstanceUseCase();
-await viUseCase.addViewInstance(title);
+const store = getAppStoreInstance();
+store.getState().addTheme(path);
 
 // ✅ 新代码
-import { createLayoutUseCase } from '@/app/usecases/layout.usecase';
-const layoutUseCase = createLayoutUseCase();
-await layoutUseCase.addView(title);
+const useCases = useUseCases();
+useCases.theme.addTheme(path);
 ```
 
-### 从 AppStore 迁移
+### 验收标准
 
-```typescript
-// ❌ 旧代码
-const appStore = AppStore.getInstance();
-await appStore.addViewInstance(title);
+1. ✅ ThemeMatrix UI 文件中不出现 `AppStore` / `useStore` import
+2. ✅ 所有写操作都经过 `useCases.theme.*`
+3. ✅ UI 临时态不写入 settings
+4. ✅ 服务层不直接依赖 AppStore
 
-// ✅ 新代码
-import { createLayoutUseCase } from '@/app/usecases/layout.usecase';
-const layoutUseCase = createLayoutUseCase();
-await layoutUseCase.addView(title);
-```
+### 文件清单
+
+#### 唯一写入口
+- `src/app/usecases/theme.usecase.ts` - ✅ Facade
+
+#### 底层实现（仅供 useCases 使用）
+- `src/app/store/slices/theme.slice.ts`
+
+#### UI 组件（已迁移）
+- `src/features/settings/ThemeMatrix.tsx`
+- `src/features/settings/ThemeTable.tsx`
+- `src/features/settings/ThemeTreeNodeRow.tsx`
+- `src/features/settings/InputSettings.tsx`
+
+#### 服务层（已断 AppStore）
+- `src/core/theme-matrix/ThemeMatrixService.ts`
+- `src/core/theme-matrix/ThemeScanService.ts`
+
+---
 
 ## ESLint 规则
 
@@ -136,33 +266,26 @@ await layoutUseCase.addView(title);
     'no-restricted-imports': ['error', {
       patterns: [{
         group: ['@/app/store/slices/*', '../app/store/slices/*'],
-        message: '[S5] features 层禁止直接 import slices，请使用 useCases.layout'
+        message: '[S5/S6] features 层禁止直接 import slices，请使用 useCases'
       }]
     }]
   }
 }
 ```
 
-## 验收标准
+---
 
-1. ✅ ViewInstance / Layout 的所有写操作最终都经过 `useCases.layout.*`
-2. ✅ 不存在两套"都能改 settings"的路径
-3. ✅ 禁用 group 的策略保持不变
-4. ✅ Legacy stores 构造时抛出异常
-5. ✅ ESLint 规则阻止违规 import
+## 查询操作
 
-## 文件清单
+### 查询操作
 
-### 唯一写入口
-- `src/app/usecases/layout.usecase.ts` - ✅ Facade
-
-### 底层实现（仅供 useCases 使用）
-- `src/app/store/slices/layout.slice.ts`
-- `src/app/store/slices/viewInstance.slice.ts`
-
-### 已禁用
-- `src/app/usecases/viewInstance.usecase.ts` - ⛔ 抛出异常
-- `src/app/usecases/group.usecase.ts` - ⛔ 抛出异常
-- `src/features/settings/ViewInstanceStore.ts` - ⛔ 抛出异常
-- `src/features/settings/GroupStore.ts` - ⛔ 抛出异常
-- `src/features/settings/LayoutStore.ts` - ⛔ 抛出异常
+| 操作 | UseCase API |
+|------|-------------|
+| 获取所有布局 | `layoutUseCase.getLayouts()` |
+| 获取单个布局 | `layoutUseCase.getLayout(id)` |
+| 按父级获取 | `layoutUseCase.getLayoutsByParent(parentId)` |
+| 获取顶级布局 | `layoutUseCase.getTopLevelLayouts()` |
+| 获取所有主题 | `themeUseCase.getThemes()` |
+| 获取单个主题 | `themeUseCase.getTheme(id)` |
+| 获取所有覆盖 | `themeUseCase.getOverrides()` |
+| 获取特定覆盖 | `themeUseCase.getOverride(blockId, themeId)` |

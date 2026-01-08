@@ -1,5 +1,10 @@
 /**
  * ThemeMatrix 核心模块导出
+ * 
+ * 【S6 架构约束】
+ * - 本模块下的服务（ThemeMatrixService, ThemeScanService）已完成 AppStore 解耦
+ * - 服务通过配置注入模式（getSettings + writeOps）获取数据和执行写操作
+ * - 写操作最终通过 useCases.theme.* 调用
  */
 
 // 主题操作相关工具
@@ -17,20 +22,27 @@ export * from './themeDeduplication';
 // 主题相关类型
 export * from './theme.types';
 
-// 批量操作相关类型  
-export * from './batch.types';
+// 批量操作相关类型（排除与 ThemeMatrixService 冲突的 BatchOperationResult）
+export {
+  type BatchOperationType,
+  type BatchOperationParams,
+  type BatchOperationResult,
+  type BatchOperationConfig,
+  BATCH_OPERATION_CONFIGS,
+  getAvailableOperations,
+  isThemeOperation,
+  isBlockOperation
+} from './batch.types';
 
 // 选择状态相关类型
 export * from './selection.types';
 
-
-// 主题矩阵主要业务服务
-export * from './ThemeMatrixService';
+// 主题矩阵主要业务服务（排除重复的 BatchOperationResult）
+export {
+  ThemeMatrixService,
+  type ThemeMatrixWriteOps,
+  type ThemeMatrixServiceConfig
+} from './ThemeMatrixService';
 
 // 主题扫描服务
 export * from './ThemeScanService';
-
-// NOTE: BatchOperationService 已从此处移除导出
-// 原因：该服务依赖 AppStore 和 ThemeManager（features层），违反 core 层边界约束
-// 如需使用 BatchOperationService，请直接从 '@core/theme-matrix/BatchOperationService' 导入
-// 迁移完成后可将其迁移到 features 层或重构其依赖

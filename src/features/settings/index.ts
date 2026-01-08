@@ -1,5 +1,11 @@
 /**
  * @file 功能汇总入口（Theme + Settings + Dashboard）
+ * 
+ * S7.0: appStore 已变为可选依赖
+ * - 新代码应使用 zustand store (useZustandAppStore) + useCases
+ * - 旧代码可继续传递 appStore 以保持兼容
+ * 
+ * S8.2: CodeblockEmbedder 已彻底移除 appStore 依赖
  */
 
 /* ========================================================================== */
@@ -20,7 +26,7 @@ export * from './props.types';
 import { App } from 'obsidian';
 import type ThinkPlugin from '@main';
 import { SettingsTab } from './SettingsTab';
-import { AppStore as SettingsAppStore } from '@/app/AppStore';
+import type { AppStore as SettingsAppStore } from '@/app/AppStore';
 import { DataStore } from '@/core/services/DataStore';
 
 import { BlockViewEditor } from './BlockViewEditor';
@@ -36,7 +42,7 @@ export { InputSettings } from './InputSettings';
 export { GeneralSettings } from './GeneralSettings';
 
 /**
- * Settings 模块内部用到的“视图编辑器组件”映射
+ * Settings 模块内部用到的"视图编辑器组件"映射
  * 原来的 ViewComponents，这里改名为 SettingsViewComponents
  * 避免和 Dashboard 的 ViewComponents 冲突
  */
@@ -49,11 +55,15 @@ export const SettingsViewComponents = {
   Timeline: TimelineViewEditor,
 };
 
-/** Settings 模块依赖项接口（原 SettingsDependencies） */
+/** 
+ * Settings 模块依赖项接口
+ * S7.0: appStore 已变为可选
+ */
 export interface SettingsDependencies {
   app: App;
   plugin: ThinkPlugin;
-  appStore: SettingsAppStore;
+  /** @deprecated 使用 zustand store + useCases 替代 */
+  appStore?: SettingsAppStore;
   dataStore: DataStore;
 }
 
@@ -82,10 +92,14 @@ import type { ActionService } from '@core/services/ActionService';
 import { VaultWatcher } from '@core/services/VaultWatcher';
 import { CodeblockEmbedder } from './CodeblockEmbedder';
 
-/** Dashboard 功能依赖项接口（原 DashboardDependencies） */
+/** 
+ * Dashboard 功能依赖项接口
+ * S8.2: appStore 已移除，CodeblockEmbedder 直接使用 Zustand store
+ */
 export interface DashboardDependencies {
   plugin: Plugin;
-  appStore: DashboardAppStore;
+  /** @deprecated S8.2: 已移除，不再使用 */
+  appStore?: DashboardAppStore;
   dataStore: DataStore;
   rendererService: RendererService;
   actionService: ActionService;
@@ -95,15 +109,19 @@ export interface DashboardDependencies {
  * Dashboard 初始化函数
  * 原：export function setup(deps: DashboardDependencies)
  * 这里重命名为 setupDashboard
+ * 
+ * S8.2: CodeblockEmbedder 已彻底移除 appStore 依赖
+ * - 直接使用 Zustand store 读取 settings
+ * - 不再传递 appStore 参数
  */
 export function setupDashboard(deps: DashboardDependencies): void {
-  const { plugin, dataStore, appStore, rendererService, actionService } = deps;
+  const { plugin, dataStore, rendererService, actionService } = deps;
 
   // 监听 Vault 变化
   new VaultWatcher(plugin, dataStore);
 
-  // 注册代码块仪表盘嵌入
-  new CodeblockEmbedder(plugin, appStore, dataStore, rendererService, actionService);
+  // S8.2: CodeblockEmbedder 不再需要 appStore 参数
+  new CodeblockEmbedder(plugin, dataStore, rendererService, actionService);
 }
 
 /* ========================================================================== */

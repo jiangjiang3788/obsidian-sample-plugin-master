@@ -1,29 +1,49 @@
 // src/features/aiinput/registerCommands.ts
-// AI 自然语言快速记录命令注册
+/**
+ * S7.2: AI 自然语言快速记录命令注册 - 移除 AppStore 依赖
+ * - 使用 zustand getAppStoreInstance() 获取 settings
+ * - 使用 SettingsProviderToken 创建 AI 服务
+ */
 
 import { Notice } from 'obsidian';
+import { container } from 'tsyringe';
 import type ThinkPlugin from '@/main';
-import { AppStore } from '@/app/AppStore';
 import { QuickInputModal } from '@/features/quickinput/QuickInputModal';
 import { AiTextPromptModal } from './AiTextPromptModal';
 import { AiBatchConfirmModal } from './AiBatchConfirmModal';
 import { AiConfigCache, AiHttpClient, AiNaturalLanguageRecordParser } from '@/core/ai';
+import { getAppStoreInstance } from '@/app/store/useAppStore';
+import { SettingsProviderToken, type ISettingsProvider } from '@/core/services/types';
+
+/**
+ * 创建一个基于 zustand store 的 SettingsProvider
+ */
+function createZustandSettingsProvider(): ISettingsProvider {
+    return {
+        getSettings: () => getAppStoreInstance().getState().settings
+    };
+}
 
 /**
  * 注册 AI 输入相关命令
+ * S7.2: 移除 appStore 参数，使用 zustand store
  */
-export function registerAiInputCommands(plugin: ThinkPlugin, appStore: AppStore) {
+export function registerAiInputCommands(plugin: ThinkPlugin) {
+    // S7.2: 创建基于 zustand 的 settings provider
+    const settingsProvider = createZustandSettingsProvider();
+    
     // 创建 AI 相关服务实例
-    const cache = new AiConfigCache(appStore);
+    const cache = new AiConfigCache(settingsProvider);
     const http = new AiHttpClient();
-    const parser = new AiNaturalLanguageRecordParser(appStore, cache, http);
+    const parser = new AiNaturalLanguageRecordParser(settingsProvider, cache, http);
 
     // 注册命令：AI 自然语言快速记录
     plugin.addCommand({
         id: 'think-ai-natural-input',
         name: 'AI: 自然语言快速记录',
         callback: async () => {
-            const settings = appStore.getSettings();
+            // S7.2: 使用 zustand store 获取 settings
+            const settings = getAppStoreInstance().getState().settings;
             const ai = settings.aiSettings;
 
             // 检查 AI 是否启用

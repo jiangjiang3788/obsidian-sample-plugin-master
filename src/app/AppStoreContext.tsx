@@ -2,15 +2,16 @@
  * AppStoreContext
  * Role: UI 层的 Store 和 Service 访问层
  * 职责：
- * 1. 提供 AppStore 的 React/Preact Context
+ * 1. 提供 AppStore 的 React/Preact Context（可选，用于兼容旧代码）
  * 2. 提供 DataStore 和 InputService 的 Context
  * 3. 提供 UseCases 的 Context（P0 新增）
- * 4. 通过 useAppStore()、useDataStore()、useInputService()、useUseCases() Hook 提供类型安全的访问
+ * 4. 通过 useDataStore()、useInputService()、useUseCases() Hook 提供类型安全的访问
  * 5. 替代 storeRegistry 中的全局导出
  * 
  * ⚠️ P0 边界防护：
  * - UI 层必须通过 useUseCases() 调用业务逻辑
  * - 禁止 UI 直接调用 AppStore 的私有方法
+ * - appStore 已变为可选，新代码应使用 zustand store + useCases
  */
 import { createContext } from 'preact';
 import { useContext } from 'preact/hooks';
@@ -19,18 +20,20 @@ import type { ComponentChildren } from 'preact';
 import type { AppStore } from './AppStore';
 import type { DataStore } from '@/core/services/DataStore';
 import type { InputService } from '@/core/services/InputService';
-import type { UseCases, USECASES_TOKEN } from './usecases';
+import type { UseCases } from './usecases';
 
 // ============== AppStore Context ==============
 
 /**
  * AppStore Context
  * 用于在 UI 层传递 AppStore 实例
+ * ⚠️ 已废弃：新代码应使用 zustand store (useZustandAppStore) + useCases
  */
 export const AppStoreContext = createContext<AppStore | null>(null);
 
 /**
  * AppStoreProvider Props
+ * @deprecated 新代码应使用 ServicesProvider
  */
 interface AppStoreProviderProps {
     store: AppStore;
@@ -40,6 +43,7 @@ interface AppStoreProviderProps {
 /**
  * AppStoreProvider
  * 包装 UI 树并提供 AppStore 实例
+ * @deprecated 新代码应使用 ServicesProvider
  */
 export function AppStoreProvider({ store, children }: AppStoreProviderProps) {
     return (
@@ -53,11 +57,16 @@ export function AppStoreProvider({ store, children }: AppStoreProviderProps) {
  * useAppStore Hook
  * 从 Context 获取 AppStore 实例
  * 
+ * ⚠️ 已废弃：新代码应使用：
+ * - 读取状态：useZustandAppStore(selector)
+ * - 写入状态：useUseCases()
+ * 
  * 兼容机制：
  * - 优先从 Context 获取 AppStore
  * - Context 不可用时，尝试从 DI 容器回退（仅限紧急兼容，会输出警告）
  * 
  * @returns AppStore 实例
+ * @deprecated 使用 useZustandAppStore + useUseCases 替代
  */
 export function useAppStore(): AppStore {
     const store = useContext(AppStoreContext);
@@ -194,12 +203,18 @@ export function useUseCases(): UseCases {
 
 /**
  * Services 集合接口
+ * 
+ * ⚠️ S7.0 变更：appStore 已变为可选
+ * - 新代码不应传递 appStore
+ * - 读取状态使用 zustand store (useZustandAppStore)
+ * - 写入状态使用 useCases
  */
 export interface Services {
-    appStore: AppStore;
+    /** @deprecated 使用 zustand store + useCases 替代 */
+    appStore?: AppStore;
     dataStore: DataStore;
     inputService: InputService;
-    useCases: UseCases;  // P0 新增
+    useCases: UseCases;
 }
 
 /**
@@ -212,7 +227,9 @@ interface ServicesProviderProps {
 
 /**
  * 校验 Services 对象完整性
- * @throws 如果任何服务缺失则抛出明确的错误信息
+ * @throws 如果任何必需服务缺失则抛出明确的错误信息
+ * 
+ * ⚠️ S7.0 变更：appStore 不再是必需的
  */
 function validateServices(services: Services, source?: string): void {
     const missing: string[] = [];
@@ -223,7 +240,8 @@ function validateServices(services: Services, source?: string): void {
             `请检查渲染入口是否正确传递了 services 参数。`
         );
     }
-    if (!services.appStore) missing.push('appStore');
+    // appStore 不再是必需的（S7.0 变更）
+    // if (!services.appStore) missing.push('appStore');
     if (!services.dataStore) missing.push('dataStore');
     if (!services.inputService) missing.push('inputService');
     if (!services.useCases) missing.push('useCases');
@@ -241,26 +259,38 @@ function validateServices(services: Services, source?: string): void {
 /**
  * ServicesProvider
  * 统一提供所有 UI 层需要的服务
- * 嵌套提供 AppStore、DataStore、InputService、UseCases 的 Context
+ * 嵌套提供 DataStore、InputService、UseCases 的 Context
  * 
  * ⚠️ P0：UI 层通过 useUseCases() 获取业务用例，而非直接调用 store action
+ * ⚠️ S7.0：appStore 已变为可选，仅在传递时提供 AppStoreContext
  * ⚠️ 运行时校验：如果 services 参数不完整，会立即抛出明确错误
  */
 export function ServicesProvider({ services, children }: ServicesProviderProps) {
-    // 运行时校验：确保所有服务都已正确传递
+    // 运行时校验：确保所有必需服务都已正确传递
     validateServices(services, 'ServicesProvider');
     
-    return (
-        <AppStoreContext.Provider value={services.appStore}>
-            <DataStoreContext.Provider value={services.dataStore}>
-                <InputServiceContext.Provider value={services.inputService}>
-                    <UseCasesContext.Provider value={services.useCases}>
-                        {children}
-                    </UseCasesContext.Provider>
-                </InputServiceContext.Provider>
-            </DataStoreContext.Provider>
-        </AppStoreContext.Provider>
+    // 构建嵌套的 Provider 树
+    // appStore 是可选的，仅在传递时提供
+    let content = (
+        <DataStoreContext.Provider value={services.dataStore}>
+            <InputServiceContext.Provider value={services.inputService}>
+                <UseCasesContext.Provider value={services.useCases}>
+                    {children}
+                </UseCasesContext.Provider>
+            </InputServiceContext.Provider>
+        </DataStoreContext.Provider>
     );
+    
+    // 如果提供了 appStore，则包裹 AppStoreContext（兼容旧代码）
+    if (services.appStore) {
+        content = (
+            <AppStoreContext.Provider value={services.appStore}>
+                {content}
+            </AppStoreContext.Provider>
+        );
+    }
+    
+    return content;
 }
 
 /**

@@ -533,6 +533,18 @@
       "initialView": "月",
       "initialDateFollowsNow": true,
       "parentId": null
+    },
+    {
+      "id": "layout_mk4vl0o1qr8pm",
+      "name": "新布局2",
+      "viewInstanceIds": [
+        "view_membbqjam5v63",
+        "view_mg1zanri06mhu"
+      ],
+      "displayMode": "list",
+      "initialView": "月",
+      "initialDateFollowsNow": true,
+      "parentId": null
     }
   ],
   "inputSettings": {
