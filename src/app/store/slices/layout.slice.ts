@@ -31,6 +31,7 @@ import type { StateCreator } from 'zustand';
 import type { ThinkSettings, Layout } from '@/core/types/schema';
 import type { SettingsRepository } from '@/core/services/SettingsRepository';
 import { generateId, moveItemInArray } from '@core/utils/array';
+import { createSliceMeta } from '@/shared/types/ActionMeta';
 
 // ============== 类型定义 ==============
 
@@ -114,12 +115,13 @@ export function createLayoutSlice(
                 };
 
                 // S2: 只调用 settingsRepository.update()，settings 由 ServiceManager 订阅后统一同步
+                // S1: 传入 ActionMeta 用于 dev 日志
                 await settingsRepository.update(draft => {
                     if (!draft.layouts) {
                         draft.layouts = [];
                     }
                     draft.layouts.push(newLayout);
-                });
+                }, createSliceMeta('layout.addLayout'));
 
                 set({ layoutLoading: false });
                 return newLayout;
@@ -141,12 +143,13 @@ export function createLayoutSlice(
 
             try {
                 // S2: 只调用 settingsRepository.update()，settings 由 ServiceManager 订阅后统一同步
+                // S1: 传入 ActionMeta 用于 dev 日志
                 await settingsRepository.update(draft => {
                     const layout = draft.layouts?.find(l => l.id === id);
                     if (layout) {
                         Object.assign(layout, updates);
                     }
-                });
+                }, createSliceMeta('layout.updateLayout'));
                 set({ layoutLoading: false });
             } catch (error: any) {
                 console.error('[LayoutSlice] updateLayout 失败:', error);
@@ -165,9 +168,10 @@ export function createLayoutSlice(
 
             try {
                 // S2: 只调用 settingsRepository.update()，settings 由 ServiceManager 订阅后统一同步
+                // S1: 传入 ActionMeta 用于 dev 日志
                 await settingsRepository.update(draft => {
                     draft.layouts = draft.layouts?.filter(l => l.id !== id) || [];
-                });
+                }, createSliceMeta('layout.deleteLayout'));
                 set({ layoutLoading: false });
             } catch (error: any) {
                 console.error('[LayoutSlice] deleteLayout 失败:', error);
@@ -186,9 +190,10 @@ export function createLayoutSlice(
 
             try {
                 // S2: 只调用 settingsRepository.update()，settings 由 ServiceManager 订阅后统一同步
+                // S1: 传入 ActionMeta 用于 dev 日志
                 await settingsRepository.update(draft => {
                     draft.layouts = moveItemInArray(draft.layouts || [], id, direction);
-                });
+                }, createSliceMeta('layout.moveLayout'));
                 set({ layoutLoading: false });
             } catch (error: any) {
                 console.error('[LayoutSlice] moveLayout 失败:', error);
@@ -219,12 +224,13 @@ export function createLayoutSlice(
                 };
 
                 // S2: 只调用 settingsRepository.update()，settings 由 ServiceManager 订阅后统一同步
+                // S1: 传入 ActionMeta 用于 dev 日志
                 await settingsRepository.update(draft => {
                     if (!draft.layouts) {
                         draft.layouts = [];
                     }
                     draft.layouts.push(newLayout);
-                });
+                }, createSliceMeta('layout.duplicateLayout'));
 
                 set({ layoutLoading: false });
                 return newLayout;
@@ -246,6 +252,7 @@ export function createLayoutSlice(
 
             try {
                 // S2: 只调用 settingsRepository.update()，settings 由 ServiceManager 订阅后统一同步
+                // S1: 传入 ActionMeta 用于 dev 日志
                 await settingsRepository.update(draft => {
                     const layouts = draft.layouts || [];
                     const layoutMap = new Map(layouts.map(l => [l.id, l]));
@@ -257,7 +264,7 @@ export function createLayoutSlice(
                     const orderedSet = new Set(orderedIds);
                     const remaining = layouts.filter(l => !orderedSet.has(l.id));
                     draft.layouts = [...reordered, ...remaining];
-                });
+                }, createSliceMeta('layout.reorderLayouts'));
                 set({ layoutLoading: false });
             } catch (error: any) {
                 console.error('[LayoutSlice] reorderLayouts 失败:', error);
@@ -275,6 +282,7 @@ export function createLayoutSlice(
 
             try {
                 // S2: 只调用 settingsRepository.update()，settings 由 ServiceManager 订阅后统一同步
+                // S1: 传入 ActionMeta 用于 dev 日志
                 await settingsRepository.update(draft => {
                     layoutIds.forEach(id => {
                         const layout = draft.layouts?.find(l => l.id === id);
@@ -282,7 +290,7 @@ export function createLayoutSlice(
                             Object.assign(layout, updates);
                         }
                     });
-                });
+                }, createSliceMeta('layout.batchUpdateLayouts'));
                 set({ layoutLoading: false });
             } catch (error: any) {
                 console.error('[LayoutSlice] batchUpdateLayouts 失败:', error);
@@ -299,9 +307,10 @@ export function createLayoutSlice(
             try {
                 const layoutIdSet = new Set(layoutIds);
                 // S2: 只调用 settingsRepository.update()，settings 由 ServiceManager 订阅后统一同步
+                // S1: 传入 ActionMeta 用于 dev 日志
                 await settingsRepository.update(draft => {
                     draft.layouts = draft.layouts?.filter(l => !layoutIdSet.has(l.id)) || [];
-                });
+                }, createSliceMeta('layout.batchDeleteLayouts'));
                 set({ layoutLoading: false });
             } catch (error: any) {
                 console.error('[LayoutSlice] batchDeleteLayouts 失败:', error);
@@ -319,12 +328,13 @@ export function createLayoutSlice(
 
             try {
                 // S2: 只调用 settingsRepository.update()，settings 由 ServiceManager 订阅后统一同步
+                // S1: 传入 ActionMeta 用于 dev 日志
                 await settingsRepository.update(draft => {
                     const layout = draft.layouts?.find(l => l.id === layoutId);
                     if (layout) {
                         layout.parentId = newParentId;
                     }
-                });
+                }, createSliceMeta('layout.moveLayoutToParent'));
                 set({ layoutLoading: false });
             } catch (error: any) {
                 console.error('[LayoutSlice] moveLayoutToParent 失败:', error);
@@ -342,12 +352,13 @@ export function createLayoutSlice(
 
             try {
                 // S2: 只调用 settingsRepository.update()，settings 由 ServiceManager 订阅后统一同步
+                // S1: 传入 ActionMeta 用于 dev 日志
                 await settingsRepository.update(draft => {
                     const layout = draft.layouts?.find(l => l.id === layoutId);
                     if (layout && !layout.viewInstanceIds.includes(viewInstanceId)) {
                         layout.viewInstanceIds.push(viewInstanceId);
                     }
-                });
+                }, createSliceMeta('layout.addViewInstanceToLayout'));
                 set({ layoutLoading: false });
             } catch (error: any) {
                 console.error('[LayoutSlice] addViewInstanceToLayout 失败:', error);
@@ -363,12 +374,13 @@ export function createLayoutSlice(
 
             try {
                 // S2: 只调用 settingsRepository.update()，settings 由 ServiceManager 订阅后统一同步
+                // S1: 传入 ActionMeta 用于 dev 日志
                 await settingsRepository.update(draft => {
                     const layout = draft.layouts?.find(l => l.id === layoutId);
                     if (layout) {
                         layout.viewInstanceIds = layout.viewInstanceIds.filter(id => id !== viewInstanceId);
                     }
-                });
+                }, createSliceMeta('layout.removeViewInstanceFromLayout'));
                 set({ layoutLoading: false });
             } catch (error: any) {
                 console.error('[LayoutSlice] removeViewInstanceFromLayout 失败:', error);
@@ -384,12 +396,13 @@ export function createLayoutSlice(
 
             try {
                 // S2: 只调用 settingsRepository.update()，settings 由 ServiceManager 订阅后统一同步
+                // S1: 传入 ActionMeta 用于 dev 日志
                 await settingsRepository.update(draft => {
                     const layout = draft.layouts?.find(l => l.id === layoutId);
                     if (layout) {
                         layout.viewInstanceIds = viewInstanceIds;
                     }
-                });
+                }, createSliceMeta('layout.reorderViewInstancesInLayout'));
                 set({ layoutLoading: false });
             } catch (error: any) {
                 console.error('[LayoutSlice] reorderViewInstancesInLayout 失败:', error);

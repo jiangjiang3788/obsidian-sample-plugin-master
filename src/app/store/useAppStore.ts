@@ -25,6 +25,7 @@ import { create } from 'zustand';
 import { subscribeWithSelector } from 'zustand/middleware';
 import type { ThinkSettings } from '@/core/types/schema';
 import type { SettingsRepository } from '@/core/services/SettingsRepository';
+import { createSliceMeta } from '@/shared/types/ActionMeta';
 import { createThemeSlice, type ThemeSlice } from './slices/theme.slice';
 import { createLayoutSlice, type LayoutSlice } from './slices/layout.slice';
 import { createSettingsSlice, type SettingsSlice } from './slices/settings.slice';
@@ -107,11 +108,12 @@ export function createAppStore(settingsRepository: SettingsRepository) {
 
                 try {
                     // S2: 只调用 settingsRepository.update()，settings 由 ServiceManager 订阅后统一同步
+                    // S1: 传入 ActionMeta 用于 dev 日志
                     await settingsRepository.update(draft => {
                         const blocks = draft.inputSettings?.blocks || [];
                         const [removed] = blocks.splice(oldIndex, 1);
                         blocks.splice(newIndex, 0, removed);
-                    });
+                    }, createSliceMeta('core.reorderBlocks'));
                     set({ isLoading: false });
                 } catch (error: any) {
                     console.error('useAppStore: Block 重排序失败', error);

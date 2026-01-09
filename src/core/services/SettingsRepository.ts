@@ -3,19 +3,28 @@
  * SettingsRepository - 设置持久化仓库
  * Role: Repository (数据访问层)
  * 
+ * 【S1 可观测性】
+ * - 所有写入操作支持可选 ActionMeta 参数
+ * - 在 dev 环境输出 [SETTINGS_WRITE] 日志
+ * - 包含 actionName + source + diff
+ * 
  * Do:
  * - 封装设置的读写 IO 操作
  * - 使用 immer/produce 进行不可变更新
  * - 提供统一的设置访问接口
+ * - 在 dev 环境记录写入日志
  * 
  * Don't:
  * - 管理 UI 状态
  * - 处理业务逻辑
+ * - 在 production 环境输出日志
  */
 
 import { singleton, inject } from 'tsyringe';
 import { produce } from 'immer';
 import type { ThinkSettings } from '@/core/types/schema';
+import type { ActionMeta } from '@/shared/types/ActionMeta';
+import { logSettingsWrite } from '@/shared/utils/devLogger';
 
 // ============== 类型定义 ==============
 
@@ -108,22 +117,31 @@ export class SettingsRepository {
 
     /**
      * 保存设置
+     * @param settings 新设置
+     * @param meta 可选的动作元数据（用于 dev 日志）
      */
-    async save(settings: ThinkSettings): Promise<void> {
+    async save(settings: ThinkSettings, meta?: ActionMeta): Promise<void> {
+        const before = this.currentSettings;
         this.currentSettings = settings;
         await this.persistence.saveData(settings);
+        
+        // S1: Dev-only 日志
+        logSettingsWrite(meta, before, settings);
     }
 
     /**
      * 使用 immer 更新设置
      * @param mutator 修改函数，接收 draft 参数进行修改
+     * @param meta 可选的动作元数据（用于 dev 日志）
      * @returns 更新后的设置
      */
-    async update(mutator: (draft: ThinkSettings) => void): Promise<ThinkSettings> {
+    async update(mutator: (draft: ThinkSettings) => void, meta?: ActionMeta): Promise<ThinkSettings> {
         if (!this.currentSettings) {
             throw new Error('SettingsRepository: 设置未加载，请先调用 load()');
         }
 
+        const before = this.currentSettings;
+        
         // 使用 immer 进行不可变更新
         const newSettings = produce(this.currentSettings, mutator);
         
@@ -132,6 +150,9 @@ export class SettingsRepository {
             this.currentSettings = newSettings;
             await this.persistence.saveData(newSettings);
             this.notify();
+            
+            // S1: Dev-only 日志
+            logSettingsWrite(meta, before, newSettings);
         }
 
         return newSettings;

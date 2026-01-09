@@ -335,14 +335,91 @@ export class AppStore implements ISettingsProvider {
 // DEBUG 开关：仅在开发调试时手动开启，生产构建保持 false
 const DEBUG_STORE_SUBSCRIPTIONS = false;
 
+// ============== S2 断路测试配置 ==============
+
+/**
+ * 断路开关：DEV 环境默认启用
+ */
+const CIRCUIT_BREAKER_ENABLED = import.meta.env.DEV;
+
+/**
+ * 逃生舱检查：允许临时放行（方便渐进迁移）
+ */
+const isLegacyAllowed = (): boolean => {
+    try {
+        return typeof localStorage !== 'undefined' && 
+               localStorage.getItem('ALLOW_LEGACY_APPSTORE') === '1';
+    } catch {
+        return false;
+    }
+};
+
+/**
+ * 断路报错函数
+ */
+const circuitBreakerError = (hookName: string, context: string): void => {
+    if (!CIRCUIT_BREAKER_ENABLED) {
+        return; // prod 环境不执行断路逻辑
+    }
+
+    const message = `🚨 [ZOMBIE CODE DETECTED] ${hookName} is deprecated!
+
+⚠️ 迁移指引：
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📖 读取状态 - 使用 Zustand hooks：
+  • useSettingsStore(selector) - 设置相关状态
+  • useTimerStore(selector) - 计时器相关状态
+  • useThemeStore(selector) - 主题相关状态
+  • useZustandAppStore(selector) - 通用状态访问
+
+📝 写入状态 - 使用 useCases：
+  • const { settings, timer } = useUseCases();
+  • settings.updateSettings({ ... })
+  • timer.start() / timer.stop() / timer.reset()
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📍 调用位置：${context}
+📁 源文件：src/app/AppStore.ts
+
+🔧 逃生舱（临时放行）：
+  localStorage.setItem('ALLOW_LEGACY_APPSTORE', '1')
+  
+请立即迁移到新的 Zustand hooks / useCases！`;
+
+    console.error(message);
+    
+    // 输出调用堆栈，帮助定位调用者
+    console.trace('📚 调用堆栈（用于定位僵尸代码位置）：');
+    
+    if (!isLegacyAllowed()) {
+        throw new Error(`🚨 [ZOMBIE CODE] ${hookName} is deprecated! 请迁移到 Zustand hooks / useCases。详见上方控制台输出。`);
+    } else {
+        console.warn(
+            `⚠️ [CIRCUIT BREAKER] 逃生舱已启用，不抛出异常。\n` +
+            `请尽快完成迁移后移除：localStorage.removeItem('ALLOW_LEGACY_APPSTORE')`
+        );
+    }
+};
+
 /**
  * useStore Hook
  * @deprecated ZUSTAND MIGRATION: 请直接使用 useZustandAppStore(selector) 替代
+ * 
+ * ⚠️ S2 断路测试：
+ * - DEV 环境下每次调用都会报错 + 输出堆栈
+ * - 默认会抛出异常，使用逃生舱可临时放行
+ * - 逃生舱：localStorage.setItem('ALLOW_LEGACY_APPSTORE', '1')
  * 
  * 兼容层：将 AppState selector 映射到 Zustand store
  * AppState.settings -> AppStoreState.settings
  */
 export function useStore<T>(selector: (state: AppState) => T): T {
+    // S2 断路测试：核心断路点
+    circuitBreakerError(
+        'useStore()',
+        'useStore hook 被调用（来自 AppStore.ts）'
+    );
+    
     // ZUSTAND MIGRATION: 映射旧 AppState 到新 AppStoreState
     // AppState 只有 { settings } 字段，直接映射
     const zustandSelector = useCallback(

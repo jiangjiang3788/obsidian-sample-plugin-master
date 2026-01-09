@@ -464,9 +464,7 @@
         "view_mer6ll4mtbjry",
         "view_mer6n7pwf7suy",
         "view_mg1zanri06mhu",
-        "view_membnf1hgjgm3",
-        "view_membbqjam5v63",
-        "view_mh4itucqmm9rt"
+        "view_membnf1hgjgm3"
       ],
       "displayMode": "list",
       "initialView": "周",
@@ -476,15 +474,7 @@
       "isOverviewMode": false,
       "initialDate": "2025-05-26",
       "useFieldGranularity": false,
-      "selectedThemes": [
-        "工作",
-        "工作/老板任务",
-        "工作/其他",
-        "工作/设计",
-        "工作/手续、对账",
-        "工作/通勤",
-        "工作/投标"
-      ],
+      "selectedThemes": [],
       "selectedCategories": []
     },
     {
