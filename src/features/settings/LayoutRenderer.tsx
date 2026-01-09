@@ -9,7 +9,7 @@ import { DashboardViewComponents as ViewComponents } from './index';
 
 import { getDateRange, dayjs } from '@core/utils/date';
 import { useZustandAppStore } from '@/app/store/useAppStore';
-import { useAppStore, useUseCases } from '@/app/AppStoreContext';
+import { useUseCases } from '@/app/AppStoreContext';
 import type { ActionService } from '@core/services/ActionService';
 import { ItemService } from '@core/services/ItemService';
 import type { TimerService } from '@features/timer/TimerService';
@@ -107,8 +107,7 @@ const ViewContent = ({
 };
 
 export function LayoutRenderer({ layout, dataStore, app, actionService, itemService, timerService }: any) {
-    // [P1] 通过 Context 获取 AppStore 和 UseCases
-    const appStore = useAppStore();
+    // [P1] 通过 Context 获取 UseCases（已移除 useAppStore，统一用 Zustand）
     const useCases = useUseCases();
     
     // 使用 Zustand store 获取 settings 相关状态

@@ -31,7 +31,7 @@ import { singleton, inject } from 'tsyringe';
 import type { ThinkSettings, ViewInstance, Layout, InputSettings, BlockTemplate, ThemeDefinition, ThemeOverride, Group, GroupType, Groupable } from '@/core/types/schema';
 import { SETTINGS_TOKEN, ISettingsProvider } from '@/core/services/types';
 import { SettingsRepository } from '@/core/services/SettingsRepository';
-import { useAppStore } from '@/app/AppStoreContext';
+import { useZustandAppStore, type ZustandAppStore as AppStoreState } from '@/app/store/useAppStore'; // ZUSTAND MIGRATION: 替换 useAppStore
 import { ThemeStore } from '@features/settings/ThemeStore';
 import type { TimerState } from '@/app/store/slices/timer.slice';
 import { BlockStore } from '@/features/settings/BlockStore';
@@ -337,43 +337,24 @@ const DEBUG_STORE_SUBSCRIPTIONS = false;
 
 /**
  * useStore Hook
- * 从 Context 获取 AppStore 并订阅状态变化
- * @param selector 状态选择器函数
- * @returns 选择的状态切片
+ * @deprecated ZUSTAND MIGRATION: 请直接使用 useZustandAppStore(selector) 替代
+ * 
+ * 兼容层：将 AppState selector 映射到 Zustand store
+ * AppState.settings -> AppStoreState.settings
  */
 export function useStore<T>(selector: (state: AppState) => T): T {
-    // 通过 Context 获取 store 实例
-    const store = useAppStore();
+    // ZUSTAND MIGRATION: 映射旧 AppState 到新 AppStoreState
+    // AppState 只有 { settings } 字段，直接映射
+    const zustandSelector = useCallback(
+        (zustandState: AppStoreState) => {
+            // 构造兼容的 AppState 对象
+            const compatAppState: AppState = {
+                settings: zustandState.settings
+            };
+            return selector(compatAppState);
+        },
+        [selector]
+    );
     
-    const memoizedSelector = useCallback(selector, []);
-    
-    const [state, setState] = useState(() => memoizedSelector(store.getState()));
-
-    useEffect(() => {
-        const unsubscribe = store.subscribe(() => {
-            const newStateSlice = memoizedSelector(store.getState());
-            
-            setState(currentStateSlice => {
-                if (Object.is(currentStateSlice, newStateSlice)) {
-                    return currentStateSlice;
-                }
-                // 调试日志：默认关闭，仅在开发时手动开启
-                if (DEBUG_STORE_SUBSCRIPTIONS) {
-                    console.log("[DEBUG] useStore re-render triggered", {
-                        selectorHint: memoizedSelector.toString().slice(0, 100)
-                    });
-                }
-                return newStateSlice;
-            });
-        });
-
-        const initialStateSlice = memoizedSelector(store.getState());
-        if (!Object.is(state, initialStateSlice)) {
-            setState(initialStateSlice);
-        }
-
-        return unsubscribe;
-    }, [store, memoizedSelector]);
-
-    return state;
+    return useZustandAppStore(zustandSelector);
 }

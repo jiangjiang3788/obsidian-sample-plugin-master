@@ -49,8 +49,9 @@ export default defineConfig({
         },
 
     build: {
-        outDir: '.',
-        emptyOutDir: false,
+        outDir: 'dist',
+        emptyOutDir: true,
+        copyPublicDir: false,
         lib: {
             entry: 'src/main.ts',
             formats: ['cjs'],
