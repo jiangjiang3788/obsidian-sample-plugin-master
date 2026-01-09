@@ -172,7 +172,7 @@ export class ThemeUseCase {
      * @param themeIds 主题ID列表
      * @param status 目标状态
      */
-    async batchUpdateThemeStatus(themeIds: string[], status: 'active' | 'archived'): Promise<void> {
+    async batchUpdateThemeStatus(themeIds: string[], status: 'active' | 'inactive'): Promise<void> {
         try {
             const store = getAppStoreInstance();
             const state = store.getState();

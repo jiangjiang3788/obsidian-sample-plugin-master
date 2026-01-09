@@ -41,7 +41,7 @@ export interface ThemeSliceActions {
     // Theme 批量操作
     batchUpdateThemes: (themeIds: string[], updates: Partial<ThemeDefinition>) => Promise<void>;
     batchDeleteThemes: (themeIds: string[]) => Promise<void>;
-    batchUpdateThemeStatus: (themeIds: string[], status: 'active' | 'archived') => Promise<void>;
+    batchUpdateThemeStatus: (themeIds: string[], status: 'active' | 'inactive') => Promise<void>;
     batchUpdateThemeIcon: (themeIds: string[], icon: string) => Promise<void>;
     
     // Override 操作
@@ -232,7 +232,7 @@ export function createThemeSlice(
             }
         },
 
-        batchUpdateThemeStatus: async (themeIds: string[], status: 'active' | 'archived'): Promise<void> => {
+        batchUpdateThemeStatus: async (themeIds: string[], status: 'active' | 'inactive'): Promise<void> => {
             const state = get();
             if (!state.isInitialized) return;
 

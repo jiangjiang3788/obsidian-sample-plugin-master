@@ -23,7 +23,6 @@ import AddIcon from '@mui/icons-material/Add';
 import { useState, useMemo } from 'preact/hooks';
 import { TemplateEditorModal } from '@features/settings/TemplateEditorModal';
 import type { BlockTemplate, ThemeDefinition, ThemeOverride } from '@/core/types/schema';
-import { ThemeManager } from './ThemeManager';
 
 // 导入服务
 import { ThemeMatrixService } from '@/core/theme-matrix/ThemeMatrixService';
@@ -82,9 +81,6 @@ export function ThemeMatrix() {
         handleSelectBlockColumn,
     } = useThemeMatrixEditor();
 
-    // 初始化服务
-    const themeManager = useMemo(() => new ThemeManager(), []);
-    
     // 批量操作 Hook - 通过 useUseCases 获取
     const { executeBatchOperation, isProcessing } = useBatchOperations({
         onOperationComplete: clearSelection,
@@ -99,19 +95,19 @@ export function ThemeMatrix() {
             deleteTheme: (themeId: string) => { useCases.theme.deleteTheme(themeId); },
             deleteOverride: async (blockId: string, themeId: string) => { await useCases.theme.deleteOverride(blockId, themeId); },
             upsertOverride: async (override: any) => { await useCases.theme.upsertOverride(override); },
+            batchUpdateThemeStatus: async (themeIds: string[], status: 'active' | 'inactive') => { await useCases.theme.batchUpdateThemeStatus(themeIds, status); },
         },
-        themeManager,
-    }), [settings, useCases, themeManager]);
+    }), [settings, useCases]);
     
     // 【S6】ThemeScanService - 使用 useCases 作为写入口
     const themeScanService = useMemo(() => new ThemeScanService({ 
         getSettings: () => settings,
         writeOps: {
             addTheme: (path: string) => { useCases.theme.addTheme(path); },
+            batchUpdateThemeStatus: async (themeIds: string[], status: 'active' | 'inactive') => { await useCases.theme.batchUpdateThemeStatus(themeIds, status); },
         },
         dataStore, 
-        themeManager,
-    }), [settings, useCases, dataStore, themeManager]);
+    }), [settings, useCases, dataStore]);
     
     // 获取扩展的主题信息
     const extendedThemes = useMemo(() => {

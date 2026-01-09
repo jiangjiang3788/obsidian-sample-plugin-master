@@ -9,6 +9,9 @@ import { VaultFileStorage, STORAGE_TOKEN } from '@core/services/StorageService';
  * 配置核心 DI 容器
  * 注册基础服务和配置
  * 
+ * 注意：此文件在 core 层，不应依赖 features 层
+ * THEME_MATCHER_TOKEN 的注册在 ServiceManager 中完成
+ * 
  * @param app Obsidian App 实例
  * @param settings 插件设置
  */

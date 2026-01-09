@@ -1,5 +1,4 @@
 // src/core/domain/theme.ts
-import { STATUS, SOURCE } from '@/constants';
 import { pathUtils } from '@core/utils/pathUtils';
 import type { ActiveStatus, SourceType } from '@/shared/types/common';
 
@@ -7,6 +6,22 @@ import type { ActiveStatus, SourceType } from '@/shared/types/common';
  * 主题系统的核心接口定义
  * 用于统一管理预定义主题和发现的主题
  */
+
+/**
+ * 主题状态常量
+ */
+export const THEME_STATUS = {
+  ACTIVE: 'active' as const,
+  INACTIVE: 'inactive' as const,
+};
+
+/**
+ * 主题来源常量
+ */
+export const THEME_SOURCE = {
+  PREDEFINED: 'predefined' as const,
+  DISCOVERED: 'discovered' as const,
+};
 
 /**
  * 主题接口
@@ -100,6 +115,25 @@ export const DEFAULT_THEME_CONFIG: ThemeManagerConfig = {
 };
 
 /**
+ * 主题匹配服务接口
+ * 用于 DataStore 等 core 层服务依赖注入
+ * 避免 core 直接依赖 features 层的 ThemeManager
+ */
+export interface IThemeMatcher {
+  /**
+   * 根据部分文本匹配主题路径
+   * @param headerText - 标题文本
+   * @returns 匹配到的主题路径，或 null
+   */
+  findThemeByPartialMatch(headerText: string): string | null;
+}
+
+/**
+ * 主题匹配服务注入令牌
+ */
+export const THEME_MATCHER_TOKEN = Symbol('IThemeMatcher');
+
+/**
  * 创建新主题的辅助函数
  */
 export function createTheme(
@@ -116,7 +150,7 @@ export function createTheme(
     name,
     icon: options?.icon,
     parentId: options?.parentId || null,
-    status: options?.status || (source === SOURCE.PREDEFINED ? STATUS.ACTIVE : STATUS.INACTIVE),
+    status: options?.status || (source === THEME_SOURCE.PREDEFINED ? THEME_STATUS.ACTIVE : THEME_STATUS.INACTIVE),
     source,
     usageCount: options?.usageCount || 0,
     lastUsed: options?.lastUsed,
@@ -131,7 +165,7 @@ export function sortThemes(themes: Theme[]): Theme[] {
   return [...themes].sort((a, b) => {
     // 首先按状态排序（active优先）
     if (a.status !== b.status) {
-      return a.status === STATUS.ACTIVE ? -1 : 1;
+      return a.status === THEME_STATUS.ACTIVE ? -1 : 1;
     }
     
     // 然后按使用次数降序

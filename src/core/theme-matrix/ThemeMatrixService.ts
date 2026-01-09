@@ -3,7 +3,6 @@
  */
 import { type ThemeDefinition, ThemeOverride, BlockTemplate, ThinkSettings } from '@/core/types/schema';
 import { type ExtendedTheme, BatchOperationType, ThemeTreeNode } from '@core/theme-matrix';
-import { ThemeManager } from '@features/settings/ThemeManager';
 import { 
     normalizePath,
     validatePathCharacters 
@@ -26,6 +25,7 @@ export interface ThemeMatrixWriteOps {
     deleteTheme: (themeId: string) => void;
     deleteOverride: (blockId: string, themeId: string) => Promise<void>;
     upsertOverride: (override: ThemeOverride) => Promise<void>;
+    batchUpdateThemeStatus: (themeIds: string[], status: 'active' | 'inactive') => Promise<void>;
 }
 
 /**
@@ -36,8 +36,6 @@ export interface ThemeMatrixServiceConfig {
     getSettings: () => ThinkSettings;
     /** 写操作回调 */
     writeOps: ThemeMatrixWriteOps;
-    /** 主题管理器实例 */
-    themeManager?: ThemeManager;
 }
 
 /**
@@ -59,12 +57,10 @@ export interface BatchOperationResult {
 export class ThemeMatrixService {
     private getSettings: () => ThinkSettings;
     private writeOps: ThemeMatrixWriteOps;
-    private themeManager: ThemeManager;
     
     constructor(config: ThemeMatrixServiceConfig) {
         this.getSettings = config.getSettings;
         this.writeOps = config.writeOps;
-        this.themeManager = config.themeManager || new ThemeManager();
     }
     
     /**
@@ -73,18 +69,23 @@ export class ThemeMatrixService {
      * @returns 扩展主题列表
      */
     getExtendedThemes(themes: ThemeDefinition[]): ExtendedTheme[] {
+        const settings = this.getSettings();
+        const activeThemePaths = settings.activeThemePaths || [];
+
         return themes.map(theme => {
-            const themeData = this.themeManager.getThemeByPath(theme.path);
-            // 如果主题已经有 source 属性，保留它；否则根据 themeData 判断
-            const source = (theme as any).source || 
-                          (themeData?.source) || 
-                          'predefined';
+            // 状态真源：settings.activeThemePaths
+            const isActive = activeThemePaths.includes(theme.path);
+            
+            // 如果主题已经有 source 属性，保留它；否则默认为 predefined
+            // 注意：ThemeManager 移除后，source 属性可能需要从其他地方获取，或者暂时默认为 predefined
+            const source = (theme as any).source || 'predefined';
+            
             return {
                 ...theme,
-                status: themeData?.status || 'active',
+                status: isActive ? 'active' : 'inactive',
                 source: source as 'predefined' | 'discovered',
-                usageCount: themeData?.usageCount || 0,
-                lastUsed: themeData?.lastUsed
+                usageCount: 0, // 暂时移除 usageCount，后续如果需要可以从 DataStore 获取
+                lastUsed: undefined // 暂时移除 lastUsed
             } as ExtendedTheme;
         });
     }
@@ -210,12 +211,12 @@ export class ThemeMatrixService {
             try {
                 switch (operation) {
                     case 'activate':
-                        this.themeManager.activateTheme(theme.path);
+                        await this.writeOps.batchUpdateThemeStatus([themeId], 'active');
                         result.success++;
                         break;
                         
-                    case 'archive':
-                        this.themeManager.deactivateTheme(theme.path);
+                    case 'inactive':
+                        await this.writeOps.batchUpdateThemeStatus([themeId], 'inactive');
                         result.success++;
                         break;
                         
@@ -388,14 +389,6 @@ export class ThemeMatrixService {
         }
         
         return result;
-    }
-    
-    /**
-     * 获取 ThemeManager 实例
-     * @returns ThemeManager 实例
-     */
-    getThemeManager(): ThemeManager {
-        return this.themeManager;
     }
     
     /**

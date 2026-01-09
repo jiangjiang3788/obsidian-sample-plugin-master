@@ -1,7 +1,7 @@
 /**
  * DataStore - 数据存储与查询核心
  * Role: Service (业务 + IO)
- * Dependencies: ObsidianPlatform, App, ThemeManager, IPluginStorage
+ * Dependencies: ObsidianPlatform, App, IThemeMatcher, IPluginStorage
  * 
  * Do:
  * - 扫描 Vault 中的 Markdown 文件，解析成结构化的 Item 对象
@@ -27,7 +27,8 @@ import { filterByRules, sortItems } from '@core/utils/itemFilter';
 import { parseRecurrence } from '@core/utils/mark';
 // [新增] 注入令牌与服务
 import { AppToken } from '@core/services/types';
-import { ThemeManager } from '@features/settings/ThemeManager';
+import type { IThemeMatcher } from '@core/types/theme';
+import { THEME_MATCHER_TOKEN } from '@core/types/theme';
 import type { IPluginStorage } from '@core/services/StorageService';
 import { STORAGE_TOKEN } from '@core/services/StorageService';
 import {
@@ -42,7 +43,7 @@ export class DataStore {
   constructor(
     @inject(ObsidianPlatform) private platform: ObsidianPlatform,
     @inject(AppToken) private app: App,
-    @inject(ThemeManager) private themeManager: ThemeManager,
+    @inject(THEME_MATCHER_TOKEN) private themeMatcher: IThemeMatcher,
     @inject(STORAGE_TOKEN) private storage: IPluginStorage
   ) {}
 
@@ -191,7 +192,7 @@ export class DataStore {
               const lineNo = hashIdx >= 0 ? Number(blockItem.id.slice(hashIdx + 1)) : undefined;
               (blockItem as any).file = { path: filePath, line: lineNo, basename: fileName };
               if (currentHeader) {
-                const matchedTheme = this.themeManager.findThemeByPartialMatch(currentHeader);
+                const matchedTheme = this.themeMatcher.findThemeByPartialMatch(currentHeader);
                 (blockItem as any).theme = matchedTheme || currentHeader;
               }
               (blockItem as any).titleLower = (blockItem.title || '').toLowerCase();
@@ -214,7 +215,7 @@ export class DataStore {
           if (currentHeader) {
             taskItem.header = currentHeader;
             // 使用智能匹配获取完整主题路径
-            const matchedTheme = this.themeManager.findThemeByPartialMatch(currentHeader);
+            const matchedTheme = this.themeMatcher.findThemeByPartialMatch(currentHeader);
             taskItem.theme = matchedTheme || currentHeader;
           }
           taskItem.filename = fileName;
