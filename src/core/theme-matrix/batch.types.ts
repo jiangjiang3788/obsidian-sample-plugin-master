@@ -9,7 +9,7 @@ import type { ThemeOverride } from '@/core/types/schema';
 export type BatchOperationType = 
   // 主题级操作
   | 'activate'           // 激活主题
-  | 'archive'           // 归档主题
+  | 'inactive'           // 归档主题
   | 'delete'            // 删除主题
   | 'setIcon'           // 批量设置图标
   | 'editMode'          // 批量进入编辑模式
@@ -86,7 +86,7 @@ export const BATCH_OPERATION_CONFIGS: Record<BatchOperationType, BatchOperationC
     description: '将选中的主题设置为激活状态',
     supportedModes: ['theme']
   },
-  archive: {
+  inactive: {
     label: '归档主题',
     description: '将选中的主题设置为归档状态',
     supportedModes: ['theme']
@@ -150,7 +150,7 @@ export function getAvailableOperations(mode: 'theme' | 'block' | 'cell'): BatchO
  * 判断操作是否为主题级操作
  */
 export function isThemeOperation(operation: BatchOperationType): boolean {
-  return ['activate', 'archive', 'delete', 'setIcon', 'editMode'].includes(operation);
+  return ['activate', 'inactive', 'delete', 'setIcon', 'editMode'].includes(operation);
 }
 
 /**

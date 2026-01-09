@@ -10,7 +10,7 @@ import { useUseCases } from '@/app/usecases';
 
 // 定义新的参数类型
 export type BatchOperation = 
-  | 'activate' | 'archive' | 'delete' | 'setIcon'
+  | 'activate' | 'inactive' | 'delete' | 'setIcon'
   | 'setInherit' | 'setOverride' | 'setDisabled';
 
 export interface BatchOperationParams {
@@ -53,8 +53,8 @@ export function useBatchOperations({
           case 'activate':
             await useCases.theme.batchUpdateThemeStatus(themeIds, 'active');
             break;
-          case 'archive':
-            await useCases.theme.batchUpdateThemeStatus(themeIds, 'archived');
+          case 'inactive':
+            await useCases.theme.batchUpdateThemeStatus(themeIds, 'inactive');
             break;
           case 'delete':
             if (confirm(`确定要删除 ${themeIds.length} 个主题吗？`)) {

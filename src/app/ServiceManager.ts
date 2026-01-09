@@ -14,6 +14,8 @@ import { startMeasure } from '@shared/utils/performance';
 import { SETTINGS_PERSISTENCE_TOKEN, SettingsRepository, type ISettingsPersistence } from '@core/services/SettingsRepository';
 import { createAppStore, setAppStoreInstance } from '@/app/store/useAppStore';
 import { createUseCases, USECASES_TOKEN, type UseCases } from '@/app/usecases';
+import { THEME_MATCHER_TOKEN } from '@core/types/theme';
+import { ThemeManager } from '@features/settings/ThemeManager';
 import type ThinkPlugin from '@main';
 
 /**
@@ -94,6 +96,8 @@ export class ServiceManager {
     /**
      * 注册 SettingsPersistence 到 DI 容器
      * 将 plugin.loadData/saveData 封装为 ISettingsPersistence 接口
+     * 
+     * S6: 同时注册 THEME_MATCHER_TOKEN，将 ThemeManager 作为实现
      */
     private registerSettingsPersistence(): void {
         const plugin = this.plugin;
@@ -110,6 +114,11 @@ export class ServiceManager {
         container.register(SETTINGS_PERSISTENCE_TOKEN, {
             useValue: settingsPersistence
         });
+        
+        // S6: 注册 ThemeManager 并绑定到 THEME_MATCHER_TOKEN
+        // 这样 core 层的 DataStore 可以通过接口依赖 ThemeManager
+        container.registerSingleton(ThemeManager);
+        container.register(THEME_MATCHER_TOKEN, { useToken: ThemeManager });
     }
 
     /**

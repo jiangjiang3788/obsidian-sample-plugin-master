@@ -301,7 +301,7 @@ export class AppStore implements ISettingsProvider {
         return this.theme.batchDeleteThemes(themeIds);
     }
 
-    public batchUpdateThemeStatus = async (themeIds: string[], status: 'active' | 'archived') => {
+    public batchUpdateThemeStatus = async (themeIds: string[], status: 'active' | 'inactive') => {
         return this.theme.batchUpdateThemeStatus(themeIds, status);
     }
 

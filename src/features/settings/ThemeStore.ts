@@ -105,7 +105,7 @@ export class ThemeStore {
     }
 
     // 批量更新主题状态
-    public batchUpdateThemeStatus = async (themeIds: string[], status: 'active' | 'archived') => {
+    public batchUpdateThemeStatus = async (themeIds: string[], status: 'active' | 'inactive') => {
         await this._updateSettings(draft => {
             const themePaths = themeIds.map(id => draft.inputSettings.themes.find(t => t.id === id)?.path).filter(Boolean) as string[];
             
@@ -119,7 +119,7 @@ export class ThemeStore {
                         draft.activeThemePaths!.push(path);
                     }
                 });
-            } else { // 'archived'
+            } else { // 'inactive'
                 draft.activeThemePaths = draft.activeThemePaths!.filter(path => !themePaths.includes(path));
             }
         });

@@ -3,7 +3,6 @@
  * 负责从数据中扫描主题并提供智能导入功能
  */
 import type { ThemeDefinition, Item, ThinkSettings } from '@/core/types/schema';
-import { ThemeManager } from '@features/settings/ThemeManager';
 import { DataStore } from '@core/services/DataStore';
 import { 
     deduplicateThemes, 
@@ -73,6 +72,7 @@ export interface ImportResult {
  */
 export interface ThemeScanWriteOps {
     addTheme: (path: string) => void | Promise<void>;
+    batchUpdateThemeStatus?: (themeIds: string[], status: 'active' | 'inactive') => Promise<void>;
 }
 
 /**
@@ -85,8 +85,6 @@ export interface ThemeScanServiceConfig {
     writeOps: ThemeScanWriteOps;
     /** 数据存储 */
     dataStore: DataStore;
-    /** 主题管理器实例 */
-    themeManager?: ThemeManager;
 }
 
 /**
@@ -96,13 +94,11 @@ export class ThemeScanService {
     private getSettings: () => ThinkSettings;
     private writeOps: ThemeScanWriteOps;
     private dataStore: DataStore;
-    private themeManager: ThemeManager;
     
     constructor(config: ThemeScanServiceConfig) {
         this.getSettings = config.getSettings;
         this.writeOps = config.writeOps;
         this.dataStore = config.dataStore;
-        this.themeManager = config.themeManager || new ThemeManager();
     }
     
     /**
@@ -122,7 +118,7 @@ export class ThemeScanService {
             if (!config.includeTasks && item.type === 'task') continue;
             if (!config.includeBlocks && item.type === 'block') continue;
             
-            const theme = this.themeManager.extractTheme(item);
+            const theme = item.theme;
             if (theme && theme.trim() !== '') {
                 const normalizedTheme = theme.trim();
                 const existing = themeStats.get(normalizedTheme) || { count: 0, sources: [] };
@@ -174,7 +170,7 @@ export class ThemeScanService {
             itemsWithThemes: items.filter(item => {
                 if (!config.includeTasks && item.type === 'task') return false;
                 if (!config.includeBlocks && item.type === 'block') return false;
-                return this.themeManager.extractTheme(item) !== null;
+                return (item.theme || null) !== null;
             }).length,
             uniqueThemes: rawThemes.length,
             newThemes: deduplicationResult.newThemes.length,
@@ -182,12 +178,12 @@ export class ThemeScanService {
                 tasks: items.filter(item => 
                     item.type === 'task' && 
                     config.includeTasks && 
-                    this.themeManager.extractTheme(item) !== null
+                    (item.theme || null) !== null
                 ).length,
                 blocks: items.filter(item => 
                     item.type === 'block' && 
                     config.includeBlocks && 
-                    this.themeManager.extractTheme(item) !== null
+                    (item.theme || null) !== null
                 ).length
             }
         };
@@ -227,9 +223,6 @@ export class ThemeScanService {
                 await this.writeOps.addTheme(theme);
                 result.imported++;
                 
-                // 在ThemeManager中发现这个主题
-                this.themeManager.discoverTheme(theme);
-                
             } catch (error) {
                 result.failed++;
                 result.errors.push(`导入主题 "${theme}" 失败: ${error}`);
@@ -252,7 +245,7 @@ export class ThemeScanService {
     }> {
         const items = this.dataStore.queryItems();
         const themeItems = items.filter(item => {
-            const theme = this.themeManager.extractTheme(item);
+            const theme = item.theme || null;
             return theme === themePath;
         });
         
@@ -321,8 +314,15 @@ export class ThemeScanService {
      * @param themePaths - 主题路径列表
      */
     async batchActivateThemes(themePaths: string[]): Promise<void> {
-        for (const path of themePaths) {
-            this.themeManager.activateTheme(path);
+        if (!this.writeOps.batchUpdateThemeStatus) return;
+        
+        const themes = this.getSettings().inputSettings.themes;
+        const themeIds = themes
+            .filter(t => themePaths.includes(t.path))
+            .map(t => t.id);
+            
+        if (themeIds.length > 0) {
+            await this.writeOps.batchUpdateThemeStatus(themeIds, 'active');
         }
     }
     

@@ -2,13 +2,15 @@
 import { singleton } from 'tsyringe';
 import { Theme } from './theme-types';
 import { Item } from '@/core/types/schema';
+import type { IThemeMatcher } from '@core/types/theme';
 
 /**
  * 主题管理服务
  * 负责主题的创建、发现、激活和管理
+ * 实现 IThemeMatcher 接口供 core 层使用
  */
 @singleton()
-export class ThemeManager {
+export class ThemeManager implements IThemeMatcher {
     private themes: Map<string, Theme> = new Map();
     private themeIdCounter: number = 0;
 
@@ -209,6 +211,7 @@ export class ThemeManager {
     /**
      * 根据部分文本匹配完整主题路径
      * 例如：headerText = "娱乐"，匹配到 "生活/娱乐"
+     * 实现 IThemeMatcher 接口
      */
     findThemeByPartialMatch(headerText: string): string | null {
         if (!headerText || headerText.trim() === '') {
