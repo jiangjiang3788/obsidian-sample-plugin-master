@@ -1,10 +1,9 @@
 // src/core/services/RendererService.ts
 /**
- * S8.1: RendererService - 使用 Zustand 精准订阅替代 AppStore.subscribe
+ * RendererService - 使用 Zustand 精准订阅
  * 
  * 改动说明：
- * - 移除 appStore.subscribe 的全量订阅
- * - 改用 Zustand store.subscribe(selector, listener) 精准订阅 layouts + viewInstances
+ * - 使用 Zustand store.subscribe(selector, listener) 精准订阅 layouts + viewInstances
  * - 只在 layout/viewInstances 变化时触发 rerenderAll()
  * - 在 cleanup 时取消订阅，避免内存泄漏
  */
@@ -13,7 +12,6 @@ import { h, render } from 'preact';
 import { App } from 'obsidian';
 import { Layout } from '@/core/types/schema';
 import { DataStore } from '@core/services/DataStore';
-import { AppStore } from '@/app/AppStore';
 import { ServicesProvider, type Services } from '@/app/AppStoreContext';
 import { LayoutRenderer } from '@/features/settings/LayoutRenderer';
 import { ActionService } from '../../core/services/ActionService';
@@ -35,11 +33,9 @@ export class RendererService {
     // S8.1: Zustand 订阅取消函数
     private unsubscribeZustand: (() => void) | null = null;
 
-    // [核心修改] 为构造函数的每个参数添加 @inject 装饰器
     constructor(
         @inject(AppToken) private app: App,
         @inject(DataStore) private dataStore: DataStore,
-        @inject(AppStore) private appStore: AppStore,
         @inject(ActionService) private actionService: ActionService,
         @inject(ItemService) private itemService: ItemService,
         @inject(InputService) private inputService: InputService,
@@ -47,8 +43,8 @@ export class RendererService {
         @inject(USECASES_TOKEN) private useCases: UseCases
     ) {
         // 构建 Services 对象，供 ServicesProvider 使用
+        // Z3: 不再包含 appStore
         this.services = {
-            appStore: this.appStore,
             dataStore: this.dataStore,
             inputService: this.inputService,
             useCases: this.useCases,
@@ -66,10 +62,10 @@ export class RendererService {
     /**
      * 运行时校验 Services 完整性
      * 防止"传 undefined 但运行到深处才爆"
+     * Z3: 移除 appStore 校验
      */
     private validateServices(): void {
         const missing: string[] = [];
-        if (!this.services.appStore) missing.push('appStore');
         if (!this.services.dataStore) missing.push('dataStore');
         if (!this.services.inputService) missing.push('inputService');
         if (!this.services.useCases) missing.push('useCases');

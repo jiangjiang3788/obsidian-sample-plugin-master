@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "vite build && node -e \"const fs=require('fs');fs.copyFileSync('dist/main.js','main.js');fs.copyFileSync('dist/main.js.map','main.js.map');fs.copyFileSync('dist/styles.css','styles.css');\"",
     "test": "jest --config test/configs/jest.config.js",
     "test:watch": "jest --config test/configs/jest.config.js --watch",
     "test:coverage": "jest --config test/configs/jest.config.js --coverage",

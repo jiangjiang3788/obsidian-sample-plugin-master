@@ -12,7 +12,7 @@ export function InputSettings() {
             {/* BlockManager 通过 useUseCases() 获取依赖 */}
             <BlockManager />
             <Divider sx={{ my: 4, mx: 'auto', maxWidth: 900 }} />
-            {/* ThemeMatrix 通过 useAppStore() / useDataStore() 获取依赖 */}
+            {/* ThemeMatrix 通过 useZustandAppStore() / useUseCases() 获取依赖 */}
             <ThemeMatrix />
         </Box>
     );
