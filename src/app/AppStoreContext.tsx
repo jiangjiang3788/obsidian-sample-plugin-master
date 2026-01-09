@@ -12,6 +12,30 @@
  * - UI 层必须通过 useUseCases() 调用业务逻辑
  * - 禁止 UI 直接调用 AppStore 的私有方法
  * - appStore 已变为可选，新代码应使用 zustand store + useCases
+ * 
+ * ============== S2 断路测试 (Circuit Breaker) ==============
+ * 
+ * 目的：在删除 AppStore 前，暴露所有残余 useAppStore() / AppStoreContext 依赖点（僵尸代码）
+ * 
+ * 配置说明：
+ * - CIRCUIT_BREAKER_ENABLED: 断路开关，DEV 环境默认启用
+ * - localStorage.getItem('ALLOW_LEGACY_APPSTORE') === '1': 逃生舱，允许临时放行不抛出异常
+ * - localStorage.getItem('ARCH_BREAKER') === '1': 可选的额外控制开关（需要同时启用）
+ * 
+ * 迁移指引：
+ * - 读取状态：使用 useZustandAppStore(selector) 或具体的 slice hook
+ *   - useSettingsStore() - 设置相关
+ *   - useTimerStore() - 计时器相关  
+ *   - useThemeStore() - 主题相关
+ * - 写入状态：使用 useUseCases()
+ *   - useCases.settings.updateSettings()
+ *   - useCases.timer.start() / stop() / reset()
+ * 
+ * 验收方式：
+ * 1. 打开插件所有面板/功能
+ * 2. 控制台出现 🚨 [ZOMBIE CODE DETECTED] 前缀
+ * 3. 有 stack trace，能定位具体组件/文件
+ * 4. 逐个替换调用点后，错误消失
  */
 import { createContext } from 'preact';
 import { useContext } from 'preact/hooks';
@@ -22,14 +46,98 @@ import type { DataStore } from '@/core/services/DataStore';
 import type { InputService } from '@/core/services/InputService';
 import type { UseCases } from './usecases';
 
+// ============== S2 断路测试配置 ==============
+
+/**
+ * 断路开关：DEV 环境默认启用
+ * 
+ * 如何启用/关闭：
+ * - 默认：DEV 环境自动启用
+ * - 手动关闭：设置 localStorage.setItem('ARCH_BREAKER', '0')
+ * - 手动启用：设置 localStorage.setItem('ARCH_BREAKER', '1')
+ */
+const CIRCUIT_BREAKER_ENABLED = import.meta.env.DEV;
+
+/**
+ * 逃生舱检查：允许临时放行（方便渐进迁移）
+ * 
+ * 如何使用：
+ * - 在浏览器控制台执行：localStorage.setItem('ALLOW_LEGACY_APPSTORE', '1')
+ * - 这样 useAppStore() 不会抛出异常，只会 log + trace
+ * - 迁移完成后记得移除：localStorage.removeItem('ALLOW_LEGACY_APPSTORE')
+ */
+const isLegacyAllowed = (): boolean => {
+    try {
+        return typeof localStorage !== 'undefined' && 
+               localStorage.getItem('ALLOW_LEGACY_APPSTORE') === '1';
+    } catch {
+        return false;
+    }
+};
+
+/**
+ * 断路报错函数
+ * 
+ * @param hookName - 被调用的 hook 名称
+ * @param context - 调用上下文描述
+ * @param shouldThrow - 是否抛出异常（逃生舱模式下不抛出）
+ */
+const circuitBreakerError = (hookName: string, context: string): void => {
+    if (!CIRCUIT_BREAKER_ENABLED) {
+        return; // prod 环境不执行断路逻辑
+    }
+
+    const message = `🚨 [ZOMBIE CODE DETECTED] ${hookName} is deprecated!
+
+⚠️ 迁移指引：
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📖 读取状态 - 使用 Zustand hooks：
+  • useSettingsStore(selector) - 设置相关状态
+  • useTimerStore(selector) - 计时器相关状态
+  • useThemeStore(selector) - 主题相关状态
+  • useZustandAppStore(selector) - 通用状态访问
+
+📝 写入状态 - 使用 useCases：
+  • const { settings, timer } = useUseCases();
+  • settings.updateSettings({ ... })
+  • timer.start() / timer.stop() / timer.reset()
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📍 调用位置：${context}
+📁 源文件：src/app/AppStoreContext.tsx
+
+🔧 逃生舱（临时放行）：
+  localStorage.setItem('ALLOW_LEGACY_APPSTORE', '1')
+  
+请立即迁移到新的 Zustand hooks / useCases！`;
+
+    console.error(message);
+    
+    // 输出调用堆栈，帮助定位调用者
+    console.trace('📚 调用堆栈（用于定位僵尸代码位置）：');
+    
+    if (!isLegacyAllowed()) {
+        throw new Error(`🚨 [ZOMBIE CODE] ${hookName} is deprecated! 请迁移到 Zustand hooks / useCases。详见上方控制台输出。`);
+    } else {
+        console.warn(
+            `⚠️ [CIRCUIT BREAKER] 逃生舱已启用，不抛出异常。\n` +
+            `请尽快完成迁移后移除：localStorage.removeItem('ALLOW_LEGACY_APPSTORE')`
+        );
+    }
+};
+
 // ============== AppStore Context ==============
 
 /**
  * AppStore Context
  * 用于在 UI 层传递 AppStore 实例
+ * 
  * ⚠️ 已废弃：新代码应使用 zustand store (useZustandAppStore) + useCases
+ * ⚠️ S2 断路测试：类型改为 never | null，编译期暴露依赖
+ * 
+ * @deprecated 请迁移到 Zustand hooks + useCases
  */
-export const AppStoreContext = createContext<AppStore | null>(null);
+export const AppStoreContext = createContext<never | null>(null);
 
 /**
  * AppStoreProvider Props
@@ -43,11 +151,21 @@ interface AppStoreProviderProps {
 /**
  * AppStoreProvider
  * 包装 UI 树并提供 AppStore 实例
+ * 
  * @deprecated 新代码应使用 ServicesProvider
+ * ⚠️ S2 断路测试：DEV 环境下会报错 + 抛出异常
  */
 export function AppStoreProvider({ store, children }: AppStoreProviderProps) {
+    // S2 断路测试：Provider 断路
+    if (CIRCUIT_BREAKER_ENABLED) {
+        circuitBreakerError(
+            'AppStoreProvider',
+            'AppStoreProvider 组件被渲染'
+        );
+    }
+    
     return (
-        <AppStoreContext.Provider value={store}>
+        <AppStoreContext.Provider value={store as never}>
             {children}
         </AppStoreContext.Provider>
     );
@@ -61,6 +179,11 @@ export function AppStoreProvider({ store, children }: AppStoreProviderProps) {
  * - 读取状态：useZustandAppStore(selector)
  * - 写入状态：useUseCases()
  * 
+ * ⚠️ S2 断路测试：
+ * - DEV 环境下每次调用都会报错 + 输出堆栈
+ * - 默认会抛出异常，使用逃生舱可临时放行
+ * - 逃生舱：localStorage.setItem('ALLOW_LEGACY_APPSTORE', '1')
+ * 
  * 兼容机制：
  * - 优先从 Context 获取 AppStore
  * - Context 不可用时，尝试从 DI 容器回退（仅限紧急兼容，会输出警告）
@@ -69,7 +192,15 @@ export function AppStoreProvider({ store, children }: AppStoreProviderProps) {
  * @deprecated 使用 useZustandAppStore + useUseCases 替代
  */
 export function useAppStore(): AppStore {
-    const store = useContext(AppStoreContext);
+    // S2 断路测试：核心断路点
+    // 每次调用都会触发断路检查，帮助定位僵尸代码
+    circuitBreakerError(
+        'useAppStore()',
+        'useAppStore hook 被调用'
+    );
+    
+    // 如果逃生舱启用，继续执行原有逻辑
+    const store = useContext(AppStoreContext) as AppStore | null;
     
     if (store) {
         return store;
@@ -282,9 +413,10 @@ export function ServicesProvider({ services, children }: ServicesProviderProps) 
     );
     
     // 如果提供了 appStore，则包裹 AppStoreContext（兼容旧代码）
+    // S2 断路测试：使用类型断言绕过 never 类型检查
     if (services.appStore) {
         content = (
-            <AppStoreContext.Provider value={services.appStore}>
+            <AppStoreContext.Provider value={services.appStore as never}>
                 {content}
             </AppStoreContext.Provider>
         );
@@ -319,4 +451,50 @@ export function devCheckServicesContext(): { valid: boolean; missing: string[] }
     }
     
     return result;
+}
+
+// ============== S2 断路测试导出 ==============
+
+/**
+ * 断路测试状态查询
+ * 用于在控制台检查当前断路测试配置
+ * 
+ * @example
+ * // 在浏览器控制台执行
+ * import { getCircuitBreakerStatus } from './AppStoreContext';
+ * getCircuitBreakerStatus();
+ */
+export function getCircuitBreakerStatus(): {
+    enabled: boolean;
+    legacyAllowed: boolean;
+    instructions: string;
+} {
+    const status = {
+        enabled: CIRCUIT_BREAKER_ENABLED,
+        legacyAllowed: isLegacyAllowed(),
+        instructions: `
+╔══════════════════════════════════════════════════════════════╗
+║           S2 断路测试 (Circuit Breaker) 状态                 ║
+╠══════════════════════════════════════════════════════════════╣
+║ 断路开关: ${CIRCUIT_BREAKER_ENABLED ? '✅ 已启用' : '❌ 已禁用'}                                    ║
+║ 逃生舱:   ${isLegacyAllowed() ? '🔓 已开启（不抛异常）' : '🔒 已关闭（会抛异常）'}                   ║
+╠══════════════════════════════════════════════════════════════╣
+║ 如何使用逃生舱（临时放行，方便调试）：                       ║
+║   localStorage.setItem('ALLOW_LEGACY_APPSTORE', '1')         ║
+║                                                              ║
+║ 如何关闭逃生舱：                                             ║
+║   localStorage.removeItem('ALLOW_LEGACY_APPSTORE')           ║
+╠══════════════════════════════════════════════════════════════╣
+║ 迁移指引：                                                   ║
+║ • 读取状态 → useSettingsStore / useTimerStore / useThemeStore║
+║ • 写入状态 → useUseCases()                                   ║
+╚══════════════════════════════════════════════════════════════╝
+        `.trim()
+    };
+    
+    if (CIRCUIT_BREAKER_ENABLED) {
+        console.log(status.instructions);
+    }
+    
+    return status;
 }

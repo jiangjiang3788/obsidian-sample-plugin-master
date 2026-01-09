@@ -22,6 +22,7 @@ import type { StateCreator } from 'zustand';
 import type { ThinkSettings, ThemeDefinition, ThemeOverride } from '@/core/types/schema';
 import type { SettingsRepository } from '@/core/services/SettingsRepository';
 import { generateId } from '@core/utils/array';
+import { createSliceMeta } from '@/shared/types/ActionMeta';
 
 // ============== 类型定义 ==============
 
@@ -113,12 +114,13 @@ export function createThemeSlice(
                     icon: ''
                 };
 
+                // S1: 传入 ActionMeta 用于 dev 日志
                 await settingsRepository.update(draft => {
                     if (!draft.inputSettings.themes) {
                         draft.inputSettings.themes = [];
                     }
                     draft.inputSettings.themes.push(newTheme);
-                });
+                }, createSliceMeta('theme.addTheme'));
 
                 // S2: settings 由 ServiceManager 订阅 SettingsRepository 统一更新
                 set({ themeLoading: false });
@@ -149,12 +151,13 @@ export function createThemeSlice(
             set({ themeLoading: true, themeError: null });
 
             try {
+                // S1: 传入 ActionMeta 用于 dev 日志
                 await settingsRepository.update(draft => {
                     const theme = draft.inputSettings.themes?.find(t => t.id === id);
                     if (theme) {
                         Object.assign(theme, updates);
                     }
-                });
+                }, createSliceMeta('theme.updateTheme'));
                 // S2: settings 由 ServiceManager 订阅 SettingsRepository 统一更新
                 set({ themeLoading: false });
             } catch (error: any) {
@@ -173,12 +176,13 @@ export function createThemeSlice(
             set({ themeLoading: true, themeError: null });
 
             try {
+                // S1: 传入 ActionMeta 用于 dev 日志
                 await settingsRepository.update(draft => {
                     // 删除主题
                     draft.inputSettings.themes = draft.inputSettings.themes?.filter(t => t.id !== id) || [];
                     // 清理相关的 overrides
                     draft.inputSettings.overrides = draft.inputSettings.overrides?.filter(o => o.themeId !== id) || [];
-                });
+                }, createSliceMeta('theme.deleteTheme'));
                 // S2: settings 由 ServiceManager 订阅 SettingsRepository 统一更新
                 set({ themeLoading: false });
             } catch (error: any) {
@@ -196,6 +200,7 @@ export function createThemeSlice(
             set({ themeLoading: true, themeError: null });
 
             try {
+                // S1: 传入 ActionMeta 用于 dev 日志
                 await settingsRepository.update(draft => {
                     themeIds.forEach(id => {
                         const theme = draft.inputSettings.themes?.find(t => t.id === id);
@@ -203,7 +208,7 @@ export function createThemeSlice(
                             Object.assign(theme, updates);
                         }
                     });
-                });
+                }, createSliceMeta('theme.batchUpdateThemes'));
                 // S2: settings 由 ServiceManager 订阅 SettingsRepository 统一更新
                 set({ themeLoading: false });
             } catch (error: any) {
@@ -220,10 +225,11 @@ export function createThemeSlice(
 
             try {
                 const themeIdSet = new Set(themeIds);
+                // S1: 传入 ActionMeta 用于 dev 日志
                 await settingsRepository.update(draft => {
                     draft.inputSettings.themes = draft.inputSettings.themes?.filter(t => !themeIdSet.has(t.id)) || [];
                     draft.inputSettings.overrides = draft.inputSettings.overrides?.filter(o => !themeIdSet.has(o.themeId)) || [];
-                });
+                }, createSliceMeta('theme.batchDeleteThemes'));
                 // S2: settings 由 ServiceManager 订阅 SettingsRepository 统一更新
                 set({ themeLoading: false });
             } catch (error: any) {
@@ -239,6 +245,7 @@ export function createThemeSlice(
             set({ themeLoading: true, themeError: null });
 
             try {
+                // S1: 传入 ActionMeta 用于 dev 日志
                 await settingsRepository.update(draft => {
                     const themePaths = themeIds
                         .map(id => draft.inputSettings.themes?.find(t => t.id === id)?.path)
@@ -257,7 +264,7 @@ export function createThemeSlice(
                     } else {
                         draft.activeThemePaths = draft.activeThemePaths.filter(path => !themePaths.includes(path));
                     }
-                });
+                }, createSliceMeta('theme.batchUpdateThemeStatus'));
                 // S2: settings 由 ServiceManager 订阅 SettingsRepository 统一更新
                 set({ themeLoading: false });
             } catch (error: any) {
@@ -273,6 +280,7 @@ export function createThemeSlice(
             set({ themeLoading: true, themeError: null });
 
             try {
+                // S1: 传入 ActionMeta 用于 dev 日志
                 await settingsRepository.update(draft => {
                     themeIds.forEach(id => {
                         const theme = draft.inputSettings.themes?.find(t => t.id === id);
@@ -280,7 +288,7 @@ export function createThemeSlice(
                             theme.icon = icon;
                         }
                     });
-                });
+                }, createSliceMeta('theme.batchUpdateThemeIcon'));
                 // S2: settings 由 ServiceManager 订阅 SettingsRepository 统一更新
                 set({ themeLoading: false });
             } catch (error: any) {
@@ -299,6 +307,7 @@ export function createThemeSlice(
 
             try {
                 let resultOverride: ThemeOverride | null = null;
+                // S1: 传入 ActionMeta 用于 dev 日志
                 await settingsRepository.update(draft => {
                     const existingIndex = draft.inputSettings.overrides?.findIndex(
                         o => o.blockId === overrideData.blockId && o.themeId === overrideData.themeId
@@ -318,7 +327,7 @@ export function createThemeSlice(
                         draft.inputSettings.overrides.push(newOverride);
                         resultOverride = newOverride;
                     }
-                });
+                }, createSliceMeta('theme.upsertOverride'));
                 // S2: settings 由 ServiceManager 订阅 SettingsRepository 统一更新
                 set({ themeLoading: false });
                 return resultOverride;
@@ -336,11 +345,12 @@ export function createThemeSlice(
             set({ themeLoading: true, themeError: null });
 
             try {
+                // S1: 传入 ActionMeta 用于 dev 日志
                 await settingsRepository.update(draft => {
                     draft.inputSettings.overrides = draft.inputSettings.overrides?.filter(
                         o => !(o.blockId === blockId && o.themeId === themeId)
                     ) || [];
-                });
+                }, createSliceMeta('theme.deleteOverride'));
                 // S2: settings 由 ServiceManager 订阅 SettingsRepository 统一更新
                 set({ themeLoading: false });
             } catch (error: any) {
@@ -356,6 +366,7 @@ export function createThemeSlice(
             set({ themeLoading: true, themeError: null });
 
             try {
+                // S1: 传入 ActionMeta 用于 dev 日志
                 await settingsRepository.update(draft => {
                     for (const overrideData of overrides) {
                         const existingIndex = draft.inputSettings.overrides?.findIndex(
@@ -374,7 +385,7 @@ export function createThemeSlice(
                             } as ThemeOverride);
                         }
                     }
-                });
+                }, createSliceMeta('theme.batchUpsertOverrides'));
                 // S2: settings 由 ServiceManager 订阅 SettingsRepository 统一更新
                 set({ themeLoading: false });
             } catch (error: any) {
@@ -391,11 +402,12 @@ export function createThemeSlice(
 
             try {
                 const selectionSet = new Set(selections.map(s => `${s.blockId}:${s.themeId}`));
+                // S1: 传入 ActionMeta 用于 dev 日志
                 await settingsRepository.update(draft => {
                     draft.inputSettings.overrides = draft.inputSettings.overrides?.filter(
                         o => !selectionSet.has(`${o.blockId}:${o.themeId}`)
                     ) || [];
-                });
+                }, createSliceMeta('theme.batchDeleteOverrides'));
                 // S2: settings 由 ServiceManager 订阅 SettingsRepository 统一更新
                 set({ themeLoading: false });
             } catch (error: any) {
@@ -411,6 +423,7 @@ export function createThemeSlice(
             set({ themeLoading: true, themeError: null });
 
             try {
+                // S1: 传入 ActionMeta 用于 dev 日志
                 await settingsRepository.update(draft => {
                     if (status === 'inherit') {
                         const cellKeys = new Set(cells.map(c => `${c.themeId}:${c.blockId}`));
@@ -445,7 +458,7 @@ export function createThemeSlice(
                             }
                         });
                     }
-                });
+                }, createSliceMeta('theme.batchSetOverrideStatus'));
                 // S2: settings 由 ServiceManager 订阅 SettingsRepository 统一更新
                 set({ themeLoading: false });
             } catch (error: any) {
