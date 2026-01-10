@@ -48,8 +48,8 @@ export class RendererService {
     ) {
         this.store = store;
         // 构建 Services 对象，供 ServicesProvider 使用
-        // Z3: 不再包含 appStore
         this.services = {
+            zustandStore: this.store,
             dataStore: this.dataStore,
             inputService: this.inputService,
             useCases: this.useCases,
@@ -71,6 +71,7 @@ export class RendererService {
      */
     private validateServices(): void {
         const missing: string[] = [];
+        if (!this.services.zustandStore) missing.push('zustandStore');
         if (!this.services.dataStore) missing.push('dataStore');
         if (!this.services.inputService) missing.push('inputService');
         if (!this.services.useCases) missing.push('useCases');

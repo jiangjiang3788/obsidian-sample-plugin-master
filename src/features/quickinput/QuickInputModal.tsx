@@ -16,6 +16,7 @@ import { useZustandAppStore, useDataStore, useInputService, ServicesProvider, Se
 import { DataStore } from '@/core/services/DataStore';
 import { InputService } from '@/core/services/InputService';
 import { USECASES_TOKEN, type UseCases } from '@/app/usecases';
+import { STORE_TOKEN, type AppStoreInstance } from '@/app/store/useAppStore';
 import type { InputSettings, BlockTemplate, ThemeDefinition, TemplateField, TemplateFieldOption } from '@/core/types/schema';
 import { Button, RadioGroup as MuiRadioGroup, FormControlLabel, Radio, FormControl, Typography, Stack, Divider, Box, IconButton, Tooltip } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
@@ -43,8 +44,9 @@ export class QuickInputModal extends Modal {
         private allowBlockSwitch: boolean = false
     ) {
         super(app);
-        // S7.1: 从 DI 容器获取服务 - 不再包含 appStore
+        // S7.1: 从 DI 容器获取服务
         this.services = {
+            zustandStore: container.resolve<AppStoreInstance>(STORE_TOKEN),
             dataStore: container.resolve(DataStore),
             inputService: container.resolve(InputService),
             useCases: container.resolve(USECASES_TOKEN),
