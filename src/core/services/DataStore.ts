@@ -13,7 +13,7 @@
  * 
  * Don't:
  * - 直接修改文件内容 (这是 ItemService 的职责)
- * - 管理应用级别的状态 (这是 AppStore 的职责)
+ * - 管理应用级别的状态 (状态管理的职责)
  * - 渲染 UI
  */
 import { singleton, inject } from 'tsyringe';

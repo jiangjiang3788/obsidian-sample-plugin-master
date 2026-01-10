@@ -1,6 +1,10 @@
 /**
  * 主题扫描服务
- * 负责从数据中扫描主题并提供智能导入功能
+ * 
+ * 【S6 架构约束 - P0-5 写入口唯一化】
+ * - 本服务只提供纯读/扫描/计算逻辑
+ * - 所有写操作必须通过 useCases.theme.* 执行
+ * - 禁止在 service 层直接调用 SettingsRepository.update
  */
 import type { ThemeDefinition, Item, ThinkSettings } from '@/core/types/schema';
 import { DataStore } from '@core/services/DataStore';
@@ -53,51 +57,44 @@ export interface ScanStats {
 }
 
 /**
- * 导入结果
+ * 导入预览结果
+ * 【P0-5】纯计算结果，由 useCases.theme 执行实际写入
  */
-export interface ImportResult {
-    /** 成功导入的数量 */
-    imported: number;
-    /** 跳过的数量 */
-    skipped: number;
-    /** 失败的数量 */
-    failed: number;
-    /** 错误信息 */
-    errors: string[];
-}
-
-/**
- * 写操作回调接口
- * TODO: 后续迁移到 useCases 层统一调用
- */
-export interface ThemeScanWriteOps {
-    addTheme: (path: string) => void | Promise<void>;
-    batchUpdateThemeStatus?: (themeIds: string[], status: 'active' | 'inactive') => Promise<void>;
+export interface ImportPreview {
+    /** 可以导入的主题 */
+    willImport: string[];
+    /** 将被跳过的主题 */
+    willSkip: Array<{ theme: string; reason: string }>;
+    /** 预估导入时间 */
+    estimatedTime: number;
 }
 
 /**
  * 主题扫描服务配置
+ * 
+ * 【P0-5】已移除 writeOps，service 只提供纯读/计算能力
  */
 export interface ThemeScanServiceConfig {
     /** 获取设置的函数 - 同步返回最新 settings */
     getSettings: () => ThinkSettings;
-    /** 写操作回调 */
-    writeOps: ThemeScanWriteOps;
     /** 数据存储 */
     dataStore: DataStore;
 }
 
 /**
  * 主题扫描服务
+ * 
+ * 【P0-5 写入口唯一化】
+ * - 只提供扫描/预览/查询能力
+ * - 不执行任何写操作
+ * - 返回结果交由 useCases.theme.* 执行写入
  */
 export class ThemeScanService {
     private getSettings: () => ThinkSettings;
-    private writeOps: ThemeScanWriteOps;
     private dataStore: DataStore;
     
     constructor(config: ThemeScanServiceConfig) {
         this.getSettings = config.getSettings;
-        this.writeOps = config.writeOps;
         this.dataStore = config.dataStore;
     }
     
@@ -196,40 +193,17 @@ export class ThemeScanService {
     }
     
     /**
-     * 导入新主题到系统
-     * @param themes - 要导入的主题路径列表
-     * @returns 导入结果
+     * 【纯计算】获取可导入的主题列表
+     * @param themes - 待导入的主题路径列表
+     * @returns 可以导入的主题列表（过滤已存在的）
      */
-    async importThemes(themes: string[]): Promise<ImportResult> {
-        const result: ImportResult = {
-            imported: 0,
-            skipped: 0,
-            failed: 0,
-            errors: []
-        };
-        
+    getImportableThemes(themes: string[]): string[] {
         const existingThemes = this.getSettings().inputSettings.themes;
         const existingPaths = new Set(existingThemes.map((t: ThemeDefinition) => t.path));
         
-        for (const theme of themes) {
-            try {
-                // 检查是否已存在
-                if (existingPaths.has(theme)) {
-                    result.skipped++;
-                    continue;
-                }
-                
-                // 添加主题
-                await this.writeOps.addTheme(theme);
-                result.imported++;
-                
-            } catch (error) {
-                result.failed++;
-                result.errors.push(`导入主题 "${theme}" 失败: ${error}`);
-            }
-        }
-        
-        return result;
+        return themes.filter(theme => 
+            theme && theme.trim() !== '' && !existingPaths.has(theme)
+        );
     }
     
     /**
@@ -310,20 +284,15 @@ export class ThemeScanService {
     }
     
     /**
-     * 批量激活主题
+     * 【纯计算】获取要激活的主题ID列表
      * @param themePaths - 主题路径列表
+     * @returns 主题ID列表（由 useCases.theme.batchUpdateThemeStatus 执行写入）
      */
-    async batchActivateThemes(themePaths: string[]): Promise<void> {
-        if (!this.writeOps.batchUpdateThemeStatus) return;
-        
+    getThemeIdsForActivation(themePaths: string[]): string[] {
         const themes = this.getSettings().inputSettings.themes;
-        const themeIds = themes
+        return themes
             .filter(t => themePaths.includes(t.path))
             .map(t => t.id);
-            
-        if (themeIds.length > 0) {
-            await this.writeOps.batchUpdateThemeStatus(themeIds, 'active');
-        }
     }
     
     /**

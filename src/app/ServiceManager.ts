@@ -19,11 +19,7 @@ import { SETTINGS_TOKEN } from '@core/services/types'; // DI DEBUG: 用于获取
 import type { ThinkSettings } from '@core/types'; // DI DEBUG
 import type ThinkPlugin from '@main';
 
-// ============== P0-4: AppStore DI 依赖已彻底移除 ==============
-// 
-// 本文件不再包含任何 AppStore 相关的 DI 逻辑：
-// - ❌ 不再 import AppStore
-// - ❌ 不再 container.resolve(AppStore)
+// ============== 核心 DI 容器配置 ==============
 // - ❌ 不再有 appStore getter
 // - ❌ 不再有 poison proxy / DI_UNPLUG 测试代码
 //
@@ -40,7 +36,7 @@ import type ThinkPlugin from '@main';
  * 3. 协调特性 (Feature) 的加载与挂载
  * 4. 统一资源清理
  * 
- * S7.0: FeatureLoader 不再需要 AppStore 参数
+     * FeatureLoader 不再需要额外参数
  */
 export class ServiceManager {
     private plugin: ThinkPlugin;
@@ -78,7 +74,7 @@ export class ServiceManager {
         // 注册 SettingsPersistence（基于 plugin.loadData/saveData）
         this.registerSettingsPersistence();
         
-        await this.initializeCore();         // 1. 基础状态 (AppStore)
+        await this.initializeCore();         // 1. 基础状态
         await this.loadDataServices();       // 2. 数据服务 (Data/IO)
         await this.loadTimerServices();      // 3. 核心业务 (Timer)
         await this.loadUIFeatures();         // 4. UI 特性 (Dashboard/Settings)
@@ -141,7 +137,7 @@ export class ServiceManager {
      * [主流程] #2 初始化核心服务
      * 
      * Z1 改造：
-     * 1. 使用 SettingsRepository 替代 AppStore 获取初始 settings
+     * 1. 使用 SettingsRepository 获取初始 settings
      * 2. 创建 Zustand Store 并初始化
      * 3. 创建 UseCases
      */
@@ -320,7 +316,7 @@ export class ServiceManager {
     /**
      * [主流程] #5 加载UI特性
      * 
-     * S7.0: FeatureLoader 不再需要 AppStore 参数
+     * FeatureLoader 不再需要额外参数
      * - QuickInput/AiInput 通过 zustand store 获取 settings
      * - Dashboard/Settings 的 appStore 参数已变为可选
      */

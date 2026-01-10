@@ -1,9 +1,7 @@
 /**
  * @file 功能汇总入口（Theme + Settings + Dashboard）
  * 
- * P0-1: 入口层已彻底移除 AppStore 依赖
- * - 使用 zustand store (useZustandAppStore) + useCases
- * - 不再暴露任何 AppStore 相关符号
+ * 架构：使用 zustand store + useCases 进行状态管理
  */
 
 /* ========================================================================== */
@@ -54,7 +52,6 @@ export const SettingsViewComponents = {
 
 /** 
  * Settings 模块依赖项接口
- * P0-1: 已移除 appStore 字段
  */
 export interface SettingsDependencies {
   app: App;
@@ -88,7 +85,6 @@ import { CodeblockEmbedder } from './CodeblockEmbedder';
 
 /** 
  * Dashboard 功能依赖项接口
- * P0-1: 已移除 appStore 字段
  */
 export interface DashboardDependencies {
   plugin: Plugin;
@@ -101,8 +97,6 @@ export interface DashboardDependencies {
  * Dashboard 初始化函数
  * 原：export function setup(deps: DashboardDependencies)
  * 这里重命名为 setupDashboard
- * 
- * P0-1: 已彻底移除 appStore 依赖
  */
 export function setupDashboard(deps: DashboardDependencies): void {
   const { plugin, dataStore, rendererService, actionService } = deps;

@@ -124,7 +124,7 @@ export class RendererService {
      * [主流程] 注册并渲染布局
      * 将指定的布局配置渲染到目标容器中，并加入活跃布局列表进行管理。
      * 
-     * ⚠️ P0 修复：使用 ServicesProvider 替代 AppStoreProvider，
+     * ⚠️ P0 修复：使用 ServicesProvider 注入依赖，
      * 确保 LayoutRenderer 及其子组件可以访问 useUseCases/useDataStore/useInputService
      */
     public register(container: HTMLElement, layout: Layout): void {

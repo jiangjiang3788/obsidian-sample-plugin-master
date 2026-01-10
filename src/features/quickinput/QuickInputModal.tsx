@@ -1,10 +1,9 @@
 // @ts-nocheck
 // src/features/quick-input/ui/QuickInputModal.tsx
 /**
- * S7.1: QuickInputModal - 移除 AppStore 依赖
+ * S7.1: QuickInputModal - 快速输入模态框
  * - 使用 useZustandAppStore 读取 settings
  * - 使用 useCases 进行写入操作
- * - ServicesProvider 不再包含 appStore
  */
 /** @jsxImportSource preact */
 import { h, Fragment } from 'preact';

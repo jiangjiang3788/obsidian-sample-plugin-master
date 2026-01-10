@@ -23,7 +23,7 @@ import type { AppStoreApi } from './index';
 
 /**
  * 设置用例类
- * P0 止血点：UI 不再直接调用 AppStore.updateFloatingTimerEnabled
+ * P0 止血点：UI 通过 useCases 调用
  */
 export class SettingsUseCase {
     private store: AppStoreApi;

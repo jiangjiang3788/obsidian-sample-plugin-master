@@ -4,7 +4,7 @@
  * Role: Adapter (适配器)
  * 
  * 将 SettingsRepository 适配为 ISettingsProvider 接口
- * 用于替代 AppStore 作为 SettingsProviderToken 的实现
+ * SettingsProviderToken 的实现
  */
 
 import { singleton, inject } from 'tsyringe';

@@ -2,7 +2,6 @@
  * 组件属性类型定义
  * 
  * 【S6 架构约束】
- * - 不再使用 AppStore 相关类型
  * - 写操作通过 UseCases 进行
  * - 读操作通过 Zustand selector 或 props 传递
  */

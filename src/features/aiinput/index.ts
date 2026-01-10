@@ -1,6 +1,6 @@
 // src/features/aiinput/index.ts
 /**
- * S7.2: AI 自然语言快速记录功能模块 - 移除 AppStore 依赖
+ * S7.2: AI 自然语言快速记录功能模块
  * 只需要 plugin 实例，其他依赖通过 DI 或 zustand 获取
  */
 

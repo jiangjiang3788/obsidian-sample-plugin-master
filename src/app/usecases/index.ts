@@ -15,10 +15,10 @@
  * 
  * ⚠️ P0-2 架构约束：
  * - UI 层必须通过 UseCases 调用业务逻辑
- * - 禁止 UI 直接调用 AppStore 的私有方法
+ * - UI 通过 UseCases 调用业务逻辑
  * - 禁止 UI 直接调用 appStore['_updateSettingsAndPersist']
  * - 禁止 UI 直接调用 Zustand Store actions
- * - ⛔ 禁止使用 getAppStoreInstance / setAppStoreInstance 全局单例
+ * - ⛔ 禁止使用全局单例
  */
 
 import type { InjectionToken } from 'tsyringe';

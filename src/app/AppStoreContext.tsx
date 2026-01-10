@@ -2,43 +2,18 @@
  * AppStoreContext
  * Role: UI 层的 Store 和 Service 访问层
  * 职责：
- * 1. 提供 AppStore 的 React/Preact Context（可选，用于兼容旧代码）
- * 2. 提供 DataStore 和 InputService 的 Context
- * 3. 提供 UseCases 的 Context（P0 新增）
+ * 1. 提供 DataStore 和 InputService 的 Context
+ * 2. 提供 UseCases 的 Context
+ * 3. 提供 Zustand Store 的 Context
  * 4. 通过 useDataStore()、useInputService()、useUseCases() Hook 提供类型安全的访问
- * 5. 替代 storeRegistry 中的全局导出
  * 
  * ⚠️ P0 边界防护：
  * - UI 层必须通过 useUseCases() 调用业务逻辑
- * - 禁止 UI 直接调用 AppStore 的私有方法
- * - appStore 已变为可选，新代码应使用 zustand store + useCases
- * 
- * ============== S2 断路测试 (Circuit Breaker) ==============
- * 
- * 目的：在删除 AppStore 前，暴露所有残余 useAppStore() / AppStoreContext 依赖点（僵尸代码）
- * 
- * 配置说明：
- * - CIRCUIT_BREAKER_ENABLED: 断路开关，DEV 环境默认启用
- * - localStorage.getItem('ALLOW_LEGACY_APPSTORE') === '1': 逃生舱，允许临时放行不抛出异常
- * - localStorage.getItem('ARCH_BREAKER') === '1': 可选的额外控制开关（需要同时启用）
- * 
- * 迁移指引：
- * - 读取状态：使用 useZustandAppStore(selector) 或具体的 slice hook
- *   - useSettingsStore() - 设置相关
- *   - useTimerStore() - 计时器相关  
- *   - useThemeStore() - 主题相关
- * - 写入状态：使用 useUseCases()
- *   - useCases.settings.updateSettings()
- *   - useCases.timer.start() / stop() / reset()
- * 
- * 验收方式：
- * 1. 打开插件所有面板/功能
- * 2. 控制台出现 🚨 [ZOMBIE CODE DETECTED] 前缀
- * 3. 有 stack trace，能定位具体组件/文件
- * 4. 逐个替换调用点后，错误消失
+ * - 读取状态使用 useZustandAppStore(selector)
+ * - 写入状态使用 useUseCases()
  */
 import { createContext } from 'preact';
-import { useContext, useMemo } from 'preact/hooks';
+import { useContext } from 'preact/hooks';
 import { useStore } from 'zustand';
 import { container } from 'tsyringe';
 import type { ComponentChildren } from 'preact';
@@ -46,169 +21,18 @@ import type { DataStore } from '@/core/services/DataStore';
 import type { InputService } from '@/core/services/InputService';
 import type { UseCases } from './usecases';
 import type { AppStoreInstance, ZustandAppStore } from './store/useAppStore';
-import { STORE_TOKEN } from './store/useAppStore';
 
-// ============== S2 断路测试配置 ==============
-
-/**
- * 断路开关：DEV 环境默认启用
- * 
- * 如何启用/关闭：
- * - 默认：DEV 环境自动启用
- * - 手动关闭：设置 localStorage.setItem('ARCH_BREAKER', '0')
- * - 手动启用：设置 localStorage.setItem('ARCH_BREAKER', '1')
- */
-const CIRCUIT_BREAKER_ENABLED = import.meta.env.DEV;
-
-/**
- * 逃生舱检查：允许临时放行（方便渐进迁移）
- * 
- * 如何使用：
- * - 在浏览器控制台执行：localStorage.setItem('ALLOW_LEGACY_APPSTORE', '1')
- * - 这样 useAppStore() 不会抛出异常，只会 log + trace
- * - 迁移完成后记得移除：localStorage.removeItem('ALLOW_LEGACY_APPSTORE')
- */
-const isLegacyAllowed = (): boolean => {
-    try {
-        return typeof localStorage !== 'undefined' && 
-               localStorage.getItem('ALLOW_LEGACY_APPSTORE') === '1';
-    } catch {
-        return false;
-    }
-};
-
-/**
- * 断路报错函数
- * 
- * @param hookName - 被调用的 hook 名称
- * @param context - 调用上下文描述
- * @param shouldThrow - 是否抛出异常（逃生舱模式下不抛出）
- */
-const circuitBreakerError = (hookName: string, context: string): void => {
-    if (!CIRCUIT_BREAKER_ENABLED) {
-        return; // prod 环境不执行断路逻辑
-    }
-
-    const message = `🚨 [ZOMBIE CODE DETECTED] ${hookName} is deprecated!
-
-⚠️ 迁移指引：
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-📖 读取状态 - 使用 Zustand hooks：
-  • useSettingsStore(selector) - 设置相关状态
-  • useTimerStore(selector) - 计时器相关状态
-  • useThemeStore(selector) - 主题相关状态
-  • useZustandAppStore(selector) - 通用状态访问
-
-📝 写入状态 - 使用 useCases：
-  • const { settings, timer } = useUseCases();
-  • settings.updateSettings({ ... })
-  • timer.start() / timer.stop() / timer.reset()
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-📍 调用位置：${context}
-📁 源文件：src/app/AppStoreContext.tsx
-
-🔧 逃生舱（临时放行）：
-  localStorage.setItem('ALLOW_LEGACY_APPSTORE', '1')
-  
-请立即迁移到新的 Zustand hooks / useCases！`;
-
-    console.error(message);
-    
-    // 输出调用堆栈，帮助定位调用者
-    console.trace('📚 调用堆栈（用于定位僵尸代码位置）：');
-    
-    if (!isLegacyAllowed()) {
-        throw new Error(`🚨 [ZOMBIE CODE] ${hookName} is deprecated! 请迁移到 Zustand hooks / useCases。详见上方控制台输出。`);
-    } else {
-        console.warn(
-            `⚠️ [CIRCUIT BREAKER] 逃生舱已启用，不抛出异常。\n` +
-            `请尽快完成迁移后移除：localStorage.removeItem('ALLOW_LEGACY_APPSTORE')`
-        );
-    }
-};
-
-// ============== AppStore Context ==============
-
-/**
- * AppStore Context
- * 用于在 UI 层传递 AppStore 实例
- * 
- * ⚠️ 已废弃：新代码应使用 zustand store (useZustandAppStore) + useCases
- * ⚠️ S2 断路测试：类型改为 never | null，编译期暴露依赖
- * 
- * @deprecated 请迁移到 Zustand hooks + useCases
- */
-export const AppStoreContext = createContext<never | null>(null);
-
-/**
- * AppStoreProvider
- * @deprecated P0-4: AppStore 已移除，此组件已废弃
- */
-export function AppStoreProvider(_props: { store: never; children: ComponentChildren }) {
-    throw new Error(
-        '🚨 [ZOMBIE CODE] AppStoreProvider 已废弃！\n' +
-        '请迁移到 ServicesProvider。'
-    );
-}
-
-/**
- * useAppStore Hook
- * 从 Context 获取 AppStore 实例
- * 
- * ⚠️ 已废弃：新代码应使用：
- * - 读取状态：useZustandAppStore(selector)
- * - 写入状态：useUseCases()
- * 
- * ⚠️ S2 断路测试：
- * - DEV 环境下每次调用都会报错 + 输出堆栈
- * - 默认会抛出异常，使用逃生舱可临时放行
- * - 逃生舱：localStorage.setItem('ALLOW_LEGACY_APPSTORE', '1')
- * 
- * 兼容机制：
- * - 优先从 Context 获取 AppStore
- * - Context 不可用时，尝试从 DI 容器回退（仅限紧急兼容，会输出警告）
- * 
- * @returns AppStore 实例
- * @deprecated 使用 useZustandAppStore + useUseCases 替代
- */
-export function useAppStore(): never {
-    // S2 断路测试：核心断路点
-    // 每次调用都会触发断路检查，帮助定位僵尸代码
-    circuitBreakerError(
-        'useAppStore()',
-        'useAppStore hook 被调用'
-    );
-    
-    // P0-4: AppStore DI 依赖已移除
-    // useAppStore() 已废弃，调用时直接抛出错误引导迁移
-    throw new Error(
-        '🚨 [ZOMBIE CODE] useAppStore() 已废弃！\n' +
-        '请迁移到：\n' +
-        '  - 读取状态：useZustandAppStore(selector)\n' +
-        '  - 写入状态：useUseCases()\n'
-    );
-}
-
-// ============== Zustand Store Context (P0-3) ==============
+// ============== Zustand Store Context ==============
 
 /**
  * Zustand Store Context
  * 用于在 UI 层传递 Zustand store 实例
- * 
- * ⚠️ P0-3 架构约束：
- * - React 组件通过此 Context 获取 store
- * - 非 React 场景通过 DI（container.resolve(STORE_TOKEN)）获取
  */
 export const ZustandStoreContext = createContext<AppStoreInstance | null>(null);
 
 /**
  * useZustandAppStore Hook
  * 从 Context 获取 Zustand store 并使用 selector 读取状态
- * 
- * ⚠️ P0-3 架构约束：
- * - React 组件读取状态的唯一方式
- * - 非 React 场景禁止使用此 hook，应使用 getZustandState(store, selector)
  * 
  * @param selector 状态选择器
  * @returns 选择的状态值
@@ -304,15 +128,6 @@ export const UseCasesContext = createContext<UseCases | null>(null);
  * useUseCases Hook
  * 从 Context 获取 UseCases 实例
  * 
- * ⚠️ P0 边界防护：
- * - UI 层必须通过此 Hook 调用业务逻辑
- * - 禁止直接调用 AppStore 的私有方法
- * - 禁止直接调用 appStore['_updateSettingsAndPersist']
- * 
- * 兼容机制：
- * - 优先从 Context 获取 UseCases
- * - Context 不可用时，尝试从 DI 容器回退（仅限紧急兼容，会输出警告）
- * 
  * @returns UseCases 实例
  */
 export function useUseCases(): UseCases {
@@ -348,10 +163,6 @@ export function useUseCases(): UseCases {
 
 /**
  * Services 集合接口
- * 
- * P0-1: 已彻底移除 appStore
- * - 读取状态使用 zustand store (useZustandAppStore)
- * - 写入状态使用 useCases
  */
 export interface Services {
     zustandStore: AppStoreInstance;
@@ -371,8 +182,6 @@ interface ServicesProviderProps {
 /**
  * 校验 Services 对象完整性
  * @throws 如果任何必需服务缺失则抛出明确的错误信息
- * 
- * ⚠️ S7.0 变更：appStore 不再是必需的
  */
 function validateServices(services: Services, source?: string): void {
     const missing: string[] = [];
@@ -403,8 +212,6 @@ function validateServices(services: Services, source?: string): void {
  * 统一提供所有 UI 层需要的服务
  * 嵌套提供 DataStore、InputService、UseCases 的 Context
  * 
- * ⚠️ P0：UI 层通过 useUseCases() 获取业务用例，而非直接调用 store action
- * ⚠️ S7.0：appStore 已变为可选，仅在传递时提供 AppStoreContext
  * ⚠️ 运行时校验：如果 services 参数不完整，会立即抛出明确错误
  */
 export function ServicesProvider({ services, children }: ServicesProviderProps) {
@@ -452,50 +259,4 @@ export function devCheckServicesContext(): { valid: boolean; missing: string[] }
     }
     
     return result;
-}
-
-// ============== S2 断路测试导出 ==============
-
-/**
- * 断路测试状态查询
- * 用于在控制台检查当前断路测试配置
- * 
- * @example
- * // 在浏览器控制台执行
- * import { getCircuitBreakerStatus } from './AppStoreContext';
- * getCircuitBreakerStatus();
- */
-export function getCircuitBreakerStatus(): {
-    enabled: boolean;
-    legacyAllowed: boolean;
-    instructions: string;
-} {
-    const status = {
-        enabled: CIRCUIT_BREAKER_ENABLED,
-        legacyAllowed: isLegacyAllowed(),
-        instructions: `
-╔══════════════════════════════════════════════════════════════╗
-║           S2 断路测试 (Circuit Breaker) 状态                 ║
-╠══════════════════════════════════════════════════════════════╣
-║ 断路开关: ${CIRCUIT_BREAKER_ENABLED ? '✅ 已启用' : '❌ 已禁用'}                                    ║
-║ 逃生舱:   ${isLegacyAllowed() ? '🔓 已开启（不抛异常）' : '🔒 已关闭（会抛异常）'}                   ║
-╠══════════════════════════════════════════════════════════════╣
-║ 如何使用逃生舱（临时放行，方便调试）：                       ║
-║   localStorage.setItem('ALLOW_LEGACY_APPSTORE', '1')         ║
-║                                                              ║
-║ 如何关闭逃生舱：                                             ║
-║   localStorage.removeItem('ALLOW_LEGACY_APPSTORE')           ║
-╠══════════════════════════════════════════════════════════════╣
-║ 迁移指引：                                                   ║
-║ • 读取状态 → useSettingsStore / useTimerStore / useThemeStore║
-║ • 写入状态 → useUseCases()                                   ║
-╚══════════════════════════════════════════════════════════════╝
-        `.trim()
-    };
-    
-    if (CIRCUIT_BREAKER_ENABLED) {
-        console.log(status.instructions);
-    }
-    
-    return status;
 }
