@@ -31,7 +31,8 @@ import { singleton, inject } from 'tsyringe';
 import type { ThinkSettings, ViewInstance, Layout, InputSettings, BlockTemplate, ThemeDefinition, ThemeOverride, Group, GroupType, Groupable } from '@/core/types/schema';
 import { SETTINGS_TOKEN, ISettingsProvider } from '@/core/services/types';
 import { SettingsRepository } from '@/core/services/SettingsRepository';
-import { useZustandAppStore, type ZustandAppStore as AppStoreState } from '@/app/store/useAppStore'; // ZUSTAND MIGRATION: 替换 useAppStore
+import { type ZustandAppStore as AppStoreState } from '@/app/store/useAppStore';
+import { useZustandAppStore } from '@/app/AppStoreContext'; // ZUSTAND MIGRATION: 替换 useAppStore
 import { ThemeStore } from '@features/settings/ThemeStore';
 import type { TimerState } from '@/app/store/slices/timer.slice';
 import { BlockStore } from '@/features/settings/BlockStore';

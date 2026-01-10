@@ -8,8 +8,7 @@ import { ModulePanel } from './ModulePanel';
 import { DashboardViewComponents as ViewComponents } from './index';
 
 import { getDateRange, dayjs } from '@core/utils/date';
-import { useZustandAppStore } from '@/app/store/useAppStore';
-import { useUseCases } from '@/app/AppStoreContext';
+import { useZustandAppStore, useUseCases } from '@/app/AppStoreContext';
 import type { ActionService } from '@core/services/ActionService';
 import { ItemService } from '@core/services/ItemService';
 import type { TimerService } from '@features/timer/TimerService';

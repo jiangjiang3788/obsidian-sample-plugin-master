@@ -9,8 +9,7 @@
  */
 /** @jsxImportSource preact */
 import { h } from 'preact';
-import { useZustandAppStore } from '@/app/store/useAppStore';
-import { useUseCases } from '@/app/AppStoreContext';
+import { useZustandAppStore, useUseCases } from '@/app/AppStoreContext';
 import { Accordion, AccordionSummary, AccordionDetails, Box, Stack, Typography, IconButton, Tooltip, Divider, TextField } from '@mui/material';
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 import DeleteForeverOutlinedIcon from '@mui/icons-material/DeleteForeverOutlined';

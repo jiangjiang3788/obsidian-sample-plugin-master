@@ -1,38 +1,41 @@
 // src/features/logic/CodeblockEmbedder.ts
 /**
- * S8.2: CodeblockEmbedder - 彻底移除 AppStore 依赖
- * P0-2: 使用 getZustandState 只读访问 settings
+ * P0-3: CodeblockEmbedder - 通过 DI 获取 store
  * 
  * 改动说明：
- * - 移除构造函数中的 appStore 参数
- * - 使用 getZustandState(s => s.settings) 读取 settings
- * - 不再有 appStore fallback
+ * - 使用 container.resolve(STORE_TOKEN) 获取 store
+ * - 使用纯函数 getZustandState(store, selector) 读取 settings
  */
 import { render } from 'preact';
 import { Notice, Plugin } from 'obsidian';
+import { container } from 'tsyringe';
 import { CODEBLOCK_LANG } from '@/core/types/constants';
 import { DataStore } from '@core/services/DataStore';
-import { getZustandState } from '@/app/store/useAppStore';
+import { getZustandState, STORE_TOKEN, type AppStoreInstance } from '@/app/store/useAppStore';
 import { RendererService } from '@/features/settings/RendererService';
 import type { Layout } from '@/core/types/schema';
 import type { ActionService } from '@core/services/ActionService';
 
 export class CodeblockEmbedder {
+    // P0-3: store 从 DI 获取
+    private store: AppStoreInstance;
+    
     constructor(
         private plugin: Plugin,
         private dataStore: DataStore,
         private rendererService: RendererService,
         private actionService: ActionService,
     ) {
+        // P0-3: 从 DI 容器获取 store
+        this.store = container.resolve<AppStoreInstance>(STORE_TOKEN);
         this.registerProcessor();
     }
 
     /**
-     * S8.2/P0-2: 获取 settings - 使用 getZustandState 只读访问
-     * 替代已废弃的 getAppStoreInstance()
+     * P0-3: 获取 settings - 使用纯函数 getZustandState
      */
     private getSettings() {
-        return getZustandState(s => s.settings);
+        return getZustandState(this.store, s => s.settings);
     }
 
     private registerProcessor() {
@@ -66,7 +69,7 @@ export class CodeblockEmbedder {
                     new Notice(`Think Plugin: 未指定布局，已自动选择第一个布局 "${layoutName}"。`);
                 }
 
-                const layout = allLayouts.find(l => l.name === layoutName);
+                const layout = allLayouts.find((l: Layout) => l.name === layoutName);
                 if (!layout) {
                     el.createDiv({ text: `Think Plugin: 找不到名称为 "${layoutName}" 的布局。请在插件设置中创建。` });
                     return;

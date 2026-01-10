@@ -2,7 +2,7 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
 import { useRef, useCallback } from 'preact/hooks';
-import { useZustandAppStore } from '@/app/store/useAppStore';
+import { useZustandAppStore } from '@/app/AppStoreContext';
 import { useLocalStorage } from '@shared/hooks';
 import { Box, Typography, Button, Paper, Stack, Tooltip } from '@mui/material';
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';

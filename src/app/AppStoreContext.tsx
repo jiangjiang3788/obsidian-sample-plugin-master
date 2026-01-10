@@ -38,13 +38,16 @@
  * 4. 逐个替换调用点后，错误消失
  */
 import { createContext } from 'preact';
-import { useContext } from 'preact/hooks';
+import { useContext, useMemo } from 'preact/hooks';
+import { useStore } from 'zustand';
 import { container } from 'tsyringe';
 import type { ComponentChildren } from 'preact';
 import type { AppStore } from './AppStore';
 import type { DataStore } from '@/core/services/DataStore';
 import type { InputService } from '@/core/services/InputService';
 import type { UseCases } from './usecases';
+import type { AppStoreInstance, ZustandAppStore } from './store/useAppStore';
+import { STORE_TOKEN } from './store/useAppStore';
 
 // ============== S2 断路测试配置 ==============
 
@@ -226,6 +229,61 @@ export function useAppStore(): AppStore {
         'useAppStore 必须在 AppStoreProvider 内部使用。' +
         '请确保组件树被 AppStoreProvider 包裹。'
     );
+}
+
+// ============== Zustand Store Context (P0-3) ==============
+
+/**
+ * Zustand Store Context
+ * 用于在 UI 层传递 Zustand store 实例
+ * 
+ * ⚠️ P0-3 架构约束：
+ * - React 组件通过此 Context 获取 store
+ * - 非 React 场景通过 DI（container.resolve(STORE_TOKEN)）获取
+ */
+export const ZustandStoreContext = createContext<AppStoreInstance | null>(null);
+
+/**
+ * useZustandAppStore Hook
+ * 从 Context 获取 Zustand store 并使用 selector 读取状态
+ * 
+ * ⚠️ P0-3 架构约束：
+ * - React 组件读取状态的唯一方式
+ * - 非 React 场景禁止使用此 hook，应使用 getZustandState(store, selector)
+ * 
+ * @param selector 状态选择器
+ * @returns 选择的状态值
+ * 
+ * @example
+ * const settings = useZustandAppStore(state => state.settings);
+ * const themes = useZustandAppStore(state => state.settings.inputSettings?.themes);
+ */
+export function useZustandAppStore<T>(selector: (state: ZustandAppStore) => T): T {
+    const store = useContext(ZustandStoreContext);
+    
+    if (!store) {
+        // 兼容回退：尝试从 DI 容器获取
+        try {
+            const fallbackStore = container.resolve<AppStoreInstance>(STORE_TOKEN);
+            if (fallbackStore) {
+                console.warn(
+                    '[useZustandAppStore] ⚠️ 正在使用 DI 容器回退获取 Zustand store。\n' +
+                    '这表明组件未被 ServicesProvider 包裹。\n' +
+                    '请检查组件渲染入口并添加 ServicesProvider。'
+                );
+                return useStore(fallbackStore, selector);
+            }
+        } catch (e) {
+            // DI 容器也没有注册
+        }
+        
+        throw new Error(
+            'useZustandAppStore 必须在 ServicesProvider 内部使用。' +
+            '请确保组件树被 ServicesProvider 包裹。'
+        );
+    }
+    
+    return useStore(store, selector);
 }
 
 // ============== DataStore Context ==============

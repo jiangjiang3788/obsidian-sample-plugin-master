@@ -11,7 +11,7 @@ import { App, Modal, Notice } from 'obsidian';
 import { render, unmountComponentAtNode } from 'preact/compat';
 import { useState, useMemo, useEffect } from 'preact/hooks';
 import { container } from 'tsyringe';
-import { useZustandAppStore } from '@/app/store/useAppStore';
+import { useZustandAppStore } from '@/app/AppStoreContext';
 import { useDataStore, useInputService, ServicesProvider, Services } from '@/app/AppStoreContext';
 import { DataStore } from '@/core/services/DataStore';
 import { InputService } from '@/core/services/InputService';

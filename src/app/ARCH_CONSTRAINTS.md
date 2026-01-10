@@ -235,9 +235,12 @@ import { USECASES_TOKEN, type UseCases } from '@/app/usecases';
 const useCases = container.resolve<UseCases>(USECASES_TOKEN);
 useCases.theme.addTheme(path);
 
-// ✅ 只读访问状态：使用 getZustandState
-import { getZustandState } from '@/app/store/useAppStore';
-const themes = getZustandState(s => s.settings.inputSettings.themes);
+// ✅ 只读访问状态：使用 getZustandState(store, selector)
+// 非 React 场景需通过 DI 获取 store，然后使用纯函数版本
+import { container } from 'tsyringe';
+import { getZustandState, STORE_TOKEN, type AppStoreInstance } from '@/app/store/useAppStore';
+const store = container.resolve<AppStoreInstance>(STORE_TOKEN);
+const themes = getZustandState(store, s => s.settings.inputSettings.themes);
 ```
 
 ### 验收标准
