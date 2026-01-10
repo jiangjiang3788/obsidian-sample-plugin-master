@@ -5,15 +5,15 @@ import { ActionService } from '@core/services/ActionService';
 import * as QuickInputFeature from '@features/quickinput';
 import * as AiInputFeature from '@features/aiinput';
 import { setupSettings, setupDashboard } from '@/features/settings';
-import { getAppStoreInstance } from '@/app/store/useAppStore';
 
 /**
  * FeatureLoader - UI 特性加载器
  * 职责：负责加载和挂载插件的 UI 特性 (Dashboard, Settings, QuickInput 等)
  * 
- * S7.0: 移除对 AppStore 的必选依赖
- * - 通过 getAppStoreInstance() 获取 zustand store
+ * P0-2 架构：
+ * - 不依赖全局单例
  * - 通过 DI container 获取其他服务
+ * - useCases 由 ServiceManager 创建并注册到 DI
  */
 export class FeatureLoader {
     private plugin: ThinkPlugin;

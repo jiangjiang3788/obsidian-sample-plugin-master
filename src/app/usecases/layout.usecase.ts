@@ -30,16 +30,23 @@
  * - 直接操作 SettingsRepository
  * - 持有 UI 相关逻辑
  * - 暴露底层 slice actions 给 features 层
+ * - ⛔ 使用全局单例（禁止 getAppStoreInstance）
  */
 
-import { getAppStoreInstance } from '@/app/store/useAppStore';
 import type { Layout, ViewInstance } from '@/core/types/schema';
+import type { AppStoreApi } from './index';
 
 /**
  * 布局用例类
  * P1: UI 通过 UseCases 调用布局操作，不直接访问 Store
  */
 export class LayoutUseCase {
+    private store: AppStoreApi;
+
+    constructor(store: AppStoreApi) {
+        this.store = store;
+    }
+
     // ============== Layout CRUD ==============
 
     /**
@@ -49,8 +56,7 @@ export class LayoutUseCase {
      */
     async addLayout(name: string, parentId?: string | null): Promise<Layout | null> {
         try {
-            const store = getAppStoreInstance();
-            const state = store.getState();
+            const state = this.store.getState();
             
             if (!state.isInitialized) {
                 console.error('[LayoutUseCase] Store 未初始化');
@@ -71,8 +77,7 @@ export class LayoutUseCase {
      */
     async updateLayout(id: string, updates: Partial<Layout>): Promise<void> {
         try {
-            const store = getAppStoreInstance();
-            const state = store.getState();
+            const state = this.store.getState();
             
             if (!state.isInitialized) {
                 console.error('[LayoutUseCase] Store 未初始化');
@@ -92,8 +97,7 @@ export class LayoutUseCase {
      */
     async deleteLayout(id: string): Promise<void> {
         try {
-            const store = getAppStoreInstance();
-            const state = store.getState();
+            const state = this.store.getState();
             
             if (!state.isInitialized) {
                 console.error('[LayoutUseCase] Store 未初始化');
@@ -112,8 +116,7 @@ export class LayoutUseCase {
      */
     async moveLayout(id: string, direction: 'up' | 'down'): Promise<void> {
         try {
-            const store = getAppStoreInstance();
-            const state = store.getState();
+            const state = this.store.getState();
             
             if (!state.isInitialized) return;
             
@@ -129,8 +132,7 @@ export class LayoutUseCase {
      */
     async duplicateLayout(id: string): Promise<Layout | null> {
         try {
-            const store = getAppStoreInstance();
-            const state = store.getState();
+            const state = this.store.getState();
             
             if (!state.isInitialized) return null;
             
@@ -147,8 +149,7 @@ export class LayoutUseCase {
      */
     async reorderLayouts(orderedIds: string[]): Promise<void> {
         try {
-            const store = getAppStoreInstance();
-            const state = store.getState();
+            const state = this.store.getState();
             
             if (!state.isInitialized) {
                 console.error('[LayoutUseCase] Store 未初始化');
@@ -169,8 +170,7 @@ export class LayoutUseCase {
      */
     async batchUpdateLayouts(layoutIds: string[], updates: Partial<Layout>): Promise<void> {
         try {
-            const store = getAppStoreInstance();
-            const state = store.getState();
+            const state = this.store.getState();
             
             if (!state.isInitialized) return;
             
@@ -186,8 +186,7 @@ export class LayoutUseCase {
      */
     async batchDeleteLayouts(layoutIds: string[]): Promise<void> {
         try {
-            const store = getAppStoreInstance();
-            const state = store.getState();
+            const state = this.store.getState();
             
             if (!state.isInitialized) return;
             
@@ -205,8 +204,7 @@ export class LayoutUseCase {
      */
     async moveLayoutToParent(layoutId: string, newParentId: string | null): Promise<void> {
         try {
-            const store = getAppStoreInstance();
-            const state = store.getState();
+            const state = this.store.getState();
             
             if (!state.isInitialized) return;
             
@@ -224,8 +222,7 @@ export class LayoutUseCase {
      */
     async addViewInstanceToLayout(layoutId: string, viewInstanceId: string): Promise<void> {
         try {
-            const store = getAppStoreInstance();
-            const state = store.getState();
+            const state = this.store.getState();
             
             if (!state.isInitialized) return;
             
@@ -241,8 +238,7 @@ export class LayoutUseCase {
      */
     async removeViewInstanceFromLayout(layoutId: string, viewInstanceId: string): Promise<void> {
         try {
-            const store = getAppStoreInstance();
-            const state = store.getState();
+            const state = this.store.getState();
             
             if (!state.isInitialized) return;
             
@@ -258,8 +254,7 @@ export class LayoutUseCase {
      */
     async reorderViewInstancesInLayout(layoutId: string, viewInstanceIds: string[]): Promise<void> {
         try {
-            const store = getAppStoreInstance();
-            const state = store.getState();
+            const state = this.store.getState();
             
             if (!state.isInitialized) return;
             
@@ -277,8 +272,7 @@ export class LayoutUseCase {
      */
     getLayouts(): Layout[] {
         try {
-            const store = getAppStoreInstance();
-            const state = store.getState();
+            const state = this.store.getState();
             return state.getLayouts();
         } catch (error) {
             console.error('[LayoutUseCase] getLayouts 失败:', error);
@@ -291,8 +285,7 @@ export class LayoutUseCase {
      */
     getLayout(id: string): Layout | undefined {
         try {
-            const store = getAppStoreInstance();
-            const state = store.getState();
+            const state = this.store.getState();
             return state.getLayout(id);
         } catch (error) {
             console.error('[LayoutUseCase] getLayout 失败:', error);
@@ -305,8 +298,7 @@ export class LayoutUseCase {
      */
     getLayoutsByParent(parentId: string | null): Layout[] {
         try {
-            const store = getAppStoreInstance();
-            const state = store.getState();
+            const state = this.store.getState();
             return state.getLayoutsByParent(parentId);
         } catch (error) {
             console.error('[LayoutUseCase] getLayoutsByParent 失败:', error);
@@ -319,8 +311,7 @@ export class LayoutUseCase {
      */
     getTopLevelLayouts(): Layout[] {
         try {
-            const store = getAppStoreInstance();
-            const state = store.getState();
+            const state = this.store.getState();
             return state.getTopLevelLayouts();
         } catch (error) {
             console.error('[LayoutUseCase] getTopLevelLayouts 失败:', error);
@@ -338,8 +329,7 @@ export class LayoutUseCase {
      */
     async addView(title: string, parentId: string | null = null): Promise<void> {
         try {
-            const store = getAppStoreInstance();
-            const state = store.getState();
+            const state = this.store.getState();
             
             if (!state.isInitialized) {
                 console.error('[LayoutUseCase] Store 未初始化');
@@ -360,8 +350,7 @@ export class LayoutUseCase {
      */
     async updateView(id: string, updates: Partial<ViewInstance>): Promise<void> {
         try {
-            const store = getAppStoreInstance();
-            const state = store.getState();
+            const state = this.store.getState();
             
             if (!state.isInitialized) {
                 console.error('[LayoutUseCase] Store 未初始化');
@@ -381,8 +370,7 @@ export class LayoutUseCase {
      */
     async deleteView(id: string): Promise<void> {
         try {
-            const store = getAppStoreInstance();
-            const state = store.getState();
+            const state = this.store.getState();
             
             if (!state.isInitialized) {
                 console.error('[LayoutUseCase] Store 未初始化');
@@ -403,8 +391,7 @@ export class LayoutUseCase {
      */
     async moveView(id: string, direction: 'up' | 'down'): Promise<void> {
         try {
-            const store = getAppStoreInstance();
-            const state = store.getState();
+            const state = this.store.getState();
             
             if (!state.isInitialized) return;
             
@@ -421,8 +408,7 @@ export class LayoutUseCase {
      */
     async duplicateView(id: string): Promise<void> {
         try {
-            const store = getAppStoreInstance();
-            const state = store.getState();
+            const state = this.store.getState();
             
             if (!state.isInitialized) return;
             
@@ -436,7 +422,8 @@ export class LayoutUseCase {
 
 /**
  * 创建布局用例实例
+ * @param store Zustand Store 实例
  */
-export function createLayoutUseCase(): LayoutUseCase {
-    return new LayoutUseCase();
+export function createLayoutUseCase(store: AppStoreApi): LayoutUseCase {
+    return new LayoutUseCase(store);
 }

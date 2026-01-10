@@ -12,6 +12,7 @@ import type { Services } from '@/app/AppStoreContext';
 
 /**
  * 验证 Services 对象是否完整
+ * P0-1: 已移除 appStore 校验
  */
 export function validateServicesObject(services: Partial<Services> | null | undefined): {
     valid: boolean;
@@ -28,7 +29,7 @@ export function validateServicesObject(services: Partial<Services> | null | unde
         };
     }
     
-    if (!services.appStore) missing.push('appStore');
+    // P0-1: 已移除 appStore 校验
     if (!services.dataStore) missing.push('dataStore');
     if (!services.inputService) missing.push('inputService');
     if (!services.useCases) missing.push('useCases');
@@ -62,10 +63,10 @@ export function runServicesProviderSelfTest(services: Partial<Services> | null |
 
 /**
  * 创建模拟的完整 Services 对象（用于测试）
+ * P0-1: 已移除 appStore
  */
 export function createMockServices(): Services {
     return {
-        appStore: {} as Services['appStore'],
         dataStore: {} as Services['dataStore'],
         inputService: {} as Services['inputService'],
         useCases: {} as Services['useCases'],

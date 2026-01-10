@@ -1,7 +1,7 @@
 // src/features/aiinput/registerCommands.ts
 /**
  * S7.2: AI 自然语言快速记录命令注册 - 移除 AppStore 依赖
- * - 使用 zustand getAppStoreInstance() 获取 settings
+ * P0-2: 使用 getZustandState 只读访问 settings
  * - 使用 SettingsProviderToken 创建 AI 服务
  */
 
@@ -12,7 +12,7 @@ import { QuickInputModal } from '@/features/quickinput/QuickInputModal';
 import { AiTextPromptModal } from './AiTextPromptModal';
 import { AiBatchConfirmModal } from './AiBatchConfirmModal';
 import { AiConfigCache, AiHttpClient, AiNaturalLanguageRecordParser } from '@/core/ai';
-import { getAppStoreInstance } from '@/app/store/useAppStore';
+import { getZustandState } from '@/app/store/useAppStore';
 import { SettingsProviderToken, type ISettingsProvider } from '@/core/services/types';
 
 /**
@@ -20,7 +20,7 @@ import { SettingsProviderToken, type ISettingsProvider } from '@/core/services/t
  */
 function createZustandSettingsProvider(): ISettingsProvider {
     return {
-        getSettings: () => getAppStoreInstance().getState().settings
+        getSettings: () => getZustandState(s => s.settings)
     };
 }
 
@@ -42,8 +42,8 @@ export function registerAiInputCommands(plugin: ThinkPlugin) {
         id: 'think-ai-natural-input',
         name: 'AI: 自然语言快速记录',
         callback: async () => {
-            // S7.2: 使用 zustand store 获取 settings
-            const settings = getAppStoreInstance().getState().settings;
+            // S7.2: 使用 zustand store 获取 settings（通过 getZustandState 只读访问）
+            const settings = getZustandState(s => s.settings);
             const ai = settings.aiSettings;
 
             // 检查 AI 是否启用

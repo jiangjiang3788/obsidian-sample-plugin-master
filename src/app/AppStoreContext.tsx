@@ -335,14 +335,11 @@ export function useUseCases(): UseCases {
 /**
  * Services 集合接口
  * 
- * ⚠️ S7.0 变更：appStore 已变为可选
- * - 新代码不应传递 appStore
+ * P0-1: 已彻底移除 appStore
  * - 读取状态使用 zustand store (useZustandAppStore)
  * - 写入状态使用 useCases
  */
 export interface Services {
-    /** @deprecated 使用 zustand store + useCases 替代 */
-    appStore?: AppStore;
     dataStore: DataStore;
     inputService: InputService;
     useCases: UseCases;
@@ -411,16 +408,6 @@ export function ServicesProvider({ services, children }: ServicesProviderProps) 
             </InputServiceContext.Provider>
         </DataStoreContext.Provider>
     );
-    
-    // 如果提供了 appStore，则包裹 AppStoreContext（兼容旧代码）
-    // S2 断路测试：使用类型断言绕过 never 类型检查
-    if (services.appStore) {
-        content = (
-            <AppStoreContext.Provider value={services.appStore as never}>
-                {content}
-            </AppStoreContext.Provider>
-        );
-    }
     
     return content;
 }
