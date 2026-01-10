@@ -6,13 +6,13 @@
  * - 读操作通过 Zustand selector 或 props 传递
  */
 import { type BlockTemplate, type ThemeDefinition, type ThemeOverride } from '@/core/types/schema';
-import { type BatchOperationType } from '@shared/types/common';
+import { type BatchOperationType, type ActiveStatus, type SourceType } from '@shared/types/common';
 import type { UseCases } from '@/app/usecases';
 
 // 临时定义类型，直到修复完整的类型系统
 export interface ExtendedTheme extends ThemeDefinition {
-    status: 'active' | 'inactive';
-    source: 'predefined' | 'discovered';
+    status: ActiveStatus;
+    source: SourceType;
     usageCount: number;
     lastUsed?: number;
     order: number;

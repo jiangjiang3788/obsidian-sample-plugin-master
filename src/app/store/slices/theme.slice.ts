@@ -21,6 +21,7 @@
 import type { StateCreator } from 'zustand';
 import type { ThinkSettings, ThemeDefinition, ThemeOverride } from '@/core/types/schema';
 import type { SettingsRepository } from '@/core/services/SettingsRepository';
+import type { ActiveStatus } from '@shared/types/common';
 import { generateId } from '@core/utils/array';
 import { createSliceMeta } from '@/shared/types/ActionMeta';
 
@@ -42,7 +43,7 @@ export interface ThemeSliceActions {
     // Theme 批量操作
     batchUpdateThemes: (themeIds: string[], updates: Partial<ThemeDefinition>) => Promise<void>;
     batchDeleteThemes: (themeIds: string[]) => Promise<void>;
-    batchUpdateThemeStatus: (themeIds: string[], status: 'active' | 'inactive') => Promise<void>;
+    batchUpdateThemeStatus: (themeIds: string[], status: ActiveStatus) => Promise<void>;
     batchUpdateThemeIcon: (themeIds: string[], icon: string) => Promise<void>;
     
     // Override 操作
@@ -238,7 +239,7 @@ export function createThemeSlice(
             }
         },
 
-        batchUpdateThemeStatus: async (themeIds: string[], status: 'active' | 'inactive'): Promise<void> => {
+        batchUpdateThemeStatus: async (themeIds: string[], status: ActiveStatus): Promise<void> => {
             const state = get();
             if (!state.isInitialized) return;
 

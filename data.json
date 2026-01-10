@@ -8500,59 +8500,10 @@
         "blockId": "blk_mejsg1dc46fj9",
         "disabled": true,
         "id": "ovr_mh1smyhxqo3gk"
-      },
-      {
-        "blockId": "blk_mejsg1dc46fj9",
-        "themeId": "thm_mejstzgoiocwm",
-        "disabled": false,
-        "fields": [
-          {
-            "id": "field_mewjlt4j",
-            "key": "思考分类",
-            "label": "思考分类",
-            "type": "radio",
-            "options": [
-              {
-                "value": "事件",
-                "label": "事件"
-              },
-              {
-                "value": "感受",
-                "label": "感受"
-              },
-              {
-                "value": "思考",
-                "label": "思考"
-              }
-            ]
-          },
-          {
-            "id": "field_mewkyug9",
-            "key": "日期",
-            "label": "日期",
-            "type": "date"
-          },
-          {
-            "id": "field_mewjlypl",
-            "key": "内容",
-            "label": "内容",
-            "type": "textarea"
-          }
-        ],
-        "outputTemplate": "<!-- start -->\n分类:: {{思考分类}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n",
-        "targetFile": "01/闪念.md",
-        "appendUnderHeader": "## {{theme}}",
-        "id": "ovr_mk80dcsw4xm1i"
-      },
-      {
-        "blockId": "blk_mejsg1dc46fj9",
-        "themeId": "thm_mejsx2qu3g8fi",
-        "disabled": true,
-        "id": "ovr_mk80djlr78saj"
       }
     ]
   },
-  "floatingTimerEnabled": false,
+  "floatingTimerEnabled": true,
   "activeThemePaths": [
     "思考",
     "思考/时间整理",

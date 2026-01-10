@@ -8,6 +8,7 @@
  */
 import { type ThemeDefinition, ThemeOverride, BlockTemplate, ThinkSettings } from '@/core/types/schema';
 import { type ExtendedTheme, BatchOperationType, ThemeTreeNode } from '@core/theme-matrix';
+import type { SourceType } from '@shared/types/common';
 import { 
     normalizePath,
     validatePathCharacters 
@@ -91,7 +92,7 @@ export class ThemeMatrixService {
             return {
                 ...theme,
                 status: isActive ? 'active' : 'inactive',
-                source: source as 'predefined' | 'discovered',
+                source: source as SourceType,
                 usageCount: 0, // 暂时移除 usageCount，后续如果需要可以从 DataStore 获取
                 lastUsed: undefined // 暂时移除 lastUsed
             } as ExtendedTheme;

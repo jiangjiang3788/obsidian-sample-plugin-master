@@ -13,7 +13,9 @@
     "test:e2e": "wdio run ./test/configs/wdio.conf.mts",
     "test:e2e:no-proxy": "node test/e2e/run-e2e-no-proxy.js",
     "test:all": "npm run test && npm run test:e2e",
-    "check:boundaries": "npx ts-node --project scripts/tsconfig.json scripts/check-boundaries.ts"
+    "check:boundaries": "npx ts-node --project scripts/tsconfig.json scripts/check-boundaries.ts",
+    "arch:gate": "node scripts/arch-gate.mjs",
+    "ci": "npm run build && npm run arch:gate"
   },
   "dependencies": {
     "@codemirror/state": "^6.5.2",

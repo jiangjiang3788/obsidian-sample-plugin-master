@@ -12,10 +12,7 @@ import { render, unmountComponentAtNode } from 'preact/compat';
 import { useState, useMemo, useEffect } from 'preact/hooks';
 import { container } from 'tsyringe';
 import { useZustandAppStore, useDataStore, useInputService, ServicesProvider, Services } from '@/app/AppStoreContext';
-import { DataStore } from '@/core/services/DataStore';
-import { InputService } from '@/core/services/InputService';
-import { USECASES_TOKEN, type UseCases } from '@/app/usecases';
-import { STORE_TOKEN, type AppStoreInstance } from '@/app/store/useAppStore';
+import { createServices } from '@/app/createServices';
 import type { InputSettings, BlockTemplate, ThemeDefinition, TemplateField, TemplateFieldOption } from '@/core/types/schema';
 import { Button, RadioGroup as MuiRadioGroup, FormControlLabel, Radio, FormControl, Typography, Stack, Divider, Box, IconButton, Tooltip } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
@@ -43,13 +40,8 @@ export class QuickInputModal extends Modal {
         private allowBlockSwitch: boolean = false
     ) {
         super(app);
-        // S7.1: 从 DI 容器获取服务
-        this.services = {
-            zustandStore: container.resolve<AppStoreInstance>(STORE_TOKEN),
-            dataStore: container.resolve(DataStore),
-            inputService: container.resolve(InputService),
-            useCases: container.resolve(USECASES_TOKEN),
-        };
+        // P1-2: 使用 createServices 统一创建服务
+        this.services = createServices(container);
     }
 
     onOpen() {

@@ -39,6 +39,7 @@
  */
 
 import type { ThemeDefinition, ThemeOverride } from '@/core/types/schema';
+import type { ActiveStatus } from '@shared/types/common';
 import type { AppStoreApi } from './index';
 
 /**
@@ -174,7 +175,7 @@ export class ThemeUseCase {
      * @param themeIds 主题ID列表
      * @param status 目标状态
      */
-    async batchUpdateThemeStatus(themeIds: string[], status: 'active' | 'inactive'): Promise<void> {
+    async batchUpdateThemeStatus(themeIds: string[], status: ActiveStatus): Promise<void> {
         try {
             const state = this.store.getState();
             
