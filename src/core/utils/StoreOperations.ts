@@ -1,6 +1,6 @@
 // src/core/utils/StoreOperations.ts
 import type { ThinkSettings } from '@/core/types/schema';
-import { generateId } from '@core/utils/array';
+import { generateId } from '@/shared/utils/array';
 import { arrayUtils } from '@core/utils/array';
 
 /**

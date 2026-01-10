@@ -24,11 +24,7 @@ import type { StateCreator } from 'zustand';
 import type { ZustandAppStore } from '../useAppStore';
 import type { SettingsRepository } from '@/core/services/SettingsRepository';
 import type { BlockTemplate, ThemeOverride } from '@/core/types/schema';
-
-// 简单的 UUID 生成函数
-function generateId(): string {
-    return 'block_' + Date.now().toString(36) + '_' + Math.random().toString(36).substr(2, 9);
-}
+import { generateId } from '@/shared/utils/array';
 
 // ============== 类型定义 ==============
 
@@ -65,7 +61,7 @@ export function createBlocksSlice(
 
             try {
                 const newBlock: BlockTemplate = {
-                    id: generateId(),
+                    id: generateId('block'),
                     name,
                     targetFile: '',
                     appendUnderHeader: '',
@@ -179,7 +175,7 @@ export function createBlocksSlice(
             try {
                 const newBlock: BlockTemplate = {
                     ...source,
-                    id: generateId(),
+                    id: generateId('block'),
                     name: `${source.name} (副本)`,
                 };
 

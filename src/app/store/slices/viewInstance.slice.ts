@@ -34,11 +34,7 @@ import type { ZustandAppStore } from '../useAppStore';
 import type { SettingsRepository } from '@/core/services/SettingsRepository';
 import type { ViewInstance } from '@/core/types/schema';
 import { VIEW_DEFAULT_CONFIGS } from '@/core/config/viewConfigs';
-
-// 简单的 ID 生成函数
-function generateId(prefix: string): string {
-    return prefix + '_' + Date.now().toString(36) + '_' + Math.random().toString(36).substr(2, 9);
-}
+import { generateId } from '@/shared/utils/array';
 
 // ============== 类型定义 ==============
 

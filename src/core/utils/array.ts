@@ -1,14 +1,6 @@
 // src/core/utils/array.ts
 import type { Groupable } from '@/core/types/schema';
-
-/**
- * 生成一个带前缀的唯一ID
-* @param prefix - ID前缀 (例如: 'ds', 'view')
- * @returns 生成的唯一ID
- */
-export function generateId(prefix: string): string {
-    return `${prefix}_${Date.now().toString(36)}${Math.random().toString(36).slice(2, 7)}`;
-}
+import { generateId } from '@/shared/utils/array';
 
 /**
  * 在一个数组内，根据parentId对项目进行上移或下移

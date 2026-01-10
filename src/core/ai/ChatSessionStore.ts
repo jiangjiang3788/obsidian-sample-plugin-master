@@ -17,6 +17,7 @@ import { z } from 'zod';
 import { singleton, inject } from 'tsyringe';
 import type { IPluginStorage } from '@/core/services/StorageService';
 import { STORAGE_TOKEN } from '@/core/services/StorageService';
+import { generateId } from '@/shared/utils/array';
 
 // ============== Zod Schemas ==============
 
@@ -84,12 +85,6 @@ const LEGACY_STORAGE_KEY = 'think-ai-chat-sessions';
 const DEFAULT_FILE_PATH = 'Think/chat-sessions.json';
 const CORRUPT_SUFFIX = '.corrupt.json';
 const MAX_SESSIONS = 50; // 最多保留的会话数
-
-// ============== Helper ==============
-
-function generateId(): string {
-    return `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
-}
 
 // ============== ChatSessionStore ==============
 

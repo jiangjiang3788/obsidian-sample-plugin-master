@@ -4,6 +4,11 @@
  * 这些函数将逐步替代 src/core/utils/array.ts 中的函数
  */
 
+import { generateId } from './id';
+
+// Re-export generateId for backward compatibility
+export { generateId } from './id';
+
 /**
  * 在数组中移动元素
  */
@@ -45,13 +50,6 @@ export function duplicateInArray<T extends { id: string }>(
     };
 
     return [...array.slice(0, index + 1), duplicate, ...array.slice(index + 1)];
-}
-
-/**
- * 生成唯一ID
- */
-export function generateId(prefix: string = 'id'): string {
-    return `${prefix}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 }
 
 /**
