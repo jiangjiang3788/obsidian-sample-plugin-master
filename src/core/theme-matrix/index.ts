@@ -1,10 +1,10 @@
 /**
  * ThemeMatrix 核心模块导出
  * 
- * 【S6 架构约束】
- * - 本模块下的服务（ThemeMatrixService, ThemeScanService）已完成 AppStore 解耦
- * - 服务通过配置注入模式（getSettings + writeOps）获取数据和执行写操作
- * - 写操作最终通过 useCases.theme.* 调用
+ * 【S6 架构约束 - P0-5 写入口唯一化】
+ * - 本模块下的服务（ThemeMatrixService, ThemeScanService）只提供纯读/计算能力
+ * - 已移除 writeOps 模式，所有写操作必须通过 useCases.theme.* 执行
+ * - 服务通过 getSettings 获取数据，返回计算结果由 useCases 执行写入
  */
 
 // 主题操作相关工具
@@ -37,11 +37,14 @@ export {
 // 选择状态相关类型
 export * from './selection.types';
 
-// 主题矩阵主要业务服务（排除重复的 BatchOperationResult）
+// 主题矩阵主要业务服务
+// 【P0-5】已移除 ThemeMatrixWriteOps，service 只提供纯读/计算能力
 export {
   ThemeMatrixService,
-  type ThemeMatrixWriteOps,
-  type ThemeMatrixServiceConfig
+  type ThemeMatrixServiceConfig,
+  type AddThemeValidation,
+  type UpdateThemeValidation,
+  type DeleteThemeComputation
 } from './ThemeMatrixService';
 
 // 主题扫描服务

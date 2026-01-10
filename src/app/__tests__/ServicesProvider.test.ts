@@ -12,7 +12,6 @@ import type { Services } from '@/app/AppStoreContext';
 
 /**
  * 验证 Services 对象是否完整
- * P0-1: 已移除 appStore 校验
  */
 export function validateServicesObject(services: Partial<Services> | null | undefined): {
     valid: boolean;
@@ -29,7 +28,7 @@ export function validateServicesObject(services: Partial<Services> | null | unde
         };
     }
     
-    // P0-1: 已移除 appStore 校验
+    if (!services.zustandStore) missing.push('zustandStore');
     if (!services.dataStore) missing.push('dataStore');
     if (!services.inputService) missing.push('inputService');
     if (!services.useCases) missing.push('useCases');
@@ -57,16 +56,16 @@ export function runServicesProviderSelfTest(services: Partial<Services> | null |
         console.error('[ServicesProvider SelfTest] 请检查:');
         console.error('  1. ServiceManager.initializeCore() 是否正确执行');
         console.error('  2. USECASES_TOKEN 是否正确注册到 DI 容器');
-        console.error('  3. 渲染入口是否使用 ServicesProvider 而非 AppStoreProvider');
+        console.error('  3. 渲染入口是否使用 ServicesProvider');
     }
 }
 
 /**
  * 创建模拟的完整 Services 对象（用于测试）
- * P0-1: 已移除 appStore
  */
 export function createMockServices(): Services {
     return {
+        zustandStore: {} as Services['zustandStore'],
         dataStore: {} as Services['dataStore'],
         inputService: {} as Services['inputService'],
         useCases: {} as Services['useCases'],

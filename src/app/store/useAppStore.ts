@@ -174,7 +174,7 @@ export type AppStoreInstance = ReturnType<typeof createAppStore>;
  * ⚠️ P0-3 架构约束：
  * - ⛔ 禁止任何全局单例（无 module-level store 缓存）
  * - ✅ 非 React 场景必须通过 DI（container.resolve(STORE_TOKEN)）获取 store
- * - ✅ React 组件通过 AppStoreContext 获取 store
+ * - ✅ React 组件通过 ServicesProvider 获取 store
  */
 export const STORE_TOKEN = Symbol('STORE_TOKEN');
 

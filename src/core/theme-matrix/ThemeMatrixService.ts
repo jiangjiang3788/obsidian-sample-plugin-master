@@ -1,5 +1,10 @@
 /**
  * ThemeMatrix 业务逻辑服务
+ * 
+ * 【S6 架构约束 - P0-5 写入口唯一化】
+ * - 本服务只提供纯读/计算逻辑
+ * - 所有写操作必须通过 useCases.theme.* 执行
+ * - 禁止在 service 层直接调用 SettingsRepository.update
  */
 import { type ThemeDefinition, ThemeOverride, BlockTemplate, ThinkSettings } from '@/core/types/schema';
 import { type ExtendedTheme, BatchOperationType, ThemeTreeNode } from '@core/theme-matrix';
@@ -16,51 +21,54 @@ import {
 import { buildThemeTree, findNodeInTree, getDescendantIds } from '@/core/theme-matrix/themeTreeBuilder';
 
 /**
- * 写操作回调接口
- * TODO: 后续迁移到 useCases 层统一调用
- */
-export interface ThemeMatrixWriteOps {
-    addTheme: (path: string) => void;
-    updateTheme: (themeId: string, updates: Partial<ThemeDefinition>) => void;
-    deleteTheme: (themeId: string) => void;
-    deleteOverride: (blockId: string, themeId: string) => Promise<void>;
-    upsertOverride: (override: ThemeOverride) => Promise<void>;
-    batchUpdateThemeStatus: (themeIds: string[], status: 'active' | 'inactive') => Promise<void>;
-}
-
-/**
  * ThemeMatrix 服务配置
+ * 
+ * 【P0-5】已移除 writeOps，service 只提供纯读/计算能力
  */
 export interface ThemeMatrixServiceConfig {
     /** 获取设置的函数 - 同步返回最新 settings */
     getSettings: () => ThinkSettings;
-    /** 写操作回调 */
-    writeOps: ThemeMatrixWriteOps;
 }
 
 /**
- * 批量操作结果
+ * 添加主题的验证结果
  */
-export interface BatchOperationResult {
-    /** 成功数量 */
-    success: number;
-    /** 失败数量 */
-    failed: number;
-    /** 错误信息 */
-    errors: string[];
+export interface AddThemeValidation {
+    valid: boolean;
+    normalizedPath?: string;
+    message?: string;
+}
+
+/**
+ * 更新主题的验证结果
+ */
+export interface UpdateThemeValidation {
+    valid: boolean;
+    normalizedUpdates?: Partial<ThemeDefinition>;
+    message?: string;
+}
+
+/**
+ * 删除主题的计算结果
+ */
+export interface DeleteThemeComputation {
+    themeIds: string[];
+    count: number;
 }
 
 /**
  * ThemeMatrix 业务逻辑服务
- * 封装所有主题矩阵相关的业务逻辑
+ * 
+ * 【P0-5 写入口唯一化】
+ * - 本服务只提供纯读/计算逻辑
+ * - 所有写操作通过返回"计算结果/patch建议"由 useCases.theme.* 执行
+ * - 禁止直接调用 SettingsRepository.update
  */
 export class ThemeMatrixService {
     private getSettings: () => ThinkSettings;
-    private writeOps: ThemeMatrixWriteOps;
     
     constructor(config: ThemeMatrixServiceConfig) {
         this.getSettings = config.getSettings;
-        this.writeOps = config.writeOps;
     }
     
     /**
@@ -91,47 +99,47 @@ export class ThemeMatrixService {
     }
     
     /**
-     * 添加新主题
+     * 【纯计算】验证添加主题的合法性
      * @param path - 主题路径
-     * @returns 添加结果
+     * @returns 验证结果（包含规范化后的路径）
      */
-    addTheme(path: string): { success: boolean; message?: string } {
+    validateAddTheme(path: string): AddThemeValidation {
         // 规范化路径
         const normalizedPath = normalizePath(path);
         
         // 验证路径
         const validation = validatePathCharacters(normalizedPath);
         if (!validation.valid) {
-            return { success: false, message: validation.message };
+            return { valid: false, message: validation.message };
         }
         
         // 检查是否已存在
         const themes = this.getSettings().inputSettings.themes;
         if (themes.some((t: ThemeDefinition) => t.path === normalizedPath)) {
-            return { success: false, message: '主题路径已存在' };
+            return { valid: false, message: '主题路径已存在' };
         }
         
-        // 添加主题
-        this.writeOps.addTheme(normalizedPath);
-        return { success: true };
+        return { valid: true, normalizedPath };
     }
     
     /**
-     * 更新主题
+     * 【纯计算】验证更新主题的合法性
      * @param themeId - 主题ID
      * @param updates - 更新内容
-     * @returns 更新结果
+     * @returns 验证结果（包含规范化后的更新）
      */
-    updateTheme(
+    validateUpdateTheme(
         themeId: string, 
         updates: Partial<ThemeDefinition>
-    ): { success: boolean; message?: string } {
+    ): UpdateThemeValidation {
+        const normalizedUpdates = { ...updates };
+        
         // 如果更新路径，需要验证
         if (updates.path) {
             const normalizedPath = normalizePath(updates.path);
             const validation = validatePathCharacters(normalizedPath);
             if (!validation.valid) {
-                return { success: false, message: validation.message };
+                return { valid: false, message: validation.message };
             }
             
             // 检查路径是否与其他主题冲突
@@ -140,33 +148,32 @@ export class ThemeMatrixService {
                 t.id !== themeId && t.path === normalizedPath
             );
             if (hasConflict) {
-                return { success: false, message: '主题路径已被使用' };
+                return { valid: false, message: '主题路径已被使用' };
             }
             
-            updates.path = normalizedPath;
+            normalizedUpdates.path = normalizedPath;
         }
         
-        this.writeOps.updateTheme(themeId, updates);
-        return { success: true };
+        return { valid: true, normalizedUpdates };
     }
     
     /**
-     * 删除主题
+     * 【纯计算】计算要删除的主题ID列表（含子节点）
      * @param themeId - 主题ID
      * @param includeChildren - 是否包含子主题
-     * @returns 删除结果
+     * @returns 要删除的主题ID列表
      */
-    deleteTheme(
+    computeDeleteThemeIds(
         themeId: string, 
         includeChildren: boolean = false
-    ): { success: boolean; deletedCount: number } {
+    ): DeleteThemeComputation {
         const themes = this.getSettings().inputSettings.themes;
         const extendedThemes = this.getExtendedThemes(themes);
         const tree = buildThemeTree(extendedThemes, new Set());
         const node = findNodeInTree(tree, themeId);
         
         if (!node) {
-            return { success: false, deletedCount: 0 };
+            return { themeIds: [], count: 0 };
         }
         
         const toDelete: string[] = [themeId];
@@ -176,96 +183,7 @@ export class ThemeMatrixService {
             toDelete.push(...descendants.slice(1)); // 排除自身
         }
         
-        toDelete.forEach(id => this.writeOps.deleteTheme(id));
-        
-        return { success: true, deletedCount: toDelete.length };
-    }
-    
-    /**
-     * 执行批量操作
-     * @param operation - 操作类型
-     * @param themeIds - 主题ID列表
-     * @returns 操作结果
-     */
-    async performBatchOperation(
-        operation: BatchOperationType,
-        themeIds: string[]
-    ): Promise<BatchOperationResult> {
-        const result: BatchOperationResult = {
-            success: 0,
-            failed: 0,
-            errors: []
-        };
-        
-        const themes = this.getSettings().inputSettings.themes;
-        const extendedThemes = this.getExtendedThemes(themes);
-        
-        for (const themeId of themeIds) {
-            const theme = extendedThemes.find(t => t.id === themeId);
-            if (!theme) {
-                result.failed++;
-                result.errors.push(`主题 ${themeId} 不存在`);
-                continue;
-            }
-            
-            try {
-                switch (operation) {
-                    case 'activate':
-                        await this.writeOps.batchUpdateThemeStatus([themeId], 'active');
-                        result.success++;
-                        break;
-                        
-                    case 'inactive':
-                        await this.writeOps.batchUpdateThemeStatus([themeId], 'inactive');
-                        result.success++;
-                        break;
-                        
-                    case 'delete':
-                        // 只允许删除非预定义主题
-                        if (theme.source === 'predefined') {
-                            result.failed++;
-                            result.errors.push(`无法删除预定义主题 ${theme.path}`);
-                        } else {
-                            this.writeOps.deleteTheme(themeId);
-                            result.success++;
-                        }
-                        break;
-                }
-            } catch (error) {
-                result.failed++;
-                result.errors.push(`操作 ${theme.path} 失败: ${error}`);
-            }
-        }
-        
-        return result;
-    }
-    
-    /**
-     * 更新主题覆盖配置
-     * @param themeId - 主题ID
-     * @param blockId - Block ID
-     * @param override - 覆盖配置
-     */
-    async updateThemeOverride(
-        themeId: string,
-        blockId: string,
-        override: Partial<ThemeOverride> | null
-    ): Promise<void> {
-        if (override === null) {
-            // 删除覆盖
-            await this.writeOps.deleteOverride(blockId, themeId);
-        } else {
-            // 使用 upsertOverride 来添加或更新
-            await this.writeOps.upsertOverride({
-                id: '', // TODO: 由调用方生成或在 writeOps 内部生成
-                themeId,
-                blockId,
-                disabled: override.disabled || false,
-                outputTemplate: override.outputTemplate || '',
-                targetFile: override.targetFile || '',
-                appendUnderHeader: override.appendUnderHeader || ''
-            });
-        }
+        return { themeIds: toDelete, count: toDelete.length };
     }
     
     /**
@@ -336,59 +254,40 @@ export class ThemeMatrixService {
     }
     
     /**
-     * 导入主题配置
+     * 【纯计算】预览导入主题配置
+     * 计算哪些主题和覆盖配置可以导入，哪些会被跳过
      * @param data - 要导入的配置数据
-     * @returns 导入结果
+     * @returns 导入预览结果，包含可导入项（由 useCases.theme 执行实际写入）
      */
-    async importThemeConfigurations(data: {
+    previewImportConfigurations(data: {
         themes: ThemeDefinition[];
         overrides: ThemeOverride[];
-    }): Promise<{ 
-        imported: number; 
-        skipped: number; 
-        errors: string[] 
-    }> {
-        const result = {
-            imported: 0,
-            skipped: 0,
-            errors: [] as string[]
-        };
-        
+    }): { 
+        themesToAdd: Array<{ path: string; icon?: string }>;
+        overridesToAdd: ThemeOverride[];
+        skippedThemes: string[];
+    } {
         const existingThemes = this.getSettings().inputSettings.themes;
+        const existingPaths = new Set(existingThemes.map((t: ThemeDefinition) => t.path));
         
-        // 导入主题
+        const themesToAdd: Array<{ path: string; icon?: string }> = [];
+        const skippedThemes: string[] = [];
+        
+        // 计算可导入的主题
         for (const theme of data.themes) {
-            const exists = existingThemes.some((t: ThemeDefinition) => t.path === theme.path);
-            if (exists) {
-                result.skipped++;
+            if (existingPaths.has(theme.path)) {
+                skippedThemes.push(theme.path);
             } else {
-                try {
-                    this.writeOps.addTheme(theme.path);
-                    if (theme.icon) {
-                        // 更新图标 - 需要重新获取新添加的主题
-                        const updatedThemes = this.getSettings().inputSettings.themes;
-                        const newTheme = updatedThemes.find((t: ThemeDefinition) => t.path === theme.path);
-                        if (newTheme) {
-                            this.writeOps.updateTheme(newTheme.id, { icon: theme.icon });
-                        }
-                    }
-                    result.imported++;
-                } catch (error) {
-                    result.errors.push(`导入主题 ${theme.path} 失败: ${error}`);
-                }
+                themesToAdd.push({ path: theme.path, icon: theme.icon });
             }
         }
         
-        // 导入覆盖配置
-        for (const override of data.overrides) {
-            try {
-                await this.writeOps.upsertOverride(override);
-            } catch (error) {
-                result.errors.push(`导入覆盖配置失败: ${error}`);
-            }
-        }
-        
-        return result;
+        // 覆盖配置全部返回，由 useCases 执行 upsert
+        return {
+            themesToAdd,
+            overridesToAdd: data.overrides,
+            skippedThemes
+        };
     }
     
     /**

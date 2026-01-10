@@ -8,7 +8,7 @@
  * - features 层（src/features/*）只能调用 useCases.layout.*
  * - 不允许 features 层直接调用 viewInstance.slice 的 vi* actions
  * - 不允许 features 层直接调用 viewInstance.usecase
- * - 不允许 features 层直接调用 AppStore 的已禁用方法
+ * - 不允许 features 层直接调用 zustand slice actions
  * 
  * 对外暴露：
  * - Layout CRUD: addLayout, updateLayout, deleteLayout, moveLayout, duplicateLayout

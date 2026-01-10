@@ -8,7 +8,7 @@
  * - 遵循单向数据流：UI → UseCase → Zustand Store → UI
  * 
  * ⚠️ 禁止事项：
- * - 不得直接 import AppStore / useStore
+ * - 使用 useZustandAppStore / useUseCases
  * - 不得直接调用 slice actions
  * - 不得直接调用 SettingsRepository
  */

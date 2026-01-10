@@ -28,7 +28,7 @@ features 层 → useCases.layout.* → slice actions → SettingsRepository
 - `src/features/**` → `viewInstance.slice` 的 vi* actions
 - `src/features/**` → `viewInstance.usecase`
 - `src/features/**` → `group.usecase`
-- `src/features/**` → `AppStore` 的已禁用方法
+- `src/features/**` → 已废弃的旧 API
 
 #### 2. 层级职责
 
@@ -106,7 +106,7 @@ ThemeMatrix UI → useCases.theme.* → Zustand Store actions → SettingsReposi
 
 **⛔ 禁止的调用路径：**
 - `src/features/**` → `theme.slice` 的 actions（直接调用）
-- `src/features/**` → `AppStore.addTheme/updateTheme/deleteTheme`
+- `src/features/**` → 已废弃的旧 API
 - `src/features/**` → `SettingsRepository.update()`（直接调用）
 - `src/features/**` → `useStore(state => state.settings)` 进行写操作
 
@@ -164,21 +164,19 @@ UI 读取 theme 相关数据应使用 Zustand selector：
 
 ```typescript
 // ✅ 推荐：使用 useZustandAppStore selector
-import { useZustandAppStore } from '@/app/store/useAppStore';
+import { useZustandAppStore } from '@/app/AppStoreContext';
 
 const themes = useZustandAppStore(state => state.settings.inputSettings.themes);
 const overrides = useZustandAppStore(state => state.settings.inputSettings.overrides);
 
-// ⛔ 禁止：使用旧的 useStore 从 AppStore 读取
-import { useStore } from '@/app/AppStore';
-const { themes } = useStore(state => state.settings.inputSettings); // 已废弃
+// ⛔ 禁止：使用已废弃的 API
 ```
 
 ### 服务层约束
 
 #### ThemeMatrixService / ThemeScanService
 
-这些服务不应直接依赖 AppStore，而是通过配置注入：
+这些服务应通过配置注入：
 
 ```typescript
 // ✅ 推荐：通过配置注入
@@ -191,52 +189,29 @@ const themeService = new ThemeMatrixService({
     },
     themeManager,
 });
-
-// ⛔ 禁止：直接依赖 AppStore
-const themeService = new ThemeMatrixService({
-    appStore, // 不允许
-});
 ```
 
 ### 迁移指引
 
-#### 从 AppStore 迁移
+#### API 使用示例
 
 ```typescript
-// ❌ 旧代码
-import { useStore } from '@/app/AppStore';
-const { themes } = useStore(state => state.settings.inputSettings);
-appStore.addTheme(path);
-
-// ✅ 新代码
-import { useZustandAppStore } from '@/app/store/useAppStore';
-import { useUseCases } from '@/app/AppStoreContext';
-
+// ✅ React 组件内读取状态
+import { useZustandAppStore } from '@/app/AppStoreContext';
 const themes = useZustandAppStore(state => state.settings.inputSettings.themes);
-const useCases = useUseCases();
-useCases.theme.addTheme(path);
-```
 
-#### 从直接调用 slice actions 迁移
-
-```typescript
-// ❌ 旧代码（已废弃 getAppStoreInstance）
-// P0-2: 禁止使用 getAppStoreInstance 全局单例
-// const store = getAppStoreInstance();
-// store.getState().addTheme(path);
-
-// ✅ 新代码：React 组件内使用 useUseCases
+// ✅ React 组件内写入状态
+import { useUseCases } from '@/app/AppStoreContext';
 const useCases = useUseCases();
 useCases.theme.addTheme(path);
 
-// ✅ 新代码：非 React 场景使用 DI 获取
+// ✅ 非 React 场景使用 DI 获取
 import { container } from 'tsyringe';
 import { USECASES_TOKEN, type UseCases } from '@/app/usecases';
 const useCases = container.resolve<UseCases>(USECASES_TOKEN);
 useCases.theme.addTheme(path);
 
-// ✅ 只读访问状态：使用 getZustandState(store, selector)
-// 非 React 场景需通过 DI 获取 store，然后使用纯函数版本
+// ✅ 非 React 场景只读访问
 import { container } from 'tsyringe';
 import { getZustandState, STORE_TOKEN, type AppStoreInstance } from '@/app/store/useAppStore';
 const store = container.resolve<AppStoreInstance>(STORE_TOKEN);
@@ -245,10 +220,10 @@ const themes = getZustandState(store, s => s.settings.inputSettings.themes);
 
 ### 验收标准
 
-1. ✅ ThemeMatrix UI 文件中不出现 `AppStore` / `useStore` import
+1. ✅ ThemeMatrix UI 文件中不出现已废弃的 API import
 2. ✅ 所有写操作都经过 `useCases.theme.*`
 3. ✅ UI 临时态不写入 settings
-4. ✅ 服务层不直接依赖 AppStore
+4. ✅ 服务层通过配置注入依赖
 
 ### 文件清单
 
@@ -264,7 +239,7 @@ const themes = getZustandState(store, s => s.settings.inputSettings.themes);
 - `src/features/settings/ThemeTreeNodeRow.tsx`
 - `src/features/settings/InputSettings.tsx`
 
-#### 服务层（已断 AppStore）
+#### 服务层
 - `src/core/theme-matrix/ThemeMatrixService.ts`
 - `src/core/theme-matrix/ThemeScanService.ts`
 

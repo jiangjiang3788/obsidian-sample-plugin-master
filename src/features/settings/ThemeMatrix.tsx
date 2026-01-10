@@ -8,8 +8,7 @@
  * - 遵循单向数据流：UI → UseCase → Zustand Store → UI
  * 
  * ⚠️ 禁止事项：
- * - 不得直接 import AppStore / useStore
- * - 不得直接调用 slice actions
+ * - 不得直接调用 zustand slice actions
  * - 不得直接调用 SettingsRepository
  * - UI 临时态（选中态/展开态）不得写入 settings
  */
@@ -85,28 +84,16 @@ export function ThemeMatrix() {
         onOperationComplete: clearSelection,
     });
     
-    // 【S6】ThemeMatrixService - 使用 useCases 作为写入口
+    // 【P0-5】ThemeMatrixService - 只用于读/计算，已移除 writeOps
     const themeService = useMemo(() => new ThemeMatrixService({
         getSettings: () => settings,
-        writeOps: {
-            addTheme: (path: string) => { useCases.theme.addTheme(path); },
-            updateTheme: (themeId: string, updates: any) => { useCases.theme.updateTheme(themeId, updates); },
-            deleteTheme: (themeId: string) => { useCases.theme.deleteTheme(themeId); },
-            deleteOverride: async (blockId: string, themeId: string) => { await useCases.theme.deleteOverride(blockId, themeId); },
-            upsertOverride: async (override: any) => { await useCases.theme.upsertOverride(override); },
-            batchUpdateThemeStatus: async (themeIds: string[], status: 'active' | 'inactive') => { await useCases.theme.batchUpdateThemeStatus(themeIds, status); },
-        },
-    }), [settings, useCases]);
+    }), [settings]);
     
-    // 【S6】ThemeScanService - 使用 useCases 作为写入口
+    // 【P0-5】ThemeScanService - 只用于扫描/预览，已移除 writeOps
     const themeScanService = useMemo(() => new ThemeScanService({ 
         getSettings: () => settings,
-        writeOps: {
-            addTheme: (path: string) => { useCases.theme.addTheme(path); },
-            batchUpdateThemeStatus: async (themeIds: string[], status: 'active' | 'inactive') => { await useCases.theme.batchUpdateThemeStatus(themeIds, status); },
-        },
         dataStore, 
-    }), [settings, useCases, dataStore]);
+    }), [settings, dataStore]);
     
     // 获取扩展的主题信息
     const extendedThemes = useMemo(() => {
@@ -182,14 +169,31 @@ export function ThemeMatrix() {
         }
     };
 
-    // 主题扫描处理函数
+    // 主题扫描处理函数（纯读操作，由 service 提供）
     const handleThemeScan = async (config: any) => {
         return await themeScanService.scanThemesFromData(config);
     };
 
-    // 主题导入处理函数
-    const handleThemeImport = async (themes: string[]) => {
-        return await themeScanService.importThemes(themes);
+    // 【P0-5】主题导入处理函数 - 通过 useCases.theme 执行写入
+    const handleThemeImport = async (themePaths: string[]) => {
+        // 使用 service 过滤可导入的主题
+        const importableThemes = themeScanService.getImportableThemes(themePaths);
+        
+        let imported = 0;
+        let skipped = themePaths.length - importableThemes.length;
+        const errors: string[] = [];
+        
+        // 通过 useCases.theme.addTheme 执行写入
+        for (const path of importableThemes) {
+            try {
+                await useCases.theme.addTheme(path);
+                imported++;
+            } catch (error) {
+                errors.push(`导入主题 "${path}" 失败: ${error}`);
+            }
+        }
+        
+        return { imported, skipped, failed: errors.length, errors };
     };
 
     return (

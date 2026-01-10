@@ -7,7 +7,7 @@
  * 【S6 架构约束 - 强制性规范】
  * 
  * ⚠️ ThemeMatrix 的写操作只能走 useCases.theme.*
- * ⚠️ UI 不得直接 import slice actions / AppStore / SettingsRepository
+ * ⚠️ UI 不得直接 import slice actions / SettingsRepository
  * ⚠️ group / layout 的约束不在此处处理（只管 theme）
  * ⛔ 禁止使用全局单例（禁止 getAppStoreInstance）
  * 

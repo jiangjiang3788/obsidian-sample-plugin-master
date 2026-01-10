@@ -1,6 +1,6 @@
 // src/features/aiinput/AiBatchConfirmModal.tsx
 /**
- * S7.2: AiBatchConfirmModal - 移除 AppStore 依赖
+ * S7.2: AiBatchConfirmModal
  * - 使用 useZustandAppStore 读取 settings
  * - 使用 useCases 进行写入操作
  * - ServicesProvider 不再包含 appStore
