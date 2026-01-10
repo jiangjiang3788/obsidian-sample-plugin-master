@@ -1,17 +1,18 @@
 // src/features/logic/CodeblockEmbedder.ts
 /**
  * S8.2: CodeblockEmbedder - 彻底移除 AppStore 依赖
+ * P0-2: 使用 getZustandState 只读访问 settings
  * 
  * 改动说明：
  * - 移除构造函数中的 appStore 参数
- * - 使用 getAppStoreInstance().getState().settings 读取 settings
+ * - 使用 getZustandState(s => s.settings) 读取 settings
  * - 不再有 appStore fallback
  */
 import { render } from 'preact';
 import { Notice, Plugin } from 'obsidian';
 import { CODEBLOCK_LANG } from '@/core/types/constants';
 import { DataStore } from '@core/services/DataStore';
-import { getAppStoreInstance } from '@/app/store/useAppStore';
+import { getZustandState } from '@/app/store/useAppStore';
 import { RendererService } from '@/features/settings/RendererService';
 import type { Layout } from '@/core/types/schema';
 import type { ActionService } from '@core/services/ActionService';
@@ -27,11 +28,11 @@ export class CodeblockEmbedder {
     }
 
     /**
-     * S8.2: 获取 settings - 直接使用 Zustand store
-     * 不再有 appStore fallback
+     * S8.2/P0-2: 获取 settings - 使用 getZustandState 只读访问
+     * 替代已废弃的 getAppStoreInstance()
      */
     private getSettings() {
-        return getAppStoreInstance().getState().settings;
+        return getZustandState(s => s.settings);
     }
 
     private registerProcessor() {

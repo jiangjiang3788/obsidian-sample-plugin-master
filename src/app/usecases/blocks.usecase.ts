@@ -11,16 +11,23 @@
  * Don't:
  * - 直接操作 SettingsRepository
  * - 持有 UI 相关逻辑
+ * - ⛔ 使用全局单例（禁止 getAppStoreInstance）
  */
 
-import { getAppStoreInstance } from '@/app/store/useAppStore';
 import type { BlockTemplate } from '@/core/types/schema';
+import type { AppStoreApi } from './index';
 
 /**
  * Block 用例类
  * P1: 提供完整的 Block CRUD 操作
  */
 export class BlocksUseCase {
+    private store: AppStoreApi;
+
+    constructor(store: AppStoreApi) {
+        this.store = store;
+    }
+
     /**
      * 重排序 Blocks
      * @param activeId 被拖动的 Block ID
@@ -28,8 +35,7 @@ export class BlocksUseCase {
      */
     async reorderBlocks(activeId: string, overId: string): Promise<void> {
         try {
-            const store = getAppStoreInstance();
-            const state = store.getState();
+            const state = this.store.getState();
             
             if (!state.isInitialized) {
                 console.error('[BlocksUseCase] Store 未初始化，无法重排序 Block');
@@ -50,8 +56,7 @@ export class BlocksUseCase {
      */
     async addBlock(name: string): Promise<BlockTemplate | undefined> {
         try {
-            const store = getAppStoreInstance();
-            const state = store.getState();
+            const state = this.store.getState();
             
             if (!state.isInitialized) {
                 console.error('[BlocksUseCase] Store 未初始化，无法添加 Block');
@@ -72,8 +77,7 @@ export class BlocksUseCase {
      */
     async updateBlock(id: string, updates: Partial<BlockTemplate>): Promise<void> {
         try {
-            const store = getAppStoreInstance();
-            const state = store.getState();
+            const state = this.store.getState();
             
             if (!state.isInitialized) {
                 console.error('[BlocksUseCase] Store 未初始化，无法更新 Block');
@@ -93,8 +97,7 @@ export class BlocksUseCase {
      */
     async deleteBlock(id: string): Promise<void> {
         try {
-            const store = getAppStoreInstance();
-            const state = store.getState();
+            const state = this.store.getState();
             
             if (!state.isInitialized) {
                 console.error('[BlocksUseCase] Store 未初始化，无法删除 Block');
@@ -115,8 +118,7 @@ export class BlocksUseCase {
      */
     async duplicateBlock(id: string): Promise<BlockTemplate | undefined> {
         try {
-            const store = getAppStoreInstance();
-            const state = store.getState();
+            const state = this.store.getState();
             
             if (!state.isInitialized) {
                 console.error('[BlocksUseCase] Store 未初始化，无法复制 Block');
@@ -137,8 +139,7 @@ export class BlocksUseCase {
      */
     async moveBlock(id: string, direction: 'up' | 'down'): Promise<void> {
         try {
-            const store = getAppStoreInstance();
-            const state = store.getState();
+            const state = this.store.getState();
             
             if (!state.isInitialized) {
                 console.error('[BlocksUseCase] Store 未初始化，无法移动 Block');
@@ -157,15 +158,15 @@ export class BlocksUseCase {
      * @returns Block 列表
      */
     getBlocks(): BlockTemplate[] {
-        const store = getAppStoreInstance();
-        const state = store.getState();
+        const state = this.store.getState();
         return state.settings.inputSettings?.blocks || [];
     }
 }
 
 /**
  * 创建 Block 用例实例
+ * @param store Zustand Store 实例
  */
-export function createBlocksUseCase(): BlocksUseCase {
-    return new BlocksUseCase();
+export function createBlocksUseCase(store: AppStoreApi): BlocksUseCase {
+    return new BlocksUseCase(store);
 }

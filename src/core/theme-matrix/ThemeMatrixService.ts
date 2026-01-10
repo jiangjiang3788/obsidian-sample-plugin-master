@@ -396,21 +396,19 @@ export class ThemeMatrixService {
      * @param tree - 主题树
      * @returns 分组后的主题
      */
-    groupThemesByStatus(tree: ThemeTreeNode[]): {
-        activeThemes: ThemeTreeNode[];
-        archivedThemes: ThemeTreeNode[];
-    } {
-        const activeThemes: ThemeTreeNode[] = [];
-        const archivedThemes: ThemeTreeNode[] = [];
-        
-        tree.forEach(node => {
-            if (node.theme.status === 'active') {
-                activeThemes.push(node);
-            } else {
-                archivedThemes.push(node);
-            }
-        });
-        
-        return { activeThemes, archivedThemes };
+    groupThemesByStatus(tree: ThemeTreeNode[]) {
+    const activeThemes: ThemeTreeNode[] = [];
+    const archivedThemes: ThemeTreeNode[] = [];
+
+    tree.forEach(node => {
+        // ✅ 现在只有 active/inactive，没有 archived 概念
+        // 先让 inactive 也默认可见
+        activeThemes.push(node);
+
+        // 如果你未来真要 archived，再引入第三种状态再分
+        // if (node.theme.status === 'archived') archivedThemes.push(node);
+    });
+
+    return { activeThemes, archivedThemes };
     }
 }

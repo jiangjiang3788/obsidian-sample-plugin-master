@@ -59,9 +59,8 @@ export class SettingsTab extends PluginSettingTab {
     constructor(public app: App, private plugin: ThinkPlugin) {
         super(app, plugin);
         this.id = plugin.manifest.id;
-        // 初始化 services 对象，所有依赖从 plugin 获取
+        // P0-1: 初始化 services 对象，已移除 appStore
         this.services = {
-            appStore: plugin.appStore,
             dataStore: plugin.dataStore,
             inputService: plugin.inputService,
             useCases: plugin.useCases,

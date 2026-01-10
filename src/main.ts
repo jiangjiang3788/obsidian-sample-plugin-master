@@ -5,7 +5,6 @@ ensureReflectMetadata();
 
 import { container } from 'tsyringe';
 import { Plugin, Notice } from 'obsidian';
-import { AppStore } from '@/app/AppStore';
 import { DataStore } from '@core/services/DataStore';
 import { InputService } from '@core/services/InputService';
 import { ThinkSettings, DEFAULT_SETTINGS } from '@core/types';
@@ -98,13 +97,11 @@ export default class ThinkPlugin extends Plugin {
     }
 
     async saveSettings() {
-        await this.saveData(this.serviceManager.appStore.getSettings());
+        // P0-1: 使用 SettingsRepository 替代 appStore
+        await this.saveData(this.serviceManager.settingsRepository.getSettings());
     }
 
-    // 提供服务访问方法
-    get appStore(): AppStore {
-        return this.serviceManager.appStore;
-    }
+    // 提供服务访问方法（P0-1: 已移除 appStore getter）
 
     get dataStore(): DataStore {
         return this.serviceManager.dataStore;

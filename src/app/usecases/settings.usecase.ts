@@ -12,27 +12,33 @@
  * - 直接操作 SettingsRepository
  * - 持有 UI 相关逻辑
  * - 直接修改 settings 数据结构
+ * - ⛔ 使用全局单例（禁止 getAppStoreInstance）
  * 
  * NOTE: ViewInstance CRUD 请使用 useCases.viewInstance.*
  * NOTE: reorderItems 请使用 useCases.group.reorderItems
  */
 
-import { getAppStoreInstance } from '@/app/store/useAppStore';
 import type { AiSettings } from '@/core/types/ai-schema';
+import type { AppStoreApi } from './index';
 
 /**
  * 设置用例类
  * P0 止血点：UI 不再直接调用 AppStore.updateFloatingTimerEnabled
  */
 export class SettingsUseCase {
+    private store: AppStoreApi;
+
+    constructor(store: AppStoreApi) {
+        this.store = store;
+    }
+
     /**
      * 设置悬浮计时器启用状态
      * @param enabled 是否启用
      */
     async setFloatingTimerEnabled(enabled: boolean): Promise<void> {
         try {
-            const store = getAppStoreInstance();
-            const state = store.getState();
+            const state = this.store.getState();
             
             if (!state.isInitialized) {
                 console.error('[SettingsUseCase] Store 未初始化，无法设置悬浮计时器状态');
@@ -55,8 +61,7 @@ export class SettingsUseCase {
      */
     async toggleTimerWidgetVisibility(): Promise<void> {
         try {
-            const store = getAppStoreInstance();
-            const state = store.getState();
+            const state = this.store.getState();
             
             if (!state.isInitialized) {
                 console.error('[SettingsUseCase] Store 未初始化，无法切换计时器可见性');
@@ -86,8 +91,7 @@ export class SettingsUseCase {
      */
     async updateAiSettings(aiSettings: AiSettings): Promise<void> {
         try {
-            const store = getAppStoreInstance();
-            const state = store.getState();
+            const state = this.store.getState();
             
             if (!state.isInitialized) {
                 console.error('[SettingsUseCase] Store 未初始化，无法更新 AI 设置');
@@ -104,7 +108,8 @@ export class SettingsUseCase {
 
 /**
  * 创建设置用例实例
+ * @param store Zustand Store 实例
  */
-export function createSettingsUseCase(): SettingsUseCase {
-    return new SettingsUseCase();
+export function createSettingsUseCase(store: AppStoreApi): SettingsUseCase {
+    return new SettingsUseCase(store);
 }

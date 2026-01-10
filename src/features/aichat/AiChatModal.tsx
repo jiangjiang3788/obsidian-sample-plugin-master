@@ -40,7 +40,6 @@ import ChatIcon from '@mui/icons-material/Chat';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import CheckIcon from '@mui/icons-material/Check';
 import { container } from 'tsyringe';
-import { AppStore } from '@/app/AppStore';
 import { ServicesProvider, type Services } from '@/app/AppStoreContext';
 import { DataStore } from '@/core/services/DataStore';
 import { InputService } from '@/core/services/InputService';
@@ -85,9 +84,8 @@ export class AiChatModal extends Modal {
             retrievalService: container.resolve(RetrievalService),
             sessionStore: container.resolve(ChatSessionStore),
         };
-        // P0: 构建 Services 对象供 ServicesProvider 使用
+        // P0-1: 构建 Services 对象供 ServicesProvider 使用（已移除 appStore）
         this.services = {
-            appStore: container.resolve(AppStore),
             dataStore: container.resolve(DataStore),
             inputService: container.resolve(InputService),
             useCases: container.resolve(USECASES_TOKEN),

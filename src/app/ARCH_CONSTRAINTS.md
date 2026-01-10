@@ -220,13 +220,24 @@ useCases.theme.addTheme(path);
 #### 从直接调用 slice actions 迁移
 
 ```typescript
-// ❌ 旧代码
-const store = getAppStoreInstance();
-store.getState().addTheme(path);
+// ❌ 旧代码（已废弃 getAppStoreInstance）
+// P0-2: 禁止使用 getAppStoreInstance 全局单例
+// const store = getAppStoreInstance();
+// store.getState().addTheme(path);
 
-// ✅ 新代码
+// ✅ 新代码：React 组件内使用 useUseCases
 const useCases = useUseCases();
 useCases.theme.addTheme(path);
+
+// ✅ 新代码：非 React 场景使用 DI 获取
+import { container } from 'tsyringe';
+import { USECASES_TOKEN, type UseCases } from '@/app/usecases';
+const useCases = container.resolve<UseCases>(USECASES_TOKEN);
+useCases.theme.addTheme(path);
+
+// ✅ 只读访问状态：使用 getZustandState
+import { getZustandState } from '@/app/store/useAppStore';
+const themes = getZustandState(s => s.settings.inputSettings.themes);
 ```
 
 ### 验收标准

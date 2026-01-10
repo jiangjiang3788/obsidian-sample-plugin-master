@@ -20,7 +20,7 @@ import { InputService } from '@core/services/InputService';
 import { TimerService } from '@features/timer/TimerService';
 import { AppToken } from '@core/services/types';
 import { USECASES_TOKEN, type UseCases } from '@/app/usecases';
-import { getAppStoreInstance, type ZustandAppStore } from '@/app/store/useAppStore';
+import { getZustandState, subscribeZustandStore, type ZustandAppStore } from '@/app/store/useAppStore';
 
 @singleton()
 export class RendererService {
@@ -81,14 +81,13 @@ export class RendererService {
     /**
      * S8.1: 设置 Zustand 精准订阅
      * 只监听 layouts 和 viewInstances 的变化，避免其他 settings 变化导致全量 rerender
+     * P0-2: 使用 subscribeZustandStore 替代 getAppStoreInstance().subscribe()
      */
     private setupZustandSubscription(): void {
         try {
-            const store = getAppStoreInstance();
-            
             // 使用 subscribeWithSelector 的精准订阅
             // selector 返回 layouts 和 viewInstances 的 JSON 快照，用于深度比较
-            this.unsubscribeZustand = store.subscribe(
+            this.unsubscribeZustand = subscribeZustandStore(
                 // Selector: 提取 layouts 和 viewInstances
                 (state: ZustandAppStore) => ({
                     layouts: state.settings.layouts,
@@ -162,8 +161,8 @@ export class RendererService {
     private rerenderAll(): void {
         if (!this.isInitialized) return;
         
-        // S8.1: 从 Zustand store 获取最新 settings
-        const latestSettings = getAppStoreInstance().getState().settings;
+        // S8.1/P0-2: 从 Zustand store 获取最新 settings（使用 getZustandState）
+        const latestSettings = getZustandState(s => s.settings);
 
         for (const activeLayout of [...this.activeLayouts]) {
             const { container, layoutName } = activeLayout;

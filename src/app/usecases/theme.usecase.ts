@@ -9,6 +9,7 @@
  * ⚠️ ThemeMatrix 的写操作只能走 useCases.theme.*
  * ⚠️ UI 不得直接 import slice actions / AppStore / SettingsRepository
  * ⚠️ group / layout 的约束不在此处处理（只管 theme）
+ * ⛔ 禁止使用全局单例（禁止 getAppStoreInstance）
  * 
  * 【数据边界】
  * - settings 中只存"主题定义 / 映射规则"等业务数据
@@ -37,8 +38,8 @@
  * ============================================================================
  */
 
-import { getAppStoreInstance } from '@/app/store/useAppStore';
 import type { ThemeDefinition, ThemeOverride } from '@/core/types/schema';
+import type { AppStoreApi } from './index';
 
 /**
  * 主题用例类
@@ -61,6 +62,12 @@ import type { ThemeDefinition, ThemeOverride } from '@/core/types/schema';
  * - batchSetOverrideStatus: 批量设置覆盖状态
  */
 export class ThemeUseCase {
+    private store: AppStoreApi;
+
+    constructor(store: AppStoreApi) {
+        this.store = store;
+    }
+
     // ============== Theme CRUD ==============
 
     /**
@@ -70,8 +77,7 @@ export class ThemeUseCase {
      */
     async addTheme(path: string): Promise<ThemeDefinition | null> {
         try {
-            const store = getAppStoreInstance();
-            const state = store.getState();
+            const state = this.store.getState();
             
             if (!state.isInitialized) {
                 console.error('[ThemeUseCase] Store 未初始化');
@@ -92,8 +98,7 @@ export class ThemeUseCase {
      */
     async updateTheme(id: string, updates: Partial<ThemeDefinition>): Promise<void> {
         try {
-            const store = getAppStoreInstance();
-            const state = store.getState();
+            const state = this.store.getState();
             
             if (!state.isInitialized) {
                 console.error('[ThemeUseCase] Store 未初始化');
@@ -113,8 +118,7 @@ export class ThemeUseCase {
      */
     async deleteTheme(id: string): Promise<void> {
         try {
-            const store = getAppStoreInstance();
-            const state = store.getState();
+            const state = this.store.getState();
             
             if (!state.isInitialized) {
                 console.error('[ThemeUseCase] Store 未初始化');
@@ -137,8 +141,7 @@ export class ThemeUseCase {
      */
     async batchUpdateThemes(themeIds: string[], updates: Partial<ThemeDefinition>): Promise<void> {
         try {
-            const store = getAppStoreInstance();
-            const state = store.getState();
+            const state = this.store.getState();
             
             if (!state.isInitialized) return;
             
@@ -155,8 +158,7 @@ export class ThemeUseCase {
      */
     async batchDeleteThemes(themeIds: string[]): Promise<void> {
         try {
-            const store = getAppStoreInstance();
-            const state = store.getState();
+            const state = this.store.getState();
             
             if (!state.isInitialized) return;
             
@@ -174,8 +176,7 @@ export class ThemeUseCase {
      */
     async batchUpdateThemeStatus(themeIds: string[], status: 'active' | 'inactive'): Promise<void> {
         try {
-            const store = getAppStoreInstance();
-            const state = store.getState();
+            const state = this.store.getState();
             
             if (!state.isInitialized) return;
             
@@ -193,8 +194,7 @@ export class ThemeUseCase {
      */
     async batchUpdateThemeIcon(themeIds: string[], icon: string): Promise<void> {
         try {
-            const store = getAppStoreInstance();
-            const state = store.getState();
+            const state = this.store.getState();
             
             if (!state.isInitialized) return;
             
@@ -214,8 +214,7 @@ export class ThemeUseCase {
      */
     async upsertOverride(overrideData: Omit<ThemeOverride, 'id'>): Promise<ThemeOverride | null> {
         try {
-            const store = getAppStoreInstance();
-            const state = store.getState();
+            const state = this.store.getState();
             
             if (!state.isInitialized) return null;
             
@@ -233,8 +232,7 @@ export class ThemeUseCase {
      */
     async deleteOverride(blockId: string, themeId: string): Promise<void> {
         try {
-            const store = getAppStoreInstance();
-            const state = store.getState();
+            const state = this.store.getState();
             
             if (!state.isInitialized) return;
             
@@ -251,8 +249,7 @@ export class ThemeUseCase {
      */
     async batchUpsertOverrides(overrides: Array<Omit<ThemeOverride, 'id'>>): Promise<void> {
         try {
-            const store = getAppStoreInstance();
-            const state = store.getState();
+            const state = this.store.getState();
             
             if (!state.isInitialized) return;
             
@@ -269,8 +266,7 @@ export class ThemeUseCase {
      */
     async batchDeleteOverrides(selections: Array<{blockId: string; themeId: string}>): Promise<void> {
         try {
-            const store = getAppStoreInstance();
-            const state = store.getState();
+            const state = this.store.getState();
             
             if (!state.isInitialized) return;
             
@@ -291,8 +287,7 @@ export class ThemeUseCase {
         status: 'inherit' | 'override' | 'disabled'
     ): Promise<void> {
         try {
-            const store = getAppStoreInstance();
-            const state = store.getState();
+            const state = this.store.getState();
             
             if (!state.isInitialized) return;
             
@@ -313,8 +308,7 @@ export class ThemeUseCase {
      */
     getThemes(): ThemeDefinition[] {
         try {
-            const store = getAppStoreInstance();
-            const state = store.getState();
+            const state = this.store.getState();
             return state.getThemes();
         } catch (error) {
             console.error('[ThemeUseCase] getThemes 失败:', error);
@@ -329,8 +323,7 @@ export class ThemeUseCase {
      */
     getTheme(id: string): ThemeDefinition | undefined {
         try {
-            const store = getAppStoreInstance();
-            const state = store.getState();
+            const state = this.store.getState();
             return state.getTheme(id);
         } catch (error) {
             console.error('[ThemeUseCase] getTheme 失败:', error);
@@ -344,8 +337,7 @@ export class ThemeUseCase {
      */
     getOverrides(): ThemeOverride[] {
         try {
-            const store = getAppStoreInstance();
-            const state = store.getState();
+            const state = this.store.getState();
             return state.getOverrides();
         } catch (error) {
             console.error('[ThemeUseCase] getOverrides 失败:', error);
@@ -361,8 +353,7 @@ export class ThemeUseCase {
      */
     getOverride(blockId: string, themeId: string): ThemeOverride | undefined {
         try {
-            const store = getAppStoreInstance();
-            const state = store.getState();
+            const state = this.store.getState();
             return state.getOverride(blockId, themeId);
         } catch (error) {
             console.error('[ThemeUseCase] getOverride 失败:', error);
@@ -373,8 +364,9 @@ export class ThemeUseCase {
 
 /**
  * 创建主题用例实例
+ * @param store Zustand Store 实例
  * @returns ThemeUseCase 实例
  */
-export function createThemeUseCase(): ThemeUseCase {
-    return new ThemeUseCase();
+export function createThemeUseCase(store: AppStoreApi): ThemeUseCase {
+    return new ThemeUseCase(store);
 }
