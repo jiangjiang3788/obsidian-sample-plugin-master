@@ -4,9 +4,8 @@ import { unmountComponentAtNode } from 'preact/compat';
 import type ThinkPlugin from '@main';
 import { TimerView } from './TimerView';
 import { ServicesProvider, type Services } from '@/app/AppStoreContext';
+import { createServices } from '@/app/createServices';
 import { container } from 'tsyringe';
-import { STORE_TOKEN, type AppStoreInstance } from '@/app/store/useAppStore';
-import { USECASES_TOKEN, type UseCases } from '@/app/usecases';
 
 export class FloatingTimerWidget {
     private plugin: ThinkPlugin;
@@ -39,13 +38,8 @@ export class FloatingTimerWidget {
 
         console.log('[FloatingTimerWidget] render 执行：actionService / dataStore 已就绪');
 
-        // 构建 services 对象，包含 zustandStore
-        const services: Services = {
-            zustandStore: container.resolve<AppStoreInstance>(STORE_TOKEN),
-            dataStore: this.plugin.dataStore,
-            inputService: this.plugin.inputService,
-            useCases: container.resolve<UseCases>(USECASES_TOKEN),
-        };
+        // P1-2: 使用 createServices 统一创建服务
+        const services = createServices(container);
 
         // [修改] 将所有需要的服务实例作为 props 传递给 TimerView
         const timerViewElement = h(TimerView, { 

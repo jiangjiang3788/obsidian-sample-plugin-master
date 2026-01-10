@@ -14,8 +14,8 @@ import { InputSettings } from './InputSettings';
 import { GeneralSettings } from './GeneralSettings';
 import { AiSettings } from './AiSettings';
 import { ServicesProvider, type Services } from '@/app/AppStoreContext';
+import { createServices } from '@/app/createServices';
 import { container } from 'tsyringe';
-import { STORE_TOKEN, type AppStoreInstance } from '@/app/store/useAppStore';
 
 function a11yProps(index: number) {
     return { id: `settings-tab-${index}`, 'aria-controls': `settings-tabpanel-${index}` };
@@ -61,13 +61,8 @@ export class SettingsTab extends PluginSettingTab {
     constructor(public app: App, private plugin: ThinkPlugin) {
         super(app, plugin);
         this.id = plugin.manifest.id;
-        // P0-1: 初始化 services 对象
-        this.services = {
-            zustandStore: container.resolve<AppStoreInstance>(STORE_TOKEN),
-            dataStore: plugin.dataStore,
-            inputService: plugin.inputService,
-            useCases: plugin.useCases,
-        };
+        // P1-2: 使用 createServices 统一创建服务
+        this.services = createServices(container);
     }
 
     display(): void {

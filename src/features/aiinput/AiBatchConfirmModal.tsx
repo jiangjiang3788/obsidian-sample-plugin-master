@@ -11,12 +11,8 @@ import { App, Modal, Notice } from 'obsidian';
 import { render, unmountComponentAtNode } from 'preact/compat';
 import { useState, useMemo, useEffect } from 'preact/hooks';
 import { container } from 'tsyringe';
-import { useZustandAppStore } from '@/app/AppStoreContext';
-import { useDataStore, useInputService, ServicesProvider, Services } from '@/app/AppStoreContext';
-import { DataStore } from '@/core/services/DataStore';
-import { InputService } from '@/core/services/InputService';
-import { USECASES_TOKEN } from '@/app/usecases';
-import { STORE_TOKEN, type AppStoreInstance } from '@/app/store/useAppStore';
+import { useZustandAppStore, useDataStore, useInputService, ServicesProvider, Services } from '@/app/AppStoreContext';
+import { createServices } from '@/app/createServices';
 import type { InputSettings, BlockTemplate, ThemeDefinition, TemplateField } from '@/core/types/schema';
 import type { NaturalRecordCommand } from '@/core/types/ai-schema';
 import { Button, RadioGroup as MuiRadioGroup, FormControlLabel, Radio, FormControl, Typography, Stack, Divider, Box, IconButton, Tooltip, Chip, List, ListItem, ListItemButton, ListItemText, ListItemIcon } from '@mui/material';
@@ -55,16 +51,8 @@ export class AiBatchConfirmModal extends Modal {
         private onComplete?: () => void
     ) {
         super(app);
-        // S7.2: 从 DI 容器获取服务 - 不再包含 appStore
-        const dataStore = container.resolve(DataStore);
-        const inputService = container.resolve(InputService);
-        
-        this.services = {
-            zustandStore: container.resolve<AppStoreInstance>(STORE_TOKEN),
-            dataStore,
-            inputService,
-            useCases: container.resolve(USECASES_TOKEN),
-        };
+        // P1-2: 使用 createServices 统一创建服务
+        this.services = createServices(container);
     }
 
     onOpen() {

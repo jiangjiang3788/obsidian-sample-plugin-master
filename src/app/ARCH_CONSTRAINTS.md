@@ -6,6 +6,135 @@
 
 ---
 
+## P1-1 CI 防回流固化
+
+### 概述
+
+P1-1 规范通过 CI 门禁脚本确保架构边界不被破坏。该脚本在每次 PR 前自动运行，防止架构回流和越界访问。
+
+### 核心规则
+
+#### A) AppStore 永不回流
+
+**规则：** AppStore 仅应在 `app` 层使用，`features`/`core` 层不应直接访问 AppStore。
+
+**✅ 允许：**
+- `src/app/**` 中使用 AppStore
+- 测试文件 (`__tests__/*`, `*.test.ts`, `*.test.tsx`) 中使用
+
+**⛔ 禁止：**
+- `src/features/**` 直接引用 AppStore
+- `src/core/**` 直接引用 AppStore
+
+**验收命令：**
+```bash
+# 检查是否有违规（应无输出或仅在 app 层/测试文件）
+rg -n "\bAppStore\b" src \
+  --glob '!src/app/**' \
+  --glob '!**/__tests__/**' \
+  --glob '!**/*.test.ts' \
+  --glob '!**/*.test.tsx' \
+  --glob '!**/ARCH_CONSTRAINTS.md'
+```
+
+#### B) features 禁止 import app/store/slices
+
+**规则：** features 层必须通过 `useCases` 访问数据，不可直接 import slices。
+
+**✅ 允许：**
+- `src/features/**` → `useUseCases()` → `useCases.theme.*`
+- `src/features/**` → `useZustandAppStore(selector)`
+
+**⛔ 禁止：**
+- `src/features/**` → `import ... from '@/app/store/slices'`
+- `src/features/**` → `import ... from 'app/store/slices'`
+
+**验收命令：**
+```bash
+# 检查是否有违规 import slices（应无输出）
+rg -n "from ['\"]@/app/store/slices" src/features \
+  --glob '!**/__tests__/**' \
+  --glob '!**/*.test.ts' \
+  --glob '!**/*.test.tsx'
+```
+
+#### C) core 禁止 import features
+
+**规则：** core 层是底层模块，不应依赖 features 层。
+
+**✅ 允许：**
+- `src/core/**` → 其他 core 模块
+- `src/core/**` → 外部库
+
+**⛔ 禁止：**
+- `src/core/**` → `import ... from '@/features'`
+- `src/core/**` → `import ... from 'features/'`
+
+**验收命令：**
+```bash
+# 检查是否有违规 import features（应无输出）
+rg -n "from ['\"]@/features" src/core \
+  --glob '!**/__tests__/**' \
+  --glob '!**/*.test.ts' \
+  --glob '!**/*.test.tsx'
+```
+
+### 运行门禁检查
+
+#### 手动运行
+
+```bash
+# 运行架构门禁检查
+npm run arch:gate
+
+# 运行完整 CI 流程（构建 + 门禁）
+npm run ci
+```
+
+#### CI 集成
+
+在 CI/CD pipeline 中添加：
+
+```yaml
+# .github/workflows/ci.yml
+- name: Architecture Gate Check
+  run: npm run arch:gate
+```
+
+#### Git Hooks（可选）
+
+使用 husky 在 pre-commit 时检查：
+
+```bash
+# .husky/pre-commit
+npm run arch:gate
+```
+
+### 失败输出示例
+
+当违反架构约束时，脚本会输出：
+
+```
+❌ 发现 AppStore 回流违规：
+
+违规文件：
+src/features/settings/ThemeMatrix.tsx:15:  const appStore = useAppStore();
+
+💡 修复建议：
+   - features 层应使用 useUseCases() hook，而不是直接访问 AppStore
+   - 例如：const useCases = useUseCases(); useCases.theme.addTheme(...)
+```
+
+### 依赖要求
+
+需要安装 [ripgrep (rg)](https://github.com/BurntSushi/ripgrep):
+
+- **Windows:** `scoop install ripgrep` 或 `choco install ripgrep`
+- **macOS:** `brew install ripgrep`
+- **Linux:** `apt install ripgrep` 或 `dnf install ripgrep`
+
+---
+
 ## S5 架构约束 - Layout/ViewInstance
 
 ### 概述

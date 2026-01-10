@@ -2,6 +2,7 @@
 import type { ThinkSettings, ThemeDefinition, ThemeOverride } from '@/core/types/schema';
 import { generateId } from '@core/utils/array';
 import { StoreOperations, type StoreKit } from '@core/utils/StoreOperations';
+import type { ActiveStatus } from '@shared/types/common';
 
 /**
  * ThemeStore - 管理主题相关状态
@@ -105,7 +106,7 @@ export class ThemeStore {
     }
 
     // 批量更新主题状态
-    public batchUpdateThemeStatus = async (themeIds: string[], status: 'active' | 'inactive') => {
+    public batchUpdateThemeStatus = async (themeIds: string[], status: ActiveStatus) => {
         await this._updateSettings(draft => {
             const themePaths = themeIds.map(id => draft.inputSettings.themes.find(t => t.id === id)?.path).filter(Boolean) as string[];
             
