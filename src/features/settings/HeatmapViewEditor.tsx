@@ -6,7 +6,7 @@ import { Stack, Typography, FormControlLabel, Radio, RadioGroup, Box, Button, Ch
 import type { ViewEditorProps } from './registry';
 import { SimpleSelect } from '@shared/ui/composites/SimpleSelect';
 import { ListEditor } from '@shared/ui/composites/form/ListEditor';
-import { useZustandAppStore } from '@/app/store/useAppStore';
+import { useZustandAppStore } from '@/app/AppStoreContext';
 import { useMemo } from 'preact/hooks';
 import { LEVEL_SYSTEM_PRESETS } from '@core/utils/levelingSystem';
 import { HEATMAP_VIEW_DEFAULT_CONFIG } from '@core/config/viewConfigs';

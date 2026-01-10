@@ -25,7 +25,7 @@ import {
     Chip,
 } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import { useZustandAppStore } from '@/app/store/useAppStore';
+import { useZustandAppStore } from '@/app/AppStoreContext';
 import { useUseCases } from '@/app/AppStoreContext';
 import type { AiSettings as AiSettingsType } from '@/core/types/ai-schema';
 import { DEFAULT_AI_SETTINGS, CUSTOM_PROMPT_EXAMPLES } from '@/core/types/ai-schema';

@@ -44,7 +44,7 @@ import { ServicesProvider, type Services } from '@/app/AppStoreContext';
 import { DataStore } from '@/core/services/DataStore';
 import { InputService } from '@/core/services/InputService';
 import { USECASES_TOKEN } from '@/app/usecases';
-import { useZustandAppStore } from '@/app/store/useAppStore';
+import { useZustandAppStore } from '@/app/AppStoreContext';
 import { ThemeTreeSelect } from '@/shared/components/ThemeTreeSelect';
 import { 
     ChatSessionStore,

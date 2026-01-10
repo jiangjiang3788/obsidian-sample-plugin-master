@@ -393,14 +393,46 @@
     {
       "id": "view_mh4itucqmm9rt",
       "title": "新视图",
-      "viewType": "BlockView",
+      "viewType": "StatisticsView",
       "dataSourceId": "",
       "viewConfig": {
-        "view": "BlockView",
-        "title": "块视图",
-        "collapsed": false,
-        "fields": [],
-        "group": "categoryKey"
+        "categories": [
+          {
+            "name": "打卡",
+            "color": "#51591f"
+          },
+          {
+            "name": "感受",
+            "color": "#946d84"
+          },
+          {
+            "name": "计划",
+            "color": "#dbf459"
+          },
+          {
+            "name": "事件",
+            "color": "#c2774c"
+          },
+          {
+            "name": "思考",
+            "color": "#4bb710"
+          },
+          {
+            "name": "完成任务",
+            "color": "#d91f55"
+          },
+          {
+            "name": "未完成任务",
+            "color": "#f64237"
+          },
+          {
+            "name": "总结",
+            "color": "#17e738"
+          }
+        ],
+        "displayMode": "smart",
+        "minVisibleHeight": 15,
+        "usePeriodField": false
       },
       "collapsed": true,
       "parentId": null,
@@ -493,11 +525,6 @@
         "生活/整理",
         "生活/车车",
         "健康",
-        "电脑",
-        "电脑/ob基础",
-        "电脑/笔记系统",
-        "电脑/记录系统",
-        "电脑/整理",
         "工作",
         "工作/设计",
         "工作/投标",
@@ -506,7 +533,12 @@
         "工作/老板任务",
         "工作/通勤",
         "思考/专注",
-        "健康 身体"
+        "健康 身体",
+        "电脑",
+        "电脑/笔记系统",
+        "电脑/记录系统",
+        "电脑/整理",
+        "电脑/ob基础"
       ],
       "selectedCategories": []
     }

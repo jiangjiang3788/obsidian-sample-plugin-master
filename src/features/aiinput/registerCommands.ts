@@ -1,36 +1,39 @@
 // src/features/aiinput/registerCommands.ts
 /**
- * S7.2: AI 自然语言快速记录命令注册 - 移除 AppStore 依赖
- * P0-2: 使用 getZustandState 只读访问 settings
- * - 使用 SettingsProviderToken 创建 AI 服务
+ * P0-3: AI 自然语言快速记录命令注册 - 通过 DI 获取 store
+ * - 使用 container.resolve(STORE_TOKEN) 获取 store
+ * - 使用纯函数 getZustandState(store, selector) 读取 settings
  */
 
 import { Notice } from 'obsidian';
 import { container } from 'tsyringe';
 import type ThinkPlugin from '@/main';
-import { QuickInputModal } from '@/features/quickinput/QuickInputModal';
 import { AiTextPromptModal } from './AiTextPromptModal';
 import { AiBatchConfirmModal } from './AiBatchConfirmModal';
 import { AiConfigCache, AiHttpClient, AiNaturalLanguageRecordParser } from '@/core/ai';
-import { getZustandState } from '@/app/store/useAppStore';
-import { SettingsProviderToken, type ISettingsProvider } from '@/core/services/types';
+import { getZustandState, STORE_TOKEN, type AppStoreInstance } from '@/app/store/useAppStore';
+import type { ISettingsProvider } from '@/core/services/types';
 
 /**
  * 创建一个基于 zustand store 的 SettingsProvider
+ * P0-3: 使用纯函数版本，显式传入 store
  */
-function createZustandSettingsProvider(): ISettingsProvider {
+function createZustandSettingsProvider(store: AppStoreInstance): ISettingsProvider {
     return {
-        getSettings: () => getZustandState(s => s.settings)
+        getSettings: () => getZustandState(store, s => s.settings)
     };
 }
 
 /**
  * 注册 AI 输入相关命令
- * S7.2: 移除 appStore 参数，使用 zustand store
+ * P0-3: 从 DI 容器获取 store
  */
 export function registerAiInputCommands(plugin: ThinkPlugin) {
-    // S7.2: 创建基于 zustand 的 settings provider
-    const settingsProvider = createZustandSettingsProvider();
+    // P0-3: 从 DI 容器获取 store
+    const store = container.resolve<AppStoreInstance>(STORE_TOKEN);
+    
+    // P0-3: 创建基于 zustand 的 settings provider（传入 store）
+    const settingsProvider = createZustandSettingsProvider(store);
     
     // 创建 AI 相关服务实例
     const cache = new AiConfigCache(settingsProvider);
@@ -42,8 +45,8 @@ export function registerAiInputCommands(plugin: ThinkPlugin) {
         id: 'think-ai-natural-input',
         name: 'AI: 自然语言快速记录',
         callback: async () => {
-            // S7.2: 使用 zustand store 获取 settings（通过 getZustandState 只读访问）
-            const settings = getZustandState(s => s.settings);
+            // P0-3: 使用纯函数版本获取 settings
+            const settings = getZustandState(store, s => s.settings);
             const ai = settings.aiSettings;
 
             // 检查 AI 是否启用

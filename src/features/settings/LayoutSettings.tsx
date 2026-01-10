@@ -14,8 +14,8 @@
  * - Layout/View 作为扁平列表管理
  */
 import { h } from 'preact';
-import { useZustandAppStore } from '@/app/store/useAppStore';
-import { useUseCases, type UseCases } from '@/app/usecases';
+import { useZustandAppStore, useUseCases } from '@/app/AppStoreContext';
+import type { UseCases } from '@/app/usecases';
 import { Box, Stack, Typography, TextField, Checkbox, FormControlLabel, Tooltip, Chip, Radio, RadioGroup as MuiRadioGroup, Autocomplete, Button, Menu, MenuItem, IconButton } from '@mui/material';
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';

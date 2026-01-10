@@ -11,7 +11,7 @@ import { FeatureLoader } from '@/app/FeatureLoader';
 import { safeAsync } from '@shared/utils/errorHandler';
 import { startMeasure } from '@shared/utils/performance';
 import { SETTINGS_PERSISTENCE_TOKEN, SettingsRepository, type ISettingsPersistence } from '@core/services/SettingsRepository';
-import { createAppStore, setAppStoreInstance } from '@/app/store/useAppStore';
+import { createAppStore, STORE_TOKEN, type AppStoreInstance } from '@/app/store/useAppStore';
 import { createUseCases, USECASES_TOKEN, type UseCases } from '@/app/usecases';
 import { THEME_MATCHER_TOKEN } from '@core/types/theme';
 import { ThemeManager } from '@features/settings/ThemeManager';
@@ -400,10 +400,13 @@ export class ServiceManager {
                 console.log('[DI DEBUG] SettingsRepository.setInitialSettings() called');
                 this.services.timerStateService = container.resolve(TimerStateService);
                 
-                // 2. 创建 Zustand Store 并初始化
+                // 2. 创建 Zustand Store 并注册到 DI
                 const settingsRepository = this.services.settingsRepository;
                 const zustandStore = createAppStore(settingsRepository);
-                setAppStoreInstance(zustandStore);
+                
+                // P0-3: 注册 STORE_TOKEN 到 DI 容器（替代全局单例）
+                container.register(STORE_TOKEN, { useValue: zustandStore });
+                console.log('[ThinkPlugin] Zustand Store 已注册到 DI 容器');
                 
                 // 使用 SettingsRepository 加载的 settings 初始化 Zustand store
                 const zustandInitialSettings = settingsRepository.getSettings();

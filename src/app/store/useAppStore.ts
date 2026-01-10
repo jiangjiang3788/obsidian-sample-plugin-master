@@ -159,80 +159,63 @@ export function createAppStore(settingsRepository: SettingsRepository) {
     );
 }
 
-// ============== Store 实例 ==============
+// ============== Store 类型导出 ==============
 
 /**
- * Store 实例（由 ServiceManager 创建并注入）
- * 
- * ⚠️ P0-2 架构约束：
- * - ⛔ 禁止导出 getAppStoreInstance / setAppStoreInstance 全局单例函数
- * - ✅ 外部应通过 DI（USECASES_TOKEN）或 React Context（useUseCases）获取 useCases
- * - ✅ React 组件可通过 useZustandAppStore 或 AppStoreContext 读取状态
+ * Store 类型（用于 DI token 和函数参数）
  */
-let storeInstance: ReturnType<typeof createAppStore> | null = null;
+export type AppStoreInstance = ReturnType<typeof createAppStore>;
+
+// ============== DI Token ==============
 
 /**
- * 设置 Store 实例（仅由 ServiceManager 内部调用）
- * @internal 不对外导出
- */
-export function setAppStoreInstance(store: ReturnType<typeof createAppStore>) {
-    storeInstance = store;
-}
-
-/**
- * 获取 Store 实例（仅内部使用）
- * @internal 不建议外部直接调用，请使用 DI 或 React Context
- */
-function getStoreInstance() {
-    if (!storeInstance) {
-        throw new Error('useAppStore: Store 未初始化，请确保 ServiceManager 已启动');
-    }
-    return storeInstance;
-}
-
-/**
- * 直接使用 zustand store 的 hook
- * 用于替代旧的 useStore
+ * STORE_TOKEN - 用于 DI 注入 Zustand Store
  * 
- * ⚠️ 注意：此 hook 仅用于读取状态，写操作应通过 useCases
+ * ⚠️ P0-3 架构约束：
+ * - ⛔ 禁止任何全局单例（无 module-level store 缓存）
+ * - ✅ 非 React 场景必须通过 DI（container.resolve(STORE_TOKEN)）获取 store
+ * - ✅ React 组件通过 AppStoreContext 获取 store
  */
-export function useZustandAppStore<T>(selector: (state: ZustandAppStore) => T): T {
-    const store = getStoreInstance();
-    return store(selector);
-}
+export const STORE_TOKEN = Symbol('STORE_TOKEN');
+
+// ============== 纯函数工具 ==============
 
 /**
- * 非 React 上下文中读取 store 状态
+ * 读取 Zustand store 状态（纯函数版本）
  * 
- * ⚠️ P0-2 架构约束：
- * - 仅用于读取状态，写操作应通过 useCases（从 DI 获取）
- * - 替代已废弃的 getAppStoreInstance()
+ * ⚠️ P0-3 架构约束：
+ * - 必须显式传入 store 实例
+ * - store 来自 DI（container.resolve(STORE_TOKEN)）或上层参数传递
  * 
+ * @param store Zustand store 实例
  * @param selector 状态选择器
  * @returns 选择的状态值
  */
-export function getZustandState<T>(selector: (state: ZustandAppStore) => T): T {
-    const store = getStoreInstance();
+export function getZustandState<T>(
+    store: AppStoreInstance,
+    selector: (state: ZustandAppStore) => T
+): T {
     return selector(store.getState());
 }
 
 /**
- * 订阅 Zustand store 状态变化（非 React 上下文）
+ * 订阅 Zustand store 状态变化（纯函数版本）
  * 
- * ⚠️ P0-2 架构约束：
- * - 用于非 React 场景（如 RendererService）订阅特定状态变化
- * - 替代已废弃的 getAppStoreInstance().subscribe()
+ * ⚠️ P0-3 架构约束：
+ * - 必须显式传入 store 实例
+ * - store 来自 DI（container.resolve(STORE_TOKEN)）或上层参数传递
  * 
+ * @param store Zustand store 实例
  * @param selector 状态选择器
  * @param listener 状态变化监听器
  * @param options 订阅选项
  * @returns 取消订阅函数
  */
 export function subscribeZustandStore<T>(
+    store: AppStoreInstance,
     selector: (state: ZustandAppStore) => T,
     listener: (current: T, previous: T) => void,
     options?: { equalityFn?: (a: T, b: T) => boolean }
 ): () => void {
-    const store = getStoreInstance();
     return store.subscribe(selector, listener, options);
 }
