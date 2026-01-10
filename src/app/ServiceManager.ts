@@ -18,6 +18,230 @@ import { ThemeManager } from '@features/settings/ThemeManager';
 import { SETTINGS_TOKEN } from '@core/services/types'; // DI DEBUG: 用于获取初始设置
 import type { ThinkSettings } from '@core/types'; // DI DEBUG
 import type ThinkPlugin from '@main';
+import { AppStore } from '@/app/AppStore';
+
+// ============== S3 拔管测试 (DI_UNPLUG) 配置 ==============
+/**
+ * S3 拔管测试：ServiceManager 不注入 AppStore
+ * 
+ * 目的：在删除 AppStore 前，用"故意断供"的方式验证核心链路已经解耦，
+ *       并找出所有隐性 DI 依赖点。
+ * 
+ * 如何启用：
+ *   localStorage.setItem('DI_UNPLUG_APPSTORE', '1')
+ *   然后刷新页面
+ * 
+ * 如何关闭：
+ *   localStorage.removeItem('DI_UNPLUG_APPSTORE')
+ *   然后刷新页面
+ * 
+ * 若白屏：
+ *   1. 查看 Console 中所有带 🚨 [DI_UNPLUG] 前缀的错误
+ *   2. 查看堆栈信息定位依赖点
+ *   3. 修复依赖点后重新测试
+ * 
+ * 逃生舱（允许 bypass 不 throw）：
+ *   localStorage.setItem('ALLOW_DI_UNPLUG_BYPASS', '1')
+ *   这样只会 log 错误，不会 throw（方便调试）
+ * 
+ * ⚠️ 生产环境不受影响：拔管只在 DEV 才能启用
+ */
+const DEV = import.meta.env.DEV;
+
+/**
+ * 拔管开关：检查是否启用 AppStore 拔管
+ * 仅 DEV 环境 + localStorage.DI_UNPLUG_APPSTORE = '1' 时启用
+ */
+const isUnplugEnabled = (): boolean => {
+    if (!DEV) return false;
+    try {
+        return typeof localStorage !== 'undefined' && 
+               localStorage.getItem('DI_UNPLUG_APPSTORE') === '1';
+    } catch {
+        return false;
+    }
+};
+
+/**
+ * 拔管逃生舱：检查是否允许 bypass（不 throw，只 log）
+ */
+const isUnplugBypassAllowed = (): boolean => {
+    try {
+        return typeof localStorage !== 'undefined' && 
+               localStorage.getItem('ALLOW_DI_UNPLUG_BYPASS') === '1';
+    } catch {
+        return false;
+    }
+};
+
+// 缓存拔管状态（启动时确定，避免运行时变化）
+const UNPLUG = isUnplugEnabled();
+
+/**
+ * 获取 DI 拔管状态
+ * 在控制台调用：getDIUnplugStatus()
+ */
+export function getDIUnplugStatus(): { DEV: boolean; UNPLUG: boolean; BYPASS: boolean; instructions: string } {
+    const status = {
+        DEV,
+        UNPLUG: isUnplugEnabled(),
+        BYPASS: isUnplugBypassAllowed(),
+        instructions: `
+╔══════════════════════════════════════════════════════════════════════╗
+║             S3 DI 拔管测试 (DI_UNPLUG) 状态                          ║
+╠══════════════════════════════════════════════════════════════════════╣
+║ DEV 环境:      ${DEV ? '✅ 是' : '❌ 否'}                                             ║
+║ 拔管开关:      ${isUnplugEnabled() ? '🔌 已启用（AppStore 未注入）' : '🟢 已关闭（正常模式）'}       ║
+║ 逃生舱:        ${isUnplugBypassAllowed() ? '🔓 已开启（不抛异常）' : '🔒 已关闭（会抛异常）'}                ║
+╠══════════════════════════════════════════════════════════════════════╣
+║ 如何启用拔管（测试 AppStore 依赖）：                                 ║
+║   localStorage.setItem('DI_UNPLUG_APPSTORE', '1')                    ║
+║   然后刷新页面                                                       ║
+║                                                                      ║
+║ 如何关闭拔管：                                                       ║
+║   localStorage.removeItem('DI_UNPLUG_APPSTORE')                      ║
+║   然后刷新页面                                                       ║
+║                                                                      ║
+║ 如何启用逃生舱（只 log 不 throw）：                                  ║
+║   localStorage.setItem('ALLOW_DI_UNPLUG_BYPASS', '1')                ║
+╠══════════════════════════════════════════════════════════════════════╣
+║ 若白屏，如何定位问题：                                               ║
+║   1. 查看 Console 中所有 🚨 [DI_UNPLUG] 前缀的错误                   ║
+║   2. 查看堆栈信息定位依赖点                                          ║
+║   3. 在仓库中搜索依赖点并修复                                        ║
+║                                                                      ║
+║ 搜索建议：                                                           ║
+║   - container.resolve(AppStore)                                      ║
+║   - new AppStore                                                     ║
+║   - appStore.getSettings                                             ║
+║   - serviceManager.appStore                                          ║
+╚══════════════════════════════════════════════════════════════════════╝
+        `.trim()
+    };
+    
+    console.log(status.instructions);
+    return status;
+}
+
+/**
+ * 报告遗留依赖（帮助定位 AppStore 依赖点）
+ * 在控制台调用：reportLegacyDependencies()
+ */
+export function reportLegacyDependencies(): void {
+    console.log(`
+╔══════════════════════════════════════════════════════════════════════╗
+║           🔍 AppStore 遗留依赖定位指南                               ║
+╠══════════════════════════════════════════════════════════════════════╣
+║                                                                      ║
+║ 如果 UNPLUG=1 时出现错误，请在仓库中搜索以下模式：                   ║
+║                                                                      ║
+║ 🔸 DI 注入：                                                         ║
+║    container.resolve(AppStore)                                       ║
+║    @inject(AppStore)                                                 ║
+║    container.resolve('AppStore')                                     ║
+║                                                                      ║
+║ 🔸 直接实例化：                                                      ║
+║    new AppStore(                                                     ║
+║                                                                      ║
+║ 🔸 方法调用：                                                        ║
+║    appStore.getSettings()                                            ║
+║    appStore.subscribe(                                               ║
+║    appStore.theme.                                                   ║
+║    appStore.settings.                                                ║
+║    appStore.block.                                                   ║
+║                                                                      ║
+║ 🔸 ServiceManager/Plugin 访问：                                      ║
+║    serviceManager.appStore                                           ║
+║    plugin.appStore                                                   ║
+║    this.appStore                                                     ║
+║                                                                      ║
+║ 🔸 Context/Hook：                                                    ║
+║    useAppStore()                                                     ║
+║    AppStoreContext                                                   ║
+║    AppStoreProvider                                                  ║
+║                                                                      ║
+╠══════════════════════════════════════════════════════════════════════╣
+║ 迁移建议：                                                           ║
+║   📖 读取 settings → useZustandAppStore(s => s.settings)             ║
+║   📝 写入 settings → useCases.settings.updateSettings()              ║
+║   🎨 主题操作     → useCases.theme.*                                 ║
+║   📦 布局操作     → useCases.layout.*                                ║
+║   ⏱️ 计时器操作   → useCases.timer.*                                 ║
+╚══════════════════════════════════════════════════════════════════════╝
+    `);
+}
+
+/**
+ * DI 拔管错误处理
+ * 当 UNPLUG=1 时访问 AppStore 会调用此函数
+ */
+function unplugError(context: string, operation: string): never | void {
+    const message = `🚨 [DI_UNPLUG] AppStore 访问被拦截！
+
+════════════════════════════════════════════════════════════════════════
+⚠️ DI 拔管测试已启用：AppStore 未注入 DI 容器
+
+📍 访问点：${context}
+🔧 操作：${operation}
+
+这意味着此代码依赖 AppStore，需要迁移到新架构：
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📖 读取状态 → useZustandAppStore(selector)
+📝 写入状态 → useCases.settings / useCases.layout / useCases.theme
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🔧 如何修复：
+  1. 找到上方堆栈中的调用点
+  2. 将 AppStore 调用替换为 Zustand hooks 或 useCases
+  3. 参考 reportLegacyDependencies() 获取更多迁移建议
+
+🚪 逃生舱（临时放行）：
+  localStorage.setItem('ALLOW_DI_UNPLUG_BYPASS', '1')
+════════════════════════════════════════════════════════════════════════`;
+
+    console.error(message);
+    console.trace('📚 调用堆栈（用于定位依赖点）：');
+
+    if (!isUnplugBypassAllowed()) {
+        throw new Error(`🚨 [DI_UNPLUG] ${context} - ${operation} 被拦截。请迁移到 Zustand / useCases。`);
+    } else {
+        console.warn(
+            `⚠️ [DI_UNPLUG] 逃生舱已启用，不抛出异常。\n` +
+            `请尽快修复依赖后移除：localStorage.removeItem('ALLOW_DI_UNPLUG_BYPASS')`
+        );
+    }
+}
+
+/**
+ * 创建 Poison AppStore 代理
+ * 当 UNPLUG=1 时，任何对 AppStore 的访问都会触发错误
+ * 
+ * 使用 any 类型绕过 TypeScript 检查，因为这是一个故意不兼容的"毒"对象
+ */
+function createPoisonAppStore(): AppStore {
+    const poisonTarget = {} as any;
+    const handler: ProxyHandler<any> = {
+        get(target, prop, receiver) {
+            // 跳过常见的内部属性检查
+            if (prop === 'then' || prop === Symbol.toStringTag || prop === Symbol.iterator) {
+                return undefined;
+            }
+            unplugError('Poison AppStore Proxy', `访问属性 "${String(prop)}"`);
+            return undefined;
+        },
+        set(target, prop, value) {
+            unplugError('Poison AppStore Proxy', `设置属性 "${String(prop)}"`);
+            return false;
+        },
+        apply(target, thisArg, args) {
+            unplugError('Poison AppStore Proxy', '调用方法');
+            return undefined;
+        }
+    };
+    
+    // 使用 any 类型绕过 TypeScript 严格检查
+    return new Proxy(poisonTarget, handler) as unknown as AppStore;
+}
 
 /**
  * ServiceManager - 插件服务总线
@@ -46,7 +270,11 @@ export class ServiceManager {
         timerWidget: FloatingTimerWidget;
         itemService: ItemService;
         useCases: UseCases;
+        appStore: AppStore; // S3: 保留 appStore 缓存，但 UNPLUG 时为 poison
     }> = {};
+    
+    // S3: Poison AppStore 实例（UNPLUG 模式下使用）
+    private poisonAppStore: AppStore | null = null;
 
     constructor(plugin: ThinkPlugin) {
         this.plugin = plugin;
@@ -62,6 +290,25 @@ export class ServiceManager {
      */
     async bootstrap(): Promise<void> {
         const stopMeasure = startMeasure('ServiceManager.bootstrap');
+        
+        // S3: 输出 DI_UNPLUG 状态
+        if (DEV) {
+            if (UNPLUG) {
+                console.warn(`
+╔══════════════════════════════════════════════════════════════════════╗
+║  🚨 S3 DI_UNPLUG 模式已启用                                          ║
+║                                                                      ║
+║  AppStore 不会被注入 DI 容器，所有访问将被拦截并报错。               ║
+║  请关注 console 中所有 🚨 [DI_UNPLUG] 前缀的错误。                   ║
+║                                                                      ║
+║  如何关闭：localStorage.removeItem('DI_UNPLUG_APPSTORE')             ║
+║  逃生舱：  localStorage.setItem('ALLOW_DI_UNPLUG_BYPASS', '1')       ║
+╚══════════════════════════════════════════════════════════════════════╝
+                `);
+            } else {
+                console.log('[S3 DI_UNPLUG] 正常模式（拔管未启用）');
+            }
+        }
         
         // 注册 SettingsPersistence（基于 plugin.loadData/saveData）
         this.registerSettingsPersistence();
@@ -366,6 +613,36 @@ export class ServiceManager {
     get useCases(): UseCases {
         if (!this.services.useCases) throw new Error('UseCases 未初始化');
         return this.services.useCases;
+    }
+
+    /**
+     * S3 拔管测试：获取 AppStore
+     * 
+     * ⚠️ 当 UNPLUG=1 时：
+     * - 不会从 DI 容器 resolve AppStore
+     * - 返回 Poison Proxy，任何访问都会触发明确的错误 + 堆栈
+     * 
+     * 正常模式：
+     * - 正常从 DI 容器获取 AppStore 单例
+     * 
+     * @deprecated 新代码应使用 zustand store (useZustandAppStore) + useCases
+     */
+    get appStore(): AppStore {
+        // S3 拔管模式：返回 Poison Proxy
+        if (UNPLUG) {
+            if (!this.poisonAppStore) {
+                console.warn('🚨 [DI_UNPLUG] UNPLUG 模式已启用：AppStore 访问将被拦截');
+                console.warn('🚨 [DI_UNPLUG] 请关注 console 中所有 [DI_UNPLUG] 报错');
+                this.poisonAppStore = createPoisonAppStore();
+            }
+            return this.poisonAppStore;
+        }
+        
+        // 正常模式：从 DI 容器获取
+        if (!this.services.appStore) {
+            this.services.appStore = container.resolve(AppStore);
+        }
+        return this.services.appStore;
     }
 
     getLoadingStatus() {

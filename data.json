@@ -480,9 +480,11 @@
     {
       "id": "layout_mk3p87bbyl5g9",
       "name": "新布局2 (副本)",
-      "viewInstanceIds": [],
-      "displayMode": "list",
-      "initialView": "月",
+      "viewInstanceIds": [
+        "view_mh4itucqmm9rt"
+      ],
+      "displayMode": "grid",
+      "initialView": "季",
       "initialDateFollowsNow": true,
       "parentId": null
     },
@@ -8554,7 +8556,7 @@
       }
     ]
   },
-  "floatingTimerEnabled": true,
+  "floatingTimerEnabled": false,
   "activeThemePaths": [],
   "aiSettings": {
     "enabled": true,
