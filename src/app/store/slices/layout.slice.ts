@@ -30,7 +30,8 @@
 import type { StateCreator } from 'zustand';
 import type { ThinkSettings, Layout } from '@/core/types/schema';
 import type { SettingsRepository } from '@/core/services/SettingsRepository';
-import { generateId, moveItemInArray } from '@core/utils/array';
+import { generateId } from '@/shared/utils/array';
+import { moveItemInArray } from '@core/utils/array';
 import { createSliceMeta } from '@/shared/types/ActionMeta';
 
 // ============== 类型定义 ==============
