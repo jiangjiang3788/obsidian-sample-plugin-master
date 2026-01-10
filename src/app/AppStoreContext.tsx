@@ -42,7 +42,6 @@ import { useContext, useMemo } from 'preact/hooks';
 import { useStore } from 'zustand';
 import { container } from 'tsyringe';
 import type { ComponentChildren } from 'preact';
-import type { AppStore } from './AppStore';
 import type { DataStore } from '@/core/services/DataStore';
 import type { InputService } from '@/core/services/InputService';
 import type { UseCases } from './usecases';
@@ -143,34 +142,13 @@ const circuitBreakerError = (hookName: string, context: string): void => {
 export const AppStoreContext = createContext<never | null>(null);
 
 /**
- * AppStoreProvider Props
- * @deprecated 新代码应使用 ServicesProvider
- */
-interface AppStoreProviderProps {
-    store: AppStore;
-    children: ComponentChildren;
-}
-
-/**
  * AppStoreProvider
- * 包装 UI 树并提供 AppStore 实例
- * 
- * @deprecated 新代码应使用 ServicesProvider
- * ⚠️ S2 断路测试：DEV 环境下会报错 + 抛出异常
+ * @deprecated P0-4: AppStore 已移除，此组件已废弃
  */
-export function AppStoreProvider({ store, children }: AppStoreProviderProps) {
-    // S2 断路测试：Provider 断路
-    if (CIRCUIT_BREAKER_ENABLED) {
-        circuitBreakerError(
-            'AppStoreProvider',
-            'AppStoreProvider 组件被渲染'
-        );
-    }
-    
-    return (
-        <AppStoreContext.Provider value={store as never}>
-            {children}
-        </AppStoreContext.Provider>
+export function AppStoreProvider(_props: { store: never; children: ComponentChildren }) {
+    throw new Error(
+        '🚨 [ZOMBIE CODE] AppStoreProvider 已废弃！\n' +
+        '请迁移到 ServicesProvider。'
     );
 }
 
@@ -194,7 +172,7 @@ export function AppStoreProvider({ store, children }: AppStoreProviderProps) {
  * @returns AppStore 实例
  * @deprecated 使用 useZustandAppStore + useUseCases 替代
  */
-export function useAppStore(): AppStore {
+export function useAppStore(): never {
     // S2 断路测试：核心断路点
     // 每次调用都会触发断路检查，帮助定位僵尸代码
     circuitBreakerError(
@@ -202,32 +180,13 @@ export function useAppStore(): AppStore {
         'useAppStore hook 被调用'
     );
     
-    // 如果逃生舱启用，继续执行原有逻辑
-    const store = useContext(AppStoreContext) as AppStore | null;
-    
-    if (store) {
-        return store;
-    }
-    
-    // 兼容回退：尝试从 DI 容器获取
-    // 使用字符串 Token 'AppStore'，由 setupCore 注册
-    try {
-        const fallbackStore = container.resolve<AppStore>('AppStore');
-        if (fallbackStore) {
-            console.warn(
-                '[useAppStore] ⚠️ 正在使用 DI 容器回退获取 AppStore。\n' +
-                '这表明组件未被 ServicesProvider 包裹。\n' +
-                '请检查组件渲染入口并添加 ServicesProvider。'
-            );
-            return fallbackStore;
-        }
-    } catch (e) {
-        // DI 容器也没有注册，抛出原始错误
-    }
-    
+    // P0-4: AppStore DI 依赖已移除
+    // useAppStore() 已废弃，调用时直接抛出错误引导迁移
     throw new Error(
-        'useAppStore 必须在 AppStoreProvider 内部使用。' +
-        '请确保组件树被 AppStoreProvider 包裹。'
+        '🚨 [ZOMBIE CODE] useAppStore() 已废弃！\n' +
+        '请迁移到：\n' +
+        '  - 读取状态：useZustandAppStore(selector)\n' +
+        '  - 写入状态：useUseCases()\n'
     );
 }
 
@@ -262,24 +221,21 @@ export function useZustandAppStore<T>(selector: (state: ZustandAppStore) => T): 
     const store = useContext(ZustandStoreContext);
     
     if (!store) {
-        // 兼容回退：尝试从 DI 容器获取
-        try {
-            const fallbackStore = container.resolve<AppStoreInstance>(STORE_TOKEN);
-            if (fallbackStore) {
-                console.warn(
-                    '[useZustandAppStore] ⚠️ 正在使用 DI 容器回退获取 Zustand store。\n' +
-                    '这表明组件未被 ServicesProvider 包裹。\n' +
-                    '请检查组件渲染入口并添加 ServicesProvider。'
-                );
-                return useStore(fallbackStore, selector);
-            }
-        } catch (e) {
-            // DI 容器也没有注册
-        }
-        
         throw new Error(
-            'useZustandAppStore 必须在 ServicesProvider 内部使用。' +
-            '请确保组件树被 ServicesProvider 包裹。'
+            '🚨 [useZustandAppStore] ZustandStoreContext 为空！\n' +
+            '组件必须在 ServicesProvider 内部使用。\n\n' +
+            '⚠️ 迁移指引：\n' +
+            '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
+            '请确保渲染入口正确包裹 ServicesProvider：\n\n' +
+            '  const root = createRoot(container);\n' +
+            '  root.render(\n' +
+            '    <ServicesProvider services={services}>\n' +
+            '      <YourComponent />\n' +
+            '    </ServicesProvider>\n' +
+            '  );\n\n' +
+            '其中 services 必须包含 zustandStore：\n' +
+            '  const services = serviceManager.getServices();\n' +
+            '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━'
         );
     }
     
@@ -398,6 +354,7 @@ export function useUseCases(): UseCases {
  * - 写入状态使用 useCases
  */
 export interface Services {
+    zustandStore: AppStoreInstance;
     dataStore: DataStore;
     inputService: InputService;
     useCases: UseCases;
@@ -426,8 +383,7 @@ function validateServices(services: Services, source?: string): void {
             `请检查渲染入口是否正确传递了 services 参数。`
         );
     }
-    // appStore 不再是必需的（S7.0 变更）
-    // if (!services.appStore) missing.push('appStore');
+    if (!services.zustandStore) missing.push('zustandStore');
     if (!services.dataStore) missing.push('dataStore');
     if (!services.inputService) missing.push('inputService');
     if (!services.useCases) missing.push('useCases');
@@ -456,18 +412,18 @@ export function ServicesProvider({ services, children }: ServicesProviderProps) 
     validateServices(services, 'ServicesProvider');
     
     // 构建嵌套的 Provider 树
-    // appStore 是可选的，仅在传递时提供
-    let content = (
-        <DataStoreContext.Provider value={services.dataStore}>
-            <InputServiceContext.Provider value={services.inputService}>
-                <UseCasesContext.Provider value={services.useCases}>
-                    {children}
-                </UseCasesContext.Provider>
-            </InputServiceContext.Provider>
-        </DataStoreContext.Provider>
+    // 最外层必须是 ZustandStoreContext，确保所有子组件都能访问 store
+    return (
+        <ZustandStoreContext.Provider value={services.zustandStore}>
+            <DataStoreContext.Provider value={services.dataStore}>
+                <InputServiceContext.Provider value={services.inputService}>
+                    <UseCasesContext.Provider value={services.useCases}>
+                        {children}
+                    </UseCasesContext.Provider>
+                </InputServiceContext.Provider>
+            </DataStoreContext.Provider>
+        </ZustandStoreContext.Provider>
     );
-    
-    return content;
 }
 
 /**

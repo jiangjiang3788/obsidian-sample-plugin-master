@@ -45,6 +45,7 @@ import { DataStore } from '@/core/services/DataStore';
 import { InputService } from '@/core/services/InputService';
 import { USECASES_TOKEN } from '@/app/usecases';
 import { useZustandAppStore } from '@/app/AppStoreContext';
+import { STORE_TOKEN, type AppStoreInstance } from '@/app/store/useAppStore';
 import { ThemeTreeSelect } from '@/shared/components/ThemeTreeSelect';
 import { 
     ChatSessionStore,
@@ -84,8 +85,9 @@ export class AiChatModal extends Modal {
             retrievalService: container.resolve(RetrievalService),
             sessionStore: container.resolve(ChatSessionStore),
         };
-        // P0-1: 构建 Services 对象供 ServicesProvider 使用（已移除 appStore）
+        // P0-1: 构建 Services 对象供 ServicesProvider 使用
         this.services = {
+            zustandStore: container.resolve<AppStoreInstance>(STORE_TOKEN),
             dataStore: container.resolve(DataStore),
             inputService: container.resolve(InputService),
             useCases: container.resolve(USECASES_TOKEN),

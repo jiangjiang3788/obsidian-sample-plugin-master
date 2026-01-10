@@ -3,6 +3,10 @@ import { render, h } from 'preact';
 import { unmountComponentAtNode } from 'preact/compat';
 import type ThinkPlugin from '@main';
 import { TimerView } from './TimerView';
+import { ServicesProvider, type Services } from '@/app/AppStoreContext';
+import { container } from 'tsyringe';
+import { STORE_TOKEN, type AppStoreInstance } from '@/app/store/useAppStore';
+import { USECASES_TOKEN, type UseCases } from '@/app/usecases';
 
 /**
  * TimerWidget 负责管理状态栏中计时器UI元素的整个生命周期。
@@ -43,18 +47,30 @@ export class TimerWidget {
      * 渲染/重渲染 Preact 组件。
      */
     private render() {
-        if (!this.statusBarEl || !this.plugin.actionService || !this.plugin.timerService || !this.plugin.dataStore) {
+        if (!this.statusBarEl || !this.plugin.actionService || !this.plugin.timerService || !this.plugin.dataStore || !this.plugin.inputService) {
             return;
         }
 
+        // 构建 services 对象，包含 zustandStore
+        const services: Services = {
+            zustandStore: container.resolve<AppStoreInstance>(STORE_TOKEN),
+            dataStore: this.plugin.dataStore,
+            inputService: this.plugin.inputService,
+            useCases: container.resolve<UseCases>(USECASES_TOKEN),
+        };
+
         // 使用 Preact 将 TimerView 组件渲染到状态栏的DOM元素中
-        // 我们需要将 actionService 实例传递给组件，以便处理“编辑”按钮的点击事件
-        const component = h(TimerView, { 
+        // 我们需要将 actionService 实例传递给组件，以便处理"编辑"按钮的点击事件
+        const timerViewElement = h(TimerView, { 
             app: this.plugin.app,
             actionService: this.plugin.actionService,
             timerService: this.plugin.timerService,
             dataStore: this.plugin.dataStore
         });
+        const component = h(
+            ServicesProvider,
+            { services, children: timerViewElement }
+        );
         render(component, this.statusBarEl);
     }
 }

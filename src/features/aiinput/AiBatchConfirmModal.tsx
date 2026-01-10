@@ -16,6 +16,7 @@ import { useDataStore, useInputService, ServicesProvider, Services } from '@/app
 import { DataStore } from '@/core/services/DataStore';
 import { InputService } from '@/core/services/InputService';
 import { USECASES_TOKEN } from '@/app/usecases';
+import { STORE_TOKEN, type AppStoreInstance } from '@/app/store/useAppStore';
 import type { InputSettings, BlockTemplate, ThemeDefinition, TemplateField } from '@/core/types/schema';
 import type { NaturalRecordCommand } from '@/core/types/ai-schema';
 import { Button, RadioGroup as MuiRadioGroup, FormControlLabel, Radio, FormControl, Typography, Stack, Divider, Box, IconButton, Tooltip, Chip, List, ListItem, ListItemButton, ListItemText, ListItemIcon } from '@mui/material';
@@ -59,6 +60,7 @@ export class AiBatchConfirmModal extends Modal {
         const inputService = container.resolve(InputService);
         
         this.services = {
+            zustandStore: container.resolve<AppStoreInstance>(STORE_TOKEN),
             dataStore,
             inputService,
             useCases: container.resolve(USECASES_TOKEN),
