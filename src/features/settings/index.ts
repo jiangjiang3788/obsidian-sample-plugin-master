@@ -9,11 +9,9 @@
 /* ========================================================================== */
 
 export { ThemeManager } from './ThemeManager';
-export { ThemeStore } from './ThemeStore';
 export { ThemeMatrix } from './ThemeMatrix';
 
 export * from './theme-types';
-export * from './props.types';
 
 /* ========================================================================== */
 /* 2. Settings 模块（设置面板 + 视图编辑器）                                   */

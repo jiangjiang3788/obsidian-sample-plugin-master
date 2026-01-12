@@ -319,104 +319,48 @@ export class LayoutUseCase {
         }
     }
 
-    // ============== View CRUD (Facade) ==============
-    // 【S5 术语统一】features 层通过 layout.usecase 调用，内部转调 viewInstance actions
-
+    // ============== View CRUD (Facade) - DEPRECATED ==============
+    // 【已禁用】viewInstance slice 已被移除
+    // 这些方法调用的底层 vi* actions 已不存在，需要调用者迁移到其他方案
+    
     /**
-     * 添加视图
-     * @param title 视图标题
-     * @param parentId 父级ID（可选，用于兼容）
+     * @deprecated viewInstance slice 已被移除，此方法不再可用
      */
     async addView(title: string, parentId: string | null = null): Promise<void> {
-        try {
-            const state = this.store.getState();
-            
-            if (!state.isInitialized) {
-                console.error('[LayoutUseCase] Store 未初始化');
-                return;
-            }
-            
-            await state.viAddViewInstance(title, parentId);
-        } catch (error) {
-            console.error('[LayoutUseCase] addView 失败:', error);
-            throw error;
-        }
+        console.error('[LayoutUseCase] addView 已弃用：viewInstance slice 已被移除');
+        throw new Error('viewInstance slice 已被移除，请使用其他方式管理视图');
     }
 
     /**
-     * 更新视图
-     * @param id 视图ID
-     * @param updates 更新内容
+     * @deprecated viewInstance slice 已被移除，此方法不再可用
      */
     async updateView(id: string, updates: Partial<ViewInstance>): Promise<void> {
-        try {
-            const state = this.store.getState();
-            
-            if (!state.isInitialized) {
-                console.error('[LayoutUseCase] Store 未初始化');
-                return;
-            }
-            
-            await state.viUpdateViewInstance(id, updates);
-        } catch (error) {
-            console.error('[LayoutUseCase] updateView 失败:', error);
-            throw error;
-        }
+        console.error('[LayoutUseCase] updateView 已弃用：viewInstance slice 已被移除');
+        throw new Error('viewInstance slice 已被移除，请使用其他方式管理视图');
     }
 
     /**
-     * 删除视图
-     * @param id 视图ID
+     * @deprecated viewInstance slice 已被移除，此方法不再可用
      */
     async deleteView(id: string): Promise<void> {
-        try {
-            const state = this.store.getState();
-            
-            if (!state.isInitialized) {
-                console.error('[LayoutUseCase] Store 未初始化');
-                return;
-            }
-            
-            await state.viDeleteViewInstance(id);
-        } catch (error) {
-            console.error('[LayoutUseCase] deleteView 失败:', error);
-            throw error;
-        }
+        console.error('[LayoutUseCase] deleteView 已弃用：viewInstance slice 已被移除');
+        throw new Error('viewInstance slice 已被移除，请使用其他方式管理视图');
     }
 
     /**
-     * 移动视图（上下移动）
-     * @param id 视图ID
-     * @param direction 方向
+     * @deprecated viewInstance slice 已被移除，此方法不再可用
      */
     async moveView(id: string, direction: 'up' | 'down'): Promise<void> {
-        try {
-            const state = this.store.getState();
-            
-            if (!state.isInitialized) return;
-            
-            await state.viMoveViewInstance(id, direction);
-        } catch (error) {
-            console.error('[LayoutUseCase] moveView 失败:', error);
-            throw error;
-        }
+        console.error('[LayoutUseCase] moveView 已弃用：viewInstance slice 已被移除');
+        throw new Error('viewInstance slice 已被移除，请使用其他方式管理视图');
     }
 
     /**
-     * 复制视图
-     * @param id 视图ID
+     * @deprecated viewInstance slice 已被移除，此方法不再可用
      */
     async duplicateView(id: string): Promise<void> {
-        try {
-            const state = this.store.getState();
-            
-            if (!state.isInitialized) return;
-            
-            await state.viDuplicateViewInstance(id);
-        } catch (error) {
-            console.error('[LayoutUseCase] duplicateView 失败:', error);
-            throw error;
-        }
+        console.error('[LayoutUseCase] duplicateView 已弃用：viewInstance slice 已被移除');
+        throw new Error('viewInstance slice 已被移除，请使用其他方式管理视图');
     }
 }
 

@@ -226,7 +226,7 @@ export class ChatSessionStore {
     }
 
     /** 获取最近 N 个会话 */
-    getRecentSessions(limit: number = 10): ChatSession[] {
+    getRecentSessions(limit: number = 100): ChatSession[] {
         return this.listSessions().slice(0, limit);
     }
 

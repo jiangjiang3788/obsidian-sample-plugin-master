@@ -74,7 +74,7 @@ const SYSTEM_PROMPT = `你是一个个人工作记录助手，帮助用户查询
 - 保持专业、友好的语气
 - 不要编造不存在的信息`;
 
-const MAX_CONTEXT_LENGTH = 3000; // 上下文最大字符数
+const MAX_CONTEXT_LENGTH = 200000; // 上下文最大字符数（约100k tokens）
 
 // ============== AiChatService ==============
 
@@ -186,7 +186,7 @@ export class AiChatService {
 
             const searchResult = retrievalService.search(request.userMessage, {
                 ...filters,
-                limit: request.retrievalLimit ?? 10,
+                limit: request.retrievalLimit ?? 10000, // 默认不限制（使用较大值）
             });
 
             if (searchResult.items.length > 0) {
