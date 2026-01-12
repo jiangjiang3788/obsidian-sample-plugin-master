@@ -15,12 +15,12 @@
 import { createContext } from 'preact';
 import { useContext } from 'preact/hooks';
 import { useStore } from 'zustand';
-import { container } from 'tsyringe';
 import type { ComponentChildren } from 'preact';
 import type { DataStore } from '@/core/services/DataStore';
 import type { InputService } from '@/core/services/InputService';
 import type { UseCases } from './usecases';
 import type { AppStoreInstance, ZustandAppStore } from './store/useAppStore';
+import { validateServices } from './createServices';
 
 // ============== Zustand Store Context ==============
 
@@ -129,34 +129,19 @@ export const UseCasesContext = createContext<UseCases | null>(null);
  * 从 Context 获取 UseCases 实例
  * 
  * @returns UseCases 实例
+ * @throws 如果在 ServicesProvider 外部使用则抛出异常
  */
 export function useUseCases(): UseCases {
     const useCases = useContext(UseCasesContext);
     
-    if (useCases) {
-        return useCases;
+    if (!useCases) {
+        throw new Error(
+            'UseCasesProvider is missing. Wrap your component tree with <ServicesProvider>.\n' +
+            'Ensure the render entry properly wraps components with ServicesProvider.'
+        );
     }
     
-    // 兼容回退：尝试从 DI 容器获取
-    // 仅用于紧急兼容，正常情况下组件应该被 ServicesProvider 包裹
-    try {
-        const fallbackUseCases = container.resolve<UseCases>('UseCases');
-        if (fallbackUseCases) {
-            console.warn(
-                '[useUseCases] ⚠️ 正在使用 DI 容器回退获取 UseCases。\n' +
-                '这表明组件未被 ServicesProvider 包裹。\n' +
-                '请检查组件渲染入口并添加 ServicesProvider。'
-            );
-            return fallbackUseCases;
-        }
-    } catch (e) {
-        // DI 容器也没有注册，抛出原始错误
-    }
-    
-    throw new Error(
-        'useUseCases 必须在 ServicesProvider 内部使用。' +
-        '请确保组件树被 ServicesProvider 包裹。'
-    );
+    return useCases;
 }
 
 // ============== 统一 Services Provider ==============
@@ -180,42 +165,15 @@ interface ServicesProviderProps {
 }
 
 /**
- * 校验 Services 对象完整性
- * @throws 如果任何必需服务缺失则抛出明确的错误信息
- */
-function validateServices(services: Services, source?: string): void {
-    const missing: string[] = [];
-    if (!services) {
-        throw new Error(
-            `[ServicesProvider] services 对象为空。\n` +
-            `来源: ${source || '未知'}\n` +
-            `请检查渲染入口是否正确传递了 services 参数。`
-        );
-    }
-    if (!services.zustandStore) missing.push('zustandStore');
-    if (!services.dataStore) missing.push('dataStore');
-    if (!services.inputService) missing.push('inputService');
-    if (!services.useCases) missing.push('useCases');
-    
-    if (missing.length > 0) {
-        throw new Error(
-            `[ServicesProvider] Services 校验失败: 缺少 ${missing.join(', ')}。\n` +
-            `来源: ${source || '未知'}\n` +
-            `请检查渲染入口是否正确包裹 ServicesProvider，以及 services 参数是否完整。\n` +
-            `确保 ServiceManager 已正确初始化所有服务。`
-        );
-    }
-}
-
-/**
  * ServicesProvider
  * 统一提供所有 UI 层需要的服务
  * 嵌套提供 DataStore、InputService、UseCases 的 Context
  * 
  * ⚠️ 运行时校验：如果 services 参数不完整，会立即抛出明确错误
+ * ⚠️ 校验规则来源：createServices.validateServices（唯一真源）
  */
 export function ServicesProvider({ services, children }: ServicesProviderProps) {
-    // 运行时校验：确保所有必需服务都已正确传递
+    // 运行时校验：调用 createServices 中的唯一真源校验函数
     validateServices(services, 'ServicesProvider');
     
     // 构建嵌套的 Provider 树

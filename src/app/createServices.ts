@@ -57,11 +57,20 @@ export function createServices(container: DependencyContainer): Services {
 }
 
 /**
- * 校验 Services 对象完整性
+ * 校验 Services 对象完整性（唯一真源）
+ * @param services Services 对象
+ * @param source 调用来源（可选，用于错误消息）
  * @throws 如果任何必需字段缺失则抛出错误
  */
-function validateServices(services: Services): void {
+export function validateServices(services: Services, source?: string): void {
     const missing: string[] = [];
+    
+    if (!services) {
+        throw new Error(
+            `[${source || 'validateServices'}] services 对象为空。\n` +
+            `请检查渲染入口是否正确传递了 services 参数。`
+        );
+    }
     
     if (!services.zustandStore) missing.push('zustandStore (STORE_TOKEN)');
     if (!services.dataStore) missing.push('dataStore (DataStore)');
@@ -70,7 +79,7 @@ function validateServices(services: Services): void {
     
     if (missing.length > 0) {
         throw new Error(
-            `[createServices] Services 校验失败: 缺少 ${missing.join(', ')}。\n` +
+            `[${source || 'validateServices'}] Services 校验失败: 缺少 ${missing.join(', ')}。\n` +
             `请检查 DI 容器是否正确注册了所有服务。`
         );
     }
