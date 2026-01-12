@@ -26,8 +26,6 @@ import { SettingsUseCase, createSettingsUseCase } from './settings.usecase';
 import { BlocksUseCase, createBlocksUseCase } from './blocks.usecase';
 import { ThemeUseCase, createThemeUseCase } from './theme.usecase';
 import { LayoutUseCase, createLayoutUseCase } from './layout.usecase';
-import { GroupUseCase, createGroupUseCase } from './group.usecase';
-import { ViewInstanceUseCase, createViewInstanceUseCase } from './viewInstance.usecase';
 import { TimerUseCase, createTimerUseCase } from './timer.usecase';
 
 /**
@@ -43,8 +41,6 @@ export interface UseCases {
     blocks: BlocksUseCase;
     theme: ThemeUseCase;
     layout: LayoutUseCase;
-    group: GroupUseCase;
-    viewInstance: ViewInstanceUseCase;
     timer: TimerUseCase;
 }
 
@@ -71,8 +67,6 @@ export function createUseCases(store: AppStoreApi): UseCases {
         blocks: createBlocksUseCase(store),
         theme: createThemeUseCase(store),
         layout: createLayoutUseCase(store),
-        group: createGroupUseCase(),
-        viewInstance: createViewInstanceUseCase(),
         timer: createTimerUseCase(store),
     };
 }
@@ -82,8 +76,6 @@ export { SettingsUseCase } from './settings.usecase';
 export { BlocksUseCase } from './blocks.usecase';
 export { ThemeUseCase } from './theme.usecase';
 export { LayoutUseCase } from './layout.usecase';
-export { GroupUseCase } from './group.usecase';
-export { ViewInstanceUseCase } from './viewInstance.usecase';
 export { TimerUseCase } from './timer.usecase';
 
 // 重新导出 useUseCases hook（从 AppStoreContext）

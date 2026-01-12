@@ -30,8 +30,6 @@ import { createThemeSlice, type ThemeSlice } from './slices/theme.slice';
 import { createLayoutSlice, type LayoutSlice } from './slices/layout.slice';
 import { createSettingsSlice, type SettingsSlice } from './slices/settings.slice';
 import { createBlocksSlice, type BlocksSlice } from './slices/blocks.slice';
-import { createGroupSlice, type GroupSlice } from './slices/group.slice';
-import { createViewInstanceSlice, type ViewInstanceSlice } from './slices/viewInstance.slice';
 import { createTimerSlice, type TimerSlice } from './slices/timer.slice';
 import { createUiSlice, type UiSlice } from './slices/ui.slice';
 
@@ -60,7 +58,7 @@ export interface ZustandAppCoreActions {
 }
 
 // 组合所有 slices 的类型
-export type ZustandAppStore = ZustandAppCoreState & ZustandAppCoreActions & ThemeSlice & LayoutSlice & SettingsSlice & BlocksSlice & GroupSlice & ViewInstanceSlice & TimerSlice & UiSlice;
+export type ZustandAppStore = ZustandAppCoreState & ZustandAppCoreActions & ThemeSlice & LayoutSlice & SettingsSlice & BlocksSlice & TimerSlice & UiSlice;
 
 // ============== Store 工厂 ==============
 
@@ -143,12 +141,6 @@ export function createAppStore(settingsRepository: SettingsRepository) {
 
             // ============== Blocks Slice ==============
             ...createBlocksSlice(settingsRepository)(set, get, store),
-
-            // ============== Group Slice ==============
-            ...createGroupSlice(settingsRepository)(set, get, store),
-
-            // ============== ViewInstance Slice ==============
-            ...createViewInstanceSlice(settingsRepository)(set, get, store),
 
             // ============== Timer Slice ==============
             ...createTimerSlice(set, get, store),

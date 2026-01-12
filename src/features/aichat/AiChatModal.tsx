@@ -270,7 +270,7 @@ function AiChatModalContent({ app, closeModal, services }: AiChatModalContentPro
                 history,
                 enableRetrieval,
                 retrievalFilters: filters,
-                retrievalLimit: 10,
+                retrievalLimit: 5000,
             });
 
             // 添加 AI 回复
