@@ -174,32 +174,38 @@ export class ServiceManager {
                 zustandStore.getState().initialize(zustandInitialSettings);
                 console.log('[ThinkPlugin] Zustand Store 初始化完成');
                 
-                // 订阅 SettingsRepository 的变更，同步到 Zustand Store
+                // 订阅 SettingsRepository 的变更，仅同步到 Zustand Store
                 settingsRepository.subscribe((settings) => {
-                    // 同步到 Zustand Store
                     zustandStore.setState({ settings });
-                    
-                    // 动态管理 TimerWidget 的生命周期
-                    // 如果启用且未加载，则加载
-                    if (settings.floatingTimerEnabled && !this.services.timerWidget) {
-                        this.services.timerWidget = new FloatingTimerWidget(this.plugin);
-                        this.services.timerWidget.load();
-                        // 启用时默认显示
-                        zustandStore.setState(s => ({ ui: { ...s.ui, isTimerWidgetVisible: true } }));
-                        console.log("[计时器浮窗] settings 启用 -> 创建并显示浮窗");
-                    }
-
-                    // 同步派生状态：如果 floatingTimerEnabled 变为 false，关闭 widget
-                    if (!settings.floatingTimerEnabled) {
-                        zustandStore.setState(s => ({ ui: { ...s.ui, isTimerWidgetVisible: false } }));
-                        if (this.services.timerWidget) {
-                            this.services.timerWidget.unload();
-                            this.services.timerWidget = undefined;
-                        }
-                        console.log("[计时器浮窗] settings 禁用 -> 卸载浮窗");
-                    }
                 });
-                console.log('[ThinkPlugin] SettingsRepository 订阅已建立');
+                console.log('[ThinkPlugin] SettingsRepository 订阅已建立（纯同步 settings）');
+                
+                // TimerWidget 生命周期管理：通过监听 store 中 settings.floatingTimerEnabled 变化
+                zustandStore.subscribe(
+                    (state) => state.settings.floatingTimerEnabled,
+                    (floatingTimerEnabled, prevFloatingTimerEnabled) => {
+                        // 从禁用到启用：创建并加载 TimerWidget
+                        if (floatingTimerEnabled && !prevFloatingTimerEnabled) {
+                            if (!this.services.timerWidget) {
+                                this.services.timerWidget = new FloatingTimerWidget(this.plugin);
+                                this.services.timerWidget.load();
+                                zustandStore.setState(s => ({ ui: { ...s.ui, isTimerWidgetVisible: true } }));
+                                console.log("[计时器浮窗] 已启用 -> 创建并显示浮窗");
+                            }
+                        }
+                        
+                        // 从启用到禁用：卸载 TimerWidget
+                        if (!floatingTimerEnabled && prevFloatingTimerEnabled) {
+                            zustandStore.setState(s => ({ ui: { ...s.ui, isTimerWidgetVisible: false } }));
+                            if (this.services.timerWidget) {
+                                this.services.timerWidget.unload();
+                                this.services.timerWidget = undefined;
+                                console.log("[计时器浮窗] 已禁用 -> 卸载浮窗");
+                            }
+                        }
+                    }
+                );
+                console.log('[ThinkPlugin] TimerWidget 生命周期监听已建立');
                 
                 // 3. 创建 UseCases 并注册到 DI 容器（传入 store）
                 this.services.useCases = createUseCases(zustandStore);
