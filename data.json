@@ -438,14 +438,15 @@
       "id": "layout_memcg9jjoq6j4",
       "name": "全局布局",
       "viewInstanceIds": [
-        "view_mewr7y1gvq0ro",
-        "view_mi5ep8xvvi5mx",
-        "view_mer6ll4mtbjry",
+        "view_meqt389ufhx91",
         "view_mer6n7pwf7suy",
-        "view_mg1zanri06mhu",
+        "view_mewr7y1gvq0ro",
         "view_membnf1hgjgm3",
         "view_membbqjam5v63",
-        "view_mh4itucqmm9rt"
+        "view_mer6ll4mtbjry",
+        "view_mg1zanri06mhu",
+        "view_mh4itucqmm9rt",
+        "view_mi5ep8xvvi5mx"
       ],
       "displayMode": "list",
       "initialView": "周",
