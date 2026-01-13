@@ -1,6 +1,6 @@
 // src/features/dashboard/ui/StatisticsView.tsx
 /** @jsxImportSource preact */
-import { h, Fragment } from 'preact';
+import { Fragment } from 'preact';
 import { useState, useMemo, useEffect, useRef } from 'preact/hooks';
 import { Item, readField, ViewInstance } from '@/core/types/schema';
 import { dayjs, getWeeksInYear } from '@core/utils/date';
@@ -13,6 +13,8 @@ import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 import IosShareIcon from '@mui/icons-material/IosShare';
 import { exportItemsToMarkdown, getExportConfigByViewType } from '@core/utils/exportUtils';
 import { QuickInputModal } from '@/features/quickinput/QuickInputModal';
+import FloatingWidget from '@/shared/ui/widgets/FloatingWidget';
+import FloatingPanel from '@/shared/ui/primitives/FloatingPanel';
 import { dayjs as dayjsUtil } from '@core/utils/date';
 import type { CategoryConfig, PeriodData } from '@core/utils/statisticsAggregation';
 import { 
@@ -75,16 +77,6 @@ const Popover = ({ target, blocks, title, onClose, app, module, actionService, d
         setPosition({ x: centerX, y: centerY });
     }, []);
 
-    // 点击外部关闭
-    useEffect(() => {
-        const handleClickOutside = (event: MouseEvent) => {
-            if (popoverRef.current && !popoverRef.current.contains(event.target as Node)) {
-                onClose();
-            }
-        };
-        setTimeout(() => document.addEventListener('mousedown', handleClickOutside), 50);
-        return () => document.removeEventListener('mousedown', handleClickOutside);
-    }, [onClose]);
 
     // 拖动功能
     const handleMouseDown = (e: MouseEvent) => {
@@ -148,7 +140,7 @@ const Popover = ({ target, blocks, title, onClose, app, module, actionService, d
                 <span>{title}</span>
                 <div class="flex items-center gap-1">
                     {/* 导出按钮 */}
-                    <Tooltip title="导出为 Markdown">
+                    <Tooltip title="导出为 Markdown" PopperProps={{ disablePortal: true }}>
                         <AnyIconButton
                             size="small"
                             onClick={(e: any) => {
@@ -161,7 +153,7 @@ const Popover = ({ target, blocks, title, onClose, app, module, actionService, d
                         </AnyIconButton>
                     </Tooltip>
                     {/* 快捷创建按钮 */}
-                    <Tooltip title="快捷创建">
+                    <Tooltip title="快捷创建" PopperProps={{ disablePortal: true }}>
                         <AnyIconButton
                             size="small"
                             onClick={(e: any) => {
@@ -209,6 +201,8 @@ export function StatisticsView({ items, app, dateRange, module, currentView, use
     const categoryOrder = useMemo(() => categoryConfigs.map((c: CategoryConfig) => c.name), [categoryConfigs]);
     const [selectedCell, setSelectedCell] = useState<any>(null);
     const [popover, setPopover] = useState<PopoverState | null>(null);
+    const popoverWidgetRef = useRef<FloatingWidget | null>(null);
+    const openLockRef = useRef(false);
     // 周期字段使用状态
     const [usePeriod, setUsePeriod] = useState(usePeriodField);
     
@@ -230,13 +224,43 @@ export function StatisticsView({ items, app, dateRange, module, currentView, use
 
     const handleCellClick = (cellIdentifier: any, target: HTMLElement, blocks: Item[], title: string) => {
         console.log('点击单元格:', { cellIdentifier, title, blocksCount: blocks.length, blocks });
-        if (JSON.stringify(cellIdentifier) === JSON.stringify(selectedCell)) {
+        // 防止同一次点击被触发多次（导致立即打开后又关闭）
+        if (openLockRef.current) return;
+        // 切换：如果相同则关闭当前浮窗，否则打开新的浮窗（使用 FloatingWidget）
+        const currentKey = JSON.stringify(cellIdentifier);
+        if (popover && JSON.stringify(selectedCell) === currentKey) {
+            // 关闭当前 widget
+            if (popoverWidgetRef.current) {
+                popoverWidgetRef.current.unload();
+                popoverWidgetRef.current = null;
+            }
             setPopover(null);
             setSelectedCell(null);
-        } else {
-            setSelectedCell(cellIdentifier);
-            setPopover({ target, blocks, title });
+            return;
         }
+
+        // 打开新的浮窗 widget
+        if (popoverWidgetRef.current) {
+            popoverWidgetRef.current.unload();
+            popoverWidgetRef.current = null;
+        }
+
+        setSelectedCell(cellIdentifier);
+        setPopover({ target, blocks, title });
+
+        const widgetId = `stats-popover-${module.id}-${Date.now()}`;
+        const widget = new FloatingWidget(widgetId, () => (
+            // 默认居中于屏幕；若需在鼠标处打开可传入 coords
+            h(FloatingPanel, { id: widgetId, defaultPosition: { x: window.innerWidth / 2 - 250, y: window.innerHeight / 2 - 150 }, minWidth: 360, onClose: () => widget.unload() },
+                h(Popover, { target, blocks, title, onClose: () => { widget.unload(); popoverWidgetRef.current = null; setPopover(null); setSelectedCell(null); }, app, module, actionService, dateRange, currentView, timerService, timers, allThemes })
+            )
+        ));
+
+        popoverWidgetRef.current = widget;
+        widget.load();
+        // 设置短期锁，避免连续触发
+        openLockRef.current = true;
+        setTimeout(() => { openLockRef.current = false; }, 300);
     };
     
     if (!categories || categories.length === 0) {
@@ -285,7 +309,7 @@ export function StatisticsView({ items, app, dateRange, module, currentView, use
                         />
                     </div>
                 </div>
-                {popover && <Popover {...popover} onClose={() => { setPopover(null); setSelectedCell(null); }} app={app} module={module} actionService={actionService} dateRange={dateRange} currentView={currentView} timerService={timerService} timers={timers} allThemes={allThemes} />}
+                {/* 使用 FloatingWidget 渲染 Popover（已在 handleCellClick 中托管） */}
             </div>
         );
     }
@@ -311,7 +335,7 @@ export function StatisticsView({ items, app, dateRange, module, currentView, use
                         />
                     </div>
                 </div>
-                {popover && <Popover {...popover} onClose={() => { setPopover(null); setSelectedCell(null); }} app={app} module={module} actionService={actionService} dateRange={dateRange} currentView={currentView} timerService={timerService} timers={timers} allThemes={allThemes} />}
+                {/* Popover is rendered via FloatingWidget in handleCellClick */}
             </div>
         );
     }
@@ -375,7 +399,7 @@ export function StatisticsView({ items, app, dateRange, module, currentView, use
                         })}
                     </div>
                 </div>
-                {popover && <Popover {...popover} onClose={() => { setPopover(null); setSelectedCell(null); }} app={app} module={module} actionService={actionService} dateRange={dateRange} currentView={currentView} timerService={timerService} timers={timers} allThemes={allThemes} />}
+                {/* Popover is rendered via FloatingWidget in handleCellClick */}
             </div>
         );
     }
@@ -466,7 +490,7 @@ export function StatisticsView({ items, app, dateRange, module, currentView, use
                         </div>
                     ))}
                 </div>
-            {popover && <Popover {...popover} onClose={() => { setPopover(null); setSelectedCell(null); }} app={app} module={module} actionService={actionService} dateRange={dateRange} currentView={currentView} timerService={timerService} timers={timers} allThemes={allThemes} />}
+            {/* Popover is rendered via FloatingWidget in handleCellClick */}
         </div>
     );
 }
@@ -551,7 +575,7 @@ export function StatisticsView({ items, app, dateRange, module, currentView, use
                     ))}
                 </div>
             </div>
-            {popover && <Popover {...popover} onClose={() => { setPopover(null); setSelectedCell(null); }} app={app} module={module} dateRange={dateRange} currentView={currentView} timerService={timerService} timers={timers} allThemes={allThemes} />}
+            {/* Popover is rendered via FloatingWidget in handleCellClick */}
         </div>
     );
 }

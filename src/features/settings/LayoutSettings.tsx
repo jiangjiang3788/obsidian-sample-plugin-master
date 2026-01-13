@@ -29,7 +29,7 @@ import { App } from 'obsidian';
 import { DndContext, closestCenter } from '@dnd-kit/core';
 import { useSortable, SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { arrayMove } from '@core/utils/array';
-import { ModuleSettingsModal } from '@/features/settings/ModuleSettingsModal';
+import { ModuleSettingsModal, openModuleSettingsWidget } from '@/features/settings/ModuleSettingsModal';
 import { NamePromptModal } from '@shared/ui/composites/dialogs/NamePromptModal';
 import { DEFAULT_NAMES } from '@/core/types/constants';
 
@@ -143,8 +143,8 @@ function LayoutEditor({ layout, useCases }: { layout: Layout, useCases: UseCases
         if (contextMenu) {
             const view = allViews.find(v => v.id === contextMenu.viewId);
             if (view) {
-                setSelectedViewForSettings(view);
-                setSettingsModalOpen(true);
+                // 使用 FloatingWidget 打开模块设置
+                openModuleSettingsWidget(view);
             }
         }
         handleContextMenuClose();
@@ -233,13 +233,7 @@ function LayoutEditor({ layout, useCases }: { layout: Layout, useCases: UseCases
                 <MenuItem onClick={handleViewRemove}>移除</MenuItem>
             </Menu>
 
-            {settingsModalOpen && selectedViewForSettings && (
-                <ModuleSettingsModal
-                    isOpen={settingsModalOpen}
-                    onClose={handleSettingsModalClose}
-                    module={selectedViewForSettings}
-                />
-            )}
+            {/* 模块设置已迁移为 FloatingWidget（openModuleSettingsWidget），不再在此处直接渲染 Modal */}
         </Stack>
     );
 }

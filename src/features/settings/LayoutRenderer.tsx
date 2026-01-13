@@ -349,14 +349,7 @@ export function LayoutRenderer({ layout, dataStore, app, actionService, itemServ
                 {isStateInitialized && layout.viewInstanceIds.map(renderViewInstance)}
             </div>
             
-            {/* [P1] 设置模态框 - 已迁移到 UseCase 层，无需 appStore 和 dataStore */}
-            {settingsModalOpen && currentViewInstance && (
-                <ModuleSettingsModal
-                    isOpen={settingsModalOpen}
-                    onClose={handleSettingsClose}
-                    module={currentViewInstance}
-                />
-            )}
+            {/* 模块设置已迁移为 FloatingWidget（openModuleSettingsWidget），不再在此处直接渲染 Modal */}
         </div>
     );
 }

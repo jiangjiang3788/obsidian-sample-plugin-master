@@ -5,7 +5,7 @@
  * - 所有 View 写操作统一通过 useCases.layout.*
  * - 禁止直接 import viewInstance.usecase
  */
-import { h } from 'preact';
+
 import { useMemo } from 'preact/hooks';
 import { FormControlLabel, Checkbox } from '@mui/material';
 import { VIEW_OPTIONS, ViewName, getAllFields } from '@/core/types/schema';
@@ -15,6 +15,9 @@ import { useZustandAppStore, useDataStore, useUseCases } from '@/app/AppStoreCon
 import { SimpleSelect } from '@shared/ui/composites/SimpleSelect';
 import { RuleBuilder } from '@features/settings/RuleBuilder';
 import { Modal } from '@shared/ui/primitives/Modal';
+import FloatingWidget from '@/shared/ui/widgets/FloatingWidget';
+import FloatingPanel from '@/shared/ui/primitives/FloatingPanel';
+
 import { FormField, FieldManager, useSaveHandler } from '@shared/index';
 
 // [S5 术语统一] 视图设置编辑器组件 - 通过 useCases.layout 调用
@@ -222,3 +225,28 @@ export function ModuleSettingsModal({ isOpen, onClose, module }: Props) {
         </Modal>
     );
 }
+
+/**
+ * 在浮窗 widget 中打开模块设置（供外部调用，自动负责卸载）
+ */
+export function openModuleSettingsWidget(module: ViewInstance) {
+  const widgetId = `module-settings-${module.id}`;
+
+  const existing = document.getElementById(`think-floating-widget-${widgetId}`);
+  if (existing) existing.remove();
+
+  const widget = new FloatingWidget(widgetId, () => (
+    <FloatingPanel
+      id={widgetId}
+      defaultPosition={{ x: window.innerWidth / 2 - 300, y: window.innerHeight / 2 - 200 }}
+      minWidth={420}
+      onClose={() => widget.unload()}
+    >
+      <ModuleSettingsModal isOpen={true} onClose={() => widget.unload()} module={module} />
+    </FloatingPanel>
+  ));
+
+  widget.load();
+  return widget;
+}
+
