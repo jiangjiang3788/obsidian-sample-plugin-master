@@ -35,9 +35,9 @@ function ViewInstanceEditor({ vi }: { vi: ViewInstance }) {
         return currentVi.viewConfig || {};
     }, [currentVi.viewConfig]);
 
-    // [S5 术语统一] 通过 useCases.layout.updateView 更新
+    // 迁移: 通过 useCases.viewInstance.updateView 更新
     const handleUpdate = (updates: Partial<ViewInstance>) => {
-        useCases.layout.updateView(currentVi.id, updates);
+        useCases.viewInstance.updateView(currentVi.id, updates);
     };
 
     // 准备选项数据

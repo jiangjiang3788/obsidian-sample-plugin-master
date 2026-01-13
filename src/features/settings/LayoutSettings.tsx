@@ -110,7 +110,7 @@ function LayoutEditor({ layout, useCases }: { layout: Layout, useCases: UseCases
         } catch (error) {
             console.error('创建新视图失败:', error);
         }
-    }, [useCases]);
+    }, [useCases, addView]);
 
     const handleAutocompleteChange = useCallback(async (event: any, newValue: any) => {
         if (!newValue) return;
@@ -154,8 +154,8 @@ function LayoutEditor({ layout, useCases }: { layout: Layout, useCases: UseCases
         if (contextMenu) {
             const newName = prompt('请输入新的视图名称', contextMenu.viewTitle);
             if (newName && newName.trim()) {
-                // S5 术语统一: 通过 useCases.layout.updateView 更新
-                useCases.layout.updateView(contextMenu.viewId, { title: newName.trim() });
+                // 迁移: 使用 useCases.viewInstance.updateView 更新视图元数据
+                useCases.viewInstance.updateView(contextMenu.viewId, { title: newName.trim() });
             }
         }
         handleContextMenuClose();

@@ -245,6 +245,10 @@
           "op": "=",
           "value": "block"
         }
+      ],
+      "groupFields": [
+        "theme",
+        "categoryKey"
       ]
     },
     {
@@ -396,7 +400,8 @@
           "op": "=",
           "value": "打卡"
         }
-      ]
+      ],
+      "groupFields": []
     },
     {
       "id": "view_mi5ep8xvvi5mx",
@@ -430,7 +435,8 @@
           "op": "=",
           "value": "none"
         }
-      ]
+      ],
+      "groupFields": []
     }
   ],
   "layouts": [
