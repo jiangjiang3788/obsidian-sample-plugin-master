@@ -7,13 +7,13 @@ import { TaskCheckbox } from '@shared/ui/composites/TaskCheckbox';
 import { TaskSendToTimerButton } from '@shared/ui/composites/TaskSendToTimerButton';
 import { isDone } from '@core/utils/taskUtils';
 import { FieldPill } from './FieldPill';
-import type { TimerService } from '@features/timer/TimerService';
+import type { TimerController } from '@/app/public';
 
 interface TaskRowProps {
     item: Item;
     onMarkDone: (id: string) => void;
     app: App;
-    timerService: TimerService;
+    timerService: TimerController;
     timer?: any;
     allThemes: ThemeDefinition[];
     showFields?: string[];

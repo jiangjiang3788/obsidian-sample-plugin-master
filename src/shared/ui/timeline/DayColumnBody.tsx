@@ -3,9 +3,9 @@
 import { h } from 'preact';
 import { useState } from 'preact/hooks';
 import { App, Notice } from 'obsidian';
-import { TaskBlock } from '@features/views/timeline-parser';
+import type { TaskBlock } from '@core/types/timeline';
 import { ItemService } from '@core/services/ItemService';
-import { EditTaskModal } from '@features/settings/EditTaskModal';
+import { EditTaskModal } from '@shared/ui/modals/EditTaskModal';
 import { makeObsUri } from '@core/utils/obsidian';
 import { mapTaskToCategory } from '@core/utils/timelineAggregation';
 import { dayjs } from '@core/utils/date';

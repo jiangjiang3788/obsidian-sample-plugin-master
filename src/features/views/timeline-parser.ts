@@ -1,26 +1,15 @@
 // src/features/dashboard/views/timeline/timeline-parser.ts
-import { Item } from '@/core/types/schema';
+//
+// 注意：timeline 的“类型形状”不再由 features 定义。
+// 这里仅保留解析/拆分的实现；类型来自 core（唯一真源）。
+
+import type { Item } from '@/core/types/schema';
 import { dayjs, timeToMinutes } from '@core/utils/date';
 
-/**
- * 增强后的任务项，包含用于时间轴视图的额外信息
- */
-export interface TimelineTask extends Item {
-    startMinute: number;
-    endMinute: number;
-    duration: number;
-    pureText: string;
-    actualStartDate: string; // 任务真实的开始日期
-}
+export type { TimelineTask, TaskBlock } from '@core/types/timeline';
+import type { TimelineTask, TaskBlock } from '@core/types/timeline';
 
-/**
- * 表示在时间轴上渲染的单个任务块，可能是一个跨天任务的一部分
- */
-export interface TaskBlock extends TimelineTask {
-    day: string; // YYYY-MM-DD
-    blockStartMinute: number;
-    blockEndMinute: number;
-}
+// TimelineTask / TaskBlock 已在 core/types/timeline.ts 定义并在此文件 re-export。
 
 const DATE_FORMAT = 'YYYY-MM-DD';
 

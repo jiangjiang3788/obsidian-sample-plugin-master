@@ -162,45 +162,7 @@ module.exports = {
       },
     },
 
-    // SHARED 历史例外（冻结，不扩散）：这些文件暂时还在依赖 features
-    // TODO(阶段3+): 逐步迁移这些依赖（把类型/组件下沉或上移到合适的层），然后删除例外
-    {
-      files: [
-        'src/shared/ui/items/TaskRow.tsx',
-        'src/shared/ui/timeline/DayColumnBody.tsx',
-        'src/shared/ui/timeline/DayColumnHeader.tsx',
-      ],
-      rules: {
-        'no-restricted-imports': [
-          'error',
-          {
-            patterns: [
-              // 仍然禁止 app 内部实现下沉（shared 应只依赖 app/public）
-              {
-                group: ['@/app/store/**', '../app/store/**', '../../app/store/**'],
-                message:
-                  "shared(legacy) 层禁止依赖 app/store/** ❌ 如需能力请通过 '@/app/public'",
-              },
-              {
-                group: ['@/app/usecases/**', '../app/usecases/**', '../../app/usecases/**'],
-                message:
-                  "shared(legacy) 层禁止依赖 app/usecases/** ❌ 如需能力请通过 '@/app/public'",
-              },
-              {
-                group: ['@/app/AppStoreContext', '../app/AppStoreContext', '../../app/AppStoreContext'],
-                message:
-                  "shared(legacy) 层禁止直接依赖 AppStoreContext ❌ 请从 '@/app/public' 引入",
-              },
-              {
-                group: ['@/app/createServices', '../app/createServices', '../../app/createServices'],
-                message:
-                  "shared(legacy) 层禁止直接依赖 createServices ❌ 请从 '@/app/public' 引入",
-              },
-              // 注意：这里刻意不禁止 features import（作为临时 allowlist）
-            ],
-          },
-        ],
-      },
-    },
+    // ✅ shared allowlist 已清空：
+    // DayColumnBody 的 features 依赖 tunnel 已迁移（见 shared/ui/modals/EditTaskModal + core/types/timeline）
   ],
 };

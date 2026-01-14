@@ -5,7 +5,7 @@ import { useMemo } from 'preact/hooks';
 import { dayjs } from '@core/utils/date';
 import { buildDailyCategoryHours } from '@core/utils/timelineAggregation';
 import { ProgressBlock } from './ProgressBlock';
-import { TaskBlock } from '@features/views/timeline-parser';
+import type { TaskBlock } from '@core/types/timeline';
 
 interface DayColumnHeaderProps {
     day: string;

@@ -41,3 +41,21 @@ export type { AppStoreInstance, ZustandAppStore } from './store/useAppStore';
 
 // ============== Store public types ==============
 export type { TimerState } from './store/types';
+
+// ============== UI Contracts (types only) ==============
+
+/**
+ * TimerController
+ *
+ * shared/UI 层可依赖的最小 Timer 能力合同。
+ *
+ * 目的：
+ * - shared 层不再 import features/timer（避免 shared 变成绕过边界的通道）
+ * - UI 只关心「要做什么」，不关心 Timer 的实现落在哪个 feature
+ *
+ * 注意：
+ * - 这是一个纯 TypeScript 合同（interface），运行期不会产生依赖/循环引用。
+ */
+export interface TimerController {
+  startOrResume(taskId: string): Promise<void>;
+}
