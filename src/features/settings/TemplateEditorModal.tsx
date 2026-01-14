@@ -5,7 +5,7 @@ import { useState, useEffect, useMemo } from 'preact/hooks';
 import { Dialog, DialogTitle, DialogContent, DialogActions, Button, Stack, TextField, Typography, Box, RadioGroup, FormControlLabel, Radio, FormControl, FormLabel, Divider } from '@mui/material';
 import { FieldsEditor } from './FieldsEditor';
 import type { BlockTemplate, ThemeDefinition, ThemeOverride, TemplateField } from '@/core/types/schema';
-import type { UseCases } from '@/app/usecases';
+import type { UseCases } from '@/app/public';
 import { Notice } from 'obsidian';
 import { TemplateVariableCopier } from './TemplateVariableCopier';
 

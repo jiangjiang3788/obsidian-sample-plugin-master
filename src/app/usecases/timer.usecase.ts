@@ -1,16 +1,19 @@
-import { container } from 'tsyringe';
+// src/app/usecases/timer.usecase.ts
+import { generateId } from '@/shared/utils/id';
 import { TimerStateService } from '@features/timer/TimerStateService';
-import type { TimerState } from '@/app/store/slices/timer.slice';
+import type { TimerState } from '@/app/store/types';
 import type { AppStoreApi } from './index';
 
+/**
+ * TimerUseCase
+ * - 统一对外提供 timer 的写入口（UI/feature 不允许直接写 slice）
+ * - 冻结阶段：明确依赖由上层注入（禁止在 UseCase 内部 container.resolve）
+ */
 export class TimerUseCase {
-    private timerStateService: TimerStateService;
-    private store: AppStoreApi;
-
-    constructor(store: AppStoreApi) {
-        this.store = store;
-        this.timerStateService = container.resolve(TimerStateService);
-    }
+    constructor(
+        private store: AppStoreApi,
+        private timerStateService: TimerStateService
+    ) {}
 
     getTimers(): TimerState[] {
         return this.store.getState().timer.timers;
@@ -22,11 +25,9 @@ export class TimerUseCase {
     }
 
     async addTimer(timer: Omit<TimerState, 'id'>): Promise<TimerState> {
-        const { generateId } = await import('@core/utils/array');
-        
         const newTimer: TimerState = { ...timer, id: generateId('timer') };
         this.store.getState().timer.timerAdd(newTimer);
-        
+
         await this.saveState();
         return newTimer;
     }
@@ -48,6 +49,6 @@ export class TimerUseCase {
     }
 }
 
-export function createTimerUseCase(store: AppStoreApi): TimerUseCase {
-    return new TimerUseCase(store);
+export function createTimerUseCase(store: AppStoreApi, timerStateService: TimerStateService): TimerUseCase {
+    return new TimerUseCase(store, timerStateService);
 }

@@ -6,7 +6,7 @@ import { App, Notice } from 'obsidian';
 import { Item, ViewInstance, InputSettings, ThemeDefinition } from '@/core/types/schema';
 import { dayjs } from '@core/utils/date';
 import { QuickInputModal } from '@/features/quickinput/QuickInputModal';
-import { DEFAULT_CONFIG } from '@features/settings/HeatmapViewEditor';
+import { HEATMAP_VIEW_DEFAULT_CONFIG } from '@core/config/viewConfigs';
 import { getThemeLevelData } from '@core/utils/levelingSystem';
 import { CheckinManagerModal } from '@/features/settings/CheckinManagerModal';
 import { HeatmapCell } from '@shared/ui/heatmap/HeatmapCell';
@@ -27,7 +27,7 @@ interface HeatmapViewProps {
 export function HeatmapView({ items, app, dateRange, module, currentView, inputSettings }: HeatmapViewProps) {
     // 将 config 对象移入 useMemo，确保响应式更新
     const config = useMemo(
-        () => ({ ...DEFAULT_CONFIG, ...module.viewConfig }), 
+        () => ({ ...HEATMAP_VIEW_DEFAULT_CONFIG, ...module.viewConfig }), 
         [module.viewConfig]
     );
     

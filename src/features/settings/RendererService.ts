@@ -12,15 +12,15 @@ import { h, render } from 'preact';
 import { App } from 'obsidian';
 import { Layout } from '@/core/types/schema';
 import { DataStore } from '@core/services/DataStore';
-import { ServicesProvider, type Services } from '@/app/AppStoreContext';
+import { ServicesProvider, type Services } from '@/app/public';
 import { LayoutRenderer } from '@/features/settings/LayoutRenderer';
 import { ActionService } from '../../core/services/ActionService';
 import { ItemService } from '@core/services/ItemService';
 import { InputService } from '@core/services/InputService';
 import { TimerService } from '@features/timer/TimerService';
 import { AppToken } from '@core/services/types';
-import { USECASES_TOKEN, type UseCases } from '@/app/usecases';
-import { getZustandState, subscribeZustandStore, STORE_TOKEN, type ZustandAppStore, type AppStoreInstance } from '@/app/store/useAppStore';
+import { USECASES_TOKEN, type UseCases } from '@/app/public';
+import { getZustandState, subscribeZustandStore, STORE_TOKEN, type ZustandAppStore, type AppStoreInstance } from '@/app/public';
 
 @singleton()
 export class RendererService {

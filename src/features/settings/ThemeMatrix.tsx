@@ -13,7 +13,7 @@
  * - UI 临时态（选中态/展开态）不得写入 settings
  */
 import { h } from 'preact';
-import { useZustandAppStore, useUseCases, useDataStore } from '@/app/AppStoreContext';
+import { useZustandAppStore, useUseCases, useDataStore } from '@/app/public';
 import { 
     Box, Typography, TextField, Button, Stack 
 } from '@mui/material';

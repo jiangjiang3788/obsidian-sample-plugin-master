@@ -17,7 +17,7 @@ import DragIndicatorIcon from '@mui/icons-material/DragIndicator';
 import { createPortal } from 'preact/compat';
 
 import { useLocalStorage } from '@/shared/hooks';
-import { useZustandAppStore } from '@/app/AppStoreContext';
+import { useZustandAppStore } from '@/app/public';
 
 const getEventCoords = (e: MouseEvent | TouchEvent) => {
     if (e instanceof MouseEvent) return { x: e.clientX, y: e.clientY };

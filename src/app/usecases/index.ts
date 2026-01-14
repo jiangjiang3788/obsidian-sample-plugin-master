@@ -28,6 +28,7 @@ import { ThemeUseCase, createThemeUseCase } from './theme.usecase';
 import { LayoutUseCase, createLayoutUseCase } from './layout.usecase';
 import { ViewInstanceUseCase, createViewInstanceUseCase } from './viewinstance.usecase';
 import { TimerUseCase, createTimerUseCase } from './timer.usecase';
+import type { TimerStateService } from '@features/timer/TimerStateService';
 
 /**
  * Zustand Store 类型（用于 createUseCases 参数）
@@ -53,6 +54,15 @@ export interface UseCases {
 export const USECASES_TOKEN: InjectionToken<UseCases> = 'UseCases';
 
 /**
+ * UseCase 依赖集合（冻结阶段）
+ * - 由 ServiceManager 作为组合根注入
+ * - 禁止在 UseCase 内部自行 resolve 依赖（避免隐藏依赖 / 权力外溢）
+ */
+export interface UseCaseDeps {
+    timerStateService: TimerStateService;
+}
+
+/**
  * 创建 UseCases 实例
  * 
  * ⚠️ P0-2 架构约束：
@@ -63,14 +73,14 @@ export const USECASES_TOKEN: InjectionToken<UseCases> = 'UseCases';
  * @param store Zustand Store 实例
  * @returns UseCases 集合
  */
-export function createUseCases(store: AppStoreApi): UseCases {
+export function createUseCases(store: AppStoreApi, deps: UseCaseDeps): UseCases {
     return {
         settings: createSettingsUseCase(store),
         blocks: createBlocksUseCase(store),
         theme: createThemeUseCase(store),
         layout: createLayoutUseCase(store),
         viewInstance: createViewInstanceUseCase(store),
-        timer: createTimerUseCase(store),
+        timer: createTimerUseCase(store, deps.timerStateService),
     };
 }
 
@@ -82,5 +92,4 @@ export { LayoutUseCase } from './layout.usecase';
 export { ViewInstanceUseCase } from './viewinstance.usecase';
 export { TimerUseCase } from './timer.usecase';
 
-// 重新导出 useUseCases hook（从 AppStoreContext）
-export { useUseCases } from '@/app/AppStoreContext';
+// UI 层请从 '@/app/public' 获取 useUseCases（冻结阶段唯一出口）

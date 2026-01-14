@@ -40,9 +40,9 @@ import ChatIcon from '@mui/icons-material/Chat';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import CheckIcon from '@mui/icons-material/Check';
 import { container } from 'tsyringe';
-import { ServicesProvider, type Services } from '@/app/AppStoreContext';
-import { createServices } from '@/app/createServices';
-import { useZustandAppStore } from '@/app/AppStoreContext';
+import { ServicesProvider, type Services } from '@/app/public';
+import { createServices } from '@/app/public';
+import { useZustandAppStore } from '@/app/public';
 import { ThemeTreeSelect } from '@/shared/components/ThemeTreeSelect';
 import { 
     ChatSessionStore,

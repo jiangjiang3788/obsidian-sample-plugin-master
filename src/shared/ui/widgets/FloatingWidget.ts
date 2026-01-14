@@ -2,8 +2,8 @@
 import { render, h } from 'preact';
 import { unmountComponentAtNode } from 'preact/compat';
 import type { ComponentChildren } from 'preact';
-import { ServicesProvider } from '@/app/AppStoreContext';
-import { createServices } from '@/app/createServices';
+import { ServicesProvider } from '@/app/public';
+import { createServices } from '@/app/public';
 import { container } from 'tsyringe';
 
 /**

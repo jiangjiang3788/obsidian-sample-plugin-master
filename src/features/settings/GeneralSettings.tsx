@@ -8,7 +8,7 @@
  */
 /** @jsxImportSource preact */
 import { h } from 'preact';
-import { useZustandAppStore, useUseCases } from '@/app/AppStoreContext';
+import { useZustandAppStore, useUseCases } from '@/app/public';
 import { Box, Typography, Stack, FormControlLabel, Checkbox } from '@mui/material';
 
 /**

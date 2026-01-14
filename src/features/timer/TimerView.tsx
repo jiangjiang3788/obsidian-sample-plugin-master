@@ -1,7 +1,7 @@
 // src/features/timer/ui/TimerView.tsx
 /** @jsxImportSource preact */
 
-import { useZustandAppStore } from '@/app/AppStoreContext';
+import { useZustandAppStore } from '@/app/public';
 import FloatingPanel from '@/shared/ui/primitives/FloatingPanel';
 import { Button, Stack, Tooltip, Typography } from '@mui/material';
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';

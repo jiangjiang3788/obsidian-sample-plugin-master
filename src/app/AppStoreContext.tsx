@@ -20,7 +20,10 @@ import type { DataStore } from '@/core/services/DataStore';
 import type { InputService } from '@/core/services/InputService';
 import type { UseCases } from './usecases';
 import type { AppStoreInstance, ZustandAppStore } from './store/useAppStore';
-import { validateServices } from './createServices';
+import { validateServices, type Services } from './services.types';
+
+// 兼容性：允许外部仍从 AppStoreContext 引入 Services 类型
+export type { Services } from './services.types';
 
 // ============== Zustand Store Context ==============
 
@@ -147,16 +150,6 @@ export function useUseCases(): UseCases {
 // ============== 统一 Services Provider ==============
 
 /**
- * Services 集合接口
- */
-export interface Services {
-    zustandStore: AppStoreInstance;
-    dataStore: DataStore;
-    inputService: InputService;
-    useCases: UseCases;
-}
-
-/**
  * ServicesProvider Props
  */
 interface ServicesProviderProps {
@@ -170,7 +163,7 @@ interface ServicesProviderProps {
  * 嵌套提供 DataStore、InputService、UseCases 的 Context
  * 
  * ⚠️ 运行时校验：如果 services 参数不完整，会立即抛出明确错误
- * ⚠️ 校验规则来源：createServices.validateServices（唯一真源）
+ * ⚠️ 校验规则来源：services.types.validateServices（唯一真源）
  */
 export function ServicesProvider({ services, children }: ServicesProviderProps) {
     // 运行时校验：调用 createServices 中的唯一真源校验函数

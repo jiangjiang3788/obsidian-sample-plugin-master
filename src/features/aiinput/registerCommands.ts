@@ -11,7 +11,7 @@ import type ThinkPlugin from '@/main';
 import { AiTextPromptModal } from './AiTextPromptModal';
 import { AiBatchConfirmModal } from './AiBatchConfirmModal';
 import { AiConfigCache, AiHttpClient, AiNaturalLanguageRecordParser } from '@/core/ai';
-import { getZustandState, STORE_TOKEN, type AppStoreInstance } from '@/app/store/useAppStore';
+import { getZustandState, STORE_TOKEN, type AppStoreInstance } from '@/app/public';
 import type { ISettingsProvider } from '@/core/services/types';
 
 /**

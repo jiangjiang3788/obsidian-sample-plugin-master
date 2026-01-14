@@ -11,7 +11,7 @@ import { FormControlLabel, Checkbox, Button } from '@mui/material';
 import { VIEW_OPTIONS, ViewName, getAllFields } from '@/core/types/schema';
 import type { ViewInstance } from '@/core/types/schema';
 import { VIEW_EDITORS } from '@features/settings/registry';
-import { useZustandAppStore, useDataStore, useUseCases } from '@/app/AppStoreContext';
+import { useZustandAppStore, useDataStore, useUseCases } from '@/app/public';
 import { SimpleSelect } from '@shared/ui/composites/SimpleSelect';
 import { RuleBuilder } from '@features/settings/RuleBuilder';
 import { Modal } from '@shared/ui/primitives/Modal';

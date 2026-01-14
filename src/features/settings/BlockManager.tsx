@@ -9,7 +9,7 @@
  */
 /** @jsxImportSource preact */
 import { h } from 'preact';
-import { useZustandAppStore, useUseCases } from '@/app/AppStoreContext';
+import { useZustandAppStore, useUseCases } from '@/app/public';
 import { Accordion, AccordionSummary, AccordionDetails, Box, Stack, Typography, IconButton, Tooltip, Divider, TextField } from '@mui/material';
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 import DeleteForeverOutlinedIcon from '@mui/icons-material/DeleteForeverOutlined';
@@ -22,7 +22,7 @@ import { TemplateVariableCopier } from './TemplateVariableCopier';
 import { DndContext, closestCenter } from '@dnd-kit/core';
 import { arrayMove, SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import type { UseCases } from '@/app/usecases';
+import type { UseCases } from '@/app/public';
 
 // P1: 组件 props 接收 useCases
 function SortableBlockItem({ block, openId, setOpenId, handleDelete, handleDuplicate, useCases }: {

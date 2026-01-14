@@ -7,7 +7,7 @@
 import { container } from 'tsyringe';
 import type ThinkPlugin from '@/main';
 import { QuickInputModal } from './QuickInputModal';
-import { getZustandState, STORE_TOKEN, type AppStoreInstance } from '@/app/store/useAppStore';
+import { getZustandState, STORE_TOKEN, type AppStoreInstance } from '@/app/public';
 
 export function registerQuickInputCommands(plugin: ThinkPlugin) {
     // P0-3: 从 DI 容器获取 store

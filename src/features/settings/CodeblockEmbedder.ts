@@ -11,7 +11,7 @@ import { Notice, Plugin } from 'obsidian';
 import { container } from 'tsyringe';
 import { CODEBLOCK_LANG } from '@/core/types/constants';
 import { DataStore } from '@core/services/DataStore';
-import { getZustandState, STORE_TOKEN, type AppStoreInstance } from '@/app/store/useAppStore';
+import { getZustandState, STORE_TOKEN, type AppStoreInstance } from '@/app/public';
 import { RendererService } from '@/features/settings/RendererService';
 import type { Layout } from '@/core/types/schema';
 import type { ActionService } from '@core/services/ActionService';

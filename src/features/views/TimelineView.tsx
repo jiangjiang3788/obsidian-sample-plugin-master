@@ -8,7 +8,7 @@ import { dayjs } from '@core/utils/date';
 import weekOfYear from 'dayjs/plugin/weekOfYear';
 import isoWeek from 'dayjs/plugin/isoWeek';
 import isBetween from 'dayjs/plugin/isBetween';
-import { DEFAULT_CONFIG as DEFAULT_TIMELINE_CONFIG } from '@features/settings/TimelineViewEditor';
+import { DEFAULT_CONFIG as TIMELINE_VIEW_DEFAULT_CONFIG } from '@features/settings/TimelineViewEditor';
 import { App } from 'obsidian';
 import { ItemService } from '@core/services/ItemService';
 import { filterByRules } from '@core/utils/itemFilter';
@@ -58,7 +58,7 @@ export function TimelineView({
 
     // 配置管理
     const config = useMemo(() => {
-        const defaults = JSON.parse(JSON.stringify(DEFAULT_TIMELINE_CONFIG));
+        const defaults = JSON.parse(JSON.stringify(TIMELINE_VIEW_DEFAULT_CONFIG));
         const userConfig = module.viewConfig || {};
         return { ...defaults, ...userConfig, categories: userConfig.categories || defaults.categories };
     }, [module.viewConfig]);

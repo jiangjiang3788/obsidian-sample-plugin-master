@@ -213,7 +213,9 @@ export class ServiceManager {
                 console.log('[ThinkPlugin] TimerWidget 生命周期监听已建立');
                 
                 // 3. 创建 UseCases 并注册到 DI 容器（传入 store）
-                this.services.useCases = createUseCases(zustandStore);
+                this.services.useCases = createUseCases(zustandStore, {
+                    timerStateService: this.services.timerStateService!,
+                });
                 container.register(USECASES_TOKEN, { useValue: this.services.useCases });
                 console.log('[ThinkPlugin] UseCases 创建完成');
                 

@@ -1,63 +1,37 @@
 // .eslintrc-architecture.js
-// 架构依赖约束验证规则（被 .eslintrc.cjs 引用）
+// 冻结阶段架构约束（被 .eslintrc.cjs 引用）
 //
-// 设计原则：
-// - 统一使用 eslint core rule：no-restricted-imports
-// - 禁止 shared 依赖 core/features
-// - 禁止 core 依赖 features
-// - 禁止 features 互相依赖（允许依赖 core + shared）
-// - 禁止 features import slices / legacy store / AppStore
+// 目标：
+// 1) 不推倒重来：允许历史遗留存在，但必须显式列出例外（allowlist），禁止继续扩散
+// 2) 唯一出口：features/shared/views 访问 app 的能力，只允许通过 src/app/public.ts
+// 3) 单向依赖：core 不依赖 app/features；shared 不依赖 features；features 不依赖 app 内部实现
 //
-// 注意：no-restricted-imports 的 patterns 只能用 group（glob），paths 只能匹配具体模块名。
-// 所以这里统一使用 patterns + group 来实现 glob 约束。
+// 使用方式：
+// - 这份规则是“冻结混乱”的第一道闸门：先止血，再逐步迁移（第三阶段开始收敛）
+//
+// 说明：
+// - 这里只使用 eslint 内置 rule：no-restricted-imports（避免引入额外插件）
+// - 规则不追求一口吃成胖子：先把“最危险的权力外溢”冻住
 
 module.exports = {
-  rules: {
-    // 默认规则（对所有文件生效的兜底约束）
-    "no-restricted-imports": [
-      "error",
-      {
-        patterns: [
-          // 禁止 core 依赖 features（全局兜底，防止漏掉 overrides）
-          {
-            group: ["@features/**", "../features/**"],
-            message: "core 层不能依赖 features 层 ❌ 违反依赖约束规范",
-          },
-
-          // 禁止 shared 依赖 core/features（全局兜底，最终以 shared override 为准）
-          {
-            group: ["@core/**", "../core/**"],
-            message: "shared 层不能依赖 core 层 ❌ 违反依赖约束规范",
-          },
-          {
-            group: ["@features/**", "../features/**"],
-            message: "shared 层不能依赖 features 层 ❌ 违反依赖约束规范",
-          },
-        ],
-      },
-    ],
-  },
-
   overrides: [
-    // shared 目录的特殊规则：只能依赖通用库 + shared 自身模块
+    // ==================================================================================
+    // CORE：禁止依赖 app / features（保持核心可测试 & 可迁移）
+    // ==================================================================================
     {
-      files: ["src/shared/**/*.{ts,tsx,js,jsx}"],
+      files: ['src/core/**/*.{ts,tsx,js,jsx}'],
       rules: {
-        "no-restricted-imports": [
-          "error",
+        'no-restricted-imports': [
+          'error',
           {
             patterns: [
               {
-                group: ["@core/**", "../core/**", "@/core/**"],
-                message: "shared 层只能依赖通用库和自身模块 ❌（禁止依赖 core）",
+                group: ['@/app/**', '@app/**', '../app/**', '../../app/**'],
+                message: 'core 层不能依赖 app 层 ❌（请通过接口/注入/UseCase 组合根）',
               },
               {
-                group: ["@features/**", "../features/**", "@/features/**"],
-                message: "shared 层只能依赖通用库和自身模块 ❌（禁止依赖 features）",
-              },
-              {
-                group: ["@app/**", "../app/**", "@/app/**"],
-                message: "shared 层不能依赖 app 层 ❌",
+                group: ['@/features/**', '@features/**', '../features/**', '../../features/**'],
+                message: 'core 层不能依赖 features 层 ❌（历史例外请加入 allowlist）',
               },
             ],
           },
@@ -65,31 +39,79 @@ module.exports = {
       },
     },
 
-    // core 目录的特殊规则：禁止依赖 features（允许依赖 shared）
+    // CORE 历史例外（冻结，不扩散）：timeline 相关 util 暂时依赖了部分 UI/feature
+    // TODO(阶段3): 把这两份逻辑迁移到 app/feature 边界内，移除例外
     {
-      files: ["src/core/**/*.{ts,tsx,js,jsx}"],
+      files: [
+        'src/core/utils/timelineAggregation.ts',
+        'src/core/utils/timelineInteraction.ts',
+      ],
       rules: {
-        "no-restricted-imports": [
-          "error",
+        'no-restricted-imports': [
+          'error',
           {
             patterns: [
               {
-                group: ["@features/**", "../features/**", "@/features/**"],
-                message: "core 层不能依赖 features 层 ❌",
+                group: ['@/app/**', '@app/**', '../app/**', '../../app/**'],
+                message: 'core(legacy) 层不能依赖 app 层 ❌（请通过接口/注入）',
+              },
+              // 允许 features 依赖（仅限这两份 legacy 文件）
+            ],
+          },
+        ],
+      },
+    },
+
+    // ==================================================================================
+    // FEATURES：只能通过 app/public 访问 app 能力（冻结“绕过边界”）
+    // ==================================================================================
+    {
+      files: ['src/features/**/*.{ts,tsx,js,jsx}'],
+      rules: {
+        'no-restricted-imports': [
+          'error',
+          {
+            patterns: [
+              // 1) 禁止直接依赖 app 内部 store（只允许通过 '@/app/public' 暴露的 read-only helpers）
+              {
+                group: ['@/app/store/**', '../app/store/**', '../../app/store/**'],
+                message:
+                  "features 层禁止依赖 app/store/** ❌ 请通过 '@/app/public' 获取必要能力",
               },
 
-              // 可选：如果你希望 core 也不能依赖 app（很多架构都要求）
+              // 2) 禁止直接依赖 app/usecases 内部实现（只允许通过 public 或 DI token）
               {
-                group: ["@/app/**", "../app/**", "src/app/**"],
-                message: "core 层不能依赖 app 层 ❌（请通过接口/注入）",
+                group: ['@/app/usecases/**', '../app/usecases/**', '../../app/usecases/**'],
+                message:
+                  "features 层禁止依赖 app/usecases/** ❌ 请通过 '@/app/public' 或注入 USECASES_TOKEN",
               },
 
-              // 你原本的“业务词汇”约束其实属于命名规范，不建议用 import 规则做。
-              // 但你坚持要保留的话，我这里按“禁止 import 这些命名路径”保留为弱约束。
-              // 你如果想更严格，应该用 eslint-plugin-unicorn/filename-case 或自定义规则。
+              // 3) 禁止直接依赖 AppStoreContext / createServices（统一出口）
               {
-                group: ["**/TaskService", "**/ViewService", "**/TimerService"],
-                message: "core 层禁止使用具体业务词汇 ❌ 请使用抽象概念（建议改名/抽象）",
+                group: ['@/app/AppStoreContext', '../app/AppStoreContext', '../../app/AppStoreContext'],
+                message:
+                  "features 层禁止直接依赖 AppStoreContext ❌ 请从 '@/app/public' 引入",
+              },
+              {
+                group: ['@/app/createServices', '../app/createServices', '../../app/createServices'],
+                message:
+                  "features 层禁止直接依赖 createServices ❌ 请从 '@/app/public' 引入",
+              },
+
+              // 4) 组合根禁止下沉
+              {
+                group: ['@/app/ServiceManager', '../app/ServiceManager', '../../app/ServiceManager'],
+                message: 'features 层禁止依赖 ServiceManager（组合根）❌',
+              },
+              {
+                group: ['@/app/FeatureLoader', '../app/FeatureLoader', '../../app/FeatureLoader'],
+                message: 'features 层禁止依赖 FeatureLoader（组合根）❌',
+              },
+
+              // 5) 明确禁止 slices（写入口只能是 useCases）
+              {
+                group: ['@/app/store/slices/**', '../app/store/slices/**', '../../app/store/slices/**'],
+                message: 'features 层禁止直接 import slices ❌（写入口必须通过 useCases）',
               },
             ],
           },
@@ -97,83 +119,84 @@ module.exports = {
       },
     },
 
-    // features 目录的特殊规则：禁止 features 互相依赖，但允许依赖 core + shared
+    // ==================================================================================
+    // SHARED：不允许依赖 features（防止 shared 成为绕过边界的通道）
+    // ==================================================================================
     {
-      files: ["src/features/**/*.{ts,tsx,js,jsx}"],
+      files: ['src/shared/**/*.{ts,tsx,js,jsx}'],
       rules: {
-        "no-restricted-imports": [
-          "error",
+        'no-restricted-imports': [
+          'error',
           {
             patterns: [
-              // 禁止 features 间相互依赖（这里用多种路径写法兜底）
+              // shared 可以依赖 core，但不应该依赖 app 内部实现
               {
-                group: [
-                  "@features/**",
-                  "@/features/**",
-                  "../features/**",
-                  "../../features/**",
-                  "../../../features/**",
-                ],
-                message: "Features 不能相互依赖 ❌ 只能依赖 core + shared",
-              },
-
-              // 【SSOT】禁止新增或使用旧 Class Store / legacy
-              {
-                group: ["src/legacy/**", "**/AppStore", "@/app/AppStore", "@/app/AppStoreContext"],
-                message: "SSOT：禁止新增或使用旧 Class Store / AppStore。",
-              },
-
-              // 【S5 规范】禁止 features 层直接 import slices
-              {
-                group: [
-                  "@/app/store/slices/*",
-                  "@/app/store/slices/**",
-                  "src/app/store/slices/*",
-                  "src/app/store/slices/**",
-                  "../app/store/slices/*",
-                  "../../app/store/slices/*",
-                  "../../../app/store/slices/*",
-                ],
+                group: ['@/app/store/**', '../app/store/**', '../../app/store/**'],
                 message:
-                  "[S5] features 层禁止直接 import slices ❌ 请使用 useCases.layout（或对应 useCases），详见 src/app/ARCH_CONSTRAINTS.md",
+                  "shared 层禁止依赖 app/store/** ❌ 如需能力请通过 '@/app/public'",
               },
-
-              // 【S5 规范】禁止 features 层直接 import viewInstance.usecase（必须走 useCases.layout）
               {
-                group: [
-                  "@/app/usecases/viewInstance.usecase",
-                  "src/app/usecases/viewInstance.usecase",
-                  "../app/usecases/viewInstance.usecase",
-                  "../../app/usecases/viewInstance.usecase",
-                ],
+                group: ['@/app/usecases/**', '../app/usecases/**', '../../app/usecases/**'],
                 message:
-                  "[S5] features 层禁止直接 import viewInstance.usecase ❌ 请使用 useCases.layout，详见 src/app/ARCH_CONSTRAINTS.md",
+                  "shared 层禁止依赖 app/usecases/** ❌ 如需能力请通过 '@/app/public'",
               },
-
-              // 【S5 规范】禁止 features 层直接 import group.usecase（功能禁用）
               {
-                group: [
-                  "@/app/usecases/group.usecase",
-                  "src/app/usecases/group.usecase",
-                  "../app/usecases/group.usecase",
-                  "../../app/usecases/group.usecase",
-                ],
+                group: ['@/app/AppStoreContext', '../app/AppStoreContext', '../../app/AppStoreContext'],
                 message:
-                  "[S5] features 层禁止直接 import group.usecase ❌ Group 功能已禁用，详见 src/app/ARCH_CONSTRAINTS.md",
+                  "shared 层禁止直接依赖 AppStoreContext ❌ 请从 '@/app/public' 引入",
+              },
+              {
+                group: ['@/app/createServices', '../app/createServices', '../../app/createServices'],
+                message:
+                  "shared 层禁止直接依赖 createServices ❌ 请从 '@/app/public' 引入",
               },
 
-              // 你原有的规则：features 不能直接使用 IO（repositories/adapters）
+              // 核心冻结点：shared 不允许依赖 features
               {
-                group: ["src/core/repositories/**", "src/core/adapters/**", "@/core/repositories/**", "@/core/adapters/**"],
-                message: "features 不能直接使用 IO，请通过 UseCase。",
+                group: ['@/features/**', '@features/**', '../features/**', '../../features/**'],
+                message: 'shared 层禁止依赖 features ❌（避免 shared 成为绕过边界的通道）',
               },
+            ],
+          },
+        ],
+      },
+    },
 
-              // 你原有的规则：UI 禁止直接调用 store actions（如果你 store actions 在某文件里）
-              // 这里保留，按你原配置的路径
+    // SHARED 历史例外（冻结，不扩散）：这些文件暂时还在依赖 features
+    // TODO(阶段3+): 逐步迁移这些依赖（把类型/组件下沉或上移到合适的层），然后删除例外
+    {
+      files: [
+        'src/shared/ui/items/TaskRow.tsx',
+        'src/shared/ui/timeline/DayColumnBody.tsx',
+        'src/shared/ui/timeline/DayColumnHeader.tsx',
+      ],
+      rules: {
+        'no-restricted-imports': [
+          'error',
+          {
+            patterns: [
+              // 仍然禁止 app 内部实现下沉（shared 应只依赖 app/public）
               {
-                group: ["src/app/store/store", "@/app/store/store"],
-                message: "UI 禁止直接调用 store actions，请通过 UseCase。",
+                group: ['@/app/store/**', '../app/store/**', '../../app/store/**'],
+                message:
+                  "shared(legacy) 层禁止依赖 app/store/** ❌ 如需能力请通过 '@/app/public'",
               },
+              {
+                group: ['@/app/usecases/**', '../app/usecases/**', '../../app/usecases/**'],
+                message:
+                  "shared(legacy) 层禁止依赖 app/usecases/** ❌ 如需能力请通过 '@/app/public'",
+              },
+              {
+                group: ['@/app/AppStoreContext', '../app/AppStoreContext', '../../app/AppStoreContext'],
+                message:
+                  "shared(legacy) 层禁止直接依赖 AppStoreContext ❌ 请从 '@/app/public' 引入",
+              },
+              {
+                group: ['@/app/createServices', '../app/createServices', '../../app/createServices'],
+                message:
+                  "shared(legacy) 层禁止直接依赖 createServices ❌ 请从 '@/app/public' 引入",
+              },
+              // 注意：这里刻意不禁止 features import（作为临时 allowlist）
             ],
           },
         ],

@@ -3,8 +3,8 @@ import { render, h } from 'preact';
 import { unmountComponentAtNode } from 'preact/compat';
 import type ThinkPlugin from '@main';
 import { TimerView } from './TimerView';
-import { ServicesProvider, type Services } from '@/app/AppStoreContext';
-import { createServices } from '@/app/createServices';
+import { ServicesProvider, type Services } from '@/app/public';
+import { createServices } from '@/app/public';
 import { container } from 'tsyringe';
 
 /**

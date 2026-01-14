@@ -13,8 +13,8 @@ import { LayoutSettings } from './LayoutSettings';
 import { InputSettings } from './InputSettings';
 import { GeneralSettings } from './GeneralSettings';
 import { AiSettings } from './AiSettings';
-import { ServicesProvider, type Services } from '@/app/AppStoreContext';
-import { createServices } from '@/app/createServices';
+import { ServicesProvider, type Services } from '@/app/public';
+import { createServices } from '@/app/public';
 import { container } from 'tsyringe';
 
 function a11yProps(index: number) {

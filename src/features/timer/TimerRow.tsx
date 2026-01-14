@@ -10,7 +10,7 @@ import EditIcon from '@mui/icons-material/Edit';
 import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
 import { DataStore } from '@core/services/DataStore';
 import { TimerService } from '@features/timer/TimerService';
-import type { TimerState } from '@/app/store/slices/timer.slice';
+import type { TimerState } from '@/app/public';
 import { formatSecondsToHHMMSS } from '@core/utils/date';
 import { makeObsUri } from '@core/utils/obsidian';
 import type { ActionService } from '@core/services/ActionService';

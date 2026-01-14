@@ -293,7 +293,7 @@ UI 读取 theme 相关数据应使用 Zustand selector：
 
 ```typescript
 // ✅ 推荐：使用 useZustandAppStore selector
-import { useZustandAppStore } from '@/app/AppStoreContext';
+import { useZustandAppStore } from '@/app/public';
 
 const themes = useZustandAppStore(state => state.settings.inputSettings.themes);
 const overrides = useZustandAppStore(state => state.settings.inputSettings.overrides);
@@ -326,23 +326,23 @@ const themeService = new ThemeMatrixService({
 
 ```typescript
 // ✅ React 组件内读取状态
-import { useZustandAppStore } from '@/app/AppStoreContext';
+import { useZustandAppStore } from '@/app/public';
 const themes = useZustandAppStore(state => state.settings.inputSettings.themes);
 
 // ✅ React 组件内写入状态
-import { useUseCases } from '@/app/AppStoreContext';
+import { useUseCases } from '@/app/public';
 const useCases = useUseCases();
 useCases.theme.addTheme(path);
 
 // ✅ 非 React 场景使用 DI 获取
 import { container } from 'tsyringe';
-import { USECASES_TOKEN, type UseCases } from '@/app/usecases';
+import { USECASES_TOKEN, type UseCases } from '@/app/public';
 const useCases = container.resolve<UseCases>(USECASES_TOKEN);
 useCases.theme.addTheme(path);
 
 // ✅ 非 React 场景只读访问
 import { container } from 'tsyringe';
-import { getZustandState, STORE_TOKEN, type AppStoreInstance } from '@/app/store/useAppStore';
+import { getZustandState, STORE_TOKEN, type AppStoreInstance } from '@/app/public';
 const store = container.resolve<AppStoreInstance>(STORE_TOKEN);
 const themes = getZustandState(store, s => s.settings.inputSettings.themes);
 ```

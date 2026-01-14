@@ -14,8 +14,8 @@
  * - Layout/View 作为扁平列表管理
  */
 import { h } from 'preact';
-import { useZustandAppStore, useUseCases } from '@/app/AppStoreContext';
-import type { UseCases } from '@/app/usecases';
+import { useZustandAppStore, useUseCases } from '@/app/public';
+import type { UseCases } from '@/app/public';
 import { Box, Stack, Typography, TextField, Checkbox, FormControlLabel, Tooltip, Chip, Radio, RadioGroup as MuiRadioGroup, Autocomplete, Button, Menu, MenuItem, IconButton } from '@mui/material';
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
@@ -102,17 +102,21 @@ function LayoutEditor({ layout, useCases }: { layout: Layout, useCases: UseCases
         return existingOptions;
     }, [availableViews, inputValue]);
 
-    const handleCreateNewView = useCallback(async (viewName: string) => {
-        try {
-            // S5 术语统一: 通过 useCases.layout.addView 创建
-            await useCases.layout.addView(viewName);
-            setInputValue('');
-        } catch (error) {
-            console.error('创建新视图失败:', error);
-        }
-    }, [useCases, addView]);
+    const handleCreateNewView = useCallback(
+        async (viewTitle: string) => {
+            // 冻结阶段：视图实例的创建权收回到 app（UseCases）
+            // 1) 创建 ViewInstance
+            const newView = await useCases.viewInstance.createView(viewTitle);
 
-    const handleAutocompleteChange = useCallback(async (event: any, newValue: any) => {
+            if (!newView) return;
+
+            // 2) 立即挂到当前 Layout 上（否则 UI 会出现“创建了但没挂载”的悬空状态）
+            addView(newView.id);
+        },
+        [useCases, addView]
+    );
+
+const handleAutocompleteChange = useCallback(async (event: any, newValue: any) => {
         if (!newValue) return;
         
         if (newValue.type === 'existing') {

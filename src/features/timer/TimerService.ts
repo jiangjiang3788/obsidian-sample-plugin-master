@@ -22,7 +22,7 @@ import { InputService } from '@core/services/InputService';
 import type { QuickInputSaveData } from '@/features/quickinput/QuickInputModal';
 import { AppToken } from '@core/services/types';
 import { nowHHMM, timeToMinutes, minutesToTime } from '@core/utils/date';
-import { USECASES_TOKEN, type UseCases } from '@/app/usecases';
+import { USECASES_TOKEN, type UseCases } from '@/app/public';
 
 @singleton()
 export class TimerService {

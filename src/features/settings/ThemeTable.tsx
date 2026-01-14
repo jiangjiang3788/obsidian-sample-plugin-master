@@ -25,7 +25,7 @@ import {
 import { ThemeTreeNodeRow } from './ThemeTreeNodeRow';
 import type { EditorState } from './useThemeMatrixEditor';
 import type { BlockTemplate, ThemeDefinition, ThemeOverride } from '@/core/types/schema';
-import type { UseCases } from '@/app/usecases';
+import type { UseCases } from '@/app/public';
 import type { ThemeTreeNode } from '@/core/theme-matrix/theme.types';
 
 /**

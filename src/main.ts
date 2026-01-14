@@ -8,7 +8,7 @@ import { Plugin, Notice } from 'obsidian';
 import { DataStore } from '@core/services/DataStore';
 import { InputService } from '@core/services/InputService';
 import { ThinkSettings, DEFAULT_SETTINGS } from '@core/types';
-import type { UseCases } from '@/app/usecases';
+import type { UseCases } from '@/app/public';
 import { setupCoreContainer } from '@core/di/setupCore';
 import './styles/main.css';
 import { safeAsync } from '@shared/utils/errorHandler';

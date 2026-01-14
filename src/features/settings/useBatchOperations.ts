@@ -6,7 +6,7 @@
  */
 import { useState, useCallback } from 'preact/hooks';
 import { parseCellKey } from '@/core/utils/cellKey';
-import { useUseCases } from '@/app/usecases';
+import { useUseCases } from '@/app/public';
 
 // 定义新的参数类型
 export type BatchOperation = 

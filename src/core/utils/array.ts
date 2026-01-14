@@ -2,10 +2,6 @@
 import type { Groupable } from '@/core/types/schema';
 import { generateId } from '@/shared/utils/array';
 
-// ✅ 关键修复：把 generateId 从 core/utils/array 重新导出，
-// 这样 `await import('@core/utils/array')` 才能拿到 generateId
-export { generateId };
-
 /**
  * 在一个数组内，根据parentId对项目进行上移或下移
  * 这是一个纯函数，返回一个新的排序后的数组副本
@@ -14,37 +10,32 @@ export { generateId };
  * @param direction - 'up' 或 'down'
  * @returns 经过排序的新数组
  */
-export function moveItemInArray<
-  T extends { id: string; parentId?: string | null }
->(array: T[], id: string, direction: 'up' | 'down'): T[] {
-  const newArray = [...array];
-  const itemToMove = newArray.find((i) => i.id === id);
-  if (!itemToMove) return newArray;
+export function moveItemInArray<T extends { id: string, parentId?: string | null }>(array: T[], id: string, direction: 'up' | 'down'): T[] {
+    const newArray = [...array];
+    const itemToMove = newArray.find(i => i.id === id);
+    if (!itemToMove) return newArray;
 
-  // 找到与当前项属于同一父级的所有兄弟节点
-  const siblings = newArray.filter(
-    (item) => item.parentId === itemToMove.parentId
-  );
-  const index = siblings.findIndex((item) => item.id === id);
+    // 找到与当前项属于同一父级的所有兄弟节点
+    const siblings = newArray.filter(item => item.parentId === itemToMove.parentId);
+    const index = siblings.findIndex(item => item.id === id);
+    
+    if (index === -1) return newArray;
 
-  if (index === -1) return newArray;
+    const newIndex = direction === 'up' ? index - 1 : index + 1;
+    if (newIndex < 0 || newIndex >= siblings.length) return newArray;
 
-  const newIndex = direction === 'up' ? index - 1 : index + 1;
-  if (newIndex < 0 || newIndex >= siblings.length) return newArray;
+    // 获取原始数组中的实际索引
+    const originalIndexInFullArray = newArray.findIndex(item => item.id === id);
+    const targetIndexInFullArray = newArray.findIndex(item => item.id === siblings[newIndex].id);
 
-  // 获取原始数组中的实际索引
-  const originalIndexInFullArray = newArray.findIndex((item) => item.id === id);
-  const targetIndexInFullArray = newArray.findIndex(
-    (item) => item.id === siblings[newIndex].id
-  );
-
-  if (originalIndexInFullArray > -1 && targetIndexInFullArray > -1) {
-    const [movedItem] = newArray.splice(originalIndexInFullArray, 1);
-    newArray.splice(targetIndexInFullArray, 0, movedItem);
-  }
-
-  return newArray;
+    if (originalIndexInFullArray > -1 && targetIndexInFullArray > -1) {
+        const [movedItem] = newArray.splice(originalIndexInFullArray, 1);
+        newArray.splice(targetIndexInFullArray, 0, movedItem);
+    }
+    
+    return newArray;
 }
+
 
 /**
  * 复制数组中的一个指定项
@@ -53,24 +44,22 @@ export function moveItemInArray<
  * @param nameField - 用于标识名称的字段 ('name' 或 'title')
  * @returns 包含复制项的新数组
  */
-export function duplicateItemInArray<
-  T extends Groupable & { name?: string; title?: string }
->(array: T[], id: string, nameField: 'name' | 'title' = 'name'): T[] {
-  const newArray = [...array];
-  const index = newArray.findIndex((item) => item.id === id);
-  if (index === -1) return newArray;
+export function duplicateItemInArray<T extends Groupable & { name?: string, title?: string }>(array: T[], id: string, nameField: 'name' | 'title' = 'name'): T[] {
+    const newArray = [...array];
+    const index = newArray.findIndex(item => item.id === id);
+    if (index === -1) return newArray;
 
-  const originalItem = newArray[index];
-  // [修改] 将 structuredClone 替换为 JSON.parse(JSON.stringify()) 以提高移动端兼容性
-  const newItem = JSON.parse(JSON.stringify(originalItem));
-  newItem.id = generateId(originalItem.id.split('_')[0]);
+    const originalItem = newArray[index];
+    // [修改] 将 structuredClone 替换为 JSON.parse(JSON.stringify()) 以提高移动端兼容性
+    const newItem = JSON.parse(JSON.stringify(originalItem));
+    newItem.id = generateId(originalItem.id.split('_')[0]);
+    
+    const currentName = (originalItem as any)[nameField] || '';
+    (newItem as any)[nameField] = `${currentName} (副本)`;
+    newItem.parentId = originalItem.parentId;
 
-  const currentName = (originalItem as any)[nameField] || '';
-  (newItem as any)[nameField] = `${currentName} (副本)`;
-  newItem.parentId = originalItem.parentId;
-
-  newArray.splice(index + 1, 0, newItem);
-  return newArray;
+    newArray.splice(index + 1, 0, newItem);
+    return newArray;
 }
 
 // [NEW] Add this utility function for dnd-kit
@@ -95,12 +84,8 @@ export function arrayMove<T>(array: T[], from: number, to: number): T[] {
  * @param updates - 要应用的更新
  * @returns 更新后的新数组
  */
-export function updateById<T extends { id: any }>(
-  items: T[],
-  id: any,
-  updates: Partial<T>
-): T[] {
-  const index = items.findIndex((item) => item.id === id);
+export function updateById<T extends { id: any }>(items: T[], id: any, updates: Partial<T>): T[] {
+  const index = items.findIndex(item => item.id === id);
   if (index === -1) {
     return [...items];
   }
@@ -115,12 +100,9 @@ export function updateById<T extends { id: any }>(
  * @param idsToRemove - 要移除的 ID 数组
  * @returns 移除对象后的新数组
  */
-export function removeByIds<T extends { id: any }>(
-  items: T[],
-  idsToRemove: any[]
-): T[] {
+export function removeByIds<T extends { id: any }>(items: T[], idsToRemove: any[]): T[] {
   const idSet = new Set(idsToRemove);
-  return items.filter((item) => !idSet.has(item.id));
+  return items.filter(item => !idSet.has(item.id));
 }
 
 /**
@@ -129,7 +111,7 @@ export function removeByIds<T extends { id: any }>(
  * @returns 以 ID 为键的 Map
  */
 export function arrayToMap<T extends { id: any }>(items: T[]): Map<any, T> {
-  return new Map(items.map((item) => [item.id, item]));
+  return new Map(items.map(item => [item.id, item]));
 }
 
 /**
