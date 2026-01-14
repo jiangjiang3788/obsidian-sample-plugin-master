@@ -5,9 +5,10 @@
 
 import type { Item } from '@/core/types/schema';
 import { dayjs, timeToMinutes } from '@core/utils/date';
+import { splitTaskIntoDayBlocks } from '@core/utils/timelineBlocks';
 
 export type { TimelineTask, TaskBlock } from '@core/types/timeline';
-import type { TimelineTask, TaskBlock } from '@core/types/timeline';
+import type { TimelineTask } from '@core/types/timeline';
 
 // TimelineTask / TaskBlock 已在 core/types/timeline.ts 定义并在此文件 re-export。
 
@@ -97,45 +98,6 @@ export function processItemsToTimelineTasks(items: Item[]): TimelineTask[] {
 /**
  * 将单个任务（可能跨天）拆分为多个按天对齐的 TaskBlock
  */
-export function splitTaskIntoDayBlocks(task: TimelineTask, dateRange: [dayjs.Dayjs, dayjs.Dayjs]): TaskBlock[] {
-    const blocks: TaskBlock[] = [];
-    if (task.startMinute === null || task.endMinute === null || !task.doneDate) {
-        return [];
-    }
-
-    let currentDate = dayjs(task.actualStartDate);
-    let currentStartMinute = task.startMinute % 1440;
-    let remainingDuration = task.duration;
-    
-    while (remainingDuration > 0 && currentDate.isBefore(dateRange[1].add(1, 'day'))) {
-        const dayStr = currentDate.format(DATE_FORMAT);
-
-        // 如果任务块在当前视图范围之前，快速跳过
-        if (currentDate.isBefore(dateRange[0], 'day')) {
-            const minutesInDay = Math.min(1440 - currentStartMinute, remainingDuration);
-            remainingDuration -= minutesInDay;
-            currentStartMinute = 0;
-            currentDate = currentDate.add(1, 'day');
-            continue;
-        }
-        
-        const blockStartMinute = currentStartMinute;
-        const blockEndMinute = Math.min(1440, currentStartMinute + remainingDuration);
-
-        if (blockStartMinute < blockEndMinute) {
-            blocks.push({
-                ...task,
-                day: dayStr,
-                blockStartMinute: blockStartMinute,
-                blockEndMinute: blockEndMinute,
-            });
-        }
-
-        const durationInDay = blockEndMinute - blockStartMinute;
-        remainingDuration -= durationInDay;
-        currentStartMinute = 0;
-        currentDate = currentDate.add(1, 'day');
-    }
-
-    return blocks;
-}
+// splitTaskIntoDayBlocks 已迁移至 core（唯一真源）
+// timeline-parser 仅做 re-export，保留对外调用点稳定。
+export { splitTaskIntoDayBlocks };

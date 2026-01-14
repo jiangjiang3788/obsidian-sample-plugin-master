@@ -24,10 +24,8 @@ import {
     buildMonthlyAndWeeklySummary, 
     buildSummaryCategoryHours 
 } from '@core/utils/timelineAggregation';
-import { 
-    handleTimelineTaskCreation, 
-    buildDailyViewData 
-} from '@core/utils/timelineInteraction';
+import { buildDailyViewData } from '@core/utils/timelineInteraction';
+import { handleTimelineTaskCreation } from './timelineInteraction';
 import { useTimelineZoom } from '@core/hooks/useTimelineZoom';
 
 // 初始化 dayjs 插件

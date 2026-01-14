@@ -39,28 +39,8 @@ module.exports = {
       },
     },
 
-    // CORE 历史例外（冻结，不扩散）：timeline 相关 util 暂时依赖了部分 UI/feature
-    // TODO(阶段3): 把这两份逻辑迁移到 app/feature 边界内，移除例外
-    {
-      files: [
-        'src/core/utils/timelineAggregation.ts',
-        'src/core/utils/timelineInteraction.ts',
-      ],
-      rules: {
-        'no-restricted-imports': [
-          'error',
-          {
-            patterns: [
-              {
-                group: ['@/app/**', '@app/**', '../app/**', '../../app/**'],
-                message: 'core(legacy) 层不能依赖 app 层 ❌（请通过接口/注入）',
-              },
-              // 允许 features 依赖（仅限这两份 legacy 文件）
-            ],
-          },
-        ],
-      },
-    },
+    // ✅ core allowlist 已清空：
+    // timelineInteraction 中的 UI/feature 依赖已迁移到 features/views/timelineInteraction.ts
 
     // ==================================================================================
     // FEATURES：只能通过 app/public 访问 app 能力（冻结“绕过边界”）

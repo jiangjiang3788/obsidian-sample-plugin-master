@@ -1,6 +1,6 @@
 // src/core/utils/timelineAggregation.ts
 import { dayjs } from '@core/utils/date';
-import { TaskBlock } from '@features/views/timeline-parser';
+import type { TaskBlock } from '@core/types/timeline';
 
 /**
  * 将任务文件名映射到分类
