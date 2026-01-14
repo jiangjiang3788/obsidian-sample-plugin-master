@@ -14,7 +14,7 @@ import { ItemService } from '@core/services/ItemService';
 import type { TimerService } from '@features/timer/TimerService';
 import { useViewData } from '@/features/settings/useViewData';
 import { QuickInputModal } from '@/features/quickinput/QuickInputModal';
-import { ModuleSettingsModal } from './ModuleSettingsModal'; // [新增] 导入设置模态框
+import { openModuleSettingsWidget } from './ModuleSettingsModal';
 import { App, Notice } from 'obsidian'; // [修改] 导入 Notice
 import { exportItemsToMarkdown, getExportConfigByViewType } from '@core/utils/exportUtils'; // [新增] 导入导出函数
 import { ViewToolbar } from '@features/views/ViewToolbar'; // [新增] 导入统一工具栏组件
@@ -254,20 +254,9 @@ export function LayoutRenderer({ layout, dataStore, app, actionService, itemServ
     }, []);
 
 
-    // [新增] 设置模态框状态
-    const [settingsModalOpen, setSettingsModalOpen] = useState(false);
-    const [currentViewInstance, setCurrentViewInstance] = useState<ViewInstance | null>(null);
-
-    // [新增] 处理设置按钮点击
+    // 设置按钮：打开“视图设置”浮窗（统一 FloatingPanel 能力：可拖动 / 点击外部关闭）
     const handleSettingsClick = useCallback((viewInstance: ViewInstance) => {
-        setCurrentViewInstance(viewInstance);
-        setSettingsModalOpen(true);
-    }, []);
-
-    // [新增] 关闭设置模态框
-    const handleSettingsClose = useCallback(() => {
-        setSettingsModalOpen(false);
-        setCurrentViewInstance(null);
+        openModuleSettingsWidget(viewInstance);
     }, []);
 
     // [P1] 处理主题筛选变化 - 通过 UseCase 层

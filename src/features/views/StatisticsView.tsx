@@ -13,8 +13,8 @@ import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 import IosShareIcon from '@mui/icons-material/IosShare';
 import { exportItemsToMarkdown, getExportConfigByViewType } from '@core/utils/exportUtils';
 import { QuickInputModal } from '@/features/quickinput/QuickInputModal';
-import FloatingWidget from '@/shared/ui/widgets/FloatingWidget';
 import FloatingPanel from '@/shared/ui/primitives/FloatingPanel';
+import { openFloatingWidget, closeFloatingWidget } from '@/shared/ui/widgets/FloatingWidgetManager';
 import { dayjs as dayjsUtil } from '@core/utils/date';
 import type { CategoryConfig, PeriodData } from '@core/utils/statisticsAggregation';
 import { 
@@ -48,145 +48,35 @@ interface StatisticsViewProps {
     allThemes: any[];
 }
 interface PopoverState {
-    target: HTMLElement;
     blocks: Item[];
     title: string;
 }
 
 // =============== 悬浮窗组件 ===============
-const Popover = ({ target, blocks, title, onClose, app, module, actionService, dateRange, currentView, timerService, timers, allThemes }: PopoverState & { 
-    onClose: () => void; 
-    app: App; 
+const PopoverContent = ({ blocks, app, module, timerService, timers, allThemes }: {
+    blocks: Item[];
+    app: App;
     module: ViewInstance;
-    actionService?: any;
-    dateRange: [Date, Date];
-    currentView: string;
     timerService: TimerService;
     timers: any[];
     allThemes: any[];
 }) => {
-    const popoverRef = useRef<HTMLDivElement>(null);
-    const [position, setPosition] = useState({ x: 0, y: 0 });
-    const [isDragging, setIsDragging] = useState(false);
-    const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
-
-    // 初始化位置为屏幕中央
-    useEffect(() => {
-        const centerX = window.innerWidth / 2;
-        const centerY = window.innerHeight / 2;
-        setPosition({ x: centerX, y: centerY });
-    }, []);
-
-
-    // 拖动功能
-    const handleMouseDown = (e: MouseEvent) => {
-        // 只在标题栏上才能拖动
-        if ((e.target as HTMLElement).closest('.sv-popover-title')) {
-            setIsDragging(true);
-            setDragStart({
-                x: e.clientX - position.x,
-                y: e.clientY - position.y
-            });
-        }
-    };
-
-    useEffect(() => {
-        const handleMouseMove = (e: MouseEvent) => {
-            if (isDragging) {
-                setPosition({
-                    x: e.clientX - dragStart.x,
-                    y: e.clientY - dragStart.y
-                });
-            }
-        };
-
-        const handleMouseUp = () => {
-            setIsDragging(false);
-        };
-
-        if (isDragging) {
-            document.addEventListener('mousemove', handleMouseMove);
-            document.addEventListener('mouseup', handleMouseUp);
-        }
-
-        return () => {
-            document.removeEventListener('mousemove', handleMouseMove);
-            document.removeEventListener('mouseup', handleMouseUp);
-        };
-    }, [isDragging, dragStart]);
-
-    const style = {
-        top: `${position.y}px`,
-        left: `${position.x}px`,
-        cursor: isDragging ? 'grabbing' : 'default',
-    };
-
-    // 导出功能
-    const handleExport = () => {
-        if (blocks.length === 0) {
-            new Notice('没有内容可导出');
-            return;
-        }
-        // 使用 StatisticsView 专用的导出配置
-        const exportConfig = getExportConfigByViewType('StatisticsView');
-        const markdownContent = exportItemsToMarkdown(blocks, exportConfig);
-        navigator.clipboard.writeText(markdownContent);
-        new Notice(`"${title}" 的内容已复制到剪贴板！`);
-    };
-
     return (
-        <div ref={popoverRef} style={style} className="sv-popover" onMouseDown={handleMouseDown}>
-            <div className="sv-popover-title">
-                <span>{title}</span>
-                <div class="flex items-center gap-1">
-                    {/* 导出按钮 */}
-                    <Tooltip title="导出为 Markdown" PopperProps={{ disablePortal: true }}>
-                        <AnyIconButton
-                            size="small"
-                            onClick={(e: any) => {
-                                e.stopPropagation();
-                                handleExport();
-                            }}
-                            sx={{ padding: '4px' }}
-                        >
-                            <IosShareIcon sx={{ fontSize: '1rem' }} />
-                        </AnyIconButton>
-                    </Tooltip>
-                    {/* 快捷创建按钮 */}
-                    <Tooltip title="快捷创建" PopperProps={{ disablePortal: true }}>
-                        <AnyIconButton
-                            size="small"
-                            onClick={(e: any) => {
-                                e.stopPropagation();
-                                if (actionService) {
-                                    const layoutDate = dayjsUtil(dateRange[0]);
-                                    const config = actionService.getQuickInputConfigForView(module, layoutDate, currentView);
-                                    if (config) {
-                                        new QuickInputModal(app, config.blockId, config.context, config.themeId).open();
-                                    }
-                                }
-                            }}
-                            sx={{ padding: '4px' }}
-                        >
-                            <AddCircleOutlineIcon sx={{ fontSize: '1rem' }} />
-                        </AnyIconButton>
-                    </Tooltip>
-                </div>
-            </div>
-            <div className="sv-popover-content">
-                {blocks.length === 0 ? <div class="sv-popover-empty">无内容</div> :
-                    <BlockView 
-                        items={blocks} 
-                        app={app} 
-                        fields={module.fields || ['title', 'content', 'categoryKey', 'tags', 'date', 'period']} 
-                        groupFields={module.groupFields}
-                        onMarkDone={() => {}} 
-                        timerService={timerService}
-                        timers={timers}
-                        allThemes={allThemes}
-                    />
-                }
-            </div>
+        <div className="sv-popover-content">
+            {blocks.length === 0 ? (
+                <div class="sv-popover-empty">无内容</div>
+            ) : (
+                <BlockView
+                    items={blocks}
+                    app={app}
+                    fields={module.fields || ['title', 'content', 'categoryKey', 'tags', 'date', 'period']}
+                    groupFields={module.groupFields}
+                    onMarkDone={() => { }}
+                    timerService={timerService}
+                    timers={timers}
+                    allThemes={allThemes}
+                />
+            )}
         </div>
     );
 };
@@ -201,7 +91,6 @@ export function StatisticsView({ items, app, dateRange, module, currentView, use
     const categoryOrder = useMemo(() => categoryConfigs.map((c: CategoryConfig) => c.name), [categoryConfigs]);
     const [selectedCell, setSelectedCell] = useState<any>(null);
     const [popover, setPopover] = useState<PopoverState | null>(null);
-    const popoverWidgetRef = useRef<FloatingWidget | null>(null);
     const openLockRef = useRef(false);
     // 周期字段使用状态
     const [usePeriod, setUsePeriod] = useState(usePeriodField);
@@ -222,42 +111,102 @@ export function StatisticsView({ items, app, dateRange, module, currentView, use
     }, [categoryConfigs, selectedCategories]);
 
 
-    const handleCellClick = (cellIdentifier: any, target: HTMLElement, blocks: Item[], title: string) => {
+    const handleCellClick = (cellIdentifier: any, _target: HTMLElement, blocks: Item[], title: string) => {
         console.log('点击单元格:', { cellIdentifier, title, blocksCount: blocks.length, blocks });
         // 防止同一次点击被触发多次（导致立即打开后又关闭）
         if (openLockRef.current) return;
-        // 切换：如果相同则关闭当前浮窗，否则打开新的浮窗（使用 FloatingWidget）
+        const widgetId = `stats-popover-${module.id}`;
+
+        // 切换：如果相同则关闭当前浮窗，否则打开新的浮窗
         const currentKey = JSON.stringify(cellIdentifier);
         if (popover && JSON.stringify(selectedCell) === currentKey) {
-            // 关闭当前 widget
-            if (popoverWidgetRef.current) {
-                popoverWidgetRef.current.unload();
-                popoverWidgetRef.current = null;
-            }
+            closeFloatingWidget(widgetId);
             setPopover(null);
             setSelectedCell(null);
             return;
         }
 
-        // 打开新的浮窗 widget
-        if (popoverWidgetRef.current) {
-            popoverWidgetRef.current.unload();
-            popoverWidgetRef.current = null;
-        }
+        // 打开新的浮窗 widget（先关闭旧实例，避免残留）
+        closeFloatingWidget(widgetId);
 
         setSelectedCell(cellIdentifier);
-        setPopover({ target, blocks, title });
+        setPopover({ blocks, title });
 
-        const widgetId = `stats-popover-${module.id}-${Date.now()}`;
-        const widget = new FloatingWidget(widgetId, () => (
-            // 默认居中于屏幕；若需在鼠标处打开可传入 coords
-            h(FloatingPanel, { id: widgetId, defaultPosition: { x: window.innerWidth / 2 - 250, y: window.innerHeight / 2 - 150 }, minWidth: 360, onClose: () => widget.unload() },
-                h(Popover, { target, blocks, title, onClose: () => { widget.unload(); popoverWidgetRef.current = null; setPopover(null); setSelectedCell(null); }, app, module, actionService, dateRange, currentView, timerService, timers, allThemes })
-            )
+        const handleClose = () => {
+            closeFloatingWidget(widgetId);
+            setPopover(null);
+            setSelectedCell(null);
+        };
+
+        const handleExport = () => {
+            if (blocks.length === 0) {
+                new Notice('没有内容可导出');
+                return;
+            }
+            const exportConfig = getExportConfigByViewType('StatisticsView');
+            const markdownContent = exportItemsToMarkdown(blocks, exportConfig);
+            navigator.clipboard.writeText(markdownContent);
+            new Notice(`"${title}" 的内容已复制到剪贴板！`);
+        };
+
+        const handleQuickCreate = () => {
+            if (!actionService) return;
+            const layoutDate = dayjsUtil(dateRange[0]);
+            const config = actionService.getQuickInputConfigForView(module, layoutDate, currentView);
+            if (!config) return;
+            new QuickInputModal(app, config.blockId, config.context, config.themeId).open();
+        };
+
+        openFloatingWidget(widgetId, () => (
+            <FloatingPanel
+                id={widgetId}
+                title={title}
+                defaultPosition={{ x: window.innerWidth / 2 - 320, y: window.innerHeight / 2 - 240 }}
+                minWidth={520}
+                maxWidth="90vw"
+                maxHeight="85vh"
+                bodyPadding={0}
+                onClose={handleClose}
+                headerActions={
+                    <div class="flex items-center gap-1">
+                        <Tooltip title="导出为 Markdown" PopperProps={{ disablePortal: true }}>
+                            <AnyIconButton
+                                size="small"
+                                onClick={(e: any) => {
+                                    e.stopPropagation();
+                                    handleExport();
+                                }}
+                                sx={{ padding: '4px' }}
+                            >
+                                <IosShareIcon sx={{ fontSize: '1rem' }} />
+                            </AnyIconButton>
+                        </Tooltip>
+                        <Tooltip title="快捷创建" PopperProps={{ disablePortal: true }}>
+                            <AnyIconButton
+                                size="small"
+                                onClick={(e: any) => {
+                                    e.stopPropagation();
+                                    handleQuickCreate();
+                                }}
+                                sx={{ padding: '4px' }}
+                            >
+                                <AddCircleOutlineIcon sx={{ fontSize: '1rem' }} />
+                            </AnyIconButton>
+                        </Tooltip>
+                    </div>
+                }
+            >
+                <PopoverContent
+                    blocks={blocks}
+                    app={app}
+                    module={module}
+                    timerService={timerService}
+                    timers={timers}
+                    allThemes={allThemes}
+                />
+            </FloatingPanel>
         ));
 
-        popoverWidgetRef.current = widget;
-        widget.load();
         // 设置短期锁，避免连续触发
         openLockRef.current = true;
         setTimeout(() => { openLockRef.current = false; }, 300);

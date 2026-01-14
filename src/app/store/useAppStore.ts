@@ -32,6 +32,7 @@ import { createSettingsSlice, type SettingsSlice } from './slices/settings.slice
 import { createBlocksSlice, type BlocksSlice } from './slices/blocks.slice';
 import { createTimerSlice, type TimerSlice } from './slices/timer.slice';
 import { createUiSlice, type UiSlice } from './slices/ui.slice';
+import { createFloatingWindowsSlice, type FloatingWindowsSlice } from './slices/floatingWindows.slice';
 
 // ============== 类型定义 ==============
 
@@ -58,7 +59,15 @@ export interface ZustandAppCoreActions {
 }
 
 // 组合所有 slices 的类型
-export type ZustandAppStore = ZustandAppCoreState & ZustandAppCoreActions & ThemeSlice & LayoutSlice & SettingsSlice & BlocksSlice & TimerSlice & UiSlice;
+export type ZustandAppStore = ZustandAppCoreState &
+    ZustandAppCoreActions &
+    ThemeSlice &
+    LayoutSlice &
+    SettingsSlice &
+    BlocksSlice &
+    TimerSlice &
+    UiSlice &
+    FloatingWindowsSlice;
 
 // ============== Store 工厂 ==============
 
@@ -147,6 +156,9 @@ export function createAppStore(settingsRepository: SettingsRepository) {
 
             // ============== UI Slice ==============
             ...createUiSlice(set, get, store),
+
+            // ============== Floating Windows Slice ==============
+            ...createFloatingWindowsSlice(set, get, store),
         }))
     );
 }

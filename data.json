@@ -372,7 +372,10 @@
         "date",
         "content"
       ],
-      "group": "theme"
+      "group": "theme",
+      "groupFields": [
+        "theme"
+      ]
     },
     {
       "id": "view_mh4itucqmm9rt",
@@ -444,7 +447,8 @@
       "id": "layout_memcg9jjoq6j4",
       "name": "全局布局",
       "viewInstanceIds": [
-        "view_mg1zanri06mhu"
+        "view_mg1zanri06mhu",
+        "view_membnf1hgjgm3"
       ],
       "displayMode": "list",
       "initialView": "周",
@@ -461,7 +465,6 @@
       "id": "layout_mkbzs71jx81urxx",
       "name": "全局布局 (副本)",
       "viewInstanceIds": [
-        "view_mewr7y1gvq0ro",
         "view_mi5ep8xvvi5mx",
         "view_mer6ll4mtbjry",
         "view_mer6n7pwf7suy",
@@ -8526,7 +8529,7 @@
       }
     ]
   },
-  "floatingTimerEnabled": false,
+  "floatingTimerEnabled": true,
   "activeThemePaths": [
     "思考",
     "思考/时间整理",

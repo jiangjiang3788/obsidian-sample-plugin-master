@@ -7,7 +7,7 @@
  */
 
 import { useMemo } from 'preact/hooks';
-import { FormControlLabel, Checkbox } from '@mui/material';
+import { FormControlLabel, Checkbox, Button } from '@mui/material';
 import { VIEW_OPTIONS, ViewName, getAllFields } from '@/core/types/schema';
 import type { ViewInstance } from '@/core/types/schema';
 import { VIEW_EDITORS } from '@features/settings/registry';
@@ -15,8 +15,8 @@ import { useZustandAppStore, useDataStore, useUseCases } from '@/app/AppStoreCon
 import { SimpleSelect } from '@shared/ui/composites/SimpleSelect';
 import { RuleBuilder } from '@features/settings/RuleBuilder';
 import { Modal } from '@shared/ui/primitives/Modal';
-import FloatingWidget from '@/shared/ui/widgets/FloatingWidget';
 import FloatingPanel from '@/shared/ui/primitives/FloatingPanel';
+import { closeFloatingWidget, openFloatingWidget } from '@/shared/ui/widgets/FloatingWidgetManager';
 
 import { FormField, FieldManager, useSaveHandler } from '@shared/index';
 
@@ -227,26 +227,66 @@ export function ModuleSettingsModal({ isOpen, onClose, module }: Props) {
 }
 
 /**
+ * 浮窗版本（非 Modal Overlay）
+ *
+ * 说明：
+ * - 之前 openModuleSettingsWidget 把 <Modal/> 塞进 <FloatingPanel/>，
+ *   overlay 会吞掉鼠标事件，导致“悬浮窗不能拖动”。
+ * - 这里改为：FloatingPanel 负责窗口能力（拖动/点击外部关闭/zIndex），
+ *   该组件只负责渲染设置表单与底部按钮。
+ */
+function ModuleSettingsPanel({ module, onClose }: { module: ViewInstance; onClose: () => void }) {
+    const currentModule = useZustandAppStore(state => state.settings.viewInstances.find(v => v.id === module.id)) || module;
+
+    const handleSave = useSaveHandler(async () => {
+        await new Promise(resolve => setTimeout(resolve, 100));
+        onClose();
+    }, {
+        successMessage: `已保存视图 "${module.title}" 的设置`,
+        errorMessage: '保存设置失败'
+    });
+
+    return (
+        <div style={{ display: 'flex', flexDirection: 'column', maxHeight: '75vh' }}>
+            <div style={{ flex: 1, overflowY: 'auto', paddingRight: 8 }}>
+                <ViewInstanceEditor vi={currentModule} />
+            </div>
+
+            <div
+                style={{
+                    display: 'flex',
+                    justifyContent: 'flex-end',
+                    gap: 8,
+                    paddingTop: 12,
+                    marginTop: 12,
+                    borderTop: '1px solid var(--background-modifier-border)',
+                }}
+            >
+                <Button onClick={handleSave} variant="contained">保存设置</Button>
+                <Button onClick={onClose} variant="outlined">关闭</Button>
+            </div>
+        </div>
+    );
+}
+
+/**
  * 在浮窗 widget 中打开模块设置（供外部调用，自动负责卸载）
  */
 export function openModuleSettingsWidget(module: ViewInstance) {
-  const widgetId = `module-settings-${module.id}`;
+    const widgetId = `module-settings-${module.id}`;
 
-  const existing = document.getElementById(`think-floating-widget-${widgetId}`);
-  if (existing) existing.remove();
-
-  const widget = new FloatingWidget(widgetId, () => (
-    <FloatingPanel
-      id={widgetId}
-      defaultPosition={{ x: window.innerWidth / 2 - 300, y: window.innerHeight / 2 - 200 }}
-      minWidth={420}
-      onClose={() => widget.unload()}
-    >
-      <ModuleSettingsModal isOpen={true} onClose={() => widget.unload()} module={module} />
-    </FloatingPanel>
-  ));
-
-  widget.load();
-  return widget;
+    return openFloatingWidget(widgetId, () => (
+        <FloatingPanel
+            id={widgetId}
+            title={`视图设置: ${module.title}`}
+            defaultPosition={{ x: window.innerWidth / 2 - 340, y: window.innerHeight / 2 - 260 }}
+            minWidth={520}
+            maxWidth="90vw"
+            maxHeight="85vh"
+            onClose={() => closeFloatingWidget(widgetId)}
+        >
+            <ModuleSettingsPanel module={module} onClose={() => closeFloatingWidget(widgetId)} />
+        </FloatingPanel>
+    ));
 }
 

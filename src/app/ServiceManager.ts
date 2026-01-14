@@ -10,6 +10,7 @@ import { FloatingTimerWidget } from '@features/timer/FloatingTimerWidget';
 import { FeatureLoader } from '@/app/FeatureLoader';
 import { safeAsync } from '@shared/utils/errorHandler';
 import { startMeasure } from '@shared/utils/performance';
+import { closeAllFloatingWidgets } from '@/shared/ui/widgets/FloatingWidgetManager';
 import { SETTINGS_PERSISTENCE_TOKEN, SettingsRepository, type ISettingsPersistence } from '@core/services/SettingsRepository';
 import { createAppStore, STORE_TOKEN, type AppStoreInstance } from '@/app/store/useAppStore';
 import { createUseCases, USECASES_TOKEN, type UseCases } from '@/app/usecases';
@@ -88,6 +89,10 @@ export class ServiceManager {
      */
     cleanup(): void {
         try {
+            // 统一关闭所有由 FloatingWidgetManager 打开的悬浮窗
+            // （例如：统计 Popover / 视图设置浮窗等）
+            closeAllFloatingWidgets();
+
             this.services.timerWidget?.unload();
             this.services.rendererService?.cleanup();
             this.services = {};
