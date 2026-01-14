@@ -39,6 +39,32 @@ module.exports = {
       },
     },
 
+    // ==================================================================================
+    // APP/USECASES：禁止依赖 features（UseCases 必须保持纯应用层 Facade）
+    // ==================================================================================
+    {
+      files: ['src/app/usecases/**/*.{ts,tsx,js,jsx}'],
+      rules: {
+        'no-restricted-imports': [
+          'error',
+          {
+            patterns: [
+              {
+                group: [
+                  '@/features/**',
+                  '@features/**',
+                  // 任意深度的相对路径：../../..../features/**
+                  '**/features/**',
+                ],
+                message:
+                  'app/usecases 层禁止依赖 features ❌（UseCases 只能依赖 core/app 内部能力；UI 依赖应由上层组合根注入）',
+              },
+            ],
+          },
+        ],
+      },
+    },
+
     // ✅ core allowlist 已清空：
     // timelineInteraction 中的 UI/feature 依赖已迁移到 features/views/timelineInteraction.ts
 
@@ -54,43 +80,72 @@ module.exports = {
             patterns: [
               // 1) 禁止直接依赖 app 内部 store（只允许通过 '@/app/public' 暴露的 read-only helpers）
               {
-                group: ['@/app/store/**', '../app/store/**', '../../app/store/**'],
+                group: [
+                  '@/app/store/**',
+                  '@app/store/**',
+                  // 任意深度的相对路径：../../..../app/store/**
+                  '**/app/store/**',
+                ],
                 message:
                   "features 层禁止依赖 app/store/** ❌ 请通过 '@/app/public' 获取必要能力",
               },
 
               // 2) 禁止直接依赖 app/usecases 内部实现（只允许通过 public 或 DI token）
               {
-                group: ['@/app/usecases/**', '../app/usecases/**', '../../app/usecases/**'],
+                group: [
+                  '@/app/usecases/**',
+                  '@app/usecases/**',
+                  '**/app/usecases/**',
+                ],
                 message:
                   "features 层禁止依赖 app/usecases/** ❌ 请通过 '@/app/public' 或注入 USECASES_TOKEN",
               },
 
               // 3) 禁止直接依赖 AppStoreContext / createServices（统一出口）
               {
-                group: ['@/app/AppStoreContext', '../app/AppStoreContext', '../../app/AppStoreContext'],
+                group: [
+                  '@/app/AppStoreContext',
+                  '@app/AppStoreContext',
+                  '**/app/AppStoreContext',
+                ],
                 message:
                   "features 层禁止直接依赖 AppStoreContext ❌ 请从 '@/app/public' 引入",
               },
               {
-                group: ['@/app/createServices', '../app/createServices', '../../app/createServices'],
+                group: [
+                  '@/app/createServices',
+                  '@app/createServices',
+                  '**/app/createServices',
+                ],
                 message:
                   "features 层禁止直接依赖 createServices ❌ 请从 '@/app/public' 引入",
               },
 
               // 4) 组合根禁止下沉
               {
-                group: ['@/app/ServiceManager', '../app/ServiceManager', '../../app/ServiceManager'],
+                group: [
+                  '@/app/ServiceManager',
+                  '@app/ServiceManager',
+                  '**/app/ServiceManager',
+                ],
                 message: 'features 层禁止依赖 ServiceManager（组合根）❌',
               },
               {
-                group: ['@/app/FeatureLoader', '../app/FeatureLoader', '../../app/FeatureLoader'],
+                group: [
+                  '@/app/FeatureLoader',
+                  '@app/FeatureLoader',
+                  '**/app/FeatureLoader',
+                ],
                 message: 'features 层禁止依赖 FeatureLoader（组合根）❌',
               },
 
               // 5) 明确禁止 slices（写入口只能是 useCases）
               {
-                group: ['@/app/store/slices/**', '../app/store/slices/**', '../../app/store/slices/**'],
+                group: [
+                  '@/app/store/slices/**',
+                  '@app/store/slices/**',
+                  '**/app/store/slices/**',
+                ],
                 message: 'features 层禁止直接 import slices ❌（写入口必须通过 useCases）',
               },
             ],
@@ -111,29 +166,50 @@ module.exports = {
             patterns: [
               // shared 可以依赖 core，但不应该依赖 app 内部实现
               {
-                group: ['@/app/store/**', '../app/store/**', '../../app/store/**'],
+                group: [
+                  '@/app/store/**',
+                  '@app/store/**',
+                  '**/app/store/**',
+                ],
                 message:
                   "shared 层禁止依赖 app/store/** ❌ 如需能力请通过 '@/app/public'",
               },
               {
-                group: ['@/app/usecases/**', '../app/usecases/**', '../../app/usecases/**'],
+                group: [
+                  '@/app/usecases/**',
+                  '@app/usecases/**',
+                  '**/app/usecases/**',
+                ],
                 message:
                   "shared 层禁止依赖 app/usecases/** ❌ 如需能力请通过 '@/app/public'",
               },
               {
-                group: ['@/app/AppStoreContext', '../app/AppStoreContext', '../../app/AppStoreContext'],
+                group: [
+                  '@/app/AppStoreContext',
+                  '@app/AppStoreContext',
+                  '**/app/AppStoreContext',
+                ],
                 message:
                   "shared 层禁止直接依赖 AppStoreContext ❌ 请从 '@/app/public' 引入",
               },
               {
-                group: ['@/app/createServices', '../app/createServices', '../../app/createServices'],
+                group: [
+                  '@/app/createServices',
+                  '@app/createServices',
+                  '**/app/createServices',
+                ],
                 message:
                   "shared 层禁止直接依赖 createServices ❌ 请从 '@/app/public' 引入",
               },
 
               // 核心冻结点：shared 不允许依赖 features
               {
-                group: ['@/features/**', '@features/**', '../features/**', '../../features/**'],
+                group: [
+                  '@/features/**',
+                  '@features/**',
+                  // 任意深度的相对路径：../../..../features/**
+                  '**/features/**',
+                ],
                 message: 'shared 层禁止依赖 features ❌（避免 shared 成为绕过边界的通道）',
               },
             ],

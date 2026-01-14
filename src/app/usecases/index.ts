@@ -28,7 +28,7 @@ import { ThemeUseCase, createThemeUseCase } from './theme.usecase';
 import { LayoutUseCase, createLayoutUseCase } from './layout.usecase';
 import { ViewInstanceUseCase, createViewInstanceUseCase } from './viewinstance.usecase';
 import { TimerUseCase, createTimerUseCase } from './timer.usecase';
-import type { TimerStateService } from '@features/timer/TimerStateService';
+import type { TimerStateService } from '@core/services/TimerStateService';
 
 /**
  * Zustand Store 类型（用于 createUseCases 参数）

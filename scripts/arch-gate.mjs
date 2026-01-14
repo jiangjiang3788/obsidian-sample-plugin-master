@@ -1,283 +1,292 @@
-#!/usr/bin/env node
-/**
- * P1-1 CI 防回流固化脚本
- * 
- * 架构约束门禁检查：
- * A) AppStore 永不回流 - 确保 AppStore 仅在 app 层使用
- * B) features 禁止 import app/store/slices - 必须通过 useCases
- * C) core 禁止 import features - 保持依赖方向正确
- * 
- * 使用方式：
- *   npm run arch:gate
- *   node scripts/arch-gate.mjs
- */
+// scripts/arch-gate.mjs
+// -----------------------------------------------------------------------------
+// Architecture Gate (Phase 4)
+// -----------------------------------------------------------------------------
+// 目标：把“约定”变成“不可绕过的事实”。
+//
+// 为什么不只依赖 ESLint：
+// - ESLint 可以被局部 disable；也容易因为 patterns 漏洞被绕过。
+// - 这个脚本会“解析并解析后校验”每个 import 的真实目标路径，作为 CI 的硬闸门。
+//
+// 设计原则：
+// - 规则尽量少，但必须强：
+//   1) core 不能依赖 app/features
+//   2) shared 不能依赖 features；shared 访问 app 只能通过 app/public
+//   3) features 访问 app 只能通过 app/public
+//   4) app/usecases 不能依赖 features（UseCases 必须保持纯应用层 Facade）
+//
+// 运行：
+//   npm run arch:gate
+// -----------------------------------------------------------------------------
 
-import { execFileSync } from 'child_process';
-import { existsSync } from 'fs';
+import fs from 'node:fs/promises';
+import path from 'node:path';
 
-const RESET = '\x1b[0m';
-const RED = '\x1b[31m';
-const GREEN = '\x1b[32m';
-const YELLOW = '\x1b[33m';
-const BLUE = '\x1b[34m';
-
-class ArchGateError extends Error {
-  constructor(message) {
-    super(message);
-    this.name = 'ArchGateError';
-  }
-}
-
-function log(message, color = RESET) {
-  console.log(`${color}${message}${RESET}`);
-}
-
-function execRipgrep(pattern, path, extraArgs = []) {
-  try {
-    const args = [
-      '-n',                    // 显示行号
-      '--color=never',         // 禁用颜色
-      '--no-heading',          // 不显示文件名标题
-      ...extraArgs,
-      pattern,
-      path
-    ];
-    
-    const result = execFileSync('rg', args, {
-      encoding: 'utf-8',
-      stdio: 'pipe'
-    });
-    
-    return result.trim();
-  } catch (error) {
-    // rg 返回 exit code 1 表示没有找到匹配
-    if (error.status === 1) {
-      return '';
-    }
-    // 其他错误（如 rg 不存在）
-    throw error;
-  }
-}
-
-function checkRipgrepExists() {
-  try {
-    execFileSync('rg', ['--version'], { stdio: 'ignore' });
-  } catch (error) {
-    throw new ArchGateError(
-      '❌ ripgrep (rg) 未安装。\n' +
-      '   请安装 ripgrep: https://github.com/BurntSushi/ripgrep#installation\n' +
-      '   - Windows: scoop install ripgrep 或 choco install ripgrep\n' +
-      '   - macOS: brew install ripgrep\n' +
-      '   - Linux: apt install ripgrep 或 dnf install ripgrep'
-    );
-  }
-}
+const ROOT = process.cwd();
+const SRC_DIR = path.join(ROOT, 'src');
 
 /**
- * A) AppStore 永不回流检查
- * 规则：AppStore 仅应在 app 层使用，features/core 层不应直接使用
+ * 你可以在这里添加“明确的历史例外”。
+ * 例外必须是非常具体的（到文件级别），避免变成新的绕过通道。
  */
-function checkAppStoreNoBackflow() {
-  log('\n🔍 [A] 检查 AppStore 回流...', BLUE);
-  
-  if (!existsSync('src')) {
-    log('⚠️  src 目录不存在，跳过检查', YELLOW);
+const ALLOWLIST = new Set([
+  // format: `${fromRel} -> ${toRel}`
+]);
+
+const EXTENSIONS = ['.ts', '.tsx', '.js', '.jsx', '.mjs', '.cjs'];
+
+function toPosix(p) {
+  return p.split(path.sep).join('/');
+}
+
+function relToRoot(absPath) {
+  return toPosix(path.relative(ROOT, absPath));
+}
+
+function layerOf(absPath) {
+  const rel = relToRoot(absPath);
+  if (rel.startsWith('src/core/')) return 'core';
+  if (rel.startsWith('src/app/')) return 'app';
+  if (rel.startsWith('src/shared/')) return 'shared';
+  if (rel.startsWith('src/features/')) return 'features';
+  return 'other';
+}
+
+function isUseCasesFile(importerAbsPath) {
+  const rel = relToRoot(importerAbsPath);
+  return rel.startsWith('src/app/usecases/');
+}
+
+function isAppPublicFile(targetAbsPath) {
+  return relToRoot(targetAbsPath) === 'src/app/public.ts';
+}
+
+async function exists(p) {
+  try {
+    await fs.access(p);
     return true;
-  }
-  
-  // 排除允许使用 AppStore 的文件
-  const excludeGlobs = [
-    '--glob', '!src/app/**',                    // app 层允许
-    '--glob', '!**/__tests__/**',               // 测试文件允许
-    '--glob', '!**/*.test.ts',                  // 测试文件允许
-    '--glob', '!**/*.test.tsx',                 // 测试文件允许
-    '--glob', '!**/ARCH_CONSTRAINTS.md',        // 文档允许
-    '--glob', '!**/README.md',                  // 文档允许
-    '--glob', '!scripts/**',                    // 脚本允许
-    '--glob', '!docs/**',                       // 文档允许
-  ];
-  
-  const violations = execRipgrep('\\bAppStore\\b', 'src', excludeGlobs);
-  
-  if (violations) {
-    log('❌ 发现 AppStore 回流违规：', RED);
-    log('\n违规文件：', YELLOW);
-    log(violations);
-    log('\n💡 修复建议：', YELLOW);
-    log('   - features 层应使用 useUseCases() hook，而不是直接访问 AppStore');
-    log('   - core 层不应依赖 app 层，考虑重构依赖关系');
-    log('   - 如果是测试文件，确保放在 __tests__ 目录或以 .test.ts(x) 结尾\n');
+  } catch {
     return false;
   }
-  
-  log('✅ 通过 - 未发现 AppStore 回流', GREEN);
-  return true;
 }
 
-/**
- * B) features 禁止 import app/store/slices
- * 规则：features 层必须通过 useCases 访问数据，不可直接 import slices
- * 注意：允许 import type（类型导入不会造成运行时依赖）
- */
-function checkFeaturesNoSlices() {
-  log('\n🔍 [B] 检查 features 是否违规 import slices...', BLUE);
-  
-  if (!existsSync('src/features')) {
-    log('⚠️  src/features 目录不存在，跳过检查', YELLOW);
-    return true;
+async function resolveFile(baseAbsPath) {
+  // 1) direct file with extension
+  if (path.extname(baseAbsPath)) {
+    if (await exists(baseAbsPath)) return baseAbsPath;
+  } else {
+    // 2) try with extensions
+    for (const ext of EXTENSIONS) {
+      const p = baseAbsPath + ext;
+      if (await exists(p)) return p;
+    }
   }
-  
-  // 先搜索所有包含 from slices 的行，然后在 JS 中过滤掉 import type
-  const patterns = [
-    'from [\'"]@/app/store/slices',
-    'from [\'"]app/store/slices',  
-    'from [\'"]\\.\\./\\.\\./app/store/slices',
-    'from [\'"]\\.\\./app/store/slices',
-  ];
-  
-  const excludeGlobs = [
-    '--glob', '!**/__tests__/**',
-    '--glob', '!**/*.test.ts',
-    '--glob', '!**/*.test.tsx',
-    '--glob', '!**/ARCH_CONSTRAINTS.md',
-  ];
-  
-  let hasViolations = false;
-  let allViolations = '';
-  
-  for (const pattern of patterns) {
-    const violations = execRipgrep(pattern, 'src/features', excludeGlobs);
-    if (violations) {
-      // 过滤：排除 import type 行（类型导入允许）
-      const lines = violations.split('\n').filter(line => {
-        // 跳过空行
-        if (!line.trim()) return false;
-        // 跳过 import type
-        if (line.match(/import\s+type\s+/)) return false;
-        return true;
-      });
-      
-      if (lines.length > 0) {
-        hasViolations = true;
-        allViolations += lines.join('\n') + '\n';
+
+  // 3) directory index
+  if (await exists(baseAbsPath)) {
+    // might be a dir
+    for (const ext of EXTENSIONS) {
+      const idx = path.join(baseAbsPath, 'index' + ext);
+      if (await exists(idx)) return idx;
+    }
+  }
+
+  return null;
+}
+
+async function resolveImport(importerAbsPath, source) {
+  // External deps
+  if (!source.startsWith('.') && !source.startsWith('@/') && !source.startsWith('@')) {
+    return { kind: 'external' };
+  }
+
+  // Relative
+  if (source.startsWith('.')) {
+    const base = path.resolve(path.dirname(importerAbsPath), source);
+    const resolved = await resolveFile(base);
+    if (resolved) return { kind: 'internal', absPath: resolved };
+    return { kind: 'unresolved' };
+  }
+
+  // Alias: @/ -> src/
+  if (source.startsWith('@/')) {
+    const base = path.join(SRC_DIR, source.slice(2));
+    const resolved = await resolveFile(base);
+    if (resolved) return { kind: 'internal', absPath: resolved };
+    return { kind: 'unresolved' };
+  }
+
+  // Alias: @main
+  if (source === '@main') {
+    const resolved = await resolveFile(path.join(SRC_DIR, 'main'));
+    if (resolved) return { kind: 'internal', absPath: resolved };
+    return { kind: 'unresolved' };
+  }
+
+  // Alias family: @core/, @app/, @shared/, @features/, @platform/ ...
+  const aliasMap = {
+    '@core/': path.join(SRC_DIR, 'core'),
+    '@app/': path.join(SRC_DIR, 'app'),
+    '@shared/': path.join(SRC_DIR, 'shared'),
+    '@features/': path.join(SRC_DIR, 'features'),
+    '@platform/': path.join(SRC_DIR, 'platform'),
+    '@lib/': path.join(SRC_DIR, 'lib'),
+    '@store/': path.join(SRC_DIR, 'store'),
+    '@ui/': path.join(SRC_DIR, 'ui'),
+    '@views/': path.join(SRC_DIR, 'views'),
+    '@hooks/': path.join(SRC_DIR, 'hooks'),
+    '@config/': path.join(SRC_DIR, 'config'),
+    '@types/': path.join(SRC_DIR, 'types'),
+    '@domain/': path.join(SRC_DIR, 'lib/types/domain'),
+    '@utils/': path.join(SRC_DIR, 'utils'),
+    '@services/': path.join(SRC_DIR, 'lib/services'),
+    '@constants/': path.join(SRC_DIR, 'constants'),
+  };
+
+  for (const [prefix, dir] of Object.entries(aliasMap)) {
+    if (source.startsWith(prefix)) {
+      const base = path.join(dir, source.slice(prefix.length));
+      const resolved = await resolveFile(base);
+      if (resolved) return { kind: 'internal', absPath: resolved };
+      return { kind: 'unresolved' };
+    }
+  }
+
+  // Unknown @xxx - treat as external to avoid false positives.
+  return { kind: 'external' };
+}
+
+function extractImportSources(code) {
+  const sources = new Set();
+
+  // import ... from 'x' / export ... from 'x' / import 'x'
+  const re1 = /\b(?:import|export)\s+(?:type\s+)?(?:[^'"\n;]*?\s+from\s+)?['"]([^'"]+)['"]/g;
+  let m;
+  while ((m = re1.exec(code))) sources.add(m[1]);
+
+  // dynamic import('x')
+  const re2 = /\bimport\s*\(\s*['"]([^'"]+)['"]\s*\)/g;
+  while ((m = re2.exec(code))) sources.add(m[1]);
+
+  // require('x')
+  const re3 = /\brequire\s*\(\s*['"]([^'"]+)['"]\s*\)/g;
+  while ((m = re3.exec(code))) sources.add(m[1]);
+
+  return [...sources];
+}
+
+async function walk(dirAbs, out) {
+  const entries = await fs.readdir(dirAbs, { withFileTypes: true });
+  for (const e of entries) {
+    const p = path.join(dirAbs, e.name);
+    if (e.isDirectory()) {
+      // skip build artifacts
+      if (e.name === 'node_modules' || e.name === 'dist') continue;
+      await walk(p, out);
+    } else if (e.isFile()) {
+      if (!EXTENSIONS.includes(path.extname(e.name))) continue;
+      out.push(p);
+    }
+  }
+}
+
+function formatViolation({ importerRel, source, targetRel, message }) {
+  return [
+    `❌ ${message}`,
+    `  from: ${importerRel}`,
+    `  import: ${source}`,
+    `  to: ${targetRel}`,
+  ].join('\n');
+}
+
+async function main() {
+  const files = [];
+  await walk(SRC_DIR, files);
+
+  const violations = [];
+
+  for (const importerAbs of files) {
+    const importerRel = relToRoot(importerAbs);
+    const importerLayer = layerOf(importerAbs);
+
+    // only gate the main architecture layers
+    if (importerLayer === 'other') continue;
+
+    const code = await fs.readFile(importerAbs, 'utf8');
+    const sources = extractImportSources(code);
+
+    for (const source of sources) {
+      const resolved = await resolveImport(importerAbs, source);
+      if (resolved.kind !== 'internal') continue;
+
+      const targetAbs = resolved.absPath;
+      const targetRel = relToRoot(targetAbs);
+      const targetLayer = layerOf(targetAbs);
+
+      const allowKey = `${importerRel} -> ${targetRel}`;
+      if (ALLOWLIST.has(allowKey)) continue;
+
+      // ---------------- Rule 1: core cannot depend on app/features ----------------
+      if (importerLayer === 'core' && (targetLayer === 'app' || targetLayer === 'features')) {
+        violations.push({
+          importerRel,
+          source,
+          targetRel,
+          message: '[R1] core 不能依赖 app/features',
+        });
+        continue;
+      }
+
+      // ---------------- Rule 2: shared cannot depend on features ----------------
+      if (importerLayer === 'shared' && targetLayer === 'features') {
+        violations.push({
+          importerRel,
+          source,
+          targetRel,
+          message: '[R2] shared 不能依赖 features',
+        });
+        continue;
+      }
+
+      // ---------------- Rule 3: features/shared can only access app via app/public ----------------
+      if ((importerLayer === 'features' || importerLayer === 'shared') && targetLayer === 'app') {
+        if (!isAppPublicFile(targetAbs)) {
+          violations.push({
+            importerRel,
+            source,
+            targetRel,
+            message: `[R3] ${importerLayer} 访问 app 只能通过 src/app/public.ts`,
+          });
+          continue;
+        }
+      }
+
+      // ---------------- Rule 4: app/usecases cannot depend on features ----------------
+      if (isUseCasesFile(importerAbs) && targetLayer === 'features') {
+        violations.push({
+          importerRel,
+          source,
+          targetRel,
+          message: '[R4] app/usecases 不能依赖 features',
+        });
+        continue;
       }
     }
   }
-  
-  if (hasViolations) {
-    log('❌ 发现 features 层违规 import slices：', RED);
-    log('\n违规文件：', YELLOW);
-    log(allViolations);
-    log('💡 修复建议：', YELLOW);
-    log('   - 移除 features 中对 slices 的直接 import（import type 允许）');
-    log('   - 使用 useUseCases() hook 访问业务逻辑');
-    log('   - 例如：const useCases = useUseCases(); useCases.theme.addTheme(...)\n');
-    return false;
+
+  if (violations.length > 0) {
+    console.error('\n================ Architecture Gate FAILED ================');
+    for (const v of violations) {
+      console.error(formatViolation(v));
+      console.error('');
+    }
+    console.error(`Total violations: ${violations.length}`);
+    console.error('========================================================\n');
+    process.exitCode = 1;
+    return;
   }
-  
-  log('✅ 通过 - features 层未违规 import slices（import type 允许）', GREEN);
-  return true;
+
+  console.log('\n✅ Architecture Gate PASSED (no boundary violations)');
 }
 
-/**
- * C) core 禁止 import features
- * 规则：core 层是底层模块，不应依赖 features 层
- */
-function checkCoreNoFeatures() {
-  log('\n🔍 [C] 检查 core 是否违规 import features...', BLUE);
-  
-  if (!existsSync('src/core')) {
-    log('⚠️  src/core 目录不存在，跳过检查', YELLOW);
-    return true;
-  }
-  
-  // 检查多种可能的 import 模式
-  const patterns = [
-    'from [\'"]@/features',
-    'from [\'"]features/',
-    'from [\'"]\\.\\./\\.\\./features',
-    'from [\'"]\\.\\./features',
-    'from [\'"]~/features',
-    'import.*from [\'"]@/features',
-    'import.*from [\'"]features/',
-  ];
-  
-  const excludeGlobs = [
-    '--glob', '!**/__tests__/**',
-    '--glob', '!**/*.test.ts',
-    '--glob', '!**/*.test.tsx',
-  ];
-  
-  let hasViolations = false;
-  let allViolations = '';
-  
-  for (const pattern of patterns) {
-    const violations = execRipgrep(pattern, 'src/core', excludeGlobs);
-    if (violations) {
-      hasViolations = true;
-      allViolations += violations + '\n';
-    }
-  }
-  
-  if (hasViolations) {
-    log('❌ 发现 core 层违规 import features：', RED);
-    log('\n违规文件：', YELLOW);
-    log(allViolations);
-    log('💡 修复建议：', YELLOW);
-    log('   - core 层不应依赖 features 层');
-    log('   - 考虑将共享逻辑移至 core 层');
-    log('   - 或通过依赖注入的方式解耦\n');
-    return false;
-  }
-  
-  log('✅ 通过 - core 层未违规 import features', GREEN);
-  return true;
-}
-
-function main() {
-  log('╔════════════════════════════════════════════════════════╗', BLUE);
-  log('║         P1-1 CI 架构门禁检查 (Architecture Gate)      ║', BLUE);
-  log('╚════════════════════════════════════════════════════════╝', BLUE);
-  
-  try {
-    // 检查 ripgrep 是否安装
-    checkRipgrepExists();
-    
-    // 执行三项检查
-    const checkA = checkAppStoreNoBackflow();
-    const checkB = checkFeaturesNoSlices();
-    const checkC = checkCoreNoFeatures();
-    
-    // 汇总结果
-    log('\n' + '═'.repeat(60), BLUE);
-    log('检查结果汇总：', BLUE);
-    log(`  [A] AppStore 回流检查:        ${checkA ? '✅ 通过' : '❌ 失败'}`, checkA ? GREEN : RED);
-    log(`  [B] features→slices 检查:     ${checkB ? '✅ 通过' : '❌ 失败'}`, checkB ? GREEN : RED);
-    log(`  [C] core→features 检查:       ${checkC ? '✅ 通过' : '❌ 失败'}`, checkC ? GREEN : RED);
-    log('═'.repeat(60) + '\n', BLUE);
-    
-    if (checkA && checkB && checkC) {
-      log('🎉 所有架构约束检查通过！', GREEN);
-      log('   代码库符合 P1-1 架构边界要求\n', GREEN);
-      process.exit(0);
-    } else {
-      log('💥 架构约束检查失败！', RED);
-      log('   请根据上述建议修复违规代码\n', RED);
-      process.exit(1);
-    }
-  } catch (error) {
-    if (error instanceof ArchGateError) {
-      log(error.message, RED);
-    } else {
-      log('❌ 执行检查时发生错误：', RED);
-      log(error.message, RED);
-      if (error.stack) {
-        log('\n堆栈跟踪：', YELLOW);
-        log(error.stack, YELLOW);
-      }
-    }
-    process.exit(1);
-  }
-}
-
-main();
+await main();

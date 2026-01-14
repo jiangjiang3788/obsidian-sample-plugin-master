@@ -2,7 +2,7 @@ import { container } from 'tsyringe';
 import { DataStore } from '@core/services/DataStore';
 import { RendererService } from '@/features/settings/RendererService';
 import { ActionService } from '@core/services/ActionService';
-import { TimerStateService } from '@features/timer/TimerStateService';
+import { TimerStateService } from '@core/services/TimerStateService';
 import { InputService } from '@core/services/InputService';
 import { ItemService } from '@core/services/ItemService';
 import { TimerService } from '@features/timer/TimerService';

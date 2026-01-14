@@ -14,7 +14,7 @@ import './styles/main.css';
 import { safeAsync } from '@shared/utils/errorHandler';
 import { performanceMonitor, startMeasure } from '@shared/utils/performance';
 import { ServiceManager } from '@/app/ServiceManager';
-import { TimerStateService } from '@features/timer/TimerStateService';
+import { TimerStateService } from '@core/services/TimerStateService';
 import { TimerService } from '@features/timer/TimerService';
 import { ActionService } from '@core/services/ActionService';
 import { AiChatModal } from '@features/aichat';

@@ -1,12 +1,6 @@
 import { StateCreator } from 'zustand';
 
-export interface TimerState {
-    id: string;
-    taskId: string;
-    startTime: number;
-    elapsedSeconds: number;
-    status: 'running' | 'paused';
-}
+import type { TimerState } from '@core/types/timer';
 
 export interface TimerSlice {
     timer: {
