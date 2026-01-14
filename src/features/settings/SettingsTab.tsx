@@ -13,9 +13,7 @@ import { LayoutSettings } from './LayoutSettings';
 import { InputSettings } from './InputSettings';
 import { GeneralSettings } from './GeneralSettings';
 import { AiSettings } from './AiSettings';
-import { ServicesProvider, type Services } from '@/app/public';
-import { createServices } from '@/app/public';
-import { container } from 'tsyringe';
+import { ServicesProvider, createServices, type Services } from '@/app/public';
 
 function a11yProps(index: number) {
     return { id: `settings-tab-${index}`, 'aria-controls': `settings-tabpanel-${index}` };
@@ -61,8 +59,9 @@ export class SettingsTab extends PluginSettingTab {
     constructor(public app: App, private plugin: ThinkPlugin) {
         super(app, plugin);
         this.id = plugin.manifest.id;
-        // P1-2: 使用 createServices 统一创建服务
-        this.services = createServices(container);
+        // Phase 4.3: 禁止在 features 层 import tsyringe container
+        // - Services 只能通过 app/public 的 createServices() 获取
+        this.services = createServices();
     }
 
     display(): void {

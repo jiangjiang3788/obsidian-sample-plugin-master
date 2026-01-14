@@ -175,6 +175,33 @@ function extractImportSources(code) {
   return [...sources];
 }
 
+function hasTsyringeContainerAccess(code) {
+  // Phase 4.3: 禁止在 features/shared 直接获得 DI container
+  // - import { container } from 'tsyringe'
+  // - import * as di from 'tsyringe' (namespace import 可访问 di.container)
+  // - import di from 'tsyringe' (default import 也可访问 di.container)
+  // - dynamic import('tsyringe') / require('tsyringe')
+  // - const { container } = require('tsyringe')
+  // - require('tsyringe').container
+  const importRe = /\bimport\s*{[^}]*\bcontainer\b[^}]*}\s*from\s*['"]tsyringe['"]/m;
+  const namespaceImportRe = /\bimport\s*\*\s*as\s*\w+\s*from\s*['"]tsyringe['"]/m;
+  const defaultImportRe = /\bimport\s+\w+\s+from\s*['"]tsyringe['"]/m;
+  const dynamicImportRe = /\bimport\s*\(\s*['"]tsyringe['"]\s*\)/m;
+  const requireAnyRe = /\brequire\(\s*['"]tsyringe['"]\s*\)/m;
+  const requireDestructureRe = /\bconst\s*{[^}]*\bcontainer\b[^}]*}\s*=\s*require\(\s*['"]tsyringe['"]\s*\)/m;
+  const requirePropRe = /\brequire\(\s*['"]tsyringe['"]\s*\)\s*\.\s*container\b/m;
+  return (
+    importRe.test(code) ||
+    namespaceImportRe.test(code) ||
+    defaultImportRe.test(code) ||
+    dynamicImportRe.test(code) ||
+    // require(...) 一律视为危险：拿到了模块，就能拿到 container
+    requireAnyRe.test(code) ||
+    requireDestructureRe.test(code) ||
+    requirePropRe.test(code)
+  );
+}
+
 async function walk(dirAbs, out) {
   const entries = await fs.readdir(dirAbs, { withFileTypes: true });
   for (const e of entries) {
@@ -213,6 +240,18 @@ async function main() {
     if (importerLayer === 'other') continue;
 
     const code = await fs.readFile(importerAbs, 'utf8');
+
+    // ---------------- Rule 0: features/shared cannot access tsyringe.container ----------------
+    if ((importerLayer === 'features' || importerLayer === 'shared') && hasTsyringeContainerAccess(code)) {
+      violations.push({
+        importerRel,
+        source: "tsyringe.container",
+        targetRel: '(external)',
+        message:
+          '[R0] features/shared 禁止直接获取 tsyringe.container（组合根必须上移到 app/main）',
+      });
+      // continue scanning to surface other violations too
+    }
     const sources = extractImportSources(code);
 
     for (const source of sources) {

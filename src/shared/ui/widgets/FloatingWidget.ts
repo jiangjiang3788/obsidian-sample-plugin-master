@@ -2,9 +2,7 @@
 import { render, h } from 'preact';
 import { unmountComponentAtNode } from 'preact/compat';
 import type { ComponentChildren } from 'preact';
-import { ServicesProvider } from '@/app/public';
-import { createServices } from '@/app/public';
-import { container } from 'tsyringe';
+import { ServicesProvider, createServices } from '@/app/public';
 
 /**
  * 通用 FloatingWidget：在 document.body 上创建容器并渲染传入的 Preact 子树
@@ -44,7 +42,9 @@ export class FloatingWidget {
     private render() {
         if (!this.containerEl) return;
         // wrap with ServicesProvider so hooks/useCases inside work
-        const services = createServices(container);
+        // Phase 4.3: shared 层禁止 import tsyringe container
+        // - Services 只能通过 app/public 的 createServices() 获取
+        const services = createServices();
         console.log('[FloatingWidget] render()', this.id);
         const tree = h(ServicesProvider, { services, children: this.renderFn() });
         render(tree, this.containerEl);

@@ -1,17 +1,17 @@
 // src/features/logic/CodeblockEmbedder.ts
 /**
- * P0-3: CodeblockEmbedder - 通过 DI 获取 store
- * 
- * 改动说明：
- * - 使用 container.resolve(STORE_TOKEN) 获取 store
+ * P0-3: CodeblockEmbedder - 通过 app/public 获取 store
+ *
+ * Phase 4.3: 组合根禁止下沉
+ * - features 层禁止直接 import tsyringe container
+ * - 使用 createServices() 作为唯一入口拿到 zustandStore
  * - 使用纯函数 getZustandState(store, selector) 读取 settings
  */
 import { render } from 'preact';
 import { Notice, Plugin } from 'obsidian';
-import { container } from 'tsyringe';
 import { CODEBLOCK_LANG } from '@/core/types/constants';
 import { DataStore } from '@core/services/DataStore';
-import { getZustandState, STORE_TOKEN, type AppStoreInstance } from '@/app/public';
+import { createServices, getZustandState, type AppStoreInstance } from '@/app/public';
 import { RendererService } from '@/features/settings/RendererService';
 import type { Layout } from '@/core/types/schema';
 import type { ActionService } from '@core/services/ActionService';
@@ -26,8 +26,8 @@ export class CodeblockEmbedder {
         private rendererService: RendererService,
         private actionService: ActionService,
     ) {
-        // P0-3: 从 DI 容器获取 store
-        this.store = container.resolve<AppStoreInstance>(STORE_TOKEN);
+        // Phase 4.3: 只能通过 app/public 获取 store（禁止 container 下沉）
+        this.store = createServices().zustandStore;
         this.registerProcessor();
     }
 

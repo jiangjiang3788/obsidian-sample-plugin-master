@@ -10,9 +10,7 @@ import { h } from 'preact';
 import { App, Modal, Notice } from 'obsidian';
 import { render, unmountComponentAtNode } from 'preact/compat';
 import { useState, useMemo, useEffect } from 'preact/hooks';
-import { container } from 'tsyringe';
-import { useZustandAppStore, useDataStore, useInputService, ServicesProvider, Services } from '@/app/public';
-import { createServices } from '@/app/public';
+import { useZustandAppStore, useDataStore, useInputService, ServicesProvider, Services, createServices } from '@/app/public';
 import type { InputSettings, BlockTemplate, ThemeDefinition, TemplateField } from '@/core/types/schema';
 import type { NaturalRecordCommand } from '@/core/types/ai-schema';
 import { Button, RadioGroup as MuiRadioGroup, FormControlLabel, Radio, FormControl, Typography, Stack, Divider, Box, IconButton, Tooltip, Chip, List, ListItem, ListItemButton, ListItemText, ListItemIcon } from '@mui/material';
@@ -51,8 +49,9 @@ export class AiBatchConfirmModal extends Modal {
         private onComplete?: () => void
     ) {
         super(app);
-        // P1-2: 使用 createServices 统一创建服务
-        this.services = createServices(container);
+        // Phase 4.3: features 层禁止 import tsyringe container
+        // - Services 只能通过 app/public 的 createServices() 获取
+        this.services = createServices();
     }
 
     onOpen() {

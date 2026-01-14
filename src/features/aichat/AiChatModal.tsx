@@ -2,7 +2,7 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
 import { useState, useEffect, useRef, useMemo, useCallback } from 'preact/hooks';
-import { App, Modal, Component } from 'obsidian';
+import { App, Modal } from 'obsidian';
 import { render, unmountComponentAtNode } from 'preact/compat';
 import {
     Box,
@@ -39,10 +39,7 @@ import CloseIcon from '@mui/icons-material/Close';
 import ChatIcon from '@mui/icons-material/Chat';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import CheckIcon from '@mui/icons-material/Check';
-import { container } from 'tsyringe';
-import { ServicesProvider, type Services } from '@/app/public';
-import { createServices } from '@/app/public';
-import { useZustandAppStore } from '@/app/public';
+import { ServicesProvider, createServices, useZustandAppStore, type Services } from '@/app/public';
 import { ThemeTreeSelect } from '@/shared/components/ThemeTreeSelect';
 import { 
     ChatSessionStore,
@@ -58,32 +55,25 @@ import { getMessageRenderService, MessageContentType } from '@/shared/utils/Mess
 
 // ============== AI 服务接口（用于依赖注入） ==============
 
-interface AiServices {
+export interface AiServices {
     chatService: AiChatService;
     retrievalService: RetrievalService;
     sessionStore: ChatSessionStore;
 }
 
-// 获取全局 app 实例
-declare const app: App;
-
 // ============== Modal 包装 ==============
 
 export class AiChatModal extends Modal {
-    // Composition root: 在 Modal 构造函数中 resolve 所有服务
+    // Phase 4.3: features 层不再拥有“组合根”权力
+    // - 依赖必须由上层（main/app/ServiceManager）注入
     private aiServices: AiServices;
     private services: Services;
 
-    constructor(app: App) {
+    constructor(app: App, aiServices: AiServices) {
         super(app);
-        // DI 仅在此处（composition root）进行 resolve
-        this.aiServices = {
-            chatService: container.resolve(AiChatService),
-            retrievalService: container.resolve(RetrievalService),
-            sessionStore: container.resolve(ChatSessionStore),
-        };
-        // P1-2: 使用 createServices 统一创建服务
-        this.services = createServices(container);
+        this.aiServices = aiServices;
+        // UI Services 统一通过 app/public 获取（内部会使用全局 container）
+        this.services = createServices();
     }
 
     async onOpen() {

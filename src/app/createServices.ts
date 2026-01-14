@@ -14,11 +14,11 @@
  *
  * @example
  * // 在渲染入口
- * const services = createServices(container);
+ * const services = createServices();
  * root.render(<ServicesProvider services={services}>...</ServicesProvider>);
  */
 
-import type { DependencyContainer } from 'tsyringe';
+import { container as defaultContainer, type DependencyContainer } from 'tsyringe';
 import { validateServices, type Services } from './services.types';
 import { STORE_TOKEN, type AppStoreInstance } from './store/useAppStore';
 import { USECASES_TOKEN, type UseCases } from './usecases';
@@ -26,13 +26,17 @@ import { DataStore } from '@/core/services/DataStore';
 import { InputService } from '@/core/services/InputService';
 
 /**
- * 从 DI 容器创建完整的 Services 对象
+ * createServices
  *
- * @param container DI 容器实例
+ * Phase 4.3: 组合根禁止下沉
+ * - features/shared 不允许直接 import tsyringe container
+ * - 统一由 app 内部负责拿到全局 container，并在这里构造 UI 所需 Services
+ *
+ * @param container （可选）DI 容器实例。默认使用 tsyringe 的全局 container。
  * @returns 完整的 Services 对象
  * @throws 如果任何必需服务 resolve 失败则抛出错误
  */
-export function createServices(container: DependencyContainer): Services {
+export function createServices(container: DependencyContainer = defaultContainer): Services {
     try {
         // 统一 resolve 所有 Services 字段
         const services: Services = {

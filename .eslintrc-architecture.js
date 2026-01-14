@@ -77,6 +77,15 @@ module.exports = {
         'no-restricted-imports': [
           'error',
           {
+            // Phase 4.3: 禁止在 features 层拿到 DI container（组合根权力必须在 app/main）
+            paths: [
+              {
+                name: 'tsyringe',
+                importNames: ['container'],
+                message:
+                  "features 层禁止 import { container } from 'tsyringe' ❌（组合根只能在 app/main；请通过 '@/app/public' 的 createServices()/hooks/useCases 取能力）",
+              },
+            ],
             patterns: [
               // 1) 禁止直接依赖 app 内部 store（只允许通过 '@/app/public' 暴露的 read-only helpers）
               {
@@ -163,6 +172,15 @@ module.exports = {
         'no-restricted-imports': [
           'error',
           {
+            // Phase 4.3: 禁止在 shared 层拿到 DI container（否则 shared 会成为绕过边界的通道）
+            paths: [
+              {
+                name: 'tsyringe',
+                importNames: ['container'],
+                message:
+                  "shared 层禁止 import { container } from 'tsyringe' ❌（请通过 '@/app/public' 的 createServices()/ServicesProvider 获取能力）",
+              },
+            ],
             patterns: [
               // shared 可以依赖 core，但不应该依赖 app 内部实现
               {

@@ -1,17 +1,17 @@
 // src/features/quickinput/registerCommands.ts
 /**
- * P0-3: QuickInput 命令注册 - 通过 DI 获取 store
- * - 使用 container.resolve(STORE_TOKEN) 获取 store
+ * P0-3: QuickInput 命令注册 - 通过 app/public 获取 store
+ * - 禁止在 features 层直接 import tsyringe container
+ * - 使用 createServices() 作为唯一入口拿到 zustandStore
  * - 使用纯函数 getZustandState(store, selector) 读取 settings
  */
-import { container } from 'tsyringe';
 import type ThinkPlugin from '@/main';
 import { QuickInputModal } from './QuickInputModal';
-import { getZustandState, STORE_TOKEN, type AppStoreInstance } from '@/app/public';
+import { createServices, getZustandState } from '@/app/public';
 
 export function registerQuickInputCommands(plugin: ThinkPlugin) {
-    // P0-3: 从 DI 容器获取 store
-    const store = container.resolve<AppStoreInstance>(STORE_TOKEN);
+    // Phase 4.3: 只能通过 app/public 获取 store（禁止 container 下沉）
+    const { zustandStore: store } = createServices();
     
     // P0-3: 使用纯函数版本，显式传入 store
     const settings = getZustandState(store, s => s.settings.inputSettings);

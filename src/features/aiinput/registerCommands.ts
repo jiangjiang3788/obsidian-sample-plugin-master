@@ -1,17 +1,17 @@
 // src/features/aiinput/registerCommands.ts
 /**
- * P0-3: AI 自然语言快速记录命令注册 - 通过 DI 获取 store
- * - 使用 container.resolve(STORE_TOKEN) 获取 store
+ * P0-3: AI 自然语言快速记录命令注册 - 通过 app/public 获取 store
+ * - 禁止在 features 层直接 import tsyringe container
+ * - 使用 createServices() 作为唯一入口拿到 zustandStore
  * - 使用纯函数 getZustandState(store, selector) 读取 settings
  */
 
 import { Notice } from 'obsidian';
-import { container } from 'tsyringe';
 import type ThinkPlugin from '@/main';
 import { AiTextPromptModal } from './AiTextPromptModal';
 import { AiBatchConfirmModal } from './AiBatchConfirmModal';
 import { AiConfigCache, AiHttpClient, AiNaturalLanguageRecordParser } from '@/core/ai';
-import { getZustandState, STORE_TOKEN, type AppStoreInstance } from '@/app/public';
+import { createServices, getZustandState, type AppStoreInstance } from '@/app/public';
 import type { ISettingsProvider } from '@/core/services/types';
 
 /**
@@ -26,11 +26,11 @@ function createZustandSettingsProvider(store: AppStoreInstance): ISettingsProvid
 
 /**
  * 注册 AI 输入相关命令
- * P0-3: 从 DI 容器获取 store
+ * P0-3: 从 app/public 获取 store
  */
 export function registerAiInputCommands(plugin: ThinkPlugin) {
-    // P0-3: 从 DI 容器获取 store
-    const store = container.resolve<AppStoreInstance>(STORE_TOKEN);
+    // Phase 4.3: 只能通过 app/public 获取 store（禁止 container 下沉）
+    const { zustandStore: store } = createServices();
     
     // P0-3: 创建基于 zustand 的 settings provider（传入 store）
     const settingsProvider = createZustandSettingsProvider(store);

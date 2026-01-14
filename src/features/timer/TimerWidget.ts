@@ -3,9 +3,7 @@ import { render, h } from 'preact';
 import { unmountComponentAtNode } from 'preact/compat';
 import type ThinkPlugin from '@main';
 import { TimerView } from './TimerView';
-import { ServicesProvider, type Services } from '@/app/public';
-import { createServices } from '@/app/public';
-import { container } from 'tsyringe';
+import { ServicesProvider, createServices } from '@/app/public';
 
 /**
  * TimerWidget 负责管理状态栏中计时器UI元素的整个生命周期。
@@ -51,7 +49,9 @@ export class TimerWidget {
         }
 
         // P1-2: 使用 createServices 统一创建服务
-        const services = createServices(container);
+        // Phase 4.3: 禁止在 features 层 import tsyringe container
+        // - Services 只能通过 app/public 的 createServices() 获取
+        const services = createServices();
 
         // 使用 Preact 将 TimerView 组件渲染到状态栏的DOM元素中
         // 我们需要将 actionService 实例传递给组件，以便处理"编辑"按钮的点击事件

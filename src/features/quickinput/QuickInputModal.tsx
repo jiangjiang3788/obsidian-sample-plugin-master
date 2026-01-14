@@ -10,9 +10,7 @@ import { h, Fragment } from 'preact';
 import { App, Modal, Notice } from 'obsidian';
 import { render, unmountComponentAtNode } from 'preact/compat';
 import { useState, useMemo, useEffect } from 'preact/hooks';
-import { container } from 'tsyringe';
-import { useZustandAppStore, useDataStore, useInputService, ServicesProvider, Services } from '@/app/public';
-import { createServices } from '@/app/public';
+import { useZustandAppStore, useDataStore, useInputService, ServicesProvider, Services, createServices } from '@/app/public';
 import type { InputSettings, BlockTemplate, ThemeDefinition, TemplateField, TemplateFieldOption } from '@/core/types/schema';
 import { Button, RadioGroup as MuiRadioGroup, FormControlLabel, Radio, FormControl, Typography, Stack, Divider, Box, IconButton, Tooltip } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
@@ -40,8 +38,9 @@ export class QuickInputModal extends Modal {
         private allowBlockSwitch: boolean = false
     ) {
         super(app);
-        // P1-2: 使用 createServices 统一创建服务
-        this.services = createServices(container);
+        // Phase 4.3: features 层禁止 import tsyringe container
+        // - Services 只能通过 app/public 的 createServices() 获取
+        this.services = createServices();
     }
 
     onOpen() {

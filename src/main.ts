@@ -18,6 +18,9 @@ import { TimerStateService } from '@core/services/TimerStateService';
 import { TimerService } from '@features/timer/TimerService';
 import { ActionService } from '@core/services/ActionService';
 import { AiChatModal } from '@features/aichat';
+import { AiChatService } from '@core/ai/AiChatService';
+import { RetrievalService } from '@core/ai/RetrievalService';
+import { ChatSessionStore } from '@core/ai/ChatSessionStore';
 
 console.log(`[ThinkPlugin] main.js 文件已加载，版本时间: ${new Date().toLocaleTimeString()}`);
 
@@ -76,7 +79,15 @@ export default class ThinkPlugin extends Plugin {
             id: 'think-open-ai-chat',
             name: '打开 AI 助手对话',
             callback: () => {
-                new AiChatModal(this.app).open();
+                        // Phase 4.3: 禁止在 features 内部使用 tsyringe container
+                        // - 组合根（resolve）必须上移到入口（main/app）
+                        const aiServices = {
+                            chatService: container.resolve(AiChatService),
+                            retrievalService: container.resolve(RetrievalService),
+                            sessionStore: container.resolve(ChatSessionStore),
+                        };
+
+                        new AiChatModal(this.app, aiServices).open();
             }
         });
     }
