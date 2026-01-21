@@ -21,7 +21,7 @@
     "arch:capabilities": "node scripts/capability-gate.mjs"
   },
   "dependencies": {
-    "@codemirror/state": "^6.5.2",
+    "@codemirror/state": "6.5.0",
     "@codemirror/view": "^6.38.1",
     "@dnd-kit/core": "^6.3.1",
     "@dnd-kit/sortable": "^10.0.0",

@@ -7,22 +7,19 @@
  * - 只在 layout/viewInstances 变化时触发 rerenderAll()
  * - 在 cleanup 时取消订阅，避免内存泄漏
  */
-import { singleton, inject } from 'tsyringe';
 import { h, render } from 'preact';
 import { App } from 'obsidian';
 import { Layout } from '@core/public';
 import { DataStore } from '@core/public';
 import { ServicesProvider, type Services } from '@/app/public';
 import { LayoutRenderer } from '@/features/settings/LayoutRenderer';
-import { ActionService } from '../../core/services/ActionService';
+import { ActionService } from '@core/public';
 import { ItemService } from '@core/public';
 import { InputService } from '@core/public';
 import { TimerService } from '@features/timer/TimerService';
-import { AppToken } from '@core/public';
-import { USECASES_TOKEN, type UseCases } from '@/app/public';
-import { getZustandState, subscribeZustandStore, STORE_TOKEN, type ZustandAppStore, type AppStoreInstance } from '@/app/public';
+import type { UseCases } from '@/app/public';
+import { getZustandState, subscribeZustandStore, type ZustandAppStore, type AppStoreInstance } from '@/app/public';
 
-@singleton()
 export class RendererService {
     private isInitialized = false;
     private activeLayouts: { container: HTMLElement; layoutName: string }[] = [];
@@ -33,18 +30,18 @@ export class RendererService {
     // S8.1: Zustand 订阅取消函数
     private unsubscribeZustand: (() => void) | null = null;
     
-    // P0-3: store 从 DI 注入
+    // App Store（由 ServiceManager 注入）
     private store: AppStoreInstance;
 
     constructor(
-        @inject(AppToken) private app: App,
-        @inject(DataStore) private dataStore: DataStore,
-        @inject(ActionService) private actionService: ActionService,
-        @inject(ItemService) private itemService: ItemService,
-        @inject(InputService) private inputService: InputService,
-        @inject(TimerService) private timerService: TimerService,
-        @inject(USECASES_TOKEN) private useCases: UseCases,
-        @inject(STORE_TOKEN) store: AppStoreInstance
+        private app: App,
+        private dataStore: DataStore,
+        private actionService: ActionService,
+        private itemService: ItemService,
+        private inputService: InputService,
+        private timerService: TimerService,
+        private useCases: UseCases,
+        store: AppStoreInstance
     ) {
         this.store = store;
         // 构建 Services 对象，供 ServicesProvider 使用

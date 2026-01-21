@@ -14,7 +14,7 @@
  * 约束（防止 core/public.ts 变垃圾桶）：
  * - ✅ 允许 export：领域 types、纯 utils、稳定 config、必要的 DI tokens/服务类（用于组合根/UseCase）
  * - ❌ 禁止 export：临时性的 UI helper、feature 业务规则、一次性脚本、内部实现细节（优先留在内部文件）
- * - ❌ 禁止把 “export * from './某个深层实现文件'” 当捷径（除非它本身就是模块级 public barrel）
+ * - ❌ 禁止把 “export-star from 某个深层实现文件” 当捷径（除非它本身就是模块级 public barrel）
  *
  * 命名约定：
  * - ThemeMatrix 模块的 buildThemeTree / ThemeTreeNode 与 legacy themeUtils 冲突，
@@ -25,12 +25,6 @@
 // -------------------- Domain Types (唯一真源) --------------------
 //
 export * from './types';
-
-//
-// -------------------- Config（稳定常量） --------------------
-//
-export * from './config/viewConfigs';
-export * from './config/heatmapViewConfig';
 
 //
 // -------------------- Utils（可复用纯能力） --------------------
@@ -96,7 +90,8 @@ export type { ISettingsPersistence } from './services/SettingsRepository';
 
 export { RepositorySettingsProvider } from './services/RepositorySettingsProvider';
 
-export * from './services/types';
+// services/types.ts 中包含 DI tokens + 少量 interface。
+// 对外可见面统一从 core/types barrel 暴露（避免 core/public.ts 深层 export*）
 
 //
 // -------------------- Bootstrap / Polyfills --------------------

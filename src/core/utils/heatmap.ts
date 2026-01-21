@@ -25,3 +25,18 @@ export function collectThemePathsForHeatmap(params: {
 
     return Array.from(themeSet).sort((a, b) => a.localeCompare(b, 'zh-CN'));
 }
+
+/**
+ * Heatmap UI helpers（纯判断）
+ * ---------------------------------------------------------------
+ * 这些函数原先在 core/config/heatmapViewConfig.ts 中对外导出。
+ * 现在统一归入 core/utils（通过 @core/public 暴露）。
+ */
+
+export const isImagePath = (value: string): boolean => {
+    return /\.(png|svg|jpg|jpeg|gif)$/i.test(value);
+};
+
+export const isHexColor = (value: string): boolean => {
+    return /^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/.test(value);
+};

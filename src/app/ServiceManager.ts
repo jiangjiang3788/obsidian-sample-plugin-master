@@ -237,7 +237,6 @@ export class ServiceManager {
         
         // 解析服务
         this.services.dataStore = container.resolve(DataStore);
-        this.services.rendererService = container.resolve(RendererService);
         this.services.actionService = container.resolve(ActionService);
         this.services.inputService = container.resolve(InputService);
         this.services.itemService = container.resolve(ItemService);
@@ -291,7 +290,29 @@ export class ServiceManager {
         
         await safeAsync(
             async () => {
-                this.services.timerService = container.resolve(TimerService);
+                // [DI Gate] features 层禁止 tsyringe：TimerService 改为手工创建
+                this.services.timerService = new TimerService(
+                    this.services.useCases!,
+                    this.services.dataStore!,
+                    this.services.itemService!,
+                    this.services.inputService!,
+                    this.plugin.app
+                );
+
+                // RendererService 依赖 TimerService，因此在 TimerService 就绪后再创建
+                if (!this.services.rendererService) {
+                    const store = container.resolve<AppStoreInstance>(STORE_TOKEN);
+                    this.services.rendererService = new RendererService(
+                        this.plugin.app,
+                        this.services.dataStore!,
+                        this.services.actionService!,
+                        this.services.itemService!,
+                        this.services.inputService!,
+                        this.services.timerService,
+                        this.services.useCases!,
+                        store
+                    );
+                }
                 
                 // 注册命令（P0: 使用 UseCases 替代直接调用 appStore）
                 this.plugin.addCommand({

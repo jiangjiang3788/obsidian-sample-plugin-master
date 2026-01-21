@@ -14,24 +14,21 @@
  * - 直接渲染 UI
  * - 直接操作 Obsidian 界面元素
  */
-import { singleton, inject } from 'tsyringe';
 import { ItemService } from '@core/public';
 import { Notice, App, TFile } from 'obsidian';
 import { DataStore } from '@core/public';
 import { InputService } from '@core/public';
 import type { QuickInputSaveData } from '@/features/quickinput/QuickInputModal';
-import { AppToken } from '@core/public';
 import { nowHHMM, timeToMinutes, minutesToTime } from '@core/public';
-import { USECASES_TOKEN, type UseCases } from '@/app/public';
+import type { UseCases } from '@/app/public';
 
-@singleton()
 export class TimerService {
     constructor(
-        @inject(USECASES_TOKEN) private useCases: UseCases,
-        @inject(DataStore) private dataStore: DataStore,
-        @inject(ItemService) private itemService: ItemService,
-        @inject(InputService) private inputService: InputService,
-        @inject(AppToken) private app: App
+        private useCases: UseCases,
+        private dataStore: DataStore,
+        private itemService: ItemService,
+        private inputService: InputService,
+        private app: App
     ) {}
 
     public async startOrResume(taskId: string): Promise<void> {

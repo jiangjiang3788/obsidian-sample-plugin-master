@@ -1,5 +1,4 @@
 // src/core/services/ThemeManager.ts
-import { singleton } from 'tsyringe';
 import { Theme } from './theme-types';
 import { Item } from '@core/public';
 import type { IThemeMatcher } from '@core/public';
@@ -9,7 +8,6 @@ import type { IThemeMatcher } from '@core/public';
  * 负责主题的创建、发现、激活和管理
  * 实现 IThemeMatcher 接口供 core 层使用
  */
-@singleton()
 export class ThemeManager implements IThemeMatcher {
     private themes: Map<string, Theme> = new Map();
     private themeIdCounter: number = 0;

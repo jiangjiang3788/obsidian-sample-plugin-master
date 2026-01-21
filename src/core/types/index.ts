@@ -20,4 +20,6 @@ export * from './ai-schema';
 export * from './timeline';
 export * from './theme';
 export * from './timer';
+export * from './viewConfigs';
+export * from './services';
 // export * from './cache'; // 如未来有对外需求再打开
