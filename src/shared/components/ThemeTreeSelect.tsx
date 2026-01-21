@@ -26,13 +26,13 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import SearchIcon from '@mui/icons-material/Search';
 import ClearIcon from '@mui/icons-material/Clear';
-import type { ThemeDefinition } from '@/core/types/schema';
+import type { ThemeDefinition } from '@core/public';
 import { 
-    ThemeTreeBuilder, 
-    ThemeTreeNode, 
-    buildThemeTree,
-    searchThemeTree,
-} from '@/core/theme/ThemeTreeBuilder';
+    ThemePathTreeBuilder as ThemeTreeBuilder, 
+    ThemePathTreeNode as ThemeTreeNode, 
+    buildThemePathTree as buildThemeTree,
+    searchThemePathTree as searchThemeTree,
+} from '@core/public';
 
 // ============== 类型定义 ==============
 

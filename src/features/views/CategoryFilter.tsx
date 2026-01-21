@@ -13,8 +13,8 @@ import {
     IconButton
 } from '@mui/material';
 import FilterListIcon from '@mui/icons-material/FilterList';
-import type { ViewInstance } from '@/core/types/schema';
-import { collectCategoriesFromViews } from '@core/utils/itemGrouping';
+import type { ViewInstance } from '@core/public';
+import { collectCategoriesFromViews } from '@core/public';
 
 // Type compatibility
 const AnyButton = Button as any;

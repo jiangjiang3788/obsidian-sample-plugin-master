@@ -1,11 +1,11 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
 import { useMemo } from 'preact/hooks';
-import { dayjs, formatDateForView } from '@core/utils/date';
+import { dayjs, formatDateForView } from '@core/public';
 import { ThemeFilter } from './ThemeFilter';
 import { CategoryFilter } from './CategoryFilter';
-import type { ViewInstance } from '@/core/types/schema';
-import type { ThemeDefinition } from '@/core/types';
+import type { ViewInstance } from '@core/public';
+import type { ThemeDefinition } from '@core/public';
 
 export interface ViewToolbarProps {
     // 时间相关

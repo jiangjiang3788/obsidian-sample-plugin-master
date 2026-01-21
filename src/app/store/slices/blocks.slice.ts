@@ -22,8 +22,8 @@
 
 import type { StateCreator } from 'zustand';
 import type { ZustandAppStore } from '../useAppStore';
-import type { SettingsRepository } from '@/core/services/SettingsRepository';
-import type { BlockTemplate, ThemeOverride } from '@/core/types/schema';
+import type { SettingsRepository } from '@core/public';
+import type { BlockTemplate, ThemeOverride } from '@core/public';
 import { generateId } from '@/shared/utils/array';
 
 // ============== 类型定义 ==============

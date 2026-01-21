@@ -1,11 +1,11 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
 import { App } from 'obsidian';
-import type { Item, ThemeDefinition } from '@/core/types/schema';
-import { makeObsUri } from '@core/utils/obsidian';
+import type { Item, ThemeDefinition } from '@core/public';
+import { makeObsUri } from '@core/public';
 import { TaskCheckbox } from '@shared/ui/composites/TaskCheckbox';
 import { TaskSendToTimerButton } from '@shared/ui/composites/TaskSendToTimerButton';
-import { isDone } from '@core/utils/taskUtils';
+import { isDone } from '@core/public';
 import { FieldPill } from './FieldPill';
 import type { TimerController } from '@/app/public';
 

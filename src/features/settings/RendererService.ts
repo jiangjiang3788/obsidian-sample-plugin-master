@@ -10,15 +10,15 @@
 import { singleton, inject } from 'tsyringe';
 import { h, render } from 'preact';
 import { App } from 'obsidian';
-import { Layout } from '@/core/types/schema';
-import { DataStore } from '@core/services/DataStore';
+import { Layout } from '@core/public';
+import { DataStore } from '@core/public';
 import { ServicesProvider, type Services } from '@/app/public';
 import { LayoutRenderer } from '@/features/settings/LayoutRenderer';
 import { ActionService } from '../../core/services/ActionService';
-import { ItemService } from '@core/services/ItemService';
-import { InputService } from '@core/services/InputService';
+import { ItemService } from '@core/public';
+import { InputService } from '@core/public';
 import { TimerService } from '@features/timer/TimerService';
-import { AppToken } from '@core/services/types';
+import { AppToken } from '@core/public';
 import { USECASES_TOKEN, type UseCases } from '@/app/public';
 import { getZustandState, subscribeZustandStore, STORE_TOKEN, type ZustandAppStore, type AppStoreInstance } from '@/app/public';
 

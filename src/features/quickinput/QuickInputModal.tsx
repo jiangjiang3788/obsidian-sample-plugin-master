@@ -11,14 +11,14 @@ import { App, Modal, Notice } from 'obsidian';
 import { render, unmountComponentAtNode } from 'preact/compat';
 import { useState, useMemo, useEffect } from 'preact/hooks';
 import { useZustandAppStore, useDataStore, useInputService, ServicesProvider, Services, createServices } from '@/app/public';
-import type { InputSettings, BlockTemplate, ThemeDefinition, TemplateField, TemplateFieldOption } from '@/core/types/schema';
+import type { InputSettings, BlockTemplate, ThemeDefinition, TemplateField, TemplateFieldOption } from '@core/public';
 import { Button, RadioGroup as MuiRadioGroup, FormControlLabel, Radio, FormControl, Typography, Stack, Divider, Box, IconButton, Tooltip } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import { SimpleSelect } from '@shared/ui/composites/SimpleSelect';
-import { buildThemeTree, ThemeTreeNode } from '@core/utils/themeUtils';
-import { dayjs, timeToMinutes, minutesToTime } from '@core/utils/date';
-import { renderTemplate } from '@core/utils/templateUtils';
-import { getEffectiveTemplate } from '@core/utils/inputTemplateUtils';
+import { buildThemeTree, ThemeTreeNode } from '@core/public';
+import { dayjs, timeToMinutes, minutesToTime } from '@core/public';
+import { renderTemplate } from '@core/public';
+import { getEffectiveTemplate } from '@core/public';
 
 export interface QuickInputSaveData {
     template: BlockTemplate;

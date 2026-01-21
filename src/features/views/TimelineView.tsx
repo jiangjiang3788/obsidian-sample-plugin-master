@@ -2,16 +2,16 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
 import { useMemo, useCallback } from 'preact/hooks';
-import { Item } from '@/core/types/schema';
+import { Item } from '@core/public';
 import { processItemsToTimelineTasks } from './timeline-parser';
-import { dayjs } from '@core/utils/date';
+import { dayjs } from '@core/public';
 import weekOfYear from 'dayjs/plugin/weekOfYear';
 import isoWeek from 'dayjs/plugin/isoWeek';
 import isBetween from 'dayjs/plugin/isBetween';
 import { DEFAULT_CONFIG as TIMELINE_VIEW_DEFAULT_CONFIG } from '@features/settings/TimelineViewEditor';
 import { App } from 'obsidian';
-import { ItemService } from '@core/services/ItemService';
-import { filterByRules } from '@core/utils/itemFilter';
+import { ItemService } from '@core/public';
+import { filterByRules } from '@core/public';
 
 // 导入重构后的组件、工具函数和 hooks
 import { 
@@ -23,10 +23,10 @@ import {
 import { 
     buildMonthlyAndWeeklySummary, 
     buildSummaryCategoryHours 
-} from '@core/utils/timelineAggregation';
-import { buildDailyViewData } from '@core/utils/timelineInteraction';
+} from '@core/public';
+import { buildDailyViewData } from '@core/public';
 import { handleTimelineTaskCreation } from './timelineInteraction';
-import { useTimelineZoom } from '@core/hooks/useTimelineZoom';
+import { useTimelineZoom } from '@core/public';
 
 // 初始化 dayjs 插件
 dayjs.extend(weekOfYear);

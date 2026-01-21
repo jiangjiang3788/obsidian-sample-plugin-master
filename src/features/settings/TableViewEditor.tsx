@@ -3,10 +3,10 @@
 import { h } from 'preact';
 import { Stack, TextField, Autocomplete, Typography } from '@mui/material';
 import type { ViewEditorProps } from './registry';
-import { TABLE_VIEW_DEFAULT_CONFIG } from '@core/config/viewConfigs';
+import { TABLE_VIEW_DEFAULT_CONFIG } from '@core/public';
 
 // 重新导出以保持兼容性
-export { TABLE_VIEW_DEFAULT_CONFIG as DEFAULT_CONFIG } from '@core/config/viewConfigs';
+export { TABLE_VIEW_DEFAULT_CONFIG as DEFAULT_CONFIG } from '@core/public';
 
 export function TableViewEditor({ value, onChange, fieldOptions }: ViewEditorProps) {
   return (

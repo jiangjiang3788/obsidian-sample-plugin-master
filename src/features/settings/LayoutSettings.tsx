@@ -23,15 +23,15 @@ import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import DragIndicatorIcon from '@mui/icons-material/DragIndicator';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
-import type { Layout, ViewInstance } from '@/core/types/schema';
+import type { Layout, ViewInstance } from '@core/public';
 import { useMemo, useCallback, useState } from 'preact/hooks';
 import { App } from 'obsidian';
 import { DndContext, closestCenter } from '@dnd-kit/core';
 import { useSortable, SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
-import { arrayMove } from '@core/utils/array';
+import { arrayMove } from '@core/public';
 import { ModuleSettingsModal, openModuleSettingsWidget } from '@/features/settings/ModuleSettingsModal';
 import { NamePromptModal } from '@shared/ui/composites/dialogs/NamePromptModal';
-import { DEFAULT_NAMES } from '@/core/types/constants';
+import { DEFAULT_NAMES } from '@core/public';
 
 const PERIOD_OPTIONS = ['年', '季', '月', '周', '天'].map(v => ({ value: v, label: v }));
 const DISPLAY_MODE_OPTIONS = [{ value: 'list', label: '列表' }, { value: 'grid', label: '网格' }];

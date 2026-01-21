@@ -59,6 +59,18 @@ module.exports = {
                 message:
                   'app/usecases 层禁止依赖 features ❌（UseCases 只能依赖 core/app 内部能力；UI 依赖应由上层组合根注入）',
               },
+              // 2) core 只允许通过 @core/public（Phase 4.4）
+              {
+                group: [
+                  // 禁止使用 @/core/** 绕过门面
+                  '@/core/**',
+
+                  // @core/* 只允许 @core/public，其余一律禁止
+                  '@core/!(public)',
+                  '@core/!(public)/**',
+                ],
+                message: "app/usecases 层访问 core 只能通过 '@core/public' ❌",
+              },
             ],
           },
         ],
@@ -68,7 +80,36 @@ module.exports = {
     // ✅ core allowlist 已清空：
     // timelineInteraction 中的 UI/feature 依赖已迁移到 features/views/timelineInteraction.ts
 
+    
     // ==================================================================================
+    // APP：core 只允许通过 @core/public（Phase 4.4）
+    // ==================================================================================
+    {
+      files: ['src/app/**/*.{ts,tsx,js,jsx}'],
+      excludedFiles: ['src/app/usecases/**/*.{ts,tsx,js,jsx}'],
+      rules: {
+        'no-restricted-imports': [
+          'error',
+          {
+            patterns: [
+              {
+                group: [
+                  // 禁止使用 @/core/** 绕过门面
+                  '@/core/**',
+
+                  // @core/* 只允许 @core/public，其余一律禁止
+                  '@core/!(public)',
+                  '@core/!(public)/**',
+                ],
+                message: "app 层访问 core 只能通过 '@core/public' ❌",
+              },
+            ],
+          },
+        ],
+      },
+    },
+
+// ==================================================================================
     // FEATURES：只能通过 app/public 访问 app 能力（冻结“绕过边界”）
     // ==================================================================================
     {
@@ -157,6 +198,18 @@ module.exports = {
                 ],
                 message: 'features 层禁止直接 import slices ❌（写入口必须通过 useCases）',
               },
+              // 6) core 只允许通过 @core/public（Phase 4.4）
+              {
+                group: [
+                  // 禁止使用 @/core/** 绕过门面
+                  '@/core/**',
+
+                  // @core/* 只允许 @core/public，其余一律禁止
+                  '@core/!(public)',
+                  '@core/!(public)/**',
+                ],
+                message: "features 层访问 core 只能通过 '@core/public' ❌",
+              },
             ],
           },
         ],
@@ -229,6 +282,18 @@ module.exports = {
                   '**/features/**',
                 ],
                 message: 'shared 层禁止依赖 features ❌（避免 shared 成为绕过边界的通道）',
+              },
+              // 2) core 只允许通过 @core/public（Phase 4.4）
+              {
+                group: [
+                  // 禁止使用 @/core/** 绕过门面
+                  '@/core/**',
+
+                  // @core/* 只允许 @core/public，其余一律禁止
+                  '@core/!(public)',
+                  '@core/!(public)/**',
+                ],
+                message: "shared 层访问 core 只能通过 '@core/public' ❌",
               },
             ],
           },

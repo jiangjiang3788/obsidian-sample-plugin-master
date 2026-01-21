@@ -1,23 +1,23 @@
 import { container } from 'tsyringe';
-import { DataStore } from '@core/services/DataStore';
+import { DataStore } from '@core/public';
 import { RendererService } from '@/features/settings/RendererService';
-import { ActionService } from '@core/services/ActionService';
-import { TimerStateService } from '@core/services/TimerStateService';
-import { InputService } from '@core/services/InputService';
-import { ItemService } from '@core/services/ItemService';
+import { ActionService } from '@core/public';
+import { TimerStateService } from '@core/public';
+import { InputService } from '@core/public';
+import { ItemService } from '@core/public';
 import { TimerService } from '@features/timer/TimerService';
 import { FloatingTimerWidget } from '@features/timer/FloatingTimerWidget';
 import { FeatureLoader } from '@/app/FeatureLoader';
 import { safeAsync } from '@shared/utils/errorHandler';
 import { startMeasure } from '@shared/utils/performance';
 import { closeAllFloatingWidgets } from '@/shared/ui/widgets/FloatingWidgetManager';
-import { SETTINGS_PERSISTENCE_TOKEN, SettingsRepository, type ISettingsPersistence } from '@core/services/SettingsRepository';
+import { SETTINGS_PERSISTENCE_TOKEN, SettingsRepository, type ISettingsPersistence } from '@core/public';
 import { createAppStore, STORE_TOKEN, type AppStoreInstance } from '@/app/store/useAppStore';
 import { createUseCases, USECASES_TOKEN, type UseCases } from '@/app/usecases';
-import { THEME_MATCHER_TOKEN } from '@core/types/theme';
+import { THEME_MATCHER_TOKEN } from '@core/public';
 import { ThemeManager } from '@features/settings/ThemeManager';
-import { SETTINGS_TOKEN } from '@core/services/types'; // DI DEBUG: 用于获取初始设置
-import type { ThinkSettings } from '@core/types'; // DI DEBUG
+import { SETTINGS_TOKEN } from '@core/public'; // DI DEBUG: 用于获取初始设置
+import type { ThinkSettings } from '@core/public'; // DI DEBUG
 import type ThinkPlugin from '@main';
 
 // ============== 核心 DI 容器配置 ==============

@@ -1,10 +1,10 @@
 // src/features/settings/EventTimelineViewEditor.tsx
 /** @jsxImportSource preact */
 import { h } from 'preact';
-import { EVENT_TIMELINE_VIEW_DEFAULT_CONFIG } from '@core/config/viewConfigs';
+import { EVENT_TIMELINE_VIEW_DEFAULT_CONFIG } from '@core/public';
 
 // 重新导出以保持兼容性
-export { EVENT_TIMELINE_VIEW_DEFAULT_CONFIG as DEFAULT_CONFIG } from '@core/config/viewConfigs';
+export { EVENT_TIMELINE_VIEW_DEFAULT_CONFIG as DEFAULT_CONFIG } from '@core/public';
 
 export function EventTimelineViewEditor() {
     return (

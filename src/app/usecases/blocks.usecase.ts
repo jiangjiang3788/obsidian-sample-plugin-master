@@ -14,7 +14,7 @@
  * - ⛔ 使用全局单例（禁止 getAppStoreInstance）
  */
 
-import type { BlockTemplate } from '@/core/types/schema';
+import type { BlockTemplate } from '@core/public';
 import type { AppStoreApi } from './index';
 
 /**

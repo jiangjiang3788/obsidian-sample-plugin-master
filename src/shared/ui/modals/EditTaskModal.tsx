@@ -2,9 +2,9 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
 import { useEffect } from 'preact/hooks';
-import type { TaskBlock } from '@core/types/timeline';
-import type { ItemService } from '@core/services/ItemService';
-import { timeToMinutes, minutesToTime } from '@core/utils/date';
+import type { TaskBlock } from '@core/public';
+import type { ItemService } from '@core/public';
+import { timeToMinutes, minutesToTime } from '@core/public';
 import { Dialog, DialogTitle, DialogContent, DialogActions, Button, TextField } from '@mui/material';
 import { useTimeFormState, useSaveHandler } from '@shared/index';
 

@@ -19,8 +19,8 @@
  */
 
 import type { StateCreator } from 'zustand';
-import type { ThinkSettings, ThemeDefinition, ThemeOverride } from '@/core/types/schema';
-import type { SettingsRepository } from '@/core/services/SettingsRepository';
+import type { ThinkSettings, ThemeDefinition, ThemeOverride } from '@core/public';
+import type { SettingsRepository } from '@core/public';
 import type { ActiveStatus } from '@shared/types/common';
 import { generateId } from '@/shared/utils/array';
 import { createSliceMeta } from '@/shared/types/ActionMeta';

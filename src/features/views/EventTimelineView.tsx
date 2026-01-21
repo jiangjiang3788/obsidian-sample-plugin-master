@@ -3,11 +3,11 @@
 import { h } from 'preact';
 import { useMemo } from 'preact/hooks';
 import type { App } from 'obsidian';
-import type { Item, ViewInstance } from '@/core/types/schema';
-import { readField } from '@/core/types/schema';
-import { dayjs } from '@core/utils/date';
+import type { Item, ViewInstance } from '@core/public';
+import { readField } from '@core/public';
+import { dayjs } from '@core/public';
 import type { TimerService } from '@features/timer/TimerService';
-import { groupItemsByFields, type GroupNode } from '@core/utils/itemGrouping';
+import { groupItemsByFields, type GroupNode } from '@core/public';
 import { TaskRow } from '@shared/ui/items/TaskRow';
 import { BlockItem } from '@shared/ui/items/BlockItem';
 import { GroupedContainer } from '@shared/ui/GroupedContainer';

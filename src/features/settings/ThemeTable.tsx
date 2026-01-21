@@ -24,9 +24,9 @@ import {
 } from '@mui/material';
 import { ThemeTreeNodeRow } from './ThemeTreeNodeRow';
 import type { EditorState } from './useThemeMatrixEditor';
-import type { BlockTemplate, ThemeDefinition, ThemeOverride } from '@/core/types/schema';
+import type { BlockTemplate, ThemeDefinition, ThemeOverride } from '@core/public';
 import type { UseCases } from '@/app/public';
-import type { ThemeTreeNode } from '@/core/theme-matrix/theme.types';
+import type { ThemeMatrixTreeNode as ThemeTreeNode } from '@core/public';
 
 /**
  * ThemeTable 组件属性

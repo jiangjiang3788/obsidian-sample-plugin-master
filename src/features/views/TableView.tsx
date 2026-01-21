@@ -2,10 +2,10 @@
 
 /** @jsxImportSource preact */
 import { h } from 'preact';
-import { Item } from '@/core/types/schema';
+import { Item } from '@core/public';
 import { App } from 'obsidian';
 import type { TimerService } from '@features/timer/TimerService';
-import { buildTableMatrix } from '@core/utils/itemGrouping';
+import { buildTableMatrix } from '@core/public';
 import { TaskRow } from '@shared/ui/items/TaskRow';
 import { ItemLink } from '@shared/ui/items/ItemLink';
 

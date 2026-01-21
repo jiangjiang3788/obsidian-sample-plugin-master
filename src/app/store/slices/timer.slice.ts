@@ -1,6 +1,6 @@
 import { StateCreator } from 'zustand';
 
-import type { TimerState } from '@core/types/timer';
+import type { TimerState } from '@core/public';
 
 export interface TimerSlice {
     timer: {

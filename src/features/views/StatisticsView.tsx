@@ -2,8 +2,8 @@
 /** @jsxImportSource preact */
 import { Fragment } from 'preact';
 import { useState, useMemo, useEffect, useRef } from 'preact/hooks';
-import { Item, readField, ViewInstance } from '@/core/types/schema';
-import { dayjs, getWeeksInYear } from '@core/utils/date';
+import { Item, readField, ViewInstance } from '@core/public';
+import { dayjs, getWeeksInYear } from '@core/public';
 import { App, Notice } from 'obsidian';
 // [架构标准化] 从core配置导入，避免features间依赖违规
 import { STATISTICS_VIEW_DEFAULT_CONFIG as DEFAULT_CONFIG } from '../../core/config/viewConfigs';
@@ -11,12 +11,12 @@ import { BlockView } from './BlockView';
 import { IconButton, Tooltip } from '@mui/material';
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 import IosShareIcon from '@mui/icons-material/IosShare';
-import { exportItemsToMarkdown, getExportConfigByViewType } from '@core/utils/exportUtils';
+import { exportItemsToMarkdown, getExportConfigByViewType } from '@core/public';
 import { QuickInputModal } from '@/features/quickinput/QuickInputModal';
 import FloatingPanel from '@/shared/ui/primitives/FloatingPanel';
 import { openFloatingWidget, closeFloatingWidget } from '@/shared/ui/widgets/FloatingWidgetManager';
-import { dayjs as dayjsUtil } from '@core/utils/date';
-import type { CategoryConfig, PeriodData } from '@core/utils/statisticsAggregation';
+import { dayjs as dayjsUtil } from '@core/public';
+import type { CategoryConfig, PeriodData } from '@core/public';
 import { 
     aggregateByDay,
     aggregateByWeek,
@@ -25,7 +25,7 @@ import {
     aggregateByYear,
     getMonthWeeksData,
     createPeriodData
-} from '@core/utils/statisticsAggregation';
+} from '@core/public';
 import { ChartBlock } from '@shared/ui/statistics/ChartBlock';
 import type { TimerService } from '@features/timer/TimerService';
 

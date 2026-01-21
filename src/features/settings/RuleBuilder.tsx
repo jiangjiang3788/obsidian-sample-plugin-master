@@ -5,8 +5,8 @@ import { useMemo, useState } from 'preact/hooks';
 import { Typography, Tooltip, Chip, Autocomplete, TextField, Button } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import { SimpleSelect } from '@shared/ui/composites/SimpleSelect';
-import { DataStore } from '@/core/services/DataStore';
-import { getAllFields, readField, FilterRule, SortRule } from '@/core/types/schema';
+import { DataStore } from '@core/public';
+import { getAllFields, readField, FilterRule, SortRule } from '@core/public';
 
 // 辅助Hook：获取库中所有字段的唯一值，用于自动补全
 function useUniqueFieldValues(dataStore: DataStore) {

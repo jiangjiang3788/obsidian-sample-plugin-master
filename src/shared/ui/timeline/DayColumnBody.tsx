@@ -3,12 +3,12 @@
 import { h } from 'preact';
 import { useState } from 'preact/hooks';
 import { App, Notice } from 'obsidian';
-import type { TaskBlock } from '@core/types/timeline';
-import { ItemService } from '@core/services/ItemService';
+import type { TaskBlock } from '@core/public';
+import { ItemService } from '@core/public';
 import { EditTaskModal } from '@shared/ui/modals/EditTaskModal';
-import { makeObsUri } from '@core/utils/obsidian';
-import { mapTaskToCategory } from '@core/utils/timelineAggregation';
-import { dayjs } from '@core/utils/date';
+import { makeObsUri } from '@core/public';
+import { mapTaskToCategory } from '@core/public';
+import { dayjs } from '@core/public';
 
 interface DayColumnBodyProps {
     app: App;

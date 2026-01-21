@@ -11,18 +11,18 @@ import { App, Modal, Notice } from 'obsidian';
 import { render, unmountComponentAtNode } from 'preact/compat';
 import { useState, useMemo, useEffect } from 'preact/hooks';
 import { useZustandAppStore, useDataStore, useInputService, ServicesProvider, Services, createServices } from '@/app/public';
-import type { InputSettings, BlockTemplate, ThemeDefinition, TemplateField } from '@/core/types/schema';
-import type { NaturalRecordCommand } from '@/core/types/ai-schema';
+import type { InputSettings, BlockTemplate, ThemeDefinition, TemplateField } from '@core/public';
+import type { NaturalRecordCommand } from '@core/public';
 import { Button, RadioGroup as MuiRadioGroup, FormControlLabel, Radio, FormControl, Typography, Stack, Divider, Box, IconButton, Tooltip, Chip, List, ListItem, ListItemButton, ListItemText, ListItemIcon } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import RadioButtonUncheckedIcon from '@mui/icons-material/RadioButtonUnchecked';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { SimpleSelect } from '@shared/ui/composites/SimpleSelect';
-import { buildThemeTree, ThemeTreeNode } from '@core/utils/themeUtils';
-import { dayjs, timeToMinutes, minutesToTime } from '@core/utils/date';
-import { renderTemplate } from '@core/utils/templateUtils';
-import { getEffectiveTemplate } from '@core/utils/inputTemplateUtils';
+import { buildThemeTree, ThemeTreeNode } from '@core/public';
+import { dayjs, timeToMinutes, minutesToTime } from '@core/public';
+import { renderTemplate } from '@core/public';
+import { getEffectiveTemplate } from '@core/public';
 
 interface RecordItem {
     id: string;

@@ -3,12 +3,12 @@
 import { h } from 'preact';
 import { useRef, useState, useEffect } from 'preact/hooks';
 import { App } from 'obsidian';
-import { Item, ThemeDefinition } from '@/core/types/schema';
-import { groupItemsByField, getSortedGroupKeys, groupItemsByFields, type GroupNode } from '@core/utils/itemGrouping';
+import { Item, ThemeDefinition } from '@core/public';
+import { groupItemsByField, getSortedGroupKeys, groupItemsByFields, type GroupNode } from '@core/public';
 import { TaskRow } from '@shared/ui/items/TaskRow';
 import { BlockItem } from '@shared/ui/items/BlockItem';
 import type { TimerService } from '@features/timer/TimerService';
-import { exportItemsToMarkdown } from '@/core/utils/exportUtils';
+import { exportItemsToMarkdown } from '@core/public';
 import { Notice } from 'obsidian';
 import { GroupedContainer } from '@shared/ui/GroupedContainer';
 

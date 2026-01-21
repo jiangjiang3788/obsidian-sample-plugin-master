@@ -33,7 +33,7 @@
  * - ⛔ 使用全局单例（禁止 getAppStoreInstance）
  */
 
-import type { Layout, ViewInstance } from '@/core/types/schema';
+import type { Layout, ViewInstance } from '@core/public';
 import type { AppStoreApi } from './index';
 
 /**

@@ -23,8 +23,8 @@
 
 import { create } from 'zustand';
 import { subscribeWithSelector } from 'zustand/middleware';
-import type { ThinkSettings } from '@/core/types/schema';
-import type { SettingsRepository } from '@/core/services/SettingsRepository';
+import type { ThinkSettings } from '@core/public';
+import type { SettingsRepository } from '@core/public';
 import { createSliceMeta } from '@/shared/types/ActionMeta';
 import { createThemeSlice, type ThemeSlice } from './slices/theme.slice';
 import { createLayoutSlice, type LayoutSlice } from './slices/layout.slice';

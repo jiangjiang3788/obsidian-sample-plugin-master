@@ -1,11 +1,11 @@
 // src/features/dashboard/hooks/useViewData.ts
 
 import { useState, useEffect, useMemo } from 'preact/hooks';
-import { DataStore } from '@core/services/DataStore';
+import { DataStore } from '@core/public';
 // [核心修复] 将 filterByKeyword 添加回 import 列表
-import { filterByRules, sortItems, filterByDateRange, filterByPeriod, filterByKeyword } from '@core/utils/itemFilter';
-import { dayjs } from '@core/utils/date';
-import type { Item, ViewInstance, FilterRule, SortRule } from '@/core/types/schema';
+import { filterByRules, sortItems, filterByDateRange, filterByPeriod, filterByKeyword } from '@core/public';
+import { dayjs } from '@core/public';
+import type { Item, ViewInstance, FilterRule, SortRule } from '@core/public';
 
 interface UseViewDataProps {
     dataStore: DataStore;

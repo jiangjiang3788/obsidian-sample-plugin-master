@@ -2,21 +2,21 @@
 /** @jsxImportSource preact */
 import { h, Fragment } from 'preact';
 import { useState, useMemo, useEffect, useCallback, useRef } from 'preact/hooks'; // [修改] 导入 useRef
-import { DataStore } from '@core/services/DataStore';
-import { Layout, ViewInstance, Item } from '@/core/types/schema'; // [修改] 导入 Item 类型
+import { DataStore } from '@core/public';
+import { Layout, ViewInstance, Item } from '@core/public'; // [修改] 导入 Item 类型
 import { ModulePanel } from './ModulePanel';
 import { DashboardViewComponents as ViewComponents } from './index';
 
-import { getDateRange, dayjs } from '@core/utils/date';
+import { getDateRange, dayjs } from '@core/public';
 import { useZustandAppStore, useUseCases } from '@/app/public';
-import type { ActionService } from '@core/services/ActionService';
-import { ItemService } from '@core/services/ItemService';
+import type { ActionService } from '@core/public';
+import { ItemService } from '@core/public';
 import type { TimerService } from '@features/timer/TimerService';
 import { useViewData } from '@/features/settings/useViewData';
 import { QuickInputModal } from '@/features/quickinput/QuickInputModal';
 import { openModuleSettingsWidget } from './ModuleSettingsModal';
 import { App, Notice } from 'obsidian'; // [修改] 导入 Notice
-import { exportItemsToMarkdown, getExportConfigByViewType } from '@core/utils/exportUtils'; // [新增] 导入导出函数
+import { exportItemsToMarkdown, getExportConfigByViewType } from '@core/public'; // [新增] 导入导出函数
 import { ViewToolbar } from '@features/views/ViewToolbar'; // [新增] 导入统一工具栏组件
 
 // [修改] ViewContent 组件增加 onDataLoaded 和 selectedThemes props

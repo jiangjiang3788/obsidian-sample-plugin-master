@@ -20,17 +20,17 @@ import {
 import AddIcon from '@mui/icons-material/Add';
 import { useState, useMemo } from 'preact/hooks';
 import { TemplateEditorModal } from '@features/settings/TemplateEditorModal';
-import type { BlockTemplate, ThemeDefinition, ThemeOverride } from '@/core/types/schema';
+import type { BlockTemplate, ThemeDefinition, ThemeOverride } from '@core/public';
 
 // 导入服务
-import { ThemeMatrixService } from '@/core/theme-matrix/ThemeMatrixService';
-import { ThemeScanService } from '@/core/theme-matrix/ThemeScanService';
+import { ThemeMatrixService } from '@core/public';
+import { ThemeScanService } from '@core/public';
 
 // 导入类型
-import type { ThemeTreeNode } from '@/core/theme-matrix/theme.types';
+import type { ThemeMatrixTreeNode as ThemeTreeNode } from '@core/public';
 
 // 导入工具函数
-import { buildThemeTree } from '@/core/theme-matrix/themeTreeBuilder';
+import { buildThemeMatrixTree as buildThemeTree } from '@core/public';
 
 // 导入组件
 import { ThemeToolbar } from './ThemeToolbar';

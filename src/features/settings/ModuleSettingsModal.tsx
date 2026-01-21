@@ -8,8 +8,8 @@
 
 import { useMemo } from 'preact/hooks';
 import { FormControlLabel, Checkbox, Button } from '@mui/material';
-import { VIEW_OPTIONS, ViewName, getAllFields } from '@/core/types/schema';
-import type { ViewInstance } from '@/core/types/schema';
+import { VIEW_OPTIONS, ViewName, getAllFields } from '@core/public';
+import type { ViewInstance } from '@core/public';
 import { VIEW_EDITORS } from '@features/settings/registry';
 import { useZustandAppStore, useDataStore, useUseCases } from '@/app/public';
 import { SimpleSelect } from '@shared/ui/composites/SimpleSelect';

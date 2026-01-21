@@ -18,7 +18,7 @@
  * NOTE: reorderItems 请使用 useCases.group.reorderItems
  */
 
-import type { AiSettings } from '@/core/types/ai-schema';
+import type { AiSettings } from '@core/public';
 import type { AppStoreApi } from './index';
 
 /**

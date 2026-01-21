@@ -1,7 +1,7 @@
 import type ThinkPlugin from '@main';
-import { DataStore } from '@core/services/DataStore';
+import { DataStore } from '@core/public';
 import { RendererService } from '@/features/settings/RendererService';
-import { ActionService } from '@core/services/ActionService';
+import { ActionService } from '@core/public';
 import * as QuickInputFeature from '@features/quickinput';
 import * as AiInputFeature from '@features/aiinput';
 import { setupSettings, setupDashboard } from '@/features/settings';

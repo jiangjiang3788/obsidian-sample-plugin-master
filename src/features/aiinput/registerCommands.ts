@@ -10,9 +10,9 @@ import { Notice } from 'obsidian';
 import type ThinkPlugin from '@/main';
 import { AiTextPromptModal } from './AiTextPromptModal';
 import { AiBatchConfirmModal } from './AiBatchConfirmModal';
-import { AiConfigCache, AiHttpClient, AiNaturalLanguageRecordParser } from '@/core/ai';
+import { AiConfigCache, AiHttpClient, AiNaturalLanguageRecordParser } from '@core/public';
 import { createServices, getZustandState, type AppStoreInstance } from '@/app/public';
-import type { ISettingsProvider } from '@/core/services/types';
+import type { ISettingsProvider } from '@core/public';
 
 /**
  * 创建一个基于 zustand store 的 SettingsProvider

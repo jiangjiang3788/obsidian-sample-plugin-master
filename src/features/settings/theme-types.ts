@@ -1,5 +1,5 @@
 // src/core/domain/theme.ts
-import { pathUtils } from '@core/utils/pathUtils';
+import { pathUtils } from '@core/public';
 import type { ActiveStatus, SourceType } from '@shared/types/common';
 
 // 定义常量

@@ -20,7 +20,7 @@ export * from './theme-types';
 import { App } from 'obsidian';
 import type ThinkPlugin from '@main';
 import { SettingsTab } from './SettingsTab';
-import { DataStore } from '@/core/services/DataStore';
+import { DataStore } from '@core/public';
 
 import { BlockViewEditor } from './BlockViewEditor';
 import { ExcelViewEditor } from './ExcelViewEditor';
@@ -76,9 +76,9 @@ export function setupSettings(deps: SettingsDependencies): void {
 
 import type { Plugin } from 'obsidian';
 import type { RendererService } from './RendererService';
-import type { ActionService } from '@core/services/ActionService';
+import type { ActionService } from '@core/public';
 
-import { VaultWatcher } from '@core/services/VaultWatcher';
+import { VaultWatcher } from '@core/public';
 import { CodeblockEmbedder } from './CodeblockEmbedder';
 
 /** 
@@ -122,8 +122,8 @@ import {
 import type { ComponentType } from 'preact';
 
 /** 从 Domain 层导入 ViewName 和 VIEW_OPTIONS */
-import type { ViewName } from '@/core/types/schema';
-import { VIEW_OPTIONS as DOMAIN_VIEW_OPTIONS } from '@/core/types/schema';
+import type { ViewName } from '@core/public';
+import { VIEW_OPTIONS as DOMAIN_VIEW_OPTIONS } from '@core/public';
 
 /**
  * 视图注册表：域层的 ViewName -> 具体视图组件

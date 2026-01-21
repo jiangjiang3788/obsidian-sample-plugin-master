@@ -1,26 +1,27 @@
-import { ensureReflectMetadata } from '@core/polyfills';
+import 'reflect-metadata';
+import { ensureReflectMetadata } from '@core/public';
 
 // 立即执行环境检查
 ensureReflectMetadata();
 
 import { container } from 'tsyringe';
 import { Plugin, Notice } from 'obsidian';
-import { DataStore } from '@core/services/DataStore';
-import { InputService } from '@core/services/InputService';
-import { ThinkSettings, DEFAULT_SETTINGS } from '@core/types';
+import { DataStore } from '@core/public';
+import { InputService } from '@core/public';
+import { ThinkSettings, DEFAULT_SETTINGS } from '@core/public';
 import type { UseCases } from '@/app/public';
-import { setupCoreContainer } from '@core/di/setupCore';
+import { setupCoreContainer } from '@core/public';
 import './styles/main.css';
 import { safeAsync } from '@shared/utils/errorHandler';
 import { performanceMonitor, startMeasure } from '@shared/utils/performance';
 import { ServiceManager } from '@/app/ServiceManager';
-import { TimerStateService } from '@core/services/TimerStateService';
+import { TimerStateService } from '@core/public';
 import { TimerService } from '@features/timer/TimerService';
-import { ActionService } from '@core/services/ActionService';
+import { ActionService } from '@core/public';
 import { AiChatModal } from '@features/aichat';
-import { AiChatService } from '@core/ai/AiChatService';
-import { RetrievalService } from '@core/ai/RetrievalService';
-import { ChatSessionStore } from '@core/ai/ChatSessionStore';
+import { AiChatService } from '@core/public';
+import { RetrievalService } from '@core/public';
+import { ChatSessionStore } from '@core/public';
 
 console.log(`[ThinkPlugin] main.js 文件已加载，版本时间: ${new Date().toLocaleTimeString()}`);
 

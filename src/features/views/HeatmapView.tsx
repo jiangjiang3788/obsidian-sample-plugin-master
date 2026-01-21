@@ -3,15 +3,15 @@
 /** @jsxImportSource preact */
 import { useMemo, useState, useRef, useEffect } from 'preact/hooks';
 import { App, Notice } from 'obsidian';
-import { Item, ViewInstance, InputSettings, ThemeDefinition } from '@/core/types/schema';
-import { dayjs } from '@core/utils/date';
+import { Item, ViewInstance, InputSettings, ThemeDefinition } from '@core/public';
+import { dayjs } from '@core/public';
 import { QuickInputModal } from '@/features/quickinput/QuickInputModal';
-import { HEATMAP_VIEW_DEFAULT_CONFIG } from '@core/config/viewConfigs';
-import { getThemeLevelData } from '@core/utils/levelingSystem';
+import { HEATMAP_VIEW_DEFAULT_CONFIG } from '@core/public';
+import { getThemeLevelData } from '@core/public';
 import { CheckinManagerModal } from '@/features/settings/CheckinManagerModal';
 import { HeatmapCell } from '@shared/ui/heatmap/HeatmapCell';
-import { buildThemeDataMap, buildThemesByPathMap, getThemeItems } from '@core/utils/heatmapAggregation';
-import { RatingMappingCache } from '@core/utils/heatmapTemplate';
+import { buildThemeDataMap, buildThemesByPathMap, getThemeItems } from '@core/public';
+import { RatingMappingCache } from '@core/public';
 
 // ========== Types ==========
 interface HeatmapViewProps {

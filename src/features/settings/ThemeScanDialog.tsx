@@ -40,7 +40,7 @@ import type {
     ScanConfig, 
     ImportResult,
     ScanStats
-} from '@/core/theme-matrix/ThemeScanService';
+} from '@core/public';
 
 /**
  * 主题扫描对话框属性

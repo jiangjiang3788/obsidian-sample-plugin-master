@@ -1,12 +1,12 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
 import { App } from 'obsidian';
-import type { Item, ThemeDefinition } from '@/core/types/schema';
-import { readField } from '@/core/types/schema';
-import { getFieldLabel } from '@/core/types/fields';
-import { getCategoryColor } from '@/core/types/definitions';
+import type { Item, ThemeDefinition } from '@core/public';
+import { readField } from '@core/public';
+import { getFieldLabel } from '@core/public';
+import { getCategoryColor } from '@core/public';
 import { TagsRenderer } from '@shared/ui/composites/TagsRenderer';
-import { getBaseCategory } from '@core/utils/itemGrouping';
+import { getBaseCategory } from '@core/public';
 
 interface FieldPillProps {
     item: Item;

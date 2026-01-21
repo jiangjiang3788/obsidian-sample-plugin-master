@@ -3,12 +3,12 @@
 // 注意：timeline 的“类型形状”不再由 features 定义。
 // 这里仅保留解析/拆分的实现；类型来自 core（唯一真源）。
 
-import type { Item } from '@/core/types/schema';
-import { dayjs, timeToMinutes } from '@core/utils/date';
-import { splitTaskIntoDayBlocks } from '@core/utils/timelineBlocks';
+import type { Item } from '@core/public';
+import { dayjs, timeToMinutes } from '@core/public';
+import { splitTaskIntoDayBlocks } from '@core/public';
 
-export type { TimelineTask, TaskBlock } from '@core/types/timeline';
-import type { TimelineTask } from '@core/types/timeline';
+export type { TimelineTask, TaskBlock } from '@core/public';
+import type { TimelineTask } from '@core/public';
 
 // TimelineTask / TaskBlock 已在 core/types/timeline.ts 定义并在此文件 re-export。
 

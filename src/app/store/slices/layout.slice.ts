@@ -28,10 +28,10 @@
  */
 
 import type { StateCreator } from 'zustand';
-import type { ThinkSettings, Layout } from '@/core/types/schema';
-import type { SettingsRepository } from '@/core/services/SettingsRepository';
+import type { ThinkSettings, Layout } from '@core/public';
+import type { SettingsRepository } from '@core/public';
 import { generateId } from '@/shared/utils/array';
-import { moveItemInArray } from '@core/utils/array';
+import { moveItemInArray } from '@core/public';
 import { createSliceMeta } from '@/shared/types/ActionMeta';
 
 // ============== 类型定义 ==============

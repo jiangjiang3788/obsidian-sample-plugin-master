@@ -8,8 +8,8 @@ import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
 import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
 
 // [架构标准化] 使用 core 层的共享配置，避免重复定义
-import { STATISTICS_VIEW_DEFAULT_CONFIG as DEFAULT_CONFIG } from '@core/config/viewConfigs';
-import { discoverBaseCategories } from '@core/utils/dataAggregation';
+import { STATISTICS_VIEW_DEFAULT_CONFIG as DEFAULT_CONFIG } from '@core/public';
+import { discoverBaseCategories } from '@core/public';
 
 // 重新导出 DEFAULT_CONFIG 以便于 registry.tsx 使用
 export { DEFAULT_CONFIG };

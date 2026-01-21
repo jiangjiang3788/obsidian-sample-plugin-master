@@ -15,13 +15,13 @@
  * - 直接操作 Obsidian 界面元素
  */
 import { singleton, inject } from 'tsyringe';
-import { ItemService } from '@core/services/ItemService';
+import { ItemService } from '@core/public';
 import { Notice, App, TFile } from 'obsidian';
-import { DataStore } from '@core/services/DataStore';
-import { InputService } from '@core/services/InputService';
+import { DataStore } from '@core/public';
+import { InputService } from '@core/public';
 import type { QuickInputSaveData } from '@/features/quickinput/QuickInputModal';
-import { AppToken } from '@core/services/types';
-import { nowHHMM, timeToMinutes, minutesToTime } from '@core/utils/date';
+import { AppToken } from '@core/public';
+import { nowHHMM, timeToMinutes, minutesToTime } from '@core/public';
 import { USECASES_TOKEN, type UseCases } from '@/app/public';
 
 @singleton()

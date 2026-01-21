@@ -1,7 +1,7 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
 import { App } from 'obsidian';
-import { Item, ThemeDefinition } from '@/core/types/schema';
+import { Item, ThemeDefinition } from '@core/public';
 import { FieldPill } from '@shared/ui/items/FieldPill';
 import { ItemLink } from '@shared/ui/items/ItemLink';
 

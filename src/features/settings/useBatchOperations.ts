@@ -5,7 +5,7 @@
  * P1: 通过 UseCases 调用批量操作，禁止直接访问 appStore
  */
 import { useState, useCallback } from 'preact/hooks';
-import { parseCellKey } from '@/core/utils/cellKey';
+import { parseCellKey } from '@core/public';
 import { useUseCases } from '@/app/public';
 
 // 定义新的参数类型

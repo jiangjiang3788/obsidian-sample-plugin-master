@@ -1,8 +1,8 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
 import { App } from 'obsidian';
-import type { Item } from '@/core/types/schema';
-import { makeObsUri } from '@core/utils/obsidian';
+import type { Item } from '@core/public';
+import { makeObsUri } from '@core/public';
 
 interface ItemLinkProps {
     item: Item;

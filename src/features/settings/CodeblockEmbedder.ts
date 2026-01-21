@@ -9,12 +9,12 @@
  */
 import { render } from 'preact';
 import { Notice, Plugin } from 'obsidian';
-import { CODEBLOCK_LANG } from '@/core/types/constants';
-import { DataStore } from '@core/services/DataStore';
+import { CODEBLOCK_LANG } from '@core/public';
+import { DataStore } from '@core/public';
 import { createServices, getZustandState, type AppStoreInstance } from '@/app/public';
 import { RendererService } from '@/features/settings/RendererService';
-import type { Layout } from '@/core/types/schema';
-import type { ActionService } from '@core/services/ActionService';
+import type { Layout } from '@core/public';
+import type { ActionService } from '@core/public';
 
 export class CodeblockEmbedder {
     // P0-3: store 从 DI 获取

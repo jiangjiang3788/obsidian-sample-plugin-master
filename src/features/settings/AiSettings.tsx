@@ -27,9 +27,9 @@ import {
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { useZustandAppStore } from '@/app/public';
 import { useUseCases } from '@/app/public';
-import type { AiSettings as AiSettingsType } from '@/core/types/ai-schema';
-import { DEFAULT_AI_SETTINGS, CUSTOM_PROMPT_EXAMPLES } from '@/core/types/ai-schema';
-import { AiHttpClient } from '@/core/ai';
+import type { AiSettings as AiSettingsType } from '@core/public';
+import { DEFAULT_AI_SETTINGS, CUSTOM_PROMPT_EXAMPLES } from '@core/public';
+import { AiHttpClient } from '@core/public';
 
 // P0: 移除 appStore 依赖，改用 useCases
 interface AiSettingsProps {

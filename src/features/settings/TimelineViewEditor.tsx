@@ -8,11 +8,11 @@ import DeleteIcon from '@mui/icons-material/RemoveCircleOutline';
 import { useMemo } from 'preact/hooks';
 
 import { SimpleSelect } from '@shared/ui/composites/SimpleSelect';
-import { TIMELINE_VIEW_DEFAULT_CONFIG, type CategoryConfig } from '@core/config/viewConfigs';
-import { collectFileNames } from '@core/utils/timeline';
+import { TIMELINE_VIEW_DEFAULT_CONFIG, type CategoryConfig } from '@core/public';
+import { collectFileNames } from '@core/public';
 
 // 重新导出以保持兼容性
-export { TIMELINE_VIEW_DEFAULT_CONFIG as DEFAULT_CONFIG } from '@core/config/viewConfigs';
+export { TIMELINE_VIEW_DEFAULT_CONFIG as DEFAULT_CONFIG } from '@core/public';
 
 type CategoriesMap = Record<string, CategoryConfig>;
 

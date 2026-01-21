@@ -61,6 +61,10 @@ function isAppPublicFile(targetAbsPath) {
   return relToRoot(targetAbsPath) === 'src/app/public.ts';
 }
 
+function isCorePublicFile(targetAbsPath) {
+  return relToRoot(targetAbsPath) === 'src/core/public.ts';
+}
+
 async function exists(p) {
   try {
     await fs.access(p);
@@ -300,7 +304,20 @@ async function main() {
         }
       }
 
-      // ---------------- Rule 4: app/usecases cannot depend on features ----------------
+            // ---------------- Rule 3b: app/features/shared can only access core via core/public ----------------
+      if (importerLayer !== 'core' && targetLayer === 'core') {
+        if (!isCorePublicFile(targetAbs)) {
+          violations.push({
+            importerRel,
+            source,
+            targetRel,
+            message: `[R3b] ${importerLayer} 访问 core 只能通过 src/core/public.ts`,
+          });
+          continue;
+        }
+      }
+
+// ---------------- Rule 4: app/usecases cannot depend on features ----------------
       if (isUseCasesFile(importerAbs) && targetLayer === 'features') {
         violations.push({
           importerRel,

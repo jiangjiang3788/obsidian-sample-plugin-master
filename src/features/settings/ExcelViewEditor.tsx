@@ -2,10 +2,10 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
 import { Typography } from '@mui/material';
-import { EXCEL_VIEW_DEFAULT_CONFIG } from '@core/config/viewConfigs';
+import { EXCEL_VIEW_DEFAULT_CONFIG } from '@core/public';
 
 // 重新导出以保持兼容性
-export { EXCEL_VIEW_DEFAULT_CONFIG as DEFAULT_CONFIG } from '@core/config/viewConfigs';
+export { EXCEL_VIEW_DEFAULT_CONFIG as DEFAULT_CONFIG } from '@core/public';
 
 export function ExcelViewEditor() {
   return (

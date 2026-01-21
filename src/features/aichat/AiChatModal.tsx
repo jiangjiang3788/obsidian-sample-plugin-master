@@ -46,11 +46,11 @@ import {
     ChatSession, 
     ChatMessage,
     SessionFilters 
-} from '@/core/ai/ChatSessionStore';
-import { AiChatService, ChatResponse } from '@/core/ai/AiChatService';
-import { RetrievalService } from '@/core/ai/RetrievalService';
-import type { OpenAIChatMessage } from '@/core/ai/AiHttpClient';
-import { dayjs } from '@core/utils/date';
+} from '@core/public';
+import { AiChatService, ChatResponse } from '@core/public';
+import { RetrievalService } from '@core/public';
+import type { OpenAIChatMessage } from '@core/public';
+import { dayjs } from '@core/public';
 import { getMessageRenderService, MessageContentType } from '@/shared/utils/MessageRenderService';
 
 // ============== AI 服务接口（用于依赖注入） ==============

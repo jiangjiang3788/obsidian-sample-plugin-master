@@ -18,7 +18,15 @@ import { TemplateResolver } from '@/core/services/TemplateResolver';
  * @param themeId 可选的主题 ID
  * @returns BlockTemplate 或 null
  */
-export function getEffectiveTemplate(
+// NOTE:
+// 这里原本导出名为 getEffectiveTemplate，与 inputTemplateUtils.ts 的同名导出冲突。
+// core/utils/index.ts 会把两者都 re-export，Vite/Rollup 会报 "Conflicting namespaces"，
+// 并导致其中一个导出被忽略，最终出现 @core/public 无法稳定导出 getEffectiveTemplate 的问题。
+//
+// 为了让 @core/public 的 API 形状稳定：
+// - inputTemplateUtils.ts 保留 getEffectiveTemplate（返回 {template, theme}）
+// - heatmapTemplate.ts 改名为 getEffectiveHeatmapTemplate（返回 BlockTemplate | null）
+export function getEffectiveHeatmapTemplate(
     settings: InputSettings, 
     blockId: string, 
     themeId?: string
@@ -34,7 +42,7 @@ export function buildRatingMapping(
     blockId: string, 
     themeId?: string
 ): Map<string, string> {
-    const effectiveTemplate = getEffectiveTemplate(inputSettings, blockId, themeId);
+    const effectiveTemplate = getEffectiveHeatmapTemplate(inputSettings, blockId, themeId);
     const ratingField = effectiveTemplate?.fields.find(f => f.type === 'rating');
     
     return new Map<string, string>(

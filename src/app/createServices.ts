@@ -22,8 +22,8 @@ import { container as defaultContainer, type DependencyContainer } from 'tsyring
 import { validateServices, type Services } from './services.types';
 import { STORE_TOKEN, type AppStoreInstance } from './store/useAppStore';
 import { USECASES_TOKEN, type UseCases } from './usecases';
-import { DataStore } from '@/core/services/DataStore';
-import { InputService } from '@/core/services/InputService';
+import { DataStore } from '@core/public';
+import { InputService } from '@core/public';
 
 /**
  * createServices

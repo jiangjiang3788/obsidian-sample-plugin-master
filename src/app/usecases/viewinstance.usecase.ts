@@ -1,5 +1,5 @@
 // src/app/usecases/viewinstance.usecase.ts
-import type { ViewInstance, ViewName } from '@/core/types/schema';
+import type { ViewInstance, ViewName } from '@core/public';
 import type { AppStoreApi } from './index';
 import { generateId } from '@/shared/utils/id';
 

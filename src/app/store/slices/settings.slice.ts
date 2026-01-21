@@ -21,9 +21,9 @@
  */
 
 import type { StateCreator } from 'zustand';
-import type { ThinkSettings, InputSettings } from '@/core/types/schema';
-import type { AiSettings } from '@/core/types/ai-schema';
-import type { SettingsRepository } from '@/core/services/SettingsRepository';
+import type { ThinkSettings, InputSettings } from '@core/public';
+import type { AiSettings } from '@core/public';
+import type { SettingsRepository } from '@core/public';
 
 // ============== 类型定义 ==============
 

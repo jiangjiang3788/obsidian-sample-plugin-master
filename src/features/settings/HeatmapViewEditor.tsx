@@ -8,13 +8,13 @@ import { SimpleSelect } from '@shared/ui/composites/SimpleSelect';
 import { ListEditor } from '@shared/ui/composites/form/ListEditor';
 import { useZustandAppStore } from '@/app/public';
 import { useMemo } from 'preact/hooks';
-import { LEVEL_SYSTEM_PRESETS } from '@core/utils/levelingSystem';
-import { HEATMAP_VIEW_DEFAULT_CONFIG } from '@core/config/viewConfigs';
-import { collectThemePathsForHeatmap } from '@core/utils/heatmap';
+import { LEVEL_SYSTEM_PRESETS } from '@core/public';
+import { HEATMAP_VIEW_DEFAULT_CONFIG } from '@core/public';
+import { collectThemePathsForHeatmap } from '@core/public';
 import { Notice } from 'obsidian';
 
 // 重新导出以保持兼容性
-export { HEATMAP_VIEW_DEFAULT_CONFIG as DEFAULT_CONFIG } from '@core/config/viewConfigs';
+export { HEATMAP_VIEW_DEFAULT_CONFIG as DEFAULT_CONFIG } from '@core/public';
 
 export function HeatmapViewEditor({ value, onChange, module, dataStore }: ViewEditorProps) {
     const config = { ...HEATMAP_VIEW_DEFAULT_CONFIG, ...value };

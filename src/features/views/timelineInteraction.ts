@@ -8,8 +8,8 @@
 // core 只负责可推演的纯计算；交互/弹窗属于 features 层。
 
 import { App, Notice } from 'obsidian';
-import { minutesToTime } from '@core/utils/date';
-import type { TaskBlock } from '@core/types/timeline';
+import { minutesToTime } from '@core/public';
+import type { TaskBlock } from '@core/public';
 import { QuickInputModal } from '@features/quickinput/QuickInputModal';
 
 interface CreateTaskOptions {

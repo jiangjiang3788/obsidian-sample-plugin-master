@@ -1,10 +1,10 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
 import { App } from 'obsidian';
-import type { Item } from '@/core/types/schema';
-import { dayjs } from '@core/utils/date';
-import { getEffectiveDisplayCount, getEffectiveLevelCount } from '@core/utils/levelingSystem';
-import { isImagePath, isHexColor } from '@core/config/heatmapViewConfig';
+import type { Item } from '@core/public';
+import { dayjs } from '@core/public';
+import { getEffectiveDisplayCount, getEffectiveLevelCount } from '@core/public';
+import { isImagePath, isHexColor } from '@core/public';
 
 interface HeatmapCellProps {
     date: string;

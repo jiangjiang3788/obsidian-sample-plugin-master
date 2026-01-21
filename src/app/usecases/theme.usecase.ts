@@ -38,7 +38,7 @@
  * ============================================================================
  */
 
-import type { ThemeDefinition, ThemeOverride } from '@/core/types/schema';
+import type { ThemeDefinition, ThemeOverride } from '@core/public';
 import type { ActiveStatus } from '@shared/types/common';
 import type { AppStoreApi } from './index';
 

@@ -2,14 +2,14 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
 import { useMemo } from 'preact/hooks';
-import { dayjs } from '@core/utils/date';
+import { dayjs } from '@core/public';
 import { 
     getMonday, 
     getWeekNumber, 
     getWeeksInYear, 
     getMondayByWeek, 
     getWeekRangeStr 
-} from '@core/utils/timeNavigator';
+} from '@core/public';
 
 interface TimeNavigatorProps {
     currentDate: dayjs.Dayjs;

@@ -1,42 +1,90 @@
 {
-    "compilerOptions": {
-      "experimentalDecorators": true,
-      "emitDecoratorMetadata": true,
-      "target": "ESNext",
-      "module": "ESNext",
-      "moduleResolution": "Node",
-      "strict": true,
-      "jsx": "react-jsx",
-      "jsxImportSource": "preact",
-      "esModuleInterop": true,
-      "forceConsistentCasingInFileNames": true,
-      "skipLibCheck": true,
-      "allowSyntheticDefaultImports": true,
-      "resolveJsonModule": true,
-      "isolatedModules": true,
-      "baseUrl": ".",
-      "paths": {
-        "@/*": ["src/*"],
-        "@lib/*": ["src/lib/*"],
-        "@store/*": ["src/store/*"],
-        "@ui/*": ["src/ui/*"],
-        "@views/*": ["src/views/*"],
-        "@hooks/*": ["src/hooks/*"],
-        "@config/*": ["src/config/*"],
-        "@platform/*": ["src/platform/*"],
-        "@main": ["src/main.ts"],
-        "@types/*": ["src/types/*"],
-        "@domain/*": ["src/lib/types/domain/*"],
-        "@utils/*": ["src/utils/*"],
-        "@services/*": ["src/lib/services/*"],
-        "@constants/*": ["src/constants/*"],
-        "@shared/*": ["src/shared/*"],
-        "@core/*": ["src/core/*"],
-        "@features/*": ["src/features/*"],
-        "react": ["node_modules/preact/compat"]
-      },
-      "types": ["vite/client", "preact"]
+  "compilerOptions": {
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "target": "ESNext",
+    "module": "ESNext",
+    "moduleResolution": "Node",
+    "strict": true,
+    "jsx": "react-jsx",
+    "jsxImportSource": "preact",
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "skipLibCheck": true,
+    "allowSyntheticDefaultImports": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "baseUrl": ".",
+    "paths": {
+      "@/*": [
+        "src/*"
+      ],
+      "@lib/*": [
+        "src/lib/*"
+      ],
+      "@store/*": [
+        "src/store/*"
+      ],
+      "@ui/*": [
+        "src/ui/*"
+      ],
+      "@views/*": [
+        "src/views/*"
+      ],
+      "@hooks/*": [
+        "src/hooks/*"
+      ],
+      "@config/*": [
+        "src/config/*"
+      ],
+      "@platform/*": [
+        "src/platform/*"
+      ],
+      "@main": [
+        "src/main.ts"
+      ],
+      "@types/*": [
+        "src/types/*"
+      ],
+      "@domain/*": [
+        "src/lib/types/domain/*"
+      ],
+      "@utils/*": [
+        "src/utils/*"
+      ],
+      "@services/*": [
+        "src/lib/services/*"
+      ],
+      "@constants/*": [
+        "src/constants/*"
+      ],
+      "@shared/*": [
+        "src/shared/*"
+      ],
+      "@core/public": [
+        "src/core/public.ts"
+      ],
+      "@core/*": [
+        "src/core/*"
+      ],
+      "@features/*": [
+        "src/features/*"
+      ],
+      "react": [
+        "node_modules/preact/compat"
+      ]
     },
-    "include": ["src", "test"],
-    "exclude": ["node_modules", "dist"]
-  }
+    "types": [
+      "vite/client",
+      "preact"
+    ]
+  },
+  "include": [
+    "src",
+    "test"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist"
+  ]
+}
