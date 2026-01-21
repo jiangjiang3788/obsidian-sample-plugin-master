@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "scripts": {
     "dev": "vite",
-    "build": "vite build && node -e \"const fs=require('fs');fs.copyFileSync('dist/main.js','main.js');fs.copyFileSync('dist/main.js.map','main.js.map');fs.copyFileSync('dist/styles.css','styles.css');\"",
+    "build": "npm run arch:public && npm run arch:capabilities && npm run arch:gate && vite build && node -e \"const fs=require('fs');fs.copyFileSync('dist/main.js','main.js');fs.copyFileSync('dist/main.js.map','main.js.map');fs.copyFileSync('dist/styles.css','styles.css');\"",
     "test": "jest --config test/configs/jest.config.js",
     "test:watch": "jest --config test/configs/jest.config.js --watch",
     "test:coverage": "jest --config test/configs/jest.config.js --coverage",
@@ -15,7 +15,10 @@
     "test:all": "npm run test && npm run test:e2e",
     "check:boundaries": "npx ts-node --project scripts/tsconfig.json scripts/check-boundaries.ts",
     "arch:gate": "node scripts/arch-gate.mjs",
-    "ci": "npm run build && npm run arch:gate"
+    "di:gate": "node scripts/di-gate.mjs",
+    "ci": "npm run lint && npm run typecheck && npm run arch:gate && npm run public-api:gate && npm run capability:gate && npm run di:gate",
+    "arch:public": "node scripts/public-api-gate.mjs",
+    "arch:capabilities": "node scripts/capability-gate.mjs"
   },
   "dependencies": {
     "@codemirror/state": "^6.5.2",

@@ -61,6 +61,10 @@ function isAppPublicFile(targetAbsPath) {
   return relToRoot(targetAbsPath) === 'src/app/public.ts';
 }
 
+function isAppCapabilitiesPublicFile(targetAbsPath) {
+  return relToRoot(targetAbsPath) === 'src/app/capabilities/public.ts';
+}
+
 function isCorePublicFile(targetAbsPath) {
   return relToRoot(targetAbsPath) === 'src/core/public.ts';
 }

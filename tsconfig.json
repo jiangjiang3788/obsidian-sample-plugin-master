@@ -72,6 +72,12 @@
       ],
       "react": [
         "node_modules/preact/compat"
+      ],
+      "@app/capabilities": [
+        "src/app/capabilities/public.ts"
+      ],
+      "@capabilities": [
+        "src/app/capabilities/public.ts"
       ]
     },
     "types": [

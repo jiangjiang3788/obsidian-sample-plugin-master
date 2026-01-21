@@ -254,6 +254,17 @@ module.exports = {
                 message:
                   "shared 层禁止依赖 app/usecases/** ❌ 如需能力请通过 '@/app/public'",
               },
+{
+  // Phase 4.5: shared 访问 app 只能通过 app/public 或 app/capabilities
+  group: [
+    '@/app/!(public|capabilities)/**',
+    '@app/!(public|capabilities)',
+    '@app/!(public|capabilities)/**'
+  ],
+  message:
+    "shared 层禁止深层依赖 app/** ❌ 如需能力请通过 '@/app/public' 或 '@app/capabilities'",
+},
+
               {
                 group: [
                   '@/app/AppStoreContext',
