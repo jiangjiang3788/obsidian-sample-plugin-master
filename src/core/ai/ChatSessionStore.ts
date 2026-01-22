@@ -17,7 +17,7 @@ import { z } from 'zod';
 import { singleton, inject } from 'tsyringe';
 import type { IPluginStorage } from '@/core/services/StorageService';
 import { STORAGE_TOKEN } from '@/core/services/StorageService';
-import { generateId } from '@/shared/utils/array';
+import { generateId } from '../utils/id';
 
 // ============== Zod Schemas ==============
 

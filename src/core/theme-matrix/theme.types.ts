@@ -2,7 +2,7 @@
  * 主题相关类型定义
  */
 import { ThemeDefinition, ThemeOverride } from '@/core/types/schema';
-import { ActiveStatus, SourceType } from '@shared/types/common';
+import type { ActiveStatus, SourceType } from '../types/common';
 
 /**
  * 扩展的主题定义，包含运行时状态和元数据

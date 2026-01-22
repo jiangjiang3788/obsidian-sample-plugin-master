@@ -1,7 +1,7 @@
 /**
  * 选择状态相关类型定义
  */
-import { type SelectionMode } from '@shared/types/common';
+import type { SelectionMode } from '../types/common';
 import { parseCellKey as _parseCellKey, makeCellKey } from '@/core/utils/cellKey';
 
 /**

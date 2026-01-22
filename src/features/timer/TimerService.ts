@@ -18,7 +18,7 @@ import { ItemService } from '@core/public';
 import { Notice, App, TFile } from 'obsidian';
 import { DataStore } from '@core/public';
 import { InputService } from '@core/public';
-import type { QuickInputSaveData } from '@/features/quickinput/QuickInputModal';
+import type { QuickInputSaveData } from '@core/public';
 import { nowHHMM, timeToMinutes, minutesToTime } from '@core/public';
 import type { UseCases } from '@/app/public';
 

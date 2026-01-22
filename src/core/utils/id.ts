@@ -1,14 +1,17 @@
-// src/shared/utils/id.ts
+// src/core/utils/id.ts
 /**
- * ID 生成工具
- * 全仓唯一真源 - 所有 ID 生成必须使用此文件
+ * ID utilities (SSOT)
+ * ---------------------------------------------------------------
+ * 说明：
+ * - 原先 generateId 位于 shared/utils/id.ts，并被 core 引用，导致 core 反向依赖 shared。
+ * - 4.5 起，基础工具统一下沉到 core。
  */
 
 /**
  * 生成唯一ID
  * @param prefix - ID前缀，默认为 'id'
  * @returns 生成的唯一ID，格式：prefix_timestamp_random
- * 
+ *
  * @example
  * generateId('user')  // => 'user_abc123_xyz789'
  * generateId()        // => 'id_abc123_xyz789'

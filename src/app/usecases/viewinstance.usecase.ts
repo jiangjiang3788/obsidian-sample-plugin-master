@@ -1,7 +1,7 @@
 // src/app/usecases/viewinstance.usecase.ts
 import type { ViewInstance, ViewName } from '@core/public';
 import type { AppStoreApi } from './index';
-import { generateId } from '@/shared/utils/id';
+import { generateId } from '@core/public';
 
 /**
  * ViewInstanceUseCase - 视图实例 CRUD

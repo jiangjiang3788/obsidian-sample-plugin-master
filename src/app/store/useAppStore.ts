@@ -25,7 +25,7 @@ import { create } from 'zustand';
 import { subscribeWithSelector } from 'zustand/middleware';
 import type { ThinkSettings } from '@core/public';
 import type { SettingsRepository } from '@core/public';
-import { createSliceMeta } from '@/shared/types/ActionMeta';
+import { createSliceMeta } from '@core/public';
 import { createThemeSlice, type ThemeSlice } from './slices/theme.slice';
 import { createLayoutSlice, type LayoutSlice } from './slices/layout.slice';
 import { createSettingsSlice, type SettingsSlice } from './slices/settings.slice';

@@ -21,9 +21,9 @@
 import type { StateCreator } from 'zustand';
 import type { ThinkSettings, ThemeDefinition, ThemeOverride } from '@core/public';
 import type { SettingsRepository } from '@core/public';
-import type { ActiveStatus } from '@shared/types/common';
-import { generateId } from '@/shared/utils/array';
-import { createSliceMeta } from '@/shared/types/ActionMeta';
+import type { ActiveStatus } from '@core/public';
+import { generateId } from '@core/public';
+import { createSliceMeta } from '@core/public';
 
 // ============== 类型定义 ==============
 

@@ -1,6 +1,6 @@
 // src/core/domain/theme.ts
 import { pathUtils } from '@core/public';
-import type { ActiveStatus, SourceType } from '@shared/types/common';
+import type { ActiveStatus, SourceType } from '@core/public';
 
 // 定义常量
 export const STATUS = {

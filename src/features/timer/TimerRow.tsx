@@ -15,8 +15,8 @@ import { formatSecondsToHHMMSS } from '@core/public';
 import { makeObsUri } from '@core/public';
 import type { ActionService } from '@core/public';
 import { App } from 'obsidian';
-// [修改] 导入 QuickInputModal 以修复 handleEdit 功能
-import { QuickInputModal } from '../quickinput/QuickInputModal';
+// [4.5] QuickInputModal 迁移至 shared（避免跨 feature 依赖）
+import { QuickInputModal } from '@shared/ui/modals/QuickInputModal';
 
 interface TimerRowProps {
     timer: TimerState;

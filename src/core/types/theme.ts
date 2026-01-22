@@ -1,6 +1,6 @@
 // src/core/domain/theme.ts
 import { pathUtils } from '@core/utils/pathUtils';
-import type { ActiveStatus, SourceType } from '@/shared/types/common';
+import type { ActiveStatus, SourceType } from './common';
 
 /**
  * 主题系统的核心接口定义

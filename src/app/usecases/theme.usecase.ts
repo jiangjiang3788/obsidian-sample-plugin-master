@@ -39,7 +39,7 @@
  */
 
 import type { ThemeDefinition, ThemeOverride } from '@core/public';
-import type { ActiveStatus } from '@shared/types/common';
+import type { ActiveStatus } from '@core/public';
 import type { AppStoreApi } from './index';
 
 /**

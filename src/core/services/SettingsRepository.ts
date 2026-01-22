@@ -23,8 +23,8 @@
 import { singleton, inject } from 'tsyringe';
 import { produce } from 'immer';
 import type { ThinkSettings } from '@/core/types/schema';
-import type { ActionMeta } from '@/shared/types/ActionMeta';
-import { logSettingsWrite } from '@/shared/utils/devLogger';
+import type { ActionMeta } from '@/core/types/actionMeta';
+import { logSettingsWrite } from '@/core/utils/devLogger';
 
 // ============== 类型定义 ==============
 

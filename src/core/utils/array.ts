@@ -1,6 +1,6 @@
 // src/core/utils/array.ts
 import type { Groupable } from '@/core/types/schema';
-import { generateId } from '@/shared/utils/array';
+import { generateId } from './id';
 
 /**
  * 在一个数组内，根据parentId对项目进行上移或下移

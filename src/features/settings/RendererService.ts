@@ -12,11 +12,11 @@ import { App } from 'obsidian';
 import { Layout } from '@core/public';
 import { DataStore } from '@core/public';
 import { ServicesProvider, type Services } from '@/app/public';
+import type { TimerController } from '@/app/public';
 import { LayoutRenderer } from '@/features/settings/LayoutRenderer';
 import { ActionService } from '@core/public';
 import { ItemService } from '@core/public';
 import { InputService } from '@core/public';
-import { TimerService } from '@features/timer/TimerService';
 import type { UseCases } from '@/app/public';
 import { getZustandState, subscribeZustandStore, type ZustandAppStore, type AppStoreInstance } from '@/app/public';
 
@@ -39,7 +39,7 @@ export class RendererService {
         private actionService: ActionService,
         private itemService: ItemService,
         private inputService: InputService,
-        private timerService: TimerService,
+        private timerService: TimerController,
         private useCases: UseCases,
         store: AppStoreInstance
     ) {

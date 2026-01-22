@@ -1,14 +1,10 @@
-// src/shared/types/ActionMeta.ts
+// src/core/types/actionMeta.ts
 /**
  * ActionMeta - 动作元数据类型定义
- * Role: Type Definition
- * 
- * 用于 S1 低成本可观测性，记录每次写操作的来源信息
- * 
- * 【规范】
- * - 所有写操作可选传入 meta
- * - 未传入时使用默认值 { action: 'unknown', source: 'unknown' }
- * - 仅在 development 环境下使用
+ * ---------------------------------------------------------------
+ * 说明：
+ * - 原先位于 shared/types/ActionMeta.ts，导致 core/services 反向依赖 shared。
+ * - 该类型是“写操作可观测性”的基础合同，应归属于 core（SSOT）。
  */
 
 /**

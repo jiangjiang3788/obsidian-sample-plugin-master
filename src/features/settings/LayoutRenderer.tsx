@@ -9,15 +9,16 @@ import { DashboardViewComponents as ViewComponents } from './index';
 
 import { getDateRange, dayjs } from '@core/public';
 import { useZustandAppStore, useUseCases } from '@/app/public';
+import type { TimerController } from '@/app/public';
 import type { ActionService } from '@core/public';
 import { ItemService } from '@core/public';
-import type { TimerService } from '@features/timer/TimerService';
+ 
 import { useViewData } from '@/features/settings/useViewData';
-import { QuickInputModal } from '@/features/quickinput/QuickInputModal';
+import { QuickInputModal } from '@shared/ui/modals/QuickInputModal';
 import { openModuleSettingsWidget } from './ModuleSettingsModal';
 import { App, Notice } from 'obsidian'; // [修改] 导入 Notice
 import { exportItemsToMarkdown, getExportConfigByViewType } from '@core/public'; // [新增] 导入导出函数
-import { ViewToolbar } from '@features/views/ViewToolbar'; // [新增] 导入统一工具栏组件
+import { ViewToolbar } from '@shared/ui/views/ViewToolbar'; // [新增] 导入统一工具栏组件
 
 // [修改] ViewContent 组件增加 onDataLoaded 和 selectedThemes props
 const ViewContent = ({
@@ -53,7 +54,7 @@ const ViewContent = ({
     onMarkDone: (id: string) => void;
     actionService: ActionService;
     itemService: ItemService;
-    timerService: TimerService;
+    timerService: TimerController;
     timers: any[]; // [新增]
     allThemes: any[]; // [新增]
     inputSettings: any; // [新增]

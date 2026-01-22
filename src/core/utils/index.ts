@@ -11,6 +11,7 @@
  */
 
 export * from './array';
+export * from './id';
 export * from './cellKey';
 export * from './dataAggregation';
 export * from './date';

@@ -18,8 +18,14 @@ export * from './schema';
 export * from './fields';
 export * from './ai-schema';
 export * from './timeline';
+
+// 4.x / SSOT - common contracts
+export * from './common';
+export * from './actionMeta';
 export * from './theme';
 export * from './timer';
 export * from './viewConfigs';
 export * from './services';
+// 4.5 composition contracts
+export * from './quickInput';
 // export * from './cache'; // 如未来有对外需求再打开

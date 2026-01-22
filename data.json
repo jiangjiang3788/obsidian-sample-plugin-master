@@ -225,7 +225,7 @@
         "fields": [],
         "group": "categoryKey"
       },
-      "collapsed": true,
+      "collapsed": false,
       "parentId": "group_memc1a9ofen88",
       "fields": [
         "categoryKey",
@@ -247,8 +247,13 @@
         }
       ],
       "groupFields": [
-        "theme",
-        "categoryKey"
+        "theme"
+      ],
+      "sort": [
+        {
+          "field": "categoryKey",
+          "dir": "asc"
+        }
       ]
     },
     {
@@ -306,9 +311,10 @@
         "displayMode": "habit",
         "sourceBlockId": "blk_mejsg76atopau",
         "themePaths": [
+          "健康/心情",
           "健康/身体",
-          "思考/专注",
           "健康/睡眠",
+          "思考/专注",
           "思考/读书"
         ],
         "countColors": [
@@ -319,7 +325,7 @@
           "#216e39"
         ]
       },
-      "collapsed": false,
+      "collapsed": true,
       "parentId": "group_memc1a9ofen88",
       "filters": []
     },
@@ -372,10 +378,7 @@
         "date",
         "content"
       ],
-      "group": "theme",
-      "groupFields": [
-        "theme"
-      ]
+      "group": "theme"
     },
     {
       "id": "view_mh4itucqmm9rt",
@@ -403,8 +406,7 @@
           "op": "=",
           "value": "打卡"
         }
-      ],
-      "groupFields": []
+      ]
     },
     {
       "id": "view_mi5ep8xvvi5mx",
@@ -438,8 +440,7 @@
           "op": "=",
           "value": "none"
         }
-      ],
-      "groupFields": []
+      ]
     }
   ],
   "layouts": [
@@ -448,34 +449,13 @@
       "name": "全局布局",
       "viewInstanceIds": [
         "view_mg1zanri06mhu",
+        "view_mer6n7pwf7suy",
+        "view_mewr7y1gvq0ro",
         "view_membnf1hgjgm3",
         "view_membbqjam5v63"
       ],
       "displayMode": "list",
-      "initialView": "周",
-      "initialDateFollowsNow": true,
-      "parentId": "group_memcg1u3us3jc",
-      "hideToolbar": false,
-      "isOverviewMode": false,
-      "initialDate": "2025-05-26",
-      "useFieldGranularity": false,
-      "selectedThemes": [],
-      "selectedCategories": []
-    },
-    {
-      "id": "layout_mkbzs71jx81urxx",
-      "name": "全局布局 (副本)",
-      "viewInstanceIds": [
-        "view_mi5ep8xvvi5mx",
-        "view_mer6ll4mtbjry",
-        "view_mer6n7pwf7suy",
-        "view_mg1zanri06mhu",
-        "view_membnf1hgjgm3",
-        "view_membbqjam5v63",
-        "view_mh4itucqmm9rt"
-      ],
-      "displayMode": "list",
-      "initialView": "周",
+      "initialView": "季",
       "initialDateFollowsNow": true,
       "parentId": "group_memcg1u3us3jc",
       "hideToolbar": false,
@@ -8583,11 +8563,17 @@
     "provider": "openai_compat",
     "apiEndpoint": "https://api.ricardochat.cn/v1",
     "apiKey": "sk-2SPzXePSCl9BISBoGzqQoBTd2BDv0mmoRZ3KoSZiMPFWyryn",
-    "model": "[渠道2]gemini-2.5-pro",
+    "model": "[Max]gemini-3-flash-preview",
     "temperature": 0.7,
     "maxTokens": 4096,
-    "requestTimeoutMs": 3000000,
-    "enabledBlockIds": [],
+    "requestTimeoutMs": 30000,
+    "enabledBlockIds": [
+      "blk_meic1my6m62iu",
+      "blk_mejsg1dc46fj9",
+      "blk_mejsdvflptluo",
+      "blk_mejsfuehqj4s0",
+      "blk_mejsg76atopau"
+    ],
     "allowMultipleResults": true,
     "maxResults": 5,
     "confirmMode": "single",

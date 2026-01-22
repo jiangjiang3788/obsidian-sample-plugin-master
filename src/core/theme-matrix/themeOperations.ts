@@ -3,7 +3,7 @@
  */
 import { pathUtils } from '@core/utils/pathUtils';
 import type { BatchOperationType } from '@core/theme-matrix';
-import type { ActiveStatus } from '@shared/types/common';
+import type { ActiveStatus } from '../types/common';
 import type { ExtendedTheme, ThemeTreeNode, ThemeOverrideKey } from '@core/theme-matrix';
 import type { ThemeOverride } from '@/core/types/schema';
 import { findNodeInTree, getDescendantIds } from './themeTreeBuilder';

@@ -8,7 +8,7 @@
  */
 import { type ThemeDefinition, ThemeOverride, BlockTemplate, ThinkSettings } from '@/core/types/schema';
 import { type ExtendedTheme, BatchOperationType, ThemeTreeNode } from '@core/theme-matrix';
-import type { SourceType } from '@shared/types/common';
+import type { SourceType } from '../types/common';
 import { 
     normalizePath,
     validatePathCharacters 

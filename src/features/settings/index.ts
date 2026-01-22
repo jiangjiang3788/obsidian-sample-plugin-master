@@ -118,7 +118,7 @@ import {
   TimelineView,
   EventTimelineView,
   HeatmapView,
-} from '@features/views';
+} from '@shared/ui/views';
 import type { ComponentType } from 'preact';
 
 /** 从 Domain 层导入 ViewName 和 VIEW_OPTIONS */

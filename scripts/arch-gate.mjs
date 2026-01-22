@@ -1,352 +1,308 @@
+#!/usr/bin/env node
 // scripts/arch-gate.mjs
-// -----------------------------------------------------------------------------
-// Architecture Gate (Phase 4)
-// -----------------------------------------------------------------------------
-// 目标：把“约定”变成“不可绕过的事实”。
-//
-// 为什么不只依赖 ESLint：
-// - ESLint 可以被局部 disable；也容易因为 patterns 漏洞被绕过。
-// - 这个脚本会“解析并解析后校验”每个 import 的真实目标路径，作为 CI 的硬闸门。
-//
-// 设计原则：
-// - 规则尽量少，但必须强：
-//   1) core 不能依赖 app/features
-//   2) shared 不能依赖 features；shared 访问 app 只能通过 app/public
-//   3) features 访问 app 只能通过 app/public
-//   4) app/usecases 不能依赖 features（UseCases 必须保持纯应用层 Facade）
-//
-// 运行：
-//   npm run arch:gate
-// -----------------------------------------------------------------------------
+// ---------------------------------------------------------------------------
+// Architecture Gate (AST-based)
+// ---------------------------------------------------------------------------
+// Why AST?
+// - Regex-based import scanning can be bypassed by multi-line imports, exotic
+//   export forms, or type-level import() usage.
+// - This gate uses the TypeScript compiler API to *reliably* extract:
+//   - import ... from 'x'
+//   - export ... from 'x'
+//   - dynamic import('x')
+//   - require('x')
+//   - type T = import('x').Foo
+// And resolves modules using tsconfig (baseUrl/paths) to real files.
 
-import fs from 'node:fs/promises';
-import path from 'node:path';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import { createRequire } from 'module';
 
-const ROOT = process.cwd();
+const require = createRequire(import.meta.url);
+// Use require() so this works even when TypeScript is provided via CommonJS.
+// (ESM import may fail in some Node setups if TS isn't locally installed.)
+const ts = require('typescript');
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const ROOT = path.resolve(__dirname, '..');
 const SRC_DIR = path.join(ROOT, 'src');
 
-/**
- * 你可以在这里添加“明确的历史例外”。
- * 例外必须是非常具体的（到文件级别），避免变成新的绕过通道。
- */
-const ALLOWLIST = new Set([
-  // format: `${fromRel} -> ${toRel}`
-]);
-
-const EXTENSIONS = ['.ts', '.tsx', '.js', '.jsx', '.mjs', '.cjs'];
+const APP_PUBLIC = path.join(SRC_DIR, 'app', 'public.ts');
+const APP_CAPABILITIES_PUBLIC = path.join(SRC_DIR, 'app', 'capabilities', 'public.ts');
+const CORE_PUBLIC = path.join(SRC_DIR, 'core', 'public.ts');
 
 function toPosix(p) {
   return p.split(path.sep).join('/');
 }
 
-function relToRoot(absPath) {
-  return toPosix(path.relative(ROOT, absPath));
+function walkDir(dir, cb) {
+  const entries = fs.readdirSync(dir, { withFileTypes: true });
+  for (const e of entries) {
+    const abs = path.join(dir, e.name);
+    if (e.isDirectory()) walkDir(abs, cb);
+    else cb(abs);
+  }
 }
 
 function layerOf(absPath) {
-  const rel = relToRoot(absPath);
-  if (rel.startsWith('src/core/')) return 'core';
-  if (rel.startsWith('src/app/')) return 'app';
-  if (rel.startsWith('src/shared/')) return 'shared';
-  if (rel.startsWith('src/features/')) return 'features';
+  const rel = toPosix(path.relative(SRC_DIR, absPath));
+  if (rel.startsWith('core/')) return 'core';
+  if (rel.startsWith('app/')) return 'app';
+  if (rel.startsWith('shared/')) return 'shared';
+  if (rel.startsWith('features/')) return 'features';
   return 'other';
 }
 
-function isUseCasesFile(importerAbsPath) {
-  const rel = relToRoot(importerAbsPath);
-  return rel.startsWith('src/app/usecases/');
+function isAppPublicFile(targetAbs) {
+  return path.resolve(targetAbs) === path.resolve(APP_PUBLIC);
 }
 
-function isAppPublicFile(targetAbsPath) {
-  return relToRoot(targetAbsPath) === 'src/app/public.ts';
+function isAppCapabilitiesPublicFile(targetAbs) {
+  return path.resolve(targetAbs) === path.resolve(APP_CAPABILITIES_PUBLIC);
 }
 
-function isAppCapabilitiesPublicFile(targetAbsPath) {
-  return relToRoot(targetAbsPath) === 'src/app/capabilities/public.ts';
+function isCorePublicFile(targetAbs) {
+  return path.resolve(targetAbs) === path.resolve(CORE_PUBLIC);
 }
 
-function isCorePublicFile(targetAbsPath) {
-  return relToRoot(targetAbsPath) === 'src/core/public.ts';
+// Keep this “capability” lock as a string/regex scan.
+// The di-gate is the main enforcement; this gives an early, clear error.
+function hasTsyringeContainerAccess(sourceText) {
+  // Matches:
+  //  - import { container } from 'tsyringe'
+  //  - import { something, container } from "tsyringe"
+  //  - import * as tsyringe from 'tsyringe'  (and later uses tsyringe.container)
+  //  - require('tsyringe').container
+  //  - tsyringe.container
+  const re1 = /import\s*\{[^}]*\bcontainer\b[^}]*\}\s*from\s*['"]tsyringe['"]/g;
+  const re2 = /\btsyringe\.container\b/g;
+  const re3 = /require\(\s*['"]tsyringe['"]\s*\)\s*\.\s*container/g;
+  const re4 = /\bcontainer\s*from\s*['"]tsyringe['"]/g;
+  return re1.test(sourceText) || re2.test(sourceText) || re3.test(sourceText) || re4.test(sourceText);
 }
 
-async function exists(p) {
-  try {
-    await fs.access(p);
-    return true;
-  } catch {
-    return false;
-  }
+function getScriptKind(absPath) {
+  const ext = path.extname(absPath).toLowerCase();
+  if (ext === '.ts') return ts.ScriptKind.TS;
+  if (ext === '.tsx') return ts.ScriptKind.TSX;
+  if (ext === '.js') return ts.ScriptKind.JS;
+  if (ext === '.jsx') return ts.ScriptKind.JSX;
+  if (ext === '.mts') return ts.ScriptKind.TS;
+  if (ext === '.cts') return ts.ScriptKind.TS;
+  return ts.ScriptKind.Unknown;
 }
 
-async function resolveFile(baseAbsPath) {
-  // 1) direct file with extension
-  if (path.extname(baseAbsPath)) {
-    if (await exists(baseAbsPath)) return baseAbsPath;
-  } else {
-    // 2) try with extensions
-    for (const ext of EXTENSIONS) {
-      const p = baseAbsPath + ext;
-      if (await exists(p)) return p;
+function extractModuleSpecifiers(sourceFile) {
+  /** @type {{ spec: string, pos: number, kind: string }[]} */
+  const specs = [];
+
+  /** @param {any} node */
+  function visit(node) {
+    // import ... from 'x'
+    if (ts.isImportDeclaration(node) && node.moduleSpecifier && ts.isStringLiteral(node.moduleSpecifier)) {
+      specs.push({ spec: node.moduleSpecifier.text, pos: node.moduleSpecifier.getStart(sourceFile), kind: 'import' });
     }
-  }
 
-  // 3) directory index
-  if (await exists(baseAbsPath)) {
-    // might be a dir
-    for (const ext of EXTENSIONS) {
-      const idx = path.join(baseAbsPath, 'index' + ext);
-      if (await exists(idx)) return idx;
+    // export ... from 'x'
+    if (ts.isExportDeclaration(node) && node.moduleSpecifier && ts.isStringLiteral(node.moduleSpecifier)) {
+      specs.push({ spec: node.moduleSpecifier.text, pos: node.moduleSpecifier.getStart(sourceFile), kind: 'export' });
     }
+
+    // import('x')
+    if (ts.isCallExpression(node) && node.expression && node.expression.kind === ts.SyntaxKind.ImportKeyword) {
+      const arg0 = node.arguments && node.arguments[0];
+      if (arg0 && ts.isStringLiteral(arg0)) {
+        specs.push({ spec: arg0.text, pos: arg0.getStart(sourceFile), kind: 'import()' });
+      }
+    }
+
+    // require('x')
+    if (ts.isCallExpression(node) && node.expression && ts.isIdentifier(node.expression) && node.expression.escapedText === 'require') {
+      const arg0 = node.arguments && node.arguments[0];
+      if (arg0 && ts.isStringLiteral(arg0)) {
+        specs.push({ spec: arg0.text, pos: arg0.getStart(sourceFile), kind: 'require()' });
+      }
+    }
+
+    // import x = require('x')
+    if (ts.isImportEqualsDeclaration(node)) {
+      const ref = node.moduleReference;
+      if (ref && ts.isExternalModuleReference(ref) && ref.expression && ts.isStringLiteral(ref.expression)) {
+        specs.push({ spec: ref.expression.text, pos: ref.expression.getStart(sourceFile), kind: 'import=' });
+      }
+    }
+
+    // type T = import('x').Foo
+    if (ts.isImportTypeNode(node)) {
+      const arg = node.argument;
+      if (arg && ts.isLiteralTypeNode(arg) && ts.isStringLiteral(arg.literal)) {
+        specs.push({ spec: arg.literal.text, pos: arg.literal.getStart(sourceFile), kind: 'import-type' });
+      }
+    }
+
+    ts.forEachChild(node, visit);
   }
 
-  return null;
+  visit(sourceFile);
+  return specs;
 }
 
-async function resolveImport(importerAbsPath, source) {
-  // External deps
-  if (!source.startsWith('.') && !source.startsWith('@/') && !source.startsWith('@')) {
-    return { kind: 'external' };
+function loadTsConfig() {
+  const configPath = ts.findConfigFile(ROOT, ts.sys.fileExists, 'tsconfig.json');
+  if (!configPath) {
+    throw new Error('arch-gate: tsconfig.json not found');
   }
-
-  // Relative
-  if (source.startsWith('.')) {
-    const base = path.resolve(path.dirname(importerAbsPath), source);
-    const resolved = await resolveFile(base);
-    if (resolved) return { kind: 'internal', absPath: resolved };
-    return { kind: 'unresolved' };
+  const configFile = ts.readConfigFile(configPath, ts.sys.readFile);
+  if (configFile.error) {
+    throw new Error('arch-gate: failed to read tsconfig.json');
   }
+  const parsed = ts.parseJsonConfigFileContent(configFile.config, ts.sys, path.dirname(configPath));
+  return { compilerOptions: parsed.options, configPath };
+}
 
-  // Alias: @/ -> src/
-  if (source.startsWith('@/')) {
-    const base = path.join(SRC_DIR, source.slice(2));
-    const resolved = await resolveFile(base);
-    if (resolved) return { kind: 'internal', absPath: resolved };
-    return { kind: 'unresolved' };
-  }
-
-  // Alias: @main
-  if (source === '@main') {
-    const resolved = await resolveFile(path.join(SRC_DIR, 'main'));
-    if (resolved) return { kind: 'internal', absPath: resolved };
-    return { kind: 'unresolved' };
-  }
-
-  // Alias family: @core/, @app/, @shared/, @features/, @platform/ ...
-  const aliasMap = {
-    '@core/': path.join(SRC_DIR, 'core'),
-    '@app/': path.join(SRC_DIR, 'app'),
-    '@shared/': path.join(SRC_DIR, 'shared'),
-    '@features/': path.join(SRC_DIR, 'features'),
-    '@platform/': path.join(SRC_DIR, 'platform'),
-    '@lib/': path.join(SRC_DIR, 'lib'),
-    '@store/': path.join(SRC_DIR, 'store'),
-    '@ui/': path.join(SRC_DIR, 'ui'),
-    '@views/': path.join(SRC_DIR, 'views'),
-    '@hooks/': path.join(SRC_DIR, 'hooks'),
-    '@config/': path.join(SRC_DIR, 'config'),
-    '@types/': path.join(SRC_DIR, 'types'),
-    '@domain/': path.join(SRC_DIR, 'lib/types/domain'),
-    '@utils/': path.join(SRC_DIR, 'utils'),
-    '@services/': path.join(SRC_DIR, 'lib/services'),
-    '@constants/': path.join(SRC_DIR, 'constants'),
+function createResolver(compilerOptions) {
+  const resolutionHost = {
+    fileExists: ts.sys.fileExists,
+    readFile: ts.sys.readFile,
+    directoryExists: ts.sys.directoryExists,
+    getCurrentDirectory: () => ROOT,
+    getDirectories: ts.sys.getDirectories,
+    realpath: ts.sys.realpath,
+    useCaseSensitiveFileNames: ts.sys.useCaseSensitiveFileNames,
   };
+  const cache = ts.createModuleResolutionCache(ROOT, (s) => s, compilerOptions);
 
-  for (const [prefix, dir] of Object.entries(aliasMap)) {
-    if (source.startsWith(prefix)) {
-      const base = path.join(dir, source.slice(prefix.length));
-      const resolved = await resolveFile(base);
-      if (resolved) return { kind: 'internal', absPath: resolved };
-      return { kind: 'unresolved' };
-    }
+  /**
+   * @param {string} spec
+   * @param {string} importerAbs
+   */
+  function resolve(spec, importerAbs) {
+    const res = ts.resolveModuleName(spec, importerAbs, compilerOptions, resolutionHost, cache);
+    const m = res && res.resolvedModule;
+    if (!m) return null;
+    let resolved = m.resolvedFileName;
+    if (!resolved) return null;
+    if (!path.isAbsolute(resolved)) resolved = path.resolve(ROOT, resolved);
+    return {
+      resolvedFileName: resolved,
+      isExternalLibraryImport: !!m.isExternalLibraryImport,
+    };
   }
 
-  // Unknown @xxx - treat as external to avoid false positives.
-  return { kind: 'external' };
+  return { resolve };
 }
 
-function extractImportSources(code) {
-  const sources = new Set();
-
-  // import ... from 'x' / export ... from 'x' / import 'x'
-  const re1 = /\b(?:import|export)\s+(?:type\s+)?(?:[^'"\n;]*?\s+from\s+)?['"]([^'"]+)['"]/g;
-  let m;
-  while ((m = re1.exec(code))) sources.add(m[1]);
-
-  // dynamic import('x')
-  const re2 = /\bimport\s*\(\s*['"]([^'"]+)['"]\s*\)/g;
-  while ((m = re2.exec(code))) sources.add(m[1]);
-
-  // require('x')
-  const re3 = /\brequire\s*\(\s*['"]([^'"]+)['"]\s*\)/g;
-  while ((m = re3.exec(code))) sources.add(m[1]);
-
-  return [...sources];
-}
-
-function hasTsyringeContainerAccess(code) {
-  // Phase 4.3: 禁止在 features/shared 直接获得 DI container
-  // - import { container } from 'tsyringe'
-  // - import * as di from 'tsyringe' (namespace import 可访问 di.container)
-  // - import di from 'tsyringe' (default import 也可访问 di.container)
-  // - dynamic import('tsyringe') / require('tsyringe')
-  // - const { container } = require('tsyringe')
-  // - require('tsyringe').container
-  const importRe = /\bimport\s*{[^}]*\bcontainer\b[^}]*}\s*from\s*['"]tsyringe['"]/m;
-  const namespaceImportRe = /\bimport\s*\*\s*as\s*\w+\s*from\s*['"]tsyringe['"]/m;
-  const defaultImportRe = /\bimport\s+\w+\s+from\s*['"]tsyringe['"]/m;
-  const dynamicImportRe = /\bimport\s*\(\s*['"]tsyringe['"]\s*\)/m;
-  const requireAnyRe = /\brequire\(\s*['"]tsyringe['"]\s*\)/m;
-  const requireDestructureRe = /\bconst\s*{[^}]*\bcontainer\b[^}]*}\s*=\s*require\(\s*['"]tsyringe['"]\s*\)/m;
-  const requirePropRe = /\brequire\(\s*['"]tsyringe['"]\s*\)\s*\.\s*container\b/m;
-  return (
-    importRe.test(code) ||
-    namespaceImportRe.test(code) ||
-    defaultImportRe.test(code) ||
-    dynamicImportRe.test(code) ||
-    // require(...) 一律视为危险：拿到了模块，就能拿到 container
-    requireAnyRe.test(code) ||
-    requireDestructureRe.test(code) ||
-    requirePropRe.test(code)
-  );
-}
-
-async function walk(dirAbs, out) {
-  const entries = await fs.readdir(dirAbs, { withFileTypes: true });
-  for (const e of entries) {
-    const p = path.join(dirAbs, e.name);
-    if (e.isDirectory()) {
-      // skip build artifacts
-      if (e.name === 'node_modules' || e.name === 'dist') continue;
-      await walk(p, out);
-    } else if (e.isFile()) {
-      if (!EXTENSIONS.includes(path.extname(e.name))) continue;
-      out.push(p);
-    }
+function formatLoc(sourceFile, pos) {
+  try {
+    const lc = ts.getLineAndCharacterOfPosition(sourceFile, pos);
+    return `${lc.line + 1}:${lc.character + 1}`;
+  } catch {
+    return '?:?';
   }
 }
 
-function formatViolation({ importerRel, source, targetRel, message }) {
-  return [
-    `❌ ${message}`,
-    `  from: ${importerRel}`,
-    `  import: ${source}`,
-    `  to: ${targetRel}`,
-  ].join('\n');
-}
+// ------------------------------
+// Main
+// ------------------------------
 
-async function main() {
-  const files = [];
-  await walk(SRC_DIR, files);
+const errors = [];
 
-  const violations = [];
+const { compilerOptions } = loadTsConfig();
+const resolver = createResolver(compilerOptions);
 
-  for (const importerAbs of files) {
-    const importerRel = relToRoot(importerAbs);
-    const importerLayer = layerOf(importerAbs);
+/**
+ * Collect files to scan.
+ * We intentionally scan source files only. Config/test files outside src are ignored.
+ */
+const files = [];
+walkDir(SRC_DIR, (abs) => {
+  if (!/\.(ts|tsx|js|jsx)$/.test(abs)) return;
+  files.push(abs);
+});
 
-    // only gate the main architecture layers
-    if (importerLayer === 'other') continue;
+for (const absPath of files) {
+  const importerLayer = layerOf(absPath);
+  if (importerLayer === 'other') continue;
 
-    const code = await fs.readFile(importerAbs, 'utf8');
+  const code = fs.readFileSync(absPath, 'utf8');
+  const sf = ts.createSourceFile(absPath, code, ts.ScriptTarget.Latest, true, getScriptKind(absPath));
 
-    // ---------------- Rule 0: features/shared cannot access tsyringe.container ----------------
-    if ((importerLayer === 'features' || importerLayer === 'shared') && hasTsyringeContainerAccess(code)) {
-      violations.push({
-        importerRel,
-        source: "tsyringe.container",
-        targetRel: '(external)',
-        message:
-          '[R0] features/shared 禁止直接获取 tsyringe.container（组合根必须上移到 app/main）',
+  // Rule 0: prevent container access from features/shared
+  if ((importerLayer === 'features' || importerLayer === 'shared') && hasTsyringeContainerAccess(code)) {
+    errors.push({
+      file: absPath,
+      msg: '❌ Rule0: features/shared 禁止访问 tsyringe.container（必须由上层 app 组合注入）',
+    });
+  }
+
+  const specs = extractModuleSpecifiers(sf);
+  for (const { spec, pos, kind } of specs) {
+    const resolved = resolver.resolve(spec, absPath);
+    if (!resolved) continue;
+    const targetAbs = resolved.resolvedFileName;
+    if (!targetAbs.startsWith(SRC_DIR)) continue; // ignore node_modules/external
+
+    const targetLayer = layerOf(targetAbs);
+    if (targetLayer === 'other') continue;
+
+    // ---- Rule 1: core cannot depend on app/features/shared (strict)
+    if (importerLayer === 'core' && (targetLayer === 'app' || targetLayer === 'features' || targetLayer === 'shared')) {
+      errors.push({
+        file: absPath,
+        msg: `❌ Rule1: core 禁止依赖 ${targetLayer} (found via ${kind} '${spec}')`,
+        loc: formatLoc(sf, pos),
       });
-      // continue scanning to surface other violations too
+      continue;
     }
-    const sources = extractImportSources(code);
 
-    for (const source of sources) {
-      const resolved = await resolveImport(importerAbs, source);
-      if (resolved.kind !== 'internal') continue;
+    // ---- Rule 2: shared cannot depend on features
+    if (importerLayer === 'shared' && targetLayer === 'features') {
+      errors.push({
+        file: absPath,
+        msg: `❌ Rule2: shared 禁止依赖 features (found via ${kind} '${spec}')`,
+        loc: formatLoc(sf, pos),
+      });
+      continue;
+    }
 
-      const targetAbs = resolved.absPath;
-      const targetRel = relToRoot(targetAbs);
-      const targetLayer = layerOf(targetAbs);
-
-      const allowKey = `${importerRel} -> ${targetRel}`;
-      if (ALLOWLIST.has(allowKey)) continue;
-
-      // ---------------- Rule 1: core cannot depend on app/features ----------------
-      if (importerLayer === 'core' && (targetLayer === 'app' || targetLayer === 'features')) {
-        violations.push({
-          importerRel,
-          source,
-          targetRel,
-          message: '[R1] core 不能依赖 app/features',
+    // ---- Rule 3: features/shared can only access app through app/public.ts or app/capabilities/public.ts
+    if ((importerLayer === 'features' || importerLayer === 'shared') && targetLayer === 'app') {
+      if (!isAppPublicFile(targetAbs) && !isAppCapabilitiesPublicFile(targetAbs)) {
+        errors.push({
+          file: absPath,
+          msg: `❌ Rule3: features/shared 只能通过 app/public.ts 或 app/capabilities/public.ts 访问 app (found via ${kind} '${spec}' -> ${toPosix(path.relative(ROOT, targetAbs))})`,
+          loc: formatLoc(sf, pos),
         });
         continue;
       }
+    }
 
-      // ---------------- Rule 2: shared cannot depend on features ----------------
-      if (importerLayer === 'shared' && targetLayer === 'features') {
-        violations.push({
-          importerRel,
-          source,
-          targetRel,
-          message: '[R2] shared 不能依赖 features',
-        });
-        continue;
-      }
-
-      // ---------------- Rule 3: features/shared can only access app via app/public ----------------
-      if ((importerLayer === 'features' || importerLayer === 'shared') && targetLayer === 'app') {
-        if (!isAppPublicFile(targetAbs)) {
-          violations.push({
-            importerRel,
-            source,
-            targetRel,
-            message: `[R3] ${importerLayer} 访问 app 只能通过 src/app/public.ts`,
-          });
-          continue;
-        }
-      }
-
-            // ---------------- Rule 3b: app/features/shared can only access core via core/public ----------------
-      if (importerLayer !== 'core' && targetLayer === 'core') {
-        if (!isCorePublicFile(targetAbs)) {
-          violations.push({
-            importerRel,
-            source,
-            targetRel,
-            message: `[R3b] ${importerLayer} 访问 core 只能通过 src/core/public.ts`,
-          });
-          continue;
-        }
-      }
-
-// ---------------- Rule 4: app/usecases cannot depend on features ----------------
-      if (isUseCasesFile(importerAbs) && targetLayer === 'features') {
-        violations.push({
-          importerRel,
-          source,
-          targetRel,
-          message: '[R4] app/usecases 不能依赖 features',
+    // ---- Rule 3b: non-core can only access core through core/public.ts
+    if (importerLayer !== 'core' && targetLayer === 'core') {
+      if (!isCorePublicFile(targetAbs)) {
+        errors.push({
+          file: absPath,
+          msg: `❌ Rule3b: 非 core 层访问 core 必须通过 core/public.ts (found via ${kind} '${spec}' -> ${toPosix(path.relative(ROOT, targetAbs))})`,
+          loc: formatLoc(sf, pos),
         });
         continue;
       }
     }
   }
-
-  if (violations.length > 0) {
-    console.error('\n================ Architecture Gate FAILED ================');
-    for (const v of violations) {
-      console.error(formatViolation(v));
-      console.error('');
-    }
-    console.error(`Total violations: ${violations.length}`);
-    console.error('========================================================\n');
-    process.exitCode = 1;
-    return;
-  }
-
-  console.log('\n✅ Architecture Gate PASSED (no boundary violations)');
 }
 
-await main();
+if (errors.length) {
+  console.error('===== Architecture Gate FAILED =====');
+  for (const e of errors) {
+    const rel = toPosix(path.relative(ROOT, e.file));
+    const loc = e.loc ? `:${e.loc}` : '';
+    console.error(`\n${rel}${loc}`);
+    console.error(e.msg);
+  }
+  console.error(`\nTotal violations: ${errors.length}`);
+  process.exit(1);
+}
+
+console.log('✅ Architecture Gate PASSED (AST-based)');
