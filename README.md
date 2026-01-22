@@ -190,3 +190,40 @@ npm run test:coverage
 Made with ❤️ by Think OS Team
 
 </div>
+
+
+
+## 架构审计与收敛指标（Architecture Audit & Convergence Metrics）
+
+> 目标：把“架构是否在变好”变成可量化、可追踪的事实，而不是靠感觉。
+
+### 一键生成架构报告（全中文输出）
+
+```bash
+npm run arch:audit
+```
+
+会生成：
+- `reports/arch/summary.json`：机器可读指标（用于 PR 对比、持续收敛）
+- `reports/arch/deps.dot`：Graphviz 依赖图（可选可视化）
+
+### 我应该重点盯哪些指标？
+
+- **跨 feature 依赖边（cross-feature edges）**  
+  目标：逐步收敛到 **0**（任何新增会被 `npm run feature:gate` 拦住）
+
+- **反向依赖 core->shared（reverse deps）**  
+  目标：逐步收敛到 **0**（任何 core 引用 shared 都会被 `npm run arch:gate` 拦住）
+
+- **内部依赖边总数（total internal edges）**  
+  这个不一定要单调下降，但你可以用它观察“复杂度是否在增长”。
+
+### CI 硬闸（不允许违规）
+
+```bash
+npm run arch:gate
+npm run feature:gate
+npm run arch:public
+npm run arch:capabilities
+npm run di:gate
+```

@@ -25,7 +25,8 @@
     "jscpd": "npx --yes jscpd",
     "ci": "npm run lint && npm run typecheck && npm run arch:gate && npm run feature:gate && npm run arch:public && npm run arch:capabilities && npm run di:gate",
     "arch:public": "node scripts/public-api-gate.mjs",
-    "arch:capabilities": "node scripts/capability-gate.mjs"
+    "arch:capabilities": "node scripts/capability-gate.mjs",
+    "arch:audit": "node scripts/arch-audit.mjs"
   },
   "dependencies": {
     "@codemirror/state": "6.5.0",

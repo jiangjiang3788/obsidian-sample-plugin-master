@@ -168,7 +168,7 @@ function main() {
     process.exit(1);
   }
 
-  console.log('✅ di-gate passed.');
+  console.log('✅ DI（依赖注入）硬闸通过（di-gate）');
 }
 
 main();

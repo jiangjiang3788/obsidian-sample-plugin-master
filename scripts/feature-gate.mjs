@@ -1,4 +1,9 @@
 #!/usr/bin/env node
+// ---------------------------------------------------------------------------
+// Feature 硬闸（Feature Isolation Gate）
+// 目的：禁止 src/features/<A> 直接引用 src/features/<B>（A≠B）。
+// 结果：子功能之间不能“偷接线”，协作必须走 app/capabilities 或 public API。
+// ---------------------------------------------------------------------------
 // scripts/feature-gate.mjs
 // ---------------------------------------------------------------------------
 // Feature Isolation Gate
@@ -180,7 +185,7 @@ const violations = [];
 const seenCrossEdges = new Set();
 
 if (!fs.existsSync(FEATURES_DIR)) {
-  console.log('✅ Feature Gate PASSED (no src/features directory)');
+  console.log('✅ Feature 硬闸通过（未发现 src/features 目录）');
   process.exit(0);
 }
 
@@ -229,24 +234,24 @@ for (const absPath of files) {
 const staleAllow = [...allow].filter((k) => !seenCrossEdges.has(k));
 
 if (staleAllow.length) {
-  console.error('===== Feature Gate FAILED (stale allowlist entries) =====');
-  console.error(`\nAllowlist contains ${staleAllow.length} stale entries (please remove them):`);
+  console.error('===== Feature 硬闸失败（allowlist 存在过期条目）=====');
+  console.error(`\nallowlist 中有 ${staleAllow.length} 条过期条目（请删除）：`);
   for (const k of staleAllow) console.error(`- ${k}`);
   process.exit(1);
 }
 
 if (violations.length) {
-  console.error('===== Feature Gate FAILED =====');
+  console.error('===== Feature 硬闸失败（跨 feature 引用）=====');
   for (const v of violations) {
     const rel = toPosix(path.relative(ROOT, v.file));
     console.error(`\n${rel}:${v.loc}`);
     console.error(v.msg);
   }
-  console.error(`\nTotal cross-feature violations: ${violations.length}`);
+  console.error(`\n跨 feature 违规总数：${violations.length}`);
   if (allow.size) {
-    console.error(`Allowlist size: ${allow.size} (scripts/feature-gate.allowlist.json)`);
+    console.error(`allowlist 当前条目数：${allow.size}（scripts/feature-gate.allowlist.json）`);
   }
   process.exit(1);
 }
 
-console.log('✅ Feature Gate PASSED');
+console.log('✅ Feature 硬闸通过（无跨 feature 引用）');

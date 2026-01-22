@@ -1,0 +1,28 @@
+digraph deps {
+  rankdir=LR;
+  node [shape=box];
+  "core";
+  "shared";
+  "features";
+  "app";
+  "other";
+  "app" -> "core" [label="50"];
+  "app" -> "app" [label="60"];
+  "app" -> "other" [label="2"];
+  "app" -> "features" [label="8"];
+  "app" -> "shared" [label="3"];
+  "core" -> "core" [label="245"];
+  "core" -> "other" [label="1"];
+  "features" -> "app" [label="29"];
+  "features" -> "shared" [label="42"];
+  "features" -> "core" [label="100"];
+  "features" -> "features" [label="70"];
+  "features" -> "other" [label="7"];
+  "other" -> "core" [label="11"];
+  "other" -> "app" [label="2"];
+  "other" -> "shared" [label="2"];
+  "other" -> "features" [label="2"];
+  "shared" -> "core" [label="93"];
+  "shared" -> "shared" [label="64"];
+  "shared" -> "app" [label="8"];
+}

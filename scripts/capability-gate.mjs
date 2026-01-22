@@ -179,7 +179,7 @@ function main() {
     process.exit(1);
   }
 
-  console.log('✅ capability-gate passed.');
+  console.log('✅ Capability 形状硬闸通过（capability-gate）');
 }
 
 main();

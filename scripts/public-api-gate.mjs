@@ -132,7 +132,7 @@ function fmt(rule, message, detail = '') {
 }
 
 function printViolations(title, violations) {
-  console.error(`\n❌ ${title} failed:\n`);
+  console.error(`\n❌ ${title} 失败：\n`);
   for (const v of violations) {
     console.error(`- [${v.rule}] ${v.message}`);
     if (v.detail) console.error(`  ${v.detail}`);
@@ -241,7 +241,7 @@ function main() {
     process.exit(1);
   }
 
-  console.log('✅ public-api-gate passed.');
+  console.log('✅ Public API 硬闸通过（public-api-gate）');
 }
 
 main();

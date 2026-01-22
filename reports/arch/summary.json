@@ -1,0 +1,64 @@
+{
+  "generatedAt": "2026-01-22T07:45:00.966Z",
+  "files": {
+    "total": 232,
+    "byLayer": {
+      "app": 27,
+      "core": 83,
+      "features": 66,
+      "other": 3,
+      "shared": 53
+    },
+    "byFeature": {
+      "aichat": 2,
+      "aiinput": 4,
+      "quickinput": 3,
+      "settings": 39,
+      "timer": 4,
+      "views": 14
+    }
+  },
+  "imports": {
+    "totalEdges": 799,
+    "layerEdgeMatrix": {
+      "app": {
+        "core": 50,
+        "app": 60,
+        "other": 2,
+        "features": 8,
+        "shared": 3
+      },
+      "core": {
+        "core": 245,
+        "other": 1
+      },
+      "features": {
+        "app": 29,
+        "shared": 42,
+        "core": 100,
+        "features": 70,
+        "other": 7
+      },
+      "other": {
+        "core": 11,
+        "app": 2,
+        "shared": 2,
+        "features": 2
+      },
+      "shared": {
+        "core": 93,
+        "shared": 64,
+        "app": 8
+      }
+    },
+    "crossFeature": {
+      "count": 0,
+      "edges": []
+    },
+    "reverseDeps": {
+      "core->shared": 0,
+      "core->app": 0,
+      "core->features": 0
+    }
+  }
+}

@@ -1,7 +1,12 @@
 #!/usr/bin/env node
+// ---------------------------------------------------------------------------
+// 架构硬闸（Architecture Gate）
+// 目的：用 TypeScript AST 可靠解析 import/export，避免用正则被“换行 import”等方式绕过。
+// 结果：一旦违反分层/出口规则，CI 直接失败，让架构“物理上难违规”。
+// ---------------------------------------------------------------------------
 // scripts/arch-gate.mjs
 // ---------------------------------------------------------------------------
-// Architecture Gate (AST-based)
+// 架构硬闸（AST 解析）
 // ---------------------------------------------------------------------------
 // Why AST?
 // - Regex-based import scanning can be bypassed by multi-line imports, exotic
@@ -152,11 +157,11 @@ function extractModuleSpecifiers(sourceFile) {
 function loadTsConfig() {
   const configPath = ts.findConfigFile(ROOT, ts.sys.fileExists, 'tsconfig.json');
   if (!configPath) {
-    throw new Error('arch-gate: tsconfig.json not found');
+    throw new Error('arch-gate：未找到 tsconfig.json');
   }
   const configFile = ts.readConfigFile(configPath, ts.sys.readFile);
   if (configFile.error) {
-    throw new Error('arch-gate: failed to read tsconfig.json');
+    throw new Error('arch-gate：读取 tsconfig.json 失败');
   }
   const parsed = ts.parseJsonConfigFileContent(configFile.config, ts.sys, path.dirname(configPath));
   return { compilerOptions: parsed.options, configPath };
@@ -294,15 +299,15 @@ for (const absPath of files) {
 }
 
 if (errors.length) {
-  console.error('===== Architecture Gate FAILED =====');
+  console.error('===== 架构硬闸失败（Architecture Gate FAILED）=====');
   for (const e of errors) {
     const rel = toPosix(path.relative(ROOT, e.file));
     const loc = e.loc ? `:${e.loc}` : '';
     console.error(`\n${rel}${loc}`);
     console.error(e.msg);
   }
-  console.error(`\nTotal violations: ${errors.length}`);
+  console.error(`\n违规总数：${errors.length}`);
   process.exit(1);
 }
 
-console.log('✅ Architecture Gate PASSED (AST-based)');
+console.log('✅ 架构硬闸通过（AST 解析，不可绕过）');

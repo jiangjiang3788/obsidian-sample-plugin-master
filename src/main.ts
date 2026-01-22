@@ -1,4 +1,3 @@
-import "reflect-metadata";
 import { ensureReflectMetadata } from '@core/public';
 
 // 立即执行环境检查
