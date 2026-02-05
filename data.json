@@ -441,6 +441,60 @@
           "value": "none"
         }
       ]
+    },
+    {
+      "id": "vi_ml4w8csbfctb6hn",
+      "title": "打卡02",
+      "viewType": "HeatmapView",
+      "viewConfig": {
+        "categories": [
+          {
+            "name": "打卡",
+            "color": "#bbd580"
+          },
+          {
+            "name": "感受",
+            "color": "#ce5c4b"
+          },
+          {
+            "name": "计划",
+            "color": "#c3cdc6"
+          },
+          {
+            "name": "事件",
+            "color": "#e7042c"
+          },
+          {
+            "name": "思考",
+            "color": "#306ed3"
+          },
+          {
+            "name": "完成任务",
+            "color": "#4f0c14"
+          },
+          {
+            "name": "未完成任务",
+            "color": "#ca0538"
+          },
+          {
+            "name": "总结",
+            "color": "#b12df1"
+          }
+        ],
+        "sourceBlockId": "blk_mejsg76atopau",
+        "themePaths": [
+          "健康/姨妈"
+        ]
+      },
+      "fields": [
+        "date",
+        "icon",
+        "content"
+      ],
+      "groupFields": [],
+      "filters": [],
+      "sort": [],
+      "collapsed": false
     }
   ],
   "layouts": [
@@ -448,13 +502,13 @@
       "id": "layout_memcg9jjoq6j4",
       "name": "全局布局",
       "viewInstanceIds": [
+        "view_mg1zanri06mhu",
+        "view_mer6n7pwf7suy",
         "view_mewr7y1gvq0ro",
-        "view_membnf1hgjgm3",
-        "view_membbqjam5v63",
-        "view_mi5ep8xvvi5mx"
+        "view_membnf1hgjgm3"
       ],
       "displayMode": "list",
-      "initialView": "季",
+      "initialView": "周",
       "initialDateFollowsNow": true,
       "parentId": "group_memcg1u3us3jc",
       "hideToolbar": false,
@@ -463,10 +517,62 @@
       "useFieldGranularity": false,
       "selectedThemes": [],
       "selectedCategories": []
+    },
+    {
+      "id": "layout_ml4w7z1v2rntyan",
+      "name": "02",
+      "viewInstanceIds": [
+        "vi_ml4w8csbfctb6hn"
+      ],
+      "displayMode": "list",
+      "initialView": "月",
+      "initialDateFollowsNow": true,
+      "parentId": null
     }
   ],
   "inputSettings": {
     "blocks": [
+      {
+        "id": "blk_mejsg1dc46fj9",
+        "name": "闪念",
+        "fields": [
+          {
+            "id": "field_mewjlt4j",
+            "key": "思考分类",
+            "label": "思考分类",
+            "type": "radio",
+            "options": [
+              {
+                "value": "事件",
+                "label": "事件"
+              },
+              {
+                "value": "感受",
+                "label": "感受"
+              },
+              {
+                "value": "思考",
+                "label": "思考"
+              }
+            ]
+          },
+          {
+            "id": "field_mewkyug9",
+            "key": "日期",
+            "label": "日期",
+            "type": "date"
+          },
+          {
+            "id": "field_mewjlypl",
+            "key": "内容",
+            "label": "内容",
+            "type": "textarea"
+          }
+        ],
+        "outputTemplate": "<!-- start -->\n分类:: {{思考分类}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n",
+        "targetFile": "01/闪念.md",
+        "appendUnderHeader": "## {{theme}}"
+      },
       {
         "id": "blk_meic1my6m62iu",
         "name": "任务",
@@ -549,47 +655,6 @@
         ],
         "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) {{重复.value}} {{状态}} {{日期}}\n\n",
         "targetFile": "03/01.md",
-        "appendUnderHeader": "## {{theme}}"
-      },
-      {
-        "id": "blk_mejsg1dc46fj9",
-        "name": "闪念",
-        "fields": [
-          {
-            "id": "field_mewjlt4j",
-            "key": "思考分类",
-            "label": "思考分类",
-            "type": "radio",
-            "options": [
-              {
-                "value": "事件",
-                "label": "事件"
-              },
-              {
-                "value": "感受",
-                "label": "感受"
-              },
-              {
-                "value": "思考",
-                "label": "思考"
-              }
-            ]
-          },
-          {
-            "id": "field_mewkyug9",
-            "key": "日期",
-            "label": "日期",
-            "type": "date"
-          },
-          {
-            "id": "field_mewjlypl",
-            "key": "内容",
-            "label": "内容",
-            "type": "textarea"
-          }
-        ],
-        "outputTemplate": "<!-- start -->\n分类:: {{思考分类}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n",
-        "targetFile": "01/闪念.md",
         "appendUnderHeader": "## {{theme}}"
       },
       {
@@ -712,7 +777,8 @@
             "id": "field_mewjqtxg",
             "key": "内容",
             "label": "内容",
-            "type": "textarea"
+            "type": "textarea",
+            "defaultValue": ""
           }
         ],
         "outputTemplate": "<!-- start -->\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分}}\npintu::{{评分.value}}\n内容:: {{内容}}\n<!-- end -->\n\n",
@@ -6450,7 +6516,7 @@
           }
         ],
         "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) {{重复.value}} {{状态}} {{日期}}\n\n",
-        "targetFile": "01/2-5电脑.md",
+        "targetFile": "01/{{moment:YYYY-MM-DD}}.md",
         "appendUnderHeader": "## {{theme}}",
         "id": "ovr_mfhzxac3hz906"
       },
@@ -8509,7 +8575,7 @@
       }
     ]
   },
-  "floatingTimerEnabled": true,
+  "floatingTimerEnabled": false,
   "activeThemePaths": [
     "思考",
     "思考/时间整理",

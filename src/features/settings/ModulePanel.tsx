@@ -38,7 +38,7 @@ export function ModulePanel({ title, collapsed, children, onActionClick, onToggl
                     <div class="module-header-actions">
                         {/* [新增] 删除按钮 */}
                         {onRemove && (
-                            <Tooltip title="从当前布局移除">
+                            <Tooltip title="删除视图（从配置与所有布局中移除）">
                                 <AnyIconButton
                                     size="small"
                                     onClick={(e: any) => {

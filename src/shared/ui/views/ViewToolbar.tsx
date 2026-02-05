@@ -25,6 +25,9 @@ export interface ViewToolbarProps {
     
     // 配置
     hideToolbar?: boolean;
+
+    // 布局设置入口
+    onLayoutSettingsClick?: () => void;
 }
 
 export function ViewToolbar({
@@ -39,7 +42,8 @@ export function ViewToolbar({
     viewInstances,
     themes,
     predefinedCategories,
-    hideToolbar = false
+    hideToolbar = false,
+    onLayoutSettingsClick
 }: ViewToolbarProps) {
     // 时间单位映射
     const unit = useMemo(() => (v: string) => ({ 
@@ -109,6 +113,17 @@ export function ViewToolbar({
                 viewInstances={viewInstances}
                 predefinedCategories={predefinedCategories}
             />
-        </div>
+        
+            {/* 布局设置按钮 */}
+            {onLayoutSettingsClick && (
+                <button
+                    class="tp-toolbar-layout-settings"
+                    title="布局设置"
+                    onClick={() => onLayoutSettingsClick()}
+                >
+                    ⚙
+                </button>
+            )}
+</div>
     );
 }

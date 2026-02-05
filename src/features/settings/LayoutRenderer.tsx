@@ -14,6 +14,8 @@ import type { ActionService } from '@core/public';
 import { ItemService } from '@core/public';
  
 import { useViewData } from '@/features/settings/useViewData';
+import { openLayoutSettingsWidget } from '@/features/settings/LayoutSettingsWidget';
+
 import { QuickInputModal } from '@shared/ui/modals/QuickInputModal';
 import { openModuleSettingsWidget } from './ModuleSettingsModal';
 import { App, Notice } from 'obsidian'; // [修改] 导入 Notice
@@ -261,8 +263,8 @@ export function LayoutRenderer({ layout, dataStore, app, actionService, itemServ
     }, []);
 
     // 从当前布局移除模块
-    const handleRemoveFromLayout = useCallback((viewInstanceId: string) => {
-        useCases.layout.removeViewInstanceFromLayout(layout.id, viewInstanceId);
+    const handleDeleteViewInstance = useCallback((viewInstanceId: string) => {
+        useCases.viewInstance.deleteView(viewInstanceId);
     }, [layout.id, useCases.layout]);
 
     // [P1] 处理主题筛选变化 - 通过 UseCase 层
@@ -292,7 +294,7 @@ export function LayoutRenderer({ layout, dataStore, app, actionService, itemServ
                 onActionClick={() => handleQuickInputAction(viewInstance)}
                 onExport={() => handleExport(viewInstance.id, viewInstance.title)} // [修改] 传递 onExport
                 onSettingsClick={() => handleSettingsClick(viewInstance)} // [新增] 传递设置回调
-                onRemove={() => handleRemoveFromLayout(viewInstance.id)}
+                onRemove={() => handleDeleteViewInstance(viewInstance.id)}
             >
                 {isExpanded && (
                     <ViewContent
@@ -338,6 +340,7 @@ export function LayoutRenderer({ layout, dataStore, app, actionService, itemServ
                 onCategorySelectionChange={handleCategorySelectionChange}
                 viewInstances={layout.viewInstanceIds.map((id: string) => allViews.find((v: any) => v.id === id)).filter(Boolean)}
                 hideToolbar={layout.hideToolbar}
+                onLayoutSettingsClick={() => openLayoutSettingsWidget(layout.id)}
                 themes={allThemes} // [新增] 传递主题列表
                 predefinedCategories={predefinedCategories} // [新增] 传递预定义分类
             />
