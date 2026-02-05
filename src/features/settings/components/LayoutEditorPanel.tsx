@@ -51,7 +51,9 @@ const AlignedRadioGroup = ({ label, options, selectedValue, onChange }: any) => 
  */
 export function LayoutEditorPanel({ layoutId, useCases }: { layoutId: string; useCases?: UseCases }) {
   const _useCases = useCases ?? useUseCases();
-  const layout = useZustandAppStore((s) => (s.settings.layouts || []).find((l: Layout) => l.id === layoutId)) as Layout | undefined;
+  const layout = useZustandAppStore((s) => (s.settings.layouts || []).find((l: Layout) => l.id === layoutId)) as
+    | Layout
+    | undefined;
   const allViews = useZustandAppStore((s) => s.settings.viewInstances) as ViewInstance[];
 
   const [inputValue, setInputValue] = useState('');
@@ -68,7 +70,10 @@ export function LayoutEditorPanel({ layoutId, useCases }: { layoutId: string; us
   );
 
   const selectedViews = useMemo(
-    () => (layout?.viewInstanceIds || []).map((id) => allViews.find((v) => v.id === id)).filter(Boolean) as ViewInstance[],
+    () =>
+      (layout?.viewInstanceIds || [])
+        .map((id) => allViews.find((v) => v.id === id))
+        .filter(Boolean) as ViewInstance[],
     [layout?.viewInstanceIds, allViews]
   );
 
@@ -242,6 +247,7 @@ export function LayoutEditorPanel({ layoutId, useCases }: { layoutId: string; us
 
       <Stack direction="row" flexWrap="wrap" spacing={1} useFlexGap alignItems="center">
         <Typography sx={{ width: LABEL_WIDTH, flexShrink: 0, fontWeight: 500 }}>包含视图</Typography>
+
         {selectedViews.map(
           (view) =>
             view && (
@@ -268,10 +274,16 @@ export function LayoutEditorPanel({ layoutId, useCases }: { layoutId: string; us
             <TextField {...(params as any)} variant="outlined" placeholder="+ 搜索添加或创建视图..." />
           )}
           sx={{ minWidth: 240 }}
+          size="small"
+
+          // ✅ 关键修复：在 FloatingPanel 中必须禁用 Portal，否则 Popper 挂到 body 上
+          // 会被 FloatingPanel 的“点击外部关闭”误判，并且可能被浮窗遮挡。
+          disablePortal
+          PopperProps={{ style: { zIndex: 20000 } }}
         />
       </Stack>
 
-      {/* 简易右键菜单（复用现有 prompt 形式，避免引入新的菜单组件） */}
+      {/* 简易右键菜单（你说右键菜单已修复，这里保持原样） */}
       {contextMenu && (
         <div
           style={{
@@ -288,7 +300,9 @@ export function LayoutEditorPanel({ layoutId, useCases }: { layoutId: string; us
           onMouseLeave={handleContextMenuClose}
         >
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6, minWidth: 160 }}>
-            <button className="mod-cta" onClick={handleViewSettings}>设置…</button>
+            <button className="mod-cta" onClick={handleViewSettings}>
+              设置…
+            </button>
             <button onClick={handleViewRename}>重命名…</button>
             <button onClick={handleViewRemove}>从布局移除</button>
           </div>
