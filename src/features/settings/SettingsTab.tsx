@@ -1,7 +1,6 @@
 // src/features/settings/ui/SettingsTab.tsx
 /** @jsxImportSource preact */
-import { render } from 'preact';
-import { unmountComponentAtNode } from 'preact/compat';
+import { createServices, type Services, mountWithServices, unmountPreact } from '@/app/public';
 import { PluginSettingTab, App } from 'obsidian';
 import { ThemeProvider, CssBaseline, Box, Tabs, Tab } from '@mui/material';
 import type ThinkPlugin from '@main';
@@ -13,7 +12,6 @@ import { LayoutSettings } from './LayoutSettings';
 import { InputSettings } from './InputSettings';
 import { GeneralSettings } from './GeneralSettings';
 import { AiSettings } from './AiSettings';
-import { ServicesProvider, createServices, type Services } from '@/app/public';
 
 function a11yProps(index: number) {
     return { id: `settings-tab-${index}`, 'aria-controls': `settings-tabpanel-${index}` };
@@ -67,15 +65,10 @@ export class SettingsTab extends PluginSettingTab {
     display(): void {
         const { containerEl } = this;
         containerEl.empty();
-        render(
-            <ServicesProvider services={this.services}>
-                <SettingsRoot app={this.app} />
-            </ServicesProvider>,
-            containerEl
-        );
+        mountWithServices(containerEl, <SettingsRoot app={this.app} />, this.services);
     }
 
     hide(): void {
-        unmountComponentAtNode(this.containerEl);
+        unmountPreact(this.containerEl);
     }
 }

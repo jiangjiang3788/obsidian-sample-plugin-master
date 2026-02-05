@@ -26,6 +26,9 @@ export type { Services } from './services.types';
 export { createServices } from './createServices';
 export { validateServices } from './services.types';
 
+// ============== UI Mount Helpers (reduce repeated bootstrap code) ==============
+export { mountWithServices, unmountPreact } from './ui/mountWithServices';
+
 // ============== UseCases (types + DI token) ==============
 export { USECASES_TOKEN } from './usecases';
 export type { UseCases } from './usecases';

@@ -1,6 +1,7 @@
 // src/shared/components/dialogs/NamePromptModal.tsx
 /** @jsxImportSource preact */
-import { h, render } from 'preact';
+import { h } from 'preact';
+import { render, unmountComponentAtNode } from 'preact/compat';
 import { useState } from 'preact/hooks';
 import { App, Modal } from 'obsidian';
 import { TextField, Button } from '@mui/material';
@@ -82,6 +83,6 @@ export class NamePromptModal extends Modal {
     }
 
     onClose() {
-        unmountComponentAtNode(this.containerEl);
+        unmountComponentAtNode(this.contentEl);
     }
 }

@@ -1,5 +1,5 @@
 // src/core/services/ThemeManager.ts
-import { Theme } from './theme-types';
+import type { Theme } from '@core/public';
 import { Item } from '@core/public';
 import type { IThemeMatcher } from '@core/public';
 

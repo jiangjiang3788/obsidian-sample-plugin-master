@@ -115,13 +115,24 @@ export class ServiceManager {
      */
     private registerSettingsPersistence(): void {
         const plugin = this.plugin;
+
+        // 安全：持久化前对设置做脱敏（目前仅对 AI apiKey 进行剥离）
+        const sanitizeForPersistence = (settings: any) => {
+            // 仅用于保存，避免影响内存中的当前设置
+            const cloned = JSON.parse(JSON.stringify(settings ?? {}));
+            if (cloned?.aiSettings && typeof cloned.aiSettings === 'object') {
+                // 永不落盘 apiKey
+                cloned.aiSettings.apiKey = '';
+            }
+            return cloned;
+        };
         
         const settingsPersistence: ISettingsPersistence = {
             async loadData() {
                 return await plugin.loadData();
             },
             async saveData(settings) {
-                await plugin.saveData(settings);
+                await plugin.saveData(sanitizeForPersistence(settings));
             }
         };
         

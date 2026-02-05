@@ -11,7 +11,6 @@
 export { ThemeManager } from './ThemeManager';
 export { ThemeMatrix } from './ThemeMatrix';
 
-export * from './theme-types';
 
 /* ========================================================================== */
 /* 2. Settings 模块（设置面板 + 视图编辑器）                                   */

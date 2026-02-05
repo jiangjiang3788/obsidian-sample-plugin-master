@@ -4,9 +4,9 @@ import { h } from 'preact';
 import { useState } from 'preact/hooks';
 import { App, Modal } from 'obsidian';
 import { render, unmountComponentAtNode } from 'preact/compat';
-import { Button, TextField, Box, Typography, Stack, IconButton, Tooltip, CircularProgress } from '@mui/material';
-import CloseIcon from '@mui/icons-material/Close';
+import { Button, TextField, Box, Typography, Stack, CircularProgress } from '@mui/material';
 import SmartToyIcon from '@mui/icons-material/SmartToy';
+import { ModalHeader } from '@shared/ui/components/ModalHeader';
 
 interface AiTextPromptFormProps {
     onSubmit: (text: string) => void;
@@ -38,17 +38,18 @@ function AiTextPromptForm({ onSubmit, onCancel, isLoading }: AiTextPromptFormPro
 
     return (
         <Box sx={{ p: 2, minWidth: 400 }}>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                <Stack direction="row" spacing={1} alignItems="center">
-                    <SmartToyIcon color="primary" />
-                    <Typography variant="h6">AI 自然语言快速记录</Typography>
-                </Stack>
-                <Tooltip title="关闭">
-                    <IconButton onClick={onCancel} size="small">
-                        <CloseIcon />
-                    </IconButton>
-                </Tooltip>
-            </Box>
+            <ModalHeader
+                padding={0}
+                borderBottom={false}
+                left={
+                    <Stack direction="row" spacing={1} alignItems="center">
+                        <SmartToyIcon color="primary" />
+                        <Typography variant="h6">AI 自然语言快速记录</Typography>
+                    </Stack>
+                }
+                onClose={onCancel}
+            />
+            <Box sx={{ mb: 2 }} />
 
             <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
                 用自然语言描述你想记录的内容，AI 会自动识别并填充相应字段。

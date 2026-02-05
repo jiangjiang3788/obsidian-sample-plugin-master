@@ -56,7 +56,8 @@ export const DEFAULT_AI_SETTINGS: AiSettings = {
   enabled: false,
   provider: 'openai_compat',
   apiEndpoint: 'https://api.ricardochat.cn/v1',
-  apiKey: 'sk-9BZGGwd78iHSraAdHtnLDXFoY3bJhxqRwivYazOPoA0dTepV',
+  // 安全：默认不提供任何 key，避免被意外持久化/同步
+  apiKey: '',
   model: '[渠道2]gemini-2.5-pro',
   temperature: 0.7,
   maxTokens: 4096,

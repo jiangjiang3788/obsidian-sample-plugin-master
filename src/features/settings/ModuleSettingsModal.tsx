@@ -18,7 +18,11 @@ import { Modal } from '@shared/ui/primitives/Modal';
 import FloatingPanel from '@/shared/ui/primitives/FloatingPanel';
 import { closeFloatingWidget, openFloatingWidget } from '@/shared/ui/widgets/FloatingWidgetManager';
 
-import { FormField, FieldManager, useSaveHandler } from '@shared/index';
+import { FormField } from '@shared/ui/composites/FormField';
+import { FieldManager } from '@shared/ui/composites/FieldManager';
+import { useSaveHandler } from '@shared/patterns/ModalSavePattern';
+
+
 
 // [S5 术语统一] 视图设置编辑器组件 - 通过 useCases.layout 调用
 function ViewInstanceEditor({ vi }: { vi: ViewInstance }) {

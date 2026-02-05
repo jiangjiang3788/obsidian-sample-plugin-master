@@ -5,6 +5,7 @@ import { h } from 'preact';
 import { IconButton, Tooltip } from '@mui/material';
 import IosShareIcon from '@mui/icons-material/IosShare';
 import SettingsIcon from '@mui/icons-material/Settings';
+import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 
 // 解决 Preact 和 Material-UI 的类型兼容性问题
 const AnyIconButton = IconButton as any;
@@ -18,9 +19,10 @@ interface ModulePanelProps {
     onToggle?: (e: MouseEvent) => void;
     onExport?: () => void; // [新增] 导出按钮的回调函数
     onSettingsClick?: () => void; // [新增] 设置按钮的回调函数
+    onRemove?: () => void; // [新增] 删除模块
 }
 
-export function ModulePanel({ title, collapsed, children, onActionClick, onToggle, onExport, onSettingsClick }: ModulePanelProps) {
+export function ModulePanel({ title, collapsed, children, onActionClick, onToggle, onExport, onSettingsClick, onRemove }: ModulePanelProps) {
     const onHeaderClick = (e: MouseEvent) => {
         if ((e.target as HTMLElement).closest('.module-header-actions')) {
             return;
@@ -34,6 +36,21 @@ export function ModulePanel({ title, collapsed, children, onActionClick, onToggl
                 <span class="module-title">{title}</span>
                 <div class="module-header-controls">
                     <div class="module-header-actions">
+                        {/* [新增] 删除按钮 */}
+                        {onRemove && (
+                            <Tooltip title="从当前布局移除">
+                                <AnyIconButton
+                                    size="small"
+                                    onClick={(e: any) => {
+                                        e.stopPropagation();
+                                        onRemove();
+                                    }}
+                                    sx={{ padding: '4px' }}
+                                >
+                                    <DeleteOutlineIcon sx={{ fontSize: '1rem' }} />
+                                </AnyIconButton>
+                            </Tooltip>
+                        )}
                         {/* [新增] 设置按钮 */}
                         {onSettingsClick && (
                             <Tooltip title="模块设置">

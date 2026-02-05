@@ -1,6 +1,6 @@
 // src/core/domain/cache.ts
 
-import type { Item } from './domain/schema';
+import type { Item } from './schema';
 
 /**
  * Cache schema v1

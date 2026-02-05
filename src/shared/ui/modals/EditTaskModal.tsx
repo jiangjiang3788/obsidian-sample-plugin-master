@@ -6,7 +6,9 @@ import type { TaskBlock } from '@core/public';
 import type { ItemService } from '@core/public';
 import { timeToMinutes, minutesToTime } from '@core/public';
 import { Dialog, DialogTitle, DialogContent, DialogActions, Button, TextField } from '@mui/material';
-import { useTimeFormState, useSaveHandler } from '@shared/index';
+import { useTimeFormState } from '@shared/hooks/useFormState';
+import { useSaveHandler } from '@shared/patterns/ModalSavePattern';
+import { computeLinkedTimeChanges } from '@shared/utils/linkedTimeFields';
 
 export interface EditTaskModalProps {
   isOpen: boolean;
@@ -36,38 +38,12 @@ export function EditTaskModal({ isOpen, onClose, task, itemService, onSave }: Ed
 
   // 智能时间计算逻辑
   useEffect(() => {
-    const start = timeData.startTime;
-    const end = timeData.endTime;
-    const durationStr = String(timeData.duration);
-    const duration = !isNaN(parseInt(durationStr)) ? parseInt(durationStr) : null;
-
-    const startMinutes = timeToMinutes(start);
-    const endMinutes = timeToMinutes(end);
-
-    const changes: Record<string, any> = {};
-
-    // 优先级 1: 开始和结束时间都有效，计算时长
-    if (startMinutes !== null && endMinutes !== null && lastChanged !== 'duration') {
-      let newDuration = endMinutes - startMinutes;
-      if (newDuration < 0) newDuration += 24 * 60; // 跨天
-      if (newDuration !== duration) {
-        changes.duration = String(newDuration);
-      }
-    }
-    // 优先级 2: 开始时间和时长都有效，计算结束时间
-    else if (startMinutes !== null && duration !== null && lastChanged !== 'endTime') {
-      const newEndTime = minutesToTime(startMinutes + duration);
-      if (newEndTime !== end) {
-        changes.endTime = newEndTime;
-      }
-    }
-    // 优先级 3: 结束时间和时长都有效，计算开始时间
-    else if (endMinutes !== null && duration !== null && lastChanged !== 'startTime') {
-      const newStartTime = minutesToTime(endMinutes - duration);
-      if (newStartTime !== start) {
-        changes.startTime = newStartTime;
-      }
-    }
+    const changes = computeLinkedTimeChanges(
+      timeData,
+      { startKey: 'startTime', endKey: 'endTime', durationKey: 'duration' },
+      lastChanged,
+      { durationOutput: 'string' }
+    );
 
     if (Object.keys(changes).length > 0) {
       Object.entries(changes).forEach(([field, value]) => {

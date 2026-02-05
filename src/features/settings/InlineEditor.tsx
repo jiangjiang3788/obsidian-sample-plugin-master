@@ -2,7 +2,12 @@
 import { h } from 'preact';
 import { useState } from 'preact/hooks';
 import { TextField } from '@mui/material';
-import type { InlineEditorProps } from './types';
+
+export interface InlineEditorProps {
+  value: string;
+  onSave: (nextValue: string) => void;
+}
+
 
 export function InlineEditor({ value, onSave }: InlineEditorProps) {
     const [current, setCurrent] = useState(value);

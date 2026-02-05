@@ -260,6 +260,11 @@ export function LayoutRenderer({ layout, dataStore, app, actionService, itemServ
         openModuleSettingsWidget(viewInstance);
     }, []);
 
+    // 从当前布局移除模块
+    const handleRemoveFromLayout = useCallback((viewInstanceId: string) => {
+        useCases.layout.removeViewInstanceFromLayout(layout.id, viewInstanceId);
+    }, [layout.id, useCases.layout]);
+
     // [P1] 处理主题筛选变化 - 通过 UseCase 层
     const handleThemeSelectionChange = useCallback((themes: string[]) => {
         setSelectedThemes(themes);
@@ -287,6 +292,7 @@ export function LayoutRenderer({ layout, dataStore, app, actionService, itemServ
                 onActionClick={() => handleQuickInputAction(viewInstance)}
                 onExport={() => handleExport(viewInstance.id, viewInstance.title)} // [修改] 传递 onExport
                 onSettingsClick={() => handleSettingsClick(viewInstance)} // [新增] 传递设置回调
+                onRemove={() => handleRemoveFromLayout(viewInstance.id)}
             >
                 {isExpanded && (
                     <ViewContent

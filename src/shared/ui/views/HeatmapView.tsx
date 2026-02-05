@@ -49,10 +49,28 @@ export function HeatmapView({ items, app, dateRange, module, currentView, inputS
         ratingMappingsCache.clear();
     }, [items]);
 
-    // 使用新的聚合函数
+    // 当 viewConfig 未显式指定 themePaths 时：
+    // - 自动从当前 items 推断主题列表，避免落到 '__default__' 把不同主题混在同一张热力图里
+    const inferredThemePaths = useMemo(() => {
+        const set = new Set<string>();
+        for (const it of items) {
+            if (it?.theme && typeof it.theme === 'string' && it.theme.trim().length > 0) {
+                set.add(it.theme);
+            }
+        }
+        return Array.from(set);
+    }, [items]);
+
+    const themesToTrack = useMemo(() => {
+        return config.themePaths && config.themePaths.length > 0
+            ? config.themePaths
+            : inferredThemePaths;
+    }, [config.themePaths, inferredThemePaths]);
+
+    // 使用新的聚合函数（用推断/配置后的 themesToTrack）
     const dataByThemeAndDate = useMemo(() => {
-        return buildThemeDataMap(items, config.themePaths || []);
-    }, [items, config.themePaths]);
+        return buildThemeDataMap(items, themesToTrack);
+    }, [items, themesToTrack]);
 
     const handleCellClick = (date: string, item?: Item, themePath?: string) => {
         if (!config.sourceBlockId) return;
@@ -288,18 +306,16 @@ export function HeatmapView({ items, app, dateRange, module, currentView, inputS
         return () => {
             resizeObserver.disconnect();
         };
-    }, [config.themePaths]);
+    }, [themesToTrack, currentView]);
 
     const renderContent = () => {
-        const themesToDisplay = config.themePaths && config.themePaths.length > 0 
-            ? config.themePaths 
-            : ['__default__'];
+        const themesToDisplay = themesToTrack.length > 0 ? themesToTrack : ['__default__'];
         const isRowLayout = ['天', '周', '月'].includes(currentView);
 
         return (
             <div class={`heatmap-view-wrapper ${isRowLayout ? 'layout-row' : 'layout-grid'}`}>
                 {themesToDisplay.map((theme) => {
-                    const dataForTheme = dataByThemeAndDate.get(theme)!;
+                    const dataForTheme = dataByThemeAndDate.get(theme) || new Map();
                     
                     // 计算该主题的等级数据
                     const themeItems = getThemeItems(dataByThemeAndDate, theme);

@@ -1,8 +1,7 @@
 // src/shared/ui/widgets/FloatingWidget.ts
-import { render, h } from 'preact';
-import { unmountComponentAtNode } from 'preact/compat';
+import { h } from 'preact';
 import type { ComponentChildren } from 'preact';
-import { ServicesProvider, createServices } from '@/app/public';
+import { createServices, mountWithServices, unmountPreact, type Services } from '@/app/public';
 
 /**
  * 通用 FloatingWidget：在 document.body 上创建容器并渲染传入的 Preact 子树
@@ -12,6 +11,7 @@ export class FloatingWidget {
     id: string;
     private containerEl: HTMLElement | null = null;
     private renderFn: () => ComponentChildren;
+    private services: Services | null = null;
 
     constructor(id: string, renderFn: () => ComponentChildren) {
         this.id = id;
@@ -29,11 +29,7 @@ export class FloatingWidget {
 
     unload() {
         if (!this.containerEl) return;
-        try {
-            unmountComponentAtNode(this.containerEl);
-        } catch (e) {
-            // ignore
-        }
+        unmountPreact(this.containerEl);
         console.log('[FloatingWidget] unload()', this.id);
         this.containerEl.remove();
         this.containerEl = null;
@@ -44,10 +40,11 @@ export class FloatingWidget {
         // wrap with ServicesProvider so hooks/useCases inside work
         // Phase 4.3: shared 层禁止 import tsyringe container
         // - Services 只能通过 app/public 的 createServices() 获取
-        const services = createServices();
+        if (!this.services) {
+            this.services = createServices();
+        }
         console.log('[FloatingWidget] render()', this.id);
-        const tree = h(ServicesProvider, { services, children: this.renderFn() });
-        render(tree, this.containerEl);
+        mountWithServices(this.containerEl, this.renderFn(), this.services);
     }
 }
 

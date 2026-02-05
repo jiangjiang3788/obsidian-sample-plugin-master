@@ -3,7 +3,6 @@
 import { h } from 'preact';
 import { useState, useEffect, useRef, useMemo, useCallback } from 'preact/hooks';
 import { App, Modal } from 'obsidian';
-import { render, unmountComponentAtNode } from 'preact/compat';
 import {
     Box,
     Typography,
@@ -35,12 +34,12 @@ import SendIcon from '@mui/icons-material/Send';
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
 import SearchIcon from '@mui/icons-material/Search';
-import CloseIcon from '@mui/icons-material/Close';
 import ChatIcon from '@mui/icons-material/Chat';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import CheckIcon from '@mui/icons-material/Check';
-import { ServicesProvider, createServices, useZustandAppStore, type Services } from '@/app/public';
+import { createServices, useZustandAppStore, type Services, mountWithServices, unmountPreact } from '@/app/public';
 import { ThemeTreeSelect } from '@/shared/components/ThemeTreeSelect';
+import { ModalHeader } from '@shared/ui/components/ModalHeader';
 import { 
     ChatSessionStore,
     ChatSession, 
@@ -68,6 +67,7 @@ export class AiChatModal extends Modal {
     // - 依赖必须由上层（main/app/ServiceManager）注入
     private aiServices: AiServices;
     private services: Services;
+    private keydownStopper?: (e: KeyboardEvent) => void;
 
     constructor(app: App, aiServices: AiServices) {
         super(app);
@@ -84,27 +84,31 @@ export class AiChatModal extends Modal {
         this.modalEl.style.height = '85vh';
 
         // 阻止 Modal 拦截输入事件
-        this.contentEl.addEventListener('keydown', (e) => {
+        this.keydownStopper = (e: KeyboardEvent) => {
             e.stopPropagation();
-        });
+        };
+        this.contentEl.addEventListener('keydown', this.keydownStopper);
 
         // 初始化 sessionStore
         await this.aiServices.sessionStore.initialize();
 
-        render(
-            <ServicesProvider services={this.services}>
-                <AiChatModalContent 
-                    app={this.app} 
-                    closeModal={() => this.close()} 
-                    services={this.aiServices}
-                />
-            </ServicesProvider>,
-            this.contentEl
+        mountWithServices(
+            this.contentEl,
+            <AiChatModalContent 
+                app={this.app} 
+                closeModal={() => this.close()} 
+                services={this.aiServices}
+            />,
+            this.services
         );
     }
 
     onClose() {
-        unmountComponentAtNode(this.contentEl);
+        if (this.keydownStopper) {
+            this.contentEl.removeEventListener('keydown', this.keydownStopper);
+            this.keydownStopper = undefined;
+        }
+        unmountPreact(this.contentEl);
     }
 }
 
@@ -375,23 +379,18 @@ function AiChatModalContent({ app, closeModal, services }: AiChatModalContentPro
             {/* 右侧：聊天区域 */}
             <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
                 {/* 头部 */}
-                <Box sx={{
-                    p: 1.5,
-                    borderBottom: '1px solid var(--background-modifier-border)',
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                }}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                        <ChatIcon color="primary" />
-                        <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
-                            {currentSession?.title ?? 'AI 助手'}
-                        </Typography>
-                    </Box>
-                    <IconButton onClick={closeModal} size="small">
-                        <CloseIcon />
-                    </IconButton>
-                </Box>
+                <ModalHeader
+                    padding={1.5}
+                    left={
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                            <ChatIcon color="primary" />
+                            <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
+                                {currentSession?.title ?? 'AI 助手'}
+                            </Typography>
+                        </Box>
+                    }
+                    onClose={closeModal}
+                />
 
                 {/* 过滤器栏 */}
                 <Box sx={{
