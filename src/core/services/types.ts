@@ -1,10 +1,11 @@
 /* src/core/services/types.ts */
 import type { InjectionToken } from 'tsyringe';
 import type { ThinkSettings } from '@/core/types/schema';
-import type { App } from 'obsidian';
 
-// [核心修改] 为 Obsidian App 实例创建一个注入令牌 (Token)
-export const AppToken: InjectionToken<App> = "App";
+// [Phase2] Obsidian App 类型不应进入 core。
+// - Token 仍然存在（供 platform/app 组合根注册/注入）
+// - 这里将类型降级为 unknown，避免 core import 'obsidian'
+export const AppToken: InjectionToken<unknown> = "App";
 
 // [核心修改] 为 ThinkSettings 对象创建一个注入令牌
 export const SETTINGS_TOKEN: InjectionToken<ThinkSettings> = "ThinkSettings";

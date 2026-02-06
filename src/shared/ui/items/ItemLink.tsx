@@ -17,7 +17,7 @@ interface ItemLinkProps {
 export function ItemLink({ item, app, className = '', showIcon = true }: ItemLinkProps) {
     return (
         <a 
-            href={makeObsUri(item, app)} 
+            href={makeObsUri(item, app.vault.getName())} 
             target="_blank" 
             rel="noopener" 
             class={`item-link ${className}`}

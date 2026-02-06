@@ -67,7 +67,7 @@ export function registerSettingsFeatures(
                 name: '打开 Think 插件设置',
                 callback: () => {
                     // Obsidian setting 面板 API 没有稳定的类型定义（不同版本可能变化）
-                    // 这里保留最小的显式 any 断言，避免被迫 @ts-nocheck。
+                    // 这里保留最小的显式 any 断言，避免被迫关闭整文件类型检查。
                     (deps.plugin.app as any).setting?.open?.();
                     (deps.plugin.app as any).setting?.openTabById?.(deps.plugin.manifest.id);
                 },

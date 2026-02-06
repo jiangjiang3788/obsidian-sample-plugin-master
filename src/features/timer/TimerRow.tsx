@@ -69,7 +69,18 @@ export function TimerRow({ timer, actionService, timerService, dataStore, app }:
         <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px', width: '100%' }}>
             {/* @ts-ignore */}
             <Tooltip title={`点击跳转: ${taskItem?.title}`}>
-                <a href={taskItem ? makeObsUri(taskItem, app) : '#'} style={{ flexGrow: 1, minWidth: 0, textDecoration: 'none', color: 'inherit', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                <a
+                    href={taskItem ? makeObsUri(taskItem, app.vault.getName()) : '#'}
+                    style={{
+                        flexGrow: 1,
+                        minWidth: 0,
+                        textDecoration: 'none',
+                        color: 'inherit',
+                        whiteSpace: 'nowrap',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis'
+                    }}
+                >
                     <Typography variant="body2" noWrap>{taskItem?.title || '任务已不存在'}</Typography>
                 </a>
             </Tooltip>

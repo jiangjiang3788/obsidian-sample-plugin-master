@@ -42,7 +42,7 @@ export function ExcelView({ items, fields, app }: ExcelViewProps) {
       
       // 决定显示的文本：如果超过20个字符，则截断；否则显示全文
       const displayText = value.length > 20 ? value.substring(0, 20) + '...' : value;
-      const obsUri = makeObsUri(item, app);
+      const obsUri = makeObsUri(item, app.vault.getName());
 
       return (
         <a 

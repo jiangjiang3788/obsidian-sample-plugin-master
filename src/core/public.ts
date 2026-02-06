@@ -85,6 +85,11 @@ export { VaultWatcher } from './services/VaultWatcher';
 export { VaultFileStorage, STORAGE_TOKEN } from './services/StorageService';
 export type { IPluginStorage } from './services/StorageService';
 
+// -------------------- Core Ports（Phase2: platform 边界） --------------------
+// 说明：core 层只定义接口（Port）；平台层实现并在组合根注册。
+export { VAULT_PORT_TOKEN } from './ports/VaultPort';
+export type { VaultPort } from './ports/VaultPort';
+
 export { SettingsRepository, SETTINGS_PERSISTENCE_TOKEN } from './services/SettingsRepository';
 export type { ISettingsPersistence } from './services/SettingsRepository';
 

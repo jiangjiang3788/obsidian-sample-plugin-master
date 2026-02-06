@@ -43,7 +43,7 @@ export function TaskRow({
             
             <div class="task-row-content">
                 <div class="flex items-center gap-2">
-                    <a href={makeObsUri(item, app)} target="_blank" rel="noopener" class={`task-row-title ${done ? 'task-done' : ''}`}>
+                    <a href={makeObsUri(item, app.vault.getName())} target="_blank" rel="noopener" class={`task-row-title ${done ? 'task-done' : ''}`}>
                         {item.icon && <span class="icon mr-1">{item.icon}</span>}
                         {item.title}
                     </a>

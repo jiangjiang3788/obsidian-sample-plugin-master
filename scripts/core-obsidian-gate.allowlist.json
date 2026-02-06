@@ -1,0 +1,8 @@
+[
+  "src/core/services/ActionService.ts",
+  "src/core/services/DataStore.ts",
+  "src/core/services/InputService.ts",
+  "src/core/services/ItemService.ts",
+  "src/core/services/TimerStateService.ts",
+  "src/core/services/VaultWatcher.ts"
+]

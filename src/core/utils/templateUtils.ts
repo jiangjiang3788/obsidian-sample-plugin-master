@@ -1,5 +1,6 @@
 // src/core/utils/templateUtils.ts
-import { moment } from 'obsidian';
+import { dayjs } from './date';
+import { devError } from './devLogger';
 
 /**
  * @file 模板渲染工具函数
@@ -28,7 +29,8 @@ export function renderTemplate(templateString: string, data: Record<string, any>
                 result = data.theme?.icon || '';
             } else if (key.startsWith('moment:')) {
                 const format = key.substring(7);
-                result = moment().format(format);
+                // 兼容旧模板：仍使用 moment: 前缀，但底层实现已切到 dayjs
+                result = dayjs().format(format);
             } else {
                 const keys = key.split('.');
                 const rootKey = keys[0];
@@ -57,7 +59,7 @@ export function renderTemplate(templateString: string, data: Record<string, any>
             }
             return result;
         } catch (e: any) {
-            console.error(`[ThinkPlugin] 解析模板变量 {{${key}}} 时发生错误:`, e);
+            devError(`[ThinkPlugin] 解析模板变量 {{${key}}} 时发生错误:`, e);
             return `(解析错误: ${key})`;
         }
     });

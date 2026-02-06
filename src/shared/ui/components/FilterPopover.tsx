@@ -40,7 +40,7 @@ export function FilterPopover({
   const selectedCount = selectedKeys.length;
 
   // 说明：MUI 的 onClick 事件类型在 React/Preact 环境下可能略有差异，这里显式 any
-  // 避免因为事件类型不兼容导致 UI 组件被迫 @ts-nocheck。
+  // 避免因为事件类型不兼容导致 UI 组件被迫关闭整文件类型检查。
   const handleClick = (event: any) => setAnchorEl((event?.currentTarget ?? null) as HTMLElement | null);
   const handleClose = () => setAnchorEl(null);
 

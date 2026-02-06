@@ -12,6 +12,7 @@ import { InputService } from '@core/public';
 import { ThinkSettings, DEFAULT_SETTINGS } from '@core/public';
 import type { UseCases } from '@/app/public';
 import { setupCoreContainer } from '@core/public';
+import { VAULT_PORT_TOKEN } from '@core/public';
 import './styles/main.css';
 import { safeAsync } from '@shared/utils/errorHandler';
 import { performanceMonitor, startMeasure } from '@shared/utils/performance';
@@ -25,6 +26,7 @@ import { TimerStateService } from '@core/public';
 import { TimerService } from '@features/timer/TimerService';
 import { ActionService } from '@core/public';
 import { devLog } from '@core/public';
+import { ObsidianVaultPort } from '@/platform/ObsidianVaultPort';
 
 devLog(`[ThinkPlugin] main.ts 已加载，版本时间: ${new Date().toLocaleTimeString()}`);
 
@@ -49,6 +51,11 @@ export default class ThinkPlugin extends Plugin {
 
                 // 2. 配置 DI 容器 & 基础服务
                 setupCoreContainer(this.app, settings);
+
+                // Phase2: platform 成为唯一 Obsidian API 入口（第一步）
+                // - 为 core/storage 注入 VaultPort 的平台实现
+                // - 必须在任何依赖 STORAGE_TOKEN 的服务 resolve 之前完成注册
+                container.register(VAULT_PORT_TOKEN, { useClass: ObsidianVaultPort });
 
                 // 2.1 capabilities 组合根（Phase1: 可注入体系）
                 // - 先创建 registry，让后续 feature 可以在这里追加 register(...)

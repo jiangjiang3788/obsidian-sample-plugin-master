@@ -1,0 +1,200 @@
+{
+  "files": 229,
+  "totalLines": 31574,
+  "console": {
+    "total": 65,
+    "top": [
+      [
+        "src/core/utils/devLogger.ts",
+        16
+      ],
+      [
+        "src/shared/utils/performance.ts",
+        13
+      ],
+      [
+        "src/features/settings/useViewData.ts",
+        3
+      ],
+      [
+        "src/shared/ui/views/BlockView.tsx",
+        3
+      ],
+      [
+        "src/shared/ui/widgets/FloatingWidget.ts",
+        3
+      ],
+      [
+        "src/app/store/useAppStore.ts",
+        2
+      ],
+      [
+        "src/core/services/InputService.ts",
+        2
+      ],
+      [
+        "src/core/services/StorageService.ts",
+        2
+      ],
+      [
+        "src/core/services/TimerStateService.ts",
+        2
+      ],
+      [
+        "src/features/settings/ThemeTreeNodeRow.tsx",
+        2
+      ]
+    ]
+  },
+  "tsNoCheck": {
+    "files": []
+  },
+  "tsIgnore": {
+    "total": 29,
+    "top": [
+      [
+        "src/features/settings/TimelineViewEditor.tsx",
+        11
+      ],
+      [
+        "src/features/timer/TimerRow.tsx",
+        7
+      ],
+      [
+        "src/features/settings/ContextualToolbar.tsx",
+        4
+      ],
+      [
+        "src/features/settings/ThemeMatrix.tsx",
+        4
+      ],
+      [
+        "src/features/settings/ThemeToolbar.tsx",
+        2
+      ],
+      [
+        "src/core/utils/date.ts",
+        1
+      ]
+    ]
+  },
+  "obsidianImport": {
+    "total": 55,
+    "top": [
+      [
+        "src/features/settings/index.ts",
+        2
+      ],
+      [
+        "src/shared/ui/views/BlockView.tsx",
+        2
+      ],
+      [
+        "src/app/capabilities/CapabilityRegistry.ts",
+        1
+      ],
+      [
+        "src/app/capabilities/capabilities/ai.ts",
+        1
+      ],
+      [
+        "src/app/capabilities/capabilities/timer.ts",
+        1
+      ],
+      [
+        "src/app/capabilities/createCapabilities.ts",
+        1
+      ],
+      [
+        "src/core/di/setupCore.ts",
+        1
+      ],
+      [
+        "src/core/services/ActionService.ts",
+        1
+      ],
+      [
+        "src/core/services/DataStore.ts",
+        1
+      ],
+      [
+        "src/core/services/InputService.ts",
+        1
+      ]
+    ]
+  },
+  "tsyringeImport": {
+    "total": 20,
+    "top": [
+      [
+        "src/core/services/StorageService.ts",
+        2
+      ],
+      [
+        "src/app/ServiceManager.ts",
+        1
+      ],
+      [
+        "src/app/capabilities/capabilities/ai.ts",
+        1
+      ],
+      [
+        "src/app/createServices.ts",
+        1
+      ],
+      [
+        "src/app/usecases/index.ts",
+        1
+      ],
+      [
+        "src/core/ai/AiChatService.ts",
+        1
+      ],
+      [
+        "src/core/ai/ChatSessionStore.ts",
+        1
+      ],
+      [
+        "src/core/ai/RetrievalService.ts",
+        1
+      ],
+      [
+        "src/core/di/setupCore.ts",
+        1
+      ],
+      [
+        "src/core/services/ActionService.ts",
+        1
+      ]
+    ]
+  },
+  "containerResolve": {
+    "total": 16,
+    "top": [
+      [
+        "src/app/ServiceManager.ts",
+        6
+      ],
+      [
+        "src/app/capabilities/capabilities/ai.ts",
+        3
+      ],
+      [
+        "src/app/store/useAppStore.ts",
+        3
+      ],
+      [
+        "src/app/createServices.ts",
+        2
+      ],
+      [
+        "src/core/ai/AiChatService.ts",
+        1
+      ],
+      [
+        "src/core/ai/RetrievalService.ts",
+        1
+      ]
+    ]
+  }
+}

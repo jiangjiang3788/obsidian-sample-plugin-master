@@ -149,7 +149,7 @@ export function DayColumnBody({
                             class="timeline-task-link"
                             onClick={(e) => { 
                                 e.preventDefault(); 
-                                window.open(makeObsUri(block, app)); 
+                                window.open(makeObsUri(block, app.vault.getName())); 
                             }}
                         >
                             <div class="timeline-task-indicator" style={{ background: color }}></div>

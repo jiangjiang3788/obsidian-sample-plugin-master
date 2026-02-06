@@ -1,5 +1,4 @@
 import { container } from 'tsyringe';
-import { App } from 'obsidian';
 import { ThinkSettings } from '@core/types';
 import { AppToken, SETTINGS_TOKEN, SettingsProviderToken } from '@core/services/types';
 import { VaultFileStorage, STORAGE_TOKEN } from '@core/services/StorageService';
@@ -13,10 +12,10 @@ import { SettingsRepository } from '@core/services/SettingsRepository';
  * 注意：此文件在 core 层，不应依赖 features 层和 app 层
  * THEME_MATCHER_TOKEN 的注册在 ServiceManager 中完成
  * 
- * @param app Obsidian App 实例
+ * @param app Obsidian App 实例（Phase2: core 不依赖 obsidian 类型，因此使用 unknown）
  * @param settings 插件设置
  */
-export function setupCoreContainer(app: App, settings: ThinkSettings): void {
+export function setupCoreContainer(app: unknown, settings: ThinkSettings): void {
     // 注册基础依赖
     container.register(AppToken, { useValue: app });
     container.register(SETTINGS_TOKEN, { useValue: settings });

@@ -66,7 +66,7 @@ function CheckinManagerForm({ app, date, items, onSave, onClose }: CheckinManage
 
     const handleItemClick = (item: Item) => {
         if (item.file?.path) {
-            const obsidianUri = makeObsUri(item, app);
+            const obsidianUri = makeObsUri(item, app.vault.getName());
             window.open(obsidianUri, '_blank');
             onClose();
         }
