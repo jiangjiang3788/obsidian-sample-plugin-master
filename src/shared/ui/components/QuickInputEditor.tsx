@@ -1,4 +1,3 @@
-// @ts-nocheck
 /** @jsxImportSource preact */
 import { h } from 'preact';
 import { useEffect, useMemo, useState } from 'preact/hooks';

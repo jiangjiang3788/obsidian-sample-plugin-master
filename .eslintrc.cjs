@@ -1,63 +1,52 @@
 // .eslintrc.cjs
 // ESLint Root Config（唯一入口）
-// 说明：所有架构依赖约束都来自 .eslintrc-architecture.js
-// 这样避免出现两套规则并行、互相覆盖导致“看似有约束但实际不生效”。
+// - 架构依赖约束来自 .eslintrc-architecture.js
+// - console 策略：关键路径 error，其它 src/** warn，脚本/配置不误伤
 
-const architecture = require("./.eslintrc-architecture.js");
+const architecture = require('./.eslintrc-architecture.js');
 
 module.exports = {
   root: true,
-  parser: "@typescript-eslint/parser",
-  plugins: ["@typescript-eslint"],
+  parser: '@typescript-eslint/parser',
+  plugins: ['@typescript-eslint'],
 
-  extends: [
-    "eslint:recommended",
-    "plugin:@typescript-eslint/recommended",
-  ],
+  extends: ['eslint:recommended', 'plugin:@typescript-eslint/recommended'],
 
-  // ✅ 核心：把 architecture 规则注入到 root 里
-  // architecture.rules / architecture.overrides 会与本文件合并
   rules: {
-    // 禁止在业务代码中直接使用 console（统一走 devLogger）
-    'no-console': 'warn',
+    // 默认不限制 console：把约束收口在 src/**，避免 scripts/config 被误伤。
+    'no-console': 'off',
     ...(architecture.rules || {}),
   },
 
   overrides: [
     ...(architecture.overrides || []),
 
-    // 你原来写在 .eslintrc.cjs 的 overrides（如果你还需要更多自定义规则）
-    // 这里建议只放“不是架构约束”的 lint 规则，避免架构规则散落多处。
-
-    // 示例：你可以在这里补充一般性 TS/React 规则，不涉及依赖边界。
-
-    // ✅ 白名单：允许在 devLogger/performance 内部使用 console
+    // ✅ 基线：src 内默认 warn（冻结扩散）
     {
-      files: ["src/core/utils/devLogger.ts", "src/shared/utils/performance.ts"],
+      files: ['src/**/*.{ts,tsx,js,jsx}'],
       rules: {
-        "no-console": "off",
+        'no-console': 'warn',
       },
     },
 
-    // ✅ 关键路径：严格禁止 console（这些目录必须保持 0 console）
+    // ✅ 关键路径：严格禁止 console（必须保持 0 console）
     {
       files: [
-        "src/main.ts",
-        "src/app/usecases/**/*.{ts,tsx}",
-        "src/app/store/slices/**/*.{ts,tsx}",
-        "src/core/ai/**/*.{ts,tsx}",
+        'src/main.ts',
+        'src/app/usecases/**/*.{ts,tsx}',
+        'src/app/store/slices/**/*.{ts,tsx}',
+        'src/core/ai/**/*.{ts,tsx}',
       ],
       rules: {
-        "no-console": "error",
+        'no-console': 'error',
       },
     },
+
+    // ✅ 白名单：允许 devLogger/performance 内部使用 console（封装层）
     {
-      files: ["src/**/*.{ts,tsx}"],
+      files: ['src/core/utils/devLogger.ts', 'src/shared/utils/performance.ts'],
       rules: {
-    // 禁止在业务代码中直接使用 console（统一走 devLogger）
-    'no-console': 'warn',
-        // 例：你如果不想太严格，可以关掉某些推荐项
-        // "@typescript-eslint/no-explicit-any": "warn",
+        'no-console': 'off',
       },
     },
   ],

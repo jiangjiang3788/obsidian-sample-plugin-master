@@ -10,8 +10,13 @@
  * - 禁止 export *、禁止散落的小 helper，防止变成另一个垃圾桶。
  */
 
-export { createCapabilities } from './createCapabilities';
-export type { Capabilities } from './createCapabilities';
+export { createCapabilities, createDefaultCapabilityRegistry } from './createCapabilities';
+export { registerCapabilityContributions } from './registerCapabilityContributions';
+export type { Capabilities, CapabilityMap } from './types';
+
+// Phase1: capability registry (feature injection 基础设施)
+export { CapabilityRegistry } from './CapabilityRegistry';
+export type { CapabilityFactory, CapabilityRegistryOptions } from './CapabilityRegistry';
 
 // Individual capability factories + contracts
 export { createAiCapability } from './capabilities/ai';
@@ -19,3 +24,10 @@ export type { AiCapability } from './capabilities/ai';
 
 export { createTimerCapability } from './capabilities/timer';
 export type { TimerCapability } from './capabilities/timer';
+
+// Phase1: FeatureRegistry (feature register/boot 编排)
+export { FeatureRegistry } from '../FeatureRegistry';
+export type { Feature, FeatureBootMode, FeatureBootResult, FeatureRegistryOptions } from '../FeatureRegistry';
+
+// Phase1: shared feature boot context (types only)
+export type { UIFeatureBootContext } from '../features/featureContext';

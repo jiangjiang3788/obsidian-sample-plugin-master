@@ -1,4 +1,3 @@
-// @ts-nocheck
 // src/features/dashboard/ui/ThemeFilter.tsx
 /** @jsxImportSource preact */
 import { h } from 'preact';

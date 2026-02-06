@@ -4,7 +4,7 @@ import type { ThinkSettings } from '@core/public';
 import { container } from 'tsyringe';
 import { AiChatService, ChatSessionStore, RetrievalService } from '@core/public';
 import { AiChatModal } from '@features/aichat';
-import { devWarn } from '@/core/utils/devLogger';
+import { devWarn } from '@core/public';
 
 export interface AiCapability {
     /**

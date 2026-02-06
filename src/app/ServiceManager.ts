@@ -19,7 +19,7 @@ import { ThemeManager } from '@features/settings/ThemeManager';
 import { SETTINGS_TOKEN } from '@core/public'; // DI DEBUG: 用于获取初始设置
 import type { ThinkSettings } from '@core/public'; // DI DEBUG
 import type ThinkPlugin from '@main';
-import { devLog, devWarn, devError, devTime, devTimeEnd } from '@/core/utils/devLogger';
+import { devLog, devWarn, devError, devTime, devTimeEnd } from '@core/public';
 
 // ============== 核心 DI 容器配置 ==============
 // - ❌ 不再有 appStore getter
@@ -43,6 +43,9 @@ import { devLog, devWarn, devError, devTime, devTimeEnd } from '@/core/utils/dev
 export class ServiceManager {
     private plugin: ThinkPlugin;
     private scanDataPromise: Promise<void> | null = null;
+
+    // UI 特性加载器（用于 unload 时清理 background feature 的定时任务）
+    private featureLoader: FeatureLoader | null = null;
     
     // 服务实例缓存
     private services: Partial<{
@@ -90,6 +93,10 @@ export class ServiceManager {
      */
     cleanup(): void {
         try {
+            // 先清理 feature registry 的 background 定时任务，避免 unload 后仍触发。
+            this.featureLoader?.cleanup();
+            this.featureLoader = null;
+
             // 统一关闭所有由 FloatingWidgetManager 打开的悬浮窗
             // （例如：统计 Popover / 视图设置浮窗等）
             closeAllFloatingWidgets();
@@ -374,14 +381,16 @@ export class ServiceManager {
         }
 
         // S7.0: FeatureLoader 构造函数不再接收 appStore
-        const featureLoader = new FeatureLoader(
+        // 说明：featureLoader 需要在 unload 时 cleanup（取消 background 定时任务），因此必须挂在 ServiceManager 上。
+        this.featureLoader?.cleanup();
+        this.featureLoader = new FeatureLoader(
             this.plugin,
             this.services.dataStore,
             this.services.rendererService,
             this.services.actionService
         );
 
-        await featureLoader.loadFeatures(this.scanDataPromise);
+        await this.featureLoader.loadFeatures(this.scanDataPromise);
     }
 
     // ==================================================================================

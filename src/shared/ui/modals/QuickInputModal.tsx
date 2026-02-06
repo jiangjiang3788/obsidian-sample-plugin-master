@@ -1,4 +1,3 @@
-// @ts-nocheck
 // src/shared/ui/modals/QuickInputModal.tsx
 /**
  * S7.1: QuickInputModal - 快速输入模态框
@@ -28,6 +27,16 @@ import { ModalHeader } from '@shared/ui/components/ModalHeader';
 
 export class QuickInputModal extends Modal {
   private services: Services;
+  /**
+   * 软键盘/视口监听清理函数。
+   *
+   * 以前通过 `this.onClose = () => {...}` 动态覆写方法来做清理，
+   * TS/运行期都容易踩坑（方法与实例属性语义不一致）。
+   *
+   * 现在改为：在 setupKeyboardDetection() 里生成 cleanup，
+   * 由 onClose() 统一调用。
+   */
+  private cleanupKeyboardDetection: (() => void) | null = null;
 
   constructor(
     app: App,
@@ -147,7 +156,8 @@ export class QuickInputModal extends Modal {
     window.addEventListener('orientationchange', handleOrientationChange);
     setKeyboardHeight(300);
 
-    this.onClose = () => {
+    // 将清理逻辑收敛成 closure，由 onClose() 统一调用
+    this.cleanupKeyboardDetection = () => {
       this.contentEl.removeEventListener('focusin', handleFocusIn);
       this.contentEl.removeEventListener('focusout', handleFocusOut);
 
@@ -161,11 +171,16 @@ export class QuickInputModal extends Modal {
       document.documentElement.style.removeProperty('--keyboard-height');
       this.modalEl.style.removeProperty('--keyboard-height');
       this.modalEl.style.removeProperty('--keyboard-offset');
-      unmountPreact(this.contentEl);
     };
   }
 
   onClose() {
+    // 先卸载监听/样式，再卸载 UI
+    try {
+      this.cleanupKeyboardDetection?.();
+    } finally {
+      this.cleanupKeyboardDetection = null;
+    }
     unmountPreact(this.contentEl);
   }
 }

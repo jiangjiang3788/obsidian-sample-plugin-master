@@ -1,23 +1,43 @@
-// @ts-nocheck
 // src/features/settings/ui/components/view-editors/HeatmapViewEditor.tsx
 /** @jsxImportSource preact */
 import { h } from 'preact';
-import { Stack, Typography, FormControlLabel, Radio, RadioGroup, Box, Button, Checkbox } from '@mui/material';
+import { Stack, Typography, Box, Button } from '@mui/material';
 import type { ViewEditorProps } from './registry';
 import { SimpleSelect } from '@shared/ui/composites/SimpleSelect';
 import { ListEditor } from '@shared/ui/composites/form/ListEditor';
 import { useZustandAppStore } from '@/app/public';
 import { useMemo } from 'preact/hooks';
-import { LEVEL_SYSTEM_PRESETS } from '@core/public';
-import { HEATMAP_VIEW_DEFAULT_CONFIG } from '@core/public';
-import { collectThemePathsForHeatmap } from '@core/public';
+import {
+    HEATMAP_VIEW_DEFAULT_CONFIG,
+    collectThemePathsForHeatmap,
+    type BlockTemplate,
+    type HeatmapViewConfig,
+    type ViewInstance,
+} from '@core/public';
 import { Notice } from 'obsidian';
 
 // 重新导出以保持兼容性
 export { HEATMAP_VIEW_DEFAULT_CONFIG as DEFAULT_CONFIG } from '@core/public';
 
+function normalizeHeatmapConfig(value: Record<string, any> | undefined): HeatmapViewConfig {
+    const base = HEATMAP_VIEW_DEFAULT_CONFIG;
+    const v = (value ?? {}) as Partial<HeatmapViewConfig>;
+
+    return {
+        displayMode: v.displayMode === 'habit' || v.displayMode === 'count' ? v.displayMode : base.displayMode,
+        sourceBlockId: typeof v.sourceBlockId === 'string' ? v.sourceBlockId : base.sourceBlockId,
+        themePaths: Array.isArray(v.themePaths)
+            ? v.themePaths.filter((x): x is string => typeof x === 'string')
+            : base.themePaths,
+        enableLeveling: typeof v.enableLeveling === 'boolean' ? v.enableLeveling : base.enableLeveling,
+        maxDailyChecks: typeof v.maxDailyChecks === 'number' ? v.maxDailyChecks : base.maxDailyChecks,
+        allowManualEdit: typeof v.allowManualEdit === 'boolean' ? v.allowManualEdit : base.allowManualEdit,
+        showLevelProgress: typeof v.showLevelProgress === 'boolean' ? v.showLevelProgress : base.showLevelProgress,
+    };
+}
+
 export function HeatmapViewEditor({ value, onChange, module, dataStore }: ViewEditorProps) {
-    const config = { ...HEATMAP_VIEW_DEFAULT_CONFIG, ...value };
+    const config = normalizeHeatmapConfig(value);
     const allBlocks = useZustandAppStore(state => state.settings.inputSettings?.blocks) ?? [];
 
     const blockOptions = useMemo(() => 
@@ -31,8 +51,14 @@ export function HeatmapViewEditor({ value, onChange, module, dataStore }: ViewEd
             return;
         }
 
-        const dataSource = module;
-        const sourceBlock = allBlocks.find(b => b.id === config.sourceBlockId);
+        // registry.tsx 中 module 是可选的；缺少上下文时禁用扫描。
+        if (!module) {
+            new Notice('无法扫描：缺少视图上下文（module）。');
+            return;
+        }
+
+        const dataSource: ViewInstance = module;
+        const sourceBlock: BlockTemplate | undefined = allBlocks.find(b => b.id === config.sourceBlockId);
         if (!sourceBlock) {
             new Notice('找不到所选的 Block 模板。');
             return;

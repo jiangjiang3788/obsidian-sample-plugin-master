@@ -1,6 +1,6 @@
-// @ts-nocheck
 /** @jsxImportSource preact */
 import { h } from 'preact';
+import type { ComponentChildren } from 'preact';
 import { useState } from 'preact/hooks';
 
 import { Box, Button, Chip, Popover, Typography } from '@mui/material';
@@ -18,7 +18,7 @@ export interface FilterPopoverProps {
   emptyText?: string;
   isEmpty?: boolean;
   chipLimit?: number;
-  children?: any;
+  children?: ComponentChildren;
 }
 
 export function FilterPopover({
@@ -39,7 +39,9 @@ export function FilterPopover({
   const open = Boolean(anchorEl);
   const selectedCount = selectedKeys.length;
 
-  const handleClick = (event: any) => setAnchorEl(event.currentTarget);
+  // 说明：MUI 的 onClick 事件类型在 React/Preact 环境下可能略有差异，这里显式 any
+  // 避免因为事件类型不兼容导致 UI 组件被迫 @ts-nocheck。
+  const handleClick = (event: any) => setAnchorEl((event?.currentTarget ?? null) as HTMLElement | null);
   const handleClose = () => setAnchorEl(null);
 
   const showPartial = selectedCount > 0 && selectedCount < totalCount;

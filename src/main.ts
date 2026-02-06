@@ -16,11 +16,15 @@ import './styles/main.css';
 import { safeAsync } from '@shared/utils/errorHandler';
 import { performanceMonitor, startMeasure } from '@shared/utils/performance';
 import { ServiceManager } from '@/app/ServiceManager';
-import { createCapabilities, type Capabilities } from '@/app/capabilities/createCapabilities';
+import {
+    createCapabilities,
+    createDefaultCapabilityRegistry,
+    type Capabilities
+} from '@/app/capabilities/createCapabilities';
 import { TimerStateService } from '@core/public';
 import { TimerService } from '@features/timer/TimerService';
 import { ActionService } from '@core/public';
-import { devLog } from '@/core/utils/devLogger';
+import { devLog } from '@core/public';
 
 devLog(`[ThinkPlugin] main.ts 已加载，版本时间: ${new Date().toLocaleTimeString()}`);
 
@@ -46,8 +50,10 @@ export default class ThinkPlugin extends Plugin {
                 // 2. 配置 DI 容器 & 基础服务
                 setupCoreContainer(this.app, settings);
 
-                // 2.1 capabilities 组合根（最小接入闭环）
-                this.capabilities = createCapabilities(this.app, settings);
+                // 2.1 capabilities 组合根（Phase1: 可注入体系）
+                // - 先创建 registry，让后续 feature 可以在这里追加 register(...)
+                const capabilityRegistry = createDefaultCapabilityRegistry();
+                this.capabilities = createCapabilities(this.app, settings, capabilityRegistry);
 
                 // 3. 构建服务总线并启动主流程
                 this.serviceManager = new ServiceManager(this);

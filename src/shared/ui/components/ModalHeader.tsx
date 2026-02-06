@@ -1,5 +1,4 @@
 // src/shared/ui/components/ModalHeader.tsx
-// @ts-nocheck
 /** @jsxImportSource preact */
 import { h } from 'preact';
 import type { ComponentChildren } from 'preact';

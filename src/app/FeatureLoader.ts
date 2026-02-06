@@ -1,11 +1,9 @@
 import type ThinkPlugin from '@main';
-import { DataStore } from '@core/public';
+import { ActionService, DataStore, devTime, devTimeEnd, devWarn } from '@core/public';
 import { RendererService } from '@/features/settings/RendererService';
-import { ActionService } from '@core/public';
-import * as QuickInputFeature from '@features/quickinput';
-import * as AiInputFeature from '@features/aiinput';
-import { setupSettings, setupDashboard } from '@/features/settings';
-import { devTime, devTimeEnd } from '@/core/utils/devLogger';
+import { FeatureRegistry } from './FeatureRegistry';
+import { registerFeatureContributions } from './features/registerFeatureContributions';
+import type { UIFeatureBootContext } from './features/featureContext';
 
 /**
  * FeatureLoader - UI 特性加载器
@@ -21,6 +19,9 @@ export class FeatureLoader {
     private dataStore: DataStore;
     private rendererService: RendererService;
     private actionService: ActionService;
+
+    // Phase1: 收拢 feature boot 编排，便于在插件卸载时统一清理 background 定时任务。
+    private registry: FeatureRegistry<UIFeatureBootContext> | null = null;
 
     constructor(
         plugin: ThinkPlugin,
@@ -40,81 +41,40 @@ export class FeatureLoader {
      */
     async loadFeatures(dataScanPromise: Promise<void> | null): Promise<void> {
         devTime('[ThinkPlugin] UI特性加载');
-        
-        // 1. Dashboard (依赖数据扫描)
-        await this.loadDashboardFeature(dataScanPromise);
-        
-        // 2. Settings (独立)
-        this.loadSettingsFeature();
-        
-        // 3. QuickInput (独立)
-        this.loadQuickInputFeature();
-        
-        // 4. AI Input (独立)
-        this.loadAiInputFeature();
-        
-        devTimeEnd('[ThinkPlugin] UI特性加载');
-    }
 
-    private async loadDashboardFeature(dataScanPromise: Promise<void> | null): Promise<void> {
-        // 必须等待数据扫描完成，否则 Dashboard 没数据
-        if (dataScanPromise) {
-            await dataScanPromise;
-        }
-        
-        devTime('[ThinkPlugin] Dashboard特性加载');
-        setupDashboard?.({
+        // Phase1: FeatureRegistry 收拢 feature 的 register/boot（避免硬编码堆积）
+        // 说明：registry 持有 background 的 setTimeout 句柄；因此必须挂在实例上，才能在 unload 时 dispose。
+        this.registry?.dispose();
+        this.registry = new FeatureRegistry<UIFeatureBootContext>();
+        const registry = this.registry;
+
+        // Phase1-2: 由各 feature 自己声明注册信息，FeatureLoader 仅做编排
+        registerFeatureContributions(registry, {
             plugin: this.plugin,
             dataStore: this.dataStore,
             rendererService: this.rendererService,
             actionService: this.actionService,
         });
-        devTimeEnd('[ThinkPlugin] Dashboard特性加载');
+
+        await registry.bootAll(
+            { dataScanPromise },
+            {
+                onError: ({ id, error }) => {
+                    devWarn(`[ThinkPlugin] Feature boot failed: ${id}`, error);
+                },
+            }
+        );
+
+        devTimeEnd('[ThinkPlugin] UI特性加载');
     }
 
-    private loadSettingsFeature(): void {
-        // 延迟加载以优化启动性能
-        setTimeout(() => {
-            devTime('[ThinkPlugin] Settings特性加载');
-            
-            setupSettings?.({
-                app: this.plugin.app,
-                plugin: this.plugin,
-                dataStore: this.dataStore,
-            });
-
-            this.plugin.addCommand({
-                id: 'think-open-settings',
-                name: '打开 Think 插件设置',
-                callback: () => {
-                    // @ts-ignore
-                    this.plugin.app.setting.open();
-                    // @ts-ignore
-                    this.plugin.app.setting.openTabById(this.plugin.manifest.id);
-                }
-            });
-
-            devTimeEnd('[ThinkPlugin] Settings特性加载');
-        }, 150);
+    /**
+     * 插件卸载时的清理入口。
+     * - 取消尚未触发的 background feature 定时任务
+     */
+    cleanup(): void {
+        this.registry?.dispose();
+        this.registry = null;
     }
 
-    private loadQuickInputFeature(): void {
-        setTimeout(() => {
-            devTime('[ThinkPlugin] QuickInput特性加载');
-            QuickInputFeature.setup?.({
-                plugin: this.plugin
-            });
-            devTimeEnd('[ThinkPlugin] QuickInput特性加载');
-        }, 100);
-    }
-
-    private loadAiInputFeature(): void {
-        setTimeout(() => {
-            devTime('[ThinkPlugin] AiInput特性加载');
-            AiInputFeature.setup?.({
-                plugin: this.plugin
-            });
-            devTimeEnd('[ThinkPlugin] AiInput特性加载');
-        }, 120);
-    }
 }
