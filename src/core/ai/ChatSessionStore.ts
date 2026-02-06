@@ -18,6 +18,7 @@ import { singleton, inject } from 'tsyringe';
 import type { IPluginStorage } from '@/core/services/StorageService';
 import { STORAGE_TOKEN } from '@/core/services/StorageService';
 import { generateId } from '../utils/id';
+import { devLog, devWarn, devError } from '../utils/devLogger';
 
 // ============== Zod Schemas ==============
 
@@ -121,23 +122,23 @@ export class ChatSessionStore {
         
         if (fileData) {
             this.data = fileData;
-            console.log(`ChatSessionStore: 从文件加载 ${this.data.sessions.length} 个会话`);
+            devLog(`ChatSessionStore: 从文件加载 ${this.data.sessions.length} 个会话`);
             return;
         }
 
         // 2. 如果新文件不存在，尝试从 localStorage 迁移
         const legacyData = this.loadFromLocalStorage();
         if (legacyData && legacyData.sessions.length > 0) {
-            console.log(`ChatSessionStore: 从 localStorage 迁移 ${legacyData.sessions.length} 个会话`);
+            devLog(`ChatSessionStore: 从 localStorage 迁移 ${legacyData.sessions.length} 个会话`);
             this.data = legacyData;
             await this.saveToFile();
             
             // 清理 localStorage
             try {
                 localStorage.removeItem(LEGACY_STORAGE_KEY);
-                console.log('ChatSessionStore: localStorage 数据已清理');
+                devLog('ChatSessionStore: localStorage 数据已清理');
             } catch (e) {
-                console.warn('ChatSessionStore: 清理 localStorage 失败', e);
+                devWarn('ChatSessionStore: 清理 localStorage 失败', e);
             }
             return;
         }
@@ -159,11 +160,11 @@ export class ChatSessionStore {
             }
 
             // 校验失败，备份损坏数据
-            console.warn('ChatSessionStore: 文件数据校验失败，备份损坏文件', result.error);
+            devWarn('ChatSessionStore: 文件数据校验失败，备份损坏文件', result.error);
             await this.backupCorruptData(raw);
             return null;
         } catch (e) {
-            console.warn('ChatSessionStore: 加载文件失败', e);
+            devWarn('ChatSessionStore: 加载文件失败', e);
             return null;
         }
     }
@@ -179,10 +180,10 @@ export class ChatSessionStore {
                 return result.data;
             }
 
-            console.warn('ChatSessionStore: localStorage 数据校验失败', result.error);
+            devWarn('ChatSessionStore: localStorage 数据校验失败', result.error);
             return null;
         } catch (e) {
-            console.warn('ChatSessionStore: 解析 localStorage 失败', e);
+            devWarn('ChatSessionStore: 解析 localStorage 失败', e);
             return null;
         }
     }
@@ -191,9 +192,9 @@ export class ChatSessionStore {
         try {
             const corruptPath = this.filePath.replace('.json', CORRUPT_SUFFIX);
             await this.storage.writeJSON(corruptPath, data);
-            console.log(`ChatSessionStore: 损坏数据已备份到 ${corruptPath}`);
+            devLog(`ChatSessionStore: 损坏数据已备份到 ${corruptPath}`);
         } catch (e) {
-            console.error('ChatSessionStore: 备份损坏数据失败', e);
+            devError('ChatSessionStore: 备份损坏数据失败', e);
         }
     }
 
@@ -201,13 +202,13 @@ export class ChatSessionStore {
         try {
             await this.storage.writeJSON(this.filePath, this.data);
         } catch (e) {
-            console.error('ChatSessionStore: 保存失败', e);
+            devError('ChatSessionStore: 保存失败', e);
         }
     }
 
     private notify(): void {
         this.listeners.forEach(fn => {
-            try { fn(); } catch (e) { console.error('ChatSessionStore: 通知失败', e); }
+            try { fn(); } catch (e) { devError('ChatSessionStore: 通知失败', e); }
         });
     }
 
@@ -269,7 +270,7 @@ export class ChatSessionStore {
     ): Promise<ChatMessage | null> {
         const session = this.data.sessions.find(s => s.id === sessionId);
         if (!session) {
-            console.warn('ChatSessionStore: 会话不存在', sessionId);
+            devWarn('ChatSessionStore: 会话不存在', sessionId);
             return null;
         }
 

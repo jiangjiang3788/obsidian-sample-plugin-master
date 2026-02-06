@@ -22,7 +22,7 @@ import { container as defaultContainer, type DependencyContainer } from 'tsyring
 import { validateServices, type Services } from './services.types';
 import { STORE_TOKEN, type AppStoreInstance } from './store/useAppStore';
 import { USECASES_TOKEN, type UseCases } from './usecases';
-import { DataStore } from '@core/public';
+import {DataStore, devError} from '@core/public';
 import { InputService } from '@core/public';
 
 /**
@@ -51,7 +51,7 @@ export function createServices(container: DependencyContainer = defaultContainer
 
         return services;
     } catch (error) {
-        console.error('[createServices] 创建 Services 失败:', error);
+        devError('[createServices] 创建 Services 失败:', error);
         throw new Error(
             `[createServices] 无法从 DI 容器创建 Services。\n` +
             `请确保 ServiceManager 已完成初始化。\n` +

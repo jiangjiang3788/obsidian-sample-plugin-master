@@ -4,6 +4,7 @@
  */
 
 import { Notice } from 'obsidian';
+import { devError } from '@core/public';
 
 /**
  * 错误类型枚举
@@ -189,7 +190,6 @@ export class ErrorHandler {
 
         // 文件日志（未来实现）
         if (logToFile) {
-            // TODO: 实现文件日志记录
             // this.logToFile(logEntry);
         }
 
@@ -279,18 +279,18 @@ export class ErrorHandler {
         const prefix = `[ErrorHandler][${entry.type}][${timestamp}]`;
         
         console.group(prefix);
-        console.error('Message:', entry.message);
+        devError('Message:', entry.message);
         
         if (entry.context) {
-            console.error('Context:', entry.context);
+            devError('Context:', entry.context);
         }
         
         if (entry.stack) {
-            console.error('Stack:', entry.stack);
+            devError('Stack:', entry.stack);
         }
         
         if (entry.details) {
-            console.error('Details:', entry.details);
+            devError('Details:', entry.details);
         }
         
         console.groupEnd();

@@ -4,7 +4,7 @@
  * Role: UseCase (应用层) - 唯一写入口
  * 
  * 【S5 规范】真源唯一
- * ✅ 这是 ViewInstance / Layout 的 CRUD 和 reorder 的唯一写入口！
+ * ✅ 这是 Layout 的 CRUD / reorder 的唯一写入口（以及 Layout-ViewInstance 关联写入口）！
  * - features 层（src/features/*）只能调用 useCases.layout.*
  * - 不允许 features 层直接调用 viewInstance.slice 的 vi* actions
  * - 不允许 features 层直接调用 viewInstance.usecase
@@ -12,13 +12,12 @@
  * 
  * 对外暴露：
  * - Layout CRUD: addLayout, updateLayout, deleteLayout, moveLayout, duplicateLayout
- * - View CRUD: addView, updateView, deleteView, moveView, duplicateView
+ * - Layout-ViewInstance 关联: addViewInstanceToLayout
  * - 批量操作: batchUpdateLayouts, batchDeleteLayouts
  * - 查询方法: getLayouts, getLayout, getLayoutsByParent, getTopLevelLayouts
  * 
  * 内部实现：
  * - Layout 操作转调 layout.slice actions
- * - View 操作转调 viewInstance.slice 的 vi* actions
  * 
  * Do:
  * - 封装布局和视图相关的业务意图
@@ -35,6 +34,7 @@
 
 import type { Layout, ViewInstance } from '@core/public';
 import type { AppStoreApi } from './index';
+import { devError } from '@core/public';
 
 /**
  * 布局用例类
@@ -59,13 +59,13 @@ export class LayoutUseCase {
             const state = this.store.getState();
             
             if (!state.isInitialized) {
-                console.error('[LayoutUseCase] Store 未初始化');
+                devError('[LayoutUseCase] Store 未初始化');
                 return null;
             }
             
             return await state.addLayout(name, parentId);
         } catch (error) {
-            console.error('[LayoutUseCase] addLayout 失败:', error);
+            devError('[LayoutUseCase] addLayout 失败:', error);
             throw error;
         }
     }
@@ -80,13 +80,13 @@ export class LayoutUseCase {
             const state = this.store.getState();
             
             if (!state.isInitialized) {
-                console.error('[LayoutUseCase] Store 未初始化');
+                devError('[LayoutUseCase] Store 未初始化');
                 return;
             }
             
             await state.updateLayout(id, updates);
         } catch (error) {
-            console.error('[LayoutUseCase] updateLayout 失败:', error);
+            devError('[LayoutUseCase] updateLayout 失败:', error);
             throw error;
         }
     }
@@ -100,13 +100,13 @@ export class LayoutUseCase {
             const state = this.store.getState();
             
             if (!state.isInitialized) {
-                console.error('[LayoutUseCase] Store 未初始化');
+                devError('[LayoutUseCase] Store 未初始化');
                 return;
             }
             
             await state.deleteLayout(id);
         } catch (error) {
-            console.error('[LayoutUseCase] deleteLayout 失败:', error);
+            devError('[LayoutUseCase] deleteLayout 失败:', error);
             throw error;
         }
     }
@@ -122,7 +122,7 @@ export class LayoutUseCase {
             
             await state.moveLayout(id, direction);
         } catch (error) {
-            console.error('[LayoutUseCase] moveLayout 失败:', error);
+            devError('[LayoutUseCase] moveLayout 失败:', error);
             throw error;
         }
     }
@@ -138,7 +138,7 @@ export class LayoutUseCase {
             
             return await state.duplicateLayout(id);
         } catch (error) {
-            console.error('[LayoutUseCase] duplicateLayout 失败:', error);
+            devError('[LayoutUseCase] duplicateLayout 失败:', error);
             throw error;
         }
     }
@@ -152,13 +152,13 @@ export class LayoutUseCase {
             const state = this.store.getState();
             
             if (!state.isInitialized) {
-                console.error('[LayoutUseCase] Store 未初始化');
+                devError('[LayoutUseCase] Store 未初始化');
                 return;
             }
             
             await state.reorderLayouts(orderedIds);
         } catch (error) {
-            console.error('[LayoutUseCase] reorderLayouts 失败:', error);
+            devError('[LayoutUseCase] reorderLayouts 失败:', error);
             throw error;
         }
     }
@@ -176,7 +176,7 @@ export class LayoutUseCase {
             
             await state.batchUpdateLayouts(layoutIds, updates);
         } catch (error) {
-            console.error('[LayoutUseCase] batchUpdateLayouts 失败:', error);
+            devError('[LayoutUseCase] batchUpdateLayouts 失败:', error);
             throw error;
         }
     }
@@ -192,7 +192,7 @@ export class LayoutUseCase {
             
             await state.batchDeleteLayouts(layoutIds);
         } catch (error) {
-            console.error('[LayoutUseCase] batchDeleteLayouts 失败:', error);
+            devError('[LayoutUseCase] batchDeleteLayouts 失败:', error);
             throw error;
         }
     }
@@ -210,7 +210,7 @@ export class LayoutUseCase {
             
             await state.moveLayoutToParent(layoutId, newParentId);
         } catch (error) {
-            console.error('[LayoutUseCase] moveLayoutToParent 失败:', error);
+            devError('[LayoutUseCase] moveLayoutToParent 失败:', error);
             throw error;
         }
     }
@@ -228,7 +228,7 @@ export class LayoutUseCase {
             
             await state.addViewInstanceToLayout(layoutId, viewInstanceId);
         } catch (error) {
-            console.error('[LayoutUseCase] addViewInstanceToLayout 失败:', error);
+            devError('[LayoutUseCase] addViewInstanceToLayout 失败:', error);
             throw error;
         }
     }
@@ -244,7 +244,7 @@ export class LayoutUseCase {
             
             await state.removeViewInstanceFromLayout(layoutId, viewInstanceId);
         } catch (error) {
-            console.error('[LayoutUseCase] removeViewInstanceFromLayout 失败:', error);
+            devError('[LayoutUseCase] removeViewInstanceFromLayout 失败:', error);
             throw error;
         }
     }
@@ -260,7 +260,7 @@ export class LayoutUseCase {
             
             await state.reorderViewInstancesInLayout(layoutId, viewInstanceIds);
         } catch (error) {
-            console.error('[LayoutUseCase] reorderViewInstancesInLayout 失败:', error);
+            devError('[LayoutUseCase] reorderViewInstancesInLayout 失败:', error);
             throw error;
         }
     }
@@ -275,7 +275,7 @@ export class LayoutUseCase {
             const state = this.store.getState();
             return state.getLayouts();
         } catch (error) {
-            console.error('[LayoutUseCase] getLayouts 失败:', error);
+            devError('[LayoutUseCase] getLayouts 失败:', error);
             return [];
         }
     }
@@ -288,7 +288,7 @@ export class LayoutUseCase {
             const state = this.store.getState();
             return state.getLayout(id);
         } catch (error) {
-            console.error('[LayoutUseCase] getLayout 失败:', error);
+            devError('[LayoutUseCase] getLayout 失败:', error);
             return undefined;
         }
     }
@@ -301,7 +301,7 @@ export class LayoutUseCase {
             const state = this.store.getState();
             return state.getLayoutsByParent(parentId);
         } catch (error) {
-            console.error('[LayoutUseCase] getLayoutsByParent 失败:', error);
+            devError('[LayoutUseCase] getLayoutsByParent 失败:', error);
             return [];
         }
     }
@@ -314,55 +314,12 @@ export class LayoutUseCase {
             const state = this.store.getState();
             return state.getTopLevelLayouts();
         } catch (error) {
-            console.error('[LayoutUseCase] getTopLevelLayouts 失败:', error);
+            devError('[LayoutUseCase] getTopLevelLayouts 失败:', error);
             return [];
         }
     }
 
-    // ============== View CRUD (Facade) - DEPRECATED ==============
-    // 【已禁用】viewInstance slice 已被移除
-    // 这些方法调用的底层 vi* actions 已不存在，需要调用者迁移到其他方案
-    
-    /**
-     * @deprecated viewInstance slice 已被移除，此方法不再可用
-     */
-    async addView(title: string, parentId: string | null = null): Promise<void> {
-        console.error('[LayoutUseCase] addView 已弃用：viewInstance slice 已被移除');
-        throw new Error('viewInstance slice 已被移除，请使用其他方式管理视图');
     }
-
-    /**
-     * @deprecated viewInstance slice 已被移除，此方法不再可用
-     */
-    async updateView(id: string, updates: Partial<ViewInstance>): Promise<void> {
-        console.error('[LayoutUseCase] updateView 已弃用：viewInstance slice 已被移除');
-        throw new Error('viewInstance slice 已被移除，请使用其他方式管理视图');
-    }
-
-    /**
-     * @deprecated viewInstance slice 已被移除，此方法不再可用
-     */
-    async deleteView(id: string): Promise<void> {
-        console.error('[LayoutUseCase] deleteView 已弃用：viewInstance slice 已被移除');
-        throw new Error('viewInstance slice 已被移除，请使用其他方式管理视图');
-    }
-
-    /**
-     * @deprecated viewInstance slice 已被移除，此方法不再可用
-     */
-    async moveView(id: string, direction: 'up' | 'down'): Promise<void> {
-        console.error('[LayoutUseCase] moveView 已弃用：viewInstance slice 已被移除');
-        throw new Error('viewInstance slice 已被移除，请使用其他方式管理视图');
-    }
-
-    /**
-     * @deprecated viewInstance slice 已被移除，此方法不再可用
-     */
-    async duplicateView(id: string): Promise<void> {
-        console.error('[LayoutUseCase] duplicateView 已弃用：viewInstance slice 已被移除');
-        throw new Error('viewInstance slice 已被移除，请使用其他方式管理视图');
-    }
-}
 
 /**
  * 创建布局用例实例

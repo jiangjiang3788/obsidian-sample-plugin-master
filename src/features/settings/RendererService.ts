@@ -9,7 +9,7 @@
  */
 import { h, render } from 'preact';
 import { App } from 'obsidian';
-import { Layout } from '@core/public';
+import {Layout, devLog, devError} from '@core/public';
 import { DataStore } from '@core/public';
 import { ServicesProvider, type Services } from '@/app/public';
 import type { TimerController } from '@/app/public';
@@ -103,7 +103,7 @@ export class RendererService {
                     const previousSnapshot = JSON.stringify(previous);
                     
                     if (currentSnapshot !== previousSnapshot) {
-                        console.log('[RendererService] layouts/viewInstances 变化，触发 rerenderAll');
+                        devLog('[RendererService] layouts/viewInstances 变化，触发 rerenderAll');
                         this.rerenderAll();
                     }
                 },
@@ -111,9 +111,9 @@ export class RendererService {
                 { equalityFn: (a: any, b: any) => a === b }
             );
             
-            console.log('[RendererService] Zustand 精准订阅已建立');
+            devLog('[RendererService] Zustand 精准订阅已建立');
         } catch (error) {
-            console.error('[RendererService] Zustand 订阅失败:', error);
+            devError('[RendererService] Zustand 订阅失败:', error);
         }
     }
 
@@ -201,7 +201,7 @@ export class RendererService {
         if (this.unsubscribeZustand) {
             this.unsubscribeZustand();
             this.unsubscribeZustand = null;
-            console.log('[RendererService] Zustand 订阅已取消');
+            devLog('[RendererService] Zustand 订阅已取消');
         }
         
         [...this.activeLayouts].forEach(layout => this.unregister(layout.container));

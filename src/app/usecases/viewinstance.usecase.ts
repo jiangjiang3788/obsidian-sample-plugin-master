@@ -1,7 +1,7 @@
 // src/app/usecases/viewinstance.usecase.ts
 import type { ViewInstance, ViewName } from '@core/public';
 import type { AppStoreApi } from './index';
-import { generateId } from '@core/public';
+import {generateId, devError} from '@core/public';
 
 /**
  * ViewInstanceUseCase - 视图实例 CRUD
@@ -18,7 +18,7 @@ export class ViewInstanceUseCase {
         try {
             const state = this.store.getState();
             if (!state.isInitialized) {
-                console.error('[ViewInstanceUseCase] Store 未初始化');
+                devError('[ViewInstanceUseCase] Store 未初始化');
                 return null;
             }
 
@@ -41,7 +41,7 @@ export class ViewInstanceUseCase {
 
             return newVi;
         } catch (error) {
-            console.error('[ViewInstanceUseCase] createView 失败:', error);
+            devError('[ViewInstanceUseCase] createView 失败:', error);
             throw error;
         }
     }
@@ -50,7 +50,7 @@ export class ViewInstanceUseCase {
         try {
             const state = this.store.getState();
             if (!state.isInitialized) {
-                console.error('[ViewInstanceUseCase] Store 未初始化');
+                devError('[ViewInstanceUseCase] Store 未初始化');
                 return;
             }
 
@@ -60,7 +60,7 @@ export class ViewInstanceUseCase {
                 if (vi) Object.assign(vi, updates);
             });
         } catch (error) {
-            console.error('[ViewInstanceUseCase] updateView 失败:', error);
+            devError('[ViewInstanceUseCase] updateView 失败:', error);
             throw error;
         }
     }
@@ -69,7 +69,7 @@ export class ViewInstanceUseCase {
         try {
             const state = this.store.getState();
             if (!state.isInitialized) {
-                console.error('[ViewInstanceUseCase] Store 未初始化');
+                devError('[ViewInstanceUseCase] Store 未初始化');
                 return;
             }
 
@@ -87,7 +87,7 @@ export class ViewInstanceUseCase {
                 }
             });
         } catch (error) {
-            console.error('[ViewInstanceUseCase] deleteView 失败:', error);
+            devError('[ViewInstanceUseCase] deleteView 失败:', error);
             throw error;
         }
     }

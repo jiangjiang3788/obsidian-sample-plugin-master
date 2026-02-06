@@ -17,6 +17,7 @@ import { singleton, inject } from 'tsyringe';
 import MiniSearch, { SearchResult } from 'minisearch';
 import type { Item } from '@/core/types/schema';
 import { DataStore } from '@/core/services/DataStore';
+import { devLog, devWarn, devError } from '../utils/devLogger';
 
 // ============== Types ==============
 
@@ -123,7 +124,7 @@ export class RetrievalService {
         const itemsToIndex = items ?? this.getItemsFromDataStore();
         
         if (!itemsToIndex || itemsToIndex.length === 0) {
-            console.log('RetrievalService: 没有可索引的 items');
+            devLog('RetrievalService: 没有可索引的 items');
             return;
         }
 
@@ -139,9 +140,9 @@ export class RetrievalService {
             validItems.forEach(item => this.indexedItemIds.add(item.id));
             
             this.lastIndexTime = Date.now();
-            console.log(`RetrievalService: 索引完成，共 ${validItems.length} 条，耗时 ${Date.now() - startTime}ms`);
+            devLog(`RetrievalService: 索引完成，共 ${validItems.length} 条，耗时 ${Date.now() - startTime}ms`);
         } catch (e) {
-            console.error('RetrievalService: 索引构建失败', e);
+            devError('RetrievalService: 索引构建失败', e);
         }
     }
 
@@ -150,7 +151,7 @@ export class RetrievalService {
      */
     private getItemsFromDataStore(): Item[] {
         if (!this.dataStore) {
-            console.warn('RetrievalService: DataStore 未初始化');
+            devWarn('RetrievalService: DataStore 未初始化');
             return [];
         }
         // 使用 queryItems 获取所有 items（无过滤）
@@ -224,11 +225,11 @@ export class RetrievalService {
 
             const items = results.map(r => r.item);
 
-            console.log(`RetrievalService: 搜索 "${query}" 找到 ${totalMatched} 条，返回 ${items.length} 条`);
+            devLog(`RetrievalService: 搜索 "${query}" 找到 ${totalMatched} 条，返回 ${items.length} 条`);
 
             return { items, results, totalMatched };
         } catch (e) {
-            console.error('RetrievalService: 搜索失败', e);
+            devError('RetrievalService: 搜索失败', e);
             return { items: [], results: [], totalMatched: 0 };
         }
     }

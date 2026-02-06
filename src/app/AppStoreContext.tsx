@@ -21,6 +21,7 @@ import type { InputService } from '@core/public';
 import type { UseCases } from './usecases';
 import type { AppStoreInstance, ZustandAppStore } from './store/useAppStore';
 import { validateServices, type Services } from './services.types';
+import { devLog, devError } from '@core/public';
 
 // 兼容性：允许外部仍从 AppStoreContext 引入 Services 类型
 export type { Services } from './services.types';
@@ -202,10 +203,10 @@ export function devCheckServicesContext(): { valid: boolean; missing: string[] }
     try {
         // 这些检查会在 Context 不存在时抛出异常
         // 但我们只在开发模式下使用，不影响生产
-        console.log('[DevCheck] ServicesContext 自检开始...');
-        console.log('[DevCheck] 如果此后没有错误日志，说明 Context 配置正确');
+        devLog('[DevCheck] ServicesContext 自检开始...');
+        devLog('[DevCheck] 如果此后没有错误日志，说明 Context 配置正确');
     } catch (e) {
-        console.error('[DevCheck] ServicesContext 自检失败:', e);
+        devError('[DevCheck] ServicesContext 自检失败:', e);
         result.valid = false;
     }
     

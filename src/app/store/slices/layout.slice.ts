@@ -30,7 +30,7 @@
 import type { StateCreator } from 'zustand';
 import type { ThinkSettings, Layout } from '@core/public';
 import type { SettingsRepository } from '@core/public';
-import { generateId } from '@core/public';
+import {generateId, devWarn, devError} from '@core/public';
 import { moveItemInArray } from '@core/public';
 import { createSliceMeta } from '@core/public';
 
@@ -98,7 +98,7 @@ export function createLayoutSlice(
         addLayout: async (name: string, parentId: string | null = null): Promise<Layout | null> => {
             const state = get();
             if (!state.isInitialized) {
-                console.error('[LayoutSlice] Store 未初始化');
+                devError('[LayoutSlice] Store 未初始化');
                 return null;
             }
 
@@ -127,7 +127,7 @@ export function createLayoutSlice(
                 set({ layoutLoading: false });
                 return newLayout;
             } catch (error: any) {
-                console.error('[LayoutSlice] addLayout 失败:', error);
+                devError('[LayoutSlice] addLayout 失败:', error);
                 set({ layoutError: error.message || '添加布局失败', layoutLoading: false });
                 return null;
             }
@@ -136,7 +136,7 @@ export function createLayoutSlice(
         updateLayout: async (id: string, updates: Partial<Layout>): Promise<void> => {
             const state = get();
             if (!state.isInitialized) {
-                console.error('[LayoutSlice] Store 未初始化');
+                devError('[LayoutSlice] Store 未初始化');
                 return;
             }
 
@@ -153,7 +153,7 @@ export function createLayoutSlice(
                 }, createSliceMeta('layout.updateLayout'));
                 set({ layoutLoading: false });
             } catch (error: any) {
-                console.error('[LayoutSlice] updateLayout 失败:', error);
+                devError('[LayoutSlice] updateLayout 失败:', error);
                 set({ layoutError: error.message || '更新布局失败', layoutLoading: false });
             }
         },
@@ -161,7 +161,7 @@ export function createLayoutSlice(
         deleteLayout: async (id: string): Promise<void> => {
             const state = get();
             if (!state.isInitialized) {
-                console.error('[LayoutSlice] Store 未初始化');
+                devError('[LayoutSlice] Store 未初始化');
                 return;
             }
 
@@ -175,7 +175,7 @@ export function createLayoutSlice(
                 }, createSliceMeta('layout.deleteLayout'));
                 set({ layoutLoading: false });
             } catch (error: any) {
-                console.error('[LayoutSlice] deleteLayout 失败:', error);
+                devError('[LayoutSlice] deleteLayout 失败:', error);
                 set({ layoutError: error.message || '删除布局失败', layoutLoading: false });
             }
         },
@@ -183,7 +183,7 @@ export function createLayoutSlice(
         moveLayout: async (id: string, direction: 'up' | 'down'): Promise<void> => {
             const state = get();
             if (!state.isInitialized) {
-                console.error('[LayoutSlice] Store 未初始化');
+                devError('[LayoutSlice] Store 未初始化');
                 return;
             }
 
@@ -197,7 +197,7 @@ export function createLayoutSlice(
                 }, createSliceMeta('layout.moveLayout'));
                 set({ layoutLoading: false });
             } catch (error: any) {
-                console.error('[LayoutSlice] moveLayout 失败:', error);
+                devError('[LayoutSlice] moveLayout 失败:', error);
                 set({ layoutError: error.message || '移动布局失败', layoutLoading: false });
             }
         },
@@ -205,13 +205,13 @@ export function createLayoutSlice(
         duplicateLayout: async (id: string): Promise<Layout | null> => {
             const state = get();
             if (!state.isInitialized) {
-                console.error('[LayoutSlice] Store 未初始化');
+                devError('[LayoutSlice] Store 未初始化');
                 return null;
             }
 
             const original = state.settings.layouts?.find(l => l.id === id);
             if (!original) {
-                console.warn(`[LayoutSlice] 找不到ID为 ${id} 的布局`);
+                devWarn(`[LayoutSlice] 找不到ID为 ${id} 的布局`);
                 return null;
             }
 
@@ -236,7 +236,7 @@ export function createLayoutSlice(
                 set({ layoutLoading: false });
                 return newLayout;
             } catch (error: any) {
-                console.error('[LayoutSlice] duplicateLayout 失败:', error);
+                devError('[LayoutSlice] duplicateLayout 失败:', error);
                 set({ layoutError: error.message || '复制布局失败', layoutLoading: false });
                 return null;
             }
@@ -245,7 +245,7 @@ export function createLayoutSlice(
         reorderLayouts: async (orderedIds: string[]): Promise<void> => {
             const state = get();
             if (!state.isInitialized) {
-                console.error('[LayoutSlice] Store 未初始化');
+                devError('[LayoutSlice] Store 未初始化');
                 return;
             }
 
@@ -268,7 +268,7 @@ export function createLayoutSlice(
                 }, createSliceMeta('layout.reorderLayouts'));
                 set({ layoutLoading: false });
             } catch (error: any) {
-                console.error('[LayoutSlice] reorderLayouts 失败:', error);
+                devError('[LayoutSlice] reorderLayouts 失败:', error);
                 set({ layoutError: error.message || '重排布局失败', layoutLoading: false });
             }
         },
@@ -294,7 +294,7 @@ export function createLayoutSlice(
                 }, createSliceMeta('layout.batchUpdateLayouts'));
                 set({ layoutLoading: false });
             } catch (error: any) {
-                console.error('[LayoutSlice] batchUpdateLayouts 失败:', error);
+                devError('[LayoutSlice] batchUpdateLayouts 失败:', error);
                 set({ layoutError: error.message || '批量更新布局失败', layoutLoading: false });
             }
         },
@@ -314,7 +314,7 @@ export function createLayoutSlice(
                 }, createSliceMeta('layout.batchDeleteLayouts'));
                 set({ layoutLoading: false });
             } catch (error: any) {
-                console.error('[LayoutSlice] batchDeleteLayouts 失败:', error);
+                devError('[LayoutSlice] batchDeleteLayouts 失败:', error);
                 set({ layoutError: error.message || '批量删除布局失败', layoutLoading: false });
             }
         },
@@ -338,7 +338,7 @@ export function createLayoutSlice(
                 }, createSliceMeta('layout.moveLayoutToParent'));
                 set({ layoutLoading: false });
             } catch (error: any) {
-                console.error('[LayoutSlice] moveLayoutToParent 失败:', error);
+                devError('[LayoutSlice] moveLayoutToParent 失败:', error);
                 set({ layoutError: error.message || '移动布局失败', layoutLoading: false });
             }
         },
@@ -362,7 +362,7 @@ export function createLayoutSlice(
                 }, createSliceMeta('layout.addViewInstanceToLayout'));
                 set({ layoutLoading: false });
             } catch (error: any) {
-                console.error('[LayoutSlice] addViewInstanceToLayout 失败:', error);
+                devError('[LayoutSlice] addViewInstanceToLayout 失败:', error);
                 set({ layoutError: error.message || '添加视图实例失败', layoutLoading: false });
             }
         },
@@ -384,7 +384,7 @@ export function createLayoutSlice(
                 }, createSliceMeta('layout.removeViewInstanceFromLayout'));
                 set({ layoutLoading: false });
             } catch (error: any) {
-                console.error('[LayoutSlice] removeViewInstanceFromLayout 失败:', error);
+                devError('[LayoutSlice] removeViewInstanceFromLayout 失败:', error);
                 set({ layoutError: error.message || '移除视图实例失败', layoutLoading: false });
             }
         },
@@ -406,7 +406,7 @@ export function createLayoutSlice(
                 }, createSliceMeta('layout.reorderViewInstancesInLayout'));
                 set({ layoutLoading: false });
             } catch (error: any) {
-                console.error('[LayoutSlice] reorderViewInstancesInLayout 失败:', error);
+                devError('[LayoutSlice] reorderViewInstancesInLayout 失败:', error);
                 set({ layoutError: error.message || '重排视图实例失败', layoutLoading: false });
             }
         },

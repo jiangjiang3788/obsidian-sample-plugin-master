@@ -24,6 +24,7 @@ import type { StateCreator } from 'zustand';
 import type { ThinkSettings, InputSettings } from '@core/public';
 import type { AiSettings } from '@core/public';
 import type { SettingsRepository } from '@core/public';
+import { devError } from '@core/public';
 
 // ============== 类型定义 ==============
 
@@ -88,7 +89,7 @@ export function createSettingsSlice(
         setFloatingTimerEnabled: async (enabled: boolean): Promise<void> => {
             const state = get();
             if (!state.isInitialized) {
-                console.error('[SettingsSlice] Store 未初始化');
+                devError('[SettingsSlice] Store 未初始化');
                 return;
             }
 
@@ -105,7 +106,7 @@ export function createSettingsSlice(
                 
                 set({ settingsLoading: false });
             } catch (error: any) {
-                console.error('[SettingsSlice] setFloatingTimerEnabled 失败:', error);
+                devError('[SettingsSlice] setFloatingTimerEnabled 失败:', error);
                 set({ 
                     settingsError: error.message || '设置悬浮计时器状态失败',
                     settingsLoading: false 
@@ -118,7 +119,7 @@ export function createSettingsSlice(
         updateInputSettings: async (updates: Partial<InputSettings>): Promise<void> => {
             const state = get();
             if (!state.isInitialized) {
-                console.error('[SettingsSlice] Store 未初始化');
+                devError('[SettingsSlice] Store 未初始化');
                 return;
             }
 
@@ -131,7 +132,7 @@ export function createSettingsSlice(
                 });
                 set({ settingsLoading: false });
             } catch (error: any) {
-                console.error('[SettingsSlice] updateInputSettings 失败:', error);
+                devError('[SettingsSlice] updateInputSettings 失败:', error);
                 set({ 
                     settingsError: error.message || '更新输入设置失败',
                     settingsLoading: false 
@@ -144,7 +145,7 @@ export function createSettingsSlice(
         updateAiSettings: async (aiSettings: AiSettings): Promise<void> => {
             const state = get();
             if (!state.isInitialized) {
-                console.error('[SettingsSlice] Store 未初始化');
+                devError('[SettingsSlice] Store 未初始化');
                 return;
             }
 
@@ -157,7 +158,7 @@ export function createSettingsSlice(
                 });
                 set({ settingsLoading: false });
             } catch (error: any) {
-                console.error('[SettingsSlice] updateAiSettings 失败:', error);
+                devError('[SettingsSlice] updateAiSettings 失败:', error);
                 set({ 
                     settingsError: error.message || 'AI 设置更新失败',
                     settingsLoading: false 
@@ -180,7 +181,7 @@ export function createSettingsSlice(
                 });
                 set({ settingsLoading: false });
             } catch (error: any) {
-                console.error('[SettingsSlice] updateActiveThemePaths 失败:', error);
+                devError('[SettingsSlice] updateActiveThemePaths 失败:', error);
                 set({ settingsError: error.message || '更新活跃主题路径失败', settingsLoading: false });
             }
         },
@@ -203,7 +204,7 @@ export function createSettingsSlice(
                 });
                 set({ settingsLoading: false });
             } catch (error: any) {
-                console.error('[SettingsSlice] addActiveThemePath 失败:', error);
+                devError('[SettingsSlice] addActiveThemePath 失败:', error);
                 set({ settingsError: error.message || '添加活跃主题路径失败', settingsLoading: false });
             }
         },
@@ -223,7 +224,7 @@ export function createSettingsSlice(
                 });
                 set({ settingsLoading: false });
             } catch (error: any) {
-                console.error('[SettingsSlice] removeActiveThemePath 失败:', error);
+                devError('[SettingsSlice] removeActiveThemePath 失败:', error);
                 set({ settingsError: error.message || '移除活跃主题路径失败', settingsLoading: false });
             }
         },
@@ -233,7 +234,7 @@ export function createSettingsSlice(
         updateSettings: async (mutator: (draft: ThinkSettings) => void): Promise<void> => {
             const state = get();
             if (!state.isInitialized) {
-                console.error('[SettingsSlice] Store 未初始化，无法更新设置');
+                devError('[SettingsSlice] Store 未初始化，无法更新设置');
                 return;
             }
 
@@ -244,7 +245,7 @@ export function createSettingsSlice(
                 await settingsRepository.update(mutator);
                 set({ settingsLoading: false });
             } catch (error: any) {
-                console.error('[SettingsSlice] updateSettings 失败:', error);
+                devError('[SettingsSlice] updateSettings 失败:', error);
                 set({ 
                     settingsError: error.message || '更新设置失败',
                     settingsLoading: false 
@@ -265,7 +266,7 @@ export function createSettingsSlice(
                 });
                 set({ settingsLoading: false });
             } catch (error: any) {
-                console.error('[SettingsSlice] batchUpdateSettings 失败:', error);
+                devError('[SettingsSlice] batchUpdateSettings 失败:', error);
                 set({ settingsError: error.message || '批量更新设置失败', settingsLoading: false });
             }
         },

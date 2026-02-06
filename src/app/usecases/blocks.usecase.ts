@@ -16,6 +16,7 @@
 
 import type { BlockTemplate } from '@core/public';
 import type { AppStoreApi } from './index';
+import { devError } from '@core/public';
 
 /**
  * Block 用例类
@@ -38,13 +39,13 @@ export class BlocksUseCase {
             const state = this.store.getState();
             
             if (!state.isInitialized) {
-                console.error('[BlocksUseCase] Store 未初始化，无法重排序 Block');
+                devError('[BlocksUseCase] Store 未初始化，无法重排序 Block');
                 return;
             }
             
             await state.reorderBlocks(activeId, overId);
         } catch (error) {
-            console.error('[BlocksUseCase] reorderBlocks 失败:', error);
+            devError('[BlocksUseCase] reorderBlocks 失败:', error);
             throw error;
         }
     }
@@ -59,13 +60,13 @@ export class BlocksUseCase {
             const state = this.store.getState();
             
             if (!state.isInitialized) {
-                console.error('[BlocksUseCase] Store 未初始化，无法添加 Block');
+                devError('[BlocksUseCase] Store 未初始化，无法添加 Block');
                 return undefined;
             }
             
             return await state.addBlock(name);
         } catch (error) {
-            console.error('[BlocksUseCase] addBlock 失败:', error);
+            devError('[BlocksUseCase] addBlock 失败:', error);
             throw error;
         }
     }
@@ -80,13 +81,13 @@ export class BlocksUseCase {
             const state = this.store.getState();
             
             if (!state.isInitialized) {
-                console.error('[BlocksUseCase] Store 未初始化，无法更新 Block');
+                devError('[BlocksUseCase] Store 未初始化，无法更新 Block');
                 return;
             }
             
             await state.updateBlock(id, updates);
         } catch (error) {
-            console.error('[BlocksUseCase] updateBlock 失败:', error);
+            devError('[BlocksUseCase] updateBlock 失败:', error);
             throw error;
         }
     }
@@ -100,13 +101,13 @@ export class BlocksUseCase {
             const state = this.store.getState();
             
             if (!state.isInitialized) {
-                console.error('[BlocksUseCase] Store 未初始化，无法删除 Block');
+                devError('[BlocksUseCase] Store 未初始化，无法删除 Block');
                 return;
             }
             
             await state.deleteBlock(id);
         } catch (error) {
-            console.error('[BlocksUseCase] deleteBlock 失败:', error);
+            devError('[BlocksUseCase] deleteBlock 失败:', error);
             throw error;
         }
     }
@@ -121,13 +122,13 @@ export class BlocksUseCase {
             const state = this.store.getState();
             
             if (!state.isInitialized) {
-                console.error('[BlocksUseCase] Store 未初始化，无法复制 Block');
+                devError('[BlocksUseCase] Store 未初始化，无法复制 Block');
                 return undefined;
             }
             
             return await state.duplicateBlock(id);
         } catch (error) {
-            console.error('[BlocksUseCase] duplicateBlock 失败:', error);
+            devError('[BlocksUseCase] duplicateBlock 失败:', error);
             throw error;
         }
     }
@@ -142,13 +143,13 @@ export class BlocksUseCase {
             const state = this.store.getState();
             
             if (!state.isInitialized) {
-                console.error('[BlocksUseCase] Store 未初始化，无法移动 Block');
+                devError('[BlocksUseCase] Store 未初始化，无法移动 Block');
                 return;
             }
             
             await state.moveBlock(id, direction);
         } catch (error) {
-            console.error('[BlocksUseCase] moveBlock 失败:', error);
+            devError('[BlocksUseCase] moveBlock 失败:', error);
             throw error;
         }
     }

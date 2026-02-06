@@ -1,4 +1,5 @@
 import 'reflect-metadata';
+import { devLog, devError } from './utils/devLogger';
 
 /**
  * 确保 reflect-metadata 正确加载
@@ -6,16 +7,16 @@ import 'reflect-metadata';
  */
 export function ensureReflectMetadata(): void {
     if (typeof Reflect === 'undefined') {
-        console.error('[ThinkPlugin] Reflect 对象未定义!');
+        devError('[ThinkPlugin] Reflect 对象未定义!');
         throw new Error('Reflect object is not available');
     }
 
     if (typeof Reflect.getOwnMetadata !== 'function') {
-        console.error('[ThinkPlugin] Reflect.getOwnMetadata 方法不可用!');
-        console.log('[ThinkPlugin] 可用的 Reflect 方法:', Object.getOwnPropertyNames(Reflect));
+        devError('[ThinkPlugin] Reflect.getOwnMetadata 方法不可用!');
+        devLog('[ThinkPlugin] 可用的 Reflect 方法:', Object.getOwnPropertyNames(Reflect));
         throw new Error('Reflect.getOwnMetadata is not a function - reflect-metadata polyfill not properly loaded');
     }
 
     // 在开发环境下可以开启日志，生产环境可注释掉
-    // console.log('[ThinkPlugin] reflect-metadata 已正确加载');
+    // devLog('[ThinkPlugin] reflect-metadata 已正确加载');
 }

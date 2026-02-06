@@ -22,6 +22,7 @@ import type { Item } from '@/core/types/schema';
 import type { ISettingsProvider } from '@/core/services/types';
 import { SettingsProviderToken } from '@/core/services/types';
 import { dayjs } from '@core/utils/date';
+import { devLog, devError } from '../utils/devLogger';
 
 // ============== Types ==============
 
@@ -199,7 +200,7 @@ export class AiChatService {
                     content: `以下是与用户问题相关的个人记录（共 ${retrievalCount} 条）：\n\n${contextStr}\n\n请基于这些记录回答用户的问题。`,
                 });
 
-                console.log(`AiChatService: 检索到 ${retrievalCount} 条相关记录`);
+                devLog(`AiChatService: 检索到 ${retrievalCount} 条相关记录`);
             }
         }
 
@@ -246,7 +247,7 @@ export class AiChatService {
                 retrievalCount,
             };
         } catch (e: any) {
-            console.error('AiChatService: 请求失败', e);
+            devError('AiChatService: 请求失败', e);
             throw new Error(`AI 请求失败: ${e.message || e}`);
         }
     }

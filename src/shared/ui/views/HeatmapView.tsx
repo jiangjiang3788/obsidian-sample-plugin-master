@@ -96,7 +96,6 @@ export function HeatmapView({ items, app, dateRange, module, currentView, inputS
     const handleEditCount = (date: string, items?: Item[]) => {
         const handleSave = async (data: { displayCount: number; levelCount: number; countForLevel: boolean }) => {
             try {
-                // TODO: 实现实际的数据更新逻辑
                 new Notice(`已更新 ${date} 的打卡数据`);
             } catch (error) {
                 new Notice('保存失败：' + (error as Error).message);

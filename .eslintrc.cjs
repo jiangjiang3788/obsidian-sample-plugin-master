@@ -18,6 +18,8 @@ module.exports = {
   // ✅ 核心：把 architecture 规则注入到 root 里
   // architecture.rules / architecture.overrides 会与本文件合并
   rules: {
+    // 禁止在业务代码中直接使用 console（统一走 devLogger）
+    'no-console': 'warn',
     ...(architecture.rules || {}),
   },
 
@@ -28,9 +30,32 @@ module.exports = {
     // 这里建议只放“不是架构约束”的 lint 规则，避免架构规则散落多处。
 
     // 示例：你可以在这里补充一般性 TS/React 规则，不涉及依赖边界。
+
+    // ✅ 白名单：允许在 devLogger/performance 内部使用 console
+    {
+      files: ["src/core/utils/devLogger.ts", "src/shared/utils/performance.ts"],
+      rules: {
+        "no-console": "off",
+      },
+    },
+
+    // ✅ 关键路径：严格禁止 console（这些目录必须保持 0 console）
+    {
+      files: [
+        "src/main.ts",
+        "src/app/usecases/**/*.{ts,tsx}",
+        "src/app/store/slices/**/*.{ts,tsx}",
+        "src/core/ai/**/*.{ts,tsx}",
+      ],
+      rules: {
+        "no-console": "error",
+      },
+    },
     {
       files: ["src/**/*.{ts,tsx}"],
       rules: {
+    // 禁止在业务代码中直接使用 console（统一走 devLogger）
+    'no-console': 'warn',
         // 例：你如果不想太严格，可以关掉某些推荐项
         // "@typescript-eslint/no-explicit-any": "warn",
       },

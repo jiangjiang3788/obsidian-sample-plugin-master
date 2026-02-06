@@ -1,6 +1,7 @@
 // src/app/capabilities/capabilities/timer.ts
 import type { App } from 'obsidian';
 import type { ThinkSettings } from '@core/public';
+import { devWarn } from '@core/public';
 
 export interface TimerCapability {
     /**
@@ -13,10 +14,10 @@ export interface TimerCapability {
 export function createTimerCapability(_app: App, _settings: ThinkSettings): TimerCapability {
     return {
         start() {
-            console.warn('[TimerCapability] start() not wired yet. Wire in main/app composition root.');
+            devWarn('[TimerCapability] start() not wired yet. Wire in main/app composition root.');
         },
         stop() {
-            console.warn('[TimerCapability] stop() not wired yet. Wire in main/app composition root.');
+            devWarn('[TimerCapability] stop() not wired yet. Wire in main/app composition root.');
         },
     };
 }

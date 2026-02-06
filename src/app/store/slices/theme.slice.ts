@@ -22,7 +22,7 @@ import type { StateCreator } from 'zustand';
 import type { ThinkSettings, ThemeDefinition, ThemeOverride } from '@core/public';
 import type { SettingsRepository } from '@core/public';
 import type { ActiveStatus } from '@core/public';
-import { generateId } from '@core/public';
+import {generateId, devWarn, devError} from '@core/public';
 import { createSliceMeta } from '@core/public';
 
 // ============== 类型定义 ==============
@@ -90,19 +90,19 @@ export function createThemeSlice(
         addTheme: async (path: string): Promise<ThemeDefinition | null> => {
             const state = get();
             if (!state.isInitialized) {
-                console.error('[ThemeSlice] Store 未初始化');
+                devError('[ThemeSlice] Store 未初始化');
                 return null;
             }
 
             if (!path) {
-                console.warn('[ThemeSlice] 主题路径不能为空');
+                devWarn('[ThemeSlice] 主题路径不能为空');
                 return null;
             }
 
             // 检查路径是否已存在
             const existingThemes = state.settings.inputSettings?.themes || [];
             if (existingThemes.some(t => t.path === path)) {
-                console.warn(`[ThemeSlice] 主题路径 "${path}" 已存在`);
+                devWarn(`[ThemeSlice] 主题路径 "${path}" 已存在`);
                 return null;
             }
 
@@ -127,7 +127,7 @@ export function createThemeSlice(
                 set({ themeLoading: false });
                 return newTheme;
             } catch (error: any) {
-                console.error('[ThemeSlice] addTheme 失败:', error);
+                devError('[ThemeSlice] addTheme 失败:', error);
                 set({ themeError: error.message || '添加主题失败', themeLoading: false });
                 return null;
             }
@@ -136,7 +136,7 @@ export function createThemeSlice(
         updateTheme: async (id: string, updates: Partial<ThemeDefinition>): Promise<void> => {
             const state = get();
             if (!state.isInitialized) {
-                console.error('[ThemeSlice] Store 未初始化');
+                devError('[ThemeSlice] Store 未初始化');
                 return;
             }
 
@@ -144,7 +144,7 @@ export function createThemeSlice(
             if (updates.path) {
                 const existingThemes = state.settings.inputSettings?.themes || [];
                 if (existingThemes.some(t => t.path === updates.path && t.id !== id)) {
-                    console.warn(`[ThemeSlice] 主题路径 "${updates.path}" 已存在`);
+                    devWarn(`[ThemeSlice] 主题路径 "${updates.path}" 已存在`);
                     return;
                 }
             }
@@ -162,7 +162,7 @@ export function createThemeSlice(
                 // S2: settings 由 ServiceManager 订阅 SettingsRepository 统一更新
                 set({ themeLoading: false });
             } catch (error: any) {
-                console.error('[ThemeSlice] updateTheme 失败:', error);
+                devError('[ThemeSlice] updateTheme 失败:', error);
                 set({ themeError: error.message || '更新主题失败', themeLoading: false });
             }
         },
@@ -170,7 +170,7 @@ export function createThemeSlice(
         deleteTheme: async (id: string): Promise<void> => {
             const state = get();
             if (!state.isInitialized) {
-                console.error('[ThemeSlice] Store 未初始化');
+                devError('[ThemeSlice] Store 未初始化');
                 return;
             }
 
@@ -187,7 +187,7 @@ export function createThemeSlice(
                 // S2: settings 由 ServiceManager 订阅 SettingsRepository 统一更新
                 set({ themeLoading: false });
             } catch (error: any) {
-                console.error('[ThemeSlice] deleteTheme 失败:', error);
+                devError('[ThemeSlice] deleteTheme 失败:', error);
                 set({ themeError: error.message || '删除主题失败', themeLoading: false });
             }
         },
@@ -213,7 +213,7 @@ export function createThemeSlice(
                 // S2: settings 由 ServiceManager 订阅 SettingsRepository 统一更新
                 set({ themeLoading: false });
             } catch (error: any) {
-                console.error('[ThemeSlice] batchUpdateThemes 失败:', error);
+                devError('[ThemeSlice] batchUpdateThemes 失败:', error);
                 set({ themeError: error.message || '批量更新主题失败', themeLoading: false });
             }
         },
@@ -234,7 +234,7 @@ export function createThemeSlice(
                 // S2: settings 由 ServiceManager 订阅 SettingsRepository 统一更新
                 set({ themeLoading: false });
             } catch (error: any) {
-                console.error('[ThemeSlice] batchDeleteThemes 失败:', error);
+                devError('[ThemeSlice] batchDeleteThemes 失败:', error);
                 set({ themeError: error.message || '批量删除主题失败', themeLoading: false });
             }
         },
@@ -269,7 +269,7 @@ export function createThemeSlice(
                 // S2: settings 由 ServiceManager 订阅 SettingsRepository 统一更新
                 set({ themeLoading: false });
             } catch (error: any) {
-                console.error('[ThemeSlice] batchUpdateThemeStatus 失败:', error);
+                devError('[ThemeSlice] batchUpdateThemeStatus 失败:', error);
                 set({ themeError: error.message || '批量更新主题状态失败', themeLoading: false });
             }
         },
@@ -293,7 +293,7 @@ export function createThemeSlice(
                 // S2: settings 由 ServiceManager 订阅 SettingsRepository 统一更新
                 set({ themeLoading: false });
             } catch (error: any) {
-                console.error('[ThemeSlice] batchUpdateThemeIcon 失败:', error);
+                devError('[ThemeSlice] batchUpdateThemeIcon 失败:', error);
                 set({ themeError: error.message || '批量更新主题图标失败', themeLoading: false });
             }
         },
@@ -333,7 +333,7 @@ export function createThemeSlice(
                 set({ themeLoading: false });
                 return resultOverride;
             } catch (error: any) {
-                console.error('[ThemeSlice] upsertOverride 失败:', error);
+                devError('[ThemeSlice] upsertOverride 失败:', error);
                 set({ themeError: error.message || '更新覆盖配置失败', themeLoading: false });
                 return null;
             }
@@ -355,7 +355,7 @@ export function createThemeSlice(
                 // S2: settings 由 ServiceManager 订阅 SettingsRepository 统一更新
                 set({ themeLoading: false });
             } catch (error: any) {
-                console.error('[ThemeSlice] deleteOverride 失败:', error);
+                devError('[ThemeSlice] deleteOverride 失败:', error);
                 set({ themeError: error.message || '删除覆盖配置失败', themeLoading: false });
             }
         },
@@ -390,7 +390,7 @@ export function createThemeSlice(
                 // S2: settings 由 ServiceManager 订阅 SettingsRepository 统一更新
                 set({ themeLoading: false });
             } catch (error: any) {
-                console.error('[ThemeSlice] batchUpsertOverrides 失败:', error);
+                devError('[ThemeSlice] batchUpsertOverrides 失败:', error);
                 set({ themeError: error.message || '批量更新覆盖配置失败', themeLoading: false });
             }
         },
@@ -412,7 +412,7 @@ export function createThemeSlice(
                 // S2: settings 由 ServiceManager 订阅 SettingsRepository 统一更新
                 set({ themeLoading: false });
             } catch (error: any) {
-                console.error('[ThemeSlice] batchDeleteOverrides 失败:', error);
+                devError('[ThemeSlice] batchDeleteOverrides 失败:', error);
                 set({ themeError: error.message || '批量删除覆盖配置失败', themeLoading: false });
             }
         },
@@ -463,7 +463,7 @@ export function createThemeSlice(
                 // S2: settings 由 ServiceManager 订阅 SettingsRepository 统一更新
                 set({ themeLoading: false });
             } catch (error: any) {
-                console.error('[ThemeSlice] batchSetOverrideStatus 失败:', error);
+                devError('[ThemeSlice] batchSetOverrideStatus 失败:', error);
                 set({ themeError: error.message || '批量设置覆盖状态失败', themeLoading: false });
             }
         },

@@ -24,7 +24,7 @@ import type { StateCreator } from 'zustand';
 import type { ZustandAppStore } from '../useAppStore';
 import type { SettingsRepository } from '@core/public';
 import type { BlockTemplate, ThemeOverride } from '@core/public';
-import { generateId } from '@core/public';
+import {generateId, devError} from '@core/public';
 
 // ============== 类型定义 ==============
 
@@ -53,7 +53,7 @@ export function createBlocksSlice(
         addBlock: async (name: string): Promise<BlockTemplate | undefined> => {
             const state = get();
             if (!state.isInitialized) {
-                console.error('[BlocksSlice] Store 未初始化，无法添加 Block');
+                devError('[BlocksSlice] Store 未初始化，无法添加 Block');
                 return undefined;
             }
 
@@ -83,7 +83,7 @@ export function createBlocksSlice(
                 set({ isLoading: false });
                 return newBlock;
             } catch (error: any) {
-                console.error('[BlocksSlice] addBlock 失败:', error);
+                devError('[BlocksSlice] addBlock 失败:', error);
                 set({ error: error.message || '添加 Block 失败', isLoading: false });
                 return undefined;
             }
@@ -95,7 +95,7 @@ export function createBlocksSlice(
         updateBlock: async (id: string, updates: Partial<BlockTemplate>): Promise<void> => {
             const state = get();
             if (!state.isInitialized) {
-                console.error('[BlocksSlice] Store 未初始化，无法更新 Block');
+                devError('[BlocksSlice] Store 未初始化，无法更新 Block');
                 return;
             }
 
@@ -113,7 +113,7 @@ export function createBlocksSlice(
 
                 set({ isLoading: false });
             } catch (error: any) {
-                console.error('[BlocksSlice] updateBlock 失败:', error);
+                devError('[BlocksSlice] updateBlock 失败:', error);
                 set({ error: error.message || '更新 Block 失败', isLoading: false });
             }
         },
@@ -124,7 +124,7 @@ export function createBlocksSlice(
         deleteBlock: async (id: string): Promise<void> => {
             const state = get();
             if (!state.isInitialized) {
-                console.error('[BlocksSlice] Store 未初始化，无法删除 Block');
+                devError('[BlocksSlice] Store 未初始化，无法删除 Block');
                 return;
             }
 
@@ -148,7 +148,7 @@ export function createBlocksSlice(
 
                 set({ isLoading: false });
             } catch (error: any) {
-                console.error('[BlocksSlice] deleteBlock 失败:', error);
+                devError('[BlocksSlice] deleteBlock 失败:', error);
                 set({ error: error.message || '删除 Block 失败', isLoading: false });
             }
         },
@@ -159,14 +159,14 @@ export function createBlocksSlice(
         duplicateBlock: async (id: string): Promise<BlockTemplate | undefined> => {
             const state = get();
             if (!state.isInitialized) {
-                console.error('[BlocksSlice] Store 未初始化，无法复制 Block');
+                devError('[BlocksSlice] Store 未初始化，无法复制 Block');
                 return undefined;
             }
 
             const blocks = state.settings.inputSettings?.blocks || [];
             const source = blocks.find(b => b.id === id);
             if (!source) {
-                console.error('[BlocksSlice] 找不到要复制的 Block:', id);
+                devError('[BlocksSlice] 找不到要复制的 Block:', id);
                 return undefined;
             }
 
@@ -193,7 +193,7 @@ export function createBlocksSlice(
                 set({ isLoading: false });
                 return newBlock;
             } catch (error: any) {
-                console.error('[BlocksSlice] duplicateBlock 失败:', error);
+                devError('[BlocksSlice] duplicateBlock 失败:', error);
                 set({ error: error.message || '复制 Block 失败', isLoading: false });
                 return undefined;
             }
@@ -205,7 +205,7 @@ export function createBlocksSlice(
         moveBlock: async (id: string, direction: 'up' | 'down'): Promise<void> => {
             const state = get();
             if (!state.isInitialized) {
-                console.error('[BlocksSlice] Store 未初始化，无法移动 Block');
+                devError('[BlocksSlice] Store 未初始化，无法移动 Block');
                 return;
             }
 
@@ -227,7 +227,7 @@ export function createBlocksSlice(
 
                 set({ isLoading: false });
             } catch (error: any) {
-                console.error('[BlocksSlice] moveBlock 失败:', error);
+                devError('[BlocksSlice] moveBlock 失败:', error);
                 set({ error: error.message || '移动 Block 失败', isLoading: false });
             }
         },

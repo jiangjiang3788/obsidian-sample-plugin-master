@@ -31,11 +31,12 @@ import type { IThemeMatcher } from '@core/types/theme';
 import { THEME_MATCHER_TOKEN } from '@core/types/theme';
 import type { IPluginStorage } from '@core/services/StorageService';
 import { STORAGE_TOKEN } from '@core/services/StorageService';
+import { devWarn, devError } from '../utils/devLogger';
 import {
-  CacheV1,
-  CURRENT_CACHE_SCHEMA_VERSION,
-  toCachedItem,
-  fromCachedItem
+    CacheV1,
+    CURRENT_CACHE_SCHEMA_VERSION,
+    toCachedItem,
+    fromCachedItem,
 } from '@/core/types/cache';
 
 @singleton()
@@ -255,7 +256,7 @@ export class DataStore {
 
       return fileItems;
     } catch (err) {
-      console.error('ThinkPlugin: 扫描文件失败', file.path, err);
+      devError('ThinkPlugin: 扫描文件失败', file.path, err);
       return [];
     }
   }
@@ -297,7 +298,7 @@ export class DataStore {
 
   private _emitChange() {
     this.changeListeners.forEach(fn => {
-      try { fn(); } catch (e) { console.error('ThinkPlugin: 数据变化通知错误', e); }
+      try { fn(); } catch (e) { devError('ThinkPlugin: 数据变化通知错误', e); }
     });
   }
   private _emitThrottled = throttle(() => this._emitChange(), 250);
@@ -315,7 +316,7 @@ export class DataStore {
           await this.storage.writeJSON('Think/cache.json', this.cache);
         }
       } catch (e) {
-        console.warn('ThinkPlugin: 写入缓存失败', e);
+        devWarn('ThinkPlugin: 写入缓存失败', e);
       }
     }, delay);
   }
@@ -338,7 +339,7 @@ export class DataStore {
       history.push(record);
       await this.storage.writeJSON(path, history);
     } catch (e) {
-      console.warn('ThinkPlugin: 写入性能报告失败', e);
+      devWarn('ThinkPlugin: 写入性能报告失败', e);
     }
   }
 }

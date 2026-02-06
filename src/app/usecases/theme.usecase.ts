@@ -41,6 +41,7 @@
 import type { ThemeDefinition, ThemeOverride } from '@core/public';
 import type { ActiveStatus } from '@core/public';
 import type { AppStoreApi } from './index';
+import { devError } from '@core/public';
 
 /**
  * 主题用例类
@@ -81,13 +82,13 @@ export class ThemeUseCase {
             const state = this.store.getState();
             
             if (!state.isInitialized) {
-                console.error('[ThemeUseCase] Store 未初始化');
+                devError('[ThemeUseCase] Store 未初始化');
                 return null;
             }
             
             return await state.addTheme(path);
         } catch (error) {
-            console.error('[ThemeUseCase] addTheme 失败:', error);
+            devError('[ThemeUseCase] addTheme 失败:', error);
             throw error;
         }
     }
@@ -102,13 +103,13 @@ export class ThemeUseCase {
             const state = this.store.getState();
             
             if (!state.isInitialized) {
-                console.error('[ThemeUseCase] Store 未初始化');
+                devError('[ThemeUseCase] Store 未初始化');
                 return;
             }
             
             await state.updateTheme(id, updates);
         } catch (error) {
-            console.error('[ThemeUseCase] updateTheme 失败:', error);
+            devError('[ThemeUseCase] updateTheme 失败:', error);
             throw error;
         }
     }
@@ -122,13 +123,13 @@ export class ThemeUseCase {
             const state = this.store.getState();
             
             if (!state.isInitialized) {
-                console.error('[ThemeUseCase] Store 未初始化');
+                devError('[ThemeUseCase] Store 未初始化');
                 return;
             }
             
             await state.deleteTheme(id);
         } catch (error) {
-            console.error('[ThemeUseCase] deleteTheme 失败:', error);
+            devError('[ThemeUseCase] deleteTheme 失败:', error);
             throw error;
         }
     }
@@ -148,7 +149,7 @@ export class ThemeUseCase {
             
             await state.batchUpdateThemes(themeIds, updates);
         } catch (error) {
-            console.error('[ThemeUseCase] batchUpdateThemes 失败:', error);
+            devError('[ThemeUseCase] batchUpdateThemes 失败:', error);
             throw error;
         }
     }
@@ -165,7 +166,7 @@ export class ThemeUseCase {
             
             await state.batchDeleteThemes(themeIds);
         } catch (error) {
-            console.error('[ThemeUseCase] batchDeleteThemes 失败:', error);
+            devError('[ThemeUseCase] batchDeleteThemes 失败:', error);
             throw error;
         }
     }
@@ -183,7 +184,7 @@ export class ThemeUseCase {
             
             await state.batchUpdateThemeStatus(themeIds, status);
         } catch (error) {
-            console.error('[ThemeUseCase] batchUpdateThemeStatus 失败:', error);
+            devError('[ThemeUseCase] batchUpdateThemeStatus 失败:', error);
             throw error;
         }
     }
@@ -201,7 +202,7 @@ export class ThemeUseCase {
             
             await state.batchUpdateThemeIcon(themeIds, icon);
         } catch (error) {
-            console.error('[ThemeUseCase] batchUpdateThemeIcon 失败:', error);
+            devError('[ThemeUseCase] batchUpdateThemeIcon 失败:', error);
             throw error;
         }
     }
@@ -221,7 +222,7 @@ export class ThemeUseCase {
             
             return await state.upsertOverride(overrideData);
         } catch (error) {
-            console.error('[ThemeUseCase] upsertOverride 失败:', error);
+            devError('[ThemeUseCase] upsertOverride 失败:', error);
             throw error;
         }
     }
@@ -239,7 +240,7 @@ export class ThemeUseCase {
             
             await state.deleteOverride(blockId, themeId);
         } catch (error) {
-            console.error('[ThemeUseCase] deleteOverride 失败:', error);
+            devError('[ThemeUseCase] deleteOverride 失败:', error);
             throw error;
         }
     }
@@ -256,7 +257,7 @@ export class ThemeUseCase {
             
             await state.batchUpsertOverrides(overrides);
         } catch (error) {
-            console.error('[ThemeUseCase] batchUpsertOverrides 失败:', error);
+            devError('[ThemeUseCase] batchUpsertOverrides 失败:', error);
             throw error;
         }
     }
@@ -273,7 +274,7 @@ export class ThemeUseCase {
             
             await state.batchDeleteOverrides(selections);
         } catch (error) {
-            console.error('[ThemeUseCase] batchDeleteOverrides 失败:', error);
+            devError('[ThemeUseCase] batchDeleteOverrides 失败:', error);
             throw error;
         }
     }
@@ -294,7 +295,7 @@ export class ThemeUseCase {
             
             await state.batchSetOverrideStatus(cells, status);
         } catch (error) {
-            console.error('[ThemeUseCase] batchSetOverrideStatus 失败:', error);
+            devError('[ThemeUseCase] batchSetOverrideStatus 失败:', error);
             throw error;
         }
     }
@@ -312,7 +313,7 @@ export class ThemeUseCase {
             const state = this.store.getState();
             return state.getThemes();
         } catch (error) {
-            console.error('[ThemeUseCase] getThemes 失败:', error);
+            devError('[ThemeUseCase] getThemes 失败:', error);
             return [];
         }
     }
@@ -327,7 +328,7 @@ export class ThemeUseCase {
             const state = this.store.getState();
             return state.getTheme(id);
         } catch (error) {
-            console.error('[ThemeUseCase] getTheme 失败:', error);
+            devError('[ThemeUseCase] getTheme 失败:', error);
             return undefined;
         }
     }
@@ -341,7 +342,7 @@ export class ThemeUseCase {
             const state = this.store.getState();
             return state.getOverrides();
         } catch (error) {
-            console.error('[ThemeUseCase] getOverrides 失败:', error);
+            devError('[ThemeUseCase] getOverrides 失败:', error);
             return [];
         }
     }
@@ -357,7 +358,7 @@ export class ThemeUseCase {
             const state = this.store.getState();
             return state.getOverride(blockId, themeId);
         } catch (error) {
-            console.error('[ThemeUseCase] getOverride 失败:', error);
+            devError('[ThemeUseCase] getOverride 失败:', error);
             return undefined;
         }
     }

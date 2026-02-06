@@ -15,6 +15,7 @@ export * from './id';
 export * from './cellKey';
 export * from './dataAggregation';
 export * from './date';
+export * from './devLogger';
 export * from './exportUtils';
 export * from './heatmap';
 export * from './heatmapAggregation';

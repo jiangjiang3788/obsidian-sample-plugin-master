@@ -40,12 +40,7 @@ import CheckIcon from '@mui/icons-material/Check';
 import { createServices, useZustandAppStore, type Services, mountWithServices, unmountPreact } from '@/app/public';
 import { ThemeTreeSelect } from '@/shared/components/ThemeTreeSelect';
 import { ModalHeader } from '@shared/ui/components/ModalHeader';
-import { 
-    ChatSessionStore,
-    ChatSession, 
-    ChatMessage,
-    SessionFilters 
-} from '@core/public';
+import {ChatSessionStore, ChatSession, ChatMessage, SessionFilters, devLog, devError} from '@core/public';
 import { AiChatService, ChatResponse } from '@core/public';
 import { RetrievalService } from '@core/public';
 import type { OpenAIChatMessage } from '@core/public';
@@ -167,7 +162,7 @@ function AiChatModalContent({ app, closeModal, services }: AiChatModalContentPro
 
         // 确保检索索引已构建
         if (retrievalService.needsRebuild()) {
-            console.log('AiChatModal: 构建检索索引...');
+            devLog('AiChatModal: 构建检索索引...');
             retrievalService.buildIndex();
         }
 
@@ -275,7 +270,7 @@ function AiChatModalContent({ app, closeModal, services }: AiChatModalContentPro
             });
 
         } catch (e: any) {
-            console.error('AiChatModal: 发送失败', e);
+            devError('AiChatModal: 发送失败', e);
             setError(e.message || '发送失败');
             // 添加错误消息
             await sessionStore.appendMessage(sessionId, 'system', `❌ 错误: ${e.message || '发送失败'}`);
@@ -568,7 +563,7 @@ function MessageBubble({ message, app }: MessageBubbleProps) {
             setCopied(true);
             setTimeout(() => setCopied(false), 2000);
         } catch (err) {
-            console.error('复制失败:', err);
+            devError('复制失败:', err);
         }
     };
 
@@ -592,7 +587,7 @@ function MessageBubble({ message, app }: MessageBubbleProps) {
             sourcePath: '',
             cls: 'message-content',
         }).catch(err => {
-            console.error('MessageBubble: 渲染失败', err);
+            devError('MessageBubble: 渲染失败', err);
         });
 
         // 组件卸载时清理

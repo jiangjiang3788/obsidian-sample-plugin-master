@@ -20,6 +20,7 @@
 
 import type { AiSettings } from '@core/public';
 import type { AppStoreApi } from './index';
+import { devLog, devError } from '@core/public';
 
 /**
  * 设置用例类
@@ -41,7 +42,7 @@ export class SettingsUseCase {
             const state = this.store.getState();
             
             if (!state.isInitialized) {
-                console.error('[SettingsUseCase] Store 未初始化，无法设置悬浮计时器状态');
+                devError('[SettingsUseCase] Store 未初始化，无法设置悬浮计时器状态');
                 return;
             }
             
@@ -51,7 +52,7 @@ export class SettingsUseCase {
             // 当用户在设置中明确启用/禁用时，UI 状态应立即跟随
             state.ui.setTimerWidgetVisible(enabled);
         } catch (error) {
-            console.error('[SettingsUseCase] setFloatingTimerEnabled 失败:', error);
+            devError('[SettingsUseCase] setFloatingTimerEnabled 失败:', error);
             throw error;
         }
     }
@@ -64,23 +65,23 @@ export class SettingsUseCase {
             const state = this.store.getState();
             
             if (!state.isInitialized) {
-                console.error('[SettingsUseCase] Store 未初始化，无法切换计时器可见性');
+                devError('[SettingsUseCase] Store 未初始化，无法切换计时器可见性');
                 return;
             }
 
-            console.log("[计时器浮窗] 命令：toggleTimerWidgetVisibility 触发", { enabled: state.settings.floatingTimerEnabled, visible: state.ui.isTimerWidgetVisible });
+            devLog("[计时器浮窗] 命令：toggleTimerWidgetVisibility 触发", { enabled: state.settings.floatingTimerEnabled, visible: state.ui.isTimerWidgetVisible });
             
             if (!state.settings.floatingTimerEnabled) {
                 await state.setFloatingTimerEnabled(true);
                 state.ui.setTimerWidgetVisible(true);
-                console.log("[计时器浮窗] 未启用 -> 已启用并设为可见");
+                devLog("[计时器浮窗] 未启用 -> 已启用并设为可见");
                 return;
             } else {
                 state.ui.toggleTimerWidgetVisible();
-                console.log("[计时器浮窗] 已启用 -> 切换可见性为", state.ui.isTimerWidgetVisible);
+                devLog("[计时器浮窗] 已启用 -> 切换可见性为", state.ui.isTimerWidgetVisible);
             }
         } catch (error) {
-            console.error('[SettingsUseCase] toggleTimerWidgetVisibility 失败:', error);
+            devError('[SettingsUseCase] toggleTimerWidgetVisibility 失败:', error);
         }
     }
 
@@ -94,13 +95,13 @@ export class SettingsUseCase {
             const state = this.store.getState();
             
             if (!state.isInitialized) {
-                console.error('[SettingsUseCase] Store 未初始化，无法更新 AI 设置');
+                devError('[SettingsUseCase] Store 未初始化，无法更新 AI 设置');
                 return;
             }
             
             await state.updateAiSettings(aiSettings);
         } catch (error) {
-            console.error('[SettingsUseCase] updateAiSettings 失败:', error);
+            devError('[SettingsUseCase] updateAiSettings 失败:', error);
             throw error;
         }
     }
