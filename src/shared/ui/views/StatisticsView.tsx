@@ -110,6 +110,59 @@ export function StatisticsView({ items, app, dateRange, module, currentView, use
         return categoryConfigs.filter((c: CategoryConfig) => selectedCategories.includes(c.name));
     }, [categoryConfigs, selectedCategories]);
 
+    // [修复] 年视图相关的 useMemo 必须在组件顶层调用，否则切换 年/季/月/周/天 会破坏 Hooks 调用顺序，导致数据显示错乱
+    const isYearView = currentView === '年';
+    const year = startDate.year();
+
+    const yearlyWeekStructure = useMemo(() => {
+        if (!isYearView) return [];
+        const months: { month: number; weeks: number[] }[] = Array.from({ length: 12 }, (_, i) => ({
+            month: i + 1,
+            weeks: [],
+        }));
+        const totalWeeks = getWeeksInYear(year);
+
+        for (let week = 1; week <= totalWeeks; week++) {
+            const thursdayOfWeek = dayjs().year(year).isoWeek(week).day(4);
+            const monthIndex = thursdayOfWeek.month();
+            if (months[monthIndex]) {
+                months[monthIndex].weeks.push(week);
+            }
+        }
+        return months;
+    }, [isYearView, year]);
+
+    const processedData = useMemo(() => {
+        if (!isYearView) {
+            return { yearData: createPeriodData(filteredCategories), quartersData: [], monthsData: [], weeksData: [] };
+        }
+
+        const totalWeeks = getWeeksInYear(year);
+        const targetDate = dayjs().year(year);
+        const yearData = aggregateByYear(items, filteredCategories, targetDate, usePeriod);
+
+        const quartersData: PeriodData[] = [];
+        for (let q = 1; q <= 4; q++) {
+            const quarterDate = targetDate.quarter(q);
+            quartersData.push(aggregateByQuarter(items, filteredCategories, quarterDate, usePeriod));
+        }
+
+        const monthsData: PeriodData[] = [];
+        for (let m = 0; m < 12; m++) {
+            const monthDate = targetDate.month(m);
+            monthsData.push(aggregateByMonth(items, filteredCategories, monthDate, usePeriod));
+        }
+
+        const weeksData: PeriodData[] = [];
+        for (let w = 1; w <= totalWeeks; w++) {
+            const weekDate = targetDate.isoWeek(w);
+            weeksData.push(aggregateByWeek(items, filteredCategories, weekDate));
+        }
+
+        return { yearData, quartersData, monthsData, weeksData };
+    }, [isYearView, items, year, filteredCategories, usePeriod]);
+
+
 
     const handleCellClick = (cellIdentifier: any, _target: HTMLElement, blocks: Item[], title: string) => {
         console.log('点击单元格:', { cellIdentifier, title, blocksCount: blocks.length, blocks });
@@ -445,51 +498,8 @@ export function StatisticsView({ items, app, dateRange, module, currentView, use
 }
 
     // 年视图：保持原有的层级结构
-    const year = startDate.year();
-    const yearlyWeekStructure = useMemo(() => {
-        const months: { month: number; weeks: number[] }[] = Array.from({ length: 12 }, (_, i) => ({
-            month: i + 1,
-            weeks: [],
-        }));
-        const totalWeeks = getWeeksInYear(year);
-
-        for (let week = 1; week <= totalWeeks; week++) {
-            const thursdayOfWeek = dayjs().year(year).isoWeek(week).day(4);
-            const monthIndex = thursdayOfWeek.month();
-            if (months[monthIndex]) {
-                months[monthIndex].weeks.push(week);
-            }
-        }
-        return months;
-    }, [year]);
-
-    const processedData = useMemo(() => {
-        const totalWeeks = getWeeksInYear(year);
-        const targetDate = dayjs().year(year);
-        const yearData = aggregateByYear(items, filteredCategories, targetDate, usePeriod);
-
-        const quartersData: PeriodData[] = [];
-        for (let q = 1; q <= 4; q++) {
-            const quarterDate = targetDate.quarter(q);
-            quartersData.push(aggregateByQuarter(items, filteredCategories, quarterDate, usePeriod));
-        }
-
-        const monthsData: PeriodData[] = [];
-        for (let m = 0; m < 12; m++) {
-            const monthDate = targetDate.month(m);
-            monthsData.push(aggregateByMonth(items, filteredCategories, monthDate, usePeriod));
-        }
-
-        const weeksData: PeriodData[] = [];
-        for (let w = 1; w <= totalWeeks; w++) {
-            const weekDate = targetDate.isoWeek(w);
-            weeksData.push(aggregateByWeek(items, filteredCategories, weekDate));
-        }
-
-        return { yearData, quartersData, monthsData, weeksData };
-    }, [items, year, filteredCategories, usePeriod]);
-
-    return (
+    // [修复] yearlyWeekStructure / processedData 已在组件顶层 useMemo 计算，避免切换视图时 Hook 顺序变化
+return (
         <div class="statistics-view">
             <TopControls />
             <div class="sv-timeline">

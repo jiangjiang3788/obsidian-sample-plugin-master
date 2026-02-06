@@ -176,6 +176,13 @@ export function LayoutRenderer({ layout, dataStore, app, actionService, itemServ
     const [layoutDate, setLayoutDate] = useState(getInitialDate());
     const [selectedThemes, setSelectedThemes] = useState<string[]>(layout.selectedThemes || []); // [新增] 主题筛选状态
     const [selectedCategories, setSelectedCategories] = useState<string[]>(layout.selectedCategories || []); // [新增] 分类筛选状态
+
+    // [修复] 统一在组件顶层计算 dateRange，避免在循环/条件中调用 Hook（切换 年/季/月/周/天 时容易导致数据显示错乱）
+    const dateRangeForView = useMemo(() => {
+        const range = getDateRange(layoutDate, layoutView);
+        return [range.startDate.toDate(), range.endDate.toDate()] as [Date, Date];
+    }, [layoutDate, layoutView]);
+
     
     // [新增] 预定义分类列表（从设置中获取）
     const predefinedCategories = useMemo(() => {
@@ -300,10 +307,7 @@ export function LayoutRenderer({ layout, dataStore, app, actionService, itemServ
                     <ViewContent
                         viewInstance={viewInstance}
                         dataStore={dataStore}
-                        dateRange={useMemo(() => {
-                            const range = getDateRange(layoutDate, layoutView);
-                            return [range.startDate.toDate(), range.endDate.toDate()] as [Date, Date];
-                        }, [layoutDate, layoutView])}
+                        dateRange={dateRangeForView}
                         keyword=""
                         layoutView={layoutView}
                         isOverviewMode={false}

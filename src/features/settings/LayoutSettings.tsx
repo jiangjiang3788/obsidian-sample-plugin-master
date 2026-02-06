@@ -216,6 +216,10 @@ const handleAutocompleteChange = useCallback(async (event: any, newValue: any) =
                     options={autocompleteOptions}
                     getOptionLabel={(option) => option ? option.label : ''}
                     onChange={handleAutocompleteChange}
+                    // ✅ 在 FloatingPanel 中使用时，必须禁用 Portal。
+                    // 否则 Popper 会挂到 document.body，导致 FloatingPanel 的“点击外部关闭”误判。
+                    disablePortal
+                    PopperProps={{ style: { zIndex: 20000 } }}
                     renderInput={(params) => <TextField {...params as any} variant="outlined" placeholder="+ 搜索添加或创建视图..." />}
                     sx={{ minWidth: 200 }}
                     size="small"
@@ -225,6 +229,8 @@ const handleAutocompleteChange = useCallback(async (event: any, newValue: any) =
             <Menu
                 open={contextMenu !== null}
                 onClose={handleContextMenuClose}
+                // 同理：Menu 默认 Portal 到 body，会触发 FloatingPanel 外部点击关闭
+                disablePortal
                 anchorReference="anchorPosition"
                 anchorPosition={
                     contextMenu !== null

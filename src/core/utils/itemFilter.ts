@@ -142,8 +142,21 @@ function isClosed(it: Item) {
 
 export function filterByDateRange(items: Item[], startISO?: string, endISO?: string) {
   if (!startISO && !endISO) return items;
-  const sMs = startISO ? Date.parse(startISO) : null;
-  const eMs = endISO   ? Date.parse(endISO)   : null;
+
+  // [修复] 结束日期需要按“当天结束”做包含式过滤：
+  // - startISO / endISO 常以 'YYYY-MM-DD' 形式传入（无时间）
+  // - Date.parse('YYYY-MM-DD') 解析到当天 00:00:00，直接比较会把“结束日当天”的带时间条目过滤掉
+  const norm = (s: string) => (s || '').trim().replace(/\//g, '-');
+  const isDateOnly = (s: string) => /^\d{4}-\d{1,2}-\d{1,2}$/.test(s);
+
+  const sMs = startISO ? Date.parse(norm(startISO)) : null;
+  const eMs = (() => {
+    if (!endISO) return null;
+    const n = norm(endISO);
+    const t = Date.parse(n);
+    if (isNaN(t)) return null;
+    return isDateOnly(n) ? (t + 24 * 60 * 60 * 1000 - 1) : t;
+  })();
 
   return items.filter(it => {
     const t = (it.dateMs ?? (it.date ? Date.parse((it.date || '').replace(/\//g, '-')) : NaN));

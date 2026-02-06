@@ -103,18 +103,21 @@ export function TimelineView({
         return <div class="timeline-empty-state">当前范围内没有数据。</div>;
     }
     
-    // 年/季视图：使用 TimelineSummaryTable
-    if (currentView === '年' || currentView === '季') {
-        const summaryData = useMemo(() => {
-            const viewStart = dayjs(dateRange[0]);
-            const viewEnd = dayjs(dateRange[1]);
-            const tasksInRange = timelineTasks.filter(task => {
-                const taskDate = dayjs(task.doneDate);
-                return taskDate.isBetween(viewStart, viewEnd, 'day', '[]');
-            });
-            return buildMonthlyAndWeeklySummary(tasksInRange, config);
-        }, [timelineTasks, dateRange, config]);
+        // 年/季视图：使用 TimelineSummaryTable
+    // [修复] 必须在组件顶层调用 useMemo，避免切换 年/季/月/周/天 时 Hook 顺序变化导致数据显示错乱
+    const isSummaryView = currentView === '年' || currentView === '季';
+    const summaryData = useMemo<any[]>(() => {
+        if (!isSummaryView) return [];
+        const viewStart = dayjs(dateRange[0]);
+        const viewEnd = dayjs(dateRange[1]);
+        const tasksInRange = timelineTasks.filter(task => {
+            const taskDate = dayjs(task.doneDate);
+            return taskDate.isBetween(viewStart, viewEnd, 'day', '[]');
+        });
+        return buildMonthlyAndWeeklySummary(tasksInRange, config);
+    }, [isSummaryView, timelineTasks, dateRange, config]);
 
+    if (isSummaryView) {
         return (
             <TimelineSummaryTable 
                 summaryData={summaryData} 
@@ -124,8 +127,8 @@ export function TimelineView({
             />
         );
     }
-    
-    // 计算汇总数据
+
+// 计算汇总数据
     const summaryCategoryHours = useMemo(() => {
         return buildSummaryCategoryHours(timelineTasks, dateRange, config);
     }, [timelineTasks, dateRange, config]);
