@@ -16,18 +16,17 @@ import './styles/main.css';
 import { safeAsync } from '@shared/utils/errorHandler';
 import { performanceMonitor, startMeasure } from '@shared/utils/performance';
 import { ServiceManager } from '@/app/ServiceManager';
+import { createCapabilities, type Capabilities } from '@/app/capabilities/createCapabilities';
 import { TimerStateService } from '@core/public';
 import { TimerService } from '@features/timer/TimerService';
 import { ActionService } from '@core/public';
-import { AiChatModal } from '@features/aichat';
-import { AiChatService } from '@core/public';
-import { RetrievalService } from '@core/public';
-import { ChatSessionStore } from '@core/public';
+import { devLog } from '@/core/utils/devLogger';
 
-console.log(`[ThinkPlugin] main.js 文件已加载，版本时间: ${new Date().toLocaleTimeString()}`);
+devLog(`[ThinkPlugin] main.ts 已加载，版本时间: ${new Date().toLocaleTimeString()}`);
 
 export default class ThinkPlugin extends Plugin {
     private serviceManager!: ServiceManager;
+    private capabilities!: Capabilities;
 
     /**
      * [主流程] 插件启动入口
@@ -47,6 +46,9 @@ export default class ThinkPlugin extends Plugin {
                 // 2. 配置 DI 容器 & 基础服务
                 setupCoreContainer(this.app, settings);
 
+                // 2.1 capabilities 组合根（最小接入闭环）
+                this.capabilities = createCapabilities(this.app, settings);
+
                 // 3. 构建服务总线并启动主流程
                 this.serviceManager = new ServiceManager(this);
                 await this.serviceManager.bootstrap(); // 新的启动方法
@@ -55,7 +57,7 @@ export default class ThinkPlugin extends Plugin {
                 this.registerCommands();
 
                 const totalTime = stopMeasure();
-                console.log(`[Think Plugin] 核心功能已加载完成 (总耗时: ${totalTime.toFixed(2)}ms)`);
+                devLog(`[Think Plugin] 核心功能已加载完成 (总耗时: ${totalTime.toFixed(2)}ms)`);
                 new Notice('Think Plugin 核心功能已加载!', 2000);
             },
             'ThinkPlugin.onload',
@@ -81,15 +83,8 @@ export default class ThinkPlugin extends Plugin {
             id: 'think-open-ai-chat',
             name: '打开 AI 助手对话',
             callback: () => {
-                        // Phase 4.3: 禁止在 features 内部使用 tsyringe container
-                        // - 组合根（resolve）必须上移到入口（main/app）
-                        const aiServices = {
-                            chatService: container.resolve(AiChatService),
-                            retrievalService: container.resolve(RetrievalService),
-                            sessionStore: container.resolve(ChatSessionStore),
-                        };
-
-                        new AiChatModal(this.app, aiServices).open();
+                // ✅ 通过 capabilities 统一入口触发
+                this.capabilities.ai.openChat();
             }
         });
     }

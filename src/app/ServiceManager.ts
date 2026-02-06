@@ -19,6 +19,7 @@ import { ThemeManager } from '@features/settings/ThemeManager';
 import { SETTINGS_TOKEN } from '@core/public'; // DI DEBUG: 用于获取初始设置
 import type { ThinkSettings } from '@core/public'; // DI DEBUG
 import type ThinkPlugin from '@main';
+import { devLog, devWarn, devError, devTime, devTimeEnd } from '@/core/utils/devLogger';
 
 // ============== 核心 DI 容器配置 ==============
 // - ❌ 不再有 appStore getter
@@ -81,7 +82,7 @@ export class ServiceManager {
         await this.loadUIFeatures();         // 4. UI 特性 (Dashboard/Settings)
         
         const duration = stopMeasure();
-        console.log(`[ThinkPlugin] ServiceManager.bootstrap 完成 (总耗时: ${duration.toFixed(2)}ms)`);
+        devLog(`[ThinkPlugin] ServiceManager.bootstrap 完成 (总耗时: ${duration.toFixed(2)}ms)`);
     }
 
     /**
@@ -97,9 +98,9 @@ export class ServiceManager {
             this.services.rendererService?.cleanup();
             this.services = {};
             container.clearInstances();
-            console.log('[ThinkPlugin] ServiceManager 清理完成');
+            devLog('[ThinkPlugin] ServiceManager 清理完成');
         } catch (error) {
-            console.error('[ThinkPlugin] ServiceManager 清理失败:', error);
+            devError('[ThinkPlugin] ServiceManager 清理失败:', error);
         }
     }
 
@@ -141,7 +142,7 @@ export class ServiceManager {
         });
         
         // DI DEBUG: prove token is registered in THIS container instance
-        console.log('[DI DEBUG] after register SettingsPersistence, isRegistered =', container.isRegistered(SETTINGS_PERSISTENCE_TOKEN));
+        devLog('[DI DEBUG] after register SettingsPersistence, isRegistered =', container.isRegistered(SETTINGS_PERSISTENCE_TOKEN));
         
         // S6: 注册 ThemeManager 并绑定到 THEME_MATCHER_TOKEN
         // 这样 core 层的 DataStore 可以通过接口依赖 ThemeManager
@@ -164,17 +165,17 @@ export class ServiceManager {
                 // 1. 解析核心服务
                 // DI DEBUG: guard before any resolve
                 if (!container.isRegistered(SETTINGS_PERSISTENCE_TOKEN)) {
-                    console.error('[DI DEBUG] SettingsPersistence NOT registered in container used for resolve()', container);
+                    devError('[DI DEBUG] SettingsPersistence NOT registered in container used for resolve()', container);
                     throw new Error('[DI DEBUG] SettingsPersistence token missing before resolve()');
                 } else {
-                    console.log('[DI DEBUG] SettingsPersistence is registered before resolve()');
+                    devLog('[DI DEBUG] SettingsPersistence is registered before resolve()');
                 }
                 this.services.settingsRepository = container.resolve(SettingsRepository);
                 
                 // DI DEBUG: 初始化 SettingsRepository 的设置（因 setupCore.ts 不再调用 resolve）
                 const diInitialSettings = container.resolve<ThinkSettings>(SETTINGS_TOKEN);
                 this.services.settingsRepository.setInitialSettings(diInitialSettings);
-                console.log('[DI DEBUG] SettingsRepository.setInitialSettings() called');
+                devLog('[DI DEBUG] SettingsRepository.setInitialSettings() called');
                 this.services.timerStateService = container.resolve(TimerStateService);
                 
                 // 2. 创建 Zustand Store 并注册到 DI
@@ -183,18 +184,18 @@ export class ServiceManager {
                 
                 // P0-3: 注册 STORE_TOKEN 到 DI 容器（替代全局单例）
                 container.register(STORE_TOKEN, { useValue: zustandStore });
-                console.log('[ThinkPlugin] Zustand Store 已注册到 DI 容器');
+                devLog('[ThinkPlugin] Zustand Store 已注册到 DI 容器');
                 
                 // 使用 SettingsRepository 加载的 settings 初始化 Zustand store
                 const zustandInitialSettings = settingsRepository.getSettings();
                 zustandStore.getState().initialize(zustandInitialSettings);
-                console.log('[ThinkPlugin] Zustand Store 初始化完成');
+                devLog('[ThinkPlugin] Zustand Store 初始化完成');
                 
                 // 订阅 SettingsRepository 的变更，仅同步到 Zustand Store
                 settingsRepository.subscribe((settings) => {
                     zustandStore.setState({ settings });
                 });
-                console.log('[ThinkPlugin] SettingsRepository 订阅已建立（纯同步 settings）');
+                devLog('[ThinkPlugin] SettingsRepository 订阅已建立（纯同步 settings）');
                 
                 // TimerWidget 生命周期管理：通过监听 store 中 settings.floatingTimerEnabled 变化
                 zustandStore.subscribe(
@@ -206,7 +207,7 @@ export class ServiceManager {
                                 this.services.timerWidget = new FloatingTimerWidget(this.plugin);
                                 this.services.timerWidget.load();
                                 zustandStore.setState(s => ({ ui: { ...s.ui, isTimerWidgetVisible: true } }));
-                                console.log("[计时器浮窗] 已启用 -> 创建并显示浮窗");
+                                devLog("[计时器浮窗] 已启用 -> 创建并显示浮窗");
                             }
                         }
                         
@@ -216,22 +217,22 @@ export class ServiceManager {
                             if (this.services.timerWidget) {
                                 this.services.timerWidget.unload();
                                 this.services.timerWidget = undefined;
-                                console.log("[计时器浮窗] 已禁用 -> 卸载浮窗");
+                                devLog("[计时器浮窗] 已禁用 -> 卸载浮窗");
                             }
                         }
                     }
                 );
-                console.log('[ThinkPlugin] TimerWidget 生命周期监听已建立');
+                devLog('[ThinkPlugin] TimerWidget 生命周期监听已建立');
                 
                 // 3. 创建 UseCases 并注册到 DI 容器（传入 store）
                 this.services.useCases = createUseCases(zustandStore, {
                     timerStateService: this.services.timerStateService!,
                 });
                 container.register(USECASES_TOKEN, { useValue: this.services.useCases });
-                console.log('[ThinkPlugin] UseCases 创建完成');
+                devLog('[ThinkPlugin] UseCases 创建完成');
                 
                 const duration = stopMeasure();
-                console.log(`[ThinkPlugin] 核心服务初始化完成 (${duration.toFixed(2)}ms)`);
+                devLog(`[ThinkPlugin] 核心服务初始化完成 (${duration.toFixed(2)}ms)`);
             },
             'ServiceManager.initializeCore',
             { showNotice: false }
@@ -256,7 +257,7 @@ export class ServiceManager {
         this.scanDataInBackground();
         
         const duration = stopMeasure();
-        console.log(`[ThinkPlugin] 数据服务加载完成 (${duration.toFixed(2)}ms)`);
+        devLog(`[ThinkPlugin] 数据服务加载完成 (${duration.toFixed(2)}ms)`);
     }
 
     /**
@@ -266,14 +267,14 @@ export class ServiceManager {
         if (this.scanDataPromise) return this.scanDataPromise;
         
         this.scanDataPromise = new Promise<void>((resolve) => {
-            console.time('[ThinkPlugin] 数据扫描');
+            devTime('[ThinkPlugin] 数据扫描');
             this.services.dataStore!.initialScan().then(() => {
-                console.timeEnd('[ThinkPlugin] 数据扫描');
+                devTimeEnd('[ThinkPlugin] 数据扫描');
                 this.services.dataStore!.notifyChange();
                 this.services.dataStore!.writePerformanceReport('initialScan');
                 resolve();
             }).catch((error) => {
-                console.error('[ThinkPlugin] 数据扫描失败:', error);
+                devError('[ThinkPlugin] 数据扫描失败:', error);
                 resolve();
             });
         });
@@ -290,7 +291,7 @@ export class ServiceManager {
      */
     private async loadTimerServices(): Promise<void> {
         // [Debug] 验证依赖服务是否就绪
-        console.log('[ServiceManager] loadTimerServices: action/data ready', {
+        devLog('[ServiceManager] loadTimerServices: action/data ready', {
             actionService: !!this.services.actionService,
             dataStore: !!this.services.dataStore,
         });
@@ -337,7 +338,7 @@ export class ServiceManager {
 
                 // [PR1] 初始化 Zustand Timer Slice
                 await this.services.useCases!.timer.setInitialTimersFromDisk();
-                console.log('[ThinkPlugin] Zustand Timers Loaded:', this.services.useCases!.timer.getTimers());
+                devLog('[ThinkPlugin] Zustand Timers Loaded:', this.services.useCases!.timer.getTimers());
 
                 // 加载 Widget
                 const settings = this.services.settingsRepository!.getSettings();
@@ -347,7 +348,7 @@ export class ServiceManager {
                 }
                 
                 const duration = stopMeasure();
-                console.log(`[ThinkPlugin] 计时器服务加载完成 (${duration.toFixed(2)}ms)`);
+                devLog(`[ThinkPlugin] 计时器服务加载完成 (${duration.toFixed(2)}ms)`);
             },
             'ServiceManager.loadTimerServices',
             { showNotice: true }
@@ -368,7 +369,7 @@ export class ServiceManager {
     private async loadUIFeatures(): Promise<void> {
         // 确保依赖已就绪
         if (!this.services.dataStore || !this.services.rendererService || !this.services.actionService) {
-            console.error('[ThinkPlugin] UI特性加载失败: 依赖服务未就绪');
+            devError('[ThinkPlugin] UI特性加载失败: 依赖服务未就绪');
             return;
         }
 
@@ -434,7 +435,7 @@ export class ServiceManager {
     }
 
     async reloadService(serviceName: keyof typeof this.services): Promise<void> {
-        console.log(`[ServiceManager] 重新加载服务: ${serviceName}`);
+        devLog(`[ServiceManager] 重新加载服务: ${serviceName}`);
         
         if (this.services[serviceName]) {
             const service = this.services[serviceName] as any;
@@ -452,7 +453,7 @@ export class ServiceManager {
                 await this.loadDataServices();
                 break;
             default:
-                console.warn(`[ServiceManager] 不支持重新加载服务: ${serviceName}`);
+                devWarn(`[ServiceManager] 不支持重新加载服务: ${serviceName}`);
         }
     }
 }

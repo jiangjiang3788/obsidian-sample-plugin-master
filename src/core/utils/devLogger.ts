@@ -43,6 +43,54 @@ function isDev(): boolean {
 // 缓存环境检测结果
 const IS_DEV = isDev();
 
+// ============== 通用日志（dev-only） ==============
+
+/**
+ * dev-only console.log
+ */
+export function devLog(...args: unknown[]): void {
+    if (!IS_DEV) return;
+    // eslint-disable-next-line no-console
+    console.log(...args);
+}
+
+/**
+ * dev-only console.warn
+ */
+export function devWarn(...args: unknown[]): void {
+    if (!IS_DEV) return;
+    // eslint-disable-next-line no-console
+    console.warn(...args);
+}
+
+/**
+ * dev-only console.error
+ */
+export function devError(...args: unknown[]): void {
+    if (!IS_DEV) return;
+    // eslint-disable-next-line no-console
+    console.error(...args);
+}
+
+
+/**
+ * dev-only console.time
+ */
+export function devTime(label: string): void {
+    if (!IS_DEV) return;
+    // eslint-disable-next-line no-console
+    console.time(label);
+}
+
+/**
+ * dev-only console.timeEnd
+ */
+export function devTimeEnd(label: string): void {
+    if (!IS_DEV) return;
+    // eslint-disable-next-line no-console
+    console.timeEnd(label);
+}
+
 // ============== Diff 工具 ==============
 
 /**

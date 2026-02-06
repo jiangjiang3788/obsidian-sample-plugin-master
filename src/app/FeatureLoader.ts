@@ -5,6 +5,7 @@ import { ActionService } from '@core/public';
 import * as QuickInputFeature from '@features/quickinput';
 import * as AiInputFeature from '@features/aiinput';
 import { setupSettings, setupDashboard } from '@/features/settings';
+import { devTime, devTimeEnd } from '@/core/utils/devLogger';
 
 /**
  * FeatureLoader - UI 特性加载器
@@ -38,7 +39,7 @@ export class FeatureLoader {
      * @param dataScanPromise 数据扫描的 Promise，用于确保 Dashboard 在数据准备好后加载
      */
     async loadFeatures(dataScanPromise: Promise<void> | null): Promise<void> {
-        console.time('[ThinkPlugin] UI特性加载');
+        devTime('[ThinkPlugin] UI特性加载');
         
         // 1. Dashboard (依赖数据扫描)
         await this.loadDashboardFeature(dataScanPromise);
@@ -52,7 +53,7 @@ export class FeatureLoader {
         // 4. AI Input (独立)
         this.loadAiInputFeature();
         
-        console.timeEnd('[ThinkPlugin] UI特性加载');
+        devTimeEnd('[ThinkPlugin] UI特性加载');
     }
 
     private async loadDashboardFeature(dataScanPromise: Promise<void> | null): Promise<void> {
@@ -61,20 +62,20 @@ export class FeatureLoader {
             await dataScanPromise;
         }
         
-        console.time('[ThinkPlugin] Dashboard特性加载');
+        devTime('[ThinkPlugin] Dashboard特性加载');
         setupDashboard?.({
             plugin: this.plugin,
             dataStore: this.dataStore,
             rendererService: this.rendererService,
             actionService: this.actionService,
         });
-        console.timeEnd('[ThinkPlugin] Dashboard特性加载');
+        devTimeEnd('[ThinkPlugin] Dashboard特性加载');
     }
 
     private loadSettingsFeature(): void {
         // 延迟加载以优化启动性能
         setTimeout(() => {
-            console.time('[ThinkPlugin] Settings特性加载');
+            devTime('[ThinkPlugin] Settings特性加载');
             
             setupSettings?.({
                 app: this.plugin.app,
@@ -93,27 +94,27 @@ export class FeatureLoader {
                 }
             });
 
-            console.timeEnd('[ThinkPlugin] Settings特性加载');
+            devTimeEnd('[ThinkPlugin] Settings特性加载');
         }, 150);
     }
 
     private loadQuickInputFeature(): void {
         setTimeout(() => {
-            console.time('[ThinkPlugin] QuickInput特性加载');
+            devTime('[ThinkPlugin] QuickInput特性加载');
             QuickInputFeature.setup?.({
                 plugin: this.plugin
             });
-            console.timeEnd('[ThinkPlugin] QuickInput特性加载');
+            devTimeEnd('[ThinkPlugin] QuickInput特性加载');
         }, 100);
     }
 
     private loadAiInputFeature(): void {
         setTimeout(() => {
-            console.time('[ThinkPlugin] AiInput特性加载');
+            devTime('[ThinkPlugin] AiInput特性加载');
             AiInputFeature.setup?.({
                 plugin: this.plugin
             });
-            console.timeEnd('[ThinkPlugin] AiInput特性加载');
+            devTimeEnd('[ThinkPlugin] AiInput特性加载');
         }, 120);
     }
 }

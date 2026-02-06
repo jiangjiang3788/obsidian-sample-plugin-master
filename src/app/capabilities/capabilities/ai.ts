@@ -1,6 +1,10 @@
 // src/app/capabilities/capabilities/ai.ts
 import type { App } from 'obsidian';
 import type { ThinkSettings } from '@core/public';
+import { container } from 'tsyringe';
+import { AiChatService, ChatSessionStore, RetrievalService } from '@core/public';
+import { AiChatModal } from '@features/aichat';
+import { devWarn } from '@/core/utils/devLogger';
 
 export interface AiCapability {
     /**
@@ -17,8 +21,18 @@ export interface AiCapability {
 export function createAiCapability(_app: App, _settings: ThinkSettings): AiCapability {
     return {
         openChat() {
-            // NOTE: Phase 4.5 只搭壳 + 冻结未来；具体实现迁移会在后续逐步完成
-            console.warn('[AiCapability] openChat() not wired yet. Wire in main/app composition root.');
+            try {
+                // ✅ 组合根：在 app/capabilities 层完成 resolve + 组合
+                const aiServices = {
+                    chatService: container.resolve(AiChatService),
+                    retrievalService: container.resolve(RetrievalService),
+                    sessionStore: container.resolve(ChatSessionStore),
+                };
+
+                new AiChatModal(_app, aiServices).open();
+            } catch (err) {
+                devWarn('[AiCapability] openChat() failed', err);
+            }
         },
     };
 }
