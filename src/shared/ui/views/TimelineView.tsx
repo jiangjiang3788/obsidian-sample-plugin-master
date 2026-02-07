@@ -10,8 +10,8 @@ import isoWeek from 'dayjs/plugin/isoWeek';
 import isBetween from 'dayjs/plugin/isBetween';
 import { TIMELINE_VIEW_DEFAULT_CONFIG } from '@core/public';
 import { App } from 'obsidian';
-import { ItemService } from '@core/public';
 import { filterByRules } from '@core/public';
+import type { UpdateTaskTimeHandler } from '@shared/types/taskTime';
 
 // 导入重构后的组件、工具函数和 hooks
 import { 
@@ -39,7 +39,8 @@ interface TimelineViewProps {
     module: any;
     currentView: '年' | '季' | '月' | '周' | '天';
     app: App;
-    itemService: ItemService;
+    /** 由 feature 层注入：用于“对齐/精确编辑”等需要写回的操作 */
+    onUpdateTaskTime?: UpdateTaskTimeHandler;
     inputSettings: any;
 }
 
@@ -49,7 +50,7 @@ export function TimelineView({
     module, 
     currentView, 
     app, 
-    itemService, 
+    onUpdateTaskTime, 
     inputSettings 
 }: TimelineViewProps) {
     const inputBlocks = inputSettings?.blocks || [];
@@ -192,7 +193,7 @@ export function TimelineView({
                             categoriesConfig={config.categories} 
                             colorMap={colorMap} 
                             maxHours={config.MAX_HOURS_PER_DAY} 
-                            itemService={itemService}
+                            onUpdateTaskTime={onUpdateTaskTime}
                             onColumnClick={handleColumnClick}
                         />
                     );

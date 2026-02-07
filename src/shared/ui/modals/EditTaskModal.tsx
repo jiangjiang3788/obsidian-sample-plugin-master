@@ -3,19 +3,22 @@
 import { h } from 'preact';
 import { useEffect } from 'preact/hooks';
 import type { TaskBlock } from '@core/public';
-import type { ItemService } from '@core/public';
 import { timeToMinutes, minutesToTime } from '@core/public';
 import { Dialog, DialogTitle, DialogContent, DialogActions, Button, TextField } from '@mui/material';
 import { useTimeFormState } from '@shared/hooks/useFormState';
 import { useSaveHandler } from '@shared/patterns/ModalSavePattern';
 import { computeLinkedTimeChanges } from '@shared/utils/linkedTimeFields';
+import type { UpdateTaskTimeHandler } from '@shared/types/taskTime';
 
 export interface EditTaskModalProps {
   isOpen: boolean;
   onClose: () => void;
   task: TaskBlock;
-  /** 默认实现会调用 itemService.updateItemTime；若你在上层自定义保存逻辑，可不传 */
-  itemService?: ItemService;
+  /**
+   * 保存处理器（由 feature 层注入）。
+   * shared/ui 不直接依赖 core Service（如 ItemService），仅通过回调完成保存。
+   */
+  onUpdateTaskTime: UpdateTaskTimeHandler;
   onSave?: () => void;
 }
 
@@ -26,7 +29,7 @@ export interface EditTaskModalProps {
  * - shared/ui 不能依赖 features（否则 shared 就会变成绕过边界的 tunnel）
  * - 这个组件本质是可复用 UI + core service 能力，因此归位到 shared/ui/modals
  */
-export function EditTaskModal({ isOpen, onClose, task, itemService, onSave }: EditTaskModalProps) {
+export function EditTaskModal({ isOpen, onClose, task, onUpdateTaskTime, onSave }: EditTaskModalProps) {
   // 使用专门的时间表单状态管理
   const formState = useTimeFormState({
     startTime: minutesToTime(task.startMinute),
@@ -54,10 +57,6 @@ export function EditTaskModal({ isOpen, onClose, task, itemService, onSave }: Ed
 
   // 验证函数
   const validateTimeData = () => {
-    if (!itemService) {
-      throw new Error('ItemService 未提供，无法保存');
-    }
-
     const startM = timeToMinutes(timeData.startTime);
     const endM = timeToMinutes(timeData.endTime);
     const duration = Number(timeData.duration);
@@ -85,7 +84,7 @@ export function EditTaskModal({ isOpen, onClose, task, itemService, onSave }: Ed
   const handleSave = useSaveHandler(
     async () => {
       const timeUpdateData = validateTimeData();
-      await itemService!.updateItemTime(task.id, timeUpdateData);
+      await onUpdateTaskTime(task.id, timeUpdateData);
       onSave?.();
       onClose();
     },

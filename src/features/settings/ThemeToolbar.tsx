@@ -3,7 +3,7 @@ import { h } from 'preact';
 import {
     Box,
     Button,
-} from '@mui/material';
+} from '@shared/ui/muiCompat';
 import EditIcon from '@mui/icons-material/Edit';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 
@@ -19,13 +19,11 @@ export function ThemeToolbar({
     const isEditMode = mode === 'edit';
 
     return (
-        // @ts-ignore - MUI与Preact类型兼容性问题
         <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 2 }}>
-            {/* @ts-ignore - MUI与Preact类型兼容性问题 */}
             <Button
                 variant="outlined"
                 onClick={onToggleEditMode}
-                startIcon={isEditMode ? <VisibilityIcon /> : <EditIcon /> as any}
+                startIcon={isEditMode ? <VisibilityIcon /> : <EditIcon />}
             >
                 {isEditMode ? '退出编辑模式' : '进入编辑模式'}
             </Button>

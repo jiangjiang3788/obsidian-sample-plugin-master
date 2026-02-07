@@ -7,7 +7,7 @@ import { Layout, ViewInstance, Item } from '@core/public'; // [修改] 导入 It
 import { ModulePanel } from './ModulePanel';
 import { DashboardViewComponents as ViewComponents } from './index';
 
-import { getDateRange, dayjs } from '@core/public';
+import { getDateRange, dayjs, devLog } from '@core/public';
 import { useZustandAppStore, useUseCases } from '@/app/public';
 import type { TimerController } from '@/app/public';
 import type { ActionService } from '@core/public';
@@ -21,6 +21,11 @@ import { openModuleSettingsWidget } from './ModuleSettingsModal';
 import { App, Notice } from 'obsidian'; // [修改] 导入 Notice
 import { exportItemsToMarkdown, getExportConfigByViewType } from '@core/public'; // [新增] 导入导出函数
 import { ViewToolbar } from '@shared/ui/views/ViewToolbar'; // [新增] 导入统一工具栏组件
+import type { UpdateTaskTimeHandler } from '@shared/types/taskTime';
+
+// Phase2: shared/ui 纯化试点（先从 BlockView 的分组树计算搬出）
+import { buildBlockViewModel } from '@/features/settings/viewModels/blockViewModel';
+import { buildEventTimelineViewModel } from '@/features/settings/viewModels/eventTimelineViewModel';
 
 // [修改] ViewContent 组件增加 onDataLoaded 和 selectedThemes props
 const ViewContent = ({
@@ -84,6 +89,31 @@ const ViewContent = ({
     const ViewComponent = (ViewComponents as any)[viewInstance.viewType];
     if (!ViewComponent) return <div>未知视图: {viewInstance.viewType}</div>;
 
+    // Phase2: shared/ui 纯化试点
+    // 先把 BlockView 的“分组树计算”从 shared/ui 挪到 feature 层。
+    const blockViewModel = viewInstance.viewType === 'BlockView'
+        ? buildBlockViewModel({
+            items: viewItems,
+            groupField: viewInstance.group,
+            groupFields: viewInstance.groupFields,
+        })
+        : null;
+
+    const eventTimelineViewModel = viewInstance.viewType === 'EventTimelineView'
+        ? buildEventTimelineViewModel({
+            items: viewItems,
+            module: viewInstance,
+            dateRange,
+        })
+        : null;
+
+    // Phase2: shared/ui 不直接依赖 core service（如 ItemService）
+    // 由 feature 层注入保存处理器，shared/ui 只触发回调。
+    const onUpdateTaskTime = useCallback<UpdateTaskTimeHandler>(
+        (taskId, updates) => itemService.updateItemTime(taskId, updates),
+        [itemService]
+    );
+
     const viewProps: any = {
         app,
         items: viewItems,
@@ -98,11 +128,21 @@ const ViewContent = ({
         onMarkDone: onMarkDone,
         actionService: actionService,
         itemService: itemService,
+        // 仅部分 View 需要（如 TimelineView 的“对齐/精确编辑”）
+        onUpdateTaskTime: onUpdateTaskTime,
         timerService: timerService,
         timers: timers, // [新增]
         allThemes: allThemes, // [新增]
         inputSettings: inputSettings, // [新增]
         selectedCategories,
+
+        // 仅 BlockView 需要（其它 View 忽略即可）
+        effectiveGroupFields: blockViewModel?.effectiveGroupFields,
+        groupTree: blockViewModel?.groupTree,
+
+        // 仅 EventTimelineView 需要（其它 View 忽略即可）
+        filteredItems: eventTimelineViewModel?.filteredItems,
+        groupedTree: eventTimelineViewModel?.groupedTree,
     };
 
     return <ViewComponent {...viewProps} />;
@@ -135,7 +175,7 @@ export function LayoutRenderer({ layout, dataStore, app, actionService, itemServ
                 layoutId: layout.id,
                 viewCount: layout.viewInstanceIds.length
             });
-            console.log('[ThinkPlugin] 首屏就绪');
+            devLog('[ThinkPlugin] 首屏就绪');
         });
     }, []);
 

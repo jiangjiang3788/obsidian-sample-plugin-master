@@ -2,7 +2,7 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
 import { useState, useEffect } from 'preact/hooks';
-import { Box, Typography, IconButton, Tooltip } from '@mui/material';
+import { Box, Typography, IconButton, Tooltip } from '@shared/ui/muiCompat';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import StopIcon from '@mui/icons-material/Stop';
 import PauseIcon from '@mui/icons-material/Pause';
@@ -65,9 +65,7 @@ export function TimerRow({ timer, actionService, timerService, dataStore, app }:
     };
 
     return (
-        // @ts-ignore
         <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px', width: '100%' }}>
-            {/* @ts-ignore */}
             <Tooltip title={`点击跳转: ${taskItem?.title}`}>
                 <a
                     href={taskItem ? makeObsUri(taskItem, app.vault.getName()) : '#'}
@@ -87,17 +85,12 @@ export function TimerRow({ timer, actionService, timerService, dataStore, app }:
             <Typography variant="body2" sx={{ fontFamily: 'monospace' }}>{displayTime}</Typography>
             
             {timer.status === 'running' ? (
-                // @ts-ignore
                 <Tooltip title="暂停"><IconButton size="small" onClick={() => timerService.pause(timer.id)}><PauseIcon fontSize="inherit" /></IconButton></Tooltip>
             ) : (
-                // @ts-ignore
                 <Tooltip title="继续"><IconButton size="small" onClick={() => timerService.resume(timer.id)} color="primary"><PlayArrowIcon fontSize="inherit" /></IconButton></Tooltip>
             )}
-            {/* @ts-ignore */}
             <Tooltip title="停止并记录"><IconButton size="small" onClick={() => timerService.stopAndApply(timer.id)}><StopIcon fontSize="inherit" /></IconButton></Tooltip>
-            {/* @ts-ignore */}
             <Tooltip title="编辑任务"><IconButton size="small" onClick={handleEdit}><EditIcon fontSize="inherit" /></IconButton></Tooltip>
-            {/* @ts-ignore */}
             <Tooltip title="取消任务"><IconButton size="small" onClick={() => timerService.cancel(timer.id)} color="error"><DeleteForeverIcon fontSize="inherit" /></IconButton></Tooltip>
         </Box>
     );

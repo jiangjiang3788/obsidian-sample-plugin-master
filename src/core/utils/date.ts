@@ -90,8 +90,7 @@ export function formatDateForView(d: dayjs.Dayjs, v: string): string {
         case '季': return `${d.year()}年${QTXT[d.quarter() - 1]}季度`;
         case '月': return d.format('YYYY-MM');
         case '周': {
-            // @ts-ignore
-            const isoYear = (d as any).isoWeekYear();
+            const isoYear = d.isoWeekYear();
             const isoWeekNum = d.isoWeek();
             return `${isoYear}-W${String(isoWeekNum).padStart(2, '0')}`;
         }

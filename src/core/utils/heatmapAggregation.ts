@@ -1,5 +1,6 @@
 import type { Item, ThemeDefinition } from '@/core/types/schema';
 import { readField } from '@/core/types/schema';
+import { devLog } from './devLogger';
 
 /**
  * 过滤结果类型
@@ -149,7 +150,7 @@ export function buildThemeDataMap(
     
     // 调试日志（可选）
     if (result.filterResult.skippedCount > 0) {
-        console.debug('[buildThemeDataMap] Skipped items:', result.filterResult.skippedByReason);
+        devLog('[buildThemeDataMap] Skipped items:', result.filterResult.skippedByReason);
     }
     
     return result.themeMap;

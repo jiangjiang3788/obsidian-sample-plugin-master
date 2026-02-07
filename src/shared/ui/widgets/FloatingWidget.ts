@@ -2,6 +2,7 @@
 import { h } from 'preact';
 import type { ComponentChildren } from 'preact';
 import { createServices, mountWithServices, unmountPreact, type Services } from '@/app/public';
+import { devLog } from '@core/public';
 
 /**
  * 通用 FloatingWidget：在 document.body 上创建容器并渲染传入的 Preact 子树
@@ -23,14 +24,14 @@ export class FloatingWidget {
         this.containerEl = document.createElement('div');
         this.containerEl.id = `think-floating-widget-${this.id}`;
         document.body.appendChild(this.containerEl);
-        console.log('[FloatingWidget] load()', this.id);
+        devLog('[FloatingWidget] load()', this.id);
         this.render();
     }
 
     unload() {
         if (!this.containerEl) return;
         unmountPreact(this.containerEl);
-        console.log('[FloatingWidget] unload()', this.id);
+        devLog('[FloatingWidget] unload()', this.id);
         this.containerEl.remove();
         this.containerEl = null;
     }
@@ -43,7 +44,7 @@ export class FloatingWidget {
         if (!this.services) {
             this.services = createServices();
         }
-        console.log('[FloatingWidget] render()', this.id);
+        devLog('[FloatingWidget] render()', this.id);
         mountWithServices(this.containerEl, this.renderFn(), this.services);
     }
 }

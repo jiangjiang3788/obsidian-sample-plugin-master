@@ -16,7 +16,7 @@ import { h } from 'preact';
 import { useZustandAppStore, useUseCases, useDataStore } from '@/app/public';
 import { 
     Box, Typography, TextField, Button, Stack 
-} from '@mui/material';
+} from '@shared/ui/muiCompat';
 import AddIcon from '@mui/icons-material/Add';
 import { useState, useMemo } from 'preact/hooks';
 import { TemplateEditorModal } from '@features/settings/TemplateEditorModal';
@@ -197,7 +197,6 @@ export function ThemeMatrix() {
     };
 
     return (
-        // @ts-ignore - MUI与Preact类型兼容性问题
         <Box sx={{ maxWidth: '1200px', mx: 'auto', padding: 2 }}>
             <Typography variant="h4" gutterBottom>
                 主题配置矩阵
@@ -212,7 +211,6 @@ export function ThemeMatrix() {
                 onToggleEditMode={toggleEditMode}
             />
             
-            {/* @ts-ignore - MUI与Preact类型兼容性问题 */}
             <ContextualToolbar
                 editorState={editorState}
                 onAction={handleBatchAction}
@@ -236,7 +234,6 @@ export function ThemeMatrix() {
             />
             
             {/* 添加新主题 */}
-            {/* @ts-ignore - MUI与Preact类型兼容性问题 */}
             <Stack direction="row" spacing={1} alignItems="center" sx={{ mt: 2 }}>
                 <TextField 
                     placeholder="新主题路径 (如: 个人/习惯)" 
@@ -247,7 +244,6 @@ export function ThemeMatrix() {
                     variant="outlined" 
                     sx={{ flexGrow: 1, maxWidth: '400px' }} 
                 />
-                {/* @ts-ignore - MUI与Preact类型兼容性问题 */}
                 <Button onClick={handleAddTheme} variant="outlined" size="small" startIcon={<AddIcon />}>
                     添加主题
                 </Button>

@@ -1,6 +1,6 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
-import { Box, Typography, Button, Stack, Divider } from '@mui/material';
+import { Box, Typography, Button, Stack, Divider } from '@shared/ui/muiCompat';
 import { type EditorState } from './useThemeMatrixEditor';
 import type { BatchOperation } from './useBatchOperations';
 
@@ -21,7 +21,6 @@ export function ContextualToolbar({ editorState, onAction, onClearSelection }: C
   const typeLabel = selectionType === 'theme' ? '个主题' : '个配置';
 
   return (
-    // @ts-ignore
     <Box
       sx={{
         position: 'sticky',
@@ -38,14 +37,12 @@ export function ContextualToolbar({ editorState, onAction, onClearSelection }: C
         justifyContent: 'space-between',
       }}
     >
-      {/* @ts-ignore */}
       <Stack direction="row" spacing={2} alignItems="center">
         <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>
           已选择 {count} {typeLabel}
         </Typography>
         <Divider orientation="vertical" flexItem />
         {selectionType === 'theme' && (
-          // @ts-ignore
           <Stack direction="row" spacing={1}>
             <Button size="small" onClick={() => onAction('activate')}>激活</Button>
             <Button size="small" onClick={() => onAction('archive')}>归档</Button>
@@ -54,7 +51,6 @@ export function ContextualToolbar({ editorState, onAction, onClearSelection }: C
           </Stack>
         )}
         {selectionType === 'block' && (
-          // @ts-ignore
           <Stack direction="row" spacing={1}>
             <Button size="small" onClick={() => onAction('setInherit')}>设为继承</Button>
             <Button size="small" onClick={() => onAction('setOverride')}>设为覆盖</Button>

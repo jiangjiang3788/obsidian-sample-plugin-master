@@ -3,7 +3,7 @@
 /** @jsxImportSource preact */
 import { useMemo, useState, useRef, useEffect } from 'preact/hooks';
 import { App, Notice } from 'obsidian';
-import { Item, ViewInstance, InputSettings, ThemeDefinition } from '@core/public';
+import { Item, ViewInstance, InputSettings, ThemeDefinition, devLog } from '@core/public';
 import { dayjs } from '@core/public';
 import { QuickInputModal } from '@shared/ui/modals/QuickInputModal';
 import { HEATMAP_VIEW_DEFAULT_CONFIG } from '@core/public';
@@ -45,7 +45,7 @@ export function HeatmapView({ items, app, dateRange, module, currentView, inputS
 
     // 当items数据发生变化时，确保重新计算数据聚合
     useEffect(() => {
-        console.log(`🔄 [数据更新] 检测到items数据变化，项目数量: ${items.length}`);
+        devLog(`🔄 [数据更新] 检测到items数据变化，项目数量: ${items.length}`);
         ratingMappingsCache.clear();
     }, [items]);
 

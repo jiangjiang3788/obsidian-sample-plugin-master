@@ -233,6 +233,12 @@ module.exports = {
                 message:
                   "shared 层禁止 import { container } from 'tsyringe' ❌（请通过 '@/app/public' 的 createServices()/ServicesProvider 获取能力）",
               },
+              {
+                name: '@core/public',
+                importNames: ['ItemService'],
+                message:
+                  "shared 层禁止依赖 ItemService ❌（请在 feature 层桥接为 onUpdateTaskTime 等回调/DTO；shared/ui 只负责渲染与触发事件）",
+              },
             ],
             patterns: [
               // shared 可以依赖 core，但不应该依赖 app 内部实现

@@ -2,7 +2,6 @@ import { singleton, inject } from 'tsyringe';
 import type { Item, FilterRule, SortRule } from '@/core/types/schema';
 import { parseTaskLine, parseBlockContent } from '@core/utils/parser';
 import { throttle } from '@core/utils/timing';
-import { ObsidianPlatform } from '@platform/obsidian';
 import { normalizeItemDates } from '@core/utils/normalize';
 import { filterByRules, sortItems } from '@core/utils/itemFilter';
 import { parseRecurrence } from '@core/utils/mark';
@@ -26,7 +25,6 @@ import {
 @singleton()
 export class DataStore {
   constructor(
-    @inject(ObsidianPlatform) private platform: ObsidianPlatform,
     @inject(VAULT_PORT_TOKEN) private vault: VaultPort,
     @inject(METADATA_PORT_TOKEN) private metadata: MetadataPort,
     @inject(FILESTAT_PORT_TOKEN) private fileStat: FileStatPort,
@@ -66,7 +64,7 @@ export class DataStore {
   async scanAll() {
     this.items = [];
     this.fileIndex.clear();
-    const paths = this.platform.getMarkdownFilePaths();
+    const paths = this.vault.listMarkdownFilePaths();
     for (const path of paths) {
       const scanned = await this.scanFile(path);
       this._perf.scannedFiles += 1;
@@ -125,7 +123,7 @@ export class DataStore {
     this.cache = cache;
 
     // 2) 列出所有 Markdown 文件
-    const paths = this.platform.getMarkdownFilePaths();
+    const paths = this.vault.listMarkdownFilePaths();
 
     // 3) 对比缓存
     const seen = new Set<string>();

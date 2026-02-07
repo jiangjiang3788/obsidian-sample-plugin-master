@@ -3,22 +3,25 @@
 import { h } from 'preact';
 import { useRef, useState, useEffect } from 'preact/hooks';
 import { App } from 'obsidian';
-import { Item, ThemeDefinition } from '@core/public';
-import { groupItemsByField, getSortedGroupKeys, groupItemsByFields, type GroupNode } from '@core/public';
+import { Item, ThemeDefinition, groupItemsByFields, type GroupNode, devLog } from '@core/public';
 import { TaskRow } from '@shared/ui/items/TaskRow';
 import { BlockItem } from '@shared/ui/items/BlockItem';
 import type { TimerController } from '@/app/public';
-import { exportItemsToMarkdown } from '@core/public';
-import { Notice } from 'obsidian';
 import { GroupedContainer } from '@shared/ui/GroupedContainer';
 
-
-type GroupPath = string;
 
 interface BlockViewProps {
     items: Item[];
     groupField?: string;          // 兼容旧配置：单字段分组
     groupFields?: string[];       // 新配置：多字段层级分组（A -> B -> C）
+    /**
+     * Phase2: shared/ui 纯化（渐进）
+     * 如果上层（feature/usecase）已经预先算好了分组树，则直接使用。
+     * 这样 BlockView 不需要再做业务计算（groupItemsByFields）。
+     */
+    groupTree?: GroupNode[] | null;
+    /** 上层已经归一化后的分组字段（优先级：groupFields > groupField） */
+    effectiveGroupFields?: string[];
     fields?: string[];
     app: App;
     onMarkDone: (id: string) => void;
@@ -28,13 +31,21 @@ interface BlockViewProps {
 }
 
 export function BlockView(props: BlockViewProps) {
-    const { items, groupField, groupFields, fields = [], app, onMarkDone, timerService, timers, allThemes } = props;
+    const {
+        items,
+        groupField,
+        groupFields,
+        groupTree: injectedGroupTree,
+        effectiveGroupFields: injectedGroupFields,
+        fields = [],
+        app,
+        onMarkDone,
+        timerService,
+        timers,
+        allThemes,
+    } = props;
     const containerRef = useRef<HTMLDivElement>(null);
     const [isNarrow, setIsNarrow] = useState(false);
-
-    // 记录每个分组路径的折叠状态：path => collapsed
-    // 现在折叠逻辑由 GroupedContainer 内部管理，这里保留 state 仅为兼容可能的外部依赖（如未来扩展）
-    const [collapsedGroups, setCollapsedGroups] = useState<Record<GroupPath, boolean>>({});
 
     useEffect(() => {
         const observer = new ResizeObserver(entries => {
@@ -74,7 +85,8 @@ export function BlockView(props: BlockViewProps) {
     };
 
     // 统一处理单字段 / 多字段：优先使用 groupFields，其次兼容 groupField
-    const effectiveGroupFields: string[] = (() => {
+    // Phase2 渐进：优先使用上层注入（feature/usecase 已经归一化过）
+    const effectiveGroupFields: string[] = injectedGroupFields ?? (() => {
         if (groupFields && groupFields.length > 0) return groupFields;
         if (groupField) return [groupField];
         return [];
@@ -94,14 +106,15 @@ export function BlockView(props: BlockViewProps) {
 
     // ===== 多字段层级分组逻辑 =====
 
-    // --- 调试日志 ---
-    console.log('[BlockView] 接收到的 Props:', props);
-    console.log(`[BlockView] 生效的分组字段 (effectiveGroupFields):`, effectiveGroupFields);
+    // --- 调试日志（dev-only） ---
+    devLog('[BlockView] 接收到的 Props:', props);
+    devLog(`[BlockView] 生效的分组字段 (effectiveGroupFields):`, effectiveGroupFields);
 
     // 使用多字段分组工具构建分组树
-    const groupTree: GroupNode[] = groupItemsByFields(items, effectiveGroupFields);
+    // Phase2 渐进：优先使用上层注入（避免 shared/ui 内部做业务计算）
+    const groupTree: GroupNode[] = (injectedGroupTree ?? groupItemsByFields(items, effectiveGroupFields)) as GroupNode[];
 
-    console.log('[BlockView] 生成的分组树 (groupTree):', JSON.parse(JSON.stringify(groupTree))); // 使用 JSON 深拷贝打印，避免控制台显示Proxy对象
+    devLog('[BlockView] 生成的分组树 (groupTree):', JSON.parse(JSON.stringify(groupTree))); // 使用 JSON 深拷贝打印，避免控制台显示Proxy对象
 
     // 之前这里有一整套手写的折叠 & 递归渲染逻辑，现已由 GroupedContainer 统一处理
 

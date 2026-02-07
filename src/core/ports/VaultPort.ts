@@ -29,6 +29,17 @@ export interface VaultPort {
   readFile(path: string): Promise<string | null>;
 
   /**
+   * 列出 vault 中所有 Markdown 文件路径（相对 vault 根）。
+   *
+   * 用途：
+   * - DataStore 启动扫描 / 缓存对比
+   *
+   * 约束：
+   * - 只返回字符串路径，避免泄漏 TFile
+   */
+  listMarkdownFilePaths(): string[];
+
+  /**
    * 写入文件内容（覆盖/创建）。
    * - 平台层应确保父目录存在
    * - 如果 path 位置已经是文件夹等冲突，应抛出错误

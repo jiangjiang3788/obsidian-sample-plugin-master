@@ -8,6 +8,7 @@
 import type ThinkPlugin from '@/main';
 import { QuickInputModal } from './QuickInputModal';
 import { createServices, getZustandState } from '@/app/public';
+import { devWarn } from '@core/public';
 
 export function registerQuickInputCommands(plugin: ThinkPlugin) {
     // Phase 4.3: 只能通过 app/public 获取 store（禁止 container 下沉）
@@ -17,7 +18,7 @@ export function registerQuickInputCommands(plugin: ThinkPlugin) {
     const settings = getZustandState(store, s => s.settings.inputSettings);
 
     if (!settings || !settings.blocks || settings.blocks.length === 0) {
-        console.log("ThinkPlugin: No Block Templates found to register commands.");
+        devWarn('ThinkPlugin: No Block Templates found to register commands.');
         return;
     }
 

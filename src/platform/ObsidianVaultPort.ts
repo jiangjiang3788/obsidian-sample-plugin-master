@@ -22,6 +22,10 @@ import type { VaultPort } from '@core/ports/VaultPort';
 export class ObsidianVaultPort implements VaultPort {
   constructor(@inject(AppToken) private app: App) {}
 
+  listMarkdownFilePaths(): string[] {
+    return this.app.vault.getMarkdownFiles().map((f) => f.path);
+  }
+
   async readFile(path: string): Promise<string | null> {
     const af = this.app.vault.getAbstractFileByPath(path);
     if (!af) return null;

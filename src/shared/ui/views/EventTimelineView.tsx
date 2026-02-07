@@ -14,6 +14,17 @@ import { GroupedContainer } from '@shared/ui/GroupedContainer';
 
 interface EventTimelineViewProps {
     items: Item[];
+    /**
+     * Phase2 渐进：上层（feature/usecase）预先计算好的时间线过滤结果。
+     * 如果传入，则视图不再在 shared/ui 内部做过滤/排序。
+     */
+    filteredItems?: Item[];
+    /**
+     * Phase2 渐进：上层预先计算好的分组树。
+     * - undefined: 未传入，由视图自己计算
+     * - null: 明确表示不分组
+     */
+    groupedTree?: GroupNode[] | null;
     app: App;
     dateRange: [Date, Date];
     module: ViewInstance;
@@ -33,6 +44,8 @@ interface EventTimelineViewProps {
 export function EventTimelineView(props: EventTimelineViewProps) {
     const {
         items,
+        filteredItems: injectedFilteredItems,
+        groupedTree: injectedGroupedTree,
         app,
         dateRange,
         module,
@@ -68,7 +81,10 @@ export function EventTimelineView(props: EventTimelineViewProps) {
     }
 
     // 先按时间过滤 + 排序，确保时间线语义正确
+    // Phase2 渐进：如果上层已注入 filteredItems，则这里不再重复计算。
     const filteredItems = useMemo(() => {
+        if (injectedFilteredItems !== undefined) return injectedFilteredItems;
+
         const result: Item[] = [];
 
         for (const item of items) {
@@ -83,13 +99,14 @@ export function EventTimelineView(props: EventTimelineViewProps) {
             const tb = getItemTime(b)!;
             return ta.valueOf() - tb.valueOf();
         });
-    }, [items, start, end, timeField]);
+    }, [items, start, end, timeField, injectedFilteredItems]);
 
     // 如果配置了分组字段，则按字段进行多级分组；否则仅按时间线顺序展示
     const groupedTree: GroupNode[] | null = useMemo(() => {
+        if (injectedGroupedTree !== undefined) return injectedGroupedTree;
         if (!groupFields || groupFields.length === 0) return null;
         return groupItemsByFields(filteredItems, groupFields);
-    }, [filteredItems, groupFields]);
+    }, [filteredItems, groupFields, injectedGroupedTree]);
 
     if (filteredItems.length === 0) {
         return <div class="event-timeline-empty">当前时间范围内没有事件记录。</div>;

@@ -2,7 +2,7 @@
 /** @jsxImportSource preact */
 import { Fragment } from 'preact';
 import { useState, useMemo, useEffect, useRef } from 'preact/hooks';
-import { Item, readField, ViewInstance } from '@core/public';
+import { Item, readField, ViewInstance, devLog } from '@core/public';
 import { dayjs, getWeeksInYear } from '@core/public';
 import { App, Notice } from 'obsidian';
 // [架构标准化] 统一从 core public 获取稳定合同，避免 deep import
@@ -165,7 +165,7 @@ export function StatisticsView({ items, app, dateRange, module, currentView, use
 
 
     const handleCellClick = (cellIdentifier: any, _target: HTMLElement, blocks: Item[], title: string) => {
-        console.log('点击单元格:', { cellIdentifier, title, blocksCount: blocks.length, blocks });
+        devLog('点击单元格:', { cellIdentifier, title, blocksCount: blocks.length, blocks });
         // 防止同一次点击被触发多次（导致立即打开后又关闭）
         if (openLockRef.current) return;
         const widgetId = `stats-popover-${module.id}`;

@@ -4,11 +4,11 @@ import { h } from 'preact';
 import { useState } from 'preact/hooks';
 import { App, Notice } from 'obsidian';
 import type { TaskBlock } from '@core/public';
-import { ItemService } from '@core/public';
 import { EditTaskModal } from '@shared/ui/modals/EditTaskModal';
 import { makeObsUri } from '@core/public';
 import { mapTaskToCategory } from '@core/public';
 import { dayjs } from '@core/public';
+import type { UpdateTaskTimeHandler } from '@shared/types/taskTime';
 
 interface DayColumnBodyProps {
     app: App;
@@ -18,8 +18,9 @@ interface DayColumnBodyProps {
     categoriesConfig: Record<string, { files?: string[]; color?: string }>;
     colorMap: Record<string, string>;
     maxHours: number;
-    itemService: ItemService;
     onColumnClick: (day: string, e: MouseEvent | TouchEvent) => void;
+    /** 由 feature 层注入的保存处理器：用于“对齐/精确编辑”等需要写回的操作 */
+    onUpdateTaskTime?: UpdateTaskTimeHandler;
     onEditTask?: (block: TaskBlock) => void;
     onAlignPrev?: (block: TaskBlock, prevBlock: TaskBlock | null) => void;
     onAlignNext?: (block: TaskBlock, nextBlock: TaskBlock | null) => void;
@@ -62,18 +63,34 @@ export function DayColumnBody({
     categoriesConfig,
     colorMap,
     maxHours,
-    itemService,
     onColumnClick,
+    onUpdateTaskTime,
     onEditTask,
     onAlignPrev,
     onAlignNext
 }: DayColumnBodyProps) {
     const [editingTask, setEditingTask] = useState<TaskBlock | null>(null);
 
+    const tryUpdateTaskTime = async (taskId: string, updates: Parameters<UpdateTaskTimeHandler>[1]) => {
+        if (!onUpdateTaskTime) {
+            new Notice('未提供保存处理器，无法更新任务时间');
+            return;
+        }
+        try {
+            await onUpdateTaskTime(taskId, updates);
+        } catch (e) {
+            new Notice('更新任务时间失败');
+        }
+    };
+
     const handleEdit = (block: TaskBlock) => {
         if (onEditTask) {
             onEditTask(block);
         } else {
+            if (!onUpdateTaskTime) {
+                new Notice('未提供保存处理器，无法打开编辑弹窗');
+                return;
+            }
             setEditingTask(block);
         }
     };
@@ -91,7 +108,7 @@ export function DayColumnBody({
             const deltaMinutes = prevBlock.blockEndMinute - block.blockStartMinute;
             const newAbsoluteStartMinute = block.startMinute + deltaMinutes;
             const newStartTimeString = formatTimeMinute(newAbsoluteStartMinute);
-            itemService.updateItemTime(block.id, { time: newStartTimeString });
+            void tryUpdateTaskTime(block.id, { time: newStartTimeString });
         }
     };
 
@@ -107,7 +124,7 @@ export function DayColumnBody({
                 new Notice('无法对齐：任务时长将变为负数或零');
                 return;
             }
-            itemService.updateItemTime(block.id, { duration: newDuration });
+            void tryUpdateTaskTime(block.id, { duration: newDuration });
         }
     };
 
@@ -118,12 +135,12 @@ export function DayColumnBody({
             onClick={(e) => onColumnClick(day, e as any)}
             onTouchStart={(e) => onColumnClick(day, e as any)}
         >
-            {editingTask && (
+            {editingTask && onUpdateTaskTime && (
                 <EditTaskModal
                     isOpen={true}
                     onClose={handleCloseModal}
                     task={editingTask}
-                    itemService={itemService}
+                    onUpdateTaskTime={onUpdateTaskTime}
                 />
             )}
             

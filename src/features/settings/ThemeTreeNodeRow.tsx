@@ -35,6 +35,7 @@ import { useState } from 'preact/hooks';
 import { InlineEditor } from './InlineEditor';
 import type { EditorState } from './useThemeMatrixEditor';
 import type { BlockTemplate, ThemeDefinition, ThemeOverride } from '@core/public';
+import { devLog } from '@core/public';
 import type { UseCases } from '@/app/public';
 import type { ThemeMatrixTreeNode as ThemeTreeNode } from '@core/public';
 
@@ -140,7 +141,7 @@ export function ThemeTreeNodeRow({
                             type="checkbox"
                             checked={isThemeSelected}
                             onChange={(e) => {
-                                console.log('【调试】主题 Checkbox 点击', { themeId: theme.id, checked: (e.target as HTMLInputElement).checked });
+                                devLog('【调试】主题 Checkbox 点击', { themeId: theme.id, checked: (e.target as HTMLInputElement).checked });
                                 onSelectionChange('theme', theme.id, (e.target as HTMLInputElement).checked);
                             }}
                             style={{ 
@@ -169,7 +170,7 @@ export function ThemeTreeNodeRow({
                                     type="checkbox"
                                     checked={isCellSelected}
                                     onChange={(e) => {
-                                        console.log('【调试】单元格 Checkbox 点击', { cellId, checked: (e.target as HTMLInputElement).checked });
+                                        devLog('【调试】单元格 Checkbox 点击', { cellId, checked: (e.target as HTMLInputElement).checked });
                                         onSelectionChange('block', cellId, (e.target as HTMLInputElement).checked);
                                     }}
                                     style={{ 

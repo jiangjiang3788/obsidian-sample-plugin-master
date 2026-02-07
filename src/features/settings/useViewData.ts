@@ -1,7 +1,7 @@
 // src/features/dashboard/hooks/useViewData.ts
 
 import { useState, useEffect, useMemo } from 'preact/hooks';
-import { DataStore } from '@core/public';
+import { DataStore, devTime, devTimeEnd } from '@core/public';
 // [核心修复] 将 filterByKeyword 添加回 import 列表
 import { filterByRules, sortItems, filterByDateRange, filterByPeriod, filterByKeyword } from '@core/public';
 import { dayjs } from '@core/public';
@@ -50,10 +50,10 @@ export function useViewData({
     }, [dataStore, sourceName]);
 
     const processedItems = useMemo(() => {
-        console.time(`[useViewData] 为视图 [${sourceName}] 计算数据耗时`);
+        devTime(`[useViewData] 为视图 [${sourceName}] 计算数据耗时`);
 
         if (!viewInstance) {
-            console.timeEnd(`[useViewData] 为视图 [${sourceName}] 计算数据耗时`);
+            devTimeEnd(`[useViewData] 为视图 [${sourceName}] 计算数据耗时`);
             return [];
         }
 
@@ -106,8 +106,13 @@ export function useViewData({
                             return itemDate.isSame(contextDate, 'quarter');
                         case '月':
                             return itemDate.isSame(contextDate, 'month');
-                        case '周':
-                            return itemDate.isSame(contextDate, 'week');
+                        case '周': {
+                            // 用 ISO 周对齐（与 getDateRange 的 isoWeek 语义一致）
+                            return (
+                                itemDate.isoWeekYear() === contextDate.isoWeekYear() &&
+                                itemDate.isoWeek() === contextDate.isoWeek()
+                            );
+                        }
                         default: // '天' 或其他
                             // 对于"天"粒度的条目，使用精确的日期范围过滤
                             const itemMs = itemDate.valueOf();
@@ -145,7 +150,7 @@ export function useViewData({
         
         const finalResult = sortItems(finalItems, sort);
 
-        console.timeEnd(`[useViewData] 为视图 [${sourceName}] 计算数据耗时`);
+        devTimeEnd(`[useViewData] 为视图 [${sourceName}] 计算数据耗时`);
         return finalResult;
 
     }, [allItems, filters, sort, dateRange, keyword, layoutView, isOverviewMode, useFieldGranularity, selectedThemes, selectedCategories, sourceName]);
