@@ -1,34 +1,27 @@
 import { container } from 'tsyringe';
-import { DataStore } from '@core/public';
-import { RendererService } from '@/features/settings/RendererService';
-import { ActionService } from '@core/public';
-import { TimerStateService } from '@core/public';
-import { InputService } from '@core/public';
-import { ItemService } from '@core/public';
-import { TimerService } from '@features/timer/TimerService';
-import { FloatingTimerWidget } from '@features/timer/FloatingTimerWidget';
-import { FeatureLoader } from '@/app/FeatureLoader';
-import { safeAsync } from '@shared/utils/errorHandler';
+
+import type ThinkPlugin from '@main';
+import type {
+    ActionService,
+    DataStore,
+    InputService,
+    SettingsRepository,
+    TimerStateService,
+} from '@core/public';
+import { devError, devLog, devWarn } from '@core/public';
+
+import type { FeatureLoader } from '@/app/FeatureLoader';
+import type { ServiceManagerServices } from '@/app/ServiceManager.services';
+import { Disposables } from '@/app/runtime/disposables';
+
 import { startMeasure } from '@shared/utils/performance';
 import { closeAllFloatingWidgets } from '@/shared/ui/widgets/FloatingWidgetManager';
-import { SETTINGS_PERSISTENCE_TOKEN, SettingsRepository, type ISettingsPersistence } from '@core/public';
-import { createAppStore, STORE_TOKEN, type AppStoreInstance } from '@/app/store/useAppStore';
-import { createUseCases, USECASES_TOKEN, type UseCases } from '@/app/usecases';
-import { THEME_MATCHER_TOKEN } from '@core/public';
-import { ThemeManager } from '@features/settings/ThemeManager';
-import { SETTINGS_TOKEN } from '@core/public'; // DI DEBUG: 用于获取初始设置
-import type { ThinkSettings } from '@core/public'; // DI DEBUG
-import type ThinkPlugin from '@main';
-import { devLog, devWarn, devError, devTime, devTimeEnd } from '@core/public';
-import { z } from 'zod';
 
-// ============== 核心 DI 容器配置 ==============
-// - ❌ 不再有 appStore getter
-// - ❌ 不再有 poison proxy / DI_UNPLUG 测试代码
-//
-// 状态读取：通过 STORE_TOKEN (Zustand store)
-// 状态写入：通过 USECASES_TOKEN (UseCases)
-// 设置持久化：通过 SettingsRepository
+import { registerSettingsPersistence } from '@/app/bootstrap/register';
+import { initializeCore } from '@/app/bootstrap/initializeCore';
+import { loadDataServices } from '@/app/bootstrap/loadDataServices';
+import { loadTimerServices } from '@/app/bootstrap/loadTimerServices';
+import { loadUIFeatures } from '@/app/bootstrap/loadUIFeatures';
 
 /**
  * ServiceManager - 插件服务总线
@@ -38,8 +31,6 @@ import { z } from 'zod';
  * 2. 管理核心服务 (Store, Data, Timer) 的生命周期
  * 3. 协调特性 (Feature) 的加载与挂载
  * 4. 统一资源清理
- * 
-     * FeatureLoader 不再需要额外参数
  */
 export class ServiceManager {
     private plugin: ThinkPlugin;
@@ -47,23 +38,41 @@ export class ServiceManager {
 
     // UI 特性加载器（用于 unload 时清理 background feature 的定时任务）
     private featureLoader: FeatureLoader | null = null;
-    
-    // 服务实例缓存
-    private services: Partial<{
-        settingsRepository: SettingsRepository;
-        dataStore: DataStore;
-        rendererService: RendererService;
-        actionService: ActionService;
-        timerService: TimerService;
-        timerStateService: TimerStateService;
-        inputService: InputService;
-        timerWidget: FloatingTimerWidget;
-        itemService: ItemService;
-        useCases: UseCases;
-    }> = {};
+
+    // 服务实例缓存（逐步填充）
+    private services: ServiceManagerServices = {};
+
+    // 统一资源释放表
+    private disposables: Disposables = new Disposables();
 
     constructor(plugin: ThinkPlugin) {
         this.plugin = plugin;
+
+        // Cleanup 资源表（逆序执行：LIFO）
+        // 这里的注册顺序刻意与“希望释放顺序”相反
+        this.disposables.add('container.clearInstances()', () => {
+            container.clearInstances();
+        });
+
+        this.disposables.add('RendererService.cleanup()', () => {
+            this.services.rendererService?.cleanup();
+        });
+
+        this.disposables.add('FloatingTimerWidget.unload()', () => {
+            this.services.timerWidget?.unload();
+            this.services.timerWidget = undefined;
+        });
+
+        this.disposables.add('closeAllFloatingWidgets()', () => {
+            // 统一关闭所有由 FloatingWidgetManager 打开的悬浮窗
+            closeAllFloatingWidgets();
+        });
+
+        this.disposables.add('FeatureLoader.cleanup()', () => {
+            // 先清理 feature registry 的 background 定时任务，避免 unload 后仍触发。
+            this.featureLoader?.cleanup();
+            this.featureLoader = null;
+        });
     }
 
     // ==================================================================================
@@ -71,20 +80,20 @@ export class ServiceManager {
     // ==================================================================================
 
     /**
-     * [主流程] #1 启动服务总线
+     * [主流程] 启动服务总线
      * 这是插件启动的核心入口，负责按顺序加载所有服务和功能。
      */
     async bootstrap(): Promise<void> {
         const stopMeasure = startMeasure('ServiceManager.bootstrap');
-        
+
         // 注册 SettingsPersistence（基于 plugin.loadData/saveData）
         this.registerSettingsPersistence();
-        
-        await this.initializeCore();         // 1. 基础状态
-        await this.loadDataServices();       // 2. 数据服务 (Data/IO)
-        await this.loadTimerServices();      // 3. 核心业务 (Timer)
-        await this.loadUIFeatures();         // 4. UI 特性 (Dashboard/Settings)
-        
+
+        await this.initializeCore(); // 1. 基础状态
+        await this.loadDataServices(); // 2. 数据服务 (Data/IO)
+        await this.loadTimerServices(); // 3. 核心业务 (Timer)
+        await this.loadUIFeatures(); // 4. UI 特性 (Dashboard/Settings)
+
         const duration = stopMeasure();
         devLog(`[ThinkPlugin] ServiceManager.bootstrap 完成 (总耗时: ${duration.toFixed(2)}ms)`);
     }
@@ -94,18 +103,12 @@ export class ServiceManager {
      */
     cleanup(): void {
         try {
-            // 先清理 feature registry 的 background 定时任务，避免 unload 后仍触发。
-            this.featureLoader?.cleanup();
-            this.featureLoader = null;
+            this.disposables.disposeAll();
 
-            // 统一关闭所有由 FloatingWidgetManager 打开的悬浮窗
-            // （例如：统计 Popover / 视图设置浮窗等）
-            closeAllFloatingWidgets();
-
-            this.services.timerWidget?.unload();
-            this.services.rendererService?.cleanup();
+            // 清空引用，避免意外复用
+            this.scanDataPromise = null;
             this.services = {};
-            container.clearInstances();
+
             devLog('[ThinkPlugin] ServiceManager 清理完成');
         } catch (error) {
             devError('[ThinkPlugin] ServiceManager 清理失败:', error);
@@ -113,313 +116,52 @@ export class ServiceManager {
     }
 
     // ==================================================================================
-    // 2. 核心服务初始化 (Core & Data)
+    // 2. 启动步骤封装（只拆文件，不改行为）
     // ==================================================================================
 
-    /**
-     * 注册 SettingsPersistence 到 DI 容器
-     * 将 plugin.loadData/saveData 封装为 ISettingsPersistence 接口
-     * 
-     * S6: 同时注册 THEME_MATCHER_TOKEN，将 ThemeManager 作为实现
-     */
     private registerSettingsPersistence(): void {
-        const plugin = this.plugin;
-
-        // 安全：持久化前对设置做脱敏（目前仅对 AI apiKey 进行剥离）
-        // 目标：机制保证（而不是“人肉记得别存 apiKey”）
-        const persistedSettingsGuard = z
-            .object({
-                aiSettings: z
-                    .object({
-                        apiKey: z.string().optional(),
-                    })
-                    .passthrough()
-                    .optional(),
-            })
-            .passthrough();
-
-        const sanitizeForPersistence = (settings: any) => {
-            // 仅用于保存，避免影响内存中的当前设置
-            const cloned = JSON.parse(JSON.stringify(settings ?? {}));
-            const parsed = persistedSettingsGuard.safeParse(cloned);
-            const out: any = parsed.success ? parsed.data : cloned;
-
-            if (out?.aiSettings && typeof out.aiSettings === 'object') {
-                if (out.aiSettings.apiKey) {
-                    devWarn('[SettingsPersistence] apiKey 检测到将被写入磁盘，已强制剥离');
-                }
-                // 永不落盘 apiKey
-                out.aiSettings.apiKey = '';
-            }
-
-            return out;
-        };
-        
-        const settingsPersistence: ISettingsPersistence = {
-            async loadData() {
-                return await plugin.loadData();
-            },
-            async saveData(settings) {
-                await plugin.saveData(sanitizeForPersistence(settings));
-            }
-        };
-        
-        container.register(SETTINGS_PERSISTENCE_TOKEN, {
-            useValue: settingsPersistence
-        });
-        
-        // DI DEBUG: prove token is registered in THIS container instance
-        devLog('[DI DEBUG] after register SettingsPersistence, isRegistered =', container.isRegistered(SETTINGS_PERSISTENCE_TOKEN));
-        
-        // S6: 注册 ThemeManager 并绑定到 THEME_MATCHER_TOKEN
-        // 这样 core 层的 DataStore 可以通过接口依赖 ThemeManager
-        container.registerSingleton(ThemeManager);
-        container.register(THEME_MATCHER_TOKEN, { useToken: ThemeManager });
+        registerSettingsPersistence(this.plugin);
     }
 
-    /**
-     * [主流程] #2 初始化核心服务
-     * 
-     * Z1 改造：
-     * 1. 使用 SettingsRepository 获取初始 settings
-     * 2. 创建 Zustand Store 并初始化
-     * 3. 创建 UseCases
-     */
     private async initializeCore(): Promise<void> {
-        const stopMeasure = startMeasure('ServiceManager.initializeCore');
-        return await safeAsync(
-            async () => {
-                // 1. 解析核心服务
-                // DI DEBUG: guard before any resolve
-                if (!container.isRegistered(SETTINGS_PERSISTENCE_TOKEN)) {
-                    devError('[DI DEBUG] SettingsPersistence NOT registered in container used for resolve()', container);
-                    throw new Error('[DI DEBUG] SettingsPersistence token missing before resolve()');
-                } else {
-                    devLog('[DI DEBUG] SettingsPersistence is registered before resolve()');
-                }
-                this.services.settingsRepository = container.resolve(SettingsRepository);
-                
-                // DI DEBUG: 初始化 SettingsRepository 的设置（因 setupCore.ts 不再调用 resolve）
-                const diInitialSettings = container.resolve<ThinkSettings>(SETTINGS_TOKEN);
-                this.services.settingsRepository.setInitialSettings(diInitialSettings);
-                devLog('[DI DEBUG] SettingsRepository.setInitialSettings() called');
-                this.services.timerStateService = container.resolve(TimerStateService);
-                
-                // 2. 创建 Zustand Store 并注册到 DI
-                const settingsRepository = this.services.settingsRepository;
-                const zustandStore = createAppStore(settingsRepository);
-                
-                // P0-3: 注册 STORE_TOKEN 到 DI 容器（替代全局单例）
-                container.register(STORE_TOKEN, { useValue: zustandStore });
-                devLog('[ThinkPlugin] Zustand Store 已注册到 DI 容器');
-                
-                // 使用 SettingsRepository 加载的 settings 初始化 Zustand store
-                const zustandInitialSettings = settingsRepository.getSettings();
-                zustandStore.getState().initialize(zustandInitialSettings);
-                devLog('[ThinkPlugin] Zustand Store 初始化完成');
-                
-                // 订阅 SettingsRepository 的变更，仅同步到 Zustand Store
-                settingsRepository.subscribe((settings) => {
-                    zustandStore.setState({ settings });
-                });
-                devLog('[ThinkPlugin] SettingsRepository 订阅已建立（纯同步 settings）');
-                
-                // TimerWidget 生命周期管理：通过监听 store 中 settings.floatingTimerEnabled 变化
-                zustandStore.subscribe(
-                    (state) => state.settings.floatingTimerEnabled,
-                    (floatingTimerEnabled, prevFloatingTimerEnabled) => {
-                        // 从禁用到启用：创建并加载 TimerWidget
-                        if (floatingTimerEnabled && !prevFloatingTimerEnabled) {
-                            if (!this.services.timerWidget) {
-                                this.services.timerWidget = new FloatingTimerWidget(this.plugin);
-                                this.services.timerWidget.load();
-                                zustandStore.setState(s => ({ ui: { ...s.ui, isTimerWidgetVisible: true } }));
-                                devLog("[计时器浮窗] 已启用 -> 创建并显示浮窗");
-                            }
-                        }
-                        
-                        // 从启用到禁用：卸载 TimerWidget
-                        if (!floatingTimerEnabled && prevFloatingTimerEnabled) {
-                            zustandStore.setState(s => ({ ui: { ...s.ui, isTimerWidgetVisible: false } }));
-                            if (this.services.timerWidget) {
-                                this.services.timerWidget.unload();
-                                this.services.timerWidget = undefined;
-                                devLog("[计时器浮窗] 已禁用 -> 卸载浮窗");
-                            }
-                        }
-                    }
-                );
-                devLog('[ThinkPlugin] TimerWidget 生命周期监听已建立');
-                
-                // 3. 创建 UseCases 并注册到 DI 容器（传入 store）
-                this.services.useCases = createUseCases(zustandStore, {
-                    timerStateService: this.services.timerStateService!,
-                });
-                container.register(USECASES_TOKEN, { useValue: this.services.useCases });
-                devLog('[ThinkPlugin] UseCases 创建完成');
-                
-                const duration = stopMeasure();
-                devLog(`[ThinkPlugin] 核心服务初始化完成 (${duration.toFixed(2)}ms)`);
-            },
-            'ServiceManager.initializeCore',
-            { showNotice: false }
-        ) || undefined;
+        await initializeCore({
+            plugin: this.plugin,
+            services: this.services,
+            disposables: this.disposables,
+        });
     }
 
-    /**
-     * [主流程] #4 加载数据服务
-     */
     private async loadDataServices(): Promise<void> {
-        if (this.services.dataStore) return;
-        
-        const stopMeasure = startMeasure('ServiceManager.loadDataServices');
-        
-        // 解析服务
-        this.services.dataStore = container.resolve(DataStore);
-        this.services.actionService = container.resolve(ActionService);
-        this.services.inputService = container.resolve(InputService);
-        this.services.itemService = container.resolve(ItemService);
-
-        // 触发后台扫描
-        this.scanDataInBackground();
-        
-        const duration = stopMeasure();
-        devLog(`[ThinkPlugin] 数据服务加载完成 (${duration.toFixed(2)}ms)`);
-    }
-
-    /**
-     * [主流程] #4.1 后台扫描数据
-     */
-    private async scanDataInBackground(): Promise<void> {
-        if (this.scanDataPromise) return this.scanDataPromise;
-        
-        this.scanDataPromise = new Promise<void>((resolve) => {
-            devTime('[ThinkPlugin] 数据扫描');
-            this.services.dataStore!.initialScan().then(() => {
-                devTimeEnd('[ThinkPlugin] 数据扫描');
-                this.services.dataStore!.notifyChange();
-                this.services.dataStore!.writePerformanceReport('initialScan');
-                resolve();
-            }).catch((error) => {
-                devError('[ThinkPlugin] 数据扫描失败:', error);
-                resolve();
-            });
-        });
-        
-        return this.scanDataPromise;
-    }
-
-    // ==================================================================================
-    // 3. 业务服务加载 (Timer)
-    // ==================================================================================
-
-    /**
-     * [主流程] #3 加载计时器服务
-     */
-    private async loadTimerServices(): Promise<void> {
-        // [Debug] 验证依赖服务是否就绪
-        devLog('[ServiceManager] loadTimerServices: action/data ready', {
-            actionService: !!this.services.actionService,
-            dataStore: !!this.services.dataStore,
-        });
-
-        if (this.services.timerService) return;
-        
-        const stopMeasure = startMeasure('ServiceManager.loadTimerServices');
-        
-        await safeAsync(
-            async () => {
-                // [DI Gate] features 层禁止 tsyringe：TimerService 改为手工创建
-                this.services.timerService = new TimerService(
-                    this.services.useCases!,
-                    this.services.dataStore!,
-                    this.services.itemService!,
-                    this.services.inputService!,
-                    this.plugin.app
-                );
-
-                // Phase1: Capabilities 可注入体系 - 让 TimerCapability 能在运行时 resolve 到 TimerService。
-                // 注意：TimerService 仍然由 app 层负责创建，features 层不允许直接触达容器。
-                container.register(TimerService, { useValue: this.services.timerService });
-                devLog('[ThinkPlugin] TimerService 已注册到 DI 容器（供 capabilities/usecases 使用）');
-
-                // RendererService 依赖 TimerService，因此在 TimerService 就绪后再创建
-                if (!this.services.rendererService) {
-                    const store = container.resolve<AppStoreInstance>(STORE_TOKEN);
-                    this.services.rendererService = new RendererService(
-                        this.plugin.app,
-                        this.services.dataStore!,
-                        this.services.actionService!,
-                        this.services.itemService!,
-                        this.services.inputService!,
-                        this.services.timerService,
-                        this.services.useCases!,
-                        store
-                    );
-                }
-                
-                // 注册命令（P0: 使用 UseCases 替代直接调用 appStore）
-                this.plugin.addCommand({
-                    id: 'toggle-think-floating-timer',
-                    name: '切换悬浮计时器显隐',
-                    callback: () => {
-                        // P0: 通过 UseCases 调用，而非直接调用 appStore
-                        this.services.useCases!.settings.toggleTimerWidgetVisibility();
-                    },
-                });
-
-                // [PR1] 初始化 Zustand Timer Slice
-                await this.services.useCases!.timer.setInitialTimersFromDisk();
-                devLog('[ThinkPlugin] Zustand Timers Loaded:', this.services.useCases!.timer.getTimers());
-
-                // 加载 Widget
-                const settings = this.services.settingsRepository!.getSettings();
-                if (settings.floatingTimerEnabled) {
-                    this.services.timerWidget = new FloatingTimerWidget(this.plugin);
-                    this.services.timerWidget.load();
-                }
-                
-                const duration = stopMeasure();
-                devLog(`[ThinkPlugin] 计时器服务加载完成 (${duration.toFixed(2)}ms)`);
+        await loadDataServices({
+            services: this.services,
+            getScanDataPromise: () => this.scanDataPromise,
+            setScanDataPromise: (p) => {
+                this.scanDataPromise = p;
             },
-            'ServiceManager.loadTimerServices',
-            { showNotice: true }
-        );
+        });
     }
 
-    // ==================================================================================
-    // 4. UI 特性加载 (Features)
-    // ==================================================================================
+    private async loadTimerServices(): Promise<void> {
+        await loadTimerServices({
+            plugin: this.plugin,
+            services: this.services,
+        });
+    }
 
-    /**
-     * [主流程] #5 加载UI特性
-     * 
-     * FeatureLoader 不再需要额外参数
-     * - QuickInput/AiInput 通过 zustand store 获取 settings
-     * - Dashboard/Settings 的 appStore 参数已变为可选
-     */
     private async loadUIFeatures(): Promise<void> {
-        // 确保依赖已就绪
-        if (!this.services.dataStore || !this.services.rendererService || !this.services.actionService) {
-            devError('[ThinkPlugin] UI特性加载失败: 依赖服务未就绪');
-            return;
-        }
-
-        // S7.0: FeatureLoader 构造函数不再接收 appStore
-        // 说明：featureLoader 需要在 unload 时 cleanup（取消 background 定时任务），因此必须挂在 ServiceManager 上。
-        this.featureLoader?.cleanup();
-        this.featureLoader = new FeatureLoader(
-            this.plugin,
-            this.services.dataStore,
-            this.services.rendererService,
-            this.services.actionService
-        );
-
-        await this.featureLoader.loadFeatures(this.scanDataPromise);
+        await loadUIFeatures({
+            plugin: this.plugin,
+            services: this.services,
+            scanDataPromise: this.scanDataPromise,
+            getFeatureLoader: () => this.featureLoader,
+            setFeatureLoader: (loader) => {
+                this.featureLoader = loader;
+            },
+        });
     }
 
     // ==================================================================================
-    // 5. 辅助方法 (Getters & Helpers)
+    // 3. Getters & Helpers（对外访问保持不变）
     // ==================================================================================
 
     get settingsRepository(): SettingsRepository {
@@ -432,16 +174,8 @@ export class ServiceManager {
         return this.services.dataStore;
     }
 
-    get timerService(): TimerService | undefined {
-        return this.services.timerService;
-    }
-
     get timerStateService(): TimerStateService | undefined {
         return this.services.timerStateService;
-    }
-
-    get timerWidget(): FloatingTimerWidget | undefined {
-        return this.services.timerWidget;
     }
 
     get inputService(): InputService {
@@ -454,9 +188,18 @@ export class ServiceManager {
     }
 
     // P0 新增：获取 UseCases
-    get useCases(): UseCases {
+    get useCases() {
         if (!this.services.useCases) throw new Error('UseCases 未初始化');
         return this.services.useCases;
+    }
+
+    // 保留老接口：供 main.ts getter 使用
+    get timerService() {
+        return this.services.timerService;
+    }
+
+    get timerWidget() {
+        return this.services.timerWidget;
     }
 
     getLoadingStatus() {
@@ -464,19 +207,19 @@ export class ServiceManager {
             coreLoaded: !!this.services.settingsRepository && !!this.services.timerStateService,
             timerLoaded: !!this.services.timerService,
             dataLoaded: !!this.services.dataStore && !!this.services.rendererService,
-            uiLoaded: !!this.services.dataStore && !!this.services.rendererService
+            uiLoaded: !!this.services.dataStore && !!this.services.rendererService,
         };
     }
 
-    async reloadService(serviceName: keyof typeof this.services): Promise<void> {
+    async reloadService(serviceName: keyof ServiceManagerServices): Promise<void> {
         devLog(`[ServiceManager] 重新加载服务: ${serviceName}`);
-        
+
         if (this.services[serviceName]) {
-            const service = this.services[serviceName] as any;
+            const service: any = this.services[serviceName] as any;
             if (typeof service.cleanup === 'function') {
                 service.cleanup();
             }
-            delete this.services[serviceName];
+            delete (this.services as any)[serviceName];
         }
 
         switch (serviceName) {
@@ -487,7 +230,7 @@ export class ServiceManager {
                 await this.loadDataServices();
                 break;
             default:
-                devWarn(`[ServiceManager] 不支持重新加载服务: ${serviceName}`);
+                devWarn(`[ServiceManager] 不支持重新加载服务: ${String(serviceName)}`);
         }
     }
 }
