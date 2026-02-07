@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "scripts": {
     "dev": "vite",
-    "build": "npm run arch:public && npm run arch:capabilities && npm run arch:gate && npm run feature:gate && npm run dual-system:gate && npm run core-obsidian:gate && vite build && node -e \"const fs=require('fs');fs.copyFileSync('dist/main.js','main.js');fs.copyFileSync('dist/main.js.map','main.js.map');fs.copyFileSync('dist/styles.css','styles.css');\"",
+    "build": "npm run arch:public && npm run arch:capabilities && npm run arch:gate && npm run feature:gate && npm run dual-system:gate && npm run core-obsidian:gate && npm run core-public:gate && vite build && node -e \"const fs=require('fs');fs.copyFileSync('dist/main.js','main.js');fs.copyFileSync('dist/main.js.map','main.js.map');fs.copyFileSync('dist/styles.css','styles.css');\"",
     "test": "jest --config test/configs/jest.config.js",
     "test:watch": "jest --config test/configs/jest.config.js --watch",
     "test:coverage": "jest --config test/configs/jest.config.js --coverage",
@@ -19,6 +19,7 @@
     "di:gate": "node scripts/di-gate.mjs",
     "dual-system:gate": "node scripts/dual-system-gate.mjs",
     "core-obsidian:gate": "node scripts/core-obsidian-gate.mjs",
+    "core-public:gate": "node scripts/core-public-gate.mjs",
     "refactor:metrics": "node scripts/refactor-metrics.mjs",
     "lint": "eslint . --ext .ts,.tsx,.js,.jsx",
     "typecheck": "tsc -p tsconfig.json --noEmit",
@@ -26,7 +27,7 @@
     "capability:gate": "npm run arch:capabilities",
     "knip": "npx --yes knip",
     "jscpd": "npx --yes jscpd",
-    "ci": "npm run lint && npm run typecheck && npm run arch:gate && npm run feature:gate && npm run arch:public && npm run arch:capabilities && npm run di:gate && npm run dual-system:gate && npm run core-obsidian:gate",
+    "ci": "npm run lint && npm run typecheck && npm run arch:gate && npm run feature:gate && npm run arch:public && npm run arch:capabilities && npm run di:gate && npm run dual-system:gate && npm run core-obsidian:gate && npm run core-public:gate",
     "arch:public": "node scripts/public-api-gate.mjs",
     "arch:capabilities": "node scripts/capability-gate.mjs",
     "arch:audit": "node scripts/arch-audit.mjs"

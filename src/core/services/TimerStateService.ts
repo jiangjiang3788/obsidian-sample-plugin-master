@@ -13,28 +13,26 @@
  */
 
 import { singleton, inject } from 'tsyringe';
-import { App } from 'obsidian';
 import type { TimerState } from '@core/types/timer';
-import { AppToken } from '@core/services/types';
+import type { VaultPort } from '@core/ports/VaultPort';
+import { VAULT_PORT_TOKEN } from '@core/ports/VaultPort';
+import { devWarn } from '@core/utils/devLogger';
 
 const TIMER_STATE_PATH = 'think-plugin-timer-state.json';
 
 @singleton()
 export class TimerStateService {
-  constructor(@inject(AppToken) private app: App) {}
+  constructor(@inject(VAULT_PORT_TOKEN) private vault: VaultPort) {}
 
   async loadStateFromFile(): Promise<TimerState[]> {
     try {
-      const fileExists = await this.app.vault.adapter.exists(TIMER_STATE_PATH);
-      if (!fileExists) return [];
-
-      const content = await this.app.vault.adapter.read(TIMER_STATE_PATH);
+      const content = await this.vault.readFile(TIMER_STATE_PATH);
       if (!content) return [];
 
       const timers = JSON.parse(content);
-      return Array.isArray(timers) ? timers : [];
+      return Array.isArray(timers) ? (timers as TimerState[]) : [];
     } catch (error) {
-      console.error('Think Plugin: Failed to load timer state from file.', error);
+      devWarn('Think Plugin: Failed to load timer state from file.', error);
       return [];
     }
   }
@@ -42,9 +40,9 @@ export class TimerStateService {
   async saveStateToFile(timers: TimerState[]): Promise<void> {
     try {
       const content = JSON.stringify(timers, null, 2);
-      await this.app.vault.adapter.write(TIMER_STATE_PATH, content);
+      await this.vault.writeFile(TIMER_STATE_PATH, content);
     } catch (error) {
-      console.error('Think Plugin: Failed to save timer state to file.', error);
+      devWarn('Think Plugin: Failed to save timer state to file.', error);
     }
   }
 }

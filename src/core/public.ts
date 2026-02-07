@@ -80,7 +80,6 @@ export { InputService } from './services/InputService';
 export { ItemService } from './services/ItemService';
 export { ActionService } from './services/ActionService';
 export { TimerStateService } from './services/TimerStateService';
-export { VaultWatcher } from './services/VaultWatcher';
 
 export { VaultFileStorage, STORAGE_TOKEN } from './services/StorageService';
 export type { IPluginStorage } from './services/StorageService';
@@ -89,6 +88,16 @@ export type { IPluginStorage } from './services/StorageService';
 // 说明：core 层只定义接口（Port）；平台层实现并在组合根注册。
 export { VAULT_PORT_TOKEN } from './ports/VaultPort';
 export type { VaultPort } from './ports/VaultPort';
+
+export { UI_PORT_TOKEN } from './ports/UiPort';
+export type { UiPort } from './ports/UiPort';
+
+export { METADATA_PORT_TOKEN } from './ports/MetadataPort';
+export type { MetadataPort, HeadingInfo } from './ports/MetadataPort';
+
+export { FILESTAT_PORT_TOKEN } from './ports/FileStatPort';
+export type { FileStatPort, FileStat } from './ports/FileStatPort';
+
 
 export { SettingsRepository, SETTINGS_PERSISTENCE_TOKEN } from './services/SettingsRepository';
 export type { ISettingsPersistence } from './services/SettingsRepository';

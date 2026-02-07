@@ -1,9 +1,9 @@
 // src/core/services/ItemService.ts
 // [架构标准化] 抽象化业务概念，避免 core 层出现具体业务词汇
 import { singleton, inject } from 'tsyringe';
-import { App, TFile, Notice } from 'obsidian';
 import { DataStore } from '@core/services/DataStore';
-import { AppToken } from '@core/services/types';
+import type { VaultPort } from '@core/ports/VaultPort';
+import { VAULT_PORT_TOKEN } from '@core/ports/VaultPort';
 import { dayjs, nowHHMM, todayISO, timeToMinutes, minutesToTime } from '@core/utils/date';
 import { markTaskDone } from '@core/utils/mark';
 
@@ -11,7 +11,7 @@ import { markTaskDone } from '@core/utils/mark';
 export class ItemService {
     constructor(
         @inject(DataStore) private dataStore: DataStore,
-        @inject(AppToken) private app: App
+        @inject(VAULT_PORT_TOKEN) private vault: VaultPort
     ) {}
 
     /**
@@ -19,10 +19,8 @@ export class ItemService {
      */
     public async getItemLine(itemId: string): Promise<string> {
         const { path, lineNo } = this.parseItemId(itemId);
-        const file = this.app.vault.getAbstractFileByPath(path);
-        if (!(file instanceof TFile)) throw new Error(`找不到条目文件: ${path}`);
-
-        const content = await this.app.vault.read(file);
+        const content = await this.vault.readFile(path);
+        if (content == null) throw new Error(`找不到条目文件: ${path}`);
         const lines = content.split('\n');
         if (lineNo > lines.length) throw new Error(`文件 ${path} 的行号 ${lineNo} 超出范围。`);
 
@@ -33,19 +31,18 @@ export class ItemService {
      * [架构标准化] 更新文件中的特定行。
      */
     private async updateItemLine(path: string, lineNo: number, newLine: string, nextLine?: string): Promise<void> {
-        const file = this.app.vault.getAbstractFileByPath(path);
-        if (!(file instanceof TFile)) throw new Error(`找不到文件: ${path}`);
-        
-        const content = await this.app.vault.read(file);
+        const content = await this.vault.readFile(path);
+        if (content == null) throw new Error(`找不到文件: ${path}`);
         const lines = content.split('\n');
+        if (lineNo > lines.length) throw new Error(`文件 ${path} 的行号 ${lineNo} 超出范围。`);
         lines[lineNo - 1] = newLine;
 
         if (nextLine) {
             lines.splice(lineNo, 0, nextLine);
         }
 
-        await this.app.vault.modify(file, lines.join('\n'));
-        this.dataStore.scanFile(file).then(() => this.dataStore.notifyChange());
+        await this.vault.writeFile(path, lines.join('\n'));
+        this.dataStore.scanFileByPath(path).then(() => this.dataStore.notifyChange());
     }
 
     /**

@@ -77,7 +77,7 @@ import type { Plugin } from 'obsidian';
 import type { RendererService } from './RendererService';
 import type { ActionService } from '@core/public';
 
-import { VaultWatcher } from '@core/public';
+import { VaultWatcher } from './VaultWatcher';
 import { CodeblockEmbedder } from './CodeblockEmbedder';
 
 /** 

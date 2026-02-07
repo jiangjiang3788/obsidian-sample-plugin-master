@@ -1,18 +1,19 @@
 // src/core/services/ActionService.ts
 import { singleton, inject } from 'tsyringe';
-import { App, Notice } from 'obsidian';
 import { dayjs } from '@core/utils/date';
 import type { Item, ViewInstance } from '@/core/types/schema';
 import { DataStore } from '@core/services/DataStore';
 import { InputService } from '@core/services/InputService';
 import type { QuickInputConfig, ISettingsProvider } from '@core/services/types';
-import { AppToken, SettingsProviderToken } from '@core/services/types';
+import { SettingsProviderToken } from '@core/services/types';
 import { readField } from '@/core/types/schema';
+import type { UiPort } from '@core/ports/UiPort';
+import { UI_PORT_TOKEN } from '@core/ports/UiPort';
 
 @singleton()
 export class ActionService {
     constructor(
-        @inject(AppToken) private app: App,
+        @inject(UI_PORT_TOKEN) private ui: UiPort,
         @inject(DataStore) private dataStore: DataStore,
         @inject(SettingsProviderToken) private settingsProvider: ISettingsProvider,
         @inject(InputService) private inputService: InputService
@@ -30,7 +31,7 @@ export class ActionService {
         const filters = viewInstance.filters || [];
         const categoryFilter = filters.find((f: any) => f.field === 'categoryKey' && (f.op === '=' || f.op === 'includes'));
         if (!categoryFilter || !categoryFilter.value) {
-            new Notice('快捷输入失败：此视图未按 "categoryKey" 进行筛选。');
+            this.ui.notice('快捷输入失败：此视图未按 "categoryKey" 进行筛选。');
             return null;
         }
         const blockName = categoryFilter.value as string;
@@ -43,9 +44,9 @@ export class ActionService {
         
         if (!targetBlock) {
             if (blockName === '完成任务' || blockName === '未完成任务') {
-                new Notice(`快捷输入失败：找不到名称包含"任务"的Block模板。请在设置中创建一个任务类型的模板。`);
+                this.ui.notice(`快捷输入失败：找不到名称包含"任务"的Block模板。请在设置中创建一个任务类型的模板。`);
             } else {
-                new Notice(`快捷输入失败：找不到名为 "${blockName}" 的Block模板。`);
+                this.ui.notice(`快捷输入失败：找不到名为 "${blockName}" 的Block模板。`);
             }
             return null;
         }
@@ -92,7 +93,7 @@ export class ActionService {
     public getQuickInputConfigForTaskEdit(taskId: string): QuickInputConfig | null {
         const item = this.dataStore.queryItems().find(i => i.id === taskId);
         if (!item) {
-            new Notice(`错误：找不到ID为 ${taskId} 的任务。`);
+            this.ui.notice(`错误：找不到ID为 ${taskId} 的任务。`);
             return null;
         }
 
@@ -101,7 +102,7 @@ export class ActionService {
         const targetBlock = settings.inputSettings.blocks.find(b => b.name === baseCategory);
 
         if (!targetBlock) {
-            new Notice(`找不到与分类 "${baseCategory}" 匹配的Block模板，无法编辑。`);
+            this.ui.notice(`找不到与分类 "${baseCategory}" 匹配的Block模板，无法编辑。`);
             return null;
         }
 
@@ -143,7 +144,7 @@ export class ActionService {
         const categories = viewConfig.categories || [];
         
         if (categories.length === 0) {
-            new Notice('快捷输入失败：统计视图未配置分类。');
+            this.ui.notice('快捷输入失败：统计视图未配置分类。');
             return null;
         }
         
@@ -158,9 +159,9 @@ export class ActionService {
         
         if (!targetBlock) {
             if (targetCategoryName === '完成任务' || targetCategoryName === '未完成任务') {
-                new Notice(`快捷输入失败：找不到名称包含"任务"的Block模板。请在设置中创建一个任务类型的模板。`);
+                this.ui.notice(`快捷输入失败：找不到名称包含"任务"的Block模板。请在设置中创建一个任务类型的模板。`);
             } else {
-                new Notice(`快捷输入失败：找不到名为 "${targetCategoryName}" 的Block模板。`);
+                this.ui.notice(`快捷输入失败：找不到名为 "${targetCategoryName}" 的Block模板。`);
             }
             return null;
         }
@@ -203,7 +204,7 @@ export class ActionService {
     public getQuickInputConfigForNewTimer(): QuickInputConfig | null {
         const blocks = this.settingsProvider.getSettings().inputSettings.blocks;
         if (!blocks || blocks.length === 0) {
-            new Notice('没有可用的Block模板，请先在设置中创建一个。');
+            this.ui.notice('没有可用的Block模板，请先在设置中创建一个。');
             return null;
         }
         const defaultBlockId = blocks[0].id;

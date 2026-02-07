@@ -93,7 +93,7 @@
     {
       "id": "view_mg1zanri06mhu",
       "title": "打卡block",
-      "viewType": "StatisticsView",
+      "viewType": "ExcelView",
       "dataSourceId": "ds_mer6kbdnogrty",
       "viewConfig": {
         "categories": [

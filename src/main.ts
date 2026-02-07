@@ -12,7 +12,7 @@ import { InputService } from '@core/public';
 import { ThinkSettings, DEFAULT_SETTINGS } from '@core/public';
 import type { UseCases } from '@/app/public';
 import { setupCoreContainer } from '@core/public';
-import { VAULT_PORT_TOKEN } from '@core/public';
+import { VAULT_PORT_TOKEN, UI_PORT_TOKEN, METADATA_PORT_TOKEN, FILESTAT_PORT_TOKEN } from '@core/public';
 import './styles/main.css';
 import { safeAsync } from '@shared/utils/errorHandler';
 import { performanceMonitor, startMeasure } from '@shared/utils/performance';
@@ -27,6 +27,9 @@ import { TimerService } from '@features/timer/TimerService';
 import { ActionService } from '@core/public';
 import { devLog } from '@core/public';
 import { ObsidianVaultPort } from '@/platform/ObsidianVaultPort';
+import { ObsidianUiPort } from '@/platform/ObsidianUiPort';
+import { ObsidianMetadataPort } from '@/platform/ObsidianMetadataPort';
+import { ObsidianFileStatPort } from '@/platform/ObsidianFileStatPort';
 
 devLog(`[ThinkPlugin] main.ts 已加载，版本时间: ${new Date().toLocaleTimeString()}`);
 
@@ -56,6 +59,9 @@ export default class ThinkPlugin extends Plugin {
                 // - 为 core/storage 注入 VaultPort 的平台实现
                 // - 必须在任何依赖 STORAGE_TOKEN 的服务 resolve 之前完成注册
                 container.register(VAULT_PORT_TOKEN, { useClass: ObsidianVaultPort });
+                container.register(UI_PORT_TOKEN, { useClass: ObsidianUiPort });
+                container.register(METADATA_PORT_TOKEN, { useClass: ObsidianMetadataPort });
+                container.register(FILESTAT_PORT_TOKEN, { useClass: ObsidianFileStatPort });
 
                 // 2.1 capabilities 组合根（Phase1: 可注入体系）
                 // - 先创建 registry，让后续 feature 可以在这里追加 register(...)
@@ -88,6 +94,22 @@ export default class ThinkPlugin extends Plugin {
             name: '显示性能报告',
             callback: () => {
                 performanceMonitor.printReport();
+            }
+        });
+
+        // [恢复工具] 清空索引缓存并重新全量扫描
+        // 主要用于修复：升级/重构后 cache 不一致导致 items=0 的情况。
+        this.addCommand({
+            id: 'think-rebuild-index',
+            name: '重建索引（清空缓存并重新扫描）',
+            callback: async () => {
+                try {
+                    new Notice('Think: 正在重建索引...', 3000);
+                    await this.serviceManager.dataStore.clearCacheAndRescan('full');
+                    new Notice('Think: 索引重建完成', 3000);
+                } catch (e: any) {
+                    new Notice(`Think: 索引重建失败 - ${e?.message || e}`, 5000);
+                }
             }
         });
 

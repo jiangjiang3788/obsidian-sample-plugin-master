@@ -1,23 +1,4 @@
-/**
- * DataStore - 数据存储与查询核心
- * Role: Service (业务 + IO)
- * Dependencies: ObsidianPlatform, App, IThemeMatcher, IPluginStorage
- * 
- * Do:
- * - 扫描 Vault 中的 Markdown 文件，解析成结构化的 Item 对象
- * - 使用缓存机制 (warmStart) 提升启动速度
- * - 在内存中维护所有 Item 的索引 (items, fileIndex)
- * - 提供统一的数据查询接口 (queryItems)
- * - 管理数据版本和查询缓存
- * - 提供订阅机制，在数据变更时通知其他部分
- * 
- * Don't:
- * - 直接修改文件内容 (这是 ItemService 的职责)
- * - 管理应用级别的状态 (状态管理的职责)
- * - 渲染 UI
- */
 import { singleton, inject } from 'tsyringe';
-import type { HeadingCache, TFile, App } from 'obsidian';
 import type { Item, FilterRule, SortRule } from '@/core/types/schema';
 import { parseTaskLine, parseBlockContent } from '@core/utils/parser';
 import { throttle } from '@core/utils/timing';
@@ -25,13 +6,16 @@ import { ObsidianPlatform } from '@platform/obsidian';
 import { normalizeItemDates } from '@core/utils/normalize';
 import { filterByRules, sortItems } from '@core/utils/itemFilter';
 import { parseRecurrence } from '@core/utils/mark';
-// [新增] 注入令牌与服务
-import { AppToken } from '@core/services/types';
 import type { IThemeMatcher } from '@core/types/theme';
 import { THEME_MATCHER_TOKEN } from '@core/types/theme';
 import type { IPluginStorage } from '@core/services/StorageService';
 import { STORAGE_TOKEN } from '@core/services/StorageService';
 import { devWarn, devError } from '../utils/devLogger';
+// NOTE: core 内部禁止依赖 @core/public（对外门面）。
+// 否则会形成循环依赖：core/services -> core/public -> core/services...
+import { VAULT_PORT_TOKEN, type VaultPort } from '@core/ports/VaultPort';
+import { METADATA_PORT_TOKEN, type MetadataPort } from '@core/ports/MetadataPort';
+import { FILESTAT_PORT_TOKEN, type FileStatPort } from '@core/ports/FileStatPort';
 import {
     CacheV1,
     CURRENT_CACHE_SCHEMA_VERSION,
@@ -43,12 +27,28 @@ import {
 export class DataStore {
   constructor(
     @inject(ObsidianPlatform) private platform: ObsidianPlatform,
-    @inject(AppToken) private app: App,
+    @inject(VAULT_PORT_TOKEN) private vault: VaultPort,
+    @inject(METADATA_PORT_TOKEN) private metadata: MetadataPort,
+    @inject(FILESTAT_PORT_TOKEN) private fileStat: FileStatPort,
     @inject(THEME_MATCHER_TOKEN) private themeMatcher: IThemeMatcher,
     @inject(STORAGE_TOKEN) private storage: IPluginStorage
   ) {}
 
-  // 内存数据
+  private _pathBasename(path: string) {
+    return path.split('/').pop() || path;
+  }
+
+  private _pathParentName(path: string) {
+    const parts = path.split('/');
+    if (parts.length <= 1) return '';
+    return parts[parts.length - 2] || '';
+  }
+
+  private _basenameNoExt(filename: string) {
+    return filename.toLowerCase().endsWith('.md') ? filename.slice(0, -3) : filename;
+  }
+
+// 内存数据
   private items: Item[] = [];
   private fileIndex: Map<string, Item[]> = new Map();
   private changeListeners: Set<() => void> = new Set();
@@ -66,9 +66,9 @@ export class DataStore {
   async scanAll() {
     this.items = [];
     this.fileIndex.clear();
-    const files = this.platform.getMarkdownFiles();
-    for (const file of files) {
-      const scanned = await this.scanFile(file);
+    const paths = this.platform.getMarkdownFilePaths();
+    for (const path of paths) {
+      const scanned = await this.scanFile(path);
       this._perf.scannedFiles += 1;
       this._perf.scannedItems += scanned.length;
     }
@@ -78,6 +78,39 @@ export class DataStore {
   // [主流程] 初始扫描（代理到暖启动）
   async initialScan() {
     return this.warmStart();
+  }
+
+  /**
+   * 手动恢复：清空缓存并重新扫描。
+   *
+   * 用途：
+   * - 修复缓存文件写入异常导致的“items=0”
+   * - 版本迁移时用户本地残留旧 cache
+   *
+   * 说明：不会触碰用户笔记内容，只重建 Think/cache.json。
+   */
+  async clearCacheAndRescan(mode: 'warm' | 'full' = 'warm'): Promise<void> {
+    // 1) 清空内存
+    this.items = [];
+    this.fileIndex.clear();
+    this.queryCache.clear();
+    this.cache = null;
+
+    // 2) 删除缓存文件（忽略不存在的情况）
+    try {
+      await this.storage.remove('Think/cache.json');
+    } catch (e) {
+      devWarn('ThinkPlugin: 删除缓存文件失败（可忽略）', e);
+    }
+
+    // 3) 重新扫描
+    if (mode === 'full') {
+      await this.scanAll();
+    } else {
+      await this.warmStart();
+    }
+
+    this.notifyChange();
   }
 
   // [主流程] 暖启动：加载缓存 → 目录 stat → 仅扫描变更 → 合并内存 → 防抖保存
@@ -92,22 +125,25 @@ export class DataStore {
     this.cache = cache;
 
     // 2) 列出所有 Markdown 文件
-    const files = this.platform.getMarkdownFiles();
+    const paths = this.platform.getMarkdownFilePaths();
 
     // 3) 对比缓存
     const seen = new Set<string>();
     const unchangedEntries: Array<{ path: string; cached: { mtime: number; size: number; items: any[] } }> = [];
-    const changedFiles: TFile[] = [];
+    const changedFiles: string[] = [];
 
-    for (const file of files) {
-      const path = file.path;
+    for (const path of paths) {
       seen.add(path);
-      const st = file.stat;
+      const st = await this.fileStat.stat(path);
+      if (!st) {
+        // 文件不存在或非 markdown file（极少）
+        continue;
+      }
       const cached = cache.files[path];
       if (cached && cached.mtime === st.mtime && cached.size === st.size) {
         unchangedEntries.push({ path, cached });
       } else {
-        changedFiles.push(file);
+        changedFiles.push(path);
       }
     }
 
@@ -122,8 +158,8 @@ export class DataStore {
     }
 
     // 5) 仅扫描变更文件
-    for (const f of changedFiles) {
-      const scanned = await this.scanFile(f, { bumpVersion: false });
+    for (const pth of changedFiles) {
+      const scanned = await this.scanFile(pth, { bumpVersion: false });
       this._perf.scannedFiles += 1;
       this._perf.scannedItems += scanned.length;
       // 扫描完成时 scanFile 会同步更新 cache.files[path]
@@ -145,26 +181,60 @@ export class DataStore {
 
   /* ---------------- 单文件扫描 ---------------- */
 
-  async scanFile(file: TFile, opts: { bumpVersion?: boolean } = {}): Promise<Item[]> {
+  /**
+   * Phase2 迁移辅助：按路径扫描文件。
+   * 目的：让 core 其它服务（如 ItemService）不需要依赖 Obsidian 的 TFile 类型。
+   */
+  async scanFileByPath(filePath: string, opts: { bumpVersion?: boolean } = {}): Promise<Item[]> {
+    return await this.scanFile(filePath, opts);
+  }
+
+  /**
+   * 扫描单个文件。
+   *
+   * Phase2 之后 core 不能 import 'obsidian'，但外层（feature / platform）
+   * 仍可能传入 TFile。
+   *
+   * 为了避免“升级后类型/运行时断裂”，这里接受两类入参：
+   * - string: file path
+   * - { path: string }: 结构化对象（兼容 TFile）
+   */
+  async scanFile(filePathOrFile: string | { path: string }, opts: { bumpVersion?: boolean } = {}): Promise<Item[]> {
     try {
-      const content = await this.platform.readFile(file);
+      const filePath = typeof filePathOrFile === 'string'
+        ? filePathOrFile
+        : (filePathOrFile && typeof filePathOrFile.path === 'string' ? filePathOrFile.path : '');
+
+      if (!filePath) {
+        devWarn('ThinkPlugin: scanFile 入参非法（缺少 path）', filePathOrFile);
+        return [];
+      }
+
+      const content = await this.vault.readFile(filePath);
+      if (content == null) {
+        devWarn('ThinkPlugin: scanFile 文件不存在或不可读', filePath);
+        return [];
+      }
       const lines = content.split(/\r?\n/);
-      const filePath = file.path;
-      const parentFolder = file.parent?.name || '';
+      const parentFolder = this._pathParentName(filePath);
       const fileItems: Item[] = [];
 
-      const cache = this.app.metadataCache.getFileCache(file);
-      const headingsList: HeadingCache[] = cache?.headings || [];
+      const headingsList = await this.metadata.getHeadings(filePath);
+      const stat = await this.fileStat.stat(filePath);
+      if (!stat) {
+        devWarn('ThinkPlugin: scanFile 获取 stat 失败', filePath);
+        return [];
+      }
       let nextHeadingIndex = 0;
       let currentSectionTags: string[] = [];
       let currentHeader = '';
-      const fileName = file.name.toLowerCase().endsWith('.md') ? file.name.slice(0, -3) : file.name;
+      const fileName = this._basenameNoExt(this._pathBasename(filePath));
 
       for (let i = 0; i < lines.length; i++) {
         const line = lines[i];
 
         // 命中标题：记录当前节的 header/tags
-        if (nextHeadingIndex < headingsList.length && headingsList[nextHeadingIndex].position.start.line === i) {
+        if (nextHeadingIndex < headingsList.length && headingsList[nextHeadingIndex].line === i) {
           const headingEntry = headingsList[nextHeadingIndex];
           const headingText = headingEntry.heading;
           const headingTags = headingText.match(/#([\p{L}\p{N}_\/-]+)/gu) || [];
@@ -182,8 +252,8 @@ export class DataStore {
           if (endIdx !== -1) {
             const blockItem = parseBlockContent(filePath, lines, i, endIdx, parentFolder);
             if (blockItem) {
-              blockItem.created = file.stat.ctime;
-              blockItem.modified = file.stat.mtime;
+              blockItem.created = stat.ctime;
+              blockItem.modified = stat.mtime;
               if (currentHeader) blockItem.header = currentHeader;
               blockItem.tags = Array.from(new Set([...currentSectionTags, ...blockItem.tags]));
               blockItem.filename = fileName;
@@ -211,8 +281,8 @@ export class DataStore {
         const taskItem = parseTaskLine(filePath, line, i + 1, parentFolder);
         if (taskItem) {
           taskItem.tags = Array.from(new Set([...currentSectionTags, ...taskItem.tags]));
-          taskItem.created = file.stat.ctime;
-          taskItem.modified = file.stat.mtime;
+          taskItem.created = stat.ctime;
+          taskItem.modified = stat.mtime;
           if (currentHeader) {
             taskItem.header = currentHeader;
             // 使用智能匹配获取完整主题路径
@@ -244,8 +314,8 @@ export class DataStore {
         this.cache = { schemaVersion: CURRENT_CACHE_SCHEMA_VERSION, files: {} };
       }
       this.cache.files[filePath] = {
-        mtime: file.stat.mtime,
-        size: file.stat.size,
+        mtime: stat.mtime,
+        size: stat.size,
         items: fileItems.map(toCachedItem)
       };
       this._scheduleCacheSave();
@@ -256,7 +326,7 @@ export class DataStore {
 
       return fileItems;
     } catch (err) {
-      devError('ThinkPlugin: 扫描文件失败', file.path, err);
+      devError('ThinkPlugin: 扫描文件失败', filePath, err);
       return [];
     }
   }

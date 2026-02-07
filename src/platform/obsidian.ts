@@ -1,8 +1,8 @@
 // src/platform/obsidian.ts
 import { singleton, inject } from 'tsyringe';
 import { App, TFile, TAbstractFile } from 'obsidian';
-// [新增] 导入 App 的注入令牌
-import { AppToken } from '@core/public';
+// NOTE: 这里不能从 @core/public 导入，否则会与 core/public -> core/services 形成循环依赖。
+import { AppToken } from '@core/services/types';
 
 /**
  * 对 Obsidian API 的最薄包装。
@@ -18,6 +18,13 @@ export class ObsidianPlatform {
     }
     getMarkdownFiles(): TFile[] {
         return this.app.vault.getMarkdownFiles();
+    }
+
+    /**
+     * Phase2: 提供不泄漏 TFile 的查询方式，供 core 使用。
+     */
+    getMarkdownFilePaths(): string[] {
+        return this.app.vault.getMarkdownFiles().map((f) => f.path);
     }
     async writeFile(file: TFile, content: string) {
         return this.app.vault.modify(file, content);

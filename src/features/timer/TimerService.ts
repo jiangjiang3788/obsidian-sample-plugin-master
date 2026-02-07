@@ -144,7 +144,8 @@ export class TimerService {
             const file = this.app.vault.getAbstractFileByPath(targetFilePath);
 
             if (file instanceof TFile) {
-                const newItemsInFile = await this.dataStore.scanFile(file);
+                // Phase2: core DataStore 扫描入口统一走 path
+                const newItemsInFile = await this.dataStore.scanFileByPath(file.path);
 
                 if (newItemsInFile.length > 0) {
                     const latestItem = newItemsInFile.sort((a, b) => (b.file?.line || 0) - (a.file?.line || 0))[0];

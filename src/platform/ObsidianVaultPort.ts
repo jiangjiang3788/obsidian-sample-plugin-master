@@ -7,8 +7,9 @@
 
 import { singleton, inject } from 'tsyringe';
 import { App, TFile, TFolder } from 'obsidian';
-import { AppToken, devError } from '@core/public';
-import type { VaultPort } from '@core/public';
+import { AppToken } from '@core/services/types';
+import { devError } from '@core/utils/devLogger';
+import type { VaultPort } from '@core/ports/VaultPort';
 
 /**
  * ObsidianVaultPort
@@ -44,7 +45,22 @@ export class ObsidianVaultPort implements VaultPort {
       throw new Error(`路径冲突："${path}" 是文件夹，无法写入文件。`);
     }
 
-    await this.app.vault.create(path, content);
+    try {
+      await this.app.vault.create(path, content);
+    } catch (e) {
+      // 竞争条件：并发创建同一路径时，Obsidian 可能抛错。
+      // 再次确认是否已存在，如果已存在则改为覆盖写入。
+      const recheck = this.app.vault.getAbstractFileByPath(path);
+      if (recheck instanceof TFile) {
+        await this.app.vault.modify(recheck, content);
+        return;
+      }
+      if (recheck instanceof TFolder) {
+        throw new Error(`路径冲突："${path}" 是文件夹，无法写入文件。`);
+      }
+      devError(`[ObsidianVaultPort] create file failed: ${path}`, e);
+      throw e;
+    }
   }
 
   async deleteFile(path: string): Promise<void> {

@@ -27,7 +27,9 @@ export interface CachedItem {
 }
 
 export interface CacheV1 {
-  schemaVersion: 1;
+  // NOTE: 版本号用于“缓存失效/重建”。
+  // 我们允许它是 number，以便平滑升级时兼容历史文件。
+  schemaVersion: number;
   files: Record<
     string,
     {
@@ -43,7 +45,8 @@ export interface CacheV1 {
   };
 }
 
-export const CURRENT_CACHE_SCHEMA_VERSION = 1;
+// v2: 主目的为一次性修复旧 cache 造成的“items=0/不刷新”问题（强制重新扫描）
+export const CURRENT_CACHE_SCHEMA_VERSION = 2;
 
 // 将运行时 Item 映射为 CachedItem（仅保存热字段）
 export function toCachedItem(it: Item): CachedItem {
