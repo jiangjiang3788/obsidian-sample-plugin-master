@@ -14,6 +14,7 @@
  */
 
 import { App, MarkdownRenderer, Component } from 'obsidian';
+import { devWarn } from '@core/public';
 
 // ============== Types ==============
 
@@ -84,7 +85,7 @@ export class MessageRenderService {
         try {
             await this.renderMarkdown(app, containerEl, content, sourcePath, component);
         } catch (e) {
-            console.warn('MessageRenderService: Markdown 渲染失败，降级为纯文本', e);
+            devWarn('MessageRenderService: Markdown 渲染失败，降级为纯文本', e);
             this.clear(containerEl);
             this.renderPlainText(containerEl, content);
         }

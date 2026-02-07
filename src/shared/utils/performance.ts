@@ -4,7 +4,7 @@
  */
 
 import { errorHandler } from './errorHandler';
-import { devLog } from '@core/public';
+import { devLog, devWarn, devError } from '@core/public';
 
 /**
  * 性能指标数据结构
@@ -244,11 +244,11 @@ export class PerformanceMonitor {
      */
     private checkThreshold(name: string, duration: number): void {
         if (duration >= this.config.errorThreshold) {
-            console.error(
+            devError(
                 `[Performance] SLOW: ${name} took ${duration.toFixed(2)}ms (threshold: ${this.config.errorThreshold}ms)`
             );
         } else if (duration >= this.config.warningThreshold) {
-            console.warn(
+            devWarn(
                 `[Performance] Warning: ${name} took ${duration.toFixed(2)}ms (threshold: ${this.config.warningThreshold}ms)`
             );
         }

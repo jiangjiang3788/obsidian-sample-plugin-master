@@ -4,7 +4,7 @@
  */
 
 import { Notice } from 'obsidian';
-import { devError } from '@core/public';
+import { devError, devLog } from '@core/public';
 
 /**
  * 错误类型枚举
@@ -277,8 +277,10 @@ export class ErrorHandler {
     private logToConsole(entry: ErrorLogEntry): void {
         const timestamp = new Date(entry.timestamp).toLocaleString();
         const prefix = `[ErrorHandler][${entry.type}][${timestamp}]`;
-        
-        console.group(prefix);
+
+        // Note: avoid raw console.* here to keep production console clean.
+        // devLog/devError are dev-only.
+        devLog(prefix);
         devError('Message:', entry.message);
         
         if (entry.context) {
@@ -292,8 +294,6 @@ export class ErrorHandler {
         if (entry.details) {
             devError('Details:', entry.details);
         }
-        
-        console.groupEnd();
     }
 
     /**

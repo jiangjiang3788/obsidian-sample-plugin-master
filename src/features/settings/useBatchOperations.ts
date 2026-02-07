@@ -5,7 +5,7 @@
  * P1: 通过 UseCases 调用批量操作，禁止直接访问 appStore
  */
 import { useState, useCallback } from 'preact/hooks';
-import { devWarn, parseCellKey } from '@core/public';
+import { devWarn, devError, parseCellKey } from '@core/public';
 import { useUseCases } from '@/app/public';
 
 // 定义新的参数类型
@@ -92,7 +92,7 @@ export function useBatchOperations({
 
       onOperationComplete?.();
     } catch (error) {
-      console.error('批量操作失败:', error);
+      devError('批量操作失败:', error);
       // 可以在这里添加用户通知
     } finally {
       setIsProcessing(false);

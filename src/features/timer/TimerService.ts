@@ -19,7 +19,7 @@ import { Notice, App, TFile } from 'obsidian';
 import { DataStore } from '@core/public';
 import { InputService } from '@core/public';
 import type { QuickInputSaveData } from '@core/public';
-import { nowHHMM, timeToMinutes, minutesToTime } from '@core/public';
+import { nowHHMM, timeToMinutes, minutesToTime, devError } from '@core/public';
 import type { UseCases } from '@/app/public';
 
 export class TimerService {
@@ -127,7 +127,7 @@ export class TimerService {
             }
         } catch (e: any) {
             new Notice(`错误：更新任务失败 - ${e.message}`);
-            console.error("TimerService Error:", e);
+            devError("TimerService Error:", e);
         }
         await this.useCases.timer.removeTimer(timerId);
     }
@@ -160,7 +160,7 @@ export class TimerService {
 
         } catch (e: any) {
             new Notice(`创建任务失败: ${e.message}`);
-            console.error(e);
+            devError(e);
         }
     }
 }

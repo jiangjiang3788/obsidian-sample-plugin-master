@@ -4,6 +4,7 @@
  */
 
 import { Notice } from 'obsidian';
+import { devError } from '@core/public';
 
 export interface SaveOptions {
   successMessage?: string;
@@ -38,7 +39,7 @@ export function useSaveHandler(
       const errorObj = error instanceof Error ? error : new Error(String(error));
       const message = errorObj.message || '未知错误';
       new Notice(`❌ ${errorMessage}: ${message}`);
-      console.error(`${errorMessage}:`, errorObj);
+      devError(`${errorMessage}:`, errorObj);
       onError?.(errorObj);
     }
   };

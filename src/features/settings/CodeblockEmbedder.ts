@@ -9,7 +9,7 @@
  */
 import { render } from 'preact';
 import { Notice, Plugin } from 'obsidian';
-import { CODEBLOCK_LANG } from '@core/public';
+import { CODEBLOCK_LANG, devWarn } from '@core/public';
 import { DataStore } from '@core/public';
 import { createServices, getZustandState, type AppStoreInstance } from '@/app/public';
 import { RendererService } from '@/features/settings/RendererService';
@@ -56,7 +56,7 @@ export class CodeblockEmbedder {
                         layoutName = trimmedSource.replace(/['"]/g, '');
                     }
                 } catch (e) {
-                    console.warn('ThinkPlugin: 代码块内容解析失败', e);
+                    devWarn('ThinkPlugin: 代码块内容解析失败', e);
                     el.createDiv({ text: '代码块内容解析失败，请检查语法。应为布局名称或JSON。' });
                     return;
                 }

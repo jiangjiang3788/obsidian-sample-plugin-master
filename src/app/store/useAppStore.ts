@@ -25,7 +25,7 @@ import { create } from 'zustand';
 import { subscribeWithSelector } from 'zustand/middleware';
 import type { ThinkSettings } from '@core/public';
 import type { SettingsRepository } from '@core/public';
-import { createSliceMeta } from '@core/public';
+import { createSliceMeta, devError } from '@core/public';
 import { createThemeSlice, type ThemeSlice } from './slices/theme.slice';
 import { createLayoutSlice, type LayoutSlice } from './slices/layout.slice';
 import { createSettingsSlice, type SettingsSlice } from './slices/settings.slice';
@@ -99,7 +99,7 @@ export function createAppStore(settingsRepository: SettingsRepository) {
             reorderBlocks: async (activeId: string, overId: string) => {
                 const state = get();
                 if (!state.isInitialized) {
-                    console.error('useAppStore: 未初始化，无法重排序 Block');
+                    devError('useAppStore: 未初始化，无法重排序 Block');
                     return;
                 }
 
@@ -123,7 +123,7 @@ export function createAppStore(settingsRepository: SettingsRepository) {
                     }, createSliceMeta('core.reorderBlocks'));
                     set({ isLoading: false });
                 } catch (error: any) {
-                    console.error('useAppStore: Block 重排序失败', error);
+                    devError('useAppStore: Block 重排序失败', error);
                     set({ 
                         error: error.message || 'Block 重排序失败',
                         isLoading: false 

@@ -10,7 +10,7 @@ import { Notice } from 'obsidian';
 import type ThinkPlugin from '@/main';
 import { AiTextPromptModal } from './AiTextPromptModal';
 import { AiBatchConfirmModal } from './AiBatchConfirmModal';
-import { AiConfigCache, AiHttpClient, AiNaturalLanguageRecordParser } from '@core/public';
+import { AiConfigCache, AiHttpClient, AiNaturalLanguageRecordParser, devError } from '@core/public';
 import { createServices, getZustandState, type AppStoreInstance } from '@/app/public';
 import type { ISettingsProvider } from '@core/public';
 
@@ -103,7 +103,7 @@ export function registerAiInputCommands(plugin: ThinkPlugin) {
 
             } catch (e: any) {
                 loadingNotice.hide();
-                console.error('AI 解析失败:', e);
+                devError('AI 解析失败:', e);
                 new Notice(`AI 解析失败：${e?.message ?? e}`, 6000);
             }
         },

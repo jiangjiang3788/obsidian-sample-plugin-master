@@ -30,7 +30,6 @@ import { buildEventTimelineViewModel } from '@/features/settings/viewModels/even
 import { buildHeatmapViewModel } from '@/features/settings/viewModels/heatmapViewModel';
 import { buildTimelineViewModel } from '@/features/settings/viewModels/timelineViewModel';
 import { buildStatisticsViewModel } from '@/features/settings/viewModels/statisticsViewModel';
-import { buildStatisticsViewModel } from '@/features/settings/viewModels/statisticsViewModel';
 
 // [修改] ViewContent 组件增加 onDataLoaded 和 selectedThemes props
 const ViewContent = ({
