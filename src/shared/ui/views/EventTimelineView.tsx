@@ -11,6 +11,7 @@ import { groupItemsByFields, type GroupNode } from '@core/public';
 import { TaskRow } from '@shared/ui/items/TaskRow';
 import { BlockItem } from '@shared/ui/items/BlockItem';
 import { GroupedContainer } from '@shared/ui/GroupedContainer';
+import type { MarkDoneHandler } from '@shared/types/actions';
 
 interface EventTimelineViewProps {
     items: Item[];
@@ -29,7 +30,7 @@ interface EventTimelineViewProps {
     dateRange: [Date, Date];
     module: ViewInstance;
     currentView: '年' | '季' | '月' | '周' | '天';
-    actionService?: any;
+    onMarkDone?: MarkDoneHandler;
     timerService: TimerController;
     timers: any[];
     allThemes: any[];
@@ -50,7 +51,7 @@ export function EventTimelineView(props: EventTimelineViewProps) {
         dateRange,
         module,
         currentView, // 目前主要影响 dateRange，展示形式保持竖向事件流
-        actionService,
+        onMarkDone,
         timerService,
         timers,
         allThemes
@@ -155,7 +156,7 @@ export function EventTimelineView(props: EventTimelineViewProps) {
                         {item.type === 'task' ? (
                             <TaskRow
                                 item={item}
-                                onMarkDone={(id: string) => actionService?.markTaskDone?.(id)}
+                                onMarkDone={(id: string) => onMarkDone?.(id)}
                                 app={app}
                                 timerService={timerService}
                                 timer={timers.find(t => t.taskId === item.id)}

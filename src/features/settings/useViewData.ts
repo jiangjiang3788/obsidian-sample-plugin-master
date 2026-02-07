@@ -5,6 +5,7 @@ import { DataStore, devTime, devTimeEnd } from '@core/public';
 // [核心修复] 将 filterByKeyword 添加回 import 列表
 import { filterByRules, sortItems, filterByDateRange, filterByPeriod, filterByKeyword } from '@core/public';
 import { dayjs } from '@core/public';
+import { isSameIsoWeek, toIsoDateTuple } from '@core/public';
 import type { Item, ViewInstance, FilterRule, SortRule } from '@core/public';
 
 interface UseViewDataProps {
@@ -57,8 +58,11 @@ export function useViewData({
             return [];
         }
 
-        const start = dayjs(dateRange[0]).format('YYYY-MM-DD');
-        const end = dayjs(dateRange[1]).format('YYYY-MM-DD');
+        // Single source of truth: always use an ISO date tuple derived from the already-normalized dateRange.
+        const [start, end] = toIsoDateTuple({
+            start: dayjs(dateRange[0]).startOf('day'),
+            end: dayjs(dateRange[1]).endOf('day'),
+        });
         
         let itemsToProcess = allItems;
         itemsToProcess = filterByRules(itemsToProcess, filters);
@@ -107,11 +111,8 @@ export function useViewData({
                         case '月':
                             return itemDate.isSame(contextDate, 'month');
                         case '周': {
-                            // 用 ISO 周对齐（与 getDateRange 的 isoWeek 语义一致）
-                            return (
-                                itemDate.isoWeekYear() === contextDate.isoWeekYear() &&
-                                itemDate.isoWeek() === contextDate.isoWeek()
-                            );
+                            // 用 ISO 周对齐（与 calculateTimelineRange 的 isoWeek 语义一致）
+                            return isSameIsoWeek(itemDate, contextDate);
                         }
                         default: // '天' 或其他
                             // 对于"天"粒度的条目，使用精确的日期范围过滤

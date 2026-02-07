@@ -5,7 +5,7 @@
  * P1: 通过 UseCases 调用批量操作，禁止直接访问 appStore
  */
 import { useState, useCallback } from 'preact/hooks';
-import { parseCellKey } from '@core/public';
+import { devWarn, parseCellKey } from '@core/public';
 import { useUseCases } from '@/app/public';
 
 // 定义新的参数类型
@@ -85,7 +85,7 @@ export function useBatchOperations({
             break;
           case 'setOverride':
             // 对于覆盖，可能需要一个模态框来输入通用配置
-            console.log('批量覆盖操作需要UI支持');
+            devWarn('批量覆盖操作需要 UI 支持');
             break;
         }
       }

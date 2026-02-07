@@ -506,7 +506,8 @@
         "view_mer6n7pwf7suy",
         "view_mewr7y1gvq0ro",
         "view_membnf1hgjgm3",
-        "view_membbqjam5v63"
+        "view_membbqjam5v63",
+        "view_mer6ll4mtbjry"
       ],
       "displayMode": "list",
       "initialView": "周",
@@ -8628,7 +8629,7 @@
     "enabled": true,
     "provider": "openai_compat",
     "apiEndpoint": "https://api.ricardochat.cn/v1",
-    "apiKey": "sk-2SPzXePSCl9BISBoGzqQoBTd2BDv0mmoRZ3KoSZiMPFWyryn",
+    "apiKey": "",
     "model": "[Max]gemini-3-flash-preview",
     "temperature": 0.7,
     "maxTokens": 4096,

@@ -4,6 +4,7 @@
  */
 
 import { errorHandler } from './errorHandler';
+import { devLog } from '@core/public';
 
 /**
  * 性能指标数据结构
@@ -313,29 +314,26 @@ export class PerformanceMonitor {
      */
     public printReport(): void {
         const report = this.generateReport();
-        
-        console.group('📊 Performance Report');
-        console.log(`Generated at: ${new Date(report.timestamp).toLocaleString()}`);
-        console.log('\n=== Summary ===');
-        console.log(`Total Operations: ${report.summary.totalOperations}`);
-        console.log(`Total Time: ${report.summary.totalTime.toFixed(2)}ms`);
-        console.log(`Average Time: ${report.summary.averageTime.toFixed(2)}ms`);
-        console.log(`Slowest: ${report.summary.slowestOperation}`);
-        console.log(`Fastest: ${report.summary.fastestOperation}`);
-        
-        console.log('\n=== Metrics ===');
-        console.table(
-            report.metrics.map(m => ({
-                Name: m.name,
-                Count: m.count,
-                'Avg (ms)': m.avg.toFixed(2),
-                'Min (ms)': m.min.toFixed(2),
-                'Max (ms)': m.max.toFixed(2),
-                'P95 (ms)': m.p95.toFixed(2),
-                'P99 (ms)': m.p99.toFixed(2)
-            }))
-        );
-        console.groupEnd();
+
+        // dev-only 输出：避免污染用户日志
+        // 结构化数据直接打印对象，方便在 DevTools 中展开查看
+        devLog('📊 Performance Report', {
+            generatedAt: new Date(report.timestamp).toLocaleString(),
+            summary: {
+                ...report.summary,
+                totalTime: Number(report.summary.totalTime.toFixed(2)),
+                averageTime: Number(report.summary.averageTime.toFixed(2)),
+            },
+            metrics: report.metrics.map(m => ({
+                name: m.name,
+                count: m.count,
+                avgMs: Number(m.avg.toFixed(2)),
+                minMs: Number(m.min.toFixed(2)),
+                maxMs: Number(m.max.toFixed(2)),
+                p95Ms: Number(m.p95.toFixed(2)),
+                p99Ms: Number(m.p99.toFixed(2)),
+            })),
+        });
     }
 
     /**

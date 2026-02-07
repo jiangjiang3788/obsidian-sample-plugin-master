@@ -2,6 +2,7 @@ import type { Item } from '@/core/types/schema';
 import { dayjs } from '@core/utils/date';
 import { readField } from '@/core/types/schema';
 import { getBaseCategory } from '@core/utils/itemGrouping';
+import { isSameIsoWeek } from '@core/utils/timelineRange';
 
 export interface PeriodData {
     counts: Record<string, number>;
@@ -192,7 +193,7 @@ export function getMonthWeeksData(
     const weeksData = [];
     
     let weekStart = monthStart.startOf('isoWeek');
-    while (weekStart.isBefore(monthEnd) || weekStart.isSame(monthEnd, 'week')) {
+    while (weekStart.isBefore(monthEnd) || isSameIsoWeek(weekStart, monthEnd)) {
         const weekEnd = weekStart.endOf('isoWeek');
         const weekItems = items.filter(item => {
             const itemDate = dayjs(item.date);

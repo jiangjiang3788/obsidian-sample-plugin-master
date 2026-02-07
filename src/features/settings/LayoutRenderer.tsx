@@ -7,7 +7,7 @@ import { Layout, ViewInstance, Item } from '@core/public'; // [修改] 导入 It
 import { ModulePanel } from './ModulePanel';
 import { DashboardViewComponents as ViewComponents } from './index';
 
-import { getDateRange, dayjs, devLog } from '@core/public';
+import { calculateTimelineRange, normalizeTimelineView, dayjs, devLog } from '@core/public';
 import { useZustandAppStore, useUseCases } from '@/app/public';
 import type { TimerController } from '@/app/public';
 import type { ActionService } from '@core/public';
@@ -22,10 +22,15 @@ import { App, Notice } from 'obsidian'; // [修改] 导入 Notice
 import { exportItemsToMarkdown, getExportConfigByViewType } from '@core/public'; // [新增] 导入导出函数
 import { ViewToolbar } from '@shared/ui/views/ViewToolbar'; // [新增] 导入统一工具栏组件
 import type { UpdateTaskTimeHandler } from '@shared/types/taskTime';
+import type { OpenQuickCreateHandler } from '@shared/types/actions';
 
 // Phase2: shared/ui 纯化试点（先从 BlockView 的分组树计算搬出）
 import { buildBlockViewModel } from '@/features/settings/viewModels/blockViewModel';
 import { buildEventTimelineViewModel } from '@/features/settings/viewModels/eventTimelineViewModel';
+import { buildHeatmapViewModel } from '@/features/settings/viewModels/heatmapViewModel';
+import { buildTimelineViewModel } from '@/features/settings/viewModels/timelineViewModel';
+import { buildStatisticsViewModel } from '@/features/settings/viewModels/statisticsViewModel';
+import { buildStatisticsViewModel } from '@/features/settings/viewModels/statisticsViewModel';
 
 // [修改] ViewContent 组件增加 onDataLoaded 和 selectedThemes props
 const ViewContent = ({
@@ -107,12 +112,48 @@ const ViewContent = ({
         })
         : null;
 
+    const heatmapViewModel = viewInstance.viewType === 'HeatmapView'
+        ? buildHeatmapViewModel({
+            items: viewItems,
+            module: viewInstance,
+            inputSettings,
+        })
+        : null;
+
+    const timelineViewModel = viewInstance.viewType === 'TimelineView'
+        ? buildTimelineViewModel({
+            items: viewItems,
+            module: viewInstance,
+            dateRange,
+            currentView: layoutView as any,
+        })
+        : null;
+
+    const statisticsViewModel = viewInstance.viewType === 'StatisticsView'
+        ? buildStatisticsViewModel({
+            items: viewItems,
+            dateRange,
+            module: viewInstance,
+            currentView: layoutView as any,
+            selectedCategories,
+        })
+        : null;
+
     // Phase2: shared/ui 不直接依赖 core service（如 ItemService）
     // 由 feature 层注入保存处理器，shared/ui 只触发回调。
     const onUpdateTaskTime = useCallback<UpdateTaskTimeHandler>(
         (taskId, updates) => itemService.updateItemTime(taskId, updates),
         [itemService]
     );
+
+    // Phase2: shared/ui 纯化（StatisticsView）
+    // shared/ui 不直接依赖 ActionService，只接收一个“打开快捷创建”的回调。
+    const onQuickCreate = useCallback<OpenQuickCreateHandler>(() => {
+        const layoutDate = dayjs(dateRange[0]);
+        const config = actionService.getQuickInputConfigForView(viewInstance, layoutDate, layoutView);
+        if (!config) return;
+        new QuickInputModal(app, config.blockId, config.context, config.themeId).open();
+    }, [actionService, app, viewInstance, dateRange, layoutView]);
 
     const viewProps: any = {
         app,
@@ -126,10 +167,11 @@ const ViewContent = ({
         groupFields: viewInstance.groupFields,
         fields: viewInstance.fields,
         onMarkDone: onMarkDone,
-        actionService: actionService,
-        itemService: itemService,
+        // 不向 shared/ui 透传 actionService：需要的能力一律用 handlers 注入
+        // itemService 不再向 shared/ui 透传（避免把 service 依赖扩散到 UI）
         // 仅部分 View 需要（如 TimelineView 的“对齐/精确编辑”）
         onUpdateTaskTime: onUpdateTaskTime,
+        onQuickCreate: viewInstance.viewType === 'StatisticsView' ? onQuickCreate : undefined,
         timerService: timerService,
         timers: timers, // [新增]
         allThemes: allThemes, // [新增]
@@ -143,6 +185,15 @@ const ViewContent = ({
         // 仅 EventTimelineView 需要（其它 View 忽略即可）
         filteredItems: eventTimelineViewModel?.filteredItems,
         groupedTree: eventTimelineViewModel?.groupedTree,
+
+        // Phase2: TimelineView / StatisticsView renderModel 注入（shared/ui 只渲染）
+        timelineModel: timelineViewModel,
+        statisticsModel: statisticsViewModel,
+
+        // 仅 HeatmapView 需要（其它 View 忽略即可）
+        injectedThemesByPath: heatmapViewModel?.themesByPath,
+        injectedThemesToTrack: heatmapViewModel?.themesToTrack,
+        injectedDataByThemeAndDate: heatmapViewModel?.dataByThemeAndDate,
     };
 
     return <ViewComponent {...viewProps} />;
@@ -219,8 +270,8 @@ export function LayoutRenderer({ layout, dataStore, app, actionService, itemServ
 
     // [修复] 统一在组件顶层计算 dateRange，避免在循环/条件中调用 Hook（切换 年/季/月/周/天 时容易导致数据显示错乱）
     const dateRangeForView = useMemo(() => {
-        const range = getDateRange(layoutDate, layoutView);
-        return [range.startDate.toDate(), range.endDate.toDate()] as [Date, Date];
+        const range = calculateTimelineRange(layoutDate, normalizeTimelineView(layoutView));
+        return [range.start.toDate(), range.end.toDate()] as [Date, Date];
     }, [layoutDate, layoutView]);
 
     

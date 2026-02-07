@@ -33,6 +33,10 @@ module.exports = {
                 group: ['@/features/**', '@features/**', '../features/**', '../../features/**'],
                 message: 'core 层不能依赖 features 层 ❌（历史例外请加入 allowlist）',
               },
+              {
+                group: ['@/platform/**', '@platform/**', '../platform/**', '../../platform/**'],
+                message: 'core 层不能依赖 platform 层 ❌（请通过 Port 接口注入）',
+              },
             ],
           },
         ],
@@ -239,6 +243,12 @@ module.exports = {
                 message:
                   "shared 层禁止依赖 ItemService ❌（请在 feature 层桥接为 onUpdateTaskTime 等回调/DTO；shared/ui 只负责渲染与触发事件）",
               },
+              {
+                name: '@core/public',
+                importNames: ['ActionService'],
+                message:
+                  "shared 层禁止依赖 ActionService ❌（请在 feature 层桥接为 onQuickCreate/onMarkDone 等回调；shared/ui 只负责渲染与触发事件）",
+              },
             ],
             patterns: [
               // shared 可以依赖 core，但不应该依赖 app 内部实现
@@ -320,5 +330,35 @@ module.exports = {
 
     // ✅ shared allowlist 已清空：
     // DayColumnBody 的 features 依赖 tunnel 已迁移（见 shared/ui/modals/EditTaskModal + core/types/timeline）
+
+    // ==================================================================================
+    // SHARED/UI：纯化增量护栏（先 warn 冻结扩散）
+    // - shared/ui 仍允许使用 '@/app/public'，但强烈不建议直接使用 store/services 能力
+    // - 采用 warn（不阻断 CI），用于逐步收敛
+    // ==================================================================================
+    {
+      files: ['src/shared/ui/**/*.{ts,tsx,js,jsx}'],
+      rules: {
+        'no-restricted-imports': [
+          'warn',
+          {
+            paths: [
+              {
+                name: '@/app/public',
+                importNames: ['useZustandAppStore'],
+                message:
+                  "shared/ui 建议不要直接使用全局 store（useZustandAppStore）⚠️ 请优先由 feature 层计算 renderModel 后注入 shared/ui",
+              },
+              {
+                name: '@/app/public',
+                importNames: ['createServices', 'mountWithServices', 'unmountPreact'],
+                message:
+                  "shared/ui 建议不要直接组合 services（createServices/mountWithServices）⚠️ 组合根能力应在 app/feature 层完成",
+              },
+            ],
+          },
+        ],
+      },
+    },
   ],
 };

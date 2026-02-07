@@ -31,6 +31,7 @@
     "arch:public": "node scripts/public-api-gate.mjs",
     "arch:capabilities": "node scripts/capability-gate.mjs",
     "arch:audit": "node scripts/arch-audit.mjs"
+    ,"audit:shared-ui": "node scripts/audit-shared-ui-imports.mjs"
   },
   "dependencies": {
     "@codemirror/state": "6.5.0",

@@ -10,6 +10,8 @@ import customParse from 'dayjs/plugin/customParseFormat';
 import isoWeek from 'dayjs/plugin/isoWeek';
 import isSameOrBefore from 'dayjs/plugin/isSameOrBefore'; // 确保引入
 
+import { calculateTimelineRange, normalizeTimelineView } from './timelineRange';
+
 dayjs.extend(quarterOfYear);
 dayjs.extend(weekOfYear);
 dayjs.extend(customParse);
@@ -73,13 +75,8 @@ export function extractDate(line: string, em: string | string[]) {
 
 /* ---------- 起止区间 ---------- */
 export function getDateRange(d: dayjs.Dayjs, view: string) {
-  switch (view) {
-    case '年': return { startDate: d.startOf('year'), endDate: d.endOf('year') };
-    case '季': return { startDate: d.startOf('quarter'), endDate: d.endOf('quarter') };
-    case '月': return { startDate: d.startOf('month'), endDate: d.endOf('month') };
-    case '周': return { startDate: d.startOf('isoWeek'), endDate: d.endOf('isoWeek') };
-    default: return { startDate: d.startOf('day'), endDate: d.endOf('day') };
-  }
+  const range = calculateTimelineRange(d, normalizeTimelineView(view));
+  return { startDate: range.start, endDate: range.end };
 }
 
 // --- 职责单一的视图日期格式化函数 ---

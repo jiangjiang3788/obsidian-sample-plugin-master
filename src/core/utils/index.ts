@@ -40,4 +40,5 @@ export * from './timeline';
 export * from './timelineAggregation';
 export * from './timelineBlocks';
 export * from './timelineInteraction';
+export * from './timelineRange';
 export * from './timing';

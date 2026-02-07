@@ -3,7 +3,7 @@
 import { Fragment } from 'preact';
 import { useState, useMemo, useEffect, useRef } from 'preact/hooks';
 import { Item, readField, ViewInstance, devLog } from '@core/public';
-import { dayjs, getWeeksInYear } from '@core/public';
+import { dayjs, getWeeksInYear, isSameIsoWeek } from '@core/public';
 import { App, Notice } from 'obsidian';
 // [架构标准化] 统一从 core public 获取稳定合同，避免 deep import
 import { STATISTICS_VIEW_DEFAULT_CONFIG as DEFAULT_CONFIG } from '@core/public';
@@ -12,10 +12,8 @@ import { IconButton, Tooltip } from '@mui/material';
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 import IosShareIcon from '@mui/icons-material/IosShare';
 import { exportItemsToMarkdown, getExportConfigByViewType } from '@core/public';
-import { QuickInputModal } from '@shared/ui/modals/QuickInputModal';
 import FloatingPanel from '@/shared/ui/primitives/FloatingPanel';
 import { openFloatingWidget, closeFloatingWidget } from '@/shared/ui/widgets/FloatingWidgetManager';
-import { dayjs as dayjsUtil } from '@core/public';
 import type { CategoryConfig, PeriodData } from '@core/public';
 import { 
     aggregateByDay,
@@ -28,6 +26,7 @@ import {
 } from '@core/public';
 import { ChartBlock } from '@shared/ui/statistics/ChartBlock';
 import type { TimerController } from '@/app/public';
+import type { OpenQuickCreateHandler } from '@shared/types/actions';
 
 // 解决 Preact 和 Material-UI 的类型兼容性问题
 const AnyIconButton = IconButton as any;
@@ -41,11 +40,13 @@ interface StatisticsViewProps {
     module: ViewInstance;
     currentView: '年' | '季' | '月' | '周' | '天';
     useFieldGranularity?: boolean;
-    actionService?: any;
+    onQuickCreate?: OpenQuickCreateHandler;
     selectedCategories?: string[];
     timerService: TimerController;
     timers: any[];
     allThemes: any[];
+    /** Phase2: feature 层注入的 renderModel（shared/ui 只渲染） */
+    statisticsModel?: any;
 }
 interface PopoverState {
     blocks: Item[];
@@ -85,18 +86,22 @@ const PopoverContent = ({ blocks, app, module, timerService, timers, allThemes }
 
 
 // =============== 主视图组件 ===============
-export function StatisticsView({ items, app, dateRange, module, currentView, useFieldGranularity = false, actionService, selectedCategories, timerService, timers, allThemes }: StatisticsViewProps) {
-    const { categories = [], displayMode = 'smart', minVisibleHeight = 15, usePeriodField = false } = { ...DEFAULT_CONFIG, ...module.viewConfig };
+export function StatisticsView({ items, app, dateRange, module, currentView, useFieldGranularity = false, onQuickCreate, selectedCategories, timerService, timers, allThemes, statisticsModel }: StatisticsViewProps) {
+    const viewConfig = statisticsModel?.viewConfig ?? ({ ...DEFAULT_CONFIG, ...module.viewConfig } as any);
+    const { categories = [], displayMode = 'smart', minVisibleHeight = 15, usePeriodField = false } = viewConfig;
     const categoryConfigs = categories as CategoryConfig[];
-    const categoryOrder = useMemo(() => categoryConfigs.map((c: CategoryConfig) => c.name), [categoryConfigs]);
+    const categoryOrder = useMemo(
+        () => statisticsModel?.categoryOrder ?? categoryConfigs.map((c: CategoryConfig) => c.name),
+        [statisticsModel, categoryConfigs]
+    );
     const [selectedCell, setSelectedCell] = useState<any>(null);
     const [popover, setPopover] = useState<PopoverState | null>(null);
     const openLockRef = useRef(false);
     // 周期字段使用状态
     const [usePeriod, setUsePeriod] = useState(usePeriodField);
     
-    const startDate = useMemo(() => dayjs(dateRange[0]), [dateRange]);
-    const endDate = useMemo(() => dayjs(dateRange[1]), [dateRange]);
+    const startDate = useMemo(() => statisticsModel?.startDate ?? dayjs(dateRange[0]), [statisticsModel, dateRange]);
+    const endDate = useMemo(() => statisticsModel?.endDate ?? dayjs(dateRange[1]), [statisticsModel, dateRange]);
 
     // [修复] 只在分类配置实际改变时才更新选中状态，避免主题筛选时重置
     const categoryOrderKey = useMemo(() => categoryOrder.join(','), [categoryOrder]);
@@ -104,63 +109,41 @@ export function StatisticsView({ items, app, dateRange, module, currentView, use
 
     // 过滤后的分类列表
     const filteredCategories = useMemo(() => {
-        if (!selectedCategories || selectedCategories.length === 0) {
-            return categoryConfigs;
-        }
+        if (statisticsModel?.filteredCategories) return statisticsModel.filteredCategories;
+        if (!selectedCategories || selectedCategories.length === 0) return categoryConfigs;
         return categoryConfigs.filter((c: CategoryConfig) => selectedCategories.includes(c.name));
-    }, [categoryConfigs, selectedCategories]);
+    }, [statisticsModel, categoryConfigs, selectedCategories]);
 
     // [修复] 年视图相关的 useMemo 必须在组件顶层调用，否则切换 年/季/月/周/天 会破坏 Hooks 调用顺序，导致数据显示错乱
-    const isYearView = currentView === '年';
-    const year = startDate.year();
+    const isYearView = statisticsModel?.isYearView ?? (currentView === '年');
+    const year = statisticsModel?.year ?? startDate.year();
 
     const yearlyWeekStructure = useMemo(() => {
+        if (statisticsModel?.yearlyWeekStructure) return statisticsModel.yearlyWeekStructure;
         if (!isYearView) return [];
-        const months: { month: number; weeks: number[] }[] = Array.from({ length: 12 }, (_, i) => ({
-            month: i + 1,
-            weeks: [],
-        }));
+        const months: { month: number; weeks: number[] }[] = Array.from({ length: 12 }, (_, i) => ({ month: i + 1, weeks: [] }));
         const totalWeeks = getWeeksInYear(year);
-
         for (let week = 1; week <= totalWeeks; week++) {
             const thursdayOfWeek = dayjs().year(year).isoWeek(week).day(4);
-            const monthIndex = thursdayOfWeek.month();
-            if (months[monthIndex]) {
-                months[monthIndex].weeks.push(week);
-            }
+            months[thursdayOfWeek.month()]?.weeks.push(week);
         }
         return months;
-    }, [isYearView, year]);
+    }, [statisticsModel, isYearView, year]);
 
     const processedData = useMemo(() => {
-        if (!isYearView) {
-            return { yearData: createPeriodData(filteredCategories), quartersData: [], monthsData: [], weeksData: [] };
-        }
-
+        if (statisticsModel?.processedData) return statisticsModel.processedData;
+        if (!isYearView) return { yearData: createPeriodData(filteredCategories), quartersData: [], monthsData: [], weeksData: [] };
         const totalWeeks = getWeeksInYear(year);
         const targetDate = dayjs().year(year);
         const yearData = aggregateByYear(items, filteredCategories, targetDate, usePeriod);
-
         const quartersData: PeriodData[] = [];
-        for (let q = 1; q <= 4; q++) {
-            const quarterDate = targetDate.quarter(q);
-            quartersData.push(aggregateByQuarter(items, filteredCategories, quarterDate, usePeriod));
-        }
-
+        for (let q = 1; q <= 4; q++) quartersData.push(aggregateByQuarter(items, filteredCategories, targetDate.quarter(q), usePeriod));
         const monthsData: PeriodData[] = [];
-        for (let m = 0; m < 12; m++) {
-            const monthDate = targetDate.month(m);
-            monthsData.push(aggregateByMonth(items, filteredCategories, monthDate, usePeriod));
-        }
-
+        for (let m = 0; m < 12; m++) monthsData.push(aggregateByMonth(items, filteredCategories, targetDate.month(m), usePeriod));
         const weeksData: PeriodData[] = [];
-        for (let w = 1; w <= totalWeeks; w++) {
-            const weekDate = targetDate.isoWeek(w);
-            weeksData.push(aggregateByWeek(items, filteredCategories, weekDate));
-        }
-
+        for (let w = 1; w <= totalWeeks; w++) weeksData.push(aggregateByWeek(items, filteredCategories, targetDate.isoWeek(w)));
         return { yearData, quartersData, monthsData, weeksData };
-    }, [isYearView, items, year, filteredCategories, usePeriod]);
+    }, [statisticsModel, isYearView, items, year, filteredCategories, usePeriod]);
 
 
 
@@ -203,11 +186,7 @@ export function StatisticsView({ items, app, dateRange, module, currentView, use
         };
 
         const handleQuickCreate = () => {
-            if (!actionService) return;
-            const layoutDate = dayjsUtil(dateRange[0]);
-            const config = actionService.getQuickInputConfigForView(module, layoutDate, currentView);
-            if (!config) return;
-            new QuickInputModal(app, config.blockId, config.context, config.themeId).open();
+            onQuickCreate?.();
         };
 
         openFloatingWidget(widgetId, () => (
@@ -331,7 +310,7 @@ export function StatisticsView({ items, app, dateRange, module, currentView, use
                             label={`${weekStart.format('YYYY年MM月DD日')} ~ ${weekEnd.format('MM月DD日')} (第${weekStart.isoWeek()}周)`}
                             categories={filteredCategories}
                             onCellClick={handleCellClick}
-                            cellIdentifier={(cat: string) => ({ type: 'week', week: weekStart.isoWeek(), year: weekStart.year(), category: cat })}
+                            cellIdentifier={(cat: string) => ({ type: 'week', week: weekStart.isoWeek(), year: weekStart.isoWeekYear(), category: cat })}
                             displayMode={displayMode}
                             minVisibleHeight={minVisibleHeight}
                         />
@@ -352,7 +331,7 @@ export function StatisticsView({ items, app, dateRange, module, currentView, use
         const weeksMeta: { weekStart: dayjs.Dayjs; label: string }[] = [];
         let weekCursor = monthStart.startOf('isoWeek');
 
-        while (weekCursor.isBefore(monthEnd) || weekCursor.isSame(monthEnd, 'week')) {
+        while (weekCursor.isBefore(monthEnd) || isSameIsoWeek(weekCursor, monthEnd)) {
             const weekStart = weekCursor;
             const weekEnd = weekStart.endOf('isoWeek');
             weeksMeta.push({
@@ -392,7 +371,7 @@ export function StatisticsView({ items, app, dateRange, module, currentView, use
                                     label={`第${index + 1}周`}
                                     categories={filteredCategories}
                                     onCellClick={handleCellClick}
-                                    cellIdentifier={(cat: string) => ({ type: 'week', week: weekStart.isoWeek(), year: weekStart.year(), category: cat })}
+                                    cellIdentifier={(cat: string) => ({ type: 'week', week: weekStart.isoWeek(), year: weekStart.isoWeekYear(), category: cat })}
                                     isCompact={true}
                                     displayMode={displayMode}
                                     minVisibleHeight={minVisibleHeight}
@@ -421,7 +400,7 @@ export function StatisticsView({ items, app, dateRange, module, currentView, use
             const weeksMeta: { weekStart: dayjs.Dayjs }[] = [];
             let weekCursor = monthStart.startOf('isoWeek');
 
-            while (weekCursor.isBefore(monthEnd) || weekCursor.isSame(monthEnd, 'week')) {
+            while (weekCursor.isBefore(monthEnd) || isSameIsoWeek(weekCursor, monthEnd)) {
                 const weekStart = weekCursor;
                 weeksMeta.push({ weekStart });
                 weekCursor = weekCursor.add(1, 'week');
@@ -481,7 +460,7 @@ export function StatisticsView({ items, app, dateRange, module, currentView, use
                                             label={`${weekStart.isoWeek()}W`}
                                             categories={filteredCategories}
                                             onCellClick={handleCellClick}
-                                            cellIdentifier={(cat: string) => ({ type: 'week', week: weekStart.isoWeek(), year: weekStart.year(), category: cat })}
+                                            cellIdentifier={(cat: string) => ({ type: 'week', week: weekStart.isoWeek(), year: weekStart.isoWeekYear(), category: cat })}
                                             isCompact={true}
                                             displayMode={displayMode}
                                             minVisibleHeight={minVisibleHeight}

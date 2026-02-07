@@ -21,10 +21,25 @@ interface HeatmapViewProps {
     module: ViewInstance;
     currentView: '年' | '季' | '月' | '周' | '天';
     inputSettings: InputSettings;
+
+    // Phase2: shared/ui 纯化试点（可注入 renderModel）
+    injectedThemesByPath?: Map<string, ThemeDefinition>;
+    injectedThemesToTrack?: string[];
+    injectedDataByThemeAndDate?: Map<string, Map<string, Item[]>>;
 }
 
 // ========== Main View Component ==========
-export function HeatmapView({ items, app, dateRange, module, currentView, inputSettings }: HeatmapViewProps) {
+export function HeatmapView({
+    items,
+    app,
+    dateRange,
+    module,
+    currentView,
+    inputSettings,
+    injectedThemesByPath,
+    injectedThemesToTrack,
+    injectedDataByThemeAndDate,
+}: HeatmapViewProps) {
     // 将 config 对象移入 useMemo，确保响应式更新
     const config = useMemo(
         () => ({ ...HEATMAP_VIEW_DEFAULT_CONFIG, ...module.viewConfig }), 
@@ -32,8 +47,8 @@ export function HeatmapView({ items, app, dateRange, module, currentView, inputS
     );
     
     const themesByPath = useMemo(() => {
-        return buildThemesByPathMap(inputSettings.themes);
-    }, [inputSettings.themes]);
+        return injectedThemesByPath ?? buildThemesByPathMap(inputSettings.themes);
+    }, [injectedThemesByPath, inputSettings.themes]);
 
     // 评分映射缓存
     const ratingMappingsCache = useRef(new RatingMappingCache()).current;
@@ -52,6 +67,8 @@ export function HeatmapView({ items, app, dateRange, module, currentView, inputS
     // 当 viewConfig 未显式指定 themePaths 时：
     // - 自动从当前 items 推断主题列表，避免落到 '__default__' 把不同主题混在同一张热力图里
     const inferredThemePaths = useMemo(() => {
+        // 如果上层已经注入 themesToTrack，则无需在 shared/ui 再做推断
+        if (injectedThemesToTrack) return [];
         const set = new Set<string>();
         for (const it of items) {
             if (it?.theme && typeof it.theme === 'string' && it.theme.trim().length > 0) {
@@ -59,18 +76,20 @@ export function HeatmapView({ items, app, dateRange, module, currentView, inputS
             }
         }
         return Array.from(set);
-    }, [items]);
+    }, [items, injectedThemesToTrack]);
 
     const themesToTrack = useMemo(() => {
-        return config.themePaths && config.themePaths.length > 0
-            ? config.themePaths
-            : inferredThemePaths;
-    }, [config.themePaths, inferredThemePaths]);
+        return injectedThemesToTrack ?? (
+            config.themePaths && config.themePaths.length > 0
+                ? config.themePaths
+                : inferredThemePaths
+        );
+    }, [injectedThemesToTrack, config.themePaths, inferredThemePaths]);
 
     // 使用新的聚合函数（用推断/配置后的 themesToTrack）
     const dataByThemeAndDate = useMemo(() => {
-        return buildThemeDataMap(items, themesToTrack);
-    }, [items, themesToTrack]);
+        return injectedDataByThemeAndDate ?? buildThemeDataMap(items, themesToTrack);
+    }, [injectedDataByThemeAndDate, items, themesToTrack]);
 
     const handleCellClick = (date: string, item?: Item, themePath?: string) => {
         if (!config.sourceBlockId) return;

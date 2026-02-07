@@ -42,6 +42,8 @@ interface TimelineViewProps {
     /** 由 feature 层注入：用于“对齐/精确编辑”等需要写回的操作 */
     onUpdateTaskTime?: UpdateTaskTimeHandler;
     inputSettings: any;
+    /** Phase2: feature 层注入的 renderModel（shared/ui 只渲染） */
+    timelineModel?: any;
 }
 
 export function TimelineView({ 
@@ -51,16 +53,18 @@ export function TimelineView({
     currentView, 
     app, 
     onUpdateTaskTime, 
-    inputSettings 
+    inputSettings,
+    timelineModel,
 }: TimelineViewProps) {
     const inputBlocks = inputSettings?.blocks || [];
 
     // 配置管理
     const config = useMemo(() => {
+        if (timelineModel?.config) return timelineModel.config;
         const defaults = JSON.parse(JSON.stringify(TIMELINE_VIEW_DEFAULT_CONFIG));
         const userConfig = module.viewConfig || {};
         return { ...defaults, ...userConfig, categories: userConfig.categories || defaults.categories };
-    }, [module.viewConfig]);
+    }, [timelineModel, module.viewConfig]);
     
     // 使用缩放 hook
     const { hourHeight, zoomHandlers } = useTimelineZoom({
@@ -69,12 +73,14 @@ export function TimelineView({
 
     // 计算 timeline 任务
     const timelineTasks = useMemo(() => {
+        if (timelineModel?.timelineTasks) return timelineModel.timelineTasks;
         const filteredItems = module.filters ? filterByRules(items, module.filters) : items;
         return processItemsToTimelineTasks(filteredItems);
-    }, [items, module.filters]);
+    }, [timelineModel, items, module.filters]);
 
     // 颜色映射
     const colorMap = useMemo(() => {
+        if (timelineModel?.colorMap) return timelineModel.colorMap;
         const finalColorMap: Record<string, string> = {};
         const categoriesConfig = config.categories || {};
         for(const categoryName in categoriesConfig) {
@@ -82,12 +88,13 @@ export function TimelineView({
         }
         finalColorMap[config.UNTRACKED_LABEL] = "#9ca3af";
         return finalColorMap;
-    }, [config.categories, config.UNTRACKED_LABEL]);
+    }, [timelineModel, config.categories, config.UNTRACKED_LABEL]);
 
     // 计算每日视图数据
     const dailyViewData = useMemo(() => {
+        if (timelineModel?.dailyViewData) return timelineModel.dailyViewData;
         return buildDailyViewData(timelineTasks, dateRange);
-    }, [timelineTasks, dateRange]);
+    }, [timelineModel, timelineTasks, dateRange]);
 
     // 点击创建任务处理
     const handleColumnClick = useCallback((day: string, e: MouseEvent | TouchEvent) => {
@@ -106,8 +113,9 @@ export function TimelineView({
     
         // 年/季视图：使用 TimelineSummaryTable
     // [修复] 必须在组件顶层调用 useMemo，避免切换 年/季/月/周/天 时 Hook 顺序变化导致数据显示错乱
-    const isSummaryView = currentView === '年' || currentView === '季';
+    const isSummaryView = timelineModel?.isSummaryView ?? (currentView === '年' || currentView === '季');
     const summaryData = useMemo<any[]>(() => {
+        if (timelineModel?.summaryData) return timelineModel.summaryData;
         if (!isSummaryView) return [];
         const viewStart = dayjs(dateRange[0]);
         const viewEnd = dayjs(dateRange[1]);
@@ -116,7 +124,7 @@ export function TimelineView({
             return taskDate.isBetween(viewStart, viewEnd, 'day', '[]');
         });
         return buildMonthlyAndWeeklySummary(tasksInRange, config);
-    }, [isSummaryView, timelineTasks, dateRange, config]);
+    }, [timelineModel, isSummaryView, timelineTasks, dateRange, config]);
 
     if (isSummaryView) {
         return (
@@ -131,11 +139,12 @@ export function TimelineView({
 
 // 计算汇总数据
     const summaryCategoryHours = useMemo(() => {
+        if (timelineModel?.summaryCategoryHours) return timelineModel.summaryCategoryHours;
         return buildSummaryCategoryHours(timelineTasks, dateRange, config);
-    }, [timelineTasks, dateRange, config]);
+    }, [timelineModel, timelineTasks, dateRange, config]);
 
     // 天/周/月视图：使用每日时间轴
-    const totalSummaryHours = Object.values(summaryCategoryHours || {}).reduce((s, h) => s + h, 0);
+    const totalSummaryHours = timelineModel?.totalSummaryHours ?? Object.values(summaryCategoryHours || {}).reduce((s, h) => s + h, 0);
     const TIME_AXIS_WIDTH = 90;
 
     return (
