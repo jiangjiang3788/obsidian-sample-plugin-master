@@ -6,9 +6,9 @@
  * 这里保留旧路径，以避免历史 import 立即破坏。
  *
  * ✅ 新代码请直接 import:
- * - UI:   @shared/ui/modals/QuickInputModal
+ * - UI:   @/app/public
  * - Type: @core/public (QuickInputSaveData)
  */
 
-export { QuickInputModal } from '@shared/ui/modals/QuickInputModal';
+export { QuickInputModal } from '@/app/public';
 export type { QuickInputSaveData } from '@core/public';

@@ -10,7 +10,7 @@
 import { App, Notice } from 'obsidian';
 import { minutesToTime } from '@core/public';
 import type { TaskBlock } from '@core/public';
-import { QuickInputModal } from '@shared/ui/modals/QuickInputModal';
+import { QuickInputModal } from '@/app/public';
 
 interface CreateTaskOptions {
   app: App;

@@ -12,8 +12,8 @@ import { IconButton, Tooltip } from '@mui/material';
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 import IosShareIcon from '@mui/icons-material/IosShare';
 import { exportItemsToMarkdown, getExportConfigByViewType } from '@core/public';
-import FloatingPanel from '@/shared/ui/primitives/FloatingPanel';
-import { openFloatingWidget, closeFloatingWidget } from '@/shared/ui/widgets/FloatingWidgetManager';
+import { FloatingPanel } from '@/app/public';
+import { openFloatingWidget, closeFloatingWidget } from '@/app/public';
 import type { CategoryConfig, PeriodData } from '@core/public';
 import { 
     aggregateByDay,

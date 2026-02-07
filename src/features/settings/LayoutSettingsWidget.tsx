@@ -13,8 +13,8 @@
 import { h } from 'preact';
 import { useZustandAppStore } from '@/app/public';
 import type { Layout } from '@core/public';
-import FloatingPanel from '@/shared/ui/primitives/FloatingPanel';
-import { closeFloatingWidget, openFloatingWidget } from '@/shared/ui/widgets/FloatingWidgetManager';
+import { FloatingPanel } from '@/app/public';
+import { closeFloatingWidget, openFloatingWidget } from '@/app/public';
 import { LayoutEditorPanel } from '@/features/settings/components/LayoutEditorPanel';
 
 function LayoutSettingsWidgetInner({ layoutId, widgetId }: { layoutId: string; widgetId: string }) {

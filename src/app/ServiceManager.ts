@@ -15,13 +15,14 @@ import type { ServiceManagerServices } from '@/app/ServiceManager.services';
 import { Disposables } from '@/app/runtime/disposables';
 
 import { startMeasure } from '@shared/utils/performance';
-import { closeAllFloatingWidgets } from '@/shared/ui/widgets/FloatingWidgetManager';
+import { closeAllFloatingWidgets } from '@/app/public';
 
 import { registerSettingsPersistence } from '@/app/bootstrap/register';
 import { initializeCore } from '@/app/bootstrap/initializeCore';
 import { loadDataServices } from '@/app/bootstrap/loadDataServices';
 import { loadTimerServices } from '@/app/bootstrap/loadTimerServices';
 import { loadUIFeatures } from '@/app/bootstrap/loadUIFeatures';
+import { resetRuntimeCache } from '@/app/bootstrap/buildRuntime';
 
 /**
  * ServiceManager - 插件服务总线
@@ -50,6 +51,10 @@ export class ServiceManager {
 
         // Cleanup 资源表（逆序执行：LIFO）
         // 这里的注册顺序刻意与“希望释放顺序”相反
+        this.disposables.add('resetRuntimeCache()', () => {
+            resetRuntimeCache();
+        });
+
         this.disposables.add('container.clearInstances()', () => {
             container.clearInstances();
         });

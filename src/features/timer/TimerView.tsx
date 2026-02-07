@@ -2,7 +2,7 @@
 /** @jsxImportSource preact */
 
 import { useZustandAppStore } from '@/app/public';
-import FloatingPanel from '@/shared/ui/primitives/FloatingPanel';
+import { FloatingPanel } from '@/app/public';
 import { Button, Stack, Tooltip, Typography } from '@mui/material';
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 import type { ActionService } from '@core/public';
@@ -10,7 +10,7 @@ import type { TimerService } from '@features/timer/TimerService';
 import type { DataStore } from '@core/public';
 import { TimerRow } from './TimerRow';
 import { App } from 'obsidian';
-import { QuickInputModal } from '@shared/ui/modals/QuickInputModal';
+import { QuickInputModal } from '@/app/public';
 import type { QuickInputSaveData } from '@core/public';
 
 interface TimerViewProps {

@@ -62,3 +62,20 @@ export type { TimerState } from './store/types';
 export interface TimerController {
   startOrResume(taskId: string): Promise<void>;
 }
+
+
+// ============== Runtime UI (moved from shared/ui to app/ui) ==============
+export { QuickInputEditor, finalizeQuickInputFormData } from './ui/components/QuickInputEditor';
+export type { QuickInputEditorState, QuickInputEditorProps } from './ui/components/QuickInputEditor';
+export { QuickInputModal } from './ui/modals/QuickInputModal';
+export { default as FloatingPanel } from './ui/primitives/FloatingPanel';
+export {
+  openFloatingWidget,
+  closeFloatingWidget,
+  closeAllFloatingWidgets,
+  isFloatingWidgetOpen,
+} from './ui/widgets/FloatingWidgetManager';
+
+// ============== Store Selectors (recommended read API) ==============
+export * from './store/selectors';
+export { FloatingWidget } from './ui/widgets/FloatingWidget';

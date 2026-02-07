@@ -16,7 +16,7 @@ import { makeObsUri } from '@core/public';
 import type { ActionService } from '@core/public';
 import { App } from 'obsidian';
 // [4.5] QuickInputModal 迁移至 shared（避免跨 feature 依赖）
-import { QuickInputModal } from '@shared/ui/modals/QuickInputModal';
+import { QuickInputModal } from '@/app/public';
 
 interface TimerRowProps {
     timer: TimerState;

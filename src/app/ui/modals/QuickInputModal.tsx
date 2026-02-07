@@ -22,7 +22,7 @@ import type { QuickInputSaveData } from '@core/public';
 
 import { Box, Button } from '@mui/material';
 
-import { finalizeQuickInputFormData, QuickInputEditor, type QuickInputEditorState } from '@shared/ui/components/QuickInputEditor';
+import { finalizeQuickInputFormData, QuickInputEditor, type QuickInputEditorState } from '@/app/public';
 import { ModalHeader } from '@shared/ui/components/ModalHeader';
 
 export class QuickInputModal extends Modal {

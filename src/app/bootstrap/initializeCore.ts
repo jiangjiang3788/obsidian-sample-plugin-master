@@ -10,6 +10,8 @@ import {
     devLog,
 } from '@core/public';
 
+import { diDebug, diWarn } from '@/app/diagnostics/diDiagnostics';
+
 import type { ThinkSettings } from '@core/public';
 import { safeAsync } from '@shared/utils/errorHandler';
 import { startMeasure } from '@shared/utils/performance';
@@ -32,23 +34,20 @@ export async function initializeCore(opts: {
         safeAsync(
             async () => {
                 // 1. 解析核心服务
-                // DI DEBUG: guard before any resolve
+                // DI diagnostics: guard before any resolve (dev only, opt-in)
                 if (!container.isRegistered(SETTINGS_PERSISTENCE_TOKEN)) {
-                    devError(
-                        '[DI DEBUG] SettingsPersistence NOT registered in container used for resolve()',
-                        container
-                    );
-                    throw new Error('[DI DEBUG] SettingsPersistence token missing before resolve()');
+                    diWarn('SettingsPersistence NOT registered in container used for resolve()');
+                    throw new Error('SettingsPersistence token missing before resolve()');
                 } else {
-                    devLog('[DI DEBUG] SettingsPersistence is registered before resolve()');
+                    diDebug('SettingsPersistence is registered before resolve()');
                 }
 
                 services.settingsRepository = container.resolve(SettingsRepository);
 
-                // DI DEBUG: 初始化 SettingsRepository 的设置（因 setupCore.ts 不再调用 resolve）
+                // 初始化 SettingsRepository 的设置（因 setupCore.ts 不再调用 resolve）
                 const diInitialSettings = container.resolve<ThinkSettings>(SETTINGS_TOKEN);
                 services.settingsRepository.setInitialSettings(diInitialSettings);
-                devLog('[DI DEBUG] SettingsRepository.setInitialSettings() called');
+                diDebug('SettingsRepository.setInitialSettings() called');
 
                 services.timerStateService = container.resolve(TimerStateService);
 

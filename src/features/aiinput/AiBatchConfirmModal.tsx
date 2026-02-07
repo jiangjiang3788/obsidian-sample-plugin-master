@@ -36,7 +36,7 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import RadioButtonUncheckedIcon from '@mui/icons-material/RadioButtonUnchecked';
 import DeleteIcon from '@mui/icons-material/Delete';
 
-import { finalizeQuickInputFormData, QuickInputEditor } from '@shared/ui/components/QuickInputEditor';
+import { finalizeQuickInputFormData, QuickInputEditor } from '@/app/public';
 import { ModalHeader } from '@shared/ui/components/ModalHeader';
 
 interface RecordItem {

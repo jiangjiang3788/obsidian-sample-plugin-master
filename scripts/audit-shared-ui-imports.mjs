@@ -7,15 +7,8 @@ import path from 'path';
 const ROOT = process.cwd();
 const TARGET_DIR = path.join(ROOT, 'src', 'shared', 'ui');
 
-// 当前允许的例外：这些模块是“UI runtime/浮窗/输入系统”的基础设施，
-// 暂时允许读取 app/public 的 store 或 services（后续若要完全纯化可再上移）。
-const ALLOW_APP_PUBLIC_RUNTIME = new Set([
-  path.join(TARGET_DIR, 'modals', 'QuickInputModal.tsx'),
-  path.join(TARGET_DIR, 'components', 'QuickInputEditor.tsx'),
-  path.join(TARGET_DIR, 'primitives', 'FloatingPanel.tsx'),
-  path.join(TARGET_DIR, 'widgets', 'FloatingWidget.ts'),
-  path.join(TARGET_DIR, 'widgets', 'FloatingWidgetManager.ts'),
-]);
+// 例外白名单：已迁出 runtime UI 到 src/app/ui/**，shared/ui 不再允许依赖 app/public 的 store/services。
+const ALLOW_APP_PUBLIC_RUNTIME = new Set([]);
 
 /** @param {string} dir */
 function walk(dir) {

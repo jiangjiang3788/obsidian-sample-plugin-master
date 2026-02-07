@@ -5,7 +5,7 @@ import { useMemo, useState, useRef, useEffect } from 'preact/hooks';
 import { App, Notice } from 'obsidian';
 import { Item, ViewInstance, InputSettings, ThemeDefinition, devLog } from '@core/public';
 import { dayjs } from '@core/public';
-import { QuickInputModal } from '@shared/ui/modals/QuickInputModal';
+import { QuickInputModal } from '@/app/public';
 import { HEATMAP_VIEW_DEFAULT_CONFIG } from '@core/public';
 import { getThemeLevelData } from '@core/public';
 import { CheckinManagerModal } from '@shared/ui/modals/CheckinManagerModal';

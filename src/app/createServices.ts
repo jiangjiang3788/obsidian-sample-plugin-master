@@ -19,11 +19,8 @@
  */
 
 import { container as defaultContainer, type DependencyContainer } from 'tsyringe';
-import { validateServices, type Services } from './services.types';
-import { STORE_TOKEN, type AppStoreInstance } from './store/useAppStore';
-import { USECASES_TOKEN, type UseCases } from './usecases';
-import {DataStore, devError} from '@core/public';
-import { InputService } from '@core/public';
+import type { Services } from './services.types';
+import { buildRuntime } from './bootstrap/buildRuntime';
 
 /**
  * createServices
@@ -37,27 +34,7 @@ import { InputService } from '@core/public';
  * @throws 如果任何必需服务 resolve 失败则抛出错误
  */
 export function createServices(container: DependencyContainer = defaultContainer): Services {
-    try {
-        // 统一 resolve 所有 Services 字段
-        const services: Services = {
-            zustandStore: container.resolve<AppStoreInstance>(STORE_TOKEN),
-            dataStore: container.resolve(DataStore),
-            inputService: container.resolve(InputService),
-            useCases: container.resolve<UseCases>(USECASES_TOKEN),
-        };
-
-        // 运行时校验：确保所有字段都已正确 resolve
-        validateServices(services, 'createServices');
-
-        return services;
-    } catch (error) {
-        devError('[createServices] 创建 Services 失败:', error);
-        throw new Error(
-            `[createServices] 无法从 DI 容器创建 Services。\n` +
-            `请确保 ServiceManager 已完成初始化。\n` +
-            `原始错误: ${error instanceof Error ? error.message : String(error)}`
-        );
-    }
+    return buildRuntime(container);
 }
 
 // 兼容性：保留旧的导入路径（如果有外部代码仍从 createServices.ts 引入 validateServices）

@@ -15,8 +15,8 @@ import { useZustandAppStore, useDataStore, useUseCases } from '@/app/public';
 import { SimpleSelect } from '@shared/ui/composites/SimpleSelect';
 import { RuleBuilder } from '@features/settings/RuleBuilder';
 import { Modal } from '@shared/ui/primitives/Modal';
-import FloatingPanel from '@/shared/ui/primitives/FloatingPanel';
-import { closeFloatingWidget, openFloatingWidget } from '@/shared/ui/widgets/FloatingWidgetManager';
+import { FloatingPanel } from '@/app/public';
+import { closeFloatingWidget, openFloatingWidget } from '@/app/public';
 
 import { FormField } from '@shared/ui/composites/FormField';
 import { FieldManager } from '@shared/ui/composites/FieldManager';

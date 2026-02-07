@@ -6,7 +6,7 @@ import { ensureReflectMetadata } from '@core/public';
 ensureReflectMetadata();
 
 import { container } from 'tsyringe';
-import { Plugin, Notice } from 'obsidian';
+import { Plugin, Notice, Modal, Setting } from 'obsidian';
 import { DataStore } from '@core/public';
 import { InputService } from '@core/public';
 import { ThinkSettings, DEFAULT_SETTINGS } from '@core/public';
@@ -122,6 +122,35 @@ export default class ThinkPlugin extends Plugin {
                 this.capabilities.ai.openChat();
             }
         });
+
+        // Timer commands (via capabilities) - provide a concrete verification入口 for TimerCapability wiring.
+        this.addCommand({
+            id: 'think-timer-start-by-task-id',
+            name: 'Timer: 开始/继续计时（输入任务 ID）',
+            callback: async () => {
+                const taskId = await TextPromptModal.open(this.app, {
+                    title: '开始/继续计时',
+                    placeholder: '请输入任务 Item ID（例如：来自 Dashboard 的 item.id）',
+                    ctaText: '开始',
+                });
+                if (!taskId) return;
+                await this.capabilities.timer.startOrResume(taskId.trim());
+            },
+        });
+
+        this.addCommand({
+            id: 'think-timer-stop-active',
+            name: 'Timer: 停止并写回（当前运行/暂停的第一个计时器）',
+            callback: async () => {
+                const timers = this.serviceManager.useCases.timer.getTimers();
+                const active = timers.find((t: any) => t.status === 'running') ?? timers.find((t: any) => t.status === 'paused');
+                if (!active) {
+                    new Notice('没有找到可停止的计时器');
+                    return;
+                }
+                await this.capabilities.timer.stopAndApply(active.id);
+            },
+        });
     }
 
     onunload(): void {
@@ -168,5 +197,67 @@ export default class ThinkPlugin extends Plugin {
 
     get useCases(): UseCases {
         return this.serviceManager.useCases;
+    }
+}
+
+// ----------------------------------------------------------------------------------
+// Tiny input modal helper (kept local to avoid introducing a new shared UI dependency).
+// ----------------------------------------------------------------------------------
+class TextPromptModal extends Modal {
+    private value: string = '';
+    private resolve!: (value: string | null) => void;
+    private titleText: string;
+    private placeholder: string;
+    private ctaText: string;
+
+    static open(app: any, opts: { title: string; placeholder?: string; ctaText?: string }): Promise<string | null> {
+        return new Promise((resolve) => {
+            const modal = new TextPromptModal(app, resolve, opts);
+            modal.open();
+        });
+    }
+
+    constructor(app: any, resolve: (value: string | null) => void, opts: { title: string; placeholder?: string; ctaText?: string }) {
+        super(app);
+        this.resolve = resolve;
+        this.titleText = opts.title;
+        this.placeholder = opts.placeholder ?? '';
+        this.ctaText = opts.ctaText ?? '确定';
+    }
+
+    onOpen(): void {
+        const { contentEl } = this;
+        contentEl.empty();
+        contentEl.createEl('h2', { text: this.titleText });
+
+        new Setting(contentEl)
+            .addText((text) => {
+                text.setPlaceholder(this.placeholder);
+                text.onChange((v) => (this.value = v));
+            })
+            .addButton((btn) => {
+                btn.setButtonText(this.ctaText);
+                btn.setCta();
+                btn.onClick(() => {
+                    this.close();
+                    this.resolve(this.value || null);
+                });
+            });
+
+        // Cancel on close
+        this.modalEl.addEventListener('keydown', (e: KeyboardEvent) => {
+            if (e.key === 'Escape') {
+                this.close();
+                this.resolve(null);
+            }
+            if (e.key === 'Enter') {
+                this.close();
+                this.resolve(this.value || null);
+            }
+        });
+    }
+
+    onClose(): void {
+        this.contentEl.empty();
     }
 }

@@ -6,9 +6,10 @@ import {
     SETTINGS_PERSISTENCE_TOKEN,
     type ISettingsPersistence,
     THEME_MATCHER_TOKEN,
-    devLog,
     devWarn,
 } from '@core/public';
+
+import { diDebug } from '@/app/diagnostics/diDiagnostics';
 
 import { ThemeManager } from '@features/settings/ThemeManager';
 
@@ -61,11 +62,8 @@ export function registerSettingsPersistence(plugin: ThinkPlugin): void {
         useValue: settingsPersistence,
     });
 
-    // DI DEBUG: prove token is registered in THIS container instance
-    devLog(
-        '[DI DEBUG] after register SettingsPersistence, isRegistered =',
-        container.isRegistered(SETTINGS_PERSISTENCE_TOKEN)
-    );
+    // DI diagnostics (dev only, opt-in)
+    diDebug('after register SettingsPersistence, isRegistered =', container.isRegistered(SETTINGS_PERSISTENCE_TOKEN));
 
     // 注册 ThemeManager 并绑定到 THEME_MATCHER_TOKEN
     // 这样 core 层的 DataStore 可以通过接口依赖 ThemeManager

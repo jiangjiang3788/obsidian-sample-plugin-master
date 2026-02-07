@@ -12,11 +12,17 @@ import { useZustandAppStore, useUseCases } from '@/app/public';
 import type { TimerController } from '@/app/public';
 import type { ActionService } from '@core/public';
 import { ItemService } from '@core/public';
+import {
+  selectViewInstances,
+  selectInputSettings,
+  selectTimers,
+} from '@/app/public';
+
  
 import { useViewData } from '@/features/settings/useViewData';
 import { openLayoutSettingsWidget } from '@/features/settings/LayoutSettingsWidget';
 
-import { QuickInputModal } from '@shared/ui/modals/QuickInputModal';
+import { QuickInputModal } from '@/app/public';
 import { openModuleSettingsWidget } from './ModuleSettingsModal';
 import { App, Notice } from 'obsidian'; // [修改] 导入 Notice
 import { exportItemsToMarkdown, getExportConfigByViewType } from '@core/public'; // [新增] 导入导出函数
@@ -203,10 +209,10 @@ export function LayoutRenderer({ layout, dataStore, app, actionService, itemServ
     const useCases = useUseCases();
     
     // 使用 Zustand store 获取 settings 相关状态
-    const allViews = useZustandAppStore(state => state.settings.viewInstances);
-    const inputSettings = useZustandAppStore(state => state.settings.inputSettings); // [修改] 获取完整 inputSettings
+    const allViews = useZustandAppStore(selectViewInstances);
+    const inputSettings = useZustandAppStore(selectInputSettings); // [修改] 获取完整 inputSettings
     // [修改] 使用 Zustand store 获取 timers
-    const timers = useZustandAppStore(state => state.timer.timers);
+    const timers = useZustandAppStore(selectTimers);
     const allThemes = inputSettings.themes; // [兼容] 保持 allThemes 变量
     
     const [expandedState, setExpandedState] = useState<Record<string, boolean>>({});
