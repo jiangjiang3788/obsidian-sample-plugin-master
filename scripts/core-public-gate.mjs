@@ -19,6 +19,8 @@ import path from 'node:path';
 import process from 'node:process';
 import { createRequire } from 'node:module';
 
+import { failWithViolations, printOk } from './gate-formatter.mjs';
+
 const require = createRequire(import.meta.url);
 const ts = require('typescript');
 
@@ -126,15 +128,14 @@ function main() {
   }
 
   if (offenders.length) {
-    console.error('\n❌ Core Public Gate failed:\n');
-    for (const o of offenders) {
-      console.error(`- CORE-PUB-001 ${o.file}:${o.loc} 不允许 ${o.kind} '@core/public'`);
-      console.error('  修复：core 内部请直接从具体模块 import（例如 @core/ports/*, @core/types/*, @core/services/*），@core/public 仅供 app/features/shared 使用。\n');
-    }
-    process.exit(1);
+    failWithViolations('core-public-gate', offenders.map((o) => ({
+      file: path.join(ROOT, o.file),
+      loc: o.loc,
+      message: `CORE-PUB-001 core 内部不允许 ${o.kind} '@core/public'`,
+      hint: \"core 内部请直接从具体模块 import（例如 @core/ports/*, @core/types/*, @core/services/*），@core/public 仅供 app/features/shared 使用\",
+    })), { rootDir: ROOT, summary: 'core 内部依赖了 @core/public' });
   }
 
-  console.log('✅ Core Public Gate 通过（core 内部未发现对 @core/public 的依赖）');
-}
+  printOk('core-public-gate', 'core 内部未发现对 @core/public 的依赖');\n}
 
 main();

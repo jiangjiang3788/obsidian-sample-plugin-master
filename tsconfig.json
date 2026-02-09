@@ -19,50 +19,8 @@
       "@/*": [
         "src/*"
       ],
-      "@lib/*": [
-        "src/lib/*"
-      ],
-      "@store/*": [
-        "src/store/*"
-      ],
-      "@ui/*": [
-        "src/ui/*"
-      ],
-      "@views/*": [
-        "src/views/*"
-      ],
-      "@hooks/*": [
-        "src/hooks/*"
-      ],
-      "@config/*": [
-        "src/config/*"
-      ],
-      "@platform/*": [
-        "src/platform/*"
-      ],
-      "@main": [
-        "src/main.ts"
-      ],
-      "@types/*": [
-        "src/types/*"
-      ],
-      "@domain/*": [
-        "src/lib/types/domain/*"
-      ],
-      "@utils/*": [
-        "src/utils/*"
-      ],
-      "@services/*": [
-        "src/lib/services/*"
-      ],
-      "@constants/*": [
-        "src/constants/*"
-      ],
-      "@shared/*": [
-        "src/shared/*"
-      ],
-      "@core/public": [
-        "src/core/public.ts"
+      "@app/*": [
+        "src/app/*"
       ],
       "@core/*": [
         "src/core/*"
@@ -70,14 +28,32 @@
       "@features/*": [
         "src/features/*"
       ],
-      "react": [
-        "node_modules/preact/compat"
+      "@platform/*": [
+        "src/platform/*"
+      ],
+      "@shared/*": [
+        "src/shared/*"
+      ],
+      "@types/*": [
+        "src/types/*"
+      ],
+      "@main": [
+        "src/main.ts"
+      ],
+      "@core/public": [
+        "src/core/public.ts"
+      ],
+      "@shared/public": [
+        "src/shared/public.ts"
       ],
       "@app/capabilities": [
         "src/app/capabilities/public.ts"
       ],
       "@capabilities": [
         "src/app/capabilities/public.ts"
+      ],
+      "react": [
+        "node_modules/preact/compat"
       ]
     },
     "types": [

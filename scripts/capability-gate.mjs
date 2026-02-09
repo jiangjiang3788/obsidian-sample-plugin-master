@@ -3,6 +3,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
 
+import { failWithViolations, printOk } from './gate-formatter.mjs';
+
 /**
  * Capability Gate (zero-deps)
  * 目标：
@@ -175,11 +177,14 @@ function main() {
   }
 
   if (violations.length) {
-    printViolations('Capability Gate', violations);
-    process.exit(1);
+    failWithViolations('capability-gate', violations.map((v) => ({
+      file: path.join(ROOT, (v.message.match(/^(src\/[^\\s]+)/) || [,'scripts/capability-gate.mjs'])[1]),
+      loc: '0:0',
+      message: `${v.rule} ${v.message}`.trim(),
+      hint: v.detail,
+    })), { rootDir: ROOT, summary: 'capability 形状约束失败' });
   }
 
-  console.log('✅ Capability 形状硬闸通过（capability-gate）');
-}
+  printOk('capability-gate', 'capability 形状检查通过');\n}
 
 main();

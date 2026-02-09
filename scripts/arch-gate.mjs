@@ -24,6 +24,8 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { createRequire } from 'module';
 
+import { failWithViolations, printOk } from './gate-formatter.mjs';
+
 const require = createRequire(import.meta.url);
 // Use require() so this works even when TypeScript is provided via CommonJS.
 // (ESM import may fail in some Node setups if TS isn't locally installed.)
@@ -299,15 +301,12 @@ for (const absPath of files) {
 }
 
 if (errors.length) {
-  console.error('===== 架构硬闸失败（Architecture Gate FAILED）=====');
-  for (const e of errors) {
-    const rel = toPosix(path.relative(ROOT, e.file));
-    const loc = e.loc ? `:${e.loc}` : '';
-    console.error(`\n${rel}${loc}`);
-    console.error(e.msg);
-  }
-  console.error(`\n违规总数：${errors.length}`);
-  process.exit(1);
+  failWithViolations('arch-gate', errors.map((e) => ({
+    file: e.file,
+    loc: e.loc,
+    message: e.msg.replace(/\s+/g, ' ').trim(),
+    hint: '根据分层规则修复 import/export，必要时通过 public 门面收口',
+  })), { rootDir: ROOT, summary: 'Architecture Gate FAILED' });
 }
 
-console.log('✅ 架构硬闸通过（AST 解析，不可绕过）');
+printOk('arch-gate', 'AST 分析通过');\n

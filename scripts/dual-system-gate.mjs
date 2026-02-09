@@ -14,6 +14,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
 
+import { failWithViolations, printOk } from './gate-formatter.mjs';
+
 const ROOT = process.cwd();
 
 function rel(p) {
@@ -104,11 +106,14 @@ function main() {
   }
 
   if (violations.length) {
-    printViolations('Dual-System Gate', violations);
-    process.exit(1);
+    failWithViolations('dual-system-gate', violations.map((v) => ({
+      file: path.join(ROOT, v.message.split(' ')[0]),
+      loc: '0:0',
+      message: `${v.rule} ${v.message.substring(v.message.indexOf(' ') + 1)}`.trim(),
+      hint: v.detail,
+    })), { rootDir: ROOT, summary: '防止注册分散导致新旧系统并存/回潮' });
   }
 
-  console.log('✅ Dual-System Gate 通过（防止新旧系统并存/回潮）');
-}
+  printOk('dual-system-gate', '无 registry/capabilityRegistry 分散注册');\n}
 
 main();

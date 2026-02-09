@@ -3,11 +3,11 @@ import { defineConfig } from 'vite';
 import preact from '@preact/preset-vite';
 import replace from '@rollup/plugin-replace';
 import tsconfigPaths from 'vite-tsconfig-paths';
-import path from 'path';
 
 export default defineConfig({
     plugins: [
         preact(),
+        tsconfigPaths(),
         replace({
             'process.env.NODE_ENV': JSON.stringify('production'),
             preventAssignment: true,
@@ -17,23 +17,8 @@ export default defineConfig({
         resolve: {
             extensions: ['.ts', '.tsx', '.js', '.jsx', '.json'],
             alias: {
-                '@': path.resolve(process.cwd(), 'src'),
-                '@lib': path.resolve(process.cwd(), 'src/lib'),
-                '@store': path.resolve(process.cwd(), 'src/store'),
-                '@ui': path.resolve(process.cwd(), 'src/ui'),
-                '@views': path.resolve(process.cwd(), 'src/views'),
-                '@hooks': path.resolve(process.cwd(), 'src/hooks'),
-                '@config': path.resolve(process.cwd(), 'src/config'),
-                '@platform': path.resolve(process.cwd(), 'src/platform'),
-                '@types': path.resolve(process.cwd(), 'src/types'),
-                '@domain': path.resolve(process.cwd(), 'src/lib/types/domain'),
-                '@utils': path.resolve(process.cwd(), 'src/utils'),
-                '@services': path.resolve(process.cwd(), 'src/lib/services'),
-                '@constants': path.resolve(process.cwd(), 'src/constants'),
-                '@shared': path.resolve(process.cwd(), 'src/shared'),
-                '@core': path.resolve(process.cwd(), 'src/core'),
-                '@app': path.resolve(process.cwd(), 'src/app'),
-                '@features': path.resolve(process.cwd(), 'src/features'),
+                // 解析保持与 tsconfig paths 一致
+                // （@/ @core/ @app/ ... 由 vite-tsconfig-paths 提供）
                 // dayjs ESM 别名
                 'dayjs': 'dayjs/esm',
                 'dayjs/plugin/quarterOfYear': 'dayjs/esm/plugin/quarterOfYear',
@@ -41,7 +26,7 @@ export default defineConfig({
                 'dayjs/plugin/customParseFormat': 'dayjs/esm/plugin/customParseFormat',
                 'dayjs/plugin/isoWeek': 'dayjs/esm/plugin/isoWeek',
                 'dayjs/plugin/isSameOrBefore': 'dayjs/esm/plugin/isSameOrBefore',
-                // React别名到Preact
+                // React 别名到 Preact
                 'react': 'preact/compat',
                 'react-dom': 'preact/compat',
                 'react/jsx-runtime': 'preact/jsx-runtime',

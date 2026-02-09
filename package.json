@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "scripts": {
     "dev": "vite",
-    "check": "npm run lint && npm run typecheck && npm run test:unit",
+    "check": "npm run lint && npm run typecheck && npm run gate",
     "gate": "npm run arch:public && npm run arch:capabilities && npm run arch:gate && npm run feature:gate && npm run di:gate && npm run dual-system:gate && npm run core-obsidian:gate && npm run core-public:gate && npm run gate:settings-persistence",
     "build": "vite build && node -e \"const fs=require('fs');fs.copyFileSync('dist/main.js','main.js');fs.copyFileSync('dist/main.js.map','main.js.map');fs.copyFileSync('dist/styles.css','styles.css');\"",
     "test": "jest --config test/configs/jest.config.js",
@@ -28,11 +28,11 @@
     "public-api:gate": "npm run arch:public",
     "capability:gate": "npm run arch:capabilities",
     "knip": "npx --yes knip",
-    "jscpd": "npx --yes jscpd",    
+    "jscpd": "npx --yes jscpd",
     "arch:public": "node scripts/public-api-gate.mjs",
     "arch:capabilities": "node scripts/capability-gate.mjs",
-    "arch:audit": "node scripts/arch-audit.mjs"
-    ,"audit:shared-ui": "node scripts/audit-shared-ui-imports.mjs",
+    "arch:audit": "node scripts/arch-audit.mjs",
+    "audit:shared-ui": "node scripts/audit-shared-ui-imports.mjs",
     "gate:settings-persistence": "node scripts/settings-persistence-gate.mjs",
     "ci": "npm run check && npm run gate && npm run build"
   },

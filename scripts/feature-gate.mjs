@@ -22,6 +22,8 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { createRequire } from 'module';
 
+import { failWithViolations, printOk } from './gate-formatter.mjs';
+
 const require = createRequire(import.meta.url);
 const ts = require('typescript');
 
@@ -234,24 +236,21 @@ for (const absPath of files) {
 const staleAllow = [...allow].filter((k) => !seenCrossEdges.has(k));
 
 if (staleAllow.length) {
-  console.error('===== Feature 硬闸失败（allowlist 存在过期条目）=====');
-  console.error(`\nallowlist 中有 ${staleAllow.length} 条过期条目（请删除）：`);
-  for (const k of staleAllow) console.error(`- ${k}`);
-  process.exit(1);
+  failWithViolations('feature-gate', staleAllow.map((k) => ({
+    file: path.join(ROOT, 'scripts', 'feature-gate.allowlist.json'),
+    loc: '0:0',
+    message: `stale allowlist entry: ${k}`,
+    hint: '删除 allowlist 中已不存在的边（allowlist 只允许缩小）',
+  })), { rootDir: ROOT, summary: 'allowlist 存在过期条目' });
 }
 
 if (violations.length) {
-  console.error('===== Feature 硬闸失败（跨 feature 引用）=====');
-  for (const v of violations) {
-    const rel = toPosix(path.relative(ROOT, v.file));
-    console.error(`\n${rel}:${v.loc}`);
-    console.error(v.msg);
-  }
-  console.error(`\n跨 feature 违规总数：${violations.length}`);
-  if (allow.size) {
-    console.error(`allowlist 当前条目数：${allow.size}（scripts/feature-gate.allowlist.json）`);
-  }
-  process.exit(1);
+  failWithViolations('feature-gate', violations.map((v) => ({
+    file: v.file,
+    loc: v.loc,
+    message: v.msg.replace(/\s+/g, ' ').trim(),
+    hint: v.key ? `allowlist key: ${v.key}` : undefined,
+  })), { rootDir: ROOT, summary: '跨 feature 引用禁止' });
 }
 
-console.log('✅ Feature 硬闸通过（无跨 feature 引用）');
+printOk('feature-gate', '无跨 feature 引用');

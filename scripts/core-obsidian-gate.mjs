@@ -15,6 +15,8 @@ import path from 'node:path';
 import process from 'node:process';
 import { createRequire } from 'node:module';
 
+import { failWithViolations, printOk } from './gate-formatter.mjs';
+
 const require = createRequire(import.meta.url);
 const ts = require('typescript');
 
@@ -170,18 +172,18 @@ function main() {
   const stale = Array.from(allow).filter((p) => !importing.has(p));
 
   if (violations.length) {
-    printViolations('Core Obsidian Gate', violations);
-    if (stale.length) {
-      console.error(`\nℹ️ allowlist 中存在已不再 import obsidian 的条目（建议顺手清理）：`);
-      for (const p of stale) console.error(`- ${p}`);
-    }
-    process.exit(1);
+    failWithViolations('core-obsidian-gate', violations.map((v) => ({
+      file: path.join(ROOT, v.message.split(':')[0]),
+      loc: (v.message.match(/:(\d+:\d+)/) || [,'0:0'])[1],
+      message: `${v.rule} ${v.message.split(' ').slice(1).join(' ')}`.trim(),
+      hint: v.detail,
+    })), { rootDir: ROOT, summary: 'core 层禁止直接 import obsidian' });
   }
 
-  console.log(`✅ Core Obsidian Gate 通过（当前 core import obsidian 文件数：${importing.size}）`);
+  printOk('core-obsidian-gate', `当前 core import obsidian 文件数：${importing.size}`);
   if (stale.length) {
-    console.log(`ℹ️ allowlist 可收敛：以下条目已不再 import obsidian（建议移除）`);
-    for (const p of stale) console.log(`- ${p}`);
+    console.log(`[core-obsidian-gate] allowlist 可收敛：以下条目已不再 import obsidian（建议移除）`);
+    for (const p of stale) console.log(`[core-obsidian-gate] ${p}:0:0 - stale allowlist candidate`);
   }
 }
 

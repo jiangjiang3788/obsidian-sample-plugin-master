@@ -3,6 +3,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
 
+import { failWithViolations, printOk } from './gate-formatter.mjs';
+
 /**
  * DI Gate (zero-deps)
  * 目标（Phase 4.5 最硬）：
@@ -164,11 +166,14 @@ function main() {
   }
 
   if (violations.length) {
-    printViolations('DI Gate (features/shared 禁止 tsyringe)', violations);
-    process.exit(1);
+    failWithViolations('di-gate', violations.map((v) => ({
+      file: path.join(ROOT, v.message.split(' ')[0]),
+      loc: '0:0',
+      message: `${v.rule} ${v.message.substring(v.message.indexOf(' ') + 1)}`.trim(),
+      hint: v.detail,
+    })), { rootDir: ROOT, summary: 'features/shared 禁止 DI 权力' });
   }
 
-  console.log('✅ DI（依赖注入）硬闸通过（di-gate）');
-}
+  printOk('di-gate', 'features/shared 未发现 tsyringe/container 违规');\n}
 
 main();

@@ -1,27 +1,4 @@
 {
-  "aiSettings": {
-    "apiKey": "",
-    "enabled": true,
-    "provider": "openai_compat",
-    "apiEndpoint": "https://api.ricardochat.cn/v1",
-    "model": "[Max]gemini-3-flash-preview",
-    "temperature": 0.7,
-    "maxTokens": 4096,
-    "requestTimeoutMs": 30000,
-    "enabledBlockIds": [
-      "blk_meic1my6m62iu",
-      "blk_mejsg1dc46fj9",
-      "blk_mejsdvflptluo",
-      "blk_mejsfuehqj4s0",
-      "blk_mejsg76atopau"
-    ],
-    "allowMultipleResults": true,
-    "maxResults": 5,
-    "confirmMode": "single",
-    "preloadConfigOnStartup": false,
-    "configCacheTTLSeconds": 300,
-    "customPrompt": ""
-  },
   "groups": [
     {
       "id": "group_mem9c0yqeumgu",
@@ -529,8 +506,7 @@
         "view_mer6n7pwf7suy",
         "view_mewr7y1gvq0ro",
         "view_membnf1hgjgm3",
-        "view_membbqjam5v63",
-        "view_mer6ll4mtbjry"
+        "view_membbqjam5v63"
       ],
       "displayMode": "list",
       "initialView": "周",
@@ -540,15 +516,7 @@
       "isOverviewMode": false,
       "initialDate": "2025-05-26",
       "useFieldGranularity": false,
-      "selectedThemes": [
-        "生活",
-        "生活/车车",
-        "生活/高级生活",
-        "生活/家务",
-        "生活/垚垚",
-        "生活/娱乐",
-        "生活/整理"
-      ],
+      "selectedThemes": [],
       "selectedCategories": []
     },
     {
@@ -8656,6 +8624,29 @@
     "工作/通勤",
     "思考/专注"
   ],
+  "aiSettings": {
+    "enabled": true,
+    "provider": "openai_compat",
+    "apiEndpoint": "https://api.ricardochat.cn/v1",
+    "apiKey": "sk-2SPzXePSCl9BISBoGzqQoBTd2BDv0mmoRZ3KoSZiMPFWyryn",
+    "model": "[Max]gemini-3-flash-preview",
+    "temperature": 0.7,
+    "maxTokens": 4096,
+    "requestTimeoutMs": 30000,
+    "enabledBlockIds": [
+      "blk_meic1my6m62iu",
+      "blk_mejsg1dc46fj9",
+      "blk_mejsdvflptluo",
+      "blk_mejsfuehqj4s0",
+      "blk_mejsg76atopau"
+    ],
+    "allowMultipleResults": true,
+    "maxResults": 5,
+    "confirmMode": "single",
+    "preloadConfigOnStartup": false,
+    "configCacheTTLSeconds": 300,
+    "customPrompt": ""
+  },
   "dataSources": [
     {
       "id": "ds_membld9cc3oj6",

@@ -3,6 +3,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
 
+import { failWithViolations, printOk } from './gate-formatter.mjs';
+
 /**
  * Public API Gate (zero-deps)
  * 目标：
@@ -237,11 +239,18 @@ function main() {
   }
 
   if (violations.length) {
-    printViolations('Public API Gate', violations);
-    process.exit(1);
+    failWithViolations('public-api-gate', violations.map((v) => {
+      const m = v.message.match(/(src\/[^\\s:]+\.ts[x]?)/);
+      const fileRel = m ? m[1] : 'scripts/public-api-gate.mjs';
+      return {
+        file: path.join(ROOT, fileRel),
+        loc: '0:0',
+        message: `${v.rule} ${v.message}`.trim(),
+        hint: v.detail,
+      };
+    }), { rootDir: ROOT, summary: 'public API/深导入约束失败' });
   }
 
-  console.log('✅ Public API 硬闸通过（public-api-gate）');
-}
+  printOk('public-api-gate', 'public API / core deep import 检查通过');\n}
 
 main();

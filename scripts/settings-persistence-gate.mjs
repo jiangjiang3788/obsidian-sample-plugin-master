@@ -5,16 +5,13 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
-const root = process.cwd();
+import { failWithViolations, printOk } from './gate-formatter.mjs';
 
-function fail(msg) {
-  console.error(`\n[gate:settings-persistence] ${msg}\n`);
-  process.exit(1);
-}
+const root = process.cwd();
 
 const registerPath = path.join(root, 'src', 'app', 'bootstrap', 'register.ts');
 if (!fs.existsSync(registerPath)) {
-  fail(`Missing file: ${registerPath}`);
+  failWithViolations('settings-persistence-gate', [{ file: registerPath, loc: '0:0', message: `Missing file: ${registerPath}`, hint: '修复：确保 registerSettingsPersistence 存在 sanitizeForPersistence 且剥离 apiKey，并用其保存' }], { rootDir: root, summary: 'settings persistence gate' });
 }
 
 const src = fs.readFileSync(registerPath, 'utf8');
@@ -39,4 +36,4 @@ if (!src.includes('plugin.saveData(sanitizeForPersistence(settings))')) {
   fail('saveData() is not using sanitizeForPersistence(settings).');
 }
 
-console.log('[gate:settings-persistence] OK');
+printOk('settings-persistence-gate', 'sanitizeForPersistence / apiKey stripping / saveData 串联正确');
