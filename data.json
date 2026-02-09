@@ -540,7 +540,15 @@
       "isOverviewMode": false,
       "initialDate": "2025-05-26",
       "useFieldGranularity": false,
-      "selectedThemes": [],
+      "selectedThemes": [
+        "生活",
+        "生活/车车",
+        "生活/高级生活",
+        "生活/家务",
+        "生活/垚垚",
+        "生活/娱乐",
+        "生活/整理"
+      ],
       "selectedCategories": []
     },
     {

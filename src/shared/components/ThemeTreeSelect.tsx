@@ -9,23 +9,11 @@ import { useState, useMemo, useCallback, useRef, useEffect } from 'preact/hooks'
 import {
     Box,
     Typography,
-    IconButton,
-    TextField,
-    Button,
-    Checkbox,
-    Chip,
     Paper,
     Popper,
     ClickAwayListener,
-    InputAdornment,
     List,
-    ListItemButton,
-    Collapse,
 } from '@mui/material';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import ChevronRightIcon from '@mui/icons-material/ChevronRight';
-import SearchIcon from '@mui/icons-material/Search';
-import ClearIcon from '@mui/icons-material/Clear';
 import type { ThemeDefinition } from '@core/public';
 import { 
     ThemePathTreeBuilder as ThemeTreeBuilder, 
@@ -33,6 +21,13 @@ import {
     buildThemePathTree as buildThemeTree,
     searchThemePathTree as searchThemeTree,
 } from '@core/public';
+
+import { SearchBox } from './ThemeTreeSelect/SearchBox';
+import { MultiSelectToolbar } from './ThemeTreeSelect/MultiSelectToolbar';
+import { SelectedPathsChips } from './ThemeTreeSelect/SelectedPathsChips';
+import { ThemeTreeSelectTrigger } from './ThemeTreeSelect/Trigger';
+import { ThemeTreeNodeItem } from './ThemeTreeSelect/ThemeTreeNodeItem';
+import { ThemeTreeNodeItem } from './ThemeTreeSelect/ThemeTreeNodeItem';
 
 // ============== 类型定义 ==============
 
@@ -254,46 +249,17 @@ export function ThemeTreeSelect({
     return (
         <Box sx={{ position: 'relative', ...sx }}>
             {/* 触发按钮 */}
-            <Box
-                ref={anchorRef}
-                onClick={() => !disabled && setOpen(!open)}
-                sx={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 0.5,
-                    px: 1.5,
-                    py: size === 'small' ? 0.5 : 1,
-                    border: '1px solid var(--background-modifier-border)',
-                    borderRadius: 1,
-                    cursor: disabled ? 'not-allowed' : 'pointer',
-                    opacity: disabled ? 0.5 : 1,
-                    bgcolor: 'background.paper',
-                    '&:hover': disabled ? {} : {
-                        borderColor: 'primary.main',
-                    },
-                }}
-            >
-                <Typography
-                    variant="body2"
-                    sx={{
-                        flex: 1,
-                        color: hasSelection ? 'text.primary' : 'text.secondary',
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                        whiteSpace: 'nowrap',
-                    }}
-                >
-                    {displayText}
-                </Typography>
-                {allowClear && hasSelection && !disabled && (
-                    <IconButton size="small" onClick={handleClear} sx={{ p: 0.25 }}>
-                        <ClearIcon fontSize="small" />
-                    </IconButton>
-                )}
-                <IconButton size="small" sx={{ p: 0.25 }}>
-                    {open ? <ExpandMoreIcon fontSize="small" /> : <ChevronRightIcon fontSize="small" />}
-                </IconButton>
-            </Box>
+            <ThemeTreeSelectTrigger
+                anchorRef={anchorRef}
+                open={open}
+                onToggleOpen={() => setOpen(!open)}
+                displayText={displayText}
+                hasSelection={hasSelection}
+                allowClear={allowClear}
+                disabled={disabled}
+                size={size}
+                onClear={handleClear}
+            />
 
             {/* 下拉面板 */}
             <Popper
@@ -311,54 +277,11 @@ export function ThemeTreeSelect({
                         }}
                     >
                         {/* 搜索框 */}
-                        {searchable && (
-                            <Box sx={{ p: 1, borderBottom: '1px solid var(--background-modifier-border)' }}>
-                                <TextField
-                                    fullWidth
-                                    size="small"
-                                    placeholder="搜索主题..."
-                                    value={searchTerm}
-                                    onChange={(e: any) => setSearchTerm(e.target.value)}
-                                    InputProps={{
-                                        startAdornment: (
-                                            <InputAdornment position="start">
-                                                <SearchIcon fontSize="small" />
-                                            </InputAdornment>
-                                        ),
-                                        endAdornment: searchTerm && (
-                                            <InputAdornment position="end">
-                                                <IconButton size="small" onClick={() => setSearchTerm('')}>
-                                                    <ClearIcon fontSize="small" />
-                                                </IconButton>
-                                            </InputAdornment>
-                                        ),
-                                    }}
-                                    onKeyDown={(e: KeyboardEvent) => e.stopPropagation()}
-                                />
-                            </Box>
-                        )}
+                        {searchable && <SearchBox value={searchTerm} onChange={setSearchTerm} />}
 
                         {/* 多选操作栏 */}
                         {multiSelect && (
-                            <Box sx={{ 
-                                display: 'flex', 
-                                gap: 1, 
-                                p: 1,
-                                borderBottom: '1px solid var(--background-modifier-border)',
-                            }}>
-                                <Button
-                                    size="small"
-                                    onClick={() => {
-                                        const allPaths = ThemeTreeBuilder.getLeafNodes(themeTree).map(n => n.path);
-                                        onSelectMultiple?.(allPaths);
-                                    }}
-                                >
-                                    全选
-                                </Button>
-                                <Button size="small" onClick={() => onSelectMultiple?.([])}>
-                                    清空
-                                </Button>
-                            </Box>
+                            <MultiSelectToolbar themeTree={themeTree} onSelectMultiple={onSelectMultiple} />
                         )}
 
                         {/* 树列表 */}
@@ -394,167 +317,13 @@ export function ThemeTreeSelect({
             </Popper>
 
             {/* 多选时显示已选标签 */}
-            {multiSelect && selectedPaths.length > 0 && (
-                <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap', mt: 0.5 }}>
-                    {selectedPaths.slice(0, 3).map(path => (
-                        <Chip
-                            key={path}
-                            size="small"
-                            label={path.split('/').pop()}
-                            onDelete={() => {
-                                onSelectMultiple?.(selectedPaths.filter(p => p !== path));
-                            }}
-                            sx={{ height: 22 }}
-                        />
-                    ))}
-                    {selectedPaths.length > 3 && (
-                        <Chip
-                            size="small"
-                            label={`+${selectedPaths.length - 3}`}
-                            sx={{ height: 22 }}
-                        />
-                    )}
-                </Box>
+            {multiSelect && (
+                <SelectedPathsChips
+                    selectedPaths={selectedPaths}
+                    onRemovePath={(path) => onSelectMultiple?.(selectedPaths.filter(p => p !== path))}
+                />
             )}
         </Box>
-    );
-}
-
-// ============== 树节点项组件 ==============
-
-interface ThemeTreeNodeItemProps {
-    node: ThemeTreeNode;
-    expandedIds: Set<string>;
-    selectedPaths: string[];
-    selectedThemeId: string | null | undefined;
-    multiSelect: boolean;
-    onToggleExpand: (nodeId: string, e?: Event) => void;
-    onSingleSelect: (node: ThemeTreeNode) => void;
-    onMultiSelect: (node: ThemeTreeNode) => void;
-    onSelectWithChildren: (node: ThemeTreeNode) => void;
-    renderLabel?: (node: ThemeTreeNode) => preact.ComponentChildren;
-}
-
-function ThemeTreeNodeItem({
-    node,
-    expandedIds,
-    selectedPaths,
-    selectedThemeId,
-    multiSelect,
-    onToggleExpand,
-    onSingleSelect,
-    onMultiSelect,
-    onSelectWithChildren,
-    renderLabel,
-}: ThemeTreeNodeItemProps) {
-    const hasChildren = node.children.length > 0;
-    const isExpanded = expandedIds.has(node.id);
-    const isSelected = multiSelect 
-        ? selectedPaths.includes(node.path)
-        : node.themeId === selectedThemeId;
-
-    const handleClick = () => {
-        if (multiSelect) {
-            onMultiSelect(node);
-        } else {
-            // 单选模式：只有叶子节点（有 themeId）才可选
-            if (node.themeId) {
-                onSingleSelect(node);
-            } else if (hasChildren) {
-                // 非叶子节点，切换展开
-                onToggleExpand(node.id);
-            }
-        }
-    };
-
-    return (
-        <>
-            <ListItemButton
-                onClick={handleClick}
-                selected={isSelected}
-                sx={{
-                    pl: 1 + node.depth * 2,
-                    py: 0.5,
-                    minHeight: 32,
-                }}
-            >
-                {/* 展开/折叠按钮 */}
-                {hasChildren ? (
-                    <IconButton
-                        size="small"
-                        onClick={(e: any) => onToggleExpand(node.id, e)}
-                        sx={{ p: 0.25, mr: 0.5 }}
-                    >
-                        {isExpanded ? (
-                            <ExpandMoreIcon fontSize="small" />
-                        ) : (
-                            <ChevronRightIcon fontSize="small" />
-                        )}
-                    </IconButton>
-                ) : (
-                    <Box sx={{ width: 24, mr: 0.5 }} />
-                )}
-
-                {/* 多选复选框 */}
-                {multiSelect && (
-                    <Checkbox
-                        size="small"
-                        checked={isSelected}
-                        onClick={(e: any) => e.stopPropagation()}
-                        onChange={() => onMultiSelect(node)}
-                        sx={{ p: 0.25, mr: 0.5 }}
-                    />
-                )}
-
-                {/* 标签 */}
-                <Typography
-                    variant="body2"
-                    sx={{
-                        flex: 1,
-                        fontWeight: node.themeId ? 400 : 500, // 虚节点加粗
-                        color: node.themeId ? 'text.primary' : 'text.secondary',
-                    }}
-                >
-                    {renderLabel ? renderLabel(node) : node.label}
-                </Typography>
-
-                {/* 多选时：包含子节点按钮 */}
-                {multiSelect && hasChildren && (
-                    <IconButton
-                        size="small"
-                        onClick={(e: any) => {
-                            e.stopPropagation();
-                            onSelectWithChildren(node);
-                        }}
-                        sx={{ p: 0.25, opacity: 0.6, '&:hover': { opacity: 1 } }}
-                        title="包含子主题"
-                    >
-                        <ExpandMoreIcon fontSize="small" />
-                    </IconButton>
-                )}
-            </ListItemButton>
-
-            {/* 子节点 */}
-            {hasChildren && (
-                <Collapse in={isExpanded}>
-                    {node.children.map(child => (
-                        <ThemeTreeNodeItem
-                            key={child.id}
-                            node={child}
-                            expandedIds={expandedIds}
-                            selectedPaths={selectedPaths}
-                            selectedThemeId={selectedThemeId}
-                            multiSelect={multiSelect}
-                            onToggleExpand={onToggleExpand}
-                            onSingleSelect={onSingleSelect}
-                            onMultiSelect={onMultiSelect}
-                            onSelectWithChildren={onSelectWithChildren}
-                            renderLabel={renderLabel}
-                        />
-                    ))}
-                </Collapse>
-            )}
-        </>
     );
 }
 
