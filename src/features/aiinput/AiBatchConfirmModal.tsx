@@ -37,7 +37,7 @@ import RadioButtonUncheckedIcon from '@mui/icons-material/RadioButtonUnchecked';
 import DeleteIcon from '@mui/icons-material/Delete';
 
 import { finalizeQuickInputFormData, QuickInputEditor } from '@/app/public';
-import { ModalHeader } from '@shared/ui/components/ModalHeader';
+import { ModalHeader } from '@shared/public';
 
 interface RecordItem {
   id: string;

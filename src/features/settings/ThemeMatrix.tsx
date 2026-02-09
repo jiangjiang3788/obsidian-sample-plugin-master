@@ -16,7 +16,7 @@ import { h } from 'preact';
 import { useZustandAppStore, useUseCases, useDataStore } from '@/app/public';
 import { 
     Box, Typography, TextField, Button, Stack 
-} from '@shared/ui/muiCompat';
+} from '@shared/public';
 import AddIcon from '@mui/icons-material/Add';
 import { useState, useMemo } from 'preact/hooks';
 import { TemplateEditorModal } from '@features/settings/TemplateEditorModal';

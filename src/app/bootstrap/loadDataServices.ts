@@ -1,7 +1,7 @@
 import { container } from 'tsyringe';
 
 import { DataStore, ActionService, InputService, ItemService, devError, devLog, devTime, devTimeEnd } from '@core/public';
-import { startMeasure } from '@shared/utils/performance';
+import { startMeasure } from '@shared/public';
 
 import type { ServiceManagerServices } from '@/app/ServiceManager.services';
 

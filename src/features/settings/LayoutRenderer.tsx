@@ -26,9 +26,9 @@ import { QuickInputModal } from '@/app/public';
 import { openModuleSettingsWidget } from './ModuleSettingsModal';
 import { App, Notice } from 'obsidian'; // [修改] 导入 Notice
 import { exportItemsToMarkdown, getExportConfigByViewType } from '@core/public'; // [新增] 导入导出函数
-import { ViewToolbar } from '@shared/ui/views/ViewToolbar'; // [新增] 导入统一工具栏组件
-import type { UpdateTaskTimeHandler } from '@shared/types/taskTime';
-import type { OpenQuickCreateHandler } from '@shared/types/actions';
+import { ViewToolbar } from '@shared/public'; // [新增] 导入统一工具栏组件
+import type { UpdateTaskTimeHandler } from '@shared/public';
+import type { OpenQuickCreateHandler } from '@shared/public';
 
 // Phase2: shared/ui 纯化试点（先从 BlockView 的分组树计算搬出）
 import { buildBlockViewModel } from '@/features/settings/viewModels/blockViewModel';

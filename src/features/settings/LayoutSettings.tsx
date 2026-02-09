@@ -30,7 +30,7 @@ import { DndContext, closestCenter } from '@dnd-kit/core';
 import { useSortable, SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { arrayMove } from '@core/public';
 import { ModuleSettingsModal, openModuleSettingsWidget } from '@/features/settings/ModuleSettingsModal';
-import { NamePromptModal } from '@shared/ui/composites/dialogs/NamePromptModal';
+import { NamePromptModal } from '@shared/public';
 import { DEFAULT_NAMES } from '@core/public';
 
 const PERIOD_OPTIONS = ['年', '季', '月', '周', '天'].map(v => ({ value: v, label: v }));

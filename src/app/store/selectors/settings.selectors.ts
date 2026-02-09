@@ -15,3 +15,5 @@ export const makeSelectLayoutById = (layoutId: string) => (s: ZustandAppStore) =
 
 export const makeSelectViewInstanceById = (instanceId: string) => (s: ZustandAppStore) =>
   s.settings.viewInstances?.find((v) => v.id === instanceId);
+
+export const selectFloatingTimerEnabled = (s: ZustandAppStore) => s.settings.floatingTimerEnabled;

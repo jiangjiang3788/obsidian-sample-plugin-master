@@ -4,7 +4,7 @@ import { h } from 'preact';
 import { useMemo } from 'preact/hooks';
 import { Notice } from 'obsidian';
 import type { BlockTemplate } from '@core/public';
-import { SimpleSelect } from '@shared/ui/composites/SimpleSelect';
+import { SimpleSelect } from '@shared/public';
 import { Box } from '@mui/material';
 
 interface Props {

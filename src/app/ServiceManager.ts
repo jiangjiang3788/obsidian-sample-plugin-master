@@ -14,7 +14,7 @@ import type { FeatureLoader } from '@/app/FeatureLoader';
 import type { ServiceManagerServices } from '@/app/ServiceManager.services';
 import { Disposables } from '@/app/runtime/disposables';
 
-import { startMeasure } from '@shared/utils/performance';
+import { startMeasure } from '@shared/public';
 import { closeAllFloatingWidgets } from '@/app/public';
 
 import { registerSettingsPersistence } from '@/app/bootstrap/register';

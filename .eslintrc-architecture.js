@@ -360,5 +360,31 @@ module.exports = {
         ],
       },
     },
+
+    // ==================================================================================
+    // SHARED：薄出口 @shared/public；禁止上层深导入 @shared/**（避免耦合扩散）
+    // ==================================================================================
+    {
+      files: ['src/**/*.{ts,tsx,js,jsx}'],
+      excludedFiles: ['src/shared/**/*.{ts,tsx,js,jsx}'],
+      rules: {
+        'no-restricted-imports': [
+          'error',
+          {
+            patterns: [
+              {
+                group: [
+                  // 禁止使用 @shared/** 绕过门面（只允许 @shared/public）
+                  '@shared/!(public)',
+                  '@shared/!(public)/**',
+                ],
+                message: "请通过 '@shared/public' 引入 shared 能力（禁止 @shared/** 深导入）❌",
+              },
+            ],
+          },
+        ],
+      },
+    },
+
   ],
 };

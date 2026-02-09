@@ -2,7 +2,7 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
 import { useState, useEffect } from 'preact/hooks';
-import { Box, Typography, IconButton, Tooltip } from '@shared/ui/muiCompat';
+import { Box, Typography, IconButton, Tooltip } from '@shared/public';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import StopIcon from '@mui/icons-material/Stop';
 import PauseIcon from '@mui/icons-material/Pause';

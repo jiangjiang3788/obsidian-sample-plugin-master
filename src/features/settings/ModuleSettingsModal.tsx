@@ -12,15 +12,15 @@ import { VIEW_OPTIONS, ViewName, getAllFields } from '@core/public';
 import type { ViewInstance } from '@core/public';
 import { VIEW_EDITORS } from '@features/settings/registry';
 import { useZustandAppStore, useDataStore, useUseCases } from '@/app/public';
-import { SimpleSelect } from '@shared/ui/composites/SimpleSelect';
+import { SimpleSelect } from '@shared/public';
 import { RuleBuilder } from '@features/settings/RuleBuilder';
-import { Modal } from '@shared/ui/primitives/Modal';
+import { Modal } from '@shared/public';
 import { FloatingPanel } from '@/app/public';
 import { closeFloatingWidget, openFloatingWidget } from '@/app/public';
 
-import { FormField } from '@shared/ui/composites/FormField';
-import { FieldManager } from '@shared/ui/composites/FieldManager';
-import { useSaveHandler } from '@shared/patterns/ModalSavePattern';
+import { FormField } from '@shared/public';
+import { FieldManager } from '@shared/public';
+import { useSaveHandler } from '@shared/public';
 
 
 

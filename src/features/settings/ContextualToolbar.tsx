@@ -1,6 +1,6 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
-import { Box, Typography, Button, Stack, Divider } from '@shared/ui/muiCompat';
+import { Box, Typography, Button, Stack, Divider } from '@shared/public';
 import { type EditorState } from './useThemeMatrixEditor';
 import type { BatchOperation } from './useBatchOperations';
 

@@ -4,7 +4,7 @@ import { h } from 'preact';
 import { useMemo, useState } from 'preact/hooks';
 import { Typography, Tooltip, Chip, Autocomplete, TextField, Button } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
-import { SimpleSelect } from '@shared/ui/composites/SimpleSelect';
+import { SimpleSelect } from '@shared/public';
 import { DataStore } from '@core/public';
 import { getAllFields, readField, FilterRule, SortRule } from '@core/public';
 

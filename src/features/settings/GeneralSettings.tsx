@@ -19,7 +19,7 @@ import { Box, Typography, Stack, FormControlLabel, Checkbox } from '@mui/materia
  */
 export function GeneralSettings() {
     // 使用细粒度 selector 订阅设置状态
-    const floatingTimerEnabled = useZustandAppStore(state => state.settings.floatingTimerEnabled);
+    const floatingTimerEnabled = useZustandAppStore(selectFloatingTimerEnabled);
     
     // P0: 获取 UseCases
     const useCases = useUseCases();

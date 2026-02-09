@@ -3,7 +3,7 @@ import { h } from 'preact';
 import {
     Box,
     Button,
-} from '@shared/ui/muiCompat';
+} from '@shared/public';
 import EditIcon from '@mui/icons-material/Edit';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 

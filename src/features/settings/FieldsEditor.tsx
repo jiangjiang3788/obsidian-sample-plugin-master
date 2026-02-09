@@ -9,7 +9,7 @@ import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
 import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
 import RemoveCircleOutlineIcon from '@mui/icons-material/RemoveCircleOutline';
 import type { TemplateField, TemplateFieldOption } from '@core/public';
-import { SimpleSelect } from '@shared/ui/composites/SimpleSelect';
+import { SimpleSelect } from '@shared/public';
 import { Notice } from 'obsidian';
 
 // OptionRow 组件没有变化

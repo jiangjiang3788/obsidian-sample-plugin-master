@@ -9,7 +9,7 @@ import { buildThemeTree, type ThemeTreeNode } from '@core/public';
 import { dayjs, renderTemplate } from '@core/public';
 import { getEffectiveTemplate } from '@core/public';
 
-import { computeLinkedTimeChanges, finalizeLinkedTimeFields } from '@shared/utils/linkedTimeFields';
+import { computeLinkedTimeChanges, finalizeLinkedTimeFields } from '@shared/public';
 
 import {
   Box,
@@ -23,7 +23,7 @@ import {
   Typography,
 } from '@mui/material';
 
-import { SimpleSelect } from '@shared/ui/composites/SimpleSelect';
+import { SimpleSelect } from '@shared/public';
 
 // 一个稳定的空对象引用：避免因为 `{}` 的引用变化造成不必要的 rerender（甚至触发上层状态回写链路）。
 const EMPTY_FORM_DATA: Record<string, any> = {};

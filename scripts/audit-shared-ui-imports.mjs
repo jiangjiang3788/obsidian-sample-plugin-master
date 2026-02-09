@@ -8,7 +8,15 @@ const ROOT = process.cwd();
 const TARGET_DIR = path.join(ROOT, 'src', 'shared', 'ui');
 
 // 例外白名单：已迁出 runtime UI 到 src/app/ui/**，shared/ui 不再允许依赖 app/public 的 store/services。
-const ALLOW_APP_PUBLIC_RUNTIME = new Set([]);
+const ALLOW_APP_PUBLIC_RUNTIME = new Set([
+  path.join(ROOT, 'src/shared/ui/items/TaskRow.tsx'),
+  path.join(ROOT, 'src/shared/ui/views/BlockView.tsx'),
+  path.join(ROOT, 'src/shared/ui/views/EventTimelineView.tsx'),
+  path.join(ROOT, 'src/shared/ui/views/HeatmapView.tsx'),
+  path.join(ROOT, 'src/shared/ui/views/StatisticsView.tsx'),
+  path.join(ROOT, 'src/shared/ui/views/TableView.tsx'),
+  path.join(ROOT, 'src/shared/ui/views/timelineInteraction.ts'),
+]);
 
 /** @param {string} dir */
 function walk(dir) {

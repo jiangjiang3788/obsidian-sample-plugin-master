@@ -13,8 +13,8 @@ import {
 import { diDebug, diWarn } from '@/app/diagnostics/diDiagnostics';
 
 import type { ThinkSettings } from '@core/public';
-import { safeAsync } from '@shared/utils/errorHandler';
-import { startMeasure } from '@shared/utils/performance';
+import { safeAsync } from '@shared/public';
+import { startMeasure } from '@shared/public';
 
 import { createAppStore, STORE_TOKEN } from '@/app/store/useAppStore';
 import { createUseCases, USECASES_TOKEN } from '@/app/usecases';

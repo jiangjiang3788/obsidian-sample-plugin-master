@@ -14,8 +14,8 @@ import type { UseCases } from '@/app/public';
 import { setupCoreContainer } from '@core/public';
 import { VAULT_PORT_TOKEN, UI_PORT_TOKEN, METADATA_PORT_TOKEN, FILESTAT_PORT_TOKEN } from '@core/public';
 import './styles/main.css';
-import { safeAsync } from '@shared/utils/errorHandler';
-import { performanceMonitor, startMeasure } from '@shared/utils/performance';
+import { safeAsync } from '@shared/public';
+import { performanceMonitor, startMeasure } from '@shared/public';
 import { ServiceManager } from '@/app/ServiceManager';
 import {
     createCapabilities,

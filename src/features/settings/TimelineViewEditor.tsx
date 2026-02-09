@@ -3,11 +3,11 @@
 import { h } from 'preact';
 import { useMemo } from 'preact/hooks';
 
-import { Box, Stack, Typography, TextField, Button, IconButton, Tooltip } from '@shared/ui/muiCompat';
+import { Box, Stack, Typography, TextField, Button, IconButton, Tooltip } from '@shared/public';
 import AddIcon from '@mui/icons-material/AddCircleOutline';
 import DeleteIcon from '@mui/icons-material/RemoveCircleOutline';
 
-import { SimpleSelect } from '@shared/ui/composites/SimpleSelect';
+import { SimpleSelect } from '@shared/public';
 import { collectFileNames, TIMELINE_VIEW_DEFAULT_CONFIG, type CategoryConfig, type TimelineViewConfig } from '@core/public';
 import { ViewEditorProps } from './registry';
 

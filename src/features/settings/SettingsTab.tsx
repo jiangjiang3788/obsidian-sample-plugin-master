@@ -4,9 +4,9 @@ import { createServices, type Services, mountWithServices, unmountPreact } from 
 import { PluginSettingTab, App } from 'obsidian';
 import { ThemeProvider, CssBaseline, Box, Tabs, Tab } from '@mui/material';
 import type ThinkPlugin from '@main';
-import { useLocalStorage } from '@shared/hooks';
+import { useLocalStorage } from '@shared/public';
 import { LOCAL_STORAGE_KEYS } from '@core/public';
-import { theme as baseTheme } from '@shared/styles/mui-theme';
+import { theme as baseTheme } from '@shared/public';
 
 import { LayoutSettings } from './LayoutSettings';
 import { InputSettings } from './InputSettings';

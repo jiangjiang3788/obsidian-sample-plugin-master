@@ -3,8 +3,8 @@
 import { h } from 'preact';
 import { Stack, Typography, Box, Button } from '@mui/material';
 import type { ViewEditorProps } from './registry';
-import { SimpleSelect } from '@shared/ui/composites/SimpleSelect';
-import { ListEditor } from '@shared/ui/composites/form/ListEditor';
+import { SimpleSelect } from '@shared/public';
+import { ListEditor } from '@shared/public';
 import { useZustandAppStore } from '@/app/public';
 import { useMemo } from 'preact/hooks';
 import {

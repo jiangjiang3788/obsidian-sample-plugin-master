@@ -1,8 +1,8 @@
 import { container } from 'tsyringe';
 import type ThinkPlugin from '@main';
 
-import { safeAsync } from '@shared/utils/errorHandler';
-import { startMeasure } from '@shared/utils/performance';
+import { safeAsync } from '@shared/public';
+import { startMeasure } from '@shared/public';
 
 import { devLog } from '@core/public';
 
