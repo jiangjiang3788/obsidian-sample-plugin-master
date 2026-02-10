@@ -58,14 +58,33 @@ export class DataStore {
   private _cacheSaveTimer: any = null;
   private _perf = { start: 0, end: 0, scannedFiles: 0, scannedItems: 0 };
 
+  private _disposed = false;
+
+  /**
+   * Lifecycle: release timers/listeners to avoid writing after unload.
+   */
+  dispose(): void {
+    this._disposed = true;
+    try { clearTimeout(this._cacheSaveTimer); } catch {}
+    this._cacheSaveTimer = null;
+    this.changeListeners.clear();
+    this.queryCache.clear();
+  }
+
+  private _assertNotDisposed(): boolean {
+    return !this._disposed;
+  }
+
   /* ---------------- 启动扫描 ---------------- */
 
   // 兼容保留（可能被其他位置直接调用）
   async scanAll() {
+    if (!this._assertNotDisposed()) return;
     this.items = [];
     this.fileIndex.clear();
     const paths = this.vault.listMarkdownFilePaths();
     for (const path of paths) {
+      if (!this._assertNotDisposed()) break;
       const scanned = await this.scanFile(path);
       this._perf.scannedFiles += 1;
       this._perf.scannedItems += scanned.length;
@@ -75,6 +94,7 @@ export class DataStore {
 
   // [主流程] 初始扫描（代理到暖启动）
   async initialScan() {
+    if (!this._assertNotDisposed()) return;
     return this.warmStart();
   }
 
@@ -113,6 +133,7 @@ export class DataStore {
 
   // [主流程] 暖启动：加载缓存 → 目录 stat → 仅扫描变更 → 合并内存 → 防抖保存
   async warmStart(): Promise<void> {
+    if (!this._assertNotDisposed()) return;
     this._perf = { start: Date.now(), end: 0, scannedFiles: 0, scannedItems: 0 };
 
     // 1) 加载缓存（版本不符视为空）
@@ -184,6 +205,7 @@ export class DataStore {
    * 目的：让 core 其它服务（如 ItemService）不需要依赖 Obsidian 的 TFile 类型。
    */
   async scanFileByPath(filePath: string, opts: { bumpVersion?: boolean } = {}): Promise<Item[]> {
+    if (!this._assertNotDisposed()) return [];
     return await this.scanFile(filePath, opts);
   }
 
@@ -198,6 +220,7 @@ export class DataStore {
    * - { path: string }: 结构化对象（兼容 TFile）
    */
   async scanFile(filePathOrFile: string | { path: string }, opts: { bumpVersion?: boolean } = {}): Promise<Item[]> {
+    if (!this._assertNotDisposed()) return [];
     try {
       const filePath = typeof filePathOrFile === 'string'
         ? filePathOrFile
@@ -370,15 +393,17 @@ export class DataStore {
     });
   }
   private _emitThrottled = throttle(() => this._emitChange(), 250);
-  subscribe(listener: () => void) { this.changeListeners.add(listener); }
+  subscribe(listener: () => void) { if (this._assertNotDisposed()) this.changeListeners.add(listener); }
   unsubscribe(listener: () => void) { this.changeListeners.delete(listener); }
-  notifyChange() { this._emitThrottled(); }
+  notifyChange() { if (this._assertNotDisposed()) this._emitThrottled(); }
 
   /* ---------------- 辅助：缓存保存与性能报告 ---------------- */
 
   private _scheduleCacheSave(delay = 1500) {
+    if (!this._assertNotDisposed()) return;
     clearTimeout(this._cacheSaveTimer);
     this._cacheSaveTimer = setTimeout(async () => {
+      if (!this._assertNotDisposed()) return;
       try {
         if (this.cache) {
           await this.storage.writeJSON('Think/cache.json', this.cache);
@@ -393,6 +418,7 @@ export class DataStore {
    * 将本次扫描埋点写入 Vault/Think/performance-report.json（数组追加）
    */
   async writePerformanceReport(stage: string, extra: Record<string, any> = {}): Promise<void> {
+    if (!this._assertNotDisposed()) return;
     try {
       const path = 'Think/performance-report.json';
       const history = (await this.storage.readJSON<any[]>(path)) || [];
@@ -405,6 +431,7 @@ export class DataStore {
         ...extra
       };
       history.push(record);
+      if (!this._assertNotDisposed()) return;
       await this.storage.writeJSON(path, history);
     } catch (e) {
       devWarn('ThinkPlugin: 写入性能报告失败', e);

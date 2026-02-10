@@ -10,6 +10,7 @@
 export * from './utils/errorHandler';
 export * from './utils/performance';
 export * from './utils/linkedTimeFields';
+export * from './utils/takeLatest';
 export * from './styles/mui-theme';
 export * from './types/actions';
 export * from './types/taskTime';

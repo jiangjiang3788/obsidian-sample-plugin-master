@@ -76,7 +76,7 @@ import type { RendererService } from './RendererService';
 import type { EventsPort } from '@core/public';
 import type { ActionService } from '@core/public';
 
-import { VaultWatcher } from './VaultWatcher';
+import { VaultWatcher } from '@/platform/events/VaultWatcher';
 import { CodeblockEmbedder } from './CodeblockEmbedder';
 
 /** 
@@ -95,14 +95,18 @@ export interface DashboardDependencies {
  * 原：export function setup(deps: DashboardDependencies)
  * 这里重命名为 setupDashboard
  */
-export function setupDashboard(deps: DashboardDependencies): void {
+export function setupDashboard(deps: DashboardDependencies): () => void {
   const { plugin, eventsPort, dataStore, rendererService, actionService } = deps;
 
   // 监听 Vault 变化（通过 EventsPort，避免 features 直触 obsidian 类型）
-  new VaultWatcher(eventsPort, dataStore);
+  const watcher = new VaultWatcher(eventsPort, dataStore);
 
   // S8.2: CodeblockEmbedder 不再需要 appStore 参数
   new CodeblockEmbedder(plugin, dataStore, rendererService, actionService);
+
+  return () => {
+    try { watcher.dispose(); } catch {}
+  };
 }
 
 /* ========================================================================== */

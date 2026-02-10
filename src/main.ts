@@ -215,6 +215,7 @@ class TextPromptModal extends Modal {
     private titleText: string;
     private placeholder: string;
     private ctaText: string;
+    private keydownHandler: ((e: KeyboardEvent) => void) | null = null;
 
     static open(app: any, opts: { title: string; placeholder?: string; ctaText?: string }): Promise<string | null> {
         return new Promise((resolve) => {
@@ -251,7 +252,8 @@ class TextPromptModal extends Modal {
             });
 
         // Cancel on close
-        this.modalEl.addEventListener('keydown', (e: KeyboardEvent) => {
+        // NOTE: 需要在 onClose 移除监听，避免多次 open/close 后累积监听导致重复触发。
+        this.keydownHandler = (e: KeyboardEvent) => {
             if (e.key === 'Escape') {
                 this.close();
                 this.resolve(null);
@@ -260,10 +262,15 @@ class TextPromptModal extends Modal {
                 this.close();
                 this.resolve(this.value || null);
             }
-        });
+        };
+        this.modalEl.addEventListener('keydown', this.keydownHandler);
     }
 
     onClose(): void {
+        if (this.keydownHandler) {
+            this.modalEl.removeEventListener('keydown', this.keydownHandler);
+            this.keydownHandler = null;
+        }
         this.contentEl.empty();
     }
 }

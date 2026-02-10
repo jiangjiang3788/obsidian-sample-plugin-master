@@ -95,6 +95,7 @@ export class ChatSessionStore {
     private listeners: Set<() => void> = new Set();
     private initialized: boolean = false;
     private initPromise: Promise<void> | null = null;
+    private disposed: boolean = false;
 
     constructor(
         @inject(STORAGE_TOKEN) private storage: IPluginStorage,
@@ -108,6 +109,7 @@ export class ChatSessionStore {
      * 必须在使用前调用
      */
     async initialize(): Promise<void> {
+        if (this.disposed) return;
         if (this.initialized) return;
         if (this.initPromise) return this.initPromise;
 
@@ -150,6 +152,7 @@ export class ChatSessionStore {
     // ============== 持久化 ==============
 
     private async loadFromFile(): Promise<ChatStoreData | null> {
+        if (this.disposed) return null;
         try {
             const raw = await this.storage.readJSON<unknown>(this.filePath);
             if (!raw) return null;
@@ -189,6 +192,7 @@ export class ChatSessionStore {
     }
 
     private async backupCorruptData(data: unknown): Promise<void> {
+        if (this.disposed) return;
         try {
             const corruptPath = this.filePath.replace('.json', CORRUPT_SUFFIX);
             await this.storage.writeJSON(corruptPath, data);
@@ -199,6 +203,7 @@ export class ChatSessionStore {
     }
 
     private async saveToFile(): Promise<void> {
+        if (this.disposed) return;
         try {
             await this.storage.writeJSON(this.filePath, this.data);
         } catch (e) {
@@ -207,6 +212,7 @@ export class ChatSessionStore {
     }
 
     private notify(): void {
+        if (this.disposed) return;
         this.listeners.forEach(fn => {
             try { fn(); } catch (e) { devError('ChatSessionStore: 通知失败', e); }
         });
@@ -217,6 +223,16 @@ export class ChatSessionStore {
     subscribe(listener: () => void): () => void {
         this.listeners.add(listener);
         return () => this.listeners.delete(listener);
+    }
+
+    /**
+     * 生命周期收口：卸载时停止一切写盘/通知
+     * - 让 unload/reload 后不会再写文件
+     */
+    dispose(): void {
+        this.disposed = true;
+        this.listeners.clear();
+        this.initPromise = null;
     }
 
     // ============== 会话 API ==============

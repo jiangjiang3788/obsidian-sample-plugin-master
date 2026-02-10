@@ -15,6 +15,8 @@ import { AiTextPromptModal } from './modals/AiTextPromptModal';
 import { AiBatchConfirmModal } from './modals/AiBatchConfirmModal';
 import { QuickInputModal } from './modals/QuickInputModal';
 import { NamePromptModal } from './modals/NamePromptModal';
+import { AiChatModal } from './modals/AiChatModal';
+import { CheckinManagerModal } from './modals/CheckinManagerModal';
 
 @singleton()
 export class ObsidianModalPort implements ModalPort {
@@ -25,16 +27,39 @@ export class ObsidianModalPort implements ModalPort {
     return modal.openAndGetValue();
   }
 
-  openAiBatchConfirm(items: NaturalRecordCommand[]): void {
-    new AiBatchConfirmModal(this.app, items).open();
+  openAiBatchConfirm(args: {
+    title: string;
+    items: string[];
+    confirmText?: string;
+    cancelText?: string;
+  }): Promise<boolean> {
+    // items 在 core 侧是 string[]（通常是摘要）；这里需要 NaturalRecordCommand 时只能走更上游转换
+    // 为兼容现有实现：若调用者传的是 string[]，这里弹一个只读确认（不落库）
+    // 如果你后续要支持 NaturalRecordCommand 批量保存，建议把 ModalPort 的 items 类型改回 NaturalRecordCommand[]
+    const itemsAsCommands = (args.items as any) as NaturalRecordCommand[];
+    const modal = new AiBatchConfirmModal(this.app, {
+      title: args.title,
+      items: itemsAsCommands,
+      confirmText: args.confirmText,
+      cancelText: args.cancelText,
+    });
+    return modal.openAndGetResult();
   }
 
-  openQuickInput(blockId: string): void {
-    new QuickInputModal(this.app, blockId).open();
+  openQuickInput(blockId?: string): void {
+    new QuickInputModal(this.app, blockId || '').open();
   }
 
   openNamePrompt(options: NamePromptOptions): Promise<string | null> {
     const modal = new NamePromptModal(this.app, options);
     return modal.openAndGetValue();
+  }
+
+  openAiChat(): void {
+    new AiChatModal(this.app).open();
+  }
+
+  openCheckinManager(): void {
+    new CheckinManagerModal(this.app).open();
   }
 }

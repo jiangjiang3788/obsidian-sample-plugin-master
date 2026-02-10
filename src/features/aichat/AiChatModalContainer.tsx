@@ -8,6 +8,7 @@ import { devError, devLog } from '@core/public';
 import type { ChatResponse } from '@core/public';
 import { AiChatModalView } from './AiChatModalView';
 import type { AiServices } from './types';
+import { createTakeLatest, CancelledError, useIsMounted } from '@shared/public';
 
 export interface AiChatModalContainerProps {
     closeModal: () => void;
@@ -31,6 +32,10 @@ export function AiChatModalContainer({ closeModal, services }: AiChatModalContai
     const [inputText, setInputText] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+
+    // takeLatest：新的发送会取消上一次请求；并避免卸载后 setState
+    const isMountedRef = useIsMounted();
+    const takeLatestRef = useRef(createTakeLatest());
 
     // 过滤器状态
     const [enableRetrieval, setEnableRetrieval] = useState(true);
@@ -65,7 +70,11 @@ export function AiChatModalContainer({ closeModal, services }: AiChatModalContai
             retrievalService.buildIndex();
         }
 
-        return unsubscribe;
+        return () => {
+            try { unsubscribe(); } catch {}
+            // modal 关闭/卸载时取消未完成的请求
+            takeLatestRef.current.dispose();
+        };
     }, []);
 
     // 当前会话变化时加载消息
@@ -133,9 +142,10 @@ export function AiChatModalContainer({ closeModal, services }: AiChatModalContai
         const userMessage = inputText.trim();
         setInputText('');
         setError(null);
-        setIsLoading(true);
+        if (isMountedRef.current) setIsLoading(true);
 
-        // 添加用户消息
+        // 添加用户消息（如果已卸载则不写入）
+        if (!isMountedRef.current) return;
         await sessionStore.appendMessage(sessionId, 'user', userMessage);
 
         try {
@@ -153,27 +163,40 @@ export function AiChatModalContainer({ closeModal, services }: AiChatModalContai
             if (selectedBlockId) filters.blockTemplateIds = [selectedBlockId];
 
             // 发送请求
-            const response: ChatResponse = await chatService.chat({
-                userMessage,
-                history,
-                enableRetrieval,
-                retrievalFilters: filters,
-                retrievalLimit: 5000,
-            });
+            const response: ChatResponse = await takeLatestRef.current.run((signal) =>
+                chatService.chat(
+                    {
+                        userMessage,
+                        history,
+                        enableRetrieval,
+                        retrievalFilters: filters,
+                        retrievalLimit: 5000,
+                    },
+                    signal,
+                )
+            );
 
-            // 添加 AI 回复
+            // 添加 AI 回复（如果已卸载则不写入）
+            if (!isMountedRef.current) return;
             await sessionStore.appendMessage(sessionId, 'assistant', response.content, {
                 referencedItemIds: response.referencedItemIds,
                 model: response.model,
                 retrievalCount: response.retrievalCount,
             });
         } catch (e: any) {
+            // 取消不视为错误（modal 关闭/新请求打断）
+            if (e instanceof CancelledError) {
+                if (isMountedRef.current) devLog('AiChatModal: 请求已取消');
+                return;
+            }
             devError('AiChatModal: 发送失败', e);
-            setError(e.message || '发送失败');
-            // 添加错误消息
-            await sessionStore.appendMessage(sessionId, 'system', `❌ 错误: ${e.message || '发送失败'}`);
+            if (isMountedRef.current) setError(e.message || '发送失败');
+            // 添加错误消息（如果已卸载则不写入）
+            if (isMountedRef.current) {
+                await sessionStore.appendMessage(sessionId, 'system', `❌ 错误: ${e.message || '发送失败'}`);
+            }
         } finally {
-            setIsLoading(false);
+            if (isMountedRef.current) setIsLoading(false);
         }
     }, [inputText, isLoading, currentSessionId, selectedThemes, selectedType, selectedBlockId, enableRetrieval]);
 
@@ -211,7 +234,6 @@ export function AiChatModalContainer({ closeModal, services }: AiChatModalContai
 
     return (
         <AiChatModalView
-            app={app}
             closeModal={closeModal}
             sessions={sessions}
             currentSessionId={currentSessionId}

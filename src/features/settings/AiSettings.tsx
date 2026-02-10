@@ -1,7 +1,7 @@
 // src/features/settings/AiSettings.tsx
 /** @jsxImportSource preact */
 import { h } from 'preact';
-import { useState, useMemo, useRef } from 'preact/hooks';
+import { useState, useMemo, useRef, useEffect } from 'preact/hooks';
 import {
     Box,
     Typography,
@@ -29,6 +29,7 @@ import { useZustandAppStore, useUseCases, selectAiSettings, selectInputSettings 
 import type { AiSettings as AiSettingsType } from '@core/public';
 import { DEFAULT_AI_SETTINGS, CUSTOM_PROMPT_EXAMPLES } from '@core/public';
 import { AiHttpClient } from '@core/public';
+import { createTakeLatest, CancelledError, useIsMounted } from '@shared/public';
 
 // P0: 移除 appStore 依赖，改用 useCases
 interface AiSettingsProps {
@@ -46,6 +47,16 @@ export function AiSettings(_props: AiSettingsProps) {
     const [localSettings, setLocalSettings] = useState<AiSettingsType>(aiSettings);
     const [testStatus, setTestStatus] = useState<'idle' | 'testing' | 'success' | 'error'>('idle');
     const [testMessage, setTestMessage] = useState('');
+
+    const isMountedRef = useIsMounted();
+    const takeLatestRef = useRef(createTakeLatest());
+
+    useEffect(() => {
+        return () => {
+            // 卸载时取消进行中的测试请求
+            takeLatestRef.current.dispose();
+        };
+    }, []);
     
     // 复用 AiHttpClient 实例
     const httpClientRef = useRef<AiHttpClient | null>(null);
@@ -71,30 +82,39 @@ export function AiSettings(_props: AiSettingsProps) {
             return;
         }
 
-        setTestStatus('testing');
-        setTestMessage('正在测试连接...');
+        if (isMountedRef.current) {
+            setTestStatus('testing');
+            setTestMessage('正在测试连接...');
+        }
 
         try {
             // 调用 AiHttpClient.chatCompletion 进行测试
             // 使用最小化 payload：简短消息 + 限制 max_tokens
-            await httpClientRef.current!.chatCompletion({
-                baseURL: localSettings.apiEndpoint,
-                apiKey: localSettings.apiKey,
-                model: localSettings.model,
-                temperature: 0,
-                max_tokens: 10,
-                messages: [
-                    { role: 'system', content: 'You are a test assistant.' },
-                    { role: 'user', content: 'ping' }
-                ],
-                timeoutMs: localSettings.requestTimeoutMs,
-            });
-
-            setTestStatus('success');
-            setTestMessage('连接成功！API 配置正确。');
+            await takeLatestRef.current.run((signal) =>
+                httpClientRef.current!.chatCompletion({
+                    baseURL: localSettings.apiEndpoint,
+                    apiKey: localSettings.apiKey,
+                    model: localSettings.model,
+                    temperature: 0,
+                    max_tokens: 10,
+                    messages: [
+                        { role: 'system', content: 'You are a test assistant.' },
+                        { role: 'user', content: 'ping' },
+                    ],
+                    timeoutMs: localSettings.requestTimeoutMs,
+                    signal,
+                })
+            );
+            if (isMountedRef.current) {
+                setTestStatus('success');
+                setTestMessage('连接成功！API 配置正确。');
+            }
         } catch (e: any) {
-            setTestStatus('error');
-            setTestMessage(`连接失败: ${e.message || e}`);
+            if (e instanceof CancelledError) return;
+            if (isMountedRef.current) {
+                setTestStatus('error');
+                setTestMessage(`连接失败: ${e.message || e}`);
+            }
         }
     };
 

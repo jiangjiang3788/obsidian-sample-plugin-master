@@ -81,7 +81,14 @@ export function useSaveHandlerWithValidation<T>(
   return async (data: T) => {
     const validationError = validateFn(data);
     if (validationError) {
-      new Notice(`❌ 验证失败: ${validationError}`);
+      // shared 层不直接依赖 Obsidian UI（Notice）。统一走 UiPort。
+      if (options.uiPort) {
+        options.uiPort.notice(`❌ 验证失败: ${validationError}`);
+      } else {
+        // 在没有 uiPort 的场景（例如纯函数/测试）下，使用原生 alert 兜底。
+        // eslint-disable-next-line no-alert
+        alert(`验证失败: ${validationError}`);
+      }
       return;
     }
     

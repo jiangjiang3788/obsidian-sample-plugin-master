@@ -8,7 +8,8 @@
 import { singleton, inject } from 'tsyringe';
 import { App, TFile, TFolder } from 'obsidian';
 import { AppToken } from '@core/services/types';
-import { devError } from '@core/utils/devLogger';
+import { devError, devWarn } from '@core/utils/devLogger';
+import { isDisposed } from '@/app/runtime/lifecycleState';
 import type { VaultPort } from '@core/ports/VaultPort';
 
 /**
@@ -27,6 +28,7 @@ export class ObsidianVaultPort implements VaultPort {
   }
 
   async readFile(path: string): Promise<string | null> {
+    if (isDisposed()) return null;
     const af = this.app.vault.getAbstractFileByPath(path);
     if (!af) return null;
     if (af instanceof TFile) {
@@ -37,6 +39,10 @@ export class ObsidianVaultPort implements VaultPort {
   }
 
   async writeFile(path: string, content: string): Promise<void> {
+    if (isDisposed()) {
+      devWarn(`[ObsidianVaultPort] writeFile ignored after dispose: ${path}`);
+      return;
+    }
     await this.ensureFolderFor(path);
 
     const af = this.app.vault.getAbstractFileByPath(path);
@@ -68,6 +74,10 @@ export class ObsidianVaultPort implements VaultPort {
   }
 
   async deleteFile(path: string): Promise<void> {
+    if (isDisposed()) {
+      devWarn(`[ObsidianVaultPort] deleteFile ignored after dispose: ${path}`);
+      return;
+    }
     const af = this.app.vault.getAbstractFileByPath(path);
     if (af instanceof TFile) {
       await this.app.vault.delete(af);

@@ -9,12 +9,15 @@ import type {
     TimerStateService,
 } from '@core/public';
 import { devError, devLog, devWarn } from '@core/public';
+import { ChatSessionStore } from '@core/public';
 
 import type { FeatureLoader } from '@/app/FeatureLoader';
 import type { ServiceManagerServices } from '@/app/ServiceManager.services';
 import { Disposables } from '@/app/runtime/disposables';
+import { markDisposed } from '@/app/runtime/lifecycleState';
 
 import { startMeasure } from '@shared/public';
+import { performanceMonitor } from '@shared/public';
 import { closeAllFloatingWidgets } from '@/app/public';
 
 import { registerSettingsPersistence } from '@/app/bootstrap/register';
@@ -55,12 +58,26 @@ export class ServiceManager {
             resetRuntimeCache();
         });
 
+        // AI chat sessions（如果已创建）：卸载后禁止继续写文件
+        this.disposables.add('ChatSessionStore.dispose()', () => {
+            try {
+                const store = container.resolve(ChatSessionStore);
+                store.dispose?.();
+            } catch {
+                // ignore: 未创建/未注册
+            }
+        });
+
         this.disposables.add('container.clearInstances()', () => {
             container.clearInstances();
         });
 
         this.disposables.add('RendererService.cleanup()', () => {
             this.services.rendererService?.cleanup();
+        });
+
+        this.disposables.add('DataStore.dispose()', () => {
+            try { this.services.dataStore?.dispose?.(); } catch {}
         });
 
         this.disposables.add('FloatingTimerWidget.unload()', () => {
@@ -71,6 +88,10 @@ export class ServiceManager {
         this.disposables.add('closeAllFloatingWidgets()', () => {
             // 统一关闭所有由 FloatingWidgetManager 打开的悬浮窗
             closeAllFloatingWidgets();
+        });
+
+        this.disposables.add('performanceMonitor.reset()', () => {
+            try { performanceMonitor.reset(); } catch {}
         });
 
         this.disposables.add('FeatureLoader.cleanup()', () => {
@@ -108,6 +129,8 @@ export class ServiceManager {
      */
     cleanup(): void {
         try {
+            // Mark disposed first so any late async tasks can short-circuit writes.
+            markDisposed();
             this.disposables.disposeAll();
 
             // 清空引用，避免意外复用

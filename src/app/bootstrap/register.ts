@@ -12,6 +12,7 @@ import {
 import { diDebug } from '@/app/diagnostics/diDiagnostics';
 
 import { ThemeManager } from '@features/settings/ThemeManager';
+import { isDisposed } from '@/app/runtime/lifecycleState';
 
 /**
  * Step 0: 注册 app 层需要补充的 DI 绑定
@@ -54,6 +55,7 @@ export function registerSettingsPersistence(plugin: ThinkPlugin): void {
             return await plugin.loadData();
         },
         async saveData(settings) {
+            if (isDisposed()) return;
             await plugin.saveData(sanitizeForPersistence(settings));
         },
     };

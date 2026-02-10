@@ -140,7 +140,11 @@ export class AiChatService {
     /**
      * 发送聊天请求
      */
-    async chat(request: ChatRequest): Promise<ChatResponse> {
+    /**
+     * 发送 AI 请求
+     * - signal 用于 modal 关闭/unload/takeLatest 等场景的取消
+     */
+    async chat(request: ChatRequest, signal?: AbortSignal): Promise<ChatResponse> {
         const settings = this.getAiSettings();
 
         if (!settings.enabled) {
@@ -238,6 +242,7 @@ export class AiChatService {
                 max_tokens: settings.maxTokens,
                 messages,
                 timeoutMs: settings.requestTimeoutMs,
+                signal,
             });
 
             return {

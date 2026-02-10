@@ -1,6 +1,8 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
-import { useState, useEffect, useMemo } from 'preact/hooks';
+import { useState, useEffect, useMemo, useRef } from 'preact/hooks';
+import { useIsMounted } from '@/shared/hooks/useIsMounted';
+import { createTakeLatest, CancelledError } from '@/shared/utils/takeLatest';
 import {
     Dialog,
     DialogTitle,
@@ -73,6 +75,9 @@ export function ThemeScanDialog({
     onImport,
     initialConfig = {}
 }: ThemeScanDialogProps) {
+    const isMountedRef = useIsMounted();
+    const scanTakeLatestRef = useRef(createTakeLatest('theme-scan'));
+    const importTakeLatestRef = useRef(createTakeLatest('theme-import'));
     // 状态管理
     const [state, setState] = useState<DialogState>('config');
     const [scanConfig, setScanConfig] = useState<ScanConfig>({
@@ -98,9 +103,19 @@ export function ThemeScanDialog({
     // 当对话框关闭时重置状态
     useEffect(() => {
         if (!open) {
+            scanTakeLatestRef.current.cancel();
+            importTakeLatestRef.current.cancel();
             resetDialog();
         }
     }, [open]);
+
+    // 组件卸载时取消潜在未完成请求
+    useEffect(() => {
+        return () => {
+            scanTakeLatestRef.current.dispose();
+            importTakeLatestRef.current.dispose();
+        };
+    }, []);
 
     // 当扫描结果改变时，默认选择所有新主题
     useEffect(() => {
@@ -112,14 +127,26 @@ export function ThemeScanDialog({
     // 执行扫描
     const handleScan = async () => {
         try {
-            setState('scanning');
-            setError(null);
-            const result = await onScan(scanConfig);
-            setScanResult(result);
-            setState('results');
+            if (isMountedRef.current) {
+                setState('scanning');
+                setError(null);
+            }
+            const result = await scanTakeLatestRef.current.run((signal) => {
+                // 目前 onScan 不接受 signal，这里先做到 takeLatest（重复点击会取消上一轮的 state 更新）
+                // 后续如果 onScan 支持 signal，可在此透传
+                void signal;
+                return onScan(scanConfig);
+            });
+            if (isMountedRef.current) {
+                setScanResult(result);
+                setState('results');
+            }
         } catch (err) {
-            setError(`扫描失败: ${err}`);
-            setState('config');
+            if (err instanceof CancelledError) return;
+            if (isMountedRef.current) {
+                setError(`扫描失败: ${err}`);
+                setState('config');
+            }
         }
     };
 
@@ -128,14 +155,24 @@ export function ThemeScanDialog({
         if (!scanResult || selectedThemes.size === 0) return;
 
         try {
-            setState('importing');
-            setError(null);
-            const result = await onImport(Array.from(selectedThemes));
-            setImportResult(result);
-            setState('completed');
+            if (isMountedRef.current) {
+                setState('importing');
+                setError(null);
+            }
+            const result = await importTakeLatestRef.current.run((signal) => {
+                void signal;
+                return onImport(Array.from(selectedThemes));
+            });
+            if (isMountedRef.current) {
+                setImportResult(result);
+                setState('completed');
+            }
         } catch (err) {
-            setError(`导入失败: ${err}`);
-            setState('results');
+            if (err instanceof CancelledError) return;
+            if (isMountedRef.current) {
+                setError(`导入失败: ${err}`);
+                setState('results');
+            }
         }
     };
 

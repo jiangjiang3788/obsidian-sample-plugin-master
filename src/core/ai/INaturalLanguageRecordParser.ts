@@ -11,6 +11,8 @@ export interface ParseInput {
     text: string;
     /** 当前时间 */
     now: Date;
+    /** 可选：用于取消请求（modal 关闭 / unload / takeLatest） */
+    signal?: AbortSignal;
 }
 
 /**

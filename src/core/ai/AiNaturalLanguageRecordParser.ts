@@ -89,6 +89,7 @@ export class AiNaturalLanguageRecordParser implements INaturalLanguageRecordPars
             temperature: ai.temperature,
             max_tokens: ai.maxTokens,
             timeoutMs: ai.requestTimeoutMs ?? 30000,
+            signal: input.signal,
             messages: [
                 { role: 'system', content: system },
                 { role: 'user', content: user },

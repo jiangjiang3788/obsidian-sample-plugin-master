@@ -41,7 +41,7 @@ export function registerSettingsFeatures(
                 await ctx.dataScanPromise;
             }
 
-            setupDashboard({
+            return setupDashboard({
                 plugin: deps.plugin,
                 eventsPort: deps.eventsPort,
                 dataStore: deps.dataStore,

@@ -12,6 +12,7 @@ import { AiBatchConfirmModal } from '@/app/ui/modals/AiBatchConfirmModal';
 import { AiConfigCache, AiHttpClient, AiNaturalLanguageRecordParser, devError } from '@core/public';
 import { createServices, getZustandState, type AppStoreInstance } from '@/app/public';
 import type { ISettingsProvider } from '@core/public';
+import { createTakeLatest, CancelledError } from '@/shared/utils/takeLatest';
 
 /**
  * 创建一个基于 zustand store 的 SettingsProvider
@@ -38,6 +39,11 @@ export function registerAiInputCommands(plugin: ThinkPlugin) {
     const cache = new AiConfigCache(settingsProvider);
     const http = new AiHttpClient();
     const parser = new AiNaturalLanguageRecordParser(settingsProvider, cache, http);
+
+    // B-Ext: 同一命令被重复触发时，自动取消上一次解析请求
+    const takeLatest = createTakeLatest('ai-natural-input');
+    // 确保插件卸载时取消潜在的未完成请求
+    plugin.register(() => takeLatest.dispose());
 
     // 注册命令：AI 自然语言快速记录
     plugin.addCommand({
@@ -79,8 +85,8 @@ export function registerAiInputCommands(plugin: ThinkPlugin) {
             const loadingNotice = ui.notice('AI 正在解析...', 0);
 
             try {
-                // 调用解析器
-                const batch = await parser.parse({ text, now: new Date() });
+                // 调用解析器（支持取消）
+                const batch = await takeLatest.run((signal) => parser.parse({ text, now: new Date(), signal }));
 
                 // 关闭加载提示
                 loadingNotice.hide();
@@ -101,6 +107,10 @@ export function registerAiInputCommands(plugin: ThinkPlugin) {
                 ).open();
 
             } catch (e: any) {
+                if (e instanceof CancelledError) {
+                    loadingNotice.hide();
+                    return;
+                }
                 loadingNotice.hide();
                 devError('AI 解析失败:', e);
                 ui.notice(`AI 解析失败：${e?.message ?? e}`, 6000);

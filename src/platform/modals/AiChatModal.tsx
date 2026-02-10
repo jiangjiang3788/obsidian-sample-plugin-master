@@ -4,26 +4,43 @@ import { h } from 'preact';
 import type { App } from 'obsidian';
 import { Modal } from 'obsidian';
 import { createServices, type Services, mountWithServices, unmountPreact } from '@/app/public';
-import { AiChatModalContainer } from './AiChatModalContainer';
-import type { AiServices } from './types';
+import { AiChatModalContainer } from '@/features/aichat/AiChatModalContainer';
+import type { AiServices } from '@/features/aichat/types';
+import { container } from 'tsyringe';
+import { AiChatService, ChatSessionStore, RetrievalService, devError } from '@core/public';
 
 // 对外继续导出 AiServices（便于上层注入依赖时标注类型）
-export type { AiServices } from './types';
+export type { AiServices } from '@/features/aichat/types';
 
 // ============== Modal 包装（API 保持不变） ==============
 
 export class AiChatModal extends Modal {
     // Phase 4.3: features 层不再拥有“组合根”权力
     // - 依赖必须由上层（main/app/ServiceManager）注入
-    private aiServices: AiServices;
+    private aiServices?: AiServices;
     private services: Services;
     private keydownStopper?: (e: KeyboardEvent) => void;
 
-    constructor(app: App, aiServices: AiServices) {
+    constructor(app: App, aiServices?: AiServices) {
         super(app);
         this.aiServices = aiServices;
         // UI Services 统一通过 app/public 获取（内部会使用全局 container）
         this.services = createServices();
+    }
+
+    private ensureAiServices(): AiServices {
+        if (this.aiServices) return this.aiServices;
+        try {
+            this.aiServices = {
+                chatService: container.resolve(AiChatService),
+                retrievalService: container.resolve(RetrievalService),
+                sessionStore: container.resolve(ChatSessionStore),
+            };
+            return this.aiServices;
+        } catch (err) {
+            devError('[AiChatModal] Failed to resolve AiServices from DI container', err);
+            throw err;
+        }
     }
 
     async onOpen() {
@@ -39,12 +56,14 @@ export class AiChatModal extends Modal {
         };
         this.contentEl.addEventListener('keydown', this.keydownStopper);
 
+        const aiServices = this.ensureAiServices();
+
         // 初始化 sessionStore
-        await this.aiServices.sessionStore.initialize();
+        await aiServices.sessionStore.initialize();
 
         mountWithServices(
             this.contentEl,
-            <AiChatModalContainer closeModal={() => this.close()} services={this.aiServices} />,
+            <AiChatModalContainer closeModal={() => this.close()} services={aiServices} />,
             this.services
         );
     }

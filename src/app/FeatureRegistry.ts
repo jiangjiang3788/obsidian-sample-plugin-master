@@ -12,6 +12,9 @@
 
 export type FeatureBootMode = 'blocking' | 'background';
 
+export type FeatureDisposer = () => void | Promise<void>;
+export type FeatureBootReturn = void | FeatureDisposer | Promise<void | FeatureDisposer>;
+
 export interface Feature<C> {
   /** 全局唯一 ID（用于日志/调试/开关） */
   id: string;
@@ -30,7 +33,7 @@ export interface Feature<C> {
   delayMs?: number;
 
   /** 启动入口 */
-  boot: (ctx: C) => void | Promise<void>;
+  boot: (ctx: C) => FeatureBootReturn;
 }
 
 export interface FeatureBootResult {
@@ -50,6 +53,7 @@ export interface FeatureRegistryOptions {
 export class FeatureRegistry<C> {
   private readonly features: Feature<C>[] = [];
   private readonly scheduledTimers = new Set<ReturnType<typeof setTimeout>>();
+  private readonly cleanupFns: FeatureDisposer[] = [];
   private disposed = false;
 
   /**
@@ -60,6 +64,8 @@ export class FeatureRegistry<C> {
    */
   dispose(): void {
     this.disposed = true;
+
+    // 1) cancel scheduled background timers
     for (const t of this.scheduledTimers) {
       try {
         clearTimeout(t);
@@ -68,6 +74,19 @@ export class FeatureRegistry<C> {
       }
     }
     this.scheduledTimers.clear();
+
+    // 2) run cleanup fns (LIFO)
+    for (const fn of [...this.cleanupFns].reverse()) {
+      try {
+        const ret = fn();
+        if (ret && typeof (ret as any).then === 'function') {
+          (ret as Promise<void>).catch(() => {});
+        }
+      } catch {
+        // ignore
+      }
+    }
+    this.cleanupFns.length = 0;
   }
 
   register(feature: Feature<C>): void {
@@ -101,9 +120,16 @@ export class FeatureRegistry<C> {
           if (timer) this.scheduledTimers.delete(timer);
           if (this.disposed) return;
           try {
-            Promise.resolve(feature.boot(ctx)).catch((error) => {
-              options.onError?.({ id: feature.id, error });
-            });
+            Promise.resolve(feature.boot(ctx))
+              .then((ret) => {
+                if (this.disposed) return;
+                if (typeof ret === 'function') {
+                  this.cleanupFns.push(ret as FeatureDisposer);
+                }
+              })
+              .catch((error) => {
+                options.onError?.({ id: feature.id, error });
+              });
           } catch (error) {
             options.onError?.({ id: feature.id, error });
           }
@@ -121,7 +147,10 @@ export class FeatureRegistry<C> {
       // blocking: await and capture
       const start = Date.now();
       try {
-        await feature.boot(ctx);
+        const ret = await feature.boot(ctx);
+        if (!this.disposed && typeof ret === 'function') {
+          this.cleanupFns.push(ret as FeatureDisposer);
+        }
         results.push({ id: feature.id, status: 'ok', durationMs: Date.now() - start });
       } catch (error) {
         options.onError?.({ id: feature.id, error });

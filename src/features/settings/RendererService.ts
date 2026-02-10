@@ -75,7 +75,6 @@ export class RendererService {
         validateServicesImpl(this.services, 'RendererService');
     }
     
-    
     /**
      * S8.1: 设置 Zustand 精准订阅
      * 只监听 layouts 和 viewInstances 的变化，避免其他 settings 变化导致全量 rerender

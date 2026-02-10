@@ -1,13 +1,13 @@
-// src/features/aiinput/AiBatchConfirmModal.tsx
+// src/platform/modals/AiBatchConfirmModal.tsx
 /**
- * S7.2: AiBatchConfirmModal
- * - 使用 useZustandAppStore 读取 settings
- * - 使用 useCases 进行写入操作
- * - 复用 QuickInputModal 的表单/字段逻辑（避免复制粘贴）
+ * AiBatchConfirmModal
+ * - openAndGetResult(): Promise<boolean>
+ * - 关闭（X/遮罩/Esc）也会 resolve(false)，避免 Promise 悬挂
  */
 /** @jsxImportSource preact */
 import { h } from 'preact';
-import { App, Modal, Notice } from 'obsidian';
+import type { App } from 'obsidian';
+import { Modal, Notice } from 'obsidian';
 import { useMemo, useState } from 'preact/hooks';
 
 import {
@@ -51,12 +51,27 @@ interface RecordItem {
 
 export class AiBatchConfirmModal extends Modal {
   private services: Services;
+  private resolvePromise: ((value: boolean) => void) | null = null;
+  private resolved = false;
 
-  constructor(app: App, private items: NaturalRecordCommand[], private onComplete?: () => void) {
+  constructor(
+    app: App,
+    private args: {
+      title: string;
+      items: NaturalRecordCommand[];
+      confirmText?: string;
+      cancelText?: string;
+    }
+  ) {
     super(app);
-    // Phase 4.3: features 层禁止 import tsyringe container
-    // - Services 只能通过 app/public 的 createServices() 获取
     this.services = createServices();
+  }
+
+  openAndGetResult(): Promise<boolean> {
+    return new Promise((resolve) => {
+      this.resolvePromise = resolve;
+      this.open();
+    });
   }
 
   onOpen() {
@@ -68,23 +83,47 @@ export class AiBatchConfirmModal extends Modal {
 
     mountWithServices(
       this.contentEl,
-      <AiBatchConfirmForm getResourcePath={(path) => this.app.vault.adapter.getResourcePath(path)} items={this.items} closeModal={() => this.close()} onComplete={this.onComplete} />,
+      <AiBatchConfirmForm
+        app={this.app}
+        title={this.args.title}
+        confirmText={this.args.confirmText}
+        cancelText={this.args.cancelText}
+        items={this.args.items}
+        closeModal={() => this.close()}
+        onComplete={() => {
+          this.resolved = true;
+          if (this.resolvePromise) {
+            this.resolvePromise(true);
+            this.resolvePromise = null;
+          }
+        }}
+      />,
       this.services
     );
   }
 
   onClose() {
+    // 用户直接关闭（点击遮罩/右上角/ESC）也必须 resolve(false)
+    if (!this.resolved && this.resolvePromise) {
+      this.resolvePromise(false);
+      this.resolvePromise = null;
+    }
     unmountPreact(this.contentEl);
   }
 }
-
 function AiBatchConfirmForm({
   app,
+  title,
+  confirmText,
+  cancelText,
   items: initialItems,
   closeModal,
   onComplete,
 }: {
   app: App;
+  title: string;
+  confirmText?: string;
+  cancelText?: string;
   items: NaturalRecordCommand[];
   closeModal: () => void;
   onComplete?: () => void;
@@ -286,7 +325,7 @@ function AiBatchConfirmForm({
           left={
             <Box>
               <Typography variant="h6" sx={{ fontWeight: 600 }}>
-                编辑第 {currentIndex + 1} 条记录
+                {title} · 编辑第 {currentIndex + 1} 条记录
               </Typography>
               {currentRecord.saved && <Chip label="已保存" color="success" size="small" sx={{ ml: 1 }} />}
               {currentRecord.skipped && <Chip label="已跳过" color="default" size="small" sx={{ ml: 1 }} />}

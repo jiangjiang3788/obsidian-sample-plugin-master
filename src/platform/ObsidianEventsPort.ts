@@ -79,4 +79,21 @@ export class ObsidianEventsPort implements EventsPort {
       } catch {}
     };
   }
+
+  onWorkspaceActiveFileChange(cb: (path: string | null) => void): UnsubscribeFn {
+    const { workspace } = this.plugin.app;
+
+    // Obsidian: 'file-open' fires when active file changes (or becomes null)
+    const ref = workspace.on('file-open', (file: TFile | null) => {
+      cb(file ? file.path : null);
+    });
+
+    this.plugin.registerEvent(ref);
+
+    return () => {
+      try {
+        workspace.offref(ref);
+      } catch {}
+    };
+  }
 }
