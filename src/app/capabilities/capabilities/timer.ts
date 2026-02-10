@@ -1,8 +1,7 @@
 // src/app/capabilities/capabilities/timer.ts
-import type { ThinkSettings } from '@core/public';
 import { devWarn } from '@core/public';
-import { container } from 'tsyringe';
-import { TimerService } from '@features/timer/TimerService';
+import type { TimerService } from '@features/timer/TimerService';
+import type { CapabilityDeps } from '../types';
 
 export interface TimerCapability {
     /**
@@ -23,40 +22,39 @@ export interface TimerCapability {
     cancel(timerId: string): Promise<void>;
 }
 
-export function createTimerCapability(_app: unknown, _settings: ThinkSettings): TimerCapability {
-    const resolveTimerService = (): TimerService | null => {
-        try {
-            // TimerService 由 ServiceManager.loadTimerServices() 手工创建并注册到 DI。
-            return container.resolve(TimerService);
-        } catch (err) {
-            devWarn('[TimerCapability] TimerService not ready. Did ServiceManager.bootstrap() run?', err);
-            return null;
+export function createTimerCapability(deps: Pick<CapabilityDeps, 'timerService'>): TimerCapability {
+    const getTimerService = (): TimerService | null => {
+        const svc = deps.timerService ?? null;
+        if (!svc) {
+            devWarn('[TimerCapability] TimerService not ready. Did ServiceManager.bootstrap() run?');
         }
+        return svc;
     };
+
 
     return {
         async startOrResume(taskId: string) {
-            const svc = resolveTimerService();
+            const svc = getTimerService();
             if (!svc) return;
             await svc.startOrResume(taskId);
         },
         async pause(timerId: string) {
-            const svc = resolveTimerService();
+            const svc = getTimerService();
             if (!svc) return;
             await svc.pause(timerId);
         },
         async resume(timerId: string) {
-            const svc = resolveTimerService();
+            const svc = getTimerService();
             if (!svc) return;
             await svc.resume(timerId);
         },
         async stopAndApply(timerId: string) {
-            const svc = resolveTimerService();
+            const svc = getTimerService();
             if (!svc) return;
             await svc.stopAndApply(timerId);
         },
         async cancel(timerId: string) {
-            const svc = resolveTimerService();
+            const svc = getTimerService();
             if (!svc) return;
             await svc.cancel(timerId);
         },

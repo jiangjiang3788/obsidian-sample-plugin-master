@@ -1,25 +1,29 @@
-import { container } from 'tsyringe';
-
-import { DataStore, ActionService, InputService, ItemService, devError, devLog, devTime, devTimeEnd } from '@core/public';
+import { devError, devLog, devTime, devTimeEnd } from '@core/public';
 import { startMeasure } from '@shared/public';
 
 import type { ServiceManagerServices } from '@/app/ServiceManager.services';
+import type { Services } from '@/app/services.types';
+import type { BootstrapResolved } from '@/app/bootstrap/buildRuntime';
 
 export async function loadDataServices(opts: {
     services: ServiceManagerServices;
+    runtime: Pick<Services, 'dataStore' | 'inputService'>;
+    bootstrap: Pick<BootstrapResolved, 'actionService' | 'itemService' | 'chatSessionStore'>;
     getScanDataPromise: () => Promise<void> | null;
     setScanDataPromise: (p: Promise<void>) => void;
 }): Promise<void> {
-    const { services, getScanDataPromise, setScanDataPromise } = opts;
+    const { services, runtime, bootstrap, getScanDataPromise, setScanDataPromise } = opts;
 
     if (services.dataStore) return;
 
     const stopMeasure = startMeasure('ServiceManager.loadDataServices');
 
-    services.dataStore = container.resolve(DataStore);
-    services.actionService = container.resolve(ActionService);
-    services.inputService = container.resolve(InputService);
-    services.itemService = container.resolve(ItemService);
+    // 从 buildRuntime/resolveBootstrap 下发（避免散落 resolve）
+    services.dataStore = runtime.dataStore;
+    services.inputService = runtime.inputService;
+    services.actionService = bootstrap.actionService;
+    services.itemService = bootstrap.itemService;
+    services.chatSessionStore = bootstrap.chatSessionStore;
 
     // 触发后台扫描
     scanDataInBackground({ services, getScanDataPromise, setScanDataPromise });

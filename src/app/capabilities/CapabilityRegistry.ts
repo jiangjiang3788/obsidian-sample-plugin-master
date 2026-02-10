@@ -8,7 +8,7 @@ import type { ThinkSettings } from '@core/public';
  * - capabilities 是 app 层的组合结果（composition root）
  * - factory 只拿 app + settings，避免把 DI 容器当成“万能依赖”继续扩散
  */
-export type CapabilityFactory<T> = (app: unknown, settings: ThinkSettings) => T;
+export type CapabilityFactory<T, Deps = unknown> = (app: unknown, settings: ThinkSettings, deps: Deps) => T;
 
 export interface CapabilityRegistryOptions {
     /**
@@ -25,18 +25,18 @@ export interface CapabilityRegistryOptions {
  * - Allows Phase1 "feature injection" without hardcoding every capability in createCapabilities()
  */
 export class CapabilityRegistry<CapMap extends Record<string, any> = Record<string, any>> {
-    private readonly factories = new Map<keyof CapMap & string, CapabilityFactory<any>>();
+    private readonly factories = new Map<keyof CapMap & string, CapabilityFactory<any, any>>();
     private readonly strict: boolean;
 
     constructor(options?: CapabilityRegistryOptions) {
         this.strict = options?.strict ?? true;
     }
 
-    register<K extends keyof CapMap & string>(key: K, factory: CapabilityFactory<CapMap[K]>): void {
+    register<K extends keyof CapMap & string, Deps>(key: K, factory: CapabilityFactory<CapMap[K], Deps>): void {
         if (this.strict && this.factories.has(key)) {
             throw new Error(`[CapabilityRegistry] capability '${key}' already registered`);
         }
-        this.factories.set(key, factory as CapabilityFactory<any>);
+        this.factories.set(key, factory as CapabilityFactory<any, any>);
     }
 
     has<K extends keyof CapMap & string>(key: K): boolean {
@@ -47,10 +47,10 @@ export class CapabilityRegistry<CapMap extends Record<string, any> = Record<stri
         return [...this.factories.keys()] as (keyof CapMap & string)[];
     }
 
-    createAll(app: unknown, settings: ThinkSettings): CapMap {
+    createAll<Deps = unknown>(app: unknown, settings: ThinkSettings, deps: Deps): CapMap {
         const out: Record<string, unknown> = {};
         for (const [key, factory] of this.factories.entries()) {
-            out[String(key)] = factory(app, settings);
+            out[String(key)] = factory(app, settings, deps);
         }
         return out as CapMap;
     }

@@ -10,6 +10,14 @@
 import type { AiCapability } from './capabilities/ai';
 import type { TimerCapability } from './capabilities/timer';
 
+import type { ModalPort } from '@core/public';
+import type { TimerService } from '@features/timer/TimerService';
+
+export interface CapabilityDeps {
+    modalPort: ModalPort;
+    timerService?: TimerService;
+}
+
 export interface Capabilities {
     ai: AiCapability;
     timer: TimerCapability;

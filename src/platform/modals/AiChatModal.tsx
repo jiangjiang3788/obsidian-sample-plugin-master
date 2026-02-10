@@ -6,8 +6,6 @@ import { Modal } from 'obsidian';
 import { createServices, type Services, mountWithServices, unmountPreact } from '@/app/public';
 import { AiChatModalContainer } from '@/features/aichat/AiChatModalContainer';
 import type { AiServices } from '@/features/aichat/types';
-import { container } from 'tsyringe';
-import { AiChatService, ChatSessionStore, RetrievalService, devError } from '@core/public';
 
 // 对外继续导出 AiServices（便于上层注入依赖时标注类型）
 export type { AiServices } from '@/features/aichat/types';
@@ -29,18 +27,10 @@ export class AiChatModal extends Modal {
     }
 
     private ensureAiServices(): AiServices {
-        if (this.aiServices) return this.aiServices;
-        try {
-            this.aiServices = {
-                chatService: container.resolve(AiChatService),
-                retrievalService: container.resolve(RetrievalService),
-                sessionStore: container.resolve(ChatSessionStore),
-            };
-            return this.aiServices;
-        } catch (err) {
-            devError('[AiChatModal] Failed to resolve AiServices from DI container', err);
-            throw err;
+        if (!this.aiServices) {
+            throw new Error('[AiChatModal] aiServices not provided. ObsidianModalPort must inject AiServices.');
         }
+        return this.aiServices;
     }
 
     async onOpen() {

@@ -1,14 +1,7 @@
 import { container } from 'tsyringe';
 import type ThinkPlugin from '@main';
 
-import {
-    SETTINGS_PERSISTENCE_TOKEN,
-    SETTINGS_TOKEN,
-    SettingsRepository,
-    TimerStateService,
-    devError,
-    devLog,
-} from '@core/public';
+import { SETTINGS_PERSISTENCE_TOKEN, devError, devLog } from '@core/public';
 
 import { diDebug, diWarn } from '@/app/diagnostics/diDiagnostics';
 
@@ -21,13 +14,15 @@ import { createUseCases, USECASES_TOKEN } from '@/app/usecases';
 import { FloatingTimerWidget } from '@features/timer/FloatingTimerWidget';
 import type { ServiceManagerServices } from '@/app/ServiceManager.services';
 import type { Disposables } from '@/app/runtime/disposables';
+import type { BootstrapResolved } from '@/app/bootstrap/buildRuntime';
 
 export async function initializeCore(opts: {
     plugin: ThinkPlugin;
     services: ServiceManagerServices;
     disposables?: Disposables;
+    bootstrap: Pick<BootstrapResolved, 'settingsRepository' | 'timerStateService' | 'initialSettings'>;
 }): Promise<void> {
-    const { plugin, services, disposables } = opts;
+    const { plugin, services, disposables, bootstrap } = opts;
     const stopMeasure = startMeasure('ServiceManager.initializeCore');
 
     await (
@@ -42,14 +37,15 @@ export async function initializeCore(opts: {
                     diDebug('SettingsPersistence is registered before resolve()');
                 }
 
-                services.settingsRepository = container.resolve(SettingsRepository);
+                // 1. 使用上层传入的依赖（避免在此处散落 resolve）
+                services.settingsRepository = bootstrap.settingsRepository;
 
-                // 初始化 SettingsRepository 的设置（因 setupCore.ts 不再调用 resolve）
-                const diInitialSettings = container.resolve<ThinkSettings>(SETTINGS_TOKEN);
+                // 初始化 SettingsRepository 的设置（由上层 resolve 并下发）
+                const diInitialSettings: ThinkSettings = bootstrap.initialSettings;
                 services.settingsRepository.setInitialSettings(diInitialSettings);
                 diDebug('SettingsRepository.setInitialSettings() called');
 
-                services.timerStateService = container.resolve(TimerStateService);
+                services.timerStateService = bootstrap.timerStateService;
 
                 // 2. 创建 Zustand Store 并注册到 DI
                 const settingsRepository = services.settingsRepository;

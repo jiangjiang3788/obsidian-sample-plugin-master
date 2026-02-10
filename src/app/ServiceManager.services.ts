@@ -1,4 +1,4 @@
-import type { DataStore, ActionService, TimerStateService, InputService, ItemService, SettingsRepository } from '@core/public';
+import type { DataStore, ActionService, TimerStateService, InputService, ItemService, SettingsRepository, ChatSessionStore } from '@core/public';
 import type { RendererService } from '@/features/settings/RendererService';
 import type { TimerService } from '@features/timer/TimerService';
 import type { FloatingTimerWidget } from '@features/timer/FloatingTimerWidget';
@@ -20,4 +20,5 @@ export type ServiceManagerServices = Partial<{
     timerWidget: FloatingTimerWidget;
     itemService: ItemService;
     useCases: UseCases;
+    chatSessionStore: ChatSessionStore;
 }>;

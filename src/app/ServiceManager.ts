@@ -9,7 +9,6 @@ import type {
     TimerStateService,
 } from '@core/public';
 import { devError, devLog, devWarn } from '@core/public';
-import { ChatSessionStore } from '@core/public';
 
 import type { FeatureLoader } from '@/app/FeatureLoader';
 import type { ServiceManagerServices } from '@/app/ServiceManager.services';
@@ -25,7 +24,7 @@ import { initializeCore } from '@/app/bootstrap/initializeCore';
 import { loadDataServices } from '@/app/bootstrap/loadDataServices';
 import { loadTimerServices } from '@/app/bootstrap/loadTimerServices';
 import { loadUIFeatures } from '@/app/bootstrap/loadUIFeatures';
-import { resetRuntimeCache } from '@/app/bootstrap/buildRuntime';
+import { buildRuntime, resetRuntimeCache, resolveBootstrap, type BootstrapResolved } from '@/app/bootstrap/buildRuntime';
 
 /**
  * ServiceManager - 插件服务总线
@@ -46,6 +45,18 @@ export class ServiceManager {
     // 服务实例缓存（逐步填充）
     private services: ServiceManagerServices = {};
 
+    // bootstrap 时一次性 resolve 的依赖（不含 STORE_TOKEN）
+    private bootstrapResolved: BootstrapResolved | null = null;
+
+    // buildRuntime 构建的 UI services（含 STORE_TOKEN）
+    private runtimeServices: import('./services.types').Services | null = null;
+
+    // bootstrap 阶段一次性 resolve 的依赖（不依赖 STORE_TOKEN）
+    private bootstrapResolved: BootstrapResolved | null = null;
+
+    // buildRuntime 的缓存（依赖 STORE_TOKEN，需在 initializeCore 后调用）
+    private runtimeServices: import('@/app/services.types').Services | null = null;
+
     // 统一资源释放表
     private disposables: Disposables = new Disposables();
 
@@ -60,12 +71,7 @@ export class ServiceManager {
 
         // AI chat sessions（如果已创建）：卸载后禁止继续写文件
         this.disposables.add('ChatSessionStore.dispose()', () => {
-            try {
-                const store = container.resolve(ChatSessionStore);
-                store.dispose?.();
-            } catch {
-                // ignore: 未创建/未注册
-            }
+            try { this.services.chatSessionStore?.dispose?.(); } catch {}
         });
 
         this.disposables.add('container.clearInstances()', () => {
@@ -115,7 +121,14 @@ export class ServiceManager {
         // 注册 SettingsPersistence（基于 plugin.loadData/saveData）
         this.registerSettingsPersistence();
 
+        // 在创建 store 之前，先解析不依赖 STORE_TOKEN 的 bootstrap deps
+        this.bootstrapResolved = resolveBootstrap();
+
         await this.initializeCore(); // 1. 基础状态
+
+        // store & usecases 就绪后再构建 runtime（依赖 STORE_TOKEN）
+        this.runtimeServices = buildRuntime();
+
         await this.loadDataServices(); // 2. 数据服务 (Data/IO)
         await this.loadTimerServices(); // 3. 核心业务 (Timer)
         await this.loadUIFeatures(); // 4. UI 特性 (Dashboard/Settings)
@@ -152,16 +165,33 @@ export class ServiceManager {
     }
 
     private async initializeCore(): Promise<void> {
+        if (!this.bootstrapResolved) throw new Error('bootstrapResolved 未初始化');
         await initializeCore({
             plugin: this.plugin,
             services: this.services,
             disposables: this.disposables,
+            bootstrap: {
+                settingsRepository: this.bootstrapResolved.settingsRepository,
+                timerStateService: this.bootstrapResolved.timerStateService,
+                initialSettings: this.bootstrapResolved.initialSettings,
+            },
         });
     }
 
     private async loadDataServices(): Promise<void> {
+        if (!this.bootstrapResolved) throw new Error('bootstrapResolved 未初始化');
+        if (!this.runtimeServices) throw new Error('runtimeServices 未初始化');
         await loadDataServices({
             services: this.services,
+            runtime: {
+                dataStore: this.runtimeServices.dataStore,
+                inputService: this.runtimeServices.inputService,
+            },
+            bootstrap: {
+                actionService: this.bootstrapResolved.actionService,
+                itemService: this.bootstrapResolved.itemService,
+                chatSessionStore: this.bootstrapResolved.chatSessionStore,
+            },
             getScanDataPromise: () => this.scanDataPromise,
             setScanDataPromise: (p) => {
                 this.scanDataPromise = p;
@@ -170,9 +200,11 @@ export class ServiceManager {
     }
 
     private async loadTimerServices(): Promise<void> {
+        if (!this.runtimeServices) throw new Error('runtimeServices 未初始化');
         await loadTimerServices({
             plugin: this.plugin,
             services: this.services,
+            runtime: this.runtimeServices,
         });
     }
 

@@ -1,7 +1,7 @@
 // src/app/capabilities/createCapabilities.ts
 import type { ThinkSettings } from '@core/public';
 import { CapabilityRegistry } from './CapabilityRegistry';
-import type { Capabilities, CapabilityMap } from './types';
+import type { Capabilities, CapabilityMap, CapabilityDeps } from './types';
 import { registerCapabilityContributions } from './registerCapabilityContributions';
 
 export type { Capabilities, CapabilityMap } from './types';
@@ -25,7 +25,8 @@ export function createDefaultCapabilityRegistry(): CapabilityRegistry<Capability
 export function createCapabilities(
     app: unknown,
     settings: ThinkSettings,
+    deps: CapabilityDeps,
     registry: CapabilityRegistry<CapabilityMap> = createDefaultCapabilityRegistry()
 ): Capabilities {
-    return registry.createAll(app, settings);
+    return registry.createAll(app, settings, deps);
 }

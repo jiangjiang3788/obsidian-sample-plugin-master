@@ -4,10 +4,9 @@ import type ThinkPlugin from '@main';
 import { safeAsync } from '@shared/public';
 import { startMeasure } from '@shared/public';
 
-import { devLog, UI_PORT_TOKEN, MODAL_PORT_TOKEN, MESSAGE_RENDER_PORT_TOKEN, type UiPort, type ModalPort, type MessageRenderPort } from '@core/public';
+import { devLog } from '@core/public';
 
-import type { AppStoreInstance } from '@/app/store/useAppStore';
-import { STORE_TOKEN } from '@/app/store/useAppStore';
+import type { Services } from '@/app/services.types';
 import { RendererService } from '@/features/settings/RendererService';
 import { TimerService } from '@features/timer/TimerService';
 import { FloatingTimerWidget } from '@features/timer/FloatingTimerWidget';
@@ -16,8 +15,9 @@ import type { ServiceManagerServices } from '@/app/ServiceManager.services';
 export async function loadTimerServices(opts: {
     plugin: ThinkPlugin;
     services: ServiceManagerServices;
+    runtime: Services;
 }): Promise<void> {
-    const { plugin, services } = opts;
+    const { plugin, services, runtime } = opts;
 
     // [Debug] 验证依赖服务是否就绪
     devLog('[ServiceManager] loadTimerServices: action/data ready', {
@@ -31,8 +31,8 @@ export async function loadTimerServices(opts: {
 
     await safeAsync(
         async () => {
-            // [DI Gate] features 层禁止 tsyringe：TimerService 改为手工创建
-            const ui = container.resolve<UiPort>(UI_PORT_TOKEN);
+            // UI deps 由 buildRuntime 下发
+            const ui = runtime.uiPort;
 
             services.timerService = new TimerService(
                 services.useCases!,
@@ -49,10 +49,6 @@ export async function loadTimerServices(opts: {
 
             // RendererService 依赖 TimerService，因此在 TimerService 就绪后再创建
             if (!services.rendererService) {
-                const store = container.resolve<AppStoreInstance>(STORE_TOKEN);
-                const modalPort = container.resolve<ModalPort>(MODAL_PORT_TOKEN);
-                const messageRenderPort = container.resolve<MessageRenderPort>(MESSAGE_RENDER_PORT_TOKEN);
-
                 services.rendererService = new RendererService(
                     plugin.app,
                     services.dataStore!,
@@ -62,9 +58,9 @@ export async function loadTimerServices(opts: {
                     services.timerService,
                     services.useCases!,
                     ui,
-                    modalPort,
-                    messageRenderPort,
-                    store
+                    runtime.modalPort,
+                    runtime.messageRenderPort,
+                    runtime.zustandStore
                 );
             }
 

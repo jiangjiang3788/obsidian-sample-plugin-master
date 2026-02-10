@@ -17,6 +17,7 @@ import './styles/main.css';
 import { safeAsync } from '@shared/public';
 import { performanceMonitor, startMeasure } from '@shared/public';
 import { ServiceManager } from '@/app/ServiceManager';
+import { buildRuntime } from '@/app/bootstrap/buildRuntime';
 import {
     createCapabilities,
     createDefaultCapabilityRegistry,
@@ -71,12 +72,19 @@ export default class ThinkPlugin extends Plugin {
 
                 // 2.1 capabilities 组合根（Phase1: 可注入体系）
                 // - 先创建 registry，让后续 feature 可以在这里追加 register(...)
-                const capabilityRegistry = createDefaultCapabilityRegistry();
-                this.capabilities = createCapabilities(this.app, settings, capabilityRegistry);
 
                 // 3. 构建服务总线并启动主流程
                 this.serviceManager = new ServiceManager(this);
                 await this.serviceManager.bootstrap(); // 新的启动方法
+                // 2.1 capabilities 组合根（Phase1: 可注入体系）
+                // - 在 ServiceManager.bootstrap() 之后创建，确保 timerService/useCases 已就绪
+                const capabilityRegistry = createDefaultCapabilityRegistry();
+                const runtime = buildRuntime(container);
+                this.capabilities = createCapabilities(this.app, settings, {
+                    modalPort: runtime.modalPort,
+                    timerService: this.serviceManager.timerService,
+                }, capabilityRegistry);
+
 
                 // 4. 注册命令
                 this.registerCommands();

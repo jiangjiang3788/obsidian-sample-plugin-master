@@ -13,11 +13,12 @@
 //   registry.register(...) from many places.
 
 import { createAiCapability } from './capabilities/ai';
+import type { CapabilityDeps } from './types';
 import { createTimerCapability } from './capabilities/timer';
 import type { CapabilityRegistry } from './CapabilityRegistry';
 import type { CapabilityMap } from './types';
 
 export function registerCapabilityContributions(registry: CapabilityRegistry<CapabilityMap>): void {
-    registry.register('ai', (app, settings) => createAiCapability(app, settings));
-    registry.register('timer', (app, settings) => createTimerCapability(app, settings));
+    registry.register('ai', (_app, _settings, deps: CapabilityDeps) => createAiCapability(deps));
+    registry.register('timer', (_app, _settings, deps: CapabilityDeps) => createTimerCapability(deps));
 }

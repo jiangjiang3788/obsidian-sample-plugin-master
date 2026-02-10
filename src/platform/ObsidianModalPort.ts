@@ -9,6 +9,7 @@ import { singleton, inject } from 'tsyringe';
 import type { App } from 'obsidian';
 import { AppToken } from '@core/services/types';
 import type { ModalPort, NamePromptOptions } from '@core/public';
+import { AiChatService, RetrievalService, ChatSessionStore } from '@core/public';
 import type { NaturalRecordCommand } from '@core/types/ai-schema';
 
 import { AiTextPromptModal } from './modals/AiTextPromptModal';
@@ -20,7 +21,13 @@ import { CheckinManagerModal } from './modals/CheckinManagerModal';
 
 @singleton()
 export class ObsidianModalPort implements ModalPort {
-  constructor(@inject(AppToken) private app: App) {}
+  constructor(
+    @inject(AppToken) private app: App,
+    // DI Round2: remove container.resolve() from adapter; use pure constructor injection
+    private chatService: AiChatService,
+    private retrievalService: RetrievalService,
+    private sessionStore: ChatSessionStore,
+  ) {}
 
   openAiTextPrompt(): Promise<string | null> {
     const modal = new AiTextPromptModal(this.app);
@@ -56,7 +63,12 @@ export class ObsidianModalPort implements ModalPort {
   }
 
   openAiChat(): void {
-    new AiChatModal(this.app).open();
+    const aiServices = {
+      chatService: this.chatService,
+      retrievalService: this.retrievalService,
+      sessionStore: this.sessionStore,
+    };
+    new AiChatModal(this.app, aiServices).open();
   }
 
   openCheckinManager(): void {
