@@ -5,7 +5,7 @@ import { Stack, Typography, Box, Button } from '@mui/material';
 import type { ViewEditorProps } from './registry';
 import { SimpleSelect } from '@shared/public';
 import { ListEditor } from '@shared/public';
-import { useZustandAppStore, useUiPort } from '@/app/public';
+import { useSelector, selectInputBlocks, useUiPort } from '@/app/public';
 import { useMemo } from 'preact/hooks';
 import {
     HEATMAP_VIEW_DEFAULT_CONFIG,
@@ -38,7 +38,7 @@ function normalizeHeatmapConfig(value: Record<string, any> | undefined): Heatmap
 export function HeatmapViewEditor({ value, onChange, module, dataStore }: ViewEditorProps) {
     const ui = useUiPort();
     const config = normalizeHeatmapConfig(value);
-    const allBlocks = useZustandAppStore(state => state.settings.inputSettings?.blocks) ?? [];
+    const allBlocks = useSelector(selectInputBlocks);
 
     const blockOptions = useMemo(() => 
         allBlocks.map(b => ({ value: b.id, label: b.name })), 

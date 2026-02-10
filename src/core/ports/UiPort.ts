@@ -16,7 +16,20 @@ import type { InjectionToken } from 'tsyringe';
  * 后续如果需要 confirm / modal，可以在这里增量扩展。
  */
 export interface UiPort {
-  notice(message: string, timeoutMs?: number): void;
+  /**
+   * 显示一条通知。
+   *
+   * - timeoutMs = 0 表示“常驻/长时间”，调用方可通过返回值 hide() 主动关闭。
+   * - 对于实现不支持 hide 的情况，也应返回一个 no-op 的 handle，避免调用方崩溃。
+   */
+  notice(message: string, timeoutMs?: number): UiNoticeHandle;
+}
+
+/**
+ * UI 通知句柄（用于主动关闭，例如“解析中...”常驻提示）。
+ */
+export interface UiNoticeHandle {
+  hide(): void;
 }
 
 export const UI_PORT_TOKEN: InjectionToken<UiPort> = 'UiPort';

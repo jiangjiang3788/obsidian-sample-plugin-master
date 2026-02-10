@@ -6,13 +6,22 @@
 
 import { singleton } from 'tsyringe';
 import { Notice } from 'obsidian';
-import type { UiPort } from '@core/ports/UiPort';
+import type { UiNoticeHandle, UiPort } from '@core/ports/UiPort';
 
 @singleton()
 export class ObsidianUiPort implements UiPort {
-  notice(message: string, timeoutMs?: number): void {
+  notice(message: string, timeoutMs?: number): UiNoticeHandle {
     // Obsidian Notice: default timeout is determined by Obsidian; we pass through if provided.
     // Using `as any` avoids tight coupling to Notice's overload signatures across Obsidian versions.
-    new (Notice as any)(message, timeoutMs);
+    const notice = new (Notice as any)(message, timeoutMs);
+    return {
+      hide(): void {
+        try {
+          notice?.hide?.();
+        } catch {
+          // no-op
+        }
+      },
+    };
   }
 }

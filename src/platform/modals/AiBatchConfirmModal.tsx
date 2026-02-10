@@ -10,15 +10,7 @@ import type { App } from 'obsidian';
 import { Modal, Notice } from 'obsidian';
 import { useMemo, useState } from 'preact/hooks';
 
-import {
-  type Services,
-  createServices,
-  mountWithServices,
-  unmountPreact,
-  useDataStore,
-  useInputService,
-  useZustandAppStore,
-} from '@/app/public';
+import { type Services, createServices, mountWithServices, unmountPreact, useDataStore, useInputService, useSelector } from '@/app/public';
 import type { NaturalRecordCommand, ThemeDefinition } from '@core/public';
 import { getEffectiveTemplate } from '@core/public';
 
@@ -128,7 +120,7 @@ function AiBatchConfirmForm({
   closeModal: () => void;
   onComplete?: () => void;
 }) {
-  const settings = useZustandAppStore((state) => state.settings.inputSettings);
+  const settings = useSelector((state) => state.settings.inputSettings);
   const dataStore = useDataStore();
   const inputService = useInputService();
 

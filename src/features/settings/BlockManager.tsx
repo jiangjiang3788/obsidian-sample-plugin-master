@@ -9,7 +9,7 @@
  */
 /** @jsxImportSource preact */
 import { h } from 'preact';
-import { useZustandAppStore, useUseCases } from '@/app/public';
+import { useSelector, selectInputBlocks, useUseCases } from '@/app/public';
 import { Accordion, AccordionSummary, AccordionDetails, Box, Stack, Typography, IconButton, Tooltip, Divider, TextField } from '@mui/material';
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 import DeleteForeverOutlinedIcon from '@mui/icons-material/DeleteForeverOutlined';
@@ -110,7 +110,7 @@ function BlockEditor({ block, useCases }: { block: BlockTemplate, useCases: UseC
  * ⚠️ 不再接收 appStore 作为 props
  */
 export function BlockManager() {
-    const blocks = useZustandAppStore(state => state.settings.inputSettings?.blocks) ?? [];
+    const blocks = useSelector(selectInputBlocks);
     const [openId, setOpenId] = useState<string | null>(null);
     
     // P1: 获取 UseCases

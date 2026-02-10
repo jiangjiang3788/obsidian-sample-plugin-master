@@ -2,7 +2,7 @@
 import { h } from 'preact';
 import { useCallback, useEffect, useRef, useState } from 'preact/hooks';
 import { Box, Button, Typography } from '@mui/material';
-import { useZustandAppStore } from '@/app/public';
+import { selectAiSettings, selectInputSettings, useSelector } from '@/app/public';
 import type { OpenAIChatMessage, ChatMessage, ChatSession, SessionFilters } from '@core/public';
 import { devError, devLog } from '@core/public';
 import type { ChatResponse } from '@core/public';
@@ -17,10 +17,10 @@ export interface AiChatModalContainerProps {
 
 export function AiChatModalContainer({ closeModal, services }: AiChatModalContainerProps) {
     // P0: 使用 Zustand store 作为 SSOT
-    const settings = useZustandAppStore(state => state.settings);
-    const themes = settings.inputSettings?.themes ?? [];
-    const blocks = settings.inputSettings?.blocks ?? [];
-    const aiSettings = settings.aiSettings;
+    const aiSettings = useSelector(selectAiSettings);
+    const inputSettings = useSelector(selectInputSettings);
+    const themes = inputSettings?.themes ?? [];
+    const blocks = inputSettings?.blocks ?? [];
 
     // 从 props 获取服务（已在 composition root 中 resolve）
     const { chatService, retrievalService, sessionStore } = services;

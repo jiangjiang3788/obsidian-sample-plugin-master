@@ -8,7 +8,7 @@ import { ModulePanel } from './ModulePanel';
 import { DashboardViewComponents as ViewComponents } from './index';
 
 import { calculateTimelineRange, normalizeTimelineView, dayjs, devLog } from '@core/public';
-import { useZustandAppStore, useUseCases, useUiPort } from '@/app/public';
+import { useUseCases, useUiPort, useSelector } from '@/app/public';
 import type { TimerController } from '@/app/public';
 import type { ActionService } from '@core/public';
 import { ItemService } from '@core/public';
@@ -209,10 +209,10 @@ export function LayoutRenderer({ layout, dataStore, app, actionService, itemServ
     const ui = useUiPort();
     
     // 使用 Zustand store 获取 settings 相关状态
-    const allViews = useZustandAppStore(selectViewInstances);
-    const inputSettings = useZustandAppStore(selectInputSettings); // [修改] 获取完整 inputSettings
+    const allViews = useSelector(selectViewInstances);
+    const inputSettings = useSelector(selectInputSettings); // [修改] 获取完整 inputSettings
     // [修改] 使用 Zustand store 获取 timers
-    const timers = useZustandAppStore(selectTimers);
+    const timers = useSelector(selectTimers);
     const allThemes = inputSettings.themes; // [兼容] 保持 allThemes 变量
     
     const [expandedState, setExpandedState] = useState<Record<string, boolean>>({});

@@ -8,7 +8,7 @@
 
 import { h } from 'preact';
 import { useMemo, useCallback, useState } from 'preact/hooks';
-import { useZustandAppStore, useUseCases } from '@/app/public';
+import { useUseCases, useSelector } from '@/app/public';
 import type { UseCases } from '@/app/public';
 import type { Layout, ViewInstance } from '@core/public';
 
@@ -51,10 +51,10 @@ const AlignedRadioGroup = ({ label, options, selectedValue, onChange }: any) => 
  */
 export function LayoutEditorPanel({ layoutId, useCases }: { layoutId: string; useCases?: UseCases }) {
   const _useCases = useCases ?? useUseCases();
-  const layout = useZustandAppStore((s) => (s.settings.layouts || []).find((l: Layout) => l.id === layoutId)) as
+  const layout = useSelector((s) => (s.settings.layouts || []).find((l: Layout) => l.id === layoutId)) as
     | Layout
     | undefined;
-  const allViews = useZustandAppStore((s) => s.settings.viewInstances) as ViewInstance[];
+  const allViews = useSelector((s) => s.settings.viewInstances) as ViewInstance[];
 
   const [inputValue, setInputValue] = useState('');
   const [contextMenu, setContextMenu] = useState<

@@ -9,15 +9,7 @@ import { h } from 'preact';
 import { App, Modal, Notice } from 'obsidian';
 import { useMemo, useState } from 'preact/hooks';
 
-import {
-  createServices,
-  Services,
-  useDataStore,
-  useInputService,
-  useZustandAppStore,
-  mountWithServices,
-  unmountPreact,
-} from '@/app/public';
+import { createServices, Services, useDataStore, useInputService, mountWithServices, unmountPreact, useSelector } from '@/app/public';
 import type { QuickInputSaveData } from '@core/public';
 
 import { Box, Button } from '@mui/material';
@@ -202,7 +194,7 @@ function QuickInputModalContent({
   closeModal: () => void;
   allowBlockSwitch: boolean;
 }) {
-  const settings = useZustandAppStore((s) => s.settings.inputSettings);
+  const settings = useSelector((s) => s.settings.inputSettings);
   const dataStore = useDataStore();
   const inputService = useInputService();
 

@@ -17,14 +17,7 @@ import DragIndicatorIcon from '@mui/icons-material/DragIndicator';
 import { createPortal } from 'preact/compat';
 
 import { useLocalStorage } from '@/shared/hooks';
-import {
-  makeSelectFloatingWindowZIndex,
-  selectFloatingWindowsActiveId,
-  selectFloatingWindowsFocus,
-  selectFloatingWindowsRegister,
-  selectFloatingWindowsUnregister,
-  useZustandAppStore,
-} from '@/app/public';
+import { makeSelectFloatingWindowZIndex, selectFloatingWindowsActiveId, selectFloatingWindowsFocus, selectFloatingWindowsRegister, selectFloatingWindowsUnregister, useSelector } from '@/app/public';
 
 const getEventCoords = (e: MouseEvent | TouchEvent) => {
     if (e instanceof MouseEvent) return { x: e.clientX, y: e.clientY };
@@ -91,11 +84,11 @@ export function FloatingPanel({
     zIndex = 9999,
 }: FloatingPanelProps) {
     // ============== 共享状态：zIndex / activeId（Zustand） ==============
-    const register = useZustandAppStore(selectFloatingWindowsRegister);
-    const unregister = useZustandAppStore(selectFloatingWindowsUnregister);
-    const focus = useZustandAppStore(selectFloatingWindowsFocus);
-    const activeId = useZustandAppStore(selectFloatingWindowsActiveId);
-    const managedZIndex = useZustandAppStore(makeSelectFloatingWindowZIndex(id));
+    const register = useSelector(selectFloatingWindowsRegister);
+    const unregister = useSelector(selectFloatingWindowsUnregister);
+    const focus = useSelector(selectFloatingWindowsFocus);
+    const activeId = useSelector(selectFloatingWindowsActiveId);
+    const managedZIndex = useSelector(makeSelectFloatingWindowZIndex(id));
     const effectiveZIndex = managedZIndex ?? zIndex;
 
     // ============== 位置持久化（localStorage） ==============

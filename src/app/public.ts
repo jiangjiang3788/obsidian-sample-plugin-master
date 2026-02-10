@@ -76,6 +76,8 @@ export {
   isFloatingWidgetOpen,
 } from './ui/widgets/FloatingWidgetManager';
 
+export { useSelector } from './store/useSelector';
+
 // ============== Store Selectors (recommended read API) ==============
 export * from './store/selectors';
 export { FloatingWidget } from './ui/widgets/FloatingWidget';

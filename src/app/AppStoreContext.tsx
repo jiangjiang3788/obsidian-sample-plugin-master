@@ -45,7 +45,7 @@ export const ZustandStoreContext = createContext<AppStoreInstance | null>(null);
  * const settings = useZustandAppStore(state => state.settings);
  * const themes = useZustandAppStore(state => state.settings.inputSettings?.themes);
  */
-export function useZustandAppStore<T>(selector: (state: ZustandAppStore) => T): T {
+export function useZustandAppStore<T>(selector: (state: ZustandAppStore) => T, equalityFn?: (a: T, b: T) => boolean): T {
     const store = useContext(ZustandStoreContext);
     
     if (!store) {

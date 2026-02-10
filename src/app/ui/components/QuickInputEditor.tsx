@@ -2,7 +2,7 @@
 import { h } from 'preact';
 import { useEffect, useMemo, useState } from 'preact/hooks';
 
-import { selectInputSettings, useZustandAppStore } from '@/app/public';
+import { selectInputSettings, useSelector } from '@/app/public';
 import type { TemplateField, ThemeDefinition } from '@core/public';
 import { buildThemeTree, type ThemeTreeNode } from '@core/public';
 import { dayjs, renderTemplate } from '@core/public';
@@ -118,7 +118,7 @@ export function QuickInputEditor({
   showDivider = true,
   onStateChange,
 }: QuickInputEditorProps) {
-  const settings = useZustandAppStore(selectInputSettings);
+  const settings = useSelector(selectInputSettings);
   const [currentBlockId, setCurrentBlockId] = useState(initialBlockId);
   const [selectedThemeId, setSelectedThemeId] = useState<string | null>(initialThemeId);
   const [formData, setFormData] = useState<Record<string, any>>(() => initialFormData ?? EMPTY_FORM_DATA);

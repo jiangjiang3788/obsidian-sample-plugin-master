@@ -4,6 +4,11 @@ export const selectSettings = (s: ZustandAppStore) => s.settings;
 
 export const selectInputSettings = (s: ZustandAppStore) => s.settings.inputSettings;
 
+// inputSettings helpers (avoid repeating nullish checks in UI)
+export const selectInputBlocks = (s: ZustandAppStore) => s.settings.inputSettings?.blocks ?? [];
+export const selectInputThemes = (s: ZustandAppStore) => s.settings.inputSettings?.themes ?? [];
+export const selectInputOverrides = (s: ZustandAppStore) => s.settings.inputSettings?.overrides ?? [];
+
 export const selectAiSettings = (s: ZustandAppStore) => s.settings.aiSettings;
 
 export const selectLayouts = (s: ZustandAppStore) => s.settings.layouts;

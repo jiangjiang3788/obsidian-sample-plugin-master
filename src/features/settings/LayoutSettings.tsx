@@ -14,7 +14,7 @@
  * - Layout/View 作为扁平列表管理
  */
 import { h } from 'preact';
-import { useZustandAppStore, useUseCases } from '@/app/public';
+import { useSelector, selectViewInstances, selectLayouts, useUseCases } from '@/app/public';
 import type { UseCases } from '@/app/public';
 import { Box, Stack, Typography, TextField, Checkbox, FormControlLabel, Tooltip, Chip, Radio, RadioGroup as MuiRadioGroup, Autocomplete, Button, Menu, MenuItem, IconButton } from '@mui/material';
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
@@ -49,7 +49,7 @@ const AlignedRadioGroup = ({ label, options, selectedValue, onChange }: any) => 
 
 // Layout 编辑器组件
 function LayoutEditor({ layout, useCases }: { layout: Layout, useCases: UseCases }) {
-    const allViews = useZustandAppStore(state => state.settings.viewInstances);
+    const allViews = useSelector(selectViewInstances);
     const [inputValue, setInputValue] = useState('');
     const [contextMenu, setContextMenu] = useState<{ mouseX: number; mouseY: number; viewId: string; viewTitle: string } | null>(null);
     const [settingsModalOpen, setSettingsModalOpen] = useState(false);
@@ -338,7 +338,7 @@ function SortableLayoutItem({ layout, useCases, isExpanded, onToggle }: {
  */
 export function LayoutSettings({ app }: { app: any }) {
     const useCases = useUseCases();
-    const layouts = useZustandAppStore(state => state.settings.layouts);
+    const layouts = useSelector(selectLayouts);
     const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
 
     // 添加新布局（无 parentId，扁平列表）

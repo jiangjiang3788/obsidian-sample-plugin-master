@@ -8,7 +8,7 @@
  */
 /** @jsxImportSource preact */
 import { h } from 'preact';
-import { useZustandAppStore, useUseCases } from '@/app/public';
+import { useUseCases, useSelector } from '@/app/public';
 import { Box, Typography, Stack, FormControlLabel, Checkbox } from '@mui/material';
 
 /**
@@ -19,7 +19,7 @@ import { Box, Typography, Stack, FormControlLabel, Checkbox } from '@mui/materia
  */
 export function GeneralSettings() {
     // 使用细粒度 selector 订阅设置状态
-    const floatingTimerEnabled = useZustandAppStore(selectFloatingTimerEnabled);
+    const floatingTimerEnabled = useSelector(selectFloatingTimerEnabled);
     
     // P0: 获取 UseCases
     const useCases = useUseCases();

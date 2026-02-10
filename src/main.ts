@@ -220,6 +220,7 @@ export default class ThinkPlugin extends Plugin {
 class TextPromptModal extends Modal {
     private value: string = '';
     private resolve!: (value: string | null) => void;
+    private resolved = false;
     private titleText: string;
     private placeholder: string;
     private ctaText: string;
@@ -240,6 +241,16 @@ class TextPromptModal extends Modal {
         this.ctaText = opts.ctaText ?? '确定';
     }
 
+    private resolveOnce(value: string | null) {
+        if (this.resolved) return;
+        this.resolved = true;
+        try {
+            this.resolve(value);
+        } catch {
+            // ignore
+        }
+    }
+
     onOpen(): void {
         const { contentEl } = this;
         contentEl.empty();
@@ -255,7 +266,7 @@ class TextPromptModal extends Modal {
                 btn.setCta();
                 btn.onClick(() => {
                     this.close();
-                    this.resolve(this.value || null);
+                    this.resolveOnce(this.value || null);
                 });
             });
 
@@ -264,17 +275,19 @@ class TextPromptModal extends Modal {
         this.keydownHandler = (e: KeyboardEvent) => {
             if (e.key === 'Escape') {
                 this.close();
-                this.resolve(null);
+                this.resolveOnce(null);
             }
             if (e.key === 'Enter') {
                 this.close();
-                this.resolve(this.value || null);
+                this.resolveOnce(this.value || null);
             }
         };
         this.modalEl.addEventListener('keydown', this.keydownHandler);
     }
 
     onClose(): void {
+        // If user closes the modal by clicking outside / X / etc., resolve to null.
+        this.resolveOnce(null);
         if (this.keydownHandler) {
             this.modalEl.removeEventListener('keydown', this.keydownHandler);
             this.keydownHandler = null;

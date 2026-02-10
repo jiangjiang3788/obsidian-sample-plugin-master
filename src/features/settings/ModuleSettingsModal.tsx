@@ -11,7 +11,7 @@ import { FormControlLabel, Checkbox, Button } from '@mui/material';
 import { VIEW_OPTIONS, ViewName, getAllFields } from '@core/public';
 import type { ViewInstance } from '@core/public';
 import { VIEW_EDITORS } from '@features/settings/registry';
-import { useZustandAppStore, useDataStore, useUseCases } from '@/app/public';
+import { useSelector, makeSelectViewInstanceById, useDataStore, useUseCases } from '@/app/public';
 import { SimpleSelect } from '@shared/public';
 import { RuleBuilder } from '@features/settings/RuleBuilder';
 import { Modal } from '@shared/public';
@@ -32,7 +32,7 @@ function ViewInstanceEditor({ vi }: { vi: ViewInstance }) {
     const useCases = useUseCases();
     
     // 从store中获取最新的viewInstance状态
-    const currentVi = useZustandAppStore(state => state.settings.viewInstances.find(v => v.id === vi.id)) || vi;
+    const currentVi = useSelector(makeSelectViewInstanceById(vi.id)) || vi;
     const fieldOptions = useMemo(() => getAllFields(dataStore?.queryItems() || []), [dataStore]);
     const EditorComponent = VIEW_EDITORS[currentVi.viewType];
 
@@ -203,7 +203,7 @@ interface Props {
 // [P1 迁移] 移除 appStore 和 dataStore props，内部获取
 export function ModuleSettingsModal({ isOpen, onClose, module }: Props) {
     // 从store中获取最新的模块状态
-    const currentModule = useZustandAppStore(state => state.settings.viewInstances.find(v => v.id === module.id)) || module;
+    const currentModule = useSelector(makeSelectViewInstanceById(module.id)) || module;
 
     // 使用统一的保存处理模式
     const handleSave = useSaveHandler(async () => {
@@ -240,7 +240,7 @@ export function ModuleSettingsModal({ isOpen, onClose, module }: Props) {
  *   该组件只负责渲染设置表单与底部按钮。
  */
 function ModuleSettingsPanel({ module, onClose }: { module: ViewInstance; onClose: () => void }) {
-    const currentModule = useZustandAppStore(state => state.settings.viewInstances.find(v => v.id === module.id)) || module;
+    const currentModule = useSelector(makeSelectViewInstanceById(module.id)) || module;
 
     const handleSave = useSaveHandler(async () => {
         await new Promise(resolve => setTimeout(resolve, 100));
