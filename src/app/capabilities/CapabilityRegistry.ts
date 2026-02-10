@@ -1,5 +1,4 @@
 // src/app/capabilities/CapabilityRegistry.ts
-import type { App } from 'obsidian';
 import type { ThinkSettings } from '@core/public';
 
 /**
@@ -9,7 +8,7 @@ import type { ThinkSettings } from '@core/public';
  * - capabilities 是 app 层的组合结果（composition root）
  * - factory 只拿 app + settings，避免把 DI 容器当成“万能依赖”继续扩散
  */
-export type CapabilityFactory<T> = (app: App, settings: ThinkSettings) => T;
+export type CapabilityFactory<T> = (app: unknown, settings: ThinkSettings) => T;
 
 export interface CapabilityRegistryOptions {
     /**
@@ -48,7 +47,7 @@ export class CapabilityRegistry<CapMap extends Record<string, any> = Record<stri
         return [...this.factories.keys()] as (keyof CapMap & string)[];
     }
 
-    createAll(app: App, settings: ThinkSettings): CapMap {
+    createAll(app: unknown, settings: ThinkSettings): CapMap {
         const out: Record<string, unknown> = {};
         for (const [key, factory] of this.factories.entries()) {
             out[String(key)] = factory(app, settings);

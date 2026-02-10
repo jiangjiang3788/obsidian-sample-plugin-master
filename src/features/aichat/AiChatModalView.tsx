@@ -1,7 +1,6 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
 import type { RefObject } from 'preact';
-import type { App } from 'obsidian';
 import { Box, Typography } from '@mui/material';
 import ChatIcon from '@mui/icons-material/Chat';
 import { ModalHeader } from '@shared/public';
@@ -12,7 +11,6 @@ import { ChatMessages } from './components/ChatMessages';
 import { ChatComposer } from './components/ChatComposer';
 
 export interface AiChatModalViewProps {
-    app: App;
     closeModal: () => void;
 
     // sessions
@@ -60,8 +58,7 @@ export interface AiChatModalViewProps {
 
 export function AiChatModalView(props: AiChatModalViewProps) {
     const {
-        app,
-        closeModal,
+                closeModal,
         sessions,
         currentSessionId,
         currentSessionTitle,
@@ -136,8 +133,7 @@ export function AiChatModalView(props: AiChatModalViewProps) {
 
                 {/* 消息区域 */}
                 <ChatMessages
-                    app={app}
-                    messages={messages}
+                        messages={messages}
                     isLoading={isLoading}
                     emptyHint={emptyHint}
                     enableRetrieval={enableRetrieval}

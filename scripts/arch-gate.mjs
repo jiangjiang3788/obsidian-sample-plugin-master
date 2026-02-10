@@ -309,4 +309,4 @@ if (errors.length) {
   })), { rootDir: ROOT, summary: 'Architecture Gate FAILED' });
 }
 
-printOk('arch-gate', 'AST 分析通过');\n
+printOk('arch-gate', 'AST 分析通过');

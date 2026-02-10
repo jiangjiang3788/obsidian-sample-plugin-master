@@ -1,5 +1,4 @@
 // src/app/capabilities/createCapabilities.ts
-import type { App } from 'obsidian';
 import type { ThinkSettings } from '@core/public';
 import { CapabilityRegistry } from './CapabilityRegistry';
 import type { Capabilities, CapabilityMap } from './types';
@@ -24,7 +23,7 @@ export function createDefaultCapabilityRegistry(): CapabilityRegistry<Capability
  * - features/shared 不允许触达 container，也不允许拼装 service
  */
 export function createCapabilities(
-    app: App,
+    app: unknown,
     settings: ThinkSettings,
     registry: CapabilityRegistry<CapabilityMap> = createDefaultCapabilityRegistry()
 ): Capabilities {

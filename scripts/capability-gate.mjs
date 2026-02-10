@@ -185,6 +185,7 @@ function main() {
     })), { rootDir: ROOT, summary: 'capability 形状约束失败' });
   }
 
-  printOk('capability-gate', 'capability 形状检查通过');\n}
+  printOk('capability-gate', 'capability 形状检查通过');
+}
 
 main();

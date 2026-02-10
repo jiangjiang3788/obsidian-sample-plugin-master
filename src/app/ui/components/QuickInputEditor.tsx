@@ -1,7 +1,6 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
 import { useEffect, useMemo, useState } from 'preact/hooks';
-import type { App } from 'obsidian';
 
 import { selectInputSettings, useZustandAppStore } from '@/app/public';
 import type { TemplateField, ThemeDefinition } from '@core/public';
@@ -92,7 +91,7 @@ export interface QuickInputEditorState {
 }
 
 export interface QuickInputEditorProps {
-  app: App;
+  getResourcePath: (path: string) => string;
   initialBlockId: string;
   context?: Record<string, any>;
   initialThemeId?: string | null;
@@ -310,7 +309,7 @@ export function QuickInputEditor({
                 const isImagePath = opt.value && (opt.value.endsWith('.png') || opt.value.endsWith('.jpg') || opt.value.endsWith('.svg'));
                 const displayContent = isImagePath ? (
                   <img
-                    src={app.vault.adapter.getResourcePath(opt.value)}
+                    src={getResourcePath(opt.value)}
                     alt={opt.label}
                     style={{ width: '24px', height: '24px', objectFit: 'contain' }}
                   />

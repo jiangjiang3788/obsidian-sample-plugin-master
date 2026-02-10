@@ -1,5 +1,7 @@
 import type ThinkPlugin from '@main';
 import { devError } from '@core/public';
+import { container } from 'tsyringe';
+import { EVENTS_PORT_TOKEN, type EventsPort } from '@core/public';
 
 import { FeatureLoader } from '@/app/FeatureLoader';
 import type { ServiceManagerServices } from '@/app/ServiceManager.services';
@@ -23,11 +25,14 @@ export async function loadUIFeatures(opts: {
     const existing = getFeatureLoader();
     existing?.cleanup();
 
+    const eventsPort = container.resolve<EventsPort>(EVENTS_PORT_TOKEN);
+
     const loader = new FeatureLoader(
         plugin,
         services.dataStore,
         services.rendererService,
-        services.actionService
+        services.actionService,
+        eventsPort
     );
     setFeatureLoader(loader);
 

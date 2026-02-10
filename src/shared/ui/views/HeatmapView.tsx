@@ -2,10 +2,9 @@
 
 /** @jsxImportSource preact */
 import { useMemo, useState, useRef, useEffect } from 'preact/hooks';
-import { App, Notice } from 'obsidian';
 import { Item, ViewInstance, InputSettings, ThemeDefinition, devLog } from '@core/public';
 import { dayjs } from '@core/public';
-import { QuickInputModal } from '@/app/public';
+import { QuickInputModal, useUiPort } from '@/app/public';
 import { HEATMAP_VIEW_DEFAULT_CONFIG } from '@core/public';
 import { getThemeLevelData } from '@core/public';
 import { CheckinManagerModal } from '@shared/ui/modals/CheckinManagerModal';
@@ -16,7 +15,7 @@ import { RatingMappingCache } from '@core/public';
 // ========== Types ==========
 interface HeatmapViewProps {
     items: Item[];
-    app: App;
+    app: any;
     dateRange: [Date, Date];
     module: ViewInstance;
     currentView: '年' | '季' | '月' | '周' | '天';
@@ -40,6 +39,7 @@ export function HeatmapView({
     injectedThemesToTrack,
     injectedDataByThemeAndDate,
 }: HeatmapViewProps) {
+    const ui = useUiPort();
     // 将 config 对象移入 useMemo，确保响应式更新
     const config = useMemo(
         () => ({ ...HEATMAP_VIEW_DEFAULT_CONFIG, ...module.viewConfig }), 
@@ -115,9 +115,9 @@ export function HeatmapView({
     const handleEditCount = (date: string, items?: Item[]) => {
         const handleSave = async (data: { displayCount: number; levelCount: number; countForLevel: boolean }) => {
             try {
-                new Notice(`已更新 ${date} 的打卡数据`);
+                ui.notice(`已更新 ${date} 的打卡数据`);
             } catch (error) {
-                new Notice('保存失败：' + (error as Error).message);
+                ui.notice('保存失败：' + (error as Error).message);
                 throw error;
             }
         };

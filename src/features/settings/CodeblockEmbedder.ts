@@ -8,7 +8,6 @@
  * - 使用纯函数 getZustandState(store, selector) 读取 settings
  */
 import { render } from 'preact';
-import { Notice, Plugin } from 'obsidian';
 import { CODEBLOCK_LANG, devWarn } from '@core/public';
 import { DataStore } from '@core/public';
 import { createServices, getZustandState, type AppStoreInstance } from '@/app/public';
@@ -19,15 +18,17 @@ import type { ActionService } from '@core/public';
 export class CodeblockEmbedder {
     // P0-3: store 从 DI 获取
     private store: AppStoreInstance;
-    
+    private uiPort: ReturnType<typeof createServices>['uiPort'];
     constructor(
-        private plugin: Plugin,
+        private plugin: any,
         private dataStore: DataStore,
         private rendererService: RendererService,
         private actionService: ActionService,
     ) {
         // Phase 4.3: 只能通过 app/public 获取 store（禁止 container 下沉）
-        this.store = createServices().zustandStore;
+        const services = createServices();
+        this.store = services.zustandStore;
+        this.uiPort = services.uiPort;
         this.registerProcessor();
     }
 
@@ -66,7 +67,7 @@ export class CodeblockEmbedder {
 
                 if (!layoutName && allLayouts.length > 0) {
                     layoutName = allLayouts[0].name;
-                    new Notice(`Think Plugin: 未指定布局，已自动选择第一个布局 "${layoutName}"。`);
+                    this.uiPort.notice(`Think Plugin: 未指定布局，已自动选择第一个布局 "${layoutName}"。`);
                 }
 
                 const layout = allLayouts.find((l: Layout) => l.name === layoutName);

@@ -8,10 +8,9 @@
  * - 在 cleanup 时取消订阅，避免内存泄漏
  */
 import { h, render } from 'preact';
-import { App } from 'obsidian';
 import {Layout, devLog, devError} from '@core/public';
 import { DataStore } from '@core/public';
-import { ServicesProvider, type Services } from '@/app/public';
+import { ServicesProvider, type Services, validateServices as validateServicesImpl } from '@/app/public';
 import type { TimerController } from '@/app/public';
 import { LayoutRenderer } from '@/features/settings/LayoutRenderer';
 import { ActionService } from '@core/public';
@@ -34,13 +33,16 @@ export class RendererService {
     private store: AppStoreInstance;
 
     constructor(
-        private app: App,
+        private app: any,
         private dataStore: DataStore,
         private actionService: ActionService,
         private itemService: ItemService,
         private inputService: InputService,
         private timerService: TimerController,
         private useCases: UseCases,
+        private uiPort: Services['uiPort'],
+        private modalPort: Services['modalPort'],
+        private messageRenderPort: Services['messageRenderPort'],
         store: AppStoreInstance
     ) {
         this.store = store;
@@ -50,6 +52,9 @@ export class RendererService {
             dataStore: this.dataStore,
             inputService: this.inputService,
             useCases: this.useCases,
+            uiPort: this.uiPort,
+            modalPort: this.modalPort,
+            messageRenderPort: this.messageRenderPort,
         };
         
         // 运行时校验：确保所有服务都已正确注入
@@ -67,19 +72,9 @@ export class RendererService {
      * Z3: 移除 appStore 校验
      */
     private validateServices(): void {
-        const missing: string[] = [];
-        if (!this.services.zustandStore) missing.push('zustandStore');
-        if (!this.services.dataStore) missing.push('dataStore');
-        if (!this.services.inputService) missing.push('inputService');
-        if (!this.services.useCases) missing.push('useCases');
-        
-        if (missing.length > 0) {
-            throw new Error(
-                `[RendererService] Services 校验失败: 缺少 ${missing.join(', ')}。\n` +
-                `请检查 ServiceManager 是否正确初始化了所有服务，以及 DI 容器是否正确注册。`
-            );
-        }
+        validateServicesImpl(this.services, 'RendererService');
     }
+    
     
     /**
      * S8.1: 设置 Zustand 精准订阅

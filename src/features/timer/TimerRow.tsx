@@ -14,7 +14,6 @@ import type { TimerState } from '@/app/public';
 import { formatSecondsToHHMMSS } from '@core/public';
 import { makeObsUri } from '@core/public';
 import type { ActionService } from '@core/public';
-import { App } from 'obsidian';
 // [4.5] QuickInputModal 迁移至 shared（避免跨 feature 依赖）
 import { QuickInputModal } from '@/app/public';
 
@@ -23,7 +22,7 @@ interface TimerRowProps {
     actionService: ActionService;
     timerService: TimerService;
     dataStore: DataStore;
-    app: App;
+    app: any;
 }
 
 export function TimerRow({ timer, actionService, timerService, dataStore, app }: TimerRowProps) {

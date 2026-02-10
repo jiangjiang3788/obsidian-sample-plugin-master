@@ -1,5 +1,4 @@
 // src/app/capabilities/capabilities/timer.ts
-import type { App } from 'obsidian';
 import type { ThinkSettings } from '@core/public';
 import { devWarn } from '@core/public';
 import { container } from 'tsyringe';
@@ -24,7 +23,7 @@ export interface TimerCapability {
     cancel(timerId: string): Promise<void>;
 }
 
-export function createTimerCapability(_app: App, _settings: ThinkSettings): TimerCapability {
+export function createTimerCapability(_app: unknown, _settings: ThinkSettings): TimerCapability {
     const resolveTimerService = (): TimerService | null => {
         try {
             // TimerService 由 ServiceManager.loadTimerServices() 手工创建并注册到 DI。

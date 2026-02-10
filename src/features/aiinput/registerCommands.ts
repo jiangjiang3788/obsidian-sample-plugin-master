@@ -6,10 +6,9 @@
  * - 使用纯函数 getZustandState(store, selector) 读取 settings
  */
 
-import { Notice } from 'obsidian';
 import type ThinkPlugin from '@/main';
-import { AiTextPromptModal } from './AiTextPromptModal';
-import { AiBatchConfirmModal } from './AiBatchConfirmModal';
+import { AiTextPromptModal } from '@/app/ui/modals/AiTextPromptModal';
+import { AiBatchConfirmModal } from '@/app/ui/modals/AiBatchConfirmModal';
 import { AiConfigCache, AiHttpClient, AiNaturalLanguageRecordParser, devError } from '@core/public';
 import { createServices, getZustandState, type AppStoreInstance } from '@/app/public';
 import type { ISettingsProvider } from '@core/public';
@@ -30,7 +29,7 @@ function createZustandSettingsProvider(store: AppStoreInstance): ISettingsProvid
  */
 export function registerAiInputCommands(plugin: ThinkPlugin) {
     // Phase 4.3: 只能通过 app/public 获取 store（禁止 container 下沉）
-    const { zustandStore: store } = createServices();
+    const { zustandStore: store, uiPort: ui } = createServices();
     
     // P0-3: 创建基于 zustand 的 settings provider（传入 store）
     const settingsProvider = createZustandSettingsProvider(store);
@@ -51,20 +50,20 @@ export function registerAiInputCommands(plugin: ThinkPlugin) {
 
             // 检查 AI 是否启用
             if (!ai?.enabled) {
-                new Notice('AI 快速记录未启用，请在设置中开启', 4000);
+                ui.notice('AI 快速记录未启用，请在设置中开启', 4000);
                 return;
             }
 
             // 检查 API 配置
             if (!ai.apiEndpoint || !ai.apiKey || !ai.model) {
-                new Notice('AI 配置不完整，请在设置中配置 API 端点、密钥和模型', 5000);
+                ui.notice('AI 配置不完整，请在设置中配置 API 端点、密钥和模型', 5000);
                 return;
             }
 
             // 检查是否有可用的 Block
             const blocks = settings.inputSettings?.blocks ?? [];
             if (blocks.length === 0) {
-                new Notice('没有可用的 Block 模板，请先在"快速输入"设置中创建', 5000);
+                ui.notice('没有可用的 Block 模板，请先在"快速输入"设置中创建', 5000);
                 return;
             }
 
@@ -77,7 +76,7 @@ export function registerAiInputCommands(plugin: ThinkPlugin) {
             }
 
             // 显示解析中提示
-            const loadingNotice = new Notice('AI 正在解析...', 0);
+            const loadingNotice = ui.notice('AI 正在解析...', 0);
 
             try {
                 // 调用解析器
@@ -88,12 +87,12 @@ export function registerAiInputCommands(plugin: ThinkPlugin) {
 
                 // 检查结果
                 if (!batch.items?.length) {
-                    new Notice('AI 未能识别出可记录内容，请换种说法再试', 5000);
+                    ui.notice('AI 未能识别出可记录内容，请换种说法再试', 5000);
                     return;
                 }
 
                 // 显示识别结果数量
-                new Notice(`AI 识别出 ${batch.items.length} 条记录`, 2000);
+                ui.notice(`AI 识别出 ${batch.items.length} 条记录`, 2000);
 
                 // 使用批量确认 Modal
                 new AiBatchConfirmModal(
@@ -104,7 +103,7 @@ export function registerAiInputCommands(plugin: ThinkPlugin) {
             } catch (e: any) {
                 loadingNotice.hide();
                 devError('AI 解析失败:', e);
-                new Notice(`AI 解析失败：${e?.message ?? e}`, 6000);
+                ui.notice(`AI 解析失败：${e?.message ?? e}`, 6000);
             }
         },
     });

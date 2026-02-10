@@ -1,5 +1,5 @@
 import { container as defaultContainer, type DependencyContainer } from 'tsyringe';
-import { devError } from '@core/public';
+import { devError, UI_PORT_TOKEN, MODAL_PORT_TOKEN, MESSAGE_RENDER_PORT_TOKEN } from '@core/public';
 import { validateServices, type Services } from '@/app/services.types';
 import { STORE_TOKEN, type AppStoreInstance } from '@/app/store/useAppStore';
 import { USECASES_TOKEN, type UseCases } from '@/app/usecases';
@@ -27,6 +27,9 @@ export function buildRuntime(container: DependencyContainer = defaultContainer):
       dataStore: container.resolve(DataStore),
       inputService: container.resolve(InputService),
       useCases: container.resolve<UseCases>(USECASES_TOKEN),
+      uiPort: container.resolve(UI_PORT_TOKEN),
+      modalPort: container.resolve(MODAL_PORT_TOKEN),
+      messageRenderPort: container.resolve(MESSAGE_RENDER_PORT_TOKEN),
     };
 
     validateServices(services, 'buildRuntime');

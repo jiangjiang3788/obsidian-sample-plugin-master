@@ -1,6 +1,7 @@
 import type ThinkPlugin from '@main';
 import { ActionService, DataStore, devTime, devTimeEnd, devWarn } from '@core/public';
 import { RendererService } from '@/features/settings/RendererService';
+import type { EventsPort } from '@core/public';
 import { FeatureRegistry } from './FeatureRegistry';
 import { registerFeatureContributions } from './features/registerFeatureContributions';
 import type { UIFeatureBootContext } from './features/featureContext';
@@ -19,6 +20,7 @@ export class FeatureLoader {
     private dataStore: DataStore;
     private rendererService: RendererService;
     private actionService: ActionService;
+    private eventsPort: EventsPort;
 
     // Phase1: 收拢 feature boot 编排，便于在插件卸载时统一清理 background 定时任务。
     private registry: FeatureRegistry<UIFeatureBootContext> | null = null;
@@ -27,12 +29,14 @@ export class FeatureLoader {
         plugin: ThinkPlugin,
         dataStore: DataStore,
         rendererService: RendererService,
-        actionService: ActionService
+        actionService: ActionService,
+        eventsPort: EventsPort
     ) {
         this.plugin = plugin;
         this.dataStore = dataStore;
         this.rendererService = rendererService;
         this.actionService = actionService;
+        this.eventsPort = eventsPort;
     }
 
     /**
@@ -54,6 +58,7 @@ export class FeatureLoader {
             dataStore: this.dataStore,
             rendererService: this.rendererService,
             actionService: this.actionService,
+            eventsPort: this.eventsPort,
         });
 
         await registry.bootAll(

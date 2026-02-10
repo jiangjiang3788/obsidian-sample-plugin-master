@@ -127,6 +127,8 @@ export function useInputService(): InputService {
  * ⚠️ P0 边界防护：UI 层必须通过此 Context 获取 UseCases
  */
 export const UseCasesContext = createContext<UseCases | null>(null);
+const UiPortContext = createContext<any | null>(null);
+const ModalPortContext = createContext<any | null>(null);
 
 /**
  * useUseCases Hook
@@ -177,8 +179,12 @@ export function ServicesProvider({ services, children }: ServicesProviderProps) 
             <DataStoreContext.Provider value={services.dataStore}>
                 <InputServiceContext.Provider value={services.inputService}>
                     <UseCasesContext.Provider value={services.useCases}>
+      <UiPortContext.Provider value={services.uiPort}>
+      <ModalPortContext.Provider value={services.modalPort}>
                         {children}
-                    </UseCasesContext.Provider>
+                    </ModalPortContext.Provider>
+      </UiPortContext.Provider>
+    </UseCasesContext.Provider>
                 </InputServiceContext.Provider>
             </DataStoreContext.Provider>
         </ZustandStoreContext.Provider>
@@ -211,4 +217,20 @@ export function devCheckServicesContext(): { valid: boolean; missing: string[] }
     }
     
     return result;
+}
+
+export function useUiPort() {
+  const ui = useContext(UiPortContext);
+  if (!ui) {
+    throw new Error('🚨 [useUiPort] UiPortContext 为空！请检查 <AppStoreProvider> 是否注入 services.uiPort。');
+  }
+  return ui as any;
+}
+
+export function useModalPort() {
+  const modal = useContext(ModalPortContext);
+  if (!modal) {
+    throw new Error('🚨 [useModalPort] ModalPortContext 为空！请检查 <AppStoreProvider> 是否注入 services.modalPort。');
+  }
+  return modal as any;
 }

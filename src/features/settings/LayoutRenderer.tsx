@@ -8,7 +8,7 @@ import { ModulePanel } from './ModulePanel';
 import { DashboardViewComponents as ViewComponents } from './index';
 
 import { calculateTimelineRange, normalizeTimelineView, dayjs, devLog } from '@core/public';
-import { useZustandAppStore, useUseCases } from '@/app/public';
+import { useZustandAppStore, useUseCases, useUiPort } from '@/app/public';
 import type { TimerController } from '@/app/public';
 import type { ActionService } from '@core/public';
 import { ItemService } from '@core/public';
@@ -24,7 +24,6 @@ import { openLayoutSettingsWidget } from '@/features/settings/LayoutSettingsWidg
 
 import { QuickInputModal } from '@/app/public';
 import { openModuleSettingsWidget } from './ModuleSettingsModal';
-import { App, Notice } from 'obsidian'; // [修改] 导入 Notice
 import { exportItemsToMarkdown, getExportConfigByViewType } from '@core/public'; // [新增] 导入导出函数
 import { ViewToolbar } from '@shared/public'; // [新增] 导入统一工具栏组件
 import type { UpdateTaskTimeHandler } from '@shared/public';
@@ -67,7 +66,7 @@ const ViewContent = ({
     useFieldGranularity: boolean;
     selectedThemes: string[]; // [新增]
     selectedCategories: string[]; // [新增]
-    app: App;
+    app: any;
     onMarkDone: (id: string) => void;
     actionService: ActionService;
     itemService: ItemService;
@@ -207,6 +206,7 @@ const ViewContent = ({
 export function LayoutRenderer({ layout, dataStore, app, actionService, itemService, timerService }: any) {
     // [P1] 通过 Context 获取 UseCases（已移除 useAppStore，统一用 Zustand）
     const useCases = useUseCases();
+    const ui = useUiPort();
     
     // 使用 Zustand store 获取 settings 相关状态
     const allViews = useZustandAppStore(selectViewInstances);
@@ -301,7 +301,7 @@ export function LayoutRenderer({ layout, dataStore, app, actionService, itemServ
     const handleExport = useCallback((viewId: string, viewTitle: string) => {
         const items = modulesDataCache.current[viewId];
         if (!items || items.length === 0) {
-            new Notice('没有内容可导出');
+            ui.notice('没有内容可导出');
             return;
         }
         
@@ -328,7 +328,7 @@ export function LayoutRenderer({ layout, dataStore, app, actionService, itemServ
         
         const markdownContent = exportItemsToMarkdown(items, exportConfig);
         navigator.clipboard.writeText(markdownContent);
-        new Notice(`"${viewTitle}" 的内容已复制到剪贴板！`);
+        ui.notice(`"${viewTitle}" 的内容已复制到剪贴板！`);
     }, [allViews]); // 依赖 allViews 来获取视图类型
 
     const handleQuickInputAction = (viewInstance: ViewInstance) => {

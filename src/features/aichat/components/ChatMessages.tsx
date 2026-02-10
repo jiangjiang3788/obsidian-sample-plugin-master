@@ -1,14 +1,12 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
 import type { RefObject } from 'preact';
-import type { App } from 'obsidian';
 import { Box, CircularProgress, Stack, Typography } from '@mui/material';
 import ChatIcon from '@mui/icons-material/Chat';
 import type { ChatMessage } from '@core/public';
 import { MessageBubble } from './MessageBubble';
 
 export interface ChatMessagesProps {
-    app: App;
     messages: ChatMessage[];
     isLoading: boolean;
     emptyHint: {
@@ -20,7 +18,6 @@ export interface ChatMessagesProps {
 }
 
 export function ChatMessages({
-    app,
     messages,
     isLoading,
     emptyHint,
@@ -42,7 +39,7 @@ export function ChatMessages({
             ) : (
                 <Stack spacing={2}>
                     {messages.map(msg => (
-                        <MessageBubble key={msg.id} message={msg} app={app} />
+                        <MessageBubble key={msg.id} message={msg} />
                     ))}
                     {isLoading && (
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>

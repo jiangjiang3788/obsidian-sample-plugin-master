@@ -16,7 +16,6 @@ export { ThemeMatrix } from './ThemeMatrix';
 /* 2. Settings 模块（设置面板 + 视图编辑器）                                   */
 /* ========================================================================== */
 
-import { App } from 'obsidian';
 import type ThinkPlugin from '@main';
 import { SettingsTab } from './SettingsTab';
 import { DataStore } from '@core/public';
@@ -51,7 +50,7 @@ export const SettingsViewComponents = {
  * Settings 模块依赖项接口
  */
 export interface SettingsDependencies {
-  app: App;
+  app: any;
   plugin: ThinkPlugin;
   dataStore: DataStore;
 }
@@ -73,8 +72,8 @@ export function setupSettings(deps: SettingsDependencies): void {
 /* 3. Dashboard 核心逻辑（数据监听 + 代码块嵌入）                             */
 /* ========================================================================== */
 
-import type { Plugin } from 'obsidian';
 import type { RendererService } from './RendererService';
+import type { EventsPort } from '@core/public';
 import type { ActionService } from '@core/public';
 
 import { VaultWatcher } from './VaultWatcher';
@@ -84,7 +83,8 @@ import { CodeblockEmbedder } from './CodeblockEmbedder';
  * Dashboard 功能依赖项接口
  */
 export interface DashboardDependencies {
-  plugin: Plugin;
+  plugin: ThinkPlugin;
+  eventsPort: EventsPort;
   dataStore: DataStore;
   rendererService: RendererService;
   actionService: ActionService;
@@ -96,10 +96,10 @@ export interface DashboardDependencies {
  * 这里重命名为 setupDashboard
  */
 export function setupDashboard(deps: DashboardDependencies): void {
-  const { plugin, dataStore, rendererService, actionService } = deps;
+  const { plugin, eventsPort, dataStore, rendererService, actionService } = deps;
 
-  // 监听 Vault 变化
-  new VaultWatcher(plugin, dataStore);
+  // 监听 Vault 变化（通过 EventsPort，避免 features 直触 obsidian 类型）
+  new VaultWatcher(eventsPort, dataStore);
 
   // S8.2: CodeblockEmbedder 不再需要 appStore 参数
   new CodeblockEmbedder(plugin, dataStore, rendererService, actionService);

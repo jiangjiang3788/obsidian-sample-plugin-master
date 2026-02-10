@@ -2,7 +2,6 @@
 // src/features/views/EventTimelineView.tsx
 import { h } from 'preact';
 import { useMemo } from 'preact/hooks';
-import type { App } from 'obsidian';
 import type { Item, ViewInstance } from '@core/public';
 import { readField } from '@core/public';
 import { dayjs } from '@core/public';
@@ -26,7 +25,7 @@ interface EventTimelineViewProps {
      * - null: 明确表示不分组
      */
     groupedTree?: GroupNode[] | null;
-    app: App;
+    app: any;
     dateRange: [Date, Date];
     module: ViewInstance;
     currentView: '年' | '季' | '月' | '周' | '天';

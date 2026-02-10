@@ -1,6 +1,5 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
-import { App } from 'obsidian';
 import type { Item } from '@core/public';
 import { dayjs } from '@core/public';
 import { getEffectiveDisplayCount, getEffectiveLevelCount } from '@core/public';
@@ -10,7 +9,7 @@ interface HeatmapCellProps {
     date: string;
     items?: Item[];
     config: any;
-    app: App;
+    app: any;
     onCellClick: (date: string, item?: Item) => void;
     onEditCount?: (date: string, items?: Item[]) => void;
     ratingMapping: Map<string, string>;

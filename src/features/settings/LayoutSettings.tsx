@@ -25,7 +25,6 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import type { Layout, ViewInstance } from '@core/public';
 import { useMemo, useCallback, useState } from 'preact/hooks';
-import { App } from 'obsidian';
 import { DndContext, closestCenter } from '@dnd-kit/core';
 import { useSortable, SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { arrayMove } from '@core/public';
@@ -337,7 +336,7 @@ function SortableLayoutItem({ layout, useCases, isExpanded, onToggle }: {
  * - 不再使用 SettingsTreeView（包含 group 逻辑）
  * - 使用扁平 Layout 列表 + 拖拽排序
  */
-export function LayoutSettings({ app }: { app: App }) {
+export function LayoutSettings({ app }: { app: any }) {
     const useCases = useUseCases();
     const layouts = useZustandAppStore(state => state.settings.layouts);
     const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());

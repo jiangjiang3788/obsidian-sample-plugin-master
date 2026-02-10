@@ -4,7 +4,6 @@ import { Fragment } from 'preact';
 import { useState, useMemo, useEffect, useRef } from 'preact/hooks';
 import { Item, readField, ViewInstance, devLog } from '@core/public';
 import { dayjs, getWeeksInYear, isSameIsoWeek } from '@core/public';
-import { App, Notice } from 'obsidian';
 // [架构标准化] 统一从 core public 获取稳定合同，避免 deep import
 import { STATISTICS_VIEW_DEFAULT_CONFIG as DEFAULT_CONFIG } from '@core/public';
 import { BlockView } from './BlockView';
@@ -12,8 +11,7 @@ import { IconButton, Tooltip } from '@mui/material';
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 import IosShareIcon from '@mui/icons-material/IosShare';
 import { exportItemsToMarkdown, getExportConfigByViewType } from '@core/public';
-import { FloatingPanel } from '@/app/public';
-import { openFloatingWidget, closeFloatingWidget } from '@/app/public';
+import { FloatingPanel, openFloatingWidget, closeFloatingWidget, useUiPort } from '@/app/public';
 import type { CategoryConfig, PeriodData } from '@core/public';
 import { 
     aggregateByDay,
@@ -35,7 +33,7 @@ const AnyIconButton = IconButton as any;
 // =============== 类型定义 ===============
 interface StatisticsViewProps {
     items: Item[];
-    app: App;
+    app: any;
     dateRange: [Date, Date];
     module: ViewInstance;
     currentView: '年' | '季' | '月' | '周' | '天';
@@ -56,7 +54,7 @@ interface PopoverState {
 // =============== 悬浮窗组件 ===============
 const PopoverContent = ({ blocks, app, module, timerService, timers, allThemes }: {
     blocks: Item[];
-    app: App;
+    app: any;
     module: ViewInstance;
     timerService: TimerController;
     timers: any[];
@@ -87,6 +85,7 @@ const PopoverContent = ({ blocks, app, module, timerService, timers, allThemes }
 
 // =============== 主视图组件 ===============
 export function StatisticsView({ items, app, dateRange, module, currentView, useFieldGranularity = false, onQuickCreate, selectedCategories, timerService, timers, allThemes, statisticsModel }: StatisticsViewProps) {
+    const ui = useUiPort();
     const viewConfig = statisticsModel?.viewConfig ?? ({ ...DEFAULT_CONFIG, ...module.viewConfig } as any);
     const { categories = [], displayMode = 'smart', minVisibleHeight = 15, usePeriodField = false } = viewConfig;
     const categoryConfigs = categories as CategoryConfig[];
@@ -176,13 +175,13 @@ export function StatisticsView({ items, app, dateRange, module, currentView, use
 
         const handleExport = () => {
             if (blocks.length === 0) {
-                new Notice('没有内容可导出');
+                ui.notice('没有内容可导出');
                 return;
             }
             const exportConfig = getExportConfigByViewType('StatisticsView');
             const markdownContent = exportItemsToMarkdown(blocks, exportConfig);
             navigator.clipboard.writeText(markdownContent);
-            new Notice(`"${title}" 的内容已复制到剪贴板！`);
+            ui.notice(`"${title}" 的内容已复制到剪贴板！`);
         };
 
         const handleQuickCreate = () => {

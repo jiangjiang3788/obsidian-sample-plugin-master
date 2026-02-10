@@ -2,7 +2,7 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
 import { useMemo } from 'preact/hooks';
-import { Notice } from 'obsidian';
+import { useUiPort } from '@/app/public';
 import type { BlockTemplate } from '@core/public';
 import { SimpleSelect } from '@shared/public';
 import { Box } from '@mui/material';
@@ -12,6 +12,7 @@ interface Props {
 }
 
 export function TemplateVariableCopier({ block }: Props) {
+    const ui = useUiPort();
     const variableOptions = useMemo(() => {
         const options = [
             { value: '{{block}}', label: 'block' },
@@ -38,7 +39,7 @@ export function TemplateVariableCopier({ block }: Props) {
     const handleCopy = (variable: string) => {
         if (!variable) return;
         navigator.clipboard.writeText(variable);
-        new Notice(`已复制: ${variable}`);
+        ui.notice(`已复制: ${variable}`);
     };
 
     return (

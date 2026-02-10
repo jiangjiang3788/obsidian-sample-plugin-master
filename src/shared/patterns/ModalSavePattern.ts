@@ -3,10 +3,10 @@
  * 提供统一的保存逻辑和错误处理
  */
 
-import { Notice } from 'obsidian';
-import { devError } from '@core/public';
+import { devError, type UiPort } from '@core/public';
 
 export interface SaveOptions {
+  uiPort?: UiPort;
   successMessage?: string;
   errorMessage?: string;
   onSuccess?: () => void;
@@ -33,12 +33,12 @@ export function useSaveHandler(
   return async () => {
     try {
       await saveAction();
-      new Notice(`✅ ${successMessage}`);
+      options.uiPort?.notice(`✅ ${successMessage}`);
       onSuccess?.();
     } catch (error) {
       const errorObj = error instanceof Error ? error : new Error(String(error));
       const message = errorObj.message || '未知错误';
-      new Notice(`❌ ${errorMessage}: ${message}`);
+      options.uiPort?.notice(`❌ ${errorMessage}: ${message}`);
       devError(`${errorMessage}:`, errorObj);
       onError?.(errorObj);
     }

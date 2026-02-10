@@ -60,7 +60,7 @@ export class QuickInputModal extends Modal {
     mountWithServices(
       this.contentEl,
       <QuickInputModalContent
-        app={this.app}
+        getResourcePath={(path) => this.app.vault.adapter.getResourcePath(path)}
         initialBlockId={this.blockId}
         context={this.context}
         initialThemeId={this.themeId}

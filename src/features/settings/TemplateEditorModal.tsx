@@ -5,8 +5,7 @@ import { useState, useEffect, useMemo } from 'preact/hooks';
 import { Dialog, DialogTitle, DialogContent, DialogActions, Button, Stack, TextField, Typography, Box, RadioGroup, FormControlLabel, Radio, FormControl, FormLabel, Divider } from '@mui/material';
 import { FieldsEditor } from './FieldsEditor';
 import type { BlockTemplate, ThemeDefinition, ThemeOverride, TemplateField } from '@core/public';
-import type { UseCases } from '@/app/public';
-import { Notice } from 'obsidian';
+import { useUiPort, type UseCases } from '@/app/public';
 import { TemplateVariableCopier } from './TemplateVariableCopier';
 
 type EditMode = 'inherit' | 'override' | 'disabled';
@@ -21,6 +20,7 @@ interface Props {
 }
 
 export function TemplateEditorModal({ isOpen, onClose, block, theme, existingOverride, useCases }: Props) {
+    const ui = useUiPort();
     const [mode, setMode] = useState<EditMode>('inherit');
     const [localOverride, setLocalOverride] = useState<Partial<ThemeOverride>>({});
 
@@ -56,7 +56,7 @@ export function TemplateEditorModal({ isOpen, onClose, block, theme, existingOve
                 // ⚠️ P1: 通过 UseCase 层调用，而非直接调用 appStore
                 useCases.theme.deleteOverride(block.id, theme.id);
             }
-            new Notice(`已设为继承 "${block.name}" 的基础配置`);
+            ui.notice(`已设为继承 "${block.name}" 的基础配置`);
         } else {
             const dataToSave: Omit<ThemeOverride, 'id'> = {
                 blockId: block.id,
@@ -69,7 +69,7 @@ export function TemplateEditorModal({ isOpen, onClose, block, theme, existingOve
             };
             // ⚠️ P1: 通过 UseCase 层调用，而非直接调用 appStore
             useCases.theme.upsertOverride(dataToSave);
-            new Notice(`已保存 "${theme.path}" 对 "${block.name}" 的配置`);
+            ui.notice(`已保存 "${theme.path}" 对 "${block.name}" 的配置`);
         }
         onClose();
     };

@@ -1,23 +1,21 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
 import { useEffect, useRef, useState } from 'preact/hooks';
-import type { App } from 'obsidian';
 import { Box, Chip, IconButton, Paper, Tooltip, Typography } from '@mui/material';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import CheckIcon from '@mui/icons-material/Check';
-import type { ChatMessage } from '@core/public';
+import type { ChatMessage, MessageContentType } from '@core/public';
 import { devError, dayjs } from '@core/public';
-import { getMessageRenderService, type MessageContentType } from '@/shared/utils/MessageRenderService';
 
 export interface MessageBubbleProps {
     message: ChatMessage;
-    app: App;
-}
+  }
 
-export function MessageBubble({ message, app }: MessageBubbleProps) {
+export function MessageBubble({ message }: MessageBubbleProps) {
     const isUser = message.role === 'user';
     const isSystem = message.role === 'system';
     const contentRef = useRef<HTMLDivElement>(null);
+    const renderPort = useMessageRenderPort();
     const [copied, setCopied] = useState(false);
 
     // 复制消息内容
@@ -39,15 +37,13 @@ export function MessageBubble({ message, app }: MessageBubbleProps) {
     useEffect(() => {
         if (!contentRef.current) return;
 
-        const renderService = getMessageRenderService();
 
         // 用户消息用纯文本，AI 回复用 Markdown
-        renderService
+        renderPort
             .renderMessage({
-                app,
                 containerEl: contentRef.current,
                 content: message.content,
-                contentType,
+                contentType: contentType === 'plain' ? 'plain' : 'markdown',
                 sourcePath: '',
                 cls: 'message-content',
             })
@@ -58,10 +54,10 @@ export function MessageBubble({ message, app }: MessageBubbleProps) {
         // 组件卸载时清理
         return () => {
             if (contentRef.current) {
-                renderService.clear(contentRef.current);
+                renderPort.clear(contentRef.current);
             }
         };
-    }, [message.content, message.id, contentType, app]);
+    }, [message.content, message.id, contentType, renderPort]);
 
     return (
         <Box sx={{ display: 'flex', justifyContent: isUser ? 'flex-end' : 'flex-start' }}>

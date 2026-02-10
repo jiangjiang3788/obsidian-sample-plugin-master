@@ -1,6 +1,5 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
-import { App } from 'obsidian';
 import { Item, ThemeDefinition } from '@core/public';
 import { FieldPill } from '@shared/ui/items/FieldPill';
 import { ItemLink } from '@shared/ui/items/ItemLink';
@@ -9,7 +8,7 @@ interface BlockItemProps {
     item: Item;
     fields: string[];
     isNarrow: boolean;
-    app: App;
+    app: any;
     allThemes: ThemeDefinition[];
 }
 

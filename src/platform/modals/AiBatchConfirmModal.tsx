@@ -68,7 +68,7 @@ export class AiBatchConfirmModal extends Modal {
 
     mountWithServices(
       this.contentEl,
-      <AiBatchConfirmForm app={this.app} items={this.items} closeModal={() => this.close()} onComplete={this.onComplete} />,
+      <AiBatchConfirmForm getResourcePath={(path) => this.app.vault.adapter.getResourcePath(path)} items={this.items} closeModal={() => this.close()} onComplete={this.onComplete} />,
       this.services
     );
   }

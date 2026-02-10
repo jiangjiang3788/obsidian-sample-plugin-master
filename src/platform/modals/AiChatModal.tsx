@@ -44,7 +44,7 @@ export class AiChatModal extends Modal {
 
         mountWithServices(
             this.contentEl,
-            <AiChatModalContainer app={this.app} closeModal={() => this.close()} services={this.aiServices} />,
+            <AiChatModalContainer closeModal={() => this.close()} services={this.aiServices} />,
             this.services
         );
     }

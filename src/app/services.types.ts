@@ -12,6 +12,7 @@
 import type { DataStore } from '@core/public';
 import type { InputService } from '@core/public';
 import type { UseCases } from './usecases';
+import type { UiPort, ModalPort, MessageRenderPort } from '@core/public';
 import type { AppStoreInstance } from './store/useAppStore';
 
 /**
@@ -22,7 +23,11 @@ export interface Services {
   dataStore: DataStore;
   inputService: InputService;
   useCases: UseCases;
+  uiPort: UiPort;
+  modalPort: ModalPort;
+  messageRenderPort: MessageRenderPort;
 }
+
 
 /**
  * 运行时校验：防止 services 传 undefined 但运行到深处才爆
@@ -41,6 +46,9 @@ export function validateServices(services: Services, source: string = 'validateS
   if (!services.dataStore) missing.push('dataStore (DataStore)');
   if (!services.inputService) missing.push('inputService (InputService)');
   if (!services.useCases) missing.push('useCases (USECASES_TOKEN)');
+  if (!services.uiPort) missing.push('uiPort (UI_PORT_TOKEN)');
+  if (!services.modalPort) missing.push('modalPort (MODAL_PORT_TOKEN)');
+  if (!services.messageRenderPort) missing.push('messageRenderPort (MESSAGE_RENDER_PORT_TOKEN)');
 
   if (missing.length > 0) {
     throw new Error(

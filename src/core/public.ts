@@ -98,6 +98,16 @@ export type { MetadataPort, HeadingInfo } from './ports/MetadataPort';
 export { FILESTAT_PORT_TOKEN } from './ports/FileStatPort';
 export type { FileStatPort, FileStat } from './ports/FileStatPort';
 
+export { EVENTS_PORT_TOKEN } from './ports/EventsPort';
+export type { EventsPort, UnsubscribeFn } from './ports/EventsPort';
+
+export type { AppPort, AppVaultNamePort } from './ports/AppPort';
+export { MODAL_PORT_TOKEN } from './ports/ModalPort';
+export type { ModalPort } from './ports/ModalPort';
+export { MESSAGE_RENDER_PORT_TOKEN } from './ports/MessageRenderPort';
+export type { MessageRenderPort, RenderMessageArgs, MessageContentType } from './ports/MessageRenderPort';
+export type { ModalPort, NamePromptOptions } from './ports/ModalPort';
+
 
 export { SettingsRepository, SETTINGS_PERSISTENCE_TOKEN } from './services/SettingsRepository';
 export type { ISettingsPersistence } from './services/SettingsRepository';

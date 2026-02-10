@@ -1,6 +1,5 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
-import { App } from 'obsidian';
 import type { Item, ThemeDefinition } from '@core/public';
 import { makeObsUri } from '@core/public';
 import { TaskCheckbox } from '@shared/ui/composites/TaskCheckbox';
@@ -12,7 +11,7 @@ import type { TimerController } from '@/app/public';
 interface TaskRowProps {
     item: Item;
     onMarkDone: (id: string) => void;
-    app: App;
+    app: any;
     timerService: TimerController;
     timer?: any;
     allThemes: ThemeDefinition[];

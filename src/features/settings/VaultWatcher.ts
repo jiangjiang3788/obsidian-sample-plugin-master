@@ -1,61 +1,58 @@
 // src/features/settings/VaultWatcher.ts
 // ---------------------------------------------------------------------------
-// Phase2: Vault 事件监听属于 Obsidian 集成层，不能放在 core。
-// - core 的目标是 "import 'obsidian' = 0"
-// - 这里保留原 VaultWatcher 逻辑，但迁移到 feature（UI/Integration）层
+// Phase0 P1: platform boundary (EventsPort) - Vault watcher is now Obsidian-free
+// ---------------------------------------------------------------------------
+// Goal:
+// - features 不直接 import 'obsidian'，通过 EventsPort 监听 vault 变化
+// - DataStore 统一使用 path 入口（scanFileByPath/removeFileItems）
 // ---------------------------------------------------------------------------
 
-import type { Plugin, TAbstractFile } from 'obsidian';
-import { TFile } from 'obsidian';
 import type { DataStore } from '@core/public';
+import type { EventsPort, UnsubscribeFn } from '@core/public';
 
 /** 监听 Vault 变化并与 DataStore 联动（节流由 DataStore 内部处理） */
 export class VaultWatcher {
-  private plugin: Plugin;
   private dataStore: DataStore;
+  private events: EventsPort;
+  private unsubscribers: UnsubscribeFn[] = [];
 
-  constructor(plugin: Plugin, dataStore: DataStore) {
-    this.plugin = plugin;
+  constructor(events: EventsPort, dataStore: DataStore) {
+    this.events = events;
     this.dataStore = dataStore;
     this.registerEvents();
   }
 
-  /**
-   * 定义一个可复用的文件变更处理函数
-   * @param f - 被创建、修改或重命名的文件
-   */
-  private handleFileChange = (f: TAbstractFile): void => {
-    // 确保是 Markdown 文件，然后执行扫描并通知更新
-    if (f instanceof TFile && f.extension === 'md') {
-      // Phase2: core 不依赖 TFile，统一使用 path 入口
-      this.dataStore.scanFileByPath(f.path).then(() => this.dataStore.notifyChange());
+  private registerEvents(): void {
+    // create/modify
+    this.unsubscribers.push(
+      this.events.onMarkdownCreateOrModify((path) => {
+        this.dataStore.scanFileByPath(path).then(() => this.dataStore.notifyChange());
+      })
+    );
+
+    // delete
+    this.unsubscribers.push(
+      this.events.onMarkdownDelete((path) => {
+        this.dataStore.removeFileItems(path);
+        this.dataStore.notifyChange();
+      })
+    );
+
+    // rename
+    this.unsubscribers.push(
+      this.events.onMarkdownRename((newPath, oldPath) => {
+        this.dataStore.removeFileItems(oldPath);
+        this.dataStore.scanFileByPath(newPath).then(() => this.dataStore.notifyChange());
+      })
+    );
+  }
+
+  /** 可选：手动释放（目前 ObsidianEventsPort 也会在 unload 自动解绑） */
+  dispose(): void {
+    const subs = this.unsubscribers;
+    this.unsubscribers = [];
+    for (const unsub of subs) {
+      try { unsub(); } catch {}
     }
-  };
-
-  private registerEvents() {
-    const { vault } = this.plugin.app;
-
-    // 'create' 和 'modify' 事件共用同一个处理函数
-    this.plugin.registerEvent(vault.on('modify', this.handleFileChange));
-    this.plugin.registerEvent(vault.on('create', this.handleFileChange));
-
-    this.plugin.registerEvent(
-      vault.on('delete', (f) => {
-        if (f instanceof TFile && f.extension === 'md') {
-          this.dataStore.removeFileItems(f.path);
-          this.dataStore.notifyChange();
-        }
-      })
-    );
-
-    this.plugin.registerEvent(
-      vault.on('rename', (f, old) => {
-        if (f instanceof TFile && f.extension === 'md') {
-          this.dataStore.removeFileItems(old);
-          // 重命名操作中的“重新扫描新文件”复用 handleFileChange
-          this.handleFileChange(f);
-        }
-      })
-    );
   }
 }

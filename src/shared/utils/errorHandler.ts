@@ -3,8 +3,7 @@
  * 提供统一的错误分类、记录和用户通知功能
  */
 
-import { Notice } from 'obsidian';
-import { devError, devLog } from '@core/public';
+import { devError, devLog, type UiPort } from '@core/public';
 
 /**
  * 错误类型枚举
@@ -23,6 +22,7 @@ export enum ErrorType {
  * 错误处理选项
  */
 export interface ErrorHandlerOptions {
+    uiPort?: UiPort;               // UI 通知端口（可选）
     showNotice?: boolean;          // 是否显示用户通知
     logToConsole?: boolean;        // 是否记录到控制台
     logToFile?: boolean;           // 是否记录到文件（未来实现）
@@ -268,7 +268,7 @@ export class ErrorHandler {
      * 显示用户通知
      */
     private showNotice(message: string, timeout: number): void {
-        new Notice(message, timeout);
+        options.uiPort?.notice(message, timeout);
     }
 
     /**

@@ -12,7 +12,7 @@ import { InputService } from '@core/public';
 import { ThinkSettings, DEFAULT_SETTINGS } from '@core/public';
 import type { UseCases } from '@/app/public';
 import { setupCoreContainer } from '@core/public';
-import { VAULT_PORT_TOKEN, UI_PORT_TOKEN, METADATA_PORT_TOKEN, FILESTAT_PORT_TOKEN } from '@core/public';
+import { VAULT_PORT_TOKEN, UI_PORT_TOKEN, METADATA_PORT_TOKEN, FILESTAT_PORT_TOKEN, MODAL_PORT_TOKEN, EVENTS_PORT_TOKEN, MESSAGE_RENDER_PORT_TOKEN } from '@core/public';
 import './styles/main.css';
 import { safeAsync } from '@shared/public';
 import { performanceMonitor, startMeasure } from '@shared/public';
@@ -28,6 +28,9 @@ import { ActionService } from '@core/public';
 import { devLog } from '@core/public';
 import { ObsidianVaultPort } from '@/platform/ObsidianVaultPort';
 import { ObsidianUiPort } from '@/platform/ObsidianUiPort';
+import { ObsidianModalPort } from '@/platform/ObsidianModalPort';
+import { ObsidianEventsPort } from '@/platform/ObsidianEventsPort';
+import { ObsidianMessageRenderPort } from '@/platform/ObsidianMessageRenderPort';
 import { ObsidianMetadataPort } from '@/platform/ObsidianMetadataPort';
 import { ObsidianFileStatPort } from '@/platform/ObsidianFileStatPort';
 
@@ -60,6 +63,9 @@ export default class ThinkPlugin extends Plugin {
                 // - 必须在任何依赖 STORAGE_TOKEN 的服务 resolve 之前完成注册
                 container.register(VAULT_PORT_TOKEN, { useClass: ObsidianVaultPort });
                 container.register(UI_PORT_TOKEN, { useClass: ObsidianUiPort });
+                container.register(MODAL_PORT_TOKEN, { useClass: ObsidianModalPort });
+                container.register(EVENTS_PORT_TOKEN, { useValue: new ObsidianEventsPort(this) });
+                container.register(MESSAGE_RENDER_PORT_TOKEN, { useValue: new ObsidianMessageRenderPort(this.app) });
                 container.register(METADATA_PORT_TOKEN, { useClass: ObsidianMetadataPort });
                 container.register(FILESTAT_PORT_TOKEN, { useClass: ObsidianFileStatPort });
 

@@ -3,7 +3,6 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
 import { Item } from '@core/public';
-import { App } from 'obsidian';
 import type { TimerController } from '@/app/public';
 import { buildTableMatrix } from '@core/public';
 import { TaskRow } from '@shared/ui/items/TaskRow';
@@ -14,7 +13,7 @@ interface TableViewProps {
     rowField: string;
     colField: string;
     onMarkDone: (id: string) => void;
-    app: App;
+    app: any;
     timerService: TimerController;
     timers: any[];
     allThemes?: any[]; // 为了兼容 TaskRow 组件

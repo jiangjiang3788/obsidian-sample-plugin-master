@@ -2,24 +2,28 @@
  * TimerService - 计时器业务逻辑
  * 角色：Service (业务)
  * 依赖：UseCases, DataStore, ItemService, InputService
- * 
+ *
  * 只做：
  * - 开始 / 暂停 / 恢复 / 停止计时
  * - 切换当前任务
  * - 将计时结果写入文件系统 (通过 ItemService)
  * - 创建新任务并立即开始计时
- * 
+ *
  * 不做：
  * - 直接管理和存储计时器的状态 (这是 Zustand Store 的职责)
  * - 直接渲染 UI
  * - 直接操作 Obsidian 界面元素
+ *
+ * Phase0 P1:
+ * - features 不直接依赖 obsidian 类型（Notice/App/TFile）
+ * - UI 反馈通过 UiPort
  */
 import { ItemService } from '@core/public';
-import { Notice, App, TFile } from 'obsidian';
 import { DataStore } from '@core/public';
 import { InputService } from '@core/public';
 import type { QuickInputSaveData } from '@core/public';
 import { nowHHMM, timeToMinutes, minutesToTime, devError } from '@core/public';
+import type { UiPort } from '@core/public';
 import type { UseCases } from '@/app/public';
 
 export class TimerService {
@@ -28,7 +32,7 @@ export class TimerService {
         private dataStore: DataStore,
         private itemService: ItemService,
         private inputService: InputService,
-        private app: App
+        private ui: UiPort
     ) {}
 
     public async startOrResume(taskId: string): Promise<void> {
@@ -44,13 +48,13 @@ export class TimerService {
         } else if (!existingTimer) {
             const taskItem = this.dataStore.queryItems().find(i => i.id === taskId);
             if (!taskItem) {
-                new Notice('找不到要计时的任务');
+                this.ui.notice('找不到要计时的任务');
                 return;
             }
-            
+
             // [核心修改] 移除了在开始计时时就写入文件“开始时间”的逻辑
             // 仅显示一个通知，文件将在任务完成时被修改
-            new Notice(`计时开始。`);
+            this.ui.notice(`计时开始。`);
 
             await this.useCases.timer.addTimer({
                 taskId,
@@ -101,13 +105,13 @@ export class TimerService {
 
         try {
             const taskItem = this.dataStore.queryItems().find(i => i.id === timer.taskId);
-            
+
             if (!taskItem) {
-                new Notice(`错误：找不到原始任务，可能已被移动或删除。计时时长无法保存。`);
+                this.ui.notice(`错误：找不到原始任务，可能已被移动或删除。计时时长无法保存。`);
                 await this.useCases.timer.removeTimer(timerId);
                 return;
             }
-            
+
             const endTime = nowHHMM();
             const endMinutes = timeToMinutes(endTime);
             let startTime: string | undefined;
@@ -120,13 +124,13 @@ export class TimerService {
             const currentLine = await this.itemService.getItemLine(timer.taskId);
             if (currentLine && /^\s*-\s*\[ \]\s*/.test(currentLine)) {
                 await this.itemService.completeItem(timer.taskId, { duration: totalMinutes, startTime: startTime, endTime: endTime });
-                new Notice(`任务已完成，时长 ${totalMinutes} 分钟已记录。`);
+                this.ui.notice(`任务已完成，时长 ${totalMinutes} 分钟已记录。`);
             } else {
                 await this.itemService.updateItemTime(timer.taskId, { duration: totalMinutes, time: startTime, endTime: endTime });
-                new Notice(`任务时长已更新为 ${totalMinutes} 分钟。`);
+                this.ui.notice(`任务时长已更新为 ${totalMinutes} 分钟。`);
             }
         } catch (e: any) {
-            new Notice(`错误：更新任务失败 - ${e.message}`);
+            this.ui.notice(`错误：更新任务失败 - ${e.message}`);
             devError("TimerService Error:", e);
         }
         await this.useCases.timer.removeTimer(timerId);
@@ -134,32 +138,28 @@ export class TimerService {
 
     public async cancel(timerId: string): Promise<void> {
         await this.useCases.timer.removeTimer(timerId);
-        new Notice('计时任务已取消。');
+        this.ui.notice('计时任务已取消。');
     }
-    
+
     public async createNewTaskAndStart(data: QuickInputSaveData): Promise<void> {
         const { template, formData, theme } = data;
         try {
             const targetFilePath = await this.inputService.executeTemplate(template, formData, theme);
-            const file = this.app.vault.getAbstractFileByPath(targetFilePath);
 
-            if (file instanceof TFile) {
-                // Phase2: core DataStore 扫描入口统一走 path
-                const newItemsInFile = await this.dataStore.scanFileByPath(file.path);
+            // Phase0 P1:
+            // - 不再使用 app.vault.getAbstractFileByPath / TFile
+            // - 直接按 path 触发 DataStore 扫描（platform 细节由 DataStore/VaultPort 处理）
+            const newItemsInFile = await this.dataStore.scanFileByPath(targetFilePath);
 
-                if (newItemsInFile.length > 0) {
-                    const latestItem = newItemsInFile.sort((a, b) => (b.file?.line || 0) - (a.file?.line || 0))[0];
-                    this.startOrResume(latestItem.id);
-                } else {
-                    new Notice("任务内容已创建，但未识别为可计时的任务项。");
-                }
+            if (newItemsInFile.length > 0) {
+                const latestItem = newItemsInFile.sort((a, b) => (b.file?.line || 0) - (a.file?.line || 0))[0];
+                await this.startOrResume(latestItem.id);
             } else {
-                new Notice("任务已创建，但无法在文件系统中立即找到它以开始计时。");
+                this.ui.notice("任务内容已创建，但未识别为可计时的任务项。");
                 this.dataStore.notifyChange();
             }
-
         } catch (e: any) {
-            new Notice(`创建任务失败: ${e.message}`);
+            this.ui.notice(`创建任务失败: ${e.message}`);
             devError(e);
         }
     }

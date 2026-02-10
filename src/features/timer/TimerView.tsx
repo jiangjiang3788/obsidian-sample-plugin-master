@@ -9,12 +9,11 @@ import type { ActionService } from '@core/public';
 import type { TimerService } from '@features/timer/TimerService';
 import type { DataStore } from '@core/public';
 import { TimerRow } from './TimerRow';
-import { App } from 'obsidian';
 import { QuickInputModal } from '@/app/public';
 import type { QuickInputSaveData } from '@core/public';
 
 interface TimerViewProps {
-    app: App;
+    app: any;
     actionService: ActionService;
     timerService: TimerService;
     dataStore: DataStore;

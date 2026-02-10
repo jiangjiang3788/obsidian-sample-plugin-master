@@ -2,7 +2,7 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
 import { useState } from 'preact/hooks';
-import { App, Notice } from 'obsidian';
+import { useUiPort } from '@/app/public';
 import type { TaskBlock } from '@core/public';
 import { EditTaskModal } from '@shared/ui/modals/EditTaskModal';
 import { makeObsUri } from '@core/public';
@@ -11,7 +11,7 @@ import { dayjs } from '@core/public';
 import type { UpdateTaskTimeHandler } from '@shared/types/taskTime';
 
 interface DayColumnBodyProps {
-    app: App;
+    app: any;
     day: string;
     blocks: TaskBlock[];
     hourHeight: number;
@@ -70,16 +70,17 @@ export function DayColumnBody({
     onAlignNext
 }: DayColumnBodyProps) {
     const [editingTask, setEditingTask] = useState<TaskBlock | null>(null);
+    const ui = useUiPort();
 
     const tryUpdateTaskTime = async (taskId: string, updates: Parameters<UpdateTaskTimeHandler>[1]) => {
         if (!onUpdateTaskTime) {
-            new Notice('未提供保存处理器，无法更新任务时间');
+            ui.notice('未提供保存处理器，无法更新任务时间');
             return;
         }
         try {
             await onUpdateTaskTime(taskId, updates);
         } catch (e) {
-            new Notice('更新任务时间失败');
+            ui.notice('更新任务时间失败');
         }
     };
 
@@ -88,7 +89,7 @@ export function DayColumnBody({
             onEditTask(block);
         } else {
             if (!onUpdateTaskTime) {
-                new Notice('未提供保存处理器，无法打开编辑弹窗');
+                ui.notice('未提供保存处理器，无法打开编辑弹窗');
                 return;
             }
             setEditingTask(block);
@@ -121,7 +122,7 @@ export function DayColumnBody({
             const deltaDuration = nextBlock.blockStartMinute - block.blockEndMinute;
             const newDuration = block.duration + deltaDuration;
             if (newDuration <= 0) {
-                new Notice('无法对齐：任务时长将变为负数或零');
+                ui.notice('无法对齐：任务时长将变为负数或零');
                 return;
             }
             void tryUpdateTaskTime(block.id, { duration: newDuration });

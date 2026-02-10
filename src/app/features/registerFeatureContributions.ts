@@ -12,6 +12,7 @@
 
 import type ThinkPlugin from '@main';
 import type { ActionService, DataStore } from '@core/public';
+import type { EventsPort } from '@core/public';
 import type { RendererService } from '@features/settings/RendererService';
 
 import { FeatureRegistry } from '../FeatureRegistry';
@@ -23,6 +24,7 @@ import { registerAiInputFeature } from '@features/aiinput/registerFeature';
 
 export interface UIFeatureDeps {
     plugin: ThinkPlugin;
+    eventsPort: EventsPort;
     dataStore: DataStore;
     rendererService: RendererService;
     actionService: ActionService;

@@ -174,6 +174,7 @@ function main() {
     })), { rootDir: ROOT, summary: 'features/shared 禁止 DI 权力' });
   }
 
-  printOk('di-gate', 'features/shared 未发现 tsyringe/container 违规');\n}
+  printOk('di-gate', 'features/shared 未发现 tsyringe/container 违规');
+}
 
 main();

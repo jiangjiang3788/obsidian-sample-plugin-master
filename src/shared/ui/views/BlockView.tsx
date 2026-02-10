@@ -2,7 +2,6 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
 import { useRef, useState, useEffect } from 'preact/hooks';
-import { App } from 'obsidian';
 import { Item, ThemeDefinition, groupItemsByFields, type GroupNode, devLog } from '@core/public';
 import { TaskRow } from '@shared/ui/items/TaskRow';
 import { BlockItem } from '@shared/ui/items/BlockItem';
@@ -23,7 +22,7 @@ interface BlockViewProps {
     /** 上层已经归一化后的分组字段（优先级：groupFields > groupField） */
     effectiveGroupFields?: string[];
     fields?: string[];
-    app: App;
+    app: any;
     onMarkDone: (id: string) => void;
     timerService: TimerController;
     timers: any[];

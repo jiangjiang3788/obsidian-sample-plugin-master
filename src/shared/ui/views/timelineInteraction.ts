@@ -7,13 +7,14 @@
 // 这部分逻辑不属于 core：
 // core 只负责可推演的纯计算；交互/弹窗属于 features 层。
 
-import { App, Notice } from 'obsidian';
 import { minutesToTime } from '@core/public';
 import type { TaskBlock } from '@core/public';
 import { QuickInputModal } from '@/app/public';
+import type { UiPort } from '@core/public';
 
 interface CreateTaskOptions {
-  app: App;
+  app: any;
+  uiPort: UiPort;
   inputBlocks: any[];
   hourHeight: number;
   dayBlocks: TaskBlock[];
@@ -30,7 +31,7 @@ export function handleTimelineTaskCreation(
   const { app, inputBlocks, hourHeight, dayBlocks } = options;
 
   if (!inputBlocks || inputBlocks.length === 0) {
-    new Notice('没有可用的Block模板，请先在设置中创建一个。');
+    options.uiPort.notice('没有可用的Block模板，请先在设置中创建一个。');
     return;
   }
 

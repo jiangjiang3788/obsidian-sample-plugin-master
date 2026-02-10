@@ -1,6 +1,5 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
-import { App } from 'obsidian';
 import type { Item, ThemeDefinition } from '@core/public';
 import { readField } from '@core/public';
 import { getFieldLabel } from '@core/public';
@@ -11,7 +10,7 @@ import { getBaseCategory } from '@core/public';
 interface FieldPillProps {
     item: Item;
     fieldKey: string;
-    app: App;
+    app: any;
     allThemes: ThemeDefinition[];
 }
 

@@ -1,7 +1,6 @@
 // src/features/dashboard/ui/ExcelView.tsx
 /** @jsxImportSource preact */
 import { h } from 'preact';
-import { App } from 'obsidian';
 import { Item, getAllFields, readField } from '@core/public';
 import { makeObsUri } from '@core/public';
 
@@ -9,7 +8,7 @@ import { makeObsUri } from '@core/public';
 interface ExcelViewProps {
   items: Item[];
   fields?: string[];
-  app: App;
+  app: any;
 }
 
 // 辅助函数保持不变

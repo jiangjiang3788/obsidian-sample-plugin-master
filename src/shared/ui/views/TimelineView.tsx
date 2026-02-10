@@ -2,6 +2,7 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
 import { useMemo, useCallback } from 'preact/hooks';
+import { useUiPort } from '@/app/public';
 import { Item } from '@core/public';
 import { processItemsToTimelineTasks } from './timeline-parser';
 import { dayjs } from '@core/public';
@@ -9,7 +10,6 @@ import weekOfYear from 'dayjs/plugin/weekOfYear';
 import isoWeek from 'dayjs/plugin/isoWeek';
 import isBetween from 'dayjs/plugin/isBetween';
 import { TIMELINE_VIEW_DEFAULT_CONFIG } from '@core/public';
-import { App } from 'obsidian';
 import { filterByRules } from '@core/public';
 import type { UpdateTaskTimeHandler } from '@shared/types/taskTime';
 
@@ -38,7 +38,7 @@ interface TimelineViewProps {
     dateRange: [Date, Date];
     module: any;
     currentView: '年' | '季' | '月' | '周' | '天';
-    app: App;
+    app: any;
     /** 由 feature 层注入：用于“对齐/精确编辑”等需要写回的操作 */
     onUpdateTaskTime?: UpdateTaskTimeHandler;
     inputSettings: any;
@@ -56,6 +56,8 @@ export function TimelineView({
     inputSettings,
     timelineModel,
 }: TimelineViewProps) {
+    const uiPort = useUiPort();
+
     const inputBlocks = inputSettings?.blocks || [];
 
     // 配置管理
@@ -100,6 +102,7 @@ export function TimelineView({
     const handleColumnClick = useCallback((day: string, e: MouseEvent | TouchEvent) => {
         handleTimelineTaskCreation(day, e, {
             app,
+            uiPort,
             inputBlocks,
             hourHeight,
             dayBlocks: dailyViewData?.blocksByDay[day] || []

@@ -13,6 +13,7 @@
 
 import type ThinkPlugin from '@main';
 import type { ActionService, DataStore } from '@core/public';
+import type { EventsPort } from '@core/public';
 import type { FeatureRegistry, UIFeatureBootContext } from '@capabilities';
 
 import type { RendererService } from './RendererService';
@@ -20,6 +21,7 @@ import { setupDashboard, setupSettings } from './index';
 
 export interface SettingsFeatureDeps {
     plugin: ThinkPlugin;
+    eventsPort: EventsPort;
     dataStore: DataStore;
     rendererService: RendererService;
     actionService: ActionService;
@@ -41,6 +43,7 @@ export function registerSettingsFeatures(
 
             setupDashboard({
                 plugin: deps.plugin,
+                eventsPort: deps.eventsPort,
                 dataStore: deps.dataStore,
                 rendererService: deps.rendererService,
                 actionService: deps.actionService,

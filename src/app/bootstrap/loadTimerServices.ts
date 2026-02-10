@@ -4,7 +4,7 @@ import type ThinkPlugin from '@main';
 import { safeAsync } from '@shared/public';
 import { startMeasure } from '@shared/public';
 
-import { devLog } from '@core/public';
+import { devLog, UI_PORT_TOKEN, MODAL_PORT_TOKEN, MESSAGE_RENDER_PORT_TOKEN, type UiPort, type ModalPort, type MessageRenderPort } from '@core/public';
 
 import type { AppStoreInstance } from '@/app/store/useAppStore';
 import { STORE_TOKEN } from '@/app/store/useAppStore';
@@ -32,12 +32,14 @@ export async function loadTimerServices(opts: {
     await safeAsync(
         async () => {
             // [DI Gate] features 层禁止 tsyringe：TimerService 改为手工创建
+            const ui = container.resolve<UiPort>(UI_PORT_TOKEN);
+
             services.timerService = new TimerService(
                 services.useCases!,
                 services.dataStore!,
                 services.itemService!,
                 services.inputService!,
-                plugin.app
+                ui
             );
 
             // Phase1: Capabilities 可注入体系 - 让 TimerCapability 能在运行时 resolve 到 TimerService。
@@ -48,6 +50,9 @@ export async function loadTimerServices(opts: {
             // RendererService 依赖 TimerService，因此在 TimerService 就绪后再创建
             if (!services.rendererService) {
                 const store = container.resolve<AppStoreInstance>(STORE_TOKEN);
+                const modalPort = container.resolve<ModalPort>(MODAL_PORT_TOKEN);
+                const messageRenderPort = container.resolve<MessageRenderPort>(MESSAGE_RENDER_PORT_TOKEN);
+
                 services.rendererService = new RendererService(
                     plugin.app,
                     services.dataStore!,
@@ -56,6 +61,9 @@ export async function loadTimerServices(opts: {
                     services.inputService!,
                     services.timerService,
                     services.useCases!,
+                    ui,
+                    modalPort,
+                    messageRenderPort,
                     store
                 );
             }

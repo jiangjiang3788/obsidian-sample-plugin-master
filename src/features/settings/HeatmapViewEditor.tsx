@@ -5,7 +5,7 @@ import { Stack, Typography, Box, Button } from '@mui/material';
 import type { ViewEditorProps } from './registry';
 import { SimpleSelect } from '@shared/public';
 import { ListEditor } from '@shared/public';
-import { useZustandAppStore } from '@/app/public';
+import { useZustandAppStore, useUiPort } from '@/app/public';
 import { useMemo } from 'preact/hooks';
 import {
     HEATMAP_VIEW_DEFAULT_CONFIG,
@@ -14,7 +14,6 @@ import {
     type HeatmapViewConfig,
     type ViewInstance,
 } from '@core/public';
-import { Notice } from 'obsidian';
 
 // 重新导出以保持兼容性
 export { HEATMAP_VIEW_DEFAULT_CONFIG as DEFAULT_CONFIG } from '@core/public';
@@ -37,6 +36,7 @@ function normalizeHeatmapConfig(value: Record<string, any> | undefined): Heatmap
 }
 
 export function HeatmapViewEditor({ value, onChange, module, dataStore }: ViewEditorProps) {
+    const ui = useUiPort();
     const config = normalizeHeatmapConfig(value);
     const allBlocks = useZustandAppStore(state => state.settings.inputSettings?.blocks) ?? [];
 
@@ -47,20 +47,20 @@ export function HeatmapViewEditor({ value, onChange, module, dataStore }: ViewEd
 
     const handleScanThemes = () => {
         if (!config.sourceBlockId) {
-            new Notice('请先选择源 Block 模板。');
+            ui.notice('请先选择源 Block 模板。');
             return;
         }
 
         // registry.tsx 中 module 是可选的；缺少上下文时禁用扫描。
         if (!module) {
-            new Notice('无法扫描：缺少视图上下文（module）。');
+            ui.notice('无法扫描：缺少视图上下文（module）。');
             return;
         }
 
         const dataSource: ViewInstance = module;
         const sourceBlock: BlockTemplate | undefined = allBlocks.find(b => b.id === config.sourceBlockId);
         if (!sourceBlock) {
-            new Notice('找不到所选的 Block 模板。');
+            ui.notice('找不到所选的 Block 模板。');
             return;
         }
 
@@ -73,7 +73,7 @@ export function HeatmapViewEditor({ value, onChange, module, dataStore }: ViewEd
         });
 
         onChange({ themePaths: sortedThemes });
-        new Notice(`扫描完成！已自动添加 ${sortedThemes.length} 个主题路径（来自分类 "${sourceBlock.name}"）。`);
+        ui.notice(`扫描完成！已自动添加 ${sortedThemes.length} 个主题路径（来自分类 "${sourceBlock.name}"）。`);
     };
 
     return (

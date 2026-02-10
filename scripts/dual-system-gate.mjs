@@ -114,6 +114,7 @@ function main() {
     })), { rootDir: ROOT, summary: '防止注册分散导致新旧系统并存/回潮' });
   }
 
-  printOk('dual-system-gate', '无 registry/capabilityRegistry 分散注册');\n}
+  printOk('dual-system-gate', '无 registry/capabilityRegistry 分散注册');
+}
 
 main();

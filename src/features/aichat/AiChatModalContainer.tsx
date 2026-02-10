@@ -1,7 +1,6 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
 import { useCallback, useEffect, useRef, useState } from 'preact/hooks';
-import type { App } from 'obsidian';
 import { Box, Button, Typography } from '@mui/material';
 import { useZustandAppStore } from '@/app/public';
 import type { OpenAIChatMessage, ChatMessage, ChatSession, SessionFilters } from '@core/public';
@@ -11,12 +10,11 @@ import { AiChatModalView } from './AiChatModalView';
 import type { AiServices } from './types';
 
 export interface AiChatModalContainerProps {
-    app: App;
     closeModal: () => void;
     services: AiServices;
 }
 
-export function AiChatModalContainer({ app, closeModal, services }: AiChatModalContainerProps) {
+export function AiChatModalContainer({ closeModal, services }: AiChatModalContainerProps) {
     // P0: 使用 Zustand store 作为 SSOT
     const settings = useZustandAppStore(state => state.settings);
     const themes = settings.inputSettings?.themes ?? [];

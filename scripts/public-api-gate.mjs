@@ -251,6 +251,7 @@ function main() {
     }), { rootDir: ROOT, summary: 'public API/深导入约束失败' });
   }
 
-  printOk('public-api-gate', 'public API / core deep import 检查通过');\n}
+  printOk('public-api-gate', 'public API / core deep import 检查通过');
+}
 
 main();
