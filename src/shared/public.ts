@@ -41,3 +41,5 @@ export * from './ui/modals/EditTaskModal';
 export * from './ui/timeline';
 export * from './ui/views';
 export * from './ui/views/ViewToolbar';
+export * from './ui/components/ThemeTreeNodeLabel';
+export * from './components/ThemeTreeSelect';

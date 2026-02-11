@@ -1,9 +1,10 @@
 /** @jsxImportSource preact */
 import { h, type ComponentChildren } from 'preact';
-import { Box, Checkbox, Collapse, IconButton, ListItemButton, Typography } from '@mui/material';
+import { Checkbox, Collapse, IconButton, ListItemButton, Typography } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import type { ThemePathTreeNode as ThemeTreeNode } from '@core/public';
+
+import { ThemeTreeNodeLabel } from '../../ui/components/ThemeTreeNodeLabel';
 
 export interface ThemeTreeNodeItemProps {
     node: ThemeTreeNode;
@@ -54,61 +55,60 @@ export function ThemeTreeNodeItem({
                 onClick={handleClick}
                 selected={isSelected}
                 sx={{
-                    pl: 1 + node.depth * 2,
+                    // 缩进逻辑统一下沉到 ThemeTreeNodeLabel
+                    pl: 0,
                     py: 0.5,
                     minHeight: 32,
                 }}
             >
-                {/* 展开/折叠按钮 */}
-                {hasChildren ? (
-                    <IconButton
-                        size="small"
-                        onClick={(e: any) => onToggleExpand(node.id, e)}
-                        sx={{ p: 0.25, mr: 0.5 }}
-                    >
-                        {isExpanded ? <ExpandMoreIcon fontSize="small" /> : <ChevronRightIcon fontSize="small" />}
-                    </IconButton>
-                ) : (
-                    <Box sx={{ width: 24, mr: 0.5 }} />
-                )}
-
-                {/* 多选复选框 */}
-                {multiSelect && (
-                    <Checkbox
-                        size="small"
-                        checked={isSelected}
-                        onClick={(e: any) => e.stopPropagation()}
-                        onChange={() => onMultiSelect(node)}
-                        sx={{ p: 0.25, mr: 0.5 }}
-                    />
-                )}
-
-                {/* 标签 */}
-                <Typography
-                    variant="body2"
-                    sx={{
-                        flex: 1,
-                        fontWeight: node.themeId ? 400 : 500, // 虚节点加粗
-                        color: node.themeId ? 'text.primary' : 'text.secondary',
-                    }}
+                <ThemeTreeNodeLabel
+                    depth={node.depth}
+                    hasChildren={hasChildren}
+                    expanded={isExpanded}
+                    onToggleExpand={(e: any) => onToggleExpand(node.id, e)}
+                    placeholderWidthPx={24}
+                    basePadding={1}
+                    indentUnit={2}
+                    sx={{ width: '100%' }}
                 >
-                    {renderLabel ? renderLabel(node) : node.label}
-                </Typography>
+                    {/* 多选复选框 */}
+                    {multiSelect && (
+                        <Checkbox
+                            size="small"
+                            checked={isSelected}
+                            onClick={(e: any) => e.stopPropagation()}
+                            onChange={() => onMultiSelect(node)}
+                            sx={{ p: 0.25, mr: 0.5 }}
+                        />
+                    )}
 
-                {/* 多选时：包含子节点按钮 */}
-                {multiSelect && hasChildren && (
-                    <IconButton
-                        size="small"
-                        onClick={(e: any) => {
-                            e.stopPropagation();
-                            onSelectWithChildren(node);
+                    {/* 标签 */}
+                    <Typography
+                        variant="body2"
+                        sx={{
+                            flex: 1,
+                            fontWeight: node.themeId ? 400 : 500, // 虚节点加粗
+                            color: node.themeId ? 'text.primary' : 'text.secondary',
                         }}
-                        sx={{ p: 0.25, opacity: 0.6, '&:hover': { opacity: 1 } }}
-                        title="包含子主题"
                     >
-                        <ExpandMoreIcon fontSize="small" />
-                    </IconButton>
-                )}
+                        {renderLabel ? renderLabel(node) : node.label}
+                    </Typography>
+
+                    {/* 多选时：包含子节点按钮 */}
+                    {multiSelect && hasChildren && (
+                        <IconButton
+                            size="small"
+                            onClick={(e: any) => {
+                                e.stopPropagation();
+                                onSelectWithChildren(node);
+                            }}
+                            sx={{ p: 0.25, opacity: 0.6, '&:hover': { opacity: 1 } }}
+                            title="包含子主题"
+                        >
+                            <ExpandMoreIcon fontSize="small" />
+                        </IconButton>
+                    )}
+                </ThemeTreeNodeLabel>
             </ListItemButton>
 
             {/* 子节点 */}

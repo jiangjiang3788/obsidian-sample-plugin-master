@@ -1,7 +1,7 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
 
-import type { ThemeTreeNode } from '@core/public';
+import type { ThemeDefinition } from '@core/public';
 
 import { Box, Button, Divider, FormControl, Typography } from '@mui/material';
 
@@ -17,10 +17,10 @@ export interface QuickInputEditorViewProps {
   currentBlockId: string;
   onBlockChange: (blockId: string) => void;
 
-  // Theme selection
-  themeTree: ThemeTreeNode[];
-  activePath: ThemeTreeNode[];
-  onSelectTheme: (themeId: string, parentThemeId: string | null) => void;
+  // Theme selection（统一 ThemeTreeSelect）
+  themes: ThemeDefinition[];
+  selectedThemeId: string | null;
+  onSelectTheme: (themeId: string | null, path: string | null) => void;
 
   // Fields
   template: any;
@@ -41,8 +41,8 @@ export function QuickInputEditorView({
   allowBlockSwitch,
   currentBlockId,
   onBlockChange,
-  themeTree,
-  activePath,
+  themes,
+  selectedThemeId,
   onSelectTheme,
   template,
   formData,
@@ -79,10 +79,17 @@ export function QuickInputEditorView({
       )}
 
       {/* 主题选择 */}
-      <QuickInputEditorThemeSelector themeTree={themeTree} activePath={activePath} onSelect={onSelectTheme} dense={dense} />
+      <QuickInputEditorThemeSelector themes={themes} selectedThemeId={selectedThemeId} onSelect={onSelectTheme} dense={dense} />
 
       {showDivider && <Divider sx={{ my: dense ? 1 : 2 }} />}
-      <QuickInputEditorFields getResourcePath={getResourcePath} template={template} formData={formData} dense={dense} onUpdateField={onUpdateField} />
+
+      <QuickInputEditorFields
+        getResourcePath={getResourcePath}
+        template={template}
+        formData={formData}
+        dense={dense}
+        onUpdateField={onUpdateField}
+      />
     </Box>
   );
 }

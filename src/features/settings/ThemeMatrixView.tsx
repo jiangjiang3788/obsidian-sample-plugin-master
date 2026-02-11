@@ -9,8 +9,8 @@ import AddIcon from '@mui/icons-material/Add';
 import { useState, useMemo } from 'preact/hooks';
 import { TemplateEditorModal } from '@features/settings/TemplateEditorModal';
 import type { BlockTemplate, ThemeDefinition, ThemeOverride } from '@core/public';
-import { ThemeMatrixService, ThemeScanService, buildThemeMatrixTree as buildThemeTree } from '@core/public';
-import type { ThemeMatrixTreeNode as ThemeTreeNode } from '@core/public';
+import { ThemeMatrixService, ThemeScanService, buildThemePathTree, flattenThemePathTree } from '@core/public';
+import type { ThemePathTreeNode, ThemePathTreeFlatNode as ThemeTreeNode } from '@core/public';
 
 import { ThemeToolbar } from './ThemeToolbar';
 import { ContextualToolbar } from './ContextualToolbar';
@@ -72,15 +72,40 @@ export function ThemeMatrixView({ blocks, themes, overrides, settings, useCases,
     // 提取所有主题ID，用于全选操作
     const allThemeIds = useMemo(() => extendedThemes.map(t => t.id), [extendedThemes]);
     
-    // 构建主题树
-    const themeTree = useMemo(() => {
-        return buildThemeTree(extendedThemes, expandedNodes);
-    }, [extendedThemes, expandedNodes]);
-    
-    // 分组主题（激活和归档）
+    // 构建主题路径树（统一 builder / 无 legacy wrapper）
+    // 说明：
+    // - ThemeMatrix 只关心“真实主题节点”（不需要虚节点分组），因此 createVirtualNodes=false
+    // - level/expanded 不再写进节点（SSOT 是 expandedNodes Set），由 flattenThemePathTree 计算可见性与展开态
+    const themeTreeRoots = useMemo(() => {
+        return buildThemePathTree(extendedThemes, { createVirtualNodes: false });
+    }, [extendedThemes]);
+
+    // 将“themeId 展开集合”映射到 “node.id（path）展开集合”，供 flattenThemePathTree 使用
+    const expandedPathIds = useMemo(() => {
+        const set = new Set<string>();
+        const walk = (nodes: ThemePathTreeNode[]) => {
+            for (const n of nodes) {
+                if (n.themeId && expandedNodes.has(n.themeId)) {
+                    set.add(n.id);
+                }
+                if (n.children && n.children.length > 0) {
+                    walk(n.children);
+                }
+            }
+        };
+        walk(themeTreeRoots);
+        return set;
+    }, [themeTreeRoots, expandedNodes]);
+
+    // 扁平化（只保留“可见节点”），用于 Table 直出渲染，避免递归渲染 helpers
+    const flatVisibleNodes = useMemo(() => {
+        return flattenThemePathTree(themeTreeRoots, expandedPathIds).filter(n => n.visible);
+    }, [themeTreeRoots, expandedPathIds]);
+
+    // 分组主题（目前 active/inactive 都先放在同一组；archived 预留）
     const { activeThemes, archivedThemes } = useMemo(() => {
-        return themeService.groupThemesByStatus(themeTree);
-    }, [themeTree, themeService]);
+        return { activeThemes: flatVisibleNodes, archivedThemes: [] as ThemeTreeNode[] };
+    }, [flatVisibleNodes]);
     
     const overridesMap = useMemo(() => {
         const map = new Map<string, ThemeOverride>();

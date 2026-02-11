@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from 'preact/hooks';
 
 import { selectInputSettings, useSelector } from '@/app/public';
 import type { ThemeDefinition } from '@core/public';
-import { buildThemeTree, type ThemeTreeNode, dayjs, getEffectiveTemplate, renderTemplate } from '@core/public';
+import { dayjs, getEffectiveTemplate, renderTemplate } from '@core/public';
 import { computeLinkedTimeChanges, finalizeLinkedTimeFields } from '@shared/public';
 
 import { QuickInputEditorView } from './QuickInputEditorView';
@@ -19,16 +19,6 @@ export function finalizeQuickInputFormData(formData: Record<string, any>) {
   return finalizeLinkedTimeFields(finalData, { startKey: '时间', endKey: '结束', durationKey: '时长' }, { durationOutput: 'number' });
 }
 
-const findNodePath = (nodes: ThemeTreeNode[], themeId: string): ThemeTreeNode[] => {
-  for (const node of nodes) {
-    if (node.themeId === themeId) return [node];
-    if (node.children.length) {
-      const path = findNodePath(node.children, themeId);
-      if (path.length) return [node, ...path];
-    }
-  }
-  return [];
-};
 
 export interface QuickInputEditorState {
   blockId: string;
@@ -81,15 +71,17 @@ export function QuickInputEditor({
   const blocks = useMemo(() => settings.blocks || [], [settings.blocks]);
   const themes = useMemo(() => settings.themes || [], [settings.themes]);
 
-  const { themeTree, themeIdMap } = useMemo(() => {
+  const { availableThemes, themeIdMap, pathToIdMap } = useMemo(() => {
     const disabledThemeIds = new Set<string>();
     (settings.overrides || []).forEach((override: any) => {
       if (override.blockId === currentBlockId && override.disabled) disabledThemeIds.add(override.themeId);
     });
-    const availableThemes = themes.filter((t: any) => !disabledThemeIds.has(t.id));
+
+    const availableThemes = (themes || []).filter((t: any) => !disabledThemeIds.has(t.id));
     return {
-      themeTree: buildThemeTree(availableThemes),
-      themeIdMap: new Map<string, ThemeDefinition>(themes.map((t: any) => [t.id, t])),
+      availableThemes,
+      themeIdMap: new Map<string, ThemeDefinition>((themes || []).map((t: any) => [t.id, t])),
+      pathToIdMap: new Map<string, string>((themes || []).map((t: any) => [t.path, t.id])),
     };
   }, [settings, themes, currentBlockId]);
 
@@ -197,9 +189,22 @@ export function QuickInputEditor({
     setFormData(preserved);
   };
 
-  const activePath = selectedThemeId ? findNodePath(themeTree, selectedThemeId) : [];
-  const handleSelectTheme = (newThemeId: string, parentThemeId: string | null) => {
-    setSelectedThemeId(selectedThemeId === newThemeId ? parentThemeId : newThemeId);
+  const handleSelectTheme = (themeId: string | null, path: string | null) => {
+    // 清空
+    if (!themeId || !path) {
+      setSelectedThemeId(null);
+      return;
+    }
+
+    // 兼容旧交互：重复点击同一主题 → 回到父主题
+    if (selectedThemeId === themeId) {
+      const parentPath = path.includes('/') ? path.slice(0, path.lastIndexOf('/')) : '';
+      const parentThemeId = parentPath ? pathToIdMap.get(parentPath) ?? null : null;
+      setSelectedThemeId(parentThemeId);
+      return;
+    }
+
+    setSelectedThemeId(themeId);
   };
 
   return (
@@ -209,8 +214,8 @@ export function QuickInputEditor({
       allowBlockSwitch={allowBlockSwitch}
       currentBlockId={currentBlockId}
       onBlockChange={handleBlockChange}
-      themeTree={themeTree}
-      activePath={activePath}
+      themes={availableThemes}
+      selectedThemeId={selectedThemeId}
       onSelectTheme={handleSelectTheme}
       template={template}
       formData={formData}

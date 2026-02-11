@@ -82,66 +82,157 @@ export class ThemeTreeBuilder {
         themes: ThemeDefinition[],
         options: BuildThemeTreeOptions = {}
     ): ThemeTreeNode[] {
+
         const { sortBy = 'path', createVirtualNodes = true } = options;
 
         if (!themes || themes.length === 0) {
             return [];
         }
 
-        const roots: ThemeTreeNode[] = [];
-        const nodeMap = new Map<string, ThemeTreeNode>();
+        // Branch A: create virtual nodes (default) - keep existing behavior
+        if (createVirtualNodes) {
+            const roots: ThemeTreeNode[] = [];
+            const nodeMap = new Map<string, ThemeTreeNode>();
 
-        // 按路径排序确保父节点先被创建
-        const sortedThemes = [...themes].sort((a, b) => a.path.localeCompare(b.path));
+            // 按路径排序确保父节点先被创建
+            const sortedThemes = [...themes].sort((a, b) => a.path.localeCompare(b.path));
 
-        for (const theme of sortedThemes) {
-            const parts = theme.path.split('/');
-            let currentPath = '';
-            let parentNode: ThemeTreeNode | null = null;
+            for (const theme of sortedThemes) {
+                const parts = theme.path.split('/');
+                let currentPath = '';
+                let parentNode: ThemeTreeNode | null = null;
 
-            for (let i = 0; i < parts.length; i++) {
-                const part = parts[i];
-                const isLeaf = i === parts.length - 1;
-                currentPath = currentPath ? `${currentPath}/${part}` : part;
+                for (let i = 0; i < parts.length; i++) {
+                    const part = parts[i];
+                    const isLeaf = i === parts.length - 1;
+                    currentPath = currentPath ? `${currentPath}/${part}` : part;
 
-                let node = nodeMap.get(currentPath);
+                    let node = nodeMap.get(currentPath);
 
-                if (!node) {
-                    // 创建新节点
-                    const newNode: ThemeTreeNode = {
-                        id: currentPath,
-                        label: part,
-                        path: currentPath,
-                        depth: i,
-                        themeId: isLeaf ? theme.id : null,
-                        theme: isLeaf ? theme : null,
-                        parentId: parentNode?.id ?? null,
-                        children: [],
-                    };
-                    node = newNode;
-                    nodeMap.set(currentPath, newNode);
+                    if (!node) {
+                        // 创建新节点
+                        const newNode: ThemeTreeNode = {
+                            id: currentPath,
+                            label: part,
+                            path: currentPath,
+                            depth: i,
+                            themeId: isLeaf ? theme.id : null,
+                            theme: isLeaf ? theme : null,
+                            parentId: parentNode?.id ?? null,
+                            children: [],
+                        };
+                        node = newNode;
+                        nodeMap.set(currentPath, newNode);
 
-                    // 添加到父节点或根列表
-                    if (parentNode) {
-                        if (!parentNode.children.some(c => c.id === newNode.id)) {
-                            parentNode.children.push(newNode);
+                        // 添加到父节点或根列表
+                        if (parentNode) {
+                            if (!parentNode.children.some(c => c.id === newNode.id)) {
+                                parentNode.children.push(newNode);
+                            }
+                        } else {
+                            if (!roots.some(r => r.id === newNode.id)) {
+                                roots.push(newNode);
+                            }
                         }
-                    } else {
-                        if (!roots.some(r => r.id === newNode.id)) {
-                            roots.push(newNode);
-                        }
+                    } else if (isLeaf) {
+                        // 更新已存在的虚节点为真实节点
+                        node.themeId = theme.id;
+                        node.theme = theme;
                     }
-                } else if (isLeaf) {
-                    // 更新已存在的虚节点为真实节点
-                    node.themeId = theme.id;
-                    node.theme = theme;
-                }
 
-                parentNode = node;
+                    parentNode = node;
+                }
+            }
+
+            // 排序子节点
+            const sortNodes = (nodes: ThemeTreeNode[]): void => {
+                nodes.sort((a, b) => {
+                    if (sortBy === 'label') {
+                        return a.label.localeCompare(b.label);
+                    }
+                    return a.path.localeCompare(b.path);
+                });
+                nodes.forEach(node => sortNodes(node.children));
+            };
+            sortNodes(roots);
+
+            return roots;
+        }
+
+        // Branch B: do NOT create virtual nodes (only real themes form nodes).
+        // 父子关系：使用“最近的已存在祖先主题路径”作为 parent。
+        const themeByPath = new Map<string, ThemeDefinition>();
+        for (const t of themes) {
+            themeByPath.set(t.path, t);
+        }
+
+        const nodeByPath = new Map<string, ThemeTreeNode>();
+        for (const theme of themes) {
+            const parts = theme.path.split('/');
+            const label = parts[parts.length - 1] ?? theme.path;
+            nodeByPath.set(theme.path, {
+                id: theme.path,
+                label,
+                path: theme.path,
+                depth: 0, // will be filled after linking
+                themeId: theme.id,
+                theme,
+                parentId: null,
+                children: [],
+            });
+        }
+
+        const roots: ThemeTreeNode[] = [];
+        const rootIds = new Set<string>();
+
+        // Link parent/children
+        for (const theme of themes) {
+            const node = nodeByPath.get(theme.path);
+            if (!node) continue;
+
+            const parts = theme.path.split('/');
+            let parentPath: string | null = null;
+
+            if (parts.length > 1) {
+                for (let i = parts.length - 1; i >= 1; i--) {
+                    const candidate = parts.slice(0, i).join('/');
+                    if (themeByPath.has(candidate)) {
+                        parentPath = candidate;
+                        break;
+                    }
+                }
+            }
+
+            if (parentPath) {
+                const parentNode = nodeByPath.get(parentPath);
+                if (parentNode) {
+                    node.parentId = parentNode.id;
+                    if (!parentNode.children.some(c => c.id === node.id)) {
+                        parentNode.children.push(node);
+                    }
+                    continue;
+                }
+            }
+
+            // No parent => root
+            if (!rootIds.has(node.id)) {
+                roots.push(node);
+                rootIds.add(node.id);
             }
         }
 
-        // 排序子节点
+        // Compute depths based on actual parent/children relationships
+        const setDepth = (nodes: ThemeTreeNode[], depth: number): void => {
+            for (const n of nodes) {
+                n.depth = depth;
+                if (n.children.length > 0) {
+                    setDepth(n.children, depth + 1);
+                }
+            }
+        };
+        setDepth(roots, 0);
+
+        // Sort children
         const sortNodes = (nodes: ThemeTreeNode[]): void => {
             nodes.sort((a, b) => {
                 if (sortBy === 'label') {

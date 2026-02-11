@@ -28,10 +28,6 @@ export interface ThemeTreeNode {
     theme: ExtendedTheme;
     /** 子节点列表 */
     children: ThemeTreeNode[];
-    /** 展开状态 */
-    expanded: boolean;
-    /** 节点层级，用于缩进显示 */
-    level: number;
 }
 
 /**

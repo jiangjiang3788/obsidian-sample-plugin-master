@@ -67,9 +67,13 @@ export type { ThemeTreeNode as ThemeMatrixTreeNode, ExtendedTheme, ThemeOverride
 export {
     ThemeTreeBuilder as ThemePathTreeBuilder,
     buildThemeTree as buildThemePathTree,
+    flattenThemeTree as flattenThemePathTree,
     searchThemeTree as searchThemePathTree,
 } from './theme/ThemeTreeBuilder';
-export type { ThemeTreeNode as ThemePathTreeNode } from './theme/ThemeTreeBuilder';
+export type {
+    ThemeTreeNode as ThemePathTreeNode,
+    FlatThemeTreeNode as ThemePathTreeFlatNode,
+} from './theme/ThemeTreeBuilder';
 
 //
 // -------------------- Core Services（DI 需要的 token / class） --------------------

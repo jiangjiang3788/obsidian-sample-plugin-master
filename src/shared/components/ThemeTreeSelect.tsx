@@ -1,330 +1,213 @@
 /**
- * ThemeTreeSelect - 统一主题树选择组件
- * 
- * 可被 QuickInput、ThemeMatrix、AI Chat 等模块共用
+ * ThemeTreeSelect - 统一主题树选择组件（Dropdown）
+ *
+ * 说明：
+ * - Dropdown 触发器 + Popper 容器在这里
+ * - 树的渲染/搜索/展开/多选逻辑下沉到 ThemeTreeSelectPanel，便于在 FilterPopover 等场景复用
  */
 /** @jsxImportSource preact */
 import { h } from 'preact';
-import { useState, useMemo, useCallback, useRef, useEffect } from 'preact/hooks';
-import {
-    Box,
-    Typography,
-    Paper,
-    Popper,
-    ClickAwayListener,
-    List,
-} from '@mui/material';
+import type { ComponentChildren } from 'preact';
+import { useMemo, useRef, useState, useCallback } from 'preact/hooks';
+import { Box, Paper, Popper, ClickAwayListener } from '@mui/material';
+
 import type { ThemeDefinition } from '@core/public';
-import { 
-    ThemePathTreeBuilder as ThemeTreeBuilder, 
-    ThemePathTreeNode as ThemeTreeNode, 
-    buildThemePathTree as buildThemeTree,
-    searchThemePathTree as searchThemeTree,
-} from '@core/public';
+import type { ThemePathTreeNode as ThemeTreeNode } from '@core/public';
 
-import { SearchBox } from './ThemeTreeSelect/SearchBox';
-import { MultiSelectToolbar } from './ThemeTreeSelect/MultiSelectToolbar';
-import { SelectedPathsChips } from './ThemeTreeSelect/SelectedPathsChips';
 import { ThemeTreeSelectTrigger } from './ThemeTreeSelect/Trigger';
-import { ThemeTreeNodeItem } from './ThemeTreeSelect/ThemeTreeNodeItem';
-import { ThemeTreeNodeItem } from './ThemeTreeSelect/ThemeTreeNodeItem';
-
-// ============== 类型定义 ==============
+import { ThemeTreeSelectPanel, type ThemeTreeSelectPanelProps } from './ThemeTreeSelect/Panel';
 
 export interface ThemeTreeSelectProps {
-    /** 主题列表 */
-    themes: ThemeDefinition[];
-    /** 已选中的主题 ID 或路径（单选模式） */
-    selectedThemeId?: string | null;
-    /** 已选中的主题路径列表（多选模式） */
-    selectedPaths?: string[];
-    /** 选中变化回调（单选模式） */
-    onSelect?: (themeId: string | null, path: string | null) => void;
-    /** 选中变化回调（多选模式） */
-    onSelectMultiple?: (paths: string[]) => void;
-    /** 是否多选模式 */
-    multiSelect?: boolean;
-    /** 是否允许清空 */
-    allowClear?: boolean;
-    /** 是否启用搜索 */
-    searchable?: boolean;
-    /** 默认展开的节点 ID 列表 */
-    defaultExpandedIds?: string[];
-    /** 默认展开全部 */
-    defaultExpandAll?: boolean;
-    /** 展开到已选节点 */
-    expandToSelected?: boolean;
-    /** 自定义标签渲染 */
-    renderLabel?: (node: ThemeTreeNode) => preact.ComponentChildren;
-    /** 占位符文本 */
-    placeholder?: string;
-    /** 禁用状态 */
-    disabled?: boolean;
-    /** 尺寸 */
-    size?: 'small' | 'medium';
-    /** 样式覆盖 */
-    sx?: Record<string, any>;
-    /** 下拉面板最大高度 */
-    maxDropdownHeight?: number;
+  /** 主题列表 */
+  themes: ThemeDefinition[];
+
+  /** 已选中的主题 ID（单选模式） */
+  selectedThemeId?: string | null;
+
+  /** 已选中的主题路径列表（多选模式） */
+  selectedPaths?: string[];
+
+  /** 选中变化回调（单选模式） */
+  onSelect?: (themeId: string | null, path: string | null) => void;
+
+  /** 选中变化回调（多选模式） */
+  onSelectMultiple?: (paths: string[]) => void;
+
+  /** 是否多选模式 */
+  multiSelect?: boolean;
+
+  /** 是否允许清空 */
+  allowClear?: boolean;
+
+  /** 是否启用搜索 */
+  searchable?: boolean;
+
+  /** 是否显示多选工具栏（全选/清空等） */
+  showToolbar?: boolean;
+
+  /** 是否显示已选 chips（多选模式） */
+  showSelectedChips?: boolean;
+
+  /** 默认展开的节点 ID 列表 */
+  defaultExpandedIds?: string[];
+
+  /** 默认展开全部 */
+  defaultExpandAll?: boolean;
+
+  /** 展开到已选节点 */
+  expandToSelected?: boolean;
+
+  /** 自定义标签渲染 */
+  renderLabel?: (node: ThemeTreeNode) => ComponentChildren;
+
+  /** 占位符文本 */
+  placeholder?: string;
+
+  /** 禁用状态 */
+  disabled?: boolean;
+
+  /** 尺寸 */
+  size?: 'small' | 'medium';
+
+  /** 样式覆盖（作用于 trigger 外层） */
+  sx?: Record<string, any>;
+
+  /** 下拉面板最大高度 */
+  maxDropdownHeight?: number;
+
+  /**
+   * 多选时：当点击“有子节点且当前为折叠”的父节点时，
+   * 是否按“整棵子树”进行选择/取消（更符合 ThemeFilter 的旧交互）。
+   */
+  selectChildrenOnCollapsedParent?: boolean;
 }
 
-// ============== 主组件 ==============
-
+/**
+ * Dropdown 版 ThemeTreeSelect
+ */
 export function ThemeTreeSelect({
+  themes,
+  selectedThemeId,
+  selectedPaths = [],
+  onSelect,
+  onSelectMultiple,
+  multiSelect = false,
+  allowClear = true,
+  searchable = true,
+  showToolbar = true,
+  showSelectedChips = true,
+  defaultExpandedIds = [],
+  defaultExpandAll = false,
+  expandToSelected = true,
+  renderLabel,
+  placeholder = '选择主题',
+  disabled = false,
+  size = 'small',
+  sx = {},
+  maxDropdownHeight = 300,
+  selectChildrenOnCollapsedParent = false,
+}: ThemeTreeSelectProps) {
+  const [open, setOpen] = useState(false);
+  const anchorRef = useRef<HTMLDivElement>(null);
+
+  // 是否有选中
+  const hasSelection = multiSelect ? selectedPaths.length > 0 : !!selectedThemeId;
+
+  // trigger 显示文本
+  const displayText = useMemo(() => {
+    if (multiSelect) {
+      if (selectedPaths.length === 0) return placeholder;
+      if (selectedPaths.length === 1) {
+        const p = selectedPaths[0];
+        return p.split('/').pop() || p;
+      }
+      return `${selectedPaths.length} 个主题`;
+    }
+
+    if (!selectedThemeId) return placeholder;
+    const theme = themes.find((t) => t.id === selectedThemeId);
+    if (!theme) return placeholder;
+    const name = theme.path.split('/').pop() || theme.path;
+    return theme.icon ? `${theme.icon} ${name}` : name;
+  }, [multiSelect, placeholder, selectedPaths, selectedThemeId, themes]);
+
+  // 清空选择
+  const handleClear = useCallback(
+    (e: Event) => {
+      e.stopPropagation();
+      if (disabled) return;
+
+      if (multiSelect) {
+        onSelectMultiple?.([]);
+      } else {
+        onSelect?.(null, null);
+      }
+    },
+    [disabled, multiSelect, onSelect, onSelectMultiple]
+  );
+
+  const handleClose = useCallback(() => setOpen(false), []);
+
+  // Panel props（供 dropdown 复用）
+  const panelProps: ThemeTreeSelectPanelProps = {
     themes,
     selectedThemeId,
-    selectedPaths = [],
+    selectedPaths,
     onSelect,
     onSelectMultiple,
-    multiSelect = false,
-    allowClear = true,
-    searchable = true,
-    defaultExpandedIds = [],
-    defaultExpandAll = false,
-    expandToSelected = true,
+    multiSelect,
+    searchable,
+    showToolbar,
+    showSelectedChips,
+    defaultExpandedIds,
+    defaultExpandAll,
+    expandToSelected,
     renderLabel,
-    placeholder = '选择主题',
-    disabled = false,
-    size = 'small',
-    sx = {},
-    maxDropdownHeight = 300,
-}: ThemeTreeSelectProps) {
-    // 下拉状态
-    const [open, setOpen] = useState(false);
-    const anchorRef = useRef<HTMLDivElement>(null);
+    maxHeight: maxDropdownHeight,
+    selectChildrenOnCollapsedParent,
+    disabled,
+    // 单选时：选中即关闭（多选保持打开）
+    onRequestClose: multiSelect ? undefined : handleClose,
+  };
 
-    // 搜索状态
-    const [searchTerm, setSearchTerm] = useState('');
+  return (
+    <Box sx={{ position: 'relative', ...sx }}>
+      <ThemeTreeSelectTrigger
+        anchorRef={anchorRef}
+        open={open}
+        onToggleOpen={() => !disabled && setOpen(!open)}
+        displayText={displayText}
+        hasSelection={hasSelection}
+        allowClear={allowClear}
+        disabled={disabled}
+        size={size}
+        onClear={handleClear}
+      />
 
-    // 展开状态
-    const [expandedIds, setExpandedIds] = useState<Set<string>>(() => {
-        const initial = new Set(defaultExpandedIds);
-        if (defaultExpandAll) {
-            // 将在树构建后展开全部
-        }
-        return initial;
-    });
-
-    // 构建主题树
-    const themeTree = useMemo(() => {
-        return buildThemeTree(themes);
-    }, [themes]);
-
-    // 初始化展开状态：展开到已选节点
-    useEffect(() => {
-        if (!expandToSelected) return;
-        
-        const pathsToExpand: string[] = [];
-        
-        if (multiSelect && selectedPaths.length > 0) {
-            selectedPaths.forEach(path => {
-                pathsToExpand.push(...ThemeTreeBuilder.getAncestorPaths(path));
-            });
-        } else if (selectedThemeId) {
-            const selectedPath = ThemeTreeBuilder.getThemePath(themeTree, selectedThemeId);
-            if (selectedPath) {
-                pathsToExpand.push(...ThemeTreeBuilder.getAncestorPaths(selectedPath));
-            }
-        }
-
-        if (pathsToExpand.length > 0) {
-            setExpandedIds(prev => {
-                const next = new Set(prev);
-                pathsToExpand.forEach(p => next.add(p));
-                return next;
-            });
-        }
-    }, [themeTree, selectedThemeId, selectedPaths, multiSelect, expandToSelected]);
-
-    // 默认展开全部
-    useEffect(() => {
-        if (defaultExpandAll && themeTree.length > 0) {
-            const allIds: string[] = [];
-            const collect = (nodes: ThemeTreeNode[]) => {
-                nodes.forEach(n => {
-                    allIds.push(n.id);
-                    collect(n.children);
-                });
-            };
-            collect(themeTree);
-            setExpandedIds(new Set(allIds));
-        }
-    }, [defaultExpandAll, themeTree]);
-
-    // 过滤后的树
-    const filteredTree = useMemo(() => {
-        if (!searchTerm.trim()) {
-            return themeTree;
-        }
-        return searchThemeTree(themeTree, searchTerm);
-    }, [themeTree, searchTerm]);
-
-    // 切换展开
-    const toggleExpand = useCallback((nodeId: string, e?: Event) => {
-        e?.stopPropagation();
-        setExpandedIds(prev => {
-            const next = new Set(prev);
-            if (next.has(nodeId)) {
-                next.delete(nodeId);
-            } else {
-                next.add(nodeId);
-            }
-            return next;
-        });
-    }, []);
-
-    // 单选处理
-    const handleSingleSelect = useCallback((node: ThemeTreeNode) => {
-        if (onSelect) {
-            onSelect(node.themeId, node.path);
-        }
-        setOpen(false);
-        setSearchTerm('');
-    }, [onSelect]);
-
-    // 多选处理
-    const handleMultiSelect = useCallback((node: ThemeTreeNode) => {
-        if (!onSelectMultiple) return;
-
-        const path = node.path;
-        const isSelected = selectedPaths.includes(path);
-        
-        if (isSelected) {
-            // 取消选择：移除该节点及其所有子节点
-            const descendantPaths = ThemeTreeBuilder.getDescendantPaths(node);
-            const toRemove = new Set([path, ...descendantPaths]);
-            onSelectMultiple(selectedPaths.filter(p => !toRemove.has(p)));
-        } else {
-            // 选择：添加该节点
-            onSelectMultiple([...selectedPaths, path]);
-        }
-    }, [selectedPaths, onSelectMultiple]);
-
-    // 选择包含子节点
-    const handleSelectWithChildren = useCallback((node: ThemeTreeNode) => {
-        if (!onSelectMultiple) return;
-
-        const descendantPaths = ThemeTreeBuilder.getDescendantPaths(node);
-        const allPaths = [node.path, ...descendantPaths];
-        const hasAll = allPaths.every(p => selectedPaths.includes(p));
-
-        if (hasAll) {
-            // 全部取消
-            const toRemove = new Set(allPaths);
-            onSelectMultiple(selectedPaths.filter(p => !toRemove.has(p)));
-        } else {
-            // 全部添加
-            onSelectMultiple([...new Set([...selectedPaths, ...allPaths])]);
-        }
-    }, [selectedPaths, onSelectMultiple]);
-
-    // 清空选择
-    const handleClear = useCallback((e: Event) => {
-        e.stopPropagation();
-        if (multiSelect && onSelectMultiple) {
-            onSelectMultiple([]);
-        } else if (onSelect) {
-            onSelect(null, null);
-        }
-    }, [multiSelect, onSelect, onSelectMultiple]);
-
-    // 获取显示文本
-    const displayText = useMemo(() => {
-        if (multiSelect) {
-            if (selectedPaths.length === 0) return placeholder;
-            if (selectedPaths.length === 1) {
-                return selectedPaths[0].split('/').pop() || selectedPaths[0];
-            }
-            return `${selectedPaths.length} 个主题`;
-        } else {
-            if (!selectedThemeId) return placeholder;
-            const node = ThemeTreeBuilder.findNodeByThemeId(themeTree, selectedThemeId);
-            return node?.label || selectedThemeId;
-        }
-    }, [multiSelect, selectedPaths, selectedThemeId, themeTree, placeholder]);
-
-    // 是否有选中
-    const hasSelection = multiSelect ? selectedPaths.length > 0 : !!selectedThemeId;
-
-    return (
-        <Box sx={{ position: 'relative', ...sx }}>
-            {/* 触发按钮 */}
-            <ThemeTreeSelectTrigger
-                anchorRef={anchorRef}
-                open={open}
-                onToggleOpen={() => setOpen(!open)}
-                displayText={displayText}
-                hasSelection={hasSelection}
-                allowClear={allowClear}
-                disabled={disabled}
-                size={size}
-                onClear={handleClear}
-            />
-
-            {/* 下拉面板 */}
-            <Popper
-                open={open}
-                anchorEl={anchorRef.current}
-                placement="bottom-start"
-                sx={{ zIndex: 1300, minWidth: anchorRef.current?.offsetWidth }}
-            >
-                <ClickAwayListener onClickAway={() => setOpen(false)}>
-                    <Paper
-                        sx={{
-                            mt: 0.5,
-                            border: '1px solid var(--background-modifier-border)',
-                            boxShadow: 2,
-                        }}
-                    >
-                        {/* 搜索框 */}
-                        {searchable && <SearchBox value={searchTerm} onChange={setSearchTerm} />}
-
-                        {/* 多选操作栏 */}
-                        {multiSelect && (
-                            <MultiSelectToolbar themeTree={themeTree} onSelectMultiple={onSelectMultiple} />
-                        )}
-
-                        {/* 树列表 */}
-                        <Box sx={{ maxHeight: maxDropdownHeight, overflow: 'auto' }}>
-                            {filteredTree.length === 0 ? (
-                                <Box sx={{ p: 2, textAlign: 'center' }}>
-                                    <Typography variant="body2" color="text.secondary">
-                                        {themes.length === 0 ? '暂无主题' : '无匹配结果'}
-                                    </Typography>
-                                </Box>
-                            ) : (
-                                <List dense disablePadding>
-                                    {filteredTree.map(node => (
-                                        <ThemeTreeNodeItem
-                                            key={node.id}
-                                            node={node}
-                                            expandedIds={expandedIds}
-                                            selectedPaths={multiSelect ? selectedPaths : []}
-                                            selectedThemeId={multiSelect ? null : selectedThemeId}
-                                            multiSelect={multiSelect}
-                                            onToggleExpand={toggleExpand}
-                                            onSingleSelect={handleSingleSelect}
-                                            onMultiSelect={handleMultiSelect}
-                                            onSelectWithChildren={handleSelectWithChildren}
-                                            renderLabel={renderLabel}
-                                        />
-                                    ))}
-                                </List>
-                            )}
-                        </Box>
-                    </Paper>
-                </ClickAwayListener>
-            </Popper>
-
-            {/* 多选时显示已选标签 */}
-            {multiSelect && (
-                <SelectedPathsChips
-                    selectedPaths={selectedPaths}
-                    onRemovePath={(path) => onSelectMultiple?.(selectedPaths.filter(p => p !== path))}
-                />
-            )}
-        </Box>
-    );
+      <Popper
+        open={open}
+        anchorEl={anchorRef.current}
+        placement="bottom-start"
+        sx={{ zIndex: 1300, minWidth: anchorRef.current?.offsetWidth }}
+      >
+        <ClickAwayListener onClickAway={handleClose}>
+          <Paper
+            sx={{
+              mt: 0.5,
+              border: '1px solid var(--background-modifier-border)',
+              boxShadow: 2,
+            }}
+          >
+            <ThemeTreeSelectPanel {...panelProps} />
+          </Paper>
+        </ClickAwayListener>
+      </Popper>
+    </Box>
+  );
 }
+
+// Re-export Panel（供 FilterPopover 等 inline 场景使用）
+export { ThemeTreeSelectPanel };
+export type { ThemeTreeSelectPanelProps } from './ThemeTreeSelect/Panel';
 
 export default ThemeTreeSelect;

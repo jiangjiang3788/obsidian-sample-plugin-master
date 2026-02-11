@@ -13,21 +13,16 @@
  * - 不得直接调用 SettingsRepository
  */
 import { h } from 'preact';
-import {
-    Box, TableRow, TableCell, IconButton, Tooltip,
-    Typography, Checkbox, Chip
-} from '@mui/material';
+import { Box, TableRow, TableCell, Tooltip, Typography, Checkbox, Chip } from '@mui/material';
+import { ThemeTreeNodeLabel } from '@shared/public';
 // HACK: Cast all MUI components to `any` to resolve Preact/React type conflicts.
 const AnyTableRow = TableRow as any;
 const AnyTableCell = TableCell as any;
-const AnyIconButton = IconButton as any;
 const AnyTooltip = Tooltip as any;
 const AnyTypography = Typography as any;
 const AnyCheckbox = Checkbox as any;
 const AnyChip = Chip as any;
 const AnyBox = Box as any;
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import TaskAltIcon from '@mui/icons-material/TaskAlt';
 import CancelIcon from '@mui/icons-material/Cancel';
 import EditIcon from '@mui/icons-material/Edit';
@@ -37,7 +32,7 @@ import type { EditorState } from './useThemeMatrixEditor';
 import type { BlockTemplate, ThemeDefinition, ThemeOverride } from '@core/public';
 import { devLog } from '@core/public';
 import type { UseCases } from '@/app/public';
-import type { ThemeMatrixTreeNode as ThemeTreeNode } from '@core/public';
+import type { ThemePathTreeFlatNode as ThemeTreeNode } from '@core/public';
 
 /**
  * ThemeTreeNodeRow 组件属性
@@ -66,9 +61,16 @@ export function ThemeTreeNodeRow({
     editorState,
     onSelectionChange
 }: ThemeTreeNodeRowProps) {
-    const { theme, children, expanded, level } = node;
-    
-    // 【UI 临时态】编辑状态不写入 settings
+    const theme = node.theme;
+    if (!theme) {
+        // createVirtualNodes=false should guarantee theme, but keep a guard.
+        return null;
+    }
+    const children = node.children ?? [];
+    const expanded = !!node.expanded;
+    const level = node.depth;
+
+// 【UI 临时态】编辑状态不写入 settings
     const [isEditingPath, setIsEditingPath] = useState(false);
     const [isEditingIcon, setIsEditingIcon] = useState(false);
 
@@ -87,18 +89,15 @@ export function ThemeTreeNodeRow({
                 }}
             >
                 <AnyTableCell>
-                    <AnyBox sx={{ display: 'flex', alignItems: 'center', pl: level * 2 }}>
-                        {children.length > 0 && (
-                            <AnyIconButton 
-                                size="small" 
-                                onClick={() => onToggleExpand(theme.id)}
-                                sx={{ mr: 0.5 }}
-                            >
-                                {expanded ? <ExpandMoreIcon /> : <ChevronRightIcon />}
-                            </AnyIconButton>
-                        )}
-                        {children.length === 0 && <AnyBox sx={{ width: '28px' }} />}
-                        
+                    <ThemeTreeNodeLabel
+                        depth={level}
+                        hasChildren={children.length > 0}
+                        expanded={expanded}
+                        onToggleExpand={() => onToggleExpand(theme.id)}
+                        basePadding={0}
+                        indentUnit={2}
+                        placeholderWidthPx={28}
+                    >
                         <AnyBox sx={{ flex: 1, display: 'flex', alignItems: 'center', gap: 1 }}>
                         {isEditingIcon ? (
                                 <InlineEditor 
@@ -132,8 +131,7 @@ export function ThemeTreeNodeRow({
                                 </AnyTypography>
                             )}
                         </AnyBox>
-                    </AnyBox>
-                </AnyTableCell>
+                    </ThemeTreeNodeLabel></AnyTableCell>
 
                 <AnyTableCell align="center" sx={{ width: '100px' }}>
                     {isEditMode ? (
@@ -214,20 +212,6 @@ export function ThemeTreeNodeRow({
                     );
                 })}
             </AnyTableRow>
-            
-            {expanded && children.map((child: ThemeTreeNode) => (
-                <ThemeTreeNodeRow
-                    key={child.theme.id}
-                    node={child}
-                    blocks={blocks}
-                    overridesMap={overridesMap}
-                    onCellClick={onCellClick}
-                    useCases={useCases}
-                    onToggleExpand={onToggleExpand}
-                    editorState={editorState}
-                    onSelectionChange={onSelectionChange}
-                />
-            ))}
         </>
     );
 }

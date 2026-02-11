@@ -2,7 +2,7 @@
 import { h } from 'preact';
 import { Box, Chip, FormControl, FormControlLabel, InputLabel, MenuItem, Select, Switch, Typography } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
-import { ThemeTreeSelect } from '@/shared/components/ThemeTreeSelect';
+import { ThemeTreeSelect } from '@shared/public';
 import type { ThemeDefinition } from '@core/public';
 
 export interface BlockDefinition {

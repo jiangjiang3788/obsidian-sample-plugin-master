@@ -170,7 +170,7 @@ export class ThemeMatrixService {
     ): DeleteThemeComputation {
         const themes = this.getSettings().inputSettings.themes;
         const extendedThemes = this.getExtendedThemes(themes);
-        const tree = buildThemeTree(extendedThemes, new Set());
+        const tree = buildThemeTree(extendedThemes);
         const node = findNodeInTree(tree, themeId);
         
         if (!node) {

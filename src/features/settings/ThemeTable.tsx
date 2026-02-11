@@ -26,7 +26,7 @@ import { ThemeTreeNodeRow } from './ThemeTreeNodeRow';
 import type { EditorState } from './useThemeMatrixEditor';
 import type { BlockTemplate, ThemeDefinition, ThemeOverride } from '@core/public';
 import type { UseCases } from '@/app/public';
-import type { ThemeMatrixTreeNode as ThemeTreeNode } from '@core/public';
+import type { ThemePathTreeFlatNode as ThemeTreeNode } from '@core/public';
 
 /**
  * ThemeTable 组件属性
@@ -70,11 +70,16 @@ export function ThemeTable({
 
     // Derived state for header checkboxes
     const allVisibleThemes = showArchived ? [...activeThemes, ...archivedThemes] : activeThemes;
-    const allVisibleThemeIds = allVisibleThemes.map(node => node.theme.id);
-    const selectedThemeCount = editorState.selectedThemes.size;
-    const totalThemeCount = allVisibleThemeIds.length;
-    const areAllThemesSelected = totalThemeCount > 0 && selectedThemeCount === totalThemeCount;
-    const areSomeThemesSelected = selectedThemeCount > 0 && selectedThemeCount < totalThemeCount;
+    const allVisibleThemeIds = allVisibleThemes
+        .map(node => node.themeId)
+        .filter((id): id is string => typeof id === 'string' && id.length > 0);
+
+    // Header checkbox should reflect "visible themes" selection state (not total selected across entire tree)
+    const selectedVisibleThemeCount = allVisibleThemeIds.filter(id => editorState.selectedThemes.has(id)).length;
+    const totalVisibleThemeCount = allVisibleThemeIds.length;
+
+    const areAllThemesSelected = totalVisibleThemeCount > 0 && selectedVisibleThemeCount === totalVisibleThemeCount;
+    const areSomeThemesSelected = selectedVisibleThemeCount > 0 && selectedVisibleThemeCount < totalVisibleThemeCount;
 
     // HACK: Cast all MUI components to `any` to resolve Preact/React type conflicts.
     const AnyTable = Table as any;
@@ -88,12 +93,16 @@ export function ThemeTable({
     const renderRows = () => {
         const rows: h.JSX.Element[] = [];
 
+        const activeRootCount = activeThemes.filter(n => n.depth === 0).length;
+        const archivedRootCount = archivedThemes.filter(n => n.depth === 0).length;
+
+
         if (activeThemes.length > 0) {
             rows.push(
                 <AnyTableRow key="active-header">
                     <AnyTableCell colSpan={blocks.length + 2} sx={{ backgroundColor: 'action.hover', py: 0.5 }}>
                         <AnyTypography variant="subtitle2" sx={{ fontWeight: 'bold' }}>
-                            激活主题 ({activeThemes.length})
+                            激活主题 ({activeRootCount})
                         </AnyTypography>
                     </AnyTableCell>
                 </AnyTableRow>
@@ -101,7 +110,7 @@ export function ThemeTable({
             activeThemes.forEach(node => {
                 rows.push(
                     <ThemeTreeNodeRow
-                        key={node.theme.id}
+                        key={node.id}
                         node={node}
                         blocks={blocks}
                         overridesMap={overridesMap}
@@ -120,7 +129,7 @@ export function ThemeTable({
                 <AnyTableRow key="archived-header">
                     <AnyTableCell colSpan={blocks.length + 2} sx={{ backgroundColor: 'action.hover', py: 0.5 }}>
                         <AnyTypography variant="subtitle2" sx={{ fontWeight: 'bold' }}>
-                            归档主题 ({archivedThemes.length})
+                            归档主题 ({archivedRootCount})
                         </AnyTypography>
                     </AnyTableCell>
                 </AnyTableRow>
@@ -128,7 +137,7 @@ export function ThemeTable({
             archivedThemes.forEach(node => {
                 rows.push(
                     <ThemeTreeNodeRow
-                        key={node.theme.id}
+                        key={node.id}
                         node={node}
                         blocks={blocks}
                         overridesMap={overridesMap}
