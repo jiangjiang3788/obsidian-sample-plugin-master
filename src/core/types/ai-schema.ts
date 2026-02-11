@@ -15,6 +15,11 @@ export interface AiSettings {
   apiEndpoint: string;
   /** API 密钥 */
   apiKey: string;
+
+  /** 是否将 apiKey 写入插件设置（settings.json / 插件 data）。
+   *  注意：Obsidian 插件数据通常是明文存储/可同步。
+   */
+  persistApiKey: boolean;
   /** 模型名称 */
   model: string;
   /** 温度参数 */
@@ -58,6 +63,8 @@ export const DEFAULT_AI_SETTINGS: AiSettings = {
   apiEndpoint: 'https://api.ricardochat.cn/v1',
   // 安全：默认不提供任何 key，避免被意外持久化/同步
   apiKey: '',
+  // 需求：允许像其他设置一样落盘保存（用户可在设置页关闭）
+  persistApiKey: true,
   model: '[渠道2]gemini-2.5-pro',
   temperature: 0.7,
   maxTokens: 4096,

@@ -134,10 +134,10 @@ export class AiNaturalLanguageRecordParser implements INaturalLanguageRecordPars
      */
     private buildSystemPrompt(snapshot: any, customPrompt: string): string {
         // 提取主题列表用于示例
-        const themeExamples = snapshot.themes?.slice(0, 5).map((t: any) => t.path).join(', ') || '';
+        const themeExamples = (snapshot.themes ?? []).slice(0, 5).map((t: any) => t.path).join(', ') || '';
         
         // 提取 Block 列表用于示例
-        const blockExamples = snapshot.blocks?.slice(0, 5).map((b: any) => `${b.id}(${b.name})`).join(', ') || '';
+        const blockExamples = (snapshot.blocks ?? []).slice(0, 5).map((b: any) => `${b.id}(${b.name})`).join(', ') || '';
         
         const basePrompt = [
             'You are a parser that converts natural language into Think plugin record commands.',

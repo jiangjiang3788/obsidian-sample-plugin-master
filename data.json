@@ -1,6 +1,6 @@
 {
   "aiSettings": {
-    "apiKey": "",
+    "apiKey": "sk-2SPzXePSCl9BISBoGzqQoBTd2BDv0mmoRZ3KoSZiMPFWyryn",
     "enabled": true,
     "provider": "openai_compat",
     "apiEndpoint": "https://api.ricardochat.cn/v1",
@@ -353,57 +353,6 @@
       "filters": []
     },
     {
-      "id": "view_mg1zanri06mhu",
-      "title": "打卡block",
-      "viewType": "StatisticsView",
-      "dataSourceId": "ds_mer6kbdnogrty",
-      "viewConfig": {
-        "categories": [
-          {
-            "name": "未完成任务",
-            "color": "#cfe6f7"
-          },
-          {
-            "name": "完成任务",
-            "color": "#c6ec8d"
-          },
-          {
-            "name": "打卡",
-            "color": "#c2a3f0"
-          },
-          {
-            "name": "事件",
-            "color": "#d1d1d1"
-          },
-          {
-            "name": "感受",
-            "color": "#3db5ff"
-          },
-          {
-            "name": "思考",
-            "color": "#f39090"
-          },
-          {
-            "name": "计划",
-            "color": "#27be13"
-          },
-          {
-            "name": "总结",
-            "color": "#c00c0c"
-          }
-        ],
-        "displayMode": "smart",
-        "minVisibleHeight": 15
-      },
-      "collapsed": true,
-      "parentId": "group_memc1a9ofen88",
-      "fields": [
-        "date",
-        "content"
-      ],
-      "group": "theme"
-    },
-    {
       "id": "view_mh4itucqmm9rt",
       "title": "新视图",
       "viewType": "HeatmapView",
@@ -525,7 +474,6 @@
       "id": "layout_memcg9jjoq6j4",
       "name": "全局布局",
       "viewInstanceIds": [
-        "view_mg1zanri06mhu",
         "view_mer6n7pwf7suy",
         "view_mewr7y1gvq0ro",
         "view_membnf1hgjgm3",

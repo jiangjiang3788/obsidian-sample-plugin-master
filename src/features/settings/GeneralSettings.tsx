@@ -10,6 +10,7 @@
 import { h } from 'preact';
 import { useUseCases, useSelector } from '@/app/public';
 import { Box, Typography, Stack, FormControlLabel, Checkbox } from '@mui/material';
+import { selectFloatingTimerEnabled } from '@/app/store/selectors';
 
 /**
  * 通用设置组件

@@ -24,9 +24,9 @@ export class ObsidianModalPort implements ModalPort {
   constructor(
     @inject(AppToken) private app: App,
     // DI Round2: remove container.resolve() from adapter; use pure constructor injection
-    private chatService: AiChatService,
-    private retrievalService: RetrievalService,
-    private sessionStore: ChatSessionStore,
+    @inject(AiChatService) private chatService: AiChatService,
+    @inject(RetrievalService) private retrievalService: RetrievalService,
+    @inject(ChatSessionStore) private sessionStore: ChatSessionStore,
   ) {}
 
   openAiTextPrompt(): Promise<string | null> {

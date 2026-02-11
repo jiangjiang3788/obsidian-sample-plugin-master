@@ -183,7 +183,19 @@ export function AiSettings(_props: AiSettingsProps) {
                             type="password"
                             value={localSettings.apiKey}
                             onChange={(e) => updateLocal({ apiKey: (e.target as HTMLInputElement).value })}
-                            helperText="您的 API 密钥"
+                            helperText="您的 API 密钥（若选择保存到设置，将以明文存储在插件数据中）"
+                        />
+
+                        <FormControlLabel
+                            control={
+                                <Switch
+                                    checked={localSettings.persistApiKey !== false}
+                                    onChange={(e) =>
+                                        updateLocal({ persistApiKey: (e.target as HTMLInputElement).checked })
+                                    }
+                                />
+                            }
+                            label="保存 API 密钥到设置（不推荐：明文存储）"
                         />
                         <TextField
                             fullWidth

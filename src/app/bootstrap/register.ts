@@ -20,13 +20,15 @@ import { isDisposed } from '@/app/runtime/lifecycleState';
  * - Theme matcher（ThemeManager）
  */
 export function registerSettingsPersistence(plugin: ThinkPlugin): void {
-    // 安全：持久化前对设置做脱敏（目前仅对 AI apiKey 进行剥离）
-    // 目标：机制保证（而不是“人肉记得别存 apiKey”）
+    // 持久化前对设置做可选脱敏（AI apiKey）。
+    // - 默认允许落盘（用户需求：重启后无需重新填写）
+    // - 仍提供开关：aiSettings.persistApiKey=false 时强制剥离
     const persistedSettingsGuard = z
         .object({
             aiSettings: z
                 .object({
                     apiKey: z.string().optional(),
+                    persistApiKey: z.boolean().optional(),
                 })
                 .passthrough()
                 .optional(),
@@ -40,11 +42,13 @@ export function registerSettingsPersistence(plugin: ThinkPlugin): void {
         const out: any = parsed.success ? parsed.data : cloned;
 
         if (out?.aiSettings && typeof out.aiSettings === 'object') {
-            if (out.aiSettings.apiKey) {
-                devWarn('[SettingsPersistence] apiKey 检测到将被写入磁盘，已强制剥离');
+            const persist = out.aiSettings.persistApiKey !== false;
+            if (!persist) {
+                if (out.aiSettings.apiKey) {
+                    devWarn('[SettingsPersistence] persistApiKey=false，apiKey 将被剥离后保存');
+                }
+                out.aiSettings.apiKey = '';
             }
-            // 永不落盘 apiKey
-            out.aiSettings.apiKey = '';
         }
 
         return out;

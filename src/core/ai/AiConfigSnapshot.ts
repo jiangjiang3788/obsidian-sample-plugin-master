@@ -51,11 +51,11 @@ export interface AiConfigSnapshot {
  * @param ai AiSettings 配置
  * @returns AI 配置快照
  */
-export function buildAiConfigSnapshot(input: InputSettings, ai: AiSettings): AiConfigSnapshot {
+export function buildAiConfigSnapshot(input: InputSettings | undefined, ai: AiSettings): AiConfigSnapshot {
     // 如果指定了 enabledBlockIds，则只保留这些 block
     const enabledSet = ai.enabledBlockIds?.length ? new Set(ai.enabledBlockIds) : null;
 
-    const blocks = input.blocks
+    const blocks = (input?.blocks ?? [])
         .filter(b => !enabledSet || enabledSet.has(b.id))
         .map(b => {
             // 用 getEffectiveTemplate 来获取字段（最贴合实际 override）
@@ -80,7 +80,7 @@ export function buildAiConfigSnapshot(input: InputSettings, ai: AiSettings): AiC
             };
         });
 
-    const themes = input.themes.map(t => ({
+    const themes = (input?.themes ?? []).map(t => ({
         id: t.id,
         path: t.path,
         name: t.path.split('/').pop() || t.path,
