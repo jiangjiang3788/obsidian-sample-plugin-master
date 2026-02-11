@@ -330,7 +330,7 @@ function AiBatchConfirmForm({
         <Box sx={{ flex: 1, overflow: 'auto', p: 2 }}>
           <QuickInputEditor
             key={currentRecord.id}
-            app={app}
+            getResourcePath={(path) => app.vault.adapter.getResourcePath(path)}
             initialBlockId={currentRecord.blockId}
             initialThemeId={currentRecord.themeId || null}
             initialFormData={currentRecord.formData}

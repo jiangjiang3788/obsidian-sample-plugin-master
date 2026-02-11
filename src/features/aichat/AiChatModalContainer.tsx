@@ -21,7 +21,6 @@ export function AiChatModalContainer({ closeModal, services }: AiChatModalContai
     const inputSettings = useSelector(selectInputSettings);
     const themes = inputSettings?.themes ?? [];
     const blocks = inputSettings?.blocks ?? [];
-
     // 从 props 获取服务（已在 composition root 中 resolve）
     const { chatService, retrievalService, sessionStore } = services;
     const [sessions, setSessions] = useState<ChatSession[]>([]);

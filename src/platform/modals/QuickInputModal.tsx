@@ -9,7 +9,7 @@ import { h } from 'preact';
 import { App, Modal, Notice } from 'obsidian';
 import { useMemo, useState } from 'preact/hooks';
 
-import { createServices, Services, useDataStore, useInputService, mountWithServices, unmountPreact, useSelector } from '@/app/public';
+import { createServices, Services, useDataStore, useInputService, mountWithServices, unmountPreact, useSelector, selectInputSettings } from '@/app/public';
 import type { QuickInputSaveData } from '@core/public';
 
 import { Box, Button } from '@mui/material';
@@ -178,7 +178,7 @@ export class QuickInputModal extends Modal {
 }
 
 function QuickInputModalContent({
-  app,
+  getResourcePath,
   initialBlockId,
   context,
   initialThemeId,
@@ -186,7 +186,7 @@ function QuickInputModalContent({
   closeModal,
   allowBlockSwitch,
 }: {
-  app: App;
+  getResourcePath: (path: string) => string;
   initialBlockId: string;
   context?: Record<string, any>;
   initialThemeId?: string;
@@ -194,7 +194,7 @@ function QuickInputModalContent({
   closeModal: () => void;
   allowBlockSwitch: boolean;
 }) {
-  const settings = useSelector((s) => s.settings.inputSettings);
+  const settings = useSelector(selectInputSettings);
   const dataStore = useDataStore();
   const inputService = useInputService();
 
@@ -253,7 +253,7 @@ function QuickInputModalContent({
       </Box>
 
       <QuickInputEditor
-        app={app}
+        getResourcePath={getResourcePath}
         initialBlockId={initialBlockId}
         initialThemeId={initialThemeId || null}
         context={context}
