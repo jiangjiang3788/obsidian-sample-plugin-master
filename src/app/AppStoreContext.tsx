@@ -18,6 +18,7 @@ import { useStore } from 'zustand';
 import type { ComponentChildren } from 'preact';
 import type { DataStore } from '@core/public';
 import type { InputService } from '@core/public';
+import type { MessageRenderPort } from '@core/public';
 import type { UseCases } from './usecases';
 import type { AppStoreInstance, ZustandAppStore } from './store/useAppStore';
 import { validateServices, type Services } from './services.types';
@@ -129,6 +130,7 @@ export function useInputService(): InputService {
 export const UseCasesContext = createContext<UseCases | null>(null);
 const UiPortContext = createContext<any | null>(null);
 const ModalPortContext = createContext<any | null>(null);
+const MessageRenderPortContext = createContext<MessageRenderPort | null>(null);
 
 /**
  * useUseCases Hook
@@ -179,11 +181,13 @@ export function ServicesProvider({ services, children }: ServicesProviderProps) 
             <DataStoreContext.Provider value={services.dataStore}>
                 <InputServiceContext.Provider value={services.inputService}>
                     <UseCasesContext.Provider value={services.useCases}>
-      <UiPortContext.Provider value={services.uiPort}>
-      <ModalPortContext.Provider value={services.modalPort}>
-                        {children}
-                    </ModalPortContext.Provider>
-      </UiPortContext.Provider>
+	                      <UiPortContext.Provider value={services.uiPort}>
+	                        <ModalPortContext.Provider value={services.modalPort}>
+	                          <MessageRenderPortContext.Provider value={services.messageRenderPort}>
+	                            {children}
+	                          </MessageRenderPortContext.Provider>
+	                        </ModalPortContext.Provider>
+	                      </UiPortContext.Provider>
     </UseCasesContext.Provider>
                 </InputServiceContext.Provider>
             </DataStoreContext.Provider>
@@ -233,4 +237,12 @@ export function useModalPort() {
     throw new Error('🚨 [useModalPort] ModalPortContext 为空！请检查 <AppStoreProvider> 是否注入 services.modalPort。');
   }
   return modal as any;
+}
+
+export function useMessageRenderPort() {
+  const port = useContext(MessageRenderPortContext);
+  if (!port) {
+    throw new Error('🚨 [useMessageRenderPort] MessageRenderPortContext 为空！请检查 <ServicesProvider> 是否注入 services.messageRenderPort。');
+  }
+  return port as any;
 }

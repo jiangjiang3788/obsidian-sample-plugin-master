@@ -42,7 +42,7 @@ export class CodeblockEmbedder {
     private registerProcessor() {
         this.plugin.registerMarkdownCodeBlockProcessor(
             CODEBLOCK_LANG,
-            (source, el, /* ctx */) => {
+            (source: string, el: HTMLElement, /* ctx */) => {
                 try { render(null, el); } catch { }
                 el.empty();
                 

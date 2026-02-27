@@ -36,12 +36,8 @@ import InfoIcon from '@mui/icons-material/Info';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import DownloadIcon from '@mui/icons-material/Download';
 import CloseIcon from '@mui/icons-material/Close';
-import type { 
-    ScanResult, 
-    ScanConfig, 
-    ImportResult,
-    ScanStats
-} from '@core/public';
+import type { ScanResult, ScanConfig, ScanStats } from '@core/public';
+import type { ImportResult } from './importTypes';
 
 /**
  * 主题扫描对话框属性

@@ -1,10 +1,8 @@
 // src/shared/components/TagsRenderer.tsx
 /** @jsxImportSource preact */
 import { h } from 'preact';
-import { useMemo } from 'preact/hooks';
 import type { ThemeDefinition } from '@core/public';
-import { getSimplifiedThemeDisplay } from '@core/public';
-import { getCategoryColor } from '@core/public';
+// 术语对齐：tags 只负责“标签”，theme 独立由字段 theme 展示。
 
 interface TagsRendererProps {
     tags: string[];
@@ -12,27 +10,12 @@ interface TagsRendererProps {
 }
 
 export function TagsRenderer({ tags, allThemes }: TagsRendererProps) {
-    // 使用 useMemo 进行性能优化，只有当 tags 或 allThemes 变化时才重新计算
-    const { themeLabels, regularTags } = useMemo(() => {
-        return getSimplifiedThemeDisplay(tags, allThemes);
-    }, [tags, allThemes]);
+    // allThemes 目前不再参与 tags 渲染，但保留参数避免大范围改动。
+    void allThemes;
 
     return (
         <div class="bv-fields-list">
-            {/* 渲染简化后的主题标签 */}
-            {themeLabels.map(({ fullPath, label }) => (
-                <span 
-                    key={fullPath}
-                    class="tag-pill" 
-                    title={`主题: ${fullPath}`}
-                    // 使用分类颜色，颜色从完整路径的第一部分获取
-                    style={{ background: getCategoryColor(fullPath) }}
-                >
-                    {label}
-                </span>
-            ))}
-            {/* 渲染普通标签 */}
-            {regularTags.map(tag => (
+            {tags.map(tag => (
                 <span 
                     key={tag}
                     class="tag-pill" 

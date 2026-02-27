@@ -1,11 +1,14 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
 import { useEffect, useRef, useState } from 'preact/hooks';
-import { Box, Chip, IconButton, Paper, Tooltip, Typography } from '@mui/material';
+import { Box, Chip, Paper, Tooltip, Typography } from '@mui/material';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import CheckIcon from '@mui/icons-material/Check';
+
+import { IconAction } from '@shared/public';
 import type { ChatMessage, MessageContentType } from '@core/public';
 import { devError, dayjs } from '@core/public';
+import { useMessageRenderPort } from '@/app/public';
 
 export interface MessageBubbleProps {
     message: ChatMessage;
@@ -47,7 +50,7 @@ export function MessageBubble({ message }: MessageBubbleProps) {
                 sourcePath: '',
                 cls: 'message-content',
             })
-            .catch(err => {
+            .catch((err: unknown) => {
                 devError('MessageBubble: 渲染失败', err);
             });
 
@@ -113,25 +116,21 @@ export function MessageBubble({ message }: MessageBubbleProps) {
                 }}
             >
                 {/* 复制按钮 */}
-                <Tooltip title={copied ? '已复制' : '复制'}>
-                    <IconButton
-                        className="copy-button"
-                        size="small"
-                        onClick={handleCopy}
-                        sx={{
-                            position: 'absolute',
-                            top: 4,
-                            right: 4,
-                            opacity: 0,
-                            transition: 'opacity 0.2s',
-                            bgcolor: 'background.paper',
-                            boxShadow: 1,
-                            '&:hover': { bgcolor: 'action.hover' },
-                        }}
-                    >
-                        {copied ? <CheckIcon fontSize="small" color="success" /> : <ContentCopyIcon fontSize="small" />}
-                    </IconButton>
-                </Tooltip>
+                <IconAction
+                    label={copied ? '已复制' : '复制'}
+                    onClick={handleCopy}
+                    icon={copied ? <CheckIcon fontSize="small" color="success" /> : <ContentCopyIcon fontSize="small" />}
+                    sx={{
+                        position: 'absolute',
+                        top: 4,
+                        right: 4,
+                        opacity: 0,
+                        transition: 'opacity 0.2s',
+                        bgcolor: 'background.paper',
+                        boxShadow: 1,
+                        '&:hover': { bgcolor: 'action.hover' },
+                    }}
+                />
 
                 {/* 消息内容容器 */}
                 <Box

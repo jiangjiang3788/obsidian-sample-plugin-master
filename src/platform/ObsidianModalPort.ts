@@ -18,6 +18,9 @@ import { QuickInputModal } from './modals/QuickInputModal';
 import { NamePromptModal } from './modals/NamePromptModal';
 import { AiChatModal } from './modals/AiChatModal';
 import { CheckinManagerModal } from './modals/CheckinManagerModal';
+import { todayISO } from '@core/public';
+import type { Item } from '@core/public';
+import type { CheckinManagerData } from './modals/CheckinManagerModal';
 
 @singleton()
 export class ObsidianModalPort implements ModalPort {
@@ -72,6 +75,9 @@ export class ObsidianModalPort implements ModalPort {
   }
 
   openCheckinManager(): void {
-    new CheckinManagerModal(this.app).open();
+	    // Provide safe defaults for ad-hoc opening.
+	    const emptyItems: Item[] = [];
+	    const noopSave = async (_data: CheckinManagerData) => {};
+	    new CheckinManagerModal(this.app, todayISO(), emptyItems, noopSave).open();
   }
 }

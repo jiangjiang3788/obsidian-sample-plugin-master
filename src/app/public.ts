@@ -83,4 +83,4 @@ export { useSelector } from './store/useSelector';
 // ============== Store Selectors (recommended read API) ==============
 export * from './store/selectors';
 export { FloatingWidget } from './ui/widgets/FloatingWidget';
-export { useUiPort, useModalPort } from './AppStoreContext';
+export { useUiPort, useModalPort, useMessageRenderPort } from './AppStoreContext';

@@ -3,16 +3,11 @@ import { dayjs } from '@core/utils/date';
 import { readField } from '@/core/types/schema';
 import { getBaseCategory } from '@core/utils/itemGrouping';
 import { isSameIsoWeek } from '@core/utils/timelineRange';
+import type { CategoryConfig } from '@/core/config/viewConfigs';
 
 export interface PeriodData {
     counts: Record<string, number>;
     blocks: Item[];
-}
-
-export interface CategoryConfig {
-    name: string;
-    color?: string;
-    alias?: string;
 }
 
 /**

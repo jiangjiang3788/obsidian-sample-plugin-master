@@ -58,12 +58,12 @@
     },
     "types": [
       "vite/client",
-      "preact"
+      "preact",
+      "node"
     ]
   },
   "include": [
-    "src",
-    "test"
+    "src"
   ],
   "exclude": [
     "node_modules",

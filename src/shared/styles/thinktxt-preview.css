@@ -1,0 +1,28 @@
+.thinktxt-merged{margin:0.5rem 0;}
+.thinktxt-table-wrap{margin:0.25rem 0;}
+.thinktxt-preview-table {
+  margin: 0.5rem 0;
+}
+
+.thinktxt-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9em;
+}
+
+.thinktxt-table th,
+.thinktxt-table td {
+  border: 1px solid var(--background-modifier-border);
+  padding: 6px 8px;
+  vertical-align: top;
+}
+
+.thinktxt-table thead th {
+  background: var(--background-secondary);
+  font-weight: 600;
+}
+
+.thinktxt-table td {
+  white-space: pre-wrap;
+  word-break: break-word;
+}

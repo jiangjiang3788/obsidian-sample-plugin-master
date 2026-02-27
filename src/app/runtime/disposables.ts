@@ -17,8 +17,18 @@ type DisposableTask = {
 export class Disposables {
     private tasks: DisposableTask[] = [];
 
-    add(name: string, dispose: DisposeFn): void {
-        this.tasks.push({ name, dispose });
+    add(dispose: DisposeFn): void;
+    add(name: string, dispose: DisposeFn): void;
+    add(nameOrDispose: string | DisposeFn, disposeMaybe?: DisposeFn): void {
+        if (typeof nameOrDispose === 'function') {
+            const autoName = `anonymous#${this.tasks.length + 1}`;
+            this.tasks.push({ name: autoName, dispose: nameOrDispose });
+            return;
+        }
+        if (typeof disposeMaybe !== 'function') {
+            throw new Error('[Disposables] add(name, dispose) requires a dispose function');
+        }
+        this.tasks.push({ name: nameOrDispose, dispose: disposeMaybe });
     }
 
     /**
@@ -39,5 +49,10 @@ export class Disposables {
                 devError(`[Disposables] dispose failed: ${task.name}`, error);
             }
         }
+    }
+
+    /** Backward/ergonomic alias used by older callers/tests. */
+    dispose(): void {
+        this.disposeAll();
     }
 }

@@ -1,7 +1,7 @@
 // src/shared/components/TaskSendToTimerButton.tsx
 /** @jsxImportSource preact */
 import { h } from 'preact';
-import { IconButton, Tooltip } from '@mui/material';
+import { IconAction } from '@shared/public';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import HourglassTopIcon from '@mui/icons-material/HourglassTop';
 
@@ -19,25 +19,16 @@ interface TaskSendToTimerButtonProps {
 export function TaskSendToTimerButton({ taskId, timerStatus, onStart }: TaskSendToTimerButtonProps) {
     if (timerStatus) {
         return (
-            <Tooltip title={`该任务已在计时面板中 (${timerStatus})`}>
-                <IconButton size="small" color="primary" sx={{ cursor: 'default' }}>
-                    <HourglassTopIcon fontSize="small" />
-                </IconButton>
-            </Tooltip>
+            <IconAction
+                label={`该任务已在计时面板中 (${timerStatus})`}
+                color="primary"
+                sx={{ cursor: 'default' }}
+                icon={<HourglassTopIcon fontSize="small" />}
+            />
         );
     }
 
     return (
-        <Tooltip title="添加并开始计时">
-            <IconButton 
-                size="small" 
-                onClick={(e) => {
-                    e.stopPropagation();
-                    onStart();
-                }} 
-            >
-                <PlayArrowIcon fontSize="small" />
-            </IconButton>
-        </Tooltip>
+        <IconAction label="添加并开始计时" onClick={onStart} icon={<PlayArrowIcon fontSize="small" />} />
     );
 }

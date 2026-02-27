@@ -107,7 +107,6 @@ export type { EventsPort, UnsubscribeFn } from './ports/EventsPort';
 
 export type { AppPort, AppVaultNamePort } from './ports/AppPort';
 export { MODAL_PORT_TOKEN } from './ports/ModalPort';
-export type { ModalPort } from './ports/ModalPort';
 export { MESSAGE_RENDER_PORT_TOKEN } from './ports/MessageRenderPort';
 export type { MessageRenderPort, RenderMessageArgs, MessageContentType } from './ports/MessageRenderPort';
 export type { ModalPort, NamePromptOptions } from './ports/ModalPort';

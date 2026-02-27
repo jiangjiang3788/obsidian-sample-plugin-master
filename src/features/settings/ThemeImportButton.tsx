@@ -4,11 +4,8 @@ import { useState } from 'preact/hooks';
 import { Button, Tooltip } from '@mui/material';
 import ScannerIcon from '@mui/icons-material/Scanner';
 import { ThemeScanDialog } from './ThemeScanDialog';
-import type { 
-    ScanResult, 
-    ScanConfig, 
-    ImportResult 
-} from '@core/public';
+import type { ScanResult, ScanConfig } from '@core/public';
+import type { ImportResult } from './importTypes';
 
 /**
  * 主题导入按钮属性

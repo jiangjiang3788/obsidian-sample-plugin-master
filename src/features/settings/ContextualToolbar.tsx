@@ -45,7 +45,8 @@ export function ContextualToolbar({ editorState, onAction, onClearSelection }: C
         {selectionType === 'theme' && (
           <Stack direction="row" spacing={1}>
             <Button size="small" onClick={() => onAction('activate')}>激活</Button>
-            <Button size="small" onClick={() => onAction('archive')}>归档</Button>
+            {/* 归档语义 = 设为 inactive */}
+            <Button size="small" onClick={() => onAction('inactive')}>归档</Button>
             <Button size="small" onClick={() => onAction('setIcon')}>设置图标</Button>
             <Button size="small" color="error" onClick={() => onAction('delete')}>删除</Button>
           </Stack>

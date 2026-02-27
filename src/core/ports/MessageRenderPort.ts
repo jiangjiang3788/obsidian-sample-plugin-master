@@ -1,7 +1,9 @@
 // src/core/ports/MessageRenderPort.ts
 import type { InjectionToken } from 'tsyringe';
 
-export type MessageContentType = 'markdown' | 'plain';
+// NOTE: ChatSessionStore supports 'html'.
+// Keep this union aligned so UI can render without type assertions.
+export type MessageContentType = 'markdown' | 'plain' | 'html';
 
 export interface RenderMessageArgs {
   containerEl: HTMLElement;

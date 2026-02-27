@@ -35,6 +35,8 @@ import { ObsidianEventsPort } from '@/platform/ObsidianEventsPort';
 import { ObsidianMessageRenderPort } from '@/platform/ObsidianMessageRenderPort';
 import { ObsidianMetadataPort } from '@/platform/ObsidianMetadataPort';
 import { ObsidianFileStatPort } from '@/platform/ObsidianFileStatPort';
+import { TaskThemeFromHeadingMigrator } from '@/core/migrations/TaskThemeFromHeadingMigrator';
+import { registerThinktxtPreview } from '@/platform/thinktxt/ThinktxtPreviewRenderer';
 
 devLog(`[ThinkPlugin] main.ts 已加载，版本时间: ${new Date().toLocaleTimeString()}`);
 
@@ -90,6 +92,11 @@ export default class ThinkPlugin extends Plugin {
                 // 4. 注册命令
                 this.registerCommands();
 
+                // 5. 预览模式渲染：将连续的 [!thinktxt] callout 合并渲染为只读表格
+                // - 仅作用于预览（Markdown 渲染）
+                // - 编辑模式仍保留原始 callout 格式，后续编辑/拖拽在 Phase2 P2 实现
+                registerThinktxtPreview(this);
+
                 const totalTime = stopMeasure();
                 devLog(`[Think Plugin] 核心功能已加载完成 (总耗时: ${totalTime.toFixed(2)}ms)`);
                 new Notice('Think Plugin 核心功能已加载!', 2000);
@@ -124,6 +131,50 @@ export default class ThinkPlugin extends Plugin {
                     new Notice('Think: 索引重建完成', 3000);
                 } catch (e: any) {
                     new Notice(`Think: 索引重建失败 - ${e?.message || e}`, 5000);
+                }
+            }
+        });
+
+        // [临时迁移] 把 heading 主题写入到任务行 (主题::xxx)
+        // 用途：从“heading=主题”的旧习惯，过渡到“任务行显式主题字段”。
+        // 迁移完成一段时间后，可安全删除该命令与 migrator，不影响新格式解析。
+        this.addCommand({
+            id: 'think-migrate-task-theme-from-heading-active-file',
+            name: '迁移：把当前文件 heading 主题写入任务行 (主题::...)',
+            callback: async () => {
+                const file = this.app.workspace.getActiveFile();
+                if (!file || !file.path?.endsWith('.md')) {
+                    new Notice('Think: 没有找到当前打开的 Markdown 文件', 4000);
+                    return;
+                }
+                try {
+                    const migrator = container.resolve(TaskThemeFromHeadingMigrator);
+                    new Notice('Think: 正在迁移任务主题字段...', 3000);
+                    const res = await migrator.migrate({ paths: [file.path] });
+                    new Notice(`Think: 迁移完成（修改任务 ${res.tasksTouched} 条）`, 5000);
+                } catch (e: any) {
+                    new Notice(`Think: 迁移失败 - ${e?.message || e}`, 6000);
+                }
+            }
+        });
+
+        this.addCommand({
+            id: 'think-migrate-task-theme-from-heading-all-files',
+            name: '迁移：全库把 heading 主题写入任务行 (主题::...)',
+            callback: async () => {
+                try {
+                    const vaultPort = container.resolve(VAULT_PORT_TOKEN as any) as any;
+                    const paths: string[] = vaultPort?.listMarkdownFilePaths?.() || [];
+                    if (!paths.length) {
+                        new Notice('Think: 未找到可迁移的 Markdown 文件', 4000);
+                        return;
+                    }
+                    const migrator = container.resolve(TaskThemeFromHeadingMigrator);
+                    new Notice(`Think: 正在迁移全库任务主题字段（文件数：${paths.length}）...`, 4000);
+                    const res = await migrator.migrate({ paths });
+                    new Notice(`Think: 迁移完成（修改任务 ${res.tasksTouched} 条，涉及文件 ${res.filesTouched} 个）`, 6000);
+                } catch (e: any) {
+                    new Notice(`Think: 迁移失败 - ${e?.message || e}`, 6000);
                 }
             }
         });

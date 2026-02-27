@@ -23,19 +23,23 @@ import { DEFAULT_ACTION_META } from '../types/actionMeta';
  * 支持 Vite 和 Node.js 环境
  */
 function isDev(): boolean {
-    // Vite 环境
-    if (typeof import.meta !== 'undefined' && import.meta.env) {
-        return import.meta.env.DEV === true;
-    }
-    // Node.js 环境 - 使用类型安全的方式检测
+    // IMPORTANT:
+    // - Avoid using `import.meta` syntax here, because Jest (CommonJS) will parse this file
+    //   during tests and fail before transforms run.
+    // - Obsidian plugin runs in Electron where `process.env.NODE_ENV` usually exists.
     try {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const nodeProcess = (globalThis as any).process;
-        if (nodeProcess?.env?.NODE_ENV) {
-            return nodeProcess.env.NODE_ENV !== 'production';
+        const env = nodeProcess?.env?.NODE_ENV;
+        if (typeof env === 'string') {
+            if (env === 'test') return false;
+            if (env === 'development') return true;
+            if (env === 'production') return false;
+            // default: be conservative (no logs)
+            return false;
         }
     } catch {
-        // 忽略错误
+        // ignore
     }
     return false;
 }

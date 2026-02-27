@@ -4,7 +4,7 @@
   "scripts": {
     "dev": "vite",
     "check": "npm run lint && npm run typecheck && npm run gate",
-    "gate": "npm run arch:public && npm run arch:capabilities && npm run arch:gate && npm run feature:gate && npm run di:gate && npm run dual-system:gate && npm run obsidian-leak:gate && npm run events-boundary:gate && npm run core-obsidian:gate && npm run core-public:gate && npm run shared-public:gate && npm run gate:settings-persistence && npm run di-resolve:gate && npm run modal-promise:gate && npm run selector-giant-subscription:gate && npm run theme-tree-recursion:gate && npm run theme-matrix-legacy-import:gate",
+    "gate": "npm run arch:public && npm run arch:capabilities && npm run arch:gate && npm run feature:gate && npm run di:gate && npm run dual-system:gate && npm run obsidian-leak:gate && npm run events-boundary:gate && npm run core-obsidian:gate && npm run core-public:gate && npm run shared-public:gate && npm run gate:settings-persistence && npm run di-resolve:gate && npm run modal-promise:gate && npm run selector-giant-subscription:gate && npm run theme-tree-recursion:gate && npm run theme-matrix-legacy-import:gate && npm run iconaction:gate",
     "build": "vite build && node scripts/fix-sourcemap.mjs && node -e \"const fs=require('fs');fs.copyFileSync('dist/main.js','main.js');fs.copyFileSync('dist/main.js.map','main.js.map');fs.copyFileSync('dist/styles.css','styles.css');\"",
     "test": "jest --config test/configs/jest.config.js",
     "test:watch": "jest --config test/configs/jest.config.js --watch",
@@ -24,7 +24,7 @@
     "core-public:gate": "node scripts/core-public-gate.mjs",
     "refactor:metrics": "node scripts/refactor-metrics.mjs",
     "lint": "eslint . --ext .ts,.tsx,.js,.jsx",
-    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.test.json --noEmit",
     "public-api:gate": "npm run arch:public",
     "capability:gate": "npm run arch:capabilities",
     "knip": "npx --yes knip",
@@ -43,7 +43,10 @@
     "selector-giant-subscription:gate": "node scripts/selector-giant-subscription-gate.mjs",
     "selectors:coverage": "node scripts/selectors-coverage-report.mjs",
     "theme-tree-recursion:gate": "node scripts/theme-tree-recursion-gate.mjs",
-    "theme-matrix-legacy-import:gate": "node scripts/theme-matrix-legacy-import-gate.mjs"
+    "theme-matrix-legacy-import:gate": "node scripts/theme-matrix-legacy-import-gate.mjs",
+    "iconaction:gate": "node scripts/iconaction-gate.mjs",
+    "typecheck:src": "tsc -p tsconfig.json --noEmit",
+    "typecheck:test": "tsc -p tsconfig.test.json --noEmit"
   },
   "dependencies": {
     "@codemirror/state": "6.5.0",

@@ -1,5 +1,7 @@
-import { StateCreator } from 'zustand';
+import type { StateCreator } from 'zustand';
 
+// Re-export so app/store/types.ts can re-export it from this slice module.
+export type { TimerState } from '@core/public';
 import type { TimerState } from '@core/public';
 
 export interface TimerSlice {

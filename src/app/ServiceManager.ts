@@ -51,12 +51,6 @@ export class ServiceManager {
     // buildRuntime 构建的 UI services（含 STORE_TOKEN）
     private runtimeServices: import('./services.types').Services | null = null;
 
-    // bootstrap 阶段一次性 resolve 的依赖（不依赖 STORE_TOKEN）
-    private bootstrapResolved: BootstrapResolved | null = null;
-
-    // buildRuntime 的缓存（依赖 STORE_TOKEN，需在 initializeCore 后调用）
-    private runtimeServices: import('@/app/services.types').Services | null = null;
-
     // 统一资源释放表
     private disposables: Disposables = new Disposables();
 

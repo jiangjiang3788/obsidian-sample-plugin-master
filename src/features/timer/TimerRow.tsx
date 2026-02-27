@@ -2,7 +2,7 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
 import { useState, useEffect } from 'preact/hooks';
-import { Box, Typography, IconButton, Tooltip } from '@shared/public';
+import { Box, IconAction, Typography, Tooltip } from '@shared/public';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import StopIcon from '@mui/icons-material/Stop';
 import PauseIcon from '@mui/icons-material/Pause';
@@ -84,13 +84,13 @@ export function TimerRow({ timer, actionService, timerService, dataStore, app }:
             <Typography variant="body2" sx={{ fontFamily: 'monospace' }}>{displayTime}</Typography>
             
             {timer.status === 'running' ? (
-                <Tooltip title="暂停"><IconButton size="small" onClick={() => timerService.pause(timer.id)}><PauseIcon fontSize="inherit" /></IconButton></Tooltip>
+                <IconAction label="暂停" onClick={() => timerService.pause(timer.id)} icon={<PauseIcon fontSize="inherit" />} />
             ) : (
-                <Tooltip title="继续"><IconButton size="small" onClick={() => timerService.resume(timer.id)} color="primary"><PlayArrowIcon fontSize="inherit" /></IconButton></Tooltip>
+                <IconAction label="继续" onClick={() => timerService.resume(timer.id)} color="primary" icon={<PlayArrowIcon fontSize="inherit" />} />
             )}
-            <Tooltip title="停止并记录"><IconButton size="small" onClick={() => timerService.stopAndApply(timer.id)}><StopIcon fontSize="inherit" /></IconButton></Tooltip>
-            <Tooltip title="编辑任务"><IconButton size="small" onClick={handleEdit}><EditIcon fontSize="inherit" /></IconButton></Tooltip>
-            <Tooltip title="取消任务"><IconButton size="small" onClick={() => timerService.cancel(timer.id)} color="error"><DeleteForeverIcon fontSize="inherit" /></IconButton></Tooltip>
+            <IconAction label="停止并记录" onClick={() => timerService.stopAndApply(timer.id)} icon={<StopIcon fontSize="inherit" />} />
+            <IconAction label="编辑任务" onClick={handleEdit} icon={<EditIcon fontSize="inherit" />} />
+            <IconAction label="取消任务" onClick={() => timerService.cancel(timer.id)} color="error" icon={<DeleteForeverIcon fontSize="inherit" />} />
         </Box>
     );
 }

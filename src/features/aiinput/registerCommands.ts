@@ -102,7 +102,10 @@ export function registerAiInputCommands(plugin: ThinkPlugin) {
                 // 使用批量确认 Modal
                 new AiBatchConfirmModal(
                     plugin.app,
-                    batch.items
+                    {
+                        title: '确认记录',
+                        items: batch.items,
+                    }
                 ).open();
 
             } catch (e: any) {

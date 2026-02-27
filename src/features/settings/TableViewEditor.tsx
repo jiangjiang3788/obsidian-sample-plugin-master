@@ -21,7 +21,7 @@ export function TableViewEditor({ value, onChange, fieldOptions }: ViewEditorPro
                 options={fieldOptions}
                 value={value.rowField ?? ''}
                 onChange={(_, v) => onChange({ rowField: v ?? '' })}
-                renderInput={p => <TextField {...p} label="行字段" variant="outlined" />}
+                renderInput={(p: any) => <TextField {...(p as any)} label="行字段" variant="outlined" />}
             />
             <Autocomplete
                 freeSolo disablePortal fullWidth size="small"
@@ -29,7 +29,7 @@ export function TableViewEditor({ value, onChange, fieldOptions }: ViewEditorPro
                 options={fieldOptions}
                 value={value.colField ?? ''}
                 onChange={(_, v) => onChange({ colField: v ?? '' })}
-                renderInput={p => <TextField {...p} label="列字段" variant="outlined" />}
+                renderInput={(p: any) => <TextField {...(p as any)} label="列字段" variant="outlined" />}
             />
         </Stack>
     </Stack>

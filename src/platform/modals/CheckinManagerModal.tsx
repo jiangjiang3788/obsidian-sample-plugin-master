@@ -9,7 +9,7 @@ import { getEffectiveDisplayCount, getEffectiveLevelCount } from '@core/public';
 import { makeObsUri } from '@core/public';
 
 // Types
-interface CheckinManagerData {
+export interface CheckinManagerData {
     displayCount: number;
     levelCount: number;
     countForLevel: boolean;

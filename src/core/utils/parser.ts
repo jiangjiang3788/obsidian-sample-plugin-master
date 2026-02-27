@@ -60,7 +60,12 @@ export function parseTaskLine(
         const value = m[2].trim();
         const lowerKey = key.toLowerCase();
 
-        if (['主题', '标签', 'tag', 'tags'].includes(lowerKey)) {
+        // 语义止血：
+        // - (主题::xxx) 只写入 item.theme，不再混入 tags
+        // - tags 仅来自 #tag 或 (标签::) /(tags::)
+        if (['主题', 'theme'].includes(lowerKey)) {
+            item.theme = value;
+        } else if (['标签', 'tag', 'tags'].includes(lowerKey)) {
             value.split(/[,，]/).forEach(v => {
                 const t = v.trim().replace(/^#/, '');
                 if (t) item.tags.push(t);
@@ -155,9 +160,27 @@ export function parseBlockContent(
     // [Day2新增] 主题字段
     let themeVal: string | undefined;
 
+    // 支持在 legacy block 中使用 callout + 引用行：
+    //
+    // <!-- start -->
+    // > [!thinktxt]
+    // > 分类:: ...
+    // > - [x] ...
+    // <!-- end -->
+    //
+    // - `> ` / `>` 前缀会被剥离（包含 `>-` 这种写法）
+    // - `[!thinktxt]` 标记行会被忽略
+    const normalizeLegacyLine = (raw: string) => {
+        const m = raw.match(/^\s*>\s?(.*)$/);
+        return m ? m[1] : raw;
+    };
+
     for (let i = 0; i < contentLines.length; i++) {
-        const rawLine = contentLines[i];
+        const rawLine0 = contentLines[i];
+        const rawLine = normalizeLegacyLine(rawLine0);
         const line = rawLine.trim();
+        // 忽略 callout 标记行
+        if (/^\[!thinktxt\]/i.test(line)) continue;
         if (!contentStarted) {
             if (line === '') continue;
             const kv = line.match(/^([^:：]{1,20})[:：]{1,2}\s*(.*)$/);

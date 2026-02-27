@@ -28,6 +28,7 @@ import { useMemo, useCallback, useState } from 'preact/hooks';
 import { DndContext, closestCenter } from '@dnd-kit/core';
 import { useSortable, SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { arrayMove } from '@core/public';
+import { IconAction } from '@shared/public';
 import { ModuleSettingsModal, openModuleSettingsWidget } from '@/features/settings/ModuleSettingsModal';
 import { NamePromptModal } from '@shared/public';
 import { DEFAULT_NAMES } from '@core/public';
@@ -218,7 +219,8 @@ const handleAutocompleteChange = useCallback(async (event: any, newValue: any) =
                     // ✅ 在 FloatingPanel 中使用时，必须禁用 Portal。
                     // 否则 Popper 会挂到 document.body，导致 FloatingPanel 的“点击外部关闭”误判。
                     disablePortal
-                    PopperProps={{ style: { zIndex: 20000 } }}
+                    // MUI v6+ types: PopperProps moved under slotProps.popper
+                    slotProps={{ popper: { style: { zIndex: 20000 } } } as any}
                     renderInput={(params) => <TextField {...params as any} variant="outlined" placeholder="+ 搜索添加或创建视图..." />}
                     sx={{ minWidth: 200 }}
                     size="small"
@@ -309,17 +311,9 @@ function SortableLayoutItem({ layout, useCases, isExpanded, onToggle }: {
                     {layout.name}
                 </Typography>
 
-                <Tooltip title="复制">
-                    <IconButton size="small" onClick={handleDuplicate}>
-                        <ContentCopyIcon fontSize="small" />
-                    </IconButton>
-                </Tooltip>
+                <IconAction label="复制" onClick={handleDuplicate} icon={<ContentCopyIcon fontSize="small" />} />
 
-                <Tooltip title="删除">
-                    <IconButton size="small" onClick={handleDelete} color="error">
-                        <DeleteOutlineIcon fontSize="small" />
-                    </IconButton>
-                </Tooltip>
+                <IconAction label="删除" onClick={handleDelete} color="error" icon={<DeleteOutlineIcon fontSize="small" />} />
             </Stack>
 
             {isExpanded && (
@@ -343,16 +337,18 @@ export function LayoutSettings({ app }: { app: any }) {
 
     // 添加新布局（无 parentId，扁平列表）
     const onAddLayout = useCallback(() => {
-        new NamePromptModal(
-            app,
-            `创建新布局`,
-            `请输入新布局的名称...`,
-            DEFAULT_NAMES.NEW_LAYOUT,
-            (newName) => {
-                // S5: 通过 useCases.layout 创建，parentId = null
-                useCases.layout.addLayout(newName, null);
-            }
-        ).open();
+        const modal = new NamePromptModal(app, {
+            title: '创建新布局',
+            placeholder: '请输入新布局的名称...',
+            defaultValue: DEFAULT_NAMES.NEW_LAYOUT,
+            ctaText: '创建',
+        });
+
+        modal.openAndGetValue().then((newName) => {
+            if (!newName) return;
+            // S5: 通过 useCases.layout 创建，parentId = null
+            useCases.layout.addLayout(newName, null);
+        });
     }, [app, useCases]);
 
     const toggleExpand = useCallback((id: string) => {

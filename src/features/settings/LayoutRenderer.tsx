@@ -8,7 +8,7 @@ import { ModulePanel } from './ModulePanel';
 import { DashboardViewComponents as ViewComponents } from './index';
 
 import { calculateTimelineRange, normalizeTimelineView, dayjs, devLog } from '@core/public';
-import { useUseCases, useUiPort, useSelector } from '@/app/public';
+import { useUseCases, useUiPort, useSelector, useMessageRenderPort } from '@/app/public';
 import type { TimerController } from '@/app/public';
 import type { ActionService } from '@core/public';
 import { ItemService } from '@core/public';
@@ -76,6 +76,8 @@ const ViewContent = ({
     inputSettings: any; // [新增]
     onDataLoaded: (items: Item[]) => void; // [新增]
 }) => {
+    const messageRenderPort = useMessageRenderPort();
+
     const viewItems = useViewData({
         dataStore,
         viewInstance,
@@ -181,6 +183,9 @@ const ViewContent = ({
         allThemes: allThemes, // [新增]
         inputSettings: inputSettings, // [新增]
         selectedCategories,
+
+        // 通用：Markdown 渲染能力（BlockView/卡片内容等复用）
+        messageRenderPort,
 
         // 仅 BlockView 需要（其它 View 忽略即可）
         effectiveGroupFields: blockViewModel?.effectiveGroupFields,

@@ -3,8 +3,10 @@
 import { h } from 'preact';
 import type { ComponentChildren } from 'preact';
 
-import { Box, IconButton, Tooltip } from '@mui/material';
+import { Box } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
+
+import { IconAction } from '@shared/public';
 
 /**
  * ModalHeader
@@ -40,11 +42,7 @@ export function ModalHeader({
 
       {right ??
         (onClose ? (
-          <Tooltip title="关闭">
-            <IconButton onClick={onClose} size="small">
-              <CloseIcon />
-            </IconButton>
-          </Tooltip>
+          <IconAction label="关闭" onClick={onClose} icon={<CloseIcon />} />
         ) : null)}
     </Box>
   );

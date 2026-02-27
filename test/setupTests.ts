@@ -1,3 +1,5 @@
-// Jest setup (kept minimal on purpose)
+// Jest setup (kept intentionally minimal)
+// tsyringe requires reflect-metadata to be loaded before any imports that use decorators/DI.
+import 'reflect-metadata';
 
-// jsdom doesn't implement DOM APIs like getBBox etc. Add stubs here if needed.
+// Add global mocks / matchers here when needed.

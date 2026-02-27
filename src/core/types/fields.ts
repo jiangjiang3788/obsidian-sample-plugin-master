@@ -31,6 +31,7 @@ export const FIELD_REGISTRY: Record<string, FieldDefinition> = {
     categoryKey:   { key: 'categoryKey',   label: '类别',      type: 'string', description: '统一的分类键 (例如 "任务/done")' },
     date:          { key: 'date',          label: '日期',      type: 'date',   description: '项目的主要关联日期' },
     tags:          { key: 'tags',          label: '标签',      type: 'tags',   description: '所有关联的标签', formatter: (v) => Array.isArray(v) ? v.join(', ') : '' },
+    theme:         { key: 'theme',         label: '主题',      type: 'string', description: '该条目归属的主题（推荐用 (主题::xxx) 显式写入）' },
     priority:      { key: 'priority',      label: '优先级',    type: 'string' },
     icon:          { key: 'icon',          label: '图标',      type: 'icon' },
     period:        { key: 'period',        label: '字段粒度',      type: 'string', description: '该条目归属的时间粒度：年/季/月/周/天（未设置默认天）' },

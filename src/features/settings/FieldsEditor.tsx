@@ -2,14 +2,14 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
 import { useState, useEffect } from 'preact/hooks';
-import { Box, Stack, TextField, IconButton, Button, Typography, Tooltip, Divider } from '@mui/material';
+import { Box, Stack, TextField, Button, Typography, Divider } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import AddIcon from '@mui/icons-material/Add';
 import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
 import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
 import RemoveCircleOutlineIcon from '@mui/icons-material/RemoveCircleOutline';
 import type { TemplateField, TemplateFieldOption } from '@core/public';
-import { SimpleSelect } from '@shared/public';
+import { IconAction, SimpleSelect } from '@shared/public';
 
 // OptionRow 组件没有变化
 function OptionRow({ option, onChange, onRemove, fieldType }: { option: TemplateFieldOption, onChange: (newOption: TemplateFieldOption) => void, onRemove: () => void, fieldType: TemplateField['type'] }) {
@@ -26,7 +26,7 @@ function OptionRow({ option, onChange, onRemove, fieldType }: { option: Template
         <Stack direction="row" alignItems="center" spacing={1.5}>
             <TextField label={labelLabel} value={localOption.label || ''} onChange={e => setLocalOption(o => ({ ...o, label: (e.target as HTMLInputElement).value }))} onBlur={handleBlur} size="small" variant="outlined" sx={{ flex: 1 }} />
             <TextField label={valueLabel} value={localOption.value} onChange={e => setLocalOption(o => ({ ...o, value: (e.target as HTMLInputElement).value }))} onBlur={handleBlur} size="small" variant="outlined" sx={{ flex: 1 }} />
-            <Tooltip title="删除此选项"><IconButton onClick={onRemove} size="small"><RemoveCircleOutlineIcon fontSize='small' /></IconButton></Tooltip>
+            <IconAction label="删除此选项" onClick={onRemove} icon={<RemoveCircleOutlineIcon fontSize="small" />} />
         </Stack>
     );
 }
@@ -85,10 +85,10 @@ function FieldRow({ field, index, fieldCount, onUpdate, onRemove, onMove }: { fi
                     </Stack>
                 )}
                 <Stack direction="row">
-                    <Tooltip title="上移"><span><IconButton size="small" disabled={index === 0} onClick={() => onMove('up')}><ArrowUpwardIcon sx={{ fontSize: '1.1rem' }} /></IconButton></span></Tooltip>
-                    <Tooltip title="下移"><span><IconButton size="small" disabled={index === fieldCount - 1} onClick={() => onMove('down')}><ArrowDownwardIcon sx={{ fontSize: '1.1rem' }} /></IconButton></span></Tooltip>
+                    <IconAction label="上移" disabled={index === 0} onClick={() => onMove('up')} icon={<ArrowUpwardIcon sx={{ fontSize: '1.1rem' }} />} />
+                    <IconAction label="下移" disabled={index === fieldCount - 1} onClick={() => onMove('down')} icon={<ArrowDownwardIcon sx={{ fontSize: '1.1rem' }} />} />
                 </Stack>
-                <Tooltip title="删除此字段"><IconButton onClick={onRemove} size="small" color="error"><DeleteIcon /></IconButton></Tooltip>
+                <IconAction label="删除此字段" onClick={onRemove} color="error" icon={<DeleteIcon />} />
             </Stack>
 
             {/* ===================== [核心修改 2: 新增UI] ===================== */}

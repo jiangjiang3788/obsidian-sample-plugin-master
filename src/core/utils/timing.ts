@@ -4,7 +4,7 @@ export function throttle<T extends (...args: any[]) => void>(
   wait = 250
 ): T {
   let last = 0, timer: any = null;
-  return function (...args: Parameters<T>) {
+  return function (this: unknown, ...args: Parameters<T>) {
     const now = Date.now();
     if (now - last >= wait) {
       last = now;

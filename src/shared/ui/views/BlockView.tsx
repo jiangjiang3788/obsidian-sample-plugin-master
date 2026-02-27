@@ -7,6 +7,7 @@ import { TaskRow } from '@shared/ui/items/TaskRow';
 import { BlockItem } from '@shared/ui/items/BlockItem';
 import type { TimerController } from '@/app/public';
 import { GroupedContainer } from '@shared/ui/GroupedContainer';
+import type { MessageRenderPort } from '@core/public';
 
 
 interface BlockViewProps {
@@ -23,6 +24,7 @@ interface BlockViewProps {
     effectiveGroupFields?: string[];
     fields?: string[];
     app: any;
+    messageRenderPort?: MessageRenderPort;
     onMarkDone: (id: string) => void;
     timerService: TimerController;
     timers: any[];
@@ -38,6 +40,7 @@ export function BlockView(props: BlockViewProps) {
         effectiveGroupFields: injectedGroupFields,
         fields = [],
         app,
+        messageRenderPort,
         onMarkDone,
         timerService,
         timers,
@@ -77,6 +80,7 @@ export function BlockView(props: BlockViewProps) {
                     fields={fields} 
                     isNarrow={isNarrow} 
                     app={app} 
+                    messageRenderPort={messageRenderPort}
                     allThemes={allThemes} 
                 />
             );

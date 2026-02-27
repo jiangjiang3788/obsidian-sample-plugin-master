@@ -3,20 +3,54 @@ import { h } from 'preact';
 import { Item, ThemeDefinition } from '@core/public';
 import { FieldPill } from '@shared/ui/items/FieldPill';
 import { ItemLink } from '@shared/ui/items/ItemLink';
+import type { MessageRenderPort } from '@core/public';
+import { MarkdownContent } from '@shared/ui/markdown/MarkdownContent';
 
 interface BlockItemProps {
     item: Item;
     fields: string[];
     isNarrow: boolean;
     app: any;
+    messageRenderPort?: MessageRenderPort;
     allThemes: ThemeDefinition[];
 }
 
-export const BlockItem = ({ item, fields, isNarrow, app, allThemes }: BlockItemProps) => {
+export const BlockItem = ({ item, fields, isNarrow, app, messageRenderPort, allThemes }: BlockItemProps) => {
     const metadataFields = fields.filter(f => f !== 'title' && f !== 'content');
     const showTitle = fields.includes('title') && item.title;
-    const showContent = fields.includes('content') && item.content;
+    // Many "task" items have empty content (their main text lives in title).
+    // In layouts that only show content, we fallback to title so users always see something.
+    const effectiveContent = (item.content && item.content.trim().length > 0) ? item.content : item.title;
+    const showContent = fields.includes('content') && effectiveContent;
     const narrowClass = isNarrow ? 'is-narrow' : '';
+
+    const openSourceAtLine = (evt: MouseEvent) => {
+        try {
+            // Let normal link clicks inside markdown behave normally.
+            const target = evt.target as HTMLElement | null;
+            if (target?.closest('a')) return;
+
+            const path = item.file?.path;
+            if (!path) return;
+
+            const file = app?.vault?.getAbstractFileByPath?.(path);
+            if (!file) return;
+
+            const line = typeof item.file?.line === 'number' ? item.file!.line : 0;
+            const leaf = app?.workspace?.getLeaf?.(false);
+            if (leaf?.openFile) {
+                leaf.openFile(file, { state: { line } });
+                return;
+            }
+
+            // Fallback: openLinkText if available
+            if (app?.workspace?.openLinkText) {
+                app.workspace.openLinkText(path, '', false, { state: { line } });
+            }
+        } catch {
+            // no-op: navigation should never crash rendering
+        }
+    };
 
     return (
         <div class={`bv-item bv-item--block ${narrowClass}`}>
@@ -41,7 +75,15 @@ export const BlockItem = ({ item, fields, isNarrow, app, allThemes }: BlockItemP
                 )}
                 {showContent && (
                     <div class="bv-block-content">
-                        <ItemLink item={item} app={app} className="content-link" />
+                        <MarkdownContent
+                            renderPort={messageRenderPort}
+                            app={app}
+                            content={effectiveContent || ''}
+                            contentType="markdown"
+                            sourcePath={item.file?.path || ''}
+                            className="bv-block-md"
+                            onClick={openSourceAtLine as any}
+                        />
                     </div>
                 )}
             </div>

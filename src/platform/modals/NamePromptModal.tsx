@@ -71,7 +71,7 @@ function PromptComponent({
 export class NamePromptModal extends Modal {
   private resolvePromise: ((value: string | null) => void) | null = null;
 
-  constructor(private app: App, private options: NamePromptOptions) {
+  constructor(app: App, private options: NamePromptOptions) {
     super(app);
   }
 

@@ -31,6 +31,17 @@ export function FieldPill({ item, fieldKey, app, allThemes }: FieldPillProps) {
     if (fieldKey === 'tags') {
         return <TagsRenderer tags={value} allThemes={allThemes} />;
     }
+
+    // Theme 字段特殊处理（术语对齐：theme=主题，独立于 tags）
+    if (fieldKey === 'theme' && typeof value === 'string') {
+        const fullPath = value;
+        const labelText = fullPath.split('/').pop() || fullPath;
+        return (
+            <span class="tag-pill" title={`${label}: ${fullPath}`} style={{ backgroundColor: getCategoryColor(fullPath) }}>
+                {labelText}
+            </span>
+        );
+    }
     
     // Category 字段特殊处理
     if (fieldKey === 'categoryKey') {

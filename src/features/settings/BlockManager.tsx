@@ -10,7 +10,7 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
 import { useSelector, selectInputBlocks, useUseCases } from '@/app/public';
-import { Accordion, AccordionSummary, AccordionDetails, Box, Stack, Typography, IconButton, Tooltip, Divider, TextField } from '@mui/material';
+import { Accordion, AccordionSummary, AccordionDetails, Box, Stack, Typography, Tooltip, Divider, TextField } from '@mui/material';
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 import DeleteForeverOutlinedIcon from '@mui/icons-material/DeleteForeverOutlined';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
@@ -23,6 +23,7 @@ import { DndContext, closestCenter } from '@dnd-kit/core';
 import { arrayMove, SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import type { UseCases } from '@/app/public';
+import { IconAction } from '@shared/public';
 
 // P1: 组件 props 接收 useCases
 function SortableBlockItem({ block, openId, setOpenId, handleDelete, handleDuplicate, useCases }: {
@@ -43,7 +44,7 @@ function SortableBlockItem({ block, openId, setOpenId, handleDelete, handleDupli
                     <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
                         <Stack direction="row" alignItems="center" spacing={0.5}>
                             <Tooltip title="拖动排序">
-                                <Box component="span" {...attributes} {...listeners} sx={{ cursor: 'grab', display: 'flex', alignItems: 'center' }}>
+                                <Box component="span" {...(attributes as any)} {...(listeners as any)} sx={{ cursor: 'grab', display: 'flex', alignItems: 'center' }}>
                                     <DragIndicatorIcon sx={{ color: 'text.disabled' }} />
                                 </Box>
                             </Tooltip>
@@ -51,8 +52,8 @@ function SortableBlockItem({ block, openId, setOpenId, handleDelete, handleDupli
                         </Stack>
                         <Stack direction="row" alignItems="center" spacing={0.5}>
                             {/* P1: 通过 UseCase 层复制 Block */}
-                            <Tooltip title="复制"><IconButton size="small" onClick={e => { e.stopPropagation(); handleDuplicate(block.id); }}><ContentCopyIcon fontSize="small" /></IconButton></Tooltip>
-                            <Tooltip title="删除"><IconButton size="small" onClick={e => { e.stopPropagation(); handleDelete(block.id, block.name); }} sx={{ color: 'text.secondary', '&:hover': { color: 'error.main' } }}><DeleteForeverOutlinedIcon /></IconButton></Tooltip>
+                            <IconAction label="复制" icon={<ContentCopyIcon fontSize="small" />} onClick={() => handleDuplicate(block.id)} />
+                            <IconAction label="删除" icon={<DeleteForeverOutlinedIcon />} onClick={() => handleDelete(block.id, block.name)} sx={{ color: 'text.secondary', '&:hover': { color: 'error.main' } }} />
                         </Stack>
                     </Box>
                 </AccordionSummary>
@@ -155,7 +156,7 @@ export function BlockManager() {
         <Box sx={{ maxWidth: '900px', mx: 'auto' }}>
             <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 2 }}>
                 <Typography variant="h6">1. 管理 Block</Typography>
-                <Tooltip title="新增Block类型"><IconButton onClick={handleAdd} color="success"><AddCircleOutlineIcon /></IconButton></Tooltip>
+                <IconAction label="新增Block类型" onClick={handleAdd} color="success" icon={<AddCircleOutlineIcon />} />
             </Stack>
             <Typography variant="body2" color="text.secondary" sx={{mb: 1.5}}>在这里定义所有快速输入的基础模板，例如任务、打卡、总结等。可拖动排序。</Typography>
             

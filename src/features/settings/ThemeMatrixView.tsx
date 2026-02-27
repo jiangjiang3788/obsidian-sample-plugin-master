@@ -232,8 +232,8 @@ export function ThemeMatrixView({ blocks, themes, overrides, settings, useCases,
                 <TextField 
                     placeholder="新主题路径 (如: 个人/习惯)" 
                     value={newThemePath} 
-                    onChange={e => setNewThemePath((e.target as HTMLInputElement).value)} 
-                    onKeyDown={e => e.key === 'Enter' && handleAddTheme()} 
+                    onChange={(e: any) => setNewThemePath((e.target as HTMLInputElement).value)} 
+                    onKeyDown={(e: any) => e.key === 'Enter' && handleAddTheme()} 
                     size="small" 
                     variant="outlined" 
                     sx={{ flexGrow: 1, maxWidth: '400px' }} 

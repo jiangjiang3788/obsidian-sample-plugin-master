@@ -279,7 +279,8 @@ export function LayoutEditorPanel({ layoutId, useCases }: { layoutId: string; us
           // ✅ 关键修复：在 FloatingPanel 中必须禁用 Portal，否则 Popper 挂到 body 上
           // 会被 FloatingPanel 的“点击外部关闭”误判，并且可能被浮窗遮挡。
           disablePortal
-          PopperProps={{ style: { zIndex: 20000 } }}
+          // MUI v6+ types: PopperProps moved under slotProps.popper
+          slotProps={{ popper: { style: { zIndex: 20000 } } } as any}
         />
       </Stack>
 

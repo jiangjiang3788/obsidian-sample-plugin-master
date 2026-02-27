@@ -24,6 +24,7 @@ export class ViewInstanceUseCase {
 
             const newVi: ViewInstance = {
                 id: generateId('vi'),
+                parentId: null,
                 title,
                 viewType,
                 viewConfig: {},
@@ -32,7 +33,7 @@ export class ViewInstanceUseCase {
                 filters: [],
                 sort: [],
                 collapsed: false,
-            } as ViewInstance;
+            };
 
             await state.updateSettings(draft => {
                 if (!draft.viewInstances) draft.viewInstances = [];

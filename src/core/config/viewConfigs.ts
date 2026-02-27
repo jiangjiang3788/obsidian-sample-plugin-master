@@ -58,9 +58,15 @@ export const TABLE_VIEW_DEFAULT_CONFIG: TableViewConfig = {
  * TimelineView 默认配置（供视图 + 编辑器复用）
  */
 export interface CategoryConfig {
-    name?: string;
+    /**
+     * Stable identifier used across aggregation / charting.
+     * Keep it required to avoid `string | undefined` leaks throughout the UI.
+     */
+    name: string;
     color: string;
     files: string[];
+    /** Optional display alias */
+    alias?: string;
 }
 
 export interface TimelineViewConfig {
@@ -76,9 +82,9 @@ export const TIMELINE_VIEW_DEFAULT_CONFIG: TimelineViewConfig = {
     MAX_HOURS_PER_DAY: 24,
     UNTRACKED_LABEL: "未记录",
     categories: {
-        "工作": { color: "#60a5fa", files: ["工作", "Work"] },
-        "学习": { color: "#34d399", files: ["学习", "Study"] },
-        "生活": { color: "#fbbf24", files: ["生活", "Life"] },
+        "工作": { name: "工作", color: "#60a5fa", files: ["工作", "Work"] },
+        "学习": { name: "学习", color: "#34d399", files: ["学习", "Study"] },
+        "生活": { name: "生活", color: "#fbbf24", files: ["生活", "Life"] },
     },
     progressOrder: ["工作", "学习", "生活"],
 };

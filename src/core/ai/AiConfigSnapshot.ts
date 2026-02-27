@@ -59,7 +59,7 @@ export function buildAiConfigSnapshot(input: InputSettings | undefined, ai: AiSe
         .filter(b => !enabledSet || enabledSet.has(b.id))
         .map(b => {
             // 用 getEffectiveTemplate 来获取字段（最贴合实际 override）
-            const effective = getEffectiveTemplate(input, b.id, undefined);
+            const effective = input ? getEffectiveTemplate(input, b.id, undefined) : undefined;
             const sourceFields = effective?.template?.fields ?? b.fields ?? [];
             
             const fields: AiBlockConfigField[] = sourceFields.map(f => ({

@@ -79,6 +79,8 @@ export interface ThemeDefinition {
     id: string;
     path: string;
     icon?: string;
+    /** UI-only state; persisted as part of InputSettings for theme matrix. */
+    status?: 'active' | 'inactive';
 }
 export interface ThemeOverride {
     id: string;

@@ -3,7 +3,7 @@
 import { h } from 'preact';
 import { useMemo } from 'preact/hooks';
 
-import { Box, Stack, Typography, TextField, Button, IconButton, Tooltip } from '@shared/public';
+import { Box, IconAction, Stack, Typography, TextField, Button, IconButton, Tooltip } from '@shared/public';
 import AddIcon from '@mui/icons-material/AddCircleOutline';
 import DeleteIcon from '@mui/icons-material/RemoveCircleOutline';
 
@@ -43,7 +43,7 @@ function normalizeProgressOrder(categories: CategoriesMap, progressOrder: string
 function stripInlineName(config: CategoryConfig): CategoryConfig {
     // Category name lives in the map key; keep data clean.
     const { name: _inlineName, ...rest } = config;
-    return { ...rest };
+    return { name: config.name, ...rest };
 }
 
 function nextCategoriesForRename(
@@ -61,8 +61,9 @@ function nextCategoriesForRename(
     const targetName = willCollide ? oldName : finalName;
 
     const merged: CategoryConfig = {
-        ...(categories[oldName] || { color: '#cccccc', files: [] }),
+        ...(categories[oldName] || { name: oldName, color: '#cccccc', files: [] }),
         ...newConfig,
+        name: targetName,
     };
 
     const nextCats: CategoriesMap = {};
@@ -97,9 +98,7 @@ function HourHeightSetting(props: {
                 size="small"
                 variant="outlined"
                 value={hourHeight}
-                onChange={(e) =>
-                    onPatch({ defaultHourHeight: Number((e.target as HTMLInputElement).value) })
-                }
+                onChange={(e: any) => onPatch({ defaultHourHeight: Number((e.target as HTMLInputElement).value) })}
                 inputProps={{ min: 20, max: 200 }}
                 sx={{ width: '120px' }}
             />
@@ -128,7 +127,7 @@ function CategoriesEditor(props: {
             newName = `新分类${i++}`;
         }
         onPatch({
-            categories: { ...categories, [newName]: { color: '#60a5fa', files: [] } },
+            categories: { ...categories, [newName]: { name: newName, color: '#60a5fa', files: [] } },
             progressOrder: [...progressOrder, newName],
         });
     };
@@ -176,37 +175,27 @@ function CategoriesEditor(props: {
                         }}
                     >
                         <Stack direction="row" sx={{ gridColumn: '1 / 2' }}>
-                            <Tooltip title="上移">
-                                <span>
-                                    <IconButton
-                                        size="small"
-                                        disabled={index === 0}
-                                        onClick={() => moveCategory(index, 'up')}
-                                        sx={{ p: '4px', fontSize: '0.9rem' }}
-                                    >
-                                        ▲
-                                    </IconButton>
-                                </span>
-                            </Tooltip>
-                            <Tooltip title="下移">
-                                <span>
-                                    <IconButton
-                                        size="small"
-                                        disabled={index === progressOrder.length - 1}
-                                        onClick={() => moveCategory(index, 'down')}
-                                        sx={{ p: '4px', fontSize: '0.9rem' }}
-                                    >
-                                        ▼
-                                    </IconButton>
-                                </span>
-                            </Tooltip>
+                            <IconAction
+                                label="上移"
+                                disabled={index === 0}
+                                onClick={() => moveCategory(index, 'up')}
+                                sx={{ p: '4px', fontSize: '0.9rem' }}
+                                icon={<span>▲</span>}
+                            />
+                            <IconAction
+                                label="下移"
+                                disabled={index === progressOrder.length - 1}
+                                onClick={() => moveCategory(index, 'down')}
+                                sx={{ p: '4px', fontSize: '0.9rem' }}
+                                icon={<span>▼</span>}
+                            />
                         </Stack>
 
                         <TextField
                             type="color"
                             size="small"
                             value={catConfig.color || '#cccccc'}
-                            onChange={(e) =>
+                            onChange={(e: any) =>
                                 handleCategoryChange(name, {
                                     color: (e.target as HTMLInputElement).value,
                                 })
@@ -218,7 +207,7 @@ function CategoriesEditor(props: {
                             variant="outlined"
                             size="small"
                             defaultValue={name}
-                            onBlur={(e) =>
+                            onBlur={(e: any) =>
                                 handleCategoryChange(name, {
                                     name: (e.target as HTMLInputElement).value.trim(),
                                 })

@@ -221,8 +221,10 @@ export class DataStore {
    */
   async scanFile(filePathOrFile: string | { path: string }, opts: { bumpVersion?: boolean } = {}): Promise<Item[]> {
     if (!this._assertNotDisposed()) return [];
+    // Keep filePath visible for error reporting in catch.
+    let filePath = '';
     try {
-      const filePath = typeof filePathOrFile === 'string'
+      filePath = typeof filePathOrFile === 'string'
         ? filePathOrFile
         : (filePathOrFile && typeof filePathOrFile.path === 'string' ? filePathOrFile.path : '');
 
@@ -283,7 +285,14 @@ export class DataStore {
               const hashIdx = blockItem.id.lastIndexOf('#');
               const lineNo = hashIdx >= 0 ? Number(blockItem.id.slice(hashIdx + 1)) : undefined;
               (blockItem as any).file = { path: filePath, line: lineNo, basename: fileName };
-              if (currentHeader) {
+              // 语义止血：显式主题优先（来自 block 内容中的 `主题:`）。
+              // - 若 blockItem 自身已带 theme，则只做匹配归一，不用 header 覆盖
+              // - 否则才 fallback 到当前 heading
+              const explicitTheme = (blockItem as any).theme as string | undefined;
+              if (explicitTheme && explicitTheme.trim()) {
+                const matched = this.themeMatcher.findThemeByPartialMatch(explicitTheme.trim());
+                (blockItem as any).theme = matched || explicitTheme.trim();
+              } else if (currentHeader) {
                 const matchedTheme = this.themeMatcher.findThemeByPartialMatch(currentHeader);
                 (blockItem as any).theme = matchedTheme || currentHeader;
               }
@@ -304,9 +313,16 @@ export class DataStore {
           taskItem.tags = Array.from(new Set([...currentSectionTags, ...taskItem.tags]));
           taskItem.created = stat.ctime;
           taskItem.modified = stat.mtime;
-          if (currentHeader) {
-            taskItem.header = currentHeader;
-            // 使用智能匹配获取完整主题路径
+          if (currentHeader) taskItem.header = currentHeader;
+
+          // 语义止血：显式主题优先（来自任务行的 (主题::xxx)）。
+          // - 若 taskItem.theme 已存在：只做匹配归一，不用 header 覆盖
+          // - 否则才 fallback 到当前 heading
+          if (taskItem.theme && taskItem.theme.trim()) {
+            const t = taskItem.theme.trim();
+            const matched = this.themeMatcher.findThemeByPartialMatch(t);
+            taskItem.theme = matched || t;
+          } else if (currentHeader) {
             const matchedTheme = this.themeMatcher.findThemeByPartialMatch(currentHeader);
             taskItem.theme = matchedTheme || currentHeader;
           }
