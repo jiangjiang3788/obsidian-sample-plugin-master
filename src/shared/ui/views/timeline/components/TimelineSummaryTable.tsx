@@ -1,7 +1,7 @@
 // src/shared/ui/timeline/TimelineSummaryTable.tsx
 /** @jsxImportSource preact */
 import { h } from 'preact';
-import { ProgressBlock } from './ProgressBlock';
+import { ProgressBlock } from '@shared/ui/timeline';
 
 interface WeeklySummary {
     summary: Record<string, number>;

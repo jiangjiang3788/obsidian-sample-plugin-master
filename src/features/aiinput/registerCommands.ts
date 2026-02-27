@@ -7,12 +7,11 @@
  */
 
 import type ThinkPlugin from '@/main';
-import { AiTextPromptModal } from '@/app/ui/modals/AiTextPromptModal';
-import { AiBatchConfirmModal } from '@/app/ui/modals/AiBatchConfirmModal';
+import { AiTextPromptModal, AiBatchConfirmModal } from '@/app/public';
 import { AiConfigCache, AiHttpClient, AiNaturalLanguageRecordParser, devError } from '@core/public';
 import { createServices, getZustandState, type AppStoreInstance } from '@/app/public';
 import type { ISettingsProvider } from '@core/public';
-import { createTakeLatest, CancelledError } from '@/shared/utils/takeLatest';
+import { createTakeLatest, CancelledError } from '@shared/public';
 
 /**
  * 创建一个基于 zustand store 的 SettingsProvider

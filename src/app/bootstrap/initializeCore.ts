@@ -15,6 +15,7 @@ import { FloatingTimerWidget } from '@features/timer/FloatingTimerWidget';
 import type { ServiceManagerServices } from '@/app/ServiceManager.services';
 import type { Disposables } from '@/app/runtime/disposables';
 import type { BootstrapResolved } from '@/app/bootstrap/buildRuntime';
+import { setDevConsoleStackEnabled } from '@shared/public';
 
 export async function initializeCore(opts: {
     plugin: ThinkPlugin;
@@ -60,6 +61,10 @@ export async function initializeCore(opts: {
                 zustandStore.getState().initialize(zustandInitialSettings);
                 devLog('[ThinkPlugin] Zustand Store 初始化完成');
 
+                // 开发模式：初始化 console.error stack 开关
+                setDevConsoleStackEnabled(!!zustandStore.getState().settings.devConsoleStackEnabled);
+
+
                 // 订阅 SettingsRepository 的变更，仅同步到 Zustand Store
                 const unsubscribeSettingsRepo = settingsRepository.subscribe((settings) => {
                     zustandStore.setState({ settings });
@@ -98,6 +103,16 @@ export async function initializeCore(opts: {
                 );
                 disposables?.add('AppStore.subscribe(floatingTimerEnabled)', unsubscribeFloatingTimer);
                 devLog('[ThinkPlugin] TimerWidget 生命周期监听已建立');
+// 开发模式：监听设置变更，决定是否输出 console.error stack
+const unsubscribeDevConsole = zustandStore.subscribe(
+    (state) => !!state.settings.devConsoleStackEnabled,
+    (enabled) => {
+        setDevConsoleStackEnabled(enabled);
+    }
+);
+disposables?.add('AppStore.subscribe(devConsoleStackEnabled)', unsubscribeDevConsole);
+devLog('[ThinkPlugin] DevConsoleStackEnabled 监听已建立');
+
 
                 // 3. 创建 UseCases 并注册到 DI 容器（传入 store）
                 services.useCases = createUseCases(zustandStore, {

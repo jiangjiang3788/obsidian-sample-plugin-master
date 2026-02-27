@@ -1,8 +1,7 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
 import { useState, useEffect, useMemo, useRef } from 'preact/hooks';
-import { useIsMounted } from '@/shared/hooks/useIsMounted';
-import { createTakeLatest, CancelledError } from '@/shared/utils/takeLatest';
+import { useIsMounted, createTakeLatest, CancelledError } from '@shared/public';
 import {
     Dialog,
     DialogTitle,

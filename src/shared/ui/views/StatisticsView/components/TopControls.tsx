@@ -1,6 +1,6 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
-import type { StatisticsCurrentView } from './types';
+import type { StatisticsCurrentView } from '../types';
 
 export function TopControls({
   currentView,

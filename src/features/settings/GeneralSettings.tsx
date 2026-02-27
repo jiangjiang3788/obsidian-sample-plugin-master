@@ -10,7 +10,7 @@
 import { h } from 'preact';
 import { useUseCases, useSelector } from '@/app/public';
 import { Box, Typography, Stack, FormControlLabel, Checkbox } from '@mui/material';
-import { selectFloatingTimerEnabled } from '@/app/store/selectors';
+import { selectFloatingTimerEnabled, selectDevConsoleStackEnabled } from '@/app/public';
 
 /**
  * 通用设置组件
@@ -21,6 +21,7 @@ import { selectFloatingTimerEnabled } from '@/app/store/selectors';
 export function GeneralSettings() {
     // 使用细粒度 selector 订阅设置状态
     const floatingTimerEnabled = useSelector(selectFloatingTimerEnabled);
+    const devConsoleStackEnabled = useSelector(selectDevConsoleStackEnabled);
     
     // P0: 获取 UseCases
     const useCases = useUseCases();
@@ -43,6 +44,19 @@ export function GeneralSettings() {
                 <Typography variant="body2" color="text.secondary" sx={{ pl: 4, mt: -1.5 }}>
                     关闭后，下次启动Obsidian将不再加载悬浮计时器。你也可以通过命令面板临时切换它的可见性。
                 </Typography>
+
+<FormControlLabel
+    control={
+        <Checkbox
+            checked={devConsoleStackEnabled}
+            onChange={(e) => useCases.settings.setDevConsoleStackEnabled((e.target as HTMLInputElement).checked)}
+        />
+    }
+    label="开发模式：错误 toast 同时输出控制台堆栈"
+/>
+<Typography variant="body2" color="text.secondary" sx={{ pl: 4, mt: -1.5 }}>
+    开启后：toast 仍显示，同时 console.error 打出完整 stack（便于定位）。关闭后：只 toast，不污染控制台。
+</Typography>
             </Stack>
         </Box>
     );

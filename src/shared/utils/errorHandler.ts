@@ -4,6 +4,7 @@
  */
 
 import { devError, devLog, type UiPort } from '@core/public';
+import { isDevConsoleStackEnabled } from './devConsole';
 
 /**
  * 错误类型枚举
@@ -157,7 +158,8 @@ export class ErrorHandler {
             logToConsole = true,
             logToFile = false,
             noticeTimeout = 5000,
-            context: additionalContext
+            context: additionalContext,
+            uiPort
         } = options;
 
         // 确保错误对象
@@ -183,6 +185,17 @@ export class ErrorHandler {
 
         this.addLogEntry(logEntry);
 
+        // 开发模式：无论是否显示 toast，都输出完整错误对象与堆栈
+        // - 解决“toast 有，但控制台无堆栈”的定位问题
+        if (isDevConsoleStackEnabled()) {
+            try {
+                console.error('[Think][Error]', fullContext, errorObj);
+            } catch {
+                // no-op
+            }
+        }
+
+
         // 控制台输出
         if (logToConsole) {
             this.logToConsole(logEntry);
@@ -196,7 +209,7 @@ export class ErrorHandler {
         // 用户通知
         if (showNotice) {
             const userMessage = this.getUserFriendlyMessage(errorType, errorObj);
-            this.showNotice(userMessage, noticeTimeout);
+            this.showNotice(uiPort, userMessage, noticeTimeout);
         }
     }
 
@@ -267,8 +280,8 @@ export class ErrorHandler {
     /**
      * 显示用户通知
      */
-    private showNotice(message: string, timeout: number): void {
-        options.uiPort?.notice(message, timeout);
+    private showNotice(uiPort: UiPort | undefined, message: string, timeout: number): void {
+        uiPort?.notice(message, timeout);
     }
 
     /**

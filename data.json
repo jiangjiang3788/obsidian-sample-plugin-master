@@ -4,7 +4,7 @@
     "enabled": true,
     "provider": "openai_compat",
     "apiEndpoint": "https://api.ricardochat.cn/v1",
-    "model": "[Max]gemini-3-flash-preview",
+    "model": "[Max]gemini-3-flash-previe",
     "temperature": 0.7,
     "maxTokens": 4096,
     "requestTimeoutMs": 30000,
@@ -467,6 +467,50 @@
       "filters": [],
       "sort": [],
       "collapsed": false
+    },
+    {
+      "id": "vi_mlis2zsq6xqrojc",
+      "title": "施工方",
+      "viewType": "EventTimelineView",
+      "viewConfig": {
+        "categories": [
+          {
+            "name": "打卡",
+            "color": "#961dff"
+          },
+          {
+            "name": "计划",
+            "color": "#87f6df"
+          },
+          {
+            "name": "闪念",
+            "color": "#a43824"
+          },
+          {
+            "name": "事件",
+            "color": "#90e554"
+          },
+          {
+            "name": "完成任务",
+            "color": "#5e81a2"
+          },
+          {
+            "name": "未完成任务",
+            "color": "#c0ecc7"
+          },
+          {
+            "name": "总结",
+            "color": "#14cb9f"
+          }
+        ]
+      },
+      "fields": [
+        "duration"
+      ],
+      "groupFields": [],
+      "filters": [],
+      "sort": [],
+      "collapsed": false
     }
   ],
   "layouts": [
@@ -477,7 +521,8 @@
         "view_mer6n7pwf7suy",
         "view_mewr7y1gvq0ro",
         "view_membnf1hgjgm3",
-        "view_membbqjam5v63"
+        "view_membbqjam5v63",
+        "vi_mlis2zsq6xqrojc"
       ],
       "displayMode": "list",
       "initialView": "周",
@@ -550,48 +595,6 @@
   ],
   "inputSettings": {
     "blocks": [
-      {
-        "id": "blk_mejsg1dc46fj9",
-        "name": "闪念",
-        "fields": [
-          {
-            "id": "field_mewjlt4j",
-            "key": "思考分类",
-            "label": "思考分类",
-            "type": "radio",
-            "options": [
-              {
-                "value": "事件",
-                "label": "事件"
-              },
-              {
-                "value": "感受",
-                "label": "感受"
-              },
-              {
-                "value": "思考",
-                "label": "思考"
-              }
-            ]
-          },
-          {
-            "id": "field_mewkyug9",
-            "key": "日期",
-            "label": "日期",
-            "type": "number",
-            "defaultValue": ""
-          },
-          {
-            "id": "field_mewjlypl",
-            "key": "内容",
-            "label": "内容",
-            "type": "textarea"
-          }
-        ],
-        "outputTemplate": "<!-- start -->\n分类:: {{思考分类}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n",
-        "targetFile": "01/闪念.md",
-        "appendUnderHeader": "## {{theme}}"
-      },
       {
         "id": "blk_meic1my6m62iu",
         "name": "任务",
@@ -674,6 +677,48 @@
         ],
         "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) {{重复.value}} {{状态}} {{日期}}\n\n",
         "targetFile": "03/01.md",
+        "appendUnderHeader": "## {{theme}}"
+      },
+      {
+        "id": "blk_mejsg1dc46fj9",
+        "name": "闪念",
+        "fields": [
+          {
+            "id": "field_mewjlt4j",
+            "key": "思考分类",
+            "label": "思考分类",
+            "type": "radio",
+            "options": [
+              {
+                "value": "事件",
+                "label": "事件"
+              },
+              {
+                "value": "感受",
+                "label": "感受"
+              },
+              {
+                "value": "思考",
+                "label": "思考"
+              }
+            ]
+          },
+          {
+            "id": "field_mewkyug9",
+            "key": "日期",
+            "label": "日期",
+            "type": "number",
+            "defaultValue": ""
+          },
+          {
+            "id": "field_mewjlypl",
+            "key": "内容",
+            "label": "内容",
+            "type": "textarea"
+          }
+        ],
+        "outputTemplate": "<!-- start -->\n分类:: {{思考分类}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n",
+        "targetFile": "01/闪念.md",
         "appendUnderHeader": "## {{theme}}"
       },
       {
@@ -8642,6 +8687,7 @@
     "工作/通勤",
     "思考/专注"
   ],
+  "devConsoleStackEnabled": true,
   "dataSources": [
     {
       "id": "ds_membld9cc3oj6",

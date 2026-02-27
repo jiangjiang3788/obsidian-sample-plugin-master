@@ -1,0 +1,1 @@
+export { EventTimelineView } from './EventTimelineViewContainer';

@@ -5,7 +5,7 @@
     "dev": "vite",
     "check": "npm run lint && npm run typecheck && npm run gate",
     "gate": "npm run arch:public && npm run arch:capabilities && npm run arch:gate && npm run feature:gate && npm run di:gate && npm run dual-system:gate && npm run obsidian-leak:gate && npm run events-boundary:gate && npm run core-obsidian:gate && npm run core-public:gate && npm run shared-public:gate && npm run gate:settings-persistence && npm run di-resolve:gate && npm run modal-promise:gate && npm run selector-giant-subscription:gate && npm run theme-tree-recursion:gate && npm run theme-matrix-legacy-import:gate",
-    "build": "vite build && node -e \"const fs=require('fs');fs.copyFileSync('dist/main.js','main.js');fs.copyFileSync('dist/main.js.map','main.js.map');fs.copyFileSync('dist/styles.css','styles.css');\"",
+    "build": "vite build && node scripts/fix-sourcemap.mjs && node -e \"const fs=require('fs');fs.copyFileSync('dist/main.js','main.js');fs.copyFileSync('dist/main.js.map','main.js.map');fs.copyFileSync('dist/styles.css','styles.css');\"",
     "test": "jest --config test/configs/jest.config.js",
     "test:watch": "jest --config test/configs/jest.config.js --watch",
     "test:coverage": "jest --config test/configs/jest.config.js --coverage",

@@ -57,6 +57,27 @@ export class SettingsUseCase {
         }
     }
 
+/**
+ * 开发模式：控制是否把错误堆栈输出到 console.error
+ * - 开启：toast 仍显示，同时 console.error 输出 stack（便于定位）
+ * - 关闭：只 toast，不污染控制台
+ */
+async setDevConsoleStackEnabled(enabled: boolean): Promise<void> {
+    try {
+        const state = this.store.getState();
+        if (!state.isInitialized) {
+            devError('[SettingsUseCase] Store 未初始化，无法设置 devConsoleStackEnabled');
+            return;
+        }
+        await state.updateSettings((draft) => {
+            draft.devConsoleStackEnabled = enabled;
+        });
+    } catch (error) {
+        devError('[SettingsUseCase] setDevConsoleStackEnabled 失败:', error);
+        throw error;
+    }
+}
+
     /**
      * 切换计时器悬浮窗可见性（临时状态，不持久化）
      */

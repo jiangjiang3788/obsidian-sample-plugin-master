@@ -1,5 +1,5 @@
 import { Item, TIMELINE_VIEW_DEFAULT_CONFIG, filterByRules, buildDailyViewData, buildMonthlyAndWeeklySummary, buildSummaryCategoryHours, dayjs } from '@core/public';
-import { processItemsToTimelineTasks } from '@/shared/ui/views/timeline-parser';
+import { processItemsToTimelineTasks } from '@shared/public';
 
 import weekOfYear from 'dayjs/plugin/weekOfYear';
 import isoWeek from 'dayjs/plugin/isoWeek';

@@ -22,3 +22,6 @@ export const makeSelectViewInstanceById = (instanceId: string) => (s: ZustandApp
   s.settings.viewInstances?.find((v) => v.id === instanceId);
 
 export const selectFloatingTimerEnabled = (s: ZustandAppStore) => s.settings.floatingTimerEnabled;
+
+
+export const selectDevConsoleStackEnabled = (s: ZustandAppStore) => !!s.settings.devConsoleStackEnabled;

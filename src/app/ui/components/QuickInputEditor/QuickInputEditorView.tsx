@@ -5,8 +5,8 @@ import type { ThemeDefinition } from '@core/public';
 
 import { Box, Button, Divider, FormControl, Typography } from '@mui/material';
 
-import { QuickInputEditorFields } from './QuickInputEditorFields';
-import { QuickInputEditorThemeSelector } from './QuickInputEditorThemeSelector';
+import { QuickInputEditorFields } from './components/Fields';
+import { QuickInputEditorThemeSelector } from './components/ThemeSelector';
 
 export interface QuickInputEditorViewProps {
   getResourcePath: (path: string) => string;

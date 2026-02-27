@@ -27,11 +27,10 @@ function read(p) {
 }
 
 function stripNoise(code) {
+  // 仅移除注释，保留字符串字面量。
+  // 之前替换字符串会导致 import 源路径被抹掉，从而漏检。
   let s = code.replace(/\/\*[\s\S]*?\*\//g, ' ');
   s = s.replace(/(^|[^:])\/\/.*$/gm, '$1 ');
-  s = s.replace(/'([^'\\]|\\.)*'/g, "''");
-  s = s.replace(/\"([^\"\\]|\\.)*\"/g, '""');
-  s = s.replace(/`([^`\\]|\\.)*`/g, '``');
   return s;
 }
 

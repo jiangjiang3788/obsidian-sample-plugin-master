@@ -17,6 +17,7 @@ import './styles/main.css';
 import { safeAsync } from '@shared/public';
 import { performanceMonitor, startMeasure } from '@shared/public';
 import { ServiceManager } from '@/app/ServiceManager';
+import { isDisposed } from '@/app/runtime/lifecycleState';
 import { buildRuntime } from '@/app/bootstrap/buildRuntime';
 import {
     createCapabilities,
@@ -183,6 +184,7 @@ export default class ThinkPlugin extends Plugin {
     }
 
     async saveSettings() {
+        if (isDisposed()) return;
         // P0-1: 使用 SettingsRepository 替代 appStore
         await this.saveData(this.serviceManager.settingsRepository.getSettings());
     }

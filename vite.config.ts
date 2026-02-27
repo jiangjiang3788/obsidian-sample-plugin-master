@@ -43,6 +43,8 @@ export default defineConfig({
             fileName: () => 'main.js',
         },
         sourcemap: true,
+        minify: false, // 更易于 DevTools sourcemap 映射与调试
+
         rollupOptions: {
             external: ['obsidian'],
             treeshake: { 
@@ -55,6 +57,12 @@ export default defineConfig({
             },
             // 确保 reflect-metadata 优先加载
             output: {
+                sourcemapPathTransform: (relativeSourcePath: string) => {
+                    // 让 DevTools 更容易显示为 src/** 的路径（避免 ../.. 或绝对路径）
+                    const p = relativeSourcePath.replace(/\\/g, '/');
+                    return p.replace(/^\.(?:\.\/)+/, '').replace(/^\/+/, '');
+                },
+
                 assetFileNames: 'styles.css',
                 manualChunks: undefined,
                 // 强制 reflect-metadata 在最前面

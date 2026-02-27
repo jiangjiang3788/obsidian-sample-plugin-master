@@ -1,7 +1,7 @@
 // src/features/timer/ui/TimerView.tsx
 /** @jsxImportSource preact */
 
-import { useSelector } from '@/app/store/useSelector';
+import { useSelector } from '@/app/public';
 import { selectTimers, selectIsTimerWidgetVisible, selectSetTimerWidgetVisible } from '@/app/public';
 import type { ActionService } from '@core/public';
 import type { TimerService } from '@features/timer/TimerService';

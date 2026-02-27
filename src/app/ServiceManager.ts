@@ -63,6 +63,11 @@ export class ServiceManager {
     constructor(plugin: ThinkPlugin) {
         this.plugin = plugin;
 
+        // Ensure floating widgets are closed on unload/reload (avoid lingering DOM/listeners).
+        this.disposables.add('closeAllFloatingWidgets()', () => {
+            try { closeAllFloatingWidgets(); } catch {}
+        });
+
         // Cleanup 资源表（逆序执行：LIFO）
         // 这里的注册顺序刻意与“希望释放顺序”相反
         this.disposables.add('resetRuntimeCache()', () => {

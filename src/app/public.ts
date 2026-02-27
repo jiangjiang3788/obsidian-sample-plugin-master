@@ -68,6 +68,8 @@ export interface TimerController {
 export { QuickInputEditor, finalizeQuickInputFormData } from './ui/components/QuickInputEditor';
 export type { QuickInputEditorState, QuickInputEditorProps } from './ui/components/QuickInputEditor';
 export { QuickInputModal } from './ui/modals/QuickInputModal';
+export { AiTextPromptModal } from './ui/modals/AiTextPromptModal';
+export { AiBatchConfirmModal } from './ui/modals/AiBatchConfirmModal';
 export { default as FloatingPanel } from './ui/primitives/FloatingPanel';
 export {
   openFloatingWidget,

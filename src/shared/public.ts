@@ -8,6 +8,7 @@
  */
 
 export * from './utils/errorHandler';
+export * from './utils/devConsole';
 export * from './utils/performance';
 export * from './utils/linkedTimeFields';
 export * from './utils/takeLatest';
@@ -20,9 +21,8 @@ export * from './patterns/ModalSavePattern';
 export * from './ui/contracts';
 export * from './ui/GroupedContainer';
 export * from './ui/muiCompat';
-export * from './ui/primitives/Modal';
-export * from './ui/components/ModalHeader';
-export * from './ui/components/FilterPopover';
+export * from './ui/primitives';
+export * from './ui/components';
 export * from './ui/composites/SimpleSelect';
 export * from './ui/composites/FormField';
 export * from './ui/composites/FieldManager';
@@ -41,5 +41,5 @@ export * from './ui/modals/EditTaskModal';
 export * from './ui/timeline';
 export * from './ui/views';
 export * from './ui/views/ViewToolbar';
-export * from './ui/components/ThemeTreeNodeLabel';
+// ui/components 已统一出口（ThemeTreeNodeLabel 等）
 export * from './components/ThemeTreeSelect';

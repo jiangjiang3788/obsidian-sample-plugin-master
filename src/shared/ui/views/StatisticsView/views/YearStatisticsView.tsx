@@ -3,8 +3,8 @@ import { h } from 'preact';
 import type { CategoryConfig, PeriodData } from '@core/public';
 import { createPeriodData } from '@core/public';
 import { ChartBlock } from '@shared/ui/statistics/ChartBlock';
-import type { StatisticsCellClickHandler } from './types';
-import { TopControls } from './TopControls';
+import type { StatisticsCellClickHandler } from '../types';
+import { TopControls } from '../components/TopControls';
 
 export function YearStatisticsView({
   year,

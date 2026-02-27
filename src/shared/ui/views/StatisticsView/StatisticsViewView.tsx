@@ -3,11 +3,11 @@ import { h } from 'preact';
 import type { Item } from '@core/public';
 import type { CategoryConfig, PeriodData } from '@core/public';
 import type { StatisticsCurrentView, StatisticsCellClickHandler } from './types';
-import { DayStatisticsView } from './DayStatisticsView';
-import { WeekStatisticsView } from './WeekStatisticsView';
-import { MonthStatisticsView } from './MonthStatisticsView';
-import { QuarterStatisticsView } from './QuarterStatisticsView';
-import { YearStatisticsView } from './YearStatisticsView';
+import { DayStatisticsView } from './views/DayStatisticsView';
+import { WeekStatisticsView } from './views/WeekStatisticsView';
+import { MonthStatisticsView } from './views/MonthStatisticsView';
+import { QuarterStatisticsView } from './views/QuarterStatisticsView';
+import { YearStatisticsView } from './views/YearStatisticsView';
 
 export function StatisticsViewView({
   items,

@@ -4,7 +4,7 @@ import type { Item } from '@core/public';
 import type { CategoryConfig } from '@core/public';
 import { aggregateByWeek } from '@core/public';
 import { ChartBlock } from '@shared/ui/statistics/ChartBlock';
-import type { StatisticsCellClickHandler } from './types';
+import type { StatisticsCellClickHandler } from '../types';
 
 export function WeekStatisticsView({
   items,

@@ -31,6 +31,8 @@ export interface ThinkSettings {
     activeThemePaths?: string[];
     // [新增] AI 设置
     aiSettings?: AiSettings;
+    // [新增] 开发模式：错误 toast 同时输出 console.error stack
+    devConsoleStackEnabled?: boolean;
 }
 
 export const DEFAULT_SETTINGS: ThinkSettings = {
@@ -44,6 +46,8 @@ export const DEFAULT_SETTINGS: ThinkSettings = {
     activeThemePaths: [],
     // [新增] AI 默认设置
     aiSettings: DEFAULT_AI_SETTINGS,
+    // [新增] 默认关闭（避免污染控制台）
+    devConsoleStackEnabled: false,
 };
 
 

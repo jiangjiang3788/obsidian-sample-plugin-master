@@ -6,10 +6,11 @@ import type { UpdateTaskTimeHandler } from '@shared/types/taskTime';
 
 import {
   ProgressBlock,
-  TimelineSummaryTable,
   DayColumnHeader,
   DayColumnBody,
 } from '@shared/ui/timeline';
+
+import { TimelineSummaryTable } from '../timeline/components/TimelineSummaryTable';
 
 type ZoomHandlers = Record<string, any>;
 

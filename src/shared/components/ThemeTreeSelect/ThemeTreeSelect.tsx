@@ -14,8 +14,8 @@ import { Box, Paper, Popper, ClickAwayListener } from '@mui/material';
 import type { ThemeDefinition } from '@core/public';
 import type { ThemePathTreeNode as ThemeTreeNode } from '@core/public';
 
-import { ThemeTreeSelectTrigger } from './ThemeTreeSelect/Trigger';
-import { ThemeTreeSelectPanel, type ThemeTreeSelectPanelProps } from './ThemeTreeSelect/Panel';
+import { ThemeTreeSelectTrigger } from './Trigger';
+import { ThemeTreeSelectPanel, type ThemeTreeSelectPanelProps } from './Panel';
 
 export interface ThemeTreeSelectProps {
   /** 主题列表 */
@@ -208,6 +208,6 @@ export function ThemeTreeSelect({
 
 // Re-export Panel（供 FilterPopover 等 inline 场景使用）
 export { ThemeTreeSelectPanel };
-export type { ThemeTreeSelectPanelProps } from './ThemeTreeSelect/Panel';
+export type { ThemeTreeSelectPanelProps } from './Panel';
 
 export default ThemeTreeSelect;

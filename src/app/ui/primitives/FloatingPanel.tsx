@@ -16,7 +16,7 @@ import { Paper } from '@mui/material';
 import DragIndicatorIcon from '@mui/icons-material/DragIndicator';
 import { createPortal } from 'preact/compat';
 
-import { useLocalStorage } from '@/shared/hooks';
+import { useLocalStorage } from '@shared/public';
 import { makeSelectFloatingWindowZIndex, selectFloatingWindowsActiveId, selectFloatingWindowsFocus, selectFloatingWindowsRegister, selectFloatingWindowsUnregister, useSelector } from '@/app/public';
 
 const getEventCoords = (e: MouseEvent | TouchEvent) => {

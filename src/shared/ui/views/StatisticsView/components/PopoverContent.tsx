@@ -2,7 +2,7 @@
 import { h } from 'preact';
 import type { Item, ViewInstance } from '@core/public';
 import type { TimerController } from '@/app/public';
-import { BlockView } from '../BlockView';
+import { BlockView } from '../../BlockView';
 
 export function PopoverContent({
   blocks,
