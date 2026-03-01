@@ -111,20 +111,10 @@
         "content"
       ],
       "collapsed": true,
-      "groupFields": [],
-      "filters": [
-        {
-          "field": "type",
-          "op": "=",
-          "value": "block",
-          "logic": "and"
-        },
-        {
-          "field": "categoryKey",
-          "op": "!=",
-          "value": "打卡"
-        }
+      "groupFields": [
+        "categoryKey"
       ],
+      "filters": [],
       "sort": []
     },
     {
