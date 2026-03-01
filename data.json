@@ -8326,7 +8326,7 @@
       }
     ]
   },
-  "floatingTimerEnabled": false,
+  "floatingTimerEnabled": true,
   "activeThemePaths": [
     "思考",
     "思考/时间整理",
