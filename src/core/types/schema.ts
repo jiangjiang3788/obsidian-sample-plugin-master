@@ -33,6 +33,8 @@ export interface ThinkSettings {
     aiSettings?: AiSettings;
     // [新增] 开发模式：错误 toast 同时输出 console.error stack
     devConsoleStackEnabled?: boolean;
+    // [新增] 全局分类颜色配置（categoryKey 基础类别 → 颜色）
+    categoryColors?: Record<string, string>;
 }
 
 export const DEFAULT_SETTINGS: ThinkSettings = {

@@ -6,13 +6,11 @@ import { useMemo, useState, useEffect } from 'preact/hooks';
 
 // [架构标准化] 使用 core 层的共享配置，避免重复定义
 import { STATISTICS_VIEW_DEFAULT_CONFIG as DEFAULT_CONFIG } from '@core/public';
-import { discoverBaseCategories } from '@core/public';
+import { discoverBaseCategories, getCategoryColor } from '@core/public';
 
 // 重新导出 DEFAULT_CONFIG 以便于 registry.tsx 使用
 export { DEFAULT_CONFIG };
 
-// 随机生成一个颜色
-const getRandomColor = () => `#${Math.floor(Math.random()*16777215).toString(16).padStart(6, '0')}`;
 
 export function StatisticsViewEditor({ value, onChange, dataStore }: ViewEditorProps) {
     const config = { ...DEFAULT_CONFIG, ...value };
@@ -25,14 +23,14 @@ export function StatisticsViewEditor({ value, onChange, dataStore }: ViewEditorP
         return discoverBaseCategories(allItems);
     }, [dataStore]);
 
-    // 同步发现的分类和已保存的分类
+    // 同步发现的分类和已保存的分类（颜色统一来自全局设置）
     useEffect(() => {
         const existingNames = new Set(config.categories.map(c => c.name));
         const newCategories = [...config.categories];
         let changed = false;
         discoveredCategories.forEach(name => {
             if (!existingNames.has(name)) {
-                newCategories.push({ name, color: getRandomColor() });
+                newCategories.push({ name, color: getCategoryColor(name) });
                 changed = true;
             }
         });
@@ -56,13 +54,6 @@ export function StatisticsViewEditor({ value, onChange, dataStore }: ViewEditorP
         onChange({ categories: newCategories });
     };
 
-    const handleColorChange = (index: number, color: string) => {
-        const newCategories = [...localCategories];
-        newCategories[index].color = color;
-        setLocalCategories(newCategories);
-        onChange({ categories: newCategories });
-    };
-
     const handleAliasChange = (index: number, alias: string) => {
         const newCategories = [...localCategories];
         newCategories[index].alias = alias;
@@ -76,7 +67,7 @@ export function StatisticsViewEditor({ value, onChange, dataStore }: ViewEditorP
             <div class="statistics-section">
                 <div class="categories-section-title">分类配置</div>
                 <div class="categories-description">
-                    每个分类的配置：颜色、名称、别名。您可以使用上下按钮调整顺序。
+                    调整分类的显示顺序和别名。颜色由「通用设置 → 分类颜色」统一管理。
                 </div>
             </div>
             <div>
@@ -98,12 +89,18 @@ export function StatisticsViewEditor({ value, onChange, dataStore }: ViewEditorP
                             >↓</button>
                         </div>
 
-                        {/* 颜色选择器 */}
-                        <input
-                            class="color-picker"
-                            type="color"
-                            value={cat.color}
-                            onChange={(e) => handleColorChange(index, (e.target as HTMLInputElement).value)}
+                        {/* 颜色预览（只读，来自全局设置） */}
+                        <div
+                            class="color-preview"
+                            style={{
+                                width: 24,
+                                height: 24,
+                                borderRadius: 4,
+                                backgroundColor: getCategoryColor(cat.name),
+                                border: '1px solid var(--text-muted)',
+                                flexShrink: 0,
+                            }}
+                            title={`颜色来自通用设置: ${getCategoryColor(cat.name)}`}
                         />
 
                         {/* 分类名称 */}

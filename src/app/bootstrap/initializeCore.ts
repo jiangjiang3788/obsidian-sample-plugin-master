@@ -1,7 +1,7 @@
 import { container } from 'tsyringe';
 import type ThinkPlugin from '@main';
 
-import { SETTINGS_PERSISTENCE_TOKEN, devError, devLog } from '@core/public';
+import { SETTINGS_PERSISTENCE_TOKEN, devError, devLog, updateCategoryColorMap } from '@core/public';
 
 import { diDebug, diWarn } from '@/app/diagnostics/diDiagnostics';
 
@@ -64,6 +64,12 @@ export async function initializeCore(opts: {
                 // 开发模式：初始化 console.error stack 开关
                 setDevConsoleStackEnabled(!!zustandStore.getState().settings.devConsoleStackEnabled);
 
+                // 初始化全局分类颜色映射（从用户设置覆盖硬编码默认值）
+                const savedCategoryColors = zustandStore.getState().settings.categoryColors;
+                if (savedCategoryColors) {
+                    updateCategoryColorMap(savedCategoryColors);
+                }
+
 
                 // 订阅 SettingsRepository 的变更，仅同步到 Zustand Store
                 const unsubscribeSettingsRepo = settingsRepository.subscribe((settings) => {
@@ -112,6 +118,16 @@ const unsubscribeDevConsole = zustandStore.subscribe(
 );
 disposables?.add('AppStore.subscribe(devConsoleStackEnabled)', unsubscribeDevConsole);
 devLog('[ThinkPlugin] DevConsoleStackEnabled 监听已建立');
+
+// 分类颜色：监听设置变更，同步运行时颜色映射
+const unsubscribeCategoryColors = zustandStore.subscribe(
+    (state) => state.settings.categoryColors,
+    (colors) => {
+        updateCategoryColorMap(colors ?? {});
+    }
+);
+disposables?.add('AppStore.subscribe(categoryColors)', unsubscribeCategoryColors);
+devLog('[ThinkPlugin] CategoryColors 监听已建立');
 
 
                 // 3. 创建 UseCases 并注册到 DI 容器（传入 store）

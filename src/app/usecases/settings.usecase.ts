@@ -20,7 +20,7 @@
 
 import type { AiSettings } from '@core/public';
 import type { AppStoreApi } from './index';
-import { devLog, devError } from '@core/public';
+import { devLog, devError, updateCategoryColorMap } from '@core/public';
 
 /**
  * 设置用例类
@@ -57,26 +57,26 @@ export class SettingsUseCase {
         }
     }
 
-/**
- * 开发模式：控制是否把错误堆栈输出到 console.error
- * - 开启：toast 仍显示，同时 console.error 输出 stack（便于定位）
- * - 关闭：只 toast，不污染控制台
- */
-async setDevConsoleStackEnabled(enabled: boolean): Promise<void> {
-    try {
-        const state = this.store.getState();
-        if (!state.isInitialized) {
-            devError('[SettingsUseCase] Store 未初始化，无法设置 devConsoleStackEnabled');
-            return;
+    /**
+     * 开发模式：控制是否把错误堆栈输出到 console.error
+     * - 开启：toast 仍显示，同时 console.error 输出 stack（便于定位）
+     * - 关闭：只 toast，不污染控制台
+     */
+    async setDevConsoleStackEnabled(enabled: boolean): Promise<void> {
+        try {
+            const state = this.store.getState();
+            if (!state.isInitialized) {
+                devError('[SettingsUseCase] Store 未初始化，无法设置 devConsoleStackEnabled');
+                return;
+            }
+            await state.updateSettings((draft) => {
+                draft.devConsoleStackEnabled = enabled;
+            });
+        } catch (error) {
+            devError('[SettingsUseCase] setDevConsoleStackEnabled 失败:', error);
+            throw error;
         }
-        await state.updateSettings((draft) => {
-            draft.devConsoleStackEnabled = enabled;
-        });
-    } catch (error) {
-        devError('[SettingsUseCase] setDevConsoleStackEnabled 失败:', error);
-        throw error;
     }
-}
 
     /**
      * 切换计时器悬浮窗可见性（临时状态，不持久化）
@@ -123,6 +123,28 @@ async setDevConsoleStackEnabled(enabled: boolean): Promise<void> {
             await state.updateAiSettings(aiSettings);
         } catch (error) {
             devError('[SettingsUseCase] updateAiSettings 失败:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * 更新全局分类颜色配置
+     * @param colors categoryKey 基础类别 → 颜色 映射
+     */
+    async updateCategoryColors(colors: Record<string, string>): Promise<void> {
+        try {
+            const state = this.store.getState();
+            if (!state.isInitialized) {
+                devError('[SettingsUseCase] Store 未初始化，无法更新分类颜色');
+                return;
+            }
+            await state.updateSettings((draft) => {
+                draft.categoryColors = colors;
+            });
+            // 同步更新运行时颜色映射
+            updateCategoryColorMap(colors);
+        } catch (error) {
+            devError('[SettingsUseCase] updateCategoryColors 失败:', error);
             throw error;
         }
     }

@@ -25,3 +25,6 @@ export const selectFloatingTimerEnabled = (s: ZustandAppStore) => s.settings.flo
 
 
 export const selectDevConsoleStackEnabled = (s: ZustandAppStore) => !!s.settings.devConsoleStackEnabled;
+
+const EMPTY_CATEGORY_COLORS: Record<string, string> = {};
+export const selectCategoryColors = (s: ZustandAppStore) => s.settings.categoryColors ?? EMPTY_CATEGORY_COLORS;

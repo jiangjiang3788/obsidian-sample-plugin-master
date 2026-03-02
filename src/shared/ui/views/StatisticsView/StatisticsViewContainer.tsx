@@ -16,11 +16,13 @@ import {
   aggregateByYear,
   createPeriodData,
   devLog,
+  discoverBaseCategories,
+  getCategoryColor,
 } from '@core/public';
 import { IconButton, Tooltip } from '@mui/material';
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 import IosShareIcon from '@mui/icons-material/IosShare';
-import { FloatingPanel, openFloatingWidget, closeFloatingWidget, useUiPort } from '@/app/public';
+import { FloatingPanel, openFloatingWidget, closeFloatingWidget, useUiPort, useSelector, selectCategoryColors } from '@/app/public';
 import type { TimerController } from '@/app/public';
 import type { OpenQuickCreateHandler } from '@shared/types/actions';
 import { PopoverContent } from './components/PopoverContent';
@@ -67,10 +69,51 @@ export function StatisticsView({
 }: StatisticsViewProps) {
   const ui = useUiPort();
 
+  // 订阅全局分类颜色，确保颜色变更时触发重渲染
+  const globalCategoryColors = useSelector(selectCategoryColors);
+
   const viewConfig = statisticsModel?.viewConfig ?? ({ ...DEFAULT_CONFIG, ...module.viewConfig } as any);
   const { categories = [], displayMode = 'smart', minVisibleHeight = 15, usePeriodField = false } = viewConfig;
 
-  const categoryConfigs = categories as CategoryConfig[];
+  // 从真实 items 数据动态提取分类，颜色始终来自全局颜色系统
+  const categoryConfigs: CategoryConfig[] = useMemo(() => {
+    // 从 items 中发现所有基础分类
+    const discovered = discoverBaseCategories(items);
+    
+    if (categories.length > 0) {
+      // 有保存的配置：保留配置中的顺序和别名，但颜色使用全局颜色系统
+      const configMap = new Map((categories as CategoryConfig[]).map(c => [c.name, c]));
+      const result: CategoryConfig[] = [];
+      
+      // 先添加配置中已有的分类（保留顺序）
+      for (const cat of categories as CategoryConfig[]) {
+        result.push({
+          ...cat,
+          color: getCategoryColor(cat.name), // 颜色从全局系统获取
+        });
+      }
+      
+      // 再添加配置中没有但数据中存在的新分类
+      for (const name of discovered) {
+        if (!configMap.has(name)) {
+          result.push({
+            name,
+            color: getCategoryColor(name),
+            files: [],
+          });
+        }
+      }
+      
+      return result;
+    }
+    
+    // 无配置：全部从 items 动态生成
+    return discovered.map(name => ({
+      name,
+      color: getCategoryColor(name),
+      files: [],
+    }));
+  }, [categories, items, globalCategoryColors]);
 
   const [selectedCell, setSelectedCell] = useState<any>(null);
   const [popover, setPopover] = useState<PopoverState | null>(null);

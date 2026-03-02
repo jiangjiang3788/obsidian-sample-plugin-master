@@ -144,39 +144,42 @@
       ]
     },
     {
-      "id": "vi_mm8q001y0lwic3v",
+      "id": "vi_mm8r5n3vthaor92",
       "parentId": null,
-      "title": "sd",
+      "title": "asd",
       "viewType": "StatisticsView",
       "viewConfig": {
         "categories": [
           {
             "name": "打卡",
-            "color": "#e3a6e2"
+            "color": "#60558b"
           },
           {
             "name": "计划",
-            "color": "#be5e83"
+            "color": "#cd3c3c"
           },
           {
             "name": "闪念",
-            "color": "#a4f283"
+            "color": "#e0e0e0"
           },
           {
             "name": "完成任务",
-            "color": "#1d955b"
+            "color": "#e0e0e0"
           },
           {
             "name": "未完成任务",
-            "color": "#635127"
+            "color": "#e0e0e0"
           },
           {
             "name": "总结",
-            "color": "#1e9c62"
+            "color": "#ce9a40"
           }
         ]
       },
-      "fields": [],
+      "fields": [
+        "date",
+        "content"
+      ],
       "groupFields": [],
       "filters": [],
       "sort": [],
@@ -189,7 +192,8 @@
       "name": "全局布局",
       "viewInstanceIds": [
         "view_mer6ll4mtbjry",
-        "vi_mm8q001y0lwic3v"
+        "view_mi5ep8xvvi5mx",
+        "vi_mm8r5n3vthaor92"
       ],
       "displayMode": "list",
       "initialView": "年",
@@ -246,10 +250,7 @@
         "工作/通勤",
         "思考/专注"
       ],
-      "selectedCategories": [
-        "计划",
-        "总结"
-      ]
+      "selectedCategories": []
     }
   ],
   "inputSettings": {
@@ -8296,7 +8297,7 @@
       }
     ]
   },
-  "floatingTimerEnabled": false,
+  "floatingTimerEnabled": true,
   "activeThemePaths": [
     "思考",
     "思考/时间整理",
@@ -8401,5 +8402,10 @@
       ],
       "parentId": "group_mem9c0yqeumgu"
     }
-  ]
+  ],
+  "categoryColors": {
+    "打卡": "#60558b",
+    "计划": "#1b0808",
+    "总结": "#ce9a40"
+  }
 }
