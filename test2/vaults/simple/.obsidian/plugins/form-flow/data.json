@@ -1,0 +1,23 @@
+{
+  "formFolder": "DJ/CP",
+  "scriptFolder": "DJ/CP",
+  "formIntegrations": {
+    "DJ/CP/弹窗导入.cform": {
+      "asCommand": true
+    },
+    "DJ/CP/打开日历.cform": {
+      "asCommand": true
+    },
+    "DJ/CP/页头.cform": {
+      "asCommand": true
+    },
+    "DJ/CP/页尾.cform": {
+      "asCommand": true
+    }
+  },
+  "fileEntrypoints": {
+    "DJ/CP/弹窗导入.cform": {
+      "asCommand": true
+    }
+  }
+}

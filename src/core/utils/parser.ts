@@ -160,27 +160,9 @@ export function parseBlockContent(
     // [Day2新增] 主题字段
     let themeVal: string | undefined;
 
-    // 支持在 legacy block 中使用 callout + 引用行：
-    //
-    // <!-- start -->
-    // > [!thinktxt]
-    // > 分类:: ...
-    // > - [x] ...
-    // <!-- end -->
-    //
-    // - `> ` / `>` 前缀会被剥离（包含 `>-` 这种写法）
-    // - `[!thinktxt]` 标记行会被忽略
-    const normalizeLegacyLine = (raw: string) => {
-        const m = raw.match(/^\s*>\s?(.*)$/);
-        return m ? m[1] : raw;
-    };
-
     for (let i = 0; i < contentLines.length; i++) {
-        const rawLine0 = contentLines[i];
-        const rawLine = normalizeLegacyLine(rawLine0);
+        const rawLine = contentLines[i];
         const line = rawLine.trim();
-        // 忽略 callout 标记行
-        if (/^\[!thinktxt\]/i.test(line)) continue;
         if (!contentStarted) {
             if (line === '') continue;
             const kv = line.match(/^([^:：]{1,20})[:：]{1,2}\s*(.*)$/);

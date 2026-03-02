@@ -36,7 +36,6 @@ import { ObsidianMessageRenderPort } from '@/platform/ObsidianMessageRenderPort'
 import { ObsidianMetadataPort } from '@/platform/ObsidianMetadataPort';
 import { ObsidianFileStatPort } from '@/platform/ObsidianFileStatPort';
 import { TaskThemeFromHeadingMigrator } from '@/core/migrations/TaskThemeFromHeadingMigrator';
-import { registerThinktxtPreview } from '@/platform/thinktxt/ThinktxtPreviewRenderer';
 
 devLog(`[ThinkPlugin] main.ts 已加载，版本时间: ${new Date().toLocaleTimeString()}`);
 
@@ -91,11 +90,6 @@ export default class ThinkPlugin extends Plugin {
 
                 // 4. 注册命令
                 this.registerCommands();
-
-                // 5. 预览模式渲染：将连续的 [!thinktxt] callout 合并渲染为只读表格
-                // - 仅作用于预览（Markdown 渲染）
-                // - 编辑模式仍保留原始 callout 格式，后续编辑/拖拽在 Phase2 P2 实现
-                registerThinktxtPreview(this);
 
                 const totalTime = stopMeasure();
                 devLog(`[Think Plugin] 核心功能已加载完成 (总耗时: ${totalTime.toFixed(2)}ms)`);
