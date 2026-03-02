@@ -1,11 +1,8 @@
 // src/features/settings/ui/components/view-editors/StatisticsViewEditor.tsx
 /** @jsxImportSource preact */
 import { h } from 'preact';
-import { Stack, Typography, Box, IconButton, TextField, Tooltip } from '@mui/material';
 import type { ViewEditorProps } from './registry';
 import { useMemo, useState, useEffect } from 'preact/hooks';
-import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
-import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
 
 // [架构标准化] 使用 core 层的共享配置，避免重复定义
 import { STATISTICS_VIEW_DEFAULT_CONFIG as DEFAULT_CONFIG } from '@core/public';
@@ -76,64 +73,6 @@ export function StatisticsViewEditor({ value, onChange, dataStore }: ViewEditorP
 
     return (
         <div class="statistics-editor-container">
-            {/* 显示模式配置 */}
-            <div class="statistics-section">
-                <div class="statistics-section-title">显示模式</div>
-                <div class="display-mode-options">
-                    <label class="display-mode-label">
-                        <input
-                            class="display-mode-input"
-                            type="radio"
-                            name="displayMode"
-                            value="smart"
-                            checked={config.displayMode === 'smart'}
-                            onChange={() => onChange({ displayMode: 'smart' })}
-                        />
-                        <span class="display-mode-text">智能模式</span>
-                    </label>
-                    <label class="display-mode-label">
-                        <input
-                            class="display-mode-input"
-                            type="radio"
-                            name="displayMode"
-                            value="linear"
-                            checked={config.displayMode === 'linear'}
-                            onChange={() => onChange({ displayMode: 'linear' })}
-                        />
-                        <span class="display-mode-text">线性模式</span>
-                    </label>
-                    <label class="display-mode-label">
-                        <input
-                            class="display-mode-input"
-                            type="radio"
-                            name="displayMode"
-                            value="logarithmic"
-                            checked={config.displayMode === 'logarithmic'}
-                            onChange={() => onChange({ displayMode: 'logarithmic' })}
-                        />
-                        <span class="display-mode-text">对数模式</span>
-                    </label>
-                </div>
-                <div class="statistics-section-description">
-                    智能模式：自动选择最佳显示方式 | 线性模式：按实际比例显示 | 对数模式：适合数据差异很大的情况
-                </div>
-                <div class="min-height-controls">
-                    <label class="min-height-label">最小可见高度:</label>
-                    <input
-                        class="min-height-slider"
-                        type="range"
-                        min="10"
-                        max="30"
-                        step="1"
-                        value={config.minVisibleHeight || 15}
-                        onChange={(e) => onChange({ minVisibleHeight: parseInt((e.target as HTMLInputElement).value) })}
-                    />
-                    <span class="min-height-value">
-                        {config.minVisibleHeight || 15}%
-                    </span>
-                </div>
-            </div>
-
             <div class="statistics-section">
                 <div class="categories-section-title">分类配置</div>
                 <div class="categories-description">

@@ -16,12 +16,12 @@ interface ChartBlockProps {
 }
 
 /**
- * 智能高度计算算法
+ * 高度计算：按数量线性比例
  */
 function calculateSmartHeight(
     count: number, 
     allCounts: number[], 
-    displayMode: string, 
+    _displayMode: string, 
     minVisibleHeight: number
 ): number {
     if (count === 0) return 0;
@@ -30,38 +30,9 @@ function calculateSmartHeight(
     if (nonZeroCounts.length === 0) return 0;
     
     const maxCount = Math.max(...nonZeroCounts);
-    const minCount = Math.min(...nonZeroCounts);
-    const ratio = maxCount / Math.max(minCount, 1);
     
-    let height = 0;
-    
-    switch (displayMode) {
-        case 'logarithmic':
-            // 对数模式：使用对数缩放
-            height = (Math.log(count + 1) / Math.log(maxCount + 1)) * 100;
-            break;
-            
-        case 'linear':
-            // 线性模式：严格按比例
-            height = (count / maxCount) * 100;
-            break;
-            
-        case 'smart':
-        default:
-            // 智能模式：根据数据分布自动选择
-            if (ratio > 10) {
-                // 数据差异很大时，使用混合算法
-                const logHeight = (Math.log(count + 1) / Math.log(maxCount + 1)) * 100;
-                const linearHeight = (count / maxCount) * 100;
-                // 按比例混合对数和线性高度
-                const logWeight = Math.min(ratio / 20, 0.7); // 最大70%对数权重
-                height = logHeight * logWeight + linearHeight * (1 - logWeight);
-            } else {
-                // 数据差异不大时，使用线性模式
-                height = (count / maxCount) * 100;
-            }
-            break;
-    }
+    // 按数量线性比例显示
+    let height = (count / maxCount) * 100;
     
     // 确保最小可见高度
     if (height > 0 && height < minVisibleHeight) {

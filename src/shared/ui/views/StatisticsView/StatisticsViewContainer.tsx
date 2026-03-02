@@ -107,7 +107,8 @@ export function StatisticsView({
   }, [statisticsModel, isYearView, year]);
 
   const processedData = useMemo(() => {
-    if (statisticsModel?.processedData) return statisticsModel.processedData;
+    // 不使用 statisticsModel.processedData 的预计算结果，
+    // 始终在本地基于 usePeriod 状态重新计算，确保勾选"使用周期字段"时数据能正确响应。
     if (!isYearView) return { yearData: createPeriodData(filteredCategories), quartersData: [], monthsData: [], weeksData: [] };
 
     const totalWeeks = getWeeksInYear(year);
@@ -125,7 +126,7 @@ export function StatisticsView({
     for (let w = 1; w <= totalWeeks; w++) weeksData.push(aggregateByWeek(items, filteredCategories, targetDate.isoWeek(w)));
 
     return { yearData, quartersData, monthsData, weeksData };
-  }, [statisticsModel, isYearView, items, year, filteredCategories, usePeriod]);
+  }, [isYearView, items, year, filteredCategories, usePeriod]);
 
   const handleCellClick = (cellIdentifier: any, _target: HTMLElement, blocks: Item[], title: string) => {
     devLog('点击单元格:', { cellIdentifier, title, blocksCount: blocks.length, blocks });
