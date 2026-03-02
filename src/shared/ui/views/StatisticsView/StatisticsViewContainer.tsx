@@ -1,7 +1,7 @@
 // src/shared/ui/views/StatisticsView.tsx
 /** @jsxImportSource preact */
 import { h } from 'preact';
-import { useState, useMemo, useRef } from 'preact/hooks';
+import { useState, useMemo, useRef, useEffect } from 'preact/hooks';
 import type { Item, ViewInstance } from '@core/public';
 import type { CategoryConfig, PeriodData } from '@core/public';
 import {
@@ -18,11 +18,12 @@ import {
   devLog,
   discoverBaseCategories,
   getCategoryColor,
+  generateCategoryColor,
 } from '@core/public';
 import { IconButton, Tooltip } from '@mui/material';
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 import IosShareIcon from '@mui/icons-material/IosShare';
-import { FloatingPanel, openFloatingWidget, closeFloatingWidget, useUiPort, useSelector, selectCategoryColors } from '@/app/public';
+import { FloatingPanel, openFloatingWidget, closeFloatingWidget, useUiPort, useSelector, selectCategoryColors, useUseCases } from '@/app/public';
 import type { TimerController } from '@/app/public';
 import type { OpenQuickCreateHandler } from '@shared/types/actions';
 import { PopoverContent } from './components/PopoverContent';
@@ -71,6 +72,23 @@ export function StatisticsView({
 
   // 订阅全局分类颜色，确保颜色变更时触发重渲染
   const globalCategoryColors = useSelector(selectCategoryColors);
+  const useCases = useUseCases();
+
+  // 自动发现 items 中的新分类，为其生成颜色并持久化到 store
+  useEffect(() => {
+    const discovered = discoverBaseCategories(items);
+    const newColors: Record<string, string> = {};
+    let hasNew = false;
+    for (const name of discovered) {
+      if (!globalCategoryColors[name]) {
+        newColors[name] = generateCategoryColor(name);
+        hasNew = true;
+      }
+    }
+    if (hasNew) {
+      useCases.settings.updateCategoryColors({ ...globalCategoryColors, ...newColors });
+    }
+  }, [items, globalCategoryColors]);
 
   const viewConfig = statisticsModel?.viewConfig ?? ({ ...DEFAULT_CONFIG, ...module.viewConfig } as any);
   const { categories = [], displayMode = 'smart', minVisibleHeight = 15, usePeriodField = false } = viewConfig;

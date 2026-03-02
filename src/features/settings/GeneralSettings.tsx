@@ -12,7 +12,7 @@ import { useState, useMemo } from 'preact/hooks';
 import { useUseCases, useSelector } from '@/app/public';
 import { Box, Typography, Stack, FormControlLabel, Checkbox } from '@mui/material';
 import { selectFloatingTimerEnabled, selectDevConsoleStackEnabled, selectCategoryColors } from '@/app/public';
-import { CATEGORY_COLOR_MAP, getActiveCategoryColors } from '@core/public';
+import { generateCategoryColor, getActiveCategoryColors } from '@core/public';
 
 /**
  * 通用设置组件
@@ -26,14 +26,12 @@ export function GeneralSettings() {
     // P0: 获取 UseCases
     const useCases = useUseCases();
 
-    // 合并：硬编码默认值 + 用户已保存值 → 当前生效的完整颜色映射
+    // 当前生效的完整颜色映射
     const activeColors = useMemo(() => getActiveCategoryColors(), [savedCategoryColors]);
     
-    // 所有已知分类名称（硬编码 + 用户已配置的）
+    // 所有已知分类名称（用户已配置的）
     const allCategoryNames = useMemo(() => {
-        const names = new Set(Object.keys(CATEGORY_COLOR_MAP));
-        Object.keys(savedCategoryColors).forEach(k => names.add(k));
-        return Array.from(names);
+        return Array.from(new Set(Object.keys(savedCategoryColors)));
     }, [savedCategoryColors]);
 
     // 新增分类状态
@@ -55,8 +53,6 @@ export function GeneralSettings() {
     };
 
     const handleRemoveCategory = (name: string) => {
-        // 只能删除用户新增的（不在硬编码默认值中的）
-        if (CATEGORY_COLOR_MAP[name]) return;
         const updated = { ...savedCategoryColors };
         delete updated[name];
         useCases.settings.updateCategoryColors(updated);
@@ -101,8 +97,7 @@ export function GeneralSettings() {
 
                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
                     {allCategoryNames.map((name) => {
-                        const color = activeColors[name] || '#e0e0e0';
-                        const isDefault = !!CATEGORY_COLOR_MAP[name];
+                                const color = activeColors[name] || '#e0e0e0';
                         return (
                             <Box key={name} sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
                                 <input
@@ -113,23 +108,21 @@ export function GeneralSettings() {
                                 />
                                 <Typography variant="body1" sx={{ minWidth: 60 }}>{name}</Typography>
                                 <Typography variant="caption" color="text.secondary">{color}</Typography>
-                                {!isDefault && (
-                                    <button
-                                        onClick={() => handleRemoveCategory(name)}
-                                        style={{ 
-                                            marginLeft: 'auto', 
-                                            cursor: 'pointer', 
-                                            background: 'none', 
-                                            border: '1px solid var(--text-muted)', 
-                                            borderRadius: 4, 
-                                            padding: '2px 8px',
-                                            color: 'var(--text-muted)',
-                                            fontSize: 12
-                                        }}
-                                    >
-                                        删除
-                                    </button>
-                                )}
+                                <button
+                                    onClick={() => handleRemoveCategory(name)}
+                                    style={{ 
+                                        marginLeft: 'auto', 
+                                        cursor: 'pointer', 
+                                        background: 'none', 
+                                        border: '1px solid var(--text-muted)', 
+                                        borderRadius: 4, 
+                                        padding: '2px 8px',
+                                        color: 'var(--text-muted)',
+                                        fontSize: 12
+                                    }}
+                                >
+                                    删除
+                                </button>
                             </Box>
                         );
                     })}
