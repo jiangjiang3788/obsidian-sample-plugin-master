@@ -26,7 +26,6 @@ export function MonthStatisticsView({
   displayMode: 'smart' | 'linear' | 'logarithmic';
   minVisibleHeight: number;
 }) {
-  // 月视图：显示月度汇总和该月所有周的柱状图
   const monthData = aggregateByMonth(items, categories, monthDate, usePeriod);
   const monthWeeksData = getMonthWeeksData(items, categories, monthDate, usePeriod);
 
@@ -46,12 +45,18 @@ export function MonthStatisticsView({
     weekCursor = weekCursor.add(1, 'week');
   }
 
+  const weekCount = monthWeeksData.length;
+
   return (
     <div class="statistics-view">
       <TopControls currentView="月" usePeriod={usePeriod} onToggleUsePeriod={onToggleUsePeriod} />
-      <div class="sv-timeline">
-        {/* 月度汇总 */}
-        <div class="sv-row">
+
+      <div
+        class="sv-month-grid"
+        style={{ gridTemplateColumns: `repeat(${weekCount}, 1fr)` }}
+      >
+        {/* 第1行：月度汇总 - 跨全部N列 */}
+        <div class="sv-month-grid-summary">
           <ChartBlock
             data={monthData}
             label={monthDate.format('YYYY年MM月')}
@@ -68,15 +73,18 @@ export function MonthStatisticsView({
           />
         </div>
 
-        {/* 月度周视图 */}
-        <div class="sv-row sv-row-month-weeks">
-          {monthWeeksData.map((data, index) => {
-            const meta = weeksMeta[index];
-            if (!meta) return null;
-            const { weekStart } = meta;
-            return (
+        {/* 第2行：周 - 每个占1列 */}
+        {monthWeeksData.map((data, index) => {
+          const meta = weeksMeta[index];
+          if (!meta) return null;
+          const { weekStart } = meta;
+          return (
+            <div
+              key={weekStart.format('YYYY-MM-DD')}
+              class="sv-month-grid-week"
+              style={{ gridColumn: `${index + 1}` }}
+            >
               <ChartBlock
-                key={weekStart.format('YYYY-MM-DD')}
                 data={data}
                 label={`第${index + 1}周`}
                 categories={categories}
@@ -91,11 +99,10 @@ export function MonthStatisticsView({
                 displayMode={displayMode}
                 minVisibleHeight={minVisibleHeight}
               />
-            );
-          })}
-        </div>
+            </div>
+          );
+        })}
       </div>
-      {/* Popover is rendered via FloatingWidget in container */}
     </div>
   );
 }

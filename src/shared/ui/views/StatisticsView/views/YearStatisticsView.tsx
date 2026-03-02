@@ -32,11 +32,19 @@ export function YearStatisticsView({
   displayMode: 'smart' | 'linear' | 'logarithmic';
   minVisibleHeight: number;
 }) {
+  // 计算最大周数（用于统一周行的行数）
+  const maxWeeksInMonth = Math.max(
+    ...yearlyWeekStructure.map(({ weeks }) => weeks.length),
+    1
+  );
+
   return (
     <div class="statistics-view">
       <TopControls currentView="年" usePeriod={usePeriod} onToggleUsePeriod={onToggleUsePeriod} />
-      <div class="sv-timeline">
-        <div class="sv-row">
+
+      <div class="sv-year-grid">
+        {/* 第1行：年度汇总 - 跨全部12列 */}
+        <div class="sv-year-grid-year">
           <ChartBlock
             data={processedData.yearData}
             label={`${year}年`}
@@ -48,10 +56,14 @@ export function YearStatisticsView({
           />
         </div>
 
-        <div class="sv-row sv-row-quarters">
-          {processedData.quartersData.map((data, i) => (
+        {/* 第2行：4个季度 - 每个跨3列 */}
+        {processedData.quartersData.map((data, i) => (
+          <div
+            key={`q${i}`}
+            class="sv-year-grid-quarter"
+            style={{ gridColumn: `${i * 3 + 1} / ${i * 3 + 4}` }}
+          >
             <ChartBlock
-              key={i}
               data={data}
               label={`Q${i + 1}`}
               categories={categories}
@@ -60,53 +72,66 @@ export function YearStatisticsView({
               displayMode={displayMode}
               minVisibleHeight={minVisibleHeight}
             />
-          ))}
-        </div>
+          </div>
+        ))}
 
-        <div class="sv-row sv-row-months">
-          {processedData.monthsData.map((data, i) => (
+        {/* 第3行：12个月 - 每个占1列 */}
+        {processedData.monthsData.map((data, i) => (
+          <div
+            key={`m${i}`}
+            class={`sv-year-grid-month${(i % 3 === 2 && i < 11) ? ' sv-quarter-end' : ''}`}
+            style={{ gridColumn: `${i + 1}` }}
+          >
             <ChartBlock
-              key={i}
               data={data}
               label={`${i + 1}月`}
               categories={categories}
               onCellClick={onCellClick}
               cellIdentifier={(cat: string) => ({ type: 'month', year, month: i + 1, category: cat })}
+              isCompact={true}
               displayMode={displayMode}
               minVisibleHeight={minVisibleHeight}
             />
-          ))}
-        </div>
+          </div>
+        ))}
 
-        <div class="sv-row-weeks">
-          {yearlyWeekStructure.map(({ month, weeks }) => (
-            <div class="sv-month-col" key={month}>
-              <div class="sv-month-col-header">{month}月</div>
-              <div class="sv-month-col-weeks">
-                {weeks.map((week) => {
-                  const weekIndex = week - 1;
-                  const weekData = processedData.weeksData[weekIndex] || createPeriodData(categories);
+        {/* 第4+行：每月的周 - 每月占1列，周在列内竖排 */}
+        {yearlyWeekStructure.map(({ month, weeks }) => {
+          const gridCol = month; // month is 1-based (1=Jan), grid columns are 1-12
+          const isQuarterEnd = (month % 3 === 0) && month < 12;
 
-                  return (
-                    <ChartBlock
-                      key={week}
-                      data={weekData}
-                      label={`${week}W`}
-                      categories={categories}
-                      onCellClick={onCellClick}
-                      cellIdentifier={(cat: string) => ({ type: 'week', year, week, category: cat })}
-                      isCompact={true}
-                      displayMode={displayMode}
-                      minVisibleHeight={minVisibleHeight}
-                    />
-                  );
-                })}
-              </div>
+          return (
+            <div
+              key={`w-col-${month}`}
+              class={`sv-year-grid-week-col${isQuarterEnd ? ' sv-quarter-end' : ''}`}
+              style={{ gridColumn: `${gridCol}` }}
+            >
+              {weeks.map((week) => {
+                const weekIndex = week - 1;
+                const weekData = processedData.weeksData[weekIndex] || createPeriodData(categories);
+
+                return (
+                  <ChartBlock
+                    key={week}
+                    data={weekData}
+                    label={`${week}W`}
+                    categories={categories}
+                    onCellClick={onCellClick}
+                    cellIdentifier={(cat: string) => ({ type: 'week', year, week, category: cat })}
+                    isCompact={true}
+                    displayMode={displayMode}
+                    minVisibleHeight={minVisibleHeight}
+                  />
+                );
+              })}
+              {/* 用空白占位，确保每列高度一致 */}
+              {Array.from({ length: maxWeeksInMonth - weeks.length }, (_, i) => (
+                <div key={`pad-${i}`} class="sv-week-placeholder" />
+              ))}
             </div>
-          ))}
-        </div>
+          );
+        })}
       </div>
-      {/* Popover is rendered via FloatingWidget in container */}
     </div>
   );
 }

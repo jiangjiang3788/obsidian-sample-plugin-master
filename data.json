@@ -20,23 +20,23 @@
   "groups": [],
   "viewInstances": [
     {
-      "id": "vi_mm8rvusg9wsj08d",
+      "id": "vi_mm8spfmmjacv291",
       "parentId": null,
-      "title": "41",
+      "title": "方式",
       "viewType": "StatisticsView",
       "viewConfig": {
         "categories": [
-          {
-            "name": "未完成任务",
-            "color": "#969696"
-          },
           {
             "name": "完成任务",
             "color": "#2b96da"
           },
           {
+            "name": "未完成任务",
+            "color": "#969696"
+          },
+          {
             "name": "打卡",
-            "color": "#e0e0e0"
+            "color": "#8972e4"
           },
           {
             "name": "闪念",
@@ -52,8 +52,13 @@
           }
         ]
       },
-      "fields": [],
-      "groupFields": [],
+      "fields": [
+        "date",
+        "content"
+      ],
+      "groupFields": [
+        "theme"
+      ],
       "filters": [],
       "sort": [],
       "collapsed": false
@@ -64,7 +69,7 @@
       "id": "layout_mm8rs76pvqg2yzr",
       "name": "新布局",
       "viewInstanceIds": [
-        "vi_mm8rvusg9wsj08d"
+        "vi_mm8spfmmjacv291"
       ],
       "displayMode": "list",
       "initialView": "月",
@@ -89,6 +94,7 @@
     "计划": "#21d43f",
     "未完成任务": "#969696",
     "完成任务": "#2b96da",
-    "闪念": "#ee8b8b"
+    "闪念": "#ee8b8b",
+    "打卡": "#8972e4"
   }
 }

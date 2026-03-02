@@ -11,6 +11,7 @@ interface ChartBlockProps {
     categories: CategoryConfig[];
     cellIdentifier: (cat: string) => any;
     isCompact?: boolean;
+    isNarrow?: boolean;
     displayMode?: 'smart' | 'linear' | 'logarithmic';
     minVisibleHeight?: number;
 }
@@ -52,6 +53,7 @@ export function ChartBlock({
     categories, 
     cellIdentifier, 
     isCompact = false, 
+    isNarrow = false,
     displayMode = 'smart', 
     minVisibleHeight = 15 
 }: ChartBlockProps) {
@@ -67,7 +69,12 @@ export function ChartBlock({
         });
     }, [counts, categories, displayMode, minVisibleHeight, allCounts]);
     
-    const containerClasses = `sv-chart-block ${isCompact ? 'is-compact' : ''} ${total === 0 ? 'is-empty' : ''}`;
+    const containerClasses = [
+        'sv-chart-block',
+        isCompact ? 'is-compact' : '',
+        isNarrow ? 'is-narrow' : '',
+        total === 0 ? 'is-empty' : '',
+    ].filter(Boolean).join(' ');
 
     return (
         <div 

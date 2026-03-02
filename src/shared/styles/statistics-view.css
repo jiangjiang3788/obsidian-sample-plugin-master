@@ -126,6 +126,157 @@ body.theme-dark .sv-filter-btn.is-selected {
     gap: 12px;
 }
 
+/* =============== 年视图统一 12 列网格 =============== */
+.sv-year-grid {
+    display: grid;
+    grid-template-columns: repeat(12, 1fr);
+    gap: 4px;
+    column-gap: 4px;
+    row-gap: 8px;
+}
+
+/* 年度汇总行 - 跨全部12列 */
+.sv-year-grid-year {
+    grid-column: 1 / -1;
+}
+
+/* 季度 - 每个跨3列（通过 inline style 设置 grid-column） */
+.sv-year-grid-quarter {
+    min-width: 0;
+}
+
+/* 月份 - 每个占1列 */
+.sv-year-grid-month {
+    min-width: 0;
+}
+
+/* 季度边界 - 在季度末尾列增加右侧间距，形成视觉分隔 */
+.sv-quarter-end {
+    margin-right: 8px;
+}
+
+/* 周列 - 每月占1列，内部周竖排 */
+.sv-year-grid-week-col {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    min-width: 0;
+}
+
+/* 周占位块 - 确保所有月列等高 */
+.sv-week-placeholder {
+    height: 110px; /* 与 is-compact 高度一致 */
+    flex-shrink: 0;
+}
+
+/* 年视图内周图表块：柱子变细、文字省略 */
+.sv-year-grid-week-col .sv-chart-block {
+    padding: 4px;
+    gap: 3px;
+}
+
+.sv-year-grid-week-col .sv-vbar-bar {
+    max-width: 10px;
+    margin: 0 auto;
+}
+
+.sv-year-grid-week-col .sv-chart-label {
+    font-size: 10px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.sv-year-grid-week-col .sv-chart-number {
+    font-size: 9px;
+    min-height: 12px;
+    line-height: 12px;
+}
+
+.sv-year-grid-week-col .sv-chart-category {
+    font-size: 8px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-height: 14px;
+    line-height: 14px;
+}
+
+.sv-year-grid-week-col .sv-chart-bars-container {
+    min-height: 40px;
+    gap: 2px;
+}
+
+/* =============== 季度视图统一 3 列网格 =============== */
+.sv-quarter-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 4px;
+    row-gap: 8px;
+}
+
+/* 季度汇总 - 跨全部3列 */
+.sv-quarter-grid-summary {
+    grid-column: 1 / -1;
+}
+
+/* 月份 - 每个占1列 */
+.sv-quarter-grid-month {
+    min-width: 0;
+}
+
+/* 周列 - 每月占1列，内部周竖排 */
+.sv-quarter-grid-week-col {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    min-width: 0;
+}
+
+/* =============== 月视图 N 列网格 =============== */
+.sv-month-grid {
+    display: grid;
+    gap: 4px;
+    row-gap: 8px;
+}
+
+/* 月度汇总 - 跨全部列 */
+.sv-month-grid-summary {
+    grid-column: 1 / -1;
+}
+
+/* 周 - 每个占1列 */
+.sv-month-grid-week {
+    min-width: 0;
+}
+
+/* 年视图内月份图表块也稍微紧凑 */
+.sv-year-grid-month .sv-chart-block {
+    padding: 6px;
+    gap: 4px;
+}
+
+.sv-year-grid-month .sv-vbar-bar {
+    max-width: 14px;
+    margin: 0 auto;
+}
+
+.sv-year-grid-month .sv-chart-label {
+    font-size: 11px;
+}
+
+.sv-year-grid-month .sv-chart-number {
+    font-size: 10px;
+}
+
+.sv-year-grid-month .sv-chart-category {
+    font-size: 9px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+
 .sv-row {
     display: grid;
     gap: 8px;
@@ -208,21 +359,21 @@ body.theme-dark .sv-filter-btn.is-selected {
 .sv-chart-block {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 4px;
     border-radius: 6px;
     background: var(--background-primary);
     border: 1px solid var(--background-modifier-border);
     cursor: pointer;
     transition: all 0.2s ease;
-    padding: 12px;
-    height: 220px;
+    padding: 8px;
+    height: 180px;
     min-width: 0;
 }
 
 .sv-chart-block.is-compact {
-    height: 130px;
-    padding: 8px;
-    gap: 6px;
+    height: 110px;
+    padding: 6px;
+    gap: 3px;
 }
 
 .sv-chart-block:hover {
@@ -251,7 +402,7 @@ body.theme-dark .sv-filter-btn.is-selected {
 .sv-chart-content {
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: 3px;
     flex-grow: 1;
     min-height: 0;
 }
@@ -259,10 +410,10 @@ body.theme-dark .sv-filter-btn.is-selected {
 /* 数字标签行 */
 .sv-chart-numbers {
     display: flex;
-    gap: 4px;
+    gap: 2px;
     justify-content: space-between;
     align-items: center;
-    min-height: 16px;
+    min-height: 14px;
 }
 
 .sv-chart-number {
@@ -272,17 +423,17 @@ body.theme-dark .sv-filter-btn.is-selected {
     color: var(--text-muted);
     font-weight: 600;
     white-space: nowrap;
-    min-height: 16px;
-    line-height: 16px;
+    min-height: 14px;
+    line-height: 14px;
 }
 
 /* 柱状图容器 */
 .sv-chart-bars-container {
     display: flex;
-    gap: 4px;
+    gap: 3px;
     flex-grow: 1;
     align-items: flex-end;
-    min-height: 60px;
+    min-height: 40px;
 }
 
 .sv-vbar-wrapper {
@@ -310,10 +461,10 @@ body.theme-dark .sv-filter-btn.is-selected {
 /* 分类标签行 */
 .sv-chart-categories {
     display: flex;
-    gap: 4px;
+    gap: 2px;
     justify-content: space-between;
     align-items: center;
-    min-height: 18px;
+    min-height: 14px;
 }
 
 .sv-chart-category {
@@ -325,8 +476,8 @@ body.theme-dark .sv-filter-btn.is-selected {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    min-height: 18px;
-    line-height: 18px;
+    min-height: 14px;
+    line-height: 14px;
 }
 
 /* 弹窗样式 */
