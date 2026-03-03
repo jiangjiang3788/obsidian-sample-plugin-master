@@ -10,5 +10,6 @@ styles.css
 # Archive files
 *.zip
 
-# test2 vault plugin binaries
+# test vault plugin binaries
+test/vaults/simple/.obsidian/plugins/*/main.js
 test2/vaults/simple/.obsidian/plugins/*/main.js
