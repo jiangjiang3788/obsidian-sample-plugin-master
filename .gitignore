@@ -1,3 +1,4 @@
 node_modules
 dist
 .obsidian-cachedist/
+.obsidian-cache
