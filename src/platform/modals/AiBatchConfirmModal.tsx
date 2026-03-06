@@ -11,7 +11,7 @@ import { Modal, Notice } from 'obsidian';
 import { useMemo, useState } from 'preact/hooks';
 
 import { type Services, createServices, mountWithServices, unmountPreact, useDataStore, useInputService, useSelector } from '@/app/public';
-import type { NaturalRecordCommand, ThemeDefinition } from '@core/public';
+import type { NaturalRecordCommand, ThemeDefinition, TemplateField } from '@core/public';
 import { getEffectiveTemplate } from '@core/public';
 
 import {
@@ -39,6 +39,43 @@ interface RecordItem {
   formData: Record<string, any>;
   saved: boolean;
   skipped: boolean;
+}
+
+function normalizeAiFieldValue(field: TemplateField, rawValue: any): any {
+  if (rawValue === null || rawValue === undefined || rawValue === '') return rawValue;
+
+  const isSelectable = ['select', 'radio', 'rating'].includes(field.type);
+  if (!isSelectable || !field.options?.length) return rawValue;
+
+  if (typeof rawValue === 'object' && rawValue !== null && 'value' in rawValue) {
+    const objectValue = String((rawValue as any).value ?? '');
+    const objectLabel = String((rawValue as any).label ?? '');
+    const matched = field.options.find((opt) => String(opt.value) === objectValue || (!!opt.label && String(opt.label) === objectLabel));
+    if (matched) return { value: matched.value, label: matched.label || matched.value };
+    return { value: objectValue, label: objectLabel || objectValue };
+  }
+
+  if (Array.isArray(rawValue)) {
+    return rawValue.map((entry) => normalizeAiFieldValue(field, entry));
+  }
+
+  const normalizedRaw = String(rawValue).trim();
+  const matched = field.options.find((opt) => String(opt.value) === normalizedRaw || String(opt.label || '').trim() === normalizedRaw);
+  if (matched) return { value: matched.value, label: matched.label || matched.value };
+
+  return rawValue;
+}
+
+function normalizeAiFormData(template: { fields?: TemplateField[] } | undefined, formData: Record<string, any> | undefined): Record<string, any> {
+  const next = { ...(formData || {}) };
+  if (!template?.fields?.length) return next;
+
+  template.fields.forEach((field) => {
+    if (!(field.key in next)) return;
+    next[field.key] = normalizeAiFieldValue(field, next[field.key]);
+  });
+
+  return next;
 }
 
 export class AiBatchConfirmModal extends Modal {
@@ -143,12 +180,14 @@ function AiBatchConfirmForm({
       }
       if (!themeId && themes.length > 0) themeId = themes[0].id;
 
+      const { template } = getEffectiveTemplate(settings, block?.id || '', themeId);
+
       return {
         id: `record-${index}`,
         cmd,
         blockId: block?.id || '',
         themeId,
-        formData: { ...(cmd.fieldValues || {}) },
+        formData: normalizeAiFormData(template, cmd.fieldValues),
         saved: false,
         skipped: false,
       };
@@ -180,7 +219,8 @@ function AiBatchConfirmForm({
       return;
     }
 
-    const finalData = finalizeQuickInputFormData(currentRecord.formData);
+    const normalizedFormData = normalizeAiFormData(template, currentRecord.formData);
+    const finalData = finalizeQuickInputFormData(normalizedFormData);
     const finalTheme = currentRecord.themeId ? themeIdMap.get(currentRecord.themeId) : undefined;
 
     try {
@@ -215,7 +255,8 @@ function AiBatchConfirmForm({
       const { template } = getEffectiveTemplate(settings, record.blockId, record.themeId);
       if (!template) continue;
 
-      const finalData = finalizeQuickInputFormData(record.formData);
+      const normalizedFormData = normalizeAiFormData(template, record.formData);
+      const finalData = finalizeQuickInputFormData(normalizedFormData);
       const finalTheme = record.themeId ? themeIdMap.get(record.themeId) : undefined;
 
       try {
