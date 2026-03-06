@@ -206,7 +206,7 @@ export class AiNaturalLanguageRecordParser implements INaturalLanguageRecordPars
             '1. Keys MUST be from snapshot.blocks[].fields[].key',
             '2. Date format: YYYY-MM-DD',
             '3. Time format: HH:mm',
-            '4. Select/radio: return the exact option.value or option.label from snapshot; the app will map it back to the configured option object',
+            '4. Select/radio/rating: return the exact option.value or option.label from snapshot; the app will map it back to the configured option object',
             '5. Rating: use numeric value (1-5)',
             '6. Use current date/time if not specified in input',
             '',

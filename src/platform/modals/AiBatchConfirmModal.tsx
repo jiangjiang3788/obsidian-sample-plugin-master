@@ -31,6 +31,43 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import { finalizeQuickInputFormData, QuickInputEditor } from '@/app/public';
 import { ModalHeader } from '@shared/public';
 
+
+function normalizeAiFieldValue(field: TemplateField, value: any): any {
+  if (value === undefined || value === null || value === '') return value;
+
+  const isSelectable = ['select', 'radio', 'rating'].includes(field.type);
+  if (!isSelectable) return value;
+
+  if (typeof value === 'object' && 'value' in value && 'label' in value) {
+    return value;
+  }
+
+  const options = field.options || [];
+
+  if (Array.isArray(value)) {
+    return value.map((entry) => {
+      if (entry && typeof entry === 'object' && 'value' in entry && 'label' in entry) return entry;
+      const matched = options.find((option) => option.value === entry || option.label === entry);
+      return matched ? { value: matched.value, label: matched.label || matched.value } : entry;
+    });
+  }
+
+  const matched = options.find((option) => option.value === value || option.label === value);
+  return matched ? { value: matched.value, label: matched.label || matched.value } : value;
+}
+
+function normalizeAiFormData(template: { fields?: TemplateField[] } | undefined, formData: Record<string, any>): Record<string, any> {
+  if (!template?.fields?.length) return { ...formData };
+
+  const next = { ...formData };
+  template.fields.forEach((field) => {
+    if (!(field.key in next)) return;
+    next[field.key] = normalizeAiFieldValue(field, next[field.key]);
+  });
+
+  return next;
+}
+
 interface RecordItem {
   id: string;
   cmd: NaturalRecordCommand;
@@ -39,43 +76,6 @@ interface RecordItem {
   formData: Record<string, any>;
   saved: boolean;
   skipped: boolean;
-}
-
-function normalizeAiFieldValue(field: TemplateField, rawValue: any): any {
-  if (rawValue === null || rawValue === undefined || rawValue === '') return rawValue;
-
-  const isSelectable = ['select', 'radio', 'rating'].includes(field.type);
-  if (!isSelectable || !field.options?.length) return rawValue;
-
-  if (typeof rawValue === 'object' && rawValue !== null && 'value' in rawValue) {
-    const objectValue = String((rawValue as any).value ?? '');
-    const objectLabel = String((rawValue as any).label ?? '');
-    const matched = field.options.find((opt) => String(opt.value) === objectValue || (!!opt.label && String(opt.label) === objectLabel));
-    if (matched) return { value: matched.value, label: matched.label || matched.value };
-    return { value: objectValue, label: objectLabel || objectValue };
-  }
-
-  if (Array.isArray(rawValue)) {
-    return rawValue.map((entry) => normalizeAiFieldValue(field, entry));
-  }
-
-  const normalizedRaw = String(rawValue).trim();
-  const matched = field.options.find((opt) => String(opt.value) === normalizedRaw || String(opt.label || '').trim() === normalizedRaw);
-  if (matched) return { value: matched.value, label: matched.label || matched.value };
-
-  return rawValue;
-}
-
-function normalizeAiFormData(template: { fields?: TemplateField[] } | undefined, formData: Record<string, any> | undefined): Record<string, any> {
-  const next = { ...(formData || {}) };
-  if (!template?.fields?.length) return next;
-
-  template.fields.forEach((field) => {
-    if (!(field.key in next)) return;
-    next[field.key] = normalizeAiFieldValue(field, next[field.key]);
-  });
-
-  return next;
 }
 
 export class AiBatchConfirmModal extends Modal {
@@ -180,14 +180,14 @@ function AiBatchConfirmForm({
       }
       if (!themeId && themes.length > 0) themeId = themes[0].id;
 
-      const { template } = getEffectiveTemplate(settings, block?.id || '', themeId);
+      const initialTemplate = block ? getEffectiveTemplate(settings, block.id, themeId).template : undefined;
 
       return {
         id: `record-${index}`,
         cmd,
         blockId: block?.id || '',
         themeId,
-        formData: normalizeAiFormData(template, cmd.fieldValues),
+        formData: normalizeAiFormData(initialTemplate, { ...(cmd.fieldValues || {}) }),
         saved: false,
         skipped: false,
       };
@@ -219,8 +219,7 @@ function AiBatchConfirmForm({
       return;
     }
 
-    const normalizedFormData = normalizeAiFormData(template, currentRecord.formData);
-    const finalData = finalizeQuickInputFormData(normalizedFormData);
+    const finalData = finalizeQuickInputFormData(currentRecord.formData);
     const finalTheme = currentRecord.themeId ? themeIdMap.get(currentRecord.themeId) : undefined;
 
     try {
@@ -255,8 +254,7 @@ function AiBatchConfirmForm({
       const { template } = getEffectiveTemplate(settings, record.blockId, record.themeId);
       if (!template) continue;
 
-      const normalizedFormData = normalizeAiFormData(template, record.formData);
-      const finalData = finalizeQuickInputFormData(normalizedFormData);
+      const finalData = finalizeQuickInputFormData(record.formData);
       const finalTheme = record.themeId ? themeIdMap.get(record.themeId) : undefined;
 
       try {
