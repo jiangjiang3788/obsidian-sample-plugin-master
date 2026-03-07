@@ -9,6 +9,8 @@ import type { InputSettings, BlockTemplate, ThemeDefinition, ThemeOverride } fro
 export interface TemplateResolveResult {
     template: BlockTemplate | null;
     theme: ThemeDefinition | null;
+    templateId: string | null;
+    templateSourceType: 'block' | 'override' | null;
 }
 
 /**
@@ -44,7 +46,7 @@ export class TemplateResolver {
         // Step 1: 查找 baseBlock
         const baseBlock = settings.blocks.find(b => b.id === blockId);
         if (!baseBlock) {
-            return { template: null, theme: null };
+            return { template: null, theme: null, templateId: null, templateSourceType: null };
         }
 
         // Step 2: 查找 theme
@@ -68,12 +70,12 @@ export class TemplateResolver {
                     targetFile: override.targetFile ?? baseBlock.targetFile,
                     appendUnderHeader: override.appendUnderHeader ?? baseBlock.appendUnderHeader,
                 };
-                return { template: effectiveTemplate, theme };
+                return { template: effectiveTemplate, theme, templateId: override.id, templateSourceType: 'override' };
             }
         }
 
         // Step 4: 没有 themeId 或 override 被禁用/不存在，返回 baseBlock
-        return { template: baseBlock, theme };
+        return { template: baseBlock, theme, templateId: baseBlock.id, templateSourceType: 'block' };
     }
 
     /**

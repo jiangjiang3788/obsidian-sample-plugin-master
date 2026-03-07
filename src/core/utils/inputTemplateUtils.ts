@@ -25,7 +25,7 @@ export function getEffectiveTemplate(
     settings: InputSettings,
     blockId: string,
     themeId?: string
-): { template: BlockTemplate | null; theme: ThemeDefinition | null } {
+): { template: BlockTemplate | null; theme: ThemeDefinition | null; templateId: string | null; templateSourceType: 'block' | 'override' | null } {
     return TemplateResolver.resolve(settings, blockId, themeId);
 }
 

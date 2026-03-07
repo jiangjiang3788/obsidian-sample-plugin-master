@@ -65,6 +65,10 @@ export function parseTaskLine(
         // - tags 仅来自 #tag 或 (标签::) /(tags::)
         if (['主题', 'theme'].includes(lowerKey)) {
             item.theme = value;
+        } else if (['模板id', 'templateid'].includes(lowerKey)) {
+            item.templateId = value;
+        } else if (['模板来源', 'templatesource', 'templatesourcetype'].includes(lowerKey)) {
+            if (value === 'block' || value === 'override') item.templateSourceType = value;
         } else if (['标签', 'tag', 'tags'].includes(lowerKey)) {
             value.split(/[,，]/).forEach(v => {
                 const t = v.trim().replace(/^#/, '');
@@ -172,6 +176,12 @@ export function parseBlockContent(
                 const lower = key.toLowerCase();
 
                 if (['分类', '类别', 'category'].includes(lower))      categoryKey = value.trim();
+                else if (['模板id', 'templateid'].includes(lower)) {
+                    extra['templateId'] = value.trim();
+                }
+                else if (['模板来源', 'templatesource', 'templatesourcetype'].includes(lower)) {
+                    extra['templateSourceType'] = value.trim();
+                }
                 else if (['主题'].includes(lower)) {
                     // [Day2新增] 主题字段单独处理
                     themeVal = value.trim();
@@ -216,6 +226,13 @@ export function parseBlockContent(
         // [Day2新增] 主题字段
         theme: themeVal,
     };
+    const parsedTemplateId = typeof extra['templateId'] === 'string' ? String(extra['templateId']) : undefined;
+    const parsedTemplateSourceType = extra['templateSourceType'] === 'block' || extra['templateSourceType'] === 'override' ? extra['templateSourceType'] as 'block' | 'override' : undefined;
+    if (parsedTemplateId) item.templateId = parsedTemplateId;
+    if (parsedTemplateSourceType) item.templateSourceType = parsedTemplateSourceType;
+    delete extra['templateId'];
+    delete extra['templateSourceType'];
+
     if (iconVal) item.icon = iconVal;
     if (periodVal) item.period = periodVal;
     if (ratingVal) item.rating = ratingVal;

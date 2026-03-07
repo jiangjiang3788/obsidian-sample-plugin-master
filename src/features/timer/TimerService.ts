@@ -142,9 +142,9 @@ export class TimerService {
     }
 
     public async createNewTaskAndStart(data: QuickInputSaveData): Promise<void> {
-        const { template, formData, theme } = data;
+        const { template, formData, theme, templateId, templateSourceType } = data;
         try {
-            const targetFilePath = await this.inputService.executeTemplate(template, formData, theme);
+            const targetFilePath = await this.inputService.executeTemplate(template, formData, theme, { templateId, templateSourceType });
 
             // Phase0 P1:
             // - 不再使用 app.vault.getAbstractFileByPath / TFile

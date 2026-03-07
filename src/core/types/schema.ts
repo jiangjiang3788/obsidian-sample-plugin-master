@@ -167,6 +167,8 @@ export interface SortRule {
 }
 export interface Item {
     id: string;
+    templateId?: string;
+    templateSourceType?: 'block' | 'override';
     title: string;
     content: string;
     type: 'task' | 'block';

@@ -204,6 +204,8 @@ function QuickInputModalContent({
     formData: {},
     template: null,
     theme: null,
+    templateId: null,
+    templateSourceType: null,
   });
 
   const themeIdMap = useMemo(() => {
@@ -226,13 +228,13 @@ function QuickInputModalContent({
     const finalTheme = editorState.themeId ? themeIdMap.get(editorState.themeId) : undefined;
 
     if (onSave) {
-      onSave({ template, formData: finalData, theme: finalTheme });
+      onSave({ template, formData: finalData, theme: finalTheme, templateId: editorState.templateId, templateSourceType: editorState.templateSourceType });
       closeModal();
       return;
     }
 
     try {
-      await inputService.executeTemplate(template, finalData, finalTheme);
+      await inputService.executeTemplate(template, finalData, finalTheme, { templateId: editorState.templateId, templateSourceType: editorState.templateSourceType });
       new Notice(`✅ 已保存`);
       dataStore?.notifyChange?.();
       closeModal();

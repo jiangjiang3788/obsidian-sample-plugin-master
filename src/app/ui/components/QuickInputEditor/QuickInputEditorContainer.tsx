@@ -26,6 +26,8 @@ export interface QuickInputEditorState {
   formData: Record<string, any>;
   template: any;
   theme: ThemeDefinition | null;
+  templateId: string | null;
+  templateSourceType: 'block' | 'override' | null;
 }
 
 export interface QuickInputEditorProps {
@@ -85,7 +87,7 @@ export function QuickInputEditor({
     };
   }, [settings, themes, currentBlockId]);
 
-  const { template, theme } = useMemo(() => getEffectiveTemplate(settings, currentBlockId, selectedThemeId || undefined), [
+  const { template, theme, templateId, templateSourceType } = useMemo(() => getEffectiveTemplate(settings, currentBlockId, selectedThemeId || undefined), [
     settings,
     currentBlockId,
     selectedThemeId,
@@ -172,8 +174,10 @@ export function QuickInputEditor({
       formData,
       template,
       theme: selectedThemeId ? themeIdMap.get(selectedThemeId) ?? null : null,
+      templateId,
+      templateSourceType,
     });
-  }, [currentBlockId, selectedThemeId, formData, template]);
+  }, [currentBlockId, selectedThemeId, formData, template, templateId, templateSourceType]);
 
   const handleUpdateField = (key: string, value: any, isOptionObject = false) => {
     setFormData((cur) => ({ ...cur, [key]: isOptionObject ? { value: value.value, label: value.label } : value, lastChanged: key }));

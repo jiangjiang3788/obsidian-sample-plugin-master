@@ -12,4 +12,6 @@ export interface QuickInputSaveData {
     template: BlockTemplate;
     formData: Record<string, any>;
     theme?: ThemeDefinition;
+    templateId?: string | null;
+    templateSourceType?: 'block' | 'override' | null;
 }

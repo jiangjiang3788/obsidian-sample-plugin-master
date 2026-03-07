@@ -24,17 +24,21 @@ export class InputService {
   public async executeTemplate(
     template: BlockTemplate,
     formData: Record<string, any>,
-    theme?: ThemeDefinition
+    theme?: ThemeDefinition,
+    templateMeta?: { templateId?: string | null; templateSourceType?: 'block' | 'override' | null }
   ): Promise<string> {
     if (!template) throw new Error('传入了无效的模板对象。');
 
     const renderData = {
       ...formData,
-      block: { name: template.name },
+      block: { name: template.name, id: template.id, categoryKey: template.categoryKey },
       theme: theme ? { path: theme.path, icon: theme.icon || '' } : {},
+      templateId: templateMeta?.templateId || template.id,
+      templateSourceType: templateMeta?.templateSourceType || 'block',
     };
 
-    const outputContent = renderTemplate(template.outputTemplate, renderData).trim();
+    const renderedContent = renderTemplate(template.outputTemplate, renderData).trim();
+    const outputContent = this.injectTemplateMetadata(renderedContent, renderData.templateId, renderData.templateSourceType);
     const targetFilePath = renderTemplate(template.targetFile, renderData).trim();
     const header = template.appendUnderHeader ? renderTemplate(template.appendUnderHeader, renderData) : null;
 
@@ -49,6 +53,41 @@ export class InputService {
     const newContent = existingContent ? `${existingContent.trim()}\n\n${outputContent}` : outputContent;
     await this.vault.writeFile(targetFilePath, newContent);
     return targetFilePath;
+  }
+
+
+
+  private injectTemplateMetadata(
+    outputContent: string,
+    templateId?: string | null,
+    templateSourceType?: 'block' | 'override' | null
+  ): string {
+    if (!templateId || !outputContent) return outputContent;
+
+    if (/模板ID\s*[:：]{1,2}/.test(outputContent)) return outputContent;
+
+    const sourceLine = templateSourceType ? `模板来源:: ${templateSourceType}` : '';
+
+    if (outputContent.includes('<!-- start -->')) {
+      const lines = outputContent.split('\n');
+      const startIdx = lines.findIndex((line) => line.trim() === '<!-- start -->');
+      if (startIdx !== -1) {
+        const injectLines = [`模板ID:: ${templateId}`];
+        if (sourceLine) injectLines.push(sourceLine);
+        lines.splice(startIdx + 1, 0, ...injectLines);
+        return lines.join('\n');
+      }
+    }
+
+    const lines = outputContent.split('\n');
+    const firstNonEmptyIndex = lines.findIndex((line) => line.trim() !== '');
+    if (firstNonEmptyIndex !== -1 && /^\s*-\s*\[[ xX\-]?\]/.test(lines[firstNonEmptyIndex])) {
+      lines[firstNonEmptyIndex] = `${lines[firstNonEmptyIndex]} (模板ID::${templateId})${sourceLine ? ` (模板来源::${templateSourceType})` : ''}`;
+      return lines.join('\n');
+    }
+
+    const prefix = sourceLine ? `模板ID:: ${templateId}\n${sourceLine}\n` : `模板ID:: ${templateId}\n`;
+    return `${prefix}${outputContent}`;
   }
 
   // ---------------------------------------------------------------------------

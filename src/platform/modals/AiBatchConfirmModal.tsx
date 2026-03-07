@@ -215,7 +215,7 @@ function AiBatchConfirmForm({
       return;
     }
 
-    const { template } = getEffectiveTemplate(settings, currentRecord.blockId, currentRecord.themeId);
+    const { template, templateId, templateSourceType } = getEffectiveTemplate(settings, currentRecord.blockId, currentRecord.themeId);
     if (!template) {
       new Notice('保存失败：找不到模板');
       return;
@@ -225,7 +225,7 @@ function AiBatchConfirmForm({
     const finalTheme = currentRecord.themeId ? themeIdMap.get(currentRecord.themeId) : undefined;
 
     try {
-      await inputService.executeTemplate(template, finalData, finalTheme);
+      await inputService.executeTemplate(template, finalData, finalTheme, { templateId, templateSourceType });
       updateCurrentRecord({ saved: true });
       new Notice(`✅ 第 ${currentIndex + 1} 条已保存`);
       dataStore?.notifyChange?.();
@@ -253,14 +253,14 @@ function AiBatchConfirmForm({
 
       setCurrentIndex(i);
 
-      const { template } = getEffectiveTemplate(settings, record.blockId, record.themeId);
+      const { template, templateId, templateSourceType } = getEffectiveTemplate(settings, record.blockId, record.themeId);
       if (!template) continue;
 
       const finalData = finalizeQuickInputFormData(record.formData);
       const finalTheme = record.themeId ? themeIdMap.get(record.themeId) : undefined;
 
       try {
-        await inputService.executeTemplate(template, finalData, finalTheme);
+        await inputService.executeTemplate(template, finalData, finalTheme, { templateId, templateSourceType });
         setRecords((prev) => prev.map((r, idx) => (idx === i ? { ...r, saved: true } : r)));
       } catch (e: any) {
         new Notice(`❌ 第 ${i + 1} 条保存失败: ${e.message || e}`);
