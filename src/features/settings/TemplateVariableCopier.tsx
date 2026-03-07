@@ -18,6 +18,8 @@ export function TemplateVariableCopier({ block }: Props) {
             { value: '{{block}}', label: 'block' },
             { value: '{{theme}}', label: 'theme' },
             { value: '{{icon}}', label: 'icon' },
+            { value: '{{templateId}}', label: '模板ID:: {{templateId}}' },
+            { value: '{{templateSourceType}}', label: '模板来源:: {{templateSourceType}}' },
             { value: '{{moment:YYYY-MM-DD}}', label: 'moment:YYYY-MM-DD' },
         ];
 

@@ -2,10 +2,10 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
 import { useState, useEffect, useMemo } from 'preact/hooks';
-import { Dialog, DialogTitle, DialogContent, DialogActions, Button, Stack, TextField, Typography, Box, RadioGroup, FormControlLabel, Radio, FormControl, FormLabel, Divider } from '@mui/material';
+import { Button, Stack, TextField, Typography, Box, RadioGroup, FormControlLabel, Radio, FormControl, FormLabel, Divider } from '@mui/material';
 import { FieldsEditor } from './FieldsEditor';
 import type { BlockTemplate, ThemeDefinition, ThemeOverride, TemplateField } from '@core/public';
-import { useUiPort, type UseCases } from '@/app/public';
+import { FloatingPanel, useUiPort, type UseCases } from '@/app/public';
 import { TemplateVariableCopier } from './TemplateVariableCopier';
 
 type EditMode = 'inherit' | 'override' | 'disabled';
@@ -79,13 +79,20 @@ export function TemplateEditorModal({ isOpen, onClose, block, theme, existingOve
     const isFormDisabled = mode !== 'override';
 
     return (
-        <Dialog open={isOpen} onClose={onClose} fullWidth maxWidth="md" disablePortal>
-            <DialogTitle>
+        <FloatingPanel
+            id={`theme-template-editor-${theme.id}-${block.id}`}
+            title={
                 <Typography>
                     配置: <strong>{theme.path}</strong> / <span style={{ color: 'var(--color-accent)' }}>{block.name}</span>
                 </Typography>
-            </DialogTitle>
-            <DialogContent dividers>
+            }
+            onClose={onClose}
+            width={920}
+            maxWidth={'calc(100vw - 32px)'}
+            maxHeight={'calc(100vh - 32px)'}
+            bodyPadding={0}
+        >
+            <Box sx={{ p: 2, maxHeight: 'calc(100vh - 120px)', overflowY: 'auto' }}>
                 <Stack spacing={3}>
                     <FormControl component="fieldset">
                         <FormLabel component="legend">配置模式</FormLabel>
@@ -116,24 +123,24 @@ export function TemplateEditorModal({ isOpen, onClose, block, theme, existingOve
                                     <Typography variant="h6" sx={{ fontSize: '1rem', fontWeight: 600 }}>输出模板</Typography>
                                     <TemplateVariableCopier block={effectiveBlockForCopier} />
                                 </Stack>
-                                <TextField 
-                                    multiline 
-                                    rows={8} 
-                                    value={localOverride.outputTemplate || ''} 
-                                    onChange={e => setLocalOverride(o => ({...o, outputTemplate: (e.target as HTMLInputElement).value}))} 
-                                    fullWidth 
-                                    variant="outlined" 
+                                <TextField
+                                    multiline
+                                    rows={8}
+                                    value={localOverride.outputTemplate || ''}
+                                    onChange={e => setLocalOverride(o => ({...o, outputTemplate: (e.target as HTMLInputElement).value}))}
+                                    fullWidth
+                                    variant="outlined"
                                     sx={{ fontFamily: 'monospace', '& textarea': { fontSize: '13px' } }}
                                 />
                             </Box>
                         </Stack>
                     </fieldset>
+                    <Stack direction="row" justifyContent="flex-end" spacing={1}>
+                        <Button onClick={onClose}>取消</Button>
+                        <Button onClick={handleSave} variant="contained">保存配置</Button>
+                    </Stack>
                 </Stack>
-            </DialogContent>
-            <DialogActions>
-                <Button onClick={onClose}>取消</Button>
-                <Button onClick={handleSave} variant="contained">保存配置</Button>
-            </DialogActions>
-        </Dialog>
+            </Box>
+        </FloatingPanel>
     );
 }
