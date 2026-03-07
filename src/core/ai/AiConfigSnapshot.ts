@@ -22,6 +22,7 @@ export interface AiBlockConfigField {
 export interface AiBlockConfig {
     id: string;
     name: string;
+    categoryKey: string;
     fields: AiBlockConfigField[];
 }
 
@@ -76,6 +77,7 @@ export function buildAiConfigSnapshot(input: InputSettings | undefined, ai: AiSe
             return {
                 id: b.id,
                 name: b.name,
+                categoryKey: b.categoryKey,
                 fields,
             };
         });

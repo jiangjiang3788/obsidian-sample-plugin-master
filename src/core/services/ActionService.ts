@@ -1,7 +1,7 @@
 // src/core/services/ActionService.ts
 import { singleton, inject } from 'tsyringe';
 import { dayjs } from '@core/utils/date';
-import type { Item, ViewInstance } from '@/core/types/schema';
+import type { Item, ViewInstance, BlockTemplate } from '@/core/types/schema';
 import { DataStore } from '@core/services/DataStore';
 import { InputService } from '@core/services/InputService';
 import type { QuickInputConfig, ISettingsProvider } from '@core/services/types';
@@ -19,38 +19,49 @@ export class ActionService {
         @inject(InputService) private inputService: InputService
     ) {}
 
+    private findBlockByCategoryKey(categoryKey: string | undefined): BlockTemplate | undefined {
+        if (!categoryKey) return undefined;
+        const blocks = this.settingsProvider.getSettings().inputSettings.blocks || [];
+
+        if (categoryKey === '完成任务' || categoryKey === '未完成任务') {
+            return blocks.find((b) => b.categoryKey === '任务');
+        }
+
+        const exact = blocks.find((b) => b.categoryKey === categoryKey);
+        if (exact) return exact;
+
+        const segments = categoryKey.split('/');
+        while (segments.length > 1) {
+            segments.pop();
+            const parentKey = segments.join('/');
+            const matched = blocks.find((b) => b.categoryKey === parentKey);
+            if (matched) return matched;
+        }
+
+        return undefined;
+    }
+
     public getQuickInputConfigForView(viewInstance: ViewInstance, dateContext: dayjs.Dayjs, periodContext: string): QuickInputConfig | null {
         const settings = this.settingsProvider.getSettings();
-        
-        // 检查是否是统计视图，如果是则使用特殊处理
+
         if (viewInstance.viewType === 'StatisticsView') {
             return this.getQuickInputConfigForStatisticsView(viewInstance, dateContext, periodContext);
         }
-        
-        // 从视图实例的筛选条件中查找 categoryKey
+
         const filters = viewInstance.filters || [];
         const categoryFilter = filters.find((f: any) => f.field === 'categoryKey' && (f.op === '=' || f.op === 'includes'));
         if (!categoryFilter || !categoryFilter.value) {
             this.ui.notice('快捷输入失败：此视图未按 "categoryKey" 进行筛选。');
             return null;
         }
-        const blockName = categoryFilter.value as string;
-        let targetBlock = settings.inputSettings.blocks.find(b => b.name === blockName);
-        
-        // 特殊处理：如果是任务相关的 categoryKey，尝试匹配包含"任务"的模板
-        if (!targetBlock && (blockName === '完成任务' || blockName === '未完成任务')) {
-            targetBlock = settings.inputSettings.blocks.find(b => b.name.includes('任务'));
-        }
-        
+
+        const categoryKey = String(categoryFilter.value);
+        const targetBlock = this.findBlockByCategoryKey(categoryKey);
         if (!targetBlock) {
-            if (blockName === '完成任务' || blockName === '未完成任务') {
-                this.ui.notice(`快捷输入失败：找不到名称包含"任务"的Block模板。请在设置中创建一个任务类型的模板。`);
-            } else {
-                this.ui.notice(`快捷输入失败：找不到名为 "${blockName}" 的Block模板。`);
-            }
+            this.ui.notice(`快捷输入失败：找不到分类为 "${categoryKey}" 的 Block 模板。`);
             return null;
         }
-        
+
         let preselectedThemeId: string | undefined;
         const themeFilter = filters.find((f: any) => f.field === 'tags' && f.op === 'includes' && typeof f.value === 'string');
         if (themeFilter) {
@@ -60,12 +71,12 @@ export class ActionService {
                 preselectedThemeId = matchedTheme.id;
             }
         }
-        
+
         const context: Record<string, any> = {
             '日期': dateContext.format('YYYY-MM-DD'),
             '周期': periodContext,
         };
-        
+
         const equalityFilters = filters.filter((f: any) => f.op === '=');
         for (const filter of equalityFilters) {
             if (filter.field === 'categoryKey') continue;
@@ -73,23 +84,18 @@ export class ActionService {
             for (const templateField of targetBlock.fields) {
                 if (filter.field === templateField.key || filter.field === templateField.label) {
                     context[templateField.key] = filter.value;
-                    break; 
+                    break;
                 }
             }
         }
-        
+
         return {
             blockId: targetBlock.id,
-            context: context,
+            context,
             themeId: preselectedThemeId,
         };
     }
 
-    /**
-     * [核心修复]
-     * 重写了此方法，使用 `readField` 工具函数来准确地从任务 Item 中读取所有字段的值。
-     * 这确保了在编辑任务时，所有信息都能被正确地预填充到表单中。
-     */
     public getQuickInputConfigForTaskEdit(taskId: string): QuickInputConfig | null {
         const item = this.dataStore.queryItems().find(i => i.id === taskId);
         if (!item) {
@@ -97,12 +103,11 @@ export class ActionService {
             return null;
         }
 
-        const settings = this.settingsProvider.getSettings();
-        const baseCategory = (item.categoryKey || '').split('/')[0];
-        const targetBlock = settings.inputSettings.blocks.find(b => b.name === baseCategory);
+        const baseCategory = item.categoryKey || '';
+        const targetBlock = this.findBlockByCategoryKey(baseCategory);
 
         if (!targetBlock) {
-            this.ui.notice(`找不到与分类 "${baseCategory}" 匹配的Block模板，无法编辑。`);
+            this.ui.notice(`找不到与分类 "${baseCategory}" 匹配的 Block 模板，无法编辑。`);
             return null;
         }
 
@@ -114,7 +119,6 @@ export class ActionService {
             }
         }
 
-        // 特殊处理：确保 `title` 和 `tags` 被正确填充
         if (!context.title && !context['标题']) {
             context[targetBlock.fields.find(f => f.label === '标题')?.key || '标题'] = item.title;
         }
@@ -122,51 +126,36 @@ export class ActionService {
         if (tagsField && !context[tagsField.key]) {
             context[tagsField.key] = item.tags.join(', ');
         }
-        
+
         return {
             blockId: targetBlock.id,
-            context: context
+            context,
         };
     }
 
-    /**
-     * 为统计视图获取快捷输入配置
-     * 统计视图的分类信息存储在 viewConfig.categories 中，而不是数据源筛选条件里
-     */
     public getQuickInputConfigForStatisticsView(
-        viewInstance: ViewInstance, 
-        dateContext: dayjs.Dayjs, 
+        viewInstance: ViewInstance,
+        dateContext: dayjs.Dayjs,
         periodContext: string,
         categoryName?: string
     ): QuickInputConfig | null {
         const settings = this.settingsProvider.getSettings();
         const viewConfig = viewInstance.viewConfig || {};
         const categories = viewConfig.categories || [];
-        
+
         if (categories.length === 0) {
             this.ui.notice('快捷输入失败：统计视图未配置分类。');
             return null;
         }
-        
-        // 如果指定了分类名称，使用它；否则使用第一个分类
-        const targetCategoryName = categoryName || categories[0].name;
-        let targetBlock = settings.inputSettings.blocks.find(b => b.name === targetCategoryName);
-        
-        // 特殊处理：如果是任务相关的 categoryKey，尝试匹配包含"任务"的模板
-        if (!targetBlock && (targetCategoryName === '完成任务' || targetCategoryName === '未完成任务')) {
-            targetBlock = settings.inputSettings.blocks.find(b => b.name.includes('任务'));
-        }
-        
+
+        const targetCategoryKey = categoryName || categories[0].name;
+        const targetBlock = this.findBlockByCategoryKey(targetCategoryKey);
+
         if (!targetBlock) {
-            if (targetCategoryName === '完成任务' || targetCategoryName === '未完成任务') {
-                this.ui.notice(`快捷输入失败：找不到名称包含"任务"的Block模板。请在设置中创建一个任务类型的模板。`);
-            } else {
-                this.ui.notice(`快捷输入失败：找不到名为 "${targetCategoryName}" 的Block模板。`);
-            }
+            this.ui.notice(`快捷输入失败：找不到分类为 "${targetCategoryKey}" 的 Block 模板。`);
             return null;
         }
-        
-        // 检查主题筛选
+
         let preselectedThemeId: string | undefined;
         const filters = viewInstance.filters || [];
         const themeFilter = filters.find((f: any) => f.field === 'tags' && f.op === 'includes' && typeof f.value === 'string');
@@ -177,13 +166,12 @@ export class ActionService {
                 preselectedThemeId = matchedTheme.id;
             }
         }
-        
+
         const context: Record<string, any> = {
             '日期': dateContext.format('YYYY-MM-DD'),
             '周期': periodContext,
         };
-        
-        // 从视图实例的其他筛选条件中提取上下文
+
         const equalityFilters = filters.filter((f: any) => f.op === '=' && f.field !== 'categoryKey');
         for (const filter of equalityFilters) {
             for (const templateField of targetBlock.fields) {
@@ -193,10 +181,10 @@ export class ActionService {
                 }
             }
         }
-        
+
         return {
             blockId: targetBlock.id,
-            context: context,
+            context,
             themeId: preselectedThemeId,
         };
     }
@@ -207,9 +195,9 @@ export class ActionService {
             this.ui.notice('没有可用的Block模板，请先在设置中创建一个。');
             return null;
         }
-        const defaultBlockId = blocks[0].id;
+        const taskBlock = blocks.find((b) => b.categoryKey === '任务') || blocks[0];
         return {
-            blockId: defaultBlockId,
+            blockId: taskBlock.id,
         };
     }
 }

@@ -72,6 +72,7 @@ export interface TemplateField {
 export interface BlockTemplate {
     id: string;
     name: string;
+    categoryKey: string;
     fields: TemplateField[];
     outputTemplate: string;
     targetFile: string;

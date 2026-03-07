@@ -168,8 +168,10 @@ function AiBatchConfirmForm({
   const [records, setRecords] = useState<RecordItem[]>(() =>
     initialItems.map((cmd, index) => {
       // block
-      let block = blocks.find((b) => b.id === cmd.target.blockId);
-      if (!block) block = blocks.find((b) => b.name === cmd.target.blockId);
+      let block = cmd.target.blockId ? blocks.find((b) => b.id === cmd.target.blockId) : undefined;
+      if (!block && cmd.target.categoryKey) {
+        block = blocks.find((b) => b.categoryKey === cmd.target.categoryKey);
+      }
       if (!block && blocks.length > 0) block = blocks[0];
 
       // theme

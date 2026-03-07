@@ -78,6 +78,7 @@
       },
       "fields": [
         "date",
+        "pintu",
         "content"
       ],
       "groupFields": [],
@@ -149,6 +150,59 @@
       "filters": [],
       "sort": [],
       "collapsed": false
+    },
+    {
+      "id": "vi_mmeolydjaga6z6u",
+      "parentId": null,
+      "title": "打卡",
+      "viewType": "HeatmapView",
+      "viewConfig": {
+        "categories": [
+          {
+            "name": "打卡",
+            "color": "#b888e7"
+          },
+          {
+            "name": "计划",
+            "color": "#9eeabe"
+          },
+          {
+            "name": "闪念",
+            "color": "#e47272"
+          },
+          {
+            "name": "完成任务",
+            "color": "#88c1dd"
+          },
+          {
+            "name": "未完成任务",
+            "color": "#ebebeb"
+          },
+          {
+            "name": "总结",
+            "color": "#e5bf8a"
+          }
+        ],
+        "themePaths": [
+          "健康/粑粑",
+          "健康/喝水",
+          "健康/身体",
+          "健康/睡眠",
+          "健康/心情",
+          "健康/姨妈",
+          "健康/运动",
+          "生活/车车",
+          "生活/洗澡",
+          "思考/读书",
+          "思考/专注"
+        ],
+        "sourceBlockId": "blk_mejsg76atopau"
+      },
+      "fields": [],
+      "groupFields": [],
+      "filters": [],
+      "sort": [],
+      "collapsed": true
     }
   ],
   "layouts": [
@@ -157,7 +211,8 @@
       "name": "全局布局",
       "viewInstanceIds": [
         "vi_mm8vpr3qfhebdsu",
-        "vi_mm9z0oe1cvlr53c"
+        "vi_mm9z0oe1cvlr53c",
+        "vi_mmeolydjaga6z6u"
       ],
       "displayMode": "list",
       "initialView": "周",
@@ -308,7 +363,8 @@
         ],
         "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) {{重复.value}} {{状态}} {{日期}}\n\n",
         "targetFile": "03/01.md",
-        "appendUnderHeader": "## {{theme}}"
+        "appendUnderHeader": "## {{theme}}",
+        "categoryKey": "任务"
       },
       {
         "id": "blk_mejsg1dc46fj9",
@@ -349,7 +405,8 @@
         ],
         "outputTemplate": "<!-- start -->\n分类:: {{思考分类}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/闪念.md",
-        "appendUnderHeader": "## {{theme}}"
+        "appendUnderHeader": "## {{theme}}",
+        "categoryKey": "闪念"
       },
       {
         "id": "blk_mejsdvflptluo",
@@ -394,7 +451,8 @@
         ],
         "outputTemplate": "<!-- start -->\n分类:: 计划\n周期:: {{周期}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n\n",
         "targetFile": "01/计划.md",
-        "appendUnderHeader": "## {{theme}}"
+        "appendUnderHeader": "## {{theme}}",
+        "categoryKey": "计划"
       },
       {
         "id": "blk_mejsfuehqj4s0",
@@ -443,7 +501,8 @@
         ],
         "outputTemplate": "<!-- start -->\n分类:: 总结\n周期:: {{周期}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/总结.md",
-        "appendUnderHeader": "## {{theme}}"
+        "appendUnderHeader": "## {{theme}}",
+        "categoryKey": "总结"
       },
       {
         "id": "blk_mejsg76atopau",
@@ -476,7 +535,8 @@
         ],
         "outputTemplate": "<!-- start -->\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分}}\npintu::{{评分.value}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/打卡.md",
-        "appendUnderHeader": "## {{theme}}"
+        "appendUnderHeader": "## {{theme}}",
+        "categoryKey": "打卡"
       }
     ],
     "themes": [

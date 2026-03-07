@@ -124,6 +124,9 @@ export class AiNaturalLanguageRecordParser implements INaturalLanguageRecordPars
             if (!item.target.themeId && defaultThemeId) {
                 item.target.themeId = defaultThemeId;
             }
+            if (!item.target.categoryKey && snapshot.blocks?.[0]?.categoryKey) {
+                item.target.categoryKey = snapshot.blocks[0].categoryKey;
+            }
         });
 
         return batch;
@@ -150,15 +153,16 @@ export class AiNaturalLanguageRecordParser implements INaturalLanguageRecordPars
             '{',
             '  "rawText": "original input text",',
             '  "target": {',
-            '    "blockId": "block-id-from-snapshot",',
-            '    "themeId": "theme-path-from-snapshot"  // REQUIRED! Must be a valid theme path',
+            '    "categoryKey": "category-from-snapshot",',
+            '    "blockId": "optional-block-id-from-snapshot",',
+            '    "themeId": "theme-path-from-snapshot"',
             '  },',
             '  "fieldValues": { "fieldKey": "value" },',
             '  "meta": { "confidence": 0.9, "reason": "explanation" }',
             '}',
             '',
             '=== AVAILABLE BLOCKS ===',
-            `Block IDs: ${blockExamples}${snapshot.blocks?.length > 5 ? '...' : ''}`,
+            `Blocks: ${blockExamples}${snapshot.blocks?.length > 5 ? '...' : ''}`,
             '',
             '=== AVAILABLE THEMES ===',
             `Theme paths: ${themeExamples}${snapshot.themes?.length > 5 ? '...' : ''}`,
@@ -192,15 +196,18 @@ export class AiNaturalLanguageRecordParser implements INaturalLanguageRecordPars
             '   - If no clear match, use the FIRST theme in the list as default',
             '4. NEVER leave themeId empty or undefined',
             '',
-            'BLOCK SELECTION:',
-            '1. blockId must be from snapshot.blocks[].id',
-            '2. Choose block based on user intent and block name',
-            '3. Common patterns:',
-            '   - "任务"/"要做"/"计划" → task block',
-            '   - "想法"/"灵感"/"闪念" → idea/flash block',
-            '   - "学习"/"学了"/"记录" → study/record block',
-            '   - "心情"/"开心"/"难过" → mood/check-in block',
-            '4. If unsure, use the first block',
+            'CATEGORY AND BLOCK SELECTION:',
+            '1. categoryKey is REQUIRED and must come from snapshot.blocks[].categoryKey',
+            '2. Prefer choosing categoryKey first; blockId is OPTIONAL',
+            '3. Only return blockId when you are sure which specific template to use',
+            '4. Common patterns:',
+            '   - "任务"/"要做"/"待办" → categoryKey = "任务"',
+            '   - "计划" → categoryKey = "计划"',
+            '   - "总结"/"复盘" → categoryKey = "总结"',
+            '   - "打卡"/"记录状态" → categoryKey = "打卡"',
+            '   - "闪念"/"想法"/"灵感" → categoryKey = "闪念"',
+            '   - If the field values imply a subcategory (such as 闪念/感受, 闪念/思考), put that exact value into fieldValues and still keep categoryKey = "闪念"',
+            '5. Do not invent a new categoryKey that does not exist in snapshot.blocks[].categoryKey',
             '',
             'FIELD VALUES:',
             '1. Keys MUST be from snapshot.blocks[].fields[].key',
@@ -211,15 +218,15 @@ export class AiNaturalLanguageRecordParser implements INaturalLanguageRecordPars
             '6. Use current date/time if not specified in input',
             '',
             '=== EXAMPLE ===',
-            'If user says "记录今天学了30分钟英语" and themes include "学习/英语":',
+            'If user says "记录今天的一个闪念，我有点累" and themes include "健康/心情":',
             '{',
             '  "items": [{',
-            '    "rawText": "记录今天学了30分钟英语",',
-            '    "target": { "blockId": "study-record", "themeId": "学习/英语" },',
-            '    "fieldValues": { "duration": 30, "date": "2024-01-15" },',
+            '    "rawText": "记录今天的一个闪念，我有点累",',
+            '    "target": { "categoryKey": "闪念", "themeId": "健康/心情" },',
+            '    "fieldValues": { "思考分类": "闪念/感受", "日期": "2024-01-15", "内容": "我有点累" },',
             '    "meta": { "confidence": 0.95 }',
             '  }]',
-            '}',
+            '}', 
         );
 
         return basePrompt.join('\n');
@@ -242,7 +249,7 @@ export class AiNaturalLanguageRecordParser implements INaturalLanguageRecordPars
             '=== USER INPUT ===',
             text,
             '',
-            'Return JSON with themeId filled:',
+            'Return JSON with target.categoryKey and target.themeId filled:',
         ].join('\n');
     }
 }

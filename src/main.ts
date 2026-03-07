@@ -224,6 +224,10 @@ export default class ThinkPlugin extends Plugin {
         merged.viewInstances = merged.viewInstances || [];
         merged.layouts = merged.layouts || [];
         merged.inputSettings = merged.inputSettings || { blocks: [], themes: [], overrides: [] };
+        merged.inputSettings.blocks = (merged.inputSettings.blocks || []).map((block: any) => ({
+            ...block,
+            categoryKey: block?.categoryKey || block?.name || '',
+        }));
         merged.groups = merged.groups || [];
         return merged as ThinkSettings;
     }

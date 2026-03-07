@@ -63,6 +63,7 @@ export function createBlocksSlice(
                 const newBlock: BlockTemplate = {
                     id: generateId('block'),
                     name,
+                    categoryKey: name,
                     targetFile: '',
                     appendUnderHeader: '',
                     outputTemplate: '',

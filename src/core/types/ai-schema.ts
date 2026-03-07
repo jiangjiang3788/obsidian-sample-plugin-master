@@ -96,7 +96,8 @@ export interface NaturalRecordCommand {
   rawText: string;
   /** 目标 Block 和 Theme */
   target: {
-    blockId: string;
+    categoryKey: string;
+    blockId?: string;
     themeId?: string;
   };
   /** 字段值，key 为字段的 key */
