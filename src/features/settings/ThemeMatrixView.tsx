@@ -191,11 +191,11 @@ export function ThemeMatrixView({ blocks, themes, overrides, settings, useCases,
     };
 
     return (
-        <Box sx={{ width: '100%', maxWidth: 'none', mx: 'auto', padding: 2 }}>
-            <Typography variant="h4" gutterBottom>
+        <Box sx={{ width: '100%', maxWidth: '100%', mx: 0, px: 1, py: 1 }}>
+            <Typography variant="h5" gutterBottom sx={{ mb: 1 }}>
                 主题配置矩阵
             </Typography>
-            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 1.25 }}>
                 管理不同主题对各类Block的配置。进入编辑模式以进行批量操作。
             </Typography>
             
@@ -212,6 +212,7 @@ export function ThemeMatrixView({ blocks, themes, overrides, settings, useCases,
             />
 
             {/* 主题表格 */}
+            <Box sx={{ overflowX: 'auto', width: '100%' }}>
             <ThemeTable
                 blocks={blocks}
                 activeThemes={activeThemes}
@@ -226,9 +227,10 @@ export function ThemeMatrixView({ blocks, themes, overrides, settings, useCases,
                 onSelectBlockColumn={(blockId: string, isSelected: boolean) => handleSelectBlockColumn(blockId, allThemeIds, isSelected)}
                 useCases={useCases}
             />
+            </Box>
             
             {/* 添加新主题 */}
-            <Stack direction="row" spacing={1} alignItems="center" sx={{ mt: 2 }}>
+            <Stack direction="row" spacing={1} alignItems="center" sx={{ mt: 1.25 }}>
                 <TextField 
                     placeholder="新主题路径 (如: 个人/习惯)" 
                     value={newThemePath} 
@@ -236,7 +238,7 @@ export function ThemeMatrixView({ blocks, themes, overrides, settings, useCases,
                     onKeyDown={(e: any) => e.key === 'Enter' && handleAddTheme()} 
                     size="small" 
                     variant="outlined" 
-                    sx={{ flexGrow: 1, maxWidth: '400px' }} 
+                    sx={{ flexGrow: 1, maxWidth: '320px' }} 
                 />
                 <Button onClick={handleAddTheme} variant="outlined" size="small" startIcon={<AddIcon />}>
                     添加主题
