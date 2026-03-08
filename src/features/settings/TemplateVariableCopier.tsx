@@ -18,8 +18,10 @@ export function TemplateVariableCopier({ block }: Props) {
             { value: '{{block}}', label: 'block' },
             { value: '{{theme}}', label: 'theme' },
             { value: '{{icon}}', label: 'icon' },
-            { value: '{{templateId}}', label: '模板ID:: {{templateId}}' },
-            { value: '{{templateSourceType}}', label: '模板来源:: {{templateSourceType}}' },
+            { value: '{{templateId}}', label: 'templateId' },
+            { value: '{{templateSourceType}}', label: 'templateSourceType' },
+            { value: '(模板ID::{{templateId}})', label: '模板ID:: {{templateId}}' },
+            { value: '(模板来源::{{templateSourceType}})', label: '模板来源:: {{templateSourceType}}' },
             { value: '{{moment:YYYY-MM-DD}}', label: 'moment:YYYY-MM-DD' },
         ];
 

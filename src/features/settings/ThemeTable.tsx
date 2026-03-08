@@ -1,17 +1,4 @@
 /** @jsxImportSource preact */
-/**
- * ThemeTable - 主题表格组件
- * 
- * 【S6 架构约束】
- * - 读：通过 props 接收数据（由父组件 ThemeMatrix 从 Zustand 读取）
- * - 写：通过 useCases 进行状态管理
- * - 遵循单向数据流：UI → UseCase → Zustand Store → UI
- * 
- * ⚠️ 禁止事项：
- * - 使用 useZustandAppStore / useUseCases
- * - 不得直接调用 slice actions
- * - 不得直接调用 SettingsRepository
- */
 import { h } from 'preact';
 import {
     Table,
@@ -20,7 +7,7 @@ import {
     TableCell,
     TableBody,
     Typography,
-    Checkbox,
+    Box,
 } from '@mui/material';
 import { ThemeTreeNodeRow } from './ThemeTreeNodeRow';
 import type { EditorState } from './useThemeMatrixEditor';
@@ -28,11 +15,6 @@ import type { BlockTemplate, ThemeDefinition, ThemeOverride } from '@core/public
 import type { UseCases } from '@/app/public';
 import type { ThemePathTreeFlatNode as ThemeTreeNode } from '@core/public';
 
-/**
- * ThemeTable 组件属性
- * 
- * 【S6】所有数据通过 props 传入，写操作通过 useCases
- */
 interface ThemeTableProps {
     blocks: BlockTemplate[];
     activeThemes: ThemeTreeNode[];
@@ -40,7 +22,6 @@ interface ThemeTableProps {
     showArchived: boolean;
     overridesMap: Map<string, ThemeOverride>;
     editorState: EditorState;
-    /** 【S6】使用 useCases 替代 appStore */
     useCases: UseCases;
     onCellClick: (block: BlockTemplate, theme: ThemeDefinition) => void;
     onToggleExpand: (themeId: string) => void;
@@ -49,6 +30,32 @@ interface ThemeTableProps {
     onSelectBlockColumn: (blockId: string, isSelected: boolean) => void;
 }
 
+const AnyTable = Table as any;
+const AnyTableHead = TableHead as any;
+const AnyTableRow = TableRow as any;
+const AnyTableCell = TableCell as any;
+const AnyTableBody = TableBody as any;
+const AnyTypography = Typography as any;
+const AnyBox = Box as any;
+
+function buildGroups(nodes: ThemeTreeNode[]) {
+    const groups: ThemeTreeNode[][] = [];
+    let current: ThemeTreeNode[] = [];
+
+    nodes.forEach((node) => {
+        if (node.depth === 0) {
+            if (current.length > 0) groups.push(current);
+            current = [node];
+        } else if (current.length > 0) {
+            current.push(node);
+        } else {
+            current = [node];
+        }
+    });
+
+    if (current.length > 0) groups.push(current);
+    return groups;
+}
 
 export function ThemeTable({
     blocks,
@@ -68,50 +75,44 @@ export function ThemeTable({
     const isThemeSelection = editorState.selectionType === 'theme';
     const isBlockSelection = editorState.selectionType === 'block';
 
-    // Derived state for header checkboxes
     const allVisibleThemes = showArchived ? [...activeThemes, ...archivedThemes] : activeThemes;
     const allVisibleThemeIds = allVisibleThemes
         .map(node => node.themeId)
         .filter((id): id is string => typeof id === 'string' && id.length > 0);
 
-    // Header checkbox should reflect "visible themes" selection state (not total selected across entire tree)
     const selectedVisibleThemeCount = allVisibleThemeIds.filter(id => editorState.selectedThemes.has(id)).length;
     const totalVisibleThemeCount = allVisibleThemeIds.length;
 
     const areAllThemesSelected = totalVisibleThemeCount > 0 && selectedVisibleThemeCount === totalVisibleThemeCount;
     const areSomeThemesSelected = selectedVisibleThemeCount > 0 && selectedVisibleThemeCount < totalVisibleThemeCount;
 
-    // HACK: Cast all MUI components to `any` to resolve Preact/React type conflicts.
-    const AnyTable = Table as any;
-    const AnyTableHead = TableHead as any;
-    const AnyTableRow = TableRow as any;
-    const AnyTableCell = TableCell as any;
-    const AnyTableBody = TableBody as any;
-    const AnyTypography = Typography as any;
-    const AnyCheckbox = Checkbox as any;
+    const activeGroups = buildGroups(activeThemes);
+    const archivedGroups = buildGroups(archivedThemes);
 
-    const renderRows = () => {
+    const firstColWidth = 280;
+    const statusColWidth = 92;
+    const blockColWidth = 74;
+    const tableWidth = firstColWidth + statusColWidth + blocks.length * blockColWidth;
+
+    const renderGroupRows = (groups: ThemeTreeNode[][]) => {
         const rows: h.JSX.Element[] = [];
 
-        const activeRootCount = activeThemes.filter(n => n.depth === 0).length;
-        const archivedRootCount = archivedThemes.filter(n => n.depth === 0).length;
+        groups.forEach((group, groupIndex) => {
+            if (groupIndex > 0) {
+                rows.push(
+                    <AnyTableRow key={`spacer-${groupIndex}`}>
+                        <AnyTableCell colSpan={blocks.length + 2} sx={{ borderBottom: 'none', p: 0, height: 14 }} />
+                    </AnyTableRow>
+                );
+            }
 
-
-        if (activeThemes.length > 0) {
-            rows.push(
-                <AnyTableRow key="active-header">
-                    <AnyTableCell colSpan={blocks.length + 2} sx={{ backgroundColor: 'action.hover', py: 0.5 }}>
-                        <AnyTypography variant="subtitle2" sx={{ fontWeight: 'bold' }}>
-                            激活主题 ({activeRootCount})
-                        </AnyTypography>
-                    </AnyTableCell>
-                </AnyTableRow>
-            );
-            activeThemes.forEach(node => {
+            group.forEach((node, rowIndex) => {
                 rows.push(
                     <ThemeTreeNodeRow
                         key={node.id}
                         node={node}
+                        groupNodes={group}
+                        rowIndex={rowIndex}
                         blocks={blocks}
                         overridesMap={overridesMap}
                         onCellClick={onCellClick}
@@ -122,113 +123,117 @@ export function ThemeTable({
                     />
                 );
             });
-        }
+        });
 
-        if (showArchived && archivedThemes.length > 0) {
-            rows.push(
-                <AnyTableRow key="archived-header">
-                    <AnyTableCell colSpan={blocks.length + 2} sx={{ backgroundColor: 'action.hover', py: 0.5 }}>
-                        <AnyTypography variant="subtitle2" sx={{ fontWeight: 'bold' }}>
-                            归档主题 ({archivedRootCount})
-                        </AnyTypography>
-                    </AnyTableCell>
-                </AnyTableRow>
-            );
-            archivedThemes.forEach(node => {
-                rows.push(
-                    <ThemeTreeNodeRow
-                        key={node.id}
-                        node={node}
-                        blocks={blocks}
-                        overridesMap={overridesMap}
-                        onCellClick={onCellClick}
-                        useCases={useCases}
-                        onToggleExpand={onToggleExpand}
-                        editorState={editorState}
-                        onSelectionChange={onSelectionChange}
-                    />
-                );
-            });
-        }
         return rows;
     };
 
     return (
-        <AnyTable size="small" sx={{ tableLayout: 'auto', '& th, & td': { whiteSpace: 'nowrap', py: 1, px: 1.5 } }}>
-            <AnyTableHead>
-                <AnyTableRow>
-                    <AnyTableCell sx={{ fontWeight: 'bold', minWidth: '200px' }}>
-                        主题路径
-                    </AnyTableCell>
-                    <AnyTableCell align="center" sx={{ fontWeight: 'bold', width: '100px' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
-                            {isEditMode && (
-                                <input
-                                    type="checkbox"
-                                    disabled={isBlockSelection}
-                                    ref={(el) => {
-                                        if (el) {
-                                            el.indeterminate = areSomeThemesSelected;
-                                        }
-                                    }}
-                                    checked={areAllThemesSelected}
-                                    onChange={(e) => onSelectAllThemes((e.target as HTMLInputElement).checked)}
-                                    style={{ 
-                                        margin: 0, 
-                                        cursor: isBlockSelection ? 'not-allowed' : 'pointer',
-                                        transform: 'scale(1.2)',
-                                        opacity: isBlockSelection ? 0.5 : 1
-                                    }}
-                                />
-                            )}
-                            状态
-                        </div>
-                    </AnyTableCell>
-                    {blocks.map(b => {
-                        const allCellIdsForBlock = allVisibleThemeIds.map(themeId => `${themeId}:${b.id}`);
-                        const selectedCellCountForBlock = allCellIdsForBlock.filter(cellId =>
-                            editorState.selectedCells.has(cellId)
-                        ).length;
-                        const totalCellCountForBlock = allVisibleThemeIds.length;
-                        const areAllWindowsBlockSelected =
-                            totalCellCountForBlock > 0 && selectedCellCountForBlock === totalCellCountForBlock;
-                        const areSomeWindowsBlockSelected =
-                            selectedCellCountForBlock > 0 && selectedCellCountForBlock < totalCellCountForBlock;
-
-                        return (
-                            <AnyTableCell
-                                key={b.id}
-                                align="center"
-                                sx={{ fontWeight: 'bold', width: '40px', minWidth: '40px' }}
-                            >
+        <AnyBox sx={{ width: '100%', overflowX: 'auto', pb: 1 }}>
+            <AnyTable
+                size="small"
+                sx={{
+                    width: tableWidth,
+                    minWidth: tableWidth,
+                    tableLayout: 'fixed',
+                    borderCollapse: 'separate',
+                    borderSpacing: '0 0',
+                    '& th, & td': {
+                        borderBottom: 'none',
+                        whiteSpace: 'nowrap',
+                        px: 0.75,
+                        py: 0.35,
+                    },
+                }}
+            >
+                <colgroup>
+                    <col style={{ width: `${firstColWidth}px` }} />
+                    <col style={{ width: `${statusColWidth}px` }} />
+                    {blocks.map((b) => <col key={`col-${b.id}`} style={{ width: `${blockColWidth}px` }} />)}
+                </colgroup>
+                <AnyTableHead>
+                    <AnyTableRow>
+                        <AnyTableCell sx={{ fontWeight: 700, color: 'text.secondary', pb: 1.5 }}>
+                            主题路径
+                        </AnyTableCell>
+                        <AnyTableCell align="center" sx={{ fontWeight: 700, color: 'text.secondary', pb: 1.5 }}>
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
                                 {isEditMode && (
                                     <input
                                         type="checkbox"
-                                        disabled={isThemeSelection}
+                                        disabled={isBlockSelection}
                                         ref={(el) => {
-                                            if (el) {
-                                                el.indeterminate = areSomeWindowsBlockSelected;
-                                            }
+                                            if (el) el.indeterminate = areSomeThemesSelected;
                                         }}
-                                        checked={areAllWindowsBlockSelected}
-                                        onChange={(e) => onSelectBlockColumn(b.id, (e.target as HTMLInputElement).checked)}
-                                        style={{ 
-                                            margin: '0 4px 0 0', 
-                                            cursor: isThemeSelection ? 'not-allowed' : 'pointer',
-                                            transform: 'scale(1.2)',
-                                            opacity: isThemeSelection ? 0.5 : 1
+                                        checked={areAllThemesSelected}
+                                        onChange={(e) => onSelectAllThemes((e.target as HTMLInputElement).checked)}
+                                        style={{
+                                            margin: 0,
+                                            cursor: isBlockSelection ? 'not-allowed' : 'pointer',
+                                            transform: 'scale(1.1)',
+                                            opacity: isBlockSelection ? 0.5 : 1,
                                         }}
                                     />
                                 )}
-                                {b.name}
-                            </AnyTableCell>
-                        );
-                    })}
-                </AnyTableRow>
-            </AnyTableHead>
-            <AnyTableBody>
-                {renderRows()}
-            </AnyTableBody>
-        </AnyTable>
+                                状态
+                            </div>
+                        </AnyTableCell>
+                        {blocks.map((b) => {
+                            const allCellIdsForBlock = allVisibleThemeIds.map(themeId => `${themeId}:${b.id}`);
+                            const selectedCellCountForBlock = allCellIdsForBlock.filter(cellId =>
+                                editorState.selectedCells.has(cellId)
+                            ).length;
+                            const totalCellCountForBlock = allVisibleThemeIds.length;
+                            const areAllWindowsBlockSelected =
+                                totalCellCountForBlock > 0 && selectedCellCountForBlock === totalCellCountForBlock;
+                            const areSomeWindowsBlockSelected =
+                                selectedCellCountForBlock > 0 && selectedCellCountForBlock < totalCellCountForBlock;
+
+                            return (
+                                <AnyTableCell
+                                    key={b.id}
+                                    align="center"
+                                    sx={{ fontWeight: 700, color: 'text.secondary', pb: 1.5 }}
+                                >
+                                    {isEditMode && (
+                                        <input
+                                            type="checkbox"
+                                            disabled={isThemeSelection}
+                                            ref={(el) => {
+                                                if (el) el.indeterminate = areSomeWindowsBlockSelected;
+                                            }}
+                                            checked={areAllWindowsBlockSelected}
+                                            onChange={(e) => onSelectBlockColumn(b.id, (e.target as HTMLInputElement).checked)}
+                                            style={{
+                                                margin: '0 4px 0 0',
+                                                cursor: isThemeSelection ? 'not-allowed' : 'pointer',
+                                                transform: 'scale(1.1)',
+                                                opacity: isThemeSelection ? 0.5 : 1,
+                                            }}
+                                        />
+                                    )}
+                                    {b.name}
+                                </AnyTableCell>
+                            );
+                        })}
+                    </AnyTableRow>
+                </AnyTableHead>
+                <AnyTableBody>
+                    {renderGroupRows(activeGroups)}
+                    {showArchived && archivedGroups.length > 0 && (
+                        <>
+                            <AnyTableRow>
+                                <AnyTableCell colSpan={blocks.length + 2} sx={{ pt: 2.5, pb: 1, borderBottom: 'none' }}>
+                                    <AnyTypography variant="body2" sx={{ color: 'text.secondary', fontWeight: 700 }}>
+                                        归档主题
+                                    </AnyTypography>
+                                </AnyTableCell>
+                            </AnyTableRow>
+                            {renderGroupRows(archivedGroups)}
+                        </>
+                    )}
+                </AnyTableBody>
+            </AnyTable>
+        </AnyBox>
     );
 }

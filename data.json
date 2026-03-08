@@ -403,7 +403,7 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n分类:: {{思考分类}}\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n",
+        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: {{思考分类}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/闪念.md",
         "appendUnderHeader": "## {{theme}}",
         "categoryKey": "闪念"
@@ -449,7 +449,7 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n分类:: 计划\n周期:: {{周期}}\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n\n",
+        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 计划\n周期:: {{周期}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n\n",
         "targetFile": "01/计划.md",
         "appendUnderHeader": "## {{theme}}",
         "categoryKey": "计划"
@@ -499,7 +499,7 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n分类:: 总结\n周期:: {{周期}}\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n",
+        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 总结\n周期:: {{周期}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/总结.md",
         "appendUnderHeader": "## {{theme}}",
         "categoryKey": "总结"
@@ -533,7 +533,7 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n分类:: 打卡\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分}}\npintu::{{评分.value}}\n内容:: {{内容}}\n<!-- end -->\n\n",
+        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分}}\npintu::{{评分.value}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/打卡.md",
         "appendUnderHeader": "## {{theme}}",
         "categoryKey": "打卡"
@@ -869,7 +869,7 @@
             ]
           }
         ],
-        "outputTemplate": "\n{{状态.value}} {{icon}} {{任务内容}} (时间::{{时间}}) (时长::{{时长}})   {{状态}} {{moment:YYYY-MM-DD}}",
+        "outputTemplate": "\n{{状态.value}} {{icon}} {{任务内容}} (时间::{{时间}}) (时长::{{时长}})   {{状态}} (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{moment:YYYY-MM-DD}}\n\n",
         "targetFile": "02/01.md",
         "appendUnderHeader": "## {{theme.path}}"
       },
@@ -943,7 +943,7 @@
             ]
           }
         ],
-        "outputTemplate": "\n{{状态.value}} {{icon}} {{任务内容}} (时间::{{时间}}) (时长::{{时长}})   {{状态}} {{moment:YYYY-MM-DD}}",
+        "outputTemplate": "\n{{状态.value}} {{icon}} {{任务内容}} (时间::{{时间}}) (时长::{{时长}})   {{状态}} (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{moment:YYYY-MM-DD}}\n\n",
         "targetFile": "02/01.md",
         "appendUnderHeader": "## {{theme.path}}"
       },
@@ -1017,7 +1017,7 @@
             ]
           }
         ],
-        "outputTemplate": "\n{{状态.value}} {{icon}} {{任务内容}} (时间::{{时间}}) (时长::{{时长}})   {{状态}} {{moment:YYYY-MM-DD}}",
+        "outputTemplate": "\n{{状态.value}} {{icon}} {{任务内容}} (时间::{{时间}}) (时长::{{时长}})   {{状态}} (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{moment:YYYY-MM-DD}}\n\n",
         "targetFile": "02/01.md",
         "appendUnderHeader": "## {{theme.path}}"
       },
@@ -1091,7 +1091,7 @@
             ]
           }
         ],
-        "outputTemplate": "\n{{状态.value}} {{icon}} {{任务内容}} (时间::{{时间}}) (时长::{{时长}})   {{状态}} {{moment:YYYY-MM-DD}}",
+        "outputTemplate": "\n{{状态.value}} {{icon}} {{任务内容}} (时间::{{时间}}) (时长::{{时长}})   {{状态}} (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{moment:YYYY-MM-DD}}\n\n",
         "targetFile": "02/01.md",
         "appendUnderHeader": "## {{theme.path}}"
       },
@@ -1165,7 +1165,7 @@
             ]
           }
         ],
-        "outputTemplate": "\n{{状态.value}} {{icon}} {{任务内容}} (时间::{{时间}}) (时长::{{时长}})   {{状态}} {{moment:YYYY-MM-DD}}",
+        "outputTemplate": "\n{{状态.value}} {{icon}} {{任务内容}} (时间::{{时间}}) (时长::{{时长}})   {{状态}} (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{moment:YYYY-MM-DD}}\n\n",
         "targetFile": "02/01.md",
         "appendUnderHeader": "## {{theme.path}}"
       },
@@ -1239,7 +1239,7 @@
             ]
           }
         ],
-        "outputTemplate": "\n{{状态.value}} {{icon}} {{任务内容}} (时间::{{时间}}) (时长::{{时长}})  {{重复.value}}  {{状态}} {{moment:YYYY-MM-DD}}",
+        "outputTemplate": "\n{{状态.value}} {{icon}} {{任务内容}} (时间::{{时间}}) (时长::{{时长}})  {{重复.value}}  {{状态}} (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{moment:YYYY-MM-DD}}\n\n",
         "targetFile": "02/01.md",
         "appendUnderHeader": "## {{theme}}",
         "disabled": true
@@ -1287,7 +1287,7 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n分类:: 计划\n分类:: {{周期}}\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n\n",
+        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 计划\n分类:: {{周期}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n\n",
         "targetFile": "01/计划.md",
         "appendUnderHeader": "## {{theme}}",
         "disabled": true
@@ -1335,7 +1335,7 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n分类:: 计划\n分类:: {{周期}}\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n\n",
+        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 计划\n分类:: {{周期}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n\n",
         "targetFile": "01/计划.md",
         "appendUnderHeader": "## {{theme}}",
         "disabled": true
@@ -1383,7 +1383,7 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n分类:: 计划\n分类:: {{周期}}\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n\n",
+        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 计划\n分类:: {{周期}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n\n",
         "targetFile": "01/计划.md",
         "appendUnderHeader": "## {{theme}}",
         "disabled": true
@@ -1431,7 +1431,7 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n分类:: 计划\n分类:: {{周期}}\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n\n",
+        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 计划\n分类:: {{周期}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n\n",
         "targetFile": "01/计划.md",
         "appendUnderHeader": "## {{theme}}",
         "disabled": true
@@ -1479,7 +1479,7 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n分类:: 计划\n分类:: {{周期}}\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n\n",
+        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 计划\n分类:: {{周期}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n\n",
         "targetFile": "01/计划.md",
         "appendUnderHeader": "## {{theme}}",
         "disabled": true
@@ -1515,7 +1515,7 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n分类:: 打卡\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分}}\npintu::{{评分..value}}\n内容:: {{内容}}\n<!-- end -->\n\n",
+        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分}}\npintu::{{评分..value}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/打卡.md",
         "appendUnderHeader": "## {{theme}}"
       },
@@ -1550,7 +1550,7 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n分类:: 打卡\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分}}\npintu::{{评分..value}}\n内容:: {{内容}}\n<!-- end -->\n\n",
+        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分}}\npintu::{{评分..value}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/打卡.md",
         "appendUnderHeader": "## {{theme}}"
       },
@@ -1585,7 +1585,7 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n分类:: 打卡\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分}}\npintu::{{评分..value}}\n内容:: {{内容}}\n<!-- end -->\n\n",
+        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分}}\npintu::{{评分..value}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/打卡.md",
         "appendUnderHeader": "## {{theme}}"
       },
@@ -1620,7 +1620,7 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n分类:: 打卡\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分}}\npintu::{{评分..value}}\n内容:: {{内容}}\n<!-- end -->\n\n",
+        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分}}\npintu::{{评分..value}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/打卡.md",
         "appendUnderHeader": "## {{theme}}"
       },
@@ -1655,7 +1655,7 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n分类:: 打卡\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分}}\npintu::{{评分..value}}\n内容:: {{内容}}\n<!-- end -->\n\n",
+        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分}}\npintu::{{评分..value}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/打卡.md",
         "appendUnderHeader": "## {{theme}}"
       },
@@ -1690,7 +1690,7 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n分类:: 打卡\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分}}\npintu::{{评分..value}}\n内容:: {{内容}}\n<!-- end -->\n\n",
+        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分}}\npintu::{{评分..value}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/打卡.md",
         "appendUnderHeader": "## {{theme}}"
       },
@@ -1725,7 +1725,7 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n分类:: 打卡\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分}}\npintu::{{评分..value}}\n内容:: {{内容}}\n<!-- end -->\n\n",
+        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分}}\npintu::{{评分..value}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/打卡.md",
         "appendUnderHeader": "## {{theme}}"
       },
@@ -1760,7 +1760,7 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n分类:: 打卡\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分}}\npintu::{{评分..value}}\n内容:: {{内容}}\n<!-- end -->\n\n",
+        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分}}\npintu::{{评分..value}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/打卡.md",
         "appendUnderHeader": "## {{theme}}"
       },
@@ -1795,7 +1795,7 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n分类:: 打卡\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分}}\npintu::{{评分..value}}\n内容:: {{内容}}\n<!-- end -->\n\n",
+        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分}}\npintu::{{评分..value}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/打卡.md",
         "appendUnderHeader": "## {{theme}}"
       },
@@ -1830,7 +1830,7 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n分类:: 打卡\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分}}\npintu::{{评分..value}}\n内容:: {{内容}}\n<!-- end -->\n\n",
+        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分}}\npintu::{{评分..value}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/打卡.md",
         "appendUnderHeader": "## {{theme}}"
       },
@@ -1865,7 +1865,7 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n分类:: 打卡\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分}}\npintu::{{评分..value}}\n内容:: {{内容}}\n<!-- end -->\n\n",
+        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分}}\npintu::{{评分..value}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/打卡.md",
         "appendUnderHeader": "## {{theme}}",
         "disabled": true
@@ -1901,7 +1901,7 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n分类:: 打卡\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分}}\npintu::{{评分..value}}\n内容:: {{内容}}\n<!-- end -->\n\n",
+        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分}}\npintu::{{评分..value}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/打卡.md",
         "appendUnderHeader": "## {{theme}}",
         "disabled": true
@@ -1937,7 +1937,7 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n分类:: 打卡\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分}}\npintu::{{评分..value}}\n内容:: {{内容}}\n<!-- end -->\n\n",
+        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分}}\npintu::{{评分..value}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/打卡.md",
         "appendUnderHeader": "## {{theme}}",
         "disabled": true
@@ -1973,7 +1973,7 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n分类:: 打卡\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分}}\npintu::{{评分..value}}\n内容:: {{内容}}\n<!-- end -->\n\n",
+        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分}}\npintu::{{评分..value}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/打卡.md",
         "appendUnderHeader": "## {{theme}}",
         "disabled": true
@@ -2009,7 +2009,7 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n分类:: 打卡\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分}}\npintu::{{评分..value}}\n内容:: {{内容}}\n<!-- end -->\n\n",
+        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分}}\npintu::{{评分..value}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/打卡.md",
         "appendUnderHeader": "## {{theme}}",
         "disabled": true
@@ -2051,7 +2051,7 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n分类:: 打卡\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分}}\npintu::{{评分..value}}\n内容:: {{内容}}\n<!-- end -->\n\n",
+        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分}}\npintu::{{评分..value}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/打卡.md",
         "appendUnderHeader": "## {{theme}}",
         "disabled": true
@@ -2087,7 +2087,7 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n分类:: 打卡\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分}}\npintu::{{评分..value}}\n内容:: {{内容}}\n<!-- end -->\n\n",
+        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分}}\npintu::{{评分..value}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/打卡.md",
         "appendUnderHeader": "## {{theme}}",
         "disabled": true
@@ -2123,7 +2123,7 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n分类:: 打卡\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分}}\npintu::{{评分..value}}\n内容:: {{内容}}\n<!-- end -->\n\n",
+        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分}}\npintu::{{评分..value}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/打卡.md",
         "appendUnderHeader": "## {{theme}}",
         "disabled": true
@@ -2159,7 +2159,7 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n分类:: 打卡\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分}}\npintu::{{评分..value}}\n内容:: {{内容}}\n<!-- end -->\n\n",
+        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分}}\npintu::{{评分..value}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/打卡.md",
         "appendUnderHeader": "## {{theme}}",
         "disabled": true
@@ -2201,7 +2201,7 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n分类:: 打卡\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分}}\npintu::{{评分..value}}\n内容:: {{内容}}\n<!-- end -->\n\n",
+        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分}}\npintu::{{评分..value}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/打卡.md",
         "appendUnderHeader": "## {{theme}}"
       },
@@ -2236,7 +2236,7 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n分类:: 打卡\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分}}\npintu::{{评分..value}}\n内容:: {{内容}}\n<!-- end -->\n\n",
+        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分}}\npintu::{{评分..value}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/打卡.md",
         "appendUnderHeader": "## {{theme}}"
       },
@@ -2271,7 +2271,7 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n分类:: 打卡\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分}}\npintu::{{评分..value}}\n内容:: {{内容}}\n<!-- end -->\n\n",
+        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分}}\npintu::{{评分..value}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/打卡.md",
         "appendUnderHeader": "## {{theme}}",
         "disabled": true
@@ -2307,7 +2307,7 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n分类:: 打卡\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分}}\npintu::{{评分..value}}\n内容:: {{内容}}\n<!-- end -->\n\n",
+        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分}}\npintu::{{评分..value}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/打卡.md",
         "appendUnderHeader": "## {{theme}}",
         "disabled": true
@@ -2343,7 +2343,7 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n分类:: 打卡\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分}}\npintu::{{评分..value}}\n内容:: {{内容}}\n<!-- end -->\n\n",
+        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分}}\npintu::{{评分..value}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/打卡.md",
         "appendUnderHeader": "## {{theme}}",
         "disabled": true
@@ -2379,7 +2379,7 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n分类:: 打卡\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分}}\npintu::{{评分..value}}\n内容:: {{内容}}\n<!-- end -->\n\n",
+        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分}}\npintu::{{评分..value}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/打卡.md",
         "appendUnderHeader": "## {{theme}}",
         "disabled": true
@@ -2415,7 +2415,7 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n分类:: 打卡\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分}}\npintu::{{评分..value}}\n内容:: {{内容}}\n<!-- end -->\n\n",
+        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分}}\npintu::{{评分..value}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/打卡.md",
         "appendUnderHeader": "## {{theme}}",
         "disabled": true
@@ -2451,7 +2451,7 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n分类:: 打卡\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分}}\npintu::{{评分..value}}\n内容:: {{内容}}\n<!-- end -->\n\n",
+        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分}}\npintu::{{评分..value}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/打卡.md",
         "appendUnderHeader": "## {{theme}}",
         "disabled": true
@@ -2489,7 +2489,7 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n分类:: {{思考分类}}\n日期:: {{moment:YYYY-MM-DD}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n",
+        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: {{思考分类}}\n日期:: {{moment:YYYY-MM-DD}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/闪念.md",
         "appendUnderHeader": "## {{theme}}",
         "disabled": true
@@ -2527,7 +2527,7 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n分类:: {{思考分类}}\n日期:: {{moment:YYYY-MM-DD}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n",
+        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: {{思考分类}}\n日期:: {{moment:YYYY-MM-DD}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/闪念.md",
         "appendUnderHeader": "## {{theme}}",
         "disabled": true
@@ -2565,7 +2565,7 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n分类:: {{思考分类}}\n日期:: {{moment:YYYY-MM-DD}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n",
+        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: {{思考分类}}\n日期:: {{moment:YYYY-MM-DD}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/闪念.md",
         "appendUnderHeader": "## {{theme}}",
         "disabled": true
@@ -2603,7 +2603,7 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n分类:: {{思考分类}}\n日期:: {{moment:YYYY-MM-DD}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n",
+        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: {{思考分类}}\n日期:: {{moment:YYYY-MM-DD}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/闪念.md",
         "appendUnderHeader": "## {{theme}}",
         "disabled": true
@@ -2641,7 +2641,7 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n分类:: {{思考分类}}\n日期:: {{moment:YYYY-MM-DD}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n",
+        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: {{思考分类}}\n日期:: {{moment:YYYY-MM-DD}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/闪念.md",
         "appendUnderHeader": "## {{theme}}",
         "disabled": true
@@ -2679,7 +2679,7 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n分类:: {{思考分类}}\n日期:: {{moment:YYYY-MM-DD}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n",
+        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: {{思考分类}}\n日期:: {{moment:YYYY-MM-DD}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/闪念.md",
         "appendUnderHeader": "## {{theme}}",
         "disabled": true
@@ -2717,7 +2717,7 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n分类:: {{思考分类}}\n日期:: {{moment:YYYY-MM-DD}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n",
+        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: {{思考分类}}\n日期:: {{moment:YYYY-MM-DD}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/闪念.md",
         "appendUnderHeader": "## {{theme}}",
         "disabled": true
@@ -2755,7 +2755,7 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n分类:: {{思考分类}}\n日期:: {{moment:YYYY-MM-DD}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n",
+        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: {{思考分类}}\n日期:: {{moment:YYYY-MM-DD}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/闪念.md",
         "appendUnderHeader": "## {{theme}}",
         "disabled": true
@@ -2793,7 +2793,7 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n分类:: {{思考分类}}\n日期:: {{moment:YYYY-MM-DD}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n",
+        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: {{思考分类}}\n日期:: {{moment:YYYY-MM-DD}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/闪念.md",
         "appendUnderHeader": "## {{theme}}",
         "disabled": true
@@ -2831,7 +2831,7 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n分类:: {{思考分类}}\n日期:: {{moment:YYYY-MM-DD}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n",
+        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: {{思考分类}}\n日期:: {{moment:YYYY-MM-DD}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/闪念.md",
         "appendUnderHeader": "## {{theme}}",
         "disabled": true
@@ -2869,7 +2869,7 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n分类:: {{思考分类}}\n日期:: {{moment:YYYY-MM-DD}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n",
+        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: {{思考分类}}\n日期:: {{moment:YYYY-MM-DD}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/闪念.md",
         "appendUnderHeader": "## {{theme}}",
         "disabled": true
@@ -2907,7 +2907,7 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n分类:: {{思考分类}}\n日期:: {{moment:YYYY-MM-DD}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n",
+        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: {{思考分类}}\n日期:: {{moment:YYYY-MM-DD}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/闪念.md",
         "appendUnderHeader": "## {{theme}}",
         "disabled": true
@@ -2955,7 +2955,7 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n分类:: 计划\n分类:: {{周期}}\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n\n",
+        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 计划\n分类:: {{周期}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n\n",
         "targetFile": "01/计划.md",
         "appendUnderHeader": "## {{theme}}",
         "disabled": true
@@ -3003,7 +3003,7 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n分类:: 计划\n分类:: {{周期}}\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n\n",
+        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 计划\n分类:: {{周期}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n\n",
         "targetFile": "01/计划.md",
         "appendUnderHeader": "## {{theme}}",
         "disabled": true
@@ -3051,7 +3051,7 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n分类:: 计划\n分类:: {{周期}}\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n\n",
+        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 计划\n分类:: {{周期}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n\n",
         "targetFile": "01/计划.md",
         "appendUnderHeader": "## {{theme}}",
         "disabled": true
@@ -3099,7 +3099,7 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n分类:: 计划\n分类:: {{周期}}\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n\n",
+        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 计划\n分类:: {{周期}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n\n",
         "targetFile": "01/计划.md",
         "appendUnderHeader": "## {{theme}}",
         "disabled": true
@@ -3147,7 +3147,7 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n分类:: 计划\n分类:: {{周期}}\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n\n",
+        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 计划\n分类:: {{周期}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n\n",
         "targetFile": "01/计划.md",
         "appendUnderHeader": "## {{theme}}"
       },
@@ -3194,7 +3194,7 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n分类:: 计划\n分类:: {{周期}}\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n\n",
+        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 计划\n分类:: {{周期}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n\n",
         "targetFile": "01/计划.md",
         "appendUnderHeader": "## {{theme}}"
       },
@@ -3241,7 +3241,7 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n分类:: 计划\n分类:: {{周期}}\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n\n",
+        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 计划\n分类:: {{周期}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n\n",
         "targetFile": "01/计划.md",
         "appendUnderHeader": "## {{theme}}"
       },
@@ -3292,7 +3292,7 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n分类:: 总结\n分类:: {{周期}}\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n",
+        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 总结\n分类:: {{周期}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/总结.md",
         "appendUnderHeader": "## {{theme}}"
       },
@@ -3343,7 +3343,7 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n分类:: 总结\n分类:: {{周期}}\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n",
+        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 总结\n分类:: {{周期}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/总结.md",
         "appendUnderHeader": "## {{theme}}"
       },
@@ -3394,7 +3394,7 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n分类:: 总结\n分类:: {{周期}}\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n",
+        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 总结\n分类:: {{周期}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/总结.md",
         "appendUnderHeader": "## {{theme}}"
       },
@@ -3445,7 +3445,7 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n分类:: 总结\n分类:: {{周期}}\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n",
+        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 总结\n分类:: {{周期}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/总结.md",
         "appendUnderHeader": "## {{theme}}",
         "disabled": true
@@ -3497,7 +3497,7 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n分类:: 总结\n分类:: {{周期}}\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n",
+        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 总结\n分类:: {{周期}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/总结.md",
         "appendUnderHeader": "## {{theme}}",
         "disabled": true
@@ -3549,7 +3549,7 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n分类:: 总结\n分类:: {{周期}}\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n",
+        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 总结\n分类:: {{周期}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/总结.md",
         "appendUnderHeader": "## {{theme}}",
         "disabled": true
@@ -3601,7 +3601,7 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n分类:: 总结\n分类:: {{周期}}\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n",
+        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 总结\n分类:: {{周期}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/总结.md",
         "appendUnderHeader": "## {{theme}}",
         "disabled": true
@@ -3653,7 +3653,7 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n分类:: 总结\n分类:: {{周期}}\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n",
+        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 总结\n分类:: {{周期}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/总结.md",
         "appendUnderHeader": "## {{theme}}",
         "disabled": true
@@ -3705,7 +3705,7 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n分类:: 总结\n分类:: {{周期}}\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n",
+        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 总结\n分类:: {{周期}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/总结.md",
         "appendUnderHeader": "## {{theme}}",
         "disabled": true
@@ -3757,7 +3757,7 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n分类:: 总结\n分类:: {{周期}}\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n",
+        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 总结\n分类:: {{周期}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/总结.md",
         "appendUnderHeader": "## {{theme}}",
         "disabled": true
@@ -3809,7 +3809,7 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n分类:: 总结\n分类:: {{周期}}\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n",
+        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 总结\n分类:: {{周期}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/总结.md",
         "appendUnderHeader": "## {{theme}}",
         "disabled": true
@@ -3861,7 +3861,7 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n分类:: 总结\n分类:: {{周期}}\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n",
+        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 总结\n分类:: {{周期}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/总结.md",
         "appendUnderHeader": "## {{theme}}",
         "disabled": true
@@ -3897,7 +3897,7 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n分类:: 打卡\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分}}\npintu::{{评分.value}}\n内容:: {{内容}}\n<!-- end -->\n\n",
+        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分}}\npintu::{{评分.value}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/打卡.md",
         "appendUnderHeader": "## {{theme}}"
       },
@@ -3936,7 +3936,7 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n分类:: 打卡\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分}}\npintu::{{评分.value}}\n内容:: {{内容}}\n<!-- end -->\n\n",
+        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分}}\npintu::{{评分.value}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/打卡.md",
         "appendUnderHeader": "## {{theme}}"
       },
@@ -3979,7 +3979,7 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n分类:: 打卡\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分}}\npintu::{{评分.value}}\n内容:: {{内容}}\n<!-- end -->\n\n",
+        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分}}\npintu::{{评分.value}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/打卡.md",
         "appendUnderHeader": "## {{theme}}"
       },
@@ -4042,7 +4042,7 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n分类:: 打卡\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分}}\npintu::{{评分.value}}\n内容:: {{内容}}\n<!-- end -->\n\n",
+        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分}}\npintu::{{评分.value}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/打卡.md",
         "appendUnderHeader": "## {{theme}}"
       },
@@ -4093,7 +4093,7 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n分类:: 打卡\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分}}\npintu::{{评分.value}}\n内容:: {{内容}}\n<!-- end -->\n\n",
+        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分}}\npintu::{{评分.value}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/打卡.md",
         "appendUnderHeader": "## {{theme}}"
       },
@@ -4156,7 +4156,7 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n分类:: 打卡\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分}}\npintu::{{评分.value}}\n内容:: {{内容}}\n<!-- end -->\n\n",
+        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分}}\npintu::{{评分.value}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/打卡.md",
         "appendUnderHeader": "## {{theme}}"
       },
@@ -4199,7 +4199,7 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n分类:: 打卡\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分}}\npintu::{{评分.value}}\n内容:: {{内容}}\n<!-- end -->\n\n",
+        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分}}\npintu::{{评分.value}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/打卡.md",
         "appendUnderHeader": "## {{theme}}"
       },
@@ -4246,7 +4246,7 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n分类:: 计划\n分类:: {{周期}}\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n\n",
+        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 计划\n分类:: {{周期}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n\n",
         "targetFile": "01/计划.md",
         "appendUnderHeader": "## {{theme}}",
         "disabled": true
@@ -4294,7 +4294,7 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n分类:: 计划\n分类:: {{周期}}\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n\n",
+        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 计划\n分类:: {{周期}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n\n",
         "targetFile": "01/计划.md",
         "appendUnderHeader": "## {{theme}}",
         "disabled": true
@@ -4342,7 +4342,7 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n分类:: 计划\n分类:: {{周期}}\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n\n",
+        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 计划\n分类:: {{周期}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n\n",
         "targetFile": "01/计划.md",
         "appendUnderHeader": "## {{theme}}",
         "disabled": true
@@ -4394,7 +4394,7 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n分类:: 总结\n分类:: {{周期}}\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n",
+        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 总结\n分类:: {{周期}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/总结.md",
         "appendUnderHeader": "## {{theme}}",
         "disabled": true
@@ -4446,7 +4446,7 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n分类:: 总结\n分类:: {{周期}}\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n",
+        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 总结\n分类:: {{周期}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/总结.md",
         "appendUnderHeader": "## {{theme}}",
         "disabled": true
@@ -4498,7 +4498,7 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n分类:: 总结\n分类:: {{周期}}\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n",
+        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 总结\n分类:: {{周期}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/总结.md",
         "appendUnderHeader": "## {{theme}}",
         "disabled": true
@@ -4542,7 +4542,7 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n分类:: {{思考分类}}\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n",
+        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: {{思考分类}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/闪念.md",
         "appendUnderHeader": "## {{theme}}",
         "disabled": true
@@ -4586,7 +4586,7 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n分类:: {{思考分类}}\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n",
+        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: {{思考分类}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/闪念.md",
         "appendUnderHeader": "## {{theme}}",
         "disabled": true
@@ -4630,7 +4630,7 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n分类:: {{思考分类}}\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n",
+        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: {{思考分类}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/闪念.md",
         "appendUnderHeader": "## {{theme}}",
         "disabled": true
@@ -4711,7 +4711,7 @@
             ]
           }
         ],
-        "outputTemplate": "\n{{状态.value}} {{icon}} {{任务内容}} (时间::{{时间}}) (时长::{{时长}})  {{重复.value}}  {{状态}} (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{日期}}",
+        "outputTemplate": "\n{{状态.value}} {{icon}} {{任务内容}} (时间::{{时间}}) (时长::{{时长}})  {{重复.value}}  {{状态}} (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{日期}}\n\n",
         "targetFile": "03/01.md",
         "appendUnderHeader": "## {{theme}}",
         "disabled": true
@@ -4792,7 +4792,7 @@
             ]
           }
         ],
-        "outputTemplate": "\n{{状态.value}} {{icon}} {{任务内容}} (时间::{{时间}}) (时长::{{时长}})  {{重复.value}}  {{状态}} (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{日期}}",
+        "outputTemplate": "\n{{状态.value}} {{icon}} {{任务内容}} (时间::{{时间}}) (时长::{{时长}})  {{重复.value}}  {{状态}} (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{日期}}\n\n",
         "targetFile": "03/01.md",
         "appendUnderHeader": "## {{theme}}",
         "disabled": true
@@ -4873,7 +4873,7 @@
             ]
           }
         ],
-        "outputTemplate": "\n{{状态.value}} {{icon}} {{任务内容}} (时间::{{时间}}) (时长::{{时长}})  {{重复.value}}  {{状态}} (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{日期}}",
+        "outputTemplate": "\n{{状态.value}} {{icon}} {{任务内容}} (时间::{{时间}}) (时长::{{时长}})  {{重复.value}}  {{状态}} (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{日期}}\n\n",
         "targetFile": "03/01.md",
         "appendUnderHeader": "## {{theme}}",
         "disabled": true
@@ -4909,7 +4909,7 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n分类:: 打卡\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分}}\npintu::{{评分.value}}\n内容:: {{内容}}\n<!-- end -->\n\n",
+        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分}}\npintu::{{评分.value}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/打卡.md",
         "appendUnderHeader": "## {{theme}}"
       },
@@ -4948,7 +4948,7 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n分类:: 打卡\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分}}\npintu::{{评分.value}}\n内容:: {{内容}}\n<!-- end -->\n\n",
+        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分}}\npintu::{{评分.value}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/打卡.md",
         "appendUnderHeader": "## {{theme}}"
       },
@@ -4983,7 +4983,7 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n分类:: 打卡\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分}}\npintu::{{评分.value}}\n内容:: {{内容}}\n<!-- end -->\n\n",
+        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分}}\npintu::{{评分.value}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/打卡.md",
         "appendUnderHeader": "## {{theme}}"
       },

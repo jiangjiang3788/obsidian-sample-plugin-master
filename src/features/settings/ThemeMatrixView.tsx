@@ -191,7 +191,7 @@ export function ThemeMatrixView({ blocks, themes, overrides, settings, useCases,
     };
 
     return (
-        <Box sx={{ maxWidth: '1200px', mx: 'auto', padding: 2 }}>
+        <Box sx={{ width: '100%', maxWidth: 'none', mx: 'auto', padding: 2 }}>
             <Typography variant="h4" gutterBottom>
                 主题配置矩阵
             </Typography>
