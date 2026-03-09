@@ -1,6 +1,6 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
-import type { Item, ViewInstance } from '@core/public';
+import type { Item, ViewInstance, MessageRenderPort } from '@core/public';
 import type { TimerController } from '@/app/public';
 import { BlockView } from '../../BlockView';
 
@@ -11,6 +11,7 @@ export function PopoverContent({
   timerService,
   timers,
   allThemes,
+  messageRenderPort,
 }: {
   blocks: Item[];
   app: any;
@@ -18,6 +19,7 @@ export function PopoverContent({
   timerService: TimerController;
   timers: any[];
   allThemes: any[];
+  messageRenderPort?: MessageRenderPort;
 }) {
   return (
     <div className="sv-popover-content">
@@ -33,6 +35,7 @@ export function PopoverContent({
           timerService={timerService}
           timers={timers}
           allThemes={allThemes}
+          messageRenderPort={messageRenderPort}
         />
       )}
     </div>

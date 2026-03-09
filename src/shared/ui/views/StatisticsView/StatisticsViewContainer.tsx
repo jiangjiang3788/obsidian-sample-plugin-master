@@ -2,7 +2,7 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
 import { useState, useMemo, useRef, useEffect } from 'preact/hooks';
-import type { Item, ViewInstance } from '@core/public';
+import type { Item, ViewInstance, MessageRenderPort } from '@core/public';
 import type { CategoryConfig, PeriodData } from '@core/public';
 import {
   dayjs,
@@ -45,6 +45,7 @@ interface StatisticsViewProps {
   timerService: TimerController;
   timers: any[];
   allThemes: any[];
+  messageRenderPort?: MessageRenderPort;
   /** Phase2: feature 层注入的 renderModel（shared/ui 只渲染） */
   statisticsModel?: any;
 }
@@ -66,6 +67,7 @@ export function StatisticsView({
   timerService,
   timers,
   allThemes,
+  messageRenderPort,
   statisticsModel,
 }: StatisticsViewProps) {
   const ui = useUiPort();
@@ -272,7 +274,7 @@ export function StatisticsView({
           </div>
         }
       >
-        <PopoverContent blocks={blocks} app={app} module={module} timerService={timerService} timers={timers} allThemes={allThemes} />
+        <PopoverContent blocks={blocks} app={app} module={module} timerService={timerService} timers={timers} allThemes={allThemes} messageRenderPort={messageRenderPort} />
       </FloatingPanel>
     ));
 

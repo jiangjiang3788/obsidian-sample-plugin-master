@@ -4,6 +4,7 @@ import { Item, ThemeDefinition } from '@core/public';
 import { FieldPill } from '@shared/ui/items/FieldPill';
 import { ItemLink } from '@shared/ui/items/ItemLink';
 import type { MessageRenderPort } from '@core/public';
+import { makeObsUri } from '@core/public';
 import { MarkdownContent } from '@shared/ui/markdown/MarkdownContent';
 
 interface BlockItemProps {
@@ -33,18 +34,33 @@ export const BlockItem = ({ item, fields, isNarrow, app, messageRenderPort, allT
             const path = item.file?.path;
             if (!path) return;
 
-            const file = app?.vault?.getAbstractFileByPath?.(path);
-            if (!file) return;
+            evt.preventDefault();
+            evt.stopPropagation();
 
-            const line = typeof item.file?.line === 'number' ? item.file!.line : 0;
-            const leaf = app?.workspace?.getLeaf?.(false);
-            if (leaf?.openFile) {
-                leaf.openFile(file, { state: { line } });
+            // 优先走 advanced-uri：它在插件/浮窗/统计弹层里更稳定，且能明确跳到具体行。
+            const vaultName = app?.vault?.getName?.();
+            const obsidianUri = makeObsUri(item, vaultName);
+            if (obsidianUri && !obsidianUri.startsWith('#error-') && typeof window !== 'undefined' && typeof window.open === 'function') {
+                window.open(obsidianUri, '_self');
                 return;
             }
 
-            // Fallback: openLinkText if available
+            // Fallback 1：openFile（行号使用 0-based，避免落到错误行）
+            const file = app?.vault?.getAbstractFileByPath?.(path);
+            if (file) {
+                const rawLine = typeof item.file?.line === 'number' ? item.file.line : 1;
+                const line = Math.max(0, rawLine - 1);
+                const leaf = app?.workspace?.getLeaf?.(false);
+                if (leaf?.openFile) {
+                    leaf.openFile(file, { state: { line } });
+                    return;
+                }
+            }
+
+            // Fallback 2：openLinkText
             if (app?.workspace?.openLinkText) {
+                const rawLine = typeof item.file?.line === 'number' ? item.file.line : 1;
+                const line = Math.max(0, rawLine - 1);
                 app.workspace.openLinkText(path, '', false, { state: { line } });
             }
         } catch {

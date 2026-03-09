@@ -80,17 +80,13 @@
 }
 
 /*
- * Obsidian 的 MarkdownRenderer 对「普通文本」会包一层 <p>，
- * 默认会把换行折叠成空格（看起来像只显示了第一行）。
- * BlockView 里我们希望：
- * - 保留原始换行（多行显示）
- * - 同时仍然支持 Markdown（列表/加粗/链接等）
+ * Markdown 内容交给 Obsidian 默认规则渲染，避免把普通换行强行渲染成额外断行。
+ * 仅保留断词能力，确保长文本不会撑破布局。
  */
 .bv-block-content .message-render-markdown,
 .bv-block-content .message-render-markdown p,
 .bv-block-content .message-render-markdown li,
 .bv-block-content .message-render-markdown blockquote {
-    white-space: pre-wrap;
     word-break: break-word;
 }
 
