@@ -4,12 +4,13 @@
 import { Item } from '@/core/types/schema';
 import { dayjs } from './date';
 import { getEffectiveDisplayCount, getEffectiveLevelCount } from './levelingSystem';
+import { getBasePath } from './pathSemantic';
 
 /** 从 items 中抽取所有一级分类（categoryKey 的第一段）并排序 */
 export function discoverBaseCategories(items: Item[]): string[] {
     const categorySet = new Set<string>();
     items.forEach(item => {
-        const baseCategory = (item.categoryKey || '').split('/')[0];
+        const baseCategory = getBasePath(item.categoryKey);
         if (baseCategory) {
             categorySet.add(baseCategory);
         }
@@ -86,7 +87,7 @@ export function aggregateItems(items: Item[], options: {
     
     if (categories) {
         filteredItems = filteredItems.filter(item => {
-            const baseCategory = (item.categoryKey || '').split('/')[0];
+            const baseCategory = getBasePath(item.categoryKey);
             return categories.includes(baseCategory);
         });
     }
@@ -105,7 +106,7 @@ export function aggregateItems(items: Item[], options: {
     // 按日期-分类-主题聚合
     filteredItems.forEach(item => {
         const date = item.date || '';
-        const baseCategory = (item.categoryKey || '').split('/')[0];
+        const baseCategory = getBasePath(item.categoryKey);
         const theme = item.theme || '__default__';
         
         const displayCount = getEffectiveDisplayCount(item);

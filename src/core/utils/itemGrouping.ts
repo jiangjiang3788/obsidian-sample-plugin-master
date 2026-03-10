@@ -2,6 +2,7 @@
 import type { Item } from '@/core/types/schema';
 import { readField } from '@/core/types/schema';
 import { EMPTY_LABEL } from '@/core/types/constants';
+import { getBasePath } from './pathSemantic';
 
 /**
  * 按单个字段对 items 进行分组
@@ -114,7 +115,7 @@ export function buildTableMatrix(items: Item[], rowField: string, colField: stri
  * 提取 categoryKey 的基础分类（第一级路径）
  */
 export function getBaseCategory(categoryKey?: string): string {
-    return (categoryKey || '').split('/')[0] || '';
+    return getBasePath(categoryKey);
 }
 
 /**
@@ -145,7 +146,7 @@ export function collectCategoriesFromViews(
         if (view.viewType === 'StatisticsView' && view.viewConfig?.categories) {
             view.viewConfig.categories.forEach((cat: any) => {
                 if (cat.name) {
-                    categorySet.add(cat.name);
+                    categorySet.add(getBasePath(cat.name) || cat.name);
                 }
             });
         }

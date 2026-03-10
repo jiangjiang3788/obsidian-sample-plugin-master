@@ -4,7 +4,7 @@
 import { useMemo, useState, useRef, useEffect } from 'preact/hooks';
 import { Item, ViewInstance, InputSettings, ThemeDefinition, devLog } from '@core/public';
 import { dayjs } from '@core/public';
-import { QuickInputModal, useUiPort } from '@/app/public';
+import { QuickInputModal } from '@/app/public';
 import { HEATMAP_VIEW_DEFAULT_CONFIG } from '@core/public';
 import { getThemeLevelData } from '@core/public';
 import { CheckinManagerModal } from '@shared/ui/modals/CheckinManagerModal';
@@ -39,7 +39,6 @@ export function HeatmapView({
     injectedThemesToTrack,
     injectedDataByThemeAndDate,
 }: HeatmapViewProps) {
-    const ui = useUiPort();
     // 将 config 对象移入 useMemo，确保响应式更新
     const config = useMemo(
         () => ({ ...HEATMAP_VIEW_DEFAULT_CONFIG, ...module.viewConfig }), 
@@ -91,40 +90,46 @@ export function HeatmapView({
         return injectedDataByThemeAndDate ?? buildThemeDataMap(items, themesToTrack);
     }, [injectedDataByThemeAndDate, items, themesToTrack]);
 
-    const handleCellClick = (date: string, item?: Item, themePath?: string) => {
+    const openCreateModal = (date: string, item?: Item, themePath?: string) => {
         if (!config.sourceBlockId) return;
-        
-        let themeToPreselect: ThemeDefinition | undefined;
 
-        // 优先使用传入的themePath，否则使用item.theme
+        let themeToPreselect: ThemeDefinition | undefined;
         if (themePath && themePath !== '__default__') {
             themeToPreselect = themesByPath.get(themePath);
         } else if (item?.theme) {
             themeToPreselect = themesByPath.get(item.theme);
         }
-        
+
         const context = {
             '日期': date,
-            ...(item ? { '内容': item.content || '', '评分': item.rating ?? 0 } : {}),
+            ...(item ? { '内容': item.content || item.title || '', '评分': item.rating ?? 0 } : {}),
             ...(themeToPreselect ? { '主题': themeToPreselect.path } : {})
         };
-        
+
         new QuickInputModal(app, config.sourceBlockId, context, themeToPreselect?.id).open();
     };
 
-    const handleEditCount = (date: string, items?: Item[]) => {
-        const handleSave = async (data: { displayCount: number; levelCount: number; countForLevel: boolean }) => {
-            try {
-                ui.notice(`已更新 ${date} 的打卡数据`);
-            } catch (error) {
-                ui.notice('保存失败：' + (error as Error).message);
-                throw error;
-            }
-        };
-
-        new CheckinManagerModal(app, date, items || [], handleSave).open();
+    const openEditModal = (item: Item) => {
+        new QuickInputModal(app, item.templateId || item.categoryKey || config.sourceBlockId || '', undefined, undefined, undefined, false, {
+            mode: 'edit',
+            editItem: item,
+        }).open();
     };
 
+    const handleCellClick = (date: string, item?: Item, themePath?: string, dayItems?: Item[]) => {
+        if (dayItems && dayItems.length > 0) {
+            new CheckinManagerModal(
+                app,
+                date,
+                dayItems,
+                () => openCreateModal(date, item, themePath),
+                (editItem) => openEditModal(editItem)
+            ).open();
+            return;
+        }
+
+        openCreateModal(date, item, themePath);
+    };
     const renderMonthGrid = (monthDate: dayjs.Dayjs, dataForMonth: Map<string, Item[]>, themePath: string) => {
         const startOfMonth = monthDate.startOf('month');
         const endOfMonth = monthDate.endOf('month');
@@ -152,8 +157,7 @@ export function HeatmapView({
                     config={config} 
                     ratingMapping={themeRatingMapping} 
                     app={app} 
-                    onCellClick={(date, item) => handleCellClick(date, item, themePath)}
-                    onEditCount={handleEditCount}
+                    onCellClick={(date, item, dayItems) => handleCellClick(date, item, themePath, dayItems)}
                 />
             );
         }
@@ -192,8 +196,7 @@ export function HeatmapView({
                         config={config} 
                         ratingMapping={themeRatingMapping} 
                         app={app} 
-                        onCellClick={(date, item) => handleCellClick(date, item, themePath)}
-                        onEditCount={handleEditCount}
+                        onCellClick={(date, item, dayItems) => handleCellClick(date, item, themePath, dayItems)}
                     />
                 ];
             }
@@ -213,8 +216,7 @@ export function HeatmapView({
                             config={config} 
                             ratingMapping={themeRatingMapping} 
                             app={app} 
-                            onCellClick={(date, item) => handleCellClick(date, item, themePath)}
-                            onEditCount={handleEditCount}
+                            onCellClick={(date, item, dayItems) => handleCellClick(date, item, themePath, dayItems)}
                         />
                     );
                     currentDate = currentDate.add(1, 'day');
@@ -236,8 +238,7 @@ export function HeatmapView({
                             config={config} 
                             ratingMapping={themeRatingMapping} 
                             app={app} 
-                            onCellClick={(date, item) => handleCellClick(date, item, themePath)}
-                            onEditCount={handleEditCount}
+                            onCellClick={(date, item, dayItems) => handleCellClick(date, item, themePath, dayItems)}
                         />
                     );
                     currentDate = currentDate.add(1, 'day');

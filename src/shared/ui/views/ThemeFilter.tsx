@@ -4,6 +4,7 @@ import { h } from 'preact';
 import { useMemo } from 'preact/hooks';
 
 import type { ThemeDefinition } from '@core/public';
+import { getLeafPath } from '@core/public';
 import { FilterPopover } from '@shared/ui/components/FilterPopover';
 import { ThemeTreeSelectPanel } from '@/shared/components/ThemeTreeSelect';
 
@@ -33,7 +34,7 @@ export function ThemeFilter({ selectedThemes, onSelectionChange, themes }: Theme
       totalCount={allThemePaths.length}
       getChipLabel={(themePath) => {
         const theme = themes.find((t) => t.path === themePath);
-        return theme ? theme.path.split('/').pop() || theme.path : themePath;
+        return theme ? getLeafPath(theme.path) || theme.path : themePath;
       }}
       onDeleteKey={(themePath) => {
         onSelectionChange(selectedThemes.filter((t) => t !== themePath));

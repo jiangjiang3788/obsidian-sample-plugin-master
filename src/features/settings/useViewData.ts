@@ -5,7 +5,7 @@ import { DataStore, devTime, devTimeEnd } from '@core/public';
 // [核心修复] 将 filterByKeyword 添加回 import 列表
 import { filterByRules, sortItems, filterByDateRange, filterByPeriod, filterByKeyword } from '@core/public';
 import { dayjs } from '@core/public';
-import { isSameIsoWeek, toIsoDateTuple } from '@core/public';
+import { isSameIsoWeek, toIsoDateTuple, getBasePath } from '@core/public';
 import type { Item, ViewInstance, FilterRule, SortRule } from '@core/public';
 
 interface UseViewDataProps {
@@ -79,7 +79,7 @@ export function useViewData({
         // [新增] 分类筛选
         if (selectedCategories && selectedCategories.length > 0) {
             itemsToProcess = itemsToProcess.filter(item => {
-                const baseCategory = (item.categoryKey || '').split('/')[0];
+                const baseCategory = getBasePath(item.categoryKey);
                 return selectedCategories.includes(baseCategory);
             });
         }

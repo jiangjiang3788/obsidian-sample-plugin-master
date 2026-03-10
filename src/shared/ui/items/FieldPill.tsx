@@ -5,7 +5,7 @@ import { readField } from '@core/public';
 import { getFieldLabel } from '@core/public';
 import { getCategoryColor } from '@core/public';
 import { TagsRenderer } from '@shared/ui/composites/TagsRenderer';
-import { getBaseCategory } from '@core/public';
+import { getBaseCategory, getLeafPath } from '@core/public';
 
 interface FieldPillProps {
     item: Item;
@@ -35,7 +35,7 @@ export function FieldPill({ item, fieldKey, app, allThemes }: FieldPillProps) {
     // Theme 字段特殊处理（术语对齐：theme=主题，独立于 tags）
     if (fieldKey === 'theme' && typeof value === 'string') {
         const fullPath = value;
-        const labelText = fullPath.split('/').pop() || fullPath;
+        const labelText = getLeafPath(fullPath) || fullPath;
         return (
             <span class="tag-pill" title={`${label}: ${fullPath}`} style={{ backgroundColor: getCategoryColor(fullPath) }}>
                 {labelText}
@@ -45,7 +45,7 @@ export function FieldPill({ item, fieldKey, app, allThemes }: FieldPillProps) {
     
     // Category 字段特殊处理
     if (fieldKey === 'categoryKey') {
-        const baseCategory = getBaseCategory(item.categoryKey);
+        const baseCategory = getLeafPath(item.categoryKey) || getBaseCategory(item.categoryKey);
         return (
             <span class="tag-pill" title={`${label}: ${value}`} style={{ backgroundColor: getCategoryColor(item.categoryKey) }}>
                 {baseCategory}

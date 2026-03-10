@@ -69,6 +69,8 @@ function FieldRow({ field, index, fieldCount, onUpdate, onRemove, onMove }: { fi
     ];
 
     const showOptionsEditor = ['select', 'radio', 'rating'].includes(field.type);
+    const isCategoryLike = ['select', 'radio'].includes(field.type) && (((field.semanticType || '') === 'path') || String(field.key || field.label || '').includes('分类'));
+    const isRatingLike = field.type === 'rating' || field.semanticType === 'ratingPair';
     // [核心修改 1] 判断是否应该显示 defaultValue 输入框
     const showDefaultValueEditor = ['text', 'textarea', 'number', 'date', 'time'].includes(field.type);
 
@@ -115,6 +117,15 @@ function FieldRow({ field, index, fieldCount, onUpdate, onRemove, onMove }: { fi
 
             {showOptionsEditor && (
                 <Box sx={{ mt: 2, pl: 2, ml: 6 }}>
+                    {isRatingLike ? (
+                        <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block', mb: 1 }}>
+                            推荐：label 填评分数值，value 填显示资源。模板中优先写 评分:: {'{{字段名.label}}'} 与 评图:: {'{{字段名.value}}'}。
+                        </Typography>
+                    ) : isCategoryLike ? (
+                        <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block', mb: 1 }}>
+                            推荐：分类/主题这类路径字段保留对象值，模板中优先写 {'{{字段名.value}}'} 保存完整路径，{'{{字段名.label}}'} 用于显示。
+                        </Typography>
+                    ) : null}
                     <Stack spacing={1.5} divider={<Divider flexItem sx={{ borderStyle: 'dashed' }} />}>
                         {(field.options || []).map((option, optIndex) => <OptionRow key={optIndex} option={option} onChange={(newOpt) => handleOptionChange(optIndex, newOpt)} onRemove={() => removeOption(optIndex)} fieldType={field.type} />)}
                     </Stack>

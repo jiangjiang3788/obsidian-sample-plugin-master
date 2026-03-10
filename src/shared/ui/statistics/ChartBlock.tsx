@@ -3,6 +3,7 @@ import { h } from 'preact';
 import { useMemo } from 'preact/hooks';
 import type { Item } from '@core/public';
 import type { PeriodData, CategoryConfig } from '@core/public';
+import { getBasePath } from '@core/public';
 
 interface ChartBlockProps {
     data: PeriodData;
@@ -109,7 +110,7 @@ export function ChartBlock({
                                     onCellClick(
                                         cellIdentifier(name), 
                                         e.currentTarget as HTMLElement, 
-                                        data.blocks.filter((b: Item) => (b.categoryKey || '').startsWith(name)), 
+                                        data.blocks.filter((b: Item) => getBasePath(b.categoryKey) === name), 
                                         `${label} · ${displayName}`
                                     ); 
                                 }}

@@ -29,6 +29,7 @@ export * from './normalize';
 export * from './obsidian';
 export * from './parser';
 export * from './pathUtils';
+export * from './pathSemantic';
 export * from './regex';
 export * from './statisticsAggregation';
 export * from './taskUtils';

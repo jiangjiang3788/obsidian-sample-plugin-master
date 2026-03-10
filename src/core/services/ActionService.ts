@@ -7,6 +7,7 @@ import { InputService } from '@core/services/InputService';
 import type { QuickInputConfig, ISettingsProvider } from '@core/services/types';
 import { SettingsProviderToken } from '@core/services/types';
 import { readField } from '@/core/types/schema';
+import { buildPathOption, getBasePath, getLeafPath } from '@core/utils/pathSemantic';
 import type { UiPort } from '@core/ports/UiPort';
 import { UI_PORT_TOKEN } from '@core/ports/UiPort';
 
@@ -96,6 +97,40 @@ export class ActionService {
         };
     }
 
+
+    private buildFieldContextValue(field: any, item: Item): any {
+        const direct = readField(item, field.key) ?? readField(item, field.label);
+        const fieldName = String(field.key || field.label || '');
+        const isCategoryField = fieldName.includes('分类') || fieldName.toLowerCase().includes('category');
+
+        if (field.type === 'rating') {
+            const score = item.rating ?? item.extra?.['评分'] ?? item.extra?.['rating'];
+            const visual = item.pintu ?? item.extra?.['评图'] ?? item.extra?.['pintu'];
+            if (field.options?.length) {
+                const scoreStr = score !== undefined && score !== null ? String(score) : '';
+                const matched = field.options.find((opt: any) =>
+                    (scoreStr && String(opt.label || '') === scoreStr && (!visual || String(opt.value || '') === String(visual))) ||
+                    (scoreStr && String(opt.label || '') === scoreStr) ||
+                    (visual && String(opt.value || '') === String(visual))
+                );
+                if (matched) return { value: matched.value, label: matched.label || matched.value };
+            }
+            if (score !== undefined && score !== null) return { value: visual || '', label: String(score) };
+        }
+
+        if ((field.type === 'select' || field.type === 'radio') && isCategoryField) {
+            const pathValue = String(item.categoryKey || direct || '');
+            if (!pathValue) return direct;
+            if (field.options?.length) {
+                const matched = field.options.find((opt: any) => String(opt.value) === pathValue || String(opt.label) === getLeafPath(pathValue));
+                if (matched) return { value: matched.value, label: matched.label || matched.value };
+            }
+            return buildPathOption(pathValue) || direct;
+        }
+
+        return direct;
+    }
+
     public getQuickInputConfigForTaskEdit(taskId: string): QuickInputConfig | null {
         const item = this.dataStore.queryItems().find(i => i.id === taskId);
         if (!item) {
@@ -103,7 +138,7 @@ export class ActionService {
             return null;
         }
 
-        const baseCategory = item.categoryKey || '';
+        const baseCategory = getBasePath(item.categoryKey) || item.categoryKey || '';
         const targetBlock = this.findBlockByCategoryKey(baseCategory);
 
         if (!targetBlock) {
@@ -113,7 +148,7 @@ export class ActionService {
 
         const context: Record<string, any> = {};
         for (const field of targetBlock.fields) {
-            const value = readField(item, field.key) ?? readField(item, field.label);
+            const value = this.buildFieldContextValue(field, item);
             if (value !== undefined && value !== null) {
                 context[field.key] = value;
             }

@@ -64,6 +64,12 @@ export interface TemplateField {
     key: string;
     label: string;
     type: 'text' | 'textarea' | 'date' | 'time' | 'select' | 'radio' | 'number' | 'rating';
+    /** 轻量语义层：路径字段（如 categoryKey/theme）或评分复合字段。 */
+    semanticType?: 'scalar' | 'path' | 'ratingPair';
+    /** 选项类字段默认如何存储；raw 保持旧行为。 */
+    storeMode?: 'raw' | 'label' | 'value';
+    /** 评分复合字段的辅助键，默认建议使用“评图”。 */
+    auxKey?: string;
     defaultValue?: string;
     options?: TemplateFieldOption[];
     min?: number;

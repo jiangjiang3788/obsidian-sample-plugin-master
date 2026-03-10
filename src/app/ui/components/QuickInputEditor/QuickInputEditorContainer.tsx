@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from 'preact/hooks';
 
 import { selectInputSettings, useSelector } from '@/app/public';
 import type { ThemeDefinition } from '@core/public';
-import { dayjs, getEffectiveTemplate, renderTemplate } from '@core/public';
+import { dayjs, getEffectiveTemplate, renderTemplate, getLeafPath } from '@core/public';
 import { computeLinkedTimeChanges, finalizeLinkedTimeFields } from '@shared/public';
 
 import { QuickInputEditorView } from './QuickInputEditorView';
@@ -123,7 +123,13 @@ export function QuickInputEditor({
 
         if (contextValue !== undefined) {
           if (['select', 'radio', 'rating'].includes(field.type)) {
-            const matched = (field.options || []).find((opt: any) => opt.value === contextValue || opt.label === contextValue);
+            const rawString = contextValue !== null && contextValue !== undefined ? String(contextValue) : '';
+            const leafString = getLeafPath(rawString) || rawString;
+            const matched = (field.options || []).find((opt: any) => {
+              const optLabel = String(opt.label || opt.value || '');
+              const optValue = String(opt.value || '');
+              return optValue === rawString || optLabel === rawString || optLabel === leafString || String(optLabel) === String(rawString);
+            });
             assignIfChanged(field.key, matched ? { value: matched.value, label: matched.label || matched.value } : contextValue);
           } else {
             assignIfChanged(field.key, contextValue);

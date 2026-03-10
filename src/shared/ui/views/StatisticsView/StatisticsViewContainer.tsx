@@ -2,7 +2,7 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
 import { useState, useMemo, useRef, useEffect } from 'preact/hooks';
-import type { Item, ViewInstance, MessageRenderPort } from '@core/public';
+import type { Item, ViewInstance } from '@core/public';
 import type { CategoryConfig, PeriodData } from '@core/public';
 import {
   dayjs,
@@ -19,6 +19,7 @@ import {
   discoverBaseCategories,
   getCategoryColor,
   generateCategoryColor,
+  getBasePath,
 } from '@core/public';
 import { IconButton, Tooltip } from '@mui/material';
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
@@ -45,7 +46,6 @@ interface StatisticsViewProps {
   timerService: TimerController;
   timers: any[];
   allThemes: any[];
-  messageRenderPort?: MessageRenderPort;
   /** Phase2: feature 层注入的 renderModel（shared/ui 只渲染） */
   statisticsModel?: any;
 }
@@ -67,7 +67,6 @@ export function StatisticsView({
   timerService,
   timers,
   allThemes,
-  messageRenderPort,
   statisticsModel,
 }: StatisticsViewProps) {
   const ui = useUiPort();
@@ -97,37 +96,38 @@ export function StatisticsView({
 
   // 从真实 items 数据动态提取分类，颜色始终来自全局颜色系统
   const categoryConfigs: CategoryConfig[] = useMemo(() => {
-    // 从 items 中发现所有基础分类
     const discovered = discoverBaseCategories(items);
-    
+
     if (categories.length > 0) {
-      // 有保存的配置：保留配置中的顺序和别名，但颜色使用全局颜色系统
-      const configMap = new Map((categories as CategoryConfig[]).map(c => [c.name, c]));
       const result: CategoryConfig[] = [];
-      
-      // 先添加配置中已有的分类（保留顺序）
+      const seen = new Set<string>();
+
       for (const cat of categories as CategoryConfig[]) {
+        const baseName = getBasePath(cat.name) || cat.name || '';
+        if (!baseName || seen.has(baseName)) continue;
+        seen.add(baseName);
         result.push({
           ...cat,
-          color: getCategoryColor(cat.name), // 颜色从全局系统获取
+          name: baseName,
+          alias: cat.alias && cat.alias !== baseName ? cat.alias : undefined,
+          color: getCategoryColor(baseName),
         });
       }
-      
-      // 再添加配置中没有但数据中存在的新分类
+
       for (const name of discovered) {
-        if (!configMap.has(name)) {
-          result.push({
-            name,
-            color: getCategoryColor(name),
-            files: [],
-          });
-        }
+        const baseName = getBasePath(name) || name;
+        if (!baseName || seen.has(baseName)) continue;
+        seen.add(baseName);
+        result.push({
+          name: baseName,
+          color: getCategoryColor(baseName),
+          files: [],
+        });
       }
-      
+
       return result;
     }
-    
-    // 无配置：全部从 items 动态生成
+
     return discovered.map(name => ({
       name,
       color: getCategoryColor(name),
@@ -274,7 +274,7 @@ export function StatisticsView({
           </div>
         }
       >
-        <PopoverContent blocks={blocks} app={app} module={module} timerService={timerService} timers={timers} allThemes={allThemes} messageRenderPort={messageRenderPort} />
+        <PopoverContent blocks={blocks} app={app} module={module} timerService={timerService} timers={timers} allThemes={allThemes} />
       </FloatingPanel>
     ));
 

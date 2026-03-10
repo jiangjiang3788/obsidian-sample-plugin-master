@@ -1,12 +1,12 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
 import type { Item, ThemeDefinition } from '@core/public';
-import { makeObsUri } from '@core/public';
 import { TaskCheckbox } from '@shared/ui/composites/TaskCheckbox';
 import { TaskSendToTimerButton } from '@shared/ui/composites/TaskSendToTimerButton';
 import { isDone } from '@core/public';
 import { FieldPill } from './FieldPill';
 import type { TimerController } from '@/app/public';
+import { QuickInputModal } from '@/app/public';
 
 interface TaskRowProps {
     item: Item;
@@ -19,9 +19,6 @@ interface TaskRowProps {
     compact?: boolean;
 }
 
-/**
- * 通用任务行组件 - 可在 BlockView, TableView 等多个视图间复用
- */
 export function TaskRow({ 
     item, 
     onMarkDone, 
@@ -33,31 +30,41 @@ export function TaskRow({
     compact = false
 }: TaskRowProps) {
     const done = isDone(item.categoryKey);
+
+    const openEdit = (evt?: Event) => {
+        evt?.preventDefault?.();
+        evt?.stopPropagation?.();
+        new QuickInputModal(app, item.templateId || item.categoryKey || '', undefined, undefined, undefined, false, {
+            mode: 'edit',
+            editItem: item,
+        }).open();
+    };
     
     return (
         <div class={`task-row ${compact ? 'task-row--compact' : ''} ${done ? 'task-row--done' : ''}`}>
-            <div class="task-row-checkbox-wrapper">
+            <div class="task-row-checkbox-wrapper" onClick={(e) => e.stopPropagation()}>
                 <TaskCheckbox done={done} onMarkDone={() => onMarkDone(item.id)} />
             </div>
             
-            <div class="task-row-content">
+            <div class="task-row-content" onClick={openEdit as any}>
                 <div class="flex items-center gap-2">
-                    <a href={makeObsUri(item, app.vault.getName())} target="_blank" rel="noopener" class={`task-row-title ${done ? 'task-done' : ''}`}>
+                    <button type="button" onClick={openEdit as any} class={`task-row-title ${done ? 'task-done' : ''}`} style={{ background: 'none', border: 'none', padding: 0, textAlign: 'left', cursor: 'pointer' }}>
                         {item.icon && <span class="icon mr-1">{item.icon}</span>}
                         {item.title}
-                    </a>
+                    </button>
                     {!done && (
-                        <TaskSendToTimerButton 
-                            taskId={item.id} 
-                            timerStatus={timer?.status}
-                            onStart={() => timerService?.startOrResume(item.id)}
-                        />
+                        <div onClick={(e) => e.stopPropagation()}>
+                            <TaskSendToTimerButton 
+                                taskId={item.id} 
+                                timerStatus={timer?.status}
+                                onStart={() => timerService?.startOrResume(item.id)}
+                            />
+                        </div>
                     )}
                 </div>
                 
-                {/* 可选的字段显示 */}
                 {!compact && showFields.length > 0 && (
-                    <div class="task-row-fields">
+                    <div class="task-row-fields" onClick={(e) => e.stopPropagation()}>
                         {showFields.map(fieldKey => (
                             <FieldPill 
                                 key={fieldKey} 

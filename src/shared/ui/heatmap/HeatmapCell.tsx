@@ -10,8 +10,7 @@ interface HeatmapCellProps {
     items?: Item[];
     config: any;
     app: any;
-    onCellClick: (date: string, item?: Item) => void;
-    onEditCount?: (date: string, items?: Item[]) => void;
+    onCellClick: (date: string, item?: Item, items?: Item[]) => void;
     ratingMapping: Map<string, string>;
 }
 
@@ -33,8 +32,7 @@ export function generateCellTooltip(date: string, items?: Item[], displayCount =
         latestItem.rating !== undefined ? `⭐ 最后评分: ${latestItem.rating}` : '',
         latestItem.content ? `💭 最后内容: ${latestItem.content}` : '',
         '',
-        '💡 左键点击新增打卡',
-        '💡 右键查看详情或编辑'
+        items.length > 0 ? '💡 点击查看当天记录 / 继续新增' : '💡 点击新增打卡'
     ].filter(Boolean).join('\n');
 }
 
@@ -65,8 +63,7 @@ export function HeatmapCell({
     config, 
     ratingMapping, 
     app, 
-    onCellClick, 
-    onEditCount 
+    onCellClick 
 }: HeatmapCellProps) {
     const today = dayjs().format('YYYY-MM-DD');
     const isToday = date === today;
@@ -129,13 +126,7 @@ export function HeatmapCell({
             class={`heatmap-cell ${isToday ? 'current-day' : ''} ${item ? 'has-data' : 'empty'}`}
             style={cellStyle}
             title={title}
-            onClick={() => onCellClick(date, item)}
-            onContextMenu={(e) => {
-                e.preventDefault();
-                if (onEditCount) {
-                    onEditCount(date, items);
-                }
-            }}
+            onClick={() => onCellClick(date, item, items)}
         >
             <div class="heatmap-cell-content">
                 {cellContent}
