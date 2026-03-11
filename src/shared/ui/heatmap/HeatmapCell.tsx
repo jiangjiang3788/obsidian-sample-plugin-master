@@ -10,7 +10,7 @@ interface HeatmapCellProps {
     items?: Item[];
     config: any;
     app: any;
-    onCellClick: (date: string, item?: Item, items?: Item[]) => void;
+    onCellClick: (date: string, items?: Item[]) => void;
     ratingMapping: Map<string, string>;
 }
 
@@ -32,7 +32,7 @@ export function generateCellTooltip(date: string, items?: Item[], displayCount =
         latestItem.rating !== undefined ? `⭐ 最后评分: ${latestItem.rating}` : '',
         latestItem.content ? `💭 最后内容: ${latestItem.content}` : '',
         '',
-        items.length > 0 ? '💡 点击查看当天记录 / 继续新增' : '💡 点击新增打卡'
+        '💡 左键：空白日期新增 / 有记录日期查看当天记录并继续新增'
     ].filter(Boolean).join('\n');
 }
 
@@ -126,7 +126,7 @@ export function HeatmapCell({
             class={`heatmap-cell ${isToday ? 'current-day' : ''} ${item ? 'has-data' : 'empty'}`}
             style={cellStyle}
             title={title}
-            onClick={() => onCellClick(date, item, items)}
+            onClick={() => onCellClick(date, items)}
         >
             <div class="heatmap-cell-content">
                 {cellContent}

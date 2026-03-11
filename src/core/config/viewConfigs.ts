@@ -35,6 +35,32 @@ export const HEATMAP_VIEW_DEFAULT_CONFIG: HeatmapViewConfig = {
     showLevelProgress: true,
 };
 
+
+/**
+ * ProgressView 默认配置（独立成长/积分视图）
+ */
+export interface ProgressViewConfig {
+    basePoints: number;
+    levelStep: number;
+    includedCategories: string[];
+    ratingBonusThreshold: number;
+    ratingBonusPoints: number;
+    showThemeBreakdown: boolean;
+    showCategoryBreakdown: boolean;
+    topN: number;
+}
+
+export const PROGRESS_VIEW_DEFAULT_CONFIG: ProgressViewConfig = {
+    basePoints: 1,
+    levelStep: 20,
+    includedCategories: [],
+    ratingBonusThreshold: 4,
+    ratingBonusPoints: 1,
+    showThemeBreakdown: true,
+    showCategoryBreakdown: true,
+    topN: 5,
+};
+
 /**
  * TableView 默认配置（供视图 + 编辑器复用）
  */
@@ -355,4 +381,5 @@ export const VIEW_DEFAULT_CONFIGS: Record<ViewName, any> = {
     EventTimelineView: EVENT_TIMELINE_VIEW_DEFAULT_CONFIG,
     StatisticsView: STATISTICS_VIEW_DEFAULT_CONFIG,
     HeatmapView: HEATMAP_VIEW_DEFAULT_CONFIG,
+    ProgressView: PROGRESS_VIEW_DEFAULT_CONFIG,
 };

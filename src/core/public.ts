@@ -130,3 +130,4 @@ export { setupCoreContainer } from './di/setupCore';
 // -------------------- Hooks（暂时放 core，后续可迁移到 shared/ui） --------------------
 //
 export { useTimelineZoom } from './hooks/useTimelineZoom';
+export { PROGRESS_VIEW_DEFAULT_CONFIG } from './config/viewConfigs';

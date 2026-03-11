@@ -24,6 +24,7 @@ import { BlockViewEditor } from './BlockViewEditor';
 import { ExcelViewEditor } from './ExcelViewEditor';
 import { HeatmapViewEditor } from './HeatmapViewEditor';
 import { StatisticsViewEditor } from './StatisticsViewEditor';
+import { ProgressViewEditor } from './ProgressViewEditor';
 import { TableViewEditor } from './TableViewEditor';
 import { TimelineViewEditor } from './TimelineViewEditor';
 
@@ -42,6 +43,7 @@ export const SettingsViewComponents = {
   Excel: ExcelViewEditor,
   Heatmap: HeatmapViewEditor,
   Statistics: StatisticsViewEditor,
+  Progress: ProgressViewEditor,
   Table: TableViewEditor,
   Timeline: TimelineViewEditor,
 };
@@ -121,6 +123,7 @@ import {
   TimelineView,
   EventTimelineView,
   HeatmapView,
+  ProgressView,
 } from '@shared/public';
 import type { ComponentType } from 'preact';
 
@@ -139,6 +142,7 @@ export const VIEW_REGISTRY: Record<ViewName, ComponentType<any>> = {
   ExcelView,
   StatisticsView,
   HeatmapView,
+  ProgressView,
 } as const;
 
 /**

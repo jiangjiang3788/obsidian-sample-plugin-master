@@ -7,6 +7,7 @@ export { TimelineView } from './TimelineView';
 export { EventTimelineView } from './EventTimelineView';
 export { HeatmapView } from './HeatmapView';
 export { StatisticsView } from './StatisticsView';
+export { ProgressView } from './ProgressView';
 export { TableView } from './TableView';
 export { ExcelView } from './ExcelView';
 

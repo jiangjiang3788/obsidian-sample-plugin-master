@@ -8,6 +8,7 @@ import { TimelineViewEditor, DEFAULT_CONFIG as TimelineViewDefault } from './Tim
 import { EventTimelineViewEditor, DEFAULT_CONFIG as EventTimelineViewDefault } from './EventTimelineViewEditor';
 import { StatisticsViewEditor, DEFAULT_CONFIG as StatisticsViewDefault } from './StatisticsViewEditor';
 import { HeatmapViewEditor, DEFAULT_CONFIG as HeatmapViewDefault } from './HeatmapViewEditor';
+import { ProgressViewEditor, DEFAULT_CONFIG as ProgressViewDefault } from './ProgressViewEditor';
 import type { ViewName, ViewInstance } from '@core/public';
 import type { DataStore } from '@core/public';
 
@@ -32,6 +33,7 @@ export const VIEW_INFO_REGISTRY = {
   EventTimelineView: { component: EventTimelineViewEditor, defaultConfig: EventTimelineViewDefault },
   StatisticsView: { component: StatisticsViewEditor, defaultConfig: StatisticsViewDefault },
   HeatmapView: { component: HeatmapViewEditor, defaultConfig: HeatmapViewDefault },
+  ProgressView: { component: ProgressViewEditor, defaultConfig: ProgressViewDefault },
 } as const;
 
 

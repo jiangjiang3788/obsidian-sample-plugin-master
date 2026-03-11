@@ -64,12 +64,6 @@ export interface TemplateField {
     key: string;
     label: string;
     type: 'text' | 'textarea' | 'date' | 'time' | 'select' | 'radio' | 'number' | 'rating';
-    /** 轻量语义层：路径字段（如 categoryKey/theme）或评分复合字段。 */
-    semanticType?: 'scalar' | 'path' | 'ratingPair';
-    /** 选项类字段默认如何存储；raw 保持旧行为。 */
-    storeMode?: 'raw' | 'label' | 'value';
-    /** 评分复合字段的辅助键，默认建议使用“评图”。 */
-    auxKey?: string;
     defaultValue?: string;
     options?: TemplateFieldOption[];
     min?: number;
@@ -111,7 +105,7 @@ export interface InputSettings {
 // ----- 视图与布局定义 (保持不变) ----- //
 
 // [MODIFIED] 添加 HeatmapView 和 EventTimelineView
-export const VIEW_OPTIONS = ['BlockView', 'TableView', 'ExcelView', 'TimelineView', 'StatisticsView', 'HeatmapView', 'EventTimelineView'] as const;
+export const VIEW_OPTIONS = ['BlockView', 'TableView', 'ExcelView', 'TimelineView', 'StatisticsView', 'HeatmapView', 'EventTimelineView', 'ProgressView'] as const;
 export type ViewName = typeof VIEW_OPTIONS[number];
 
 // [修改] 实现 Groupable 接口，整合数据源功能

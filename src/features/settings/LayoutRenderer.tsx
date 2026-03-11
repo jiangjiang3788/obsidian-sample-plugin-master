@@ -35,6 +35,7 @@ import { buildEventTimelineViewModel } from '@/features/settings/viewModels/even
 import { buildHeatmapViewModel } from '@/features/settings/viewModels/heatmapViewModel';
 import { buildTimelineViewModel } from '@/features/settings/viewModels/timelineViewModel';
 import { buildStatisticsViewModel } from '@/features/settings/viewModels/statisticsViewModel';
+import { buildProgressViewModel } from '@/features/settings/viewModels/progressViewModel';
 
 // [修改] ViewContent 组件增加 onDataLoaded 和 selectedThemes props
 const ViewContent = ({
@@ -145,6 +146,13 @@ const ViewContent = ({
         })
         : null;
 
+    const progressViewModel = viewInstance.viewType === 'ProgressView'
+        ? buildProgressViewModel({
+            items: viewItems,
+            module: viewInstance,
+        })
+        : null;
+
     // Phase2: shared/ui 不直接依赖 core service（如 ItemService）
     // 由 feature 层注入保存处理器，shared/ui 只触发回调。
     const onUpdateTaskTime = useCallback<UpdateTaskTimeHandler>(
@@ -198,6 +206,7 @@ const ViewContent = ({
         // Phase2: TimelineView / StatisticsView renderModel 注入（shared/ui 只渲染）
         timelineModel: timelineViewModel,
         statisticsModel: statisticsViewModel,
+        progressModel: progressViewModel,
 
         // 仅 HeatmapView 需要（其它 View 忽略即可）
         injectedThemesByPath: heatmapViewModel?.themesByPath,

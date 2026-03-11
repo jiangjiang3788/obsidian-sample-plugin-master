@@ -1,7 +1,7 @@
 // src/features/settings/ui/components/view-editors/HeatmapViewEditor.tsx
 /** @jsxImportSource preact */
 import { h } from 'preact';
-import { Stack, Typography, Box, Button } from '@mui/material';
+import { Stack, Typography, Box, Button, FormControlLabel, Checkbox } from '@mui/material';
 import type { ViewEditorProps } from './registry';
 import { SimpleSelect } from '@shared/public';
 import { ListEditor } from '@shared/public';
@@ -78,6 +78,9 @@ export function HeatmapViewEditor({ value, onChange, module, dataStore }: ViewEd
 
     return (
         <Stack spacing={2.5}>
+            <Typography variant="body2" color="text.secondary">
+                打卡视图现在只负责记录入口：空白日期可新增，有记录日期查看当天记录并继续新增。经验/等级请使用独立的 ProgressView。
+            </Typography>
             <div>
                 <Stack direction="row" alignItems="center" spacing={2} sx={{ mb: 2 }}>
                     <Typography sx={{ width: '80px', flexShrink: 0, fontWeight: 500 }}>源 Block</Typography>
@@ -108,6 +111,7 @@ export function HeatmapViewEditor({ value, onChange, module, dataStore }: ViewEd
                     </Box>
                 </Stack>
             </div>
+            <FormControlLabel control={<Checkbox checked={!!config.allowManualEdit} onChange={e => onChange({ allowManualEdit: (e.target as HTMLInputElement).checked })} />} label="允许查看当天记录并新增" />
         </Stack>
     );
 }
