@@ -10,7 +10,7 @@ import { App, Modal, Notice } from 'obsidian';
 import { useMemo, useRef, useState } from 'preact/hooks';
 
 import { createServices, Services, useDataStore, useInputService, mountWithServices, unmountPreact, useSelector, selectInputSettings } from '@/app/public';
-import type { Item, QuickInputSaveData, ThemeDefinition } from '@core/public';
+import { makeObsUri, type Item, type QuickInputSaveData, type ThemeDefinition } from '@core/public';
 import { buildPathOption, getLeafPath, normalizePath } from '@core/utils/pathSemantic';
 
 import { Box, Button } from '@mui/material';
@@ -74,6 +74,7 @@ export class QuickInputModal extends Modal {
         allowBlockSwitch={this.allowBlockSwitch}
         mode={this.options?.mode || 'create'}
         editItem={this.options?.editItem}
+        vaultName={this.app.vault.getName()}
       />,
       this.services
     );
@@ -437,6 +438,7 @@ function QuickInputModalContent({
   allowBlockSwitch,
   mode,
   editItem,
+  vaultName,
 }: {
   getResourcePath: (path: string) => string;
   initialBlockId: string;
@@ -447,6 +449,7 @@ function QuickInputModalContent({
   allowBlockSwitch: boolean;
   mode: 'create' | 'edit';
   editItem?: Item;
+  vaultName: string;
 }) {
   const settings = useSelector(selectInputSettings);
   const dataStore = useDataStore();
@@ -476,6 +479,15 @@ function QuickInputModalContent({
 
   const currentBlock = (settings.blocks || []).find((b: any) => b.id === editorState.blockId);
   const currentBlockName = currentBlock?.name || editorState.template?.name || editorState.blockId;
+  const originalUri = mode === 'edit' && editItem ? makeObsUri(editItem, vaultName) : '';
+
+  const handleJumpToOriginal = () => {
+    if (!originalUri || originalUri.startsWith('#error')) {
+      new Notice('❌ 找不到原文位置');
+      return;
+    }
+    window.open(originalUri, '_blank');
+  };
 
   const handleSubmit = async () => {
     const template = editorState.template;
@@ -547,7 +559,10 @@ function QuickInputModalContent({
         <div style={{ color: 'var(--text-muted)', fontSize: '12px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
           {mode === 'edit' ? editState.title : ''}
         </div>
-        <div style={{ display: 'flex', gap: '8px' }}>
+        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+          {mode === 'edit' && editItem?.file?.path ? (
+            <Button onClick={handleJumpToOriginal} disabled={isSubmitting}>跳到原文</Button>
+          ) : null}
           <Button onClick={handleSubmit} variant="contained" disabled={isSubmitting}>
             {isSubmitting ? '保存中...' : (mode === 'edit' ? '写回 md' : (onSave ? '创建并开始计时' : '提交'))}
           </Button>

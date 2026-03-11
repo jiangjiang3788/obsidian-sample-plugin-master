@@ -103,6 +103,20 @@ body {
     text-decoration: none;
     display: inline-block;
     word-break: break-word;
+    appearance: none;
+    -webkit-appearance: none;
+    background: transparent !important;
+    border: none !important;
+    outline: none !important;
+    box-shadow: none !important;
+}
+
+.task-row-title:focus,
+.task-row-title:focus-visible,
+.task-row-title:hover,
+.task-row-title:active {
+    outline: none !important;
+    box-shadow: none !important;
 }
 
 .task-row-title:hover {
