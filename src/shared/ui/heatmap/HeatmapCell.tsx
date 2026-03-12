@@ -12,6 +12,8 @@ interface HeatmapCellProps {
     app: any;
     onCellClick: (date: string, items?: Item[]) => void;
     ratingMapping: Map<string, string>;
+    highlightToday?: boolean;
+    emptyLabel?: string;
 }
 
 /**
@@ -63,10 +65,12 @@ export function HeatmapCell({
     config, 
     ratingMapping, 
     app, 
-    onCellClick 
+    onCellClick,
+    highlightToday = true,
+    emptyLabel
 }: HeatmapCellProps) {
     const today = dayjs().format('YYYY-MM-DD');
-    const isToday = date === today;
+    const isToday = highlightToday && date === today;
     
     let cellContent: any = '';
     let cellStyle: any = {};
@@ -114,6 +118,12 @@ export function HeatmapCell({
                     <span class={`pure-count ${sizeClass}`}>
                         {displayCount > 999 ? '999+' : displayCount}
                     </span>
+                </div>
+            );
+        } else if (emptyLabel) {
+            cellContent = (
+                <div class="cell-with-empty-label">
+                    <span class="empty-label-text">{emptyLabel}</span>
                 </div>
             );
         }

@@ -75,6 +75,8 @@ export type {
     FlatThemeTreeNode as ThemePathTreeFlatNode,
 } from './theme/ThemeTreeBuilder';
 
+export { parsePath, getRelativePath } from './theme-matrix/themePathParser';
+
 //
 // -------------------- Core Services（DI 需要的 token / class） --------------------
 // 说明：这些 export 是为了组合根（main/app）和 usecases 能 resolve。

@@ -2,7 +2,7 @@
 
 /** @jsxImportSource preact */
 import { useMemo, useState, useRef, useEffect } from 'preact/hooks';
-import { Item, ViewInstance, InputSettings, ThemeDefinition, devLog, getEffectiveDisplayCount } from '@core/public';
+import { Item, ViewInstance, InputSettings, ThemeDefinition, devLog, parsePath } from '@core/public';
 import { dayjs } from '@core/public';
 import { QuickInputModal } from '@/app/public';
 import { HEATMAP_VIEW_DEFAULT_CONFIG } from '@core/public';
@@ -24,6 +24,17 @@ interface HeatmapViewProps {
     injectedThemesByPath?: Map<string, ThemeDefinition>;
     injectedThemesToTrack?: string[];
     injectedDataByThemeAndDate?: Map<string, Map<string, Item[]>>;
+}
+
+interface DayThemeEntry {
+    themePath: string;
+    label: string;
+    dataForTheme: Map<string, Item[]>;
+}
+
+interface DayThemeGroup {
+    title: string;
+    entries: DayThemeEntry[];
 }
 
 // ========== Main View Component ==========
@@ -254,7 +265,7 @@ export function HeatmapView({
         
         // 年、季度视图现在通过 CSS 强制垂直布局，不需要 JavaScript 处理
         const isGridLayout = ['年', '季'].includes(currentView);
-        if (isGridLayout) return;
+        if (isGridLayout || currentView === '周') return;
         
         // 其他视图根据容器宽度决定
         const containerWidth = headerElement.clientWidth;
@@ -296,28 +307,105 @@ export function HeatmapView({
         };
     }, [themesToTrack, currentView]);
 
-    const renderContent = () => {
+    const buildDayThemeGroups = (): DayThemeGroup[] => {
         const themesToDisplay = themesToTrack.length > 0 ? themesToTrack : ['__default__'];
-        const isDayGridLayout = currentView === '天';
+        const groups: DayThemeGroup[] = [];
+        const groupMap = new Map<string, DayThemeGroup>();
+
+        themesToDisplay.forEach((themePath) => {
+            const segments = parsePath(themePath);
+            const rootSegment = segments[0];
+            const title = rootSegment?.name || themePath || '未分类';
+            const label = segments.length > 1
+                ? segments.slice(1).map(segment => segment.name).join(' / ')
+                : (rootSegment?.name || themePath || '未分类');
+
+            const entry: DayThemeEntry = {
+                themePath,
+                label,
+                dataForTheme: dataByThemeAndDate.get(themePath) || new Map(),
+            };
+
+            const existingGroup = groupMap.get(title);
+            if (existingGroup) {
+                existingGroup.entries.push(entry);
+                return;
+            }
+
+            const newGroup: DayThemeGroup = {
+                title,
+                entries: [entry],
+            };
+            groupMap.set(title, newGroup);
+            groups.push(newGroup);
+        });
+
+        return groups;
+    };
+
+    const renderDayContent = () => {
+        const dayDateStr = dayjs(dateRange[0]).format('YYYY-MM-DD');
+        const dayGroups = buildDayThemeGroups();
+
+        return (
+            <div class="heatmap-day-view">
+                {dayGroups.map((group) => (
+                    <section class="heatmap-day-section" key={group.title}>
+                        <h3 class="heatmap-day-section-title">{group.title}</h3>
+                        <div class="heatmap-day-section-grid">
+                            {group.entries.map((entry) => {
+                                const themeRatingMapping = ratingMappingsCache.get(
+                                    inputSettings,
+                                    config.sourceBlockId || '',
+                                    entry.themePath,
+                                    themesByPath
+                                );
+                                const dayItems = entry.dataForTheme.get(dayDateStr);
+
+                                return (
+                                    <div class="heatmap-day-item" key={entry.themePath}>
+                                        <HeatmapCell
+                                            date={dayDateStr}
+                                            items={dayItems}
+                                            config={config}
+                                            ratingMapping={themeRatingMapping}
+                                            app={app}
+                                            highlightToday={false}
+                                            emptyLabel={!dayItems || dayItems.length === 0 ? entry.label : undefined}
+                                            onCellClick={(date, items) => handleCellClick(date, items, entry.themePath)}
+                                        />
+                                        {dayItems && dayItems.length > 0 && (
+                                            <span class="heatmap-day-item-label">{entry.label}</span>
+                                        )}
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </section>
+                ))}
+            </div>
+        );
+    };
+
+    const renderContent = () => {
+        if (currentView === '天') {
+            return renderDayContent();
+        }
+
+        const themesToDisplay = themesToTrack.length > 0 ? themesToTrack : ['__default__'];
         const isRowLayout = ['周', '月'].includes(currentView);
-        const dayDateStr = isDayGridLayout ? dayjs(dateRange[0]).format('YYYY-MM-DD') : '';
-        const wrapperClass = isDayGridLayout
-            ? 'layout-day-grid'
-            : (isRowLayout ? 'layout-row' : 'layout-grid');
+        const wrapperClass = isRowLayout ? 'layout-row' : 'layout-grid';
 
         return (
             <div class={`heatmap-view-wrapper ${wrapperClass}`}>
                 {themesToDisplay.map((theme) => {
                     const dataForTheme = dataByThemeAndDate.get(theme) || new Map();
-                    const isVertical = verticalLayouts.has(theme);
-                    const todayItems = isDayGridLayout ? (dataForTheme.get(dayDateStr) || []) : [];
-                    const todayCount = todayItems.reduce((sum, item) => sum + getEffectiveDisplayCount(item), 0);
-                    const hasTodayData = todayCount > 0;
+                    const isVertical = currentView === '周' ? false : verticalLayouts.has(theme);
 
                     return (
-                        <div class={`heatmap-theme-group ${isDayGridLayout ? 'compact-theme-group' : ''}`} key={theme}>
+                        <div class="heatmap-theme-group" key={theme}>
                             <div 
-                                class={`heatmap-theme-header ${isVertical ? 'vertical-layout' : ''} ${isDayGridLayout ? 'compact-theme-header day-table-theme-header' : ''}`}
+                                class={`heatmap-theme-header ${currentView === '周' ? 'week-inline-layout' : ''} ${isVertical ? 'vertical-layout' : ''}`}
                                 data-theme={theme}
                                 ref={(el) => {
                                     if (el && theme !== '__default__') {
@@ -326,20 +414,15 @@ export function HeatmapView({
                                 }}
                             >
                                 {theme !== '__default__' && (
-                                    <div class={`heatmap-header-info ${isDayGridLayout ? 'compact-day-header-info' : ''}`}>
-                                        <div class={`heatmap-header-info-left ${isDayGridLayout ? 'compact-day-info-left' : ''}`}>
+                                    <div class="heatmap-header-info">
+                                        <div class="heatmap-header-info-left">
                                             <span class="theme-name">
                                                 {theme}
                                             </span>
-                                            {isDayGridLayout && (
-                                                <span class={`day-checkin-badge ${hasTodayData ? 'has-data' : 'empty'}`}>
-                                                    {hasTodayData ? `${todayCount} 次` : '未打卡'}
-                                                </span>
-                                            )}
                                         </div>
                                     </div>
                                 )}
-                                <div class={`heatmap-header-cells ${isRowLayout ? '' : 'grid-view'} ${isDayGridLayout ? 'compact-day-cells day-single-cell' : ''}`}>
+                                <div class={`heatmap-header-cells ${isRowLayout ? '' : 'grid-view'}`}>
                                     {renderHeaderCells(currentView, theme, dataForTheme)}
                                 </div>
                             </div>
