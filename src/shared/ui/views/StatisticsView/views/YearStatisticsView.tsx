@@ -88,7 +88,6 @@ export function YearStatisticsView({
               categories={categories}
               onCellClick={onCellClick}
               cellIdentifier={(cat: string) => ({ type: 'month', year, month: i + 1, category: cat })}
-              isCompact={true}
               displayMode={displayMode}
               minVisibleHeight={minVisibleHeight}
             />

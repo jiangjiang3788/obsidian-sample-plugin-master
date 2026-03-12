@@ -20,7 +20,7 @@ export function TopControls({
     <div class="sv-top-controls">
       <label
         class="sv-period-toggle"
-        title="勾选后，有周期字段的条目按周期过滤，无周期字段的条目按时间归属显示"
+        title="勾选后：年/季/月只统计对应周期字段；周统计包含 period=周 和未设置 period 的条目"
       >
         <input
           type="checkbox"

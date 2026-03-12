@@ -86,7 +86,7 @@ export function MonthStatisticsView({
             >
               <ChartBlock
                 data={data}
-                label={`第${index + 1}周`}
+                label={`W${weekStart.isoWeek()}`}
                 categories={categories}
                 onCellClick={onCellClick}
                 cellIdentifier={(cat: string) => ({

@@ -186,7 +186,7 @@ export function StatisticsView({
     for (let m = 0; m < 12; m++) monthsData.push(aggregateByMonth(items, filteredCategories, targetDate.month(m), usePeriod));
 
     const weeksData: PeriodData[] = [];
-    for (let w = 1; w <= totalWeeks; w++) weeksData.push(aggregateByWeek(items, filteredCategories, targetDate.isoWeek(w)));
+    for (let w = 1; w <= totalWeeks; w++) weeksData.push(aggregateByWeek(items, filteredCategories, targetDate.isoWeek(w), usePeriod));
 
     return { yearData, quartersData, monthsData, weeksData };
   }, [isYearView, items, year, filteredCategories, usePeriod]);

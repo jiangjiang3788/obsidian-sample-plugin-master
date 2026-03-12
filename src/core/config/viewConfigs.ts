@@ -19,20 +19,16 @@ export interface HeatmapViewConfig {
     displayMode: 'habit' | 'count';
     sourceBlockId: string;
     themePaths: string[];
-    enableLeveling: boolean;
     maxDailyChecks: number;
     allowManualEdit: boolean;
-    showLevelProgress: boolean;
 }
 
 export const HEATMAP_VIEW_DEFAULT_CONFIG: HeatmapViewConfig = {
     displayMode: 'habit',
     sourceBlockId: '',
     themePaths: [],
-    enableLeveling: true,
     maxDailyChecks: 10,
     allowManualEdit: true,
-    showLevelProgress: true,
 };
 
 

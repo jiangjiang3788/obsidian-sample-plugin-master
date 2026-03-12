@@ -2,14 +2,13 @@
 
 /** @jsxImportSource preact */
 import { useMemo, useState, useRef, useEffect } from 'preact/hooks';
-import { Item, ViewInstance, InputSettings, ThemeDefinition, devLog } from '@core/public';
+import { Item, ViewInstance, InputSettings, ThemeDefinition, devLog, getEffectiveDisplayCount } from '@core/public';
 import { dayjs } from '@core/public';
-import { QuickInputModal, useUiPort } from '@/app/public';
+import { QuickInputModal } from '@/app/public';
 import { HEATMAP_VIEW_DEFAULT_CONFIG } from '@core/public';
-import { getThemeLevelData } from '@core/public';
 import { CheckinManagerModal } from '@shared/ui/modals/CheckinManagerModal';
 import { HeatmapCell } from '@shared/ui/heatmap/HeatmapCell';
-import { buildThemeDataMap, buildThemesByPathMap, getThemeItems } from '@core/public';
+import { buildThemeDataMap, buildThemesByPathMap } from '@core/public';
 import { RatingMappingCache } from '@core/public';
 
 // ========== Types ==========
@@ -39,7 +38,6 @@ export function HeatmapView({
     injectedThemesToTrack,
     injectedDataByThemeAndDate,
 }: HeatmapViewProps) {
-    const ui = useUiPort();
     // 将 config 对象移入 useMemo，确保响应式更新
     const config = useMemo(
         () => ({ ...HEATMAP_VIEW_DEFAULT_CONFIG, ...module.viewConfig }), 
@@ -248,22 +246,7 @@ export function HeatmapView({
 
     // 响应式布局检测
     const [verticalLayouts, setVerticalLayouts] = useState<Set<string>>(new Set());
-    // 折叠状态管理
-    const [collapsedThemes, setCollapsedThemes] = useState<Set<string>>(new Set());
     const headerRefs = useRef<Map<string, HTMLElement>>(new Map());
-
-    // 切换主题折叠状态
-    const toggleThemeCollapse = (theme: string) => {
-        setCollapsedThemes(prev => {
-            const newSet = new Set(prev);
-            if (newSet.has(theme)) {
-                newSet.delete(theme);
-            } else {
-                newSet.add(theme);
-            }
-            return newSet;
-        });
-    };
 
     // 检测是否需要垂直布局（仅用于天、周、月视图）
     const checkLayout = (theme: string, headerElement: HTMLElement) => {
@@ -275,7 +258,7 @@ export function HeatmapView({
         
         // 其他视图根据容器宽度决定
         const containerWidth = headerElement.clientWidth;
-        const threshold = 600; // 当容器宽度小于600px时切换为垂直布局
+        const threshold = currentView === '天' ? 320 : 600;
         const needsVertical = containerWidth < threshold;
         
         setVerticalLayouts(prev => {
@@ -315,24 +298,26 @@ export function HeatmapView({
 
     const renderContent = () => {
         const themesToDisplay = themesToTrack.length > 0 ? themesToTrack : ['__default__'];
-        const isRowLayout = ['天', '周', '月'].includes(currentView);
+        const isDayGridLayout = currentView === '天';
+        const isRowLayout = ['周', '月'].includes(currentView);
+        const dayDateStr = isDayGridLayout ? dayjs(dateRange[0]).format('YYYY-MM-DD') : '';
+        const wrapperClass = isDayGridLayout
+            ? 'layout-day-grid'
+            : (isRowLayout ? 'layout-row' : 'layout-grid');
 
         return (
-            <div class={`heatmap-view-wrapper ${isRowLayout ? 'layout-row' : 'layout-grid'}`}>
+            <div class={`heatmap-view-wrapper ${wrapperClass}`}>
                 {themesToDisplay.map((theme) => {
                     const dataForTheme = dataByThemeAndDate.get(theme) || new Map();
-                    
-                    // 计算该主题的等级数据
-                    const themeItems = getThemeItems(dataByThemeAndDate, theme);
-                    const levelData = config.enableLeveling && theme !== '__default__' ? getThemeLevelData(themeItems) : null;
-                    
                     const isVertical = verticalLayouts.has(theme);
-                    const isCollapsed = collapsedThemes.has(theme);
-                    
+                    const todayItems = isDayGridLayout ? (dataForTheme.get(dayDateStr) || []) : [];
+                    const todayCount = todayItems.reduce((sum, item) => sum + getEffectiveDisplayCount(item), 0);
+                    const hasTodayData = todayCount > 0;
+
                     return (
-                        <div class="heatmap-theme-group" key={theme}>
+                        <div class={`heatmap-theme-group ${isDayGridLayout ? 'compact-theme-group' : ''}`} key={theme}>
                             <div 
-                                class={`heatmap-theme-header ${isVertical ? 'vertical-layout' : ''}`}
+                                class={`heatmap-theme-header ${isVertical ? 'vertical-layout' : ''} ${isDayGridLayout ? 'compact-theme-header day-table-theme-header' : ''}`}
                                 data-theme={theme}
                                 ref={(el) => {
                                     if (el && theme !== '__default__') {
@@ -340,62 +325,23 @@ export function HeatmapView({
                                     }
                                 }}
                             >
-                                {/* 第一行：等级信息和进度条 */}
                                 {theme !== '__default__' && (
-                                    <div 
-                                        class="heatmap-header-info"
-                                        onClick={() => toggleThemeCollapse(theme)}
-                                        title="点击折叠/展开"
-                                    >
-                                        {/* 左侧：等级信息和主题名称 */}
-                                        <div class="heatmap-header-info-left">
-                                            <span class="heatmap-toggle-icon" style={{ 
-                                                display: 'inline-block', 
-                                                width: '16px', 
-                                                textAlign: 'center',
-                                                transform: isCollapsed ? 'rotate(-90deg)' : 'rotate(0deg)',
-                                                transition: 'transform 0.2s ease',
-                                                marginRight: '4px',
-                                                color: 'var(--text-muted)'
-                                            }}>
-                                                ▼
-                                            </span>
-                                            {levelData && (
-                                                <>
-                                                    <span class="level-icon">
-                                                        {levelData.config.icon}
-                                                    </span>
-                                                    <span class="level-text">
-                                                        Lv.{levelData.level}
-                                                    </span>
-                                                </>
-                                            )}
+                                    <div class={`heatmap-header-info ${isDayGridLayout ? 'compact-day-header-info' : ''}`}>
+                                        <div class={`heatmap-header-info-left ${isDayGridLayout ? 'compact-day-info-left' : ''}`}>
                                             <span class="theme-name">
                                                 {theme}
                                             </span>
+                                            {isDayGridLayout && (
+                                                <span class={`day-checkin-badge ${hasTodayData ? 'has-data' : 'empty'}`}>
+                                                    {hasTodayData ? `${todayCount} 次` : '未打卡'}
+                                                </span>
+                                            )}
                                         </div>
-
-                                        {/* 右侧：进度条 */}
-                                        {levelData && config.showLevelProgress && levelData.nextConfig && (
-                                            <div class="heatmap-header-info-right">
-                                                <div class="progress-bar-container"
-                                                title={`当前进度: ${levelData.totalChecks}${levelData.nextRequirement ? ` / ${levelData.nextRequirement}` : ''} 
-下一等级: ${levelData.nextConfig.title}
-距离升级还需: ${levelData.nextRequirement ? Math.max(0, levelData.nextRequirement - levelData.totalChecks) : 0} 次打卡`}
-                                                >
-                                                    <div class="progress-bar" style={{ width: `${levelData.progress * 100}%`, backgroundColor: levelData.config.color }} />
-                                                </div>
-                                            </div>
-                                        )}
                                     </div>
                                 )}
-                                
-                                {/* 第二行：HeatmapCell展示区域 */}
-                                {!isCollapsed && (
-                                    <div class={`heatmap-header-cells ${isRowLayout ? '' : 'grid-view'}`}>
-                                        {renderHeaderCells(currentView, theme, dataForTheme)}
-                                    </div>
-                                )}
+                                <div class={`heatmap-header-cells ${isRowLayout ? '' : 'grid-view'} ${isDayGridLayout ? 'compact-day-cells day-single-cell' : ''}`}>
+                                    {renderHeaderCells(currentView, theme, dataForTheme)}
+                                </div>
                             </div>
                         </div>
                     );

@@ -22,10 +22,21 @@
     flex-direction: column;
 }
 
+.heatmap-view-wrapper.layout-day-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+    gap: 10px;
+    align-items: start;
+}
+
 .heatmap-theme-group {
     display: flex;
     flex-direction: column;
     gap: 8px;
+}
+
+.compact-theme-group {
+    min-width: 0;
 }
 
 .heatmap-theme-header {
@@ -37,7 +48,29 @@
     transition: all 0.2s ease;
 }
 
+.compact-theme-header {
+    margin-bottom: 0;
+    padding: 10px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    min-height: 100%;
+}
 
+.day-table-theme-header {
+    --heatmap-cell-size: 32px;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 10px;
+    border-radius: 10px;
+}
+
+.day-table-theme-header:hover {
+    border-color: var(--interactive-accent-hover);
+    transform: translateY(-1px);
+}
 
 .heatmap-theme-header.vertical-layout {
     flex-direction: column;
@@ -50,11 +83,23 @@
     justify-content: space-between;
 }
 
+.compact-day-header-info {
+    min-width: 0;
+}
+
 .heatmap-header-info-left {
     display: flex;
     align-items: center;
     gap: 8px;
     flex: 0 0 auto;
+}
+
+.compact-day-info-left {
+    min-width: 0;
+    max-width: 100%;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
 }
 
 .heatmap-header-info-right {
@@ -73,6 +118,41 @@
 
 .heatmap-header-cells.grid-view {
     gap: 26px; /* 为年/季视图的月份之间添加间距 */
+}
+
+.compact-day-cells {
+    gap: 8px;
+}
+
+.day-single-cell {
+    width: auto;
+    flex-wrap: nowrap;
+    justify-content: flex-end;
+    gap: 0;
+}
+
+.day-single-cell .heatmap-cell {
+    border-radius: 8px;
+}
+
+.day-checkin-badge {
+    display: inline-flex;
+    align-items: center;
+    min-height: 20px;
+    padding: 0 8px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 600;
+    line-height: 20px;
+    border: 1px solid var(--background-modifier-border);
+    color: var(--text-muted);
+    background: var(--background-secondary);
+}
+
+.day-checkin-badge.has-data {
+    color: var(--interactive-accent);
+    border-color: color-mix(in srgb, var(--interactive-accent) 30%, var(--background-modifier-border));
+    background: color-mix(in srgb, var(--interactive-accent) 10%, var(--background-primary));
 }
 
 .heatmap-cell {
@@ -192,21 +272,15 @@
     gap: 3px;
 }
 
-/* 等级相关样式 */
-.level-icon {
-    font-size: 16px;
-}
-
-.level-text {
-    font-weight: bold;
-    font-size: 13px;
-    color: var(--text-normal);
-}
-
 .theme-name {
     font-weight: bold;
     font-size: 14px;
     color: var(--text-normal);
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 100%;
 }
 
 /* 字体尺寸工具类 */
@@ -214,22 +288,6 @@
 .text-14 { font-size: 14px; }
 .text-13 { font-size: 13px; }
 .text-12 { font-size: 12px; }
-
-/* 进度条样式 */
-.progress-bar-container {
-    width: 100%;
-    height: 6px;
-    background-color: var(--background-modifier-border);
-    border-radius: 3px;
-    overflow: hidden;
-    position: relative;
-    cursor: pointer;
-}
-
-.progress-bar {
-    height: 100%;
-    transition: width 0.3s ease;
-}
 
 /* 主题适配 */
 body.theme-dark .heatmap-cell {
@@ -262,6 +320,12 @@ body.theme-dark .heatmap-cell.empty {
         margin: 8px 0 0 0;
         width: 100%;
     }
+
+    .day-table-theme-header {
+        --heatmap-cell-size: 30px;
+        grid-template-columns: minmax(0, 1fr) auto;
+        align-items: center;
+    }
 }
 
 @media (max-width: 480px) {
@@ -271,6 +335,16 @@ body.theme-dark .heatmap-cell.empty {
     
     .heatmap-view-wrapper {
         gap: 12px;
+    }
+
+    .heatmap-view-wrapper.layout-day-grid {
+        grid-template-columns: 1fr;
+        gap: 8px;
+    }
+
+    .day-table-theme-header {
+        --heatmap-cell-size: 28px;
+        grid-template-columns: 1fr auto;
     }
 }
 

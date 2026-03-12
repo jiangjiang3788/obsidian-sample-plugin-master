@@ -51,7 +51,8 @@ export function aggregateByDay(
 export function aggregateByWeek(
     items: Item[], 
     categories: CategoryConfig[], 
-    targetDate: dayjs.Dayjs
+    targetDate: dayjs.Dayjs,
+    usePeriod = false
 ): PeriodData {
     const data = createPeriodData(categories);
     const categoryOrder = categories.map(c => c.name);
@@ -64,6 +65,12 @@ export function aggregateByWeek(
         
         const baseCategory = getBaseCategory(item.categoryKey);
         if (!categoryOrder.includes(baseCategory)) return;
+
+        if (usePeriod) {
+            const itemPeriod = (readField(item, 'period') || '').trim();
+            const shouldIncludeInWeek = itemPeriod === '' || itemPeriod === '周';
+            if (!shouldIncludeInWeek) return;
+        }
         
         data.counts[baseCategory]++;
         data.blocks.push(item);
@@ -195,9 +202,7 @@ export function getMonthWeeksData(
             return itemDate.isBetween(weekStart, weekEnd, 'day', '[]');
         });
         
-        const data = usePeriod 
-            ? aggregateByWeek(weekItems, categories, weekStart)
-            : aggregateByWeek(weekItems, categories, weekStart);
+        const data = aggregateByWeek(weekItems, categories, weekStart, usePeriod);
         
         weeksData.push(data);
         weekStart = weekStart.add(1, 'week');

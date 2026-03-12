@@ -92,7 +92,6 @@ export function QuarterStatisticsView({
                 year: month.year(),
                 category: cat,
               })}
-              isCompact={true}
               displayMode={displayMode}
               minVisibleHeight={minVisibleHeight}
             />
@@ -114,7 +113,7 @@ export function QuarterStatisticsView({
                 <ChartBlock
                   key={weekStart.format('YYYY-MM-DD')}
                   data={data}
-                  label={`${weekStart.isoWeek()}W`}
+                  label={`W${weekStart.isoWeek()}`}
                   categories={categories}
                   onCellClick={onCellClick}
                   cellIdentifier={(cat: string) => ({

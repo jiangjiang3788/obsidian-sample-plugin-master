@@ -23,7 +23,6 @@
     padding: 12px;
     background: var(--background-primary);
     border-radius: 8px;
-    border: 1px solid var(--background-modifier-border);
     gap: 16px;
     flex-wrap: wrap;
 }
@@ -67,7 +66,6 @@
 .sv-filter-toggle-all {
     padding: 4px 12px;
     /* font-size: 12px; -> 使用工具类: think-text-base */
-    border: 1px solid var(--background-modifier-border);
     background: var(--background-secondary);
     color: var(--text-muted);
     border-radius: 4px;
@@ -130,14 +128,17 @@ body.theme-dark .sv-filter-btn.is-selected {
 .sv-year-grid {
     display: grid;
     grid-template-columns: repeat(12, 1fr);
-    gap: 4px;
-    column-gap: 4px;
-    row-gap: 8px;
+    gap: 6px;
+    column-gap: 6px;
+    row-gap: 12px;
 }
 
 /* 年度汇总行 - 跨全部12列 */
 .sv-year-grid-year {
     grid-column: 1 / -1;
+    padding: 8px 10px 12px;
+    background: color-mix(in srgb, var(--interactive-accent) 8%, var(--background-primary));
+    border-radius: 10px;
 }
 
 /* 季度 - 每个跨3列（通过 inline style 设置 grid-column） */
@@ -148,19 +149,24 @@ body.theme-dark .sv-filter-btn.is-selected {
 /* 月份 - 每个占1列 */
 .sv-year-grid-month {
     min-width: 0;
+    padding: 8px 8px 10px;
+    background: color-mix(in srgb, var(--background-modifier-hover) 55%, var(--background-primary));
+    border-radius: 8px;
 }
 
 /* 季度边界 - 在季度末尾列增加右侧间距，形成视觉分隔 */
 .sv-quarter-end {
-    margin-right: 8px;
+    margin-right: 10px;
 }
 
 /* 周列 - 每月占1列，内部周竖排 */
 .sv-year-grid-week-col {
     display: flex;
     flex-direction: column;
-    gap: 3px;
+    gap: 6px;
     min-width: 0;
+    padding-top: 10px;
+    border-top: 1px solid var(--background-modifier-border-hover);
 }
 
 /* 周占位块 - 确保所有月列等高 */
@@ -211,43 +217,56 @@ body.theme-dark .sv-filter-btn.is-selected {
 .sv-quarter-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 4px;
-    row-gap: 8px;
+    gap: 6px;
+    row-gap: 12px;
 }
 
 /* 季度汇总 - 跨全部3列 */
 .sv-quarter-grid-summary {
     grid-column: 1 / -1;
+    padding: 8px 10px 12px;
+    background: color-mix(in srgb, var(--interactive-accent) 8%, var(--background-primary));
+    border-radius: 10px;
 }
 
 /* 月份 - 每个占1列 */
 .sv-quarter-grid-month {
     min-width: 0;
+    padding: 8px 8px 10px;
+    background: color-mix(in srgb, var(--background-modifier-hover) 55%, var(--background-primary));
+    border-radius: 8px;
 }
 
 /* 周列 - 每月占1列，内部周竖排 */
 .sv-quarter-grid-week-col {
     display: flex;
     flex-direction: column;
-    gap: 3px;
+    gap: 6px;
     min-width: 0;
+    padding-top: 10px;
+    border-top: 1px solid var(--background-modifier-border-hover);
 }
 
 /* =============== 月视图 N 列网格 =============== */
 .sv-month-grid {
     display: grid;
-    gap: 4px;
-    row-gap: 8px;
+    gap: 6px;
+    row-gap: 12px;
 }
 
 /* 月度汇总 - 跨全部列 */
 .sv-month-grid-summary {
     grid-column: 1 / -1;
+    padding: 8px 10px 12px;
+    background: color-mix(in srgb, var(--interactive-accent) 8%, var(--background-primary));
+    border-radius: 10px;
 }
 
 /* 周 - 每个占1列 */
 .sv-month-grid-week {
     min-width: 0;
+    padding-top: 10px;
+    border-top: 1px solid var(--background-modifier-border-hover);
 }
 
 /* 年视图内月份图表块也稍微紧凑 */
@@ -362,7 +381,6 @@ body.theme-dark .sv-filter-btn.is-selected {
     gap: 4px;
     border-radius: 6px;
     background: var(--background-primary);
-    border: 1px solid var(--background-modifier-border);
     cursor: pointer;
     transition: all 0.2s ease;
     padding: 8px;
@@ -483,7 +501,6 @@ body.theme-dark .sv-filter-btn.is-selected {
 /* 弹窗样式 */
 .sv-popover {
     background: var(--background-primary);
-    border: 1px solid var(--background-modifier-border);
     border-radius: 12px;
     box-shadow: var(--shadow-l);
     width: 500px;

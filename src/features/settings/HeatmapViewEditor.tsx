@@ -28,10 +28,8 @@ function normalizeHeatmapConfig(value: Record<string, any> | undefined): Heatmap
         themePaths: Array.isArray(v.themePaths)
             ? v.themePaths.filter((x): x is string => typeof x === 'string')
             : base.themePaths,
-        enableLeveling: typeof v.enableLeveling === 'boolean' ? v.enableLeveling : base.enableLeveling,
         maxDailyChecks: typeof v.maxDailyChecks === 'number' ? v.maxDailyChecks : base.maxDailyChecks,
         allowManualEdit: typeof v.allowManualEdit === 'boolean' ? v.allowManualEdit : base.allowManualEdit,
-        showLevelProgress: typeof v.showLevelProgress === 'boolean' ? v.showLevelProgress : base.showLevelProgress,
     };
 }
 
@@ -79,7 +77,7 @@ export function HeatmapViewEditor({ value, onChange, module, dataStore }: ViewEd
     return (
         <Stack spacing={2.5}>
             <Typography variant="body2" color="text.secondary">
-                打卡视图现在只负责记录入口：空白日期可新增，有记录日期查看当天记录并继续新增。经验/等级请使用独立的 ProgressView。
+                打卡视图只负责主题 + 日期格子的记录入口：空白日期可新增，有记录日期查看当天记录并继续新增。经验/等级请使用独立的 ProgressView。
             </Typography>
             <div>
                 <Stack direction="row" alignItems="center" spacing={2} sx={{ mb: 2 }}>

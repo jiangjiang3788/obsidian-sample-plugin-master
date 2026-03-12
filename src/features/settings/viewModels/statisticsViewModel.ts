@@ -95,7 +95,7 @@ export function buildStatisticsViewModel(args: {
 
     const weeksData: any[] = [];
     for (let w = 1; w <= totalWeeks; w++) {
-      weeksData.push(aggregateByWeek(items, filteredCategories, targetDate.isoWeek(w)));
+      weeksData.push(aggregateByWeek(items, filteredCategories, targetDate.isoWeek(w), usePeriod));
     }
 
     return { yearData, quartersData, monthsData, weeksData };
