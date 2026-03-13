@@ -1,5 +1,6 @@
 import { Item, readField } from '@/core/types/schema';
 import { EMOJI } from '@/core/types/constants';
+import { getTaskStatus } from '@/core/utils/taskStatus';
 import { 
     BLOCK_EXPORT_DEFAULT_CONFIG, 
     EVENT_TIMELINE_EXPORT_CONFIG,
@@ -23,6 +24,7 @@ export function getExportConfigByViewType(viewType: string): ExportViewConfig {
         'HeatmapView': HEATMAP_EXPORT_CONFIG,
         'TimelineView': TIMELINE_EXPORT_CONFIG,
         'TableView': TABLE_EXPORT_CONFIG,
+        'TaskExecutionView': TABLE_EXPORT_CONFIG,
     };
     
     return configMap[viewType] || BLOCK_EXPORT_DEFAULT_CONFIG;
@@ -196,9 +198,8 @@ function formatBlockItem(item: Item, index: number, config: ExportViewConfig): s
  * 格式化 Task 类型的 Item (保持原有逻辑的简化版)
  */
 function formatTaskItem(item: Item): string {
-    const isDone = item.categoryKey.includes('/done');
-    const isCancelled = item.categoryKey.includes('/cancelled');
-    const checkbox = isDone ? '[x]' : isCancelled ? '[-]' : '[ ]';
+    const status = getTaskStatus(item);
+    const checkbox = status === 'done' ? '[x]' : status === 'cancelled' ? '[-]' : '[ ]';
     
     let taskLine = `- ${checkbox} ${item.title}`;
 

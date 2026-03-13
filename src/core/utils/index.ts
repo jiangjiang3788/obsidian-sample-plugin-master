@@ -32,6 +32,7 @@ export * from './pathUtils';
 export * from './pathSemantic';
 export * from './regex';
 export * from './statisticsAggregation';
+export * from './taskStatus';
 export * from './taskUtils';
 export * from './templateUtils';
 export * from './text';

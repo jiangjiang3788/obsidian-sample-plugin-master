@@ -9,6 +9,7 @@ import { EventTimelineViewEditor, DEFAULT_CONFIG as EventTimelineViewDefault } f
 import { StatisticsViewEditor, DEFAULT_CONFIG as StatisticsViewDefault } from './StatisticsViewEditor';
 import { HeatmapViewEditor, DEFAULT_CONFIG as HeatmapViewDefault } from './HeatmapViewEditor';
 import { ProgressViewEditor, DEFAULT_CONFIG as ProgressViewDefault } from './ProgressViewEditor';
+import { TaskExecutionViewEditor, DEFAULT_CONFIG as TaskExecutionViewDefault } from './TaskExecutionViewEditor';
 import type { ViewName, ViewInstance } from '@core/public';
 import type { DataStore } from '@core/public';
 
@@ -34,6 +35,7 @@ export const VIEW_INFO_REGISTRY = {
   StatisticsView: { component: StatisticsViewEditor, defaultConfig: StatisticsViewDefault },
   HeatmapView: { component: HeatmapViewEditor, defaultConfig: HeatmapViewDefault },
   ProgressView: { component: ProgressViewEditor, defaultConfig: ProgressViewDefault },
+  TaskExecutionView: { component: TaskExecutionViewEditor, defaultConfig: TaskExecutionViewDefault },
 } as const;
 
 

@@ -16,6 +16,7 @@ export {
   BLOCK_VIEW_DEFAULT_CONFIG,
   EXCEL_VIEW_DEFAULT_CONFIG,
   EVENT_TIMELINE_VIEW_DEFAULT_CONFIG,
+  TASK_EXECUTION_VIEW_DEFAULT_CONFIG,
   BLOCK_EXPORT_DEFAULT_CONFIG,
   EVENT_TIMELINE_EXPORT_CONFIG,
 } from '../config/viewConfigs';
@@ -31,6 +32,7 @@ export type {
   BlockViewConfig,
   ExcelViewConfig,
   EventTimelineViewConfig,
+  TaskExecutionViewConfig,
   FieldRenderConfig,
   ExportViewConfig,
 } from '../config/viewConfigs';

@@ -5,7 +5,7 @@ import { DataStore } from '@core/services/DataStore';
 import type { VaultPort } from '@core/ports/VaultPort';
 import { VAULT_PORT_TOKEN } from '@core/ports/VaultPort';
 import { dayjs, nowHHMM, todayISO, timeToMinutes, minutesToTime } from '@core/utils/date';
-import { markTaskDone } from '@core/utils/mark';
+import { buildCompletedTaskRecord, markTaskDone } from '@core/utils/mark';
 
 @singleton()
 export class ItemService {
@@ -100,6 +100,22 @@ export class ItemService {
         }
     }
 
+
+    /**
+     * 追加一条完成记录，不修改原始任务。
+     */
+    public async appendCompletionRecord(itemId: string, options?: { duration?: number; startTime?: string; endTime?: string }): Promise<void> {
+        const { path, lineNo } = this.parseItemId(itemId);
+        const rawLine = await this.getItemLine(itemId);
+        const completedLine = buildCompletedTaskRecord(
+            rawLine,
+            todayISO(),
+            options?.endTime || nowHHMM(),
+            options,
+        );
+        await this.insertLineAfter(path, lineNo, completedLine);
+    }
+
     /**
      * [架构标准化] 更新条目的时间和/或时长。
      */
@@ -118,6 +134,20 @@ export class ItemService {
         }
 
         await this.updateItemLine(path, lineNo, line);
+    }
+
+
+    /**
+     * 在指定行后追加一行，保留原始任务不变。
+     */
+    private async insertLineAfter(path: string, lineNo: number, newLine: string): Promise<void> {
+        const content = await this.vault.readFile(path);
+        if (content == null) throw new Error(`找不到文件: ${path}`);
+        const lines = content.split('\n');
+        if (lineNo > lines.length) throw new Error(`文件 ${path} 的行号 ${lineNo} 超出范围。`);
+        lines.splice(lineNo, 0, newLine);
+        await this.vault.writeFile(path, lines.join('\n'));
+        this.dataStore.scanFileByPath(path).then(() => this.dataStore.notifyChange());
     }
 
     /**

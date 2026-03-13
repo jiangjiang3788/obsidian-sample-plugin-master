@@ -57,6 +57,19 @@ export const PROGRESS_VIEW_DEFAULT_CONFIG: ProgressViewConfig = {
     topN: 5,
 };
 
+
+
+/**
+ * TaskExecutionView 默认配置（按主题分组的任务执行视图）
+ */
+export interface TaskExecutionViewConfig {
+    onlyRecurring: boolean;
+}
+
+export const TASK_EXECUTION_VIEW_DEFAULT_CONFIG: TaskExecutionViewConfig = {
+    onlyRecurring: true,
+};
+
 /**
  * TableView 默认配置（供视图 + 编辑器复用）
  */
@@ -378,4 +391,5 @@ export const VIEW_DEFAULT_CONFIGS: Record<ViewName, any> = {
     StatisticsView: STATISTICS_VIEW_DEFAULT_CONFIG,
     HeatmapView: HEATMAP_VIEW_DEFAULT_CONFIG,
     ProgressView: PROGRESS_VIEW_DEFAULT_CONFIG,
+    TaskExecutionView: TASK_EXECUTION_VIEW_DEFAULT_CONFIG,
 };

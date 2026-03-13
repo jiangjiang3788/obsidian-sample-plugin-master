@@ -36,6 +36,7 @@ import { buildHeatmapViewModel } from '@/features/settings/viewModels/heatmapVie
 import { buildTimelineViewModel } from '@/features/settings/viewModels/timelineViewModel';
 import { buildStatisticsViewModel } from '@/features/settings/viewModels/statisticsViewModel';
 import { buildProgressViewModel } from '@/features/settings/viewModels/progressViewModel';
+import { buildTaskExecutionViewModel } from '@/features/settings/viewModels/taskExecutionViewModel';
 
 // [修改] ViewContent 组件增加 onDataLoaded 和 selectedThemes props
 const ViewContent = ({
@@ -78,6 +79,13 @@ const ViewContent = ({
     onDataLoaded: (items: Item[]) => void; // [新增]
 }) => {
     const messageRenderPort = useMessageRenderPort();
+
+    const [allItems, setAllItems] = useState(() => dataStore.queryItems());
+    useEffect(() => {
+        const listener = () => setAllItems(dataStore.queryItems());
+        dataStore.subscribe(listener);
+        return () => dataStore.unsubscribe(listener);
+    }, [dataStore]);
 
     const viewItems = useViewData({
         dataStore,
@@ -153,6 +161,18 @@ const ViewContent = ({
         })
         : null;
 
+    const taskExecutionViewModel = viewInstance.viewType === 'TaskExecutionView'
+        ? buildTaskExecutionViewModel({
+            items: allItems,
+            dateRange,
+            viewInstance,
+            keyword,
+            selectedThemes,
+            selectedCategories,
+            allThemes,
+        })
+        : null;
+
     // Phase2: shared/ui 不直接依赖 core service（如 ItemService）
     // 由 feature 层注入保存处理器，shared/ui 只触发回调。
     const onUpdateTaskTime = useCallback<UpdateTaskTimeHandler>(
@@ -181,6 +201,7 @@ const ViewContent = ({
         groupFields: viewInstance.groupFields,
         fields: viewInstance.fields,
         onMarkDone: onMarkDone,
+        onRecordExecution: (itemId: string) => itemService.appendCompletionRecord(itemId),
         // 不向 shared/ui 透传 actionService：需要的能力一律用 handlers 注入
         // itemService 不再向 shared/ui 透传（避免把 service 依赖扩散到 UI）
         // 仅部分 View 需要（如 TimelineView 的“对齐/精确编辑”）
@@ -207,6 +228,7 @@ const ViewContent = ({
         timelineModel: timelineViewModel,
         statisticsModel: statisticsViewModel,
         progressModel: progressViewModel,
+        taskExecutionModel: taskExecutionViewModel,
 
         // 仅 HeatmapView 需要（其它 View 忽略即可）
         injectedThemesByPath: heatmapViewModel?.themesByPath,

@@ -25,6 +25,7 @@ import { ExcelViewEditor } from './ExcelViewEditor';
 import { HeatmapViewEditor } from './HeatmapViewEditor';
 import { StatisticsViewEditor } from './StatisticsViewEditor';
 import { ProgressViewEditor } from './ProgressViewEditor';
+import { TaskExecutionViewEditor } from './TaskExecutionViewEditor';
 import { TableViewEditor } from './TableViewEditor';
 import { TimelineViewEditor } from './TimelineViewEditor';
 
@@ -124,6 +125,7 @@ import {
   EventTimelineView,
   HeatmapView,
   ProgressView,
+  TaskExecutionView,
 } from '@shared/public';
 import type { ComponentType } from 'preact';
 
@@ -143,6 +145,7 @@ export const VIEW_REGISTRY: Record<ViewName, ComponentType<any>> = {
   StatisticsView,
   HeatmapView,
   ProgressView,
+  TaskExecutionView,
 } as const;
 
 /**

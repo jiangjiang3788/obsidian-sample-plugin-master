@@ -137,13 +137,23 @@ export function generateNextRecurringTask(
 
 
 /* ---------- 一次性完成标记 + 生成下一条 ---------- */
+export function buildCompletedTaskRecord(
+    rawLine: string,
+    todayISO: string,
+    nowTime: string,
+    options?: { duration?: number; startTime?: string; endTime?: string }
+): string {
+    return toggleToDone(rawLine, todayISO, nowTime, options);
+}
+
+/* ---------- 一次性完成标记 + 生成下一条 ---------- */
 export function markTaskDone(
     rawLine: string,
     todayISO: string,
     nowTime: string,
     options?: { duration?: number; startTime?: string; endTime?: string }
 ): { completedLine: string; nextTaskLine?: string } {
-    const completedLine = toggleToDone(rawLine, todayISO, nowTime, options);
+    const completedLine = buildCompletedTaskRecord(rawLine, todayISO, nowTime, options);
     const rec = parseRecurrence(rawLine);
     if (!rec) return { completedLine };
 
