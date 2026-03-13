@@ -74,6 +74,15 @@ export function toggleToDone(
     return `${line.trim()} ${EMOJI.done} ${todayISO}`;
 }
 
+export function buildCompletedTaskRecord(
+    rawLine: string,
+    todayISO: string,
+    nowTime: string,
+    options?: { duration?: number; startTime?: string; endTime?: string }
+): string {
+    return toggleToDone(rawLine, todayISO, nowTime, options);
+}
+
 /* ---------- 周期任务 (无变化) ---------- */
 export function parseRecurrence(rawTask: string): RecurrenceInfo | null {
     const m = rawTask.match(
@@ -135,16 +144,6 @@ export function generateNextRecurringTask(
     return next.trim();
 }
 
-
-/* ---------- 一次性完成标记 + 生成下一条 ---------- */
-export function buildCompletedTaskRecord(
-    rawLine: string,
-    todayISO: string,
-    nowTime: string,
-    options?: { duration?: number; startTime?: string; endTime?: string }
-): string {
-    return toggleToDone(rawLine, todayISO, nowTime, options);
-}
 
 /* ---------- 一次性完成标记 + 生成下一条 ---------- */
 export function markTaskDone(

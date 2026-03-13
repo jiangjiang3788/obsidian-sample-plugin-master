@@ -100,7 +100,6 @@ export class ItemService {
         }
     }
 
-
     /**
      * 追加一条完成记录，不修改原始任务。
      */
@@ -111,7 +110,7 @@ export class ItemService {
             rawLine,
             todayISO(),
             options?.endTime || nowHHMM(),
-            options,
+            options
         );
         await this.insertLineAfter(path, lineNo, completedLine);
     }
@@ -136,9 +135,8 @@ export class ItemService {
         await this.updateItemLine(path, lineNo, line);
     }
 
-
     /**
-     * 在指定行后追加一行，保留原始任务不变。
+     * 在指定行后插入一条新记录，保留原任务不变。
      */
     private async insertLineAfter(path: string, lineNo: number, newLine: string): Promise<void> {
         const content = await this.vault.readFile(path);

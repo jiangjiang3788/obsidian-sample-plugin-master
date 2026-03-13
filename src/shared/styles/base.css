@@ -162,7 +162,7 @@ body {
 .task-execution-view {
     display: flex;
     flex-direction: column;
-    gap: 20px;
+    gap: 22px;
 }
 
 .task-execution-section {
@@ -173,9 +173,22 @@ body {
 
 .task-execution-section-title {
     margin: 0;
-    color: var(--text-accent, var(--interactive-accent));
-    font-size: 1.8em;
+    font-size: 2rem;
     line-height: 1.2;
+    color: var(--text-accent, var(--interactive-accent));
+}
+
+.task-execution-subsection {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.task-execution-subsection-title {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-muted);
 }
 
 .task-execution-chip-grid {
@@ -187,23 +200,22 @@ body {
 .task-execution-chip {
     appearance: none;
     -webkit-appearance: none;
-    border: none;
-    outline: none;
-    box-shadow: none;
+    border: none !important;
+    outline: none !important;
+    box-shadow: none !important;
     background: var(--background-secondary-alt, var(--background-secondary));
     color: var(--text-normal);
     border-radius: 10px;
     padding: 10px 14px;
-    cursor: pointer;
     font: inherit;
+    cursor: pointer;
     transition: background-color 0.15s ease, transform 0.1s ease;
 }
 
 .task-execution-chip:hover,
 .task-execution-chip:focus-visible {
     background: var(--background-modifier-hover);
-    box-shadow: none;
-    outline: none;
+    box-shadow: none !important;
 }
 
 .task-execution-chip:active {
@@ -214,12 +226,12 @@ body {
     position: fixed;
     z-index: 1000;
     min-width: 180px;
-    max-width: 260px;
-    padding: 10px 12px;
+    max-width: 280px;
     border-radius: 10px;
+    padding: 10px 12px;
     background: var(--background-primary);
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
     border: 1px solid var(--background-modifier-border);
+    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.18);
 }
 
 .task-execution-context-title {
@@ -241,11 +253,16 @@ body {
     gap: 4px;
 }
 
-.task-execution-context-item {
-    font-size: 0.95em;
+.task-execution-context-link {
     color: var(--text-normal);
+    text-decoration: none;
 }
 
-.task-execution-context-item.is-empty {
+.task-execution-context-link:hover {
+    color: var(--interactive-accent);
+    text-decoration: underline;
+}
+
+.task-execution-context-empty {
     color: var(--text-muted);
 }

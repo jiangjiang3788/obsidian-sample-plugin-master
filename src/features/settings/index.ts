@@ -45,6 +45,7 @@ export const SettingsViewComponents = {
   Heatmap: HeatmapViewEditor,
   Statistics: StatisticsViewEditor,
   Progress: ProgressViewEditor,
+  TaskExecution: TaskExecutionViewEditor,
   Table: TableViewEditor,
   Timeline: TimelineViewEditor,
 };

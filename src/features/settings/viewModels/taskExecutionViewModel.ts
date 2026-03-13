@@ -1,64 +1,57 @@
 import type { Item, ThemeDefinition, ViewInstance } from '@core/public';
-import { buildThemePathTree, dayjs, filterByKeyword, filterByRules, getBasePath, isTaskCompleted, isTaskOpen } from '@core/public';
+import {
+  dayjs,
+  filterByKeyword,
+  filterByRules,
+  getBasePath,
+  isTaskCompleted,
+  isTaskOpen,
+  parsePath,
+} from '@core/public';
 
-export interface TaskExecutionRecord {
+export interface TaskExecutionRecordVM {
   id: string;
   doneDate?: string;
   timeLabel: string;
   item: Item;
 }
 
-export interface TaskExecutionTask {
+export interface TaskExecutionTaskVM {
   key: string;
   itemId: string;
   title: string;
-  theme?: string;
-  themeLabel: string;
-  recurrenceLabel: string;
   count: number;
-  records: TaskExecutionRecord[];
+  recurrenceLabel: string;
+  records: TaskExecutionRecordVM[];
   item: Item;
 }
 
-export interface TaskExecutionThemeSection {
+export interface TaskExecutionSubgroupVM {
   key: string;
   title: string;
-  tasks: TaskExecutionTask[];
+  tasks: TaskExecutionTaskVM[];
+}
+
+export interface TaskExecutionSectionVM {
+  key: string;
+  title: string;
+  groups: TaskExecutionSubgroupVM[];
 }
 
 export interface TaskExecutionViewModel {
-  sections: TaskExecutionThemeSection[];
+  sections: TaskExecutionSectionVM[];
 }
 
-function normalizeTitle(title?: string): string {
-  return String(title || '').trim();
+function buildTaskKey(item: Item): string {
+  return [item.file?.path || '', String(item.title || '').trim(), item.theme || ''].join('::');
 }
 
-function buildGroupKey(item: Item): string {
-  return [item.file?.path || '', normalizeTitle(item.title), item.theme || ''].join('::');
-}
-
-function getTopThemeLabel(themePath: string | undefined, rootLabelMap: Map<string, string>): string {
-  if (!themePath) return '未分类';
-  return rootLabelMap.get(themePath) || themePath.split('/')[0] || '未分类';
-}
-
-function getLeafThemeLabel(themePath?: string): string {
-  if (!themePath) return '未分类';
-  return themePath.split('/').pop() || themePath;
-}
-
-function buildRootThemeLabelMap(themes: ThemeDefinition[]): Map<string, string> {
-  const tree = buildThemePathTree(themes);
-  const map = new Map<string, string>();
-
-  const visit = (node: any, rootLabel: string) => {
-    map.set(node.path, rootLabel);
-    (node.children || []).forEach((child: any) => visit(child, rootLabel));
+function getThemeGroup(theme?: string): { parent: string; child: string } {
+  const segments = parsePath(String(theme || '').trim());
+  return {
+    parent: segments[0]?.name || '未分类',
+    child: segments[1]?.name || '',
   };
-
-  tree.forEach((root: any) => visit(root, root.label));
-  return map;
 }
 
 function matchesTheme(item: Item, selectedThemes: string[]): boolean {
@@ -71,8 +64,8 @@ function matchesCategory(item: Item, selectedCategories: string[]): boolean {
   return selectedCategories.includes(getBasePath(item.categoryKey));
 }
 
-function formatTimeLabel(item: Item): string {
-  return String(item.endTime || item.startTime || item.extra?.['结束'] || item.extra?.['时间'] || item.doneDate || '').trim();
+function formatRecordTime(item: Item): string {
+  return String(item.endTime || item.startTime || item.doneDate || '').trim();
 }
 
 export function buildTaskExecutionViewModel(params: {
@@ -84,91 +77,77 @@ export function buildTaskExecutionViewModel(params: {
   selectedCategories: string[];
   allThemes: ThemeDefinition[];
 }): TaskExecutionViewModel {
-  const {
-    items,
-    dateRange,
-    viewInstance,
-    keyword,
-    selectedThemes,
-    selectedCategories,
-    allThemes,
-  } = params;
-
-  const rootThemeLabelMap = buildRootThemeLabelMap(allThemes || []);
+  const { items, dateRange, viewInstance, keyword, selectedThemes, selectedCategories } = params;
   const [start, end] = dateRange;
   const startDay = dayjs(start).startOf('day');
   const endDay = dayjs(end).endOf('day');
+  const onlyRecurring = viewInstance.viewConfig?.onlyRecurring !== false;
 
   const filtered = filterByKeyword(filterByRules(items, viewInstance.filters || []), keyword).filter((item) => {
     if (item.type !== 'task') return false;
     if (!matchesTheme(item, selectedThemes)) return false;
     if (!matchesCategory(item, selectedCategories)) return false;
+    if (onlyRecurring && !item.recurrence) return false;
     return true;
   });
 
-  const baseTasks = filtered.filter((item) => isTaskOpen(item) && !!item.recurrence);
-  const completedRecords = filtered.filter((item) => {
+  const baseTasks = filtered.filter((item) => isTaskOpen(item) && (!!item.recurrence || !onlyRecurring));
+  const completed = filtered.filter((item) => {
     if (!isTaskCompleted(item)) return false;
     if (!item.doneDate) return false;
     const done = dayjs(item.doneDate);
-    if (!done.isValid()) return false;
-    return (done.isSame(startDay) || done.isAfter(startDay)) && (done.isSame(endDay) || done.isBefore(endDay));
+    return done.isValid() && !done.isBefore(startDay) && !done.isAfter(endDay);
   });
 
-  const recordMap = new Map<string, TaskExecutionRecord[]>();
-  for (const item of completedRecords) {
-    const key = buildGroupKey(item);
-    const arr = recordMap.get(key) || [];
-    arr.push({
-      id: item.id,
-      doneDate: item.doneDate,
-      timeLabel: formatTimeLabel(item),
-      item,
-    });
-    recordMap.set(key, arr);
+  const recordMap = new Map<string, TaskExecutionRecordVM[]>();
+  for (const item of completed) {
+    const key = buildTaskKey(item);
+    const list = recordMap.get(key) || [];
+    list.push({ id: item.id, doneDate: item.doneDate, timeLabel: formatRecordTime(item), item });
+    recordMap.set(key, list);
   }
-
-  recordMap.forEach((records) => {
-    records.sort((a, b) => {
-      const aValue = `${a.doneDate || ''} ${a.timeLabel || ''}`;
-      const bValue = `${b.doneDate || ''} ${b.timeLabel || ''}`;
-      return bValue.localeCompare(aValue);
-    });
+  recordMap.forEach((list) => {
+    list.sort((a, b) => `${b.doneDate || ''} ${b.timeLabel}`.localeCompare(`${a.doneDate || ''} ${a.timeLabel}`, 'zh-CN'));
   });
 
-  const sectionMap = new Map<string, TaskExecutionThemeSection>();
+  const sectionMap = new Map<string, Map<string, TaskExecutionTaskVM[]>>();
   for (const item of baseTasks) {
-    const key = buildGroupKey(item);
-    const themeTitle = getTopThemeLabel(item.theme, rootThemeLabelMap);
-    if (!sectionMap.has(themeTitle)) {
-      sectionMap.set(themeTitle, { key: themeTitle, title: themeTitle, tasks: [] });
-    }
-    sectionMap.get(themeTitle)!.tasks.push({
+    const { parent, child } = getThemeGroup(item.theme);
+    if (!sectionMap.has(parent)) sectionMap.set(parent, new Map());
+    const childKey = child || '__root__';
+    const childMap = sectionMap.get(parent)!;
+    if (!childMap.has(childKey)) childMap.set(childKey, []);
+
+    const key = buildTaskKey(item);
+    childMap.get(childKey)!.push({
       key,
       itemId: item.id,
-      title: normalizeTitle(item.title),
-      theme: item.theme,
-      themeLabel: getLeafThemeLabel(item.theme),
-      recurrenceLabel: String(item.recurrence || '').trim(),
+      title: String(item.title || '').trim(),
       count: (recordMap.get(key) || []).length,
+      recurrenceLabel: String(item.recurrence || '').trim(),
       records: recordMap.get(key) || [],
       item,
     });
   }
 
-  const rootOrder = buildThemePathTree(allThemes || []).map((node: any) => node.label);
-  const sections = Array.from(sectionMap.values()).sort((a, b) => {
-    const ai = rootOrder.indexOf(a.title);
-    const bi = rootOrder.indexOf(b.title);
-    if (ai === -1 && bi === -1) return a.title.localeCompare(b.title, 'zh-Hans-CN');
-    if (ai === -1) return 1;
-    if (bi === -1) return -1;
-    return ai - bi;
-  });
-
-  sections.forEach((section) => {
-    section.tasks.sort((a, b) => a.title.localeCompare(b.title, 'zh-Hans-CN'));
-  });
+  const sections: TaskExecutionSectionVM[] = Array.from(sectionMap.entries())
+    .map(([parent, childMap]) => ({
+      key: parent,
+      title: parent,
+      groups: Array.from(childMap.entries())
+        .map(([child, tasks]) => ({
+          key: `${parent}/${child}`,
+          title: child === '__root__' ? '' : child,
+          tasks: tasks.sort((a, b) => a.title.localeCompare(b.title, 'zh-CN')),
+        }))
+        .sort((a, b) => {
+          if (!a.title && !b.title) return 0;
+          if (!a.title) return -1;
+          if (!b.title) return 1;
+          return a.title.localeCompare(b.title, 'zh-CN');
+        }),
+    }))
+    .sort((a, b) => a.title.localeCompare(b.title, 'zh-CN'));
 
   return { sections };
 }

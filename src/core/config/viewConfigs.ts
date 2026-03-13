@@ -57,8 +57,6 @@ export const PROGRESS_VIEW_DEFAULT_CONFIG: ProgressViewConfig = {
     topN: 5,
 };
 
-
-
 /**
  * TaskExecutionView 默认配置（按主题分组的任务执行视图）
  */
