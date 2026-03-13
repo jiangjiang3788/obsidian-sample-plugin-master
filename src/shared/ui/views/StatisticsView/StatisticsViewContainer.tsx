@@ -2,7 +2,7 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
 import { useState, useMemo, useRef, useEffect } from 'preact/hooks';
-import type { Item, ViewInstance } from '@core/public';
+import type { Item, ViewInstance, MessageRenderPort } from '@core/public';
 import type { CategoryConfig, PeriodData } from '@core/public';
 import {
   dayjs,
@@ -24,7 +24,15 @@ import {
 import { IconButton, Tooltip } from '@mui/material';
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 import IosShareIcon from '@mui/icons-material/IosShare';
-import { FloatingPanel, openFloatingWidget, closeFloatingWidget, useUiPort, useSelector, selectCategoryColors, useUseCases } from '@/app/public';
+import {
+  FloatingPanel,
+  openFloatingWidget,
+  closeFloatingWidget,
+  useUiPort,
+  useSelector,
+  selectCategoryColors,
+  useUseCases,
+} from '@/app/public';
 import type { TimerController } from '@/app/public';
 import type { OpenQuickCreateHandler } from '@shared/types/actions';
 import { PopoverContent } from './components/PopoverContent';
@@ -48,6 +56,8 @@ interface StatisticsViewProps {
   allThemes: any[];
   /** Phase2: feature 层注入的 renderModel（shared/ui 只渲染） */
   statisticsModel?: any;
+  /** 复用 BlockView 的 Markdown 渲染链路，保证统计视图弹层与 BlockView 一致 */
+  messageRenderPort?: MessageRenderPort;
 }
 
 interface PopoverState {
@@ -68,6 +78,7 @@ export function StatisticsView({
   timers,
   allThemes,
   statisticsModel,
+  messageRenderPort,
 }: StatisticsViewProps) {
   const ui = useUiPort();
 
@@ -274,7 +285,15 @@ export function StatisticsView({
           </div>
         }
       >
-        <PopoverContent blocks={blocks} app={app} module={module} timerService={timerService} timers={timers} allThemes={allThemes} />
+        <PopoverContent
+          blocks={blocks}
+          app={app}
+          module={module}
+          timerService={timerService}
+          timers={timers}
+          allThemes={allThemes}
+          messageRenderPort={messageRenderPort}
+        />
       </FloatingPanel>
     ));
 

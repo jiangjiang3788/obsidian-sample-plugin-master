@@ -49,25 +49,21 @@ export function HeatmapView({
     injectedThemesToTrack,
     injectedDataByThemeAndDate,
 }: HeatmapViewProps) {
-    // 将 config 对象移入 useMemo，确保响应式更新
     const config = useMemo(
-        () => ({ ...HEATMAP_VIEW_DEFAULT_CONFIG, ...module.viewConfig }), 
+        () => ({ ...HEATMAP_VIEW_DEFAULT_CONFIG, ...module.viewConfig }),
         [module.viewConfig]
     );
-    
+
     const themesByPath = useMemo(() => {
         return injectedThemesByPath ?? buildThemesByPathMap(inputSettings.themes);
     }, [injectedThemesByPath, inputSettings.themes]);
 
-    // 评分映射缓存
     const ratingMappingsCache = useRef(new RatingMappingCache()).current;
-    
-    // 当设置发生变化时，清空相关缓存
+
     useEffect(() => {
         ratingMappingsCache.clear();
     }, [inputSettings.themes, inputSettings.blocks, inputSettings.overrides]);
 
-    // 当items数据发生变化时，确保重新计算数据聚合
     useEffect(() => {
         devLog(`🔄 [数据更新] 检测到items数据变化，项目数量: ${items.length}`);
         ratingMappingsCache.clear();
@@ -76,7 +72,6 @@ export function HeatmapView({
     // 当 viewConfig 未显式指定 themePaths 时：
     // - 自动从当前 items 推断主题列表，避免落到 '__default__' 把不同主题混在同一张热力图里
     const inferredThemePaths = useMemo(() => {
-        // 如果上层已经注入 themesToTrack，则无需在 shared/ui 再做推断
         if (injectedThemesToTrack) return [];
         const set = new Set<string>();
         for (const it of items) {
@@ -95,7 +90,6 @@ export function HeatmapView({
         );
     }, [injectedThemesToTrack, config.themePaths, inferredThemePaths]);
 
-    // 使用新的聚合函数（用推断/配置后的 themesToTrack）
     const dataByThemeAndDate = useMemo(() => {
         return injectedDataByThemeAndDate ?? buildThemeDataMap(items, themesToTrack);
     }, [injectedDataByThemeAndDate, items, themesToTrack]);
@@ -104,8 +98,11 @@ export function HeatmapView({
         if (!config.sourceBlockId) return;
 
         let themeToPreselect: ThemeDefinition | undefined;
-        if (themePath && themePath !== '__default__') themeToPreselect = themesByPath.get(themePath);
-        else if (item?.theme) themeToPreselect = themesByPath.get(item.theme);
+        if (themePath && themePath !== '__default__') {
+            themeToPreselect = themesByPath.get(themePath);
+        } else if (item?.theme) {
+            themeToPreselect = themesByPath.get(item.theme);
+        }
 
         const context = {
             '日期': date,
@@ -116,163 +113,196 @@ export function HeatmapView({
         new QuickInputModal(app, config.sourceBlockId, context, themeToPreselect?.id).open();
     };
 
+    // 点击行为：
+    // - 无记录：直接新增
+    // - 1 条记录：直接编辑该条
+    // - 多条记录：打开管理窗口，可选择具体哪一条
     const handleCellClick = (date: string, dayItems?: Item[], themePath?: string) => {
         const itemsForDay = dayItems || [];
+
         if (itemsForDay.length === 0) {
             openQuickCreate(date, undefined, themePath);
             return;
         }
-        new CheckinManagerModal(app, date, itemsForDay, async () => {}, () => openQuickCreate(date, itemsForDay[itemsForDay.length - 1], themePath)).open();
+
+        if (itemsForDay.length === 1) {
+            openQuickCreate(date, itemsForDay[0], themePath);
+            return;
+        }
+
+        new CheckinManagerModal(
+            app,
+            date,
+            itemsForDay,
+            async () => {},
+            () => openQuickCreate(date, itemsForDay[itemsForDay.length - 1], themePath)
+        ).open();
     };
 
-    const renderMonthGrid = (monthDate: dayjs.Dayjs, dataForMonth: Map<string, Item[]>, themePath: string) => {
+    const renderMonthGrid = (
+        monthDate: dayjs.Dayjs,
+        dataForMonth: Map<string, Item[]>,
+        themePath: string
+    ) => {
         const startOfMonth = monthDate.startOf('month');
         const endOfMonth = monthDate.endOf('month');
         const firstWeekday = startOfMonth.isoWeekday();
-        
+
         const themeRatingMapping = ratingMappingsCache.get(
             inputSettings,
             config.sourceBlockId || '',
             themePath,
             themesByPath
         );
-        
+
         const days = [];
-        for (let i = 1; i < firstWeekday; i++) { 
-            days.push(<div key={`spacer-${i}`} class="heatmap-cell grid-spacer"></div>); 
+        for (let i = 1; i < firstWeekday; i++) {
+            days.push(<div key={`spacer-${i}`} class="heatmap-cell grid-spacer"></div>);
         }
+
         for (let i = 1; i <= endOfMonth.date(); i++) {
             const dateStr = startOfMonth.clone().date(i).format('YYYY-MM-DD');
             const dayItems = dataForMonth.get(dateStr);
             days.push(
-                <HeatmapCell 
-                    key={dateStr} 
-                    date={dateStr} 
-                    items={dayItems} 
-                    config={config} 
-                    ratingMapping={themeRatingMapping} 
-                    app={app} 
-                    onCellClick={(date, dayItems) => handleCellClick(date, dayItems, themePath)}
+                <HeatmapCell
+                    key={dateStr}
+                    date={dateStr}
+                    items={dayItems}
+                    config={config}
+                    ratingMapping={themeRatingMapping}
+                    app={app}
+                    onCellClick={(clickedDate, clickedItems) => handleCellClick(clickedDate, clickedItems, themePath)}
                 />
             );
         }
+
         return (
             <div key={monthDate.format('YYYY-MM')} class="month-section">
-                <div class="month-label">
-                    {monthDate.format('M月')}
-                </div>
-                <div class="heatmap-row calendar">
-                    {days}
-                </div>
+                <div class="month-label">{monthDate.format('M月')}</div>
+                <div class="heatmap-row calendar">{days}</div>
             </div>
         );
     };
 
-    const renderHeaderCells = (currentView: string, themePath: string, dataForTheme: Map<string, Item[]>) => {
+    const renderHeaderCells = (
+        currentView: string,
+        themePath: string,
+        dataForTheme: Map<string, Item[]>
+    ) => {
         const start = dayjs(dateRange[0]);
         const end = dayjs(dateRange[1]);
-        
+
         const themeRatingMapping = ratingMappingsCache.get(
             inputSettings,
             config.sourceBlockId || '',
             themePath,
             themesByPath
         );
-        
+
         switch (currentView) {
             case '天': {
                 const dateStr = start.format('YYYY-MM-DD');
                 const dayItems = dataForTheme.get(dateStr);
                 return [
-                    <HeatmapCell 
-                        key={dateStr} 
-                        date={dateStr} 
+                    <HeatmapCell
+                        key={dateStr}
+                        date={dateStr}
                         items={dayItems}
-                        config={config} 
-                        ratingMapping={themeRatingMapping} 
-                        app={app} 
-                        onCellClick={(date, dayItems) => handleCellClick(date, dayItems, themePath)}
-                    />
+                        config={config}
+                        ratingMapping={themeRatingMapping}
+                        app={app}
+                        onCellClick={(clickedDate, clickedItems) => handleCellClick(clickedDate, clickedItems, themePath)}
+                    />,
                 ];
             }
+
             case '周': {
                 const cells = [];
                 let currentDate = start.startOf('isoWeek');
                 const endDate = start.endOf('isoWeek');
-                while(currentDate.isSameOrBefore(endDate, 'day')) {
+
+                while (currentDate.isSameOrBefore(endDate, 'day')) {
                     const dateStr = currentDate.format('YYYY-MM-DD');
                     const dayItems = dataForTheme.get(dateStr);
-                    
+
                     cells.push(
-                        <HeatmapCell 
+                        <HeatmapCell
                             key={`${themePath}-${dateStr}`}
-                            date={dateStr} 
+                            date={dateStr}
                             items={dayItems}
-                            config={config} 
-                            ratingMapping={themeRatingMapping} 
-                            app={app} 
-                            onCellClick={(date, dayItems) => handleCellClick(date, dayItems, themePath)}
+                            config={config}
+                            ratingMapping={themeRatingMapping}
+                            app={app}
+                            onCellClick={(clickedDate, clickedItems) => handleCellClick(clickedDate, clickedItems, themePath)}
                         />
                     );
+
                     currentDate = currentDate.add(1, 'day');
                 }
+
                 return cells;
             }
+
             case '月': {
                 const cells = [];
                 let currentDate = start.startOf('month');
                 const endDate = start.endOf('month');
-                while(currentDate.isSameOrBefore(endDate, 'day')) {
+
+                while (currentDate.isSameOrBefore(endDate, 'day')) {
                     const dateStr = currentDate.format('YYYY-MM-DD');
                     const dayItems = dataForTheme.get(dateStr);
+
                     cells.push(
-                        <HeatmapCell 
-                            key={dateStr} 
-                            date={dateStr} 
+                        <HeatmapCell
+                            key={dateStr}
+                            date={dateStr}
                             items={dayItems}
-                            config={config} 
-                            ratingMapping={themeRatingMapping} 
-                            app={app} 
-                            onCellClick={(date, dayItems) => handleCellClick(date, dayItems, themePath)}
+                            config={config}
+                            ratingMapping={themeRatingMapping}
+                            app={app}
+                            onCellClick={(clickedDate, clickedItems) => handleCellClick(clickedDate, clickedItems, themePath)}
                         />
                     );
+
                     currentDate = currentDate.add(1, 'day');
                 }
+
                 return cells;
             }
+
             case '年':
             case '季': {
                 const months = [];
                 let currentMonth = start.clone().startOf('month');
+
                 while (currentMonth.isSameOrBefore(end, 'month')) {
                     months.push(renderMonthGrid(currentMonth, dataForTheme, themePath));
                     currentMonth = currentMonth.add(1, 'month');
                 }
+
                 return months;
             }
+
             default:
                 return [];
         }
     };
 
-    // 响应式布局检测
     const [verticalLayouts, setVerticalLayouts] = useState<Set<string>>(new Set());
     const headerRefs = useRef<Map<string, HTMLElement>>(new Map());
 
-    // 检测是否需要垂直布局（仅用于天、周、月视图）
+    // 检测是否需要垂直布局（仅用于天、月视图；周视图固定主题和 cell 一行）
     const checkLayout = (theme: string, headerElement: HTMLElement) => {
         if (!headerElement || theme === '__default__') return;
-        
-        // 年、季度视图现在通过 CSS 强制垂直布局，不需要 JavaScript 处理
+
         const isGridLayout = ['年', '季'].includes(currentView);
         if (isGridLayout || currentView === '周') return;
-        
-        // 其他视图根据容器宽度决定
+
         const containerWidth = headerElement.clientWidth;
         const threshold = currentView === '天' ? 320 : 600;
         const needsVertical = containerWidth < threshold;
-        
-        setVerticalLayouts(prev => {
+
+        setVerticalLayouts((prev) => {
             const newSet = new Set(prev);
             if (needsVertical) {
                 newSet.add(theme);
@@ -283,10 +313,9 @@ export function HeatmapView({
         });
     };
 
-    // 使用ResizeObserver监听容器大小变化
     useEffect(() => {
-        const resizeObserver = new ResizeObserver(entries => {
-            entries.forEach(entry => {
+        const resizeObserver = new ResizeObserver((entries) => {
+            entries.forEach((entry) => {
                 const element = entry.target as HTMLElement;
                 const theme = element.dataset.theme;
                 if (theme) {
@@ -295,10 +324,8 @@ export function HeatmapView({
             });
         });
 
-        // 监听所有主题头部容器
         headerRefs.current.forEach((element, theme) => {
             resizeObserver.observe(element);
-            // 初始检测
             checkLayout(theme, element);
         });
 
@@ -317,7 +344,7 @@ export function HeatmapView({
             const rootSegment = segments[0];
             const title = rootSegment?.name || themePath || '未分类';
             const label = segments.length > 1
-                ? segments.slice(1).map(segment => segment.name).join(' / ')
+                ? segments.slice(1).map((segment) => segment.name).join(' / ')
                 : (rootSegment?.name || themePath || '未分类');
 
             const entry: DayThemeEntry = {
@@ -343,6 +370,10 @@ export function HeatmapView({
         return groups;
     };
 
+    // 天视图：
+    // - 按一级主题分组
+    // - 未打卡时，在 cell 内显示子主题
+    // - 已打卡时，不显示主题文字
     const renderDayContent = () => {
         const dayDateStr = dayjs(dateRange[0]).format('YYYY-MM-DD');
         const dayGroups = buildDayThemeGroups();
@@ -372,11 +403,8 @@ export function HeatmapView({
                                             app={app}
                                             highlightToday={false}
                                             emptyLabel={!dayItems || dayItems.length === 0 ? entry.label : undefined}
-                                            onCellClick={(date, items) => handleCellClick(date, items, entry.themePath)}
+                                            onCellClick={(clickedDate, clickedItems) => handleCellClick(clickedDate, clickedItems, entry.themePath)}
                                         />
-                                        {dayItems && dayItems.length > 0 && (
-                                            <span class="heatmap-day-item-label">{entry.label}</span>
-                                        )}
                                     </div>
                                 );
                             })}
@@ -404,7 +432,7 @@ export function HeatmapView({
 
                     return (
                         <div class="heatmap-theme-group" key={theme}>
-                            <div 
+                            <div
                                 class={`heatmap-theme-header ${currentView === '周' ? 'week-inline-layout' : ''} ${isVertical ? 'vertical-layout' : ''}`}
                                 data-theme={theme}
                                 ref={(el) => {
@@ -416,12 +444,11 @@ export function HeatmapView({
                                 {theme !== '__default__' && (
                                     <div class="heatmap-header-info">
                                         <div class="heatmap-header-info-left">
-                                            <span class="theme-name">
-                                                {theme}
-                                            </span>
+                                            <span class="theme-name">{theme}</span>
                                         </div>
                                     </div>
                                 )}
+
                                 <div class={`heatmap-header-cells ${isRowLayout ? '' : 'grid-view'}`}>
                                     {renderHeaderCells(currentView, theme, dataForTheme)}
                                 </div>
