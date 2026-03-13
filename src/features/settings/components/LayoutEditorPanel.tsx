@@ -7,7 +7,7 @@
  */
 
 import { h } from 'preact';
-import { useMemo, useCallback, useState } from 'preact/hooks';
+import { useMemo, useCallback, useState, useRef } from 'preact/hooks';
 import { useUseCases, useSelector } from '@/app/public';
 import type { UseCases } from '@/app/public';
 import type { Layout, ViewInstance } from '@core/public';
@@ -23,7 +23,11 @@ import {
   Radio,
   RadioGroup as MuiRadioGroup,
   Autocomplete,
+  IconButton,
+  Box,
 } from '@mui/material';
+import ArrowBackIosNewIcon from '@mui/icons-material/ArrowBackIosNew';
+import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
 
 import { openModuleSettingsWidget } from '@/features/settings/ModuleSettingsModal';
 
@@ -46,9 +50,6 @@ const AlignedRadioGroup = ({ label, options, selectedValue, onChange }: any) => 
   </Stack>
 );
 
-/**
- * 复用组件：编辑单个 Layout 的所有设置
- */
 export function LayoutEditorPanel({ layoutId, useCases }: { layoutId: string; useCases?: UseCases }) {
   const _useCases = useCases ?? useUseCases();
   const layout = useSelector((s) => (s.settings.layouts || []).find((l: Layout) => l.id === layoutId)) as
@@ -57,6 +58,8 @@ export function LayoutEditorPanel({ layoutId, useCases }: { layoutId: string; us
   const allViews = useSelector((s) => s.settings.viewInstances) as ViewInstance[];
 
   const [inputValue, setInputValue] = useState('');
+  const [autocompleteOpen, setAutocompleteOpen] = useState(false);
+  const inputRef = useRef<HTMLInputElement | null>(null);
   const [contextMenu, setContextMenu] = useState<
     { mouseX: number; mouseY: number; viewId: string; viewTitle: string } | null
   >(null);
@@ -82,15 +85,28 @@ export function LayoutEditorPanel({ layoutId, useCases }: { layoutId: string; us
     [layout?.viewInstanceIds, allViews]
   );
 
-  const addView = (viewId: string) => {
-    if (!layout) return;
-    if (viewId) handleUpdate({ viewInstanceIds: [...layout.viewInstanceIds, viewId] });
-  };
+  const addView = useCallback((viewId: string) => {
+    if (!layout || !viewId) return;
+    if (layout.viewInstanceIds.includes(viewId)) return;
+    handleUpdate({ viewInstanceIds: [...layout.viewInstanceIds, viewId] });
+  }, [layout, handleUpdate]);
 
-  const removeViewFromLayout = (viewId: string) => {
+  const removeViewFromLayout = useCallback((viewId: string) => {
     if (!layout) return;
     handleUpdate({ viewInstanceIds: layout.viewInstanceIds.filter((id) => id !== viewId) });
-  };
+  }, [layout, handleUpdate]);
+
+  const moveView = useCallback((viewId: string, direction: -1 | 1) => {
+    if (!layout) return;
+    const currentIds = [...layout.viewInstanceIds];
+    const index = currentIds.indexOf(viewId);
+    if (index < 0) return;
+    const targetIndex = index + direction;
+    if (targetIndex < 0 || targetIndex >= currentIds.length) return;
+    const [moved] = currentIds.splice(index, 1);
+    currentIds.splice(targetIndex, 0, moved);
+    handleUpdate({ viewInstanceIds: currentIds });
+  }, [layout, handleUpdate]);
 
   const autocompleteOptions = useMemo(() => {
     const opts: Array<{ value: string; label: string; type: 'existing' | 'create'; newName?: string }> =
@@ -110,23 +126,38 @@ export function LayoutEditorPanel({ layoutId, useCases }: { layoutId: string; us
     return opts;
   }, [availableViews, inputValue]);
 
+  const reopenAutocomplete = useCallback(() => {
+    window.requestAnimationFrame(() => {
+      setAutocompleteOpen(true);
+      inputRef.current?.focus();
+    });
+  }, []);
+
   const handleCreateNewView = useCallback(
     async (viewTitle: string) => {
       const newView = await _useCases.viewInstance.createView(viewTitle);
       if (!newView) return;
       addView(newView.id);
+      reopenAutocomplete();
     },
-    [_useCases, layout?.id]
+    [_useCases, addView, reopenAutocomplete]
   );
 
   const handleAutocompleteChange = useCallback(
     async (_event: any, newValue: any) => {
       if (!newValue) return;
-      if (newValue.type === 'existing') addView(newValue.value);
-      if (newValue.type === 'create') await handleCreateNewView(newValue.newName);
-      setInputValue('');
+      if (newValue.type === 'existing') {
+        addView(newValue.value);
+        setInputValue('');
+        reopenAutocomplete();
+        return;
+      }
+      if (newValue.type === 'create') {
+        setInputValue('');
+        await handleCreateNewView(newValue.newName);
+      }
     },
-    [handleCreateNewView, layout?.id]
+    [addView, handleCreateNewView, reopenAutocomplete]
   );
 
   const handleChipRightClick = useCallback((event: MouseEvent, view: ViewInstance) => {
@@ -146,7 +177,7 @@ export function LayoutEditorPanel({ layoutId, useCases }: { layoutId: string; us
     const view = allViews.find((v) => v.id === contextMenu.viewId);
     if (view) openModuleSettingsWidget(view);
     handleContextMenuClose();
-  }, [contextMenu, allViews]);
+  }, [contextMenu, allViews, handleContextMenuClose]);
 
   const handleViewRename = useCallback(() => {
     if (!contextMenu) return;
@@ -155,20 +186,32 @@ export function LayoutEditorPanel({ layoutId, useCases }: { layoutId: string; us
       _useCases.viewInstance.updateView(contextMenu.viewId, { title: newName.trim() });
     }
     handleContextMenuClose();
-  }, [contextMenu, _useCases]);
+  }, [contextMenu, _useCases, handleContextMenuClose]);
 
   const handleViewRemove = useCallback(() => {
     if (!contextMenu) return;
     removeViewFromLayout(contextMenu.viewId);
     handleContextMenuClose();
-  }, [contextMenu, layout?.id]);
+  }, [contextMenu, removeViewFromLayout, handleContextMenuClose]);
+
+  const handleMoveLeftFromMenu = useCallback(() => {
+    if (!contextMenu) return;
+    moveView(contextMenu.viewId, -1);
+    handleContextMenuClose();
+  }, [contextMenu, moveView, handleContextMenuClose]);
+
+  const handleMoveRightFromMenu = useCallback(() => {
+    if (!contextMenu) return;
+    moveView(contextMenu.viewId, 1);
+    handleContextMenuClose();
+  }, [contextMenu, moveView, handleContextMenuClose]);
 
   if (!layout) {
     return <div style={{ padding: 12 }}>未找到布局（可能已被删除）。</div>;
   }
 
   return (
-    <Stack spacing={2} sx={{ p: '8px 16px 16px 16px' }}>
+    <Stack spacing={2} sx={{ p: '8px 16px 16px 16px', width: '100%', minWidth: 0, boxSizing: 'border-box' }}>
       <TextField
         label="布局名称"
         value={layout.name || ''}
@@ -245,46 +288,106 @@ export function LayoutEditorPanel({ layoutId, useCases }: { layoutId: string; us
         </Stack>
       )}
 
-      <Stack direction="row" flexWrap="wrap" spacing={1} useFlexGap alignItems="center">
-        <Typography sx={{ width: LABEL_WIDTH, flexShrink: 0, fontWeight: 500 }}>包含视图</Typography>
+      <Stack direction="row" alignItems="flex-start" spacing={2} sx={{ minWidth: 0 }}>
+        <Typography sx={{ width: LABEL_WIDTH, flexShrink: 0, fontWeight: 500, pt: '6px' }}>包含视图</Typography>
 
-        {selectedViews.map(
-          (view) =>
-            view && (
-              <Tooltip key={view.id} title={`左键移除，右键更多选项`}>
-                <Chip
-                  label={view.title}
-                  onClick={() => removeViewFromLayout(view.id)}
-                  onContextMenu={(e) => handleChipRightClick(e as any, view)}
-                  size="small"
-                  sx={{ cursor: 'pointer' }}
-                />
-              </Tooltip>
-            )
-        )}
+        <Stack spacing={1} sx={{ flex: 1, minWidth: 0 }}>
+          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, alignItems: 'center', minHeight: 32 }}>
+            {selectedViews.map((view, index) =>
+              view ? (
+                <Box
+                  key={view.id}
+                  sx={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 0.25,
+                    px: 0.25,
+                    py: 0.25,
+                    borderRadius: 1,
+                    background: 'var(--background-secondary)',
+                    maxWidth: '100%',
+                  }}
+                >
+                  <Tooltip title="前移">
+                    <span>
+                      <IconButton
+                        size="small"
+                        disabled={index === 0}
+                        onClick={() => moveView(view.id, -1)}
+                        sx={{ p: '2px' }}
+                      >
+                        <ArrowBackIosNewIcon sx={{ fontSize: '0.85rem' }} />
+                      </IconButton>
+                    </span>
+                  </Tooltip>
 
-        <Autocomplete
-          value={null}
-          inputValue={inputValue}
-          onInputChange={(_, newInputValue) => setInputValue(newInputValue)}
-          options={autocompleteOptions}
-          getOptionLabel={(option) => (option ? option.label : '')}
-          onChange={handleAutocompleteChange}
-          renderInput={(params) => (
-            <TextField {...(params as any)} variant="outlined" placeholder="+ 搜索添加或创建视图..." />
-          )}
-          sx={{ minWidth: 240 }}
-          size="small"
+                  <Tooltip title="左键移除，右键更多选项">
+                    <Chip
+                      label={view.title}
+                      onClick={() => removeViewFromLayout(view.id)}
+                      onContextMenu={(e) => handleChipRightClick(e as any, view)}
+                      size="small"
+                      sx={{ cursor: 'pointer', maxWidth: 240 }}
+                    />
+                  </Tooltip>
 
-          // ✅ 关键修复：在 FloatingPanel 中必须禁用 Portal，否则 Popper 挂到 body 上
-          // 会被 FloatingPanel 的“点击外部关闭”误判，并且可能被浮窗遮挡。
-          disablePortal
-          // MUI v6+ types: PopperProps moved under slotProps.popper
-          slotProps={{ popper: { style: { zIndex: 20000 } } } as any}
-        />
+                  <Tooltip title="后移">
+                    <span>
+                      <IconButton
+                        size="small"
+                        disabled={index === selectedViews.length - 1}
+                        onClick={() => moveView(view.id, 1)}
+                        sx={{ p: '2px' }}
+                      >
+                        <ArrowForwardIosIcon sx={{ fontSize: '0.85rem' }} />
+                      </IconButton>
+                    </span>
+                  </Tooltip>
+                </Box>
+              ) : null
+            )}
+          </Box>
+
+          <Autocomplete
+            open={autocompleteOpen}
+            value={null}
+            inputValue={inputValue}
+            onOpen={() => setAutocompleteOpen(true)}
+            onClose={(_, reason) => {
+              if (reason === 'selectOption') return;
+              setAutocompleteOpen(false);
+            }}
+            onInputChange={(_, newInputValue) => {
+              setInputValue(newInputValue);
+              setAutocompleteOpen(true);
+            }}
+            options={autocompleteOptions}
+            getOptionLabel={(option) => (option ? option.label : '')}
+            onChange={handleAutocompleteChange}
+            disableCloseOnSelect
+            blurOnSelect={false}
+            clearOnBlur={false}
+            selectOnFocus
+            renderInput={(params) => (
+              <TextField
+                {...(params as any)}
+                variant="outlined"
+                placeholder="+ 搜索添加或创建视图..."
+                inputRef={(node: HTMLInputElement | null) => {
+                  inputRef.current = node;
+                  const paramsRef = (params as any).inputProps?.ref;
+                  if (typeof paramsRef === 'function') paramsRef(node);
+                }}
+              />
+            )}
+            sx={{ minWidth: 240, maxWidth: 520 }}
+            size="small"
+            disablePortal
+            slotProps={{ popper: { style: { zIndex: 20000 } } } as any}
+          />
+        </Stack>
       </Stack>
 
-      {/* 简易右键菜单（你说右键菜单已修复，这里保持原样） */}
       {contextMenu && (
         <div
           style={{
@@ -304,6 +407,8 @@ export function LayoutEditorPanel({ layoutId, useCases }: { layoutId: string; us
             <button className="mod-cta" onClick={handleViewSettings}>
               设置…
             </button>
+            <button onClick={handleMoveLeftFromMenu}>向前移动</button>
+            <button onClick={handleMoveRightFromMenu}>向后移动</button>
             <button onClick={handleViewRename}>重命名…</button>
             <button onClick={handleViewRemove}>从布局移除</button>
           </div>

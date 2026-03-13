@@ -24,15 +24,7 @@ import {
 import { IconButton, Tooltip } from '@mui/material';
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 import IosShareIcon from '@mui/icons-material/IosShare';
-import {
-  FloatingPanel,
-  openFloatingWidget,
-  closeFloatingWidget,
-  useUiPort,
-  useSelector,
-  selectCategoryColors,
-  useUseCases,
-} from '@/app/public';
+import { FloatingPanel, openFloatingWidget, closeFloatingWidget, useUiPort, useSelector, selectCategoryColors, useUseCases } from '@/app/public';
 import type { TimerController } from '@/app/public';
 import type { OpenQuickCreateHandler } from '@shared/types/actions';
 import { PopoverContent } from './components/PopoverContent';
@@ -56,7 +48,6 @@ interface StatisticsViewProps {
   allThemes: any[];
   /** Phase2: feature 层注入的 renderModel（shared/ui 只渲染） */
   statisticsModel?: any;
-  /** 复用 BlockView 的 Markdown 渲染链路，保证统计视图弹层与 BlockView 一致 */
   messageRenderPort?: MessageRenderPort;
 }
 
@@ -254,7 +245,11 @@ export function StatisticsView({
         minWidth={520}
         maxWidth="90vw"
         maxHeight="85vh"
+        width={760}
+        height={640}
+        resizable
         bodyPadding={0}
+        bodyStyle={{ display: 'flex', flexDirection: 'column', minHeight: 0 }}
         onClose={handleClose}
         headerActions={
           <div class="flex items-center gap-1">
@@ -285,15 +280,7 @@ export function StatisticsView({
           </div>
         }
       >
-        <PopoverContent
-          blocks={blocks}
-          app={app}
-          module={module}
-          timerService={timerService}
-          timers={timers}
-          allThemes={allThemes}
-          messageRenderPort={messageRenderPort}
-        />
+        <PopoverContent blocks={blocks} app={app} module={module} timerService={timerService} timers={timers} allThemes={allThemes} messageRenderPort={messageRenderPort} />
       </FloatingPanel>
     ));
 

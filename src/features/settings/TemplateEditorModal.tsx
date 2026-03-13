@@ -90,9 +90,12 @@ export function TemplateEditorModal({ isOpen, onClose, block, theme, existingOve
             width={920}
             maxWidth={'calc(100vw - 32px)'}
             maxHeight={'calc(100vh - 32px)'}
+            height={680}
+            resizable
             bodyPadding={0}
+            bodyStyle={{ display: 'flex', flexDirection: 'column', minHeight: 0 }}
         >
-            <Box sx={{ p: 2, maxHeight: 'calc(100vh - 120px)', overflowY: 'auto' }}>
+            <Box sx={{ p: 2, flex: 1, minHeight: 0, overflowY: 'auto', boxSizing: 'border-box' }}>
                 <Stack spacing={3}>
                     <FormControl component="fieldset">
                         <FormLabel component="legend">配置模式</FormLabel>

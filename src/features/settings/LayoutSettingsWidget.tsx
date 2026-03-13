@@ -30,6 +30,11 @@ function LayoutSettingsWidgetInner({ layoutId, widgetId }: { layoutId: string; w
       minWidth={620}
       maxWidth="92vw"
       maxHeight="88vh"
+      width={760}
+      height={620}
+      resizable
+      bodyPadding={0}
+      bodyStyle={{ display: 'flex', flexDirection: 'column', minHeight: 0 }}
       onClose={() => closeFloatingWidget(widgetId)}
     >
       <LayoutEditorPanel layoutId={layoutId} />

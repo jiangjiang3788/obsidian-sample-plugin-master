@@ -47,7 +47,7 @@
       "id": "vi_mm9z0oe1cvlr53c",
       "parentId": null,
       "title": "时间轴",
-      "viewType": "ProgressView",
+      "viewType": "TimelineView",
       "viewConfig": {
         "categories": {
           "0": {
@@ -309,11 +309,40 @@
         ]
       },
       "fields": [
-        "categoryKey",
+        "period",
         "date",
         "pintu",
         "content"
       ],
+      "groupFields": [],
+      "filters": [],
+      "sort": [
+        {
+          "field": "priority",
+          "dir": "asc"
+        }
+      ],
+      "collapsed": false
+    },
+    {
+      "id": "vi_mmoatd6rl16r9kz",
+      "parentId": null,
+      "title": "染发的晚上",
+      "viewType": "StatisticsView",
+      "viewConfig": {},
+      "fields": [],
+      "groupFields": [],
+      "filters": [],
+      "sort": [],
+      "collapsed": false
+    },
+    {
+      "id": "vi_mmoateqyfjp1fms",
+      "parentId": null,
+      "title": "玩儿",
+      "viewType": "StatisticsView",
+      "viewConfig": {},
+      "fields": [],
       "groupFields": [],
       "filters": [],
       "sort": [],
@@ -326,8 +355,9 @@
       "name": "全局布局",
       "viewInstanceIds": [
         "vi_mmkdnmbx5hbapzu",
-        "vi_mmeolydjaga6z6u",
         "vi_mmikcsvy3rwcetd",
+        "vi_mmeolydjaga6z6u",
+        "vi_mmijitbq47u10wu",
         "vi_mm9z0oe1cvlr53c"
       ],
       "displayMode": "list",

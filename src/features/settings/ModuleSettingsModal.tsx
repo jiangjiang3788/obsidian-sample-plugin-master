@@ -251,8 +251,8 @@ function ModuleSettingsPanel({ module, onClose }: { module: ViewInstance; onClos
     });
 
     return (
-        <div style={{ display: 'flex', flexDirection: 'column', maxHeight: '75vh' }}>
-            <div style={{ flex: 1, overflowY: 'auto', paddingRight: 8 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0, width: '100%' }}>
+            <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', padding: 12, boxSizing: 'border-box' }}>
                 <ViewInstanceEditor vi={currentModule} />
             </div>
 
@@ -261,8 +261,8 @@ function ModuleSettingsPanel({ module, onClose }: { module: ViewInstance; onClos
                     display: 'flex',
                     justifyContent: 'flex-end',
                     gap: 8,
-                    paddingTop: 12,
-                    marginTop: 12,
+                    padding: '12px 12px 0 12px',
+                    marginTop: 0,
                     borderTop: '1px solid var(--background-modifier-border)',
                 }}
             >
@@ -287,6 +287,11 @@ export function openModuleSettingsWidget(module: ViewInstance) {
             minWidth={520}
             maxWidth="90vw"
             maxHeight="85vh"
+            width={720}
+            height={640}
+            resizable
+            bodyPadding={0}
+            bodyStyle={{ display: 'flex', flexDirection: 'column', minHeight: 0 }}
             onClose={() => closeFloatingWidget(widgetId)}
         >
             <ModuleSettingsPanel module={module} onClose={() => closeFloatingWidget(widgetId)} />
