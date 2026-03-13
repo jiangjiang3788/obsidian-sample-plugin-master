@@ -1,200 +1,63 @@
-/*
- * ===================================================================
- * Base Styles
- * -------------------------------------------------------------------
- * - Global element resets
- * - MUI component overrides
- * - Font size integration with Obsidian
- * ===================================================================
- */
-
-/* Set base font size from Obsidian's CSS variable for global scaling */
-body {
-    font-size: var(--font-size-normal);
-}
-
-/*
- * --- 1. 全局 MUI & 表单元素覆盖 ---
- * 此部分用于重置MUI组件的默认样式，使其更符合Obsidian的原生外观。
- */
-
-/* 重置图标按钮(IconButton)，移除圆形背景、投影，并使其更紧凑 */
-.MuiIconButton-root,
-.MuiIconButton-root:hover {
-    background-color: transparent !important;
-    box-shadow: none !important;
-    border-radius: 4px !important;
-    width: auto !important;
-    height: auto !important;
-    padding: 2px !important;
-}
-
-/* 将图标按钮中的 SVG 图标颜色设置为 Obsidian 主题强调色 */
-.MuiIconButton-root .MuiSvgIcon-root {
-    color: var(--interactive-accent);
-    font-size: 1.25rem;
-}
-
-/* 移除 Autocomplete 组件中标签的背景，以兼容自定义的 pill 样式 */
-.MuiAutocomplete-root .MuiAutocomplete-tag {
-    padding: 0 !important;
-    background: transparent !important;
-    border: 0 !important;
-    box-shadow: none !important;
-}
-
-/* 让原生复选框样式与 Obsidian 保持一致 */
-.task-checkbox {
-    appearance: auto !important;
-    -webkit-appearance: checkbox !important;
-}
-
-/* 已完成的复选框使用醒目的主题色 */
-.task-checkbox.done,
-.task-checkbox:checked {
-    accent-color: var(--interactive-accent) !important;
-}
-
-/* 已完成的复选框不可再次点击 */
-.task-checkbox.done {
-    pointer-events: none;
-}
-.task-checkbox:checked::after {
-    content: none !important;
-    display: none !important;
-    -webkit-mask-image: none !important;
-    background-color: transparent !important;
-}
-
-
-
-/* --- TaskRow 组件样式 --- */
-.task-row {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 4px;
-    background-color: var(--background-primary);
-    border-radius: 6px;
-    transition: all 0.2s ease;
-}
-
-.task-row:hover {
-    background-color: var(--background-modifier-hover);
-}
-
-.task-row-checkbox-wrapper {
-    flex-shrink: 0;
-    display: flex;
-    align-items: center;
-}
-
-.task-row-content {
-    flex: 1;
-    min-width: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-}
-
-.task-row-title {
-    color: var(--text-normal);
-    line-height: 1.5;
-    text-decoration: none;
-    display: inline-block;
-    word-break: break-word;
-    appearance: none;
-    -webkit-appearance: none;
-    background: transparent !important;
-    border: none !important;
-    outline: none !important;
-    box-shadow: none !important;
-}
-
-.task-row-title:focus,
-.task-row-title:focus-visible,
-.task-row-title:hover,
-.task-row-title:active {
-    outline: none !important;
-    box-shadow: none !important;
-}
-
-.task-row-title:hover {
-    text-decoration: underline;
-    color: var(--interactive-accent);
-}
-
-.task-row-title.task-done {
-    color: var(--text-muted);
-    text-decoration: line-through;
-}
-
-.task-row-fields {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
-    align-items: center;
-    margin-top: 4px;
-}
-
-/* 紧凑模式下的任务行样式 */
-.task-row--compact {
-    padding: 2px 4px;
-    gap: 6px;
-}
-
-.task-row--compact .task-row-title {
-    font-size: 0.9rem;
-    line-height: 1.4;
-}
-
-/* 已完成任务的样式 */
-.task-row--done {
-    opacity: 0.7;
-}
-
-.task-row--done .task-row-title {
-    color: var(--text-muted);
-    text-decoration: line-through;
-}
-
-/* --- TaskExecutionView --- */
 .task-execution-view {
     display: flex;
     flex-direction: column;
-    gap: 22px;
+    gap: 34px;
 }
 
 .task-execution-section {
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 14px;
+    padding-top: 10px;
+}
+
+.task-execution-section + .task-execution-section {
+    border-top: 2px solid color-mix(in srgb, var(--background-modifier-border) 70%, transparent);
+    padding-top: 36px;
+}
+
+.task-execution-section-header {
+    display: flex;
+    align-items: center;
 }
 
 .task-execution-section-title {
     margin: 0;
     font-size: 2rem;
-    line-height: 1.2;
+    line-height: 1.15;
+    font-weight: 800;
     color: var(--text-accent, var(--interactive-accent));
 }
 
-.task-execution-subsection {
+.task-execution-section-body {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 22px;
+}
+
+.task-execution-subsection {
+    display: grid;
+    grid-template-columns: 132px minmax(0, 1fr);
+    gap: 10px 18px;
+    align-items: start;
+    padding-left: 28px;
 }
 
 .task-execution-subsection-title {
     margin: 0;
+    padding-top: 8px;
     font-size: 1rem;
+    line-height: 1.5;
     font-weight: 600;
     color: var(--text-muted);
+    white-space: nowrap;
 }
 
 .task-execution-chip-grid {
     display: flex;
     flex-wrap: wrap;
-    gap: 12px;
+    gap: 12px 14px;
+    min-width: 0;
 }
 
 .task-execution-chip {
@@ -205,17 +68,17 @@ body {
     box-shadow: none !important;
     background: var(--background-secondary-alt, var(--background-secondary));
     color: var(--text-normal);
-    border-radius: 10px;
-    padding: 10px 14px;
-    font: inherit;
+    border-radius: 16px;
+    padding: 8px 18px;
+    font-size: 1rem;
+    line-height: 1.5;
+    font-weight: 500;
     cursor: pointer;
     transition: background-color 0.15s ease, transform 0.1s ease;
 }
 
-.task-execution-chip:hover,
-.task-execution-chip:focus-visible {
+.task-execution-chip:hover {
     background: var(--background-modifier-hover);
-    box-shadow: none !important;
 }
 
 .task-execution-chip:active {
@@ -224,45 +87,61 @@ body {
 
 .task-execution-context-menu {
     position: fixed;
-    z-index: 1000;
-    min-width: 180px;
+    z-index: 9999;
+    min-width: 220px;
     max-width: 280px;
-    border-radius: 10px;
-    padding: 10px 12px;
     background: var(--background-primary);
     border: 1px solid var(--background-modifier-border);
-    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.18);
+    border-radius: 12px;
+    box-shadow: var(--shadow-s);
+    padding: 10px;
 }
 
 .task-execution-context-title {
-    font-weight: 600;
+    font-size: 0.98rem;
+    font-weight: 700;
     margin-bottom: 4px;
 }
 
 .task-execution-context-meta,
 .task-execution-context-rule {
     color: var(--text-muted);
-    font-size: 0.9em;
+    font-size: 0.9rem;
     margin-bottom: 4px;
 }
 
 .task-execution-context-list {
-    margin-top: 8px;
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 6px;
+    margin-top: 8px;
 }
 
 .task-execution-context-link {
     color: var(--text-normal);
     text-decoration: none;
+    padding: 6px 8px;
+    border-radius: 8px;
 }
 
 .task-execution-context-link:hover {
-    color: var(--interactive-accent);
-    text-decoration: underline;
+    background: var(--background-modifier-hover);
 }
 
 .task-execution-context-empty {
     color: var(--text-muted);
+    font-size: 0.9rem;
+    padding: 4px 0;
+}
+
+@media (max-width: 640px) {
+    .task-execution-subsection {
+        grid-template-columns: 1fr;
+        gap: 8px;
+        padding-left: 16px;
+    }
+
+    .task-execution-subsection-title {
+        padding-top: 0;
+    }
 }

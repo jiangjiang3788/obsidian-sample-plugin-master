@@ -88,26 +88,31 @@ export function TaskExecutionView({ app, currentView, taskExecutionModel, onReco
     <div class="task-execution-view">
       {(taskExecutionModel?.sections || []).map((section) => (
         <section class="task-execution-section" key={section.key}>
-          <h2 class="task-execution-section-title">{section.title}</h2>
-          {(section.groups || []).map((group) => (
-            <div class="task-execution-subsection" key={group.key}>
-              {group.title ? <h3 class="task-execution-subsection-title">{group.title}</h3> : null}
-              <div class="task-execution-chip-grid">
-                {(group.tasks || []).map((task) => (
-                  <button
-                    key={task.key}
-                    type="button"
-                    class="task-execution-chip"
-                    title={task.recurrenceLabel || task.title}
-                    onClick={() => onRecordExecution(task.itemId)}
-                    onContextMenu={(event) => openMenu(event as unknown as MouseEvent, task.key)}
-                  >
-                    {task.count > 0 ? `${task.title} · ${task.count}` : task.title}
-                  </button>
-                ))}
+          <div class="task-execution-section-header">
+            <h2 class="task-execution-section-title">{section.title}</h2>
+          </div>
+
+          <div class="task-execution-section-body">
+            {(section.groups || []).map((group) => (
+              <div class="task-execution-subsection" key={group.key}>
+                <h3 class="task-execution-subsection-title">{group.title}</h3>
+                <div class="task-execution-chip-grid">
+                  {(group.tasks || []).map((task) => (
+                    <button
+                      key={task.key}
+                      type="button"
+                      class="task-execution-chip"
+                      title={task.recurrenceLabel || task.title}
+                      onClick={() => onRecordExecution(task.itemId)}
+                      onContextMenu={(event) => openMenu(event as unknown as MouseEvent, task.key)}
+                    >
+                      {task.count > 0 ? `${task.title} · ${task.count}` : task.title}
+                    </button>
+                  ))}
+                </div>
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </section>
       ))}
 

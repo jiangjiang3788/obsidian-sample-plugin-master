@@ -50,7 +50,7 @@ function getThemeGroup(theme?: string): { parent: string; child: string } {
   const segments = parsePath(String(theme || '').trim());
   return {
     parent: segments[0]?.name || '未分类',
-    child: segments[1]?.name || '',
+    child: segments[1]?.name || '任务',
   };
 }
 
@@ -112,14 +112,13 @@ export function buildTaskExecutionViewModel(params: {
 
   const sectionMap = new Map<string, Map<string, TaskExecutionTaskVM[]>>();
   for (const item of baseTasks) {
-    const { parent, child } = getThemeGroup(item.theme);
-    if (!sectionMap.has(parent)) sectionMap.set(parent, new Map());
-    const childKey = child || '__root__';
-    const childMap = sectionMap.get(parent)!;
-    if (!childMap.has(childKey)) childMap.set(childKey, []);
+    const group = getThemeGroup(item.theme);
+    if (!sectionMap.has(group.parent)) sectionMap.set(group.parent, new Map());
+    const childMap = sectionMap.get(group.parent)!;
+    if (!childMap.has(group.child)) childMap.set(group.child, []);
 
     const key = buildTaskKey(item);
-    childMap.get(childKey)!.push({
+    childMap.get(group.child)!.push({
       key,
       itemId: item.id,
       title: String(item.title || '').trim(),
@@ -137,13 +136,12 @@ export function buildTaskExecutionViewModel(params: {
       groups: Array.from(childMap.entries())
         .map(([child, tasks]) => ({
           key: `${parent}/${child}`,
-          title: child === '__root__' ? '' : child,
+          title: child,
           tasks: tasks.sort((a, b) => a.title.localeCompare(b.title, 'zh-CN')),
         }))
         .sort((a, b) => {
-          if (!a.title && !b.title) return 0;
-          if (!a.title) return -1;
-          if (!b.title) return 1;
+          if (a.title === '任务' && b.title !== '任务') return -1;
+          if (b.title === '任务' && a.title !== '任务') return 1;
           return a.title.localeCompare(b.title, 'zh-CN');
         }),
     }))

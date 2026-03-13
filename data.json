@@ -103,7 +103,10 @@
         ],
         "topN": 50
       },
-      "fields": [],
+      "fields": [
+        "categoryKey",
+        "content"
+      ],
       "groupFields": [],
       "filters": [],
       "sort": [],
@@ -166,7 +169,7 @@
       "id": "vi_mmijitbq47u10wu",
       "parentId": null,
       "title": "block",
-      "viewType": "BlockView",
+      "viewType": "TableView",
       "viewConfig": {
         "categories": [
           {
@@ -197,7 +200,9 @@
             "name": "总结",
             "color": "#e5bf8a"
           }
-        ]
+        ],
+        "rowField": "recurrence",
+        "colField": "file.path"
       },
       "fields": [
         "date",
@@ -207,7 +212,25 @@
         "categoryKey",
         "period"
       ],
-      "filters": [],
+      "filters": [
+        {
+          "field": "categoryKey",
+          "op": "=",
+          "value": "未完成任务",
+          "logic": "and"
+        },
+        {
+          "field": "folder",
+          "op": "=",
+          "value": "01",
+          "logic": "and"
+        },
+        {
+          "field": "recurrence",
+          "op": "regex",
+          "value": "^(?!.*every).*"
+        }
+      ],
       "sort": [
         {
           "field": "date",
