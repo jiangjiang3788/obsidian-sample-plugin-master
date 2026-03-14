@@ -201,7 +201,6 @@ const ViewContent = ({
         groupFields: viewInstance.groupFields,
         fields: viewInstance.fields,
         onMarkDone: onMarkDone,
-        onRecordExecution: (itemId: string) => itemService.appendCompletionRecord(itemId),
         // 不向 shared/ui 透传 actionService：需要的能力一律用 handlers 注入
         // itemService 不再向 shared/ui 透传（避免把 service 依赖扩散到 UI）
         // 仅部分 View 需要（如 TimelineView 的“对齐/精确编辑”）

@@ -63,7 +63,7 @@ export function TableView({ items, rowField, colField, onMarkDone, app, timerSer
                                 <td key={c} class="empty" />
                             ) : (
                                 <td key={c}>
-                                    {cellItems.map(it => (<div key={it.id}>{renderCellItem(it)}</div>))}
+                                    {cellItems.map(it => (<div key={it.id} class="table-view-cell-item">{renderCellItem(it)}</div>))}
                                 </td>
                             );
                         })}

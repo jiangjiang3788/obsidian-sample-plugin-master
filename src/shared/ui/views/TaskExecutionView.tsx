@@ -37,7 +37,7 @@ interface TaskExecutionViewProps {
   app: any;
   currentView: string;
   taskExecutionModel?: { sections: TaskExecutionSectionVM[] } | null;
-  onRecordExecution: (itemId: string) => void | Promise<void>;
+  onMarkDone?: (itemId: string) => void | Promise<void>;
 }
 
 interface MenuState {
@@ -54,7 +54,7 @@ function getChipToneClass(count: number): string {
   return 'task-execution-chip--tone-0';
 }
 
-export function TaskExecutionView({ app, currentView, taskExecutionModel, onRecordExecution }: TaskExecutionViewProps) {
+export function TaskExecutionView({ app, currentView, taskExecutionModel, onMarkDone }: TaskExecutionViewProps) {
   const [menu, setMenu] = useState<MenuState | null>(null);
   const menuRef = useRef<HTMLDivElement | null>(null);
   const vaultName = app?.vault?.getName?.() || '';
@@ -113,7 +113,7 @@ export function TaskExecutionView({ app, currentView, taskExecutionModel, onReco
                         type="button"
                         class={`task-execution-chip ${getChipToneClass(task.count)}`}
                         title={task.recurrenceLabel || task.title}
-                        onClick={() => onRecordExecution(task.itemId)}
+                        onClick={() => onMarkDone?.(task.itemId)}
                         onContextMenu={(event) => openMenu(event as unknown as MouseEvent, task.key)}
                       >
                         <span class="task-execution-chip-label">{task.title}</span>

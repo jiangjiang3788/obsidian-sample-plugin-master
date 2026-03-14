@@ -47,13 +47,13 @@ export function TaskRow({
             </div>
             
             <div class="task-row-content" onClick={openEdit as any}>
-                <div class="flex items-center gap-2">
+                <div class="task-row-main">
                     <button type="button" onClick={openEdit as any} class={`task-row-title ${done ? 'task-done' : ''}`} style={{ background: 'none', border: 'none', padding: 0, textAlign: 'left', cursor: 'pointer' }}>
                         {item.icon && <span class="icon mr-1">{item.icon}</span>}
                         {item.title}
                     </button>
                     {!done && (
-                        <div onClick={(e) => e.stopPropagation()}>
+                        <div class="task-row-timer-action" onClick={(e) => e.stopPropagation()}>
                             <TaskSendToTimerButton 
                                 taskId={item.id} 
                                 timerStatus={timer?.status}

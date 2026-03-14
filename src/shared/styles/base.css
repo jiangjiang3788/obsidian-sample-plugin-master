@@ -187,3 +187,108 @@
         flex-basis: 100%;
     }
 }
+
+
+/* TaskRow layout */
+.task-row {
+    display: inline-flex;
+    align-items: flex-start;
+    justify-content: flex-start;
+    gap: 8px;
+    max-width: 100%;
+    text-align: left;
+    vertical-align: top;
+}
+
+.task-row-checkbox-wrapper {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    padding-top: 2px;
+}
+
+.task-row-content {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: flex-start;
+    min-width: 0;
+    flex: 0 1 auto;
+    text-align: left;
+}
+
+.task-row-main {
+    display: inline-flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 8px;
+    min-width: 0;
+    max-width: 100%;
+}
+
+.task-row-title {
+    display: inline-flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 4px;
+    min-width: 0;
+    max-width: 100%;
+    flex: 0 1 auto;
+    text-align: left !important;
+    white-space: nowrap;
+}
+
+.task-row-timer-action {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+}
+
+.task-row-fields {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 6px;
+    margin-top: 4px;
+    min-width: 0;
+}
+
+.think-table td > .table-view-cell-item {
+    display: flex;
+    justify-content: flex-start;
+    text-align: left;
+}
+
+
+.task-row button {
+    box-shadow: none !important;
+}
+
+.task-row .task-row-title {
+    background: transparent !important;
+    box-shadow: none !important;
+}
+
+.task-row .task-row-timer-action button,
+.task-row .task-row-timer-action .MuiButtonBase-root,
+.task-row .task-row-timer-action .MuiIconButton-root {
+    background: transparent !important;
+    box-shadow: none !important;
+    border: none !important;
+}
+
+.task-row .task-row-timer-action button:hover,
+.task-row .task-row-timer-action button:focus,
+.task-row .task-row-timer-action button:active,
+.task-row .task-row-timer-action .MuiButtonBase-root:hover,
+.task-row .task-row-timer-action .MuiButtonBase-root:focus,
+.task-row .task-row-timer-action .MuiButtonBase-root:active,
+.task-row .task-row-timer-action .MuiIconButton-root:hover,
+.task-row .task-row-timer-action .MuiIconButton-root:focus,
+.task-row .task-row-timer-action .MuiIconButton-root:active {
+    background: transparent !important;
+    box-shadow: none !important;
+}
