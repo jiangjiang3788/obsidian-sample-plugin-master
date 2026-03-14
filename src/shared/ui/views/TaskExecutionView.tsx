@@ -13,6 +13,7 @@ interface TaskExecutionRecordVM {
 
 interface TaskExecutionTaskVM {
   key: string;
+  aggregateKey: string;
   itemId: string;
   title: string;
   count: number;
@@ -43,6 +44,14 @@ interface MenuState {
   x: number;
   y: number;
   taskKey: string;
+}
+
+function getChipToneClass(count: number): string {
+  if (count >= 4) return 'task-execution-chip--tone-4';
+  if (count >= 3) return 'task-execution-chip--tone-3';
+  if (count >= 2) return 'task-execution-chip--tone-2';
+  if (count >= 1) return 'task-execution-chip--tone-1';
+  return 'task-execution-chip--tone-0';
 }
 
 export function TaskExecutionView({ app, currentView, taskExecutionModel, onRecordExecution }: TaskExecutionViewProps) {
@@ -95,20 +104,23 @@ export function TaskExecutionView({ app, currentView, taskExecutionModel, onReco
           <div class="task-execution-section-body">
             {(section.groups || []).map((group) => (
               <div class="task-execution-subsection" key={group.key}>
-                <h3 class="task-execution-subsection-title">{group.title}</h3>
-                <div class="task-execution-chip-grid">
-                  {(group.tasks || []).map((task) => (
-                    <button
-                      key={task.key}
-                      type="button"
-                      class="task-execution-chip"
-                      title={task.recurrenceLabel || task.title}
-                      onClick={() => onRecordExecution(task.itemId)}
-                      onContextMenu={(event) => openMenu(event as unknown as MouseEvent, task.key)}
-                    >
-                      {task.count > 0 ? `${task.title} · ${task.count}` : task.title}
-                    </button>
-                  ))}
+                <div class="task-execution-subsection-body">
+                  <div class="task-execution-subsection-title">{group.title}</div>
+                  <div class="task-execution-chip-grid">
+                    {(group.tasks || []).map((task) => (
+                      <button
+                        key={task.key}
+                        type="button"
+                        class={`task-execution-chip ${getChipToneClass(task.count)}`}
+                        title={task.recurrenceLabel || task.title}
+                        onClick={() => onRecordExecution(task.itemId)}
+                        onContextMenu={(event) => openMenu(event as unknown as MouseEvent, task.key)}
+                      >
+                        <span class="task-execution-chip-label">{task.title}</span>
+                        {task.count > 0 && <span class="task-execution-chip-count">·{task.count}</span>}
+                      </button>
+                    ))}
+                  </div>
                 </div>
               </div>
             ))}

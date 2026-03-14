@@ -18,6 +18,7 @@ export interface TaskExecutionRecordVM {
 
 export interface TaskExecutionTaskVM {
   key: string;
+  aggregateKey: string;
   itemId: string;
   title: string;
   count: number;
@@ -42,8 +43,12 @@ export interface TaskExecutionViewModel {
   sections: TaskExecutionSectionVM[];
 }
 
-function buildTaskKey(item: Item): string {
+function buildAggregateKey(item: Item): string {
   return [item.file?.path || '', String(item.title || '').trim(), item.theme || ''].join('::');
+}
+
+function buildRenderKey(item: Item): string {
+  return String(item.id || buildAggregateKey(item));
 }
 
 function getThemeGroup(theme?: string): { parent: string; child: string } {
@@ -69,7 +74,8 @@ function formatRecordTime(item: Item): string {
 }
 
 function hasRecurringRule(item: Item): boolean {
-  return !!String(item.recurrence || '').trim() && String(item.recurrence).trim().toLowerCase() !== 'none';
+  const value = String(item.recurrence || '').trim();
+  return !!value && value.toLowerCase() !== 'none';
 }
 
 export function buildTaskExecutionViewModel(params: {
@@ -105,10 +111,10 @@ export function buildTaskExecutionViewModel(params: {
 
   const recordMap = new Map<string, TaskExecutionRecordVM[]>();
   for (const item of completed) {
-    const key = buildTaskKey(item);
-    const list = recordMap.get(key) || [];
+    const aggregateKey = buildAggregateKey(item);
+    const list = recordMap.get(aggregateKey) || [];
     list.push({ id: item.id, doneDate: item.doneDate, timeLabel: formatRecordTime(item), item });
-    recordMap.set(key, list);
+    recordMap.set(aggregateKey, list);
   }
   recordMap.forEach((list) => {
     list.sort((a, b) => `${b.doneDate || ''} ${b.timeLabel}`.localeCompare(`${a.doneDate || ''} ${a.timeLabel}`, 'zh-CN'));
@@ -121,14 +127,15 @@ export function buildTaskExecutionViewModel(params: {
     const childMap = sectionMap.get(group.parent)!;
     if (!childMap.has(group.child)) childMap.set(group.child, []);
 
-    const key = buildTaskKey(item);
+    const aggregateKey = buildAggregateKey(item);
     childMap.get(group.child)!.push({
-      key,
+      key: buildRenderKey(item),
+      aggregateKey,
       itemId: item.id,
       title: String(item.title || '').trim(),
-      count: (recordMap.get(key) || []).length,
+      count: (recordMap.get(aggregateKey) || []).length,
       recurrenceLabel: String(item.recurrence || '').trim(),
-      records: recordMap.get(key) || [],
+      records: recordMap.get(aggregateKey) || [],
       item,
     });
   }

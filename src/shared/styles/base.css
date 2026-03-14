@@ -1,19 +1,18 @@
 .task-execution-view {
     display: flex;
     flex-direction: column;
-    gap: 34px;
+    gap: 26px;
 }
 
 .task-execution-section {
     display: flex;
     flex-direction: column;
-    gap: 14px;
-    padding-top: 10px;
+    gap: 12px;
 }
 
 .task-execution-section + .task-execution-section {
-    border-top: 2px solid color-mix(in srgb, var(--background-modifier-border) 70%, transparent);
-    padding-top: 36px;
+    padding-top: 18px;
+    border-top: 1px solid var(--background-modifier-border);
 }
 
 .task-execution-section-header {
@@ -23,8 +22,8 @@
 
 .task-execution-section-title {
     margin: 0;
-    font-size: 2rem;
-    line-height: 1.15;
+    font-size: 1.7rem;
+    line-height: 1.2;
     font-weight: 800;
     color: var(--text-accent, var(--interactive-accent));
 }
@@ -32,53 +31,98 @@
 .task-execution-section-body {
     display: flex;
     flex-direction: column;
-    gap: 22px;
+    gap: 10px;
 }
 
 .task-execution-subsection {
-    display: grid;
-    grid-template-columns: 132px minmax(0, 1fr);
-    gap: 10px 18px;
-    align-items: start;
-    padding-left: 28px;
+    display: block;
+}
+
+.task-execution-subsection-body {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px 14px;
+    min-width: 0;
 }
 
 .task-execution-subsection-title {
     margin: 0;
-    padding-top: 8px;
-    font-size: 1rem;
-    line-height: 1.5;
-    font-weight: 600;
-    color: var(--text-muted);
-    white-space: nowrap;
+    flex: 0 0 auto;
+    font-size: 1.04rem;
+    line-height: 1.4;
+    font-weight: 700;
+    color: color-mix(in srgb, var(--text-normal) 82%, var(--text-muted) 18%);
 }
 
 .task-execution-chip-grid {
     display: flex;
+    flex: 1 1 280px;
     flex-wrap: wrap;
-    gap: 12px 14px;
+    align-items: center;
+    gap: 10px;
     min-width: 0;
 }
 
 .task-execution-chip {
     appearance: none;
     -webkit-appearance: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0;
+    min-height: 38px;
+    max-width: 100%;
     border: none !important;
     outline: none !important;
     box-shadow: none !important;
-    background: var(--background-secondary-alt, var(--background-secondary));
-    color: var(--text-normal);
-    border-radius: 16px;
-    padding: 8px 18px;
-    font-size: 1rem;
-    line-height: 1.5;
+    border-radius: 14px;
+    padding: 8px 14px;
+    font-size: 14px;
+    line-height: 1.4;
     font-weight: 500;
     cursor: pointer;
-    transition: background-color 0.15s ease, transform 0.1s ease;
+    color: var(--text-normal);
+    background: var(--background-secondary);
+    transition: background-color 0.15s ease, transform 0.1s ease, box-shadow 0.15s ease;
+}
+
+.task-execution-chip-label {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.task-execution-chip-count {
+    margin-left: 2px;
+    font-size: 12px;
+    line-height: 1;
+    font-weight: 600;
+    color: color-mix(in srgb, var(--text-normal) 72%, var(--text-muted) 28%);
+}
+
+.task-execution-chip--tone-0 {
+    background: var(--background-secondary);
+}
+
+.task-execution-chip--tone-1 {
+    background: color-mix(in srgb, var(--background-secondary) 82%, var(--interactive-accent, var(--text-accent)) 18%);
+}
+
+.task-execution-chip--tone-2 {
+    background: color-mix(in srgb, var(--background-secondary) 70%, var(--interactive-accent, var(--text-accent)) 30%);
+}
+
+.task-execution-chip--tone-3 {
+    background: color-mix(in srgb, var(--background-secondary) 58%, var(--interactive-accent, var(--text-accent)) 42%);
+}
+
+.task-execution-chip--tone-4 {
+    background: color-mix(in srgb, var(--background-secondary) 46%, var(--interactive-accent, var(--text-accent)) 54%);
 }
 
 .task-execution-chip:hover {
-    background: var(--background-modifier-hover);
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--interactive-accent, var(--text-accent)) 22%, transparent);
 }
 
 .task-execution-chip:active {
@@ -135,13 +179,11 @@
 }
 
 @media (max-width: 640px) {
-    .task-execution-subsection {
-        grid-template-columns: 1fr;
-        gap: 8px;
-        padding-left: 16px;
+    .task-execution-subsection-body {
+        gap: 8px 10px;
     }
 
-    .task-execution-subsection-title {
-        padding-top: 0;
+    .task-execution-chip-grid {
+        flex-basis: 100%;
     }
 }
