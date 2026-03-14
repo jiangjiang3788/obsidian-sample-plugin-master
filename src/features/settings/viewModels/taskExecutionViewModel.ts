@@ -68,6 +68,10 @@ function formatRecordTime(item: Item): string {
   return String(item.endTime || item.startTime || item.doneDate || '').trim();
 }
 
+function hasRecurringRule(item: Item): boolean {
+  return !!String(item.recurrence || '').trim() && String(item.recurrence).trim().toLowerCase() !== 'none';
+}
+
 export function buildTaskExecutionViewModel(params: {
   items: Item[];
   dateRange: [Date, Date];
@@ -87,11 +91,11 @@ export function buildTaskExecutionViewModel(params: {
     if (item.type !== 'task') return false;
     if (!matchesTheme(item, selectedThemes)) return false;
     if (!matchesCategory(item, selectedCategories)) return false;
-    if (onlyRecurring && !item.recurrence) return false;
+    if (onlyRecurring && !hasRecurringRule(item)) return false;
     return true;
   });
 
-  const baseTasks = filtered.filter((item) => isTaskOpen(item) && (!!item.recurrence || !onlyRecurring));
+  const baseTasks = filtered.filter((item) => isTaskOpen(item) && (hasRecurringRule(item) || !onlyRecurring));
   const completed = filtered.filter((item) => {
     if (!isTaskCompleted(item)) return false;
     if (!item.doneDate) return false;

@@ -9,6 +9,7 @@ import {
 import { normalizeDateStr, extractDate, getPeriodCount, dayjs } from './date';
 import { EMOJI } from '@/core/types/constants';
 import { cleanTaskText } from './text';
+import { extractRecurrenceText } from './mark';
 
 /* ---------- 工具 ---------- */
 function pick(line: string, emoji: string) { return extractDate(line, emoji); }
@@ -50,8 +51,8 @@ export function parseTaskLine(
     item.tags = tagMatches.map(t => t.replace('#', ''));
 
     /* ---- 重复性 ---- */
-    const recMatch = lineText.match(/🔁\s*([^\n📅⏳🛫➕✅❌]*)/);
-    if (recMatch && recMatch[1]) item.recurrence = recMatch[1].trim();
+    const recurrenceText = extractRecurrenceText(lineText);
+    if (recurrenceText) item.recurrence = recurrenceText;
 
     /* ---- 括号 meta (包含新的核心字段解析) ---- */
     let m: RegExpExecArray | null;

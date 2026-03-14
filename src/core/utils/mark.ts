@@ -12,6 +12,23 @@ export interface RecurrenceInfo {
     whenDone: boolean;
 }
 
+const RECURRENCE_RULE_RE =
+    /(^|[\s\[(])🔁\s*(every\s+(?:\d+\s+)?(?:day|week|month|year)s?(?:\s+when\s+done)?)(?=$|\s*(?:[\(\[][^(\[\])]*::|📅|⏳|🛫|➕|✅|❌))/i;
+
+/*
+ * 从一整行任务文本中抽取“纯 recurrence 规则文本”。
+ *
+ * 目标：
+ * - ✅ `- [ ] 跑步 🔁 every day (主题::健康)` -> `every day`
+ * - ✅ `- [ ] 回顾 🔁 every 2 weeks when done 📅 2025-09-20` -> `every 2 weeks when done`
+ * - ❌ 不把后续的 `(主题::...) (时间::...) ✅ 2025-09-20` 吞进 recurrence 文本里
+ */
+export function extractRecurrenceText(rawTask: string): string | null {
+    const match = rawTask.match(RECURRENCE_RULE_RE);
+    if (!match) return null;
+    return match[2]?.trim() || null;
+}
+
 // [核心修改] 辅助函数，用于清理所有时间相关的标签
 const cleanTimeAndDurationTags = (line: string): string => {
     return line
@@ -41,7 +58,7 @@ export function toggleToDone(
     // 顺序 1: 开始时间
     if (startTime !== undefined) {
         tagsToAppend.push(`(时间:: ${startTime})`);
-    } 
+    }
     // 回退情况：如果没有任何时间信息，说明是简单完成，记录一个时间点
     else if (duration === undefined && endTime === undefined) {
         tagsToAppend.push(`(时间:: ${nowTime})`);
@@ -59,7 +76,7 @@ export function toggleToDone(
 
     // 3. 重新组装任务行
     line = [line, ...tagsToAppend].join(' ').replace(/\s+/g, ' ').trim();
-    
+
     // 4. 标记任务为完成状态 [x]
     line = line.replace(/^(\s*-\s*)\[[ xX-]\]/, '$1[x]');
     if (!/^-\s*\[x\]/.test(line)) {
@@ -83,12 +100,16 @@ export function buildCompletedTaskRecord(
     return toggleToDone(rawLine, todayISO, nowTime, options);
 }
 
-/* ---------- 周期任务 (无变化) ---------- */
+/* ---------- 周期任务 ---------- */
 export function parseRecurrence(rawTask: string): RecurrenceInfo | null {
-    const m = rawTask.match(
-        /🔁\s*every\s+(\d+)?\s*(day|week|month|year)s?\s*(when done)?/i,
+    const recurrenceText = extractRecurrenceText(rawTask);
+    if (!recurrenceText) return null;
+
+    const m = recurrenceText.match(
+        /^every\s+(\d+)?\s*(day|week|month|year)s?(\s+when\s+done)?$/i,
     );
     if (!m) return null;
+
     const interval = m[1] ? parseInt(m[1], 10) : 1;
     const unit = m[2].toLowerCase() as RecurrenceInfo['unit'];
     const whenDone = Boolean(m[3]);
@@ -123,7 +144,7 @@ export function generateNextRecurringTask(
         .replace(/^(\s*-\s*)\[[ xX-]\]/, '$1[ ]') // 复原为待办
         .replace(new RegExp(`\\s*${EMOJI.done}\\s*${DATE_YMD_RE.source}`), '')
         .replace(/\s*[\(\[]时间::[^)\]]*[\)\]]/g, '') // 清理所有时间相关标签
-        .replace(/\s*[\(\[]结束::[^)\]]*[\)\]]/g, '')
+        .replace(/\s*[\(\[]结束::[^)\]]*[\)\]]/g, '');
         // .replace(/\s*[\(\[]时长::[^)\]]*[\)\]]/g, '');
 
     const rec = parseRecurrence(rawTask);
