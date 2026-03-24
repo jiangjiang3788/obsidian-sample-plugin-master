@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>代码架构图：左流程右说明</title>
+  <style>
+    :root{
+      --bg:#ffffff;--text:#1f2937;--muted:#6b7280;--line:#e5e7eb;--soft:#f8fafc;
+      --blue:#2563eb;--green:#059669;--orange:#d97706;--purple:#7c3aed;--red:#dc2626;--gray:#64748b;
+      --active:#111827;--active-bg:#eff6ff;--active-line:#2563eb;
+    }
+    *{box-sizing:border-box}
+    html{scroll-behavior:smooth}
+    body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;background:var(--bg);color:var(--text);line-height:1.7}
+    .wrap{max-width:1380px;margin:0 auto;padding:20px 18px 40px}
+    h1,h2,h3{margin:0}
+    h1{font-size:30px;line-height:1.3}
+    h2{font-size:20px;line-height:1.4}
+    h3{font-size:18px;line-height:1.4}
+    p{margin:0}
+    .muted{color:var(--muted)}
+    .hero{padding:16px 0 18px;border-bottom:1px solid var(--line);margin-bottom:18px}
+    .lead{margin-top:10px;font-size:16px;color:#374151}
+    .layout{display:grid;grid-template-columns:320px 1fr;gap:28px;align-items:start}
+    .left{position:sticky;top:12px}
+    .left h2{margin-bottom:10px}
+    .guide{font-size:13px;color:var(--muted);margin-bottom:12px}
+    .nav{list-style:none;padding:0;margin:0;border-left:2px solid #e5e7eb}
+    .nav li{margin:0;padding:0}
+    .nav a{display:block;padding:10px 12px 10px 16px;margin-left:-2px;border-left:2px solid transparent;color:#374151;text-decoration:none;border-radius:0 10px 10px 0}
+    .nav a:hover{background:#f9fafb}
+    .nav a.active{border-left-color:var(--active-line);background:var(--active-bg);color:var(--active);font-weight:600}
+    .nav .name{display:block;font-size:15px}
+    .nav .desc{display:block;font-size:12px;color:#6b7280;margin-top:2px}
+    .rules{margin-top:18px;padding-top:14px;border-top:1px solid var(--line)}
+    .rules ul{margin:8px 0 0 18px;padding:0}
+    .rules li{margin:6px 0;color:#4b5563}
+    .right{display:block}
+    .folder-section{display:none}
+    .folder-section.visible{display:block}
+    .folder-section{padding:18px 0;border-top:1px solid var(--line);border-radius:14px;transition:background .2s ease, box-shadow .2s ease, padding .2s ease}
+    .folder-section:first-child{border-top:none;padding-top:0}
+    .folder-section.active-section{background:#f8fbff;box-shadow:inset 3px 0 0 var(--active-line);padding-left:14px;padding-right:14px}
+    .folder-header{display:flex;justify-content:space-between;align-items:baseline;gap:14px;margin-bottom:10px}
+    .folder-path{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12px;color:#475569;background:#f8fafc;border:1px solid var(--line);border-radius:999px;padding:4px 8px;white-space:nowrap}
+    .folder-list{list-style:none;margin:0;padding:0}
+    .folder-list li{padding:8px 0;border-bottom:1px dashed #edf2f7;display:grid;grid-template-columns:120px 1fr;gap:12px;align-items:start}
+    .folder-list li:last-child{border-bottom:none}
+    .folder-list .label{font-weight:600;color:#111827}
+    .folder-list .value{color:#374151}
+    .tip{margin-top:10px;color:#4b5563;font-size:14px}
+    .simple{font-size:15px;color:#374151}
+    .em{font-weight:700;color:#111827}
+    @media (max-width: 980px){
+      .layout{grid-template-columns:1fr;gap:20px}
+      .left{position:static}
+      .folder-list li{grid-template-columns:1fr}
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <section class="hero">
+      <h1>左边看“它像店里的什么地方”，右边看“它到底干嘛”</h1>
+      <p class="lead">这版不再用一堆积木块解释。左边是<strong>通俗导览列表</strong>，右边是<strong>列表式说明</strong>。每个文件夹都先用比喻帮你建立感觉，再用很短的话讲清楚：它在哪一层、干什么、和谁关系最近。</p>
+    </section>
+
+    <div class="layout">
+      <aside class="left">
+        <h2>项目导览</h2>
+        <div class="guide">看左边先建立感觉：它像什么。再看右边理解它具体做什么。</div>
+        <ul class="nav" id="folderNav">
+          <li><a href="#main" class="active"><span class="name">main.ts</span><span class="desc">像商店的开门键：先把整个店开起来</span></a></li>
+          <li><a href="#app"><span class="name">app/</span><span class="desc">像店长办公室：负责安排整个店怎么运转</span></a></li>
+          <li><a href="#core"><span class="name">core/</span><span class="desc">像后仓和基础设备区：平时看不到，但整个店都靠它</span></a></li>
+          <li><a href="#features"><span class="name">features/</span><span class="desc">像店里的各个服务区：顾客直接接触到</span></a></li>
+          <li><a href="#platform"><span class="name">platform/</span><span class="desc">像店和商场物业的对接窗口：负责和外部环境打交道</span></a></li>
+          <li><a href="#shared"><span class="name">shared/</span><span class="desc">像店里的公共工具柜：多个区域都能拿来用</span></a></li>
+        </ul>
+
+        <div class="rules">
+          <h2>先记这 4 句</h2>
+          <ul>
+            <li><span class="em">main</span> 负责开店，不负责具体营业。</li>
+            <li><span class="em">app</span> 像店长办公室，负责安排，不是顾客直接看到的服务区。</li>
+            <li><span class="em">core</span> 像后仓和基础设备，提供支持，不直接面对顾客。</li>
+            <li><span class="em">features</span> 是顾客真正接触到的服务区。</li>
+          </ul>
+        </div>
+      </aside>
+
+      <main class="right" id="folderContent">
+        <section id="main" class="folder-section">
+          <div class="folder-header">
+            <h3>main.ts</h3>
+            <span class="folder-path">src/main.ts</span>
+          </div>
+          <ul class="folder-list">
+            <li><span class="label">像什么</span><span class="value">像商店的开门键，先把整个店开起来。</span></li>
+            <li><span class="label">一句话</span><span class="value">它是入口，负责开店，不负责后面的具体营业安排。</span></li>
+            <li><span class="label">层级</span><span class="value">最外层，排在最前面。</span></li>
+            <li><span class="label">主要作用</span><span class="value">把店开起来，然后把后面的营业安排交给 <span class="em">app/</span>。</span></li>
+            <li><span class="label">你怎么记</span><span class="value">看到 main，就理解成“先开店”。</span></li>
+          </ul>
+          <div class="tip">它和 app 的区别：<span class="em">main 是先把店门打开</span>，<span class="em">app 是开门后开始安排今天怎么营业</span>。</div>
+        </section>
+
+        <section id="app" class="folder-section">
+          <div class="folder-header">
+            <h3>app/</h3>
+            <span class="folder-path">src/app/</span>
+          </div>
+          <ul class="folder-list">
+            <li><span class="label">像什么</span><span class="value">像店长办公室。</span></li>
+            <li><span class="label">一句话</span><span class="value">它负责安排：谁先开工、谁来记账、谁来处理具体事务。</span></li>
+            <li><span class="label">层级</span><span class="value">比 main 更深一层，属于“开店后开始安排营业”的那层。</span></li>
+            <li><span class="label">主要作用</span><span class="value">把 <span class="em">core</span> 这套后仓能力接起来，再分配给 <span class="em">features</span> 这些前台服务区使用。</span></li>
+            <li><span class="label">里面常见内容</span><span class="value">store、usecases、bootstrap。你可以理解成：状态、操作入口、启动流程。</span></li>
+            <li><span class="label">你怎么记</span><span class="value">看到 app，就想成“店长办公室”。</span></li>
+          </ul>
+          <div class="tip">它和 core 的区别：<span class="em">app 负责安排店怎么运转</span>，<span class="em">core 负责提供店运转需要的基础能力</span>。</div>
+        </section>
+
+        <section id="core" class="folder-section">
+          <div class="folder-header">
+            <h3>core/</h3>
+            <span class="folder-path">src/core/</span>
+          </div>
+          <ul class="folder-list">
+            <li><span class="label">像什么</span><span class="value">像后仓、库房、基础设备区。</span></li>
+            <li><span class="label">一句话</span><span class="value">它提供基础支持，但顾客平时不会直接看到它。</span></li>
+            <li><span class="label">层级</span><span class="value">属于底层，像商店后面的后仓，前台很多地方都要靠它。</span></li>
+            <li><span class="label">主要作用</span><span class="value">负责数据、设置、AI、工具这些基础支持，就像店里的库房、水电、基础设备。</span></li>
+            <li><span class="label">你最该懂的点</span><span class="value">它不是给顾客看的服务区，它更像“后仓和基础设备区”。</span></li>
+            <li><span class="label">你怎么记</span><span class="value">看到 core，就想成“后仓在后面默默撑着整个店”。</span></li>
+          </ul>
+          <div class="tip">你之前看不懂 core，核心原因就是它太抽象。以后直接把它翻成：<span class="em">后仓和基础支持区</span>。</div>
+        </section>
+
+        <section id="features" class="folder-section">
+          <div class="folder-header">
+            <h3>features/</h3>
+            <span class="folder-path">src/features/</span>
+          </div>
+          <ul class="folder-list">
+            <li><span class="label">像什么</span><span class="value">像店里的不同服务区：收银区、咨询区、展示区。</span></li>
+            <li><span class="label">一句话</span><span class="value">这里放顾客真正看得到、点得到、用得到的服务。</span></li>
+            <li><span class="label">层级</span><span class="value">比 core 更靠前，最接近顾客。</span></li>
+            <li><span class="label">主要作用</span><span class="value">把聊天、设置、计时器、快速输入这些具体服务区组织起来。</span></li>
+            <li><span class="label">和 app 的关系</span><span class="value">features 不自己乱改数据，而是找 app 提供的 usecases 去操作。</span></li>
+            <li><span class="label">你怎么记</span><span class="value">看到 features，就想成“顾客正在使用的服务区”。</span></li>
+          </ul>
+          <div class="tip">如果你在整理文件夹时犹豫一个东西放哪，先问自己：<span class="em">这是顾客直接接触到的服务吗？</span> 是的话，大概率归 features。</div>
+        </section>
+
+        <section id="platform" class="folder-section">
+          <div class="folder-header">
+            <h3>platform/</h3>
+            <span class="folder-path">src/platform/</span>
+          </div>
+          <ul class="folder-list">
+            <li><span class="label">像什么</span><span class="value">像店和商场物业的对接窗口。</span></li>
+            <li><span class="label">一句话</span><span class="value">负责和商场外部环境打交道，再把外部规则接进店里。</span></li>
+            <li><span class="label">层级</span><span class="value">靠近外部环境，属于“店里和商场外部之间”的一层。</span></li>
+            <li><span class="label">主要作用</span><span class="value">处理 Vault、Metadata、Events、Modal 这些和外部平台打交道的能力。</span></li>
+            <li><span class="label">你最该懂的点</span><span class="value">它不是店里的服务本身，它只是负责把店和外部环境接起来。</span></li>
+            <li><span class="label">你怎么记</span><span class="value">看到 platform，就想成“对外对接窗口”。</span></li>
+          </ul>
+          <div class="tip">如果某段代码里 Obsidian 味很重，大概率就不该散在服务区里，而应该收进 platform 这个对外对接窗口。</div>
+        </section>
+
+        <section id="shared" class="folder-section">
+          <div class="folder-header">
+            <h3>shared/</h3>
+            <span class="folder-path">src/shared/</span>
+          </div>
+          <ul class="folder-list">
+            <li><span class="label">像什么</span><span class="value">像店里的公共工具柜，多个区域都能来拿。</span></li>
+            <li><span class="label">一句话</span><span class="value">这里放多个服务区都会用到的公共工具和小零件。</span></li>
+            <li><span class="label">层级</span><span class="value">不是营业主线的一站，而是横向给各个区域提供支持。</span></li>
+            <li><span class="label">主要作用</span><span class="value">减少重复，把通用的小工具、小零件统一放一起。</span></li>
+            <li><span class="label">你最该懂的点</span><span class="value">只有“多个服务区都要用”的东西才该进 shared。</span></li>
+            <li><span class="label">你怎么记</span><span class="value">看到 shared，就想成“公共工具柜”。</span></li>
+          </ul>
+          <div class="tip">如果一个东西只服务某一个服务区，就别放 shared，放回它自己的功能目录更清楚。</div>
+        </section>
+      </main>
+    </div>
+  </div>
+  <script>
+    const links = Array.from(document.querySelectorAll('#folderNav a'));
+    const sections = links.map(a => document.querySelector(a.getAttribute('href'))).filter(Boolean);
+
+    const setActive = (id) => {
+      links.forEach(a => a.classList.toggle('active', a.getAttribute('href') === '#' + id));
+      sections.forEach(sec => {
+        const isActive = sec.id === id;
+        sec.classList.toggle('active-section', isActive);
+        sec.classList.toggle('visible', isActive);
+      });
+    };
+
+    links.forEach(link => {
+      link.addEventListener('click', (e) => {
+        e.preventDefault();
+        const id = link.getAttribute('href').slice(1);
+        setActive(id);
+      });
+    });
+
+    setActive('main');
+  </script>
+</body>
+</html>

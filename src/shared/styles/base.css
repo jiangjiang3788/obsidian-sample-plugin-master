@@ -41,7 +41,8 @@
 .task-execution-subsection-body {
     display: flex;
     flex-wrap: wrap;
-    align-items: center;
+    /* 修改 1：改为靠顶对齐，这样标签换行时，标题依然留在顶部 */
+    align-items: flex-start; 
     gap: 10px 14px;
     min-width: 0;
 }
@@ -49,17 +50,19 @@
 .task-execution-subsection-title {
     margin: 0;
     flex: 0 0 auto;
-    font-size: 1.04rem;
-    line-height: 1.4;
-    font-weight: 700;
-    color: color-mix(in srgb, var(--text-normal) 82%, var(--text-muted) 18%);
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #444444;
+    line-height: 30px; /* 让标题的行高直接等于一个标签的高度 */
+    height: auto;
 }
 
 .task-execution-chip-grid {
     display: flex;
-    flex: 1 1 280px;
+    flex: 1 1 auto; /* 允许在窄屏下伸缩 */
     flex-wrap: wrap;
-    align-items: center;
+    /* 修改 4：这里也改为 flex-start，确保内部对齐逻辑一致 */
+    align-items: flex-start; 
     gap: 10px;
     min-width: 0;
 }
@@ -70,13 +73,13 @@
     display: inline-flex;
     align-items: center;
     gap: 0;
-    min-height: 38px;
+    min-height: 30px;
     max-width: 100%;
     border: none !important;
     outline: none !important;
     box-shadow: none !important;
     border-radius: 14px;
-    padding: 8px 14px;
+    padding: 8px 12px;
     font-size: 14px;
     line-height: 1.4;
     font-weight: 500;
@@ -89,14 +92,17 @@
 .task-execution-chip-label {
     min-width: 0;
     overflow: hidden;
+    font-size: 0.7rem;
+    overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
 }
 
 .task-execution-chip-count {
     margin-left: 2px;
-    font-size: 12px;
+    font-size:0.7rem;
     line-height: 1;
+    color: inherit !important;
     font-weight: 600;
     color: color-mix(in srgb, var(--text-normal) 72%, var(--text-muted) 28%);
 }
@@ -105,21 +111,32 @@
     background: var(--background-secondary);
 }
 
-.task-execution-chip--tone-1 {
-    background: color-mix(in srgb, var(--background-secondary) 82%, var(--interactive-accent, var(--text-accent)) 18%);
+/* 日：你选定的基准色 - 沉稳且有质感，作为最重层级 */
+.task-execution-chip--tone-1 { 
+    background: #9B7FBD !important; 
+    color: #ffffff !important; 
+    border: none;
 }
 
-.task-execution-chip--tone-2 {
-    background: color-mix(in srgb, var(--background-secondary) 70%, var(--interactive-accent, var(--text-accent)) 30%);
+/* 周：在中基准色基础上增加透明度 - 视觉厚度减半 */
+.task-execution-chip--tone-2 { 
+    background: #B9A5D1 !important; /* 稍微提亮一点的浅灰紫 */
+    color: #ffffff !important; 
 }
 
-.task-execution-chip--tone-3 {
-    background: color-mix(in srgb, var(--background-secondary) 58%, var(--interactive-accent, var(--text-accent)) 42%);
+/* 月：低饱和淡紫 - 即使满屏也不觉得乱 */
+.task-execution-chip--tone-3 { 
+    background: #E5D9F2 !important; 
+    color: #8E71AF !important; /* 文字用加深的同色系，保持柔和 */
 }
 
-.task-execution-chip--tone-4 {
-    background: color-mix(in srgb, var(--background-secondary) 46%, var(--interactive-accent, var(--text-accent)) 54%);
+/* 年：极淡灰紫 - 几乎融入背景，只有在特意看时才存在 */
+.task-execution-chip--tone-4 { 
+    background: #F4F0F9 !important; /* 非常接近背景的紫色微调 */
+    color: #C3B4D6 !important;    /* 极浅的文字，消除对比 */
+    border: 1px solid #E9E1F0;    /* 极细边框，给一个轮廓感即可 */
 }
+
 
 .task-execution-chip:hover {
     box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--interactive-accent, var(--text-accent)) 22%, transparent);

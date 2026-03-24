@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>代码架构图：左流程右说明</title>
+  <style>
+    :root{
+      --bg:#ffffff;--text:#1f2937;--muted:#6b7280;--line:#e5e7eb;--soft:#f8fafc;
+      --blue:#2563eb;--green:#059669;--orange:#d97706;--purple:#7c3aed;--red:#dc2626;--gray:#64748b;
+      --active:#111827;--active-bg:#eff6ff;--active-line:#2563eb;
+    }
+    *{box-sizing:border-box}
+    html{scroll-behavior:smooth}
+    body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;background:var(--bg);color:var(--text);line-height:1.7}
+    .wrap{max-width:1380px;margin:0 auto;padding:20px 18px 40px}
+    h1,h2,h3{margin:0}
+    h1{font-size:30px;line-height:1.3}
+    h2{font-size:20px;line-height:1.4}
+    h3{font-size:18px;line-height:1.4}
+    p{margin:0}
+    .muted{color:var(--muted)}
+    .hero{padding:16px 0 18px;border-bottom:1px solid var(--line);margin-bottom:18px}
+    .lead{margin-top:10px;font-size:16px;color:#374151}
+    .layout{display:grid;grid-template-columns:320px 1fr;gap:28px;align-items:start}
+    .left{position:sticky;top:12px}
+    .left h2{margin-bottom:10px}
+    .guide{font-size:13px;color:var(--muted);margin-bottom:12px}
+    .nav{list-style:none;padding:0;margin:0;border-left:2px solid #e5e7eb}
+    .nav li{margin:0;padding:0}
+    .nav a{display:block;padding:10px 12px 10px 16px;margin-left:-2px;border-left:2px solid transparent;color:#374151;text-decoration:none;border-radius:0 10px 10px 0}
+    .nav a:hover{background:#f9fafb}
+    .nav a.active{border-left-color:var(--active-line);background:var(--active-bg);color:var(--active);font-weight:600}
+    .nav .name{display:block;font-size:15px}
+    .nav .desc{display:block;font-size:12px;color:#6b7280;margin-top:2px}
+    .rules{margin-top:18px;padding-top:14px;border-top:1px solid var(--line)}
+    .rules ul{margin:8px 0 0 18px;padding:0}
+    .rules li{margin:6px 0;color:#4b5563}
+    .right{display:block}
+    .folder-section{display:none}
+    .folder-section.visible{display:block}
+    .folder-section{padding:18px 0;border-top:1px solid var(--line);border-radius:14px;transition:background .2s ease, box-shadow .2s ease, padding .2s ease}
+    .folder-section:first-child{border-top:none;padding-top:0}
+    .folder-section.active-section{background:#f8fbff;box-shadow:inset 3px 0 0 var(--active-line);padding-left:14px;padding-right:14px}
+    .folder-header{display:flex;justify-content:space-between;align-items:baseline;gap:14px;margin-bottom:10px}
+    .folder-path{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12px;color:#475569;background:#f8fafc;border:1px solid var(--line);border-radius:999px;padding:4px 8px;white-space:nowrap}
+    .folder-list{list-style:none;margin:0;padding:0}
+    .folder-list li{padding:8px 0;border-bottom:1px dashed #edf2f7;display:grid;grid-template-columns:120px 1fr;gap:12px;align-items:start}
+    .folder-list li:last-child{border-bottom:none}
+    .folder-list .label{font-weight:600;color:#111827}
+    .folder-list .value{color:#374151}
+    .tip{margin-top:10px;color:#4b5563;font-size:14px}
+    .simple{font-size:15px;color:#374151}
+    .em{font-weight:700;color:#111827}
+    @media (max-width: 980px){
+      .layout{grid-template-columns:1fr;gap:20px}
+      .left{position:static}
+      .folder-list li{grid-template-columns:1fr}
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <section class="hero">
+      <h1>先把 app/ 看懂：它像店长办公室</h1>
+      <p class="lead">这次不再讲整个项目，而是只讲 <strong>app/</strong>。因为你现在最需要搞懂的，不是全部目录，而是 <strong>app 到底管什么、和 core 有什么区别、里面每个子目录分别干嘛</strong>。你可以把 app 理解成：<strong>店已经开了，店长办公室开始安排今天怎么运转</strong>。</p>
+    </section>
+
+    <div class="layout">
+      <aside class="left">
+        <h2>app/ 导览</h2>
+        <div class="guide">先从左边建立感觉：这些子目录在“店长办公室”里各自是什么角色。</div>
+        <ul class="nav" id="folderNav">
+          <li><a href="#app-overview" class="active"><span class="name">app/ 总体</span><span class="desc">像店长办公室：负责安排整个店怎么运转</span></a></li>
+          <li><a href="#bootstrap"><span class="name">bootstrap/</span><span class="desc">像开店流程单：先做哪一步都写在这里</span></a></li>
+          <li><a href="#store"><span class="name">store/</span><span class="desc">像店里的记录本：现在店里是什么状态都记这里</span></a></li>
+          <li><a href="#usecases"><span class="name">usecases/</span><span class="desc">像店员操作手册：想做事，要按这里的动作来</span></a></li>
+          <li><a href="#ui"><span class="name">ui/</span><span class="desc">像办公室对外的小窗口：管理层需要露出来的界面</span></a></li>
+          <li><a href="#runtime"><span class="name">runtime/</span><span class="desc">像今天营业时的现场安排：店开着时要一直维持</span></a></li>
+          <li><a href="#capabilities"><span class="name">capabilities/</span><span class="desc">像可用服务清单：店里现在能提供哪些能力</span></a></li>
+        </ul>
+
+        <div class="rules">
+          <h2>先记这 4 句</h2>
+          <ul>
+            <li><span class="em">app</span> 不是功能区，它是安排功能区怎么运转的地方。</li>
+            <li><span class="em">bootstrap</span> 管“先后顺序”。</li>
+            <li><span class="em">store</span> 管“现在是什么状态”。</li>
+            <li><span class="em">usecases</span> 管“要做一件事时该走哪条路”。</li>
+          </ul>
+        </div>
+      </aside>
+
+      <main class="right" id="folderContent">
+        <section id="app-overview" class="folder-section">
+          <div class="folder-header">
+            <h3>app/ 总体</h3>
+            <span class="folder-path">src/app/</span>
+          </div>
+          <ul class="folder-list">
+            <li><span class="label">像什么</span><span class="value">像店长办公室。</span></li>
+            <li><span class="label">一句话</span><span class="value">它不直接卖东西，它负责安排整家店怎么运转。</span></li>
+            <li><span class="label">它在哪层</span><span class="value">它在 <span class="em">main</span> 下面、<span class="em">features</span> 上面，属于“调度层”。</span></li>
+            <li><span class="label">主要干什么</span><span class="value">把 <span class="em">core</span> 里的基础能力接起来，再按规则交给前面的功能区使用。</span></li>
+            <li><span class="label">和 core 的区别</span><span class="value"><span class="em">app</span> 是安排怎么用，<span class="em">core</span> 是提供能用的东西。</span></li>
+            <li><span class="label">你怎么记</span><span class="value">看到 app，就想成“店长办公室，不亲自接客，但决定大家怎么干活”。</span></li>
+          </ul>
+          <div class="tip">你后面只要看到“启动、状态、写操作入口、全局装配”这些词，大概率就在 app/ 里。</div>
+        </section>
+
+        <section id="bootstrap" class="folder-section">
+          <div class="folder-header">
+            <h3>bootstrap/</h3>
+            <span class="folder-path">src/app/bootstrap/</span>
+          </div>
+          <ul class="folder-list">
+            <li><span class="label">像什么</span><span class="value">像开店流程单。</span></li>
+            <li><span class="label">一句话</span><span class="value">它决定：店一开门，第一步、第二步、第三步分别做什么。</span></li>
+            <li><span class="label">它在哪层</span><span class="value">属于 app 里面最靠前的部分，因为它负责开场顺序。</span></li>
+            <li><span class="label">主要干什么</span><span class="value">初始化核心对象、拼装运行时、注册功能、完成启动流程。</span></li>
+            <li><span class="label">和 runtime 的区别</span><span class="value"><span class="em">bootstrap</span> 管“开店前后的启动顺序”，<span class="em">runtime</span> 管“店开着以后怎么维持现场”。</span></li>
+            <li><span class="label">你怎么记</span><span class="value">看到 bootstrap，就想成“开店流程单”。</span></li>
+          </ul>
+          <div class="tip">如果你看到 <span class="em">initialize</span>、<span class="em">buildRuntime</span>、<span class="em">register</span> 这类文件名，基本就是在写“先后顺序”。</div>
+        </section>
+
+        <section id="store" class="folder-section">
+          <div class="folder-header">
+            <h3>store/</h3>
+            <span class="folder-path">src/app/store/</span>
+          </div>
+          <ul class="folder-list">
+            <li><span class="label">像什么</span><span class="value">像店里的总记录本。</span></li>
+            <li><span class="label">一句话</span><span class="value">它负责记住：现在店里是什么状态。</span></li>
+            <li><span class="label">它在哪层</span><span class="value">属于 app 内部的状态中心，是很多功能都会读到的一层。</span></li>
+            <li><span class="label">主要干什么</span><span class="value">保存全局状态，比如当前设置、界面状态、主题数据、运行中的状态等。</span></li>
+            <li><span class="label">和 usecases 的区别</span><span class="value"><span class="em">store</span> 负责“存现在是什么样”，<span class="em">usecases</span> 负责“要把它改成什么样”。</span></li>
+            <li><span class="label">你怎么记</span><span class="value">看到 store，就想成“账本 / 记录本”。</span></li>
+          </ul>
+          <div class="tip">你可以把它理解成“结果放哪”。用户点完东西后，很多变化最后都会落到这里。</div>
+        </section>
+
+        <section id="usecases" class="folder-section">
+          <div class="folder-header">
+            <h3>usecases/</h3>
+            <span class="folder-path">src/app/usecases/</span>
+          </div>
+          <ul class="folder-list">
+            <li><span class="label">像什么</span><span class="value">像店员操作手册。</span></li>
+            <li><span class="label">一句话</span><span class="value">想做一件事时，不是乱来，而是按这里定义的动作去做。</span></li>
+            <li><span class="label">它在哪层</span><span class="value">在 features 和 store 中间，是“动作入口层”。</span></li>
+            <li><span class="label">主要干什么</span><span class="value">把“修改设置、更新主题、触发某个业务动作”这些事情包装成统一入口。</span></li>
+            <li><span class="label">和 features 的区别</span><span class="value"><span class="em">features</span> 是顾客看到的按钮和界面，<span class="em">usecases</span> 是按钮背后真正执行动作的标准流程。</span></li>
+            <li><span class="label">你怎么记</span><span class="value">看到 usecases，就想成“操作手册：做事要按流程来”。</span></li>
+          </ul>
+          <div class="tip">这就是为什么项目里强调：<span class="em">features 不要直接改 slices，要走 usecases</span>。因为 usecases 是统一动作入口。</div>
+        </section>
+
+        <section id="ui" class="folder-section">
+          <div class="folder-header">
+            <h3>ui/</h3>
+            <span class="folder-path">src/app/ui/</span>
+          </div>
+          <ul class="folder-list">
+            <li><span class="label">像什么</span><span class="value">像店长办公室对外的小窗口。</span></li>
+            <li><span class="label">一句话</span><span class="value">这里不是顾客主要逛的服务区，而是管理层需要露出来的一些界面。</span></li>
+            <li><span class="label">它在哪层</span><span class="value">属于 app 的外露部分，是 app 少数“要显示出来”的地方。</span></li>
+            <li><span class="label">主要干什么</span><span class="value">放应用级别的 UI、挂载点、公共模态窗、上下文提供层之类的东西。</span></li>
+            <li><span class="label">和 features 的区别</span><span class="value"><span class="em">ui</span> 更像系统级界面，<span class="em">features</span> 更像具体功能区界面。</span></li>
+            <li><span class="label">你怎么记</span><span class="value">看到 ui，就想成“办公室需要露出来的那扇窗”。</span></li>
+          </ul>
+          <div class="tip">如果一个界面是“整个系统都共用的管理外壳”，更可能在 app/ui；如果是某个具体功能自己的界面，更可能在 features 里。</div>
+        </section>
+
+        <section id="runtime" class="folder-section">
+          <div class="folder-header">
+            <h3>runtime/</h3>
+            <span class="folder-path">src/app/runtime/</span>
+          </div>
+          <ul class="folder-list">
+            <li><span class="label">像什么</span><span class="value">像今天营业时的现场安排。</span></li>
+            <li><span class="label">一句话</span><span class="value">店开起来以后，哪些对象要一直活着、哪些资源要一直维护，就在这里管。</span></li>
+            <li><span class="label">它在哪层</span><span class="value">属于 app 里面偏“持续运行”的那部分。</span></li>
+            <li><span class="label">主要干什么</span><span class="value">管理运行期对象、生命周期、可释放资源、当前会话环境之类的内容。</span></li>
+            <li><span class="label">和 bootstrap 的区别</span><span class="value"><span class="em">bootstrap</span> 负责启动那一瞬间，<span class="em">runtime</span> 负责启动之后的持续状态。</span></li>
+            <li><span class="label">你怎么记</span><span class="value">看到 runtime，就想成“营业现场一直在运转的安排”。</span></li>
+          </ul>
+          <div class="tip">理解 runtime 最简单的办法就是：它不是“怎么开店”，而是“店开着的时候怎么一直维持”。</div>
+        </section>
+
+        <section id="capabilities" class="folder-section">
+          <div class="folder-header">
+            <h3>capabilities/</h3>
+            <span class="folder-path">src/app/capabilities/</span>
+          </div>
+          <ul class="folder-list">
+            <li><span class="label">像什么</span><span class="value">像店里的可用服务清单。</span></li>
+            <li><span class="label">一句话</span><span class="value">它负责回答：这家店现在到底能提供哪些能力。</span></li>
+            <li><span class="label">它在哪层</span><span class="value">属于 app 里的“能力组织层”，比具体功能更靠抽象一些。</span></li>
+            <li><span class="label">主要干什么</span><span class="value">把系统当前可提供的功能、支持的能力、注册关系整理出来，便于上层使用。</span></li>
+            <li><span class="label">和 features 的区别</span><span class="value"><span class="em">capabilities</span> 更像“这家店能做什么”的清单，<span class="em">features</span> 更像“顾客实际看到的服务区”。</span></li>
+            <li><span class="label">你怎么记</span><span class="value">看到 capabilities，就想成“服务菜单”。</span></li>
+          </ul>
+          <div class="tip">如果你看到某个地方在整理“系统支持什么”，而不是“顾客点哪个按钮”，那它更像 capabilities。</div>
+        </section>
+      </main>
+    </div>
+  </div>
+  <script>
+    const links = Array.from(document.querySelectorAll('#folderNav a'));
+    const sections = links.map(a => document.querySelector(a.getAttribute('href'))).filter(Boolean);
+
+    const setActive = (id) => {
+      links.forEach(a => a.classList.toggle('active', a.getAttribute('href') === '#' + id));
+      sections.forEach(sec => {
+        const isActive = sec.id === id;
+        sec.classList.toggle('active-section', isActive);
+        sec.classList.toggle('visible', isActive);
+      });
+    };
+
+    links.forEach(link => {
+      link.addEventListener('click', (e) => {
+        e.preventDefault();
+        const id = link.getAttribute('href').slice(1);
+        setActive(id);
+      });
+    });
+
+    setActive('app-overview');
+  </script>
+</body>
+</html>

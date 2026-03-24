@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Think OS 开发文档</title>
+  <link rel="stylesheet" href="./shared.css" />
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand-card">
+        <h1>Think OS 开发文档</h1>
+        <p>总入口只负责引入公共样式、公共脚本，以及按顺序引入各个章节文件。</p>
+      </div>
+      <nav class="toc" id="toc"></nav>
+      <div class="tip-card">
+        <div class="tip-title">交互说明</div>
+        <div class="tip-text">
+          目录点击后只显示当前章节。<br />
+          在逻辑图区域中：<br />
+          <b>Ctrl + 滚轮</b>：缩放图<br />
+          <b>Shift + 滚轮</b>：左右移动图
+        </div>
+      </div>
+    </aside>
+    <main class="main">
+      <div class="main-inner">
+        <section class="hero">
+          <h1>Think OS 章节化开发文档</h1>
+          <p>你以后维护时，只需要增删章节文件，不需要再改一个超长单文件。</p>
+          <div class="hero-badges">
+            <span class="badge">一层文件结构</span>
+            <span class="badge">章节可独立修改</span>
+            <span class="badge">目录自动生成</span>
+            <span class="badge">图支持滚轮缩放与横向移动</span>
+          </div>
+        </section>
+        <div id="chapters"></div>
+      </div>
+    </main>
+  </div>
+  <script>window.THINKOS_DOC_CHAPTERS = [];</script>
+  <script src="./chapter-01-总览.js"></script>
+  <script src="./chapter-02-产品功能地图.js"></script>
+  <script src="./chapter-03-需求台账.js"></script>
+  <script src="./chapter-04-代码架构图.js"></script>
+  <script src="./chapter-05-架构视角逐文件.js"></script>
+  <script src="./chapter-06-领域视角逐文件.js"></script>
+  <script src="./chapter-07-业务视角逐文件.js"></script>
+  <script src="./chapter-08-数据流与流程图.js"></script>
+  <script src="./shared.js"></script>
+</body>
+</html>

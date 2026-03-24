@@ -109,7 +109,12 @@
       ],
       "groupFields": [],
       "filters": [],
-      "sort": [],
+      "sort": [
+        {
+          "field": "recurrence",
+          "dir": "asc"
+        }
+      ],
       "collapsed": false
     },
     {
@@ -161,7 +166,13 @@
       },
       "fields": [],
       "groupFields": [],
-      "filters": [],
+      "filters": [
+        {
+          "field": "categoryKey",
+          "op": "=",
+          "value": "打卡"
+        }
+      ],
       "sort": [],
       "collapsed": true
     },

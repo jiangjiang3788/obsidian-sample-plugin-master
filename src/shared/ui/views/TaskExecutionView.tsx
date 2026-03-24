@@ -46,11 +46,15 @@ interface MenuState {
   taskKey: string;
 }
 
-function getChipToneClass(count: number): string {
-  if (count >= 4) return 'task-execution-chip--tone-4';
-  if (count >= 3) return 'task-execution-chip--tone-3';
-  if (count >= 2) return 'task-execution-chip--tone-2';
-  if (count >= 1) return 'task-execution-chip--tone-1';
+function getChipToneClass(recurrenceLabel: string): string {
+  const recurrence = String(recurrenceLabel || '').trim().toLowerCase();
+
+  if (!recurrence) return 'task-execution-chip--tone-0';
+  if (recurrence.includes('day')) return 'task-execution-chip--tone-1';
+  if (recurrence.includes('week')) return 'task-execution-chip--tone-2';
+  if (recurrence.includes('month')) return 'task-execution-chip--tone-3';
+  if (recurrence.includes('year')) return 'task-execution-chip--tone-4';
+
   return 'task-execution-chip--tone-0';
 }
 
@@ -111,7 +115,7 @@ export function TaskExecutionView({ app, currentView, taskExecutionModel, onMark
                       <button
                         key={task.key}
                         type="button"
-                        class={`task-execution-chip ${getChipToneClass(task.count)}`}
+                        class={`task-execution-chip ${getChipToneClass(task.recurrenceLabel)}`}
                         title={task.recurrenceLabel || task.title}
                         onClick={() => onMarkDone?.(task.itemId)}
                         onContextMenu={(event) => openMenu(event as unknown as MouseEvent, task.key)}
