@@ -1,34 +1,30 @@
-// src/shared/ui/modals/QuickInputModal.tsx
-/**
- * S7.1: QuickInputModal - 快速输入模态框
- * - 使用 useZustandAppStore 读取 settings
- * - 使用 useCases 进行写入操作
- */
 /** @jsxImportSource preact */
 import { h } from 'preact';
 import { App, Modal, Notice } from 'obsidian';
-import { useMemo, useRef, useState } from 'preact/hooks';
+import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
 
-import { createServices, Services, useDataStore, useInputService, mountWithServices, unmountPreact, useSelector, selectInputSettings } from '@/app/public';
-import { makeObsUri, type Item, type QuickInputSaveData, type ThemeDefinition } from '@core/public';
-import { buildPathOption, getLeafPath, normalizePath } from '@core/utils/pathSemantic';
+import {
+  createServices,
+  Services,
+  mountWithServices,
+  unmountPreact,
+  useSelector,
+  selectInputSettings,
+  QuickInputEditor,
+  type QuickInputEditorState,
+  useUseCases,
+} from '@/app/public';
+import { makeObsUri, readRecordSubmitMessage, type Item, type QuickInputSaveData, type RecordInputSource, type RecordSubmitResult } from '@core/public';
 
 import { Box, Button } from '@mui/material';
 
-import { finalizeQuickInputFormData, QuickInputEditor, type QuickInputEditorState } from '@/app/public';
 import { CancelledError, createTakeLatest, ModalHeader } from '@shared/public';
 
 interface QuickInputEditOptions {
   mode?: 'create' | 'edit';
   editItem?: Item;
-}
-
-interface ResolvedEditState {
-  blockId: string;
-  themeId: string | null;
-  initialFormData: Record<string, any>;
-  title: string;
-  resolvedBy: 'exact' | 'inferred' | 'fallback';
+  source?: Extract<RecordInputSource, 'quickinput' | 'view_quick_create' | 'timer' | 'unknown'>;
+  onSubmitSuccess?: (result: RecordSubmitResult, draft: QuickInputSaveData) => void | Promise<void>;
 }
 
 export class QuickInputModal extends Modal {
@@ -74,9 +70,11 @@ export class QuickInputModal extends Modal {
         allowBlockSwitch={this.allowBlockSwitch}
         mode={this.options?.mode || 'create'}
         editItem={this.options?.editItem}
+        source={this.options?.source}
         vaultName={this.app.vault.getName()}
+        onSubmitSuccess={this.options?.onSubmitSuccess}
       />,
-      this.services
+      this.services,
     );
   }
 
@@ -90,8 +88,8 @@ export class QuickInputModal extends Modal {
       document.documentElement.style.setProperty('--keyboard-height', `${height}px`);
     };
 
-    const handleFocusIn = (e: FocusEvent) => {
-      const target = e.target as HTMLElement;
+    const handleFocusIn = (event: FocusEvent) => {
+      const target = event.target as HTMLElement;
       if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') {
         this.modalEl.addClass('keyboard-active');
         setTimeout(() => {
@@ -100,8 +98,8 @@ export class QuickInputModal extends Modal {
       }
     };
 
-    const handleFocusOut = (e: FocusEvent) => {
-      const target = e.target as HTMLElement;
+    const handleFocusOut = (event: FocusEvent) => {
+      const target = event.target as HTMLElement;
       if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') {
         setTimeout(() => {
           this.modalEl.removeClass('keyboard-active');
@@ -194,238 +192,16 @@ export class QuickInputModal extends Modal {
   }
 }
 
-function findThemeIdByPath(themes: ThemeDefinition[] = [], path?: string): string | null {
-  if (!path) return null;
-  return themes.find((t: any) => t.path === path)?.id ?? null;
-}
-
-function isOptionObject(value: any): value is { label?: any; value?: any } {
-  return !!value && typeof value === 'object' && ('value' in value || 'label' in value);
-}
-
-function isPathLikeField(field: any): boolean {
-  if (!field) return false;
-  if (field.semanticType === 'path') return true;
-  const key = String(field.key || field.label || '');
-  if (key.includes('分类') || /category/i.test(key)) return true;
-  return Array.isArray(field.options) && field.options.some((opt: any) => String(opt?.value || '').includes('/'));
-}
-
-function mapFieldValue(field: any, rawValue: any) {
-  if (rawValue === undefined || rawValue === null || rawValue === '') return undefined;
-  if (isOptionObject(rawValue)) {
-    return { value: rawValue.value, label: rawValue.label ?? rawValue.value };
-  }
-  if (['select', 'radio', 'rating'].includes(field.type)) {
-    const options = field.options || [];
-    if (field.type === 'rating' || field.semanticType === 'ratingPair') {
-      const option = options.find((opt: any) => String(opt.label ?? opt.value) === String(rawValue) || String(opt.value) === String(rawValue));
-      if (option) return { value: option.value, label: option.label || option.value };
-    }
-    if (isPathLikeField(field)) {
-      const rawPath = normalizePath(String(rawValue));
-      const option = options.find((opt: any) => normalizePath(String(opt.value || '')) === rawPath || String(opt.label || '') === String(rawValue));
-      if (option) return { value: normalizePath(String(option.value)), label: option.label || getLeafPath(String(option.value)) || option.value };
-      const built = buildPathOption(String(rawValue));
-      if (built) return built;
-    }
-    const option = options.find((opt: any) => opt.value === rawValue || opt.label === rawValue || String(opt.value) === String(rawValue) || String(opt.label) === String(rawValue));
-    if (option) return { value: option.value, label: option.label || option.value };
-  }
-  return rawValue;
-}
-
-function normalizeToken(value: any): string {
-  return String(value || '').trim().toLowerCase();
-}
-
-function getItemSemanticTokens(item: Item): Set<string> {
-  const tokens = new Set<string>();
-  const push = (value: any) => {
-    const normalized = normalizeToken(value);
-    if (normalized) tokens.add(normalized);
-  };
-
-  push(item.categoryKey);
-  push(item.theme);
-  push(item.file?.basename);
-  push(item.fileName);
-  push(item.header);
-  push(item.templateId);
-
-  Object.keys(item.extra || {}).forEach((key) => push(key));
-
-  if (item.content) push('content');
-  if (item.title) push('title');
-  if (item.date || item.createdDate) push('date');
-  if (item.startTime) push('time');
-  if (item.endTime) push('end');
-  if (item.duration !== undefined) push('duration');
-  if (item.rating !== undefined) push('rating');
-
-  return tokens;
-}
-
-function scoreTemplateForItem(block: any, item: Item): number {
-  let score = 0;
-  const outputTemplate = String(block?.outputTemplate || '');
-  const semanticTokens = getItemSemanticTokens(item);
-  const categoryKey = normalizeToken(item.categoryKey);
-  const blockId = normalizeToken(block?.id);
-  const blockName = normalizeToken(block?.name);
-  const blockCategory = normalizeToken(block?.categoryKey);
-
-  if (item.templateId && normalizeToken(item.templateId) === blockId) score += 100;
-  if (categoryKey && categoryKey === blockCategory) score += 30;
-  if (categoryKey && categoryKey === blockName) score += 20;
-
-  if (item.type === 'task') {
-    if (/^\s*-\s*\[[ xX]?\]/m.test(outputTemplate)) score += 40;
-    else score -= 10;
-  } else {
-    if (/<!--\s*start\s*-->/i.test(outputTemplate) || /内容\s*[:：]/.test(outputTemplate)) score += 20;
-  }
-
-  const fields = Array.isArray(block?.fields) ? block.fields : [];
-  for (const field of fields) {
-    const key = normalizeToken(field?.key);
-    const label = normalizeToken(field?.label);
-    if (semanticTokens.has(key)) score += 8;
-    if (label && semanticTokens.has(label)) score += 6;
-
-    if (item.type === 'task' && ['title', '标题', 'content', '内容'].includes(field?.key)) score += 4;
-    if (item.type === 'block' && ['content', '内容'].includes(field?.key)) score += 4;
-  }
-
-  return score;
-}
-
-function resolveBlockForEdit(blocks: any[], item: Item, initialBlockId: string) {
-  if (!Array.isArray(blocks) || blocks.length === 0) return { block: null, resolvedBy: 'fallback' as const };
-
-  if (item.templateId) {
-    const exact = blocks.find((b: any) => b.id === item.templateId);
-    if (exact) return { block: exact, resolvedBy: 'exact' as const };
-  }
-
-  const withScores = blocks
-    .map((block: any) => ({ block, score: scoreTemplateForItem(block, item) }))
-    .sort((a: any, b: any) => b.score - a.score);
-
-  const top = withScores[0];
-  if (top && top.score > 0) return { block: top.block, resolvedBy: 'inferred' as const };
-
-  const initial = initialBlockId ? blocks.find((b: any) => b.id === initialBlockId) : null;
-  if (initial) return { block: initial, resolvedBy: 'fallback' as const };
-
-  const sameTypeFallback = item.type === 'task'
-    ? blocks.find((b: any) => /^\s*-\s*\[[ xX]?\]/m.test(String(b?.outputTemplate || '')))
-    : blocks.find((b: any) => /<!--\s*start\s*-->/i.test(String(b?.outputTemplate || '')) || /内容\s*[:：]/.test(String(b?.outputTemplate || '')));
-
-  return { block: sameTypeFallback || blocks[0], resolvedBy: 'fallback' as const };
-}
-
-function buildRatingOption(field: any, item: Item) {
-  if (item.rating === undefined && !item.pintu) return undefined;
-  const options = field?.options || [];
-  const score = item.rating !== undefined && item.rating !== null ? String(item.rating) : '';
-  const image = String(item.pintu || '');
-  let option = options.find((opt: any) => String(opt.label ?? '') === score && (!image || String(opt.value || '') === image));
-  if (!option && score) option = options.find((opt: any) => String(opt.label ?? opt.value) === score);
-  if (!option && image) option = options.find((opt: any) => String(opt.value || '') === image);
-  if (option) return { value: option.value, label: option.label || option.value };
-  if (score || image) return { value: image, label: score || image };
-  return undefined;
-}
-
-function buildInitialFormData(template: any, item: Item): Record<string, any> {
-  const result: Record<string, any> = {};
-  if (!template?.fields?.length) return result;
-
-  const extraEntries = Object.entries(item.extra || {});
-  const readExtraByAlias = (alias: string) => {
-    if (!alias) return undefined;
-    if (item.extra && Object.prototype.hasOwnProperty.call(item.extra, alias)) return item.extra[alias as keyof typeof item.extra];
-    const lower = normalizeToken(alias);
-    const match = extraEntries.find(([key]) => normalizeToken(key) === lower);
-    return match?.[1];
-  };
-
-  const readValue = (field: any) => {
-    const aliases = [field.key, field.label, String(field.key || '').toLowerCase(), String(field.label || '').toLowerCase()];
-    for (const alias of aliases) {
-      const value = readExtraByAlias(alias);
-      if (value !== undefined) return value;
-    }
-
-    const key = String(field.key || '').toLowerCase();
-    const label = String(field.label || '').toLowerCase();
-
-    if (field.type === 'rating' || field.semanticType === 'ratingPair' || ['评分', 'rating'].includes(key) || ['评分', 'rating'].includes(label)) {
-      return buildRatingOption(field, item);
-    }
-
-    if (isPathLikeField(field)) {
-      return item.categoryKey || undefined;
-    }
-
-    if (['内容', 'content', 'title', '标题'].includes(field.key) || ['内容', 'content', 'title', '标题'].includes(field.label)) {
-      return item.type === 'task' ? (item.title || item.content) : item.content;
-    }
-    if (['日期', 'date'].includes(field.key) || ['日期', 'date'].includes(field.label)) return item.date || item.createdDate;
-    if (['时间', 'time', 'start'].includes(key) || ['时间', 'time', 'start'].includes(label)) return item.startTime;
-    if (['结束', 'end'].includes(key) || ['结束', 'end'].includes(label)) return item.endTime;
-    if (['时长', 'duration'].includes(key) || ['时长', 'duration'].includes(label)) return item.duration;
-    if (['主题', 'theme'].includes(key) || ['主题', 'theme'].includes(label)) return item.theme || item.header;
-    return (item as any)[field.key] ?? (item as any)[field.label];
-  };
-
-  for (const field of template.fields) {
-    const raw = readValue(field);
-    const mapped = mapFieldValue(field, raw);
-    if (mapped !== undefined) result[field.key] = mapped;
-  }
-  return result;
-}
-
-function resolveEditState(settings: any, initialBlockId: string, initialThemeId: string | undefined, editItem?: Item): ResolvedEditState {
-  if (!editItem) {
-    return {
-      blockId: initialBlockId,
-      themeId: initialThemeId || null,
-      initialFormData: {},
-      title: initialBlockId,
-      resolvedBy: 'fallback',
-    };
-  }
-
-  const blocks = settings.blocks || [];
-  const { block: resolvedBlock, resolvedBy } = resolveBlockForEdit(blocks, editItem, initialBlockId);
-
-  const themeId = findThemeIdByPath(settings.themes || [], editItem.theme) || initialThemeId || null;
-  const matchingOverride = resolvedBlock
-    ? (settings.overrides || []).find((o: any) => o.blockId === resolvedBlock.id && o.themeId === themeId && !o.disabled)
-    : null;
-  const template = resolvedBlock
-    ? (matchingOverride
-      ? {
-          ...resolvedBlock,
-          ...matchingOverride,
-          fields: matchingOverride.fields || resolvedBlock.fields,
-        }
-      : resolvedBlock)
-    : null;
-
-  const titleBase = editItem.type === 'task' ? (editItem.title || '编辑任务') : (editItem.content || editItem.title || '编辑记录');
-  const titlePrefix = resolvedBy === 'inferred' ? '推断模板 · ' : resolvedBy === 'fallback' ? '兜底模板 · ' : '';
-
-  return {
-    blockId: resolvedBlock?.id || initialBlockId,
-    themeId,
-    initialFormData: template ? buildInitialFormData(template, editItem) : {},
-    title: `${titlePrefix}${titleBase}`,
-    resolvedBy,
-  };
+function buildEditTitle(item: Item, resolvedBy?: 'exact' | 'inferred' | 'fallback'): string {
+  const titleBase = item.type === 'task'
+    ? (item.title || '编辑任务')
+    : (item.content || item.title || '编辑记录');
+  const titlePrefix = resolvedBy === 'inferred'
+    ? '推断模板 · '
+    : resolvedBy === 'fallback'
+      ? '兜底模板 · '
+      : '';
+  return `${titlePrefix}${titleBase}`;
 }
 
 function QuickInputModalContent({
@@ -438,7 +214,9 @@ function QuickInputModalContent({
   allowBlockSwitch,
   mode,
   editItem,
+  source,
   vaultName,
+  onSubmitSuccess,
 }: {
   getResourcePath: (path: string) => string;
   initialBlockId: string;
@@ -449,39 +227,56 @@ function QuickInputModalContent({
   allowBlockSwitch: boolean;
   mode: 'create' | 'edit';
   editItem?: Item;
+  source?: Extract<RecordInputSource, 'quickinput' | 'view_quick_create' | 'timer' | 'unknown'>;
   vaultName: string;
+  onSubmitSuccess?: (result: RecordSubmitResult, draft: QuickInputSaveData) => void | Promise<void>;
 }) {
   const settings = useSelector(selectInputSettings);
-  const dataStore = useDataStore();
-  const inputService = useInputService();
+  const useCases = useUseCases();
   const submitLatestRef = useRef(createTakeLatest('quick-input-submit'));
+  const originalTouchRef = useRef<number | null>(null);
 
-  const editState = useMemo(
-    () => resolveEditState(settings, initialBlockId, initialThemeId, mode === 'edit' ? editItem : undefined),
-    [settings, initialBlockId, initialThemeId, mode, editItem]
-  );
+  useEffect(() => () => submitLatestRef.current.dispose(), []);
+
+  const preparedRecord = useMemo(() => {
+    if (mode === 'edit' && editItem) {
+      return useCases.recordInput.prepareEditRecord({
+        item: editItem,
+        blockId: initialBlockId,
+        themeId: initialThemeId ?? null,
+        source: 'quickinput',
+      });
+    }
+
+    return useCases.recordInput.prepareCreateRecord({
+      blockId: initialBlockId,
+      themeId: initialThemeId ?? null,
+      context,
+      source: onSave ? 'timer' : (source ?? 'quickinput'),
+    });
+  }, [useCases, settings, initialBlockId, initialThemeId, context, mode, editItem, onSave, source]);
 
   const [editorState, setEditorState] = useState<QuickInputEditorState>({
-    blockId: editState.blockId,
-    themeId: editState.themeId,
-    formData: editState.initialFormData,
+    blockId: preparedRecord.blockId || initialBlockId,
+    themeId: preparedRecord.themeId,
+    formData: preparedRecord.initialFormData,
     template: null,
     theme: null,
     templateId: null,
     templateSourceType: null,
   });
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [pendingAction, setPendingAction] = useState<'submit' | 'delete' | null>(null);
 
-  const themeIdMap = useMemo(() => {
-    const themes = settings.themes || [];
-    return new Map(themes.map((t: any) => [t.id, t]));
-  }, [settings.themes]);
-
-  const currentBlock = (settings.blocks || []).find((b: any) => b.id === editorState.blockId);
+  const currentBlock = (settings.blocks || []).find((block: any) => block.id === editorState.blockId);
   const currentBlockName = currentBlock?.name || editorState.template?.name || editorState.blockId;
   const originalUri = mode === 'edit' && editItem ? makeObsUri(editItem, vaultName) : '';
+  const isBusy = pendingAction !== null;
+  const isTimerCreate = mode === 'create' && (source === 'timer' || !!onSave);
+  const originalGestureHint = originalUri && !originalUri.startsWith('#error')
+    ? '桌面端按住 Ctrl/⌘ 点击标题或说明；手机端双击标题或说明，可打开原文'
+    : undefined;
 
-  const handleJumpToOriginal = () => {
+  const openOriginal = () => {
     if (!originalUri || originalUri.startsWith('#error')) {
       new Notice('❌ 找不到原文位置');
       return;
@@ -489,48 +284,133 @@ function QuickInputModalContent({
     window.open(originalUri, '_blank');
   };
 
+  const handleOriginalPointerClick = (event: MouseEvent) => {
+    if (!originalGestureHint) return;
+    if (!event.ctrlKey && !event.metaKey) return;
+    event.preventDefault();
+    event.stopPropagation();
+    openOriginal();
+  };
+
+  const handleOriginalTouchEnd = (event: TouchEvent) => {
+    if (!originalGestureHint) return;
+    const now = Date.now();
+    const previous = originalTouchRef.current;
+    originalTouchRef.current = now;
+
+    if (previous && now - previous <= 350) {
+      originalTouchRef.current = null;
+      event.preventDefault();
+      event.stopPropagation();
+      openOriginal();
+    }
+  };
+
+  const showResult = (message: string, type: 'success' | 'error' = 'error') => {
+    const prefix = type === 'success' ? '' : '❌ ';
+    new Notice(`${prefix}${message}`, type === 'success' ? 4000 : 10000);
+  };
+
+  const buildCreateDraft = (): QuickInputSaveData => ({
+    blockId: editorState.blockId,
+    themeId: editorState.themeId ?? null,
+    formData: editorState.formData,
+    context,
+    source: source ?? (onSave ? 'timer' : 'quickinput'),
+  });
+
   const handleSubmit = async () => {
-    const template = editorState.template;
-    if (!template) return;
-    if (!inputService) {
-      new Notice('❌ 保存失败: InputService 未初始化');
-      return;
-    }
-
-    const finalData = finalizeQuickInputFormData(editorState.formData);
-    const finalTheme = editorState.themeId ? themeIdMap.get(editorState.themeId) : undefined;
-
     if (onSave && mode === 'create') {
-      onSave({ template, formData: finalData, theme: finalTheme, templateId: editorState.templateId, templateSourceType: editorState.templateSourceType });
+      onSave(buildCreateDraft());
       closeModal();
       return;
     }
 
-    setIsSubmitting(true);
+    setPendingAction('submit');
     try {
-      await submitLatestRef.current.run(async (signal) => {
+      const result = await submitLatestRef.current.run(async (signal) => {
         if (mode === 'edit' && editItem) {
-          await inputService.updateExistingRecord(editItem, template, finalData, finalTheme, {
-            templateId: editorState.templateId,
-            templateSourceType: editorState.templateSourceType,
-          }, signal);
-        } else {
-          const path = await inputService.executeTemplate(template, finalData, finalTheme, {
-            templateId: editorState.templateId,
-            templateSourceType: editorState.templateSourceType,
+          return await useCases.recordInput.submitUpdateRecord({
+            item: editItem,
+            blockId: editorState.blockId,
+            themeId: editorState.themeId,
+            formData: editorState.formData,
+            signal,
+            source: 'quickinput',
           });
-          await dataStore?.scanFileByPath?.(path);
-          dataStore?.notifyChange?.();
         }
+
+        return await useCases.recordInput.submitCreateRecord({
+          blockId: editorState.blockId,
+          themeId: editorState.themeId,
+          formData: editorState.formData,
+          context,
+          signal,
+          source: source ?? 'quickinput',
+        });
       });
-      new Notice(mode === 'edit' ? '✅ 已写回 md 并刷新记录' : '✅ 已保存');
-      closeModal();
-    } catch (e: any) {
-      if (!(e instanceof CancelledError)) {
-        new Notice(`❌ 保存失败: ${e.message || e}`, 10000);
+
+      if (result.status === 'success') {
+        const shouldShowOwnSuccessNotice = !(mode === 'create' && source === 'timer' && onSubmitSuccess);
+        if (result.feedback?.notice && shouldShowOwnSuccessNotice) {
+          showResult(result.feedback.notice, 'success');
+        }
+        if (mode === 'create' && onSubmitSuccess) {
+          try {
+            await onSubmitSuccess(result, buildCreateDraft());
+          } catch (followUpError: any) {
+            showResult(followUpError?.message || '记录已创建，但后续操作失败');
+          }
+        }
+        closeModal();
+        return;
+      }
+
+      if (result.status === 'cancelled') {
+        return;
+      }
+
+      showResult(readRecordSubmitMessage(result, mode === 'edit' ? '保存修改失败' : '创建失败'));
+    } catch (error: any) {
+      if (!(error instanceof CancelledError)) {
+        showResult(error?.message || (mode === 'edit' ? '保存修改失败' : '创建失败'));
       }
     } finally {
-      setIsSubmitting(false);
+      setPendingAction(null);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (mode !== 'edit' || !editItem) return;
+    if (!window.confirm('确认删除这条记录吗？')) return;
+
+    setPendingAction('delete');
+    try {
+      const result = await submitLatestRef.current.run((signal) => useCases.recordInput.submitDeleteRecord({
+        item: editItem,
+        signal,
+        source: 'quickinput',
+      }));
+
+      if (result.status === 'success') {
+        if (result.feedback?.notice) {
+          showResult(result.feedback.notice, 'success');
+        }
+        closeModal();
+        return;
+      }
+
+      if (result.status === 'cancelled') {
+        return;
+      }
+
+      showResult(readRecordSubmitMessage(result, '删除失败'));
+    } catch (error: any) {
+      if (!(error instanceof CancelledError)) {
+        showResult(error?.message || '删除失败');
+      }
+    } finally {
+      setPendingAction(null);
     }
   };
 
@@ -538,7 +418,16 @@ function QuickInputModalContent({
     <div class="think-modal" style={{ padding: '0 1rem 1rem 1rem' }}>
       <Box sx={{ mb: '1rem' }}>
         <ModalHeader
-          left={<h3 style={{ margin: 0 }}>{mode === 'edit' ? `编辑记录 · ${currentBlockName}` : (onSave ? `开始新任务: ${currentBlockName}` : `快速录入 · ${currentBlockName}`)}</h3>}
+          left={
+            <h3
+              style={{ margin: 0 }}
+              title={originalGestureHint}
+              onClick={mode === 'edit' ? (handleOriginalPointerClick as any) : undefined}
+              onTouchEnd={mode === 'edit' ? (handleOriginalTouchEnd as any) : undefined}
+            >
+              {mode === 'edit' ? `编辑记录 · ${currentBlockName}` : (isTimerCreate ? `开始新任务 · ${currentBlockName}` : `快速录入 · ${currentBlockName}`)}
+            </h3>
+          }
           onClose={closeModal}
           padding={0}
           borderBottom={false}
@@ -547,26 +436,27 @@ function QuickInputModalContent({
 
       <QuickInputEditor
         getResourcePath={getResourcePath}
-        initialBlockId={editState.blockId}
-        initialThemeId={editState.themeId}
-        initialFormData={editState.initialFormData}
+        initialBlockId={preparedRecord.blockId || initialBlockId}
+        initialThemeId={preparedRecord.themeId}
+        initialFormData={preparedRecord.initialFormData}
         context={mode === 'edit' ? undefined : context}
         allowBlockSwitch={mode === 'edit' ? false : allowBlockSwitch}
         onStateChange={setEditorState}
       />
 
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '1.5rem', gap: '8px' }}>
-        <div style={{ color: 'var(--text-muted)', fontSize: '12px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-          {mode === 'edit' ? editState.title : ''}
-        </div>
+      <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', marginTop: '1.5rem', gap: '8px' }}>
         <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
-          {mode === 'edit' && editItem?.file?.path ? (
-            <Button onClick={handleJumpToOriginal} disabled={isSubmitting}>跳到原文</Button>
+          {mode === 'edit' ? (
+            <Button color="error" onClick={handleDelete} disabled={isBusy}>
+              {pendingAction === 'delete' ? '删除中...' : '删除'}
+            </Button>
           ) : null}
-          <Button onClick={handleSubmit} variant="contained" disabled={isSubmitting}>
-            {isSubmitting ? '保存中...' : (mode === 'edit' ? '写回 md' : (onSave ? '创建并开始计时' : '提交'))}
+          <Button onClick={handleSubmit} variant="contained" disabled={isBusy}>
+            {pendingAction === 'submit'
+              ? (mode === 'edit' ? '保存中...' : '创建中...')
+              : (mode === 'edit' ? '保存修改' : '创建')}
           </Button>
-          <Button onClick={closeModal} disabled={isSubmitting}>取消</Button>
+          <Button onClick={closeModal} disabled={isBusy}>取消</Button>
         </div>
       </div>
     </div>

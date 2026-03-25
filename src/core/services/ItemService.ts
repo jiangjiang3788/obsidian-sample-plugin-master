@@ -1,11 +1,16 @@
 // src/core/services/ItemService.ts
-// [架构标准化] 抽象化业务概念，避免 core 层出现具体业务词汇
 import { singleton, inject } from 'tsyringe';
 import { DataStore } from '@core/services/DataStore';
-import type { VaultPort } from '@core/ports/VaultPort';
-import { VAULT_PORT_TOKEN } from '@core/ports/VaultPort';
-import { dayjs, nowHHMM, todayISO, timeToMinutes, minutesToTime } from '@core/utils/date';
+import { VAULT_PORT_TOKEN, type VaultPort } from '@core/ports/VaultPort';
+import { nowHHMM, todayISO } from '@core/utils/date';
+import { normalizeTaskTimeTriple } from '@core/utils/taskTime';
 import { buildCompletedTaskRecord, markTaskDone } from '@core/utils/mark';
+import { resolveTaskLineIndexForMutation } from '@core/services/recordInput/mutationLocator';
+import { createRecordConflictError } from '@core/services/recordInput/mutationErrors';
+
+interface ItemMutationOptions {
+    autoRefresh?: boolean;
+}
 
 @singleton()
 export class ItemService {
@@ -14,113 +19,123 @@ export class ItemService {
         @inject(VAULT_PORT_TOKEN) private vault: VaultPort
     ) {}
 
-    /**
-     * [架构标准化] 根据条目ID获取其在文件中的原始行文本。
-     */
     public async getItemLine(itemId: string): Promise<string> {
-        const { path, lineNo } = this.parseItemId(itemId);
-        const content = await this.vault.readFile(path);
-        if (content == null) throw new Error(`找不到条目文件: ${path}`);
-        const lines = content.split('\n');
-        if (lineNo > lines.length) throw new Error(`文件 ${path} 的行号 ${lineNo} 超出范围。`);
-
-        return lines[lineNo - 1];
+        const context = await this.loadMutableTaskContext(itemId);
+        return context.rawLine;
     }
 
-    /**
-     * [架构标准化] 更新文件中的特定行。
-     */
-    private async updateItemLine(path: string, lineNo: number, newLine: string, nextLine?: string): Promise<void> {
-        const content = await this.vault.readFile(path);
-        if (content == null) throw new Error(`找不到文件: ${path}`);
-        const lines = content.split('\n');
-        if (lineNo > lines.length) throw new Error(`文件 ${path} 的行号 ${lineNo} 超出范围。`);
-        lines[lineNo - 1] = newLine;
-
-        if (nextLine) {
-            lines.splice(lineNo, 0, nextLine);
-        }
-
+    private async writeLines(path: string, lines: string[], options: ItemMutationOptions = {}): Promise<void> {
         await this.vault.writeFile(path, lines.join('\n'));
-        this.dataStore.scanFileByPath(path).then(() => this.dataStore.notifyChange());
+        if (options.autoRefresh !== false) {
+            await this.dataStore.scanFileByPath(path);
+            this.dataStore.notifyChange();
+        }
     }
 
-    /**
-     * [架构标准化] 完成一个条目。
-     */
-    public async completeItem(itemId: string, options?: { duration?: number; startTime?: string; endTime?: string }): Promise<void> {
-        const { path, lineNo } = this.parseItemId(itemId);
-        const rawLine = await this.getItemLine(itemId);
+    public async completeItem(
+        itemId: string,
+        options?: { duration?: number; startTime?: string; endTime?: string },
+        mutationOptions: ItemMutationOptions = {},
+    ): Promise<void> {
+        const context = await this.loadMutableTaskContext(itemId);
+        const { path, index, rawLine, item } = context;
+        const lines = [...context.lines];
 
-        // 如果 options 明确从外部（如计时器）传入，则直接使用它们
         if (options) {
+            const fallbackEndTime = options.endTime || nowHHMM();
+            const seedOptions = {
+                duration: typeof options.duration === 'number' ? options.duration : undefined,
+                startTime: options.startTime || undefined,
+                endTime: fallbackEndTime,
+            };
+            const normalizedTriple = seedOptions.duration !== undefined
+                ? normalizeTaskTimeTriple(seedOptions)
+                : {
+                    startTime: seedOptions.startTime,
+                    endTime: fallbackEndTime,
+                    duration: undefined,
+                };
+            const normalizedOptions = {
+                duration: normalizedTriple.duration,
+                startTime: normalizedTriple.startTime,
+                endTime: normalizedTriple.endTime || fallbackEndTime,
+            };
+
             const { completedLine, nextTaskLine } = markTaskDone(
                 rawLine,
                 todayISO(),
-                options.endTime || nowHHMM(),
-                options
+                normalizedOptions.endTime || nowHHMM(),
+                normalizedOptions,
             );
-            await this.updateItemLine(path, lineNo, completedLine, nextTaskLine);
+            lines[index] = completedLine;
+            if (nextTaskLine) {
+                lines.splice(index + 1, 0, nextTaskLine);
+            }
+            await this.writeLines(path, lines, mutationOptions);
             return;
         }
 
-        // [核心修改] 如果是手动点击复选框，则执行新的计算逻辑
-        const item = this.dataStore.queryItems().find(i => i.id === itemId);
-
-        // 检查条目本身是否有"时长"属性
         if (item && item.duration) {
             const durationMinutes = item.duration;
-            const endTime = nowHHMM(); // 当前时间作为结束时间
-            const endMinutes = timeToMinutes(endTime);
+            const endTime = nowHHMM();
+            const normalizedTriple = normalizeTaskTimeTriple({ endTime, duration: durationMinutes });
+            const startTime = normalizedTriple.startTime || undefined;
 
-            if (endMinutes !== null) {
-                // 根据结束时间和时长反推开始时间
-                const startMinutes = endMinutes - durationMinutes;
-                const startTime = minutesToTime(startMinutes);
+            const calculatedOptions = {
+                duration: normalizedTriple.duration ?? durationMinutes,
+                startTime,
+                endTime,
+            };
 
-                const calculatedOptions = {
-                    duration: durationMinutes,
-                    startTime: startTime,
-                    endTime: endTime
-                };
-
-                const { completedLine, nextTaskLine } = markTaskDone(
-                    rawLine, todayISO(), endTime, calculatedOptions
-                );
-                await this.updateItemLine(path, lineNo, completedLine, nextTaskLine);
-            } else {
-                // 时间解析失败则回退
-                const { completedLine, nextTaskLine } = markTaskDone(rawLine, todayISO(), nowHHMM());
-                await this.updateItemLine(path, lineNo, completedLine, nextTaskLine);
+            const { completedLine, nextTaskLine } = markTaskDone(
+                rawLine,
+                todayISO(),
+                endTime,
+                calculatedOptions,
+            );
+            lines[index] = completedLine;
+            if (nextTaskLine) {
+                lines.splice(index + 1, 0, nextTaskLine);
             }
-        } else {
-            // 如果条目没有"时长"，则按旧逻辑处理
-            const { completedLine, nextTaskLine } = markTaskDone(rawLine, todayISO(), nowHHMM());
-            await this.updateItemLine(path, lineNo, completedLine, nextTaskLine);
+            await this.writeLines(path, lines, mutationOptions);
+            return;
         }
+
+        const { completedLine, nextTaskLine } = markTaskDone(rawLine, todayISO(), nowHHMM());
+        lines[index] = completedLine;
+        if (nextTaskLine) {
+            lines.splice(index + 1, 0, nextTaskLine);
+        }
+        await this.writeLines(path, lines, mutationOptions);
     }
 
-    /**
-     * 追加一条完成记录，不修改原始任务。
-     */
-    public async appendCompletionRecord(itemId: string, options?: { duration?: number; startTime?: string; endTime?: string }): Promise<void> {
-        const { path, lineNo } = this.parseItemId(itemId);
-        const rawLine = await this.getItemLine(itemId);
+    public async appendCompletionRecord(
+        itemId: string,
+        options?: { duration?: number; startTime?: string; endTime?: string },
+        mutationOptions: ItemMutationOptions = {},
+    ): Promise<void> {
+        const context = await this.loadMutableTaskContext(itemId);
+        const { path, index, rawLine } = context;
+        const lines = [...context.lines];
         const completedLine = buildCompletedTaskRecord(
             rawLine,
             todayISO(),
             options?.endTime || nowHHMM(),
-            options
+            options,
         );
-        await this.insertLineAfter(path, lineNo, completedLine);
+        lines.splice(index + 1, 0, completedLine);
+        await this.writeLines(path, lines, mutationOptions);
     }
 
-    /**
-     * [架构标准化] 更新条目的时间和/或时长。
-     */
-    public async updateItemTime(itemId: string, updates: { time?: string; endTime?: string; duration?: number }): Promise<void> {
-        const { path, lineNo } = this.parseItemId(itemId);
-        let line = await this.getItemLine(itemId);
+    public async updateItemTime(
+        itemId: string,
+        updates: { time?: string; endTime?: string; duration?: number },
+        mutationOptions: ItemMutationOptions = {},
+    ): Promise<void> {
+        const context = await this.loadMutableTaskContext(itemId);
+        const { path, index, rawLine } = context;
+        const lines = [...context.lines];
+        let line = rawLine;
 
         if (updates.time !== undefined) {
             line = this.upsertKvTag(line, '时间', updates.time);
@@ -132,47 +147,63 @@ export class ItemService {
             line = this.upsertKvTag(line, '时长', String(updates.duration));
         }
 
-        await this.updateItemLine(path, lineNo, line);
+        lines[index] = line;
+        await this.writeLines(path, lines, mutationOptions);
     }
 
-    /**
-     * 在指定行后插入一条新记录，保留原任务不变。
-     */
-    private async insertLineAfter(path: string, lineNo: number, newLine: string): Promise<void> {
+    private async loadMutableTaskContext(itemId: string): Promise<{
+        path: string;
+        index: number;
+        lines: string[];
+        rawLine: string;
+        item?: { content?: string; title?: string; duration?: number };
+    }> {
+        const { path, lineNo } = this.parseItemId(itemId);
         const content = await this.vault.readFile(path);
-        if (content == null) throw new Error(`找不到文件: ${path}`);
+        if (content == null) {
+            throw createRecordConflictError('record_path_missing', `找不到条目文件: ${path}`);
+        }
+
         const lines = content.split('\n');
-        if (lineNo > lines.length) throw new Error(`文件 ${path} 的行号 ${lineNo} 超出范围。`);
-        lines.splice(lineNo, 0, newLine);
-        await this.vault.writeFile(path, lines.join('\n'));
-        this.dataStore.scanFileByPath(path).then(() => this.dataStore.notifyChange());
+        const item = this.dataStore.queryItems().find((candidate) => candidate.id === itemId);
+        const resolvedIndex = resolveTaskLineIndexForMutation(lines, item ?? null, lineNo - 1);
+        const rawLine = lines[resolvedIndex];
+
+        if (!rawLine) {
+            throw createRecordConflictError('record_item_missing', '条目已不存在，无法继续操作。');
+        }
+
+        return {
+            path,
+            index: resolvedIndex,
+            lines,
+            rawLine,
+            item: item
+                ? {
+                    content: item.content,
+                    title: item.title,
+                    duration: item.duration,
+                }
+                : undefined,
+        };
     }
 
-    /**
-     * [架构标准化] 辅助函数：解析条目ID为路径和行号。
-     */
     private parseItemId(itemId: string): { path: string; lineNo: number } {
         const hashIndex = itemId.lastIndexOf('#');
-        if (hashIndex === -1) throw new Error(`无效的条目ID格式: ${itemId}`);
-        
+        if (hashIndex === -1) throw createRecordConflictError('record_locator_invalid', `无效的条目ID格式: ${itemId}`);
+
         const path = itemId.substring(0, hashIndex);
         const lineNo = parseInt(itemId.substring(hashIndex + 1), 10);
-        if (isNaN(lineNo)) throw new Error(`无效的条目行号: ${itemId}`);
+        if (isNaN(lineNo)) throw createRecordConflictError('record_locator_invalid', `无效的条目行号: ${itemId}`);
 
         return { path, lineNo };
     }
 
-    /**
-     * [架构标准化] 辅助函数：在条目行中更新或插入 (key:: value) 格式的标签。
-     */
     private upsertKvTag(line: string, key: string, value: string): string {
-        const pattern = new RegExp(`([\(\\[]\\s*${key}::\\s*)[^\\)\\]]*(\\s*[\\)\\]])`);
+        const pattern = new RegExp(`([\\(\\[]\\s*${key}::\\s*)[^\\)\\]]*(\\s*[\\)\\]])`);
         if (pattern.test(line)) {
-            // 如果已存在，则替换值
             return line.replace(pattern, `$1${value}$2`);
-        } else {
-            // 如果不存在，则追加
-            return `${line.trim()} (${key}:: ${value})`;
         }
+        return `${line.trim()} (${key}:: ${value})`;
     }
 }

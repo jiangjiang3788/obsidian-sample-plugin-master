@@ -4,7 +4,7 @@
 import { useMemo, useState, useRef, useEffect } from 'preact/hooks';
 import { Item, ViewInstance, InputSettings, ThemeDefinition, devLog, parsePath } from '@core/public';
 import { dayjs } from '@core/public';
-import { QuickInputModal } from '@/app/public';
+import { openCreateFromHeatmap } from '@/app/actions/recordUiActions';
 import { HEATMAP_VIEW_DEFAULT_CONFIG } from '@core/public';
 import { CheckinManagerModal } from '@shared/ui/modals/CheckinManagerModal';
 import { HeatmapCell } from '@shared/ui/heatmap/HeatmapCell';
@@ -95,28 +95,20 @@ export function HeatmapView({
     }, [injectedDataByThemeAndDate, items, themesToTrack]);
 
     const openQuickCreate = (date: string, item?: Item, themePath?: string) => {
-        if (!config.sourceBlockId) return;
-
-        let themeToPreselect: ThemeDefinition | undefined;
-        if (themePath && themePath !== '__default__') {
-            themeToPreselect = themesByPath.get(themePath);
-        } else if (item?.theme) {
-            themeToPreselect = themesByPath.get(item.theme);
-        }
-
-        const context = {
-            '日期': date,
-            ...(item ? { '内容': item.content || '', '评分': item.rating ?? 0 } : {}),
-            ...(themeToPreselect ? { '主题': themeToPreselect.path } : {}),
-        };
-
-        new QuickInputModal(app, config.sourceBlockId, context, themeToPreselect?.id).open();
+        openCreateFromHeatmap({
+            app,
+            sourceBlockId: config.sourceBlockId,
+            date,
+            item,
+            themePath,
+            themesByPath,
+        });
     };
 
     // 点击行为：
     // - 无记录：直接新增
-    // - 1 条记录：直接编辑该条
-    // - 多条记录：打开管理窗口，可选择具体哪一条
+    // - 1 条记录：按当前日期/主题继续新增一条（保留 create with context 语义）
+    // - 多条记录：打开管理窗口，已有记录走查看，新增仍走 create with context
     const handleCellClick = (date: string, dayItems?: Item[], themePath?: string) => {
         const itemsForDay = dayItems || [];
 

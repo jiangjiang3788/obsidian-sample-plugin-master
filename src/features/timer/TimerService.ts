@@ -1,37 +1,36 @@
 /**
  * TimerService - 计时器业务逻辑
  * 角色：Service (业务)
- * 依赖：UseCases, DataStore, ItemService, InputService
+ * 依赖：UseCases, DataStore
  *
  * 只做：
  * - 开始 / 暂停 / 恢复 / 停止计时
  * - 切换当前任务
- * - 将计时结果写入文件系统 (通过 ItemService)
+ * - 将计时结果提交到统一 recordInput.usecase
  * - 创建新任务并立即开始计时
  *
  * 不做：
  * - 直接管理和存储计时器的状态 (这是 Zustand Store 的职责)
  * - 直接渲染 UI
- * - 直接操作 Obsidian 界面元素
- *
- * Phase0 P1:
- * - features 不直接依赖 obsidian 类型（Notice/App/TFile）
- * - UI 反馈通过 UiPort
+ * - 直接绕过 UseCase 触发 InputService / ItemService 写入
  */
-import { ItemService } from '@core/public';
 import { DataStore } from '@core/public';
-import { InputService } from '@core/public';
-import type { QuickInputSaveData } from '@core/public';
-import { nowHHMM, timeToMinutes, minutesToTime, devError } from '@core/public';
+import type { RecordSubmitResult } from '@core/public';
+import { nowHHMM, normalizeTaskTimeTriple, devError, readRecordSubmitMessage } from '@core/public';
 import type { UiPort } from '@core/public';
 import type { UseCases } from '@/app/public';
+
+function readResultMessage(
+    result: { status?: string; errors?: Array<{ message: string }>; feedback?: { notice?: string } },
+    fallback: string,
+): string {
+    return readRecordSubmitMessage(result as any, fallback);
+}
 
 export class TimerService {
     constructor(
         private useCases: UseCases,
         private dataStore: DataStore,
-        private itemService: ItemService,
-        private inputService: InputService,
         private ui: UiPort
     ) {}
 
@@ -52,8 +51,6 @@ export class TimerService {
                 return;
             }
 
-            // [核心修改] 移除了在开始计时时就写入文件“开始时间”的逻辑
-            // 仅显示一个通知，文件将在任务完成时被修改
             this.ui.notice(`计时开始。`);
 
             await this.useCases.timer.addTimer({
@@ -107,31 +104,48 @@ export class TimerService {
             const taskItem = this.dataStore.queryItems().find(i => i.id === timer.taskId);
 
             if (!taskItem) {
-                this.ui.notice(`错误：找不到原始任务，可能已被移动或删除。计时时长无法保存。`);
+                this.ui.notice('找不到原始任务，可能已被移动或删除，计时时长无法保存。');
                 await this.useCases.timer.removeTimer(timerId);
                 return;
             }
 
             const endTime = nowHHMM();
-            const endMinutes = timeToMinutes(endTime);
-            let startTime: string | undefined;
+            const normalizedTime = totalMinutes > 0
+                ? normalizeTaskTimeTriple({ endTime, duration: totalMinutes })
+                : { startTime: undefined, endTime, duration: undefined };
+            const startTime = normalizedTime.startTime ?? undefined;
 
-            if (endMinutes !== null && totalMinutes > 0) {
-                const startMinutes = endMinutes - totalMinutes;
-                startTime = minutesToTime(startMinutes);
-            }
+            const isOpenTask = /^\s*-\s*\[ \]\s*/.test(taskItem.content || '');
+            const result = isOpenTask
+                ? await this.useCases.recordInput.submitCompleteRecord({
+                    itemId: timer.taskId,
+                    options: {
+                        duration: normalizedTime.duration ?? totalMinutes,
+                        startTime: startTime ?? null,
+                        endTime,
+                    },
+                    source: 'timer',
+                  })
+                : await this.useCases.recordInput.submitUpdateRecordTime({
+                    itemId: timer.taskId,
+                    updates: {
+                        time: startTime ?? null,
+                        endTime,
+                        duration: totalMinutes,
+                    },
+                    source: 'timer',
+                  });
 
-            const currentLine = await this.itemService.getItemLine(timer.taskId);
-            if (currentLine && /^\s*-\s*\[ \]\s*/.test(currentLine)) {
-                await this.itemService.completeItem(timer.taskId, { duration: totalMinutes, startTime: startTime, endTime: endTime });
-                this.ui.notice(`任务已完成，时长 ${totalMinutes} 分钟已记录。`);
-            } else {
-                await this.itemService.updateItemTime(timer.taskId, { duration: totalMinutes, time: startTime, endTime: endTime });
-                this.ui.notice(`任务时长已更新为 ${totalMinutes} 分钟。`);
+            if (result.status === 'success') {
+                if (result.feedback?.notice) {
+                    this.ui.notice(result.feedback.notice);
+                }
+            } else if (result.status !== 'cancelled') {
+                this.ui.notice(readResultMessage(result, '更新任务失败'));
             }
         } catch (e: any) {
-            this.ui.notice(`错误：更新任务失败 - ${e.message}`);
-            devError("TimerService Error:", e);
+            this.ui.notice(`更新任务失败：${e.message}`);
+            devError('TimerService Error:', e);
         }
         await this.useCases.timer.removeTimer(timerId);
     }
@@ -141,26 +155,12 @@ export class TimerService {
         this.ui.notice('计时任务已取消。');
     }
 
-    public async createNewTaskAndStart(data: QuickInputSaveData): Promise<void> {
-        const { template, formData, theme, templateId, templateSourceType } = data;
-        try {
-            const targetFilePath = await this.inputService.executeTemplate(template, formData, theme, { templateId, templateSourceType });
-
-            // Phase0 P1:
-            // - 不再使用 app.vault.getAbstractFileByPath / TFile
-            // - 直接按 path 触发 DataStore 扫描（platform 细节由 DataStore/VaultPort 处理）
-            const newItemsInFile = await this.dataStore.scanFileByPath(targetFilePath);
-
-            if (newItemsInFile.length > 0) {
-                const latestItem = newItemsInFile.sort((a, b) => (b.file?.line || 0) - (a.file?.line || 0))[0];
-                await this.startOrResume(latestItem.id);
-            } else {
-                this.ui.notice("任务内容已创建，但未识别为可计时的任务项。");
-                this.dataStore.notifyChange();
-            }
-        } catch (e: any) {
-            this.ui.notice(`创建任务失败: ${e.message}`);
-            devError(e);
+    public async startCreatedTaskIfPossible(result: Pick<RecordSubmitResult, 'followUp'>): Promise<void> {
+        const taskId = result.followUp?.startTimerForRecordId;
+        if (!taskId) {
+            this.ui.notice('任务内容已创建，但未定位到可计时的任务项。');
+            return;
         }
+        await this.startOrResume(taskId);
     }
 }

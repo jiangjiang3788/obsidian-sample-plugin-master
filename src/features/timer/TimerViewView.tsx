@@ -5,7 +5,7 @@ import { FloatingPanel, QuickInputModal } from '@/app/public';
 import { Button, Stack, Tooltip } from '@mui/material';
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 import { TimerRow } from './TimerRow';
-import type { ActionService, DataStore, QuickInputSaveData } from '@core/public';
+import type { ActionService, DataStore } from '@core/public';
 import type { TimerService } from '@features/timer/TimerService';
 import type { TimerState } from '@/app/public';
 
@@ -24,11 +24,13 @@ export function TimerViewView({ app, actionService, timerService, dataStore, tim
         const config = actionService.getQuickInputConfigForNewTimer();
         if (!config) return;
 
-        const onSaveCallback = (data: QuickInputSaveData) => {
-            timerService.createNewTaskAndStart(data);
-        };
-
-        new QuickInputModal(app, config.blockId, config.context, undefined, onSaveCallback).open();
+        new QuickInputModal(app, config.blockId, config.context, config.themeId, undefined, false, {
+            mode: 'create',
+            source: 'timer',
+            onSubmitSuccess: async (result) => {
+                await timerService.startCreatedTaskIfPossible(result);
+            },
+        }).open();
     };
 
     return (
@@ -57,7 +59,6 @@ export function TimerViewView({ app, actionService, timerService, dataStore, tim
                             key={timer.id}
                             timer={timer}
                             timerService={timerService}
-                            actionService={actionService}
                             dataStore={dataStore}
                             app={app}
                         />

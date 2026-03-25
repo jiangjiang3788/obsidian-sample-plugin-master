@@ -11,7 +11,6 @@ import { calculateTimelineRange, normalizeTimelineView, dayjs, devLog } from '@c
 import { useUseCases, useUiPort, useSelector, useMessageRenderPort } from '@/app/public';
 import type { TimerController } from '@/app/public';
 import type { ActionService } from '@core/public';
-import { ItemService } from '@core/public';
 import {
   selectViewInstances,
   selectInputSettings,
@@ -22,7 +21,13 @@ import {
 import { useViewData } from '@/features/settings/useViewData';
 import { openLayoutSettingsWidget } from '@/features/settings/LayoutSettingsWidget';
 
-import { QuickInputModal } from '@/app/public';
+import {
+    completeFromView,
+    isModuleHeaderCreateAllowed,
+    openCreateFromStatistics,
+    openCreateFromViewHeader,
+    updateTimeFromView,
+} from '@/app/actions/recordUiActions';
 import { openModuleSettingsWidget } from './ModuleSettingsModal';
 import { exportItemsToMarkdown, getExportConfigByViewType } from '@core/public'; // [新增] 导入导出函数
 import { ViewToolbar } from '@shared/public'; // [新增] 导入统一工具栏组件
@@ -52,7 +57,6 @@ const ViewContent = ({
     app,
     onMarkDone,
     actionService,
-    itemService,
     timerService,
     timers, // [新增]
     allThemes, // [新增]
@@ -71,7 +75,6 @@ const ViewContent = ({
     app: any;
     onMarkDone: (id: string) => void;
     actionService: ActionService;
-    itemService: ItemService;
     timerService: TimerController;
     timers: any[]; // [新增]
     allThemes: any[]; // [新增]
@@ -79,6 +82,8 @@ const ViewContent = ({
     onDataLoaded: (items: Item[]) => void; // [新增]
 }) => {
     const messageRenderPort = useMessageRenderPort();
+    const useCases = useUseCases();
+    const ui = useUiPort();
 
     const [allItems, setAllItems] = useState(() => dataStore.queryItems());
     useEffect(() => {
@@ -176,18 +181,37 @@ const ViewContent = ({
     // Phase2: shared/ui 不直接依赖 core service（如 ItemService）
     // 由 feature 层注入保存处理器，shared/ui 只触发回调。
     const onUpdateTaskTime = useCallback<UpdateTaskTimeHandler>(
-        (taskId, updates) => itemService.updateItemTime(taskId, updates),
-        [itemService]
+        async (taskId, updates) => {
+            const ok = await updateTimeFromView({
+                uiPort: ui,
+                useCases,
+                itemId: taskId,
+                updates: {
+                    time: updates.time,
+                    endTime: updates.endTime,
+                    duration: updates.duration,
+                },
+                source: 'layout_renderer',
+            });
+
+            if (!ok) throw new Error('更新任务时间失败');
+        },
+        [ui, useCases]
     );
 
     // Phase2: shared/ui 纯化（StatisticsView）
     // shared/ui 不直接依赖 ActionService，只接收一个“打开快捷创建”的回调。
-    const onQuickCreate = useCallback<OpenQuickCreateHandler>(() => {
-        const layoutDate = dayjs(dateRange[0]);
-        const config = actionService.getQuickInputConfigForView(viewInstance, layoutDate, layoutView);
-        if (!config) return;
-        new QuickInputModal(app, config.blockId, config.context, config.themeId).open();
-    }, [actionService, app, viewInstance, dateRange, layoutView]);
+    const onQuickCreate = useCallback<OpenQuickCreateHandler>((payload) => {
+        openCreateFromStatistics({
+            app,
+            actionService,
+            uiPort: ui,
+            viewInstance,
+            currentView: layoutView as any,
+            fallbackDate: dayjs(dateRange[0]),
+            payload,
+        });
+    }, [actionService, app, dateRange, layoutView, ui, viewInstance]);
 
     const viewProps: any = {
         app,
@@ -238,7 +262,7 @@ const ViewContent = ({
     return <ViewComponent {...viewProps} />;
 };
 
-export function LayoutRenderer({ layout, dataStore, app, actionService, itemService, timerService }: any) {
+export function LayoutRenderer({ layout, dataStore, app, actionService, timerService }: any) {
     // [P1] 通过 Context 获取 UseCases（已移除 useAppStore，统一用 Zustand）
     const useCases = useUseCases();
     const ui = useUiPort();
@@ -366,16 +390,26 @@ export function LayoutRenderer({ layout, dataStore, app, actionService, itemServ
         ui.notice(`"${viewTitle}" 的内容已复制到剪贴板！`);
     }, [allViews]); // 依赖 allViews 来获取视图类型
 
-    const handleQuickInputAction = (viewInstance: ViewInstance) => {
-        const config = actionService.getQuickInputConfigForView(viewInstance, layoutDate, layoutView);
-        if (config) {
-            new QuickInputModal(app, config.blockId, config.context, config.themeId).open();
-        }
-    };
+    const handleQuickInputAction = useCallback((viewInstance: ViewInstance) => {
+        openCreateFromViewHeader({
+            app,
+            actionService,
+            viewInstance,
+            dateContext: layoutDate,
+            periodContext: layoutView,
+        });
+    }, [actionService, app, layoutDate, layoutView]);
     
     const handleMarkItemDone = useCallback((itemId: string) => {
-        itemService.completeItem(itemId);
-    }, [itemService]);
+        void (async () => {
+            await completeFromView({
+                uiPort: ui,
+                useCases,
+                itemId,
+                source: 'layout_renderer',
+            });
+        })();
+    }, [ui, useCases]);
 
     const handleToggle = useCallback((viewId: string, event?: MouseEvent) => {
         const isToggleAll = event?.metaKey || event?.ctrlKey;
@@ -429,7 +463,9 @@ export function LayoutRenderer({ layout, dataStore, app, actionService, itemServ
                 title={viewInstance.title} 
                 collapsed={!isExpanded}
                 onToggle={(e: MouseEvent) => handleToggle(viewId, e)}
-                onActionClick={() => handleQuickInputAction(viewInstance)}
+                onActionClick={isModuleHeaderCreateAllowed(viewInstance.viewType)
+                    ? () => handleQuickInputAction(viewInstance)
+                    : undefined}
                 onExport={() => handleExport(viewInstance.id, viewInstance.title)} // [修改] 传递 onExport
                 onSettingsClick={() => handleSettingsClick(viewInstance)} // [新增] 传递设置回调
                 onRemove={() => handleDeleteViewInstance(viewInstance.id)}
@@ -448,7 +484,6 @@ export function LayoutRenderer({ layout, dataStore, app, actionService, itemServ
                         app={app}
                         onMarkDone={handleMarkItemDone}
                         actionService={actionService}
-                        itemService={itemService}
                         timerService={timerService}
                         timers={timers} // [新增]
                         allThemes={allThemes} // [新增]

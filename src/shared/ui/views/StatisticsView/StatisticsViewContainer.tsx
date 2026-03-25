@@ -25,8 +25,9 @@ import { IconButton, Tooltip } from '@mui/material';
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 import IosShareIcon from '@mui/icons-material/IosShare';
 import { FloatingPanel, openFloatingWidget, closeFloatingWidget, useUiPort, useSelector, selectCategoryColors, useUseCases } from '@/app/public';
+import { canCreateFromStatisticsCell } from '@/app/actions/recordUiActions';
 import type { TimerController } from '@/app/public';
-import type { OpenQuickCreateHandler } from '@shared/types/actions';
+import type { OpenQuickCreateHandler, StatisticsQuickCreatePayload } from '@shared/types/actions';
 import { PopoverContent } from './components/PopoverContent';
 import { StatisticsViewView } from './StatisticsViewView';
 
@@ -234,8 +235,18 @@ export function StatisticsView({
     };
 
     const handleQuickCreate = () => {
-      onQuickCreate?.();
+      onQuickCreate?.({
+        cellIdentifier,
+        blocks,
+        title,
+      } as StatisticsQuickCreatePayload);
     };
+
+    const canQuickCreate = canCreateFromStatisticsCell({
+      cellIdentifier,
+      blocks,
+      title,
+    });
 
     openFloatingWidget(widgetId, () => (
       <FloatingPanel
@@ -265,18 +276,20 @@ export function StatisticsView({
                 <IosShareIcon sx={{ fontSize: '1rem' }} />
               </AnyIconButton>
             </Tooltip>
-            <Tooltip title="快捷创建" PopperProps={{ disablePortal: true }}>
-              <AnyIconButton
-                size="small"
-                onClick={(e: any) => {
-                  e.stopPropagation();
-                  handleQuickCreate();
-                }}
-                sx={{ padding: '4px' }}
-              >
-                <AddCircleOutlineIcon sx={{ fontSize: '1rem' }} />
-              </AnyIconButton>
-            </Tooltip>
+            {canQuickCreate && onQuickCreate ? (
+              <Tooltip title="按当前分类创建" PopperProps={{ disablePortal: true }}>
+                <AnyIconButton
+                  size="small"
+                  onClick={(e: any) => {
+                    e.stopPropagation();
+                    handleQuickCreate();
+                  }}
+                  sx={{ padding: '4px' }}
+                >
+                  <AddCircleOutlineIcon sx={{ fontSize: '1rem' }} />
+                </AnyIconButton>
+              </Tooltip>
+            ) : null}
           </div>
         }
       >

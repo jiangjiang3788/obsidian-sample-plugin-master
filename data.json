@@ -47,7 +47,7 @@
       "id": "vi_mm9z0oe1cvlr53c",
       "parentId": null,
       "title": "时间轴",
-      "viewType": "TaskExecutionView",
+      "viewType": "TimelineView",
       "viewConfig": {
         "categories": {
           "0": {
@@ -121,7 +121,7 @@
       "id": "vi_mmeolydjaga6z6u",
       "parentId": null,
       "title": "打卡",
-      "viewType": "HeatmapView",
+      "viewType": "ExcelView",
       "viewConfig": {
         "categories": [
           {

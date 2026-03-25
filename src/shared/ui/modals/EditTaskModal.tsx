@@ -3,7 +3,7 @@
 import { h } from 'preact';
 import { useEffect } from 'preact/hooks';
 import type { TaskBlock } from '@core/public';
-import { timeToMinutes, minutesToTime } from '@core/public';
+import { timeToMinutes, minutesToTime, normalizeTaskTimeTriple } from '@core/public';
 import { Dialog, DialogTitle, DialogContent, DialogActions, Button, TextField } from '@mui/material';
 import { useTimeFormState } from '@shared/hooks/useFormState';
 import { useSaveHandler } from '@shared/patterns/ModalSavePattern';
@@ -65,18 +65,16 @@ export function EditTaskModal({ isOpen, onClose, task, onUpdateTaskTime, onSave 
       throw new Error('请输入有效的时间和时长');
     }
 
-    // 最终数据准备
-    let finalDuration = duration;
-    if (startM !== null && endM !== null) {
-      let calculatedDuration = endM - startM;
-      if (calculatedDuration < 0) calculatedDuration += 24 * 60;
-      finalDuration = calculatedDuration;
-    }
+    const normalized = normalizeTaskTimeTriple({
+      startTime: timeData.startTime,
+      endTime: timeData.endTime,
+      duration,
+    });
 
     return {
-      time: timeData.startTime,
-      endTime: timeData.endTime,
-      duration: finalDuration,
+      time: normalized.startTime ?? timeData.startTime,
+      endTime: normalized.endTime ?? timeData.endTime,
+      duration: normalized.duration ?? duration,
     };
   };
 

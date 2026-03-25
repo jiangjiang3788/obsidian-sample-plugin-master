@@ -1,7 +1,7 @@
 import { container } from 'tsyringe';
 import type ThinkPlugin from '@main';
 
-import { SETTINGS_PERSISTENCE_TOKEN, devError, devLog, updateCategoryColorMap } from '@core/public';
+import { SETTINGS_PERSISTENCE_TOKEN, devError, devLog, updateCategoryColorMap, DataStore, InputService, ItemService } from '@core/public';
 
 import { diDebug, diWarn } from '@/app/diagnostics/diDiagnostics';
 
@@ -131,8 +131,15 @@ devLog('[ThinkPlugin] CategoryColors 监听已建立');
 
 
                 // 3. 创建 UseCases 并注册到 DI 容器（传入 store）
+                const inputService = container.resolve(InputService);
+                const itemService = container.resolve(ItemService);
+                const dataStore = container.resolve(DataStore);
+
                 services.useCases = createUseCases(zustandStore, {
                     timerStateService: services.timerStateService!,
+                    inputService,
+                    itemService,
+                    dataStore,
                 });
                 container.register(USECASES_TOKEN, { useValue: services.useCases });
                 devLog('[ThinkPlugin] UseCases 创建完成');

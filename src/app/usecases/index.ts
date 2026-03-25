@@ -28,7 +28,8 @@ import { ThemeUseCase, createThemeUseCase } from './theme.usecase';
 import { LayoutUseCase, createLayoutUseCase } from './layout.usecase';
 import { ViewInstanceUseCase, createViewInstanceUseCase } from './viewinstance.usecase';
 import { TimerUseCase, createTimerUseCase } from './timer.usecase';
-import type { TimerStateService } from '@core/public';
+import { RecordInputUseCase, createRecordInputUseCase } from './recordInput.usecase';
+import type { DataStore, InputService, ItemService, TimerStateService } from '@core/public';
 
 /**
  * Zustand Store 类型（用于 createUseCases 参数）
@@ -45,6 +46,7 @@ export interface UseCases {
     layout: LayoutUseCase;
     viewInstance: ViewInstanceUseCase;
     timer: TimerUseCase;
+    recordInput: RecordInputUseCase;
 }
 
 /**
@@ -60,6 +62,9 @@ export const USECASES_TOKEN: InjectionToken<UseCases> = 'UseCases';
  */
 export interface UseCaseDeps {
     timerStateService: TimerStateService;
+    inputService: InputService;
+    itemService: ItemService;
+    dataStore: DataStore;
 }
 
 /**
@@ -81,6 +86,11 @@ export function createUseCases(store: AppStoreApi, deps: UseCaseDeps): UseCases 
         layout: createLayoutUseCase(store),
         viewInstance: createViewInstanceUseCase(store),
         timer: createTimerUseCase(store, deps.timerStateService),
+        recordInput: createRecordInputUseCase(store, {
+            inputService: deps.inputService,
+            itemService: deps.itemService,
+            dataStore: deps.dataStore,
+        }),
     };
 }
 
@@ -91,5 +101,6 @@ export { ThemeUseCase } from './theme.usecase';
 export { LayoutUseCase } from './layout.usecase';
 export { ViewInstanceUseCase } from './viewinstance.usecase';
 export { TimerUseCase } from './timer.usecase';
+export { RecordInputUseCase } from './recordInput.usecase';
 
 // UI 层请从 '@/app/public' 获取 useUseCases（冻结阶段唯一出口）

@@ -2,7 +2,8 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
 import { Item, getAllFields, readField } from '@core/public';
-import { makeObsUri } from '@core/public';
+import { openEditFromItem } from '@/app/actions/recordUiActions';
+import { createRecordGestureHandlers } from '@/shared/ui/utils/recordOrigin';
 
 // 接口定义保持不变
 interface ExcelViewProps {
@@ -41,18 +42,23 @@ export function ExcelView({ items, fields, app }: ExcelViewProps) {
       
       // 决定显示的文本：如果超过20个字符，则截断；否则显示全文
       const displayText = value.length > 20 ? value.substring(0, 20) + '...' : value;
-      const obsUri = makeObsUri(item, app.vault.getName());
+      const gesture = createRecordGestureHandlers({
+        item,
+        app,
+        onPrimary: () => openEditFromItem({ app, item }),
+      });
 
       return (
-        <a 
-          href={obsUri} 
-          target="_blank" 
-          rel="noopener" 
-          title={value} // 鼠标悬浮时显示完整内容
+        <span
+          title={value}
           class="excel-view-content-link"
+          onClick={gesture.onClick as any}
+          onDblClick={gesture.onDblClick as any}
+          onTouchEnd={gesture.onTouchEnd as any}
+          style={{ cursor: 'pointer' }}
         >
           {displayText}
-        </a>
+        </span>
       );
     }
     

@@ -8,11 +8,11 @@
 import { h } from 'preact';
 import type { App } from 'obsidian';
 import { Modal, Notice } from 'obsidian';
-import { useMemo, useState } from 'preact/hooks';
+import { useState } from 'preact/hooks';
 
-import { type Services, createServices, mountWithServices, unmountPreact, useDataStore, useInputService, useSelector } from '@/app/public';
-import type { NaturalRecordCommand, ThemeDefinition, TemplateField } from '@core/public';
-import { getEffectiveTemplate } from '@core/public';
+import { type Services, createServices, mountWithServices, unmountPreact, useUseCases, useSelector } from '@/app/public';
+import type { NaturalRecordCommand, RecordSubmitResult, TemplateField } from '@core/public';
+import { getEffectiveTemplate, readRecordSubmitMessage } from '@core/public';
 
 import {
   Box,
@@ -28,7 +28,7 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import RadioButtonUncheckedIcon from '@mui/icons-material/RadioButtonUnchecked';
 import DeleteIcon from '@mui/icons-material/Delete';
 
-import { finalizeQuickInputFormData, QuickInputEditor } from '@/app/public';
+import { QuickInputEditor } from '@/app/public';
 import { ModalHeader } from '@shared/public';
 
 
@@ -158,13 +158,10 @@ function AiBatchConfirmForm({
   onComplete?: () => void;
 }) {
   const settings = useSelector((state) => state.settings.inputSettings);
-  const dataStore = useDataStore();
-  const inputService = useInputService();
+  const useCases = useUseCases();
 
   const blocks = settings.blocks || [];
   const themes = settings.themes || [];
-  const themeIdMap = useMemo(() => new Map<string, ThemeDefinition>(themes.map((t) => [t.id, t])), [themes]);
-
   const [records, setRecords] = useState<RecordItem[]>(() =>
     initialItems.map((cmd, index) => {
       // block
@@ -208,31 +205,86 @@ function AiBatchConfirmForm({
     if (nextPending >= 0) setCurrentIndex(nextPending);
   };
 
+  const readFailureMessage = (result: RecordSubmitResult, fallback: string) => {
+    return readRecordSubmitMessage(result, fallback);
+  };
+
+  const buildBatchCreateResult = (results: RecordSubmitResult[]): RecordSubmitResult => {
+    const succeeded = results.filter((result) => result.status === 'success');
+    const failed = results.filter((result) => result.status !== 'success' && result.status !== 'cancelled');
+    const scanPaths = Array.from(new Set(results.flatMap((result) => result.refresh.scanPaths || [])));
+    const warnings = results.flatMap((result) => result.warnings || []);
+    const errors = results.flatMap((result) => result.errors || []);
+
+    if (failed.length === 0) {
+      return {
+        status: 'success',
+        operation: 'create',
+        refresh: {
+          scanPaths,
+          notify: results.some((result) => result.refresh.notify),
+        },
+        feedback: {
+          notice: `✅ 批量保存完成：成功 ${succeeded.length} 条`,
+        },
+        warnings,
+      };
+    }
+
+    if (succeeded.length === 0) {
+      return {
+        status: 'error',
+        operation: 'create',
+        refresh: {
+          scanPaths,
+          notify: results.some((result) => result.refresh.notify),
+        },
+        feedback: {
+          notice: `❌ 批量保存失败：0/${results.length} 成功`,
+        },
+        warnings,
+        errors,
+      };
+    }
+
+    return {
+      status: 'partial_success',
+      operation: 'create',
+      refresh: {
+        scanPaths,
+        notify: results.some((result) => result.refresh.notify),
+      },
+      feedback: {
+        notice: `⚠️ 批量保存完成：成功 ${succeeded.length} 条，失败 ${failed.length} 条`,
+      },
+      warnings,
+      errors,
+    };
+  };
+
   const handleSaveCurrent = async () => {
     if (!currentRecord) return;
-    if (!inputService) {
-      new Notice('保存失败：InputService 未初始化');
-      return;
-    }
 
-    const { template, templateId, templateSourceType } = getEffectiveTemplate(settings, currentRecord.blockId, currentRecord.themeId);
-    if (!template) {
-      new Notice('保存失败：找不到模板');
-      return;
-    }
+    const result = await useCases.recordInput.submitCreateRecord({
+      blockId: currentRecord.blockId,
+      themeId: currentRecord.themeId ?? null,
+      formData: currentRecord.formData,
+      context: { ...(currentRecord.cmd.fieldValues || {}), ...(currentRecord.formData || {}) },
+      source: 'ai_batch',
+    });
 
-    const finalData = finalizeQuickInputFormData(currentRecord.formData);
-    const finalTheme = currentRecord.themeId ? themeIdMap.get(currentRecord.themeId) : undefined;
-
-    try {
-      await inputService.executeTemplate(template, finalData, finalTheme, { templateId, templateSourceType });
+    if (result.status === 'success') {
       updateCurrentRecord({ saved: true });
       new Notice(`✅ 第 ${currentIndex + 1} 条已保存`);
-      dataStore?.notifyChange?.();
       jumpToNextPending();
-    } catch (e: any) {
-      new Notice(`❌ 保存失败: ${e.message || e}`, 10000);
+      return;
     }
+
+    if (result.status === 'cancelled') {
+      return;
+    }
+
+    new Notice(`❌ 保存失败: ${readFailureMessage(result, '保存失败')}`, 10000);
   };
 
   const handleSkipCurrent = () => {
@@ -242,10 +294,7 @@ function AiBatchConfirmForm({
   };
 
   const handleSaveAll = async () => {
-    if (!inputService) {
-      new Notice('保存失败：InputService 未初始化');
-      return;
-    }
+    const results: RecordSubmitResult[] = [];
 
     for (let i = 0; i < records.length; i++) {
       const record = records[i];
@@ -253,22 +302,26 @@ function AiBatchConfirmForm({
 
       setCurrentIndex(i);
 
-      const { template, templateId, templateSourceType } = getEffectiveTemplate(settings, record.blockId, record.themeId);
-      if (!template) continue;
+      const result = await useCases.recordInput.submitCreateRecord({
+        blockId: record.blockId,
+        themeId: record.themeId ?? null,
+        formData: record.formData,
+        context: { ...(record.cmd.fieldValues || {}), ...(record.formData || {}) },
+        source: 'ai_batch',
+      });
+      results.push(result);
 
-      const finalData = finalizeQuickInputFormData(record.formData);
-      const finalTheme = record.themeId ? themeIdMap.get(record.themeId) : undefined;
-
-      try {
-        await inputService.executeTemplate(template, finalData, finalTheme, { templateId, templateSourceType });
+      if (result.status === 'success') {
         setRecords((prev) => prev.map((r, idx) => (idx === i ? { ...r, saved: true } : r)));
-      } catch (e: any) {
-        new Notice(`❌ 第 ${i + 1} 条保存失败: ${e.message || e}`);
+      } else if (result.status !== 'cancelled') {
+        new Notice(`❌ 第 ${i + 1} 条保存失败: ${readFailureMessage(result, '保存失败')}`);
       }
     }
 
-    new Notice('✅ 批量保存完成');
-    dataStore?.notifyChange?.();
+    const summary = buildBatchCreateResult(results);
+    if (summary.feedback?.notice) {
+      new Notice(summary.feedback.notice);
+    }
   };
 
   const handleComplete = () => {

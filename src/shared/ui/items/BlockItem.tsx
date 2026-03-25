@@ -5,7 +5,7 @@ import { FieldPill } from '@shared/ui/items/FieldPill';
 import { ItemLink } from '@shared/ui/items/ItemLink';
 import type { MessageRenderPort } from '@core/public';
 import { MarkdownContent } from '@shared/ui/markdown/MarkdownContent';
-import { QuickInputModal } from '@/app/public';
+import { openEditFromItem } from '@/app/actions/recordUiActions';
 
 interface BlockItemProps {
     item: Item;
@@ -27,10 +27,7 @@ export const BlockItem = ({ item, fields, isNarrow, app, messageRenderPort, allT
         try {
             const target = evt.target as HTMLElement | null;
             if (target?.closest('a')) return;
-            new QuickInputModal(app, item.templateId || item.categoryKey || '', undefined, undefined, undefined, false, {
-                mode: 'edit',
-                editItem: item,
-            }).open();
+            openEditFromItem({ app, item });
         } catch {
             // no-op: editing should never crash rendering
         }

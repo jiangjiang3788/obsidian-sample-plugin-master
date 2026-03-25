@@ -81,16 +81,18 @@ export function ModulePanel({ title, collapsed, children, onActionClick, onToggl
                                 </AnyIconButton>
                             </Tooltip>
                         )}
-                        <span 
-                            class="module-action-plus" 
-                            title="快捷输入"
-                            onClick={(e) => {
-                                e.stopPropagation(); // 阻止事件冒泡到 header 的 onClick
-                                onActionClick?.();
-                            }}
-                        >
-                            +
-                        </span>
+                        {onActionClick ? (
+                            <span 
+                                class="module-action-plus" 
+                                title="创建记录"
+                                onClick={(e) => {
+                                    e.stopPropagation(); // 阻止事件冒泡到 header 的 onClick
+                                    onActionClick();
+                                }}
+                            >
+                                +
+                            </span>
+                        ) : null}
                     </div>
                     <div class="module-toggle">{collapsed ? '▶' : '▼'}</div>
                 </div>

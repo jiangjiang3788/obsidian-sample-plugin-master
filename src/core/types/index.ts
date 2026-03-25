@@ -29,3 +29,4 @@ export * from './services';
 // 4.5 composition contracts
 export * from './quickInput';
 // export * from './cache'; // 如未来有对外需求再打开
+export * from './recordInput';

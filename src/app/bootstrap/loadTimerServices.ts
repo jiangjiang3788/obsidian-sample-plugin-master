@@ -37,8 +37,6 @@ export async function loadTimerServices(opts: {
             services.timerService = new TimerService(
                 services.useCases!,
                 services.dataStore!,
-                services.itemService!,
-                services.inputService!,
                 ui
             );
 

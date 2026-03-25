@@ -5,10 +5,26 @@
  * 这些 handler 由 feature 层桥接（例如 LayoutRenderer）。
  */
 
+import type { Item } from '@core/public';
+
 export type MarkDoneHandler = (id: string) => void;
+
+export interface StatisticsQuickCreatePayload {
+  cellIdentifier?: {
+    type?: string;
+    category?: string;
+    date?: string;
+    week?: number;
+    month?: number;
+    quarter?: number;
+    year?: number;
+  } | null;
+  blocks?: Item[];
+  title?: string;
+}
 
 /**
  * 打开“快捷创建”的 UI 行为。
  * 具体怎么拿 config / 写入什么，由 feature 层决定。
  */
-export type OpenQuickCreateHandler = () => void;
+export type OpenQuickCreateHandler = (payload?: StatisticsQuickCreatePayload) => void;

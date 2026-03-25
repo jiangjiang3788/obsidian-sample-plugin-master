@@ -1,8 +1,9 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
 import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
-import { makeObsUri } from '@core/public';
 import type { Item } from '@core/public';
+import { openEditFromItem } from '@/app/actions/recordUiActions';
+import { createRecordGestureHandlers } from '@/shared/ui/utils/recordOrigin';
 
 interface TaskExecutionRecordVM {
   id: string;
@@ -138,16 +139,27 @@ export function TaskExecutionView({ app, currentView, taskExecutionModel, onMark
           <div class="task-execution-context-meta">{currentView}内完成 {selectedTask.count} 次</div>
           <div class="task-execution-context-rule">{selectedTask.recurrenceLabel}</div>
           <div class="task-execution-context-list">
-            {selectedTask.records.length > 0 ? selectedTask.records.map((record) => (
+            {selectedTask.records.length > 0 ? selectedTask.records.map((record) => {
+              const gesture = createRecordGestureHandlers({
+                item: record.item,
+                app,
+                onPrimary: () => {
+                  openEditFromItem({ app, item: record.item });
+                  setMenu(null);
+                },
+              });
+              return (
               <a
                 key={record.id}
                 class="task-execution-context-link"
-                href={makeObsUri(record.item, vaultName)}
-                onClick={() => setMenu(null)}
+                href="#"
+                onClick={(e) => { gesture.onClick(e as any); setMenu(null); }}
+                onDblClick={(e) => { gesture.onDblClick(e as any); setMenu(null); }}
+                onTouchEnd={(e) => { gesture.onTouchEnd(e as any); }}
               >
                 {record.timeLabel || record.doneDate || '查看记录'}
               </a>
-            )) : <div class="task-execution-context-empty">暂无记录</div>}
+            );}) : <div class="task-execution-context-empty">暂无记录</div>}
           </div>
         </div>
       )}

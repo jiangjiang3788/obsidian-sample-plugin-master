@@ -6,7 +6,7 @@ import { TaskSendToTimerButton } from '@shared/ui/composites/TaskSendToTimerButt
 import { isDone } from '@core/public';
 import { FieldPill } from './FieldPill';
 import type { TimerController } from '@/app/public';
-import { QuickInputModal } from '@/app/public';
+import { openEditFromItem } from '@/app/actions/recordUiActions';
 
 interface TaskRowProps {
     item: Item;
@@ -34,10 +34,7 @@ export function TaskRow({
     const openEdit = (evt?: Event) => {
         evt?.preventDefault?.();
         evt?.stopPropagation?.();
-        new QuickInputModal(app, item.templateId || item.categoryKey || '', undefined, undefined, undefined, false, {
-            mode: 'edit',
-            editItem: item,
-        }).open();
+        openEditFromItem({ app, item });
     };
     
     return (

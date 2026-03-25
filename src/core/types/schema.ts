@@ -64,6 +64,8 @@ export interface TemplateField {
     key: string;
     label: string;
     type: 'text' | 'textarea' | 'date' | 'time' | 'select' | 'radio' | 'number' | 'rating';
+    semanticType?: 'path' | 'ratingPair' | string;
+    auxKey?: string;
     defaultValue?: string;
     options?: TemplateFieldOption[];
     min?: number;

@@ -12,20 +12,17 @@ import { DataStore } from '@core/public';
 import { TimerService } from '@features/timer/TimerService';
 import type { TimerState } from '@/app/public';
 import { formatSecondsToHHMMSS } from '@core/public';
-import { makeObsUri } from '@core/public';
-import type { ActionService } from '@core/public';
-// [4.5] QuickInputModal 迁移至 shared（避免跨 feature 依赖）
-import { QuickInputModal } from '@/app/public';
+import { openEditFromItem } from '@/app/actions/recordUiActions';
+import { createRecordGestureHandlers } from '@/shared/ui/utils/recordOrigin';
 
 interface TimerRowProps {
     timer: TimerState;
-    actionService: ActionService;
     timerService: TimerService;
     dataStore: DataStore;
     app: any;
 }
 
-export function TimerRow({ timer, actionService, timerService, dataStore, app }: TimerRowProps) {
+export function TimerRow({ timer, timerService, dataStore, app }: TimerRowProps) {
     const [displayTime, setDisplayTime] = useState('00:00:00');
     const taskItem = dataStore.queryItems().find(i => i.id === timer.taskId);
 
@@ -55,19 +52,16 @@ export function TimerRow({ timer, actionService, timerService, dataStore, app }:
 
     const handleEdit = () => {
         if (taskItem) {
-            const config = actionService.getQuickInputConfigForTaskEdit(taskItem.id);
-            if (config) {
-                // [核心修改] 调用简化后的构造函数
-                new QuickInputModal(app, config.blockId, config.context).open();
-            }
+            openEditFromItem({ app, item: taskItem });
         }
     };
 
+    const titleGesture = taskItem ? createRecordGestureHandlers({ item: taskItem, app, onPrimary: handleEdit }) : null;
+
     return (
         <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px', width: '100%' }}>
-            <Tooltip title={`点击跳转: ${taskItem?.title}`}>
-                <a
-                    href={taskItem ? makeObsUri(taskItem, app.vault.getName()) : '#'}
+            <Tooltip title={taskItem ? `点击编辑；Ctrl/⌘+点击或双击打开原文：${taskItem?.title}` : '任务已不存在'}>
+                <div
                     style={{
                         flexGrow: 1,
                         minWidth: 0,
@@ -75,11 +69,15 @@ export function TimerRow({ timer, actionService, timerService, dataStore, app }:
                         color: 'inherit',
                         whiteSpace: 'nowrap',
                         overflow: 'hidden',
-                        textOverflow: 'ellipsis'
+                        textOverflow: 'ellipsis',
+                        cursor: taskItem ? 'pointer' : 'default'
                     }}
+                    onClick={titleGesture ? (titleGesture.onClick as any) : undefined}
+                    onDblClick={titleGesture ? (titleGesture.onDblClick as any) : undefined}
+                    onTouchEnd={titleGesture ? (titleGesture.onTouchEnd as any) : undefined}
                 >
                     <Typography variant="body2" noWrap>{taskItem?.title || '任务已不存在'}</Typography>
-                </a>
+                </div>
             </Tooltip>
             <Typography variant="body2" sx={{ fontFamily: 'monospace' }}>{displayTime}</Typography>
             

@@ -3,7 +3,9 @@ import { h } from 'preact';
 import { useMemo } from 'preact/hooks';
 import { App, Modal, Notice } from 'obsidian';
 import { render, unmountComponentAtNode } from 'preact/compat';
-import { Item, dayjs, makeObsUri } from '@core/public';
+import { Item, dayjs } from '@core/public';
+import { openEditFromItem } from '@/app/actions/recordUiActions';
+import { createRecordGestureHandlers } from '@/shared/ui/utils/recordOrigin';
 
 export interface CheckinManagerData {
     displayCount: number;
@@ -23,14 +25,13 @@ interface CheckinManagerModalProps {
 function CheckinManagerForm({ app, date, items, onClose, onAddRecord }: CheckinManagerModalProps) {
     const sortedItems = useMemo(() => [...items].sort((a, b) => (a.created || 0) - (b.created || 0)), [items]);
 
-    const handleItemClick = (item: Item) => {
+    const handleOpenRecord = (item: Item) => {
         if (!item.file?.path) return;
         try {
-            const obsidianUri = makeObsUri(item, app.vault.getName());
-            window.open(obsidianUri, '_blank');
+            openEditFromItem({ app, item });
             onClose();
         } catch (error: any) {
-            new Notice(`打开原文失败: ${error?.message || String(error)}`);
+            new Notice(`打开记录失败: ${error?.message || String(error)}`);
         }
     };
 
@@ -55,14 +56,26 @@ function CheckinManagerForm({ app, date, items, onClose, onAddRecord }: CheckinM
                     </div>
                 ) : (
                     <div class="checkin-details-list">
-                        {sortedItems.map(item => (
-                            <div key={item.id} class="checkin-details-item" onClick={() => handleItemClick(item)}>
+                        {sortedItems.map(item => {
+                            const gesture = createRecordGestureHandlers({
+                                item,
+                                app,
+                                onPrimary: () => handleOpenRecord(item),
+                            });
+                            return (
+                            <div
+                                key={item.id}
+                                class="checkin-details-item"
+                                onClick={gesture.onClick as any}
+                                onDblClick={gesture.onDblClick as any}
+                                onTouchEnd={gesture.onTouchEnd as any}
+                            >
                                 <div class="checkin-item-content">{item.content || item.title || '无内容'}</div>
                                 <div class="checkin-item-meta">
                                     {`${dayjs(item.created).format('HH:mm:ss')} · ${item.file?.path || '未知位置'}`}
                                 </div>
                             </div>
-                        ))}
+                        );})}
                     </div>
                 )}
             </div>

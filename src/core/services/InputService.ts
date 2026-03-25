@@ -5,6 +5,16 @@ import { VAULT_PORT_TOKEN } from '@core/ports/VaultPort';
 import { renderTemplate } from '@core/utils/templateUtils';
 import type { BlockTemplate, ThemeDefinition, Item } from '@core/types/schema';
 import { DataStore } from '@core/services/DataStore';
+import {
+  resolveBlockRangeForMutation,
+  resolveTaskLineIndexForMutation,
+} from '@core/services/recordInput/mutationLocator';
+import { createRecordConflictError } from '@core/services/recordInput/mutationErrors';
+
+export interface RecordWriteOptions {
+  signal?: AbortSignal;
+  autoRefresh?: boolean;
+}
 
 @singleton()
 export class InputService {
@@ -13,12 +23,12 @@ export class InputService {
     @inject(DataStore) private dataStore: DataStore,
   ) {}
 
-  async executeTemplate(
+  previewTemplateExecution(
     template: BlockTemplate,
     formData: Record<string, any>,
     theme?: ThemeDefinition,
-    templateMeta?: { templateId?: string | null; templateSourceType?: 'block' | 'override' | null }
-  ): Promise<string> {
+    templateMeta?: { templateId?: string | null; templateSourceType?: 'block' | 'override' | null },
+  ): { renderData: Record<string, any>; outputContent: string; targetFilePath: string; header: string | null } {
     if (!template) throw new Error('传入了无效的模板对象。');
 
     const renderData = this.buildRenderData(template, formData, theme, templateMeta);
@@ -26,14 +36,36 @@ export class InputService {
     const targetFilePath = renderTemplate(template.targetFile, renderData).trim();
     const header = template.appendUnderHeader ? renderTemplate(template.appendUnderHeader, renderData) : null;
 
+    return {
+      renderData,
+      outputContent,
+      targetFilePath,
+      header,
+    };
+  }
+
+  async executeTemplate(
+    template: BlockTemplate,
+    formData: Record<string, any>,
+    theme?: ThemeDefinition,
+    templateMeta?: { templateId?: string | null; templateSourceType?: 'block' | 'override' | null },
+    options: RecordWriteOptions = {},
+  ): Promise<string> {
+    const signal = options.signal;
+    this.throwIfAborted(signal);
+    const preview = this.previewTemplateExecution(template, formData, theme, templateMeta);
+    const { outputContent, targetFilePath, header } = preview;
+
     if (!targetFilePath) throw new Error('模板未定义目标文件路径 (targetFile)。');
+    this.throwIfAborted(signal);
 
     if (header) {
-      await this.appendUnderHeader(targetFilePath, header, outputContent);
+      await this.appendUnderHeader(targetFilePath, header, outputContent, signal);
       return targetFilePath;
     }
 
     const existingContent = await this.vault.readFile(targetFilePath);
+    this.throwIfAborted(signal);
     const newContent = existingContent ? `${existingContent.trim()}\n\n${outputContent}` : outputContent;
     await this.vault.writeFile(targetFilePath, newContent);
     return targetFilePath;
@@ -45,15 +77,21 @@ export class InputService {
     formData: Record<string, any>,
     theme?: ThemeDefinition,
     templateMeta?: { templateId?: string | null; templateSourceType?: 'block' | 'override' | null },
-    signal?: AbortSignal,
+    options: RecordWriteOptions = {},
   ): Promise<string> {
+    const signal = options.signal;
+    const autoRefresh = options.autoRefresh !== false;
     this.throwIfAborted(signal);
     const path = item.file?.path || this.parseItemId(item.id).path;
     const lineNo = item.file?.line || this.parseItemId(item.id).lineNo;
-    if (!path || !lineNo) throw new Error('无法定位原始记录。');
+    if (!path || !lineNo) {
+      throw createRecordConflictError('record_locator_invalid', '无法定位原始记录。');
+    }
 
     const existingContent = await this.vault.readFile(path);
-    if (existingContent == null) throw new Error(`找不到文件: ${path}`);
+    if (existingContent == null) {
+      throw createRecordConflictError('record_path_missing', `找不到文件: ${path}`);
+    }
     this.throwIfAborted(signal);
 
     const renderData = this.buildRenderData(template, formData, theme, templateMeta);
@@ -62,19 +100,56 @@ export class InputService {
 
     const lines = existingContent.split('\n');
     const nextLines = nextText.split(/\r?\n/);
-    const startIndex = Math.max(0, lineNo - 1);
+    const expectedIndex = Math.max(0, lineNo - 1);
 
     if (item.type === 'block') {
-      const endIndex = this.findBlockEndIndex(lines, startIndex);
-      lines.splice(startIndex, endIndex - startIndex + 1, ...nextLines);
+      const range = resolveBlockRangeForMutation(lines, item, expectedIndex);
+      lines.splice(range.startIndex, range.endIndex - range.startIndex + 1, ...nextLines);
     } else {
+      const startIndex = resolveTaskLineIndexForMutation(lines, item, expectedIndex);
       lines.splice(startIndex, 1, ...nextLines);
     }
 
     await this.vault.writeFile(path, lines.join('\n'));
+    if (autoRefresh) {
+      await this.dataStore.scanFileByPath(path);
+      this.dataStore.notifyChange();
+    }
+    return path;
+  }
+
+  async deleteExistingRecord(item: Item, options: RecordWriteOptions = {}): Promise<string> {
+    const signal = options.signal;
+    const autoRefresh = options.autoRefresh !== false;
     this.throwIfAborted(signal);
-    await this.dataStore.scanFileByPath(path);
-    this.dataStore.notifyChange();
+    const path = item.file?.path || this.parseItemId(item.id).path;
+    const lineNo = item.file?.line || this.parseItemId(item.id).lineNo;
+    if (!path || !lineNo) {
+      throw createRecordConflictError('record_locator_invalid', '无法定位原始记录。');
+    }
+
+    const existingContent = await this.vault.readFile(path);
+    if (existingContent == null) {
+      throw createRecordConflictError('record_path_missing', `找不到文件: ${path}`);
+    }
+    this.throwIfAborted(signal);
+
+    const lines = existingContent.split('\n');
+    const expectedIndex = Math.max(0, lineNo - 1);
+
+    if (item.type === 'block') {
+      const range = resolveBlockRangeForMutation(lines, item, expectedIndex);
+      lines.splice(range.startIndex, range.endIndex - range.startIndex + 1);
+    } else {
+      const startIndex = resolveTaskLineIndexForMutation(lines, item, expectedIndex);
+      lines.splice(startIndex, 1);
+    }
+
+    await this.vault.writeFile(path, lines.join('\n'));
+    if (autoRefresh) {
+      await this.dataStore.scanFileByPath(path);
+      this.dataStore.notifyChange();
+    }
     return path;
   }
 
@@ -82,7 +157,7 @@ export class InputService {
     template: BlockTemplate,
     formData: Record<string, any>,
     theme?: ThemeDefinition,
-    templateMeta?: { templateId?: string | null; templateSourceType?: 'block' | 'override' | null }
+    templateMeta?: { templateId?: string | null; templateSourceType?: 'block' | 'override' | null },
   ) {
     const normalizedData: Record<string, any> = { ...formData };
 
@@ -94,8 +169,6 @@ export class InputService {
       const hasValue = Object.prototype.hasOwnProperty.call(raw, 'value');
       if (!hasLabel && !hasValue) continue;
 
-      // 保留对象本体，供 {{字段.value}} / {{字段.label}} 使用；
-      // 同时补充语义辅助键，方便评分/路径型字段统一。
       if (field.semanticType === 'ratingPair') {
         normalizedData[field.key] = { label: raw.label, value: raw.value };
         const auxKey = field.auxKey || '评图';
@@ -116,18 +189,13 @@ export class InputService {
 
   private parseItemId(itemId: string): { path: string; lineNo: number } {
     const hashIndex = itemId.lastIndexOf('#');
-    if (hashIndex === -1) throw new Error(`无效的条目ID格式: ${itemId}`);
+    if (hashIndex === -1) throw createRecordConflictError('record_locator_invalid', `无效的条目ID格式: ${itemId}`);
     const path = itemId.substring(0, hashIndex);
     const lineNo = parseInt(itemId.substring(hashIndex + 1), 10);
-    if (!path || Number.isNaN(lineNo)) throw new Error(`无效的条目ID格式: ${itemId}`);
-    return { path, lineNo };
-  }
-
-  private findBlockEndIndex(lines: string[], startIndex: number): number {
-    for (let i = startIndex; i < lines.length; i++) {
-      if (lines[i].trim() === '<!-- end -->') return i;
+    if (!path || Number.isNaN(lineNo)) {
+      throw createRecordConflictError('record_locator_invalid', `无效的条目ID格式: ${itemId}`);
     }
-    throw new Error('未找到 block 结束标记 <!-- end -->。');
+    return { path, lineNo };
   }
 
   private throwIfAborted(signal?: AbortSignal) {
@@ -138,23 +206,20 @@ export class InputService {
     }
   }
 
-  // ---------------------------------------------------------------------------
-  // Internal helpers
-  // ---------------------------------------------------------------------------
-
-  /**
-   * Append payload under a markdown header.
-   * - If header doesn't exist, it will be appended at EOF.
-   * - If file doesn't exist, it will be created.
-   */
-  private async appendUnderHeader(filePath: string, header: string, payload: string): Promise<void> {
+  private async appendUnderHeader(
+    filePath: string,
+    header: string,
+    payload: string,
+    signal?: AbortSignal,
+  ): Promise<void> {
     const esc = header.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     const regex = new RegExp(`^${esc}\\s*$`, 'm');
 
     const text = (await this.vault.readFile(filePath)) ?? '';
+    this.throwIfAborted(signal);
     const lines = text.split('\n');
 
-    let headerLineIndex = lines.findIndex((l) => regex.test(l));
+    let headerLineIndex = lines.findIndex((line) => regex.test(line));
     if (headerLineIndex === -1) {
       if (lines.length && lines[lines.length - 1].trim() !== '') lines.push('');
       lines.push(header, '');
@@ -163,10 +228,10 @@ export class InputService {
 
     let insertAtIndex = lines.length;
     const headerLevel = header.match(/^(#+)\s/)?.[1].length || 0;
-    for (let i = headerLineIndex + 1; i < lines.length; i++) {
-      const match = lines[i].match(/^(#+)\s/);
+    for (let index = headerLineIndex + 1; index < lines.length; index += 1) {
+      const match = lines[index].match(/^(#+)\s/);
       if (match && match[1].length <= headerLevel) {
-        insertAtIndex = i;
+        insertAtIndex = index;
         break;
       }
     }
@@ -177,6 +242,7 @@ export class InputService {
       lines.splice(insertAtIndex, 0, payload);
     }
 
+    this.throwIfAborted(signal);
     await this.vault.writeFile(filePath, lines.join('\n'));
   }
 }

@@ -1,11 +1,11 @@
 // src/shared/ui/timeline/DayColumnBody.tsx
 /** @jsxImportSource preact */
 import { h } from 'preact';
-import { useState } from 'preact/hooks';
+import { useRef, useState } from 'preact/hooks';
 import { useUiPort } from '@/app/public';
 import type { TaskBlock } from '@core/public';
 import { EditTaskModal } from '@shared/ui/modals/EditTaskModal';
-import { makeObsUri } from '@core/public';
+import { createRecordGestureHandlers } from '@/shared/ui/utils/recordOrigin';
 import { mapTaskToCategory } from '@core/public';
 import { dayjs } from '@core/public';
 import type { UpdateTaskTimeHandler } from '@shared/types/taskTime';
@@ -71,6 +71,8 @@ export function DayColumnBody({
 }: DayColumnBodyProps) {
     const [editingTask, setEditingTask] = useState<TaskBlock | null>(null);
     const ui = useUiPort();
+    const lastTouchRef = useRef<{ time: number; x: number; y: number } | null>(null);
+    const suppressClickUntilRef = useRef(0);
 
     const tryUpdateTaskTime = async (taskId: string, updates: Parameters<UpdateTaskTimeHandler>[1]) => {
         if (!onUpdateTaskTime) {
@@ -129,12 +131,43 @@ export function DayColumnBody({
         }
     };
 
+
+    const handleBodyClick = (event: MouseEvent) => {
+        if (Date.now() < suppressClickUntilRef.current) return;
+        onColumnClick(day, event);
+    };
+
+    const handleBodyTouchEnd = (event: TouchEvent) => {
+        const touch = event.changedTouches?.[0];
+        if (!touch) return;
+
+        const now = Date.now();
+        const previous = lastTouchRef.current;
+        const isDoubleTap = !!previous
+            && now - previous.time <= 350
+            && Math.abs(previous.x - touch.clientX) <= 24
+            && Math.abs(previous.y - touch.clientY) <= 24;
+
+        lastTouchRef.current = {
+            time: now,
+            x: touch.clientX,
+            y: touch.clientY,
+        };
+        suppressClickUntilRef.current = now + 450;
+
+        if (!isDoubleTap) return;
+
+        event.preventDefault();
+        onColumnClick(day, event);
+        lastTouchRef.current = null;
+    };
+
     return (
         <div 
             class="day-column-body"
             style={{ height: `${maxHours * hourHeight}px` }}
-            onClick={(e) => onColumnClick(day, e as any)}
-            onTouchStart={(e) => onColumnClick(day, e as any)}
+            onClick={(e) => handleBodyClick(e as any)}
+            onTouchEnd={(e) => handleBodyTouchEnd(e as any)}
         >
             {editingTask && onUpdateTaskTime && (
                 <EditTaskModal
@@ -154,6 +187,8 @@ export function DayColumnBody({
                 const nextBlock = index < blocks.length - 1 ? blocks[index + 1] : null;
                 const canAlignToNext = nextBlock && (nextBlock.blockStartMinute > block.blockStartMinute);
 
+                const blockGesture = createRecordGestureHandlers({ item: block as any, app, onPrimary: () => handleEdit(block) });
+
                 return (
                     <div 
                         key={block.id + block.day}
@@ -162,13 +197,13 @@ export function DayColumnBody({
                         style={{ top: `${top}px`, height: `${Math.max(height, 2)}px` }}
                         onClick={(e) => e.stopPropagation()}
                         onTouchStart={(e) => e.stopPropagation()}
+                        onTouchEnd={(e) => e.stopPropagation()}
                     >
                         <a 
                             class="timeline-task-link"
-                            onClick={(e) => { 
-                                e.preventDefault(); 
-                                window.open(makeObsUri(block, app.vault.getName())); 
-                            }}
+                            onClick={blockGesture.onClick as any}
+                            onDblClick={blockGesture.onDblClick as any}
+                            onTouchEnd={blockGesture.onTouchEnd as any}
                         >
                             <div class="timeline-task-indicator" style={{ background: color }}></div>
                             <div class="timeline-task-content" style={{ background: hexToRgba(color) }}>

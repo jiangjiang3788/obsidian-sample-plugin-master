@@ -13,7 +13,7 @@
  * - 保持现有交互语义：尊重 lastChanged，避免反向覆盖用户刚输入的字段
  */
 
-import { minutesToTime, timeToMinutes } from '@core/public';
+import { deriveDurationFromRange, deriveEndFromStartAndDuration, deriveStartFromEndAndDuration, normalizeTaskTimeTriple } from '@core/public';
 
 export interface LinkedTimeKeys {
   startKey: string;
@@ -67,32 +67,28 @@ export function computeLinkedTimeChanges(
   const durationVal = data[keys.durationKey];
 
   const duration = parseDuration(durationVal);
-  const startM = timeToMinutes(startVal);
-  const endM = timeToMinutes(endVal);
-
   const changes: Record<string, any> = {};
 
   // 1) start + end -> duration
-  if (startM !== null && endM !== null && lastChanged !== keys.durationKey) {
-    let newDuration = endM - startM;
-    if (newDuration < 0) newDuration += 24 * 60;
+  if (deriveDurationFromRange(startVal, endVal) !== null && lastChanged !== keys.durationKey) {
+    const newDuration = deriveDurationFromRange(startVal, endVal)!;
     const nextDuration = formatDuration(newDuration, durationVal, options.durationOutput);
     if (nextDuration !== durationVal) changes[keys.durationKey] = nextDuration;
     return changes;
   }
 
   // 2) start + duration -> end
-  if (startM !== null && duration !== null && lastChanged !== keys.endKey) {
-    const newEnd = minutesToTime(startM + duration);
-    if (newEnd !== endVal) changes[keys.endKey] = newEnd;
-    return changes;
+  if (duration !== null && lastChanged !== keys.endKey) {
+    const newEnd = deriveEndFromStartAndDuration(startVal, duration);
+    if (newEnd !== null && newEnd !== endVal) changes[keys.endKey] = newEnd;
+    if (Object.keys(changes).length) return changes;
   }
 
   // 3) end + duration -> start
-  if (endM !== null && duration !== null && lastChanged !== keys.startKey) {
-    const newStart = minutesToTime(endM - duration);
-    if (newStart !== startVal) changes[keys.startKey] = newStart;
-    return changes;
+  if (duration !== null && lastChanged !== keys.startKey) {
+    const newStart = deriveStartFromEndAndDuration(endVal, duration);
+    if (newStart !== null && newStart !== startVal) changes[keys.startKey] = newStart;
+    if (Object.keys(changes).length) return changes;
   }
 
   return changes;
@@ -112,27 +108,18 @@ export function finalizeLinkedTimeFields(
   options: LinkedTimeOptions = {}
 ): Record<string, any> {
   const next = { ...data };
-
-  const startM = timeToMinutes(next[keys.startKey]);
-  const endM = timeToMinutes(next[keys.endKey]);
   const durationVal = next[keys.durationKey];
-  const duration = parseDuration(durationVal);
 
-  if (startM !== null && endM !== null) {
-    let newDuration = endM - startM;
-    if (newDuration < 0) newDuration += 24 * 60;
-    next[keys.durationKey] = formatDuration(newDuration, durationVal, options.durationOutput);
-    return next;
-  }
+  const normalized = normalizeTaskTimeTriple({
+    startTime: next[keys.startKey],
+    endTime: next[keys.endKey],
+    duration: durationVal,
+  });
 
-  if (startM !== null && duration !== null) {
-    next[keys.endKey] = minutesToTime(startM + duration);
-    return next;
-  }
-
-  if (endM !== null && duration !== null) {
-    next[keys.startKey] = minutesToTime(endM - duration);
-    return next;
+  if (normalized.startTime !== undefined) next[keys.startKey] = normalized.startTime;
+  if (normalized.endTime !== undefined) next[keys.endKey] = normalized.endTime;
+  if (normalized.duration !== undefined) {
+    next[keys.durationKey] = formatDuration(normalized.duration, durationVal, options.durationOutput);
   }
 
   return next;
