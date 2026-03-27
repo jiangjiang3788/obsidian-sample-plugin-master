@@ -93,8 +93,17 @@ export class QuickInputModal extends Modal {
       if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') {
         this.modalEl.addClass('keyboard-active');
         setTimeout(() => {
-          target.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        }, 300);
+          const container = this.contentEl.querySelector('.think-modal__body') as HTMLElement | null;
+          const anchor = target.closest('.think-form-row, .think-inline-field-row, .think-textarea-row') as HTMLElement | null;
+          (anchor || target).scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' });
+          if (container && anchor) {
+            const anchorRect = anchor.getBoundingClientRect();
+            const containerRect = container.getBoundingClientRect();
+            if (anchorRect.bottom > containerRect.bottom - 16) {
+              container.scrollTop += anchorRect.bottom - containerRect.bottom + 24;
+            }
+          }
+        }, 180);
       }
     };
 
@@ -116,11 +125,13 @@ export class QuickInputModal extends Modal {
         setKeyboardHeight(heightDiff);
         const modalContent = this.contentEl.querySelector('.modal-content, .think-modal') as HTMLElement;
         if (modalContent) {
-          modalContent.scrollTop = modalContent.scrollHeight;
+          modalContent.style.paddingBottom = `calc(${heightDiff}px + env(safe-area-inset-bottom, 0px) + 24px)`;
         }
       } else {
         this.modalEl.removeClass('keyboard-active');
         setKeyboardHeight(300);
+        const modalContent = this.contentEl.querySelector('.think-modal__body') as HTMLElement | null;
+        if (modalContent) modalContent.style.removeProperty('padding-bottom');
       }
     };
 
@@ -133,12 +144,12 @@ export class QuickInputModal extends Modal {
           this.modalEl.addClass('keyboard-active');
           setKeyboardHeight(heightDiff);
           const offsetTop = window.visualViewport.offsetTop || 0;
-          if (offsetTop > 0) {
-            this.modalEl.style.setProperty('--keyboard-offset', `${offsetTop}px`);
-          }
+          this.modalEl.style.setProperty('--keyboard-offset', `${offsetTop}px`);
         } else {
           this.modalEl.removeClass('keyboard-active');
           setKeyboardHeight(300);
+          const modalContent = this.contentEl.querySelector('.think-modal__body') as HTMLElement | null;
+          if (modalContent) modalContent.style.removeProperty('padding-bottom');
         }
       }
     };
@@ -415,8 +426,8 @@ function QuickInputModalContent({
   };
 
   return (
-    <div class="think-modal" style={{ padding: '0 1rem 1rem 1rem' }}>
-      <Box sx={{ mb: '1rem' }}>
+    <div class="think-modal think-modal--quick-input" style={{ padding: '0 0.9rem 0.9rem 0.9rem', display: 'flex', flexDirection: 'column', minHeight: 0, maxHeight: 'calc(100dvh - 24px)', gap: '0.25rem' }}>
+      <Box sx={{ mb: '0.75rem' }}>
         <ModalHeader
           left={
             <h3
@@ -434,6 +445,7 @@ function QuickInputModalContent({
         />
       </Box>
 
+      <div class="think-modal__body">
       <QuickInputEditor
         getResourcePath={getResourcePath}
         initialBlockId={preparedRecord.blockId || initialBlockId}
@@ -443,20 +455,25 @@ function QuickInputModalContent({
         allowBlockSwitch={mode === 'edit' ? false : allowBlockSwitch}
         onStateChange={setEditorState}
       />
+      </div>
 
-      <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', marginTop: '1.5rem', gap: '8px' }}>
-        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
-          {mode === 'edit' ? (
-            <Button color="error" onClick={handleDelete} disabled={isBusy}>
-              {pendingAction === 'delete' ? '删除中...' : '删除'}
+      <div class="think-modal__footer think-modal__footer--quick-input" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '0.9rem', gap: '8px' }}>
+        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', justifyContent: 'space-between', width: '100%' }}>
+          <div>
+            {mode === 'edit' ? (
+              <Button color="error" onClick={handleDelete} disabled={isBusy}>
+                {pendingAction === 'delete' ? '删除中...' : '删除'}
+              </Button>
+            ) : null}
+          </div>
+          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+            <Button onClick={closeModal} disabled={isBusy}>取消</Button>
+            <Button onClick={handleSubmit} variant="contained" disabled={isBusy}>
+              {pendingAction === 'submit'
+                ? (mode === 'edit' ? '保存中...' : '创建中...')
+                : (mode === 'edit' ? '保存修改' : '创建')}
             </Button>
-          ) : null}
-          <Button onClick={handleSubmit} variant="contained" disabled={isBusy}>
-            {pendingAction === 'submit'
-              ? (mode === 'edit' ? '保存中...' : '创建中...')
-              : (mode === 'edit' ? '保存修改' : '创建')}
-          </Button>
-          <Button onClick={closeModal} disabled={isBusy}>取消</Button>
+          </div>
         </div>
       </div>
     </div>

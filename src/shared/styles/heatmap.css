@@ -11,7 +11,7 @@
 .heatmap-view-wrapper {
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: 8px;
 }
 
 .heatmap-view-wrapper.layout-row {
@@ -25,25 +25,32 @@
 .heatmap-theme-group {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 0;
+    padding: 6px 0;
+    border-bottom: 1px solid var(--background-modifier-border);
+}
+
+.heatmap-theme-group:last-child {
+    border-bottom: none;
 }
 
 .heatmap-theme-header {
     display: flex;
     flex-direction: column;
     align-items: flex-start;
-    gap: 12px;
-    margin-bottom: 16px;
-    padding: 12px 16px;
-    background-color: var(--background-primary);
-    border-radius: 8px;
-    border: 1px solid var(--background-modifier-border);
+    gap: 8px;
+    margin-bottom: 0;
+    padding: 2px 0;
+    background-color: transparent;
+    border-radius: 0;
+    border: none;
     transition: all 0.2s ease;
 }
 
 .heatmap-theme-header.week-inline-layout {
     flex-direction: row;
     align-items: center;
+    gap: 10px;
 }
 
 .heatmap-theme-header.vertical-layout {
@@ -56,13 +63,19 @@
     align-items: center;
     justify-content: space-between;
     flex: 0 0 auto;
+    min-width: 0;
+}
+
+.heatmap-header-info.is-clickable {
+    cursor: pointer;
 }
 
 .heatmap-header-info-left {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 6px;
     flex: 0 0 auto;
+    min-width: 0;
 }
 
 .heatmap-header-info-right {
@@ -77,6 +90,17 @@
     flex-wrap: wrap;
     justify-content: flex-start;
     width: 100%;
+}
+
+.heatmap-collapse-arrow {
+    font-size: 12px;
+    color: var(--text-muted);
+    transition: transform 0.18s ease;
+    flex: 0 0 auto;
+}
+
+.heatmap-collapse-arrow.is-collapsed {
+    transform: rotate(-90deg);
 }
 
 .heatmap-theme-header.week-inline-layout .heatmap-header-cells {
@@ -267,7 +291,7 @@
 }
 
 .theme-name {
-    font-weight: bold;
+    font-weight: 600;
     font-size: 14px;
     color: var(--text-normal);
     min-width: 0;
@@ -297,8 +321,8 @@ body.theme-dark .heatmap-cell.empty {
     }
 
     .heatmap-theme-header {
-        padding: 8px 12px;
-        margin-bottom: 12px;
+        padding: 0;
+        margin-bottom: 0;
     }
 
     .heatmap-header-info {
@@ -314,6 +338,27 @@ body.theme-dark .heatmap-cell.empty {
 
     .heatmap-day-section-grid {
         gap: 8px 16px;
+    }
+
+    .heatmap-theme-group {
+        padding: 4px 0;
+    }
+
+    .heatmap-theme-header.week-inline-layout {
+        align-items: flex-start;
+    }
+}
+
+@media (max-width: 768px) {
+    .heatmap-theme-header.week-inline-layout {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 6px;
+    }
+
+    .heatmap-theme-header.week-inline-layout .heatmap-header-cells {
+        width: 100%;
+        flex: none;
     }
 }
 

@@ -38,3 +38,99 @@
         padding: 16px !important;
     }
 }
+
+
+.think-quick-input-modal .think-modal--quick-input {
+    width: 100%;
+}
+
+.think-quick-input-modal .think-modal__body {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 12px);
+}
+
+.think-quick-input-modal .think-modal__footer--quick-input {
+    position: sticky;
+    bottom: 0;
+    z-index: 2;
+    background: var(--background-primary);
+    padding-top: 12px;
+    padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 4px);
+}
+
+.think-quick-input-modal.keyboard-active .think-modal__body {
+    padding-bottom: calc(var(--keyboard-height, 300px) + env(safe-area-inset-bottom, 0px) + 24px) !important;
+}
+
+@media screen and (max-width: 768px) {
+    .think-quick-input-modal {
+        top: max(8px, env(safe-area-inset-top, 0px)) !important;
+        left: 8px !important;
+        right: 8px !important;
+        bottom: 8px !important;
+        max-height: none !important;
+        height: auto !important;
+    }
+
+    .think-quick-input-modal .modal-content {
+        display: flex !important;
+        flex-direction: column !important;
+        min-height: 0 !important;
+        padding: 12px !important;
+    }
+
+    .think-quick-input-modal .think-modal--quick-input {
+        padding: 0 0.5rem 0.75rem 0.5rem !important;
+        max-height: calc(100dvh - 24px) !important;
+    }
+}
+
+.think-quick-input-modal .think-modal--quick-input {
+    width: 100%;
+}
+
+.think-quick-input-modal .think-native-input,
+.think-quick-input-modal .think-native-input--textarea {
+    border-radius: 10px;
+    border: 1px solid var(--background-modifier-border);
+    background: var(--background-primary);
+}
+
+.think-quick-input-modal .think-form-row--inline .MuiFormControl-root {
+    margin-top: 0;
+}
+
+.think-quick-input-modal .think-modal__body {
+    padding-right: 2px;
+}
+
+@media screen and (max-width: 768px) {
+    .think-quick-input-modal .think-modal__footer--quick-input {
+        padding-top: 10px;
+    }
+
+    .think-quick-input-modal.keyboard-active .think-modal__footer--quick-input {
+        position: static;
+    }
+}
+
+
+.think-quick-input-modal .think-native-input,
+.think-quick-input-modal .think-native-input--textarea {
+    width: 100%;
+    border-radius: 10px;
+    border: 1px solid var(--background-modifier-border);
+    background: var(--background-primary);
+    padding: 10px 12px;
+    box-shadow: none;
+}
+
+.think-quick-input-modal .think-native-input:focus,
+.think-quick-input-modal .think-native-input--textarea:focus {
+    outline: none;
+    border-color: var(--interactive-accent);
+    box-shadow: 0 0 0 1px var(--interactive-accent);
+}

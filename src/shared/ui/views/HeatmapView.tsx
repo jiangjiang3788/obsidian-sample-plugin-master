@@ -3,6 +3,7 @@
 /** @jsxImportSource preact */
 import { useMemo, useState, useRef, useEffect } from 'preact/hooks';
 import { Item, ViewInstance, InputSettings, ThemeDefinition, devLog, parsePath } from '@core/public';
+import { Notice } from 'obsidian';
 import { dayjs } from '@core/public';
 import { openCreateFromHeatmap } from '@/app/actions/recordUiActions';
 import { HEATMAP_VIEW_DEFAULT_CONFIG } from '@core/public';
@@ -35,6 +36,19 @@ interface DayThemeEntry {
 interface DayThemeGroup {
     title: string;
     entries: DayThemeEntry[];
+}
+
+function getThemeLeafLabel(themePath: string) {
+    if (!themePath || themePath === '__default__') return '未分类';
+    const segments = parsePath(themePath);
+    const leaf = segments[segments.length - 1];
+    return leaf?.name || themePath;
+}
+
+function getThemeGroupTitle(themePath: string) {
+    if (!themePath || themePath === '__default__') return '未分类';
+    const segments = parsePath(themePath);
+    return segments[0]?.name || themePath;
 }
 
 // ========== Main View Component ==========
@@ -94,14 +108,53 @@ export function HeatmapView({
         return injectedDataByThemeAndDate ?? buildThemeDataMap(items, themesToTrack);
     }, [injectedDataByThemeAndDate, items, themesToTrack]);
 
+    const inferredBlockIdByTheme = useMemo(() => {
+        const result = new Map<string, string>();
+        const counts = new Map<string, Map<string, number>>();
+
+        for (const it of items) {
+            const themeKey = typeof it?.theme === 'string' && it.theme.trim().length > 0 ? it.theme : '__default__';
+            const blockId = (typeof it?.templateId === 'string' && it.templateId.trim().length > 0)
+                ? it.templateId
+                : (typeof it?.categoryKey === 'string' && it.categoryKey.trim().length > 0 ? it.categoryKey : '');
+            if (!blockId) continue;
+            if (!counts.has(themeKey)) counts.set(themeKey, new Map());
+            const themeCounts = counts.get(themeKey)!;
+            themeCounts.set(blockId, (themeCounts.get(blockId) || 0) + 1);
+        }
+
+        counts.forEach((themeCounts, themeKey) => {
+            let bestBlockId = '';
+            let bestCount = -1;
+            themeCounts.forEach((count, blockId) => {
+                if (count > bestCount) {
+                    bestCount = count;
+                    bestBlockId = blockId;
+                }
+            });
+            if (bestBlockId) result.set(themeKey, bestBlockId);
+        });
+
+        return result;
+    }, [items]);
+
+    const resolveCreateBlockId = (themePath?: string, item?: Item) => {
+        return config.sourceBlockId
+            || (item?.templateId || item?.categoryKey)
+            || (themePath ? inferredBlockIdByTheme.get(themePath) : undefined)
+            || inferredBlockIdByTheme.get('__default__')
+            || '';
+    };
+
     const openQuickCreate = (date: string, item?: Item, themePath?: string) => {
         openCreateFromHeatmap({
             app,
-            sourceBlockId: config.sourceBlockId,
+            sourceBlockId: resolveCreateBlockId(themePath, item),
             date,
             item,
             themePath,
             themesByPath,
+            notice: (message) => new Notice(message),
         });
     };
 
@@ -281,7 +334,17 @@ export function HeatmapView({
     };
 
     const [verticalLayouts, setVerticalLayouts] = useState<Set<string>>(new Set());
+    const [collapsedThemes, setCollapsedThemes] = useState<Set<string>>(new Set());
     const headerRefs = useRef<Map<string, HTMLElement>>(new Map());
+
+    const toggleThemeCollapsed = (theme: string) => {
+        setCollapsedThemes((prev) => {
+            const next = new Set(prev);
+            if (next.has(theme)) next.delete(theme);
+            else next.add(theme);
+            return next;
+        });
+    };
 
     // 检测是否需要垂直布局（仅用于天、月视图；周视图固定主题和 cell 一行）
     const checkLayout = (theme: string, headerElement: HTMLElement) => {
@@ -332,12 +395,8 @@ export function HeatmapView({
         const groupMap = new Map<string, DayThemeGroup>();
 
         themesToDisplay.forEach((themePath) => {
-            const segments = parsePath(themePath);
-            const rootSegment = segments[0];
-            const title = rootSegment?.name || themePath || '未分类';
-            const label = segments.length > 1
-                ? segments.slice(1).map((segment) => segment.name).join(' / ')
-                : (rootSegment?.name || themePath || '未分类');
+            const title = getThemeGroupTitle(themePath);
+            const label = getThemeLeafLabel(themePath);
 
             const entry: DayThemeEntry = {
                 themePath,
@@ -421,11 +480,13 @@ export function HeatmapView({
                 {themesToDisplay.map((theme) => {
                     const dataForTheme = dataByThemeAndDate.get(theme) || new Map();
                     const isVertical = currentView === '周' ? false : verticalLayouts.has(theme);
+                    const isCollapsed = currentView === '年' && collapsedThemes.has(theme);
+                    const leafLabel = getThemeLeafLabel(theme);
 
                     return (
-                        <div class="heatmap-theme-group" key={theme}>
+                        <div class={`heatmap-theme-group ${currentView === '年' ? 'is-collapsible' : ''}`} key={theme}>
                             <div
-                                class={`heatmap-theme-header ${currentView === '周' ? 'week-inline-layout' : ''} ${isVertical ? 'vertical-layout' : ''}`}
+                                class={`heatmap-theme-header ${currentView === '周' ? 'week-inline-layout' : ''} ${isVertical ? 'vertical-layout' : ''} ${isCollapsed ? 'is-collapsed' : ''}`}
                                 data-theme={theme}
                                 ref={(el) => {
                                     if (el && theme !== '__default__') {
@@ -434,16 +495,24 @@ export function HeatmapView({
                                 }}
                             >
                                 {theme !== '__default__' && (
-                                    <div class="heatmap-header-info">
+                                    <div
+                                        class={`heatmap-header-info ${currentView === '年' ? 'is-clickable' : ''}`}
+                                        onClick={() => {
+                                            if (currentView === '年') toggleThemeCollapsed(theme);
+                                        }}
+                                    >
                                         <div class="heatmap-header-info-left">
-                                            <span class="theme-name">{theme}</span>
+                                            {currentView === '年' && <span class={`heatmap-collapse-arrow ${isCollapsed ? 'is-collapsed' : ''}`}>▾</span>}
+                                            <span class="theme-name">{leafLabel}</span>
                                         </div>
                                     </div>
                                 )}
 
-                                <div class={`heatmap-header-cells ${isRowLayout ? '' : 'grid-view'}`}>
-                                    {renderHeaderCells(currentView, theme, dataForTheme)}
-                                </div>
+                                {!isCollapsed && (
+                                    <div class={`heatmap-header-cells ${isRowLayout ? '' : 'grid-view'}`}>
+                                        {renderHeaderCells(currentView, theme, dataForTheme)}
+                                    </div>
+                                )}
                             </div>
                         </div>
                     );

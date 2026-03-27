@@ -6,6 +6,7 @@ import { ItemLink } from '@shared/ui/items/ItemLink';
 import type { MessageRenderPort } from '@core/public';
 import { MarkdownContent } from '@shared/ui/markdown/MarkdownContent';
 import { openEditFromItem } from '@/app/actions/recordUiActions';
+import { createRecordGestureHandlers } from '@/shared/ui/utils/recordOrigin';
 
 interface BlockItemProps {
     item: Item;
@@ -23,15 +24,18 @@ export const BlockItem = ({ item, fields, isNarrow, app, messageRenderPort, allT
     const showContent = fields.includes('content') && effectiveContent;
     const narrowClass = isNarrow ? 'is-narrow' : '';
 
-    const openEditModal = (evt: MouseEvent) => {
-        try {
-            const target = evt.target as HTMLElement | null;
-            if (target?.closest('a')) return;
-            openEditFromItem({ app, item });
-        } catch {
-            // no-op: editing should never crash rendering
-        }
-    };
+
+    const gesture = createRecordGestureHandlers({
+        item,
+        app,
+        onPrimary: () => {
+            try {
+                openEditFromItem({ app, item });
+            } catch {
+                // no-op: editing should never crash rendering
+            }
+        },
+    });
 
     return (
         <div class={`bv-item bv-item--block ${narrowClass}`}>
@@ -63,7 +67,21 @@ export const BlockItem = ({ item, fields, isNarrow, app, messageRenderPort, allT
                             contentType="markdown"
                             sourcePath={item.file?.path || ''}
                             className="bv-block-md"
-                            onClick={openEditModal as any}
+                            onClick={(evt: any) => {
+                                const target = evt?.target as HTMLElement | null;
+                                if (target?.closest('a')) return;
+                                gesture.onClick(evt);
+                            }}
+                            onDblClick={(evt: any) => {
+                                const target = evt?.target as HTMLElement | null;
+                                if (target?.closest('a')) return;
+                                gesture.onDblClick(evt);
+                            }}
+                            onTouchEnd={(evt: any) => {
+                                const target = evt?.target as HTMLElement | null;
+                                if (target?.closest('a')) return;
+                                gesture.onTouchEnd(evt);
+                            }}
                         />
                     </div>
                 )}

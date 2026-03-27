@@ -61,17 +61,12 @@ export function QuickInputEditorThemeSelector({
     : null;
   const activeParent = activeParentPath ? themes.find((t) => t.path === activeParentPath) || null : null;
   const childThemes = activeParentPath ? childrenByParent.get(activeParentPath) || [] : [];
-  const childAreaHeight = dense ? 92 : 108;
 
   return (
     <FormControl component="fieldset" sx={{ width: '100%' }}>
-      <Typography variant="body2" sx={{ fontWeight: 600, mb: 1 }}>
-        主题分类
-      </Typography>
-
-      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.25 }}>
+      <Box sx={{ display: 'flex', flexDirection: 'column', gap: dense ? 1 : 1.2 }}>
         <Box>
-          <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block', mb: 0.75 }}>
+          <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block', mb: 0.75, fontWeight: 600 }}>
             父主题
           </Typography>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
@@ -84,13 +79,6 @@ export function QuickInputEditorThemeSelector({
                   selected={isSelected || isActiveParent}
                   title={parent.path}
                   onClick={() => onSelect(parent.id, parent.path)}
-                  style={
-                    isSelected || isActiveParent
-                      ? {}
-                      : {
-                          border: '2px solid transparent',
-                        }
-                  }
                 >
                   {parent.icon ? `${parent.icon} ` : ''}
                   {getThemeLabel(parent)}
@@ -100,54 +88,29 @@ export function QuickInputEditorThemeSelector({
           </div>
         </Box>
 
-        <div
-          style={{
-            height: '1px',
-            background: 'var(--background-modifier-border)',
-            opacity: 0.9,
-          }}
-        />
-
         <Box>
-          <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block', mb: 0.75 }}>
+          <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block', mb: 0.75, fontWeight: 600 }}>
             {activeParent ? `${getThemeLabel(activeParent)} · 子主题` : '子主题'}
           </Typography>
-          <div
-            style={{
-              minHeight: `${childAreaHeight}px`,
-              maxHeight: `${childAreaHeight}px`,
-              overflowY: 'auto',
-              paddingRight: '4px',
-            }}
-          >
-            {childThemes.length > 0 ? (
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', alignContent: 'flex-start' }}>
-                {childThemes.map((child) => (
-                  <SelectablePill
-                    key={child.id}
-                    selected={selectedThemeId === child.id}
-                    title={child.path}
-                    onClick={() => onSelect(child.id, child.path)}
-                  >
-                    {child.icon ? `${child.icon} ` : ''}
-                    {getThemeLabel(child)}
-                  </SelectablePill>
-                ))}
-              </div>
-            ) : (
-              <div
-                style={{
-                  height: '100%',
-                  display: 'flex',
-                  alignItems: 'center',
-                  color: 'var(--text-muted)',
-                  fontSize: '0.85rem',
-                }}
-              >
-                {activeParent ? '这个父主题下还没有子主题。' : '先选择一个父主题。'}
-              </div>
-            )}
-          </div>
+          {childThemes.length > 0 ? (
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+              {childThemes.map((child) => (
+                <SelectablePill
+                  key={child.id}
+                  selected={selectedThemeId === child.id}
+                  title={child.path}
+                  onClick={() => onSelect(child.id, child.path)}
+                >
+                  {child.icon ? `${child.icon} ` : ''}
+                  {getThemeLabel(child)}
+                </SelectablePill>
+              ))}
+            </div>
+          ) : (
+            <Typography variant="body2" sx={{ color: 'text.secondary', fontSize: '0.9rem' }}>
+              {activeParent ? '这个父主题下还没有子主题。' : '先选择一个父主题。'}
+            </Typography>
+          )}
         </Box>
       </Box>
     </FormControl>

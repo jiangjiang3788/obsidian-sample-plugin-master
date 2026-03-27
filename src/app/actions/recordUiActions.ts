@@ -41,6 +41,7 @@ export interface HeatmapCreateParams {
   item?: Item;
   themePath?: string;
   themesByPath?: Map<string, ThemeDefinition>;
+  notice?: (message: string) => void;
 }
 
 export interface StatisticsCreateParams {
@@ -179,7 +180,8 @@ function resolveHeatmapThemeId(themesByPath: Map<string, ThemeDefinitionType> | 
 }
 
 function buildHeatmapCreateConfig(params: HeatmapCreateParams): QuickInputConfig | null {
-  if (!params.sourceBlockId) return null;
+  const resolvedBlockId = params.sourceBlockId || params.item?.templateId || params.item?.categoryKey;
+  if (!resolvedBlockId) return null;
 
   const themeId = resolveHeatmapThemeId(params.themesByPath, params.themePath, params.item);
   const themePath = params.themePath && params.themePath !== '__default__'
@@ -201,7 +203,7 @@ function buildHeatmapCreateConfig(params: HeatmapCreateParams): QuickInputConfig
   }
 
   return {
-    blockId: params.sourceBlockId,
+    blockId: resolvedBlockId,
     context,
     themeId,
   };
@@ -326,7 +328,12 @@ export function openCreateFromTimeline(params: TimelineCreateParams): boolean {
 }
 
 export function openCreateFromHeatmap(params: HeatmapCreateParams): boolean {
-  return openCreateModal(params.app, buildHeatmapCreateConfig(params), 'view_quick_create');
+  const config = buildHeatmapCreateConfig(params);
+  if (!config) {
+    params.notice?.('当前热力图没有可用于新增的模板，请先为该热力图配置 sourceBlockId，或保证该主题下至少已有一条记录可供推断模板。');
+    return false;
+  }
+  return openCreateModal(params.app, config, 'view_quick_create');
 }
 
 export function openCreateFromStatistics(params: StatisticsCreateParams): boolean {

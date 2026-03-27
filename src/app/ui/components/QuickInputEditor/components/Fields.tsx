@@ -3,9 +3,11 @@ import { h } from 'preact';
 
 import type { TemplateField } from '@core/public';
 
-import { Box, Button, FormControl, FormControlLabel, Radio, RadioGroup as MuiRadioGroup, Stack, Typography } from '@mui/material';
+import { Box, Button, FormControl, Stack, Typography } from '@mui/material';
 
 import { SimpleSelect } from '@shared/public';
+
+import { SelectablePill } from './SelectablePill';
 
 export interface QuickInputEditorFieldsProps {
   getResourcePath: (path: string) => string;
@@ -15,14 +17,82 @@ export interface QuickInputEditorFieldsProps {
   onUpdateField: (key: string, value: any, isOptionObject?: boolean) => void;
 }
 
-/**
- * 字段渲染（纯渲染）
- * - 不读 store，不做副作用
- * - 只根据 template + formData + handler 输出 UI
- */
 export function QuickInputEditorFields({ getResourcePath, template, formData, dense = false, onUpdateField }: QuickInputEditorFieldsProps) {
   const handleUpdate = (key: string, value: any, isOptionObject = false) => {
     onUpdateField(key, value, isOptionObject);
+  };
+
+  const isInlineRowField = (field: TemplateField) => {
+    const label = field.label || field.key;
+    return label === '状态' || label === '重复' || label === '日期';
+  };
+
+  const isTimeField = (field: TemplateField) => ['时间', '结束', '时长'].includes(field.label || field.key);
+
+  const renderFieldLabel = (label: string) => (
+    <Typography
+      variant="body2"
+      sx={{
+        fontWeight: 700,
+        color: 'text.primary',
+        lineHeight: 1.35,
+      }}
+    >
+      {label}
+    </Typography>
+  );
+
+  const renderInlineRow = (label: string, control: any) => (
+    <Box
+      className="think-form-row think-form-row--inline"
+      sx={{
+        display: 'grid',
+        gridTemplateColumns: { xs: '1fr', sm: '84px minmax(0, 1fr)' },
+        alignItems: 'start',
+        columnGap: { xs: 0, sm: 1.5 },
+        rowGap: 0.7,
+        width: '100%',
+      }}
+    >
+      <Box sx={{ pt: { xs: 0, sm: 0.55 } }}>{renderFieldLabel(label)}</Box>
+      <Box sx={{ minWidth: 0 }}>{control}</Box>
+    </Box>
+  );
+
+  const renderStandardField = (label: string, control: any, textarea = false) => (
+    <Box
+      className={textarea ? 'think-form-row think-textarea-row' : 'think-form-row'}
+      sx={{
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 0.8,
+        width: '100%',
+      }}
+    >
+      {renderFieldLabel(label)}
+      {control}
+    </Box>
+  );
+
+  const renderOptionPills = (field: TemplateField) => {
+    const selectedOptionObject = formData[field.key];
+    return (
+      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+        {(field.options || []).map((opt: any, index: number) => {
+          const selected = selectedOptionObject?.value === opt.value && selectedOptionObject?.label === (opt.label || opt.value);
+          return (
+            <SelectablePill
+              key={index}
+              selected={selected}
+              onClick={() => handleUpdate(field.key, { value: opt.value, label: opt.label || opt.value }, true)}
+              title={opt.label || opt.value}
+            >
+              {opt.label || opt.value}
+            </SelectablePill>
+          );
+        })}
+      </Box>
+    );
   };
 
   const renderField = (field: TemplateField) => {
@@ -32,95 +102,58 @@ export function QuickInputEditorFields({ getResourcePath, template, formData, de
 
     switch (field.type) {
       case 'rating':
-        return (
-          <FormControl component="fieldset">
-            <Typography variant="body2" sx={{ fontWeight: 500 }}>
-              {label}
-            </Typography>
-            <Stack direction="row" spacing={1} sx={{ mt: 1 }}>
-              {(field.options || []).map((opt: any) => {
-                const isSelected = isComplex && formData[field.key]?.label === opt.label && formData[field.key]?.value === opt.value;
-                const isImagePath =
-                  opt.value && (opt.value.endsWith('.png') || opt.value.endsWith('.jpg') || opt.value.endsWith('.jpeg') || opt.value.endsWith('.svg'));
+        return renderStandardField(
+          label,
+          <Stack direction="row" spacing={0.9} sx={{ mt: 0.1, flexWrap: 'wrap' }}>
+            {(field.options || []).map((opt: any) => {
+              const isSelected = isComplex && formData[field.key]?.label === opt.label && formData[field.key]?.value === opt.value;
+              const isImagePath =
+                opt.value && (opt.value.endsWith('.png') || opt.value.endsWith('.jpg') || opt.value.endsWith('.jpeg') || opt.value.endsWith('.svg'));
 
-                const displayContent = isImagePath ? (
-                  <img
-                    src={getResourcePath(opt.value)}
-                    alt={opt.label}
-                    style={{ width: '24px', height: '24px', objectFit: 'contain' }}
-                  />
-                ) : (
-                  <span style={{ fontSize: '20px' }}>{opt.value}</span>
-                );
+              const displayContent = isImagePath ? (
+                <img
+                  src={getResourcePath(opt.value)}
+                  alt={opt.label}
+                  style={{ width: '22px', height: '22px', objectFit: 'contain' }}
+                />
+              ) : (
+                <span style={{ fontSize: '18px', lineHeight: 1 }}>{opt.value}</span>
+              );
 
-                return (
-                  <Button
-                    key={opt.label}
-                    variant="text"
-                    onClick={() => handleUpdate(field.key, { value: opt.value, label: opt.label }, true)}
-                    title={`评分: ${opt.label}`}
-                    sx={{
-                      minWidth: '40px',
-                      height: '40px',
-                      p: 1,
-                      opacity: isSelected ? 1 : 0.6,
-                      '&:hover': { opacity: 1, transform: 'scale(1.05)' },
-                      border: isSelected ? '2px solid var(--interactive-accent)' : '1px solid transparent',
-                      borderRadius: '8px',
-                      transition: 'all 0.2s ease',
-                    }}
-                  >
-                    {displayContent}
-                  </Button>
-                );
-              })}
-            </Stack>
-          </FormControl>
+              return (
+                <Button
+                  key={opt.label}
+                  variant="text"
+                  onClick={() => handleUpdate(field.key, { value: opt.value, label: opt.label }, true)}
+                  title={opt.label || String(opt.value || '')}
+                  sx={{
+                    minWidth: '40px',
+                    height: '40px',
+                    p: 0.75,
+                    opacity: isSelected ? 1 : 0.8,
+                    border: isSelected ? '2px solid var(--interactive-accent)' : '1px solid var(--background-modifier-border)',
+                    background: isSelected ? 'var(--background-modifier-hover)' : 'transparent',
+                    borderRadius: '10px',
+                    transition: 'all 0.18s ease',
+                    '&:hover': { opacity: 1, background: 'var(--background-modifier-hover)' },
+                  }}
+                >
+                  {displayContent}
+                </Button>
+              );
+            })}
+          </Stack>
         );
 
       case 'radio':
+        return isInlineRowField(field)
+          ? renderInlineRow(label, renderOptionPills(field))
+          : renderStandardField(label, renderOptionPills(field));
+
       case 'select': {
-        const isRadio = field.type === 'radio';
-
-        if (isRadio) {
-          const selectedOptionObject = formData[field.key];
-          const selectedIndex =
-            field.options?.findIndex((opt: any) => opt.value === selectedOptionObject?.value && opt.label === selectedOptionObject?.label) ?? -1;
-
-          return (
-            <FormControl component="fieldset">
-              <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                {label}
-              </Typography>
-              <MuiRadioGroup
-                row
-                value={selectedIndex > -1 ? String(selectedIndex) : ''}
-                onChange={(e: any) => {
-                  const newIndex = parseInt(e.target.value, 10);
-                  const newlySelectedOption = field.options?.[newIndex];
-                  if (newlySelectedOption) {
-                    handleUpdate(
-                      field.key,
-                      { value: newlySelectedOption.value, label: newlySelectedOption.label || newlySelectedOption.value },
-                      true
-                    );
-                  }
-                }}
-              >
-                {(field.options || []).map((opt: any, index: number) => (
-                  <FormControlLabel key={index} value={String(index)} control={<Radio />} label={opt.label || opt.value} />
-                ))}
-              </MuiRadioGroup>
-            </FormControl>
-          );
-        }
-
         const selectOptions = (field.options || []).map((opt: any) => ({ value: opt.value, label: opt.label || opt.value }));
-        return (
+        const selectControl = (
           <FormControl fullWidth>
-            <Typography variant="body2" sx={{ fontWeight: 500, mb: 0.5 }}>
-              {label}
-            </Typography>
             <SimpleSelect
               value={value || ''}
               options={selectOptions}
@@ -134,26 +167,37 @@ export function QuickInputEditorFields({ getResourcePath, template, formData, de
             />
           </FormControl>
         );
+
+        return isInlineRowField(field)
+          ? renderInlineRow(label, selectControl)
+          : renderStandardField(label, selectControl);
       }
 
       default: {
         const commonInputProps: any = {
-          className: 'think-native-input',
+          className: field.type === 'textarea' ? 'think-native-input think-native-input--textarea' : 'think-native-input',
           value: value || '',
           onInput: (e: any) => handleUpdate(field.key, e.target.value),
           onKeyDown: (e: any) => e.stopPropagation(),
         };
 
-        return (
-          <div style={{ display: 'flex', flexDirection: 'column', width: '100%' }}>
-            <label style={{ fontWeight: 500, fontSize: '0.875rem', marginBottom: '4px' }}>{label}</label>
-            {field.type === 'textarea' ? (
-              <textarea {...commonInputProps} rows={dense ? 3 : 4} />
-            ) : (
-              <input {...commonInputProps} type={field.type === 'text' ? 'text' : (field.type as any)} min={field.min} max={field.max} />
-            )}
-          </div>
+        const control = field.type === 'textarea' ? (
+          <textarea {...commonInputProps} rows={dense ? 4 : 5} style={{ resize: 'vertical', minHeight: dense ? '96px' : '118px' }} />
+        ) : (
+          <input
+            {...commonInputProps}
+            type={field.type === 'text' ? 'text' : (field.type as any)}
+            min={field.min}
+            max={field.max}
+            style={isTimeField(field) ? { minHeight: '42px' } : undefined}
+          />
         );
+
+        if (isInlineRowField(field)) {
+          return renderInlineRow(label, control);
+        }
+
+        return renderStandardField(label, control, field.type === 'textarea');
       }
     }
   };
@@ -182,7 +226,16 @@ export function QuickInputEditorFields({ getResourcePath, template, formData, de
       const sortedTimeFields = timeFieldKeys.map((key) => timeFields.find((f) => f.key === key)).filter((f) => f !== undefined);
 
       fieldsToRender.push(
-        <Box key="time-fields" sx={{ display: 'flex', gap: 1, flexWrap: 'nowrap', '& > div': { flex: 1, minWidth: 0 } }}>
+        <Box
+          key="time-fields"
+          className="think-form-row"
+          sx={{
+            display: 'grid',
+            gridTemplateColumns: { xs: '1fr', sm: 'repeat(3, minmax(0, 1fr))' },
+            gap: 1.25,
+            pt: 0.2,
+          }}
+        >
           {sortedTimeFields.map((field: any) => (
             <div key={field.id}>{renderField(field)}</div>
           ))}
@@ -193,5 +246,5 @@ export function QuickInputEditorFields({ getResourcePath, template, formData, de
     return fieldsToRender;
   };
 
-  return <Stack spacing={dense ? 1.75 : 2.5}>{renderFields()}</Stack>;
+  return <Stack spacing={dense ? 1.7 : 1.9}>{renderFields()}</Stack>;
 }

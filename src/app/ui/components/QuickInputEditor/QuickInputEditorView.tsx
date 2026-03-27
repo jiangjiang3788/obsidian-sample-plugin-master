@@ -28,6 +28,22 @@ export interface QuickInputEditorViewProps {
   onUpdateField: (key: string, value: any, isOptionObject?: boolean) => void;
 }
 
+function SectionTitle({ title, compact = false }: { title: string; compact?: boolean }) {
+  return (
+    <Typography
+      variant="body2"
+      sx={{
+        fontWeight: 700,
+        color: 'text.primary',
+        mb: compact ? 0.75 : 0.9,
+        lineHeight: 1.3,
+      }}
+    >
+      {title}
+    </Typography>
+  );
+}
+
 export function QuickInputEditorView({
   getResourcePath,
   blocks,
@@ -48,43 +64,48 @@ export function QuickInputEditorView({
   }
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', gap: dense ? 1.5 : 2 }}>
+    <Box sx={{ display: 'flex', flexDirection: 'column', gap: dense ? 1.75 : 2 }}>
       {allowBlockSwitch && blocks.length > 1 && (
-        <FormControl fullWidth>
-          <Typography variant="body2" sx={{ fontWeight: 600, mb: 1 }}>
-            记录类型
-          </Typography>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-            {blocks.map((block: any) => (
-              <SelectablePill
-                key={block.id}
-                selected={currentBlockId === block.id}
-                onClick={() => onBlockChange(block.id)}
-                title={block.name}
-              >
-                {block.name}
-              </SelectablePill>
-            ))}
-          </div>
-        </FormControl>
+        <Box>
+          <SectionTitle title="记录类型" compact />
+          <FormControl fullWidth>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+              {blocks.map((block: any) => (
+                <SelectablePill
+                  key={block.id}
+                  selected={currentBlockId === block.id}
+                  onClick={() => onBlockChange(block.id)}
+                  title={block.name}
+                >
+                  {block.name}
+                </SelectablePill>
+              ))}
+            </div>
+          </FormControl>
+        </Box>
       )}
 
-      <QuickInputEditorThemeSelector
-        themes={themes}
-        selectedThemeId={selectedThemeId}
-        onSelect={onSelectTheme}
-        dense={dense}
-      />
+      <Box>
+        <SectionTitle title="主题分类" compact />
+        <QuickInputEditorThemeSelector
+          themes={themes}
+          selectedThemeId={selectedThemeId}
+          onSelect={onSelectTheme}
+          dense={dense}
+        />
+      </Box>
 
-      {showDivider && <Divider sx={{ my: dense ? 1 : 2 }} />}
+      {showDivider && <Divider sx={{ my: dense ? 0.1 : 0.2, opacity: 0.55 }} />}
 
-      <QuickInputEditorFields
-        getResourcePath={getResourcePath}
-        template={template}
-        formData={formData}
-        dense={dense}
-        onUpdateField={onUpdateField}
-      />
+      <Box>
+        <QuickInputEditorFields
+          getResourcePath={getResourcePath}
+          template={template}
+          formData={formData}
+          dense={dense}
+          onUpdateField={onUpdateField}
+        />
+      </Box>
     </Box>
   );
 }

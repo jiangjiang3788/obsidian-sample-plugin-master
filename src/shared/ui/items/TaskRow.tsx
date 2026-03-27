@@ -7,6 +7,7 @@ import { isDone } from '@core/public';
 import { FieldPill } from './FieldPill';
 import type { TimerController } from '@/app/public';
 import { openEditFromItem } from '@/app/actions/recordUiActions';
+import { createRecordGestureHandlers } from '@/shared/ui/utils/recordOrigin';
 
 interface TaskRowProps {
     item: Item;
@@ -36,6 +37,8 @@ export function TaskRow({
         evt?.stopPropagation?.();
         openEditFromItem({ app, item });
     };
+
+    const gesture = createRecordGestureHandlers({ item, app, onPrimary: () => openEdit() });
     
     return (
         <div class={`task-row ${compact ? 'task-row--compact' : ''} ${done ? 'task-row--done' : ''}`}>
@@ -43,9 +46,9 @@ export function TaskRow({
                 <TaskCheckbox done={done} onMarkDone={() => onMarkDone(item.id)} />
             </div>
             
-            <div class="task-row-content" onClick={openEdit as any}>
+            <div class="task-row-content" onClick={gesture.onClick as any} onDblClick={gesture.onDblClick as any} onTouchEnd={gesture.onTouchEnd as any}>
                 <div class="task-row-main">
-                    <button type="button" onClick={openEdit as any} class={`task-row-title ${done ? 'task-done' : ''}`} style={{ background: 'none', border: 'none', padding: 0, textAlign: 'left', cursor: 'pointer' }}>
+                    <button type="button" onClick={gesture.onClick as any} onDblClick={gesture.onDblClick as any} onTouchEnd={gesture.onTouchEnd as any} class={`task-row-title ${done ? 'task-done' : ''}`} style={{ background: 'none', border: 'none', padding: 0, textAlign: 'left', cursor: 'pointer' }}>
                         {item.icon && <span class="icon mr-1">{item.icon}</span>}
                         {item.title}
                     </button>

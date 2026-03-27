@@ -168,7 +168,7 @@ function ViewInstanceEditor({ vi }: { vi: ViewInstance }) {
             </div>
 
             {/* 专属配置 */}
-            {EditorComponent && (
+            {EditorComponent && currentVi.viewType !== 'TimelineView' && (
                 <div style={{ 
                     borderTop: '1px solid var(--background-modifier-border)', 
                     paddingTop: '1.5rem' 

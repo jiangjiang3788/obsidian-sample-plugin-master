@@ -20,7 +20,7 @@
     "confirmMode": "batch",
     "preloadConfigOnStartup": true,
     "configCacheTTLSeconds": 300,
-    "customPrompt": "完成的任务状态勾选完成✅\n未开始的任务🛫\n未完成的任务、有截止日期的📅\n上午8点到12点工作 其中9点到十点写总结  这个应该断成三节 十点到九点工作 九点到十点写总结 十点到十二点工作"
+    "customPrompt": "完成的任务状态勾选完成✅\n未开始的任务🛫\n未完成的任务、有截止日期的📅\n上午8点到12点工作 其中9点到十点写总结 这个应该断成三节 十点到九点工作 九点到十点写总结 十点到十二点工作"
   },
   "groups": [
     {
@@ -47,7 +47,7 @@
       "id": "vi_mm9z0oe1cvlr53c",
       "parentId": null,
       "title": "时间轴",
-      "viewType": "TimelineView",
+      "viewType": "TaskExecutionView",
       "viewConfig": {
         "categories": {
           "0": {
@@ -121,7 +121,7 @@
       "id": "vi_mmeolydjaga6z6u",
       "parentId": null,
       "title": "打卡",
-      "viewType": "ExcelView",
+      "viewType": "HeatmapView",
       "viewConfig": {
         "categories": [
           {
@@ -180,7 +180,7 @@
       "id": "vi_mmijitbq47u10wu",
       "parentId": null,
       "title": "block",
-      "viewType": "TableView",
+      "viewType": "BlockView",
       "viewConfig": {
         "categories": [
           {
@@ -223,25 +223,7 @@
         "categoryKey",
         "period"
       ],
-      "filters": [
-        {
-          "field": "categoryKey",
-          "op": "=",
-          "value": "未完成任务",
-          "logic": "and"
-        },
-        {
-          "field": "folder",
-          "op": "=",
-          "value": "01",
-          "logic": "and"
-        },
-        {
-          "field": "recurrence",
-          "op": "regex",
-          "value": "^(?!.*every).*"
-        }
-      ],
+      "filters": [],
       "sort": [
         {
           "field": "date",
@@ -303,7 +285,13 @@
         {
           "field": "file.basename",
           "op": "!=",
-          "value": "2-2三餐"
+          "value": "2-2三餐",
+          "logic": "and"
+        },
+        {
+          "field": "recurrence",
+          "op": "=",
+          "value": "none"
         }
       ],
       "sort": [],
@@ -356,30 +344,6 @@
           "dir": "asc"
         }
       ],
-      "collapsed": false
-    },
-    {
-      "id": "vi_mmoatd6rl16r9kz",
-      "parentId": null,
-      "title": "染发的晚上",
-      "viewType": "StatisticsView",
-      "viewConfig": {},
-      "fields": [],
-      "groupFields": [],
-      "filters": [],
-      "sort": [],
-      "collapsed": false
-    },
-    {
-      "id": "vi_mmoateqyfjp1fms",
-      "parentId": null,
-      "title": "玩儿",
-      "viewType": "StatisticsView",
-      "viewConfig": {},
-      "fields": [],
-      "groupFields": [],
-      "filters": [],
-      "sort": [],
       "collapsed": false
     }
   ],
@@ -496,7 +460,7 @@
             ]
           }
         ],
-        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{theme}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) {{状态}} (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{日期}}\n\n",
+        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{theme}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{状态}} {{重复.value}} {{日期}}\n\n",
         "targetFile": "03/01.md",
         "appendUnderHeader": "## {{theme}}",
         "categoryKey": "任务"
@@ -5312,7 +5276,7 @@
             ]
           }
         ],
-        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{theme}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) {{状态}} (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{日期}}\n\n",
+        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{theme}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态}} {{日期}}\n\n",
         "targetFile": "01/2-6工作.md",
         "appendUnderHeader": "## {{theme}}"
       },
@@ -5398,7 +5362,7 @@
             ]
           }
         ],
-        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{theme}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) {{状态}} (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{日期}}\n\n",
+        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{theme}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态}} {{日期}}\n\n",
         "targetFile": "01/2-6工作.md",
         "appendUnderHeader": "## {{theme}}"
       },
@@ -5484,7 +5448,7 @@
             ]
           }
         ],
-        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{theme}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) {{状态}} (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{日期}}\n\n",
+        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{theme}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态}} {{日期}}\n\n",
         "targetFile": "01/2-6工作.md",
         "appendUnderHeader": "## {{theme}}"
       },
@@ -5570,7 +5534,7 @@
             ]
           }
         ],
-        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{theme}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) {{状态}} (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{日期}}\n\n",
+        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{theme}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态}} {{日期}}\n\n",
         "targetFile": "01/2-6工作.md",
         "appendUnderHeader": "## {{theme}}"
       },
@@ -5656,7 +5620,7 @@
             ]
           }
         ],
-        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{theme}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) {{状态}} (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{日期}}\n\n",
+        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{theme}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态}} {{日期}}\n\n",
         "targetFile": "01/2-6工作.md",
         "appendUnderHeader": "## {{theme}}",
         "id": "ovr_mfhzw9d975by6"
@@ -5743,7 +5707,7 @@
             ]
           }
         ],
-        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{theme}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) {{状态}} (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{日期}}\n\n",
+        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{theme}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态}} {{日期}}\n\n",
         "targetFile": "01/2-6工作.md",
         "appendUnderHeader": "## {{theme}}"
       },
@@ -5829,7 +5793,7 @@
             ]
           }
         ],
-        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{theme}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) {{状态}} (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{日期}}\n\n",
+        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{theme}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态}} {{日期}}\n\n",
         "targetFile": "01/2-4思考.md",
         "appendUnderHeader": "## {{theme}}",
         "id": "ovr_mfhzwkwivqho3"
@@ -5916,7 +5880,7 @@
             ]
           }
         ],
-        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{theme}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) {{状态}} (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{日期}}\n\n",
+        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{theme}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态}} {{日期}}\n\n",
         "targetFile": "01/2-4思考.md",
         "appendUnderHeader": "## {{theme}}",
         "id": "ovr_mfhzwoqz4223c"
@@ -6003,7 +5967,7 @@
             ]
           }
         ],
-        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{theme}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) {{状态}} (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{日期}}\n\n",
+        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{theme}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态}} {{日期}}\n\n",
         "targetFile": "01/2-5电脑.md",
         "appendUnderHeader": "## {{theme}}",
         "id": "ovr_mfhzwx24q1kpc"
@@ -6090,7 +6054,7 @@
             ]
           }
         ],
-        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{theme}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) {{状态}} (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{日期}}\n\n",
+        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{theme}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态}} {{日期}}\n\n",
         "targetFile": "01/2-5电脑.md",
         "appendUnderHeader": "## {{theme}}",
         "id": "ovr_mfhzx4hvl9s27",
@@ -6178,7 +6142,7 @@
             ]
           }
         ],
-        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{theme}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) {{状态}} (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{日期}}\n\n",
+        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{theme}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态}} {{日期}}\n\n",
         "targetFile": "01/2-5电脑.md",
         "appendUnderHeader": "## {{theme}}",
         "id": "ovr_mfhzxac3hz906"
@@ -6265,7 +6229,7 @@
             ]
           }
         ],
-        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{theme}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) {{状态}} (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{日期}}\n\n",
+        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{theme}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态}} {{日期}}\n\n",
         "targetFile": "01/2-5电脑.md",
         "appendUnderHeader": "## {{theme}}",
         "id": "ovr_mfhzxf5uox0gu",
@@ -6353,7 +6317,7 @@
             ]
           }
         ],
-        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{theme}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) {{状态}} (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{日期}}\n\n",
+        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{theme}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态}} {{日期}}\n\n",
         "targetFile": "01/2-5电脑.md",
         "appendUnderHeader": "## {{theme}}",
         "disabled": true
@@ -6440,7 +6404,7 @@
             ]
           }
         ],
-        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{theme}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) {{状态}} (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{日期}}\n\n",
+        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{theme}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态}} {{日期}}\n\n",
         "targetFile": "01/2-4思考.md",
         "appendUnderHeader": "## {{theme}}",
         "id": "ovr_mfhzxpuhe0flz"
@@ -6527,7 +6491,7 @@
             ]
           }
         ],
-        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{theme}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) {{状态}} (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{日期}}\n\n",
+        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{theme}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态}} {{日期}}\n\n",
         "targetFile": "01/2-3生活.md",
         "appendUnderHeader": "## {{theme}}",
         "id": "ovr_mfhzy0ykf8a08"
@@ -6614,7 +6578,7 @@
             ]
           }
         ],
-        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{theme}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) {{状态}} (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{日期}}\n\n",
+        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{theme}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态}} {{日期}}\n\n",
         "targetFile": "01/2-4思考.md",
         "appendUnderHeader": "## {{theme}}",
         "id": "ovr_mfhzy8wjn37t5"
@@ -6701,7 +6665,7 @@
             ]
           }
         ],
-        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{theme}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) {{状态}} (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{日期}}\n\n",
+        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{theme}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态}} {{日期}}\n\n",
         "targetFile": "01/2-3生活.md",
         "appendUnderHeader": "## {{theme}}",
         "id": "ovr_mfhzz4r56gn7k"
@@ -6788,7 +6752,7 @@
             ]
           }
         ],
-        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{theme}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) {{状态}} (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{日期}}\n\n",
+        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{theme}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态}} {{日期}}\n\n",
         "targetFile": "01/2-3生活.md",
         "appendUnderHeader": "## {{theme}}",
         "id": "ovr_mfhzzaeanezaa"
@@ -6875,7 +6839,7 @@
             ]
           }
         ],
-        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{theme}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) {{状态}} (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{日期}}\n\n",
+        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{theme}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态}} {{日期}}\n\n",
         "targetFile": "01/2-3生活.md",
         "appendUnderHeader": "## {{theme}}",
         "id": "ovr_mfhzzedvyx5e3"
@@ -6962,7 +6926,7 @@
             ]
           }
         ],
-        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{theme}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) {{状态}} (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{日期}}\n\n",
+        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{theme}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态}} {{日期}}\n\n",
         "targetFile": "01/2-3生活.md",
         "appendUnderHeader": "## {{theme}}",
         "id": "ovr_mfhzzih02q1gy"
@@ -7049,7 +7013,7 @@
             ]
           }
         ],
-        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{theme}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) {{状态}} (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{日期}}\n\n",
+        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{theme}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态}} {{日期}}\n\n",
         "targetFile": "01/2-3生活.md",
         "appendUnderHeader": "## {{theme}}",
         "id": "ovr_mfhzzn3vwjnxg"
@@ -7136,7 +7100,7 @@
             ]
           }
         ],
-        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{theme}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) {{状态}} (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{日期}}\n\n",
+        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{theme}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态}} {{日期}}\n\n",
         "targetFile": "01/2-1健康.md",
         "appendUnderHeader": "## {{theme}}"
       },
@@ -7222,7 +7186,7 @@
             ]
           }
         ],
-        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{theme}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) {{状态}} (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{日期}}\n\n",
+        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{theme}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态}} {{日期}}\n\n",
         "targetFile": "01/2-1健康.md",
         "appendUnderHeader": "## {{theme}}",
         "id": "ovr_mfi00peyoa7fx"
@@ -7309,7 +7273,7 @@
             ]
           }
         ],
-        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{theme}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) {{状态}} (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{日期}}\n\n",
+        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{theme}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态}} {{日期}}\n\n",
         "targetFile": "01/2-1健康.md",
         "appendUnderHeader": "## {{theme}}",
         "id": "ovr_mfi00txo5ux1g"
@@ -7396,7 +7360,7 @@
             ]
           }
         ],
-        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{theme}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) {{状态}} (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{日期}}\n\n",
+        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{theme}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态}} {{日期}}\n\n",
         "targetFile": "01/2-1健康.md",
         "appendUnderHeader": "## {{theme}}"
       },
@@ -7488,7 +7452,7 @@
             ]
           }
         ],
-        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{theme}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) {{状态}} (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{日期}}\n\n",
+        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{theme}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态}} {{日期}}\n\n",
         "targetFile": "01/2-1健康.md",
         "appendUnderHeader": "## {{theme}}",
         "id": "ovr_mfi015kb2hw7a"
@@ -7575,7 +7539,7 @@
             ]
           }
         ],
-        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{theme}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) {{状态}} (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{日期}}\n\n",
+        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{theme}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态}} {{日期}}\n\n",
         "targetFile": "01/2-1健康.md",
         "appendUnderHeader": "## {{theme}}",
         "id": "ovr_mfi019n9qc5c0"
@@ -7662,7 +7626,7 @@
             ]
           }
         ],
-        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{theme}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) {{状态}} (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{日期}}\n\n",
+        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{theme}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态}} {{日期}}\n\n",
         "targetFile": "01/2-2三餐.md",
         "appendUnderHeader": "## {{theme}}",
         "id": "ovr_mfi01w2yaf99z"
@@ -7749,7 +7713,7 @@
             ]
           }
         ],
-        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{theme}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) {{状态}} (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{日期}}\n\n",
+        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{theme}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态}} {{日期}}\n\n",
         "targetFile": "01/2-2三餐.md",
         "appendUnderHeader": "## {{theme}}",
         "id": "ovr_mfi020mjezkyy"
@@ -7836,7 +7800,7 @@
             ]
           }
         ],
-        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{theme}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) {{状态}} (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{日期}}\n\n",
+        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{theme}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态}} {{日期}}\n\n",
         "targetFile": "01/2-2三餐.md",
         "appendUnderHeader": "## {{theme}}",
         "id": "ovr_mfi025rhepqgs"
@@ -7924,7 +7888,7 @@
             ]
           }
         ],
-        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{theme}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) {{状态}} (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{日期}}\n\n",
+        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{theme}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态}} {{日期}}\n\n",
         "targetFile": "01/2-6工作.md",
         "appendUnderHeader": "## {{theme}}",
         "id": "ovr_mfj18fupymfx4"
@@ -8018,7 +7982,7 @@
             ]
           }
         ],
-        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{theme}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) {{状态}} (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{日期}}\n\n",
+        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{theme}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态}} {{日期}}\n\n",
         "targetFile": "01/2-4思考.md",
         "appendUnderHeader": "## {{theme}}"
       },
@@ -8118,7 +8082,7 @@
             ]
           }
         ],
-        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{theme}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) {{状态}} (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{日期}}\n\n",
+        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{theme}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态}} {{日期}}\n\n",
         "targetFile": "01/2-3生活.md",
         "appendUnderHeader": "## {{theme}}"
       },
