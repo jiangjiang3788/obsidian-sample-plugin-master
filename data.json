@@ -4,10 +4,10 @@
     "enabled": true,
     "provider": "openai_compat",
     "apiEndpoint": "https://api.ricardochat.cn/v1",
-    "model": "[渠道2]gemini-2.5-pro",
+    "model": "[Max]gemini-3-flash-preview",
     "temperature": 0.7,
     "maxTokens": 4096,
-    "requestTimeoutMs": 30000,
+    "requestTimeoutMs": 3000000,
     "enabledBlockIds": [
       "blk_meic1my6m62iu",
       "blk_mejsg1dc46fj9",
@@ -345,6 +345,71 @@
         }
       ],
       "collapsed": false
+    },
+    {
+      "id": "vi_mno1se06ici7si5",
+      "parentId": null,
+      "title": "时间轴2",
+      "viewType": "TimelineView",
+      "viewConfig": {
+        "categories": {
+          "0": {
+            "name": "0",
+            "color": "#b888e7",
+            "files": [
+              "2-1健康"
+            ]
+          },
+          "1": {
+            "name": "1",
+            "color": "#9eeabe",
+            "files": [
+              "2-2三餐"
+            ]
+          },
+          "2": {
+            "name": "2",
+            "color": "#e47272",
+            "files": [
+              "2-2三餐"
+            ]
+          },
+          "3": {
+            "name": "3",
+            "color": "#88c1dd",
+            "files": [
+              "2-4思考"
+            ]
+          },
+          "4": {
+            "name": "4",
+            "color": "#ebebeb",
+            "files": [
+              "2-5电脑"
+            ]
+          },
+          "5": {
+            "name": "5",
+            "color": "#e5bf8a",
+            "files": [
+              "2-6工作"
+            ]
+          }
+        },
+        "progressOrder": [
+          "0",
+          "1",
+          "2",
+          "3",
+          "4",
+          "5"
+        ]
+      },
+      "fields": [],
+      "groupFields": [],
+      "filters": [],
+      "sort": [],
+      "collapsed": false
     }
   ],
   "layouts": [
@@ -352,6 +417,7 @@
       "id": "layout_memcg9jjoq6j4",
       "name": "全局布局",
       "viewInstanceIds": [
+        "vi_mno1se06ici7si5",
         "vi_mmkdnmbx5hbapzu",
         "vi_mmikcsvy3rwcetd",
         "vi_mmeolydjaga6z6u",

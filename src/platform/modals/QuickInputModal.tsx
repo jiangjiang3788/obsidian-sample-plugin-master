@@ -79,114 +79,105 @@ export class QuickInputModal extends Modal {
   }
 
   private setupKeyboardDetection() {
-    let initialViewportHeight = window.innerHeight;
-    let keyboardHeight = 300;
+    let initialViewportHeight = window.visualViewport?.height || window.innerHeight;
+    const keyboardActivationThreshold = 150;
+    const defaultKeyboardHeight = 300;
 
     const setKeyboardHeight = (height: number) => {
-      keyboardHeight = height;
       this.modalEl.style.setProperty('--keyboard-height', `${height}px`);
       document.documentElement.style.setProperty('--keyboard-height', `${height}px`);
     };
 
-    const handleFocusIn = (event: FocusEvent) => {
-      const target = event.target as HTMLElement;
-      if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') {
-        this.modalEl.addClass('keyboard-active');
-        setTimeout(() => {
-          const container = this.contentEl.querySelector('.think-modal__body') as HTMLElement | null;
-          const anchor = target.closest('.think-form-row, .think-inline-field-row, .think-textarea-row') as HTMLElement | null;
-          (anchor || target).scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' });
-          if (container && anchor) {
-            const anchorRect = anchor.getBoundingClientRect();
-            const containerRect = container.getBoundingClientRect();
-            if (anchorRect.bottom > containerRect.bottom - 16) {
-              container.scrollTop += anchorRect.bottom - containerRect.bottom + 24;
-            }
-          }
-        }, 180);
-      }
+    const isKeyboardInput = (el: EventTarget | null): el is HTMLElement => {
+      if (!(el instanceof HTMLElement)) return false;
+      if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') return true;
+      return el.isContentEditable;
     };
 
-    const handleFocusOut = (event: FocusEvent) => {
-      const target = event.target as HTMLElement;
-      if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') {
-        setTimeout(() => {
-          this.modalEl.removeClass('keyboard-active');
-        }, 100);
-      }
+    const hasActiveKeyboardInput = () => {
+      const activeElement = document.activeElement;
+      return !!activeElement && this.contentEl.contains(activeElement) && isKeyboardInput(activeElement);
     };
 
-    const handleResize = () => {
-      const currentHeight = window.visualViewport?.height || window.innerHeight;
-      const heightDiff = initialViewportHeight - currentHeight;
+    const updateKeyboardState = () => {
+      const viewportHeight = window.visualViewport?.height || window.innerHeight;
+      const heightDiff = Math.max(0, Math.round(initialViewportHeight - viewportHeight));
+      const shouldEnableKeyboardMode = heightDiff > keyboardActivationThreshold && hasActiveKeyboardInput();
 
-      if (heightDiff > 150) {
+      if (shouldEnableKeyboardMode) {
         this.modalEl.addClass('keyboard-active');
         setKeyboardHeight(heightDiff);
-        const modalContent = this.contentEl.querySelector('.modal-content, .think-modal') as HTMLElement;
-        if (modalContent) {
-          modalContent.style.paddingBottom = `calc(${heightDiff}px + env(safe-area-inset-bottom, 0px) + 24px)`;
-        }
-      } else {
-        this.modalEl.removeClass('keyboard-active');
-        setKeyboardHeight(300);
-        const modalContent = this.contentEl.querySelector('.think-modal__body') as HTMLElement | null;
-        if (modalContent) modalContent.style.removeProperty('padding-bottom');
+        const offsetTop = window.visualViewport?.offsetTop || 0;
+        this.modalEl.style.setProperty('--keyboard-offset', `${offsetTop}px`);
+        return;
+      }
+
+      this.modalEl.removeClass('keyboard-active');
+      setKeyboardHeight(defaultKeyboardHeight);
+      this.modalEl.style.removeProperty('--keyboard-offset');
+
+      if (heightDiff <= 0) {
+        initialViewportHeight = viewportHeight;
       }
     };
 
-    const handleVisualViewportResize = () => {
-      if (window.visualViewport) {
-        const viewportHeight = window.visualViewport.height;
-        const heightDiff = initialViewportHeight - viewportHeight;
+    const handleFocusIn = (event: FocusEvent) => {
+      const target = event.target as HTMLElement;
+      if (!isKeyboardInput(target)) return;
 
-        if (heightDiff > 150) {
-          this.modalEl.addClass('keyboard-active');
-          setKeyboardHeight(heightDiff);
-          const offsetTop = window.visualViewport.offsetTop || 0;
-          this.modalEl.style.setProperty('--keyboard-offset', `${offsetTop}px`);
-        } else {
-          this.modalEl.removeClass('keyboard-active');
-          setKeyboardHeight(300);
-          const modalContent = this.contentEl.querySelector('.think-modal__body') as HTMLElement | null;
-          if (modalContent) modalContent.style.removeProperty('padding-bottom');
+      setTimeout(() => {
+        const container = this.contentEl.querySelector('.think-modal__body') as HTMLElement | null;
+        const anchor = target.closest('.think-form-row, .think-inline-field-row, .think-textarea-row') as HTMLElement | null;
+        (anchor || target).scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' });
+        if (container && anchor) {
+          const anchorRect = anchor.getBoundingClientRect();
+          const containerRect = container.getBoundingClientRect();
+          if (anchorRect.bottom > containerRect.bottom - 16) {
+            container.scrollTop += anchorRect.bottom - containerRect.bottom + 24;
+          }
         }
-      }
+        updateKeyboardState();
+      }, 180);
     };
 
-    this.contentEl.addEventListener('focusin', handleFocusIn);
-    this.contentEl.addEventListener('focusout', handleFocusOut);
-
-    if (window.visualViewport) {
-      window.visualViewport.addEventListener('resize', handleVisualViewportResize);
-    } else {
-      window.addEventListener('resize', handleResize);
-    }
+    const handleViewportResize = () => {
+      updateKeyboardState();
+    };
 
     const handleOrientationChange = () => {
       setTimeout(() => {
-        initialViewportHeight = window.innerHeight;
-        setKeyboardHeight(300);
+        initialViewportHeight = window.visualViewport?.height || window.innerHeight;
+        setKeyboardHeight(defaultKeyboardHeight);
+        updateKeyboardState();
       }, 500);
     };
 
+    this.contentEl.addEventListener('focusin', handleFocusIn);
+
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener('resize', handleViewportResize);
+    } else {
+      window.addEventListener('resize', handleViewportResize);
+    }
+
     window.addEventListener('orientationchange', handleOrientationChange);
-    setKeyboardHeight(300);
+    setKeyboardHeight(defaultKeyboardHeight);
+    updateKeyboardState();
 
     this.cleanupKeyboardDetection = () => {
       this.contentEl.removeEventListener('focusin', handleFocusIn);
-      this.contentEl.removeEventListener('focusout', handleFocusOut);
 
       if (window.visualViewport) {
-        window.visualViewport.removeEventListener('resize', handleVisualViewportResize);
+        window.visualViewport.removeEventListener('resize', handleViewportResize);
       } else {
-        window.removeEventListener('resize', handleResize);
+        window.removeEventListener('resize', handleViewportResize);
       }
 
       window.removeEventListener('orientationchange', handleOrientationChange);
       document.documentElement.style.removeProperty('--keyboard-height');
       this.modalEl.style.removeProperty('--keyboard-height');
       this.modalEl.style.removeProperty('--keyboard-offset');
+      this.modalEl.removeClass('keyboard-active');
     };
   }
 
