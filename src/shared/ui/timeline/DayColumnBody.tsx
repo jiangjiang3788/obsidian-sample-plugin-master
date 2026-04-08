@@ -1,10 +1,9 @@
 // src/shared/ui/timeline/DayColumnBody.tsx
 /** @jsxImportSource preact */
 import { h } from 'preact';
-import { useRef, useState } from 'preact/hooks';
-import { useUiPort } from '@/app/public';
+import { useRef } from 'preact/hooks';
+import { QuickInputModal, useUiPort } from '@/app/public';
 import type { TaskBlock } from '@core/public';
-import { EditTaskModal } from '@shared/ui/modals/EditTaskModal';
 import { createRecordGestureHandlers } from '@/shared/ui/utils/recordOrigin';
 import { mapTaskToCategory } from '@core/public';
 import { dayjs } from '@core/public';
@@ -69,7 +68,6 @@ export function DayColumnBody({
     onAlignPrev,
     onAlignNext
 }: DayColumnBodyProps) {
-    const [editingTask, setEditingTask] = useState<TaskBlock | null>(null);
     const ui = useUiPort();
     const lastTouchRef = useRef<{ time: number; x: number; y: number } | null>(null);
     const suppressClickUntilRef = useRef(0);
@@ -89,18 +87,21 @@ export function DayColumnBody({
     const handleEdit = (block: TaskBlock) => {
         if (onEditTask) {
             onEditTask(block);
-        } else {
-            if (!onUpdateTaskTime) {
-                ui.notice('未提供保存处理器，无法打开编辑弹窗');
-                return;
-            }
-            setEditingTask(block);
+            return;
         }
+
+        const templateId = block.templateId || block.categoryKey || '';
+        if (!templateId) {
+            ui.notice('缺少模板ID，无法打开通用编辑器');
+            return;
+        }
+
+        new QuickInputModal(app, templateId, undefined, undefined, undefined, false, {
+            mode: 'edit',
+            editItem: block,
+        }).open();
     };
 
-    const handleCloseModal = () => {
-        setEditingTask(null);
-    };
 
     const handleAlignToPrev = (block: TaskBlock, prevBlock: TaskBlock | null) => {
         if (onAlignPrev) {
@@ -169,16 +170,7 @@ export function DayColumnBody({
             onClick={(e) => handleBodyClick(e as any)}
             onTouchEnd={(e) => handleBodyTouchEnd(e as any)}
         >
-            {editingTask && onUpdateTaskTime && (
-                <EditTaskModal
-                    isOpen={true}
-                    onClose={handleCloseModal}
-                    task={editingTask}
-                    onUpdateTaskTime={onUpdateTaskTime}
-                />
-            )}
-            
-            {blocks.map((block: TaskBlock, index: number) => {
+{blocks.map((block: TaskBlock, index: number) => {
                 const top = (block.blockStartMinute / 60) * hourHeight;
                 const height = ((block.blockEndMinute - block.blockStartMinute) / 60) * hourHeight;
                 const category = mapTaskToCategory(block.fileName || '', categoriesConfig);
@@ -207,7 +199,8 @@ export function DayColumnBody({
                         >
                             <div class="timeline-task-indicator" style={{ background: color }}></div>
                             <div class="timeline-task-content" style={{ background: hexToRgba(color) }}>
-                                {block.pureText}
+                                {block.icon ? <span class="timeline-task-icon">{block.icon}</span> : null}
+                                <span class="timeline-task-title">{block.title || block.pureText}</span>
                             </div>
                         </a>
                         <div class="task-buttons">

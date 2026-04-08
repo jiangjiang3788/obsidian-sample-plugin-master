@@ -1,4 +1,5 @@
 // src/shared/ui/modals/EditTaskModal.tsx
+//这个是时间轴编辑的弹窗现在已经弃用 使用通用弹窗
 /** @jsxImportSource preact */
 import { h } from 'preact';
 import { useEffect } from 'preact/hooks';

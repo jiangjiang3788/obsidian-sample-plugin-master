@@ -298,7 +298,7 @@
       "collapsed": true
     },
     {
-      "id": "vi_mmkdnmbx5hbapzu",
+      "id": "vi_mn9o962553qwhzp",
       "parentId": null,
       "title": "数据",
       "viewType": "StatisticsView",
@@ -331,79 +331,68 @@
         ]
       },
       "fields": [
-        "period",
+        "theme",
         "date",
         "pintu",
         "content"
       ],
       "groupFields": [],
       "filters": [],
-      "sort": [
-        {
-          "field": "priority",
-          "dir": "asc"
-        }
-      ],
+      "sort": [],
       "collapsed": false
     },
     {
-      "id": "vi_mno1se06ici7si5",
+      "id": "vi_mno1upgdwpv72oj",
       "parentId": null,
       "title": "时间轴2",
       "viewType": "TimelineView",
       "viewConfig": {
         "categories": {
-          "0": {
-            "name": "0",
-            "color": "#b888e7",
+          "健康": {
+            "name": "健康",
+            "color": "#60a5fa",
             "files": [
-              "2-1健康"
-            ]
-          },
-          "1": {
-            "name": "1",
-            "color": "#9eeabe",
-            "files": [
+              "2-1健康",
               "2-2三餐"
             ]
           },
-          "2": {
-            "name": "2",
-            "color": "#e47272",
+          "生活": {
+            "name": "生活",
+            "color": "#98e47c",
             "files": [
-              "2-2三餐"
+              "2-3生活"
             ]
           },
-          "3": {
-            "name": "3",
-            "color": "#88c1dd",
+          "思考": {
+            "name": "思考",
+            "color": "#fb6060",
             "files": [
               "2-4思考"
             ]
           },
-          "4": {
-            "name": "4",
-            "color": "#ebebeb",
+          "电脑": {
+            "name": "电脑",
+            "color": "#fb8e60",
             "files": [
               "2-5电脑"
             ]
           },
-          "5": {
-            "name": "5",
-            "color": "#e5bf8a",
+          "工作": {
+            "name": "工作",
+            "color": "#fbe160",
             "files": [
               "2-6工作"
             ]
           }
         },
         "progressOrder": [
-          "0",
-          "1",
-          "2",
-          "3",
-          "4",
-          "5"
-        ]
+          "健康",
+          "生活",
+          "思考",
+          "电脑",
+          "工作"
+        ],
+        "topN": 50
       },
       "fields": [],
       "groupFields": [],
@@ -417,15 +406,15 @@
       "id": "layout_memcg9jjoq6j4",
       "name": "全局布局",
       "viewInstanceIds": [
-        "vi_mno1se06ici7si5",
-        "vi_mmkdnmbx5hbapzu",
+        "vi_mn9o962553qwhzp",
         "vi_mmikcsvy3rwcetd",
         "vi_mmeolydjaga6z6u",
         "vi_mmijitbq47u10wu",
-        "vi_mm9z0oe1cvlr53c"
+        "vi_mm9z0oe1cvlr53c",
+        "vi_mno1upgdwpv72oj"
       ],
       "displayMode": "list",
-      "initialView": "周",
+      "initialView": "月",
       "initialDateFollowsNow": true,
       "parentId": "group_memcg1u3us3jc",
       "hideToolbar": false,
@@ -434,13 +423,15 @@
       "useFieldGranularity": false,
       "selectedThemes": [],
       "selectedCategories": [
+        "周",
+        "季",
         "完成任务",
         "总结",
         "打卡",
+        "月",
         "未完成任务",
         "计划",
-        "闪念",
-        "事件"
+        "闪念"
       ]
     }
   ],
@@ -564,13 +555,19 @@
             "type": "date"
           },
           {
+            "id": "field_mn5ui00x",
+            "key": "标签",
+            "label": "标签",
+            "type": "text"
+          },
+          {
             "id": "field_mewjlypl",
             "key": "内容",
             "label": "内容",
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: {{思考分类.value}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n",
+        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: {{思考分类.value}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n标签:: {{标签}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/闪念.md",
         "appendUnderHeader": "## {{theme}}",
         "categoryKey": "闪念"
@@ -6299,7 +6296,7 @@
         "targetFile": "01/2-5电脑.md",
         "appendUnderHeader": "## {{theme}}",
         "id": "ovr_mfhzxf5uox0gu",
-        "disabled": true
+        "disabled": false
       },
       {
         "id": "ovr_mfhzxlc4yemiz",
@@ -8381,6 +8378,7 @@
     "未完成任务": "#ebebeb",
     "打卡": "#b888e7",
     "闪念": "#e47272",
-    "事件": "#a5c8ee"
+    "事件": "#a5c8ee",
+    "周": "#e09185"
   }
 }
