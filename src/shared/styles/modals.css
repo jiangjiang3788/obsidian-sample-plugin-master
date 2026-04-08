@@ -12,36 +12,37 @@
 }
 
 /* 移动端快捷输入面板适配 - 避免被输入法覆盖 */
-/* 竖屏模式适配 */
-@media screen and (orientation: portrait) {
-    .think-quick-input-modal {
-        position: fixed !important;
-        top: 20px !important;
-        left: 10px !important;
-        right: 10px !important;
-        bottom: auto !important;
-        max-height: calc(100vh - 120px) !important;
-        transform: none !important;
-        margin: 0 !important;
-        border-radius: 12px !important;
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2) !important;
-        width: auto !important;
-        height: auto !important;
-        display: flex !important;
-        flex-direction: column !important;
-    }
-    
-    .think-quick-input-modal .modal-content {
-        flex: 1 !important;
-        overflow-y: auto !important;
-        overflow-x: hidden !important;
-        padding: 16px !important;
-    }
+.think-quick-input-modal {
+    position: fixed !important;
+    top: max(12px, env(safe-area-inset-top, 0px)) !important;
+    left: 10px !important;
+    right: 10px !important;
+    bottom: 10px !important;
+    margin: 0 !important;
+    width: auto !important;
+    height: auto !important;
+    max-height: none !important;
+    transform: none !important;
+    border-radius: 12px !important;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2) !important;
+    display: flex !important;
+    flex-direction: column !important;
 }
 
+.think-quick-input-modal .modal-content {
+    display: flex !important;
+    flex: 1 1 auto !important;
+    flex-direction: column !important;
+    min-height: 0 !important;
+    overflow: hidden !important;
+    padding: 12px !important;
+}
 
 .think-quick-input-modal .think-modal--quick-input {
     width: 100%;
+    padding: 0 0.5rem 0.75rem 0.5rem !important;
+    min-height: 0;
+    max-height: 100% !important;
 }
 
 .think-quick-input-modal .think-modal__body {
@@ -49,7 +50,9 @@
     min-height: 0;
     overflow-y: auto;
     overflow-x: hidden;
-    padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 12px);
+    padding-right: 2px;
+    padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 16px);
+    -webkit-overflow-scrolling: touch;
 }
 
 .think-quick-input-modal .think-modal__footer--quick-input {
@@ -58,11 +61,32 @@
     z-index: 2;
     background: var(--background-primary);
     padding-top: 12px;
-    padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 4px);
+    padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 8px);
 }
 
-.think-quick-input-modal.keyboard-active .think-modal__body {
-    padding-bottom: calc(var(--keyboard-height, 300px) + env(safe-area-inset-bottom, 0px) + 24px) !important;
+.think-quick-input-modal.keyboard-suspected .think-modal__body {
+    padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 168px) !important;
+}
+
+.think-quick-input-modal.keyboard-detected .think-modal__body {
+    padding-bottom: calc(var(--keyboard-height, 0px) + env(safe-area-inset-bottom, 0px) + 120px) !important;
+}
+
+@media screen and (min-width: 769px) {
+    .think-quick-input-modal {
+        top: 24px !important;
+        left: max(24px, calc((100vw - 720px) / 2)) !important;
+        right: max(24px, calc((100vw - 720px) / 2)) !important;
+        bottom: 24px !important;
+    }
+
+    .think-quick-input-modal .modal-content {
+        padding: 16px !important;
+    }
+
+    .think-quick-input-modal .think-modal--quick-input {
+        padding: 0 0.9rem 0.9rem 0.9rem !important;
+    }
 }
 
 @media screen and (max-width: 768px) {
@@ -71,25 +95,11 @@
         left: 8px !important;
         right: 8px !important;
         bottom: 8px !important;
-        max-height: none !important;
-        height: auto !important;
     }
 
-    .think-quick-input-modal .modal-content {
-        display: flex !important;
-        flex-direction: column !important;
-        min-height: 0 !important;
-        padding: 12px !important;
+    .think-quick-input-modal .think-modal__footer--quick-input {
+        padding-top: 10px;
     }
-
-    .think-quick-input-modal .think-modal--quick-input {
-        padding: 0 0.5rem 0.75rem 0.5rem !important;
-        max-height: calc(100dvh - 24px) !important;
-    }
-}
-
-.think-quick-input-modal .think-modal--quick-input {
-    width: 100%;
 }
 
 .think-quick-input-modal .think-native-input,

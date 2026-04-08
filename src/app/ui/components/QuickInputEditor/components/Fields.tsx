@@ -22,6 +22,13 @@ export function QuickInputEditorFields({ getResourcePath, template, formData, de
     onUpdateField(key, value, isOptionObject);
   };
 
+  const autoResizeTextarea = (el: HTMLTextAreaElement | null) => {
+    if (!el) return;
+    el.style.height = 'auto';
+    const minHeight = dense ? 96 : 118;
+    el.style.height = `${Math.max(el.scrollHeight, minHeight)}px`;
+  };
+
   const isInlineRowField = (field: TemplateField) => {
     const label = field.label || field.key;
     return label === '状态' || label === '重复' || label === '日期';
@@ -177,12 +184,28 @@ export function QuickInputEditorFields({ getResourcePath, template, formData, de
         const commonInputProps: any = {
           className: field.type === 'textarea' ? 'think-native-input think-native-input--textarea' : 'think-native-input',
           value: value || '',
-          onInput: (e: any) => handleUpdate(field.key, e.target.value),
-          onKeyDown: (e: any) => e.stopPropagation(),
+          onInput: (e: any) => {
+            handleUpdate(field.key, e.target.value);
+            if (field.type === 'textarea' && e.target instanceof HTMLTextAreaElement) {
+              autoResizeTextarea(e.target);
+            }
+          },
+          onKeyDown: (e: any) => {
+            e.stopPropagation();
+            if (field.type === 'textarea' && e.key === 'Enter' && !e.shiftKey && !(e.nativeEvent?.isComposing)) {
+              return;
+            }
+          },
         };
 
         const control = field.type === 'textarea' ? (
-          <textarea {...commonInputProps} rows={dense ? 4 : 5} style={{ resize: 'vertical', minHeight: dense ? '96px' : '118px' }} />
+          <textarea
+            {...commonInputProps}
+            rows={dense ? 4 : 5}
+            enterKeyHint="enter"
+            ref={(el: HTMLTextAreaElement | null) => autoResizeTextarea(el)}
+            style={{ resize: 'none', overflowY: 'hidden', minHeight: dense ? '96px' : '118px' }}
+          />
         ) : (
           <input
             {...commonInputProps}

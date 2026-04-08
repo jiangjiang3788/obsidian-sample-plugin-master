@@ -79,13 +79,18 @@ export class QuickInputModal extends Modal {
   }
 
   private setupKeyboardDetection() {
-    let initialViewportHeight = window.visualViewport?.height || window.innerHeight;
+    let baselineViewportHeight = window.visualViewport?.height || window.innerHeight;
     const keyboardActivationThreshold = 150;
-    const defaultKeyboardHeight = 300;
+    const suspectedBottomInset = 156;
+    const detectedBottomInsetExtra = 120;
 
     const setKeyboardHeight = (height: number) => {
-      this.modalEl.style.setProperty('--keyboard-height', `${height}px`);
-      document.documentElement.style.setProperty('--keyboard-height', `${height}px`);
+      this.modalEl.style.setProperty('--keyboard-height', `${Math.max(0, Math.round(height))}px`);
+      document.documentElement.style.setProperty('--keyboard-height', `${Math.max(0, Math.round(height))}px`);
+    };
+
+    const setAccessoryInset = (height: number) => {
+      this.modalEl.style.setProperty('--keyboard-accessory-inset', `${Math.max(0, Math.round(height))}px`);
     };
 
     const isKeyboardInput = (el: EventTarget | null): el is HTMLElement => {
@@ -99,76 +104,128 @@ export class QuickInputModal extends Modal {
       return !!activeElement && this.contentEl.contains(activeElement) && isKeyboardInput(activeElement);
     };
 
-    const updateKeyboardState = () => {
-      const viewportHeight = window.visualViewport?.height || window.innerHeight;
-      const heightDiff = Math.max(0, Math.round(initialViewportHeight - viewportHeight));
-      const shouldEnableKeyboardMode = heightDiff > keyboardActivationThreshold && hasActiveKeyboardInput();
+    const getBodyContainer = () => this.contentEl.querySelector('.think-modal__body') as HTMLElement | null;
 
-      if (shouldEnableKeyboardMode) {
-        this.modalEl.addClass('keyboard-active');
+    const ensureTargetVisible = (target?: HTMLElement | null) => {
+      const activeTarget = target && this.contentEl.contains(target) ? target : (document.activeElement as HTMLElement | null);
+      if (!activeTarget || !isKeyboardInput(activeTarget) || !this.contentEl.contains(activeTarget)) return;
+
+      const container = getBodyContainer();
+      if (!container) return;
+
+      const anchor = activeTarget.closest('.think-form-row, .think-inline-field-row, .think-textarea-row') as HTMLElement | null;
+      const node = anchor || activeTarget;
+      const nodeRect = node.getBoundingClientRect();
+      const containerRect = container.getBoundingClientRect();
+      const accessoryInset = Number.parseInt(this.modalEl.style.getPropertyValue('--keyboard-accessory-inset') || '0', 10) || suspectedBottomInset;
+      const safeTop = containerRect.top + 12;
+      const safeBottom = containerRect.bottom - Math.max(72, accessoryInset);
+
+      if (nodeRect.bottom > safeBottom) {
+        container.scrollTop += nodeRect.bottom - safeBottom + 28;
+      } else if (nodeRect.top < safeTop) {
+        container.scrollTop -= safeTop - nodeRect.top + 12;
+      }
+
+      if (activeTarget instanceof HTMLTextAreaElement) {
+        const lineReserve = 44;
+        const caretBottom = activeTarget.scrollHeight - activeTarget.scrollTop;
+        const visibleHeight = activeTarget.clientHeight - lineReserve;
+        if (caretBottom > visibleHeight) {
+          activeTarget.scrollTop = Math.max(0, activeTarget.scrollHeight - visibleHeight);
+        }
+      }
+    };
+
+    const updateKeyboardState = (target?: HTMLElement | null) => {
+      const viewportHeight = window.visualViewport?.height || window.innerHeight;
+      const heightDiff = Math.max(0, Math.round(baselineViewportHeight - viewportHeight));
+      const hasFocusedInput = hasActiveKeyboardInput();
+      const detected = heightDiff > keyboardActivationThreshold && hasFocusedInput;
+      const suspected = hasFocusedInput;
+
+      this.modalEl.toggleClass('keyboard-detected', detected);
+      this.modalEl.toggleClass('keyboard-suspected', suspected);
+
+      if (detected) {
         setKeyboardHeight(heightDiff);
+        setAccessoryInset(heightDiff + detectedBottomInsetExtra);
         const offsetTop = window.visualViewport?.offsetTop || 0;
         this.modalEl.style.setProperty('--keyboard-offset', `${offsetTop}px`);
-        return;
+      } else if (suspected) {
+        setKeyboardHeight(0);
+        setAccessoryInset(suspectedBottomInset);
+        this.modalEl.style.removeProperty('--keyboard-offset');
+      } else {
+        setKeyboardHeight(0);
+        setAccessoryInset(0);
+        this.modalEl.style.removeProperty('--keyboard-offset');
       }
 
-      this.modalEl.removeClass('keyboard-active');
-      setKeyboardHeight(defaultKeyboardHeight);
-      this.modalEl.style.removeProperty('--keyboard-offset');
-
-      if (heightDiff <= 0) {
-        initialViewportHeight = viewportHeight;
+      if (heightDiff <= 0 && !hasFocusedInput) {
+        baselineViewportHeight = viewportHeight;
       }
+
+      if (suspected) {
+        ensureTargetVisible(target);
+      }
+    };
+
+    const scheduleVisibilityPasses = (target?: HTMLElement | null) => {
+      const run = () => updateKeyboardState(target);
+      requestAnimationFrame(run);
+      window.setTimeout(run, 120);
+      window.setTimeout(run, 260);
+      window.setTimeout(run, 420);
     };
 
     const handleFocusIn = (event: FocusEvent) => {
-      const target = event.target as HTMLElement;
+      const target = event.target as HTMLElement | null;
       if (!isKeyboardInput(target)) return;
+      scheduleVisibilityPasses(target);
+    };
 
-      setTimeout(() => {
-        const container = this.contentEl.querySelector('.think-modal__body') as HTMLElement | null;
-        const anchor = target.closest('.think-form-row, .think-inline-field-row, .think-textarea-row') as HTMLElement | null;
-        (anchor || target).scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' });
-        if (container && anchor) {
-          const anchorRect = anchor.getBoundingClientRect();
-          const containerRect = container.getBoundingClientRect();
-          if (anchorRect.bottom > containerRect.bottom - 16) {
-            container.scrollTop += anchorRect.bottom - containerRect.bottom + 24;
-          }
-        }
-        updateKeyboardState();
-      }, 180);
+    const handleFocusOut = () => {
+      window.setTimeout(() => updateKeyboardState(document.activeElement as HTMLElement | null), 60);
     };
 
     const handleViewportResize = () => {
-      updateKeyboardState();
+      updateKeyboardState(document.activeElement as HTMLElement | null);
+    };
+
+    const handleViewportScroll = () => {
+      updateKeyboardState(document.activeElement as HTMLElement | null);
     };
 
     const handleOrientationChange = () => {
       setTimeout(() => {
-        initialViewportHeight = window.visualViewport?.height || window.innerHeight;
-        setKeyboardHeight(defaultKeyboardHeight);
-        updateKeyboardState();
+        baselineViewportHeight = window.visualViewport?.height || window.innerHeight;
+        updateKeyboardState(document.activeElement as HTMLElement | null);
       }, 500);
     };
 
     this.contentEl.addEventListener('focusin', handleFocusIn);
+    this.contentEl.addEventListener('focusout', handleFocusOut);
 
     if (window.visualViewport) {
       window.visualViewport.addEventListener('resize', handleViewportResize);
+      window.visualViewport.addEventListener('scroll', handleViewportScroll);
     } else {
       window.addEventListener('resize', handleViewportResize);
     }
 
     window.addEventListener('orientationchange', handleOrientationChange);
-    setKeyboardHeight(defaultKeyboardHeight);
-    updateKeyboardState();
+    setKeyboardHeight(0);
+    setAccessoryInset(0);
+    updateKeyboardState(document.activeElement as HTMLElement | null);
 
     this.cleanupKeyboardDetection = () => {
       this.contentEl.removeEventListener('focusin', handleFocusIn);
+      this.contentEl.removeEventListener('focusout', handleFocusOut);
 
       if (window.visualViewport) {
         window.visualViewport.removeEventListener('resize', handleViewportResize);
+        window.visualViewport.removeEventListener('scroll', handleViewportScroll);
       } else {
         window.removeEventListener('resize', handleViewportResize);
       }
@@ -176,8 +233,10 @@ export class QuickInputModal extends Modal {
       window.removeEventListener('orientationchange', handleOrientationChange);
       document.documentElement.style.removeProperty('--keyboard-height');
       this.modalEl.style.removeProperty('--keyboard-height');
+      this.modalEl.style.removeProperty('--keyboard-accessory-inset');
       this.modalEl.style.removeProperty('--keyboard-offset');
-      this.modalEl.removeClass('keyboard-active');
+      this.modalEl.removeClass('keyboard-detected');
+      this.modalEl.removeClass('keyboard-suspected');
     };
   }
 
