@@ -93,7 +93,6 @@ export default class ThinkPlugin extends Plugin {
 
                 const totalTime = stopMeasure();
                 devLog(`[Think Plugin] 核心功能已加载完成 (总耗时: ${totalTime.toFixed(2)}ms)`);
-                new Notice('Think Plugin 核心功能已加载!', 2000);
             },
             'ThinkPlugin.onload',
             {
