@@ -11,7 +11,7 @@ import { DataStore } from '@core/public';
 import { InputService } from '@core/public';
 import { ThinkSettings, DEFAULT_SETTINGS } from '@core/public';
 import type { UseCases } from '@/app/public';
-import { setupCoreContainer } from '@core/public';
+import { setupCoreContainer, repairCrossDayTaskCompletionDatesInVault } from '@core/public';
 import { VAULT_PORT_TOKEN, UI_PORT_TOKEN, METADATA_PORT_TOKEN, FILESTAT_PORT_TOKEN, MODAL_PORT_TOKEN, EVENTS_PORT_TOKEN, MESSAGE_RENDER_PORT_TOKEN } from '@core/public';
 import './styles/main.css';
 import { safeAsync } from '@shared/public';
@@ -114,6 +114,22 @@ export default class ThinkPlugin extends Plugin {
 
         // [恢复工具] 清空索引缓存并重新全量扫描
         // 主要用于修复：升级/重构后 cache 不一致导致 items=0 的情况。
+
+        this.addCommand({
+            id: 'think-repair-cross-day-task-dates',
+            name: '修复时间数据（按开始日，一次性迁移）',
+            callback: async () => {
+                try {
+                    new Notice('Think: 正在扫描并修复跨天任务日期...', 4000);
+                    const result = await repairCrossDayTaskCompletionDatesInVault(this.app.vault as any);
+                    const sampleLine = result.samples[0] ? `；样例 ${result.samples[0].oldDate} -> ${result.samples[0].newDate} @ ${result.samples[0].file}:${result.samples[0].line}` : '';
+                    new Notice(`Think: 修复完成（文件 ${result.scannedFiles}，任务 ${result.scannedTasks}，跨天 ${result.crossDayTasks}，修改文件 ${result.changedFiles}，调整 ${result.changedLines} 行${sampleLine}）`, 10000);
+                } catch (e: any) {
+                    new Notice(`Think: 修复失败 - ${e?.message || e}`, 6000);
+                }
+            }
+        });
+
         this.addCommand({
             id: 'think-rebuild-index',
             name: '重建索引（清空缓存并重新扫描）',

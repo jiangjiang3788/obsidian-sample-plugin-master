@@ -414,7 +414,7 @@
         "vi_mno1upgdwpv72oj"
       ],
       "displayMode": "list",
-      "initialView": "月",
+      "initialView": "周",
       "initialDateFollowsNow": true,
       "parentId": "group_memcg1u3us3jc",
       "hideToolbar": false,
@@ -8313,7 +8313,7 @@
     "工作/通勤",
     "思考/专注"
   ],
-  "devConsoleStackEnabled": false,
+  "devConsoleStackEnabled": true,
   "dataSources": [
     {
       "id": "ds_membld9cc3oj6",

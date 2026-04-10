@@ -16,7 +16,7 @@
  */
 import { DataStore } from '@core/public';
 import type { RecordSubmitResult } from '@core/public';
-import { nowHHMM, normalizeTaskTimeTriple, devError, readRecordSubmitMessage } from '@core/public';
+import { nowHHMM, applyTaskTimePolicy, normalizeTaskTimeTriple, devError, readRecordSubmitMessage } from '@core/public';
 import type { UiPort } from '@core/public';
 import type { UseCases } from '@/app/public';
 
@@ -111,7 +111,7 @@ export class TimerService {
 
             const endTime = nowHHMM();
             const normalizedTime = totalMinutes > 0
-                ? normalizeTaskTimeTriple({ endTime, duration: totalMinutes })
+                ? applyTaskTimePolicy({ endTime, duration: totalMinutes }, { mode: 'finalize', direction: 'backward' })
                 : { startTime: undefined, endTime, duration: undefined };
             const startTime = normalizedTime.startTime ?? undefined;
 

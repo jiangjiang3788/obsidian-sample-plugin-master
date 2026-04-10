@@ -26,6 +26,7 @@ export interface QuickInputEditorViewProps {
   dense?: boolean;
   showDivider?: boolean;
   onUpdateField: (key: string, value: any, isOptionObject?: boolean) => void;
+  isMobileLike?: boolean;
 }
 
 function SectionTitle({ title, compact = false }: { title: string; compact?: boolean }) {
@@ -58,6 +59,7 @@ export function QuickInputEditorView({
   dense = false,
   showDivider = true,
   onUpdateField,
+  isMobileLike = false,
 }: QuickInputEditorViewProps) {
   if (!template) {
     return <div>错误：找不到当前 Block 的模板配置。</div>;
@@ -104,6 +106,7 @@ export function QuickInputEditorView({
           formData={formData}
           dense={dense}
           onUpdateField={onUpdateField}
+          isMobileLike={isMobileLike}
         />
       </Box>
     </Box>

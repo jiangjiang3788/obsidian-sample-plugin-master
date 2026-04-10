@@ -4,7 +4,7 @@
 // 这里仅保留解析/拆分的实现；类型来自 core（唯一真源）。
 
 import type { Item } from '@core/public';
-import { dayjs, timeToMinutes } from '@core/public';
+import { dayjs, timeToMinutes, deriveDurationFromRange, deriveStartFromEndAndDuration } from '@core/public';
 import { splitTaskIntoDayBlocks } from '@core/public';
 
 export type { TimelineTask, TaskBlock } from '@core/public';
@@ -19,19 +19,30 @@ const DATE_FORMAT = 'YYYY-MM-DD';
  */
 function parseAllTimes(item: Item): { startMinute: number | null; duration: number | null; endMinute: number | null } {
     const startMinute = item.startTime ? timeToMinutes(item.startTime) : null;
-    const endMinute = item.endTime ? timeToMinutes(item.endTime) : null;
-    const duration = item.duration ?? null; // 正确处理undefined情况
+    const explicitEndMinute = item.endTime ? timeToMinutes(item.endTime) : null;
+    const duration = item.duration ?? null;
 
-    // 优先级 1: 有开始和结束，计算并覆盖时长
-    if (startMinute !== null && endMinute !== null) {
-        let calculatedDuration = endMinute - startMinute;
-        if (calculatedDuration < 0) calculatedDuration += 24 * 60; // 跨天
-        return { startMinute, duration: calculatedDuration, endMinute };
+    if (startMinute !== null && item.startTime && item.endTime) {
+        const normalizedDuration = deriveDurationFromRange(item.startTime, item.endTime);
+        if (normalizedDuration !== null) {
+            return {
+                startMinute,
+                duration: normalizedDuration,
+                endMinute: startMinute + normalizedDuration,
+            };
+        }
     }
-    
-    // 优先级 2: 有开始和时长，计算结束
+
     if (startMinute !== null && duration !== null && duration >= 0) {
         return { startMinute, duration, endMinute: startMinute + duration };
+    }
+
+    if (explicitEndMinute !== null && duration !== null && duration >= 0 && item.endTime) {
+        const derivedStart = deriveStartFromEndAndDuration(item.endTime, duration);
+        const derivedStartMinute = derivedStart ? timeToMinutes(derivedStart) : null;
+        if (derivedStartMinute !== null) {
+            return { startMinute: derivedStartMinute, duration, endMinute: derivedStartMinute + duration };
+        }
     }
 
     return { startMinute: null, duration: null, endMinute: null };
@@ -71,15 +82,9 @@ export function processItemsToTimelineTasks(items: Item[]): TimelineTask[] {
 
         if (startMinute !== null && duration !== null && endMinute !== null && item.doneDate) {
             
-            const doneDate = dayjs(item.doneDate);
-
-            // [上次的正确修改] 修复跨天任务的实际开始日期计算逻辑
-            const startOfDayMinute = timeToMinutes(item.startTime || '');
-            const endOfDayMinute = timeToMinutes(item.endTime || '');
-            const isCrossNight = startOfDayMinute !== null && endOfDayMinute !== null && startOfDayMinute > endOfDayMinute;
-            const actualStartDate = isCrossNight 
-                ? doneDate.subtract(1, 'day').format(DATE_FORMAT) 
-                : doneDate.format(DATE_FORMAT);
+            const anchorDate = item.doneDate || item.date;
+            if (!anchorDate) continue;
+            const actualStartDate = dayjs(anchorDate).format(DATE_FORMAT);
 
             timelineTasks.push({
                 ...item,

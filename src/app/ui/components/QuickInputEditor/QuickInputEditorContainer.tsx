@@ -41,6 +41,7 @@ export interface QuickInputEditorProps {
   dense?: boolean;
   showDivider?: boolean;
   onStateChange?: (state: QuickInputEditorState) => void;
+  isMobileLike?: boolean;
 }
 
 /**
@@ -58,6 +59,7 @@ export function QuickInputEditor({
   dense = false,
   showDivider = true,
   onStateChange,
+  isMobileLike = false,
 }: QuickInputEditorProps) {
   const settings = useSelector(selectInputSettings);
 

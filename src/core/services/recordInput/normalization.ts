@@ -67,7 +67,9 @@ function normalizeOptionValue(field: any, rawValue: unknown): unknown {
 
 export function normalizeRecordInput(input: NormalizeRecordInputParams): NormalizeRecordInputResult {
   const normalizedFormData: Record<string, unknown> = { ...input.formData };
+  const timeDirection = ((normalizedFormData as any).__timeDirection === 'backward' ? 'backward' : 'forward') as 'forward' | 'backward';
   delete (normalizedFormData as any).lastChanged;
+  delete (normalizedFormData as any).__timeDirection;
 
   for (const field of input.template.fields || []) {
     if (!Object.prototype.hasOwnProperty.call(normalizedFormData, field.key)) continue;
@@ -77,7 +79,7 @@ export function normalizeRecordInput(input: NormalizeRecordInputParams): Normali
   const finalized = finalizeLinkedTimeFields(
     normalizedFormData,
     { startKey: '时间', endKey: '结束', durationKey: '时长' },
-    { durationOutput: 'number' },
+    { durationOutput: 'number', direction: timeDirection },
   );
 
   return {

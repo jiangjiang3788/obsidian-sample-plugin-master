@@ -3,7 +3,7 @@ import { singleton, inject } from 'tsyringe';
 import { DataStore } from '@core/services/DataStore';
 import { VAULT_PORT_TOKEN, type VaultPort } from '@core/ports/VaultPort';
 import { nowHHMM, todayISO } from '@core/utils/date';
-import { normalizeTaskTimeTriple } from '@core/utils/taskTime';
+import { applyTaskTimePolicy } from '@core/utils/taskTime';
 import { buildCompletedTaskRecord, markTaskDone } from '@core/utils/mark';
 import { resolveTaskLineIndexForMutation } from '@core/services/recordInput/mutationLocator';
 import { createRecordConflictError } from '@core/services/recordInput/mutationErrors';
@@ -49,7 +49,7 @@ export class ItemService {
                 endTime: fallbackEndTime,
             };
             const normalizedTriple = seedOptions.duration !== undefined
-                ? normalizeTaskTimeTriple(seedOptions)
+                ? applyTaskTimePolicy(seedOptions, { mode: 'finalize', direction: seedOptions.startTime ? 'forward' : 'backward' })
                 : {
                     startTime: seedOptions.startTime,
                     endTime: fallbackEndTime,
@@ -78,7 +78,7 @@ export class ItemService {
         if (item && item.duration) {
             const durationMinutes = item.duration;
             const endTime = nowHHMM();
-            const normalizedTriple = normalizeTaskTimeTriple({ endTime, duration: durationMinutes });
+            const normalizedTriple = applyTaskTimePolicy({ endTime, duration: durationMinutes }, { mode: 'finalize', direction: 'backward' });
             const startTime = normalizedTriple.startTime || undefined;
 
             const calculatedOptions = {
@@ -137,14 +137,26 @@ export class ItemService {
         const lines = [...context.lines];
         let line = rawLine;
 
-        if (updates.time !== undefined) {
-            line = this.upsertKvTag(line, '时间', updates.time);
+        const normalized = applyTaskTimePolicy(
+            {
+                startTime: updates.time,
+                endTime: updates.endTime,
+                duration: updates.duration,
+            },
+            {
+                mode: 'finalize',
+                direction: updates.time !== undefined ? 'forward' : updates.endTime !== undefined && updates.duration !== undefined ? 'backward' : 'forward',
+            },
+        );
+
+        if (normalized.startTime !== undefined) {
+            line = this.upsertKvTag(line, '时间', normalized.startTime);
         }
-        if (updates.endTime !== undefined) {
-            line = this.upsertKvTag(line, '结束', updates.endTime);
+        if (normalized.endTime !== undefined) {
+            line = this.upsertKvTag(line, '结束', normalized.endTime);
         }
-        if (updates.duration !== undefined) {
-            line = this.upsertKvTag(line, '时长', String(updates.duration));
+        if (normalized.duration !== undefined) {
+            line = this.upsertKvTag(line, '时长', String(normalized.duration));
         }
 
         lines[index] = line;

@@ -209,7 +209,7 @@ export class QuickInputModal extends Modal {
 
     if (window.visualViewport) {
       window.visualViewport.addEventListener('resize', handleViewportResize);
-      window.visualViewport.addEventListener('scroll', handleViewportScroll);
+      window.visualViewport.addEventListener('scroll', handleViewportScroll, { passive: true });
     } else {
       window.addEventListener('resize', handleViewportResize);
     }
@@ -327,6 +327,12 @@ function QuickInputModalContent({
     templateSourceType: null,
   });
   const [pendingAction, setPendingAction] = useState<'submit' | 'delete' | null>(null);
+  const isMobileLike = useMemo(() => {
+    if (typeof window === 'undefined') return false;
+    return /Android|iPhone|iPad|iPod|Mobile/i.test(window.navigator.userAgent)
+      || (window.matchMedia?.('(pointer: coarse)').matches ?? false)
+      || window.innerWidth <= 820;
+  }, []);
 
   const currentBlock = (settings.blocks || []).find((block: any) => block.id === editorState.blockId);
   const currentBlockName = currentBlock?.name || editorState.template?.name || editorState.blockId;
@@ -495,7 +501,7 @@ function QuickInputModalContent({
         />
       </Box>
 
-      <div class="think-modal__body">
+      <div class="think-modal__body" style={{ paddingBottom: isMobileLike ? '96px' : undefined }}>
       <QuickInputEditor
         getResourcePath={getResourcePath}
         initialBlockId={preparedRecord.blockId || initialBlockId}
@@ -504,10 +510,11 @@ function QuickInputModalContent({
         context={mode === 'edit' ? undefined : context}
         allowBlockSwitch={mode === 'edit' ? false : allowBlockSwitch}
         onStateChange={setEditorState}
+        isMobileLike={isMobileLike}
       />
       </div>
 
-      <div class="think-modal__footer think-modal__footer--quick-input" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '0.9rem', gap: '8px' }}>
+      <div class="think-modal__footer think-modal__footer--quick-input" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '0.9rem', gap: '8px', position: isMobileLike ? 'sticky' : 'static', bottom: 0, background: 'var(--background-primary)', paddingBottom: isMobileLike ? 'calc(env(safe-area-inset-bottom, 0px) + 8px)' : undefined, zIndex: isMobileLike ? 3 : undefined }}>
         <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', justifyContent: 'space-between', width: '100%' }}>
           <div>
             {mode === 'edit' ? (
@@ -518,7 +525,7 @@ function QuickInputModalContent({
           </div>
           <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
             <Button onClick={closeModal} disabled={isBusy}>取消</Button>
-            <Button onClick={handleSubmit} variant="contained" disabled={isBusy}>
+            <Button data-submit="true" onClick={handleSubmit} variant="contained" disabled={isBusy}>
               {pendingAction === 'submit'
                 ? (mode === 'edit' ? '保存中...' : '创建中...')
                 : (mode === 'edit' ? '保存修改' : '创建')}

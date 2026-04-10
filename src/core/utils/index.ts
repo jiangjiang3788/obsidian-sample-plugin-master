@@ -35,6 +35,7 @@ export * from './regex';
 export * from './statisticsAggregation';
 export * from './taskStatus';
 export * from './taskTime';
+export * from './timeRepair';
 export * from './taskUtils';
 export * from './templateUtils';
 export * from './text';
