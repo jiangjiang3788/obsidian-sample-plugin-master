@@ -490,7 +490,7 @@
             "id": "field_mekymokf",
             "key": "时长",
             "label": "时长",
-            "type": "text"
+            "type": "number"
           },
           {
             "id": "field_mekyn4c3",
@@ -5743,7 +5743,7 @@
             "id": "field_mekymokf",
             "key": "时长",
             "label": "时长",
-            "type": "text"
+            "type": "number"
           },
           {
             "id": "field_mekyn4c3",
@@ -5772,7 +5772,8 @@
         ],
         "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{theme}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态}} {{日期}}\n\n",
         "targetFile": "01/2-6工作.md",
-        "appendUnderHeader": "## {{theme}}"
+        "appendUnderHeader": "## {{theme}}",
+        "disabled": false
       },
       {
         "blockId": "blk_meic1my6m62iu",

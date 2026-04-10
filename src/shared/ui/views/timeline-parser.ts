@@ -2,6 +2,10 @@
 //
 // 注意：timeline 的“类型形状”不再由 features 定义。
 // 这里仅保留解析/拆分的实现；类型来自 core（唯一真源）。
+function resolveTimelineAnchorDate(item: any): string | null {
+  return item?.date || item?.doneDate || item?.completedDate || item?.createdDate || null;
+}
+
 
 import type { Item } from '@core/public';
 import { dayjs, timeToMinutes, deriveDurationFromRange, deriveStartFromEndAndDuration } from '@core/public';

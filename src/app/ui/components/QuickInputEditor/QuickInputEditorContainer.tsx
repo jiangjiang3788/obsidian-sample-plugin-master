@@ -41,6 +41,7 @@ export interface QuickInputEditorProps {
   dense?: boolean;
   showDivider?: boolean;
   onStateChange?: (state: QuickInputEditorState) => void;
+  onRequestSubmit?: () => void;
   isMobileLike?: boolean;
 }
 
@@ -59,6 +60,7 @@ export function QuickInputEditor({
   dense = false,
   showDivider = true,
   onStateChange,
+  onRequestSubmit,
   isMobileLike = false,
 }: QuickInputEditorProps) {
   const settings = useSelector(selectInputSettings);
@@ -167,14 +169,6 @@ export function QuickInputEditor({
     });
   }, [template, theme, context]);
 
-  // 时间字段联动（时间/结束/时长）
-  useEffect(() => {
-    const changes = computeLinkedTimeChanges(formData, { startKey: '时间', endKey: '结束', durationKey: '时长' }, (formData as any).lastChanged, {
-      durationOutput: 'number',
-    });
-    if (Object.keys(changes).length) setFormData((cur) => ({ ...cur, ...changes, lastChanged: undefined }));
-  }, [formData]);
-
   useEffect(() => {
     onStateChange?.({
       blockId: currentBlockId,
@@ -187,8 +181,39 @@ export function QuickInputEditor({
     });
   }, [currentBlockId, selectedThemeId, formData, template, templateId, templateSourceType]);
 
+  const emitDraftState = (draftFormData: Record<string, any>) => {
+    onStateChange?.({
+      blockId: currentBlockId,
+      themeId: selectedThemeId,
+      formData: draftFormData,
+      template,
+      theme: selectedThemeId ? themeIdMap.get(selectedThemeId) ?? null : null,
+      templateId,
+      templateSourceType,
+    });
+  };
+
+  const applyLinkedDraftChanges = (draft: Record<string, any>) => {
+    const changes = computeLinkedTimeChanges(draft, { startKey: '时间', endKey: '结束', durationKey: '时长' }, (draft as any).lastChanged, {
+      durationOutput: 'number',
+    });
+    if (!Object.keys(changes).length) {
+      const cleaned = { ...draft };
+      if ('lastChanged' in cleaned) delete cleaned.lastChanged;
+      return cleaned;
+    }
+    const merged = { ...draft, ...changes };
+    if ('lastChanged' in merged) delete merged.lastChanged;
+    return merged;
+  };
+
   const handleUpdateField = (key: string, value: any, isOptionObject = false) => {
-    setFormData((cur) => ({ ...cur, [key]: isOptionObject ? { value: value.value, label: value.label } : value, lastChanged: key }));
+    setFormData((cur) => {
+      const draft = { ...cur, [key]: isOptionObject ? { value: value.value, label: value.label } : value, lastChanged: key };
+      const next = applyLinkedDraftChanges(draft);
+      emitDraftState(next);
+      return next;
+    });
   };
 
   const handleBlockChange = (newBlockId: string) => {
@@ -234,6 +259,8 @@ export function QuickInputEditor({
       dense={dense}
       showDivider={showDivider}
       onUpdateField={handleUpdateField}
+      onRequestSubmit={onRequestSubmit}
+      isMobileLike={isMobileLike}
     />
   );
 }

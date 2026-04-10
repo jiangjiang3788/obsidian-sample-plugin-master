@@ -26,6 +26,7 @@ export interface QuickInputEditorViewProps {
   dense?: boolean;
   showDivider?: boolean;
   onUpdateField: (key: string, value: any, isOptionObject?: boolean) => void;
+  onRequestSubmit?: () => void;
   isMobileLike?: boolean;
 }
 
@@ -59,6 +60,7 @@ export function QuickInputEditorView({
   dense = false,
   showDivider = true,
   onUpdateField,
+  onRequestSubmit,
   isMobileLike = false,
 }: QuickInputEditorViewProps) {
   if (!template) {
@@ -106,6 +108,7 @@ export function QuickInputEditorView({
           formData={formData}
           dense={dense}
           onUpdateField={onUpdateField}
+          onRequestSubmit={onRequestSubmit}
           isMobileLike={isMobileLike}
         />
       </Box>

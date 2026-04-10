@@ -1,7 +1,7 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
 import { App, Modal, Notice } from 'obsidian';
-import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'preact/hooks';
 
 import {
   createServices,
@@ -185,7 +185,15 @@ export class QuickInputModal extends Modal {
       scheduleVisibilityPasses(target);
     };
 
-    const handleFocusOut = () => {
+    const handleFocusOut = (event: FocusEvent) => {
+      if (!(event.target instanceof HTMLElement)) {
+        window.setTimeout(() => updateKeyboardState(document.activeElement as HTMLElement | null), 60);
+        return;
+      }
+      if (!this.contentEl.contains(event.target)) {
+        window.setTimeout(() => updateKeyboardState(document.activeElement as HTMLElement | null), 60);
+        return;
+      }
       window.setTimeout(() => updateKeyboardState(document.activeElement as HTMLElement | null), 60);
     };
 
@@ -327,6 +335,7 @@ function QuickInputModalContent({
     templateSourceType: null,
   });
   const [pendingAction, setPendingAction] = useState<'submit' | 'delete' | null>(null);
+  const editorStateRef = useRef<QuickInputEditorState | null>(null);
   const isMobileLike = useMemo(() => {
     if (typeof window === 'undefined') return false;
     return /Android|iPhone|iPad|iPod|Mobile/i.test(window.navigator.userAgent)
@@ -334,7 +343,8 @@ function QuickInputModalContent({
       || window.innerWidth <= 820;
   }, []);
 
-  const currentBlock = (settings.blocks || []).find((block: any) => block.id === editorState.blockId);
+  const currentState = editorStateRef.current || editorState;
+  const currentBlock = (settings.blocks || []).find((block: any) => block.id === currentState.blockId);
   const currentBlockName = currentBlock?.name || editorState.template?.name || editorState.blockId;
   const originalUri = mode === 'edit' && editItem ? makeObsUri(editItem, vaultName) : '';
   const isBusy = pendingAction !== null;
@@ -379,12 +389,17 @@ function QuickInputModalContent({
   };
 
   const buildCreateDraft = (): QuickInputSaveData => ({
-    blockId: editorState.blockId,
-    themeId: editorState.themeId ?? null,
-    formData: editorState.formData,
+    blockId: currentState.blockId,
+    themeId: currentState.themeId ?? null,
+    formData: currentState.formData,
     context,
     source: source ?? (onSave ? 'timer' : 'quickinput'),
   });
+
+  const handleEditorStateChange = useCallback((state: QuickInputEditorState) => {
+    editorStateRef.current = state;
+    setEditorState(state);
+  }, []);
 
   const handleSubmit = async () => {
     if (onSave && mode === 'create') {
@@ -396,21 +411,22 @@ function QuickInputModalContent({
     setPendingAction('submit');
     try {
       const result = await submitLatestRef.current.run(async (signal) => {
+        const latestState = editorStateRef.current || editorState;
         if (mode === 'edit' && editItem) {
           return await useCases.recordInput.submitUpdateRecord({
             item: editItem,
-            blockId: editorState.blockId,
-            themeId: editorState.themeId,
-            formData: editorState.formData,
+            blockId: latestState.blockId,
+            themeId: latestState.themeId,
+            formData: latestState.formData,
             signal,
             source: 'quickinput',
           });
         }
 
         return await useCases.recordInput.submitCreateRecord({
-          blockId: editorState.blockId,
-          themeId: editorState.themeId,
-          formData: editorState.formData,
+          blockId: latestState.blockId,
+          themeId: latestState.themeId,
+          formData: latestState.formData,
           context,
           signal,
           source: source ?? 'quickinput',
@@ -444,7 +460,29 @@ function QuickInputModalContent({
       }
     } finally {
       setPendingAction(null);
+      submitTriggeredRef.current = false;
     }
+  };
+
+  const preserveDesktopInputFocus = (event: MouseEvent | PointerEvent) => {
+    if (isMobileLike) return;
+    event.preventDefault();
+  };
+
+  const submitTriggeredRef = useRef(false);
+
+
+  const handleSubmitPointerDown = (event: MouseEvent | PointerEvent) => {
+    if (isMobileLike) return;
+    event.preventDefault();
+    event.stopPropagation();
+    if (submitTriggeredRef.current || isBusy) return;
+    submitTriggeredRef.current = true;
+    void handleSubmit().finally(() => {
+      window.setTimeout(() => {
+        submitTriggeredRef.current = false;
+      }, 80);
+    });
   };
 
   const handleDelete = async () => {
@@ -509,7 +547,8 @@ function QuickInputModalContent({
         initialFormData={preparedRecord.initialFormData}
         context={mode === 'edit' ? undefined : context}
         allowBlockSwitch={mode === 'edit' ? false : allowBlockSwitch}
-        onStateChange={setEditorState}
+        onStateChange={handleEditorStateChange}
+        onRequestSubmit={handleSubmit}
         isMobileLike={isMobileLike}
       />
       </div>
@@ -518,14 +557,14 @@ function QuickInputModalContent({
         <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', justifyContent: 'space-between', width: '100%' }}>
           <div>
             {mode === 'edit' ? (
-              <Button color="error" onClick={handleDelete} disabled={isBusy}>
+              <Button color="error" onMouseDown={preserveDesktopInputFocus as any} onPointerDown={preserveDesktopInputFocus as any} onClick={handleDelete} disabled={isBusy}>
                 {pendingAction === 'delete' ? '删除中...' : '删除'}
               </Button>
             ) : null}
           </div>
           <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
-            <Button onClick={closeModal} disabled={isBusy}>取消</Button>
-            <Button data-submit="true" onClick={handleSubmit} variant="contained" disabled={isBusy}>
+            <Button onMouseDown={preserveDesktopInputFocus as any} onPointerDown={preserveDesktopInputFocus as any} onClick={closeModal} disabled={isBusy}>取消</Button>
+            <Button data-submit="true" onMouseDown={handleSubmitPointerDown as any} onPointerDown={handleSubmitPointerDown as any} onClick={isMobileLike ? handleSubmit : undefined} variant="contained" disabled={isBusy}>
               {pendingAction === 'submit'
                 ? (mode === 'edit' ? '保存中...' : '创建中...')
                 : (mode === 'edit' ? '保存修改' : '创建')}

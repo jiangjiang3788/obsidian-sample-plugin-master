@@ -15,10 +15,11 @@ export interface QuickInputEditorFieldsProps {
   formData: Record<string, any>;
   dense?: boolean;
   onUpdateField: (key: string, value: any, isOptionObject?: boolean) => void;
+  onRequestSubmit?: () => void;
   isMobileLike?: boolean;
 }
 
-export function QuickInputEditorFields({ getResourcePath, template, formData, dense = false, onUpdateField, isMobileLike = false }: QuickInputEditorFieldsProps) {
+export function QuickInputEditorFields({ getResourcePath, template, formData, dense = false, onUpdateField, onRequestSubmit, isMobileLike = false }: QuickInputEditorFieldsProps) {
   const handleUpdate = (key: string, value: any, isOptionObject = false) => {
     onUpdateField(key, value, isOptionObject);
   };
@@ -196,16 +197,14 @@ export function QuickInputEditorFields({ getResourcePath, template, formData, de
             if (field.type === 'textarea') {
               if (isMobileLike) return;
               if ((e.metaKey || e.ctrlKey) && e.key === 'Enter' && !(e.nativeEvent?.isComposing)) {
-                const submitButton = document.querySelector('.think-modal__footer--quick-input button[data-submit="true"]') as HTMLButtonElement | null;
-                submitButton?.click();
+                onRequestSubmit?.();
                 e.preventDefault();
               }
               return;
             }
             if (isMobileLike) return;
             if (e.key === 'Enter' && !(e.metaKey || e.ctrlKey || e.shiftKey) && !(e.nativeEvent?.isComposing)) {
-              const submitButton = document.querySelector('.think-modal__footer--quick-input button[data-submit="true"]') as HTMLButtonElement | null;
-              submitButton?.click();
+              onRequestSubmit?.();
               e.preventDefault();
             }
           },
