@@ -48,6 +48,20 @@ export interface RecordSubmitResult {
   warnings?: RecordSubmitIssue[];
 }
 
+
+export type EntryKind = 'task' | 'block';
+
+export interface EntryContext {
+  entryKind: EntryKind;
+  entryId: string;
+  sourcePath?: string | null;
+  sourceLine?: number | null;
+  templateId?: string | null;
+  categoryKey?: string | null;
+  openedFrom?: 'list' | 'detail' | 'search' | 'timeline' | 'quickinput' | 'timer' | 'unknown';
+  supportsTaskTimeEditing?: boolean;
+}
+
 export interface PrepareCreateRecordParams {
   blockId?: string | null;
   themeId?: string | null;

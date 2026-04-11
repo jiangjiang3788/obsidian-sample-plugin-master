@@ -1,5 +1,5 @@
 import type { AppStoreApi } from './index';
-import { DataStore, InputService, ItemService, applyTaskTimePolicy, normalizeTaskTimeTriple } from '@core/public';
+import { DataStore, InputService, ItemService, applyTaskTimePolicy } from '@core/public';
 import type {
   Item,
   PrepareCreateRecordParams,
@@ -494,7 +494,9 @@ export class RecordInputUseCase {
         startTime: normalized.startTime,
         endTime: normalized.endTime,
         duration: normalized.duration,
-      }, { mode: 'finalize', direction: normalized.startTime ? 'forward' : 'backward' });
+        mode: 'finalize',
+        direction: 'forward',
+      });
 
       return {
         duration: normalizedTriple.duration ?? normalized.duration,
@@ -530,7 +532,9 @@ export class RecordInputUseCase {
         startTime: time,
         endTime,
         duration,
-      }, { mode: 'finalize', direction: time ? 'forward' : 'backward' });
+        mode: 'finalize',
+        direction: 'forward',
+      });
 
       return {
         time: normalized.startTime ?? time,

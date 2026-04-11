@@ -2,7 +2,8 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
 import { useRef } from 'preact/hooks';
-import { QuickInputModal, useUiPort } from '@/app/public';
+import { useUiPort } from '@/app/public';
+import { openEditFromItem } from '@/app/actions/recordUiActions';
 import type { TaskBlock } from '@core/public';
 import { createRecordGestureHandlers } from '@/shared/ui/utils/recordOrigin';
 import { mapTaskToCategory } from '@core/public';
@@ -90,16 +91,7 @@ export function DayColumnBody({
             return;
         }
 
-        const templateId = block.templateId || block.categoryKey || '';
-        if (!templateId) {
-            ui.notice('缺少模板ID，无法打开通用编辑器');
-            return;
-        }
-
-        new QuickInputModal(app, templateId, undefined, undefined, undefined, false, {
-            mode: 'edit',
-            editItem: block,
-        }).open();
+        openEditFromItem({ app, item: block, openedFrom: 'timeline' });
     };
 
 

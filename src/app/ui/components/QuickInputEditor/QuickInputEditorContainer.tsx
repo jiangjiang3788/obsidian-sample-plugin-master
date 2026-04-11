@@ -97,6 +97,13 @@ export function QuickInputEditor({
     selectedThemeId,
   ]);
 
+  const showTimeDirectionControl = useMemo(() => {
+    if (!template?.fields) return false;
+    const keys = new Set((template.fields || []).map((f: any) => f.key || f.label));
+    return keys.has('时间') && keys.has('结束') && keys.has('时长');
+  }, [template]);
+
+
   // 默认值/从 context 回填
   useEffect(() => {
     if (!template) return;
@@ -261,6 +268,7 @@ export function QuickInputEditor({
       onUpdateField={handleUpdateField}
       onRequestSubmit={onRequestSubmit}
       isMobileLike={isMobileLike}
+      showTimeDirectionControl={showTimeDirectionControl}
     />
   );
 }

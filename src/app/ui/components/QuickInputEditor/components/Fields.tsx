@@ -17,9 +17,10 @@ export interface QuickInputEditorFieldsProps {
   onUpdateField: (key: string, value: any, isOptionObject?: boolean) => void;
   onRequestSubmit?: () => void;
   isMobileLike?: boolean;
+  showTimeDirectionControl?: boolean;
 }
 
-export function QuickInputEditorFields({ getResourcePath, template, formData, dense = false, onUpdateField, onRequestSubmit, isMobileLike = false }: QuickInputEditorFieldsProps) {
+export function QuickInputEditorFields({ getResourcePath, template, formData, dense = false, onUpdateField, onRequestSubmit, isMobileLike = false, showTimeDirectionControl = false }: QuickInputEditorFieldsProps) {
   const handleUpdate = (key: string, value: any, isOptionObject = false) => {
     onUpdateField(key, value, isOptionObject);
   };
@@ -262,19 +263,33 @@ export function QuickInputEditorFields({ getResourcePath, template, formData, de
       const sortedTimeFields = timeFieldKeys.map((key) => timeFields.find((f) => f.key === key)).filter((f) => f !== undefined);
 
       fieldsToRender.push(
-        <Box
-          key="time-fields"
-          className="think-form-row"
-          sx={{
-            display: 'grid',
-            gridTemplateColumns: { xs: '1fr', sm: 'repeat(3, minmax(0, 1fr))' },
-            gap: 1.25,
-            pt: 0.2,
-          }}
-        >
-          {sortedTimeFields.map((field: any) => (
-            <div key={field.id}>{renderField(field)}</div>
-          ))}
+        <Box key="time-fields-wrapper" sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+          <Box
+            key="time-fields"
+            className="think-form-row"
+            sx={{
+              display: 'grid',
+              gridTemplateColumns: { xs: '1fr', sm: 'repeat(3, minmax(0, 1fr))' },
+              gap: 1.25,
+              pt: 0.2,
+            }}
+          >
+            {sortedTimeFields.map((field: any) => (
+              <div key={field.id}>{renderField(field)}</div>
+            ))}
+          </Box>
+          {showTimeDirectionControl && (
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', minHeight: 28 }}>
+              <label style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '12px', color: 'var(--text-muted)' }}>
+                <input
+                  type="checkbox"
+                  checked={formData['__timeDirection'] === 'backward'}
+                  onChange={(e: any) => handleUpdate('__timeDirection', e.currentTarget.checked ? 'backward' : 'forward')}
+                />
+                反向（结束 - 时长 = 时间）
+              </label>
+            </Box>
+          )}
         </Box>
       );
     }

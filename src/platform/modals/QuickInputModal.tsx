@@ -402,6 +402,7 @@ function QuickInputModalContent({
   }, []);
 
   const handleSubmit = async () => {
+    
     if (onSave && mode === 'create') {
       onSave(buildCreateDraft());
       closeModal();
@@ -470,7 +471,6 @@ function QuickInputModalContent({
   };
 
   const submitTriggeredRef = useRef(false);
-
 
   const handleSubmitPointerDown = (event: MouseEvent | PointerEvent) => {
     if (isMobileLike) return;

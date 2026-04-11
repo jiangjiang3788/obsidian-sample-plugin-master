@@ -28,6 +28,7 @@ export interface QuickInputEditorViewProps {
   onUpdateField: (key: string, value: any, isOptionObject?: boolean) => void;
   onRequestSubmit?: () => void;
   isMobileLike?: boolean;
+  showTimeDirectionControl?: boolean;
 }
 
 function SectionTitle({ title, compact = false }: { title: string; compact?: boolean }) {
@@ -62,6 +63,7 @@ export function QuickInputEditorView({
   onUpdateField,
   onRequestSubmit,
   isMobileLike = false,
+  showTimeDirectionControl = false,
 }: QuickInputEditorViewProps) {
   if (!template) {
     return <div>错误：找不到当前 Block 的模板配置。</div>;
@@ -110,6 +112,7 @@ export function QuickInputEditorView({
           onUpdateField={onUpdateField}
           onRequestSubmit={onRequestSubmit}
           isMobileLike={isMobileLike}
+          showTimeDirectionControl={showTimeDirectionControl}
         />
       </Box>
     </Box>

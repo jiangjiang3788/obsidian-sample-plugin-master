@@ -1,6 +1,6 @@
 import type { NormalizeRecordInputParams, NormalizeRecordInputResult } from '@/core/types/recordInput';
 import { buildPathOption, getLeafPath, normalizePath } from '@/core/utils/pathSemantic';
-import { finalizeLinkedTimeFields } from '@shared/public';
+import { applyTaskTimePolicy } from '@core/public';
 
 function isOptionObject(value: unknown): value is { label?: unknown; value?: unknown } {
   return !!value && typeof value === 'object' && ('value' in value || 'label' in value);
@@ -67,20 +67,25 @@ function normalizeOptionValue(field: any, rawValue: unknown): unknown {
 
 export function normalizeRecordInput(input: NormalizeRecordInputParams): NormalizeRecordInputResult {
   const normalizedFormData: Record<string, unknown> = { ...input.formData };
-  const timeDirection = ((normalizedFormData as any).__timeDirection === 'backward' ? 'backward' : 'forward') as 'forward' | 'backward';
   delete (normalizedFormData as any).lastChanged;
-  delete (normalizedFormData as any).__timeDirection;
 
   for (const field of input.template.fields || []) {
     if (!Object.prototype.hasOwnProperty.call(normalizedFormData, field.key)) continue;
     normalizedFormData[field.key] = normalizeOptionValue(field as any, normalizedFormData[field.key]);
   }
 
-  const finalized = finalizeLinkedTimeFields(
-    normalizedFormData,
-    { startKey: '时间', endKey: '结束', durationKey: '时长' },
-    { durationOutput: 'number', direction: timeDirection },
-  );
+  const normalizedTriple = applyTaskTimePolicy({
+    startTime: normalizedFormData['时间'] as string | undefined,
+    endTime: normalizedFormData['结束'] as string | undefined,
+    duration: normalizedFormData['时长'] as number | string | undefined,
+    mode: 'finalize',
+    direction: 'forward',
+  });
+
+  const finalized = { ...normalizedFormData };
+  if (normalizedTriple.startTime !== undefined) finalized['时间'] = normalizedTriple.startTime;
+  if (normalizedTriple.endTime !== undefined) finalized['结束'] = normalizedTriple.endTime;
+  if (normalizedTriple.duration !== undefined) finalized['时长'] = normalizedTriple.duration;
 
   return {
     normalizedFormData: finalized,
