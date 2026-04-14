@@ -329,6 +329,7 @@ function QuickInputModalContent({
     blockId: preparedRecord.blockId || initialBlockId,
     themeId: preparedRecord.themeId,
     formData: preparedRecord.initialFormData,
+    meta: { timeDirection: 'forward' },
     template: null,
     theme: null,
     templateId: null,
@@ -393,6 +394,7 @@ function QuickInputModalContent({
     themeId: currentState.themeId ?? null,
     formData: currentState.formData,
     context,
+    meta: currentState.meta,
     source: source ?? (onSave ? 'timer' : 'quickinput'),
   });
 
@@ -419,6 +421,7 @@ function QuickInputModalContent({
             blockId: latestState.blockId,
             themeId: latestState.themeId,
             formData: latestState.formData,
+            meta: latestState.meta,
             signal,
             source: 'quickinput',
           });
@@ -429,6 +432,7 @@ function QuickInputModalContent({
           themeId: latestState.themeId,
           formData: latestState.formData,
           context,
+          meta: latestState.meta,
           signal,
           source: source ?? 'quickinput',
         });

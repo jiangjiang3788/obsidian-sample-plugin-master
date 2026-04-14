@@ -10,13 +10,14 @@
  */
 
 import type { BlockTemplate, ThemeDefinition } from './schema';
-import type { RecordInputSource } from './recordInput';
+import type { RecordInputMeta, RecordInputSource } from './recordInput';
 
 export interface QuickInputSaveData {
     blockId?: string;
     themeId?: string | null;
     context?: Record<string, any>;
     formData: Record<string, any>;
+    meta?: RecordInputMeta;
     source?: Extract<RecordInputSource, 'timer' | 'quickinput' | 'unknown'>;
 
     // 兼容 Batch 1 之前的旧调用方；Batch 2 之后 Timer create 不再依赖这些字段。

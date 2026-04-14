@@ -142,6 +142,7 @@ export interface SubmitUpdateRecordTimeParams {
     end?: string | null;
     duration?: number | string | null;
     date?: string | null;
+    direction?: 'forward' | 'backward';
   };
   signal?: AbortSignal;
   source?: Extract<RecordInputSource, 'timer' | 'layout_renderer' | 'unknown'>;

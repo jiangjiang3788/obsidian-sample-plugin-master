@@ -12,11 +12,13 @@ import { QuickInputEditorView } from './QuickInputEditorView';
 // 稳定空引用：避免调用方传入 `initialFormData={{}}` 造成死循环。
 const EMPTY_FORM_DATA: Record<string, any> = {};
 
-/** 将“时间/结束/时长”字段收敛成最终数据，并去掉 lastChanged。 */
+/** 将“时间/结束/时长”字段收敛成最终数据，并去掉编辑态元字段。 */
 export function finalizeQuickInputFormData(formData: Record<string, any>) {
   const finalData = { ...formData };
+  const direction = finalData.__timeDirection === 'backward' ? 'backward' : 'forward';
   delete finalData.lastChanged;
-  return finalizeLinkedTimeFields(finalData, { startKey: '时间', endKey: '结束', durationKey: '时长' }, { durationOutput: 'number' });
+  delete finalData.__timeDirection;
+  return finalizeLinkedTimeFields(finalData, { startKey: '时间', endKey: '结束', durationKey: '时长' }, { durationOutput: 'number', direction });
 }
 
 
@@ -68,11 +70,15 @@ export function QuickInputEditor({
   const [currentBlockId, setCurrentBlockId] = useState(initialBlockId);
   const [selectedThemeId, setSelectedThemeId] = useState<string | null>(initialThemeId);
   const [formData, setFormData] = useState<Record<string, any>>(() => initialFormData ?? EMPTY_FORM_DATA);
+  const [timeDirection, setTimeDirection] = useState<'forward' | 'backward'>(() => (initialFormData?.__timeDirection === 'backward' ? 'backward' : 'forward'));
 
   useEffect(() => setCurrentBlockId(initialBlockId), [initialBlockId]);
   useEffect(() => setSelectedThemeId(initialThemeId ?? null), [initialThemeId]);
   // 不要依赖 initialFormData（可能是新对象）→ 用 block/theme 变化作为 reset 语义。
-  useEffect(() => setFormData(initialFormData ?? EMPTY_FORM_DATA), [initialBlockId, initialThemeId]);
+  useEffect(() => {
+    setFormData(initialFormData ?? EMPTY_FORM_DATA);
+    setTimeDirection(initialFormData?.__timeDirection === 'backward' ? 'backward' : 'forward');
+  }, [initialBlockId, initialThemeId]);
 
   const blocks = useMemo(() => settings.blocks || [], [settings.blocks]);
   const themes = useMemo(() => settings.themes || [], [settings.themes]);
@@ -180,19 +186,19 @@ export function QuickInputEditor({
     onStateChange?.({
       blockId: currentBlockId,
       themeId: selectedThemeId,
-      formData,
+      formData: { ...formData, __timeDirection: timeDirection },
       template,
       theme: selectedThemeId ? themeIdMap.get(selectedThemeId) ?? null : null,
       templateId,
       templateSourceType,
     });
-  }, [currentBlockId, selectedThemeId, formData, template, templateId, templateSourceType]);
+  }, [currentBlockId, selectedThemeId, formData, timeDirection, template, templateId, templateSourceType]);
 
-  const emitDraftState = (draftFormData: Record<string, any>) => {
+  const emitDraftState = (draftFormData: Record<string, any>, directionOverride: 'forward' | 'backward' = timeDirection) => {
     onStateChange?.({
       blockId: currentBlockId,
       themeId: selectedThemeId,
-      formData: draftFormData,
+      formData: { ...draftFormData, __timeDirection: directionOverride },
       template,
       theme: selectedThemeId ? themeIdMap.get(selectedThemeId) ?? null : null,
       templateId,
@@ -200,9 +206,10 @@ export function QuickInputEditor({
     });
   };
 
-  const applyLinkedDraftChanges = (draft: Record<string, any>) => {
+  const applyLinkedDraftChanges = (draft: Record<string, any>, direction: 'forward' | 'backward' = timeDirection) => {
     const changes = computeLinkedTimeChanges(draft, { startKey: '时间', endKey: '结束', durationKey: '时长' }, (draft as any).lastChanged, {
       durationOutput: 'number',
+      direction,
     });
     if (!Object.keys(changes).length) {
       const cleaned = { ...draft };
@@ -217,8 +224,21 @@ export function QuickInputEditor({
   const handleUpdateField = (key: string, value: any, isOptionObject = false) => {
     setFormData((cur) => {
       const draft = { ...cur, [key]: isOptionObject ? { value: value.value, label: value.label } : value, lastChanged: key };
-      const next = applyLinkedDraftChanges(draft);
-      emitDraftState(next);
+      const next = applyLinkedDraftChanges(draft, timeDirection);
+      emitDraftState(next, timeDirection);
+      return next;
+    });
+  };
+
+  const handleTimeDirectionChange = (nextDirection: 'forward' | 'backward') => {
+    setTimeDirection(nextDirection);
+    setFormData((cur) => {
+      const draft = { ...cur };
+      if (nextDirection === 'backward' && !draft['结束']) {
+        draft['结束'] = dayjs().format('HH:mm');
+      }
+      const next = applyLinkedDraftChanges(draft, nextDirection);
+      emitDraftState(next, nextDirection);
       return next;
     });
   };
@@ -231,6 +251,7 @@ export function QuickInputEditor({
     });
     setCurrentBlockId(newBlockId);
     setFormData(preserved);
+    setTimeDirection('forward');
   };
 
   const handleSelectTheme = (themeId: string | null, path: string | null) => {
@@ -263,9 +284,11 @@ export function QuickInputEditor({
       onSelectTheme={handleSelectTheme}
       template={template}
       formData={formData}
+      timeDirection={timeDirection}
       dense={dense}
       showDivider={showDivider}
       onUpdateField={handleUpdateField}
+      onTimeDirectionChange={handleTimeDirectionChange}
       onRequestSubmit={onRequestSubmit}
       isMobileLike={isMobileLike}
       showTimeDirectionControl={showTimeDirectionControl}

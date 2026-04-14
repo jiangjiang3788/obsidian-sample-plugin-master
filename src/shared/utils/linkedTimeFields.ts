@@ -13,7 +13,7 @@
  * - 保持现有交互语义：尊重 lastChanged，避免反向覆盖用户刚输入的字段
  */
 
-import { applyTaskTimePolicy, type TaskTimeDirection, normalizeTaskTimeTriple } from '@core/public';
+import { applyTaskTimePolicy, type TaskTimeDirection } from '@core/public';
 
 export interface LinkedTimeKeys {
   startKey: string;
@@ -113,10 +113,12 @@ export function finalizeLinkedTimeFields(
   const next = { ...data };
   const durationVal = next[keys.durationKey];
 
-  const normalized = normalizeTaskTimeTriple({
+  const normalized = applyTaskTimePolicy({
     startTime: next[keys.startKey],
     endTime: next[keys.endKey],
     duration: durationVal,
+    mode: 'finalize',
+    direction: options.direction,
   });
 
   if (normalized.startTime !== undefined) next[keys.startKey] = normalized.startTime;

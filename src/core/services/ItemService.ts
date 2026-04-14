@@ -137,22 +137,14 @@ export class ItemService {
         const lines = [...context.lines];
         let line = rawLine;
 
-        const normalizedUpdates = applyTaskTimePolicy({
-            startTime: updates.time,
-            endTime: updates.endTime,
-            duration: updates.duration,
-            mode: 'finalize',
-            direction: 'forward',
-        });
-
-        if (normalizedUpdates.startTime !== undefined) {
-            line = this.upsertKvTag(line, '时间', normalizedUpdates.startTime);
+        if (updates.time !== undefined) {
+            line = this.upsertKvTag(line, '时间', updates.time);
         }
-        if (normalizedUpdates.endTime !== undefined) {
-            line = this.upsertKvTag(line, '结束', normalizedUpdates.endTime);
+        if (updates.endTime !== undefined) {
+            line = this.upsertKvTag(line, '结束', updates.endTime);
         }
-        if (normalizedUpdates.duration !== undefined) {
-            line = this.upsertKvTag(line, '时长', String(normalizedUpdates.duration));
+        if (updates.duration !== undefined) {
+            line = this.upsertKvTag(line, '时长', String(updates.duration));
         }
 
         lines[index] = line;

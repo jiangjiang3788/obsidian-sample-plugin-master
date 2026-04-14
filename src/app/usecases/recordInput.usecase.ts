@@ -513,6 +513,7 @@ export class RecordInputUseCase {
   ): TimeUpdatePayload | { error: RecordSubmitIssue } {
     const time = updates.time ?? updates.start ?? undefined;
     const endTime = updates.endTime ?? updates.end ?? undefined;
+    const direction = updates.direction === 'backward' ? 'backward' : 'forward';
 
     let duration: number | undefined;
     if (updates.duration !== undefined && updates.duration !== null && updates.duration !== '') {
@@ -533,7 +534,7 @@ export class RecordInputUseCase {
         endTime,
         duration,
         mode: 'finalize',
-        direction: 'forward',
+        direction,
       });
 
       return {

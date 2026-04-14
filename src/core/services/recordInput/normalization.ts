@@ -67,7 +67,9 @@ function normalizeOptionValue(field: any, rawValue: unknown): unknown {
 
 export function normalizeRecordInput(input: NormalizeRecordInputParams): NormalizeRecordInputResult {
   const normalizedFormData: Record<string, unknown> = { ...input.formData };
+  const timeDirection = (normalizedFormData as any).__timeDirection === 'backward' ? 'backward' : 'forward';
   delete (normalizedFormData as any).lastChanged;
+  delete (normalizedFormData as any).__timeDirection;
 
   for (const field of input.template.fields || []) {
     if (!Object.prototype.hasOwnProperty.call(normalizedFormData, field.key)) continue;
@@ -79,7 +81,7 @@ export function normalizeRecordInput(input: NormalizeRecordInputParams): Normali
     endTime: normalizedFormData['结束'] as string | undefined,
     duration: normalizedFormData['时长'] as number | string | undefined,
     mode: 'finalize',
-    direction: 'forward',
+    direction: timeDirection,
   });
 
   const finalized = { ...normalizedFormData };

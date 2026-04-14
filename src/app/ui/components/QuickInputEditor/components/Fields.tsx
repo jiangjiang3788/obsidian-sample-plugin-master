@@ -15,12 +15,14 @@ export interface QuickInputEditorFieldsProps {
   formData: Record<string, any>;
   dense?: boolean;
   onUpdateField: (key: string, value: any, isOptionObject?: boolean) => void;
+  timeDirection?: 'forward' | 'backward';
+  onTimeDirectionChange?: (direction: 'forward' | 'backward') => void;
   onRequestSubmit?: () => void;
   isMobileLike?: boolean;
   showTimeDirectionControl?: boolean;
 }
 
-export function QuickInputEditorFields({ getResourcePath, template, formData, dense = false, onUpdateField, onRequestSubmit, isMobileLike = false, showTimeDirectionControl = false }: QuickInputEditorFieldsProps) {
+export function QuickInputEditorFields({ getResourcePath, template, formData, dense = false, onUpdateField, timeDirection = 'forward', onTimeDirectionChange, onRequestSubmit, isMobileLike = false, showTimeDirectionControl = false }: QuickInputEditorFieldsProps) {
   const handleUpdate = (key: string, value: any, isOptionObject = false) => {
     onUpdateField(key, value, isOptionObject);
   };
@@ -283,8 +285,8 @@ export function QuickInputEditorFields({ getResourcePath, template, formData, de
               <label style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '12px', color: 'var(--text-muted)' }}>
                 <input
                   type="checkbox"
-                  checked={formData['__timeDirection'] === 'backward'}
-                  onChange={(e: any) => handleUpdate('__timeDirection', e.currentTarget.checked ? 'backward' : 'forward')}
+                  checked={timeDirection === 'backward'}
+                  onChange={(e: any) => onTimeDirectionChange?.(e.currentTarget.checked ? 'backward' : 'forward')}
                 />
                 反向（结束 - 时长 = 时间）
               </label>

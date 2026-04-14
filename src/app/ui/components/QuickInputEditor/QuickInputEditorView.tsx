@@ -23,9 +23,11 @@ export interface QuickInputEditorViewProps {
 
   template: any;
   formData: Record<string, any>;
+  timeDirection?: 'forward' | 'backward';
   dense?: boolean;
   showDivider?: boolean;
   onUpdateField: (key: string, value: any, isOptionObject?: boolean) => void;
+  onTimeDirectionChange?: (direction: 'forward' | 'backward') => void;
   onRequestSubmit?: () => void;
   isMobileLike?: boolean;
   showTimeDirectionControl?: boolean;
@@ -58,9 +60,11 @@ export function QuickInputEditorView({
   onSelectTheme,
   template,
   formData,
+  timeDirection = 'forward',
   dense = false,
   showDivider = true,
   onUpdateField,
+  onTimeDirectionChange,
   onRequestSubmit,
   isMobileLike = false,
   showTimeDirectionControl = false,
@@ -110,6 +114,8 @@ export function QuickInputEditorView({
           formData={formData}
           dense={dense}
           onUpdateField={onUpdateField}
+          timeDirection={timeDirection}
+          onTimeDirectionChange={onTimeDirectionChange}
           onRequestSubmit={onRequestSubmit}
           isMobileLike={isMobileLike}
           showTimeDirectionControl={showTimeDirectionControl}
