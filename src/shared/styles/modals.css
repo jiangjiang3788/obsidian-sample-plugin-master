@@ -51,24 +51,34 @@
     overflow-y: auto;
     overflow-x: hidden;
     padding-right: 2px;
-    padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 16px);
+    padding-bottom: 0;
     -webkit-overflow-scrolling: touch;
 }
 
 .think-quick-input-modal .think-modal__footer--quick-input {
-    position: sticky;
-    bottom: 0;
+    position: static;
+    bottom: auto;
     z-index: 2;
     background: var(--background-primary);
     padding-top: 12px;
+    padding-bottom: 0;
+}
+
+.think-quick-input-modal--mobile .think-modal__body {
+    padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 16px);
+}
+
+.think-quick-input-modal--mobile .think-modal__footer--quick-input {
+    position: sticky;
+    bottom: 0;
     padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 8px);
 }
 
-.think-quick-input-modal.keyboard-suspected .think-modal__body {
+.think-quick-input-modal--mobile.keyboard-suspected .think-modal__body {
     padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 168px) !important;
 }
 
-.think-quick-input-modal.keyboard-detected .think-modal__body {
+.think-quick-input-modal--mobile.keyboard-detected .think-modal__body {
     padding-bottom: calc(var(--keyboard-height, 0px) + env(safe-area-inset-bottom, 0px) + 120px) !important;
 }
 
@@ -97,7 +107,7 @@
         bottom: 8px !important;
     }
 
-    .think-quick-input-modal .think-modal__footer--quick-input {
+    .think-quick-input-modal--mobile .think-modal__footer--quick-input {
         padding-top: 10px;
     }
 }
@@ -118,11 +128,11 @@
 }
 
 @media screen and (max-width: 768px) {
-    .think-quick-input-modal .think-modal__footer--quick-input {
+    .think-quick-input-modal--mobile .think-modal__footer--quick-input {
         padding-top: 10px;
     }
 
-    .think-quick-input-modal.keyboard-active .think-modal__footer--quick-input {
+    .think-quick-input-modal--mobile.keyboard-active .think-modal__footer--quick-input {
         position: static;
     }
 }

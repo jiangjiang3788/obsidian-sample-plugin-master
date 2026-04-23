@@ -31,6 +31,14 @@ export class QuickInputModal extends Modal {
   private static activeModal: QuickInputModal | null = null;
   private services: Services;
   private cleanupKeyboardDetection: (() => void) | null = null;
+  private cleanupBackdropCloseGuard: (() => void) | null = null;
+
+  private isMobileLikeEnvironment() {
+    if (typeof window === 'undefined') return false;
+    return /Android|iPhone|iPad|iPod|Mobile/i.test(window.navigator.userAgent)
+      || (window.matchMedia?.('(pointer: coarse)').matches ?? false)
+      || window.innerWidth <= 820;
+  }
 
   constructor(
     app: App,
@@ -56,7 +64,13 @@ export class QuickInputModal extends Modal {
     QuickInputModal.activeModal = this;
     this.contentEl.empty();
     this.modalEl.addClass('think-quick-input-modal');
-    this.setupKeyboardDetection();
+    if (this.isMobileLikeEnvironment()) {
+      this.modalEl.addClass('think-quick-input-modal--mobile');
+      this.setupKeyboardDetection();
+    } else {
+      this.modalEl.addClass('think-quick-input-modal--desktop');
+    }
+    this.setupBackdropCloseGuard();
 
     mountWithServices(
       this.contentEl,
@@ -76,6 +90,30 @@ export class QuickInputModal extends Modal {
       />,
       this.services,
     );
+  }
+
+  private setupBackdropCloseGuard() {
+    const bgEl = (this as any).bgEl as HTMLElement | null | undefined;
+    if (!bgEl) return;
+
+    const stopBackdropClose = (event: Event) => {
+      event.preventDefault();
+      event.stopPropagation();
+    };
+
+    bgEl.addEventListener('pointerdown', stopBackdropClose, true);
+    bgEl.addEventListener('mousedown', stopBackdropClose, true);
+    bgEl.addEventListener('click', stopBackdropClose, true);
+    bgEl.addEventListener('touchstart', stopBackdropClose, true);
+    bgEl.addEventListener('touchend', stopBackdropClose, true);
+
+    this.cleanupBackdropCloseGuard = () => {
+      bgEl.removeEventListener('pointerdown', stopBackdropClose, true);
+      bgEl.removeEventListener('mousedown', stopBackdropClose, true);
+      bgEl.removeEventListener('click', stopBackdropClose, true);
+      bgEl.removeEventListener('touchstart', stopBackdropClose, true);
+      bgEl.removeEventListener('touchend', stopBackdropClose, true);
+    };
   }
 
   private setupKeyboardDetection() {
@@ -251,8 +289,12 @@ export class QuickInputModal extends Modal {
   onClose() {
     try {
       this.cleanupKeyboardDetection?.();
+      this.cleanupBackdropCloseGuard?.();
     } finally {
       this.cleanupKeyboardDetection = null;
+      this.cleanupBackdropCloseGuard = null;
+      this.modalEl.removeClass('think-quick-input-modal--mobile');
+      this.modalEl.removeClass('think-quick-input-modal--desktop');
       if (QuickInputModal.activeModal === this) {
         QuickInputModal.activeModal = null;
       }

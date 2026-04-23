@@ -80,6 +80,7 @@ interface RecordItem {
 
 export class AiBatchConfirmModal extends Modal {
   private services: Services;
+  private cleanupBackdropCloseGuard: (() => void) | null = null;
   private resolvePromise: ((value: boolean) => void) | null = null;
   private resolved = false;
 
@@ -106,6 +107,7 @@ export class AiBatchConfirmModal extends Modal {
   onOpen() {
     this.contentEl.empty();
     this.modalEl.addClass('think-ai-batch-confirm-modal');
+    this.setupBackdropCloseGuard();
     this.modalEl.style.width = '90vw';
     this.modalEl.style.maxWidth = '900px';
     this.modalEl.style.height = '80vh';
@@ -131,7 +133,33 @@ export class AiBatchConfirmModal extends Modal {
     );
   }
 
+  private setupBackdropCloseGuard() {
+    const bgEl = (this as any).bgEl as HTMLElement | null | undefined;
+    if (!bgEl) return;
+
+    const stopBackdropClose = (event: Event) => {
+      event.preventDefault();
+      event.stopPropagation();
+    };
+
+    bgEl.addEventListener('pointerdown', stopBackdropClose, true);
+    bgEl.addEventListener('mousedown', stopBackdropClose, true);
+    bgEl.addEventListener('click', stopBackdropClose, true);
+    bgEl.addEventListener('touchstart', stopBackdropClose, true);
+    bgEl.addEventListener('touchend', stopBackdropClose, true);
+
+    this.cleanupBackdropCloseGuard = () => {
+      bgEl.removeEventListener('pointerdown', stopBackdropClose, true);
+      bgEl.removeEventListener('mousedown', stopBackdropClose, true);
+      bgEl.removeEventListener('click', stopBackdropClose, true);
+      bgEl.removeEventListener('touchstart', stopBackdropClose, true);
+      bgEl.removeEventListener('touchend', stopBackdropClose, true);
+    };
+  }
+
   onClose() {
+    this.cleanupBackdropCloseGuard?.();
+    this.cleanupBackdropCloseGuard = null;
     // 用户直接关闭（点击遮罩/右上角/ESC）也必须 resolve(false)
     if (!this.resolved && this.resolvePromise) {
       this.resolvePromise(false);

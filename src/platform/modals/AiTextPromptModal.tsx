@@ -94,6 +94,7 @@ function AiTextPromptForm({ onSubmit, onCancel, isLoading }: AiTextPromptFormPro
  * 返回 Promise<string | null>，用户取消时返回 null
  */
 export class AiTextPromptModal extends Modal {
+    private cleanupBackdropCloseGuard: (() => void) | null = null;
     private resolvePromise: ((value: string | null) => void) | null = null;
     private isLoading = false;
 
@@ -122,7 +123,32 @@ export class AiTextPromptModal extends Modal {
     onOpen() {
         this.contentEl.empty();
         this.modalEl.addClass('think-ai-prompt-modal');
+        this.setupBackdropCloseGuard();
         this.renderContent();
+    }
+
+    private setupBackdropCloseGuard() {
+        const bgEl = (this as any).bgEl as HTMLElement | null | undefined;
+        if (!bgEl) return;
+
+        const stopBackdropClose = (event: Event) => {
+            event.preventDefault();
+            event.stopPropagation();
+        };
+
+        bgEl.addEventListener('pointerdown', stopBackdropClose, true);
+        bgEl.addEventListener('mousedown', stopBackdropClose, true);
+        bgEl.addEventListener('click', stopBackdropClose, true);
+        bgEl.addEventListener('touchstart', stopBackdropClose, true);
+        bgEl.addEventListener('touchend', stopBackdropClose, true);
+
+        this.cleanupBackdropCloseGuard = () => {
+            bgEl.removeEventListener('pointerdown', stopBackdropClose, true);
+            bgEl.removeEventListener('mousedown', stopBackdropClose, true);
+            bgEl.removeEventListener('click', stopBackdropClose, true);
+            bgEl.removeEventListener('touchstart', stopBackdropClose, true);
+            bgEl.removeEventListener('touchend', stopBackdropClose, true);
+        };
     }
 
     private renderContent() {
@@ -150,6 +176,8 @@ export class AiTextPromptModal extends Modal {
     }
 
     onClose() {
+        this.cleanupBackdropCloseGuard?.();
+        this.cleanupBackdropCloseGuard = null;
         // 如果用户直接关闭 Modal（点击外部或按 Esc），返回 null
         if (this.resolvePromise) {
             this.resolvePromise(null);
