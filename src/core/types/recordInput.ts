@@ -1,4 +1,5 @@
 import type { BlockTemplate, ThemeDefinition, Item } from './schema';
+import type { EditableRecordSnapshot, RecordOutputPlan, RecordPersistencePlan } from './recordSnapshot';
 
 export type RecordOperation =
   | 'create'
@@ -81,6 +82,9 @@ export interface PreparedCreateRecord {
   themeId: string | null;
   template: BlockTemplate | null;
   initialFormData: Record<string, unknown>;
+  snapshot?: EditableRecordSnapshot | null;
+  outputPlan?: RecordOutputPlan;
+  persistencePlan?: RecordPersistencePlan;
   warnings: RecordSubmitIssue[];
 }
 
@@ -89,6 +93,9 @@ export interface PreparedEditRecord {
   themeId: string | null;
   template: BlockTemplate | null;
   initialFormData: Record<string, unknown>;
+  snapshot?: EditableRecordSnapshot | null;
+  outputPlan?: RecordOutputPlan;
+  persistencePlan?: RecordPersistencePlan;
   inferred: {
     usedFallbackBlock: boolean;
     usedFallbackTheme: boolean;
@@ -103,6 +110,9 @@ export interface SubmitCreateRecordParams {
   themeId?: string | null;
   formData: Record<string, unknown>;
   context?: Record<string, unknown>;
+  meta?: {
+    timeDirection?: 'forward' | 'backward';
+  };
   signal?: AbortSignal;
   source?: Extract<RecordInputSource, 'quickinput' | 'ai_batch' | 'timer' | 'unknown' | 'view_quick_create'>;
 }
@@ -112,6 +122,9 @@ export interface SubmitUpdateRecordParams {
   blockId: string;
   themeId?: string | null;
   formData: Record<string, unknown>;
+  meta?: {
+    timeDirection?: 'forward' | 'backward';
+  };
   signal?: AbortSignal;
   source?: Extract<RecordInputSource, 'quickinput' | 'unknown'>;
 }

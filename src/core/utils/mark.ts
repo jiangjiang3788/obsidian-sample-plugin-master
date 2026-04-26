@@ -12,16 +12,12 @@ export interface RecurrenceInfo {
     whenDone: boolean;
 }
 
+// 放宽了 🔁 前面的限制：允许紧贴正文（如 “什么也不干🔁every day”）也能识别。
 const RECURRENCE_RULE_RE =
-    /(^|[\s\[(])🔁\s*(every\s+(?:\d+\s+)?(?:day|week|month|year)s?(?:\s+when\s+done)?)(?=$|\s*(?:[\(\[][^(\[\])]*::|📅|⏳|🛫|➕|✅|❌))/i;
+    /(^|[\s\[(]|[^\s])🔁\s*(every\s+(?:\d+\s+)?(?:day|week|month|year)s?(?:\s+when\s+done)?)(?=$|\s*(?:[\(\[][^\(\[\])]*::|📅|⏳|🛫|➕|✅|❌|#))/i;
 
 /*
  * 从一整行任务文本中抽取“纯 recurrence 规则文本”。
- *
- * 目标：
- * - ✅ `- [ ] 跑步 🔁 every day (主题::健康)` -> `every day`
- * - ✅ `- [ ] 回顾 🔁 every 2 weeks when done 📅 2025-09-20` -> `every 2 weeks when done`
- * - ❌ 不把后续的 `(主题::...) (时间::...) ✅ 2025-09-20` 吞进 recurrence 文本里
  */
 export function extractRecurrenceText(rawTask: string): string | null {
     const match = rawTask.match(RECURRENCE_RULE_RE);
@@ -29,7 +25,6 @@ export function extractRecurrenceText(rawTask: string): string | null {
     return match[2]?.trim() || null;
 }
 
-// [核心修改] 辅助函数，用于清理所有时间相关的标签
 const cleanTimeAndDurationTags = (line: string): string => {
     return line
         .replace(/\s*[\(\[]时间::[^)\]]*[\)\]]/g, '')
@@ -38,52 +33,42 @@ const cleanTimeAndDurationTags = (line: string): string => {
         .trim();
 };
 
-/* ---------- 单行任务完成 ---------- */
 export function toggleToDone(
     rawLine: string,
     todayISO: string,
     nowTime: string,
     options?: { duration?: number; startTime?: string; endTime?: string }
 ): string {
-    // 1. 清理所有旧的时间、结束、时长标签，以确保顺序和值的正确性
     let line = cleanTimeAndDurationTags(rawLine);
 
-    // 2. 准备要按顺序追加的新标签
     const duration = options?.duration;
     const startTime = options?.startTime;
     const endTime = options?.endTime;
 
     const tagsToAppend = [];
 
-    // 顺序 1: 开始时间
     if (startTime !== undefined) {
         tagsToAppend.push(`(时间:: ${startTime})`);
     }
-    // 回退情况：如果没有任何时间信息，说明是简单完成，记录一个时间点
     else if (duration === undefined && endTime === undefined) {
         tagsToAppend.push(`(时间:: ${nowTime})`);
     }
 
-    // 顺序 2: 结束时间
     if (endTime !== undefined) {
         tagsToAppend.push(`(结束:: ${endTime})`);
     }
 
-    // 顺序 3: 时长
     if (duration !== undefined) {
         tagsToAppend.push(`(时长:: ${duration})`);
     }
 
-    // 3. 重新组装任务行
     line = [line, ...tagsToAppend].join(' ').replace(/\s+/g, ' ').trim();
 
-    // 4. 标记任务为完成状态 [x]
     line = line.replace(/^(\s*-\s*)\[[ xX-]\]/, '$1[x]');
     if (!/^-\s*\[x\]/.test(line)) {
         line = `- [x] ${line.replace(/^-\s*\[.\]/, '').replace(/^-\s*/, '')}`;
     }
 
-    // 5. 清理旧的完成日期并添加新的
     line = line.replace(
         new RegExp(`\\s*${EMOJI.done}\\s*${DATE_YMD_RE.source}$`),
         '',
@@ -100,7 +85,6 @@ export function buildCompletedTaskRecord(
     return toggleToDone(rawLine, todayISO, nowTime, options);
 }
 
-/* ---------- 周期任务 ---------- */
 export function parseRecurrence(rawTask: string): RecurrenceInfo | null {
     const recurrenceText = extractRecurrenceText(rawTask);
     if (!recurrenceText) return null;
@@ -124,7 +108,7 @@ export function findBaseDateForRecurring(
     if (whenDone) return todayISO;
 
     const pick = (emoji: string) => {
-        const r = new RegExp(`${emoji}\\s*(${DATE_YMD_RE.source})`);
+        const r = new RegExp(`${emoji}\s*(${DATE_YMD_RE.source})`);
         const mt = rawTask.match(r);
         return mt ? normalizeDateStr(mt[1]) : null;
     };
@@ -141,11 +125,10 @@ export function generateNextRecurringTask(
     baseDateISO: string,
 ): string {
     let next = rawTask
-        .replace(/^(\s*-\s*)\[[ xX-]\]/, '$1[ ]') // 复原为待办
+        .replace(/^(\s*-\s*)\[[ xX-]\]/, '$1[ ]')
         .replace(new RegExp(`\\s*${EMOJI.done}\\s*${DATE_YMD_RE.source}`), '')
-        .replace(/\s*[\(\[]时间::[^)\]]*[\)\]]/g, '') // 清理所有时间相关标签
+        .replace(/\s*[\(\[]时间::[^)\]]*[\)\]]/g, '')
         .replace(/\s*[\(\[]结束::[^)\]]*[\)\]]/g, '');
-        // .replace(/\s*[\(\[]时长::[^)\]]*[\)\]]/g, '');
 
     const rec = parseRecurrence(rawTask);
     if (!rec) return next.trim();
@@ -155,7 +138,7 @@ export function generateNextRecurringTask(
     const nextStr = nextDate.format('YYYY-MM-DD');
 
     const replaceIf = (emoji: string) => {
-        const re = new RegExp(`${emoji}\\s*${DATE_YMD_RE.source}`);
+        const re = new RegExp(`${emoji}\s*${DATE_YMD_RE.source}`);
         if (re.test(next)) next = next.replace(re, `${emoji} ${nextStr}`);
     };
     replaceIf(EMOJI.due);
@@ -165,8 +148,6 @@ export function generateNextRecurringTask(
     return next.trim();
 }
 
-
-/* ---------- 一次性完成标记 + 生成下一条 ---------- */
 export function markTaskDone(
     rawLine: string,
     todayISO: string,

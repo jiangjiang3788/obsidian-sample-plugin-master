@@ -173,6 +173,10 @@ export interface Item {
     templateSourceType?: 'block' | 'override';
     title: string;
     content: string;
+    /** 编辑态使用的正文真源：尽量保留用户原始表达，但去掉任务前缀/内联元数据噪音。 */
+    editableText?: string;
+    /** 原始源文本（单行 task 或完整 block 内容），用于后续快照/调试。 */
+    rawSource?: string;
     type: 'task' | 'block';
     tags: string[];
     theme?: string;     // [新增] 主题字段，用于统一的主题管理

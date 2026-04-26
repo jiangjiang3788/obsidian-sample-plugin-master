@@ -71,6 +71,22 @@ export class InputService {
     return targetFilePath;
   }
 
+
+
+  /**
+   * 计划第 6.5 步：安全迁移保存。
+   * 只负责“先写新位置”，删除旧记录由 usecase 在确认写入成功后再执行。
+   */
+  async createRecordAtPlannedLocation(
+    template: BlockTemplate,
+    formData: Record<string, any>,
+    theme?: ThemeDefinition,
+    templateMeta?: { templateId?: string | null; templateSourceType?: 'block' | 'override' | null },
+    options: RecordWriteOptions = {},
+  ): Promise<string> {
+    return this.executeTemplate(template, formData, theme, templateMeta, options);
+  }
+
   async updateExistingRecord(
     item: Item,
     template: BlockTemplate,

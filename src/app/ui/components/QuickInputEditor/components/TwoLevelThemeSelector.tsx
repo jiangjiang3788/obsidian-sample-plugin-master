@@ -18,9 +18,10 @@ interface ThemeNode {
   name: string;
   icon?: string;
   parentPath: string | null;
+  inputOrder: number;
 }
 
-function parseNode(theme: ThemeDefinition): ThemeNode {
+function parseNode(theme: ThemeDefinition & { __inputOrder?: number }, index: number): ThemeNode {
   const parts = theme.path.split('/').filter(Boolean);
   return {
     id: theme.id,
@@ -28,6 +29,7 @@ function parseNode(theme: ThemeDefinition): ThemeNode {
     name: parts[parts.length - 1] || theme.path,
     icon: theme.icon,
     parentPath: parts.length > 1 ? parts.slice(0, -1).join('/') : null,
+    inputOrder: theme.__inputOrder ?? index,
   };
 }
 
@@ -55,14 +57,15 @@ function getButtonSx(active: boolean) {
 export function TwoLevelThemeSelector({ themes, selectedThemeId, onSelect, dense = false }: TwoLevelThemeSelectorProps) {
   if (!themes || themes.length === 0) return null;
 
-  const nodes = themes.map(parseNode);
-  const roots = nodes.filter((n) => n.parentPath === null);
+  const nodes = themes.map((theme, index) => parseNode(theme as ThemeDefinition & { __inputOrder?: number }, index));
+  const roots = nodes.filter((n) => n.parentPath === null).sort((a, b) => a.inputOrder - b.inputOrder);
   const childrenByParent = new Map<string, ThemeNode[]>();
   for (const node of nodes) {
     if (!node.parentPath) continue;
     if (!childrenByParent.has(node.parentPath)) childrenByParent.set(node.parentPath, []);
     childrenByParent.get(node.parentPath)!.push(node);
   }
+  childrenByParent.forEach((list) => list.sort((a, b) => a.inputOrder - b.inputOrder));
 
   const selectedNode = nodes.find((node) => node.id === selectedThemeId) || null;
   const activeParentPath = selectedNode?.parentPath ?? selectedNode?.path ?? roots[0]?.path ?? null;

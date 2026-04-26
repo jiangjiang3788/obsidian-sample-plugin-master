@@ -11,6 +11,7 @@ import type {
 } from '@/core/types/recordInput';
 import type { InputSettings } from '@/core/types/schema';
 import { buildEditRecordState } from './editStateResolver';
+import { buildEditableRecordSnapshot } from './snapshot/EditSnapshotFactory';
 import { normalizeRecordInput as normalizeRecordInputImpl } from './normalization';
 import { resolveRecordDependencies } from './dependencyResolver';
 import { validateRecordInput as validateRecordInputImpl } from './validation';
@@ -24,11 +25,27 @@ export class RecordInputKernel {
       themeId: params.themeId ?? null,
     });
 
+    const snapshot = buildEditableRecordSnapshot({
+      mode: 'create',
+      blockId: resolved.blockId,
+      themeId: resolved.themeId,
+      fields: {},
+      template: resolved.template,
+      theme: resolved.theme,
+      templateMeta: {
+        templateId: resolved.meta.templateId ?? resolved.template?.id ?? null,
+        templateSourceType: resolved.meta.templateSourceType ?? 'block',
+      },
+    });
+
     return {
       blockId: resolved.blockId,
       themeId: resolved.themeId,
       template: resolved.template,
       initialFormData: {},
+      snapshot,
+      outputPlan: snapshot.outputPlan,
+      persistencePlan: snapshot.persistencePlan,
       warnings: [...resolved.warnings],
     };
   }

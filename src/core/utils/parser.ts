@@ -8,7 +8,7 @@ import {
 // [修改] 导入 getPeriodCount 和 dayjs
 import { normalizeDateStr, extractDate, getPeriodCount, dayjs } from './date';
 import { EMOJI } from '@/core/types/constants';
-import { cleanTaskText } from './text';
+import { cleanTaskText, stripTaskLineToEditableText } from './text';
 import { extractRecurrenceText } from './mark';
 
 /* ---------- 工具 ---------- */
@@ -117,7 +117,9 @@ export function parseTaskLine(
         item.icon = iconMatch[1];
         titleSrc = titleSrc.replace(/^(?:\p{Extended_Pictographic}\uFE0F?\s*)+/u, '');
     }
+    const editableText = stripTaskLineToEditableText(titleSrc);
     item.title = cleanTaskText(titleSrc) || '';
+    if (editableText) item.extra['正文'] = editableText;
     item.priority = pickPriority(lineText);
     
     // [Day2新增] 任务的主题是当前章节标题，而不是任务标题

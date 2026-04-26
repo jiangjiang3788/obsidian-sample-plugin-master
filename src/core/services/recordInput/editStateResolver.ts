@@ -1,5 +1,6 @@
 import type { InputSettings, Item } from '@/core/types/schema';
 import type { PreparedEditRecord } from '@/core/types/recordInput';
+import { buildEditableRecordSnapshot } from '@/core/services/recordInput/snapshot/EditSnapshotFactory';
 import { buildPathOption, getLeafPath, normalizePath } from '@/core/utils/pathSemantic';
 import { findThemeIdByPath, resolveRecordDependencies } from './dependencyResolver';
 
@@ -194,7 +195,9 @@ function buildInitialFormData(template: any, item: Item): Record<string, unknown
     }
 
     if (['内容', 'content', 'title', '标题'].includes(field.key) || ['内容', 'content', 'title', '标题'].includes(field.label)) {
-      return item.type === 'task' ? (item.title || item.content) : item.content;
+      return item.type === 'task'
+        ? ((item.extra?.['正文'] as string | undefined) || item.title || item.content)
+        : item.content;
     }
     if (['日期', 'date'].includes(field.key) || ['日期', 'date'].includes(field.label)) return item.date || item.createdDate;
     if (['时间', 'time', 'start'].includes(key) || ['时间', 'time', 'start'].includes(label)) return item.startTime;
@@ -223,17 +226,44 @@ export function buildEditRecordState(input: BuildEditStateInput): PreparedEditRe
     item,
   });
 
+  const initialFormData = resolvedDependencies.template ? buildInitialFormData(resolvedDependencies.template, item) : {};
+  const snapshot = buildEditableRecordSnapshot({
+    mode: 'edit',
+    item,
+    blockId: resolvedDependencies.blockId,
+    themeId: resolvedDependencies.themeId,
+    fields: initialFormData,
+    template: resolvedDependencies.template,
+    theme: resolvedDependencies.theme,
+    templateMeta: {
+      templateId: resolvedDependencies.meta.templateId ?? resolvedDependencies.template?.id ?? null,
+      templateSourceType: resolvedDependencies.meta.templateSourceType ?? 'block',
+    },
+  });
+
+  const warnings = [...resolvedDependencies.warnings];
+  if (snapshot.persistencePlan.pathChanged) {
+    warnings.push({
+      code: 'record_target_path_changed',
+      message: `当前模板/主题推导出的目标文件为 ${snapshot.outputPlan.targetFilePath}，与原文件 ${snapshot.persistencePlan.originalPath} 不同。当前仍按原位置更新；后续步骤会接入迁移保存。`,
+      field: 'themeId',
+    });
+  }
+
   return {
     blockId: resolvedDependencies.blockId,
     themeId: resolvedDependencies.themeId,
     template: resolvedDependencies.template,
-    initialFormData: resolvedDependencies.template ? buildInitialFormData(resolvedDependencies.template, item) : {},
+    initialFormData,
+    snapshot,
+    outputPlan: snapshot.outputPlan,
+    persistencePlan: snapshot.persistencePlan,
     inferred: {
       usedFallbackBlock: resolvedBlock.usedFallbackBlock,
       usedFallbackTheme: resolvedDependencies.meta.usedFallbackTheme,
       templateSourceType: resolvedDependencies.meta.templateSourceType,
       resolvedBy: resolvedBlock.resolvedBy,
     },
-    warnings: [...resolvedDependencies.warnings],
+    warnings,
   };
 }

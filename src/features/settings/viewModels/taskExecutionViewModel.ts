@@ -7,6 +7,7 @@ import {
   isTaskCompleted,
   isTaskOpen,
   parsePath,
+  cleanTaskText,
 } from '@core/public';
 
 export interface TaskExecutionRecordVM {
@@ -43,8 +44,14 @@ export interface TaskExecutionViewModel {
   sections: TaskExecutionSectionVM[];
 }
 
+function getIdentityTitle(item: Item): string {
+  const raw = String(item.content || item.title || '').trim();
+  const cleaned = cleanTaskText(raw);
+  return cleaned || String(item.title || '').trim();
+}
+
 function buildAggregateKey(item: Item): string {
-  return [item.file?.path || '', String(item.title || '').trim(), item.theme || ''].join('::');
+  return [item.file?.path || '', getIdentityTitle(item), item.theme || '', String(item.recurrence || '').trim()].join('::');
 }
 
 function buildRenderKey(item: Item): string {
@@ -132,7 +139,7 @@ export function buildTaskExecutionViewModel(params: {
       key: buildRenderKey(item),
       aggregateKey,
       itemId: item.id,
-      title: String(item.title || '').trim(),
+      title: getIdentityTitle(item),
       count: (recordMap.get(aggregateKey) || []).length,
       recurrenceLabel: String(item.recurrence || '').trim(),
       records: recordMap.get(aggregateKey) || [],

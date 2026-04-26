@@ -31,14 +31,6 @@ export class QuickInputModal extends Modal {
   private static activeModal: QuickInputModal | null = null;
   private services: Services;
   private cleanupKeyboardDetection: (() => void) | null = null;
-  private cleanupBackdropCloseGuard: (() => void) | null = null;
-
-  private isMobileLikeEnvironment() {
-    if (typeof window === 'undefined') return false;
-    return /Android|iPhone|iPad|iPod|Mobile/i.test(window.navigator.userAgent)
-      || (window.matchMedia?.('(pointer: coarse)').matches ?? false)
-      || window.innerWidth <= 820;
-  }
 
   constructor(
     app: App,
@@ -64,13 +56,7 @@ export class QuickInputModal extends Modal {
     QuickInputModal.activeModal = this;
     this.contentEl.empty();
     this.modalEl.addClass('think-quick-input-modal');
-    if (this.isMobileLikeEnvironment()) {
-      this.modalEl.addClass('think-quick-input-modal--mobile');
-      this.setupKeyboardDetection();
-    } else {
-      this.modalEl.addClass('think-quick-input-modal--desktop');
-    }
-    this.setupBackdropCloseGuard();
+    this.setupKeyboardDetection();
 
     mountWithServices(
       this.contentEl,
@@ -90,30 +76,6 @@ export class QuickInputModal extends Modal {
       />,
       this.services,
     );
-  }
-
-  private setupBackdropCloseGuard() {
-    const bgEl = (this as any).bgEl as HTMLElement | null | undefined;
-    if (!bgEl) return;
-
-    const stopBackdropClose = (event: Event) => {
-      event.preventDefault();
-      event.stopPropagation();
-    };
-
-    bgEl.addEventListener('pointerdown', stopBackdropClose, true);
-    bgEl.addEventListener('mousedown', stopBackdropClose, true);
-    bgEl.addEventListener('click', stopBackdropClose, true);
-    bgEl.addEventListener('touchstart', stopBackdropClose, true);
-    bgEl.addEventListener('touchend', stopBackdropClose, true);
-
-    this.cleanupBackdropCloseGuard = () => {
-      bgEl.removeEventListener('pointerdown', stopBackdropClose, true);
-      bgEl.removeEventListener('mousedown', stopBackdropClose, true);
-      bgEl.removeEventListener('click', stopBackdropClose, true);
-      bgEl.removeEventListener('touchstart', stopBackdropClose, true);
-      bgEl.removeEventListener('touchend', stopBackdropClose, true);
-    };
   }
 
   private setupKeyboardDetection() {
@@ -289,12 +251,8 @@ export class QuickInputModal extends Modal {
   onClose() {
     try {
       this.cleanupKeyboardDetection?.();
-      this.cleanupBackdropCloseGuard?.();
     } finally {
       this.cleanupKeyboardDetection = null;
-      this.cleanupBackdropCloseGuard = null;
-      this.modalEl.removeClass('think-quick-input-modal--mobile');
-      this.modalEl.removeClass('think-quick-input-modal--desktop');
       if (QuickInputModal.activeModal === this) {
         QuickInputModal.activeModal = null;
       }
@@ -349,6 +307,8 @@ function QuickInputModalContent({
 
   useEffect(() => () => submitLatestRef.current.dispose(), []);
 
+  // 计划第 5 步：prepare 阶段开始返回 outputPlan / persistencePlan，
+  // 先用于验收与路径变化提示，下一步再接入迁移保存策略。
   const preparedRecord = useMemo(() => {
     if (mode === 'edit' && editItem) {
       return useCases.recordInput.prepareEditRecord({
@@ -395,6 +355,12 @@ function QuickInputModalContent({
   const originalGestureHint = originalUri && !originalUri.startsWith('#error')
     ? '桌面端按住 Ctrl/⌘ 点击标题或说明；手机端双击标题或说明，可打开原文'
     : undefined;
+  const outputPlanHint = preparedRecord.outputPlan?.targetFilePath
+    ? `目标位置：${preparedRecord.outputPlan.targetFilePath}${preparedRecord.outputPlan?.targetHeader ? ` → ${preparedRecord.outputPlan.targetHeader}` : ''}`
+    : '';
+  const pathChangeHint = preparedRecord.persistencePlan?.pathChanged
+    ? `当前位置：${preparedRecord.persistencePlan.originalPath || '未知'}；当前模板推导位置：${preparedRecord.outputPlan?.targetFilePath || '未知'}。计划第 6.5 步开始，保存时会先写入新位置，再删除旧记录；如果删除失败，会保留旧记录并提示你手动清理。`
+    : '';
 
   const openOriginal = () => {
     if (!originalUri || originalUri.startsWith('#error')) {
@@ -583,6 +549,11 @@ function QuickInputModalContent({
           padding={0}
           borderBottom={false}
         />
+        {(pathChangeHint || outputPlanHint) ? (
+          <div style={{ marginTop: '0.35rem', fontSize: '12px', color: 'var(--text-muted)', lineHeight: 1.5 }}>
+            {pathChangeHint || outputPlanHint}
+          </div>
+        ) : null}
       </Box>
 
       <div class="think-modal__body" style={{ paddingBottom: isMobileLike ? '96px' : undefined }}>
