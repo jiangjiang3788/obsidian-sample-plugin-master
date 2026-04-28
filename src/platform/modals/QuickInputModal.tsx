@@ -45,6 +45,11 @@ export class QuickInputModal extends Modal {
     this.services = createServices();
   }
 
+  // ✅ 方法一：官方 API（Obsidian ≥ 0.15.0）
+  shouldCloseOnClickOutside(): boolean {
+    return false;
+  }
+
   onOpen() {
     if (QuickInputModal.activeModal && QuickInputModal.activeModal !== this) {
       try {
@@ -76,6 +81,18 @@ export class QuickInputModal extends Modal {
       />,
       this.services,
     );
+
+    // ✅ 方法二：强制拦截遮罩层点击（所有版本通用，双保险）
+    // 使用 setTimeout 确保 DOM 已完全挂载
+    setTimeout(() => {
+      const bg = this.modalEl.closest('.modal-container')?.querySelector('.modal-bg');
+      if (bg) {
+        bg.addEventListener('click', (e) => {
+          e.stopPropagation();
+          e.preventDefault();
+        }, true);
+      }
+    }, 0);
   }
 
   private setupKeyboardDetection() {
@@ -307,8 +324,6 @@ function QuickInputModalContent({
 
   useEffect(() => () => submitLatestRef.current.dispose(), []);
 
-  // 计划第 5 步：prepare 阶段开始返回 outputPlan / persistencePlan，
-  // 先用于验收与路径变化提示，下一步再接入迁移保存策略。
   const preparedRecord = useMemo(() => {
     if (mode === 'edit' && editItem) {
       return useCases.recordInput.prepareEditRecord({
