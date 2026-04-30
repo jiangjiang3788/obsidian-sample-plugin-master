@@ -13,6 +13,10 @@ export interface ParseInput {
     now: Date;
     /** 可选：用于取消请求（modal 关闭 / unload / takeLatest） */
     signal?: AbortSignal;
+    /** 可选：调试链路 ID，用于把 command/parser/http 的耗时日志串起来 */
+    traceId?: string;
+    /** 可选：快速模式，减少 prompt 体积和 maxTokens，优先降低 AI 首包等待时间 */
+    fastMode?: boolean;
 }
 
 /**

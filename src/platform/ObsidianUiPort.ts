@@ -31,6 +31,15 @@ export class ObsidianUiPort implements UiPort {
           // no-op
         }
       },
+      setMessage(nextMessage: string): void {
+        try {
+          if (typeof notice?.setMessage === 'function') {
+            notice.setMessage(nextMessage);
+          }
+        } catch {
+          // no-op
+        }
+      },
     };
   }
 }

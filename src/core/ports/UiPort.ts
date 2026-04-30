@@ -30,6 +30,14 @@ export interface UiPort {
  */
 export interface UiNoticeHandle {
   hide(): void;
+
+  /**
+   * 更新通知内容。
+   *
+   * Obsidian Notice 原生支持 setMessage；其他平台实现可以不提供，
+   * 调用方需要把它当作可选能力使用。
+   */
+  setMessage?(message: string): void;
 }
 
 export const UI_PORT_TOKEN: InjectionToken<UiPort> = 'UiPort';
