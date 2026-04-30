@@ -107,6 +107,7 @@ export function ThemeTable({
     const [dropTarget, setDropTarget] = useState<{ themeId: string; position: DropPosition } | null>(null);
     const draggedNodeRef = useRef<ThemeTreeNode | null>(null);
     const dropTargetRef = useRef<{ themeId: string; position: DropPosition } | null>(null);
+    const [editingCell, setEditingCell] = useState<{ themeId: string; field: 'icon' | 'path' } | null>(null);
 
     const allVisibleThemes = showArchived ? [...activeThemes, ...archivedThemes] : activeThemes;
     const allVisibleThemeIds = allVisibleThemes
@@ -236,6 +237,9 @@ export function ThemeTable({
                     onDragOverTheme={handleDragOverRow}
                     onDropTheme={handleDropRow}
                     onDragEndTheme={handleDragEnd}
+                    editingCell={editingCell}
+                    onStartEdit={(themeId, field) => setEditingCell({ themeId, field })}
+                    onFinishEdit={() => setEditingCell(null)}
                 />
             );
         });

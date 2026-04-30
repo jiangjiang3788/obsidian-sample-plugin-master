@@ -5,7 +5,6 @@ import { ThemeTreeNodeLabel } from '@shared/public';
 import TaskAltIcon from '@mui/icons-material/TaskAlt';
 import CancelIcon from '@mui/icons-material/Cancel';
 import EditIcon from '@mui/icons-material/Edit';
-import { useState } from 'preact/hooks';
 import { InlineEditor } from './InlineEditor';
 import type { EditorState } from './useThemeMatrixEditor';
 import type { BlockTemplate, ThemeDefinition, ThemeOverride } from '@core/public';
@@ -38,6 +37,9 @@ interface ThemeTreeNodeRowProps {
     onDragOverTheme?: (node: ThemeTreeNode, event: DragEvent) => void;
     onDropTheme?: (node: ThemeTreeNode) => void;
     onDragEndTheme?: () => void;
+    editingCell?: { themeId: string; field: 'icon' | 'path' } | null;
+    onStartEdit?: (themeId: string, field: 'icon' | 'path') => void;
+    onFinishEdit?: () => void;
 }
 
 type CellKind = 'inherit' | 'override' | 'disabled' | 'active' | 'archived';
@@ -95,6 +97,9 @@ export function ThemeTreeNodeRow({
     onDragOverTheme,
     onDropTheme,
     onDragEndTheme,
+    editingCell,
+    onStartEdit,
+    onFinishEdit,
 }: ThemeTreeNodeRowProps) {
     const theme = node.theme;
     if (!theme) return null;
@@ -106,8 +111,8 @@ export function ThemeTreeNodeRow({
     const nextNode = rowIndexInGroup < groupNodes.length - 1 ? groupNodes[rowIndexInGroup + 1] : null;
     const isRoot = level === 0;
 
-    const [isEditingPath, setIsEditingPath] = useState(false);
-    const [isEditingIcon, setIsEditingIcon] = useState(false);
+    const isEditingIcon = editingCell?.themeId === theme.id && editingCell?.field === 'icon';
+    const isEditingPath = editingCell?.themeId === theme.id && editingCell?.field === 'path';
 
     const isEditMode = editorState.mode === 'edit';
     const isThemeSelected = editorState.selectedThemes.has(theme.id);
@@ -210,13 +215,13 @@ export function ThemeTreeNodeRow({
                                     value={theme.icon || ''}
                                     onSave={(newIcon: string) => {
                                         useCases.theme.updateTheme(theme.id, { icon: newIcon });
-                                        setIsEditingIcon(false);
+                                        onFinishEdit?.();
                                     }}
                                 />
                             ) : (
                                 <AnyTypography
                                     sx={{ cursor: 'text', width: '20px', textAlign: 'center', flexShrink: 0 }}
-                                    onClick={() => setIsEditingIcon(true)}
+                                    onClick={() => onStartEdit?.(theme.id, 'icon')}
                                 >
                                     {theme.icon || ' '}
                                 </AnyTypography>
@@ -226,12 +231,12 @@ export function ThemeTreeNodeRow({
                                     value={theme.path}
                                     onSave={(newPath: string) => {
                                         useCases.theme.updateTheme(theme.id, { path: newPath });
-                                        setIsEditingPath(false);
+                                        onFinishEdit?.();
                                     }}
                                 />
                             ) : (
                                 <AnyTypography
-                                    onDoubleClick={() => setIsEditingPath(true)}
+                                    onDoubleClick={() => onStartEdit?.(theme.id, 'path')}
                                     sx={{
                                         cursor: 'text',
                                         fontWeight: isRoot ? 700 : 500,
