@@ -19,6 +19,17 @@ function getThemeLabel(theme: ThemeDefinition): string {
   return raw || theme.path || '';
 }
 
+function getThemeOrder(t: ThemeDefinition): number {
+  return typeof t.order === 'number' && Number.isFinite(t.order) ? t.order : Number.MAX_SAFE_INTEGER;
+}
+
+function compareTheme(a: ThemeDefinition, b: ThemeDefinition): number {
+  const ao = getThemeOrder(a);
+  const bo = getThemeOrder(b);
+  if (ao !== bo) return ao - bo;
+  return getThemeLabel(a).localeCompare(getThemeLabel(b), 'zh-Hans-CN');
+}
+
 function buildThemeGroups(themes: ThemeDefinition[]) {
   const topLevel = themes.filter((t) => !t.path.includes('/'));
   const childrenByParent = new Map<string, ThemeDefinition[]>();
@@ -33,12 +44,12 @@ function buildThemeGroups(themes: ThemeDefinition[]) {
   });
 
   for (const [key, list] of childrenByParent.entries()) {
-    list.sort((a, b) => getThemeLabel(a).localeCompare(getThemeLabel(b), 'zh-Hans-CN'));
+    list.sort(compareTheme);
     childrenByParent.set(key, list);
   }
 
   return {
-    parents: topLevel.sort((a, b) => getThemeLabel(a).localeCompare(getThemeLabel(b), 'zh-Hans-CN')),
+    parents: topLevel.sort(compareTheme),
     childrenByParent,
   };
 }
