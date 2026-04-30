@@ -14,7 +14,7 @@ import type { UseCases } from '@/app/public';
 import { setupCoreContainer, repairCrossDayTaskCompletionDatesInVault } from '@core/public';
 import { VAULT_PORT_TOKEN, UI_PORT_TOKEN, METADATA_PORT_TOKEN, FILESTAT_PORT_TOKEN, MODAL_PORT_TOKEN, EVENTS_PORT_TOKEN, MESSAGE_RENDER_PORT_TOKEN } from '@core/public';
 import './styles/main.css';
-import { safeAsync } from '@shared/public';
+import { safeAsync, installVisibleDiagnostics, getDebugLogText } from '@shared/public';
 import { performanceMonitor, startMeasure } from '@shared/public';
 import { ServiceManager } from '@/app/ServiceManager';
 import { isDisposed } from '@/app/runtime/lifecycleState';
@@ -51,19 +51,26 @@ export default class ThinkPlugin extends Plugin {
      * 4. 注册命令
      */
     async onload(): Promise<void> {
+        installVisibleDiagnostics(this);
+        devLog('[ThinkPlugin][BOOT] onload entered');
+        this.registerDiagnosticCommands();
         const stopMeasure = startMeasure('ThinkPlugin.onload');
 
         await safeAsync(
             async () => {
                 // 1. 加载设置
+                devLog('[ThinkPlugin][BOOT] before loadSettings');
                 const settings = await this.loadSettings();
 
                 // 2. 配置 DI 容器 & 基础服务
+                devLog('[ThinkPlugin][BOOT] after loadSettings', settings);
+                devLog('[ThinkPlugin][BOOT] before setupCoreContainer');
                 setupCoreContainer(this.app, settings);
 
                 // Phase2: platform 成为唯一 Obsidian API 入口（第一步）
                 // - 为 core/storage 注入 VaultPort 的平台实现
                 // - 必须在任何依赖 STORAGE_TOKEN 的服务 resolve 之前完成注册
+                devLog('[ThinkPlugin][BOOT] before platform registrations');
                 container.register(VAULT_PORT_TOKEN, { useClass: ObsidianVaultPort });
                 container.register(UI_PORT_TOKEN, { useClass: ObsidianUiPort });
                 container.register(MODAL_PORT_TOKEN, { useClass: ObsidianModalPort });
@@ -76,10 +83,13 @@ export default class ThinkPlugin extends Plugin {
                 // - 先创建 registry，让后续 feature 可以在这里追加 register(...)
 
                 // 3. 构建服务总线并启动主流程
+                devLog('[ThinkPlugin][BOOT] before ServiceManager constructor');
                 this.serviceManager = new ServiceManager(this);
+                devLog('[ThinkPlugin][BOOT] before ServiceManager.bootstrap');
                 await this.serviceManager.bootstrap(); // 新的启动方法
                 // 2.1 capabilities 组合根（Phase1: 可注入体系）
                 // - 在 ServiceManager.bootstrap() 之后创建，确保 timerService/useCases 已就绪
+                devLog('[ThinkPlugin][BOOT] after ServiceManager.bootstrap');
                 const capabilityRegistry = createDefaultCapabilityRegistry();
                 const runtime = buildRuntime(container);
                 this.capabilities = createCapabilities(this.app, settings, {
@@ -89,8 +99,10 @@ export default class ThinkPlugin extends Plugin {
 
 
                 // 4. 注册命令
+                devLog('[ThinkPlugin][BOOT] before registerCommands');
                 this.registerCommands();
 
+                devLog('[ThinkPlugin][BOOT] after registerCommands');
                 const totalTime = stopMeasure();
                 devLog(`[Think Plugin] 核心功能已加载完成 (总耗时: ${totalTime.toFixed(2)}ms)`);
             },
@@ -101,6 +113,23 @@ export default class ThinkPlugin extends Plugin {
                 context: 'Plugin initialization'
             }
         );
+    }
+
+    private registerDiagnosticCommands(): void {
+        this.addCommand({
+            id: 'think-copy-runtime-diagnostics',
+            name: '复制运行诊断日志',
+            callback: async () => {
+                const text = getDebugLogText();
+                try {
+                    await navigator.clipboard.writeText(text);
+                    new Notice('Think: 运行诊断日志已复制', 3000);
+                } catch (error) {
+                    console.error('[ThinkPlugin][Diagnostics] copy failed', error);
+                    new Notice('Think: 复制失败，请打开 .think-plugin-debug.log 查看', 5000);
+                }
+            }
+        });
     }
 
     private registerCommands(): void {

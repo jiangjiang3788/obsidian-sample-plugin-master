@@ -46,7 +46,8 @@
     "theme-matrix-legacy-import:gate": "node scripts/theme-matrix-legacy-import-gate.mjs",
     "iconaction:gate": "node scripts/iconaction-gate.mjs",
     "typecheck:src": "tsc -p tsconfig.json --noEmit",
-    "typecheck:test": "tsc -p tsconfig.test.json --noEmit"
+    "typecheck:test": "tsc -p tsconfig.test.json --noEmit",
+    "build:debug": "vite build --mode development && node scripts/fix-sourcemap.mjs && node -e \"const fs=require('fs');fs.copyFileSync('dist/main.js','main.js');fs.copyFileSync('dist/main.js.map','main.js.map');fs.copyFileSync('dist/styles.css','styles.css');\""
   },
   "dependencies": {
     "@codemirror/state": "6.5.0",

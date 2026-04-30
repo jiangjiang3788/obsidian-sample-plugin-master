@@ -1,111 +1,169 @@
 // src/core/utils/devLogger.ts
 /**
- * DevLogger - 开发环境日志工具
+ * DevLogger - 运行态诊断日志工具
  * Role: Utility
  *
- * 【S1 低成本可观测性】
- * - 仅在 development 环境下输出日志
- * - production 环境完全不输出，不影响性能
- * - 提供清晰的日志格式：actionName + source + diff
- *
- * 说明：
- * - 原实现位于 shared/utils/devLogger.ts，导致 core/services 反向依赖 shared。
- * - 4.5 起，该工具下沉到 core（底层唯一真源）。
+ * 本次改动目标：先看到，再收敛。
+ * - 不再把日志输出绑定到 NODE_ENV=development，因为 Obsidian 插件通常通过 vite build 后运行，
+ *   构建态会把 NODE_ENV 固定为 production，导致运行中 devLog 全部静默。
+ * - 默认在非 test 环境输出日志。
+ * - 除 console 外，同时写入全局内存缓冲区，供可视化诊断面板 / Obsidian 命令 / 文件日志读取。
  */
 
 import type { ActionMeta } from '../types/actionMeta';
 import { DEFAULT_ACTION_META } from '../types/actionMeta';
 
-// ============== 环境检测 ==============
+type ThinkLogLevel = 'log' | 'info' | 'warn' | 'error' | 'debug' | 'trace' | 'time' | 'timeEnd';
 
-/**
- * 检测是否为开发环境
- * 支持 Vite 和 Node.js 环境
- */
-function isDev(): boolean {
-    // IMPORTANT:
-    // - Avoid using `import.meta` syntax here, because Jest (CommonJS) will parse this file
-    //   during tests and fail before transforms run.
-    // - Obsidian plugin runs in Electron where `process.env.NODE_ENV` usually exists.
+export interface ThinkDebugLogEntry {
+    timestamp: number;
+    level: ThinkLogLevel;
+    source: string;
+    args: unknown[];
+    text: string;
+}
+
+interface ThinkDebugGlobal {
+    __THINK_DEBUG_ENABLED__?: boolean;
+    __THINK_DEBUG_BUFFER__?: ThinkDebugLogEntry[];
+    __THINK_DEBUG_SINK__?: (entry: ThinkDebugLogEntry) => void;
+}
+
+const MAX_BUFFER_SIZE = 1000;
+
+function getDebugGlobal(): ThinkDebugGlobal {
+    return globalThis as typeof globalThis & ThinkDebugGlobal;
+}
+
+function isTestEnvironment(): boolean {
     try {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const nodeProcess = (globalThis as any).process;
-        const env = nodeProcess?.env?.NODE_ENV;
-        if (typeof env === 'string') {
-            if (env === 'test') return false;
-            if (env === 'development') return true;
-            if (env === 'production') return false;
-            // default: be conservative (no logs)
-            return false;
-        }
+        const env = (globalThis as any).process?.env?.NODE_ENV;
+        return env === 'test';
+    } catch {
+        return false;
+    }
+}
+
+function shouldLog(): boolean {
+    if (isTestEnvironment()) return false;
+
+    // 允许运行时显式关闭，但默认打开。
+    try {
+        const g = getDebugGlobal();
+        if (g.__THINK_DEBUG_ENABLED__ === false) return false;
     } catch {
         // ignore
     }
-    return false;
+
+    return true;
 }
 
-// 缓存环境检测结果
-const IS_DEV = isDev();
+function stringifyArg(arg: unknown): string {
+    if (arg instanceof Error) {
+        return `${arg.name}: ${arg.message}${arg.stack ? `\n${arg.stack}` : ''}`;
+    }
+    if (typeof arg === 'string') return arg;
+    if (typeof arg === 'number' || typeof arg === 'boolean' || arg == null) return String(arg);
 
-// ============== 通用日志（dev-only） ==============
+    try {
+        return JSON.stringify(arg, (_key, value) => {
+            if (value instanceof Error) {
+                return {
+                    name: value.name,
+                    message: value.message,
+                    stack: value.stack,
+                };
+            }
+            return value;
+        }, 2);
+    } catch {
+        try {
+            return String(arg);
+        } catch {
+            return '[unserializable]';
+        }
+    }
+}
 
-/**
- * dev-only console.log
- */
+function makeEntry(level: ThinkLogLevel, source: string, args: unknown[]): ThinkDebugLogEntry {
+    return {
+        timestamp: Date.now(),
+        level,
+        source,
+        args,
+        text: args.map(stringifyArg).join(' '),
+    };
+}
+
+function pushEntry(entry: ThinkDebugLogEntry): void {
+    try {
+        const g = getDebugGlobal();
+        const buffer = g.__THINK_DEBUG_BUFFER__ || [];
+        buffer.push(entry);
+        if (buffer.length > MAX_BUFFER_SIZE) {
+            buffer.splice(0, buffer.length - MAX_BUFFER_SIZE);
+        }
+        g.__THINK_DEBUG_BUFFER__ = buffer;
+        g.__THINK_DEBUG_SINK__?.(entry);
+    } catch {
+        // 诊断日志不能影响业务逻辑。
+    }
+}
+
+function emit(level: ThinkLogLevel, args: unknown[], source: string = 'devLogger'): void {
+    if (!shouldLog()) return;
+
+    const entry = makeEntry(level, source, args);
+    pushEntry(entry);
+
+    try {
+        const consoleMethod = console[level as keyof Console];
+        if (typeof consoleMethod === 'function') {
+            (consoleMethod as (...values: unknown[]) => void).apply(console, args);
+            return;
+        }
+        console.log(...args);
+    } catch {
+        // ignore console failures
+    }
+}
+
+// ============== 通用日志 ==============
+
 export function devLog(...args: unknown[]): void {
-    if (!IS_DEV) return;
-    // eslint-disable-next-line no-console
-    console.log(...args);
+    emit('log', args);
 }
 
-/**
- * dev-only console.warn
- */
 export function devWarn(...args: unknown[]): void {
-    if (!IS_DEV) return;
-    // eslint-disable-next-line no-console
-    console.warn(...args);
+    emit('warn', args);
 }
 
-/**
- * dev-only console.error
- */
 export function devError(...args: unknown[]): void {
-    if (!IS_DEV) return;
-    // eslint-disable-next-line no-console
-    console.error(...args);
+    emit('error', args);
 }
 
-
-/**
- * dev-only console.time
- */
 export function devTime(label: string): void {
-    if (!IS_DEV) return;
-    // eslint-disable-next-line no-console
-    console.time(label);
+    if (!shouldLog()) return;
+    pushEntry(makeEntry('time', 'devLogger', [`[time] ${label}`]));
+    try {
+        console.time(label);
+    } catch {
+        // ignore
+    }
 }
 
-/**
- * dev-only console.timeEnd
- */
 export function devTimeEnd(label: string): void {
-    if (!IS_DEV) return;
-    // eslint-disable-next-line no-console
-    console.timeEnd(label);
+    if (!shouldLog()) return;
+    pushEntry(makeEntry('timeEnd', 'devLogger', [`[timeEnd] ${label}`]));
+    try {
+        console.timeEnd(label);
+    } catch {
+        // ignore
+    }
 }
 
 // ============== Diff 工具 ==============
 
-/**
- * 浅层 diff 两个对象，返回变更的 key paths
- *
- * @param before 变更前的对象
- * @param after 变更后的对象
- * @param prefix 路径前缀
- * @param maxDepth 最大递归深度
- * @returns 变更的 key paths 数组
- */
 export function shallowDiff(
     before: unknown,
     after: unknown,
@@ -114,12 +172,10 @@ export function shallowDiff(
 ): string[] {
     const changes: string[] = [];
 
-    // 如果两者完全相等，无变化
     if (before === after) {
         return changes;
     }
 
-    // 如果达到最大深度或不是对象，记录变化
     if (maxDepth <= 0 || typeof before !== 'object' || typeof after !== 'object' || before === null || after === null) {
         if (prefix) {
             changes.push(prefix);
@@ -127,7 +183,6 @@ export function shallowDiff(
         return changes;
     }
 
-    // 处理数组
     if (Array.isArray(before) && Array.isArray(after)) {
         if (before.length !== after.length) {
             if (prefix) {
@@ -143,11 +198,8 @@ export function shallowDiff(
         return changes;
     }
 
-    // 处理对象
     const beforeObj = before as Record<string, unknown>;
     const afterObj = after as Record<string, unknown>;
-
-    // 获取所有 key
     const keys = new Set([...Object.keys(beforeObj), ...Object.keys(afterObj)]);
 
     for (const key of keys) {
@@ -155,9 +207,7 @@ export function shallowDiff(
         const afterVal = afterObj[key];
         const keyPath = prefix ? `${prefix}.${key}` : key;
 
-        // key 不存在或值不同
         if (!(key in beforeObj) || !(key in afterObj) || beforeVal !== afterVal) {
-            // 递归检查
             const nestedChanges = shallowDiff(beforeVal, afterVal, keyPath, maxDepth - 1);
             if (nestedChanges.length > 0) {
                 changes.push(...nestedChanges);
@@ -169,8 +219,6 @@ export function shallowDiff(
 
     return changes;
 }
-
-// ============== 日志输出 ==============
 
 function normalizeMeta(meta?: ActionMeta): ActionMeta {
     return {
@@ -191,48 +239,34 @@ function safeStringify(obj: unknown, maxLen: number = 500): string {
     }
 }
 
-/**
- * 记录 store 写入日志（dev-only）
- */
 export function logStoreWrite(
     meta: ActionMeta | undefined,
     before: unknown,
     after: unknown
 ): void {
-    if (!IS_DEV) return;
+    if (!shouldLog()) return;
     const m = normalizeMeta(meta);
     const diff = shallowDiff(before, after);
     const diffInfo = diff.length ? diff.join(', ') : '(no shallow diff)';
-    // eslint-disable-next-line no-console
-    console.log(`[STORE_WRITE] action=${m.action} source=${m.source} diff=${diffInfo}`);
+    emit('log', [`[STORE_WRITE] action=${m.action} source=${m.source} diff=${diffInfo}`], 'store');
     if (m.debugStack) {
-        // eslint-disable-next-line no-console
-        console.trace('[STORE_WRITE stack]');
+        emit('trace', ['[STORE_WRITE stack]'], 'store');
     }
 }
 
-/**
- * 记录 settings 写入日志（dev-only）
- */
 export function logSettingsWrite(
     meta: ActionMeta | undefined,
     before: unknown,
     after: unknown
 ): void {
-    if (!IS_DEV) return;
+    if (!shouldLog()) return;
     const m = normalizeMeta(meta);
     const diff = shallowDiff(before, after);
     const diffInfo = diff.length ? diff.join(', ') : '(no shallow diff)';
-    // eslint-disable-next-line no-console
-    console.log(`[SETTINGS_WRITE] action=${m.action} source=${m.source} diff=${diffInfo}`);
+    emit('log', [`[SETTINGS_WRITE] action=${m.action} source=${m.source} diff=${diffInfo}`], 'settings');
     if (m.debugStack) {
-        // eslint-disable-next-line no-console
-        console.trace('[SETTINGS_WRITE stack]');
+        emit('trace', ['[SETTINGS_WRITE stack]'], 'settings');
     }
-
-    // 在 dev 环境下输出简要 before/after（截断）
-    // eslint-disable-next-line no-console
-    console.log('before:', safeStringify(before));
-    // eslint-disable-next-line no-console
-    console.log('after :', safeStringify(after));
+    emit('log', ['before:', safeStringify(before)], 'settings');
+    emit('log', ['after :', safeStringify(after)], 'settings');
 }

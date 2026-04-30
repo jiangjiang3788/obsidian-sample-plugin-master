@@ -105,12 +105,18 @@ export class ObsidianVaultPort implements VaultPort {
           await this.app.vault.createFolder(cur);
         } catch (e) {
           // 竞争条件：并发创建同一路径时，Obsidian 可能抛错。
-          // 再次确认是否已存在。
+          // Obsidian 有时会在 getAbstractFileByPath 尚未刷新时抛 Folder already exists，
+          // 这种情况应视为创建成功，而不是污染调试日志或中断性能报告写入。
           const recheck = this.app.vault.getAbstractFileByPath(cur);
-          if (!recheck) {
-            devError(`[ObsidianVaultPort] createFolder failed: ${cur}`, e);
-            throw e;
+          const message = e instanceof Error ? e.message : String(e);
+          if (recheck instanceof TFolder || message.includes('Folder already exists')) {
+            continue;
           }
+          if (recheck instanceof TFile) {
+            throw new Error(`路径冲突："${cur}" 是文件，无法作为文件夹。`);
+          }
+          devError(`[ObsidianVaultPort] createFolder failed: ${cur}`, e);
+          throw e;
         }
       } else if (af instanceof TFile) {
         throw new Error(`路径冲突："${cur}" 是文件，无法作为文件夹。`);

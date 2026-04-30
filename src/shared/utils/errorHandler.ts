@@ -4,7 +4,6 @@
  */
 
 import { devError, devLog, type UiPort } from '@core/public';
-import { isDevConsoleStackEnabled } from './devConsole';
 
 /**
  * 错误类型枚举
@@ -185,16 +184,18 @@ export class ErrorHandler {
 
         this.addLogEntry(logEntry);
 
-        // 开发模式：无论是否显示 toast，都输出完整错误对象与堆栈
-        // - 解决“toast 有，但控制台无堆栈”的定位问题
-        if (isDevConsoleStackEnabled()) {
-            try {
-                console.error('[Think][Error]', fullContext, errorObj);
-            } catch {
-                // no-op
-            }
+        // Runtime diagnostics: always print the full error object and stack when the unified handler is reached.
+        try {
+            console.error('[Think][ErrorHandler][RAW]', {
+                context: fullContext,
+                type: errorType,
+                message: errorObj.message,
+                stack: errorObj.stack,
+                raw: error,
+            });
+        } catch {
+            // no-op
         }
-
 
         // 控制台输出
         if (logToConsole) {
