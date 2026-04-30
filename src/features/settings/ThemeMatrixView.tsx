@@ -77,7 +77,7 @@ export function ThemeMatrixView({ blocks, themes, overrides, settings, useCases,
     // - ThemeMatrix 只关心“真实主题节点”（不需要虚节点分组），因此 createVirtualNodes=false
     // - level/expanded 不再写进节点（SSOT 是 expandedNodes Set），由 flattenThemePathTree 计算可见性与展开态
     const themeTreeRoots = useMemo(() => {
-        return buildThemePathTree(extendedThemes, { createVirtualNodes: false });
+        return buildThemePathTree(extendedThemes, { createVirtualNodes: false, sortBy: 'order' });
     }, [extendedThemes]);
 
     // 将“themeId 展开集合”映射到 “node.id（path）展开集合”，供 flattenThemePathTree 使用
@@ -145,6 +145,12 @@ export function ThemeMatrixView({ blocks, themes, overrides, settings, useCases,
         const override = overridesMap.get(`${theme.id}:${block.id}`) || null;
         setModalData({ block, theme, override });
         setModalOpen(true);
+    };
+
+
+    const handleReorderThemeSiblings = async (orderedThemeIds: string[], parentKey?: string) => {
+        if (!orderedThemeIds || orderedThemeIds.length === 0) return;
+        await useCases.theme.reorderThemeSiblings(orderedThemeIds, parentKey);
     };
 
     const handleBatchAction = (operation: BatchOperation) => {
@@ -225,6 +231,7 @@ export function ThemeMatrixView({ blocks, themes, overrides, settings, useCases,
                 onSelectionChange={handleSelectionChange}
                 onSelectAllThemes={(isSelected: boolean) => handleSelectAll(allThemeIds, isSelected)}
                 onSelectBlockColumn={(blockId: string, isSelected: boolean) => handleSelectBlockColumn(blockId, allThemeIds, isSelected)}
+                onReorderThemeSiblings={handleReorderThemeSiblings}
                 useCases={useCases}
             />
             </Box>

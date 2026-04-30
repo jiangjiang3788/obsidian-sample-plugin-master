@@ -8,6 +8,7 @@ import {
     TableBody,
     Typography,
 } from '@mui/material';
+import { useRef, useState } from 'preact/hooks';
 import { ThemeTreeNodeRow } from './ThemeTreeNodeRow';
 import type { EditorState } from './useThemeMatrixEditor';
 import type { BlockTemplate, ThemeDefinition, ThemeOverride } from '@core/public';
@@ -27,6 +28,7 @@ interface ThemeTableProps {
     onSelectionChange: (type: 'theme' | 'block', id: string, isSelected: boolean) => void;
     onSelectAllThemes: (isSelected: boolean) => void;
     onSelectBlockColumn: (blockId: string, isSelected: boolean) => void;
+    onReorderThemeSiblings: (orderedThemeIds: string[], parentKey?: string) => void | Promise<void>;
 }
 
 const AnyTable = Table as any;
@@ -39,6 +41,8 @@ const AnyTypography = Typography as any;
 const PATH_COL_WIDTH = 250;
 const STATUS_COL_WIDTH = 78;
 const BLOCK_COL_WIDTH = 58;
+
+type DropPosition = 'before' | 'after';
 
 function splitByRoot(nodes: ThemeTreeNode[]): ThemeTreeNode[][] {
     const groups: ThemeTreeNode[][] = [];
@@ -59,6 +63,27 @@ function splitByRoot(nodes: ThemeTreeNode[]): ThemeTreeNode[][] {
     return groups;
 }
 
+function getNodeParentKey(node: ThemeTreeNode): string {
+    return node.parentId ?? '__root__';
+}
+
+function canDropOnNode(dragged: ThemeTreeNode | null, target: ThemeTreeNode): boolean {
+    if (!dragged || !dragged.themeId || !target.themeId) return false;
+    if (dragged.themeId === target.themeId) return false;
+    return dragged.depth === target.depth && getNodeParentKey(dragged) === getNodeParentKey(target);
+}
+
+function reorderIds(ids: string[], draggedId: string, targetId: string, position: DropPosition): string[] {
+    const withoutDragged = ids.filter(id => id !== draggedId);
+    const targetIndex = withoutDragged.indexOf(targetId);
+    if (targetIndex < 0) return ids;
+
+    const insertIndex = position === 'after' ? targetIndex + 1 : targetIndex;
+    const next = [...withoutDragged];
+    next.splice(insertIndex, 0, draggedId);
+    return next;
+}
+
 export function ThemeTable({
     blocks,
     activeThemes,
@@ -72,10 +97,16 @@ export function ThemeTable({
     onSelectionChange,
     onSelectAllThemes,
     onSelectBlockColumn,
+    onReorderThemeSiblings,
 }: ThemeTableProps) {
     const isEditMode = editorState.mode === 'edit';
     const isThemeSelection = editorState.selectionType === 'theme';
     const isBlockSelection = editorState.selectionType === 'block';
+
+    const [draggedNode, setDraggedNode] = useState<ThemeTreeNode | null>(null);
+    const [dropTarget, setDropTarget] = useState<{ themeId: string; position: DropPosition } | null>(null);
+    const draggedNodeRef = useRef<ThemeTreeNode | null>(null);
+    const dropTargetRef = useRef<{ themeId: string; position: DropPosition } | null>(null);
 
     const allVisibleThemes = showArchived ? [...activeThemes, ...archivedThemes] : activeThemes;
     const allVisibleThemeIds = allVisibleThemes
@@ -88,6 +119,81 @@ export function ThemeTable({
     const areSomeThemesSelected = selectedVisibleThemeCount > 0 && selectedVisibleThemeCount < totalVisibleThemeCount;
 
     const activeGroups = splitByRoot(activeThemes);
+
+    const clearDragState = () => {
+        draggedNodeRef.current = null;
+        dropTargetRef.current = null;
+        setDraggedNode(null);
+        setDropTarget(null);
+    };
+
+    const handleDragStart = (node: ThemeTreeNode) => {
+        if (!node.themeId) return;
+        draggedNodeRef.current = node;
+        dropTargetRef.current = null;
+        setDraggedNode(node);
+        setDropTarget(null);
+    };
+
+    const handleDragOverRow = (node: ThemeTreeNode, event: DragEvent) => {
+        const currentDragged = draggedNodeRef.current;
+        if (!canDropOnNode(currentDragged, node)) {
+            if (dropTargetRef.current !== null) {
+                dropTargetRef.current = null;
+                setDropTarget(null);
+            }
+            return;
+        }
+
+        event.preventDefault();
+        if (event.dataTransfer) event.dataTransfer.dropEffect = 'move';
+
+        const row = event.currentTarget as HTMLElement | null;
+        const rect = row?.getBoundingClientRect();
+        const position: DropPosition = rect && event.clientY > rect.top + rect.height / 2 ? 'after' : 'before';
+        const nextTarget = { themeId: node.themeId!, position };
+        const prevTarget = dropTargetRef.current;
+
+        // dragover 高频触发。只有目标行或 before/after 真变化时才更新状态，避免子主题拖动卡顿。
+        if (!prevTarget || prevTarget.themeId !== nextTarget.themeId || prevTarget.position !== nextTarget.position) {
+            dropTargetRef.current = nextTarget;
+            setDropTarget(nextTarget);
+        }
+    };
+
+    const handleDropRow = async (node: ThemeTreeNode) => {
+        const currentDragged = draggedNodeRef.current;
+        const currentDropTarget = dropTargetRef.current;
+
+        if (!currentDragged?.themeId || !node.themeId || !currentDropTarget || currentDropTarget.themeId !== node.themeId) {
+            clearDragState();
+            return;
+        }
+
+        if (!canDropOnNode(currentDragged, node)) {
+            clearDragState();
+            return;
+        }
+
+        const parentKey = getNodeParentKey(node);
+        const siblings = allVisibleThemes.filter(candidate =>
+            candidate.themeId &&
+            candidate.depth === node.depth &&
+            getNodeParentKey(candidate) === parentKey
+        );
+        const siblingIds = siblings.map(candidate => candidate.themeId).filter((id): id is string => !!id);
+        const orderedIds = reorderIds(siblingIds, currentDragged.themeId, node.themeId, currentDropTarget.position);
+
+        clearDragState();
+
+        if (orderedIds.join('|') !== siblingIds.join('|')) {
+            await onReorderThemeSiblings(orderedIds, parentKey);
+        }
+    };
+
+    const handleDragEnd = () => {
+        clearDragState();
+    };
 
     const renderGroupRows = (group: ThemeTreeNode[], groupIndex: number) => {
         const rows: h.JSX.Element[] = [];
@@ -108,6 +214,7 @@ export function ThemeTable({
         }
 
         group.forEach((node, index) => {
+            const isDropTarget = !!dropTarget && dropTarget.themeId === node.themeId;
             rows.push(
                 <ThemeTreeNodeRow
                     key={node.id}
@@ -121,6 +228,14 @@ export function ThemeTable({
                     onSelectionChange={onSelectionChange}
                     groupNodes={group}
                     rowIndexInGroup={index}
+                    dragEnabled={!isEditMode}
+                    isDragging={!!draggedNode?.themeId && draggedNode.themeId === node.themeId}
+                    isDropTarget={isDropTarget}
+                    dropPosition={isDropTarget ? dropTarget!.position : null}
+                    onDragStartTheme={handleDragStart}
+                    onDragOverTheme={handleDragOverRow}
+                    onDropTheme={handleDropRow}
+                    onDragEndTheme={handleDragEnd}
                 />
             );
         });

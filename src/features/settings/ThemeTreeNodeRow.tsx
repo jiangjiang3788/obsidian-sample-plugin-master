@@ -30,6 +30,14 @@ interface ThemeTreeNodeRowProps {
     onSelectionChange: (type: 'theme' | 'block', id: string, isSelected: boolean) => void;
     groupNodes: ThemeTreeNode[];
     rowIndexInGroup: number;
+    dragEnabled?: boolean;
+    isDragging?: boolean;
+    isDropTarget?: boolean;
+    dropPosition?: 'before' | 'after' | null;
+    onDragStartTheme?: (node: ThemeTreeNode) => void;
+    onDragOverTheme?: (node: ThemeTreeNode, event: DragEvent) => void;
+    onDropTheme?: (node: ThemeTreeNode) => void;
+    onDragEndTheme?: () => void;
 }
 
 type CellKind = 'inherit' | 'override' | 'disabled' | 'active' | 'archived';
@@ -79,6 +87,14 @@ export function ThemeTreeNodeRow({
     onSelectionChange,
     groupNodes,
     rowIndexInGroup,
+    dragEnabled = true,
+    isDragging = false,
+    isDropTarget = false,
+    dropPosition = null,
+    onDragStartTheme,
+    onDragOverTheme,
+    onDropTheme,
+    onDragEndTheme,
 }: ThemeTreeNodeRowProps) {
     const theme = node.theme;
     if (!theme) return null;
@@ -129,9 +145,19 @@ export function ThemeTreeNodeRow({
 
     return (
         <AnyTableRow
+            onDragOver={(e: DragEvent) => onDragOverTheme?.(node, e)}
+            onDrop={() => onDropTheme?.(node)}
+            onDragEnd={() => onDragEndTheme?.()}
             sx={{
-                opacity: theme.status === 'inactive' ? 0.6 : 1,
+                opacity: isDragging ? 0.45 : (theme.status === 'inactive' ? 0.6 : 1),
                 backgroundColor: isThemeSelected ? 'action.selected' : 'transparent',
+                position: 'relative',
+                outline: isDropTarget ? '1px dashed rgba(122, 94, 230, 0.7)' : 'none',
+                boxShadow: isDropTarget && dropPosition === 'before'
+                    ? 'inset 0 3px 0 rgba(122, 94, 230, 0.95)'
+                    : isDropTarget && dropPosition === 'after'
+                        ? 'inset 0 -3px 0 rgba(122, 94, 230, 0.95)'
+                        : 'none',
             }}
         >
             <AnyTableCell sx={{ width: PATH_COL_WIDTH, px: 0.5, py: 0.25 }}>
@@ -155,6 +181,30 @@ export function ThemeTreeNodeRow({
                         placeholderWidthPx={22}
                     >
                         <AnyBox sx={{ flex: 1, display: 'flex', alignItems: 'center', gap: 0.75, minWidth: 0 }}>
+                            <span
+                                draggable={dragEnabled}
+                                title={dragEnabled ? '拖拽调整同级主题顺序' : '编辑模式下暂不拖拽排序'}
+                                onDragStart={(e: DragEvent) => {
+                                    if (!dragEnabled) return;
+                                    e.stopPropagation();
+                                    e.dataTransfer?.setData('text/plain', theme.id);
+                                    if (e.dataTransfer) e.dataTransfer.effectAllowed = 'move';
+                                    onDragStartTheme?.(node);
+                                }}
+                                onDragEnd={() => onDragEndTheme?.()}
+                                style={{
+                                    cursor: dragEnabled ? 'grab' : 'not-allowed',
+                                    color: 'var(--text-muted)',
+                                    fontSize: '14px',
+                                    lineHeight: 1,
+                                    userSelect: 'none',
+                                    opacity: dragEnabled ? 0.85 : 0.35,
+                                    padding: '0 2px',
+                                    flexShrink: 0,
+                                }}
+                            >
+                                ⋮⋮
+                            </span>
                             {isEditingIcon ? (
                                 <InlineEditor
                                     value={theme.icon || ''}

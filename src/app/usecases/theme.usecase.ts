@@ -53,6 +53,7 @@ import { devError } from '@core/public';
  * - addTheme: 添加主题
  * - updateTheme: 更新主题
  * - deleteTheme: 删除主题
+ * - reorderThemeSiblings: 调整同级主题顺序
  * - batchUpdateThemes: 批量更新主题
  * - batchDeleteThemes: 批量删除主题
  * - batchUpdateThemeStatus: 批量更新主题状态
@@ -130,6 +131,27 @@ export class ThemeUseCase {
             await state.deleteTheme(id);
         } catch (error) {
             devError('[ThemeUseCase] deleteTheme 失败:', error);
+            throw error;
+        }
+    }
+
+
+    /**
+     * 调整同级主题顺序
+     * @param orderedThemeIds 调整后的同级主题 ID 顺序
+     */
+    async reorderThemeSiblings(orderedThemeIds: string[], parentKey?: string): Promise<void> {
+        try {
+            const state = this.store.getState();
+
+            if (!state.isInitialized) {
+                devError('[ThemeUseCase] Store 未初始化');
+                return;
+            }
+
+            await state.reorderThemeSiblings(orderedThemeIds, parentKey);
+        } catch (error) {
+            devError('[ThemeUseCase] reorderThemeSiblings 失败:', error);
             throw error;
         }
     }

@@ -709,227 +709,272 @@
       {
         "id": "thm_mejsim4o4c2mw",
         "path": "思考",
-        "icon": "🧠"
+        "icon": "🧠",
+        "order": 0
       },
       {
         "id": "thm_mejswaiozga40",
         "path": "思考/时间整理",
-        "icon": "🧠"
+        "icon": "🧠",
+        "order": 9
       },
       {
         "id": "thm_mejswh9v0jpsi",
         "path": "思考/复盘整理",
-        "icon": "🧠"
+        "icon": "🧠",
+        "order": 8
       },
       {
         "id": "thm_mejswmjkpyrzg",
         "path": "思考/思路整理",
-        "icon": "🧠"
+        "icon": "🧠",
+        "order": 10
       },
       {
         "id": "thm_mejsl0rd9ggip",
         "path": "思考/读书",
-        "icon": "📚"
+        "icon": "📚",
+        "order": 7
       },
       {
         "id": "thm_mejsj5pzfonlh",
         "path": "思考/自我",
-        "icon": "🐈"
+        "icon": "🐈",
+        "order": 0
       },
       {
         "id": "thm_mejsjh81u5lyz",
         "path": "思考/垚垚",
-        "icon": "👶"
+        "icon": "👶",
+        "order": 1
       },
       {
         "id": "thm_mejsjpvsuflrj",
         "path": "思考/阳阳",
-        "icon": "👨"
+        "icon": "👨",
+        "order": 2
       },
       {
         "id": "thm_mejsk4s9spuik",
         "path": "思考/婆婆",
-        "icon": "🧓"
+        "icon": "🧓",
+        "order": 3
       },
       {
         "id": "thm_mejskaj1enucn",
         "path": "思考/芦苇",
-        "icon": "🔆"
+        "icon": "🔆",
+        "order": 5
       },
       {
         "id": "thm_mejskeoadmnaj",
         "path": "思考/家庭",
-        "icon": "👪"
+        "icon": "👪",
+        "order": 4
       },
       {
         "id": "thm_mejsl7i17il4q",
         "path": "生活",
-        "icon": "✨"
+        "icon": "✨",
+        "order": 2
       },
       {
         "id": "thm_mg1ytgzlrkbv8",
         "path": "生活/高级生活",
-        "icon": "🔆"
+        "icon": "🔆",
+        "order": 2
       },
       {
         "id": "thm_mejslgmvm2yym",
         "path": "生活/娱乐",
-        "icon": "📺"
+        "icon": "📺",
+        "order": 1
       },
       {
         "id": "thm_mejsmps6gropq",
         "path": "生活/垚垚",
-        "icon": "👶"
+        "icon": "👶",
+        "order": 4
       },
       {
         "id": "thm_mejsn748ryfip",
         "path": "生活/家务",
-        "icon": "🧹"
+        "icon": "🧹",
+        "order": 3
       },
       {
         "id": "thm_mejsnf4dp61nq",
         "path": "生活/整理",
-        "icon": "📦"
+        "icon": "📦",
+        "order": 5
       },
       {
         "id": "thm_mejsmcngeij2y",
         "path": "生活/车车",
-        "icon": "🚗"
+        "icon": "🚗",
+        "order": 0
       },
       {
         "id": "thm_mejsnu4ekns46",
         "path": "健康",
-        "icon": "💤"
+        "icon": "💤",
+        "order": 1
       },
       {
         "id": "thm_mejso10pwthbr",
         "path": "健康/卫生",
-        "icon": "🛁"
+        "icon": "🛁",
+        "order": 8
       },
       {
         "id": "thm_mejso80owbe8a",
         "path": "健康/睡眠",
-        "icon": "💤"
+        "icon": "💤",
+        "order": 4
       },
       {
         "id": "thm_mejsosvgm4lcp",
         "path": "健康/身体",
-        "icon": "🔋"
+        "icon": "🔋",
+        "order": 5
       },
       {
         "id": "thm_mejsoxh023r2m",
         "path": "健康/习惯",
-        "icon": "🥛"
+        "icon": "🥛",
+        "order": 9
       },
       {
         "id": "thm_mejsp0lukfkh0",
         "path": "健康/运动",
-        "icon": "💪"
+        "icon": "💪",
+        "order": 7
       },
       {
         "id": "thm_mejspgfly30j8",
         "path": "健康/粑粑",
-        "icon": "💩"
+        "icon": "💩",
+        "order": 6
       },
       {
         "id": "thm_mejspn5ocowew",
         "path": "健康/早餐",
-        "icon": "🥚"
+        "icon": "🥚",
+        "order": 0
       },
       {
         "id": "thm_mejspwp4h6de9",
         "path": "健康/午餐",
-        "icon": "🍱"
+        "icon": "🍱",
+        "order": 1
       },
       {
         "id": "thm_mejst90wwyoyn",
         "path": "健康/晚餐",
-        "icon": "🥣"
+        "icon": "🥣",
+        "order": 2
       },
       {
         "id": "thm_mejstnaohdg8t",
         "path": "健康/心情",
-        "icon": "😄"
+        "icon": "😄",
+        "order": 3
       },
       {
         "id": "thm_mewzwlmjw8b7r",
         "path": "健康/姨妈",
-        "icon": "🩸"
+        "icon": "🩸",
+        "order": 10
       },
       {
         "id": "thm_mewzx8x1h4g1r",
         "path": "健康/剪头发",
-        "icon": "✂"
+        "icon": "✂",
+        "order": 11
       },
       {
         "id": "thm_mewzx1twrayjd",
         "path": "健康/剪指甲",
-        "icon": "✋"
+        "icon": "✋",
+        "order": 12
       },
       {
         "id": "thm_mejstzgoiocwm",
         "path": "电脑",
-        "icon": "🖥"
+        "icon": "🖥",
+        "order": 3
       },
       {
         "id": "thm_mejsuv5sylsi0",
         "path": "电脑/ob基础",
-        "icon": "🎚"
+        "icon": "🎚",
+        "order": 0
       },
       {
         "id": "thm_mejsvgb4hlukj",
         "path": "电脑/笔记系统",
-        "icon": "📕"
+        "icon": "📕",
+        "order": 2
       },
       {
         "id": "thm_mejsvlfjaerh5",
         "path": "电脑/记录系统",
-        "icon": "🎴"
+        "icon": "🎴",
+        "order": 3
       },
       {
         "id": "thm_mejsvz19l0804",
         "path": "电脑/整理",
-        "icon": "✒"
+        "icon": "✒",
+        "order": 1
       },
       {
         "id": "thm_mejsx2qu3g8fi",
         "path": "工作",
-        "icon": "🖥"
+        "icon": "🖥",
+        "order": 4
       },
       {
         "id": "thm_mejsxbyuursnz",
         "path": "工作/设计",
-        "icon": "🖥"
+        "icon": "🖥",
+        "order": 2
       },
       {
         "id": "thm_mejsxl0soxhxz",
         "path": "工作/投标",
-        "icon": "🎟"
+        "icon": "🎟",
+        "order": 3
       },
       {
         "id": "thm_mejsxtufpvqd3",
         "path": "工作/手续、对账",
-        "icon": "📋"
+        "icon": "📋",
+        "order": 4
       },
       {
         "id": "thm_mejsy9nvsnd0q",
         "path": "工作/其他",
-        "icon": "📋"
+        "icon": "📋",
+        "order": 5
       },
       {
         "id": "thm_mejsye15uvbzi",
         "path": "工作/老板任务",
-        "icon": "💥"
+        "icon": "💥",
+        "order": 1
       },
       {
         "id": "thm_mfj17uymay4u6",
         "path": "工作/通勤",
-        "icon": "🛵"
+        "icon": "🛵",
+        "order": 0
       },
       {
         "path": "思考/专注",
         "icon": "",
-        "id": "thm_mi2zaftrvxtv2"
+        "id": "thm_mi2zaftrvxtv2",
+        "order": 6
       }
     ],
     "overrides": [

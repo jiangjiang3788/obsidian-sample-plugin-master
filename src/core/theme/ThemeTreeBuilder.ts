@@ -41,8 +41,8 @@ export interface FlatThemeTreeNode extends ThemeTreeNode {
  * 构建选项
  */
 export interface BuildThemeTreeOptions {
-    /** 排序方式：'path' | 'label'，默认 'path' */
-    sortBy?: 'path' | 'label';
+    /** 排序方式：'path' | 'label' | 'order'，默认 'path' */
+    sortBy?: 'path' | 'label' | 'order';
     /** 是否创建虚节点（中间层节点），默认 true */
     createVirtualNodes?: boolean;
 }
@@ -88,6 +88,25 @@ export class ThemeTreeBuilder {
         if (!themes || themes.length === 0) {
             return [];
         }
+
+        const getOrder = (node: ThemeTreeNode): number | null => {
+            const raw = node.theme?.order;
+            return typeof raw === 'number' && Number.isFinite(raw) ? raw : null;
+        };
+
+        const compareNodes = (a: ThemeTreeNode, b: ThemeTreeNode): number => {
+            if (sortBy === 'label') {
+                return a.label.localeCompare(b.label);
+            }
+            if (sortBy === 'order') {
+                const ao = getOrder(a);
+                const bo = getOrder(b);
+                if (ao !== null && bo !== null && ao !== bo) return ao - bo;
+                if (ao !== null && bo === null) return -1;
+                if (ao === null && bo !== null) return 1;
+            }
+            return a.path.localeCompare(b.path);
+        };
 
         // Branch A: create virtual nodes (default) - keep existing behavior
         if (createVirtualNodes) {
@@ -146,12 +165,7 @@ export class ThemeTreeBuilder {
 
             // 排序子节点
             const sortNodes = (nodes: ThemeTreeNode[]): void => {
-                nodes.sort((a, b) => {
-                    if (sortBy === 'label') {
-                        return a.label.localeCompare(b.label);
-                    }
-                    return a.path.localeCompare(b.path);
-                });
+                nodes.sort(compareNodes);
                 nodes.forEach(node => sortNodes(node.children));
             };
             sortNodes(roots);
@@ -234,12 +248,7 @@ export class ThemeTreeBuilder {
 
         // Sort children
         const sortNodes = (nodes: ThemeTreeNode[]): void => {
-            nodes.sort((a, b) => {
-                if (sortBy === 'label') {
-                    return a.label.localeCompare(b.label);
-                }
-                return a.path.localeCompare(b.path);
-            });
+            nodes.sort(compareNodes);
             nodes.forEach(node => sortNodes(node.children));
         };
         sortNodes(roots);

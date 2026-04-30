@@ -84,6 +84,8 @@ export interface ThemeDefinition {
     id: string;
     path: string;
     icon?: string;
+    /** 同级主题排序值；未设置时按路径回退排序，兼容旧数据。 */
+    order?: number;
     /** UI-only state; persisted as part of InputSettings for theme matrix. */
     status?: 'active' | 'inactive';
 }

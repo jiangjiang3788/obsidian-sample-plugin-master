@@ -25,6 +25,33 @@ import type { ActiveStatus } from '@core/public';
 import {generateId, devWarn, devError} from '@core/public';
 import { createSliceMeta } from '@core/public';
 
+
+function normalizeThemePath(path: string): string {
+    return path.split('/').map(part => part.trim()).filter(Boolean).join('/');
+}
+
+function getNearestParentPath(path: string, themes: ThemeDefinition[]): string | null {
+    const parts = normalizeThemePath(path).split('/');
+    if (parts.length <= 1) return null;
+
+    const themePaths = new Set(themes.map(t => normalizeThemePath(t.path)));
+    for (let i = parts.length - 1; i >= 1; i--) {
+        const candidate = parts.slice(0, i).join('/');
+        if (themePaths.has(candidate)) return candidate;
+    }
+    return null;
+}
+
+function getSiblingOrderForNewTheme(path: string, themes: ThemeDefinition[]): number {
+    const normalizedPath = normalizeThemePath(path);
+    const parentPath = getNearestParentPath(normalizedPath, themes);
+    const siblingOrders = themes
+        .filter(t => getNearestParentPath(t.path, themes) === parentPath)
+        .map(t => typeof t.order === 'number' && Number.isFinite(t.order) ? t.order : -1);
+    const maxOrder = siblingOrders.length > 0 ? Math.max(...siblingOrders) : -1;
+    return maxOrder + 1;
+}
+
 // ============== 类型定义 ==============
 
 export interface ThemeSliceState {
@@ -39,6 +66,7 @@ export interface ThemeSliceActions {
     addTheme: (path: string) => Promise<ThemeDefinition | null>;
     updateTheme: (id: string, updates: Partial<ThemeDefinition>) => Promise<void>;
     deleteTheme: (id: string) => Promise<void>;
+    reorderThemeSiblings: (orderedThemeIds: string[], parentKey?: string) => Promise<void>;
     
     // Theme 批量操作
     batchUpdateThemes: (themeIds: string[], updates: Partial<ThemeDefinition>) => Promise<void>;
@@ -109,10 +137,12 @@ export function createThemeSlice(
             set({ themeLoading: true, themeError: null });
 
             try {
+                const normalizedPath = normalizeThemePath(path);
                 const newTheme: ThemeDefinition = {
                     id: generateId('thm'),
-                    path,
-                    icon: ''
+                    path: normalizedPath,
+                    icon: '',
+                    order: getSiblingOrderForNewTheme(normalizedPath, existingThemes)
                 };
 
                 // S1: 传入 ActionMeta 用于 dev 日志
@@ -189,6 +219,41 @@ export function createThemeSlice(
             } catch (error: any) {
                 devError('[ThemeSlice] deleteTheme 失败:', error);
                 set({ themeError: error.message || '删除主题失败', themeLoading: false });
+            }
+        },
+
+        reorderThemeSiblings: async (orderedThemeIds: string[], parentKey?: string): Promise<void> => {
+            const state = get();
+            if (!state.isInitialized) {
+                devError('[ThemeSlice] Store 未初始化');
+                return;
+            }
+
+            if (!orderedThemeIds || orderedThemeIds.length === 0) return;
+
+            set({ themeLoading: true, themeError: null });
+
+            try {
+                const orderMap = new Map<string, number>();
+                orderedThemeIds.forEach((id, index) => orderMap.set(id, index));
+
+                await settingsRepository.update(draft => {
+                    const themes = draft.inputSettings.themes || [];
+
+                    // 关键修复：拖拽根主题时也必须持久化。这里不再依赖 UI 的树节点，
+                    // 而是直接按提交的 ID 顺序写入 settings.inputSettings.themes[*].order。
+                    themes.forEach(theme => {
+                        const nextOrder = orderMap.get(theme.id);
+                        if (typeof nextOrder === 'number') {
+                            theme.order = nextOrder;
+                        }
+                    });
+                }, createSliceMeta('theme.reorderThemeSiblings'));
+
+                set({ themeLoading: false });
+            } catch (error: any) {
+                devError('[ThemeSlice] reorderThemeSiblings 失败:', { error, orderedThemeIds, parentKey });
+                set({ themeError: error.message || '主题排序失败', themeLoading: false });
             }
         },
 
