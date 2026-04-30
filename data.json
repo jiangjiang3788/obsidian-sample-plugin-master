@@ -937,7 +937,7 @@
       {
         "id": "thm_mejsxbyuursnz",
         "path": "工作/设计",
-        "icon": "🖥",
+        "icon": "工作/设计",
         "order": 2
       },
       {
@@ -961,7 +961,7 @@
       {
         "id": "thm_mejsye15uvbzi",
         "path": "工作/老板任务",
-        "icon": "💥",
+        "icon": "工作/老板任务",
         "order": 1
       },
       {
@@ -971,10 +971,10 @@
         "order": 0
       },
       {
-        "path": "思考/专注",
-        "icon": "",
-        "id": "thm_mi2zaftrvxtv2",
-        "order": 6
+        "id": "thm_mol8cfbu50qxra7",
+        "path": "升级",
+        "icon": "📁",
+        "order": 5
       }
     ],
     "overrides": [

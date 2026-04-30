@@ -141,7 +141,7 @@ export function createThemeSlice(
                 const newTheme: ThemeDefinition = {
                     id: generateId('thm'),
                     path: normalizedPath,
-                    icon: '',
+                    icon: '📁',
                     order: getSiblingOrderForNewTheme(normalizedPath, existingThemes)
                 };
 

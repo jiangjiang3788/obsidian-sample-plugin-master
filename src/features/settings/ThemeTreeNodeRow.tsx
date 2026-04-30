@@ -216,7 +216,7 @@ export function ThemeTreeNodeRow({
                             ) : (
                                 <AnyTypography
                                     sx={{ cursor: 'text', width: '20px', textAlign: 'center', flexShrink: 0 }}
-                                    onDoubleClick={() => setIsEditingIcon(true)}
+                                    onClick={() => setIsEditingIcon(true)}
                                 >
                                     {theme.icon || ' '}
                                 </AnyTypography>
