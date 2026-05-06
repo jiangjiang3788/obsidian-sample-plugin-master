@@ -84,7 +84,36 @@ export interface FloatingPanelProps {
 
     /** 兜底 zIndex（通常不需要传，交给 Zustand 管理） */
     zIndex?: number;
+
+    /**
+     * 是否使用 Portal 挂到 document.body。
+     * 默认 true，适合普通悬浮窗。
+     * 在 Obsidian 设置页内编辑输入框时，body portal 可能被设置页/Tabs 的焦点管理当作“外部区域”，
+     * 导致 input focusin 后立刻 focusout 并把焦点还给 settings tab。
+     * 这种场景传 false，让 fixed 面板仍然显示为悬浮窗，但 DOM 留在当前设置页焦点作用域内。
+     */
+    portal?: boolean;
+
+    /** 自定义 Portal 容器；仅 portal=true 时有效。 */
+    portalContainer?: Element | null;
+
+    /**
+     * 布局模式。
+     * - floating: fixed 定位、可拖拽，可作为真正悬浮窗。
+     * - inline: 作为设置页内部面板渲染，宽度跟随父容器，不拖拽、不使用 fixed。
+     *
+     * 主题模板编辑器应使用 inline，避免 body portal/fixed 面板和 Obsidian Settings/Tabs 焦点管理冲突，
+     * 也避免手机端超出设置页宽高。
+     */
+    placement?: 'floating' | 'inline';
 }
+
+const isMobile = (): boolean => {
+    if (typeof window === 'undefined') return false;
+    return /Android|iPhone|iPad|iPod|Mobile/i.test(window.navigator.userAgent)
+        || (window.matchMedia?.('(pointer: coarse)').matches ?? false)
+        || window.innerWidth <= 820;
+};
 
 export function FloatingPanel({
     id,
@@ -107,7 +136,13 @@ export function FloatingPanel({
     closeOnOutsideClick = true,
     closeOnEscape = true,
     zIndex = 9999,
+    portal = true,
+    portalContainer,
+    placement = 'floating',
 }: FloatingPanelProps) {
+    const mobile = useMemo(() => isMobile(), []);
+    const inline = placement === 'inline';
+
     const register = useSelector(selectFloatingWindowsRegister);
     const unregister = useSelector(selectFloatingWindowsUnregister);
     const focus = useSelector(selectFloatingWindowsFocus);
@@ -115,11 +150,19 @@ export function FloatingPanel({
     const managedZIndex = useSelector(makeSelectFloatingWindowZIndex(id));
     const effectiveZIndex = managedZIndex ?? zIndex;
 
+    const mobileDefaultPosition = useMemo(() => ({
+        x: 8,
+        y: Math.max(8, window.innerHeight / 2 - 250),
+    }), []);
+
     const positionStorageKey = `think-floating-pos-${id}`;
     const sizeStorageKey = `think-floating-size-${id}`;
 
-    const [storedPosition, setStoredPosition] = useLocalStorage(positionStorageKey, defaultPosition);
-    const [position, setPosition] = useState<{ x: number; y: number }>(storedPosition || defaultPosition);
+    const [storedPosition, setStoredPosition] = useLocalStorage(positionStorageKey, mobile ? mobileDefaultPosition : defaultPosition);
+    const [position, setPosition] = useState<{ x: number; y: number }>(() => {
+        if (mobile) return mobileDefaultPosition;
+        return storedPosition || defaultPosition;
+    });
 
     const initialSize = useMemo<PanelSize>(() => ({
         width: typeof width === 'number' ? width : undefined,
@@ -138,17 +181,19 @@ export function FloatingPanel({
     });
     const rootRef = useRef<HTMLDivElement | null>(null);
 
-    const minWidthPx = getNumericConstraint(minWidth, 320) ?? 320;
+    const mobileMinWidthPx = mobile ? (window.innerWidth - 16) : undefined;
+    const minWidthPx = mobileMinWidthPx ?? getNumericConstraint(minWidth, 320) ?? 320;
     const minHeightPx = getNumericConstraint(minHeight, 160) ?? 160;
-    const maxWidthPx = getNumericConstraint(maxWidth, window.innerWidth - 16);
-    const maxHeightPx = getNumericConstraint(maxHeight, window.innerHeight - 16);
+    const maxWidthPx = mobile ? (window.innerWidth - 16) : (getNumericConstraint(maxWidth, window.innerWidth - 16) ?? window.innerWidth - 16);
+    const maxHeightPx = getNumericConstraint(maxHeight, window.innerHeight - 16) ?? window.innerHeight - 16;
 
     const getEffectiveWidth = useCallback(() => {
+        if (mobile) return window.innerWidth - 16;
         if (typeof size.width === 'number') return size.width;
         if (typeof width === 'number') return width;
         if (typeof minWidth === 'number') return minWidth;
         return 320;
-    }, [size.width, width, minWidth]);
+    }, [mobile, size.width, width, minWidth]);
 
     const getEffectiveHeight = useCallback(() => {
         if (typeof size.height === 'number') return size.height;
@@ -173,12 +218,12 @@ export function FloatingPanel({
         const currentWidth = typeof panelSize?.width === 'number' ? panelSize.width : getEffectiveWidth();
         const currentHeight = typeof panelSize?.height === 'number' ? panelSize.height : getEffectiveHeight();
         const maxX = Math.max(0, window.innerWidth - currentWidth);
-        const maxY = Math.max(0, window.innerHeight - Math.min(currentHeight, window.innerHeight - 16));
+        const maxY = Math.max(0, window.innerHeight - Math.min(currentHeight, window.innerHeight - 32));
         return {
-            x: Math.min(Math.max(0, pos.x), maxX),
-            y: Math.min(Math.max(0, pos.y), maxY),
+            x: Math.min(Math.max(mobile ? 8 : 0, pos.x), maxX),
+            y: Math.min(Math.max(mobile ? 8 : 0, pos.y), maxY),
         };
-    }, [getEffectiveWidth, getEffectiveHeight]);
+    }, [getEffectiveWidth, getEffectiveHeight, mobile]);
 
     useEffect(() => {
         if (!visible) {
@@ -275,6 +320,7 @@ export function FloatingPanel({
     }, [onDragMove]);
 
     const onDragStart = useCallback((e: MouseEvent | TouchEvent) => {
+        if (inline) return;
         const coords = getEventCoords(e);
         if (!coords) return;
         focus(id);
@@ -283,7 +329,7 @@ export function FloatingPanel({
         window.addEventListener('mouseup', onDragEnd as any);
         window.addEventListener('touchmove', onDragMove as any, { passive: false } as any);
         window.addEventListener('touchend', onDragEnd as any);
-    }, [id, focus, position, onDragMove, onDragEnd]);
+    }, [inline, id, focus, position, onDragMove, onDragEnd]);
 
     const onResizeMove = useCallback((e: MouseEvent | TouchEvent) => {
         e.preventDefault();
@@ -338,37 +384,63 @@ export function FloatingPanel({
 
     if (!visible) return null;
 
-    const paperStyle: JSX.CSSProperties = {
-        position: 'fixed',
-        left: `${position.x}px`,
-        top: `${position.y}px`,
-        zIndex: effectiveZIndex,
-        minWidth: toCssSize(minWidth),
-        maxWidth: toCssSize(maxWidth),
+    if (typeof console !== 'undefined') {
+        console.log('[FloatingPanel][portal-mode]', { id, portal, placement, portalTarget: portal ? (portalContainer ? 'custom' : 'document.body') : 'inline' });
+    }
+
+    const paperStyle: JSX.CSSProperties = inline ? {
+        position: 'relative',
+        left: undefined,
+        top: undefined,
+        zIndex: undefined,
+        minWidth: 0,
+        maxWidth: '100%',
         minHeight: toCssSize(minHeight),
         maxHeight: toCssSize(maxHeight),
-        width: toCssSize(size.width ?? width),
-        height: toCssSize(size.height ?? height),
-        userSelect: 'none',
+        width: '100%',
+        height: toCssSize(height),
+        userSelect: 'text',
         display: 'flex',
         flexDirection: 'column',
         overflow: 'hidden',
         boxSizing: 'border-box',
+        margin: '8px 0',
+    } : {
+        position: 'fixed',
+        left: mobile ? '8px' : `${position.x}px`,
+        top: `${position.y}px`,
+        zIndex: effectiveZIndex,
+        minWidth: mobile ? `${window.innerWidth - 16}px` : toCssSize(minWidth),
+        maxWidth: mobile ? '100vw' : toCssSize(maxWidth),
+        minHeight: toCssSize(minHeight),
+        maxHeight: mobile ? `calc(100vh - env(safe-area-inset-bottom, 16px))` : toCssSize(maxHeight),
+        width: mobile ? `${window.innerWidth - 16}px` : toCssSize(size.width ?? width),
+        height: toCssSize(size.height ?? height),
+        // 不要在整个悬浮窗上禁用文本选择，否则输入框/textarea 在 Obsidian + Preact/MUI 下可能出现能聚焦但无法正常编辑/选择的问题。
+        // 只在标题拖拽区禁用选择，正文区域允许文本输入和选择。
+        userSelect: 'text',
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
+        boxSizing: 'border-box',
+        paddingBottom: mobile ? 'env(safe-area-inset-bottom, 8px)' : undefined,
     };
 
     const bodyMergedStyle: JSX.CSSProperties = {
-        padding: bodyPadding,
+        padding: mobile ? 12 : bodyPadding,
         flex: 1,
         minHeight: 0,
         minWidth: 0,
         overflow: 'auto',
         boxSizing: 'border-box',
+        WebkitOverflowScrolling: 'touch',
+        userSelect: 'text',
         ...bodyStyle,
     };
 
     const resizeHandleBase: JSX.CSSProperties = {
         position: 'absolute',
-        zIndex: effectiveZIndex + 1,
+        zIndex: 1,
     };
 
     const panel = (
@@ -384,7 +456,7 @@ export function FloatingPanel({
                         style={{
                             display: 'flex',
                             alignItems: 'center',
-                            padding: '6px 8px',
+                            padding: mobile ? '10px 12px' : '6px 8px',
                             borderBottom: '1px solid var(--background-modifier-border)',
                             gap: 8,
                             flexShrink: 0,
@@ -398,14 +470,16 @@ export function FloatingPanel({
                                 display: 'flex',
                                 alignItems: 'center',
                                 gap: 8,
-                                cursor: 'move',
+                                cursor: inline ? 'default' : 'move',
+                                userSelect: 'none',
                                 flex: 1,
                                 minWidth: 0,
+                                minHeight: mobile ? '44px' : undefined,
                             }}
                         >
-                            <div style={{ display: 'inline-flex', alignItems: 'center' }}>
-                                <DragIndicatorIcon sx={{ color: 'text.disabled', fontSize: '1.2rem' }} />
-                            </div>
+                            {!inline && <div style={{ display: 'inline-flex', alignItems: 'center', padding: mobile ? '4px' : undefined }}>
+                                <DragIndicatorIcon sx={{ color: 'text.disabled', fontSize: mobile ? '1.4rem' : '1.2rem' }} />
+                            </div>}
                             {title && (
                                 <div
                                     style={{
@@ -414,6 +488,7 @@ export function FloatingPanel({
                                         textOverflow: 'ellipsis',
                                         whiteSpace: 'nowrap',
                                         fontWeight: 600,
+                                        fontSize: mobile ? '0.95rem' : undefined,
                                     }}
                                 >
                                     {title}
@@ -421,7 +496,7 @@ export function FloatingPanel({
                             )}
                         </div>
 
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexShrink: 0 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: mobile ? 8 : 4, flexShrink: 0 }}>
                             {headerActions}
                             {onClose && (
                                 <button
@@ -429,7 +504,16 @@ export function FloatingPanel({
                                         e.stopPropagation();
                                         onClose();
                                     }}
-                                    style={{ background: 'transparent', border: 'none', cursor: 'pointer', fontSize: 18, lineHeight: 1 }}
+                                    style={{
+                                        background: 'transparent',
+                                        border: 'none',
+                                        cursor: 'pointer',
+                                        fontSize: mobile ? 24 : 18,
+                                        lineHeight: 1,
+                                        padding: mobile ? '4px 8px' : undefined,
+                                        minWidth: mobile ? '44px' : undefined,
+                                        minHeight: mobile ? '44px' : undefined,
+                                    }}
                                     aria-label="Close"
                                 >
                                     ×
@@ -441,7 +525,7 @@ export function FloatingPanel({
 
                 <div style={bodyMergedStyle}>{children}</div>
 
-                {resizable && (
+                {resizable && !mobile && !inline && (
                     <>
                         <div
                             onMouseDown={onResizeStart('right') as any}
@@ -482,11 +566,38 @@ export function FloatingPanel({
                         />
                     </>
                 )}
+                {resizable && mobile && !inline && (
+                    <div
+                        onMouseDown={onResizeStart('bottom') as any}
+                        onTouchStart={onResizeStart('bottom') as any}
+                        style={{
+                            ...resizeHandleBase,
+                            left: 0,
+                            bottom: 0,
+                            width: '100%',
+                            height: '24px',
+                            cursor: 'ns-resize',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                        }}
+                    >
+                        <div style={{
+                            width: '36px',
+                            height: '4px',
+                            borderRadius: '2px',
+                            background: 'var(--text-faint)',
+                            opacity: 0.5,
+                        }} />
+                    </div>
+                )}
             </Paper>
         </div>
     );
 
-    return createPortal(panel, document.body);
+    if (!portal) return panel;
+
+    return createPortal(panel, portalContainer || document.body);
 }
 
 export default FloatingPanel;

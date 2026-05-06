@@ -379,19 +379,27 @@ export function createThemeSlice(
                         o => o.blockId === overrideData.blockId && o.themeId === overrideData.themeId
                     ) ?? -1;
 
+                    if (!draft.inputSettings.overrides) {
+                        draft.inputSettings.overrides = [];
+                    }
+
                     if (existingIndex > -1) {
-                        Object.assign(draft.inputSettings.overrides![existingIndex], overrideData);
-                        resultOverride = draft.inputSettings.overrides![existingIndex];
+                        // 不要把 Immer draft proxy 泄漏到 update 回调外部。
+                        // 之前 resultOverride = draft.inputSettings.overrides![existingIndex]
+                        // 会把已 revoke 的 draft proxy 返回给 UI，保存后读取/打印时可能异常。
+                        const updatedOverride: ThemeOverride = {
+                            ...draft.inputSettings.overrides[existingIndex],
+                            ...overrideData,
+                        } as ThemeOverride;
+                        draft.inputSettings.overrides[existingIndex] = updatedOverride;
+                        resultOverride = JSON.parse(JSON.stringify(updatedOverride));
                     } else {
                         const newOverride: ThemeOverride = {
                             ...overrideData,
                             id: generateId('ovr')
                         } as ThemeOverride;
-                        if (!draft.inputSettings.overrides) {
-                            draft.inputSettings.overrides = [];
-                        }
                         draft.inputSettings.overrides.push(newOverride);
-                        resultOverride = newOverride;
+                        resultOverride = JSON.parse(JSON.stringify(newOverride));
                     }
                 }, createSliceMeta('theme.upsertOverride'));
                 // S2: settings 由 ServiceManager 订阅 SettingsRepository 统一更新

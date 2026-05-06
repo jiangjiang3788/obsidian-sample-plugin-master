@@ -937,7 +937,7 @@
       {
         "id": "thm_mejsxbyuursnz",
         "path": "工作/设计",
-        "icon": "工作/设计",
+        "icon": "44/设计",
         "order": 2
       },
       {
@@ -961,7 +961,7 @@
       {
         "id": "thm_mejsye15uvbzi",
         "path": "工作/老板任务",
-        "icon": "工作/老板任务",
+        "icon": "1",
         "order": 1
       },
       {
@@ -5810,12 +5810,12 @@
               },
               {
                 "value": "🔁 every year",
-                "label": "每月"
+                "label": "每月222"
               }
             ]
           }
         ],
-        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{theme}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态}} {{日期}}\n\n",
+        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{theme}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态}} {{日期}}ff\n\n",
         "targetFile": "01/2-6工作.md",
         "appendUnderHeader": "## {{theme}}",
         "disabled": false
@@ -6530,7 +6530,7 @@
             "type": "radio",
             "options": [
               {
-                "value": "- [x]",
+                "value": "",
                 "label": "✅",
                 "extraValues": {}
               },
@@ -6549,13 +6549,14 @@
             "key": "任务内容",
             "label": "任务内容",
             "type": "textarea",
-            "defaultValue": "生活"
+            "defaultValue": "生活11"
           },
           {
             "id": "field_mewk9zrg",
-            "key": "日期",
-            "label": "日期",
-            "type": "date"
+            "key": "44",
+            "label": "44",
+            "type": "date",
+            "defaultValue": ""
           },
           {
             "id": "field_mekymbeq",
@@ -6595,7 +6596,7 @@
               },
               {
                 "value": "🔁 every year",
-                "label": "每月"
+                "label": "每月77"
               }
             ]
           }
@@ -6603,7 +6604,8 @@
         "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{theme}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态}} {{日期}}\n\n",
         "targetFile": "01/2-3生活.md",
         "appendUnderHeader": "## {{theme}}",
-        "id": "ovr_mfhzy0ykf8a08"
+        "id": "ovr_mfhzy0ykf8a08",
+        "disabled": false
       },
       {
         "blockId": "blk_meic1my6m62iu",
