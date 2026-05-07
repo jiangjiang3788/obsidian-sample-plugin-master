@@ -4,21 +4,31 @@ import type { Item } from './schema';
  * 计划第 5 步：把“保存位置 / 输出结果”前置成显式的 OutputPlan，
  * 让编辑阶段也能知道当前模板+主题+字段会写到哪里。
  */
+export interface ThemePathParts {
+  /** 完整路径主题，例如：学习/英语/听力。 */
+  themePath: string | null;
+  /** 根主题，例如：学习。 */
+  rootTheme: string | null;
+  /** 叶主题，例如：听力。 */
+  leafTheme: string | null;
+}
+
 export interface RecordOutputPlan {
   targetFilePath: string | null;
   targetHeader: string | null;
   outputContent: string;
   renderData: Record<string, unknown>;
+  themeParts: ThemePathParts;
 }
 
 export interface RecordPersistencePlan {
   originalPath: string | null;
   pathChanged: boolean;
   /**
-   * 计划第 6.5 步：当编辑导致目标文件变化时，
-   * 进入安全迁移保存（先写新位置，再删旧位置）。
+   * 安全 MVP：编辑导致目标文件变化时先阻止保存，
+   * 不在测试不足时自动迁移，避免新旧位置同时出现或误删旧记录。
    */
-  writeMode: 'create' | 'update_in_place' | 'move_and_replace';
+  writeMode: 'create' | 'update_in_place' | 'blocked_path_change';
 }
 
 /**
@@ -45,6 +55,8 @@ export interface ParsedRecordSnapshot {
     endTime: string | null;
     duration: number | null;
     themePath: string | null;
+    rootTheme: string | null;
+    leafTheme: string | null;
     categoryKey: string | null;
   };
   templateHint: {
@@ -62,6 +74,32 @@ export interface EditableRecordSnapshot {
   fields: Record<string, unknown>;
   outputPlan: RecordOutputPlan;
   persistencePlan: RecordPersistencePlan;
+  themeParts: ThemePathParts;
+}
+
+export function splitThemePath(themePath: string | null | undefined): ThemePathParts {
+  const cleaned = String(themePath || '')
+    .split('/')
+    .map((part) => part.trim())
+    .filter(Boolean);
+
+  if (!cleaned.length) {
+    return { themePath: null, rootTheme: null, leafTheme: null };
+  }
+
+  return {
+    themePath: cleaned.join('/'),
+    rootTheme: cleaned[0] || null,
+    leafTheme: cleaned[cleaned.length - 1] || null,
+  };
+}
+
+function pickEditableText(item: Item): string | null {
+  if (item.editableText) return item.editableText;
+  const extraBody = item.extra?.['正文'];
+  if (typeof extraBody === 'string' && extraBody.trim()) return extraBody.trim();
+  if (item.type === 'task') return item.title || null;
+  return item.content || item.title || null;
 }
 
 export function buildParsedRecordSnapshot(item: Item): ParsedRecordSnapshot {
@@ -78,15 +116,14 @@ export function buildParsedRecordSnapshot(item: Item): ParsedRecordSnapshot {
         return Number.isFinite(parsed) ? parsed : null;
       })();
 
-  const editableText = item.type === 'task'
-    ? ((item.extra?.['正文'] as string | undefined) || item.title || item.content || null)
-    : (item.content || item.title || null);
+  const editableText = pickEditableText(item);
+  const themeParts = splitThemePath(item.theme || item.header || null);
 
   return {
     itemId: item.id,
     entryKind: item.type,
     locator: { path, line },
-    raw: { sourceText: item.content || '' },
+    raw: { sourceText: item.rawSource || item.content || '' },
     semantic: {
       title: item.title || null,
       editableText,
@@ -95,7 +132,9 @@ export function buildParsedRecordSnapshot(item: Item): ParsedRecordSnapshot {
       startTime: item.startTime || null,
       endTime: item.endTime || null,
       duration: item.duration ?? null,
-      themePath: item.theme || item.header || null,
+      themePath: themeParts.themePath,
+      rootTheme: themeParts.rootTheme,
+      leafTheme: themeParts.leafTheme,
       categoryKey: item.categoryKey || null,
     },
     templateHint: {

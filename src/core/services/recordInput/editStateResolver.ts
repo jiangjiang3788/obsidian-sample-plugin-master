@@ -1,6 +1,7 @@
 import type { InputSettings, Item } from '@/core/types/schema';
 import type { PreparedEditRecord } from '@/core/types/recordInput';
 import { buildEditableRecordSnapshot } from '@/core/services/recordInput/snapshot/EditSnapshotFactory';
+import { splitThemePath } from '@/core/types/recordSnapshot';
 import { buildPathOption, getLeafPath, normalizePath } from '@/core/utils/pathSemantic';
 import { findThemeIdByPath, resolveRecordDependencies } from './dependencyResolver';
 
@@ -191,19 +192,27 @@ function buildInitialFormData(template: any, item: Item): Record<string, unknown
     }
 
     if (isPathLikeField(field)) {
-      return item.categoryKey || undefined;
+      return item.theme || item.header || item.categoryKey || undefined;
     }
 
-    if (['内容', 'content', 'title', '标题'].includes(field.key) || ['内容', 'content', 'title', '标题'].includes(field.label)) {
+    const themeParts = splitThemePath(item.theme || item.header || null);
+    if (['根主题', 'rootTheme', 'themeRoot'].includes(field.key) || ['根主题', 'rootTheme', 'themeRoot'].includes(field.label)) return themeParts.rootTheme || undefined;
+    if (['叶主题', 'leafTheme', 'themeLeaf'].includes(field.key) || ['叶主题', 'leafTheme', 'themeLeaf'].includes(field.label)) return themeParts.leafTheme || undefined;
+    if (['完整主题', '主题路径', 'themePath'].includes(field.key) || ['完整主题', '主题路径', 'themePath'].includes(field.label)) return themeParts.themePath || undefined;
+
+    if (['内容', 'content'].includes(field.key) || ['内容', 'content'].includes(field.label)) {
       return item.type === 'task'
-        ? ((item.extra?.['正文'] as string | undefined) || item.title || item.content)
+        ? (item.editableText || (item.extra?.['正文'] as string | undefined) || item.title || item.content)
         : item.content;
+    }
+    if (['title', '标题'].includes(field.key) || ['title', '标题'].includes(field.label)) {
+      return item.title || (item.type === 'task' ? item.editableText : item.content);
     }
     if (['日期', 'date'].includes(field.key) || ['日期', 'date'].includes(field.label)) return item.date || item.createdDate;
     if (['时间', 'time', 'start'].includes(key) || ['时间', 'time', 'start'].includes(label)) return item.startTime;
     if (['结束', 'end'].includes(key) || ['结束', 'end'].includes(label)) return item.endTime;
     if (['时长', 'duration'].includes(key) || ['时长', 'duration'].includes(label)) return item.duration;
-    if (['主题', 'theme'].includes(key) || ['主题', 'theme'].includes(label)) return item.theme || item.header;
+    if (['主题', 'theme'].includes(key) || ['主题', 'theme'].includes(label)) return themeParts.themePath || item.theme || item.header;
     return (item as any)[field.key] ?? (item as any)[field.label];
   };
 

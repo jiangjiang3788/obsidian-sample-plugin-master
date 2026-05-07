@@ -28,6 +28,7 @@ export function parseTaskLine(
         id: `${filePath}#${lineNo}`,
         title: '', // 稍后填充
         content: lineText.trim(),
+        rawSource: lineText.trim(),
         type: 'task',
         tags: [], // 稍后填充
         recurrence: 'none', // 稍后填充
@@ -119,6 +120,7 @@ export function parseTaskLine(
     }
     const editableText = stripTaskLineToEditableText(titleSrc);
     item.title = cleanTaskText(titleSrc) || '';
+    item.editableText = editableText || item.title || '';
     if (editableText) item.extra['正文'] = editableText;
     item.priority = pickPriority(lineText);
     
@@ -218,6 +220,8 @@ export function parseBlockContent(
         id: `${filePath}#${startIdx + 1}`,
         title: title || '',
         content: contentText.trim(),
+        rawSource: lines.slice(startIdx, endIdx + 1).join('\n'),
+        editableText: contentText.trim(),
         type: 'block',
         tags: Array.from(new Set(tags)),
         recurrence: 'none',

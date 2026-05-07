@@ -105,6 +105,15 @@ function getItemLineNumber(item: Item): number {
   }
 }
 
+function getItemFilePath(item: Item): string | null {
+  if (item.file?.path) return item.file.path;
+  try {
+    return parseItemLocator(item.id).path;
+  } catch {
+    return null;
+  }
+}
+
 export class RecordInputUseCase {
   constructor(
     private store: AppStoreApi,
@@ -253,92 +262,18 @@ export class RecordInputUseCase {
     });
     const persistencePlan = buildRecordPersistencePlan({
       mode: 'edit',
-      originalPath: params.item.file?.path ?? null,
+      originalPath: getItemFilePath(params.item),
       outputPlan,
     });
 
     try {
-      if (persistencePlan.pathChanged && persistencePlan.writeMode === 'move_and_replace') {
-        const targetPath = outputPlan.targetFilePath || '';
-        const beforeTargetItems = this.getFileItemsByPath(targetPath);
-        const createdPath = await this.deps.inputService.createRecordAtPlannedLocation(
-          resolved.template,
-          normalized.normalizedFormData,
-          resolved.theme ?? undefined,
-          {
-            templateId: resolved.meta.templateId ?? resolved.template.id,
-            templateSourceType: resolved.meta.templateSourceType ?? 'block',
-          },
-          {
-            signal: params.signal,
-            autoRefresh: false,
-          },
-        );
-
-        const scannedNewPath = await applyRecordRefreshPlan(this.deps.dataStore, {
-          scanPaths: [createdPath],
-          notify: false,
-        });
-        const afterTargetItems = scannedNewPath.get(createdPath) ?? this.getFileItemsByPath(createdPath);
-        const createdRecord = this.locateCreatedRecord(beforeTargetItems, afterTargetItems, {
-          outputContent: outputPlan.outputContent,
-          normalizedFormData: normalized.normalizedFormData,
-          templateId: resolved.meta.templateId ?? resolved.template.id,
-          templateSourceType: resolved.meta.templateSourceType ?? 'block',
-          themePath: resolved.theme?.path ?? null,
-          blockCategoryKey: resolved.template.categoryKey ?? null,
-          itemTypeHint: this.inferCreatedItemType(resolved.template.outputTemplate),
-          appendMode: outputPlan.targetHeader ? 'header' : 'append',
-          targetHeader: outputPlan.targetHeader ?? null,
-          beforeMaxLine: beforeTargetItems.reduce((max, item) => Math.max(max, getItemLineNumber(item)), 0),
-        });
-
-        try {
-          const deletedPath = await this.deps.inputService.deleteExistingRecord(params.item, {
-            signal: params.signal,
-            autoRefresh: false,
-          });
-          return finalizeRecordSubmitResult(this.deps.dataStore, buildSuccessResult('update', {
-            affectedPath: createdPath,
-            affectedRecordId: createdRecord?.id ?? params.item.id,
-            refresh: {
-              scanPaths: [createdPath, deletedPath],
-              notify: true,
-            },
-            feedback: {
-              notice: '✅ 已迁移保存',
-            },
-            warnings: [
-              ...warnings,
-              issue(
-                'record_update_moved_to_new_path',
-                `计划第 6.5 步：检测到目标文件变化后，已先写入 ${createdPath}，再删除原位置 ${persistencePlan.originalPath || '未知位置'}。`,
-              ),
-            ],
-          }));
-        } catch (deleteError) {
-          return finalizeRecordSubmitResult(this.deps.dataStore, {
-            status: 'partial_success',
-            operation: 'update',
-            affectedPath: createdPath,
-            affectedRecordId: createdRecord?.id ?? params.item.id,
-            refresh: {
-              scanPaths: [createdPath, persistencePlan.originalPath || ''],
-              notify: true,
-            },
-            feedback: {
-              notice: '⚠️ 已写入新位置，但旧记录删除失败',
-            },
-            warnings,
-            errors: [
-              issue(
-                'record_update_old_entry_delete_failed',
-                `计划第 6.5 步：已先写入新位置 ${createdPath}，但删除原记录 ${persistencePlan.originalPath || '未知位置'} 失败。为避免数据丢失，旧记录被保留，请手动检查并清理。`,
-              ),
-              ...toArray(this.mapSubmitError('update', deleteError).errors),
-            ],
-          });
-        }
+      if (persistencePlan.pathChanged) {
+        return buildValidationErrorResult('update', [
+          issue(
+            'record_update_target_path_changed',
+            `安全 MVP：当前修改会把记录从 ${persistencePlan.originalPath || '未知位置'} 写到 ${outputPlan.targetFilePath || '未知位置'}。为避免误迁移，本次先阻止保存；请改回原主题/模板，或后续使用专门的迁移保存。`,
+          ),
+        ], warnings);
       }
 
       const path = await this.deps.inputService.updateExistingRecord(

@@ -182,6 +182,12 @@ export interface Item {
     type: 'task' | 'block';
     tags: string[];
     theme?: string;     // [新增] 主题字段，用于统一的主题管理
+    /** 主题完整路径，供视图筛选/分组使用，例如：学习/英语/听力。 */
+    themePath?: string;
+    /** 主题根节点，供视图设置按大类分组，例如：学习。 */
+    rootTheme?: string;
+    /** 主题叶子节点，供视图设置按末级主题分组，例如：听力。 */
+    leafTheme?: string;
     categoryKey: string;
     recurrence: string;
     recurrenceInfo?: RecurrenceInfo;
@@ -228,7 +234,12 @@ export interface Item {
 }
 
 // [修改] 将新字段加入核心字段列表，包括theme字段
-export const CORE_FIELDS = ['id', 'type', 'title', 'content', 'categoryKey', 'tags', 'theme', 'recurrence', 'icon', 'priority', 'date', 'header', 'startTime', 'endTime', 'duration', 'period', 'rating', 'pintu', 'folder', 'periodCount'] as const;
+export const CORE_FIELDS = [
+    'id', 'type', 'title', 'content', 'categoryKey', 'tags',
+    // 主题视图字段：theme 保持旧兼容，themePath/rootTheme/leafTheme 供视图设置明确选择。
+    'theme', 'themePath', 'rootTheme', 'leafTheme',
+    'recurrence', 'icon', 'priority', 'date', 'header', 'startTime', 'endTime', 'duration', 'period', 'rating', 'pintu', 'folder', 'periodCount'
+] as const;
 
 export type CoreField = typeof CORE_FIELDS[number];
 export function getAllFields(items: Item[]): string[] {
@@ -240,8 +251,33 @@ export function getAllFields(items: Item[]): string[] {
     });
     return Array.from(set).sort();
 }
+function splitItemThemePath(theme: string | null | undefined) {
+    const parts = String(theme || '')
+        .split('/')
+        .map(part => part.trim())
+        .filter(Boolean);
+    if (!parts.length) return { themePath: undefined, rootTheme: undefined, leafTheme: undefined };
+    return {
+        themePath: parts.join('/'),
+        rootTheme: parts[0],
+        leafTheme: parts[parts.length - 1],
+    };
+}
+
 export function readField(item: Item, field: string): any {
     if (field.startsWith('extra.')) return item.extra?.[field.slice(6)];
     if (field.startsWith('file.')) return (item as any).file?.[field.slice(5)];
+
+    // 主题三分法给视图设置用：即使旧 item 没落盘这些字段，也能从 theme/header 动态推导。
+    if (field === 'themePath' || field === '完整主题' || field === '主题路径') {
+        return item.themePath ?? (item as any).themePathNormalized ?? splitItemThemePath(item.theme || item.header).themePath;
+    }
+    if (field === 'rootTheme' || field === '根主题' || field === 'themeRoot') {
+        return item.rootTheme ?? splitItemThemePath(item.themePath || item.theme || item.header).rootTheme;
+    }
+    if (field === 'leafTheme' || field === '叶主题' || field === 'themeLeaf') {
+        return item.leafTheme ?? splitItemThemePath(item.themePath || item.theme || item.header).leafTheme;
+    }
+
     return (item as any)[field];
 }

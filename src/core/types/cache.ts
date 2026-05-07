@@ -16,6 +16,8 @@ export interface CachedItem {
   contentLower?: string;
   tagsLower?: string[];
   themePathNormalized?: string;
+  rootTheme?: string;
+  leafTheme?: string;
 
   // 时间与分类
   dateMs?: number;
@@ -57,7 +59,9 @@ export function toCachedItem(it: Item): CachedItem {
     titleLower: it.title?.toLowerCase(),
     contentLower: it.content?.toLowerCase(),
     tagsLower: (it.tags || []).map(t => t.toLowerCase()),
-    themePathNormalized: it.theme,
+    themePathNormalized: it.themePath ?? it.theme,
+    rootTheme: it.rootTheme,
+    leafTheme: it.leafTheme,
     dateMs: it.dateMs ?? it.startMs ?? it.endMs,
     categoryKey: it.categoryKey,
     created: it.created,
@@ -74,6 +78,9 @@ export function fromCachedItem(c: CachedItem): Item {
     type: 'task', // 具体类型需在解析时写入，这里保守给默认值；下游通常不会依赖该字段筛选
     tags: c.tagsLower || [],
     theme: c.themePathNormalized,
+    themePath: c.themePathNormalized,
+    rootTheme: c.rootTheme,
+    leafTheme: c.leafTheme,
     categoryKey: c.categoryKey,
     recurrence: 'none',
     created: c.created,
@@ -89,6 +96,9 @@ export function fromCachedItem(c: CachedItem): Item {
   it.contentLower = c.contentLower ?? '';
   it.tagsLower = c.tagsLower ?? [];
   it.themePathNormalized = c.themePathNormalized;
+  it.themePath = c.themePathNormalized;
+  it.rootTheme = c.rootTheme;
+  it.leafTheme = c.leafTheme;
 
   return it as Item;
 }

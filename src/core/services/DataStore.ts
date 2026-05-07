@@ -1,6 +1,7 @@
 import { singleton, inject } from 'tsyringe';
 import type { Item, FilterRule, SortRule } from '@/core/types/schema';
 import { parseTaskLine, parseBlockContent } from '@core/utils/parser';
+import { splitThemePath } from '@/core/types/recordSnapshot';
 import { throttle } from '@core/utils/timing';
 import { normalizeItemDates } from '@core/utils/normalize';
 import { filterByRules, sortItems } from '@core/utils/itemFilter';
@@ -21,6 +22,14 @@ import {
     toCachedItem,
     fromCachedItem,
 } from '@/core/types/cache';
+
+function applyThemeViewFields(item: any) {
+  const parts = splitThemePath(item.theme || item.header || null);
+  item.themePath = parts.themePath || undefined;
+  item.rootTheme = parts.rootTheme || undefined;
+  item.leafTheme = parts.leafTheme || undefined;
+  item.themePathNormalized = item.themePath || undefined;
+}
 
 @singleton()
 export class DataStore {
@@ -299,7 +308,7 @@ export class DataStore {
               (blockItem as any).titleLower = (blockItem.title || '').toLowerCase();
               (blockItem as any).contentLower = (blockItem.content || '').toLowerCase();
               (blockItem as any).tagsLower = (blockItem.tags || []).map(t => t.toLowerCase());
-              (blockItem as any).themePathNormalized = (blockItem as any).theme || undefined;
+              applyThemeViewFields(blockItem);
               fileItems.push(blockItem);
             }
             i = endIdx;
@@ -334,7 +343,7 @@ export class DataStore {
           (taskItem as any).titleLower = (taskItem.title || '').toLowerCase();
           (taskItem as any).contentLower = (taskItem.content || '').toLowerCase();
           (taskItem as any).tagsLower = (taskItem.tags || []).map(t => t.toLowerCase());
-          (taskItem as any).themePathNormalized = taskItem.theme || undefined;
+          applyThemeViewFields(taskItem);
           fileItems.push(taskItem);
         }
       }

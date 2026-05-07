@@ -38,5 +38,6 @@ export function buildEditableRecordSnapshot(input: {
     fields: { ...input.fields },
     outputPlan,
     persistencePlan,
+    themeParts: outputPlan.themeParts,
   };
 }

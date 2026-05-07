@@ -1,5 +1,6 @@
 import type { BlockTemplate, ThemeDefinition } from '@/core/types/schema';
 import type { RecordOutputPlan, RecordPersistencePlan } from '@/core/types/recordSnapshot';
+import { splitThemePath } from '@/core/types/recordSnapshot';
 import { renderTemplate } from '@/core/utils/templateUtils';
 
 function normalizePath(value: string | null | undefined): string | null {
@@ -14,6 +15,7 @@ function buildRenderData(
   templateMeta?: { templateId?: string | null; templateSourceType?: 'block' | 'override' | null },
 ): Record<string, unknown> {
   const normalizedData: Record<string, unknown> = { ...formData };
+  const themeParts = splitThemePath(theme?.path ?? null);
 
   for (const field of template.fields || []) {
     const raw = normalizedData[field.key] as any;
@@ -35,7 +37,10 @@ function buildRenderData(
   return {
     ...normalizedData,
     block: { name: template.name, id: template.id, categoryKey: template.categoryKey },
-    theme: theme ? { path: theme.path, icon: theme.icon || '' } : {},
+    theme: theme ? { path: themeParts.themePath, root: themeParts.rootTheme, leaf: themeParts.leafTheme, icon: theme.icon || '' } : { path: null, root: null, leaf: null },
+    themePath: themeParts.themePath,
+    rootTheme: themeParts.rootTheme,
+    leafTheme: themeParts.leafTheme,
     templateId: templateMeta?.templateId || template.id,
     templateSourceType: templateMeta?.templateSourceType || 'block',
   };
@@ -43,8 +48,8 @@ function buildRenderData(
 
 /**
  * 计划第 5 步：显式计算当前编辑态会写到哪里，
- * 第 6.5 步：编辑保存遇到路径变化时，
- * 不再只是拦截，而是进入安全迁移保存（先写新位置，再删旧位置）。
+ * 安全 MVP：编辑保存遇到路径变化时，只前置检测并阻止保存。
+ * 不自动迁移，避免测试不足时误删或重复写入。
  */
 export function buildRecordOutputPlan(input: {
   template: BlockTemplate | null;
@@ -58,6 +63,7 @@ export function buildRecordOutputPlan(input: {
       targetHeader: null,
       outputContent: '',
       renderData: {},
+      themeParts: splitThemePath(null),
     };
   }
 
@@ -73,6 +79,7 @@ export function buildRecordOutputPlan(input: {
     targetHeader,
     outputContent,
     renderData,
+    themeParts: splitThemePath(input.theme?.path ?? null),
   };
 }
 
@@ -96,6 +103,6 @@ export function buildRecordPersistencePlan(input: {
   return {
     originalPath,
     pathChanged,
-    writeMode: pathChanged ? 'move_and_replace' : 'update_in_place',
+    writeMode: pathChanged ? 'blocked_path_change' : 'update_in_place',
   };
 }

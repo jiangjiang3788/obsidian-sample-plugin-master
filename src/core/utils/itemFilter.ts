@@ -79,9 +79,9 @@ function matchRule(item: Item, rule: FilterRule): boolean {
   } else if (rule.field === 'content') {
     v1 = (item as any).contentLower ?? String(v1 ?? '').toLowerCase();
     v2 = String(v2 ?? '').toLowerCase();
-  } else if (rule.field === 'theme') {
-    const themeNorm = (item as any).themePathNormalized ?? (item as any).theme ?? v1;
-    v1 = String(themeNorm ?? '').toLowerCase();
+  } else if (['theme', 'themePath', 'rootTheme', 'leafTheme', '主题路径', '完整主题', '根主题', '叶主题'].includes(rule.field)) {
+    // 视图设置使用主题三分法时，统一走 readField，保持大小写无关比较。
+    v1 = String(v1 ?? '').toLowerCase();
     v2 = String(v2 ?? '').toLowerCase();
   } else if (rule.field === 'tags') {
     const tagsLower: string[] = (item as any).tagsLower

@@ -46,7 +46,12 @@ export interface QuickInputEditorState {
   templateId: string | null;
   templateSourceType: 'block' | 'override' | null;
   fieldSources?: QuickInputFieldSourceMap;
+  /** 完整路径主题，例如：学习/英语/听力。 */
   themePath?: string | null;
+  /** 根主题，例如：学习。 */
+  rootTheme?: string | null;
+  /** 叶主题，例如：听力。 */
+  leafTheme?: string | null;
   fieldSourceSummary?: Record<QuickInputFieldSource, number>;
 }
 
@@ -91,6 +96,18 @@ const buildInitialFieldSources = (initialData?: Record<string, any>): QuickInput
     next[key] = 'context';
   });
   return next;
+};
+
+const splitThemePathParts = (path?: string | null) => {
+  const parts = String(path || '')
+    .split('/')
+    .map((part) => part.trim())
+    .filter(Boolean);
+  return {
+    themePath: parts.length ? parts.join('/') : null,
+    rootTheme: parts[0] || null,
+    leafTheme: parts.length ? parts[parts.length - 1] : null,
+  };
 };
 
 const buildFieldSourceSummary = (sources: QuickInputFieldSourceMap): Record<QuickInputFieldSource, number> => ({
@@ -270,6 +287,7 @@ export function QuickInputEditor({
 
   useEffect(() => {
     const currentTheme = selectedThemeId ? themeIdMap.get(selectedThemeId) ?? null : null;
+    const themeParts = splitThemePathParts(currentTheme?.path ?? null);
     onStateChange?.({
       blockId: currentBlockId,
       themeId: selectedThemeId,
@@ -279,13 +297,14 @@ export function QuickInputEditor({
       templateId,
       templateSourceType,
       fieldSources,
-      themePath: currentTheme?.path ?? null,
+      ...themeParts,
       fieldSourceSummary: buildFieldSourceSummary(fieldSources),
     });
   }, [currentBlockId, selectedThemeId, formData, timeDirection, template, templateId, templateSourceType, fieldSources]);
 
   const emitDraftState = (draftFormData: Record<string, any>, directionOverride: TimeDirection = timeDirection, sourceOverride: QuickInputFieldSourceMap = fieldSources) => {
     const currentTheme = selectedThemeId ? themeIdMap.get(selectedThemeId) ?? null : null;
+    const themeParts = splitThemePathParts(currentTheme?.path ?? null);
     onStateChange?.({
       blockId: currentBlockId,
       themeId: selectedThemeId,
@@ -295,7 +314,7 @@ export function QuickInputEditor({
       templateId,
       templateSourceType,
       fieldSources: sourceOverride,
-      themePath: currentTheme?.path ?? null,
+      ...themeParts,
       fieldSourceSummary: buildFieldSourceSummary(sourceOverride),
     });
   };

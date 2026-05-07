@@ -269,7 +269,7 @@
           }
         ],
         "rowField": "recurrence",
-        "colField": "file.path"
+        "colField": "rootTheme"
       },
       "fields": [
         "title"

@@ -31,6 +31,7 @@ export class QuickInputModal extends Modal {
   private static activeModal: QuickInputModal | null = null;
   private services: Services;
   private cleanupKeyboardDetection: (() => void) | null = null;
+  private cleanupOutsideClickGuard: (() => void) | null = null;
 
   constructor(
     app: App,
@@ -61,7 +62,12 @@ export class QuickInputModal extends Modal {
     QuickInputModal.activeModal = this;
     this.contentEl.empty();
     this.modalEl.addClass('think-quick-input-modal');
-    this.setupKeyboardDetection();
+    const mobileLike = this.isMobileLikeEnvironment();
+    this.modalEl.toggleClass('think-quick-input-modal--mobile', mobileLike);
+    this.modalEl.toggleClass('think-quick-input-modal--desktop', !mobileLike);
+    if (mobileLike) {
+      this.setupKeyboardDetection();
+    }
 
     mountWithServices(
       this.contentEl,
@@ -87,12 +93,21 @@ export class QuickInputModal extends Modal {
     setTimeout(() => {
       const bg = this.modalEl.closest('.modal-container')?.querySelector('.modal-bg');
       if (bg) {
-        bg.addEventListener('click', (e) => {
+        const stopOutsideClose = (e: Event) => {
           e.stopPropagation();
           e.preventDefault();
-        }, true);
+        };
+        bg.addEventListener('click', stopOutsideClose, true);
+        this.cleanupOutsideClickGuard = () => bg.removeEventListener('click', stopOutsideClose, true);
       }
     }, 0);
+  }
+
+  private isMobileLikeEnvironment(): boolean {
+    if (typeof window === 'undefined') return false;
+    return /Android|iPhone|iPad|iPod|Mobile/i.test(window.navigator.userAgent)
+      || (window.matchMedia?.('(pointer: coarse)').matches ?? false)
+      || window.innerWidth <= 820;
   }
 
   private setupKeyboardDetection() {
@@ -267,8 +282,10 @@ export class QuickInputModal extends Modal {
 
   onClose() {
     try {
+      this.cleanupOutsideClickGuard?.();
       this.cleanupKeyboardDetection?.();
     } finally {
+      this.cleanupOutsideClickGuard = null;
       this.cleanupKeyboardDetection = null;
       if (QuickInputModal.activeModal === this) {
         QuickInputModal.activeModal = null;
@@ -374,7 +391,7 @@ function QuickInputModalContent({
     ? `目标位置：${preparedRecord.outputPlan.targetFilePath}${preparedRecord.outputPlan?.targetHeader ? ` → ${preparedRecord.outputPlan.targetHeader}` : ''}`
     : '';
   const pathChangeHint = preparedRecord.persistencePlan?.pathChanged
-    ? `当前位置：${preparedRecord.persistencePlan.originalPath || '未知'}；当前模板推导位置：${preparedRecord.outputPlan?.targetFilePath || '未知'}。计划第 6.5 步开始，保存时会先写入新位置，再删除旧记录；如果删除失败，会保留旧记录并提示你手动清理。`
+    ? `当前位置：${preparedRecord.persistencePlan.originalPath || '未知'}；当前模板推导位置：${preparedRecord.outputPlan?.targetFilePath || '未知'}。安全 MVP：本次会阻止保存，避免在测试不足时自动迁移或误删旧记录。请改回原主题/模板，或后续使用专门的迁移保存。`
     : '';
 
   const openOriginal = () => {
