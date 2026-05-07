@@ -47,9 +47,12 @@ function buildRenderData(
 }
 
 /**
- * 计划第 5 步：显式计算当前编辑态会写到哪里，
- * 安全 MVP：编辑保存遇到路径变化时，只前置检测并阻止保存。
- * 不自动迁移，避免测试不足时误删或重复写入。
+ * 计划第 7 步：显式计算当前编辑态会写到哪里。
+ *
+ * 之前的安全 MVP 对路径变化一律阻止，实测太保守。
+ * 现在改为“安全迁移保存”：路径变化时生成 move_and_replace 计划，
+ * 上层执行时必须先写入新位置，再删除旧位置；删除失败不能回滚新记录，
+ * 但必须返回 partial_success 并提示用户手动清理旧记录。
  */
 export function buildRecordOutputPlan(input: {
   template: BlockTemplate | null;
@@ -103,6 +106,6 @@ export function buildRecordPersistencePlan(input: {
   return {
     originalPath,
     pathChanged,
-    writeMode: pathChanged ? 'blocked_path_change' : 'update_in_place',
+    writeMode: pathChanged ? 'move_and_replace' : 'update_in_place',
   };
 }

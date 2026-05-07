@@ -16,6 +16,80 @@ export interface RecordWriteOptions {
   autoRefresh?: boolean;
 }
 
+
+function uniqPreserveOrder(values: string[]): string[] {
+  const seen = new Set<string>();
+  const result: string[] = [];
+  for (const value of values) {
+    const cleaned = value.trim();
+    if (!cleaned || seen.has(cleaned)) continue;
+    seen.add(cleaned);
+    result.push(cleaned);
+  }
+  return result;
+}
+
+function extractTaskContextTokens(line: string): string[] {
+  const source = String(line || '');
+  const tokens: string[] = [];
+
+  for (const match of source.matchAll(/#[\p{L}\p{N}_-]+/gu)) tokens.push(match[0]);
+  for (const match of source.matchAll(/[📅⏳🛫➕✅❌]\s*\d{4}[-/]\d{2}[-/]\d{2}/gu)) tokens.push(match[0]);
+  for (const match of source.matchAll(/🔁\s*every\s+(?:\d+\s+)?(?:day|week|month|year)s?(?:\s+when\s+done)?/giu)) tokens.push(match[0]);
+  for (const match of source.matchAll(/[\(\[][^[\]()]*::[^\)\]]*[\)\]]/g)) tokens.push(match[0]);
+
+  return uniqPreserveOrder(tokens);
+}
+
+function getTaskContextTokenIdentity(token: string): { kind: 'tag' | 'emoji-date' | 'recurrence' | 'kv' | 'literal'; key: string } {
+  const trimmed = token.trim();
+  if (trimmed.startsWith('#')) return { kind: 'tag', key: trimmed };
+  const emoji = trimmed.match(/^([📅⏳🛫➕✅❌])/u)?.[1];
+  if (emoji) return { kind: 'emoji-date', key: emoji };
+  if (/^🔁/u.test(trimmed)) return { kind: 'recurrence', key: '🔁' };
+  const kv = trimmed.match(/^[\(\[]\s*([^:\]\)]+?)\s*::/);
+  if (kv?.[1]) return { kind: 'kv', key: kv[1].trim() };
+  return { kind: 'literal', key: trimmed };
+}
+
+function taskLineContainsTokenIdentity(line: string, token: string): boolean {
+  const identity = getTaskContextTokenIdentity(token);
+  if (identity.kind === 'tag' || identity.kind === 'literal') return line.includes(identity.key);
+  if (identity.kind === 'emoji-date' || identity.kind === 'recurrence') return line.includes(identity.key);
+  if (identity.kind === 'kv') {
+    const escaped = identity.key.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    return new RegExp(`[\\(\\[]\\s*${escaped}\\s*::`).test(line);
+  }
+  return false;
+}
+
+function preserveTaskCheckboxStatus(originalLine: string, nextLine: string): string {
+  const original = originalLine.match(/^(\s*[-*]\s*\[)([ xX-])(\]\s*)/);
+  const next = nextLine.match(/^(\s*[-*]\s*\[)([ xX-])(\]\s*)/);
+  if (!original || !next) return nextLine;
+  if (original[2] === next[2]) return nextLine;
+  return nextLine.replace(/^(\s*[-*]\s*\[)[ xX-](\]\s*)/, `$1${original[2]}$2`);
+}
+
+/**
+ * SNAPSHOT-MIGRATION: task write-back safety layer.
+ * The snapshot path is still replacing the rendered task line in-place. Until task
+ * patch update is fully implemented, preserve source-line context tokens that are
+ * not represented by the new template output. This avoids losing unknown tags,
+ * emoji dates, recurrence marks, and custom `(key::value)` metadata during edit.
+ */
+function mergeTaskLinePreservingSourceContext(originalLine: string, renderedText: string): string {
+  const nextLines = renderedText.split(/\r?\n/);
+  if (nextLines.length !== 1) return renderedText;
+
+  let nextLine = preserveTaskCheckboxStatus(originalLine, nextLines[0]);
+  const tokensToAppend = extractTaskContextTokens(originalLine)
+    .filter((token) => !taskLineContainsTokenIdentity(nextLine, token));
+
+  if (!tokensToAppend.length) return nextLine;
+  return `${nextLine.trimEnd()} ${tokensToAppend.join(' ')}`.trimEnd();
+}
+
 @singleton()
 export class InputService {
   constructor(
@@ -123,7 +197,8 @@ export class InputService {
       lines.splice(range.startIndex, range.endIndex - range.startIndex + 1, ...nextLines);
     } else {
       const startIndex = resolveTaskLineIndexForMutation(lines, item, expectedIndex);
-      lines.splice(startIndex, 1, ...nextLines);
+      const preservedTaskText = mergeTaskLinePreservingSourceContext(lines[startIndex] || item.rawSource || item.content || '', nextText);
+      lines.splice(startIndex, 1, ...preservedTaskText.split(/\r?\n/));
     }
 
     await this.vault.writeFile(path, lines.join('\n'));

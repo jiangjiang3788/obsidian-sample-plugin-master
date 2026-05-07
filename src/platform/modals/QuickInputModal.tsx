@@ -14,7 +14,8 @@ import {
   type QuickInputEditorState,
   useUseCases,
 } from '@/app/public';
-import { makeObsUri, readRecordSubmitMessage, type Item, type QuickInputSaveData, type RecordInputSource, type RecordSubmitResult } from '@core/public';
+import { buildRecordSubmitFeedbackPresentation, makeObsUri, type Item, type QuickInputSaveData, type RecordInputSource, type RecordSubmitResult } from '@core/public';
+import { buildRecordOutputPlan, buildRecordPersistencePlan } from '@/core/services/recordInput/snapshot/OutputPlanner';
 
 import { Box, Button } from '@mui/material';
 
@@ -387,11 +388,39 @@ function QuickInputModalContent({
   const originalGestureHint = originalUri && !originalUri.startsWith('#error')
     ? '桌面端按住 Ctrl/⌘ 点击标题或说明；手机端双击标题或说明，可打开原文'
     : undefined;
-  const outputPlanHint = preparedRecord.outputPlan?.targetFilePath
-    ? `目标位置：${preparedRecord.outputPlan.targetFilePath}${preparedRecord.outputPlan?.targetHeader ? ` → ${preparedRecord.outputPlan.targetHeader}` : ''}`
+
+  const liveOutputPlan = useMemo(() => {
+    if (!currentState.template) return preparedRecord.outputPlan ?? null;
+    try {
+      return buildRecordOutputPlan({
+        template: currentState.template as any,
+        formData: currentState.formData || {},
+        theme: currentState.theme as any,
+        templateMeta: {
+          templateId: currentState.templateId ?? undefined,
+          templateSourceType: currentState.templateSourceType ?? undefined,
+        },
+      });
+    } catch (error) {
+      console.warn('[记录调试][保存位置预览] 计算实时 OutputPlan 失败，回退到初始计划', error);
+      return preparedRecord.outputPlan ?? null;
+    }
+  }, [currentState.template, currentState.theme, currentState.formData, currentState.templateId, currentState.templateSourceType, preparedRecord.outputPlan]);
+
+  const livePersistencePlan = useMemo(() => {
+    if (!liveOutputPlan) return preparedRecord.persistencePlan ?? null;
+    return buildRecordPersistencePlan({
+      mode,
+      originalPath: preparedRecord.persistencePlan?.originalPath ?? editItem?.file?.path ?? null,
+      outputPlan: liveOutputPlan,
+    });
+  }, [liveOutputPlan, preparedRecord.persistencePlan, editItem, mode]);
+
+  const outputPlanHint = liveOutputPlan?.targetFilePath
+    ? `目标位置：${liveOutputPlan.targetFilePath}${liveOutputPlan?.targetHeader ? ` → ${liveOutputPlan.targetHeader}` : ''}`
     : '';
-  const pathChangeHint = preparedRecord.persistencePlan?.pathChanged
-    ? `当前位置：${preparedRecord.persistencePlan.originalPath || '未知'}；当前模板推导位置：${preparedRecord.outputPlan?.targetFilePath || '未知'}。安全 MVP：本次会阻止保存，避免在测试不足时自动迁移或误删旧记录。请改回原主题/模板，或后续使用专门的迁移保存。`
+  const pathChangeHint = livePersistencePlan?.pathChanged
+    ? `保存位置将变化：${livePersistencePlan.originalPath || '未知'} → ${liveOutputPlan?.targetFilePath || '未知'}${liveOutputPlan?.targetHeader ? ` → ${liveOutputPlan.targetHeader}` : ''}。保存时会执行迁移保存：先写入新位置，再删除旧记录；如果删除旧记录失败，会保留旧记录并提示手动清理。`
     : '';
 
   const openOriginal = () => {
@@ -424,9 +453,10 @@ function QuickInputModalContent({
     }
   };
 
-  const showResult = (message: string, type: 'success' | 'error' = 'error') => {
-    const prefix = type === 'success' ? '' : '❌ ';
-    new Notice(`${prefix}${message}`, type === 'success' ? 4000 : 10000);
+  const showResult = (message: string, type: 'success' | 'warning' | 'error' = 'error') => {
+    const prefix = type === 'success' ? '' : type === 'warning' ? '⚠️ ' : '❌ ';
+    const duration = type === 'success' ? 4000 : type === 'warning' ? 12000 : 10000;
+    new Notice(`${prefix}${message}`, duration);
   };
 
   const buildCreateDraft = (): QuickInputSaveData => ({
@@ -462,6 +492,8 @@ function QuickInputModalContent({
             themeId: latestState.themeId,
             formData: latestState.formData,
             meta: latestState.meta,
+            expectedOutputPlan: liveOutputPlan,
+            expectedPersistencePlan: livePersistencePlan,
             signal,
             source: 'quickinput',
           });
@@ -478,27 +510,33 @@ function QuickInputModalContent({
         });
       });
 
-      if (result.status === 'success') {
-        const shouldShowOwnSuccessNotice = !(mode === 'create' && source === 'timer' && onSubmitSuccess);
-        if (result.feedback?.notice && shouldShowOwnSuccessNotice) {
-          showResult(result.feedback.notice, 'success');
-        }
-        if (mode === 'create' && onSubmitSuccess) {
-          try {
-            await onSubmitSuccess(result, buildCreateDraft());
-          } catch (followUpError: any) {
-            showResult(followUpError?.message || '记录已创建，但后续操作失败');
-          }
-        }
-        closeModal();
-        return;
-      }
+      const presentation = buildRecordSubmitFeedbackPresentation(
+        result,
+        mode === 'edit' ? '保存修改失败' : '创建失败',
+      );
 
       if (result.status === 'cancelled') {
         return;
       }
 
-      showResult(readRecordSubmitMessage(result, mode === 'edit' ? '保存修改失败' : '创建失败'));
+      if (presentation.message) {
+        const shouldShowOwnSuccessNotice = !(mode === 'create' && source === 'timer' && onSubmitSuccess);
+        if (presentation.tone !== 'success' || shouldShowOwnSuccessNotice) {
+          showResult(presentation.message, presentation.tone);
+        }
+      }
+
+      if (result.status === 'success' && mode === 'create' && onSubmitSuccess) {
+        try {
+          await onSubmitSuccess(result, buildCreateDraft());
+        } catch (followUpError: any) {
+          showResult(followUpError?.message || '记录已创建，但后续操作失败');
+        }
+      }
+
+      if (presentation.shouldCloseModal) {
+        closeModal();
+      }
     } catch (error: any) {
       if (!(error instanceof CancelledError)) {
         showResult(error?.message || (mode === 'edit' ? '保存修改失败' : '创建失败'));
@@ -553,7 +591,7 @@ function QuickInputModalContent({
         return;
       }
 
-      showResult(readRecordSubmitMessage(result, '删除失败'));
+      showResult(result.errors?.[0]?.message || result.feedback?.notice || '删除失败');
     } catch (error: any) {
       if (!(error instanceof CancelledError)) {
         showResult(error?.message || '删除失败');
@@ -582,8 +620,22 @@ function QuickInputModalContent({
           borderBottom={false}
         />
         {(pathChangeHint || outputPlanHint) ? (
-          <div style={{ marginTop: '0.35rem', fontSize: '12px', color: 'var(--text-muted)', lineHeight: 1.5 }}>
-            {pathChangeHint || outputPlanHint}
+          <div
+            style={{
+              marginTop: '0.35rem',
+              fontSize: '12px',
+              color: pathChangeHint ? 'var(--text-warning)' : 'var(--text-muted)',
+              lineHeight: 1.5,
+              padding: pathChangeHint ? '0.45rem 0.55rem' : '0.25rem 0',
+              border: pathChangeHint ? '1px solid var(--background-modifier-border)' : undefined,
+              borderRadius: pathChangeHint ? '8px' : undefined,
+              background: pathChangeHint ? 'var(--background-secondary)' : undefined,
+            }}
+          >
+            <div style={{ fontWeight: pathChangeHint ? 600 : 400, marginBottom: pathChangeHint ? '0.15rem' : 0 }}>
+              {pathChangeHint ? '保存位置预览：将迁移保存' : '保存位置预览'}
+            </div>
+            <div>{pathChangeHint || outputPlanHint}</div>
           </div>
         ) : null}
       </Box>

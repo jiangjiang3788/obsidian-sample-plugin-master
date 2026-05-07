@@ -8,7 +8,8 @@ import {
 // [修改] 导入 getPeriodCount 和 dayjs
 import { normalizeDateStr, extractDate, getPeriodCount, dayjs } from './date';
 import { EMOJI } from '@/core/types/constants';
-import { cleanTaskText, stripTaskLineToEditableText } from './text';
+import { cleanTaskText, extractTaskEditableText, explainTaskEditableTextExtraction } from './text';
+import { recordDebugLog } from './recordDebug';
 import { extractRecurrenceText } from './mark';
 
 /* ---------- 工具 ---------- */
@@ -118,10 +119,33 @@ export function parseTaskLine(
         item.icon = iconMatch[1];
         titleSrc = titleSrc.replace(/^(?:\p{Extended_Pictographic}\uFE0F?\s*)+/u, '');
     }
-    const editableText = stripTaskLineToEditableText(titleSrc);
-    item.title = cleanTaskText(titleSrc) || '';
+    // SNAPSHOT-MIGRATION: 任务正文统一从完整 raw line 提取。
+    // 不再从 titleSrc 局部文本提取，避免 parser / snapshot / edit resolver 三处结果不一致。
+    const editableExtraction = extractTaskEditableText(lineText);
+    const editableText = editableExtraction.editableText;
+    item.title = editableText || cleanTaskText(titleSrc) || '';
     item.editableText = editableText || item.title || '';
-    if (editableText) item.extra['正文'] = editableText;
+    if (editableText) {
+        item.extra['正文'] = editableText;
+        // 中文调试/兼容：很多旧模板字段叫“内容”，编辑回填时也可能通过 extra alias 读取。
+        item.extra['内容'] = editableText;
+        item.extra['任务内容'] = editableText;
+        item.extra['记录内容'] = editableText;
+        item.extra['editableText'] = editableText;
+    }
+    if (typeof window !== 'undefined' && (window as any).__THINK_RECORD_DEBUG__) {
+        // 中文调试：任务正文解析阶段。不会影响数据，只输出到控制台。
+        console.groupCollapsed('[记录调试][任务读取] parser.parseTaskLine 正文提取');
+        console.log('原始任务行:', lineText);
+        console.log('去掉 checkbox 和开头图标后的候选正文 titleSrc:', titleSrc);
+        console.log('统一提取入口 extractTaskEditableText(lineText):', editableExtraction);
+        console.log('最终 editableText:', editableText);
+        console.log('正文长度/是否包含连续空格:', { length: editableText.length, hasDoubleSpace: /\s{2,}/.test(editableText) });
+        console.log('清洗过程:', explainTaskEditableTextExtraction(lineText));
+        console.log('写入 item.title:', item.title);
+        console.log('写入 item.extra[正文]:', item.extra['正文']);
+        console.groupEnd();
+    }
     item.priority = pickPriority(lineText);
     
     // [Day2新增] 任务的主题是当前章节标题，而不是任务标题

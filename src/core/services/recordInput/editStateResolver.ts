@@ -1,7 +1,9 @@
 import type { InputSettings, Item } from '@/core/types/schema';
 import type { PreparedEditRecord } from '@/core/types/recordInput';
+import type { ParsedRecordSnapshot } from '@/core/types/recordSnapshot';
 import { buildEditableRecordSnapshot } from '@/core/services/recordInput/snapshot/EditSnapshotFactory';
-import { splitThemePath } from '@/core/types/recordSnapshot';
+import { buildParsedRecordSnapshot } from '@/core/types/recordSnapshot';
+import { recordDebugLog } from '@/core/utils/recordDebug';
 import { buildPathOption, getLeafPath, normalizePath } from '@/core/utils/pathSemantic';
 import { findThemeIdByPath, resolveRecordDependencies } from './dependencyResolver';
 
@@ -113,41 +115,111 @@ function scoreTemplateForItem(block: any, item: Item): number {
   return score;
 }
 
+function looksLikeTaskTemplate(block: any): boolean {
+  return /^\s*-\s*\[[ xX]?\]/m.test(String(block?.outputTemplate || ''));
+}
+
+function looksLikeBlockTemplate(block: any): boolean {
+  return /<!--\s*start\s*-->/i.test(String(block?.outputTemplate || '')) || /内容\s*[:：]/.test(String(block?.outputTemplate || ''));
+}
+
+function findOverrideById(settings: InputSettings, overrideId?: string | null) {
+  if (!overrideId) return null;
+  return (settings.overrides || []).find((candidate: any) => candidate.id === overrideId) ?? null;
+}
+
 function resolveBlockForEdit(settings: InputSettings, item: Item, preferredBlockId?: string | null) {
   const blocks = settings.blocks || [];
   if (!Array.isArray(blocks) || blocks.length === 0) {
-    return { blockId: preferredBlockId ?? null, resolvedBy: 'fallback' as const, usedFallbackBlock: true };
+    return {
+      blockId: preferredBlockId ?? null,
+      themeIdFromTemplateHint: null as string | null,
+      resolvedBy: 'fallback' as const,
+      usedFallbackBlock: true,
+      debugReason: '没有可用 block，只能使用 preferredBlockId。',
+    };
   }
 
-  if (item.templateId) {
-    const exact = blocks.find((block) => block.id === item.templateId);
-    if (exact) {
-      return { blockId: exact.id, resolvedBy: 'exact' as const, usedFallbackBlock: false };
+  // SNAPSHOT-MIGRATION / SAFETY-FIX:
+  // 任务编辑必须优先尊重原记录中的模板提示。
+  // 之前 (模板ID::ovr_xxx)(模板来源::override) 会被当成 blockId 去查，查不到后进入打分推断，
+  // 可能把任务误判成「闪念」这类 block 模板，导致路径从任务文件跳到闪念文件并被阻止保存。
+  if (item.templateId && item.templateSourceType === 'override') {
+    const override = findOverrideById(settings, item.templateId) as any;
+    if (override?.blockId) {
+      const block = blocks.find((candidate) => candidate.id === override.blockId);
+      if (block) {
+        return {
+          blockId: block.id,
+          themeIdFromTemplateHint: override.themeId ?? null,
+          resolvedBy: 'exact' as const,
+          usedFallbackBlock: false,
+          debugReason: `根据 override 模板ID ${item.templateId} 精确还原 block=${block.id} theme=${override.themeId || ''}`,
+        };
+      }
     }
   }
 
-  const withScores = blocks
+  if (item.templateId && item.templateSourceType !== 'override') {
+    const exact = blocks.find((block) => block.id === item.templateId);
+    if (exact) {
+      return {
+        blockId: exact.id,
+        themeIdFromTemplateHint: null as string | null,
+        resolvedBy: 'exact' as const,
+        usedFallbackBlock: false,
+        debugReason: `根据 block 模板ID ${item.templateId} 精确命中。`,
+      };
+    }
+  }
+
+  const preferred = preferredBlockId ? blocks.find((block) => block.id === preferredBlockId) : null;
+  if (preferred) {
+    // preferredBlockId 只有在类型匹配时才作为强候选，避免 categoryKey / 外部误传把 task 带到 block 模板。
+    const typeMatches = item.type === 'task' ? looksLikeTaskTemplate(preferred) : !looksLikeTaskTemplate(preferred);
+    if (typeMatches) {
+      return {
+        blockId: preferred.id,
+        themeIdFromTemplateHint: null as string | null,
+        resolvedBy: 'exact' as const,
+        usedFallbackBlock: false,
+        debugReason: `preferredBlockId 类型匹配，使用 ${preferred.id}。`,
+      };
+    }
+  }
+
+  // 类型护栏：任务只能在任务模板里推断，block 只能优先在非任务模板里推断。
+  // 这是为了防止任务内容字段较少时，被「闪念」等 block 模板高分抢走。
+  const typedCandidates = item.type === 'task'
+    ? blocks.filter(looksLikeTaskTemplate)
+    : blocks.filter((block) => !looksLikeTaskTemplate(block));
+  const candidatePool = typedCandidates.length > 0 ? typedCandidates : blocks;
+
+  const withScores = candidatePool
     .map((block) => ({ block, score: scoreTemplateForItem(block, item) }))
     .sort((left, right) => right.score - left.score);
 
   const top = withScores[0];
   if (top && top.score > 0) {
-    return { blockId: top.block.id, resolvedBy: 'inferred' as const, usedFallbackBlock: false };
-  }
-
-  const preferred = preferredBlockId ? blocks.find((block) => block.id === preferredBlockId) : null;
-  if (preferred) {
-    return { blockId: preferred.id, resolvedBy: 'fallback' as const, usedFallbackBlock: true };
+    return {
+      blockId: top.block.id,
+      themeIdFromTemplateHint: null as string | null,
+      resolvedBy: 'inferred' as const,
+      usedFallbackBlock: false,
+      debugReason: `按记录类型护栏后推断命中 ${top.block.id}，score=${top.score}。`,
+    };
   }
 
   const sameTypeFallback = item.type === 'task'
-    ? blocks.find((block) => /^\s*-\s*\[[ xX]?\]/m.test(String(block?.outputTemplate || '')))
-    : blocks.find((block) => /<!--\s*start\s*-->/i.test(String(block?.outputTemplate || '')) || /内容\s*[:：]/.test(String(block?.outputTemplate || '')));
+    ? blocks.find(looksLikeTaskTemplate)
+    : blocks.find(looksLikeBlockTemplate);
 
   return {
     blockId: sameTypeFallback?.id ?? blocks[0]?.id ?? null,
+    themeIdFromTemplateHint: null as string | null,
     resolvedBy: 'fallback' as const,
     usedFallbackBlock: true,
+    debugReason: `无法精确/推断命中，使用同类型 fallback=${sameTypeFallback?.id || blocks[0]?.id || ''}。`,
   };
 }
 
@@ -164,7 +236,50 @@ function buildRatingOption(field: any, item: Item) {
   return undefined;
 }
 
-function buildInitialFormData(template: any, item: Item): Record<string, unknown> {
+function isContentField(field: any): boolean {
+  const key = normalizeToken(field?.key);
+  const label = normalizeToken(field?.label);
+  const semantic = normalizeToken(field?.semanticType);
+  return semantic === 'content'
+    || ['内容', '正文', 'content', 'body', '任务内容', '记录内容', 'taskcontent'].includes(key)
+    || ['内容', '正文', 'content', 'body', '任务内容', '记录内容', 'taskcontent'].includes(label);
+}
+
+function isTitleField(field: any): boolean {
+  const key = normalizeToken(field?.key);
+  const label = normalizeToken(field?.label);
+  return ['title', '标题'].includes(key) || ['title', '标题'].includes(label);
+}
+
+function readSnapshotSemanticValue(field: any, item: Item, snapshot: ParsedRecordSnapshot): unknown {
+  const key = normalizeToken(field?.key);
+  const label = normalizeToken(field?.label);
+
+  // SNAPSHOT-MIGRATION CLOSEOUT:
+  // 编辑主路径优先从 ParsedRecordSnapshot.semantic 读取，legacy item 字段只作为 fallback。
+  // 这样任务正文、时间、主题路径的来源是一致的，避免 parser 提取对了但 editStateResolver 又读回 item.title。
+  if (item.type === 'task' && (isContentField(field) || isTitleField(field))) {
+    return snapshot.semantic.editableText || snapshot.semantic.title || item.title || item.content;
+  }
+
+  if (isContentField(field)) return snapshot.semantic.editableText || snapshot.semantic.content || item.content;
+  if (isTitleField(field)) return snapshot.semantic.title || snapshot.semantic.editableText || item.title;
+
+  if (['日期', 'date'].includes(key) || ['日期', 'date'].includes(label)) return snapshot.semantic.date;
+  if (['时间', 'time', 'start', 'starttime'].includes(key) || ['时间', 'time', 'start', 'starttime'].includes(label)) return snapshot.semantic.startTime;
+  if (['结束', 'end', 'endtime'].includes(key) || ['结束', 'end', 'endtime'].includes(label)) return snapshot.semantic.endTime;
+  if (['时长', 'duration'].includes(key) || ['时长', 'duration'].includes(label)) return snapshot.semantic.duration;
+
+  if (['主题', 'theme', 'themepath', '完整主题', '完整路径主题'].includes(key) || ['主题', 'theme', 'themepath', '完整主题', '完整路径主题'].includes(label)) {
+    return snapshot.semantic.themePath || item.theme || item.header;
+  }
+  if (['roottheme', '根主题'].includes(key) || ['roottheme', '根主题'].includes(label)) return snapshot.semantic.rootTheme;
+  if (['leaftheme', '叶主题'].includes(key) || ['leaftheme', '叶主题'].includes(label)) return snapshot.semantic.leafTheme;
+
+  return undefined;
+}
+
+function buildInitialFormData(template: any, item: Item, snapshot: ParsedRecordSnapshot = buildParsedRecordSnapshot(item)): Record<string, unknown> {
   const result: Record<string, unknown> = {};
   if (!template?.fields?.length) return result;
 
@@ -178,12 +293,6 @@ function buildInitialFormData(template: any, item: Item): Record<string, unknown
   };
 
   const readValue = (field: any) => {
-    const aliases = [field.key, field.label, String(field.key || '').toLowerCase(), String(field.label || '').toLowerCase()];
-    for (const alias of aliases) {
-      const value = readExtraByAlias(alias);
-      if (value !== undefined) return value;
-    }
-
     const key = String(field.key || '').toLowerCase();
     const label = String(field.label || '').toLowerCase();
 
@@ -191,28 +300,21 @@ function buildInitialFormData(template: any, item: Item): Record<string, unknown
       return buildRatingOption(field, item);
     }
 
+    const semanticValue = readSnapshotSemanticValue(field, item, snapshot);
+    if (semanticValue !== undefined && semanticValue !== null && semanticValue !== '') return semanticValue;
+
+    const aliases = [field.key, field.label, String(field.key || '').toLowerCase(), String(field.label || '').toLowerCase()];
+    for (const alias of aliases) {
+      const value = readExtraByAlias(alias);
+      if (value !== undefined) return value;
+    }
+
     if (isPathLikeField(field)) {
-      return item.theme || item.header || item.categoryKey || undefined;
+      // LEGACY-FALLBACK:
+      // 历史 path-like 字段曾经直接读 categoryKey。现在优先使用 themePath，只有没有主题路径时才回退。
+      return snapshot.semantic.themePath || item.theme || item.categoryKey || undefined;
     }
 
-    const themeParts = splitThemePath(item.theme || item.header || null);
-    if (['根主题', 'rootTheme', 'themeRoot'].includes(field.key) || ['根主题', 'rootTheme', 'themeRoot'].includes(field.label)) return themeParts.rootTheme || undefined;
-    if (['叶主题', 'leafTheme', 'themeLeaf'].includes(field.key) || ['叶主题', 'leafTheme', 'themeLeaf'].includes(field.label)) return themeParts.leafTheme || undefined;
-    if (['完整主题', '主题路径', 'themePath'].includes(field.key) || ['完整主题', '主题路径', 'themePath'].includes(field.label)) return themeParts.themePath || undefined;
-
-    if (['内容', 'content'].includes(field.key) || ['内容', 'content'].includes(field.label)) {
-      return item.type === 'task'
-        ? (item.editableText || (item.extra?.['正文'] as string | undefined) || item.title || item.content)
-        : item.content;
-    }
-    if (['title', '标题'].includes(field.key) || ['title', '标题'].includes(field.label)) {
-      return item.title || (item.type === 'task' ? item.editableText : item.content);
-    }
-    if (['日期', 'date'].includes(field.key) || ['日期', 'date'].includes(field.label)) return item.date || item.createdDate;
-    if (['时间', 'time', 'start'].includes(key) || ['时间', 'time', 'start'].includes(label)) return item.startTime;
-    if (['结束', 'end'].includes(key) || ['结束', 'end'].includes(label)) return item.endTime;
-    if (['时长', 'duration'].includes(key) || ['时长', 'duration'].includes(label)) return item.duration;
-    if (['主题', 'theme'].includes(key) || ['主题', 'theme'].includes(label)) return themeParts.themePath || item.theme || item.header;
     return (item as any)[field.key] ?? (item as any)[field.label];
   };
 
@@ -227,7 +329,19 @@ function buildInitialFormData(template: any, item: Item): Record<string, unknown
 export function buildEditRecordState(input: BuildEditStateInput): PreparedEditRecord {
   const { settings, item, preferredBlockId, preferredThemeId } = input;
   const resolvedBlock = resolveBlockForEdit(settings, item, preferredBlockId);
-  const resolvedThemeId = findThemeIdByPath(settings, item.theme) ?? preferredThemeId ?? undefined;
+  const resolvedThemeId = resolvedBlock.themeIdFromTemplateHint ?? findThemeIdByPath(settings, item.theme) ?? preferredThemeId ?? undefined;
+  recordDebugLog('编辑模板解析', '任务/块模板选择', {
+    itemType: item.type,
+    itemTitle: item.title,
+    itemEditableText: item.editableText,
+    templateId: item.templateId,
+    templateSourceType: item.templateSourceType,
+    preferredBlockId,
+    resolvedBlockId: resolvedBlock.blockId,
+    resolvedThemeId,
+    resolvedBy: resolvedBlock.resolvedBy,
+    reason: resolvedBlock.debugReason,
+  });
   const resolvedDependencies = resolveRecordDependencies({
     settings,
     blockId: resolvedBlock.blockId,
@@ -235,7 +349,12 @@ export function buildEditRecordState(input: BuildEditStateInput): PreparedEditRe
     item,
   });
 
-  const initialFormData = resolvedDependencies.template ? buildInitialFormData(resolvedDependencies.template, item) : {};
+  const parsedSnapshot = buildParsedRecordSnapshot(item);
+  const initialFormData = resolvedDependencies.template ? buildInitialFormData(resolvedDependencies.template, item, parsedSnapshot) : {};
+  recordDebugLog('编辑初始值', 'ParsedRecordSnapshot 到 initialFormData 的回填结果', {
+    parsedSemantic: parsedSnapshot.semantic,
+    initialFormData,
+  });
   const snapshot = buildEditableRecordSnapshot({
     mode: 'edit',
     item,

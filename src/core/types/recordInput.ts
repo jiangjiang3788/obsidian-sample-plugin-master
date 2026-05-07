@@ -125,6 +125,13 @@ export interface SubmitUpdateRecordParams {
   meta?: {
     timeDirection?: 'forward' | 'backward';
   };
+  /**
+   * 主线收口：提交前 UI 实时预览到的输出计划。
+   * usecase 会再次计算实际输出计划；如果二者不一致，说明 UI 预览和实际保存链路已经漂移，
+   * 必须阻止本次保存，避免“界面显示写到 A，实际写到 B”。
+   */
+  expectedOutputPlan?: Pick<RecordOutputPlan, 'targetFilePath' | 'targetHeader'> | null;
+  expectedPersistencePlan?: Pick<RecordPersistencePlan, 'originalPath' | 'pathChanged' | 'writeMode'> | null;
   signal?: AbortSignal;
   source?: Extract<RecordInputSource, 'quickinput' | 'unknown'>;
 }

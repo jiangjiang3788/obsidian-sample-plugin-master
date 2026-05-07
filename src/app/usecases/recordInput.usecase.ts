@@ -72,6 +72,56 @@ function normalizeLineText(value: unknown): string {
     .toLowerCase();
 }
 
+
+function normalizePlanText(value: unknown): string {
+  return String(value ?? '').trim();
+}
+
+// CLOSEOUT-GUARD: 提交前一致性校验。
+// 目的：防止 UI 实时预览的保存位置与实际提交时重新计算的位置不一致。
+// 规则：只要 targetFile / targetHeader / writeMode / originalPath 发生偏移，就取消保存，不写新记录、不删旧记录。
+function buildPlanConsistencyIssues(params: {
+  expectedOutputPlan?: SubmitUpdateRecordParams['expectedOutputPlan'];
+  expectedPersistencePlan?: SubmitUpdateRecordParams['expectedPersistencePlan'];
+  actualOutputPlan: ReturnType<typeof buildRecordOutputPlan>;
+  actualPersistencePlan: ReturnType<typeof buildRecordPersistencePlan>;
+}): RecordSubmitIssue[] {
+  const issues: RecordSubmitIssue[] = [];
+  const expectedOutput = params.expectedOutputPlan;
+  const expectedPersistence = params.expectedPersistencePlan;
+
+  if (expectedOutput) {
+    const expectedPath = normalizePlanText(expectedOutput.targetFilePath);
+    const actualPath = normalizePlanText(params.actualOutputPlan.targetFilePath);
+    const expectedHeader = normalizePlanText(expectedOutput.targetHeader);
+    const actualHeader = normalizePlanText(params.actualOutputPlan.targetHeader);
+
+    if (expectedPath !== actualPath || expectedHeader !== actualHeader) {
+      issues.push(issue(
+        'record_output_plan_changed_before_submit',
+        `保存位置预览和实际保存计划不一致：预览为 ${expectedPath || '未知位置'}${expectedHeader ? ` → ${expectedHeader}` : ''}，实际为 ${actualPath || '未知位置'}${actualHeader ? ` → ${actualHeader}` : ''}。为避免误写入，已取消本次保存，请重新打开面板后再试。`,
+      ));
+    }
+  }
+
+  if (expectedPersistence) {
+    const expectedOriginalPath = normalizePlanText(expectedPersistence.originalPath);
+    const actualOriginalPath = normalizePlanText(params.actualPersistencePlan.originalPath);
+    if (
+      expectedPersistence.pathChanged !== params.actualPersistencePlan.pathChanged
+      || expectedPersistence.writeMode !== params.actualPersistencePlan.writeMode
+      || expectedOriginalPath !== actualOriginalPath
+    ) {
+      issues.push(issue(
+        'record_persistence_plan_changed_before_submit',
+        `保存策略预览和实际保存策略不一致：预览为 ${expectedPersistence.writeMode}${expectedPersistence.pathChanged ? '，路径变化' : '，路径不变'}；实际为 ${params.actualPersistencePlan.writeMode}${params.actualPersistencePlan.pathChanged ? '，路径变化' : '，路径不变'}。为避免误保存，已取消本次保存。`,
+      ));
+    }
+  }
+
+  return issues;
+}
+
 function getFirstDefinedValue(record: Record<string, unknown>, keys: string[]): unknown {
   for (const key of keys) {
     if (!Object.prototype.hasOwnProperty.call(record, key)) continue;
@@ -266,14 +316,100 @@ export class RecordInputUseCase {
       outputPlan,
     });
 
+    const planConsistencyIssues = buildPlanConsistencyIssues({
+      expectedOutputPlan: params.expectedOutputPlan,
+      expectedPersistencePlan: params.expectedPersistencePlan,
+      actualOutputPlan: outputPlan,
+      actualPersistencePlan: persistencePlan,
+    });
+    if (planConsistencyIssues.length > 0) {
+      return buildValidationErrorResult('update', planConsistencyIssues, warnings);
+    }
+
     try {
-      if (persistencePlan.pathChanged) {
-        return buildValidationErrorResult('update', [
-          issue(
-            'record_update_target_path_changed',
-            `安全 MVP：当前修改会把记录从 ${persistencePlan.originalPath || '未知位置'} 写到 ${outputPlan.targetFilePath || '未知位置'}。为避免误迁移，本次先阻止保存；请改回原主题/模板，或后续使用专门的迁移保存。`,
-          ),
-        ], warnings);
+      if (persistencePlan.pathChanged && persistencePlan.writeMode === 'move_and_replace') {
+        const targetPath = outputPlan.targetFilePath || '';
+        const beforeTargetItems = this.getFileItemsByPath(targetPath);
+        const createdPath = await this.deps.inputService.createRecordAtPlannedLocation(
+          resolved.template,
+          normalized.normalizedFormData,
+          resolved.theme ?? undefined,
+          {
+            templateId: resolved.meta.templateId ?? resolved.template.id,
+            templateSourceType: resolved.meta.templateSourceType ?? 'block',
+          },
+          {
+            signal: params.signal,
+            autoRefresh: false,
+          },
+        );
+
+        const scannedNewPath = await applyRecordRefreshPlan(this.deps.dataStore, {
+          scanPaths: [createdPath],
+          notify: false,
+        });
+        const afterTargetItems = scannedNewPath.get(createdPath) ?? this.getFileItemsByPath(createdPath);
+        const createdRecord = this.locateCreatedRecord(beforeTargetItems, afterTargetItems, {
+          outputContent: outputPlan.outputContent,
+          normalizedFormData: normalized.normalizedFormData,
+          templateId: resolved.meta.templateId ?? resolved.template.id,
+          templateSourceType: resolved.meta.templateSourceType ?? 'block',
+          themePath: resolved.theme?.path ?? null,
+          blockCategoryKey: resolved.template.categoryKey ?? null,
+          itemTypeHint: this.inferCreatedItemType(resolved.template.outputTemplate),
+          appendMode: outputPlan.targetHeader ? 'header' : 'append',
+          targetHeader: outputPlan.targetHeader ?? null,
+          beforeMaxLine: beforeTargetItems.reduce((max, item) => Math.max(max, getItemLineNumber(item)), 0),
+        });
+
+        try {
+          const deletedPath = await this.deps.inputService.deleteExistingRecord(params.item, {
+            signal: params.signal,
+            autoRefresh: false,
+          });
+          return finalizeRecordSubmitResult(this.deps.dataStore, buildSuccessResult('update', {
+            affectedPath: createdPath,
+            affectedRecordId: createdRecord?.id ?? params.item.id,
+            refresh: {
+              scanPaths: [createdPath, deletedPath],
+              notify: true,
+            },
+            feedback: {
+              notice: `✅ 已迁移保存：${persistencePlan.originalPath || '原位置'} → ${createdPath}`,
+            },
+            warnings: [
+              ...warnings,
+              issue(
+                'record_update_moved_to_new_path',
+                `路径变化已执行安全迁移：已先写入 ${createdPath}，再删除原位置 ${persistencePlan.originalPath || '未知位置'}。`,
+              ),
+            ],
+          }));
+        } catch (deleteError) {
+          return finalizeRecordSubmitResult(this.deps.dataStore, {
+            // CLOSEOUT-GUARD: 带警告的成功。
+            // 新位置已经写入成功，不应作为普通 error 处理；UI 应提示手动清理旧记录并关闭面板，避免重复保存。
+            status: 'partial_success',
+            operation: 'update',
+            affectedPath: createdPath,
+            affectedRecordId: createdRecord?.id ?? params.item.id,
+            refresh: {
+              scanPaths: [createdPath, persistencePlan.originalPath || ''],
+              notify: true,
+            },
+            feedback: {
+              notice: `已写入新位置 ${createdPath}，但旧记录删除失败；请检查并手动清理 ${persistencePlan.originalPath || '原位置'}。`,
+            },
+            warnings,
+            errors: [
+              issue(
+                'record_update_old_entry_delete_failed',
+                `安全迁移保存：已先写入新位置 ${createdPath}，但删除原记录 ${persistencePlan.originalPath || '未知位置'} 失败。为避免数据丢失，旧记录被保留，请手动检查并清理。`,
+              ),
+              ...toArray(this.mapSubmitError('update', deleteError).errors),
+            ],
+          });
+        }
       }
 
       const path = await this.deps.inputService.updateExistingRecord(

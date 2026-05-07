@@ -30,6 +30,7 @@ export * from './types';
 // -------------------- Utils（可复用纯能力） --------------------
 //
 export * from './utils';
+export { buildRecordSubmitFeedbackPresentation } from './utils/recordSubmitFeedback';
 
 //
 // -------------------- AI Module（模块级 public） --------------------

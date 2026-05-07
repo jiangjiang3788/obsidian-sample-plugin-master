@@ -415,11 +415,11 @@
       ],
       "displayMode": "list",
       "initialView": "月",
-      "initialDateFollowsNow": true,
+      "initialDateFollowsNow": false,
       "parentId": "group_memcg1u3us3jc",
       "hideToolbar": false,
       "isOverviewMode": false,
-      "initialDate": "2025-05-26",
+      "initialDate": "2026-04-26",
       "useFieldGranularity": false,
       "selectedThemes": [],
       "selectedCategories": [

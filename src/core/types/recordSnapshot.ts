@@ -1,4 +1,5 @@
 import type { Item } from './schema';
+import { extractTaskEditableText } from '@/core/utils/text';
 
 /**
  * 计划第 5 步：把“保存位置 / 输出结果”前置成显式的 OutputPlan，
@@ -25,10 +26,13 @@ export interface RecordPersistencePlan {
   originalPath: string | null;
   pathChanged: boolean;
   /**
-   * 安全 MVP：编辑导致目标文件变化时先阻止保存，
-   * 不在测试不足时自动迁移，避免新旧位置同时出现或误删旧记录。
+   * 主线第 7 步：路径变化不再一刀切阻止。
+   *
+   * update_in_place：目标路径未变化，直接替换原记录。
+   * move_and_replace：目标路径变化，先写入新位置，再删除旧记录；
+   *                  如果删除失败，返回 partial_success 并保留旧记录，避免误删。
    */
-  writeMode: 'create' | 'update_in_place' | 'blocked_path_change';
+  writeMode: 'create' | 'update_in_place' | 'move_and_replace';
 }
 
 /**
@@ -95,10 +99,21 @@ export function splitThemePath(themePath: string | null | undefined): ThemePathP
 }
 
 function pickEditableText(item: Item): string | null {
+  if (item.type === 'task') {
+    // SNAPSHOT-MIGRATION DEBUG FIX:
+    // 任务正文优先从 rawSource/content 重新剥离，而不是优先信任 item.title / item.editableText。
+    // 原因：历史缓存或旧 parser 可能已经把 editableText/title 写成被空格截断的摘要。
+    // 例如：`长治学院  设计道旗定稿` 曾经会只剩 `长治学院`。
+    const fromRaw = extractTaskEditableText(item.rawSource || item.content || '').editableText;
+    if (fromRaw) return fromRaw;
+    const extraBody = item.extra?.['正文'];
+    if (typeof extraBody === 'string' && extraBody.trim()) return extraBody.trim();
+    if (item.editableText) return item.editableText;
+    return item.title || null;
+  }
   if (item.editableText) return item.editableText;
   const extraBody = item.extra?.['正文'];
   if (typeof extraBody === 'string' && extraBody.trim()) return extraBody.trim();
-  if (item.type === 'task') return item.title || null;
   return item.content || item.title || null;
 }
 
