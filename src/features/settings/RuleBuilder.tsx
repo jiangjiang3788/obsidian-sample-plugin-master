@@ -5,7 +5,7 @@ import { useMemo, useState } from 'preact/hooks';
 import { Typography, Tooltip, Chip, Autocomplete, TextField, Button } from '@mui/material';
 import { SimpleSelect } from '@shared/public';
 import { DataStore } from '@core/public';
-import { getAllFields, readField, FilterRule, SortRule } from '@core/public';
+import { getAllFields, readField, getFieldLabel, FilterRule, SortRule } from '@core/public';
 
 function useUniqueFieldValues(dataStore: DataStore) {
     return useMemo(() => {
@@ -100,13 +100,13 @@ export function RuleBuilder({ title, mode, rows, fieldOptions, onChange, dataSto
     const formatRule = (rule: FilterRule | SortRule) => {
         if (isFilterMode) {
             const filterRule = rule as FilterRule;
-            return `${filterRule.field} ${filterRule.op} "${filterRule.value}"`;
+            return `${getFieldLabel(filterRule.field)} ${filterRule.op} "${filterRule.value}"`; 
         }
         const sortRule = rule as SortRule;
-        return `${sortRule.field} ${sortRule.dir === 'asc' ? '升序' : '降序'}`;
+        return `${getFieldLabel(sortRule.field)} ${sortRule.dir === 'asc' ? '升序' : '降序'}`;
     };
 
-    const fieldSelectOptions = fieldOptions.map((f: string) => ({ value: f, label: f }));
+    const fieldSelectOptions = fieldOptions.map((f: string) => ({ value: f, label: getFieldLabel(f) }));
     const operatorOptions = ['=', '!=', 'includes', 'regex', '>', '<'].map(op => ({ value: op, label: op }));
     const directionOptions = [{ value: 'asc', label: '升序' }, { value: 'desc', label: '降序' }];
     const logicOptions = [

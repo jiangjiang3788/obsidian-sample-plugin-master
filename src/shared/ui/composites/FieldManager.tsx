@@ -15,6 +15,7 @@ export interface FieldManagerProps {
   disabled?: boolean;
   maxFields?: number;
   className?: string;
+  getFieldLabel?: (field: string) => string;
 }
 
 export function FieldManager({
@@ -24,15 +25,16 @@ export function FieldManager({
   placeholder = "+ 添加字段...",
   disabled = false,
   maxFields,
-  className = ""
+  className = "",
+  getFieldLabel = (field: string) => field
 }: FieldManagerProps) {
 
   // 过滤可用字段（排除已选字段）
   const availableOptions = useMemo(() => {
     return availableFields
       .filter(field => !fields.includes(field))
-      .map(field => ({ value: field, label: field }));
-  }, [availableFields, fields]);
+      .map(field => ({ value: field, label: getFieldLabel(field) }));
+  }, [availableFields, fields, getFieldLabel]);
 
   const handleAddField = (field: string) => {
     if (maxFields !== undefined && fields.length >= maxFields) {
@@ -57,7 +59,7 @@ export function FieldManager({
             key={field} 
             className="field-tag" 
             onClick={() => !disabled && handleRemoveField(field)}
-            title={`点击移除字段: ${field}`}
+            title={`点击移除字段: ${getFieldLabel(field)}（${field}）`}
             style={{
               display: 'inline-flex',
               alignItems: 'center',
@@ -70,7 +72,7 @@ export function FieldManager({
               userSelect: 'none'
             }}
           >
-            {field} ✕
+            {getFieldLabel(field)} ✕
           </span>
         ))}
       </div>

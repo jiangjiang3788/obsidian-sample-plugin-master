@@ -8,7 +8,7 @@
 
 import { useMemo } from 'preact/hooks';
 import { FormControlLabel, Checkbox, Button } from '@mui/material';
-import { VIEW_OPTIONS, ViewName, getAllFields } from '@core/public';
+import { VIEW_OPTIONS, ViewName, getAllFields, getFieldLabel } from '@core/public';
 import type { ViewInstance } from '@core/public';
 import { VIEW_EDITORS } from '@features/settings/registry';
 import { useSelector, makeSelectViewInstanceById, useDataStore, useUseCases } from '@/app/public';
@@ -106,6 +106,7 @@ function ViewInstanceEditor({ vi }: { vi: ViewInstance }) {
                         availableFields={fieldOptions}
                         onFieldsChange={handleFieldsChange}
                         placeholder="+ 添加字段..."
+                        getFieldLabel={getFieldLabel}
                     />
                 </FormField>
 
@@ -118,6 +119,7 @@ function ViewInstanceEditor({ vi }: { vi: ViewInstance }) {
                         availableFields={fieldOptions}
                         onFieldsChange={handleGroupFieldsChange}
                         placeholder="+ 选择分组字段..."
+                        getFieldLabel={getFieldLabel}
                     />
                 </FormField>
 
