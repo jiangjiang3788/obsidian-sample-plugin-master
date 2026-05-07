@@ -1,0 +1,1045 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>移动端 UI 全量重构方案｜Think OS 插件文档系统</title>
+  <link rel="stylesheet" href="../../_资源/文档样式.css">
+</head>
+<body data-doc-root="../../">
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-title">Think OS 插件文档系统</div>
+        <div class="brand-subtitle">HTML 项目驾驶舱 / 文档 / 需求 / 技术 / 评审 / 发布</div>
+      </div>
+      <div class="search-box">
+        <input class="search-input" data-doc-search placeholder="搜索：需求、命令、设置、文件地图、评审、QuickInput...">
+        <div class="search-results" data-search-results></div>
+      </div>
+<div class="nav-section" data-nav-key="topic-00"><div class="nav-title">基础入口</div>
+<div class="nav-subsection" data-nav-key="topic-00-group-00"><div class="nav-subtitle">项目驾驶舱</div>
+<a class="nav-link" href="../../index.html">首页仪表盘</a>
+<a class="nav-link" href="../../00-基础入口/00-项目驾驶舱/项目总览.html">项目总览</a>
+<a class="nav-link" href="../../00-基础入口/00-项目驾驶舱/快速开始.html">快速开始</a>
+<a class="nav-link" href="../../00-基础入口/00-项目驾驶舱/当前状态.html">当前状态</a>
+</div>
+<div class="nav-subsection" data-nav-key="topic-00-group-01"><div class="nav-subtitle">概念与边界</div>
+<a class="nav-link" href="../../00-基础入口/01-概念与边界/插件定位.html">插件定位</a>
+<a class="nav-link" href="../../00-基础入口/01-概念与边界/功能地图.html">功能地图</a>
+<a class="nav-link" href="../../00-基础入口/01-概念与边界/术语表.html">术语表</a>
+<a class="nav-link" href="../../00-基础入口/01-概念与边界/常见问题.html">常见问题</a>
+</div>
+<div class="nav-subsection" data-nav-key="topic-00-group-02"><div class="nav-subtitle">迁移与旧资料</div>
+<a class="nav-link" href="../../00-基础入口/02-迁移与旧资料/迁移文档索引.html">迁移文档索引</a>
+<a class="nav-link" href="../../00-基础入口/02-迁移与旧资料/旧章节总览.html">旧章节总览</a>
+<a class="nav-link" href="../../00-基础入口/02-迁移与旧资料/章节化文档框架.html">章节化文档框架</a>
+</div>
+</div>
+<div class="nav-section" data-nav-key="topic-01"><div class="nav-title">项目管理</div>
+<div class="nav-subsection" data-nav-key="topic-01-group-00"><div class="nav-subtitle">计划与路线</div>
+<a class="nav-link" href="../../01-项目管理/00-计划与路线/需求池.html">需求池</a>
+<a class="nav-link" href="../../01-项目管理/00-计划与路线/版本路线图.html">版本路线图</a>
+<a class="nav-link" href="../../01-项目管理/00-计划与路线/开发计划.html">开发计划</a>
+</div>
+<div class="nav-subsection" data-nav-key="topic-01-group-01"><div class="nav-subtitle">过程记录</div>
+<a class="nav-link" href="../../01-项目管理/01-过程记录/问题记录.html">问题记录</a>
+<a class="nav-link" href="../../01-项目管理/01-过程记录/技术债.html">技术债</a>
+<a class="nav-link" href="../../01-项目管理/01-过程记录/决策记录.html">决策记录</a>
+<a class="nav-link" href="../../01-项目管理/01-过程记录/发布记录.html">发布记录</a>
+</div>
+<div class="nav-subsection" data-nav-key="topic-01-group-02"><div class="nav-subtitle">实施计划</div>
+<a class="nav-link" href="../../01-项目管理/02-实施计划/插件深度报告与实施计划.html">插件深度报告与实施计划</a>
+<a class="nav-link" href="../../01-项目管理/02-实施计划/上下文时间重构计划.html">上下文时间重构计划</a>
+<a class="nav-link" href="../../01-项目管理/02-实施计划/统一输入修改计划.html">统一输入修改计划</a>
+<a class="nav-link" href="../../01-项目管理/02-实施计划/原始计划记录.html">原始计划记录</a>
+<a class="nav-link" href="../../01-项目管理/02-实施计划/旧需求台账.html">旧需求台账</a>
+</div>
+<div class="nav-subsection" data-nav-key="topic-01-group-03"><div class="nav-subtitle">实施报告</div>
+<a class="nav-link" href="../../01-项目管理/03-实施报告/Batch1实施报告.html">Batch1 实施报告</a>
+<a class="nav-link" href="../../01-项目管理/03-实施报告/Batch2实施报告.html">Batch2 实施报告</a>
+<a class="nav-link" href="../../01-项目管理/03-实施报告/QuickInput主线修改记录.html">QuickInput 主线修改记录</a>
+<a class="nav-link" href="../../01-项目管理/03-实施报告/QuickInput收口状态.html">QuickInput 收口状态</a>
+<a class="nav-link" href="../../01-项目管理/03-实施报告/QuickInput本轮修改总览.html">QuickInput 本轮修改总览</a>
+</div>
+</div>
+<div class="nav-section" data-nav-key="topic-02"><div class="nav-title">功能设计</div>
+<div class="nav-subsection" data-nav-key="topic-02-group-00"><div class="nav-subtitle">功能全景</div>
+<a class="nav-link" href="../00-功能全景/功能总览.html">功能总览</a>
+<a class="nav-link" href="../00-功能全景/功能清单迁移.html">功能清单迁移</a>
+<a class="nav-link" href="../00-功能全景/旧产品功能地图.html">旧产品功能地图</a>
+</div>
+<div class="nav-subsection" data-nav-key="topic-02-group-01"><div class="nav-subtitle">用户与交互</div>
+<a class="nav-link" href="../01-用户与交互/用户场景.html">用户场景</a>
+<a class="nav-link" href="../01-用户与交互/命令设计.html">命令设计</a>
+<a class="nav-link" href="../01-用户与交互/设置项设计.html">设置项设计</a>
+<a class="nav-link" href="../01-用户与交互/交互流程.html">交互流程</a>
+<a class="nav-link" href="../01-用户与交互/异常状态.html">异常状态</a>
+<a class="nav-link" href="../01-用户与交互/功能验收标准.html">功能验收标准</a>
+</div>
+<div class="nav-subsection" data-nav-key="topic-02-group-02"><div class="nav-subtitle">View UI 与移动端</div>
+<a class="nav-link" href="ViewUI触发动作梳理.html">View UI 触发动作梳理</a>
+<a class="nav-link" href="移动端UI全量重构方案.html">移动端 UI 全量重构方案</a>
+</div>
+<div class="nav-subsection" data-nav-key="topic-02-group-03"><div class="nav-subtitle">QuickInput 功能收口</div>
+<a class="nav-link" href="../03-QuickInput功能收口/QuickInput保存计划一致性.html">QuickInput 保存计划一致性</a>
+<a class="nav-link" href="../03-QuickInput功能收口/QuickInput迁移保存反馈.html">QuickInput 迁移保存反馈</a>
+<a class="nav-link" href="../03-QuickInput功能收口/QuickInput路径变化保存策略.html">QuickInput 路径变化保存策略</a>
+</div>
+</div>
+<div class="nav-section" data-nav-key="topic-03"><div class="nav-title">技术文档</div>
+<div class="nav-subsection" data-nav-key="topic-03-group-00"><div class="nav-subtitle">技术全景</div>
+<a class="nav-link" href="../../03-技术文档/00-技术全景/技术总览.html">技术总览</a>
+<a class="nav-link" href="../../03-技术文档/00-技术全景/文件地图.html">文件地图</a>
+<a class="nav-link" href="../../03-技术文档/00-技术全景/模块职责.html">模块职责</a>
+<a class="nav-link" href="../../03-技术文档/00-技术全景/插件生命周期.html">插件生命周期</a>
+</div>
+<div class="nav-subsection" data-nav-key="topic-03-group-01"><div class="nav-subtitle">架构导览</div>
+<a class="nav-link" href="../../03-技术文档/01-架构导览/开发指南迁移.html">开发指南迁移</a>
+<a class="nav-link" href="../../03-技术文档/01-架构导览/开发规范迁移.html">开发规范迁移</a>
+<a class="nav-link" href="../../03-技术文档/01-架构导览/代码架构图总览.html">代码架构图总览</a>
+<a class="nav-link" href="../../03-技术文档/01-架构导览/旧代码架构图.html">旧代码架构图</a>
+</div>
+<div class="nav-subsection" data-nav-key="topic-03-group-02"><div class="nav-subtitle">目录地图</div>
+<a class="nav-link" href="../../03-技术文档/02-目录地图/app目录导览.html">app 目录导览</a>
+<a class="nav-link" href="../../03-技术文档/02-目录地图/core目录导览.html">core 目录导览</a>
+<a class="nav-link" href="../../03-技术文档/02-目录地图/features目录导览.html">features 目录导览</a>
+<a class="nav-link" href="../../03-技术文档/02-目录地图/platform目录导览.html">platform 目录导览</a>
+<a class="nav-link" href="../../03-技术文档/02-目录地图/share目录导览.html">share 目录导览</a>
+</div>
+<div class="nav-subsection" data-nav-key="topic-03-group-03"><div class="nav-subtitle">代码视角</div>
+<a class="nav-link" href="../../03-技术文档/03-代码视角/架构视角逐文件.html">架构视角逐文件</a>
+<a class="nav-link" href="../../03-技术文档/03-代码视角/领域视角逐文件.html">领域视角逐文件</a>
+<a class="nav-link" href="../../03-技术文档/03-代码视角/业务视角逐文件.html">业务视角逐文件</a>
+</div>
+<div class="nav-subsection" data-nav-key="topic-03-group-04"><div class="nav-subtitle">运行机制</div>
+<a class="nav-link" href="../../03-技术文档/04-运行机制/数据流.html">数据流</a>
+<a class="nav-link" href="../../03-技术文档/04-运行机制/事件流.html">事件流</a>
+<a class="nav-link" href="../../03-技术文档/04-运行机制/Obsidian API 使用.html">Obsidian API 使用</a>
+<a class="nav-link" href="../../03-技术文档/04-运行机制/样式系统.html">样式系统</a>
+<a class="nav-link" href="../../03-技术文档/04-运行机制/构建流程.html">构建流程</a>
+<a class="nav-link" href="../../03-技术文档/04-运行机制/数据流与流程图.html">数据流与流程图</a>
+</div>
+<div class="nav-subsection" data-nav-key="topic-03-group-05"><div class="nav-subtitle">字段与输入</div>
+<a class="nav-link" href="../../03-技术文档/05-字段与输入/字段系统重构方案.html">字段系统重构方案</a>
+<a class="nav-link" href="../../03-技术文档/05-字段与输入/统一输入现状盘点.html">统一输入现状盘点</a>
+</div>
+<div class="nav-subsection" data-nav-key="topic-03-group-06"><div class="nav-subtitle">QuickInput 技术记录</div>
+<a class="nav-link" href="../../03-技术文档/06-QuickInput技术记录/QuickInput多步推进Snapshot.html">QuickInput 多步推进 Snapshot</a>
+<a class="nav-link" href="../../03-技术文档/06-QuickInput技术记录/QuickInputLegacy调试收口.html">QuickInput Legacy 调试收口</a>
+<a class="nav-link" href="../../03-技术文档/06-QuickInput技术记录/QuickInput任务内容提取调试.html">QuickInput 任务内容提取调试</a>
+<a class="nav-link" href="../../03-技术文档/06-QuickInput技术记录/QuickInput任务内容单一入口.html">QuickInput 任务内容单一入口</a>
+<a class="nav-link" href="../../03-技术文档/06-QuickInput技术记录/QuickInput任务模板护栏.html">QuickInput 任务模板护栏</a>
+<a class="nav-link" href="../../03-技术文档/06-QuickInput技术记录/QuickInput任务写回保真.html">QuickInput 任务写回保真</a>
+</div>
+</div>
+<div class="nav-section" data-nav-key="topic-04"><div class="nav-title">评审中心</div>
+<div class="nav-subsection" data-nav-key="topic-04-group-00"><div class="nav-subtitle">评审方法</div>
+<a class="nav-link" href="../../04-评审中心/00-评审方法/需求评审.html">需求评审</a>
+<a class="nav-link" href="../../04-评审中心/00-评审方法/功能评审.html">功能评审</a>
+<a class="nav-link" href="../../04-评审中心/00-评审方法/技术方案评审.html">技术方案评审</a>
+</div>
+<div class="nav-subsection" data-nav-key="topic-04-group-01"><div class="nav-subtitle">质量评审</div>
+<a class="nav-link" href="../../04-评审中心/01-质量评审/代码结构评审.html">代码结构评审</a>
+<a class="nav-link" href="../../04-评审中心/01-质量评审/发布评审.html">发布评审</a>
+<a class="nav-link" href="../../04-评审中心/01-质量评审/风险评审.html">风险评审</a>
+</div>
+<div class="nav-subsection" data-nav-key="topic-04-group-02"><div class="nav-subtitle">专题评审</div>
+<a class="nav-link" href="../../04-评审中心/02-专题评审/字段系统深度评审.html">字段系统深度评审</a>
+<a class="nav-link" href="../../04-评审中心/02-专题评审/QuickInput调试与Legacy规范.html">QuickInput 调试与 Legacy 规范</a>
+</div>
+</div>
+<div class="nav-section" data-nav-key="topic-05"><div class="nav-title">维护发布</div>
+<div class="nav-subsection" data-nav-key="topic-05-group-00"><div class="nav-subtitle">测试验收</div>
+<a class="nav-link" href="../../05-维护发布/00-测试验收/测试清单.html">测试清单</a>
+<a class="nav-link" href="../../05-维护发布/00-测试验收/测试方案迁移.html">测试方案迁移</a>
+<a class="nav-link" href="../../05-维护发布/00-测试验收/QuickInput主线验收清单.html">QuickInput 主线验收清单</a>
+<a class="nav-link" href="../../05-维护发布/00-测试验收/QuickInput最终验收清单.html">QuickInput 最终验收清单</a>
+</div>
+<div class="nav-subsection" data-nav-key="topic-05-group-01"><div class="nav-subtitle">发布与回滚</div>
+<a class="nav-link" href="../../05-维护发布/01-发布与回滚/发布流程.html">发布流程</a>
+<a class="nav-link" href="../../05-维护发布/01-发布与回滚/Changelog.html">Changelog</a>
+<a class="nav-link" href="../../05-维护发布/01-发布与回滚/Bug处理流程.html">Bug 处理流程</a>
+<a class="nav-link" href="../../05-维护发布/01-发布与回滚/兼容性记录.html">兼容性记录</a>
+<a class="nav-link" href="../../05-维护发布/01-发布与回滚/回滚方案.html">回滚方案</a>
+<a class="nav-link" href="../../05-维护发布/01-发布与回滚/QuickInput风险与回滚说明.html">QuickInput 风险与回滚说明</a>
+</div>
+<div class="nav-subsection" data-nav-key="topic-05-group-02"><div class="nav-subtitle">修复记录</div>
+<a class="nav-link" href="../../05-维护发布/02-修复记录/QuickInput构建导出修复.html">QuickInput 构建导出修复</a>
+<a class="nav-link" href="../../05-维护发布/02-修复记录/BlockStatistics统一与跳转修复.html">Block Statistics 统一与跳转修复</a>
+<a class="nav-link" href="../../05-维护发布/02-修复记录/QuickInput任务正文空格保留修复.html">QuickInput 任务正文空格保留修复</a>
+</div>
+</div>
+    </aside>
+    <main class="main">
+      <section class="hero">
+        <div class="eyebrow">功能设计 / MIGRATED DOC</div>
+        <h1>移动端 UI 全量重构方案</h1>
+        <p class="lead">本次重构的目标不是“把桌面端界面缩到手机里”，而是为移动端建立一套独立、完整、可维护的 UI 体系。当前移动端问题不是单点 bug，而是系统性缺陷：移动端 UI 重构必须遵循以下原则：1. **移动端独立建模**2. **共享业务，不共享壳层**</p>
+        <div class="meta-row">
+          <span class="badge good">状态：已迁移</span>
+          <span class="badge">最后更新：2026-05-07</span>
+          <span class="badge">格式：HTML</span>
+        </div>
+      </section>
+      <section class="grid"><article class="card full"><h2>迁移信息</h2><div class="table-wrap"><table><thead><tr><th>项目</th><th>内容</th></tr></thead><tbody><tr><td>新分类</td><td>功能设计</td></tr><tr><td>旧路径</td><td><code>docs/完整移动端 UI 重构方案.md</code></td></tr><tr><td>原始标题</td><td>移动端 UI 全量重构方案（地毯式覆盖版）</td></tr><tr><td>处理方式</td><td>正文已转换为当前 <code>文档/</code> 的 HTML 页面；原始文件另存于 <code>_归档/迁移原文/</code>。</td></tr></tbody></table></div></article><article class="card full"><h2>正文</h2><div class="imported-doc"><h1>移动端 UI 全量重构方案（地毯式覆盖版）</h1>
+<h2>一、目标定义</h2>
+<p>本次重构的目标不是“把桌面端界面缩到手机里”，而是为移动端建立一套独立、完整、可维护的 UI 体系。</p>
+<h3>目标</h3>
+<ul>
+<li>让移动端成为独立可用的一等体验</li>
+<li>建立桌面端与移动端分治的 UI 架构</li>
+<li>统一交互规则、组件规范、状态模型和适配策略</li>
+<li>解决当前由补丁式兼容带来的反复问题</li>
+<li>为后续功能扩展建立稳定基础</li>
+</ul>
+<h3>非目标</h3>
+<ul>
+<li>不追求所有桌面端交互在移动端一比一复刻</li>
+<li>不追求所有页面同构</li>
+<li>不优先做视觉翻新，优先做结构稳定和交互正确</li>
+</ul>
+<hr/>
+<h2>二、核心判断</h2>
+<h3>2.1 当前问题的本质</h3>
+<p>当前移动端问题不是单点 bug，而是系统性缺陷：</p>
+<ul>
+<li>桌面端优先设计，移动端后补</li>
+<li>页面、弹窗、表单、选择器、操作区没有移动优先建模</li>
+<li>交互逻辑散落在组件内部</li>
+<li>布局、滚动、键盘、安全区、焦点、状态耦合过深</li>
+<li>缺乏统一的移动端设计语言和适配层</li>
+</ul>
+<h3>2.2 重构的原则</h3>
+<p>移动端 UI 重构必须遵循以下原则：</p>
+<ol>
+<li><strong>移动端独立建模</strong></li>
+<li><strong>共享业务，不共享壳层</strong></li>
+<li><strong>单一主滚动容器</strong></li>
+<li><strong>输入、选择、提交是三类核心场景</strong></li>
+<li><strong>状态先行，样式其次</strong></li>
+<li><strong>视觉统一服从交互正确</strong></li>
+<li><strong>可调试、可验证、可回归</strong></li>
+</ol>
+<hr/>
+<h2>三、产品层设计：移动端不应只是桌面缩略版</h2>
+<h2>3.1 双端产品形态定义</h2>
+<h3>桌面端适合：</h3>
+<ul>
+<li>高信息密度</li>
+<li>多区块并排</li>
+<li>hover、快捷键、右键</li>
+<li>长时间编辑与切换</li>
+<li>modal、side panel、dense table</li>
+</ul>
+<h3>移动端适合：</h3>
+<ul>
+<li>单任务流</li>
+<li>明确上下文</li>
+<li>一次一个重点</li>
+<li>焦点驱动交互</li>
+<li>全屏页、sheet、底部动作区、分步式输入</li>
+</ul>
+<h3>结论</h3>
+<p>同一个业务能力，桌面端与移动端应共享：</p>
+<ul>
+<li>领域模型</li>
+<li>表单定义</li>
+<li>提交逻辑</li>
+<li>校验规则</li>
+</ul>
+<p>但不应强行共享：</p>
+<ul>
+<li>页面骨架</li>
+<li>布局形态</li>
+<li>滚动策略</li>
+<li>操作位置</li>
+<li>输入与选择交互</li>
+</ul>
+<hr/>
+<h2>四、整体信息架构重构</h2>
+<h2>4.1 页面层级建议</h2>
+<p>移动端建议将 UI 拆成四种一级形态：</p>
+<h3>A. 全屏页面 Full Screen View</h3>
+<p>适用于：</p>
+<ul>
+<li>主功能页</li>
+<li>长表单</li>
+<li>设置页</li>
+<li>详情页</li>
+<li>编辑页</li>
+</ul>
+<p>特点：</p>
+<ul>
+<li>独立导航栏</li>
+<li>单一主滚动区</li>
+<li>支持返回</li>
+<li>适合复杂内容</li>
+</ul>
+<hr/>
+<h3>B. 底部抽屉 Bottom Sheet</h3>
+<p>适用于：</p>
+<ul>
+<li>轻量选择</li>
+<li>次级操作</li>
+<li>筛选</li>
+<li>短表单</li>
+<li>二次确认</li>
+</ul>
+<p>特点：</p>
+<ul>
+<li>轻量</li>
+<li>临时</li>
+<li>强上下文依附</li>
+<li>不适合重编辑</li>
+</ul>
+<hr/>
+<h3>C. 全屏编辑态 Full Screen Editor</h3>
+<p>适用于：</p>
+<ul>
+<li>富文本输入</li>
+<li>长文本输入</li>
+<li>多字段编辑</li>
+<li>需要键盘长期占用的场景</li>
+</ul>
+<p>特点：</p>
+<ul>
+<li>输入优先</li>
+<li>操作按钮简化</li>
+<li>减少顶部/底部占位</li>
+<li>保证光标与内容安全可见</li>
+</ul>
+<hr/>
+<h3>D. 操作菜单 Action Surface</h3>
+<p>适用于：</p>
+<ul>
+<li>单选/多选</li>
+<li>排序</li>
+<li>批量操作</li>
+<li>分享/删除/归档等动作</li>
+</ul>
+<p>特点：</p>
+<ul>
+<li>不承载复杂内容</li>
+<li>优先使用动作列表</li>
+<li>避免在移动端塞复杂弹窗</li>
+</ul>
+<hr/>
+<h2>4.2 信息架构分区</h2>
+<p>每个移动端页面建议统一分为：</p>
+<ol>
+<li><strong>顶部导航区</strong></li>
+<li><strong>状态/上下文区</strong></li>
+<li><strong>主内容区</strong></li>
+<li><strong>底部动作区</strong></li>
+<li><strong>系统反馈区</strong></li>
+</ol>
+<h3>其中最重要的约束：</h3>
+<ul>
+<li>主内容区必须是唯一主滚动区</li>
+<li>顶部和底部是否固定，要按页面类型明确，不可混搭</li>
+</ul>
+<hr/>
+<h2>五、页面骨架系统</h2>
+<h2>5.1 页面骨架基类</h2>
+<p>建议抽象以下壳层组件：</p>
+<pre><code class="language-ts">MobileScreenShell
+MobileSheetShell
+MobileEditorShell
+MobileSelectionShell
+</code></pre>
+<p>每种壳层各自负责：</p>
+<ul>
+<li>safe area</li>
+<li>header</li>
+<li>body</li>
+<li>footer</li>
+<li>scroll region</li>
+<li>keyboard behavior</li>
+<li>dismiss behavior</li>
+</ul>
+<p>这样业务组件不再自己处理这些问题。</p>
+<hr/>
+<h2>5.2 Header 体系</h2>
+<p>移动端顶部区域需要统一规范：</p>
+<h3>Header 类型</h3>
+<ul>
+<li>Standard Header：标题 + 返回</li>
+<li>Context Header：标题 + 副标题/状态</li>
+<li>Editor Header：返回/关闭 + 保存</li>
+<li>Search Header：搜索框 + 取消</li>
+</ul>
+<h3>规则</h3>
+<ul>
+<li>标题不宜超过两行</li>
+<li>主操作不超过 1 个</li>
+<li>次操作通过 menu 收纳</li>
+<li>不在 header 堆按钮</li>
+</ul>
+<hr/>
+<h2>5.3 Footer / Bottom Action Bar 体系</h2>
+<h3>Footer 类型</h3>
+<ul>
+<li>固定底部主操作</li>
+<li>吸附型次操作区</li>
+<li>键盘共存型底部操作区</li>
+<li>无 footer 页面</li>
+</ul>
+<h3>规则</h3>
+<ul>
+<li>输入页避免厚重固定 footer</li>
+<li>只有主动作才长期固定</li>
+<li>次动作收进更多菜单</li>
+<li>键盘出现时 footer 要么弱化，要么让位，不与输入区争空间</li>
+</ul>
+<hr/>
+<h2>六、导航系统重构</h2>
+<h2>6.1 移动端导航原则</h2>
+<p>移动端不应复制桌面端多面板结构，而应优先：</p>
+<ul>
+<li>栈式导航</li>
+<li>返回优先</li>
+<li>当前任务优先</li>
+<li>上下文可回溯</li>
+</ul>
+<h3>推荐结构</h3>
+<ul>
+<li>一级：主入口</li>
+<li>二级：列表/模块页</li>
+<li>三级：详情/编辑页</li>
+<li>临时操作：sheet</li>
+</ul>
+<hr/>
+<h2>6.2 面包屑与路径</h2>
+<p>桌面端常见面包屑在移动端不宜保留为完整路径串。
+建议改为：</p>
+<ul>
+<li>返回按钮</li>
+<li>简短标题</li>
+<li>必要时副标题展示父级信息</li>
+</ul>
+<hr/>
+<h2>七、列表系统重构</h2>
+<h2>7.1 移动端列表不应照搬桌面表格</h2>
+<p>桌面端擅长：</p>
+<ul>
+<li>表格</li>
+<li>多列</li>
+<li>高密度信息</li>
+</ul>
+<p>移动端应改成：</p>
+<ul>
+<li>卡片列表</li>
+<li>两层信息结构</li>
+<li>重要信息前置</li>
+<li>次信息折叠</li>
+</ul>
+<hr/>
+<h2>7.2 列表项设计规范</h2>
+<p>每个列表项建议限制为：</p>
+<ul>
+<li>主标题</li>
+<li>一行摘要</li>
+<li>一行元信息</li>
+<li>0~2 个轻操作</li>
+</ul>
+<h3>不要做：</h3>
+<ul>
+<li>每行 4 个按钮</li>
+<li>多列复杂对齐</li>
+<li>小字号堆信息</li>
+</ul>
+<h3>可做：</h3>
+<ul>
+<li>左主信息，右状态</li>
+<li>长按进入批量操作</li>
+<li>左滑/右滑触发轻操作，但必须有显式替代入口</li>
+</ul>
+<hr/>
+<h2>7.3 列表状态</h2>
+<p>每个列表页都必须具备完整状态体系：</p>
+<ul>
+<li>加载中</li>
+<li>空状态</li>
+<li>错误状态</li>
+<li>无权限</li>
+<li>筛选结果为空</li>
+<li>局部刷新</li>
+<li>加载更多</li>
+</ul>
+<hr/>
+<h2>八、表单系统重构</h2>
+<h2>8.1 表单是移动端重灾区，必须单独设计</h2>
+<p>表单拆为三层：</p>
+<ol>
+<li>字段层</li>
+<li>分组层</li>
+<li>页面层</li>
+</ol>
+<hr/>
+<h2>8.2 字段类型体系</h2>
+<p>建议统一字段模型：</p>
+<pre><code class="language-ts">type FieldKind =
+  | 'text'
+  | 'textarea'
+  | 'number'
+  | 'select'
+  | 'multiselect'
+  | 'date'
+  | 'datetime'
+  | 'toggle'
+  | 'checkbox'
+  | 'radio'
+  | 'tags'
+  | 'richtext'
+  | 'attachments'
+</code></pre>
+<hr/>
+<h2>8.3 字段行为模型</h2>
+<p>每个字段应可声明移动端行为：</p>
+<pre><code class="language-ts">type MobileFieldBehavior = {
+  autoGrow?: boolean;
+  openInSheet?: boolean;
+  enterBehavior?: 'newline' | 'next' | 'submit';
+  keepCursorVisible?: boolean;
+  selectionStyle?: 'inline' | 'sheet' | 'fullscreen';
+};
+</code></pre>
+<hr/>
+<h2>8.4 表单布局规则</h2>
+<h3>桌面端常见：</h3>
+<ul>
+<li>两列或多列</li>
+<li>label 左对齐或上对齐均可</li>
+<li>可做紧凑布局</li>
+</ul>
+<h3>移动端建议：</h3>
+<ul>
+<li>单列</li>
+<li>label 在上</li>
+<li>字段之间有明确呼吸感</li>
+<li>分组之间有明显层次</li>
+<li>不做并排双列字段，除非极简场景</li>
+</ul>
+<hr/>
+<h2>8.5 分组策略</h2>
+<p>长表单必须分组：</p>
+<ul>
+<li>基本信息</li>
+<li>详细信息</li>
+<li>高级选项</li>
+<li>危险操作</li>
+</ul>
+<p>并支持：</p>
+<ul>
+<li>折叠/展开</li>
+<li>锚点跳转</li>
+<li>分段保存</li>
+</ul>
+<hr/>
+<h2>8.6 验证与错误提示</h2>
+<p>移动端表单错误提示必须满足：</p>
+<ul>
+<li>错误信息贴近字段</li>
+<li>不只靠颜色</li>
+<li>页面顶部有汇总提示时，也要能跳到字段</li>
+<li>提交失败时自动滚动到第一个错误字段</li>
+</ul>
+<hr/>
+<h2>九、输入体验系统重构</h2>
+<h2>9.1 输入保护能力独立化</h2>
+<p>建议抽象为：</p>
+<pre><code class="language-ts">useInputVisibilityGuard()
+useKeyboardState()
+useAutoGrowTextarea()
+useFieldFocusNavigator()
+</code></pre>
+<h3>负责内容</h3>
+<ul>
+<li>focus 管理</li>
+<li>keyboard suspected/detected</li>
+<li>光标可见性</li>
+<li>内容安全区</li>
+<li>多次滚动校正</li>
+<li>textarea 自动增高</li>
+<li>调试输出</li>
+</ul>
+<hr/>
+<h2>9.2 输入目标等级</h2>
+<p>输入体验至少分三层：</p>
+<ol>
+<li>控件可见</li>
+<li>光标可见</li>
+<li>当前输入内容可见</li>
+</ol>
+<p>系统设计目标必须至少达到第 3 层。</p>
+<hr/>
+<h2>9.3 回车语义</h2>
+<p>移动端必须按字段类型定义：</p>
+<ul>
+<li>单行 text：next / done</li>
+<li>textarea：newline</li>
+<li>搜索框：search</li>
+<li>表单最后字段：done 或 submit</li>
+</ul>
+<p>不要让所有字段共用同一种回车语义。</p>
+<hr/>
+<h2>十、选择器与弹层系统重构</h2>
+<h2>10.1 选择器分类</h2>
+<h3>轻量选择</h3>
+<ul>
+<li>单选项少</li>
+<li>直接 sheet</li>
+</ul>
+<h3>中量选择</h3>
+<ul>
+<li>需要搜索</li>
+<li>全屏选择页</li>
+</ul>
+<h3>重量选择</h3>
+<ul>
+<li>多条件筛选</li>
+<li>全屏筛选器，不放在小 modal 里</li>
+</ul>
+<hr/>
+<h2>10.2 弹层体系分级</h2>
+<p>建议统一定义四类弹层：</p>
+<ol>
+<li>Toast / Notice</li>
+<li>Popover / Action Menu</li>
+<li>Bottom Sheet</li>
+<li>Full Screen Modal</li>
+</ol>
+<h3>规则</h3>
+<ul>
+<li>移动端少用居中 modal</li>
+<li>复杂交互尽量升级到全屏页或全屏编辑态</li>
+<li>不在移动端堆嵌套弹窗</li>
+</ul>
+<hr/>
+<h2>十一、详情页系统重构</h2>
+<h2>11.1 详情页结构</h2>
+<p>详情页建议统一为：</p>
+<ul>
+<li>顶部主信息</li>
+<li>关键状态</li>
+<li>分组内容</li>
+<li>关联操作</li>
+<li>历史/日志</li>
+<li>底部主动作</li>
+</ul>
+<h3>规则</h3>
+<ul>
+<li>关键信息前置</li>
+<li>长内容分块</li>
+<li>二级操作通过 menu / sheet 收纳</li>
+<li>危险操作下沉到底部独立区块</li>
+</ul>
+<hr/>
+<h2>十二、搜索与筛选系统重构</h2>
+<h2>12.1 搜索页</h2>
+<p>移动端搜索应采用独立 search mode：</p>
+<ul>
+<li>顶部搜索框</li>
+<li>实时结果</li>
+<li>最近搜索</li>
+<li>清空与取消</li>
+<li>支持空查询态</li>
+</ul>
+<hr/>
+<h2>12.2 筛选器</h2>
+<p>复杂筛选建议：</p>
+<ul>
+<li>不嵌在小弹窗</li>
+<li>使用底部 sheet 或全屏筛选页</li>
+<li>支持“重置 / 应用”</li>
+<li>显示当前已生效筛选标签</li>
+</ul>
+<hr/>
+<h2>十三、反馈系统重构</h2>
+<h2>13.1 反馈层级</h2>
+<h3>轻反馈</h3>
+<ul>
+<li>toast</li>
+<li>inline hint</li>
+</ul>
+<h3>中反馈</h3>
+<ul>
+<li>section error</li>
+<li>banner</li>
+</ul>
+<h3>重反馈</h3>
+<ul>
+<li>full-screen error</li>
+<li>blocking confirm</li>
+</ul>
+<h3>原则</h3>
+<p>反馈强度必须与问题严重程度一致。</p>
+<hr/>
+<h2>13.2 Notice 使用规则</h2>
+<p>避免无意义提示，例如：</p>
+<ul>
+<li>“核心功能已加载”</li>
+<li>“组件初始化成功”</li>
+</ul>
+<p>用户只应看到与任务有关的反馈：</p>
+<ul>
+<li>已保存</li>
+<li>保存失败</li>
+<li>网络不可用</li>
+<li>已复制</li>
+<li>已删除</li>
+</ul>
+<hr/>
+<h2>十四、空态与错误态设计</h2>
+<p>每个页面都应具备以下 UI 状态设计：</p>
+<ul>
+<li>首次加载</li>
+<li>部分加载</li>
+<li>空数据</li>
+<li>搜索为空</li>
+<li>筛选为空</li>
+<li>异常错误</li>
+<li>离线</li>
+<li>权限不足</li>
+</ul>
+<h3>空态应包含</h3>
+<ul>
+<li>状态说明</li>
+<li>一句指导</li>
+<li>一个主动作</li>
+</ul>
+<hr/>
+<h2>十五、设计系统与视觉系统</h2>
+<h2>15.1 Token 体系</h2>
+<p>建立统一设计 token：</p>
+<ul>
+<li>spacing</li>
+<li>radius</li>
+<li>font size</li>
+<li>line height</li>
+<li>color</li>
+<li>shadow</li>
+<li>z-index</li>
+<li>safe-area inset</li>
+<li>animation duration</li>
+</ul>
+<hr/>
+<h2>15.2 间距规则</h2>
+<p>移动端建议建立一套固定尺度，例如：</p>
+<ul>
+<li>4 / 8 / 12 / 16 / 20 / 24 / 32</li>
+</ul>
+<p>不要靠页面临时拍脑袋。</p>
+<hr/>
+<h2>15.3 字号层级</h2>
+<p>建议控制在有限层级内：</p>
+<ul>
+<li>title</li>
+<li>subtitle</li>
+<li>body</li>
+<li>caption</li>
+<li>meta</li>
+</ul>
+<p>移动端不宜字号过多。</p>
+<hr/>
+<h2>15.4 触控热区</h2>
+<p>移动端所有可点击元素必须满足足够热区。
+优先保证可点，不优先追求视觉紧凑。</p>
+<hr/>
+<h2>十六、组件系统重构</h2>
+<h2>16.1 组件分层</h2>
+<h3>基础组件</h3>
+<ul>
+<li>Button</li>
+<li>Input</li>
+<li>Textarea</li>
+<li>Select</li>
+<li>Toggle</li>
+<li>Chip</li>
+<li>Card</li>
+<li>Sheet</li>
+<li>Banner</li>
+</ul>
+<h3>业务组合组件</h3>
+<ul>
+<li>FieldRow</li>
+<li>SectionHeader</li>
+<li>ActionBar</li>
+<li>StatusPill</li>
+<li>SearchHeader</li>
+<li>ListItemCard</li>
+</ul>
+<h3>场景组件</h3>
+<ul>
+<li>QuickInputMobileView</li>
+<li>MobileFilterPanel</li>
+<li>MobileEditorPage</li>
+</ul>
+<hr/>
+<h2>16.2 组件约束</h2>
+<p>每个组件必须说明：</p>
+<ul>
+<li>何时使用</li>
+<li>何时不要用</li>
+<li>桌面端与移动端差异</li>
+<li>是否支持 keyboard-safe</li>
+<li>是否支持 safe-area</li>
+<li>是否支持单一滚动容器环境</li>
+</ul>
+<hr/>
+<h2>十七、架构设计：共享业务，不共享壳层</h2>
+<h2>17.1 推荐目录结构</h2>
+<pre><code class="language-txt">src/
+  domain/
+    quickInput/
+    records/
+    search/
+  application/
+    quickInput/
+    navigation/
+  presentation/
+    viewmodels/
+    mobile/
+    desktop/
+  ui/
+    shared/
+    mobile/
+    desktop/
+    shells/
+    components/
+  infra/
+    platform/
+    storage/
+    debug/
+</code></pre>
+<hr/>
+<h2>17.2 分层职责</h2>
+<h3>domain</h3>
+<ul>
+<li>业务对象</li>
+<li>校验</li>
+<li>领域规则</li>
+</ul>
+<h3>application</h3>
+<ul>
+<li>用例</li>
+<li>流程</li>
+<li>命令/提交协调</li>
+</ul>
+<h3>presentation</h3>
+<ul>
+<li>页面状态</li>
+<li>选择器状态</li>
+<li>keyboard / focus / scroll 状态</li>
+</ul>
+<h3>ui</h3>
+<ul>
+<li>组件与布局</li>
+</ul>
+<h3>infra</h3>
+<ul>
+<li>平台适配</li>
+<li>宿主能力</li>
+<li>调试日志</li>
+</ul>
+<hr/>
+<h2>十八、移动适配层设计</h2>
+<h2>18.1 必须有独立 platform adapter</h2>
+<p>建议抽象：</p>
+<pre><code class="language-ts">platform/mobile/
+  viewport.ts
+  keyboard.ts
+  safeArea.ts
+  gestures.ts
+  haptics.ts
+  clipboard.ts
+</code></pre>
+<h3>目的</h3>
+<p>把平台差异隔离，不让业务组件直接接触宿主不稳定 API。</p>
+<hr/>
+<h2>18.2 keyboard 适配原则</h2>
+<ul>
+<li>不能只依赖 visualViewport</li>
+<li>需要 suspected + detected 双模型</li>
+<li>需要 focus 驱动兜底</li>
+<li>需要调试出口</li>
+</ul>
+<hr/>
+<h2>十九、状态管理设计</h2>
+<h2>19.1 状态分类</h2>
+<h3>业务状态</h3>
+<ul>
+<li>表单值</li>
+<li>提交结果</li>
+<li>数据内容</li>
+</ul>
+<h3>UI 状态</h3>
+<ul>
+<li>当前激活字段</li>
+<li>sheet 是否打开</li>
+<li>keyboard 是否 suspected</li>
+<li>当前滚动目标</li>
+<li>是否处于 selection mode</li>
+</ul>
+<h3>派生状态</h3>
+<ul>
+<li>是否可提交</li>
+<li>是否有未保存修改</li>
+<li>是否存在错误字段</li>
+<li>当前页面主动作是否可用</li>
+</ul>
+<p>不要把这三类混在一起。</p>
+<hr/>
+<h2>二十、性能与渲染治理</h2>
+<h2>20.1 移动端性能重点</h2>
+<ul>
+<li>避免长列表一次性渲染</li>
+<li>减少 layout thrash</li>
+<li>避免输入时大量状态联动</li>
+<li>滚动中不做重计算</li>
+<li>减少多层阴影和复杂动画</li>
+</ul>
+<hr/>
+<h2>20.2 输入场景性能规则</h2>
+<ul>
+<li>textarea auto-grow 节流</li>
+<li>focus 保护逻辑最少化 DOM 查询</li>
+<li>调试模式与正式模式分离</li>
+<li>键盘期间避免全页重渲染</li>
+</ul>
+<hr/>
+<h2>二十一、调试与观测体系</h2>
+<h2>21.1 移动端必须有无控制台调试能力</h2>
+<p>提供：</p>
+<ul>
+<li>调试面板</li>
+<li>一键复制日志</li>
+<li>导出日志文件</li>
+<li>当前视口/焦点/滚动快照</li>
+</ul>
+<hr/>
+<h2>21.2 每个复杂 UI 能力都要有可观测数据</h2>
+<p>例如：</p>
+<ul>
+<li>当前 page shell 类型</li>
+<li>当前滚动容器</li>
+<li>当前 keyboard 状态</li>
+<li>当前 safe area</li>
+<li>当前 active field</li>
+<li>最近交互事件</li>
+</ul>
+<hr/>
+<h2>二十二、测试体系</h2>
+<h2>22.1 测试层次</h2>
+<h3>单元测试</h3>
+<ul>
+<li>领域规则</li>
+<li>表单校验</li>
+<li>状态派生</li>
+</ul>
+<h3>组件测试</h3>
+<ul>
+<li>字段渲染</li>
+<li>错误提示</li>
+<li>auto-grow</li>
+<li>bottom sheet 行为</li>
+</ul>
+<h3>交互测试</h3>
+<ul>
+<li>focus 与滚动</li>
+<li>提交失败跳错</li>
+<li>列表筛选</li>
+<li>搜索与取消</li>
+</ul>
+<h3>设备测试</h3>
+<ul>
+<li>iOS</li>
+<li>Android</li>
+<li>小屏/大屏</li>
+<li>横屏/竖屏</li>
+</ul>
+<hr/>
+<h2>22.2 回归清单</h2>
+<p>每次移动端改动至少检查：</p>
+<ul>
+<li>页面是否只有一个主滚动区</li>
+<li>键盘出现时内容是否安全可见</li>
+<li>footer 是否与输入区冲突</li>
+<li>sheet 是否可关闭/回退</li>
+<li>长列表是否流畅</li>
+<li>表单错误是否能定位</li>
+<li>safe area 是否正确</li>
+</ul>
+<hr/>
+<h2>二十三、治理规范</h2>
+<h2>23.1 禁止项</h2>
+<ul>
+<li>禁止把移动端兼容写成零散 CSS 补丁</li>
+<li>禁止一个页面多个主滚动容器</li>
+<li>禁止复杂交互放进小居中 modal</li>
+<li>禁止业务组件直接读不稳定平台 API</li>
+<li>禁止通知泛滥</li>
+</ul>
+<hr/>
+<h2>23.2 必做项</h2>
+<ul>
+<li>新页面必须声明 shell 类型</li>
+<li>新字段必须声明移动行为</li>
+<li>新弹层必须声明层级</li>
+<li>新表单必须有错误态设计</li>
+<li>新交互必须有回退路径</li>
+</ul>
+<hr/>
+<h2>二十四、落地路线图</h2>
+<h2>阶段 1：止血与抽象</h2>
+<ul>
+<li>修复输入、候选栏、auto-grow</li>
+<li>建立 keyboard/focus/safe-area 适配层</li>
+<li>建立单一滚动容器约束</li>
+</ul>
+<h2>阶段 2：壳层重构</h2>
+<ul>
+<li>落地 MobileScreenShell / MobileSheetShell / MobileEditorShell</li>
+<li>将现有移动端页面逐步迁移</li>
+</ul>
+<h2>阶段 3：组件体系重构</h2>
+<ul>
+<li>统一字段、列表项、header、footer、sheet</li>
+<li>建立移动端组件库与规范</li>
+</ul>
+<h2>阶段 4：双端分治</h2>
+<ul>
+<li>桌面与移动分离为两套展示骨架</li>
+<li>保持业务层共享</li>
+</ul>
+<h2>阶段 5：规范治理</h2>
+<ul>
+<li>建立 review checklist</li>
+<li>建立调试面板</li>
+<li>建立回归测试矩阵</li>
+</ul>
+<hr/>
+<h2>二十五、最终结论</h2>
+<p>完整移动端重构，不应理解为“修几个样式”或“兼容键盘”。</p>
+<p>它本质上是一次从产品形态到架构边界的重建：</p>
+<ul>
+<li>从桌面优先转向双端并重</li>
+<li>从补丁兼容转向系统建模</li>
+<li>从页面堆砌转向壳层治理</li>
+<li>从视觉修补转向交互正确</li>
+<li>从单点修复转向全链路可维护</li>
+</ul>
+<hr/>
+<h2>二十六、一句话总纲</h2>
+<blockquote>
+<p>移动端 UI 的正确重构方式，不是把桌面界面塞进手机，而是围绕“单任务、单滚动、输入优先、选择清晰、反馈克制、状态可观测”重新建立一套完整系统。</p>
+</blockquote>
+</div></article></section>
+      <footer class="footer">本页属于 Think OS 插件 HTML 文档系统。UI 沿用原有风格，docs/html 旧资料已按新结构迁移。</footer>
+    </main>
+  </div>
+  <script src="../../_资源/搜索索引.js"></script>
+  <script src="../../_资源/文档脚本.js"></script>
+</body>
+</html>

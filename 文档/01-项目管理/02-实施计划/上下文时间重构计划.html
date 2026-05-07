@@ -1,0 +1,534 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>上下文时间重构计划｜Think OS 插件文档系统</title>
+  <link rel="stylesheet" href="../../_资源/文档样式.css">
+</head>
+<body data-doc-root="../../">
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-title">Think OS 插件文档系统</div>
+        <div class="brand-subtitle">HTML 项目驾驶舱 / 文档 / 需求 / 技术 / 评审 / 发布</div>
+      </div>
+      <div class="search-box">
+        <input class="search-input" data-doc-search placeholder="搜索：需求、命令、设置、文件地图、评审、QuickInput...">
+        <div class="search-results" data-search-results></div>
+      </div>
+<div class="nav-section" data-nav-key="topic-00"><div class="nav-title">基础入口</div>
+<div class="nav-subsection" data-nav-key="topic-00-group-00"><div class="nav-subtitle">项目驾驶舱</div>
+<a class="nav-link" href="../../index.html">首页仪表盘</a>
+<a class="nav-link" href="../../00-基础入口/00-项目驾驶舱/项目总览.html">项目总览</a>
+<a class="nav-link" href="../../00-基础入口/00-项目驾驶舱/快速开始.html">快速开始</a>
+<a class="nav-link" href="../../00-基础入口/00-项目驾驶舱/当前状态.html">当前状态</a>
+</div>
+<div class="nav-subsection" data-nav-key="topic-00-group-01"><div class="nav-subtitle">概念与边界</div>
+<a class="nav-link" href="../../00-基础入口/01-概念与边界/插件定位.html">插件定位</a>
+<a class="nav-link" href="../../00-基础入口/01-概念与边界/功能地图.html">功能地图</a>
+<a class="nav-link" href="../../00-基础入口/01-概念与边界/术语表.html">术语表</a>
+<a class="nav-link" href="../../00-基础入口/01-概念与边界/常见问题.html">常见问题</a>
+</div>
+<div class="nav-subsection" data-nav-key="topic-00-group-02"><div class="nav-subtitle">迁移与旧资料</div>
+<a class="nav-link" href="../../00-基础入口/02-迁移与旧资料/迁移文档索引.html">迁移文档索引</a>
+<a class="nav-link" href="../../00-基础入口/02-迁移与旧资料/旧章节总览.html">旧章节总览</a>
+<a class="nav-link" href="../../00-基础入口/02-迁移与旧资料/章节化文档框架.html">章节化文档框架</a>
+</div>
+</div>
+<div class="nav-section" data-nav-key="topic-01"><div class="nav-title">项目管理</div>
+<div class="nav-subsection" data-nav-key="topic-01-group-00"><div class="nav-subtitle">计划与路线</div>
+<a class="nav-link" href="../00-计划与路线/需求池.html">需求池</a>
+<a class="nav-link" href="../00-计划与路线/版本路线图.html">版本路线图</a>
+<a class="nav-link" href="../00-计划与路线/开发计划.html">开发计划</a>
+</div>
+<div class="nav-subsection" data-nav-key="topic-01-group-01"><div class="nav-subtitle">过程记录</div>
+<a class="nav-link" href="../01-过程记录/问题记录.html">问题记录</a>
+<a class="nav-link" href="../01-过程记录/技术债.html">技术债</a>
+<a class="nav-link" href="../01-过程记录/决策记录.html">决策记录</a>
+<a class="nav-link" href="../01-过程记录/发布记录.html">发布记录</a>
+</div>
+<div class="nav-subsection" data-nav-key="topic-01-group-02"><div class="nav-subtitle">实施计划</div>
+<a class="nav-link" href="插件深度报告与实施计划.html">插件深度报告与实施计划</a>
+<a class="nav-link" href="上下文时间重构计划.html">上下文时间重构计划</a>
+<a class="nav-link" href="统一输入修改计划.html">统一输入修改计划</a>
+<a class="nav-link" href="原始计划记录.html">原始计划记录</a>
+<a class="nav-link" href="旧需求台账.html">旧需求台账</a>
+</div>
+<div class="nav-subsection" data-nav-key="topic-01-group-03"><div class="nav-subtitle">实施报告</div>
+<a class="nav-link" href="../03-实施报告/Batch1实施报告.html">Batch1 实施报告</a>
+<a class="nav-link" href="../03-实施报告/Batch2实施报告.html">Batch2 实施报告</a>
+<a class="nav-link" href="../03-实施报告/QuickInput主线修改记录.html">QuickInput 主线修改记录</a>
+<a class="nav-link" href="../03-实施报告/QuickInput收口状态.html">QuickInput 收口状态</a>
+<a class="nav-link" href="../03-实施报告/QuickInput本轮修改总览.html">QuickInput 本轮修改总览</a>
+</div>
+</div>
+<div class="nav-section" data-nav-key="topic-02"><div class="nav-title">功能设计</div>
+<div class="nav-subsection" data-nav-key="topic-02-group-00"><div class="nav-subtitle">功能全景</div>
+<a class="nav-link" href="../../02-功能设计/00-功能全景/功能总览.html">功能总览</a>
+<a class="nav-link" href="../../02-功能设计/00-功能全景/功能清单迁移.html">功能清单迁移</a>
+<a class="nav-link" href="../../02-功能设计/00-功能全景/旧产品功能地图.html">旧产品功能地图</a>
+</div>
+<div class="nav-subsection" data-nav-key="topic-02-group-01"><div class="nav-subtitle">用户与交互</div>
+<a class="nav-link" href="../../02-功能设计/01-用户与交互/用户场景.html">用户场景</a>
+<a class="nav-link" href="../../02-功能设计/01-用户与交互/命令设计.html">命令设计</a>
+<a class="nav-link" href="../../02-功能设计/01-用户与交互/设置项设计.html">设置项设计</a>
+<a class="nav-link" href="../../02-功能设计/01-用户与交互/交互流程.html">交互流程</a>
+<a class="nav-link" href="../../02-功能设计/01-用户与交互/异常状态.html">异常状态</a>
+<a class="nav-link" href="../../02-功能设计/01-用户与交互/功能验收标准.html">功能验收标准</a>
+</div>
+<div class="nav-subsection" data-nav-key="topic-02-group-02"><div class="nav-subtitle">View UI 与移动端</div>
+<a class="nav-link" href="../../02-功能设计/02-ViewUI与移动端/ViewUI触发动作梳理.html">View UI 触发动作梳理</a>
+<a class="nav-link" href="../../02-功能设计/02-ViewUI与移动端/移动端UI全量重构方案.html">移动端 UI 全量重构方案</a>
+</div>
+<div class="nav-subsection" data-nav-key="topic-02-group-03"><div class="nav-subtitle">QuickInput 功能收口</div>
+<a class="nav-link" href="../../02-功能设计/03-QuickInput功能收口/QuickInput保存计划一致性.html">QuickInput 保存计划一致性</a>
+<a class="nav-link" href="../../02-功能设计/03-QuickInput功能收口/QuickInput迁移保存反馈.html">QuickInput 迁移保存反馈</a>
+<a class="nav-link" href="../../02-功能设计/03-QuickInput功能收口/QuickInput路径变化保存策略.html">QuickInput 路径变化保存策略</a>
+</div>
+</div>
+<div class="nav-section" data-nav-key="topic-03"><div class="nav-title">技术文档</div>
+<div class="nav-subsection" data-nav-key="topic-03-group-00"><div class="nav-subtitle">技术全景</div>
+<a class="nav-link" href="../../03-技术文档/00-技术全景/技术总览.html">技术总览</a>
+<a class="nav-link" href="../../03-技术文档/00-技术全景/文件地图.html">文件地图</a>
+<a class="nav-link" href="../../03-技术文档/00-技术全景/模块职责.html">模块职责</a>
+<a class="nav-link" href="../../03-技术文档/00-技术全景/插件生命周期.html">插件生命周期</a>
+</div>
+<div class="nav-subsection" data-nav-key="topic-03-group-01"><div class="nav-subtitle">架构导览</div>
+<a class="nav-link" href="../../03-技术文档/01-架构导览/开发指南迁移.html">开发指南迁移</a>
+<a class="nav-link" href="../../03-技术文档/01-架构导览/开发规范迁移.html">开发规范迁移</a>
+<a class="nav-link" href="../../03-技术文档/01-架构导览/代码架构图总览.html">代码架构图总览</a>
+<a class="nav-link" href="../../03-技术文档/01-架构导览/旧代码架构图.html">旧代码架构图</a>
+</div>
+<div class="nav-subsection" data-nav-key="topic-03-group-02"><div class="nav-subtitle">目录地图</div>
+<a class="nav-link" href="../../03-技术文档/02-目录地图/app目录导览.html">app 目录导览</a>
+<a class="nav-link" href="../../03-技术文档/02-目录地图/core目录导览.html">core 目录导览</a>
+<a class="nav-link" href="../../03-技术文档/02-目录地图/features目录导览.html">features 目录导览</a>
+<a class="nav-link" href="../../03-技术文档/02-目录地图/platform目录导览.html">platform 目录导览</a>
+<a class="nav-link" href="../../03-技术文档/02-目录地图/share目录导览.html">share 目录导览</a>
+</div>
+<div class="nav-subsection" data-nav-key="topic-03-group-03"><div class="nav-subtitle">代码视角</div>
+<a class="nav-link" href="../../03-技术文档/03-代码视角/架构视角逐文件.html">架构视角逐文件</a>
+<a class="nav-link" href="../../03-技术文档/03-代码视角/领域视角逐文件.html">领域视角逐文件</a>
+<a class="nav-link" href="../../03-技术文档/03-代码视角/业务视角逐文件.html">业务视角逐文件</a>
+</div>
+<div class="nav-subsection" data-nav-key="topic-03-group-04"><div class="nav-subtitle">运行机制</div>
+<a class="nav-link" href="../../03-技术文档/04-运行机制/数据流.html">数据流</a>
+<a class="nav-link" href="../../03-技术文档/04-运行机制/事件流.html">事件流</a>
+<a class="nav-link" href="../../03-技术文档/04-运行机制/Obsidian API 使用.html">Obsidian API 使用</a>
+<a class="nav-link" href="../../03-技术文档/04-运行机制/样式系统.html">样式系统</a>
+<a class="nav-link" href="../../03-技术文档/04-运行机制/构建流程.html">构建流程</a>
+<a class="nav-link" href="../../03-技术文档/04-运行机制/数据流与流程图.html">数据流与流程图</a>
+</div>
+<div class="nav-subsection" data-nav-key="topic-03-group-05"><div class="nav-subtitle">字段与输入</div>
+<a class="nav-link" href="../../03-技术文档/05-字段与输入/字段系统重构方案.html">字段系统重构方案</a>
+<a class="nav-link" href="../../03-技术文档/05-字段与输入/统一输入现状盘点.html">统一输入现状盘点</a>
+</div>
+<div class="nav-subsection" data-nav-key="topic-03-group-06"><div class="nav-subtitle">QuickInput 技术记录</div>
+<a class="nav-link" href="../../03-技术文档/06-QuickInput技术记录/QuickInput多步推进Snapshot.html">QuickInput 多步推进 Snapshot</a>
+<a class="nav-link" href="../../03-技术文档/06-QuickInput技术记录/QuickInputLegacy调试收口.html">QuickInput Legacy 调试收口</a>
+<a class="nav-link" href="../../03-技术文档/06-QuickInput技术记录/QuickInput任务内容提取调试.html">QuickInput 任务内容提取调试</a>
+<a class="nav-link" href="../../03-技术文档/06-QuickInput技术记录/QuickInput任务内容单一入口.html">QuickInput 任务内容单一入口</a>
+<a class="nav-link" href="../../03-技术文档/06-QuickInput技术记录/QuickInput任务模板护栏.html">QuickInput 任务模板护栏</a>
+<a class="nav-link" href="../../03-技术文档/06-QuickInput技术记录/QuickInput任务写回保真.html">QuickInput 任务写回保真</a>
+</div>
+</div>
+<div class="nav-section" data-nav-key="topic-04"><div class="nav-title">评审中心</div>
+<div class="nav-subsection" data-nav-key="topic-04-group-00"><div class="nav-subtitle">评审方法</div>
+<a class="nav-link" href="../../04-评审中心/00-评审方法/需求评审.html">需求评审</a>
+<a class="nav-link" href="../../04-评审中心/00-评审方法/功能评审.html">功能评审</a>
+<a class="nav-link" href="../../04-评审中心/00-评审方法/技术方案评审.html">技术方案评审</a>
+</div>
+<div class="nav-subsection" data-nav-key="topic-04-group-01"><div class="nav-subtitle">质量评审</div>
+<a class="nav-link" href="../../04-评审中心/01-质量评审/代码结构评审.html">代码结构评审</a>
+<a class="nav-link" href="../../04-评审中心/01-质量评审/发布评审.html">发布评审</a>
+<a class="nav-link" href="../../04-评审中心/01-质量评审/风险评审.html">风险评审</a>
+</div>
+<div class="nav-subsection" data-nav-key="topic-04-group-02"><div class="nav-subtitle">专题评审</div>
+<a class="nav-link" href="../../04-评审中心/02-专题评审/字段系统深度评审.html">字段系统深度评审</a>
+<a class="nav-link" href="../../04-评审中心/02-专题评审/QuickInput调试与Legacy规范.html">QuickInput 调试与 Legacy 规范</a>
+</div>
+</div>
+<div class="nav-section" data-nav-key="topic-05"><div class="nav-title">维护发布</div>
+<div class="nav-subsection" data-nav-key="topic-05-group-00"><div class="nav-subtitle">测试验收</div>
+<a class="nav-link" href="../../05-维护发布/00-测试验收/测试清单.html">测试清单</a>
+<a class="nav-link" href="../../05-维护发布/00-测试验收/测试方案迁移.html">测试方案迁移</a>
+<a class="nav-link" href="../../05-维护发布/00-测试验收/QuickInput主线验收清单.html">QuickInput 主线验收清单</a>
+<a class="nav-link" href="../../05-维护发布/00-测试验收/QuickInput最终验收清单.html">QuickInput 最终验收清单</a>
+</div>
+<div class="nav-subsection" data-nav-key="topic-05-group-01"><div class="nav-subtitle">发布与回滚</div>
+<a class="nav-link" href="../../05-维护发布/01-发布与回滚/发布流程.html">发布流程</a>
+<a class="nav-link" href="../../05-维护发布/01-发布与回滚/Changelog.html">Changelog</a>
+<a class="nav-link" href="../../05-维护发布/01-发布与回滚/Bug处理流程.html">Bug 处理流程</a>
+<a class="nav-link" href="../../05-维护发布/01-发布与回滚/兼容性记录.html">兼容性记录</a>
+<a class="nav-link" href="../../05-维护发布/01-发布与回滚/回滚方案.html">回滚方案</a>
+<a class="nav-link" href="../../05-维护发布/01-发布与回滚/QuickInput风险与回滚说明.html">QuickInput 风险与回滚说明</a>
+</div>
+<div class="nav-subsection" data-nav-key="topic-05-group-02"><div class="nav-subtitle">修复记录</div>
+<a class="nav-link" href="../../05-维护发布/02-修复记录/QuickInput构建导出修复.html">QuickInput 构建导出修复</a>
+<a class="nav-link" href="../../05-维护发布/02-修复记录/BlockStatistics统一与跳转修复.html">Block Statistics 统一与跳转修复</a>
+<a class="nav-link" href="../../05-维护发布/02-修复记录/QuickInput任务正文空格保留修复.html">QuickInput 任务正文空格保留修复</a>
+</div>
+</div>
+    </aside>
+    <main class="main">
+      <section class="hero">
+        <div class="eyebrow">项目管理 / MIGRATED DOC</div>
+        <h1>上下文时间重构计划</h1>
+        <p class="lead">对，这个我修正一下：你这个例子是对的：所以更合理的规则是：也就是说，保留：不保留：如果以后真要显示，可以有一个**只读派生状态**：它是算出来的，不是填出来的。下面我把 **P0 止痛 / P1 稳定 / P2 重构** 合成一张总表，并加上你要的：</p>
+        <div class="meta-row">
+          <span class="badge good">状态：已迁移</span>
+          <span class="badge">最后更新：2026-05-07</span>
+          <span class="badge">格式：HTML</span>
+        </div>
+      </section>
+      <section class="grid"><article class="card full"><h2>迁移信息</h2><div class="table-wrap"><table><thead><tr><th>项目</th><th>内容</th></tr></thead><tbody><tr><td>新分类</td><td>项目管理</td></tr><tr><td>旧路径</td><td><code>docs/上下文 时间重构.md</code></td></tr><tr><td>原始标题</td><td>当前阶段实施总计划表（P0 止痛 / P1 稳定 / P2 重构）</td></tr><tr><td>处理方式</td><td>正文已转换为当前 <code>文档/</code> 的 HTML 页面；原始文件另存于 <code>_归档/迁移原文/</code>。</td></tr></tbody></table></div></article><article class="card full"><h2>正文</h2><div class="imported-doc"><p>对，这个我修正一下：</p>
+<p><strong>隔天任务不应该靠额外勾选。</strong>
+你这个例子是对的：</p>
+<ul>
+<li>23:00 开始</li>
+<li>时长 120 分钟</li>
+<li>自动得到 01:00</li>
+<li>这本身就应该被识别为<strong>隔天任务</strong></li>
+</ul>
+<p>所以更合理的规则是：</p>
+<ul>
+<li><strong><code>startTime + duration</code> 自动推 <code>endTime</code></strong>，允许自然跨天</li>
+<li><strong><code>endTime + duration</code> 倒推 <code>startTime</code></strong>，也允许自然跨天</li>
+<li>“隔天”不是用户额外维护的状态，而是<strong>计算结果</strong></li>
+<li>真正需要用户选择的是：
+<strong>按开始时间向后推</strong>，还是 <strong>按结束时间向前推</strong></li>
+</ul>
+<p>也就是说，保留：</p>
+<ul>
+<li><code>timeDirection: forward | backward</code></li>
+</ul>
+<p>不保留：</p>
+<ul>
+<li><code>crossDay</code> 勾选框</li>
+</ul>
+<p>如果以后真要显示，可以有一个<strong>只读派生状态</strong>：</p>
+<ul>
+<li><code>isCrossDay = true/false</code></li>
+</ul>
+<p>它是算出来的，不是填出来的。</p>
+<hr/>
+<p>下面我把 <strong>P0 止痛 / P1 稳定 / P2 重构</strong> 合成一张总表，并加上你要的：</p>
+<ul>
+<li>重要性</li>
+<li>架构领域</li>
+<li>修改原因</li>
+<li>涉及文件</li>
+<li>预估时长</li>
+<li>用 Pro 还是 Think</li>
+<li><strong>MVP 验收</strong></li>
+<li><strong>完整验收</strong></li>
+</ul>
+<hr/>
+<h1>当前阶段实施总计划表（P0 止痛 / P1 稳定 / P2 重构）</h1>
+<h2>说明</h2>
+<p>本计划表以“先解决真实痛点，再逐步稳定，再考虑重构”为原则。
+当前最优先的问题不是 UI 是否优雅，而是：</p>
+<ul>
+<li>编辑任务或条目时上下文读取不准</li>
+<li>时间计算规则不稳定</li>
+<li>TaskEntry 与 BlockEntry 的读取模型不一致</li>
+<li>时间方向语义不明确</li>
+</ul>
+<h3>术语约定</h3>
+<ul>
+<li><p><strong>Entry</strong>：统一条目</p>
+</li>
+<li><p><strong>TaskEntry</strong>：任务条目</p>
+</li>
+<li><p><strong>BlockEntry</strong>：普通块条目 / 信息条目</p>
+</li>
+<li><p><strong>EntryContext</strong>：编辑上下文</p>
+</li>
+<li><p><strong>timeDirection</strong>：</p>
+<ul>
+<li><code>forward</code>：按开始时间向后推</li>
+<li><code>backward</code>：按结束时间向前推</li>
+</ul>
+</li>
+</ul>
+<h3>关键修正</h3>
+<p>“隔天任务”不是额外勾选项，而是时间计算的自然结果。
+例如：</p>
+<ul>
+<li><code>23:00 + 120 分钟 = 次日 01:00</code></li>
+</ul>
+<p>这本身应自动识别为隔天任务。
+因此需要新增的是 <strong>timeDirection</strong>，而不是 <code>crossDay</code> 勾选框。</p>
+<hr/>
+<h2>总表</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>阶段</th>
+<th>重要性</th>
+<th>事项</th>
+<th>架构 / 领域</th>
+<th>修改原因</th>
+<th>涉及文件</th>
+<th>预估时长</th>
+<th>建议模型</th>
+<th>MVP 验收</th>
+<th>完整验收</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>P0</td>
+<td>极高</td>
+<td>统一 <code>EntryContext</code> / <code>TaskContext</code> / <code>BlockContext</code></td>
+<td>领域层 / 应用层</td>
+<td>现在任务和 block 都会进入编辑，但真实来源结构不同，导致上下文读错</td>
+<td><code>core/types/recordInput.ts</code> <code>core/types/schema.ts</code> 新增 <code>core/types/context.ts</code></td>
+<td>0.5 天</td>
+<td>Think</td>
+<td>所有编辑入口都能产出统一上下文对象</td>
+<td>列表、详情、搜索、快速输入等入口全部使用同一上下文模型，且调试信息可见</td>
+</tr>
+<tr>
+<td>P0</td>
+<td>极高</td>
+<td>编辑入口统一走上下文解析总入口</td>
+<td>应用层</td>
+<td>当前不同入口可能各自组装状态，容易串对象、串字段、串默认值</td>
+<td><code>app/usecases/recordInput.usecase.ts</code> <code>core/services/recordInput/editStateResolver.ts</code> <code>core/services/recordInput/dependencyResolver.ts</code></td>
+<td>0.5~1 天</td>
+<td>Think</td>
+<td>所有编辑入口进入同一解析函数</td>
+<td>TaskEntry / BlockEntry 各走正确子分支，且回写对象不串</td>
+</tr>
+<tr>
+<td>P0</td>
+<td>极高</td>
+<td>收口时间计算总入口</td>
+<td>领域层 / 应用层</td>
+<td>时间逻辑分散在 util、usecase、container、service 多处，规则重复且容易不一致</td>
+<td><code>core/utils/taskTime.ts</code> <code>shared/utils/linkedTimeFields.ts</code> <code>app/usecases/recordInput.usecase.ts</code> <code>core/services/ItemService.ts</code></td>
+<td>1 天</td>
+<td>Think</td>
+<td>页面不再直接手写时间推导</td>
+<td>所有时间推导都走统一服务，页面只消费结果</td>
+</tr>
+<tr>
+<td>P0</td>
+<td>极高</td>
+<td>新增 <code>timeDirection</code>（默认 <code>forward</code>）</td>
+<td>领域层 / UI 状态</td>
+<td>当前“有时向后算，有时向前算”没有显式语义，用户和代码都容易混乱</td>
+<td><code>core/utils/taskTime.ts</code> <code>shared/utils/linkedTimeFields.ts</code> <code>app/ui/components/QuickInputEditor/QuickInputEditorContainer.tsx</code> <code>app/ui/components/QuickInputEditor/QuickInputEditorView.tsx</code></td>
+<td>1 天</td>
+<td>Think</td>
+<td>UI 可切换“向后/向前”</td>
+<td>输入 <code>start + duration</code>、<code>end + duration</code> 时，能按方向稳定推导</td>
+</tr>
+<tr>
+<td>P0</td>
+<td>极高</td>
+<td>隔天任务自动计算</td>
+<td>领域层</td>
+<td>23:00 + 120 分钟这类场景应自然跨天，不应要求勾选</td>
+<td><code>core/utils/taskTime.ts</code> <code>shared/utils/linkedTimeFields.ts</code></td>
+<td>0.5 天</td>
+<td>Think</td>
+<td><code>23:00 + 120</code> 能得到次日 01:00</td>
+<td>前推/后推都支持跨天，显示、保存、再次编辑保持一致</td>
+</tr>
+<tr>
+<td>P0</td>
+<td>高</td>
+<td>增加上下文 / 时间调试输出</td>
+<td>基础设施 / 调试</td>
+<td>没有观测就会继续靠猜；你这次键盘问题已经证明调试输出很有效</td>
+<td><code>core/utils/devLogger.ts</code> <code>app/usecases/recordInput.usecase.ts</code> <code>shared/utils/linkedTimeFields.ts</code> 视情况新增 <code>app/diagnostics/*</code></td>
+<td>0.5 天</td>
+<td>Pro</td>
+<td>能看到当前 EntryContext 和时间推导链</td>
+<td>可复制完整调试信息，定位“读错对象”和“算错时间”</td>
+</tr>
+<tr>
+<td>P1</td>
+<td>高</td>
+<td>抽出 <code>taskTimePolicy</code></td>
+<td>领域层</td>
+<td>把 forward / backward / 跨天规则从零散 util 提升为统一策略对象</td>
+<td>新增 <code>core/domain/time/taskTimePolicy.ts</code> 或拆分 <code>core/utils/taskTime.ts</code></td>
+<td>0.5~1 天</td>
+<td>Think</td>
+<td>时间规则集中到一个策略模块</td>
+<td>所有时间业务规则有统一入口、统一测试、统一术语</td>
+</tr>
+<tr>
+<td>P1</td>
+<td>高</td>
+<td>QuickInput 时间联动改为策略驱动</td>
+<td>UI 状态 / 应用层</td>
+<td>当前时间字段联动更像硬编码逻辑，后续维护成本高</td>
+<td><code>app/ui/components/QuickInputEditor/QuickInputEditorContainer.tsx</code> <code>shared/utils/linkedTimeFields.ts</code></td>
+<td>1 天</td>
+<td>Think</td>
+<td>QuickInput 可正确联动三字段</td>
+<td>切换 direction 后 UI、推导、保存、再次打开都一致</td>
+</tr>
+<tr>
+<td>P1</td>
+<td>高</td>
+<td>TaskEntry / BlockEntry 编辑分流，但共享编辑框架</td>
+<td>应用层 / 展示层</td>
+<td>两类条目已明显不是同一种读取语义，但也不该完全拆成两套系统</td>
+<td><code>app/usecases/recordInput.usecase.ts</code> <code>core/services/recordInput/editStateResolver.ts</code> <code>app/ui/components/QuickInputEditor/*</code></td>
+<td>1~2 天</td>
+<td>Think</td>
+<td>任务和块能走不同准备逻辑</td>
+<td>两类条目各自拿到正确默认值、字段集、写回目标</td>
+</tr>
+<tr>
+<td>P1</td>
+<td>中高</td>
+<td>核心字段中心化（先覆盖任务相关字段）</td>
+<td>领域层</td>
+<td>不先全量字段重构，只先收口最事故高发的 <code>时间/状态/标题/描述</code></td>
+<td><code>core/types/fields.ts</code> <code>core/types/definitions.ts</code> <code>core/services/recordInput/normalization.ts</code></td>
+<td>1~2 天</td>
+<td>Think</td>
+<td>时间相关字段有统一 key / kind / 规则</td>
+<td>任务编辑不再散落硬编码字段判断</td>
+</tr>
+<tr>
+<td>P1</td>
+<td>中高</td>
+<td>统一任务写回策略</td>
+<td>应用层 / 存储层</td>
+<td>不同入口写回格式不一致，会导致再次读取时不稳定</td>
+<td><code>core/services/ItemService.ts</code> <code>core/utils/mark.ts</code> <code>core/utils/parser.ts</code></td>
+<td>1 天</td>
+<td>Pro</td>
+<td>所有任务编辑都走同一写回函数</td>
+<td>写回后再次读取、再次编辑、列表显示都一致</td>
+</tr>
+<tr>
+<td>P2</td>
+<td>中</td>
+<td>最小目录整理：context / time / fields 三块收口</td>
+<td>架构层</td>
+<td>这一步是为了后续维护，不是为了解决当前 bug</td>
+<td>新增目录并迁移 <code>core/utils/taskTime.ts</code> <code>core/services/recordInput/*</code> <code>core/types/fields.ts</code> 等</td>
+<td>1~2 天</td>
+<td>Pro</td>
+<td>三类高频事故代码先收口</td>
+<td>目录与职责基本对齐，后续定位明显更快</td>
+</tr>
+<tr>
+<td>P2</td>
+<td>中</td>
+<td>字段协议升级：输入 / 展示 / 筛选 / 存储拆开</td>
+<td>领域层 / 应用层</td>
+<td>为未来字段系统、筛选器、媒体字段做基础，不属于当前止痛重点</td>
+<td><code>core/types/fields.ts</code> <code>core/types/schema.ts</code> <code>core/services/recordInput/normalization.ts</code></td>
+<td>2~4 天</td>
+<td>Think</td>
+<td>字段定义不再只是 UI 配置</td>
+<td>字段系统能承接输入、展示、筛选、存储四类能力</td>
+</tr>
+<tr>
+<td>P2</td>
+<td>中</td>
+<td>任务字段与 Block 字段部分分治</td>
+<td>领域层</td>
+<td>任务的时间语义和 block 的内容语义已经明显不同</td>
+<td><code>core/types/fields.ts</code> <code>features/settings/FieldsEditor.tsx</code> <code>app/ui/components/QuickInputEditor/*</code></td>
+<td>2 天</td>
+<td>Think</td>
+<td>两类条目不再强行共用同一字段假设</td>
+<td>配置、编辑、展示都能明确区分 TaskEntry / BlockEntry</td>
+</tr>
+<tr>
+<td>P2</td>
+<td>低中</td>
+<td>图片 / 音频字段占位设计</td>
+<td>领域层 / 存储层 / UI</td>
+<td>先预留 path 引用型字段，不急着做完整媒体体验</td>
+<td><code>core/types/fields.ts</code> <code>core/types/schema.ts</code> <code>features/settings/FieldsEditor.tsx</code> 展示组件</td>
+<td>1~2 天</td>
+<td>Think</td>
+<td>schema 中能声明 image/audio</td>
+<td>可存 path、可显示占位、未来可扩展预览</td>
+</tr>
+</tbody>
+</table></div>
+<hr/>
+<h2>推荐执行顺序</h2>
+<h3>第一批：必须先做</h3>
+<ol>
+<li><code>EntryContext</code> / <code>TaskContext</code> / <code>BlockContext</code></li>
+<li>编辑入口统一走上下文解析总入口</li>
+<li>时间计算总入口收口</li>
+<li><code>timeDirection</code></li>
+<li>隔天任务自动计算</li>
+<li>调试输出</li>
+</ol>
+<h3>第二批：修完后让系统稳定</h3>
+<ol start="7">
+<li><code>taskTimePolicy</code></li>
+<li>QuickInput 时间联动策略化</li>
+<li>TaskEntry / BlockEntry 编辑分流</li>
+<li>核心字段中心化（先任务相关）</li>
+<li>统一任务写回</li>
+</ol>
+<h3>第三批：再考虑重构</h3>
+<ol start="12">
+<li>最小目录整理</li>
+<li>字段协议升级</li>
+<li>图片 / 音频字段占位</li>
+</ol>
+<hr/>
+<h2>当前阶段的真正目标</h2>
+<p>当前不是追求“架构最优”，而是追求：</p>
+<ul>
+<li>编辑不串上下文</li>
+<li>时间计算可预测</li>
+<li>隔天任务自动正确</li>
+<li>任务与块的差异被显式承认</li>
+<li>修改范围可控，不陷入无止境重构</li>
+</ul>
+<hr/>
+<h2>一句话执行总纲</h2>
+<blockquote>
+<p>先把“编辑的是谁”与“时间到底怎么算”统一，再让字段和结构为这两件事服务，而不是反过来为了重构去拖延止痛。</p>
+</blockquote>
+<p>再把“隔天任务”这件事，给你压成一句实现原则，方便你后面自己审代码：</p>
+<h2>隔天任务的正确规则</h2>
+<p>不是：</p>
+<ul>
+<li>用户勾选“隔天任务”</li>
+</ul>
+<p>而是：</p>
+<ul>
+<li><strong>只要时间推导结果跨过 24:00，就自然形成隔天任务</strong></li>
+</ul>
+<p>例如：</p>
+<ul>
+<li><code>23:00 + 120 分钟 = 次日 01:00</code></li>
+<li><code>01:00 - 120 分钟 = 前一日 23:00</code></li>
+</ul>
+<p>所以你真正需要显式控制的是：</p>
+<ul>
+<li><strong>按开始时间向后推</strong></li>
+<li><strong>按结束时间向前推</strong></li>
+</ul>
+<p>不是“是不是隔天”。</p>
+<p>如果你愿意，我下一步可以直接把这个总表继续拆成：
+<strong>《第一批实施清单》</strong>
+会细到“新增什么类型、改什么函数签名、哪个文件先动、哪个文件后动”。</p>
+</div></article></section>
+      <footer class="footer">本页属于 Think OS 插件 HTML 文档系统。UI 沿用原有风格，docs/html 旧资料已按新结构迁移。</footer>
+    </main>
+  </div>
+  <script src="../../_资源/搜索索引.js"></script>
+  <script src="../../_资源/文档脚本.js"></script>
+</body>
+</html>

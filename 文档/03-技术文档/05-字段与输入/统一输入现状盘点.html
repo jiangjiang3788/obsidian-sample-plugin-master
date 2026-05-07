@@ -1,0 +1,1064 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>统一输入现状盘点｜Think OS 插件文档系统</title>
+  <link rel="stylesheet" href="../../_资源/文档样式.css">
+</head>
+<body data-doc-root="../../">
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-title">Think OS 插件文档系统</div>
+        <div class="brand-subtitle">HTML 项目驾驶舱 / 文档 / 需求 / 技术 / 评审 / 发布</div>
+      </div>
+      <div class="search-box">
+        <input class="search-input" data-doc-search placeholder="搜索：需求、命令、设置、文件地图、评审、QuickInput...">
+        <div class="search-results" data-search-results></div>
+      </div>
+<div class="nav-section" data-nav-key="topic-00"><div class="nav-title">基础入口</div>
+<div class="nav-subsection" data-nav-key="topic-00-group-00"><div class="nav-subtitle">项目驾驶舱</div>
+<a class="nav-link" href="../../index.html">首页仪表盘</a>
+<a class="nav-link" href="../../00-基础入口/00-项目驾驶舱/项目总览.html">项目总览</a>
+<a class="nav-link" href="../../00-基础入口/00-项目驾驶舱/快速开始.html">快速开始</a>
+<a class="nav-link" href="../../00-基础入口/00-项目驾驶舱/当前状态.html">当前状态</a>
+</div>
+<div class="nav-subsection" data-nav-key="topic-00-group-01"><div class="nav-subtitle">概念与边界</div>
+<a class="nav-link" href="../../00-基础入口/01-概念与边界/插件定位.html">插件定位</a>
+<a class="nav-link" href="../../00-基础入口/01-概念与边界/功能地图.html">功能地图</a>
+<a class="nav-link" href="../../00-基础入口/01-概念与边界/术语表.html">术语表</a>
+<a class="nav-link" href="../../00-基础入口/01-概念与边界/常见问题.html">常见问题</a>
+</div>
+<div class="nav-subsection" data-nav-key="topic-00-group-02"><div class="nav-subtitle">迁移与旧资料</div>
+<a class="nav-link" href="../../00-基础入口/02-迁移与旧资料/迁移文档索引.html">迁移文档索引</a>
+<a class="nav-link" href="../../00-基础入口/02-迁移与旧资料/旧章节总览.html">旧章节总览</a>
+<a class="nav-link" href="../../00-基础入口/02-迁移与旧资料/章节化文档框架.html">章节化文档框架</a>
+</div>
+</div>
+<div class="nav-section" data-nav-key="topic-01"><div class="nav-title">项目管理</div>
+<div class="nav-subsection" data-nav-key="topic-01-group-00"><div class="nav-subtitle">计划与路线</div>
+<a class="nav-link" href="../../01-项目管理/00-计划与路线/需求池.html">需求池</a>
+<a class="nav-link" href="../../01-项目管理/00-计划与路线/版本路线图.html">版本路线图</a>
+<a class="nav-link" href="../../01-项目管理/00-计划与路线/开发计划.html">开发计划</a>
+</div>
+<div class="nav-subsection" data-nav-key="topic-01-group-01"><div class="nav-subtitle">过程记录</div>
+<a class="nav-link" href="../../01-项目管理/01-过程记录/问题记录.html">问题记录</a>
+<a class="nav-link" href="../../01-项目管理/01-过程记录/技术债.html">技术债</a>
+<a class="nav-link" href="../../01-项目管理/01-过程记录/决策记录.html">决策记录</a>
+<a class="nav-link" href="../../01-项目管理/01-过程记录/发布记录.html">发布记录</a>
+</div>
+<div class="nav-subsection" data-nav-key="topic-01-group-02"><div class="nav-subtitle">实施计划</div>
+<a class="nav-link" href="../../01-项目管理/02-实施计划/插件深度报告与实施计划.html">插件深度报告与实施计划</a>
+<a class="nav-link" href="../../01-项目管理/02-实施计划/上下文时间重构计划.html">上下文时间重构计划</a>
+<a class="nav-link" href="../../01-项目管理/02-实施计划/统一输入修改计划.html">统一输入修改计划</a>
+<a class="nav-link" href="../../01-项目管理/02-实施计划/原始计划记录.html">原始计划记录</a>
+<a class="nav-link" href="../../01-项目管理/02-实施计划/旧需求台账.html">旧需求台账</a>
+</div>
+<div class="nav-subsection" data-nav-key="topic-01-group-03"><div class="nav-subtitle">实施报告</div>
+<a class="nav-link" href="../../01-项目管理/03-实施报告/Batch1实施报告.html">Batch1 实施报告</a>
+<a class="nav-link" href="../../01-项目管理/03-实施报告/Batch2实施报告.html">Batch2 实施报告</a>
+<a class="nav-link" href="../../01-项目管理/03-实施报告/QuickInput主线修改记录.html">QuickInput 主线修改记录</a>
+<a class="nav-link" href="../../01-项目管理/03-实施报告/QuickInput收口状态.html">QuickInput 收口状态</a>
+<a class="nav-link" href="../../01-项目管理/03-实施报告/QuickInput本轮修改总览.html">QuickInput 本轮修改总览</a>
+</div>
+</div>
+<div class="nav-section" data-nav-key="topic-02"><div class="nav-title">功能设计</div>
+<div class="nav-subsection" data-nav-key="topic-02-group-00"><div class="nav-subtitle">功能全景</div>
+<a class="nav-link" href="../../02-功能设计/00-功能全景/功能总览.html">功能总览</a>
+<a class="nav-link" href="../../02-功能设计/00-功能全景/功能清单迁移.html">功能清单迁移</a>
+<a class="nav-link" href="../../02-功能设计/00-功能全景/旧产品功能地图.html">旧产品功能地图</a>
+</div>
+<div class="nav-subsection" data-nav-key="topic-02-group-01"><div class="nav-subtitle">用户与交互</div>
+<a class="nav-link" href="../../02-功能设计/01-用户与交互/用户场景.html">用户场景</a>
+<a class="nav-link" href="../../02-功能设计/01-用户与交互/命令设计.html">命令设计</a>
+<a class="nav-link" href="../../02-功能设计/01-用户与交互/设置项设计.html">设置项设计</a>
+<a class="nav-link" href="../../02-功能设计/01-用户与交互/交互流程.html">交互流程</a>
+<a class="nav-link" href="../../02-功能设计/01-用户与交互/异常状态.html">异常状态</a>
+<a class="nav-link" href="../../02-功能设计/01-用户与交互/功能验收标准.html">功能验收标准</a>
+</div>
+<div class="nav-subsection" data-nav-key="topic-02-group-02"><div class="nav-subtitle">View UI 与移动端</div>
+<a class="nav-link" href="../../02-功能设计/02-ViewUI与移动端/ViewUI触发动作梳理.html">View UI 触发动作梳理</a>
+<a class="nav-link" href="../../02-功能设计/02-ViewUI与移动端/移动端UI全量重构方案.html">移动端 UI 全量重构方案</a>
+</div>
+<div class="nav-subsection" data-nav-key="topic-02-group-03"><div class="nav-subtitle">QuickInput 功能收口</div>
+<a class="nav-link" href="../../02-功能设计/03-QuickInput功能收口/QuickInput保存计划一致性.html">QuickInput 保存计划一致性</a>
+<a class="nav-link" href="../../02-功能设计/03-QuickInput功能收口/QuickInput迁移保存反馈.html">QuickInput 迁移保存反馈</a>
+<a class="nav-link" href="../../02-功能设计/03-QuickInput功能收口/QuickInput路径变化保存策略.html">QuickInput 路径变化保存策略</a>
+</div>
+</div>
+<div class="nav-section" data-nav-key="topic-03"><div class="nav-title">技术文档</div>
+<div class="nav-subsection" data-nav-key="topic-03-group-00"><div class="nav-subtitle">技术全景</div>
+<a class="nav-link" href="../00-技术全景/技术总览.html">技术总览</a>
+<a class="nav-link" href="../00-技术全景/文件地图.html">文件地图</a>
+<a class="nav-link" href="../00-技术全景/模块职责.html">模块职责</a>
+<a class="nav-link" href="../00-技术全景/插件生命周期.html">插件生命周期</a>
+</div>
+<div class="nav-subsection" data-nav-key="topic-03-group-01"><div class="nav-subtitle">架构导览</div>
+<a class="nav-link" href="../01-架构导览/开发指南迁移.html">开发指南迁移</a>
+<a class="nav-link" href="../01-架构导览/开发规范迁移.html">开发规范迁移</a>
+<a class="nav-link" href="../01-架构导览/代码架构图总览.html">代码架构图总览</a>
+<a class="nav-link" href="../01-架构导览/旧代码架构图.html">旧代码架构图</a>
+</div>
+<div class="nav-subsection" data-nav-key="topic-03-group-02"><div class="nav-subtitle">目录地图</div>
+<a class="nav-link" href="../02-目录地图/app目录导览.html">app 目录导览</a>
+<a class="nav-link" href="../02-目录地图/core目录导览.html">core 目录导览</a>
+<a class="nav-link" href="../02-目录地图/features目录导览.html">features 目录导览</a>
+<a class="nav-link" href="../02-目录地图/platform目录导览.html">platform 目录导览</a>
+<a class="nav-link" href="../02-目录地图/share目录导览.html">share 目录导览</a>
+</div>
+<div class="nav-subsection" data-nav-key="topic-03-group-03"><div class="nav-subtitle">代码视角</div>
+<a class="nav-link" href="../03-代码视角/架构视角逐文件.html">架构视角逐文件</a>
+<a class="nav-link" href="../03-代码视角/领域视角逐文件.html">领域视角逐文件</a>
+<a class="nav-link" href="../03-代码视角/业务视角逐文件.html">业务视角逐文件</a>
+</div>
+<div class="nav-subsection" data-nav-key="topic-03-group-04"><div class="nav-subtitle">运行机制</div>
+<a class="nav-link" href="../04-运行机制/数据流.html">数据流</a>
+<a class="nav-link" href="../04-运行机制/事件流.html">事件流</a>
+<a class="nav-link" href="../04-运行机制/Obsidian API 使用.html">Obsidian API 使用</a>
+<a class="nav-link" href="../04-运行机制/样式系统.html">样式系统</a>
+<a class="nav-link" href="../04-运行机制/构建流程.html">构建流程</a>
+<a class="nav-link" href="../04-运行机制/数据流与流程图.html">数据流与流程图</a>
+</div>
+<div class="nav-subsection" data-nav-key="topic-03-group-05"><div class="nav-subtitle">字段与输入</div>
+<a class="nav-link" href="字段系统重构方案.html">字段系统重构方案</a>
+<a class="nav-link" href="统一输入现状盘点.html">统一输入现状盘点</a>
+</div>
+<div class="nav-subsection" data-nav-key="topic-03-group-06"><div class="nav-subtitle">QuickInput 技术记录</div>
+<a class="nav-link" href="../06-QuickInput技术记录/QuickInput多步推进Snapshot.html">QuickInput 多步推进 Snapshot</a>
+<a class="nav-link" href="../06-QuickInput技术记录/QuickInputLegacy调试收口.html">QuickInput Legacy 调试收口</a>
+<a class="nav-link" href="../06-QuickInput技术记录/QuickInput任务内容提取调试.html">QuickInput 任务内容提取调试</a>
+<a class="nav-link" href="../06-QuickInput技术记录/QuickInput任务内容单一入口.html">QuickInput 任务内容单一入口</a>
+<a class="nav-link" href="../06-QuickInput技术记录/QuickInput任务模板护栏.html">QuickInput 任务模板护栏</a>
+<a class="nav-link" href="../06-QuickInput技术记录/QuickInput任务写回保真.html">QuickInput 任务写回保真</a>
+</div>
+</div>
+<div class="nav-section" data-nav-key="topic-04"><div class="nav-title">评审中心</div>
+<div class="nav-subsection" data-nav-key="topic-04-group-00"><div class="nav-subtitle">评审方法</div>
+<a class="nav-link" href="../../04-评审中心/00-评审方法/需求评审.html">需求评审</a>
+<a class="nav-link" href="../../04-评审中心/00-评审方法/功能评审.html">功能评审</a>
+<a class="nav-link" href="../../04-评审中心/00-评审方法/技术方案评审.html">技术方案评审</a>
+</div>
+<div class="nav-subsection" data-nav-key="topic-04-group-01"><div class="nav-subtitle">质量评审</div>
+<a class="nav-link" href="../../04-评审中心/01-质量评审/代码结构评审.html">代码结构评审</a>
+<a class="nav-link" href="../../04-评审中心/01-质量评审/发布评审.html">发布评审</a>
+<a class="nav-link" href="../../04-评审中心/01-质量评审/风险评审.html">风险评审</a>
+</div>
+<div class="nav-subsection" data-nav-key="topic-04-group-02"><div class="nav-subtitle">专题评审</div>
+<a class="nav-link" href="../../04-评审中心/02-专题评审/字段系统深度评审.html">字段系统深度评审</a>
+<a class="nav-link" href="../../04-评审中心/02-专题评审/QuickInput调试与Legacy规范.html">QuickInput 调试与 Legacy 规范</a>
+</div>
+</div>
+<div class="nav-section" data-nav-key="topic-05"><div class="nav-title">维护发布</div>
+<div class="nav-subsection" data-nav-key="topic-05-group-00"><div class="nav-subtitle">测试验收</div>
+<a class="nav-link" href="../../05-维护发布/00-测试验收/测试清单.html">测试清单</a>
+<a class="nav-link" href="../../05-维护发布/00-测试验收/测试方案迁移.html">测试方案迁移</a>
+<a class="nav-link" href="../../05-维护发布/00-测试验收/QuickInput主线验收清单.html">QuickInput 主线验收清单</a>
+<a class="nav-link" href="../../05-维护发布/00-测试验收/QuickInput最终验收清单.html">QuickInput 最终验收清单</a>
+</div>
+<div class="nav-subsection" data-nav-key="topic-05-group-01"><div class="nav-subtitle">发布与回滚</div>
+<a class="nav-link" href="../../05-维护发布/01-发布与回滚/发布流程.html">发布流程</a>
+<a class="nav-link" href="../../05-维护发布/01-发布与回滚/Changelog.html">Changelog</a>
+<a class="nav-link" href="../../05-维护发布/01-发布与回滚/Bug处理流程.html">Bug 处理流程</a>
+<a class="nav-link" href="../../05-维护发布/01-发布与回滚/兼容性记录.html">兼容性记录</a>
+<a class="nav-link" href="../../05-维护发布/01-发布与回滚/回滚方案.html">回滚方案</a>
+<a class="nav-link" href="../../05-维护发布/01-发布与回滚/QuickInput风险与回滚说明.html">QuickInput 风险与回滚说明</a>
+</div>
+<div class="nav-subsection" data-nav-key="topic-05-group-02"><div class="nav-subtitle">修复记录</div>
+<a class="nav-link" href="../../05-维护发布/02-修复记录/QuickInput构建导出修复.html">QuickInput 构建导出修复</a>
+<a class="nav-link" href="../../05-维护发布/02-修复记录/BlockStatistics统一与跳转修复.html">Block Statistics 统一与跳转修复</a>
+<a class="nav-link" href="../../05-维护发布/02-修复记录/QuickInput任务正文空格保留修复.html">QuickInput 任务正文空格保留修复</a>
+</div>
+</div>
+    </aside>
+    <main class="main">
+      <section class="hero">
+        <div class="eyebrow">技术文档 / MIGRATED DOC</div>
+        <h1>统一输入现状盘点</h1>
+        <p class="lead">目标：完成 5 张表的第一版——**写入口清单、UseCase 清单、校验/补全清单、副作用清单、竞态热点清单**。范围：基于上传代码包中与下列目录直接相关的实现进行静态盘点：这类报告里，“详尽”不是把文件名堆满，而是至少满足这 5 条：1. **覆盖够广**：你指定的关键目录都看过，而且不是只看文件名，而是能说明“谁</p>
+        <div class="meta-row">
+          <span class="badge good">状态：已迁移</span>
+          <span class="badge">最后更新：2026-05-07</span>
+          <span class="badge">格式：HTML</span>
+        </div>
+      </section>
+      <section class="grid"><article class="card full"><h2>迁移信息</h2><div class="table-wrap"><table><thead><tr><th>项目</th><th>内容</th></tr></thead><tbody><tr><td>新分类</td><td>技术文档</td></tr><tr><td>旧路径</td><td><code>docs/收集.md</code></td></tr><tr><td>原始标题</td><td>统一输入改造 · 第 1 轮现状盘点报告（只做“看清”）</td></tr><tr><td>处理方式</td><td>正文已转换为当前 <code>文档/</code> 的 HTML 页面；原始文件另存于 <code>_归档/迁移原文/</code>。</td></tr></tbody></table></div></article><article class="card full"><h2>正文</h2><div class="imported-doc"><h1>统一输入改造 · 第 1 轮现状盘点报告（只做“看清”）</h1>
+<blockquote>
+<p>目标：完成 5 张表的第一版——<strong>写入口清单、UseCase 清单、校验/补全清单、副作用清单、竞态热点清单</strong>。<br/>
+范围：基于上传代码包中与下列目录直接相关的实现进行静态盘点：</p>
+<ul>
+<li><code>app/ui/components/QuickInputEditor/*</code></li>
+<li><code>features/quickinput/*</code></li>
+<li><code>features/settings/*</code></li>
+<li><code>app/usecases/*</code></li>
+<li><code>app/store/slices/*</code></li>
+<li><code>core/services/InputService.ts</code></li>
+<li><code>core/utils/inputTemplateUtils.ts</code></li>
+<li><code>core/utils/normalize.ts</code></li>
+<li><code>core/types/quickInput.ts</code></li>
+<li>同时补看了与写链直接相连的：<code>core/services/ActionService.ts</code>、<code>core/services/ItemService.ts</code>、<code>core/services/SettingsRepository.ts</code>、<code>core/services/DataStore.ts</code>、<code>platform/modals/*</code>、<code>platform/events/VaultWatcher.ts</code>、<code>app/bootstrap/initializeCore.ts</code></li>
+</ul>
+</blockquote>
+<hr/>
+<h2>0. 我认为什么叫“详尽”</h2>
+<p>这类报告里，“详尽”不是把文件名堆满，而是至少满足这 5 条：</p>
+<ol>
+<li><strong>覆盖够广</strong>：你指定的关键目录都看过，而且不是只看文件名，而是能说明“谁在写、写到哪、怎么写”。</li>
+<li><strong>链路够完整</strong>：每条关键写入路径都要落到“UI 触发 → UseCase/Service → Store/Repository/Vault → 刷新/通知”。</li>
+<li><strong>证据够硬</strong>：重要结论必须能回指到文件和代码位置，而不是凭感觉。</li>
+<li><strong>风险够具体</strong>：不仅说“有副作用/有竞态”，还要指出<strong>哪条链</strong>、<strong>为什么会发生</strong>、<strong>最低处理标准是什么</strong>。</li>
+<li><strong>边界够清楚</strong>：哪些地方已确认，哪些地方只是高概率推断，要分开写。</li>
+</ol>
+<p>按这个标准，这份报告给的是：</p>
+<ul>
+<li><strong>覆盖面</strong>：已覆盖你指定目录的主干写链，并额外补了直接相连的核心服务/平台事件链。</li>
+<li><strong>证据形式</strong>：以下所有关键结论都带 <code>文件:行号</code>。</li>
+<li><strong>结论粒度</strong>：不仅有“清单”，还有“归类”“绕过点”“副作用归属现状”“竞态热点”。</li>
+</ul>
+<hr/>
+<h2>1. 先给结论摘要</h2>
+<h3>1.1 当前系统里，实际上已经存在两条主写链</h3>
+<p><strong>链 A：设置/配置写链</strong><br/>
+<code>UI(features/settings 等) → useCases.* → zustand slice / state.updateSettings → SettingsRepository.update() → persistence → repository.subscribe → zustand.setState → UI/运行时订阅副作用</code></p>
+<p>证据：</p>
+<ul>
+<li>架构文档要求 features 通过 useCases 写，而不是直接触 slices：<code>app/ARCH_CONSTRAINTS.md:40-59</code></li>
+<li><code>useCases</code> 明确宣称是 UI 唯一业务入口：<code>app/usecases/index.ts:6-22, 76-85</code></li>
+<li><code>SettingsRepository.update()</code> 是统一设置持久化入口：<code>core/services/SettingsRepository.ts:138-159</code></li>
+<li><code>initializeCore()</code> 订阅 <code>SettingsRepository</code>，把 settings 同步回 zustand，并挂接 timer widget / devConsole / categoryColors 等运行时副作用：<code>app/bootstrap/initializeCore.ts:74-130</code></li>
+</ul>
+<p><strong>链 B：记录/输入写链</strong><br/>
+<code>UI/Modal → InputService / ItemService → Vault 写文件 → DataStore.scanFileByPath()/notifyChange() → 视图刷新</code></p>
+<p>证据：</p>
+<ul>
+<li><code>QuickInputModal</code> 提交时直接调 <code>inputService.updateExistingRecord()</code> / <code>inputService.executeTemplate()</code>，并自行 <code>scanFileByPath + notifyChange</code>：<code>platform/modals/QuickInputModal.tsx:492-527</code></li>
+<li><code>InputService</code> 自身直接写 vault；编辑路径里还内置 <code>scanFileByPath + notifyChange</code>：<code>core/services/InputService.ts:16-40, 42-79</code></li>
+<li><code>ItemService.completeItem()/updateItemTime()</code> 也是直接改文件，再 <code>scanFileByPath().then(notifyChange)</code>：<code>core/services/ItemService.ts:33-46, 51-99, 121-149</code></li>
+</ul>
+<h3>1.2 你说的风险已经在代码里落地了：<strong>“统一写入口”在设置域成立，在输入域不成立</strong></h3>
+<ul>
+<li>设置域多数动作确实走 <code>useCases.*</code>。</li>
+<li>但记录输入域并<strong>没有</strong>一个 usecase 层的统一动作内核；真实写入核心在 <code>InputService</code> / <code>ItemService</code>，而且入口分散在多个 Modal / View / Timer 流程中。</li>
+</ul>
+<h3>1.3 文档与现实有两处明显漂移</h3>
+<p><strong>漂移 1：QuickInputModal 注释与实现不一致</strong><br/>
+文件头注释写的是“使用 useCases 进行写入操作”，但真实代码直接调用的是 <code>InputService</code>，没有经过任何输入 usecase：</p>
+<ul>
+<li>注释：<code>platform/modals/QuickInputModal.tsx:3-6</code></li>
+<li>实现：<code>platform/modals/QuickInputModal.tsx:492-527</code></li>
+</ul>
+<p><strong>漂移 2：Layout/View 规范与实现不一致</strong><br/>
+架构文档与 <code>layout.usecase.ts</code> 注释都说 features 层应只走 <code>useCases.layout.*</code>，甚至把 <code>viewinstance.usecase</code> 标成“已禁用/不允许 features 直调”：</p>
+<ul>
+<li>规范：<code>app/ARCH_CONSTRAINTS.md:142-172, 187-195</code></li>
+<li><code>layout.usecase.ts</code> 注释：<code>app/usecases/layout.usecase.ts:6-18</code></li>
+</ul>
+<p>但现实里：</p>
+<ul>
+<li><code>LayoutSettings</code> 直接调用 <code>useCases.viewInstance.createView/updateView</code>：<code>features/settings/LayoutSettings.tsx:105-117, 157-166</code></li>
+<li><code>LayoutEditorPanel</code> 也直接调用 <code>_useCases.viewInstance.createView/updateView</code>：<code>features/settings/components/LayoutEditorPanel.tsx:138, 186</code></li>
+<li><code>ModuleSettingsModal</code> 每次改动都直接 <code>useCases.viewInstance.updateView</code>：<code>features/settings/ModuleSettingsModal.tsx:45-48</code></li>
+<li><code>LayoutRenderer</code> 删除 view 时直接 <code>useCases.viewInstance.deleteView</code>：<code>features/settings/LayoutRenderer.tsx:403-406</code></li>
+</ul>
+<p>更关键的是：<strong><code>layout.usecase.ts</code> 里并没有文档声称的 addView/updateView/deleteView 等 facade 方法</strong>；当前 features 只能绕去 <code>viewinstance.usecase.ts</code>。这说明 ViewInstance 侧的“唯一写入口”并没有真正收口。</p>
+<hr/>
+<h2>2. 范围与方法</h2>
+<p>本轮是<strong>静态盘点</strong>，不做改码，不做行为回归，不做运行时打点。方法是：</p>
+<ol>
+<li>先读架构约束和 usecase 出口，确定“理论上的唯一写入口”是什么。</li>
+<li>再从 UI 层反查所有写入口：<ul>
+<li><code>new QuickInputModal(...)</code></li>
+<li><code>useCases.*.*(...)</code></li>
+<li><code>inputService.executeTemplate/updateExistingRecord(...)</code></li>
+<li><code>itemService.completeItem/updateItemTime(...)</code></li>
+</ul>
+</li>
+<li>再把这些入口落到实际持久化位置：<ul>
+<li><code>SettingsRepository.update()</code></li>
+<li><code>vault.writeFile()</code></li>
+</ul>
+</li>
+<li>最后补副作用与竞态：<ul>
+<li><code>scanFileByPath</code></li>
+<li><code>notifyChange</code></li>
+<li><code>createTakeLatest</code></li>
+<li>repository/store subscriptions</li>
+</ul>
+</li>
+</ol>
+<hr/>
+<h2>3. 写入口清单（第一版）</h2>
+<p>下面的“写入口”分成两大类：</p>
+<ul>
+<li><strong>A. 记录/输入域</strong>：真正影响 md 记录内容</li>
+<li><strong>B. 设置/配置域</strong>：影响模板、主题、布局、视图、AI 设置、计时器设置等</li>
+</ul>
+<hr/>
+<h2>3A. 记录 / 输入域写入口</h2>
+<h3>A-1. QuickInput 命令入口</h3>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>入口</th>
+<th>触发文件</th>
+<th>写动作最终去向</th>
+<th>备注</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>命令面板“快速录入 - {block}”</td>
+<td><code>features/quickinput/registerCommands.ts:27-35</code></td>
+<td><code>QuickInputModal</code> → <code>InputService.executeTemplate/updateExistingRecord</code></td>
+<td>最基础入口</td>
+</tr>
+<tr>
+<td>平台抽象 <code>openQuickInput()</code></td>
+<td><code>platform/ObsidianModalPort.ts:58-60</code></td>
+<td>同上</td>
+<td>平台侧统一打开 modal，但不统一写动作</td>
+</tr>
+</tbody>
+</table></div>
+<h3>A-2. 视图/列表中打开 QuickInput 的入口</h3>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>入口</th>
+<th>触发文件</th>
+<th>目的</th>
+<th>最终写链</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>任务行点击编辑</td>
+<td><code>shared/ui/items/TaskRow.tsx:34-40</code></td>
+<td>编辑已有任务</td>
+<td><code>QuickInputModal(mode='edit')</code> → <code>InputService.updateExistingRecord()</code></td>
+</tr>
+<tr>
+<td>Block 行点击编辑</td>
+<td><code>shared/ui/items/BlockItem.tsx:26-33</code></td>
+<td>编辑已有 block 记录</td>
+<td>同上</td>
+</tr>
+<tr>
+<td>Heatmap 空白格新增 / 单条格继续录入</td>
+<td><code>shared/ui/views/HeatmapView.tsx:97-140</code></td>
+<td>新建记录</td>
+<td><code>QuickInputModal(create)</code> → <code>InputService.executeTemplate()</code></td>
+</tr>
+<tr>
+<td>Timeline 点击空白时间段建任务</td>
+<td><code>shared/ui/views/timelineInteraction.ts:26-74</code></td>
+<td>新建任务</td>
+<td>同上</td>
+</tr>
+<tr>
+<td>LayoutRenderer 的快捷输入按钮</td>
+<td><code>features/settings/LayoutRenderer.tsx:185-190, 369-373</code></td>
+<td>新建记录</td>
+<td>同上</td>
+</tr>
+<tr>
+<td>Timer 浮窗“新任务”</td>
+<td><code>features/timer/TimerViewView.tsx:23-31</code></td>
+<td>先返回 <code>QuickInputSaveData</code>，再由 <code>TimerService</code> 新建并开计时</td>
+<td><code>QuickInputModal(onSave)</code> → <code>TimerService.createNewTaskAndStart()</code> → <code>InputService.executeTemplate()</code></td>
+</tr>
+<tr>
+<td>Timer 行“编辑任务”</td>
+<td><code>features/timer/TimerRow.tsx:56-63</code></td>
+<td><strong>看起来像编辑，但实际不是 edit mode</strong></td>
+<td><code>QuickInputModal(create)</code>，只传了 <code>blockId + context</code>，没传 <code>{ mode:'edit', editItem }</code></td>
+</tr>
+</tbody>
+</table></div>
+<h4>对 A-2 的判断</h4>
+<p><code>TaskRow</code> / <code>BlockItem</code> 是<strong>标准编辑链</strong>：</p>
+<ul>
+<li>直接以 <code>mode:'edit'</code> 打开：<code>shared/ui/items/TaskRow.tsx:37-40</code>、<code>shared/ui/items/BlockItem.tsx:30-33</code></li>
+</ul>
+<p><code>TimerRow</code> 是一个<strong>明显不一致点</strong>：</p>
+<ul>
+<li>它调用 <code>actionService.getQuickInputConfigForTaskEdit(taskId)</code> 拿到的是 <code>blockId + context</code>：<code>core/services/ActionService.ts:134-168</code></li>
+<li>但真正打开 modal 时并没有传 <code>mode:'edit'</code> 和 <code>editItem</code>：<code>features/timer/TimerRow.tsx:56-63</code></li>
+<li>这意味着它更像“带上下文的新建壳”而不是“回写原记录”。</li>
+</ul>
+<p>这个点需要你在第 2 轮定规则时单独裁决：<strong>TimerRow 的“编辑任务”究竟应不应该统一到真正的 update 链。</strong></p>
+<h3>A-3. QuickInputModal 本身就是一个写根，而不是纯壳</h3>
+<p><code>QuickInputModal</code> 当前不是一个“只收集输入、交给统一内核处理”的前台壳，而是<strong>自己就包含了完整提交逻辑</strong>：</p>
+<ul>
+<li>读 editorState：<code>platform/modals/QuickInputModal.tsx:492-501</code></li>
+<li>走 <code>onSave</code> 分支（Timer 新任务）：<code>platform/modals/QuickInputModal.tsx:503-506</code></li>
+<li>走 edit 分支：<code>platform/modals/QuickInputModal.tsx:511-516</code></li>
+<li>走 create 分支：<code>platform/modals/QuickInputModal.tsx:517-523</code></li>
+<li>toast + close：<code>platform/modals/QuickInputModal.tsx:526-533</code></li>
+</ul>
+<p>所以从改造角度看，<strong>QuickInputModal 现在并不是“入口壳”，而是“入口 + 提交控制器 + 副作用协调器”混在一起</strong>。</p>
+<h3>A-4. AI 批量确认也是独立输入写链</h3>
+<p><code>AiBatchConfirmModal</code> 不是走 <code>QuickInputModal</code>，而是自己直接：</p>
+<ul>
+<li>解析模板：<code>platform/modals/AiBatchConfirmModal.tsx:218-225, 256-260</code></li>
+<li><code>inputService.executeTemplate()</code>：<code>platform/modals/AiBatchConfirmModal.tsx:227-231, 262-264</code></li>
+<li>成功后仅 <code>notifyChange()</code>：<code>platform/modals/AiBatchConfirmModal.tsx:231, 271</code></li>
+</ul>
+<p>这里有两个重要现象：</p>
+<ol>
+<li><strong>它和 QuickInput 共用了模板解析 / form finalize，但没共用提交流程。</strong></li>
+<li><strong>它 create 后没有主动 <code>scanFileByPath()</code>，只 <code>notifyChange()</code>。</strong><br/>
+相比之下，QuickInput create 路径会显式 <code>scanFileByPath + notifyChange</code>：<code>platform/modals/QuickInputModal.tsx:518-523</code></li>
+</ol>
+<p>这说明当前“创建记录后的刷新策略”并不统一。</p>
+<h3>A-5. TimerService 也在直接落库</h3>
+<p><code>TimerService.createNewTaskAndStart()</code>：</p>
+<ul>
+<li>直接 <code>inputService.executeTemplate(...)</code>：<code>features/timer/TimerService.ts:144-148</code></li>
+<li>手动 <code>dataStore.scanFileByPath(targetFilePath)</code>：<code>features/timer/TimerService.ts:149-153</code></li>
+<li>再决定是 <code>startOrResume(latestItem.id)</code> 还是 <code>notifyChange()</code>：<code>features/timer/TimerService.ts:154-160</code></li>
+</ul>
+<p>这条链本质上也是一个<strong>独立创建入口</strong>。</p>
+<h3>A-6. 任务完成/时间修改是另一条记录写链，不走 QuickInput</h3>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>动作</th>
+<th>入口</th>
+<th>最终服务</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>勾选完成任务</td>
+<td><code>features/settings/LayoutRenderer.tsx:376-378</code></td>
+<td><code>itemService.completeItem()</code></td>
+</tr>
+<tr>
+<td>视图中更新时间</td>
+<td><code>features/settings/LayoutRenderer.tsx:178-180</code></td>
+<td><code>itemService.updateItemTime()</code></td>
+</tr>
+<tr>
+<td>计时结束写回时长</td>
+<td><code>features/timer/TimerService.ts:124-131</code></td>
+<td><code>itemService.completeItem()</code> 或 <code>itemService.updateItemTime()</code></td>
+</tr>
+</tbody>
+</table></div>
+<p>而 <code>ItemService</code> 内部是：</p>
+<ul>
+<li>直接读写目标文件行：<code>core/services/ItemService.ts:20-45</code></li>
+<li>完成任务：<code>core/services/ItemService.ts:51-101</code></li>
+<li>更新时间：<code>core/services/ItemService.ts:121-136</code></li>
+<li>写完后 <code>scanFileByPath().then(notifyChange())</code>：<code>core/services/ItemService.ts:45-46, 147-148</code></li>
+</ul>
+<h3>A-7. “删除记录”写入口：本轮未找到统一主线</h3>
+<p>本轮代码盘点里，<strong>没有找到与 <code>InputService.updateExistingRecord()</code> 对应的 “deleteExistingRecord” 或统一的记录删除 usecase</strong>。</p>
+<p>已确认：</p>
+<ul>
+<li>配置删除（block/theme/layout/view）很多；</li>
+<li>记录编辑/创建很多；</li>
+<li>但“删除一条已存在记录”的统一主线，在本轮范围内没有看见。</li>
+</ul>
+<p>这不是说系统一定不能删记录，而是说：<strong>在当前盘点范围里，没有看到一个成型、显性的、可复用的记录删除主动作。</strong></p>
+<p>这对你第 2 轮定动作模型是重要输入：<code>submitDeleteRecord</code> 目前很可能需要新建，而不是简单抽取。</p>
+<hr/>
+<h2>3B. 设置 / 配置域写入口</h2>
+<p>这一组总体比输入域更规整，大部分已经经过 <code>useCases.*</code>。</p>
+<h3>B-1. Block 相关</h3>
+<p><code>features/settings/BlockManager.tsx</code></p>
+<ul>
+<li>add：<code>useCases.blocks.addBlock()</code>：<code>features/settings/BlockManager.tsx:121-127</code></li>
+<li>delete：<code>useCases.blocks.deleteBlock()</code>：<code>features/settings/BlockManager.tsx:129-134</code></li>
+<li>duplicate：<code>useCases.blocks.duplicateBlock()</code>：<code>features/settings/BlockManager.tsx:136-139</code></li>
+<li>reorder：<code>useCases.blocks.reorderBlocks()</code>：<code>features/settings/BlockManager.tsx:147-152</code></li>
+<li>inline update：<code>useCases.blocks.updateBlock()</code>：<code>features/settings/BlockManager.tsx:73-77</code></li>
+<li>触发方式主要是 <code>onBlur</code> 持久化：<code>features/settings/BlockManager.tsx:75-100</code></li>
+</ul>
+<h3>B-2. Theme / Override 相关</h3>
+<ul>
+<li>新增主题：<code>features/settings/ThemeMatrixView.tsx:131, 181-184</code></li>
+<li>行内改 icon/path：<code>features/settings/ThemeTreeNodeRow.tsx:162, 178</code></li>
+<li>保存 override：<code>features/settings/TemplateEditorModal.tsx:53-71, 143</code></li>
+<li>批量主题操作：<code>features/settings/useBatchOperations.ts:54-84</code></li>
+</ul>
+<h3>B-3. Settings 相关</h3>
+<ul>
+<li>通用设置页：<ul>
+<li>分类颜色：<code>features/settings/GeneralSettings.tsx:43, 50, 58</code></li>
+<li>悬浮计时器开关：<code>features/settings/GeneralSettings.tsx:70</code></li>
+<li>dev console stack 开关：<code>features/settings/GeneralSettings.tsx:83</code></li>
+</ul>
+</li>
+<li>AI 设置保存：<code>features/settings/AiSettings.tsx:73-74, 457</code></li>
+<li>统计视图容器还会<strong>自动补分类颜色并持久化</strong>：<code>shared/ui/views/StatisticsView/StatisticsViewContainer.tsx:80-94</code></li>
+</ul>
+<p>这说明“设置写入口”并不只在 settings 页，<strong>shared/ui 也有自动写入全局设置的行为</strong>。</p>
+<h3>B-4. Layout / ViewInstance 相关</h3>
+<h4>Layout 相关（相对规范）</h4>
+<ul>
+<li><code>LayoutSettings</code>：<ul>
+<li>update layout：<code>features/settings/LayoutSettings.tsx:59-61</code></li>
+<li>delete layout：<code>features/settings/LayoutSettings.tsx:266-270</code></li>
+<li>duplicate layout：<code>features/settings/LayoutSettings.tsx:272-274</code></li>
+<li>rename layout：<code>features/settings/LayoutSettings.tsx:276-280</code></li>
+<li>add layout：<code>features/settings/LayoutSettings.tsx:338-351</code></li>
+<li>reorder layouts：<code>features/settings/LayoutSettings.tsx:366-378</code></li>
+</ul>
+</li>
+<li><code>LayoutRenderer</code>：<ul>
+<li>selectedThemes：<code>features/settings/LayoutRenderer.tsx:408-412</code></li>
+<li>selectedCategories：<code>features/settings/LayoutRenderer.tsx:414-418</code></li>
+</ul>
+</li>
+<li><code>LayoutEditorPanel</code>：<ul>
+<li>update layout：<code>features/settings/components/LayoutEditorPanel.tsx:70</code></li>
+</ul>
+</li>
+</ul>
+<h4>ViewInstance 相关（存在明显绕行）</h4>
+<ul>
+<li>create view：<code>features/settings/LayoutSettings.tsx:105-117</code>、<code>features/settings/components/LayoutEditorPanel.tsx:138</code></li>
+<li>update view title：<code>features/settings/LayoutSettings.tsx:157-166</code>、<code>features/settings/components/LayoutEditorPanel.tsx:186</code></li>
+<li>delete view：<code>features/settings/LayoutRenderer.tsx:403-406</code></li>
+<li><code>ModuleSettingsModal</code> 每次改动即持久化：<code>features/settings/ModuleSettingsModal.tsx:45-48, 84-187</code></li>
+</ul>
+<p>这里的核心问题不是“有没有 usecase”，而是：</p>
+<ul>
+<li>文档希望 <strong>Layout facade 一统 Layout + View 写入口</strong>；</li>
+<li>现实是 <strong>features 直接调用 <code>useCases.viewInstance.*</code></strong>；</li>
+<li>而 <code>viewinstance.usecase.ts</code> 本身又直接用的是<strong>通用 escape hatch</strong> <code>state.updateSettings(...)</code>：<code>app/usecases/viewinstance.usecase.ts:38-41, 58-62, 77-89</code></li>
+</ul>
+<p>所以 ViewInstance 这块当前是<strong>名义有 usecase，实际上没真正收成一个稳定 facade</strong>。</p>
+<hr/>
+<h2>4. UseCase 清单（系统已有“标准动作”）</h2>
+<h2>4.1 已存在的 usecase 及职责</h2>
+<h3><code>BlocksUseCase</code></h3>
+<ul>
+<li>方法：<code>reorderBlocks / addBlock / updateBlock / deleteBlock / duplicateBlock / moveBlock</code></li>
+<li>证据：<code>app/usecases/blocks.usecase.ts:25-171</code></li>
+<li>覆盖：Block 管理基本完整</li>
+</ul>
+<h3><code>ThemeUseCase</code></h3>
+<ul>
+<li>方法：<code>addTheme / updateTheme / deleteTheme / batchUpdateThemes / batchDeleteThemes / batchUpdateThemeStatus / batchUpdateThemeIcon / upsertOverride / deleteOverride / batchUpsertOverrides / batchDeleteOverrides / batchSetOverrideStatus</code></li>
+<li>证据：<code>app/usecases/theme.usecase.ts</code>（方法清单可由 <code>rg</code> 得到，已在盘点中确认）</li>
+<li>覆盖：Theme / Override 基本完整</li>
+</ul>
+<h3><code>LayoutUseCase</code></h3>
+<ul>
+<li>方法：<code>addLayout / updateLayout / deleteLayout / moveLayout / duplicateLayout / reorderLayouts / batchUpdateLayouts / batchDeleteLayouts / moveLayoutToParent / addViewInstanceToLayout / removeViewInstanceFromLayout / reorderViewInstancesInLayout / get*</code></li>
+<li>证据：<code>app/usecases/layout.usecase.ts:43-260+</code></li>
+<li>覆盖：Layout 很完整；View 与 Layout 关系只覆盖“挂接/移除/重排”，<strong>没覆盖 ViewInstance CRUD</strong></li>
+</ul>
+<h3><code>ViewInstanceUseCase</code></h3>
+<ul>
+<li>方法：<code>createView / updateView / deleteView</code></li>
+<li>证据：<code>app/usecases/viewinstance.usecase.ts:17-95</code></li>
+<li>特点：依赖 <code>state.updateSettings()</code> 通用 mutator，而不是专门 slice action：<code>app/usecases/viewinstance.usecase.ts:38-41, 58-62, 77-89</code></li>
+</ul>
+<h3><code>SettingsUseCase</code></h3>
+<ul>
+<li>方法：<code>setFloatingTimerEnabled / setDevConsoleStackEnabled / toggleTimerWidgetVisibility / updateAiSettings / updateCategoryColors</code></li>
+<li>证据：<code>app/usecases/settings.usecase.ts</code> 方法清单已确认</li>
+</ul>
+<h3><code>TimerUseCase</code></h3>
+<ul>
+<li>方法：<code>getTimers / setInitialTimersFromDisk / addTimer / updateTimer / removeTimer</code></li>
+<li>证据：<code>app/usecases/timer.usecase.ts:12-54</code></li>
+</ul>
+<h2>4.2 关于“统一输入”最关键的结论</h2>
+<p><strong>当前不存在一个对等于 <code>BlocksUseCase</code> / <code>ThemeUseCase</code> / <code>LayoutUseCase</code> 的“InputUseCase”或“RecordInputUseCase”。</strong></p>
+<p>也就是说：</p>
+<ul>
+<li>配置域已经有 facade；</li>
+<li>输入域没有对应 facade；</li>
+<li>QuickInput / AI Batch / Timer New Task / Item time update 都各自直接连到 service 层。</li>
+</ul>
+<p>这就是为什么你现在强调“不要做第二个前台输入渠道，而是先建统一输入内核”是对的：</p>
+<blockquote>
+<p>因为现在缺的不是“再多一个按钮”，缺的是<strong>输入域自己的应用层 facade / 动作模型</strong>。</p>
+</blockquote>
+<hr/>
+<h2>5. 校验 / 补全 / 归一化清单</h2>
+<p>这一块是本轮最重要的“分散逻辑盘点”。结论先说：</p>
+<blockquote>
+<p><strong>模板解析、表单默认值、编辑态回填、字段对象化、时间联动、主题 override 解析、视图配置 normalize，已经散落在多个层级。</strong></p>
+</blockquote>
+<p>不是一个点坏了，而是<strong>同一类规则分布在 6 个地方</strong>。</p>
+<h2>5.1 模板解析：<code>TemplateResolver</code> 是当前最接近“统一真源”的点</h2>
+<ul>
+<li>唯一模板解析实现：<code>core/services/TemplateResolver.ts:17-31</code></li>
+<li>解析规则：<ul>
+<li>找 base block：<code>core/services/TemplateResolver.ts:46-50</code></li>
+<li>找 theme：<code>core/services/TemplateResolver.ts:52-55</code></li>
+<li>有 override 且未禁用则合并 <code>fields/outputTemplate/targetFile/appendUnderHeader</code>：<code>core/services/TemplateResolver.ts:57-74</code></li>
+<li>否则返回 baseBlock：<code>core/services/TemplateResolver.ts:77-78</code></li>
+</ul>
+</li>
+<li><code>inputTemplateUtils.ts</code> 现在只是 thin wrapper：<code>core/utils/inputTemplateUtils.ts:4-5, 24-30</code></li>
+</ul>
+<h3>这部分当前状态</h3>
+<p>这已经比较收口。后续统一输入内核应该<strong>直接复用它</strong>，而不是再发明一套 block/theme/override 合并规则。</p>
+<h2>5.2 QuickInputEditor：默认值、context 回填、时间联动都在这里</h2>
+<p><code>app/ui/components/QuickInputEditor/QuickInputEditorContainer.tsx</code></p>
+<h3>已确认的逻辑</h3>
+<ul>
+<li>提交前 finalize：删 <code>lastChanged</code> + 统一时间字段：<code>app/ui/components/QuickInputEditor/QuickInputEditorContainer.tsx:15-20</code></li>
+<li>过滤当前 block 下被 disabled 的主题：<code>app/ui/components/QuickInputEditor/QuickInputEditorContainer.tsx:76-88</code></li>
+<li>取 effective template：<code>app/ui/components/QuickInputEditor/QuickInputEditorContainer.tsx:90-94</code></li>
+<li>context 回填：<code>app/ui/components/QuickInputEditor/QuickInputEditorContainer.tsx:118-139</code></li>
+<li>defaultValue 回填：<code>app/ui/components/QuickInputEditor/QuickInputEditorContainer.tsx:140-152</code></li>
+<li>无 defaultValue 时自动填当前日期/当前时间/首个选项：<code>app/ui/components/QuickInputEditor/QuickInputEditorContainer.tsx:153-160</code></li>
+<li>时间联动（时间/结束/时长）：<code>app/ui/components/QuickInputEditor/QuickInputEditorContainer.tsx:168-174</code></li>
+<li>block 切换时只保留特定字段：<code>app/ui/components/QuickInputEditor/QuickInputEditorContainer.tsx:192-200</code></li>
+<li><code>templateId/templateSourceType</code> 会随 editor state 一起对外发：<code>app/ui/components/QuickInputEditor/QuickInputEditorContainer.tsx:176-186</code></li>
+</ul>
+<h3>判断</h3>
+<p>QuickInputEditor 现在已经承担了很大一部分“输入规则层”职责，但它仍然是 UI 组件，不是独立输入内核。</p>
+<h2>5.3 QuickInputModal：编辑态模板推断和回填也在这里</h2>
+<p><code>platform/modals/QuickInputModal.tsx</code></p>
+<h3>已确认逻辑</h3>
+<ul>
+<li><code>mapFieldValue()</code>：把 select/radio/rating/path-like 字段映射成 <code>{value,label}</code>：<code>platform/modals/QuickInputModal.tsx:214-236</code></li>
+<li><code>scoreTemplateForItem()</code>：根据 <code>templateId/categoryKey/outputTemplate/field token</code> 给 block 打分：<code>platform/modals/QuickInputModal.tsx:269-300</code></li>
+<li><code>resolveBlockForEdit()</code>：exact → inferred → fallback：<code>platform/modals/QuickInputModal.tsx:303-326</code></li>
+<li><code>buildInitialFormData()</code>：从 item.extra / item 本体读取字段并映射：<code>platform/modals/QuickInputModal.tsx:341-389</code></li>
+<li><code>resolveEditState()</code>：决定 block/theme/override/title/initialFormData：<code>platform/modals/QuickInputModal.tsx:391-428</code></li>
+</ul>
+<h3>判断</h3>
+<p>这说明“编辑已有记录时，应该用哪个模板、如何从旧 item 反推表单值”这套规则<strong>没有独立抽出来</strong>，还嵌在 modal 里。</p>
+<p>这部分将来非常适合作为 <code>resolveEditRecordContext</code> / <code>buildRecordFormStateFromItem</code> 之类的统一动作拆出来。</p>
+<h2>5.4 InputService：提交时再次做字段对象归一化</h2>
+<p><code>core/services/InputService.ts</code></p>
+<ul>
+<li><code>buildRenderData()</code> 会对 option object 做再次归一化：<code>core/services/InputService.ts:81-115</code></li>
+<li><code>ratingPair</code> 会额外写入辅助键（默认 <code>评图</code>）：<code>core/services/InputService.ts:97-103</code></li>
+<li>path/select/radio 也会保留 <code>{label,value}</code>：<code>core/services/InputService.ts:103-105</code></li>
+<li>最终统一补入 <code>block/theme/templateId/templateSourceType</code>：<code>core/services/InputService.ts:108-114</code></li>
+</ul>
+<h3>判断</h3>
+<p>这部分很重要，因为它说明：</p>
+<ul>
+<li>UI 层已经在处理 option object；</li>
+<li>service 层又做了一遍“面向渲染模板”的对象归一化；</li>
+<li>这其实已经接近“normalizeRecordInput”的后半段。</li>
+</ul>
+<h2>5.5 Theme / Block / Layout 的校验与默认值分散在 slices</h2>
+<h3>Theme</h3>
+<ul>
+<li><code>addTheme</code>：空路径拒绝、重复路径拒绝：<code>app/store/slices/theme.slice.ts:90-107</code></li>
+<li><code>updateTheme</code>：改 path 时检查重复：<code>app/store/slices/theme.slice.ts:136-149</code></li>
+<li>删 theme 时级联删 overrides：<code>app/store/slices/theme.slice.ts:170-186</code></li>
+<li>批量删 theme 时也删 overrides：<code>app/store/slices/theme.slice.ts:221-233</code></li>
+</ul>
+<h3>Block</h3>
+<ul>
+<li><code>addBlock</code> 默认新对象：<code>categoryKey=name</code>，其余 <code>targetFile/appendUnderHeader/outputTemplate/fields</code> 默认空：<code>app/store/slices/blocks.slice.ts:63-71</code></li>
+<li>删 block 时级联删 overrides：<code>app/store/slices/blocks.slice.ts:125-148</code></li>
+</ul>
+<h3>Layout</h3>
+<ul>
+<li><code>addLayout</code> 默认 <code>viewInstanceIds=[] / displayMode='list' / initialView='月' / initialDateFollowsNow=true</code>：<code>app/store/slices/layout.slice.ts:98-125</code></li>
+<li><code>deleteLayout</code> 只删 layout 本身，不处理 viewInstances：<code>app/store/slices/layout.slice.ts:161-175</code></li>
+</ul>
+<h2>5.6 视图编辑器里的 normalize 也很分散</h2>
+<h3>HeatmapViewEditor</h3>
+<ul>
+<li><code>normalizeHeatmapConfig()</code>：<code>features/settings/HeatmapViewEditor.tsx:21-34</code></li>
+<li><code>handleScanThemes()</code>：从数据源扫描并写回 <code>themePaths</code>：<code>features/settings/HeatmapViewEditor.tsx:46-75</code></li>
+</ul>
+<h3>StatisticsViewEditor</h3>
+<ul>
+<li>自动发现分类并写回 <code>categories</code>：<code>features/settings/StatisticsViewEditor.tsx:19-43</code></li>
+<li>调整顺序/别名即时 <code>onChange</code>：<code>features/settings/StatisticsViewEditor.tsx:45-62</code></li>
+</ul>
+<h3>TimelineViewEditor</h3>
+<ul>
+<li><code>normalizeProgressOrder()</code>：<code>features/settings/TimelineViewEditor.tsx:23-84</code></li>
+<li>分类改名碰撞保护：<code>features/settings/TimelineViewEditor.tsx:56-61</code></li>
+<li>所有 patch 只发最小补丁：<code>features/settings/TimelineViewEditor.tsx:303-306</code></li>
+</ul>
+<h3>判断</h3>
+<p>这些逻辑虽然不属于 quickinput 表单本身，但它们说明：</p>
+<ul>
+<li><strong>“配置输入的 normalize”</strong> 也没有统一层；</li>
+<li>现在很多 editor 组件自己带规则；</li>
+<li>将来如果你想把 “view/editor/modal 里的编辑动作” 一起纳入统一动作模型，就不能只盯 quickinput。</li>
+</ul>
+<h2>5.7 <code>core/utils/normalize.ts</code> 不是输入 normalize，而是 item 日期 normalize</h2>
+<p><code>core/utils/normalize.ts</code> 当前只做：</p>
+<ul>
+<li>block/task 的统一日期字段推导：<code>core/utils/normalize.ts:9-46</code></li>
+</ul>
+<p>它<strong>不是</strong>输入表单 normalize，也不能直接拿来当“统一输入 normalize 层”。</p>
+<hr/>
+<h2>6. 副作用清单（写后会发生什么）</h2>
+<p>这一节是你这次特别要求纳入的重点。</p>
+<h2>6.1 设置写链的副作用</h2>
+<h3>固定链路</h3>
+<ol>
+<li><code>useCases.*</code> 调 store action / <code>updateSettings</code></li>
+<li>底层 <code>SettingsRepository.update()</code> 保存：<code>core/services/SettingsRepository.ts:138-159</code></li>
+<li>repository <code>notify()</code>：<code>core/services/SettingsRepository.ts:63-70, 149-155</code></li>
+<li><code>initializeCore()</code> 里订阅 repository，把 settings 同步回 zustand：<code>app/bootstrap/initializeCore.ts:74-79</code></li>
+</ol>
+<h3>附加运行时副作用</h3>
+<ul>
+<li><code>floatingTimerEnabled</code> 变化：创建/卸载 timer widget，并同步 UI 可见性：<code>app/bootstrap/initializeCore.ts:81-111</code></li>
+<li><code>devConsoleStackEnabled</code> 变化：切换 dev console 行为：<code>app/bootstrap/initializeCore.ts:112-120</code></li>
+<li><code>categoryColors</code> 变化：同步运行时颜色映射：<code>app/bootstrap/initializeCore.ts:122-130</code></li>
+</ul>
+<h3>结论</h3>
+<p>设置写链的副作用<strong>已经有“固定承接点”</strong>，也就是 bootstrap 层的订阅。这是当前架构中比较健康的一部分。</p>
+<h2>6.2 QuickInput create 的副作用</h2>
+<p><code>platform/modals/QuickInputModal.tsx:517-527</code></p>
+<p>create 成功后会：</p>
+<ol>
+<li><code>inputService.executeTemplate(...)</code></li>
+<li><code>dataStore.scanFileByPath(path)</code></li>
+<li><code>dataStore.notifyChange()</code></li>
+<li><code>new Notice('✅ 已保存')</code></li>
+<li><code>closeModal()</code></li>
+</ol>
+<h2>6.3 QuickInput edit 的副作用</h2>
+<p><code>platform/modals/QuickInputModal.tsx:511-527</code></p>
+<p>edit 成功后会：</p>
+<ol>
+<li><code>inputService.updateExistingRecord(...)</code></li>
+<li><code>InputService.updateExistingRecord()</code> 内部又 <code>scanFileByPath + notifyChange</code>：<code>core/services/InputService.ts:74-78</code></li>
+<li><code>new Notice('✅ 已写回 md 并刷新记录')</code></li>
+<li><code>closeModal()</code></li>
+</ol>
+<h2>6.4 AI 批量确认的副作用</h2>
+<p><code>platform/modals/AiBatchConfirmModal.tsx:211-272</code></p>
+<ul>
+<li>单条保存：<code>executeTemplate</code> → 更新当前记录状态 → Notice → <code>notifyChange</code> → 跳下一条</li>
+<li>批量保存：逐条 <code>executeTemplate</code> → 末尾统一 Notice → <code>notifyChange</code></li>
+</ul>
+<h3>明显差异</h3>
+<p>AI 批量保存没有显式 <code>scanFileByPath()</code>，而 QuickInput create / Timer 新建有。</p>
+<p>这意味着“写入后刷新”的副作用策略至少有三种：</p>
+<ol>
+<li>写完立即 scan + notify</li>
+<li>写完只 notify</li>
+<li>写完 scan，若识别到 item 则继续触发 timer 业务</li>
+</ol>
+<h2>6.5 TimerService 的副作用</h2>
+<p><code>features/timer/TimerService.ts</code></p>
+<ul>
+<li><code>startOrResume()</code>：如果已有 running timer，会先 pause 其它 timer：<code>features/timer/TimerService.ts:38-65</code></li>
+<li><code>stopAndApply()</code>：不仅改 md，还会 <code>ui.notice()</code> 并删除 timer：<code>features/timer/TimerService.ts:97-137</code></li>
+<li><code>createNewTaskAndStart()</code>：创建 md → scan file → 尝试自动 start timer，否则 notice + notify：<code>features/timer/TimerService.ts:144-165</code></li>
+</ul>
+<h2>6.6 ItemService 的副作用</h2>
+<p><code>core/services/ItemService.ts</code></p>
+<ul>
+<li>完成任务 / 更新时间 / 插入完成记录，最终都会：<ul>
+<li><code>vault.writeFile()</code></li>
+<li><code>dataStore.scanFileByPath(path).then(() =&gt; dataStore.notifyChange())</code></li>
+</ul>
+</li>
+</ul>
+<p>证据：<code>core/services/ItemService.ts:33-46, 141-149</code></p>
+<h2>6.7 VaultWatcher 带来的“平台同步副作用”</h2>
+<p>Dashboard 初始化时创建了 <code>VaultWatcher</code>：<code>features/settings/index.ts:102-113</code></p>
+<p><code>VaultWatcher</code> 对 vault create/modify/delete/rename 都会推动 <code>DataStore</code>：</p>
+<ul>
+<li>create/modify：<code>platform/events/VaultWatcher.ts:27-30</code></li>
+<li>delete：<code>platform/events/VaultWatcher.ts:34-38</code></li>
+<li>rename：<code>platform/events/VaultWatcher.ts:42-46</code></li>
+</ul>
+<h3>重要判断（带推断性质）</h3>
+<p>从代码结构看，<strong>应用自身写文件后，很可能还会触发 VaultWatcher 的扫描/通知</strong>。<br/>
+如果 Obsidian 对自身写入也触发 markdown create/modify 事件，那么：</p>
+<ul>
+<li>QuickInput create：手动 scan/notify + watcher scan/notify</li>
+<li>QuickInput edit：service 内 scan/notify + watcher scan/notify</li>
+<li>ItemService.complete/update：service 内 scan/notify + watcher scan/notify</li>
+</ul>
+<p>这意味着当前存在<strong>重复扫描 / 重复通知</strong>的高概率风险。<br/>
+这条结论是基于代码结构的合理推断，不是运行时实测结论；但在第 2 轮定副作用归属时必须考虑。</p>
+<hr/>
+<h2>7. 竞态 / 防重热点清单</h2>
+<h2>7.1 QuickInputModal：有一半防重，但不完整</h2>
+<h3>已做的</h3>
+<ul>
+<li>用 <code>createTakeLatest('quick-input-submit')</code> 保证 submit 取最后一次：<code>platform/modals/QuickInputModal.tsx:457, 509-517</code></li>
+<li><code>createTakeLatest</code> 会 cancel 上一个任务，并把 <code>AbortError</code> 转成 <code>CancelledError</code>：<code>shared/utils/takeLatest.ts:20-65</code></li>
+<li><code>isSubmitting</code> 会禁用按钮：<code>platform/modals/QuickInputModal.tsx:473, 564-569</code></li>
+<li><code>InputService.updateExistingRecord()</code> 支持 <code>AbortSignal</code>：<code>core/services/InputService.ts:42-79, 133-139</code></li>
+</ul>
+<h3>还没做完整的地方</h3>
+<ul>
+<li>create 分支 <code>executeTemplate()</code> <strong>不接收 signal</strong>：<code>platform/modals/QuickInputModal.tsx:518-523</code>、<code>core/services/InputService.ts:16-40</code></li>
+<li>也就是说：<strong>edit 可中断，create 不可中断</strong></li>
+</ul>
+<h3>判断</h3>
+<p>QuickInput 现在的“防重”更准确地说是：</p>
+<ul>
+<li>UI 按钮层做了锁；</li>
+<li>edit 链做了 takeLatest + abort；</li>
+<li>create 链只做了 UI 锁，没有真正可中断的 service 级提交取消。</li>
+</ul>
+<h2>7.2 AI 批量确认：没有 takeLatest / 没有事务边界 / 允许部分成功</h2>
+<p><code>AiBatchConfirmModal</code>：<code>platform/modals/AiBatchConfirmModal.tsx:211-272</code></p>
+<p>问题：</p>
+<ul>
+<li>没有 <code>createTakeLatest</code></li>
+<li><code>handleSaveAll()</code> 是顺序循环，一条失败不会回滚前面成功的条目</li>
+<li><code>saveAll</code> 过程没有总级别的提交锁、没有 abort、没有统一刷新策略</li>
+</ul>
+<p>这类链路后续应至少纳入“串行提交 + 可中断 + 部分失败结果协议”。</p>
+<h2>7.3 View 设置编辑：几乎是“每次改动立即落库”</h2>
+<p><code>ModuleSettingsModal</code> 里的 <code>ViewInstanceEditor</code>：</p>
+<ul>
+<li>所有 <code>onChange</code> 直接 <code>useCases.viewInstance.updateView(...)</code>：<code>features/settings/ModuleSettingsModal.tsx:45-48, 84-187</code></li>
+<li>save 按钮并不真正提交，只是 <code>await new Promise(resolve =&gt; setTimeout(resolve, 100)); onClose();</code>：<code>features/settings/ModuleSettingsModal.tsx:208-217</code></li>
+</ul>
+<h3>判断</h3>
+<p>这是一个很明显的竞态/副作用热点：</p>
+<ul>
+<li>没有“编辑态”和“已提交态”的边界；</li>
+<li>save 只是“等一下然后关窗”；</li>
+<li>如果你后面想把 modal save 纳入统一动作，这里必须重构。</li>
+</ul>
+<h2>7.4 ViewInstanceUseCase：走通用 <code>updateSettings</code>，没有专门并发约束</h2>
+<p><code>app/usecases/viewinstance.usecase.ts:38-41, 58-62, 77-89</code></p>
+<p>因为 View CRUD 直接用的是 <code>state.updateSettings(draft =&gt; ...)</code>，而 <code>SettingsRepository.update()</code> 当前没有显式队列/锁：<code>core/services/SettingsRepository.ts:138-159</code></p>
+<p>这意味着：</p>
+<ul>
+<li>并发写时只能依赖 JS 事件循环与当前内存快照；</li>
+<li>没有 recordId/layoutId/viewId 级别串行器；</li>
+<li>也没有“版本号/冲突检测”。</li>
+</ul>
+<h2>7.5 ItemService：scan/notify 是异步 fire-and-forget</h2>
+<p><code>core/services/ItemService.ts:45-46, 147-148</code></p>
+<p>这里是：</p>
+<pre><code class="language-ts">this.dataStore.scanFileByPath(path).then(() =&gt; this.dataStore.notifyChange());
+</code></pre>
+<p>没有 <code>await</code>，意味着：</p>
+<ul>
+<li>调用方拿到 <code>completeItem/updateItemTime</code> resolved，并不等于 DataStore 已经刷新完成；</li>
+<li>UI 侧若紧接着读取，可能读到旧缓存；</li>
+<li>如果同时还有 VaultWatcher 事件，这个顺序会更难推断。</li>
+</ul>
+<h2>7.6 Timer 新建任务链：创建、扫描、找最新 item、启动 timer 是一条复合事务，但没有统一事务边界</h2>
+<p><code>features/timer/TimerService.ts:144-165</code></p>
+<p>步骤是：</p>
+<ol>
+<li>create md</li>
+<li>scan file</li>
+<li>从扫描结果里挑 line 最大的 item 当 latest</li>
+<li>startOrResume(latestItem.id)</li>
+</ol>
+<p>热点：</p>
+<ul>
+<li>如果模板输出多条可解析记录，<code>line 最大</code> 未必就是“应该计时的那条”</li>
+<li>如果 scan 结果为空，会退化成“创建了文件但没识别成任务”</li>
+<li>没有显式事务对象传递“本次创建的 recordId”</li>
+</ul>
+<h2>7.7 StatisticsViewContainer：会自动写全局颜色设置</h2>
+<p><code>shared/ui/views/StatisticsView/StatisticsViewContainer.tsx:80-94</code></p>
+<p>它在渲染期 <code>useEffect</code> 里自动发现分类并写 <code>categoryColors</code>。<br/>
+虽然逻辑合理，但从“竞态与副作用归属”角度看，这意味着：</p>
+<ul>
+<li>纯展示容器也会触发全局设置写入；</li>
+<li>数据变化可能反向触发设置持久化；</li>
+<li>这类“渲染即写入”的行为后续要谨慎纳入统一规则。</li>
+</ul>
+<hr/>
+<h2>8. 绕过点 / 不一致点（最值得你下一轮盯住）</h2>
+<h2>8.1 绕过点 1：输入域没有 usecase facade，UI 直接调 service</h2>
+<p>代表文件：</p>
+<ul>
+<li><code>platform/modals/QuickInputModal.tsx:492-527</code></li>
+<li><code>platform/modals/AiBatchConfirmModal.tsx:211-272</code></li>
+<li><code>features/timer/TimerService.ts:144-165</code></li>
+<li><code>core/services/ItemService.ts:51-149</code>（被多个 UI/feature 间接调用）</li>
+</ul>
+<h2>8.2 绕过点 2：ViewInstance 没有真正并入 Layout facade</h2>
+<p>代表文件：</p>
+<ul>
+<li>规范：<code>app/ARCH_CONSTRAINTS.md:142-172, 187-195</code></li>
+<li>实现：<code>features/settings/LayoutSettings.tsx:109, 162</code>、<code>features/settings/components/LayoutEditorPanel.tsx:138, 186</code>、<code>features/settings/ModuleSettingsModal.tsx:47</code>、<code>features/settings/LayoutRenderer.tsx:405</code></li>
+<li><code>viewinstance.usecase.ts</code> 仍直接用 <code>updateSettings</code>：<code>app/usecases/viewinstance.usecase.ts:38-41, 58-62, 77-89</code></li>
+</ul>
+<h2>8.3 不一致点 1：QuickInput create 的刷新策略与 AI 批量确认不一致</h2>
+<ul>
+<li>QuickInput create：<code>scanFileByPath + notifyChange</code>：<code>platform/modals/QuickInputModal.tsx:518-523</code></li>
+<li>AI 批量：只 <code>notifyChange</code>：<code>platform/modals/AiBatchConfirmModal.tsx:228-231, 262-271</code></li>
+<li>Timer 新建：<code>scanFileByPath</code> 后再决定 start/notify：<code>features/timer/TimerService.ts:147-160</code></li>
+</ul>
+<h2>8.4 不一致点 2：真正编辑 vs “伪编辑”共存</h2>
+<ul>
+<li>真编辑：<code>TaskRow</code> / <code>BlockItem</code> 走 <code>mode:'edit'</code>：<code>shared/ui/items/TaskRow.tsx:37-40</code>、<code>shared/ui/items/BlockItem.tsx:30-33</code></li>
+<li>伪编辑：<code>TimerRow</code> 打开的是 create 模式，只带 context：<code>features/timer/TimerRow.tsx:56-63</code></li>
+</ul>
+<h2>8.5 不一致点 3：Modal 保存语义不一致</h2>
+<ul>
+<li><code>QuickInputModal</code>：save = 真提交</li>
+<li><code>TemplateEditorModal</code>：save = 真提交</li>
+<li><code>ModuleSettingsModal</code>：save = 等 100ms 后关闭，真实提交已在过程中发生：<code>features/settings/ModuleSettingsModal.tsx:208-217</code></li>
+</ul>
+<hr/>
+<h2>9. 五张清单（可直接带到第 2 轮）</h2>
+<h2>9.1 写入口清单（压缩版）</h2>
+<h3>记录/输入域</h3>
+<ul>
+<li><code>features/quickinput/registerCommands.ts</code></li>
+<li><code>platform/ObsidianModalPort.ts</code></li>
+<li><code>shared/ui/items/TaskRow.tsx</code></li>
+<li><code>shared/ui/items/BlockItem.tsx</code></li>
+<li><code>shared/ui/views/HeatmapView.tsx</code></li>
+<li><code>shared/ui/views/timelineInteraction.ts</code></li>
+<li><code>features/settings/LayoutRenderer.tsx</code></li>
+<li><code>features/timer/TimerViewView.tsx</code></li>
+<li><code>features/timer/TimerRow.tsx</code></li>
+<li><code>platform/modals/QuickInputModal.tsx</code></li>
+<li><code>platform/modals/AiBatchConfirmModal.tsx</code></li>
+<li><code>features/timer/TimerService.ts</code></li>
+<li><code>features/settings/LayoutRenderer.tsx</code>（<code>itemService.completeItem/updateItemTime</code>）</li>
+</ul>
+<h3>设置/配置域</h3>
+<ul>
+<li><code>features/settings/BlockManager.tsx</code></li>
+<li><code>features/settings/TemplateEditorModal.tsx</code></li>
+<li><code>features/settings/ThemeMatrixView.tsx</code></li>
+<li><code>features/settings/ThemeTreeNodeRow.tsx</code></li>
+<li><code>features/settings/useBatchOperations.ts</code></li>
+<li><code>features/settings/GeneralSettings.tsx</code></li>
+<li><code>features/settings/AiSettings.tsx</code></li>
+<li><code>features/settings/LayoutSettings.tsx</code></li>
+<li><code>features/settings/components/LayoutEditorPanel.tsx</code></li>
+<li><code>features/settings/ModuleSettingsModal.tsx</code></li>
+<li><code>features/settings/LayoutRenderer.tsx</code></li>
+<li><code>shared/ui/views/StatisticsView/StatisticsViewContainer.tsx</code></li>
+</ul>
+<h2>9.2 UseCase 清单（压缩版）</h2>
+<ul>
+<li><code>BlocksUseCase</code></li>
+<li><code>ThemeUseCase</code></li>
+<li><code>LayoutUseCase</code></li>
+<li><code>ViewInstanceUseCase</code></li>
+<li><code>SettingsUseCase</code></li>
+<li><code>TimerUseCase</code></li>
+</ul>
+<p><strong>缺失项：</strong> 没有对等的 <code>Input/Record</code> UseCase。</p>
+<h2>9.3 校验 / 补全清单（压缩版）</h2>
+<ul>
+<li>模板解析：<code>core/services/TemplateResolver.ts</code></li>
+<li>QuickInput 默认值 / context 回填 / 时间联动：<code>app/ui/components/QuickInputEditor/QuickInputEditorContainer.tsx</code></li>
+<li>编辑态模板推断 / item → formData 回填：<code>platform/modals/QuickInputModal.tsx</code></li>
+<li>提交前 renderData normalize：<code>core/services/InputService.ts</code></li>
+<li>Theme path 唯一性校验：<code>app/store/slices/theme.slice.ts</code></li>
+<li>Block / Layout 默认值：<code>app/store/slices/blocks.slice.ts</code>、<code>app/store/slices/layout.slice.ts</code></li>
+<li>ViewEditor normalize：<code>features/settings/*ViewEditor.tsx</code></li>
+<li>Item 日期 normalize：<code>core/utils/normalize.ts</code></li>
+</ul>
+<h2>9.4 副作用清单（压缩版）</h2>
+<ul>
+<li><code>SettingsRepository.update()</code> 持久化 + notify</li>
+<li><code>initializeCore()</code> 中 settings 订阅带来的运行时副作用：timer widget / devConsole / categoryColors</li>
+<li><code>InputService</code> / <code>ItemService</code> 写文件后的 <code>scanFileByPath + notifyChange</code></li>
+<li><code>QuickInputModal</code> / <code>AiBatchConfirmModal</code> / <code>TimerService</code> 自己加的 Notice、close、scan、notify</li>
+<li><code>VaultWatcher</code> 带来的平台侧同步扫描</li>
+</ul>
+<h2>9.5 竞态热点清单（压缩版）</h2>
+<ul>
+<li>QuickInput：edit 有 takeLatest，create 没有真正 abort</li>
+<li>AI 批量保存：无 takeLatest、无回滚、允许部分成功</li>
+<li>ModuleSettingsModal：编辑中即持久化，save 只是延时关闭</li>
+<li>ViewInstanceUseCase：依赖通用 <code>updateSettings</code>，无专门并发约束</li>
+<li>ItemService：scan/notify fire-and-forget</li>
+<li>Timer 新建任务链：create → scan → pick latest → start timer，缺事务边界</li>
+<li>StatisticsViewContainer：渲染副作用会反写全局设置</li>
+</ul>
+<hr/>
+<h2>10. 这轮结束后，哪些事情已经“看清了”</h2>
+<p>我认为下面这些已经足够确定，可以作为第 2 轮输入：</p>
+<h3>已确定 1：quickinput 不能再继续长胖</h3>
+<p>因为它现在已经同时承担：</p>
+<ul>
+<li>前台入口</li>
+<li>表单默认值/时间联动</li>
+<li>编辑态解析</li>
+<li>提交控制</li>
+<li>部分副作用协调</li>
+</ul>
+<p>如果继续在这里堆逻辑，只会更难抽内核。</p>
+<h3>已确定 2：统一输入内核的第一接入点，确实应该先接 QuickInput</h3>
+<p>因为 QuickInput 已经是最多入口汇聚的前门：</p>
+<ul>
+<li>命令</li>
+<li>列表编辑</li>
+<li>Heatmap</li>
+<li>Timeline</li>
+<li>Layout 快捷录入</li>
+<li>Timer 新任务</li>
+</ul>
+<p>先让它降级成“入口壳”，收益最大。</p>
+<h3>已确定 3：输入域的统一动作必须至少覆盖 create / update / refresh / feedback</h3>
+<p>因为当前 create/update 不是只差一个 save：</p>
+<ul>
+<li>create 有至少 3 种刷新策略</li>
+<li>update 有 <code>InputService.updateExistingRecord</code> 与 <code>ItemService.updateItemTime/completeItem</code> 两条子链</li>
+<li>feedback（Notice / closeModal）散在 UI</li>
+</ul>
+<h3>已确定 4：ViewInstance 域也需要收口，不然“统一编辑动作”做不稳</h3>
+<p>否则会出现：</p>
+<ul>
+<li>输入域你收口了；</li>
+<li>视图编辑域还继续到处 <code>useCases.viewInstance.*</code>；</li>
+<li>最后“统一编辑动作”仍然不统一。</li>
+</ul>
+<hr/>
+<h2>11. 我建议你下一轮（定规则）直接回答的 6 个问题</h2>
+<ol>
+<li><p><strong>输入域的新 facade 叫什么？</strong><br/>
+例如：<code>recordInput.usecase.ts</code> / <code>inputKernel.usecase.ts</code> / <code>recordCommands.usecase.ts</code></p>
+</li>
+<li><p><strong>QuickInputModal 以后是不是只保留“打开、收集、触发提交动作”三件事？</strong></p>
+</li>
+<li><p><strong>编辑已有记录时，模板推断逻辑要不要从 modal 抽成独立 resolver？</strong></p>
+</li>
+<li><p><strong>create 后刷新策略是否统一为：写文件 → scan 指定 path → notifyChange？</strong></p>
+</li>
+<li><p><strong><code>ItemService.completeItem/updateItemTime</code> 算不算纳入统一记录动作模型？</strong><br/>
+我倾向于算，因为它们本质上也是 record update。</p>
+</li>
+<li><p><strong>ViewInstance 要不要并回 <code>layout.usecase</code>，还是明确承认它是第二个 facade？</strong><br/>
+现在文档和实现不一致，必须选边。</p>
+</li>
+</ol>
+<hr/>
+<h2>12. 最后一段判断</h2>
+<p>如果按你的总原则：</p>
+<blockquote>
+<p><strong>不要做第二个前台输入渠道。要做的是：新建统一输入内核，让 quickinput 先接进去。</strong></p>
+</blockquote>
+<p>那基于这轮盘点，我的判断是：</p>
+<h3>你现在最值得确认的真实现状是</h3>
+<ul>
+<li><strong>前台入口并不缺，已经太多了</strong>；</li>
+<li><strong>缺的是输入域统一应用层</strong>；</li>
+<li><strong>QuickInput 现在不是壳，而是半个内核</strong>；</li>
+<li><strong>AI 批量、Timer 新建、Item 时间更新，都是未来必须并入统一动作模型的旁路</strong>；</li>
+<li><strong>副作用和刷新策略还没收口</strong>；</li>
+<li><strong>竞态控制只在少数链路做了一半</strong>。</li>
+</ul>
+<h3>所以第 1 轮的结论不是“可以开始大改了”</h3>
+<p>而是：</p>
+<blockquote>
+<p><strong>现在已经可以开始第 2 轮：定规则。</strong><br/>
+因为“谁在写、写到哪、哪些地方绕过、哪些副作用在飞、哪些链路有竞态”——已经足够清楚了。</p>
+</blockquote>
+</div></article></section>
+      <footer class="footer">本页属于 Think OS 插件 HTML 文档系统。UI 沿用原有风格，docs/html 旧资料已按新结构迁移。</footer>
+    </main>
+  </div>
+  <script src="../../_资源/搜索索引.js"></script>
+  <script src="../../_资源/文档脚本.js"></script>
+</body>
+</html>

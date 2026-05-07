@@ -1,0 +1,407 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>原始计划记录｜Think OS 插件文档系统</title>
+  <link rel="stylesheet" href="../../_资源/文档样式.css">
+</head>
+<body data-doc-root="../../">
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-title">Think OS 插件文档系统</div>
+        <div class="brand-subtitle">HTML 项目驾驶舱 / 文档 / 需求 / 技术 / 评审 / 发布</div>
+      </div>
+      <div class="search-box">
+        <input class="search-input" data-doc-search placeholder="搜索：需求、命令、设置、文件地图、评审、QuickInput...">
+        <div class="search-results" data-search-results></div>
+      </div>
+<div class="nav-section" data-nav-key="topic-00"><div class="nav-title">基础入口</div>
+<div class="nav-subsection" data-nav-key="topic-00-group-00"><div class="nav-subtitle">项目驾驶舱</div>
+<a class="nav-link" href="../../index.html">首页仪表盘</a>
+<a class="nav-link" href="../../00-基础入口/00-项目驾驶舱/项目总览.html">项目总览</a>
+<a class="nav-link" href="../../00-基础入口/00-项目驾驶舱/快速开始.html">快速开始</a>
+<a class="nav-link" href="../../00-基础入口/00-项目驾驶舱/当前状态.html">当前状态</a>
+</div>
+<div class="nav-subsection" data-nav-key="topic-00-group-01"><div class="nav-subtitle">概念与边界</div>
+<a class="nav-link" href="../../00-基础入口/01-概念与边界/插件定位.html">插件定位</a>
+<a class="nav-link" href="../../00-基础入口/01-概念与边界/功能地图.html">功能地图</a>
+<a class="nav-link" href="../../00-基础入口/01-概念与边界/术语表.html">术语表</a>
+<a class="nav-link" href="../../00-基础入口/01-概念与边界/常见问题.html">常见问题</a>
+</div>
+<div class="nav-subsection" data-nav-key="topic-00-group-02"><div class="nav-subtitle">迁移与旧资料</div>
+<a class="nav-link" href="../../00-基础入口/02-迁移与旧资料/迁移文档索引.html">迁移文档索引</a>
+<a class="nav-link" href="../../00-基础入口/02-迁移与旧资料/旧章节总览.html">旧章节总览</a>
+<a class="nav-link" href="../../00-基础入口/02-迁移与旧资料/章节化文档框架.html">章节化文档框架</a>
+</div>
+</div>
+<div class="nav-section" data-nav-key="topic-01"><div class="nav-title">项目管理</div>
+<div class="nav-subsection" data-nav-key="topic-01-group-00"><div class="nav-subtitle">计划与路线</div>
+<a class="nav-link" href="../00-计划与路线/需求池.html">需求池</a>
+<a class="nav-link" href="../00-计划与路线/版本路线图.html">版本路线图</a>
+<a class="nav-link" href="../00-计划与路线/开发计划.html">开发计划</a>
+</div>
+<div class="nav-subsection" data-nav-key="topic-01-group-01"><div class="nav-subtitle">过程记录</div>
+<a class="nav-link" href="../01-过程记录/问题记录.html">问题记录</a>
+<a class="nav-link" href="../01-过程记录/技术债.html">技术债</a>
+<a class="nav-link" href="../01-过程记录/决策记录.html">决策记录</a>
+<a class="nav-link" href="../01-过程记录/发布记录.html">发布记录</a>
+</div>
+<div class="nav-subsection" data-nav-key="topic-01-group-02"><div class="nav-subtitle">实施计划</div>
+<a class="nav-link" href="插件深度报告与实施计划.html">插件深度报告与实施计划</a>
+<a class="nav-link" href="上下文时间重构计划.html">上下文时间重构计划</a>
+<a class="nav-link" href="统一输入修改计划.html">统一输入修改计划</a>
+<a class="nav-link" href="原始计划记录.html">原始计划记录</a>
+<a class="nav-link" href="旧需求台账.html">旧需求台账</a>
+</div>
+<div class="nav-subsection" data-nav-key="topic-01-group-03"><div class="nav-subtitle">实施报告</div>
+<a class="nav-link" href="../03-实施报告/Batch1实施报告.html">Batch1 实施报告</a>
+<a class="nav-link" href="../03-实施报告/Batch2实施报告.html">Batch2 实施报告</a>
+<a class="nav-link" href="../03-实施报告/QuickInput主线修改记录.html">QuickInput 主线修改记录</a>
+<a class="nav-link" href="../03-实施报告/QuickInput收口状态.html">QuickInput 收口状态</a>
+<a class="nav-link" href="../03-实施报告/QuickInput本轮修改总览.html">QuickInput 本轮修改总览</a>
+</div>
+</div>
+<div class="nav-section" data-nav-key="topic-02"><div class="nav-title">功能设计</div>
+<div class="nav-subsection" data-nav-key="topic-02-group-00"><div class="nav-subtitle">功能全景</div>
+<a class="nav-link" href="../../02-功能设计/00-功能全景/功能总览.html">功能总览</a>
+<a class="nav-link" href="../../02-功能设计/00-功能全景/功能清单迁移.html">功能清单迁移</a>
+<a class="nav-link" href="../../02-功能设计/00-功能全景/旧产品功能地图.html">旧产品功能地图</a>
+</div>
+<div class="nav-subsection" data-nav-key="topic-02-group-01"><div class="nav-subtitle">用户与交互</div>
+<a class="nav-link" href="../../02-功能设计/01-用户与交互/用户场景.html">用户场景</a>
+<a class="nav-link" href="../../02-功能设计/01-用户与交互/命令设计.html">命令设计</a>
+<a class="nav-link" href="../../02-功能设计/01-用户与交互/设置项设计.html">设置项设计</a>
+<a class="nav-link" href="../../02-功能设计/01-用户与交互/交互流程.html">交互流程</a>
+<a class="nav-link" href="../../02-功能设计/01-用户与交互/异常状态.html">异常状态</a>
+<a class="nav-link" href="../../02-功能设计/01-用户与交互/功能验收标准.html">功能验收标准</a>
+</div>
+<div class="nav-subsection" data-nav-key="topic-02-group-02"><div class="nav-subtitle">View UI 与移动端</div>
+<a class="nav-link" href="../../02-功能设计/02-ViewUI与移动端/ViewUI触发动作梳理.html">View UI 触发动作梳理</a>
+<a class="nav-link" href="../../02-功能设计/02-ViewUI与移动端/移动端UI全量重构方案.html">移动端 UI 全量重构方案</a>
+</div>
+<div class="nav-subsection" data-nav-key="topic-02-group-03"><div class="nav-subtitle">QuickInput 功能收口</div>
+<a class="nav-link" href="../../02-功能设计/03-QuickInput功能收口/QuickInput保存计划一致性.html">QuickInput 保存计划一致性</a>
+<a class="nav-link" href="../../02-功能设计/03-QuickInput功能收口/QuickInput迁移保存反馈.html">QuickInput 迁移保存反馈</a>
+<a class="nav-link" href="../../02-功能设计/03-QuickInput功能收口/QuickInput路径变化保存策略.html">QuickInput 路径变化保存策略</a>
+</div>
+</div>
+<div class="nav-section" data-nav-key="topic-03"><div class="nav-title">技术文档</div>
+<div class="nav-subsection" data-nav-key="topic-03-group-00"><div class="nav-subtitle">技术全景</div>
+<a class="nav-link" href="../../03-技术文档/00-技术全景/技术总览.html">技术总览</a>
+<a class="nav-link" href="../../03-技术文档/00-技术全景/文件地图.html">文件地图</a>
+<a class="nav-link" href="../../03-技术文档/00-技术全景/模块职责.html">模块职责</a>
+<a class="nav-link" href="../../03-技术文档/00-技术全景/插件生命周期.html">插件生命周期</a>
+</div>
+<div class="nav-subsection" data-nav-key="topic-03-group-01"><div class="nav-subtitle">架构导览</div>
+<a class="nav-link" href="../../03-技术文档/01-架构导览/开发指南迁移.html">开发指南迁移</a>
+<a class="nav-link" href="../../03-技术文档/01-架构导览/开发规范迁移.html">开发规范迁移</a>
+<a class="nav-link" href="../../03-技术文档/01-架构导览/代码架构图总览.html">代码架构图总览</a>
+<a class="nav-link" href="../../03-技术文档/01-架构导览/旧代码架构图.html">旧代码架构图</a>
+</div>
+<div class="nav-subsection" data-nav-key="topic-03-group-02"><div class="nav-subtitle">目录地图</div>
+<a class="nav-link" href="../../03-技术文档/02-目录地图/app目录导览.html">app 目录导览</a>
+<a class="nav-link" href="../../03-技术文档/02-目录地图/core目录导览.html">core 目录导览</a>
+<a class="nav-link" href="../../03-技术文档/02-目录地图/features目录导览.html">features 目录导览</a>
+<a class="nav-link" href="../../03-技术文档/02-目录地图/platform目录导览.html">platform 目录导览</a>
+<a class="nav-link" href="../../03-技术文档/02-目录地图/share目录导览.html">share 目录导览</a>
+</div>
+<div class="nav-subsection" data-nav-key="topic-03-group-03"><div class="nav-subtitle">代码视角</div>
+<a class="nav-link" href="../../03-技术文档/03-代码视角/架构视角逐文件.html">架构视角逐文件</a>
+<a class="nav-link" href="../../03-技术文档/03-代码视角/领域视角逐文件.html">领域视角逐文件</a>
+<a class="nav-link" href="../../03-技术文档/03-代码视角/业务视角逐文件.html">业务视角逐文件</a>
+</div>
+<div class="nav-subsection" data-nav-key="topic-03-group-04"><div class="nav-subtitle">运行机制</div>
+<a class="nav-link" href="../../03-技术文档/04-运行机制/数据流.html">数据流</a>
+<a class="nav-link" href="../../03-技术文档/04-运行机制/事件流.html">事件流</a>
+<a class="nav-link" href="../../03-技术文档/04-运行机制/Obsidian API 使用.html">Obsidian API 使用</a>
+<a class="nav-link" href="../../03-技术文档/04-运行机制/样式系统.html">样式系统</a>
+<a class="nav-link" href="../../03-技术文档/04-运行机制/构建流程.html">构建流程</a>
+<a class="nav-link" href="../../03-技术文档/04-运行机制/数据流与流程图.html">数据流与流程图</a>
+</div>
+<div class="nav-subsection" data-nav-key="topic-03-group-05"><div class="nav-subtitle">字段与输入</div>
+<a class="nav-link" href="../../03-技术文档/05-字段与输入/字段系统重构方案.html">字段系统重构方案</a>
+<a class="nav-link" href="../../03-技术文档/05-字段与输入/统一输入现状盘点.html">统一输入现状盘点</a>
+</div>
+<div class="nav-subsection" data-nav-key="topic-03-group-06"><div class="nav-subtitle">QuickInput 技术记录</div>
+<a class="nav-link" href="../../03-技术文档/06-QuickInput技术记录/QuickInput多步推进Snapshot.html">QuickInput 多步推进 Snapshot</a>
+<a class="nav-link" href="../../03-技术文档/06-QuickInput技术记录/QuickInputLegacy调试收口.html">QuickInput Legacy 调试收口</a>
+<a class="nav-link" href="../../03-技术文档/06-QuickInput技术记录/QuickInput任务内容提取调试.html">QuickInput 任务内容提取调试</a>
+<a class="nav-link" href="../../03-技术文档/06-QuickInput技术记录/QuickInput任务内容单一入口.html">QuickInput 任务内容单一入口</a>
+<a class="nav-link" href="../../03-技术文档/06-QuickInput技术记录/QuickInput任务模板护栏.html">QuickInput 任务模板护栏</a>
+<a class="nav-link" href="../../03-技术文档/06-QuickInput技术记录/QuickInput任务写回保真.html">QuickInput 任务写回保真</a>
+</div>
+</div>
+<div class="nav-section" data-nav-key="topic-04"><div class="nav-title">评审中心</div>
+<div class="nav-subsection" data-nav-key="topic-04-group-00"><div class="nav-subtitle">评审方法</div>
+<a class="nav-link" href="../../04-评审中心/00-评审方法/需求评审.html">需求评审</a>
+<a class="nav-link" href="../../04-评审中心/00-评审方法/功能评审.html">功能评审</a>
+<a class="nav-link" href="../../04-评审中心/00-评审方法/技术方案评审.html">技术方案评审</a>
+</div>
+<div class="nav-subsection" data-nav-key="topic-04-group-01"><div class="nav-subtitle">质量评审</div>
+<a class="nav-link" href="../../04-评审中心/01-质量评审/代码结构评审.html">代码结构评审</a>
+<a class="nav-link" href="../../04-评审中心/01-质量评审/发布评审.html">发布评审</a>
+<a class="nav-link" href="../../04-评审中心/01-质量评审/风险评审.html">风险评审</a>
+</div>
+<div class="nav-subsection" data-nav-key="topic-04-group-02"><div class="nav-subtitle">专题评审</div>
+<a class="nav-link" href="../../04-评审中心/02-专题评审/字段系统深度评审.html">字段系统深度评审</a>
+<a class="nav-link" href="../../04-评审中心/02-专题评审/QuickInput调试与Legacy规范.html">QuickInput 调试与 Legacy 规范</a>
+</div>
+</div>
+<div class="nav-section" data-nav-key="topic-05"><div class="nav-title">维护发布</div>
+<div class="nav-subsection" data-nav-key="topic-05-group-00"><div class="nav-subtitle">测试验收</div>
+<a class="nav-link" href="../../05-维护发布/00-测试验收/测试清单.html">测试清单</a>
+<a class="nav-link" href="../../05-维护发布/00-测试验收/测试方案迁移.html">测试方案迁移</a>
+<a class="nav-link" href="../../05-维护发布/00-测试验收/QuickInput主线验收清单.html">QuickInput 主线验收清单</a>
+<a class="nav-link" href="../../05-维护发布/00-测试验收/QuickInput最终验收清单.html">QuickInput 最终验收清单</a>
+</div>
+<div class="nav-subsection" data-nav-key="topic-05-group-01"><div class="nav-subtitle">发布与回滚</div>
+<a class="nav-link" href="../../05-维护发布/01-发布与回滚/发布流程.html">发布流程</a>
+<a class="nav-link" href="../../05-维护发布/01-发布与回滚/Changelog.html">Changelog</a>
+<a class="nav-link" href="../../05-维护发布/01-发布与回滚/Bug处理流程.html">Bug 处理流程</a>
+<a class="nav-link" href="../../05-维护发布/01-发布与回滚/兼容性记录.html">兼容性记录</a>
+<a class="nav-link" href="../../05-维护发布/01-发布与回滚/回滚方案.html">回滚方案</a>
+<a class="nav-link" href="../../05-维护发布/01-发布与回滚/QuickInput风险与回滚说明.html">QuickInput 风险与回滚说明</a>
+</div>
+<div class="nav-subsection" data-nav-key="topic-05-group-02"><div class="nav-subtitle">修复记录</div>
+<a class="nav-link" href="../../05-维护发布/02-修复记录/QuickInput构建导出修复.html">QuickInput 构建导出修复</a>
+<a class="nav-link" href="../../05-维护发布/02-修复记录/BlockStatistics统一与跳转修复.html">Block Statistics 统一与跳转修复</a>
+<a class="nav-link" href="../../05-维护发布/02-修复记录/QuickInput任务正文空格保留修复.html">QuickInput 任务正文空格保留修复</a>
+</div>
+</div>
+    </aside>
+    <main class="main">
+      <section class="hero">
+        <div class="eyebrow">项目管理 / MIGRATED DOC</div>
+        <h1>原始计划记录</h1>
+        <p class="lead">从旧 docs/html 迁移来的文档，已按新文档结构重新归类。</p>
+        <div class="meta-row">
+          <span class="badge good">状态：已迁移</span>
+          <span class="badge">最后更新：2026-05-07</span>
+          <span class="badge">格式：HTML</span>
+        </div>
+      </section>
+      <section class="grid"><article class="card full"><h2>迁移信息</h2><div class="table-wrap"><table><thead><tr><th>项目</th><th>内容</th></tr></thead><tbody><tr><td>新分类</td><td>项目管理</td></tr><tr><td>旧路径</td><td><code>docs/计划.md</code></td></tr><tr><td>原始标题</td><td>计划</td></tr><tr><td>处理方式</td><td>正文已转换为当前 <code>文档/</code> 的 HTML 页面；原始文件另存于 <code>_归档/迁移原文/</code>。</td></tr></tbody></table></div></article><article class="card full"><h2>正文</h2><div class="imported-doc"><div class="table-wrap"><table>
+<thead>
+<tr>
+<th>阶段</th>
+<th>优先级</th>
+<th>修改类型</th>
+<th>进度（最新）</th>
+<th>原因说明（简）</th>
+<th>涉及文件（主）</th>
+<th>危险性</th>
+<th>验收</th>
+<th>建议测试命令</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Phase0</td>
+<td>P0</td>
+<td>Typecheck 收敛（87→0）工程止血</td>
+<td>🔴 当前 1 个 TS error</td>
+<td><code>BlockItem.tsx</code> 传 <code>app</code> 给 <code>MarkdownContent</code>，但 props 无此字段，<code>npm run typecheck</code> 报错</td>
+<td><code>tsconfig*.json</code> / <code>package.json</code> / <code>src/shared/ui/items/BlockItem.tsx</code></td>
+<td>🔥</td>
+<td><code>npm run typecheck</code> = 0 errors</td>
+<td><strong><code>npm run typecheck</code></strong></td>
+</tr>
+<tr>
+<td>Phase0</td>
+<td>P0</td>
+<td>最小测试框架（Jest + smoke≥3）</td>
+<td>🟡 框架 OK，但 1 个单测失败</td>
+<td>Jest 配置正常，6 个 unit suite 中 5 个 PASS；<code>legacyCalloutBlock.test.ts</code> 挂（content 为空，没 <code>- [x]</code>）</td>
+<td><code>test/configs/jest.config.js</code> / <code>test/unit/*</code></td>
+<td>🔥</td>
+<td><code>npm run test:unit</code> 全 PASS（smoke ≥3）</td>
+<td><strong><code>npm run test:unit</code></strong>（重点看 <code>legacyCalloutBlock</code>）</td>
+</tr>
+<tr>
+<td>Phase0</td>
+<td>P1</td>
+<td>解析语义止血：Task 主题字段归位 + Theme 显式优先</td>
+<td>🟡 主线 OK，legacy 场景待修</td>
+<td>parser/DataStore/Theme 主线没爆，但 legacy callout 语义在 <code>legacyCalloutBlock.test.ts</code> 失败</td>
+<td><code>src/core/utils/parser.ts</code> / <code>src/core/services/DataStore.ts</code> / <code>src/core/types/schema.ts</code></td>
+<td>🔥</td>
+<td>主题不混 tags；Theme 优先级一致；相关单测全绿</td>
+<td>还是 <strong><code>npm run test:unit</code></strong>，修好 legacy 用例；必要时加几条 parser 单测</td>
+</tr>
+<tr>
+<td>Phase0</td>
+<td>P2</td>
+<td>生命周期收口：统一 dispose + 卸载安全</td>
+<td>🟡 结构/单测已在，缺运行态证据</td>
+<td><code>disposables.test.ts</code>、<code>lifecycleState.test.ts</code> PASS，<code>events-boundary:gate</code> ✅；但没真实 unload/reload 压测/日志</td>
+<td><code>ServiceManager</code> / <code>Disposables</code></td>
+<td>💥</td>
+<td>reload/unload 无遗留订阅/定时器（日志/计数/手工验证）</td>
+<td>单测：<code>npm run test:unit</code>（确认相关用例仍绿）＋ 建议加 1 条小 E2E/脚本做 unload/reload 自测</td>
+</tr>
+<tr>
+<td>Phase0</td>
+<td>P2</td>
+<td>共享层去平台化（Notice 等）</td>
+<td>🟡 门禁已绿，业务抽象待确认</td>
+<td><code>obsidian-leak:gate</code> 等门禁 PASS，说明 shared/core 不再直接 import obsidian；但 Notice 是否全部走 UiPort 还需人工确认</td>
+<td><code>shared/*</code> / <code>UiPort</code> / <code>scripts/obsidian-leak-gate*</code></td>
+<td>🔥</td>
+<td>shared/core 无非法 obsidian import；Notice 全走 UiPort；相关 gate 全绿</td>
+<td><strong><code>npm run obsidian-leak:gate</code></strong>＋ <code>npm run gate</code>（里也会跑）</td>
+</tr>
+<tr>
+<td>Phase1</td>
+<td>P0</td>
+<td>边界简化（禁深导入硬闸）</td>
+<td>✅ check-boundaries 已跑通</td>
+<td><code>obsidian-leak:gate</code> 内部调用 <code>scripts/check-boundaries.ts</code>，本次执行没有深导入违规</td>
+<td><code>gates/</code> / <code>scripts/*gate*.mjs</code> / <code>scripts/check-boundaries.ts</code></td>
+<td>🔥</td>
+<td><code>npm run check:boundaries</code> 通过；相关 gate 不被深导入卡住</td>
+<td><strong><code>npm run check:boundaries</code></strong> 或直接 <code>npm run gate</code></td>
+</tr>
+<tr>
+<td>Phase1</td>
+<td>P0</td>
+<td>目录整理（功能目录归一 + import 收口）</td>
+<td>🟡 结构雏形有，没系统迁移清单</td>
+<td><code>features</code> 目录已建，但还没“模块迁移清单 + 完成定义”；偏工程优化，不挡 thinktxt MVP</td>
+<td>多模块目录</td>
+<td>⚠️</td>
+<td>文档 + 至少 1~2 模块迁移清单</td>
+<td>无专用测试；<strong>改目录前后跑一轮</strong>：<code>npm run typecheck &amp;&amp; npm run test:unit &amp;&amp; npm run gate</code></td>
+</tr>
+<tr>
+<td>Phase1</td>
+<td>P1</td>
+<td>IconAction（统一 IconButton+Tooltip）</td>
+<td>✅ 门禁确认，无旧模式残留</td>
+<td><code>npm run iconaction:gate</code> OK，静态扫旧用法=0</td>
+<td><code>IconAction.tsx</code> + <code>iconaction-gate</code></td>
+<td>🔥</td>
+<td>旧模式清零；<code>iconaction:gate</code> + <code>npm run gate</code> 通过</td>
+<td>日常只需 <strong><code>npm run iconaction:gate</code></strong>（或一起跑 <code>npm run gate</code>）</td>
+</tr>
+<tr>
+<td>Phase1</td>
+<td>P1</td>
+<td>FilterPopoverShell</td>
+<td>❌ 未开始（仓库无文件）</td>
+<td>尚无实现，对 thinktxt MVP 不构成阻塞</td>
+<td><code>FilterPopoverShell.tsx</code>（未来）</td>
+<td>⚠️</td>
+<td>Shell 可用；替换 ≥2</td>
+<td>实现后建议补 1 条组件测试；当前无测试需求</td>
+</tr>
+<tr>
+<td>Phase1</td>
+<td>P2</td>
+<td>竞态/取消统一（takeLatest/Abort）</td>
+<td>🟡 单测+部分 gate OK，「专项 gate」未做</td>
+<td><code>takeLatest.test.ts</code> PASS，<code>events-boundary:gate</code> ✅；但“全链路取消策略/专项 gate”未落地</td>
+<td>usecases/hooks</td>
+<td>🔥</td>
+<td>关键链路可取消；unmount 安全；竞态/生命周期/legacy 专项 gate 落地</td>
+<td>现阶段：<strong><code>npm run test:unit</code></strong>（关注 <code>takeLatest</code> 用例）＋ 将来为关键链路补 1–2 条集成/E2E</td>
+</tr>
+<tr>
+<td><strong>Phase2</strong></td>
+<td><strong>P0</strong></td>
+<td><strong>Legacy block 支持 callout 编辑态（&gt; [!thinktxt]）</strong></td>
+<td>🔴 单测失败，语义未达标</td>
+<td><code>legacyCalloutBlock.test.ts</code> 失败：<code>item!.content</code> 为空，没预期 <code>- [x]</code>；说明 <code>[!thinktxt]</code> callout 场景下任务抽取语义不对</td>
+<td><code>src/core/utils/parser.ts</code></td>
+<td>🔥</td>
+<td><code>legacyCalloutBlock</code> 相关单测全 PASS；DataStore 正确提取新格式</td>
+<td>重点：<strong><code>npm run test:unit</code></strong>，直到 <code>legacyCalloutBlock.test.ts</code> 绿；必要时补几条 legacy 场景 UT</td>
+</tr>
+<tr>
+<td>Phase2</td>
+<td>P1</td>
+<td>预览态表格只读渲染（<code>&lt;!-- start --&gt;...&lt;!-- end --&gt;</code>）</td>
+<td>⏳ 设计/未有集成验收</td>
+<td>目前没有能直接覆盖这块逻辑的 integration/E2E，用例；<code>test:unit</code> 覆盖不到 preview DOM 替换</td>
+<td>platform post processor + shared 表格组件</td>
+<td>⚠️</td>
+<td>预览可见表格（至少 1 条完整用例）</td>
+<td>未来要补：1 条集成测试（跑 postProcessor，看 DOM 里出现 table）＋ 1 条 E2E（打开预览能看到表格）</td>
+</tr>
+<tr>
+<td>Phase2</td>
+<td>P2</td>
+<td>表格编辑 + 写回 md（按 start/end 精准替换）</td>
+<td>⏳ 未实现</td>
+<td>没有表格编辑/写回相关实现和测试；这是快捷编辑核心</td>
+<td>platform patcher（未来）</td>
+<td>💥</td>
+<td>读→改→写稳定（含测试）</td>
+<td>规划：UT（金样本 md 读→改→写）、IT（DataStore + patcher）、E2E（编辑→ md 改）——实现时一起补</td>
+</tr>
+<tr>
+<td>Phase2</td>
+<td>P2</td>
+<td>拖拽排序 + 写回</td>
+<td>⏳ 未实现</td>
+<td>没有拖拽排序实现和测试；依赖表格读写地基</td>
+<td>dnd + patcher</td>
+<td>💥</td>
+<td>顺序可持久化（含测试）</td>
+<td>同上，和表格编辑共用 patcher 的 UT/IT/E2E，只是多一些 reorder 场景</td>
+</tr>
+<tr>
+<td>Phase3</td>
+<td>P1</td>
+<td>DataStore 拆分（Repo/Cache/Indexer）</td>
+<td>0/4（MVP 可后置）</td>
+<td>现在 DataStore 仍是“单块”，未见拆分提交；后期优化</td>
+<td><code>src/core/services/DataStore.ts</code></td>
+<td>⚠️</td>
+<td>—（靠现有用例保护）</td>
+<td>不增加新测试类型；<strong>重构时必须跑全套</strong>：<code>typecheck + test:unit + gate + 关键 E2E</code></td>
+</tr>
+<tr>
+<td>Phase4</td>
+<td>P1</td>
+<td>工程收尾文档化</td>
+<td>🟡 docs 存在，闭环未验证</td>
+<td><code>npm run build</code> 成功；但没验证“新人按 README 从 install→check/test 的闭环”</td>
+<td><code>docs/</code> / <code>README</code></td>
+<td>🙂</td>
+<td>新人按文档可跑 build/check/gate/test</td>
+<td>手动按 README 跑一轮：<code>npm install &amp;&amp; npm run build &amp;&amp; npm run check &amp;&amp; npm run test:unit &amp;&amp; npm run gate</code>，过程记一下</td>
+</tr>
+<tr>
+<td>（旧表补回）</td>
+<td>P2</td>
+<td>shared 去平台化（obsidian-leak gate）</td>
+<td>✅ 本次已实测 PASS</td>
+<td><code>npm run obsidian-leak:gate</code> ✅：平台外 obsidian import 仅在 allowlist 内，无新增泄漏</td>
+<td><code>shared/ui/markdown</code> / <code>scripts/obsidian-leak-gate.mjs</code></td>
+<td>🔥</td>
+<td><code>npm run obsidian-leak:gate</code> PASS</td>
+<td>和“共享层去平台化”一项视为同一块：稳定后只需定期跑 <code>npm run obsidian-leak:gate</code></td>
+</tr>
+<tr>
+<td>（旧表补回）</td>
+<td>Phase1 P0</td>
+<td>gate 全绿（总门禁）</td>
+<td>🔴 被 <code>di-resolve:gate</code> 卡住</td>
+<td><code>npm run gate</code> 在 <code>di-resolve:gate</code> 阶段失败：<code>src/main.ts</code> 存不允许的 <code>container.resolve()</code>；后续 gate（modal-promise / selector-* / theme-* / iconaction）没跑到</td>
+<td><code>scripts/*gate*.mjs</code> / <code>src/main.ts</code></td>
+<td>🔥</td>
+<td><code>npm run gate</code> 全绿；composition root 之外无非法 <code>container.resolve</code></td>
+<td><strong><code>npm run gate</code></strong>；修掉 <code>di-resolve:gate</code> 提示的问题，再确认其他 gate 全部跑完且通过</td>
+</tr>
+</tbody>
+</table></div>
+</div></article></section>
+      <footer class="footer">本页属于 Think OS 插件 HTML 文档系统。UI 沿用原有风格，docs/html 旧资料已按新结构迁移。</footer>
+    </main>
+  </div>
+  <script src="../../_资源/搜索索引.js"></script>
+  <script src="../../_资源/文档脚本.js"></script>
+</body>
+</html>

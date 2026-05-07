@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>代码架构图：左流程右说明</title>
+  <style>
+    :root{
+      --bg:#ffffff;--text:#1f2937;--muted:#6b7280;--line:#e5e7eb;--soft:#f8fafc;
+      --blue:#2563eb;--green:#059669;--orange:#d97706;--purple:#7c3aed;--red:#dc2626;--gray:#64748b;
+      --active:#111827;--active-bg:#eff6ff;--active-line:#2563eb;
+    }
+    *{box-sizing:border-box}
+    html{scroll-behavior:smooth}
+    body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;background:var(--bg);color:var(--text);line-height:1.7}
+    .wrap{max-width:1380px;margin:0 auto;padding:20px 18px 40px}
+    h1,h2,h3{margin:0}
+    h1{font-size:30px;line-height:1.3}
+    h2{font-size:20px;line-height:1.4}
+    h3{font-size:18px;line-height:1.4}
+    p{margin:0}
+    .muted{color:var(--muted)}
+    .hero{padding:16px 0 18px;border-bottom:1px solid var(--line);margin-bottom:18px}
+    .lead{margin-top:10px;font-size:16px;color:#374151}
+    .layout{display:grid;grid-template-columns:320px 1fr;gap:28px;align-items:start}
+    .left{position:sticky;top:12px}
+    .left h2{margin-bottom:10px}
+    .guide{font-size:13px;color:var(--muted);margin-bottom:12px}
+    .nav{list-style:none;padding:0;margin:0;border-left:2px solid #e5e7eb}
+    .nav li{margin:0;padding:0}
+    .nav a{display:block;padding:10px 12px 10px 16px;margin-left:-2px;border-left:2px solid transparent;color:#374151;text-decoration:none;border-radius:0 10px 10px 0}
+    .nav a:hover{background:#f9fafb}
+    .nav a.active{border-left-color:var(--active-line);background:var(--active-bg);color:var(--active);font-weight:600}
+    .nav .name{display:block;font-size:15px}
+    .nav .desc{display:block;font-size:12px;color:#6b7280;margin-top:2px}
+    .rules{margin-top:18px;padding-top:14px;border-top:1px solid var(--line)}
+    .rules ul{margin:8px 0 0 18px;padding:0}
+    .rules li{margin:6px 0;color:#4b5563}
+    .right{display:block}
+    .folder-section{display:none}
+    .folder-section.visible{display:block}
+    .folder-section{padding:18px 0;border-top:1px solid var(--line);border-radius:14px;transition:background .2s ease, box-shadow .2s ease, padding .2s ease}
+    .folder-section:first-child{border-top:none;padding-top:0}
+    .folder-section.active-section{background:#f8fbff;box-shadow:inset 3px 0 0 var(--active-line);padding-left:14px;padding-right:14px}
+    .folder-header{display:flex;justify-content:space-between;align-items:baseline;gap:14px;margin-bottom:10px}
+    .folder-path{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12px;color:#475569;background:#f8fafc;border:1px solid var(--line);border-radius:999px;padding:4px 8px;white-space:nowrap}
+    .folder-list{list-style:none;margin:0;padding:0}
+    .folder-list li{padding:8px 0;border-bottom:1px dashed #edf2f7;display:grid;grid-template-columns:120px 1fr;gap:12px;align-items:start}
+    .folder-list li:last-child{border-bottom:none}
+    .folder-list .label{font-weight:600;color:#111827}
+    .folder-list .value{color:#374151}
+    .tip{margin-top:10px;color:#4b5563;font-size:14px}
+    .simple{font-size:15px;color:#374151}
+    .em{font-weight:700;color:#111827}
+    @media (max-width: 980px){
+      .layout{grid-template-columns:1fr;gap:20px}
+      .left{position:static}
+      .folder-list li{grid-template-columns:1fr}
+    }
+  </style>
+</head>
+<body data-doc-root="../../../">
+  <div class="wrap">
+    <section class="hero">
+      <h1>继续把 shared/ 看懂：它像店里的公共工具柜</h1>
+      <p class="lead">这次只讲 <strong>shared/</strong>。这是你以后整理文件夹时特别容易纠结的一层，因为很多项目最后都会把 shared 用成“杂物间”。你可以把它理解成：<strong>店里多个区域都会来借东西的公共工具柜</strong>。重点不是“这个东西好不好用”，而是：<strong>它是不是被多个区域共同使用</strong>。</p>
+    </section>
+
+    <div class="layout">
+      <aside class="left">
+        <h2>shared/ 导览</h2>
+        <div class="guide">先从左边建立感觉：shared 不是主流程的一站，而是横向给多个区域提供支持的公共工具柜。</div>
+        <ul class="nav" id="folderNav">
+          <li><a href="#shared-overview" class="active"><span class="name">shared/ 总体</span><span class="desc">像公共工具柜：多个区域都能来借工具</span></a></li>
+          <li><a href="#components"><span class="name">components/</span><span class="desc">像公共零件盒：多个地方都能复用的界面零件</span></a></li>
+          <li><a href="#hooks"><span class="name">hooks/</span><span class="desc">像常用操作小技巧卡：多个地方都能直接套用</span></a></li>
+          <li><a href="#utils"><span class="name">utils/</span><span class="desc">像公共小工具抽屉：不是某个服务区独占的工具</span></a></li>
+          <li><a href="#theme-tree-example"><span class="name">ThemeTreeSelect 这类内容</span><span class="desc">像公共展示支架：多个区域都可能共用的专用件</span></a></li>
+          <li><a href="#shared-rules"><span class="name">shared 的放置规则</span><span class="desc">像工具柜使用规则：什么能放、什么不能放</span></a></li>
+        </ul>
+
+        <div class="rules">
+          <h2>先记这 4 句</h2>
+          <ul>
+            <li><span class="em">shared</span> 只放多个区域都会用到的东西。</li>
+            <li><span class="em">shared</span> 不是大杂烩，不是“暂时不知道放哪就先丢这里”。</li>
+            <li><span class="em">只服务一个 feature</span> 的东西，优先放回那个 feature。</li>
+            <li><span class="em">shared</span> 应该轻，不要慢慢长成第二个 core。</li>
+          </ul>
+        </div>
+      </aside>
+
+      <main class="right" id="folderContent">
+        <section id="shared-overview" class="folder-section">
+          <div class="folder-header">
+            <h3>shared/ 总体</h3>
+            <span class="folder-path">src/shared/</span>
+          </div>
+          <ul class="folder-list">
+            <li><span class="label">像什么</span><span class="value">像店里的公共工具柜。</span></li>
+            <li><span class="label">一句话</span><span class="value">这里放的是多个区域都会来借用的公共工具和零件，不属于某一个单独服务区。</span></li>
+            <li><span class="label">它在哪层</span><span class="value">它不是前台服务区，也不是后仓核心区，而是横向支撑层。</span></li>
+            <li><span class="label">主要干什么</span><span class="value">减少重复，把多个地方都要用的组件、hooks、通用小工具集中起来。</span></li>
+            <li><span class="label">和 core 的区别</span><span class="value"><span class="em">core</span> 是基础能力区，负责撑住系统；<span class="em">shared</span> 是公共复用区，负责减少重复。</span></li>
+            <li><span class="label">你怎么记</span><span class="value">看到 shared，就想成“大家都能来借，但不是谁的私人物品”。</span></li>
+          </ul>
+          <div class="tip">你以后整理时最关键的一问是：<span class="em">这个东西是不是至少两个区域都会长期用？</span> 如果不是，就要小心它不该进 shared。</div>
+        </section>
+
+        <section id="components" class="folder-section">
+          <div class="folder-header">
+            <h3>components/</h3>
+            <span class="folder-path">src/shared/components/</span>
+          </div>
+          <ul class="folder-list">
+            <li><span class="label">像什么</span><span class="value">像公共零件盒。</span></li>
+            <li><span class="label">一句话</span><span class="value">这里放的是多个地方都能复用的界面小零件，不只服务一个功能区。</span></li>
+            <li><span class="label">它在哪层</span><span class="value">属于 shared 里最常见的一层，因为很多复用都会先体现在 UI 组件上。</span></li>
+            <li><span class="label">主要干什么</span><span class="value">提供通用按钮、选择器、列表块、树形选择等能在多个功能区重复使用的界面零件。</span></li>
+            <li><span class="label">和 features 里的组件区别</span><span class="value"><span class="em">shared/components</span> 是多个服务区共用的，<span class="em">features</span> 里的组件通常只服务某一个具体功能区。</span></li>
+            <li><span class="label">你怎么记</span><span class="value">看到 shared/components，就想成“公共零件盒，谁需要就拿”。</span></li>
+          </ul>
+          <div class="tip">如果一个组件看起来很通用，但实际上只有 settings 自己在用，那它更应该留在 settings，而不是提前放进 shared。</div>
+        </section>
+
+        <section id="hooks" class="folder-section">
+          <div class="folder-header">
+            <h3>hooks/</h3>
+            <span class="folder-path">src/shared/hooks/</span>
+          </div>
+          <ul class="folder-list">
+            <li><span class="label">像什么</span><span class="value">像常用操作小技巧卡。</span></li>
+            <li><span class="label">一句话</span><span class="value">把多个地方都会重复写的界面逻辑，整理成可重复使用的小套路。</span></li>
+            <li><span class="label">它在哪层</span><span class="value">属于 shared 里的逻辑复用层，比 components 更偏行为，不只是长相。</span></li>
+            <li><span class="label">主要干什么</span><span class="value">封装状态读取、事件处理、界面交互、重复性的前端逻辑。</span></li>
+            <li><span class="label">和 app/store 的区别</span><span class="value"><span class="em">hooks</span> 更像“拿来就用的小套路”，<span class="em">app/store</span> 是系统真正的状态中心。</span></li>
+            <li><span class="label">你怎么记</span><span class="value">看到 shared/hooks，就想成“多个店员都会抄的小技巧卡片”。</span></li>
+          </ul>
+          <div class="tip">如果一个 hook 强烈依赖某个 feature 的业务语义，那就别急着放 shared，它可能属于那个 feature 自己。</div>
+        </section>
+
+        <section id="utils" class="folder-section">
+          <div class="folder-header">
+            <h3>utils/</h3>
+            <span class="folder-path">src/shared/utils/</span>
+          </div>
+          <ul class="folder-list">
+            <li><span class="label">像什么</span><span class="value">像公共小工具抽屉。</span></li>
+            <li><span class="label">一句话</span><span class="value">这里放的是很多地方都可能顺手要用到的小工具，不属于某个单独功能区。</span></li>
+            <li><span class="label">它在哪层</span><span class="value">属于 shared 里的轻量辅助层，偏短小、通用、可随手复用。</span></li>
+            <li><span class="label">主要干什么</span><span class="value">做轻量转换、拼接、辅助判断、简单格式化这类公共小动作。</span></li>
+            <li><span class="label">和 core/utils 的区别</span><span class="value"><span class="em">core/utils</span> 更偏系统底层常用工具，<span class="em">shared/utils</span> 更偏前台多个区域都会顺手用的公共小工具。</span></li>
+            <li><span class="label">你怎么记</span><span class="value">看到 shared/utils，就想成“公共抽屉里的剪刀、胶带、小尺子”。</span></li>
+          </ul>
+          <div class="tip">如果一个工具已经明显带着系统底层语义，就别放 shared/utils，可能更适合放 core/utils。</div>
+        </section>
+
+        <section id="theme-tree-example" class="folder-section">
+          <div class="folder-header">
+            <h3>ThemeTreeSelect 这类内容</h3>
+            <span class="folder-path">shared/components/...（示意）</span>
+          </div>
+          <ul class="folder-list">
+            <li><span class="label">像什么</span><span class="value">像公共展示支架。</span></li>
+            <li><span class="label">一句话</span><span class="value">它看起来有点业务味，但如果多个地方都会复用，它仍然可以放在 shared。</span></li>
+            <li><span class="label">它在哪层</span><span class="value">属于 shared 里比较“专用但可复用”的那类公共件。</span></li>
+            <li><span class="label">主要干什么</span><span class="value">给多个区域提供相同的树形选择、展示、交互支架，而不是只给一个单独页面用。</span></li>
+            <li><span class="label">最容易误判的点</span><span class="value">很多人看到“主题树”就以为只能属于 settings，但如果别的地方也要选树，它就可以是公共件。</span></li>
+            <li><span class="label">你怎么记</span><span class="value">看到这种内容，就问自己：它是“某个柜台专属”，还是“多个柜台都会摆的公共支架”？</span></li>
+          </ul>
+          <div class="tip">这类内容正好说明：shared 不是完全没有业务味，而是要看它是不是“跨多个区域复用”。</div>
+        </section>
+
+        <section id="shared-rules" class="folder-section">
+          <div class="folder-header">
+            <h3>shared 的放置规则</h3>
+            <span class="folder-path">整理时最重要的一页</span>
+          </div>
+          <ul class="folder-list">
+            <li><span class="label">能放进 shared 的</span><span class="value">至少两个区域都会长期用，而且不强依赖某个单独 feature 的内容。</span></li>
+            <li><span class="label">不要放进 shared 的</span><span class="value">暂时不知道放哪的代码、只服务一个功能区的私有组件、带很强业务名词的专属逻辑。</span></li>
+            <li><span class="label">整理时先问</span><span class="value">这是“公共工具”，还是“某个服务区的私人物品”？</span></li>
+            <li><span class="label">最常见错误</span><span class="value">为了看起来整洁，把大量 feature 私有内容提前抽到 shared，结果 shared 反而最乱。</span></li>
+            <li><span class="label">你该怎么做</span><span class="value">先保守一点：宁可先留在 feature 内，等确认真的复用多次，再抽进 shared。</span></li>
+            <li><span class="label">一句话总原则</span><span class="value"><span class="em">shared 解决“重复使用”，不是解决“我现在懒得想该放哪”。</span></span></li>
+          </ul>
+          <div class="tip">如果你现在准备整理文件夹，我建议你把 shared 当成“最后再抽公共件”的地方，而不是一开始就往里塞。</div>
+        </section>
+      </main>
+    </div>
+  </div>
+  <script>
+    const links = Array.from(document.querySelectorAll('#folderNav a'));
+    const sections = links.map(a => document.querySelector(a.getAttribute('href'))).filter(Boolean);
+
+    const setActive = (id) => {
+      links.forEach(a => a.classList.toggle('active', a.getAttribute('href') === '#' + id));
+      sections.forEach(sec => {
+        const isActive = sec.id === id;
+        sec.classList.toggle('active-section', isActive);
+        sec.classList.toggle('visible', isActive);
+      });
+    };
+
+    links.forEach(link => {
+      link.addEventListener('click', (e) => {
+        e.preventDefault();
+        const id = link.getAttribute('href').slice(1);
+        setActive(id);
+      });
+    });
+
+    setActive('shared-overview');
+  </script>
+</body>
+</html>

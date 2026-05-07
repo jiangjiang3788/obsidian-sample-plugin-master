@@ -1,0 +1,37 @@
+[
+  {
+    "id": "REQ-001",
+    "name": "建立新文档驾驶舱",
+    "type": "文档",
+    "priority": "P0",
+    "status": "进行中"
+  },
+  {
+    "id": "REQ-002",
+    "name": "明确插件功能地图",
+    "type": "产品",
+    "priority": "P0",
+    "status": "待补充"
+  },
+  {
+    "id": "REQ-003",
+    "name": "建立文件地图",
+    "type": "技术",
+    "priority": "P0",
+    "status": "待补充"
+  },
+  {
+    "id": "REQ-004",
+    "name": "梳理命令和设置入口",
+    "type": "功能",
+    "priority": "P0",
+    "status": "待补充"
+  },
+  {
+    "id": "REQ-005",
+    "name": "旧 docs/html 归档策略",
+    "type": "维护",
+    "priority": "P1",
+    "status": "待评审"
+  }
+]

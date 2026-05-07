@@ -1,0 +1,509 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Batch1 实施报告｜Think OS 插件文档系统</title>
+  <link rel="stylesheet" href="../../_资源/文档样式.css">
+</head>
+<body data-doc-root="../../">
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-title">Think OS 插件文档系统</div>
+        <div class="brand-subtitle">HTML 项目驾驶舱 / 文档 / 需求 / 技术 / 评审 / 发布</div>
+      </div>
+      <div class="search-box">
+        <input class="search-input" data-doc-search placeholder="搜索：需求、命令、设置、文件地图、评审、QuickInput...">
+        <div class="search-results" data-search-results></div>
+      </div>
+<div class="nav-section" data-nav-key="topic-00"><div class="nav-title">基础入口</div>
+<div class="nav-subsection" data-nav-key="topic-00-group-00"><div class="nav-subtitle">项目驾驶舱</div>
+<a class="nav-link" href="../../index.html">首页仪表盘</a>
+<a class="nav-link" href="../../00-基础入口/00-项目驾驶舱/项目总览.html">项目总览</a>
+<a class="nav-link" href="../../00-基础入口/00-项目驾驶舱/快速开始.html">快速开始</a>
+<a class="nav-link" href="../../00-基础入口/00-项目驾驶舱/当前状态.html">当前状态</a>
+</div>
+<div class="nav-subsection" data-nav-key="topic-00-group-01"><div class="nav-subtitle">概念与边界</div>
+<a class="nav-link" href="../../00-基础入口/01-概念与边界/插件定位.html">插件定位</a>
+<a class="nav-link" href="../../00-基础入口/01-概念与边界/功能地图.html">功能地图</a>
+<a class="nav-link" href="../../00-基础入口/01-概念与边界/术语表.html">术语表</a>
+<a class="nav-link" href="../../00-基础入口/01-概念与边界/常见问题.html">常见问题</a>
+</div>
+<div class="nav-subsection" data-nav-key="topic-00-group-02"><div class="nav-subtitle">迁移与旧资料</div>
+<a class="nav-link" href="../../00-基础入口/02-迁移与旧资料/迁移文档索引.html">迁移文档索引</a>
+<a class="nav-link" href="../../00-基础入口/02-迁移与旧资料/旧章节总览.html">旧章节总览</a>
+<a class="nav-link" href="../../00-基础入口/02-迁移与旧资料/章节化文档框架.html">章节化文档框架</a>
+</div>
+</div>
+<div class="nav-section" data-nav-key="topic-01"><div class="nav-title">项目管理</div>
+<div class="nav-subsection" data-nav-key="topic-01-group-00"><div class="nav-subtitle">计划与路线</div>
+<a class="nav-link" href="../00-计划与路线/需求池.html">需求池</a>
+<a class="nav-link" href="../00-计划与路线/版本路线图.html">版本路线图</a>
+<a class="nav-link" href="../00-计划与路线/开发计划.html">开发计划</a>
+</div>
+<div class="nav-subsection" data-nav-key="topic-01-group-01"><div class="nav-subtitle">过程记录</div>
+<a class="nav-link" href="../01-过程记录/问题记录.html">问题记录</a>
+<a class="nav-link" href="../01-过程记录/技术债.html">技术债</a>
+<a class="nav-link" href="../01-过程记录/决策记录.html">决策记录</a>
+<a class="nav-link" href="../01-过程记录/发布记录.html">发布记录</a>
+</div>
+<div class="nav-subsection" data-nav-key="topic-01-group-02"><div class="nav-subtitle">实施计划</div>
+<a class="nav-link" href="../02-实施计划/插件深度报告与实施计划.html">插件深度报告与实施计划</a>
+<a class="nav-link" href="../02-实施计划/上下文时间重构计划.html">上下文时间重构计划</a>
+<a class="nav-link" href="../02-实施计划/统一输入修改计划.html">统一输入修改计划</a>
+<a class="nav-link" href="../02-实施计划/原始计划记录.html">原始计划记录</a>
+<a class="nav-link" href="../02-实施计划/旧需求台账.html">旧需求台账</a>
+</div>
+<div class="nav-subsection" data-nav-key="topic-01-group-03"><div class="nav-subtitle">实施报告</div>
+<a class="nav-link" href="Batch1实施报告.html">Batch1 实施报告</a>
+<a class="nav-link" href="Batch2实施报告.html">Batch2 实施报告</a>
+<a class="nav-link" href="QuickInput主线修改记录.html">QuickInput 主线修改记录</a>
+<a class="nav-link" href="QuickInput收口状态.html">QuickInput 收口状态</a>
+<a class="nav-link" href="QuickInput本轮修改总览.html">QuickInput 本轮修改总览</a>
+</div>
+</div>
+<div class="nav-section" data-nav-key="topic-02"><div class="nav-title">功能设计</div>
+<div class="nav-subsection" data-nav-key="topic-02-group-00"><div class="nav-subtitle">功能全景</div>
+<a class="nav-link" href="../../02-功能设计/00-功能全景/功能总览.html">功能总览</a>
+<a class="nav-link" href="../../02-功能设计/00-功能全景/功能清单迁移.html">功能清单迁移</a>
+<a class="nav-link" href="../../02-功能设计/00-功能全景/旧产品功能地图.html">旧产品功能地图</a>
+</div>
+<div class="nav-subsection" data-nav-key="topic-02-group-01"><div class="nav-subtitle">用户与交互</div>
+<a class="nav-link" href="../../02-功能设计/01-用户与交互/用户场景.html">用户场景</a>
+<a class="nav-link" href="../../02-功能设计/01-用户与交互/命令设计.html">命令设计</a>
+<a class="nav-link" href="../../02-功能设计/01-用户与交互/设置项设计.html">设置项设计</a>
+<a class="nav-link" href="../../02-功能设计/01-用户与交互/交互流程.html">交互流程</a>
+<a class="nav-link" href="../../02-功能设计/01-用户与交互/异常状态.html">异常状态</a>
+<a class="nav-link" href="../../02-功能设计/01-用户与交互/功能验收标准.html">功能验收标准</a>
+</div>
+<div class="nav-subsection" data-nav-key="topic-02-group-02"><div class="nav-subtitle">View UI 与移动端</div>
+<a class="nav-link" href="../../02-功能设计/02-ViewUI与移动端/ViewUI触发动作梳理.html">View UI 触发动作梳理</a>
+<a class="nav-link" href="../../02-功能设计/02-ViewUI与移动端/移动端UI全量重构方案.html">移动端 UI 全量重构方案</a>
+</div>
+<div class="nav-subsection" data-nav-key="topic-02-group-03"><div class="nav-subtitle">QuickInput 功能收口</div>
+<a class="nav-link" href="../../02-功能设计/03-QuickInput功能收口/QuickInput保存计划一致性.html">QuickInput 保存计划一致性</a>
+<a class="nav-link" href="../../02-功能设计/03-QuickInput功能收口/QuickInput迁移保存反馈.html">QuickInput 迁移保存反馈</a>
+<a class="nav-link" href="../../02-功能设计/03-QuickInput功能收口/QuickInput路径变化保存策略.html">QuickInput 路径变化保存策略</a>
+</div>
+</div>
+<div class="nav-section" data-nav-key="topic-03"><div class="nav-title">技术文档</div>
+<div class="nav-subsection" data-nav-key="topic-03-group-00"><div class="nav-subtitle">技术全景</div>
+<a class="nav-link" href="../../03-技术文档/00-技术全景/技术总览.html">技术总览</a>
+<a class="nav-link" href="../../03-技术文档/00-技术全景/文件地图.html">文件地图</a>
+<a class="nav-link" href="../../03-技术文档/00-技术全景/模块职责.html">模块职责</a>
+<a class="nav-link" href="../../03-技术文档/00-技术全景/插件生命周期.html">插件生命周期</a>
+</div>
+<div class="nav-subsection" data-nav-key="topic-03-group-01"><div class="nav-subtitle">架构导览</div>
+<a class="nav-link" href="../../03-技术文档/01-架构导览/开发指南迁移.html">开发指南迁移</a>
+<a class="nav-link" href="../../03-技术文档/01-架构导览/开发规范迁移.html">开发规范迁移</a>
+<a class="nav-link" href="../../03-技术文档/01-架构导览/代码架构图总览.html">代码架构图总览</a>
+<a class="nav-link" href="../../03-技术文档/01-架构导览/旧代码架构图.html">旧代码架构图</a>
+</div>
+<div class="nav-subsection" data-nav-key="topic-03-group-02"><div class="nav-subtitle">目录地图</div>
+<a class="nav-link" href="../../03-技术文档/02-目录地图/app目录导览.html">app 目录导览</a>
+<a class="nav-link" href="../../03-技术文档/02-目录地图/core目录导览.html">core 目录导览</a>
+<a class="nav-link" href="../../03-技术文档/02-目录地图/features目录导览.html">features 目录导览</a>
+<a class="nav-link" href="../../03-技术文档/02-目录地图/platform目录导览.html">platform 目录导览</a>
+<a class="nav-link" href="../../03-技术文档/02-目录地图/share目录导览.html">share 目录导览</a>
+</div>
+<div class="nav-subsection" data-nav-key="topic-03-group-03"><div class="nav-subtitle">代码视角</div>
+<a class="nav-link" href="../../03-技术文档/03-代码视角/架构视角逐文件.html">架构视角逐文件</a>
+<a class="nav-link" href="../../03-技术文档/03-代码视角/领域视角逐文件.html">领域视角逐文件</a>
+<a class="nav-link" href="../../03-技术文档/03-代码视角/业务视角逐文件.html">业务视角逐文件</a>
+</div>
+<div class="nav-subsection" data-nav-key="topic-03-group-04"><div class="nav-subtitle">运行机制</div>
+<a class="nav-link" href="../../03-技术文档/04-运行机制/数据流.html">数据流</a>
+<a class="nav-link" href="../../03-技术文档/04-运行机制/事件流.html">事件流</a>
+<a class="nav-link" href="../../03-技术文档/04-运行机制/Obsidian API 使用.html">Obsidian API 使用</a>
+<a class="nav-link" href="../../03-技术文档/04-运行机制/样式系统.html">样式系统</a>
+<a class="nav-link" href="../../03-技术文档/04-运行机制/构建流程.html">构建流程</a>
+<a class="nav-link" href="../../03-技术文档/04-运行机制/数据流与流程图.html">数据流与流程图</a>
+</div>
+<div class="nav-subsection" data-nav-key="topic-03-group-05"><div class="nav-subtitle">字段与输入</div>
+<a class="nav-link" href="../../03-技术文档/05-字段与输入/字段系统重构方案.html">字段系统重构方案</a>
+<a class="nav-link" href="../../03-技术文档/05-字段与输入/统一输入现状盘点.html">统一输入现状盘点</a>
+</div>
+<div class="nav-subsection" data-nav-key="topic-03-group-06"><div class="nav-subtitle">QuickInput 技术记录</div>
+<a class="nav-link" href="../../03-技术文档/06-QuickInput技术记录/QuickInput多步推进Snapshot.html">QuickInput 多步推进 Snapshot</a>
+<a class="nav-link" href="../../03-技术文档/06-QuickInput技术记录/QuickInputLegacy调试收口.html">QuickInput Legacy 调试收口</a>
+<a class="nav-link" href="../../03-技术文档/06-QuickInput技术记录/QuickInput任务内容提取调试.html">QuickInput 任务内容提取调试</a>
+<a class="nav-link" href="../../03-技术文档/06-QuickInput技术记录/QuickInput任务内容单一入口.html">QuickInput 任务内容单一入口</a>
+<a class="nav-link" href="../../03-技术文档/06-QuickInput技术记录/QuickInput任务模板护栏.html">QuickInput 任务模板护栏</a>
+<a class="nav-link" href="../../03-技术文档/06-QuickInput技术记录/QuickInput任务写回保真.html">QuickInput 任务写回保真</a>
+</div>
+</div>
+<div class="nav-section" data-nav-key="topic-04"><div class="nav-title">评审中心</div>
+<div class="nav-subsection" data-nav-key="topic-04-group-00"><div class="nav-subtitle">评审方法</div>
+<a class="nav-link" href="../../04-评审中心/00-评审方法/需求评审.html">需求评审</a>
+<a class="nav-link" href="../../04-评审中心/00-评审方法/功能评审.html">功能评审</a>
+<a class="nav-link" href="../../04-评审中心/00-评审方法/技术方案评审.html">技术方案评审</a>
+</div>
+<div class="nav-subsection" data-nav-key="topic-04-group-01"><div class="nav-subtitle">质量评审</div>
+<a class="nav-link" href="../../04-评审中心/01-质量评审/代码结构评审.html">代码结构评审</a>
+<a class="nav-link" href="../../04-评审中心/01-质量评审/发布评审.html">发布评审</a>
+<a class="nav-link" href="../../04-评审中心/01-质量评审/风险评审.html">风险评审</a>
+</div>
+<div class="nav-subsection" data-nav-key="topic-04-group-02"><div class="nav-subtitle">专题评审</div>
+<a class="nav-link" href="../../04-评审中心/02-专题评审/字段系统深度评审.html">字段系统深度评审</a>
+<a class="nav-link" href="../../04-评审中心/02-专题评审/QuickInput调试与Legacy规范.html">QuickInput 调试与 Legacy 规范</a>
+</div>
+</div>
+<div class="nav-section" data-nav-key="topic-05"><div class="nav-title">维护发布</div>
+<div class="nav-subsection" data-nav-key="topic-05-group-00"><div class="nav-subtitle">测试验收</div>
+<a class="nav-link" href="../../05-维护发布/00-测试验收/测试清单.html">测试清单</a>
+<a class="nav-link" href="../../05-维护发布/00-测试验收/测试方案迁移.html">测试方案迁移</a>
+<a class="nav-link" href="../../05-维护发布/00-测试验收/QuickInput主线验收清单.html">QuickInput 主线验收清单</a>
+<a class="nav-link" href="../../05-维护发布/00-测试验收/QuickInput最终验收清单.html">QuickInput 最终验收清单</a>
+</div>
+<div class="nav-subsection" data-nav-key="topic-05-group-01"><div class="nav-subtitle">发布与回滚</div>
+<a class="nav-link" href="../../05-维护发布/01-发布与回滚/发布流程.html">发布流程</a>
+<a class="nav-link" href="../../05-维护发布/01-发布与回滚/Changelog.html">Changelog</a>
+<a class="nav-link" href="../../05-维护发布/01-发布与回滚/Bug处理流程.html">Bug 处理流程</a>
+<a class="nav-link" href="../../05-维护发布/01-发布与回滚/兼容性记录.html">兼容性记录</a>
+<a class="nav-link" href="../../05-维护发布/01-发布与回滚/回滚方案.html">回滚方案</a>
+<a class="nav-link" href="../../05-维护发布/01-发布与回滚/QuickInput风险与回滚说明.html">QuickInput 风险与回滚说明</a>
+</div>
+<div class="nav-subsection" data-nav-key="topic-05-group-02"><div class="nav-subtitle">修复记录</div>
+<a class="nav-link" href="../../05-维护发布/02-修复记录/QuickInput构建导出修复.html">QuickInput 构建导出修复</a>
+<a class="nav-link" href="../../05-维护发布/02-修复记录/BlockStatistics统一与跳转修复.html">Block Statistics 统一与跳转修复</a>
+<a class="nav-link" href="../../05-维护发布/02-修复记录/QuickInput任务正文空格保留修复.html">QuickInput 任务正文空格保留修复</a>
+</div>
+</div>
+    </aside>
+    <main class="main">
+      <section class="hero">
+        <div class="eyebrow">项目管理 / MIGRATED DOC</div>
+        <h1>Batch1 实施报告</h1>
+        <p class="lead">严格按本批约束落地：这里是**本次实际落地签名**。为了贴合当前代码结构，`prepare*` 落成了**同步接口**，避免给 `QuickInputModal` 引入额外异步装载状态；`submit*` 仍然是异步。1. **QuickInputModal 不再直接 import / 调用 `InputService</p>
+        <div class="meta-row">
+          <span class="badge good">状态：已迁移</span>
+          <span class="badge">最后更新：2026-05-07</span>
+          <span class="badge">格式：HTML</span>
+        </div>
+      </section>
+      <section class="grid"><article class="card full"><h2>迁移信息</h2><div class="table-wrap"><table><thead><tr><th>项目</th><th>内容</th></tr></thead><tbody><tr><td>新分类</td><td>项目管理</td></tr><tr><td>旧路径</td><td><code>docs/BATCH1_IMPLEMENTATION_REPORT.md</code></td></tr><tr><td>原始标题</td><td>统一输入改造实施 - 第 1 批落地报告（record 域 / QuickInput create-edit）</td></tr><tr><td>处理方式</td><td>正文已转换为当前 <code>文档/</code> 的 HTML 页面；原始文件另存于 <code>_归档/迁移原文/</code>。</td></tr></tbody></table></div></article><article class="card full"><h2>正文</h2><div class="imported-doc"><h1>统一输入改造实施 - 第 1 批落地报告（record 域 / QuickInput create-edit）</h1>
+<h2>1. 本批范围</h2>
+<p>严格按本批约束落地：</p>
+<ul>
+<li>只做 <strong>record 域</strong></li>
+<li>第 1 批只迁 <strong>QuickInput create / edit</strong></li>
+<li>不顺手并入 <strong>ViewInstance / Layout 配置域</strong></li>
+<li>不先大改 <strong>InputService / ItemService</strong> 内部既有副作用</li>
+<li>不做大规模重命名；优先 <strong>小步迁移</strong></li>
+<li>每批后补一份“旧入口是否已断开直连”的核对表</li>
+</ul>
+<h2>2. 新增文件清单</h2>
+<h3>新增</h3>
+<ul>
+<li><code>app/usecases/recordInput.usecase.ts</code></li>
+<li><code>core/types/recordInput.ts</code></li>
+<li><code>core/services/recordInput/RecordInputKernel.ts</code></li>
+<li><code>core/services/recordInput/dependencyResolver.ts</code></li>
+<li><code>core/services/recordInput/editStateResolver.ts</code></li>
+<li><code>core/services/recordInput/normalization.ts</code></li>
+<li><code>core/services/recordInput/validation.ts</code></li>
+<li><code>core/services/recordInput/submitResult.ts</code></li>
+</ul>
+<h3>既有文件改动</h3>
+<ul>
+<li><code>platform/modals/QuickInputModal.tsx</code></li>
+<li><code>app/usecases/index.ts</code></li>
+<li><code>app/bootstrap/initializeCore.ts</code></li>
+<li><code>core/types/index.ts</code></li>
+<li><code>core/types/schema.ts</code></li>
+</ul>
+<h2>3. 实际接口签名</h2>
+<p>这里是<strong>本次实际落地签名</strong>。为了贴合当前代码结构，<code>prepare*</code> 落成了<strong>同步接口</strong>，避免给 <code>QuickInputModal</code> 引入额外异步装载状态；<code>submit*</code> 仍然是异步。</p>
+<h3><code>app/usecases/recordInput.usecase.ts</code></h3>
+<pre><code class="language-ts">export class RecordInputUseCase {
+  prepareCreateRecord(params: PrepareCreateRecordParams): PreparedCreateRecord
+  prepareEditRecord(params: PrepareEditRecordParams): PreparedEditRecord
+
+  submitCreateRecord(params: SubmitCreateRecordParams): Promise&lt;RecordSubmitResult&gt;
+  submitUpdateRecord(params: SubmitUpdateRecordParams): Promise&lt;RecordSubmitResult&gt;
+
+  submitDeleteRecord(params: SubmitDeleteRecordParams): Promise&lt;RecordSubmitResult&gt;
+  submitCompleteRecord(params: SubmitCompleteRecordParams): Promise&lt;RecordSubmitResult&gt;
+  submitUpdateRecordTime(params: SubmitUpdateRecordTimeParams): Promise&lt;RecordSubmitResult&gt;
+}
+</code></pre>
+<h3><code>core/services/recordInput/RecordInputKernel.ts</code></h3>
+<pre><code class="language-ts">export class RecordInputKernel {
+  constructor(settings: InputSettings)
+
+  prepareCreate(params: PrepareCreateRecordParams): PreparedCreateRecord
+  prepareEdit(params: PrepareEditRecordParams): PreparedEditRecord
+
+  resolveMissingDependencies(params: {
+    blockId?: string | null
+    themeId?: string | null
+    item?: Item | null
+  }): ResolveDependenciesResult
+
+  normalizeRecordInput(params: NormalizeRecordInputParams): NormalizeRecordInputResult
+  validateRecordInput(params: ValidateRecordInputParams): RecordValidationResult
+}
+</code></pre>
+<h3>规则模块签名</h3>
+<pre><code class="language-ts">export function resolveRecordDependencies(input: DependencyResolverInput): ResolveDependenciesResult
+export function buildEditRecordState(input: BuildEditStateInput): PreparedEditRecord
+export function normalizeRecordInput(input: NormalizeRecordInputParams): NormalizeRecordInputResult
+export function validateRecordInput(input: ValidateRecordInputParams): RecordValidationResult
+</code></pre>
+<h2>4. QuickInputModal 改动点</h2>
+<h3>已完成</h3>
+<ol>
+<li><p><strong>QuickInputModal 不再直接 import / 调用 <code>InputService</code></strong></p>
+<ul>
+<li>create/update 都改为走 <code>useCases.recordInput.*</code></li>
+</ul>
+</li>
+<li><p><strong>QuickInputModal 不再自己维护 edit 推断 helper</strong></p>
+<ul>
+<li>原来散在 modal 内的：<ul>
+<li><code>findThemeIdByPath</code></li>
+<li><code>scoreTemplateForItem</code></li>
+<li><code>resolveBlockForEdit</code></li>
+<li><code>buildInitialFormData</code></li>
+<li><code>mapFieldValue</code></li>
+</ul>
+</li>
+<li>已迁到：<ul>
+<li><code>core/services/recordInput/editStateResolver.ts</code></li>
+<li><code>core/services/recordInput/dependencyResolver.ts</code></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p><strong>QuickInputModal 不再自己决定 create/edit 的主刷新链</strong></p>
+<ul>
+<li>create/edit 提交都改成 usecase 统一提交</li>
+<li>QuickInputModal 只根据 <code>RecordSubmitResult</code> 做：<ul>
+<li>loading</li>
+<li>success notice</li>
+<li>error notice</li>
+<li>close modal</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p><strong>保留 <code>onSave</code> 兼容分支</strong></p>
+<ul>
+<li>该分支仍服务于 Timer 的“先收表单数据，再由 TimerService 创建并开计时”旧链</li>
+<li>本批没有把 Timer 主链并进来</li>
+</ul>
+</li>
+</ol>
+<h3>仍刻意保留</h3>
+<ul>
+<li><code>onSave</code> 分支仍使用 <code>finalizeQuickInputFormData(...)</code></li>
+<li>这是兼容策略的一部分，不属于本批 create/edit 统一 submit 主链</li>
+</ul>
+<h2>5. 迁移步骤（实际执行顺序）</h2>
+<h3>Step A</h3>
+<p>先建空壳与合同：</p>
+<ul>
+<li><code>recordInput.usecase.ts</code></li>
+<li><code>core/types/recordInput.ts</code></li>
+<li><code>RecordInputKernel.ts</code></li>
+<li><code>dependencyResolver.ts</code></li>
+<li><code>editStateResolver.ts</code></li>
+<li><code>normalization.ts</code></li>
+<li><code>validation.ts</code></li>
+<li><code>submitResult.ts</code></li>
+</ul>
+<h3>Step B</h3>
+<p>把 QuickInput edit 解析逻辑从 <code>QuickInputModal</code> 抽出：</p>
+<ul>
+<li>block 推断</li>
+<li>theme 推断</li>
+<li>item -&gt; formData 回填</li>
+<li>option/path/rating 的编辑态映射</li>
+</ul>
+<h3>Step C</h3>
+<p>把提交前最终收敛抽到 <code>normalization.ts</code>：</p>
+<ul>
+<li>清理 <code>lastChanged</code></li>
+<li>linked time 最终收敛</li>
+<li>option object/path object 统一</li>
+</ul>
+<h3>Step D</h3>
+<p>把 QuickInputModal 的 create/edit 提交改成统一走：</p>
+<ul>
+<li><code>useCases.recordInput.submitCreateRecord(...)</code></li>
+<li><code>useCases.recordInput.submitUpdateRecord(...)</code></li>
+</ul>
+<h3>Step E</h3>
+<p>把 usecase 接入 UseCases 聚合与初始化链：</p>
+<ul>
+<li><code>app/usecases/index.ts</code></li>
+<li><code>app/bootstrap/initializeCore.ts</code></li>
+</ul>
+<h2>6. 兼容策略</h2>
+<h3>6.1 保留 Timer / AI batch / ItemService 旧链</h3>
+<p>本批没有改：</p>
+<ul>
+<li><code>TimerService.createNewTaskAndStart</code></li>
+<li><code>AiBatchConfirmModal</code></li>
+<li><code>ItemService.completeItem / updateItemTime</code></li>
+</ul>
+<p>这样做是为了守住“<strong>先收口 QuickInput create/edit</strong>”的批次边界。</p>
+<h3>6.2 不先抽干 service 内副作用</h3>
+<p>本批遵守了“不要先大改所有 service 内副作用”的约束：</p>
+<ul>
+<li><code>InputService.updateExistingRecord(...)</code> 内部原有 <code>scanFileByPath + notifyChange</code> 保留</li>
+<li><code>submitUpdateRecord(...)</code> 只统一承接结果对象，不顺手重构 service 纯化</li>
+</ul>
+<h3>6.3 create 链把原先 modal 的 refresh 收口到 usecase</h3>
+<p>因为 <code>InputService.executeTemplate(...)</code> 本身没有 refresh 副作用，所以：</p>
+<ul>
+<li>原先 QuickInputModal create 路径里的 <code>scanFileByPath + notifyChange</code></li>
+<li>现在移到 <code>RecordInputUseCase.submitCreateRecord(...)</code></li>
+</ul>
+<p>这属于“新增链路收口到 usecase”，不是 service 纯化。</p>
+<h3>6.4 <code>prepare*</code> 改成同步</h3>
+<p>这是唯一较明显的“贴仓调整”：</p>
+<ul>
+<li>设计草案里 <code>prepare*</code> 是 Promise</li>
+<li>实际代码里为了不引入 modal 异步初始态与闪烁，落成同步</li>
+</ul>
+<p>我认为这是安全调整，因为当前 <code>prepare</code> 逻辑完全依赖内存中的 settings + item，不需要异步 I/O。</p>
+<h3>6.5 类型兼容小补丁</h3>
+<p><code>core/types/schema.ts</code> 中给 <code>TemplateField</code> 增补了：</p>
+<ul>
+<li><code>semanticType?: 'path' | 'ratingPair' | string</code></li>
+<li><code>auxKey?: string</code></li>
+</ul>
+<p>这是因为现有代码已经广泛在用这两个字段，只是类型没跟上。这个补丁不改变行为，只补齐 record 域类型合同。</p>
+<h2>7. 风险点</h2>
+<h3>7.1 create 的 abort 仍然是 best-effort</h3>
+<p>本批虽然把 <code>signal</code> 贯到了 usecase 入参，但：</p>
+<ul>
+<li><code>InputService.executeTemplate(...)</code> 仍不接收 <code>AbortSignal</code></li>
+</ul>
+<p>所以 create 的取消仍然是“调用前 / 调用后可检查”，不是 service 级真中断。</p>
+<h3>7.2 update 的 refresh 仍然部分留在 service 内</h3>
+<p>本批为了小步迁移，保留了：</p>
+<ul>
+<li><code>InputService.updateExistingRecord(...)</code> 内部 scan/notify</li>
+</ul>
+<p>因此当前状态是：</p>
+<ul>
+<li>create：refresh 主协调已进 usecase</li>
+<li>update：结果统一进 usecase，但底层 refresh 仍在 service 内</li>
+</ul>
+<p>这是有意的迁移中间态。</p>
+<h3>7.3 <code>onSave</code> 分支仍然不是 recordInput submit 主链</h3>
+<p><code>QuickInputModal</code> 的 <code>onSave</code> 分支还在走旧的“返回 <code>QuickInputSaveData</code> 给外部”模式。</p>
+<p>这意味着：</p>
+<ul>
+<li>QuickInput UI 主壳已经接 usecase</li>
+<li>但 Timer 的“QuickInput -&gt; TimerService”兼容支路仍然存在</li>
+</ul>
+<h3>7.4 delete / complete / time_update 只做了接口预留</h3>
+<p>本批为了不扩范围：</p>
+<ul>
+<li><code>submitDeleteRecord</code></li>
+<li><code>submitCompleteRecord</code></li>
+<li><code>submitUpdateRecordTime</code></li>
+</ul>
+<p>都只返回“reserved for later batch”错误结果，尚未接真实底层动作。</p>
+<h2>8. 验收点</h2>
+<h3>架构验收</h3>
+<ul>
+<li class="task-list-item"><input checked="" class="task-list-item-checkbox" disabled="" type="checkbox"/><code>QuickInputModal</code> 不再直接 import <code>InputService</code></li>
+<li class="task-list-item"><input checked="" class="task-list-item-checkbox" disabled="" type="checkbox"/><code>QuickInputModal</code> 不再直接 import <code>DataStore</code></li>
+<li class="task-list-item"><input checked="" class="task-list-item-checkbox" disabled="" type="checkbox"/><code>QuickInputModal</code> create/edit 不再自己调 <code>executeTemplate/updateExistingRecord</code></li>
+<li class="task-list-item"><input checked="" class="task-list-item-checkbox" disabled="" type="checkbox"/><code>QuickInputModal</code> 不再保留 edit 推断 helper</li>
+<li class="task-list-item"><input checked="" class="task-list-item-checkbox" disabled="" type="checkbox"/><code>useCases.recordInput</code> 已接入 UseCases 聚合</li>
+</ul>
+<h3>行为验收（静态）</h3>
+<ul>
+<li class="task-list-item"><input checked="" class="task-list-item-checkbox" disabled="" type="checkbox"/>create 提交已改走 <code>submitCreateRecord(...)</code></li>
+<li class="task-list-item"><input checked="" class="task-list-item-checkbox" disabled="" type="checkbox"/>edit 提交已改走 <code>submitUpdateRecord(...)</code></li>
+<li class="task-list-item"><input checked="" class="task-list-item-checkbox" disabled="" type="checkbox"/>edit 初始态已改走 <code>prepareEditRecord(...)</code></li>
+<li class="task-list-item"><input checked="" class="task-list-item-checkbox" disabled="" type="checkbox"/>create 初始态已改走 <code>prepareCreateRecord(...)</code></li>
+<li class="task-list-item"><input checked="" class="task-list-item-checkbox" disabled="" type="checkbox"/>QuickInput 成功/失败反馈统一改读 <code>RecordSubmitResult</code></li>
+</ul>
+<h2>9. “旧入口是否已断开直连”核对表（第 1 批）</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>旧入口 / 旧直连</th>
+<th>状态</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>QuickInputModal -&gt; InputService.executeTemplate</code></td>
+<td><strong>已断开</strong></td>
+<td>create 改走 <code>useCases.recordInput.submitCreateRecord</code></td>
+</tr>
+<tr>
+<td><code>QuickInputModal -&gt; InputService.updateExistingRecord</code></td>
+<td><strong>已断开</strong></td>
+<td>edit 改走 <code>useCases.recordInput.submitUpdateRecord</code></td>
+</tr>
+<tr>
+<td><code>QuickInputModal -&gt; DataStore.scanFileByPath/notifyChange</code></td>
+<td><strong>已断开</strong></td>
+<td>create refresh 改由 usecase 承接</td>
+</tr>
+<tr>
+<td><code>QuickInputModal</code> 内部 edit 推断 helper</td>
+<td><strong>已断开</strong></td>
+<td>已迁到 <code>editStateResolver</code> / <code>dependencyResolver</code></td>
+</tr>
+<tr>
+<td><code>QuickInputModal onSave -&gt; QuickInputSaveData</code></td>
+<td><strong>保留</strong></td>
+<td>Timer 兼容支路，明确不在第 1 批收口范围</td>
+</tr>
+<tr>
+<td><code>AiBatchConfirmModal -&gt; InputService</code></td>
+<td><strong>保留</strong></td>
+<td>第 2 批再迁</td>
+</tr>
+<tr>
+<td><code>TimerService.createNewTaskAndStart -&gt; InputService</code></td>
+<td><strong>保留</strong></td>
+<td>第 2 批再迁</td>
+</tr>
+<tr>
+<td><code>LayoutRenderer -&gt; ItemService.complete/updateTime</code></td>
+<td><strong>保留</strong></td>
+<td>第 3 批再迁</td>
+</tr>
+<tr>
+<td>ViewInstance / Layout 配置域写链</td>
+<td><strong>未触碰</strong></td>
+<td>按约束保留原状</td>
+</tr>
+</tbody>
+</table></div>
+<h2>10. 我认为这版的“详尽”交付包括什么</h2>
+<p>对这类实施落地，我认为“详尽”至少要包括：</p>
+<ol>
+<li><strong>文件改动清单</strong>：新增了什么、改了什么</li>
+<li><strong>实际接口签名</strong>：不是草案，而是代码最终落成的签名</li>
+<li><strong>迁移步骤</strong>：按什么顺序做、每一步动了什么</li>
+<li><strong>兼容策略</strong>：哪些旧链故意保留，为什么保留</li>
+<li><strong>风险点</strong>：哪些问题还没在这一批解决</li>
+<li><strong>核对表</strong>：旧入口是否已经真正断开直连</li>
+<li><strong>批次边界说明</strong>：明确哪些东西没动，防止误判“顺手扩范围”</li>
+</ol>
+<h2>11. 输出物</h2>
+<ul>
+<li>修改后的完整源码压缩包</li>
+<li>本实施报告</li>
+</ul>
+</div></article></section>
+      <footer class="footer">本页属于 Think OS 插件 HTML 文档系统。UI 沿用原有风格，docs/html 旧资料已按新结构迁移。</footer>
+    </main>
+  </div>
+  <script src="../../_资源/搜索索引.js"></script>
+  <script src="../../_资源/文档脚本.js"></script>
+</body>
+</html>

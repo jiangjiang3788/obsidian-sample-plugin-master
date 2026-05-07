@@ -1,0 +1,22 @@
+[
+  {
+    "id": "ADR-001",
+    "decision": "正式文档入口使用 文档/index.html"
+  },
+  {
+    "id": "ADR-002",
+    "decision": "术语表放在基础入口"
+  },
+  {
+    "id": "ADR-003",
+    "decision": "文件地图归入技术文档"
+  },
+  {
+    "id": "ADR-004",
+    "decision": "核心评审改为评审中心"
+  },
+  {
+    "id": "ADR-005",
+    "decision": "UI 沿用原有风格"
+  }
+]

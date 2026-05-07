@@ -1,0 +1,539 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>测试方案迁移｜Think OS 插件文档系统</title>
+  <link rel="stylesheet" href="../../_资源/文档样式.css">
+</head>
+<body data-doc-root="../../">
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-title">Think OS 插件文档系统</div>
+        <div class="brand-subtitle">HTML 项目驾驶舱 / 文档 / 需求 / 技术 / 评审 / 发布</div>
+      </div>
+      <div class="search-box">
+        <input class="search-input" data-doc-search placeholder="搜索：需求、命令、设置、文件地图、评审、QuickInput...">
+        <div class="search-results" data-search-results></div>
+      </div>
+<div class="nav-section" data-nav-key="topic-00"><div class="nav-title">基础入口</div>
+<div class="nav-subsection" data-nav-key="topic-00-group-00"><div class="nav-subtitle">项目驾驶舱</div>
+<a class="nav-link" href="../../index.html">首页仪表盘</a>
+<a class="nav-link" href="../../00-基础入口/00-项目驾驶舱/项目总览.html">项目总览</a>
+<a class="nav-link" href="../../00-基础入口/00-项目驾驶舱/快速开始.html">快速开始</a>
+<a class="nav-link" href="../../00-基础入口/00-项目驾驶舱/当前状态.html">当前状态</a>
+</div>
+<div class="nav-subsection" data-nav-key="topic-00-group-01"><div class="nav-subtitle">概念与边界</div>
+<a class="nav-link" href="../../00-基础入口/01-概念与边界/插件定位.html">插件定位</a>
+<a class="nav-link" href="../../00-基础入口/01-概念与边界/功能地图.html">功能地图</a>
+<a class="nav-link" href="../../00-基础入口/01-概念与边界/术语表.html">术语表</a>
+<a class="nav-link" href="../../00-基础入口/01-概念与边界/常见问题.html">常见问题</a>
+</div>
+<div class="nav-subsection" data-nav-key="topic-00-group-02"><div class="nav-subtitle">迁移与旧资料</div>
+<a class="nav-link" href="../../00-基础入口/02-迁移与旧资料/迁移文档索引.html">迁移文档索引</a>
+<a class="nav-link" href="../../00-基础入口/02-迁移与旧资料/旧章节总览.html">旧章节总览</a>
+<a class="nav-link" href="../../00-基础入口/02-迁移与旧资料/章节化文档框架.html">章节化文档框架</a>
+</div>
+</div>
+<div class="nav-section" data-nav-key="topic-01"><div class="nav-title">项目管理</div>
+<div class="nav-subsection" data-nav-key="topic-01-group-00"><div class="nav-subtitle">计划与路线</div>
+<a class="nav-link" href="../../01-项目管理/00-计划与路线/需求池.html">需求池</a>
+<a class="nav-link" href="../../01-项目管理/00-计划与路线/版本路线图.html">版本路线图</a>
+<a class="nav-link" href="../../01-项目管理/00-计划与路线/开发计划.html">开发计划</a>
+</div>
+<div class="nav-subsection" data-nav-key="topic-01-group-01"><div class="nav-subtitle">过程记录</div>
+<a class="nav-link" href="../../01-项目管理/01-过程记录/问题记录.html">问题记录</a>
+<a class="nav-link" href="../../01-项目管理/01-过程记录/技术债.html">技术债</a>
+<a class="nav-link" href="../../01-项目管理/01-过程记录/决策记录.html">决策记录</a>
+<a class="nav-link" href="../../01-项目管理/01-过程记录/发布记录.html">发布记录</a>
+</div>
+<div class="nav-subsection" data-nav-key="topic-01-group-02"><div class="nav-subtitle">实施计划</div>
+<a class="nav-link" href="../../01-项目管理/02-实施计划/插件深度报告与实施计划.html">插件深度报告与实施计划</a>
+<a class="nav-link" href="../../01-项目管理/02-实施计划/上下文时间重构计划.html">上下文时间重构计划</a>
+<a class="nav-link" href="../../01-项目管理/02-实施计划/统一输入修改计划.html">统一输入修改计划</a>
+<a class="nav-link" href="../../01-项目管理/02-实施计划/原始计划记录.html">原始计划记录</a>
+<a class="nav-link" href="../../01-项目管理/02-实施计划/旧需求台账.html">旧需求台账</a>
+</div>
+<div class="nav-subsection" data-nav-key="topic-01-group-03"><div class="nav-subtitle">实施报告</div>
+<a class="nav-link" href="../../01-项目管理/03-实施报告/Batch1实施报告.html">Batch1 实施报告</a>
+<a class="nav-link" href="../../01-项目管理/03-实施报告/Batch2实施报告.html">Batch2 实施报告</a>
+<a class="nav-link" href="../../01-项目管理/03-实施报告/QuickInput主线修改记录.html">QuickInput 主线修改记录</a>
+<a class="nav-link" href="../../01-项目管理/03-实施报告/QuickInput收口状态.html">QuickInput 收口状态</a>
+<a class="nav-link" href="../../01-项目管理/03-实施报告/QuickInput本轮修改总览.html">QuickInput 本轮修改总览</a>
+</div>
+</div>
+<div class="nav-section" data-nav-key="topic-02"><div class="nav-title">功能设计</div>
+<div class="nav-subsection" data-nav-key="topic-02-group-00"><div class="nav-subtitle">功能全景</div>
+<a class="nav-link" href="../../02-功能设计/00-功能全景/功能总览.html">功能总览</a>
+<a class="nav-link" href="../../02-功能设计/00-功能全景/功能清单迁移.html">功能清单迁移</a>
+<a class="nav-link" href="../../02-功能设计/00-功能全景/旧产品功能地图.html">旧产品功能地图</a>
+</div>
+<div class="nav-subsection" data-nav-key="topic-02-group-01"><div class="nav-subtitle">用户与交互</div>
+<a class="nav-link" href="../../02-功能设计/01-用户与交互/用户场景.html">用户场景</a>
+<a class="nav-link" href="../../02-功能设计/01-用户与交互/命令设计.html">命令设计</a>
+<a class="nav-link" href="../../02-功能设计/01-用户与交互/设置项设计.html">设置项设计</a>
+<a class="nav-link" href="../../02-功能设计/01-用户与交互/交互流程.html">交互流程</a>
+<a class="nav-link" href="../../02-功能设计/01-用户与交互/异常状态.html">异常状态</a>
+<a class="nav-link" href="../../02-功能设计/01-用户与交互/功能验收标准.html">功能验收标准</a>
+</div>
+<div class="nav-subsection" data-nav-key="topic-02-group-02"><div class="nav-subtitle">View UI 与移动端</div>
+<a class="nav-link" href="../../02-功能设计/02-ViewUI与移动端/ViewUI触发动作梳理.html">View UI 触发动作梳理</a>
+<a class="nav-link" href="../../02-功能设计/02-ViewUI与移动端/移动端UI全量重构方案.html">移动端 UI 全量重构方案</a>
+</div>
+<div class="nav-subsection" data-nav-key="topic-02-group-03"><div class="nav-subtitle">QuickInput 功能收口</div>
+<a class="nav-link" href="../../02-功能设计/03-QuickInput功能收口/QuickInput保存计划一致性.html">QuickInput 保存计划一致性</a>
+<a class="nav-link" href="../../02-功能设计/03-QuickInput功能收口/QuickInput迁移保存反馈.html">QuickInput 迁移保存反馈</a>
+<a class="nav-link" href="../../02-功能设计/03-QuickInput功能收口/QuickInput路径变化保存策略.html">QuickInput 路径变化保存策略</a>
+</div>
+</div>
+<div class="nav-section" data-nav-key="topic-03"><div class="nav-title">技术文档</div>
+<div class="nav-subsection" data-nav-key="topic-03-group-00"><div class="nav-subtitle">技术全景</div>
+<a class="nav-link" href="../../03-技术文档/00-技术全景/技术总览.html">技术总览</a>
+<a class="nav-link" href="../../03-技术文档/00-技术全景/文件地图.html">文件地图</a>
+<a class="nav-link" href="../../03-技术文档/00-技术全景/模块职责.html">模块职责</a>
+<a class="nav-link" href="../../03-技术文档/00-技术全景/插件生命周期.html">插件生命周期</a>
+</div>
+<div class="nav-subsection" data-nav-key="topic-03-group-01"><div class="nav-subtitle">架构导览</div>
+<a class="nav-link" href="../../03-技术文档/01-架构导览/开发指南迁移.html">开发指南迁移</a>
+<a class="nav-link" href="../../03-技术文档/01-架构导览/开发规范迁移.html">开发规范迁移</a>
+<a class="nav-link" href="../../03-技术文档/01-架构导览/代码架构图总览.html">代码架构图总览</a>
+<a class="nav-link" href="../../03-技术文档/01-架构导览/旧代码架构图.html">旧代码架构图</a>
+</div>
+<div class="nav-subsection" data-nav-key="topic-03-group-02"><div class="nav-subtitle">目录地图</div>
+<a class="nav-link" href="../../03-技术文档/02-目录地图/app目录导览.html">app 目录导览</a>
+<a class="nav-link" href="../../03-技术文档/02-目录地图/core目录导览.html">core 目录导览</a>
+<a class="nav-link" href="../../03-技术文档/02-目录地图/features目录导览.html">features 目录导览</a>
+<a class="nav-link" href="../../03-技术文档/02-目录地图/platform目录导览.html">platform 目录导览</a>
+<a class="nav-link" href="../../03-技术文档/02-目录地图/share目录导览.html">share 目录导览</a>
+</div>
+<div class="nav-subsection" data-nav-key="topic-03-group-03"><div class="nav-subtitle">代码视角</div>
+<a class="nav-link" href="../../03-技术文档/03-代码视角/架构视角逐文件.html">架构视角逐文件</a>
+<a class="nav-link" href="../../03-技术文档/03-代码视角/领域视角逐文件.html">领域视角逐文件</a>
+<a class="nav-link" href="../../03-技术文档/03-代码视角/业务视角逐文件.html">业务视角逐文件</a>
+</div>
+<div class="nav-subsection" data-nav-key="topic-03-group-04"><div class="nav-subtitle">运行机制</div>
+<a class="nav-link" href="../../03-技术文档/04-运行机制/数据流.html">数据流</a>
+<a class="nav-link" href="../../03-技术文档/04-运行机制/事件流.html">事件流</a>
+<a class="nav-link" href="../../03-技术文档/04-运行机制/Obsidian API 使用.html">Obsidian API 使用</a>
+<a class="nav-link" href="../../03-技术文档/04-运行机制/样式系统.html">样式系统</a>
+<a class="nav-link" href="../../03-技术文档/04-运行机制/构建流程.html">构建流程</a>
+<a class="nav-link" href="../../03-技术文档/04-运行机制/数据流与流程图.html">数据流与流程图</a>
+</div>
+<div class="nav-subsection" data-nav-key="topic-03-group-05"><div class="nav-subtitle">字段与输入</div>
+<a class="nav-link" href="../../03-技术文档/05-字段与输入/字段系统重构方案.html">字段系统重构方案</a>
+<a class="nav-link" href="../../03-技术文档/05-字段与输入/统一输入现状盘点.html">统一输入现状盘点</a>
+</div>
+<div class="nav-subsection" data-nav-key="topic-03-group-06"><div class="nav-subtitle">QuickInput 技术记录</div>
+<a class="nav-link" href="../../03-技术文档/06-QuickInput技术记录/QuickInput多步推进Snapshot.html">QuickInput 多步推进 Snapshot</a>
+<a class="nav-link" href="../../03-技术文档/06-QuickInput技术记录/QuickInputLegacy调试收口.html">QuickInput Legacy 调试收口</a>
+<a class="nav-link" href="../../03-技术文档/06-QuickInput技术记录/QuickInput任务内容提取调试.html">QuickInput 任务内容提取调试</a>
+<a class="nav-link" href="../../03-技术文档/06-QuickInput技术记录/QuickInput任务内容单一入口.html">QuickInput 任务内容单一入口</a>
+<a class="nav-link" href="../../03-技术文档/06-QuickInput技术记录/QuickInput任务模板护栏.html">QuickInput 任务模板护栏</a>
+<a class="nav-link" href="../../03-技术文档/06-QuickInput技术记录/QuickInput任务写回保真.html">QuickInput 任务写回保真</a>
+</div>
+</div>
+<div class="nav-section" data-nav-key="topic-04"><div class="nav-title">评审中心</div>
+<div class="nav-subsection" data-nav-key="topic-04-group-00"><div class="nav-subtitle">评审方法</div>
+<a class="nav-link" href="../../04-评审中心/00-评审方法/需求评审.html">需求评审</a>
+<a class="nav-link" href="../../04-评审中心/00-评审方法/功能评审.html">功能评审</a>
+<a class="nav-link" href="../../04-评审中心/00-评审方法/技术方案评审.html">技术方案评审</a>
+</div>
+<div class="nav-subsection" data-nav-key="topic-04-group-01"><div class="nav-subtitle">质量评审</div>
+<a class="nav-link" href="../../04-评审中心/01-质量评审/代码结构评审.html">代码结构评审</a>
+<a class="nav-link" href="../../04-评审中心/01-质量评审/发布评审.html">发布评审</a>
+<a class="nav-link" href="../../04-评审中心/01-质量评审/风险评审.html">风险评审</a>
+</div>
+<div class="nav-subsection" data-nav-key="topic-04-group-02"><div class="nav-subtitle">专题评审</div>
+<a class="nav-link" href="../../04-评审中心/02-专题评审/字段系统深度评审.html">字段系统深度评审</a>
+<a class="nav-link" href="../../04-评审中心/02-专题评审/QuickInput调试与Legacy规范.html">QuickInput 调试与 Legacy 规范</a>
+</div>
+</div>
+<div class="nav-section" data-nav-key="topic-05"><div class="nav-title">维护发布</div>
+<div class="nav-subsection" data-nav-key="topic-05-group-00"><div class="nav-subtitle">测试验收</div>
+<a class="nav-link" href="测试清单.html">测试清单</a>
+<a class="nav-link" href="测试方案迁移.html">测试方案迁移</a>
+<a class="nav-link" href="QuickInput主线验收清单.html">QuickInput 主线验收清单</a>
+<a class="nav-link" href="QuickInput最终验收清单.html">QuickInput 最终验收清单</a>
+</div>
+<div class="nav-subsection" data-nav-key="topic-05-group-01"><div class="nav-subtitle">发布与回滚</div>
+<a class="nav-link" href="../01-发布与回滚/发布流程.html">发布流程</a>
+<a class="nav-link" href="../01-发布与回滚/Changelog.html">Changelog</a>
+<a class="nav-link" href="../01-发布与回滚/Bug处理流程.html">Bug 处理流程</a>
+<a class="nav-link" href="../01-发布与回滚/兼容性记录.html">兼容性记录</a>
+<a class="nav-link" href="../01-发布与回滚/回滚方案.html">回滚方案</a>
+<a class="nav-link" href="../01-发布与回滚/QuickInput风险与回滚说明.html">QuickInput 风险与回滚说明</a>
+</div>
+<div class="nav-subsection" data-nav-key="topic-05-group-02"><div class="nav-subtitle">修复记录</div>
+<a class="nav-link" href="../02-修复记录/QuickInput构建导出修复.html">QuickInput 构建导出修复</a>
+<a class="nav-link" href="../02-修复记录/BlockStatistics统一与跳转修复.html">Block Statistics 统一与跳转修复</a>
+<a class="nav-link" href="../02-修复记录/QuickInput任务正文空格保留修复.html">QuickInput 任务正文空格保留修复</a>
+</div>
+</div>
+    </aside>
+    <main class="main">
+      <section class="hero">
+        <div class="eyebrow">维护发布 / MIGRATED DOC</div>
+        <h1>测试方案迁移</h1>
+        <p class="lead">好，我明白你要的东西了：**不是原则，不是模板，而是“结合你这张计划表和现在代码的真实状态，给一份可以直接开干的测试计划”，而且要是表格，从上到下。**下面这份我按你现在的阶段表来设计，重点偏 **端到端**，然后才是集成/单测和 gate。你可以直接按表里的“建议动作”一条条做。</p>
+        <div class="meta-row">
+          <span class="badge good">状态：已迁移</span>
+          <span class="badge">最后更新：2026-05-07</span>
+          <span class="badge">格式：HTML</span>
+        </div>
+      </section>
+      <section class="grid"><article class="card full"><h2>迁移信息</h2><div class="table-wrap"><table><thead><tr><th>项目</th><th>内容</th></tr></thead><tbody><tr><td>新分类</td><td>维护发布</td></tr><tr><td>旧路径</td><td><code>docs/测试方案.md</code></td></tr><tr><td>原始标题</td><td>表 1：按阶段/事项的测试策略（从“用户体验”到“底层 gate”）</td></tr><tr><td>处理方式</td><td>正文已转换为当前 <code>文档/</code> 的 HTML 页面；原始文件另存于 <code>_归档/迁移原文/</code>。</td></tr></tbody></table></div></article><article class="card full"><h2>正文</h2><div class="imported-doc"><p>好，我明白你要的东西了：<strong>不是原则，不是模板，而是“结合你这张计划表和现在代码的真实状态，给一份可以直接开干的测试计划”，而且要是表格，从上到下。</strong></p>
+<p>下面这份我按你现在的阶段表来设计，重点偏 <strong>端到端</strong>，然后才是集成/单测和 gate。你可以直接按表里的“建议动作”一条条做。</p>
+<hr/>
+<h2>表 1：按阶段/事项的测试策略（从“用户体验”到“底层 gate”）</h2>
+<blockquote>
+<p>说明：</p>
+<ul>
+<li>“测试层级”= 主攻是 E2E / 集成 / 单测 / gate 中哪一层</li>
+<li>我尽量让每个事项只绑定少量“最值钱”的测试，不让你乱写</li>
+</ul>
+</blockquote>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>阶段 / 事项</th>
+<th>当前状态（你表里）</th>
+<th>主要风险/目的</th>
+<th>推荐测试层级组合</th>
+<th>具体建议（不废话版）</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Phase0 P0 Typecheck 收敛（87→0）</td>
+<td>🔴 现在还有 1 个 TS error（BlockItem → MarkdownContent）</td>
+<td>没有类型安全网，大改时很容易 E2E 一片绿但细节在阴间</td>
+<td>✅ <strong>gate/静态检查</strong></td>
+<td>1. <strong>先修掉这个 TS error</strong>：给 <code>BlockItem</code> 传的 <code>app</code> 要么加到 <code>MarkdownContentProps</code>，要么干脆去掉传参。<br/>2. CI / 本地 pre-push 固定跑：<code>npm run typecheck</code>。</td>
+</tr>
+<tr>
+<td>Phase0 P0 最小测试框架（Jest + smoke≥3）</td>
+<td>🟡 框架 OK，但 <code>legacyCalloutBlock.test.ts</code> 失败</td>
+<td>parser / legacy 语义没被锁住，后面你改 parser / DataStore 会回归炸</td>
+<td>✅ 单测（小范围）</td>
+<td>1. <strong>先修这个 failing test，不要绕过</strong>。这条就是你“legacy block 支持 callout 编辑态”的验收锚点。<br/>2. 不急着多写，只要保证：现有 5–6 个单测全绿。</td>
+</tr>
+<tr>
+<td>Phase0 P1 解析语义止血（Task 主题 + Theme 优先）</td>
+<td>🟡 主线 OK，legacy 场景待修</td>
+<td>一旦主题/Theme 语义不稳，后面表格/仪表盘怎么排都不对</td>
+<td>✅ 单测 + 少量集成</td>
+<td>1. <strong>用 <code>legacyCalloutBlock.test.ts</code> + 1–2 个新增用例</strong>锁住：<br/>   - 主题字段不混 tags；<br/>   - Theme 优先级规则。<br/>2. 暂时不写 E2E，只在 parser/DataStore 层做。</td>
+</tr>
+<tr>
+<td>Phase0 P2 生命周期收口：统一 dispose + 卸载安全</td>
+<td>🟡 结构/单测有，缺真实 unload/reload 证据</td>
+<td>你做“可编辑 + 拖拽”时会挂很多事件/定时器，如果卸载不干净，Obsidian 会越来越卡或报错</td>
+<td>✅ <strong>E2E/集成</strong> + 现有单测</td>
+<td>1. 保留现有 <code>disposables.test.ts</code> 即可，不必加很多单测。<br/>2. 新增 <strong>1 条 E2E 或 integration</strong>：启动插件→打点订阅/定时器数→<code>unload/reload</code> 插件→验证计数归 0（可以用 log/计数 API）。</td>
+</tr>
+<tr>
+<td>Phase0 P2 共享层去平台化（Notice 等）</td>
+<td>🟡 gate 绿，Notice 走没走 UiPort 需要人工确认</td>
+<td>如果 shared 再偷偷 import obsidian，后面 UI 功能越多越难改</td>
+<td>✅ gate + 手工代码审查</td>
+<td>1. 靠 <code>npm run obsidian-leak:gate</code> 即可，不额外写测试。<br/>2. 挑 Notice 相关调用全看一遍：<strong>确保都经过 UiPort</strong>，这一步一次性做完后就靠 gate 保证。</td>
+</tr>
+<tr>
+<td>Phase1 P0 边界简化（禁深导入硬闸）</td>
+<td>✅ check-boundaries OK</td>
+<td>确保“模块边界”这件事以后交给脚本，不需要你人肉记</td>
+<td>✅ gate</td>
+<td>1. 不写 Jest，全部交给 <code>check-boundaries</code> + 相关 gate。<br/>2. 把 <code>npm run check:boundaries</code> 加进 CI 即可。</td>
+</tr>
+<tr>
+<td>Phase1 P0 目录整理</td>
+<td>🟡 结构雏形有，缺迁移清单</td>
+<td>工程洁癖类工作，本身不需要测试保护；只怕动手时误伤行为</td>
+<td>✅ gate + E2E 冒烟（复用）</td>
+<td>1. 不为“目录变动”单独写测试。<br/>2. 目录大改时只要求：跑一遍 <strong>全套</strong> <code>typecheck + test:unit + gate + 关键 E2E</code> 作回归即可。</td>
+</tr>
+<tr>
+<td>Phase1 P1 IconAction 统一</td>
+<td>✅ gate 确认，无旧模式</td>
+<td>UI 一致性问题，已经基本解决</td>
+<td>✅ gate</td>
+<td>1. 完全依赖 <code>iconaction:gate</code>。<br/>2. 不需要再写组件级单测（除非将来自己想练手）。</td>
+</tr>
+<tr>
+<td>Phase1 P1 FilterPopoverShell</td>
+<td>❌ 未开始</td>
+<td>纯 UI 支撑组件，不挡 thinktxt</td>
+<td>✅ 轻量组件单测（可选） + 未来某个 E2E 覆盖一下</td>
+<td>1. 实现后可以写 1 条组件测试：挂载 Shell、点击打开/关闭。<br/>2. 主要还是等它在某个具体 feature 中使用，再由那条 E2E 自然覆盖。</td>
+</tr>
+<tr>
+<td>Phase1 P2 竞态/取消统一（takeLatest/Abort）</td>
+<td>🟡 基础设施/测试有，策略未完全统一</td>
+<td>做“可编辑+拖拽”会引入更多异步，取消没处理好会出现“旧请求覆盖新状态”的鬼畜问题</td>
+<td>✅ 集成测试 + gate（将来）</td>
+<td>1. 不要给所有 hook 写细粒度单测，只在<strong>关键链路</strong>（比如“表格保存”、“拖拽后写回”）写 1‒2 条集成测试：快速连点两次保存，只最后一次生效。<br/>2. 以后有精力再加专门 gate。</td>
+</tr>
+<tr>
+<td><strong>Phase2 P0 Legacy block 支持 callout 编辑态</strong></td>
+<td>🔴 单测失败，说明语义没达标</td>
+<td>这是你后面所有“编辑表格/拖拽”的基础：新格式能不能被 DataStore 正确抓出来</td>
+<td>✅ 单测（必须）</td>
+<td>1. 把 <code>legacyCalloutBlock.test.ts</code> 当成<strong>唯一验收标准</strong>：修 parser / DataStore 直到它绿。<br/>2. 如有必要，加 1–2 个额外用例补边界（多条、混合块）。</td>
+</tr>
+<tr>
+<td>Phase2 P1 预览态表格只读渲染（start/end 区间）</td>
+<td>⏳ 设计/未验收</td>
+<td>这是你“所见即表格”的体验基础，但目前只是渲染，不写回</td>
+<td>✅ 集成 + 轻量 E2E</td>
+<td>1. 写 1 条集成测试：给一段含 <code>&lt;!-- start --&gt;</code>、多条 <code>[!thinktxt]</code> 的 markdown，跑 postProcessor，看 DOM 里出现 table。<br/>2. 写 1 条 E2E：用户打开预览，能看到表格。</td>
+</tr>
+<tr>
+<td>Phase2 P2 表格编辑 + 写回 md</td>
+<td>⏳ 未实现</td>
+<td>核心价值点；读→改→写不稳，所有 E2E 都会漂</td>
+<td>✅ <strong>单测 + 集成 + E2E 全三层</strong></td>
+<td>见下面“表 2：专门针对表格编辑/拖拽的测试计划”。</td>
+</tr>
+<tr>
+<td>Phase2 P2 拖拽排序 + 写回</td>
+<td>⏳ 未实现</td>
+<td>多文件/多块拖拽时顺序错乱会非常难 debug</td>
+<td>✅ 单测（写回算法）+ E2E</td>
+<td>同上，放一起设计。</td>
+</tr>
+<tr>
+<td>Phase3 P1 DataStore 拆分</td>
+<td>0/4，可后置</td>
+<td>重构型工作；只要前面测试网扎实就不怕</td>
+<td>✅ 不增加测试类型，完全依赖现有回归</td>
+<td>1. 拆分时<strong>禁止新增“结构型测试”</strong>，全部靠前面已经写好的 parser/DataStore/表格/E2E 用例。<br/>2. 如果重构后测挂：要么回滚，要么连同 spec 一起更新。</td>
+</tr>
+<tr>
+<td>Phase4 P1 文档化</td>
+<td>🟡 docs 有，闭环未验证</td>
+<td>新人跑不起来，之后 bug 不好交接</td>
+<td>✅ E2E（“新人脚本”）、静态检查</td>
+<td>1. 最后加一条“README 验证脚本”：按 README 的步骤跑一次 <code>npm install -&gt; npm run check -&gt; npm run test:unit -&gt; npm run gate</code>。<br/>2. 不需要 Jest，只要自己一次完整跑通并记日志即可。</td>
+</tr>
+</tbody>
+</table></div>
+<hr/>
+<h2>表 2：专门针对“表格编辑 / 拖拽 + 写回”的测试计划（你最在意的那块）</h2>
+<blockquote>
+<p>这里我按照你“从顶部到底部”的思路，把<strong>E2E → 集成 → 单测</strong>三层对齐到同一块功能上。
+你只要按顺序实现这些测试，后面怎么重构都不太会白写。</p>
+</blockquote>
+<h3>2.1 单测层（最底层：读→改→写协议）</h3>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>编号</th>
+<th>范围</th>
+<th>目的</th>
+<th>用例描述（可以直接变成 Jest）</th>
+<th>关联文件</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>UT-1</td>
+<td>解析（read）</td>
+<td>确保按 <code>start/end</code> 区间 + <code>[!thinktxt]</code> 解析稳定</td>
+<td>输入：包含 <code>&lt;!-- thinktxt:start --&gt; ... &lt;!-- thinktxt:end --&gt;</code> 以及多条 <code>{key:: value}</code> 行的 markdown；<br/>输出：数组 rows，字段完整（id/title/status/...）。</td>
+<td>parser.ts + DataStore</td>
+</tr>
+<tr>
+<td>UT-2</td>
+<td>更新（updateRow)</td>
+<td>改一个单元格不会破坏其它内容</td>
+<td>给定 mdBefore + 操作 <code>updateRow(id=2, patch={title: 'BBB-EDIT'})</code>；<br/>输出 mdAfter：<br/>1）只有目标行内容变；2）缩进/其它行保持不变；3）<code>start/end</code> 注释位置不变。</td>
+<td>patcher（你要写的模块）</td>
+</tr>
+<tr>
+<td>UT-3</td>
+<td>插入/删除</td>
+<td>保证 start/end 块范围仍正确</td>
+<td><code>insertRow(afterId=2, row=...)</code> + <code>deleteRow(id=1)</code>；<br/>验证：新增/删除行都在 <code>start/end</code> 内，区块外内容完全不变。</td>
+<td>同上</td>
+</tr>
+<tr>
+<td>UT-4</td>
+<td>拖拽排序（reorder）</td>
+<td>保证顺序正确、空行/注释不乱</td>
+<td>输入 3 行 + 若干空行/注释；操作：<code>reorder(0→2)</code>；<br/>输出：3 行顺序调换，但所有空行/注释保持原位置（或者按你设计的明确规则）。</td>
+<td>同上</td>
+</tr>
+<tr>
+<td>UT-5</td>
+<td>多块/多区间边界</td>
+<td>确保只改目标区间，不污染别的 block</td>
+<td>文档里有两个 <code>start/end</code> 区间；对第一个区间执行一组 ops；<br/>验证第二个区间一点没动。</td>
+<td>同上</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>原则</strong>：</p>
+<ul>
+<li>单测里只碰字符串，不碰 Obsidian、不碰 UI。</li>
+<li>一条用例 = 一个“金样本 md 前后对照”，以后重构 patcher 都靠它。</li>
+</ul>
+<hr/>
+<h3>2.2 集成层（DataStore + patcher + Settings 的闭环）</h3>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>编号</th>
+<th>范围</th>
+<th>目的</th>
+<th>用例描述</th>
+<th>关联模块</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>IT-1</td>
+<td>DataStore + patcher</td>
+<td>验证 DataStore 调用 patcher 后能重建正确快照</td>
+<td>1. 用虚拟 Vault（内存文件系统）初始化 DataStore。<br/>2. 写入 mdBefore。<br/>3. 调用某个 usecase 或 DataStore API：<code>applyOps(file, ops)</code>。<br/>4. 重新 <code>queryItems</code>；验证顺序/字段与预期一致。</td>
+<td>DataStore + patcher + parser</td>
+</tr>
+<tr>
+<td>IT-2</td>
+<td>Settings + DataStore 交互</td>
+<td>设置改变扫描范围/过滤条件后，读写逻辑仍正确</td>
+<td>1. 在 SettingsRepo 里设置过滤条件（比如只看某标签）；<br/>2. 同样执行 <code>applyOps</code>；<br/>3. 再 <code>queryItems</code>；<br/>验证：过滤后结果仍然正确，没掉行或多行。</td>
+<td>SettingsRepository + DataStore</td>
+</tr>
+<tr>
+<td>IT-3</td>
+<td>多文件场景（跨文件编辑）</td>
+<td>将来如有“跨文件仪表盘”，确保写回到正确文件</td>
+<td>1. Vault 中有两个文件，各自有一个表格；<br/>2. 对仪表盘中若干行执行 edit + reorder；<br/>3. 验证 DataStore 把改动写回对应文件，而不是乱串。</td>
+<td>同上 +（未来）blocks usecase / layout</td>
+</tr>
+</tbody>
+</table></div>
+<hr/>
+<h3>2.3 端到端层（你最在意的部分）</h3>
+<blockquote>
+<p>这里我假设你会用某种 E2E 框架（WebdriverIO / Playwright / 自写 Obsidian-driver 都可以），重点是“场景”。</p>
+</blockquote>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>场景编号</th>
+<th>用户故事</th>
+<th>步骤（E2E 自动脚本大纲）</th>
+<th>覆盖到的 Phase 事项</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>E2E-1</td>
+<td>打开文档 → 看到 thinktxt 预览表格</td>
+<td>1. 启动 Obsidian + 插件。<br/>2. 打开一个包含 <code>start/end</code> + <code>[!thinktxt]</code> 块的示例文档。<br/>3. 切到预览模式。<br/>4. 断言：原来多条 callout 被替换为 1 个 table（行列数正确）。</td>
+<td>Phase2 P1 预览态表格；Phase2 P0 legacy 提取</td>
+</tr>
+<tr>
+<td>E2E-2</td>
+<td>在仪表盘/侧边视图里编辑一行字段 → 写回原文档</td>
+<td>1. 打开仪表盘视图（或你准备用的编辑 UI）。<br/>2. 找到某条记录（title = "AAA"）。<br/>3. 在表格中改成 "AAA-EDIT" 并保存。<br/>4. 打开原 markdown 文档，验证对应行已变更。</td>
+<td>Phase2 P2 表格编辑 + 写回；Phase0 P1 parser 语义</td>
+</tr>
+<tr>
+<td>E2E-3</td>
+<td>拖拽改变行顺序 → 文本顺序改变</td>
+<td>1. 在仪表盘中，抓住第 1 行拖到第 3 行位置。<br/>2. 保存后打开原文档。<br/>3. 验证该表格内的 markdown 行顺序和仪表盘显示一致（对应刚刚的拖拽效果）。</td>
+<td>Phase2 P2 拖拽排序 + 写回；Phase2 P2 patcher</td>
+</tr>
+<tr>
+<td>E2E-4</td>
+<td>改设置（例如过滤条件） → 仪表盘/预览内容随之变化</td>
+<td>1. 在 Settings 里修改 thinktxt 相关设置（比如只显示某 tag / 某路径）。<br/>2. 回到仪表盘或预览。<br/>3. 验证行数/内容发生对应变化。</td>
+<td>Phase2 / Settings；Phase0 P0 测试框架；SettingsRepo</td>
+</tr>
+<tr>
+<td>E2E-5</td>
+<td>插件 reload/unload → 无遗留订阅/定时器 → 再编辑一轮正常</td>
+<td>1. 打开仪表盘，做一次编辑（E2E-2）。<br/>2. 执行插件 unload/reload（或关闭/重开 Obsidian）。<br/>3. 再做一次编辑。<br/>4. 验证：行为正常 + 日志/计数中没有“多次注册”的痕迹。</td>
+<td>Phase0 P2 生命周期收口 + 你未来所有编辑相关功能的安全网</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>建议顺序</strong>：</p>
+<ol>
+<li><p><strong>先做 E2E-1（纯只读预览）</strong>：这个实现成本最低，而且能证明 pipeline 通了。</p>
+</li>
+<li><p>然后并行推进：</p>
+<ul>
+<li>单测层 UT-1~UT-4（patcher）</li>
+<li>集成 IT-1（DataStore+patcher）</li>
+</ul>
+</li>
+<li><p>patcher 相对稳定后，再补 <strong>E2E-2 / E2E-3</strong>。</p>
+</li>
+<li><p>最后再加 E2E-5（生命周期 + reload），给整套东西兜底。</p>
+</li>
+</ol>
+<hr/>
+<h2>表 3：每天/每次提交建议跑的“测试套餐”</h2>
+<blockquote>
+<p>你说你以前是“盲改，大功能没问题就行”，那我给你一个<strong>固定组合</strong>，以后就按这个来，不用每次想半天。</p>
+</blockquote>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>场景</th>
+<th>必跑项（最小集）</th>
+<th>可选项（代码变动大时再跑）</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>日常小改（小范围改 parser/渲染）</td>
+<td>1. <code>npm run typecheck</code><br/>2. <code>npm run test:unit</code></td>
+<td>1. <code>npm run gate</code></td>
+</tr>
+<tr>
+<td>改 DataStore / patcher</td>
+<td>1. <code>npm run typecheck</code><br/>2. <code>npm run test:unit</code>（重点看 UT 系列）</td>
+<td>1. 集成测试 IT-1<br/>2. 至少 1 条 E2E（E2E-2 或 3）</td>
+</tr>
+<tr>
+<td>改设置相关（Settings / Layout）</td>
+<td>1. <code>npm run typecheck</code><br/>2. <code>npm run test:unit</code></td>
+<td>1. E2E-4</td>
+</tr>
+<tr>
+<td>改生命周期/ServiceManager</td>
+<td>1. <code>npm run typecheck</code><br/>2. 跑现有 <code>disposables.test.ts</code></td>
+<td>1. E2E-5</td>
+</tr>
+<tr>
+<td>大 refactor（目录/拆 DataStore）</td>
+<td>1. <code>npm run typecheck</code><br/>2. <code>npm run test:unit</code><br/>3. <code>npm run gate</code></td>
+<td>1. 把所有 E2E 场景跑一遍</td>
+</tr>
+</tbody>
+</table></div>
+<hr/>
+<h2>最后帮你收个口</h2>
+<ul>
+<li>你这张大表已经把“<strong>改什么</strong>”写得很清楚了，我现在做的是把“<strong>测什么 + 测到哪一层就够</strong>”按表结构排好；</li>
+<li>对你最关心的 <strong>端到端</strong>，我只选了 <strong>5 条场景 E2E</strong>，而不是让你每个 Feature 都写；</li>
+<li>真正需要你耐心写细的，是那几个“读→改→写”的<strong>单测金样本</strong>；它们一旦写好，Phase3 DataStore 拆分这种大 refactor 也不容易让你白忙活。</li>
+</ul>
+<p>你可以先挑一条开始，比如：</p>
+<blockquote>
+<p>Phase2 P0 legacy 单测修绿 + UT-1/UT-2 + E2E-1</p>
+</blockquote>
+<p>做完这一包，你的“数据提取 + 只读表格 + legacy 行为”就有一条从单测到 E2E 的完整防线了。</p>
+</div></article></section>
+      <footer class="footer">本页属于 Think OS 插件 HTML 文档系统。UI 沿用原有风格，docs/html 旧资料已按新结构迁移。</footer>
+    </main>
+  </div>
+  <script src="../../_资源/搜索索引.js"></script>
+  <script src="../../_资源/文档脚本.js"></script>
+</body>
+</html>

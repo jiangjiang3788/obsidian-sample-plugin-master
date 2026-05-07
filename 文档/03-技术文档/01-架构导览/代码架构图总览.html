@@ -1,0 +1,282 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>代码架构图总览｜Think OS 插件文档系统</title>
+  <link rel="stylesheet" href="../../_资源/文档样式.css">
+</head>
+<body data-doc-root="../../">
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-title">Think OS 插件文档系统</div>
+        <div class="brand-subtitle">HTML 项目驾驶舱 / 文档 / 需求 / 技术 / 评审 / 发布</div>
+      </div>
+      <div class="search-box">
+        <input class="search-input" data-doc-search placeholder="搜索：需求、命令、设置、文件地图、评审、QuickInput...">
+        <div class="search-results" data-search-results></div>
+      </div>
+<div class="nav-section" data-nav-key="topic-00"><div class="nav-title">基础入口</div>
+<div class="nav-subsection" data-nav-key="topic-00-group-00"><div class="nav-subtitle">项目驾驶舱</div>
+<a class="nav-link" href="../../index.html">首页仪表盘</a>
+<a class="nav-link" href="../../00-基础入口/00-项目驾驶舱/项目总览.html">项目总览</a>
+<a class="nav-link" href="../../00-基础入口/00-项目驾驶舱/快速开始.html">快速开始</a>
+<a class="nav-link" href="../../00-基础入口/00-项目驾驶舱/当前状态.html">当前状态</a>
+</div>
+<div class="nav-subsection" data-nav-key="topic-00-group-01"><div class="nav-subtitle">概念与边界</div>
+<a class="nav-link" href="../../00-基础入口/01-概念与边界/插件定位.html">插件定位</a>
+<a class="nav-link" href="../../00-基础入口/01-概念与边界/功能地图.html">功能地图</a>
+<a class="nav-link" href="../../00-基础入口/01-概念与边界/术语表.html">术语表</a>
+<a class="nav-link" href="../../00-基础入口/01-概念与边界/常见问题.html">常见问题</a>
+</div>
+<div class="nav-subsection" data-nav-key="topic-00-group-02"><div class="nav-subtitle">迁移与旧资料</div>
+<a class="nav-link" href="../../00-基础入口/02-迁移与旧资料/迁移文档索引.html">迁移文档索引</a>
+<a class="nav-link" href="../../00-基础入口/02-迁移与旧资料/旧章节总览.html">旧章节总览</a>
+<a class="nav-link" href="../../00-基础入口/02-迁移与旧资料/章节化文档框架.html">章节化文档框架</a>
+</div>
+</div>
+<div class="nav-section" data-nav-key="topic-01"><div class="nav-title">项目管理</div>
+<div class="nav-subsection" data-nav-key="topic-01-group-00"><div class="nav-subtitle">计划与路线</div>
+<a class="nav-link" href="../../01-项目管理/00-计划与路线/需求池.html">需求池</a>
+<a class="nav-link" href="../../01-项目管理/00-计划与路线/版本路线图.html">版本路线图</a>
+<a class="nav-link" href="../../01-项目管理/00-计划与路线/开发计划.html">开发计划</a>
+</div>
+<div class="nav-subsection" data-nav-key="topic-01-group-01"><div class="nav-subtitle">过程记录</div>
+<a class="nav-link" href="../../01-项目管理/01-过程记录/问题记录.html">问题记录</a>
+<a class="nav-link" href="../../01-项目管理/01-过程记录/技术债.html">技术债</a>
+<a class="nav-link" href="../../01-项目管理/01-过程记录/决策记录.html">决策记录</a>
+<a class="nav-link" href="../../01-项目管理/01-过程记录/发布记录.html">发布记录</a>
+</div>
+<div class="nav-subsection" data-nav-key="topic-01-group-02"><div class="nav-subtitle">实施计划</div>
+<a class="nav-link" href="../../01-项目管理/02-实施计划/插件深度报告与实施计划.html">插件深度报告与实施计划</a>
+<a class="nav-link" href="../../01-项目管理/02-实施计划/上下文时间重构计划.html">上下文时间重构计划</a>
+<a class="nav-link" href="../../01-项目管理/02-实施计划/统一输入修改计划.html">统一输入修改计划</a>
+<a class="nav-link" href="../../01-项目管理/02-实施计划/原始计划记录.html">原始计划记录</a>
+<a class="nav-link" href="../../01-项目管理/02-实施计划/旧需求台账.html">旧需求台账</a>
+</div>
+<div class="nav-subsection" data-nav-key="topic-01-group-03"><div class="nav-subtitle">实施报告</div>
+<a class="nav-link" href="../../01-项目管理/03-实施报告/Batch1实施报告.html">Batch1 实施报告</a>
+<a class="nav-link" href="../../01-项目管理/03-实施报告/Batch2实施报告.html">Batch2 实施报告</a>
+<a class="nav-link" href="../../01-项目管理/03-实施报告/QuickInput主线修改记录.html">QuickInput 主线修改记录</a>
+<a class="nav-link" href="../../01-项目管理/03-实施报告/QuickInput收口状态.html">QuickInput 收口状态</a>
+<a class="nav-link" href="../../01-项目管理/03-实施报告/QuickInput本轮修改总览.html">QuickInput 本轮修改总览</a>
+</div>
+</div>
+<div class="nav-section" data-nav-key="topic-02"><div class="nav-title">功能设计</div>
+<div class="nav-subsection" data-nav-key="topic-02-group-00"><div class="nav-subtitle">功能全景</div>
+<a class="nav-link" href="../../02-功能设计/00-功能全景/功能总览.html">功能总览</a>
+<a class="nav-link" href="../../02-功能设计/00-功能全景/功能清单迁移.html">功能清单迁移</a>
+<a class="nav-link" href="../../02-功能设计/00-功能全景/旧产品功能地图.html">旧产品功能地图</a>
+</div>
+<div class="nav-subsection" data-nav-key="topic-02-group-01"><div class="nav-subtitle">用户与交互</div>
+<a class="nav-link" href="../../02-功能设计/01-用户与交互/用户场景.html">用户场景</a>
+<a class="nav-link" href="../../02-功能设计/01-用户与交互/命令设计.html">命令设计</a>
+<a class="nav-link" href="../../02-功能设计/01-用户与交互/设置项设计.html">设置项设计</a>
+<a class="nav-link" href="../../02-功能设计/01-用户与交互/交互流程.html">交互流程</a>
+<a class="nav-link" href="../../02-功能设计/01-用户与交互/异常状态.html">异常状态</a>
+<a class="nav-link" href="../../02-功能设计/01-用户与交互/功能验收标准.html">功能验收标准</a>
+</div>
+<div class="nav-subsection" data-nav-key="topic-02-group-02"><div class="nav-subtitle">View UI 与移动端</div>
+<a class="nav-link" href="../../02-功能设计/02-ViewUI与移动端/ViewUI触发动作梳理.html">View UI 触发动作梳理</a>
+<a class="nav-link" href="../../02-功能设计/02-ViewUI与移动端/移动端UI全量重构方案.html">移动端 UI 全量重构方案</a>
+</div>
+<div class="nav-subsection" data-nav-key="topic-02-group-03"><div class="nav-subtitle">QuickInput 功能收口</div>
+<a class="nav-link" href="../../02-功能设计/03-QuickInput功能收口/QuickInput保存计划一致性.html">QuickInput 保存计划一致性</a>
+<a class="nav-link" href="../../02-功能设计/03-QuickInput功能收口/QuickInput迁移保存反馈.html">QuickInput 迁移保存反馈</a>
+<a class="nav-link" href="../../02-功能设计/03-QuickInput功能收口/QuickInput路径变化保存策略.html">QuickInput 路径变化保存策略</a>
+</div>
+</div>
+<div class="nav-section" data-nav-key="topic-03"><div class="nav-title">技术文档</div>
+<div class="nav-subsection" data-nav-key="topic-03-group-00"><div class="nav-subtitle">技术全景</div>
+<a class="nav-link" href="../00-技术全景/技术总览.html">技术总览</a>
+<a class="nav-link" href="../00-技术全景/文件地图.html">文件地图</a>
+<a class="nav-link" href="../00-技术全景/模块职责.html">模块职责</a>
+<a class="nav-link" href="../00-技术全景/插件生命周期.html">插件生命周期</a>
+</div>
+<div class="nav-subsection" data-nav-key="topic-03-group-01"><div class="nav-subtitle">架构导览</div>
+<a class="nav-link" href="开发指南迁移.html">开发指南迁移</a>
+<a class="nav-link" href="开发规范迁移.html">开发规范迁移</a>
+<a class="nav-link" href="代码架构图总览.html">代码架构图总览</a>
+<a class="nav-link" href="旧代码架构图.html">旧代码架构图</a>
+</div>
+<div class="nav-subsection" data-nav-key="topic-03-group-02"><div class="nav-subtitle">目录地图</div>
+<a class="nav-link" href="../02-目录地图/app目录导览.html">app 目录导览</a>
+<a class="nav-link" href="../02-目录地图/core目录导览.html">core 目录导览</a>
+<a class="nav-link" href="../02-目录地图/features目录导览.html">features 目录导览</a>
+<a class="nav-link" href="../02-目录地图/platform目录导览.html">platform 目录导览</a>
+<a class="nav-link" href="../02-目录地图/share目录导览.html">share 目录导览</a>
+</div>
+<div class="nav-subsection" data-nav-key="topic-03-group-03"><div class="nav-subtitle">代码视角</div>
+<a class="nav-link" href="../03-代码视角/架构视角逐文件.html">架构视角逐文件</a>
+<a class="nav-link" href="../03-代码视角/领域视角逐文件.html">领域视角逐文件</a>
+<a class="nav-link" href="../03-代码视角/业务视角逐文件.html">业务视角逐文件</a>
+</div>
+<div class="nav-subsection" data-nav-key="topic-03-group-04"><div class="nav-subtitle">运行机制</div>
+<a class="nav-link" href="../04-运行机制/数据流.html">数据流</a>
+<a class="nav-link" href="../04-运行机制/事件流.html">事件流</a>
+<a class="nav-link" href="../04-运行机制/Obsidian API 使用.html">Obsidian API 使用</a>
+<a class="nav-link" href="../04-运行机制/样式系统.html">样式系统</a>
+<a class="nav-link" href="../04-运行机制/构建流程.html">构建流程</a>
+<a class="nav-link" href="../04-运行机制/数据流与流程图.html">数据流与流程图</a>
+</div>
+<div class="nav-subsection" data-nav-key="topic-03-group-05"><div class="nav-subtitle">字段与输入</div>
+<a class="nav-link" href="../05-字段与输入/字段系统重构方案.html">字段系统重构方案</a>
+<a class="nav-link" href="../05-字段与输入/统一输入现状盘点.html">统一输入现状盘点</a>
+</div>
+<div class="nav-subsection" data-nav-key="topic-03-group-06"><div class="nav-subtitle">QuickInput 技术记录</div>
+<a class="nav-link" href="../06-QuickInput技术记录/QuickInput多步推进Snapshot.html">QuickInput 多步推进 Snapshot</a>
+<a class="nav-link" href="../06-QuickInput技术记录/QuickInputLegacy调试收口.html">QuickInput Legacy 调试收口</a>
+<a class="nav-link" href="../06-QuickInput技术记录/QuickInput任务内容提取调试.html">QuickInput 任务内容提取调试</a>
+<a class="nav-link" href="../06-QuickInput技术记录/QuickInput任务内容单一入口.html">QuickInput 任务内容单一入口</a>
+<a class="nav-link" href="../06-QuickInput技术记录/QuickInput任务模板护栏.html">QuickInput 任务模板护栏</a>
+<a class="nav-link" href="../06-QuickInput技术记录/QuickInput任务写回保真.html">QuickInput 任务写回保真</a>
+</div>
+</div>
+<div class="nav-section" data-nav-key="topic-04"><div class="nav-title">评审中心</div>
+<div class="nav-subsection" data-nav-key="topic-04-group-00"><div class="nav-subtitle">评审方法</div>
+<a class="nav-link" href="../../04-评审中心/00-评审方法/需求评审.html">需求评审</a>
+<a class="nav-link" href="../../04-评审中心/00-评审方法/功能评审.html">功能评审</a>
+<a class="nav-link" href="../../04-评审中心/00-评审方法/技术方案评审.html">技术方案评审</a>
+</div>
+<div class="nav-subsection" data-nav-key="topic-04-group-01"><div class="nav-subtitle">质量评审</div>
+<a class="nav-link" href="../../04-评审中心/01-质量评审/代码结构评审.html">代码结构评审</a>
+<a class="nav-link" href="../../04-评审中心/01-质量评审/发布评审.html">发布评审</a>
+<a class="nav-link" href="../../04-评审中心/01-质量评审/风险评审.html">风险评审</a>
+</div>
+<div class="nav-subsection" data-nav-key="topic-04-group-02"><div class="nav-subtitle">专题评审</div>
+<a class="nav-link" href="../../04-评审中心/02-专题评审/字段系统深度评审.html">字段系统深度评审</a>
+<a class="nav-link" href="../../04-评审中心/02-专题评审/QuickInput调试与Legacy规范.html">QuickInput 调试与 Legacy 规范</a>
+</div>
+</div>
+<div class="nav-section" data-nav-key="topic-05"><div class="nav-title">维护发布</div>
+<div class="nav-subsection" data-nav-key="topic-05-group-00"><div class="nav-subtitle">测试验收</div>
+<a class="nav-link" href="../../05-维护发布/00-测试验收/测试清单.html">测试清单</a>
+<a class="nav-link" href="../../05-维护发布/00-测试验收/测试方案迁移.html">测试方案迁移</a>
+<a class="nav-link" href="../../05-维护发布/00-测试验收/QuickInput主线验收清单.html">QuickInput 主线验收清单</a>
+<a class="nav-link" href="../../05-维护发布/00-测试验收/QuickInput最终验收清单.html">QuickInput 最终验收清单</a>
+</div>
+<div class="nav-subsection" data-nav-key="topic-05-group-01"><div class="nav-subtitle">发布与回滚</div>
+<a class="nav-link" href="../../05-维护发布/01-发布与回滚/发布流程.html">发布流程</a>
+<a class="nav-link" href="../../05-维护发布/01-发布与回滚/Changelog.html">Changelog</a>
+<a class="nav-link" href="../../05-维护发布/01-发布与回滚/Bug处理流程.html">Bug 处理流程</a>
+<a class="nav-link" href="../../05-维护发布/01-发布与回滚/兼容性记录.html">兼容性记录</a>
+<a class="nav-link" href="../../05-维护发布/01-发布与回滚/回滚方案.html">回滚方案</a>
+<a class="nav-link" href="../../05-维护发布/01-发布与回滚/QuickInput风险与回滚说明.html">QuickInput 风险与回滚说明</a>
+</div>
+<div class="nav-subsection" data-nav-key="topic-05-group-02"><div class="nav-subtitle">修复记录</div>
+<a class="nav-link" href="../../05-维护发布/02-修复记录/QuickInput构建导出修复.html">QuickInput 构建导出修复</a>
+<a class="nav-link" href="../../05-维护发布/02-修复记录/BlockStatistics统一与跳转修复.html">Block Statistics 统一与跳转修复</a>
+<a class="nav-link" href="../../05-维护发布/02-修复记录/QuickInput任务正文空格保留修复.html">QuickInput 任务正文空格保留修复</a>
+</div>
+</div>
+    </aside>
+    <main class="main">
+      <section class="hero">
+        <div class="eyebrow">技术文档 / MIGRATED DOC</div>
+        <h1>代码架构图总览</h1>
+        <p class="lead">代码架构图：左流程右说明左边看“它像店里的什么地方”，右边看“它到底干嘛”这版不再用一堆积木块解释。左边是通俗导览列表，右边是列表式说明。每个文件夹都先用比喻帮你建立感觉，再用很短的话讲清楚：它在哪一层、干什么、和谁关系最近。项目导览看左边先建立感觉：它像什么。再看右边理解它具体做什么。</p>
+        <div class="meta-row">
+          <span class="badge good">状态：已迁移</span>
+          <span class="badge">最后更新：2026-05-07</span>
+          <span class="badge">格式：HTML</span>
+        </div>
+      </section>
+      <section class="grid"><article class="card full"><h2>迁移信息</h2><div class="table-wrap"><table><thead><tr><th>项目</th><th>内容</th></tr></thead><tbody><tr><td>新分类</td><td>技术文档</td></tr><tr><td>旧路径</td><td><code>html/总览.html</code></td></tr><tr><td>原始标题</td><td>左边看“它像店里的什么地方”，右边看“它到底干嘛”</td></tr><tr><td>处理方式</td><td>正文已转换为当前 <code>文档/</code> 的 HTML 页面；原始文件另存于 <code>_归档/迁移原文/</code>。</td></tr></tbody></table></div></article><article class="card full"><h2>正文</h2><div class="imported-doc">
+<section>
+<div>
+<h3>main.ts</h3>
+<span>src/main.ts</span>
+</div>
+<ul>
+<li><span>像什么</span><span>像商店的开门键，先把整个店开起来。</span></li>
+<li><span>一句话</span><span>它是入口，负责开店，不负责后面的具体营业安排。</span></li>
+<li><span>层级</span><span>最外层，排在最前面。</span></li>
+<li><span>主要作用</span><span>把店开起来，然后把后面的营业安排交给 <span>app/</span>。</span></li>
+<li><span>你怎么记</span><span>看到 main，就理解成“先开店”。</span></li>
+</ul>
+<div>它和 app 的区别：<span>main 是先把店门打开</span>，<span>app 是开门后开始安排今天怎么营业</span>。</div>
+</section>
+<section>
+<div>
+<h3>app/</h3>
+<span>src/app/</span>
+</div>
+<ul>
+<li><span>像什么</span><span>像店长办公室。</span></li>
+<li><span>一句话</span><span>它负责安排：谁先开工、谁来记账、谁来处理具体事务。</span></li>
+<li><span>层级</span><span>比 main 更深一层，属于“开店后开始安排营业”的那层。</span></li>
+<li><span>主要作用</span><span>把 <span>core</span> 这套后仓能力接起来，再分配给 <span>features</span> 这些前台服务区使用。</span></li>
+<li><span>里面常见内容</span><span>store、usecases、bootstrap。你可以理解成：状态、操作入口、启动流程。</span></li>
+<li><span>你怎么记</span><span>看到 app，就想成“店长办公室”。</span></li>
+</ul>
+<div>它和 core 的区别：<span>app 负责安排店怎么运转</span>，<span>core 负责提供店运转需要的基础能力</span>。</div>
+</section>
+<section>
+<div>
+<h3>core/</h3>
+<span>src/core/</span>
+</div>
+<ul>
+<li><span>像什么</span><span>像后仓、库房、基础设备区。</span></li>
+<li><span>一句话</span><span>它提供基础支持，但顾客平时不会直接看到它。</span></li>
+<li><span>层级</span><span>属于底层，像商店后面的后仓，前台很多地方都要靠它。</span></li>
+<li><span>主要作用</span><span>负责数据、设置、AI、工具这些基础支持，就像店里的库房、水电、基础设备。</span></li>
+<li><span>你最该懂的点</span><span>它不是给顾客看的服务区，它更像“后仓和基础设备区”。</span></li>
+<li><span>你怎么记</span><span>看到 core，就想成“后仓在后面默默撑着整个店”。</span></li>
+</ul>
+<div>你之前看不懂 core，核心原因就是它太抽象。以后直接把它翻成：<span>后仓和基础支持区</span>。</div>
+</section>
+<section>
+<div>
+<h3>features/</h3>
+<span>src/features/</span>
+</div>
+<ul>
+<li><span>像什么</span><span>像店里的不同服务区：收银区、咨询区、展示区。</span></li>
+<li><span>一句话</span><span>这里放顾客真正看得到、点得到、用得到的服务。</span></li>
+<li><span>层级</span><span>比 core 更靠前，最接近顾客。</span></li>
+<li><span>主要作用</span><span>把聊天、设置、计时器、快速输入这些具体服务区组织起来。</span></li>
+<li><span>和 app 的关系</span><span>features 不自己乱改数据，而是找 app 提供的 usecases 去操作。</span></li>
+<li><span>你怎么记</span><span>看到 features，就想成“顾客正在使用的服务区”。</span></li>
+</ul>
+<div>如果你在整理文件夹时犹豫一个东西放哪，先问自己：<span>这是顾客直接接触到的服务吗？</span> 是的话，大概率归 features。</div>
+</section>
+<section>
+<div>
+<h3>platform/</h3>
+<span>src/platform/</span>
+</div>
+<ul>
+<li><span>像什么</span><span>像店和商场物业的对接窗口。</span></li>
+<li><span>一句话</span><span>负责和商场外部环境打交道，再把外部规则接进店里。</span></li>
+<li><span>层级</span><span>靠近外部环境，属于“店里和商场外部之间”的一层。</span></li>
+<li><span>主要作用</span><span>处理 Vault、Metadata、Events、Modal 这些和外部平台打交道的能力。</span></li>
+<li><span>你最该懂的点</span><span>它不是店里的服务本身，它只是负责把店和外部环境接起来。</span></li>
+<li><span>你怎么记</span><span>看到 platform，就想成“对外对接窗口”。</span></li>
+</ul>
+<div>如果某段代码里 Obsidian 味很重，大概率就不该散在服务区里，而应该收进 platform 这个对外对接窗口。</div>
+</section>
+<section>
+<div>
+<h3>shared/</h3>
+<span>src/shared/</span>
+</div>
+<ul>
+<li><span>像什么</span><span>像店里的公共工具柜，多个区域都能来拿。</span></li>
+<li><span>一句话</span><span>这里放多个服务区都会用到的公共工具和小零件。</span></li>
+<li><span>层级</span><span>不是营业主线的一站，而是横向给各个区域提供支持。</span></li>
+<li><span>主要作用</span><span>减少重复，把通用的小工具、小零件统一放一起。</span></li>
+<li><span>你最该懂的点</span><span>只有“多个服务区都要用”的东西才该进 shared。</span></li>
+<li><span>你怎么记</span><span>看到 shared，就想成“公共工具柜”。</span></li>
+</ul>
+<div>如果一个东西只服务某一个服务区，就别放 shared，放回它自己的功能目录更清楚。</div>
+</section>
+</div></article></section>
+      <footer class="footer">本页属于 Think OS 插件 HTML 文档系统。UI 沿用原有风格，docs/html 旧资料已按新结构迁移。</footer>
+    </main>
+  </div>
+  <script src="../../_资源/搜索索引.js"></script>
+  <script src="../../_资源/文档脚本.js"></script>
+</body>
+</html>

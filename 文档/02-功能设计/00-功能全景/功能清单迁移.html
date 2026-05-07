@@ -1,0 +1,660 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>功能清单迁移｜Think OS 插件文档系统</title>
+  <link rel="stylesheet" href="../../_资源/文档样式.css">
+</head>
+<body data-doc-root="../../">
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-title">Think OS 插件文档系统</div>
+        <div class="brand-subtitle">HTML 项目驾驶舱 / 文档 / 需求 / 技术 / 评审 / 发布</div>
+      </div>
+      <div class="search-box">
+        <input class="search-input" data-doc-search placeholder="搜索：需求、命令、设置、文件地图、评审、QuickInput...">
+        <div class="search-results" data-search-results></div>
+      </div>
+<div class="nav-section" data-nav-key="topic-00"><div class="nav-title">基础入口</div>
+<div class="nav-subsection" data-nav-key="topic-00-group-00"><div class="nav-subtitle">项目驾驶舱</div>
+<a class="nav-link" href="../../index.html">首页仪表盘</a>
+<a class="nav-link" href="../../00-基础入口/00-项目驾驶舱/项目总览.html">项目总览</a>
+<a class="nav-link" href="../../00-基础入口/00-项目驾驶舱/快速开始.html">快速开始</a>
+<a class="nav-link" href="../../00-基础入口/00-项目驾驶舱/当前状态.html">当前状态</a>
+</div>
+<div class="nav-subsection" data-nav-key="topic-00-group-01"><div class="nav-subtitle">概念与边界</div>
+<a class="nav-link" href="../../00-基础入口/01-概念与边界/插件定位.html">插件定位</a>
+<a class="nav-link" href="../../00-基础入口/01-概念与边界/功能地图.html">功能地图</a>
+<a class="nav-link" href="../../00-基础入口/01-概念与边界/术语表.html">术语表</a>
+<a class="nav-link" href="../../00-基础入口/01-概念与边界/常见问题.html">常见问题</a>
+</div>
+<div class="nav-subsection" data-nav-key="topic-00-group-02"><div class="nav-subtitle">迁移与旧资料</div>
+<a class="nav-link" href="../../00-基础入口/02-迁移与旧资料/迁移文档索引.html">迁移文档索引</a>
+<a class="nav-link" href="../../00-基础入口/02-迁移与旧资料/旧章节总览.html">旧章节总览</a>
+<a class="nav-link" href="../../00-基础入口/02-迁移与旧资料/章节化文档框架.html">章节化文档框架</a>
+</div>
+</div>
+<div class="nav-section" data-nav-key="topic-01"><div class="nav-title">项目管理</div>
+<div class="nav-subsection" data-nav-key="topic-01-group-00"><div class="nav-subtitle">计划与路线</div>
+<a class="nav-link" href="../../01-项目管理/00-计划与路线/需求池.html">需求池</a>
+<a class="nav-link" href="../../01-项目管理/00-计划与路线/版本路线图.html">版本路线图</a>
+<a class="nav-link" href="../../01-项目管理/00-计划与路线/开发计划.html">开发计划</a>
+</div>
+<div class="nav-subsection" data-nav-key="topic-01-group-01"><div class="nav-subtitle">过程记录</div>
+<a class="nav-link" href="../../01-项目管理/01-过程记录/问题记录.html">问题记录</a>
+<a class="nav-link" href="../../01-项目管理/01-过程记录/技术债.html">技术债</a>
+<a class="nav-link" href="../../01-项目管理/01-过程记录/决策记录.html">决策记录</a>
+<a class="nav-link" href="../../01-项目管理/01-过程记录/发布记录.html">发布记录</a>
+</div>
+<div class="nav-subsection" data-nav-key="topic-01-group-02"><div class="nav-subtitle">实施计划</div>
+<a class="nav-link" href="../../01-项目管理/02-实施计划/插件深度报告与实施计划.html">插件深度报告与实施计划</a>
+<a class="nav-link" href="../../01-项目管理/02-实施计划/上下文时间重构计划.html">上下文时间重构计划</a>
+<a class="nav-link" href="../../01-项目管理/02-实施计划/统一输入修改计划.html">统一输入修改计划</a>
+<a class="nav-link" href="../../01-项目管理/02-实施计划/原始计划记录.html">原始计划记录</a>
+<a class="nav-link" href="../../01-项目管理/02-实施计划/旧需求台账.html">旧需求台账</a>
+</div>
+<div class="nav-subsection" data-nav-key="topic-01-group-03"><div class="nav-subtitle">实施报告</div>
+<a class="nav-link" href="../../01-项目管理/03-实施报告/Batch1实施报告.html">Batch1 实施报告</a>
+<a class="nav-link" href="../../01-项目管理/03-实施报告/Batch2实施报告.html">Batch2 实施报告</a>
+<a class="nav-link" href="../../01-项目管理/03-实施报告/QuickInput主线修改记录.html">QuickInput 主线修改记录</a>
+<a class="nav-link" href="../../01-项目管理/03-实施报告/QuickInput收口状态.html">QuickInput 收口状态</a>
+<a class="nav-link" href="../../01-项目管理/03-实施报告/QuickInput本轮修改总览.html">QuickInput 本轮修改总览</a>
+</div>
+</div>
+<div class="nav-section" data-nav-key="topic-02"><div class="nav-title">功能设计</div>
+<div class="nav-subsection" data-nav-key="topic-02-group-00"><div class="nav-subtitle">功能全景</div>
+<a class="nav-link" href="功能总览.html">功能总览</a>
+<a class="nav-link" href="功能清单迁移.html">功能清单迁移</a>
+<a class="nav-link" href="旧产品功能地图.html">旧产品功能地图</a>
+</div>
+<div class="nav-subsection" data-nav-key="topic-02-group-01"><div class="nav-subtitle">用户与交互</div>
+<a class="nav-link" href="../01-用户与交互/用户场景.html">用户场景</a>
+<a class="nav-link" href="../01-用户与交互/命令设计.html">命令设计</a>
+<a class="nav-link" href="../01-用户与交互/设置项设计.html">设置项设计</a>
+<a class="nav-link" href="../01-用户与交互/交互流程.html">交互流程</a>
+<a class="nav-link" href="../01-用户与交互/异常状态.html">异常状态</a>
+<a class="nav-link" href="../01-用户与交互/功能验收标准.html">功能验收标准</a>
+</div>
+<div class="nav-subsection" data-nav-key="topic-02-group-02"><div class="nav-subtitle">View UI 与移动端</div>
+<a class="nav-link" href="../02-ViewUI与移动端/ViewUI触发动作梳理.html">View UI 触发动作梳理</a>
+<a class="nav-link" href="../02-ViewUI与移动端/移动端UI全量重构方案.html">移动端 UI 全量重构方案</a>
+</div>
+<div class="nav-subsection" data-nav-key="topic-02-group-03"><div class="nav-subtitle">QuickInput 功能收口</div>
+<a class="nav-link" href="../03-QuickInput功能收口/QuickInput保存计划一致性.html">QuickInput 保存计划一致性</a>
+<a class="nav-link" href="../03-QuickInput功能收口/QuickInput迁移保存反馈.html">QuickInput 迁移保存反馈</a>
+<a class="nav-link" href="../03-QuickInput功能收口/QuickInput路径变化保存策略.html">QuickInput 路径变化保存策略</a>
+</div>
+</div>
+<div class="nav-section" data-nav-key="topic-03"><div class="nav-title">技术文档</div>
+<div class="nav-subsection" data-nav-key="topic-03-group-00"><div class="nav-subtitle">技术全景</div>
+<a class="nav-link" href="../../03-技术文档/00-技术全景/技术总览.html">技术总览</a>
+<a class="nav-link" href="../../03-技术文档/00-技术全景/文件地图.html">文件地图</a>
+<a class="nav-link" href="../../03-技术文档/00-技术全景/模块职责.html">模块职责</a>
+<a class="nav-link" href="../../03-技术文档/00-技术全景/插件生命周期.html">插件生命周期</a>
+</div>
+<div class="nav-subsection" data-nav-key="topic-03-group-01"><div class="nav-subtitle">架构导览</div>
+<a class="nav-link" href="../../03-技术文档/01-架构导览/开发指南迁移.html">开发指南迁移</a>
+<a class="nav-link" href="../../03-技术文档/01-架构导览/开发规范迁移.html">开发规范迁移</a>
+<a class="nav-link" href="../../03-技术文档/01-架构导览/代码架构图总览.html">代码架构图总览</a>
+<a class="nav-link" href="../../03-技术文档/01-架构导览/旧代码架构图.html">旧代码架构图</a>
+</div>
+<div class="nav-subsection" data-nav-key="topic-03-group-02"><div class="nav-subtitle">目录地图</div>
+<a class="nav-link" href="../../03-技术文档/02-目录地图/app目录导览.html">app 目录导览</a>
+<a class="nav-link" href="../../03-技术文档/02-目录地图/core目录导览.html">core 目录导览</a>
+<a class="nav-link" href="../../03-技术文档/02-目录地图/features目录导览.html">features 目录导览</a>
+<a class="nav-link" href="../../03-技术文档/02-目录地图/platform目录导览.html">platform 目录导览</a>
+<a class="nav-link" href="../../03-技术文档/02-目录地图/share目录导览.html">share 目录导览</a>
+</div>
+<div class="nav-subsection" data-nav-key="topic-03-group-03"><div class="nav-subtitle">代码视角</div>
+<a class="nav-link" href="../../03-技术文档/03-代码视角/架构视角逐文件.html">架构视角逐文件</a>
+<a class="nav-link" href="../../03-技术文档/03-代码视角/领域视角逐文件.html">领域视角逐文件</a>
+<a class="nav-link" href="../../03-技术文档/03-代码视角/业务视角逐文件.html">业务视角逐文件</a>
+</div>
+<div class="nav-subsection" data-nav-key="topic-03-group-04"><div class="nav-subtitle">运行机制</div>
+<a class="nav-link" href="../../03-技术文档/04-运行机制/数据流.html">数据流</a>
+<a class="nav-link" href="../../03-技术文档/04-运行机制/事件流.html">事件流</a>
+<a class="nav-link" href="../../03-技术文档/04-运行机制/Obsidian API 使用.html">Obsidian API 使用</a>
+<a class="nav-link" href="../../03-技术文档/04-运行机制/样式系统.html">样式系统</a>
+<a class="nav-link" href="../../03-技术文档/04-运行机制/构建流程.html">构建流程</a>
+<a class="nav-link" href="../../03-技术文档/04-运行机制/数据流与流程图.html">数据流与流程图</a>
+</div>
+<div class="nav-subsection" data-nav-key="topic-03-group-05"><div class="nav-subtitle">字段与输入</div>
+<a class="nav-link" href="../../03-技术文档/05-字段与输入/字段系统重构方案.html">字段系统重构方案</a>
+<a class="nav-link" href="../../03-技术文档/05-字段与输入/统一输入现状盘点.html">统一输入现状盘点</a>
+</div>
+<div class="nav-subsection" data-nav-key="topic-03-group-06"><div class="nav-subtitle">QuickInput 技术记录</div>
+<a class="nav-link" href="../../03-技术文档/06-QuickInput技术记录/QuickInput多步推进Snapshot.html">QuickInput 多步推进 Snapshot</a>
+<a class="nav-link" href="../../03-技术文档/06-QuickInput技术记录/QuickInputLegacy调试收口.html">QuickInput Legacy 调试收口</a>
+<a class="nav-link" href="../../03-技术文档/06-QuickInput技术记录/QuickInput任务内容提取调试.html">QuickInput 任务内容提取调试</a>
+<a class="nav-link" href="../../03-技术文档/06-QuickInput技术记录/QuickInput任务内容单一入口.html">QuickInput 任务内容单一入口</a>
+<a class="nav-link" href="../../03-技术文档/06-QuickInput技术记录/QuickInput任务模板护栏.html">QuickInput 任务模板护栏</a>
+<a class="nav-link" href="../../03-技术文档/06-QuickInput技术记录/QuickInput任务写回保真.html">QuickInput 任务写回保真</a>
+</div>
+</div>
+<div class="nav-section" data-nav-key="topic-04"><div class="nav-title">评审中心</div>
+<div class="nav-subsection" data-nav-key="topic-04-group-00"><div class="nav-subtitle">评审方法</div>
+<a class="nav-link" href="../../04-评审中心/00-评审方法/需求评审.html">需求评审</a>
+<a class="nav-link" href="../../04-评审中心/00-评审方法/功能评审.html">功能评审</a>
+<a class="nav-link" href="../../04-评审中心/00-评审方法/技术方案评审.html">技术方案评审</a>
+</div>
+<div class="nav-subsection" data-nav-key="topic-04-group-01"><div class="nav-subtitle">质量评审</div>
+<a class="nav-link" href="../../04-评审中心/01-质量评审/代码结构评审.html">代码结构评审</a>
+<a class="nav-link" href="../../04-评审中心/01-质量评审/发布评审.html">发布评审</a>
+<a class="nav-link" href="../../04-评审中心/01-质量评审/风险评审.html">风险评审</a>
+</div>
+<div class="nav-subsection" data-nav-key="topic-04-group-02"><div class="nav-subtitle">专题评审</div>
+<a class="nav-link" href="../../04-评审中心/02-专题评审/字段系统深度评审.html">字段系统深度评审</a>
+<a class="nav-link" href="../../04-评审中心/02-专题评审/QuickInput调试与Legacy规范.html">QuickInput 调试与 Legacy 规范</a>
+</div>
+</div>
+<div class="nav-section" data-nav-key="topic-05"><div class="nav-title">维护发布</div>
+<div class="nav-subsection" data-nav-key="topic-05-group-00"><div class="nav-subtitle">测试验收</div>
+<a class="nav-link" href="../../05-维护发布/00-测试验收/测试清单.html">测试清单</a>
+<a class="nav-link" href="../../05-维护发布/00-测试验收/测试方案迁移.html">测试方案迁移</a>
+<a class="nav-link" href="../../05-维护发布/00-测试验收/QuickInput主线验收清单.html">QuickInput 主线验收清单</a>
+<a class="nav-link" href="../../05-维护发布/00-测试验收/QuickInput最终验收清单.html">QuickInput 最终验收清单</a>
+</div>
+<div class="nav-subsection" data-nav-key="topic-05-group-01"><div class="nav-subtitle">发布与回滚</div>
+<a class="nav-link" href="../../05-维护发布/01-发布与回滚/发布流程.html">发布流程</a>
+<a class="nav-link" href="../../05-维护发布/01-发布与回滚/Changelog.html">Changelog</a>
+<a class="nav-link" href="../../05-维护发布/01-发布与回滚/Bug处理流程.html">Bug 处理流程</a>
+<a class="nav-link" href="../../05-维护发布/01-发布与回滚/兼容性记录.html">兼容性记录</a>
+<a class="nav-link" href="../../05-维护发布/01-发布与回滚/回滚方案.html">回滚方案</a>
+<a class="nav-link" href="../../05-维护发布/01-发布与回滚/QuickInput风险与回滚说明.html">QuickInput 风险与回滚说明</a>
+</div>
+<div class="nav-subsection" data-nav-key="topic-05-group-02"><div class="nav-subtitle">修复记录</div>
+<a class="nav-link" href="../../05-维护发布/02-修复记录/QuickInput构建导出修复.html">QuickInput 构建导出修复</a>
+<a class="nav-link" href="../../05-维护发布/02-修复记录/BlockStatistics统一与跳转修复.html">Block Statistics 统一与跳转修复</a>
+<a class="nav-link" href="../../05-维护发布/02-修复记录/QuickInput任务正文空格保留修复.html">QuickInput 任务正文空格保留修复</a>
+</div>
+</div>
+    </aside>
+    <main class="main">
+      <section class="hero">
+        <div class="eyebrow">功能设计 / MIGRATED DOC</div>
+        <h1>功能清单迁移</h1>
+        <p class="lead">本文档记录项目当前已实现的功能，作为需求管理的基线参考。最后更新：2026-02-28位于 `scripts/*gate*.mjs`，包括：根据 `docs/计划.md` 最新状态：1. **Typecheck**：有 1 个 TS error</p>
+        <div class="meta-row">
+          <span class="badge good">状态：已迁移</span>
+          <span class="badge">最后更新：2026-05-07</span>
+          <span class="badge">格式：HTML</span>
+        </div>
+      </section>
+      <section class="grid"><article class="card full"><h2>迁移信息</h2><div class="table-wrap"><table><thead><tr><th>项目</th><th>内容</th></tr></thead><tbody><tr><td>新分类</td><td>功能设计</td></tr><tr><td>旧路径</td><td><code>docs/功能清单.md</code></td></tr><tr><td>原始标题</td><td>Think OS 功能清单</td></tr><tr><td>处理方式</td><td>正文已转换为当前 <code>文档/</code> 的 HTML 页面；原始文件另存于 <code>_归档/迁移原文/</code>。</td></tr></tbody></table></div></article><article class="card full"><h2>正文</h2><div class="imported-doc"><h1>Think OS 功能清单</h1>
+<blockquote>
+<p>本文档记录项目当前已实现的功能，作为需求管理的基线参考。
+最后更新：2026-02-28</p>
+</blockquote>
+<h2>1. 项目基本信息</h2>
+<ul>
+<li><strong>插件名称</strong>：Think OS</li>
+<li><strong>插件 ID</strong>：<code>think-os</code></li>
+<li><strong>技术栈</strong>：TypeScript + Preact + Vite + Jest</li>
+<li><strong>定位</strong>：基于 Preact 的 Obsidian 仪表盘/效率工具插件</li>
+<li><strong>入口文件</strong>：<code>src/main.ts</code></li>
+</ul>
+<h2>2. 已实现的核心功能</h2>
+<h3>2.1 Dashboard（仪表盘）</h3>
+<ul>
+<li><strong>功能描述</strong>：以视图形式组织插件 UI</li>
+<li><strong>技术实现</strong>：使用 Preact 构建交互界面</li>
+<li><strong>位置</strong>：<code>src/app/</code> + <code>src/features/</code></li>
+<li><strong>状态</strong>：✅ 已实现</li>
+</ul>
+<h3>2.2 Timer（计时器）</h3>
+<ul>
+<li><strong>功能描述</strong>：计时器管理功能</li>
+<li><strong>核心能力</strong>：<ul>
+<li>启动/停止计时</li>
+<li>计时数据写回</li>
+<li>命令行操作支持</li>
+</ul>
+</li>
+<li><strong>位置</strong>：<code>src/features/timer/</code></li>
+<li><strong>状态</strong>：✅ 已实现</li>
+</ul>
+<h3>2.3 Quick Input（快速输入）</h3>
+<ul>
+<li><strong>功能描述</strong>：快速输入相关能力</li>
+<li><strong>位置</strong>：<code>src/features/quickinput/</code></li>
+<li><strong>状态</strong>：✅ 已实现</li>
+</ul>
+<h3>2.4 AI Input（AI 输入）</h3>
+<ul>
+<li><strong>功能描述</strong>：AI 辅助输入功能</li>
+<li><strong>位置</strong>：<code>src/features/aiinput/</code></li>
+<li><strong>状态</strong>：✅ 已实现</li>
+</ul>
+<h3>2.5 AI Chat（AI 对话）</h3>
+<ul>
+<li><strong>功能描述</strong>：AI 对话能力</li>
+<li><strong>位置</strong>：<code>src/features/aichat/</code></li>
+<li><strong>状态</strong>：✅ 已实现</li>
+</ul>
+<h3>2.6 Thinktxt 预览渲染</h3>
+<ul>
+<li><strong>功能描述</strong>：将连续的 <code>[!thinktxt]</code> callout 在预览模式下合并渲染为只读表格</li>
+<li><strong>核心能力</strong>：<ul>
+<li>识别 <code>[!thinktxt]</code> callout 块</li>
+<li>预览模式下渲染为表格</li>
+<li>只读展示</li>
+</ul>
+</li>
+<li><strong>位置</strong>：<code>src/core/utils/parser.ts</code> + platform 注册</li>
+<li><strong>状态</strong>：🟡 部分实现（预览渲染待完善）</li>
+</ul>
+<h3>2.7 Settings（设置管理）</h3>
+<ul>
+<li><strong>功能描述</strong>：插件设置管理</li>
+<li><strong>位置</strong>：<code>src/features/settings/</code></li>
+<li><strong>状态</strong>：✅ 已实现</li>
+</ul>
+<h2>3. 技术架构</h2>
+<h3>3.1 分层结构</h3>
+<pre><code>src/
+├── main.ts              # 插件入口（生命周期、DI 容器、命令注册）
+├── platform/            # Obsidian API 适配层
+│   ├── Vault 端口实现
+│   ├── UI 端口实现
+│   ├── Modal 端口实现
+│   ├── Events 端口实现
+│   └── Metadata 端口实现
+├── core/                # 核心领域能力
+│   ├── settings/        # 设置管理
+│   ├── storage/         # 存储抽象
+│   ├── ports/           # 端口定义
+│   └── utils/           # 核心工具（parser 等）
+├── features/            # 功能模块
+│   ├── timer/
+│   ├── quickinput/
+│   ├── aiinput/
+│   ├── aichat/
+│   └── settings/
+├── shared/              # 跨模块共享
+│   ├── public/          # 公共 API
+│   └── private/         # 内部工具
+└── app/                 # 应用装配与运行时
+    ├── ServiceManager   # 服务生命周期管理
+    ├── usecases/        # 用例编排
+    ├── capabilities/    # 能力注册
+    └── FeatureLoader    # 功能加载器
+</code></pre>
+<h3>3.2 核心设计模式</h3>
+<ul>
+<li><strong>依赖注入（DI）</strong>：使用 DI 容器管理服务依赖</li>
+<li><strong>端口适配器</strong>：通过 <code>src/platform/</code> 隔离 Obsidian API</li>
+<li><strong>服务管理</strong>：ServiceManager 统一管理服务生命周期</li>
+<li><strong>功能模块化</strong>：每个功能独立在 <code>src/features/&lt;name&gt;/</code></li>
+<li><strong>边界约束</strong>：通过 gate 脚本强制架构边界</li>
+</ul>
+<h3>3.3 工程能力</h3>
+<h4>质量保障</h4>
+<ul>
+<li><strong>Lint</strong>：代码风格检查</li>
+<li><strong>Typecheck</strong>：TypeScript 类型检查</li>
+<li><strong>Test</strong>：Jest 单元测试框架</li>
+<li><strong>Gate</strong>：架构边界门禁（多个 gate 脚本）</li>
+</ul>
+<h4>常用命令</h4>
+<pre><code class="language-bash">npm run check      # 质量门禁（lint + typecheck + gate）
+npm test           # 运行测试
+npm run build      # 构建产物
+</code></pre>
+<h4>架构门禁（Gate）</h4>
+<p>位于 <code>scripts/*gate*.mjs</code>，包括：</p>
+<ul>
+<li><code>obsidian-leak:gate</code> - 防止平台 API 泄漏到业务层</li>
+<li><code>core-obsidian:gate</code> - core 层不依赖 obsidian</li>
+<li><code>core-public:gate</code> - core 层 public API 约束</li>
+<li><code>shared-public:gate</code> - shared 层 public API 约束</li>
+<li><code>iconaction:gate</code> - IconAction 组件使用规范</li>
+<li><code>di-resolve:gate</code> - DI 容器使用约束</li>
+<li><code>events-boundary:gate</code> - 事件边界约束</li>
+<li><code>check-boundaries</code> - 深导入边界检查</li>
+</ul>
+<h2>4. 当前开发状态</h2>
+<h3>4.1 已完成（✅）</h3>
+<ul>
+<li>Typecheck 基础框架（接近 0 errors）</li>
+<li>Jest 测试框架配置（6 个单测套件）</li>
+<li>解析语义主线（Task 主题字段归位 + Theme 显式优先）</li>
+<li>Legacy callout 支持基础（<code>[!thinktxt]</code> 格式识别）</li>
+<li>IconAction 组件统一（门禁已生效）</li>
+<li>边界检查门禁（check-boundaries 已跑通）</li>
+<li>shared 层去平台化（obsidian-leak:gate 已绿）</li>
+</ul>
+<h3>4.2 进行中（🟡）</h3>
+<ul>
+<li><strong>生命周期收口</strong>：结构已到位，缺运行态 unload/reload 验证</li>
+<li><strong>竞态/取消统一</strong>：基础设施就绪（takeLatest.test.ts PASS），策略尚未固化</li>
+<li><strong>目录整理</strong>：features 目录结构雏形有，缺系统迁移清单</li>
+<li><strong>Notice 抽象</strong>：门禁已绿，业务侧是否都走 UiPort 待确认</li>
+</ul>
+<h3>4.3 待实现（⏳/❌）</h3>
+<ul>
+<li><strong>预览态表格只读渲染</strong>：基于 <code>&lt;!-- start --&gt;...&lt;!-- end --&gt;</code> 的表格渲染</li>
+<li><strong>表格编辑 + 写回 md</strong>：按 start/end 精准替换</li>
+<li><strong>拖拽排序 + 写回</strong>：顺序可持久化</li>
+<li><strong>FilterPopoverShell</strong>：统一过滤弹窗组件（未开始）</li>
+<li><strong>DataStore 拆分</strong>：Repo/Cache/Indexer 分离（后期优化）</li>
+</ul>
+<h3>4.4 已知问题</h3>
+<p>根据 <code>docs/计划.md</code> 最新状态：</p>
+<ol>
+<li><p><strong>Typecheck</strong>：有 1 个 TS error</p>
+<ul>
+<li>位置：<code>BlockItem.tsx</code> 向 <code>MarkdownContent</code> 传了 <code>app</code>，但 props 无此字段</li>
+<li>影响：<code>npm run typecheck</code> 报错</li>
+</ul>
+</li>
+<li><p><strong>单测失败</strong>：1 个单测挂掉</p>
+<ul>
+<li>位置：<code>legacyCalloutBlock.test.ts</code></li>
+<li>问题：<code>item!.content</code> 为空，未包含预期的 <code>- [x]</code> 任务行</li>
+<li>影响：<code>npm run test:unit</code> 失败</li>
+</ul>
+</li>
+<li><p><strong>Gate 阻塞</strong>：di-resolve:gate 失败</p>
+<ul>
+<li>位置：<code>src/main.ts</code> 中存在不允许的 <code>container.resolve()</code></li>
+<li>影响：<code>npm run gate</code> 被卡住，后续 gate 未执行</li>
+</ul>
+</li>
+</ol>
+<h2>5. 下一步建议</h2>
+<h3>5.1 立即修复（阻塞项）</h3>
+<ol>
+<li>修复 <code>BlockItem.tsx</code> 的 TypeScript 错误（P0）</li>
+<li>修复 <code>legacyCalloutBlock.test.ts</code> 单测失败（P0）</li>
+<li>修复 <code>di-resolve:gate</code> 失败（P0）</li>
+</ol>
+<h3>5.2 需求管理建议</h3>
+<p>根据 <code>docs/00-项目全局路径与治理准备.md</code>，建议：</p>
+<ol>
+<li><p>在 <code>docs/governance/</code> 建立需求管理目录：</p>
+<ul>
+<li><code>01-需求池.md</code> - 记录所有待做需求</li>
+<li><code>02-迭代计划.md</code> - 当前迭代任务</li>
+<li><code>03-发布与变更记录.md</code> - 版本发布记录</li>
+</ul>
+</li>
+<li><p>使用需求卡模板（见 <code>00-项目全局路径与治理准备.md</code> 第 E 节）</p>
+</li>
+<li><p>执行流程：需求卡 → 技术任务 → 实现 → 检查 → 验收 → 回写文档</p>
+</li>
+</ol>
+<h3>5.3 功能优先级参考</h3>
+<p>根据 <code>docs/计划.md</code>，建议优先级：</p>
+<ul>
+<li><strong>Phase0 P0</strong>：工程止血（typecheck/test/gate 全绿）</li>
+<li><strong>Phase2 P0</strong>：Legacy callout 编辑态支持（thinktxt MVP 基础）</li>
+<li><strong>Phase2 P1</strong>：预览态表格只读渲染</li>
+<li><strong>Phase2 P2</strong>：表格编辑 + 写回 md</li>
+</ul>
+<h2>6. 相关文档</h2>
+<ul>
+<li><code>README.md</code> - 项目概览与安装说明</li>
+<li><code>docs/开发指南.md</code> - 开发环境与常用命令</li>
+<li><code>docs/开发规范.md</code> - 代码规范</li>
+<li><code>docs/计划.md</code> - 详细开发计划与进度</li>
+<li><code>docs/00-项目全局路径与治理准备.md</code> - 治理流程与需求卡模板</li>
+<li><code>docs/更新日志.md</code> - 版本变更记录</li>
+<li><code>docs/directory-conventions.md</code> - 目录约定</li>
+</ul>
+<hr/>
+<p><strong>备注</strong>：本文档作为需求管理的基线，后续新功能应在需求库中规划，避免直接修改代码。</p>
+<p>好，那我这次直接给你<strong>成品表格</strong>，按你要的：
+<strong>从“用户界面”顶层一路扫到底层的 Markdown / 设置存储</strong>，完全基于我刚刚实际把仓库结构和关键文件翻了一圈后的结论。</p>
+<p>你只需要看：<strong>哪一行你赞同 / 哪一行你觉得不对</strong>，不用你填空。</p>
+<hr/>
+<h2>表 1：整体分层（从“用户看到的界面”一路扫到底层数据）</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>层级（从上到下）</th>
+<th>视角 / 职责</th>
+<th>主要目录 / 文件</th>
+<th>和「数据提取 / 设置 / 仪表盘」的关系</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>L0 用户界面层</td>
+<td>用户在 Obsidian 里看到/操作的一切：仪表盘视图、设置面板、只读表格预览等</td>
+<td>- <code>src/app/ui/**</code>（通用 UI 容器）<br/>- <code>src/features/**</code>（<code>aichat</code>, <code>aiinput</code>, <code>quickinput</code>, <code>settings</code>, <code>timer</code>）<br/>- <code>src/platform/SettingsTab.tsx</code>（插件设置页 UI，内嵌 Preact+MUI）<br/>- <code>src/platform/thinktxt/ThinktxtPreviewRenderer.ts</code>（thinktxt 预览表格）</td>
+<td>- 仪表盘/表格呈现都发生在这一层。<br/>- 用户的编辑/拖拽操作从这里发出，向下走到 UseCase / DataStore。<br/>- Thinktxt 目前是<strong>只读预览表格</strong>：从 Markdown 渲染成 HTML 表格，不写回。</td>
+</tr>
+<tr>
+<td>L1 应用用例 &amp; 状态层（App）</td>
+<td>负责把 UI 事件变成“业务意图”，管理前端状态（Zustand Store）</td>
+<td>- <code>src/app/store/**</code>（<code>slices/*.ts</code> 存 settings/timer 等状态）<br/>- <code>src/app/usecases/**</code>（<code>settings.usecase.ts</code>, <code>blocks.usecase.ts</code> 等）<br/>- <code>src/app/AppStoreContext.tsx</code>（Store 上下文）<br/>- <code>src/app/createServices.ts</code> / <code>runtime/**</code> / <code>bootstrap/**</code>（构建 runtime、加载服务）</td>
+<td>- 把“仪表盘编辑/拖拽/过滤”的 UI 操作，翻译成对 DataStore / SettingsRepository 的调用。<br/>- <strong>设置相关</strong>：<code>settings.usecase.ts</code> 包装 Store 的 <code>updateSettings</code>，间接修改 SettingsRepository。<br/>- <strong>未来可编辑表格/拖拽</strong>：会通过类似 <code>blocks.usecase.ts</code> 这类用例，调用底层“读→改→写”逻辑。</td>
+</tr>
+<tr>
+<td>L2 核心服务层（Core Services）</td>
+<td>领域服务，真正处理“数据提取、查询、设置持久化”等逻辑</td>
+<td>- <code>src/core/services/DataStore.ts</code>（扫描 Vault、解析任务/块、缓存、<code>queryItems</code>）<br/>- <code>src/core/services/SettingsRepository.ts</code>（设置持久化仓库）<br/>- 其他服务：StorageService、AI、Timer 等</td>
+<td>- <strong>数据提取核心</strong>：<code>DataStore.scanAll / scanFile / queryItems</code> 从 Vault 读 Markdown → 调 parser 生成 <code>Item[]</code> → 提供过滤/排序后的数据给上层。<br/>- <strong>设置核心</strong>：<code>SettingsRepository</code> 从插件存储读写 <code>ThinkSettings</code>，提供订阅机制给 App Store。<br/>- 后续“表格编辑+写回 md / 拖拽排序”会在这里增加相应的写回能力（目前主要是读 + 缓存 + 查询）。</td>
+</tr>
+<tr>
+<td>L3 领域模型 &amp; 解析层（Core Types + Utils）</td>
+<td>定义「世界长什么样」以及“从文本 → 模型”的规则</td>
+<td>- <code>src/core/types/schema.ts</code>（<code>Item</code>, <code>FilterRule</code>, <code>SortRule</code> 等结构）<br/>- <code>src/core/utils/parser.ts</code>（<strong>任务/块解析</strong>：Tags、KV、开始结束时间、时长等）<br/>- <code>src/core/utils/date.ts</code>（<code>normalizeDateStr</code>, <code>extractDate</code>, <code>getPeriodCount</code>, <code>dayjs</code> 封装）<br/>- <code>src/core/utils/itemFilter.ts</code>（过滤+排序）<br/>- <code>src/core/theme*</code>, <code>utils/normalize.ts</code> 等</td>
+<td>- <strong>你关心的「数据提取」真正的规则全在这里</strong>：<br/>  - <code>parser.ts</code> 把一行 Markdown 解析成 <code>Item</code>：识别复选框、标签、<code>key:: value</code>（<code>start/end/duration</code> 等）。<br/>  - <code>itemFilter.ts</code> + <code>normalize</code> 决定仪表盘怎么按时间、状态、标签过滤/排序。<br/>- 这一层不依赖 Obsidian，只依赖类型和纯工具函数，是<strong>最适合写“不会随便废掉”的单测</strong>的地方。</td>
+</tr>
+<tr>
+<td>L4 端口接口层（Core Ports）</td>
+<td>定义 Core 如何“向下”访问 Obsidian / 存储 / UI，而不直接依赖实现</td>
+<td>- <code>src/core/ports/**</code>（<code>VaultPort</code>, <code>MetadataPort</code>, <code>UiPort</code>, <code>EventsPort</code>, <code>MessageRenderPort</code> 等接口和 token）<br/>- <code>src/core/public.ts</code>（对外导出 DataStore、ports token 等）</td>
+<td>- DataStore / SettingsRepository 通过这些 Port 与外界交互：<br/>  - <code>VaultPort</code>：读文件内容；<br/>  - <code>MetadataPort</code>：拿 file stat/frontmatter；<br/>  - <code>Storage</code>：读写缓存和设置；<br/>  - <code>UiPort</code>：通知等。<br/>- 这一层保证 Core 是“平台无关的”：你以后换平台（不是 Obsidian）理论上也能复用核心逻辑。</td>
+</tr>
+<tr>
+<td>L5 平台适配层（Platform Adapter）</td>
+<td>把 Obsidian 的 API 实现成各个 Port；挂 Setting Tab / 预览等</td>
+<td>- <code>src/platform/ObsidianVaultPort.ts</code> / <code>ObsidianMetadataPort.ts</code> / <code>ObsidianFileStatPort.ts</code> 等：实现 Vault/Metadata/FileStat 端口<br/>- <code>src/platform/ObsidianUiPort.ts</code>, <code>ObsidianModalPort.ts</code>, <code>ObsidianEventsPort.ts</code>, <code>ObsidianMessageRenderPort.ts</code><br/>- <code>src/platform/SettingsTab.tsx</code>：把 Settings UI 嵌入 Obsidian 设置<br/>- <code>src/platform/thinktxt/ThinktxtPreviewRenderer.ts</code>：注册 Markdown postProcessor，把 <code>[!thinktxt]</code> + <code>&lt;!-- start/end --&gt;</code> 渲染为 HTML 表格</td>
+<td>- <strong>数据提取链路</strong>：这里的 VaultPort/MetadataPort 把 Obsidian 的文件系统/元数据提供给 DataStore。<br/>- <strong>设置链路</strong>：SettingsTab 用 <code>createServices()</code> 拿到 App UseCases 和 Store，与 SettingsRepository 间接交互。<br/>- <strong>表格显示</strong>：ThinktxtPreviewRenderer 直接用 Obsidian 的 Markdown 源文本 + 预览 DOM 构建表格。</td>
+</tr>
+<tr>
+<td>L6 插件外壳 &amp; 底层存储</td>
+<td>插件入口、DI 配置，以及真正落地的数据（磁盘上的 md/设置文件）</td>
+<td>- <code>src/main.ts</code>：Obsidian 插件入口，配置 DI（tsyringe container）并创建 <code>ServiceManager</code><br/>- <code>manifest.json</code>：插件元信息<br/>- Obsidian Vault 文件（Markdown）、<code>app.vault</code> 文件系统<br/>- 插件存储（<code>IPluginStorage</code>：读写 <code>Think/settings.json</code>, <code>Think/cache.json</code> 等）</td>
+<td>- <code>main.ts</code> 注册各个 Port 的 Obsidian 实现 + 初始化 Core / App / Features。<br/>- <strong>数据提取的底层源头</strong> = Vault 里的 Markdown 文件。<br/>- <strong>设置 &amp; 缓存</strong> 实际落地在 Obsidian 的插件存储（<code>Think/settings.json</code>, <code>Think/cache.json</code> 这类 key）。</td>
+</tr>
+</tbody>
+</table></div>
+<hr/>
+<h2>表 2：数据提取链路（从 Markdown 到“给仪表盘用的数据”）</h2>
+<blockquote>
+<p>这一张表就是回答：<strong>“从底层 Markdown 扫描 → 成为你仪表盘可用的数据”</strong> 的完整路径。</p>
+</blockquote>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>步骤（从下到上）</th>
+<th>发生在哪一层 / 文件</th>
+<th>输入</th>
+<th>处理</th>
+<th>输出</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1. 读取 Markdown</td>
+<td>L6 存储 + L5 平台：<code>ObsidianVaultPort</code></td>
+<td>Obsidian Vault 的 <code>.md</code> 文件</td>
+<td>通过 Obsidian API 读取文件内容；DataStore 只拿到“文件路径 + 文本内容”。</td>
+<td>文本字符串（整份 Markdown）</td>
+</tr>
+<tr>
+<td>2. 扫描文件 &amp; 解析任务/块</td>
+<td>L2 DataStore：<code>src/core/services/DataStore.ts</code></td>
+<td>(1) 的 Markdown 文本 + 文件路径/元数据</td>
+<td><code>scanAll</code> / <code>scanFile</code>：<br/>1. 按行遍历，调用 <code>parseTaskLine</code> / <code>parseBlockContent</code>（来自 parser.ts）。<br/>2. 组合 <code>Item</code>：包含文本、状态、标签、时间（start/end/duration）、所属文件、路径等。<br/>3. 结果写入 <code>this.items</code> 和 <code>fileIndex</code>，并更新缓存。</td>
+<td>内存中的 <code>Item[]</code>，按文件分组索引（<code>fileIndex: Map&lt;filePath, Item[]&gt;</code>）。</td>
+</tr>
+<tr>
+<td>3. 归一化 &amp; 衍生字段</td>
+<td>L3 工具：<code>normalizeItemDates</code>, <code>parseRecurrence</code>, <code>itemFilter</code></td>
+<td><code>Item[]</code></td>
+<td>- 把日期/时间字符串标准化成可比较的形式；<br/>- 识别重复任务 / 分类；<br/>- 为后续过滤和排序准备字段。</td>
+<td>带有标准化时间等字段的 <code>Item[]</code>。</td>
+</tr>
+<tr>
+<td>4. 条件查询（过滤 + 排序）</td>
+<td>L2 DataStore：<code>queryItems(filters, sortRules)</code></td>
+<td>全量 <code>Item[]</code> + 上层传入的 <code>FilterRule[]</code> / <code>SortRule[]</code></td>
+<td>- 构造 query key，命中则直接用 <code>queryCache</code>。<br/>- 否则用 <code>filterByRules</code> 过滤，再用 <code>sortItems</code> 排序。</td>
+<td>满足当前“视图 / 仪表盘条件”的 <code>Item[]</code> 子集，按排序规则有序。</td>
+</tr>
+<tr>
+<td>5. 应用用例包装成“视图数据”</td>
+<td>L1 App UseCases + Store：例如 <code>blocks.usecase.ts</code>（未来编辑）、视图相关 usecase</td>
+<td><code>Item[]</code> + 当前 settings（视图配置、过滤规则等）</td>
+<td>- UseCase 组合 DataStore 的结果和 Settings；<br/>- 有的会把 <code>Item</code> 再映射成 UI 专用结构（例如按日期分组、按 Tag 分组）。</td>
+<td>传给 UI 的“视图模型”，例如某个视图的一行/一块记录数组。</td>
+</tr>
+<tr>
+<td>6. UI 渲染仪表盘</td>
+<td>L0 UI：<code>src/app/ui/**</code>, <code>src/features/settings/**</code>, 未来的仪表盘 view 组件</td>
+<td>视图模型数据</td>
+<td>- 用 Preact/MUI 表格或自定义组件渲染；<br/>- 支持排序/过滤/分页/聚合展示。</td>
+<td>用户在 Obsidian 看到的仪表盘界面。</td>
+</tr>
+</tbody>
+</table></div>
+<blockquote>
+<p>✅ 目前仓库里<strong>读路径已完整存在</strong>（1→6），主要集中在：
+<code>ObsidianVaultPort</code> → <code>DataStore</code> + <code>parser.ts</code> → <code>queryItems</code> → 各种 view/usecase → UI。
+“表格编辑 + 写回 / 拖拽排序 + 写回”会在 <strong>第 2~5 步之间加上“写回 Markdown”的反向链路</strong>（你 Phase2 提到的那几项）。</p>
+</blockquote>
+<hr/>
+<h2>表 3：设置链路（从设置 UI 到持久化，再回到仪表盘）</h2>
+<blockquote>
+<p>回答：<strong>“用户在设置面板点一下 → 如何改变后续的数据提取/仪表盘行为？”</strong></p>
+</blockquote>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>步骤</th>
+<th>发生在哪一层 / 文件</th>
+<th>输入</th>
+<th>处理</th>
+<th>输出</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1. 用户操作设置 UI</td>
+<td>L0：<code>src/platform/SettingsTab.tsx</code> + <code>src/features/settings/**</code></td>
+<td>用户在 Settings Tab 里点击开关 / 修改视图配置 / 编辑布局等</td>
+<td>Preact 组件内部调用 App 提供的 Hook/useCase（通过 <code>createServices()</code> 注入的 <code>UseCases</code> 和 Store）。</td>
+<td>触发 SettingsUseCase / Store action。</td>
+</tr>
+<tr>
+<td>2. Settings 用例层</td>
+<td>L1：<code>src/app/usecases/settings.usecase.ts</code></td>
+<td>(1) 发出的意图（例如 <code>setDevConsoleStackEnabled(true)</code>、更新 AI 设置、计时器设置等）</td>
+<td>- 从 Store 读当前状态，检查是否已初始化；<br/>- 调用 Store 的 <code>updateSettings</code> 之类的 action，传入“如何修改 draft”。<br/>- 错误统一 <code>devError</code> 打日志。</td>
+<td>Store 内的 settings slice 被更新（但这时还只是内存态）。</td>
+</tr>
+<tr>
+<td>3. Store → SettingsRepository</td>
+<td>L1 + L2：Store actions + <code>SettingsRepository</code></td>
+<td>更新前/后的 settings 差异</td>
+<td>- Store 的某些 action 内部会调用 <code>SettingsRepository.update</code> / <code>save</code> 等方法；<br/>- SettingsRepository 用 <code>immer/produce</code> 做不可变更新，并写入插件存储；<br/>- dev 环境下输出 <code>[SETTINGS_WRITE]</code> 日志（actionName + source + diff）。</td>
+<td>插件存储中的 <code>Think/settings.json</code> 被更新；SettingsRepository 的 <code>currentSettings</code> 也更新。</td>
+</tr>
+<tr>
+<td>4. SettingsRepository 通知订阅者</td>
+<td>L2：<code>SettingsRepository</code></td>
+<td>新的 <code>ThinkSettings</code> 对象</td>
+<td>- 调用内部 <code>listeners</code> 集合，把新 settings 推给所有订阅方（App Store、视图等）。</td>
+<td>App Store / runtime 收到最新 settings。</td>
+</tr>
+<tr>
+<td>5. 数据提取/视图根据设置变化重算</td>
+<td>L1~L3：UseCase / DataStore / 过滤工具</td>
+<td>新 settings + 当前数据</td>
+<td>- 用新的过滤/排序规则重新调用 <code>DataStore.queryItems</code>；<br/>- 某些设置可能还会改扫描范围（例如要处理的路径/Block 规则）。</td>
+<td>仪表盘显示内容 &amp; 行为随设置变化而更新。</td>
+</tr>
+</tbody>
+</table></div>
+<hr/>
+<h2>表 4：thinktxt 预览表格链路（当前是只读）</h2>
+<blockquote>
+<p>这是你 Phase2 里“预览态表格只读渲染”的现有实现路径。</p>
+</blockquote>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>步骤</th>
+<th>发生在哪一层 / 文件</th>
+<th>输入</th>
+<th>处理</th>
+<th>输出</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1. Markdown 中写 thinktxt 区块</td>
+<td>L6 存储</td>
+<td>用户在 md 里写：<code>&lt;!-- start --&gt; ... [!thinktxt] ... &lt;!-- end --&gt;</code> 一串 callout</td>
+<td>- 这只是普通 Markdown 内容，此时没有任何解析。</td>
+<td>带有 start/end 注释 + <code>[!thinktxt]</code> callout 的 md 文件。</td>
+</tr>
+<tr>
+<td>2. Obsidian 渲染时调用 postProcessor</td>
+<td>L5：<code>ThinktxtPreviewRenderer.ts</code></td>
+<td>Obsidian 渲染生成的 Preview DOM + 原始 Markdown 文本</td>
+<td>- 注册为 <code>MarkdownPostProcessor</code>；<br/>- 在渲染阶段获得整个文档的 markdown 文本 &amp; 对应 DOM。</td>
+<td>能操作 Preview DOM 的自定义渲染函数。</td>
+</tr>
+<tr>
+<td>3. 识别表格分组</td>
+<td>L5：<code>computeGroupSizesFromSource</code> 等函数</td>
+<td>Markdown 全文</td>
+<td>- 扫描 <code>&lt;!-- start --&gt; ... &lt;!-- end --&gt;</code> 标记，统计每个“组”里有几个 <code>[!thinktxt]</code> callout；<br/>- 过滤掉没有 thinktxt 的区间。</td>
+<td>一组“连续 callout 分组”的 size 信息 + 调试数据。</td>
+</tr>
+<tr>
+<td>4. 把各个 thinktxt callout 解析为 KV</td>
+<td>L5：内部解析函数（<code>stripQuotePrefix</code>, KV 解析）</td>
+<td>每个 callout 的文本行</td>
+<td>- 去掉引用前缀 <code>&gt;</code>；<br/>- 按 <code>key:: value</code> 解析成 <code>Record&lt;string,string&gt;</code>；<br/>- 当前实现会跳过纯 <code>[!thinktxt]</code> 的标题行。</td>
+<td>每个 callout → 一行 KV 数据（<code>ThinktxtKV</code>）。</td>
+</tr>
+<tr>
+<td>5. 构建 HTML <code>&lt;table&gt;</code> 替换原 DOM</td>
+<td>L5：<code>replaceGroupWithTable</code> 一类的逻辑</td>
+<td>多行 KV 数据 + DOM 节点</td>
+<td>- 确定表头（所有行的 key union）；<br/>- 构造 <code>&lt;table&gt;&lt;thead&gt;&lt;tbody&gt;</code>；<br/>- 在 Preview DOM 中删除原来的 callout 节点，插入新表格。</td>
+<td>预览界面看到的“只读表格”，不影响底层 md。</td>
+</tr>
+</tbody>
+</table></div>
+<blockquote>
+<p>✅ 目前这条链是<strong>单向的 UI 渲染</strong>，不写回 md。
+你 Phase2 P2/P2（表格编辑、拖拽 + 写回）的实现，就是在<strong>数据提取链路 + Markdown 写回</strong>里补上反向路径，然后 UI 不再只有 L5 这一条，而是走 L0/L1/L2/L3 的完整闭环。</p>
+</blockquote>
+<hr/>
+<p>如果你愿意，你现在可以只做一件事：</p>
+<ul>
+<li><p>就这 4 个表，只要告诉我：</p>
+<ul>
+<li><strong>哪几行是对的，可以当“以后说话的基准”</strong>；</li>
+<li><strong>哪一块你觉得和你心里的设计不一样（比如：仪表盘你想做成完全不同的结构）</strong>。</li>
+</ul>
+</li>
+</ul>
+<p>我下一步就可以基于这个“确认过的架构表”，再帮你把<strong>测试计划 / 开发顺序</strong>直接对齐到每一层的具体文件上，而不用再兜圈子。</p>
+</div></article></section>
+      <footer class="footer">本页属于 Think OS 插件 HTML 文档系统。UI 沿用原有风格，docs/html 旧资料已按新结构迁移。</footer>
+    </main>
+  </div>
+  <script src="../../_资源/搜索索引.js"></script>
+  <script src="../../_资源/文档脚本.js"></script>
+</body>
+</html>

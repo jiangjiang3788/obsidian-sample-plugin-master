@@ -1,0 +1,813 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>字段系统重构方案｜Think OS 插件文档系统</title>
+  <link rel="stylesheet" href="../../_资源/文档样式.css">
+</head>
+<body data-doc-root="../../">
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-title">Think OS 插件文档系统</div>
+        <div class="brand-subtitle">HTML 项目驾驶舱 / 文档 / 需求 / 技术 / 评审 / 发布</div>
+      </div>
+      <div class="search-box">
+        <input class="search-input" data-doc-search placeholder="搜索：需求、命令、设置、文件地图、评审、QuickInput...">
+        <div class="search-results" data-search-results></div>
+      </div>
+<div class="nav-section" data-nav-key="topic-00"><div class="nav-title">基础入口</div>
+<div class="nav-subsection" data-nav-key="topic-00-group-00"><div class="nav-subtitle">项目驾驶舱</div>
+<a class="nav-link" href="../../index.html">首页仪表盘</a>
+<a class="nav-link" href="../../00-基础入口/00-项目驾驶舱/项目总览.html">项目总览</a>
+<a class="nav-link" href="../../00-基础入口/00-项目驾驶舱/快速开始.html">快速开始</a>
+<a class="nav-link" href="../../00-基础入口/00-项目驾驶舱/当前状态.html">当前状态</a>
+</div>
+<div class="nav-subsection" data-nav-key="topic-00-group-01"><div class="nav-subtitle">概念与边界</div>
+<a class="nav-link" href="../../00-基础入口/01-概念与边界/插件定位.html">插件定位</a>
+<a class="nav-link" href="../../00-基础入口/01-概念与边界/功能地图.html">功能地图</a>
+<a class="nav-link" href="../../00-基础入口/01-概念与边界/术语表.html">术语表</a>
+<a class="nav-link" href="../../00-基础入口/01-概念与边界/常见问题.html">常见问题</a>
+</div>
+<div class="nav-subsection" data-nav-key="topic-00-group-02"><div class="nav-subtitle">迁移与旧资料</div>
+<a class="nav-link" href="../../00-基础入口/02-迁移与旧资料/迁移文档索引.html">迁移文档索引</a>
+<a class="nav-link" href="../../00-基础入口/02-迁移与旧资料/旧章节总览.html">旧章节总览</a>
+<a class="nav-link" href="../../00-基础入口/02-迁移与旧资料/章节化文档框架.html">章节化文档框架</a>
+</div>
+</div>
+<div class="nav-section" data-nav-key="topic-01"><div class="nav-title">项目管理</div>
+<div class="nav-subsection" data-nav-key="topic-01-group-00"><div class="nav-subtitle">计划与路线</div>
+<a class="nav-link" href="../../01-项目管理/00-计划与路线/需求池.html">需求池</a>
+<a class="nav-link" href="../../01-项目管理/00-计划与路线/版本路线图.html">版本路线图</a>
+<a class="nav-link" href="../../01-项目管理/00-计划与路线/开发计划.html">开发计划</a>
+</div>
+<div class="nav-subsection" data-nav-key="topic-01-group-01"><div class="nav-subtitle">过程记录</div>
+<a class="nav-link" href="../../01-项目管理/01-过程记录/问题记录.html">问题记录</a>
+<a class="nav-link" href="../../01-项目管理/01-过程记录/技术债.html">技术债</a>
+<a class="nav-link" href="../../01-项目管理/01-过程记录/决策记录.html">决策记录</a>
+<a class="nav-link" href="../../01-项目管理/01-过程记录/发布记录.html">发布记录</a>
+</div>
+<div class="nav-subsection" data-nav-key="topic-01-group-02"><div class="nav-subtitle">实施计划</div>
+<a class="nav-link" href="../../01-项目管理/02-实施计划/插件深度报告与实施计划.html">插件深度报告与实施计划</a>
+<a class="nav-link" href="../../01-项目管理/02-实施计划/上下文时间重构计划.html">上下文时间重构计划</a>
+<a class="nav-link" href="../../01-项目管理/02-实施计划/统一输入修改计划.html">统一输入修改计划</a>
+<a class="nav-link" href="../../01-项目管理/02-实施计划/原始计划记录.html">原始计划记录</a>
+<a class="nav-link" href="../../01-项目管理/02-实施计划/旧需求台账.html">旧需求台账</a>
+</div>
+<div class="nav-subsection" data-nav-key="topic-01-group-03"><div class="nav-subtitle">实施报告</div>
+<a class="nav-link" href="../../01-项目管理/03-实施报告/Batch1实施报告.html">Batch1 实施报告</a>
+<a class="nav-link" href="../../01-项目管理/03-实施报告/Batch2实施报告.html">Batch2 实施报告</a>
+<a class="nav-link" href="../../01-项目管理/03-实施报告/QuickInput主线修改记录.html">QuickInput 主线修改记录</a>
+<a class="nav-link" href="../../01-项目管理/03-实施报告/QuickInput收口状态.html">QuickInput 收口状态</a>
+<a class="nav-link" href="../../01-项目管理/03-实施报告/QuickInput本轮修改总览.html">QuickInput 本轮修改总览</a>
+</div>
+</div>
+<div class="nav-section" data-nav-key="topic-02"><div class="nav-title">功能设计</div>
+<div class="nav-subsection" data-nav-key="topic-02-group-00"><div class="nav-subtitle">功能全景</div>
+<a class="nav-link" href="../../02-功能设计/00-功能全景/功能总览.html">功能总览</a>
+<a class="nav-link" href="../../02-功能设计/00-功能全景/功能清单迁移.html">功能清单迁移</a>
+<a class="nav-link" href="../../02-功能设计/00-功能全景/旧产品功能地图.html">旧产品功能地图</a>
+</div>
+<div class="nav-subsection" data-nav-key="topic-02-group-01"><div class="nav-subtitle">用户与交互</div>
+<a class="nav-link" href="../../02-功能设计/01-用户与交互/用户场景.html">用户场景</a>
+<a class="nav-link" href="../../02-功能设计/01-用户与交互/命令设计.html">命令设计</a>
+<a class="nav-link" href="../../02-功能设计/01-用户与交互/设置项设计.html">设置项设计</a>
+<a class="nav-link" href="../../02-功能设计/01-用户与交互/交互流程.html">交互流程</a>
+<a class="nav-link" href="../../02-功能设计/01-用户与交互/异常状态.html">异常状态</a>
+<a class="nav-link" href="../../02-功能设计/01-用户与交互/功能验收标准.html">功能验收标准</a>
+</div>
+<div class="nav-subsection" data-nav-key="topic-02-group-02"><div class="nav-subtitle">View UI 与移动端</div>
+<a class="nav-link" href="../../02-功能设计/02-ViewUI与移动端/ViewUI触发动作梳理.html">View UI 触发动作梳理</a>
+<a class="nav-link" href="../../02-功能设计/02-ViewUI与移动端/移动端UI全量重构方案.html">移动端 UI 全量重构方案</a>
+</div>
+<div class="nav-subsection" data-nav-key="topic-02-group-03"><div class="nav-subtitle">QuickInput 功能收口</div>
+<a class="nav-link" href="../../02-功能设计/03-QuickInput功能收口/QuickInput保存计划一致性.html">QuickInput 保存计划一致性</a>
+<a class="nav-link" href="../../02-功能设计/03-QuickInput功能收口/QuickInput迁移保存反馈.html">QuickInput 迁移保存反馈</a>
+<a class="nav-link" href="../../02-功能设计/03-QuickInput功能收口/QuickInput路径变化保存策略.html">QuickInput 路径变化保存策略</a>
+</div>
+</div>
+<div class="nav-section" data-nav-key="topic-03"><div class="nav-title">技术文档</div>
+<div class="nav-subsection" data-nav-key="topic-03-group-00"><div class="nav-subtitle">技术全景</div>
+<a class="nav-link" href="../00-技术全景/技术总览.html">技术总览</a>
+<a class="nav-link" href="../00-技术全景/文件地图.html">文件地图</a>
+<a class="nav-link" href="../00-技术全景/模块职责.html">模块职责</a>
+<a class="nav-link" href="../00-技术全景/插件生命周期.html">插件生命周期</a>
+</div>
+<div class="nav-subsection" data-nav-key="topic-03-group-01"><div class="nav-subtitle">架构导览</div>
+<a class="nav-link" href="../01-架构导览/开发指南迁移.html">开发指南迁移</a>
+<a class="nav-link" href="../01-架构导览/开发规范迁移.html">开发规范迁移</a>
+<a class="nav-link" href="../01-架构导览/代码架构图总览.html">代码架构图总览</a>
+<a class="nav-link" href="../01-架构导览/旧代码架构图.html">旧代码架构图</a>
+</div>
+<div class="nav-subsection" data-nav-key="topic-03-group-02"><div class="nav-subtitle">目录地图</div>
+<a class="nav-link" href="../02-目录地图/app目录导览.html">app 目录导览</a>
+<a class="nav-link" href="../02-目录地图/core目录导览.html">core 目录导览</a>
+<a class="nav-link" href="../02-目录地图/features目录导览.html">features 目录导览</a>
+<a class="nav-link" href="../02-目录地图/platform目录导览.html">platform 目录导览</a>
+<a class="nav-link" href="../02-目录地图/share目录导览.html">share 目录导览</a>
+</div>
+<div class="nav-subsection" data-nav-key="topic-03-group-03"><div class="nav-subtitle">代码视角</div>
+<a class="nav-link" href="../03-代码视角/架构视角逐文件.html">架构视角逐文件</a>
+<a class="nav-link" href="../03-代码视角/领域视角逐文件.html">领域视角逐文件</a>
+<a class="nav-link" href="../03-代码视角/业务视角逐文件.html">业务视角逐文件</a>
+</div>
+<div class="nav-subsection" data-nav-key="topic-03-group-04"><div class="nav-subtitle">运行机制</div>
+<a class="nav-link" href="../04-运行机制/数据流.html">数据流</a>
+<a class="nav-link" href="../04-运行机制/事件流.html">事件流</a>
+<a class="nav-link" href="../04-运行机制/Obsidian API 使用.html">Obsidian API 使用</a>
+<a class="nav-link" href="../04-运行机制/样式系统.html">样式系统</a>
+<a class="nav-link" href="../04-运行机制/构建流程.html">构建流程</a>
+<a class="nav-link" href="../04-运行机制/数据流与流程图.html">数据流与流程图</a>
+</div>
+<div class="nav-subsection" data-nav-key="topic-03-group-05"><div class="nav-subtitle">字段与输入</div>
+<a class="nav-link" href="字段系统重构方案.html">字段系统重构方案</a>
+<a class="nav-link" href="统一输入现状盘点.html">统一输入现状盘点</a>
+</div>
+<div class="nav-subsection" data-nav-key="topic-03-group-06"><div class="nav-subtitle">QuickInput 技术记录</div>
+<a class="nav-link" href="../06-QuickInput技术记录/QuickInput多步推进Snapshot.html">QuickInput 多步推进 Snapshot</a>
+<a class="nav-link" href="../06-QuickInput技术记录/QuickInputLegacy调试收口.html">QuickInput Legacy 调试收口</a>
+<a class="nav-link" href="../06-QuickInput技术记录/QuickInput任务内容提取调试.html">QuickInput 任务内容提取调试</a>
+<a class="nav-link" href="../06-QuickInput技术记录/QuickInput任务内容单一入口.html">QuickInput 任务内容单一入口</a>
+<a class="nav-link" href="../06-QuickInput技术记录/QuickInput任务模板护栏.html">QuickInput 任务模板护栏</a>
+<a class="nav-link" href="../06-QuickInput技术记录/QuickInput任务写回保真.html">QuickInput 任务写回保真</a>
+</div>
+</div>
+<div class="nav-section" data-nav-key="topic-04"><div class="nav-title">评审中心</div>
+<div class="nav-subsection" data-nav-key="topic-04-group-00"><div class="nav-subtitle">评审方法</div>
+<a class="nav-link" href="../../04-评审中心/00-评审方法/需求评审.html">需求评审</a>
+<a class="nav-link" href="../../04-评审中心/00-评审方法/功能评审.html">功能评审</a>
+<a class="nav-link" href="../../04-评审中心/00-评审方法/技术方案评审.html">技术方案评审</a>
+</div>
+<div class="nav-subsection" data-nav-key="topic-04-group-01"><div class="nav-subtitle">质量评审</div>
+<a class="nav-link" href="../../04-评审中心/01-质量评审/代码结构评审.html">代码结构评审</a>
+<a class="nav-link" href="../../04-评审中心/01-质量评审/发布评审.html">发布评审</a>
+<a class="nav-link" href="../../04-评审中心/01-质量评审/风险评审.html">风险评审</a>
+</div>
+<div class="nav-subsection" data-nav-key="topic-04-group-02"><div class="nav-subtitle">专题评审</div>
+<a class="nav-link" href="../../04-评审中心/02-专题评审/字段系统深度评审.html">字段系统深度评审</a>
+<a class="nav-link" href="../../04-评审中心/02-专题评审/QuickInput调试与Legacy规范.html">QuickInput 调试与 Legacy 规范</a>
+</div>
+</div>
+<div class="nav-section" data-nav-key="topic-05"><div class="nav-title">维护发布</div>
+<div class="nav-subsection" data-nav-key="topic-05-group-00"><div class="nav-subtitle">测试验收</div>
+<a class="nav-link" href="../../05-维护发布/00-测试验收/测试清单.html">测试清单</a>
+<a class="nav-link" href="../../05-维护发布/00-测试验收/测试方案迁移.html">测试方案迁移</a>
+<a class="nav-link" href="../../05-维护发布/00-测试验收/QuickInput主线验收清单.html">QuickInput 主线验收清单</a>
+<a class="nav-link" href="../../05-维护发布/00-测试验收/QuickInput最终验收清单.html">QuickInput 最终验收清单</a>
+</div>
+<div class="nav-subsection" data-nav-key="topic-05-group-01"><div class="nav-subtitle">发布与回滚</div>
+<a class="nav-link" href="../../05-维护发布/01-发布与回滚/发布流程.html">发布流程</a>
+<a class="nav-link" href="../../05-维护发布/01-发布与回滚/Changelog.html">Changelog</a>
+<a class="nav-link" href="../../05-维护发布/01-发布与回滚/Bug处理流程.html">Bug 处理流程</a>
+<a class="nav-link" href="../../05-维护发布/01-发布与回滚/兼容性记录.html">兼容性记录</a>
+<a class="nav-link" href="../../05-维护发布/01-发布与回滚/回滚方案.html">回滚方案</a>
+<a class="nav-link" href="../../05-维护发布/01-发布与回滚/QuickInput风险与回滚说明.html">QuickInput 风险与回滚说明</a>
+</div>
+<div class="nav-subsection" data-nav-key="topic-05-group-02"><div class="nav-subtitle">修复记录</div>
+<a class="nav-link" href="../../05-维护发布/02-修复记录/QuickInput构建导出修复.html">QuickInput 构建导出修复</a>
+<a class="nav-link" href="../../05-维护发布/02-修复记录/BlockStatistics统一与跳转修复.html">Block Statistics 统一与跳转修复</a>
+<a class="nav-link" href="../../05-维护发布/02-修复记录/QuickInput任务正文空格保留修复.html">QuickInput 任务正文空格保留修复</a>
+</div>
+</div>
+    </aside>
+    <main class="main">
+      <section class="hero">
+        <div class="eyebrow">技术文档 / MIGRATED DOC</div>
+        <h1>字段系统重构方案</h1>
+        <p class="lead">本报告不是单纯讨论“字段类型有哪些”，而是把字段当成插件的核心骨架进行审视。字段在当前插件中不是一个 UI 细节，而是贯穿全链路的主轴：因此，字段系统如果没有被当成“一级架构对象”来设计，插件后续一定会不断出现：但我不建议“整仓推翻重来”，而建议：</p>
+        <div class="meta-row">
+          <span class="badge good">状态：已迁移</span>
+          <span class="badge">最后更新：2026-05-07</span>
+          <span class="badge">格式：HTML</span>
+        </div>
+      </section>
+      <section class="grid"><article class="card full"><h2>迁移信息</h2><div class="table-wrap"><table><thead><tr><th>项目</th><th>内容</th></tr></thead><tbody><tr><td>新分类</td><td>技术文档</td></tr><tr><td>旧路径</td><td><code>docs/字段重构方案.md</code></td></tr><tr><td>原始标题</td><td>字段系统深度审计报告与重构方案（架构 / 领域 / 表单 / 上下文 / 筛选全覆盖）</td></tr><tr><td>处理方式</td><td>正文已转换为当前 <code>文档/</code> 的 HTML 页面；原始文件另存于 <code>_归档/迁移原文/</code>。</td></tr></tbody></table></div></article><article class="card full"><h2>正文</h2><div class="imported-doc"><h1>字段系统深度审计报告与重构方案（架构 / 领域 / 表单 / 上下文 / 筛选全覆盖）</h1>
+<h2>一、报告目标</h2>
+<p>本报告不是单纯讨论“字段类型有哪些”，而是把字段当成插件的核心骨架进行审视。</p>
+<p>字段在当前插件中不是一个 UI 细节，而是贯穿全链路的主轴：</p>
+<ul>
+<li>记录数据靠字段组织</li>
+<li>表单输入靠字段驱动</li>
+<li>展示视图靠字段渲染</li>
+<li>筛选和搜索靠字段索引</li>
+<li>排序和统计靠字段语义</li>
+<li>移动端适配最终也落到字段交互</li>
+</ul>
+<p>因此，字段系统如果没有被当成“一级架构对象”来设计，插件后续一定会不断出现：</p>
+<ul>
+<li>新字段难加</li>
+<li>旧字段行为不一致</li>
+<li>UI 与数据耦合</li>
+<li>移动端和桌面端交互分裂</li>
+<li>筛选逻辑越来越散</li>
+<li>媒体字段接不进去</li>
+</ul>
+<hr/>
+<h2>二、总判断：字段是否已经到了需要重构的程度</h2>
+<h2>2.1 我的判断</h2>
+<p><strong>是的，值得重构。</strong></p>
+<p>但我不建议“整仓推翻重来”，而建议：</p>
+<blockquote>
+<p>保留已有业务能力与数据资产，重建字段内核、字段运行时和字段渲染协议，再逐步迁移 UI 与表单壳层。</p>
+</blockquote>
+<p>这类重构更像：</p>
+<ul>
+<li>不是重写整个插件</li>
+<li>而是把“字段”从零散配置、零散判断、零散组件里抽出来</li>
+<li>升级为一个统一系统</li>
+</ul>
+<hr/>
+<h2>2.2 为什么字段值得作为重构中心</h2>
+<p>因为字段本身天然跨越四层：</p>
+<h3>1. 领域层</h3>
+<p>字段定义了“记录里有什么”</p>
+<h3>2. 应用层</h3>
+<p>字段决定“如何录入、修改、校验、提交、筛选”</p>
+<h3>3. UI 层</h3>
+<p>字段决定“怎么显示、怎么编辑、怎么交互”</p>
+<h3>4. 存储层</h3>
+<p>字段决定“如何写入 Markdown / frontmatter / 附件 / 派生索引”</p>
+<p>如果这四层各自理解字段，且彼此没有统一协议，最终一定会出现一套插件像四套系统拼出来的感觉。</p>
+<hr/>
+<h2>三、什么样的字段审计报告才算“满意的答卷”</h2>
+<p>一份真正合格的字段审计报告，至少应回答以下问题：</p>
+<h3>3.1 字段到底是什么</h3>
+<p>它是：</p>
+<ul>
+<li>UI 控件配置？</li>
+<li>数据 schema？</li>
+<li>表单项？</li>
+<li>frontmatter 键？</li>
+<li>筛选维度？</li>
+<li>渲染节点？</li>
+</ul>
+<p>正确答案是：</p>
+<blockquote>
+<p>字段是一个跨领域、跨应用、跨渲染、跨存储的核心模型。</p>
+</blockquote>
+<hr/>
+<h3>3.2 字段现在在哪里被使用</h3>
+<p>必须地毯式盘点：</p>
+<ul>
+<li>创建记录</li>
+<li>编辑记录</li>
+<li>快速输入</li>
+<li>详情展示</li>
+<li>列表摘要</li>
+<li>筛选器</li>
+<li>搜索</li>
+<li>排序</li>
+<li>导出</li>
+<li>模板</li>
+<li>统计</li>
+<li>移动端交互</li>
+<li>附件与媒体插入</li>
+</ul>
+<hr/>
+<h3>3.3 字段现在是如何失控的</h3>
+<p>必须明确回答：</p>
+<ul>
+<li>是不是“字段类型”只存在于 UI 层</li>
+<li>是不是不同页面对同一字段有不同逻辑</li>
+<li>是不是筛选逻辑绕开了字段定义</li>
+<li>是不是存储层知道太多 UI 细节</li>
+<li>是不是字段行为靠散落的 if/else 驱动</li>
+</ul>
+<hr/>
+<h3>3.4 字段未来如何扩展</h3>
+<p>必须说明：</p>
+<ul>
+<li>新增字段会不会牵一发动全身</li>
+<li>图片、音频、附件、多值字段、关联字段能不能接进去</li>
+<li>移动端行为能否被字段自身声明</li>
+</ul>
+<hr/>
+<h3>3.5 重构边界在哪里</h3>
+<p>必须给出：</p>
+<ul>
+<li>哪些内容可以保留</li>
+<li>哪些必须替换</li>
+<li>哪些需要分阶段迁移</li>
+</ul>
+<p>如果做不到这几点，报告就只是“看起来很多字”，但不能指导重构。</p>
+<hr/>
+<h2>四、字段在插件中的正确定位</h2>
+<h2>4.1 字段不是表单控件，字段是“记录能力的接口”</h2>
+<p>字段真正要承载的是：</p>
+<ul>
+<li>数据类型</li>
+<li>业务语义</li>
+<li>校验规则</li>
+<li>默认值规则</li>
+<li>展示规则</li>
+<li>编辑规则</li>
+<li>筛选规则</li>
+<li>排序规则</li>
+<li>存储规则</li>
+<li>平台行为</li>
+</ul>
+<p>所以字段的定义不能只是：</p>
+<pre><code class="language-ts">{
+  key: 'title',
+  type: 'text',
+  label: '标题'
+}
+</code></pre>
+<p>这太薄了。它只能支撑一个输入框，支撑不了一个系统。</p>
+<hr/>
+<h2>4.2 字段应该被定义成“能力对象”</h2>
+<p>更合理的方向是：</p>
+<pre><code class="language-ts">type FieldDefinition = {
+  key: string;
+  kind: FieldKind;
+  label: string;
+  description?: string;
+
+  cardinality: 'single' | 'multiple';
+  required?: boolean;
+
+  defaultValue?: DefaultValuePolicy;
+  validate?: Validator[];
+  normalize?: Normalizer[];
+
+  storage: FieldStoragePolicy;
+  display: FieldDisplayPolicy;
+  input: FieldInputPolicy;
+  filter: FieldFilterPolicy;
+  sort?: FieldSortPolicy;
+
+  mobile?: MobileFieldPolicy;
+  desktop?: DesktopFieldPolicy;
+};
+</code></pre>
+<p>字段从“配置项”升级成“协议对象”。</p>
+<hr/>
+<h2>五、字段的地毯式使用场景审计</h2>
+<h2>5.1 输入场景</h2>
+<p>字段在输入里至少影响：</p>
+<ul>
+<li>使用什么控件</li>
+<li>单行还是多行</li>
+<li>是否自动增高</li>
+<li>回车语义是什么</li>
+<li>是否需要建议值</li>
+<li>是否需要 sheet 选择</li>
+<li>是否允许为空</li>
+<li>是否即时校验</li>
+<li>是否要保证光标可见</li>
+<li>是否支持移动端专属行为</li>
+</ul>
+<h3>核心判断</h3>
+<p>如果这些逻辑今天都散在组件里，而不是挂在字段定义上，那么字段系统还没有成型。</p>
+<hr/>
+<h2>5.2 表单上下文</h2>
+<p>字段不仅决定单个输入框，还决定表单上下文：</p>
+<ul>
+<li>字段顺序</li>
+<li>字段分组</li>
+<li>哪些字段默认折叠</li>
+<li>哪些字段是高级项</li>
+<li>哪些字段属于危险区</li>
+<li>哪些字段在某个记录类型下隐藏</li>
+<li>哪些字段互相联动</li>
+</ul>
+<h3>关键问题</h3>
+<p>现在你的代码里，如果“字段之间关系”不是被 schema 或规则系统表达，而是页面里手写判断，那就说明表单上下文设计偏弱。</p>
+<hr/>
+<h2>5.3 展示上下文</h2>
+<p>同一个字段在不同视图里，展示方式不一样：</p>
+<ul>
+<li>列表视图：只显示摘要</li>
+<li>详情视图：显示完整值</li>
+<li>卡片视图：显示重点信息</li>
+<li>时间轴视图：可能只显示时间与标签</li>
+<li>移动端：可能需要更紧凑的显示规则</li>
+</ul>
+<p>所以字段必须能描述：</p>
+<ul>
+<li>摘要显示</li>
+<li>完整显示</li>
+<li>空值显示</li>
+<li>截断规则</li>
+<li>富显示规则</li>
+<li>媒体预览规则</li>
+</ul>
+<hr/>
+<h2>5.4 筛选上下文</h2>
+<p>筛选不应该是“页面自己理解字段”。</p>
+<p>字段自身必须声明：</p>
+<ul>
+<li>是否可筛选</li>
+<li>用什么操作符</li>
+<li>单值还是多值</li>
+<li>文本是 contains 还是 equals</li>
+<li>日期是区间还是单点</li>
+<li>标签是任意匹配还是全匹配</li>
+<li>媒体字段是否可筛“是否存在”</li>
+</ul>
+<h3>这是重构重点</h3>
+<p>如果你不把筛选并回字段系统，后续筛选器一定越来越像另一套私有逻辑。</p>
+<hr/>
+<h2>5.5 排序与聚合上下文</h2>
+<p>很多插件一开始只想到“字段输入”，后面才想“字段排序”“字段统计”，这时会发现字段定义不够。</p>
+<p>字段应预留：</p>
+<ul>
+<li>是否可排序</li>
+<li>默认排序算法</li>
+<li>大小写规则</li>
+<li>日期排序</li>
+<li>数值排序</li>
+<li>多值字段排序策略</li>
+<li>是否可聚合统计</li>
+<li>聚合方式有哪些</li>
+</ul>
+<hr/>
+<h2>5.6 存储上下文</h2>
+<p>字段最终要落到 Obsidian 的文件系统与 Markdown 上。</p>
+<p>官方建议插件优先用 <code>Vault</code> API，而不是直接用 <code>Adapter</code>；修改 frontmatter 应用 <code>FileManager.processFrontMatter</code>，而不是手动读写 YAML。移动端也不能假定桌面文件系统行为，因为移动端 <code>Vault.adapter</code> 可能是 <code>CapacitorAdapter</code>，不是桌面文件系统适配器。(<a href="https://docs.obsidian.md/oo/plugin" title="Obsidian October plugin self-critique checklist - Developer Documentation">Developer Documentation</a>)</p>
+<p>因此字段系统必须明确定义存储策略：</p>
+<ul>
+<li>frontmatter</li>
+<li>inline markdown</li>
+<li>note body block</li>
+<li>linked attachment</li>
+<li>derived index</li>
+<li>plugin data cache</li>
+</ul>
+<hr/>
+<h2>六、字段重构的核心判断：到底要不要推翻</h2>
+<h2>6.1 不建议推翻的部分</h2>
+<p>以下内容一般可以保留：</p>
+<ul>
+<li>已有业务语义</li>
+<li>已有字段 key</li>
+<li>已有记录数据</li>
+<li>已有用户工作流</li>
+<li>已有前台页面入口</li>
+<li>已有 Markdown 存储大方向</li>
+</ul>
+<hr/>
+<h2>6.2 建议重做的部分</h2>
+<p>以下部分值得重做：</p>
+<ul>
+<li>字段定义协议</li>
+<li>字段渲染注册机制</li>
+<li>字段输入行为层</li>
+<li>字段筛选协议</li>
+<li>字段展示协议</li>
+<li>字段存储映射层</li>
+<li>移动端字段行为模型</li>
+</ul>
+<hr/>
+<h2>6.3 结论</h2>
+<p>所以这不是“推翻整个插件”，而是：</p>
+<blockquote>
+<p>推翻旧的字段实现方式，保留旧的业务目标和数据世界。</p>
+</blockquote>
+<p>这类重构是值得的，而且性价比高。</p>
+<hr/>
+<h2>七、建议的新字段架构</h2>
+<h2>7.1 四层结构</h2>
+<h3>第一层：Field Definition</h3>
+<p>描述字段“是什么”</p>
+<h3>第二层：Field Runtime</h3>
+<p>描述字段“此刻如何运行”</p>
+<h3>第三层：Field Renderer</h3>
+<p>描述字段“如何展示/编辑”</p>
+<h3>第四层：Field Persistence</h3>
+<p>描述字段“如何落盘与读取”</p>
+<hr/>
+<h2>7.2 建议的数据模型</h2>
+<pre><code class="language-ts">type FieldKind =
+  | 'text'
+  | 'textarea'
+  | 'number'
+  | 'select'
+  | 'multiselect'
+  | 'date'
+  | 'datetime'
+  | 'toggle'
+  | 'checkbox'
+  | 'radio'
+  | 'tags'
+  | 'richtext'
+  | 'image'
+  | 'audio'
+  | 'attachments';
+</code></pre>
+<hr/>
+<h3>字段定义层</h3>
+<pre><code class="language-ts">type FieldDefinition = {
+  key: string;
+  kind: FieldKind;
+  label: string;
+  required?: boolean;
+  cardinality?: 'single' | 'multiple';
+
+  defaultValue?: unknown;
+  validate?: FieldValidator[];
+  normalize?: FieldNormalizer[];
+
+  storage: FieldStoragePolicy;
+  display: FieldDisplayPolicy;
+  input: FieldInputPolicy;
+  filter?: FieldFilterPolicy;
+  mobile?: MobileFieldPolicy;
+};
+</code></pre>
+<hr/>
+<h3>运行时层</h3>
+<pre><code class="language-ts">type FieldRuntimeState = {
+  visible: boolean;
+  disabled: boolean;
+  readonly: boolean;
+  dirty: boolean;
+  touched: boolean;
+  errors: string[];
+};
+</code></pre>
+<hr/>
+<h3>渲染协议层</h3>
+<pre><code class="language-ts">type FieldRendererRegistry = {
+  display: Record&lt;FieldKind, DisplayRenderer&gt;;
+  editor: Record&lt;FieldKind, EditorRenderer&gt;;
+  filter: Record&lt;FieldKind, FilterRenderer&gt;;
+};
+</code></pre>
+<hr/>
+<h2>八、字段在代码架构中的落点</h2>
+<h2>8.1 推荐目录</h2>
+<pre><code class="language-txt">src/
+  domain/
+    fields/
+      field-definition.ts
+      field-kind.ts
+      validators.ts
+      filters.ts
+      storage.ts
+  application/
+    fields/
+      build-form.ts
+      apply-filters.ts
+      serialize-record.ts
+      deserialize-record.ts
+  presentation/
+    fields/
+      field-runtime.ts
+      field-viewmodels.ts
+  ui/
+    shared/fields/
+      display/
+      editors/
+      filters/
+    mobile/fields/
+    desktop/fields/
+</code></pre>
+<hr/>
+<h2>8.2 分层职责</h2>
+<h3>domain/fields</h3>
+<p>不碰 DOM，不碰平台 API，只定义字段语义</p>
+<h3>application/fields</h3>
+<p>把字段应用到表单、筛选、序列化、反序列化</p>
+<h3>presentation/fields</h3>
+<p>承接字段运行时状态，如错误、焦点、可见性、移动端输入状态</p>
+<h3>ui/fields</h3>
+<p>具体渲染为按钮、输入框、标签、sheet、预览卡片</p>
+<hr/>
+<h2>九、字段在输入与表单中的重构建议</h2>
+<h2>9.1 统一“字段输入协议”</h2>
+<p>每个字段都应声明：</p>
+<pre><code class="language-ts">type FieldInputPolicy = {
+  editor: 'inline' | 'sheet' | 'fullscreen';
+  enterBehavior?: 'newline' | 'next' | 'submit';
+  autoGrow?: boolean;
+  keepCursorVisible?: boolean;
+  placeholder?: string;
+  suggestions?: string[] | SuggestionSource;
+};
+</code></pre>
+<hr/>
+<h2>9.2 字段不直接决定组件，字段决定“输入策略”</h2>
+<p>例如：</p>
+<ul>
+<li><code>text</code> 不等于必须用 <code>&lt;input&gt;</code></li>
+<li><code>select</code> 不等于必须下拉框</li>
+<li><code>image</code> 不等于必须上传按钮</li>
+</ul>
+<p>真正应该决定的是：</p>
+<ul>
+<li>编辑场景</li>
+<li>平台策略</li>
+<li>是否需要全屏编辑态</li>
+<li>是否需要预览</li>
+</ul>
+<hr/>
+<h2>十、字段在上下文中的重构建议</h2>
+<h2>10.1 字段上下文不是平铺数组</h2>
+<p>建议引入：</p>
+<pre><code class="language-ts">type FieldGroup = {
+  id: string;
+  title: string;
+  fields: string[];
+  collapsible?: boolean;
+  priority?: 'primary' | 'secondary' | 'advanced' | 'danger';
+};
+</code></pre>
+<p>这样字段在表单中不再只是平铺，而是进入上下文。</p>
+<hr/>
+<h2>10.2 条件可见与联动</h2>
+<p>建议用规则而不是组件里写死：</p>
+<pre><code class="language-ts">type VisibilityRule = (record: DraftRecord) =&gt; boolean;
+type EnableRule = (record: DraftRecord) =&gt; boolean;
+</code></pre>
+<hr/>
+<h2>十一、字段在筛选中的重构建议</h2>
+<h2>11.1 字段必须自己声明筛选语义</h2>
+<p>例如：</p>
+<pre><code class="language-ts">type FieldFilterPolicy = {
+  enabled: boolean;
+  operators: string[];
+  quickFilter?: boolean;
+};
+</code></pre>
+<hr/>
+<h2>11.2 各字段建议的筛选方式</h2>
+<ul>
+<li><code>text</code>：contains / equals / startsWith</li>
+<li><code>textarea</code>：contains</li>
+<li><code>number</code>：eq / gt / lt / between</li>
+<li><code>date</code>：before / after / between</li>
+<li><code>select</code>：equals / in</li>
+<li><code>multiselect</code>：containsAny / containsAll</li>
+<li><code>tags</code>：containsAny / containsAll</li>
+<li><code>image</code>：exists / notExists</li>
+<li><code>audio</code>：exists / notExists / durationRange（以后扩展）</li>
+</ul>
+<hr/>
+<h2>十二、图片与音频字段的设计占位</h2>
+<p>这一部分你说“不着急”，那我就按“先预留正确接口，不急着做全功能”来设计。</p>
+<h2>12.1 为什么图片 / 音频字段值得提前建模</h2>
+<p>Obsidian 官方帮助文档明确支持把附件放进 vault，附件可以是图片、音频、PDF 等；也支持把这些文件嵌入到笔记中。帮助文档还列出了支持的图片与音频格式，例如图片支持 <code>.avif .bmp .gif .jpeg .jpg .png .svg .webp</code>，音频支持 <code>.flac .m4a .mp3 .ogg .wav .webm .3gp</code>。不过官方也说明，音频、视频等文件的实际支持还取决于设备可用的 codec。(<a href="https://obsidian.md/help/attachments" title="Attachments - Obsidian Help">Obsidian</a>)</p>
+<hr/>
+<h2>12.2 图片 / 音频字段不应直接存二进制内容</h2>
+<p>建议不要把图片、音频本体塞进字段 JSON 里，而是：</p>
+<ul>
+<li>文件本体存 vault 附件</li>
+<li>字段存“引用”</li>
+</ul>
+<p>因为 Obsidian 本身就以 vault 中的附件文件和内部嵌入为基础。官方帮助文档说明，附件是 vault 里的常规文件，桌面端可以拖放嵌入，移动端用附件选项插入或链接。(<a href="https://obsidian.md/help/attachments" title="Attachments - Obsidian Help">Obsidian</a>)</p>
+<hr/>
+<h2>12.3 推荐的字段值结构</h2>
+<h3>图片字段</h3>
+<pre><code class="language-ts">type ImageFieldValue = {
+  path: string;
+  alt?: string;
+  caption?: string;
+  width?: number;
+  height?: number;
+};
+</code></pre>
+<h3>音频字段</h3>
+<pre><code class="language-ts">type AudioFieldValue = {
+  path: string;
+  title?: string;
+  durationMs?: number;
+  transcriptPath?: string;
+};
+</code></pre>
+<h3>多媒体集合</h3>
+<pre><code class="language-ts">type MediaListValue&lt;T&gt; = {
+  items: T[];
+};
+</code></pre>
+<hr/>
+<h2>12.4 存储策略建议</h2>
+<p>有两条路线：</p>
+<h3>路线 A：字段值写 frontmatter，只存 path</h3>
+<p>优点：</p>
+<ul>
+<li>结构化</li>
+<li>便于筛选和程序读取</li>
+</ul>
+<p>缺点：</p>
+<ul>
+<li>真正显示时仍要转成 embed 或预览</li>
+</ul>
+<h3>路线 B：字段值写 frontmatter + 正文渲染 embed</h3>
+<p>例如图片可转为内部嵌入引用，音频同理。官方帮助文档说明内部嵌入语法是 <code>![[filename]]</code> 这一类的嵌入方式。(<a href="https://obsidian.md/help/How%2Bto/Embed%2Bfiles?utm_source=chatgpt.com" title="Embed files - Obsidian Help">Obsidian</a>)</p>
+<p>我的建议是：</p>
+<blockquote>
+<p><strong>先走路线 A，保守、稳定、可筛选。</strong>
+以后再在展示层补 route B 的富渲染。</p>
+</blockquote>
+<hr/>
+<h2>12.5 文件创建与移动的设计建议</h2>
+<p>官方对插件 API 的指导是优先用 <code>Vault</code> API，不要优先操作 Adapter；修改 frontmatter 用 <code>processFrontMatter</code>。另外，附件的默认位置由 Obsidian 的“Default location for new attachments”设置决定。(<a href="https://obsidian.md/help/attachments" title="Attachments - Obsidian Help">Obsidian</a>)</p>
+<p>所以图片 / 音频字段的设计建议是：</p>
+<ul>
+<li>上传或接收文件后，统一通过 vault 流程落盘</li>
+<li>字段层只保留路径引用</li>
+<li>frontmatter 的修改通过 <code>processFrontMatter</code></li>
+<li>不让 UI 组件自己决定文件放哪</li>
+<li>增加一个 <code>AttachmentPlacementService</code></li>
+</ul>
+<hr/>
+<h2>十三、字段系统最应该避免的坑</h2>
+<h3>1. 字段定义只存在于 UI 层</h3>
+<p>结果是业务、筛选、存储都会分叉。</p>
+<h3>2. 字段 key 与存储 key 混乱</h3>
+<p>后面迁移极痛苦。</p>
+<h3>3. 字段类型太少，行为全靠 if/else</h3>
+<p>短期省事，长期爆炸。</p>
+<h3>4. 让每个页面自己理解字段</h3>
+<p>最终每个页面都有一套“半私有字段逻辑”。</p>
+<h3>5. 媒体字段直接绑死某个平台实现</h3>
+<p>移动端和桌面端就会裂开。</p>
+<hr/>
+<h2>十四、推荐的重构策略</h2>
+<h2>第一阶段：字段盘点</h2>
+<p>输出一张矩阵：</p>
+<ul>
+<li>字段 key</li>
+<li>当前类型</li>
+<li>当前存储方式</li>
+<li>当前展示位置</li>
+<li>当前输入方式</li>
+<li>当前筛选方式</li>
+<li>是否移动端特殊</li>
+<li>是否存在重复逻辑</li>
+</ul>
+<hr/>
+<h2>第二阶段：建立新字段协议</h2>
+<p>完成：</p>
+<ul>
+<li><code>FieldDefinition</code></li>
+<li><code>FieldStoragePolicy</code></li>
+<li><code>FieldInputPolicy</code></li>
+<li><code>FieldDisplayPolicy</code></li>
+<li><code>FieldFilterPolicy</code></li>
+</ul>
+<hr/>
+<h2>第三阶段：建立渲染注册表</h2>
+<ul>
+<li>显示渲染器</li>
+<li>编辑渲染器</li>
+<li>筛选渲染器</li>
+</ul>
+<hr/>
+<h2>第四阶段：替换旧页面</h2>
+<p>按场景替换：</p>
+<ol>
+<li>QuickInput</li>
+<li>Full Editor</li>
+<li>Detail View</li>
+<li>Filter Panel</li>
+<li>List Summary</li>
+</ol>
+<hr/>
+<h2>第五阶段：扩展媒体字段</h2>
+<p>先支持：</p>
+<ul>
+<li>图片 path 引用</li>
+<li>音频 path 引用</li>
+<li>基础预览</li>
+<li><code>exists</code> 筛选</li>
+</ul>
+<p>不急着做：</p>
+<ul>
+<li>转码</li>
+<li>波形</li>
+<li>音频剪辑</li>
+<li>OCR</li>
+<li>自动转写</li>
+</ul>
+<hr/>
+<h2>十五、最终结论</h2>
+<p>你现在要做的，不是“再给字段加两个 type”。</p>
+<p>你真正要做的是：</p>
+<blockquote>
+<p>把字段从“零散表单项”升级成“插件核心协议层”。</p>
+</blockquote>
+<p>这是一次很值得做的重构，而且不必推翻整个插件。</p>
+<p>最合理的方向是：</p>
+<ul>
+<li>保留业务与数据</li>
+<li>重做字段内核</li>
+<li>重组字段运行时</li>
+<li>重建字段渲染与筛选协议</li>
+<li>为图片、音频等附件字段预留路径引用型设计</li>
+</ul>
+<hr/>
+<h2>十六、一句话结论</h2>
+<blockquote>
+<p>字段不是表单里的一个输入项，而是贯穿记录、表单、展示、筛选、存储和平台适配的核心对象；你这次重构最应该重建的，不是页面，而是字段系统本身。</p>
+</blockquote>
+</div></article></section>
+      <footer class="footer">本页属于 Think OS 插件 HTML 文档系统。UI 沿用原有风格，docs/html 旧资料已按新结构迁移。</footer>
+    </main>
+  </div>
+  <script src="../../_资源/搜索索引.js"></script>
+  <script src="../../_资源/文档脚本.js"></script>
+</body>
+</html>

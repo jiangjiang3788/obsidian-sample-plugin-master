@@ -1,0 +1,466 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>View UI 触发动作梳理｜Think OS 插件文档系统</title>
+  <link rel="stylesheet" href="../../_资源/文档样式.css">
+</head>
+<body data-doc-root="../../">
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-title">Think OS 插件文档系统</div>
+        <div class="brand-subtitle">HTML 项目驾驶舱 / 文档 / 需求 / 技术 / 评审 / 发布</div>
+      </div>
+      <div class="search-box">
+        <input class="search-input" data-doc-search placeholder="搜索：需求、命令、设置、文件地图、评审、QuickInput...">
+        <div class="search-results" data-search-results></div>
+      </div>
+<div class="nav-section" data-nav-key="topic-00"><div class="nav-title">基础入口</div>
+<div class="nav-subsection" data-nav-key="topic-00-group-00"><div class="nav-subtitle">项目驾驶舱</div>
+<a class="nav-link" href="../../index.html">首页仪表盘</a>
+<a class="nav-link" href="../../00-基础入口/00-项目驾驶舱/项目总览.html">项目总览</a>
+<a class="nav-link" href="../../00-基础入口/00-项目驾驶舱/快速开始.html">快速开始</a>
+<a class="nav-link" href="../../00-基础入口/00-项目驾驶舱/当前状态.html">当前状态</a>
+</div>
+<div class="nav-subsection" data-nav-key="topic-00-group-01"><div class="nav-subtitle">概念与边界</div>
+<a class="nav-link" href="../../00-基础入口/01-概念与边界/插件定位.html">插件定位</a>
+<a class="nav-link" href="../../00-基础入口/01-概念与边界/功能地图.html">功能地图</a>
+<a class="nav-link" href="../../00-基础入口/01-概念与边界/术语表.html">术语表</a>
+<a class="nav-link" href="../../00-基础入口/01-概念与边界/常见问题.html">常见问题</a>
+</div>
+<div class="nav-subsection" data-nav-key="topic-00-group-02"><div class="nav-subtitle">迁移与旧资料</div>
+<a class="nav-link" href="../../00-基础入口/02-迁移与旧资料/迁移文档索引.html">迁移文档索引</a>
+<a class="nav-link" href="../../00-基础入口/02-迁移与旧资料/旧章节总览.html">旧章节总览</a>
+<a class="nav-link" href="../../00-基础入口/02-迁移与旧资料/章节化文档框架.html">章节化文档框架</a>
+</div>
+</div>
+<div class="nav-section" data-nav-key="topic-01"><div class="nav-title">项目管理</div>
+<div class="nav-subsection" data-nav-key="topic-01-group-00"><div class="nav-subtitle">计划与路线</div>
+<a class="nav-link" href="../../01-项目管理/00-计划与路线/需求池.html">需求池</a>
+<a class="nav-link" href="../../01-项目管理/00-计划与路线/版本路线图.html">版本路线图</a>
+<a class="nav-link" href="../../01-项目管理/00-计划与路线/开发计划.html">开发计划</a>
+</div>
+<div class="nav-subsection" data-nav-key="topic-01-group-01"><div class="nav-subtitle">过程记录</div>
+<a class="nav-link" href="../../01-项目管理/01-过程记录/问题记录.html">问题记录</a>
+<a class="nav-link" href="../../01-项目管理/01-过程记录/技术债.html">技术债</a>
+<a class="nav-link" href="../../01-项目管理/01-过程记录/决策记录.html">决策记录</a>
+<a class="nav-link" href="../../01-项目管理/01-过程记录/发布记录.html">发布记录</a>
+</div>
+<div class="nav-subsection" data-nav-key="topic-01-group-02"><div class="nav-subtitle">实施计划</div>
+<a class="nav-link" href="../../01-项目管理/02-实施计划/插件深度报告与实施计划.html">插件深度报告与实施计划</a>
+<a class="nav-link" href="../../01-项目管理/02-实施计划/上下文时间重构计划.html">上下文时间重构计划</a>
+<a class="nav-link" href="../../01-项目管理/02-实施计划/统一输入修改计划.html">统一输入修改计划</a>
+<a class="nav-link" href="../../01-项目管理/02-实施计划/原始计划记录.html">原始计划记录</a>
+<a class="nav-link" href="../../01-项目管理/02-实施计划/旧需求台账.html">旧需求台账</a>
+</div>
+<div class="nav-subsection" data-nav-key="topic-01-group-03"><div class="nav-subtitle">实施报告</div>
+<a class="nav-link" href="../../01-项目管理/03-实施报告/Batch1实施报告.html">Batch1 实施报告</a>
+<a class="nav-link" href="../../01-项目管理/03-实施报告/Batch2实施报告.html">Batch2 实施报告</a>
+<a class="nav-link" href="../../01-项目管理/03-实施报告/QuickInput主线修改记录.html">QuickInput 主线修改记录</a>
+<a class="nav-link" href="../../01-项目管理/03-实施报告/QuickInput收口状态.html">QuickInput 收口状态</a>
+<a class="nav-link" href="../../01-项目管理/03-实施报告/QuickInput本轮修改总览.html">QuickInput 本轮修改总览</a>
+</div>
+</div>
+<div class="nav-section" data-nav-key="topic-02"><div class="nav-title">功能设计</div>
+<div class="nav-subsection" data-nav-key="topic-02-group-00"><div class="nav-subtitle">功能全景</div>
+<a class="nav-link" href="../00-功能全景/功能总览.html">功能总览</a>
+<a class="nav-link" href="../00-功能全景/功能清单迁移.html">功能清单迁移</a>
+<a class="nav-link" href="../00-功能全景/旧产品功能地图.html">旧产品功能地图</a>
+</div>
+<div class="nav-subsection" data-nav-key="topic-02-group-01"><div class="nav-subtitle">用户与交互</div>
+<a class="nav-link" href="../01-用户与交互/用户场景.html">用户场景</a>
+<a class="nav-link" href="../01-用户与交互/命令设计.html">命令设计</a>
+<a class="nav-link" href="../01-用户与交互/设置项设计.html">设置项设计</a>
+<a class="nav-link" href="../01-用户与交互/交互流程.html">交互流程</a>
+<a class="nav-link" href="../01-用户与交互/异常状态.html">异常状态</a>
+<a class="nav-link" href="../01-用户与交互/功能验收标准.html">功能验收标准</a>
+</div>
+<div class="nav-subsection" data-nav-key="topic-02-group-02"><div class="nav-subtitle">View UI 与移动端</div>
+<a class="nav-link" href="ViewUI触发动作梳理.html">View UI 触发动作梳理</a>
+<a class="nav-link" href="移动端UI全量重构方案.html">移动端 UI 全量重构方案</a>
+</div>
+<div class="nav-subsection" data-nav-key="topic-02-group-03"><div class="nav-subtitle">QuickInput 功能收口</div>
+<a class="nav-link" href="../03-QuickInput功能收口/QuickInput保存计划一致性.html">QuickInput 保存计划一致性</a>
+<a class="nav-link" href="../03-QuickInput功能收口/QuickInput迁移保存反馈.html">QuickInput 迁移保存反馈</a>
+<a class="nav-link" href="../03-QuickInput功能收口/QuickInput路径变化保存策略.html">QuickInput 路径变化保存策略</a>
+</div>
+</div>
+<div class="nav-section" data-nav-key="topic-03"><div class="nav-title">技术文档</div>
+<div class="nav-subsection" data-nav-key="topic-03-group-00"><div class="nav-subtitle">技术全景</div>
+<a class="nav-link" href="../../03-技术文档/00-技术全景/技术总览.html">技术总览</a>
+<a class="nav-link" href="../../03-技术文档/00-技术全景/文件地图.html">文件地图</a>
+<a class="nav-link" href="../../03-技术文档/00-技术全景/模块职责.html">模块职责</a>
+<a class="nav-link" href="../../03-技术文档/00-技术全景/插件生命周期.html">插件生命周期</a>
+</div>
+<div class="nav-subsection" data-nav-key="topic-03-group-01"><div class="nav-subtitle">架构导览</div>
+<a class="nav-link" href="../../03-技术文档/01-架构导览/开发指南迁移.html">开发指南迁移</a>
+<a class="nav-link" href="../../03-技术文档/01-架构导览/开发规范迁移.html">开发规范迁移</a>
+<a class="nav-link" href="../../03-技术文档/01-架构导览/代码架构图总览.html">代码架构图总览</a>
+<a class="nav-link" href="../../03-技术文档/01-架构导览/旧代码架构图.html">旧代码架构图</a>
+</div>
+<div class="nav-subsection" data-nav-key="topic-03-group-02"><div class="nav-subtitle">目录地图</div>
+<a class="nav-link" href="../../03-技术文档/02-目录地图/app目录导览.html">app 目录导览</a>
+<a class="nav-link" href="../../03-技术文档/02-目录地图/core目录导览.html">core 目录导览</a>
+<a class="nav-link" href="../../03-技术文档/02-目录地图/features目录导览.html">features 目录导览</a>
+<a class="nav-link" href="../../03-技术文档/02-目录地图/platform目录导览.html">platform 目录导览</a>
+<a class="nav-link" href="../../03-技术文档/02-目录地图/share目录导览.html">share 目录导览</a>
+</div>
+<div class="nav-subsection" data-nav-key="topic-03-group-03"><div class="nav-subtitle">代码视角</div>
+<a class="nav-link" href="../../03-技术文档/03-代码视角/架构视角逐文件.html">架构视角逐文件</a>
+<a class="nav-link" href="../../03-技术文档/03-代码视角/领域视角逐文件.html">领域视角逐文件</a>
+<a class="nav-link" href="../../03-技术文档/03-代码视角/业务视角逐文件.html">业务视角逐文件</a>
+</div>
+<div class="nav-subsection" data-nav-key="topic-03-group-04"><div class="nav-subtitle">运行机制</div>
+<a class="nav-link" href="../../03-技术文档/04-运行机制/数据流.html">数据流</a>
+<a class="nav-link" href="../../03-技术文档/04-运行机制/事件流.html">事件流</a>
+<a class="nav-link" href="../../03-技术文档/04-运行机制/Obsidian API 使用.html">Obsidian API 使用</a>
+<a class="nav-link" href="../../03-技术文档/04-运行机制/样式系统.html">样式系统</a>
+<a class="nav-link" href="../../03-技术文档/04-运行机制/构建流程.html">构建流程</a>
+<a class="nav-link" href="../../03-技术文档/04-运行机制/数据流与流程图.html">数据流与流程图</a>
+</div>
+<div class="nav-subsection" data-nav-key="topic-03-group-05"><div class="nav-subtitle">字段与输入</div>
+<a class="nav-link" href="../../03-技术文档/05-字段与输入/字段系统重构方案.html">字段系统重构方案</a>
+<a class="nav-link" href="../../03-技术文档/05-字段与输入/统一输入现状盘点.html">统一输入现状盘点</a>
+</div>
+<div class="nav-subsection" data-nav-key="topic-03-group-06"><div class="nav-subtitle">QuickInput 技术记录</div>
+<a class="nav-link" href="../../03-技术文档/06-QuickInput技术记录/QuickInput多步推进Snapshot.html">QuickInput 多步推进 Snapshot</a>
+<a class="nav-link" href="../../03-技术文档/06-QuickInput技术记录/QuickInputLegacy调试收口.html">QuickInput Legacy 调试收口</a>
+<a class="nav-link" href="../../03-技术文档/06-QuickInput技术记录/QuickInput任务内容提取调试.html">QuickInput 任务内容提取调试</a>
+<a class="nav-link" href="../../03-技术文档/06-QuickInput技术记录/QuickInput任务内容单一入口.html">QuickInput 任务内容单一入口</a>
+<a class="nav-link" href="../../03-技术文档/06-QuickInput技术记录/QuickInput任务模板护栏.html">QuickInput 任务模板护栏</a>
+<a class="nav-link" href="../../03-技术文档/06-QuickInput技术记录/QuickInput任务写回保真.html">QuickInput 任务写回保真</a>
+</div>
+</div>
+<div class="nav-section" data-nav-key="topic-04"><div class="nav-title">评审中心</div>
+<div class="nav-subsection" data-nav-key="topic-04-group-00"><div class="nav-subtitle">评审方法</div>
+<a class="nav-link" href="../../04-评审中心/00-评审方法/需求评审.html">需求评审</a>
+<a class="nav-link" href="../../04-评审中心/00-评审方法/功能评审.html">功能评审</a>
+<a class="nav-link" href="../../04-评审中心/00-评审方法/技术方案评审.html">技术方案评审</a>
+</div>
+<div class="nav-subsection" data-nav-key="topic-04-group-01"><div class="nav-subtitle">质量评审</div>
+<a class="nav-link" href="../../04-评审中心/01-质量评审/代码结构评审.html">代码结构评审</a>
+<a class="nav-link" href="../../04-评审中心/01-质量评审/发布评审.html">发布评审</a>
+<a class="nav-link" href="../../04-评审中心/01-质量评审/风险评审.html">风险评审</a>
+</div>
+<div class="nav-subsection" data-nav-key="topic-04-group-02"><div class="nav-subtitle">专题评审</div>
+<a class="nav-link" href="../../04-评审中心/02-专题评审/字段系统深度评审.html">字段系统深度评审</a>
+<a class="nav-link" href="../../04-评审中心/02-专题评审/QuickInput调试与Legacy规范.html">QuickInput 调试与 Legacy 规范</a>
+</div>
+</div>
+<div class="nav-section" data-nav-key="topic-05"><div class="nav-title">维护发布</div>
+<div class="nav-subsection" data-nav-key="topic-05-group-00"><div class="nav-subtitle">测试验收</div>
+<a class="nav-link" href="../../05-维护发布/00-测试验收/测试清单.html">测试清单</a>
+<a class="nav-link" href="../../05-维护发布/00-测试验收/测试方案迁移.html">测试方案迁移</a>
+<a class="nav-link" href="../../05-维护发布/00-测试验收/QuickInput主线验收清单.html">QuickInput 主线验收清单</a>
+<a class="nav-link" href="../../05-维护发布/00-测试验收/QuickInput最终验收清单.html">QuickInput 最终验收清单</a>
+</div>
+<div class="nav-subsection" data-nav-key="topic-05-group-01"><div class="nav-subtitle">发布与回滚</div>
+<a class="nav-link" href="../../05-维护发布/01-发布与回滚/发布流程.html">发布流程</a>
+<a class="nav-link" href="../../05-维护发布/01-发布与回滚/Changelog.html">Changelog</a>
+<a class="nav-link" href="../../05-维护发布/01-发布与回滚/Bug处理流程.html">Bug 处理流程</a>
+<a class="nav-link" href="../../05-维护发布/01-发布与回滚/兼容性记录.html">兼容性记录</a>
+<a class="nav-link" href="../../05-维护发布/01-发布与回滚/回滚方案.html">回滚方案</a>
+<a class="nav-link" href="../../05-维护发布/01-发布与回滚/QuickInput风险与回滚说明.html">QuickInput 风险与回滚说明</a>
+</div>
+<div class="nav-subsection" data-nav-key="topic-05-group-02"><div class="nav-subtitle">修复记录</div>
+<a class="nav-link" href="../../05-维护发布/02-修复记录/QuickInput构建导出修复.html">QuickInput 构建导出修复</a>
+<a class="nav-link" href="../../05-维护发布/02-修复记录/BlockStatistics统一与跳转修复.html">Block Statistics 统一与跳转修复</a>
+<a class="nav-link" href="../../05-维护发布/02-修复记录/QuickInput任务正文空格保留修复.html">QuickInput 任务正文空格保留修复</a>
+</div>
+</div>
+    </aside>
+    <main class="main">
+      <section class="hero">
+        <div class="eyebrow">功能设计 / MIGRATED DOC</div>
+        <h1>View UI 触发动作梳理</h1>
+        <p class="lead">说明：本表只做盘点和语义归类，不改 UI 代码。覆盖范围：这两个入口最接近你想要的统一模型：它们的问题不是“不能用”，而是：真正的 UI 触发点不是 `core/utils/timelineInteraction.ts`，而是：Batch 2 完成后，这条链已经比较干净：</p>
+        <div class="meta-row">
+          <span class="badge good">状态：已迁移</span>
+          <span class="badge">最后更新：2026-05-07</span>
+          <span class="badge">格式：HTML</span>
+        </div>
+      </section>
+      <section class="grid"><article class="card full"><h2>迁移信息</h2><div class="table-wrap"><table><thead><tr><th>项目</th><th>内容</th></tr></thead><tbody><tr><td>新分类</td><td>功能设计</td></tr><tr><td>旧路径</td><td><code>docs/VIEW_UI_TRIGGER_ACTIONS_V1.md</code></td></tr><tr><td>原始标题</td><td>View UI 触发动作梳理表 v1</td></tr><tr><td>处理方式</td><td>正文已转换为当前 <code>文档/</code> 的 HTML 页面；原始文件另存于 <code>_归档/迁移原文/</code>。</td></tr></tbody></table></div></article><article class="card full"><h2>正文</h2><div class="imported-doc"><h1>View UI 触发动作梳理表 v1</h1>
+<blockquote>
+<p>说明：本表只做盘点和语义归类，不改 UI 代码。</p>
+<p>覆盖范围：</p>
+<ul>
+<li><code>TaskRow</code></li>
+<li><code>BlockItem</code></li>
+<li><code>timelineInteraction</code>（实际 UI 落点为 <code>shared/ui/timeline/DayColumnBody.tsx</code>）</li>
+<li><code>HeatmapView</code></li>
+<li><code>LayoutRenderer</code></li>
+<li><code>TimerViewView</code></li>
+<li><code>TimerRow</code></li>
+<li><code>命令入口</code></li>
+</ul>
+</blockquote>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>UI 位置</th>
+<th>触发方式</th>
+<th>作用对象</th>
+<th>当前语义</th>
+<th>实际语义</th>
+<th>是否带 context</th>
+<th>当前落点</th>
+<th>目标动作</th>
+<th>是否合理</th>
+<th>备注</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>shared/ui/items/TaskRow.tsx</code></td>
+<td>点击标题/整行</td>
+<td><code>item</code></td>
+<td>编辑任务</td>
+<td><strong>真 edit</strong>：打开 <code>QuickInputModal(mode='edit', editItem=item)</code></td>
+<td>否</td>
+<td><code>QuickInputModal -&gt; useCases.recordInput.submitUpdateRecord(...)</code></td>
+<td><code>openEditRecord -&gt; submitUpdateRecord</code></td>
+<td>基本合理</td>
+<td>这是当前最标准的 record edit UI 入口之一</td>
+</tr>
+<tr>
+<td><code>shared/ui/items/TaskRow.tsx</code></td>
+<td>勾选复选框</td>
+<td><code>item.id</code></td>
+<td>完成任务</td>
+<td>由 feature 注入 handler；在布局页现已落到统一 <code>submitCompleteRecord(...)</code></td>
+<td>否</td>
+<td><code>LayoutRenderer.handleMarkItemDone -&gt; useCases.recordInput.submitCompleteRecord(...)</code></td>
+<td><code>submitCompleteRecord</code></td>
+<td>合理</td>
+<td>shared/ui 不知道底层 service，符合分层方向</td>
+</tr>
+<tr>
+<td><code>shared/ui/items/TaskRow.tsx</code></td>
+<td>发送到计时器按钮</td>
+<td><code>item.id</code></td>
+<td>开始/继续计时</td>
+<td>不是 record mutation，而是 timer state 变更</td>
+<td>否</td>
+<td><code>timerService.startOrResume(...)</code></td>
+<td>非 record 动作</td>
+<td>合理</td>
+<td>不应并入 recordInput.usecase</td>
+</tr>
+<tr>
+<td><code>shared/ui/items/BlockItem.tsx</code></td>
+<td>点击 markdown 内容区域</td>
+<td><code>item</code></td>
+<td>编辑 block 记录</td>
+<td><strong>真 edit</strong>：打开 <code>QuickInputModal(mode='edit', editItem=item)</code></td>
+<td>否</td>
+<td><code>QuickInputModal -&gt; useCases.recordInput.submitUpdateRecord(...)</code></td>
+<td><code>openEditRecord -&gt; submitUpdateRecord</code></td>
+<td>合理</td>
+<td>与 TaskRow edit 语义一致</td>
+</tr>
+<tr>
+<td><code>shared/ui/timeline/DayColumnBody.tsx</code></td>
+<td>拖动/对齐到前一个块</td>
+<td><code>taskId + time</code></td>
+<td>调整开始时间</td>
+<td>通过 <code>onUpdateTaskTime</code> 注入，现已统一到 <code>submitUpdateRecordTime(...)</code></td>
+<td>否</td>
+<td><code>LayoutRenderer.onUpdateTaskTime -&gt; useCases.recordInput.submitUpdateRecordTime(...)</code></td>
+<td><code>submitUpdateRecordTime</code></td>
+<td>合理</td>
+<td>这里是真 record time mutation</td>
+</tr>
+<tr>
+<td><code>shared/ui/timeline/DayColumnBody.tsx</code></td>
+<td>拖动/对齐到下一个块</td>
+<td><code>taskId + duration</code></td>
+<td>调整时长</td>
+<td>同上，现已统一到 <code>submitUpdateRecordTime(...)</code></td>
+<td>否</td>
+<td><code>LayoutRenderer.onUpdateTaskTime -&gt; useCases.recordInput.submitUpdateRecordTime(...)</code></td>
+<td><code>submitUpdateRecordTime</code></td>
+<td>合理</td>
+<td>语义清楚</td>
+</tr>
+<tr>
+<td><code>shared/ui/timeline/DayColumnBody.tsx</code></td>
+<td>编辑弹窗保存</td>
+<td><code>taskId + time/endTime/duration</code></td>
+<td>精确编辑任务时间</td>
+<td>同上，最终也是 time_update</td>
+<td>否</td>
+<td><code>EditTaskModal -&gt; onUpdateTaskTime -&gt; useCases.recordInput.submitUpdateRecordTime(...)</code></td>
+<td><code>submitUpdateRecordTime</code></td>
+<td>合理</td>
+<td>timeline 侧现已和统一动作对齐</td>
+</tr>
+<tr>
+<td><code>core/utils/timelineInteraction.ts</code></td>
+<td>N/A</td>
+<td>N/A</td>
+<td>timeline 交互工具</td>
+<td><strong>实际不是 UI 触发入口</strong>，现在只保留纯数据构建逻辑</td>
+<td>否</td>
+<td>纯函数</td>
+<td>无</td>
+<td>合理</td>
+<td>名字容易误导；真实 UI 触发点在 <code>DayColumnBody.tsx</code></td>
+</tr>
+<tr>
+<td><code>shared/ui/views/HeatmapView.tsx</code></td>
+<td>点击空 cell</td>
+<td><code>date + themePath</code></td>
+<td>新建记录</td>
+<td>打开 <code>QuickInputModal(create)</code>，带 <code>日期/主题</code> context</td>
+<td>是</td>
+<td><code>QuickInputModal -&gt; useCases.recordInput.submitCreateRecord(...)</code></td>
+<td><code>openCreateRecord -&gt; submitCreateRecord</code></td>
+<td>合理</td>
+<td>是典型 view quick-create</td>
+</tr>
+<tr>
+<td><code>shared/ui/views/HeatmapView.tsx</code></td>
+<td>点击有 1 条记录的 cell</td>
+<td><code>date + item + themePath</code></td>
+<td>编辑该条记录</td>
+<td><strong>实际不是标准 edit</strong>：仍走 <code>QuickInputModal(create-like)</code>，只是把 item 内容灌进 context</td>
+<td>是</td>
+<td><code>QuickInputModal(create-like)</code></td>
+<td>理想上应为 <code>openEditRecord</code></td>
+<td><strong>不完全合理</strong></td>
+<td>这是一个语义漂移点：文案像编辑，真实更接近“基于已有记录再填一次”</td>
+</tr>
+<tr>
+<td><code>shared/ui/views/HeatmapView.tsx</code></td>
+<td>点击有多条记录的 cell</td>
+<td><code>itemsForDay</code></td>
+<td>管理多条记录</td>
+<td>先开 <code>CheckinManagerModal</code>，再从中追加创建</td>
+<td>是</td>
+<td><code>CheckinManagerModal -&gt; onAddRecord -&gt; QuickInputModal(create)</code></td>
+<td><code>openCreateRecord</code></td>
+<td>基本合理</td>
+<td>但“管理已有记录”的编辑/删除能力还未统一进入 record usecase</td>
+</tr>
+<tr>
+<td><code>features/settings/LayoutRenderer.tsx</code></td>
+<td>勾选完成 / timeline 时间更新</td>
+<td><code>itemId/taskId</code></td>
+<td>record mutation 桥接层</td>
+<td>当前已是 feature 层统一桥接 <code>recordInput.usecase</code></td>
+<td>否</td>
+<td><code>useCases.recordInput.submitCompleteRecord/submitUpdateRecordTime(...)</code></td>
+<td><code>submitCompleteRecord / submitUpdateRecordTime</code></td>
+<td>合理</td>
+<td>Batch 2 后已从 ItemService 直连断开</td>
+</tr>
+<tr>
+<td><code>features/timer/TimerViewView.tsx</code></td>
+<td>点击“新任务”</td>
+<td><code>blockId + context</code></td>
+<td>新建并开始计时</td>
+<td><code>QuickInputModal(onSave)</code>，提交后由 <code>TimerService.createNewTaskAndStart</code> 转到统一 create 动作</td>
+<td>是</td>
+<td><code>TimerService -&gt; useCases.recordInput.submitCreateRecord(...)</code></td>
+<td><code>submitCreateRecord</code> + timer follow-up</td>
+<td>合理</td>
+<td>仍保留 onSave 兼容口，但写动作已收口</td>
+</tr>
+<tr>
+<td><code>features/timer/TimerRow.tsx</code></td>
+<td>点击“停止并记录”</td>
+<td><code>timer.id</code></td>
+<td>完成任务或更新时长</td>
+<td><code>TimerService.stopAndApply</code> 计算时间，再落到统一 complete/time_update</td>
+<td>否</td>
+<td><code>TimerService -&gt; useCases.recordInput.submitCompleteRecord/submitUpdateRecordTime(...)</code></td>
+<td><code>submitCompleteRecord / submitUpdateRecordTime</code></td>
+<td>合理</td>
+<td>Batch 2 后已断开 ItemService 直连</td>
+</tr>
+<tr>
+<td><code>features/timer/TimerRow.tsx</code></td>
+<td>点击“编辑任务”</td>
+<td><code>taskItem.id</code></td>
+<td>编辑当前任务</td>
+<td><strong>实际语义存疑</strong>：调用 <code>getQuickInputConfigForTaskEdit(...)</code>，但打开的是 <code>QuickInputModal(app, blockId, context)</code>，没有显式 <code>mode='edit'</code> / <code>editItem</code></td>
+<td>可能带 context</td>
+<td><code>QuickInputModal(create-like)</code></td>
+<td>理想上应为 <code>openEditRecord</code></td>
+<td><strong>不合理</strong></td>
+<td>这是当前最明显的“按钮语义 ≠ 实际语义”点</td>
+</tr>
+<tr>
+<td><code>features/quickinput/registerCommands.ts</code></td>
+<td>命令面板：<code>快速录入 - xxx</code></td>
+<td><code>block.id</code></td>
+<td>快速新建记录</td>
+<td>打开 <code>QuickInputModal(create)</code></td>
+<td>否</td>
+<td><code>QuickInputModal -&gt; useCases.recordInput.submitCreateRecord(...)</code></td>
+<td><code>openCreateRecord -&gt; submitCreateRecord</code></td>
+<td>合理</td>
+<td>是标准 create 入口</td>
+</tr>
+<tr>
+<td><code>main.ts</code> / capability timer commands</td>
+<td>命令面板：开始计时 / 停止并写回</td>
+<td><code>taskId / activeTimerId</code></td>
+<td>Timer 操作</td>
+<td>不是直接 record UI，但停止写回最终会触发 recordInput usecase</td>
+<td>否</td>
+<td><code>TimerCapability -&gt; TimerService -&gt; useCases.recordInput...</code></td>
+<td><code>submitCompleteRecord / submitUpdateRecordTime</code></td>
+<td>合理</td>
+<td>这些命令属于 timer 入口，不直接属于 view UI，但会落到 record mutation</td>
+</tr>
+</tbody>
+</table></div>
+<hr/>
+<h2>初步结论</h2>
+<h3>1. 现在最标准的 record edit 语义</h3>
+<ul>
+<li><code>TaskRow</code></li>
+<li><code>BlockItem</code></li>
+</ul>
+<p>这两个入口最接近你想要的统一模型：</p>
+<ul>
+<li>明确作用对象是 <code>item</code></li>
+<li>明确语义是 edit</li>
+<li>已经能落到统一 <code>submitUpdateRecord(...)</code></li>
+</ul>
+<h3>2. 现在最容易语义漂移的入口</h3>
+<ul>
+<li><code>HeatmapView</code> 单条 cell 点击</li>
+<li><code>TimerRow</code> 的“编辑任务”按钮</li>
+</ul>
+<p>它们的问题不是“不能用”，而是：</p>
+<ul>
+<li>用户感知更像 edit</li>
+<li>实际实现更像 create-like / context-prefill</li>
+<li>后续如果继续统一动作模型，这两处最好单独做语义梳理</li>
+</ul>
+<h3>3. timeline 侧现在已经接近统一动作模型</h3>
+<p>真正的 UI 触发点不是 <code>core/utils/timelineInteraction.ts</code>，而是：</p>
+<ul>
+<li><code>shared/ui/timeline/DayColumnBody.tsx</code></li>
+<li><code>shared/ui/modals/EditTaskModal.tsx</code></li>
+<li><code>features/settings/LayoutRenderer.tsx</code></li>
+</ul>
+<p>Batch 2 完成后，这条链已经比较干净：</p>
+<ul>
+<li>UI 只表达“更新时间”</li>
+<li>feature 层桥接到 <code>recordInput.usecase</code></li>
+<li>不再直连 <code>ItemService</code></li>
+</ul>
+</div></article></section>
+      <footer class="footer">本页属于 Think OS 插件 HTML 文档系统。UI 沿用原有风格，docs/html 旧资料已按新结构迁移。</footer>
+    </main>
+  </div>
+  <script src="../../_资源/搜索索引.js"></script>
+  <script src="../../_资源/文档脚本.js"></script>
+</body>
+</html>

@@ -1,0 +1,20 @@
+[
+  {
+    "id": "RISK-001",
+    "name": "旧 docs/html 与新入口并存",
+    "level": "中",
+    "mitigation": "标记弃用并逐步迁移"
+  },
+  {
+    "id": "RISK-002",
+    "name": "功能文档和技术文档混杂",
+    "level": "中",
+    "mitigation": "用主题职责分离"
+  },
+  {
+    "id": "RISK-003",
+    "name": "发布前缺少固定检查",
+    "level": "高",
+    "mitigation": "使用发布评审和测试清单"
+  }
+]

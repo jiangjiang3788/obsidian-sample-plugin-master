@@ -1,0 +1,386 @@
+[
+  {
+    "source": "html/thinkos-章节化文档框架/chapter-01-总览.js",
+    "target": "08-旧章节总览.html",
+    "target_title": "旧章节总览",
+    "source_title": "一、总览",
+    "section": "基础入口",
+    "lead": "结构说明"
+  },
+  {
+    "source": "html/thinkos-章节化文档框架/index.html",
+    "target": "09-章节化文档框架.html",
+    "target_title": "章节化文档框架",
+    "source_title": "Think OS 开发文档",
+    "section": "基础入口",
+    "lead": "Think OS 开发文档Think OS 开发文档总入口只负责引入公共样式、公共脚本，以及按顺序引入各个章节文件。交互说明目录点击后只显示当前章节。在逻辑图区域中：Ctrl + 滚轮：缩放图Shift + 滚轮：左右移动图Think OS 章节化开发文档"
+  },
+  {
+    "source": "docs/插件深度报告与实施计划.md",
+    "target": "27-插件深度报告与实施计划.html",
+    "target_title": "插件深度报告与实施计划",
+    "source_title": "插件深度报告与实施总计划表",
+    "section": "项目管理",
+    "lead": "先做深度报告，再确认核心字段契约，再确认上下文模型，再确认时间领域规则，最后才按 P0 / P1 / P2 节奏改代码；所有实施都必须服从前面确认出的真源。"
+  },
+  {
+    "source": "docs/上下文 时间重构.md",
+    "target": "28-上下文时间重构计划.html",
+    "target_title": "上下文时间重构计划",
+    "source_title": "当前阶段实施总计划表（P0 止痛 / P1 稳定 / P2 重构）",
+    "section": "项目管理",
+    "lead": "对，这个我修正一下：你这个例子是对的：所以更合理的规则是：也就是说，保留：不保留：如果以后真要显示，可以有一个**只读派生状态**：它是算出来的，不是填出来的。下面我把 **P0 止痛 / P1 稳定 / P2 重构** 合成一张总表，并加上你要的："
+  },
+  {
+    "source": "docs/输入编辑统一计划.md",
+    "target": "29-统一输入修改计划.html",
+    "target_title": "统一输入修改计划",
+    "source_title": "一、目标先说清",
+    "section": "项目管理",
+    "lead": "可以，下面是 **《统一输入修改计划表 v2（已纳入副作用管理）》**。我按你当前代码结构来排，已经把这些实际位置考虑进去了：先给一句总原则：这次改造不是“优化 quickinput”，而是统一这 4 件事：1. 所有新建 / 修改 / 删除入口"
+  },
+  {
+    "source": "docs/计划.md",
+    "target": "2A-原始计划记录.html",
+    "target_title": "原始计划记录",
+    "source_title": "计划",
+    "section": "项目管理",
+    "lead": "从旧 docs/html 迁移来的文档，已按新文档结构重新归类。"
+  },
+  {
+    "source": "html/thinkos-章节化文档框架/chapter-03-需求台账.js",
+    "target": "2B-旧需求台账.html",
+    "target_title": "旧需求台账",
+    "source_title": "三、需求台账",
+    "section": "项目管理",
+    "lead": "可直接编辑"
+  },
+  {
+    "source": "docs/BATCH1_IMPLEMENTATION_REPORT.md",
+    "target": "2C-Batch1实施报告.html",
+    "target_title": "Batch1 实施报告",
+    "source_title": "统一输入改造实施 - 第 1 批落地报告（record 域 / QuickInput create-edit）",
+    "section": "项目管理",
+    "lead": "严格按本批约束落地：这里是**本次实际落地签名**。为了贴合当前代码结构，`prepare*` 落成了**同步接口**，避免给 `QuickInputModal` 引入额外异步装载状态；`submit*` 仍然是异步。1. **QuickInputModal 不再直接 import / 调用 `InputService"
+  },
+  {
+    "source": "docs/BATCH2_IMPLEMENTATION_REPORT.md",
+    "target": "2D-Batch2实施报告.html",
+    "target_title": "Batch2 实施报告",
+    "source_title": "统一输入改造 Batch 2 实施报告",
+    "section": "项目管理",
+    "lead": "严格按要求执行：本批目标：把剩余 record 动作统一收口到 `recordInput.usecase`。覆盖的旧链：1. `AiBatchConfirmModal -> InputService.executeTemplate`2. `TimerService.createNewTaskAndStart -> In"
+  },
+  {
+    "source": "docs/quickinput-mainline-change-log.md",
+    "target": "2E-QuickInput主线修改记录.html",
+    "target_title": "QuickInput 主线修改记录",
+    "source_title": "QuickInput 主线修改记录",
+    "section": "项目管理",
+    "lead": "当前主线优先处理：任务读取、时间计算、写回保真、保存位置可见与安全迁移。1. 任务内容提取统一到 `extractTaskEditableText()`。2. 任务模板识别增加 guard，避免任务被误判成闪念/block。3. 时间计算支持中文字段与 start/end/duration 别名。"
+  },
+  {
+    "source": "docs/quickinput-closeout-state.md",
+    "target": "2F-QuickInput收口状态.html",
+    "target_title": "QuickInput 收口状态",
+    "source_title": "QuickInput 收口状态",
+    "section": "项目管理",
+    "lead": "本轮修改已经进入收口阶段。主链路不建议继续大改。如果本轮手测稳定，下一轮可以考虑：1. 自动迁移保存增加确认弹窗2. 任务 token 级 patch serializer3. block 编辑也完全切到 snapshot4. 删除 legacy 主路径"
+  },
+  {
+    "source": "docs/quickinput-final-change-summary.md",
+    "target": "2G-QuickInput本轮修改总览.html",
+    "target_title": "QuickInput 本轮修改总览",
+    "source_title": "QuickInput 本轮修改总览",
+    "section": "项目管理",
+    "lead": "本轮修改围绕 QuickInput 的任务编辑主链路收口：1. 任务内容完整读取2. 时间字段默认值与联动计算3. 主题字段三分法：根主题 / 叶主题 / 完整路径4. 任务写回保真5. 保存位置实时预览6. 路径变化迁移保存7. partial_success 反馈收口"
+  },
+  {
+    "source": "docs/功能清单.md",
+    "target": "47-功能清单迁移.html",
+    "target_title": "功能清单迁移",
+    "source_title": "Think OS 功能清单",
+    "section": "功能设计",
+    "lead": "本文档记录项目当前已实现的功能，作为需求管理的基线参考。最后更新：2026-02-28位于 `scripts/*gate*.mjs`，包括：根据 `docs/计划.md` 最新状态：1. **Typecheck**：有 1 个 TS error"
+  },
+  {
+    "source": "html/thinkos-章节化文档框架/chapter-02-产品功能地图.js",
+    "target": "48-旧产品功能地图.html",
+    "target_title": "旧产品功能地图",
+    "source_title": "二、产品功能地图",
+    "section": "功能设计",
+    "lead": "按你的主线：记录 → 数据处理 → 展示"
+  },
+  {
+    "source": "docs/VIEW_UI_TRIGGER_ACTIONS_V1.md",
+    "target": "49-ViewUI触发动作梳理.html",
+    "target_title": "View UI 触发动作梳理",
+    "source_title": "View UI 触发动作梳理表 v1",
+    "section": "功能设计",
+    "lead": "说明：本表只做盘点和语义归类，不改 UI 代码。覆盖范围：这两个入口最接近你想要的统一模型：它们的问题不是“不能用”，而是：真正的 UI 触发点不是 `core/utils/timelineInteraction.ts`，而是：Batch 2 完成后，这条链已经比较干净："
+  },
+  {
+    "source": "docs/完整移动端 UI 重构方案.md",
+    "target": "4A-移动端UI全量重构方案.html",
+    "target_title": "移动端 UI 全量重构方案",
+    "source_title": "移动端 UI 全量重构方案（地毯式覆盖版）",
+    "section": "功能设计",
+    "lead": "本次重构的目标不是“把桌面端界面缩到手机里”，而是为移动端建立一套独立、完整、可维护的 UI 体系。当前移动端问题不是单点 bug，而是系统性缺陷：移动端 UI 重构必须遵循以下原则：1. **移动端独立建模**2. **共享业务，不共享壳层**"
+  },
+  {
+    "source": "docs/quickinput-output-plan-submit-consistency.md",
+    "target": "4B-QuickInput保存计划一致性.html",
+    "target_title": "QuickInput 保存计划一致性",
+    "source_title": "QuickInput 保存计划一致性收口",
+    "section": "功能设计",
+    "lead": "上一阶段已经在编辑面板里做了“保存位置实时预览”，但实际保存时 usecase 仍会重新计算一次 OutputPlan / PersistencePlan。如果两边计算结果漂移，就可能出现：这类问题比普通失败更危险，所以本次加入提交前一致性校验。"
+  },
+  {
+    "source": "docs/quickinput-partial-success-and-migration-feedback.md",
+    "target": "4C-QuickInput迁移保存反馈.html",
+    "target_title": "QuickInput 迁移保存反馈",
+    "source_title": "QuickInput 迁移保存反馈收口",
+    "section": "功能设计",
+    "lead": "上一阶段已经允许路径变化时执行安全迁移保存：先写入新位置，再删除旧记录。但如果旧记录删除失败，结果是 `partial_success`，此前 UI 会把它当普通失败处理，容易造成两个问题：1. 用户以为没有保存成功，可能再次点击保存，制造重复记录。"
+  },
+  {
+    "source": "docs/quickinput-safe-mvp-change-note.md",
+    "target": "4D-QuickInput路径变化保存策略.html",
+    "target_title": "QuickInput 路径变化保存策略",
+    "source_title": "QuickInput 路径变化保存策略更新",
+    "section": "功能设计",
+    "lead": "早期安全 MVP 对编辑时的目标路径变化采取“一律阻止保存”。这个策略能避免误迁移，但实际使用中过于保守：当用户确实切换了主题/模板并希望记录跟随新目标位置保存时，会被拦住。当前策略改为安全迁移保存：1. 目标路径不变：原地更新。2. 目标路径变化：先写入新位置，再删除旧记录。"
+  },
+  {
+    "source": "docs/开发指南.md",
+    "target": "69-开发指南迁移.html",
+    "target_title": "开发指南迁移",
+    "source_title": "开发指南",
+    "section": "技术文档",
+    "lead": "本文面向“要在本仓库继续开发/迭代功能的人”，目标是：新同学能在 30 分钟内跑起来、能定位代码入口、能通过质量门禁（gate）。安装依赖：如果 `npm run check` 失败，通常是触发了 `scripts/*gate*.mjs` 的边界约束；先看报错提示对应哪条 gate。"
+  },
+  {
+    "source": "docs/开发规范.md",
+    "target": "6A-开发规范迁移.html",
+    "target_title": "开发规范迁移",
+    "source_title": "开发规范（可执行）",
+    "section": "技术文档",
+    "lead": "🔴 **必须遵守** - 违反会导致构建失败或严重问题🟡 **强烈建议** - 违反会影响代码质量或可维护性🟢 **最佳实践** - 长期遵守可提升开发体验1. **入口文件**：`src/main.ts`（插件启动点）2. **构建命令**：`npm run build`（生成 `main.js`/`styles.c"
+  },
+  {
+    "source": "html/总览.html",
+    "target": "6B-代码架构图总览.html",
+    "target_title": "代码架构图总览",
+    "source_title": "左边看“它像店里的什么地方”，右边看“它到底干嘛”",
+    "section": "技术文档",
+    "lead": "代码架构图：左流程右说明左边看“它像店里的什么地方”，右边看“它到底干嘛”这版不再用一堆积木块解释。左边是通俗导览列表，右边是列表式说明。每个文件夹都先用比喻帮你建立感觉，再用很短的话讲清楚：它在哪一层、干什么、和谁关系最近。项目导览看左边先建立感觉：它像什么。再看右边理解它具体做什么。"
+  },
+  {
+    "source": "html/app.html",
+    "target": "6C-app目录导览.html",
+    "target_title": "app 目录导览",
+    "source_title": "先把 app/ 看懂：它像店长办公室",
+    "section": "技术文档",
+    "lead": "代码架构图：左流程右说明先把 app/ 看懂：它像店长办公室这次不再讲整个项目，而是只讲app/。因为你现在最需要搞懂的，不是全部目录，而是app 到底管什么、和 core 有什么区别、里面每个子目录分别干嘛。你可以把 app 理解成：店已经开了，店长办公室开始安排今天怎么运转"
+  },
+  {
+    "source": "html/core.html",
+    "target": "6D-core目录导览.html",
+    "target_title": "core 目录导览",
+    "source_title": "先把 app/ 看懂：它像店长办公室",
+    "section": "技术文档",
+    "lead": "代码架构图：左流程右说明先把 app/ 看懂：它像店长办公室这次不再讲整个项目，而是只讲app/。因为你现在最需要搞懂的，不是全部目录，而是app 到底管什么、和 core 有什么区别、里面每个子目录分别干嘛。你可以把 app 理解成：店已经开了，店长办公室开始安排今天怎么运转"
+  },
+  {
+    "source": "html/features.html",
+    "target": "6E-features目录导览.html",
+    "target_title": "features 目录导览",
+    "source_title": "继续把 features/ 看懂：它像店里顾客真正接触到的服务区",
+    "section": "技术文档",
+    "lead": "代码架构图：左流程右说明继续把 features/ 看懂：它像店里顾客真正接触到的服务区这次只讲features/。如果说core是后仓，app是店长办公室，那features就是顾客真正会走进去、会点击、会使用的那些服务区。你以后整理文件夹时，最关键的问题就是："
+  },
+  {
+    "source": "html/platform.html",
+    "target": "6F-platform目录导览.html",
+    "target_title": "platform 目录导览",
+    "source_title": "继续把 platform/ 看懂：它像店和外部环境的对接窗口",
+    "section": "技术文档",
+    "lead": "代码架构图：左流程右说明继续把 platform/ 看懂：它像店和外部环境的对接窗口这次只讲platform/。你可以把它理解成：店里和商场物业、门禁、电表、广播系统打交道的对接窗口。它不是顾客服务区，也不是后仓基础能力本身，而是负责把Obsidian"
+  },
+  {
+    "source": "html/share.html",
+    "target": "6G-share目录导览.html",
+    "target_title": "share 目录导览",
+    "source_title": "继续把 shared/ 看懂：它像店里的公共工具柜",
+    "section": "技术文档",
+    "lead": "代码架构图：左流程右说明继续把 shared/ 看懂：它像店里的公共工具柜这次只讲shared/。这是你以后整理文件夹时特别容易纠结的一层，因为很多项目最后都会把 shared 用成“杂物间”。你可以把它理解成：店里多个区域都会来借东西的公共工具柜"
+  },
+  {
+    "source": "html/thinkos-章节化文档框架/chapter-04-代码架构图.js",
+    "target": "6H-旧代码架构图.html",
+    "target_title": "旧代码架构图",
+    "source_title": "四、代码架构图",
+    "section": "技术文档",
+    "lead": "直接在图区域缩放与横移"
+  },
+  {
+    "source": "html/thinkos-章节化文档框架/chapter-05-架构视角逐文件.js",
+    "target": "6I-架构视角逐文件.html",
+    "target_title": "架构视角逐文件",
+    "source_title": "五、架构视角（逐文件）",
+    "section": "技术文档",
+    "lead": "看装配、边界、共享、生命周期"
+  },
+  {
+    "source": "html/thinkos-章节化文档框架/chapter-06-领域视角逐文件.js",
+    "target": "6J-领域视角逐文件.html",
+    "target_title": "领域视角逐文件",
+    "source_title": "六、领域视角（逐文件）",
+    "section": "技术文档",
+    "lead": "看概念、规则、状态迁移"
+  },
+  {
+    "source": "html/thinkos-章节化文档框架/chapter-07-业务视角逐文件.js",
+    "target": "6K-业务视角逐文件.html",
+    "target_title": "业务视角逐文件",
+    "source_title": "七、业务视角（逐文件）",
+    "section": "技术文档",
+    "lead": "看用户入口和闭环"
+  },
+  {
+    "source": "html/thinkos-章节化文档框架/chapter-08-数据流与流程图.js",
+    "target": "6L-数据流与流程图.html",
+    "target_title": "数据流与流程图",
+    "source_title": "八、数据流与流程图",
+    "section": "技术文档",
+    "lead": "图在当前区域缩放和横移"
+  },
+  {
+    "source": "docs/字段重构方案.md",
+    "target": "6M-字段系统重构方案.html",
+    "target_title": "字段系统重构方案",
+    "source_title": "字段系统深度审计报告与重构方案（架构 / 领域 / 表单 / 上下文 / 筛选全覆盖）",
+    "section": "技术文档",
+    "lead": "本报告不是单纯讨论“字段类型有哪些”，而是把字段当成插件的核心骨架进行审视。字段在当前插件中不是一个 UI 细节，而是贯穿全链路的主轴：因此，字段系统如果没有被当成“一级架构对象”来设计，插件后续一定会不断出现：但我不建议“整仓推翻重来”，而建议："
+  },
+  {
+    "source": "docs/收集.md",
+    "target": "6N-统一输入现状盘点.html",
+    "target_title": "统一输入现状盘点",
+    "source_title": "统一输入改造 · 第 1 轮现状盘点报告（只做“看清”）",
+    "section": "技术文档",
+    "lead": "目标：完成 5 张表的第一版——**写入口清单、UseCase 清单、校验/补全清单、副作用清单、竞态热点清单**。范围：基于上传代码包中与下列目录直接相关的实现进行静态盘点：这类报告里，“详尽”不是把文件名堆满，而是至少满足这 5 条：1. **覆盖够广**：你指定的关键目录都看过，而且不是只看文件名，而是能说明“谁"
+  },
+  {
+    "source": "docs/quickinput-multi-step-task-time-snapshot.md",
+    "target": "6O-QuickInput多步推进Snapshot.html",
+    "target_title": "QuickInput 多步推进 Snapshot",
+    "source_title": "QuickInput 多步推进：任务内容单入口、时间计算别名、Snapshot 主链准备",
+    "section": "技术文档",
+    "lead": "这一步不是单个 bugfix，而是把前面几个主线点合并推进：1. **任务编辑初始值更靠近 Snapshot**：`editStateResolver.buildInitialFormData()` 先构造 `ParsedRecordSnapshot`，字段回填优先读 `snapshot.semantic`。"
+  },
+  {
+    "source": "docs/quickinput-legacy-closeout-and-debug.md",
+    "target": "6P-QuickInputLegacy调试收口.html",
+    "target_title": "QuickInput Legacy 调试收口",
+    "source_title": "QuickInput 主线收口：Legacy 与调试入口整理",
+    "section": "技术文档",
+    "lead": "本次不删除大块旧逻辑，避免引入新风险；重点是把主路径继续向 snapshot 收拢，并把调试入口统一。新增：统一使用：开启方式：这样 parser、编辑回填、保存前时间计算不再各自散落 `console.log` 判断。`editStateResolver.ts` 中，`buildInitialFormData()` "
+  },
+  {
+    "source": "docs/quickinput-task-content-extraction-debug.md",
+    "target": "6Q-QuickInput任务内容提取调试.html",
+    "target_title": "QuickInput 任务内容提取调试",
+    "source_title": "QuickInput 任务内容提取调试说明",
+    "section": "技术文档",
+    "lead": "示例任务：真正的内容应该是：这次重新审视后，结论是：任务内容不能再从 `title` 取，也不能按空格 split。正确方式应该是从原始任务行中剥离任务语法、开头图标、元数据、tag 后，保留中间整段正文。1. `stripTaskLineToEditableText()` 只剥离任务语法和元数据，不压缩正文内部连续空"
+  },
+  {
+    "source": "docs/quickinput-task-content-single-entry.md",
+    "target": "6R-QuickInput任务内容单一入口.html",
+    "target_title": "QuickInput 任务内容单一入口",
+    "source_title": "QuickInput 任务内容提取单一入口",
+    "section": "技术文档",
+    "lead": "本次属于主线 P7 + P8：重新收敛任务内容提取方法。之前的问题是：所以这次把任务正文提取统一到一个入口：`extractTaskEditableText()` 位于：它负责：1. 去掉任务前缀：`- [ ]` / `- [x]`2. 去掉开头图标：例如 `🖥`"
+  },
+  {
+    "source": "docs/quickinput-task-template-guard.md",
+    "target": "6S-QuickInput任务模板护栏.html",
+    "target_title": "QuickInput 任务模板护栏",
+    "source_title": "任务编辑模板类型护栏修复",
+    "section": "技术文档",
+    "lead": "用户编辑任务时，原任务行包含：之前编辑链路只把 `templateId` 当成 blockId 查找。当 `ovr_xxx` 是主题覆盖模板 ID 时，直接查 block 会失败，随后进入启发式打分。如果「闪念」这类 block 模板打分更高，就会把任务误读成 block/闪念，导致 OutputPlan 计算出从任务"
+  },
+  {
+    "source": "docs/quickinput-task-writeback-preservation.md",
+    "target": "6T-QuickInput任务写回保真.html",
+    "target_title": "QuickInput 任务写回保真",
+    "source_title": "QuickInput 任务写回保真补丁说明",
+    "section": "技术文档",
+    "lead": "本次是主线计划中的 P7：任务写回保真。目标不是做跨文件迁移，也不是完全重写 task patch serializer，而是在当前“模板渲染后原地替换”的基础上，加一层安全保护，避免编辑任务时把原任务行里的未知上下文直接丢掉。当前任务编辑保存链路仍然是："
+  },
+  {
+    "source": "docs/quickinput-debug-and-legacy-notes.md",
+    "target": "87-QuickInput调试与Legacy规范.html",
+    "target_title": "QuickInput 调试与 Legacy 规范",
+    "source_title": "QuickInput 调试与 Legacy 注释规范",
+    "section": "评审中心",
+    "lead": "任务读取和时间计算相关调试统一通过：关闭：新增日志必须满足：如果保留旧链路 fallback，必须写清楚：禁止没有退出条件的长期双轨。"
+  },
+  {
+    "source": "docs/测试方案.md",
+    "target": "A6-测试方案迁移.html",
+    "target_title": "测试方案迁移",
+    "source_title": "表 1：按阶段/事项的测试策略（从“用户体验”到“底层 gate”）",
+    "section": "维护发布",
+    "lead": "好，我明白你要的东西了：**不是原则，不是模板，而是“结合你这张计划表和现在代码的真实状态，给一份可以直接开干的测试计划”，而且要是表格，从上到下。**下面这份我按你现在的阶段表来设计，重点偏 **端到端**，然后才是集成/单测和 gate。你可以直接按表里的“建议动作”一条条做。"
+  },
+  {
+    "source": "docs/quickinput-acceptance-checklist.md",
+    "target": "A7-QuickInput主线验收清单.html",
+    "target_title": "QuickInput 主线验收清单",
+    "source_title": "QuickInput 主线验收清单",
+    "section": "维护发布",
+    "lead": "从旧 docs/html 迁移来的文档，已按新文档结构重新归类。"
+  },
+  {
+    "source": "docs/quickinput-final-acceptance.md",
+    "target": "A8-QuickInput最终验收清单.html",
+    "target_title": "QuickInput 最终验收清单",
+    "source_title": "QuickInput 最终验收清单",
+    "section": "维护发布",
+    "lead": "本清单用于确认 QuickInput 本轮主线修改已经收口。重点不是继续扩功能，而是确认：任务读得准、时间算得准、写回不误伤、迁移保存可追踪。原始任务：验收：验收：验收：验收：主题 `工作/设计/道旗` 应拆出：视图设置中应能使用这三个字段筛选或展示。"
+  },
+  {
+    "source": "docs/quickinput-risk-and-rollback.md",
+    "target": "A9-QuickInput风险与回滚说明.html",
+    "target_title": "QuickInput 风险与回滚说明",
+    "source_title": "QuickInput 风险与回滚说明",
+    "section": "维护发布",
+    "lead": "当前策略是：1. 先写入新位置2. 再删除旧记录3. 删除失败则返回 partial_success风险：回滚方式：风险：回滚方式：风险：回滚方式：风险：处理原则：如果线上出现严重问题，按这个顺序回滚：1. 关闭迁移保存，恢复为路径变化阻止2. 保留任务读取修复"
+  },
+  {
+    "source": "docs/quickinput-build-export-fix.md",
+    "target": "AA-QuickInput构建导出修复.html",
+    "target_title": "QuickInput 构建导出修复",
+    "source_title": "QuickInput 构建导出修复",
+    "section": "维护发布",
+    "lead": "构建时报错：原因是 `QuickInputModal.tsx` 从 `@core/public` 引入了 `buildRecordSubmitFeedbackPresentation`，但当前源码中的 `core/utils/recordSubmitFeedback.ts` 没有实现这个函数，`core/public."
+  },
+  {
+    "source": "docs/本次改动-block-statistics-md统一与跳转修复.md",
+    "target": "AB-BlockStatistics统一与跳转修复.html",
+    "target_title": "Block Statistics 统一与跳转修复",
+    "source_title": "本次改动：Block / Statistics Markdown 统一与跳转修复",
+    "section": "维护发布",
+    "lead": "`LayoutRenderer -> StatisticsViewContainer -> PopoverContent -> BlockView -> BlockItem -> MarkdownContent -> ObsidianMessageRenderPort`"
+  },
+  {
+    "source": "docs/quickinput-task-editable-text-space-preservation.md",
+    "target": "AC-QuickInput任务正文空格保留修复.html",
+    "target_title": "QuickInput 任务正文空格保留修复",
+    "source_title": "QuickInput 任务正文空格保留修复",
+    "section": "维护发布",
+    "lead": "示例任务：期望正文是：这里 `长治学院` 和 `设计道旗定稿` 中间有两个空格，属于用户输入内容。旧的正文清理逻辑最后使用 `/\\s+/g` 把所有连续空白压成一个空格，导致编辑回填时看起来像正文没有被完整读取。修改文件：`stripTaskLineToEditableText()` 仍然会移除："
+  }
+]

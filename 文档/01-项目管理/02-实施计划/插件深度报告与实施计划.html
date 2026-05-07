@@ -1,0 +1,715 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>插件深度报告与实施计划｜Think OS 插件文档系统</title>
+  <link rel="stylesheet" href="../../_资源/文档样式.css">
+</head>
+<body data-doc-root="../../">
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-title">Think OS 插件文档系统</div>
+        <div class="brand-subtitle">HTML 项目驾驶舱 / 文档 / 需求 / 技术 / 评审 / 发布</div>
+      </div>
+      <div class="search-box">
+        <input class="search-input" data-doc-search placeholder="搜索：需求、命令、设置、文件地图、评审、QuickInput...">
+        <div class="search-results" data-search-results></div>
+      </div>
+<div class="nav-section" data-nav-key="topic-00"><div class="nav-title">基础入口</div>
+<div class="nav-subsection" data-nav-key="topic-00-group-00"><div class="nav-subtitle">项目驾驶舱</div>
+<a class="nav-link" href="../../index.html">首页仪表盘</a>
+<a class="nav-link" href="../../00-基础入口/00-项目驾驶舱/项目总览.html">项目总览</a>
+<a class="nav-link" href="../../00-基础入口/00-项目驾驶舱/快速开始.html">快速开始</a>
+<a class="nav-link" href="../../00-基础入口/00-项目驾驶舱/当前状态.html">当前状态</a>
+</div>
+<div class="nav-subsection" data-nav-key="topic-00-group-01"><div class="nav-subtitle">概念与边界</div>
+<a class="nav-link" href="../../00-基础入口/01-概念与边界/插件定位.html">插件定位</a>
+<a class="nav-link" href="../../00-基础入口/01-概念与边界/功能地图.html">功能地图</a>
+<a class="nav-link" href="../../00-基础入口/01-概念与边界/术语表.html">术语表</a>
+<a class="nav-link" href="../../00-基础入口/01-概念与边界/常见问题.html">常见问题</a>
+</div>
+<div class="nav-subsection" data-nav-key="topic-00-group-02"><div class="nav-subtitle">迁移与旧资料</div>
+<a class="nav-link" href="../../00-基础入口/02-迁移与旧资料/迁移文档索引.html">迁移文档索引</a>
+<a class="nav-link" href="../../00-基础入口/02-迁移与旧资料/旧章节总览.html">旧章节总览</a>
+<a class="nav-link" href="../../00-基础入口/02-迁移与旧资料/章节化文档框架.html">章节化文档框架</a>
+</div>
+</div>
+<div class="nav-section" data-nav-key="topic-01"><div class="nav-title">项目管理</div>
+<div class="nav-subsection" data-nav-key="topic-01-group-00"><div class="nav-subtitle">计划与路线</div>
+<a class="nav-link" href="../00-计划与路线/需求池.html">需求池</a>
+<a class="nav-link" href="../00-计划与路线/版本路线图.html">版本路线图</a>
+<a class="nav-link" href="../00-计划与路线/开发计划.html">开发计划</a>
+</div>
+<div class="nav-subsection" data-nav-key="topic-01-group-01"><div class="nav-subtitle">过程记录</div>
+<a class="nav-link" href="../01-过程记录/问题记录.html">问题记录</a>
+<a class="nav-link" href="../01-过程记录/技术债.html">技术债</a>
+<a class="nav-link" href="../01-过程记录/决策记录.html">决策记录</a>
+<a class="nav-link" href="../01-过程记录/发布记录.html">发布记录</a>
+</div>
+<div class="nav-subsection" data-nav-key="topic-01-group-02"><div class="nav-subtitle">实施计划</div>
+<a class="nav-link" href="插件深度报告与实施计划.html">插件深度报告与实施计划</a>
+<a class="nav-link" href="上下文时间重构计划.html">上下文时间重构计划</a>
+<a class="nav-link" href="统一输入修改计划.html">统一输入修改计划</a>
+<a class="nav-link" href="原始计划记录.html">原始计划记录</a>
+<a class="nav-link" href="旧需求台账.html">旧需求台账</a>
+</div>
+<div class="nav-subsection" data-nav-key="topic-01-group-03"><div class="nav-subtitle">实施报告</div>
+<a class="nav-link" href="../03-实施报告/Batch1实施报告.html">Batch1 实施报告</a>
+<a class="nav-link" href="../03-实施报告/Batch2实施报告.html">Batch2 实施报告</a>
+<a class="nav-link" href="../03-实施报告/QuickInput主线修改记录.html">QuickInput 主线修改记录</a>
+<a class="nav-link" href="../03-实施报告/QuickInput收口状态.html">QuickInput 收口状态</a>
+<a class="nav-link" href="../03-实施报告/QuickInput本轮修改总览.html">QuickInput 本轮修改总览</a>
+</div>
+</div>
+<div class="nav-section" data-nav-key="topic-02"><div class="nav-title">功能设计</div>
+<div class="nav-subsection" data-nav-key="topic-02-group-00"><div class="nav-subtitle">功能全景</div>
+<a class="nav-link" href="../../02-功能设计/00-功能全景/功能总览.html">功能总览</a>
+<a class="nav-link" href="../../02-功能设计/00-功能全景/功能清单迁移.html">功能清单迁移</a>
+<a class="nav-link" href="../../02-功能设计/00-功能全景/旧产品功能地图.html">旧产品功能地图</a>
+</div>
+<div class="nav-subsection" data-nav-key="topic-02-group-01"><div class="nav-subtitle">用户与交互</div>
+<a class="nav-link" href="../../02-功能设计/01-用户与交互/用户场景.html">用户场景</a>
+<a class="nav-link" href="../../02-功能设计/01-用户与交互/命令设计.html">命令设计</a>
+<a class="nav-link" href="../../02-功能设计/01-用户与交互/设置项设计.html">设置项设计</a>
+<a class="nav-link" href="../../02-功能设计/01-用户与交互/交互流程.html">交互流程</a>
+<a class="nav-link" href="../../02-功能设计/01-用户与交互/异常状态.html">异常状态</a>
+<a class="nav-link" href="../../02-功能设计/01-用户与交互/功能验收标准.html">功能验收标准</a>
+</div>
+<div class="nav-subsection" data-nav-key="topic-02-group-02"><div class="nav-subtitle">View UI 与移动端</div>
+<a class="nav-link" href="../../02-功能设计/02-ViewUI与移动端/ViewUI触发动作梳理.html">View UI 触发动作梳理</a>
+<a class="nav-link" href="../../02-功能设计/02-ViewUI与移动端/移动端UI全量重构方案.html">移动端 UI 全量重构方案</a>
+</div>
+<div class="nav-subsection" data-nav-key="topic-02-group-03"><div class="nav-subtitle">QuickInput 功能收口</div>
+<a class="nav-link" href="../../02-功能设计/03-QuickInput功能收口/QuickInput保存计划一致性.html">QuickInput 保存计划一致性</a>
+<a class="nav-link" href="../../02-功能设计/03-QuickInput功能收口/QuickInput迁移保存反馈.html">QuickInput 迁移保存反馈</a>
+<a class="nav-link" href="../../02-功能设计/03-QuickInput功能收口/QuickInput路径变化保存策略.html">QuickInput 路径变化保存策略</a>
+</div>
+</div>
+<div class="nav-section" data-nav-key="topic-03"><div class="nav-title">技术文档</div>
+<div class="nav-subsection" data-nav-key="topic-03-group-00"><div class="nav-subtitle">技术全景</div>
+<a class="nav-link" href="../../03-技术文档/00-技术全景/技术总览.html">技术总览</a>
+<a class="nav-link" href="../../03-技术文档/00-技术全景/文件地图.html">文件地图</a>
+<a class="nav-link" href="../../03-技术文档/00-技术全景/模块职责.html">模块职责</a>
+<a class="nav-link" href="../../03-技术文档/00-技术全景/插件生命周期.html">插件生命周期</a>
+</div>
+<div class="nav-subsection" data-nav-key="topic-03-group-01"><div class="nav-subtitle">架构导览</div>
+<a class="nav-link" href="../../03-技术文档/01-架构导览/开发指南迁移.html">开发指南迁移</a>
+<a class="nav-link" href="../../03-技术文档/01-架构导览/开发规范迁移.html">开发规范迁移</a>
+<a class="nav-link" href="../../03-技术文档/01-架构导览/代码架构图总览.html">代码架构图总览</a>
+<a class="nav-link" href="../../03-技术文档/01-架构导览/旧代码架构图.html">旧代码架构图</a>
+</div>
+<div class="nav-subsection" data-nav-key="topic-03-group-02"><div class="nav-subtitle">目录地图</div>
+<a class="nav-link" href="../../03-技术文档/02-目录地图/app目录导览.html">app 目录导览</a>
+<a class="nav-link" href="../../03-技术文档/02-目录地图/core目录导览.html">core 目录导览</a>
+<a class="nav-link" href="../../03-技术文档/02-目录地图/features目录导览.html">features 目录导览</a>
+<a class="nav-link" href="../../03-技术文档/02-目录地图/platform目录导览.html">platform 目录导览</a>
+<a class="nav-link" href="../../03-技术文档/02-目录地图/share目录导览.html">share 目录导览</a>
+</div>
+<div class="nav-subsection" data-nav-key="topic-03-group-03"><div class="nav-subtitle">代码视角</div>
+<a class="nav-link" href="../../03-技术文档/03-代码视角/架构视角逐文件.html">架构视角逐文件</a>
+<a class="nav-link" href="../../03-技术文档/03-代码视角/领域视角逐文件.html">领域视角逐文件</a>
+<a class="nav-link" href="../../03-技术文档/03-代码视角/业务视角逐文件.html">业务视角逐文件</a>
+</div>
+<div class="nav-subsection" data-nav-key="topic-03-group-04"><div class="nav-subtitle">运行机制</div>
+<a class="nav-link" href="../../03-技术文档/04-运行机制/数据流.html">数据流</a>
+<a class="nav-link" href="../../03-技术文档/04-运行机制/事件流.html">事件流</a>
+<a class="nav-link" href="../../03-技术文档/04-运行机制/Obsidian API 使用.html">Obsidian API 使用</a>
+<a class="nav-link" href="../../03-技术文档/04-运行机制/样式系统.html">样式系统</a>
+<a class="nav-link" href="../../03-技术文档/04-运行机制/构建流程.html">构建流程</a>
+<a class="nav-link" href="../../03-技术文档/04-运行机制/数据流与流程图.html">数据流与流程图</a>
+</div>
+<div class="nav-subsection" data-nav-key="topic-03-group-05"><div class="nav-subtitle">字段与输入</div>
+<a class="nav-link" href="../../03-技术文档/05-字段与输入/字段系统重构方案.html">字段系统重构方案</a>
+<a class="nav-link" href="../../03-技术文档/05-字段与输入/统一输入现状盘点.html">统一输入现状盘点</a>
+</div>
+<div class="nav-subsection" data-nav-key="topic-03-group-06"><div class="nav-subtitle">QuickInput 技术记录</div>
+<a class="nav-link" href="../../03-技术文档/06-QuickInput技术记录/QuickInput多步推进Snapshot.html">QuickInput 多步推进 Snapshot</a>
+<a class="nav-link" href="../../03-技术文档/06-QuickInput技术记录/QuickInputLegacy调试收口.html">QuickInput Legacy 调试收口</a>
+<a class="nav-link" href="../../03-技术文档/06-QuickInput技术记录/QuickInput任务内容提取调试.html">QuickInput 任务内容提取调试</a>
+<a class="nav-link" href="../../03-技术文档/06-QuickInput技术记录/QuickInput任务内容单一入口.html">QuickInput 任务内容单一入口</a>
+<a class="nav-link" href="../../03-技术文档/06-QuickInput技术记录/QuickInput任务模板护栏.html">QuickInput 任务模板护栏</a>
+<a class="nav-link" href="../../03-技术文档/06-QuickInput技术记录/QuickInput任务写回保真.html">QuickInput 任务写回保真</a>
+</div>
+</div>
+<div class="nav-section" data-nav-key="topic-04"><div class="nav-title">评审中心</div>
+<div class="nav-subsection" data-nav-key="topic-04-group-00"><div class="nav-subtitle">评审方法</div>
+<a class="nav-link" href="../../04-评审中心/00-评审方法/需求评审.html">需求评审</a>
+<a class="nav-link" href="../../04-评审中心/00-评审方法/功能评审.html">功能评审</a>
+<a class="nav-link" href="../../04-评审中心/00-评审方法/技术方案评审.html">技术方案评审</a>
+</div>
+<div class="nav-subsection" data-nav-key="topic-04-group-01"><div class="nav-subtitle">质量评审</div>
+<a class="nav-link" href="../../04-评审中心/01-质量评审/代码结构评审.html">代码结构评审</a>
+<a class="nav-link" href="../../04-评审中心/01-质量评审/发布评审.html">发布评审</a>
+<a class="nav-link" href="../../04-评审中心/01-质量评审/风险评审.html">风险评审</a>
+</div>
+<div class="nav-subsection" data-nav-key="topic-04-group-02"><div class="nav-subtitle">专题评审</div>
+<a class="nav-link" href="../../04-评审中心/02-专题评审/字段系统深度评审.html">字段系统深度评审</a>
+<a class="nav-link" href="../../04-评审中心/02-专题评审/QuickInput调试与Legacy规范.html">QuickInput 调试与 Legacy 规范</a>
+</div>
+</div>
+<div class="nav-section" data-nav-key="topic-05"><div class="nav-title">维护发布</div>
+<div class="nav-subsection" data-nav-key="topic-05-group-00"><div class="nav-subtitle">测试验收</div>
+<a class="nav-link" href="../../05-维护发布/00-测试验收/测试清单.html">测试清单</a>
+<a class="nav-link" href="../../05-维护发布/00-测试验收/测试方案迁移.html">测试方案迁移</a>
+<a class="nav-link" href="../../05-维护发布/00-测试验收/QuickInput主线验收清单.html">QuickInput 主线验收清单</a>
+<a class="nav-link" href="../../05-维护发布/00-测试验收/QuickInput最终验收清单.html">QuickInput 最终验收清单</a>
+</div>
+<div class="nav-subsection" data-nav-key="topic-05-group-01"><div class="nav-subtitle">发布与回滚</div>
+<a class="nav-link" href="../../05-维护发布/01-发布与回滚/发布流程.html">发布流程</a>
+<a class="nav-link" href="../../05-维护发布/01-发布与回滚/Changelog.html">Changelog</a>
+<a class="nav-link" href="../../05-维护发布/01-发布与回滚/Bug处理流程.html">Bug 处理流程</a>
+<a class="nav-link" href="../../05-维护发布/01-发布与回滚/兼容性记录.html">兼容性记录</a>
+<a class="nav-link" href="../../05-维护发布/01-发布与回滚/回滚方案.html">回滚方案</a>
+<a class="nav-link" href="../../05-维护发布/01-发布与回滚/QuickInput风险与回滚说明.html">QuickInput 风险与回滚说明</a>
+</div>
+<div class="nav-subsection" data-nav-key="topic-05-group-02"><div class="nav-subtitle">修复记录</div>
+<a class="nav-link" href="../../05-维护发布/02-修复记录/QuickInput构建导出修复.html">QuickInput 构建导出修复</a>
+<a class="nav-link" href="../../05-维护发布/02-修复记录/BlockStatistics统一与跳转修复.html">Block Statistics 统一与跳转修复</a>
+<a class="nav-link" href="../../05-维护发布/02-修复记录/QuickInput任务正文空格保留修复.html">QuickInput 任务正文空格保留修复</a>
+</div>
+</div>
+    </aside>
+    <main class="main">
+      <section class="hero">
+        <div class="eyebrow">项目管理 / MIGRATED DOC</div>
+        <h1>插件深度报告与实施计划</h1>
+        <p class="lead">先做深度报告，再确认核心字段契约，再确认上下文模型，再确认时间领域规则，最后才按 P0 / P1 / P2 节奏改代码；所有实施都必须服从前面确认出的真源。</p>
+        <div class="meta-row">
+          <span class="badge good">状态：已迁移</span>
+          <span class="badge">最后更新：2026-05-07</span>
+          <span class="badge">格式：HTML</span>
+        </div>
+      </section>
+      <section class="grid"><article class="card full"><h2>迁移信息</h2><div class="table-wrap"><table><thead><tr><th>项目</th><th>内容</th></tr></thead><tbody><tr><td>新分类</td><td>项目管理</td></tr><tr><td>旧路径</td><td><code>docs/插件深度报告与实施计划.md</code></td></tr><tr><td>原始标题</td><td>插件深度报告与实施总计划表</td></tr><tr><td>处理方式</td><td>正文已转换为当前 <code>文档/</code> 的 HTML 页面；原始文件另存于 <code>_归档/迁移原文/</code>。</td></tr></tbody></table></div></article><article class="card full"><h2>正文</h2><div class="imported-doc"><h1>插件深度报告与实施总计划表</h1>
+<h2>总计划大表</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>阶段</th>
+<th>子阶段</th>
+<th>优先级</th>
+<th>名称</th>
+<th>核心目标</th>
+<th>必做项</th>
+<th>主要产出</th>
+<th>是否写代码</th>
+<th>建议模型</th>
+<th>进入条件</th>
+<th>MVP 验收</th>
+<th>完整验收</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>S0</td>
+<td>S0-1</td>
+<td>极高</td>
+<td>深度报告总盘点</td>
+<td>建立系统全景认知，停止凭局部感觉改动</td>
+<td>盘点字段、上下文、时间、模板、写回五条主链</td>
+<td>深度报告总稿</td>
+<td>否</td>
+<td>Thinking</td>
+<td>无</td>
+<td>能完整列出系统主链、模块位置、关键断层</td>
+<td>后续每个结论都能追溯到源码位置和调用链</td>
+</tr>
+<tr>
+<td>S0</td>
+<td>S0-2</td>
+<td>极高</td>
+<td>架构层盘点</td>
+<td>明确哪些模块决定字段、上下文、时间、模板、写回</td>
+<td>盘点模块职责、真源位置、重复职责、越层依赖</td>
+<td>架构层总表</td>
+<td>否</td>
+<td>Thinking</td>
+<td>S0-1 启动</td>
+<td>能说清 5 条主链分别在哪些模块里</td>
+<td>能指出所有双重真源、隐式规则和职责断层</td>
+</tr>
+<tr>
+<td>S0</td>
+<td>S0-3</td>
+<td>极高</td>
+<td>领域层盘点</td>
+<td>明确对象、字段、模板、能力的领域定位</td>
+<td>盘点 TaskEntry、BlockEntry、模板、字段、能力、时间语义</td>
+<td>领域层总表</td>
+<td>否</td>
+<td>Thinking</td>
+<td>S0-1 启动</td>
+<td>能回答对象是什么、模板是什么、能力是什么</td>
+<td>能区分事实来源、模板组织、显示形式三者边界</td>
+</tr>
+<tr>
+<td>S0</td>
+<td>S0-4</td>
+<td>极高</td>
+<td>函数层盘点</td>
+<td>明确真实代码里哪些函数决定系统行为</td>
+<td>盘点时间函数、上下文函数、字段函数、写回函数</td>
+<td>函数总表</td>
+<td>否</td>
+<td>Thinking</td>
+<td>S0-1 启动</td>
+<td>能列出关键函数文件、输入、输出、调用方</td>
+<td>能形成函数级风险清单和冲突矩阵</td>
+</tr>
+<tr>
+<td>S1</td>
+<td>S1-1</td>
+<td>极高</td>
+<td>核心字段清单确认</td>
+<td>锁定当前阶段必须关注的核心字段</td>
+<td>确认标题、内容/备注、状态、时间、结束、时长、图片、音频、附件</td>
+<td>核心字段范围表</td>
+<td>否</td>
+<td>Thinking</td>
+<td>S0 完成</td>
+<td>核心字段范围固定，不再临时增删</td>
+<td>字段范围可作为后续 S2/S3/S4 的唯一输入集合</td>
+</tr>
+<tr>
+<td>S1</td>
+<td>S1-2</td>
+<td>极高</td>
+<td>字段显示名确认</td>
+<td>确认用户可见字段名与内部语义关系</td>
+<td>确认“时间/结束/时长”等 label 是否保留</td>
+<td>字段显示名表</td>
+<td>否</td>
+<td>Thinking</td>
+<td>S1-1 完成</td>
+<td><code>时间 / 结束 / 时长</code> 是否保留得到明确结论</td>
+<td>每个核心字段都有稳定显示名，不再混淆 UI 名与内部语义</td>
+</tr>
+<tr>
+<td>S1</td>
+<td>S1-3</td>
+<td>极高</td>
+<td>字段内部语义确认</td>
+<td>确认字段在系统内部代表什么</td>
+<td>为每个核心字段确认内部语义、类型、适用范围</td>
+<td>字段语义表</td>
+<td>否</td>
+<td>Thinking</td>
+<td>S1-1 完成</td>
+<td>能回答每个字段在系统里到底代表什么</td>
+<td>Task / Block / 模板下的字段语义边界全部明确</td>
+</tr>
+<tr>
+<td>S1</td>
+<td>S1-4</td>
+<td>极高</td>
+<td>字段映射确认</td>
+<td>确认模板字段名与内部语义字段的映射</td>
+<td>盘点模板字段名、内部语义、未来兼容可能</td>
+<td>字段映射表</td>
+<td>否</td>
+<td>Thinking</td>
+<td>S1-2/S1-3 完成</td>
+<td>当前模板字段与内部语义一一对应</td>
+<td>未来允许别人不同命名的映射方案已有位置但不强制落地</td>
+</tr>
+<tr>
+<td>S1</td>
+<td>S1-5</td>
+<td>极高</td>
+<td>字段能力确认</td>
+<td>确认字段是否参与联动、展示、写回、未来媒体占位</td>
+<td>盘点联动能力、展示能力、写回能力、媒体占位</td>
+<td>核心字段契约表</td>
+<td>否</td>
+<td>Thinking</td>
+<td>S1-2/S1-3/S1-4 完成</td>
+<td>核心字段契约表可直接被 S2/S3 使用</td>
+<td>图片 / 音频 / 附件已进入 schema 视野且边界清楚</td>
+</tr>
+<tr>
+<td>S2</td>
+<td>S2-1</td>
+<td>极高</td>
+<td>对象分类确认</td>
+<td>明确系统里到底有哪些对象分类</td>
+<td>确认 TaskEntry / BlockEntry 的领域定义</td>
+<td>对象分类表</td>
+<td>否</td>
+<td>Thinking</td>
+<td>S1 完成</td>
+<td>能稳定区分任务条目和普通块条目</td>
+<td>不再把模板误当对象本体</td>
+</tr>
+<tr>
+<td>S2</td>
+<td>S2-2</td>
+<td>极高</td>
+<td>上下文对象确认</td>
+<td>明确编辑态对象模型</td>
+<td>确认 EntryContext / TaskContext / BlockContext</td>
+<td>上下文对象表</td>
+<td>否</td>
+<td>Thinking</td>
+<td>S2-1 完成</td>
+<td>能说明编辑态上下文最小结构</td>
+<td>不同入口进入编辑时都可映射到统一上下文模型</td>
+</tr>
+<tr>
+<td>S2</td>
+<td>S2-3</td>
+<td>极高</td>
+<td>识别依据确认</td>
+<td>明确对象识别到底靠什么</td>
+<td>盘点来源事实、模板信息、能力开关各自角色</td>
+<td>Task / Block 判定矩阵</td>
+<td>否</td>
+<td>Thinking</td>
+<td>S2-1/S2-2 完成</td>
+<td>能回答为什么当前对象是 Task 或 Block</td>
+<td>识别依据不再靠猜字段名或猜模板</td>
+</tr>
+<tr>
+<td>S2</td>
+<td>S2-4</td>
+<td>极高</td>
+<td>入口链路确认</td>
+<td>明确每个编辑入口如何构造上下文</td>
+<td>盘点列表、详情、搜索、时间轴、快速输入等入口</td>
+<td>上下文入口总表</td>
+<td>否</td>
+<td>Thinking</td>
+<td>S2-2 完成</td>
+<td>所有入口都能对应到上下文构造链</td>
+<td>能指出哪些入口最容易串对象、丢能力、错字段</td>
+</tr>
+<tr>
+<td>S2</td>
+<td>S2-5</td>
+<td>极高</td>
+<td>能力开关确认</td>
+<td>明确当前上下文能做什么</td>
+<td>盘点时间联动、完成状态、附件等能力开关</td>
+<td>模板 / 字段 / 能力关系表</td>
+<td>否</td>
+<td>Thinking</td>
+<td>S2-3/S2-4 完成</td>
+<td>能回答当前表单该显示什么、能做什么</td>
+<td>UI 显示条件基于上下文和能力，不再靠猜字段</td>
+</tr>
+<tr>
+<td>S3</td>
+<td>S3-1</td>
+<td>极高</td>
+<td>时间核心三字段确认</td>
+<td>锁定时间领域最小模型</td>
+<td>确认时间 / 结束 / 时长 三字段的角色</td>
+<td>时间核心字段表</td>
+<td>否</td>
+<td>Thinking</td>
+<td>S1 完成</td>
+<td>三字段角色明确</td>
+<td>三字段在 Task / Block / 模板中的适用边界清楚</td>
+</tr>
+<tr>
+<td>S3</td>
+<td>S3-2</td>
+<td>极高</td>
+<td>时间联动规则确认</td>
+<td>明确三字段联动是否全部保留</td>
+<td>确认 开始+结束→时长、开始+时长→结束、结束+时长→开始 的规则地位</td>
+<td>时间联动规则表</td>
+<td>否</td>
+<td>Thinking</td>
+<td>S3-1 完成</td>
+<td>能回答哪些联动保留、哪些降级</td>
+<td>时间规则符合你的真实使用习惯，不再默认偏向不舒服的模式</td>
+</tr>
+<tr>
+<td>S3</td>
+<td>S3-3</td>
+<td>极高</td>
+<td>默认方向确认</td>
+<td>明确默认按哪边推导</td>
+<td>确认默认方向、方向切换场景、是否会话态</td>
+<td>时间方向决策表</td>
+<td>否</td>
+<td>Thinking</td>
+<td>S3-2 完成</td>
+<td>默认方向得到明确结论</td>
+<td><code>timeDirection</code> 的显示条件、作用阶段、是否持久化全部明确</td>
+</tr>
+<tr>
+<td>S3</td>
+<td>S3-4</td>
+<td>极高</td>
+<td>跨天规则确认</td>
+<td>明确隔天任务如何自然成立</td>
+<td>确认跨天推导、自然跨日、异常判断</td>
+<td>跨天规则表</td>
+<td>否</td>
+<td>Thinking</td>
+<td>S3-2 完成</td>
+<td><code>23:00 + 120 = 次日 01:00</code> 被规则正确表达</td>
+<td>所有跨天场景都有统一解释，不再靠隐式修补</td>
+</tr>
+<tr>
+<td>S3</td>
+<td>S3-5</td>
+<td>极高</td>
+<td>日期归属确认</td>
+<td>明确记录到底归哪一天</td>
+<td>确认归开始日、结束日、场景规则或其他策略</td>
+<td>日期归属决策表</td>
+<td>否</td>
+<td>Thinking</td>
+<td>S3-3/S3-4 完成</td>
+<td>睡眠等跨天场景的日期归属得到明确结论</td>
+<td>日期归属规则可覆盖你的真实记录习惯且不自相矛盾</td>
+</tr>
+<tr>
+<td>S3</td>
+<td>S3-6</td>
+<td>极高</td>
+<td>输入中联动确认</td>
+<td>明确编辑态联动规则</td>
+<td>盘点输入时联动函数、触发条件、回填行为</td>
+<td>输入联动链路表</td>
+<td>否</td>
+<td>Thinking</td>
+<td>S3-2 完成</td>
+<td>能回答编辑时字段如何联动</td>
+<td>输入中联动与保存前归一不再互相打架</td>
+</tr>
+<tr>
+<td>S3</td>
+<td>S3-7</td>
+<td>极高</td>
+<td>提交前归一确认</td>
+<td>明确保存在提交前会不会再次调整</td>
+<td>盘点保存前归一化、二次修正、冲突处理</td>
+<td>提交前归一表</td>
+<td>否</td>
+<td>Thinking</td>
+<td>S3-6 完成</td>
+<td>能回答保存前是否会再推导一次</td>
+<td>再打开记录时字段关系与编辑时保持一致</td>
+</tr>
+<tr>
+<td>S3</td>
+<td>S3-8</td>
+<td>极高</td>
+<td>写回规则确认</td>
+<td>明确最终如何落盘、如何再次读取</td>
+<td>盘点写回格式、读取重建、稳定性</td>
+<td>写回链路表</td>
+<td>否</td>
+<td>Thinking</td>
+<td>S3-7 完成</td>
+<td>能回答最终怎么写、怎么读</td>
+<td>时间相关记录写回后再次读取仍符合既定规则</td>
+</tr>
+<tr>
+<td>S3</td>
+<td>S3-9</td>
+<td>极高</td>
+<td>时间函数全表确认</td>
+<td>形成时间系统完整函数地图</td>
+<td>盘点所有时间函数文件、函数名、输入、输出、调用方、风险点</td>
+<td>时间函数总表</td>
+<td>否</td>
+<td>Thinking</td>
+<td>S3-1 至 S3-8 完成</td>
+<td>所有时间函数被完整列出</td>
+<td>不再存在“还有一处时间逻辑没看到”的盲区</td>
+</tr>
+<tr>
+<td>S4</td>
+<td>P0-1</td>
+<td>极高</td>
+<td>编辑上下文链改造</td>
+<td>修“编辑错对象、读错上下文”</td>
+<td>统一上下文构造、统一入口、统一能力判断</td>
+<td>P0 改造清单（上下文）</td>
+<td>是</td>
+<td>Thinking 设计 / Pro 落地</td>
+<td>S1/S2/S3 完成</td>
+<td>能稳定识别当前编辑对象</td>
+<td>所有主要入口均不再串任务和 block</td>
+</tr>
+<tr>
+<td>S4</td>
+<td>P0-2</td>
+<td>极高</td>
+<td>时间推导链改造</td>
+<td>修“时间推导不符合使用习惯”</td>
+<td>统一时间推导总入口、联动规则、默认方向、跨天与日期归属</td>
+<td>P0 改造清单（时间）</td>
+<td>是</td>
+<td>Thinking 设计 / Pro 落地</td>
+<td>S1/S2/S3 完成</td>
+<td>时间联动符合既定规则</td>
+<td>跨天、反推、再次编辑、再次读取全部稳定</td>
+</tr>
+<tr>
+<td>S4</td>
+<td>P0-3</td>
+<td>高</td>
+<td>调试能力补齐</td>
+<td>让错误可观测、可复盘</td>
+<td>增加上下文调试、时间推导调试、写回前快照</td>
+<td>P0 调试清单</td>
+<td>是</td>
+<td>Pro</td>
+<td>P0-1/P0-2 启动</td>
+<td>能看到关键链路调试信息</td>
+<td>能复盘一次完整编辑到写回过程</td>
+</tr>
+<tr>
+<td>S4</td>
+<td>P1-1</td>
+<td>高</td>
+<td>策略对象沉淀</td>
+<td>把 P0 规则从页面逻辑沉淀到策略层</td>
+<td>提炼上下文策略、时间策略、能力策略</td>
+<td>P1 策略清单</td>
+<td>是</td>
+<td>Thinking 设计 / Pro 落地</td>
+<td>P0 完成</td>
+<td>规则不再散落在 UI 和 usecase</td>
+<td>后续加规则只需改策略层而非全仓补丁</td>
+</tr>
+<tr>
+<td>S4</td>
+<td>P1-2</td>
+<td>高</td>
+<td>统一入口</td>
+<td>不同入口复用同一规则</td>
+<td>统一列表、详情、搜索、时间轴、快速输入等入口逻辑</td>
+<td>P1 入口统一清单</td>
+<td>是</td>
+<td>Pro</td>
+<td>P1-1 启动</td>
+<td>修一处不再在别处复发</td>
+<td>多入口编辑同一对象结果一致</td>
+</tr>
+<tr>
+<td>S4</td>
+<td>P1-3</td>
+<td>高</td>
+<td>统一写回</td>
+<td>输入、保存、再次读取一致</td>
+<td>统一提交前归一、写回格式、回读重建</td>
+<td>P1 写回统一清单</td>
+<td>是</td>
+<td>Pro</td>
+<td>P1-1 启动</td>
+<td>再打开记录时字段关系稳定</td>
+<td>输入中联动、保存后结果、再次读取三者完全一致</td>
+</tr>
+<tr>
+<td>S4</td>
+<td>P2-1</td>
+<td>中</td>
+<td>完整字段系统</td>
+<td>从核心字段契约扩展到完整字段协议</td>
+<td>输入 / 展示 / 筛选 / 存储协议扩展</td>
+<td>P2 字段系统清单</td>
+<td>是</td>
+<td>Thinking 设计 / Pro 落地</td>
+<td>P1 完成</td>
+<td>新增字段不再牵一发动全身</td>
+<td>字段系统可支撑未来更多模板和命名映射</td>
+</tr>
+<tr>
+<td>S4</td>
+<td>P2-2</td>
+<td>中</td>
+<td>目录收口</td>
+<td>提升可维护性和定位效率</td>
+<td>收口时间、上下文、字段相关代码目录</td>
+<td>P2 目录清单</td>
+<td>是</td>
+<td>Pro</td>
+<td>P2-1 启动或并行</td>
+<td>关键代码可快速定位</td>
+<td>目录与职责基本对齐且不引入回退</td>
+</tr>
+<tr>
+<td>S4</td>
+<td>P2-3</td>
+<td>中低</td>
+<td>媒体进一步落地</td>
+<td>让图片 / 音频 / 附件进入真实流程</td>
+<td>占位后的媒体字段逐步接入展示、编辑、写回</td>
+<td>P2 媒体清单</td>
+<td>是</td>
+<td>Thinking 设计 / Pro 落地</td>
+<td>P2-1 完成</td>
+<td>媒体字段可进入真实流程</td>
+<td>在既有契约下扩展，不破坏主线</td>
+</tr>
+</tbody>
+</table></div>
+<h2>固定节奏表</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>批次</th>
+<th>阶段范围</th>
+<th>目标</th>
+<th>建议模型</th>
+<th>结束标志</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>第一批</td>
+<td>S0 + S1</td>
+<td>先完成深度报告与核心字段契约确认</td>
+<td>Thinking</td>
+<td>已形成深度报告总稿 + 核心字段契约表</td>
+</tr>
+<tr>
+<td>第二批</td>
+<td>S2 + S3</td>
+<td>再完成上下文模型与时间领域规则确认</td>
+<td>Thinking</td>
+<td>已形成上下文总表、时间函数总表、写回链路表、决策表</td>
+</tr>
+<tr>
+<td>第三批</td>
+<td>S4 P0</td>
+<td>按已确认规则开始止痛改造</td>
+<td>Thinking 设计 / Pro 落地</td>
+<td>上下文链、时间链、调试链可稳定工作</td>
+</tr>
+<tr>
+<td>第四批</td>
+<td>S4 P1</td>
+<td>把 P0 的修复沉淀成稳定系统</td>
+<td>Thinking 设计 / Pro 落地</td>
+<td>多入口一致、写回一致、规则不再散落</td>
+</tr>
+<tr>
+<td>第五批</td>
+<td>S4 P2</td>
+<td>进入完整重构与扩展</td>
+<td>Thinking 设计 / Pro 落地</td>
+<td>字段系统、目录、媒体扩展进入可持续阶段</td>
+</tr>
+</tbody>
+</table></div>
+<h2>一句话总纲</h2>
+<blockquote>
+<p>先做深度报告，再确认核心字段契约，再确认上下文模型，再确认时间领域规则，最后才按 P0 / P1 / P2 节奏改代码；所有实施都必须服从前面确认出的真源。</p>
+</blockquote>
+</div></article></section>
+      <footer class="footer">本页属于 Think OS 插件 HTML 文档系统。UI 沿用原有风格，docs/html 旧资料已按新结构迁移。</footer>
+    </main>
+  </div>
+  <script src="../../_资源/搜索索引.js"></script>
+  <script src="../../_资源/文档脚本.js"></script>
+</body>
+</html>
