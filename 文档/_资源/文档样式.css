@@ -463,3 +463,12 @@ pre.mono {
   margin-left: 14px;
   padding-left: 20px;
 }
+
+/* D 方案无闪版：不做 opacity/transform 过渡，避免正文切换被感知为“闪一下”。 */
+.main {
+  overflow-anchor: none;
+}
+.main.is-pjax-leaving,
+.main.is-pjax-entering {
+  pointer-events: none;
+}
