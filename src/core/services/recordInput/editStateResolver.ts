@@ -35,6 +35,48 @@ function isCategoryLikeField(field: any): boolean {
   return key.includes('分类') || /category/i.test(key);
 }
 
+function isPeriodField(field: any): boolean {
+  const key = normalizeToken(field?.key);
+  const label = normalizeToken(field?.label);
+  return ['周期', 'period'].includes(key) || ['周期', 'period'].includes(label);
+}
+
+function isTagsField(field: any): boolean {
+  const key = normalizeToken(field?.key);
+  const label = normalizeToken(field?.label);
+  return ['标签', 'tag', 'tags'].includes(key) || ['标签', 'tag', 'tags'].includes(label);
+}
+
+function formatTagsForField(tags: unknown): string | undefined {
+  if (!Array.isArray(tags)) return undefined;
+  const cleaned = tags.map((tag) => String(tag || '').trim().replace(/^#/, '')).filter(Boolean);
+  return cleaned.length ? Array.from(new Set(cleaned)).join(',') : undefined;
+}
+
+function readPeriodFromLegacyCategory(field: any, item: Item, snapshot: ParsedRecordSnapshot): string | undefined {
+  const candidates = [
+    snapshot.semantic.categoryKey,
+    item.categoryKey,
+    ...String(item.rawSource || '')
+      .split(/\r?\n/)
+      .map((line) => line.trim().match(/^分类[:：]{1,2}\s*(.+)$/)?.[1]?.trim())
+      .filter(Boolean),
+  ];
+  const options = field?.options || [];
+  for (const candidate of candidates) {
+    const raw = String(candidate || '').trim();
+    if (!raw) continue;
+    const leaf = getLeafPath(raw) || raw;
+    const matched = options.find((opt: any) => {
+      const optValue = String(opt.value || '').trim();
+      const optLabel = String(opt.label || '').trim();
+      return optValue === raw || optLabel === raw || optValue === leaf || optLabel === leaf;
+    });
+    if (matched) return String(matched.value || matched.label || raw);
+  }
+  return undefined;
+}
+
 function mapFieldValue(field: any, rawValue: unknown): unknown {
   if (rawValue === undefined || rawValue === null || rawValue === '') return undefined;
   if (isOptionObject(rawValue)) {
@@ -275,6 +317,8 @@ function readSnapshotSemanticValue(field: any, item: Item, snapshot: ParsedRecor
   if (isTitleField(field)) return snapshot.semantic.title || snapshot.semantic.editableText || item.title;
 
   if (['日期', 'date'].includes(key) || ['日期', 'date'].includes(label)) return snapshot.semantic.date;
+  if (isPeriodField(field)) return snapshot.semantic.period || readPeriodFromLegacyCategory(field, item, snapshot);
+  if (isTagsField(field)) return formatTagsForField(snapshot.semantic.tags) || formatTagsForField(item.tags);
   if (['时间', 'time', 'start', 'starttime'].includes(key) || ['时间', 'time', 'start', 'starttime'].includes(label)) return snapshot.semantic.startTime;
   if (['结束', 'end', 'endtime'].includes(key) || ['结束', 'end', 'endtime'].includes(label)) return snapshot.semantic.endTime;
   if (['时长', 'duration'].includes(key) || ['时长', 'duration'].includes(label)) return snapshot.semantic.duration;

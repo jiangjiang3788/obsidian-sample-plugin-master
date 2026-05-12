@@ -55,6 +55,8 @@ export interface ParsedRecordSnapshot {
     editableText: string | null;
     content: string | null;
     date: string | null;
+    period: string | null;
+    tags: string[];
     startTime: string | null;
     endTime: string | null;
     duration: number | null;
@@ -144,6 +146,8 @@ export function buildParsedRecordSnapshot(item: Item): ParsedRecordSnapshot {
       editableText,
       content: item.content || null,
       date: item.date || item.createdDate || null,
+      period: item.period || null,
+      tags: [...(item.tags || [])],
       startTime: item.startTime || null,
       endTime: item.endTime || null,
       duration: item.duration ?? null,
