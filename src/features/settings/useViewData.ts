@@ -10,6 +10,7 @@ import type { Item, ViewInstance, FilterRule, SortRule } from '@core/public';
 
 interface UseViewDataProps {
     dataStore: DataStore;
+    sourceItems?: Item[];
     viewInstance?: ViewInstance;
     dateRange: [Date, Date];
     keyword: string;
@@ -27,6 +28,7 @@ function getItemGranularity(item: Item): string {
 
 export function useViewData({
     dataStore,
+    sourceItems,
     viewInstance,
     dateRange,
     keyword,
@@ -40,15 +42,19 @@ export function useViewData({
     const sort: SortRule[] = viewInstance?.sort || [];
     const sourceName = viewInstance?.title || '未知视图';
 
-    const [allItems, setAllItems] = useState(() => dataStore.queryItems());
+    const [localItems, setLocalItems] = useState(() => sourceItems ?? dataStore.queryItems());
 
     useEffect(() => {
+        if (sourceItems) return;
+
         const listener = () => {
-            setAllItems(dataStore.queryItems());
+            setLocalItems(dataStore.queryItems());
         };
         dataStore.subscribe(listener);
         return () => dataStore.unsubscribe(listener);
-    }, [dataStore, sourceName]);
+    }, [dataStore, sourceItems, sourceName]);
+
+    const allItems = sourceItems ?? localItems;
 
     const processedItems = useMemo(() => {
         devTime(`[useViewData] 为视图 [${sourceName}] 计算数据耗时`);

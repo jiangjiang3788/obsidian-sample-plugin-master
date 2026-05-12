@@ -43,6 +43,10 @@ import { buildStatisticsViewModel } from '@/features/settings/viewModels/statist
 import { buildProgressViewModel } from '@/features/settings/viewModels/progressViewModel';
 import { buildTaskExecutionViewModel } from '@/features/settings/viewModels/taskExecutionViewModel';
 
+const INITIAL_RENDERED_EXPANDED_VIEWS = 3;
+const EXPANDED_VIEW_RENDER_BATCH_SIZE = 2;
+const EXPANDED_VIEW_RENDER_DELAY_MS = 80;
+
 // [修改] ViewContent 组件增加 onDataLoaded 和 selectedThemes props
 const ViewContent = ({
     viewInstance,
@@ -60,6 +64,7 @@ const ViewContent = ({
     timerService,
     timers, // [新增]
     allThemes, // [新增]
+    allItems,
     inputSettings, // [新增]
     onDataLoaded, // [新增]
 }: {
@@ -78,6 +83,7 @@ const ViewContent = ({
     timerService: TimerController;
     timers: any[]; // [新增]
     allThemes: any[]; // [新增]
+    allItems: Item[];
     inputSettings: any; // [新增]
     onDataLoaded: (items: Item[]) => void; // [新增]
 }) => {
@@ -85,15 +91,9 @@ const ViewContent = ({
     const useCases = useUseCases();
     const ui = useUiPort();
 
-    const [allItems, setAllItems] = useState(() => dataStore.queryItems());
-    useEffect(() => {
-        const listener = () => setAllItems(dataStore.queryItems());
-        dataStore.subscribe(listener);
-        return () => dataStore.unsubscribe(listener);
-    }, [dataStore]);
-
     const viewItems = useViewData({
         dataStore,
+        sourceItems: allItems,
         viewInstance,
         dateRange,
         keyword,
@@ -273,6 +273,27 @@ export function LayoutRenderer({ layout, dataStore, app, actionService, timerSer
     // [修改] 使用 Zustand store 获取 timers
     const timers = useSelector(selectTimers);
     const allThemes = inputSettings.themes; // [兼容] 保持 allThemes 变量
+
+    const [allItems, setAllItems] = useState<Item[]>(() => dataStore.queryItems());
+    useEffect(() => {
+        const readAllItems = () => {
+            const startedAt = performance.now();
+            const nextItems = dataStore.queryItems();
+            const durationMs = Math.round((performance.now() - startedAt) * 100) / 100;
+            devLog('[ThinkPlugin] layout shared query', {
+                layoutId: layout.id,
+                viewCount: layout.viewInstanceIds.length,
+                itemCount: nextItems.length,
+                durationMs,
+            });
+            setAllItems(nextItems);
+        };
+
+        const listener = () => readAllItems();
+        dataStore.subscribe(listener);
+        readAllItems();
+        return () => dataStore.unsubscribe(listener);
+    }, [dataStore, layout.id, layout.viewInstanceIds.length]);
     
     const [expandedState, setExpandedState] = useState<Record<string, boolean>>({});
     const [isStateInitialized, setIsStateInitialized] = useState(false);
@@ -322,6 +343,55 @@ export function LayoutRenderer({ layout, dataStore, app, actionService, timerSer
             return newState;
         });
     }, [allViews, isStateInitialized, layout.viewInstanceIds]);
+
+    const expandedViewIds = useMemo(() => {
+        if (!isStateInitialized) return [];
+        return layout.viewInstanceIds.filter((viewId: string) => !!expandedState[viewId]);
+    }, [expandedState, isStateInitialized, layout.viewInstanceIds]);
+
+    const expandedViewSignature = expandedViewIds.join('|');
+    const [renderedExpandedCount, setRenderedExpandedCount] = useState(INITIAL_RENDERED_EXPANDED_VIEWS);
+    const renderedBatchLayoutIdRef = useRef<string | null>(null);
+
+    useEffect(() => {
+        setRenderedExpandedCount(current => {
+            const firstBatchSize = Math.min(expandedViewIds.length, INITIAL_RENDERED_EXPANDED_VIEWS);
+            if (renderedBatchLayoutIdRef.current !== layout.id) {
+                renderedBatchLayoutIdRef.current = layout.id;
+                return firstBatchSize;
+            }
+
+            const target = Math.min(expandedViewIds.length, Math.max(current, INITIAL_RENDERED_EXPANDED_VIEWS));
+            return target;
+        });
+    }, [expandedViewSignature, expandedViewIds.length, layout.id]);
+
+    useEffect(() => {
+        if (renderedExpandedCount >= expandedViewIds.length) return;
+
+        const requestIdle = (window as any).requestIdleCallback as undefined | ((callback: () => void, options?: any) => number);
+        const cancelIdle = (window as any).cancelIdleCallback as undefined | ((handle: number) => void);
+        let timeoutId: ReturnType<typeof setTimeout> | null = null;
+        let idleHandle: number | null = null;
+
+        const renderNextBatch = () => {
+            setRenderedExpandedCount(current => Math.min(
+                expandedViewIds.length,
+                current + EXPANDED_VIEW_RENDER_BATCH_SIZE
+            ));
+        };
+
+        if (requestIdle) {
+            idleHandle = requestIdle(renderNextBatch, { timeout: EXPANDED_VIEW_RENDER_DELAY_MS * 2 });
+        } else {
+            timeoutId = setTimeout(renderNextBatch, EXPANDED_VIEW_RENDER_DELAY_MS);
+        }
+
+        return () => {
+            if (idleHandle !== null && cancelIdle) cancelIdle(idleHandle);
+            if (timeoutId !== null) clearTimeout(timeoutId);
+        };
+    }, [expandedViewIds.length, expandedViewSignature, renderedExpandedCount]);
 
     const getInitialDate = () => {
         return layout.initialDateFollowsNow ? dayjs() : (layout.initialDate ? dayjs(layout.initialDate) : dayjs());
@@ -456,6 +526,8 @@ export function LayoutRenderer({ layout, dataStore, app, actionService, timerSer
         if (!viewInstance) return <div class="think-module">视图 (ID: {viewId}) 未找到</div>;
 
         const isExpanded = !!expandedState[viewId];
+        const expandedIndex = isExpanded ? expandedViewIds.indexOf(viewId) : -1;
+        const shouldRenderContent = isExpanded && expandedIndex >= 0 && expandedIndex < renderedExpandedCount;
 
         return (
             <ModulePanel 
@@ -470,7 +542,7 @@ export function LayoutRenderer({ layout, dataStore, app, actionService, timerSer
                 onSettingsClick={() => handleSettingsClick(viewInstance)} // [新增] 传递设置回调
                 onRemove={() => handleDeleteViewInstance(viewInstance.id)}
             >
-                {isExpanded && (
+                {shouldRenderContent ? (
                     <ViewContent
                         viewInstance={viewInstance}
                         dataStore={dataStore}
@@ -487,10 +559,13 @@ export function LayoutRenderer({ layout, dataStore, app, actionService, timerSer
                         timerService={timerService}
                         timers={timers} // [新增]
                         allThemes={allThemes} // [新增]
+                        allItems={allItems}
                         inputSettings={inputSettings} // [新增]
                         onDataLoaded={(items) => { modulesDataCache.current[viewInstance.id] = items; }} // [修改] 传递 onDataLoaded
                     />
-                )}
+                ) : isExpanded ? (
+                    <div class="module-deferred-placeholder">正在加载视图...</div>
+                ) : null}
             </ModulePanel>
         );
     };
