@@ -1,5 +1,6 @@
-import { describe, expect, it } from 'vitest';
-import { buildPathOption } from '../../../core/utils/pathSemantic';
+import { describe, expect, it } from '@jest/globals';
+
+import { buildPathOption } from '@/core/utils/pathSemantic';
 
 describe('quick input category backfill helpers', () => {
   it('creates option objects from categoryKey for editing', () => {

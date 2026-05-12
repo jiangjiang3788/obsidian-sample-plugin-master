@@ -80,16 +80,25 @@ function isOptionObject(value: unknown): value is { label?: unknown; value?: unk
 function isPathLikeField(field: any): boolean {
   if (!field) return false;
   if (field.semanticType === 'path') return true;
+  const key = normalizeToken(field.key || field.label || '');
+  if (['主题', 'theme', 'themepath', '完整主题', '完整路径主题', '主题路径', 'roottheme', '根主题', 'leaftheme', '叶主题'].includes(key)) {
+    return true;
+  }
+  if (Array.isArray(field.options) && field.options.some((opt: any) => String(opt?.value || '').includes('/'))) return true;
+  return false;
+}
+
+function isCategoryLikeField(field: any): boolean {
+  if (!field) return false;
   const key = String(field.key || field.label || '');
-  if (key.includes('分类') || /category/i.test(key)) return true;
-  return Array.isArray(field.options) && field.options.some((opt: any) => String(opt?.value || '').includes('/'));
+  return key.includes('分类') || /category/i.test(key);
 }
 
 function normalizeOptionValue(field: any, rawValue: unknown): unknown {
   if (rawValue === undefined || rawValue === null || rawValue === '') return rawValue;
 
   if (isOptionObject(rawValue)) {
-    if (isPathLikeField(field)) {
+    if (isPathLikeField(field) || isCategoryLikeField(field)) {
       const normalized = normalizePath(String(rawValue.value ?? rawValue.label ?? ''));
       return { value: normalized, label: String((rawValue.label ?? getLeafPath(normalized)) || normalized) };
     }
@@ -106,7 +115,7 @@ function normalizeOptionValue(field: any, rawValue: unknown): unknown {
   const rawString = String(rawValue);
   const options = field.options || [];
 
-  if (isPathLikeField(field)) {
+  if (isPathLikeField(field) || isCategoryLikeField(field)) {
     const normalizedPath = normalizePath(rawString);
     const matched = options.find((opt: any) => normalizePath(String(opt.value || '')) === normalizedPath || String(opt.label || '') === rawString);
     if (matched) {

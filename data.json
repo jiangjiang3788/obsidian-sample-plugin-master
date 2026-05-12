@@ -1,10 +1,10 @@
 {
   "aiSettings": {
-    "apiKey": "sk-2SPzXePSCl9BISBoGzqQoBTd2BDv0mmoRZ3KoSZiMPFWyryn",
+    "apiKey": "sk-IL88ucMIHsvIYkcKLcTbB6ZEeeHWpay42QZAX9drXu4453ER",
     "enabled": true,
     "provider": "openai_compat",
     "apiEndpoint": "https://api.ricardochat.cn/v1",
-    "model": "[Max]gemini-3-flash-preview",
+    "model": "[D]gemini-3.1-pro-high",
     "temperature": 0.7,
     "maxTokens": 4096,
     "requestTimeoutMs": 3000000,
@@ -20,7 +20,7 @@
     "confirmMode": "batch",
     "preloadConfigOnStartup": true,
     "configCacheTTLSeconds": 300,
-    "customPrompt": "完成的任务状态勾选完成✅\n未开始的任务🛫\n未完成的任务、有截止日期的📅\n上午8点到12点工作 其中9点到十点写总结 这个应该断成三节 十点到九点工作 九点到十点写总结 十点到十二点工作"
+    "customPrompt": "完成的任务状态勾选完成✅\n未开始的任务🛫\n未完成的任务、有截止日期的📅\n上午8点到12点工作 其中9点到十点写总结 这个应该断成三节 十点到九点工作 九点到十点写总结 十点到十二点工作\n时长只能是分钟为单位，只记录数字\n\n“通勤15分钟中午吃饭45分钟玩手机70分钟 睡觉20分钟”认为是一件事接着一件事记录时间"
   },
   "groups": [
     {
@@ -115,7 +115,7 @@
           "dir": "asc"
         }
       ],
-      "collapsed": true
+      "collapsed": false
     },
     {
       "id": "vi_mmeolydjaga6z6u",
@@ -216,21 +216,31 @@
         "colField": "file.path"
       },
       "fields": [
+        "theme",
         "date",
         "content"
       ],
-      "groupFields": [
-        "categoryKey",
-        "period"
+      "groupFields": [],
+      "filters": [
+        {
+          "field": "categoryKey",
+          "op": "!=",
+          "value": "打卡",
+          "logic": "and"
+        },
+        {
+          "field": "type",
+          "op": "=",
+          "value": "block"
+        }
       ],
-      "filters": [],
       "sort": [
         {
           "field": "date",
           "dir": "asc"
         }
       ],
-      "collapsed": true
+      "collapsed": false
     },
     {
       "id": "vi_mmikcsvy3rwcetd",
@@ -269,7 +279,7 @@
           }
         ],
         "rowField": "recurrence",
-        "colField": "rootTheme"
+        "colField": "file.path"
       },
       "fields": [
         "title"
@@ -295,7 +305,7 @@
         }
       ],
       "sort": [],
-      "collapsed": true
+      "collapsed": false
     },
     {
       "id": "vi_mn9o962553qwhzp",
@@ -327,6 +337,10 @@
           {
             "name": "计划",
             "color": "#9eeabe"
+          },
+          {
+            "name": "健康",
+            "color": "#e0e0e0"
           }
         ]
       },
@@ -339,7 +353,7 @@
       "groupFields": [],
       "filters": [],
       "sort": [],
-      "collapsed": true
+      "collapsed": false
     },
     {
       "id": "vi_mno1upgdwpv72oj",
@@ -372,7 +386,7 @@
           },
           "电脑": {
             "name": "电脑",
-            "color": "#fb8e60",
+            "color": "#ff9838",
             "files": [
               "2-5电脑"
             ]
@@ -396,9 +410,62 @@
       },
       "fields": [],
       "groupFields": [],
-      "filters": [],
+      "filters": [
+        {
+          "field": "categoryKey",
+          "op": "=",
+          "value": "完成任务"
+        }
+      ],
       "sort": [],
       "collapsed": false
+    },
+    {
+      "id": "vi_mnztlf3wxrrqd8i",
+      "parentId": null,
+      "title": "完成任务",
+      "viewType": "TableView",
+      "viewConfig": {
+        "categories": [
+          {
+            "name": "打卡",
+            "color": "#b888e7"
+          },
+          {
+            "name": "计划",
+            "color": "#9eeabe"
+          },
+          {
+            "name": "闪念",
+            "color": "#e47272"
+          },
+          {
+            "name": "完成任务",
+            "color": "#88c1dd"
+          },
+          {
+            "name": "未完成任务",
+            "color": "#ebebeb"
+          },
+          {
+            "name": "总结",
+            "color": "#e5bf8a"
+          }
+        ],
+        "colField": "file.path",
+        "rowField": "type"
+      },
+      "fields": [],
+      "groupFields": [],
+      "filters": [
+        {
+          "field": "categoryKey",
+          "op": "=",
+          "value": "完成任务"
+        }
+      ],
+      "sort": [],
+      "collapsed": true
     }
   ],
   "layouts": [
@@ -406,30 +473,76 @@
       "id": "layout_memcg9jjoq6j4",
       "name": "全局布局",
       "viewInstanceIds": [
-        "vi_mn9o962553qwhzp",
-        "vi_mmikcsvy3rwcetd",
-        "vi_mmeolydjaga6z6u",
-        "vi_mmijitbq47u10wu",
         "vi_mm9z0oe1cvlr53c",
+        "vi_mmikcsvy3rwcetd",
+        "vi_mmijitbq47u10wu",
+        "vi_mmeolydjaga6z6u",
+        "vi_mn9o962553qwhzp",
+        "vi_mnztlf3wxrrqd8i",
         "vi_mno1upgdwpv72oj"
       ],
       "displayMode": "list",
-      "initialView": "月",
-      "initialDateFollowsNow": false,
+      "initialView": "年",
+      "initialDateFollowsNow": true,
       "parentId": "group_memcg1u3us3jc",
       "hideToolbar": false,
       "isOverviewMode": false,
-      "initialDate": "2026-04-26",
+      "initialDate": "2024-11-26",
       "useFieldGranularity": false,
-      "selectedThemes": [],
+      "selectedThemes": [
+        "思考",
+        "思考/时间整理",
+        "思考/复盘整理",
+        "思考/思路整理",
+        "思考/读书",
+        "思考/自我",
+        "思考/垚垚",
+        "思考/阳阳",
+        "思考/婆婆",
+        "思考/芦苇",
+        "思考/家庭",
+        "生活",
+        "生活/高级生活",
+        "生活/娱乐",
+        "生活/垚垚",
+        "生活/家务",
+        "生活/整理",
+        "生活/车车",
+        "健康",
+        "健康/卫生",
+        "健康/睡眠",
+        "健康/身体",
+        "健康/习惯",
+        "健康/运动",
+        "健康/粑粑",
+        "健康/早餐",
+        "健康/午餐",
+        "健康/晚餐",
+        "健康/心情",
+        "健康/姨妈",
+        "健康/剪头发",
+        "健康/剪指甲",
+        "电脑",
+        "电脑/ob基础",
+        "电脑/笔记系统",
+        "电脑/记录系统",
+        "电脑/整理",
+        "工作",
+        "工作/设计",
+        "工作/投标",
+        "工作/手续、对账",
+        "工作/其他",
+        "工作/老板任务",
+        "工作/通勤",
+        "思考/专注",
+        "生活/小手机"
+      ],
       "selectedCategories": [
         "周",
         "季",
-        "完成任务",
         "总结",
         "打卡",
         "月",
-        "未完成任务",
         "计划",
         "闪念"
       ]
@@ -490,7 +603,7 @@
             "id": "field_mekymokf",
             "key": "时长",
             "label": "时长",
-            "type": "number"
+            "type": "text"
           },
           {
             "id": "field_mekyn4c3",
@@ -782,7 +895,7 @@
         "id": "thm_mg1ytgzlrkbv8",
         "path": "生活/高级生活",
         "icon": "🔆",
-        "order": 2
+        "order": 0
       },
       {
         "id": "thm_mejslgmvm2yym",
@@ -800,7 +913,7 @@
         "id": "thm_mejsn748ryfip",
         "path": "生活/家务",
         "icon": "🧹",
-        "order": 3
+        "order": 6
       },
       {
         "id": "thm_mejsnf4dp61nq",
@@ -812,7 +925,7 @@
         "id": "thm_mejsmcngeij2y",
         "path": "生活/车车",
         "icon": "🚗",
-        "order": 0
+        "order": 3
       },
       {
         "id": "thm_mejsnu4ekns46",
@@ -824,37 +937,37 @@
         "id": "thm_mejso10pwthbr",
         "path": "健康/卫生",
         "icon": "🛁",
-        "order": 8
+        "order": 10
       },
       {
         "id": "thm_mejso80owbe8a",
         "path": "健康/睡眠",
         "icon": "💤",
-        "order": 4
+        "order": 6
       },
       {
         "id": "thm_mejsosvgm4lcp",
         "path": "健康/身体",
         "icon": "🔋",
-        "order": 5
+        "order": 7
       },
       {
         "id": "thm_mejsoxh023r2m",
         "path": "健康/习惯",
         "icon": "🥛",
-        "order": 9
+        "order": 3
       },
       {
         "id": "thm_mejsp0lukfkh0",
         "path": "健康/运动",
         "icon": "💪",
-        "order": 7
+        "order": 5
       },
       {
         "id": "thm_mejspgfly30j8",
         "path": "健康/粑粑",
         "icon": "💩",
-        "order": 6
+        "order": 4
       },
       {
         "id": "thm_mejspn5ocowew",
@@ -878,13 +991,13 @@
         "id": "thm_mejstnaohdg8t",
         "path": "健康/心情",
         "icon": "😄",
-        "order": 3
+        "order": 8
       },
       {
         "id": "thm_mewzwlmjw8b7r",
         "path": "健康/姨妈",
         "icon": "🩸",
-        "order": 10
+        "order": 9
       },
       {
         "id": "thm_mewzx8x1h4g1r",
@@ -937,7 +1050,7 @@
       {
         "id": "thm_mejsxbyuursnz",
         "path": "工作/设计",
-        "icon": "44/设计",
+        "icon": "🖥",
         "order": 2
       },
       {
@@ -961,7 +1074,7 @@
       {
         "id": "thm_mejsye15uvbzi",
         "path": "工作/老板任务",
-        "icon": "1",
+        "icon": "💥",
         "order": 1
       },
       {
@@ -971,10 +1084,16 @@
         "order": 0
       },
       {
-        "id": "thm_mol8cfbu50qxra7",
-        "path": "升级",
-        "icon": "📁",
-        "order": 5
+        "path": "思考/专注",
+        "icon": "⏰",
+        "id": "thm_mi2zaftrvxtv2",
+        "order": 6
+      },
+      {
+        "id": "thm_mo29hj7oy3rooy8",
+        "path": "生活/小手机",
+        "icon": "🍓",
+        "order": 2
       }
     ],
     "overrides": [
@@ -5788,7 +5907,7 @@
             "id": "field_mekymokf",
             "key": "时长",
             "label": "时长",
-            "type": "number"
+            "type": "text"
           },
           {
             "id": "field_mekyn4c3",
@@ -5810,15 +5929,14 @@
               },
               {
                 "value": "🔁 every year",
-                "label": "每月222"
+                "label": "每月"
               }
             ]
           }
         ],
-        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{theme}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态}} {{日期}}ff\n\n",
+        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{theme}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态}} {{日期}}\n\n",
         "targetFile": "01/2-6工作.md",
-        "appendUnderHeader": "## {{theme}}",
-        "disabled": false
+        "appendUnderHeader": "## {{theme}}"
       },
       {
         "blockId": "blk_meic1my6m62iu",
@@ -6024,8 +6142,7 @@
             "id": "field_mekt6ks3",
             "key": "任务内容",
             "label": "任务内容",
-            "type": "textarea",
-            "defaultValue": "电脑"
+            "type": "textarea"
           },
           {
             "id": "field_mewk9zrg",
@@ -6530,7 +6647,7 @@
             "type": "radio",
             "options": [
               {
-                "value": "",
+                "value": "- [x]",
                 "label": "✅",
                 "extraValues": {}
               },
@@ -6548,15 +6665,13 @@
             "id": "field_mekt6ks3",
             "key": "任务内容",
             "label": "任务内容",
-            "type": "textarea",
-            "defaultValue": "生活11"
+            "type": "textarea"
           },
           {
             "id": "field_mewk9zrg",
-            "key": "44",
-            "label": "44",
-            "type": "date",
-            "defaultValue": ""
+            "key": "日期",
+            "label": "日期",
+            "type": "date"
           },
           {
             "id": "field_mekymbeq",
@@ -6596,7 +6711,7 @@
               },
               {
                 "value": "🔁 every year",
-                "label": "每月77"
+                "label": "每月"
               }
             ]
           }
@@ -6604,8 +6719,7 @@
         "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{theme}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态}} {{日期}}\n\n",
         "targetFile": "01/2-3生活.md",
         "appendUnderHeader": "## {{theme}}",
-        "id": "ovr_mfhzy0ykf8a08",
-        "disabled": false
+        "id": "ovr_mfhzy0ykf8a08"
       },
       {
         "blockId": "blk_meic1my6m62iu",
@@ -6637,8 +6751,7 @@
             "id": "field_mekt6ks3",
             "key": "任务内容",
             "label": "任务内容",
-            "type": "textarea",
-            "defaultValue": "思考"
+            "type": "textarea"
           },
           {
             "id": "field_mewk9zrg",
@@ -8310,6 +8423,144 @@
         "blockId": "blk_mejsg1dc46fj9",
         "disabled": true,
         "id": "ovr_mh1smyhxqo3gk"
+      },
+      {
+        "blockId": "blk_meic1my6m62iu",
+        "themeId": "thm_mo29hj7oy3rooy8",
+        "disabled": false,
+        "fields": [
+          {
+            "id": "field_mekr8gby",
+            "key": "状态",
+            "label": "状态",
+            "type": "radio",
+            "options": [
+              {
+                "value": "- [x]",
+                "label": "✅",
+                "extraValues": {}
+              },
+              {
+                "value": "- [ ]",
+                "label": "🛫"
+              },
+              {
+                "value": "- [ ]",
+                "label": "📅"
+              }
+            ]
+          },
+          {
+            "id": "field_mekt6ks3",
+            "key": "任务内容",
+            "label": "任务内容",
+            "defaultValue": "小手机",
+            "type": "textarea"
+          },
+          {
+            "id": "field_mewk9zrg",
+            "key": "日期",
+            "label": "日期",
+            "type": "date"
+          },
+          {
+            "id": "field_mekymbeq",
+            "key": "时间",
+            "label": "时间",
+            "type": "time"
+          },
+          {
+            "id": "field_mfhzo6vd",
+            "key": "结束",
+            "label": "结束",
+            "type": "time"
+          },
+          {
+            "id": "field_mekymokf",
+            "key": "时长",
+            "label": "时长",
+            "type": "text"
+          },
+          {
+            "id": "field_mekyn4c3",
+            "key": "重复",
+            "label": "重复",
+            "type": "radio",
+            "options": [
+              {
+                "value": " ",
+                "label": "不重复"
+              },
+              {
+                "value": "🔁 every day",
+                "label": "每天"
+              },
+              {
+                "value": "🔁 every mothon",
+                "label": "每周"
+              },
+              {
+                "value": "🔁 every year",
+                "label": "每月"
+              }
+            ]
+          }
+        ],
+        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{theme}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{状态}} {{重复.value}} {{日期}}\n\n",
+        "targetFile": "01/2-3生活.md",
+        "appendUnderHeader": "## {{theme}}",
+        "id": "ovr_mo29s584mizcdy5"
+      },
+      {
+        "blockId": "blk_mejsg1dc46fj9",
+        "themeId": "thm_mejsim4o4c2mw",
+        "disabled": false,
+        "fields": [
+          {
+            "id": "field_mewjlt4j",
+            "key": "思考分类",
+            "label": "思考分类",
+            "type": "radio",
+            "options": [
+              {
+                "value": "闪念/事件",
+                "label": "事件"
+              },
+              {
+                "value": "闪念/感受",
+                "label": "感受"
+              },
+              {
+                "value": "闪念/思考",
+                "label": "思考"
+              }
+            ],
+            "semanticType": "path",
+            "storeMode": "value"
+          },
+          {
+            "id": "field_mewkyug9",
+            "key": "日期",
+            "label": "日期",
+            "type": "date"
+          },
+          {
+            "id": "field_mn5ui00x",
+            "key": "标签",
+            "label": "标签",
+            "type": "text"
+          },
+          {
+            "id": "field_mewjlypl",
+            "key": "内容",
+            "label": "内容",
+            "type": "textarea"
+          }
+        ],
+        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: {{思考分类.value}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n标签:: {{标签}}\n内容:: {{内容}}\n<!-- end -->\n\n",
+        "targetFile": "01/闪念.md",
+        "appendUnderHeader": "## {{theme}}",
+        "id": "ovr_mp2eoc93h8cjdmi"
       }
     ]
   },
@@ -8359,9 +8610,10 @@
     "工作/其他",
     "工作/老板任务",
     "工作/通勤",
-    "思考/专注"
+    "思考/专注",
+    "生活/小手机"
   ],
-  "devConsoleStackEnabled": true,
+  "devConsoleStackEnabled": false,
   "dataSources": [
     {
       "id": "ds_membld9cc3oj6",

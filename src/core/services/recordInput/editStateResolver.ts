@@ -21,9 +21,18 @@ function isOptionObject(value: unknown): value is { label?: unknown; value?: unk
 function isPathLikeField(field: any): boolean {
   if (!field) return false;
   if (field.semanticType === 'path') return true;
+  const key = normalizeToken(field.key || field.label || '');
+  if (['主题', 'theme', 'themepath', '完整主题', '完整路径主题', '主题路径', 'roottheme', '根主题', 'leaftheme', '叶主题'].includes(key)) {
+    return true;
+  }
+  if (Array.isArray(field.options) && field.options.some((opt: any) => String(opt?.value || '').includes('/'))) return true;
+  return false;
+}
+
+function isCategoryLikeField(field: any): boolean {
+  if (!field) return false;
   const key = String(field.key || field.label || '');
-  if (key.includes('分类') || /category/i.test(key)) return true;
-  return Array.isArray(field.options) && field.options.some((opt: any) => String(opt?.value || '').includes('/'));
+  return key.includes('分类') || /category/i.test(key);
 }
 
 function mapFieldValue(field: any, rawValue: unknown): unknown {
@@ -275,6 +284,7 @@ function readSnapshotSemanticValue(field: any, item: Item, snapshot: ParsedRecor
   }
   if (['roottheme', '根主题'].includes(key) || ['roottheme', '根主题'].includes(label)) return snapshot.semantic.rootTheme;
   if (['leaftheme', '叶主题'].includes(key) || ['leaftheme', '叶主题'].includes(label)) return snapshot.semantic.leafTheme;
+  if (isCategoryLikeField(field)) return snapshot.semantic.categoryKey || item.categoryKey;
 
   return undefined;
 }
@@ -307,6 +317,10 @@ function buildInitialFormData(template: any, item: Item, snapshot: ParsedRecordS
     for (const alias of aliases) {
       const value = readExtraByAlias(alias);
       if (value !== undefined) return value;
+    }
+
+    if (isCategoryLikeField(field)) {
+      return snapshot.semantic.categoryKey || item.categoryKey || undefined;
     }
 
     if (isPathLikeField(field)) {

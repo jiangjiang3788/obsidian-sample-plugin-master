@@ -1,5 +1,6 @@
-import { describe, expect, it } from 'vitest';
-import { renderTemplate } from '../../../../core/utils/templateUtils';
+import { describe, expect, it } from '@jest/globals';
+
+import { renderTemplate } from '@/core/utils/templateUtils';
 
 describe('category path field rendering', () => {
   it('preserves object form for explicit .value / .label access', () => {
