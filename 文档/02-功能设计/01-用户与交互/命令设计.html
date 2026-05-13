@@ -25,13 +25,14 @@
         <h1>命令设计</h1>
         <p class="lead">集中管理插件通过命令面板暴露给用户的动作。</p>
         <div class="meta-row">
-          <span class="badge good">状态：建议模板</span>
-          <span class="badge">最后更新：2026-05-07</span>
+          <span class="badge good">状态：已校准</span>
+          <span class="badge">最后更新：2026-05-13</span>
           <span class="badge">格式：HTML</span>
         </div>
       </section>
       <section class="grid">
-<article class="card full"><h2>已识别命令</h2><div class="table-wrap"><table><thead><tr><th>命令 ID</th><th>命令名称</th><th>用途</th><th>所属功能</th></tr></thead><tbody><tr><td><code>think-copy-runtime-diagnostics</code></td><td>复制运行诊断日志</td><td>排查运行问题</td><td>诊断</td></tr><tr><td><code>think-performance-report</code></td><td>显示性能报告</td><td>查看性能指标</td><td>诊断</td></tr><tr><td><code>think-repair-cross-day-task-dates</code></td><td>修复时间数据</td><td>修复跨天任务日期</td><td>数据维护</td></tr><tr><td><code>think-rebuild-index</code></td><td>重建索引</td><td>清空缓存并重新扫描</td><td>数据维护</td></tr><tr><td><code>think-migrate-task-theme-from-heading-active-file</code></td><td>迁移当前文件 heading 主题</td><td>主题字段迁移</td><td>迁移工具</td></tr><tr><td><code>think-migrate-task-theme-from-heading-all-files</code></td><td>迁移全库 heading 主题</td><td>批量主题迁移</td><td>迁移工具</td></tr><tr><td><code>think-open-ai-chat</code></td><td>打开 AI 助手对话</td><td>打开 AI Chat</td><td>AI</td></tr><tr><td><code>think-timer-start-by-task-id</code></td><td>Timer 开始/继续计时</td><td>按任务 ID 启动计时</td><td>Timer</td></tr><tr><td><code>think-timer-stop-active</code></td><td>Timer 停止并写回</td><td>停止当前计时器</td><td>Timer</td></tr></tbody></table></div></article>
+<article class="card full"><h2>当前命令</h2><div class="table-wrap"><table><thead><tr><th>命令 ID</th><th>命令名称</th><th>用途</th><th>所属功能</th></tr></thead><tbody><tr><td><code>think-rebuild-index</code></td><td>重建索引</td><td>清空缓存并重新扫描</td><td>数据维护</td></tr><tr><td><code>think-open-ai-chat</code></td><td>打开 AI 助手对话</td><td>打开 AI Chat</td><td>AI</td></tr><tr><td><code>think-timer-start-by-task-id</code></td><td>Timer 开始/继续计时</td><td>按任务 ID 启动计时</td><td>Timer</td></tr><tr><td><code>think-timer-stop-active</code></td><td>Timer 停止并写回</td><td>停止当前计时器</td><td>Timer</td></tr></tbody></table></div></article>
+<article class="card full"><h2>已移除命令</h2><ul><li><code>think-copy-runtime-diagnostics</code>：复制运行诊断日志。</li><li><code>think-performance-report</code>：显示性能报告。</li><li><code>think-repair-cross-day-task-dates</code>：修复时间数据。</li><li><code>think-migrate-task-theme-from-heading-active-file</code>：迁移当前文件 heading 主题。</li><li><code>think-migrate-task-theme-from-heading-all-files</code>：迁移全库 heading 主题。</li></ul></article>
 <article class="card full"><h2>命令设计规则</h2><ul><li>命令名称要能让用户理解，不只写技术名。</li><li>危险命令要有确认或清晰提示。</li><li>迁移类命令要注明临时性和可删除条件。</li><li>所有命令要归属到功能域，避免主入口变成垃圾桶。</li></ul></article>
 </section>
       <footer class="footer">本页属于 Think OS 插件 HTML 文档系统。UI 沿用原有风格，docs/html 旧资料已按新结构迁移。</footer>

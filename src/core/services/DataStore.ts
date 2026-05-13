@@ -422,7 +422,7 @@ export class DataStore {
   unsubscribe(listener: () => void) { this.changeListeners.delete(listener); }
   notifyChange() { if (this._assertNotDisposed()) this._emitThrottled(); }
 
-  /* ---------------- 辅助：缓存保存与性能报告 ---------------- */
+  /* ---------------- 辅助：缓存保存 ---------------- */
 
   private _scheduleCacheSave(delay = 1500) {
     if (!this._assertNotDisposed()) return;
@@ -439,27 +439,4 @@ export class DataStore {
     }, delay);
   }
 
-  /**
-   * 将本次扫描埋点写入 Vault/Think/performance-report.json（数组追加）
-   */
-  async writePerformanceReport(stage: string, extra: Record<string, any> = {}): Promise<void> {
-    if (!this._assertNotDisposed()) return;
-    try {
-      const path = 'Think/performance-report.json';
-      const history = (await this.storage.readJSON<any[]>(path)) || [];
-      const record = {
-        ts: Date.now(),
-        stage,
-        scannedFiles: this._perf.scannedFiles,
-        scannedItems: this._perf.scannedItems,
-        durationMs: Math.max(0, this._perf.end - this._perf.start),
-        ...extra
-      };
-      history.push(record);
-      if (!this._assertNotDisposed()) return;
-      await this.storage.writeJSON(path, history);
-    } catch (e) {
-      devWarn('ThinkPlugin: 写入性能报告失败', e);
-    }
-  }
 }

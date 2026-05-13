@@ -4,7 +4,7 @@
  */
 
 import { errorHandler } from './errorHandler';
-import { devLog, devWarn, devError } from '@core/public';
+import { devWarn, devError } from '@core/public';
 
 /**
  * 性能指标数据结构
@@ -63,13 +63,9 @@ export class PerformanceMonitor {
             maxSamples: config.maxSamples ?? 100,
             warningThreshold: config.warningThreshold ?? 1000,
             errorThreshold: config.errorThreshold ?? 5000,
-            autoReport: config.autoReport ?? false,
+            autoReport: false,
             reportInterval: config.reportInterval ?? 60000 // 1分钟
         };
-
-        if (this.config.autoReport) {
-            this.startAutoReport();
-        }
     }
 
     /**
@@ -310,41 +306,6 @@ export class PerformanceMonitor {
     }
 
     /**
-     * 打印性能报告
-     */
-    public printReport(): void {
-        const report = this.generateReport();
-
-        // dev-only 输出：避免污染用户日志
-        // 结构化数据直接打印对象，方便在 DevTools 中展开查看
-        devLog('📊 Performance Report', {
-            generatedAt: new Date(report.timestamp).toLocaleString(),
-            summary: {
-                ...report.summary,
-                totalTime: Number(report.summary.totalTime.toFixed(2)),
-                averageTime: Number(report.summary.averageTime.toFixed(2)),
-            },
-            metrics: report.metrics.map(m => ({
-                name: m.name,
-                count: m.count,
-                avgMs: Number(m.avg.toFixed(2)),
-                minMs: Number(m.min.toFixed(2)),
-                maxMs: Number(m.max.toFixed(2)),
-                p95Ms: Number(m.p95.toFixed(2)),
-                p99Ms: Number(m.p99.toFixed(2)),
-            })),
-        });
-    }
-
-    /**
-     * 导出报告为 JSON
-     */
-    public exportReport(): string {
-        const report = this.generateReport();
-        return JSON.stringify(report, null, 2);
-    }
-
-    /**
      * 清除所有指标
      */
     public clearMetrics(): void {
@@ -356,17 +317,6 @@ export class PerformanceMonitor {
      */
     public clearMetric(name: string): void {
         this.metrics.delete(name);
-    }
-
-    /**
-     * 开始自动报告
-     */
-    private startAutoReport(): void {
-        if (this.reportTimer !== null) return;
-
-        this.reportTimer = window.setInterval(() => {
-            this.printReport();
-        }, this.config.reportInterval);
     }
 
     /**
@@ -386,11 +336,8 @@ export class PerformanceMonitor {
         this.config = { ...this.config, ...config };
 
         if (config.autoReport !== undefined) {
-            if (config.autoReport) {
-                this.startAutoReport();
-            } else {
-                this.stopAutoReport();
-            }
+            this.config.autoReport = false;
+            this.stopAutoReport();
         }
     }
 

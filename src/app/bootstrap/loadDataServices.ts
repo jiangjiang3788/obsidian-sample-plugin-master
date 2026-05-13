@@ -49,7 +49,6 @@ function scanDataInBackground(opts: {
             .then(() => {
                 devTimeEnd('[ThinkPlugin] 数据扫描');
                 services.dataStore!.notifyChange();
-                services.dataStore!.writePerformanceReport('initialScan');
                 resolve();
             })
             .catch((error) => {

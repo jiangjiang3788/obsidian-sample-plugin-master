@@ -9,7 +9,6 @@
 
 export * from './utils/errorHandler';
 export * from './utils/devConsole';
-export * from './utils/visibleDiagnostics';
 export * from './utils/performance';
 export * from './utils/linkedTimeFields';
 export * from './utils/takeLatest';

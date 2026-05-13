@@ -11,11 +11,11 @@ import { DataStore } from '@core/public';
 import { InputService } from '@core/public';
 import { ThinkSettings, DEFAULT_SETTINGS } from '@core/public';
 import type { UseCases } from '@/app/public';
-import { setupCoreContainer, repairCrossDayTaskCompletionDatesInVault } from '@core/public';
+import { setupCoreContainer } from '@core/public';
 import { VAULT_PORT_TOKEN, UI_PORT_TOKEN, METADATA_PORT_TOKEN, FILESTAT_PORT_TOKEN, MODAL_PORT_TOKEN, EVENTS_PORT_TOKEN, MESSAGE_RENDER_PORT_TOKEN } from '@core/public';
 import './styles/main.css';
-import { safeAsync, installVisibleDiagnostics, getDebugLogText } from '@shared/public';
-import { performanceMonitor, startMeasure } from '@shared/public';
+import { safeAsync } from '@shared/public';
+import { startMeasure } from '@shared/public';
 import { ServiceManager } from '@/app/ServiceManager';
 import { isDisposed } from '@/app/runtime/lifecycleState';
 import { buildRuntime } from '@/app/bootstrap/buildRuntime';
@@ -35,7 +35,6 @@ import { ObsidianEventsPort } from '@/platform/ObsidianEventsPort';
 import { ObsidianMessageRenderPort } from '@/platform/ObsidianMessageRenderPort';
 import { ObsidianMetadataPort } from '@/platform/ObsidianMetadataPort';
 import { ObsidianFileStatPort } from '@/platform/ObsidianFileStatPort';
-import { TaskThemeFromHeadingMigrator } from '@/core/migrations/TaskThemeFromHeadingMigrator';
 
 devLog(`[ThinkPlugin] main.ts 已加载，版本时间: ${new Date().toLocaleTimeString()}`);
 
@@ -51,9 +50,7 @@ export default class ThinkPlugin extends Plugin {
      * 4. 注册命令
      */
     async onload(): Promise<void> {
-        installVisibleDiagnostics(this);
         devLog('[ThinkPlugin][BOOT] onload entered');
-        this.registerDiagnosticCommands();
         const stopMeasure = startMeasure('ThinkPlugin.onload');
 
         await safeAsync(
@@ -115,49 +112,9 @@ export default class ThinkPlugin extends Plugin {
         );
     }
 
-    private registerDiagnosticCommands(): void {
-        this.addCommand({
-            id: 'think-copy-runtime-diagnostics',
-            name: '复制运行诊断日志',
-            callback: async () => {
-                const text = getDebugLogText();
-                try {
-                    await navigator.clipboard.writeText(text);
-                    new Notice('Think: 运行诊断日志已复制', 3000);
-                } catch (error) {
-                    console.error('[ThinkPlugin][Diagnostics] copy failed', error);
-                    new Notice('Think: 复制失败，请打开 .think-plugin-debug.log 查看', 5000);
-                }
-            }
-        });
-    }
-
     private registerCommands(): void {
-        this.addCommand({
-            id: 'think-performance-report',
-            name: '显示性能报告',
-            callback: () => {
-                performanceMonitor.printReport();
-            }
-        });
-
         // [恢复工具] 清空索引缓存并重新全量扫描
         // 主要用于修复：升级/重构后 cache 不一致导致 items=0 的情况。
-
-        this.addCommand({
-            id: 'think-repair-cross-day-task-dates',
-            name: '修复时间数据（按开始日，一次性迁移）',
-            callback: async () => {
-                try {
-                    new Notice('Think: 正在扫描并修复跨天任务日期...', 4000);
-                    const result = await repairCrossDayTaskCompletionDatesInVault(this.app.vault as any);
-                    const sampleLine = result.samples[0] ? `；样例 ${result.samples[0].oldDate} -> ${result.samples[0].newDate} @ ${result.samples[0].file}:${result.samples[0].line}` : '';
-                    new Notice(`Think: 修复完成（文件 ${result.scannedFiles}，任务 ${result.scannedTasks}，跨天 ${result.crossDayTasks}，修改文件 ${result.changedFiles}，调整 ${result.changedLines} 行${sampleLine}）`, 10000);
-                } catch (e: any) {
-                    new Notice(`Think: 修复失败 - ${e?.message || e}`, 6000);
-                }
-            }
-        });
 
         this.addCommand({
             id: 'think-rebuild-index',
@@ -169,50 +126,6 @@ export default class ThinkPlugin extends Plugin {
                     new Notice('Think: 索引重建完成', 3000);
                 } catch (e: any) {
                     new Notice(`Think: 索引重建失败 - ${e?.message || e}`, 5000);
-                }
-            }
-        });
-
-        // [临时迁移] 把 heading 主题写入到任务行 (主题::xxx)
-        // 用途：从“heading=主题”的旧习惯，过渡到“任务行显式主题字段”。
-        // 迁移完成一段时间后，可安全删除该命令与 migrator，不影响新格式解析。
-        this.addCommand({
-            id: 'think-migrate-task-theme-from-heading-active-file',
-            name: '迁移：把当前文件 heading 主题写入任务行 (主题::...)',
-            callback: async () => {
-                const file = this.app.workspace.getActiveFile();
-                if (!file || !file.path?.endsWith('.md')) {
-                    new Notice('Think: 没有找到当前打开的 Markdown 文件', 4000);
-                    return;
-                }
-                try {
-                    const migrator = container.resolve(TaskThemeFromHeadingMigrator);
-                    new Notice('Think: 正在迁移任务主题字段...', 3000);
-                    const res = await migrator.migrate({ paths: [file.path] });
-                    new Notice(`Think: 迁移完成（修改任务 ${res.tasksTouched} 条）`, 5000);
-                } catch (e: any) {
-                    new Notice(`Think: 迁移失败 - ${e?.message || e}`, 6000);
-                }
-            }
-        });
-
-        this.addCommand({
-            id: 'think-migrate-task-theme-from-heading-all-files',
-            name: '迁移：全库把 heading 主题写入任务行 (主题::...)',
-            callback: async () => {
-                try {
-                    const vaultPort = container.resolve(VAULT_PORT_TOKEN as any) as any;
-                    const paths: string[] = vaultPort?.listMarkdownFilePaths?.() || [];
-                    if (!paths.length) {
-                        new Notice('Think: 未找到可迁移的 Markdown 文件', 4000);
-                        return;
-                    }
-                    const migrator = container.resolve(TaskThemeFromHeadingMigrator);
-                    new Notice(`Think: 正在迁移全库任务主题字段（文件数：${paths.length}）...`, 4000);
-                    const res = await migrator.migrate({ paths });
-                    new Notice(`Think: 迁移完成（修改任务 ${res.tasksTouched} 条，涉及文件 ${res.filesTouched} 个）`, 6000);
-                } catch (e: any) {
-                    new Notice(`Think: 迁移失败 - ${e?.message || e}`, 6000);
                 }
             }
         });
