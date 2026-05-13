@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Goal/Cycle/Record 关系模型｜Think OS 插件文档系统</title>
+  <link rel="stylesheet" href="../../_资源/文档样式.css">
+</head>
+<body data-doc-root="../../">
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-title">Think OS 插件文档系统</div>
+        <div class="brand-subtitle">HTML 项目驾驶舱 / 文档 / 需求 / 技术 / 评审 / 发布</div>
+      </div>
+      <div class="search-box">
+        <input class="search-input" data-doc-search placeholder="搜索：目标、计划、任务、复盘、个人管理系统...">
+        <div class="search-results" data-search-results></div>
+      </div>
+
+    </aside>
+    <main class="main">
+      <section class="hero">
+        <div class="eyebrow">THINK OS TECHNICAL DOCS</div>
+        <h1>Goal/Cycle/Record 关系模型</h1>
+        <p class="lead">把产品层的目标闭环翻译成后续开发可落地的最小技术模型，先定义关系，再决定旧 Block、Task、Statistics 如何接入。</p>
+        <div class="meta-row">
+          <span class="badge good">状态：重定位草案</span>
+          <span class="badge">最后更新：2026-05-13</span>
+          <span class="badge">格式：HTML</span>
+        </div>
+      </section>
+      <section class="grid">
+<article class="card full"><h2>技术目标</h2><p>第一阶段不急着重排目录，而是先建立一套能解释现有记录的关系层。旧的计划 Block、总结 Block、任务、Timer 记录和 Statistics 数据，都要能逐步映射到目标闭环，而不是继续作为互不相干的能力。</p><div class="callout"><strong>核心原则：</strong>先做可追溯关系，再做目录和 UI 重构。</div></article>
+<article class="card full"><h2>最小实体</h2><div class="table-wrap"><table><thead><tr><th>实体</th><th>建议最小字段</th><th>说明</th></tr></thead><tbody><tr><td><code>Goal</code></td><td><code>id</code>, <code>title</code>, <code>status</code>, <code>themeId</code>, <code>metric</code>, <code>createdAt</code>, <code>updatedAt</code></td><td>目标是一等公民，不能只靠主题或标题推断。</td></tr><tr><td><code>Cycle</code></td><td><code>id</code>, <code>goalIds</code>, <code>title</code>, <code>startDate</code>, <code>endDate</code>, <code>status</code></td><td>周期是推进窗口，可承接一个或多个目标。</td></tr><tr><td><code>Plan</code></td><td><code>id</code>, <code>goalId</code>, <code>cycleId</code>, <code>sourceBlockId</code>, <code>content</code>, <code>status</code></td><td>计划可以继续以 Block 呈现，但要有关系字段。</td></tr><tr><td><code>Task</code></td><td><code>id</code>, <code>goalId</code>, <code>cycleId</code>, <code>planId</code>, <code>content</code>, <code>status</code>, <code>dueDate</code></td><td>任务必须能追溯到目标，计划关联可以后补。</td></tr><tr><td><code>Record</code></td><td><code>id</code>, <code>goalId</code>, <code>cycleId</code>, <code>taskId</code>, <code>recordType</code>, <code>startedAt</code>, <code>endedAt</code>, <code>content</code></td><td>统一承载执行、时间、阻塞、产出等证据。</td></tr><tr><td><code>Review</code></td><td><code>id</code>, <code>goalId</code>, <code>cycleId</code>, <code>sourceBlockId</code>, <code>summary</code>, <code>adjustments</code></td><td>总结 Block 映射为周期复盘角色。</td></tr><tr><td><code>Feedback</code></td><td><code>goalId</code>, <code>cycleId</code>, <code>metrics</code>, <code>signals</code>, <code>generatedAt</code></td><td>可以是派生结果，不一定持久化为用户文件。</td></tr></tbody></table></div></article>
+<article class="card full"><h2>旧数据映射</h2><div class="table-wrap"><table><thead><tr><th>现有来源</th><th>映射目标</th><th>迁移策略</th></tr></thead><tbody><tr><td>计划 Block</td><td><code>Plan</code></td><td>先补 <code>recordRole=plan</code>、<code>goalId</code>、<code>cycleId</code>，保留原 Markdown 内容。</td></tr><tr><td>总结 Block</td><td><code>Review</code></td><td>先补 <code>recordRole=review</code>，让它能读取同周期任务和记录。</td></tr><tr><td>任务行</td><td><code>Task</code></td><td>保留现有任务写回逻辑，新增目标和周期上下文。</td></tr><tr><td>Timer 记录</td><td><code>Record</code></td><td>作为 <code>recordType=time</code> 的执行证据。</td></tr><tr><td>QuickInput 输入</td><td><code>Task</code> 或 <code>Record</code></td><td>作为入口，不作为独立领域模型。</td></tr><tr><td>Statistics View</td><td><code>Feedback</code></td><td>改为按目标和周期聚合任务、记录、复盘。</td></tr><tr><td>主题 Theme</td><td><code>Goal.themeId</code> 或筛选维度</td><td>主题只做分类，不替代目标。</td></tr></tbody></table></div></article>
+<article class="card full"><h2>读写边界</h2><ul><li>第一版优先追加关系字段，不做破坏性迁移。</li><li>Markdown 原文仍是用户可见和可恢复的资料来源。</li><li>关系模型可以先以解析层或索引层存在，不急着改变所有文件格式。</li><li>写入逻辑必须能处理缺失关系：允许临时记录，但要提供后续补齐上下文的入口。</li><li>Statistics 先读新关系，读不到时降级读取旧字段。</li></ul></article>
+<article class="card full"><h2>开发前检查</h2><div class="table-wrap"><table><thead><tr><th>问题</th><th>必须回答</th></tr></thead><tbody><tr><td>数据从哪里来？</td><td>目标、周期、计划、任务、记录是否都能从现有 Markdown 或插件状态中读出。</td></tr><tr><td>写回写到哪里？</td><td>新增关系字段是否不会破坏旧任务和 Block 内容。</td></tr><tr><td>缺失关系怎么办？</td><td>是否能标记为未关联并提供补齐路径。</td></tr><tr><td>统计如何解释？</td><td>是否先按目标和周期聚合，再展示数字。</td></tr><tr><td>旧资料如何保留？</td><td>QuickInput、字段、迁移资料继续作为实现参考，不作为产品主线。</td></tr></tbody></table></div></article>
+</section>
+      <footer class="footer">本页属于 Think OS 插件 HTML 文档系统。UI 沿用原有风格，docs/html 旧资料已按新结构迁移。</footer>
+    </main>
+  </div>
+  <script src="../../_资源/搜索索引.js"></script>
+  <script src="../../_资源/文档脚本.js"></script>
+</body>
+</html>

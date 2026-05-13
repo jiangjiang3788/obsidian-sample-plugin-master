@@ -1,22 +1,32 @@
 [
   {
     "id": "ADR-001",
-    "decision": "正式文档入口使用 文档/index.html"
+    "decision": "正式文档入口使用 文档/index.html",
+    "status": "accepted"
   },
   {
     "id": "ADR-002",
-    "decision": "术语表放在基础入口"
+    "decision": "Think OS 定位为 Obsidian 内本地优先个人管理系统",
+    "status": "accepted"
   },
   {
     "id": "ADR-003",
-    "decision": "文件地图归入技术文档"
+    "decision": "目标闭环作为功能组织主轴",
+    "status": "accepted"
   },
   {
     "id": "ADR-004",
-    "decision": "核心评审改为评审中心"
+    "decision": "旧 QuickInput / Statistics / 字段迁移文档保留但降级为历史资料和实现参考",
+    "status": "accepted"
   },
   {
     "id": "ADR-005",
-    "decision": "UI 沿用原有风格"
+    "decision": "本批只调整信息架构和页面职责，不改插件代码",
+    "status": "accepted"
+  },
+  {
+    "id": "ADR-006",
+    "decision": "项目管理区用于插件开发治理，不等同于用户目标管理",
+    "status": "accepted"
   }
 ]

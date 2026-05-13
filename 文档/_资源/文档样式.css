@@ -175,12 +175,21 @@ code, .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liber
 .nav-section.collapsed .nav-title-toggle::after {
   transform: rotate(-90deg);
 }
-.nav-section.collapsed .nav-link {
+.nav-subsection.collapsed .nav-title-toggle::after {
+  transform: rotate(-90deg);
+}
+.nav-section.collapsed .nav-subsection,
+.nav-section.collapsed .nav-link,
+.nav-subsection.collapsed .nav-link {
   display: none;
 }
 .nav-section.has-active > .nav-title-toggle {
   color: var(--accent);
   background: rgba(139, 94, 52, .06);
+}
+.nav-subsection.has-active > .nav-title-toggle {
+  color: var(--accent);
+  background: rgba(139, 94, 52, .05);
 }
 .nav-link.active {
   scroll-margin-block: 96px;

@@ -47,7 +47,8 @@
     "iconaction:gate": "node scripts/iconaction-gate.mjs",
     "typecheck:src": "tsc -p tsconfig.json --noEmit",
     "typecheck:test": "tsc -p tsconfig.test.json --noEmit",
-    "build:debug": "vite build --mode development && node scripts/fix-sourcemap.mjs && node -e \"const fs=require('fs');fs.copyFileSync('dist/main.js','main.js');fs.copyFileSync('dist/main.js.map','main.js.map');fs.copyFileSync('dist/styles.css','styles.css');\""
+    "build:debug": "vite build --mode development && node scripts/fix-sourcemap.mjs && node -e \"const fs=require('fs');fs.copyFileSync('dist/main.js','main.js');fs.copyFileSync('dist/main.js.map','main.js.map');fs.copyFileSync('dist/styles.css','styles.css');\"",
+    "docs:index": "node scripts/generate-doc-index.mjs"
   },
   "dependencies": {
     "@codemirror/state": "6.5.0",

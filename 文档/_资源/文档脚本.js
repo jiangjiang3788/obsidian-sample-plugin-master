@@ -367,6 +367,124 @@
       .replace(/'/g, '&#39;');
   }
 
+  function stripOrderPrefix(value) {
+    return String(value || '').replace(/^\d+[-_]/, '').replace(/-/g, ' ').trim();
+  }
+
+  function makeNavKey(value) {
+    return String(value || 'root')
+      .toLowerCase()
+      .replace(/\s+/g, '-')
+      .replace(/[/:?#\[\]@!$&'()*+,;=]/g, '-');
+  }
+
+  function getNavTitleFromPath(segment) {
+    return stripOrderPrefix(segment) || segment || '未分类';
+  }
+
+  function getNavSortKey(item) {
+    if (!item || !item.url) return '';
+    if (item.url === 'index.html') return '00-基础入口/00-项目驾驶舱/00-index.html';
+    return item.url;
+  }
+
+  function getDynamicNavGroups() {
+    const sourceItems = Array.isArray(window.DOC_SEARCH_INDEX) ? window.DOC_SEARCH_INDEX : [];
+    const visibleItems = sourceItems
+      .filter(item => item && item.url && !item.url.includes('/_归档/') && !item.url.startsWith('_归档/'))
+      .slice()
+      .sort((a, b) => getNavSortKey(a).localeCompare(getNavSortKey(b), 'zh-CN', { numeric: true }));
+
+    const sections = [];
+    const sectionMap = new Map();
+
+    visibleItems.forEach(item => {
+      let parts = String(item.url).split('/').filter(Boolean);
+      if (item.url === 'index.html') {
+        parts = ['00-基础入口', '00-项目驾驶舱', 'index.html'];
+      }
+      if (parts.length < 3) return;
+
+      const sectionSegment = parts[0];
+      const groupSegment = parts.slice(1, -1).join('/');
+      const sectionKey = sectionSegment;
+      const groupKey = `${sectionSegment}/${groupSegment}`;
+
+      if (!sectionMap.has(sectionKey)) {
+        const section = {
+          key: sectionKey,
+          title: getNavTitleFromPath(sectionSegment),
+          groups: [],
+          groupMap: new Map()
+        };
+        sectionMap.set(sectionKey, section);
+        sections.push(section);
+      }
+
+      const section = sectionMap.get(sectionKey);
+      if (!section.groupMap.has(groupKey)) {
+        const groupTitleSegment = parts[parts.length - 2];
+        const group = {
+          key: groupKey,
+          title: getNavTitleFromPath(groupTitleSegment),
+          items: []
+        };
+        section.groupMap.set(groupKey, group);
+        section.groups.push(group);
+      }
+
+      section.groupMap.get(groupKey).items.push(item);
+    });
+
+    return sections;
+  }
+
+  function renderDynamicNav() {
+    if (!sidebar || !window.DOC_SEARCH_INDEX) return;
+
+    Array.from(sidebar.querySelectorAll('.nav-section')).forEach(node => node.remove());
+
+    const sections = getDynamicNavGroups();
+    const fragment = document.createDocumentFragment();
+
+    sections.forEach(section => {
+      const sectionNode = document.createElement('div');
+      sectionNode.className = 'nav-section';
+      sectionNode.dataset.navKey = `topic-${makeNavKey(section.key)}`;
+
+      const title = document.createElement('div');
+      title.className = 'nav-title';
+      title.textContent = section.title;
+      sectionNode.appendChild(title);
+
+      section.groups.forEach(group => {
+        const groupNode = document.createElement('div');
+        groupNode.className = 'nav-subsection';
+        groupNode.dataset.navKey = `topic-${makeNavKey(group.key)}`;
+
+        const subtitle = document.createElement('div');
+        subtitle.className = 'nav-subtitle';
+        subtitle.textContent = group.title;
+        groupNode.appendChild(subtitle);
+
+        group.items.forEach(item => {
+          const link = document.createElement('a');
+          link.className = 'nav-link';
+          link.href = new URL(item.url, siteRoot.href).href;
+          link.textContent = item.title || item.url.replace(/\.html$/, '');
+          groupNode.appendChild(link);
+        });
+
+        sectionNode.appendChild(groupNode);
+      });
+
+      fragment.appendChild(sectionNode);
+    });
+
+    sidebar.appendChild(fragment);
+    debugLog('已根据搜索索引动态生成左侧目录', { sectionCount: sections.length });
+  }
+
   function initSearch() {
     const input = document.querySelector('[data-doc-search]');
     const results = document.querySelector('[data-search-results]');
@@ -616,6 +734,7 @@
       debugWarn('页面内容索引预加载失败：后续点击将不会自动整页跳转，请优先修复索引路径。', error);
     });
   }
+  renderDynamicNav();
   prepareLinks(document, location.href);
   syncNavLinks();
   initCollapsibleNav();
