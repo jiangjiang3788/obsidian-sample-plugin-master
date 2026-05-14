@@ -111,7 +111,7 @@ export class TimerService {
 
             const endTime = nowHHMM();
             const normalizedTime = totalMinutes > 0
-                ? applyTaskTimePolicy({ endTime, duration: totalMinutes }, { mode: 'finalize', direction: 'backward' })
+                ? applyTaskTimePolicy({ endTime, duration: totalMinutes, mode: 'finalize', direction: 'backward' })
                 : { startTime: undefined, endTime, duration: undefined };
             const startTime = normalizedTime.startTime ?? undefined;
 

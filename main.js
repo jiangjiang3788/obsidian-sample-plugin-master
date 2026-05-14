@@ -73,7 +73,7 @@ function require_Reflect() {
       var _Map = typeof Map === "function" && typeof Map.prototype.entries === "function" ? Map : CreateMapPolyfill();
       var _Set = typeof Set === "function" && typeof Set.prototype.entries === "function" ? Set : CreateSetPolyfill();
       var _WeakMap = typeof WeakMap === "function" ? WeakMap : CreateWeakMapPolyfill();
-      var registrySymbol = supportsSymbol ? Symbol.for("@reflect-metadata:registry") : void 0;
+      var registrySymbol = supportsSymbol ? /* @__PURE__ */ Symbol.for("@reflect-metadata:registry") : void 0;
       var metadataRegistry = GetOrCreateMetadataRegistry();
       var metadataProvider = CreateMetadataProvider(metadataRegistry);
       function decorate(decorators, target, propertyKey, attributes) {
@@ -357,7 +357,7 @@ function require_Reflect() {
         return OrdinaryToPrimitive(input);
       }
       function OrdinaryToPrimitive(O2, hint) {
-        var valueOf, result, toString_2;
+        var valueOf, result;
         {
           var toString_1 = O2.toString;
           if (IsCallable(toString_1)) {
@@ -1305,7 +1305,7 @@ function createSliceMeta(sliceName, source = "service") {
     source
   };
 }
-const THEME_MATCHER_TOKEN = Symbol("IThemeMatcher");
+const THEME_MATCHER_TOKEN = /* @__PURE__ */ Symbol("IThemeMatcher");
 const STATISTICS_VIEW_DEFAULT_CONFIG = {
   categories: [],
   displayMode: "smart",
@@ -1558,7 +1558,7 @@ var S$1 = "second";
 var MIN = "minute";
 var H$2 = "hour";
 var D$3 = "day";
-var W$1 = "week";
+var W$2 = "week";
 var M$2 = "month";
 var Q$2 = "quarter";
 var Y$1 = "year";
@@ -1604,7 +1604,7 @@ var prettyUnit = function prettyUnit2(u3) {
   var special = {
     M: M$2,
     y: Y$1,
-    w: W$1,
+    w: W$2,
     d: D$3,
     D: DATE,
     h: H$2,
@@ -1618,7 +1618,7 @@ var prettyUnit = function prettyUnit2(u3) {
 var isUndefined = function isUndefined2(s2) {
   return s2 === void 0;
 };
-const U$1 = {
+const U$2 = {
   s: padStart,
   z: padZoneStr,
   m: monthDiff,
@@ -1675,7 +1675,7 @@ var wrapper$1 = function wrapper(date2, instance2) {
     // todo: refactor; do not use this.$offset in you code
   });
 };
-var Utils = U$1;
+var Utils = U$2;
 Utils.l = parseLocale;
 Utils.i = isDayjs;
 Utils.w = wrapper$1;
@@ -1770,7 +1770,7 @@ var Dayjs = /* @__PURE__ */ (function() {
         return isStartOf ? instanceFactory(1, 0) : instanceFactory(31, 11);
       case M$2:
         return isStartOf ? instanceFactory(1, $M) : instanceFactory(0, $M + 1);
-      case W$1: {
+      case W$2: {
         var weekStart = this.$locale().weekStart || 0;
         var gap2 = ($W < weekStart ? $W + 7 : $W) - weekStart;
         return instanceFactory(isStartOf ? $D - gap2 : $D + (6 - gap2), $M);
@@ -1829,7 +1829,7 @@ var Dayjs = /* @__PURE__ */ (function() {
     if (unit === D$3) {
       return instanceFactorySet(1);
     }
-    if (unit === W$1) {
+    if (unit === W$2) {
       return instanceFactorySet(7);
     }
     var step = (_C$MIN$C$H$C$S$unit = {}, _C$MIN$C$H$C$S$unit[MIN] = MILLISECONDS_A_MINUTE, _C$MIN$C$H$C$S$unit[H$2] = MILLISECONDS_A_HOUR, _C$MIN$C$H$C$S$unit[S$1] = MILLISECONDS_A_SECOND, _C$MIN$C$H$C$S$unit)[unit] || 1;
@@ -1937,7 +1937,7 @@ var Dayjs = /* @__PURE__ */ (function() {
       case Q$2:
         result = getMonth() / 3;
         break;
-      case W$1:
+      case W$2:
         result = (diff2 - zoneDelta) / MILLISECONDS_A_WEEK;
         break;
       case D$3:
@@ -2051,14 +2051,14 @@ const weekOfYear = (function(o2, c2, d2) {
     var yearStart = this.$locale().yearStart || 1;
     if (this.month() === 11 && this.date() > 25) {
       var nextYearStartDay = d2(this).startOf(Y$1).add(1, Y$1).date(yearStart);
-      var thisEndOfWeek = d2(this).endOf(W$1);
+      var thisEndOfWeek = d2(this).endOf(W$2);
       if (nextYearStartDay.isBefore(thisEndOfWeek)) {
         return 1;
       }
     }
     var yearStartDay = d2(this).startOf(Y$1).date(yearStart);
-    var yearStartWeek = yearStartDay.startOf(W$1).subtract(1, MS$1);
-    var diffInWeek = this.diff(yearStartWeek, W$1, true);
+    var yearStartWeek = yearStartDay.startOf(W$2).subtract(1, MS$1);
+    var diffInWeek = this.diff(yearStartWeek, W$2, true);
     if (diffInWeek < 0) {
       return d2(this).startOf("week").week();
     }
@@ -2365,7 +2365,7 @@ const isoWeek = (function(o2, c2, d2) {
     }
     var nowWeekThursday = getCurrentWeekThursday(this);
     var diffWeekThursday = getYearFirstThursday(this.isoWeekYear(), this.$u);
-    return nowWeekThursday.diff(diffWeekThursday, W$1) + 1;
+    return nowWeekThursday.diff(diffWeekThursday, W$2) + 1;
   };
   proto2.isoWeekday = function(week) {
     if (!this.$utils().u(week)) {
@@ -4667,6 +4667,7 @@ class AiConfigCache {
   constructor(settingsProvider) {
     this.settingsProvider = settingsProvider;
   }
+  settingsProvider;
   snapshot = null;
   lastUpdated = 0;
   /**
@@ -4694,25 +4695,30 @@ class AiConfigCache {
     });
     if (!cacheHit) {
       const rebuildStart = nowMs$3();
-      this.snapshot = buildAiConfigSnapshot(settings.inputSettings, ai);
+      const nextSnapshot = buildAiConfigSnapshot(settings.inputSettings, ai);
+      this.snapshot = nextSnapshot;
       this.lastUpdated = now;
       devLog(`${prefix2} buildAiConfigSnapshot 完成 (${elapsedMs$2(rebuildStart)})`, {
-        blocksCount: this.snapshot.blocks?.length ?? 0,
-        themesCount: this.snapshot.themes?.length ?? 0
+        blocksCount: nextSnapshot.blocks?.length ?? 0,
+        themesCount: nextSnapshot.themes?.length ?? 0
       });
       if (nowMs$3() - rebuildStart >= 50) {
         devWarn(`${prefix2} 慢步骤: buildAiConfigSnapshot (${elapsedMs$2(rebuildStart)})`, {
-          blocksCount: this.snapshot.blocks?.length ?? 0,
-          themesCount: this.snapshot.themes?.length ?? 0
+          blocksCount: nextSnapshot.blocks?.length ?? 0,
+          themesCount: nextSnapshot.themes?.length ?? 0
         });
       }
     }
+    const snapshot = this.snapshot;
+    if (!snapshot) {
+      throw new Error("AI config snapshot missing after rebuild");
+    }
     devLog(`${prefix2} getSnapshot 返回 (${elapsedMs$2(totalStart)})`, {
       cacheHit,
-      blocksCount: this.snapshot.blocks?.length ?? 0,
-      themesCount: this.snapshot.themes?.length ?? 0
+      blocksCount: snapshot.blocks?.length ?? 0,
+      themesCount: snapshot.themes?.length ?? 0
     });
-    return this.snapshot;
+    return snapshot;
   }
   /**
    * 使缓存失效
@@ -4996,6 +5002,9 @@ class AiNaturalLanguageRecordParser {
     this.cache = cache;
     this.http = http;
   }
+  settingsProvider;
+  cache;
+  http;
   /**
    * 解析自然语言文本
    */
@@ -5286,6 +5295,7 @@ class AiNaturalLanguageRecordParser {
     ].join("\n");
   }
 }
+var _a$1;
 function $constructor(name, initializer2, params) {
   function init(inst, def) {
     if (!inst._zod) {
@@ -5348,7 +5358,8 @@ class $ZodEncodeError extends Error {
     this.name = "ZodEncodeError";
   }
 }
-const globalConfig = {};
+(_a$1 = globalThis).__zod_globalConfig ?? (_a$1.__zod_globalConfig = {});
+const globalConfig = globalThis.__zod_globalConfig;
 function config$1(newConfig) {
   return globalConfig;
 }
@@ -5382,21 +5393,14 @@ function cleanRegex(source) {
   return source.slice(start2, end2);
 }
 function floatSafeRemainder(val, step) {
-  const valDecCount = (val.toString().split(".")[1] || "").length;
-  const stepString = step.toString();
-  let stepDecCount = (stepString.split(".")[1] || "").length;
-  if (stepDecCount === 0 && /\d?e-\d?/.test(stepString)) {
-    const match5 = stepString.match(/\d?e-(\d?)/);
-    if (match5?.[1]) {
-      stepDecCount = Number.parseInt(match5[1]);
-    }
-  }
-  const decCount = valDecCount > stepDecCount ? valDecCount : stepDecCount;
-  const valInt = Number.parseInt(val.toFixed(decCount).replace(".", ""));
-  const stepInt = Number.parseInt(step.toFixed(decCount).replace(".", ""));
-  return valInt % stepInt / 10 ** decCount;
+  const ratio = val / step;
+  const roundedRatio = Math.round(ratio);
+  const tolerance = Number.EPSILON * Math.max(Math.abs(ratio), 1);
+  if (Math.abs(ratio - roundedRatio) < tolerance)
+    return 0;
+  return ratio - roundedRatio;
 }
-const EVALUATING = Symbol("evaluating");
+const EVALUATING = /* @__PURE__ */ Symbol("evaluating");
 function defineLazy(object2, key, getter) {
   let value = void 0;
   Object.defineProperty(object2, key, {
@@ -5446,7 +5450,10 @@ const captureStackTrace = "captureStackTrace" in Error ? Error.captureStackTrace
 function isObject(data) {
   return typeof data === "object" && data !== null && !Array.isArray(data);
 }
-const allowsEval = cached(() => {
+const allowsEval = /* @__PURE__ */ cached(() => {
+  if (globalConfig.jitless) {
+    return false;
+  }
   if (typeof navigator !== "undefined" && navigator?.userAgent?.includes("Cloudflare")) {
     return false;
   }
@@ -5479,6 +5486,10 @@ function shallowClone(o2) {
     return { ...o2 };
   if (Array.isArray(o2))
     return [...o2];
+  if (o2 instanceof Map)
+    return new Map(o2);
+  if (o2 instanceof Set)
+    return new Set(o2);
   return o2;
 }
 const propertyKeyTypes = /* @__PURE__ */ new Set(["string", "number", "symbol"]);
@@ -5521,6 +5532,11 @@ const NUMBER_FORMAT_RANGES = {
 };
 function pick(schema, mask) {
   const currDef = schema._zod.def;
+  const checks = currDef.checks;
+  const hasChecks = checks && checks.length > 0;
+  if (hasChecks) {
+    throw new Error(".pick() cannot be used on object schemas containing refinements");
+  }
   const def = mergeDefs(schema._zod.def, {
     get shape() {
       const newShape = {};
@@ -5541,6 +5557,11 @@ function pick(schema, mask) {
 }
 function omit(schema, mask) {
   const currDef = schema._zod.def;
+  const checks = currDef.checks;
+  const hasChecks = checks && checks.length > 0;
+  if (hasChecks) {
+    throw new Error(".omit() cannot be used on object schemas containing refinements");
+  }
   const def = mergeDefs(schema._zod.def, {
     get shape() {
       const newShape = { ...schema._zod.def.shape };
@@ -5566,15 +5587,19 @@ function extend(schema, shape2) {
   const checks = schema._zod.def.checks;
   const hasChecks = checks && checks.length > 0;
   if (hasChecks) {
-    throw new Error("Object schemas containing refinements cannot be extended. Use `.safeExtend()` instead.");
+    const existingShape = schema._zod.def.shape;
+    for (const key in shape2) {
+      if (Object.getOwnPropertyDescriptor(existingShape, key) !== void 0) {
+        throw new Error("Cannot overwrite keys on object schemas containing refinements. Use `.safeExtend()` instead.");
+      }
+    }
   }
   const def = mergeDefs(schema._zod.def, {
     get shape() {
       const _shape = { ...schema._zod.def.shape, ...shape2 };
       assignProp(this, "shape", _shape);
       return _shape;
-    },
-    checks: []
+    }
   });
   return clone(schema, def);
 }
@@ -5582,18 +5607,19 @@ function safeExtend(schema, shape2) {
   if (!isPlainObject$2(shape2)) {
     throw new Error("Invalid input to safeExtend: expected a plain object");
   }
-  const def = {
-    ...schema._zod.def,
+  const def = mergeDefs(schema._zod.def, {
     get shape() {
       const _shape = { ...schema._zod.def.shape, ...shape2 };
       assignProp(this, "shape", _shape);
       return _shape;
-    },
-    checks: schema._zod.def.checks
-  };
+    }
+  });
   return clone(schema, def);
 }
 function merge$2(a2, b2) {
+  if (a2._zod.def.checks?.length) {
+    throw new Error(".merge() cannot be used on object schemas containing refinements. Use .safeExtend() instead.");
+  }
   const def = mergeDefs(a2._zod.def, {
     get shape() {
       const _shape = { ...a2._zod.def.shape, ...b2._zod.def.shape };
@@ -5603,12 +5629,17 @@ function merge$2(a2, b2) {
     get catchall() {
       return b2._zod.def.catchall;
     },
-    checks: []
-    // delete existing checks
+    checks: b2._zod.def.checks ?? []
   });
   return clone(a2, def);
 }
 function partial(Class, schema, mask) {
+  const currDef = schema._zod.def;
+  const checks = currDef.checks;
+  const hasChecks = checks && checks.length > 0;
+  if (hasChecks) {
+    throw new Error(".partial() cannot be used on object schemas containing refinements");
+  }
   const def = mergeDefs(schema._zod.def, {
     get shape() {
       const oldShape = schema._zod.def.shape;
@@ -5667,8 +5698,7 @@ function required(Class, schema, mask) {
       }
       assignProp(this, "shape", shape2);
       return shape2;
-    },
-    checks: []
+    }
   });
   return clone(schema, def);
 }
@@ -5677,6 +5707,16 @@ function aborted(x2, startIndex = 0) {
     return true;
   for (let i2 = startIndex; i2 < x2.issues.length; i2++) {
     if (x2.issues[i2]?.continue !== true) {
+      return true;
+    }
+  }
+  return false;
+}
+function explicitlyAborted(x2, startIndex = 0) {
+  if (x2.aborted === true)
+    return true;
+  for (let i2 = startIndex; i2 < x2.issues.length; i2++) {
+    if (x2.issues[i2]?.continue === false) {
       return true;
     }
   }
@@ -5694,17 +5734,14 @@ function unwrapMessage(message) {
   return typeof message === "string" ? message : message?.message;
 }
 function finalizeIssue(iss, ctx, config2) {
-  const full = { ...iss, path: iss.path ?? [] };
-  if (!iss.message) {
-    const message = unwrapMessage(iss.inst?._zod.def?.error?.(iss)) ?? unwrapMessage(ctx?.error?.(iss)) ?? unwrapMessage(config2.customError?.(iss)) ?? unwrapMessage(config2.localeError?.(iss)) ?? "Invalid input";
-    full.message = message;
+  const message = iss.message ? iss.message : unwrapMessage(iss.inst?._zod.def?.error?.(iss)) ?? unwrapMessage(ctx?.error?.(iss)) ?? unwrapMessage(config2.customError?.(iss)) ?? unwrapMessage(config2.localeError?.(iss)) ?? "Invalid input";
+  const { inst: _inst, continue: _continue, input: _input, ...rest } = iss;
+  rest.path ?? (rest.path = []);
+  rest.message = message;
+  if (ctx?.reportInput) {
+    rest.input = _input;
   }
-  delete full.inst;
-  delete full.continue;
-  if (!ctx?.reportInput) {
-    delete full.input;
-  }
-  return full;
+  return rest;
 }
 function getLengthableOrigin(input) {
   if (Array.isArray(input))
@@ -5758,30 +5795,33 @@ function flattenError(error, mapper = (issue2) => issue2.message) {
 }
 function formatError(error, mapper = (issue2) => issue2.message) {
   const fieldErrors = { _errors: [] };
-  const processError = (error2) => {
+  const processError = (error2, path = []) => {
     for (const issue2 of error2.issues) {
       if (issue2.code === "invalid_union" && issue2.errors.length) {
-        issue2.errors.map((issues) => processError({ issues }));
+        issue2.errors.map((issues) => processError({ issues }, [...path, ...issue2.path]));
       } else if (issue2.code === "invalid_key") {
-        processError({ issues: issue2.issues });
+        processError({ issues: issue2.issues }, [...path, ...issue2.path]);
       } else if (issue2.code === "invalid_element") {
-        processError({ issues: issue2.issues });
-      } else if (issue2.path.length === 0) {
-        fieldErrors._errors.push(mapper(issue2));
+        processError({ issues: issue2.issues }, [...path, ...issue2.path]);
       } else {
-        let curr = fieldErrors;
-        let i2 = 0;
-        while (i2 < issue2.path.length) {
-          const el = issue2.path[i2];
-          const terminal = i2 === issue2.path.length - 1;
-          if (!terminal) {
-            curr[el] = curr[el] || { _errors: [] };
-          } else {
-            curr[el] = curr[el] || { _errors: [] };
-            curr[el]._errors.push(mapper(issue2));
+        const fullpath = [...path, ...issue2.path];
+        if (fullpath.length === 0) {
+          fieldErrors._errors.push(mapper(issue2));
+        } else {
+          let curr = fieldErrors;
+          let i2 = 0;
+          while (i2 < fullpath.length) {
+            const el = fullpath[i2];
+            const terminal = i2 === fullpath.length - 1;
+            if (!terminal) {
+              curr[el] = curr[el] || { _errors: [] };
+            } else {
+              curr[el] = curr[el] || { _errors: [] };
+              curr[el]._errors.push(mapper(issue2));
+            }
+            curr = curr[el];
+            i2++;
           }
-          curr = curr[el];
-          i2++;
         }
       }
     }
@@ -5790,7 +5830,7 @@ function formatError(error, mapper = (issue2) => issue2.message) {
   return fieldErrors;
 }
 const _parse = (_Err) => (schema, value, _ctx, _params) => {
-  const ctx = _ctx ? Object.assign(_ctx, { async: false }) : { async: false };
+  const ctx = _ctx ? { ..._ctx, async: false } : { async: false };
   const result = schema._zod.run({ value, issues: [] }, ctx);
   if (result instanceof Promise) {
     throw new $ZodAsyncError();
@@ -5803,7 +5843,7 @@ const _parse = (_Err) => (schema, value, _ctx, _params) => {
   return result.value;
 };
 const _parseAsync = (_Err) => async (schema, value, _ctx, params) => {
-  const ctx = _ctx ? Object.assign(_ctx, { async: true }) : { async: true };
+  const ctx = _ctx ? { ..._ctx, async: true } : { async: true };
   let result = schema._zod.run({ value, issues: [] }, ctx);
   if (result instanceof Promise)
     result = await result;
@@ -5827,7 +5867,7 @@ const _safeParse = (_Err) => (schema, value, _ctx) => {
 };
 const safeParse$1 = /* @__PURE__ */ _safeParse($ZodRealError);
 const _safeParseAsync = (_Err) => async (schema, value, _ctx) => {
-  const ctx = _ctx ? Object.assign(_ctx, { async: true }) : { async: true };
+  const ctx = _ctx ? { ..._ctx, async: true } : { async: true };
   let result = schema._zod.run({ value, issues: [] }, ctx);
   if (result instanceof Promise)
     result = await result;
@@ -5838,34 +5878,34 @@ const _safeParseAsync = (_Err) => async (schema, value, _ctx) => {
 };
 const safeParseAsync$1 = /* @__PURE__ */ _safeParseAsync($ZodRealError);
 const _encode = (_Err) => (schema, value, _ctx) => {
-  const ctx = _ctx ? Object.assign(_ctx, { direction: "backward" }) : { direction: "backward" };
+  const ctx = _ctx ? { ..._ctx, direction: "backward" } : { direction: "backward" };
   return _parse(_Err)(schema, value, ctx);
 };
 const _decode = (_Err) => (schema, value, _ctx) => {
   return _parse(_Err)(schema, value, _ctx);
 };
 const _encodeAsync = (_Err) => async (schema, value, _ctx) => {
-  const ctx = _ctx ? Object.assign(_ctx, { direction: "backward" }) : { direction: "backward" };
+  const ctx = _ctx ? { ..._ctx, direction: "backward" } : { direction: "backward" };
   return _parseAsync(_Err)(schema, value, ctx);
 };
 const _decodeAsync = (_Err) => async (schema, value, _ctx) => {
   return _parseAsync(_Err)(schema, value, _ctx);
 };
 const _safeEncode = (_Err) => (schema, value, _ctx) => {
-  const ctx = _ctx ? Object.assign(_ctx, { direction: "backward" }) : { direction: "backward" };
+  const ctx = _ctx ? { ..._ctx, direction: "backward" } : { direction: "backward" };
   return _safeParse(_Err)(schema, value, ctx);
 };
 const _safeDecode = (_Err) => (schema, value, _ctx) => {
   return _safeParse(_Err)(schema, value, _ctx);
 };
 const _safeEncodeAsync = (_Err) => async (schema, value, _ctx) => {
-  const ctx = _ctx ? Object.assign(_ctx, { direction: "backward" }) : { direction: "backward" };
+  const ctx = _ctx ? { ..._ctx, direction: "backward" } : { direction: "backward" };
   return _safeParseAsync(_Err)(schema, value, ctx);
 };
 const _safeDecodeAsync = (_Err) => async (schema, value, _ctx) => {
   return _safeParseAsync(_Err)(schema, value, _ctx);
 };
-const cuid = /^[cC][^\s-]{8,}$/;
+const cuid = /^[cC][0-9a-z]{6,}$/;
 const cuid2 = /^[0-9a-z]+$/;
 const ulid = /^[0-9A-HJKMNP-TV-Za-hjkmnp-tv-z]{26}$/;
 const xid = /^[0-9a-vA-V]{20}$/;
@@ -5889,7 +5929,8 @@ const cidrv4 = /^((25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9][0-9]|[0-9])\.){3}(25[0-
 const cidrv6 = /^(([0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}|::|([0-9a-fA-F]{1,4})?::([0-9a-fA-F]{1,4}:?){0,6})\/(12[0-8]|1[01][0-9]|[1-9]?[0-9])$/;
 const base64 = /^$|^(?:[0-9a-zA-Z+/]{4})*(?:(?:[0-9a-zA-Z+/]{2}==)|(?:[0-9a-zA-Z+/]{3}=))?$/;
 const base64url = /^[A-Za-z0-9_-]*$/;
-const e164 = /^\+(?:[0-9]){6,14}[0-9]$/;
+const httpProtocol = /^https?$/;
+const e164 = /^\+[1-9]\d{6,14}$/;
 const dateSource = `(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))`;
 const date$1 = /* @__PURE__ */ new RegExp(`^${dateSource}$`);
 function timeSource(args) {
@@ -5915,7 +5956,7 @@ const string$1 = (params) => {
   return new RegExp(`^${regex}$`);
 };
 const integer = /^-?\d+$/;
-const number$1 = /^-?\d+(?:\.\d+)?/;
+const number$1 = /^-?\d+(?:\.\d+)?$/;
 const boolean$1 = /^(?:true|false)$/i;
 const lowercase = /^[^A-Z]*$/;
 const uppercase = /^[^a-z]*$/;
@@ -5950,7 +5991,7 @@ const $ZodCheckLessThan = /* @__PURE__ */ $constructor("$ZodCheckLessThan", (ins
     payload.issues.push({
       origin,
       code: "too_big",
-      maximum: def.value,
+      maximum: typeof def.value === "object" ? def.value.getTime() : def.value,
       input: payload.value,
       inclusive: def.inclusive,
       inst,
@@ -5978,7 +6019,7 @@ const $ZodCheckGreaterThan = /* @__PURE__ */ $constructor("$ZodCheckGreaterThan"
     payload.issues.push({
       origin,
       code: "too_small",
-      minimum: def.value,
+      minimum: typeof def.value === "object" ? def.value.getTime() : def.value,
       input: payload.value,
       inclusive: def.inclusive,
       inst,
@@ -6045,6 +6086,7 @@ const $ZodCheckNumberFormat = /* @__PURE__ */ $constructor("$ZodCheckNumberForma
             note: "Integers must be within the safe integer range.",
             inst,
             origin,
+            inclusive: true,
             continue: !def.abort
           });
         } else {
@@ -6055,6 +6097,7 @@ const $ZodCheckNumberFormat = /* @__PURE__ */ $constructor("$ZodCheckNumberForma
             note: "Integers must be within the safe integer range.",
             inst,
             origin,
+            inclusive: true,
             continue: !def.abort
           });
         }
@@ -6078,7 +6121,9 @@ const $ZodCheckNumberFormat = /* @__PURE__ */ $constructor("$ZodCheckNumberForma
         input,
         code: "too_big",
         maximum,
-        inst
+        inclusive: true,
+        inst,
+        continue: !def.abort
       });
     }
   };
@@ -6339,8 +6384,8 @@ class Doc {
 }
 const version = {
   major: 4,
-  minor: 2,
-  patch: 1
+  minor: 4,
+  patch: 3
 };
 const $ZodType = /* @__PURE__ */ $constructor("$ZodType", (inst, def) => {
   var _a2;
@@ -6368,6 +6413,8 @@ const $ZodType = /* @__PURE__ */ $constructor("$ZodType", (inst, def) => {
       let asyncResult;
       for (const ch of checks2) {
         if (ch._zod.def.when) {
+          if (explicitlyAborted(payload))
+            continue;
           const shouldRun = ch._zod.def.when(payload);
           if (!shouldRun)
             continue;
@@ -6438,7 +6485,7 @@ const $ZodType = /* @__PURE__ */ $constructor("$ZodType", (inst, def) => {
       return runChecks(result, checks, ctx);
     };
   }
-  inst["~standard"] = {
+  defineLazy(inst, "~standard", () => ({
     validate: (value) => {
       try {
         const r2 = safeParse$1(inst, value);
@@ -6449,7 +6496,7 @@ const $ZodType = /* @__PURE__ */ $constructor("$ZodType", (inst, def) => {
     },
     vendor: "zod",
     version: 1
-  };
+  }));
 });
 const $ZodString = /* @__PURE__ */ $constructor("$ZodString", (inst, def) => {
   $ZodType.init(inst, def);
@@ -6508,6 +6555,19 @@ const $ZodURL = /* @__PURE__ */ $constructor("$ZodURL", (inst, def) => {
   inst._zod.check = (payload) => {
     try {
       const trimmed = payload.value.trim();
+      if (!def.normalize && def.protocol?.source === httpProtocol.source) {
+        if (!/^https?:\/\//i.test(trimmed)) {
+          payload.issues.push({
+            code: "invalid_format",
+            format: "url",
+            note: "Invalid URL format",
+            input: payload.value,
+            inst,
+            continue: !def.abort
+          });
+          return;
+        }
+      }
       const url = new URL(trimmed);
       if (def.hostname) {
         def.hostname.lastIndex = 0;
@@ -6656,6 +6716,8 @@ const $ZodCIDRv6 = /* @__PURE__ */ $constructor("$ZodCIDRv6", (inst, def) => {
 function isValidBase64(data) {
   if (data === "")
     return true;
+  if (/\s/.test(data))
+    return false;
   if (data.length % 4 !== 0)
     return false;
   try {
@@ -6846,12 +6908,27 @@ const $ZodArray = /* @__PURE__ */ $constructor("$ZodArray", (inst, def) => {
     return payload;
   };
 });
-function handlePropertyResult(result, final, key, input) {
+function handlePropertyResult(result, final, key, input, isOptionalIn, isOptionalOut) {
+  const isPresent = key in input;
   if (result.issues.length) {
+    if (isOptionalIn && isOptionalOut && !isPresent) {
+      return;
+    }
     final.issues.push(...prefixIssues(key, result.issues));
   }
+  if (!isPresent && !isOptionalIn) {
+    if (!result.issues.length) {
+      final.issues.push({
+        code: "invalid_type",
+        expected: "nonoptional",
+        input: void 0,
+        path: [key]
+      });
+    }
+    return;
+  }
   if (result.value === void 0) {
-    if (key in input) {
+    if (isPresent) {
       final.value[key] = void 0;
     }
   } else {
@@ -6879,7 +6956,11 @@ function handleCatchall(proms, input, payload, ctx, def, inst) {
   const keySet = def.keySet;
   const _catchall = def.catchall._zod;
   const t3 = _catchall.def.type;
+  const isOptionalIn = _catchall.optin === "optional";
+  const isOptionalOut = _catchall.optout === "optional";
   for (const key in input) {
+    if (key === "__proto__")
+      continue;
     if (keySet.has(key))
       continue;
     if (t3 === "never") {
@@ -6888,9 +6969,9 @@ function handleCatchall(proms, input, payload, ctx, def, inst) {
     }
     const r2 = _catchall.run({ value: input[key], issues: [] }, ctx);
     if (r2 instanceof Promise) {
-      proms.push(r2.then((r3) => handlePropertyResult(r3, payload, key, input)));
+      proms.push(r2.then((r3) => handlePropertyResult(r3, payload, key, input, isOptionalIn, isOptionalOut)));
     } else {
-      handlePropertyResult(r2, payload, key, input);
+      handlePropertyResult(r2, payload, key, input, isOptionalIn, isOptionalOut);
     }
   }
   if (unrecognized.length) {
@@ -6956,11 +7037,13 @@ const $ZodObject = /* @__PURE__ */ $constructor("$ZodObject", (inst, def) => {
     const shape2 = value.shape;
     for (const key of value.keys) {
       const el = shape2[key];
+      const isOptionalIn = el._zod.optin === "optional";
+      const isOptionalOut = el._zod.optout === "optional";
       const r2 = el._zod.run({ value: input[key], issues: [] }, ctx);
       if (r2 instanceof Promise) {
-        proms.push(r2.then((r3) => handlePropertyResult(r3, payload, key, input)));
+        proms.push(r2.then((r3) => handlePropertyResult(r3, payload, key, input, isOptionalIn, isOptionalOut)));
       } else {
-        handlePropertyResult(r2, payload, key, input);
+        handlePropertyResult(r2, payload, key, input, isOptionalIn, isOptionalOut);
       }
     }
     if (!catchall) {
@@ -6990,15 +7073,20 @@ const $ZodObjectJIT = /* @__PURE__ */ $constructor("$ZodObjectJIT", (inst, def) 
     for (const key of normalized.keys) {
       const id = ids2[key];
       const k2 = esc(key);
+      const schema = shape2[key];
+      const isOptionalIn = schema?._zod?.optin === "optional";
+      const isOptionalOut = schema?._zod?.optout === "optional";
       doc.write(`const ${id} = ${parseStr(key)};`);
-      doc.write(`
+      if (isOptionalIn && isOptionalOut) {
+        doc.write(`
         if (${id}.issues.length) {
-          payload.issues = payload.issues.concat(${id}.issues.map(iss => ({
-            ...iss,
-            path: iss.path ? [${k2}, ...iss.path] : [${k2}]
-          })));
+          if (${k2} in input) {
+            payload.issues = payload.issues.concat(${id}.issues.map(iss => ({
+              ...iss,
+              path: iss.path ? [${k2}, ...iss.path] : [${k2}]
+            })));
+          }
         }
-        
         
         if (${id}.value === undefined) {
           if (${k2} in input) {
@@ -7009,6 +7097,52 @@ const $ZodObjectJIT = /* @__PURE__ */ $constructor("$ZodObjectJIT", (inst, def) 
         }
         
       `);
+      } else if (!isOptionalIn) {
+        doc.write(`
+        const ${id}_present = ${k2} in input;
+        if (${id}.issues.length) {
+          payload.issues = payload.issues.concat(${id}.issues.map(iss => ({
+            ...iss,
+            path: iss.path ? [${k2}, ...iss.path] : [${k2}]
+          })));
+        }
+        if (!${id}_present && !${id}.issues.length) {
+          payload.issues.push({
+            code: "invalid_type",
+            expected: "nonoptional",
+            input: undefined,
+            path: [${k2}]
+          });
+        }
+
+        if (${id}_present) {
+          if (${id}.value === undefined) {
+            newResult[${k2}] = undefined;
+          } else {
+            newResult[${k2}] = ${id}.value;
+          }
+        }
+
+      `);
+      } else {
+        doc.write(`
+        if (${id}.issues.length) {
+          payload.issues = payload.issues.concat(${id}.issues.map(iss => ({
+            ...iss,
+            path: iss.path ? [${k2}, ...iss.path] : [${k2}]
+          })));
+        }
+        
+        if (${id}.value === undefined) {
+          if (${k2} in input) {
+            newResult[${k2}] = undefined;
+          }
+        } else {
+          newResult[${k2}] = ${id}.value;
+        }
+        
+      `);
+      }
     }
     doc.write(`payload.value = newResult;`);
     doc.write(`return payload;`);
@@ -7082,10 +7216,9 @@ const $ZodUnion = /* @__PURE__ */ $constructor("$ZodUnion", (inst, def) => {
     }
     return void 0;
   });
-  const single = def.options.length === 1;
-  const first = def.options[0]._zod.run;
+  const first = def.options.length === 1 ? def.options[0]._zod.run : null;
   inst._zod.parse = (payload, ctx) => {
-    if (single) {
+    if (first) {
       return first(payload, ctx);
     }
     let async = false;
@@ -7171,11 +7304,34 @@ function mergeValues(a2, b2) {
   return { valid: false, mergeErrorPath: [] };
 }
 function handleIntersectionResults(result, left2, right2) {
-  if (left2.issues.length) {
-    result.issues.push(...left2.issues);
+  const unrecKeys = /* @__PURE__ */ new Map();
+  let unrecIssue;
+  for (const iss of left2.issues) {
+    if (iss.code === "unrecognized_keys") {
+      unrecIssue ?? (unrecIssue = iss);
+      for (const k2 of iss.keys) {
+        if (!unrecKeys.has(k2))
+          unrecKeys.set(k2, {});
+        unrecKeys.get(k2).l = true;
+      }
+    } else {
+      result.issues.push(iss);
+    }
   }
-  if (right2.issues.length) {
-    result.issues.push(...right2.issues);
+  for (const iss of right2.issues) {
+    if (iss.code === "unrecognized_keys") {
+      for (const k2 of iss.keys) {
+        if (!unrecKeys.has(k2))
+          unrecKeys.set(k2, {});
+        unrecKeys.get(k2).r = true;
+      }
+    } else {
+      result.issues.push(iss);
+    }
+  }
+  const bothKeys = [...unrecKeys].filter(([, f2]) => f2.l && f2.r).map(([k2]) => k2);
+  if (bothKeys.length && unrecIssue) {
+    result.issues.push({ ...unrecIssue, keys: bothKeys });
   }
   if (aborted(result))
     return result;
@@ -7230,6 +7386,7 @@ const $ZodLiteral = /* @__PURE__ */ $constructor("$ZodLiteral", (inst, def) => {
 });
 const $ZodTransform = /* @__PURE__ */ $constructor("$ZodTransform", (inst, def) => {
   $ZodType.init(inst, def);
+  inst._zod.optin = "optional";
   inst._zod.parse = (payload, ctx) => {
     if (ctx.direction === "backward") {
       throw new $ZodEncodeError(inst.constructor.name);
@@ -7239,6 +7396,7 @@ const $ZodTransform = /* @__PURE__ */ $constructor("$ZodTransform", (inst, def) 
       const output = _out instanceof Promise ? _out : Promise.resolve(_out);
       return output.then((output2) => {
         payload.value = output2;
+        payload.fallback = true;
         return payload;
       });
     }
@@ -7246,11 +7404,12 @@ const $ZodTransform = /* @__PURE__ */ $constructor("$ZodTransform", (inst, def) 
       throw new $ZodAsyncError();
     }
     payload.value = _out;
+    payload.fallback = true;
     return payload;
   };
 });
 function handleOptionalResult(result, input) {
-  if (result.issues.length && input === void 0) {
+  if (input === void 0 && (result.issues.length || result.fallback)) {
     return { issues: [], value: void 0 };
   }
   return result;
@@ -7268,14 +7427,23 @@ const $ZodOptional = /* @__PURE__ */ $constructor("$ZodOptional", (inst, def) =>
   });
   inst._zod.parse = (payload, ctx) => {
     if (def.innerType._zod.optin === "optional") {
+      const input = payload.value;
       const result = def.innerType._zod.run(payload, ctx);
       if (result instanceof Promise)
-        return result.then((r2) => handleOptionalResult(r2, payload.value));
-      return handleOptionalResult(result, payload.value);
+        return result.then((r2) => handleOptionalResult(r2, input));
+      return handleOptionalResult(result, input);
     }
     if (payload.value === void 0) {
       return payload;
     }
+    return def.innerType._zod.run(payload, ctx);
+  };
+});
+const $ZodExactOptional = /* @__PURE__ */ $constructor("$ZodExactOptional", (inst, def) => {
+  $ZodOptional.init(inst, def);
+  defineLazy(inst._zod, "values", () => def.innerType._zod.values);
+  defineLazy(inst._zod, "pattern", () => def.innerType._zod.pattern);
+  inst._zod.parse = (payload, ctx) => {
     return def.innerType._zod.run(payload, ctx);
   };
 });
@@ -7362,7 +7530,7 @@ function handleNonOptionalResult(payload, inst) {
 }
 const $ZodCatch = /* @__PURE__ */ $constructor("$ZodCatch", (inst, def) => {
   $ZodType.init(inst, def);
-  defineLazy(inst._zod, "optin", () => def.innerType._zod.optin);
+  inst._zod.optin = "optional";
   defineLazy(inst._zod, "optout", () => def.innerType._zod.optout);
   defineLazy(inst._zod, "values", () => def.innerType._zod.values);
   inst._zod.parse = (payload, ctx) => {
@@ -7382,6 +7550,7 @@ const $ZodCatch = /* @__PURE__ */ $constructor("$ZodCatch", (inst, def) => {
             input: payload.value
           });
           payload.issues = [];
+          payload.fallback = true;
         }
         return payload;
       });
@@ -7396,6 +7565,7 @@ const $ZodCatch = /* @__PURE__ */ $constructor("$ZodCatch", (inst, def) => {
         input: payload.value
       });
       payload.issues = [];
+      payload.fallback = true;
     }
     return payload;
   };
@@ -7426,7 +7596,7 @@ function handlePipeResult(left2, next2, ctx) {
     left2.aborted = true;
     return left2;
   }
-  return next2._zod.run({ value: left2.value, issues: left2.issues }, ctx);
+  return next2._zod.run({ value: left2.value, issues: left2.issues, fallback: left2.fallback }, ctx);
 }
 const $ZodReadonly = /* @__PURE__ */ $constructor("$ZodReadonly", (inst, def) => {
   $ZodType.init(inst, def);
@@ -7492,9 +7662,6 @@ class $ZodRegistry {
     const meta = _meta[0];
     this._map.set(schema, meta);
     if (meta && typeof meta === "object" && "id" in meta) {
-      if (this._idmap.has(meta.id)) {
-        throw new Error(`ID ${meta.id} already exists in the registry`);
-      }
       this._idmap.set(meta.id, schema);
     }
     return this;
@@ -7531,12 +7698,14 @@ function registry$1() {
 }
 (_a = globalThis).__zod_globalRegistry ?? (_a.__zod_globalRegistry = registry$1());
 const globalRegistry = globalThis.__zod_globalRegistry;
+// @__NO_SIDE_EFFECTS__
 function _string(Class, params) {
   return new Class({
     type: "string",
     ...normalizeParams(params)
   });
 }
+// @__NO_SIDE_EFFECTS__
 function _email(Class, params) {
   return new Class({
     type: "string",
@@ -7546,6 +7715,7 @@ function _email(Class, params) {
     ...normalizeParams(params)
   });
 }
+// @__NO_SIDE_EFFECTS__
 function _guid(Class, params) {
   return new Class({
     type: "string",
@@ -7555,6 +7725,7 @@ function _guid(Class, params) {
     ...normalizeParams(params)
   });
 }
+// @__NO_SIDE_EFFECTS__
 function _uuid(Class, params) {
   return new Class({
     type: "string",
@@ -7564,6 +7735,7 @@ function _uuid(Class, params) {
     ...normalizeParams(params)
   });
 }
+// @__NO_SIDE_EFFECTS__
 function _uuidv4(Class, params) {
   return new Class({
     type: "string",
@@ -7574,6 +7746,7 @@ function _uuidv4(Class, params) {
     ...normalizeParams(params)
   });
 }
+// @__NO_SIDE_EFFECTS__
 function _uuidv6(Class, params) {
   return new Class({
     type: "string",
@@ -7584,6 +7757,7 @@ function _uuidv6(Class, params) {
     ...normalizeParams(params)
   });
 }
+// @__NO_SIDE_EFFECTS__
 function _uuidv7(Class, params) {
   return new Class({
     type: "string",
@@ -7594,6 +7768,7 @@ function _uuidv7(Class, params) {
     ...normalizeParams(params)
   });
 }
+// @__NO_SIDE_EFFECTS__
 function _url(Class, params) {
   return new Class({
     type: "string",
@@ -7603,6 +7778,7 @@ function _url(Class, params) {
     ...normalizeParams(params)
   });
 }
+// @__NO_SIDE_EFFECTS__
 function _emoji(Class, params) {
   return new Class({
     type: "string",
@@ -7612,6 +7788,7 @@ function _emoji(Class, params) {
     ...normalizeParams(params)
   });
 }
+// @__NO_SIDE_EFFECTS__
 function _nanoid(Class, params) {
   return new Class({
     type: "string",
@@ -7621,6 +7798,7 @@ function _nanoid(Class, params) {
     ...normalizeParams(params)
   });
 }
+// @__NO_SIDE_EFFECTS__
 function _cuid(Class, params) {
   return new Class({
     type: "string",
@@ -7630,6 +7808,7 @@ function _cuid(Class, params) {
     ...normalizeParams(params)
   });
 }
+// @__NO_SIDE_EFFECTS__
 function _cuid2(Class, params) {
   return new Class({
     type: "string",
@@ -7639,6 +7818,7 @@ function _cuid2(Class, params) {
     ...normalizeParams(params)
   });
 }
+// @__NO_SIDE_EFFECTS__
 function _ulid(Class, params) {
   return new Class({
     type: "string",
@@ -7648,6 +7828,7 @@ function _ulid(Class, params) {
     ...normalizeParams(params)
   });
 }
+// @__NO_SIDE_EFFECTS__
 function _xid(Class, params) {
   return new Class({
     type: "string",
@@ -7657,6 +7838,7 @@ function _xid(Class, params) {
     ...normalizeParams(params)
   });
 }
+// @__NO_SIDE_EFFECTS__
 function _ksuid(Class, params) {
   return new Class({
     type: "string",
@@ -7666,6 +7848,7 @@ function _ksuid(Class, params) {
     ...normalizeParams(params)
   });
 }
+// @__NO_SIDE_EFFECTS__
 function _ipv4(Class, params) {
   return new Class({
     type: "string",
@@ -7675,6 +7858,7 @@ function _ipv4(Class, params) {
     ...normalizeParams(params)
   });
 }
+// @__NO_SIDE_EFFECTS__
 function _ipv6(Class, params) {
   return new Class({
     type: "string",
@@ -7684,6 +7868,7 @@ function _ipv6(Class, params) {
     ...normalizeParams(params)
   });
 }
+// @__NO_SIDE_EFFECTS__
 function _cidrv4(Class, params) {
   return new Class({
     type: "string",
@@ -7693,6 +7878,7 @@ function _cidrv4(Class, params) {
     ...normalizeParams(params)
   });
 }
+// @__NO_SIDE_EFFECTS__
 function _cidrv6(Class, params) {
   return new Class({
     type: "string",
@@ -7702,6 +7888,7 @@ function _cidrv6(Class, params) {
     ...normalizeParams(params)
   });
 }
+// @__NO_SIDE_EFFECTS__
 function _base64(Class, params) {
   return new Class({
     type: "string",
@@ -7711,6 +7898,7 @@ function _base64(Class, params) {
     ...normalizeParams(params)
   });
 }
+// @__NO_SIDE_EFFECTS__
 function _base64url(Class, params) {
   return new Class({
     type: "string",
@@ -7720,6 +7908,7 @@ function _base64url(Class, params) {
     ...normalizeParams(params)
   });
 }
+// @__NO_SIDE_EFFECTS__
 function _e164(Class, params) {
   return new Class({
     type: "string",
@@ -7729,6 +7918,7 @@ function _e164(Class, params) {
     ...normalizeParams(params)
   });
 }
+// @__NO_SIDE_EFFECTS__
 function _jwt(Class, params) {
   return new Class({
     type: "string",
@@ -7738,6 +7928,7 @@ function _jwt(Class, params) {
     ...normalizeParams(params)
   });
 }
+// @__NO_SIDE_EFFECTS__
 function _isoDateTime(Class, params) {
   return new Class({
     type: "string",
@@ -7749,6 +7940,7 @@ function _isoDateTime(Class, params) {
     ...normalizeParams(params)
   });
 }
+// @__NO_SIDE_EFFECTS__
 function _isoDate(Class, params) {
   return new Class({
     type: "string",
@@ -7757,6 +7949,7 @@ function _isoDate(Class, params) {
     ...normalizeParams(params)
   });
 }
+// @__NO_SIDE_EFFECTS__
 function _isoTime(Class, params) {
   return new Class({
     type: "string",
@@ -7766,6 +7959,7 @@ function _isoTime(Class, params) {
     ...normalizeParams(params)
   });
 }
+// @__NO_SIDE_EFFECTS__
 function _isoDuration(Class, params) {
   return new Class({
     type: "string",
@@ -7774,6 +7968,7 @@ function _isoDuration(Class, params) {
     ...normalizeParams(params)
   });
 }
+// @__NO_SIDE_EFFECTS__
 function _number(Class, params) {
   return new Class({
     type: "number",
@@ -7781,6 +7976,7 @@ function _number(Class, params) {
     ...normalizeParams(params)
   });
 }
+// @__NO_SIDE_EFFECTS__
 function _int(Class, params) {
   return new Class({
     type: "number",
@@ -7790,23 +7986,27 @@ function _int(Class, params) {
     ...normalizeParams(params)
   });
 }
+// @__NO_SIDE_EFFECTS__
 function _boolean(Class, params) {
   return new Class({
     type: "boolean",
     ...normalizeParams(params)
   });
 }
+// @__NO_SIDE_EFFECTS__
 function _unknown(Class) {
   return new Class({
     type: "unknown"
   });
 }
+// @__NO_SIDE_EFFECTS__
 function _never(Class, params) {
   return new Class({
     type: "never",
     ...normalizeParams(params)
   });
 }
+// @__NO_SIDE_EFFECTS__
 function _lt(value, params) {
   return new $ZodCheckLessThan({
     check: "less_than",
@@ -7815,6 +8015,7 @@ function _lt(value, params) {
     inclusive: false
   });
 }
+// @__NO_SIDE_EFFECTS__
 function _lte(value, params) {
   return new $ZodCheckLessThan({
     check: "less_than",
@@ -7823,6 +8024,7 @@ function _lte(value, params) {
     inclusive: true
   });
 }
+// @__NO_SIDE_EFFECTS__
 function _gt(value, params) {
   return new $ZodCheckGreaterThan({
     check: "greater_than",
@@ -7831,6 +8033,7 @@ function _gt(value, params) {
     inclusive: false
   });
 }
+// @__NO_SIDE_EFFECTS__
 function _gte(value, params) {
   return new $ZodCheckGreaterThan({
     check: "greater_than",
@@ -7839,6 +8042,7 @@ function _gte(value, params) {
     inclusive: true
   });
 }
+// @__NO_SIDE_EFFECTS__
 function _multipleOf(value, params) {
   return new $ZodCheckMultipleOf({
     check: "multiple_of",
@@ -7846,6 +8050,7 @@ function _multipleOf(value, params) {
     value
   });
 }
+// @__NO_SIDE_EFFECTS__
 function _maxLength(maximum, params) {
   const ch = new $ZodCheckMaxLength({
     check: "max_length",
@@ -7854,6 +8059,7 @@ function _maxLength(maximum, params) {
   });
   return ch;
 }
+// @__NO_SIDE_EFFECTS__
 function _minLength(minimum, params) {
   return new $ZodCheckMinLength({
     check: "min_length",
@@ -7861,6 +8067,7 @@ function _minLength(minimum, params) {
     minimum
   });
 }
+// @__NO_SIDE_EFFECTS__
 function _length(length2, params) {
   return new $ZodCheckLengthEquals({
     check: "length_equals",
@@ -7868,6 +8075,7 @@ function _length(length2, params) {
     length: length2
   });
 }
+// @__NO_SIDE_EFFECTS__
 function _regex(pattern, params) {
   return new $ZodCheckRegex({
     check: "string_format",
@@ -7876,6 +8084,7 @@ function _regex(pattern, params) {
     pattern
   });
 }
+// @__NO_SIDE_EFFECTS__
 function _lowercase(params) {
   return new $ZodCheckLowerCase({
     check: "string_format",
@@ -7883,6 +8092,7 @@ function _lowercase(params) {
     ...normalizeParams(params)
   });
 }
+// @__NO_SIDE_EFFECTS__
 function _uppercase(params) {
   return new $ZodCheckUpperCase({
     check: "string_format",
@@ -7890,6 +8100,7 @@ function _uppercase(params) {
     ...normalizeParams(params)
   });
 }
+// @__NO_SIDE_EFFECTS__
 function _includes(includes, params) {
   return new $ZodCheckIncludes({
     check: "string_format",
@@ -7898,6 +8109,7 @@ function _includes(includes, params) {
     includes
   });
 }
+// @__NO_SIDE_EFFECTS__
 function _startsWith(prefix2, params) {
   return new $ZodCheckStartsWith({
     check: "string_format",
@@ -7906,6 +8118,7 @@ function _startsWith(prefix2, params) {
     prefix: prefix2
   });
 }
+// @__NO_SIDE_EFFECTS__
 function _endsWith(suffix, params) {
   return new $ZodCheckEndsWith({
     check: "string_format",
@@ -7914,27 +8127,34 @@ function _endsWith(suffix, params) {
     suffix
   });
 }
+// @__NO_SIDE_EFFECTS__
 function _overwrite(tx) {
   return new $ZodCheckOverwrite({
     check: "overwrite",
     tx
   });
 }
+// @__NO_SIDE_EFFECTS__
 function _normalize(form) {
-  return _overwrite((input) => input.normalize(form));
+  return /* @__PURE__ */ _overwrite((input) => input.normalize(form));
 }
+// @__NO_SIDE_EFFECTS__
 function _trim() {
-  return _overwrite((input) => input.trim());
+  return /* @__PURE__ */ _overwrite((input) => input.trim());
 }
+// @__NO_SIDE_EFFECTS__
 function _toLowerCase() {
-  return _overwrite((input) => input.toLowerCase());
+  return /* @__PURE__ */ _overwrite((input) => input.toLowerCase());
 }
+// @__NO_SIDE_EFFECTS__
 function _toUpperCase() {
-  return _overwrite((input) => input.toUpperCase());
+  return /* @__PURE__ */ _overwrite((input) => input.toUpperCase());
 }
+// @__NO_SIDE_EFFECTS__
 function _slugify() {
-  return _overwrite((input) => slugify(input));
+  return /* @__PURE__ */ _overwrite((input) => slugify(input));
 }
+// @__NO_SIDE_EFFECTS__
 function _array(Class, element, params) {
   return new Class({
     type: "array",
@@ -7945,6 +8165,7 @@ function _array(Class, element, params) {
     ...normalizeParams(params)
   });
 }
+// @__NO_SIDE_EFFECTS__
 function _refine(Class, fn3, _params) {
   const schema = new Class({
     type: "custom",
@@ -7954,8 +8175,9 @@ function _refine(Class, fn3, _params) {
   });
   return schema;
 }
-function _superRefine(fn3) {
-  const ch = _check((payload) => {
+// @__NO_SIDE_EFFECTS__
+function _superRefine(fn3, params) {
+  const ch = /* @__PURE__ */ _check((payload) => {
     payload.addIssue = (issue2) => {
       if (typeof issue2 === "string") {
         payload.issues.push(issue$3(issue2, payload.value, ch._zod.def));
@@ -7971,9 +8193,10 @@ function _superRefine(fn3) {
       }
     };
     return fn3(payload.value, payload);
-  });
+  }, params);
   return ch;
 }
+// @__NO_SIDE_EFFECTS__
 function _check(fn3, params) {
   const ch = new $ZodCheck({
     check: "custom",
@@ -8026,12 +8249,7 @@ function process$1(schema, ctx, _params = { path: [], schemaPath: [] }) {
       schemaPath: [..._params.schemaPath, schema],
       path: _params.path
     };
-    const parent = schema._zod.parent;
-    if (parent) {
-      result.ref = parent;
-      process$1(parent, ctx, params);
-      ctx.seen.get(parent).isParent = true;
-    } else if (schema._zod.processJSONSchema) {
+    if (schema._zod.processJSONSchema) {
       schema._zod.processJSONSchema(ctx, result.schema, params);
     } else {
       const _json = result.schema;
@@ -8041,6 +8259,13 @@ function process$1(schema, ctx, _params = { path: [], schemaPath: [] }) {
       }
       processor(schema, ctx, _json, params);
     }
+    const parent = schema._zod.parent;
+    if (parent) {
+      if (!result.ref)
+        result.ref = parent;
+      process$1(parent, ctx, params);
+      ctx.seen.get(parent).isParent = true;
+    }
   }
   const meta = ctx.metadataRegistry.get(schema);
   if (meta)
@@ -8049,7 +8274,7 @@ function process$1(schema, ctx, _params = { path: [], schemaPath: [] }) {
     delete result.schema.examples;
     delete result.schema.default;
   }
-  if (ctx.io === "input" && result.schema._prefault)
+  if (ctx.io === "input" && "_prefault" in result.schema)
     (_a2 = result.schema).default ?? (_a2.default = result.schema._prefault);
   delete result.schema._prefault;
   const _result = ctx.seen.get(schema);
@@ -8059,6 +8284,17 @@ function extractDefs(ctx, schema) {
   const root = ctx.seen.get(schema);
   if (!root)
     throw new Error("Unprocessed schema. This is a bug in Zod.");
+  const idToSchema = /* @__PURE__ */ new Map();
+  for (const entry of ctx.seen.entries()) {
+    const id = ctx.metadataRegistry.get(entry[0])?.id;
+    if (id) {
+      const existing = idToSchema.get(id);
+      if (existing && existing !== entry[0]) {
+        throw new Error(`Duplicate schema id "${id}" detected during JSON Schema conversion. Two different schemas cannot share the same id when converted together.`);
+      }
+      idToSchema.set(id, entry[0]);
+    }
+  }
   const makeURI = (entry) => {
     const defsSegment = ctx.target === "draft-2020-12" ? "$defs" : "definitions";
     if (ctx.external) {
@@ -8140,30 +8376,65 @@ function finalize$1(ctx, schema) {
     throw new Error("Unprocessed schema. This is a bug in Zod.");
   const flattenRef = (zodSchema) => {
     const seen = ctx.seen.get(zodSchema);
+    if (seen.ref === null)
+      return;
     const schema2 = seen.def ?? seen.schema;
     const _cached = { ...schema2 };
-    if (seen.ref === null) {
-      return;
-    }
     const ref = seen.ref;
     seen.ref = null;
     if (ref) {
       flattenRef(ref);
-      const refSchema = ctx.seen.get(ref).schema;
+      const refSeen = ctx.seen.get(ref);
+      const refSchema = refSeen.schema;
       if (refSchema.$ref && (ctx.target === "draft-07" || ctx.target === "draft-04" || ctx.target === "openapi-3.0")) {
         schema2.allOf = schema2.allOf ?? [];
         schema2.allOf.push(refSchema);
       } else {
         Object.assign(schema2, refSchema);
-        Object.assign(schema2, _cached);
+      }
+      Object.assign(schema2, _cached);
+      const isParentRef = zodSchema._zod.parent === ref;
+      if (isParentRef) {
+        for (const key in schema2) {
+          if (key === "$ref" || key === "allOf")
+            continue;
+          if (!(key in _cached)) {
+            delete schema2[key];
+          }
+        }
+      }
+      if (refSchema.$ref && refSeen.def) {
+        for (const key in schema2) {
+          if (key === "$ref" || key === "allOf")
+            continue;
+          if (key in refSeen.def && JSON.stringify(schema2[key]) === JSON.stringify(refSeen.def[key])) {
+            delete schema2[key];
+          }
+        }
       }
     }
-    if (!seen.isParent)
-      ctx.override({
-        zodSchema,
-        jsonSchema: schema2,
-        path: seen.path ?? []
-      });
+    const parent = zodSchema._zod.parent;
+    if (parent && parent !== ref) {
+      flattenRef(parent);
+      const parentSeen = ctx.seen.get(parent);
+      if (parentSeen?.schema.$ref) {
+        schema2.$ref = parentSeen.schema.$ref;
+        if (parentSeen.def) {
+          for (const key in schema2) {
+            if (key === "$ref" || key === "allOf")
+              continue;
+            if (key in parentSeen.def && JSON.stringify(schema2[key]) === JSON.stringify(parentSeen.def[key])) {
+              delete schema2[key];
+            }
+          }
+        }
+      }
+    }
+    ctx.override({
+      zodSchema,
+      jsonSchema: schema2,
+      path: seen.path ?? []
+    });
   };
   for (const entry of [...ctx.seen.entries()].reverse()) {
     flattenRef(entry[0]);
@@ -8184,10 +8455,15 @@ function finalize$1(ctx, schema) {
     result.$id = ctx.external.uri(id);
   }
   Object.assign(result, root.def ?? root.schema);
+  const rootMetaId = ctx.metadataRegistry.get(schema)?.id;
+  if (rootMetaId !== void 0 && result.id === rootMetaId)
+    delete result.id;
   const defs = ctx.external?.defs ?? {};
   for (const entry of ctx.seen.entries()) {
     const seen = entry[1];
     if (seen.def && seen.defId) {
+      if (seen.def.id === seen.defId)
+        delete seen.def.id;
       defs[seen.defId] = seen.def;
     }
   }
@@ -8207,8 +8483,8 @@ function finalize$1(ctx, schema) {
       value: {
         ...schema["~standard"],
         jsonSchema: {
-          input: createStandardJSONSchemaMethod(schema, "input"),
-          output: createStandardJSONSchemaMethod(schema, "output")
+          input: createStandardJSONSchemaMethod(schema, "input", ctx.processors),
+          output: createStandardJSONSchemaMethod(schema, "output", ctx.processors)
         }
       },
       enumerable: false,
@@ -8243,6 +8519,8 @@ function isTransforming(_schema, _ctx) {
     return isTransforming(def.keyType, ctx) || isTransforming(def.valueType, ctx);
   }
   if (def.type === "pipe") {
+    if (_schema._zod.traits.has("$ZodCodec"))
+      return true;
     return isTransforming(def.in, ctx) || isTransforming(def.out, ctx);
   }
   if (def.type === "object") {
@@ -8276,9 +8554,9 @@ const createToJSONSchemaMethod = (schema, processors = {}) => (params) => {
   extractDefs(ctx, schema);
   return finalize$1(ctx, schema);
 };
-const createStandardJSONSchemaMethod = (schema, io) => (params) => {
+const createStandardJSONSchemaMethod = (schema, io, processors = {}) => (params) => {
   const { libraryOptions, target } = params ?? {};
-  const ctx = initializeContext({ ...libraryOptions ?? {}, target, io, processors: {} });
+  const ctx = initializeContext({ ...libraryOptions ?? {}, target, io, processors });
   process$1(schema, ctx);
   extractDefs(ctx, schema);
   return finalize$1(ctx, schema);
@@ -8303,6 +8581,9 @@ const stringProcessor = (schema, ctx, _json, _params) => {
     json.format = formatMap[format] ?? format;
     if (json.format === "")
       delete json.format;
+    if (format === "time") {
+      delete json.format;
+    }
   }
   if (contentEncoding)
     json.contentEncoding = contentEncoding;
@@ -8327,39 +8608,28 @@ const numberProcessor = (schema, ctx, _json, _params) => {
     json.type = "integer";
   else
     json.type = "number";
-  if (typeof exclusiveMinimum === "number") {
-    if (ctx.target === "draft-04" || ctx.target === "openapi-3.0") {
+  const exMin = typeof exclusiveMinimum === "number" && exclusiveMinimum >= (minimum ?? Number.NEGATIVE_INFINITY);
+  const exMax = typeof exclusiveMaximum === "number" && exclusiveMaximum <= (maximum ?? Number.POSITIVE_INFINITY);
+  const legacy = ctx.target === "draft-04" || ctx.target === "openapi-3.0";
+  if (exMin) {
+    if (legacy) {
       json.minimum = exclusiveMinimum;
       json.exclusiveMinimum = true;
     } else {
       json.exclusiveMinimum = exclusiveMinimum;
     }
-  }
-  if (typeof minimum === "number") {
+  } else if (typeof minimum === "number") {
     json.minimum = minimum;
-    if (typeof exclusiveMinimum === "number" && ctx.target !== "draft-04") {
-      if (exclusiveMinimum >= minimum)
-        delete json.minimum;
-      else
-        delete json.exclusiveMinimum;
-    }
   }
-  if (typeof exclusiveMaximum === "number") {
-    if (ctx.target === "draft-04" || ctx.target === "openapi-3.0") {
+  if (exMax) {
+    if (legacy) {
       json.maximum = exclusiveMaximum;
       json.exclusiveMaximum = true;
     } else {
       json.exclusiveMaximum = exclusiveMaximum;
     }
-  }
-  if (typeof maximum === "number") {
+  } else if (typeof maximum === "number") {
     json.maximum = maximum;
-    if (typeof exclusiveMaximum === "number" && ctx.target !== "draft-04") {
-      if (exclusiveMaximum <= maximum)
-        delete json.maximum;
-      else
-        delete json.exclusiveMaximum;
-    }
   }
   if (typeof multipleOf === "number")
     json.multipleOf = multipleOf;
@@ -8439,7 +8709,10 @@ const arrayProcessor = (schema, ctx, _json, params) => {
   if (typeof maximum === "number")
     json.maxItems = maximum;
   json.type = "array";
-  json.items = process$1(def.element, ctx, { ...params, path: [...params.path, "items"] });
+  json.items = process$1(def.element, ctx, {
+    ...params,
+    path: [...params.path, "items"]
+  });
 };
 const objectProcessor = (schema, ctx, _json, params) => {
   const json = _json;
@@ -8554,7 +8827,8 @@ const catchProcessor = (schema, ctx, json, params) => {
 };
 const pipeProcessor = (schema, ctx, _json, params) => {
   const def = schema._zod.def;
-  const innerType = ctx.io === "input" ? def.in._zod.def.type === "transform" ? def.out : def.in : def.out;
+  const inIsTransform = def.in._zod.traits.has("$ZodTransform");
+  const innerType = ctx.io === "input" ? inIsTransform ? def.out : def.in : def.out;
   process$1(innerType, ctx, params);
   const seen = ctx.seen.get(schema);
   seen.ref = innerType;
@@ -8577,28 +8851,28 @@ const ZodISODateTime = /* @__PURE__ */ $constructor("ZodISODateTime", (inst, def
   ZodStringFormat.init(inst, def);
 });
 function datetime(params) {
-  return _isoDateTime(ZodISODateTime, params);
+  return /* @__PURE__ */ _isoDateTime(ZodISODateTime, params);
 }
 const ZodISODate = /* @__PURE__ */ $constructor("ZodISODate", (inst, def) => {
   $ZodISODate.init(inst, def);
   ZodStringFormat.init(inst, def);
 });
 function date(params) {
-  return _isoDate(ZodISODate, params);
+  return /* @__PURE__ */ _isoDate(ZodISODate, params);
 }
 const ZodISOTime = /* @__PURE__ */ $constructor("ZodISOTime", (inst, def) => {
   $ZodISOTime.init(inst, def);
   ZodStringFormat.init(inst, def);
 });
 function time(params) {
-  return _isoTime(ZodISOTime, params);
+  return /* @__PURE__ */ _isoTime(ZodISOTime, params);
 }
 const ZodISODuration = /* @__PURE__ */ $constructor("ZodISODuration", (inst, def) => {
   $ZodISODuration.init(inst, def);
   ZodStringFormat.init(inst, def);
 });
 function duration$1(params) {
-  return _isoDuration(ZodISODuration, params);
+  return /* @__PURE__ */ _isoDuration(ZodISODuration, params);
 }
 const initializer = (inst, issues) => {
   $ZodError.init(inst, issues);
@@ -8634,7 +8908,7 @@ const initializer = (inst, issues) => {
     }
   });
 };
-const ZodRealError = $constructor("ZodError", initializer, {
+const ZodRealError = /* @__PURE__ */ $constructor("ZodError", initializer, {
   Parent: Error
 });
 const parse$1 = /* @__PURE__ */ _parse(ZodRealError);
@@ -8649,6 +8923,43 @@ const safeEncode = /* @__PURE__ */ _safeEncode(ZodRealError);
 const safeDecode = /* @__PURE__ */ _safeDecode(ZodRealError);
 const safeEncodeAsync = /* @__PURE__ */ _safeEncodeAsync(ZodRealError);
 const safeDecodeAsync = /* @__PURE__ */ _safeDecodeAsync(ZodRealError);
+const _installedGroups = /* @__PURE__ */ new WeakMap();
+function _installLazyMethods(inst, group, methods) {
+  const proto2 = Object.getPrototypeOf(inst);
+  let installed = _installedGroups.get(proto2);
+  if (!installed) {
+    installed = /* @__PURE__ */ new Set();
+    _installedGroups.set(proto2, installed);
+  }
+  if (installed.has(group))
+    return;
+  installed.add(group);
+  for (const key in methods) {
+    const fn3 = methods[key];
+    Object.defineProperty(proto2, key, {
+      configurable: true,
+      enumerable: false,
+      get() {
+        const bound = fn3.bind(this);
+        Object.defineProperty(this, key, {
+          configurable: true,
+          writable: true,
+          enumerable: true,
+          value: bound
+        });
+        return bound;
+      },
+      set(v2) {
+        Object.defineProperty(this, key, {
+          configurable: true,
+          writable: true,
+          enumerable: true,
+          value: v2
+        });
+      }
+    });
+  }
+}
 const ZodType = /* @__PURE__ */ $constructor("ZodType", (inst, def) => {
   $ZodType.init(inst, def);
   Object.assign(inst["~standard"], {
@@ -8661,20 +8972,6 @@ const ZodType = /* @__PURE__ */ $constructor("ZodType", (inst, def) => {
   inst.def = def;
   inst.type = def.type;
   Object.defineProperty(inst, "_def", { value: def });
-  inst.check = (...checks) => {
-    return inst.clone(mergeDefs(def, {
-      checks: [
-        ...def.checks ?? [],
-        ...checks.map((ch) => typeof ch === "function" ? { _zod: { check: ch, def: { check: "custom" }, onattach: [] } } : ch)
-      ]
-    }));
-  };
-  inst.clone = (def2, params) => clone(inst, def2, params);
-  inst.brand = () => inst;
-  inst.register = ((reg, meta) => {
-    reg.add(inst, meta);
-    return inst;
-  });
   inst.parse = (data, params) => parse$1(inst, data, params, { callee: inst.parse });
   inst.safeParse = (data, params) => safeParse(inst, data, params);
   inst.parseAsync = async (data, params) => parseAsync(inst, data, params, { callee: inst.parseAsync });
@@ -8688,43 +8985,108 @@ const ZodType = /* @__PURE__ */ $constructor("ZodType", (inst, def) => {
   inst.safeDecode = (data, params) => safeDecode(inst, data, params);
   inst.safeEncodeAsync = async (data, params) => safeEncodeAsync(inst, data, params);
   inst.safeDecodeAsync = async (data, params) => safeDecodeAsync(inst, data, params);
-  inst.refine = (check, params) => inst.check(refine(check, params));
-  inst.superRefine = (refinement) => inst.check(superRefine(refinement));
-  inst.overwrite = (fn3) => inst.check(_overwrite(fn3));
-  inst.optional = () => optional(inst);
-  inst.nullable = () => nullable(inst);
-  inst.nullish = () => optional(nullable(inst));
-  inst.nonoptional = (params) => nonoptional(inst, params);
-  inst.array = () => array(inst);
-  inst.or = (arg2) => union([inst, arg2]);
-  inst.and = (arg2) => intersection(inst, arg2);
-  inst.transform = (tx) => pipe(inst, transform(tx));
-  inst.default = (def2) => _default(inst, def2);
-  inst.prefault = (def2) => prefault(inst, def2);
-  inst.catch = (params) => _catch(inst, params);
-  inst.pipe = (target) => pipe(inst, target);
-  inst.readonly = () => readonly(inst);
-  inst.describe = (description) => {
-    const cl = inst.clone();
-    globalRegistry.add(cl, { description });
-    return cl;
-  };
+  _installLazyMethods(inst, "ZodType", {
+    check(...chks) {
+      const def2 = this.def;
+      return this.clone(mergeDefs(def2, {
+        checks: [
+          ...def2.checks ?? [],
+          ...chks.map((ch) => typeof ch === "function" ? { _zod: { check: ch, def: { check: "custom" }, onattach: [] } } : ch)
+        ]
+      }), { parent: true });
+    },
+    with(...chks) {
+      return this.check(...chks);
+    },
+    clone(def2, params) {
+      return clone(this, def2, params);
+    },
+    brand() {
+      return this;
+    },
+    register(reg, meta) {
+      reg.add(this, meta);
+      return this;
+    },
+    refine(check, params) {
+      return this.check(refine(check, params));
+    },
+    superRefine(refinement, params) {
+      return this.check(superRefine(refinement, params));
+    },
+    overwrite(fn3) {
+      return this.check(/* @__PURE__ */ _overwrite(fn3));
+    },
+    optional() {
+      return optional(this);
+    },
+    exactOptional() {
+      return exactOptional(this);
+    },
+    nullable() {
+      return nullable(this);
+    },
+    nullish() {
+      return optional(nullable(this));
+    },
+    nonoptional(params) {
+      return nonoptional(this, params);
+    },
+    array() {
+      return array(this);
+    },
+    or(arg2) {
+      return union([this, arg2]);
+    },
+    and(arg2) {
+      return intersection(this, arg2);
+    },
+    transform(tx) {
+      return pipe(this, transform(tx));
+    },
+    default(d2) {
+      return _default(this, d2);
+    },
+    prefault(d2) {
+      return prefault(this, d2);
+    },
+    catch(params) {
+      return _catch(this, params);
+    },
+    pipe(target) {
+      return pipe(this, target);
+    },
+    readonly() {
+      return readonly(this);
+    },
+    describe(description) {
+      const cl = this.clone();
+      globalRegistry.add(cl, { description });
+      return cl;
+    },
+    meta(...args) {
+      if (args.length === 0)
+        return globalRegistry.get(this);
+      const cl = this.clone();
+      globalRegistry.add(cl, args[0]);
+      return cl;
+    },
+    isOptional() {
+      return this.safeParse(void 0).success;
+    },
+    isNullable() {
+      return this.safeParse(null).success;
+    },
+    apply(fn3) {
+      return fn3(this);
+    }
+  });
   Object.defineProperty(inst, "description", {
     get() {
       return globalRegistry.get(inst)?.description;
     },
     configurable: true
   });
-  inst.meta = (...args) => {
-    if (args.length === 0) {
-      return globalRegistry.get(inst);
-    }
-    const cl = inst.clone();
-    globalRegistry.add(cl, args[0]);
-    return cl;
-  };
-  inst.isOptional = () => inst.safeParse(void 0).success;
-  inst.isNullable = () => inst.safeParse(null).success;
   return inst;
 });
 const _ZodString = /* @__PURE__ */ $constructor("_ZodString", (inst, def) => {
@@ -8735,55 +9097,87 @@ const _ZodString = /* @__PURE__ */ $constructor("_ZodString", (inst, def) => {
   inst.format = bag.format ?? null;
   inst.minLength = bag.minimum ?? null;
   inst.maxLength = bag.maximum ?? null;
-  inst.regex = (...args) => inst.check(_regex(...args));
-  inst.includes = (...args) => inst.check(_includes(...args));
-  inst.startsWith = (...args) => inst.check(_startsWith(...args));
-  inst.endsWith = (...args) => inst.check(_endsWith(...args));
-  inst.min = (...args) => inst.check(_minLength(...args));
-  inst.max = (...args) => inst.check(_maxLength(...args));
-  inst.length = (...args) => inst.check(_length(...args));
-  inst.nonempty = (...args) => inst.check(_minLength(1, ...args));
-  inst.lowercase = (params) => inst.check(_lowercase(params));
-  inst.uppercase = (params) => inst.check(_uppercase(params));
-  inst.trim = () => inst.check(_trim());
-  inst.normalize = (...args) => inst.check(_normalize(...args));
-  inst.toLowerCase = () => inst.check(_toLowerCase());
-  inst.toUpperCase = () => inst.check(_toUpperCase());
-  inst.slugify = () => inst.check(_slugify());
+  _installLazyMethods(inst, "_ZodString", {
+    regex(...args) {
+      return this.check(/* @__PURE__ */ _regex(...args));
+    },
+    includes(...args) {
+      return this.check(/* @__PURE__ */ _includes(...args));
+    },
+    startsWith(...args) {
+      return this.check(/* @__PURE__ */ _startsWith(...args));
+    },
+    endsWith(...args) {
+      return this.check(/* @__PURE__ */ _endsWith(...args));
+    },
+    min(...args) {
+      return this.check(/* @__PURE__ */ _minLength(...args));
+    },
+    max(...args) {
+      return this.check(/* @__PURE__ */ _maxLength(...args));
+    },
+    length(...args) {
+      return this.check(/* @__PURE__ */ _length(...args));
+    },
+    nonempty(...args) {
+      return this.check(/* @__PURE__ */ _minLength(1, ...args));
+    },
+    lowercase(params) {
+      return this.check(/* @__PURE__ */ _lowercase(params));
+    },
+    uppercase(params) {
+      return this.check(/* @__PURE__ */ _uppercase(params));
+    },
+    trim() {
+      return this.check(/* @__PURE__ */ _trim());
+    },
+    normalize(...args) {
+      return this.check(/* @__PURE__ */ _normalize(...args));
+    },
+    toLowerCase() {
+      return this.check(/* @__PURE__ */ _toLowerCase());
+    },
+    toUpperCase() {
+      return this.check(/* @__PURE__ */ _toUpperCase());
+    },
+    slugify() {
+      return this.check(/* @__PURE__ */ _slugify());
+    }
+  });
 });
 const ZodString = /* @__PURE__ */ $constructor("ZodString", (inst, def) => {
   $ZodString.init(inst, def);
   _ZodString.init(inst, def);
-  inst.email = (params) => inst.check(_email(ZodEmail, params));
-  inst.url = (params) => inst.check(_url(ZodURL, params));
-  inst.jwt = (params) => inst.check(_jwt(ZodJWT, params));
-  inst.emoji = (params) => inst.check(_emoji(ZodEmoji, params));
-  inst.guid = (params) => inst.check(_guid(ZodGUID, params));
-  inst.uuid = (params) => inst.check(_uuid(ZodUUID, params));
-  inst.uuidv4 = (params) => inst.check(_uuidv4(ZodUUID, params));
-  inst.uuidv6 = (params) => inst.check(_uuidv6(ZodUUID, params));
-  inst.uuidv7 = (params) => inst.check(_uuidv7(ZodUUID, params));
-  inst.nanoid = (params) => inst.check(_nanoid(ZodNanoID, params));
-  inst.guid = (params) => inst.check(_guid(ZodGUID, params));
-  inst.cuid = (params) => inst.check(_cuid(ZodCUID, params));
-  inst.cuid2 = (params) => inst.check(_cuid2(ZodCUID2, params));
-  inst.ulid = (params) => inst.check(_ulid(ZodULID, params));
-  inst.base64 = (params) => inst.check(_base64(ZodBase64, params));
-  inst.base64url = (params) => inst.check(_base64url(ZodBase64URL, params));
-  inst.xid = (params) => inst.check(_xid(ZodXID, params));
-  inst.ksuid = (params) => inst.check(_ksuid(ZodKSUID, params));
-  inst.ipv4 = (params) => inst.check(_ipv4(ZodIPv4, params));
-  inst.ipv6 = (params) => inst.check(_ipv6(ZodIPv6, params));
-  inst.cidrv4 = (params) => inst.check(_cidrv4(ZodCIDRv4, params));
-  inst.cidrv6 = (params) => inst.check(_cidrv6(ZodCIDRv6, params));
-  inst.e164 = (params) => inst.check(_e164(ZodE164, params));
+  inst.email = (params) => inst.check(/* @__PURE__ */ _email(ZodEmail, params));
+  inst.url = (params) => inst.check(/* @__PURE__ */ _url(ZodURL, params));
+  inst.jwt = (params) => inst.check(/* @__PURE__ */ _jwt(ZodJWT, params));
+  inst.emoji = (params) => inst.check(/* @__PURE__ */ _emoji(ZodEmoji, params));
+  inst.guid = (params) => inst.check(/* @__PURE__ */ _guid(ZodGUID, params));
+  inst.uuid = (params) => inst.check(/* @__PURE__ */ _uuid(ZodUUID, params));
+  inst.uuidv4 = (params) => inst.check(/* @__PURE__ */ _uuidv4(ZodUUID, params));
+  inst.uuidv6 = (params) => inst.check(/* @__PURE__ */ _uuidv6(ZodUUID, params));
+  inst.uuidv7 = (params) => inst.check(/* @__PURE__ */ _uuidv7(ZodUUID, params));
+  inst.nanoid = (params) => inst.check(/* @__PURE__ */ _nanoid(ZodNanoID, params));
+  inst.guid = (params) => inst.check(/* @__PURE__ */ _guid(ZodGUID, params));
+  inst.cuid = (params) => inst.check(/* @__PURE__ */ _cuid(ZodCUID, params));
+  inst.cuid2 = (params) => inst.check(/* @__PURE__ */ _cuid2(ZodCUID2, params));
+  inst.ulid = (params) => inst.check(/* @__PURE__ */ _ulid(ZodULID, params));
+  inst.base64 = (params) => inst.check(/* @__PURE__ */ _base64(ZodBase64, params));
+  inst.base64url = (params) => inst.check(/* @__PURE__ */ _base64url(ZodBase64URL, params));
+  inst.xid = (params) => inst.check(/* @__PURE__ */ _xid(ZodXID, params));
+  inst.ksuid = (params) => inst.check(/* @__PURE__ */ _ksuid(ZodKSUID, params));
+  inst.ipv4 = (params) => inst.check(/* @__PURE__ */ _ipv4(ZodIPv4, params));
+  inst.ipv6 = (params) => inst.check(/* @__PURE__ */ _ipv6(ZodIPv6, params));
+  inst.cidrv4 = (params) => inst.check(/* @__PURE__ */ _cidrv4(ZodCIDRv4, params));
+  inst.cidrv6 = (params) => inst.check(/* @__PURE__ */ _cidrv6(ZodCIDRv6, params));
+  inst.e164 = (params) => inst.check(/* @__PURE__ */ _e164(ZodE164, params));
   inst.datetime = (params) => inst.check(datetime(params));
   inst.date = (params) => inst.check(date(params));
   inst.time = (params) => inst.check(time(params));
   inst.duration = (params) => inst.check(duration$1(params));
 });
 function string(params) {
-  return _string(ZodString, params);
+  return /* @__PURE__ */ _string(ZodString, params);
 }
 const ZodStringFormat = /* @__PURE__ */ $constructor("ZodStringFormat", (inst, def) => {
   $ZodStringFormat.init(inst, def);
@@ -8869,21 +9263,53 @@ const ZodNumber = /* @__PURE__ */ $constructor("ZodNumber", (inst, def) => {
   $ZodNumber.init(inst, def);
   ZodType.init(inst, def);
   inst._zod.processJSONSchema = (ctx, json, params) => numberProcessor(inst, ctx, json);
-  inst.gt = (value, params) => inst.check(_gt(value, params));
-  inst.gte = (value, params) => inst.check(_gte(value, params));
-  inst.min = (value, params) => inst.check(_gte(value, params));
-  inst.lt = (value, params) => inst.check(_lt(value, params));
-  inst.lte = (value, params) => inst.check(_lte(value, params));
-  inst.max = (value, params) => inst.check(_lte(value, params));
-  inst.int = (params) => inst.check(int(params));
-  inst.safe = (params) => inst.check(int(params));
-  inst.positive = (params) => inst.check(_gt(0, params));
-  inst.nonnegative = (params) => inst.check(_gte(0, params));
-  inst.negative = (params) => inst.check(_lt(0, params));
-  inst.nonpositive = (params) => inst.check(_lte(0, params));
-  inst.multipleOf = (value, params) => inst.check(_multipleOf(value, params));
-  inst.step = (value, params) => inst.check(_multipleOf(value, params));
-  inst.finite = () => inst;
+  _installLazyMethods(inst, "ZodNumber", {
+    gt(value, params) {
+      return this.check(/* @__PURE__ */ _gt(value, params));
+    },
+    gte(value, params) {
+      return this.check(/* @__PURE__ */ _gte(value, params));
+    },
+    min(value, params) {
+      return this.check(/* @__PURE__ */ _gte(value, params));
+    },
+    lt(value, params) {
+      return this.check(/* @__PURE__ */ _lt(value, params));
+    },
+    lte(value, params) {
+      return this.check(/* @__PURE__ */ _lte(value, params));
+    },
+    max(value, params) {
+      return this.check(/* @__PURE__ */ _lte(value, params));
+    },
+    int(params) {
+      return this.check(int(params));
+    },
+    safe(params) {
+      return this.check(int(params));
+    },
+    positive(params) {
+      return this.check(/* @__PURE__ */ _gt(0, params));
+    },
+    nonnegative(params) {
+      return this.check(/* @__PURE__ */ _gte(0, params));
+    },
+    negative(params) {
+      return this.check(/* @__PURE__ */ _lt(0, params));
+    },
+    nonpositive(params) {
+      return this.check(/* @__PURE__ */ _lte(0, params));
+    },
+    multipleOf(value, params) {
+      return this.check(/* @__PURE__ */ _multipleOf(value, params));
+    },
+    step(value, params) {
+      return this.check(/* @__PURE__ */ _multipleOf(value, params));
+    },
+    finite() {
+      return this;
+    }
+  });
   const bag = inst._zod.bag;
   inst.minValue = Math.max(bag.minimum ?? Number.NEGATIVE_INFINITY, bag.exclusiveMinimum ?? Number.NEGATIVE_INFINITY) ?? null;
   inst.maxValue = Math.min(bag.maximum ?? Number.POSITIVE_INFINITY, bag.exclusiveMaximum ?? Number.POSITIVE_INFINITY) ?? null;
@@ -8892,14 +9318,14 @@ const ZodNumber = /* @__PURE__ */ $constructor("ZodNumber", (inst, def) => {
   inst.format = bag.format ?? null;
 });
 function number(params) {
-  return _number(ZodNumber, params);
+  return /* @__PURE__ */ _number(ZodNumber, params);
 }
 const ZodNumberFormat = /* @__PURE__ */ $constructor("ZodNumberFormat", (inst, def) => {
   $ZodNumberFormat.init(inst, def);
   ZodNumber.init(inst, def);
 });
 function int(params) {
-  return _int(ZodNumberFormat, params);
+  return /* @__PURE__ */ _int(ZodNumberFormat, params);
 }
 const ZodBoolean = /* @__PURE__ */ $constructor("ZodBoolean", (inst, def) => {
   $ZodBoolean.init(inst, def);
@@ -8907,7 +9333,7 @@ const ZodBoolean = /* @__PURE__ */ $constructor("ZodBoolean", (inst, def) => {
   inst._zod.processJSONSchema = (ctx, json, params) => booleanProcessor(inst, ctx, json);
 });
 function boolean(params) {
-  return _boolean(ZodBoolean, params);
+  return /* @__PURE__ */ _boolean(ZodBoolean, params);
 }
 const ZodUnknown = /* @__PURE__ */ $constructor("ZodUnknown", (inst, def) => {
   $ZodUnknown.init(inst, def);
@@ -8915,7 +9341,7 @@ const ZodUnknown = /* @__PURE__ */ $constructor("ZodUnknown", (inst, def) => {
   inst._zod.processJSONSchema = (ctx, json, params) => unknownProcessor();
 });
 function unknown() {
-  return _unknown(ZodUnknown);
+  return /* @__PURE__ */ _unknown(ZodUnknown);
 }
 const ZodNever = /* @__PURE__ */ $constructor("ZodNever", (inst, def) => {
   $ZodNever.init(inst, def);
@@ -8923,21 +9349,33 @@ const ZodNever = /* @__PURE__ */ $constructor("ZodNever", (inst, def) => {
   inst._zod.processJSONSchema = (ctx, json, params) => neverProcessor(inst, ctx, json);
 });
 function never(params) {
-  return _never(ZodNever, params);
+  return /* @__PURE__ */ _never(ZodNever, params);
 }
 const ZodArray = /* @__PURE__ */ $constructor("ZodArray", (inst, def) => {
   $ZodArray.init(inst, def);
   ZodType.init(inst, def);
   inst._zod.processJSONSchema = (ctx, json, params) => arrayProcessor(inst, ctx, json, params);
   inst.element = def.element;
-  inst.min = (minLength, params) => inst.check(_minLength(minLength, params));
-  inst.nonempty = (params) => inst.check(_minLength(1, params));
-  inst.max = (maxLength, params) => inst.check(_maxLength(maxLength, params));
-  inst.length = (len, params) => inst.check(_length(len, params));
-  inst.unwrap = () => inst.element;
+  _installLazyMethods(inst, "ZodArray", {
+    min(n2, params) {
+      return this.check(/* @__PURE__ */ _minLength(n2, params));
+    },
+    nonempty(params) {
+      return this.check(/* @__PURE__ */ _minLength(1, params));
+    },
+    max(n2, params) {
+      return this.check(/* @__PURE__ */ _maxLength(n2, params));
+    },
+    length(n2, params) {
+      return this.check(/* @__PURE__ */ _length(n2, params));
+    },
+    unwrap() {
+      return this.element;
+    }
+  });
 });
 function array(element, params) {
-  return _array(ZodArray, element, params);
+  return /* @__PURE__ */ _array(ZodArray, element, params);
 }
 const ZodObject = /* @__PURE__ */ $constructor("ZodObject", (inst, def) => {
   $ZodObjectJIT.init(inst, def);
@@ -8946,23 +9384,47 @@ const ZodObject = /* @__PURE__ */ $constructor("ZodObject", (inst, def) => {
   defineLazy(inst, "shape", () => {
     return def.shape;
   });
-  inst.keyof = () => _enum(Object.keys(inst._zod.def.shape));
-  inst.catchall = (catchall) => inst.clone({ ...inst._zod.def, catchall });
-  inst.passthrough = () => inst.clone({ ...inst._zod.def, catchall: unknown() });
-  inst.loose = () => inst.clone({ ...inst._zod.def, catchall: unknown() });
-  inst.strict = () => inst.clone({ ...inst._zod.def, catchall: never() });
-  inst.strip = () => inst.clone({ ...inst._zod.def, catchall: void 0 });
-  inst.extend = (incoming) => {
-    return extend(inst, incoming);
-  };
-  inst.safeExtend = (incoming) => {
-    return safeExtend(inst, incoming);
-  };
-  inst.merge = (other) => merge$2(inst, other);
-  inst.pick = (mask) => pick(inst, mask);
-  inst.omit = (mask) => omit(inst, mask);
-  inst.partial = (...args) => partial(ZodOptional, inst, args[0]);
-  inst.required = (...args) => required(ZodNonOptional, inst, args[0]);
+  _installLazyMethods(inst, "ZodObject", {
+    keyof() {
+      return _enum(Object.keys(this._zod.def.shape));
+    },
+    catchall(catchall) {
+      return this.clone({ ...this._zod.def, catchall });
+    },
+    passthrough() {
+      return this.clone({ ...this._zod.def, catchall: unknown() });
+    },
+    loose() {
+      return this.clone({ ...this._zod.def, catchall: unknown() });
+    },
+    strict() {
+      return this.clone({ ...this._zod.def, catchall: never() });
+    },
+    strip() {
+      return this.clone({ ...this._zod.def, catchall: void 0 });
+    },
+    extend(incoming) {
+      return extend(this, incoming);
+    },
+    safeExtend(incoming) {
+      return safeExtend(this, incoming);
+    },
+    merge(other) {
+      return merge$2(this, other);
+    },
+    pick(mask) {
+      return pick(this, mask);
+    },
+    omit(mask) {
+      return omit(this, mask);
+    },
+    partial(...args) {
+      return partial(ZodOptional, this, args[0]);
+    },
+    required(...args) {
+      return required(ZodNonOptional, this, args[0]);
+    }
+  });
 });
 function object(shape2, params) {
   const def = {
@@ -9089,10 +9551,12 @@ const ZodTransform = /* @__PURE__ */ $constructor("ZodTransform", (inst, def) =>
     if (output instanceof Promise) {
       return output.then((output2) => {
         payload.value = output2;
+        payload.fallback = true;
         return payload;
       });
     }
     payload.value = output;
+    payload.fallback = true;
     return payload;
   };
 });
@@ -9110,6 +9574,18 @@ const ZodOptional = /* @__PURE__ */ $constructor("ZodOptional", (inst, def) => {
 });
 function optional(innerType) {
   return new ZodOptional({
+    type: "optional",
+    innerType
+  });
+}
+const ZodExactOptional = /* @__PURE__ */ $constructor("ZodExactOptional", (inst, def) => {
+  $ZodExactOptional.init(inst, def);
+  ZodType.init(inst, def);
+  inst._zod.processJSONSchema = (ctx, json, params) => optionalProcessor(inst, ctx, json, params);
+  inst.unwrap = () => inst._zod.def.innerType;
+});
+function exactOptional(innerType) {
+  return new ZodExactOptional({
     type: "optional",
     innerType
   });
@@ -9217,10 +9693,10 @@ const ZodCustom = /* @__PURE__ */ $constructor("ZodCustom", (inst, def) => {
   inst._zod.processJSONSchema = (ctx, json, params) => customProcessor(inst, ctx);
 });
 function refine(fn3, _params = {}) {
-  return _refine(ZodCustom, fn3, _params);
+  return /* @__PURE__ */ _refine(ZodCustom, fn3, _params);
 }
-function superRefine(fn3) {
-  return _superRefine(fn3);
+function superRefine(fn3, params) {
+  return /* @__PURE__ */ _superRefine(fn3, params);
 }
 var Lifecycle;
 (function(Lifecycle2) {
@@ -9991,6 +10467,7 @@ let VaultFileStorage = class {
   constructor(vault) {
     this.vault = vault;
   }
+  vault;
   async readJSON(path) {
     const text = await this.vault.readFile(path);
     if (text == null) return null;
@@ -10071,6 +10548,8 @@ let ChatSessionStore = class {
     this.storage = storage;
     this.filePath = filePath;
   }
+  storage;
+  filePath;
   data = { version: 1, sessions: [] };
   listeners = /* @__PURE__ */ new Set();
   initialized = false;
@@ -11974,7 +12453,7 @@ class MiniSearch {
     }
   }
 }
-MiniSearch.wildcard = Symbol("*");
+MiniSearch.wildcard = /* @__PURE__ */ Symbol("*");
 const getOwnProperty = (object2, property) => Object.prototype.hasOwnProperty.call(object2, property) ? object2[property] : void 0;
 const combinators = {
   [OR]: (a2, b2) => {
@@ -12228,6 +12707,11 @@ let DataStore = class {
     this.themeMatcher = themeMatcher;
     this.storage = storage;
   }
+  vault;
+  metadata;
+  fileStat;
+  themeMatcher;
+  storage;
   _pathBasename(path) {
     return path.split("/").pop() || path;
   }
@@ -12588,6 +13072,7 @@ let RetrievalService = class {
     this.dataStore = dataStore;
     this.initMiniSearch();
   }
+  dataStore;
   miniSearch = null;
   indexedItemIds = /* @__PURE__ */ new Set();
   lastIndexTime = 0;
@@ -12823,6 +13308,8 @@ let AiChatService = class {
     this.retrievalService = retrievalService;
     this.httpClient = new AiHttpClient();
   }
+  settingsProvider;
+  retrievalService;
   httpClient;
   // ============== 获取配置 ==============
   getAiSettings() {
@@ -13573,6 +14060,7 @@ class RecordConflictError extends Error {
     super(message);
     this.conflictCode = conflictCode;
   }
+  conflictCode;
   name = "RecordConflictError";
 }
 function createRecordConflictError(code, message) {
@@ -13768,6 +14256,8 @@ let InputService = class {
     this.vault = vault;
     this.dataStore = dataStore;
   }
+  vault;
+  dataStore;
   previewTemplateExecution(template, formData, theme2, templateMeta) {
     if (!template) throw new Error("传入了无效的模板对象。");
     const renderData = this.buildRenderData(template, formData, theme2, templateMeta);
@@ -13962,6 +14452,8 @@ let ItemService = class {
     this.dataStore = dataStore;
     this.vault = vault;
   }
+  dataStore;
+  vault;
   async getItemLine(itemId) {
     const context = await this.loadMutableTaskContext(itemId);
     return context.rawLine;
@@ -14130,6 +14622,10 @@ let ActionService = class {
     this.settingsProvider = settingsProvider;
     this.inputService = inputService;
   }
+  ui;
+  dataStore;
+  settingsProvider;
+  inputService;
   findBlockByCategoryKey(categoryKey) {
     if (!categoryKey) return void 0;
     const blocks = this.settingsProvider.getSettings().inputSettings.blocks || [];
@@ -14327,6 +14823,7 @@ let TimerStateService = class {
   constructor(vault) {
     this.vault = vault;
   }
+  vault;
   async loadStateFromFile() {
     try {
       const content = await this.vault.readFile(TIMER_STATE_PATH);
@@ -15083,6 +15580,7 @@ class RecordInputKernel {
   constructor(settings) {
     this.settings = settings;
   }
+  settings;
   prepareCreate(params) {
     const resolved = this.resolveMissingDependencies({
       blockId: params.blockId ?? null,
@@ -15220,10 +15718,10 @@ async function finalizeRecordSubmitResult(dataStore, result) {
 }
 const EVENTS_PORT_TOKEN = "EventsPort";
 const MODAL_PORT_TOKEN = "ModalPort";
-const MESSAGE_RENDER_PORT_TOKEN = Symbol("MessageRenderPort");
-var NOTHING = Symbol.for("immer-nothing");
-var DRAFTABLE = Symbol.for("immer-draftable");
-var DRAFT_STATE = Symbol.for("immer-state");
+const MESSAGE_RENDER_PORT_TOKEN = /* @__PURE__ */ Symbol("MessageRenderPort");
+var NOTHING = /* @__PURE__ */ Symbol.for("immer-nothing");
+var DRAFTABLE = /* @__PURE__ */ Symbol.for("immer-draftable");
+var DRAFT_STATE = /* @__PURE__ */ Symbol.for("immer-state");
 function die(error, ...args) {
   throw new Error(
     `[Immer] minified error nr: ${error}. Full error at: https://bit.ly/3cXEKWf`
@@ -15915,6 +16413,7 @@ let SettingsRepository = class {
   constructor(persistence) {
     this.persistence = persistence;
   }
+  persistence;
   currentSettings = null;
   listeners = /* @__PURE__ */ new Set();
   /**
@@ -16022,6 +16521,7 @@ let RepositorySettingsProvider = class {
   constructor(settingsRepository) {
     this.settingsRepository = settingsRepository;
   }
+  settingsRepository;
   getSettings() {
     return this.settingsRepository.getSettings();
   }
@@ -16049,102 +16549,106 @@ function setupCoreContainer(app, settings) {
   instance.registerSingleton(RepositorySettingsProvider);
   instance.register(SettingsProviderToken, { useToken: RepositorySettingsProvider });
 }
-var n, l$1, u$2, i$1, r$2, o$1, e$1, f$2, c$1, s$1, a$1, h$1, p$1 = {}, v$1 = [], y$1 = /acit|ex(?:s|g|n|p|$)|rph|grid|ows|mnc|ntw|ine[ch]|zoo|^ord|itera/i, w$2 = Array.isArray;
-function d$1(n2, l2) {
+var n, l$1, u$2, i$1, r$2, o$1, e$1, f$2, c$1, s$1, a$1, h$1, p$1, v$1, y$1, d$1 = {}, w$2 = [], _$1 = /acit|ex(?:s|g|n|p|$)|rph|grid|ows|mnc|ntw|ine[ch]|zoo|^ord|itera/i, g$2 = Array.isArray;
+function m$1(n2, l2) {
   for (var u3 in l2) n2[u3] = l2[u3];
   return n2;
 }
-function g$2(n2) {
+function b$1(n2) {
   n2 && n2.parentNode && n2.parentNode.removeChild(n2);
 }
-function _$1(l2, u3, t3) {
+function k$2(l2, u3, t3) {
   var i2, r2, o2, e2 = {};
   for (o2 in u3) "key" == o2 ? i2 = u3[o2] : "ref" == o2 ? r2 = u3[o2] : e2[o2] = u3[o2];
   if (arguments.length > 2 && (e2.children = arguments.length > 3 ? n.call(arguments, 2) : t3), "function" == typeof l2 && null != l2.defaultProps) for (o2 in l2.defaultProps) void 0 === e2[o2] && (e2[o2] = l2.defaultProps[o2]);
-  return m$1(l2, e2, i2, r2, null);
+  return x$2(l2, e2, i2, r2, null);
 }
-function m$1(n2, t3, i2, r2, o2) {
+function x$2(n2, t3, i2, r2, o2) {
   var e2 = { type: n2, props: t3, key: i2, ref: r2, __k: null, __: null, __b: 0, __e: null, __c: null, constructor: void 0, __v: null == o2 ? ++u$2 : o2, __i: -1, __u: 0 };
   return null == o2 && null != l$1.vnode && l$1.vnode(e2), e2;
 }
-function b$1() {
+function M$1() {
   return { current: null };
 }
-function k$2(n2) {
+function S(n2) {
   return n2.children;
 }
-function x$2(n2, l2) {
+function C$2(n2, l2) {
   this.props = n2, this.context = l2;
 }
-function S(n2, l2) {
-  if (null == l2) return n2.__ ? S(n2.__, n2.__i + 1) : null;
+function $$1(n2, l2) {
+  if (null == l2) return n2.__ ? $$1(n2.__, n2.__i + 1) : null;
   for (var u3; l2 < n2.__k.length; l2++) if (null != (u3 = n2.__k[l2]) && null != u3.__e) return u3.__e;
-  return "function" == typeof n2.type ? S(n2) : null;
+  return "function" == typeof n2.type ? $$1(n2) : null;
 }
-function C$2(n2) {
-  var l2, u3;
-  if (null != (n2 = n2.__) && null != n2.__c) {
-    for (n2.__e = n2.__c.base = null, l2 = 0; l2 < n2.__k.length; l2++) if (null != (u3 = n2.__k[l2]) && null != u3.__e) {
-      n2.__e = n2.__c.base = u3.__e;
-      break;
-    }
-    return C$2(n2);
+function I$1(n2) {
+  if (n2.__P && n2.__d) {
+    var u3 = n2.__v, t3 = u3.__e, i2 = [], r2 = [], o2 = m$1({}, u3);
+    o2.__v = u3.__v + 1, l$1.vnode && l$1.vnode(o2), q$2(n2.__P, o2, u3, n2.__n, n2.__P.namespaceURI, 32 & u3.__u ? [t3] : null, i2, null == t3 ? $$1(u3) : t3, !!(32 & u3.__u), r2), o2.__v = u3.__v, o2.__.__k[o2.__i] = o2, D$2(i2, o2, r2), u3.__e = u3.__ = null, o2.__e != t3 && P$2(o2);
   }
 }
-function M$1(n2) {
-  (!n2.__d && (n2.__d = true) && i$1.push(n2) && !$$1.__r++ || r$2 != l$1.debounceRendering) && ((r$2 = l$1.debounceRendering) || o$1)($$1);
+function P$2(n2) {
+  if (null != (n2 = n2.__) && null != n2.__c) return n2.__e = n2.__c.base = null, n2.__k.some(function(l2) {
+    if (null != l2 && null != l2.__e) return n2.__e = n2.__c.base = l2.__e;
+  }), P$2(n2);
 }
-function $$1() {
-  for (var n2, u3, t3, r2, o2, f2, c2, s2 = 1; i$1.length; ) i$1.length > s2 && i$1.sort(e$1), n2 = i$1.shift(), s2 = i$1.length, n2.__d && (t3 = void 0, r2 = void 0, o2 = (r2 = (u3 = n2).__v).__e, f2 = [], c2 = [], u3.__P && ((t3 = d$1({}, r2)).__v = r2.__v + 1, l$1.vnode && l$1.vnode(t3), O$1(u3.__P, t3, r2, u3.__n, u3.__P.namespaceURI, 32 & r2.__u ? [o2] : null, f2, null == o2 ? S(r2) : o2, !!(32 & r2.__u), c2), t3.__v = r2.__v, t3.__.__k[t3.__i] = t3, N$1(f2, t3, c2), r2.__e = r2.__ = null, t3.__e != o2 && C$2(t3)));
-  $$1.__r = 0;
+function A$2(n2) {
+  (!n2.__d && (n2.__d = true) && i$1.push(n2) && !H$1.__r++ || r$2 != l$1.debounceRendering) && ((r$2 = l$1.debounceRendering) || o$1)(H$1);
 }
-function I$1(n2, l2, u3, t3, i2, r2, o2, e2, f2, c2, s2) {
-  var a2, h2, y2, w2, d2, g2, _2, m2 = t3 && t3.__k || v$1, b2 = l2.length;
-  for (f2 = P$2(u3, l2, m2, f2, b2), a2 = 0; a2 < b2; a2++) null != (y2 = u3.__k[a2]) && (h2 = -1 == y2.__i ? p$1 : m2[y2.__i] || p$1, y2.__i = a2, g2 = O$1(n2, y2, h2, i2, r2, o2, e2, f2, c2, s2), w2 = y2.__e, y2.ref && h2.ref != y2.ref && (h2.ref && B$2(h2.ref, null, y2), s2.push(y2.ref, y2.__c || w2, y2)), null == d2 && null != w2 && (d2 = w2), (_2 = !!(4 & y2.__u)) || h2.__k === y2.__k ? f2 = A$2(y2, f2, n2, _2) : "function" == typeof y2.type && void 0 !== g2 ? f2 = g2 : w2 && (f2 = w2.nextSibling), y2.__u &= -7);
-  return u3.__e = d2, f2;
+function H$1() {
+  try {
+    for (var n2, l2 = 1; i$1.length; ) i$1.length > l2 && i$1.sort(e$1), n2 = i$1.shift(), l2 = i$1.length, I$1(n2);
+  } finally {
+    i$1.length = H$1.__r = 0;
+  }
 }
-function P$2(n2, l2, u3, t3, i2) {
+function L$1(n2, l2, u3, t3, i2, r2, o2, e2, f2, c2, s2) {
+  var a2, h2, p2, v2, y2, _2, g2, m2 = t3 && t3.__k || w$2, b2 = l2.length;
+  for (f2 = T$2(u3, l2, m2, f2, b2), a2 = 0; a2 < b2; a2++) null != (p2 = u3.__k[a2]) && (h2 = -1 != p2.__i && m2[p2.__i] || d$1, p2.__i = a2, _2 = q$2(n2, p2, h2, i2, r2, o2, e2, f2, c2, s2), v2 = p2.__e, p2.ref && h2.ref != p2.ref && (h2.ref && J$1(h2.ref, null, p2), s2.push(p2.ref, p2.__c || v2, p2)), null == y2 && null != v2 && (y2 = v2), (g2 = !!(4 & p2.__u)) || h2.__k === p2.__k ? (f2 = j$2(p2, f2, n2, g2), g2 && h2.__e && (h2.__e = null)) : "function" == typeof p2.type && void 0 !== _2 ? f2 = _2 : v2 && (f2 = v2.nextSibling), p2.__u &= -7);
+  return u3.__e = y2, f2;
+}
+function T$2(n2, l2, u3, t3, i2) {
   var r2, o2, e2, f2, c2, s2 = u3.length, a2 = s2, h2 = 0;
-  for (n2.__k = new Array(i2), r2 = 0; r2 < i2; r2++) null != (o2 = l2[r2]) && "boolean" != typeof o2 && "function" != typeof o2 ? (f2 = r2 + h2, (o2 = n2.__k[r2] = "string" == typeof o2 || "number" == typeof o2 || "bigint" == typeof o2 || o2.constructor == String ? m$1(null, o2, null, null, null) : w$2(o2) ? m$1(k$2, { children: o2 }, null, null, null) : null == o2.constructor && o2.__b > 0 ? m$1(o2.type, o2.props, o2.key, o2.ref ? o2.ref : null, o2.__v) : o2).__ = n2, o2.__b = n2.__b + 1, e2 = null, -1 != (c2 = o2.__i = L$1(o2, u3, f2, a2)) && (a2--, (e2 = u3[c2]) && (e2.__u |= 2)), null == e2 || null == e2.__v ? (-1 == c2 && (i2 > s2 ? h2-- : i2 < s2 && h2++), "function" != typeof o2.type && (o2.__u |= 4)) : c2 != f2 && (c2 == f2 - 1 ? h2-- : c2 == f2 + 1 ? h2++ : (c2 > f2 ? h2-- : h2++, o2.__u |= 4))) : n2.__k[r2] = null;
-  if (a2) for (r2 = 0; r2 < s2; r2++) null != (e2 = u3[r2]) && 0 == (2 & e2.__u) && (e2.__e == t3 && (t3 = S(e2)), D$2(e2, e2));
+  for (n2.__k = new Array(i2), r2 = 0; r2 < i2; r2++) null != (o2 = l2[r2]) && "boolean" != typeof o2 && "function" != typeof o2 ? ("string" == typeof o2 || "number" == typeof o2 || "bigint" == typeof o2 || o2.constructor == String ? o2 = n2.__k[r2] = x$2(null, o2, null, null, null) : g$2(o2) ? o2 = n2.__k[r2] = x$2(S, { children: o2 }, null, null, null) : void 0 === o2.constructor && o2.__b > 0 ? o2 = n2.__k[r2] = x$2(o2.type, o2.props, o2.key, o2.ref ? o2.ref : null, o2.__v) : n2.__k[r2] = o2, f2 = r2 + h2, o2.__ = n2, o2.__b = n2.__b + 1, e2 = null, -1 != (c2 = o2.__i = O$1(o2, u3, f2, a2)) && (a2--, (e2 = u3[c2]) && (e2.__u |= 2)), null == e2 || null == e2.__v ? (-1 == c2 && (i2 > s2 ? h2-- : i2 < s2 && h2++), "function" != typeof o2.type && (o2.__u |= 4)) : c2 != f2 && (c2 == f2 - 1 ? h2-- : c2 == f2 + 1 ? h2++ : (c2 > f2 ? h2-- : h2++, o2.__u |= 4))) : n2.__k[r2] = null;
+  if (a2) for (r2 = 0; r2 < s2; r2++) null != (e2 = u3[r2]) && 0 == (2 & e2.__u) && (e2.__e == t3 && (t3 = $$1(e2)), K$1(e2, e2));
   return t3;
 }
-function A$2(n2, l2, u3, t3) {
+function j$2(n2, l2, u3, t3) {
   var i2, r2;
   if ("function" == typeof n2.type) {
-    for (i2 = n2.__k, r2 = 0; i2 && r2 < i2.length; r2++) i2[r2] && (i2[r2].__ = n2, l2 = A$2(i2[r2], l2, u3, t3));
+    for (i2 = n2.__k, r2 = 0; i2 && r2 < i2.length; r2++) i2[r2] && (i2[r2].__ = n2, l2 = j$2(i2[r2], l2, u3, t3));
     return l2;
   }
-  n2.__e != l2 && (t3 && (l2 && n2.type && !l2.parentNode && (l2 = S(n2)), u3.insertBefore(n2.__e, l2 || null)), l2 = n2.__e);
+  n2.__e != l2 && (t3 && (l2 && n2.type && !l2.parentNode && (l2 = $$1(n2)), u3.insertBefore(n2.__e, l2 || null)), l2 = n2.__e);
   do {
     l2 = l2 && l2.nextSibling;
   } while (null != l2 && 8 == l2.nodeType);
   return l2;
 }
-function H$1(n2, l2) {
-  return l2 = l2 || [], null == n2 || "boolean" == typeof n2 || (w$2(n2) ? n2.some(function(n3) {
-    H$1(n3, l2);
+function F$2(n2, l2) {
+  return l2 = l2 || [], null == n2 || "boolean" == typeof n2 || (g$2(n2) ? n2.some(function(n3) {
+    F$2(n3, l2);
   }) : l2.push(n2)), l2;
 }
-function L$1(n2, l2, u3, t3) {
+function O$1(n2, l2, u3, t3) {
   var i2, r2, o2, e2 = n2.key, f2 = n2.type, c2 = l2[u3], s2 = null != c2 && 0 == (2 & c2.__u);
-  if (null === c2 && null == n2.key || s2 && e2 == c2.key && f2 == c2.type) return u3;
+  if (null === c2 && null == e2 || s2 && e2 == c2.key && f2 == c2.type) return u3;
   if (t3 > (s2 ? 1 : 0)) {
     for (i2 = u3 - 1, r2 = u3 + 1; i2 >= 0 || r2 < l2.length; ) if (null != (c2 = l2[o2 = i2 >= 0 ? i2-- : r2++]) && 0 == (2 & c2.__u) && e2 == c2.key && f2 == c2.type) return o2;
   }
   return -1;
 }
-function T$2(n2, l2, u3) {
-  "-" == l2[0] ? n2.setProperty(l2, null == u3 ? "" : u3) : n2[l2] = null == u3 ? "" : "number" != typeof u3 || y$1.test(l2) ? u3 : u3 + "px";
+function z$2(n2, l2, u3) {
+  "-" == l2[0] ? n2.setProperty(l2, null == u3 ? "" : u3) : n2[l2] = null == u3 ? "" : "number" != typeof u3 || _$1.test(l2) ? u3 : u3 + "px";
 }
-function j$2(n2, l2, u3, t3, i2) {
+function N$1(n2, l2, u3, t3, i2) {
   var r2, o2;
   n: if ("style" == l2) if ("string" == typeof u3) n2.style.cssText = u3;
   else {
-    if ("string" == typeof t3 && (n2.style.cssText = t3 = ""), t3) for (l2 in t3) u3 && l2 in u3 || T$2(n2.style, l2, "");
-    if (u3) for (l2 in u3) t3 && u3[l2] == t3[l2] || T$2(n2.style, l2, u3[l2]);
+    if ("string" == typeof t3 && (n2.style.cssText = t3 = ""), t3) for (l2 in t3) u3 && l2 in u3 || z$2(n2.style, l2, "");
+    if (u3) for (l2 in u3) t3 && u3[l2] == t3[l2] || z$2(n2.style, l2, u3[l2]);
   }
-  else if ("o" == l2[0] && "n" == l2[1]) r2 = l2 != (l2 = l2.replace(f$2, "$1")), o2 = l2.toLowerCase(), l2 = o2 in n2 || "onFocusOut" == l2 || "onFocusIn" == l2 ? o2.slice(2) : l2.slice(2), n2.l || (n2.l = {}), n2.l[l2 + r2] = u3, u3 ? t3 ? u3.u = t3.u : (u3.u = c$1, n2.addEventListener(l2, r2 ? a$1 : s$1, r2)) : n2.removeEventListener(l2, r2 ? a$1 : s$1, r2);
+  else if ("o" == l2[0] && "n" == l2[1]) r2 = l2 != (l2 = l2.replace(a$1, "$1")), o2 = l2.toLowerCase(), l2 = o2 in n2 || "onFocusOut" == l2 || "onFocusIn" == l2 ? o2.slice(2) : l2.slice(2), n2.l || (n2.l = {}), n2.l[l2 + r2] = u3, u3 ? t3 ? u3[s$1] = t3[s$1] : (u3[s$1] = h$1, n2.addEventListener(l2, r2 ? v$1 : p$1, r2)) : n2.removeEventListener(l2, r2 ? v$1 : p$1, r2);
   else {
     if ("http://www.w3.org/2000/svg" == i2) l2 = l2.replace(/xlink(H|:h)/, "h").replace(/sName$/, "s");
     else if ("width" != l2 && "height" != l2 && "href" != l2 && "list" != l2 && "form" != l2 && "tabIndex" != l2 && "download" != l2 && "rowSpan" != l2 && "colSpan" != l2 && "role" != l2 && "popover" != l2 && l2 in n2) try {
@@ -16155,60 +16659,57 @@ function j$2(n2, l2, u3, t3, i2) {
     "function" == typeof u3 || (null == u3 || false === u3 && "-" != l2[4] ? n2.removeAttribute(l2) : n2.setAttribute(l2, "popover" == l2 && 1 == u3 ? "" : u3));
   }
 }
-function F$2(n2) {
+function V$1(n2) {
   return function(u3) {
     if (this.l) {
       var t3 = this.l[u3.type + n2];
-      if (null == u3.t) u3.t = c$1++;
-      else if (u3.t < t3.u) return;
+      if (null == u3[c$1]) u3[c$1] = h$1++;
+      else if (u3[c$1] < t3[s$1]) return;
       return t3(l$1.event ? l$1.event(u3) : u3);
     }
   };
 }
-function O$1(n2, u3, t3, i2, r2, o2, e2, f2, c2, s2) {
-  var a2, h2, p2, v2, y2, _2, m2, b2, S2, C2, M2, $2, P2, A2, H2, L2, T2, j2 = u3.type;
-  if (null != u3.constructor) return null;
+function q$2(n2, u3, t3, i2, r2, o2, e2, f2, c2, s2) {
+  var a2, h2, p2, v2, y2, d2, _2, k2, x2, M2, $2, I2, P2, A2, H2, T2 = u3.type;
+  if (void 0 !== u3.constructor) return null;
   128 & t3.__u && (c2 = !!(32 & t3.__u), o2 = [f2 = u3.__e = t3.__e]), (a2 = l$1.__b) && a2(u3);
-  n: if ("function" == typeof j2) try {
-    if (b2 = u3.props, S2 = "prototype" in j2 && j2.prototype.render, C2 = (a2 = j2.contextType) && i2[a2.__c], M2 = a2 ? C2 ? C2.props.value : a2.__ : i2, t3.__c ? m2 = (h2 = u3.__c = t3.__c).__ = h2.__E : (S2 ? u3.__c = h2 = new j2(b2, M2) : (u3.__c = h2 = new x$2(b2, M2), h2.constructor = j2, h2.render = E$1), C2 && C2.sub(h2), h2.props = b2, h2.state || (h2.state = {}), h2.context = M2, h2.__n = i2, p2 = h2.__d = true, h2.__h = [], h2._sb = []), S2 && null == h2.__s && (h2.__s = h2.state), S2 && null != j2.getDerivedStateFromProps && (h2.__s == h2.state && (h2.__s = d$1({}, h2.__s)), d$1(h2.__s, j2.getDerivedStateFromProps(b2, h2.__s))), v2 = h2.props, y2 = h2.state, h2.__v = u3, p2) S2 && null == j2.getDerivedStateFromProps && null != h2.componentWillMount && h2.componentWillMount(), S2 && null != h2.componentDidMount && h2.__h.push(h2.componentDidMount);
+  n: if ("function" == typeof T2) try {
+    if (k2 = u3.props, x2 = T2.prototype && T2.prototype.render, M2 = (a2 = T2.contextType) && i2[a2.__c], $2 = a2 ? M2 ? M2.props.value : a2.__ : i2, t3.__c ? _2 = (h2 = u3.__c = t3.__c).__ = h2.__E : (x2 ? u3.__c = h2 = new T2(k2, $2) : (u3.__c = h2 = new C$2(k2, $2), h2.constructor = T2, h2.render = Q$1), M2 && M2.sub(h2), h2.state || (h2.state = {}), h2.__n = i2, p2 = h2.__d = true, h2.__h = [], h2._sb = []), x2 && null == h2.__s && (h2.__s = h2.state), x2 && null != T2.getDerivedStateFromProps && (h2.__s == h2.state && (h2.__s = m$1({}, h2.__s)), m$1(h2.__s, T2.getDerivedStateFromProps(k2, h2.__s))), v2 = h2.props, y2 = h2.state, h2.__v = u3, p2) x2 && null == T2.getDerivedStateFromProps && null != h2.componentWillMount && h2.componentWillMount(), x2 && null != h2.componentDidMount && h2.__h.push(h2.componentDidMount);
     else {
-      if (S2 && null == j2.getDerivedStateFromProps && b2 !== v2 && null != h2.componentWillReceiveProps && h2.componentWillReceiveProps(b2, M2), !h2.__e && null != h2.shouldComponentUpdate && false === h2.shouldComponentUpdate(b2, h2.__s, M2) || u3.__v == t3.__v) {
-        for (u3.__v != t3.__v && (h2.props = b2, h2.state = h2.__s, h2.__d = false), u3.__e = t3.__e, u3.__k = t3.__k, u3.__k.some(function(n3) {
+      if (x2 && null == T2.getDerivedStateFromProps && k2 !== v2 && null != h2.componentWillReceiveProps && h2.componentWillReceiveProps(k2, $2), u3.__v == t3.__v || !h2.__e && null != h2.shouldComponentUpdate && false === h2.shouldComponentUpdate(k2, h2.__s, $2)) {
+        u3.__v != t3.__v && (h2.props = k2, h2.state = h2.__s, h2.__d = false), u3.__e = t3.__e, u3.__k = t3.__k, u3.__k.some(function(n3) {
           n3 && (n3.__ = u3);
-        }), $2 = 0; $2 < h2._sb.length; $2++) h2.__h.push(h2._sb[$2]);
-        h2._sb = [], h2.__h.length && e2.push(h2);
+        }), w$2.push.apply(h2.__h, h2._sb), h2._sb = [], h2.__h.length && e2.push(h2);
         break n;
       }
-      null != h2.componentWillUpdate && h2.componentWillUpdate(b2, h2.__s, M2), S2 && null != h2.componentDidUpdate && h2.__h.push(function() {
-        h2.componentDidUpdate(v2, y2, _2);
+      null != h2.componentWillUpdate && h2.componentWillUpdate(k2, h2.__s, $2), x2 && null != h2.componentDidUpdate && h2.__h.push(function() {
+        h2.componentDidUpdate(v2, y2, d2);
       });
     }
-    if (h2.context = M2, h2.props = b2, h2.__P = n2, h2.__e = false, P2 = l$1.__r, A2 = 0, S2) {
-      for (h2.state = h2.__s, h2.__d = false, P2 && P2(u3), a2 = h2.render(h2.props, h2.state, h2.context), H2 = 0; H2 < h2._sb.length; H2++) h2.__h.push(h2._sb[H2]);
-      h2._sb = [];
-    } else do {
-      h2.__d = false, P2 && P2(u3), a2 = h2.render(h2.props, h2.state, h2.context), h2.state = h2.__s;
-    } while (h2.__d && ++A2 < 25);
-    h2.state = h2.__s, null != h2.getChildContext && (i2 = d$1(d$1({}, i2), h2.getChildContext())), S2 && !p2 && null != h2.getSnapshotBeforeUpdate && (_2 = h2.getSnapshotBeforeUpdate(v2, y2)), L2 = a2, null != a2 && a2.type === k$2 && null == a2.key && (L2 = V$1(a2.props.children)), f2 = I$1(n2, w$2(L2) ? L2 : [L2], u3, t3, i2, r2, o2, e2, f2, c2, s2), h2.base = u3.__e, u3.__u &= -161, h2.__h.length && e2.push(h2), m2 && (h2.__E = h2.__ = null);
+    if (h2.context = $2, h2.props = k2, h2.__P = n2, h2.__e = false, I2 = l$1.__r, P2 = 0, x2) h2.state = h2.__s, h2.__d = false, I2 && I2(u3), a2 = h2.render(h2.props, h2.state, h2.context), w$2.push.apply(h2.__h, h2._sb), h2._sb = [];
+    else do {
+      h2.__d = false, I2 && I2(u3), a2 = h2.render(h2.props, h2.state, h2.context), h2.state = h2.__s;
+    } while (h2.__d && ++P2 < 25);
+    h2.state = h2.__s, null != h2.getChildContext && (i2 = m$1(m$1({}, i2), h2.getChildContext())), x2 && !p2 && null != h2.getSnapshotBeforeUpdate && (d2 = h2.getSnapshotBeforeUpdate(v2, y2)), A2 = null != a2 && a2.type === S && null == a2.key ? E$1(a2.props.children) : a2, f2 = L$1(n2, g$2(A2) ? A2 : [A2], u3, t3, i2, r2, o2, e2, f2, c2, s2), h2.base = u3.__e, u3.__u &= -161, h2.__h.length && e2.push(h2), _2 && (h2.__E = h2.__ = null);
   } catch (n3) {
     if (u3.__v = null, c2 || null != o2) if (n3.then) {
       for (u3.__u |= c2 ? 160 : 128; f2 && 8 == f2.nodeType && f2.nextSibling; ) f2 = f2.nextSibling;
       o2[o2.indexOf(f2)] = null, u3.__e = f2;
     } else {
-      for (T2 = o2.length; T2--; ) g$2(o2[T2]);
-      z$2(u3);
+      for (H2 = o2.length; H2--; ) b$1(o2[H2]);
+      B$2(u3);
     }
-    else u3.__e = t3.__e, u3.__k = t3.__k, n3.then || z$2(u3);
+    else u3.__e = t3.__e, u3.__k = t3.__k, n3.then || B$2(u3);
     l$1.__e(n3, u3, t3);
   }
-  else null == o2 && u3.__v == t3.__v ? (u3.__k = t3.__k, u3.__e = t3.__e) : f2 = u3.__e = q$2(t3.__e, u3, t3, i2, r2, o2, e2, c2, s2);
+  else null == o2 && u3.__v == t3.__v ? (u3.__k = t3.__k, u3.__e = t3.__e) : f2 = u3.__e = G$1(t3.__e, u3, t3, i2, r2, o2, e2, c2, s2);
   return (a2 = l$1.diffed) && a2(u3), 128 & u3.__u ? void 0 : f2;
 }
-function z$2(n2) {
-  n2 && n2.__c && (n2.__c.__e = true), n2 && n2.__k && n2.__k.forEach(z$2);
+function B$2(n2) {
+  n2 && (n2.__c && (n2.__c.__e = true), n2.__k && n2.__k.some(B$2));
 }
-function N$1(n2, u3, t3) {
-  for (var i2 = 0; i2 < t3.length; i2++) B$2(t3[i2], t3[++i2], t3[++i2]);
+function D$2(n2, u3, t3) {
+  for (var i2 = 0; i2 < t3.length; i2++) J$1(t3[i2], t3[++i2], t3[++i2]);
   l$1.__c && l$1.__c(u3, n2), n2.some(function(u4) {
     try {
       n2 = u4.__h, u4.__h = [], n2.some(function(n3) {
@@ -16219,14 +16720,14 @@ function N$1(n2, u3, t3) {
     }
   });
 }
-function V$1(n2) {
-  return "object" != typeof n2 || null == n2 || n2.__b && n2.__b > 0 ? n2 : w$2(n2) ? n2.map(V$1) : d$1({}, n2);
+function E$1(n2) {
+  return "object" != typeof n2 || null == n2 || n2.__b > 0 ? n2 : g$2(n2) ? n2.map(E$1) : m$1({}, n2);
 }
-function q$2(u3, t3, i2, r2, o2, e2, f2, c2, s2) {
-  var a2, h2, v2, y2, d2, _2, m2, b2 = i2.props, k2 = t3.props, x2 = t3.type;
+function G$1(u3, t3, i2, r2, o2, e2, f2, c2, s2) {
+  var a2, h2, p2, v2, y2, w2, _2, m2 = i2.props || d$1, k2 = t3.props, x2 = t3.type;
   if ("svg" == x2 ? o2 = "http://www.w3.org/2000/svg" : "math" == x2 ? o2 = "http://www.w3.org/1998/Math/MathML" : o2 || (o2 = "http://www.w3.org/1999/xhtml"), null != e2) {
-    for (a2 = 0; a2 < e2.length; a2++) if ((d2 = e2[a2]) && "setAttribute" in d2 == !!x2 && (x2 ? d2.localName == x2 : 3 == d2.nodeType)) {
-      u3 = d2, e2[a2] = null;
+    for (a2 = 0; a2 < e2.length; a2++) if ((y2 = e2[a2]) && "setAttribute" in y2 == !!x2 && (x2 ? y2.localName == x2 : 3 == y2.nodeType)) {
+      u3 = y2, e2[a2] = null;
       break;
     }
   }
@@ -16234,23 +16735,18 @@ function q$2(u3, t3, i2, r2, o2, e2, f2, c2, s2) {
     if (null == x2) return document.createTextNode(k2);
     u3 = document.createElementNS(o2, x2, k2.is && k2), c2 && (l$1.__m && l$1.__m(t3, e2), c2 = false), e2 = null;
   }
-  if (null == x2) b2 === k2 || c2 && u3.data == k2 || (u3.data = k2);
+  if (null == x2) m2 === k2 || c2 && u3.data == k2 || (u3.data = k2);
   else {
-    if (e2 = e2 && n.call(u3.childNodes), b2 = i2.props || p$1, !c2 && null != e2) for (b2 = {}, a2 = 0; a2 < u3.attributes.length; a2++) b2[(d2 = u3.attributes[a2]).name] = d2.value;
-    for (a2 in b2) if (d2 = b2[a2], "children" == a2) ;
-    else if ("dangerouslySetInnerHTML" == a2) v2 = d2;
-    else if (!(a2 in k2)) {
-      if ("value" == a2 && "defaultValue" in k2 || "checked" == a2 && "defaultChecked" in k2) continue;
-      j$2(u3, a2, null, d2, o2);
-    }
-    for (a2 in k2) d2 = k2[a2], "children" == a2 ? y2 = d2 : "dangerouslySetInnerHTML" == a2 ? h2 = d2 : "value" == a2 ? _2 = d2 : "checked" == a2 ? m2 = d2 : c2 && "function" != typeof d2 || b2[a2] === d2 || j$2(u3, a2, d2, b2[a2], o2);
-    if (h2) c2 || v2 && (h2.__html == v2.__html || h2.__html == u3.innerHTML) || (u3.innerHTML = h2.__html), t3.__k = [];
-    else if (v2 && (u3.innerHTML = ""), I$1("template" == t3.type ? u3.content : u3, w$2(y2) ? y2 : [y2], t3, i2, r2, "foreignObject" == x2 ? "http://www.w3.org/1999/xhtml" : o2, e2, f2, e2 ? e2[0] : i2.__k && S(i2, 0), c2, s2), null != e2) for (a2 = e2.length; a2--; ) g$2(e2[a2]);
-    c2 || (a2 = "value", "progress" == x2 && null == _2 ? u3.removeAttribute("value") : null != _2 && (_2 !== u3[a2] || "progress" == x2 && !_2 || "option" == x2 && _2 != b2[a2]) && j$2(u3, a2, _2, b2[a2], o2), a2 = "checked", null != m2 && m2 != u3[a2] && j$2(u3, a2, m2, b2[a2], o2));
+    if (e2 = e2 && n.call(u3.childNodes), !c2 && null != e2) for (m2 = {}, a2 = 0; a2 < u3.attributes.length; a2++) m2[(y2 = u3.attributes[a2]).name] = y2.value;
+    for (a2 in m2) y2 = m2[a2], "dangerouslySetInnerHTML" == a2 ? p2 = y2 : "children" == a2 || a2 in k2 || "value" == a2 && "defaultValue" in k2 || "checked" == a2 && "defaultChecked" in k2 || N$1(u3, a2, null, y2, o2);
+    for (a2 in k2) y2 = k2[a2], "children" == a2 ? v2 = y2 : "dangerouslySetInnerHTML" == a2 ? h2 = y2 : "value" == a2 ? w2 = y2 : "checked" == a2 ? _2 = y2 : c2 && "function" != typeof y2 || m2[a2] === y2 || N$1(u3, a2, y2, m2[a2], o2);
+    if (h2) c2 || p2 && (h2.__html == p2.__html || h2.__html == u3.innerHTML) || (u3.innerHTML = h2.__html), t3.__k = [];
+    else if (p2 && (u3.innerHTML = ""), L$1("template" == t3.type ? u3.content : u3, g$2(v2) ? v2 : [v2], t3, i2, r2, "foreignObject" == x2 ? "http://www.w3.org/1999/xhtml" : o2, e2, f2, e2 ? e2[0] : i2.__k && $$1(i2, 0), c2, s2), null != e2) for (a2 = e2.length; a2--; ) b$1(e2[a2]);
+    c2 || (a2 = "value", "progress" == x2 && null == w2 ? u3.removeAttribute("value") : null != w2 && (w2 !== u3[a2] || "progress" == x2 && !w2 || "option" == x2 && w2 != m2[a2]) && N$1(u3, a2, w2, m2[a2], o2), a2 = "checked", null != _2 && _2 != u3[a2] && N$1(u3, a2, _2, m2[a2], o2));
   }
   return u3;
 }
-function B$2(n2, u3, t3) {
+function J$1(n2, u3, t3) {
   try {
     if ("function" == typeof n2) {
       var i2 = "function" == typeof n2.__u;
@@ -16260,9 +16756,9 @@ function B$2(n2, u3, t3) {
     l$1.__e(n3, t3);
   }
 }
-function D$2(n2, u3, t3) {
+function K$1(n2, u3, t3) {
   var i2, r2;
-  if (l$1.unmount && l$1.unmount(n2), (i2 = n2.ref) && (i2.current && i2.current != n2.__e || B$2(i2, null, u3)), null != (i2 = n2.__c)) {
+  if (l$1.unmount && l$1.unmount(n2), (i2 = n2.ref) && (i2.current && i2.current != n2.__e || J$1(i2, null, u3)), null != (i2 = n2.__c)) {
     if (i2.componentWillUnmount) try {
       i2.componentWillUnmount();
     } catch (n3) {
@@ -16270,25 +16766,25 @@ function D$2(n2, u3, t3) {
     }
     i2.base = i2.__P = null;
   }
-  if (i2 = n2.__k) for (r2 = 0; r2 < i2.length; r2++) i2[r2] && D$2(i2[r2], u3, t3 || "function" != typeof n2.type);
-  t3 || g$2(n2.__e), n2.__c = n2.__ = n2.__e = void 0;
+  if (i2 = n2.__k) for (r2 = 0; r2 < i2.length; r2++) i2[r2] && K$1(i2[r2], u3, t3 || "function" != typeof n2.type);
+  t3 || b$1(n2.__e), n2.__c = n2.__ = n2.__e = void 0;
 }
-function E$1(n2, l2, u3) {
+function Q$1(n2, l2, u3) {
   return this.constructor(n2, u3);
 }
-function G$1(u3, t3, i2) {
+function R$1(u3, t3, i2) {
   var r2, o2, e2, f2;
-  t3 == document && (t3 = document.documentElement), l$1.__ && l$1.__(u3, t3), o2 = (r2 = "function" == typeof i2) ? null : i2 && i2.__k || t3.__k, e2 = [], f2 = [], O$1(t3, u3 = (!r2 && i2 || t3).__k = _$1(k$2, null, [u3]), o2 || p$1, p$1, t3.namespaceURI, !r2 && i2 ? [i2] : o2 ? null : t3.firstChild ? n.call(t3.childNodes) : null, e2, !r2 && i2 ? i2 : o2 ? o2.__e : t3.firstChild, r2, f2), N$1(e2, u3, f2);
+  t3 == document && (t3 = document.documentElement), l$1.__ && l$1.__(u3, t3), o2 = (r2 = "function" == typeof i2) ? null : i2 && i2.__k || t3.__k, e2 = [], f2 = [], q$2(t3, u3 = (!r2 && i2 || t3).__k = k$2(S, null, [u3]), o2 || d$1, d$1, t3.namespaceURI, !r2 && i2 ? [i2] : o2 ? null : t3.firstChild ? n.call(t3.childNodes) : null, e2, !r2 && i2 ? i2 : o2 ? o2.__e : t3.firstChild, r2, f2), D$2(e2, u3, f2);
 }
-function J$1(n2, l2) {
-  G$1(n2, l2, J$1);
+function U$1(n2, l2) {
+  R$1(n2, l2, U$1);
 }
-function K$1(l2, u3, t3) {
-  var i2, r2, o2, e2, f2 = d$1({}, l2.props);
+function W$1(l2, u3, t3) {
+  var i2, r2, o2, e2, f2 = m$1({}, l2.props);
   for (o2 in l2.type && l2.type.defaultProps && (e2 = l2.type.defaultProps), u3) "key" == o2 ? i2 = u3[o2] : "ref" == o2 ? r2 = u3[o2] : f2[o2] = void 0 === u3[o2] && null != e2 ? e2[o2] : u3[o2];
-  return arguments.length > 2 && (f2.children = arguments.length > 3 ? n.call(arguments, 2) : t3), m$1(l2.type, f2, i2 || l2.key, r2 || l2.ref, null);
+  return arguments.length > 2 && (f2.children = arguments.length > 3 ? n.call(arguments, 2) : t3), x$2(l2.type, f2, i2 || l2.key, r2 || l2.ref, null);
 }
-function Q$1(n2) {
+function X$1(n2) {
   function l2(n3) {
     var u3, t3;
     return this.getChildContext || (u3 = /* @__PURE__ */ new Set(), (t3 = {})[l2.__c] = this, this.getChildContext = function() {
@@ -16297,7 +16793,7 @@ function Q$1(n2) {
       u3 = null;
     }, this.shouldComponentUpdate = function(n4) {
       this.props.value != n4.value && u3.forEach(function(n5) {
-        n5.__e = true, M$1(n5);
+        n5.__e = true, A$2(n5);
       });
     }, this.sub = function(n4) {
       u3.add(n4);
@@ -16307,25 +16803,25 @@ function Q$1(n2) {
       };
     }), n3.children;
   }
-  return l2.__c = "__cC" + h$1++, l2.__ = n2, l2.Provider = l2.__l = (l2.Consumer = function(n3, l3) {
+  return l2.__c = "__cC" + y$1++, l2.__ = n2, l2.Provider = l2.__l = (l2.Consumer = function(n3, l3) {
     return n3.children(l3);
   }).contextType = l2, l2;
 }
-n = v$1.slice, l$1 = { __e: function(n2, l2, u3, t3) {
+n = w$2.slice, l$1 = { __e: function(n2, l2, u3, t3) {
   for (var i2, r2, o2; l2 = l2.__; ) if ((i2 = l2.__c) && !i2.__) try {
     if ((r2 = i2.constructor) && null != r2.getDerivedStateFromError && (i2.setState(r2.getDerivedStateFromError(n2)), o2 = i2.__d), null != i2.componentDidCatch && (i2.componentDidCatch(n2, t3 || {}), o2 = i2.__d), o2) return i2.__E = i2;
   } catch (l3) {
     n2 = l3;
   }
   throw n2;
-} }, u$2 = 0, x$2.prototype.setState = function(n2, l2) {
+} }, u$2 = 0, C$2.prototype.setState = function(n2, l2) {
   var u3;
-  u3 = null != this.__s && this.__s != this.state ? this.__s : this.__s = d$1({}, this.state), "function" == typeof n2 && (n2 = n2(d$1({}, u3), this.props)), n2 && d$1(u3, n2), null != n2 && this.__v && (l2 && this._sb.push(l2), M$1(this));
-}, x$2.prototype.forceUpdate = function(n2) {
-  this.__v && (this.__e = true, n2 && this.__h.push(n2), M$1(this));
-}, x$2.prototype.render = k$2, i$1 = [], o$1 = "function" == typeof Promise ? Promise.prototype.then.bind(Promise.resolve()) : setTimeout, e$1 = function(n2, l2) {
+  u3 = null != this.__s && this.__s != this.state ? this.__s : this.__s = m$1({}, this.state), "function" == typeof n2 && (n2 = n2(m$1({}, u3), this.props)), n2 && m$1(u3, n2), null != n2 && this.__v && (l2 && this._sb.push(l2), A$2(this));
+}, C$2.prototype.forceUpdate = function(n2) {
+  this.__v && (this.__e = true, n2 && this.__h.push(n2), A$2(this));
+}, C$2.prototype.render = S, i$1 = [], o$1 = "function" == typeof Promise ? Promise.prototype.then.bind(Promise.resolve()) : setTimeout, e$1 = function(n2, l2) {
   return n2.__v.__b - l2.__v.__b;
-}, $$1.__r = 0, f$2 = /(PointerCapture)$|Capture$/i, c$1 = 0, s$1 = F$2(false), a$1 = F$2(true), h$1 = 0;
+}, H$1.__r = 0, f$2 = Math.random().toString(8), c$1 = "__d" + f$2, s$1 = "__a" + f$2, a$1 = /(PointerCapture)$|Capture$/i, h$1 = 0, p$1 = V$1(false), v$1 = V$1(true), y$1 = 0;
 var t2, r$1, u$1, i, o = 0, f$1 = [], c = l$1, e = c.__b, a = c.__r, v = c.diffed, l = c.__c, m = c.unmount, s = c.__;
 function p(n2, t3) {
   c.__h && c.__h(r$1, n2, o || t3), o = 0;
@@ -16344,13 +16840,13 @@ function h(n2, u3, i2) {
     var f2 = function(n3, t3, r2) {
       if (!o2.__c.__H) return true;
       var u4 = o2.__c.__H.__.filter(function(n4) {
-        return !!n4.__c;
+        return n4.__c;
       });
       if (u4.every(function(n4) {
         return !n4.__N;
       })) return !c2 || c2.call(this, n3, t3, r2);
       var i3 = o2.__c.props !== n3;
-      return u4.forEach(function(n4) {
+      return u4.some(function(n4) {
         if (n4.__N) {
           var t4 = n4.__[0];
           n4.__ = n4.__N, n4.__N = void 0, t4 !== n4.__[0] && (i3 = true);
@@ -16429,10 +16925,13 @@ function g$1() {
   return n2.__;
 }
 function j$1() {
-  for (var n2; n2 = f$1.shift(); ) if (n2.__P && n2.__H) try {
-    n2.__H.__h.forEach(z$1), n2.__H.__h.forEach(B$1), n2.__H.__h = [];
-  } catch (t3) {
-    n2.__H.__h = [], c.__e(t3, n2.__v);
+  for (var n2; n2 = f$1.shift(); ) {
+    var t3 = n2.__H;
+    if (n2.__P && t3) try {
+      t3.__h.some(z$1), t3.__h.some(B$1), t3.__h = [];
+    } catch (r2) {
+      t3.__h = [], c.__e(r2, n2.__v);
+    }
   }
 }
 c.__b = function(n2) {
@@ -16442,19 +16941,19 @@ c.__b = function(n2) {
 }, c.__r = function(n2) {
   a && a(n2), t2 = 0;
   var i2 = (r$1 = n2.__c).__H;
-  i2 && (u$1 === r$1 ? (i2.__h = [], r$1.__h = [], i2.__.forEach(function(n3) {
+  i2 && (u$1 === r$1 ? (i2.__h = [], r$1.__h = [], i2.__.some(function(n3) {
     n3.__N && (n3.__ = n3.__N), n3.u = n3.__N = void 0;
-  })) : (i2.__h.forEach(z$1), i2.__h.forEach(B$1), i2.__h = [], t2 = 0)), u$1 = r$1;
+  })) : (i2.__h.some(z$1), i2.__h.some(B$1), i2.__h = [], t2 = 0)), u$1 = r$1;
 }, c.diffed = function(n2) {
   v && v(n2);
   var t3 = n2.__c;
-  t3 && t3.__H && (t3.__H.__h.length && (1 !== f$1.push(t3) && i === c.requestAnimationFrame || ((i = c.requestAnimationFrame) || w$1)(j$1)), t3.__H.__.forEach(function(n3) {
+  t3 && t3.__H && (t3.__H.__h.length && (1 !== f$1.push(t3) && i === c.requestAnimationFrame || ((i = c.requestAnimationFrame) || w$1)(j$1)), t3.__H.__.some(function(n3) {
     n3.u && (n3.__H = n3.u), n3.u = void 0;
   })), u$1 = r$1 = null;
 }, c.__c = function(n2, t3) {
   t3.some(function(n3) {
     try {
-      n3.__h.forEach(z$1), n3.__h = n3.__h.filter(function(n4) {
+      n3.__h.some(z$1), n3.__h = n3.__h.filter(function(n4) {
         return !n4.__ || B$1(n4);
       });
     } catch (r2) {
@@ -16466,7 +16965,7 @@ c.__b = function(n2) {
 }, c.unmount = function(n2) {
   m && m(n2);
   var t3, r2 = n2.__c;
-  r2 && r2.__H && (r2.__H.__.forEach(function(n3) {
+  r2 && r2.__H && (r2.__H.__.some(function(n3) {
     try {
       z$1(n3);
     } catch (n4) {
@@ -17220,53 +17719,52 @@ function E(n2, t3) {
 function C(n2, t3) {
   var e2 = t3(), r2 = d({ t: { __: e2, u: t3 } }), u3 = r2[0].t, o2 = r2[1];
   return _(function() {
-    u3.__ = e2, u3.u = t3, x(u3) && o2({ t: u3 });
+    u3.__ = e2, u3.u = t3, R(u3) && o2({ t: u3 });
   }, [n2, e2, t3]), y(function() {
-    return x(u3) && o2({ t: u3 }), n2(function() {
-      x(u3) && o2({ t: u3 });
+    return R(u3) && o2({ t: u3 }), n2(function() {
+      R(u3) && o2({ t: u3 });
     });
   }, [n2]), e2;
 }
-function x(n2) {
-  var t3, e2, r2 = n2.u, u3 = n2.__;
+function R(n2) {
   try {
-    var o2 = r2();
-    return !((t3 = u3) === (e2 = o2) && (0 !== t3 || 1 / t3 == 1 / e2) || t3 != t3 && e2 != e2);
+    return !((t3 = n2.__) === (e2 = n2.u()) && (0 !== t3 || 1 / t3 == 1 / e2) || t3 != t3 && e2 != e2);
   } catch (n3) {
     return true;
   }
+  var t3, e2;
 }
-function R(n2) {
+function x(n2) {
   n2();
 }
 function w(n2) {
   return n2;
 }
 function k() {
-  return [false, R];
+  return [false, x];
 }
 var I = _;
-function N(n2, t3) {
+function M(n2, t3) {
   this.props = n2, this.context = t3;
 }
-function M(n2, e2) {
+function N(n2, e2) {
   function r2(n3) {
-    var t3 = this.props.ref, r3 = t3 == n3.ref;
-    return !r3 && t3 && (t3.call ? t3(null) : t3.current = null), e2 ? !e2(this.props, n3) || !r3 : E(this.props, n3);
+    var t3 = this.props.ref;
+    return t3 != n3.ref && t3 && ("function" == typeof t3 ? t3(null) : t3.current = null), e2 ? !e2(this.props, n3) || t3 != n3.ref : E(this.props, n3);
   }
   function u3(e3) {
-    return this.shouldComponentUpdate = r2, _$1(n2, e3);
+    return this.shouldComponentUpdate = r2, k$2(n2, e3);
   }
-  return u3.displayName = "Memo(" + (n2.displayName || n2.name) + ")", u3.prototype.isReactComponent = true, u3.__f = true, u3.type = n2, u3;
+  return u3.displayName = "Memo(" + (n2.displayName || n2.name) + ")", u3.__f = u3.prototype.isReactComponent = true, u3.type = n2, u3;
 }
-(N.prototype = new x$2()).isPureReactComponent = true, N.prototype.shouldComponentUpdate = function(n2, t3) {
+(M.prototype = new C$2()).isPureReactComponent = true, M.prototype.shouldComponentUpdate = function(n2, t3) {
   return E(this.props, n2) || E(this.state, t3);
 };
 var T = l$1.__b;
 l$1.__b = function(n2) {
   n2.type && n2.type.__f && n2.ref && (n2.props.ref = n2.ref, n2.ref = null), T && T(n2);
 };
-var A = "undefined" != typeof Symbol && Symbol.for && Symbol.for("react.forward_ref") || 3911;
+var A = "undefined" != typeof Symbol && Symbol.for && /* @__PURE__ */ Symbol.for("react.forward_ref") || 3911;
 function D(n2) {
   function t3(t4) {
     var e2 = g({}, t4);
@@ -17274,20 +17772,20 @@ function D(n2) {
   }
   return t3.$$typeof = A, t3.render = n2, t3.prototype.isReactComponent = t3.__f = true, t3.displayName = "ForwardRef(" + (n2.displayName || n2.name) + ")", t3;
 }
-var L = function(n2, t3) {
-  return null == n2 ? null : H$1(H$1(n2).map(t3));
-}, O = { map: L, forEach: L, count: function(n2) {
-  return n2 ? H$1(n2).length : 0;
+var F = function(n2, t3) {
+  return null == n2 ? null : F$2(F$2(n2).map(t3));
+}, L = { map: F, forEach: F, count: function(n2) {
+  return n2 ? F$2(n2).length : 0;
 }, only: function(n2) {
-  var t3 = H$1(n2);
+  var t3 = F$2(n2);
   if (1 !== t3.length) throw "Children.only";
   return t3[0];
-}, toArray: H$1 }, F = l$1.__e;
+}, toArray: F$2 }, O = l$1.__e;
 l$1.__e = function(n2, t3, e2, r2) {
   if (n2.then) {
     for (var u3, o2 = t3; o2 = o2.__; ) if ((u3 = o2.__c) && u3.__c) return null == t3.__e && (t3.__e = e2.__e, t3.__k = e2.__k), u3.__c(n2, t3);
   }
-  F(n2, t3, e2, r2);
+  O(n2, t3, e2, r2);
 };
 var U = l$1.unmount;
 function V(n2, t3, e2) {
@@ -17306,43 +17804,45 @@ function P() {
   this.__u = 0, this.o = null, this.__b = null;
 }
 function j(n2) {
-  var t3 = n2.__.__c;
+  var t3 = n2.__ && n2.__.__c;
   return t3 && t3.__a && t3.__a(n2);
 }
 function z(n2) {
-  var e2, r2, u3;
-  function o2(o3) {
+  var e2, r2, u3, o2 = null;
+  function i2(i3) {
     if (e2 || (e2 = n2()).then(function(n3) {
-      r2 = n3.default || n3;
+      n3 && (o2 = n3.default || n3), u3 = true;
     }, function(n3) {
-      u3 = n3;
-    }), u3) throw u3;
-    if (!r2) throw e2;
-    return _$1(r2, o3);
+      r2 = n3, u3 = true;
+    }), r2) throw r2;
+    if (!u3) throw e2;
+    return o2 ? k$2(o2, i3) : null;
   }
-  return o2.displayName = "Lazy", o2.__f = true, o2;
+  return i2.displayName = "Lazy", i2.__f = true, i2;
 }
 function B() {
   this.i = null, this.l = null;
 }
 l$1.unmount = function(n2) {
   var t3 = n2.__c;
-  t3 && t3.__R && t3.__R(), t3 && 32 & n2.__u && (n2.type = null), U && U(n2);
-}, (P.prototype = new x$2()).__c = function(n2, t3) {
+  t3 && (t3.__z = true), t3 && t3.__R && t3.__R(), t3 && 32 & n2.__u && (n2.type = null), U && U(n2);
+}, (P.prototype = new C$2()).__c = function(n2, t3) {
   var e2 = t3.__c, r2 = this;
   null == r2.o && (r2.o = []), r2.o.push(e2);
   var u3 = j(r2.__v), o2 = false, i2 = function() {
-    o2 || (o2 = true, e2.__R = null, u3 ? u3(l2) : l2());
+    o2 || r2.__z || (o2 = true, e2.__R = null, u3 ? u3(c2) : c2());
   };
   e2.__R = i2;
-  var l2 = function() {
+  var l2 = e2.__P;
+  e2.__P = null;
+  var c2 = function() {
     if (!--r2.__u) {
       if (r2.state.__a) {
         var n3 = r2.state.__a;
         r2.__v.__k[0] = W(n3, n3.__c.__P, n3.__c.__O);
       }
       var t4;
-      for (r2.setState({ __a: r2.__b = null }); t4 = r2.o.pop(); ) t4.forceUpdate();
+      for (r2.setState({ __a: r2.__b = null }); t4 = r2.o.pop(); ) t4.__P = l2, t4.forceUpdate();
     }
   };
   r2.__u++ || 32 & t3.__u || r2.setState({ __a: r2.__b = r2.__v.__k[0] }), n2.then(i2, i2);
@@ -17356,8 +17856,8 @@ l$1.unmount = function(n2) {
     }
     this.__b = null;
   }
-  var i2 = e2.__a && _$1(k$2, null, n2.fallback);
-  return i2 && (i2.__u &= -33), [_$1(k$2, null, e2.__a ? null : n2.children), i2];
+  var i2 = e2.__a && k$2(S, null, n2.fallback);
+  return i2 && (i2.__u &= -33), [k$2(S, null, e2.__a ? null : n2.children), i2];
 };
 var H = function(n2, t3, e2) {
   if (++e2[1] === e2[0] && n2.l.delete(t3), n2.props.revealOrder && ("t" !== n2.props.revealOrder[0] || !n2.l.size)) for (e2 = n2.i; e2; ) {
@@ -17374,24 +17874,24 @@ function Z(n2) {
 function Y(n2) {
   var e2 = this, r2 = n2.h;
   if (e2.componentWillUnmount = function() {
-    G$1(null, e2.v), e2.v = null, e2.h = null;
+    R$1(null, e2.v), e2.v = null, e2.h = null;
   }, e2.h && e2.h !== r2 && e2.componentWillUnmount(), !e2.v) {
     for (var u3 = e2.__v; null !== u3 && !u3.__m && null !== u3.__; ) u3 = u3.__;
     e2.h = r2, e2.v = { nodeType: 1, parentNode: r2, childNodes: [], __k: { __m: u3.__m }, contains: function() {
       return true;
-    }, insertBefore: function(n3, t3) {
+    }, namespaceURI: r2.namespaceURI, insertBefore: function(n3, t3) {
       this.childNodes.push(n3), e2.h.insertBefore(n3, t3);
     }, removeChild: function(n3) {
       this.childNodes.splice(this.childNodes.indexOf(n3) >>> 1, 1), e2.h.removeChild(n3);
     } };
   }
-  G$1(_$1(Z, { context: e2.context }, n2.__v), e2.v);
+  R$1(k$2(Z, { context: e2.context }, n2.__v), e2.v);
 }
 function $(n2, e2) {
-  var r2 = _$1(Y, { __v: n2, h: e2 });
+  var r2 = k$2(Y, { __v: n2, h: e2 });
   return r2.containerInfo = e2, r2;
 }
-(B.prototype = new x$2()).__a = function(n2) {
+(B.prototype = new C$2()).__a = function(n2) {
   var t3 = this, e2 = j(t3.__v), r2 = t3.l.get(n2);
   return r2[0]++, function(u3) {
     var o2 = function() {
@@ -17401,7 +17901,7 @@ function $(n2, e2) {
   };
 }, B.prototype.render = function(n2) {
   this.i = null, this.l = /* @__PURE__ */ new Map();
-  var t3 = H$1(n2.children);
+  var t3 = F$2(n2.children);
   n2.revealOrder && "b" === n2.revealOrder[0] && t3.reverse();
   for (var e2 = t3.length; e2--; ) this.l.set(t3[e2], this.i = [1, 0, this.i]);
   return n2.children;
@@ -17411,40 +17911,37 @@ function $(n2, e2) {
     H(n2, e2, t3);
   });
 };
-var q = "undefined" != typeof Symbol && Symbol.for && Symbol.for("react.element") || 60103, G = /^(?:accent|alignment|arabic|baseline|cap|clip(?!PathU)|color|dominant|fill|flood|font|glyph(?!R)|horiz|image(!S)|letter|lighting|marker(?!H|W|U)|overline|paint|pointer|shape|stop|strikethrough|stroke|text(?!L)|transform|underline|unicode|units|v|vector|vert|word|writing|x(?!C))[A-Z]/, J = /^on(Ani|Tra|Tou|BeforeInp|Compo)/, K = /[A-Z0-9]/g, Q = "undefined" != typeof document, X = function(n2) {
-  return ("undefined" != typeof Symbol && "symbol" == typeof Symbol() ? /fil|che|rad/ : /fil|che|ra/).test(n2);
+var q = "undefined" != typeof Symbol && Symbol.for && /* @__PURE__ */ Symbol.for("react.element") || 60103, G = /^(?:accent|alignment|arabic|baseline|cap|clip(?!PathU)|color|dominant|fill|flood|font|glyph(?!R)|horiz|image(!S)|letter|lighting|marker(?!H|W|U)|overline|paint|pointer|shape|stop|strikethrough|stroke|text(?!L)|transform|underline|unicode|units|v|vector|vert|word|writing|x(?!C))[A-Z]/, J = /^on(Ani|Tra|Tou|BeforeInp|Compo)/, K = /[A-Z0-9]/g, Q = "undefined" != typeof document, X = function(n2) {
+  return ("undefined" != typeof Symbol && "symbol" == typeof /* @__PURE__ */ Symbol() ? /fil|che|rad/ : /fil|che|ra/).test(n2);
 };
 function nn(n2, t3, e2) {
-  return null == t3.__k && (t3.textContent = ""), G$1(n2, t3), "function" == typeof e2 && e2(), n2 ? n2.__c : null;
+  return null == t3.__k && (t3.textContent = ""), R$1(n2, t3), "function" == typeof e2 && e2(), n2 ? n2.__c : null;
 }
 function tn(n2, t3, e2) {
-  return J$1(n2, t3), "function" == typeof e2 && e2(), n2 ? n2.__c : null;
+  return U$1(n2, t3), "function" == typeof e2 && e2(), n2 ? n2.__c : null;
 }
-x$2.prototype.isReactComponent = {}, ["componentWillMount", "componentWillReceiveProps", "componentWillUpdate"].forEach(function(t3) {
-  Object.defineProperty(x$2.prototype, t3, { configurable: true, get: function() {
+C$2.prototype.isReactComponent = true, ["componentWillMount", "componentWillReceiveProps", "componentWillUpdate"].forEach(function(t3) {
+  Object.defineProperty(C$2.prototype, t3, { configurable: true, get: function() {
     return this["UNSAFE_" + t3];
   }, set: function(n2) {
     Object.defineProperty(this, t3, { configurable: true, writable: true, value: n2 });
   } });
 });
 var en = l$1.event;
-function rn() {
-}
-function un() {
-  return this.cancelBubble;
-}
-function on() {
-  return this.defaultPrevented;
-}
 l$1.event = function(n2) {
-  return en && (n2 = en(n2)), n2.persist = rn, n2.isPropagationStopped = un, n2.isDefaultPrevented = on, n2.nativeEvent = n2;
+  return en && (n2 = en(n2)), n2.persist = function() {
+  }, n2.isPropagationStopped = function() {
+    return this.cancelBubble;
+  }, n2.isDefaultPrevented = function() {
+    return this.defaultPrevented;
+  }, n2.nativeEvent = n2;
 };
-var ln, cn = { enumerable: false, configurable: true, get: function() {
+var rn, un = { configurable: true, get: function() {
   return this.class;
-} }, fn = l$1.vnode;
+} }, on = l$1.vnode;
 l$1.vnode = function(n2) {
   "string" == typeof n2.type && (function(n3) {
-    var t3 = n3.props, e2 = n3.type, u3 = {}, o2 = -1 === e2.indexOf("-");
+    var t3 = n3.props, e2 = n3.type, u3 = {}, o2 = -1 == e2.indexOf("-");
     for (var i2 in t3) {
       var l2 = t3[i2];
       if (!("value" === i2 && "defaultValue" in t3 && null == l2 || Q && "children" === i2 && "noscript" === e2 || "class" === i2 || "className" === i2)) {
@@ -17452,83 +17949,88 @@ l$1.vnode = function(n2) {
         "defaultValue" === i2 && "value" in t3 && null == t3.value ? i2 = "value" : "download" === i2 && true === l2 ? l2 = "" : "translate" === c2 && "no" === l2 ? l2 = false : "o" === c2[0] && "n" === c2[1] ? "ondoubleclick" === c2 ? i2 = "ondblclick" : "onchange" !== c2 || "input" !== e2 && "textarea" !== e2 || X(t3.type) ? "onfocus" === c2 ? i2 = "onfocusin" : "onblur" === c2 ? i2 = "onfocusout" : J.test(i2) && (i2 = c2) : c2 = i2 = "oninput" : o2 && G.test(i2) ? i2 = i2.replace(K, "-$&").toLowerCase() : null === l2 && (l2 = void 0), "oninput" === c2 && u3[i2 = c2] && (i2 = "oninputCapture"), u3[i2] = l2;
       }
     }
-    "select" == e2 && u3.multiple && Array.isArray(u3.value) && (u3.value = H$1(t3.children).forEach(function(n4) {
+    "select" == e2 && (u3.multiple && Array.isArray(u3.value) && (u3.value = F$2(t3.children).forEach(function(n4) {
       n4.props.selected = -1 != u3.value.indexOf(n4.props.value);
-    })), "select" == e2 && null != u3.defaultValue && (u3.value = H$1(t3.children).forEach(function(n4) {
+    })), null != u3.defaultValue && (u3.value = F$2(t3.children).forEach(function(n4) {
       n4.props.selected = u3.multiple ? -1 != u3.defaultValue.indexOf(n4.props.value) : u3.defaultValue == n4.props.value;
-    })), t3.class && !t3.className ? (u3.class = t3.class, Object.defineProperty(u3, "className", cn)) : (t3.className && !t3.class || t3.class && t3.className) && (u3.class = u3.className = t3.className), n3.props = u3;
-  })(n2), n2.$$typeof = q, fn && fn(n2);
+    }))), t3.class && !t3.className ? (u3.class = t3.class, Object.defineProperty(u3, "className", un)) : t3.className && (u3.class = u3.className = t3.className), n3.props = u3;
+  })(n2), n2.$$typeof = q, on && on(n2);
 };
-var an = l$1.__r;
+var ln = l$1.__r;
 l$1.__r = function(n2) {
-  an && an(n2), ln = n2.__c;
+  ln && ln(n2), rn = n2.__c;
 };
-var sn = l$1.diffed;
+var cn = l$1.diffed;
 l$1.diffed = function(n2) {
-  sn && sn(n2);
+  cn && cn(n2);
   var t3 = n2.props, e2 = n2.__e;
-  null != e2 && "textarea" === n2.type && "value" in t3 && t3.value !== e2.value && (e2.value = null == t3.value ? "" : t3.value), ln = null;
+  null != e2 && "textarea" === n2.type && "value" in t3 && t3.value !== e2.value && (e2.value = null == t3.value ? "" : t3.value), rn = null;
 };
-var hn = { ReactCurrentDispatcher: { current: { readContext: function(n2) {
-  return ln.__n[n2.__c].props.value;
-}, useCallback: q$1, useContext: x$1, useDebugValue: P$1, useDeferredValue: w, useEffect: y, useId: g$1, useImperativeHandle: F$1, useInsertionEffect: I, useLayoutEffect: _, useMemo: T$1, useReducer: h, useRef: A$1, useState: d, useSyncExternalStore: C, useTransition: k } } }, vn = "18.3.1";
-function dn(n2) {
-  return _$1.bind(null, n2);
+var fn = { ReactCurrentDispatcher: { current: { readContext: function(n2) {
+  return rn.__n[n2.__c].props.value;
+}, useCallback: q$1, useContext: x$1, useDebugValue: P$1, useDeferredValue: w, useEffect: y, useId: g$1, useImperativeHandle: F$1, useInsertionEffect: I, useLayoutEffect: _, useMemo: T$1, useReducer: h, useRef: A$1, useState: d, useSyncExternalStore: C, useTransition: k } } }, an = "18.3.1";
+function sn(n2) {
+  return k$2.bind(null, n2);
 }
-function mn(n2) {
+function hn(n2) {
   return !!n2 && n2.$$typeof === q;
 }
+function vn(n2) {
+  return hn(n2) && n2.type === S;
+}
+function dn(n2) {
+  return !!n2 && "string" == typeof n2.displayName && 0 == n2.displayName.indexOf("Memo(");
+}
+function mn(n2) {
+  return hn(n2) ? W$1.apply(null, arguments) : n2;
+}
 function pn(n2) {
-  return mn(n2) && n2.type === k$2;
+  return !!n2.__k && (R$1(null, n2), true);
 }
 function yn(n2) {
-  return !!n2 && !!n2.displayName && ("string" == typeof n2.displayName || n2.displayName instanceof String) && n2.displayName.startsWith("Memo(");
-}
-function _n(n2) {
-  return mn(n2) ? K$1.apply(null, arguments) : n2;
-}
-function bn(n2) {
-  return !!n2.__k && (G$1(null, n2), true);
-}
-function Sn(n2) {
   return n2 && (n2.base || 1 === n2.nodeType && n2) || null;
 }
-var gn = function(n2, t3) {
+var _n = function(n2, t3) {
   return n2(t3);
-}, En = function(n2, t3) {
-  return n2(t3);
-}, Cn = k$2, xn = mn, Rn = { useState: d, useId: g$1, useReducer: h, useEffect: y, useLayoutEffect: _, useInsertionEffect: I, useTransition: k, useDeferredValue: w, useSyncExternalStore: C, startTransition: R, useRef: A$1, useImperativeHandle: F$1, useMemo: T$1, useCallback: q$1, useContext: x$1, useDebugValue: P$1, version: "18.3.1", Children: O, render: nn, hydrate: tn, unmountComponentAtNode: bn, createPortal: $, createElement: _$1, createContext: Q$1, createFactory: dn, cloneElement: _n, createRef: b$1, Fragment: k$2, isValidElement: mn, isElement: xn, isFragment: pn, isMemo: yn, findDOMNode: Sn, Component: x$2, PureComponent: N, memo: M, forwardRef: D, flushSync: En, unstable_batchedUpdates: gn, StrictMode: Cn, Suspense: P, SuspenseList: B, lazy: z, __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED: hn };
+}, bn = function(n2, t3) {
+  var r2 = l$1.debounceRendering;
+  l$1.debounceRendering = function(n3) {
+    return n3();
+  };
+  var u3 = n2(t3);
+  return l$1.debounceRendering = r2, u3;
+}, Sn = hn, gn = { useState: d, useId: g$1, useReducer: h, useEffect: y, useLayoutEffect: _, useInsertionEffect: I, useTransition: k, useDeferredValue: w, useSyncExternalStore: C, startTransition: x, useRef: A$1, useImperativeHandle: F$1, useMemo: T$1, useCallback: q$1, useContext: x$1, useDebugValue: P$1, version: "18.3.1", Children: L, render: nn, hydrate: tn, unmountComponentAtNode: pn, createPortal: $, createElement: k$2, createContext: X$1, createFactory: sn, cloneElement: mn, createRef: M$1, Fragment: S, isValidElement: hn, isElement: Sn, isFragment: vn, isMemo: dn, findDOMNode: yn, Component: C$2, PureComponent: M, memo: N, forwardRef: D, flushSync: bn, unstable_batchedUpdates: _n, StrictMode: S, Suspense: P, SuspenseList: B, lazy: z, __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED: fn };
 const React = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
   __proto__: null,
-  Children: O,
-  Component: x$2,
-  Fragment: k$2,
-  PureComponent: N,
-  StrictMode: Cn,
+  Children: L,
+  Component: C$2,
+  Fragment: S,
+  PureComponent: M,
+  StrictMode: S,
   Suspense: P,
   SuspenseList: B,
-  __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED: hn,
-  cloneElement: _n,
-  createContext: Q$1,
-  createElement: _$1,
-  createFactory: dn,
+  __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED: fn,
+  cloneElement: mn,
+  createContext: X$1,
+  createElement: k$2,
+  createFactory: sn,
   createPortal: $,
-  createRef: b$1,
-  default: Rn,
-  findDOMNode: Sn,
-  flushSync: En,
+  createRef: M$1,
+  default: gn,
+  findDOMNode: yn,
+  flushSync: bn,
   forwardRef: D,
   hydrate: tn,
-  isElement: xn,
-  isFragment: pn,
-  isMemo: yn,
-  isValidElement: mn,
+  isElement: Sn,
+  isFragment: vn,
+  isMemo: dn,
+  isValidElement: hn,
   lazy: z,
-  memo: M,
+  memo: N,
   render: nn,
-  startTransition: R,
-  unmountComponentAtNode: bn,
-  unstable_batchedUpdates: gn,
+  startTransition: x,
+  unmountComponentAtNode: pn,
+  unstable_batchedUpdates: _n,
   useCallback: q$1,
   useContext: x$1,
   useDebugValue: P$1,
@@ -17545,7 +18047,7 @@ const React = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.definePropert
   useState: d,
   useSyncExternalStore: C,
   useTransition: k,
-  version: vn
+  version: an
 }, Symbol.toStringTag, { value: "Module" }));
 function sheetForTag(tag) {
   if (tag.sheet) {
@@ -18626,7 +19128,7 @@ var syncFallback = function syncFallback2(create2) {
 var useInsertionEffect = React["useInsertionEffect"] ? React["useInsertionEffect"] : false;
 var useInsertionEffectAlwaysWithSyncFallback = useInsertionEffect || syncFallback;
 var useInsertionEffectWithLayoutFallback = useInsertionEffect || _;
-var EmotionCacheContext = /* @__PURE__ */ Q$1(
+var EmotionCacheContext = /* @__PURE__ */ X$1(
   // we're doing this to avoid preconstruct's dead code elimination in this one case
   // because this module is primarily intended for the browser and node
   // but it's also required in react native and similar environments sometimes
@@ -18644,7 +19146,7 @@ var withEmotionCache = function withEmotionCache2(func) {
     return func(props, cache, ref);
   });
 };
-var ThemeContext$1 = /* @__PURE__ */ Q$1({});
+var ThemeContext$1 = /* @__PURE__ */ X$1({});
 var hasOwn = {}.hasOwnProperty;
 var typePropName = "__EMOTION_TYPE_PLEASE_DO_NOT_USE__";
 var createEmotionProps = function createEmotionProps2(type, props) {
@@ -18690,17 +19192,17 @@ var Emotion = /* @__PURE__ */ withEmotionCache(function(props, cache, ref) {
   if (ref) {
     newProps.ref = ref;
   }
-  return /* @__PURE__ */ _$1(k$2, null, /* @__PURE__ */ _$1(Insertion$1, {
+  return /* @__PURE__ */ k$2(S, null, /* @__PURE__ */ k$2(Insertion$1, {
     cache,
     serialized,
     isStringTag: typeof WrappedComponent === "string"
-  }), /* @__PURE__ */ _$1(WrappedComponent, newProps));
+  }), /* @__PURE__ */ k$2(WrappedComponent, newProps));
 });
 var Emotion$1 = Emotion;
 var jsx = function jsx2(type, props) {
   var args = arguments;
   if (props == null || !hasOwn.call(props, "css")) {
-    return _$1.apply(void 0, args);
+    return k$2.apply(void 0, args);
   }
   var argsLength = args.length;
   var createElementArgArray = new Array(argsLength);
@@ -18709,7 +19211,7 @@ var jsx = function jsx2(type, props) {
   for (var i2 = 2; i2 < argsLength; i2++) {
     createElementArgArray[i2] = args[i2];
   }
-  return _$1.apply(null, createElementArgArray);
+  return k$2.apply(null, createElementArgArray);
 };
 (function(_jsx) {
   var JSX;
@@ -18881,11 +19383,11 @@ var createStyled$1 = function createStyled(tag, options) {
       if (ref) {
         newProps.ref = ref;
       }
-      return /* @__PURE__ */ _$1(k$2, null, /* @__PURE__ */ _$1(Insertion2, {
+      return /* @__PURE__ */ k$2(S, null, /* @__PURE__ */ k$2(Insertion2, {
         cache,
         serialized,
         isStringTag: typeof FinalTag === "string"
-      }), /* @__PURE__ */ _$1(FinalTag, newProps));
+      }), /* @__PURE__ */ k$2(FinalTag, newProps));
     });
     Styled.displayName = identifierName !== void 0 ? identifierName : "Styled(" + (typeof baseTag === "string" ? baseTag : baseTag.displayName || baseTag.name || "Component") + ")";
     Styled.defaultProps = tag.defaultProps;
@@ -19090,7 +19592,7 @@ var hasRequiredReactIs_production;
 function requireReactIs_production() {
   if (hasRequiredReactIs_production) return reactIs_production;
   hasRequiredReactIs_production = 1;
-  var REACT_ELEMENT_TYPE = Symbol.for("react.transitional.element"), REACT_PORTAL_TYPE = Symbol.for("react.portal"), REACT_FRAGMENT_TYPE = Symbol.for("react.fragment"), REACT_STRICT_MODE_TYPE = Symbol.for("react.strict_mode"), REACT_PROFILER_TYPE = Symbol.for("react.profiler"), REACT_CONSUMER_TYPE = Symbol.for("react.consumer"), REACT_CONTEXT_TYPE = Symbol.for("react.context"), REACT_FORWARD_REF_TYPE = Symbol.for("react.forward_ref"), REACT_SUSPENSE_TYPE = Symbol.for("react.suspense"), REACT_SUSPENSE_LIST_TYPE = Symbol.for("react.suspense_list"), REACT_MEMO_TYPE = Symbol.for("react.memo"), REACT_LAZY_TYPE = Symbol.for("react.lazy"), REACT_VIEW_TRANSITION_TYPE = Symbol.for("react.view_transition"), REACT_CLIENT_REFERENCE = Symbol.for("react.client.reference");
+  var REACT_ELEMENT_TYPE = /* @__PURE__ */ Symbol.for("react.transitional.element"), REACT_PORTAL_TYPE = /* @__PURE__ */ Symbol.for("react.portal"), REACT_FRAGMENT_TYPE = /* @__PURE__ */ Symbol.for("react.fragment"), REACT_STRICT_MODE_TYPE = /* @__PURE__ */ Symbol.for("react.strict_mode"), REACT_PROFILER_TYPE = /* @__PURE__ */ Symbol.for("react.profiler"), REACT_CONSUMER_TYPE = /* @__PURE__ */ Symbol.for("react.consumer"), REACT_CONTEXT_TYPE = /* @__PURE__ */ Symbol.for("react.context"), REACT_FORWARD_REF_TYPE = /* @__PURE__ */ Symbol.for("react.forward_ref"), REACT_SUSPENSE_TYPE = /* @__PURE__ */ Symbol.for("react.suspense"), REACT_SUSPENSE_LIST_TYPE = /* @__PURE__ */ Symbol.for("react.suspense_list"), REACT_MEMO_TYPE = /* @__PURE__ */ Symbol.for("react.memo"), REACT_LAZY_TYPE = /* @__PURE__ */ Symbol.for("react.lazy"), REACT_VIEW_TRANSITION_TYPE = /* @__PURE__ */ Symbol.for("react.view_transition"), REACT_CLIENT_REFERENCE = /* @__PURE__ */ Symbol.for("react.client.reference");
   function typeOf(object2) {
     if ("object" === typeof object2 && null !== object2) {
       var $$typeof = object2.$$typeof;
@@ -19194,7 +19696,7 @@ function isPlainObject(item) {
   return (prototype === null || prototype === Object.prototype || Object.getPrototypeOf(prototype) === null) && !(Symbol.toStringTag in item) && !(Symbol.iterator in item);
 }
 function deepClone(source) {
-  if (/* @__PURE__ */ mn(source) || reactIsExports.isValidElementType(source) || !isPlainObject(source)) {
+  if (/* @__PURE__ */ hn(source) || reactIsExports.isValidElementType(source) || !isPlainObject(source)) {
     return source;
   }
   const output = {};
@@ -19211,7 +19713,7 @@ function deepmerge(target, source, options = {
   } : target;
   if (isPlainObject(target) && isPlainObject(source)) {
     Object.keys(source).forEach((key) => {
-      if (/* @__PURE__ */ mn(source[key]) || reactIsExports.isValidElementType(source[key])) {
+      if (/* @__PURE__ */ hn(source[key]) || reactIsExports.isValidElementType(source[key])) {
         output[key] = source[key];
       } else if (isPlainObject(source[key]) && // Avoid prototype pollution
       Object.prototype.hasOwnProperty.call(target, key) && isPlainObject(target[key])) {
@@ -21052,13 +21554,13 @@ function private_safeEmphasize(color2, coefficient, warning) {
     return color2;
   }
 }
-const ThemeContext = /* @__PURE__ */ Q$1(null);
+const ThemeContext = /* @__PURE__ */ X$1(null);
 function useTheme$1() {
   const theme2 = x$1(ThemeContext);
   return theme2;
 }
 const hasSymbol = typeof Symbol === "function" && Symbol.for;
-const nested = hasSymbol ? Symbol.for("mui.nested") : "__THEME_NESTED__";
+const nested = hasSymbol ? /* @__PURE__ */ Symbol.for("mui.nested") : "__THEME_NESTED__";
 function mergeOuterLocalTheme(outerTheme, localTheme) {
   if (typeof localTheme === "function") {
     const mergedTheme = localTheme(outerTheme);
@@ -21089,7 +21591,7 @@ function ThemeProvider$2(props) {
     children
   });
 }
-const RtlContext = /* @__PURE__ */ Q$1();
+const RtlContext = /* @__PURE__ */ X$1();
 function RtlProvider({
   value,
   ...props
@@ -21103,7 +21605,7 @@ const useRtl = () => {
   const value = x$1(RtlContext);
   return value ?? false;
 };
-const PropsContext = /* @__PURE__ */ Q$1(void 0);
+const PropsContext = /* @__PURE__ */ X$1(void 0);
 function DefaultPropsProvider({
   value,
   children
@@ -21309,7 +21811,7 @@ function InitColorSchemeScript(options) {
     }
     setter += `
       ${colorSchemeNode}.setAttribute('${attr}'.replace('%s', colorScheme), ${value ? `${value}.replace('%s', colorScheme)` : '""'});`;
-  } else {
+  } else if (attribute !== ".%s") {
     setter += `${colorSchemeNode}.setAttribute('${attribute}', colorScheme);`;
   }
   return /* @__PURE__ */ u2("script", {
@@ -21635,7 +22137,7 @@ function createCssVarsProvider(options) {
     },
     systemMode: void 0
   };
-  const ColorSchemeContext = /* @__PURE__ */ Q$1(void 0);
+  const ColorSchemeContext = /* @__PURE__ */ X$1(void 0);
   const useColorScheme = () => x$1(ColorSchemeContext) || defaultContext;
   const defaultColorSchemes = {};
   const defaultComponents = {};
@@ -21804,7 +22306,7 @@ function createCssVarsProvider(options) {
     if (disableStyleSheetGeneration || restThemeProp.cssVariables === false || nested2 && upperTheme?.cssVarPrefix === cssVarPrefix) {
       shouldGenerateStyleSheet = false;
     }
-    const element = /* @__PURE__ */ u2(k$2, {
+    const element = /* @__PURE__ */ u2(S, {
       children: [/* @__PURE__ */ u2(ThemeProvider$1, {
         themeId: scopedTheme ? themeId : void 0,
         theme: memoTheme2,
@@ -22129,7 +22631,7 @@ function composeClasses(slots, getUtilityClass, classes = void 0) {
   return output;
 }
 function isMuiElement(element, muiNames) {
-  return /* @__PURE__ */ mn(element) && muiNames.indexOf(
+  return /* @__PURE__ */ hn(element) && muiNames.indexOf(
     // For server components `muiName` is available in element.type._payload.value.muiName
     // relevant info - https://github.com/facebook/react/blob/2807d781a08db8e9873687fccc25c0f12b4fb3d4/packages/react/src/ReactLazy.js#L45
     // eslint-disable-next-line no-underscore-dangle
@@ -22482,9 +22984,9 @@ function createGrid(options = {}) {
       ownerState,
       className: clsx(classes.root, className),
       ...other,
-      children: O.map(children, (child) => {
-        if (/* @__PURE__ */ mn(child) && isMuiElement(child, ["Grid"]) && container && child.props.container) {
-          return /* @__PURE__ */ _n(child, {
+      children: L.map(children, (child) => {
+        if (/* @__PURE__ */ hn(child) && isMuiElement(child, ["Grid"]) && container && child.props.container) {
+          return /* @__PURE__ */ mn(child, {
             unstable_level: child.props?.unstable_level ?? level + 1
           });
         }
@@ -22508,11 +23010,11 @@ function useThemePropsDefault(props) {
   });
 }
 function joinChildren(children, separator) {
-  const childrenArray = O.toArray(children).filter(Boolean);
+  const childrenArray = L.toArray(children).filter(Boolean);
   return childrenArray.reduce((output, child, index) => {
     output.push(child);
     if (index < childrenArray.length - 1) {
-      output.push(/* @__PURE__ */ _n(separator, {
+      output.push(/* @__PURE__ */ mn(separator, {
         key: `separator-${index}`
       }));
     }
@@ -23598,10 +24100,10 @@ function createThemeWithVars(options = {}, ...args) {
     }
     assignNode(palette, ["Alert", "AppBar", "Avatar", "Button", "Chip", "FilledInput", "LinearProgress", "Skeleton", "Slider", "SnackbarContent", "SpeedDialAction", "StepConnector", "StepContent", "Switch", "TableCell", "Tooltip"]);
     if (palette.mode === "light") {
-      setColor(palette.Alert, "errorColor", colorMix(private_safeDarken, palette.error.light, 0.6));
-      setColor(palette.Alert, "infoColor", colorMix(private_safeDarken, palette.info.light, 0.6));
-      setColor(palette.Alert, "successColor", colorMix(private_safeDarken, palette.success.light, 0.6));
-      setColor(palette.Alert, "warningColor", colorMix(private_safeDarken, palette.warning.light, 0.6));
+      setColor(palette.Alert, "errorColor", colorMix(private_safeDarken, nativeColor ? getCssVar("palette-error-light") : palette.error.light, 0.6));
+      setColor(palette.Alert, "infoColor", colorMix(private_safeDarken, nativeColor ? getCssVar("palette-info-light") : palette.info.light, 0.6));
+      setColor(palette.Alert, "successColor", colorMix(private_safeDarken, nativeColor ? getCssVar("palette-success-light") : palette.success.light, 0.6));
+      setColor(palette.Alert, "warningColor", colorMix(private_safeDarken, nativeColor ? getCssVar("palette-warning-light") : palette.warning.light, 0.6));
       setColor(palette.Alert, "errorFilledBg", setCssVarColor("palette-error-main"));
       setColor(palette.Alert, "infoFilledBg", setCssVarColor("palette-info-main"));
       setColor(palette.Alert, "successFilledBg", setCssVarColor("palette-success-main"));
@@ -23610,10 +24112,10 @@ function createThemeWithVars(options = {}, ...args) {
       setColor(palette.Alert, "infoFilledColor", silent(() => palette.getContrastText(palette.info.main)));
       setColor(palette.Alert, "successFilledColor", silent(() => palette.getContrastText(palette.success.main)));
       setColor(palette.Alert, "warningFilledColor", silent(() => palette.getContrastText(palette.warning.main)));
-      setColor(palette.Alert, "errorStandardBg", colorMix(private_safeLighten, palette.error.light, 0.9));
-      setColor(palette.Alert, "infoStandardBg", colorMix(private_safeLighten, palette.info.light, 0.9));
-      setColor(palette.Alert, "successStandardBg", colorMix(private_safeLighten, palette.success.light, 0.9));
-      setColor(palette.Alert, "warningStandardBg", colorMix(private_safeLighten, palette.warning.light, 0.9));
+      setColor(palette.Alert, "errorStandardBg", colorMix(private_safeLighten, nativeColor ? getCssVar("palette-error-light") : palette.error.light, 0.9));
+      setColor(palette.Alert, "infoStandardBg", colorMix(private_safeLighten, nativeColor ? getCssVar("palette-info-light") : palette.info.light, 0.9));
+      setColor(palette.Alert, "successStandardBg", colorMix(private_safeLighten, nativeColor ? getCssVar("palette-success-light") : palette.success.light, 0.9));
+      setColor(palette.Alert, "warningStandardBg", colorMix(private_safeLighten, nativeColor ? getCssVar("palette-warning-light") : palette.warning.light, 0.9));
       setColor(palette.Alert, "errorIconColor", setCssVarColor("palette-error-main"));
       setColor(palette.Alert, "infoIconColor", setCssVarColor("palette-info-main"));
       setColor(palette.Alert, "successIconColor", setCssVarColor("palette-success-main"));
@@ -23628,20 +24130,20 @@ function createThemeWithVars(options = {}, ...args) {
       setColor(palette.FilledInput, "bg", "rgba(0, 0, 0, 0.06)");
       setColor(palette.FilledInput, "hoverBg", "rgba(0, 0, 0, 0.09)");
       setColor(palette.FilledInput, "disabledBg", "rgba(0, 0, 0, 0.12)");
-      setColor(palette.LinearProgress, "primaryBg", colorMix(private_safeLighten, palette.primary.main, 0.62));
-      setColor(palette.LinearProgress, "secondaryBg", colorMix(private_safeLighten, palette.secondary.main, 0.62));
-      setColor(palette.LinearProgress, "errorBg", colorMix(private_safeLighten, palette.error.main, 0.62));
-      setColor(palette.LinearProgress, "infoBg", colorMix(private_safeLighten, palette.info.main, 0.62));
-      setColor(palette.LinearProgress, "successBg", colorMix(private_safeLighten, palette.success.main, 0.62));
-      setColor(palette.LinearProgress, "warningBg", colorMix(private_safeLighten, palette.warning.main, 0.62));
-      setColor(palette.Skeleton, "bg", colorSpace ? colorMix(private_safeAlpha, palette.text.primary, 0.11) : `rgba(${setCssVarColor("palette-text-primaryChannel")} / 0.11)`);
-      setColor(palette.Slider, "primaryTrack", colorMix(private_safeLighten, palette.primary.main, 0.62));
-      setColor(palette.Slider, "secondaryTrack", colorMix(private_safeLighten, palette.secondary.main, 0.62));
-      setColor(palette.Slider, "errorTrack", colorMix(private_safeLighten, palette.error.main, 0.62));
-      setColor(palette.Slider, "infoTrack", colorMix(private_safeLighten, palette.info.main, 0.62));
-      setColor(palette.Slider, "successTrack", colorMix(private_safeLighten, palette.success.main, 0.62));
-      setColor(palette.Slider, "warningTrack", colorMix(private_safeLighten, palette.warning.main, 0.62));
-      const snackbarContentBackground = colorSpace ? colorMix(private_safeDarken, palette.background.default, 0.6825) : private_safeEmphasize(palette.background.default, 0.8);
+      setColor(palette.LinearProgress, "primaryBg", colorMix(private_safeLighten, nativeColor ? getCssVar("palette-primary-main") : palette.primary.main, 0.62));
+      setColor(palette.LinearProgress, "secondaryBg", colorMix(private_safeLighten, nativeColor ? getCssVar("palette-secondary-main") : palette.secondary.main, 0.62));
+      setColor(palette.LinearProgress, "errorBg", colorMix(private_safeLighten, nativeColor ? getCssVar("palette-error-main") : palette.error.main, 0.62));
+      setColor(palette.LinearProgress, "infoBg", colorMix(private_safeLighten, nativeColor ? getCssVar("palette-info-main") : palette.info.main, 0.62));
+      setColor(palette.LinearProgress, "successBg", colorMix(private_safeLighten, nativeColor ? getCssVar("palette-success-main") : palette.success.main, 0.62));
+      setColor(palette.LinearProgress, "warningBg", colorMix(private_safeLighten, nativeColor ? getCssVar("palette-warning-light") : palette.warning.main, 0.62));
+      setColor(palette.Skeleton, "bg", colorSpace ? colorMix(private_safeAlpha, nativeColor ? getCssVar("palette-text-primary") : palette.text.primary, 0.11) : `rgba(${setCssVarColor("palette-text-primaryChannel")} / 0.11)`);
+      setColor(palette.Slider, "primaryTrack", colorMix(private_safeLighten, nativeColor ? getCssVar("palette-primary-main") : palette.primary.main, 0.62));
+      setColor(palette.Slider, "secondaryTrack", colorMix(private_safeLighten, nativeColor ? getCssVar("palette-secondary-main") : palette.secondary.main, 0.62));
+      setColor(palette.Slider, "errorTrack", colorMix(private_safeLighten, nativeColor ? getCssVar("palette-error-main") : palette.error.main, 0.62));
+      setColor(palette.Slider, "infoTrack", colorMix(private_safeLighten, nativeColor ? getCssVar("palette-info-main") : palette.info.main, 0.62));
+      setColor(palette.Slider, "successTrack", colorMix(private_safeLighten, nativeColor ? getCssVar("palette-success-main") : palette.success.main, 0.62));
+      setColor(palette.Slider, "warningTrack", colorMix(private_safeLighten, nativeColor ? getCssVar("palette-warning-main") : palette.warning.main, 0.62));
+      const snackbarContentBackground = colorSpace ? colorMix(private_safeDarken, nativeColor ? getCssVar("palette-background-default") : palette.background.default, 0.6825) : private_safeEmphasize(palette.background.default, 0.8);
       setColor(palette.SnackbarContent, "bg", snackbarContentBackground);
       setColor(palette.SnackbarContent, "color", silent(() => colorSpace ? dark.text.primary : palette.getContrastText(snackbarContentBackground)));
       setColor(palette.SpeedDialAction, "fabHoverBg", private_safeEmphasize(palette.background.paper, 0.15));
@@ -23649,20 +24151,20 @@ function createThemeWithVars(options = {}, ...args) {
       setColor(palette.StepContent, "border", setCssVarColor("palette-grey-400"));
       setColor(palette.Switch, "defaultColor", setCssVarColor("palette-common-white"));
       setColor(palette.Switch, "defaultDisabledColor", setCssVarColor("palette-grey-100"));
-      setColor(palette.Switch, "primaryDisabledColor", colorMix(private_safeLighten, palette.primary.main, 0.62));
-      setColor(palette.Switch, "secondaryDisabledColor", colorMix(private_safeLighten, palette.secondary.main, 0.62));
-      setColor(palette.Switch, "errorDisabledColor", colorMix(private_safeLighten, palette.error.main, 0.62));
-      setColor(palette.Switch, "infoDisabledColor", colorMix(private_safeLighten, palette.info.main, 0.62));
-      setColor(palette.Switch, "successDisabledColor", colorMix(private_safeLighten, palette.success.main, 0.62));
-      setColor(palette.Switch, "warningDisabledColor", colorMix(private_safeLighten, palette.warning.main, 0.62));
-      setColor(palette.TableCell, "border", colorMix(private_safeLighten, colorMix(private_safeAlpha, palette.divider, 1), 0.88));
-      setColor(palette.Tooltip, "bg", colorMix(private_safeAlpha, palette.grey[700], 0.92));
+      setColor(palette.Switch, "primaryDisabledColor", colorMix(private_safeLighten, nativeColor ? getCssVar("palette-primary-main") : palette.primary.main, 0.62));
+      setColor(palette.Switch, "secondaryDisabledColor", colorMix(private_safeLighten, nativeColor ? getCssVar("palette-secondary-main") : palette.secondary.main, 0.62));
+      setColor(palette.Switch, "errorDisabledColor", colorMix(private_safeLighten, nativeColor ? getCssVar("palette-error-main") : palette.error.main, 0.62));
+      setColor(palette.Switch, "infoDisabledColor", colorMix(private_safeLighten, nativeColor ? getCssVar("palette-info-main") : palette.info.main, 0.62));
+      setColor(palette.Switch, "successDisabledColor", colorMix(private_safeLighten, nativeColor ? getCssVar("palette-success-main") : palette.success.main, 0.62));
+      setColor(palette.Switch, "warningDisabledColor", colorMix(private_safeLighten, nativeColor ? getCssVar("palette-warning-main") : palette.warning.main, 0.62));
+      setColor(palette.TableCell, "border", colorMix(private_safeLighten, private_safeAlpha(nativeColor ? getCssVar("palette-divider") : palette.divider, 1), 0.88));
+      setColor(palette.Tooltip, "bg", colorMix(private_safeAlpha, nativeColor ? getCssVar("palette-grey-700") : palette.grey[700], 0.92));
     }
     if (palette.mode === "dark") {
-      setColor(palette.Alert, "errorColor", colorMix(private_safeLighten, palette.error.light, 0.6));
-      setColor(palette.Alert, "infoColor", colorMix(private_safeLighten, palette.info.light, 0.6));
-      setColor(palette.Alert, "successColor", colorMix(private_safeLighten, palette.success.light, 0.6));
-      setColor(palette.Alert, "warningColor", colorMix(private_safeLighten, palette.warning.light, 0.6));
+      setColor(palette.Alert, "errorColor", colorMix(private_safeLighten, nativeColor ? getCssVar("palette-error-light") : palette.error.light, 0.6));
+      setColor(palette.Alert, "infoColor", colorMix(private_safeLighten, nativeColor ? getCssVar("palette-info-light") : palette.info.light, 0.6));
+      setColor(palette.Alert, "successColor", colorMix(private_safeLighten, nativeColor ? getCssVar("palette-success-light") : palette.success.light, 0.6));
+      setColor(palette.Alert, "warningColor", colorMix(private_safeLighten, nativeColor ? getCssVar("palette-warning-light") : palette.warning.light, 0.6));
       setColor(palette.Alert, "errorFilledBg", setCssVarColor("palette-error-dark"));
       setColor(palette.Alert, "infoFilledBg", setCssVarColor("palette-info-dark"));
       setColor(palette.Alert, "successFilledBg", setCssVarColor("palette-success-dark"));
@@ -23671,10 +24173,10 @@ function createThemeWithVars(options = {}, ...args) {
       setColor(palette.Alert, "infoFilledColor", silent(() => palette.getContrastText(palette.info.dark)));
       setColor(palette.Alert, "successFilledColor", silent(() => palette.getContrastText(palette.success.dark)));
       setColor(palette.Alert, "warningFilledColor", silent(() => palette.getContrastText(palette.warning.dark)));
-      setColor(palette.Alert, "errorStandardBg", colorMix(private_safeDarken, palette.error.light, 0.9));
-      setColor(palette.Alert, "infoStandardBg", colorMix(private_safeDarken, palette.info.light, 0.9));
-      setColor(palette.Alert, "successStandardBg", colorMix(private_safeDarken, palette.success.light, 0.9));
-      setColor(palette.Alert, "warningStandardBg", colorMix(private_safeDarken, palette.warning.light, 0.9));
+      setColor(palette.Alert, "errorStandardBg", colorMix(private_safeDarken, nativeColor ? getCssVar("palette-error-light") : palette.error.light, 0.9));
+      setColor(palette.Alert, "infoStandardBg", colorMix(private_safeDarken, nativeColor ? getCssVar("palette-info-light") : palette.info.light, 0.9));
+      setColor(palette.Alert, "successStandardBg", colorMix(private_safeDarken, nativeColor ? getCssVar("palette-success-light") : palette.success.light, 0.9));
+      setColor(palette.Alert, "warningStandardBg", colorMix(private_safeDarken, nativeColor ? getCssVar("palette-warning-light") : palette.warning.light, 0.9));
       setColor(palette.Alert, "errorIconColor", setCssVarColor("palette-error-main"));
       setColor(palette.Alert, "infoIconColor", setCssVarColor("palette-info-main"));
       setColor(palette.Alert, "successIconColor", setCssVarColor("palette-success-main"));
@@ -23691,20 +24193,20 @@ function createThemeWithVars(options = {}, ...args) {
       setColor(palette.FilledInput, "bg", "rgba(255, 255, 255, 0.09)");
       setColor(palette.FilledInput, "hoverBg", "rgba(255, 255, 255, 0.13)");
       setColor(palette.FilledInput, "disabledBg", "rgba(255, 255, 255, 0.12)");
-      setColor(palette.LinearProgress, "primaryBg", colorMix(private_safeDarken, palette.primary.main, 0.5));
-      setColor(palette.LinearProgress, "secondaryBg", colorMix(private_safeDarken, palette.secondary.main, 0.5));
-      setColor(palette.LinearProgress, "errorBg", colorMix(private_safeDarken, palette.error.main, 0.5));
-      setColor(palette.LinearProgress, "infoBg", colorMix(private_safeDarken, palette.info.main, 0.5));
-      setColor(palette.LinearProgress, "successBg", colorMix(private_safeDarken, palette.success.main, 0.5));
-      setColor(palette.LinearProgress, "warningBg", colorMix(private_safeDarken, palette.warning.main, 0.5));
-      setColor(palette.Skeleton, "bg", colorSpace ? colorMix(private_safeAlpha, palette.text.primary, 0.13) : `rgba(${setCssVarColor("palette-text-primaryChannel")} / 0.13)`);
-      setColor(palette.Slider, "primaryTrack", colorMix(private_safeDarken, palette.primary.main, 0.5));
-      setColor(palette.Slider, "secondaryTrack", colorMix(private_safeDarken, palette.secondary.main, 0.5));
-      setColor(palette.Slider, "errorTrack", colorMix(private_safeDarken, palette.error.main, 0.5));
-      setColor(palette.Slider, "infoTrack", colorMix(private_safeDarken, palette.info.main, 0.5));
-      setColor(palette.Slider, "successTrack", colorMix(private_safeDarken, palette.success.main, 0.5));
-      setColor(palette.Slider, "warningTrack", colorMix(private_safeDarken, palette.warning.main, 0.5));
-      const snackbarContentBackground = colorSpace ? colorMix(private_safeLighten, palette.background.default, 0.985) : private_safeEmphasize(palette.background.default, 0.98);
+      setColor(palette.LinearProgress, "primaryBg", colorMix(private_safeDarken, nativeColor ? getCssVar("palette-primary-main") : palette.primary.main, 0.5));
+      setColor(palette.LinearProgress, "secondaryBg", colorMix(private_safeDarken, nativeColor ? getCssVar("palette-secondary-main") : palette.secondary.main, 0.5));
+      setColor(palette.LinearProgress, "errorBg", colorMix(private_safeDarken, nativeColor ? getCssVar("palette-error-main") : palette.error.main, 0.5));
+      setColor(palette.LinearProgress, "infoBg", colorMix(private_safeDarken, nativeColor ? getCssVar("palette-info-main") : palette.info.main, 0.5));
+      setColor(palette.LinearProgress, "successBg", colorMix(private_safeDarken, nativeColor ? getCssVar("palette-success-main") : palette.success.main, 0.5));
+      setColor(palette.LinearProgress, "warningBg", colorMix(private_safeDarken, nativeColor ? getCssVar("palette-warning-main") : palette.warning.main, 0.5));
+      setColor(palette.Skeleton, "bg", colorSpace ? colorMix(private_safeAlpha, nativeColor ? getCssVar("palette-text-primary") : palette.text.primary, 0.13) : `rgba(${setCssVarColor("palette-text-primaryChannel")} / 0.13)`);
+      setColor(palette.Slider, "primaryTrack", colorMix(private_safeDarken, nativeColor ? getCssVar("palette-primary-main") : palette.primary.main, 0.5));
+      setColor(palette.Slider, "secondaryTrack", colorMix(private_safeDarken, nativeColor ? getCssVar("palette-secondary-main") : palette.secondary.main, 0.5));
+      setColor(palette.Slider, "errorTrack", colorMix(private_safeDarken, nativeColor ? getCssVar("palette-error-main") : palette.error.main, 0.5));
+      setColor(palette.Slider, "infoTrack", colorMix(private_safeDarken, nativeColor ? getCssVar("palette-info-main") : palette.info.main, 0.5));
+      setColor(palette.Slider, "successTrack", colorMix(private_safeDarken, nativeColor ? getCssVar("palette-success-main") : palette.success.main, 0.5));
+      setColor(palette.Slider, "warningTrack", colorMix(private_safeDarken, nativeColor ? getCssVar("palette-warning-light") : palette.warning.main, 0.5));
+      const snackbarContentBackground = colorSpace ? colorMix(private_safeLighten, nativeColor ? getCssVar("palette-background-default") : palette.background.default, 0.985) : private_safeEmphasize(palette.background.default, 0.98);
       setColor(palette.SnackbarContent, "bg", snackbarContentBackground);
       setColor(palette.SnackbarContent, "color", silent(() => colorSpace ? light.text.primary : palette.getContrastText(snackbarContentBackground)));
       setColor(palette.SpeedDialAction, "fabHoverBg", private_safeEmphasize(palette.background.paper, 0.15));
@@ -23712,23 +24214,25 @@ function createThemeWithVars(options = {}, ...args) {
       setColor(palette.StepContent, "border", setCssVarColor("palette-grey-600"));
       setColor(palette.Switch, "defaultColor", setCssVarColor("palette-grey-300"));
       setColor(palette.Switch, "defaultDisabledColor", setCssVarColor("palette-grey-600"));
-      setColor(palette.Switch, "primaryDisabledColor", colorMix(private_safeDarken, palette.primary.main, 0.55));
-      setColor(palette.Switch, "secondaryDisabledColor", colorMix(private_safeDarken, palette.secondary.main, 0.55));
-      setColor(palette.Switch, "errorDisabledColor", colorMix(private_safeDarken, palette.error.main, 0.55));
-      setColor(palette.Switch, "infoDisabledColor", colorMix(private_safeDarken, palette.info.main, 0.55));
-      setColor(palette.Switch, "successDisabledColor", colorMix(private_safeDarken, palette.success.main, 0.55));
-      setColor(palette.Switch, "warningDisabledColor", colorMix(private_safeDarken, palette.warning.main, 0.55));
-      setColor(palette.TableCell, "border", colorMix(private_safeDarken, colorMix(private_safeAlpha, palette.divider, 1), 0.68));
-      setColor(palette.Tooltip, "bg", colorMix(private_safeAlpha, palette.grey[700], 0.92));
+      setColor(palette.Switch, "primaryDisabledColor", colorMix(private_safeDarken, nativeColor ? getCssVar("palette-primary-main") : palette.primary.main, 0.55));
+      setColor(palette.Switch, "secondaryDisabledColor", colorMix(private_safeDarken, nativeColor ? getCssVar("palette-secondary-main") : palette.secondary.main, 0.55));
+      setColor(palette.Switch, "errorDisabledColor", colorMix(private_safeDarken, nativeColor ? getCssVar("palette-error-main") : palette.error.main, 0.55));
+      setColor(palette.Switch, "infoDisabledColor", colorMix(private_safeDarken, nativeColor ? getCssVar("palette-info-main") : palette.info.main, 0.55));
+      setColor(palette.Switch, "successDisabledColor", colorMix(private_safeDarken, nativeColor ? getCssVar("palette-success-main") : palette.success.main, 0.55));
+      setColor(palette.Switch, "warningDisabledColor", colorMix(private_safeDarken, nativeColor ? getCssVar("palette-warning-light") : palette.warning.main, 0.55));
+      setColor(palette.TableCell, "border", colorMix(private_safeDarken, private_safeAlpha(nativeColor ? getCssVar("palette-divider") : palette.divider, 1), 0.68));
+      setColor(palette.Tooltip, "bg", colorMix(private_safeAlpha, nativeColor ? getCssVar("palette-grey-700") : palette.grey[700], 0.92));
     }
-    setColorChannel(palette.background, "default");
-    setColorChannel(palette.background, "paper");
-    setColorChannel(palette.common, "background");
-    setColorChannel(palette.common, "onBackground");
-    setColorChannel(palette, "divider");
+    if (!nativeColor) {
+      setColorChannel(palette.background, "default");
+      setColorChannel(palette.background, "paper");
+      setColorChannel(palette.common, "background");
+      setColorChannel(palette.common, "onBackground");
+      setColorChannel(palette, "divider");
+    }
     Object.keys(palette).forEach((color2) => {
       const colors = palette[color2];
-      if (color2 !== "tonalOffset" && colors && typeof colors === "object") {
+      if (color2 !== "tonalOffset" && !nativeColor && colors && typeof colors === "object") {
         if (colors.main) {
           setColor(palette[color2], "mainChannel", private_safeColorChannel(toRgb(colors.main)));
         }
@@ -24419,7 +24923,7 @@ const SvgIcon = /* @__PURE__ */ D(function SvgIcon2(inProps, ref) {
     viewBox = "0 0 24 24",
     ...other
   } = props;
-  const hasSvgAsChild = /* @__PURE__ */ mn(children) && children.type === "svg";
+  const hasSvgAsChild = /* @__PURE__ */ hn(children) && children.type === "svg";
   const ownerState = {
     ...props,
     color: color2,
@@ -24463,7 +24967,7 @@ function createSvgIcon(path, displayName) {
     });
   }
   Component.muiName = SvgIcon.muiName;
-  return /* @__PURE__ */ M(/* @__PURE__ */ D(Component));
+  return /* @__PURE__ */ N(/* @__PURE__ */ D(Component));
 }
 function debounce$1(func, wait2 = 166) {
   let timeout;
@@ -24649,7 +25153,7 @@ function _inheritsLoose(t3, o2) {
 const config = {
   disabled: false
 };
-const TransitionGroupContext = Rn.createContext(null);
+const TransitionGroupContext = gn.createContext(null);
 var forceReflow = function forceReflow2(node2) {
   return node2.scrollTop;
 };
@@ -24742,7 +25246,7 @@ var Transition = /* @__PURE__ */ (function(_React$Component) {
       this.cancelNextCallback();
       if (nextStatus === ENTERING) {
         if (this.props.unmountOnExit || this.props.mountOnEnter) {
-          var node2 = this.props.nodeRef ? this.props.nodeRef.current : Rn.findDOMNode(this);
+          var node2 = this.props.nodeRef ? this.props.nodeRef.current : gn.findDOMNode(this);
           if (node2) forceReflow(node2);
         }
         this.performEnter(mounting);
@@ -24759,7 +25263,7 @@ var Transition = /* @__PURE__ */ (function(_React$Component) {
     var _this2 = this;
     var enter = this.props.enter;
     var appearing = this.context ? this.context.isMounting : mounting;
-    var _ref2 = this.props.nodeRef ? [appearing] : [Rn.findDOMNode(this), appearing], maybeNode = _ref2[0], maybeAppearing = _ref2[1];
+    var _ref2 = this.props.nodeRef ? [appearing] : [gn.findDOMNode(this), appearing], maybeNode = _ref2[0], maybeAppearing = _ref2[1];
     var timeouts = this.getTimeouts();
     var enterTimeout = appearing ? timeouts.appear : timeouts.enter;
     if (!mounting && !enter || config.disabled) {
@@ -24788,7 +25292,7 @@ var Transition = /* @__PURE__ */ (function(_React$Component) {
     var _this3 = this;
     var exit = this.props.exit;
     var timeouts = this.getTimeouts();
-    var maybeNode = this.props.nodeRef ? void 0 : Rn.findDOMNode(this);
+    var maybeNode = this.props.nodeRef ? void 0 : gn.findDOMNode(this);
     if (!exit || config.disabled) {
       this.safeSetState({
         status: EXITED
@@ -24838,7 +25342,7 @@ var Transition = /* @__PURE__ */ (function(_React$Component) {
   };
   _proto.onTransitionEnd = function onTransitionEnd(timeout, handler) {
     this.setNextCallback(handler);
-    var node2 = this.props.nodeRef ? this.props.nodeRef.current : Rn.findDOMNode(this);
+    var node2 = this.props.nodeRef ? this.props.nodeRef.current : gn.findDOMNode(this);
     var doesNotHaveTimeoutOrListener = timeout == null && !this.props.addEndListener;
     if (!node2 || doesNotHaveTimeoutOrListener) {
       setTimeout(this.nextCallback, 0);
@@ -24876,13 +25380,13 @@ var Transition = /* @__PURE__ */ (function(_React$Component) {
     var childProps = _objectWithoutPropertiesLoose(_this$props, ["children", "in", "mountOnEnter", "unmountOnExit", "appear", "enter", "exit", "timeout", "addEndListener", "onEnter", "onEntering", "onEntered", "onExit", "onExiting", "onExited", "nodeRef"]);
     return (
       // allows for nested Transitions
-      /* @__PURE__ */ Rn.createElement(TransitionGroupContext.Provider, {
+      /* @__PURE__ */ gn.createElement(TransitionGroupContext.Provider, {
         value: null
-      }, typeof children === "function" ? children(status, childProps) : Rn.cloneElement(Rn.Children.only(children), childProps))
+      }, typeof children === "function" ? children(status, childProps) : gn.cloneElement(gn.Children.only(children), childProps))
     );
   };
   return Transition2;
-})(Rn.Component);
+})(gn.Component);
 Transition.contextType = TransitionGroupContext;
 Transition.propTypes = {};
 function noop$2() {
@@ -24912,10 +25416,10 @@ function _assertThisInitialized(e2) {
 }
 function getChildMapping(children, mapFn) {
   var mapper = function mapper2(child) {
-    return mapFn && mn(child) ? mapFn(child) : child;
+    return mapFn && hn(child) ? mapFn(child) : child;
   };
   var result = /* @__PURE__ */ Object.create(null);
-  if (children) O.map(children, function(c2) {
+  if (children) L.map(children, function(c2) {
     return c2;
   }).forEach(function(child) {
     result[child.key] = mapper(child);
@@ -24961,7 +25465,7 @@ function getProp(child, prop, props) {
 }
 function getInitialChildMapping(props, onExited) {
   return getChildMapping(props.children, function(child) {
-    return _n(child, {
+    return mn(child, {
       onExited: onExited.bind(null, child),
       in: true,
       appear: getProp(child, "appear", props),
@@ -24975,24 +25479,24 @@ function getNextChildMapping(nextProps, prevChildMapping, onExited) {
   var children = mergeChildMappings(prevChildMapping, nextChildMapping);
   Object.keys(children).forEach(function(key) {
     var child = children[key];
-    if (!mn(child)) return;
+    if (!hn(child)) return;
     var hasPrev = key in prevChildMapping;
     var hasNext = key in nextChildMapping;
     var prevChild = prevChildMapping[key];
-    var isLeaving = mn(prevChild) && !prevChild.props.in;
+    var isLeaving = hn(prevChild) && !prevChild.props.in;
     if (hasNext && (!hasPrev || isLeaving)) {
-      children[key] = _n(child, {
+      children[key] = mn(child, {
         onExited: onExited.bind(null, child),
         in: true,
         exit: getProp(child, "exit", nextProps),
         enter: getProp(child, "enter", nextProps)
       });
     } else if (!hasNext && hasPrev && !isLeaving) {
-      children[key] = _n(child, {
+      children[key] = mn(child, {
         in: false
       });
-    } else if (hasNext && hasPrev && mn(prevChild)) {
-      children[key] = _n(child, {
+    } else if (hasNext && hasPrev && hn(prevChild)) {
+      children[key] = mn(child, {
         onExited: onExited.bind(null, child),
         in: prevChild.props.in,
         exit: getProp(child, "exit", nextProps),
@@ -25071,16 +25575,16 @@ var TransitionGroup = /* @__PURE__ */ (function(_React$Component) {
     delete props.enter;
     delete props.exit;
     if (Component === null) {
-      return /* @__PURE__ */ Rn.createElement(TransitionGroupContext.Provider, {
+      return /* @__PURE__ */ gn.createElement(TransitionGroupContext.Provider, {
         value: contextValue
       }, children);
     }
-    return /* @__PURE__ */ Rn.createElement(TransitionGroupContext.Provider, {
+    return /* @__PURE__ */ gn.createElement(TransitionGroupContext.Provider, {
       value: contextValue
-    }, /* @__PURE__ */ Rn.createElement(Component, props, children));
+    }, /* @__PURE__ */ gn.createElement(Component, props, children));
   };
   return TransitionGroup2;
-})(Rn.Component);
+})(gn.Component);
 TransitionGroup.propTypes = {};
 TransitionGroup.defaultProps = defaultProps;
 const UNINITIALIZED = {};
@@ -25126,6 +25630,26 @@ function useTimeout() {
   return timeout;
 }
 const reflow = (node2) => node2.scrollTop;
+function normalizedTransitionCallback(nodeRef, callback) {
+  return (maybeIsAppearing) => {
+    if (callback) {
+      const node2 = nodeRef.current;
+      if (maybeIsAppearing === void 0) {
+        callback(node2);
+      } else {
+        callback(node2, maybeIsAppearing);
+      }
+    }
+  };
+}
+function getTransitionChildStyle(state, inProp, baseStyles, hiddenStyles2, styleProp, childStyle) {
+  const base = state === "exited" && !inProp ? hiddenStyles2 : baseStyles[state] || baseStyles.exited;
+  return styleProp || childStyle ? {
+    ...base,
+    ...styleProp,
+    ...childStyle
+  } : base;
+}
 function getTransitionProps(props, options) {
   const {
     timeout,
@@ -25301,11 +25825,11 @@ const useUtilityClasses$Z = (ownerState) => {
     classes
   } = ownerState;
   const slots = {
-    root: ["root", `${orientation}`],
+    root: ["root", orientation],
     entered: ["entered"],
     hidden: ["hidden"],
-    wrapper: ["wrapper", `${orientation}`],
-    wrapperInner: ["wrapperInner", `${orientation}`]
+    wrapper: ["wrapper", orientation],
+    wrapperInner: ["wrapperInner", orientation]
   };
   return composeClasses(slots, getCollapseUtilityClass, classes);
 };
@@ -25433,18 +25957,8 @@ const Collapse = /* @__PURE__ */ D(function Collapse2(inProps, ref) {
   const size = isHorizontal ? "width" : "height";
   const nodeRef = A$1(null);
   const handleRef = useForkRef(ref, nodeRef);
-  const normalizedTransitionCallback = (callback) => (maybeIsAppearing) => {
-    if (callback) {
-      const node2 = nodeRef.current;
-      if (maybeIsAppearing === void 0) {
-        callback(node2);
-      } else {
-        callback(node2, maybeIsAppearing);
-      }
-    }
-  };
   const getWrapperSize = () => wrapperRef.current ? wrapperRef.current[isHorizontal ? "clientWidth" : "clientHeight"] : 0;
-  const handleEnter = normalizedTransitionCallback((node2, isAppearing) => {
+  const handleEnter = normalizedTransitionCallback(nodeRef, (node2, isAppearing) => {
     if (wrapperRef.current && isHorizontal) {
       wrapperRef.current.style.position = "absolute";
     }
@@ -25453,7 +25967,7 @@ const Collapse = /* @__PURE__ */ D(function Collapse2(inProps, ref) {
       onEnter(node2, isAppearing);
     }
   });
-  const handleEntering = normalizedTransitionCallback((node2, isAppearing) => {
+  const handleEntering = normalizedTransitionCallback(nodeRef, (node2, isAppearing) => {
     const wrapperSize = getWrapperSize();
     if (wrapperRef.current && isHorizontal) {
       wrapperRef.current.style.position = "";
@@ -25481,20 +25995,20 @@ const Collapse = /* @__PURE__ */ D(function Collapse2(inProps, ref) {
       onEntering(node2, isAppearing);
     }
   });
-  const handleEntered = normalizedTransitionCallback((node2, isAppearing) => {
+  const handleEntered = normalizedTransitionCallback(nodeRef, (node2, isAppearing) => {
     node2.style[size] = "auto";
     if (onEntered) {
       onEntered(node2, isAppearing);
     }
   });
-  const handleExit = normalizedTransitionCallback((node2) => {
+  const handleExit = normalizedTransitionCallback(nodeRef, (node2) => {
     node2.style[size] = `${getWrapperSize()}px`;
     if (onExit) {
       onExit(node2);
     }
   });
-  const handleExited = normalizedTransitionCallback(onExited);
-  const handleExiting = normalizedTransitionCallback((node2) => {
+  const handleExited = normalizedTransitionCallback(nodeRef, onExited);
+  const handleExiting = normalizedTransitionCallback(nodeRef, (node2) => {
     const wrapperSize = getWrapperSize();
     const {
       duration: transitionDuration,
@@ -25699,7 +26213,7 @@ const Paper = /* @__PURE__ */ D(function Paper2(inProps, ref) {
     }
   });
 });
-const AccordionContext = /* @__PURE__ */ Q$1({});
+const AccordionContext = /* @__PURE__ */ X$1({});
 function getAccordionUtilityClass(slot) {
   return generateUtilityClass("MuiAccordion", slot);
 }
@@ -25830,7 +26344,6 @@ const Accordion = /* @__PURE__ */ D(function Accordion2(inProps, ref) {
     disableGutters = false,
     expanded: expandedProp,
     onChange,
-    square = false,
     slots = {},
     slotProps = {},
     TransitionComponent: TransitionComponentProp,
@@ -25849,7 +26362,7 @@ const Accordion = /* @__PURE__ */ D(function Accordion2(inProps, ref) {
       onChange(event, !expanded);
     }
   }, [expanded, onChange, setExpandedState]);
-  const [summary, ...children] = O.toArray(childrenProp);
+  const [summary, ...children] = L.toArray(childrenProp);
   const contextValue = T$1(() => ({
     expanded,
     disabled,
@@ -25858,7 +26371,6 @@ const Accordion = /* @__PURE__ */ D(function Accordion2(inProps, ref) {
   }), [expanded, disabled, disableGutters, handleChange]);
   const ownerState = {
     ...props,
-    square,
     disabled,
     disableGutters,
     expanded
@@ -25885,10 +26397,7 @@ const Accordion = /* @__PURE__ */ D(function Accordion2(inProps, ref) {
     className: clsx(classes.root, className),
     shouldForwardComponentProp: true,
     ownerState,
-    ref,
-    additionalProps: {
-      square
-    }
+    ref
   });
   const [AccordionHeadingSlot, accordionProps] = useSlot("heading", {
     elementType: AccordionHeading,
@@ -26512,7 +27021,13 @@ const ButtonBase = /* @__PURE__ */ D(function ButtonBase2(inProps, ref) {
   });
   const isNonNativeButton = () => {
     const button = buttonRef.current;
-    return component && component !== "button" && !(button.tagName === "A" && button.href);
+    if (!button) {
+      return component && component !== "button";
+    }
+    if (button.tagName === "BUTTON") {
+      return false;
+    }
+    return !(button.tagName === "A" && button.href);
   };
   const handleKeyDown = useEventCallback((event) => {
     if (focusRipple && !event.repeat && focusVisible && event.key === " ") {
@@ -26542,7 +27057,7 @@ const ButtonBase = /* @__PURE__ */ D(function ButtonBase2(inProps, ref) {
     if (onKeyUp) {
       onKeyUp(event);
     }
-    if (onClick && event.target === event.currentTarget && isNonNativeButton() && event.key === " " && !event.defaultPrevented) {
+    if (onClick && event.target === event.currentTarget && isNonNativeButton() && event.key === " " && !event.defaultPrevented && !disabled) {
       onClick(event);
     }
   });
@@ -26552,7 +27067,8 @@ const ButtonBase = /* @__PURE__ */ D(function ButtonBase2(inProps, ref) {
   }
   const buttonProps = {};
   if (ComponentProp === "button") {
-    buttonProps.type = type === void 0 ? "button" : type;
+    const hasFormAttributes = !!other.formAction;
+    buttonProps.type = type === void 0 && !hasFormAttributes ? "button" : type;
     buttonProps.disabled = disabled;
   } else {
     if (!other.href && !other.to) {
@@ -27669,6 +28185,31 @@ const Typography$1 = /* @__PURE__ */ D(function Typography(inProps, ref) {
     }
   });
 });
+function useForcedRerendering() {
+  const [, setState] = d({});
+  return q$1(() => {
+    setState({});
+  }, []);
+}
+function contains$1(parent, child) {
+  if (!parent || !child) {
+    return false;
+  }
+  if (parent.contains(child)) {
+    return true;
+  }
+  const rootNode = child.getRootNode?.();
+  if (rootNode && rootNode instanceof ShadowRoot) {
+    let next2 = child;
+    while (next2) {
+      if (parent === next2) {
+        return true;
+      }
+      next2 = next2.parentNode ?? next2.host ?? null;
+    }
+  }
+  return false;
+}
 function usePreviousProps(value) {
   const ref = A$1({});
   y(() => {
@@ -27721,7 +28262,8 @@ function createFilterOptions(config2 = {}) {
 }
 const defaultFilterOptions = createFilterOptions();
 const pageSize = 5;
-const defaultIsActiveElementInListbox = (listboxRef) => listboxRef.current !== null && listboxRef.current.parentElement?.contains(document.activeElement);
+const defaultIsActiveElementInListbox = (listboxRef) => listboxRef.current !== null && contains$1(listboxRef.current.parentElement, document.activeElement);
+const defaultIsOptionEqualToValue = (option, value) => option === value;
 const MULTIPLE_DEFAULT_VALUE = [];
 function getInputValue(value, multiple, getOptionLabel, renderValue) {
   if (multiple || value == null || renderValue) {
@@ -27760,7 +28302,7 @@ function useAutocomplete(props) {
     id: idProp,
     includeInputInList = false,
     inputValue: inputValueProp,
-    isOptionEqualToValue = (option, value2) => option === value2,
+    isOptionEqualToValue = defaultIsOptionEqualToValue,
     multiple = false,
     onChange,
     onClose,
@@ -27788,10 +28330,14 @@ function useAutocomplete(props) {
   const firstFocus = A$1(true);
   const inputRef = A$1(null);
   const listboxRef = A$1(null);
+  const windowLostFocus = A$1(false);
   const [anchorEl, setAnchorEl] = d(null);
   const [focusedItem, setFocusedItem] = d(-1);
   const defaultHighlighted = autoHighlight ? 0 : -1;
   const highlightedIndexRef = A$1(defaultHighlighted);
+  const highlightReasonRef = A$1(null);
+  const touchScrolledRef = A$1(false);
+  const isTouchRef = A$1(false);
   const initialInputValue = A$1(getInputValue(defaultValue2 ?? valueProp, multiple, getOptionLabel)).current;
   const [value, setValueState] = useControlled({
     controlled: valueProp,
@@ -27806,8 +28352,8 @@ function useAutocomplete(props) {
   });
   const [focused, setFocused] = d(false);
   const resetInputValue = q$1((event, newValue, reason) => {
-    const isOptionSelected = multiple ? value.length < newValue.length : newValue !== null;
-    if (!isOptionSelected && !clearOnBlur) {
+    const isOptionSelected2 = multiple ? value.length < newValue.length : newValue !== null;
+    if (!isOptionSelected2 && !clearOnBlur) {
       return;
     }
     const newInputValue = getInputValue(newValue, multiple, getOptionLabel, renderValue);
@@ -27828,9 +28374,30 @@ function useAutocomplete(props) {
   const [inputPristine, setInputPristine] = d(true);
   const inputValueIsSelectedValue = !multiple && value != null && inputValue === getOptionLabel(value);
   const popupOpen = open && !readOnly;
+  const selectedValues = T$1(() => {
+    if (multiple) {
+      return value;
+    }
+    if (value != null) {
+      return [value];
+    }
+    return [];
+  }, [multiple, value]);
+  const selectedValuesSet = T$1(() => {
+    if (isOptionEqualToValue !== defaultIsOptionEqualToValue || selectedValues.length === 0) {
+      return null;
+    }
+    return new Set(selectedValues);
+  }, [isOptionEqualToValue, selectedValues]);
+  const isOptionSelected = q$1((option) => {
+    if (selectedValuesSet) {
+      return selectedValuesSet.has(option);
+    }
+    return selectedValues.some((value2) => value2 != null && isOptionEqualToValue(option, value2));
+  }, [isOptionEqualToValue, selectedValues, selectedValuesSet]);
   const filteredOptions = popupOpen ? filterOptions(
     options.filter((option) => {
-      if (filterSelectedOptions && (multiple ? value : [value]).some((value2) => value2 !== null && isOptionEqualToValue(option, value2))) {
+      if (filterSelectedOptions && isOptionSelected(option)) {
         return false;
       }
       return true;
@@ -27893,19 +28460,15 @@ function useAutocomplete(props) {
       }
     }
   }
-  const setHighlightedIndex = useEventCallback(({
-    event,
+  const syncHighlightedIndexToDOM = useEventCallback(({
     index,
-    reason
+    reason,
+    preserveScroll = false
   }) => {
-    highlightedIndexRef.current = index;
     if (index === -1) {
       inputRef.current.removeAttribute("aria-activedescendant");
     } else {
       inputRef.current.setAttribute("aria-activedescendant", `${id}-option-${index}`);
-    }
-    if (onHighlightChange && ["mouse", "keyboard", "touch"].includes(reason)) {
-      onHighlightChange(event, index === -1 ? null : filteredOptions[index], reason);
     }
     if (!listboxRef.current) {
       return;
@@ -27923,7 +28486,9 @@ function useAutocomplete(props) {
       return;
     }
     if (index === -1) {
-      listboxNode.scrollTop = 0;
+      if (!preserveScroll) {
+        listboxNode.scrollTop = 0;
+      }
       return;
     }
     const option = listboxRef.current.querySelector(`[data-option-index="${index}"]`);
@@ -27945,14 +28510,45 @@ function useAutocomplete(props) {
       }
     }
   });
+  const setHighlightedIndex = useEventCallback(({
+    event,
+    index,
+    reason,
+    preserveScroll = false
+  }) => {
+    highlightedIndexRef.current = index;
+    highlightReasonRef.current = reason ?? null;
+    if (onHighlightChange && ["mouse", "keyboard", "touch"].includes(reason)) {
+      onHighlightChange(event, index === -1 ? null : filteredOptions[index], reason);
+    }
+    syncHighlightedIndexToDOM({
+      index,
+      reason,
+      preserveScroll
+    });
+  });
+  const setHighlightedIndexFromSync = useEventCallback(({
+    index
+  }) => {
+    highlightedIndexRef.current = index;
+    syncHighlightedIndexToDOM({
+      index,
+      reason: highlightReasonRef.current
+    });
+  });
   const changeHighlightedIndex = useEventCallback(({
     event,
     diff,
     direction = "next",
-    reason
+    reason,
+    preserveScroll
   }) => {
     if (!popupOpen) {
       return;
+    }
+    if (reason === "keyboard") {
+      touchScrolledRef.current = false;
+      isTouchRef.current = false;
     }
     const getNextIndex = () => {
       const maxIndex = filteredOptions.length - 1;
@@ -27990,7 +28586,8 @@ function useAutocomplete(props) {
     setHighlightedIndex({
       index: nextIndex,
       reason,
-      event
+      event,
+      preserveScroll
     });
     if (autoComplete && diff !== "reset") {
       if (nextIndex === -1) {
@@ -28036,13 +28633,17 @@ function useAutocomplete(props) {
     }
     const previousHighlightedOptionIndex = getPreviousHighlightedOptionIndex();
     if (previousHighlightedOptionIndex !== -1) {
-      highlightedIndexRef.current = previousHighlightedOptionIndex;
+      setHighlightedIndexFromSync({
+        index: previousHighlightedOptionIndex
+      });
       return;
     }
     const valueItem = multiple ? value[0] : value;
     if (filteredOptions.length === 0 || valueItem == null) {
+      const isAppendOnly = filteredOptionsChanged && previousProps.inputValue === inputValue && previousProps.filteredOptions?.length > 0 && filteredOptions.length > previousProps.filteredOptions.length && previousProps.filteredOptions.every((option, index) => getOptionLabel(option) === getOptionLabel(filteredOptions[index]));
       changeHighlightedIndex({
-        diff: "reset"
+        diff: "reset",
+        preserveScroll: isAppendOnly
       });
       return;
     }
@@ -28051,7 +28652,10 @@ function useAutocomplete(props) {
     }
     if (valueItem != null) {
       const currentOption = filteredOptions[highlightedIndexRef.current];
-      if (multiple && currentOption && value.findIndex((val) => isOptionEqualToValue(currentOption, val)) !== -1) {
+      if (multiple && currentOption && value.findIndex((val) => isOptionEqualToValue(currentOption, val)) !== -1 && previousProps.filteredOptions?.length > 0) {
+        setHighlightedIndexFromSync({
+          index: highlightedIndexRef.current
+        });
         return;
       }
       const itemIndex = filteredOptions.findIndex((optionItem) => isOptionEqualToValue(optionItem, valueItem));
@@ -28081,9 +28685,9 @@ function useAutocomplete(props) {
     // Don't sync the highlighted index with the value when multiple
     // eslint-disable-next-line react-hooks/exhaustive-deps
     multiple ? false : value,
-    filterSelectedOptions,
     changeHighlightedIndex,
     setHighlightedIndex,
+    setHighlightedIndexFromSync,
     popupOpen,
     inputValue,
     multiple
@@ -28096,16 +28700,29 @@ function useAutocomplete(props) {
     syncHighlightedIndex();
   });
   y(() => {
-    if (filteredOptionsChanged || popupOpen) {
+    if (filteredOptionsChanged || popupOpen && !disableCloseOnSelect) {
       syncHighlightedIndex();
     }
-  }, [syncHighlightedIndex, filteredOptionsChanged, popupOpen]);
+  }, [syncHighlightedIndex, filteredOptionsChanged, popupOpen, disableCloseOnSelect]);
+  y(() => {
+    if (typeof window === "undefined") {
+      return void 0;
+    }
+    const handleWindowBlur = () => {
+      windowLostFocus.current = true;
+    };
+    window.addEventListener("blur", handleWindowBlur);
+    return () => {
+      window.removeEventListener("blur", handleWindowBlur);
+    };
+  }, []);
   const handleOpen = (event) => {
     if (open) {
       return;
     }
     setOpenState(true);
     setInputPristine(true);
+    isTouchRef.current = false;
     if (onOpen) {
       onOpen(event);
     }
@@ -28115,6 +28732,8 @@ function useAutocomplete(props) {
       return;
     }
     setOpenState(false);
+    touchScrolledRef.current = false;
+    highlightReasonRef.current = null;
     if (onClose) {
       onClose(event, reason);
     }
@@ -28132,7 +28751,6 @@ function useAutocomplete(props) {
     }
     setValueState(newValue);
   };
-  const isTouch = A$1(false);
   const selectNewValue = (event, option, reasonProp = "selectOption", origin = "options") => {
     let reason = reasonProp;
     let newValue = option;
@@ -28153,7 +28771,7 @@ function useAutocomplete(props) {
     if (!disableCloseOnSelect && (!event || !event.ctrlKey && !event.metaKey)) {
       handleClose(event, reason);
     }
-    if (blurOnSelect === true || blurOnSelect === "touch" && isTouch.current || blurOnSelect === "mouse" && !isTouch.current) {
+    if (blurOnSelect === true || blurOnSelect === "touch" && isTouchRef.current || blurOnSelect === "mouse" && !isTouchRef.current) {
       inputRef.current.blur();
     }
   };
@@ -28183,9 +28801,13 @@ function useAutocomplete(props) {
       handleClose(event, "toggleInput");
     }
     let nextItem2 = focusedItem;
-    if (focusedItem === -1) {
-      if (inputValue === "" && direction === "previous") {
-        nextItem2 = value.length - 1;
+    if (focusedItem === -1 && direction === "previous") {
+      nextItem2 = value.length - 1;
+      if (freeSolo && inputValue !== "") {
+        setInputValueState("");
+        if (onInputChange) {
+          onInputChange(event, "", "reset");
+        }
       }
     } else {
       nextItem2 += direction === "next" ? 1 : -1;
@@ -28283,22 +28905,39 @@ function useAutocomplete(props) {
           });
           handleOpen(event);
           break;
-        case "ArrowLeft":
-          if (!multiple && renderValue) {
+        case "ArrowLeft": {
+          const input = inputRef.current;
+          const caretAtStart = input && input.selectionStart === 0 && input.selectionEnd === 0;
+          if (!caretAtStart) {
+            return;
+          }
+          if (!multiple && renderValue && value != null) {
+            if (freeSolo && inputValue !== "") {
+              setInputValueState("");
+              if (onInputChange) {
+                onInputChange(event, "", "reset");
+              }
+            }
+            setFocusedItem(0);
             focusItem(0);
           } else {
             handleFocusItem(event, "previous");
           }
           break;
+        }
         case "ArrowRight":
           if (!multiple && renderValue) {
+            setFocusedItem(-1);
             focusItem(-1);
           } else {
             handleFocusItem(event, "next");
           }
           break;
-        case "Enter":
-          if (highlightedIndexRef.current !== -1 && popupOpen) {
+        case "Enter": {
+          const shouldSelectHighlighted = !freeSolo || inputPristine || highlightReasonRef.current !== null;
+          if (highlightedIndexRef.current !== -1 && popupOpen && shouldSelectHighlighted && // After a touch-scroll the highlight is stale (the user scrolled
+          // past it), so skip selection until the next deliberate interaction.
+          !touchScrolledRef.current) {
             const option = filteredOptions[highlightedIndexRef.current];
             const disabled = getOptionDisabled ? getOptionDisabled(option) : false;
             event.preventDefault();
@@ -28314,8 +28953,12 @@ function useAutocomplete(props) {
               event.preventDefault();
             }
             selectNewValue(event, inputValue, "createOption", "freeSolo");
+          } else if (popupOpen && touchScrolledRef.current) {
+            event.preventDefault();
+            handleClose(event, "escape");
           }
           break;
+        }
         case "Escape":
           if (popupOpen) {
             event.preventDefault();
@@ -28336,9 +28979,10 @@ function useAutocomplete(props) {
               option: value[index]
             });
           }
-          if (!multiple && renderValue && !readOnly) {
-            setValueState(null);
-            focusItem(-1);
+          if (!multiple && renderValue && !readOnly && inputValue === "") {
+            handleValue(event, null, "removeOption", {
+              option: value
+            });
           }
           break;
         case "Delete":
@@ -28350,9 +28994,10 @@ function useAutocomplete(props) {
               option: value[index]
             });
           }
-          if (!multiple && renderValue && !readOnly) {
-            setValueState(null);
-            focusItem(-1);
+          if (!multiple && renderValue && !readOnly && inputValue === "") {
+            handleValue(event, null, "removeOption", {
+              option: value
+            });
           }
           break;
       }
@@ -28360,6 +29005,14 @@ function useAutocomplete(props) {
   };
   const handleFocus = (event) => {
     setFocused(true);
+    if (focusedItem !== -1) {
+      setFocusedItem(-1);
+      focusItem(-1);
+    }
+    if (windowLostFocus.current) {
+      windowLostFocus.current = false;
+      return;
+    }
     if (openOnFocus && !ignoreFocus.current) {
       handleOpen(event);
     }
@@ -28372,7 +29025,7 @@ function useAutocomplete(props) {
     setFocused(false);
     firstFocus.current = true;
     ignoreFocus.current = false;
-    if (autoSelect && highlightedIndexRef.current !== -1 && popupOpen) {
+    if (autoSelect && highlightedIndexRef.current !== -1 && popupOpen && highlightReasonRef.current !== "mouse" && highlightReasonRef.current !== "touch") {
       selectNewValue(event, filteredOptions[highlightedIndexRef.current], "blur");
     } else if (autoSelect && freeSolo && inputValue !== "") {
       selectNewValue(event, inputValue, "blur", "freeSolo");
@@ -28383,19 +29036,23 @@ function useAutocomplete(props) {
   };
   const handleInputChange = (event) => {
     const newValue = event.target.value;
-    if (inputValue !== newValue) {
+    const valueChanged = inputValue !== newValue;
+    if (valueChanged) {
       setInputValueState(newValue);
-      setInputPristine(false);
+      touchScrolledRef.current = false;
       if (onInputChange) {
         onInputChange(event, newValue, "input");
       }
     }
     if (newValue === "") {
-      if (!disableClearable && !multiple) {
+      if (!disableClearable && !multiple && !renderValue) {
         handleValue(event, null, "clear");
       }
     } else {
       handleOpen(event);
+    }
+    if (valueChanged) {
+      setInputPristine(false);
     }
   };
   const handleOptionMouseMove = (event) => {
@@ -28406,20 +29063,26 @@ function useAutocomplete(props) {
         index,
         reason: "mouse"
       });
+    } else {
+      highlightReasonRef.current = "mouse";
+    }
+    if (!isTouchRef.current) {
+      touchScrolledRef.current = false;
     }
   };
   const handleOptionTouchStart = (event) => {
+    touchScrolledRef.current = false;
     setHighlightedIndex({
       event,
       index: Number(event.currentTarget.getAttribute("data-option-index")),
       reason: "touch"
     });
-    isTouch.current = true;
+    isTouchRef.current = true;
   };
   const handleOptionClick = (event) => {
     const index = Number(event.currentTarget.getAttribute("data-option-index"));
     selectNewValue(event, filteredOptions[index], "selectOption");
-    isTouch.current = false;
+    isTouchRef.current = false;
   };
   const handleItemDelete = (index) => (event) => {
     const newValue = value.slice();
@@ -28441,7 +29104,10 @@ function useAutocomplete(props) {
     }
   };
   const handleMouseDown = (event) => {
-    if (!event.currentTarget.contains(event.target)) {
+    if (!contains$1(event.currentTarget, event.target)) {
+      return;
+    }
+    if (anchorEl && !contains$1(anchorEl, event.target)) {
       return;
     }
     if (event.target.getAttribute("id") !== id) {
@@ -28449,7 +29115,10 @@ function useAutocomplete(props) {
     }
   };
   const handleClick = (event) => {
-    if (!event.currentTarget.contains(event.target)) {
+    if (!contains$1(event.currentTarget, event.target)) {
+      return;
+    }
+    if (anchorEl && !contains$1(anchorEl, event.target)) {
       return;
     }
     inputRef.current.focus();
@@ -28559,16 +29228,22 @@ function useAutocomplete(props) {
       role: "listbox",
       id: `${id}-listbox`,
       "aria-labelledby": `${id}-label`,
+      "aria-multiselectable": multiple || void 0,
       ref: handleListboxRef,
       onMouseDown: (event) => {
         event.preventDefault();
+      },
+      onScroll: () => {
+        if (isTouchRef.current) {
+          touchScrolledRef.current = true;
+        }
       }
     }),
     getOptionProps: ({
       index,
       option
     }) => {
-      const selected = (multiple ? value : [value]).some((value2) => value2 != null && isOptionEqualToValue(option, value2));
+      const selected = isOptionSelected(option);
       const disabled = getOptionDisabled ? getOptionDisabled(option) : false;
       return {
         key: getOptionKey?.(option) ?? getOptionLabel(option),
@@ -29968,7 +30643,7 @@ function useSlotProps(parameters) {
   return props;
 }
 function getReactElementRef(element) {
-  if (parseInt(vn, 10) >= 19) {
+  if (parseInt(an, 10) >= 19) {
     return element?.props?.ref || null;
   }
   return element?.ref || null;
@@ -29983,7 +30658,7 @@ const Portal = /* @__PURE__ */ D(function Portal2(props, forwardedRef) {
     disablePortal = false
   } = props;
   const [mountNode, setMountNode] = d(null);
-  const handleRef = useForkRef(/* @__PURE__ */ mn(children) ? getReactElementRef(children) : null, forwardedRef);
+  const handleRef = useForkRef(/* @__PURE__ */ hn(children) ? getReactElementRef(children) : null, forwardedRef);
   useEnhancedEffect(() => {
     if (!disablePortal) {
       setMountNode(getContainer$1(container) || document.body);
@@ -29999,11 +30674,11 @@ const Portal = /* @__PURE__ */ D(function Portal2(props, forwardedRef) {
     return void 0;
   }, [forwardedRef, mountNode, disablePortal]);
   if (disablePortal) {
-    if (/* @__PURE__ */ mn(children)) {
+    if (/* @__PURE__ */ hn(children)) {
       const newProps = {
         ref: handleRef
       };
-      return /* @__PURE__ */ _n(children, newProps);
+      return /* @__PURE__ */ mn(children, newProps);
     }
     return children;
   }
@@ -30126,8 +30801,24 @@ const PopperTooltip = /* @__PURE__ */ D(function PopperTooltip2(props, forwarded
       modifiers: popperModifiers
     });
     handlePopperRefRef.current(popper2);
+    const popperElement = tooltipRef.current;
     return () => {
-      popper2.destroy();
+      if (popperElement) {
+        const {
+          style: style2
+        } = popperElement;
+        const position2 = style2.position;
+        const top2 = style2.top;
+        const left2 = style2.left;
+        const transform2 = style2.transform;
+        popper2.destroy();
+        style2.position = position2;
+        style2.top = top2;
+        style2.left = left2;
+        style2.transform = transform2;
+      } else {
+        popper2.destroy();
+      }
       handlePopperRefRef.current(null);
     };
   }, [resolvedAnchorElement, disablePortal, modifiers, open, popperOptions, rtlPlacement]);
@@ -30453,7 +31144,7 @@ const ChipRoot = styled("div", {
       [`& .${chipClasses.deleteIcon}`]: styles2[`deleteIconColor${capitalize(color2)}`]
     }, {
       [`& .${chipClasses.deleteIcon}`]: styles2[`deleteIcon${capitalize(variant)}Color${capitalize(color2)}`]
-    }, styles2.root, styles2[`size${capitalize(size)}`], styles2[`color${capitalize(color2)}`], clickable && styles2.clickable, clickable && color2 !== "default" && styles2[`clickableColor${capitalize(color2)})`], onDelete && styles2.deletable, onDelete && color2 !== "default" && styles2[`deletableColor${capitalize(color2)}`], styles2[variant], styles2[`${variant}${capitalize(color2)}`]];
+    }, styles2.root, styles2[`size${capitalize(size)}`], styles2[`color${capitalize(color2)}`], clickable && styles2.clickable, clickable && color2 !== "default" && styles2[`clickableColor${capitalize(color2)}`], onDelete && styles2.deletable, onDelete && color2 !== "default" && styles2[`deletableColor${capitalize(color2)}`], styles2[variant], styles2[`${variant}${capitalize(color2)}`]];
   }
 })(memoTheme(({
   theme: theme2
@@ -30757,9 +31448,7 @@ const Chip = /* @__PURE__ */ D(function Chip2(inProps, ref) {
   const handleRef = useForkRef(chipRef, ref);
   const handleDeleteIconClick = (event) => {
     event.stopPropagation();
-    if (onDelete) {
-      onDelete(event);
-    }
+    onDelete(event);
   };
   const handleKeyDown = (event) => {
     if (event.currentTarget === event.target && isDeleteKeyboardEvent(event)) {
@@ -30787,7 +31476,7 @@ const Chip = /* @__PURE__ */ D(function Chip2(inProps, ref) {
     disabled,
     size,
     color: color2,
-    iconColor: /* @__PURE__ */ mn(iconProp) ? iconProp.props.color || color2 : color2,
+    iconColor: /* @__PURE__ */ hn(iconProp) ? iconProp.props.color || color2 : color2,
     onDelete: !!onDelete,
     clickable,
     variant
@@ -30802,7 +31491,7 @@ const Chip = /* @__PURE__ */ D(function Chip2(inProps, ref) {
   } : {};
   let deleteIcon = null;
   if (onDelete) {
-    deleteIcon = deleteIconProp && /* @__PURE__ */ mn(deleteIconProp) ? /* @__PURE__ */ _n(deleteIconProp, {
+    deleteIcon = deleteIconProp && /* @__PURE__ */ hn(deleteIconProp) ? /* @__PURE__ */ mn(deleteIconProp, {
       className: clsx(deleteIconProp.props.className, classes.deleteIcon),
       onClick: handleDeleteIconClick
     }) : /* @__PURE__ */ u2(CancelIcon$1, {
@@ -30811,14 +31500,14 @@ const Chip = /* @__PURE__ */ D(function Chip2(inProps, ref) {
     });
   }
   let avatar = null;
-  if (avatarProp && /* @__PURE__ */ mn(avatarProp)) {
-    avatar = /* @__PURE__ */ _n(avatarProp, {
+  if (avatarProp && /* @__PURE__ */ hn(avatarProp)) {
+    avatar = /* @__PURE__ */ mn(avatarProp, {
       className: clsx(classes.avatar, avatarProp.props.className)
     });
   }
   let icon = null;
-  if (iconProp && /* @__PURE__ */ mn(iconProp)) {
-    icon = /* @__PURE__ */ _n(iconProp, {
+  if (iconProp && /* @__PURE__ */ hn(iconProp)) {
+    icon = /* @__PURE__ */ mn(iconProp, {
       className: clsx(classes.icon, iconProp.props.className)
     });
   }
@@ -31028,7 +31717,7 @@ const TextareaAutosize = /* @__PURE__ */ D(function TextareaAutosize2(props, for
       onChange(event);
     }
   };
-  return /* @__PURE__ */ u2(k$2, {
+  return /* @__PURE__ */ u2(S, {
     children: [/* @__PURE__ */ u2("textarea", {
       value,
       onChange: handleChange,
@@ -31066,9 +31755,16 @@ function formControlState({
     return acc;
   }, {});
 }
-const FormControlContext = /* @__PURE__ */ Q$1(void 0);
+const FormControlContext = /* @__PURE__ */ X$1(void 0);
 function useFormControl() {
   return x$1(FormControlContext);
+}
+function activeElement(doc) {
+  let element = doc.activeElement;
+  while (element?.shadowRoot?.activeElement != null) {
+    element = element.shadowRoot.activeElement;
+  }
+  return element;
 }
 function hasValue(value) {
   return value != null && !(Array.isArray(value) && value.length === 0);
@@ -31084,6 +31780,8 @@ function getInputBaseUtilityClass(slot) {
 }
 const inputBaseClasses = generateUtilityClasses("MuiInputBase", ["root", "formControl", "focused", "disabled", "adornedStart", "adornedEnd", "error", "sizeSmall", "multiline", "colorSecondary", "fullWidth", "hiddenLabel", "readOnly", "input", "inputSizeSmall", "inputMultiline", "inputTypeSearch", "inputAdornedStart", "inputAdornedEnd", "inputHiddenLabel"]);
 var _InputGlobalStyles;
+const MUI_AUTO_FILL = "mui-auto-fill";
+const MUI_AUTO_FILL_CANCEL = "mui-auto-fill-cancel";
 const rootOverridesResolver = (props, styles2) => {
   const {
     ownerState
@@ -31248,11 +31946,11 @@ const InputBaseInput = styled("input", {
         ownerState
       }) => !ownerState.disableInjectingGlobalStyles,
       style: {
-        animationName: "mui-auto-fill-cancel",
+        animationName: MUI_AUTO_FILL_CANCEL,
         animationDuration: "10ms",
         "&:-webkit-autofill": {
           animationDuration: "5000s",
-          animationName: "mui-auto-fill"
+          animationName: MUI_AUTO_FILL
         }
       }
     }, {
@@ -31284,14 +31982,16 @@ const InputBaseInput = styled("input", {
   };
 }));
 const InputGlobalStyles = globalCss({
-  "@keyframes mui-auto-fill": {
+  // Keep keyframes non-empty for Emotion production builds. Animation properties are ignored
+  // inside keyframes, avoiding the visible display animation triggered by Chrome 117+.
+  [`@keyframes ${MUI_AUTO_FILL}`]: {
     from: {
-      display: "block"
+      animationName: MUI_AUTO_FILL
     }
   },
-  "@keyframes mui-auto-fill-cancel": {
+  [`@keyframes ${MUI_AUTO_FILL_CANCEL}`]: {
     from: {
-      display: "block"
+      animationName: MUI_AUTO_FILL_CANCEL
     }
   }
 });
@@ -31383,6 +32083,27 @@ const InputBase = /* @__PURE__ */ D(function InputBase2(inProps, ref) {
       });
     }
   }, [value, checkDirty, isControlled]);
+  useEnhancedEffect(() => {
+    if (!autoFocus) {
+      return;
+    }
+    const input = inputRef.current;
+    if (!input) {
+      return;
+    }
+    const doc = ownerDocument(input);
+    const activeElement$1 = activeElement(doc);
+    const noElementFocused = activeElement$1 == null || activeElement$1 === doc.body || activeElement$1 === doc.documentElement;
+    if (input === activeElement$1) {
+      if (muiFormControl && muiFormControl.onFocus) {
+        muiFormControl.onFocus();
+      } else {
+        setFocused(true);
+      }
+    } else if (noElementFocused) {
+      input.focus();
+    }
+  }, [autoFocus]);
   const handleFocus = (event) => {
     if (onFocus) {
       onFocus(event);
@@ -31458,7 +32179,7 @@ const InputBase = /* @__PURE__ */ D(function InputBase2(inProps, ref) {
     InputComponent = TextareaAutosize;
   }
   const handleAutoFill = (event) => {
-    checkDirty(event.animationName === "mui-auto-fill-cancel" ? inputRef.current : {
+    checkDirty(event.animationName === MUI_AUTO_FILL_CANCEL ? inputRef.current : {
       value: "x"
     });
   };
@@ -31490,7 +32211,7 @@ const InputBase = /* @__PURE__ */ D(function InputBase2(inProps, ref) {
     ...inputProps,
     ...slotProps.input ?? componentsProps.input
   };
-  return /* @__PURE__ */ u2(k$2, {
+  return /* @__PURE__ */ u2(S, {
     children: [!disableInjectingGlobalStyles && typeof InputGlobalStyles === "function" && // For Emotion/Styled-components, InputGlobalStyles will be a function
     // For Pigment CSS, this has no effect because the InputGlobalStyles will be null.
     (_InputGlobalStyles || (_InputGlobalStyles = /* @__PURE__ */ u2(InputGlobalStyles, {}))), /* @__PURE__ */ u2(Root, {
@@ -32040,6 +32761,36 @@ const Autocomplete = /* @__PURE__ */ D(function Autocomplete2(inProps, ref) {
     ...props,
     componentName: "Autocomplete"
   });
+  const forceRenderOnResize = useForcedRerendering();
+  y(() => {
+    if (!popupOpen || !anchorEl || typeof ResizeObserver === "undefined") {
+      return void 0;
+    }
+    let lastWidth = anchorEl.clientWidth;
+    const observer = new ResizeObserver(() => {
+      const newWidth = anchorEl.clientWidth;
+      if (lastWidth !== newWidth) {
+        lastWidth = newWidth;
+        forceRenderOnResize();
+      }
+    });
+    observer.observe(anchorEl);
+    return () => {
+      observer.disconnect();
+    };
+  }, [popupOpen, anchorEl, forceRenderOnResize]);
+  const previousGroupedOptionsRef = A$1([]);
+  const prevPopupOpenRef = A$1(false);
+  const renderedOptions = popupOpen ? groupedOptions : previousGroupedOptionsRef.current;
+  useEnhancedEffect(() => {
+    if (popupOpen && !prevPopupOpenRef.current) {
+      previousGroupedOptionsRef.current = [];
+    }
+    prevPopupOpenRef.current = popupOpen;
+    if (popupOpen && groupedOptions.length > 0) {
+      previousGroupedOptionsRef.current = groupedOptions;
+    }
+  }, [popupOpen, groupedOptions]);
   const hasClearIcon = !disableClearable && !disabled && dirty && !readOnly;
   const hasPopupIcon = (!freeSolo || forcePopupIcon === true) && forcePopupIcon !== false;
   const {
@@ -32078,6 +32829,17 @@ const Autocomplete = /* @__PURE__ */ D(function Autocomplete2(inProps, ref) {
       ...slotProps
     }
   };
+  const [RootSlot, rootProps] = useSlot("root", {
+    ref,
+    className: [classes.root, className],
+    elementType: AutocompleteRoot,
+    externalForwardedProps: {
+      ...externalForwardedProps,
+      ...other
+    },
+    getSlotProps: getRootProps,
+    ownerState
+  });
   const [ListboxSlot, listboxProps] = useSlot("listbox", {
     elementType: AutocompleteListbox,
     externalForwardedProps,
@@ -32100,11 +32862,41 @@ const Autocomplete = /* @__PURE__ */ D(function Autocomplete2(inProps, ref) {
     additionalProps: {
       disablePortal,
       style: {
-        width: anchorEl ? anchorEl.clientWidth : null
+        width: anchorEl ? anchorEl.clientWidth : null,
+        // Prevent interaction with stale cached options during exit transitions.
+        // The hook's filteredOptions is [] when popupOpen=false, so clicks on stale
+        // rendered options would pass undefined to selectNewValue.
+        pointerEvents: popupOpen ? void 0 : "none"
       },
       role: "presentation",
       anchorEl,
       open: popupOpen
+    }
+  });
+  const hasPopupContent = renderedOptions.length > 0 || loading || !freeSolo || popperProps.keepMounted === true;
+  const [ClearIndicatorSlot, clearIndicatorProps] = useSlot("clearIndicator", {
+    elementType: AutocompleteClearIndicator,
+    externalForwardedProps,
+    ownerState,
+    className: classes.clearIndicator,
+    shouldForwardComponentProp: true,
+    additionalProps: {
+      ...getClearProps(),
+      "aria-label": clearText,
+      title: clearText
+    }
+  });
+  const [PopupIndicatorSlot, popupIndicatorProps] = useSlot("popupIndicator", {
+    elementType: AutocompletePopupIndicator,
+    externalForwardedProps,
+    ownerState,
+    className: classes.popupIndicator,
+    shouldForwardComponentProp: true,
+    additionalProps: {
+      ...getPopupIndicatorProps(),
+      disabled,
+      "aria-label": popupOpen ? closeText : openText,
+      title: popupOpen ? closeText : openText
     }
   });
   let startAdornment;
@@ -32187,18 +32979,13 @@ const Autocomplete = /* @__PURE__ */ D(function Autocomplete2(inProps, ref) {
       inputValue
     }, ownerState);
   };
-  const clearIndicatorSlotProps = externalForwardedProps.slotProps.clearIndicator;
-  const popupIndicatorSlotProps = externalForwardedProps.slotProps.popupIndicator;
-  return /* @__PURE__ */ u2(k$2, {
-    children: [/* @__PURE__ */ u2(AutocompleteRoot, {
-      ref,
-      className: clsx(classes.root, className),
-      ownerState,
-      ...getRootProps(other),
+  return /* @__PURE__ */ u2(S, {
+    children: [/* @__PURE__ */ u2(RootSlot, {
+      ...rootProps,
       children: renderInput({
         id,
         disabled,
-        fullWidth: true,
+        fullWidth: props.fullWidth ?? true,
         size: size === "small" ? "small" : void 0,
         InputLabelProps: getInputLabelProps(),
         InputProps: {
@@ -32214,22 +33001,11 @@ const Autocomplete = /* @__PURE__ */ D(function Autocomplete2(inProps, ref) {
             endAdornment: /* @__PURE__ */ u2(AutocompleteEndAdornment, {
               className: classes.endAdornment,
               ownerState,
-              children: [hasClearIcon ? /* @__PURE__ */ u2(AutocompleteClearIndicator, {
-                ...getClearProps(),
-                "aria-label": clearText,
-                title: clearText,
-                ownerState,
-                ...clearIndicatorSlotProps,
-                className: clsx(classes.clearIndicator, clearIndicatorSlotProps?.className),
+              children: [hasClearIcon ? /* @__PURE__ */ u2(ClearIndicatorSlot, {
+                ...clearIndicatorProps,
                 children: clearIcon
-              }) : null, hasPopupIcon ? /* @__PURE__ */ u2(AutocompletePopupIndicator, {
-                ...getPopupIndicatorProps(),
-                disabled,
-                "aria-label": popupOpen ? closeText : openText,
-                title: popupOpen ? closeText : openText,
-                ownerState,
-                ...popupIndicatorSlotProps,
-                className: clsx(classes.popupIndicator, popupIndicatorSlotProps?.className),
+              }) : null, hasPopupIcon ? /* @__PURE__ */ u2(PopupIndicatorSlot, {
+                ...popupIndicatorProps,
                 children: popupIcon
               }) : null]
             })
@@ -32242,17 +33018,17 @@ const Autocomplete = /* @__PURE__ */ D(function Autocomplete2(inProps, ref) {
           ...getInputProps()
         }
       })
-    }), anchorEl ? /* @__PURE__ */ u2(AutocompletePopper, {
+    }), anchorEl && hasPopupContent ? /* @__PURE__ */ u2(AutocompletePopper, {
       as: PopperSlot,
       ...popperProps,
       children: /* @__PURE__ */ u2(AutocompletePaper, {
         as: PaperSlot,
         ...paperProps,
-        children: [loading && groupedOptions.length === 0 ? /* @__PURE__ */ u2(AutocompleteLoading, {
+        children: [loading && renderedOptions.length === 0 ? /* @__PURE__ */ u2(AutocompleteLoading, {
           className: classes.loading,
           ownerState,
           children: loadingText
-        }) : null, groupedOptions.length === 0 && !freeSolo && !loading ? /* @__PURE__ */ u2(AutocompleteNoOptions, {
+        }) : null, renderedOptions.length === 0 && !freeSolo && !loading ? /* @__PURE__ */ u2(AutocompleteNoOptions, {
           className: classes.noOptions,
           ownerState,
           role: "presentation",
@@ -32260,10 +33036,9 @@ const Autocomplete = /* @__PURE__ */ D(function Autocomplete2(inProps, ref) {
             event.preventDefault();
           },
           children: noOptionsText
-        }) : null, groupedOptions.length > 0 ? /* @__PURE__ */ u2(ListboxSlot, {
-          as: ListboxComponentProp,
+        }) : null, renderedOptions.length > 0 ? /* @__PURE__ */ u2(ListboxSlot, {
           ...listboxProps,
-          children: groupedOptions.map((option, index) => {
+          children: renderedOptions.map((option, index) => {
             if (groupBy) {
               return renderGroup({
                 key: option.key,
@@ -32284,7 +33059,17 @@ const styles$3 = {
   },
   entered: {
     opacity: 1
+  },
+  exiting: {
+    opacity: 0
+  },
+  exited: {
+    opacity: 0
   }
+};
+const hiddenStyles$2 = {
+  opacity: 0,
+  visibility: "hidden"
 };
 const Fade = /* @__PURE__ */ D(function Fade2(props, ref) {
   const theme2 = useTheme();
@@ -32306,24 +33091,12 @@ const Fade = /* @__PURE__ */ D(function Fade2(props, ref) {
     onExiting,
     style: style2,
     timeout = defaultTimeout,
-    // eslint-disable-next-line react/prop-types
-    TransitionComponent = Transition,
     ...other
   } = props;
   const nodeRef = A$1(null);
   const handleRef = useForkRef(nodeRef, getReactElementRef(children), ref);
-  const normalizedTransitionCallback = (callback) => (maybeIsAppearing) => {
-    if (callback) {
-      const node2 = nodeRef.current;
-      if (maybeIsAppearing === void 0) {
-        callback(node2);
-      } else {
-        callback(node2, maybeIsAppearing);
-      }
-    }
-  };
-  const handleEntering = normalizedTransitionCallback(onEntering);
-  const handleEnter = normalizedTransitionCallback((node2, isAppearing) => {
+  const handleEntering = normalizedTransitionCallback(nodeRef, onEntering);
+  const handleEnter = normalizedTransitionCallback(nodeRef, (node2, isAppearing) => {
     reflow(node2);
     const transitionProps = getTransitionProps({
       style: style2,
@@ -32332,15 +33105,14 @@ const Fade = /* @__PURE__ */ D(function Fade2(props, ref) {
     }, {
       mode: "enter"
     });
-    node2.style.webkitTransition = theme2.transitions.create("opacity", transitionProps);
     node2.style.transition = theme2.transitions.create("opacity", transitionProps);
     if (onEnter) {
       onEnter(node2, isAppearing);
     }
   });
-  const handleEntered = normalizedTransitionCallback(onEntered);
-  const handleExiting = normalizedTransitionCallback(onExiting);
-  const handleExit = normalizedTransitionCallback((node2) => {
+  const handleEntered = normalizedTransitionCallback(nodeRef, onEntered);
+  const handleExiting = normalizedTransitionCallback(nodeRef, onExiting);
+  const handleExit = normalizedTransitionCallback(nodeRef, (node2) => {
     const transitionProps = getTransitionProps({
       style: style2,
       timeout,
@@ -32348,19 +33120,23 @@ const Fade = /* @__PURE__ */ D(function Fade2(props, ref) {
     }, {
       mode: "exit"
     });
-    node2.style.webkitTransition = theme2.transitions.create("opacity", transitionProps);
     node2.style.transition = theme2.transitions.create("opacity", transitionProps);
     if (onExit) {
       onExit(node2);
     }
   });
-  const handleExited = normalizedTransitionCallback(onExited);
+  const handleExited = normalizedTransitionCallback(nodeRef, (node2) => {
+    node2.style.transition = "";
+    if (onExited) {
+      onExited(node2);
+    }
+  });
   const handleAddEndListener = (next2) => {
     if (addEndListener) {
       addEndListener(nodeRef.current, next2);
     }
   };
-  return /* @__PURE__ */ u2(TransitionComponent, {
+  return /* @__PURE__ */ u2(Transition, {
     appear,
     in: inProp,
     nodeRef,
@@ -32377,14 +33153,9 @@ const Fade = /* @__PURE__ */ D(function Fade2(props, ref) {
       ownerState,
       ...restChildProps
     }) => {
-      return /* @__PURE__ */ _n(children, {
-        style: {
-          opacity: 0,
-          visibility: state === "exited" && !inProp ? "hidden" : void 0,
-          ...styles$3[state],
-          ...style2,
-          ...children.props.style
-        },
+      const childStyle = getTransitionChildStyle(state, inProp, styles$3, hiddenStyles$2, style2, children.props.style);
+      return /* @__PURE__ */ mn(children, {
+        style: childStyle,
         ref: handleRef,
         ...restChildProps
       });
@@ -32492,7 +33263,6 @@ const Backdrop = /* @__PURE__ */ D(function Backdrop2(inProps, ref) {
     children: /* @__PURE__ */ u2(RootSlot, {
       "aria-hidden": true,
       ...rootProps,
-      classes,
       ref,
       children
     })
@@ -32510,8 +33280,8 @@ function getButtonUtilityClass(slot) {
   return generateUtilityClass("MuiButton", slot);
 }
 const buttonClasses = generateUtilityClasses("MuiButton", ["root", "text", "textInherit", "textPrimary", "textSecondary", "textSuccess", "textError", "textInfo", "textWarning", "outlined", "outlinedInherit", "outlinedPrimary", "outlinedSecondary", "outlinedSuccess", "outlinedError", "outlinedInfo", "outlinedWarning", "contained", "containedInherit", "containedPrimary", "containedSecondary", "containedSuccess", "containedError", "containedInfo", "containedWarning", "disableElevation", "focusVisible", "disabled", "colorInherit", "colorPrimary", "colorSecondary", "colorSuccess", "colorError", "colorInfo", "colorWarning", "textSizeSmall", "textSizeMedium", "textSizeLarge", "outlinedSizeSmall", "outlinedSizeMedium", "outlinedSizeLarge", "containedSizeSmall", "containedSizeMedium", "containedSizeLarge", "sizeMedium", "sizeSmall", "sizeLarge", "fullWidth", "startIcon", "endIcon", "icon", "iconSizeSmall", "iconSizeMedium", "iconSizeLarge", "loading", "loadingWrapper", "loadingIconPlaceholder", "loadingIndicator", "loadingPositionCenter", "loadingPositionStart", "loadingPositionEnd"]);
-const ButtonGroupContext = /* @__PURE__ */ Q$1({});
-const ButtonGroupButtonContext = /* @__PURE__ */ Q$1(void 0);
+const ButtonGroupContext = /* @__PURE__ */ X$1({});
+const ButtonGroupButtonContext = /* @__PURE__ */ X$1(void 0);
 const useUtilityClasses$J = (ownerState) => {
   const {
     color: color2,
@@ -32596,6 +33366,17 @@ const ButtonRoot = styled(ButtonBase, {
       color: (theme2.vars || theme2).palette.action.disabled
     },
     variants: [{
+      props: ({
+        ownerState
+      }) => ownerState.startIcon || ownerState.loading && ownerState.loadingPosition === "start",
+      style: {
+        "&::before": {
+          content: '"\\200b"',
+          width: 0,
+          overflow: "hidden"
+        }
+      }
+    }, {
       props: {
         variant: "contained"
       },
@@ -33044,6 +33825,10 @@ const Button$1 = /* @__PURE__ */ D(function Button(inProps, ref) {
       })
     })
   ) : null;
+  const {
+    root,
+    ...forwardedClasses
+  } = classes;
   return /* @__PURE__ */ u2(ButtonRoot, {
     ownerState,
     className: clsx(contextProps.className, classes.root, className, positionClassName),
@@ -33055,7 +33840,7 @@ const Button$1 = /* @__PURE__ */ D(function Button(inProps, ref) {
     type,
     id: loading ? loadingId : idProp,
     ...other,
-    classes,
+    classes: forwardedClasses,
     children: [startIcon, loadingPosition !== "end" && loader, children, loadingPosition === "end" && loader, endIcon]
   });
 });
@@ -33267,7 +34052,7 @@ const SwitchBase = /* @__PURE__ */ D(function SwitchBase2(props, ref) {
     }
   };
   const handleInputChange = (event) => {
-    if (event.nativeEvent.defaultPrevented) {
+    if (event.nativeEvent.defaultPrevented || readOnly) {
       return;
     }
     const newChecked = event.target.checked;
@@ -33323,7 +34108,6 @@ const SwitchBase = /* @__PURE__ */ D(function SwitchBase2(props, ref) {
     additionalProps: {
       centerRipple: true,
       focusRipple: !disableFocusRipple,
-      disabled,
       role: void 0,
       tabIndex: null
     }
@@ -33501,17 +34285,18 @@ const Checkbox = /* @__PURE__ */ D(function Checkbox2(inProps, ref) {
     ownerState,
     additionalProps: {
       type: "checkbox",
-      icon: /* @__PURE__ */ _n(icon, {
+      icon: /* @__PURE__ */ mn(icon, {
         fontSize: icon.props.fontSize ?? size
       }),
-      checkedIcon: /* @__PURE__ */ _n(indeterminateIcon, {
+      checkedIcon: /* @__PURE__ */ mn(indeterminateIcon, {
         fontSize: indeterminateIcon.props.fontSize ?? size
       }),
       disableRipple,
       slots,
       slotProps: {
         input: mergeSlotProps$1(typeof externalInputProps === "function" ? externalInputProps(ownerState) : externalInputProps, {
-          "data-indeterminate": indeterminate
+          "data-indeterminate": indeterminate,
+          "aria-checked": indeterminate ? "mixed" : void 0
         })
       }
     }
@@ -33563,13 +34348,7 @@ function ClickAwayListener(props) {
     if (event.composedPath) {
       insideDOM = event.composedPath().includes(nodeRef.current);
     } else {
-      insideDOM = !doc.documentElement.contains(
-        // @ts-expect-error returns `false` as intended when not dispatched from a Node
-        event.target
-      ) || nodeRef.current.contains(
-        // @ts-expect-error returns `false` as intended when not dispatched from a Node
-        event.target
-      );
+      insideDOM = !contains$1(doc.documentElement, event.target) || contains$1(nodeRef.current, event.target);
     }
     if (!insideDOM && (disableReactTree || !insideReactTree)) {
       onClickAway(event);
@@ -33618,7 +34397,7 @@ function ClickAwayListener(props) {
     }
     return void 0;
   }, [handleClickAway, mouseEvent]);
-  return /* @__PURE__ */ _n(children, childrenProps);
+  return /* @__PURE__ */ mn(children, childrenProps);
 }
 const isDynamicSupport = typeof globalCss({}) === "function";
 const html = (theme2, enableColorScheme) => ({
@@ -33733,7 +34512,7 @@ function CssBaseline(inProps) {
     children,
     enableColorScheme = false
   } = props;
-  return /* @__PURE__ */ u2(k$2, {
+  return /* @__PURE__ */ u2(S, {
     children: [isDynamicSupport && /* @__PURE__ */ u2(GlobalStyles, {
       enableColorScheme
     }), !isDynamicSupport && !enableColorScheme && /* @__PURE__ */ u2("span", {
@@ -33763,7 +34542,7 @@ function ariaHidden(element, hide2) {
   }
 }
 function getPaddingRight(element) {
-  return parseInt(ownerWindow(element).getComputedStyle(element).paddingRight, 10) || 0;
+  return parseFloat(ownerWindow(element).getComputedStyle(element).paddingRight) || 0;
 }
 function isAriaHiddenForbiddenOnElement(element) {
   const forbiddenTagNames = ["TEMPLATE", "SCRIPT", "STYLE", "LINK", "MAP", "META", "NOSCRIPT", "PICTURE", "COL", "COLGROUP", "PARAM", "SLOT", "SOURCE", "TRACK"];
@@ -33928,6 +34707,13 @@ class ModalManager {
     return this.modals.length > 0 && this.modals[this.modals.length - 1] === modal;
   }
 }
+const FOCUSABLE_ATTRIBUTE = "data-mui-focusable";
+function getFocusTarget(rootElement) {
+  if (!rootElement) {
+    return null;
+  }
+  return rootElement.hasAttribute(FOCUSABLE_ATTRIBUTE) ? rootElement : rootElement.querySelector(`[${FOCUSABLE_ATTRIBUTE}]`);
+}
 const candidatesSelector = ["input", "select", "textarea", "a[href]", "button", "[tabindex]", "audio[controls]", "video[controls]", '[contenteditable]:not([contenteditable="false"])'].join(",");
 function getTabIndex(node2) {
   const tabindexAttr = parseInt(node2.getAttribute("tabindex") || "", 10);
@@ -34008,16 +34794,19 @@ function FocusTrap(props) {
     activated.current = !disableAutoFocus;
   }, [disableAutoFocus, open]);
   y(() => {
+    ignoreNextEnforceFocus.current = false;
     if (!open || !rootRef.current) {
       return;
     }
     const doc = ownerDocument(rootRef.current);
-    if (!rootRef.current.contains(doc.activeElement)) {
-      if (!rootRef.current.hasAttribute("tabIndex")) {
-        rootRef.current.setAttribute("tabIndex", "-1");
+    const activeElement$1 = activeElement(doc);
+    const focusTarget = getFocusTarget(rootRef.current) ?? rootRef.current;
+    if (!contains$1(rootRef.current, activeElement$1)) {
+      if (!focusTarget.hasAttribute("tabIndex")) {
+        focusTarget.setAttribute("tabIndex", "-1");
       }
       if (activated.current) {
-        rootRef.current.focus();
+        focusTarget.focus();
       }
     }
     return () => {
@@ -34040,7 +34829,8 @@ function FocusTrap(props) {
       if (disableEnforceFocus || !isEnabled() || nativeEvent.key !== "Tab") {
         return;
       }
-      if (doc.activeElement === rootRef.current && nativeEvent.shiftKey) {
+      const activeElement$1 = activeElement(doc);
+      if (activeElement$1 === rootRef.current && nativeEvent.shiftKey) {
         ignoreNextEnforceFocus.current = true;
         if (sentinelEnd.current) {
           sentinelEnd.current.focus();
@@ -34052,17 +34842,18 @@ function FocusTrap(props) {
       if (rootElement === null) {
         return;
       }
+      const activeEl = activeElement(doc);
       if (!doc.hasFocus() || !isEnabled() || ignoreNextEnforceFocus.current) {
         ignoreNextEnforceFocus.current = false;
         return;
       }
-      if (rootElement.contains(doc.activeElement)) {
+      if (contains$1(rootElement, activeEl)) {
         return;
       }
-      if (disableEnforceFocus && doc.activeElement !== sentinelStart.current && doc.activeElement !== sentinelEnd.current) {
+      if (disableEnforceFocus && activeEl !== sentinelStart.current && activeEl !== sentinelEnd.current) {
         return;
       }
-      if (doc.activeElement !== reactFocusEventTarget.current) {
+      if (activeEl !== reactFocusEventTarget.current) {
         reactFocusEventTarget.current = null;
       } else if (reactFocusEventTarget.current !== null) {
         return;
@@ -34071,7 +34862,7 @@ function FocusTrap(props) {
         return;
       }
       let tabbable = [];
-      if (doc.activeElement === sentinelStart.current || doc.activeElement === sentinelEnd.current) {
+      if (activeEl === sentinelStart.current || activeEl === sentinelEnd.current) {
         tabbable = getTabbable(rootRef.current);
       }
       if (tabbable.length > 0) {
@@ -34092,7 +34883,8 @@ function FocusTrap(props) {
     doc.addEventListener("focusin", contain);
     doc.addEventListener("keydown", loopFocus, true);
     const interval = setInterval(() => {
-      if (doc.activeElement && doc.activeElement.tagName === "BODY") {
+      const activeEl = activeElement(doc);
+      if (activeEl && activeEl.tagName === "BODY") {
         contain();
       }
     }, 50);
@@ -34119,13 +34911,13 @@ function FocusTrap(props) {
     }
     activated.current = true;
   };
-  return /* @__PURE__ */ u2(k$2, {
+  return /* @__PURE__ */ u2(S, {
     children: [/* @__PURE__ */ u2("div", {
       tabIndex: open ? 0 : -1,
       onFocus: handleFocusSentinel,
       ref: sentinelStart,
       "data-testid": "sentinelStart"
-    }), /* @__PURE__ */ _n(children, {
+    }), /* @__PURE__ */ mn(children, {
       ref: handleRef,
       onFocus
     }), /* @__PURE__ */ u2("div", {
@@ -34483,7 +35275,7 @@ const Modal = /* @__PURE__ */ D(function Modal2(inProps, ref) {
         disableRestoreFocus,
         isEnabled: isTopModal,
         open,
-        children: /* @__PURE__ */ _n(children, childProps)
+        children: /* @__PURE__ */ mn(children, childProps)
       })]
     })
   });
@@ -34491,12 +35283,11 @@ const Modal = /* @__PURE__ */ D(function Modal2(inProps, ref) {
 function getDialogUtilityClass(slot) {
   return generateUtilityClass("MuiDialog", slot);
 }
-const dialogClasses = generateUtilityClasses("MuiDialog", ["root", "scrollPaper", "scrollBody", "container", "paper", "paperScrollPaper", "paperScrollBody", "paperWidthFalse", "paperWidthXs", "paperWidthSm", "paperWidthMd", "paperWidthLg", "paperWidthXl", "paperFullWidth", "paperFullScreen"]);
-const DialogContext = /* @__PURE__ */ Q$1({});
+const dialogClasses = generateUtilityClasses("MuiDialog", ["root", "backdrop", "scrollPaper", "scrollBody", "container", "paper", "paperScrollPaper", "paperScrollBody", "paperWidthFalse", "paperWidthXs", "paperWidthSm", "paperWidthMd", "paperWidthLg", "paperWidthXl", "paperFullWidth", "paperFullScreen"]);
+const DialogContext = /* @__PURE__ */ X$1({});
 const DialogBackdrop = styled(Backdrop, {
   name: "MuiDialog",
-  slot: "Backdrop",
-  overrides: (props, styles2) => styles2.backdrop
+  slot: "Backdrop"
 })({
   // Improve scrollable dialog support.
   zIndex: -1
@@ -34511,6 +35302,7 @@ const useUtilityClasses$D = (ownerState) => {
   } = ownerState;
   const slots = {
     root: ["root"],
+    backdrop: ["backdrop"],
     container: ["container", `scroll${capitalize(scroll)}`],
     paper: ["paper", `paperScroll${capitalize(scroll)}`, `paperWidth${capitalize(String(maxWidth2))}`, fullWidth && "paperFullWidth", fullScreen && "paperFullScreen"]
   };
@@ -34688,6 +35480,7 @@ const Dialog = /* @__PURE__ */ D(function Dialog2(inProps, ref) {
     open,
     PaperComponent = Paper,
     PaperProps = {},
+    role = "dialog",
     scroll = "paper",
     slots = {},
     slotProps = {},
@@ -34753,14 +35546,24 @@ const Dialog = /* @__PURE__ */ D(function Dialog2(inProps, ref) {
     elementType: DialogBackdrop,
     shouldForwardComponentProp: true,
     externalForwardedProps,
-    ownerState
+    ownerState,
+    className: classes.backdrop
   });
   const [PaperSlot, paperSlotProps] = useSlot("paper", {
     elementType: DialogPaper,
     shouldForwardComponentProp: true,
     externalForwardedProps,
     ownerState,
-    className: clsx(classes.paper, PaperProps.className)
+    className: classes.paper,
+    additionalProps: {
+      elevation: 24,
+      role,
+      "aria-describedby": ariaDescribedby,
+      "aria-labelledby": ariaLabelledby,
+      "aria-modal": ariaModal,
+      tabIndex: -1,
+      [FOCUSABLE_ATTRIBUTE]: ""
+    }
   });
   const [ContainerSlot, containerSlotProps] = useSlot("container", {
     elementType: DialogContainer,
@@ -34804,11 +35607,6 @@ const Dialog = /* @__PURE__ */ D(function Dialog2(inProps, ref) {
         ...containerSlotProps,
         children: /* @__PURE__ */ u2(PaperSlot, {
           as: PaperComponent,
-          elevation: 24,
-          role: "dialog",
-          "aria-describedby": ariaDescribedby,
-          "aria-labelledby": ariaLabelledby,
-          "aria-modal": ariaModal,
           ...paperSlotProps,
           children: /* @__PURE__ */ u2(DialogContext.Provider, {
             value: dialogContextValue,
@@ -35330,7 +36128,7 @@ const FilledInputRoot = styled(InputBaseRoot, {
           borderBottom: `1px solid ${theme2.vars ? theme2.alpha(theme2.vars.palette.common.onBackground, theme2.vars.opacity.inputUnderline) : bottomLineColor}`,
           left: 0,
           bottom: 0,
-          content: '"\\00a0"',
+          content: '""',
           position: "absolute",
           right: 0,
           transition: theme2.transitions.create("border-bottom-color", {
@@ -35641,7 +36439,7 @@ const FormControl = /* @__PURE__ */ D(function FormControl2(inProps, ref) {
   const [adornedStart, setAdornedStart] = d(() => {
     let initialAdornedStart = false;
     if (children) {
-      O.forEach(children, (child) => {
+      L.forEach(children, (child) => {
         if (!isMuiElement(child, ["Input", "Select"])) {
           return;
         }
@@ -35656,7 +36454,7 @@ const FormControl = /* @__PURE__ */ D(function FormControl2(inProps, ref) {
   const [filled, setFilled] = d(() => {
     let initialFilled = false;
     if (children) {
-      O.forEach(children, (child) => {
+      L.forEach(children, (child) => {
         if (!isMuiElement(child, ["Input", "Select"])) {
           return;
         }
@@ -35883,7 +36681,7 @@ const FormControlLabel = /* @__PURE__ */ D(function FormControlLabel2(inProps, r
     ownerState,
     ref,
     ...other,
-    children: [/* @__PURE__ */ _n(control, controlProps), required2 ? /* @__PURE__ */ u2("div", {
+    children: [/* @__PURE__ */ mn(control, controlProps), required2 ? /* @__PURE__ */ u2("div", {
       children: [label, /* @__PURE__ */ u2(AsteriskComponent$1, {
         ownerState,
         "aria-hidden": true,
@@ -36221,9 +37019,21 @@ const styles$1 = {
   entered: {
     opacity: 1,
     transform: "none"
+  },
+  exiting: {
+    opacity: 0,
+    transform: getScale(0.75)
+  },
+  exited: {
+    opacity: 0,
+    transform: getScale(0.75)
   }
 };
-const isWebKit154 = typeof navigator !== "undefined" && /^((?!chrome|android).)*(safari|mobile)/i.test(navigator.userAgent) && /(os |version\/)15(.|_)4/i.test(navigator.userAgent);
+const hiddenStyles$1 = {
+  opacity: 0,
+  transform: getScale(0.75),
+  visibility: "hidden"
+};
 const Grow = /* @__PURE__ */ D(function Grow2(props, ref) {
   const {
     addEndListener,
@@ -36239,8 +37049,6 @@ const Grow = /* @__PURE__ */ D(function Grow2(props, ref) {
     onExiting,
     style: style2,
     timeout = "auto",
-    // eslint-disable-next-line react/prop-types
-    TransitionComponent = Transition,
     ...other
   } = props;
   const timer = useTimeout();
@@ -36248,18 +37056,8 @@ const Grow = /* @__PURE__ */ D(function Grow2(props, ref) {
   const theme2 = useTheme();
   const nodeRef = A$1(null);
   const handleRef = useForkRef(nodeRef, getReactElementRef(children), ref);
-  const normalizedTransitionCallback = (callback) => (maybeIsAppearing) => {
-    if (callback) {
-      const node2 = nodeRef.current;
-      if (maybeIsAppearing === void 0) {
-        callback(node2);
-      } else {
-        callback(node2, maybeIsAppearing);
-      }
-    }
-  };
-  const handleEntering = normalizedTransitionCallback(onEntering);
-  const handleEnter = normalizedTransitionCallback((node2, isAppearing) => {
+  const handleEntering = normalizedTransitionCallback(nodeRef, onEntering);
+  const handleEnter = normalizedTransitionCallback(nodeRef, (node2, isAppearing) => {
     reflow(node2);
     const {
       duration: transitionDuration,
@@ -36283,7 +37081,7 @@ const Grow = /* @__PURE__ */ D(function Grow2(props, ref) {
       duration: duration2,
       delay
     }), theme2.transitions.create("transform", {
-      duration: isWebKit154 ? duration2 : duration2 * 0.666,
+      duration: duration2 * 0.666,
       delay,
       easing: transitionTimingFunction
     })].join(",");
@@ -36291,9 +37089,9 @@ const Grow = /* @__PURE__ */ D(function Grow2(props, ref) {
       onEnter(node2, isAppearing);
     }
   });
-  const handleEntered = normalizedTransitionCallback(onEntered);
-  const handleExiting = normalizedTransitionCallback(onExiting);
-  const handleExit = normalizedTransitionCallback((node2) => {
+  const handleEntered = normalizedTransitionCallback(nodeRef, onEntered);
+  const handleExiting = normalizedTransitionCallback(nodeRef, onExiting);
+  const handleExit = normalizedTransitionCallback(nodeRef, (node2) => {
     const {
       duration: transitionDuration,
       delay,
@@ -36316,8 +37114,8 @@ const Grow = /* @__PURE__ */ D(function Grow2(props, ref) {
       duration: duration2,
       delay
     }), theme2.transitions.create("transform", {
-      duration: isWebKit154 ? duration2 : duration2 * 0.666,
-      delay: isWebKit154 ? delay : delay || duration2 * 0.333,
+      duration: duration2 * 0.666,
+      delay: delay || duration2 * 0.333,
       easing: transitionTimingFunction
     })].join(",");
     node2.style.opacity = 0;
@@ -36326,7 +37124,12 @@ const Grow = /* @__PURE__ */ D(function Grow2(props, ref) {
       onExit(node2);
     }
   });
-  const handleExited = normalizedTransitionCallback(onExited);
+  const handleExited = normalizedTransitionCallback(nodeRef, (node2) => {
+    node2.style.transition = "";
+    if (onExited) {
+      onExited(node2);
+    }
+  });
   const handleAddEndListener = (next2) => {
     if (timeout === "auto") {
       timer.start(autoTimeout.current || 0, next2);
@@ -36335,7 +37138,7 @@ const Grow = /* @__PURE__ */ D(function Grow2(props, ref) {
       addEndListener(nodeRef.current, next2);
     }
   };
-  return /* @__PURE__ */ u2(TransitionComponent, {
+  return /* @__PURE__ */ u2(Transition, {
     appear,
     in: inProp,
     nodeRef,
@@ -36352,15 +37155,9 @@ const Grow = /* @__PURE__ */ D(function Grow2(props, ref) {
       ownerState,
       ...restChildProps
     }) => {
-      return /* @__PURE__ */ _n(children, {
-        style: {
-          opacity: 0,
-          transform: getScale(0.75),
-          visibility: state === "exited" && !inProp ? "hidden" : void 0,
-          ...styles$1[state],
-          ...style2,
-          ...children.props.style
-        },
+      const childStyle = getTransitionChildStyle(state, inProp, styles$1, hiddenStyles$1, style2, children.props.style);
+      return /* @__PURE__ */ mn(children, {
+        style: childStyle,
         ref: handleRef,
         ...restChildProps
       });
@@ -36448,7 +37245,7 @@ const InputRoot = styled(InputBaseRoot, {
           borderBottom: `1px solid ${bottomLineColor}`,
           left: 0,
           bottom: 0,
-          content: '"\\00a0"',
+          content: '""',
           position: "absolute",
           right: 0,
           transition: theme2.transitions.create("border-bottom-color", {
@@ -36641,7 +37438,7 @@ const InputAdornment = /* @__PURE__ */ D(function InputAdornment2(inProps, ref) 
       children: typeof children === "string" && !disableTypography ? /* @__PURE__ */ u2(Typography$1, {
         color: "textSecondary",
         children
-      }) : /* @__PURE__ */ u2(k$2, {
+      }) : /* @__PURE__ */ u2(S, {
         children: [position2 === "start" ? (
           /* notranslate needed while Google Translate will not fix zero-width space issue */
           _span$2 || (_span$2 = /* @__PURE__ */ u2("span", {
@@ -37243,7 +38040,7 @@ const LinearProgress = /* @__PURE__ */ D(function LinearProgress2(inProps, ref) 
     })]
   });
 });
-const ListContext = /* @__PURE__ */ Q$1({});
+const ListContext = /* @__PURE__ */ X$1({});
 function getListUtilityClass(slot) {
   return generateUtilityClass("MuiList", slot);
 }
@@ -37479,6 +38276,10 @@ const ListItemButton = /* @__PURE__ */ D(function ListItemButton2(inProps, ref) 
     selected
   };
   const classes = useUtilityClasses$n(ownerState);
+  const {
+    root,
+    ...forwardedClasses
+  } = classes;
   const handleRef = useForkRef(listItemRef, ref);
   return /* @__PURE__ */ u2(ListContext.Provider, {
     value: childContext,
@@ -37490,7 +38291,7 @@ const ListItemButton = /* @__PURE__ */ D(function ListItemButton2(inProps, ref) 
       ownerState,
       className: clsx(classes.root, className),
       ...other,
-      classes,
+      classes: forwardedClasses,
       children
     })
   });
@@ -37593,6 +38394,7 @@ const ListItemTextRoot = styled("div", {
   minWidth: 0,
   marginTop: 4,
   marginBottom: 4,
+  // Combine this and the below selector once https://github.com/emotion-js/emotion/issues/3366 is solved
   [`.${typographyClasses.root}:where(& .${listItemTextClasses.primary})`]: {
     display: "block"
   },
@@ -37804,7 +38606,7 @@ const MenuList = /* @__PURE__ */ D(function MenuList2(props, ref) {
       }
       return;
     }
-    const currentFocus = ownerDocument(list).activeElement;
+    const currentFocus = activeElement(ownerDocument(list));
     if (key === "ArrowDown") {
       event.preventDefault();
       moveFocus$1(list, currentFocus, disableListWrap, disabledItemsFocusable, nextItem$1);
@@ -37845,8 +38647,8 @@ const MenuList = /* @__PURE__ */ D(function MenuList2(props, ref) {
   };
   const handleRef = useForkRef(listRef, ref);
   let activeItemIndex = -1;
-  O.forEach(children, (child, index) => {
-    if (!/* @__PURE__ */ mn(child)) {
+  L.forEach(children, (child, index) => {
+    if (!/* @__PURE__ */ hn(child)) {
       if (activeItemIndex === index) {
         activeItemIndex += 1;
         if (activeItemIndex >= children.length) {
@@ -37869,7 +38671,7 @@ const MenuList = /* @__PURE__ */ D(function MenuList2(props, ref) {
       }
     }
   });
-  const items = O.map(children, (child, index) => {
+  const items = L.map(children, (child, index) => {
     if (index === activeItemIndex) {
       const newChildProps = {};
       if (autoFocusItem) {
@@ -37878,7 +38680,7 @@ const MenuList = /* @__PURE__ */ D(function MenuList2(props, ref) {
       if (child.props.tabIndex === void 0 && variant === "selectedMenu") {
         newChildProps.tabIndex = 0;
       }
-      return /* @__PURE__ */ _n(child, newChildProps);
+      return /* @__PURE__ */ mn(child, newChildProps);
     }
     return child;
   });
@@ -38317,8 +39119,8 @@ const Menu = /* @__PURE__ */ D(function Menu2(inProps, ref) {
     }
   };
   let activeItemIndex = -1;
-  O.map(children, (child, index) => {
-    if (!/* @__PURE__ */ mn(child)) {
+  L.map(children, (child, index) => {
+    if (!/* @__PURE__ */ hn(child)) {
       return;
     }
     if (!child.props.disabled) {
@@ -38414,196 +39216,11 @@ function getMenuItemUtilityClass(slot) {
   return generateUtilityClass("MuiMenuItem", slot);
 }
 const menuItemClasses = generateUtilityClasses("MuiMenuItem", ["root", "focusVisible", "dense", "disabled", "divider", "gutters", "selected"]);
-const overridesResolver = (props, styles2) => {
-  const {
-    ownerState
-  } = props;
-  return [styles2.root, ownerState.dense && styles2.dense, ownerState.divider && styles2.divider, !ownerState.disableGutters && styles2.gutters];
-};
-const useUtilityClasses$i = (ownerState) => {
-  const {
-    disabled,
-    dense,
-    divider,
-    disableGutters,
-    selected,
-    classes
-  } = ownerState;
-  const slots = {
-    root: ["root", dense && "dense", disabled && "disabled", !disableGutters && "gutters", divider && "divider", selected && "selected"]
-  };
-  const composedClasses = composeClasses(slots, getMenuItemUtilityClass, classes);
-  return {
-    ...classes,
-    ...composedClasses
-  };
-};
-const MenuItemRoot = styled(ButtonBase, {
-  shouldForwardProp: (prop) => rootShouldForwardProp(prop) || prop === "classes",
-  name: "MuiMenuItem",
-  slot: "Root",
-  overridesResolver
-})(memoTheme(({
-  theme: theme2
-}) => ({
-  ...theme2.typography.body1,
-  display: "flex",
-  justifyContent: "flex-start",
-  alignItems: "center",
-  position: "relative",
-  textDecoration: "none",
-  minHeight: 48,
-  paddingTop: 6,
-  paddingBottom: 6,
-  boxSizing: "border-box",
-  whiteSpace: "nowrap",
-  "&:hover": {
-    textDecoration: "none",
-    backgroundColor: (theme2.vars || theme2).palette.action.hover,
-    // Reset on touch devices, it doesn't add specificity
-    "@media (hover: none)": {
-      backgroundColor: "transparent"
-    }
-  },
-  [`&.${menuItemClasses.selected}`]: {
-    backgroundColor: theme2.alpha((theme2.vars || theme2).palette.primary.main, (theme2.vars || theme2).palette.action.selectedOpacity),
-    [`&.${menuItemClasses.focusVisible}`]: {
-      backgroundColor: theme2.alpha((theme2.vars || theme2).palette.primary.main, `${(theme2.vars || theme2).palette.action.selectedOpacity} + ${(theme2.vars || theme2).palette.action.focusOpacity}`)
-    }
-  },
-  [`&.${menuItemClasses.selected}:hover`]: {
-    backgroundColor: theme2.alpha((theme2.vars || theme2).palette.primary.main, `${(theme2.vars || theme2).palette.action.selectedOpacity} + ${(theme2.vars || theme2).palette.action.hoverOpacity}`),
-    // Reset on touch devices, it doesn't add specificity
-    "@media (hover: none)": {
-      backgroundColor: theme2.alpha((theme2.vars || theme2).palette.primary.main, (theme2.vars || theme2).palette.action.selectedOpacity)
-    }
-  },
-  [`&.${menuItemClasses.focusVisible}`]: {
-    backgroundColor: (theme2.vars || theme2).palette.action.focus
-  },
-  [`&.${menuItemClasses.disabled}`]: {
-    opacity: (theme2.vars || theme2).palette.action.disabledOpacity
-  },
-  [`& + .${dividerClasses.root}`]: {
-    marginTop: theme2.spacing(1),
-    marginBottom: theme2.spacing(1)
-  },
-  [`& + .${dividerClasses.inset}`]: {
-    marginLeft: 52
-  },
-  [`& .${listItemTextClasses.root}`]: {
-    marginTop: 0,
-    marginBottom: 0
-  },
-  [`& .${listItemTextClasses.inset}`]: {
-    paddingLeft: 36
-  },
-  [`& .${listItemIconClasses.root}`]: {
-    minWidth: 36
-  },
-  variants: [{
-    props: ({
-      ownerState
-    }) => !ownerState.disableGutters,
-    style: {
-      paddingLeft: 16,
-      paddingRight: 16
-    }
-  }, {
-    props: ({
-      ownerState
-    }) => ownerState.divider,
-    style: {
-      borderBottom: `1px solid ${(theme2.vars || theme2).palette.divider}`,
-      backgroundClip: "padding-box"
-    }
-  }, {
-    props: ({
-      ownerState
-    }) => !ownerState.dense,
-    style: {
-      [theme2.breakpoints.up("sm")]: {
-        minHeight: "auto"
-      }
-    }
-  }, {
-    props: ({
-      ownerState
-    }) => ownerState.dense,
-    style: {
-      minHeight: 32,
-      // https://m2.material.io/components/menus#specs > Dense
-      paddingTop: 4,
-      paddingBottom: 4,
-      ...theme2.typography.body2,
-      [`& .${listItemIconClasses.root} svg`]: {
-        fontSize: "1.25rem"
-      }
-    }
-  }]
-})));
-const MenuItem = /* @__PURE__ */ D(function MenuItem2(inProps, ref) {
-  const props = useDefaultProps({
-    props: inProps,
-    name: "MuiMenuItem"
-  });
-  const {
-    autoFocus = false,
-    component = "li",
-    dense = false,
-    divider = false,
-    disableGutters = false,
-    focusVisibleClassName,
-    role = "menuitem",
-    tabIndex: tabIndexProp,
-    className,
-    ...other
-  } = props;
-  const context = x$1(ListContext);
-  const childContext = T$1(() => ({
-    dense: dense || context.dense || false,
-    disableGutters
-  }), [context.dense, dense, disableGutters]);
-  const menuItemRef = A$1(null);
-  useEnhancedEffect(() => {
-    if (autoFocus) {
-      if (menuItemRef.current) {
-        menuItemRef.current.focus();
-      }
-    }
-  }, [autoFocus]);
-  const ownerState = {
-    ...props,
-    dense: childContext.dense,
-    divider,
-    disableGutters
-  };
-  const classes = useUtilityClasses$i(props);
-  const handleRef = useForkRef(menuItemRef, ref);
-  let tabIndex;
-  if (!props.disabled) {
-    tabIndex = tabIndexProp !== void 0 ? tabIndexProp : -1;
-  }
-  return /* @__PURE__ */ u2(ListContext.Provider, {
-    value: childContext,
-    children: /* @__PURE__ */ u2(MenuItemRoot, {
-      ref: handleRef,
-      role,
-      tabIndex,
-      component,
-      focusVisibleClassName: clsx(classes.focusVisible, focusVisibleClassName),
-      className: clsx(classes.root, className),
-      ...other,
-      ownerState,
-      classes
-    })
-  });
-});
 function getNativeSelectUtilityClasses(slot) {
   return generateUtilityClass("MuiNativeSelect", slot);
 }
 const nativeSelectClasses = generateUtilityClasses("MuiNativeSelect", ["root", "select", "multiple", "filled", "outlined", "standard", "disabled", "icon", "iconOpen", "iconFilled", "iconOutlined", "iconStandard", "nativeInput", "error"]);
-const useUtilityClasses$h = (ownerState) => {
+const useUtilityClasses$i = (ownerState) => {
   const {
     classes,
     variant,
@@ -38762,8 +39379,8 @@ const NativeSelectInput = /* @__PURE__ */ D(function NativeSelectInput2(props, r
     variant,
     error
   };
-  const classes = useUtilityClasses$h(ownerState);
-  return /* @__PURE__ */ u2(k$2, {
+  const classes = useUtilityClasses$i(ownerState);
+  return /* @__PURE__ */ u2(S, {
     children: [/* @__PURE__ */ u2(NativeSelectSelect, {
       ownerState,
       className: clsx(classes.select, className),
@@ -38777,7 +39394,523 @@ const NativeSelectInput = /* @__PURE__ */ D(function NativeSelectInput2(props, r
     })]
   });
 });
+function getSelectUtilityClasses(slot) {
+  return generateUtilityClass("MuiSelect", slot);
+}
+const selectClasses = generateUtilityClasses("MuiSelect", ["root", "select", "multiple", "filled", "outlined", "standard", "disabled", "focused", "icon", "iconOpen", "iconFilled", "iconOutlined", "iconStandard", "nativeInput", "error"]);
+function getOpenInteractionType(event) {
+  if (!event) {
+    return null;
+  }
+  if (event.type === "mousedown" || event.type === "pointerdown" || event.type === "touchstart") {
+    return "pointer";
+  }
+  if (event.type === "keydown" || event.type === "click" && event.detail === 0) {
+    return "keyboard";
+  }
+  return null;
+}
+function isEmpty(display) {
+  return display == null || typeof display === "string" && !display.trim();
+}
+function areEqualValues$1(a2, b2) {
+  if (typeof b2 === "object" && b2 !== null) {
+    return a2 === b2;
+  }
+  return String(a2) === String(b2);
+}
+const SelectFocusSourceContext = /* @__PURE__ */ X$1(null);
+function useSelectFocusSource() {
+  const context = x$1(SelectFocusSourceContext);
+  return context;
+}
+const SelectFocusSourceProvider = SelectFocusSourceContext.Provider;
 var _span$1;
+const SelectSelect = styled(StyledSelectSelect, {
+  name: "MuiSelect",
+  slot: "Select",
+  overridesResolver: (props, styles2) => {
+    const {
+      ownerState
+    } = props;
+    return [
+      // Win specificity over the input base
+      {
+        [`&.${selectClasses.select}`]: styles2.select
+      },
+      {
+        [`&.${selectClasses.select}`]: styles2[ownerState.variant]
+      },
+      {
+        [`&.${selectClasses.error}`]: styles2.error
+      },
+      {
+        [`&.${selectClasses.multiple}`]: styles2.multiple
+      }
+    ];
+  }
+})({
+  // Win specificity over the input base
+  [`&.${selectClasses.select}`]: {
+    height: "auto",
+    // Resets for multiple select with chips
+    minHeight: "1.4375em",
+    // Required for select\text-field height consistency
+    textOverflow: "ellipsis",
+    whiteSpace: "nowrap",
+    overflow: "hidden"
+  }
+});
+const SelectIcon = styled(StyledSelectIcon, {
+  name: "MuiSelect",
+  slot: "Icon",
+  overridesResolver: (props, styles2) => {
+    const {
+      ownerState
+    } = props;
+    return [styles2.icon, ownerState.variant && styles2[`icon${capitalize(ownerState.variant)}`], ownerState.open && styles2.iconOpen];
+  }
+})({});
+const SelectNativeInput = styled("input", {
+  shouldForwardProp: (prop) => slotShouldForwardProp(prop) && prop !== "classes",
+  name: "MuiSelect",
+  slot: "NativeInput"
+})({
+  bottom: 0,
+  left: 0,
+  position: "absolute",
+  opacity: 0,
+  pointerEvents: "none",
+  width: "100%",
+  boxSizing: "border-box"
+});
+const useUtilityClasses$h = (ownerState) => {
+  const {
+    classes,
+    variant,
+    disabled,
+    multiple,
+    open,
+    error
+  } = ownerState;
+  const slots = {
+    select: ["select", variant, disabled && "disabled", multiple && "multiple", error && "error"],
+    icon: ["icon", `icon${capitalize(variant)}`, open && "iconOpen", disabled && "disabled"],
+    nativeInput: ["nativeInput"]
+  };
+  return composeClasses(slots, getSelectUtilityClasses, classes);
+};
+const SelectInput = /* @__PURE__ */ D(function SelectInput2(props, ref) {
+  const {
+    "aria-describedby": ariaDescribedby,
+    "aria-label": ariaLabel,
+    autoFocus,
+    autoWidth,
+    children,
+    className,
+    defaultOpen,
+    defaultValue: defaultValue2,
+    disabled,
+    displayEmpty,
+    error = false,
+    IconComponent,
+    inputRef: inputRefProp,
+    labelId,
+    MenuProps = {},
+    multiple,
+    name,
+    onBlur,
+    onChange,
+    onClose,
+    onFocus,
+    // eslint-disable-next-line react/prop-types
+    onKeyDown,
+    // eslint-disable-next-line react/prop-types
+    onMouseDown,
+    onOpen,
+    open: openProp,
+    readOnly,
+    renderValue,
+    required: required2,
+    SelectDisplayProps = {},
+    tabIndex: tabIndexProp,
+    // catching `type` from Input which makes no sense for SelectInput
+    type,
+    value: valueProp,
+    variant = "standard",
+    ...other
+  } = props;
+  const [value, setValueState] = useControlled({
+    controlled: valueProp,
+    default: defaultValue2,
+    name: "Select"
+  });
+  const [openState, setOpenState] = useControlled({
+    controlled: openProp,
+    default: defaultOpen,
+    name: "Select"
+  });
+  const inputRef = A$1(null);
+  const displayRef = A$1(null);
+  const [displayNode, setDisplayNode] = d(null);
+  const {
+    current: isOpenControlled
+  } = A$1(openProp != null);
+  const [menuMinWidthState, setMenuMinWidthState] = d();
+  const [openInteractionType, setOpenInteractionType] = d(null);
+  const handleRef = useForkRef(ref, inputRefProp);
+  const handleDisplayRef = q$1((node2) => {
+    displayRef.current = node2;
+    if (node2) {
+      setDisplayNode(node2);
+    }
+  }, []);
+  const anchorElement = displayNode?.parentNode;
+  F$1(handleRef, () => ({
+    focus: () => {
+      displayRef.current.focus();
+    },
+    node: inputRef.current,
+    value
+  }), [value]);
+  const open = displayNode !== null && openState;
+  y(() => {
+    if (!open || !anchorElement || autoWidth) {
+      return void 0;
+    }
+    if (typeof ResizeObserver === "undefined") {
+      return void 0;
+    }
+    const observer = new ResizeObserver(() => {
+      setMenuMinWidthState(anchorElement.clientWidth);
+    });
+    observer.observe(anchorElement);
+    return () => {
+      observer.disconnect();
+    };
+  }, [open, anchorElement, autoWidth]);
+  y(() => {
+    if (defaultOpen && openState && displayNode && !isOpenControlled) {
+      setMenuMinWidthState(autoWidth ? null : anchorElement.clientWidth);
+      displayRef.current.focus();
+    }
+  }, [displayNode, autoWidth]);
+  y(() => {
+    if (autoFocus) {
+      displayRef.current.focus();
+    }
+  }, [autoFocus]);
+  y(() => {
+    if (!labelId) {
+      return void 0;
+    }
+    const label = ownerDocument(displayRef.current).getElementById(labelId);
+    if (label) {
+      const handler = () => {
+        if (getSelection().isCollapsed) {
+          displayRef.current.focus();
+        }
+      };
+      label.addEventListener("click", handler);
+      return () => {
+        label.removeEventListener("click", handler);
+      };
+    }
+    return void 0;
+  }, [labelId]);
+  const update = (openParam, event) => {
+    if (openParam) {
+      setOpenInteractionType(getOpenInteractionType(event));
+      if (onOpen) {
+        onOpen(event);
+      }
+    } else {
+      setOpenInteractionType(null);
+      if (onClose) {
+        onClose(event);
+      }
+    }
+    if (!isOpenControlled) {
+      setMenuMinWidthState(autoWidth ? null : anchorElement.clientWidth);
+      setOpenState(openParam);
+    }
+  };
+  const handleMouseDown = (event) => {
+    onMouseDown?.(event);
+    if (event.button !== 0) {
+      return;
+    }
+    event.preventDefault();
+    displayRef.current.focus();
+    update(true, event);
+  };
+  const handleClose = (event) => {
+    update(false, event);
+  };
+  const childrenArray = L.toArray(children);
+  const handleChange = (event) => {
+    const child = childrenArray.find((childItem) => childItem.props.value === event.target.value);
+    if (child === void 0) {
+      return;
+    }
+    setValueState(child.props.value);
+    if (onChange) {
+      onChange(event, child);
+    }
+  };
+  const handleItemClick = (child) => (event) => {
+    let newValue;
+    if (!event.currentTarget.hasAttribute("tabindex")) {
+      return;
+    }
+    if (multiple) {
+      newValue = Array.isArray(value) ? value.slice() : [];
+      const itemIndex = value.indexOf(child.props.value);
+      if (itemIndex === -1) {
+        newValue.push(child.props.value);
+      } else {
+        newValue.splice(itemIndex, 1);
+      }
+    } else {
+      newValue = child.props.value;
+    }
+    if (child.props.onClick) {
+      child.props.onClick(event);
+    }
+    if (value !== newValue) {
+      setValueState(newValue);
+      if (onChange) {
+        const nativeEvent = event.nativeEvent || event;
+        const clonedEvent = new nativeEvent.constructor(nativeEvent.type, nativeEvent);
+        Object.defineProperty(clonedEvent, "target", {
+          writable: true,
+          value: {
+            value: newValue,
+            name
+          }
+        });
+        onChange(clonedEvent, child);
+      }
+    }
+    if (!multiple) {
+      update(false, event);
+    }
+  };
+  const handleKeyDown = (event) => {
+    if (!readOnly) {
+      const validKeys = [
+        " ",
+        "ArrowUp",
+        "ArrowDown",
+        // The native select doesn't respond to enter on macOS, but it's recommended by
+        // https://www.w3.org/WAI/ARIA/apg/patterns/combobox/examples/combobox-select-only/
+        "Enter"
+      ];
+      if (validKeys.includes(event.key)) {
+        event.preventDefault();
+        update(true, event);
+      }
+      onKeyDown?.(event);
+    }
+  };
+  const handleBlur = (event) => {
+    if (!open && onBlur) {
+      Object.defineProperty(event, "target", {
+        writable: true,
+        value: {
+          value,
+          name
+        }
+      });
+      onBlur(event);
+    }
+  };
+  delete other["aria-invalid"];
+  let display;
+  let displaySingle;
+  const displayMultiple = [];
+  let computeDisplay = false;
+  if (isFilled({
+    value
+  }) || displayEmpty) {
+    if (renderValue) {
+      display = renderValue(value);
+    } else {
+      computeDisplay = true;
+    }
+  }
+  const items = childrenArray.map((child) => {
+    if (!/* @__PURE__ */ hn(child)) {
+      return null;
+    }
+    let selected;
+    if (multiple) {
+      if (!Array.isArray(value)) {
+        throw new Error(formatMuiErrorMessage(2));
+      }
+      selected = value.some((v2) => areEqualValues$1(v2, child.props.value));
+      if (selected && computeDisplay) {
+        displayMultiple.push(child.props.children);
+      }
+    } else {
+      selected = areEqualValues$1(value, child.props.value);
+      if (selected && computeDisplay) {
+        displaySingle = child.props.children;
+      }
+    }
+    return /* @__PURE__ */ mn(child, {
+      "aria-selected": selected ? "true" : "false",
+      onClick: handleItemClick(child),
+      onKeyUp: (event) => {
+        if (event.key === " ") {
+          event.preventDefault();
+        }
+        if (child.props.onKeyUp) {
+          child.props.onKeyUp(event);
+        }
+      },
+      role: "option",
+      selected,
+      value: void 0,
+      // The value is most likely not a valid HTML attribute.
+      "data-value": child.props.value
+      // Instead, we provide it as a data attribute.
+    });
+  });
+  if (computeDisplay) {
+    if (multiple) {
+      if (displayMultiple.length === 0) {
+        display = null;
+      } else {
+        display = displayMultiple.reduce((output, child, index) => {
+          output.push(child);
+          if (index < displayMultiple.length - 1) {
+            output.push(", ");
+          }
+          return output;
+        }, []);
+      }
+    } else {
+      display = displaySingle;
+    }
+  }
+  let menuMinWidth = menuMinWidthState;
+  if (!autoWidth && isOpenControlled && displayNode) {
+    menuMinWidth = anchorElement.clientWidth;
+  }
+  let tabIndex;
+  if (typeof tabIndexProp !== "undefined") {
+    tabIndex = tabIndexProp;
+  } else {
+    tabIndex = disabled ? null : 0;
+  }
+  const buttonId = SelectDisplayProps.id || (name ? `mui-component-select-${name}` : void 0);
+  const ownerState = {
+    ...props,
+    variant,
+    value,
+    open,
+    error
+  };
+  const classes = useUtilityClasses$h(ownerState);
+  const paperProps = {
+    ...MenuProps.PaperProps,
+    ...typeof MenuProps.slotProps?.paper === "function" ? MenuProps.slotProps.paper(ownerState) : MenuProps.slotProps?.paper
+  };
+  const listProps = {
+    ...MenuProps.MenuListProps,
+    ...typeof MenuProps.slotProps?.list === "function" ? MenuProps.slotProps.list(ownerState) : MenuProps.slotProps?.list
+  };
+  const listboxId = useId();
+  return /* @__PURE__ */ u2(S, {
+    children: [/* @__PURE__ */ u2(SelectSelect, {
+      as: "div",
+      ref: handleDisplayRef,
+      tabIndex,
+      role: "combobox",
+      "aria-controls": open ? listboxId : void 0,
+      "aria-disabled": disabled ? "true" : void 0,
+      "aria-expanded": open ? "true" : "false",
+      "aria-haspopup": "listbox",
+      "aria-label": ariaLabel,
+      "aria-labelledby": [labelId, buttonId].filter(Boolean).join(" ") || void 0,
+      "aria-describedby": ariaDescribedby,
+      "aria-required": required2 ? "true" : void 0,
+      "aria-invalid": error ? "true" : void 0,
+      onKeyDown: handleKeyDown,
+      onMouseDown: disabled || readOnly ? null : handleMouseDown,
+      onBlur: handleBlur,
+      onFocus,
+      ...SelectDisplayProps,
+      ownerState,
+      className: clsx(SelectDisplayProps.className, classes.select, className),
+      id: buttonId,
+      children: isEmpty(display) ? (
+        // notranslate needed while Google Translate will not fix zero-width space issue
+        _span$1 || (_span$1 = /* @__PURE__ */ u2("span", {
+          className: "notranslate",
+          "aria-hidden": true,
+          children: "​"
+        }))
+      ) : display
+    }), /* @__PURE__ */ u2(SelectNativeInput, {
+      "aria-invalid": error,
+      value: Array.isArray(value) ? value.join(",") : value,
+      name,
+      ref: inputRef,
+      "aria-hidden": true,
+      onChange: handleChange,
+      tabIndex: -1,
+      disabled,
+      className: classes.nativeInput,
+      autoFocus,
+      required: required2,
+      ...other,
+      ownerState
+    }), /* @__PURE__ */ u2(SelectIcon, {
+      as: IconComponent,
+      className: classes.icon,
+      ownerState
+    }), /* @__PURE__ */ u2(SelectFocusSourceProvider, {
+      value: openInteractionType,
+      children: /* @__PURE__ */ u2(Menu, {
+        id: `menu-${name || ""}`,
+        anchorEl: anchorElement,
+        open,
+        onClose: handleClose,
+        anchorOrigin: {
+          vertical: "bottom",
+          horizontal: "center"
+        },
+        transformOrigin: {
+          vertical: "top",
+          horizontal: "center"
+        },
+        ...MenuProps,
+        slotProps: {
+          ...MenuProps.slotProps,
+          list: {
+            "aria-labelledby": labelId,
+            role: "listbox",
+            "aria-multiselectable": multiple ? "true" : void 0,
+            disableListWrap: true,
+            id: listboxId,
+            ...listProps
+          },
+          paper: {
+            ...paperProps,
+            style: {
+              minWidth: menuMinWidth,
+              ...paperProps != null ? paperProps.style : null
+            }
+          }
+        },
+        children: items
+      })
+    })]
+  });
+});
+var _span;
 const NotchedOutlineRoot$1 = styled("fieldset", {
   name: "MuiNotchedOutlined",
   shouldForwardProp: rootShouldForwardProp
@@ -38888,7 +40021,7 @@ function NotchedOutline(props) {
         children: label
       }) : (
         // notranslate needed while Google Translate will not fix zero-width space issue
-        _span$1 || (_span$1 = /* @__PURE__ */ u2("span", {
+        _span || (_span = /* @__PURE__ */ u2("span", {
           className: "notranslate",
           "aria-hidden": true,
           children: "​"
@@ -39107,7 +40240,7 @@ const OutlinedInput = /* @__PURE__ */ D(function OutlinedInput2(inProps, ref) {
       slotProps
     },
     additionalProps: {
-      label: label != null && label !== "" && fcs.required ? /* @__PURE__ */ u2(k$2, {
+      label: label != null && label !== "" && fcs.required ? /* @__PURE__ */ u2(S, {
         children: [label, " ", "*"]
       }) : label
     }
@@ -39135,6 +40268,338 @@ const OutlinedInput = /* @__PURE__ */ D(function OutlinedInput2(inProps, ref) {
   });
 });
 OutlinedInput.muiName = "Input";
+const useUtilityClasses$f = (ownerState) => {
+  const {
+    classes
+  } = ownerState;
+  const slots = {
+    root: ["root"]
+  };
+  const composedClasses = composeClasses(slots, getSelectUtilityClasses, classes);
+  return {
+    ...classes,
+    ...composedClasses
+  };
+};
+const styledRootConfig = {
+  name: "MuiSelect",
+  slot: "Root",
+  shouldForwardProp: (prop) => rootShouldForwardProp(prop) && prop !== "variant"
+};
+const StyledInput = styled(Input, styledRootConfig)("");
+const StyledOutlinedInput = styled(OutlinedInput, styledRootConfig)("");
+const StyledFilledInput = styled(FilledInput, styledRootConfig)("");
+const Select = /* @__PURE__ */ D(function Select2(inProps, ref) {
+  const props = useDefaultProps({
+    name: "MuiSelect",
+    props: inProps
+  });
+  const {
+    autoWidth = false,
+    children,
+    classes: classesProp = {},
+    className,
+    defaultOpen = false,
+    displayEmpty = false,
+    IconComponent = ArrowDropDownIcon$1,
+    id,
+    input,
+    inputProps,
+    label,
+    labelId,
+    MenuProps,
+    multiple = false,
+    native = false,
+    onClose,
+    onOpen,
+    open,
+    renderValue,
+    SelectDisplayProps,
+    variant: variantProp = "outlined",
+    ...other
+  } = props;
+  const inputComponent = native ? NativeSelectInput : SelectInput;
+  const muiFormControl = useFormControl();
+  const fcs = formControlState({
+    props,
+    muiFormControl,
+    states: ["variant", "error"]
+  });
+  const variant = fcs.variant || variantProp;
+  const ownerState = {
+    ...props,
+    variant,
+    classes: classesProp
+  };
+  const classes = useUtilityClasses$f(ownerState);
+  const {
+    root,
+    ...restOfClasses
+  } = classes;
+  const InputComponent = input || {
+    standard: /* @__PURE__ */ u2(StyledInput, {
+      ownerState
+    }),
+    outlined: /* @__PURE__ */ u2(StyledOutlinedInput, {
+      label,
+      ownerState
+    }),
+    filled: /* @__PURE__ */ u2(StyledFilledInput, {
+      ownerState
+    })
+  }[variant];
+  const inputComponentRef = useForkRef(ref, getReactElementRef(InputComponent));
+  return /* @__PURE__ */ u2(S, {
+    children: /* @__PURE__ */ mn(InputComponent, {
+      // Most of the logic is implemented in `SelectInput`.
+      // The `Select` component is a simple API wrapper to expose something better to play with.
+      inputComponent,
+      inputProps: {
+        children,
+        error: fcs.error,
+        IconComponent,
+        variant,
+        type: void 0,
+        // We render a select. We can ignore the type provided by the `Input`.
+        multiple,
+        ...native ? {
+          id
+        } : {
+          autoWidth,
+          defaultOpen,
+          displayEmpty,
+          labelId,
+          MenuProps,
+          onClose,
+          onOpen,
+          open,
+          renderValue,
+          SelectDisplayProps: {
+            id,
+            ...SelectDisplayProps
+          }
+        },
+        ...inputProps,
+        classes: inputProps ? deepmerge(restOfClasses, inputProps.classes) : restOfClasses,
+        ...input ? input.props.inputProps : {}
+      },
+      ...(multiple && native || displayEmpty) && variant === "outlined" ? {
+        notched: true
+      } : {},
+      ref: inputComponentRef,
+      className: clsx(InputComponent.props.className, className, classes.root),
+      // If a custom input is provided via 'input' prop, do not allow 'variant' to be propagated to it's root element. See https://github.com/mui/material-ui/issues/33894.
+      ...!input && {
+        variant
+      },
+      ...other
+    })
+  });
+});
+Select.muiName = "Select";
+function focusWithVisible(element, focusSource) {
+  if (focusSource == null) {
+    element.focus();
+    return;
+  }
+  try {
+    element.focus({
+      focusVisible: focusSource === "keyboard"
+    });
+  } catch (error) {
+    element.focus();
+  }
+}
+const overridesResolver = (props, styles2) => {
+  const {
+    ownerState
+  } = props;
+  return [styles2.root, ownerState.dense && styles2.dense, ownerState.divider && styles2.divider, !ownerState.disableGutters && styles2.gutters];
+};
+const useUtilityClasses$e = (ownerState) => {
+  const {
+    disabled,
+    dense,
+    divider,
+    disableGutters,
+    selected,
+    classes
+  } = ownerState;
+  const slots = {
+    root: ["root", dense && "dense", disabled && "disabled", !disableGutters && "gutters", divider && "divider", selected && "selected"]
+  };
+  const composedClasses = composeClasses(slots, getMenuItemUtilityClass, classes);
+  return {
+    ...classes,
+    ...composedClasses
+  };
+};
+const MenuItemRoot = styled(ButtonBase, {
+  shouldForwardProp: (prop) => rootShouldForwardProp(prop) || prop === "classes",
+  name: "MuiMenuItem",
+  slot: "Root",
+  overridesResolver
+})(memoTheme(({
+  theme: theme2
+}) => ({
+  ...theme2.typography.body1,
+  display: "flex",
+  justifyContent: "flex-start",
+  alignItems: "center",
+  position: "relative",
+  textDecoration: "none",
+  minHeight: 48,
+  paddingTop: 6,
+  paddingBottom: 6,
+  boxSizing: "border-box",
+  whiteSpace: "nowrap",
+  "&:hover": {
+    textDecoration: "none",
+    backgroundColor: (theme2.vars || theme2).palette.action.hover,
+    // Reset on touch devices, it doesn't add specificity
+    "@media (hover: none)": {
+      backgroundColor: "transparent"
+    }
+  },
+  [`&.${menuItemClasses.selected}`]: {
+    backgroundColor: theme2.alpha((theme2.vars || theme2).palette.primary.main, (theme2.vars || theme2).palette.action.selectedOpacity),
+    [`&.${menuItemClasses.focusVisible}`]: {
+      backgroundColor: theme2.alpha((theme2.vars || theme2).palette.primary.main, `${(theme2.vars || theme2).palette.action.selectedOpacity} + ${(theme2.vars || theme2).palette.action.focusOpacity}`)
+    }
+  },
+  [`&.${menuItemClasses.selected}:hover`]: {
+    backgroundColor: theme2.alpha((theme2.vars || theme2).palette.primary.main, `${(theme2.vars || theme2).palette.action.selectedOpacity} + ${(theme2.vars || theme2).palette.action.hoverOpacity}`),
+    // Reset on touch devices, it doesn't add specificity
+    "@media (hover: none)": {
+      backgroundColor: theme2.alpha((theme2.vars || theme2).palette.primary.main, (theme2.vars || theme2).palette.action.selectedOpacity)
+    }
+  },
+  [`&.${menuItemClasses.focusVisible}`]: {
+    backgroundColor: (theme2.vars || theme2).palette.action.focus
+  },
+  [`&.${menuItemClasses.disabled}`]: {
+    opacity: (theme2.vars || theme2).palette.action.disabledOpacity
+  },
+  [`& + .${dividerClasses.root}`]: {
+    marginTop: theme2.spacing(1),
+    marginBottom: theme2.spacing(1)
+  },
+  [`& + .${dividerClasses.inset}`]: {
+    marginLeft: 52
+  },
+  [`& .${listItemTextClasses.root}`]: {
+    marginTop: 0,
+    marginBottom: 0
+  },
+  [`& .${listItemTextClasses.inset}`]: {
+    paddingLeft: 36
+  },
+  [`& .${listItemIconClasses.root}`]: {
+    minWidth: 36
+  },
+  variants: [{
+    props: ({
+      ownerState
+    }) => !ownerState.disableGutters,
+    style: {
+      paddingLeft: 16,
+      paddingRight: 16
+    }
+  }, {
+    props: ({
+      ownerState
+    }) => ownerState.divider,
+    style: {
+      borderBottom: `1px solid ${(theme2.vars || theme2).palette.divider}`,
+      backgroundClip: "padding-box"
+    }
+  }, {
+    props: ({
+      ownerState
+    }) => !ownerState.dense,
+    style: {
+      [theme2.breakpoints.up("sm")]: {
+        minHeight: "auto"
+      }
+    }
+  }, {
+    props: ({
+      ownerState
+    }) => ownerState.dense,
+    style: {
+      minHeight: 32,
+      // https://m2.material.io/components/menus#specs > Dense
+      paddingTop: 4,
+      paddingBottom: 4,
+      ...theme2.typography.body2,
+      [`& .${listItemIconClasses.root} svg`]: {
+        fontSize: "1.25rem"
+      }
+    }
+  }]
+})));
+const MenuItem = /* @__PURE__ */ D(function MenuItem2(inProps, ref) {
+  const props = useDefaultProps({
+    props: inProps,
+    name: "MuiMenuItem"
+  });
+  const {
+    autoFocus = false,
+    component = "li",
+    dense = false,
+    divider = false,
+    disableGutters = false,
+    focusVisibleClassName,
+    role = "menuitem",
+    tabIndex: tabIndexProp,
+    className,
+    ...other
+  } = props;
+  const focusSource = useSelectFocusSource();
+  const context = x$1(ListContext);
+  const childContext = T$1(() => ({
+    dense: dense || context.dense || false,
+    disableGutters
+  }), [context.dense, dense, disableGutters]);
+  const menuItemRef = A$1(null);
+  useEnhancedEffect(() => {
+    if (autoFocus) {
+      if (menuItemRef.current) {
+        focusWithVisible(menuItemRef.current, focusSource);
+      }
+    }
+  }, [autoFocus]);
+  const ownerState = {
+    ...props,
+    dense: childContext.dense,
+    divider,
+    disableGutters
+  };
+  const classes = useUtilityClasses$e(props);
+  const handleRef = useForkRef(menuItemRef, ref);
+  const {
+    root,
+    ...forwardedClasses
+  } = classes;
+  let tabIndex;
+  if (!props.disabled) {
+    tabIndex = tabIndexProp !== void 0 ? tabIndexProp : -1;
+  }
+  return /* @__PURE__ */ u2(ListContext.Provider, {
+    value: childContext,
+    children: /* @__PURE__ */ u2(MenuItemRoot, {
+      ref: handleRef,
+      role,
+      tabIndex,
+      component,
+      focusVisibleClassName: clsx(classes.focusVisible, focusVisibleClassName),
+      className: clsx(classes.root, className),
+      ...other,
+      ownerState,
+      classes: forwardedClasses
+    })
+  });
+});
 const RadioButtonUncheckedIcon$1 = createSvgIcon(/* @__PURE__ */ u2("path", {
   d: "M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8z"
 }));
@@ -39203,7 +40668,7 @@ function RadioButtonIcon(props) {
     })]
   });
 }
-const RadioGroupContext = /* @__PURE__ */ Q$1(void 0);
+const RadioGroupContext = /* @__PURE__ */ X$1(void 0);
 function useRadioGroup() {
   return x$1(RadioGroupContext);
 }
@@ -39211,7 +40676,7 @@ function getRadioUtilityClass(slot) {
   return generateUtilityClass("MuiRadio", slot);
 }
 const radioClasses = generateUtilityClasses("MuiRadio", ["root", "checked", "disabled", "colorPrimary", "colorSecondary", "sizeSmall"]);
-const useUtilityClasses$f = (ownerState) => {
+const useUtilityClasses$d = (ownerState) => {
   const {
     classes,
     color: color2,
@@ -39289,7 +40754,7 @@ const RadioRoot = styled(SwitchBase, {
     }
   }]
 })));
-function areEqualValues$1(a2, b2) {
+function areEqualValues(a2, b2) {
   if (typeof b2 === "object" && b2 !== null) {
     return a2 === b2;
   }
@@ -39335,14 +40800,14 @@ const Radio = /* @__PURE__ */ D(function Radio2(inProps, ref) {
     color: color2,
     size
   };
-  const classes = useUtilityClasses$f(ownerState);
+  const classes = useUtilityClasses$d(ownerState);
   const radioGroup = useRadioGroup();
   let checked = checkedProp;
   const onChange = createChainedFunction(onChangeProp, radioGroup && radioGroup.onChange);
   let name = nameProp;
   if (radioGroup) {
     if (typeof checked === "undefined") {
-      checked = areEqualValues$1(radioGroup.value, props.value);
+      checked = areEqualValues(radioGroup.value, props.value);
     }
     if (typeof name === "undefined") {
       name = radioGroup.name;
@@ -39369,10 +40834,10 @@ const Radio = /* @__PURE__ */ D(function Radio2(inProps, ref) {
     ownerState,
     additionalProps: {
       type: "radio",
-      icon: /* @__PURE__ */ _n(icon, {
+      icon: /* @__PURE__ */ mn(icon, {
         fontSize: icon.props.fontSize ?? size
       }),
-      checkedIcon: /* @__PURE__ */ _n(checkedIcon, {
+      checkedIcon: /* @__PURE__ */ mn(checkedIcon, {
         fontSize: checkedIcon.props.fontSize ?? size
       }),
       disabled,
@@ -39394,7 +40859,7 @@ function getRadioGroupUtilityClass(slot) {
   return generateUtilityClass("MuiRadioGroup", slot);
 }
 generateUtilityClasses("MuiRadioGroup", ["root", "row", "error"]);
-const useUtilityClasses$e = (props) => {
+const useUtilityClasses$c = (props) => {
   const {
     classes,
     row,
@@ -39419,7 +40884,7 @@ const RadioGroup = /* @__PURE__ */ D(function RadioGroup2(props, ref) {
     ...other
   } = props;
   const rootRef = A$1(null);
-  const classes = useUtilityClasses$e(props);
+  const classes = useUtilityClasses$c(props);
   const [value, setValueState] = useControlled({
     controlled: valueProp,
     default: defaultValue2,
@@ -39470,604 +40935,6 @@ const visuallyHidden = {
   whiteSpace: "nowrap",
   width: "1px"
 };
-function getSelectUtilityClasses(slot) {
-  return generateUtilityClass("MuiSelect", slot);
-}
-const selectClasses = generateUtilityClasses("MuiSelect", ["root", "select", "multiple", "filled", "outlined", "standard", "disabled", "focused", "icon", "iconOpen", "iconFilled", "iconOutlined", "iconStandard", "nativeInput", "error"]);
-var _span;
-const SelectSelect = styled(StyledSelectSelect, {
-  name: "MuiSelect",
-  slot: "Select",
-  overridesResolver: (props, styles2) => {
-    const {
-      ownerState
-    } = props;
-    return [
-      // Win specificity over the input base
-      {
-        [`&.${selectClasses.select}`]: styles2.select
-      },
-      {
-        [`&.${selectClasses.select}`]: styles2[ownerState.variant]
-      },
-      {
-        [`&.${selectClasses.error}`]: styles2.error
-      },
-      {
-        [`&.${selectClasses.multiple}`]: styles2.multiple
-      }
-    ];
-  }
-})({
-  // Win specificity over the input base
-  [`&.${selectClasses.select}`]: {
-    height: "auto",
-    // Resets for multiple select with chips
-    minHeight: "1.4375em",
-    // Required for select\text-field height consistency
-    textOverflow: "ellipsis",
-    whiteSpace: "nowrap",
-    overflow: "hidden"
-  }
-});
-const SelectIcon = styled(StyledSelectIcon, {
-  name: "MuiSelect",
-  slot: "Icon",
-  overridesResolver: (props, styles2) => {
-    const {
-      ownerState
-    } = props;
-    return [styles2.icon, ownerState.variant && styles2[`icon${capitalize(ownerState.variant)}`], ownerState.open && styles2.iconOpen];
-  }
-})({});
-const SelectNativeInput = styled("input", {
-  shouldForwardProp: (prop) => slotShouldForwardProp(prop) && prop !== "classes",
-  name: "MuiSelect",
-  slot: "NativeInput"
-})({
-  bottom: 0,
-  left: 0,
-  position: "absolute",
-  opacity: 0,
-  pointerEvents: "none",
-  width: "100%",
-  boxSizing: "border-box"
-});
-function areEqualValues(a2, b2) {
-  if (typeof b2 === "object" && b2 !== null) {
-    return a2 === b2;
-  }
-  return String(a2) === String(b2);
-}
-function isEmpty(display) {
-  return display == null || typeof display === "string" && !display.trim();
-}
-const useUtilityClasses$d = (ownerState) => {
-  const {
-    classes,
-    variant,
-    disabled,
-    multiple,
-    open,
-    error
-  } = ownerState;
-  const slots = {
-    select: ["select", variant, disabled && "disabled", multiple && "multiple", error && "error"],
-    icon: ["icon", `icon${capitalize(variant)}`, open && "iconOpen", disabled && "disabled"],
-    nativeInput: ["nativeInput"]
-  };
-  return composeClasses(slots, getSelectUtilityClasses, classes);
-};
-const SelectInput = /* @__PURE__ */ D(function SelectInput2(props, ref) {
-  const {
-    "aria-describedby": ariaDescribedby,
-    "aria-label": ariaLabel,
-    autoFocus,
-    autoWidth,
-    children,
-    className,
-    defaultOpen,
-    defaultValue: defaultValue2,
-    disabled,
-    displayEmpty,
-    error = false,
-    IconComponent,
-    inputRef: inputRefProp,
-    labelId,
-    MenuProps = {},
-    multiple,
-    name,
-    onBlur,
-    onChange,
-    onClose,
-    onFocus,
-    onOpen,
-    open: openProp,
-    readOnly,
-    renderValue,
-    required: required2,
-    SelectDisplayProps = {},
-    tabIndex: tabIndexProp,
-    // catching `type` from Input which makes no sense for SelectInput
-    type,
-    value: valueProp,
-    variant = "standard",
-    ...other
-  } = props;
-  const [value, setValueState] = useControlled({
-    controlled: valueProp,
-    default: defaultValue2,
-    name: "Select"
-  });
-  const [openState, setOpenState] = useControlled({
-    controlled: openProp,
-    default: defaultOpen,
-    name: "Select"
-  });
-  const inputRef = A$1(null);
-  const displayRef = A$1(null);
-  const [displayNode, setDisplayNode] = d(null);
-  const {
-    current: isOpenControlled
-  } = A$1(openProp != null);
-  const [menuMinWidthState, setMenuMinWidthState] = d();
-  const handleRef = useForkRef(ref, inputRefProp);
-  const handleDisplayRef = q$1((node2) => {
-    displayRef.current = node2;
-    if (node2) {
-      setDisplayNode(node2);
-    }
-  }, []);
-  const anchorElement = displayNode?.parentNode;
-  F$1(handleRef, () => ({
-    focus: () => {
-      displayRef.current.focus();
-    },
-    node: inputRef.current,
-    value
-  }), [value]);
-  y(() => {
-    if (defaultOpen && openState && displayNode && !isOpenControlled) {
-      setMenuMinWidthState(autoWidth ? null : anchorElement.clientWidth);
-      displayRef.current.focus();
-    }
-  }, [displayNode, autoWidth]);
-  y(() => {
-    if (autoFocus) {
-      displayRef.current.focus();
-    }
-  }, [autoFocus]);
-  y(() => {
-    if (!labelId) {
-      return void 0;
-    }
-    const label = ownerDocument(displayRef.current).getElementById(labelId);
-    if (label) {
-      const handler = () => {
-        if (getSelection().isCollapsed) {
-          displayRef.current.focus();
-        }
-      };
-      label.addEventListener("click", handler);
-      return () => {
-        label.removeEventListener("click", handler);
-      };
-    }
-    return void 0;
-  }, [labelId]);
-  const update = (open2, event) => {
-    if (open2) {
-      if (onOpen) {
-        onOpen(event);
-      }
-    } else if (onClose) {
-      onClose(event);
-    }
-    if (!isOpenControlled) {
-      setMenuMinWidthState(autoWidth ? null : anchorElement.clientWidth);
-      setOpenState(open2);
-    }
-  };
-  const handleMouseDown = (event) => {
-    if (event.button !== 0) {
-      return;
-    }
-    event.preventDefault();
-    displayRef.current.focus();
-    update(true, event);
-  };
-  const handleClose = (event) => {
-    update(false, event);
-  };
-  const childrenArray = O.toArray(children);
-  const handleChange = (event) => {
-    const child = childrenArray.find((childItem) => childItem.props.value === event.target.value);
-    if (child === void 0) {
-      return;
-    }
-    setValueState(child.props.value);
-    if (onChange) {
-      onChange(event, child);
-    }
-  };
-  const handleItemClick = (child) => (event) => {
-    let newValue;
-    if (!event.currentTarget.hasAttribute("tabindex")) {
-      return;
-    }
-    if (multiple) {
-      newValue = Array.isArray(value) ? value.slice() : [];
-      const itemIndex = value.indexOf(child.props.value);
-      if (itemIndex === -1) {
-        newValue.push(child.props.value);
-      } else {
-        newValue.splice(itemIndex, 1);
-      }
-    } else {
-      newValue = child.props.value;
-    }
-    if (child.props.onClick) {
-      child.props.onClick(event);
-    }
-    if (value !== newValue) {
-      setValueState(newValue);
-      if (onChange) {
-        const nativeEvent = event.nativeEvent || event;
-        const clonedEvent = new nativeEvent.constructor(nativeEvent.type, nativeEvent);
-        Object.defineProperty(clonedEvent, "target", {
-          writable: true,
-          value: {
-            value: newValue,
-            name
-          }
-        });
-        onChange(clonedEvent, child);
-      }
-    }
-    if (!multiple) {
-      update(false, event);
-    }
-  };
-  const handleKeyDown = (event) => {
-    if (!readOnly) {
-      const validKeys = [
-        " ",
-        "ArrowUp",
-        "ArrowDown",
-        // The native select doesn't respond to enter on macOS, but it's recommended by
-        // https://www.w3.org/WAI/ARIA/apg/patterns/combobox/examples/combobox-select-only/
-        "Enter"
-      ];
-      if (validKeys.includes(event.key)) {
-        event.preventDefault();
-        update(true, event);
-      }
-    }
-  };
-  const open = displayNode !== null && openState;
-  const handleBlur = (event) => {
-    if (!open && onBlur) {
-      Object.defineProperty(event, "target", {
-        writable: true,
-        value: {
-          value,
-          name
-        }
-      });
-      onBlur(event);
-    }
-  };
-  delete other["aria-invalid"];
-  let display;
-  let displaySingle;
-  const displayMultiple = [];
-  let computeDisplay = false;
-  if (isFilled({
-    value
-  }) || displayEmpty) {
-    if (renderValue) {
-      display = renderValue(value);
-    } else {
-      computeDisplay = true;
-    }
-  }
-  const items = childrenArray.map((child) => {
-    if (!/* @__PURE__ */ mn(child)) {
-      return null;
-    }
-    let selected;
-    if (multiple) {
-      if (!Array.isArray(value)) {
-        throw new Error(formatMuiErrorMessage(2));
-      }
-      selected = value.some((v2) => areEqualValues(v2, child.props.value));
-      if (selected && computeDisplay) {
-        displayMultiple.push(child.props.children);
-      }
-    } else {
-      selected = areEqualValues(value, child.props.value);
-      if (selected && computeDisplay) {
-        displaySingle = child.props.children;
-      }
-    }
-    return /* @__PURE__ */ _n(child, {
-      "aria-selected": selected ? "true" : "false",
-      onClick: handleItemClick(child),
-      onKeyUp: (event) => {
-        if (event.key === " ") {
-          event.preventDefault();
-        }
-        if (child.props.onKeyUp) {
-          child.props.onKeyUp(event);
-        }
-      },
-      role: "option",
-      selected,
-      value: void 0,
-      // The value is most likely not a valid HTML attribute.
-      "data-value": child.props.value
-      // Instead, we provide it as a data attribute.
-    });
-  });
-  if (computeDisplay) {
-    if (multiple) {
-      if (displayMultiple.length === 0) {
-        display = null;
-      } else {
-        display = displayMultiple.reduce((output, child, index) => {
-          output.push(child);
-          if (index < displayMultiple.length - 1) {
-            output.push(", ");
-          }
-          return output;
-        }, []);
-      }
-    } else {
-      display = displaySingle;
-    }
-  }
-  let menuMinWidth = menuMinWidthState;
-  if (!autoWidth && isOpenControlled && displayNode) {
-    menuMinWidth = anchorElement.clientWidth;
-  }
-  let tabIndex;
-  if (typeof tabIndexProp !== "undefined") {
-    tabIndex = tabIndexProp;
-  } else {
-    tabIndex = disabled ? null : 0;
-  }
-  const buttonId = SelectDisplayProps.id || (name ? `mui-component-select-${name}` : void 0);
-  const ownerState = {
-    ...props,
-    variant,
-    value,
-    open,
-    error
-  };
-  const classes = useUtilityClasses$d(ownerState);
-  const paperProps = {
-    ...MenuProps.PaperProps,
-    ...typeof MenuProps.slotProps?.paper === "function" ? MenuProps.slotProps.paper(ownerState) : MenuProps.slotProps?.paper
-  };
-  const listProps = {
-    ...MenuProps.MenuListProps,
-    ...typeof MenuProps.slotProps?.list === "function" ? MenuProps.slotProps.list(ownerState) : MenuProps.slotProps?.list
-  };
-  const listboxId = useId();
-  return /* @__PURE__ */ u2(k$2, {
-    children: [/* @__PURE__ */ u2(SelectSelect, {
-      as: "div",
-      ref: handleDisplayRef,
-      tabIndex,
-      role: "combobox",
-      "aria-controls": open ? listboxId : void 0,
-      "aria-disabled": disabled ? "true" : void 0,
-      "aria-expanded": open ? "true" : "false",
-      "aria-haspopup": "listbox",
-      "aria-label": ariaLabel,
-      "aria-labelledby": [labelId, buttonId].filter(Boolean).join(" ") || void 0,
-      "aria-describedby": ariaDescribedby,
-      "aria-required": required2 ? "true" : void 0,
-      "aria-invalid": error ? "true" : void 0,
-      onKeyDown: handleKeyDown,
-      onMouseDown: disabled || readOnly ? null : handleMouseDown,
-      onBlur: handleBlur,
-      onFocus,
-      ...SelectDisplayProps,
-      ownerState,
-      className: clsx(SelectDisplayProps.className, classes.select, className),
-      id: buttonId,
-      children: isEmpty(display) ? (
-        // notranslate needed while Google Translate will not fix zero-width space issue
-        _span || (_span = /* @__PURE__ */ u2("span", {
-          className: "notranslate",
-          "aria-hidden": true,
-          children: "​"
-        }))
-      ) : display
-    }), /* @__PURE__ */ u2(SelectNativeInput, {
-      "aria-invalid": error,
-      value: Array.isArray(value) ? value.join(",") : value,
-      name,
-      ref: inputRef,
-      "aria-hidden": true,
-      onChange: handleChange,
-      tabIndex: -1,
-      disabled,
-      className: classes.nativeInput,
-      autoFocus,
-      required: required2,
-      ...other,
-      ownerState
-    }), /* @__PURE__ */ u2(SelectIcon, {
-      as: IconComponent,
-      className: classes.icon,
-      ownerState
-    }), /* @__PURE__ */ u2(Menu, {
-      id: `menu-${name || ""}`,
-      anchorEl: anchorElement,
-      open,
-      onClose: handleClose,
-      anchorOrigin: {
-        vertical: "bottom",
-        horizontal: "center"
-      },
-      transformOrigin: {
-        vertical: "top",
-        horizontal: "center"
-      },
-      ...MenuProps,
-      slotProps: {
-        ...MenuProps.slotProps,
-        list: {
-          "aria-labelledby": labelId,
-          role: "listbox",
-          "aria-multiselectable": multiple ? "true" : void 0,
-          disableListWrap: true,
-          id: listboxId,
-          ...listProps
-        },
-        paper: {
-          ...paperProps,
-          style: {
-            minWidth: menuMinWidth,
-            ...paperProps != null ? paperProps.style : null
-          }
-        }
-      },
-      children: items
-    })]
-  });
-});
-const useUtilityClasses$c = (ownerState) => {
-  const {
-    classes
-  } = ownerState;
-  const slots = {
-    root: ["root"]
-  };
-  const composedClasses = composeClasses(slots, getSelectUtilityClasses, classes);
-  return {
-    ...classes,
-    ...composedClasses
-  };
-};
-const styledRootConfig = {
-  name: "MuiSelect",
-  slot: "Root",
-  shouldForwardProp: (prop) => rootShouldForwardProp(prop) && prop !== "variant"
-};
-const StyledInput = styled(Input, styledRootConfig)("");
-const StyledOutlinedInput = styled(OutlinedInput, styledRootConfig)("");
-const StyledFilledInput = styled(FilledInput, styledRootConfig)("");
-const Select = /* @__PURE__ */ D(function Select2(inProps, ref) {
-  const props = useDefaultProps({
-    name: "MuiSelect",
-    props: inProps
-  });
-  const {
-    autoWidth = false,
-    children,
-    classes: classesProp = {},
-    className,
-    defaultOpen = false,
-    displayEmpty = false,
-    IconComponent = ArrowDropDownIcon$1,
-    id,
-    input,
-    inputProps,
-    label,
-    labelId,
-    MenuProps,
-    multiple = false,
-    native = false,
-    onClose,
-    onOpen,
-    open,
-    renderValue,
-    SelectDisplayProps,
-    variant: variantProp = "outlined",
-    ...other
-  } = props;
-  const inputComponent = native ? NativeSelectInput : SelectInput;
-  const muiFormControl = useFormControl();
-  const fcs = formControlState({
-    props,
-    muiFormControl,
-    states: ["variant", "error"]
-  });
-  const variant = fcs.variant || variantProp;
-  const ownerState = {
-    ...props,
-    variant,
-    classes: classesProp
-  };
-  const classes = useUtilityClasses$c(ownerState);
-  const {
-    root,
-    ...restOfClasses
-  } = classes;
-  const InputComponent = input || {
-    standard: /* @__PURE__ */ u2(StyledInput, {
-      ownerState
-    }),
-    outlined: /* @__PURE__ */ u2(StyledOutlinedInput, {
-      label,
-      ownerState
-    }),
-    filled: /* @__PURE__ */ u2(StyledFilledInput, {
-      ownerState
-    })
-  }[variant];
-  const inputComponentRef = useForkRef(ref, getReactElementRef(InputComponent));
-  return /* @__PURE__ */ u2(k$2, {
-    children: /* @__PURE__ */ _n(InputComponent, {
-      // Most of the logic is implemented in `SelectInput`.
-      // The `Select` component is a simple API wrapper to expose something better to play with.
-      inputComponent,
-      inputProps: {
-        children,
-        error: fcs.error,
-        IconComponent,
-        variant,
-        type: void 0,
-        // We render a select. We can ignore the type provided by the `Input`.
-        multiple,
-        ...native ? {
-          id
-        } : {
-          autoWidth,
-          defaultOpen,
-          displayEmpty,
-          labelId,
-          MenuProps,
-          onClose,
-          onOpen,
-          open,
-          renderValue,
-          SelectDisplayProps: {
-            id,
-            ...SelectDisplayProps
-          }
-        },
-        ...inputProps,
-        classes: inputProps ? deepmerge(restOfClasses, inputProps.classes) : restOfClasses,
-        ...input ? input.props.inputProps : {}
-      },
-      ...(multiple && native || displayEmpty) && variant === "outlined" ? {
-        notched: true
-      } : {},
-      ref: inputComponentRef,
-      className: clsx(InputComponent.props.className, className, classes.root),
-      // If a custom input is provided via 'input' prop, do not allow 'variant' to be propagated to it's root element. See https://github.com/mui/material-ui/issues/33894.
-      ...!input && {
-        variant
-      },
-      ...other
-    })
-  });
-});
-Select.muiName = "Select";
 function areArraysEqual(array1, array2, itemComparer = (a2, b2) => a2 === b2) {
   return array1.length === array2.length && array1.every((value, index) => itemComparer(value, array2[index]));
 }
@@ -40145,8 +41012,8 @@ function focusThumb({
   activeIndex,
   setActive
 }) {
-  const doc = ownerDocument(sliderRef.current);
-  if (!sliderRef.current?.contains(doc.activeElement) || Number(doc?.activeElement?.getAttribute("data-index")) !== activeIndex) {
+  const activeElement$1 = activeElement(ownerDocument(sliderRef.current));
+  if (!contains$1(sliderRef.current, activeElement$1) || Number(activeElement$1?.getAttribute("data-index")) !== activeIndex) {
     sliderRef.current?.querySelector(`[type="range"][data-index="${activeIndex}"]`).focus();
   }
   if (setActive) {
@@ -40374,7 +41241,8 @@ function useSlider(parameters) {
     otherHandlers?.onKeyDown?.(event);
   };
   useEnhancedEffect(() => {
-    if (disabled && sliderRef.current.contains(document.activeElement)) {
+    const activeElement$1 = activeElement(ownerDocument(sliderRef.current));
+    if (disabled && contains$1(sliderRef.current, activeElement$1)) {
       document.activeElement?.blur();
     }
   }, [disabled]);
@@ -40732,9 +41600,9 @@ function SliderValueLabel$1(props) {
   if (!children) {
     return null;
   }
-  return /* @__PURE__ */ _n(children, {
+  return /* @__PURE__ */ mn(children, {
     className: children.props.className
-  }, /* @__PURE__ */ u2(k$2, {
+  }, /* @__PURE__ */ u2(S, {
     children: [children.props.children, /* @__PURE__ */ u2("span", {
       className: clsx(classes.offset, className),
       "aria-hidden": true,
@@ -41442,7 +42310,7 @@ const Slider = /* @__PURE__ */ D(function Slider2(inputProps, ref) {
       } else {
         markActive = track === "normal" && (range ? mark.value >= values2[0] && mark.value <= values2[values2.length - 1] : mark.value <= values2[0]) || track === "inverted" && (range ? mark.value <= values2[0] || mark.value >= values2[values2.length - 1] : mark.value >= values2[0]);
       }
-      return /* @__PURE__ */ u2(k$2, {
+      return /* @__PURE__ */ u2(S, {
         children: [/* @__PURE__ */ u2(MarkSlot, {
           "data-index": index,
           ...markProps,
@@ -41829,7 +42697,7 @@ const Tooltip$1 = /* @__PURE__ */ D(function Tooltip(inProps, ref) {
     TransitionProps,
     ...other
   } = props;
-  const children = /* @__PURE__ */ mn(childrenProp) ? childrenProp : /* @__PURE__ */ u2("span", {
+  const children = /* @__PURE__ */ hn(childrenProp) ? childrenProp : /* @__PURE__ */ u2("span", {
     children: childrenProp
   });
   const theme2 = useTheme();
@@ -41909,9 +42777,19 @@ const Tooltip$1 = /* @__PURE__ */ D(function Tooltip(inProps, ref) {
   };
   const [, setChildIsFocusVisible] = d(false);
   const handleBlur = (event) => {
-    if (!isFocusVisible(event.target)) {
+    const target = event?.target ?? childNode;
+    if (!target || !isFocusVisible(target)) {
       setChildIsFocusVisible(false);
-      handleMouseLeave(event);
+      const closeEvent = event ?? new Event("blur");
+      if (!event && target) {
+        Object.defineProperty(closeEvent, "target", {
+          value: target
+        });
+        Object.defineProperty(closeEvent, "currentTarget", {
+          value: target
+        });
+      }
+      handleMouseLeave(closeEvent);
     }
   };
   const handleFocus = (event) => {
@@ -42103,8 +42981,8 @@ const Tooltip$1 = /* @__PURE__ */ D(function Tooltip(inProps, ref) {
     ownerState,
     ref: setArrowRef
   });
-  return /* @__PURE__ */ u2(k$2, {
-    children: [/* @__PURE__ */ _n(children, childrenProps), /* @__PURE__ */ u2(PopperSlot, {
+  return /* @__PURE__ */ u2(S, {
+    children: [/* @__PURE__ */ mn(children, childrenProps), /* @__PURE__ */ u2(PopperSlot, {
       as: PopperComponentProp ?? Popper2,
       placement,
       anchorEl: followCursor ? {
@@ -42318,6 +43196,8 @@ const SwitchTrack = styled("span", {
   height: "100%",
   width: "100%",
   borderRadius: 14 / 2,
+  boxSizing: "border-box",
+  border: "1px solid transparent",
   zIndex: -1,
   transition: theme2.transitions.create(["opacity", "background-color"], {
     duration: theme2.transitions.duration.shortest
@@ -42333,6 +43213,8 @@ const SwitchThumb = styled("span", {
 }) => ({
   boxShadow: (theme2.vars || theme2).shadows[1],
   backgroundColor: "currentColor",
+  boxSizing: "border-box",
+  border: "1px solid transparent",
   width: 20,
   height: 20,
   borderRadius: "50%"
@@ -42359,6 +43241,7 @@ const Switch = /* @__PURE__ */ D(function Switch2(inProps, ref) {
     size
   };
   const classes = useUtilityClasses$9(ownerState);
+  const externalInputProps = slotProps.input;
   const externalForwardedProps = {
     slots,
     slotProps
@@ -42412,12 +43295,9 @@ const Switch = /* @__PURE__ */ D(function Switch2(inProps, ref) {
         ...slotProps.switchBase && {
           root: typeof slotProps.switchBase === "function" ? slotProps.switchBase(ownerState) : slotProps.switchBase
         },
-        input: {
+        input: mergeSlotProps$1(typeof externalInputProps === "function" ? externalInputProps(ownerState) : externalInputProps, {
           role: "switch"
-        },
-        ...slotProps.input && {
-          input: typeof slotProps.input === "function" ? slotProps.input(ownerState) : slotProps.input
-        }
+        })
       }
     }), /* @__PURE__ */ u2(TrackSlot, {
       ...trackSlotProps
@@ -42637,7 +43517,7 @@ const Tab = /* @__PURE__ */ D(function Tab2(inProps, ref) {
     wrapped
   };
   const classes = useUtilityClasses$8(ownerState);
-  const icon = iconProp && label && /* @__PURE__ */ mn(iconProp) ? /* @__PURE__ */ _n(iconProp, {
+  const icon = iconProp && label && /* @__PURE__ */ hn(iconProp) ? /* @__PURE__ */ mn(iconProp, {
     className: clsx(classes.icon, iconProp.props.className)
   }) : iconProp;
   const handleClick = (event) => {
@@ -42668,14 +43548,14 @@ const Tab = /* @__PURE__ */ D(function Tab2(inProps, ref) {
     ownerState,
     tabIndex: selected ? 0 : -1,
     ...other,
-    children: [iconPosition === "top" || iconPosition === "start" ? /* @__PURE__ */ u2(k$2, {
+    children: [iconPosition === "top" || iconPosition === "start" ? /* @__PURE__ */ u2(S, {
       children: [icon, label]
-    }) : /* @__PURE__ */ u2(k$2, {
+    }) : /* @__PURE__ */ u2(S, {
       children: [label, icon]
     }), indicator]
   });
 });
-const TableContext = /* @__PURE__ */ Q$1();
+const TableContext = /* @__PURE__ */ X$1();
 function getTableUtilityClass(slot) {
   return generateUtilityClass("MuiTable", slot);
 }
@@ -42761,7 +43641,7 @@ const Table = /* @__PURE__ */ D(function Table2(inProps, ref) {
     })
   });
 });
-const Tablelvl2Context = /* @__PURE__ */ Q$1();
+const Tablelvl2Context = /* @__PURE__ */ X$1();
 function getTableBodyUtilityClass(slot) {
   return generateUtilityClass("MuiTableBody", slot);
 }
@@ -43642,7 +44522,7 @@ const Tabs = /* @__PURE__ */ D(function Tabs2(inProps, ref) {
     slots,
     slotProps: {
       indicator: TabIndicatorProps,
-      scrollButton: TabScrollButtonProps,
+      scrollButtons: TabScrollButtonProps,
       ...slotProps
     }
   };
@@ -43925,15 +44805,15 @@ const Tabs = /* @__PURE__ */ D(function Tabs2(inProps, ref) {
     ...indicatorSlotProps
   });
   let childIndex = 0;
-  const children = O.map(childrenProp, (child) => {
-    if (!/* @__PURE__ */ mn(child)) {
+  const children = L.map(childrenProp, (child) => {
+    if (!/* @__PURE__ */ hn(child)) {
       return null;
     }
     const childValue = child.props.value === void 0 ? childIndex : child.props.value;
     valueToIndex.set(childValue, childIndex);
     const selected = childValue === value;
     childIndex += 1;
-    return /* @__PURE__ */ _n(child, {
+    return /* @__PURE__ */ mn(child, {
       fullWidth: variant === "fullWidth",
       indicator: selected && !mounted && indicator,
       selected,
@@ -43951,8 +44831,8 @@ const Tabs = /* @__PURE__ */ D(function Tabs2(inProps, ref) {
       return;
     }
     const list = tabListRef.current;
-    const currentFocus = ownerDocument(list).activeElement;
-    const role = currentFocus.getAttribute("role");
+    const currentFocus = activeElement(ownerDocument(list));
+    const role = currentFocus?.getAttribute("role");
     if (role !== "tab") {
       return;
     }
@@ -44471,7 +45351,7 @@ function ThemeTreeNodeLabel({
 const ArrowDropDownIcon = createSvgIcon(/* @__PURE__ */ u2("path", {
   d: "m7 10 5 5 5-5z"
 }));
-function SimpleSelect({ value, options, onChange, placeholder, fullWidth, sx }) {
+function SimpleSelect({ value, options, onChange, placeholder, fullWidth, sx, disabled = false }) {
   const [isOpen, setIsOpen] = d(false);
   const wrapperRef = A$1(null);
   const selectedLabel = options.find((opt) => opt.value === value)?.label || value;
@@ -44503,7 +45383,9 @@ function SimpleSelect({ value, options, onChange, placeholder, fullWidth, sx }) 
         /* @__PURE__ */ u2(
           Box$1,
           {
-            onClick: () => setIsOpen(!isOpen),
+            onClick: () => {
+              if (!disabled) setIsOpen(!isOpen);
+            },
             sx: {
               display: "flex",
               alignItems: "center",
@@ -44512,7 +45394,8 @@ function SimpleSelect({ value, options, onChange, placeholder, fullWidth, sx }) 
               border: "1px solid rgba(0,0,0,0.15)",
               borderRadius: "6px",
               padding: "6px 10px",
-              cursor: "pointer",
+              cursor: disabled ? "not-allowed" : "pointer",
+              opacity: disabled ? 0.55 : 1,
               bgcolor: "#fff",
               "&:hover": {
                 borderColor: "rgba(0,0,0,0.4)"
@@ -44549,7 +45432,8 @@ function SimpleSelect({ value, options, onChange, placeholder, fullWidth, sx }) 
                 sx: {
                   padding: "8px 12px",
                   fontSize: 13,
-                  cursor: "pointer",
+                  cursor: disabled ? "not-allowed" : "pointer",
+                  opacity: disabled ? 0.55 : 1,
                   "&:hover": {
                     bgcolor: "action.hover"
                   },
@@ -44799,6 +45683,7 @@ class NamePromptModal extends obsidian.Modal {
     super(app);
     this.options = options;
   }
+  options;
   resolvePromise = null;
   openAndGetValue() {
     return new Promise((resolve) => {
@@ -44841,7 +45726,7 @@ class NamePromptModal extends obsidian.Modal {
       this.resolvePromise(null);
       this.resolvePromise = null;
     }
-    bn(this.contentEl);
+    pn(this.contentEl);
   }
 }
 const AddCircleOutlineIcon = createSvgIcon(/* @__PURE__ */ u2("path", {
@@ -45033,12 +45918,12 @@ const createStoreImpl = (createState) => {
 const createStore = ((createState) => createState ? createStoreImpl(createState) : createStoreImpl);
 const identity = (arg2) => arg2;
 function useStore(api, selector = identity) {
-  const slice2 = Rn.useSyncExternalStore(
+  const slice2 = gn.useSyncExternalStore(
     api.subscribe,
-    Rn.useCallback(() => selector(api.getState()), [api, selector]),
-    Rn.useCallback(() => selector(api.getInitialState()), [api, selector])
+    gn.useCallback(() => selector(api.getState()), [api, selector]),
+    gn.useCallback(() => selector(api.getInitialState()), [api, selector])
   );
-  Rn.useDebugValue(slice2);
+  gn.useDebugValue(slice2);
   return slice2;
 }
 const createImpl = (createState) => {
@@ -45070,7 +45955,7 @@ function validateServices(services, source = "validateServices") {
     );
   }
 }
-const ZustandStoreContext = Q$1(null);
+const ZustandStoreContext = X$1(null);
 function useZustandAppStore(selector, equalityFn) {
   const store = x$1(ZustandStoreContext);
   if (!store) {
@@ -45080,7 +45965,7 @@ function useZustandAppStore(selector, equalityFn) {
   }
   return useStore(store, selector);
 }
-const DataStoreContext = Q$1(null);
+const DataStoreContext = X$1(null);
 function useDataStore() {
   const store = x$1(DataStoreContext);
   if (!store) {
@@ -45090,11 +45975,11 @@ function useDataStore() {
   }
   return store;
 }
-const InputServiceContext = Q$1(null);
-const UseCasesContext = Q$1(null);
-const UiPortContext = Q$1(null);
-const ModalPortContext = Q$1(null);
-const MessageRenderPortContext = Q$1(null);
+const InputServiceContext = X$1(null);
+const UseCasesContext = X$1(null);
+const UiPortContext = X$1(null);
+const ModalPortContext = X$1(null);
+const MessageRenderPortContext = X$1(null);
 function useUseCases() {
   const useCases = x$1(UseCasesContext);
   if (!useCases) {
@@ -46332,7 +47217,7 @@ function createAppStore(settingsRepository) {
     }))
   );
 }
-const STORE_TOKEN = Symbol("STORE_TOKEN");
+const STORE_TOKEN = /* @__PURE__ */ Symbol("STORE_TOKEN");
 function getZustandState(store, selector) {
   return selector(store.getState());
 }
@@ -47163,6 +48048,8 @@ class TimerUseCase {
     this.store = store;
     this.timerStateService = timerStateService;
   }
+  store;
+  timerStateService;
   getTimers() {
     return this.store.getState().timer.timers;
   }
@@ -47448,6 +48335,8 @@ class RecordInputUseCase {
     this.store = store;
     this.deps = deps;
   }
+  store;
+  deps;
   prepareCreateRecord(params) {
     return this.getKernel().prepareCreate(params);
   }
@@ -47871,7 +48760,7 @@ function mountWithServices(containerEl, children, services) {
     services: finalServices,
     unmount: () => {
       try {
-        bn(containerEl);
+        pn(containerEl);
       } catch (e2) {
       }
     }
@@ -47879,7 +48768,7 @@ function mountWithServices(containerEl, children, services) {
 }
 function unmountPreact(containerEl) {
   try {
-    bn(containerEl);
+    pn(containerEl);
   } catch (e2) {
   }
 }
@@ -48862,6 +49751,7 @@ function QuickInputEditor({
       blockId: currentBlockId,
       themeId: selectedThemeId,
       formData: { ...formData, __timeDirection: timeDirection },
+      meta: { timeDirection },
       template,
       theme: currentTheme,
       templateId,
@@ -48878,6 +49768,7 @@ function QuickInputEditor({
       blockId: currentBlockId,
       themeId: selectedThemeId,
       formData: { ...draftFormData, __timeDirection: directionOverride },
+      meta: { timeDirection: directionOverride },
       template,
       theme: currentTheme,
       templateId,
@@ -48986,6 +49877,12 @@ class QuickInputModal extends obsidian.Modal {
     this.options = options;
     this.services = createServices();
   }
+  blockId;
+  context;
+  themeId;
+  onSave;
+  allowBlockSwitch;
+  options;
   static activeModal = null;
   services;
   cleanupKeyboardDetection = null;
@@ -49065,8 +49962,8 @@ class QuickInputModal extends obsidian.Modal {
       return el.isContentEditable;
     };
     const hasActiveKeyboardInput = () => {
-      const activeElement = document.activeElement;
-      return !!activeElement && this.contentEl.contains(activeElement) && isKeyboardInput(activeElement);
+      const activeElement2 = document.activeElement;
+      return !!activeElement2 && this.contentEl.contains(activeElement2) && isKeyboardInput(activeElement2);
     };
     const getBodyContainer = () => this.contentEl.querySelector(".think-modal__body");
     const ensureTargetVisible = (target) => {
@@ -49653,7 +50550,7 @@ class AiTextPromptModal extends obsidian.Modal {
       this.resolvePromise(null);
       this.resolvePromise = null;
     }
-    bn(this.contentEl);
+    pn(this.contentEl);
   }
 }
 const CheckCircleIcon = createSvgIcon(/* @__PURE__ */ u2("path", {
@@ -49698,6 +50595,7 @@ class AiBatchConfirmModal extends obsidian.Modal {
     this.args = args;
     this.services = createServices();
   }
+  args;
   services;
   cleanupBackdropCloseGuard = null;
   resolvePromise = null;
@@ -49800,7 +50698,7 @@ function AiBatchConfirmForm({
         cmd,
         blockId: block?.id || "",
         themeId,
-        formData: normalizeAiFormData(initialTemplate, { ...cmd.fieldValues || {} }),
+        formData: normalizeAiFormData(initialTemplate ?? void 0, { ...cmd.fieldValues || {} }),
         saved: false,
         skipped: false
       };
@@ -50431,7 +51329,7 @@ function FloatingPanel({
           }
         ),
         /* @__PURE__ */ u2("div", { style: bodyMergedStyle, children }),
-        resizable && !mobile && !inline && /* @__PURE__ */ u2(k$2, { children: [
+        resizable && !mobile && !inline && /* @__PURE__ */ u2(S, { children: [
           /* @__PURE__ */ u2(
             "div",
             {
@@ -50618,7 +51516,9 @@ function MarkdownContent({
   contentType = "markdown",
   sourcePath = "",
   className = "",
-  onClick
+  onClick,
+  onDblClick,
+  onTouchEnd
 }) {
   const elRef = A$1(null);
   y(() => {
@@ -50640,7 +51540,7 @@ function MarkdownContent({
       if (elRef.current && renderPort) renderPort.clear(elRef.current);
     };
   }, [renderPort, content, contentType, sourcePath, className]);
-  return /* @__PURE__ */ u2("div", { ref: elRef, className: `md-content ${className}`.trim(), onClick });
+  return /* @__PURE__ */ u2("div", { ref: elRef, className: `md-content ${className}`.trim(), onClick, onDblClick, onTouchEnd });
 }
 const BlockItem = ({ item, fields, isNarrow, app, messageRenderPort, allThemes }) => {
   const metadataFields = fields.filter((f2) => f2 !== "title" && f2 !== "content");
@@ -50675,7 +51575,6 @@ const BlockItem = ({ item, fields, isNarrow, app, messageRenderPort, allThemes }
         MarkdownContent,
         {
           renderPort: messageRenderPort,
-          app,
           content: effectiveContent || "",
           contentType: "markdown",
           sourcePath: item.file?.path || "",
@@ -53183,7 +54082,7 @@ function ThemeTreeNodeItem({
       }
     }
   };
-  return /* @__PURE__ */ u2(k$2, { children: [
+  return /* @__PURE__ */ u2(S, { children: [
     /* @__PURE__ */ u2(
       ListItemButton,
       {
@@ -54222,7 +55121,7 @@ class FloatingTimerWidget {
     }
     this.widget = new FloatingWidget(
       "floating-timer-widget",
-      () => _$1(TimerView, {
+      () => k$2(TimerView, {
         app: this.plugin.app,
         actionService: this.plugin.actionService,
         timerService: this.plugin.timerService,
@@ -55361,8 +56260,8 @@ function TemplateEditorModal({ isOpen, onClose, block, theme: theme2, existingOv
     });
   };
   const handleSave = async () => {
-    const activeElement = document.activeElement;
-    if (activeElement && typeof activeElement.blur === "function") activeElement.blur();
+    const activeElement2 = document.activeElement;
+    if (activeElement2 && typeof activeElement2.blur === "function") activeElement2.blur();
     await new Promise((resolve) => window.setTimeout(resolve, 0));
     const draft = localOverrideRef.current;
     console.groupCollapsed("[主题模板编辑器][保存] 用户点击保存配置");
@@ -56453,7 +57352,7 @@ function ThemeScanDialog({
   const renderActions = () => {
     switch (state) {
       case "config":
-        return /* @__PURE__ */ u2(k$2, { children: [
+        return /* @__PURE__ */ u2(S, { children: [
           /* @__PURE__ */ u2(Button$1, { onClick: onClose, startIcon: /* @__PURE__ */ u2(CloseIcon, {}), children: "取消" }),
           /* @__PURE__ */ u2(
             Button$1,
@@ -56469,7 +57368,7 @@ function ThemeScanDialog({
       case "scanning":
         return /* @__PURE__ */ u2(Button$1, { disabled: true, children: "扫描中..." });
       case "results":
-        return /* @__PURE__ */ u2(k$2, { children: [
+        return /* @__PURE__ */ u2(S, { children: [
           /* @__PURE__ */ u2(Button$1, { onClick: () => setState("config"), startIcon: /* @__PURE__ */ u2(RefreshIcon, {}), children: "重新扫描" }),
           /* @__PURE__ */ u2(Button$1, { onClick: onClose, children: "取消" }),
           /* @__PURE__ */ u2(
@@ -56490,7 +57389,7 @@ function ThemeScanDialog({
       case "importing":
         return /* @__PURE__ */ u2(Button$1, { disabled: true, children: "导入中..." });
       case "completed":
-        return /* @__PURE__ */ u2(k$2, { children: [
+        return /* @__PURE__ */ u2(S, { children: [
           /* @__PURE__ */ u2(Button$1, { onClick: () => setState("config"), startIcon: /* @__PURE__ */ u2(RefreshIcon, {}), children: "再次扫描" }),
           /* @__PURE__ */ u2(Button$1, { onClick: onClose, variant: "contained", startIcon: /* @__PURE__ */ u2(CheckCircleIcon, {}), children: "完成" })
         ] });
@@ -56541,7 +57440,7 @@ function ThemeImportButton({
   const handleClose = () => {
     setDialogOpen(false);
   };
-  return /* @__PURE__ */ u2(k$2, { children: [
+  return /* @__PURE__ */ u2(S, { children: [
     /* @__PURE__ */ u2(Tooltip$1, { title: tooltip, children: /* @__PURE__ */ u2(
       Button$1,
       {
@@ -57215,7 +58114,7 @@ function HiddenText(_ref) {
     id,
     value
   } = _ref;
-  return Rn.createElement("div", {
+  return gn.createElement("div", {
     id,
     style: hiddenStyles
   }, value);
@@ -57240,7 +58139,7 @@ function LiveRegion(_ref) {
     clipPath: "inset(100%)",
     whiteSpace: "nowrap"
   };
-  return Rn.createElement("div", {
+  return gn.createElement("div", {
     id,
     style: visuallyHidden2,
     role: "status",
@@ -57260,7 +58159,7 @@ function useAnnouncement() {
     announcement
   };
 }
-const DndMonitorContext = /* @__PURE__ */ Q$1(null);
+const DndMonitorContext = /* @__PURE__ */ X$1(null);
 function useDndMonitor(listener) {
   const registerListener = x$1(DndMonitorContext);
   y(() => {
@@ -57397,10 +58296,10 @@ function Accessibility(_ref) {
   if (!mounted) {
     return null;
   }
-  const markup = Rn.createElement(Rn.Fragment, null, Rn.createElement(HiddenText, {
+  const markup = gn.createElement(gn.Fragment, null, gn.createElement(HiddenText, {
     id: hiddenTextDescribedById,
     value: screenReaderInstructions.draggable
-  }), Rn.createElement(LiveRegion, {
+  }), gn.createElement(LiveRegion, {
     id: liveRegionId,
     announcement
   }));
@@ -59292,8 +60191,8 @@ const defaultInternalContext = {
   over: null,
   measureDroppableContainers: noop
 };
-const InternalContext = /* @__PURE__ */ Q$1(defaultInternalContext);
-const PublicContext = /* @__PURE__ */ Q$1(defaultPublicContext);
+const InternalContext = /* @__PURE__ */ X$1(defaultInternalContext);
+const PublicContext = /* @__PURE__ */ X$1(defaultPublicContext);
 function getInitialState() {
   return {
     draggable: {
@@ -59548,7 +60447,7 @@ function useLayoutShiftScrollCompensation(_ref) {
     }
   }, [activeNode, x2, y2, initialRect, measure]);
 }
-const ActiveDraggableContext = /* @__PURE__ */ Q$1({
+const ActiveDraggableContext = /* @__PURE__ */ X$1({
   ...defaultCoordinates,
   scaleX: 1,
   scaleY: 1
@@ -59559,7 +60458,7 @@ var Status;
   Status2[Status2["Initializing"] = 1] = "Initializing";
   Status2[Status2["Initialized"] = 2] = "Initialized";
 })(Status || (Status = {}));
-const DndContext = /* @__PURE__ */ M(function DndContext2(_ref) {
+const DndContext = /* @__PURE__ */ N(function DndContext2(_ref) {
   var _sensorContext$curren, _dragOverlay$nodeRef$, _dragOverlay$rect, _over$rect;
   let {
     id,
@@ -59770,7 +60669,7 @@ const DndContext = /* @__PURE__ */ M(function DndContext2(_ref) {
               rect: activeRects
             }
           };
-          gn(() => {
+          _n(() => {
             onDragStart == null ? void 0 : onDragStart(event2);
             setStatus(Status.Initializing);
             dispatch({
@@ -59824,7 +60723,7 @@ const DndContext = /* @__PURE__ */ M(function DndContext2(_ref) {
             }
           }
           activeRef.current = null;
-          gn(() => {
+          _n(() => {
             dispatch({
               type
             });
@@ -59905,7 +60804,7 @@ const DndContext = /* @__PURE__ */ M(function DndContext2(_ref) {
         },
         over: over2
       };
-      gn(() => {
+      _n(() => {
         onDragMove == null ? void 0 : onDragMove(event);
         dispatchMonitorEvent({
           type: "onDragMove",
@@ -59948,7 +60847,7 @@ const DndContext = /* @__PURE__ */ M(function DndContext2(_ref) {
         },
         over: over2
       };
-      gn(() => {
+      _n(() => {
         setOver(over2);
         onDragOver == null ? void 0 : onDragOver(event);
         dispatchMonitorEvent({
@@ -60027,17 +60926,17 @@ const DndContext = /* @__PURE__ */ M(function DndContext2(_ref) {
     };
     return context;
   }, [activatorEvent, activators, active, activeNodeRect, dispatch, draggableDescribedById, draggableNodes, over, measureDroppableContainers]);
-  return Rn.createElement(DndMonitorContext.Provider, {
+  return gn.createElement(DndMonitorContext.Provider, {
     value: registerMonitorListener
-  }, Rn.createElement(InternalContext.Provider, {
+  }, gn.createElement(InternalContext.Provider, {
     value: internalContext
-  }, Rn.createElement(PublicContext.Provider, {
+  }, gn.createElement(PublicContext.Provider, {
     value: publicContext
-  }, Rn.createElement(ActiveDraggableContext.Provider, {
+  }, gn.createElement(ActiveDraggableContext.Provider, {
     value: transform2
-  }, children)), Rn.createElement(RestoreFocus, {
+  }, children)), gn.createElement(RestoreFocus, {
     disabled: (accessibility == null ? void 0 : accessibility.restoreFocus) === false
-  })), Rn.createElement(Accessibility, {
+  })), gn.createElement(Accessibility, {
     ...accessibility,
     hiddenTextDescribedById: draggableDescribedById
   }));
@@ -60056,7 +60955,7 @@ const DndContext = /* @__PURE__ */ M(function DndContext2(_ref) {
     };
   }
 });
-const NullContext = /* @__PURE__ */ Q$1(null);
+const NullContext = /* @__PURE__ */ X$1(null);
 const defaultRole = "button";
 const ID_PREFIX$1 = "Draggable";
 function useDraggable(_ref) {
@@ -60371,7 +61270,7 @@ function getItemGap$1(clientRects, index, activeIndex) {
   return nextRect ? nextRect.top - (currentRect.top + currentRect.height) : previousRect ? currentRect.top - (previousRect.top + previousRect.height) : 0;
 }
 const ID_PREFIX = "Sortable";
-const Context = /* @__PURE__ */ Rn.createContext({
+const Context = /* @__PURE__ */ gn.createContext({
   activeIndex: -1,
   containerId: ID_PREFIX,
   disableTransforms: false,
@@ -60433,7 +61332,7 @@ function SortableContext(_ref) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [activeIndex, containerId, disabled.draggable, disabled.droppable, disableTransforms, items, overIndex, droppableRects, useDragOverlay, strategy]
   );
-  return Rn.createElement(Context.Provider, {
+  return gn.createElement(Context.Provider, {
     value: contextValue
   }, children);
 }
@@ -61389,7 +62288,7 @@ function RuleBuilder({ title, mode, rows, fieldOptions, onChange, dataStore }) {
             onChange: (val) => updateNewRule({ field: val })
           }
         ),
-        isFilterMode ? /* @__PURE__ */ u2(k$2, { children: [
+        isFilterMode ? /* @__PURE__ */ u2(S, { children: [
           /* @__PURE__ */ u2(
             SimpleSelect,
             {
@@ -62599,6 +63498,8 @@ class SettingsTab extends obsidian.PluginSettingTab {
     this.id = plugin.manifest.id;
     this.services = createServices();
   }
+  app;
+  plugin;
   id;
   services;
   display() {
@@ -62661,6 +63562,10 @@ class CodeblockEmbedder {
     this.uiPort = services.uiPort;
     this.registerProcessor();
   }
+  plugin;
+  dataStore;
+  rendererService;
+  actionService;
   // P0-3: store 从 DI 获取
   store;
   uiPort;
@@ -62675,7 +63580,7 @@ class CodeblockEmbedder {
       CODEBLOCK_LANG,
       (source, el) => {
         try {
-          G$1(null, el);
+          R$1(null, el);
         } catch {
         }
         el.empty();
@@ -63963,6 +64868,16 @@ class RendererService {
     this.setupZustandSubscription();
     this.isInitialized = true;
   }
+  app;
+  dataStore;
+  actionService;
+  itemService;
+  inputService;
+  timerService;
+  useCases;
+  uiPort;
+  modalPort;
+  messageRenderPort;
   isInitialized = false;
   activeLayouts = [];
   // 缓存的 Services 对象，用于 ServicesProvider
@@ -64019,10 +64934,10 @@ class RendererService {
    */
   register(container, layout) {
     this.unregister(container);
-    G$1(
-      _$1(ServicesProvider, {
+    R$1(
+      k$2(ServicesProvider, {
         services: this.services,
-        children: _$1(LayoutRenderer, {
+        children: k$2(LayoutRenderer, {
           layout,
           dataStore: this.dataStore,
           app: this.app,
@@ -64039,7 +64954,7 @@ class RendererService {
     const index = this.activeLayouts.findIndex((l2) => l2.container === container);
     if (index > -1) {
       try {
-        G$1(null, container);
+        R$1(null, container);
       } catch (e2) {
       }
       container.empty();
@@ -64057,10 +64972,10 @@ class RendererService {
       const { container, layoutName } = activeLayout;
       const newLayoutConfig = latestSettings.layouts.find((l2) => l2.name === layoutName);
       if (newLayoutConfig) {
-        G$1(
-          _$1(ServicesProvider, {
+        R$1(
+          k$2(ServicesProvider, {
             services: this.services,
-            children: _$1(LayoutRenderer, {
+            children: k$2(LayoutRenderer, {
               layout: newLayoutConfig,
               dataStore: this.dataStore,
               app: this.app,
@@ -64100,6 +65015,9 @@ class TimerService {
     this.dataStore = dataStore;
     this.ui = ui;
   }
+  useCases;
+  dataStore;
+  ui;
   async startOrResume(taskId) {
     const timers = this.useCases.timer.getTimers();
     for (const timer of timers) {
@@ -64168,7 +65086,7 @@ class TimerService {
         return;
       }
       const endTime = nowHHMM();
-      const normalizedTime = totalMinutes > 0 ? applyTaskTimePolicy({ endTime, duration: totalMinutes }, { mode: "finalize", direction: "backward" }) : { startTime: void 0, endTime, duration: void 0 };
+      const normalizedTime = totalMinutes > 0 ? applyTaskTimePolicy({ endTime, duration: totalMinutes, mode: "finalize", direction: "backward" }) : { startTime: void 0, endTime, duration: void 0 };
       const startTime = normalizedTime.startTime ?? void 0;
       const isOpenTask = /^\s*-\s*\[ \]\s*/.test(taskItem.content || "");
       const result = isOpenTask ? await this.useCases.recordInput.submitCompleteRecord({
@@ -65135,6 +66053,7 @@ let ObsidianVaultPort = class {
   constructor(app) {
     this.app = app;
   }
+  app;
   listMarkdownFilePaths() {
     return this.app.vault.getMarkdownFiles().map((f2) => f2.path);
   }
@@ -66004,6 +66923,10 @@ class CheckinManagerModal extends obsidian.Modal {
     this.onSave = onSave;
     this.onAddRecord = onAddRecord;
   }
+  date;
+  items;
+  onSave;
+  onAddRecord;
   onOpen() {
     this.contentEl.empty();
     this.modalEl.addClass("checkin-manager-modal-container");
@@ -66035,7 +66958,7 @@ class CheckinManagerModal extends obsidian.Modal {
         `;
   }
   onClose() {
-    bn(this.contentEl);
+    pn(this.contentEl);
   }
 }
 var __getOwnPropDesc$2 = Object.getOwnPropertyDescriptor;
@@ -66054,6 +66977,10 @@ let ObsidianModalPort = class {
     this.retrievalService = retrievalService;
     this.sessionStore = sessionStore;
   }
+  app;
+  chatService;
+  retrievalService;
+  sessionStore;
   openAiTextPrompt() {
     const modal = new AiTextPromptModal(this.app);
     return modal.openAndGetValue();
@@ -66085,7 +67012,7 @@ let ObsidianModalPort = class {
   }
   openCheckinManager(args) {
     const emptyItems = [];
-    const noop2 = () => {
+    const noop2 = async () => {
     };
     new CheckinManagerModal(
       this.app,
@@ -66177,6 +67104,7 @@ class ObsidianMessageRenderPort {
   constructor(app) {
     this.app = app;
   }
+  app;
   clear(containerEl) {
     containerEl.empty();
   }
@@ -66227,6 +67155,7 @@ let ObsidianMetadataPort = class {
   constructor(app) {
     this.app = app;
   }
+  app;
   async getHeadings(path) {
     const af = this.app.vault.getAbstractFileByPath(path);
     if (!(af instanceof obsidian.TFile)) return [];
@@ -66255,6 +67184,7 @@ let ObsidianFileStatPort = class {
   constructor(app) {
     this.app = app;
   }
+  app;
   async stat(path) {
     const af = this.app.vault.getAbstractFileByPath(path);
     if (!(af instanceof obsidian.TFile)) return null;

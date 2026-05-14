@@ -62,7 +62,6 @@ export const BlockItem = ({ item, fields, isNarrow, app, messageRenderPort, allT
                     <div class="bv-block-content">
                         <MarkdownContent
                             renderPort={messageRenderPort}
-                            app={app}
                             content={effectiveContent || ''}
                             contentType="markdown"
                             sourcePath={item.file?.path || ''}

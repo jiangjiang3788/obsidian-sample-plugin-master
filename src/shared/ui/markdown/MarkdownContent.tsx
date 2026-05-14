@@ -13,6 +13,8 @@ export interface MarkdownContentProps {
   sourcePath?: string;
   className?: string;
   onClick?: (evt: MouseEvent) => void;
+  onDblClick?: (evt: MouseEvent) => void;
+  onTouchEnd?: (evt: TouchEvent) => void;
 }
 
 /**
@@ -29,6 +31,8 @@ export function MarkdownContent({
   sourcePath = '',
   className = '',
   onClick,
+  onDblClick,
+  onTouchEnd,
 }: MarkdownContentProps) {
   const elRef = useRef<HTMLDivElement>(null);
 
@@ -61,5 +65,5 @@ export function MarkdownContent({
     };
   }, [renderPort, content, contentType, sourcePath, className]);
 
-  return <div ref={elRef} className={`md-content ${className}`.trim()} onClick={onClick as any} />;
+  return <div ref={elRef} className={`md-content ${className}`.trim()} onClick={onClick as any} onDblClick={onDblClick as any} onTouchEnd={onTouchEnd as any} />;
 }

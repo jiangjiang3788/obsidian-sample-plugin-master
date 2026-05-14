@@ -3,7 +3,7 @@ import { h } from 'preact';
 import { useEffect, useMemo, useState } from 'preact/hooks';
 
 import { selectInputSettings, useSelector } from '@/app/public';
-import type { ThemeDefinition } from '@core/public';
+import type { RecordInputMeta, ThemeDefinition } from '@core/public';
 import { dayjs, getEffectiveTemplate, renderTemplate, getLeafPath } from '@core/public';
 import { computeLinkedTimeChanges, finalizeLinkedTimeFields } from '@shared/public';
 
@@ -46,6 +46,7 @@ export interface QuickInputEditorState {
   templateId: string | null;
   templateSourceType: 'block' | 'override' | null;
   fieldSources?: QuickInputFieldSourceMap;
+  meta?: RecordInputMeta;
   /** 完整路径主题，例如：学习/英语/听力。 */
   themePath?: string | null;
   /** 根主题，例如：学习。 */
@@ -292,6 +293,7 @@ export function QuickInputEditor({
       blockId: currentBlockId,
       themeId: selectedThemeId,
       formData: { ...formData, __timeDirection: timeDirection },
+      meta: { timeDirection },
       template,
       theme: currentTheme,
       templateId,
@@ -309,6 +311,7 @@ export function QuickInputEditor({
       blockId: currentBlockId,
       themeId: selectedThemeId,
       formData: { ...draftFormData, __timeDirection: directionOverride },
+      meta: { timeDirection: directionOverride },
       template,
       theme: currentTheme,
       templateId,

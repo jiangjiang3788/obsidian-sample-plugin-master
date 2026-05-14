@@ -58,26 +58,31 @@ export class AiConfigCache {
         // 检查缓存是否过期
         if (!cacheHit) {
             const rebuildStart = nowMs();
-            this.snapshot = buildAiConfigSnapshot(settings.inputSettings, ai);
+            const nextSnapshot = buildAiConfigSnapshot(settings.inputSettings, ai);
+            this.snapshot = nextSnapshot;
             this.lastUpdated = now;
             devLog(`${prefix} buildAiConfigSnapshot 完成 (${elapsedMs(rebuildStart)})`, {
-                blocksCount: this.snapshot.blocks?.length ?? 0,
-                themesCount: this.snapshot.themes?.length ?? 0,
+                blocksCount: nextSnapshot.blocks?.length ?? 0,
+                themesCount: nextSnapshot.themes?.length ?? 0,
             });
             if (nowMs() - rebuildStart >= 50) {
                 devWarn(`${prefix} 慢步骤: buildAiConfigSnapshot (${elapsedMs(rebuildStart)})`, {
-                    blocksCount: this.snapshot.blocks?.length ?? 0,
-                    themesCount: this.snapshot.themes?.length ?? 0,
+                    blocksCount: nextSnapshot.blocks?.length ?? 0,
+                    themesCount: nextSnapshot.themes?.length ?? 0,
                 });
             }
         }
 
+        const snapshot = this.snapshot;
+        if (!snapshot) {
+            throw new Error('AI config snapshot missing after rebuild');
+        }
         devLog(`${prefix} getSnapshot 返回 (${elapsedMs(totalStart)})`, {
             cacheHit,
-            blocksCount: this.snapshot.blocks?.length ?? 0,
-            themesCount: this.snapshot.themes?.length ?? 0,
+            blocksCount: snapshot.blocks?.length ?? 0,
+            themesCount: snapshot.themes?.length ?? 0,
         });
-        return this.snapshot;
+        return snapshot;
     }
 
     /**

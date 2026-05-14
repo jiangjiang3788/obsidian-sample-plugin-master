@@ -77,7 +77,7 @@ export class ObsidianModalPort implements ModalPort {
     // Provide safe defaults for ad-hoc opening while allowing shared/features
     // to request a concrete platform modal without importing or new-ing it.
     const emptyItems: Item[] = [];
-    const noop = () => {};
+    const noop = async () => {};
     new CheckinManagerModal(
       this.app,
       args?.date ?? todayISO(),

@@ -9,39 +9,21 @@
 <body data-doc-root="../../">
   <div class="layout">
     <aside class="sidebar">
-      <div class="brand">
-        <div class="brand-title">Think OS 插件文档系统</div>
-        <div class="brand-subtitle">HTML 项目驾驶舱 / 文档 / 需求 / 技术 / 评审 / 发布</div>
-      </div>
-      <div class="search-box">
-        <input class="search-input" data-doc-search placeholder="搜索：目标、计划、任务、复盘、个人管理系统...">
-        <div class="search-results" data-search-results></div>
-      </div>
-
+      <div class="brand"><div class="brand-title">Think OS 插件文档系统</div><div class="brand-subtitle">Think OS 插件文档系统</div></div>
+      <div class="search-box"><input class="search-input" data-doc-search placeholder="搜索：目标、计划、任务、复盘、个人管理系统..."><div class="search-results" data-search-results></div></div>
     </aside>
     <main class="main">
       <section class="hero">
         <div class="eyebrow">THINK OS DOCUMENT SYSTEM</div>
         <h1>问题记录</h1>
-        <p class="lead">记录已经遇到或可能反复出现的问题，避免重复踩坑。</p>
-        <div class="meta-row">
-          <span class="badge good">状态：建议模板</span>
-          <span class="badge">最后更新：2026-05-07</span>
-          <span class="badge">格式：HTML</span>
-        </div>
+        <p class="lead">记录当前开放问题。已解决问题不再混在当前列表中，历史问题可在归档或修复记录中追溯。</p>
+        <div class="meta-row"><span class="badge good">状态：开放问题 0</span><span class="badge">最后更新：2026-05-14</span><span class="badge">格式：HTML</span><span class="badge">生命周期：持续维护</span></div>
       </section>
       <section class="grid">
-<article class="card full"><h2>问题记录表</h2><div class="table-wrap"><table><thead><tr><th>编号</th><th>问题</th><th>影响</th><th>状态</th><th>下一步</th></tr></thead><tbody><tr><td>ISS-001</td><td>旧 <code>docs/</code> 和 <code>html/</code> 与新文档入口并存</td><td>容易混淆正式资料来源</td><td>待处理</td><td>先标记弃用，再迁移有效内容。</td></tr><tr><td>ISS-002</td><td>功能和技术文档容易混在一起</td><td>以后找不到某个设计属于用户视角还是代码视角</td><td>已规避</td><td>通过“功能设计 / 技术文档”分区。</td></tr><tr><td>ISS-003</td><td>评审页容易变成说明页</td><td>失去判断价值</td><td>已规避</td><td>评审中心只回答是否合理、风险、结论。</td></tr><tr><td>ISS-004</td><td>左侧导航页面多后阅读压力大</td><td>查找成本上升</td><td>进行中</td><td>保留折叠目录与搜索。</td></tr></tbody></table></div></article>
-<article class="card full"><h2>问题模板</h2><pre class="mono">问题：
-发现时间：
-影响范围：
-复现方式：
-临时解决：
-长期方案：
-责任页面：
-状态：</pre></article>
-</section>
-      <footer class="footer">本页属于 Think OS 插件 HTML 文档系统。UI 沿用原有风格，docs/html 旧资料已按新结构迁移。</footer>
+<article class="card full"><h2>当前开放问题</h2><div class="callout"><strong>结论：</strong>当前开放问题为 <strong>0</strong>。</div></article>
+<article class="card full"><h2>维护规则</h2><ul><li>新发现阻塞问题时，先写入本页并标注影响范围、负责人和退出条件。</li><li>问题解决后移出当前列表，必要时写入修复记录。</li><li>不把已完成问题长期留在当前视图中。</li></ul></article>
+      </section>
+      <footer class="footer">本页属于 Think OS 插件 HTML 文档系统。当前文档治理原则：当前事实优先，长期技术事实和短期实施记录分离。</footer>
     </main>
   </div>
   <script src="../../_资源/搜索索引.js"></script>

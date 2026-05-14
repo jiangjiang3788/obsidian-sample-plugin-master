@@ -12,7 +12,9 @@ export interface TimeUpdatePayload {
   duration?: number;
 }
 
-export function normalizeCompletionOptions(options?: SubmitCompleteRecordParams['options']): SubmitCompleteRecordParams['options'] | undefined {
+export type CompletionOptionsForItemService = { duration?: number; startTime?: string; endTime?: string };
+
+export function normalizeCompletionOptions(options?: SubmitCompleteRecordParams['options']): CompletionOptionsForItemService | undefined {
   if (!options) return undefined;
 
   const normalized = {

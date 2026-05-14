@@ -24,6 +24,10 @@ export type RecordInputSource =
   | 'layout_renderer'
   | 'unknown';
 
+export interface RecordInputMeta {
+  timeDirection?: 'forward' | 'backward';
+}
+
 export interface RecordSubmitIssue {
   code: string;
   message: string;

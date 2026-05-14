@@ -18,7 +18,7 @@ export interface QuickInputSaveData {
     context?: Record<string, any>;
     formData: Record<string, any>;
     meta?: RecordInputMeta;
-    source?: Extract<RecordInputSource, 'timer' | 'quickinput' | 'unknown'>;
+    source?: Extract<RecordInputSource, 'timer' | 'quickinput' | 'view_quick_create' | 'unknown'>;
 
     // 兼容 Batch 1 之前的旧调用方；Batch 2 之后 Timer create 不再依赖这些字段。
     template?: BlockTemplate;

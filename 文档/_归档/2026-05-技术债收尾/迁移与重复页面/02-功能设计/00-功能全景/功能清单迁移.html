@@ -23,7 +23,7 @@
       <section class="hero">
         <div class="eyebrow">功能设计 / MIGRATED DOC</div>
         <h1>功能清单迁移</h1>
-        <p class="lead">本文档记录项目当前已实现的功能，作为需求管理的基线参考。最后更新：2026-02-28位于 `scripts/*gate*.mjs`，包括：根据 `docs/计划.md` 最新状态：1. **Typecheck**：有 1 个 TS error</p>
+        <p class="lead">本文档记录项目当前已实现的功能，作为需求管理的基线参考。最后更新：2026-02-28位于 `scripts/gates/*gate*.mjs`，包括：根据 `docs/计划.md` 最新状态：1. **Typecheck**：有 1 个 TS error</p>
         <div class="meta-row">
           <span class="badge good">状态：已迁移</span>
           <span class="badge">最后更新：2026-05-07</span>
@@ -151,7 +151,7 @@ npm test           # 运行测试
 npm run build      # 构建产物
 </code></pre>
 <h4>架构门禁（Gate）</h4>
-<p>位于 <code>scripts/*gate*.mjs</code>，包括：</p>
+<p>位于 <code>scripts/gates/*gate*.mjs</code>，包括：</p>
 <ul>
 <li><code>obsidian-leak:gate</code> - 防止平台 API 泄漏到业务层</li>
 <li><code>core-obsidian:gate</code> - core 层不依赖 obsidian</li>

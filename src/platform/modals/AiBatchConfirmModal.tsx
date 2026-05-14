@@ -214,7 +214,7 @@ function AiBatchConfirmForm({
         cmd,
         blockId: block?.id || '',
         themeId,
-        formData: normalizeAiFormData(initialTemplate, { ...(cmd.fieldValues || {}) }),
+        formData: normalizeAiFormData(initialTemplate ?? undefined, { ...(cmd.fieldValues || {}) }),
         saved: false,
         skipped: false,
       };

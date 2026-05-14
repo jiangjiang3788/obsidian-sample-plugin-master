@@ -21,6 +21,7 @@ dayjs.extend(isSameOrBefore); // 确保扩展
 dayjs.extend(isBetween);
 
 export { dayjs };
+export type { Dayjs } from 'dayjs';
 
 /* ---------- 快捷工具 ---------- */
 export const todayISO = () => dayjs().format('YYYY-MM-DD');

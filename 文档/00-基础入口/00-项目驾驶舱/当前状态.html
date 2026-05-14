@@ -9,33 +9,21 @@
 <body data-doc-root="../../">
   <div class="layout">
     <aside class="sidebar">
-      <div class="brand">
-        <div class="brand-title">Think OS 插件文档系统</div>
-        <div class="brand-subtitle">HTML 项目驾驶舱 / 文档 / 需求 / 技术 / 评审 / 发布</div>
-      </div>
-      <div class="search-box">
-        <input class="search-input" data-doc-search placeholder="搜索：目标、计划、任务、复盘、个人管理系统...">
-        <div class="search-results" data-search-results></div>
-      </div>
-
+      <div class="brand"><div class="brand-title">Think OS 插件文档系统</div><div class="brand-subtitle">Think OS 插件文档系统</div></div>
+      <div class="search-box"><input class="search-input" data-doc-search placeholder="搜索：目标、计划、任务、复盘、个人管理系统..."><div class="search-results" data-search-results></div></div>
     </aside>
     <main class="main">
       <section class="hero">
         <div class="eyebrow">THINK OS DOCUMENT SYSTEM</div>
         <h1>当前状态</h1>
-        <p class="lead">记录项目当前处境，尤其是哪些入口是正式的，哪些资料已经准备弃用。</p>
-        <div class="meta-row">
-          <span class="badge good">状态：建议模板</span>
-          <span class="badge">最后更新：2026-05-07</span>
-          <span class="badge">格式：HTML</span>
-        </div>
+        <p class="lead">项目当前处于工程稳定化收尾后状态：验证链路已建立，开放问题和开放技术债清零，下一步进入路线图功能开发准备。</p>
+        <div class="meta-row"><span class="badge good">状态：当前有效</span><span class="badge">最后更新：2026-05-14</span><span class="badge">格式：HTML</span><span class="badge">重要度：P0</span></div>
       </section>
       <section class="grid">
-<article class="card full"><h2>当前结论</h2><div class="status-list"><div class="status-line"><strong>正式入口</strong><span><code>文档/index.html</code> 作为新的项目驾驶舱入口。</span></div><div class="status-line"><strong>准备弃用</strong><span>根目录 <code>docs/</code> 与 <code>html/</code> 作为旧资料来源，后续只迁移有价值内容。</span></div><div class="status-line"><strong>核心任务</strong><span>先稳定文档结构和页面职责，再逐步填充具体设计和代码细节。</span></div><div class="status-line"><strong>当前风险</strong><span>旧文档较多，若不归档，容易让未来自己不知道以哪个入口为准。</span></div></div></article>
-<article class="card full"><h2>状态看板</h2><div class="table-wrap"><table><thead><tr><th>项目项</th><th>状态</th><th>下一步</th></tr></thead><tbody><tr><td>文档结构</td><td>进行中</td><td>用本文件夹替换原 <code>文档/</code>。</td></tr><tr><td>功能设计</td><td>待补充</td><td>先完善功能总览、命令设计、设置项设计。</td></tr><tr><td>技术文档</td><td>待补充</td><td>从文件地图和插件生命周期开始。</td></tr><tr><td>评审中心</td><td>可用骨架</td><td>以后每次重构/发布前使用。</td></tr><tr><td>旧资料迁移</td><td>未开始</td><td>只迁移仍然有效的旧文档。</td></tr></tbody></table></div></article>
-<article class="card full"><h2>更新规则</h2><ul><li>每次新增功能：先更新需求池和功能设计。</li><li>每次改架构：更新技术文档和决策记录。</li><li>每次准备发布：更新发布记录和 Changelog。</li><li>每次发现坑：更新问题记录、技术债或风险评审。</li></ul></article>
-</section>
-      <footer class="footer">本页属于 Think OS 插件 HTML 文档系统。UI 沿用原有风格，docs/html 旧资料已按新结构迁移。</footer>
+<article class="card full"><h2>当前结论</h2><div class="status-list"><div class="status-line"><strong>工程状态</strong><span>typecheck、gate、unit、integration、build 已作为稳定化基线；Phase C 已新增 verify/ci 验证入口。</span></div><div class="status-line"><strong>文档状态</strong><span>长期技术事实、开发计划和归档资料已重新分层。</span></div><div class="status-line"><strong>开放问题</strong><span>当前开放问题为 0。</span></div><div class="status-line"><strong>开放技术债</strong><span>当前开放技术债为 0；剩余事项进入观察项或后续路线图。</span></div></div></article>
+<article class="card full"><h2>P0 入口</h2><ol><li><a href="../../01-项目管理/00-计划与路线/开发计划/00-实施计划目录.html">实施计划目录</a></li><li><a href="../../03-技术文档/00-技术全景/当前代码架构快照.html">当前代码架构快照</a></li><li><a href="../../05-维护发布/00-测试验收/当前测试基线.html">当前测试基线</a></li><li><a href="../../01-项目管理/00-计划与路线/版本路线图.html">版本路线图</a></li><li><a href="../../01-项目管理/01-过程记录/技术债.html">技术债</a></li></ol></article>
+      </section>
+      <footer class="footer">本页属于 Think OS 插件 HTML 文档系统。当前文档治理原则：当前事实优先，长期技术事实和短期实施记录分离。</footer>
     </main>
   </div>
   <script src="../../_资源/搜索索引.js"></script>

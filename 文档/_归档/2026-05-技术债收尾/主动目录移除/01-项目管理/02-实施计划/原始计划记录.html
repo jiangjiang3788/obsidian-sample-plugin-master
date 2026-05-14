@@ -105,8 +105,8 @@
 <td>P0</td>
 <td>边界简化（禁深导入硬闸）</td>
 <td>✅ check-boundaries 已跑通</td>
-<td><code>obsidian-leak:gate</code> 内部调用 <code>scripts/check-boundaries.ts</code>，本次执行没有深导入违规</td>
-<td><code>gates/</code> / <code>scripts/*gate*.mjs</code> / <code>scripts/check-boundaries.ts</code></td>
+<td><code>obsidian-leak:gate</code> 内部调用 <code>scripts/audit/check-boundaries.ts</code>，本次执行没有深导入违规</td>
+<td><code>gates/</code> / <code>scripts/gates/*gate*.mjs</code> / <code>scripts/audit/check-boundaries.ts</code></td>
 <td>🔥</td>
 <td><code>npm run check:boundaries</code> 通过；相关 gate 不被深导入卡住</td>
 <td><strong><code>npm run check:boundaries</code></strong> 或直接 <code>npm run gate</code></td>
@@ -227,7 +227,7 @@
 <td>shared 去平台化（obsidian-leak gate）</td>
 <td>✅ 本次已实测 PASS</td>
 <td><code>npm run obsidian-leak:gate</code> ✅：平台外 obsidian import 仅在 allowlist 内，无新增泄漏</td>
-<td><code>shared/ui/markdown</code> / <code>scripts/obsidian-leak-gate.mjs</code></td>
+<td><code>shared/ui/markdown</code> / <code>scripts/gates/obsidian-leak-gate.mjs</code></td>
 <td>🔥</td>
 <td><code>npm run obsidian-leak:gate</code> PASS</td>
 <td>和“共享层去平台化”一项视为同一块：稳定后只需定期跑 <code>npm run obsidian-leak:gate</code></td>
@@ -238,7 +238,7 @@
 <td>gate 全绿（总门禁）</td>
 <td>🔴 被 <code>di-resolve:gate</code> 卡住</td>
 <td><code>npm run gate</code> 在 <code>di-resolve:gate</code> 阶段失败：<code>src/main.ts</code> 存不允许的 <code>container.resolve()</code>；后续 gate（modal-promise / selector-* / theme-* / iconaction）没跑到</td>
-<td><code>scripts/*gate*.mjs</code> / <code>src/main.ts</code></td>
+<td><code>scripts/gates/*gate*.mjs</code> / <code>src/main.ts</code></td>
 <td>🔥</td>
 <td><code>npm run gate</code> 全绿；composition root 之外无非法 <code>container.resolve</code></td>
 <td><strong><code>npm run gate</code></strong>；修掉 <code>di-resolve:gate</code> 提示的问题，再确认其他 gate 全部跑完且通过</td>

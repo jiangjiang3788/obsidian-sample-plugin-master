@@ -40,9 +40,24 @@ npm run gate
 npm run typecheck:src
 npm run test:unit
 npm run build
+npm run docs:index
 ```
 
 - `npm run build` 会构建到 `dist/`，并把产物复制到仓库根目录的 `main.js`/`main.js.map`/`styles.css`（便于直接打包/拷贝）。
+
+### 依赖治理
+
+本轮已清理无直接引用的旧依赖，并补齐 e2e / 文档索引脚本的直接 dev 依赖。依赖变更后请优先执行：
+
+```bash
+npm ci
+npm run typecheck:src
+npm run test:unit
+npm run build
+npm run docs:index
+```
+
+注意：`@emotion/react` 和 `@emotion/styled` 虽然项目代码不直接 import，但属于 MUI 默认 styled engine 的受保护依赖，不要按静态扫描误删。
 
 ### 将构建产物拷贝到 Vault（示例：PowerShell）
 
@@ -60,6 +75,10 @@ Copy-Item -Force manifest.json, main.js, styles.css $pluginDir
 - `src/core/`：核心领域与跨 feature 能力（含 settings、storage、ports 等）。
 - `src/features/`：功能模块（timer / quickinput / aiinput / aichat / settings ...）。
 - `src/shared/`：跨模块共享工具与公共 UI（按 public/private 约束组织）。
+- `scripts/gates/`：阻断式架构与质量门禁。
+- `scripts/audit/`：非阻断审计、指标和覆盖报告。
+- `scripts/docs/`：文档索引生成脚本。
+- `scripts/build/`：构建后处理脚本。
 - `文档/`：HTML 文档系统，包含项目管理、功能设计、技术文档、评审中心、维护发布。
 
 ## 相关文档
@@ -67,9 +86,22 @@ Copy-Item -Force manifest.json, main.js, styles.css $pluginDir
 当前正式文档入口是 `文档/index.html`。建议先按这个顺序阅读：
 
 1. `文档/01-项目管理/00-计划与路线/当前代码架构快照.html`
-2. `文档/01-项目管理/00-计划与路线/版本路线图.html`
-3. `文档/01-项目管理/00-计划与路线/目标闭环开发拆解.html`
-4. `文档/05-维护发布/00-测试验收/当前测试基线.html`
+2. `文档/01-项目管理/02-实施计划/工程稳定化ABC实施计划.html`
+3. `文档/01-项目管理/02-实施计划/实施计划-PhaseB脚本目录整理.html`
+4. `文档/01-项目管理/00-计划与路线/版本路线图.html`
+5. `文档/01-项目管理/00-计划与路线/目标闭环开发拆解.html`
+6. `文档/05-维护发布/00-测试验收/当前测试基线.html`
 
 `src/docs/` 仅保留代码旁说明；不存在的旧 `docs/` 入口不再作为正式导航。
 
+
+
+## 验证入口
+
+```bash
+npm run verify:fast
+npm run verify
+npm run verify:ci
+```
+
+脚本目录按 `scripts/gates`、`scripts/audit`、`scripts/docs`、`scripts/build`、`scripts/maintenance` 维护。

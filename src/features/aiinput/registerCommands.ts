@@ -10,7 +10,7 @@ import type ThinkPlugin from '@/main';
 import { AiTextPromptModal, AiBatchConfirmModal } from '@/app/public';
 import { AiConfigCache, AiHttpClient, AiNaturalLanguageRecordParser, devError, devLog, devWarn } from '@core/public';
 import { createServices, getZustandState, type AppStoreInstance } from '@/app/public';
-import type { ISettingsProvider } from '@core/public';
+import type { AiSettings, ISettingsProvider, ThinkSettings } from '@core/public';
 import { createTakeLatest, CancelledError } from '@shared/public';
 
 /**
@@ -154,7 +154,7 @@ function startAiProgressNotice(ui: { notice: (message: string, timeout?: number)
     };
 }
 
-function readAiRuntimeConfig(store: AppStoreInstance, traceId: string) {
+function readAiRuntimeConfig(store: AppStoreInstance, traceId: string): { settings: ThinkSettings; ai: AiSettings | undefined; blocks: unknown[] } {
     const readSettingsStart = nowMs();
     const settings = getZustandState(store, s => s.settings);
     const ai = settings.aiSettings;
@@ -173,7 +173,7 @@ function readAiRuntimeConfig(store: AppStoreInstance, traceId: string) {
     return { settings, ai, blocks };
 }
 
-function validateAiRuntimeConfig(ui: { notice: (message: string, timeout?: number) => any }, traceId: string, ai: any, blocks: unknown[]): boolean {
+function validateAiRuntimeConfig(ui: { notice: (message: string, timeout?: number) => any }, traceId: string, ai: AiSettings | undefined, blocks: unknown[]): ai is AiSettings {
     if (!ai?.enabled) {
         devWarn(`[AiInput][${traceId}] 中止: AI 未启用`);
         ui.notice('AI 快速记录未启用，请在设置中开启', 4000);

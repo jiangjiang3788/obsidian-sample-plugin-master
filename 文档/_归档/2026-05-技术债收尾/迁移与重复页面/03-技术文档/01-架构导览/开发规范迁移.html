@@ -455,7 +455,7 @@ Copy-Item -Force manifest.json, main.js, styles.css $pluginDir
 <h2>12. 开发时最重要的“硬规则”（AI 代写时必须遵守）</h2>
 <h3>12.1 Obsidian API 只能在 platform 用</h3>
 <ul>
-<li>gate：<code>scripts/obsidian-leak-gate.mjs</code></li>
+<li>gate：<code>scripts/gates/obsidian-leak-gate.mjs</code></li>
 <li>规则：除 <code>src/platform/**</code>（+ allowlist）外，禁止任何地方 <code>import 'obsidian'</code></li>
 <li>修法：<ul>
 <li>把 <code>obsidian</code> 相关调用下沉到 <code>src/platform/</code> 的 Port 实现</li>
@@ -465,7 +465,7 @@ Copy-Item -Force manifest.json, main.js, styles.css $pluginDir
 </ul>
 <h3>12.2 features 之间禁止互相引用</h3>
 <ul>
-<li>gate：<code>scripts/feature-gate.mjs</code></li>
+<li>gate：<code>scripts/gates/feature-gate.mjs</code></li>
 <li>规则：<code>src/features/&lt;A&gt;</code> 禁止直接 import <code>src/features/&lt;B&gt;</code>（A!=B）</li>
 <li>修法：<ul>
 <li>通过 <code>app/capabilities</code> 做“协作接线”</li>
@@ -475,7 +475,7 @@ Copy-Item -Force manifest.json, main.js, styles.css $pluginDir
 </ul>
 <h3>12.3 features/shared 禁止直接使用 tsyringe（DI 权力集中）</h3>
 <ul>
-<li>gate：<code>scripts/di-gate.mjs</code></li>
+<li>gate：<code>scripts/gates/di-gate.mjs</code></li>
 <li>规则：<ul>
 <li><code>src/features/**</code>、<code>src/shared/**</code> 禁止引入 <code>tsyringe</code></li>
 <li>禁止 <code>container.resolve/register/...</code>、禁止 <code>@singleton/@inject...</code></li>
@@ -489,19 +489,19 @@ Copy-Item -Force manifest.json, main.js, styles.css $pluginDir
 </ul>
 <h3>12.4 container.resolve() 只能出现在极少数根文件</h3>
 <ul>
-<li>gate：<code>scripts/di-resolve-gate.mjs</code></li>
+<li>gate：<code>scripts/gates/di-resolve-gate.mjs</code></li>
 <li>当前规则：只允许在 <code>src/app/bootstrap/buildRuntime.ts</code> 使用 <code>container.resolve(...)</code></li>
 <li>修法：把 resolve 收敛到 buildRuntime，通过参数传递把依赖传下去</li>
 </ul>
 <h3>12.5 public facade（门面）规则：禁止深导入/禁止循环依赖</h3>
 <ul>
 <li>core 对外门面：<code>@core/public</code><ul>
-<li>gate：<code>scripts/public-api-gate.mjs</code>（非 core 层禁止 deep import core，只能 <code>@core/public</code>）</li>
-<li>gate：<code>scripts/core-public-gate.mjs</code>（core 内部禁止 import <code>@core/public</code>，避免循环依赖/TDZ）</li>
+<li>gate：<code>scripts/gates/public-api-gate.mjs</code>（非 core 层禁止 deep import core，只能 <code>@core/public</code>）</li>
+<li>gate：<code>scripts/gates/core-public-gate.mjs</code>（core 内部禁止 import <code>@core/public</code>，避免循环依赖/TDZ）</li>
 </ul>
 </li>
 <li>shared 对外门面：<code>@shared/public</code><ul>
-<li>gate：<code>scripts/shared-public-gate.mjs</code>（shared 之外禁止 deep import shared，只能 <code>@shared/public</code>）</li>
+<li>gate：<code>scripts/gates/shared-public-gate.mjs</code>（shared 之外禁止 deep import shared，只能 <code>@shared/public</code>）</li>
 </ul>
 </li>
 </ul>
@@ -513,13 +513,13 @@ Copy-Item -Force manifest.json, main.js, styles.css $pluginDir
 </ul>
 <h3>12.6 事件订阅只能在 platform（防泄漏/防忘记 dispose）</h3>
 <ul>
-<li>gate：<code>scripts/events-boundary-gate.mjs</code></li>
+<li>gate：<code>scripts/gates/events-boundary-gate.mjs</code></li>
 <li>规则：除 <code>src/platform/**</code> 外，禁止 <code>app.vault.on</code> / <code>app.workspace.on</code> / <code>registerEvent(...)</code></li>
 <li>修法：把事件订阅放到 platform 的 <code>EventsPort</code> 实现里；业务层只消费 EventsPort</li>
 </ul>
 <h3>12.7 防“新旧两套系统并存/回潮”</h3>
 <ul>
-<li>gate：<code>scripts/dual-system-gate.mjs</code></li>
+<li>gate：<code>scripts/gates/dual-system-gate.mjs</code></li>
 <li>规则（文本门禁）：<ul>
 <li><code>FeatureLoader</code> 禁止直接 <code>registry.register(...)</code>（注册必须集中化）</li>
 <li><code>src/main.ts</code> 禁止 <code>capabilityRegistry.register(...)</code></li>
@@ -532,27 +532,27 @@ Copy-Item -Force manifest.json, main.js, styles.css $pluginDir
 <p>你跑 <code>npm run gate</code> 会依次执行这些脚本（见 <code>package.json</code>）。</p>
 <h3>13.1 架构/边界类</h3>
 <ul>
-<li><code>scripts/arch-gate.mjs</code>：AST 级别的分层/出口规则（导入解析更可靠）</li>
-<li><code>scripts/public-api-gate.mjs</code>：core/public 只允许从指定 barrel re-export；非 core 禁止 deep import core</li>
-<li><code>scripts/feature-gate.mjs</code>：feature 互相隔离（features/<a> 禁止引用 features/<b>）</b></a></li>
-<li><code>scripts/di-gate.mjs</code>：features/shared 禁止使用 tsyringe/container/DI 装饰器</li>
-<li><code>scripts/di-resolve-gate.mjs</code>：container.resolve 只能在 composition root（当前收敛到 buildRuntime）</li>
-<li><code>scripts/obsidian-leak-gate.mjs</code>：除 platform/allowlist 外，禁止 import 'obsidian'</li>
-<li><code>scripts/core-obsidian-gate.mjs</code>：core 内 obsidian 依赖冻结扩散（allowlist 外禁止）</li>
-<li><code>scripts/events-boundary-gate.mjs</code>：事件订阅只允许在 platform</li>
-<li><code>scripts/core-public-gate.mjs</code>：core 内禁止 import <code>@core/public</code>（防循环依赖/TDZ）</li>
-<li><code>scripts/shared-public-gate.mjs</code>：shared 外禁止 deep import shared（只能 <code>@shared/public</code>）</li>
-<li><code>scripts/dual-system-gate.mjs</code>：防注册分散导致“新旧系统并存/回潮”</li>
-<li><code>scripts/capability-gate.mjs</code>：capabilities 文件导出规则（禁止 export*、禁止导出实现物、限制导出数量）</li>
+<li><code>scripts/gates/arch-gate.mjs</code>：AST 级别的分层/出口规则（导入解析更可靠）</li>
+<li><code>scripts/gates/public-api-gate.mjs</code>：core/public 只允许从指定 barrel re-export；非 core 禁止 deep import core</li>
+<li><code>scripts/gates/feature-gate.mjs</code>：feature 互相隔离（features/<a> 禁止引用 features/<b>）</b></a></li>
+<li><code>scripts/gates/di-gate.mjs</code>：features/shared 禁止使用 tsyringe/container/DI 装饰器</li>
+<li><code>scripts/gates/di-resolve-gate.mjs</code>：container.resolve 只能在 composition root（当前收敛到 buildRuntime）</li>
+<li><code>scripts/gates/obsidian-leak-gate.mjs</code>：除 platform/allowlist 外，禁止 import 'obsidian'</li>
+<li><code>scripts/gates/core-obsidian-gate.mjs</code>：core 内 obsidian 依赖冻结扩散（allowlist 外禁止）</li>
+<li><code>scripts/gates/events-boundary-gate.mjs</code>：事件订阅只允许在 platform</li>
+<li><code>scripts/gates/core-public-gate.mjs</code>：core 内禁止 import <code>@core/public</code>（防循环依赖/TDZ）</li>
+<li><code>scripts/gates/shared-public-gate.mjs</code>：shared 外禁止 deep import shared（只能 <code>@shared/public</code>）</li>
+<li><code>scripts/gates/dual-system-gate.mjs</code>：防注册分散导致“新旧系统并存/回潮”</li>
+<li><code>scripts/gates/capability-gate.mjs</code>：capabilities 文件导出规则（禁止 export*、禁止导出实现物、限制导出数量）</li>
 </ul>
 <h3>13.2 体验/回归类（针对特定坑的硬闸）</h3>
 <ul>
-<li><code>scripts/settings-persistence-gate.mjs</code>：持久化时必须 sanitize，且必须剥离 <code>aiSettings.apiKey</code></li>
-<li><code>scripts/modal-promise-gate.mjs</code>：Promise 型 Modal 必须在 onClose resolve（避免 Promise 悬挂）</li>
-<li><code>scripts/selector-giant-subscription-gate.mjs</code>：禁止对 zustand store 的 “整棵 state/settings” 订阅（避免大范围重渲染）</li>
-<li><code>scripts/theme-tree-recursion-gate.mjs</code>：禁止 ThemeTreeNodeRow 递归渲染自身</li>
-<li><code>scripts/theme-matrix-legacy-import-gate.mjs</code>：禁止 ThemeMatrixView 使用 legacy buildThemeMatrixTree</li>
-<li><code>scripts/iconaction-gate.mjs</code>：禁止回退到 <code>&lt;Tooltip&gt;&lt;IconButton/&gt;&lt;/Tooltip&gt;</code> 旧模式（改用 <code>IconAction</code>）</li>
+<li><code>scripts/gates/settings-persistence-gate.mjs</code>：持久化时必须 sanitize，且必须剥离 <code>aiSettings.apiKey</code></li>
+<li><code>scripts/gates/modal-promise-gate.mjs</code>：Promise 型 Modal 必须在 onClose resolve（避免 Promise 悬挂）</li>
+<li><code>scripts/gates/selector-giant-subscription-gate.mjs</code>：禁止对 zustand store 的 “整棵 state/settings” 订阅（避免大范围重渲染）</li>
+<li><code>scripts/gates/theme-tree-recursion-gate.mjs</code>：禁止 ThemeTreeNodeRow 递归渲染自身</li>
+<li><code>scripts/gates/theme-matrix-legacy-import-gate.mjs</code>：禁止 ThemeMatrixView 使用 legacy buildThemeMatrixTree</li>
+<li><code>scripts/gates/iconaction-gate.mjs</code>：禁止回退到 <code>&lt;Tooltip&gt;&lt;IconButton/&gt;&lt;/Tooltip&gt;</code> 旧模式（改用 <code>IconAction</code>）</li>
 </ul>
 <h2>14. 常见失败案例（快速定位）</h2>
 <ul>

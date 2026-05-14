@@ -13,9 +13,10 @@ type SimpleSelectProps = {
     placeholder?: string;
     fullWidth?: boolean;
     sx?: object;
+    disabled?: boolean;
 };
 
-export function SimpleSelect({ value, options, onChange, placeholder, fullWidth, sx }: SimpleSelectProps) {
+export function SimpleSelect({ value, options, onChange, placeholder, fullWidth, sx, disabled = false }: SimpleSelectProps) {
     // 状态：控制下拉菜单是否展开
     const [isOpen, setIsOpen] = useState(false);
     // Ref：用于获取组件根元素的引用，以判断点击事件是否发生在组件外部
@@ -57,7 +58,7 @@ export function SimpleSelect({ value, options, onChange, placeholder, fullWidth,
         >
             {/* 显示当前值的区域 */}
             <Box
-                onClick={() => setIsOpen(!isOpen)}
+                onClick={() => { if (!disabled) setIsOpen(!isOpen); }}
                 sx={{
                     display: 'flex',
                     alignItems: 'center',
@@ -66,7 +67,8 @@ export function SimpleSelect({ value, options, onChange, placeholder, fullWidth,
                     border: '1px solid rgba(0,0,0,0.15)',
                     borderRadius: '6px',
                     padding: '6px 10px',
-                    cursor: 'pointer',
+                    cursor: disabled ? 'not-allowed' : 'pointer',
+                    opacity: disabled ? 0.55 : 1,
                     bgcolor: '#fff',
                     '&:hover': {
                         borderColor: 'rgba(0,0,0,0.4)',
@@ -104,7 +106,8 @@ export function SimpleSelect({ value, options, onChange, placeholder, fullWidth,
                             sx={{
                                 padding: '8px 12px',
                                 fontSize: 13,
-                                cursor: 'pointer',
+                                cursor: disabled ? 'not-allowed' : 'pointer',
+                    opacity: disabled ? 0.55 : 1,
                                 '&:hover': {
                                     bgcolor: 'action.hover',
                                 },

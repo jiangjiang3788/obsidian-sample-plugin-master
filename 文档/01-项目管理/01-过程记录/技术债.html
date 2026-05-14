@@ -9,32 +9,27 @@
 <body data-doc-root="../../">
   <div class="layout">
     <aside class="sidebar">
-      <div class="brand">
-        <div class="brand-title">Think OS 插件文档系统</div>
-        <div class="brand-subtitle">HTML 项目驾驶舱 / 文档 / 需求 / 技术 / 评审 / 发布</div>
-      </div>
-      <div class="search-box">
-        <input class="search-input" data-doc-search placeholder="搜索：目标、计划、任务、复盘、个人管理系统...">
-        <div class="search-results" data-search-results></div>
-      </div>
-
+      <div class="brand"><div class="brand-title">Think OS 插件文档系统</div><div class="brand-subtitle">Think OS 插件文档系统</div></div>
+      <div class="search-box"><input class="search-input" data-doc-search placeholder="搜索：目标、计划、任务、复盘、个人管理系统..."><div class="search-results" data-search-results></div></div>
     </aside>
     <main class="main">
       <section class="hero">
         <div class="eyebrow">THINK OS DOCUMENT SYSTEM</div>
         <h1>技术债</h1>
-        <p class="lead">把“以后再说”的东西记下来，并给它们一个处理优先级。</p>
-        <div class="meta-row">
-          <span class="badge good">状态：建议模板</span>
-          <span class="badge">最后更新：2026-05-07</span>
-          <span class="badge">格式：HTML</span>
-        </div>
+        <p class="lead">记录当前仍需主动处理的工程、文档和发布债。已完成的债保留关闭记录，但不再作为开放项干扰当前判断。</p>
+        <div class="meta-row"><span class="badge good">状态：开放技术债 0</span><span class="badge">最后更新：2026-05-14</span><span class="badge">格式：HTML</span><span class="badge">生命周期：持续维护</span><span class="badge">重要度：P0</span></div>
       </section>
       <section class="grid">
-<article class="card full"><h2>技术债分类</h2><div class="table-wrap"><table><thead><tr><th>类型</th><th>表现</th><th>处理方式</th></tr></thead><tbody><tr><td>文档债</td><td>旧资料多、新入口不明确</td><td>建立正式入口并逐步归档。</td></tr><tr><td>结构债</td><td>模块职责不清、调用方向混乱</td><td>补文件地图和模块职责，用 gate 控制边界。</td></tr><tr><td>功能债</td><td>功能入口多但缺少统一说明</td><td>补功能地图、命令设计、设置项设计。</td></tr><tr><td>测试债</td><td>重要流程缺少稳定验收</td><td>补测试清单和功能验收标准。</td></tr><tr><td>发布债</td><td>版本变化缺少记录</td><td>补 Changelog 和发布记录。</td></tr></tbody></table></div></article>
-<article class="card full"><h2>当前技术债列表</h2><div class="table-wrap"><table><thead><tr><th>编号</th><th>技术债</th><th>严重度</th><th>建议处理时间</th></tr></thead><tbody><tr><td>DEBT-001</td><td>旧 docs/html 未归档</td><td>中</td><td>文档结构稳定后。</td></tr><tr><td>DEBT-002</td><td>核心文件职责需要继续细化</td><td>中</td><td>补文件地图时。</td></tr><tr><td>DEBT-003</td><td>命令与设置入口需统一整理</td><td>中</td><td>功能设计阶段。</td></tr><tr><td>DEBT-004</td><td>发布前检查仍需固化</td><td>高</td><td>下一次发布前。</td></tr></tbody></table></div></article>
-</section>
-      <footer class="footer">本页属于 Think OS 插件 HTML 文档系统。UI 沿用原有风格，docs/html 旧资料已按新结构迁移。</footer>
+<article class="card full"><h2>当前开放技术债</h2><div class="callout"><strong>结论：</strong>截至 2026-05-14，当前开放技术债为 <strong>0</strong>。工程稳定化债、旧资料归档债、发布前检查固化债均已完成或转入观察。</div></article>
+<article class="card full"><h2>已关闭技术债</h2><div class="table-wrap"><table><thead><tr><th>编号</th><th>技术债</th><th>关闭状态</th><th>关闭依据</th></tr></thead><tbody>
+<tr><td>DEBT-001</td><td>主动文档仍有迁移/旧资料/分项计划残留</td><td>已关闭</td><td>旧迁移入口、旧实施计划、旧报告、分项计划/报告已移入 <code>_归档/2026-05-技术债收尾</code>。</td></tr>
+<tr><td>DEBT-002</td><td>技术文档缺长期文件地图 / 模块职责页</td><td>已关闭</td><td><code>03-技术文档/00-技术全景/文件地图.html</code> 与 <code>模块职责.html</code> 已补齐为长期入口。</td></tr>
+<tr><td>DEBT-003</td><td>发布流程仍是旧命令体系</td><td>已关闭</td><td>发布流程已改为 <code>npm run verify</code> / <code>npm run ci</code> 体系。</td></tr>
+<tr><td>DEBT-004</td><td>发布前检查仍需固化</td><td>已关闭</td><td>Phase C 已新增 <code>scripts/maintenance/verify.mjs</code>、CI 工作流和 verify/ci npm scripts。</td></tr>
+</tbody></table></div></article>
+<article class="card full"><h2>观察项，不作为开放技术债</h2><ul><li>路线图功能开发后，如果新增领域模型，需要同步更新技术全景和领域模型文档。</li><li>CI 真正在远端运行后，应把失败案例写入发布流程或修复记录。</li><li>若后续继续整理文件夹，应同步更新文件地图和模块职责。</li></ul></article>
+      </section>
+      <footer class="footer">本页属于 Think OS 插件 HTML 文档系统。当前文档治理原则：当前事实优先，长期技术事实和短期实施记录分离。</footer>
     </main>
   </div>
   <script src="../../_资源/搜索索引.js"></script>

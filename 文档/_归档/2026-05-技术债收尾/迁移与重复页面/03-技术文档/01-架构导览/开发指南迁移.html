@@ -23,7 +23,7 @@
       <section class="hero">
         <div class="eyebrow">技术文档 / MIGRATED DOC</div>
         <h1>开发指南迁移</h1>
-        <p class="lead">本文面向“要在本仓库继续开发/迭代功能的人”，目标是：新同学能在 30 分钟内跑起来、能定位代码入口、能通过质量门禁（gate）。安装依赖：如果 `npm run check` 失败，通常是触发了 `scripts/*gate*.mjs` 的边界约束；先看报错提示对应哪条 gate。</p>
+        <p class="lead">本文面向“要在本仓库继续开发/迭代功能的人”，目标是：新同学能在 30 分钟内跑起来、能定位代码入口、能通过质量门禁（gate）。安装依赖：如果 `npm run check` 失败，通常是触发了 `scripts/gates/*gate*.mjs` 的边界约束；先看报错提示对应哪条 gate。</p>
         <div class="meta-row">
           <span class="badge good">状态：已迁移</span>
           <span class="badge">最后更新：2026-05-07</span>
@@ -50,7 +50,7 @@ npm test
 # 构建（产物到 dist/，并复制到仓库根目录 main.js/styles.css 以便发布/拷贝）
 npm run build
 </code></pre>
-<p>如果 <code>npm run check</code> 失败，通常是触发了 <code>scripts/*gate*.mjs</code> 的边界约束；先看报错提示对应哪条 gate。</p>
+<p>如果 <code>npm run check</code> 失败，通常是触发了 <code>scripts/gates/*gate*.mjs</code> 的边界约束；先看报错提示对应哪条 gate。</p>
 <h2>3. 本地加载到 Obsidian（开发/验证）</h2>
 <p>Obsidian 插件目录结构（最小）：</p>
 <ul>

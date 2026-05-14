@@ -9,33 +9,20 @@
 <body data-doc-root="../../">
   <div class="layout">
     <aside class="sidebar">
-      <div class="brand">
-        <div class="brand-title">Think OS 插件文档系统</div>
-        <div class="brand-subtitle">HTML 项目驾驶舱 / 文档 / 需求 / 技术 / 评审 / 发布</div>
-      </div>
-      <div class="search-box">
-        <input class="search-input" data-doc-search placeholder="搜索：目标、计划、任务、复盘、个人管理系统...">
-        <div class="search-results" data-search-results></div>
-      </div>
-
+      <div class="brand"><div class="brand-title">Think OS 插件文档系统</div><div class="brand-subtitle">Think OS 插件文档系统</div></div>
+      <div class="search-box"><input class="search-input" data-doc-search placeholder="搜索：目标、计划、任务、复盘、个人管理系统..."><div class="search-results" data-search-results></div></div>
     </aside>
     <main class="main">
       <section class="hero">
         <div class="eyebrow">THINK OS DOCUMENT SYSTEM</div>
         <h1>文件地图</h1>
-        <p class="lead">技术文档的核心页：告诉你哪个文件夹负责什么，改功能先看哪里。</p>
-        <div class="meta-row">
-          <span class="badge good">状态：建议模板</span>
-          <span class="badge">最后更新：2026-05-07</span>
-          <span class="badge">格式：HTML</span>
-        </div>
+        <p class="lead">当前代码与工程目录的长期地图，用于快速判断文件应该放在哪里、哪些目录是稳定边界。</p>
+        <div class="meta-row"><span class="badge good">状态：当前有效</span><span class="badge">最后更新：2026-05-14</span><span class="badge">格式：HTML</span><span class="badge">生命周期：长期</span></div>
       </section>
       <section class="grid">
-<article class="card full"><h2>根目录地图</h2><div class="table-wrap"><table><thead><tr><th>路径</th><th>职责</th><th>备注</th></tr></thead><tbody><tr><td><code>manifest.json</code></td><td>Obsidian 插件元信息</td><td>id、name、version、main、styles。</td></tr><tr><td><code>package.json</code></td><td>依赖和脚本</td><td>dev、build、check、gate、test。</td></tr><tr><td><code>src/main.ts</code></td><td>插件主入口</td><td>onload/onunload、命令注册、设置加载。</td></tr><tr><td><code>src/styles/main.css</code></td><td>主样式入口</td><td>引入或组织插件运行样式。</td></tr><tr><td><code>scripts/</code></td><td>质量门禁和自动化脚本</td><td>架构边界、DI、feature、capability 等 gate。</td></tr><tr><td><code>test/</code></td><td>测试</td><td>unit、integration、e2e、mocks、vaults。</td></tr><tr><td><code>docs/</code></td><td>旧文档资料</td><td>准备弃用，不作为正式入口。</td></tr><tr><td><code>html/</code></td><td>旧 HTML 资料</td><td>准备弃用，不作为正式入口。</td></tr><tr><td><code>文档/</code></td><td>新项目驾驶舱</td><td>当前正式文档入口。</td></tr></tbody></table></div></article>
-<article class="card full"><h2>src 目录地图</h2><div class="table-wrap"><table><thead><tr><th>路径</th><th>职责</th><th>改什么时看</th></tr></thead><tbody><tr><td><code>src/app</code></td><td>应用组装、服务管理、capability、usecase、runtime</td><td>改启动流程、依赖组合、能力入口。</td></tr><tr><td><code>src/core</code></td><td>核心业务、数据、AI、主题、类型、工具</td><td>改业务规则、数据结构、算法。</td></tr><tr><td><code>src/features</code></td><td>面向用户的功能模块</td><td>改 QuickInput、AI Chat、Settings、Timer。</td></tr><tr><td><code>src/platform</code></td><td>Obsidian API 适配</td><td>改文件读取、元数据、弹窗、事件、UI port。</td></tr><tr><td><code>src/shared</code></td><td>共享 UI、hooks、工具、样式</td><td>改跨功能复用组件或工具。</td></tr><tr><td><code>src/types</code></td><td>补充类型声明</td><td>改外部库类型或全局类型补丁。</td></tr></tbody></table></div></article>
-<article class="card full"><h2>高频文件</h2><div class="table-wrap"><table><thead><tr><th>文件</th><th>职责</th><th>注意</th></tr></thead><tbody><tr><td><code>src/main.ts</code></td><td>插件生命周期和命令注册</td><td>避免放复杂业务逻辑。</td></tr><tr><td><code>src/app/ServiceManager.ts</code></td><td>服务启动和清理</td><td>改服务生命周期时看。</td></tr><tr><td><code>src/app/bootstrap/buildRuntime.ts</code></td><td>构建运行时依赖</td><td>改 port/usecase 组合时看。</td></tr><tr><td><code>src/app/capabilities/createCapabilities.ts</code></td><td>能力入口组合</td><td>AI/Timer 等功能统一入口。</td></tr><tr><td><code>src/features/settings/SettingsTab.tsx</code></td><td>设置页入口</td><td>设置 UI 改动先看。</td></tr><tr><td><code>src/core/services/DataStore.ts</code></td><td>数据索引和存储相关</td><td>改扫描、缓存、记录数据时看。</td></tr></tbody></table></div></article>
-</section>
-      <footer class="footer">本页属于 Think OS 插件 HTML 文档系统。UI 沿用原有风格，docs/html 旧资料已按新结构迁移。</footer>
+<article class="card full"><h2>顶层目录</h2><div class="table-wrap"><table><thead><tr><th>目录</th><th>用途</th><th>维护规则</th></tr></thead><tbody><tr><td><code>src/app</code></td><td>应用编排、usecase、runtime、bootstrap、capability。</td><td>不得直接承载 Obsidian API；不得越过 core public 入口深度依赖 core 内部。</td></tr><tr><td><code>src/core</code></td><td>领域类型、服务、port、解析、AI 配置、Goal/Cycle/Record 契约。</td><td>保持平台无关，core 内部不 import <code>@core/public</code>。</td></tr><tr><td><code>src/platform</code></td><td>Obsidian API、Modal、Vault、SettingTab 等适配。</td><td>平台依赖集中于此。</td></tr><tr><td><code>src/features</code></td><td>settings、timer、quickinput、aiinput 等功能入口。</td><td>禁止跨 feature 直接引用。</td></tr><tr><td><code>src/shared</code></td><td>共享 UI、hooks、utils。</td><td>外部优先走 <code>@shared/public</code>。</td></tr><tr><td><code>scripts</code></td><td>gates/audit/docs/build/maintenance/lib。</td><td>新增脚本先判断是否阻断式 gate。</td></tr><tr><td><code>文档</code></td><td>项目状态系统。</td><td>短期计划不写进长期技术页。</td></tr></tbody></table></div></article>
+      </section>
+      <footer class="footer">本页属于 Think OS 插件 HTML 文档系统。当前文档治理原则：当前事实优先，长期技术事实和短期实施记录分离。</footer>
     </main>
   </div>
   <script src="../../_资源/搜索索引.js"></script>
