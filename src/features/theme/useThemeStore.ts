@@ -1,4 +1,4 @@
-import { Theme } from "../../shared/types/Theme";
+import type { Theme } from '@core/public';
 
 export function ensureThemeOrder(themes: Theme[]): Theme[] {
   return themes.map((t, i) => ({

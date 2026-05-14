@@ -8,8 +8,8 @@
 /* 1. Theme 相关导出                                                          */
 /* ========================================================================== */
 
-export { ThemeManager } from './ThemeManager';
-export { ThemeMatrix } from './ThemeMatrix';
+export { ThemeManager } from './theme/ThemeManager';
+export { ThemeMatrix } from './theme/ThemeMatrix';
 
 
 /* ========================================================================== */
@@ -20,19 +20,19 @@ import type ThinkPlugin from '@main';
 import { SettingsTab } from './SettingsTab';
 import { DataStore } from '@core/public';
 
-import { BlockViewEditor } from './BlockViewEditor';
-import { ExcelViewEditor } from './ExcelViewEditor';
-import { HeatmapViewEditor } from './HeatmapViewEditor';
-import { StatisticsViewEditor } from './StatisticsViewEditor';
-import { ProgressViewEditor } from './ProgressViewEditor';
-import { TaskExecutionViewEditor } from './TaskExecutionViewEditor';
-import { TableViewEditor } from './TableViewEditor';
-import { TimelineViewEditor } from './TimelineViewEditor';
+import { BlockViewEditor } from './viewEditors/BlockViewEditor';
+import { ExcelViewEditor } from './viewEditors/ExcelViewEditor';
+import { HeatmapViewEditor } from './viewEditors/HeatmapViewEditor';
+import { StatisticsViewEditor } from './viewEditors/StatisticsViewEditor';
+import { ProgressViewEditor } from './viewEditors/ProgressViewEditor';
+import { TaskExecutionViewEditor } from './viewEditors/TaskExecutionViewEditor';
+import { TableViewEditor } from './viewEditors/TableViewEditor';
+import { TimelineViewEditor } from './viewEditors/TimelineViewEditor';
 
 // 设置页里的多个子设置组件
-export { LayoutSettings } from './LayoutSettings';
-export { InputSettings } from './InputSettings';
-export { GeneralSettings } from './GeneralSettings';
+export { LayoutSettings } from './tabs/LayoutSettings';
+export { InputSettings } from './tabs/InputSettings';
+export { GeneralSettings } from './tabs/GeneralSettings';
 
 /**
  * Settings 模块内部用到的"视图编辑器组件"映射
@@ -76,12 +76,12 @@ export function setupSettings(deps: SettingsDependencies): void {
 /* 3. Dashboard 核心逻辑（数据监听 + 代码块嵌入）                             */
 /* ========================================================================== */
 
-import type { RendererService } from './RendererService';
+import type { RendererService } from './layout/RendererService';
 import type { EventsPort } from '@core/public';
 import type { ActionService } from '@core/public';
 
 import { VaultWatcher } from '@/platform/events/VaultWatcher';
-import { CodeblockEmbedder } from './CodeblockEmbedder';
+import { CodeblockEmbedder } from './layout/CodeblockEmbedder';
 
 /** 
  * Dashboard 功能依赖项接口

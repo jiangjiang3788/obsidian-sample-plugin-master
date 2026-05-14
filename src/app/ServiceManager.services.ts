@@ -1,5 +1,5 @@
 import type { DataStore, ActionService, TimerStateService, InputService, ItemService, SettingsRepository, ChatSessionStore } from '@core/public';
-import type { RendererService } from '@/features/settings/RendererService';
+import type { RendererService } from '@features/settings/layout/RendererService';
 import type { TimerService } from '@features/timer/TimerService';
 import type { FloatingTimerWidget } from '@features/timer/FloatingTimerWidget';
 import type { UseCases } from '@/app/usecases';

@@ -6,13 +6,13 @@
  * - 防止 ThemeMatrixView 回退到 legacy wrapper: buildThemeMatrixTree
  *
  * Rule:
- * - src/features/settings/ThemeMatrixView.tsx 不得 import 或引用 buildThemeMatrixTree
+ * - src/features/settings/theme/ThemeMatrixView.tsx 不得 import 或引用 buildThemeMatrixTree
  */
 import fs from 'node:fs';
 import path from 'node:path';
 
 const repoRoot = process.cwd();
-const target = path.join(repoRoot, 'src/features/settings/ThemeMatrixView.tsx');
+const target = path.join(repoRoot, 'src/features/settings/theme/ThemeMatrixView.tsx');
 
 function stripComments(code) {
   // remove block comments and line comments (best-effort)

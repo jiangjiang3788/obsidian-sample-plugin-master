@@ -1,0 +1,21 @@
+// src/core/goal/index.ts
+export type {
+  GoalId,
+  CycleId,
+  PlanId,
+  TaskId,
+  RecordId,
+  ReviewId,
+  GoalStatus,
+  CycleStatus,
+  CycleGranularity,
+  GoalMetricDirection,
+  GoalMetricContract,
+  GoalDefinition,
+  CycleDefinition,
+  GoalRecordRelationType,
+  GoalRecordRelation,
+  PlanTaskRelation,
+  GoalReviewSnapshot,
+  GoalRelationHint,
+} from './types';

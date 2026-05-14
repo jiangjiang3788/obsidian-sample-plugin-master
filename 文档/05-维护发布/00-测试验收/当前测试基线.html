@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>当前测试基线｜Think OS 插件文档系统</title>
+  <link rel="stylesheet" href="../../_资源/文档样式.css">
+</head>
+<body data-doc-root="../../">
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-title">Think OS 插件文档系统</div>
+        <div class="brand-subtitle">HTML 项目驾驶舱 / 文档 / 需求 / 技术 / 评审 / 发布</div>
+      </div>
+      <div class="search-box">
+        <input class="search-input" data-doc-search placeholder="搜索：目标、计划、任务、复盘、个人管理系统...">
+        <div class="search-results" data-search-results></div>
+      </div>
+    </aside>
+    <main class="main">
+      <section class="hero">
+        <div class="eyebrow">QUALITY BASELINE / ROUTE PRELUDE</div>
+        <h1>当前测试基线</h1>
+        <p class="lead">记录进入 Goal / Cycle / Record 路线图前，最低限度需要跑通的验证链和本轮新增的回归保护。</p>
+        <div class="meta-row">
+          <span class="badge good">状态：路线图前置</span>
+          <span class="badge">最后更新：2026-05-13</span>
+          <span class="badge">位置：05-维护发布 / 00-测试验收</span>
+        </div>
+      </section>
+
+      <section class="grid">
+        <article class="card full">
+          <h2>本轮新增保护</h2>
+          <ul>
+            <li>新增 <code>test/unit/app/actions/recordUiActions.test.ts</code>，覆盖视图创建入口、编辑入口、完成状态写回、时间写回失败/成功反馈。</li>
+            <li>新增 <code>test/unit/app/usecases/recordInput.locator.test.ts</code>，覆盖记录定位 helper 的路径解析、文件元数据优先级、类型推断和新记录定位。</li>
+            <li>新增 <code>src/core/goal/*</code> 最小领域契约，先固定 Goal / Cycle / Record / Review 的类型边界。</li>
+            <li>轻拆 <code>FieldsEditor.tsx</code> 为 <code>fieldsEditor/FieldRow.tsx</code>、<code>OptionRow.tsx</code>、<code>nativeControls.tsx</code>，本轮已做 TSX 转译语法检查。</li>
+            <li>Heatmap 多记录管理弹窗已改为 <code>ModalPort.openCheckinManager(...)</code>，shared 不再 re-export <code>CheckinManagerModal</code>；本轮已补跑 <code>arch:gate</code>、<code>shared-public:gate</code>、<code>obsidian-leak:gate</code>、<code>core-public:gate</code>。</li>
+            <li>settings 文件夹已轻整理为 <code>tabs / input / layout / theme / viewEditors / viewModels</code>；本轮已做内部 import 目标完整性扫描，未发现缺失的项目内 import 目标；并已更新 theme 相关 gate 脚本指向新目录。</li>
+            <li>修复 <code>previewTemplateExecution</code> 运行时 undefined：<code>ServiceManager.initializeCore</code> 现在传入 <code>inputService/itemService/dataStore</code>，并同步修补构建产物 <code>main.js</code>。</li>
+            <li>更新 <code>README.md</code>，把正式文档入口从不存在的 <code>docs/</code> 改为 <code>文档/index.html</code>。</li>
+          </ul>
+        </article>
+
+        <article class="card full">
+          <h2>推荐本地验证顺序</h2>
+          <div class="table-wrap"><table><thead><tr><th>顺序</th><th>命令</th><th>目的</th><th>失败时优先看</th></tr></thead><tbody>
+            <tr><td>1</td><td><code>npm ci</code></td><td>安装 lockfile 固定依赖</td><td>Node/npm 版本、网络、lockfile 冲突</td></tr>
+            <tr><td>2</td><td><code>npm run gate</code></td><td>确认分层、public API、DI、Obsidian API 边界</td><td>新增 import 是否绕过 public/capability</td></tr>
+            <tr><td>2.5</td><td><code>node --check main.js</code></td><td>确认交付给 Obsidian 的插件入口 JS 可解析</td><td>手工修补构建产物后的语法错误</td></tr>
+            <tr><td>3</td><td><code>npm run typecheck:src</code></td><td>确认生产代码类型正确</td><td>core/public 新导出、目标闭环类型引用</td></tr>
+            <tr><td>4</td><td><code>npm run test:unit -- recordUiActions</code></td><td>只跑本轮新增的 UI action 回归测试</td><td>QuickInputModal mock、@core/public mock、时间字段期望</td></tr>
+            <tr><td>5</td><td><code>npm run test:unit -- recordInput.locator</code></td><td>只跑本轮新增的 recordInput 定位 helper 回归测试</td><td>路径解析、line number、候选记录评分</td></tr>
+            <tr><td>6</td><td><code>npm run test:unit</code></td><td>跑完整单元测试基线</td><td>历史测试与新增类型/导出兼容性</td></tr>
+            <tr><td>7</td><td><code>npm run build</code></td><td>确认插件产物可构建</td><td>Vite/Preact/MUI 构建链</td></tr>
+          </tbody></table></div>
+        </article>
+
+        <article class="card full">
+          <h2>当前验收状态</h2>
+          <div class="table-wrap"><table><thead><tr><th>检查项</th><th>状态</th><th>说明</th></tr></thead><tbody>
+            <tr><td>架构 gate</td><td><span class="badge good">已验证</span></td><td>本轮继续保持 gate 通过；完整命令在容器中可能因时限中断，已对关键 gate 单独补跑。</td></tr>
+            <tr><td>运行时缺陷</td><td><span class="badge good">已修复</span></td><td><code>previewTemplateExecution</code> undefined 的根因是 usecases 创建时缺少 <code>inputService</code> 注入；已补上并检查 <code>main.js</code> 语法。</td></tr>
+            <tr><td>测试用例</td><td><span class="badge good">已新增</span></td><td><code>recordUiActions</code> 和 <code>recordInput.locator</code> 已有最小回归测试文件。</td></tr>
+            <tr><td>依赖安装</td><td><span class="badge warn">需本地验证</span></td><td>当前交付压缩包不包含 <code>node_modules</code>，需本地执行 <code>npm ci</code>。</td></tr>
+            <tr><td>完整 typecheck/test</td><td><span class="badge warn">需本地验证</span></td><td>本轮重点是补基线与低风险契约；完整测试应在你的本地开发环境完成。</td></tr>
+          </tbody></table></div>
+        </article>
+
+        <article class="card full">
+          <h2>进入路线图修改的最低门槛</h2>
+          <ol>
+            <li><code>npm run gate</code> 通过。</li>
+            <li><code>npm run typecheck:src</code> 通过。</li>
+            <li><code>npm run test:unit -- recordUiActions</code> 和 <code>npm run test:unit -- recordInput.locator</code> 通过。</li>
+            <li>手动在 Obsidian 中跑一次 QuickInput/RecordInput 创建记录链路，确认不会再出现 <code>previewTemplateExecution</code> undefined。</li>
+            <li>新增 Goal/Cycle/Record 功能只依赖 <code>@core/public</code> 暴露的契约，不直接 deep import core 内部文件。</li>
+            <li>新增 UI 入口不得直接 import Obsidian API；需要走 platform port 或 app public 能力。</li>
+          </ol>
+        </article>
+
+        <article class="card full">
+          <h2>关联页面</h2>
+          <p>本页是 <a href="../../01-项目管理/00-计划与路线/当前代码架构快照.html">当前代码架构快照</a> 的质量验收配套页。路线图功能开发前，应先确认这里的最低验证链。</p>
+        </article>
+      </section>
+      <footer class="footer">本页属于 Think OS 插件 HTML 文档系统。当前主线：先固定质量基线，再进入目标闭环路线图。</footer>
+    </main>
+  </div>
+  <script src="../../_资源/搜索索引.js"></script>
+  <script src="../../_资源/文档脚本.js"></script>
+</body>
+</html>

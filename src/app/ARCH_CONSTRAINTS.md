@@ -118,7 +118,7 @@ npm run arch:gate
 ❌ 发现 AppStore 回流违规：
 
 违规文件：
-src/features/settings/ThemeMatrix.tsx:15:  const appStore = useAppStore();
+src/features/settings/theme/ThemeMatrix.tsx:15:  const appStore = useAppStore();
 
 💡 修复建议：
    - features 层应使用 useUseCases() hook，而不是直接访问 AppStore
@@ -229,9 +229,9 @@ ThemeMatrix UI → useCases.theme.* → Zustand Store actions → SettingsReposi
 ```
 
 **✅ 允许的调用路径：**
-- `src/features/settings/ThemeMatrix.tsx` → `useCases.theme.*`
-- `src/features/settings/ThemeTable.tsx` → `useCases.theme.*`
-- `src/features/settings/ThemeTreeNodeRow.tsx` → `useCases.theme.*`
+- `src/features/settings/theme/ThemeMatrix.tsx` → `useCases.theme.*`
+- `src/features/settings/theme/ThemeTable.tsx` → `useCases.theme.*`
+- `src/features/settings/theme/ThemeTreeNodeRow.tsx` → `useCases.theme.*`
 
 **⛔ 禁止的调用路径：**
 - `src/features/**` → `theme.slice` 的 actions（直接调用）
@@ -363,10 +363,10 @@ const themes = getZustandState(store, s => s.settings.inputSettings.themes);
 - `src/app/store/slices/theme.slice.ts`
 
 #### UI 组件（已迁移）
-- `src/features/settings/ThemeMatrix.tsx`
-- `src/features/settings/ThemeTable.tsx`
-- `src/features/settings/ThemeTreeNodeRow.tsx`
-- `src/features/settings/InputSettings.tsx`
+- `src/features/settings/theme/ThemeMatrix.tsx`
+- `src/features/settings/theme/ThemeTable.tsx`
+- `src/features/settings/theme/ThemeTreeNodeRow.tsx`
+- `src/features/settings/tabs/InputSettings.tsx`
 
 #### 服务层
 - `src/core/theme-matrix/ThemeMatrixService.ts`

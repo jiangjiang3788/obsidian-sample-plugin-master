@@ -4,8 +4,8 @@ import { useMemo } from 'preact/hooks';
 import { App, Modal, Notice } from 'obsidian';
 import { render, unmountComponentAtNode } from 'preact/compat';
 import { Item, dayjs } from '@core/public';
-import { openEditFromItem } from '@/app/actions/recordUiActions';
-import { createRecordGestureHandlers } from '@/shared/ui/utils/recordOrigin';
+import { openEditFromItem } from '@/app/public';
+import { createRecordGestureHandlers } from '@shared/public';
 
 export interface CheckinManagerData {
     displayCount: number;

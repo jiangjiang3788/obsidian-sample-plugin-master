@@ -103,10 +103,10 @@
 </ul>
 <p>但现实里：</p>
 <ul>
-<li><code>LayoutSettings</code> 直接调用 <code>useCases.viewInstance.createView/updateView</code>：<code>features/settings/LayoutSettings.tsx:105-117, 157-166</code></li>
+<li><code>LayoutSettings</code> 直接调用 <code>useCases.viewInstance.createView/updateView</code>：<code>features/settings/tabs/LayoutSettings.tsx:105-117, 157-166</code></li>
 <li><code>LayoutEditorPanel</code> 也直接调用 <code>_useCases.viewInstance.createView/updateView</code>：<code>features/settings/components/LayoutEditorPanel.tsx:138, 186</code></li>
-<li><code>ModuleSettingsModal</code> 每次改动都直接 <code>useCases.viewInstance.updateView</code>：<code>features/settings/ModuleSettingsModal.tsx:45-48</code></li>
-<li><code>LayoutRenderer</code> 删除 view 时直接 <code>useCases.viewInstance.deleteView</code>：<code>features/settings/LayoutRenderer.tsx:403-406</code></li>
+<li><code>ModuleSettingsModal</code> 每次改动都直接 <code>useCases.viewInstance.updateView</code>：<code>features/settings/layout/ModuleSettingsModal.tsx:45-48</code></li>
+<li><code>LayoutRenderer</code> 删除 view 时直接 <code>useCases.viewInstance.deleteView</code>：<code>features/settings/layout/LayoutRenderer.tsx:403-406</code></li>
 </ul>
 <p>更关键的是：<strong><code>layout.usecase.ts</code> 里并没有文档声称的 addView/updateView/deleteView 等 facade 方法</strong>；当前 features 只能绕去 <code>viewinstance.usecase.ts</code>。这说明 ViewInstance 侧的“唯一写入口”并没有真正收口。</p>
 <hr/>
@@ -205,7 +205,7 @@
 </tr>
 <tr>
 <td>LayoutRenderer 的快捷输入按钮</td>
-<td><code>features/settings/LayoutRenderer.tsx:185-190, 369-373</code></td>
+<td><code>features/settings/layout/LayoutRenderer.tsx:185-190, 369-373</code></td>
 <td>新建记录</td>
 <td>同上</td>
 </tr>
@@ -279,12 +279,12 @@
 <tbody>
 <tr>
 <td>勾选完成任务</td>
-<td><code>features/settings/LayoutRenderer.tsx:376-378</code></td>
+<td><code>features/settings/layout/LayoutRenderer.tsx:376-378</code></td>
 <td><code>itemService.completeItem()</code></td>
 </tr>
 <tr>
 <td>视图中更新时间</td>
-<td><code>features/settings/LayoutRenderer.tsx:178-180</code></td>
+<td><code>features/settings/layout/LayoutRenderer.tsx:178-180</code></td>
 <td><code>itemService.updateItemTime()</code></td>
 </tr>
 <tr>
@@ -315,31 +315,31 @@
 <h2>3B. 设置 / 配置域写入口</h2>
 <p>这一组总体比输入域更规整，大部分已经经过 <code>useCases.*</code>。</p>
 <h3>B-1. Block 相关</h3>
-<p><code>features/settings/BlockManager.tsx</code></p>
+<p><code>features/settings/input/BlockManager.tsx</code></p>
 <ul>
-<li>add：<code>useCases.blocks.addBlock()</code>：<code>features/settings/BlockManager.tsx:121-127</code></li>
-<li>delete：<code>useCases.blocks.deleteBlock()</code>：<code>features/settings/BlockManager.tsx:129-134</code></li>
-<li>duplicate：<code>useCases.blocks.duplicateBlock()</code>：<code>features/settings/BlockManager.tsx:136-139</code></li>
-<li>reorder：<code>useCases.blocks.reorderBlocks()</code>：<code>features/settings/BlockManager.tsx:147-152</code></li>
-<li>inline update：<code>useCases.blocks.updateBlock()</code>：<code>features/settings/BlockManager.tsx:73-77</code></li>
-<li>触发方式主要是 <code>onBlur</code> 持久化：<code>features/settings/BlockManager.tsx:75-100</code></li>
+<li>add：<code>useCases.blocks.addBlock()</code>：<code>features/settings/input/BlockManager.tsx:121-127</code></li>
+<li>delete：<code>useCases.blocks.deleteBlock()</code>：<code>features/settings/input/BlockManager.tsx:129-134</code></li>
+<li>duplicate：<code>useCases.blocks.duplicateBlock()</code>：<code>features/settings/input/BlockManager.tsx:136-139</code></li>
+<li>reorder：<code>useCases.blocks.reorderBlocks()</code>：<code>features/settings/input/BlockManager.tsx:147-152</code></li>
+<li>inline update：<code>useCases.blocks.updateBlock()</code>：<code>features/settings/input/BlockManager.tsx:73-77</code></li>
+<li>触发方式主要是 <code>onBlur</code> 持久化：<code>features/settings/input/BlockManager.tsx:75-100</code></li>
 </ul>
 <h3>B-2. Theme / Override 相关</h3>
 <ul>
-<li>新增主题：<code>features/settings/ThemeMatrixView.tsx:131, 181-184</code></li>
-<li>行内改 icon/path：<code>features/settings/ThemeTreeNodeRow.tsx:162, 178</code></li>
-<li>保存 override：<code>features/settings/TemplateEditorModal.tsx:53-71, 143</code></li>
-<li>批量主题操作：<code>features/settings/useBatchOperations.ts:54-84</code></li>
+<li>新增主题：<code>features/settings/theme/ThemeMatrixView.tsx:131, 181-184</code></li>
+<li>行内改 icon/path：<code>features/settings/theme/ThemeTreeNodeRow.tsx:162, 178</code></li>
+<li>保存 override：<code>features/settings/input/TemplateEditorModal.tsx:53-71, 143</code></li>
+<li>批量主题操作：<code>features/settings/theme/useBatchOperations.ts:54-84</code></li>
 </ul>
 <h3>B-3. Settings 相关</h3>
 <ul>
 <li>通用设置页：<ul>
-<li>分类颜色：<code>features/settings/GeneralSettings.tsx:43, 50, 58</code></li>
-<li>悬浮计时器开关：<code>features/settings/GeneralSettings.tsx:70</code></li>
-<li>dev console stack 开关：<code>features/settings/GeneralSettings.tsx:83</code></li>
+<li>分类颜色：<code>features/settings/tabs/GeneralSettings.tsx:43, 50, 58</code></li>
+<li>悬浮计时器开关：<code>features/settings/tabs/GeneralSettings.tsx:70</code></li>
+<li>dev console stack 开关：<code>features/settings/tabs/GeneralSettings.tsx:83</code></li>
 </ul>
 </li>
-<li>AI 设置保存：<code>features/settings/AiSettings.tsx:73-74, 457</code></li>
+<li>AI 设置保存：<code>features/settings/tabs/AiSettings.tsx:73-74, 457</code></li>
 <li>统计视图容器还会<strong>自动补分类颜色并持久化</strong>：<code>shared/ui/views/StatisticsView/StatisticsViewContainer.tsx:80-94</code></li>
 </ul>
 <p>这说明“设置写入口”并不只在 settings 页，<strong>shared/ui 也有自动写入全局设置的行为</strong>。</p>
@@ -347,17 +347,17 @@
 <h4>Layout 相关（相对规范）</h4>
 <ul>
 <li><code>LayoutSettings</code>：<ul>
-<li>update layout：<code>features/settings/LayoutSettings.tsx:59-61</code></li>
-<li>delete layout：<code>features/settings/LayoutSettings.tsx:266-270</code></li>
-<li>duplicate layout：<code>features/settings/LayoutSettings.tsx:272-274</code></li>
-<li>rename layout：<code>features/settings/LayoutSettings.tsx:276-280</code></li>
-<li>add layout：<code>features/settings/LayoutSettings.tsx:338-351</code></li>
-<li>reorder layouts：<code>features/settings/LayoutSettings.tsx:366-378</code></li>
+<li>update layout：<code>features/settings/tabs/LayoutSettings.tsx:59-61</code></li>
+<li>delete layout：<code>features/settings/tabs/LayoutSettings.tsx:266-270</code></li>
+<li>duplicate layout：<code>features/settings/tabs/LayoutSettings.tsx:272-274</code></li>
+<li>rename layout：<code>features/settings/tabs/LayoutSettings.tsx:276-280</code></li>
+<li>add layout：<code>features/settings/tabs/LayoutSettings.tsx:338-351</code></li>
+<li>reorder layouts：<code>features/settings/tabs/LayoutSettings.tsx:366-378</code></li>
 </ul>
 </li>
 <li><code>LayoutRenderer</code>：<ul>
-<li>selectedThemes：<code>features/settings/LayoutRenderer.tsx:408-412</code></li>
-<li>selectedCategories：<code>features/settings/LayoutRenderer.tsx:414-418</code></li>
+<li>selectedThemes：<code>features/settings/layout/LayoutRenderer.tsx:408-412</code></li>
+<li>selectedCategories：<code>features/settings/layout/LayoutRenderer.tsx:414-418</code></li>
 </ul>
 </li>
 <li><code>LayoutEditorPanel</code>：<ul>
@@ -367,10 +367,10 @@
 </ul>
 <h4>ViewInstance 相关（存在明显绕行）</h4>
 <ul>
-<li>create view：<code>features/settings/LayoutSettings.tsx:105-117</code>、<code>features/settings/components/LayoutEditorPanel.tsx:138</code></li>
-<li>update view title：<code>features/settings/LayoutSettings.tsx:157-166</code>、<code>features/settings/components/LayoutEditorPanel.tsx:186</code></li>
-<li>delete view：<code>features/settings/LayoutRenderer.tsx:403-406</code></li>
-<li><code>ModuleSettingsModal</code> 每次改动即持久化：<code>features/settings/ModuleSettingsModal.tsx:45-48, 84-187</code></li>
+<li>create view：<code>features/settings/tabs/LayoutSettings.tsx:105-117</code>、<code>features/settings/components/LayoutEditorPanel.tsx:138</code></li>
+<li>update view title：<code>features/settings/tabs/LayoutSettings.tsx:157-166</code>、<code>features/settings/components/LayoutEditorPanel.tsx:186</code></li>
+<li>delete view：<code>features/settings/layout/LayoutRenderer.tsx:403-406</code></li>
+<li><code>ModuleSettingsModal</code> 每次改动即持久化：<code>features/settings/layout/ModuleSettingsModal.tsx:45-48, 84-187</code></li>
 </ul>
 <p>这里的核心问题不是“有没有 usecase”，而是：</p>
 <ul>
@@ -514,19 +514,19 @@
 <h2>5.6 视图编辑器里的 normalize 也很分散</h2>
 <h3>HeatmapViewEditor</h3>
 <ul>
-<li><code>normalizeHeatmapConfig()</code>：<code>features/settings/HeatmapViewEditor.tsx:21-34</code></li>
-<li><code>handleScanThemes()</code>：从数据源扫描并写回 <code>themePaths</code>：<code>features/settings/HeatmapViewEditor.tsx:46-75</code></li>
+<li><code>normalizeHeatmapConfig()</code>：<code>features/settings/viewEditors/HeatmapViewEditor.tsx:21-34</code></li>
+<li><code>handleScanThemes()</code>：从数据源扫描并写回 <code>themePaths</code>：<code>features/settings/viewEditors/HeatmapViewEditor.tsx:46-75</code></li>
 </ul>
 <h3>StatisticsViewEditor</h3>
 <ul>
-<li>自动发现分类并写回 <code>categories</code>：<code>features/settings/StatisticsViewEditor.tsx:19-43</code></li>
-<li>调整顺序/别名即时 <code>onChange</code>：<code>features/settings/StatisticsViewEditor.tsx:45-62</code></li>
+<li>自动发现分类并写回 <code>categories</code>：<code>features/settings/viewEditors/StatisticsViewEditor.tsx:19-43</code></li>
+<li>调整顺序/别名即时 <code>onChange</code>：<code>features/settings/viewEditors/StatisticsViewEditor.tsx:45-62</code></li>
 </ul>
 <h3>TimelineViewEditor</h3>
 <ul>
-<li><code>normalizeProgressOrder()</code>：<code>features/settings/TimelineViewEditor.tsx:23-84</code></li>
-<li>分类改名碰撞保护：<code>features/settings/TimelineViewEditor.tsx:56-61</code></li>
-<li>所有 patch 只发最小补丁：<code>features/settings/TimelineViewEditor.tsx:303-306</code></li>
+<li><code>normalizeProgressOrder()</code>：<code>features/settings/viewEditors/TimelineViewEditor.tsx:23-84</code></li>
+<li>分类改名碰撞保护：<code>features/settings/viewEditors/TimelineViewEditor.tsx:56-61</code></li>
+<li>所有 patch 只发最小补丁：<code>features/settings/viewEditors/TimelineViewEditor.tsx:303-306</code></li>
 </ul>
 <h3>判断</h3>
 <p>这些逻辑虽然不属于 quickinput 表单本身，但它们说明：</p>
@@ -662,8 +662,8 @@
 <h2>7.3 View 设置编辑：几乎是“每次改动立即落库”</h2>
 <p><code>ModuleSettingsModal</code> 里的 <code>ViewInstanceEditor</code>：</p>
 <ul>
-<li>所有 <code>onChange</code> 直接 <code>useCases.viewInstance.updateView(...)</code>：<code>features/settings/ModuleSettingsModal.tsx:45-48, 84-187</code></li>
-<li>save 按钮并不真正提交，只是 <code>await new Promise(resolve =&gt; setTimeout(resolve, 100)); onClose();</code>：<code>features/settings/ModuleSettingsModal.tsx:208-217</code></li>
+<li>所有 <code>onChange</code> 直接 <code>useCases.viewInstance.updateView(...)</code>：<code>features/settings/layout/ModuleSettingsModal.tsx:45-48, 84-187</code></li>
+<li>save 按钮并不真正提交，只是 <code>await new Promise(resolve =&gt; setTimeout(resolve, 100)); onClose();</code>：<code>features/settings/layout/ModuleSettingsModal.tsx:208-217</code></li>
 </ul>
 <h3>判断</h3>
 <p>这是一个很明显的竞态/副作用热点：</p>
@@ -730,7 +730,7 @@
 <p>代表文件：</p>
 <ul>
 <li>规范：<code>app/ARCH_CONSTRAINTS.md:142-172, 187-195</code></li>
-<li>实现：<code>features/settings/LayoutSettings.tsx:109, 162</code>、<code>features/settings/components/LayoutEditorPanel.tsx:138, 186</code>、<code>features/settings/ModuleSettingsModal.tsx:47</code>、<code>features/settings/LayoutRenderer.tsx:405</code></li>
+<li>实现：<code>features/settings/tabs/LayoutSettings.tsx:109, 162</code>、<code>features/settings/components/LayoutEditorPanel.tsx:138, 186</code>、<code>features/settings/layout/ModuleSettingsModal.tsx:47</code>、<code>features/settings/layout/LayoutRenderer.tsx:405</code></li>
 <li><code>viewinstance.usecase.ts</code> 仍直接用 <code>updateSettings</code>：<code>app/usecases/viewinstance.usecase.ts:38-41, 58-62, 77-89</code></li>
 </ul>
 <h2>8.3 不一致点 1：QuickInput create 的刷新策略与 AI 批量确认不一致</h2>
@@ -748,7 +748,7 @@
 <ul>
 <li><code>QuickInputModal</code>：save = 真提交</li>
 <li><code>TemplateEditorModal</code>：save = 真提交</li>
-<li><code>ModuleSettingsModal</code>：save = 等 100ms 后关闭，真实提交已在过程中发生：<code>features/settings/ModuleSettingsModal.tsx:208-217</code></li>
+<li><code>ModuleSettingsModal</code>：save = 等 100ms 后关闭，真实提交已在过程中发生：<code>features/settings/layout/ModuleSettingsModal.tsx:208-217</code></li>
 </ul>
 <hr/>
 <h2>9. 五张清单（可直接带到第 2 轮）</h2>
@@ -761,27 +761,27 @@
 <li><code>shared/ui/items/BlockItem.tsx</code></li>
 <li><code>shared/ui/views/HeatmapView.tsx</code></li>
 <li><code>shared/ui/views/timelineInteraction.ts</code></li>
-<li><code>features/settings/LayoutRenderer.tsx</code></li>
+<li><code>features/settings/layout/LayoutRenderer.tsx</code></li>
 <li><code>features/timer/TimerViewView.tsx</code></li>
 <li><code>features/timer/TimerRow.tsx</code></li>
 <li><code>platform/modals/QuickInputModal.tsx</code></li>
 <li><code>platform/modals/AiBatchConfirmModal.tsx</code></li>
 <li><code>features/timer/TimerService.ts</code></li>
-<li><code>features/settings/LayoutRenderer.tsx</code>（<code>itemService.completeItem/updateItemTime</code>）</li>
+<li><code>features/settings/layout/LayoutRenderer.tsx</code>（<code>itemService.completeItem/updateItemTime</code>）</li>
 </ul>
 <h3>设置/配置域</h3>
 <ul>
-<li><code>features/settings/BlockManager.tsx</code></li>
-<li><code>features/settings/TemplateEditorModal.tsx</code></li>
-<li><code>features/settings/ThemeMatrixView.tsx</code></li>
-<li><code>features/settings/ThemeTreeNodeRow.tsx</code></li>
-<li><code>features/settings/useBatchOperations.ts</code></li>
-<li><code>features/settings/GeneralSettings.tsx</code></li>
-<li><code>features/settings/AiSettings.tsx</code></li>
-<li><code>features/settings/LayoutSettings.tsx</code></li>
+<li><code>features/settings/input/BlockManager.tsx</code></li>
+<li><code>features/settings/input/TemplateEditorModal.tsx</code></li>
+<li><code>features/settings/theme/ThemeMatrixView.tsx</code></li>
+<li><code>features/settings/theme/ThemeTreeNodeRow.tsx</code></li>
+<li><code>features/settings/theme/useBatchOperations.ts</code></li>
+<li><code>features/settings/tabs/GeneralSettings.tsx</code></li>
+<li><code>features/settings/tabs/AiSettings.tsx</code></li>
+<li><code>features/settings/tabs/LayoutSettings.tsx</code></li>
 <li><code>features/settings/components/LayoutEditorPanel.tsx</code></li>
-<li><code>features/settings/ModuleSettingsModal.tsx</code></li>
-<li><code>features/settings/LayoutRenderer.tsx</code></li>
+<li><code>features/settings/layout/ModuleSettingsModal.tsx</code></li>
+<li><code>features/settings/layout/LayoutRenderer.tsx</code></li>
 <li><code>shared/ui/views/StatisticsView/StatisticsViewContainer.tsx</code></li>
 </ul>
 <h2>9.2 UseCase 清单（压缩版）</h2>

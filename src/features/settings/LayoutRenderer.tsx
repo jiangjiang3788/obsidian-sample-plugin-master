@@ -27,7 +27,7 @@ import {
     openCreateFromStatistics,
     openCreateFromViewHeader,
     updateTimeFromView,
-} from '@/app/actions/recordUiActions';
+} from '@/app/public';
 import { openModuleSettingsWidget } from './ModuleSettingsModal';
 import { exportItemsToMarkdown, getExportConfigByViewType } from '@core/public'; // [新增] 导入导出函数
 import { ViewToolbar } from '@shared/public'; // [新增] 导入统一工具栏组件

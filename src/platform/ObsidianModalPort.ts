@@ -8,7 +8,7 @@
 import { singleton, inject } from 'tsyringe';
 import type { App } from 'obsidian';
 import { AppToken } from '@core/services/types';
-import type { ModalPort, NamePromptOptions } from '@core/public';
+import type { ModalPort, NamePromptOptions, CheckinManagerOpenArgs } from '@core/public';
 import { AiChatService, RetrievalService, ChatSessionStore } from '@core/public';
 import type { NaturalRecordCommand } from '@core/types/ai-schema';
 
@@ -73,10 +73,17 @@ export class ObsidianModalPort implements ModalPort {
     new AiChatModal(this.app, aiServices).open();
   }
 
-  openCheckinManager(): void {
-    // Provide safe defaults for ad-hoc opening.
+  openCheckinManager(args?: CheckinManagerOpenArgs): void {
+    // Provide safe defaults for ad-hoc opening while allowing shared/features
+    // to request a concrete platform modal without importing or new-ing it.
     const emptyItems: Item[] = [];
     const noop = () => {};
-    new CheckinManagerModal(this.app, todayISO(), emptyItems, noop, noop).open();
+    new CheckinManagerModal(
+      this.app,
+      args?.date ?? todayISO(),
+      args?.items ?? emptyItems,
+      noop,
+      args?.onAddRecord ?? noop,
+    ).open();
   }
 }

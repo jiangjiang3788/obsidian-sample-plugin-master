@@ -8,12 +8,19 @@
 // ---------------------------------------------------------------------------
 
 import type { InjectionToken } from 'tsyringe';
+import type { Item } from '../types';
 
 export interface NamePromptOptions {
   title: string;
   placeholder?: string;
   ctaText?: string;
   defaultValue?: string;
+}
+
+export interface CheckinManagerOpenArgs {
+  date: string;
+  items: Item[];
+  onAddRecord?: () => void;
 }
 
 export interface ModalPort {
@@ -32,7 +39,7 @@ export interface ModalPort {
 
   openAiChat(): void;
 
-  openCheckinManager(): void;
+  openCheckinManager(args?: CheckinManagerOpenArgs): void;
 }
 
 export const MODAL_PORT_TOKEN: InjectionToken<ModalPort> = 'ModalPort';

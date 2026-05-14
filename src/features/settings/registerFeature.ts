@@ -16,7 +16,7 @@ import type { ActionService, DataStore } from '@core/public';
 import type { EventsPort } from '@core/public';
 import type { FeatureRegistry, UIFeatureBootContext } from '@capabilities';
 
-import type { RendererService } from './RendererService';
+import type { RendererService } from './layout/RendererService';
 import { setupDashboard, setupSettings } from './index';
 
 export interface SettingsFeatureDeps {

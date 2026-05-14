@@ -2,7 +2,7 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
 import { Item, getAllFields, readField } from '@core/public';
-import { openEditFromItem } from '@/app/actions/recordUiActions';
+import { openEditFromItem } from '@/app/public';
 import { createRecordGestureHandlers } from '@/shared/ui/utils/recordOrigin';
 
 // 接口定义保持不变

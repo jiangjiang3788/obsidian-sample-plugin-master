@@ -9,7 +9,7 @@
 
 import type { TaskBlock } from '@core/public';
 import type { UiPort } from '@core/public';
-import { openCreateFromTimeline } from '@/app/actions/recordUiActions';
+import { openCreateFromTimeline } from '@/app/public';
 
 interface CreateTaskOptions {
   app: any;

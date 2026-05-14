@@ -9,6 +9,7 @@
 import { h } from 'preact';
 import { useMemo, useCallback, useState, useRef } from 'preact/hooks';
 import { useUseCases, useSelector } from '@/app/public';
+import { IconAction } from '@shared/public';
 import type { UseCases } from '@/app/public';
 import type { Layout, ViewInstance } from '@core/public';
 
@@ -23,13 +24,12 @@ import {
   Radio,
   RadioGroup as MuiRadioGroup,
   Autocomplete,
-  IconButton,
   Box,
 } from '@mui/material';
 import ArrowBackIosNewIcon from '@mui/icons-material/ArrowBackIosNew';
 import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
 
-import { openModuleSettingsWidget } from '@/features/settings/ModuleSettingsModal';
+import { openModuleSettingsWidget } from '@features/settings/layout/ModuleSettingsModal';
 
 const PERIOD_OPTIONS = ['年', '季', '月', '周', '天'].map((v) => ({ value: v, label: v }));
 const DISPLAY_MODE_OPTIONS = [
@@ -308,18 +308,15 @@ export function LayoutEditorPanel({ layoutId, useCases }: { layoutId: string; us
                     maxWidth: '100%',
                   }}
                 >
-                  <Tooltip title="前移">
-                    <span>
-                      <IconButton
-                        size="small"
-                        disabled={index === 0}
-                        onClick={() => moveView(view.id, -1)}
-                        sx={{ p: '2px' }}
-                      >
-                        <ArrowBackIosNewIcon sx={{ fontSize: '0.85rem' }} />
-                      </IconButton>
-                    </span>
-                  </Tooltip>
+                  <IconAction
+                    label="前移"
+                    icon={<ArrowBackIosNewIcon sx={{ fontSize: '0.85rem' }} />}
+                    size="small"
+                    disabled={index === 0}
+                    onClick={() => moveView(view.id, -1)}
+                    sx={{ p: '2px' }}
+                    stopPropagation={false}
+                  />
 
                   <Tooltip title="左键移除，右键更多选项">
                     <Chip
@@ -331,18 +328,15 @@ export function LayoutEditorPanel({ layoutId, useCases }: { layoutId: string; us
                     />
                   </Tooltip>
 
-                  <Tooltip title="后移">
-                    <span>
-                      <IconButton
-                        size="small"
-                        disabled={index === selectedViews.length - 1}
-                        onClick={() => moveView(view.id, 1)}
-                        sx={{ p: '2px' }}
-                      >
-                        <ArrowForwardIosIcon sx={{ fontSize: '0.85rem' }} />
-                      </IconButton>
-                    </span>
-                  </Tooltip>
+                  <IconAction
+                    label="后移"
+                    icon={<ArrowForwardIosIcon sx={{ fontSize: '0.85rem' }} />}
+                    size="small"
+                    disabled={index === selectedViews.length - 1}
+                    onClick={() => moveView(view.id, 1)}
+                    sx={{ p: '2px' }}
+                    stopPropagation={false}
+                  />
                 </Box>
               ) : null
             )}

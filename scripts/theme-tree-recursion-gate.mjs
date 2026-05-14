@@ -7,14 +7,14 @@
  * - 推荐做法：使用统一 ThemePathTreeBuilder + flattenThemePathTree 产出可见扁平列表，Table 直接 map 渲染
  *
  * Rule:
- * - src/features/settings/ThemeTreeNodeRow.tsx 里不得出现 JSX tag "<ThemeTreeNodeRow"
+ * - src/features/settings/theme/ThemeTreeNodeRow.tsx 里不得出现 JSX tag "<ThemeTreeNodeRow"
  *   （一旦出现基本就是递归渲染回来了）
  */
 import fs from 'node:fs';
 import path from 'node:path';
 
 const projectRoot = process.cwd();
-const targetFile = path.join(projectRoot, 'src', 'features', 'settings', 'ThemeTreeNodeRow.tsx');
+const targetFile = path.join(projectRoot, 'src', 'features', 'settings', 'theme', 'ThemeTreeNodeRow.tsx');
 
 function findLoc(content, idx) {
   const before = content.slice(0, idx);

@@ -6,7 +6,7 @@ import { TaskSendToTimerButton } from '@shared/ui/composites/TaskSendToTimerButt
 import { isDone } from '@core/public';
 import { FieldPill } from './FieldPill';
 import type { TimerController } from '@/app/public';
-import { openEditFromItem } from '@/app/actions/recordUiActions';
+import { openEditFromItem } from '@/app/public';
 import { createRecordGestureHandlers } from '@/shared/ui/utils/recordOrigin';
 
 interface TaskRowProps {

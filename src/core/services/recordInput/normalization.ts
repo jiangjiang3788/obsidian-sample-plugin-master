@@ -1,8 +1,8 @@
 import type { NormalizeRecordInputParams, NormalizeRecordInputResult } from '@/core/types/recordInput';
 import { buildPathOption, getLeafPath, normalizePath } from '@/core/utils/pathSemantic';
 import { recordDebugLog } from '@/core/utils/recordDebug';
-import { applyTaskTimePolicy } from '@core/public';
-import type { TaskTimeDirection } from '@core/public';
+import { applyTaskTimePolicy } from '@/core/utils/taskTime';
+import type { TaskTimeDirection } from '@/core/utils/taskTime';
 
 
 function normalizeToken(value: unknown): string {

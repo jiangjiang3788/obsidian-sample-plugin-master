@@ -1,4 +1,4 @@
-import { Theme } from "../../shared/types/Theme";
+import type { Theme } from '@core/public';
 
 export function reorderThemes(
   themes: Theme[],

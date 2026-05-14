@@ -173,6 +173,9 @@ export class ServiceManager {
                 settingsRepository: this.bootstrapResolved.settingsRepository,
                 timerStateService: this.bootstrapResolved.timerStateService,
                 initialSettings: this.bootstrapResolved.initialSettings,
+                inputService: this.bootstrapResolved.inputService,
+                itemService: this.bootstrapResolved.itemService,
+                dataStore: this.bootstrapResolved.dataStore,
             },
         });
     }

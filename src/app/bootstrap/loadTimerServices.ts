@@ -7,7 +7,7 @@ import { startMeasure } from '@shared/public';
 import { devLog } from '@core/public';
 
 import type { Services } from '@/app/services.types';
-import { RendererService } from '@/features/settings/RendererService';
+import { RendererService } from '@features/settings/layout/RendererService';
 import { TimerService } from '@features/timer/TimerService';
 import { FloatingTimerWidget } from '@features/timer/FloatingTimerWidget';
 import type { ServiceManagerServices } from '@/app/ServiceManager.services';

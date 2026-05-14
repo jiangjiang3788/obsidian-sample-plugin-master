@@ -25,6 +25,26 @@
 // -------------------- Domain Types (唯一真源) --------------------
 //
 export * from './types';
+export type {
+    GoalId,
+    CycleId,
+    PlanId,
+    TaskId,
+    RecordId,
+    ReviewId,
+    GoalStatus,
+    CycleStatus,
+    CycleGranularity,
+    GoalMetricDirection,
+    GoalMetricContract,
+    GoalDefinition,
+    CycleDefinition,
+    GoalRecordRelationType,
+    GoalRecordRelation,
+    PlanTaskRelation,
+    GoalReviewSnapshot,
+    GoalRelationHint,
+} from './goal';
 
 //
 // -------------------- Utils（可复用纯能力） --------------------
@@ -79,6 +99,12 @@ export type {
 export { parsePath, getRelativePath } from './theme-matrix/themePathParser';
 
 //
+
+// -------------------- Progression（目标/成长反馈纯计算） --------------------
+export { computeProgression } from './progression/computeProgression';
+export type { ProgressComputationOptions } from './progression/computeProgression';
+export type { ProgressBreakdownRow, ProgressResult } from './progression/types';
+
 // -------------------- Core Services（DI 需要的 token / class） --------------------
 // 说明：这些 export 是为了组合根（main/app）和 usecases 能 resolve。
 //
@@ -90,6 +116,22 @@ export { TimerStateService } from './services/TimerStateService';
 
 export { VaultFileStorage, STORAGE_TOKEN } from './services/StorageService';
 export type { IPluginStorage } from './services/StorageService';
+
+
+// -------------------- Record Input internals promoted for app usecase boundary --------------------
+// 说明：app/usecases/recordInput.usecase.ts 只能通过 core/public.ts 访问 core。
+// 这里导出的是 usecase 编排所需的稳定核心构件，不允许 features/shared 直接依赖内部路径。
+export { RecordInputKernel } from './services/recordInput/RecordInputKernel';
+export { buildRecordOutputPlan, buildRecordPersistencePlan } from './services/recordInput/snapshot/OutputPlanner';
+export {
+    buildCancelledResult,
+    buildConflictResult,
+    buildErrorResult,
+    buildSuccessResult,
+    buildValidationErrorResult,
+} from './services/recordInput/submitResult';
+export { applyRecordRefreshPlan, finalizeRecordSubmitResult } from './services/recordInput/refreshCoordinator';
+export { isRecordConflictError } from './services/recordInput/mutationErrors';
 
 // -------------------- Core Ports（Phase2: platform 边界） --------------------
 // 说明：core 层只定义接口（Port）；平台层实现并在组合根注册。
@@ -112,7 +154,7 @@ export type { AppPort, AppVaultNamePort } from './ports/AppPort';
 export { MODAL_PORT_TOKEN } from './ports/ModalPort';
 export { MESSAGE_RENDER_PORT_TOKEN } from './ports/MessageRenderPort';
 export type { MessageRenderPort, RenderMessageArgs, MessageContentType } from './ports/MessageRenderPort';
-export type { ModalPort, NamePromptOptions } from './ports/ModalPort';
+export type { ModalPort, NamePromptOptions, CheckinManagerOpenArgs } from './ports/ModalPort';
 
 
 export { SettingsRepository, SETTINGS_PERSISTENCE_TOKEN } from './services/SettingsRepository';

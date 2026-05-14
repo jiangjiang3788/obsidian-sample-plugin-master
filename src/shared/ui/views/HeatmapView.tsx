@@ -3,11 +3,9 @@
 /** @jsxImportSource preact */
 import { useMemo, useState, useRef, useEffect } from 'preact/hooks';
 import { Item, ViewInstance, InputSettings, ThemeDefinition, devLog, parsePath } from '@core/public';
-import { Notice } from 'obsidian';
 import { dayjs } from '@core/public';
-import { openCreateFromHeatmap } from '@/app/actions/recordUiActions';
+import { openCreateFromHeatmap, useModalPort, useUiPort } from '@/app/public';
 import { HEATMAP_VIEW_DEFAULT_CONFIG } from '@core/public';
-import { CheckinManagerModal } from '@shared/ui/modals/CheckinManagerModal';
 import { HeatmapCell } from '@shared/ui/heatmap/HeatmapCell';
 import { buildThemeDataMap, buildThemesByPathMap } from '@core/public';
 import { RatingMappingCache } from '@core/public';
@@ -63,6 +61,9 @@ export function HeatmapView({
     injectedThemesToTrack,
     injectedDataByThemeAndDate,
 }: HeatmapViewProps) {
+    const ui = useUiPort();
+    const modal = useModalPort();
+
     const config = useMemo(
         () => ({ ...HEATMAP_VIEW_DEFAULT_CONFIG, ...module.viewConfig }),
         [module.viewConfig]
@@ -154,7 +155,7 @@ export function HeatmapView({
             item,
             themePath,
             themesByPath,
-            notice: (message) => new Notice(message),
+            notice: (message) => { ui.notice(message); },
         });
     };
 
@@ -175,13 +176,11 @@ export function HeatmapView({
             return;
         }
 
-        new CheckinManagerModal(
-            app,
+        modal.openCheckinManager({
             date,
-            itemsForDay,
-            async () => {},
-            () => openQuickCreate(date, itemsForDay[itemsForDay.length - 1], themePath)
-        ).open();
+            items: itemsForDay,
+            onAddRecord: () => openQuickCreate(date, itemsForDay[itemsForDay.length - 1], themePath),
+        });
     };
 
     const renderMonthGrid = (

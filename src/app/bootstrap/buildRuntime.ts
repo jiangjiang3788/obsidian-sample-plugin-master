@@ -23,6 +23,8 @@ export type BootstrapResolved = {
   initialSettings: ThinkSettings;
   actionService: ActionService;
   itemService: ItemService;
+  inputService: InputService;
+  dataStore: DataStore;
   chatSessionStore: ChatSessionStore;
 };
 
@@ -81,6 +83,8 @@ export function resolveBootstrap(container: DependencyContainer = defaultContain
       initialSettings: container.resolve<ThinkSettings>(SETTINGS_TOKEN),
       actionService: container.resolve(ActionService),
       itemService: container.resolve(ItemService),
+      inputService: container.resolve(InputService),
+      dataStore: container.resolve(DataStore),
       chatSessionStore: container.resolve(ChatSessionStore),
     };
   } catch (error) {

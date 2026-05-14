@@ -3,7 +3,7 @@
 import { h } from 'preact';
 import { useRef } from 'preact/hooks';
 import { useUiPort } from '@/app/public';
-import { openEditFromItem } from '@/app/actions/recordUiActions';
+import { openEditFromItem } from '@/app/public';
 import type { TaskBlock } from '@core/public';
 import { createRecordGestureHandlers } from '@/shared/ui/utils/recordOrigin';
 import { mapTaskToCategory } from '@core/public';

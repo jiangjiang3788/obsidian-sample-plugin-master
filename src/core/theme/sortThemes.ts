@@ -1,4 +1,4 @@
-import { Theme } from "../../shared/types/Theme";
+import type { Theme } from '../types/theme';
 
 export function sortThemes(themes: Theme[]) {
   const parents = themes

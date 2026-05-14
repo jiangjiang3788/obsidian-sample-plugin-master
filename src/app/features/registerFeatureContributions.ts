@@ -13,7 +13,7 @@
 import type ThinkPlugin from '@main';
 import type { ActionService, DataStore } from '@core/public';
 import type { EventsPort } from '@core/public';
-import type { RendererService } from '@features/settings/RendererService';
+import type { RendererService } from '@features/settings/layout/RendererService';
 
 import { FeatureRegistry } from '../FeatureRegistry';
 import type { UIFeatureBootContext } from './featureContext';

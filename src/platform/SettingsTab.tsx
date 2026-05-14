@@ -9,10 +9,10 @@ import { useLocalStorage } from '@shared/public';
 import { LOCAL_STORAGE_KEYS } from '@core/public';
 import { theme as baseTheme } from '@shared/public';
 
-import { LayoutSettings } from '@/features/settings/LayoutSettings';
-import { InputSettings } from '@/features/settings/InputSettings';
-import { GeneralSettings } from '@/features/settings/GeneralSettings';
-import { AiSettings } from '@/features/settings/AiSettings';
+import { LayoutSettings } from '@features/settings/tabs/LayoutSettings';
+import { InputSettings } from '@features/settings/tabs/InputSettings';
+import { GeneralSettings } from '@features/settings/tabs/GeneralSettings';
+import { AiSettings } from '@features/settings/tabs/AiSettings';
 
 function a11yProps(index: number) {
     return { id: `settings-tab-${index}`, 'aria-controls': `settings-tabpanel-${index}` };

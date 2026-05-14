@@ -5,7 +5,7 @@ import { FieldPill } from '@shared/ui/items/FieldPill';
 import { ItemLink } from '@shared/ui/items/ItemLink';
 import type { MessageRenderPort } from '@core/public';
 import { MarkdownContent } from '@shared/ui/markdown/MarkdownContent';
-import { openEditFromItem } from '@/app/actions/recordUiActions';
+import { openEditFromItem } from '@/app/public';
 import { createRecordGestureHandlers } from '@/shared/ui/utils/recordOrigin';
 
 interface BlockItemProps {

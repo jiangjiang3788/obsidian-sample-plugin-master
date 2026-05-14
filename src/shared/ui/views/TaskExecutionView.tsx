@@ -2,7 +2,7 @@
 import { h } from 'preact';
 import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
 import type { Item } from '@core/public';
-import { openEditFromItem } from '@/app/actions/recordUiActions';
+import { openEditFromItem } from '@/app/public';
 import { createRecordGestureHandlers } from '@/shared/ui/utils/recordOrigin';
 
 interface TaskExecutionRecordVM {

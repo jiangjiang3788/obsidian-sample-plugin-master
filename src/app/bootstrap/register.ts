@@ -11,7 +11,7 @@ import {
 
 import { diDebug } from '@/app/diagnostics/diDiagnostics';
 
-import { ThemeManager } from '@features/settings/ThemeManager';
+import { ThemeManager } from '@features/settings/theme/ThemeManager';
 import { isDisposed } from '@/app/runtime/lifecycleState';
 
 /**

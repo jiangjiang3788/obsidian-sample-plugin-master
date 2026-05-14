@@ -64,6 +64,31 @@ export interface TimerController {
 }
 
 
+
+// ============== App Actions (UI-safe command helpers) ==============
+export {
+  isModuleHeaderCreateAllowed,
+  canCreateFromStatisticsCell,
+  openCreateFromViewHeader,
+  openCreateFromTimeline,
+  openCreateFromHeatmap,
+  openCreateFromStatistics,
+  openEditFromItem,
+  completeFromView,
+  updateTimeFromView,
+} from './actions/recordUiActions';
+export type {
+  StatisticsCellIdentifier,
+  StatisticsCreatePayload,
+  TimelineCreateParams,
+  HeatmapCreateParams,
+  StatisticsCreateParams,
+  HeaderCreateParams,
+  EditFromItemParams,
+  CompleteFromViewParams,
+  UpdateTimeFromViewParams,
+} from './actions/recordUiActions';
+
 // ============== Runtime UI (moved from shared/ui to app/ui) ==============
 export { QuickInputEditor, finalizeQuickInputFormData } from './ui/components/QuickInputEditor';
 export type { QuickInputEditorState, QuickInputEditorProps } from './ui/components/QuickInputEditor';

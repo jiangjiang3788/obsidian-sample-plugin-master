@@ -1,6 +1,5 @@
 import type { Item } from '@core/public';
-import { PROGRESS_VIEW_DEFAULT_CONFIG } from '@core/public';
-import { computeProgression } from '@/features/progression/computeProgression';
+import { PROGRESS_VIEW_DEFAULT_CONFIG, computeProgression } from '@core/public';
 
 export function buildProgressViewModel(args: { items: Item[]; module: any }) {
   const { items, module } = args;

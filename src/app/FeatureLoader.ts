@@ -1,6 +1,6 @@
 import type ThinkPlugin from '@main';
 import { ActionService, DataStore, devTime, devTimeEnd, devWarn } from '@core/public';
-import { RendererService } from '@/features/settings/RendererService';
+import { RendererService } from '@features/settings/layout/RendererService';
 import type { EventsPort } from '@core/public';
 import { FeatureRegistry } from './FeatureRegistry';
 import { registerFeatureContributions } from './features/registerFeatureContributions';

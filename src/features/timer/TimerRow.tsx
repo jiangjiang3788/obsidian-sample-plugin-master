@@ -12,8 +12,8 @@ import { DataStore } from '@core/public';
 import { TimerService } from '@features/timer/TimerService';
 import type { TimerState } from '@/app/public';
 import { formatSecondsToHHMMSS } from '@core/public';
-import { openEditFromItem } from '@/app/actions/recordUiActions';
-import { createRecordGestureHandlers } from '@/shared/ui/utils/recordOrigin';
+import { openEditFromItem } from '@/app/public';
+import { createRecordGestureHandlers } from '@shared/public';
 
 interface TimerRowProps {
     timer: TimerState;

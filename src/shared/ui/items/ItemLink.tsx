@@ -2,7 +2,7 @@
 import { h } from 'preact';
 import type { Item } from '@core/public';
 import { createRecordGestureHandlers } from '@/shared/ui/utils/recordOrigin';
-import { openEditFromItem } from '@/app/actions/recordUiActions';
+import { openEditFromItem } from '@/app/public';
 
 interface ItemLinkProps {
     item: Item;

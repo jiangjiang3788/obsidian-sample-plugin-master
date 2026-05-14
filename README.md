@@ -35,9 +35,10 @@ Obsidian 第三方插件的最小发布物是：
 ### 常用命令
 
 ```bash
-npm install
-npm run check
-npm test
+npm ci
+npm run gate
+npm run typecheck:src
+npm run test:unit
 npm run build
 ```
 
@@ -59,11 +60,16 @@ Copy-Item -Force manifest.json, main.js, styles.css $pluginDir
 - `src/core/`：核心领域与跨 feature 能力（含 settings、storage、ports 等）。
 - `src/features/`：功能模块（timer / quickinput / aiinput / aichat / settings ...）。
 - `src/shared/`：跨模块共享工具与公共 UI（按 public/private 约束组织）。
-- `docs/`：架构治理、目录约定与计划文档。
+- `文档/`：HTML 文档系统，包含项目管理、功能设计、技术文档、评审中心、维护发布。
 
 ## 相关文档
 
-- `docs/directory-conventions.md`
-- `docs/00-项目全局路径与治理准备.md`
-- `docs/计划.md`
+当前正式文档入口是 `文档/index.html`。建议先按这个顺序阅读：
+
+1. `文档/01-项目管理/00-计划与路线/当前代码架构快照.html`
+2. `文档/01-项目管理/00-计划与路线/版本路线图.html`
+3. `文档/01-项目管理/00-计划与路线/目标闭环开发拆解.html`
+4. `文档/05-维护发布/00-测试验收/当前测试基线.html`
+
+`src/docs/` 仅保留代码旁说明；不存在的旧 `docs/` 入口不再作为正式导航。
 
