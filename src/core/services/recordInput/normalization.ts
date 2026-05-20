@@ -1,6 +1,7 @@
 import type { NormalizeRecordInputParams, NormalizeRecordInputResult } from '@/core/types/recordInput';
 import { buildPathOption, getLeafPath, normalizePath } from '@/core/utils/pathSemantic';
 import { recordDebugLog } from '@/core/utils/recordDebug';
+import { parseTagsInput } from '@/core/utils/tagUtils';
 import { applyTaskTimePolicy } from '@/core/utils/taskTime';
 import type { TaskTimeDirection } from '@/core/utils/taskTime';
 
@@ -94,6 +95,10 @@ function isCategoryLikeField(field: any): boolean {
   return key.includes('分类') || /category/i.test(key);
 }
 
+function isTagsField(field: any): boolean {
+  return fieldMatches(field, ['标签', 'tag', 'tags']);
+}
+
 function normalizeOptionValue(field: any, rawValue: unknown): unknown {
   if (rawValue === undefined || rawValue === null || rawValue === '') return rawValue;
 
@@ -153,6 +158,10 @@ export function normalizeRecordInput(input: NormalizeRecordInputParams): Normali
 
   for (const field of input.template.fields || []) {
     if (!Object.prototype.hasOwnProperty.call(normalizedFormData, field.key)) continue;
+    if (isTagsField(field)) {
+      normalizedFormData[field.key] = parseTagsInput(normalizedFormData[field.key]);
+      continue;
+    }
     normalizedFormData[field.key] = normalizeOptionValue(field as any, normalizedFormData[field.key]);
   }
 

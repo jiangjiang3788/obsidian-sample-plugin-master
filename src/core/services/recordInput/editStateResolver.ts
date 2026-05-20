@@ -5,6 +5,7 @@ import { buildEditableRecordSnapshot } from '@/core/services/recordInput/snapsho
 import { buildParsedRecordSnapshot } from '@/core/types/recordSnapshot';
 import { recordDebugLog } from '@/core/utils/recordDebug';
 import { buildPathOption, getLeafPath, normalizePath } from '@/core/utils/pathSemantic';
+import { formatTagsForField } from '@/core/utils/tagUtils';
 import { findThemeIdByPath, resolveRecordDependencies } from './dependencyResolver';
 
 export interface BuildEditStateInput {
@@ -45,12 +46,6 @@ function isTagsField(field: any): boolean {
   const key = normalizeToken(field?.key);
   const label = normalizeToken(field?.label);
   return ['标签', 'tag', 'tags'].includes(key) || ['标签', 'tag', 'tags'].includes(label);
-}
-
-function formatTagsForField(tags: unknown): string | undefined {
-  if (!Array.isArray(tags)) return undefined;
-  const cleaned = tags.map((tag) => String(tag || '').trim().replace(/^#/, '')).filter(Boolean);
-  return cleaned.length ? Array.from(new Set(cleaned)).join(',') : undefined;
 }
 
 function readPeriodFromLegacyCategory(field: any, item: Item, snapshot: ParsedRecordSnapshot): string | undefined {

@@ -8,6 +8,7 @@ import type { QuickInputConfig, ISettingsProvider } from '@core/services/types';
 import { SettingsProviderToken } from '@core/services/types';
 import { readField } from '@/core/types/schema';
 import { buildPathOption, getBasePath, getLeafPath } from '@core/utils/pathSemantic';
+import { formatTagsForField } from '@/core/utils/tagUtils';
 import type { UiPort } from '@core/ports/UiPort';
 import { UI_PORT_TOKEN } from '@core/ports/UiPort';
 
@@ -159,7 +160,7 @@ export class ActionService {
         }
         const tagsField = targetBlock.fields.find(f => f.label === '标签' || f.key === 'tags');
         if (tagsField && !context[tagsField.key]) {
-            context[tagsField.key] = item.tags.join(', ');
+            context[tagsField.key] = formatTagsForField(item.tags);
         }
 
         return {

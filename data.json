@@ -116,7 +116,7 @@
           "dir": "asc"
         }
       ],
-      "collapsed": false
+      "collapsed": true
     },
     {
       "id": "vi_mmeolydjaga6z6u",
@@ -483,7 +483,7 @@
         "vi_mnztlf3wxrrqd8i"
       ],
       "displayMode": "list",
-      "initialView": "年",
+      "initialView": "周",
       "initialDateFollowsNow": true,
       "parentId": "group_memcg1u3us3jc",
       "hideToolbar": false,

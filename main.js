@@ -14605,6 +14605,37 @@ ItemService = __decorateClass$9([
   __decorateParam$8(0, inject(DataStore)),
   __decorateParam$8(1, inject(VAULT_PORT_TOKEN))
 ], ItemService);
+function normalizeTagToken(value) {
+  return String(value ?? "").trim().replace(/^#+/, "");
+}
+function parseTagsInput(value) {
+  const result = [];
+  const seen = /* @__PURE__ */ new Set();
+  const push = (token2) => {
+    const normalized = normalizeTagToken(token2);
+    if (!normalized || seen.has(normalized)) return;
+    seen.add(normalized);
+    result.push(normalized);
+  };
+  const visit = (input) => {
+    if (input === void 0 || input === null) return;
+    if (Array.isArray(input)) {
+      input.forEach(visit);
+      return;
+    }
+    if (typeof input === "string") {
+      input.split(/[\s,，]+/u).map((part) => part.trim()).filter(Boolean).forEach(push);
+      return;
+    }
+    push(input);
+  };
+  visit(value);
+  return result;
+}
+function formatTagsForField(value) {
+  const tags2 = parseTagsInput(value);
+  return tags2.length ? tags2.map((tag) => `#${tag}`).join(", ") : void 0;
+}
 const UI_PORT_TOKEN = "UiPort";
 var __getOwnPropDesc$8 = Object.getOwnPropertyDescriptor;
 var __decorateClass$8 = (decorators, target, key, kind) => {
@@ -14740,7 +14771,7 @@ let ActionService = class {
     }
     const tagsField = targetBlock.fields.find((f2) => f2.label === "标签" || f2.key === "tags");
     if (tagsField && !context[tagsField.key]) {
-      context[tagsField.key] = item.tags.join(", ");
+      context[tagsField.key] = formatTagsForField(item.tags);
     }
     return {
       blockId: targetBlock.id,
@@ -15056,15 +15087,10 @@ function isPeriodField(field) {
   const label = normalizeToken$1(field?.label);
   return ["周期", "period"].includes(key) || ["周期", "period"].includes(label);
 }
-function isTagsField(field) {
+function isTagsField$1(field) {
   const key = normalizeToken$1(field?.key);
   const label = normalizeToken$1(field?.label);
   return ["标签", "tag", "tags"].includes(key) || ["标签", "tag", "tags"].includes(label);
-}
-function formatTagsForField(tags2) {
-  if (!Array.isArray(tags2)) return void 0;
-  const cleaned = tags2.map((tag) => String(tag || "").trim().replace(/^#/, "")).filter(Boolean);
-  return cleaned.length ? Array.from(new Set(cleaned)).join(",") : void 0;
 }
 function readPeriodFromLegacyCategory(field, item, snapshot) {
   const candidates = [
@@ -15278,7 +15304,7 @@ function readSnapshotSemanticValue(field, item, snapshot) {
   if (isTitleField(field)) return snapshot.semantic.title || snapshot.semantic.editableText || item.title;
   if (["日期", "date"].includes(key) || ["日期", "date"].includes(label)) return snapshot.semantic.date;
   if (isPeriodField(field)) return snapshot.semantic.period || readPeriodFromLegacyCategory(field, item, snapshot);
-  if (isTagsField(field)) return formatTagsForField(snapshot.semantic.tags) || formatTagsForField(item.tags);
+  if (isTagsField$1(field)) return formatTagsForField(snapshot.semantic.tags) || formatTagsForField(item.tags);
   if (["时间", "time", "start", "starttime"].includes(key) || ["时间", "time", "start", "starttime"].includes(label)) return snapshot.semantic.startTime;
   if (["结束", "end", "endtime"].includes(key) || ["结束", "end", "endtime"].includes(label)) return snapshot.semantic.endTime;
   if (["时长", "duration"].includes(key) || ["时长", "duration"].includes(label)) return snapshot.semantic.duration;
@@ -15465,6 +15491,9 @@ function isCategoryLikeField(field) {
   const key = String(field.key || field.label || "");
   return key.includes("分类") || /category/i.test(key);
 }
+function isTagsField(field) {
+  return fieldMatches(field, ["标签", "tag", "tags"]);
+}
 function normalizeOptionValue(field, rawValue) {
   if (rawValue === void 0 || rawValue === null || rawValue === "") return rawValue;
   if (isOptionObject$1(rawValue)) {
@@ -15515,6 +15544,10 @@ function normalizeRecordInput(input) {
   delete normalizedFormData.__timeDirection;
   for (const field of input.template.fields || []) {
     if (!Object.prototype.hasOwnProperty.call(normalizedFormData, field.key)) continue;
+    if (isTagsField(field)) {
+      normalizedFormData[field.key] = parseTagsInput(normalizedFormData[field.key]);
+      continue;
+    }
     normalizedFormData[field.key] = normalizeOptionValue(field, normalizedFormData[field.key]);
   }
   const finalized = finalizeTimeFieldsByTemplate(
