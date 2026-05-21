@@ -1,6 +1,8 @@
 // src/core/domain/schema.ts
 import type { RecurrenceInfo } from '@core/utils/mark';
+import { readExplicitThemeParts } from '@/core/theme/themeSemantics';
 import type { AiSettings } from './ai-schema';
+import type { FieldOriginMap } from './fieldOrigin';
 import { DEFAULT_AI_SETTINGS } from './ai-schema';
 
 // [新增] 定义可分组项的通用接口
@@ -138,8 +140,10 @@ export interface Layout extends Groupable {
     initialDateFollowsNow?: boolean;
     isOverviewMode?: boolean; // [新增] 概览模式开关
     useFieldGranularity?: boolean; // [新增] 按字段粒度过滤开关
-    selectedThemes?: string[]; // [新增] 选中的主题路径列表，用于主题筛选
-    selectedCategories?: string[];
+    /** Layout 级全局筛选规则：由 toolbar 的数据筛选面板维护，作用于该布局下所有视图。 */
+    globalFilters?: FilterRule[];
+    selectedThemes?: string[]; // [兼容] 旧版主题筛选字段，后续由 globalFilters 替代
+    selectedCategories?: string[]; // [兼容] 旧版分类筛选字段，后续由 globalFilters 替代
     displayMode?: 'list' | 'grid';
     gridConfig?: {
         columns?: number;
@@ -159,9 +163,22 @@ export interface ActionConfig {
         options?: string[];
     }[];
 }
+export type FilterOperator =
+    | '='
+    | '!='
+    | 'includes'
+    | 'regex'
+    | '>'
+    | '<'
+    | 'in'
+    | 'notIn'
+    | 'between'
+    | 'empty'
+    | 'notEmpty';
+
 export interface FilterRule {
     field: string;
-    op: '=' | '!=' | 'includes' | 'regex' | '>' | '<';
+    op: FilterOperator;
     value: any;
     logic?: 'and' | 'or'; // 逻辑关系：且/或
 }
@@ -204,6 +221,11 @@ export interface Item {
     header?: string;
     icon?: string;
     priority?: 'lowest' | 'low' | 'medium' | 'high' | 'highest';
+    /**
+     * Optional provenance metadata for parsed fields.
+     * Used by field/debug UI to explain where a value came from.
+     */
+    fieldOrigins?: FieldOriginMap;
     extra: Record<string, string | number | boolean>;
     createdDate?: string;
     scheduledDate?: string;
@@ -215,6 +237,7 @@ export interface Item {
         path: string;
         line?: number;
         basename?: string;
+        folder?: string;
     };
     fileName?: string;
     startTime?: string; // [核心修改] time 重命名为 startTime
@@ -233,50 +256,91 @@ export interface Item {
     manuallyEdited?: boolean;  // 是否被手动编辑过
 }
 
-// [修改] 将新字段加入核心字段列表，包括theme字段
+// ----- 字段分层入口 ----- //
+// Core fields are intrinsic record data. They intentionally exclude file metadata,
+// derived theme parts, and legacy aliases. UI field pickers should be built from
+// DEFAULT_FIELD_OPTIONS via getAllFields(), not by assuming every Item property is
+// a user-facing field.
 export const CORE_FIELDS = [
     'id', 'type', 'title', 'content', 'categoryKey', 'tags',
-    // 主题视图字段：theme 保持旧兼容，themePath/rootTheme/leafTheme 供视图设置明确选择。
-    'theme', 'themePath', 'rootTheme', 'leafTheme',
-    'recurrence', 'icon', 'priority', 'date', 'header', 'startTime', 'endTime', 'duration', 'period', 'rating', 'pintu', 'folder', 'periodCount'
+    'recurrence', 'icon', 'priority', 'date', 'startTime', 'endTime', 'duration',
+    'period', 'rating', 'pintu', 'folder', 'periodCount'
 ] as const;
 
+export const SEMANTIC_FIELDS = [
+    'baseCategory',
+    // 主题筛选/分组的唯一默认字段：完整主题路径。
+    // theme 是旧兼容字段，不再出现在默认字段选择器中。
+    'themePath', 'rootTheme', 'leafTheme',
+] as const;
+
+export const FILE_FIELDS = [
+    'file.path', 'file.basename', 'file.name', 'file.folder', 'header'
+] as const;
+
+export const LEGACY_FIELDS = [
+    'theme', 'filename', 'fileName'
+] as const;
+
+export const DEFAULT_FIELD_OPTIONS = [
+    ...CORE_FIELDS,
+    ...SEMANTIC_FIELDS,
+    ...FILE_FIELDS,
+] as const;
+
+export const LEGACY_EXTRA_ALIAS_KEYS = [
+    '正文', '内容', '任务内容', '记录内容', 'editableText'
+] as const;
+
+const LEGACY_EXTRA_ALIAS_SET = new Set<string>(LEGACY_EXTRA_ALIAS_KEYS as unknown as string[]);
+
 export type CoreField = typeof CORE_FIELDS[number];
+export type SemanticField = typeof SEMANTIC_FIELDS[number];
+export type FileField = typeof FILE_FIELDS[number];
+export type LegacyField = typeof LEGACY_FIELDS[number];
+
+function isVisibleExtraField(item: Item, key: string): boolean {
+    if (!LEGACY_EXTRA_ALIAS_SET.has(key)) return true;
+    // Historical parser versions polluted extra with body aliases. Hide those
+    // unless they were explicitly read from markdown in this scan.
+    const origins = item.fieldOrigins?.[`extra.${key}`] || [];
+    return origins.some(origin => origin.confidence === 'explicit');
+}
+
 export function getAllFields(items: Item[]): string[] {
-    const set = new Set<string>(CORE_FIELDS as unknown as string[]);
+    const set = new Set<string>(DEFAULT_FIELD_OPTIONS as unknown as string[]);
     items.forEach(it => {
-        Object.keys(it.extra || {}).forEach(k => set.add('extra.' + k));
+        Object.keys(it.extra || {}).forEach(k => {
+            if (isVisibleExtraField(it, k)) set.add('extra.' + k);
+        });
         const f: any = (it as any).file;
         if (f && typeof f === 'object') Object.keys(f).forEach((k: string) => set.add('file.' + k));
     });
     return Array.from(set).sort();
 }
-function splitItemThemePath(theme: string | null | undefined) {
-    const parts = String(theme || '')
-        .split('/')
-        .map(part => part.trim())
-        .filter(Boolean);
-    if (!parts.length) return { themePath: undefined, rootTheme: undefined, leafTheme: undefined };
-    return {
-        themePath: parts.join('/'),
-        rootTheme: parts[0],
-        leafTheme: parts[parts.length - 1],
-    };
-}
-
 export function readField(item: Item, field: string): any {
     if (field.startsWith('extra.')) return item.extra?.[field.slice(6)];
-    if (field.startsWith('file.')) return (item as any).file?.[field.slice(5)];
+    if (field.startsWith('file.')) {
+        const key = field.slice(5);
+        const file = (item as any).file || {};
+        if (key === 'name' || key === 'basename') return file.basename ?? item.fileName ?? item.filename;
+        if (key === 'folder') return file.folder ?? item.folder;
+        return file[key];
+    }
+    if (field === 'baseCategory' || field === '分类根' || field === 'rootCategory') {
+        const raw = String(item.categoryKey || '').trim();
+        return raw.split('/').map(part => part.trim()).filter(Boolean)[0] || raw;
+    }
 
-    // 主题三分法给视图设置用：即使旧 item 没落盘这些字段，也能从 theme/header 动态推导。
+    // 主题三分法给视图设置用：只从显式主题字段推导，禁止 header/heading 兜底。
     if (field === 'themePath' || field === '完整主题' || field === '主题路径') {
-        return item.themePath ?? (item as any).themePathNormalized ?? splitItemThemePath(item.theme || item.header).themePath;
+        return readExplicitThemeParts(item as any).themePath ?? undefined;
     }
     if (field === 'rootTheme' || field === '根主题' || field === 'themeRoot') {
-        return item.rootTheme ?? splitItemThemePath(item.themePath || item.theme || item.header).rootTheme;
+        return readExplicitThemeParts(item as any).rootTheme ?? undefined;
     }
     if (field === 'leafTheme' || field === '叶主题' || field === 'themeLeaf') {
-        return item.leafTheme ?? splitItemThemePath(item.themePath || item.theme || item.header).leafTheme;
+        return readExplicitThemeParts(item as any).leafTheme ?? undefined;
     }
 
     return (item as any)[field];

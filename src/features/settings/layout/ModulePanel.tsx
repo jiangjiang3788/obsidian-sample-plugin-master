@@ -11,7 +11,7 @@ import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 const AnyIconButton = IconButton as any;
 
 
-interface ModulePanelProps {
+export interface ModulePanelProps {
     title: string;
     collapsed?: boolean;
     children: any;

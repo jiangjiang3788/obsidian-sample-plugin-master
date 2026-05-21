@@ -11,6 +11,7 @@ import { EMOJI } from '@/core/types/constants';
 import { cleanTaskText, extractTaskEditableText, explainTaskEditableTextExtraction } from './text';
 import { recordDebugLog } from './recordDebug';
 import { extractRecurrenceText } from './mark';
+import { addFieldOrigin } from '@/core/types/fieldOrigin';
 
 /* ---------- 工具 ---------- */
 function pick(line: string, emoji: string) { return extractDate(line, emoji); }
@@ -36,6 +37,7 @@ export function parseTaskLine(
         created: 0,
         modified: 0,
         extra: {},
+        fieldOrigins: {},
         categoryKey: '', // 稍后填充
         // [新增] 填充 folder
         folder: parentFolder,
@@ -51,6 +53,16 @@ export function parseTaskLine(
     /* ---- 标签 ---- */
     const tagMatches = lineText.match(TAG_RE) || [];
     item.tags = tagMatches.map(t => t.replace('#', ''));
+    if (item.tags.length > 0) {
+        addFieldOrigin(item, 'tags', {
+            value: [...item.tags],
+            kind: 'markdown_tag',
+            sourcePath: filePath,
+            sourceLine: lineNo,
+            parser: 'parseTaskLine',
+            confidence: 'explicit',
+        });
+    }
 
     /* ---- 重复性 ---- */
     const recurrenceText = extractRecurrenceText(lineText);
@@ -68,27 +80,59 @@ export function parseTaskLine(
         // - tags 仅来自 #tag 或 (标签::) /(tags::)
         if (['主题', 'theme'].includes(lowerKey)) {
             item.theme = value;
+            addFieldOrigin(item, 'theme', {
+                value,
+                kind: 'markdown_task_kv',
+                rawKey: key,
+                sourcePath: filePath,
+                sourceLine: lineNo,
+                parser: 'parseTaskLine',
+                confidence: 'explicit',
+            });
         } else if (['模板id', 'templateid'].includes(lowerKey)) {
             item.templateId = value;
+            addFieldOrigin(item, 'templateId', { value, kind: 'markdown_task_kv', rawKey: key, sourcePath: filePath, sourceLine: lineNo, parser: 'parseTaskLine', confidence: 'explicit' });
         } else if (['模板来源', 'templatesource', 'templatesourcetype'].includes(lowerKey)) {
-            if (value === 'block' || value === 'override') item.templateSourceType = value;
+            if (value === 'block' || value === 'override') {
+                item.templateSourceType = value;
+                addFieldOrigin(item, 'templateSourceType', { value, kind: 'markdown_task_kv', rawKey: key, sourcePath: filePath, sourceLine: lineNo, parser: 'parseTaskLine', confidence: 'explicit' });
+            }
         } else if (['标签', 'tag', 'tags'].includes(lowerKey)) {
+            const parsedTags: string[] = [];
             value.split(/[,，]/).forEach(v => {
                 const t = v.trim().replace(/^#/, '');
-                if (t) item.tags.push(t);
+                if (t) {
+                    item.tags.push(t);
+                    parsedTags.push(t);
+                }
             });
+            if (parsedTags.length > 0) {
+                addFieldOrigin(item, 'tags', { value: parsedTags, kind: 'markdown_task_kv', rawKey: key, sourcePath: filePath, sourceLine: lineNo, parser: 'parseTaskLine', confidence: 'explicit' });
+            }
         } else if (['时间', 'time', 'start'].includes(lowerKey)) { // [核心修改]
             item.startTime = value;
+            addFieldOrigin(item, 'startTime', { value, kind: 'markdown_task_kv', rawKey: key, sourcePath: filePath, sourceLine: lineNo, parser: 'parseTaskLine', confidence: 'explicit' });
         } else if (['结束', 'end'].includes(lowerKey)) { // [核心修改]
             item.endTime = value;
+            addFieldOrigin(item, 'endTime', { value, kind: 'markdown_task_kv', rawKey: key, sourcePath: filePath, sourceLine: lineNo, parser: 'parseTaskLine', confidence: 'explicit' });
         } else if (['时长', 'duration'].includes(lowerKey)) { // [核心修改]
             item.duration = Number(value) || undefined;
+            addFieldOrigin(item, 'duration', { value: item.duration, kind: 'markdown_task_kv', rawKey: key, sourcePath: filePath, sourceLine: lineNo, parser: 'parseTaskLine', confidence: 'explicit' });
         } else {
             const num = Number(value);
             let parsed: any = value;
             if (value !== '' && !isNaN(num)) parsed = num;
             else if (/^(true|false)$/i.test(value)) parsed = value.toLowerCase() === 'true';
             item.extra[key] = parsed;
+            addFieldOrigin(item, `extra.${key}`, {
+                value: parsed,
+                kind: 'markdown_task_kv',
+                rawKey: key,
+                sourcePath: filePath,
+                sourceLine: lineNo,
+                parser: 'parseTaskLine',
+                confidence: 'explicit',
+            });
         }
     }
     item.tags = Array.from(new Set(item.tags));
@@ -125,14 +169,8 @@ export function parseTaskLine(
     const editableText = editableExtraction.editableText;
     item.title = editableText || cleanTaskText(titleSrc) || '';
     item.editableText = editableText || item.title || '';
-    if (editableText) {
-        item.extra['正文'] = editableText;
-        // 中文调试/兼容：很多旧模板字段叫“内容”，编辑回填时也可能通过 extra alias 读取。
-        item.extra['内容'] = editableText;
-        item.extra['任务内容'] = editableText;
-        item.extra['记录内容'] = editableText;
-        item.extra['editableText'] = editableText;
-    }
+    // 不再把正文 alias 写入 extra。正文是核心语义字段，extra 只保留用户显式未知 KV，
+    // 避免字段选择器被 `extra.正文/extra.内容/...` 污染。
     if (typeof window !== 'undefined' && (window as any).__THINK_RECORD_DEBUG__) {
         // 中文调试：任务正文解析阶段。不会影响数据，只输出到控制台。
         console.groupCollapsed('[记录调试][任务读取] parser.parseTaskLine 正文提取');
@@ -143,14 +181,13 @@ export function parseTaskLine(
         console.log('正文长度/是否包含连续空格:', { length: editableText.length, hasDoubleSpace: /\s{2,}/.test(editableText) });
         console.log('清洗过程:', explainTaskEditableTextExtraction(lineText));
         console.log('写入 item.title:', item.title);
-        console.log('写入 item.extra[正文]:', item.extra['正文']);
+        console.log('不再写入 item.extra[正文]；正文通过 item.editableText / snapshot.semantic.editableText 暴露。');
         console.groupEnd();
     }
     item.priority = pickPriority(lineText);
     
-    // [Day2新增] 任务的主题是当前章节标题，而不是任务标题
-    // 注意：header 会在 dataStore 中设置，这里先不设置
-    // item.theme 将在 dataStore 扫描后设置为 header
+    // 主题只来自显式元数据 (主题::xxx)/(theme::xxx)。
+    // 当前章节标题会在 DataStore 中写入 item.header，但不会再作为 item.theme fallback。
 
     if (createdDate)   item.createdDate = createdDate;
     if (scheduledDate) item.scheduledDate = scheduledDate;
@@ -183,6 +220,7 @@ export function parseBlockContent(
     let date: string | undefined;
     const tags: string[] = [];
     const extra: Record<string, string | number | boolean> = {};
+    const pendingOrigins: Array<{ field: string; value?: unknown; rawKey?: string; kind: 'markdown_block_kv' | 'markdown_tag' }> = [];
     let contentText = '';
     let contentStarted = false;
     let iconVal: string | null = null;
@@ -204,31 +242,58 @@ export function parseBlockContent(
                 const value = kv[2] || '';
                 const lower = key.toLowerCase();
 
-                if (['分类', '类别', 'category'].includes(lower))      categoryKey = value.trim();
+                if (['分类', '类别', 'category'].includes(lower)) {
+                    categoryKey = value.trim();
+                    pendingOrigins.push({ field: 'categoryKey', value: categoryKey, rawKey: key, kind: 'markdown_block_kv' });
+                }
                 else if (['模板id', 'templateid'].includes(lower)) {
                     extra['templateId'] = value.trim();
+                    pendingOrigins.push({ field: 'templateId', value: value.trim(), rawKey: key, kind: 'markdown_block_kv' });
                 }
                 else if (['模板来源', 'templatesource', 'templatesourcetype'].includes(lower)) {
                     extra['templateSourceType'] = value.trim();
+                    pendingOrigins.push({ field: 'templateSourceType', value: value.trim(), rawKey: key, kind: 'markdown_block_kv' });
                 }
                 else if (['主题'].includes(lower)) {
                     // [Day2新增] 主题字段单独处理
                     themeVal = value.trim();
+                    pendingOrigins.push({ field: 'theme', value: themeVal, rawKey: key, kind: 'markdown_block_kv' });
                 }
-                else if (['标签', 'tag', 'tags'].includes(lower)) tags.push(...value.trim().split(/[,，]/).map(t => t.trim().replace(/^#/, '')));
-                else if (['日期', 'date'].includes(lower))              date = normalizeDateStr(value.trim());
-                else if (['周期', 'period'].includes(lower))            periodVal = value.trim();
-                else if (['评分', 'rating'].includes(lower))            ratingVal = Number(value.trim()) || undefined;
-                else if (['图标', 'icon'].includes(lower))              iconVal = value.trim();
-                else if (['评图', 'pintu'].includes(lower))             pintuVal = value.trim();
+                else if (['标签', 'tag', 'tags'].includes(lower)) {
+                    const parsedTags = value.trim().split(/[,，]/).map(t => t.trim().replace(/^#/, '')).filter(Boolean);
+                    tags.push(...parsedTags);
+                    if (parsedTags.length > 0) pendingOrigins.push({ field: 'tags', value: parsedTags, rawKey: key, kind: 'markdown_block_kv' });
+                }
+                else if (['日期', 'date'].includes(lower)) {
+                    date = normalizeDateStr(value.trim());
+                    pendingOrigins.push({ field: 'date', value: date, rawKey: key, kind: 'markdown_block_kv' });
+                }
+                else if (['周期', 'period'].includes(lower)) {
+                    periodVal = value.trim();
+                    pendingOrigins.push({ field: 'period', value: periodVal, rawKey: key, kind: 'markdown_block_kv' });
+                }
+                else if (['评分', 'rating'].includes(lower)) {
+                    ratingVal = Number(value.trim()) || undefined;
+                    pendingOrigins.push({ field: 'rating', value: ratingVal, rawKey: key, kind: 'markdown_block_kv' });
+                }
+                else if (['图标', 'icon'].includes(lower)) {
+                    iconVal = value.trim();
+                    pendingOrigins.push({ field: 'icon', value: iconVal, rawKey: key, kind: 'markdown_block_kv' });
+                }
+                else if (['评图', 'pintu'].includes(lower)) {
+                    pintuVal = value.trim();
+                    pendingOrigins.push({ field: 'pintu', value: pintuVal, rawKey: key, kind: 'markdown_block_kv' });
+                }
                 else if (['内容', 'content'].includes(lower)) {
                     contentStarted = true; contentText = value;
+                    pendingOrigins.push({ field: 'content', value, rawKey: key, kind: 'markdown_block_kv' });
                 } else {
                     const num = Number(value.trim());
                     let parsed: any = value.trim();
                     if (parsed !== '' && !isNaN(num)) parsed = num;
                     else if (/^(true|false)$/i.test(parsed)) parsed = parsed.toLowerCase() === 'true';
                     extra[key] = parsed;
+                    pendingOrigins.push({ field: `extra.${key}`, value: parsed, rawKey: key, kind: 'markdown_block_kv' });
                 }
             } else { contentStarted = true; contentText = rawLine; }
         } else { contentText += (contentText ? '\n' : '') + rawLine; }
@@ -252,6 +317,7 @@ export function parseBlockContent(
         created: 0,
         modified: 0,
         extra,
+        fieldOrigins: {},
         categoryKey,
         folder: parentFolder,
         // [Day2新增] 主题字段
@@ -268,6 +334,18 @@ export function parseBlockContent(
     if (periodVal) item.period = periodVal;
     if (ratingVal) item.rating = ratingVal;
     if (pintuVal) item.pintu = pintuVal;
+
+    pendingOrigins.forEach(origin => {
+        addFieldOrigin(item, origin.field, {
+            value: origin.value,
+            kind: origin.kind,
+            rawKey: origin.rawKey,
+            sourcePath: filePath,
+            sourceLine: startIdx + 1,
+            parser: 'parseBlockContent',
+            confidence: 'explicit',
+        });
+    });
 
     item.startISO = date;
     item.endISO   = date;

@@ -1,6 +1,7 @@
 // src/core/domain/cache.ts
 
 import type { Item } from './schema';
+import type { FieldOriginMap } from './fieldOrigin';
 
 /**
  * Cache schema v1
@@ -26,6 +27,10 @@ export interface CachedItem {
   // 基本冗余
   created: number;
   modified: number;
+
+  // 字段来源与显式 extra。v4 起缓存，便于解释字段来源，且不会恢复旧 parser 污染的 body alias。
+  extra?: Record<string, string | number | boolean>;
+  fieldOrigins?: FieldOriginMap;
 }
 
 export interface CacheV1 {
@@ -47,8 +52,8 @@ export interface CacheV1 {
   };
 }
 
-// v2: 主目的为一次性修复旧 cache 造成的“items=0/不刷新”问题（强制重新扫描）
-export const CURRENT_CACHE_SCHEMA_VERSION = 2;
+// v4: 字段来源/extra 语义收敛。旧 cache 可能缺少 origin，也可能保留历史 theme 派生缓存，必须强制重扫。
+export const CURRENT_CACHE_SCHEMA_VERSION = 4;
 
 // 将运行时 Item 映射为 CachedItem（仅保存热字段）
 export function toCachedItem(it: Item): CachedItem {
@@ -59,13 +64,15 @@ export function toCachedItem(it: Item): CachedItem {
     titleLower: it.title?.toLowerCase(),
     contentLower: it.content?.toLowerCase(),
     tagsLower: (it.tags || []).map(t => t.toLowerCase()),
-    themePathNormalized: it.themePath ?? it.theme,
+    themePathNormalized: it.themePath,
     rootTheme: it.rootTheme,
     leafTheme: it.leafTheme,
     dateMs: it.dateMs ?? it.startMs ?? it.endMs,
     categoryKey: it.categoryKey,
     created: it.created,
     modified: it.modified,
+    extra: it.extra || {},
+    fieldOrigins: it.fieldOrigins,
   };
 }
 
@@ -87,8 +94,9 @@ export function fromCachedItem(c: CachedItem): Item {
     modified: c.modified,
     dateMs: c.dateMs,
     filename: c.filename,
-    file: { path: c.filePath },
-    extra: {},
+    file: { path: c.filePath, folder: c.filePath.split('/').slice(0, -1).pop() || '' },
+    extra: c.extra || {},
+    fieldOrigins: c.fieldOrigins || {},
   } as any;
 
   // 恢复预处理字段，避免启动后重复计算

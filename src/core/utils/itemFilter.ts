@@ -68,9 +68,38 @@ export function filterByRules(items: Item[], rules: FilterRule[] = []) {
   });
 }
 
+function isEmptyValue(value: any): boolean {
+  if (value === null || value === undefined) return true;
+  if (Array.isArray(value)) return value.length === 0;
+  return String(value).trim() === '';
+}
+
+function normalizeListValue(value: any): any[] {
+  if (Array.isArray(value)) return value;
+  if (value === null || value === undefined) return [];
+  return String(value)
+    .split(/[,，\n]/)
+    .map(part => part.trim())
+    .filter(Boolean);
+}
+
+function normalizeBetweenValue(value: any): [any, any] | null {
+  if (Array.isArray(value) && value.length >= 2) return [value[0], value[1]];
+  if (value === null || value === undefined) return null;
+
+  const text = String(value).trim();
+  if (!text) return null;
+  const parts = text.split(/\s*(?:~|～|至|到|\.\.|,|，)\s*/).filter(Boolean);
+  if (parts.length < 2) return null;
+  return [parts[0], parts[1]];
+}
+
 function matchRule(item: Item, rule: FilterRule): boolean {
   let v1: any = readField(item, rule.field);
   let v2: any = rule.value;
+
+  if (rule.op === 'empty') return isEmptyValue(v1);
+  if (rule.op === 'notEmpty') return !isEmptyValue(v1);
 
   // 优先使用预处理字段进行大小写无关的比较
   if (rule.field === 'title') {
@@ -93,6 +122,11 @@ function matchRule(item: Item, rule: FilterRule): boolean {
     if (rule.op === '!=') {
       return !tagsLower.includes(needle);
     }
+    if (rule.op === 'in' || rule.op === 'notIn') {
+      const needles = normalizeListValue(v2).map(x => String(x).toLowerCase());
+      const matched = needles.some(needleValue => tagsLower.includes(needleValue));
+      return rule.op === 'in' ? matched : !matched;
+    }
     // 其他操作回退为字符串比较
     v1 = tagsLower.join(',');
     v2 = needle;
@@ -109,6 +143,20 @@ function matchRule(item: Item, rule: FilterRule): boolean {
       catch { return false; }
     case '>'   : return cmpMixed(v1, v2) > 0;
     case '<'   : return cmpMixed(v1, v2) < 0;
+    case 'in': {
+      const values = normalizeListValue(v2);
+      return values.some(value => cmpMixed(v1, value) === 0);
+    }
+    case 'notIn': {
+      const values = normalizeListValue(v2);
+      return !values.some(value => cmpMixed(v1, value) === 0);
+    }
+    case 'between': {
+      const range = normalizeBetweenValue(v2);
+      if (!range) return false;
+      const [minValue, maxValue] = range;
+      return cmpMixed(v1, minValue) >= 0 && cmpMixed(v1, maxValue) <= 0;
+    }
     default    : return false;
   }
 }

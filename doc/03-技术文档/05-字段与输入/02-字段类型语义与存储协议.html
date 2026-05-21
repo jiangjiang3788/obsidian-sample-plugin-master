@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>字段类型、语义与存储协议｜Think OS 插件文档系统</title>
+  <link rel="stylesheet" href="../../_资源/文档样式.css">
+</head>
+<body data-doc-root="../../">
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="brand"><div class="brand-title">Think OS 插件文档系统</div><div class="brand-subtitle">字段系统 / 输入 / 数据来源 / 筛选搜索 / 迁移验收</div></div>
+      <div class="search-box"><input class="search-input" data-doc-search placeholder="搜索：字段、来源、extra、themePath、图片字段、迁移..."><div class="search-results" data-search-results></div></div>
+    </aside>
+    <main class="main">
+      <section class="hero">
+        <div class="eyebrow">技术文档 / 字段与输入 / FIELD CONTRACT</div>
+        <h1>字段类型、语义与存储协议</h1>
+        <p class="lead">本页定义新字段系统的合同：字段类型负责值结构和输入控件，字段语义负责业务含义，字段存储负责写入位置，字段来源负责解释数据来自哪里。</p>
+        <div class="meta-row"><span class="badge good">状态：当前有效</span><span class="badge">最后更新：2026-05-21</span><span class="badge">格式：HTML</span></div>
+      </section>
+      <section class="grid">
+<article class="card full"><h2>核心原则</h2><p>字段必须拆成四个维度：<strong>类型</strong>、<strong>语义</strong>、<strong>存储</strong>、<strong>来源</strong>。字段名只用于显示和 Markdown key，不再决定业务含义。</p>
+<div class="callout"><strong>例子：</strong>用户可以把主题字段命名为“领域路径”“主题树”“我的分类”，只要 <code>semantic = themePath</code>，系统就知道它是主题路径。</div></article><article class="card full"><h2>字段类型 FieldType</h2><div class="table-wrap"><table><thead><tr><th>类型</th><th>值结构</th><th>输入能力</th><th>典型用途</th></tr></thead><tbody><tr><td><code>text</code></td><td>string</td><td>单行输入</td><td>标题、短文本。</td></tr><tr><td><code>textarea</code></td><td>string</td><td>多行输入</td><td>正文、备注。</td></tr><tr><td><code>number</code></td><td>number</td><td>数字输入</td><td>计数、评分数值。</td></tr><tr><td><code>boolean</code></td><td>boolean</td><td>开关/复选</td><td>是否完成、是否重点。</td></tr><tr><td><code>date</code> / <code>time</code> / <code>datetime</code></td><td>string/ISO</td><td>日期时间选择器</td><td>日期、开始时间、结束时间。</td></tr><tr><td><code>singleSelect</code></td><td>string</td><td>单选</td><td>状态、优先级、单值分类。</td></tr><tr><td><code>multiSelect</code></td><td>string[]</td><td>多选</td><td>多个状态、多个维度。</td></tr><tr><td><code>path</code> / <code>multiPath</code></td><td>string / string[]</td><td>层级选择器</td><td>主题、分类、路径。</td></tr><tr><td><code>tag</code> / <code>multiTag</code></td><td>string / string[]</td><td>标签选择器</td><td>Obsidian tag、多标签。</td></tr><tr><td><code>image</code> / <code>multiImage</code></td><td>ImageValue / ImageValue[]</td><td>图片选择与预览</td><td>评图、截图、附件图片。</td></tr><tr><td><code>file</code></td><td>FileRef</td><td>文件选择</td><td>附件、相关文件。</td></tr><tr><td><code>rating</code></td><td>number/string</td><td>评分控件</td><td>星级、等级、图形评分。</td></tr></tbody></table></div></article><article class="card full"><h2>字段语义 FieldSemantic</h2><div class="table-wrap"><table><thead><tr><th>语义</th><th>说明</th><th>可搭配类型</th></tr></thead><tbody><tr><td><code>title</code></td><td>记录标题或摘要。</td><td>text</td></tr><tr><td><code>body</code></td><td>记录正文。</td><td>textarea</td></tr><tr><td><code>themePath</code></td><td>完整主题路径。</td><td>path / singleSelect</td></tr><tr><td><code>categoryPath</code></td><td>业务分类路径。</td><td>path / singleSelect</td></tr><tr><td><code>tags</code></td><td>多标签。</td><td>multiTag / multiSelect</td></tr><tr><td><code>status</code></td><td>任务或记录状态。</td><td>singleSelect / boolean</td></tr><tr><td><code>date</code>、<code>startTime</code>、<code>endTime</code>、<code>duration</code></td><td>时间语义。</td><td>date / time / datetime / number</td></tr><tr><td><code>rating</code></td><td>评分语义。</td><td>rating / number / singleSelect</td></tr><tr><td><code>image</code></td><td>图片语义。</td><td>image / multiImage / file</td></tr><tr><td><code>icon</code></td><td>图标语义。</td><td>text / singleSelect / image</td></tr></tbody></table></div></article><article class="card full"><h2>FieldDefinition v2 草案</h2><pre><code class="language-ts">export interface FieldDefinition {
+  id: string;
+  key: string;            // Markdown / storage key，可由用户自由命名
+  label: string;          // UI 显示名
+  type: FieldType;        // 值结构与输入能力
+  semantic?: FieldSemantic;
+  category: FieldCategory;
+
+  cardinality?: &#x27;single&#x27; | &#x27;multi&#x27;;
+  hierarchical?: boolean;
+  required?: boolean;
+  defaultValue?: unknown;
+
+  storage: FieldStoragePolicy;
+  aliases?: string[];     // 只用于读取旧数据，默认不写回
+
+  display?: FieldDisplayPolicy;
+  filter?: FieldFilterPolicy;
+  search?: FieldSearchPolicy;
+  migration?: FieldMigrationPolicy;
+}
+
+export interface FieldStoragePolicy {
+  scope: &#x27;core&#x27; | &#x27;semantic&#x27; | &#x27;extra&#x27; | &#x27;file&#x27; | &#x27;derived&#x27; | &#x27;legacy&#x27;;
+  markdownKey?: string;
+  writeMode?: &#x27;inline-task-kv&#x27; | &#x27;block-kv&#x27; | &#x27;frontmatter&#x27; | &#x27;virtual&#x27;;
+  readOnly?: boolean;
+}</code></pre></article><article class="card full"><h2>兼容策略</h2><div class="table-wrap"><table><thead><tr><th>旧字段/旧逻辑</th><th>新归宿</th><th>迁移策略</th></tr></thead><tbody><tr><td><code>theme</code></td><td>legacy 字段；标准语义为 <code>themePath</code>。</td><td>读取时转成 themePath origin；默认隐藏 theme；不再从 header fallback。</td></tr><tr><td><code>pintu</code></td><td>semantic=image 的 legacy alias。</td><td>读取旧 pintu，写入新 image 字段；UI 不再判断 key。</td></tr><tr><td><code>extra.正文/内容</code></td><td>legacy alias，不是真 extra。</td><td>只在旧编辑回填缺失时兜底；字段选择器默认隐藏。</td></tr><tr><td><code>categoryKey</code></td><td>semantic=categoryPath 或 recordKind 拆分。</td><td>先保留兼容，再拆 recordKind/categoryPath。</td></tr><tr><td><code>rating</code> + 图片 option</td><td>rating 与 image 分离。</td><td>评分继续用 rating；图片选择走 image 字段。</td></tr></tbody></table></div></article>
+      </section>
+      <footer class="footer">本页属于 Think OS 插件 HTML 文档系统。字段系统改造原则：字段名称自由、字段类型固定、字段语义显式、字段来源可追踪。</footer>
+    </main>
+  </div>
+  <script src="../../_资源/搜索索引.js"></script>
+  <script src="../../_资源/文档脚本.js"></script>
+</body>
+</html>

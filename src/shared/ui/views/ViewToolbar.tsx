@@ -1,5 +1,6 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
+import type { ComponentChildren } from 'preact';
 import { useMemo } from 'preact/hooks';
 import { dayjs, formatDateForView } from '@core/public';
 import { ThemeFilter } from './ThemeFilter';
@@ -15,10 +16,11 @@ export interface ViewToolbarProps {
     onDateChange: (date: dayjs.Dayjs) => void;
     
     // 筛选相关
-    selectedThemes: string[];
-    selectedCategories: string[];
-    onThemeSelectionChange: (themes: string[]) => void;
-    onCategorySelectionChange: (categories: string[]) => void;
+    filterSlot?: ComponentChildren;
+    selectedThemes?: string[];
+    selectedCategories?: string[];
+    onThemeSelectionChange?: (themes: string[]) => void;
+    onCategorySelectionChange?: (categories: string[]) => void;
     viewInstances: ViewInstance[];
     themes: ThemeDefinition[];
     predefinedCategories?: string[];
@@ -35,8 +37,9 @@ export function ViewToolbar({
     currentDate,
     onViewChange,
     onDateChange,
-    selectedThemes,
-    selectedCategories,
+    filterSlot,
+    selectedThemes = [],
+    selectedCategories = [],
     onThemeSelectionChange,
     onCategorySelectionChange,
     viewInstances,
@@ -99,20 +102,27 @@ export function ViewToolbar({
                 ＝
             </button>
             
-            {/* 主题筛选 */}
-            <ThemeFilter
-                selectedThemes={selectedThemes}
-                onSelectionChange={onThemeSelectionChange}
-                themes={themes}
-            />
-            
-            {/* 分类筛选 */}
-            <CategoryFilter
-                selectedCategories={selectedCategories}
-                onSelectionChange={onCategorySelectionChange}
-                viewInstances={viewInstances}
-                predefinedCategories={predefinedCategories}
-            />
+            {/* 数据筛选：优先使用上层注入的全局筛选面板；没有注入时保留旧版主题/分类筛选。 */}
+            {filterSlot || (
+                <>
+                    {onThemeSelectionChange && (
+                        <ThemeFilter
+                            selectedThemes={selectedThemes}
+                            onSelectionChange={onThemeSelectionChange}
+                            themes={themes}
+                        />
+                    )}
+
+                    {onCategorySelectionChange && (
+                        <CategoryFilter
+                            selectedCategories={selectedCategories}
+                            onSelectionChange={onCategorySelectionChange}
+                            viewInstances={viewInstances}
+                            predefinedCategories={predefinedCategories}
+                        />
+                    )}
+                </>
+            )}
         
             {/* 布局设置按钮 */}
             {onLayoutSettingsClick && (

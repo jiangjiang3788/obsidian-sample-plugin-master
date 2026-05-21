@@ -1,7 +1,7 @@
 import { singleton, inject } from 'tsyringe';
 import type { Item, FilterRule, SortRule } from '@/core/types/schema';
 import { parseTaskLine, parseBlockContent } from '@core/utils/parser';
-import { splitThemePath } from '@/core/types/recordSnapshot';
+import { applyExplicitThemeViewFields, normalizeExplicitTheme } from '@/core/theme/themeSemantics';
 import { throttle } from '@core/utils/timing';
 import { normalizeItemDates } from '@core/utils/normalize';
 import { filterByRules, sortItems } from '@core/utils/itemFilter';
@@ -11,6 +11,7 @@ import { THEME_MATCHER_TOKEN } from '@core/types/theme';
 import type { IPluginStorage } from '@core/services/StorageService';
 import { STORAGE_TOKEN } from '@core/services/StorageService';
 import { devWarn, devError } from '../utils/devLogger';
+import { addFieldOrigin } from '@/core/types/fieldOrigin';
 // NOTE: core 内部禁止依赖 @core/public（对外门面）。
 // 否则会形成循环依赖：core/services -> core/public -> core/services...
 import { VAULT_PORT_TOKEN, type VaultPort } from '@core/ports/VaultPort';
@@ -24,12 +25,55 @@ import {
 } from '@/core/types/cache';
 
 function applyThemeViewFields(item: any) {
-  const parts = splitThemePath(item.theme || item.header || null);
-  item.themePath = parts.themePath || undefined;
-  item.rootTheme = parts.rootTheme || undefined;
-  item.leafTheme = parts.leafTheme || undefined;
-  item.themePathNormalized = item.themePath || undefined;
+  applyExplicitThemeViewFields(item);
+  if (item.themePath) {
+    addFieldOrigin(item, 'themePath', {
+      value: item.themePath,
+      kind: 'system_derived',
+      rawKey: 'theme',
+      parser: 'applyExplicitThemeViewFields',
+      confidence: 'derived',
+      note: 'Derived from explicit theme only; header/heading is intentionally excluded.',
+    });
+  }
+  if (item.rootTheme) {
+    addFieldOrigin(item, 'rootTheme', {
+      value: item.rootTheme,
+      kind: 'system_derived',
+      rawKey: 'theme',
+      parser: 'applyExplicitThemeViewFields',
+      confidence: 'derived',
+    });
+  }
+  if (item.leafTheme) {
+    addFieldOrigin(item, 'leafTheme', {
+      value: item.leafTheme,
+      kind: 'system_derived',
+      rawKey: 'theme',
+      parser: 'applyExplicitThemeViewFields',
+      confidence: 'derived',
+    });
+  }
 }
+
+function addFileFieldOrigins(item: Item, filePath: string, fileName: string, folder: string, lineNo?: number, header?: string) {
+  addFieldOrigin(item, 'file.path', { value: filePath, kind: 'file_path', sourcePath: filePath, sourceLine: lineNo, parser: 'DataStore.scanFile', confidence: 'explicit' });
+  addFieldOrigin(item, 'file.basename', { value: fileName, kind: 'file_path', sourcePath: filePath, sourceLine: lineNo, parser: 'DataStore.scanFile', confidence: 'explicit' });
+  addFieldOrigin(item, 'file.name', { value: fileName, kind: 'file_path', sourcePath: filePath, sourceLine: lineNo, parser: 'DataStore.scanFile', confidence: 'explicit' });
+  addFieldOrigin(item, 'file.folder', { value: folder, kind: 'file_path', sourcePath: filePath, sourceLine: lineNo, parser: 'DataStore.scanFile', confidence: 'explicit' });
+  if (header) {
+    addFieldOrigin(item, 'header', {
+      value: header,
+      kind: 'markdown_heading',
+      sourcePath: filePath,
+      sourceLine: lineNo,
+      parser: 'DataStore.scanFile',
+      confidence: 'explicit',
+      note: 'Markdown section heading. It is never used as a theme fallback.',
+    });
+  }
+}
+
 
 @singleton()
 export class DataStore {
@@ -293,18 +337,15 @@ export class DataStore {
               normalizeItemDates(blockItem);
               const hashIdx = blockItem.id.lastIndexOf('#');
               const lineNo = hashIdx >= 0 ? Number(blockItem.id.slice(hashIdx + 1)) : undefined;
-              (blockItem as any).file = { path: filePath, line: lineNo, basename: fileName };
-              // 语义止血：显式主题优先（来自 block 内容中的 `主题:`）。
-              // - 若 blockItem 自身已带 theme，则只做匹配归一，不用 header 覆盖
-              // - 否则才 fallback 到当前 heading
-              const explicitTheme = (blockItem as any).theme as string | undefined;
-              if (explicitTheme && explicitTheme.trim()) {
-                const matched = this.themeMatcher.findThemeByPartialMatch(explicitTheme.trim());
-                (blockItem as any).theme = matched || explicitTheme.trim();
-              } else if (currentHeader) {
-                const matchedTheme = this.themeMatcher.findThemeByPartialMatch(currentHeader);
-                (blockItem as any).theme = matchedTheme || currentHeader;
+              (blockItem as any).file = { path: filePath, line: lineNo, basename: fileName, folder: parentFolder };
+              addFileFieldOrigins(blockItem, filePath, fileName, parentFolder, lineNo, currentHeader || undefined);
+              if (currentSectionTags.length > 0) {
+                addFieldOrigin(blockItem, 'tags', { value: [...currentSectionTags], kind: 'markdown_heading', sourcePath: filePath, sourceLine: lineNo, parser: 'DataStore.scanFile', confidence: 'explicit', note: 'Inherited from current Markdown heading tags.' });
               }
+              // 主题只允许来自显式字段（block 内容中的 `主题:`）。
+              // heading/header 只表示章节位置，不再作为 theme fallback。
+              const normalizedTheme = normalizeExplicitTheme((blockItem as any).theme, this.themeMatcher);
+              (blockItem as any).theme = normalizedTheme;
               (blockItem as any).titleLower = (blockItem.title || '').toLowerCase();
               (blockItem as any).contentLower = (blockItem.content || '').toLowerCase();
               (blockItem as any).tagsLower = (blockItem.tags || []).map(t => t.toLowerCase());
@@ -324,21 +365,17 @@ export class DataStore {
           taskItem.modified = stat.mtime;
           if (currentHeader) taskItem.header = currentHeader;
 
-          // 语义止血：显式主题优先（来自任务行的 (主题::xxx)）。
-          // - 若 taskItem.theme 已存在：只做匹配归一，不用 header 覆盖
-          // - 否则才 fallback 到当前 heading
-          if (taskItem.theme && taskItem.theme.trim()) {
-            const t = taskItem.theme.trim();
-            const matched = this.themeMatcher.findThemeByPartialMatch(t);
-            taskItem.theme = matched || t;
-          } else if (currentHeader) {
-            const matchedTheme = this.themeMatcher.findThemeByPartialMatch(currentHeader);
-            taskItem.theme = matchedTheme || currentHeader;
-          }
+          // 主题只允许来自显式字段（任务行的 (主题::xxx)/(theme::xxx)）。
+          // heading/header 只表示章节位置，不再作为 theme fallback。
+          taskItem.theme = normalizeExplicitTheme(taskItem.theme, this.themeMatcher);
           taskItem.filename = fileName;
           taskItem.fileName = fileName;
           normalizeItemDates(taskItem);
-          (taskItem as any).file = { path: filePath, line: i + 1, basename: fileName };
+          (taskItem as any).file = { path: filePath, line: i + 1, basename: fileName, folder: parentFolder };
+          addFileFieldOrigins(taskItem, filePath, fileName, parentFolder, i + 1, currentHeader || undefined);
+          if (currentSectionTags.length > 0) {
+            addFieldOrigin(taskItem, 'tags', { value: [...currentSectionTags], kind: 'markdown_heading', sourcePath: filePath, sourceLine: i + 1, parser: 'DataStore.scanFile', confidence: 'explicit', note: 'Inherited from current Markdown heading tags.' });
+          }
           (taskItem as any).recurrenceInfo = parseRecurrence(taskItem.content) || undefined;
           (taskItem as any).titleLower = (taskItem.title || '').toLowerCase();
           (taskItem as any).contentLower = (taskItem.content || '').toLowerCase();

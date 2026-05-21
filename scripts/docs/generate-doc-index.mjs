@@ -6,7 +6,7 @@ import { JSDOM } from 'jsdom';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const repoRoot = path.resolve(__dirname, '../..');
-const docsRoot = path.join(repoRoot, '文档');
+const docsRoot = path.join(repoRoot, 'doc');
 const resourceRoot = path.join(docsRoot, '_资源');
 
 const IGNORED_DIRS_FOR_SEARCH = new Set(['_归档', '_模板', '_资源', '_数据']);

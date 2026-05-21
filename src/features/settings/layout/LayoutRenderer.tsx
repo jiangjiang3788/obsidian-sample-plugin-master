@@ -3,11 +3,20 @@
 import { h, Fragment } from 'preact';
 import { useState, useMemo, useEffect, useCallback, useRef } from 'preact/hooks'; // [修改] 导入 useRef
 import { DataStore } from '@core/public';
-import { Layout, ViewInstance, Item } from '@core/public'; // [修改] 导入 Item 类型
+import { Layout, ViewInstance, Item, FilterRule } from '@core/public'; // [修改] 导入 Item 类型
 import { ModulePanel } from './ModulePanel';
 import { DashboardViewComponents as ViewComponents } from '@features/settings';
 
-import { calculateTimelineRange, normalizeTimelineView, dayjs, devLog } from '@core/public';
+import {
+    calculateTimelineRange,
+    normalizeTimelineView,
+    dayjs,
+    devLog,
+    getLegacyLayoutFilterState,
+    describeLegacyLayoutFilters,
+    migrateLegacyLayoutFilters,
+    getCategoryValuesFromFilters,
+} from '@core/public';
 import { useUseCases, useUiPort, useSelector, useMessageRenderPort } from '@/app/public';
 import type { TimerController } from '@/app/public';
 import type { ActionService } from '@core/public';
@@ -29,6 +38,7 @@ import {
     updateTimeFromView,
 } from '@/app/public';
 import { openModuleSettingsWidget } from './ModuleSettingsModal';
+import { DataFilterPanel } from './DataFilterPanel';
 import { exportItemsToMarkdown, getExportConfigByViewType } from '@core/public'; // [新增] 导入导出函数
 import { ViewToolbar } from '@shared/public'; // [新增] 导入统一工具栏组件
 import type { UpdateTaskTimeHandler } from '@shared/public';
@@ -47,7 +57,7 @@ const INITIAL_RENDERED_EXPANDED_VIEWS = 3;
 const EXPANDED_VIEW_RENDER_BATCH_SIZE = 2;
 const EXPANDED_VIEW_RENDER_DELAY_MS = 80;
 
-// [修改] ViewContent 组件增加 onDataLoaded 和 selectedThemes props
+// ViewContent 负责把统一筛选后的数据和特殊视图 renderModel 组装给 shared/ui。
 const ViewContent = ({
     viewInstance,
     dataStore,
@@ -56,8 +66,7 @@ const ViewContent = ({
     layoutView,
     isOverviewMode,
     useFieldGranularity,
-    selectedThemes, // [新增]
-    selectedCategories, // [新增]
+    layoutFilters,
     app,
     onMarkDone,
     actionService,
@@ -75,8 +84,7 @@ const ViewContent = ({
     layoutView: string;
     isOverviewMode: boolean;
     useFieldGranularity: boolean;
-    selectedThemes: string[]; // [新增]
-    selectedCategories: string[]; // [新增]
+    layoutFilters: FilterRule[];
     app: any;
     onMarkDone: (id: string) => void;
     actionService: ActionService;
@@ -100,9 +108,10 @@ const ViewContent = ({
         layoutView,
         isOverviewMode: !!isOverviewMode,
         useFieldGranularity,
-        selectedThemes,
-        selectedCategories,
+        layoutFilters,
     });
+
+    const selectedLayoutCategories = useMemo(() => getCategoryValuesFromFilters(layoutFilters), [layoutFilters]);
 
     // [新增] 使用 useEffect 将数据传递给父组件
     useEffect(() => {
@@ -155,7 +164,7 @@ const ViewContent = ({
             dateRange,
             module: viewInstance,
             currentView: layoutView as any,
-            selectedCategories,
+            selectedCategories: selectedLayoutCategories,
         })
         : null;
 
@@ -172,9 +181,7 @@ const ViewContent = ({
             dateRange,
             viewInstance,
             keyword,
-            selectedThemes,
-            selectedCategories,
-            allThemes,
+            layoutFilters,
         })
         : null;
 
@@ -234,7 +241,7 @@ const ViewContent = ({
         timers: timers, // [新增]
         allThemes: allThemes, // [新增]
         inputSettings: inputSettings, // [新增]
-        selectedCategories,
+        selectedCategories: selectedLayoutCategories,
 
         // 通用：Markdown 渲染能力（BlockView/卡片内容等复用）
         messageRenderPort,
@@ -385,8 +392,14 @@ export function LayoutRenderer({ layout, dataStore, app, actionService, timerSer
 
     const [layoutView, setLayoutView] = useState(layout.initialView || '月');
     const [layoutDate, setLayoutDate] = useState(getInitialDate());
-    const [selectedThemes, setSelectedThemes] = useState<string[]>(layout.selectedThemes || []); // [新增] 主题筛选状态
-    const [selectedCategories, setSelectedCategories] = useState<string[]>(layout.selectedCategories || []); // [新增] 分类筛选状态
+    const legacyFilterState = useMemo(() => {
+        return getLegacyLayoutFilterState(layout);
+    }, [layout.globalFilters, layout.selectedThemes, layout.selectedCategories]);
+    const globalFilters = legacyFilterState.effectiveFilters;
+    const isUsingLegacyLayoutFilters = legacyFilterState.isLegacyMode && legacyFilterState.hasLegacyValues;
+    const legacyLayoutFilterSummary = useMemo(() => {
+        return describeLegacyLayoutFilters(layout);
+    }, [layout.selectedThemes, layout.selectedCategories]);
 
     // [修复] 统一在组件顶层计算 dateRange，避免在循环/条件中调用 Hook（切换 年/季/月/周/天 时容易导致数据显示错乱）
     const dateRangeForView = useMemo(() => {
@@ -395,10 +408,6 @@ export function LayoutRenderer({ layout, dataStore, app, actionService, timerSer
     }, [layoutDate, layoutView]);
 
     
-    // [新增] 预定义分类列表（从设置中获取）
-    const predefinedCategories = useMemo(() => {
-        return inputSettings.categories || [];
-    }, [inputSettings]);
 
     // [修复] 分离布局重置和主题筛选的effect，避免主题筛选时跳转视图
     useEffect(() => {
@@ -406,11 +415,6 @@ export function LayoutRenderer({ layout, dataStore, app, actionService, timerSer
         setLayoutView(layout.initialView || '月');
     }, [layout.id, layout.initialDate, layout.initialDateFollowsNow, layout.initialView]);
 
-    // [新增] 仅当布局中的筛选器设置变化时才更新状态
-    useEffect(() => {
-        setSelectedThemes(layout.selectedThemes || []);
-        setSelectedCategories(layout.selectedCategories || []);
-    }, [layout.selectedThemes, layout.selectedCategories]);
 
     // [新增] 处理导出的函数
     const handleExport = useCallback((viewId: string, viewTitle: string) => {
@@ -495,17 +499,17 @@ export function LayoutRenderer({ layout, dataStore, app, actionService, timerSer
         useCases.viewInstance.deleteView(viewInstanceId);
     }, [layout.id, useCases.layout]);
 
-    // [P1] 处理主题筛选变化 - 通过 UseCase 层
-    const handleThemeSelectionChange = useCallback((themes: string[]) => {
-        setSelectedThemes(themes);
-        useCases.layout.updateLayout(layout.id, { selectedThemes: themes });
+    const handleGlobalFiltersChange = useCallback((filters: FilterRule[]) => {
+        void useCases.layout.updateLayout(layout.id, {
+            globalFilters: filters,
+            selectedThemes: [],
+            selectedCategories: [],
+        });
     }, [layout.id, useCases.layout]);
 
-    // [P1] 处理分类筛选变化 - 通过 UseCase 层
-    const handleCategorySelectionChange = useCallback((categories: string[]) => {
-        setSelectedCategories(categories);
-        useCases.layout.updateLayout(layout.id, { selectedCategories: categories });
-    }, [layout.id, useCases.layout]);
+    const handleMigrateLegacyLayoutFilters = useCallback(() => {
+        void useCases.layout.updateLayout(layout.id, migrateLegacyLayoutFilters(layout));
+    }, [layout, useCases.layout]);
 
     const renderViewInstance = (viewId: string) => {
         const viewInstance = allViews.find(v => v.id === viewId);
@@ -537,8 +541,7 @@ export function LayoutRenderer({ layout, dataStore, app, actionService, timerSer
                         layoutView={layoutView}
                         isOverviewMode={false}
                         useFieldGranularity={false}
-                        selectedThemes={selectedThemes} // [新增] 传递主题筛选
-                        selectedCategories={selectedCategories} // [新增] 传递分类筛选
+                        layoutFilters={globalFilters}
                         app={app}
                         onMarkDone={handleMarkItemDone}
                         actionService={actionService}
@@ -565,15 +568,21 @@ export function LayoutRenderer({ layout, dataStore, app, actionService, timerSer
                 currentDate={layoutDate}
                 onViewChange={setLayoutView}
                 onDateChange={setLayoutDate}
-                selectedThemes={selectedThemes}
-                selectedCategories={selectedCategories}
-                onThemeSelectionChange={handleThemeSelectionChange}
-                onCategorySelectionChange={handleCategorySelectionChange}
+                filterSlot={(
+                    <DataFilterPanel
+                        dataStore={dataStore}
+                        items={allItems}
+                        filters={globalFilters}
+                        onChange={handleGlobalFiltersChange}
+                        legacyMode={isUsingLegacyLayoutFilters}
+                        legacySummary={legacyLayoutFilterSummary}
+                        onMigrateLegacyFilters={handleMigrateLegacyLayoutFilters}
+                    />
+                )}
                 viewInstances={layout.viewInstanceIds.map((id: string) => allViews.find((v: any) => v.id === id)).filter(Boolean)}
                 hideToolbar={layout.hideToolbar}
                 onLayoutSettingsClick={() => openLayoutSettingsWidget(layout.id)}
                 themes={allThemes} // [新增] 传递主题列表
-                predefinedCategories={predefinedCategories} // [新增] 传递预定义分类
             />
             <div style={gridStyle}>
                 {isStateInitialized && layout.viewInstanceIds.map(renderViewInstance)}

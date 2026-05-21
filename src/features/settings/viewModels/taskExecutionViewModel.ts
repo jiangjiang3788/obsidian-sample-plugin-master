@@ -1,9 +1,7 @@
-import type { Item, ThemeDefinition, ViewInstance } from '@core/public';
+import type { FilterRule, Item, ViewInstance } from '@core/public';
 import {
   dayjs,
-  filterByKeyword,
-  filterByRules,
-  getBasePath,
+  applyViewBaseFilters,
   isTaskCompleted,
   isTaskOpen,
   parsePath,
@@ -66,16 +64,6 @@ function getThemeGroup(theme?: string): { parent: string; child: string } {
   };
 }
 
-function matchesTheme(item: Item, selectedThemes: string[]): boolean {
-  if (!selectedThemes.length) return true;
-  return !!item.theme && selectedThemes.includes(item.theme);
-}
-
-function matchesCategory(item: Item, selectedCategories: string[]): boolean {
-  if (!selectedCategories.length) return true;
-  return selectedCategories.includes(getBasePath(item.categoryKey));
-}
-
 function formatRecordTime(item: Item): string {
   return String(item.endTime || item.startTime || item.doneDate || '').trim();
 }
@@ -90,20 +78,24 @@ export function buildTaskExecutionViewModel(params: {
   dateRange: [Date, Date];
   viewInstance: ViewInstance;
   keyword: string;
-  selectedThemes: string[];
-  selectedCategories: string[];
-  allThemes: ThemeDefinition[];
+  layoutFilters?: FilterRule[];
 }): TaskExecutionViewModel {
-  const { items, dateRange, viewInstance, keyword, selectedThemes, selectedCategories } = params;
+  const { items, dateRange, viewInstance, keyword, layoutFilters = [] } = params;
   const [start, end] = dateRange;
   const startDay = dayjs(start).startOf('day');
   const endDay = dayjs(end).endOf('day');
   const onlyRecurring = viewInstance.viewConfig?.onlyRecurring !== false;
-
-  const filtered = filterByKeyword(filterByRules(items, viewInstance.filters || []), keyword).filter((item) => {
+  // TaskExecution 是一个特殊视图：
+  // - open task 需要跨当前日期范围展示，否则循环任务会被普通 date filter 误删；
+  // - completed record 只在下方按 doneDate 受当前日期范围限制；
+  // - layoutFilters / viewInstance.filters / keyword 仍统一走 applyViewBaseFilters，避免全局筛选漏接。
+  const filtered = applyViewBaseFilters({
+    items,
+    layoutFilters,
+    viewFilters: viewInstance.filters || [],
+    keyword,
+  }).filter((item) => {
     if (item.type !== 'task') return false;
-    if (!matchesTheme(item, selectedThemes)) return false;
-    if (!matchesCategory(item, selectedCategories)) return false;
     if (onlyRecurring && !hasRecurringRule(item)) return false;
     return true;
   });

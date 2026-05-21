@@ -319,7 +319,7 @@ function readSnapshotSemanticValue(field: any, item: Item, snapshot: ParsedRecor
   if (['时长', 'duration'].includes(key) || ['时长', 'duration'].includes(label)) return snapshot.semantic.duration;
 
   if (['主题', 'theme', 'themepath', '完整主题', '完整路径主题'].includes(key) || ['主题', 'theme', 'themepath', '完整主题', '完整路径主题'].includes(label)) {
-    return snapshot.semantic.themePath || item.theme || item.header;
+    return snapshot.semantic.themePath || item.theme || null;
   }
   if (['roottheme', '根主题'].includes(key) || ['roottheme', '根主题'].includes(label)) return snapshot.semantic.rootTheme;
   if (['leaftheme', '叶主题'].includes(key) || ['leaftheme', '叶主题'].includes(label)) return snapshot.semantic.leafTheme;
@@ -363,9 +363,9 @@ function buildInitialFormData(template: any, item: Item, snapshot: ParsedRecordS
     }
 
     if (isPathLikeField(field)) {
-      // LEGACY-FALLBACK:
-      // 历史 path-like 字段曾经直接读 categoryKey。现在优先使用 themePath，只有没有主题路径时才回退。
-      return snapshot.semantic.themePath || item.theme || item.categoryKey || undefined;
+      // 主题/path-like 字段只回填显式主题路径。
+      // categoryKey 属于分类语义，不能再作为主题或通用 path 字段 fallback。
+      return snapshot.semantic.themePath || item.theme || undefined;
     }
 
     return (item as any)[field.key] ?? (item as any)[field.label];

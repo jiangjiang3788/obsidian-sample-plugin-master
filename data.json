@@ -483,7 +483,7 @@
         "vi_mnztlf3wxrrqd8i"
       ],
       "displayMode": "list",
-      "initialView": "周",
+      "initialView": "天",
       "initialDateFollowsNow": true,
       "parentId": "group_memcg1u3us3jc",
       "hideToolbar": false,
@@ -491,16 +491,13 @@
       "initialDate": "2024-11-26",
       "useFieldGranularity": false,
       "selectedThemes": [],
-      "selectedCategories": [
-        "周",
-        "季",
-        "总结",
-        "打卡",
-        "月",
-        "计划",
-        "闪念",
-        "完成任务",
-        "未完成任务"
+      "selectedCategories": [],
+      "globalFilters": [
+        {
+          "field": "themePath",
+          "op": "includes",
+          "value": "X"
+        }
       ]
     }
   ],
@@ -8635,6 +8632,6 @@
     "打卡": "#b888e7",
     "闪念": "#e47272",
     "事件": "#a5c8ee",
-    "周": "#e09185"
+    "生活": "#8cd4ee"
   }
 }

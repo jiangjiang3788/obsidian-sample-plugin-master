@@ -7,13 +7,15 @@
  */
 
 import { useMemo } from 'preact/hooks';
-import { FormControlLabel, Checkbox, Button } from '@mui/material';
+import { FormControlLabel, Checkbox, Button, Box, Accordion, AccordionSummary, AccordionDetails, Typography, Chip } from '@mui/material';
 import { VIEW_OPTIONS, ViewName, getAllFields, getFieldLabel } from '@core/public';
-import type { ViewInstance } from '@core/public';
+import type { FilterRule, ViewInstance } from '@core/public';
 import { VIEW_EDITORS } from '@features/settings/viewEditors/registry';
 import { useSelector, makeSelectViewInstanceById, useDataStore, useUseCases } from '@/app/public';
 import { SimpleSelect } from '@shared/public';
 import { RuleBuilder } from '@features/settings/viewEditors/RuleBuilder';
+import { CommonFilterPanel } from '@features/settings/viewEditors/CommonFilterPanel';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { Modal } from '@shared/public';
 import { FloatingPanel } from '@/app/public';
 import { closeFloatingWidget, openFloatingWidget } from '@/app/public';
@@ -52,6 +54,11 @@ function ViewInstanceEditor({ vi }: { vi: ViewInstance }) {
         VIEW_OPTIONS.map(v => ({ value: v, label: v.replace('View', '') })), 
         []
     );
+
+    const commonFilterFields = useMemo(() => ['themePath', 'baseCategory', 'tags', 'type', 'priority', 'period'], []);
+    const hasAdvancedFilters = useMemo(() => (currentVi.filters || []).some((rule: any) => (
+        rule.op !== 'in' || !commonFilterFields.includes(rule.field)
+    )), [currentVi.filters, commonFilterFields]);
 
     // 字段更新处理 - 显示字段
     const handleFieldsChange = (fields: string[]) => {
@@ -140,18 +147,50 @@ function ViewInstanceEditor({ vi }: { vi: ViewInstance }) {
                     数据筛选与排序
                 </h4>
                 
-                <FormField 
-                    label="筛选规则" 
-                    help="定义数据筛选条件"
+                <FormField
+                    label="视图筛选"
+                    help="常用筛选适合主题路径、分类、标签多选；高级筛选保留原来的字段/条件/值规则。"
                 >
-                    <RuleBuilder 
-                        title="筛选规则" 
-                        mode="filter" 
-                        rows={currentVi.filters || []} 
-                        fieldOptions={fieldOptions} 
-                        onChange={(rows: any) => handleUpdate({ filters: rows })} 
-                        dataStore={dataStore}
-                    />
+                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.25 }}>
+                        <CommonFilterPanel
+                            title="常用筛选"
+                            description="同一字段内多选表示“或”，不同字段之间默认表示“且”。"
+                            dataStore={dataStore}
+                            filters={currentVi.filters || []}
+                            fieldOptions={fieldOptions}
+                            onChange={(rows: FilterRule[]) => handleUpdate({ filters: rows })}
+                            compact
+                        />
+
+                        <Accordion
+                            defaultExpanded={hasAdvancedFilters}
+                            disableGutters
+                            sx={{
+                                border: '1px solid var(--background-modifier-border)',
+                                borderRadius: '10px',
+                                '&:before': { display: 'none' },
+                            }}
+                        >
+                            <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
+                                    <Typography sx={{ fontWeight: 700 }}>高级筛选规则</Typography>
+                                    <Chip label={`${(currentVi.filters || []).length} 条`} size="small" variant="outlined" />
+                                    <Typography variant="body2" color="text.secondary">正则、区间、排除、复杂且/或关系</Typography>
+                                </Box>
+                            </AccordionSummary>
+                            <AccordionDetails sx={{ pt: 0 }}>
+                                <RuleBuilder
+                                    title="筛选"
+                                    mode="filter"
+                                    rows={currentVi.filters || []}
+                                    fieldOptions={fieldOptions}
+                                    onChange={(rows: any) => handleUpdate({ filters: rows })}
+                                    dataStore={dataStore}
+                                    variant="panel"
+                                />
+                            </AccordionDetails>
+                        </Accordion>
+                    </Box>
                 </FormField>
                 
                 <FormField 

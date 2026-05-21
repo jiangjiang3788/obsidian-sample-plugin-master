@@ -1,5 +1,6 @@
 import type { Item } from './schema';
 import { extractTaskEditableText } from '@/core/utils/text';
+import { readExplicitThemeParts, splitThemePath as splitExplicitThemePath } from '@/core/theme/themeSemantics';
 
 /**
  * 计划第 5 步：把“保存位置 / 输出结果”前置成显式的 OutputPlan，
@@ -84,20 +85,7 @@ export interface EditableRecordSnapshot {
 }
 
 export function splitThemePath(themePath: string | null | undefined): ThemePathParts {
-  const cleaned = String(themePath || '')
-    .split('/')
-    .map((part) => part.trim())
-    .filter(Boolean);
-
-  if (!cleaned.length) {
-    return { themePath: null, rootTheme: null, leafTheme: null };
-  }
-
-  return {
-    themePath: cleaned.join('/'),
-    rootTheme: cleaned[0] || null,
-    leafTheme: cleaned[cleaned.length - 1] || null,
-  };
+  return splitExplicitThemePath(themePath);
 }
 
 function pickEditableText(item: Item): string | null {
@@ -134,7 +122,7 @@ export function buildParsedRecordSnapshot(item: Item): ParsedRecordSnapshot {
       })();
 
   const editableText = pickEditableText(item);
-  const themeParts = splitThemePath(item.theme || item.header || null);
+  const themeParts = readExplicitThemeParts(item as any);
 
   return {
     itemId: item.id,

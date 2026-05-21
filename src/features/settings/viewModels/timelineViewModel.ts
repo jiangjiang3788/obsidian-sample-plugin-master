@@ -1,4 +1,4 @@
-import { Item, TIMELINE_VIEW_DEFAULT_CONFIG, filterByRules, buildDailyViewData, buildMonthlyAndWeeklySummary, buildSummaryCategoryHours, dayjs } from '@core/public';
+import { Item, TIMELINE_VIEW_DEFAULT_CONFIG, buildDailyViewData, buildMonthlyAndWeeklySummary, buildSummaryCategoryHours, dayjs } from '@core/public';
 import { processItemsToTimelineTasks } from '@shared/public';
 
 import weekOfYear from 'dayjs/plugin/weekOfYear';
@@ -38,8 +38,9 @@ export function buildTimelineViewModel(args: {
   const userConfig = module?.viewConfig || {};
   const config = { ...defaults, ...userConfig, categories: userConfig.categories || defaults.categories };
 
-  const filteredItems = module?.filters ? filterByRules(items, module.filters) : items;
-  const timelineTasks = processItemsToTimelineTasks(filteredItems);
+  // items 已经由 useViewData/applyViewQueryPipeline 应用 layoutFilters + viewInstance.filters。
+  // 这里不要重复 filterByRules，否则 OR/区间等规则可能被二次解释。
+  const timelineTasks = processItemsToTimelineTasks(items);
 
   const categoriesConfig = config.categories || {};
   const colorMap: Record<string, string> = {};

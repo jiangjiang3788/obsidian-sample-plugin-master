@@ -1127,6 +1127,46 @@ function getCategoryColor(categoryKey) {
   const base = (categoryKey || "").split("/")[0] || "";
   return _activeCategoryColors[base] || "#e0e0e0";
 }
+function cleanThemePath(value) {
+  const cleaned = String(value ?? "").split("/").map((part) => part.trim()).filter(Boolean).join("/");
+  return cleaned || null;
+}
+function splitThemePath$1(themePath) {
+  const cleaned = cleanThemePath(themePath);
+  if (!cleaned) {
+    return { themePath: null, rootTheme: null, leafTheme: null };
+  }
+  const parts = cleaned.split("/");
+  return {
+    themePath: cleaned,
+    rootTheme: parts[0] || null,
+    leafTheme: parts[parts.length - 1] || null
+  };
+}
+function normalizeExplicitTheme(rawTheme, matcher) {
+  const explicitTheme = cleanThemePath(rawTheme);
+  if (!explicitTheme) return void 0;
+  const matched = matcher?.findThemeByPartialMatch(explicitTheme);
+  return cleanThemePath(matched) || explicitTheme;
+}
+function readExplicitThemePath(item) {
+  const normalized = cleanThemePath(item?.themePath);
+  if (normalized) return normalized;
+  const cached2 = cleanThemePath(item?.themePathNormalized);
+  if (cached2) return cached2;
+  return cleanThemePath(item?.theme) || void 0;
+}
+function readExplicitThemeParts(item) {
+  return splitThemePath$1(readExplicitThemePath(item));
+}
+function applyExplicitThemeViewFields(item) {
+  const parts = readExplicitThemeParts(item);
+  item.themePath = parts.themePath || void 0;
+  item.rootTheme = parts.rootTheme || void 0;
+  item.leafTheme = parts.leafTheme || void 0;
+  item.themePathNormalized = parts.themePath || void 0;
+  return item;
+}
 const DEFAULT_AI_SETTINGS = {
   enabled: false,
   provider: "openai_compat",
@@ -1175,16 +1215,10 @@ const CORE_FIELDS = [
   "content",
   "categoryKey",
   "tags",
-  // 主题视图字段：theme 保持旧兼容，themePath/rootTheme/leafTheme 供视图设置明确选择。
-  "theme",
-  "themePath",
-  "rootTheme",
-  "leafTheme",
   "recurrence",
   "icon",
   "priority",
   "date",
-  "header",
   "startTime",
   "endTime",
   "duration",
@@ -1194,79 +1228,121 @@ const CORE_FIELDS = [
   "folder",
   "periodCount"
 ];
+const SEMANTIC_FIELDS = [
+  "baseCategory",
+  // 主题筛选/分组的唯一默认字段：完整主题路径。
+  // theme 是旧兼容字段，不再出现在默认字段选择器中。
+  "themePath",
+  "rootTheme",
+  "leafTheme"
+];
+const FILE_FIELDS = [
+  "file.path",
+  "file.basename",
+  "file.name",
+  "file.folder",
+  "header"
+];
+const DEFAULT_FIELD_OPTIONS = [
+  ...CORE_FIELDS,
+  ...SEMANTIC_FIELDS,
+  ...FILE_FIELDS
+];
+const LEGACY_EXTRA_ALIAS_KEYS = [
+  "正文",
+  "内容",
+  "任务内容",
+  "记录内容",
+  "editableText"
+];
+const LEGACY_EXTRA_ALIAS_SET = new Set(LEGACY_EXTRA_ALIAS_KEYS);
+function isVisibleExtraField(item, key) {
+  if (!LEGACY_EXTRA_ALIAS_SET.has(key)) return true;
+  const origins = item.fieldOrigins?.[`extra.${key}`] || [];
+  return origins.some((origin) => origin.confidence === "explicit");
+}
 function getAllFields(items) {
-  const set2 = new Set(CORE_FIELDS);
+  const set2 = new Set(DEFAULT_FIELD_OPTIONS);
   items.forEach((it) => {
-    Object.keys(it.extra || {}).forEach((k2) => set2.add("extra." + k2));
+    Object.keys(it.extra || {}).forEach((k2) => {
+      if (isVisibleExtraField(it, k2)) set2.add("extra." + k2);
+    });
     const f2 = it.file;
     if (f2 && typeof f2 === "object") Object.keys(f2).forEach((k2) => set2.add("file." + k2));
   });
   return Array.from(set2).sort();
 }
-function splitItemThemePath(theme2) {
-  const parts = String(theme2 || "").split("/").map((part) => part.trim()).filter(Boolean);
-  if (!parts.length) return { themePath: void 0, rootTheme: void 0, leafTheme: void 0 };
-  return {
-    themePath: parts.join("/"),
-    rootTheme: parts[0],
-    leafTheme: parts[parts.length - 1]
-  };
-}
 function readField(item, field) {
   if (field.startsWith("extra.")) return item.extra?.[field.slice(6)];
-  if (field.startsWith("file.")) return item.file?.[field.slice(5)];
+  if (field.startsWith("file.")) {
+    const key = field.slice(5);
+    const file = item.file || {};
+    if (key === "name" || key === "basename") return file.basename ?? item.fileName ?? item.filename;
+    if (key === "folder") return file.folder ?? item.folder;
+    return file[key];
+  }
+  if (field === "baseCategory" || field === "分类根" || field === "rootCategory") {
+    const raw = String(item.categoryKey || "").trim();
+    return raw.split("/").map((part) => part.trim()).filter(Boolean)[0] || raw;
+  }
   if (field === "themePath" || field === "完整主题" || field === "主题路径") {
-    return item.themePath ?? item.themePathNormalized ?? splitItemThemePath(item.theme || item.header).themePath;
+    return readExplicitThemeParts(item).themePath ?? void 0;
   }
   if (field === "rootTheme" || field === "根主题" || field === "themeRoot") {
-    return item.rootTheme ?? splitItemThemePath(item.themePath || item.theme || item.header).rootTheme;
+    return readExplicitThemeParts(item).rootTheme ?? void 0;
   }
   if (field === "leafTheme" || field === "叶主题" || field === "themeLeaf") {
-    return item.leafTheme ?? splitItemThemePath(item.themePath || item.theme || item.header).leafTheme;
+    return readExplicitThemeParts(item).leafTheme ?? void 0;
   }
   return item[field];
 }
+function addFieldOrigin(carrier, field, origin) {
+  if (!carrier.fieldOrigins) carrier.fieldOrigins = {};
+  const list = carrier.fieldOrigins[field] || [];
+  list.push({ field, ...origin });
+  carrier.fieldOrigins[field] = list;
+  return carrier;
+}
+new Set(LEGACY_EXTRA_ALIAS_KEYS);
 const FIELD_REGISTRY = {
   // --- 核心字段 ---
-  id: { key: "id", label: "记录ID", type: "string", description: "内部记录标识" },
-  type: { key: "type", label: "记录类型", type: "string", description: "任务、块、闪念等记录类型" },
-  title: { key: "title", label: "标题", type: "string", description: "任务或块的主要内容" },
-  content: { key: "content", label: "内容", type: "string", description: "记录正文或原始内容" },
-  categoryKey: { key: "categoryKey", label: "类别", type: "string", description: "统一的分类键，例如任务状态或记录分类" },
-  date: { key: "date", label: "日期", type: "date", description: "项目的主要关联日期" },
-  tags: { key: "tags", label: "标签", type: "tags", description: "所有关联的标签", formatter: (v2) => Array.isArray(v2) ? v2.join(", ") : "" },
-  theme: { key: "theme", label: "主题", type: "string", description: "兼容旧字段，通常等同于完整主题路径" },
-  themePath: { key: "themePath", label: "完整主题", type: "string", description: "完整主题路径，例如 工作/设计/道旗" },
-  rootTheme: { key: "rootTheme", label: "根主题", type: "string", description: "主题路径第一级，例如 工作" },
-  leafTheme: { key: "leafTheme", label: "叶主题", type: "string", description: "主题路径最后一级，例如 道旗" },
-  priority: { key: "priority", label: "优先级", type: "string" },
-  icon: { key: "icon", label: "图标", type: "icon" },
-  recurrence: { key: "recurrence", label: "重复规则", type: "string" },
-  period: { key: "period", label: "字段粒度", type: "string", description: "该条目归属的时间粒度：年/季/月/周/天（未设置默认天）" },
-  time: { key: "time", label: "时间", type: "string", description: "记录的时间点，如 HH:mm" },
-  startTime: { key: "startTime", label: "开始时间", type: "string", description: "任务或事件的开始时间" },
-  endTime: { key: "endTime", label: "结束时间", type: "string", description: "任务或事件的结束时间" },
-  duration: { key: "duration", label: "时长", type: "number", description: "任务或事件的持续分钟数" },
-  rating: { key: "rating", label: "评分", type: "number", description: "对块内容的评分" },
-  pintu: { key: "pintu", label: "评图", type: "string", description: "与评分关联的图片路径" },
-  folder: { key: "folder", label: "文件夹", type: "string", description: "文件所在的父文件夹" },
-  periodCount: { key: "periodCount", label: "粒度序号", type: "number", description: "与日期结合计算出的序号，如第几周/第几月" },
-  displayCount: { key: "displayCount", label: "显示次数", type: "number" },
-  levelCount: { key: "levelCount", label: "等级次数", type: "number" },
-  countForLevel: { key: "countForLevel", label: "计入等级", type: "boolean" },
-  manuallyEdited: { key: "manuallyEdited", label: "手动编辑", type: "boolean" },
+  id: { key: "id", label: "记录ID", type: "string", category: "core", source: "item", description: "内部记录标识" },
+  type: { key: "type", label: "记录类型", type: "string", category: "core", source: "item", description: "任务、块、闪念等记录类型" },
+  title: { key: "title", label: "标题", type: "string", category: "core", source: "item", description: "任务或块的主要内容" },
+  content: { key: "content", label: "内容", type: "string", category: "core", source: "item", description: "记录正文或原始内容" },
+  categoryKey: { key: "categoryKey", label: "分类路径", type: "string", category: "semantic", source: "item", description: "完整分类路径，例如 闪念/感受；任务可为完成任务/未完成任务" },
+  baseCategory: { key: "baseCategory", label: "根分类", type: "string", category: "derived", source: "derived", description: "从 categoryKey 派生的第一级分类" },
+  date: { key: "date", label: "日期", type: "date", category: "semantic", source: "item", description: "项目的主要关联日期" },
+  tags: { key: "tags", label: "标签", type: "tags", category: "semantic", source: "item", description: "所有关联的标签，支持多值", formatter: (v2) => Array.isArray(v2) ? v2.join(", ") : "" },
+  theme: { key: "theme", label: "旧主题字段", type: "string", category: "legacy", source: "legacy", deprecated: true, hiddenByDefault: true, description: "历史兼容字段；筛选/分组请使用 themePath（主题路径）" },
+  themePath: { key: "themePath", label: "主题路径", type: "string", category: "semantic", source: "derived", description: "完整主题路径；主题筛选默认使用此字段，例如 工作/设计/道旗" },
+  rootTheme: { key: "rootTheme", label: "根主题", type: "string", category: "derived", source: "derived", description: "从 themePath 派生的第一级主题，例如 工作" },
+  leafTheme: { key: "leafTheme", label: "叶主题", type: "string", category: "derived", source: "derived", description: "从 themePath 派生的最后一级主题，例如 道旗" },
+  priority: { key: "priority", label: "优先级", type: "string", category: "semantic", source: "item" },
+  icon: { key: "icon", label: "图标", type: "icon", category: "semantic", source: "item" },
+  recurrence: { key: "recurrence", label: "重复规则", type: "string", category: "semantic", source: "item" },
+  period: { key: "period", label: "字段粒度", type: "string", category: "semantic", source: "item", description: "该条目归属的时间粒度：年/季/月/周/天（未设置默认天）" },
+  time: { key: "time", label: "旧时间字段", type: "string", category: "legacy", source: "legacy", deprecated: true, hiddenByDefault: true, description: "历史兼容字段；请使用 startTime" },
+  startTime: { key: "startTime", label: "开始时间", type: "string", category: "semantic", source: "item", description: "任务或事件的开始时间" },
+  endTime: { key: "endTime", label: "结束时间", type: "string", category: "semantic", source: "item", description: "任务或事件的结束时间" },
+  duration: { key: "duration", label: "时长", type: "number", category: "semantic", source: "item", description: "任务或事件的持续分钟数" },
+  rating: { key: "rating", label: "评分", type: "number", category: "semantic", source: "item", description: "对块内容的评分" },
+  pintu: { key: "pintu", label: "图片", type: "image", category: "semantic", source: "item", description: "图片路径；后续会升级为通用 image 字段类型" },
+  folder: { key: "folder", label: "父文件夹", type: "string", category: "file", source: "file", description: "文件所在的父文件夹" },
+  periodCount: { key: "periodCount", label: "粒度序号", type: "number", category: "derived", source: "derived", description: "与日期结合计算出的序号，如第几周/第几月" },
+  displayCount: { key: "displayCount", label: "显示次数", type: "number", category: "semantic", source: "item" },
+  levelCount: { key: "levelCount", label: "等级次数", type: "number", category: "semantic", source: "item" },
+  countForLevel: { key: "countForLevel", label: "计入等级", type: "boolean", category: "semantic", source: "item" },
+  manuallyEdited: { key: "manuallyEdited", label: "手动编辑", type: "boolean", category: "semantic", source: "item" },
   // --- 文件元数据 ---
-  "file.path": { key: "file.path", label: "文件路径", type: "string" },
-  "file.basename": { key: "file.basename", label: "文件名", type: "string" },
-  "file.name": { key: "file.name", label: "文件名", type: "string" },
-  "file.folder": { key: "file.folder", label: "文件夹", type: "string" },
-  header: { key: "header", label: "所在章节", type: "string" },
+  "file.path": { key: "file.path", label: "文件路径", type: "string", category: "file", source: "file" },
+  "file.basename": { key: "file.basename", label: "文件名", type: "string", category: "file", source: "file" },
+  "file.name": { key: "file.name", label: "文件名", type: "string", category: "file", source: "file" },
+  "file.folder": { key: "file.folder", label: "文件夹", type: "string", category: "file", source: "file" },
+  header: { key: "header", label: "所在标题/章节", type: "string", category: "file", source: "file", description: "Markdown 所在章节，只表示位置，绝不作为主题" },
   // --- 时间轴字段 ---
-  startISO: { key: "startISO", label: "开始日期", type: "date" },
-  endISO: { key: "endISO", label: "结束日期", type: "date" },
-  // --- 预定义的重要 extra 字段 ---
-  "extra.地点": { key: "extra.地点", label: "地点", type: "string", description: "事件或任务发生的地点" },
-  "extra.项目": { key: "extra.项目", label: "所属项目", type: "string", description: "关联的GTD项目" }
+  startISO: { key: "startISO", label: "开始日期", type: "date", category: "derived", source: "derived" },
+  endISO: { key: "endISO", label: "结束日期", type: "date", category: "derived", source: "derived" }
 };
 const FIELD_LABEL_ALIASES = {
   filename: "文件名",
@@ -1276,8 +1352,8 @@ const FIELD_LABEL_ALIASES = {
   filePath: "文件路径",
   themeRoot: "根主题",
   themeLeaf: "叶主题",
-  主题路径: "完整主题",
-  完整主题: "完整主题"
+  主题路径: "主题路径",
+  完整主题: "主题路径"
 };
 function getFieldLabel(key) {
   if (FIELD_REGISTRY[key]) {
@@ -3037,9 +3113,30 @@ function filterByRules(items, rules = []) {
     return result;
   });
 }
+function isEmptyValue(value) {
+  if (value === null || value === void 0) return true;
+  if (Array.isArray(value)) return value.length === 0;
+  return String(value).trim() === "";
+}
+function normalizeListValue(value) {
+  if (Array.isArray(value)) return value;
+  if (value === null || value === void 0) return [];
+  return String(value).split(/[,，\n]/).map((part) => part.trim()).filter(Boolean);
+}
+function normalizeBetweenValue(value) {
+  if (Array.isArray(value) && value.length >= 2) return [value[0], value[1]];
+  if (value === null || value === void 0) return null;
+  const text = String(value).trim();
+  if (!text) return null;
+  const parts = text.split(/\s*(?:~|～|至|到|\.\.|,|，)\s*/).filter(Boolean);
+  if (parts.length < 2) return null;
+  return [parts[0], parts[1]];
+}
 function matchRule(item, rule) {
   let v1 = readField(item, rule.field);
   let v2 = rule.value;
+  if (rule.op === "empty") return isEmptyValue(v1);
+  if (rule.op === "notEmpty") return !isEmptyValue(v1);
   if (rule.field === "title") {
     v1 = item.titleLower ?? String(v1 ?? "").toLowerCase();
     v2 = String(v2 ?? "").toLowerCase();
@@ -3057,6 +3154,11 @@ function matchRule(item, rule) {
     }
     if (rule.op === "!=") {
       return !tagsLower.includes(needle);
+    }
+    if (rule.op === "in" || rule.op === "notIn") {
+      const needles = normalizeListValue(v2).map((x2) => String(x2).toLowerCase());
+      const matched = needles.some((needleValue) => tagsLower.includes(needleValue));
+      return rule.op === "in" ? matched : !matched;
     }
     v1 = tagsLower.join(",");
     v2 = needle;
@@ -3078,6 +3180,20 @@ function matchRule(item, rule) {
       return cmpMixed(v1, v2) > 0;
     case "<":
       return cmpMixed(v1, v2) < 0;
+    case "in": {
+      const values2 = normalizeListValue(v2);
+      return values2.some((value) => cmpMixed(v1, value) === 0);
+    }
+    case "notIn": {
+      const values2 = normalizeListValue(v2);
+      return !values2.some((value) => cmpMixed(v1, value) === 0);
+    }
+    case "between": {
+      const range = normalizeBetweenValue(v2);
+      if (!range) return false;
+      const [minValue, maxValue] = range;
+      return cmpMixed(v1, minValue) >= 0 && cmpMixed(v1, maxValue) <= 0;
+    }
     default:
       return false;
   }
@@ -3373,6 +3489,79 @@ function collectCategoriesFromViews(viewInstances, predefinedCategories = []) {
   predefinedCategories.forEach((cat) => categorySet.add(cat));
   return Array.from(categorySet).sort();
 }
+function buildLegacyLayoutFilters(layout) {
+  const rules = [];
+  const selectedThemes = layout.selectedThemes || [];
+  const selectedCategories = layout.selectedCategories || [];
+  if (selectedThemes.length > 0) {
+    rules.push({
+      field: "themePath",
+      op: "in",
+      value: selectedThemes,
+      logic: selectedCategories.length > 0 ? "and" : void 0
+    });
+  }
+  if (selectedCategories.length > 0) {
+    rules.push({
+      field: "baseCategory",
+      op: "in",
+      value: selectedCategories
+    });
+  }
+  return rules;
+}
+function hasExplicitGlobalFilters(layout) {
+  return Array.isArray(layout.globalFilters);
+}
+function hasLegacyLayoutFilterValues(layout) {
+  return (layout.selectedThemes || []).length > 0 || (layout.selectedCategories || []).length > 0;
+}
+function getLegacyLayoutFilterState(layout) {
+  const isLegacyMode = !hasExplicitGlobalFilters(layout);
+  const selectedThemes = layout.selectedThemes || [];
+  const selectedCategories = layout.selectedCategories || [];
+  return {
+    isLegacyMode,
+    hasLegacyValues: hasLegacyLayoutFilterValues(layout),
+    selectedThemes,
+    selectedCategories,
+    effectiveFilters: isLegacyMode ? buildLegacyLayoutFilters(layout) : layout.globalFilters || []
+  };
+}
+function getEffectiveLayoutFilters(layout) {
+  return getLegacyLayoutFilterState(layout).effectiveFilters;
+}
+function migrateLegacyLayoutFilters(layout) {
+  return {
+    globalFilters: getEffectiveLayoutFilters(layout),
+    selectedThemes: [],
+    selectedCategories: []
+  };
+}
+function describeLegacyLayoutFilters(layout) {
+  const parts = [];
+  const selectedThemes = layout.selectedThemes || [];
+  const selectedCategories = layout.selectedCategories || [];
+  if (selectedThemes.length > 0) parts.push(`主题 ${selectedThemes.length} 项`);
+  if (selectedCategories.length > 0) parts.push(`分类 ${selectedCategories.length} 项`);
+  return parts.join("，");
+}
+function asStringList(value) {
+  if (Array.isArray(value)) return value.map((v2) => String(v2)).filter(Boolean);
+  if (value === null || value === void 0 || value === "") return [];
+  return String(value).split(/[,，]/).map((v2) => v2.trim()).filter(Boolean);
+}
+function getCategoryValuesFromFilters(filters = []) {
+  const result = /* @__PURE__ */ new Set();
+  for (const rule of filters) {
+    if (!["baseCategory", "categoryKey", "类别", "根类别"].includes(rule.field)) continue;
+    if (!["=", "includes", "in"].includes(rule.op)) continue;
+    for (const value of asStringList(rule.value)) {
+      result.add(rule.field === "categoryKey" || rule.field === "类别" ? getBasePath(value) : value);
+    }
+  }
+  return Array.from(result);
+}
 const DATE_YMD = "\\d{4}[-/]\\d{2}[-/]\\d{2}";
 const DATE_YMD_RE = new RegExp(DATE_YMD);
 const TAG_RE = /#([\p{L}\p{N}_\/-]+)/gu;
@@ -3594,6 +3783,7 @@ function parseTaskLine(filePath, rawLine, lineNo, parentFolder, currentHeader) {
     created: 0,
     modified: 0,
     extra: {},
+    fieldOrigins: {},
     categoryKey: "",
     // 稍后填充
     // [新增] 填充 folder
@@ -3605,6 +3795,16 @@ function parseTaskLine(filePath, rawLine, lineNo, parentFolder, currentHeader) {
   item.categoryKey = status === "done" || status === "cancelled" ? "完成任务" : "未完成任务";
   const tagMatches = lineText.match(TAG_RE) || [];
   item.tags = tagMatches.map((t3) => t3.replace("#", ""));
+  if (item.tags.length > 0) {
+    addFieldOrigin(item, "tags", {
+      value: [...item.tags],
+      kind: "markdown_tag",
+      sourcePath: filePath,
+      sourceLine: lineNo,
+      parser: "parseTaskLine",
+      confidence: "explicit"
+    });
+  }
   const recurrenceText = extractRecurrenceText(lineText);
   if (recurrenceText) item.recurrence = recurrenceText;
   let m2;
@@ -3614,27 +3814,59 @@ function parseTaskLine(filePath, rawLine, lineNo, parentFolder, currentHeader) {
     const lowerKey = key.toLowerCase();
     if (["主题", "theme"].includes(lowerKey)) {
       item.theme = value;
+      addFieldOrigin(item, "theme", {
+        value,
+        kind: "markdown_task_kv",
+        rawKey: key,
+        sourcePath: filePath,
+        sourceLine: lineNo,
+        parser: "parseTaskLine",
+        confidence: "explicit"
+      });
     } else if (["模板id", "templateid"].includes(lowerKey)) {
       item.templateId = value;
+      addFieldOrigin(item, "templateId", { value, kind: "markdown_task_kv", rawKey: key, sourcePath: filePath, sourceLine: lineNo, parser: "parseTaskLine", confidence: "explicit" });
     } else if (["模板来源", "templatesource", "templatesourcetype"].includes(lowerKey)) {
-      if (value === "block" || value === "override") item.templateSourceType = value;
+      if (value === "block" || value === "override") {
+        item.templateSourceType = value;
+        addFieldOrigin(item, "templateSourceType", { value, kind: "markdown_task_kv", rawKey: key, sourcePath: filePath, sourceLine: lineNo, parser: "parseTaskLine", confidence: "explicit" });
+      }
     } else if (["标签", "tag", "tags"].includes(lowerKey)) {
+      const parsedTags = [];
       value.split(/[,，]/).forEach((v2) => {
         const t3 = v2.trim().replace(/^#/, "");
-        if (t3) item.tags.push(t3);
+        if (t3) {
+          item.tags.push(t3);
+          parsedTags.push(t3);
+        }
       });
+      if (parsedTags.length > 0) {
+        addFieldOrigin(item, "tags", { value: parsedTags, kind: "markdown_task_kv", rawKey: key, sourcePath: filePath, sourceLine: lineNo, parser: "parseTaskLine", confidence: "explicit" });
+      }
     } else if (["时间", "time", "start"].includes(lowerKey)) {
       item.startTime = value;
+      addFieldOrigin(item, "startTime", { value, kind: "markdown_task_kv", rawKey: key, sourcePath: filePath, sourceLine: lineNo, parser: "parseTaskLine", confidence: "explicit" });
     } else if (["结束", "end"].includes(lowerKey)) {
       item.endTime = value;
+      addFieldOrigin(item, "endTime", { value, kind: "markdown_task_kv", rawKey: key, sourcePath: filePath, sourceLine: lineNo, parser: "parseTaskLine", confidence: "explicit" });
     } else if (["时长", "duration"].includes(lowerKey)) {
       item.duration = Number(value) || void 0;
+      addFieldOrigin(item, "duration", { value: item.duration, kind: "markdown_task_kv", rawKey: key, sourcePath: filePath, sourceLine: lineNo, parser: "parseTaskLine", confidence: "explicit" });
     } else {
       const num = Number(value);
       let parsed = value;
       if (value !== "" && !isNaN(num)) parsed = num;
       else if (/^(true|false)$/i.test(value)) parsed = value.toLowerCase() === "true";
       item.extra[key] = parsed;
+      addFieldOrigin(item, `extra.${key}`, {
+        value: parsed,
+        kind: "markdown_task_kv",
+        rawKey: key,
+        sourcePath: filePath,
+        sourceLine: lineNo,
+        parser: "parseTaskLine",
+        confidence: "explicit"
+      });
     }
   }
   item.tags = Array.from(new Set(item.tags));
@@ -3664,13 +3896,6 @@ function parseTaskLine(filePath, rawLine, lineNo, parentFolder, currentHeader) {
   const editableText = editableExtraction.editableText;
   item.title = editableText || cleanTaskText(titleSrc) || "";
   item.editableText = editableText || item.title || "";
-  if (editableText) {
-    item.extra["正文"] = editableText;
-    item.extra["内容"] = editableText;
-    item.extra["任务内容"] = editableText;
-    item.extra["记录内容"] = editableText;
-    item.extra["editableText"] = editableText;
-  }
   if (typeof window !== "undefined" && window.__THINK_RECORD_DEBUG__) {
     console.groupCollapsed("[记录调试][任务读取] parser.parseTaskLine 正文提取");
     console.log("原始任务行:", lineText);
@@ -3680,7 +3905,7 @@ function parseTaskLine(filePath, rawLine, lineNo, parentFolder, currentHeader) {
     console.log("正文长度/是否包含连续空格:", { length: editableText.length, hasDoubleSpace: /\s{2,}/.test(editableText) });
     console.log("清洗过程:", explainTaskEditableTextExtraction(lineText));
     console.log("写入 item.title:", item.title);
-    console.log("写入 item.extra[正文]:", item.extra["正文"]);
+    console.log("不再写入 item.extra[正文]；正文通过 item.editableText / snapshot.semantic.editableText 暴露。");
     console.groupEnd();
   }
   item.priority = pickPriority(lineText);
@@ -3707,6 +3932,7 @@ function parseBlockContent(filePath, lines, startIdx, endIdx, parentFolder) {
   let date2;
   const tags2 = [];
   const extra = {};
+  const pendingOrigins = [];
   let contentText = "";
   let contentStarted = false;
   let iconVal = null;
@@ -3724,28 +3950,48 @@ function parseBlockContent(filePath, lines, startIdx, endIdx, parentFolder) {
         const key = kv[1].trim();
         const value = kv[2] || "";
         const lower = key.toLowerCase();
-        if (["分类", "类别", "category"].includes(lower)) categoryKey = value.trim();
-        else if (["模板id", "templateid"].includes(lower)) {
+        if (["分类", "类别", "category"].includes(lower)) {
+          categoryKey = value.trim();
+          pendingOrigins.push({ field: "categoryKey", value: categoryKey, rawKey: key, kind: "markdown_block_kv" });
+        } else if (["模板id", "templateid"].includes(lower)) {
           extra["templateId"] = value.trim();
+          pendingOrigins.push({ field: "templateId", value: value.trim(), rawKey: key, kind: "markdown_block_kv" });
         } else if (["模板来源", "templatesource", "templatesourcetype"].includes(lower)) {
           extra["templateSourceType"] = value.trim();
+          pendingOrigins.push({ field: "templateSourceType", value: value.trim(), rawKey: key, kind: "markdown_block_kv" });
         } else if (["主题"].includes(lower)) {
           themeVal = value.trim();
-        } else if (["标签", "tag", "tags"].includes(lower)) tags2.push(...value.trim().split(/[,，]/).map((t3) => t3.trim().replace(/^#/, "")));
-        else if (["日期", "date"].includes(lower)) date2 = normalizeDateStr(value.trim());
-        else if (["周期", "period"].includes(lower)) periodVal = value.trim();
-        else if (["评分", "rating"].includes(lower)) ratingVal = Number(value.trim()) || void 0;
-        else if (["图标", "icon"].includes(lower)) iconVal = value.trim();
-        else if (["评图", "pintu"].includes(lower)) pintuVal = value.trim();
-        else if (["内容", "content"].includes(lower)) {
+          pendingOrigins.push({ field: "theme", value: themeVal, rawKey: key, kind: "markdown_block_kv" });
+        } else if (["标签", "tag", "tags"].includes(lower)) {
+          const parsedTags = value.trim().split(/[,，]/).map((t3) => t3.trim().replace(/^#/, "")).filter(Boolean);
+          tags2.push(...parsedTags);
+          if (parsedTags.length > 0) pendingOrigins.push({ field: "tags", value: parsedTags, rawKey: key, kind: "markdown_block_kv" });
+        } else if (["日期", "date"].includes(lower)) {
+          date2 = normalizeDateStr(value.trim());
+          pendingOrigins.push({ field: "date", value: date2, rawKey: key, kind: "markdown_block_kv" });
+        } else if (["周期", "period"].includes(lower)) {
+          periodVal = value.trim();
+          pendingOrigins.push({ field: "period", value: periodVal, rawKey: key, kind: "markdown_block_kv" });
+        } else if (["评分", "rating"].includes(lower)) {
+          ratingVal = Number(value.trim()) || void 0;
+          pendingOrigins.push({ field: "rating", value: ratingVal, rawKey: key, kind: "markdown_block_kv" });
+        } else if (["图标", "icon"].includes(lower)) {
+          iconVal = value.trim();
+          pendingOrigins.push({ field: "icon", value: iconVal, rawKey: key, kind: "markdown_block_kv" });
+        } else if (["评图", "pintu"].includes(lower)) {
+          pintuVal = value.trim();
+          pendingOrigins.push({ field: "pintu", value: pintuVal, rawKey: key, kind: "markdown_block_kv" });
+        } else if (["内容", "content"].includes(lower)) {
           contentStarted = true;
           contentText = value;
+          pendingOrigins.push({ field: "content", value, rawKey: key, kind: "markdown_block_kv" });
         } else {
           const num = Number(value.trim());
           let parsed = value.trim();
           if (parsed !== "" && !isNaN(num)) parsed = num;
           else if (/^(true|false)$/i.test(parsed)) parsed = parsed.toLowerCase() === "true";
           extra[key] = parsed;
+          pendingOrigins.push({ field: `extra.${key}`, value: parsed, rawKey: key, kind: "markdown_block_kv" });
         }
       } else {
         contentStarted = true;
@@ -3771,6 +4017,7 @@ function parseBlockContent(filePath, lines, startIdx, endIdx, parentFolder) {
     created: 0,
     modified: 0,
     extra,
+    fieldOrigins: {},
     categoryKey,
     folder: parentFolder,
     // [Day2新增] 主题字段
@@ -3786,6 +4033,17 @@ function parseBlockContent(filePath, lines, startIdx, endIdx, parentFolder) {
   if (periodVal) item.period = periodVal;
   if (ratingVal) item.rating = ratingVal;
   if (pintuVal) item.pintu = pintuVal;
+  pendingOrigins.forEach((origin) => {
+    addFieldOrigin(item, origin.field, {
+      value: origin.value,
+      kind: origin.kind,
+      rawKey: origin.rawKey,
+      sourcePath: filePath,
+      sourceLine: startIdx + 1,
+      parser: "parseBlockContent",
+      confidence: "explicit"
+    });
+  });
   item.startISO = date2;
   item.endISO = date2;
   if (item.startISO) item.startMs = Date.parse(item.startISO);
@@ -4623,6 +4881,103 @@ function throttle(fn3, wait2 = 250) {
       }, wait2 - (now - last2));
     }
   };
+}
+function getItemGranularity(item) {
+  return item.period || "天";
+}
+function isClosedItem(item) {
+  return /\/(done|cancelled)\b/.test((item.categoryKey || "").toLowerCase());
+}
+function applyLegacyThemeFilter(items, selectedThemes = []) {
+  if (!selectedThemes.length) return items;
+  return items.filter((item) => {
+    const theme2 = item.themePath || item.theme || item.themePathNormalized;
+    return !!theme2 && selectedThemes.includes(theme2);
+  });
+}
+function applyLegacyCategoryFilter(items, selectedCategories = []) {
+  if (!selectedCategories.length) return items;
+  return items.filter((item) => selectedCategories.includes(getBasePath(item.categoryKey)));
+}
+function applyOverviewDateFilter(items, dateRange, useFieldGranularity) {
+  const [start2, end2] = toIsoDateTuple({
+    start: dayjs(dateRange[0]).startOf("day"),
+    end: dayjs(dateRange[1]).endOf("day")
+  });
+  const contextDate = dayjs(dateRange[1]);
+  return items.filter((item) => {
+    const itemDate = item.date ? dayjs(item.date) : null;
+    if (!itemDate || !itemDate.isValid()) {
+      return !isClosedItem(item);
+    }
+    if (useFieldGranularity) {
+      const itemGranularity = getItemGranularity(item);
+      switch (itemGranularity) {
+        case "年":
+          return itemDate.isSame(contextDate, "year");
+        case "季":
+          return itemDate.isSame(contextDate, "quarter");
+        case "月":
+          return itemDate.isSame(contextDate, "month");
+        case "周":
+          return isSameIsoWeek(itemDate, contextDate);
+        default: {
+          const itemMs2 = itemDate.valueOf();
+          const startMs2 = dayjs(start2).startOf("day").valueOf();
+          const endMs2 = dayjs(end2).endOf("day").valueOf();
+          return itemMs2 >= startMs2 && itemMs2 <= endMs2;
+        }
+      }
+    }
+    const itemMs = itemDate.valueOf();
+    const startMs = dayjs(start2).startOf("day").valueOf();
+    const endMs = dayjs(end2).endOf("day").valueOf();
+    return itemMs >= startMs && itemMs <= endMs;
+  });
+}
+function applyStandardDateAndGranularityFilter(items, dateRange, layoutView, viewFilters, useFieldGranularity) {
+  const [start2, end2] = toIsoDateTuple({
+    start: dayjs(dateRange[0]).startOf("day"),
+    end: dayjs(dateRange[1]).endOf("day")
+  });
+  const periodFilter = viewFilters.find((f2) => f2.field === "period");
+  let result = items;
+  if (periodFilter) {
+    result = filterByPeriod(result, periodFilter.value);
+  } else if (useFieldGranularity) {
+    result = filterByPeriod(result, layoutView);
+  }
+  return filterByDateRange(result, start2, end2);
+}
+function applyViewBaseFilters(input) {
+  const layoutFilters = input.layoutFilters || [];
+  const viewFilters = input.viewFilters || [];
+  let result = input.items;
+  result = filterByRules(result, layoutFilters);
+  result = filterByRules(result, viewFilters);
+  result = filterByKeyword(result, input.keyword || "");
+  if (layoutFilters.length === 0) {
+    result = applyLegacyThemeFilter(result, input.legacySelectedThemes || []);
+    result = applyLegacyCategoryFilter(result, input.legacySelectedCategories || []);
+  }
+  return result;
+}
+function applyViewQueryPipeline(input) {
+  const viewFilters = input.viewFilters || [];
+  const sort = input.sort || [];
+  let result = applyViewBaseFilters(input);
+  if (input.isOverviewMode) {
+    result = applyOverviewDateFilter(result, input.dateRange, !!input.useFieldGranularity);
+  } else {
+    result = applyStandardDateAndGranularityFilter(
+      result,
+      input.dateRange,
+      input.layoutView,
+      viewFilters,
+      !!input.useFieldGranularity
+    );
+  }
+  return sortItems(result, sort);
 }
 function buildAiConfigSnapshot(input, ai) {
   const enabledSet = ai.enabledBlockIds?.length ? new Set(ai.enabledBlockIds) : null;
@@ -12567,74 +12922,9 @@ const objectToNumericMapAsync = async (object2) => {
 };
 const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 const SPACE_OR_PUNCTUATION = /[\n\r\p{Z}\p{P}]+/u;
-function splitThemePath(themePath) {
-  const cleaned = String(themePath || "").split("/").map((part) => part.trim()).filter(Boolean);
-  if (!cleaned.length) {
-    return { themePath: null, rootTheme: null, leafTheme: null };
-  }
-  return {
-    themePath: cleaned.join("/"),
-    rootTheme: cleaned[0] || null,
-    leafTheme: cleaned[cleaned.length - 1] || null
-  };
-}
-function pickEditableText(item) {
-  if (item.type === "task") {
-    const fromRaw = extractTaskEditableText(item.rawSource || item.content || "").editableText;
-    if (fromRaw) return fromRaw;
-    const extraBody2 = item.extra?.["正文"];
-    if (typeof extraBody2 === "string" && extraBody2.trim()) return extraBody2.trim();
-    if (item.editableText) return item.editableText;
-    return item.title || null;
-  }
-  if (item.editableText) return item.editableText;
-  const extraBody = item.extra?.["正文"];
-  if (typeof extraBody === "string" && extraBody.trim()) return extraBody.trim();
-  return item.content || item.title || null;
-}
-function buildParsedRecordSnapshot(item) {
-  const path = item.file?.path ?? (() => {
-    const hashIndex = item.id.lastIndexOf("#");
-    return hashIndex >= 0 ? item.id.slice(0, hashIndex) : null;
-  })();
-  const line2 = typeof item.file?.line === "number" ? item.file.line : (() => {
-    const hashIndex = item.id.lastIndexOf("#");
-    if (hashIndex < 0) return null;
-    const parsed = Number.parseInt(item.id.slice(hashIndex + 1), 10);
-    return Number.isFinite(parsed) ? parsed : null;
-  })();
-  const editableText = pickEditableText(item);
-  const themeParts = splitThemePath(item.theme || item.header || null);
-  return {
-    itemId: item.id,
-    entryKind: item.type,
-    locator: { path, line: line2 },
-    raw: { sourceText: item.rawSource || item.content || "" },
-    semantic: {
-      title: item.title || null,
-      editableText,
-      content: item.content || null,
-      date: item.date || item.createdDate || null,
-      period: item.period || null,
-      tags: [...item.tags || []],
-      startTime: item.startTime || null,
-      endTime: item.endTime || null,
-      duration: item.duration ?? null,
-      themePath: themeParts.themePath,
-      rootTheme: themeParts.rootTheme,
-      leafTheme: themeParts.leafTheme,
-      categoryKey: item.categoryKey || null
-    },
-    templateHint: {
-      templateId: item.templateId || null,
-      templateSourceType: item.templateSourceType || null
-    },
-    extra: { ...item.extra || {} }
-  };
-}
 const METADATA_PORT_TOKEN = "MetadataPort";
 const FILESTAT_PORT_TOKEN = "FileStatPort";
-const CURRENT_CACHE_SCHEMA_VERSION = 2;
+const CURRENT_CACHE_SCHEMA_VERSION = 4;
 function toCachedItem(it) {
   return {
     id: it.id,
@@ -12643,13 +12933,15 @@ function toCachedItem(it) {
     titleLower: it.title?.toLowerCase(),
     contentLower: it.content?.toLowerCase(),
     tagsLower: (it.tags || []).map((t3) => t3.toLowerCase()),
-    themePathNormalized: it.themePath ?? it.theme,
+    themePathNormalized: it.themePath,
     rootTheme: it.rootTheme,
     leafTheme: it.leafTheme,
     dateMs: it.dateMs ?? it.startMs ?? it.endMs,
     categoryKey: it.categoryKey,
     created: it.created,
-    modified: it.modified
+    modified: it.modified,
+    extra: it.extra || {},
+    fieldOrigins: it.fieldOrigins
   };
 }
 function fromCachedItem(c2) {
@@ -12671,8 +12963,9 @@ function fromCachedItem(c2) {
     modified: c2.modified,
     dateMs: c2.dateMs,
     filename: c2.filename,
-    file: { path: c2.filePath },
-    extra: {}
+    file: { path: c2.filePath, folder: c2.filePath.split("/").slice(0, -1).pop() || "" },
+    extra: c2.extra || {},
+    fieldOrigins: c2.fieldOrigins || {}
   };
   it.titleLower = c2.titleLower ?? "";
   it.contentLower = c2.contentLower ?? "";
@@ -12693,11 +12986,52 @@ var __decorateClass$d = (decorators, target, key, kind) => {
 };
 var __decorateParam$c = (index, decorator) => (target, key) => decorator(target, key, index);
 function applyThemeViewFields(item) {
-  const parts = splitThemePath(item.theme || item.header || null);
-  item.themePath = parts.themePath || void 0;
-  item.rootTheme = parts.rootTheme || void 0;
-  item.leafTheme = parts.leafTheme || void 0;
-  item.themePathNormalized = item.themePath || void 0;
+  applyExplicitThemeViewFields(item);
+  if (item.themePath) {
+    addFieldOrigin(item, "themePath", {
+      value: item.themePath,
+      kind: "system_derived",
+      rawKey: "theme",
+      parser: "applyExplicitThemeViewFields",
+      confidence: "derived",
+      note: "Derived from explicit theme only; header/heading is intentionally excluded."
+    });
+  }
+  if (item.rootTheme) {
+    addFieldOrigin(item, "rootTheme", {
+      value: item.rootTheme,
+      kind: "system_derived",
+      rawKey: "theme",
+      parser: "applyExplicitThemeViewFields",
+      confidence: "derived"
+    });
+  }
+  if (item.leafTheme) {
+    addFieldOrigin(item, "leafTheme", {
+      value: item.leafTheme,
+      kind: "system_derived",
+      rawKey: "theme",
+      parser: "applyExplicitThemeViewFields",
+      confidence: "derived"
+    });
+  }
+}
+function addFileFieldOrigins(item, filePath, fileName, folder, lineNo, header) {
+  addFieldOrigin(item, "file.path", { value: filePath, kind: "file_path", sourcePath: filePath, sourceLine: lineNo, parser: "DataStore.scanFile", confidence: "explicit" });
+  addFieldOrigin(item, "file.basename", { value: fileName, kind: "file_path", sourcePath: filePath, sourceLine: lineNo, parser: "DataStore.scanFile", confidence: "explicit" });
+  addFieldOrigin(item, "file.name", { value: fileName, kind: "file_path", sourcePath: filePath, sourceLine: lineNo, parser: "DataStore.scanFile", confidence: "explicit" });
+  addFieldOrigin(item, "file.folder", { value: folder, kind: "file_path", sourcePath: filePath, sourceLine: lineNo, parser: "DataStore.scanFile", confidence: "explicit" });
+  if (header) {
+    addFieldOrigin(item, "header", {
+      value: header,
+      kind: "markdown_heading",
+      sourcePath: filePath,
+      sourceLine: lineNo,
+      parser: "DataStore.scanFile",
+      confidence: "explicit",
+      note: "Markdown section heading. It is never used as a theme fallback."
+    });
+  }
 }
 let DataStore = class {
   constructor(vault, metadata, fileStat, themeMatcher, storage) {
@@ -12917,15 +13251,13 @@ let DataStore = class {
               normalizeItemDates(blockItem);
               const hashIdx = blockItem.id.lastIndexOf("#");
               const lineNo = hashIdx >= 0 ? Number(blockItem.id.slice(hashIdx + 1)) : void 0;
-              blockItem.file = { path: filePath, line: lineNo, basename: fileName };
-              const explicitTheme = blockItem.theme;
-              if (explicitTheme && explicitTheme.trim()) {
-                const matched = this.themeMatcher.findThemeByPartialMatch(explicitTheme.trim());
-                blockItem.theme = matched || explicitTheme.trim();
-              } else if (currentHeader) {
-                const matchedTheme = this.themeMatcher.findThemeByPartialMatch(currentHeader);
-                blockItem.theme = matchedTheme || currentHeader;
+              blockItem.file = { path: filePath, line: lineNo, basename: fileName, folder: parentFolder };
+              addFileFieldOrigins(blockItem, filePath, fileName, parentFolder, lineNo, currentHeader || void 0);
+              if (currentSectionTags.length > 0) {
+                addFieldOrigin(blockItem, "tags", { value: [...currentSectionTags], kind: "markdown_heading", sourcePath: filePath, sourceLine: lineNo, parser: "DataStore.scanFile", confidence: "explicit", note: "Inherited from current Markdown heading tags." });
               }
+              const normalizedTheme = normalizeExplicitTheme(blockItem.theme, this.themeMatcher);
+              blockItem.theme = normalizedTheme;
               blockItem.titleLower = (blockItem.title || "").toLowerCase();
               blockItem.contentLower = (blockItem.content || "").toLowerCase();
               blockItem.tagsLower = (blockItem.tags || []).map((t3) => t3.toLowerCase());
@@ -12942,18 +13274,15 @@ let DataStore = class {
           taskItem.created = stat.ctime;
           taskItem.modified = stat.mtime;
           if (currentHeader) taskItem.header = currentHeader;
-          if (taskItem.theme && taskItem.theme.trim()) {
-            const t3 = taskItem.theme.trim();
-            const matched = this.themeMatcher.findThemeByPartialMatch(t3);
-            taskItem.theme = matched || t3;
-          } else if (currentHeader) {
-            const matchedTheme = this.themeMatcher.findThemeByPartialMatch(currentHeader);
-            taskItem.theme = matchedTheme || currentHeader;
-          }
+          taskItem.theme = normalizeExplicitTheme(taskItem.theme, this.themeMatcher);
           taskItem.filename = fileName;
           taskItem.fileName = fileName;
           normalizeItemDates(taskItem);
-          taskItem.file = { path: filePath, line: i2 + 1, basename: fileName };
+          taskItem.file = { path: filePath, line: i2 + 1, basename: fileName, folder: parentFolder };
+          addFileFieldOrigins(taskItem, filePath, fileName, parentFolder, i2 + 1, currentHeader || void 0);
+          if (currentSectionTags.length > 0) {
+            addFieldOrigin(taskItem, "tags", { value: [...currentSectionTags], kind: "markdown_heading", sourcePath: filePath, sourceLine: i2 + 1, parser: "DataStore.scanFile", confidence: "explicit", note: "Inherited from current Markdown heading tags." });
+          }
           taskItem.recurrenceInfo = parseRecurrence(taskItem.content) || void 0;
           taskItem.titleLower = (taskItem.title || "").toLowerCase();
           taskItem.contentLower = (taskItem.content || "").toLowerCase();
@@ -14879,6 +15208,63 @@ TimerStateService = __decorateClass$7([
   singleton(),
   __decorateParam$6(0, inject(VAULT_PORT_TOKEN))
 ], TimerStateService);
+function splitThemePath(themePath) {
+  return splitThemePath$1(themePath);
+}
+function pickEditableText(item) {
+  if (item.type === "task") {
+    const fromRaw = extractTaskEditableText(item.rawSource || item.content || "").editableText;
+    if (fromRaw) return fromRaw;
+    const extraBody2 = item.extra?.["正文"];
+    if (typeof extraBody2 === "string" && extraBody2.trim()) return extraBody2.trim();
+    if (item.editableText) return item.editableText;
+    return item.title || null;
+  }
+  if (item.editableText) return item.editableText;
+  const extraBody = item.extra?.["正文"];
+  if (typeof extraBody === "string" && extraBody.trim()) return extraBody.trim();
+  return item.content || item.title || null;
+}
+function buildParsedRecordSnapshot(item) {
+  const path = item.file?.path ?? (() => {
+    const hashIndex = item.id.lastIndexOf("#");
+    return hashIndex >= 0 ? item.id.slice(0, hashIndex) : null;
+  })();
+  const line2 = typeof item.file?.line === "number" ? item.file.line : (() => {
+    const hashIndex = item.id.lastIndexOf("#");
+    if (hashIndex < 0) return null;
+    const parsed = Number.parseInt(item.id.slice(hashIndex + 1), 10);
+    return Number.isFinite(parsed) ? parsed : null;
+  })();
+  const editableText = pickEditableText(item);
+  const themeParts = readExplicitThemeParts(item);
+  return {
+    itemId: item.id,
+    entryKind: item.type,
+    locator: { path, line: line2 },
+    raw: { sourceText: item.rawSource || item.content || "" },
+    semantic: {
+      title: item.title || null,
+      editableText,
+      content: item.content || null,
+      date: item.date || item.createdDate || null,
+      period: item.period || null,
+      tags: [...item.tags || []],
+      startTime: item.startTime || null,
+      endTime: item.endTime || null,
+      duration: item.duration ?? null,
+      themePath: themeParts.themePath,
+      rootTheme: themeParts.rootTheme,
+      leafTheme: themeParts.leafTheme,
+      categoryKey: item.categoryKey || null
+    },
+    templateHint: {
+      templateId: item.templateId || null,
+      templateSourceType: item.templateSourceType || null
+    },
+    extra: { ...item.extra || {} }
+  };
+}
 function normalizePath(value) {
   const trimmed = String(value || "").trim();
   return trimmed || null;
@@ -15309,7 +15695,7 @@ function readSnapshotSemanticValue(field, item, snapshot) {
   if (["结束", "end", "endtime"].includes(key) || ["结束", "end", "endtime"].includes(label)) return snapshot.semantic.endTime;
   if (["时长", "duration"].includes(key) || ["时长", "duration"].includes(label)) return snapshot.semantic.duration;
   if (["主题", "theme", "themepath", "完整主题", "完整路径主题"].includes(key) || ["主题", "theme", "themepath", "完整主题", "完整路径主题"].includes(label)) {
-    return snapshot.semantic.themePath || item.theme || item.header;
+    return snapshot.semantic.themePath || item.theme || null;
   }
   if (["roottheme", "根主题"].includes(key) || ["roottheme", "根主题"].includes(label)) return snapshot.semantic.rootTheme;
   if (["leaftheme", "叶主题"].includes(key) || ["leaftheme", "叶主题"].includes(label)) return snapshot.semantic.leafTheme;
@@ -15344,7 +15730,7 @@ function buildInitialFormData(template, item, snapshot = buildParsedRecordSnapsh
       return snapshot.semantic.categoryKey || item.categoryKey || void 0;
     }
     if (isPathLikeField$1(field)) {
-      return snapshot.semantic.themePath || item.theme || item.categoryKey || void 0;
+      return snapshot.semantic.themePath || item.theme || void 0;
     }
     return item[field.key] ?? item[field.label];
   };
@@ -54536,8 +54922,9 @@ function ViewToolbar({
   currentDate,
   onViewChange,
   onDateChange,
-  selectedThemes,
-  selectedCategories,
+  filterSlot,
+  selectedThemes = [],
+  selectedCategories = [],
   onThemeSelectionChange,
   onCategorySelectionChange,
   viewInstances,
@@ -54596,23 +54983,25 @@ function ViewToolbar({
         children: "＝"
       }
     ),
-    /* @__PURE__ */ u2(
-      ThemeFilter,
-      {
-        selectedThemes,
-        onSelectionChange: onThemeSelectionChange,
-        themes
-      }
-    ),
-    /* @__PURE__ */ u2(
-      CategoryFilter,
-      {
-        selectedCategories,
-        onSelectionChange: onCategorySelectionChange,
-        viewInstances,
-        predefinedCategories
-      }
-    ),
+    filterSlot || /* @__PURE__ */ u2(S, { children: [
+      onThemeSelectionChange && /* @__PURE__ */ u2(
+        ThemeFilter,
+        {
+          selectedThemes,
+          onSelectionChange: onThemeSelectionChange,
+          themes
+        }
+      ),
+      onCategorySelectionChange && /* @__PURE__ */ u2(
+        CategoryFilter,
+        {
+          selectedCategories,
+          onSelectionChange: onCategorySelectionChange,
+          viewInstances,
+          predefinedCategories
+        }
+      )
+    ] }),
     onLayoutSettingsClick && /* @__PURE__ */ u2(
       "button",
       {
@@ -62231,15 +62620,73 @@ const defaultSortRule = { field: "", dir: "asc" };
 function cloneRule(rule) {
   return { ...rule };
 }
-function RuleBuilder({ title, mode, rows, fieldOptions, onChange, dataStore }) {
+function operatorNeedsValue(op) {
+  return !["empty", "notEmpty"].includes(op);
+}
+function isMultiValueOperator(op) {
+  return op === "in" || op === "notIn";
+}
+function getValuePlaceholder(op) {
+  if (op === "between") return "输入区间，如 1~5 或 2026-01-01~2026-01-31";
+  if (isMultiValueOperator(op)) return "选择或输入多个值，回车确认";
+  return "输入值";
+}
+function normalizeMultiValue$1(value) {
+  const rawValues = Array.isArray(value) ? value : [value];
+  const normalized = rawValues.flatMap((v2) => String(v2 ?? "").split(/[,，\n]/)).map((part) => part.trim()).filter(Boolean);
+  return Array.from(new Set(normalized));
+}
+function formatRuleValue(rule) {
+  if (!operatorNeedsValue(rule.op)) return "";
+  if (isMultiValueOperator(rule.op)) {
+    const values2 = normalizeMultiValue$1(rule.value);
+    return values2.length > 0 ? values2.join("、") : "未选择";
+  }
+  if (rule.op === "between" && Array.isArray(rule.value)) {
+    return rule.value.map((v2) => String(v2)).join(" ~ ");
+  }
+  return String(rule.value ?? "");
+}
+function normalizeFilterPatch(patch, current2) {
+  const nextOp = patch.op ?? current2?.op;
+  const normalized = { ...patch };
+  if (nextOp && !operatorNeedsValue(nextOp)) {
+    return { ...normalized, value: "" };
+  }
+  if (patch.field !== void 0 && patch.field !== current2?.field) {
+    normalized.value = nextOp && isMultiValueOperator(nextOp) ? [] : "";
+  }
+  if (nextOp && isMultiValueOperator(nextOp)) {
+    if ("value" in normalized || patch.op !== void 0) {
+      normalized.value = normalizeMultiValue$1(normalized.value ?? current2?.value);
+    }
+  } else if (current2 && isMultiValueOperator(current2.op) && patch.op !== void 0) {
+    normalized.value = normalizeMultiValue$1(current2.value).join(",");
+  }
+  return normalized;
+}
+function RuleBuilder({ title, mode, rows, fieldOptions, onChange, dataStore, variant = "compact" }) {
   const isFilterMode = mode === "filter";
   const [newRule, setNewRule] = d(
-    isFilterMode ? defaultFilterRule : defaultSortRule
+    isFilterMode ? { ...defaultFilterRule } : { ...defaultSortRule }
   );
   const uniqueFieldValues = useUniqueFieldValues(dataStore);
+  const currentFilterRule = newRule;
+  const shouldShowValueInput = !isFilterMode || operatorNeedsValue(currentFilterRule.op);
   const remove2 = (i2) => onChange(rows.filter((_2, j2) => j2 !== i2).map(cloneRule));
   const updateNewRule = (patch) => {
-    setNewRule((current2) => ({ ...current2, ...patch }));
+    setNewRule((current2) => {
+      const nextPatch = isFilterMode ? normalizeFilterPatch(patch, current2) : patch;
+      return { ...current2, ...nextPatch };
+    });
+  };
+  const updateRow = (index, patch) => {
+    const updatedRows = rows.map((row, rowIndex) => {
+      if (rowIndex !== index) return cloneRule(row);
+      const nextPatch = isFilterMode ? normalizeFilterPatch(patch, row) : patch;
+      return { ...row, ...nextPatch };
+    });
+    onChange(updatedRows);
   };
   const updateLogic = (index, logic) => {
     const updatedRows = rows.map((row, rowIndex) => {
@@ -62272,55 +62719,248 @@ function RuleBuilder({ title, mode, rows, fieldOptions, onChange, dataStore }) {
   const formatRule = (rule) => {
     if (isFilterMode) {
       const filterRule = rule;
-      return `${getFieldLabel(filterRule.field)} ${filterRule.op} "${filterRule.value}"`;
+      if (filterRule.op === "empty") return `${getFieldLabel(filterRule.field)} 为空`;
+      if (filterRule.op === "notEmpty") return `${getFieldLabel(filterRule.field)} 非空`;
+      const valueText = formatRuleValue(filterRule);
+      const opText = filterRule.op === "in" ? "属于任一" : filterRule.op === "notIn" ? "不属于任一" : filterRule.op;
+      return `${getFieldLabel(filterRule.field)} ${opText} "${valueText}"`;
     }
     const sortRule = rule;
     return `${getFieldLabel(sortRule.field)} ${sortRule.dir === "asc" ? "升序" : "降序"}`;
   };
   const fieldSelectOptions = fieldOptions.map((f2) => ({ value: f2, label: getFieldLabel(f2) }));
-  const operatorOptions = ["=", "!=", "includes", "regex", ">", "<"].map((op) => ({ value: op, label: op }));
+  const operatorOptions = [
+    { value: "=", label: "=" },
+    { value: "!=", label: "!=" },
+    { value: "includes", label: "包含" },
+    { value: "regex", label: "正则" },
+    { value: ">", label: ">" },
+    { value: "<", label: "<" },
+    { value: "in", label: "属于任一" },
+    { value: "notIn", label: "不属于任一" },
+    { value: "between", label: "区间" },
+    { value: "empty", label: "为空" },
+    { value: "notEmpty", label: "非空" }
+  ];
   const directionOptions = [{ value: "asc", label: "升序" }, { value: "desc", label: "降序" }];
   const logicOptions = [
     { value: "and", label: "且" },
     { value: "or", label: "或" }
   ];
-  return /* @__PURE__ */ u2("div", { style: { display: "flex", flexDirection: "row", gap: "8px" }, children: [
-    /* @__PURE__ */ u2(Typography$1, { sx: { width: "80px", flexShrink: 0, fontWeight: 500, pt: "8px" }, children: title }),
-    /* @__PURE__ */ u2("div", { style: { flexGrow: 1, display: "flex", flexDirection: "column", gap: "12px" }, children: [
-      /* @__PURE__ */ u2("div", { style: { display: "flex", flexDirection: "row", flexWrap: "wrap", gap: "4px", alignItems: "center" }, children: rows.map((rule, i2) => {
-        const isLast = i2 === rows.length - 1;
-        const filterRule = rule;
-        return /* @__PURE__ */ u2("div", { style: { display: "flex", alignItems: "center", gap: "4px" }, children: [
-          /* @__PURE__ */ u2(Tooltip$1, { title: `点击删除规则: ${formatRule(rule)}`, children: /* @__PURE__ */ u2(
-            Chip,
+  const renderFieldInput = (field, onFieldChange, placeholder = "搜索 / 选择字段") => {
+    const selectedFieldOption = fieldSelectOptions.find((option) => option.value === field) || null;
+    return /* @__PURE__ */ u2(
+      Autocomplete,
+      {
+        size: "small",
+        fullWidth: true,
+        disablePortal: true,
+        options: fieldSelectOptions,
+        value: selectedFieldOption,
+        getOptionLabel: (option) => option?.label || "",
+        isOptionEqualToValue: (option, value) => option?.value === value?.value,
+        onChange: (_2, option) => onFieldChange(option?.value || ""),
+        renderInput: (params) => /* @__PURE__ */ u2(TextField$1, { ...params, variant: "outlined", placeholder })
+      }
+    );
+  };
+  const renderValueInput = (rule, onValueChange) => {
+    if (!operatorNeedsValue(rule.op)) return null;
+    if (isMultiValueOperator(rule.op)) {
+      return /* @__PURE__ */ u2(
+        Autocomplete,
+        {
+          multiple: true,
+          freeSolo: true,
+          fullWidth: true,
+          size: "small",
+          disablePortal: true,
+          options: uniqueFieldValues[rule.field] || [],
+          value: normalizeMultiValue$1(rule.value),
+          onChange: (_2, newValue) => onValueChange(normalizeMultiValue$1(newValue)),
+          renderInput: (params) => /* @__PURE__ */ u2(
+            TextField$1,
             {
-              label: formatRule(rule),
-              onClick: () => remove2(i2),
-              size: "small"
+              ...params,
+              variant: "outlined",
+              placeholder: getValuePlaceholder(rule.op),
+              helperText: variant === "panel" ? "同一字段内多选表示“或”：匹配其中任一值即可。" : void 0
             }
-          ) }),
-          isFilterMode && !isLast && /* @__PURE__ */ u2(
+          )
+        }
+      );
+    }
+    return /* @__PURE__ */ u2(
+      Autocomplete,
+      {
+        freeSolo: true,
+        fullWidth: true,
+        size: "small",
+        disableClearable: true,
+        disablePortal: true,
+        options: uniqueFieldValues[rule.field] || [],
+        value: String(rule.value ?? ""),
+        inputValue: String(rule.value ?? ""),
+        onInputChange: (_2, newValue) => onValueChange(newValue || ""),
+        renderInput: (params) => /* @__PURE__ */ u2(TextField$1, { ...params, variant: "outlined", placeholder: getValuePlaceholder(rule.op) })
+      }
+    );
+  };
+  const existingRules = /* @__PURE__ */ u2("div", { style: { display: "flex", flexDirection: "row", flexWrap: "wrap", gap: "4px", alignItems: "center" }, children: rows.map((rule, i2) => {
+    const isLast = i2 === rows.length - 1;
+    const filterRule = rule;
+    return /* @__PURE__ */ u2("div", { style: { display: "flex", alignItems: "center", gap: "4px" }, children: [
+      /* @__PURE__ */ u2(Tooltip$1, { title: `点击删除规则: ${formatRule(rule)}`, children: /* @__PURE__ */ u2(
+        Chip,
+        {
+          label: formatRule(rule),
+          onClick: () => remove2(i2),
+          size: "small"
+        }
+      ) }),
+      isFilterMode && !isLast && /* @__PURE__ */ u2(
+        SimpleSelect,
+        {
+          value: filterRule.logic || "and",
+          options: logicOptions,
+          onChange: (val) => updateLogic(i2, val),
+          sx: { minWidth: 50 }
+        }
+      )
+    ] }, i2);
+  }) });
+  const panelRuleRows = /* @__PURE__ */ u2(Box$1, { sx: { display: "flex", flexDirection: "column", gap: 1 }, children: rows.map((rule, index) => {
+    const filterRule = rule;
+    const sortRule = rule;
+    const isLast = index === rows.length - 1;
+    const gridTemplateColumns2 = isFilterMode && operatorNeedsValue(filterRule.op) ? "minmax(240px, 1.2fr) minmax(150px, 0.6fr) minmax(260px, 1.2fr) minmax(96px, 0.35fr) 40px" : "minmax(240px, 1.2fr) minmax(150px, 0.6fr) minmax(96px, 0.35fr) 40px";
+    return /* @__PURE__ */ u2(Box$1, { sx: { display: "flex", flexDirection: "column", gap: 0.75 }, children: /* @__PURE__ */ u2(
+      Box$1,
+      {
+        sx: {
+          display: "grid",
+          gridTemplateColumns: gridTemplateColumns2,
+          gap: 1,
+          alignItems: "center",
+          p: 1,
+          border: "1px solid var(--background-modifier-border)",
+          borderRadius: "8px",
+          background: "var(--background-primary)"
+        },
+        children: [
+          renderFieldInput(rule.field, (field) => updateRow(index, { field })),
+          isFilterMode ? /* @__PURE__ */ u2(S, { children: [
+            /* @__PURE__ */ u2(
+              SimpleSelect,
+              {
+                value: filterRule.op,
+                options: operatorOptions,
+                onChange: (val) => updateRow(index, { op: val }),
+                sx: { minWidth: 140 }
+              }
+            ),
+            renderValueInput(filterRule, (value) => updateRow(index, { value }))
+          ] }) : /* @__PURE__ */ u2(
+            SimpleSelect,
+            {
+              value: sortRule.dir,
+              options: directionOptions,
+              onChange: (val) => updateRow(index, { dir: val }),
+              sx: { minWidth: 120 }
+            }
+          ),
+          isFilterMode && !isLast ? /* @__PURE__ */ u2(
             SimpleSelect,
             {
               value: filterRule.logic || "and",
               options: logicOptions,
-              onChange: (val) => updateLogic(i2, val),
-              sx: { minWidth: 50 }
+              onChange: (val) => updateLogic(index, val),
+              sx: { minWidth: 80 }
             }
-          )
-        ] }, i2);
-      }) }),
-      /* @__PURE__ */ u2("div", { style: { display: "flex", flexDirection: "row", gap: "4px", alignItems: "center" }, children: [
+          ) : /* @__PURE__ */ u2(Typography$1, { variant: "body2", color: "text.secondary", sx: { textAlign: "center" }, children: isFilterMode ? "末尾" : "" }),
+          /* @__PURE__ */ u2(Tooltip$1, { title: "删除规则", children: /* @__PURE__ */ u2(IconButton$1, { size: "small", onClick: () => remove2(index), children: /* @__PURE__ */ u2(DeleteOutlineIcon, { fontSize: "small" }) }) })
+        ]
+      }
+    ) }, index);
+  }) });
+  if (variant === "panel") {
+    return /* @__PURE__ */ u2(Box$1, { sx: { display: "flex", flexDirection: "column", gap: 2 }, children: [
+      /* @__PURE__ */ u2(Box$1, { sx: { display: "flex", alignItems: "center", justifyContent: "space-between", gap: 2 }, children: /* @__PURE__ */ u2("div", { children: [
+        /* @__PURE__ */ u2(Typography$1, { sx: { fontWeight: 600 }, children: [
+          title,
+          "规则"
+        ] }),
+        /* @__PURE__ */ u2(Typography$1, { variant: "body2", color: "text.secondary", children: "字段支持搜索；已有规则可直接编辑。“属于任一 / 不属于任一”支持多选 chip，也可输入后回车添加；区间用“开始~结束”。" })
+      ] }) }),
+      rows.length > 0 ? /* @__PURE__ */ u2(Box$1, { sx: { display: "flex", flexDirection: "column", gap: 1 }, children: [
         /* @__PURE__ */ u2(
-          SimpleSelect,
+          Box$1,
           {
-            fullWidth: true,
-            placeholder: "选择字段",
-            value: newRule.field,
-            options: fieldSelectOptions,
-            onChange: (val) => updateNewRule({ field: val })
+            sx: {
+              display: "grid",
+              gridTemplateColumns: isFilterMode ? "minmax(240px, 1.2fr) minmax(150px, 0.6fr) minmax(260px, 1.2fr) minmax(96px, 0.35fr) 40px" : "minmax(240px, 1.2fr) minmax(150px, 0.6fr) minmax(96px, 0.35fr) 40px",
+              gap: 1,
+              px: 1,
+              color: "text.secondary"
+            },
+            children: [
+              /* @__PURE__ */ u2(Typography$1, { variant: "caption", children: "字段" }),
+              /* @__PURE__ */ u2(Typography$1, { variant: "caption", children: isFilterMode ? "条件" : "排序" }),
+              isFilterMode && /* @__PURE__ */ u2(Typography$1, { variant: "caption", children: "值" }),
+              /* @__PURE__ */ u2(Typography$1, { variant: "caption", children: "连接" }),
+              /* @__PURE__ */ u2(Typography$1, { variant: "caption", children: "操作" })
+            ]
           }
         ),
+        panelRuleRows
+      ] }) : /* @__PURE__ */ u2(Box$1, { sx: { p: 2, border: "1px dashed var(--background-modifier-border)", borderRadius: "8px" }, children: /* @__PURE__ */ u2(Typography$1, { variant: "body2", color: "text.secondary", children: "还没有规则。先在下方选择字段、条件和值，然后添加规则。" }) }),
+      /* @__PURE__ */ u2(
+        Box$1,
+        {
+          sx: {
+            display: "grid",
+            gridTemplateColumns: isFilterMode && shouldShowValueInput ? "minmax(260px, 1.4fr) minmax(150px, 0.6fr) minmax(260px, 1.3fr) auto" : "minmax(260px, 1.4fr) minmax(150px, 0.6fr) auto",
+            gap: 1,
+            alignItems: "center",
+            p: 1.5,
+            border: "1px solid var(--background-modifier-border)",
+            borderRadius: "8px",
+            background: "var(--background-secondary)"
+          },
+          children: [
+            renderFieldInput(newRule.field, (field) => updateNewRule({ field })),
+            isFilterMode ? /* @__PURE__ */ u2(S, { children: [
+              /* @__PURE__ */ u2(
+                SimpleSelect,
+                {
+                  value: newRule.op,
+                  options: operatorOptions,
+                  onChange: (val) => updateNewRule({ op: val }),
+                  sx: { minWidth: 140 }
+                }
+              ),
+              shouldShowValueInput && renderValueInput(newRule, (value) => updateNewRule({ value }))
+            ] }) : /* @__PURE__ */ u2(
+              SimpleSelect,
+              {
+                value: newRule.dir,
+                options: directionOptions,
+                onChange: (val) => updateNewRule({ dir: val }),
+                sx: { minWidth: 120 }
+              }
+            ),
+            /* @__PURE__ */ u2(Button$1, { variant: "contained", size: "small", onClick: handleAddRule, sx: { whiteSpace: "nowrap" }, children: "添加规则" })
+          ]
+        }
+      )
+    ] });
+  }
+  return /* @__PURE__ */ u2("div", { style: { display: "flex", flexDirection: "row", gap: "8px" }, children: [
+    /* @__PURE__ */ u2(Typography$1, { sx: { width: "80px", flexShrink: 0, fontWeight: 500, pt: "8px" }, children: title }),
+    /* @__PURE__ */ u2("div", { style: { flexGrow: 1, display: "flex", flexDirection: "column", gap: "12px" }, children: [
+      existingRules,
+      /* @__PURE__ */ u2("div", { style: { display: "flex", flexDirection: "row", gap: "4px", alignItems: "center" }, children: [
+        renderFieldInput(newRule.field, (field) => updateNewRule({ field })),
         isFilterMode ? /* @__PURE__ */ u2(S, { children: [
           /* @__PURE__ */ u2(
             SimpleSelect,
@@ -62331,20 +62971,7 @@ function RuleBuilder({ title, mode, rows, fieldOptions, onChange, dataStore }) {
               sx: { minWidth: 120 }
             }
           ),
-          /* @__PURE__ */ u2(
-            Autocomplete,
-            {
-              freeSolo: true,
-              fullWidth: true,
-              size: "small",
-              disableClearable: true,
-              disablePortal: true,
-              options: uniqueFieldValues[newRule.field] || [],
-              value: newRule.value,
-              onInputChange: (_2, newValue) => updateNewRule({ value: newValue || "" }),
-              renderInput: (params) => /* @__PURE__ */ u2(TextField$1, { ...params, variant: "outlined", placeholder: "输入值" })
-            }
-          )
+          shouldShowValueInput && renderValueInput(newRule, (value) => updateNewRule({ value }))
         ] }) : /* @__PURE__ */ u2(
           SimpleSelect,
           {
@@ -62358,6 +62985,189 @@ function RuleBuilder({ title, mode, rows, fieldOptions, onChange, dataStore }) {
       ] })
     ] })
   ] });
+}
+const RestartAltIcon = createSvgIcon(/* @__PURE__ */ u2("path", {
+  d: "M12 5V2L8 6l4 4V7c3.31 0 6 2.69 6 6 0 2.97-2.17 5.43-5 5.91v2.02c3.95-.49 7-3.85 7-7.93 0-4.42-3.58-8-8-8m-6 8c0-1.65.67-3.15 1.76-4.24L6.34 7.34C4.9 8.79 4 10.79 4 13c0 4.08 3.05 7.44 7 7.93v-2.02c-2.83-.48-5-2.94-5-5.91"
+}));
+const DEFAULT_QUICK_FILTER_FIELDS = [
+  { field: "themePath", label: "主题路径", help: "使用完整 themePath 筛选，例如 生活/健康；不再用根主题或章节标题兜底。", placeholder: "选择主题路径" },
+  { field: "baseCategory", label: "分类", help: "不同字段之间默认表示“且”：主题匹配后还要分类匹配。", placeholder: "选择分类" },
+  { field: "tags", label: "标签", placeholder: "选择标签" },
+  { field: "type", label: "类型", placeholder: "选择记录类型" },
+  { field: "priority", label: "优先级", placeholder: "选择优先级" },
+  { field: "period", label: "时间粒度", placeholder: "选择粒度" }
+];
+function normalizeMultiValue(value) {
+  const rawValues = Array.isArray(value) ? value : [value];
+  const normalized = rawValues.flatMap((v2) => String(v2 ?? "").split(/[,，\n]/)).map((part) => part.trim()).filter(Boolean);
+  return Array.from(new Set(normalized));
+}
+function collectFieldValues(items, fields) {
+  const valueMap = {};
+  fields.forEach((field) => valueMap[field] = /* @__PURE__ */ new Set());
+  for (const item of items) {
+    for (const field of fields) {
+      const value = readField(item, field);
+      if (value === null || value === void 0 || String(value).trim() === "") continue;
+      const values2 = Array.isArray(value) ? value : [value];
+      values2.forEach((v2) => {
+        const strV = String(v2).trim();
+        if (strV) valueMap[field].add(strV);
+      });
+    }
+  }
+  const result = {};
+  fields.forEach((field) => {
+    result[field] = Array.from(valueMap[field] || []).sort((a2, b2) => a2.localeCompare(b2, "zh-CN"));
+  });
+  return result;
+}
+function cleanupRuleLinks(rules) {
+  return rules.map((rule, index) => {
+    const nextRule = { ...rule };
+    if (index === rules.length - 1) {
+      delete nextRule.logic;
+    } else if (!nextRule.logic) {
+      nextRule.logic = "and";
+    }
+    return nextRule;
+  });
+}
+function getQuickRule(filters, field) {
+  return filters.find((rule) => rule.field === field && rule.op === "in");
+}
+function upsertQuickRule(filters, field, values2) {
+  const cleanValues = normalizeMultiValue(values2);
+  const existingIndex = filters.findIndex((rule) => rule.field === field && rule.op === "in");
+  if (cleanValues.length === 0) {
+    if (existingIndex < 0) return cleanupRuleLinks(filters);
+    return cleanupRuleLinks(filters.filter((_2, index) => index !== existingIndex));
+  }
+  if (existingIndex >= 0) {
+    return cleanupRuleLinks(filters.map((rule, index) => index === existingIndex ? { ...rule, value: cleanValues } : { ...rule }));
+  }
+  return cleanupRuleLinks([
+    ...filters.map((rule) => ({ ...rule })),
+    { field, op: "in", value: cleanValues }
+  ]);
+}
+function hasAnyQuickFilter(filters, fields) {
+  const fieldSet = new Set(fields.map((f2) => f2.field));
+  return filters.some((rule) => fieldSet.has(rule.field) && rule.op === "in" && normalizeMultiValue(rule.value).length > 0);
+}
+function clearQuickFilters(filters, fields) {
+  const fieldSet = new Set(fields.map((f2) => f2.field));
+  return cleanupRuleLinks(filters.filter((rule) => !(fieldSet.has(rule.field) && rule.op === "in")));
+}
+function describeQuickSummary(filters, fields) {
+  const parts = fields.map((config2) => {
+    const rule = getQuickRule(filters, config2.field);
+    const values2 = normalizeMultiValue(rule?.value);
+    if (values2.length === 0) return "";
+    const label = config2.label || getFieldLabel(config2.field);
+    return `${label}为${values2.join("或")}`;
+  }).filter(Boolean);
+  return parts.length > 0 ? `当前显示：${parts.join("，并且")}。` : "未设置常用筛选。";
+}
+function CommonFilterPanel({
+  dataStore,
+  filters,
+  onChange,
+  items,
+  fieldOptions,
+  title = "常用筛选",
+  description = "适合主题路径、分类、标签这类高频筛选；同一字段内是“或”，不同字段之间是“且”。",
+  fields = DEFAULT_QUICK_FILTER_FIELDS,
+  compact = false
+}) {
+  const sourceItems = T$1(() => items ?? dataStore.queryItems(), [items, dataStore]);
+  const availableFields = T$1(() => new Set(fieldOptions ?? getAllFields(sourceItems)), [fieldOptions, sourceItems]);
+  const quickFields = T$1(
+    () => fields.filter((config2) => availableFields.has(config2.field)),
+    [fields, availableFields]
+  );
+  const valueOptions = T$1(
+    () => collectFieldValues(sourceItems, quickFields.map((config2) => config2.field)),
+    [sourceItems, quickFields]
+  );
+  const hasQuickFilters = hasAnyQuickFilter(filters, quickFields);
+  const summary = describeQuickSummary(filters, quickFields);
+  if (quickFields.length === 0) return null;
+  return /* @__PURE__ */ u2(
+    Box$1,
+    {
+      sx: {
+        display: "flex",
+        flexDirection: "column",
+        gap: compact ? 1 : 1.5,
+        p: compact ? 1.25 : 1.5,
+        border: "1px solid var(--background-modifier-border)",
+        borderRadius: "10px",
+        background: "var(--background-secondary)"
+      },
+      children: [
+        /* @__PURE__ */ u2(Box$1, { sx: { display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 2 }, children: [
+          /* @__PURE__ */ u2("div", { children: [
+            /* @__PURE__ */ u2(Typography$1, { sx: { fontWeight: 700 }, children: title }),
+            /* @__PURE__ */ u2(Typography$1, { variant: "body2", color: "text.secondary", children: description })
+          ] }),
+          /* @__PURE__ */ u2(
+            Button$1,
+            {
+              size: "small",
+              startIcon: /* @__PURE__ */ u2(RestartAltIcon, {}),
+              onClick: () => onChange(clearQuickFilters(filters, quickFields)),
+              disabled: !hasQuickFilters,
+              sx: { whiteSpace: "nowrap" },
+              children: "清空常用"
+            }
+          )
+        ] }),
+        /* @__PURE__ */ u2(
+          Box$1,
+          {
+            sx: {
+              display: "grid",
+              gridTemplateColumns: compact ? "1fr" : "repeat(auto-fit, minmax(240px, 1fr))",
+              gap: 1.25
+            },
+            children: quickFields.map((config2) => {
+              const label = config2.label || getFieldLabel(config2.field);
+              const rule = getQuickRule(filters, config2.field);
+              const values2 = normalizeMultiValue(rule?.value);
+              return /* @__PURE__ */ u2(Box$1, { sx: { display: "flex", flexDirection: "column", gap: 0.5 }, children: [
+                /* @__PURE__ */ u2(Typography$1, { variant: "caption", color: "text.secondary", sx: { fontWeight: 600 }, children: label }),
+                /* @__PURE__ */ u2(
+                  Autocomplete,
+                  {
+                    multiple: true,
+                    freeSolo: true,
+                    fullWidth: true,
+                    size: "small",
+                    disablePortal: true,
+                    options: valueOptions[config2.field] || [],
+                    value: values2,
+                    onChange: (_2, newValue) => onChange(upsertQuickRule(filters, config2.field, newValue)),
+                    renderTags: (tagValue, getTagProps) => tagValue.map((option, index) => /* @__PURE__ */ k$2(Chip, { ...getTagProps({ index }), key: `${config2.field}-${option}`, label: option, size: "small" })),
+                    renderInput: (params) => /* @__PURE__ */ u2(
+                      TextField$1,
+                      {
+                        ...params,
+                        variant: "outlined",
+                        placeholder: values2.length > 0 ? "" : config2.placeholder || `选择${label}`,
+                        helperText: compact ? void 0 : config2.help
+                      }
+                    )
+                  }
+                )
+              ] }, config2.field);
+            })
+          }
+        ),
+        /* @__PURE__ */ u2(Typography$1, { variant: "body2", color: "text.secondary", children: summary })
+      ]
+    }
+  );
 }
 function ViewInstanceEditor({ vi }) {
   const dataStore = useDataStore();
@@ -62377,6 +63187,8 @@ function ViewInstanceEditor({ vi }) {
     () => VIEW_OPTIONS.map((v2) => ({ value: v2, label: v2.replace("View", "") })),
     []
   );
+  const commonFilterFields = T$1(() => ["themePath", "baseCategory", "tags", "type", "priority", "period"], []);
+  const hasAdvancedFilters = T$1(() => (currentVi.filters || []).some((rule) => rule.op !== "in" || !commonFilterFields.includes(rule.field)), [currentVi.filters, commonFilterFields]);
   const handleFieldsChange = (fields) => {
     handleUpdate({ fields });
   };
@@ -62465,19 +63277,53 @@ function ViewInstanceEditor({ vi }) {
       /* @__PURE__ */ u2(
         FormField,
         {
-          label: "筛选规则",
-          help: "定义数据筛选条件",
-          children: /* @__PURE__ */ u2(
-            RuleBuilder,
-            {
-              title: "筛选规则",
-              mode: "filter",
-              rows: currentVi.filters || [],
-              fieldOptions,
-              onChange: (rows) => handleUpdate({ filters: rows }),
-              dataStore
-            }
-          )
+          label: "视图筛选",
+          help: "常用筛选适合主题路径、分类、标签多选；高级筛选保留原来的字段/条件/值规则。",
+          children: /* @__PURE__ */ u2(Box$1, { sx: { display: "flex", flexDirection: "column", gap: 1.25 }, children: [
+            /* @__PURE__ */ u2(
+              CommonFilterPanel,
+              {
+                title: "常用筛选",
+                description: "同一字段内多选表示“或”，不同字段之间默认表示“且”。",
+                dataStore,
+                filters: currentVi.filters || [],
+                fieldOptions,
+                onChange: (rows) => handleUpdate({ filters: rows }),
+                compact: true
+              }
+            ),
+            /* @__PURE__ */ u2(
+              Accordion,
+              {
+                defaultExpanded: hasAdvancedFilters,
+                disableGutters: true,
+                sx: {
+                  border: "1px solid var(--background-modifier-border)",
+                  borderRadius: "10px",
+                  "&:before": { display: "none" }
+                },
+                children: [
+                  /* @__PURE__ */ u2(AccordionSummary, { expandIcon: /* @__PURE__ */ u2(ExpandMoreIcon, {}), children: /* @__PURE__ */ u2(Box$1, { sx: { display: "flex", alignItems: "center", gap: 1, flexWrap: "wrap" }, children: [
+                    /* @__PURE__ */ u2(Typography$1, { sx: { fontWeight: 700 }, children: "高级筛选规则" }),
+                    /* @__PURE__ */ u2(Chip, { label: `${(currentVi.filters || []).length} 条`, size: "small", variant: "outlined" }),
+                    /* @__PURE__ */ u2(Typography$1, { variant: "body2", color: "text.secondary", children: "正则、区间、排除、复杂且/或关系" })
+                  ] }) }),
+                  /* @__PURE__ */ u2(AccordionDetails, { sx: { pt: 0 }, children: /* @__PURE__ */ u2(
+                    RuleBuilder,
+                    {
+                      title: "筛选",
+                      mode: "filter",
+                      rows: currentVi.filters || [],
+                      fieldOptions,
+                      onChange: (rows) => handleUpdate({ filters: rows }),
+                      dataStore,
+                      variant: "panel"
+                    }
+                  ) })
+                ]
+              }
+            )
+          ] })
         }
       ),
       /* @__PURE__ */ u2(
@@ -63679,9 +64525,6 @@ const VIEW_REGISTRY = {
   TaskExecutionView
 };
 const DashboardViewComponents = VIEW_REGISTRY;
-function getItemGranularity(item) {
-  return item.period || "天";
-}
 function useViewData({
   dataStore,
   sourceItems,
@@ -63691,8 +64534,7 @@ function useViewData({
   layoutView,
   isOverviewMode,
   useFieldGranularity = false,
-  selectedThemes,
-  selectedCategories
+  layoutFilters = []
 }) {
   const filters = viewInstance?.filters || [];
   const sort = viewInstance?.sort || [];
@@ -63713,71 +64555,20 @@ function useViewData({
       devTimeEnd(`[useViewData] 为视图 [${sourceName}] 计算数据耗时`);
       return [];
     }
-    const [start2, end2] = toIsoDateTuple({
-      start: dayjs(dateRange[0]).startOf("day"),
-      end: dayjs(dateRange[1]).endOf("day")
+    const finalResult = applyViewQueryPipeline({
+      items: allItems,
+      layoutFilters,
+      viewFilters: filters,
+      sort,
+      keyword,
+      dateRange,
+      layoutView,
+      isOverviewMode: !!isOverviewMode,
+      useFieldGranularity
     });
-    let itemsToProcess = allItems;
-    itemsToProcess = filterByRules(itemsToProcess, filters);
-    itemsToProcess = filterByKeyword(itemsToProcess, keyword);
-    if (selectedThemes && selectedThemes.length > 0) {
-      itemsToProcess = itemsToProcess.filter((item) => {
-        return item.theme && selectedThemes.includes(item.theme);
-      });
-    }
-    if (selectedCategories && selectedCategories.length > 0) {
-      itemsToProcess = itemsToProcess.filter((item) => {
-        const baseCategory = getBasePath(item.categoryKey);
-        return selectedCategories.includes(baseCategory);
-      });
-    }
-    let finalItems;
-    if (isOverviewMode) {
-      const contextDate = dayjs(dateRange[1]);
-      const isItemClosed = (it) => /\/(done|cancelled)\b/.test((it.categoryKey || "").toLowerCase());
-      finalItems = itemsToProcess.filter((item) => {
-        const itemDate = item.date ? dayjs(item.date) : null;
-        if (!itemDate || !itemDate.isValid()) {
-          return !isItemClosed(item);
-        }
-        if (useFieldGranularity) {
-          const itemGranularity = getItemGranularity(item);
-          switch (itemGranularity) {
-            case "年":
-              return itemDate.isSame(contextDate, "year");
-            case "季":
-              return itemDate.isSame(contextDate, "quarter");
-            case "月":
-              return itemDate.isSame(contextDate, "month");
-            case "周": {
-              return isSameIsoWeek(itemDate, contextDate);
-            }
-            default:
-              const itemMs = itemDate.valueOf();
-              const startMs = dayjs(start2).startOf("day").valueOf();
-              const endMs = dayjs(end2).endOf("day").valueOf();
-              return itemMs >= startMs && itemMs <= endMs;
-          }
-        } else {
-          const itemMs = itemDate.valueOf();
-          const startMs = dayjs(start2).startOf("day").valueOf();
-          const endMs = dayjs(end2).endOf("day").valueOf();
-          return itemMs >= startMs && itemMs <= endMs;
-        }
-      });
-    } else {
-      const periodFilter = filters.find((f2) => f2.field === "period");
-      if (periodFilter) {
-        itemsToProcess = filterByPeriod(itemsToProcess, periodFilter.value);
-      } else if (useFieldGranularity) {
-        itemsToProcess = filterByPeriod(itemsToProcess, layoutView);
-      }
-      finalItems = filterByDateRange(itemsToProcess, start2, end2);
-    }
-    const finalResult = sortItems(finalItems, sort);
     devTimeEnd(`[useViewData] 为视图 [${sourceName}] 计算数据耗时`);
     return finalResult;
-  }, [allItems, filters, sort, dateRange, keyword, layoutView, isOverviewMode, useFieldGranularity, selectedThemes, selectedCategories, sourceName]);
+  }, [allItems, layoutFilters, filters, sort, dateRange, keyword, layoutView, isOverviewMode, useFieldGranularity, sourceName, viewInstance]);
   return processedItems;
 }
 const ArrowBackIosNewIcon = createSvgIcon(/* @__PURE__ */ u2("path", {
@@ -64163,6 +64954,179 @@ function openLayoutSettingsWidget(layoutId) {
   const widgetId = `layout-settings-${layoutId}`;
   return openFloatingWidget(widgetId, () => /* @__PURE__ */ u2(LayoutSettingsWidgetInner, { layoutId, widgetId }));
 }
+function asDisplayList(value) {
+  if (Array.isArray(value)) return value.map((v2) => String(v2).trim()).filter(Boolean);
+  if (value === null || value === void 0) return [];
+  return String(value).split(/[,，\n]/).map((v2) => v2.trim()).filter(Boolean);
+}
+function describeRule(rule) {
+  if (rule.op === "empty") return `${getFieldLabel(rule.field)} 为空`;
+  if (rule.op === "notEmpty") return `${getFieldLabel(rule.field)} 非空`;
+  if (rule.op === "in" || rule.op === "notIn") {
+    const values2 = asDisplayList(rule.value);
+    const opText = rule.op === "in" ? "属于任一" : "不属于任一";
+    return `${getFieldLabel(rule.field)} ${opText} ${values2.join("、") || "未选择"}`;
+  }
+  if (rule.op === "between") {
+    const values2 = asDisplayList(rule.value);
+    return `${getFieldLabel(rule.field)} 区间 ${values2.join(" ~ ") || String(rule.value ?? "")}`;
+  }
+  return `${getFieldLabel(rule.field)} ${rule.op} ${String(rule.value ?? "")}`;
+}
+function DataFilterPanel({
+  dataStore,
+  filters,
+  items,
+  onChange,
+  legacyMode = false,
+  legacySummary,
+  onMigrateLegacyFilters
+}) {
+  const [open, setOpen] = d(false);
+  const [advancedOpen, setAdvancedOpen] = d(false);
+  const activeCount = filters.length;
+  const sourceItems = items ?? dataStore.queryItems();
+  const fieldOptions = T$1(() => getAllFields(sourceItems), [sourceItems]);
+  const commonFilterFields = T$1(() => ["themePath", "baseCategory", "tags", "type", "priority", "period"], []);
+  const hasAdvancedFilters = T$1(() => filters.some((rule) => rule.op !== "in" || !commonFilterFields.includes(rule.field)), [filters, commonFilterFields]);
+  const handleOpen = () => {
+    setAdvancedOpen(hasAdvancedFilters);
+    setOpen(true);
+  };
+  const handleClose = () => setOpen(false);
+  const handleClear = () => onChange([]);
+  const handleMigrateLegacyFilters = () => {
+    if (onMigrateLegacyFilters) onMigrateLegacyFilters();
+  };
+  const handleDeleteRule = (index) => {
+    onChange(filters.filter((_2, currentIndex) => currentIndex !== index));
+  };
+  return /* @__PURE__ */ u2("div", { class: "tp-toolbar-data-filter", children: [
+    /* @__PURE__ */ u2(
+      Button$1,
+      {
+        size: "small",
+        variant: activeCount > 0 ? "contained" : "outlined",
+        startIcon: /* @__PURE__ */ u2(FilterListIcon, {}),
+        onClick: handleOpen,
+        sx: { textTransform: "none" },
+        children: [
+          "数据筛选",
+          activeCount > 0 ? ` (${activeCount})` : "",
+          legacyMode ? " · 旧版" : ""
+        ]
+      }
+    ),
+    activeCount > 0 && /* @__PURE__ */ u2("div", { class: "filter-popover-selected-chips", children: [
+      filters.slice(0, 3).map((rule, index) => /* @__PURE__ */ u2(
+        Chip,
+        {
+          label: describeRule(rule),
+          size: "small",
+          onDelete: () => handleDeleteRule(index),
+          sx: { height: "20px", fontSize: "0.75rem" }
+        },
+        `${rule.field}-${rule.op}-${index}`
+      )),
+      filters.length > 3 && /* @__PURE__ */ u2(Chip, { label: `+${filters.length - 3}`, size: "small", sx: { height: "20px", fontSize: "0.75rem" } })
+    ] }),
+    /* @__PURE__ */ u2(
+      Dialog,
+      {
+        open,
+        onClose: handleClose,
+        fullWidth: true,
+        maxWidth: "lg",
+        PaperProps: {
+          sx: {
+            width: "min(1180px, calc(100vw - 32px))",
+            maxWidth: "calc(100vw - 32px)",
+            height: "min(760px, calc(100vh - 48px))"
+          }
+        },
+        children: [
+          /* @__PURE__ */ u2(DialogTitle, { sx: { pb: 1 }, children: /* @__PURE__ */ u2(Box$1, { sx: { display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 2 }, children: [
+            /* @__PURE__ */ u2("div", { children: [
+              /* @__PURE__ */ u2(Typography$1, { variant: "h6", component: "div", children: "全局数据筛选" }),
+              /* @__PURE__ */ u2(Typography$1, { variant: "body2", color: "text.secondary", children: "这里的规则会作用于当前布局下的所有视图；单个视图自己的筛选仍在模块设置中维护。" })
+            ] }),
+            /* @__PURE__ */ u2(Box$1, { sx: { display: "flex", alignItems: "center", gap: 1, flexShrink: 0 }, children: [
+              /* @__PURE__ */ u2(Chip, { label: `${fieldOptions.length} 个可筛选字段`, size: "small", variant: "outlined" }),
+              /* @__PURE__ */ u2(Chip, { label: `${activeCount} 条规则`, size: "small", color: activeCount > 0 ? "primary" : "default" })
+            ] })
+          ] }) }),
+          /* @__PURE__ */ u2(Divider$1, {}),
+          /* @__PURE__ */ u2(DialogContent, { sx: { p: 2.5, overflow: "auto" }, children: [
+            legacyMode && /* @__PURE__ */ u2(
+              Alert,
+              {
+                severity: "info",
+                sx: { mb: 2 },
+                action: onMigrateLegacyFilters ? /* @__PURE__ */ u2(Button$1, { color: "inherit", size: "small", onClick: handleMigrateLegacyFilters, children: "转为新版规则" }) : void 0,
+                children: [
+                  "当前规则来自旧版 toolbar 主题/分类筛选",
+                  legacySummary ? `（${legacySummary}）` : "",
+                  "。 继续编辑或清空时会自动保存为新版全局筛选规则，并清空旧字段，避免新旧筛选双写。"
+                ]
+              }
+            ),
+            /* @__PURE__ */ u2(Box$1, { sx: { display: "flex", flexDirection: "column", gap: 2 }, children: [
+              /* @__PURE__ */ u2(
+                CommonFilterPanel,
+                {
+                  title: "常用筛选",
+                  description: "先用主题路径、分类、标签等常用字段筛选：同一字段内多选表示“或”，不同字段之间默认表示“且”。",
+                  dataStore,
+                  filters,
+                  items: sourceItems,
+                  fieldOptions,
+                  onChange
+                }
+              ),
+              /* @__PURE__ */ u2(
+                Accordion,
+                {
+                  expanded: advancedOpen,
+                  onChange: (_2, expanded) => setAdvancedOpen(expanded),
+                  disableGutters: true,
+                  sx: {
+                    border: "1px solid var(--background-modifier-border)",
+                    borderRadius: "10px",
+                    "&:before": { display: "none" }
+                  },
+                  children: [
+                    /* @__PURE__ */ u2(AccordionSummary, { expandIcon: /* @__PURE__ */ u2(ExpandMoreIcon, {}), children: /* @__PURE__ */ u2(Box$1, { sx: { display: "flex", alignItems: "center", gap: 1 }, children: [
+                      /* @__PURE__ */ u2(Typography$1, { sx: { fontWeight: 700 }, children: "高级筛选规则" }),
+                      /* @__PURE__ */ u2(Chip, { label: `${activeCount} 条`, size: "small", variant: "outlined" }),
+                      /* @__PURE__ */ u2(Typography$1, { variant: "body2", color: "text.secondary", children: "需要正则、区间、排除或复杂且/或关系时再展开" })
+                    ] }) }),
+                    /* @__PURE__ */ u2(AccordionDetails, { sx: { pt: 0 }, children: /* @__PURE__ */ u2(
+                      RuleBuilder,
+                      {
+                        title: "筛选",
+                        mode: "filter",
+                        rows: filters,
+                        fieldOptions,
+                        onChange: (rows) => onChange(rows),
+                        dataStore,
+                        variant: "panel"
+                      }
+                    ) })
+                  ]
+                }
+              )
+            ] })
+          ] }),
+          /* @__PURE__ */ u2(Divider$1, {}),
+          /* @__PURE__ */ u2(DialogActions, { sx: { px: 2.5, py: 1.5, justifyContent: "space-between" }, children: [
+            /* @__PURE__ */ u2(Button$1, { size: "small", onClick: handleClear, disabled: activeCount === 0, children: "清空全部规则" }),
+            /* @__PURE__ */ u2(Button$1, { size: "small", variant: "contained", onClick: handleClose, children: "完成" })
+          ] })
+        ]
+      }
+    )
+  ] });
+}
 function resolveGroupFields(groupField, groupFields) {
   if (groupFields && groupFields.length > 0) return groupFields;
   if (groupField) return [groupField];
@@ -64249,8 +65213,7 @@ function buildTimelineViewModel(args) {
   const defaults = JSON.parse(JSON.stringify(TIMELINE_VIEW_DEFAULT_CONFIG));
   const userConfig = module2?.viewConfig || {};
   const config2 = { ...defaults, ...userConfig, categories: userConfig.categories || defaults.categories };
-  const filteredItems = module2?.filters ? filterByRules(items, module2.filters) : items;
-  const timelineTasks = processItemsToTimelineTasks(filteredItems);
+  const timelineTasks = processItemsToTimelineTasks(items);
   const categoriesConfig = config2.categories || {};
   const colorMap = {};
   for (const categoryName in categoriesConfig) {
@@ -64374,14 +65337,6 @@ function getThemeGroup(theme2) {
     child: segments[1]?.name || "任务"
   };
 }
-function matchesTheme(item, selectedThemes) {
-  if (!selectedThemes.length) return true;
-  return !!item.theme && selectedThemes.includes(item.theme);
-}
-function matchesCategory(item, selectedCategories) {
-  if (!selectedCategories.length) return true;
-  return selectedCategories.includes(getBasePath(item.categoryKey));
-}
 function formatRecordTime(item) {
   return String(item.endTime || item.startTime || item.doneDate || "").trim();
 }
@@ -64390,15 +65345,18 @@ function hasRecurringRule(item) {
   return !!value && value.toLowerCase() !== "none";
 }
 function buildTaskExecutionViewModel(params) {
-  const { items, dateRange, viewInstance, keyword, selectedThemes, selectedCategories } = params;
+  const { items, dateRange, viewInstance, keyword, layoutFilters = [] } = params;
   const [start2, end2] = dateRange;
   const startDay = dayjs(start2).startOf("day");
   const endDay = dayjs(end2).endOf("day");
   const onlyRecurring = viewInstance.viewConfig?.onlyRecurring !== false;
-  const filtered = filterByKeyword(filterByRules(items, viewInstance.filters || []), keyword).filter((item) => {
+  const filtered = applyViewBaseFilters({
+    items,
+    layoutFilters,
+    viewFilters: viewInstance.filters || [],
+    keyword
+  }).filter((item) => {
     if (item.type !== "task") return false;
-    if (!matchesTheme(item, selectedThemes)) return false;
-    if (!matchesCategory(item, selectedCategories)) return false;
     if (onlyRecurring && !hasRecurringRule(item)) return false;
     return true;
   });
@@ -64463,10 +65421,7 @@ const ViewContent = ({
   layoutView,
   isOverviewMode,
   useFieldGranularity,
-  selectedThemes,
-  // [新增]
-  selectedCategories,
-  // [新增]
+  layoutFilters,
   app,
   onMarkDone,
   actionService,
@@ -64493,9 +65448,9 @@ const ViewContent = ({
     layoutView,
     isOverviewMode: !!isOverviewMode,
     useFieldGranularity,
-    selectedThemes,
-    selectedCategories
+    layoutFilters
   });
+  const selectedLayoutCategories = T$1(() => getCategoryValuesFromFilters(layoutFilters), [layoutFilters]);
   y(() => {
     if (onDataLoaded) {
       onDataLoaded(viewItems);
@@ -64532,7 +65487,7 @@ const ViewContent = ({
     dateRange,
     module: viewInstance,
     currentView: layoutView,
-    selectedCategories
+    selectedCategories: selectedLayoutCategories
   }) : null;
   const progressViewModel = viewInstance.viewType === "ProgressView" ? buildProgressViewModel({
     items: viewItems,
@@ -64543,8 +65498,7 @@ const ViewContent = ({
     dateRange,
     viewInstance,
     keyword,
-    selectedThemes,
-    selectedCategories
+    layoutFilters
   }) : null;
   const onUpdateTaskTime = q$1(
     async (taskId, updates) => {
@@ -64598,7 +65552,7 @@ const ViewContent = ({
     // [新增]
     inputSettings,
     // [新增]
-    selectedCategories,
+    selectedCategories: selectedLayoutCategories,
     // 通用：Markdown 渲染能力（BlockView/卡片内容等复用）
     messageRenderPort,
     // 仅 BlockView 需要（其它 View 忽略即可）
@@ -64717,23 +65671,22 @@ function LayoutRenderer({ layout, dataStore, app, actionService, timerService })
   };
   const [layoutView, setLayoutView] = d(layout.initialView || "月");
   const [layoutDate, setLayoutDate] = d(getInitialDate());
-  const [selectedThemes, setSelectedThemes] = d(layout.selectedThemes || []);
-  const [selectedCategories, setSelectedCategories] = d(layout.selectedCategories || []);
+  const legacyFilterState = T$1(() => {
+    return getLegacyLayoutFilterState(layout);
+  }, [layout.globalFilters, layout.selectedThemes, layout.selectedCategories]);
+  const globalFilters = legacyFilterState.effectiveFilters;
+  const isUsingLegacyLayoutFilters = legacyFilterState.isLegacyMode && legacyFilterState.hasLegacyValues;
+  const legacyLayoutFilterSummary = T$1(() => {
+    return describeLegacyLayoutFilters(layout);
+  }, [layout.selectedThemes, layout.selectedCategories]);
   const dateRangeForView = T$1(() => {
     const range = calculateTimelineRange(layoutDate, normalizeTimelineView(layoutView));
     return [range.start.toDate(), range.end.toDate()];
   }, [layoutDate, layoutView]);
-  const predefinedCategories = T$1(() => {
-    return inputSettings.categories || [];
-  }, [inputSettings]);
   y(() => {
     setLayoutDate(getInitialDate());
     setLayoutView(layout.initialView || "月");
   }, [layout.id, layout.initialDate, layout.initialDateFollowsNow, layout.initialView]);
-  y(() => {
-    setSelectedThemes(layout.selectedThemes || []);
-    setSelectedCategories(layout.selectedCategories || []);
-  }, [layout.selectedThemes, layout.selectedCategories]);
   const handleExport = q$1((viewId, viewTitle) => {
     const items = modulesDataCache.current[viewId];
     if (!items || items.length === 0) {
@@ -64795,14 +65748,16 @@ function LayoutRenderer({ layout, dataStore, app, actionService, timerService })
   const handleDeleteViewInstance = q$1((viewInstanceId) => {
     useCases.viewInstance.deleteView(viewInstanceId);
   }, [layout.id, useCases.layout]);
-  const handleThemeSelectionChange = q$1((themes) => {
-    setSelectedThemes(themes);
-    useCases.layout.updateLayout(layout.id, { selectedThemes: themes });
+  const handleGlobalFiltersChange = q$1((filters) => {
+    void useCases.layout.updateLayout(layout.id, {
+      globalFilters: filters,
+      selectedThemes: [],
+      selectedCategories: []
+    });
   }, [layout.id, useCases.layout]);
-  const handleCategorySelectionChange = q$1((categories) => {
-    setSelectedCategories(categories);
-    useCases.layout.updateLayout(layout.id, { selectedCategories: categories });
-  }, [layout.id, useCases.layout]);
+  const handleMigrateLegacyLayoutFilters = q$1(() => {
+    void useCases.layout.updateLayout(layout.id, migrateLegacyLayoutFilters(layout));
+  }, [layout, useCases.layout]);
   const renderViewInstance = (viewId) => {
     const viewInstance = allViews.find((v2) => v2.id === viewId);
     if (!viewInstance) return /* @__PURE__ */ u2("div", { class: "think-module", children: [
@@ -64833,8 +65788,7 @@ function LayoutRenderer({ layout, dataStore, app, actionService, timerService })
             layoutView,
             isOverviewMode: false,
             useFieldGranularity: false,
-            selectedThemes,
-            selectedCategories,
+            layoutFilters: globalFilters,
             app,
             onMarkDone: handleMarkItemDone,
             actionService,
@@ -64861,15 +65815,22 @@ function LayoutRenderer({ layout, dataStore, app, actionService, timerService })
         currentDate: layoutDate,
         onViewChange: setLayoutView,
         onDateChange: setLayoutDate,
-        selectedThemes,
-        selectedCategories,
-        onThemeSelectionChange: handleThemeSelectionChange,
-        onCategorySelectionChange: handleCategorySelectionChange,
+        filterSlot: /* @__PURE__ */ u2(
+          DataFilterPanel,
+          {
+            dataStore,
+            items: allItems,
+            filters: globalFilters,
+            onChange: handleGlobalFiltersChange,
+            legacyMode: isUsingLegacyLayoutFilters,
+            legacySummary: legacyLayoutFilterSummary,
+            onMigrateLegacyFilters: handleMigrateLegacyLayoutFilters
+          }
+        ),
         viewInstances: layout.viewInstanceIds.map((id) => allViews.find((v2) => v2.id === id)).filter(Boolean),
         hideToolbar: layout.hideToolbar,
         onLayoutSettingsClick: () => openLayoutSettingsWidget(layout.id),
-        themes: allThemes,
-        predefinedCategories
+        themes: allThemes
       }
     ),
     /* @__PURE__ */ u2("div", { style: gridStyle, children: isStateInitialized && layout.viewInstanceIds.map(renderViewInstance) })
