@@ -6,9 +6,11 @@ import { Box, Typography } from '@mui/material';
 import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
 
 // 定义组件接收的props类型
+export type SimpleSelectOption = { value: string; label: string; group?: string; disabled?: boolean };
+
 type SimpleSelectProps = {
     value: string;
-    options: Array<{ value: string; label: string }>;
+    options: SimpleSelectOption[];
     onChange: (newValue: string) => void;
     placeholder?: string;
     fullWidth?: boolean;
@@ -42,8 +44,9 @@ export function SimpleSelect({ value, options, onChange, placeholder, fullWidth,
     }, [wrapperRef]); // 依赖项是ref本身
 
     // 处理选择一个选项
-    const handleOptionClick = (optionValue: string) => {
-        onChange(optionValue); // 调用父组件传入的回调
+    const handleOptionClick = (option: SimpleSelectOption) => {
+        if (disabled || option.disabled) return;
+        onChange(option.value); // 调用父组件传入的回调
         setIsOpen(false); // 关闭菜单
     };
 
@@ -99,27 +102,46 @@ export function SimpleSelect({ value, options, onChange, placeholder, fullWidth,
                         zIndex: 1300, // 确保在其他元素之上
                     }}
                 >
-                    {options.map(option => (
-                        <Box
-                            key={option.value}
-                            onClick={() => handleOptionClick(option.value)}
-                            sx={{
-                                padding: '8px 12px',
-                                fontSize: 13,
-                                cursor: disabled ? 'not-allowed' : 'pointer',
-                    opacity: disabled ? 0.55 : 1,
-                                '&:hover': {
-                                    bgcolor: 'action.hover',
-                                },
-                                ...(value === option.value && {
-                                    bgcolor: 'action.selected',
-                                    fontWeight: 500,
-                                }),
-                            }}
-                        >
-                            {option.label}
-                        </Box>
-                    ))}
+                    {options.map((option, index) => {
+                        const showGroupHeader = option.group && option.group !== options[index - 1]?.group;
+                        return (
+                            <div key={`${option.group || 'default'}-${option.value}`}>
+                                {showGroupHeader && (
+                                    <Box
+                                        sx={{
+                                            px: 1.5,
+                                            py: 0.75,
+                                            fontSize: 12,
+                                            fontWeight: 700,
+                                            color: 'text.secondary',
+                                            bgcolor: 'action.hover',
+                                            borderTop: index === 0 ? 'none' : '1px solid rgba(0,0,0,0.06)',
+                                        }}
+                                    >
+                                        {option.group}
+                                    </Box>
+                                )}
+                                <Box
+                                    onClick={() => handleOptionClick(option)}
+                                    sx={{
+                                        padding: '8px 12px',
+                                        fontSize: 13,
+                                        cursor: disabled || option.disabled ? 'not-allowed' : 'pointer',
+                                        opacity: disabled || option.disabled ? 0.55 : 1,
+                                        '&:hover': {
+                                            bgcolor: option.disabled ? 'transparent' : 'action.hover',
+                                        },
+                                        ...(value === option.value && {
+                                            bgcolor: 'action.selected',
+                                            fontWeight: 500,
+                                        }),
+                                    }}
+                                >
+                                    {option.label}
+                                </Box>
+                            </div>
+                        );
+                    })}
                 </Box>
             )}
         </Box>

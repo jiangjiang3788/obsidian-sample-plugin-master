@@ -16,6 +16,7 @@ import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import { SimpleSelect } from '@shared/public';
 import { DataStore } from '@core/public';
 import { getAllFields, readField, getFieldLabel, FilterRule, SortRule } from '@core/public';
+import { FieldPickerAutocomplete } from './FieldPickerAutocomplete';
 
 function useUniqueFieldValues(dataStore: DataStore) {
     return useMemo(() => {
@@ -193,7 +194,6 @@ export function RuleBuilder({ title, mode, rows, fieldOptions, onChange, dataSto
         return `${getFieldLabel(sortRule.field)} ${sortRule.dir === 'asc' ? '升序' : '降序'}`;
     };
 
-    const fieldSelectOptions = fieldOptions.map((f: string) => ({ value: f, label: getFieldLabel(f) }));
     const operatorOptions = [
         { value: '=', label: '=' },
         { value: '!=', label: '!=' },
@@ -217,22 +217,15 @@ export function RuleBuilder({ title, mode, rows, fieldOptions, onChange, dataSto
         field: string,
         onFieldChange: (field: string) => void,
         placeholder = '搜索 / 选择字段'
-    ) => {
-        const selectedFieldOption = fieldSelectOptions.find(option => option.value === field) || null;
-        return (
-            <Autocomplete
-                size="small"
-                fullWidth
-                disablePortal
-                options={fieldSelectOptions}
-                value={selectedFieldOption}
-                getOptionLabel={(option: any) => option?.label || ''}
-                isOptionEqualToValue={(option: any, value: any) => option?.value === value?.value}
-                onChange={(_, option: any) => onFieldChange(option?.value || '')}
-                renderInput={(params: any) => <TextField {...params} variant="outlined" placeholder={placeholder} />}
-            />
-        );
-    };
+    ) => (
+        <FieldPickerAutocomplete
+            value={field}
+            options={fieldOptions}
+            onChange={onFieldChange}
+            placeholder={placeholder}
+            helperText={variant === 'panel' ? '字段按核心字段 / 文件字段 / 自定义字段分组。' : undefined}
+        />
+    );
 
     const renderValueInput = (
         rule: FilterRule,

@@ -2,6 +2,15 @@
 import { h } from 'preact';
 
 import type { TemplateField } from '@core/public';
+import {
+  getTemplateFieldInputType,
+  getTemplateFieldSemantic,
+  isTemplateImageField,
+  isTemplateMultiValueField,
+  isTemplatePathField,
+  isTemplateTagField,
+  normalizeImageValue,
+} from '@core/public';
 
 import { Box, Button, FormControl, Stack, Typography } from '@mui/material';
 
@@ -22,6 +31,19 @@ export interface QuickInputEditorFieldsProps {
   showTimeDirectionControl?: boolean;
 }
 
+function toArrayValue(value: unknown): string[] {
+  if (Array.isArray(value)) return value.map((v) => String(typeof v === 'object' && v !== null ? (v as any).value ?? (v as any).label ?? '' : v)).filter(Boolean);
+  if (value && typeof value === 'object') return [String((value as any).value ?? (value as any).label ?? '')].filter(Boolean);
+  return String(value ?? '')
+    .split(/[,，\n]/)
+    .map((part) => part.trim())
+    .filter(Boolean);
+}
+
+function isImagePath(value: unknown): boolean {
+  return !!normalizeImageValue(value);
+}
+
 export function QuickInputEditorFields({ getResourcePath, template, formData, dense = false, onUpdateField, timeDirection = 'forward', onTimeDirectionChange, onRequestSubmit, isMobileLike = false, showTimeDirectionControl = false }: QuickInputEditorFieldsProps) {
   const handleUpdate = (key: string, value: any, isOptionObject = false) => {
     onUpdateField(key, value, isOptionObject);
@@ -35,11 +57,15 @@ export function QuickInputEditorFields({ getResourcePath, template, formData, de
   };
 
   const isInlineRowField = (field: TemplateField) => {
+    const semantic = getTemplateFieldSemantic(field);
     const label = field.label || field.key;
-    return label === '状态' || label === '重复' || label === '日期';
+    return semantic === 'status' || semantic === 'recurrence' || semantic === 'date' || label === '状态' || label === '重复' || label === '日期';
   };
 
-  const isTimeField = (field: TemplateField) => ['时间', '结束', '时长'].includes(field.label || field.key);
+  const isTimeField = (field: TemplateField) => {
+    const semantic = getTemplateFieldSemantic(field);
+    return semantic === 'startTime' || semantic === 'endTime' || semantic === 'duration' || ['时间', '结束', '时长'].includes(field.label || field.key);
+  };
 
   const renderFieldLabel = (label: string) => (
     <Typography
@@ -107,24 +133,124 @@ export function QuickInputEditorFields({ getResourcePath, template, formData, de
     );
   };
 
+  const renderMultiOptionPills = (field: TemplateField) => {
+    const selected = new Set(toArrayValue(formData[field.key]));
+    return (
+      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+        {(field.options || []).map((opt: any, index: number) => {
+          const optValue = String(opt.value ?? opt.label ?? '');
+          const isSelected = selected.has(optValue);
+          return (
+            <SelectablePill
+              key={index}
+              selected={isSelected}
+              onClick={() => {
+                const next = new Set(selected);
+                if (isSelected) next.delete(optValue); else next.add(optValue);
+                handleUpdate(field.key, Array.from(next));
+              }}
+              title={opt.label || opt.value}
+            >
+              {opt.label || opt.value}
+            </SelectablePill>
+          );
+        })}
+      </Box>
+    );
+  };
+
+  const renderImagePreview = (rawValue: unknown) => {
+    const image = normalizeImageValue(rawValue);
+    if (!image) return null;
+    const src = /^https?:\/\//i.test(image.src) ? image.src : getResourcePath(image.src);
+    return (
+      <Box sx={{ mt: 0.8, display: 'flex', alignItems: 'center', gap: 1 }}>
+        <img
+          src={src}
+          alt={image.alt || image.src}
+          style={{ width: '56px', height: '56px', objectFit: 'cover', borderRadius: '8px', border: '1px solid var(--background-modifier-border)' }}
+        />
+        <Typography variant="caption" sx={{ color: 'text.secondary', overflowWrap: 'anywhere' }}>{image.src}</Typography>
+      </Box>
+    );
+  };
+
+  const renderTextAreaValueField = (field: TemplateField, label: string, value: unknown) => {
+    const multiline = isTemplateMultiValueField(field);
+    const displayValue = Array.isArray(value) ? value.join('\n') : String(value ?? '');
+    const control = (
+      <textarea
+        className="think-native-input think-native-input--textarea"
+        value={displayValue}
+        rows={dense ? 3 : 4}
+        onInput={(e: any) => {
+          handleUpdate(field.key, e.target.value);
+          if (e.target instanceof HTMLTextAreaElement) autoResizeTextarea(e.target);
+        }}
+        onKeyDown={(e: any) => {
+          e.stopPropagation();
+          if (isMobileLike) return;
+          if ((e.metaKey || e.ctrlKey) && e.key === 'Enter' && !(e.nativeEvent?.isComposing)) {
+            onRequestSubmit?.();
+            e.preventDefault();
+          }
+        }}
+        placeholder={multiline ? '每行一个，或用逗号分隔' : undefined}
+        ref={(el: HTMLTextAreaElement | null) => autoResizeTextarea(el)}
+        style={{ resize: 'none', overflowY: 'hidden', minHeight: dense ? '78px' : '96px' }}
+      />
+    );
+    return renderStandardField(label, control, true);
+  };
+
   const renderField = (field: TemplateField) => {
-    const isComplex = typeof formData[field.key] === 'object' && formData[field.key] !== null;
+    const inputType = getTemplateFieldInputType(field);
+    const isComplex = typeof formData[field.key] === 'object' && formData[field.key] !== null && !Array.isArray(formData[field.key]);
     const value = isComplex ? formData[field.key]?.value : formData[field.key];
     const label = field.label || field.key;
 
-    switch (field.type) {
+    if (inputType === 'multiSelect') {
+      return renderStandardField(label, renderMultiOptionPills(field));
+    }
+
+    if (isTemplateTagField(field) || inputType === 'multiPath' || inputType === 'multiImage') {
+      return renderTextAreaValueField(field, label, value);
+    }
+
+    if (isTemplateImageField(field)) {
+      const control = (
+        <Box>
+          <input
+            className="think-native-input"
+            value={String(value || '')}
+            onInput={(e: any) => handleUpdate(field.key, e.target.value)}
+            onKeyDown={(e: any) => {
+              e.stopPropagation();
+              if (!isMobileLike && e.key === 'Enter' && !(e.metaKey || e.ctrlKey || e.shiftKey) && !(e.nativeEvent?.isComposing)) {
+                onRequestSubmit?.();
+                e.preventDefault();
+              }
+            }}
+            placeholder="图片路径、![[图片.png]] 或 URL"
+          />
+          {renderImagePreview(value)}
+        </Box>
+      );
+      return renderStandardField(label, control);
+    }
+
+    switch (inputType) {
       case 'rating':
         return renderStandardField(
           label,
           <Stack direction="row" spacing={0.9} sx={{ mt: 0.1, flexWrap: 'wrap' }}>
             {(field.options || []).map((opt: any) => {
               const isSelected = isComplex && formData[field.key]?.label === opt.label && formData[field.key]?.value === opt.value;
-              const isImagePath =
-                opt.value && (opt.value.endsWith('.png') || opt.value.endsWith('.jpg') || opt.value.endsWith('.jpeg') || opt.value.endsWith('.svg'));
+              const imageValue = isImagePath(opt.value) ? normalizeImageValue(opt.value) : undefined;
 
-              const displayContent = isImagePath ? (
+              const displayContent = imageValue ? (
                 <img
-                  src={getResourcePath(opt.value)}
+                  src={/^https?:\/\//i.test(imageValue.src) ? imageValue.src : getResourcePath(imageValue.src)}
                   alt={opt.label}
                   style={{ width: '22px', height: '22px', objectFit: 'contain' }}
                 />
@@ -162,9 +288,11 @@ export function QuickInputEditorFields({ getResourcePath, template, formData, de
           ? renderInlineRow(label, renderOptionPills(field))
           : renderStandardField(label, renderOptionPills(field));
 
-      case 'select': {
+      case 'select':
+      case 'singleSelect':
+      case 'path': {
         const selectOptions = (field.options || []).map((opt: any) => ({ value: opt.value, label: opt.label || opt.value }));
-        const selectControl = (
+        const selectControl = selectOptions.length ? (
           <FormControl fullWidth>
             <SimpleSelect
               value={value || ''}
@@ -174,10 +302,19 @@ export function QuickInputEditorFields({ getResourcePath, template, formData, de
                 const selectedOption = field.options?.find((opt: any) => opt.value === selectedValue);
                 if (selectedOption) {
                   handleUpdate(field.key, { value: selectedOption.value, label: selectedOption.label || selectedOption.value }, true);
+                } else {
+                  handleUpdate(field.key, selectedValue);
                 }
               }}
             />
           </FormControl>
+        ) : (
+          <input
+            className="think-native-input"
+            value={value || ''}
+            onInput={(e: any) => handleUpdate(field.key, e.target.value)}
+            placeholder={isTemplatePathField(field) ? '例如：生活/健康' : undefined}
+          />
         );
 
         return isInlineRowField(field)
@@ -187,17 +324,17 @@ export function QuickInputEditorFields({ getResourcePath, template, formData, de
 
       default: {
         const commonInputProps: any = {
-          className: field.type === 'textarea' ? 'think-native-input think-native-input--textarea' : 'think-native-input',
+          className: inputType === 'textarea' ? 'think-native-input think-native-input--textarea' : 'think-native-input',
           value: value || '',
           onInput: (e: any) => {
             handleUpdate(field.key, e.target.value);
-            if (field.type === 'textarea' && e.target instanceof HTMLTextAreaElement) {
+            if (inputType === 'textarea' && e.target instanceof HTMLTextAreaElement) {
               autoResizeTextarea(e.target);
             }
           },
           onKeyDown: (e: any) => {
             e.stopPropagation();
-            if (field.type === 'textarea') {
+            if (inputType === 'textarea') {
               if (isMobileLike) return;
               if ((e.metaKey || e.ctrlKey) && e.key === 'Enter' && !(e.nativeEvent?.isComposing)) {
                 onRequestSubmit?.();
@@ -213,7 +350,7 @@ export function QuickInputEditorFields({ getResourcePath, template, formData, de
           },
         };
 
-        const control = field.type === 'textarea' ? (
+        const control = inputType === 'textarea' ? (
           <textarea
             {...commonInputProps}
             rows={dense ? 4 : 5}
@@ -224,7 +361,7 @@ export function QuickInputEditorFields({ getResourcePath, template, formData, de
         ) : (
           <input
             {...commonInputProps}
-            type={field.type === 'text' ? 'text' : (field.type as any)}
+            type={inputType === 'text' ? 'text' : (inputType as any)}
             min={field.min}
             max={field.max}
             enterKeyHint={isMobileLike ? 'enter' : 'done'}
@@ -236,33 +373,34 @@ export function QuickInputEditorFields({ getResourcePath, template, formData, de
           return renderInlineRow(label, control);
         }
 
-        return renderStandardField(label, control, field.type === 'textarea');
+        return renderStandardField(label, control, inputType === 'textarea');
       }
     }
   };
 
   const renderFields = () => {
-    const timeFieldKeys = ['时间', '结束', '时长'];
-    const dateFieldKey = '日期';
-
     const fieldsToRender: any[] = [];
-    const dateField = template.fields.find((f: any) => f.key === dateFieldKey);
     const timeFields: any[] = [];
+    const dateFields: any[] = [];
 
     template.fields.forEach((field: any) => {
-      if (field.key !== dateFieldKey && !timeFieldKeys.includes(field.key)) {
-        fieldsToRender.push(<div key={field.id}>{renderField(field)}</div>);
-      } else if (timeFieldKeys.includes(field.key)) {
+      const semantic = getTemplateFieldSemantic(field);
+      if (semantic === 'date') {
+        dateFields.push(field);
+      } else if (semantic === 'startTime' || semantic === 'endTime' || semantic === 'duration') {
         timeFields.push(field);
+      } else {
+        fieldsToRender.push(<div key={field.id}>{renderField(field)}</div>);
       }
     });
 
-    if (dateField) {
-      fieldsToRender.push(<div key={dateField.id}>{renderField(dateField)}</div>);
-    }
+    dateFields.forEach((field: any) => {
+      fieldsToRender.push(<div key={field.id}>{renderField(field)}</div>);
+    });
 
     if (timeFields.length > 0) {
-      const sortedTimeFields = timeFieldKeys.map((key) => timeFields.find((f) => f.key === key)).filter((f) => f !== undefined);
+      const order = { startTime: 0, endTime: 1, duration: 2 } as Record<string, number>;
+      const sortedTimeFields = [...timeFields].sort((a, b) => (order[getTemplateFieldSemantic(a)] ?? 99) - (order[getTemplateFieldSemantic(b)] ?? 99));
 
       fieldsToRender.push(
         <Box key="time-fields-wrapper" sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
@@ -271,7 +409,7 @@ export function QuickInputEditorFields({ getResourcePath, template, formData, de
             className="think-form-row"
             sx={{
               display: 'grid',
-              gridTemplateColumns: { xs: '1fr', sm: 'repeat(3, minmax(0, 1fr))' },
+              gridTemplateColumns: { xs: '1fr', sm: `repeat(${Math.min(sortedTimeFields.length, 3)}, minmax(0, 1fr))` },
               gap: 1.25,
               pt: 0.2,
             }}

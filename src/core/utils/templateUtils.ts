@@ -1,6 +1,7 @@
 // src/core/utils/templateUtils.ts
 import { dayjs } from './date';
 import { devError } from './devLogger';
+import { formatFieldValueForTemplate } from '@/core/records/codec/FieldValueCodec';
 
 /**
  * @file 模板渲染工具函数
@@ -8,6 +9,11 @@ import { devError } from './devLogger';
  * 这是一个独立的、无状态的纯函数，用于将模板字符串和数据对象渲染成最终的文本。
  * 它不依赖任何服务，可以被安全地在任何地方调用。
  */
+
+
+function formatTemplateValue(value: unknown): string {
+    return formatFieldValueForTemplate(value);
+}
 
 /**
  * 根据给定的数据渲染一个模板字符串。
@@ -51,11 +57,7 @@ export function renderTemplate(templateString: string, data: Record<string, any>
                     }
                 }
 
-                if (typeof value === 'object' && value !== null && 'label' in value) {
-                    result = String(value.label);
-                } else {
-                    result = value !== null && value !== undefined ? String(value) : '';
-                }
+                result = formatTemplateValue(value);
             }
             return result;
         } catch (e: any) {

@@ -1167,6 +1167,384 @@ function applyExplicitThemeViewFields(item) {
   item.themePathNormalized = parts.themePath || void 0;
   return item;
 }
+const LEGACY_EXTRA_ALIAS_KEYS = [
+  "正文",
+  "内容",
+  "任务内容",
+  "记录内容",
+  "editableText"
+];
+const LEGACY_THEME_FIELD_KEYS = [
+  "theme",
+  "主题"
+];
+const LEGACY_IMAGE_FIELD_KEYS = [
+  "pintu",
+  "评图"
+];
+const LEGACY_CATEGORY_FIELD_KEYS = [
+  "category",
+  "categoryKey",
+  "分类",
+  "类别",
+  "分类路径"
+];
+const LEGACY_TAG_FIELD_KEYS = [
+  "tag",
+  "tags",
+  "标签"
+];
+const normalizeLegacyKey = (key) => String(key ?? "").trim();
+const extraAliasSet = new Set(LEGACY_EXTRA_ALIAS_KEYS);
+const themeAliasSet = new Set(LEGACY_THEME_FIELD_KEYS);
+const imageAliasSet = new Set(LEGACY_IMAGE_FIELD_KEYS);
+const categoryAliasSet = new Set(LEGACY_CATEGORY_FIELD_KEYS);
+const tagAliasSet = new Set(LEGACY_TAG_FIELD_KEYS);
+function isLegacyExtraAliasKey(key) {
+  return extraAliasSet.has(normalizeLegacyKey(key));
+}
+function isLegacyThemeFieldKey(key) {
+  return themeAliasSet.has(normalizeLegacyKey(key));
+}
+function isLegacyImageFieldKey(key) {
+  return imageAliasSet.has(normalizeLegacyKey(key));
+}
+function isLegacyCategoryFieldKey(key) {
+  return categoryAliasSet.has(normalizeLegacyKey(key));
+}
+function isLegacyTagFieldKey(key) {
+  return tagAliasSet.has(normalizeLegacyKey(key));
+}
+function getLegacyAliasTargetField(key) {
+  if (isLegacyThemeFieldKey(key)) return "themePath";
+  if (isLegacyImageFieldKey(key)) return "image";
+  if (isLegacyCategoryFieldKey(key)) return "categoryKey";
+  if (isLegacyTagFieldKey(key)) return "tags";
+  return void 0;
+}
+const IMAGE_EXT_RE = /\.(png|jpe?g|gif|webp|svg|bmp|avif)$/i;
+function isImageLikeValue(value) {
+  const raw = String(value ?? "").trim();
+  return !!raw && (/^https?:\/\//i.test(raw) || /^!\[\[.+\]\]$/.test(raw) || IMAGE_EXT_RE.test(raw));
+}
+function normalizeImageValue(value) {
+  if (value && typeof value === "object" && "src" in value) {
+    const src2 = String(value.src || "").trim();
+    if (!src2) return void 0;
+    return {
+      src: src2,
+      kind: inferImageKind(src2),
+      alt: typeof value.alt === "string" ? value.alt : void 0,
+      caption: typeof value.caption === "string" ? value.caption : void 0
+    };
+  }
+  const raw = String(value ?? "").trim();
+  if (!raw) return void 0;
+  const wikilink = raw.match(/^!\[\[(.+?)\]\]$/);
+  const src = wikilink ? wikilink[1].trim() : raw;
+  return { src, kind: inferImageKind(raw) };
+}
+function inferImageKind(src) {
+  if (/^https?:\/\//i.test(src)) return "url";
+  if (/^!\[\[.+\]\]$/.test(src)) return "wikilink";
+  if (src.includes("/") || IMAGE_EXT_RE.test(src)) return "vault";
+  return "unknown";
+}
+function isImageFieldDefinition(def) {
+  return !!def && (def.type === "image" || def.inputType === "image" || def.inputType === "multiImage" || def.semantic === "image");
+}
+const FIELD_CATEGORY_LABELS = {
+  core: "核心字段",
+  file: "文件字段",
+  custom: "自定义字段"
+};
+const FIELD_CATEGORY_ORDER = ["core", "file", "custom"];
+const text = (partial2) => ({
+  type: "string",
+  ...partial2
+});
+const FIELD_REGISTRY = {
+  // --- 核心字段 ---
+  id: text({ key: "id", label: "记录ID", category: "core", source: "item", semantic: "id", description: "内部记录标识" }),
+  type: text({ key: "type", label: "记录类型", category: "core", source: "item", semantic: "recordType", description: "任务或块等记录类型" }),
+  title: text({ key: "title", label: "标题", category: "core", source: "item", semantic: "title", inputType: "text", description: "记录标题或主要摘要" }),
+  content: text({ key: "content", label: "内容", category: "core", source: "item", semantic: "body", inputType: "textarea", description: "记录正文或原始内容" }),
+  editableText: text({ key: "editableText", label: "可编辑正文", category: "core", source: "item", semantic: "body", inputType: "textarea", hiddenByDefault: true, description: "编辑态正文真源" }),
+  rawSource: text({ key: "rawSource", label: "原始源文本", category: "core", source: "item", semantic: "body", hiddenByDefault: true }),
+  // --- 内置核心业务字段 ---
+  categoryKey: text({ key: "categoryKey", label: "分类路径", type: "path", inputType: "path", category: "core", source: "item", semantic: "categoryPath", hierarchical: true, aliases: ["categoryPath", "分类", "类别", "分类路径"], description: "完整分类路径，例如 闪念/感受" }),
+  tags: { key: "tags", label: "标签", type: "tags", inputType: "multiTag", category: "core", source: "item", semantic: "tags", cardinality: "multi", hierarchical: true, aliases: ["标签", "tag", "tags"], description: "多值层级标签，例如 项目/插件、地点/家", formatter: (v2) => Array.isArray(v2) ? v2.join(", ") : String(v2 ?? "") },
+  date: { key: "date", label: "日期", type: "date", inputType: "date", category: "core", source: "item", semantic: "date", aliases: ["日期", "date"], description: "记录的主要日期" },
+  priority: text({ key: "priority", label: "优先级", category: "core", source: "item", semantic: "priority" }),
+  icon: { key: "icon", label: "图标", type: "icon", inputType: "text", category: "core", source: "item", semantic: "icon" },
+  recurrence: text({ key: "recurrence", label: "重复规则", category: "core", source: "item", semantic: "recurrence" }),
+  period: text({ key: "period", label: "字段粒度", category: "core", source: "item", semantic: "period", inputType: "singleSelect", description: "时间粒度：年/季/月/周/天" }),
+  startTime: { key: "startTime", label: "开始时间", type: "time", inputType: "time", category: "core", source: "item", semantic: "startTime", aliases: ["时间", "time", "start"] },
+  endTime: { key: "endTime", label: "结束时间", type: "time", inputType: "time", category: "core", source: "item", semantic: "endTime", aliases: ["结束", "end"] },
+  duration: { key: "duration", label: "时长", type: "number", inputType: "number", category: "core", source: "item", semantic: "duration", aliases: ["时长", "duration"] },
+  rating: { key: "rating", label: "评分", type: "number", inputType: "rating", category: "core", source: "item", semantic: "rating", aliases: ["评分", "rating"] },
+  image: { key: "image", label: "图片", type: "image", inputType: "image", category: "core", source: "item", semantic: "image", aliases: ["图片", "image", "评图", "pintu"], description: "通用图片字段；当前兼容读取旧 pintu/评图 数据" },
+  // --- 主题语义：只从显式 theme 派生，header 永不参与 ---
+  themePath: text({ key: "themePath", label: "主题路径", type: "path", inputType: "path", category: "core", source: "derived", semantic: "themePath", hierarchical: true, aliases: ["主题", "主题路径", "完整主题", "themePath"], description: "完整主题路径；筛选/分组默认使用此字段" }),
+  rootTheme: text({ key: "rootTheme", label: "根主题", type: "path", category: "core", source: "derived", semantic: "themePath", hierarchical: true, aliases: ["根主题", "themeRoot"] }),
+  leafTheme: text({ key: "leafTheme", label: "叶主题", type: "path", category: "core", source: "derived", semantic: "themePath", hierarchical: true, aliases: ["叶主题", "themeLeaf"] }),
+  // --- 分类派生 ---
+  baseCategory: text({ key: "baseCategory", label: "根分类", type: "path", category: "core", source: "derived", semantic: "categoryPath", hierarchical: true, aliases: ["根分类", "rootCategory", "分类根"] }),
+  leafCategory: text({ key: "leafCategory", label: "叶分类", type: "path", category: "core", source: "derived", semantic: "categoryPath", hierarchical: true, aliases: ["叶分类", "leafCategory"] }),
+  // --- 文件字段 ---
+  "file.path": text({ key: "file.path", label: "文件路径", category: "file", source: "file", semantic: "filePath", aliases: ["文件路径", "filepath", "filePath", "path"] }),
+  "file.basename": text({ key: "file.basename", label: "文件名", category: "file", source: "file", semantic: "fileName", aliases: ["文件名", "filename", "basename"] }),
+  "file.name": text({ key: "file.name", label: "文件名", category: "file", source: "file", semantic: "fileName", hiddenByDefault: true }),
+  "file.folder": text({ key: "file.folder", label: "文件夹", category: "file", source: "file", semantic: "fileFolder", aliases: ["文件夹"] }),
+  folder: text({ key: "folder", label: "父文件夹", category: "file", source: "file", semantic: "fileFolder", aliases: ["父文件夹"] }),
+  header: text({ key: "header", label: "所在标题/章节", category: "file", source: "file", semantic: "heading", aliases: ["所在标题", "所在章节"], description: "Markdown 所在章节，只表示位置，绝不作为主题" }),
+  // --- 时间/统计派生 ---
+  startISO: { key: "startISO", label: "开始日期", type: "date", category: "core", source: "derived", semantic: "date" },
+  endISO: { key: "endISO", label: "结束日期", type: "date", category: "core", source: "derived", semantic: "date" },
+  periodCount: { key: "periodCount", label: "粒度序号", type: "number", category: "core", source: "derived", semantic: "period" },
+  displayCount: { key: "displayCount", label: "显示次数", type: "number", category: "core", source: "item" },
+  levelCount: { key: "levelCount", label: "等级次数", type: "number", category: "core", source: "item" },
+  countForLevel: { key: "countForLevel", label: "计入等级", type: "boolean", category: "core", source: "item" },
+  manuallyEdited: { key: "manuallyEdited", label: "手动编辑", type: "boolean", category: "core", source: "item" }
+};
+const LEGACY_EXTRA_ALIAS_SET$1 = new Set(LEGACY_EXTRA_ALIAS_KEYS);
+function isVisibleExtraField(_item, key) {
+  return !LEGACY_EXTRA_ALIAS_SET$1.has(key);
+}
+function inferExtraFieldType(value) {
+  if (typeof value === "number") return "number";
+  if (typeof value === "boolean") return "boolean";
+  if (isImageLikeValue(value)) return "image";
+  return "string";
+}
+function getAvailableFields(items) {
+  const allFields = /* @__PURE__ */ new Map();
+  const registeredLabels = /* @__PURE__ */ new Set();
+  Object.values(FIELD_REGISTRY).forEach((def) => {
+    if (def.hiddenByDefault) return;
+    allFields.set(def.key, def);
+    registeredLabels.add(def.label);
+  });
+  items.forEach((it) => {
+    Object.keys(it.extra || {}).forEach((key) => {
+      if (!isVisibleExtraField(it, key)) return;
+      if (registeredLabels.has(key)) return;
+      const fullKey = "extra." + key;
+      if (!allFields.has(fullKey)) {
+        const value = it.extra[key];
+        const inferredType = inferExtraFieldType(value);
+        allFields.set(fullKey, {
+          key: fullKey,
+          label: key,
+          type: inferredType,
+          inputType: inferredType === "image" ? "image" : inferredType === "boolean" ? "boolean" : inferredType === "number" ? "number" : "text",
+          semantic: inferredType === "image" ? "image" : "none",
+          category: "custom",
+          source: "extra",
+          cardinality: "single",
+          description: "从 Markdown 中显式未知 KV 解析出的自定义字段"
+        });
+      }
+    });
+  });
+  return Array.from(allFields.values()).sort((a2, b2) => a2.label.localeCompare(b2.label, "zh"));
+}
+function getFieldCategory(key) {
+  const def = getFieldDefinition(key);
+  if (!def) return key.startsWith("extra.") ? "custom" : "core";
+  return FIELD_CATEGORY_ORDER.includes(def.category) ? def.category : "custom";
+}
+function getFieldCategoryLabel(key) {
+  return FIELD_CATEGORY_LABELS[getFieldCategory(key)];
+}
+function getFieldPickerOptions(fields) {
+  const seen = /* @__PURE__ */ new Set();
+  const options = [];
+  for (const field of fields || []) {
+    const value = getCanonicalFieldKey(field);
+    if (!value || seen.has(value)) continue;
+    seen.add(value);
+    const def = getFieldDefinition(value);
+    const category = def?.category && FIELD_CATEGORY_ORDER.includes(def.category) ? def.category : "custom";
+    options.push({
+      value,
+      label: def?.label || getFieldLabel(value),
+      category,
+      group: FIELD_CATEGORY_LABELS[category],
+      description: def?.description
+    });
+  }
+  return options.sort((a2, b2) => {
+    const byCategory = FIELD_CATEGORY_ORDER.indexOf(a2.category) - FIELD_CATEGORY_ORDER.indexOf(b2.category);
+    if (byCategory !== 0) return byCategory;
+    return a2.label.localeCompare(b2.label, "zh-CN");
+  });
+}
+const FIELD_ALIAS_MAP = {};
+for (const def of Object.values(FIELD_REGISTRY)) {
+  FIELD_ALIAS_MAP[def.key] = def.key;
+  FIELD_ALIAS_MAP[def.label] = def.key;
+  (def.aliases || []).forEach((alias) => {
+    FIELD_ALIAS_MAP[alias] = def.key;
+  });
+}
+function getCanonicalFieldKey(key) {
+  const raw = String(key || "").trim();
+  if (!raw) return raw;
+  if (raw.startsWith("extra.") || raw.startsWith("file.")) return raw;
+  const legacyTarget = getLegacyAliasTargetField(raw);
+  if (legacyTarget) return legacyTarget;
+  return FIELD_ALIAS_MAP[raw] || raw;
+}
+function getFieldDefinition(key) {
+  const canonical = getCanonicalFieldKey(key);
+  if (FIELD_REGISTRY[canonical]) return FIELD_REGISTRY[canonical];
+  if (canonical.startsWith("extra.")) {
+    const label = canonical.slice(6);
+    return { key: canonical, label, type: "custom", inputType: "text", semantic: "none", category: "custom", source: "extra" };
+  }
+  return void 0;
+}
+const FIELD_LABEL_ALIASES = {
+  filename: "文件名",
+  basename: "文件名",
+  filepath: "文件路径",
+  filePath: "文件路径",
+  path: "路径",
+  themeRoot: "根主题",
+  themeLeaf: "叶主题",
+  rootCategory: "根分类",
+  leafCategory: "叶分类",
+  主题路径: "主题路径",
+  完整主题: "主题路径"
+};
+function getFieldLabel(key) {
+  const def = getFieldDefinition(key);
+  if (def) return def.label;
+  if (FIELD_LABEL_ALIASES[key]) return FIELD_LABEL_ALIASES[key];
+  if (key.startsWith("extra.")) return key.slice(6);
+  if (key.startsWith("file.")) {
+    const tail = key.slice(5);
+    return FIELD_LABEL_ALIASES[tail] || `文件.${tail}`;
+  }
+  return key;
+}
+function normalizePathParts(value) {
+  if (Array.isArray(value)) {
+    return value.flatMap(normalizePathParts);
+  }
+  const raw = String(value ?? "").trim();
+  if (!raw) return [];
+  return raw.replace(/^#+/, "").split("/").map((part) => part.trim()).filter(Boolean);
+}
+function normalizeHierarchyPath(value) {
+  const parts = normalizePathParts(value);
+  return parts.length ? parts.join("/") : void 0;
+}
+function splitHierarchyPath(value) {
+  const parts = normalizePathParts(value);
+  const path = parts.length ? parts.join("/") : void 0;
+  return {
+    path,
+    parts,
+    root: parts[0],
+    leaf: parts.length ? parts[parts.length - 1] : void 0
+  };
+}
+function normalizeTag(value) {
+  const normalized = normalizeHierarchyPath(String(value ?? "").replace(/^#/, ""));
+  return normalized || void 0;
+}
+function parseTagList(value) {
+  const rawValues = Array.isArray(value) ? value : String(value ?? "").split(/[,，]/);
+  const tags2 = rawValues.map(normalizeTag).filter((tag) => !!tag);
+  return Array.from(new Set(tags2));
+}
+function normalizeFieldKey(field) {
+  return getCanonicalFieldKey(field);
+}
+function readFileField(item, field) {
+  const file = item.file || {};
+  const key = field.slice("file.".length);
+  if (key === "name" || key === "basename") {
+    return file.basename ?? item.fileName ?? item.filename;
+  }
+  if (key === "folder") {
+    return file.folder ?? item.folder;
+  }
+  return file[key];
+}
+function readCategoryPath(item) {
+  return splitHierarchyPath(item.categoryPath ?? item.categoryKey).path;
+}
+function readRootCategory(item) {
+  return splitHierarchyPath(item.categoryPath ?? item.categoryKey).root;
+}
+function readLeafCategory(item) {
+  return splitHierarchyPath(item.categoryPath ?? item.categoryKey).leaf;
+}
+function readImageField(item) {
+  return normalizeImageValue(item.image ?? item.pintu ?? item.extra?.["图片"] ?? item.extra?.["image"] ?? item.extra?.["评图"] ?? item.extra?.["pintu"]);
+}
+function readCanonicalField(item, canonicalField) {
+  if (canonicalField.startsWith("extra.")) {
+    return item.extra?.[canonicalField.slice("extra.".length)];
+  }
+  if (canonicalField.startsWith("file.")) {
+    return readFileField(item, canonicalField);
+  }
+  if (canonicalField === "categoryKey") {
+    return readCategoryPath(item);
+  }
+  if (canonicalField === "baseCategory") {
+    return readRootCategory(item);
+  }
+  if (canonicalField === "leafCategory") {
+    return readLeafCategory(item);
+  }
+  if (canonicalField === "themePath") {
+    return readExplicitThemeParts(item).themePath ?? void 0;
+  }
+  if (canonicalField === "rootTheme") {
+    return readExplicitThemeParts(item).rootTheme ?? void 0;
+  }
+  if (canonicalField === "leafTheme") {
+    return readExplicitThemeParts(item).leafTheme ?? void 0;
+  }
+  if (canonicalField === "tags") {
+    return parseTagList(item.tags || []);
+  }
+  if (canonicalField === "image") {
+    return readImageField(item);
+  }
+  if (canonicalField === "time") {
+    return item.startTime;
+  }
+  if (canonicalField === "filename" || canonicalField === "fileName") {
+    return item.file?.basename ?? item.fileName ?? item.filename;
+  }
+  if (canonicalField === "pintu") {
+    return item.pintu;
+  }
+  return item[canonicalField];
+}
+function resolveFieldValue(item, field) {
+  const canonicalField = normalizeFieldKey(field);
+  const def = getFieldDefinition(canonicalField);
+  const value = readCanonicalField(item, canonicalField);
+  const source = def?.source || "unknown";
+  return {
+    requestedField: field,
+    field: canonicalField,
+    value,
+    source,
+    derived: source === "derived",
+    legacy: source === "legacy" || !!def?.deprecated
+  };
+}
+function readFieldValue(item, field) {
+  return resolveFieldValue(item, field).value;
+}
 const DEFAULT_AI_SETTINGS = {
   enabled: false,
   provider: "openai_compat",
@@ -1208,168 +1586,792 @@ const DEFAULT_SETTINGS = {
   devConsoleStackEnabled: false
 };
 const VIEW_OPTIONS = ["BlockView", "TableView", "ExcelView", "TimelineView", "StatisticsView", "HeatmapView", "EventTimelineView", "ProgressView", "TaskExecutionView"];
-const CORE_FIELDS = [
-  "id",
-  "type",
+function getAllFields(items) {
+  return getAvailableFields(items).map((field) => field.key);
+}
+function readField(item, field) {
+  return readFieldValue(item, field);
+}
+const CORE_FIELD_GUIDE_KEYS = [
   "title",
   "content",
   "categoryKey",
+  "themePath",
   "tags",
-  "recurrence",
-  "icon",
-  "priority",
+  "date",
+  "image",
+  "rating"
+];
+const FILE_FIELD_GUIDE_KEYS = [
+  "file.path",
+  "file.basename",
+  "folder",
+  "header"
+];
+[
+  {
+    category: "core",
+    label: "插件核心字段",
+    description: "由插件内置维护。分类、主题、标签等可以作为表单输入字段使用，但不会落到 extra。",
+    fields: CORE_FIELD_GUIDE_KEYS.map((key) => FIELD_REGISTRY[key]).filter(Boolean).map((def) => ({
+      key: def.key,
+      label: def.label,
+      category: "core",
+      description: def.description || "插件内置核心字段"
+    }))
+  },
+  {
+    category: "file",
+    label: "文件字段",
+    description: "由笔记文件路径、文件名、文件夹和所在标题自动生成，不能作为表单输入字段创建。",
+    fields: FILE_FIELD_GUIDE_KEYS.map((key) => FIELD_REGISTRY[key]).filter(Boolean).map((def) => ({
+      key: def.key,
+      label: def.label,
+      category: "file",
+      description: def.description || "插件内置文件字段"
+    }))
+  }
+];
+const CORE_INPUT_ALIAS_TARGETS = {
+  // 主题
+  theme: "themePath",
+  themepath: "themePath",
+  "主题": "themePath",
+  "主题路径": "themePath",
+  "完整主题": "themePath",
+  // 分类
+  category: "categoryKey",
+  categorykey: "categoryKey",
+  categorypath: "categoryKey",
+  "分类": "categoryKey",
+  "类别": "categoryKey",
+  "分类路径": "categoryKey",
+  // 标签
+  tag: "tags",
+  tags: "tags",
+  "标签": "tags",
+  // 图片
+  image: "image",
+  pic: "image",
+  photo: "image",
+  pintu: "image",
+  "图片": "image",
+  "评图": "image",
+  // 正文 / 标题
+  title: "title",
+  name: "title",
+  "标题": "title",
+  "名称": "title",
+  body: "content",
+  content: "content",
+  text: "content",
+  "内容": "content",
+  "正文": "content",
+  "任务内容": "content",
+  "记录内容": "content",
+  // 常用核心字段
+  date: "date",
+  "日期": "date",
+  rating: "rating",
+  "评分": "rating",
+  time: "startTime",
+  start: "startTime",
+  starttime: "startTime",
+  "时间": "startTime",
+  "开始": "startTime",
+  "开始时间": "startTime",
+  end: "endTime",
+  endtime: "endTime",
+  "结束": "endTime",
+  "结束时间": "endTime",
+  duration: "duration",
+  minutes: "duration",
+  "时长": "duration",
+  "持续时间": "duration"
+};
+const RESERVED_NON_INPUT_FIELD_NAMES = [
+  // 文件字段 / 派生字段 / 内部字段不应该作为输入字段创建。
+  "id",
+  "记录ID",
+  "type",
+  "记录类型",
+  "file",
+  "文件",
+  "文件名",
+  "文件路径",
+  "文件夹",
+  "父文件夹",
+  "所在标题",
+  "所在章节",
+  "header",
+  "folder",
+  "rootTheme",
+  "根主题",
+  "leafTheme",
+  "叶主题",
+  "baseCategory",
+  "rootCategory",
+  "根分类",
+  "leafCategory",
+  "叶分类",
+  "periodCount",
+  "粒度序号"
+];
+function normalizeFieldNameForCompare(value) {
+  return String(value ?? "").trim().replace(/\s+/g, "").toLocaleLowerCase();
+}
+const CORE_INPUT_NAME_SET = new Set(Object.keys(CORE_INPUT_ALIAS_TARGETS).map(normalizeFieldNameForCompare));
+const RESERVED_NON_INPUT_NAME_SET = new Set(RESERVED_NON_INPUT_FIELD_NAMES.map(normalizeFieldNameForCompare));
+function isCoreInputFieldName(name) {
+  const normalized = normalizeFieldNameForCompare(name);
+  return Boolean(normalized && CORE_INPUT_NAME_SET.has(normalized));
+}
+function isReservedCustomFieldName(name) {
+  const normalized = normalizeFieldNameForCompare(name);
+  return Boolean(normalized && RESERVED_NON_INPUT_NAME_SET.has(normalized));
+}
+function makeSafeCustomFieldName(name, fallback = "新字段") {
+  const trimmed = String(name ?? "").trim() || fallback;
+  if (isCoreInputFieldName(trimmed)) return trimmed;
+  if (!isReservedCustomFieldName(trimmed)) return trimmed;
+  const candidates = [`${trimmed}字段`, `自定义${trimmed}`, `${trimmed}备注`, fallback];
+  for (const candidate of candidates) {
+    if (candidate && !isReservedCustomFieldName(candidate) && !isCoreInputFieldName(candidate)) return candidate;
+  }
+  return `自定义字段`;
+}
+function getCustomFieldNameWarning(name) {
+  const trimmed = String(name ?? "").trim();
+  if (!trimmed) return void 0;
+  if (isCoreInputFieldName(trimmed)) return void 0;
+  if (!isReservedCustomFieldName(trimmed)) return void 0;
+  return "这是插件自动生成的文件/派生字段，不能作为表单输入字段添加；保存时会自动改成普通自定义字段名。";
+}
+const USER_TEMPLATE_FIELD_TYPES = [
+  "text",
+  "textarea",
+  "number",
+  "boolean",
+  "date",
+  "time",
+  "datetime",
+  "singleSelect",
+  "multiSelect",
+  "path",
+  "multiPath",
+  "tag",
+  "multiTag",
+  "image",
+  "multiImage",
+  "file",
+  "rating"
+];
+const LEGACY_TYPE_ALIASES = {
+  select: "singleSelect",
+  radio: "singleSelect"
+};
+const TYPE_LABELS = {
+  text: "单行文本",
+  textarea: "多行文本",
+  number: "数字",
+  boolean: "开关",
+  date: "日期",
+  time: "时间",
+  datetime: "日期时间",
+  select: "单选",
+  radio: "单选",
+  singleSelect: "单选",
+  multiSelect: "多选",
+  path: "层级路径",
+  multiPath: "多层级路径",
+  tag: "标签",
+  multiTag: "多标签",
+  image: "图片",
+  multiImage: "多图片",
+  file: "文件",
+  rating: "评分"
+};
+const OPTION_FIELD_TYPES = /* @__PURE__ */ new Set([
+  "singleSelect",
+  "multiSelect",
+  "path",
+  "multiPath",
+  "tag",
+  "multiTag",
+  "rating"
+]);
+const DEFAULT_VALUE_FIELD_TYPES = /* @__PURE__ */ new Set([
+  "text",
+  "textarea",
+  "number",
+  "boolean",
+  "date",
+  "time",
+  "datetime",
+  "image",
+  "file"
+]);
+const MULTI_VALUE_FIELD_TYPES = /* @__PURE__ */ new Set([
+  "multiSelect",
+  "multiPath",
+  "multiTag",
+  "multiImage"
+]);
+function stableFieldId(index) {
+  return `field_${Date.now().toString(36)}_${index}`;
+}
+function cleanName(value, fallback) {
+  const text2 = String(value ?? "").trim();
+  return text2 || fallback;
+}
+function cleanOptions(options) {
+  if (!Array.isArray(options)) return void 0;
+  const cleaned = options.map((option) => ({
+    value: String(option?.value ?? "").trim(),
+    label: option?.label === void 0 ? void 0 : String(option.label).trim(),
+    icon: option?.icon === void 0 ? void 0 : String(option.icon).trim()
+  })).filter((option) => option.value || option.label || option.icon).map((option) => ({
+    value: option.value || option.label || option.icon || "",
+    ...option.label ? { label: option.label } : {},
+    ...option.icon ? { icon: option.icon } : {}
+  }));
+  return cleaned.length ? cleaned : void 0;
+}
+function normalizeTemplateFieldType(type) {
+  const raw = String(type ?? "").trim();
+  const alias = LEGACY_TYPE_ALIASES[raw];
+  if (alias) return alias;
+  return USER_TEMPLATE_FIELD_TYPES.includes(raw) ? raw : "text";
+}
+function getUserTemplateFieldTypeOptions() {
+  return USER_TEMPLATE_FIELD_TYPES.map((type) => ({ value: type, label: TYPE_LABELS[type] || type }));
+}
+function templateFieldTypeUsesOptions(type) {
+  return OPTION_FIELD_TYPES.has(normalizeTemplateFieldType(type));
+}
+function templateFieldTypeSupportsDefaultValue(type) {
+  return DEFAULT_VALUE_FIELD_TYPES.has(normalizeTemplateFieldType(type));
+}
+function isMultiValueTemplateFieldType(type) {
+  return MULTI_VALUE_FIELD_TYPES.has(normalizeTemplateFieldType(type));
+}
+function sanitizeTemplateField(field, index = 1) {
+  const type = normalizeTemplateFieldType(field.type);
+  const fallbackName = `新字段${index}`;
+  const rawName = cleanName(field.label || field.key, fallbackName);
+  const name = makeSafeCustomFieldName(rawName, fallbackName);
+  const result = {
+    id: cleanName(field.id, stableFieldId(index)),
+    key: name,
+    label: name,
+    type
+  };
+  if (templateFieldTypeSupportsDefaultValue(type) && field.defaultValue !== void 0 && field.defaultValue !== null) {
+    result.defaultValue = String(field.defaultValue);
+  }
+  if (templateFieldTypeUsesOptions(type)) {
+    const options = cleanOptions(field.options);
+    if (options) result.options = options;
+  }
+  if ((type === "number" || type === "rating") && field.min !== void 0 && field.min !== null && !Number.isNaN(Number(field.min))) {
+    result.min = Number(field.min);
+  }
+  if ((type === "number" || type === "rating") && field.max !== void 0 && field.max !== null && !Number.isNaN(Number(field.max))) {
+    result.max = Number(field.max);
+  }
+  return result;
+}
+function makeUniqueCustomFieldName(name, usedNames) {
+  const normalize = (value) => value.trim().replace(/\s+/g, "").toLocaleLowerCase();
+  let candidate = name;
+  let normalized = normalize(candidate);
+  if (!usedNames.has(normalized)) {
+    usedNames.add(normalized);
+    return candidate;
+  }
+  let suffix = 2;
+  do {
+    candidate = `${name}${suffix}`;
+    normalized = normalize(candidate);
+    suffix += 1;
+  } while (usedNames.has(normalized));
+  usedNames.add(normalized);
+  return candidate;
+}
+function sanitizeTemplateFields(fields) {
+  const usedNames = /* @__PURE__ */ new Set();
+  return (fields || []).map((field, index) => {
+    const sanitized = sanitizeTemplateField(field, index + 1);
+    const uniqueName = makeUniqueCustomFieldName(sanitized.label || sanitized.key, usedNames);
+    return uniqueName === sanitized.label && uniqueName === sanitized.key ? sanitized : { ...sanitized, key: uniqueName, label: uniqueName };
+  });
+}
+function createCustomTemplateField(index, type = "text", name) {
+  const label = cleanName(name, type === "image" ? "图片" : type === "multiImage" ? "图片组" : `新字段${index}`);
+  return sanitizeTemplateField({ id: stableFieldId(index), key: label, label, type }, index);
+}
+const KNOWN_SEMANTICS = /* @__PURE__ */ new Set([
+  "none",
+  "id",
+  "recordType",
+  "title",
+  "body",
+  "categoryPath",
+  "themePath",
+  "tags",
+  "status",
   "date",
   "startTime",
   "endTime",
   "duration",
-  "period",
   "rating",
-  "pintu",
-  "folder",
-  "periodCount"
-];
-const SEMANTIC_FIELDS = [
-  "baseCategory",
-  // 主题筛选/分组的唯一默认字段：完整主题路径。
-  // theme 是旧兼容字段，不再出现在默认字段选择器中。
-  "themePath",
-  "rootTheme",
-  "leafTheme"
-];
-const FILE_FIELDS = [
-  "file.path",
-  "file.basename",
-  "file.name",
-  "file.folder",
-  "header"
-];
-const DEFAULT_FIELD_OPTIONS = [
-  ...CORE_FIELDS,
-  ...SEMANTIC_FIELDS,
-  ...FILE_FIELDS
-];
-const LEGACY_EXTRA_ALIAS_KEYS = [
-  "正文",
-  "内容",
-  "任务内容",
-  "记录内容",
-  "editableText"
-];
-const LEGACY_EXTRA_ALIAS_SET = new Set(LEGACY_EXTRA_ALIAS_KEYS);
-function isVisibleExtraField(item, key) {
-  if (!LEGACY_EXTRA_ALIAS_SET.has(key)) return true;
-  const origins = item.fieldOrigins?.[`extra.${key}`] || [];
-  return origins.some((origin) => origin.confidence === "explicit");
+  "image",
+  "icon",
+  "priority",
+  "recurrence",
+  "period",
+  "filePath",
+  "fileName",
+  "fileFolder",
+  "heading"
+]);
+function normalizeToken$3(value) {
+  return String(value ?? "").trim().toLowerCase();
 }
-function getAllFields(items) {
-  const set2 = new Set(DEFAULT_FIELD_OPTIONS);
-  items.forEach((it) => {
-    Object.keys(it.extra || {}).forEach((k2) => {
-      if (isVisibleExtraField(it, k2)) set2.add("extra." + k2);
+function normalizeCnToken(value) {
+  return String(value ?? "").trim();
+}
+function isKnownSemantic(value) {
+  return KNOWN_SEMANTICS.has(value);
+}
+function tokensForField(field) {
+  if (!field) return [];
+  return [field.key, field.label, field.semantic, field.semanticType, field.role].map(normalizeToken$3).filter(Boolean);
+}
+function cnTokensForField(field) {
+  if (!field) return [];
+  return [field.key, field.label, field.semantic, field.semanticType, field.role].map(normalizeCnToken).filter(Boolean);
+}
+function templateFieldMatches(field, aliases2) {
+  const lowerTokens = tokensForField(field);
+  const cnTokens = cnTokensForField(field);
+  const lowerAliases = aliases2.map(normalizeToken$3);
+  return lowerTokens.some((token2) => lowerAliases.includes(token2)) || cnTokens.some((token2) => aliases2.includes(token2));
+}
+function getTemplateFieldSemantic(field) {
+  if (!field) return "none";
+  if (isKnownSemantic(field.semantic)) return field.semantic;
+  if (isKnownSemantic(field.semanticType)) return field.semanticType;
+  const semanticType = normalizeToken$3(field.semanticType);
+  if (semanticType === "ratingpair") return "rating";
+  if (semanticType === "path") {
+    if (templateFieldMatches(field, ["主题", "theme", "themePath", "完整主题", "主题路径"])) return "themePath";
+    if (templateFieldMatches(field, ["分类", "类别", "category", "categoryPath", "分类路径"])) return "categoryPath";
+    return "none";
+  }
+  if (templateFieldMatches(field, ["标题", "title", "名称", "name"])) return "title";
+  if (templateFieldMatches(field, ["正文", "内容", "任务内容", "记录内容", "body", "content", "text"])) return "body";
+  if (templateFieldMatches(field, ["主题", "theme", "themePath", "完整主题", "主题路径"])) return "themePath";
+  if (templateFieldMatches(field, ["分类", "类别", "category", "categoryPath", "分类路径"])) return "categoryPath";
+  if (templateFieldMatches(field, ["标签", "tag", "tags"])) return "tags";
+  if (templateFieldMatches(field, ["状态", "status"])) return "status";
+  if (templateFieldMatches(field, ["日期", "date"])) return "date";
+  if (templateFieldMatches(field, ["时间", "开始", "开始时间", "time", "start", "startTime"])) return "startTime";
+  if (templateFieldMatches(field, ["结束", "结束时间", "end", "endTime"])) return "endTime";
+  if (templateFieldMatches(field, ["时长", "duration", "minutes", "持续时间"])) return "duration";
+  if (templateFieldMatches(field, ["评分", "rating"])) return "rating";
+  if (templateFieldMatches(field, ["图片", "image", "pic", "photo", "评图", "pintu"])) return "image";
+  if (templateFieldMatches(field, ["图标", "icon"])) return "icon";
+  if (templateFieldMatches(field, ["重复", "recurrence", "repeat"])) return "recurrence";
+  if (templateFieldMatches(field, ["周期", "粒度", "period"])) return "period";
+  return "none";
+}
+function getTemplateFieldInputType(field) {
+  const type = field?.type;
+  if (type) return type;
+  const semantic = getTemplateFieldSemantic(field);
+  if (semantic === "body") return "textarea";
+  if (semantic === "themePath" || semantic === "categoryPath") return "path";
+  if (semantic === "tags") return "multiTag";
+  if (semantic === "image") return "image";
+  if (semantic === "rating") return "rating";
+  if (semantic === "date") return "date";
+  if (semantic === "startTime" || semantic === "endTime") return "time";
+  if (semantic === "duration") return "number";
+  return "text";
+}
+function isOptionObject$1(value) {
+  return !!value && typeof value === "object" && ("value" in value || "label" in value);
+}
+function isTemplateRatingPairField(field) {
+  return normalizeToken$3(field?.semanticType) === "ratingpair";
+}
+function isTemplateOptionField(field) {
+  const inputType = getTemplateFieldInputType(field);
+  return ["select", "radio", "singleSelect", "multiSelect", "path", "multiPath", "tag", "multiTag", "rating"].includes(inputType);
+}
+function isTemplatePathField(field) {
+  const inputType = getTemplateFieldInputType(field);
+  const semantic = getTemplateFieldSemantic(field);
+  return inputType === "path" || inputType === "multiPath" || semantic === "themePath" || semantic === "categoryPath" || normalizeToken$3(field?.semanticType) === "path";
+}
+function isTemplateTagField(field) {
+  const inputType = getTemplateFieldInputType(field);
+  return inputType === "tag" || inputType === "multiTag" || getTemplateFieldSemantic(field) === "tags";
+}
+function isTemplateImageField(field) {
+  const inputType = getTemplateFieldInputType(field);
+  return inputType === "image" || inputType === "multiImage" || getTemplateFieldSemantic(field) === "image";
+}
+function isTemplateMultiValueField(field) {
+  const inputType = getTemplateFieldInputType(field);
+  return isMultiValueTemplateFieldType(inputType) || field?.cardinality === "multi";
+}
+function splitMultiText(value) {
+  if (Array.isArray(value)) return value.flatMap(splitMultiText);
+  return String(value ?? "").split(/[,，\n]/).map((part) => part.trim()).filter(Boolean);
+}
+function normalizeOptionObject(field, rawValue) {
+  if (isTemplatePathField(field)) {
+    const normalized = normalizeHierarchyPath(rawValue.value ?? rawValue.label);
+    return normalized ? { value: normalized, label: String(rawValue.label ?? normalized.split("/").pop() ?? normalized) } : rawValue;
+  }
+  return { value: rawValue.value, label: rawValue.label ?? rawValue.value };
+}
+function normalizeSingleRawValue(field, rawValue) {
+  if (rawValue === void 0 || rawValue === null || rawValue === "") return rawValue;
+  if (isOptionObject$1(rawValue)) return normalizeOptionObject(field, rawValue);
+  if (isTemplateTagField(field)) {
+    return parseTagList(rawValue).join(", ");
+  }
+  if (isTemplateImageField(field)) {
+    return normalizeImageValue(rawValue)?.src ?? rawValue;
+  }
+  if (isTemplatePathField(field)) {
+    const normalized = normalizeHierarchyPath(rawValue);
+    if (!normalized) return rawValue;
+    const matched = field.options?.find((opt) => normalizeHierarchyPath(opt?.value) === normalized || String(opt?.label ?? "") === String(rawValue));
+    return {
+      value: normalized,
+      label: matched?.label || normalized.split("/").pop() || normalized
+    };
+  }
+  if (isTemplateOptionField(field)) {
+    const rawString = String(rawValue);
+    const matched = field.options?.find((opt) => String(opt?.value) === rawString || String(opt?.label) === rawString || String(opt?.label ?? opt?.value) === rawString);
+    if (matched) return { value: matched.value, label: matched.label || matched.value };
+    if (getTemplateFieldInputType(field) === "rating" || isTemplateRatingPairField(field)) return { value: rawString, label: rawString };
+  }
+  return rawValue;
+}
+function normalizeTemplateFieldValue(field, rawValue) {
+  if (rawValue === void 0 || rawValue === null || rawValue === "") return rawValue;
+  if (isTemplateMultiValueField(field)) {
+    if (isTemplateTagField(field)) return parseTagList(rawValue);
+    if (isTemplateImageField(field)) {
+      return splitMultiText(rawValue).map((value) => normalizeImageValue(value)?.src).filter((src) => !!src);
+    }
+    if (isTemplatePathField(field)) {
+      return splitMultiText(rawValue).map((value) => normalizeHierarchyPath(value)).filter((value) => !!value);
+    }
+    return splitMultiText(rawValue);
+  }
+  return normalizeSingleRawValue(field, rawValue);
+}
+function singleTemplateValueToString(value) {
+  if (value === void 0 || value === null) return "";
+  if (Array.isArray(value)) return value.map(singleTemplateValueToString).filter(Boolean).join(", ");
+  if (isOptionObject$1(value)) return String(value.value ?? value.label ?? "").trim();
+  if (typeof value === "object" && value && "src" in value) return String(value.src ?? "").trim();
+  return String(value).trim();
+}
+function setIfMeaningful(data, key, value) {
+  if (value === void 0 || value === null) return;
+  if (typeof value === "string" && !value.trim()) return;
+  if (Array.isArray(value) && value.length === 0) return;
+  data[key] = value;
+}
+function applyCoreTemplateAliases(data, field, value) {
+  const semantic = getTemplateFieldSemantic(field);
+  if (semantic === "themePath") {
+    const path = normalizeHierarchyPath(singleTemplateValueToString(value));
+    if (!path) return;
+    const parts = splitHierarchyPath(path);
+    data.themePath = path;
+    data.rootTheme = parts.root || "";
+    data.leafTheme = parts.leaf || "";
+    data.theme = {
+      ...data.theme && typeof data.theme === "object" ? data.theme : {},
+      path,
+      root: parts.root || "",
+      leaf: parts.leaf || ""
+    };
+    return;
+  }
+  if (semantic === "categoryPath") {
+    const path = normalizeHierarchyPath(singleTemplateValueToString(value));
+    if (!path) return;
+    const parts = splitHierarchyPath(path);
+    data.categoryKey = path;
+    data.categoryPath = path;
+    data.baseCategory = parts.root || "";
+    data.rootCategory = parts.root || "";
+    data.leafCategory = parts.leaf || "";
+    return;
+  }
+  if (semantic === "tags") {
+    const tags2 = parseTagList(value);
+    if (tags2.length) data.tags = tags2;
+    return;
+  }
+  if (semantic === "image") {
+    if (Array.isArray(value)) {
+      const images = value.map(singleTemplateValueToString).filter(Boolean);
+      if (images.length) {
+        data.image = images[0];
+        data.images = images;
+        data.pintu = images[0];
+      }
+      return;
+    }
+    const image = normalizeImageValue(value)?.src ?? singleTemplateValueToString(value);
+    if (image) {
+      data.image = image;
+      data.pintu = image;
+    }
+    return;
+  }
+  const directKeyBySemantic = {
+    title: "title",
+    body: "content",
+    date: "date",
+    startTime: "startTime",
+    endTime: "endTime",
+    duration: "duration",
+    rating: "rating",
+    icon: "icon",
+    recurrence: "recurrence",
+    period: "period",
+    status: "status"
+  };
+  const directKey = directKeyBySemantic[semantic];
+  if (directKey) setIfMeaningful(data, directKey, value);
+}
+function normalizeTemplateRenderData(template, formData) {
+  const normalizedData = { ...formData };
+  for (const field of template.fields || []) {
+    const raw = normalizedData[field.key] ?? normalizedData[field.label || ""];
+    if (raw === void 0 || raw === null || raw === "") continue;
+    if (isTemplateRatingPairField(field)) {
+      const obj = isOptionObject$1(raw) ? normalizeOptionObject(field, raw) : { value: raw, label: raw };
+      normalizedData[field.key] = obj;
+      if (field.label && field.label !== field.key) normalizedData[field.label] = obj;
+      const auxKey = field.auxKey || "评图";
+      if (obj.value !== void 0) normalizedData[auxKey] = obj.value;
+      applyCoreTemplateAliases(normalizedData, field, obj);
+      continue;
+    }
+    const normalizedValue = normalizeTemplateFieldValue(field, raw);
+    normalizedData[field.key] = normalizedValue;
+    if (field.label && field.label !== field.key) normalizedData[field.label] = normalizedValue;
+    applyCoreTemplateAliases(normalizedData, field, normalizedValue);
+  }
+  return normalizedData;
+}
+function normalizeInput(input) {
+  return Array.isArray(input) ? { items: input } : input;
+}
+function toSampleValue(value) {
+  if (value == null) return "";
+  if (Array.isArray(value)) return value.map((v2) => String(v2)).join(", ");
+  if (typeof value === "object") {
+    try {
+      return JSON.stringify(value);
+    } catch {
+      return String(value);
+    }
+  }
+  return String(value);
+}
+function issueId(kind, fieldKey, targetFieldKey) {
+  return `${kind}:${fieldKey}->${targetFieldKey || ""}`;
+}
+function addOccurrence(map, draft, occurrence, sampleLimit) {
+  const id = issueId(draft.kind, draft.fieldKey, draft.targetFieldKey);
+  let acc = map.get(id);
+  if (!acc) {
+    acc = {
+      ...draft,
+      fieldLabel: draft.fieldLabel || getFieldLabel(draft.fieldKey),
+      recordIds: /* @__PURE__ */ new Set(),
+      templateIds: /* @__PURE__ */ new Set(),
+      sampleValues: []
+    };
+    map.set(id, acc);
+  }
+  if (occurrence.recordId) acc.recordIds.add(occurrence.recordId);
+  if (occurrence.templateId) acc.templateIds.add(occurrence.templateId);
+  const sample = toSampleValue(occurrence.value).trim();
+  if (sample && acc.sampleValues.length < sampleLimit && !acc.sampleValues.includes(sample)) {
+    acc.sampleValues.push(sample);
+  }
+}
+function hasValue$1(value) {
+  if (value == null) return false;
+  if (typeof value === "string") return value.trim().length > 0;
+  if (Array.isArray(value)) return value.length > 0;
+  return true;
+}
+function normalizeTemplateFields(input) {
+  const result = [];
+  (input.fields || []).forEach((field, index) => result.push({ field, templateId: `field:${field.id || index}` }));
+  (input.templates || []).forEach((template, templateIndex) => {
+    const templateId = template.id || template.name || `template:${templateIndex}`;
+    (template.fields || []).forEach((field, fieldIndex) => {
+      result.push({ field, templateId: `${templateId}#${field.id || field.key || fieldIndex}` });
     });
-    const f2 = it.file;
-    if (f2 && typeof f2 === "object") Object.keys(f2).forEach((k2) => set2.add("file." + k2));
   });
-  return Array.from(set2).sort();
+  return result;
 }
-function readField(item, field) {
-  if (field.startsWith("extra.")) return item.extra?.[field.slice(6)];
-  if (field.startsWith("file.")) {
-    const key = field.slice(5);
-    const file = item.file || {};
-    if (key === "name" || key === "basename") return file.basename ?? item.fileName ?? item.filename;
-    if (key === "folder") return file.folder ?? item.folder;
-    return file[key];
+function scanFieldMigrations(inputOrItems, options = {}) {
+  const input = normalizeInput(inputOrItems);
+  const items = input.items || [];
+  const templateFields = normalizeTemplateFields(input);
+  const sampleLimit = options.sampleLimit ?? 5;
+  const includeTemplateInternalMetadata = options.includeTemplateInternalMetadata ?? false;
+  const issues = /* @__PURE__ */ new Map();
+  const affectedRecords = /* @__PURE__ */ new Set();
+  const affectedTemplateFields = /* @__PURE__ */ new Set();
+  for (const item of items) {
+    const recordId = item.id || `${item.file?.path || item.filename || "record"}#${item.file?.line || ""}`;
+    if (hasValue$1(item.theme)) {
+      affectedRecords.add(recordId);
+      addOccurrence(issues, {
+        kind: "legacy_theme_field",
+        fieldKey: "theme",
+        targetFieldKey: "themePath",
+        action: "map_to_core",
+        severity: "safe",
+        reason: "旧记录仍带有 theme 字段；新体系中主题筛选和展示统一使用 themePath。",
+        recommendation: "内部读取时映射到 themePath；迁移写盘前先预览，不直接改 Markdown。",
+        safeAutoFix: true
+      }, { recordId, value: item.theme }, sampleLimit);
+    }
+    if (hasValue$1(item.pintu)) {
+      affectedRecords.add(recordId);
+      addOccurrence(issues, {
+        kind: "legacy_image_field",
+        fieldKey: "pintu",
+        targetFieldKey: "image",
+        action: "map_to_core",
+        severity: "safe",
+        reason: "pintu/评图 是旧图片字段特例；新体系中图片是通用 image 字段类型。",
+        recommendation: "保留兼容读取；后续可将 Markdown 字段名从 pintu/评图 迁移为图片或用户自定义图片字段。",
+        safeAutoFix: true
+      }, { recordId, value: item.pintu }, sampleLimit);
+    }
+    for (const [extraKey, value] of Object.entries(item.extra || {})) {
+      if (isLegacyExtraAliasKey(extraKey)) {
+        affectedRecords.add(recordId);
+        addOccurrence(issues, {
+          kind: "legacy_extra_alias",
+          fieldKey: `extra.${extraKey}`,
+          action: "ignore_pollution",
+          severity: "safe",
+          reason: "这是旧 parser 自动注入的正文别名，不是用户真实自定义字段。",
+          recommendation: "字段列表、搜索索引和新编辑回填中隐藏/忽略；不需要写回 Markdown。",
+          safeAutoFix: true
+        }, { recordId, value }, sampleLimit);
+        continue;
+      }
+      const targetFromLegacy = getLegacyAliasTargetField(extraKey);
+      const canonical = targetFromLegacy || getCanonicalFieldKey(extraKey);
+      if (canonical && canonical !== extraKey && !canonical.startsWith("extra.")) {
+        affectedRecords.add(recordId);
+        addOccurrence(issues, {
+          kind: "custom_core_name_collision",
+          fieldKey: `extra.${extraKey}`,
+          targetFieldKey: canonical,
+          action: "map_to_core",
+          severity: "review",
+          reason: "自定义 extra 字段名与插件内置核心字段别名重名。",
+          recommendation: `检查该字段是否应迁移为内置核心字段「${getFieldLabel(canonical)}」，或重命名为真正的自定义字段。`,
+          safeAutoFix: false
+        }, { recordId, value }, sampleLimit);
+      }
+    }
   }
-  if (field === "baseCategory" || field === "分类根" || field === "rootCategory") {
-    const raw = String(item.categoryKey || "").trim();
-    return raw.split("/").map((part) => part.trim()).filter(Boolean)[0] || raw;
+  for (const { field, templateId } of templateFields) {
+    const key = field.key || field.label;
+    const label = field.label || field.key;
+    const target = getLegacyAliasTargetField(key) || getLegacyAliasTargetField(label) || getCanonicalFieldKey(key) || getCanonicalFieldKey(label);
+    const ownKey = String(key || "").trim();
+    const looksLikeCore = !!target && target !== ownKey && ["themePath", "image", "categoryKey", "tags"].includes(target);
+    if (looksLikeCore) {
+      affectedTemplateFields.add(templateId);
+      addOccurrence(issues, {
+        kind: "template_core_field_collision",
+        fieldKey: ownKey || label,
+        targetFieldKey: target,
+        action: "review_template",
+        severity: "review",
+        reason: "表单字段名称与插件内置核心字段重名。分类、主题、标签、图片应由核心字段能力承载，而不是作为普通自定义字段概念暴露。",
+        recommendation: `确认模板写入是否仍需要该字段；若只是核心字段，请让模板使用「${getFieldLabel(target)}」对应变量。`,
+        safeAutoFix: false
+      }, { templateId, value: label }, sampleLimit);
+    }
+    if (includeTemplateInternalMetadata && (field.semantic || field.semanticType || field.storage || field.cardinality || field.hierarchical || field.aliases?.length)) {
+      affectedTemplateFields.add(templateId);
+      addOccurrence(issues, {
+        kind: "template_internal_metadata",
+        fieldKey: ownKey || label,
+        action: "keep_internal",
+        severity: "info",
+        reason: "字段配置里仍有旧版内部元数据。它们不再在 UI 暴露，但可以保留用于兼容旧配置。",
+        recommendation: "无需用户处理；后续设置保存时可由迁移器统一清理或规范化。",
+        safeAutoFix: true
+      }, { templateId, value: label }, sampleLimit);
+    }
   }
-  if (field === "themePath" || field === "完整主题" || field === "主题路径") {
-    return readExplicitThemeParts(item).themePath ?? void 0;
-  }
-  if (field === "rootTheme" || field === "根主题" || field === "themeRoot") {
-    return readExplicitThemeParts(item).rootTheme ?? void 0;
-  }
-  if (field === "leafTheme" || field === "叶主题" || field === "themeLeaf") {
-    return readExplicitThemeParts(item).leafTheme ?? void 0;
-  }
-  return item[field];
-}
-function addFieldOrigin(carrier, field, origin) {
-  if (!carrier.fieldOrigins) carrier.fieldOrigins = {};
-  const list = carrier.fieldOrigins[field] || [];
-  list.push({ field, ...origin });
-  carrier.fieldOrigins[field] = list;
-  return carrier;
-}
-new Set(LEGACY_EXTRA_ALIAS_KEYS);
-const FIELD_REGISTRY = {
-  // --- 核心字段 ---
-  id: { key: "id", label: "记录ID", type: "string", category: "core", source: "item", description: "内部记录标识" },
-  type: { key: "type", label: "记录类型", type: "string", category: "core", source: "item", description: "任务、块、闪念等记录类型" },
-  title: { key: "title", label: "标题", type: "string", category: "core", source: "item", description: "任务或块的主要内容" },
-  content: { key: "content", label: "内容", type: "string", category: "core", source: "item", description: "记录正文或原始内容" },
-  categoryKey: { key: "categoryKey", label: "分类路径", type: "string", category: "semantic", source: "item", description: "完整分类路径，例如 闪念/感受；任务可为完成任务/未完成任务" },
-  baseCategory: { key: "baseCategory", label: "根分类", type: "string", category: "derived", source: "derived", description: "从 categoryKey 派生的第一级分类" },
-  date: { key: "date", label: "日期", type: "date", category: "semantic", source: "item", description: "项目的主要关联日期" },
-  tags: { key: "tags", label: "标签", type: "tags", category: "semantic", source: "item", description: "所有关联的标签，支持多值", formatter: (v2) => Array.isArray(v2) ? v2.join(", ") : "" },
-  theme: { key: "theme", label: "旧主题字段", type: "string", category: "legacy", source: "legacy", deprecated: true, hiddenByDefault: true, description: "历史兼容字段；筛选/分组请使用 themePath（主题路径）" },
-  themePath: { key: "themePath", label: "主题路径", type: "string", category: "semantic", source: "derived", description: "完整主题路径；主题筛选默认使用此字段，例如 工作/设计/道旗" },
-  rootTheme: { key: "rootTheme", label: "根主题", type: "string", category: "derived", source: "derived", description: "从 themePath 派生的第一级主题，例如 工作" },
-  leafTheme: { key: "leafTheme", label: "叶主题", type: "string", category: "derived", source: "derived", description: "从 themePath 派生的最后一级主题，例如 道旗" },
-  priority: { key: "priority", label: "优先级", type: "string", category: "semantic", source: "item" },
-  icon: { key: "icon", label: "图标", type: "icon", category: "semantic", source: "item" },
-  recurrence: { key: "recurrence", label: "重复规则", type: "string", category: "semantic", source: "item" },
-  period: { key: "period", label: "字段粒度", type: "string", category: "semantic", source: "item", description: "该条目归属的时间粒度：年/季/月/周/天（未设置默认天）" },
-  time: { key: "time", label: "旧时间字段", type: "string", category: "legacy", source: "legacy", deprecated: true, hiddenByDefault: true, description: "历史兼容字段；请使用 startTime" },
-  startTime: { key: "startTime", label: "开始时间", type: "string", category: "semantic", source: "item", description: "任务或事件的开始时间" },
-  endTime: { key: "endTime", label: "结束时间", type: "string", category: "semantic", source: "item", description: "任务或事件的结束时间" },
-  duration: { key: "duration", label: "时长", type: "number", category: "semantic", source: "item", description: "任务或事件的持续分钟数" },
-  rating: { key: "rating", label: "评分", type: "number", category: "semantic", source: "item", description: "对块内容的评分" },
-  pintu: { key: "pintu", label: "图片", type: "image", category: "semantic", source: "item", description: "图片路径；后续会升级为通用 image 字段类型" },
-  folder: { key: "folder", label: "父文件夹", type: "string", category: "file", source: "file", description: "文件所在的父文件夹" },
-  periodCount: { key: "periodCount", label: "粒度序号", type: "number", category: "derived", source: "derived", description: "与日期结合计算出的序号，如第几周/第几月" },
-  displayCount: { key: "displayCount", label: "显示次数", type: "number", category: "semantic", source: "item" },
-  levelCount: { key: "levelCount", label: "等级次数", type: "number", category: "semantic", source: "item" },
-  countForLevel: { key: "countForLevel", label: "计入等级", type: "boolean", category: "semantic", source: "item" },
-  manuallyEdited: { key: "manuallyEdited", label: "手动编辑", type: "boolean", category: "semantic", source: "item" },
-  // --- 文件元数据 ---
-  "file.path": { key: "file.path", label: "文件路径", type: "string", category: "file", source: "file" },
-  "file.basename": { key: "file.basename", label: "文件名", type: "string", category: "file", source: "file" },
-  "file.name": { key: "file.name", label: "文件名", type: "string", category: "file", source: "file" },
-  "file.folder": { key: "file.folder", label: "文件夹", type: "string", category: "file", source: "file" },
-  header: { key: "header", label: "所在标题/章节", type: "string", category: "file", source: "file", description: "Markdown 所在章节，只表示位置，绝不作为主题" },
-  // --- 时间轴字段 ---
-  startISO: { key: "startISO", label: "开始日期", type: "date", category: "derived", source: "derived" },
-  endISO: { key: "endISO", label: "结束日期", type: "date", category: "derived", source: "derived" }
-};
-const FIELD_LABEL_ALIASES = {
-  filename: "文件名",
-  basename: "文件名",
-  filepath: "文件路径",
-  path: "路径",
-  filePath: "文件路径",
-  themeRoot: "根主题",
-  themeLeaf: "叶主题",
-  主题路径: "主题路径",
-  完整主题: "主题路径"
-};
-function getFieldLabel(key) {
-  if (FIELD_REGISTRY[key]) {
-    return FIELD_REGISTRY[key].label;
-  }
-  if (FIELD_LABEL_ALIASES[key]) {
-    return FIELD_LABEL_ALIASES[key];
-  }
-  if (key.startsWith("extra.")) {
-    return key.slice(6);
-  }
-  if (key.startsWith("file.")) {
-    const tail = key.slice(5);
-    return FIELD_LABEL_ALIASES[tail] || `文件.${tail}`;
-  }
-  return key;
+  const finalIssues = Array.from(issues.entries()).map(([id, acc]) => ({
+    id,
+    kind: acc.kind,
+    fieldKey: acc.fieldKey,
+    fieldLabel: acc.fieldLabel || getFieldLabel(acc.fieldKey),
+    targetFieldKey: acc.targetFieldKey,
+    targetFieldLabel: acc.targetFieldKey ? getFieldLabel(acc.targetFieldKey) : void 0,
+    action: acc.action,
+    severity: acc.severity,
+    recordCount: acc.recordIds.size,
+    templateCount: acc.templateIds.size,
+    sampleRecordIds: Array.from(acc.recordIds).slice(0, sampleLimit),
+    sampleTemplateIds: Array.from(acc.templateIds).slice(0, sampleLimit),
+    sampleValues: acc.sampleValues,
+    reason: acc.reason,
+    recommendation: acc.recommendation,
+    safeAutoFix: acc.safeAutoFix
+  })).sort((a2, b2) => {
+    const severityRank = { manual: 0, review: 1, safe: 2, info: 3 };
+    return severityRank[a2.severity] - severityRank[b2.severity] || b2.recordCount - a2.recordCount || b2.templateCount - a2.templateCount || a2.fieldKey.localeCompare(b2.fieldKey, "zh");
+  });
+  return {
+    version: "v1.4",
+    mode: "preview",
+    totalRecords: items.length,
+    totalTemplateFields: templateFields.length,
+    issueCount: finalIssues.length,
+    affectedRecordCount: affectedRecords.size,
+    affectedTemplateFieldCount: affectedTemplateFields.size,
+    issues: finalIssues,
+    summary: {
+      legacyThemeRecords: finalIssues.filter((i2) => i2.kind === "legacy_theme_field").reduce((sum, i2) => sum + i2.recordCount, 0),
+      legacyImageRecords: finalIssues.filter((i2) => i2.kind === "legacy_image_field").reduce((sum, i2) => sum + i2.recordCount, 0),
+      pollutedExtraRecords: finalIssues.filter((i2) => i2.kind === "legacy_extra_alias").reduce((sum, i2) => sum + i2.recordCount, 0),
+      customCoreNameCollisionRecords: finalIssues.filter((i2) => i2.kind === "custom_core_name_collision").reduce((sum, i2) => sum + i2.recordCount, 0),
+      templateCollisionFields: finalIssues.filter((i2) => i2.kind === "template_core_field_collision").reduce((sum, i2) => sum + i2.templateCount, 0),
+      templateInternalMetadataFields: finalIssues.filter((i2) => i2.kind === "template_internal_metadata").reduce((sum, i2) => sum + i2.templateCount, 0)
+    }
+  };
 }
 const DEFAULT_ACTION_META = {
   action: "unknown",
@@ -3126,9 +4128,9 @@ function normalizeListValue(value) {
 function normalizeBetweenValue(value) {
   if (Array.isArray(value) && value.length >= 2) return [value[0], value[1]];
   if (value === null || value === void 0) return null;
-  const text = String(value).trim();
-  if (!text) return null;
-  const parts = text.split(/\s*(?:~|～|至|到|\.\.|,|，)\s*/).filter(Boolean);
+  const text2 = String(value).trim();
+  if (!text2) return null;
+  const parts = text2.split(/\s*(?:~|～|至|到|\.\.|,|，)\s*/).filter(Boolean);
   if (parts.length < 2) return null;
   return [parts[0], parts[1]];
 }
@@ -3268,7 +4270,7 @@ function collectThemePathsForHeatmap(params) {
   });
   return Array.from(themeSet).sort((a2, b2) => a2.localeCompare(b2, "zh-CN"));
 }
-const isImagePath = (value) => {
+const isImagePath$1 = (value) => {
   return /\.(png|svg|jpg|jpeg|gif)$/i.test(value);
 };
 const isHexColor = (value) => {
@@ -3706,14 +4708,14 @@ function makeObsUri(ref, vaultName) {
   const qp = `vault=${vault}&filepath=${encodeURIComponent(filePath)}`;
   return `obsidian://advanced-uri?${qp}${line2 ? "&line=" + line2 : ""}`;
 }
-function stripTaskPrefix(text) {
-  return String(text || "").replace(/^\s*[-*+]\s*\[[ xX-]\]\s*/, "").trimStart();
+function stripTaskPrefix(text2) {
+  return String(text2 || "").replace(/^\s*[-*+]\s*\[[ xX-]\]\s*/, "").trimStart();
 }
-function stripLeadingTaskIcons(text) {
-  return String(text || "").replace(new RegExp("^\\s*(?:\\p{Extended_Pictographic}\\uFE0F?\\s*)+", "u"), "").trimStart();
+function stripLeadingTaskIcons(text2) {
+  return String(text2 || "").replace(new RegExp("^\\s*(?:\\p{Extended_Pictographic}\\uFE0F?\\s*)+", "u"), "").trimStart();
 }
-function stripTaskMetadata(text) {
-  let result = String(text || "");
+function stripTaskMetadata(text2) {
+  let result = String(text2 || "");
   result = result.replace(
     /\s*🔁\s*every\s+(?:\d+\s+)?(?:day|week|month|year)s?(?:\s+when\s+done)?(?=$|\s*(?:[\(\[][^^\(\[\])]*::|📅|⏳|🛫|➕|✅|❌|#))/gi,
     " "
@@ -3723,11 +4725,11 @@ function stripTaskMetadata(text) {
   result = result.replace(/\s*#[\p{L}\p{N}_/-]+/gu, " ");
   return result;
 }
-function normalizeLineBreaksOnly(text) {
-  return String(text || "").replace(/[\t\r\n]+/g, " ").trim();
+function normalizeLineBreaksOnly(text2) {
+  return String(text2 || "").replace(/[\t\r\n]+/g, " ").trim();
 }
-function extractTaskEditableText(text) {
-  const rawInput = String(text || "");
+function extractTaskEditableText(text2) {
+  const rawInput = String(text2 || "");
   const withoutPrefix = stripTaskPrefix(rawInput);
   const withoutLeadingIcon = stripLeadingTaskIcons(withoutPrefix);
   const withoutMetadata = stripTaskMetadata(withoutLeadingIcon);
@@ -3747,11 +4749,11 @@ function extractTaskEditableText(text) {
   }
   return { rawInput, withoutPrefix, withoutLeadingIcon, withoutMetadata, editableText, notes };
 }
-function cleanTaskText(text) {
-  return extractTaskEditableText(text).editableText;
+function cleanTaskText(text2) {
+  return extractTaskEditableText(text2).editableText;
 }
-function explainTaskEditableTextExtraction(text) {
-  const result = extractTaskEditableText(text);
+function explainTaskEditableTextExtraction(text2) {
+  const result = extractTaskEditableText(text2);
   return {
     rawInput: result.rawInput,
     withoutPrefix: result.withoutPrefix,
@@ -3759,6 +4761,285 @@ function explainTaskEditableTextExtraction(text) {
     withoutMetadata: result.withoutMetadata,
     finalEditableText: result.editableText,
     notes: result.notes
+  };
+}
+const DEFAULT_MULTI_SEPARATOR = ", ";
+function normalizeToken$2(value) {
+  return String(value ?? "").trim().toLowerCase();
+}
+function isFieldCodecMultiValue(def) {
+  const inputType = def?.inputType;
+  return def?.cardinality === "multi" || inputType === "multiSelect" || inputType === "multiPath" || inputType === "multiTag" || inputType === "multiImage";
+}
+function isFieldCodecPath(def) {
+  return def?.type === "path" || def?.inputType === "path" || def?.inputType === "multiPath" || def?.semantic === "themePath" || def?.semantic === "categoryPath";
+}
+function isFieldCodecTag(def) {
+  return def?.type === "tags" || def?.inputType === "tag" || def?.inputType === "multiTag" || def?.semantic === "tags";
+}
+function isFieldCodecImage(def) {
+  return def?.type === "image" || def?.inputType === "image" || def?.inputType === "multiImage" || def?.semantic === "image";
+}
+function splitMarkdownMultiValue(value) {
+  if (Array.isArray(value)) return value.flatMap(splitMarkdownMultiValue);
+  return String(value ?? "").split(/[,，\n]/).map((part) => part.trim()).filter(Boolean);
+}
+function decodeUnknownMarkdownKvValue(value) {
+  const raw = String(value ?? "").trim();
+  if (/^(true|false)$/i.test(raw)) return raw.toLowerCase() === "true";
+  if (raw !== "") {
+    const numeric = Number(raw);
+    if (!Number.isNaN(numeric)) return numeric;
+  }
+  return raw;
+}
+function decodeNumberValue(value) {
+  if (typeof value === "number" && Number.isFinite(value)) return value;
+  const raw = String(value ?? "").trim();
+  if (!raw) return void 0;
+  const numeric = Number(raw);
+  return Number.isNaN(numeric) ? void 0 : numeric;
+}
+function decodeBooleanValue(value) {
+  if (typeof value === "boolean") return value;
+  const raw = normalizeToken$2(value);
+  if (!raw) return void 0;
+  if (["true", "yes", "y", "1", "是"].includes(raw)) return true;
+  if (["false", "no", "n", "0", "否"].includes(raw)) return false;
+  return void 0;
+}
+function decodeImageValue(value) {
+  return normalizeImageValue(value);
+}
+function valueKind(def) {
+  return def?.type;
+}
+function semanticKind(def) {
+  return def?.semantic;
+}
+function decodeMarkdownFieldValue(value, def) {
+  if (value === void 0 || value === null) return void 0;
+  if (isFieldCodecMultiValue(def)) {
+    if (isFieldCodecTag(def)) return parseTagList(value);
+    if (isFieldCodecImage(def)) {
+      return splitMarkdownMultiValue(value).map(decodeImageValue).filter((img) => !!img);
+    }
+    if (isFieldCodecPath(def)) {
+      return splitMarkdownMultiValue(value).map(normalizeHierarchyPath).filter((path) => !!path);
+    }
+    return splitMarkdownMultiValue(value);
+  }
+  if (isFieldCodecTag(def)) return parseTagList(value);
+  if (isFieldCodecImage(def)) return decodeImageValue(value);
+  if (isFieldCodecPath(def)) return normalizeHierarchyPath(value) || void 0;
+  if (valueKind(def) === "number" || semanticKind(def) === "duration" || semanticKind(def) === "rating") {
+    return decodeNumberValue(value);
+  }
+  if (valueKind(def) === "boolean") return decodeBooleanValue(value);
+  return decodeUnknownMarkdownKvValue(value);
+}
+function imageFieldValueToMarkdown(value, options = {}) {
+  const src = String(value.src || "").trim();
+  if (!src) return "";
+  if (options.embedWikiImages && value.kind === "wikilink") return `![[${src}]]`;
+  return src;
+}
+function encodeFieldValueForMarkdown(value, def, options = {}) {
+  if (value === void 0 || value === null) return "";
+  if (Array.isArray(value)) {
+    const separator = options.multiSeparator ?? DEFAULT_MULTI_SEPARATOR;
+    return value.map((item) => encodeFieldValueForMarkdown(item, { ...def, cardinality: "single" }, options)).map((part) => part.trim()).filter(Boolean).join(separator);
+  }
+  if (isFieldCodecImage(def) || value && typeof value === "object" && "src" in value) {
+    const image = normalizeImageValue(value);
+    return image ? imageFieldValueToMarkdown(image, options) : "";
+  }
+  if (value && typeof value === "object") {
+    const objectValue = value;
+    if ("value" in objectValue) return encodeFieldValueForMarkdown(objectValue.value, def, options);
+    if ("label" in objectValue) return String(objectValue.label ?? "").trim();
+  }
+  if (typeof value === "boolean") return value ? "true" : "false";
+  return String(value).trim();
+}
+function formatFieldValueForTemplate(value, def) {
+  return encodeFieldValueForMarkdown(value, def, { multiSeparator: ", " });
+}
+const FIELD_CODEC_PRESETS = {
+  themePath: { type: "path", inputType: "path", semantic: "themePath", hierarchical: true },
+  categoryPath: { type: "path", inputType: "path", semantic: "categoryPath", hierarchical: true },
+  tags: { type: "tags", inputType: "multiTag", semantic: "tags", cardinality: "multi" },
+  image: { type: "image", inputType: "image", semantic: "image" },
+  number: { type: "number", inputType: "number" },
+  text: { type: "string", inputType: "text" }
+};
+function decodeMarkdownString$1(value, preset = FIELD_CODEC_PRESETS.text) {
+  const decoded = decodeMarkdownFieldValue(value, preset);
+  const encoded = encodeFieldValueForMarkdown(decoded, preset).trim();
+  return encoded || void 0;
+}
+function decodeMarkdownNumber$1(value) {
+  const decoded = decodeMarkdownFieldValue(value, FIELD_CODEC_PRESETS.number);
+  return typeof decoded === "number" && Number.isFinite(decoded) ? decoded : void 0;
+}
+function normalizeMetaKey$1(key) {
+  return String(key ?? "").trim().toLowerCase();
+}
+function unique$2(values2) {
+  return Array.from(new Set(values2.map((value) => value.trim()).filter(Boolean)));
+}
+function decodeTaskMetadata(lineText) {
+  const source = String(lineText || "");
+  const tags2 = (source.match(TAG_RE) || []).map((tag) => tag.replace(/^#/, ""));
+  const extra = {};
+  const result = { tags: tags2, extra };
+  KV_IN_PAREN.lastIndex = 0;
+  let match5;
+  while ((match5 = KV_IN_PAREN.exec(source)) !== null) {
+    const rawKey = match5[1].trim();
+    const value = match5[2].trim();
+    const key = normalizeMetaKey$1(rawKey);
+    if (["主题", "theme", "主题路径", "themepath"].includes(key)) {
+      result.theme = decodeMarkdownString$1(value, FIELD_CODEC_PRESETS.themePath);
+    } else if (["分类", "类别", "category", "categorypath", "分类路径"].includes(key)) {
+      result.categoryKey = decodeMarkdownString$1(value, FIELD_CODEC_PRESETS.categoryPath);
+    } else if (["图片", "image", "评图", "pintu"].includes(key)) {
+      const imageValue = decodeMarkdownString$1(value, FIELD_CODEC_PRESETS.image);
+      if (imageValue) {
+        result.image = imageValue;
+        result.pintu = imageValue;
+      }
+    } else if (["模板id", "templateid"].includes(key)) {
+      result.templateId = value;
+    } else if (["模板来源", "templatesource", "templatesourcetype"].includes(key)) {
+      if (value === "block" || value === "override") result.templateSourceType = value;
+    } else if (["标签", "tag", "tags"].includes(key)) {
+      result.tags.push(...decodeMarkdownFieldValue(value, FIELD_CODEC_PRESETS.tags));
+    } else if (["时间", "time", "start"].includes(key)) {
+      result.startTime = value;
+    } else if (["结束", "end"].includes(key)) {
+      result.endTime = value;
+    } else if (["时长", "duration"].includes(key)) {
+      result.duration = decodeMarkdownNumber$1(value);
+    } else {
+      result.extra[rawKey] = decodeUnknownMarkdownKvValue(value);
+    }
+  }
+  result.tags = unique$2(result.tags);
+  return result;
+}
+function applyTaskMetadata(item, metadata) {
+  item.tags = metadata.tags;
+  item.extra = metadata.extra;
+  if (metadata.theme) item.theme = metadata.theme;
+  if (metadata.categoryKey) item.categoryKey = metadata.categoryKey;
+  if (metadata.image) item.image = metadata.image;
+  if (metadata.pintu) item.pintu = metadata.pintu;
+  if (metadata.templateId) item.templateId = metadata.templateId;
+  if (metadata.templateSourceType) item.templateSourceType = metadata.templateSourceType;
+  if (metadata.startTime) item.startTime = metadata.startTime;
+  if (metadata.endTime) item.endTime = metadata.endTime;
+  if (metadata.duration !== void 0) item.duration = metadata.duration;
+  return item;
+}
+function decodeMarkdownString(value, preset = FIELD_CODEC_PRESETS.text) {
+  const decoded = decodeMarkdownFieldValue(value, preset);
+  const encoded = encodeFieldValueForMarkdown(decoded, preset).trim();
+  return encoded || void 0;
+}
+function decodeMarkdownNumber(value) {
+  const decoded = decodeMarkdownFieldValue(value, FIELD_CODEC_PRESETS.number);
+  return typeof decoded === "number" && Number.isFinite(decoded) ? decoded : void 0;
+}
+function normalizeMetaKey(key) {
+  return String(key ?? "").trim().toLowerCase();
+}
+function unique$1(values2) {
+  return Array.from(new Set(values2.map((value) => value.trim()).filter(Boolean)));
+}
+function buildTitle(content, tags2) {
+  let title = "";
+  const trimmed = content.trim();
+  if (trimmed) title = trimmed.split(/\r?\n/)[0];
+  else if (tags2.length > 0) title = tags2.join(", ");
+  return title.replace(new RegExp("^(?:\\p{Extended_Pictographic}\\uFE0F?\\s*)+", "u"), "").trim().slice(0, 20);
+}
+function decodeBlockContentLines(contentLines, parentFolder) {
+  let categoryKey = null;
+  let date2;
+  const tags2 = [];
+  const extra = {};
+  let content = "";
+  let contentStarted = false;
+  let icon;
+  let period;
+  let rating;
+  let image;
+  let pintu;
+  let theme2;
+  let templateId;
+  let templateSourceType;
+  for (const rawLine of contentLines) {
+    const line2 = rawLine.trim();
+    if (!contentStarted) {
+      if (line2 === "") continue;
+      const kv = line2.match(/^([^:：]{1,20})[:：]{1,2}\s*(.*)$/);
+      if (kv) {
+        const rawKey = kv[1].trim();
+        const value = kv[2] || "";
+        const key = normalizeMetaKey(rawKey);
+        if (["分类", "类别", "category", "categorypath", "分类路径"].includes(key)) {
+          categoryKey = decodeMarkdownString(value, FIELD_CODEC_PRESETS.categoryPath) || "";
+        } else if (["模板id", "templateid"].includes(key)) {
+          templateId = value.trim();
+        } else if (["模板来源", "templatesource", "templatesourcetype"].includes(key)) {
+          const source = value.trim();
+          if (source === "block" || source === "override") templateSourceType = source;
+        } else if (["主题", "theme", "主题路径", "themepath"].includes(key)) {
+          theme2 = decodeMarkdownString(value, FIELD_CODEC_PRESETS.themePath);
+        } else if (["标签", "tag", "tags"].includes(key)) {
+          tags2.push(...decodeMarkdownFieldValue(value, FIELD_CODEC_PRESETS.tags));
+        } else if (["日期", "date"].includes(key)) {
+          date2 = normalizeDateStr(value.trim());
+        } else if (["周期", "period"].includes(key)) {
+          period = decodeMarkdownString(value);
+        } else if (["评分", "rating"].includes(key)) {
+          rating = decodeMarkdownNumber(value);
+        } else if (["图标", "icon"].includes(key)) {
+          icon = value.trim();
+        } else if (["评图", "pintu", "图片", "image"].includes(key)) {
+          image = decodeMarkdownString(value, FIELD_CODEC_PRESETS.image);
+          pintu = image;
+        } else if (["内容", "content"].includes(key)) {
+          contentStarted = true;
+          content = value;
+        } else {
+          extra[rawKey] = decodeUnknownMarkdownKvValue(value);
+        }
+      } else {
+        contentStarted = true;
+        content = rawLine;
+      }
+    } else {
+      content += (content ? "\n" : "") + rawLine;
+    }
+  }
+  const finalTags = unique$1(tags2);
+  return {
+    title: buildTitle(content, finalTags),
+    content: content.trim(),
+    categoryKey: categoryKey || parentFolder || "",
+    date: date2,
+    tags: finalTags,
+    extra,
+    icon,
+    period,
+    rating,
+    image,
+    pintu,
+    theme: theme2,
+    templateId,
+    templateSourceType
   };
 }
 function pick$1(line2, emoji2) {
@@ -3783,7 +5064,6 @@ function parseTaskLine(filePath, rawLine, lineNo, parentFolder, currentHeader) {
     created: 0,
     modified: 0,
     extra: {},
-    fieldOrigins: {},
     categoryKey: "",
     // 稍后填充
     // [新增] 填充 folder
@@ -3793,83 +5073,9 @@ function parseTaskLine(filePath, rawLine, lineNo, parentFolder, currentHeader) {
   };
   const status = isDoneLine(lineText) ? "done" : isCancelledLine(lineText) ? "cancelled" : "open";
   item.categoryKey = status === "done" || status === "cancelled" ? "完成任务" : "未完成任务";
-  const tagMatches = lineText.match(TAG_RE) || [];
-  item.tags = tagMatches.map((t3) => t3.replace("#", ""));
-  if (item.tags.length > 0) {
-    addFieldOrigin(item, "tags", {
-      value: [...item.tags],
-      kind: "markdown_tag",
-      sourcePath: filePath,
-      sourceLine: lineNo,
-      parser: "parseTaskLine",
-      confidence: "explicit"
-    });
-  }
+  applyTaskMetadata(item, decodeTaskMetadata(lineText));
   const recurrenceText = extractRecurrenceText(lineText);
   if (recurrenceText) item.recurrence = recurrenceText;
-  let m2;
-  while ((m2 = KV_IN_PAREN.exec(lineText)) !== null) {
-    const key = m2[1].trim();
-    const value = m2[2].trim();
-    const lowerKey = key.toLowerCase();
-    if (["主题", "theme"].includes(lowerKey)) {
-      item.theme = value;
-      addFieldOrigin(item, "theme", {
-        value,
-        kind: "markdown_task_kv",
-        rawKey: key,
-        sourcePath: filePath,
-        sourceLine: lineNo,
-        parser: "parseTaskLine",
-        confidence: "explicit"
-      });
-    } else if (["模板id", "templateid"].includes(lowerKey)) {
-      item.templateId = value;
-      addFieldOrigin(item, "templateId", { value, kind: "markdown_task_kv", rawKey: key, sourcePath: filePath, sourceLine: lineNo, parser: "parseTaskLine", confidence: "explicit" });
-    } else if (["模板来源", "templatesource", "templatesourcetype"].includes(lowerKey)) {
-      if (value === "block" || value === "override") {
-        item.templateSourceType = value;
-        addFieldOrigin(item, "templateSourceType", { value, kind: "markdown_task_kv", rawKey: key, sourcePath: filePath, sourceLine: lineNo, parser: "parseTaskLine", confidence: "explicit" });
-      }
-    } else if (["标签", "tag", "tags"].includes(lowerKey)) {
-      const parsedTags = [];
-      value.split(/[,，]/).forEach((v2) => {
-        const t3 = v2.trim().replace(/^#/, "");
-        if (t3) {
-          item.tags.push(t3);
-          parsedTags.push(t3);
-        }
-      });
-      if (parsedTags.length > 0) {
-        addFieldOrigin(item, "tags", { value: parsedTags, kind: "markdown_task_kv", rawKey: key, sourcePath: filePath, sourceLine: lineNo, parser: "parseTaskLine", confidence: "explicit" });
-      }
-    } else if (["时间", "time", "start"].includes(lowerKey)) {
-      item.startTime = value;
-      addFieldOrigin(item, "startTime", { value, kind: "markdown_task_kv", rawKey: key, sourcePath: filePath, sourceLine: lineNo, parser: "parseTaskLine", confidence: "explicit" });
-    } else if (["结束", "end"].includes(lowerKey)) {
-      item.endTime = value;
-      addFieldOrigin(item, "endTime", { value, kind: "markdown_task_kv", rawKey: key, sourcePath: filePath, sourceLine: lineNo, parser: "parseTaskLine", confidence: "explicit" });
-    } else if (["时长", "duration"].includes(lowerKey)) {
-      item.duration = Number(value) || void 0;
-      addFieldOrigin(item, "duration", { value: item.duration, kind: "markdown_task_kv", rawKey: key, sourcePath: filePath, sourceLine: lineNo, parser: "parseTaskLine", confidence: "explicit" });
-    } else {
-      const num = Number(value);
-      let parsed = value;
-      if (value !== "" && !isNaN(num)) parsed = num;
-      else if (/^(true|false)$/i.test(value)) parsed = value.toLowerCase() === "true";
-      item.extra[key] = parsed;
-      addFieldOrigin(item, `extra.${key}`, {
-        value: parsed,
-        kind: "markdown_task_kv",
-        rawKey: key,
-        sourcePath: filePath,
-        sourceLine: lineNo,
-        parser: "parseTaskLine",
-        confidence: "explicit"
-      });
-    }
-  }
-  item.tags = Array.from(new Set(item.tags));
   const doneDate = pick$1(lineText, EMOJI.done);
   const cancelledDate = pick$1(lineText, EMOJI.cancelled);
   const dueDate = pick$1(lineText, EMOJI.due);
@@ -3927,128 +5133,35 @@ function parseTaskLine(filePath, rawLine, lineNo, parentFolder, currentHeader) {
 }
 function parseBlockContent(filePath, lines, startIdx, endIdx, parentFolder) {
   const contentLines = lines.slice(startIdx + 1, endIdx);
-  let title = "";
-  let categoryKey = null;
-  let date2;
-  const tags2 = [];
-  const extra = {};
-  const pendingOrigins = [];
-  let contentText = "";
-  let contentStarted = false;
-  let iconVal = null;
-  let periodVal;
-  let ratingVal;
-  let pintuVal;
-  let themeVal;
-  for (let i2 = 0; i2 < contentLines.length; i2++) {
-    const rawLine = contentLines[i2];
-    const line2 = rawLine.trim();
-    if (!contentStarted) {
-      if (line2 === "") continue;
-      const kv = line2.match(/^([^:：]{1,20})[:：]{1,2}\s*(.*)$/);
-      if (kv) {
-        const key = kv[1].trim();
-        const value = kv[2] || "";
-        const lower = key.toLowerCase();
-        if (["分类", "类别", "category"].includes(lower)) {
-          categoryKey = value.trim();
-          pendingOrigins.push({ field: "categoryKey", value: categoryKey, rawKey: key, kind: "markdown_block_kv" });
-        } else if (["模板id", "templateid"].includes(lower)) {
-          extra["templateId"] = value.trim();
-          pendingOrigins.push({ field: "templateId", value: value.trim(), rawKey: key, kind: "markdown_block_kv" });
-        } else if (["模板来源", "templatesource", "templatesourcetype"].includes(lower)) {
-          extra["templateSourceType"] = value.trim();
-          pendingOrigins.push({ field: "templateSourceType", value: value.trim(), rawKey: key, kind: "markdown_block_kv" });
-        } else if (["主题"].includes(lower)) {
-          themeVal = value.trim();
-          pendingOrigins.push({ field: "theme", value: themeVal, rawKey: key, kind: "markdown_block_kv" });
-        } else if (["标签", "tag", "tags"].includes(lower)) {
-          const parsedTags = value.trim().split(/[,，]/).map((t3) => t3.trim().replace(/^#/, "")).filter(Boolean);
-          tags2.push(...parsedTags);
-          if (parsedTags.length > 0) pendingOrigins.push({ field: "tags", value: parsedTags, rawKey: key, kind: "markdown_block_kv" });
-        } else if (["日期", "date"].includes(lower)) {
-          date2 = normalizeDateStr(value.trim());
-          pendingOrigins.push({ field: "date", value: date2, rawKey: key, kind: "markdown_block_kv" });
-        } else if (["周期", "period"].includes(lower)) {
-          periodVal = value.trim();
-          pendingOrigins.push({ field: "period", value: periodVal, rawKey: key, kind: "markdown_block_kv" });
-        } else if (["评分", "rating"].includes(lower)) {
-          ratingVal = Number(value.trim()) || void 0;
-          pendingOrigins.push({ field: "rating", value: ratingVal, rawKey: key, kind: "markdown_block_kv" });
-        } else if (["图标", "icon"].includes(lower)) {
-          iconVal = value.trim();
-          pendingOrigins.push({ field: "icon", value: iconVal, rawKey: key, kind: "markdown_block_kv" });
-        } else if (["评图", "pintu"].includes(lower)) {
-          pintuVal = value.trim();
-          pendingOrigins.push({ field: "pintu", value: pintuVal, rawKey: key, kind: "markdown_block_kv" });
-        } else if (["内容", "content"].includes(lower)) {
-          contentStarted = true;
-          contentText = value;
-          pendingOrigins.push({ field: "content", value, rawKey: key, kind: "markdown_block_kv" });
-        } else {
-          const num = Number(value.trim());
-          let parsed = value.trim();
-          if (parsed !== "" && !isNaN(num)) parsed = num;
-          else if (/^(true|false)$/i.test(parsed)) parsed = parsed.toLowerCase() === "true";
-          extra[key] = parsed;
-          pendingOrigins.push({ field: `extra.${key}`, value: parsed, rawKey: key, kind: "markdown_block_kv" });
-        }
-      } else {
-        contentStarted = true;
-        contentText = rawLine;
-      }
-    } else {
-      contentText += (contentText ? "\n" : "") + rawLine;
-    }
-  }
-  if (contentText.trim() !== "") title = contentText.trim().split(/\r?\n/)[0];
-  else if (tags2.length > 0) title = tags2.join(", ");
-  title = title.replace(new RegExp("^(?:\\p{Extended_Pictographic}\\uFE0F?\\s*)+", "u"), "").trim().slice(0, 20);
-  if (!categoryKey) categoryKey = parentFolder || "";
+  const parsed = decodeBlockContentLines(contentLines, parentFolder);
   const item = {
     id: `${filePath}#${startIdx + 1}`,
-    title: title || "",
-    content: contentText.trim(),
+    title: parsed.title || "",
+    content: parsed.content,
     rawSource: lines.slice(startIdx, endIdx + 1).join("\n"),
-    editableText: contentText.trim(),
+    editableText: parsed.content,
     type: "block",
-    tags: Array.from(new Set(tags2)),
+    tags: parsed.tags,
     recurrence: "none",
     created: 0,
     modified: 0,
-    extra,
-    fieldOrigins: {},
-    categoryKey,
+    extra: parsed.extra,
+    categoryKey: parsed.categoryKey,
     folder: parentFolder,
-    // [Day2新增] 主题字段
-    theme: themeVal
+    theme: parsed.theme
   };
-  const parsedTemplateId = typeof extra["templateId"] === "string" ? String(extra["templateId"]) : void 0;
-  const parsedTemplateSourceType = extra["templateSourceType"] === "block" || extra["templateSourceType"] === "override" ? extra["templateSourceType"] : void 0;
-  if (parsedTemplateId) item.templateId = parsedTemplateId;
-  if (parsedTemplateSourceType) item.templateSourceType = parsedTemplateSourceType;
-  delete extra["templateId"];
-  delete extra["templateSourceType"];
-  if (iconVal) item.icon = iconVal;
-  if (periodVal) item.period = periodVal;
-  if (ratingVal) item.rating = ratingVal;
-  if (pintuVal) item.pintu = pintuVal;
-  pendingOrigins.forEach((origin) => {
-    addFieldOrigin(item, origin.field, {
-      value: origin.value,
-      kind: origin.kind,
-      rawKey: origin.rawKey,
-      sourcePath: filePath,
-      sourceLine: startIdx + 1,
-      parser: "parseBlockContent",
-      confidence: "explicit"
-    });
-  });
-  item.startISO = date2;
-  item.endISO = date2;
+  if (parsed.templateId) item.templateId = parsed.templateId;
+  if (parsed.templateSourceType) item.templateSourceType = parsed.templateSourceType;
+  if (parsed.icon) item.icon = parsed.icon;
+  if (parsed.period) item.period = parsed.period;
+  if (parsed.rating !== void 0) item.rating = parsed.rating;
+  if (parsed.image) item.image = parsed.image;
+  if (parsed.pintu) item.pintu = parsed.pintu;
+  item.startISO = parsed.date;
+  item.endISO = parsed.date;
   if (item.startISO) item.startMs = Date.parse(item.startISO);
   if (item.endISO) item.endMs = item.startMs;
-  item.date = date2;
+  item.date = parsed.date;
   if (item.period && item.date) {
     item.periodCount = getPeriodCount(item.period, dayjs(item.date));
   }
@@ -4296,6 +5409,9 @@ function applyTaskTimePolicy(input) {
 function isDone(categoryKey) {
   return isTaskCompletedByCategory(categoryKey);
 }
+function formatTemplateValue(value) {
+  return formatFieldValueForTemplate(value);
+}
 function renderTemplate(templateString, data) {
   return templateString.replace(/\{\{\s*([^}]+?)\s*\}\}/g, (_2, placeholder) => {
     const key = placeholder.trim();
@@ -4327,11 +5443,7 @@ function renderTemplate(templateString, data) {
             }
           }
         }
-        if (typeof value === "object" && value !== null && "label" in value) {
-          result = String(value.label);
-        } else {
-          result = value !== null && value !== void 0 ? String(value) : "";
-        }
+        result = formatTemplateValue(value);
       }
       return result;
     } catch (e2) {
@@ -5210,13 +6322,13 @@ class AiHttpClient {
       }
       if (!response.ok) {
         const errorBodyStart = nowMs$2();
-        const text = await response.text().catch(() => "");
+        const text2 = await response.text().catch(() => "");
         devWarn(`[AiInput][${traceId}][HTTP] 读取错误响应体完成 (${elapsedMs$1(errorBodyStart)})`, {
           status: response.status,
-          bodyChars: text.length,
-          bodyPreview: text.slice(0, 200)
+          bodyChars: text2.length,
+          bodyPreview: text2.slice(0, 200)
         });
-        throw new Error(`AI HTTP ${response.status}: ${text.slice(0, 200)}`);
+        throw new Error(`AI HTTP ${response.status}: ${text2.slice(0, 200)}`);
       }
       const responseJsonStart = nowMs$2();
       const json = await response.json();
@@ -5604,7 +6716,7 @@ class AiNaturalLanguageRecordParser {
   /**
    * 构建用户提示
    */
-  buildUserPrompt(text, nowIso, maxResults, snapshot) {
+  buildUserPrompt(text2, nowIso, maxResults, snapshot) {
     return [
       `Current time: ${nowIso}`,
       `Max results: ${maxResults}`,
@@ -5616,7 +6728,7 @@ class AiNaturalLanguageRecordParser {
       JSON.stringify(snapshot.blocks, null, 2),
       "",
       "=== USER INPUT ===",
-      text,
+      text2,
       "",
       "Return JSON with target.categoryKey and target.themeId filled:"
     ].join("\n");
@@ -5624,7 +6736,7 @@ class AiNaturalLanguageRecordParser {
   /**
    * 快速模式用户提示：只保留必要字段，减少请求体积和模型推理负担。
    */
-  buildFastUserPrompt(text, nowIso, maxResults, snapshot) {
+  buildFastUserPrompt(text2, nowIso, maxResults, snapshot) {
     const themePaths = (snapshot.themes ?? []).map((theme2) => theme2.path).filter(Boolean);
     const compactBlocks = (snapshot.blocks ?? []).map((block) => ({
       id: block.id,
@@ -5644,7 +6756,7 @@ class AiNaturalLanguageRecordParser {
       JSON.stringify(compactBlocks),
       "",
       "User input:",
-      text,
+      text2,
       "",
       'Return JSON: {"items":[{"rawText":"...","target":{"categoryKey":"...","themeId":"..."},"fieldValues":{},"meta":{"confidence":0.9}}]}'
     ].join("\n");
@@ -7264,14 +8376,14 @@ const $ZodArray = /* @__PURE__ */ $constructor("$ZodArray", (inst, def) => {
   };
 });
 function handlePropertyResult(result, final, key, input, isOptionalIn, isOptionalOut) {
-  const isPresent = key in input;
+  const isPresent2 = key in input;
   if (result.issues.length) {
-    if (isOptionalIn && isOptionalOut && !isPresent) {
+    if (isOptionalIn && isOptionalOut && !isPresent2) {
       return;
     }
     final.issues.push(...prefixIssues(key, result.issues));
   }
-  if (!isPresent && !isOptionalIn) {
+  if (!isPresent2 && !isOptionalIn) {
     if (!result.issues.length) {
       final.issues.push({
         code: "invalid_type",
@@ -7283,7 +8395,7 @@ function handlePropertyResult(result, final, key, input, isOptionalIn, isOptiona
     return;
   }
   if (result.value === void 0) {
-    if (isPresent) {
+    if (isPresent2) {
       final.value[key] = void 0;
     }
   } else {
@@ -10824,10 +11936,10 @@ let VaultFileStorage = class {
   }
   vault;
   async readJSON(path) {
-    const text = await this.vault.readFile(path);
-    if (text == null) return null;
+    const text2 = await this.vault.readFile(path);
+    if (text2 == null) return null;
     try {
-      return JSON.parse(text);
+      return JSON.parse(text2);
     } catch (e2) {
       devWarn(`ThinkPlugin: 读取 JSON 失败 (${path})`, e2);
       return null;
@@ -12863,7 +13975,7 @@ const defaultOptions$1 = {
   idField: "id",
   extractField: (document2, fieldName) => document2[fieldName],
   stringifyField: (fieldValue, fieldName) => fieldValue.toString(),
-  tokenize: (text) => text.split(SPACE_OR_PUNCTUATION),
+  tokenize: (text2) => text2.split(SPACE_OR_PUNCTUATION),
   processTerm: (term) => term.toLowerCase(),
   fields: void 0,
   searchOptions: void 0,
@@ -12922,9 +14034,52 @@ const objectToNumericMapAsync = async (object2) => {
 };
 const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 const SPACE_OR_PUNCTUATION = /[\n\r\p{Z}\p{P}]+/u;
+function unique(values2) {
+  return Array.from(new Set(values2.map((value) => String(value ?? "").trim()).filter(Boolean)));
+}
+function lineFromItemId(id) {
+  const hashIdx = String(id || "").lastIndexOf("#");
+  if (hashIdx < 0) return void 0;
+  const parsed = Number(String(id).slice(hashIdx + 1));
+  return Number.isFinite(parsed) ? parsed : void 0;
+}
+function normalizeSearchText(value) {
+  return String(value ?? "").toLowerCase();
+}
+function normalizeRecordItem(item, context) {
+  const line2 = context.line ?? lineFromItemId(item.id);
+  item.created = context.created;
+  item.modified = context.modified;
+  item.folder = item.folder || context.parentFolder;
+  item.filename = context.fileName;
+  item.fileName = context.fileName;
+  item.file = {
+    path: context.filePath,
+    line: line2,
+    basename: context.fileName,
+    folder: context.parentFolder
+  };
+  if (context.header) {
+    item.header = context.header;
+  }
+  item.tags = unique([...context.sectionTags || [], ...item.tags || []]);
+  item.theme = normalizeExplicitTheme(item.theme, context.themeMatcher);
+  applyExplicitThemeViewFields(item);
+  if (!item.extra) item.extra = {};
+  if (!item.recurrence) item.recurrence = "none";
+  if (!item.categoryKey) item.categoryKey = item.type === "task" ? "未完成任务" : context.parentFolder;
+  normalizeItemDates(item);
+  if (item.type === "task") {
+    item.recurrenceInfo = parseRecurrence(item.content) || void 0;
+  }
+  item.titleLower = normalizeSearchText(item.title);
+  item.contentLower = normalizeSearchText(item.content);
+  item.tagsLower = (item.tags || []).map((tag) => normalizeSearchText(tag));
+  return item;
+}
 const METADATA_PORT_TOKEN = "MetadataPort";
 const FILESTAT_PORT_TOKEN = "FileStatPort";
-const CURRENT_CACHE_SCHEMA_VERSION = 4;
+const CURRENT_CACHE_SCHEMA_VERSION = 5;
 function toCachedItem(it) {
   return {
     id: it.id,
@@ -12940,8 +14095,7 @@ function toCachedItem(it) {
     categoryKey: it.categoryKey,
     created: it.created,
     modified: it.modified,
-    extra: it.extra || {},
-    fieldOrigins: it.fieldOrigins
+    extra: it.extra || {}
   };
 }
 function fromCachedItem(c2) {
@@ -12964,8 +14118,7 @@ function fromCachedItem(c2) {
     dateMs: c2.dateMs,
     filename: c2.filename,
     file: { path: c2.filePath, folder: c2.filePath.split("/").slice(0, -1).pop() || "" },
-    extra: c2.extra || {},
-    fieldOrigins: c2.fieldOrigins || {}
+    extra: c2.extra || {}
   };
   it.titleLower = c2.titleLower ?? "";
   it.contentLower = c2.contentLower ?? "";
@@ -12985,54 +14138,6 @@ var __decorateClass$d = (decorators, target, key, kind) => {
   return result;
 };
 var __decorateParam$c = (index, decorator) => (target, key) => decorator(target, key, index);
-function applyThemeViewFields(item) {
-  applyExplicitThemeViewFields(item);
-  if (item.themePath) {
-    addFieldOrigin(item, "themePath", {
-      value: item.themePath,
-      kind: "system_derived",
-      rawKey: "theme",
-      parser: "applyExplicitThemeViewFields",
-      confidence: "derived",
-      note: "Derived from explicit theme only; header/heading is intentionally excluded."
-    });
-  }
-  if (item.rootTheme) {
-    addFieldOrigin(item, "rootTheme", {
-      value: item.rootTheme,
-      kind: "system_derived",
-      rawKey: "theme",
-      parser: "applyExplicitThemeViewFields",
-      confidence: "derived"
-    });
-  }
-  if (item.leafTheme) {
-    addFieldOrigin(item, "leafTheme", {
-      value: item.leafTheme,
-      kind: "system_derived",
-      rawKey: "theme",
-      parser: "applyExplicitThemeViewFields",
-      confidence: "derived"
-    });
-  }
-}
-function addFileFieldOrigins(item, filePath, fileName, folder, lineNo, header) {
-  addFieldOrigin(item, "file.path", { value: filePath, kind: "file_path", sourcePath: filePath, sourceLine: lineNo, parser: "DataStore.scanFile", confidence: "explicit" });
-  addFieldOrigin(item, "file.basename", { value: fileName, kind: "file_path", sourcePath: filePath, sourceLine: lineNo, parser: "DataStore.scanFile", confidence: "explicit" });
-  addFieldOrigin(item, "file.name", { value: fileName, kind: "file_path", sourcePath: filePath, sourceLine: lineNo, parser: "DataStore.scanFile", confidence: "explicit" });
-  addFieldOrigin(item, "file.folder", { value: folder, kind: "file_path", sourcePath: filePath, sourceLine: lineNo, parser: "DataStore.scanFile", confidence: "explicit" });
-  if (header) {
-    addFieldOrigin(item, "header", {
-      value: header,
-      kind: "markdown_heading",
-      sourcePath: filePath,
-      sourceLine: lineNo,
-      parser: "DataStore.scanFile",
-      confidence: "explicit",
-      note: "Markdown section heading. It is never used as a theme fallback."
-    });
-  }
-}
 let DataStore = class {
   constructor(vault, metadata, fileStat, themeMatcher, storage) {
     this.vault = vault;
@@ -13242,26 +14347,17 @@ let DataStore = class {
           if (endIdx !== -1) {
             const blockItem = parseBlockContent(filePath, lines, i2, endIdx, parentFolder);
             if (blockItem) {
-              blockItem.created = stat.ctime;
-              blockItem.modified = stat.mtime;
-              if (currentHeader) blockItem.header = currentHeader;
-              blockItem.tags = Array.from(/* @__PURE__ */ new Set([...currentSectionTags, ...blockItem.tags]));
-              blockItem.filename = fileName;
-              blockItem.fileName = fileName;
-              normalizeItemDates(blockItem);
-              const hashIdx = blockItem.id.lastIndexOf("#");
-              const lineNo = hashIdx >= 0 ? Number(blockItem.id.slice(hashIdx + 1)) : void 0;
-              blockItem.file = { path: filePath, line: lineNo, basename: fileName, folder: parentFolder };
-              addFileFieldOrigins(blockItem, filePath, fileName, parentFolder, lineNo, currentHeader || void 0);
-              if (currentSectionTags.length > 0) {
-                addFieldOrigin(blockItem, "tags", { value: [...currentSectionTags], kind: "markdown_heading", sourcePath: filePath, sourceLine: lineNo, parser: "DataStore.scanFile", confidence: "explicit", note: "Inherited from current Markdown heading tags." });
-              }
-              const normalizedTheme = normalizeExplicitTheme(blockItem.theme, this.themeMatcher);
-              blockItem.theme = normalizedTheme;
-              blockItem.titleLower = (blockItem.title || "").toLowerCase();
-              blockItem.contentLower = (blockItem.content || "").toLowerCase();
-              blockItem.tagsLower = (blockItem.tags || []).map((t3) => t3.toLowerCase());
-              applyThemeViewFields(blockItem);
+              normalizeRecordItem(blockItem, {
+                filePath,
+                fileName,
+                parentFolder,
+                created: stat.ctime,
+                modified: stat.mtime,
+                line: i2 + 1,
+                header: currentHeader || void 0,
+                sectionTags: currentSectionTags,
+                themeMatcher: this.themeMatcher
+              });
               fileItems.push(blockItem);
             }
             i2 = endIdx;
@@ -13270,24 +14366,17 @@ let DataStore = class {
         }
         const taskItem = parseTaskLine(filePath, line2, i2 + 1, parentFolder);
         if (taskItem) {
-          taskItem.tags = Array.from(/* @__PURE__ */ new Set([...currentSectionTags, ...taskItem.tags]));
-          taskItem.created = stat.ctime;
-          taskItem.modified = stat.mtime;
-          if (currentHeader) taskItem.header = currentHeader;
-          taskItem.theme = normalizeExplicitTheme(taskItem.theme, this.themeMatcher);
-          taskItem.filename = fileName;
-          taskItem.fileName = fileName;
-          normalizeItemDates(taskItem);
-          taskItem.file = { path: filePath, line: i2 + 1, basename: fileName, folder: parentFolder };
-          addFileFieldOrigins(taskItem, filePath, fileName, parentFolder, i2 + 1, currentHeader || void 0);
-          if (currentSectionTags.length > 0) {
-            addFieldOrigin(taskItem, "tags", { value: [...currentSectionTags], kind: "markdown_heading", sourcePath: filePath, sourceLine: i2 + 1, parser: "DataStore.scanFile", confidence: "explicit", note: "Inherited from current Markdown heading tags." });
-          }
-          taskItem.recurrenceInfo = parseRecurrence(taskItem.content) || void 0;
-          taskItem.titleLower = (taskItem.title || "").toLowerCase();
-          taskItem.contentLower = (taskItem.content || "").toLowerCase();
-          taskItem.tagsLower = (taskItem.tags || []).map((t3) => t3.toLowerCase());
-          applyThemeViewFields(taskItem);
+          normalizeRecordItem(taskItem, {
+            filePath,
+            fileName,
+            parentFolder,
+            created: stat.ctime,
+            modified: stat.mtime,
+            line: i2 + 1,
+            header: currentHeader || void 0,
+            sectionTags: currentSectionTags,
+            themeMatcher: this.themeMatcher
+          });
           fileItems.push(taskItem);
         }
       }
@@ -13313,6 +14402,12 @@ let DataStore = class {
       devError("ThinkPlugin: 扫描文件失败", filePath, err);
       return [];
     }
+  }
+  /**
+   * 字段迁移预览（只读）：扫描当前内存记录中的旧字段/污染字段，不修改 Markdown。
+   */
+  getFieldMigrationPreview() {
+    return scanFieldMigrations(this.queryItems([], []));
   }
   removeFileItems(filePath) {
     if (this.fileIndex.has(filePath)) {
@@ -13396,6 +14491,62 @@ var __decorateClass$c = (decorators, target, key, kind) => {
 };
 var __decorateParam$b = (index, decorator) => (target, key) => decorator(target, key, index);
 const DEFAULT_LIMIT = 100;
+const LEGACY_EXTRA_ALIAS_SET = new Set(LEGACY_EXTRA_ALIAS_KEYS);
+const SEARCH_FIELDS = [
+  "title",
+  "content",
+  "editableText",
+  "tags",
+  "themePath",
+  "rootTheme",
+  "leafTheme",
+  "categoryKey",
+  "baseCategory",
+  "leafCategory",
+  "fileName",
+  "folder",
+  "header",
+  "extraText"
+];
+const STORE_FIELDS = [
+  "id",
+  "title",
+  "content",
+  "editableText",
+  "tags",
+  "themePath",
+  "rootTheme",
+  "leafTheme",
+  "categoryKey",
+  "baseCategory",
+  "leafCategory",
+  "type",
+  "templateId",
+  "fileName",
+  "folder",
+  "header",
+  "dateMs",
+  "created",
+  "modified"
+];
+function normalizeText$1(value) {
+  if (value == null) return "";
+  if (Array.isArray(value)) return value.map(normalizeText$1).filter(Boolean).join(" ");
+  if (typeof value === "object") {
+    const anyValue = value;
+    if (typeof anyValue.src === "string") return anyValue.src;
+    if (Array.isArray(anyValue.values)) return normalizeText$1(anyValue.values);
+    return Object.values(anyValue).map(normalizeText$1).filter(Boolean).join(" ");
+  }
+  return String(value).trim();
+}
+function collectSearchableExtraText(item) {
+  const extra = item.extra || {};
+  return Object.entries(extra).filter(([key]) => !LEGACY_EXTRA_ALIAS_SET.has(key)).map(([key, value]) => `${key} ${normalizeText$1(value)}`.trim()).filter(Boolean).join(" ");
+}
+function getResultId(sr) {
+  return String(sr.id ?? "");
+}
 let RetrievalService = class {
   constructor(dataStore) {
     this.dataStore = dataStore;
@@ -13404,30 +14555,35 @@ let RetrievalService = class {
   dataStore;
   miniSearch = null;
   indexedItemIds = /* @__PURE__ */ new Set();
+  indexedItemsById = /* @__PURE__ */ new Map();
   lastIndexTime = 0;
   initMiniSearch() {
     this.miniSearch = new MiniSearch({
-      // 索引的字段
-      fields: ["title", "content", "tags", "theme", "categoryKey"],
-      // 存储的字段（用于返回结果）
-      storeFields: ["id", "title", "content", "type", "theme", "tags", "categoryKey", "dateMs", "created"],
+      // 索引字段：全部来自标准化记录 + FieldValueResolver，不直接索引 legacy theme。
+      fields: SEARCH_FIELDS,
+      // 存储字段只用于搜索结果兜底；优先从 indexedItemsById 返回完整 Item。
+      storeFields: STORE_FIELDS,
       // 自定义字段提取
       extractField: (document2, fieldName) => {
-        if (fieldName === "tags") {
-          return (document2.tags || []).join(" ");
-        }
-        return document2[fieldName] ?? "";
+        return normalizeText$1(document2[fieldName]);
       },
       // 搜索选项
       searchOptions: {
-        boost: { title: 2, theme: 1.5, tags: 1.2 },
+        boost: {
+          title: 2,
+          editableText: 1.8,
+          themePath: 1.5,
+          tags: 1.3,
+          categoryKey: 1.2,
+          extraText: 0.8
+        },
         fuzzy: 0.2,
         prefix: true
       },
       // 中文分词：按字符分割 + 常规分词
-      tokenize: (text) => {
-        if (!text) return [];
-        const words = text.toLowerCase().split(/[\s,，。！？、；：""''（）【】\-_/\\]+/).filter((w2) => w2.length > 0);
+      tokenize: (text2) => {
+        if (!text2) return [];
+        const words = text2.toLowerCase().split(/[\s,，。！？、；：""''（）【】\-_/\\]+/).filter((w2) => w2.length > 0);
         const ngrams = [];
         for (const word of words) {
           if (/[\u4e00-\u9fa5]/.test(word)) {
@@ -13445,6 +14601,30 @@ let RetrievalService = class {
       }
     });
   }
+  itemToSearchDocument(item) {
+    return {
+      id: item.id,
+      title: normalizeText$1(readFieldValue(item, "title")),
+      content: normalizeText$1(readFieldValue(item, "content")),
+      editableText: normalizeText$1(readFieldValue(item, "editableText") ?? item.editableText),
+      tags: normalizeText$1(readFieldValue(item, "tags")),
+      themePath: normalizeText$1(readFieldValue(item, "themePath")),
+      rootTheme: normalizeText$1(readFieldValue(item, "rootTheme")),
+      leafTheme: normalizeText$1(readFieldValue(item, "leafTheme")),
+      categoryKey: normalizeText$1(readFieldValue(item, "categoryKey")),
+      baseCategory: normalizeText$1(readFieldValue(item, "baseCategory")),
+      leafCategory: normalizeText$1(readFieldValue(item, "leafCategory")),
+      type: normalizeText$1(item.type),
+      templateId: normalizeText$1(item.templateId),
+      fileName: normalizeText$1(readFieldValue(item, "fileName")),
+      folder: normalizeText$1(readFieldValue(item, "file.folder") ?? item.folder),
+      header: normalizeText$1(readFieldValue(item, "header")),
+      extraText: collectSearchableExtraText(item),
+      dateMs: item.dateMs,
+      created: item.created,
+      modified: item.modified
+    };
+  }
   // ============== 索引管理 ==============
   /**
    * 构建/重建索引
@@ -13459,9 +14639,14 @@ let RetrievalService = class {
     }
     this.initMiniSearch();
     this.indexedItemIds.clear();
+    this.indexedItemsById.clear();
     try {
       const validItems = itemsToIndex.filter((item) => item.id);
-      this.miniSearch.addAll(validItems);
+      const documents = validItems.map((item) => {
+        this.indexedItemsById.set(item.id, item);
+        return this.itemToSearchDocument(item);
+      });
+      this.miniSearch.addAll(documents);
       validItems.forEach((item) => this.indexedItemIds.add(item.id));
       this.lastIndexTime = Date.now();
       devLog(`RetrievalService: 索引完成，共 ${validItems.length} 条，耗时 ${Date.now() - startTime}ms`);
@@ -13541,22 +14726,29 @@ let RetrievalService = class {
   applyFilters(results, filters) {
     if (!filters) return results;
     return results.filter((sr) => {
+      const item = this.indexedItemsById.get(getResultId(sr));
       if (filters.themePaths && filters.themePaths.length > 0) {
-        const itemTheme = sr.theme;
-        if (!itemTheme) return false;
+        const itemThemePath = normalizeText$1(item ? readFieldValue(item, "themePath") : sr.themePath);
+        if (!itemThemePath) return false;
         const matched = filters.themePaths.some(
-          (tp) => itemTheme === tp || itemTheme.startsWith(tp + "/")
+          (tp) => itemThemePath === tp || itemThemePath.startsWith(tp + "/")
         );
         if (!matched) return false;
       }
       if (filters.types && filters.types.length > 0) {
-        const itemType = sr.type;
+        const itemType = item?.type || sr.type;
         if (!itemType || !filters.types.includes(itemType)) {
           return false;
         }
       }
+      if (filters.blockTemplateIds && filters.blockTemplateIds.length > 0) {
+        const templateId = normalizeText$1(item?.templateId ?? sr.templateId);
+        if (!templateId || !filters.blockTemplateIds.includes(templateId)) {
+          return false;
+        }
+      }
       if (filters.blockTemplateNames && filters.blockTemplateNames.length > 0) {
-        const categoryKey = sr.categoryKey;
+        const categoryKey = normalizeText$1(item ? readFieldValue(item, "categoryKey") : sr.categoryKey);
         if (!categoryKey) return false;
         const categoryBase = categoryKey.split("/")[0];
         if (!filters.blockTemplateNames.includes(categoryBase)) {
@@ -13567,32 +14759,48 @@ let RetrievalService = class {
     });
   }
   /**
-   * 将 SearchResult 转换回 Item（部分字段）
+   * 将 SearchResult 转换回 Item。优先返回 DataStore 中的完整标准化 Item。
    */
   searchResultToItem(sr) {
+    const id = getResultId(sr);
+    const indexedItem = this.indexedItemsById.get(id);
+    if (indexedItem) return indexedItem;
     return {
-      id: sr.id,
+      id,
       title: sr.title ?? "",
       content: sr.content ?? "",
+      editableText: sr.editableText ?? "",
       type: sr.type ?? "task",
-      theme: sr.theme,
-      tags: sr.tags ?? [],
+      themePath: sr.themePath || void 0,
+      rootTheme: sr.rootTheme || void 0,
+      leafTheme: sr.leafTheme || void 0,
+      tags: normalizeText$1(sr.tags).split(/\s+/).filter(Boolean),
       categoryKey: sr.categoryKey ?? "",
+      templateId: sr.templateId || void 0,
       dateMs: sr.dateMs,
       created: sr.created ?? 0,
-      modified: 0,
+      modified: sr.modified ?? 0,
       recurrence: "none",
       extra: {}
     };
   }
   /**
-   * 根据 ID 列表获取完整 Item（从 DataStore）
+   * 根据 ID 列表获取完整 Item（优先从当前索引缓存，其次从 DataStore）
    */
   getItemsByIds(ids2) {
-    if (!this.dataStore) return [];
+    if (!ids2.length) return [];
+    const result = [];
+    const missing = [];
+    for (const id of ids2) {
+      const item = this.indexedItemsById.get(id);
+      if (item) result.push(item);
+      else missing.push(id);
+    }
+    if (!missing.length || !this.dataStore) return result;
     const allItems = this.dataStore.queryItems([], []);
-    const idSet = new Set(ids2);
-    return allItems.filter((item) => idSet.has(item.id));
+    const missingSet = new Set(missing);
+    result.push(...allItems.filter((item) => missingSet.has(item.id)));
+    return result;
   }
 };
 RetrievalService = __decorateClass$c([
@@ -14692,25 +15900,31 @@ ${outputContent}` : outputContent;
     return path;
   }
   buildRenderData(template, formData, theme2, templateMeta) {
-    const normalizedData = { ...formData };
-    for (const field of template.fields || []) {
-      const raw = normalizedData[field.key];
-      if (!raw || typeof raw !== "object") continue;
-      const hasLabel = Object.prototype.hasOwnProperty.call(raw, "label");
-      const hasValue2 = Object.prototype.hasOwnProperty.call(raw, "value");
-      if (!hasLabel && !hasValue2) continue;
-      if (field.semanticType === "ratingPair") {
-        normalizedData[field.key] = { label: raw.label, value: raw.value };
-        const auxKey = field.auxKey || "评图";
-        if (raw.value !== void 0) normalizedData[auxKey] = raw.value;
-      } else if (field.semanticType === "path" || ["select", "radio"].includes(field.type)) {
-        normalizedData[field.key] = { label: raw.label, value: raw.value };
-      }
-    }
+    const normalizedData = normalizeTemplateRenderData(template, formData);
+    const normalizedTheme = normalizedData.theme && typeof normalizedData.theme === "object" ? normalizedData.theme : null;
+    const explicitThemePath = String(normalizedData.themePath ?? normalizedTheme?.path ?? "").trim();
+    const themePath = explicitThemePath || theme2?.path || "";
+    const themeParts = themePath.split("/").map((part) => part.trim()).filter(Boolean);
+    const categoryPath = String(normalizedData.categoryKey ?? normalizedData.categoryPath ?? template.categoryKey ?? "").trim();
+    const categoryParts = categoryPath.split("/").map((part) => part.trim()).filter(Boolean);
     return {
       ...normalizedData,
-      block: { name: template.name, id: template.id, categoryKey: template.categoryKey },
-      theme: theme2 ? { path: theme2.path, icon: theme2.icon || "" } : {},
+      block: { name: template.name, id: template.id, categoryKey: categoryPath || template.categoryKey },
+      categoryKey: categoryPath,
+      categoryPath,
+      baseCategory: categoryParts[0] || "",
+      rootCategory: categoryParts[0] || "",
+      leafCategory: categoryParts.length ? categoryParts[categoryParts.length - 1] : "",
+      theme: {
+        ...normalizedTheme || {},
+        path: themePath,
+        root: themeParts[0] || "",
+        leaf: themeParts.length ? themeParts[themeParts.length - 1] : "",
+        icon: theme2?.icon || String(normalizedTheme?.icon ?? "")
+      },
+      themePath,
+      rootTheme: themeParts[0] || "",
+      leafTheme: themeParts.length ? themeParts[themeParts.length - 1] : "",
       templateId: templateMeta?.templateId || template.id,
       templateSourceType: templateMeta?.templateSourceType || "block"
     };
@@ -14735,9 +15949,9 @@ ${outputContent}` : outputContent;
   async appendUnderHeader(filePath, header, payload, signal) {
     const esc2 = header.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
     const regex = new RegExp(`^${esc2}\\s*$`, "m");
-    const text = await this.vault.readFile(filePath) ?? "";
+    const text2 = await this.vault.readFile(filePath) ?? "";
     this.throwIfAborted(signal);
-    const lines = text.split("\n");
+    const lines = text2.split("\n");
     let headerLineIndex = lines.findIndex((line2) => regex.test(line2));
     if (headerLineIndex === -1) {
       if (lines.length && lines[lines.length - 1].trim() !== "") lines.push("");
@@ -15270,26 +16484,27 @@ function normalizePath(value) {
   return trimmed || null;
 }
 function buildRenderData(template, formData, theme2, templateMeta) {
-  const normalizedData = { ...formData };
-  const themeParts = splitThemePath(theme2?.path ?? null);
-  for (const field of template.fields || []) {
-    const raw = normalizedData[field.key];
-    if (!raw || typeof raw !== "object") continue;
-    const hasLabel = Object.prototype.hasOwnProperty.call(raw, "label");
-    const hasValue2 = Object.prototype.hasOwnProperty.call(raw, "value");
-    if (!hasLabel && !hasValue2) continue;
-    if (field.semanticType === "ratingPair") {
-      normalizedData[field.key] = { label: raw.label, value: raw.value };
-      const auxKey = field.auxKey || "评图";
-      if (raw.value !== void 0) normalizedData[auxKey] = raw.value;
-    } else if (field.semanticType === "path" || ["select", "radio"].includes(field.type)) {
-      normalizedData[field.key] = { label: raw.label, value: raw.value };
-    }
-  }
+  const normalizedData = normalizeTemplateRenderData(template, formData);
+  const normalizedTheme = normalizedData.theme && typeof normalizedData.theme === "object" ? normalizedData.theme : null;
+  const explicitThemePath = String(normalizedData.themePath ?? normalizedTheme?.path ?? "").trim();
+  const themeParts = splitThemePath(explicitThemePath || theme2?.path || null);
+  const categoryPath = String(normalizedData.categoryKey ?? normalizedData.categoryPath ?? template.categoryKey ?? "").trim();
+  const categoryParts = categoryPath.split("/").map((part) => part.trim()).filter(Boolean);
   return {
     ...normalizedData,
-    block: { name: template.name, id: template.id, categoryKey: template.categoryKey },
-    theme: theme2 ? { path: themeParts.themePath, root: themeParts.rootTheme, leaf: themeParts.leafTheme, icon: theme2.icon || "" } : { path: null, root: null, leaf: null },
+    block: { name: template.name, id: template.id, categoryKey: categoryPath || template.categoryKey },
+    categoryKey: categoryPath,
+    categoryPath,
+    baseCategory: categoryParts[0] || "",
+    rootCategory: categoryParts[0] || "",
+    leafCategory: categoryParts.length ? categoryParts[categoryParts.length - 1] : "",
+    theme: {
+      ...normalizedTheme || {},
+      path: themeParts.themePath,
+      root: themeParts.rootTheme,
+      leaf: themeParts.leafTheme,
+      icon: theme2?.icon || String(normalizedTheme?.icon ?? "")
+    },
     themePath: themeParts.themePath,
     rootTheme: themeParts.rootTheme,
     leafTheme: themeParts.leafTheme,
@@ -15450,45 +16665,45 @@ function resolveRecordDependencies(input) {
     }
   };
 }
-function isOptionObject$2(value) {
-  return !!value && typeof value === "object" && ("value" in value || "label" in value);
+function normalizeToken$1(value) {
+  return String(value ?? "").trim().toLowerCase();
 }
-function isPathLikeField$1(field) {
-  if (!field) return false;
-  if (field.semanticType === "path") return true;
-  const key = normalizeToken$1(field.key || field.label || "");
-  if (["主题", "theme", "themepath", "完整主题", "完整路径主题", "主题路径", "roottheme", "根主题", "leaftheme", "叶主题"].includes(key)) {
-    return true;
+function isPresent(value) {
+  if (value === void 0 || value === null) return false;
+  if (typeof value === "string") return value.trim() !== "";
+  if (Array.isArray(value)) return value.length > 0;
+  return true;
+}
+function fieldCodecDefinition(field) {
+  const inputType = getTemplateFieldInputType(field);
+  const semantic = getTemplateFieldSemantic(field);
+  return {
+    type: semantic === "tags" ? "tags" : semantic === "themePath" || semantic === "categoryPath" || inputType === "path" || inputType === "multiPath" ? "path" : semantic === "image" || inputType === "image" || inputType === "multiImage" ? "image" : semantic === "rating" || inputType === "number" ? "number" : "string",
+    inputType,
+    semantic,
+    cardinality: field.cardinality || (["multiSelect", "multiPath", "multiTag", "multiImage"].includes(inputType) ? "multi" : "single"),
+    hierarchical: field.hierarchical || semantic === "themePath" || semantic === "categoryPath" || semantic === "tags"
+  };
+}
+function readExtraByAlias(item, aliases2) {
+  const entries = Object.entries(item.extra || {});
+  for (const alias of aliases2) {
+    const rawAlias = String(alias ?? "").trim();
+    if (!rawAlias) continue;
+    if (item.extra && Object.prototype.hasOwnProperty.call(item.extra, rawAlias)) return item.extra[rawAlias];
+    const lower = normalizeToken$1(rawAlias);
+    const matched = entries.find(([key]) => normalizeToken$1(key) === lower);
+    if (matched) return matched[1];
   }
-  if (Array.isArray(field.options) && field.options.some((opt) => String(opt?.value || "").includes("/"))) return true;
-  return false;
-}
-function isCategoryLikeField$1(field) {
-  if (!field) return false;
-  const key = String(field.key || field.label || "");
-  return key.includes("分类") || /category/i.test(key);
-}
-function isPeriodField(field) {
-  const key = normalizeToken$1(field?.key);
-  const label = normalizeToken$1(field?.label);
-  return ["周期", "period"].includes(key) || ["周期", "period"].includes(label);
-}
-function isTagsField$1(field) {
-  const key = normalizeToken$1(field?.key);
-  const label = normalizeToken$1(field?.label);
-  return ["标签", "tag", "tags"].includes(key) || ["标签", "tag", "tags"].includes(label);
+  return void 0;
 }
 function readPeriodFromLegacyCategory(field, item, snapshot) {
-  const candidates = [
-    snapshot.semantic.categoryKey,
-    item.categoryKey,
-    ...String(item.rawSource || "").split(/\r?\n/).map((line2) => line2.trim().match(/^分类[:：]{1,2}\s*(.+)$/)?.[1]?.trim()).filter(Boolean)
-  ];
-  const options = field?.options || [];
+  const candidates = [snapshot.semantic.categoryKey, item.categoryKey];
+  const options = field.options || [];
   for (const candidate of candidates) {
     const raw = String(candidate || "").trim();
     if (!raw) continue;
-    const leaf = getLeafPath(raw) || raw;
+    const leaf = raw.split("/").filter(Boolean).pop() || raw;
     const matched = options.find((opt) => {
       const optValue = String(opt.value || "").trim();
       const optLabel = String(opt.label || "").trim();
@@ -15498,36 +16713,118 @@ function readPeriodFromLegacyCategory(field, item, snapshot) {
   }
   return void 0;
 }
-function mapFieldValue(field, rawValue) {
-  if (rawValue === void 0 || rawValue === null || rawValue === "") return void 0;
-  if (isOptionObject$2(rawValue)) {
-    return { value: rawValue.value, label: rawValue.label ?? rawValue.value };
+function buildRatingPairOption(field, item, snapshot) {
+  const options = field.options || [];
+  const score = String(item.rating ?? "");
+  const image = String(item.image ?? item.pintu ?? item.extra?.["评图"] ?? item.extra?.["pintu"] ?? item.extra?.["图片"] ?? "");
+  let matched = options.find((opt) => String(opt.label ?? "") === score && (!image || String(opt.value || "") === image));
+  if (!matched && score) matched = options.find((opt) => String(opt.label ?? opt.value) === score);
+  if (!matched && image) matched = options.find((opt) => String(opt.value || "") === image);
+  if (matched) return { value: matched.value, label: matched.label || matched.value };
+  if (score || image) return { value: image || score, label: score || image };
+  return void 0;
+}
+function readSemanticFieldValue(field, item, snapshot) {
+  const semantic = getTemplateFieldSemantic(field);
+  switch (semantic) {
+    case "body":
+      return item.type === "task" ? snapshot.semantic.editableText || snapshot.semantic.title || snapshot.semantic.content : snapshot.semantic.editableText || snapshot.semantic.content || snapshot.semantic.title;
+    case "title":
+      return item.type === "task" ? snapshot.semantic.editableText || snapshot.semantic.title || snapshot.semantic.content : snapshot.semantic.title || snapshot.semantic.editableText || snapshot.semantic.content;
+    case "date":
+      return snapshot.semantic.date;
+    case "period":
+      return snapshot.semantic.period || readPeriodFromLegacyCategory(field, item, snapshot);
+    case "tags":
+      return parseTagList(snapshot.semantic.tags);
+    case "startTime":
+      return snapshot.semantic.startTime;
+    case "endTime":
+      return snapshot.semantic.endTime;
+    case "duration":
+      return snapshot.semantic.duration;
+    case "themePath":
+      return snapshot.semantic.themePath;
+    case "categoryPath":
+      return snapshot.semantic.categoryKey;
+    case "rating":
+      if (isTemplateRatingPairField(field)) return buildRatingPairOption(field, item);
+      return item.rating;
+    case "image":
+      return normalizeImageValue(item.image ?? item.pintu ?? item.extra?.["图片"] ?? item.extra?.["image"] ?? item.extra?.["评图"] ?? item.extra?.["pintu"])?.src;
+    case "icon":
+      return item.icon;
+    case "priority":
+      return item.priority;
+    case "recurrence":
+      return item.recurrence;
+    default:
+      return void 0;
   }
-  if (["select", "radio", "rating"].includes(field.type)) {
-    const options = field.options || [];
-    if (field.type === "rating" || field.semanticType === "ratingPair") {
-      const option2 = options.find((opt) => String(opt.label ?? opt.value) === String(rawValue) || String(opt.value) === String(rawValue));
-      if (option2) return { value: option2.value, label: option2.label || option2.value };
-    }
-    if (isPathLikeField$1(field)) {
-      const rawPath = normalizePath$2(String(rawValue));
-      const option2 = options.find((opt) => normalizePath$2(String(opt.value || "")) === rawPath || String(opt.label || "") === String(rawValue));
-      if (option2) return { value: normalizePath$2(String(option2.value)), label: option2.label || getLeafPath(String(option2.value)) || option2.value };
-      const built = buildPathOption(String(rawValue));
-      if (built) return built;
-    }
-    const option = options.find((opt) => opt.value === rawValue || opt.label === rawValue || String(opt.value) === String(rawValue) || String(opt.label) === String(rawValue));
-    if (option) return { value: option.value, label: option.label || option.value };
+}
+function readRegisteredOrExtraValue(field, item) {
+  const aliases2 = [field.key, field.label, ...field.storage?.aliases || []];
+  const byKey = field.key ? resolveFieldValue(item, field.key).value : void 0;
+  if (isPresent(byKey)) return byKey;
+  const byLabel = field.label ? resolveFieldValue(item, field.label).value : void 0;
+  if (isPresent(byLabel)) return byLabel;
+  const extraValue = readExtraByAlias(item, aliases2);
+  if (isPresent(extraValue)) return extraValue;
+  const directKey = field.key ? item[field.key] : void 0;
+  if (isPresent(directKey)) return directKey;
+  const directLabel = field.label ? item[field.label] : void 0;
+  if (isPresent(directLabel)) return directLabel;
+  return void 0;
+}
+function matchOptionValue(field, rawValue) {
+  if (!isPresent(rawValue)) return rawValue;
+  if (isOptionObject$1(rawValue)) return rawValue;
+  const inputType = getTemplateFieldInputType(field);
+  const options = field.options || [];
+  if (isTemplatePathField(field)) {
+    const normalizedPath = normalizeHierarchyPath(rawValue);
+    if (!normalizedPath) return rawValue;
+    const matched = options.find((opt) => normalizeHierarchyPath(opt?.value) === normalizedPath || String(opt?.label ?? "") === String(rawValue));
+    return { value: normalizedPath, label: matched?.label || normalizedPath.split("/").pop() || normalizedPath };
+  }
+  if (["select", "radio", "singleSelect", "rating"].includes(inputType)) {
+    const rawString = String(rawValue);
+    const matched = options.find((opt) => String(opt?.value) === rawString || String(opt?.label) === rawString || String(opt?.label ?? opt?.value) === rawString);
+    if (matched) return { value: matched.value, label: matched.label || matched.value };
+    if (inputType === "rating") return { value: rawString, label: rawString };
   }
   return rawValue;
 }
-function normalizeToken$1(value) {
+function normalizeBackfillValue(field, rawValue) {
+  if (!isPresent(rawValue)) return void 0;
+  if (isTemplateRatingPairField(field) && isOptionObject$1(rawValue)) return rawValue;
+  const decoded = decodeMarkdownFieldValue(rawValue, fieldCodecDefinition(field));
+  const normalized = normalizeTemplateFieldValue(field, decoded);
+  return matchOptionValue(field, normalized);
+}
+function resolveInitialFieldValue(input) {
+  const semanticValue = readSemanticFieldValue(input.field, input.item, input.snapshot);
+  if (isPresent(semanticValue)) return normalizeBackfillValue(input.field, semanticValue);
+  const registeredOrExtra = readRegisteredOrExtraValue(input.field, input.item);
+  if (isPresent(registeredOrExtra)) return normalizeBackfillValue(input.field, registeredOrExtra);
+  return void 0;
+}
+function buildInitialEditFormData(input) {
+  const result = {};
+  const fields = input.template?.fields || [];
+  for (const field of fields) {
+    const value = resolveInitialFieldValue({ field, item: input.item, snapshot: input.snapshot });
+    if (isPresent(value)) result[field.key] = value;
+  }
+  return result;
+}
+function normalizeToken(value) {
   return String(value || "").trim().toLowerCase();
 }
 function getItemSemanticTokens(item) {
   const tokens = /* @__PURE__ */ new Set();
   const push = (value) => {
-    const normalized = normalizeToken$1(value);
+    const normalized = normalizeToken(value);
     if (normalized) tokens.add(normalized);
   };
   push(item.categoryKey);
@@ -15550,11 +16847,11 @@ function scoreTemplateForItem(block, item) {
   let score = 0;
   const outputTemplate = String(block?.outputTemplate || "");
   const semanticTokens = getItemSemanticTokens(item);
-  const categoryKey = normalizeToken$1(item.categoryKey);
-  const blockId = normalizeToken$1(block?.id);
-  const blockName = normalizeToken$1(block?.name);
-  const blockCategory = normalizeToken$1(block?.categoryKey);
-  if (item.templateId && normalizeToken$1(item.templateId) === blockId) score += 100;
+  const categoryKey = normalizeToken(item.categoryKey);
+  const blockId = normalizeToken(block?.id);
+  const blockName = normalizeToken(block?.name);
+  const blockCategory = normalizeToken(block?.categoryKey);
+  if (item.templateId && normalizeToken(item.templateId) === blockId) score += 100;
   if (categoryKey && categoryKey === blockCategory) score += 30;
   if (categoryKey && categoryKey === blockName) score += 20;
   if (item.type === "task") {
@@ -15565,8 +16862,8 @@ function scoreTemplateForItem(block, item) {
   }
   const fields = Array.isArray(block?.fields) ? block.fields : [];
   for (const field of fields) {
-    const key = normalizeToken$1(field?.key);
-    const label = normalizeToken$1(field?.label);
+    const key = normalizeToken(field?.key);
+    const label = normalizeToken(field?.label);
     if (semanticTokens.has(key)) score += 8;
     if (label && semanticTokens.has(label)) score += 6;
     if (item.type === "task" && ["title", "标题", "content", "内容"].includes(field?.key)) score += 4;
@@ -15657,89 +16954,8 @@ function resolveBlockForEdit(settings, item, preferredBlockId) {
     debugReason: `无法精确/推断命中，使用同类型 fallback=${sameTypeFallback?.id || blocks[0]?.id || ""}。`
   };
 }
-function buildRatingOption(field, item) {
-  if (item.rating === void 0 && !item.pintu) return void 0;
-  const options = field?.options || [];
-  const score = item.rating !== void 0 && item.rating !== null ? String(item.rating) : "";
-  const image = String(item.pintu || "");
-  let option = options.find((opt) => String(opt.label ?? "") === score && (!image || String(opt.value || "") === image));
-  if (!option && score) option = options.find((opt) => String(opt.label ?? opt.value) === score);
-  if (!option && image) option = options.find((opt) => String(opt.value || "") === image);
-  if (option) return { value: option.value, label: option.label || option.value };
-  if (score || image) return { value: image, label: score || image };
-  return void 0;
-}
-function isContentField(field) {
-  const key = normalizeToken$1(field?.key);
-  const label = normalizeToken$1(field?.label);
-  const semantic = normalizeToken$1(field?.semanticType);
-  return semantic === "content" || ["内容", "正文", "content", "body", "任务内容", "记录内容", "taskcontent"].includes(key) || ["内容", "正文", "content", "body", "任务内容", "记录内容", "taskcontent"].includes(label);
-}
-function isTitleField(field) {
-  const key = normalizeToken$1(field?.key);
-  const label = normalizeToken$1(field?.label);
-  return ["title", "标题"].includes(key) || ["title", "标题"].includes(label);
-}
-function readSnapshotSemanticValue(field, item, snapshot) {
-  const key = normalizeToken$1(field?.key);
-  const label = normalizeToken$1(field?.label);
-  if (item.type === "task" && (isContentField(field) || isTitleField(field))) {
-    return snapshot.semantic.editableText || snapshot.semantic.title || item.title || item.content;
-  }
-  if (isContentField(field)) return snapshot.semantic.editableText || snapshot.semantic.content || item.content;
-  if (isTitleField(field)) return snapshot.semantic.title || snapshot.semantic.editableText || item.title;
-  if (["日期", "date"].includes(key) || ["日期", "date"].includes(label)) return snapshot.semantic.date;
-  if (isPeriodField(field)) return snapshot.semantic.period || readPeriodFromLegacyCategory(field, item, snapshot);
-  if (isTagsField$1(field)) return formatTagsForField(snapshot.semantic.tags) || formatTagsForField(item.tags);
-  if (["时间", "time", "start", "starttime"].includes(key) || ["时间", "time", "start", "starttime"].includes(label)) return snapshot.semantic.startTime;
-  if (["结束", "end", "endtime"].includes(key) || ["结束", "end", "endtime"].includes(label)) return snapshot.semantic.endTime;
-  if (["时长", "duration"].includes(key) || ["时长", "duration"].includes(label)) return snapshot.semantic.duration;
-  if (["主题", "theme", "themepath", "完整主题", "完整路径主题"].includes(key) || ["主题", "theme", "themepath", "完整主题", "完整路径主题"].includes(label)) {
-    return snapshot.semantic.themePath || item.theme || null;
-  }
-  if (["roottheme", "根主题"].includes(key) || ["roottheme", "根主题"].includes(label)) return snapshot.semantic.rootTheme;
-  if (["leaftheme", "叶主题"].includes(key) || ["leaftheme", "叶主题"].includes(label)) return snapshot.semantic.leafTheme;
-  if (isCategoryLikeField$1(field)) return snapshot.semantic.categoryKey || item.categoryKey;
-  return void 0;
-}
 function buildInitialFormData(template, item, snapshot = buildParsedRecordSnapshot(item)) {
-  const result = {};
-  if (!template?.fields?.length) return result;
-  const extraEntries = Object.entries(item.extra || {});
-  const readExtraByAlias = (alias) => {
-    if (!alias) return void 0;
-    if (item.extra && Object.prototype.hasOwnProperty.call(item.extra, alias)) return item.extra[alias];
-    const lower = normalizeToken$1(alias);
-    const match5 = extraEntries.find(([key]) => normalizeToken$1(key) === lower);
-    return match5?.[1];
-  };
-  const readValue = (field) => {
-    const key = String(field.key || "").toLowerCase();
-    const label = String(field.label || "").toLowerCase();
-    if (field.type === "rating" || field.semanticType === "ratingPair" || ["评分", "rating"].includes(key) || ["评分", "rating"].includes(label)) {
-      return buildRatingOption(field, item);
-    }
-    const semanticValue = readSnapshotSemanticValue(field, item, snapshot);
-    if (semanticValue !== void 0 && semanticValue !== null && semanticValue !== "") return semanticValue;
-    const aliases2 = [field.key, field.label, String(field.key || "").toLowerCase(), String(field.label || "").toLowerCase()];
-    for (const alias of aliases2) {
-      const value = readExtraByAlias(alias);
-      if (value !== void 0) return value;
-    }
-    if (isCategoryLikeField$1(field)) {
-      return snapshot.semantic.categoryKey || item.categoryKey || void 0;
-    }
-    if (isPathLikeField$1(field)) {
-      return snapshot.semantic.themePath || item.theme || void 0;
-    }
-    return item[field.key] ?? item[field.label];
-  };
-  for (const field of template.fields) {
-    const raw = readValue(field);
-    const mapped = mapFieldValue(field, raw);
-    if (mapped !== void 0) result[field.key] = mapped;
-  }
-  return result;
+  return buildInitialEditFormData({ template, item, snapshot });
 }
 function buildEditRecordState(input) {
   const { settings, item, preferredBlockId, preferredThemeId } = input;
@@ -15807,16 +17023,14 @@ function buildEditRecordState(input) {
     warnings
   };
 }
-function normalizeToken(value) {
-  return String(value || "").trim().toLowerCase();
-}
 function fieldMatches(field, aliases2) {
-  const tokens = [field?.key, field?.label, field?.semanticType, field?.role].map(normalizeToken).filter(Boolean);
-  const normalizedAliases = aliases2.map(normalizeToken);
-  return tokens.some((token2) => normalizedAliases.includes(token2));
+  return templateFieldMatches(field, aliases2);
 }
-function findFieldKey(fields, aliases2, fallbackKey) {
-  const matched = fields.find((field) => fieldMatches(field, aliases2));
+function fieldSemanticMatches(field, semantic) {
+  return getTemplateFieldSemantic(field) === semantic;
+}
+function findFieldKey(fields, aliases2, fallbackKey, semantic) {
+  const matched = fields.find((field) => (semantic ? fieldSemanticMatches(field, semantic) : false) || fieldMatches(field, aliases2));
   return String(matched?.key || fallbackKey);
 }
 function parseDurationValue(value) {
@@ -15825,9 +17039,9 @@ function parseDurationValue(value) {
   return Number.isFinite(parsed) ? parsed : void 0;
 }
 function finalizeTimeFieldsByTemplate(formData, fields, direction) {
-  const startKey = findFieldKey(fields, ["时间", "开始", "开始时间", "time", "start", "starttime", "startTime"], "时间");
-  const endKey = findFieldKey(fields, ["结束", "结束时间", "end", "endtime", "endTime"], "结束");
-  const durationKey = findFieldKey(fields, ["时长", "duration", "minutes", "持续时间"], "时长");
+  const startKey = findFieldKey(fields, ["时间", "开始", "开始时间", "time", "start", "starttime", "startTime"], "时间", "startTime");
+  const endKey = findFieldKey(fields, ["结束", "结束时间", "end", "endtime", "endTime"], "结束", "endTime");
+  const durationKey = findFieldKey(fields, ["时长", "duration", "minutes", "持续时间"], "时长", "duration");
   const startTime = formData[startKey] ?? formData["时间"];
   const endTime = formData[endKey] ?? formData["结束"];
   const duration2 = parseDurationValue(formData[durationKey] ?? formData["时长"]);
@@ -15852,76 +17066,18 @@ function finalizeTimeFieldsByTemplate(formData, fields, direction) {
     if (durationKey !== "时长" && Object.prototype.hasOwnProperty.call(finalized, "时长")) finalized["时长"] = normalizedTriple.duration;
   }
   recordDebugLog("时间计算", "normalizeRecordInput 保存前时间字段归一化", {
-    templateFields: fields.map((field) => ({ key: field?.key, label: field?.label, semanticType: field?.semanticType })),
+    templateFields: fields.map((field) => ({
+      key: field?.key,
+      label: field?.label,
+      semantic: field?.semantic,
+      semanticType: field?.semanticType,
+      type: field?.type
+    })),
     recognizedKeys: { startKey, endKey, durationKey, direction },
     before: { startTime, endTime, duration: duration2, formData },
     after: { normalizedTriple, finalized }
   });
   return finalized;
-}
-function isOptionObject$1(value) {
-  return !!value && typeof value === "object" && ("value" in value || "label" in value);
-}
-function isPathLikeField(field) {
-  if (!field) return false;
-  if (field.semanticType === "path") return true;
-  const key = normalizeToken(field.key || field.label || "");
-  if (["主题", "theme", "themepath", "完整主题", "完整路径主题", "主题路径", "roottheme", "根主题", "leaftheme", "叶主题"].includes(key)) {
-    return true;
-  }
-  if (Array.isArray(field.options) && field.options.some((opt) => String(opt?.value || "").includes("/"))) return true;
-  return false;
-}
-function isCategoryLikeField(field) {
-  if (!field) return false;
-  const key = String(field.key || field.label || "");
-  return key.includes("分类") || /category/i.test(key);
-}
-function isTagsField(field) {
-  return fieldMatches(field, ["标签", "tag", "tags"]);
-}
-function normalizeOptionValue(field, rawValue) {
-  if (rawValue === void 0 || rawValue === null || rawValue === "") return rawValue;
-  if (isOptionObject$1(rawValue)) {
-    if (isPathLikeField(field) || isCategoryLikeField(field)) {
-      const normalized = normalizePath$2(String(rawValue.value ?? rawValue.label ?? ""));
-      return { value: normalized, label: String((rawValue.label ?? getLeafPath(normalized)) || normalized) };
-    }
-    return {
-      value: rawValue.value,
-      label: rawValue.label ?? rawValue.value
-    };
-  }
-  if (!["select", "radio", "rating"].includes(field.type)) {
-    return rawValue;
-  }
-  const rawString = String(rawValue);
-  const options = field.options || [];
-  if (isPathLikeField(field) || isCategoryLikeField(field)) {
-    const normalizedPath = normalizePath$2(rawString);
-    const matched2 = options.find((opt) => normalizePath$2(String(opt.value || "")) === normalizedPath || String(opt.label || "") === rawString);
-    if (matched2) {
-      return {
-        value: normalizePath$2(String(matched2.value || "")),
-        label: matched2.label || getLeafPath(String(matched2.value || "")) || matched2.value
-      };
-    }
-    return buildPathOption(normalizedPath) ?? rawValue;
-  }
-  const matched = options.find((opt) => String(opt.value) === rawString || String(opt.label) === rawString || String(opt.label ?? opt.value) === rawString);
-  if (matched) {
-    return {
-      value: matched.value,
-      label: matched.label || matched.value
-    };
-  }
-  if (field.type === "rating" || field.semanticType === "ratingPair") {
-    return {
-      value: rawString,
-      label: rawString
-    };
-  }
-  return rawValue;
 }
 function normalizeRecordInput(input) {
   const normalizedFormData = { ...input.formData };
@@ -15930,11 +17086,11 @@ function normalizeRecordInput(input) {
   delete normalizedFormData.__timeDirection;
   for (const field of input.template.fields || []) {
     if (!Object.prototype.hasOwnProperty.call(normalizedFormData, field.key)) continue;
-    if (isTagsField(field)) {
-      normalizedFormData[field.key] = parseTagsInput(normalizedFormData[field.key]);
+    if (isTemplateTagField(field)) {
+      normalizedFormData[field.key] = normalizeTemplateFieldValue(field, normalizedFormData[field.key]);
       continue;
     }
-    normalizedFormData[field.key] = normalizeOptionValue(field, normalizedFormData[field.key]);
+    normalizedFormData[field.key] = normalizeTemplateFieldValue(field, normalizedFormData[field.key]);
   }
   const finalized = finalizeTimeFieldsByTemplate(
     normalizedFormData,
@@ -38942,18 +40098,18 @@ function textCriteriaMatches(nextFocus, textCriteria) {
   if (textCriteria === void 0) {
     return true;
   }
-  let text = nextFocus.innerText;
-  if (text === void 0) {
-    text = nextFocus.textContent;
+  let text2 = nextFocus.innerText;
+  if (text2 === void 0) {
+    text2 = nextFocus.textContent;
   }
-  text = text.trim().toLowerCase();
-  if (text.length === 0) {
+  text2 = text2.trim().toLowerCase();
+  if (text2.length === 0) {
     return false;
   }
   if (textCriteria.repeating) {
-    return text[0] === textCriteria.keys[0];
+    return text2[0] === textCriteria.keys[0];
   }
-  return text.startsWith(textCriteria.keys.join(""));
+  return text2.startsWith(textCriteria.keys.join(""));
 }
 function moveFocus$1(list, currentFocus, disableListWrap, disabledItemsFocusable, traversalFunction, textCriteria) {
   let wrappedOnce = false;
@@ -45785,8 +46941,9 @@ function SimpleSelect({ value, options, onChange, placeholder, fullWidth, sx, di
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [wrapperRef]);
-  const handleOptionClick = (optionValue) => {
-    onChange(optionValue);
+  const handleOptionClick = (option) => {
+    if (disabled || option.disabled) return;
+    onChange(option.value);
     setIsOpen(false);
   };
   return /* @__PURE__ */ u2(
@@ -45844,27 +47001,46 @@ function SimpleSelect({ value, options, onChange, placeholder, fullWidth, sx, di
               zIndex: 1300
               // 确保在其他元素之上
             },
-            children: options.map((option) => /* @__PURE__ */ u2(
-              Box$1,
-              {
-                onClick: () => handleOptionClick(option.value),
-                sx: {
-                  padding: "8px 12px",
-                  fontSize: 13,
-                  cursor: disabled ? "not-allowed" : "pointer",
-                  opacity: disabled ? 0.55 : 1,
-                  "&:hover": {
-                    bgcolor: "action.hover"
-                  },
-                  ...value === option.value && {
-                    bgcolor: "action.selected",
-                    fontWeight: 500
+            children: options.map((option, index) => {
+              const showGroupHeader = option.group && option.group !== options[index - 1]?.group;
+              return /* @__PURE__ */ u2("div", { children: [
+                showGroupHeader && /* @__PURE__ */ u2(
+                  Box$1,
+                  {
+                    sx: {
+                      px: 1.5,
+                      py: 0.75,
+                      fontSize: 12,
+                      fontWeight: 700,
+                      color: "text.secondary",
+                      bgcolor: "action.hover",
+                      borderTop: index === 0 ? "none" : "1px solid rgba(0,0,0,0.06)"
+                    },
+                    children: option.group
                   }
-                },
-                children: option.label
-              },
-              option.value
-            ))
+                ),
+                /* @__PURE__ */ u2(
+                  Box$1,
+                  {
+                    onClick: () => handleOptionClick(option),
+                    sx: {
+                      padding: "8px 12px",
+                      fontSize: 13,
+                      cursor: disabled || option.disabled ? "not-allowed" : "pointer",
+                      opacity: disabled || option.disabled ? 0.55 : 1,
+                      "&:hover": {
+                        bgcolor: option.disabled ? "transparent" : "action.hover"
+                      },
+                      ...value === option.value && {
+                        bgcolor: "action.selected",
+                        fontWeight: 500
+                      }
+                    },
+                    children: option.label
+                  }
+                )
+              ] }, `${option.group || "default"}-${option.value}`);
+            })
           }
         )
       ]
@@ -45951,11 +47127,16 @@ function FieldManager({
   disabled = false,
   maxFields,
   className = "",
-  getFieldLabel: getFieldLabel2 = (field) => field
+  getFieldLabel: getFieldLabel2 = (field) => field,
+  getFieldGroupLabel
 }) {
   const availableOptions = T$1(() => {
-    return availableFields.filter((field) => !fields.includes(field)).map((field) => ({ value: field, label: getFieldLabel2(field) }));
-  }, [availableFields, fields, getFieldLabel2]);
+    return availableFields.filter((field) => !fields.includes(field)).map((field) => ({
+      value: field,
+      label: getFieldLabel2(field),
+      group: getFieldGroupLabel?.(field)
+    }));
+  }, [availableFields, fields, getFieldLabel2, getFieldGroupLabel]);
   const handleAddField = (field) => {
     if (maxFields !== void 0 && fields.length >= maxFields) {
       return;
@@ -46257,7 +47438,7 @@ function HeatmapCell({
   if (visualValue) {
     if (isHexColor(visualValue)) {
       cellStyle.backgroundColor = visualValue;
-    } else if (isImagePath(visualValue)) {
+    } else if (isImagePath$1(visualValue)) {
       const imageUrl = app.vault.adapter.getResourcePath(visualValue);
       cellContent = /* @__PURE__ */ u2("div", { class: "cell-with-image", children: /* @__PURE__ */ u2("img", { src: imageUrl, alt: "", class: "w-full h-full object-cover" }) });
     } else {
@@ -46298,7 +47479,7 @@ function FieldPill({ item, fieldKey, app, allThemes }) {
   if (fieldKey === "tags") {
     return /* @__PURE__ */ u2(TagsRenderer, { tags: value, allThemes });
   }
-  if (fieldKey === "theme" && typeof value === "string") {
+  if ((fieldKey === "themePath" || fieldKey === "theme" || fieldKey === "rootTheme" || fieldKey === "leafTheme") && typeof value === "string") {
     const fullPath = value;
     const labelText = getLeafPath(fullPath) || fullPath;
     return /* @__PURE__ */ u2("span", { class: "tag-pill", title: `${label}: ${fullPath}`, style: { backgroundColor: getCategoryColor(fullPath) }, children: labelText });
@@ -46307,8 +47488,12 @@ function FieldPill({ item, fieldKey, app, allThemes }) {
     const baseCategory = getLeafPath(item.categoryKey) || getBaseCategory(item.categoryKey);
     return /* @__PURE__ */ u2("span", { class: "tag-pill", title: `${label}: ${value}`, style: { backgroundColor: getCategoryColor(item.categoryKey) }, children: baseCategory });
   }
-  if (fieldKey === "pintu" && typeof value === "string") {
-    return /* @__PURE__ */ u2("span", { class: "tag-pill", title: `${label}: ${value}`, children: /* @__PURE__ */ u2("img", { src: app.vault.adapter.getResourcePath(value), alt: label }) });
+  const fieldDef = getFieldDefinition(fieldKey);
+  if (isImageFieldDefinition(fieldDef)) {
+    const image = normalizeImageValue(value);
+    if (!image) return null;
+    const src = image.kind === "url" ? image.src : app.vault.adapter.getResourcePath(image.src);
+    return /* @__PURE__ */ u2("span", { class: "tag-pill", title: `${label}: ${image.src}`, children: /* @__PURE__ */ u2("img", { src, alt: image.alt || label }) });
   }
   const displayValue = Array.isArray(value) ? value.join(", ") : String(value);
   return /* @__PURE__ */ u2("span", { class: "tag-pill", title: `${label}: ${displayValue}`, children: displayValue });
@@ -48651,10 +49836,10 @@ function locateCreatedRecord(beforeItems, afterItems, context) {
   return scored[0]?.item;
 }
 function inferCreatedItemType(outputTemplate) {
-  const text = String(outputTemplate || "").trim();
-  if (!text) return "unknown";
-  if (/^\s*-\s*\[[ xX]?\]/m.test(text)) return "task";
-  if (/<!--\s*start\s*-->/i.test(text) || /<!--\s*end\s*-->/i.test(text)) return "block";
+  const text2 = String(outputTemplate || "").trim();
+  if (!text2) return "unknown";
+  if (/^\s*-\s*\[[ xX]?\]/m.test(text2)) return "task";
+  if (/<!--\s*start\s*-->/i.test(text2) || /<!--\s*end\s*-->/i.test(text2)) return "block";
   return "unknown";
 }
 function normalizePlanText(value) {
@@ -49506,6 +50691,14 @@ function SelectablePill({
     }
   );
 }
+function toArrayValue(value) {
+  if (Array.isArray(value)) return value.map((v2) => String(typeof v2 === "object" && v2 !== null ? v2.value ?? v2.label ?? "" : v2)).filter(Boolean);
+  if (value && typeof value === "object") return [String(value.value ?? value.label ?? "")].filter(Boolean);
+  return String(value ?? "").split(/[,，\n]/).map((part) => part.trim()).filter(Boolean);
+}
+function isImagePath(value) {
+  return !!normalizeImageValue(value);
+}
 function QuickInputEditorFields({ getResourcePath, template, formData, dense = false, onUpdateField, timeDirection = "forward", onTimeDirectionChange, onRequestSubmit, isMobileLike = false, showTimeDirectionControl = false }) {
   const handleUpdate = (key, value, isOptionObject2 = false) => {
     onUpdateField(key, value, isOptionObject2);
@@ -49517,10 +50710,14 @@ function QuickInputEditorFields({ getResourcePath, template, formData, dense = f
     el.style.height = `${Math.max(el.scrollHeight, minHeight2)}px`;
   };
   const isInlineRowField = (field) => {
+    const semantic = getTemplateFieldSemantic(field);
     const label = field.label || field.key;
-    return label === "状态" || label === "重复" || label === "日期";
+    return semantic === "status" || semantic === "recurrence" || semantic === "date" || label === "状态" || label === "重复" || label === "日期";
   };
-  const isTimeField = (field) => ["时间", "结束", "时长"].includes(field.label || field.key);
+  const isTimeField = (field) => {
+    const semantic = getTemplateFieldSemantic(field);
+    return semantic === "startTime" || semantic === "endTime" || semantic === "duration" || ["时间", "结束", "时长"].includes(field.label || field.key);
+  };
   const renderFieldLabel = (label) => /* @__PURE__ */ u2(
     Typography$1,
     {
@@ -49583,21 +50780,116 @@ function QuickInputEditorFields({ getResourcePath, template, formData, dense = f
       );
     }) });
   };
+  const renderMultiOptionPills = (field) => {
+    const selected = new Set(toArrayValue(formData[field.key]));
+    return /* @__PURE__ */ u2(Box$1, { sx: { display: "flex", flexWrap: "wrap", gap: "8px" }, children: (field.options || []).map((opt, index) => {
+      const optValue = String(opt.value ?? opt.label ?? "");
+      const isSelected = selected.has(optValue);
+      return /* @__PURE__ */ u2(
+        SelectablePill,
+        {
+          selected: isSelected,
+          onClick: () => {
+            const next2 = new Set(selected);
+            if (isSelected) next2.delete(optValue);
+            else next2.add(optValue);
+            handleUpdate(field.key, Array.from(next2));
+          },
+          title: opt.label || opt.value,
+          children: opt.label || opt.value
+        },
+        index
+      );
+    }) });
+  };
+  const renderImagePreview = (rawValue) => {
+    const image = normalizeImageValue(rawValue);
+    if (!image) return null;
+    const src = /^https?:\/\//i.test(image.src) ? image.src : getResourcePath(image.src);
+    return /* @__PURE__ */ u2(Box$1, { sx: { mt: 0.8, display: "flex", alignItems: "center", gap: 1 }, children: [
+      /* @__PURE__ */ u2(
+        "img",
+        {
+          src,
+          alt: image.alt || image.src,
+          style: { width: "56px", height: "56px", objectFit: "cover", borderRadius: "8px", border: "1px solid var(--background-modifier-border)" }
+        }
+      ),
+      /* @__PURE__ */ u2(Typography$1, { variant: "caption", sx: { color: "text.secondary", overflowWrap: "anywhere" }, children: image.src })
+    ] });
+  };
+  const renderTextAreaValueField = (field, label, value) => {
+    const multiline = isTemplateMultiValueField(field);
+    const displayValue = Array.isArray(value) ? value.join("\n") : String(value ?? "");
+    const control = /* @__PURE__ */ u2(
+      "textarea",
+      {
+        className: "think-native-input think-native-input--textarea",
+        value: displayValue,
+        rows: dense ? 3 : 4,
+        onInput: (e2) => {
+          handleUpdate(field.key, e2.target.value);
+          if (e2.target instanceof HTMLTextAreaElement) autoResizeTextarea(e2.target);
+        },
+        onKeyDown: (e2) => {
+          e2.stopPropagation();
+          if (isMobileLike) return;
+          if ((e2.metaKey || e2.ctrlKey) && e2.key === "Enter" && !e2.nativeEvent?.isComposing) {
+            onRequestSubmit?.();
+            e2.preventDefault();
+          }
+        },
+        placeholder: multiline ? "每行一个，或用逗号分隔" : void 0,
+        ref: (el) => autoResizeTextarea(el),
+        style: { resize: "none", overflowY: "hidden", minHeight: dense ? "78px" : "96px" }
+      }
+    );
+    return renderStandardField(label, control, true);
+  };
   const renderField = (field) => {
-    const isComplex = typeof formData[field.key] === "object" && formData[field.key] !== null;
+    const inputType = getTemplateFieldInputType(field);
+    const isComplex = typeof formData[field.key] === "object" && formData[field.key] !== null && !Array.isArray(formData[field.key]);
     const value = isComplex ? formData[field.key]?.value : formData[field.key];
     const label = field.label || field.key;
-    switch (field.type) {
+    if (inputType === "multiSelect") {
+      return renderStandardField(label, renderMultiOptionPills(field));
+    }
+    if (isTemplateTagField(field) || inputType === "multiPath" || inputType === "multiImage") {
+      return renderTextAreaValueField(field, label, value);
+    }
+    if (isTemplateImageField(field)) {
+      const control = /* @__PURE__ */ u2(Box$1, { children: [
+        /* @__PURE__ */ u2(
+          "input",
+          {
+            className: "think-native-input",
+            value: String(value || ""),
+            onInput: (e2) => handleUpdate(field.key, e2.target.value),
+            onKeyDown: (e2) => {
+              e2.stopPropagation();
+              if (!isMobileLike && e2.key === "Enter" && !(e2.metaKey || e2.ctrlKey || e2.shiftKey) && !e2.nativeEvent?.isComposing) {
+                onRequestSubmit?.();
+                e2.preventDefault();
+              }
+            },
+            placeholder: "图片路径、![[图片.png]] 或 URL"
+          }
+        ),
+        renderImagePreview(value)
+      ] });
+      return renderStandardField(label, control);
+    }
+    switch (inputType) {
       case "rating":
         return renderStandardField(
           label,
           /* @__PURE__ */ u2(Stack$1, { direction: "row", spacing: 0.9, sx: { mt: 0.1, flexWrap: "wrap" }, children: (field.options || []).map((opt) => {
             const isSelected = isComplex && formData[field.key]?.label === opt.label && formData[field.key]?.value === opt.value;
-            const isImagePath2 = opt.value && (opt.value.endsWith(".png") || opt.value.endsWith(".jpg") || opt.value.endsWith(".jpeg") || opt.value.endsWith(".svg"));
-            const displayContent = isImagePath2 ? /* @__PURE__ */ u2(
+            const imageValue = isImagePath(opt.value) ? normalizeImageValue(opt.value) : void 0;
+            const displayContent = imageValue ? /* @__PURE__ */ u2(
               "img",
               {
-                src: getResourcePath(opt.value),
+                src: /^https?:\/\//i.test(imageValue.src) ? imageValue.src : getResourcePath(imageValue.src),
                 alt: opt.label,
                 style: { width: "22px", height: "22px", objectFit: "contain" }
               }
@@ -49627,9 +50919,11 @@ function QuickInputEditorFields({ getResourcePath, template, formData, dense = f
         );
       case "radio":
         return isInlineRowField(field) ? renderInlineRow(label, renderOptionPills(field)) : renderStandardField(label, renderOptionPills(field));
-      case "select": {
+      case "select":
+      case "singleSelect":
+      case "path": {
         const selectOptions = (field.options || []).map((opt) => ({ value: opt.value, label: opt.label || opt.value }));
-        const selectControl = /* @__PURE__ */ u2(FormControl, { fullWidth: true, children: /* @__PURE__ */ u2(
+        const selectControl = selectOptions.length ? /* @__PURE__ */ u2(FormControl, { fullWidth: true, children: /* @__PURE__ */ u2(
           SimpleSelect,
           {
             value: value || "",
@@ -49639,25 +50933,35 @@ function QuickInputEditorFields({ getResourcePath, template, formData, dense = f
               const selectedOption = field.options?.find((opt) => opt.value === selectedValue);
               if (selectedOption) {
                 handleUpdate(field.key, { value: selectedOption.value, label: selectedOption.label || selectedOption.value }, true);
+              } else {
+                handleUpdate(field.key, selectedValue);
               }
             }
           }
-        ) });
+        ) }) : /* @__PURE__ */ u2(
+          "input",
+          {
+            className: "think-native-input",
+            value: value || "",
+            onInput: (e2) => handleUpdate(field.key, e2.target.value),
+            placeholder: isTemplatePathField(field) ? "例如：生活/健康" : void 0
+          }
+        );
         return isInlineRowField(field) ? renderInlineRow(label, selectControl) : renderStandardField(label, selectControl);
       }
       default: {
         const commonInputProps = {
-          className: field.type === "textarea" ? "think-native-input think-native-input--textarea" : "think-native-input",
+          className: inputType === "textarea" ? "think-native-input think-native-input--textarea" : "think-native-input",
           value: value || "",
           onInput: (e2) => {
             handleUpdate(field.key, e2.target.value);
-            if (field.type === "textarea" && e2.target instanceof HTMLTextAreaElement) {
+            if (inputType === "textarea" && e2.target instanceof HTMLTextAreaElement) {
               autoResizeTextarea(e2.target);
             }
           },
           onKeyDown: (e2) => {
             e2.stopPropagation();
-            if (field.type === "textarea") {
+            if (inputType === "textarea") {
               if (isMobileLike) return;
               if ((e2.metaKey || e2.ctrlKey) && e2.key === "Enter" && !e2.nativeEvent?.isComposing) {
                 onRequestSubmit?.();
@@ -49672,7 +50976,7 @@ function QuickInputEditorFields({ getResourcePath, template, formData, dense = f
             }
           }
         };
-        const control = field.type === "textarea" ? /* @__PURE__ */ u2(
+        const control = inputType === "textarea" ? /* @__PURE__ */ u2(
           "textarea",
           {
             ...commonInputProps,
@@ -49685,7 +50989,7 @@ function QuickInputEditorFields({ getResourcePath, template, formData, dense = f
           "input",
           {
             ...commonInputProps,
-            type: field.type === "text" ? "text" : field.type,
+            type: inputType === "text" ? "text" : inputType,
             min: field.min,
             max: field.max,
             enterKeyHint: isMobileLike ? "enter" : "done",
@@ -49695,28 +50999,30 @@ function QuickInputEditorFields({ getResourcePath, template, formData, dense = f
         if (isInlineRowField(field)) {
           return renderInlineRow(label, control);
         }
-        return renderStandardField(label, control, field.type === "textarea");
+        return renderStandardField(label, control, inputType === "textarea");
       }
     }
   };
   const renderFields = () => {
-    const timeFieldKeys = ["时间", "结束", "时长"];
-    const dateFieldKey = "日期";
     const fieldsToRender = [];
-    const dateField = template.fields.find((f2) => f2.key === dateFieldKey);
     const timeFields = [];
+    const dateFields = [];
     template.fields.forEach((field) => {
-      if (field.key !== dateFieldKey && !timeFieldKeys.includes(field.key)) {
-        fieldsToRender.push(/* @__PURE__ */ u2("div", { children: renderField(field) }, field.id));
-      } else if (timeFieldKeys.includes(field.key)) {
+      const semantic = getTemplateFieldSemantic(field);
+      if (semantic === "date") {
+        dateFields.push(field);
+      } else if (semantic === "startTime" || semantic === "endTime" || semantic === "duration") {
         timeFields.push(field);
+      } else {
+        fieldsToRender.push(/* @__PURE__ */ u2("div", { children: renderField(field) }, field.id));
       }
     });
-    if (dateField) {
-      fieldsToRender.push(/* @__PURE__ */ u2("div", { children: renderField(dateField) }, dateField.id));
-    }
+    dateFields.forEach((field) => {
+      fieldsToRender.push(/* @__PURE__ */ u2("div", { children: renderField(field) }, field.id));
+    });
     if (timeFields.length > 0) {
-      const sortedTimeFields = timeFieldKeys.map((key) => timeFields.find((f2) => f2.key === key)).filter((f2) => f2 !== void 0);
+      const order2 = { startTime: 0, endTime: 1, duration: 2 };
+      const sortedTimeFields = [...timeFields].sort((a2, b2) => (order2[getTemplateFieldSemantic(a2)] ?? 99) - (order2[getTemplateFieldSemantic(b2)] ?? 99));
       fieldsToRender.push(
         /* @__PURE__ */ u2(Box$1, { sx: { display: "flex", flexDirection: "column", gap: 1 }, children: [
           /* @__PURE__ */ u2(
@@ -49725,7 +51031,7 @@ function QuickInputEditorFields({ getResourcePath, template, formData, dense = f
               className: "think-form-row",
               sx: {
                 display: "grid",
-                gridTemplateColumns: { xs: "1fr", sm: "repeat(3, minmax(0, 1fr))" },
+                gridTemplateColumns: { xs: "1fr", sm: `repeat(${Math.min(sortedTimeFields.length, 3)}, minmax(0, 1fr))` },
                 gap: 1.25,
                 pt: 0.2
               },
@@ -50825,10 +52131,10 @@ const SmartToyIcon = createSvgIcon(/* @__PURE__ */ u2("path", {
   d: "M20 9V7c0-1.1-.9-2-2-2h-3c0-1.66-1.34-3-3-3S9 3.34 9 5H6c-1.1 0-2 .9-2 2v2c-1.66 0-3 1.34-3 3s1.34 3 3 3v4c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2v-4c1.66 0 3-1.34 3-3s-1.34-3-3-3M7.5 11.5c0-.83.67-1.5 1.5-1.5s1.5.67 1.5 1.5S9.83 13 9 13s-1.5-.67-1.5-1.5M16 17H8v-2h8zm-1-4c-.83 0-1.5-.67-1.5-1.5S14.17 10 15 10s1.5.67 1.5 1.5S15.83 13 15 13"
 }));
 function AiTextPromptForm({ onSubmit, onCancel, isLoading }) {
-  const [text, setText] = d("");
+  const [text2, setText] = d("");
   const handleSubmit = () => {
-    if (text.trim()) {
-      onSubmit(text.trim());
+    if (text2.trim()) {
+      onSubmit(text2.trim());
     }
   };
   const handleKeyDown = (e2) => {
@@ -50863,7 +52169,7 @@ function AiTextPromptForm({ onSubmit, onCancel, isLoading }) {
         multiline: true,
         rows: 4,
         placeholder: "例如：今天早上9点到11点学习了2小时英语，感觉很好",
-        value: text,
+        value: text2,
         onChange: (e2) => setText(e2.target.value),
         onKeyDown: handleKeyDown,
         autoFocus: true,
@@ -50879,7 +52185,7 @@ function AiTextPromptForm({ onSubmit, onCancel, isLoading }) {
         {
           variant: "contained",
           onClick: handleSubmit,
-          disabled: !text.trim() || isLoading,
+          disabled: !text2.trim() || isLoading,
           startIcon: isLoading ? /* @__PURE__ */ u2(CircularProgress, { size: 16 }) : void 0,
           children: isLoading ? "解析中..." : "解析"
         }
@@ -50942,9 +52248,9 @@ class AiTextPromptModal extends obsidian.Modal {
       /* @__PURE__ */ u2(
         AiTextPromptForm,
         {
-          onSubmit: (text) => {
+          onSubmit: (text2) => {
             if (this.resolvePromise) {
-              this.resolvePromise(text);
+              this.resolvePromise(text2);
               this.resolvePromise = null;
             }
             this.close();
@@ -55762,6 +57068,9 @@ const ArrowDownwardIcon = createSvgIcon(/* @__PURE__ */ u2("path", {
 const ArrowUpwardIcon = createSvgIcon(/* @__PURE__ */ u2("path", {
   d: "m4 12 1.41 1.41L11 7.83V20h2V7.83l5.58 5.59L20 12l-8-8z"
 }));
+const ExpandLessIcon = createSvgIcon(/* @__PURE__ */ u2("path", {
+  d: "m12 8-6 6 1.41 1.41L12 10.83l4.59 4.58L18 14z"
+}));
 function readInputValue$1(event) {
   return (event.target || event.currentTarget).value;
 }
@@ -56054,30 +57363,28 @@ function OptionRow({
     ) })
   ] });
 }
-const fieldTypeOptions = [
-  { value: "text", label: "单行文本" },
-  { value: "textarea", label: "多行文本" },
-  { value: "number", label: "数字" },
-  { value: "date", label: "日期" },
-  { value: "time", label: "时间" },
-  { value: "select", label: "下拉选择" },
-  { value: "radio", label: "单选按钮" },
-  { value: "rating", label: "评分" }
-];
+const fieldTypeOptions = getUserTemplateFieldTypeOptions();
+function defaultInputType(uiType) {
+  if (uiType === "number") return "number";
+  if (uiType === "date") return "date";
+  if (uiType === "time") return "time";
+  if (uiType === "datetime") return "datetime-local";
+  return "text";
+}
 function FieldRow({
   field,
   index,
   fieldCount,
   disabled = false,
+  isDragging = false,
   onUpdate,
   onRemove,
   onMove
 }) {
   const [localName, setLocalName] = d(field.label || field.key);
-  const [localDefaultValue, setLocalDefaultValue] = d(
-    field.defaultValue || ""
-  );
+  const [localDefaultValue, setLocalDefaultValue] = d(field.defaultValue || "");
   const [isEditing, setIsEditing] = d(false);
+  const [detailsOpen, setDetailsOpen] = d(false);
   const renderCountRef = A$1(0);
   const previousFieldRef = A$1(null);
   renderCountRef.current += 1;
@@ -56089,6 +57396,7 @@ function FieldRow({
       fieldType: field.type,
       disabled,
       isEditing,
+      isDragging,
       fieldRefChanged: previousFieldRef.current !== null && previousFieldRef.current !== field,
       localName,
       localDefaultValue,
@@ -56104,12 +57412,6 @@ function FieldRow({
   }, [field.defaultValue, field.id]);
   const handleNameBlur = () => {
     const trimmedName = localName.trim();
-    console.log("[字段编辑器][字段名称编辑] 字段名称输入框失焦", {
-      字段id: field.id,
-      原字段名: field.label || field.key,
-      输入值: localName,
-      去空格后: trimmedName
-    });
     if (trimmedName && trimmedName !== (field.label || field.key)) {
       onUpdate({ key: trimmedName, label: trimmedName });
     } else {
@@ -56120,261 +57422,216 @@ function FieldRow({
   const handleOptionChange = (optIndex, newOption) => {
     const newOptions = [...field.options || []];
     newOptions[optIndex] = newOption;
-    console.log("[字段编辑器][选项编辑] 更新选项到字段", {
-      字段: field.key,
-      选项索引: optIndex,
-      新选项列表: newOptions
-    });
     onUpdate({ options: newOptions });
   };
   const addOption = () => {
     const newOptions = [...field.options || []];
-    newOptions.push({ value: "🆕", label: String(newOptions.length + 1) });
-    console.log("[字段编辑器][选项编辑] 添加选项", {
-      字段: field.key,
-      新选项列表: newOptions
-    });
+    newOptions.push({ value: "新选项", label: String(newOptions.length + 1) });
     onUpdate({ options: newOptions });
+    setDetailsOpen(true);
   };
   const removeOption = (optIndex) => {
     const nextOptions = (field.options || []).filter((_2, i2) => i2 !== optIndex);
-    console.log("[字段编辑器][选项编辑] 删除选项", {
-      字段: field.key,
-      删除索引: optIndex,
-      新选项列表: nextOptions
-    });
     onUpdate({ options: nextOptions });
   };
-  const showOptionsEditor = ["select", "radio", "rating"].includes(field.type);
-  const isCategoryLike = ["select", "radio"].includes(field.type) && ((field.semanticType || "") === "path" || String(field.key || field.label || "").includes("分类"));
-  const isRatingLike = field.type === "rating" || field.semanticType === "ratingPair";
-  const showDefaultValueEditor = [
-    "text",
-    "textarea",
-    "number",
-    "date",
-    "time"
-  ].includes(field.type);
-  return /* @__PURE__ */ u2(Box$1, { children: [
-    /* @__PURE__ */ u2(Stack$1, { direction: "row", spacing: 2, alignItems: "flex-start", children: [
-      /* @__PURE__ */ u2(Box$1, { sx: { minWidth: 120, flexShrink: 0 }, children: /* @__PURE__ */ u2(
-        SimpleSelect,
-        {
-          value: field.type,
-          options: fieldTypeOptions,
-          onChange: (val) => {
-            console.log("[字段编辑器][字段类型编辑] 修改字段类型", {
-              字段: field.key,
-              原类型: field.type,
-              新类型: val
-            });
-            onUpdate({ type: val });
-          },
-          disabled,
-          sx: { minWidth: 120, flexShrink: 0 }
-        }
-      ) }),
-      /* @__PURE__ */ u2(
-        NativeTextInput$1,
-        {
-          label: "字段名称",
-          placeholder: "例如：任务内容",
-          value: localName,
-          onInput: (value) => {
-            console.log(
-              "[字段编辑器][字段名称编辑] 正在输入字段名称 native onInput",
-              { 字段id: field.id, 输入值: value }
-            );
-            setLocalName(value);
-          },
-          onBlur: handleNameBlur,
-          onFocus: () => setIsEditing(true),
-          disabled,
-          style: { flexGrow: 1 },
-          title: "该名称将作为表单项的标题，并在模板中通过 {{字段名称}} 的形式引用"
-        }
-      ),
-      field.type === "number" && /* @__PURE__ */ u2(Stack$1, { direction: "row", spacing: 1, children: [
-        /* @__PURE__ */ u2(
-          NativeTextInput$1,
-          {
-            label: "Min",
-            type: "number",
-            value: field.min ?? "",
-            onInput: (value) => onUpdate({ min: value === "" ? void 0 : Number(value) }),
-            disabled,
-            style: { width: 80 }
-          }
-        ),
-        /* @__PURE__ */ u2(
-          NativeTextInput$1,
-          {
-            label: "Max",
-            type: "number",
-            value: field.max ?? "",
-            onInput: (value) => onUpdate({ max: value === "" ? void 0 : Number(value) }),
-            disabled,
-            style: { width: 80 }
-          }
-        )
-      ] }),
-      /* @__PURE__ */ u2(Stack$1, { direction: "row", sx: { pt: 2.5 }, children: [
-        /* @__PURE__ */ u2(
-          IconAction,
-          {
-            label: "上移",
-            disabled: disabled || index === 0,
-            onClick: () => onMove("up"),
-            icon: /* @__PURE__ */ u2(ArrowUpwardIcon, { sx: { fontSize: "1.1rem" } })
-          }
-        ),
-        /* @__PURE__ */ u2(
-          IconAction,
-          {
-            label: "下移",
-            disabled: disabled || index === fieldCount - 1,
-            onClick: () => onMove("down"),
-            icon: /* @__PURE__ */ u2(ArrowDownwardIcon, { sx: { fontSize: "1.1rem" } })
-          }
-        )
-      ] }),
-      /* @__PURE__ */ u2(Box$1, { sx: { pt: 2.5 }, children: /* @__PURE__ */ u2(
-        IconAction,
-        {
-          label: "删除此字段",
-          disabled,
-          onClick: onRemove,
-          color: "error",
-          icon: /* @__PURE__ */ u2(DeleteIcon, {})
-        }
-      ) })
-    ] }),
-    showDefaultValueEditor && (field.type === "textarea" ? /* @__PURE__ */ u2(
-      NativeTextarea$1,
-      {
-        label: "默认值",
-        value: localDefaultValue,
-        rows: 3,
-        onInput: (value) => {
-          console.log(
-            "[字段编辑器][默认值编辑] 正在输入默认值 native onInput",
-            { 字段: field.key, 输入值: value }
-          );
-          setLocalDefaultValue(value);
-          onUpdate({ defaultValue: value });
-        },
-        onBlur: () => {
-          console.log(
-            "[字段编辑器][默认值编辑] 默认值失焦，提交到上层覆写草稿",
+  const uiType = normalizeTemplateFieldType(field.type);
+  const customFieldNameWarning = getCustomFieldNameWarning(localName);
+  const showOptionsEditor = templateFieldTypeUsesOptions(uiType);
+  const showDefaultValueEditor = templateFieldTypeSupportsDefaultValue(uiType);
+  const showInlineDefaultValue = showDefaultValueEditor && uiType !== "textarea";
+  const showDetails = showOptionsEditor || uiType === "textarea" || uiType === "number";
+  return /* @__PURE__ */ u2(
+    Box$1,
+    {
+      sx: {
+        py: 0.75,
+        px: 0.5,
+        borderRadius: 1,
+        bgcolor: isDragging ? "action.hover" : "transparent"
+      },
+      children: [
+        /* @__PURE__ */ u2(Stack$1, { direction: "row", spacing: 1, alignItems: "center", children: [
+          /* @__PURE__ */ u2(
+            Box$1,
             {
-              字段: field.key,
-              默认值: localDefaultValue
+              title: "拖动排序",
+              sx: {
+                width: 28,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                color: "text.secondary",
+                cursor: disabled ? "default" : "grab",
+                flexShrink: 0
+              },
+              children: /* @__PURE__ */ u2(DragIndicatorIcon, { sx: { fontSize: "1.25rem" } })
             }
-          );
-          onUpdate({ defaultValue: localDefaultValue });
-        },
-        disabled,
-        placeholder: "可使用 {{moment:YYYY-MM-DD}}、{{theme}} 等模板变量",
-        style: {
-          marginTop: 12,
-          marginLeft: 48,
-          width: "calc(100% - 48px)"
-        }
-      }
-    ) : /* @__PURE__ */ u2(
-      NativeTextInput$1,
-      {
-        label: "默认值",
-        value: localDefaultValue,
-        type: field.type === "number" ? "number" : field.type === "date" ? "date" : field.type === "time" ? "time" : "text",
-        onInput: (value) => {
-          console.log(
-            "[字段编辑器][默认值编辑] 正在输入默认值 native onInput",
-            { 字段: field.key, 输入值: value }
-          );
-          setLocalDefaultValue(value);
-          onUpdate({ defaultValue: value });
-        },
-        onBlur: () => {
-          console.log(
-            "[字段编辑器][默认值编辑] 默认值失焦，提交到上层覆写草稿",
+          ),
+          /* @__PURE__ */ u2(Box$1, { sx: { flex: "1 1 240px", minWidth: 180 }, children: /* @__PURE__ */ u2(
+            NativeTextInput$1,
             {
-              字段: field.key,
-              默认值: localDefaultValue
+              label: "字段名称",
+              placeholder: "例如：地点、项目、备注",
+              value: localName,
+              onInput: (value) => setLocalName(value),
+              onBlur: handleNameBlur,
+              onFocus: () => setIsEditing(true),
+              disabled,
+              style: { width: "100%" },
+              title: "该名称会显示在输入表单中，也可在模板中用 {{字段名称}} 引用"
             }
-          );
-          onUpdate({ defaultValue: localDefaultValue });
-        },
-        disabled,
-        placeholder: "可使用 {{moment:YYYY-MM-DD}}、{{theme}} 等模板变量",
-        style: {
-          marginTop: 12,
-          marginLeft: 48,
-          width: "calc(100% - 48px)"
-        }
-      }
-    )),
-    showOptionsEditor && /* @__PURE__ */ u2(Box$1, { sx: { mt: 2, pl: 2, ml: 6 }, children: [
-      isRatingLike ? /* @__PURE__ */ u2(
-        Typography$1,
-        {
-          variant: "caption",
-          sx: { color: "text.secondary", display: "block", mb: 1 },
-          children: [
-            "推荐：label 填评分数值，value 填显示资源。模板中优先写 评分::",
-            " ",
-            "{{字段名.label}}",
-            " 与 评图:: ",
-            "{{字段名.value}}",
-            "。"
-          ]
-        }
-      ) : isCategoryLike ? /* @__PURE__ */ u2(
-        Typography$1,
-        {
-          variant: "caption",
-          sx: { color: "text.secondary", display: "block", mb: 1 },
-          children: [
-            "推荐：分类/主题这类路径字段保留对象值，模板中优先写",
-            " ",
-            "{{字段名.value}}",
-            " 保存完整路径，",
-            "{{字段名.label}}",
-            " 用于显示。"
-          ]
-        }
-      ) : null,
-      /* @__PURE__ */ u2(
-        Stack$1,
-        {
-          spacing: 1.5,
-          divider: /* @__PURE__ */ u2(Divider$1, { flexItem: true, sx: { borderStyle: "dashed" } }),
-          children: (field.options || []).map((option, optIndex) => /* @__PURE__ */ u2(
-            OptionRow,
+          ) }),
+          /* @__PURE__ */ u2(Box$1, { sx: { width: 150, flexShrink: 0 }, children: /* @__PURE__ */ u2(
+            SimpleSelect,
             {
-              option,
-              onChange: (newOpt) => handleOptionChange(optIndex, newOpt),
-              onRemove: () => removeOption(optIndex),
-              fieldType: field.type,
-              disabled
-            },
-            optIndex
-          ))
-        }
-      ),
-      /* @__PURE__ */ u2(
-        Button$1,
-        {
-          onClick: addOption,
-          disabled,
-          startIcon: /* @__PURE__ */ u2(AddIcon, {}),
-          size: "small",
-          sx: { alignSelf: "flex-start", mt: 1.5 },
-          children: "添加选项"
-        }
-      )
-    ] })
-  ] });
+              value: uiType,
+              options: fieldTypeOptions,
+              onChange: (val) => onUpdate({ type: normalizeTemplateFieldType(val) }),
+              disabled,
+              sx: { width: 150 }
+            }
+          ) }),
+          showInlineDefaultValue && /* @__PURE__ */ u2(Box$1, { sx: { flex: "1 1 200px", minWidth: 160 }, children: /* @__PURE__ */ u2(
+            NativeTextInput$1,
+            {
+              label: "默认值",
+              value: localDefaultValue,
+              type: defaultInputType(uiType),
+              onInput: (value) => {
+                setLocalDefaultValue(value);
+                onUpdate({ defaultValue: value });
+              },
+              onBlur: () => onUpdate({ defaultValue: localDefaultValue }),
+              disabled,
+              placeholder: "可留空",
+              style: { width: "100%" }
+            }
+          ) }),
+          showDetails && /* @__PURE__ */ u2(
+            Button$1,
+            {
+              size: "small",
+              variant: "text",
+              disabled: disabled && !showOptionsEditor,
+              onClick: () => setDetailsOpen((open) => !open),
+              endIcon: detailsOpen ? /* @__PURE__ */ u2(ExpandLessIcon, {}) : /* @__PURE__ */ u2(ExpandMoreIcon, {}),
+              sx: { flexShrink: 0, whiteSpace: "nowrap" },
+              children: detailsOpen ? "收起" : "详情"
+            }
+          ),
+          /* @__PURE__ */ u2(Stack$1, { direction: "row", sx: { flexShrink: 0 }, children: [
+            /* @__PURE__ */ u2(
+              IconAction,
+              {
+                label: "上移",
+                disabled: disabled || index === 0,
+                onClick: () => onMove("up"),
+                icon: /* @__PURE__ */ u2(ArrowUpwardIcon, { sx: { fontSize: "1rem" } })
+              }
+            ),
+            /* @__PURE__ */ u2(
+              IconAction,
+              {
+                label: "下移",
+                disabled: disabled || index === fieldCount - 1,
+                onClick: () => onMove("down"),
+                icon: /* @__PURE__ */ u2(ArrowDownwardIcon, { sx: { fontSize: "1rem" } })
+              }
+            ),
+            /* @__PURE__ */ u2(
+              IconAction,
+              {
+                label: "删除此字段",
+                disabled,
+                onClick: onRemove,
+                color: "error",
+                icon: /* @__PURE__ */ u2(DeleteIcon, {})
+              }
+            )
+          ] })
+        ] }),
+        customFieldNameWarning && /* @__PURE__ */ u2(Typography$1, { variant: "caption", sx: { color: "warning.main", display: "block", mt: 0.5, ml: 4 }, children: customFieldNameWarning }),
+        /* @__PURE__ */ u2(Collapse, { in: detailsOpen, unmountOnExit: true, children: /* @__PURE__ */ u2(Box$1, { sx: { mt: 1.25, ml: 4, p: 1.25, borderRadius: 1, bgcolor: "background.default" }, children: [
+          uiType === "textarea" && showDefaultValueEditor && /* @__PURE__ */ u2(
+            NativeTextarea$1,
+            {
+              label: "默认值",
+              value: localDefaultValue,
+              rows: 3,
+              onInput: (value) => {
+                setLocalDefaultValue(value);
+                onUpdate({ defaultValue: value });
+              },
+              onBlur: () => onUpdate({ defaultValue: localDefaultValue }),
+              disabled,
+              placeholder: "可留空",
+              style: { width: "100%" }
+            }
+          ),
+          uiType === "number" && /* @__PURE__ */ u2(Stack$1, { direction: "row", spacing: 1, sx: { mb: showOptionsEditor ? 1.5 : 0 }, children: [
+            /* @__PURE__ */ u2(
+              NativeTextInput$1,
+              {
+                label: "最小值",
+                type: "number",
+                value: field.min ?? "",
+                onInput: (value) => onUpdate({ min: value === "" ? void 0 : Number(value) }),
+                disabled,
+                style: { width: 120 }
+              }
+            ),
+            /* @__PURE__ */ u2(
+              NativeTextInput$1,
+              {
+                label: "最大值",
+                type: "number",
+                value: field.max ?? "",
+                onInput: (value) => onUpdate({ max: value === "" ? void 0 : Number(value) }),
+                disabled,
+                style: { width: 120 }
+              }
+            )
+          ] }),
+          showOptionsEditor && /* @__PURE__ */ u2(Box$1, { children: [
+            /* @__PURE__ */ u2(Stack$1, { spacing: 1.25, divider: /* @__PURE__ */ u2(Divider$1, { flexItem: true, sx: { borderStyle: "dashed" } }), children: (field.options || []).map((option, optIndex) => /* @__PURE__ */ u2(
+              OptionRow,
+              {
+                option,
+                onChange: (newOpt) => handleOptionChange(optIndex, newOpt),
+                onRemove: () => removeOption(optIndex),
+                fieldType: uiType,
+                disabled
+              },
+              optIndex
+            )) }),
+            /* @__PURE__ */ u2(
+              Button$1,
+              {
+                onClick: addOption,
+                disabled,
+                startIcon: /* @__PURE__ */ u2(AddIcon, {}),
+                size: "small",
+                sx: { mt: 1.25 },
+                children: "添加选项"
+              }
+            )
+          ] })
+        ] }) })
+      ]
+    }
+  );
+}
+function createEmptyField(index) {
+  return createCustomTemplateField(index);
+}
+function reorderFields(fields, fromIndex, toIndex) {
+  if (fromIndex === toIndex || fromIndex < 0 || toIndex < 0 || fromIndex >= fields.length || toIndex >= fields.length) {
+    return fields;
+  }
+  const next2 = [...fields];
+  const [moved] = next2.splice(fromIndex, 1);
+  next2.splice(toIndex, 0, moved);
+  return next2;
 }
 function FieldsEditor({
   fields = [],
@@ -56383,6 +57640,7 @@ function FieldsEditor({
 }) {
   const renderCountRef = A$1(0);
   const previousFieldsRef = A$1(null);
+  const [draggingIndex, setDraggingIndex] = d(null);
   renderCountRef.current += 1;
   y(() => {
     logRenderDiagnostic("FieldsEditor", {
@@ -56394,84 +57652,69 @@ function FieldsEditor({
     });
     previousFieldsRef.current = fields;
   });
+  const emitFields = (nextFields) => {
+    onChange(sanitizeTemplateFields(nextFields));
+  };
   const handleUpdate = (index, updates) => {
-    const newFields = [...fields || []];
-    newFields[index] = { ...newFields[index], ...updates };
-    console.log("[字段编辑器][字段列表更新]", {
-      字段索引: index,
-      更新内容: updates,
-      更新后字段: newFields[index],
-      完整字段列表: newFields
-    });
-    onChange(newFields);
+    const newFields = sanitizeTemplateFields(fields || []);
+    newFields[index] = sanitizeTemplateField({ ...newFields[index], ...updates }, index + 1);
+    emitFields(newFields);
   };
-  const addField = () => {
-    const newName = `新字段${(fields || []).length + 1}`;
-    const nextFields = [
-      ...fields || [],
-      {
-        id: `field_${Date.now().toString(36)}`,
-        key: newName,
-        label: newName,
-        type: "text"
-      }
-    ];
-    console.log("[字段编辑器][字段列表更新] 添加字段", {
-      新字段名: newName,
-      更新后字段列表: nextFields
-    });
-    onChange(nextFields);
-  };
+  const addField = () => emitFields([...fields || [], createEmptyField((fields || []).length + 1)]);
   const removeField = (index) => {
-    const nextFields = (fields || []).filter((_2, i2) => i2 !== index);
-    console.log("[字段编辑器][字段列表更新] 删除字段", {
-      删除索引: index,
-      更新后字段列表: nextFields
-    });
-    onChange(nextFields);
+    emitFields((fields || []).filter((_2, i2) => i2 !== index));
   };
   const moveField = (index, direction) => {
-    const newFields = [...fields || []];
     const targetIndex = direction === "up" ? index - 1 : index + 1;
-    if (targetIndex < 0 || targetIndex >= newFields.length) return;
-    [newFields[index], newFields[targetIndex]] = [
-      newFields[targetIndex],
-      newFields[index]
-    ];
-    console.log("[字段编辑器][字段列表更新] 移动字段", {
-      原索引: index,
-      方向: direction,
-      目标索引: targetIndex,
-      更新后字段列表: newFields
-    });
-    onChange(newFields);
+    emitFields(reorderFields(fields || [], index, targetIndex));
   };
-  return /* @__PURE__ */ u2(Stack$1, { spacing: 2, divider: /* @__PURE__ */ u2(Divider$1, { sx: { my: 1 } }), children: [
-    (fields || []).map((field, index) => /* @__PURE__ */ u2(
-      FieldRow,
+  const handleDropOn = (targetIndex) => {
+    if (draggingIndex === null || disabled) return;
+    emitFields(reorderFields(fields || [], draggingIndex, targetIndex));
+    setDraggingIndex(null);
+  };
+  return /* @__PURE__ */ u2(Stack$1, { spacing: 1.25, children: [
+    /* @__PURE__ */ u2(Box$1, { children: /* @__PURE__ */ u2(Button$1, { onClick: addField, disabled, startIcon: /* @__PURE__ */ u2(AddIcon, {}), variant: "contained", size: "small", children: "添加字段" }) }),
+    /* @__PURE__ */ u2(Stack$1, { spacing: 0, divider: /* @__PURE__ */ u2(Divider$1, { sx: { my: 0.75 } }), children: (fields || []).map((field, index) => /* @__PURE__ */ u2(
+      Box$1,
       {
-        field,
-        index,
-        fieldCount: fields.length,
-        disabled,
-        onUpdate: (updates) => handleUpdate(index, updates),
-        onRemove: () => removeField(index),
-        onMove: (dir) => moveField(index, dir)
+        draggable: !disabled,
+        onDragStart: (event) => {
+          if (disabled) return;
+          setDraggingIndex(index);
+          event.dataTransfer?.setData("text/plain", String(index));
+          if (event.dataTransfer) event.dataTransfer.effectAllowed = "move";
+        },
+        onDragOver: (event) => {
+          if (disabled || draggingIndex === null) return;
+          event.preventDefault();
+          if (event.dataTransfer) event.dataTransfer.dropEffect = "move";
+        },
+        onDrop: (event) => {
+          event.preventDefault();
+          handleDropOn(index);
+        },
+        onDragEnd: () => setDraggingIndex(null),
+        sx: {
+          opacity: draggingIndex === index ? 0.55 : 1,
+          borderRadius: 1
+        },
+        children: /* @__PURE__ */ u2(
+          FieldRow,
+          {
+            field,
+            index,
+            fieldCount: fields.length,
+            disabled,
+            isDragging: draggingIndex === index,
+            onUpdate: (updates) => handleUpdate(index, updates),
+            onRemove: () => removeField(index),
+            onMove: (dir) => moveField(index, dir)
+          }
+        )
       },
       field.id
-    )),
-    /* @__PURE__ */ u2(
-      Button$1,
-      {
-        onClick: addField,
-        disabled,
-        startIcon: /* @__PURE__ */ u2(AddIcon, {}),
-        variant: "contained",
-        size: "small",
-        sx: { alignSelf: "flex-start" },
-        children: "添加字段"
-      }
-    )
+    )) })
   ] });
 }
 function TemplateVariableCopier({ block }) {
@@ -56489,9 +57732,28 @@ function TemplateVariableCopier({ block }) {
     ];
     (block?.fields || []).forEach((field) => {
       const fieldKey = field.key || "untitled";
+      const fieldType = field.type || "text";
       options.push({ value: `{{${fieldKey}}}`, label: `${fieldKey}` });
-      if (field.type === "select" || field.type === "radio") {
+      if ([
+        "select",
+        "radio",
+        "singleSelect",
+        "multiSelect",
+        "path",
+        "multiPath",
+        "tag",
+        "multiTag",
+        "rating"
+      ].includes(fieldType)) {
         options.push({ value: `{{${fieldKey}.value}}`, label: `${fieldKey}.value` });
+        options.push({ value: `{{${fieldKey}.label}}`, label: `${fieldKey}.label` });
+      }
+      if (fieldType === "image" || fieldType === "multiImage") {
+        options.push({ value: `{{${fieldKey}.src}}`, label: `${fieldKey}.src` });
+      }
+      const markdownKey = field.key;
+      if (markdownKey) {
+        options.push({ value: `${markdownKey}:: {{${fieldKey}}}`, label: `${markdownKey}:: {{${fieldKey}}}` });
       }
     });
     return options;
@@ -58251,9 +59513,6 @@ function ThemeMatrix() {
 }
 const ContentCopyIcon = createSvgIcon(/* @__PURE__ */ u2("path", {
   d: "M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2m0 16H8V7h11z"
-}));
-const ExpandLessIcon = createSvgIcon(/* @__PURE__ */ u2("path", {
-  d: "m12 8-6 6 1.41 1.41L12 10.83l4.59 4.58L18 14z"
 }));
 function useCombinedRefs() {
   for (var _len = arguments.length, refs = new Array(_len), _key = 0; _key < _len; _key++) {
@@ -62038,38 +63297,88 @@ function normalizeLocalDisabled(localDisabled, globalDisabled) {
   };
 }
 [KeyboardCode.Down, KeyboardCode.Right, KeyboardCode.Up, KeyboardCode.Left];
+function getPickerOptionValue(option) {
+  if (!option) return "";
+  return typeof option === "string" ? option : option.value;
+}
+function getPickerOptionLabel(option) {
+  if (typeof option === "string") return getFieldLabel(option);
+  return option.label || getFieldLabel(option.value);
+}
+function getPickerOptionGroup(option) {
+  return typeof option === "string" ? "其他字段" : option.group || "其他字段";
+}
+function normalizePickerValue(value) {
+  return String(value ?? "").trim();
+}
+function FieldPickerAutocomplete({
+  value = "",
+  options,
+  onChange,
+  label,
+  placeholder = "搜索 / 选择字段",
+  helperText,
+  fullWidth = true,
+  size = "small",
+  disableClearable = true,
+  allowCustom = true,
+  sx
+}) {
+  const pickerOptions = T$1(() => getFieldPickerOptions(options), [options]);
+  const selectedValue = T$1(() => pickerOptions.find((option) => option.value === value) || value || "", [pickerOptions, value]);
+  return /* @__PURE__ */ u2(
+    Autocomplete,
+    {
+      freeSolo: allowCustom,
+      disablePortal: true,
+      fullWidth,
+      size,
+      disableClearable,
+      options: pickerOptions,
+      groupBy: getPickerOptionGroup,
+      getOptionLabel: getPickerOptionLabel,
+      isOptionEqualToValue: (option, current2) => getPickerOptionValue(option) === getPickerOptionValue(current2),
+      value: selectedValue,
+      onChange: (_2, nextValue) => onChange(normalizePickerValue(getPickerOptionValue(nextValue))),
+      onInputChange: (_2, nextInput, reason) => {
+        if (!allowCustom) return;
+        if (reason !== "input" && reason !== "clear") return;
+        onChange(normalizePickerValue(nextInput));
+      },
+      sx,
+      renderInput: (params) => /* @__PURE__ */ u2(
+        TextField$1,
+        {
+          ...params,
+          label,
+          placeholder,
+          helperText,
+          variant: "outlined"
+        }
+      )
+    }
+  );
+}
 function TableViewEditor({ value, onChange, fieldOptions }) {
   return /* @__PURE__ */ u2(Stack$1, { spacing: 2, children: [
     /* @__PURE__ */ u2(Typography$1, { variant: "body1", color: "text.secondary", sx: { mb: 1 }, children: "交叉表（TableView）根据两个字段来创建二维表格。" }),
     /* @__PURE__ */ u2(Stack$1, { direction: "row", spacing: 2, alignItems: "center", children: [
       /* @__PURE__ */ u2(
-        Autocomplete,
+        FieldPickerAutocomplete,
         {
-          freeSolo: true,
-          disablePortal: true,
-          fullWidth: true,
-          size: "small",
-          disableClearable: true,
+          label: "行字段",
           options: fieldOptions,
-          getOptionLabel: (option) => getFieldLabel(option),
           value: value.rowField ?? "",
-          onChange: (_2, v2) => onChange({ rowField: v2 ?? "" }),
-          renderInput: (p2) => /* @__PURE__ */ u2(TextField$1, { ...p2, label: "行字段", variant: "outlined" })
+          onChange: (v2) => onChange({ rowField: v2 ?? "" })
         }
       ),
       /* @__PURE__ */ u2(
-        Autocomplete,
+        FieldPickerAutocomplete,
         {
-          freeSolo: true,
-          disablePortal: true,
-          fullWidth: true,
-          size: "small",
-          disableClearable: true,
+          label: "列字段",
           options: fieldOptions,
-          getOptionLabel: (option) => getFieldLabel(option),
           value: value.colField ?? "",
-          onChange: (_2, v2) => onChange({ colField: v2 ?? "" }),
-          renderInput: (p2) => /* @__PURE__ */ u2(TextField$1, { ...p2, label: "列字段", variant: "outlined" })
+          onChange: (v2) => onChange({ colField: v2 ?? "" })
         }
       )
     ] })
@@ -62084,15 +63393,15 @@ function ExcelViewEditor() {
 function normalizeProgressOrder(categories, progressOrder) {
   const existing = progressOrder.filter((name) => Boolean(categories[name]));
   const seen = /* @__PURE__ */ new Set();
-  const unique = existing.filter((name) => {
+  const unique2 = existing.filter((name) => {
     if (seen.has(name)) return false;
     seen.add(name);
     return true;
   });
   for (const key of Object.keys(categories)) {
-    if (!seen.has(key)) unique.push(key);
+    if (!seen.has(key)) unique2.push(key);
   }
-  return unique;
+  return unique2;
 }
 function stripInlineName(config2) {
   const { name: _inlineName, ...rest } = config2;
@@ -62728,7 +64037,6 @@ function RuleBuilder({ title, mode, rows, fieldOptions, onChange, dataStore, var
     const sortRule = rule;
     return `${getFieldLabel(sortRule.field)} ${sortRule.dir === "asc" ? "升序" : "降序"}`;
   };
-  const fieldSelectOptions = fieldOptions.map((f2) => ({ value: f2, label: getFieldLabel(f2) }));
   const operatorOptions = [
     { value: "=", label: "=" },
     { value: "!=", label: "!=" },
@@ -62747,23 +64055,16 @@ function RuleBuilder({ title, mode, rows, fieldOptions, onChange, dataStore, var
     { value: "and", label: "且" },
     { value: "or", label: "或" }
   ];
-  const renderFieldInput = (field, onFieldChange, placeholder = "搜索 / 选择字段") => {
-    const selectedFieldOption = fieldSelectOptions.find((option) => option.value === field) || null;
-    return /* @__PURE__ */ u2(
-      Autocomplete,
-      {
-        size: "small",
-        fullWidth: true,
-        disablePortal: true,
-        options: fieldSelectOptions,
-        value: selectedFieldOption,
-        getOptionLabel: (option) => option?.label || "",
-        isOptionEqualToValue: (option, value) => option?.value === value?.value,
-        onChange: (_2, option) => onFieldChange(option?.value || ""),
-        renderInput: (params) => /* @__PURE__ */ u2(TextField$1, { ...params, variant: "outlined", placeholder })
-      }
-    );
-  };
+  const renderFieldInput = (field, onFieldChange, placeholder = "搜索 / 选择字段") => /* @__PURE__ */ u2(
+    FieldPickerAutocomplete,
+    {
+      value: field,
+      options: fieldOptions,
+      onChange: onFieldChange,
+      placeholder,
+      helperText: variant === "panel" ? "字段按核心字段 / 文件字段 / 自定义字段分组。" : void 0
+    }
+  );
   const renderValueInput = (rule, onValueChange) => {
     if (!operatorNeedsValue(rule.op)) return null;
     if (isMultiValueOperator(rule.op)) {
@@ -63240,7 +64541,8 @@ function ViewInstanceEditor({ vi }) {
               availableFields: fieldOptions,
               onFieldsChange: handleFieldsChange,
               placeholder: "+ 添加字段...",
-              getFieldLabel
+              getFieldLabel,
+              getFieldGroupLabel: getFieldCategoryLabel
             }
           )
         }
@@ -63257,7 +64559,8 @@ function ViewInstanceEditor({ vi }) {
               availableFields: fieldOptions,
               onFieldsChange: handleGroupFieldsChange,
               placeholder: "+ 选择分组字段...",
-              getFieldLabel
+              getFieldLabel,
+              getFieldGroupLabel: getFieldCategoryLabel
             }
           )
         }
@@ -63744,10 +65047,39 @@ function BlockEditor({ block, useCases }) {
     /* @__PURE__ */ u2(TextField$1, { label: "Block 名称", value: localBlock.name, onChange: (e2) => setLocalBlock((b2) => ({ ...b2, name: e2.target.value })), onBlur: () => handleBlur("name"), variant: "outlined", size: "small", sx: { maxWidth: 400 } }),
     /* @__PURE__ */ u2(Divider$1, {}),
     /* @__PURE__ */ u2(Box$1, { children: [
+      /* @__PURE__ */ u2(Typography$1, { variant: "h6", sx: { fontSize: "1rem", fontWeight: 600, mb: 1 }, children: "核心元数据" }),
+      /* @__PURE__ */ u2(Box$1, { sx: { p: 1.5, mb: 1.5, border: "1px solid rgba(0,0,0,0.12)", borderRadius: 1, bgcolor: "background.default" }, children: [
+        /* @__PURE__ */ u2(Typography$1, { variant: "body2", color: "text.secondary", children: "Block 是一类记录模板；分类、主题、标签是插件核心字段。分类由当前 Block 或表单字段写入，主题来自快速输入选择的主题，标签可作为表单字段输入。它们不会再作为普通 extra 字段处理。" }),
+        /* @__PURE__ */ u2(Typography$1, { variant: "caption", color: "text.secondary", sx: { display: "block", mt: 0.75, fontFamily: "monospace" }, children: [
+          "推荐模板行：分类:: ",
+          "{{categoryKey}}",
+          " ｜ 主题:: ",
+          "{{themePath}}",
+          " ｜ 标签:: ",
+          "{{tags}}"
+        ] })
+      ] }),
+      /* @__PURE__ */ u2(
+        TextField$1,
+        {
+          label: "默认分类",
+          value: localBlock.categoryKey || "",
+          onChange: (e2) => setLocalBlock((b2) => ({ ...b2, categoryKey: e2.target.value })),
+          onBlur: () => handleBlur("categoryKey"),
+          placeholder: "例如：闪念/思考、计划、总结、打卡",
+          helperText: "默认写入 {{categoryKey}}；如果表单里有“分类”字段，则以表单输入为准。",
+          variant: "outlined",
+          size: "small",
+          sx: { maxWidth: 520 }
+        }
+      )
+    ] }),
+    /* @__PURE__ */ u2(Divider$1, {}),
+    /* @__PURE__ */ u2(Box$1, { children: [
       /* @__PURE__ */ u2(Typography$1, { variant: "h6", sx: { fontSize: "1rem", fontWeight: 600, mb: 1 }, children: "输出目标" }),
       /* @__PURE__ */ u2(Stack$1, { spacing: 2, children: [
-        /* @__PURE__ */ u2(TextField$1, { label: "目标文件路径", value: localBlock.targetFile, onChange: (e2) => setLocalBlock((b2) => ({ ...b2, targetFile: e2.target.value })), onBlur: () => handleBlur("targetFile"), placeholder: "e.g., {{theme.path}}/{{标题.value}}.md", variant: "outlined", size: "small" }),
-        /* @__PURE__ */ u2(TextField$1, { label: "追加到标题下 (可选)", value: localBlock.appendUnderHeader || "", onChange: (e2) => setLocalBlock((b2) => ({ ...b2, appendUnderHeader: e2.target.value })), onBlur: () => handleBlur("appendUnderHeader"), placeholder: "e.g., ## {{block.name}}", variant: "outlined", size: "small" })
+        /* @__PURE__ */ u2(TextField$1, { label: "目标文件路径", value: localBlock.targetFile, onChange: (e2) => setLocalBlock((b2) => ({ ...b2, targetFile: e2.target.value })), onBlur: () => handleBlur("targetFile"), placeholder: "e.g., {{themePath}}/{{标题.value}}.md", variant: "outlined", size: "small" }),
+        /* @__PURE__ */ u2(TextField$1, { label: "追加到标题下 (可选)", value: localBlock.appendUnderHeader || "", onChange: (e2) => setLocalBlock((b2) => ({ ...b2, appendUnderHeader: e2.target.value })), onBlur: () => handleBlur("appendUnderHeader"), placeholder: "e.g., ## {{themePath}}", variant: "outlined", size: "small" })
       ] })
     ] }),
     /* @__PURE__ */ u2(Divider$1, {}),
@@ -66504,13 +67836,13 @@ function registerAiInputCommands(plugin) {
     const openPromptStart = nowMs();
     devLog(`[AiInput][${traceId}] 准备打开输入 Modal`, { fastMode });
     const promptModal = new AiTextPromptModal(plugin.app);
-    const text = await promptModal.openAndGetValue();
+    const text2 = await promptModal.openAndGetValue();
     logAiInputStep(traceId, "输入 Modal 关闭", openPromptStart, {
-      hasText: !!text?.trim(),
-      textLength: text?.length ?? 0,
+      hasText: !!text2?.trim(),
+      textLength: text2?.length ?? 0,
       fastMode
     });
-    if (!text?.trim()) {
+    if (!text2?.trim()) {
       devLog(`[AiInput][${traceId}] 用户取消或输入为空，总耗时 ${elapsedMs(totalStart)}`, { fastMode });
       return;
     }
@@ -66527,11 +67859,11 @@ function registerAiInputCommands(plugin) {
       const parseStart = nowMs();
       devLog(`[AiInput][${traceId}] before parser.parse`, {
         fastMode,
-        inputLength: text.length,
+        inputLength: text2.length,
         model: ai.model,
         endpointHost: summarizeEndpointHost(ai.apiEndpoint)
       });
-      const batch = await takeLatest.run((signal) => parser.parse({ text, now: /* @__PURE__ */ new Date(), signal, traceId, fastMode }));
+      const batch = await takeLatest.run((signal) => parser.parse({ text: text2, now: /* @__PURE__ */ new Date(), signal, traceId, fastMode }));
       logAiInputStep(traceId, "after parser.parse", parseStart, {
         fastMode,
         itemsCount: batch.items?.length ?? 0
@@ -68370,9 +69702,9 @@ class TextPromptModal extends obsidian.Modal {
     const { contentEl } = this;
     contentEl.empty();
     contentEl.createEl("h2", { text: this.titleText });
-    new obsidian.Setting(contentEl).addText((text) => {
-      text.setPlaceholder(this.placeholder);
-      text.onChange((v2) => this.value = v2);
+    new obsidian.Setting(contentEl).addText((text2) => {
+      text2.setPlaceholder(this.placeholder);
+      text2.onChange((v2) => this.value = v2);
     }).addButton((btn) => {
       btn.setButtonText(this.ctaText);
       btn.setCta();

@@ -1,8 +1,10 @@
 // src/core/domain/schema.ts
 import type { RecurrenceInfo } from '@core/utils/mark';
-import { readExplicitThemeParts } from '@/core/theme/themeSemantics';
+import { readFieldValue } from '@/core/fields/FieldValueResolver';
+import { LEGACY_EXTRA_ALIAS_KEYS } from '@/core/fields/FieldLegacy';
+import { getAvailableFields } from '@/core/fields/FieldRegistry';
 import type { AiSettings } from './ai-schema';
-import type { FieldOriginMap } from './fieldOrigin';
+import type { FieldInputType, FieldOption, FieldSemantic, FieldStoragePolicy } from '@/core/fields/FieldTypes';
 import { DEFAULT_AI_SETTINGS } from './ai-schema';
 
 // [新增] 定义可分组项的通用接口
@@ -57,16 +59,32 @@ export const DEFAULT_SETTINGS: ThinkSettings = {
 
 // ----- [重构后] 快速输入设置 (Input Settings) ----- //
 // ... 此部分无变化 ...
-export interface TemplateFieldOption {
-    value: string;
-    label?: string;
-}
+export type TemplateFieldOption = FieldOption;
+
 export interface TemplateField {
     id: string;
     key: string;
     label: string;
-    type: 'text' | 'textarea' | 'date' | 'time' | 'select' | 'radio' | 'number' | 'rating';
-    semanticType?: 'path' | 'ratingPair' | string;
+    /**
+     * 字段输入能力。兼容旧值 select/radio/rating，同时支持 multiSelect/path/tag/image 等新基础类型。
+     */
+    type: FieldInputType;
+    /**
+     * 内部兼容入口：普通设置 UI 不再暴露该内部概念。
+     * 分类、主题、标签是插件内置核心字段；自定义字段只需要名称和类型。
+     */
+    semanticType?: 'path' | 'ratingPair' | FieldSemantic | string;
+    semantic?: FieldSemantic | string;
+    /**
+     * 是否多值由字段类型决定；该字段仅用于打开旧配置时兼容。
+     */
+    cardinality?: 'single' | 'multi';
+    hierarchical?: boolean;
+    /**
+     * 内部存储策略：普通设置 UI 不再暴露。
+     */
+    storage?: FieldStoragePolicy;
+    aliases?: string[];
     auxKey?: string;
     defaultValue?: string;
     options?: TemplateFieldOption[];
@@ -221,11 +239,6 @@ export interface Item {
     header?: string;
     icon?: string;
     priority?: 'lowest' | 'low' | 'medium' | 'high' | 'highest';
-    /**
-     * Optional provenance metadata for parsed fields.
-     * Used by field/debug UI to explain where a value came from.
-     */
-    fieldOrigins?: FieldOriginMap;
     extra: Record<string, string | number | boolean>;
     createdDate?: string;
     scheduledDate?: string;
@@ -245,6 +258,8 @@ export interface Item {
     duration?: number;
     period?: string;
     rating?: number;
+    /** 通用图片字段；pintu 是历史兼容别名。 */
+    image?: string;
     pintu?: string;
     // [新增] 新的核心字段
     folder?: string;
@@ -264,11 +279,11 @@ export interface Item {
 export const CORE_FIELDS = [
     'id', 'type', 'title', 'content', 'categoryKey', 'tags',
     'recurrence', 'icon', 'priority', 'date', 'startTime', 'endTime', 'duration',
-    'period', 'rating', 'pintu', 'folder', 'periodCount'
+    'period', 'rating', 'image', 'folder', 'periodCount'
 ] as const;
 
 export const SEMANTIC_FIELDS = [
-    'baseCategory',
+    'baseCategory', 'leafCategory',
     // 主题筛选/分组的唯一默认字段：完整主题路径。
     // theme 是旧兼容字段，不再出现在默认字段选择器中。
     'themePath', 'rootTheme', 'leafTheme',
@@ -288,60 +303,20 @@ export const DEFAULT_FIELD_OPTIONS = [
     ...FILE_FIELDS,
 ] as const;
 
-export const LEGACY_EXTRA_ALIAS_KEYS = [
-    '正文', '内容', '任务内容', '记录内容', 'editableText'
-] as const;
-
-const LEGACY_EXTRA_ALIAS_SET = new Set<string>(LEGACY_EXTRA_ALIAS_KEYS as unknown as string[]);
-
 export type CoreField = typeof CORE_FIELDS[number];
 export type SemanticField = typeof SEMANTIC_FIELDS[number];
 export type FileField = typeof FILE_FIELDS[number];
 export type LegacyField = typeof LEGACY_FIELDS[number];
 
-function isVisibleExtraField(item: Item, key: string): boolean {
-    if (!LEGACY_EXTRA_ALIAS_SET.has(key)) return true;
-    // Historical parser versions polluted extra with body aliases. Hide those
-    // unless they were explicitly read from markdown in this scan.
-    const origins = item.fieldOrigins?.[`extra.${key}`] || [];
-    return origins.some(origin => origin.confidence === 'explicit');
+function isVisibleExtraField(_item: Item, key: string): boolean {
+    // 字段来源可观测能力已取消；历史 parser 自动写入的正文 alias 永久隐藏，避免污染字段选择器。
+    return !(LEGACY_EXTRA_ALIAS_KEYS as readonly string[]).includes(key);
 }
 
 export function getAllFields(items: Item[]): string[] {
-    const set = new Set<string>(DEFAULT_FIELD_OPTIONS as unknown as string[]);
-    items.forEach(it => {
-        Object.keys(it.extra || {}).forEach(k => {
-            if (isVisibleExtraField(it, k)) set.add('extra.' + k);
-        });
-        const f: any = (it as any).file;
-        if (f && typeof f === 'object') Object.keys(f).forEach((k: string) => set.add('file.' + k));
-    });
-    return Array.from(set).sort();
+    return getAvailableFields(items).map((field) => field.key);
 }
 export function readField(item: Item, field: string): any {
-    if (field.startsWith('extra.')) return item.extra?.[field.slice(6)];
-    if (field.startsWith('file.')) {
-        const key = field.slice(5);
-        const file = (item as any).file || {};
-        if (key === 'name' || key === 'basename') return file.basename ?? item.fileName ?? item.filename;
-        if (key === 'folder') return file.folder ?? item.folder;
-        return file[key];
-    }
-    if (field === 'baseCategory' || field === '分类根' || field === 'rootCategory') {
-        const raw = String(item.categoryKey || '').trim();
-        return raw.split('/').map(part => part.trim()).filter(Boolean)[0] || raw;
-    }
-
-    // 主题三分法给视图设置用：只从显式主题字段推导，禁止 header/heading 兜底。
-    if (field === 'themePath' || field === '完整主题' || field === '主题路径') {
-        return readExplicitThemeParts(item as any).themePath ?? undefined;
-    }
-    if (field === 'rootTheme' || field === '根主题' || field === 'themeRoot') {
-        return readExplicitThemeParts(item as any).rootTheme ?? undefined;
-    }
-    if (field === 'leafTheme' || field === '叶主题' || field === 'themeLeaf') {
-        return readExplicitThemeParts(item as any).leafTheme ?? undefined;
-    }
-
-    return (item as any)[field];
+    return readFieldValue(item, field);
 }
+

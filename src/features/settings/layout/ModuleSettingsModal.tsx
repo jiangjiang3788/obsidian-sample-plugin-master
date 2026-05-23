@@ -8,7 +8,7 @@
 
 import { useMemo } from 'preact/hooks';
 import { FormControlLabel, Checkbox, Button, Box, Accordion, AccordionSummary, AccordionDetails, Typography, Chip } from '@mui/material';
-import { VIEW_OPTIONS, ViewName, getAllFields, getFieldLabel } from '@core/public';
+import { VIEW_OPTIONS, ViewName, getAllFields, getFieldLabel, getFieldCategoryLabel } from '@core/public';
 import type { FilterRule, ViewInstance } from '@core/public';
 import { VIEW_EDITORS } from '@features/settings/viewEditors/registry';
 import { useSelector, makeSelectViewInstanceById, useDataStore, useUseCases } from '@/app/public';
@@ -114,6 +114,7 @@ function ViewInstanceEditor({ vi }: { vi: ViewInstance }) {
                         onFieldsChange={handleFieldsChange}
                         placeholder="+ 添加字段..."
                         getFieldLabel={getFieldLabel}
+                        getFieldGroupLabel={getFieldCategoryLabel}
                     />
                 </FormField>
 
@@ -127,6 +128,7 @@ function ViewInstanceEditor({ vi }: { vi: ViewInstance }) {
                         onFieldsChange={handleGroupFieldsChange}
                         placeholder="+ 选择分组字段..."
                         getFieldLabel={getFieldLabel}
+                        getFieldGroupLabel={getFieldCategoryLabel}
                     />
                 </FormField>
 

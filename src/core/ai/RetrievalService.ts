@@ -2,12 +2,13 @@
 /**
  * RetrievalService - 本地全文检索服务
  * Role: Service (检索逻辑)
- * 
+ *
  * Do:
- * - 使用 MiniSearch 对 Item 建立全文索引
- * - 支持 theme/type 过滤
+ * - 使用 MiniSearch 对标准化 Item 建立全文索引
+ * - 搜索字段通过 FieldValueResolver 读取，避免 legacy 字段和 header/theme 混用
+ * - 支持 themePath/type/block/category 过滤
  * - 复用 DataStore 的 items 数据
- * 
+ *
  * Don't:
  * - 修改原始数据
  * - 处理 AI 请求
@@ -17,18 +18,20 @@ import { singleton, inject } from 'tsyringe';
 import MiniSearch, { SearchResult } from 'minisearch';
 import type { Item } from '@/core/types/schema';
 import { DataStore } from '@/core/services/DataStore';
+import { readFieldValue } from '@/core/fields/FieldValueResolver';
+import { LEGACY_EXTRA_ALIAS_KEYS } from '@/core/fields/FieldLegacy';
 import { devLog, devWarn, devError } from '../utils/devLogger';
 
 // ============== Types ==============
 
 export interface RetrievalFilters {
-    /** 主题路径过滤（item.theme） */
+    /** 主题路径过滤，明确使用 item.themePath 语义，不再使用 legacy item.theme */
     themePaths?: string[];
     /** 类型过滤（item.type: 'task' | 'block'） */
     types?: ('task' | 'block')[];
-    /** Block 模板 ID 过滤（通过 categoryKey 匹配） */
+    /** Block 模板 ID 过滤（通过 item.templateId/templateId 匹配） */
     blockTemplateIds?: string[];
-    /** Block 模板名称过滤（直接匹配 categoryKey 前缀） */
+    /** Block 模板名称过滤（通过 categoryKey/root category 匹配） */
     blockTemplateNames?: string[];
     /** 结果数量限制 */
     limit?: number;
@@ -46,16 +49,107 @@ export interface RetrievalSearchResult {
     totalMatched: number;
 }
 
+interface SearchIndexDocument {
+    id: string;
+    title: string;
+    content: string;
+    editableText: string;
+    tags: string;
+    themePath: string;
+    rootTheme: string;
+    leafTheme: string;
+    categoryKey: string;
+    baseCategory: string;
+    leafCategory: string;
+    type: string;
+    templateId: string;
+    fileName: string;
+    folder: string;
+    header: string;
+    extraText: string;
+    dateMs?: number;
+    created?: number;
+    modified?: number;
+}
+
 // ============== Constants ==============
 
 const DEFAULT_LIMIT = 100;
+const LEGACY_EXTRA_ALIAS_SET = new Set<string>(LEGACY_EXTRA_ALIAS_KEYS as readonly string[]);
+
+const SEARCH_FIELDS: Array<keyof SearchIndexDocument> = [
+    'title',
+    'content',
+    'editableText',
+    'tags',
+    'themePath',
+    'rootTheme',
+    'leafTheme',
+    'categoryKey',
+    'baseCategory',
+    'leafCategory',
+    'fileName',
+    'folder',
+    'header',
+    'extraText',
+];
+
+const STORE_FIELDS: Array<keyof SearchIndexDocument> = [
+    'id',
+    'title',
+    'content',
+    'editableText',
+    'tags',
+    'themePath',
+    'rootTheme',
+    'leafTheme',
+    'categoryKey',
+    'baseCategory',
+    'leafCategory',
+    'type',
+    'templateId',
+    'fileName',
+    'folder',
+    'header',
+    'dateMs',
+    'created',
+    'modified',
+];
+
+// ============== Helpers ==============
+
+function normalizeText(value: unknown): string {
+    if (value == null) return '';
+    if (Array.isArray(value)) return value.map(normalizeText).filter(Boolean).join(' ');
+    if (typeof value === 'object') {
+        const anyValue = value as any;
+        if (typeof anyValue.src === 'string') return anyValue.src;
+        if (Array.isArray(anyValue.values)) return normalizeText(anyValue.values);
+        return Object.values(anyValue).map(normalizeText).filter(Boolean).join(' ');
+    }
+    return String(value).trim();
+}
+
+function collectSearchableExtraText(item: Item): string {
+    const extra = item.extra || {};
+    return Object.entries(extra)
+        .filter(([key]) => !LEGACY_EXTRA_ALIAS_SET.has(key))
+        .map(([key, value]) => `${key} ${normalizeText(value)}`.trim())
+        .filter(Boolean)
+        .join(' ');
+}
+
+function getResultId(sr: SearchResult): string {
+    return String((sr as any).id ?? '');
+}
 
 // ============== RetrievalService ==============
 
 @singleton()
 export class RetrievalService {
-    private miniSearch: MiniSearch<Item> | null = null;
+    private miniSearch: MiniSearch<SearchIndexDocument> | null = null;
     private indexedItemIds: Set<string> = new Set();
+    private indexedItemsById: Map<string, Item> = new Map();
     private lastIndexTime: number = 0;
 
     constructor(
@@ -66,21 +160,25 @@ export class RetrievalService {
     }
 
     private initMiniSearch(): void {
-        this.miniSearch = new MiniSearch<Item>({
-            // 索引的字段
-            fields: ['title', 'content', 'tags', 'theme', 'categoryKey'],
-            // 存储的字段（用于返回结果）
-            storeFields: ['id', 'title', 'content', 'type', 'theme', 'tags', 'categoryKey', 'dateMs', 'created'],
+        this.miniSearch = new MiniSearch<SearchIndexDocument>({
+            // 索引字段：全部来自标准化记录 + FieldValueResolver，不直接索引 legacy theme。
+            fields: SEARCH_FIELDS as string[],
+            // 存储字段只用于搜索结果兜底；优先从 indexedItemsById 返回完整 Item。
+            storeFields: STORE_FIELDS as string[],
             // 自定义字段提取
-            extractField: (document: Item, fieldName: string) => {
-                if (fieldName === 'tags') {
-                    return (document.tags || []).join(' ');
-                }
-                return (document as any)[fieldName] ?? '';
+            extractField: (document: SearchIndexDocument, fieldName: string) => {
+                return normalizeText((document as any)[fieldName]);
             },
             // 搜索选项
             searchOptions: {
-                boost: { title: 2, theme: 1.5, tags: 1.2 },
+                boost: {
+                    title: 2,
+                    editableText: 1.8,
+                    themePath: 1.5,
+                    tags: 1.3,
+                    categoryKey: 1.2,
+                    extraText: 0.8,
+                },
                 fuzzy: 0.2,
                 prefix: true,
             },
@@ -111,6 +209,31 @@ export class RetrievalService {
         });
     }
 
+    private itemToSearchDocument(item: Item): SearchIndexDocument {
+        return {
+            id: item.id,
+            title: normalizeText(readFieldValue(item, 'title')),
+            content: normalizeText(readFieldValue(item, 'content')),
+            editableText: normalizeText(readFieldValue(item, 'editableText') ?? item.editableText),
+            tags: normalizeText(readFieldValue(item, 'tags')),
+            themePath: normalizeText(readFieldValue(item, 'themePath')),
+            rootTheme: normalizeText(readFieldValue(item, 'rootTheme')),
+            leafTheme: normalizeText(readFieldValue(item, 'leafTheme')),
+            categoryKey: normalizeText(readFieldValue(item, 'categoryKey')),
+            baseCategory: normalizeText(readFieldValue(item, 'baseCategory')),
+            leafCategory: normalizeText(readFieldValue(item, 'leafCategory')),
+            type: normalizeText(item.type),
+            templateId: normalizeText(item.templateId),
+            fileName: normalizeText(readFieldValue(item, 'fileName')),
+            folder: normalizeText(readFieldValue(item, 'file.folder') ?? item.folder),
+            header: normalizeText(readFieldValue(item, 'header')),
+            extraText: collectSearchableExtraText(item),
+            dateMs: item.dateMs,
+            created: item.created,
+            modified: item.modified,
+        };
+    }
+
     // ============== 索引管理 ==============
 
     /**
@@ -119,10 +242,10 @@ export class RetrievalService {
      */
     buildIndex(items?: Item[]): void {
         const startTime = Date.now();
-        
+
         // 获取 items
         const itemsToIndex = items ?? this.getItemsFromDataStore();
-        
+
         if (!itemsToIndex || itemsToIndex.length === 0) {
             devLog('RetrievalService: 没有可索引的 items');
             return;
@@ -131,14 +254,19 @@ export class RetrievalService {
         // 重新初始化 MiniSearch（清空旧索引）
         this.initMiniSearch();
         this.indexedItemIds.clear();
+        this.indexedItemsById.clear();
 
         // 批量添加文档
         try {
             // 过滤掉没有 id 的 item
             const validItems = itemsToIndex.filter(item => item.id);
-            this.miniSearch!.addAll(validItems);
+            const documents = validItems.map(item => {
+                this.indexedItemsById.set(item.id, item);
+                return this.itemToSearchDocument(item);
+            });
+            this.miniSearch!.addAll(documents);
             validItems.forEach(item => this.indexedItemIds.add(item.id));
-            
+
             this.lastIndexTime = Date.now();
             devLog(`RetrievalService: 索引完成，共 ${validItems.length} 条，耗时 ${Date.now() - startTime}ms`);
         } catch (e) {
@@ -241,29 +369,39 @@ export class RetrievalService {
         if (!filters) return results;
 
         return results.filter(sr => {
-            // theme 过滤
+            const item = this.indexedItemsById.get(getResultId(sr));
+
+            // themePath 过滤：只读显式主题派生出的 themePath，绝不读 header 或 legacy theme。
             if (filters.themePaths && filters.themePaths.length > 0) {
-                const itemTheme = (sr as any).theme as string | undefined;
-                if (!itemTheme) return false;
+                const itemThemePath = normalizeText(item ? readFieldValue(item, 'themePath') : (sr as any).themePath);
+                if (!itemThemePath) return false;
                 // 检查是否匹配任意一个 themePath（支持前缀匹配）
-                const matched = filters.themePaths.some(tp => 
-                    itemTheme === tp || itemTheme.startsWith(tp + '/')
+                const matched = filters.themePaths.some(tp =>
+                    itemThemePath === tp || itemThemePath.startsWith(tp + '/')
                 );
                 if (!matched) return false;
             }
 
             // type 过滤
             if (filters.types && filters.types.length > 0) {
-                const itemType = (sr as any).type as 'task' | 'block' | undefined;
+                const itemType = (item?.type || (sr as any).type) as 'task' | 'block' | undefined;
                 if (!itemType || !filters.types.includes(itemType)) {
                     return false;
                 }
             }
 
-            // Block 模板名称过滤（通过 categoryKey 匹配）
+            // Block 模板 ID 过滤
+            if (filters.blockTemplateIds && filters.blockTemplateIds.length > 0) {
+                const templateId = normalizeText(item?.templateId ?? (sr as any).templateId);
+                if (!templateId || !filters.blockTemplateIds.includes(templateId)) {
+                    return false;
+                }
+            }
+
+            // Block 模板名称过滤（通过 categoryKey/root category 匹配）
             // categoryKey 格式通常是 "模板名称" 或 "模板名称/子类别"
             if (filters.blockTemplateNames && filters.blockTemplateNames.length > 0) {
-                const categoryKey = (sr as any).categoryKey as string | undefined;
+                const categoryKey = normalizeText(item ? readFieldValue(item, 'categoryKey') : (sr as any).categoryKey);
                 if (!categoryKey) return false;
                 const categoryBase = categoryKey.split('/')[0];
                 if (!filters.blockTemplateNames.includes(categoryBase)) {
@@ -276,34 +414,54 @@ export class RetrievalService {
     }
 
     /**
-     * 将 SearchResult 转换回 Item（部分字段）
+     * 将 SearchResult 转换回 Item。优先返回 DataStore 中的完整标准化 Item。
      */
     private searchResultToItem(sr: SearchResult): Item {
-        // MiniSearch 的 storeFields 会保存这些字段
+        const id = getResultId(sr);
+        const indexedItem = this.indexedItemsById.get(id);
+        if (indexedItem) return indexedItem;
+
+        // MiniSearch 的 storeFields 会保存这些字段；这里只做兜底。
         return {
-            id: sr.id as string,
+            id,
             title: (sr as any).title ?? '',
             content: (sr as any).content ?? '',
+            editableText: (sr as any).editableText ?? '',
             type: (sr as any).type ?? 'task',
-            theme: (sr as any).theme,
-            tags: (sr as any).tags ?? [],
+            themePath: (sr as any).themePath || undefined,
+            rootTheme: (sr as any).rootTheme || undefined,
+            leafTheme: (sr as any).leafTheme || undefined,
+            tags: normalizeText((sr as any).tags).split(/\s+/).filter(Boolean),
             categoryKey: (sr as any).categoryKey ?? '',
+            templateId: (sr as any).templateId || undefined,
             dateMs: (sr as any).dateMs,
             created: (sr as any).created ?? 0,
-            modified: 0,
+            modified: (sr as any).modified ?? 0,
             recurrence: 'none',
             extra: {},
         } as Item;
     }
 
     /**
-     * 根据 ID 列表获取完整 Item（从 DataStore）
+     * 根据 ID 列表获取完整 Item（优先从当前索引缓存，其次从 DataStore）
      */
     getItemsByIds(ids: string[]): Item[] {
-        if (!this.dataStore) return [];
+        if (!ids.length) return [];
+        const result: Item[] = [];
+        const missing: string[] = [];
+
+        for (const id of ids) {
+            const item = this.indexedItemsById.get(id);
+            if (item) result.push(item);
+            else missing.push(id);
+        }
+
+        if (!missing.length || !this.dataStore) return result;
+
         const allItems = this.dataStore.queryItems([], []);
-        const idSet = new Set(ids);
-        return allItems.filter(item => idSet.has(item.id));
+        const missingSet = new Set(missing);
+        result.push(...allItems.filter(item => missingSet.has(item.id)));
+        return result;
     }
 }
 

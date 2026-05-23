@@ -80,10 +80,33 @@ function BlockEditor({ block, useCases }: { block: BlockTemplate, useCases: UseC
             <TextField label="Block 名称" value={localBlock.name} onChange={e => setLocalBlock(b => ({ ...b, name: (e.target as HTMLInputElement).value }))} onBlur={() => handleBlur('name')} variant="outlined" size="small" sx={{ maxWidth: 400 }} />
             <Divider />
             <Box>
+                <Typography variant="h6" sx={{ fontSize: '1rem', fontWeight: 600, mb: 1 }}>核心元数据</Typography>
+                <Box sx={{ p: 1.5, mb: 1.5, border: '1px solid rgba(0,0,0,0.12)', borderRadius: 1, bgcolor: 'background.default' }}>
+                    <Typography variant="body2" color="text.secondary">
+                        Block 是一类记录模板；分类、主题、标签是插件核心字段。分类由当前 Block 或表单字段写入，主题来自快速输入选择的主题，标签可作为表单字段输入。它们不会再作为普通 extra 字段处理。
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.75, fontFamily: 'monospace' }}>
+                        推荐模板行：分类:: {'{{categoryKey}}'} ｜ 主题:: {'{{themePath}}'} ｜ 标签:: {'{{tags}}'}
+                    </Typography>
+                </Box>
+                <TextField
+                    label="默认分类"
+                    value={localBlock.categoryKey || ''}
+                    onChange={e => setLocalBlock(b => ({ ...b, categoryKey: (e.target as HTMLInputElement).value }))}
+                    onBlur={() => handleBlur('categoryKey')}
+                    placeholder="例如：闪念/思考、计划、总结、打卡"
+                    helperText="默认写入 {{categoryKey}}；如果表单里有“分类”字段，则以表单输入为准。"
+                    variant="outlined"
+                    size="small"
+                    sx={{ maxWidth: 520 }}
+                />
+            </Box>
+            <Divider />
+            <Box>
                 <Typography variant="h6" sx={{ fontSize: '1rem', fontWeight: 600, mb: 1 }}>输出目标</Typography>
                 <Stack spacing={2}>
-                    <TextField label="目标文件路径" value={localBlock.targetFile} onChange={e => setLocalBlock(b => ({ ...b, targetFile: (e.target as HTMLInputElement).value }))} onBlur={() => handleBlur('targetFile')} placeholder="e.g., {{theme.path}}/{{标题.value}}.md" variant="outlined" size="small" />
-                    <TextField label="追加到标题下 (可选)" value={localBlock.appendUnderHeader || ''} onChange={e => setLocalBlock(b => ({ ...b, appendUnderHeader: (e.target as HTMLInputElement).value }))} onBlur={() => handleBlur('appendUnderHeader')} placeholder="e.g., ## {{block.name}}" variant="outlined" size="small" />
+                    <TextField label="目标文件路径" value={localBlock.targetFile} onChange={e => setLocalBlock(b => ({ ...b, targetFile: (e.target as HTMLInputElement).value }))} onBlur={() => handleBlur('targetFile')} placeholder="e.g., {{themePath}}/{{标题.value}}.md" variant="outlined" size="small" />
+                    <TextField label="追加到标题下 (可选)" value={localBlock.appendUnderHeader || ''} onChange={e => setLocalBlock(b => ({ ...b, appendUnderHeader: (e.target as HTMLInputElement).value }))} onBlur={() => handleBlur('appendUnderHeader')} placeholder="e.g., ## {{themePath}}" variant="outlined" size="small" />
                 </Stack>
             </Box>
             <Divider />

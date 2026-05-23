@@ -1,17 +1,15 @@
 import { singleton, inject } from 'tsyringe';
 import type { Item, FilterRule, SortRule } from '@/core/types/schema';
 import { parseTaskLine, parseBlockContent } from '@core/utils/parser';
-import { applyExplicitThemeViewFields, normalizeExplicitTheme } from '@/core/theme/themeSemantics';
+import { normalizeRecordItem } from '@/core/records';
 import { throttle } from '@core/utils/timing';
-import { normalizeItemDates } from '@core/utils/normalize';
 import { filterByRules, sortItems } from '@core/utils/itemFilter';
-import { parseRecurrence } from '@core/utils/mark';
 import type { IThemeMatcher } from '@core/types/theme';
 import { THEME_MATCHER_TOKEN } from '@core/types/theme';
 import type { IPluginStorage } from '@core/services/StorageService';
 import { STORAGE_TOKEN } from '@core/services/StorageService';
 import { devWarn, devError } from '../utils/devLogger';
-import { addFieldOrigin } from '@/core/types/fieldOrigin';
+import { scanFieldMigrations, type FieldMigrationPreview } from '@/core/fields';
 // NOTE: core 内部禁止依赖 @core/public（对外门面）。
 // 否则会形成循环依赖：core/services -> core/public -> core/services...
 import { VAULT_PORT_TOKEN, type VaultPort } from '@core/ports/VaultPort';
@@ -23,57 +21,6 @@ import {
     toCachedItem,
     fromCachedItem,
 } from '@/core/types/cache';
-
-function applyThemeViewFields(item: any) {
-  applyExplicitThemeViewFields(item);
-  if (item.themePath) {
-    addFieldOrigin(item, 'themePath', {
-      value: item.themePath,
-      kind: 'system_derived',
-      rawKey: 'theme',
-      parser: 'applyExplicitThemeViewFields',
-      confidence: 'derived',
-      note: 'Derived from explicit theme only; header/heading is intentionally excluded.',
-    });
-  }
-  if (item.rootTheme) {
-    addFieldOrigin(item, 'rootTheme', {
-      value: item.rootTheme,
-      kind: 'system_derived',
-      rawKey: 'theme',
-      parser: 'applyExplicitThemeViewFields',
-      confidence: 'derived',
-    });
-  }
-  if (item.leafTheme) {
-    addFieldOrigin(item, 'leafTheme', {
-      value: item.leafTheme,
-      kind: 'system_derived',
-      rawKey: 'theme',
-      parser: 'applyExplicitThemeViewFields',
-      confidence: 'derived',
-    });
-  }
-}
-
-function addFileFieldOrigins(item: Item, filePath: string, fileName: string, folder: string, lineNo?: number, header?: string) {
-  addFieldOrigin(item, 'file.path', { value: filePath, kind: 'file_path', sourcePath: filePath, sourceLine: lineNo, parser: 'DataStore.scanFile', confidence: 'explicit' });
-  addFieldOrigin(item, 'file.basename', { value: fileName, kind: 'file_path', sourcePath: filePath, sourceLine: lineNo, parser: 'DataStore.scanFile', confidence: 'explicit' });
-  addFieldOrigin(item, 'file.name', { value: fileName, kind: 'file_path', sourcePath: filePath, sourceLine: lineNo, parser: 'DataStore.scanFile', confidence: 'explicit' });
-  addFieldOrigin(item, 'file.folder', { value: folder, kind: 'file_path', sourcePath: filePath, sourceLine: lineNo, parser: 'DataStore.scanFile', confidence: 'explicit' });
-  if (header) {
-    addFieldOrigin(item, 'header', {
-      value: header,
-      kind: 'markdown_heading',
-      sourcePath: filePath,
-      sourceLine: lineNo,
-      parser: 'DataStore.scanFile',
-      confidence: 'explicit',
-      note: 'Markdown section heading. It is never used as a theme fallback.',
-    });
-  }
-}
-
 
 @singleton()
 export class DataStore {
@@ -328,28 +275,17 @@ export class DataStore {
           if (endIdx !== -1) {
             const blockItem = parseBlockContent(filePath, lines, i, endIdx, parentFolder);
             if (blockItem) {
-              blockItem.created = stat.ctime;
-              blockItem.modified = stat.mtime;
-              if (currentHeader) blockItem.header = currentHeader;
-              blockItem.tags = Array.from(new Set([...currentSectionTags, ...blockItem.tags]));
-              blockItem.filename = fileName;
-              blockItem.fileName = fileName;
-              normalizeItemDates(blockItem);
-              const hashIdx = blockItem.id.lastIndexOf('#');
-              const lineNo = hashIdx >= 0 ? Number(blockItem.id.slice(hashIdx + 1)) : undefined;
-              (blockItem as any).file = { path: filePath, line: lineNo, basename: fileName, folder: parentFolder };
-              addFileFieldOrigins(blockItem, filePath, fileName, parentFolder, lineNo, currentHeader || undefined);
-              if (currentSectionTags.length > 0) {
-                addFieldOrigin(blockItem, 'tags', { value: [...currentSectionTags], kind: 'markdown_heading', sourcePath: filePath, sourceLine: lineNo, parser: 'DataStore.scanFile', confidence: 'explicit', note: 'Inherited from current Markdown heading tags.' });
-              }
-              // 主题只允许来自显式字段（block 内容中的 `主题:`）。
-              // heading/header 只表示章节位置，不再作为 theme fallback。
-              const normalizedTheme = normalizeExplicitTheme((blockItem as any).theme, this.themeMatcher);
-              (blockItem as any).theme = normalizedTheme;
-              (blockItem as any).titleLower = (blockItem.title || '').toLowerCase();
-              (blockItem as any).contentLower = (blockItem.content || '').toLowerCase();
-              (blockItem as any).tagsLower = (blockItem.tags || []).map(t => t.toLowerCase());
-              applyThemeViewFields(blockItem);
+              normalizeRecordItem(blockItem, {
+                filePath,
+                fileName,
+                parentFolder,
+                created: stat.ctime,
+                modified: stat.mtime,
+                line: i + 1,
+                header: currentHeader || undefined,
+                sectionTags: currentSectionTags,
+                themeMatcher: this.themeMatcher,
+              });
               fileItems.push(blockItem);
             }
             i = endIdx;
@@ -360,27 +296,17 @@ export class DataStore {
         // 解析 task 行
         const taskItem = parseTaskLine(filePath, line, i + 1, parentFolder);
         if (taskItem) {
-          taskItem.tags = Array.from(new Set([...currentSectionTags, ...taskItem.tags]));
-          taskItem.created = stat.ctime;
-          taskItem.modified = stat.mtime;
-          if (currentHeader) taskItem.header = currentHeader;
-
-          // 主题只允许来自显式字段（任务行的 (主题::xxx)/(theme::xxx)）。
-          // heading/header 只表示章节位置，不再作为 theme fallback。
-          taskItem.theme = normalizeExplicitTheme(taskItem.theme, this.themeMatcher);
-          taskItem.filename = fileName;
-          taskItem.fileName = fileName;
-          normalizeItemDates(taskItem);
-          (taskItem as any).file = { path: filePath, line: i + 1, basename: fileName, folder: parentFolder };
-          addFileFieldOrigins(taskItem, filePath, fileName, parentFolder, i + 1, currentHeader || undefined);
-          if (currentSectionTags.length > 0) {
-            addFieldOrigin(taskItem, 'tags', { value: [...currentSectionTags], kind: 'markdown_heading', sourcePath: filePath, sourceLine: i + 1, parser: 'DataStore.scanFile', confidence: 'explicit', note: 'Inherited from current Markdown heading tags.' });
-          }
-          (taskItem as any).recurrenceInfo = parseRecurrence(taskItem.content) || undefined;
-          (taskItem as any).titleLower = (taskItem.title || '').toLowerCase();
-          (taskItem as any).contentLower = (taskItem.content || '').toLowerCase();
-          (taskItem as any).tagsLower = (taskItem.tags || []).map(t => t.toLowerCase());
-          applyThemeViewFields(taskItem);
+          normalizeRecordItem(taskItem, {
+            filePath,
+            fileName,
+            parentFolder,
+            created: stat.ctime,
+            modified: stat.mtime,
+            line: i + 1,
+            header: currentHeader || undefined,
+            sectionTags: currentSectionTags,
+            themeMatcher: this.themeMatcher,
+          });
           fileItems.push(taskItem);
         }
       }
@@ -412,6 +338,13 @@ export class DataStore {
       devError('ThinkPlugin: 扫描文件失败', filePath, err);
       return [];
     }
+  }
+
+  /**
+   * 字段迁移预览（只读）：扫描当前内存记录中的旧字段/污染字段，不修改 Markdown。
+   */
+  getFieldMigrationPreview(): FieldMigrationPreview {
+    return scanFieldMigrations(this.queryItems([], []));
   }
 
   removeFileItems(filePath: string) {

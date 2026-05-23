@@ -50,7 +50,10 @@
     "docs:check": "npm run docs:index && git diff --exit-code -- \"文档/_资源/搜索索引.js\" \"文档/_资源/页面内容索引.js\"",
     "verify:fast": "node scripts/maintenance/verify.mjs --fast",
     "verify": "node scripts/maintenance/verify.mjs",
-    "verify:ci": "node scripts/maintenance/verify.mjs --ci"
+    "verify:ci": "node scripts/maintenance/verify.mjs --ci",
+    "acceptance:fields": "node scripts/validation/field-system-acceptance.mjs",
+    "acceptance:fields:strict": "node scripts/validation/field-system-acceptance.mjs --strict",
+    "verify:field-system": "npm run acceptance:fields && npm run test:unit -- --runTestsByPath test/unit/fieldSystemHealth.test.ts test/unit/templateCoreFields.test.ts test/unit/fieldValueCodec.test.ts test/unit/recordNormalizer.test.ts"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",

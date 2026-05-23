@@ -1,33 +1,37 @@
 // src/features/settings/fieldsEditor/FieldRow.tsx
 /** @jsxImportSource preact */
 import { useEffect, useRef, useState } from "preact/hooks";
-import { Box, Button, Divider, Stack, Typography } from "@mui/material";
+import { Box, Button, Collapse, Divider, Stack, Typography } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
 import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
 import DeleteIcon from "@mui/icons-material/Delete";
+import DragIndicatorIcon from "@mui/icons-material/DragIndicator";
+import ExpandLessIcon from "@mui/icons-material/ExpandLess";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import type { TemplateField, TemplateFieldOption } from "@core/public";
+import { getCustomFieldNameWarning, getUserTemplateFieldTypeOptions, normalizeTemplateFieldType, templateFieldTypeSupportsDefaultValue, templateFieldTypeUsesOptions } from "@core/public";
 import { IconAction, SimpleSelect } from "@shared/public";
 import { logRenderDiagnostic } from "../../../shared/debug/inputDiagnostics";
 import { NativeTextarea, NativeTextInput } from "./nativeControls";
 import { OptionRow } from "./OptionRow";
 
-const fieldTypeOptions = [
-  { value: "text", label: "单行文本" },
-  { value: "textarea", label: "多行文本" },
-  { value: "number", label: "数字" },
-  { value: "date", label: "日期" },
-  { value: "time", label: "时间" },
-  { value: "select", label: "下拉选择" },
-  { value: "radio", label: "单选按钮" },
-  { value: "rating", label: "评分" },
-];
+const fieldTypeOptions = getUserTemplateFieldTypeOptions();
+
+function defaultInputType(uiType: string) {
+  if (uiType === "number") return "number";
+  if (uiType === "date") return "date";
+  if (uiType === "time") return "time";
+  if (uiType === "datetime") return "datetime-local";
+  return "text";
+}
 
 export function FieldRow({
   field,
   index,
   fieldCount,
   disabled = false,
+  isDragging = false,
   onUpdate,
   onRemove,
   onMove,
@@ -36,15 +40,15 @@ export function FieldRow({
   index: number;
   fieldCount: number;
   disabled?: boolean;
+  isDragging?: boolean;
   onUpdate: (updates: Partial<TemplateField>) => void;
   onRemove: () => void;
   onMove: (direction: "up" | "down") => void;
 }) {
   const [localName, setLocalName] = useState(field.label || field.key);
-  const [localDefaultValue, setLocalDefaultValue] = useState(
-    field.defaultValue || "",
-  );
+  const [localDefaultValue, setLocalDefaultValue] = useState(field.defaultValue || "");
   const [isEditing, setIsEditing] = useState(false);
+  const [detailsOpen, setDetailsOpen] = useState(false);
   const renderCountRef = useRef(0);
   const previousFieldRef = useRef<TemplateField | null>(null);
   renderCountRef.current += 1;
@@ -57,6 +61,7 @@ export function FieldRow({
       fieldType: field.type,
       disabled,
       isEditing,
+      isDragging,
       fieldRefChanged:
         previousFieldRef.current !== null && previousFieldRef.current !== field,
       localName,
@@ -76,12 +81,6 @@ export function FieldRow({
 
   const handleNameBlur = () => {
     const trimmedName = localName.trim();
-    console.log("[字段编辑器][字段名称编辑] 字段名称输入框失焦", {
-      字段id: field.id,
-      原字段名: field.label || field.key,
-      输入值: localName,
-      去空格后: trimmedName,
-    });
     if (trimmedName && trimmedName !== (field.label || field.key)) {
       onUpdate({ key: trimmedName, label: trimmedName });
     } else {
@@ -90,131 +89,124 @@ export function FieldRow({
     setIsEditing(false);
   };
 
-  const handleOptionChange = (
-    optIndex: number,
-    newOption: TemplateFieldOption,
-  ) => {
+  const handleOptionChange = (optIndex: number, newOption: TemplateFieldOption) => {
     const newOptions = [...(field.options || [])];
     newOptions[optIndex] = newOption;
-    console.log("[字段编辑器][选项编辑] 更新选项到字段", {
-      字段: field.key,
-      选项索引: optIndex,
-      新选项列表: newOptions,
-    });
     onUpdate({ options: newOptions });
   };
 
   const addOption = () => {
     const newOptions = [...(field.options || [])];
-    newOptions.push({ value: "🆕", label: String(newOptions.length + 1) });
-    console.log("[字段编辑器][选项编辑] 添加选项", {
-      字段: field.key,
-      新选项列表: newOptions,
-    });
+    newOptions.push({ value: "新选项", label: String(newOptions.length + 1) });
     onUpdate({ options: newOptions });
+    setDetailsOpen(true);
   };
 
   const removeOption = (optIndex: number) => {
     const nextOptions = (field.options || []).filter((_, i) => i !== optIndex);
-    console.log("[字段编辑器][选项编辑] 删除选项", {
-      字段: field.key,
-      删除索引: optIndex,
-      新选项列表: nextOptions,
-    });
     onUpdate({ options: nextOptions });
   };
 
-  const showOptionsEditor = ["select", "radio", "rating"].includes(field.type);
-  const isCategoryLike =
-    ["select", "radio"].includes(field.type) &&
-    ((field.semanticType || "") === "path" ||
-      String(field.key || field.label || "").includes("分类"));
-  const isRatingLike =
-    field.type === "rating" || field.semanticType === "ratingPair";
-  const showDefaultValueEditor = [
-    "text",
-    "textarea",
-    "number",
-    "date",
-    "time",
-  ].includes(field.type);
+  const uiType = normalizeTemplateFieldType(field.type);
+  const customFieldNameWarning = getCustomFieldNameWarning(localName);
+  const showOptionsEditor = templateFieldTypeUsesOptions(uiType);
+  const showDefaultValueEditor = templateFieldTypeSupportsDefaultValue(uiType);
+  const showInlineDefaultValue = showDefaultValueEditor && uiType !== "textarea";
+  const showDetails = showOptionsEditor || uiType === "textarea" || uiType === "number";
 
   return (
-    <Box>
-      <Stack direction="row" spacing={2} alignItems="flex-start">
-        <Box sx={{ minWidth: 120, flexShrink: 0 }}>
-          <SimpleSelect
-            value={field.type}
-            options={fieldTypeOptions}
-            onChange={(val) => {
-              console.log("[字段编辑器][字段类型编辑] 修改字段类型", {
-                字段: field.key,
-                原类型: field.type,
-                新类型: val,
-              });
-              onUpdate({ type: val as TemplateField["type"] });
-            }}
+    <Box
+      sx={{
+        py: 0.75,
+        px: 0.5,
+        borderRadius: 1,
+        bgcolor: isDragging ? "action.hover" : "transparent",
+      }}
+    >
+      <Stack direction="row" spacing={1} alignItems="center">
+        <Box
+          title="拖动排序"
+          sx={{
+            width: 28,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            color: "text.secondary",
+            cursor: disabled ? "default" : "grab",
+            flexShrink: 0,
+          }}
+        >
+          <DragIndicatorIcon sx={{ fontSize: "1.25rem" }} />
+        </Box>
+
+        <Box sx={{ flex: "1 1 240px", minWidth: 180 }}>
+          <NativeTextInput
+            label="字段名称"
+            placeholder="例如：地点、项目、备注"
+            value={localName}
+            onInput={(value) => setLocalName(value)}
+            onBlur={handleNameBlur}
+            onFocus={() => setIsEditing(true)}
             disabled={disabled}
-            sx={{ minWidth: 120, flexShrink: 0 }}
+            style={{ width: "100%" }}
+            title="该名称会显示在输入表单中，也可在模板中用 {{字段名称}} 引用"
           />
         </Box>
-        <NativeTextInput
-          label="字段名称"
-          placeholder="例如：任务内容"
-          value={localName}
-          onInput={(value) => {
-            console.log(
-              "[字段编辑器][字段名称编辑] 正在输入字段名称 native onInput",
-              { 字段id: field.id, 输入值: value },
-            );
-            setLocalName(value);
-          }}
-          onBlur={handleNameBlur}
-          onFocus={() => setIsEditing(true)}
-          disabled={disabled}
-          style={{ flexGrow: 1 }}
-          title="该名称将作为表单项的标题，并在模板中通过 {{字段名称}} 的形式引用"
-        />
 
-        {field.type === "number" && (
-          <Stack direction="row" spacing={1}>
+        <Box sx={{ width: 150, flexShrink: 0 }}>
+          <SimpleSelect
+            value={uiType}
+            options={fieldTypeOptions}
+            onChange={(val) => onUpdate({ type: normalizeTemplateFieldType(val) })}
+            disabled={disabled}
+            sx={{ width: 150 }}
+          />
+        </Box>
+
+        {showInlineDefaultValue && (
+          <Box sx={{ flex: "1 1 200px", minWidth: 160 }}>
             <NativeTextInput
-              label="Min"
-              type="number"
-              value={field.min ?? ""}
-              onInput={(value) =>
-                onUpdate({ min: value === "" ? undefined : Number(value) })
-              }
+              label="默认值"
+              value={localDefaultValue}
+              type={defaultInputType(uiType)}
+              onInput={(value) => {
+                setLocalDefaultValue(value);
+                onUpdate({ defaultValue: value });
+              }}
+              onBlur={() => onUpdate({ defaultValue: localDefaultValue })}
               disabled={disabled}
-              style={{ width: 80 }}
+              placeholder="可留空"
+              style={{ width: "100%" }}
             />
-            <NativeTextInput
-              label="Max"
-              type="number"
-              value={field.max ?? ""}
-              onInput={(value) =>
-                onUpdate({ max: value === "" ? undefined : Number(value) })
-              }
-              disabled={disabled}
-              style={{ width: 80 }}
-            />
-          </Stack>
+          </Box>
         )}
-        <Stack direction="row" sx={{ pt: 2.5 }}>
+
+        {showDetails && (
+          <Button
+            size="small"
+            variant="text"
+            disabled={disabled && !showOptionsEditor}
+            onClick={() => setDetailsOpen((open) => !open)}
+            endIcon={detailsOpen ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+            sx={{ flexShrink: 0, whiteSpace: "nowrap" }}
+          >
+            {detailsOpen ? "收起" : "详情"}
+          </Button>
+        )}
+
+        <Stack direction="row" sx={{ flexShrink: 0 }}>
           <IconAction
             label="上移"
             disabled={disabled || index === 0}
             onClick={() => onMove("up")}
-            icon={<ArrowUpwardIcon sx={{ fontSize: "1.1rem" }} />}
+            icon={<ArrowUpwardIcon sx={{ fontSize: "1rem" }} />}
           />
           <IconAction
             label="下移"
             disabled={disabled || index === fieldCount - 1}
             onClick={() => onMove("down")}
-            icon={<ArrowDownwardIcon sx={{ fontSize: "1.1rem" }} />}
+            icon={<ArrowDownwardIcon sx={{ fontSize: "1rem" }} />}
           />
-        </Stack>
-        <Box sx={{ pt: 2.5 }}>
           <IconAction
             label="删除此字段"
             disabled={disabled}
@@ -222,129 +214,81 @@ export function FieldRow({
             color="error"
             icon={<DeleteIcon />}
           />
-        </Box>
+        </Stack>
       </Stack>
 
-      {showDefaultValueEditor &&
-        (field.type === "textarea" ? (
-          <NativeTextarea
-            label="默认值"
-            value={localDefaultValue}
-            rows={3}
-            onInput={(value) => {
-              console.log(
-                "[字段编辑器][默认值编辑] 正在输入默认值 native onInput",
-                { 字段: field.key, 输入值: value },
-              );
-              setLocalDefaultValue(value);
-              // 默认值实时进入上层草稿，保存不再依赖 blur 提交。
-              onUpdate({ defaultValue: value });
-            }}
-            onBlur={() => {
-              console.log(
-                "[字段编辑器][默认值编辑] 默认值失焦，提交到上层覆写草稿",
-                {
-                  字段: field.key,
-                  默认值: localDefaultValue,
-                },
-              );
-              onUpdate({ defaultValue: localDefaultValue });
-            }}
-            disabled={disabled}
-            placeholder="可使用 {{moment:YYYY-MM-DD}}、{{theme}} 等模板变量"
-            style={{
-              marginTop: 12,
-              marginLeft: 48,
-              width: "calc(100% - 48px)",
-            }}
-          />
-        ) : (
-          <NativeTextInput
-            label="默认值"
-            value={localDefaultValue}
-            type={
-              field.type === "number"
-                ? "number"
-                : field.type === "date"
-                  ? "date"
-                  : field.type === "time"
-                    ? "time"
-                    : "text"
-            }
-            onInput={(value) => {
-              console.log(
-                "[字段编辑器][默认值编辑] 正在输入默认值 native onInput",
-                { 字段: field.key, 输入值: value },
-              );
-              setLocalDefaultValue(value);
-              // 默认值实时进入上层草稿，保存不再依赖 blur 提交。
-              onUpdate({ defaultValue: value });
-            }}
-            onBlur={() => {
-              console.log(
-                "[字段编辑器][默认值编辑] 默认值失焦，提交到上层覆写草稿",
-                {
-                  字段: field.key,
-                  默认值: localDefaultValue,
-                },
-              );
-              onUpdate({ defaultValue: localDefaultValue });
-            }}
-            disabled={disabled}
-            placeholder="可使用 {{moment:YYYY-MM-DD}}、{{theme}} 等模板变量"
-            style={{
-              marginTop: 12,
-              marginLeft: 48,
-              width: "calc(100% - 48px)",
-            }}
-          />
-        ))}
-
-      {showOptionsEditor && (
-        <Box sx={{ mt: 2, pl: 2, ml: 6 }}>
-          {isRatingLike ? (
-            <Typography
-              variant="caption"
-              sx={{ color: "text.secondary", display: "block", mb: 1 }}
-            >
-              推荐：label 填评分数值，value 填显示资源。模板中优先写 评分::{" "}
-              {"{{字段名.label}}"} 与 评图:: {"{{字段名.value}}"}。
-            </Typography>
-          ) : isCategoryLike ? (
-            <Typography
-              variant="caption"
-              sx={{ color: "text.secondary", display: "block", mb: 1 }}
-            >
-              推荐：分类/主题这类路径字段保留对象值，模板中优先写{" "}
-              {"{{字段名.value}}"} 保存完整路径，{"{{字段名.label}}"} 用于显示。
-            </Typography>
-          ) : null}
-          <Stack
-            spacing={1.5}
-            divider={<Divider flexItem sx={{ borderStyle: "dashed" }} />}
-          >
-            {(field.options || []).map((option, optIndex) => (
-              <OptionRow
-                key={optIndex}
-                option={option}
-                onChange={(newOpt) => handleOptionChange(optIndex, newOpt)}
-                onRemove={() => removeOption(optIndex)}
-                fieldType={field.type}
-                disabled={disabled}
-              />
-            ))}
-          </Stack>
-          <Button
-            onClick={addOption}
-            disabled={disabled}
-            startIcon={<AddIcon />}
-            size="small"
-            sx={{ alignSelf: "flex-start", mt: 1.5 }}
-          >
-            添加选项
-          </Button>
-        </Box>
+      {customFieldNameWarning && (
+        <Typography variant="caption" sx={{ color: "warning.main", display: "block", mt: 0.5, ml: 4 }}>
+          {customFieldNameWarning}
+        </Typography>
       )}
+
+      <Collapse in={detailsOpen} unmountOnExit>
+        <Box sx={{ mt: 1.25, ml: 4, p: 1.25, borderRadius: 1, bgcolor: "background.default" }}>
+          {uiType === "textarea" && showDefaultValueEditor && (
+            <NativeTextarea
+              label="默认值"
+              value={localDefaultValue}
+              rows={3}
+              onInput={(value) => {
+                setLocalDefaultValue(value);
+                onUpdate({ defaultValue: value });
+              }}
+              onBlur={() => onUpdate({ defaultValue: localDefaultValue })}
+              disabled={disabled}
+              placeholder="可留空"
+              style={{ width: "100%" }}
+            />
+          )}
+
+          {uiType === "number" && (
+            <Stack direction="row" spacing={1} sx={{ mb: showOptionsEditor ? 1.5 : 0 }}>
+              <NativeTextInput
+                label="最小值"
+                type="number"
+                value={field.min ?? ""}
+                onInput={(value) => onUpdate({ min: value === "" ? undefined : Number(value) })}
+                disabled={disabled}
+                style={{ width: 120 }}
+              />
+              <NativeTextInput
+                label="最大值"
+                type="number"
+                value={field.max ?? ""}
+                onInput={(value) => onUpdate({ max: value === "" ? undefined : Number(value) })}
+                disabled={disabled}
+                style={{ width: 120 }}
+              />
+            </Stack>
+          )}
+
+          {showOptionsEditor && (
+            <Box>
+              <Stack spacing={1.25} divider={<Divider flexItem sx={{ borderStyle: "dashed" }} />}>
+                {(field.options || []).map((option, optIndex) => (
+                  <OptionRow
+                    key={optIndex}
+                    option={option}
+                    onChange={(newOpt) => handleOptionChange(optIndex, newOpt)}
+                    onRemove={() => removeOption(optIndex)}
+                    fieldType={uiType}
+                    disabled={disabled}
+                  />
+                ))}
+              </Stack>
+              <Button
+                onClick={addOption}
+                disabled={disabled}
+                startIcon={<AddIcon />}
+                size="small"
+                sx={{ mt: 1.25 }}
+              >
+                添加选项
+              </Button>
+            </Box>
+          )}
+        </Box>
+      </Collapse>
     </Box>
   );
 }

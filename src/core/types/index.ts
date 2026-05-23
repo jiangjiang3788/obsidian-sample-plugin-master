@@ -16,7 +16,6 @@ export * from './constants';
 export * from './definitions';
 export * from './schema';
 export * from './fields';
-export * from './fieldOrigin';
 export * from './ai-schema';
 export * from './timeline';
 

@@ -1,6 +1,6 @@
 {
   "aiSettings": {
-    "apiKey": "",
+    "apiKey": "sk-IL88ucMIHsvIYkcKLcTbB6ZEeeHWpay42QZAX9drXu4453ER",
     "enabled": true,
     "provider": "openai_compat",
     "apiEndpoint": "https://api.ricardochat.cn/v1",
@@ -20,8 +20,7 @@
     "confirmMode": "batch",
     "preloadConfigOnStartup": true,
     "configCacheTTLSeconds": 300,
-    "customPrompt": "完成的任务状态勾选完成✅\n未开始的任务🛫\n未完成的任务、有截止日期的📅\n上午8点到12点工作 其中9点到十点写总结 这个应该断成三节 十点到九点工作 九点到十点写总结 十点到十二点工作\n时长只能是分钟为单位，只记录数字\n\n“通勤15分钟中午吃饭45分钟玩手机70分钟 睡觉20分钟”认为是一件事接着一件事记录时间",
-    "baseUrl": ""
+    "customPrompt": "完成的任务状态勾选完成✅\n未开始的任务🛫\n未完成的任务、有截止日期的📅\n上午8点到12点工作 其中9点到十点写总结 这个应该断成三节 十点到九点工作 九点到十点写总结 十点到十二点工作\n时长只能是分钟为单位，只记录数字\n\n“通勤15分钟中午吃饭45分钟玩手机70分钟 睡觉20分钟”认为是一件事接着一件事记录时间"
   },
   "groups": [
     {
@@ -112,11 +111,11 @@
       "filters": [],
       "sort": [
         {
-          "field": "theme",
+          "field": "recurrence",
           "dir": "asc"
         }
       ],
-      "collapsed": true
+      "collapsed": false
     },
     {
       "id": "vi_mmeolydjaga6z6u",
@@ -217,18 +216,16 @@
         "colField": "file.path"
       },
       "fields": [
-        "theme",
+        "themePath",
+        "image",
         "date",
         "content"
       ],
-      "groupFields": [],
+      "groupFields": [
+        "categoryKey",
+        "leafTheme"
+      ],
       "filters": [
-        {
-          "field": "categoryKey",
-          "op": "!=",
-          "value": "打卡",
-          "logic": "and"
-        },
         {
           "field": "type",
           "op": "=",
@@ -346,9 +343,9 @@
         ]
       },
       "fields": [
-        "theme",
+        "themePath",
         "date",
-        "pintu",
+        "image",
         "content"
       ],
       "groupFields": [],
@@ -474,31 +471,24 @@
       "id": "layout_memcg9jjoq6j4",
       "name": "全局布局",
       "viewInstanceIds": [
-        "vi_mm9z0oe1cvlr53c",
-        "vi_mmikcsvy3rwcetd",
+        "vi_mn9o962553qwhzp",
         "vi_mmijitbq47u10wu",
         "vi_mmeolydjaga6z6u",
-        "vi_mn9o962553qwhzp",
-        "vi_mno1upgdwpv72oj",
-        "vi_mnztlf3wxrrqd8i"
+        "vi_mnztlf3wxrrqd8i",
+        "vi_mm9z0oe1cvlr53c",
+        "vi_mmikcsvy3rwcetd",
+        "vi_mno1upgdwpv72oj"
       ],
       "displayMode": "list",
       "initialView": "天",
-      "initialDateFollowsNow": true,
+      "initialDateFollowsNow": false,
       "parentId": "group_memcg1u3us3jc",
       "hideToolbar": false,
       "isOverviewMode": false,
-      "initialDate": "2024-11-26",
+      "initialDate": "2025-02-26",
       "useFieldGranularity": false,
       "selectedThemes": [],
-      "selectedCategories": [],
-      "globalFilters": [
-        {
-          "field": "themePath",
-          "op": "includes",
-          "value": "X"
-        }
-      ]
+      "selectedCategories": []
     }
   ],
   "inputSettings": {
@@ -511,7 +501,7 @@
             "id": "field_mekr8gby",
             "key": "状态",
             "label": "状态",
-            "type": "radio",
+            "type": "singleSelect",
             "options": [
               {
                 "value": "- [x]",
@@ -562,7 +552,7 @@
             "id": "field_mekyn4c3",
             "key": "重复",
             "label": "重复",
-            "type": "radio",
+            "type": "singleSelect",
             "options": [
               {
                 "value": " ",
@@ -583,9 +573,9 @@
             ]
           }
         ],
-        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{theme}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{状态}} {{重复.value}} {{日期}}\n\n",
+        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{themePath}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{状态}} {{重复.value}} {{日期}}\n\n",
         "targetFile": "03/01.md",
-        "appendUnderHeader": "## {{theme}}",
+        "appendUnderHeader": "## {{themePath}}",
         "categoryKey": "任务"
       },
       {
@@ -594,9 +584,9 @@
         "fields": [
           {
             "id": "field_mewjlt4j",
-            "key": "思考分类",
-            "label": "思考分类",
-            "type": "radio",
+            "key": "分类",
+            "label": "分类",
+            "type": "singleSelect",
             "options": [
               {
                 "value": "闪念/事件",
@@ -610,9 +600,7 @@
                 "value": "闪念/思考",
                 "label": "思考"
               }
-            ],
-            "semanticType": "path",
-            "storeMode": "value"
+            ]
           },
           {
             "id": "field_mewkyug9",
@@ -624,7 +612,7 @@
             "id": "field_mn5ui00x",
             "key": "标签",
             "label": "标签",
-            "type": "text"
+            "type": "multiTag"
           },
           {
             "id": "field_mewjlypl",
@@ -633,9 +621,9 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: {{思考分类.value}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n标签:: {{标签}}\n内容:: {{内容}}\n<!-- end -->\n\n",
+        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: {{分类.value}}\n日期:: {{日期}}\n主题:: {{themePath}}\n图标:: {{icon}}\n标签:: {{标签}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/闪念.md",
-        "appendUnderHeader": "## {{theme}}",
+        "appendUnderHeader": "## {{themePath}}",
         "categoryKey": "闪念"
       },
       {
@@ -646,7 +634,7 @@
             "id": "field_mer92so5",
             "key": "周期",
             "label": "周期",
-            "type": "radio",
+            "type": "singleSelect",
             "options": [
               {
                 "value": "周",
@@ -679,9 +667,9 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 计划\n周期:: {{周期}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n\n",
+        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 计划\n周期:: {{周期}}\n日期:: {{日期}}\n主题:: {{themePath}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n\n",
         "targetFile": "01/计划.md",
-        "appendUnderHeader": "## {{theme}}",
+        "appendUnderHeader": "## {{themePath}}",
         "categoryKey": "计划"
       },
       {
@@ -692,7 +680,7 @@
             "id": "field_mekrw2ui",
             "key": "周期",
             "label": "周期",
-            "type": "radio",
+            "type": "singleSelect",
             "options": [
               {
                 "value": "周",
@@ -729,15 +717,21 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 总结\n周期:: {{周期}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n",
+        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 总结\n周期:: {{周期}}\n日期:: {{日期}}\n主题:: {{themePath}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/总结.md",
-        "appendUnderHeader": "## {{theme}}",
+        "appendUnderHeader": "## {{themePath}}",
         "categoryKey": "总结"
       },
       {
         "id": "blk_mejsg76atopau",
         "name": "打卡",
         "fields": [
+          {
+            "id": "field_mewjqtxg",
+            "key": "内容",
+            "label": "内容",
+            "type": "textarea"
+          },
           {
             "id": "field_mewjpsd5",
             "key": "评分",
@@ -748,26 +742,18 @@
                 "value": "✅",
                 "label": "1"
               }
-            ],
-            "semanticType": "ratingPair",
-            "auxKey": "pintu"
+            ]
           },
           {
             "id": "field_mewk7o3j",
             "key": "日期",
             "label": "日期",
             "type": "date"
-          },
-          {
-            "id": "field_mewjqtxg",
-            "key": "内容",
-            "label": "内容",
-            "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分.label}}\npintu::{{评分.value}}\n内容:: {{内容}}\n<!-- end -->\n\n",
+        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{themePath}}\n评分:: {{评分.label}}\n图片:: {{评分.value}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/打卡.md",
-        "appendUnderHeader": "## {{theme}}",
+        "appendUnderHeader": "## {{themePath}}",
         "categoryKey": "打卡"
       }
     ],
@@ -1058,9 +1044,9 @@
         "fields": [
           {
             "id": "field_mekr8gby",
-            "key": " 状态",
+            "key": "状态",
             "label": "新字段 1",
-            "type": "radio",
+            "type": "singleSelect",
             "options": [
               {
                 "value": "- [x]",
@@ -1080,7 +1066,7 @@
         ],
         "outputTemplate": " {{icon}} {{内容}} (时间::{{时间}}) (时长::{{时长}}) {{recurrence.content}} {{status.name}} (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{日期}}\n\n",
         "targetFile": "",
-        "appendUnderHeader": "## {{theme.path}}"
+        "appendUnderHeader": "## {{themePath}}"
       },
       {
         "id": "ovr_mekz4e77m43iy",
@@ -1092,7 +1078,7 @@
             "id": "field_mekr8gby",
             "key": "状态",
             "label": "新字段 1",
-            "type": "radio",
+            "type": "singleSelect",
             "options": [
               {
                 "value": "- [x]",
@@ -1131,7 +1117,7 @@
             "id": "field_mekyn4c3",
             "key": "重复",
             "label": "新字段 5",
-            "type": "radio",
+            "type": "singleSelect",
             "options": [
               {
                 "value": " ",
@@ -1152,9 +1138,9 @@
             ]
           }
         ],
-        "outputTemplate": "\n{{状态.value}} {{icon}} {{任务内容}} (主题::{{theme}}) (时间::{{时间}}) (时长::{{时长}}) {{状态}} (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{moment:YYYY-MM-DD}}\n\n",
+        "outputTemplate": "\n{{状态.value}} {{icon}} {{任务内容}} (主题::{{themePath}}) (时间::{{时间}}) (时长::{{时长}}) {{状态}} (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{moment:YYYY-MM-DD}}\n\n",
         "targetFile": "02/01.md",
-        "appendUnderHeader": "## {{theme.path}}"
+        "appendUnderHeader": "## {{themePath}}"
       },
       {
         "id": "ovr_mekz4hud4pvpa",
@@ -1166,7 +1152,7 @@
             "id": "field_mekr8gby",
             "key": "状态",
             "label": "新字段 1",
-            "type": "radio",
+            "type": "singleSelect",
             "options": [
               {
                 "value": "- [x]",
@@ -1205,7 +1191,7 @@
             "id": "field_mekyn4c3",
             "key": "重复",
             "label": "新字段 5",
-            "type": "radio",
+            "type": "singleSelect",
             "options": [
               {
                 "value": " ",
@@ -1226,9 +1212,9 @@
             ]
           }
         ],
-        "outputTemplate": "\n{{状态.value}} {{icon}} {{任务内容}} (主题::{{theme}}) (时间::{{时间}}) (时长::{{时长}}) {{状态}} (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{moment:YYYY-MM-DD}}\n\n",
+        "outputTemplate": "\n{{状态.value}} {{icon}} {{任务内容}} (主题::{{themePath}}) (时间::{{时间}}) (时长::{{时长}}) {{状态}} (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{moment:YYYY-MM-DD}}\n\n",
         "targetFile": "02/01.md",
-        "appendUnderHeader": "## {{theme.path}}"
+        "appendUnderHeader": "## {{themePath}}"
       },
       {
         "id": "ovr_mekz4u7k77rgt",
@@ -1240,7 +1226,7 @@
             "id": "field_mekr8gby",
             "key": "状态",
             "label": "新字段 1",
-            "type": "radio",
+            "type": "singleSelect",
             "options": [
               {
                 "value": "- [x]",
@@ -1279,7 +1265,7 @@
             "id": "field_mekyn4c3",
             "key": "重复",
             "label": "新字段 5",
-            "type": "radio",
+            "type": "singleSelect",
             "options": [
               {
                 "value": " ",
@@ -1300,9 +1286,9 @@
             ]
           }
         ],
-        "outputTemplate": "\n{{状态.value}} {{icon}} {{任务内容}} (主题::{{theme}}) (时间::{{时间}}) (时长::{{时长}}) {{状态}} (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{moment:YYYY-MM-DD}}\n\n",
+        "outputTemplate": "\n{{状态.value}} {{icon}} {{任务内容}} (主题::{{themePath}}) (时间::{{时间}}) (时长::{{时长}}) {{状态}} (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{moment:YYYY-MM-DD}}\n\n",
         "targetFile": "02/01.md",
-        "appendUnderHeader": "## {{theme.path}}"
+        "appendUnderHeader": "## {{themePath}}"
       },
       {
         "id": "ovr_mekz510f46593",
@@ -1314,7 +1300,7 @@
             "id": "field_mekr8gby",
             "key": "状态",
             "label": "新字段 1",
-            "type": "radio",
+            "type": "singleSelect",
             "options": [
               {
                 "value": "- [x]",
@@ -1353,7 +1339,7 @@
             "id": "field_mekyn4c3",
             "key": "重复",
             "label": "新字段 5",
-            "type": "radio",
+            "type": "singleSelect",
             "options": [
               {
                 "value": " ",
@@ -1374,9 +1360,9 @@
             ]
           }
         ],
-        "outputTemplate": "\n{{状态.value}} {{icon}} {{任务内容}} (主题::{{theme}}) (时间::{{时间}}) (时长::{{时长}}) {{状态}} (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{moment:YYYY-MM-DD}}\n\n",
+        "outputTemplate": "\n{{状态.value}} {{icon}} {{任务内容}} (主题::{{themePath}}) (时间::{{时间}}) (时长::{{时长}}) {{状态}} (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{moment:YYYY-MM-DD}}\n\n",
         "targetFile": "02/01.md",
-        "appendUnderHeader": "## {{theme.path}}"
+        "appendUnderHeader": "## {{themePath}}"
       },
       {
         "id": "ovr_mekz5u3jce2kj",
@@ -1388,7 +1374,7 @@
             "id": "field_mekr8gby",
             "key": "状态",
             "label": "新字段 1",
-            "type": "radio",
+            "type": "singleSelect",
             "options": [
               {
                 "value": "- [x]",
@@ -1427,7 +1413,7 @@
             "id": "field_mekyn4c3",
             "key": "重复",
             "label": "新字段 5",
-            "type": "radio",
+            "type": "singleSelect",
             "options": [
               {
                 "value": " ",
@@ -1448,9 +1434,9 @@
             ]
           }
         ],
-        "outputTemplate": "\n{{状态.value}} {{icon}} {{任务内容}} (主题::{{theme}}) (时间::{{时间}}) (时长::{{时长}}) {{状态}} (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{moment:YYYY-MM-DD}}\n\n",
+        "outputTemplate": "\n{{状态.value}} {{icon}} {{任务内容}} (主题::{{themePath}}) (时间::{{时间}}) (时长::{{时长}}) {{状态}} (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{moment:YYYY-MM-DD}}\n\n",
         "targetFile": "02/01.md",
-        "appendUnderHeader": "## {{theme.path}}"
+        "appendUnderHeader": "## {{themePath}}"
       },
       {
         "id": "ovr_mewimbqzi5twd",
@@ -1462,7 +1448,7 @@
             "id": "field_mekr8gby",
             "key": "状态",
             "label": "状态",
-            "type": "radio",
+            "type": "singleSelect",
             "options": [
               {
                 "value": "- [x]",
@@ -1501,7 +1487,7 @@
             "id": "field_mekyn4c3",
             "key": "重复",
             "label": "重复",
-            "type": "radio",
+            "type": "singleSelect",
             "options": [
               {
                 "value": " ",
@@ -1522,9 +1508,9 @@
             ]
           }
         ],
-        "outputTemplate": "\n{{状态.value}} {{icon}} {{任务内容}} (主题::{{theme}}) (时间::{{时间}}) (时长::{{时长}}) {{重复.value}} {{状态}} (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{moment:YYYY-MM-DD}}\n\n",
+        "outputTemplate": "\n{{状态.value}} {{icon}} {{任务内容}} (主题::{{themePath}}) (时间::{{时间}}) (时长::{{时长}}) {{重复.value}} {{状态}} (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{moment:YYYY-MM-DD}}\n\n",
         "targetFile": "02/01.md",
-        "appendUnderHeader": "## {{theme}}",
+        "appendUnderHeader": "## {{themePath}}",
         "disabled": true
       },
       {
@@ -1537,7 +1523,7 @@
             "id": "field_mer92so5",
             "key": "周期",
             "label": "周期",
-            "type": "radio",
+            "type": "singleSelect",
             "options": [
               {
                 "value": "周",
@@ -1561,7 +1547,7 @@
             "id": "field_mer94wbx",
             "key": "日期",
             "label": "日期",
-            "type": "time"
+            "type": "date"
           },
           {
             "id": "field_mer95h6l",
@@ -1570,9 +1556,9 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 计划\n分类:: {{周期}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n\n",
+        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 计划\n周期:: {{周期}}\n日期:: {{日期}}\n主题:: {{themePath}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n\n",
         "targetFile": "01/计划.md",
-        "appendUnderHeader": "## {{theme}}",
+        "appendUnderHeader": "## {{themePath}}",
         "disabled": true
       },
       {
@@ -1585,7 +1571,7 @@
             "id": "field_mer92so5",
             "key": "周期",
             "label": "周期",
-            "type": "radio",
+            "type": "singleSelect",
             "options": [
               {
                 "value": "周",
@@ -1609,7 +1595,7 @@
             "id": "field_mer94wbx",
             "key": "日期",
             "label": "日期",
-            "type": "time"
+            "type": "date"
           },
           {
             "id": "field_mer95h6l",
@@ -1618,9 +1604,9 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 计划\n分类:: {{周期}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n\n",
+        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 计划\n周期:: {{周期}}\n日期:: {{日期}}\n主题:: {{themePath}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n\n",
         "targetFile": "01/计划.md",
-        "appendUnderHeader": "## {{theme}}",
+        "appendUnderHeader": "## {{themePath}}",
         "disabled": true
       },
       {
@@ -1633,7 +1619,7 @@
             "id": "field_mer92so5",
             "key": "周期",
             "label": "周期",
-            "type": "radio",
+            "type": "singleSelect",
             "options": [
               {
                 "value": "周",
@@ -1657,7 +1643,7 @@
             "id": "field_mer94wbx",
             "key": "日期",
             "label": "日期",
-            "type": "time"
+            "type": "date"
           },
           {
             "id": "field_mer95h6l",
@@ -1666,9 +1652,9 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 计划\n分类:: {{周期}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n\n",
+        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 计划\n周期:: {{周期}}\n日期:: {{日期}}\n主题:: {{themePath}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n\n",
         "targetFile": "01/计划.md",
-        "appendUnderHeader": "## {{theme}}",
+        "appendUnderHeader": "## {{themePath}}",
         "disabled": true
       },
       {
@@ -1681,7 +1667,7 @@
             "id": "field_mer92so5",
             "key": "周期",
             "label": "周期",
-            "type": "radio",
+            "type": "singleSelect",
             "options": [
               {
                 "value": "周",
@@ -1705,7 +1691,7 @@
             "id": "field_mer94wbx",
             "key": "日期",
             "label": "日期",
-            "type": "time"
+            "type": "date"
           },
           {
             "id": "field_mer95h6l",
@@ -1714,9 +1700,9 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 计划\n分类:: {{周期}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n\n",
+        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 计划\n周期:: {{周期}}\n日期:: {{日期}}\n主题:: {{themePath}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n\n",
         "targetFile": "01/计划.md",
-        "appendUnderHeader": "## {{theme}}",
+        "appendUnderHeader": "## {{themePath}}",
         "disabled": true
       },
       {
@@ -1729,7 +1715,7 @@
             "id": "field_mer92so5",
             "key": "周期",
             "label": "周期",
-            "type": "radio",
+            "type": "singleSelect",
             "options": [
               {
                 "value": "周",
@@ -1753,7 +1739,7 @@
             "id": "field_mer94wbx",
             "key": "日期",
             "label": "日期",
-            "type": "time"
+            "type": "date"
           },
           {
             "id": "field_mer95h6l",
@@ -1762,9 +1748,9 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 计划\n分类:: {{周期}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n\n",
+        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 计划\n周期:: {{周期}}\n日期:: {{日期}}\n主题:: {{themePath}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n\n",
         "targetFile": "01/计划.md",
-        "appendUnderHeader": "## {{theme}}",
+        "appendUnderHeader": "## {{themePath}}",
         "disabled": true
       },
       {
@@ -1785,7 +1771,7 @@
               }
             ],
             "semanticType": "ratingPair",
-            "auxKey": "pintu"
+            "auxKey": "image"
           },
           {
             "id": "field_mewk7o3j",
@@ -1800,9 +1786,9 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分.label}}\npintu::{{评分.value}}\n内容:: {{内容}}\n<!-- end -->\n\n",
+        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{themePath}}\n评分:: {{评分.label}}\n图片:: {{评分.value}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/打卡.md",
-        "appendUnderHeader": "## {{theme}}"
+        "appendUnderHeader": "## {{themePath}}"
       },
       {
         "id": "ovr_mewkfvfm4n0jp",
@@ -1822,7 +1808,7 @@
               }
             ],
             "semanticType": "ratingPair",
-            "auxKey": "pintu"
+            "auxKey": "image"
           },
           {
             "id": "field_mewk7o3j",
@@ -1837,9 +1823,9 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分.label}}\npintu::{{评分.value}}\n内容:: {{内容}}\n<!-- end -->\n\n",
+        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{themePath}}\n评分:: {{评分.label}}\n图片:: {{评分.value}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/打卡.md",
-        "appendUnderHeader": "## {{theme}}"
+        "appendUnderHeader": "## {{themePath}}"
       },
       {
         "id": "ovr_mewkfxutclbj1",
@@ -1859,7 +1845,7 @@
               }
             ],
             "semanticType": "ratingPair",
-            "auxKey": "pintu"
+            "auxKey": "image"
           },
           {
             "id": "field_mewk7o3j",
@@ -1874,9 +1860,9 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分.label}}\npintu::{{评分.value}}\n内容:: {{内容}}\n<!-- end -->\n\n",
+        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{themePath}}\n评分:: {{评分.label}}\n图片:: {{评分.value}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/打卡.md",
-        "appendUnderHeader": "## {{theme}}"
+        "appendUnderHeader": "## {{themePath}}"
       },
       {
         "id": "ovr_mewkg08ngufgu",
@@ -1896,7 +1882,7 @@
               }
             ],
             "semanticType": "ratingPair",
-            "auxKey": "pintu"
+            "auxKey": "image"
           },
           {
             "id": "field_mewk7o3j",
@@ -1911,9 +1897,9 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分.label}}\npintu::{{评分.value}}\n内容:: {{内容}}\n<!-- end -->\n\n",
+        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{themePath}}\n评分:: {{评分.label}}\n图片:: {{评分.value}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/打卡.md",
-        "appendUnderHeader": "## {{theme}}"
+        "appendUnderHeader": "## {{themePath}}"
       },
       {
         "id": "ovr_mewkg2tjocpbe",
@@ -1933,7 +1919,7 @@
               }
             ],
             "semanticType": "ratingPair",
-            "auxKey": "pintu"
+            "auxKey": "image"
           },
           {
             "id": "field_mewk7o3j",
@@ -1948,9 +1934,9 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分.label}}\npintu::{{评分.value}}\n内容:: {{内容}}\n<!-- end -->\n\n",
+        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{themePath}}\n评分:: {{评分.label}}\n图片:: {{评分.value}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/打卡.md",
-        "appendUnderHeader": "## {{theme}}"
+        "appendUnderHeader": "## {{themePath}}"
       },
       {
         "id": "ovr_mewkg60pjpqt4",
@@ -1970,7 +1956,7 @@
               }
             ],
             "semanticType": "ratingPair",
-            "auxKey": "pintu"
+            "auxKey": "image"
           },
           {
             "id": "field_mewk7o3j",
@@ -1985,9 +1971,9 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分.label}}\npintu::{{评分.value}}\n内容:: {{内容}}\n<!-- end -->\n\n",
+        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{themePath}}\n评分:: {{评分.label}}\n图片:: {{评分.value}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/打卡.md",
-        "appendUnderHeader": "## {{theme}}"
+        "appendUnderHeader": "## {{themePath}}"
       },
       {
         "id": "ovr_mewkgehu9v6oe",
@@ -2007,7 +1993,7 @@
               }
             ],
             "semanticType": "ratingPair",
-            "auxKey": "pintu"
+            "auxKey": "image"
           },
           {
             "id": "field_mewk7o3j",
@@ -2022,9 +2008,9 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分.label}}\npintu::{{评分.value}}\n内容:: {{内容}}\n<!-- end -->\n\n",
+        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{themePath}}\n评分:: {{评分.label}}\n图片:: {{评分.value}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/打卡.md",
-        "appendUnderHeader": "## {{theme}}"
+        "appendUnderHeader": "## {{themePath}}"
       },
       {
         "id": "ovr_mewkgmd248u9c",
@@ -2044,7 +2030,7 @@
               }
             ],
             "semanticType": "ratingPair",
-            "auxKey": "pintu"
+            "auxKey": "image"
           },
           {
             "id": "field_mewk7o3j",
@@ -2059,9 +2045,9 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分.label}}\npintu::{{评分.value}}\n内容:: {{内容}}\n<!-- end -->\n\n",
+        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{themePath}}\n评分:: {{评分.label}}\n图片:: {{评分.value}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/打卡.md",
-        "appendUnderHeader": "## {{theme}}"
+        "appendUnderHeader": "## {{themePath}}"
       },
       {
         "id": "ovr_mewkgos3gtzam",
@@ -2081,7 +2067,7 @@
               }
             ],
             "semanticType": "ratingPair",
-            "auxKey": "pintu"
+            "auxKey": "image"
           },
           {
             "id": "field_mewk7o3j",
@@ -2096,9 +2082,9 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分.label}}\npintu::{{评分.value}}\n内容:: {{内容}}\n<!-- end -->\n\n",
+        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{themePath}}\n评分:: {{评分.label}}\n图片:: {{评分.value}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/打卡.md",
-        "appendUnderHeader": "## {{theme}}"
+        "appendUnderHeader": "## {{themePath}}"
       },
       {
         "id": "ovr_mewkgr3k2it0f",
@@ -2118,7 +2104,7 @@
               }
             ],
             "semanticType": "ratingPair",
-            "auxKey": "pintu"
+            "auxKey": "image"
           },
           {
             "id": "field_mewk7o3j",
@@ -2133,9 +2119,9 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分.label}}\npintu::{{评分.value}}\n内容:: {{内容}}\n<!-- end -->\n\n",
+        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{themePath}}\n评分:: {{评分.label}}\n图片:: {{评分.value}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/打卡.md",
-        "appendUnderHeader": "## {{theme}}"
+        "appendUnderHeader": "## {{themePath}}"
       },
       {
         "id": "ovr_mewkgzmuepj0c",
@@ -2155,7 +2141,7 @@
               }
             ],
             "semanticType": "ratingPair",
-            "auxKey": "pintu"
+            "auxKey": "image"
           },
           {
             "id": "field_mewk7o3j",
@@ -2170,9 +2156,9 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分.label}}\npintu::{{评分.value}}\n内容:: {{内容}}\n<!-- end -->\n\n",
+        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{themePath}}\n评分:: {{评分.label}}\n图片:: {{评分.value}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/打卡.md",
-        "appendUnderHeader": "## {{theme}}",
+        "appendUnderHeader": "## {{themePath}}",
         "disabled": true
       },
       {
@@ -2193,7 +2179,7 @@
               }
             ],
             "semanticType": "ratingPair",
-            "auxKey": "pintu"
+            "auxKey": "image"
           },
           {
             "id": "field_mewk7o3j",
@@ -2208,9 +2194,9 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分.label}}\npintu::{{评分.value}}\n内容:: {{内容}}\n<!-- end -->\n\n",
+        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{themePath}}\n评分:: {{评分.label}}\n图片:: {{评分.value}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/打卡.md",
-        "appendUnderHeader": "## {{theme}}",
+        "appendUnderHeader": "## {{themePath}}",
         "disabled": true
       },
       {
@@ -2231,7 +2217,7 @@
               }
             ],
             "semanticType": "ratingPair",
-            "auxKey": "pintu"
+            "auxKey": "image"
           },
           {
             "id": "field_mewk7o3j",
@@ -2246,9 +2232,9 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分.label}}\npintu::{{评分.value}}\n内容:: {{内容}}\n<!-- end -->\n\n",
+        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{themePath}}\n评分:: {{评分.label}}\n图片:: {{评分.value}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/打卡.md",
-        "appendUnderHeader": "## {{theme}}",
+        "appendUnderHeader": "## {{themePath}}",
         "disabled": true
       },
       {
@@ -2269,7 +2255,7 @@
               }
             ],
             "semanticType": "ratingPair",
-            "auxKey": "pintu"
+            "auxKey": "image"
           },
           {
             "id": "field_mewk7o3j",
@@ -2284,9 +2270,9 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分.label}}\npintu::{{评分.value}}\n内容:: {{内容}}\n<!-- end -->\n\n",
+        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{themePath}}\n评分:: {{评分.label}}\n图片:: {{评分.value}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/打卡.md",
-        "appendUnderHeader": "## {{theme}}",
+        "appendUnderHeader": "## {{themePath}}",
         "disabled": true
       },
       {
@@ -2307,7 +2293,7 @@
               }
             ],
             "semanticType": "ratingPair",
-            "auxKey": "pintu"
+            "auxKey": "image"
           },
           {
             "id": "field_mewk7o3j",
@@ -2322,9 +2308,9 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分.label}}\npintu::{{评分.value}}\n内容:: {{内容}}\n<!-- end -->\n\n",
+        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{themePath}}\n评分:: {{评分.label}}\n图片:: {{评分.value}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/打卡.md",
-        "appendUnderHeader": "## {{theme}}",
+        "appendUnderHeader": "## {{themePath}}",
         "disabled": true
       },
       {
@@ -2351,7 +2337,7 @@
               }
             ],
             "semanticType": "ratingPair",
-            "auxKey": "pintu"
+            "auxKey": "image"
           },
           {
             "id": "field_mewk7o3j",
@@ -2366,9 +2352,9 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分.label}}\npintu::{{评分.value}}\n内容:: {{内容}}\n<!-- end -->\n\n",
+        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{themePath}}\n评分:: {{评分.label}}\n图片:: {{评分.value}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/打卡.md",
-        "appendUnderHeader": "## {{theme}}",
+        "appendUnderHeader": "## {{themePath}}",
         "disabled": true
       },
       {
@@ -2389,7 +2375,7 @@
               }
             ],
             "semanticType": "ratingPair",
-            "auxKey": "pintu"
+            "auxKey": "image"
           },
           {
             "id": "field_mewk7o3j",
@@ -2404,9 +2390,9 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分.label}}\npintu::{{评分.value}}\n内容:: {{内容}}\n<!-- end -->\n\n",
+        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{themePath}}\n评分:: {{评分.label}}\n图片:: {{评分.value}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/打卡.md",
-        "appendUnderHeader": "## {{theme}}",
+        "appendUnderHeader": "## {{themePath}}",
         "disabled": true
       },
       {
@@ -2427,7 +2413,7 @@
               }
             ],
             "semanticType": "ratingPair",
-            "auxKey": "pintu"
+            "auxKey": "image"
           },
           {
             "id": "field_mewk7o3j",
@@ -2442,9 +2428,9 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分.label}}\npintu::{{评分.value}}\n内容:: {{内容}}\n<!-- end -->\n\n",
+        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{themePath}}\n评分:: {{评分.label}}\n图片:: {{评分.value}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/打卡.md",
-        "appendUnderHeader": "## {{theme}}",
+        "appendUnderHeader": "## {{themePath}}",
         "disabled": true
       },
       {
@@ -2465,7 +2451,7 @@
               }
             ],
             "semanticType": "ratingPair",
-            "auxKey": "pintu"
+            "auxKey": "image"
           },
           {
             "id": "field_mewk7o3j",
@@ -2480,9 +2466,9 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分.label}}\npintu::{{评分.value}}\n内容:: {{内容}}\n<!-- end -->\n\n",
+        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{themePath}}\n评分:: {{评分.label}}\n图片:: {{评分.value}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/打卡.md",
-        "appendUnderHeader": "## {{theme}}",
+        "appendUnderHeader": "## {{themePath}}",
         "disabled": true
       },
       {
@@ -2509,7 +2495,7 @@
               }
             ],
             "semanticType": "ratingPair",
-            "auxKey": "pintu"
+            "auxKey": "image"
           },
           {
             "id": "field_mewk7o3j",
@@ -2524,9 +2510,9 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分.label}}\npintu::{{评分.value}}\n内容:: {{内容}}\n<!-- end -->\n\n",
+        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{themePath}}\n评分:: {{评分.label}}\n图片:: {{评分.value}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/打卡.md",
-        "appendUnderHeader": "## {{theme}}"
+        "appendUnderHeader": "## {{themePath}}"
       },
       {
         "id": "ovr_mewkk1um6adfy",
@@ -2546,7 +2532,7 @@
               }
             ],
             "semanticType": "ratingPair",
-            "auxKey": "pintu"
+            "auxKey": "image"
           },
           {
             "id": "field_mewk7o3j",
@@ -2561,9 +2547,9 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分.label}}\npintu::{{评分.value}}\n内容:: {{内容}}\n<!-- end -->\n\n",
+        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{themePath}}\n评分:: {{评分.label}}\n图片:: {{评分.value}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/打卡.md",
-        "appendUnderHeader": "## {{theme}}"
+        "appendUnderHeader": "## {{themePath}}"
       },
       {
         "id": "ovr_mewkk4y6b170v",
@@ -2583,7 +2569,7 @@
               }
             ],
             "semanticType": "ratingPair",
-            "auxKey": "pintu"
+            "auxKey": "image"
           },
           {
             "id": "field_mewk7o3j",
@@ -2598,9 +2584,9 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分.label}}\npintu::{{评分.value}}\n内容:: {{内容}}\n<!-- end -->\n\n",
+        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{themePath}}\n评分:: {{评分.label}}\n图片:: {{评分.value}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/打卡.md",
-        "appendUnderHeader": "## {{theme}}",
+        "appendUnderHeader": "## {{themePath}}",
         "disabled": true
       },
       {
@@ -2621,7 +2607,7 @@
               }
             ],
             "semanticType": "ratingPair",
-            "auxKey": "pintu"
+            "auxKey": "image"
           },
           {
             "id": "field_mewk7o3j",
@@ -2636,9 +2622,9 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分.label}}\npintu::{{评分.value}}\n内容:: {{内容}}\n<!-- end -->\n\n",
+        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{themePath}}\n评分:: {{评分.label}}\n图片:: {{评分.value}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/打卡.md",
-        "appendUnderHeader": "## {{theme}}",
+        "appendUnderHeader": "## {{themePath}}",
         "disabled": true
       },
       {
@@ -2659,7 +2645,7 @@
               }
             ],
             "semanticType": "ratingPair",
-            "auxKey": "pintu"
+            "auxKey": "image"
           },
           {
             "id": "field_mewk7o3j",
@@ -2674,9 +2660,9 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分.label}}\npintu::{{评分.value}}\n内容:: {{内容}}\n<!-- end -->\n\n",
+        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{themePath}}\n评分:: {{评分.label}}\n图片:: {{评分.value}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/打卡.md",
-        "appendUnderHeader": "## {{theme}}",
+        "appendUnderHeader": "## {{themePath}}",
         "disabled": true
       },
       {
@@ -2697,7 +2683,7 @@
               }
             ],
             "semanticType": "ratingPair",
-            "auxKey": "pintu"
+            "auxKey": "image"
           },
           {
             "id": "field_mewk7o3j",
@@ -2712,9 +2698,9 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分.label}}\npintu::{{评分.value}}\n内容:: {{内容}}\n<!-- end -->\n\n",
+        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{themePath}}\n评分:: {{评分.label}}\n图片:: {{评分.value}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/打卡.md",
-        "appendUnderHeader": "## {{theme}}",
+        "appendUnderHeader": "## {{themePath}}",
         "disabled": true
       },
       {
@@ -2735,7 +2721,7 @@
               }
             ],
             "semanticType": "ratingPair",
-            "auxKey": "pintu"
+            "auxKey": "image"
           },
           {
             "id": "field_mewk7o3j",
@@ -2750,9 +2736,9 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分.label}}\npintu::{{评分.value}}\n内容:: {{内容}}\n<!-- end -->\n\n",
+        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{themePath}}\n评分:: {{评分.label}}\n图片:: {{评分.value}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/打卡.md",
-        "appendUnderHeader": "## {{theme}}",
+        "appendUnderHeader": "## {{themePath}}",
         "disabled": true
       },
       {
@@ -2773,7 +2759,7 @@
               }
             ],
             "semanticType": "ratingPair",
-            "auxKey": "pintu"
+            "auxKey": "image"
           },
           {
             "id": "field_mewk7o3j",
@@ -2788,9 +2774,9 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分.label}}\npintu::{{评分.value}}\n内容:: {{内容}}\n<!-- end -->\n\n",
+        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{themePath}}\n评分:: {{评分.label}}\n图片:: {{评分.value}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/打卡.md",
-        "appendUnderHeader": "## {{theme}}",
+        "appendUnderHeader": "## {{themePath}}",
         "disabled": true
       },
       {
@@ -2801,9 +2787,9 @@
         "fields": [
           {
             "id": "field_mewjlt4j",
-            "key": "思考分类",
-            "label": "思考分类",
-            "type": "radio",
+            "key": "分类",
+            "label": "分类",
+            "type": "singleSelect",
             "options": [
               {
                 "value": "闪念/事件",
@@ -2817,9 +2803,7 @@
                 "value": "闪念/思考",
                 "label": "思考"
               }
-            ],
-            "semanticType": "path",
-            "storeMode": "value"
+            ]
           },
           {
             "id": "field_mewjlypl",
@@ -2828,9 +2812,9 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: {{思考分类.value}}\n日期:: {{moment:YYYY-MM-DD}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n",
+        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: {{分类.value}}\n日期:: {{moment:YYYY-MM-DD}}\n主题:: {{themePath}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/闪念.md",
-        "appendUnderHeader": "## {{theme}}",
+        "appendUnderHeader": "## {{themePath}}",
         "disabled": true
       },
       {
@@ -2841,9 +2825,9 @@
         "fields": [
           {
             "id": "field_mewjlt4j",
-            "key": "思考分类",
-            "label": "思考分类",
-            "type": "radio",
+            "key": "分类",
+            "label": "分类",
+            "type": "singleSelect",
             "options": [
               {
                 "value": "闪念/事件",
@@ -2857,9 +2841,7 @@
                 "value": "闪念/思考",
                 "label": "思考"
               }
-            ],
-            "semanticType": "path",
-            "storeMode": "value"
+            ]
           },
           {
             "id": "field_mewjlypl",
@@ -2868,9 +2850,9 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: {{思考分类.value}}\n日期:: {{moment:YYYY-MM-DD}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n",
+        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: {{分类.value}}\n日期:: {{moment:YYYY-MM-DD}}\n主题:: {{themePath}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/闪念.md",
-        "appendUnderHeader": "## {{theme}}",
+        "appendUnderHeader": "## {{themePath}}",
         "disabled": true
       },
       {
@@ -2881,9 +2863,9 @@
         "fields": [
           {
             "id": "field_mewjlt4j",
-            "key": "思考分类",
-            "label": "思考分类",
-            "type": "radio",
+            "key": "分类",
+            "label": "分类",
+            "type": "singleSelect",
             "options": [
               {
                 "value": "闪念/事件",
@@ -2897,9 +2879,7 @@
                 "value": "闪念/思考",
                 "label": "思考"
               }
-            ],
-            "semanticType": "path",
-            "storeMode": "value"
+            ]
           },
           {
             "id": "field_mewjlypl",
@@ -2908,9 +2888,9 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: {{思考分类.value}}\n日期:: {{moment:YYYY-MM-DD}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n",
+        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: {{分类.value}}\n日期:: {{moment:YYYY-MM-DD}}\n主题:: {{themePath}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/闪念.md",
-        "appendUnderHeader": "## {{theme}}",
+        "appendUnderHeader": "## {{themePath}}",
         "disabled": true
       },
       {
@@ -2921,9 +2901,9 @@
         "fields": [
           {
             "id": "field_mewjlt4j",
-            "key": "思考分类",
-            "label": "思考分类",
-            "type": "radio",
+            "key": "分类",
+            "label": "分类",
+            "type": "singleSelect",
             "options": [
               {
                 "value": "闪念/事件",
@@ -2937,9 +2917,7 @@
                 "value": "闪念/思考",
                 "label": "思考"
               }
-            ],
-            "semanticType": "path",
-            "storeMode": "value"
+            ]
           },
           {
             "id": "field_mewjlypl",
@@ -2948,9 +2926,9 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: {{思考分类.value}}\n日期:: {{moment:YYYY-MM-DD}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n",
+        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: {{分类.value}}\n日期:: {{moment:YYYY-MM-DD}}\n主题:: {{themePath}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/闪念.md",
-        "appendUnderHeader": "## {{theme}}",
+        "appendUnderHeader": "## {{themePath}}",
         "disabled": true
       },
       {
@@ -2961,9 +2939,9 @@
         "fields": [
           {
             "id": "field_mewjlt4j",
-            "key": "思考分类",
-            "label": "思考分类",
-            "type": "radio",
+            "key": "分类",
+            "label": "分类",
+            "type": "singleSelect",
             "options": [
               {
                 "value": "闪念/事件",
@@ -2977,9 +2955,7 @@
                 "value": "闪念/思考",
                 "label": "思考"
               }
-            ],
-            "semanticType": "path",
-            "storeMode": "value"
+            ]
           },
           {
             "id": "field_mewjlypl",
@@ -2988,9 +2964,9 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: {{思考分类.value}}\n日期:: {{moment:YYYY-MM-DD}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n",
+        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: {{分类.value}}\n日期:: {{moment:YYYY-MM-DD}}\n主题:: {{themePath}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/闪念.md",
-        "appendUnderHeader": "## {{theme}}",
+        "appendUnderHeader": "## {{themePath}}",
         "disabled": true
       },
       {
@@ -3001,9 +2977,9 @@
         "fields": [
           {
             "id": "field_mewjlt4j",
-            "key": "思考分类",
-            "label": "思考分类",
-            "type": "radio",
+            "key": "分类",
+            "label": "分类",
+            "type": "singleSelect",
             "options": [
               {
                 "value": "闪念/事件",
@@ -3017,9 +2993,7 @@
                 "value": "闪念/思考",
                 "label": "思考"
               }
-            ],
-            "semanticType": "path",
-            "storeMode": "value"
+            ]
           },
           {
             "id": "field_mewjlypl",
@@ -3028,9 +3002,9 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: {{思考分类.value}}\n日期:: {{moment:YYYY-MM-DD}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n",
+        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: {{分类.value}}\n日期:: {{moment:YYYY-MM-DD}}\n主题:: {{themePath}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/闪念.md",
-        "appendUnderHeader": "## {{theme}}",
+        "appendUnderHeader": "## {{themePath}}",
         "disabled": true
       },
       {
@@ -3041,9 +3015,9 @@
         "fields": [
           {
             "id": "field_mewjlt4j",
-            "key": "思考分类",
-            "label": "思考分类",
-            "type": "radio",
+            "key": "分类",
+            "label": "分类",
+            "type": "singleSelect",
             "options": [
               {
                 "value": "闪念/事件",
@@ -3057,9 +3031,7 @@
                 "value": "闪念/思考",
                 "label": "思考"
               }
-            ],
-            "semanticType": "path",
-            "storeMode": "value"
+            ]
           },
           {
             "id": "field_mewjlypl",
@@ -3068,9 +3040,9 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: {{思考分类.value}}\n日期:: {{moment:YYYY-MM-DD}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n",
+        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: {{分类.value}}\n日期:: {{moment:YYYY-MM-DD}}\n主题:: {{themePath}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/闪念.md",
-        "appendUnderHeader": "## {{theme}}",
+        "appendUnderHeader": "## {{themePath}}",
         "disabled": true
       },
       {
@@ -3081,9 +3053,9 @@
         "fields": [
           {
             "id": "field_mewjlt4j",
-            "key": "思考分类",
-            "label": "思考分类",
-            "type": "radio",
+            "key": "分类",
+            "label": "分类",
+            "type": "singleSelect",
             "options": [
               {
                 "value": "闪念/事件",
@@ -3097,9 +3069,7 @@
                 "value": "闪念/思考",
                 "label": "思考"
               }
-            ],
-            "semanticType": "path",
-            "storeMode": "value"
+            ]
           },
           {
             "id": "field_mewjlypl",
@@ -3108,9 +3078,9 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: {{思考分类.value}}\n日期:: {{moment:YYYY-MM-DD}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n",
+        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: {{分类.value}}\n日期:: {{moment:YYYY-MM-DD}}\n主题:: {{themePath}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/闪念.md",
-        "appendUnderHeader": "## {{theme}}",
+        "appendUnderHeader": "## {{themePath}}",
         "disabled": true
       },
       {
@@ -3121,9 +3091,9 @@
         "fields": [
           {
             "id": "field_mewjlt4j",
-            "key": "思考分类",
-            "label": "思考分类",
-            "type": "radio",
+            "key": "分类",
+            "label": "分类",
+            "type": "singleSelect",
             "options": [
               {
                 "value": "闪念/事件",
@@ -3137,9 +3107,7 @@
                 "value": "闪念/思考",
                 "label": "思考"
               }
-            ],
-            "semanticType": "path",
-            "storeMode": "value"
+            ]
           },
           {
             "id": "field_mewjlypl",
@@ -3148,9 +3116,9 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: {{思考分类.value}}\n日期:: {{moment:YYYY-MM-DD}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n",
+        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: {{分类.value}}\n日期:: {{moment:YYYY-MM-DD}}\n主题:: {{themePath}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/闪念.md",
-        "appendUnderHeader": "## {{theme}}",
+        "appendUnderHeader": "## {{themePath}}",
         "disabled": true
       },
       {
@@ -3161,9 +3129,9 @@
         "fields": [
           {
             "id": "field_mewjlt4j",
-            "key": "思考分类",
-            "label": "思考分类",
-            "type": "radio",
+            "key": "分类",
+            "label": "分类",
+            "type": "singleSelect",
             "options": [
               {
                 "value": "闪念/事件",
@@ -3177,9 +3145,7 @@
                 "value": "闪念/思考",
                 "label": "思考"
               }
-            ],
-            "semanticType": "path",
-            "storeMode": "value"
+            ]
           },
           {
             "id": "field_mewjlypl",
@@ -3188,9 +3154,9 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: {{思考分类.value}}\n日期:: {{moment:YYYY-MM-DD}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n",
+        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: {{分类.value}}\n日期:: {{moment:YYYY-MM-DD}}\n主题:: {{themePath}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/闪念.md",
-        "appendUnderHeader": "## {{theme}}",
+        "appendUnderHeader": "## {{themePath}}",
         "disabled": true
       },
       {
@@ -3201,9 +3167,9 @@
         "fields": [
           {
             "id": "field_mewjlt4j",
-            "key": "思考分类",
-            "label": "思考分类",
-            "type": "radio",
+            "key": "分类",
+            "label": "分类",
+            "type": "singleSelect",
             "options": [
               {
                 "value": "闪念/事件",
@@ -3217,9 +3183,7 @@
                 "value": "闪念/思考",
                 "label": "思考"
               }
-            ],
-            "semanticType": "path",
-            "storeMode": "value"
+            ]
           },
           {
             "id": "field_mewjlypl",
@@ -3228,9 +3192,9 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: {{思考分类.value}}\n日期:: {{moment:YYYY-MM-DD}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n",
+        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: {{分类.value}}\n日期:: {{moment:YYYY-MM-DD}}\n主题:: {{themePath}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/闪念.md",
-        "appendUnderHeader": "## {{theme}}",
+        "appendUnderHeader": "## {{themePath}}",
         "disabled": true
       },
       {
@@ -3241,9 +3205,9 @@
         "fields": [
           {
             "id": "field_mewjlt4j",
-            "key": "思考分类",
-            "label": "思考分类",
-            "type": "radio",
+            "key": "分类",
+            "label": "分类",
+            "type": "singleSelect",
             "options": [
               {
                 "value": "闪念/事件",
@@ -3257,9 +3221,7 @@
                 "value": "闪念/思考",
                 "label": "思考"
               }
-            ],
-            "semanticType": "path",
-            "storeMode": "value"
+            ]
           },
           {
             "id": "field_mewjlypl",
@@ -3268,9 +3230,9 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: {{思考分类.value}}\n日期:: {{moment:YYYY-MM-DD}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n",
+        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: {{分类.value}}\n日期:: {{moment:YYYY-MM-DD}}\n主题:: {{themePath}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/闪念.md",
-        "appendUnderHeader": "## {{theme}}",
+        "appendUnderHeader": "## {{themePath}}",
         "disabled": true
       },
       {
@@ -3283,7 +3245,7 @@
             "id": "field_mer92so5",
             "key": "周期",
             "label": "周期",
-            "type": "radio",
+            "type": "singleSelect",
             "options": [
               {
                 "value": "周",
@@ -3316,9 +3278,9 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 计划\n分类:: {{周期}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n\n",
+        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 计划\n周期:: {{周期}}\n日期:: {{日期}}\n主题:: {{themePath}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n\n",
         "targetFile": "01/计划.md",
-        "appendUnderHeader": "## {{theme}}",
+        "appendUnderHeader": "## {{themePath}}",
         "disabled": true
       },
       {
@@ -3331,7 +3293,7 @@
             "id": "field_mer92so5",
             "key": "周期",
             "label": "周期",
-            "type": "radio",
+            "type": "singleSelect",
             "options": [
               {
                 "value": "周",
@@ -3364,9 +3326,9 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 计划\n分类:: {{周期}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n\n",
+        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 计划\n周期:: {{周期}}\n日期:: {{日期}}\n主题:: {{themePath}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n\n",
         "targetFile": "01/计划.md",
-        "appendUnderHeader": "## {{theme}}",
+        "appendUnderHeader": "## {{themePath}}",
         "disabled": true
       },
       {
@@ -3379,7 +3341,7 @@
             "id": "field_mer92so5",
             "key": "周期",
             "label": "周期",
-            "type": "radio",
+            "type": "singleSelect",
             "options": [
               {
                 "value": "周",
@@ -3412,9 +3374,9 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 计划\n分类:: {{周期}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n\n",
+        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 计划\n周期:: {{周期}}\n日期:: {{日期}}\n主题:: {{themePath}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n\n",
         "targetFile": "01/计划.md",
-        "appendUnderHeader": "## {{theme}}",
+        "appendUnderHeader": "## {{themePath}}",
         "disabled": true
       },
       {
@@ -3427,7 +3389,7 @@
             "id": "field_mer92so5",
             "key": "周期",
             "label": "周期",
-            "type": "radio",
+            "type": "singleSelect",
             "options": [
               {
                 "value": "周",
@@ -3460,9 +3422,9 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 计划\n分类:: {{周期}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n\n",
+        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 计划\n周期:: {{周期}}\n日期:: {{日期}}\n主题:: {{themePath}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n\n",
         "targetFile": "01/计划.md",
-        "appendUnderHeader": "## {{theme}}",
+        "appendUnderHeader": "## {{themePath}}",
         "disabled": true
       },
       {
@@ -3475,7 +3437,7 @@
             "id": "field_mer92so5",
             "key": "周期",
             "label": "周期",
-            "type": "radio",
+            "type": "singleSelect",
             "options": [
               {
                 "value": "周",
@@ -3508,9 +3470,9 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 计划\n分类:: {{周期}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n\n",
+        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 计划\n周期:: {{周期}}\n日期:: {{日期}}\n主题:: {{themePath}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n\n",
         "targetFile": "01/计划.md",
-        "appendUnderHeader": "## {{theme}}"
+        "appendUnderHeader": "## {{themePath}}"
       },
       {
         "id": "ovr_mewkqeu4gbnsv",
@@ -3522,7 +3484,7 @@
             "id": "field_mer92so5",
             "key": "周期",
             "label": "周期",
-            "type": "radio",
+            "type": "singleSelect",
             "options": [
               {
                 "value": "周",
@@ -3555,9 +3517,9 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 计划\n分类:: {{周期}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n\n",
+        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 计划\n周期:: {{周期}}\n日期:: {{日期}}\n主题:: {{themePath}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n\n",
         "targetFile": "01/计划.md",
-        "appendUnderHeader": "## {{theme}}"
+        "appendUnderHeader": "## {{themePath}}"
       },
       {
         "id": "ovr_mewkqh4dz6vk3",
@@ -3569,7 +3531,7 @@
             "id": "field_mer92so5",
             "key": "周期",
             "label": "周期",
-            "type": "radio",
+            "type": "singleSelect",
             "options": [
               {
                 "value": "周",
@@ -3602,9 +3564,9 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 计划\n分类:: {{周期}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n\n",
+        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 计划\n周期:: {{周期}}\n日期:: {{日期}}\n主题:: {{themePath}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n\n",
         "targetFile": "01/计划.md",
-        "appendUnderHeader": "## {{theme}}"
+        "appendUnderHeader": "## {{themePath}}"
       },
       {
         "id": "ovr_mewkqmk0ntarr",
@@ -3616,7 +3578,7 @@
             "id": "field_mekrw2ui",
             "key": "周期",
             "label": "周期",
-            "type": "radio",
+            "type": "singleSelect",
             "options": [
               {
                 "value": "周",
@@ -3653,9 +3615,9 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 总结\n分类:: {{周期}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n",
+        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 总结\n周期:: {{周期}}\n日期:: {{日期}}\n主题:: {{themePath}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/总结.md",
-        "appendUnderHeader": "## {{theme}}"
+        "appendUnderHeader": "## {{themePath}}"
       },
       {
         "id": "ovr_mewkqp2ih6b21",
@@ -3667,7 +3629,7 @@
             "id": "field_mekrw2ui",
             "key": "周期",
             "label": "周期",
-            "type": "radio",
+            "type": "singleSelect",
             "options": [
               {
                 "value": "周",
@@ -3704,9 +3666,9 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 总结\n分类:: {{周期}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n",
+        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 总结\n周期:: {{周期}}\n日期:: {{日期}}\n主题:: {{themePath}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/总结.md",
-        "appendUnderHeader": "## {{theme}}"
+        "appendUnderHeader": "## {{themePath}}"
       },
       {
         "id": "ovr_mewkqrynyhkt2",
@@ -3718,7 +3680,7 @@
             "id": "field_mekrw2ui",
             "key": "周期",
             "label": "周期",
-            "type": "radio",
+            "type": "singleSelect",
             "options": [
               {
                 "value": "周",
@@ -3755,9 +3717,9 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 总结\n分类:: {{周期}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n",
+        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 总结\n周期:: {{周期}}\n日期:: {{日期}}\n主题:: {{themePath}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/总结.md",
-        "appendUnderHeader": "## {{theme}}"
+        "appendUnderHeader": "## {{themePath}}"
       },
       {
         "id": "ovr_mewkquimfqr7m",
@@ -3769,7 +3731,7 @@
             "id": "field_mekrw2ui",
             "key": "周期",
             "label": "周期",
-            "type": "radio",
+            "type": "singleSelect",
             "options": [
               {
                 "value": "周",
@@ -3806,9 +3768,9 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 总结\n分类:: {{周期}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n",
+        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 总结\n周期:: {{周期}}\n日期:: {{日期}}\n主题:: {{themePath}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/总结.md",
-        "appendUnderHeader": "## {{theme}}",
+        "appendUnderHeader": "## {{themePath}}",
         "disabled": true
       },
       {
@@ -3821,7 +3783,7 @@
             "id": "field_mekrw2ui",
             "key": "周期",
             "label": "周期",
-            "type": "radio",
+            "type": "singleSelect",
             "options": [
               {
                 "value": "周",
@@ -3858,9 +3820,9 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 总结\n分类:: {{周期}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n",
+        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 总结\n周期:: {{周期}}\n日期:: {{日期}}\n主题:: {{themePath}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/总结.md",
-        "appendUnderHeader": "## {{theme}}",
+        "appendUnderHeader": "## {{themePath}}",
         "disabled": true
       },
       {
@@ -3873,7 +3835,7 @@
             "id": "field_mekrw2ui",
             "key": "周期",
             "label": "周期",
-            "type": "radio",
+            "type": "singleSelect",
             "options": [
               {
                 "value": "周",
@@ -3910,9 +3872,9 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 总结\n分类:: {{周期}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n",
+        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 总结\n周期:: {{周期}}\n日期:: {{日期}}\n主题:: {{themePath}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/总结.md",
-        "appendUnderHeader": "## {{theme}}",
+        "appendUnderHeader": "## {{themePath}}",
         "disabled": true
       },
       {
@@ -3925,7 +3887,7 @@
             "id": "field_mekrw2ui",
             "key": "周期",
             "label": "周期",
-            "type": "radio",
+            "type": "singleSelect",
             "options": [
               {
                 "value": "周",
@@ -3962,9 +3924,9 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 总结\n分类:: {{周期}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n",
+        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 总结\n周期:: {{周期}}\n日期:: {{日期}}\n主题:: {{themePath}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/总结.md",
-        "appendUnderHeader": "## {{theme}}",
+        "appendUnderHeader": "## {{themePath}}",
         "disabled": true
       },
       {
@@ -3977,7 +3939,7 @@
             "id": "field_mekrw2ui",
             "key": "周期",
             "label": "周期",
-            "type": "radio",
+            "type": "singleSelect",
             "options": [
               {
                 "value": "周",
@@ -4014,9 +3976,9 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 总结\n分类:: {{周期}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n",
+        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 总结\n周期:: {{周期}}\n日期:: {{日期}}\n主题:: {{themePath}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/总结.md",
-        "appendUnderHeader": "## {{theme}}",
+        "appendUnderHeader": "## {{themePath}}",
         "disabled": true
       },
       {
@@ -4029,7 +3991,7 @@
             "id": "field_mekrw2ui",
             "key": "周期",
             "label": "周期",
-            "type": "radio",
+            "type": "singleSelect",
             "options": [
               {
                 "value": "周",
@@ -4066,9 +4028,9 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 总结\n分类:: {{周期}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n",
+        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 总结\n周期:: {{周期}}\n日期:: {{日期}}\n主题:: {{themePath}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/总结.md",
-        "appendUnderHeader": "## {{theme}}",
+        "appendUnderHeader": "## {{themePath}}",
         "disabled": true
       },
       {
@@ -4081,7 +4043,7 @@
             "id": "field_mekrw2ui",
             "key": "周期",
             "label": "周期",
-            "type": "radio",
+            "type": "singleSelect",
             "options": [
               {
                 "value": "周",
@@ -4118,9 +4080,9 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 总结\n分类:: {{周期}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n",
+        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 总结\n周期:: {{周期}}\n日期:: {{日期}}\n主题:: {{themePath}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/总结.md",
-        "appendUnderHeader": "## {{theme}}",
+        "appendUnderHeader": "## {{themePath}}",
         "disabled": true
       },
       {
@@ -4133,7 +4095,7 @@
             "id": "field_mekrw2ui",
             "key": "周期",
             "label": "周期",
-            "type": "radio",
+            "type": "singleSelect",
             "options": [
               {
                 "value": "周",
@@ -4170,9 +4132,9 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 总结\n分类:: {{周期}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n",
+        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 总结\n周期:: {{周期}}\n日期:: {{日期}}\n主题:: {{themePath}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/总结.md",
-        "appendUnderHeader": "## {{theme}}",
+        "appendUnderHeader": "## {{themePath}}",
         "disabled": true
       },
       {
@@ -4185,7 +4147,7 @@
             "id": "field_mekrw2ui",
             "key": "周期",
             "label": "周期",
-            "type": "radio",
+            "type": "singleSelect",
             "options": [
               {
                 "value": "周",
@@ -4222,9 +4184,9 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 总结\n分类:: {{周期}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n",
+        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 总结\n周期:: {{周期}}\n日期:: {{日期}}\n主题:: {{themePath}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/总结.md",
-        "appendUnderHeader": "## {{theme}}",
+        "appendUnderHeader": "## {{themePath}}",
         "disabled": true
       },
       {
@@ -4245,7 +4207,7 @@
               }
             ],
             "semanticType": "ratingPair",
-            "auxKey": "pintu"
+            "auxKey": "image"
           },
           {
             "id": "field_mewk7o3j",
@@ -4260,9 +4222,9 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分.label}}\npintu::{{评分.value}}\n内容:: {{内容}}\n<!-- end -->\n\n",
+        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{themePath}}\n评分:: {{评分.label}}\n图片:: {{评分.value}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/打卡.md",
-        "appendUnderHeader": "## {{theme}}"
+        "appendUnderHeader": "## {{themePath}}"
       },
       {
         "id": "ovr_mewt595cv52ow",
@@ -4286,7 +4248,7 @@
               }
             ],
             "semanticType": "ratingPair",
-            "auxKey": "pintu"
+            "auxKey": "image"
           },
           {
             "id": "field_mewk7o3j",
@@ -4301,9 +4263,9 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分.label}}\npintu::{{评分.value}}\n内容:: {{内容}}\n<!-- end -->\n\n",
+        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{themePath}}\n评分:: {{评分.label}}\n图片:: {{评分.value}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/打卡.md",
-        "appendUnderHeader": "## {{theme}}"
+        "appendUnderHeader": "## {{themePath}}"
       },
       {
         "id": "ovr_mewt6b67umn67",
@@ -4331,7 +4293,7 @@
               }
             ],
             "semanticType": "ratingPair",
-            "auxKey": "pintu"
+            "auxKey": "image"
           },
           {
             "id": "field_mewk7o3j",
@@ -4346,9 +4308,9 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分.label}}\npintu::{{评分.value}}\n内容:: {{内容}}\n<!-- end -->\n\n",
+        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{themePath}}\n评分:: {{评分.label}}\n图片:: {{评分.value}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/打卡.md",
-        "appendUnderHeader": "## {{theme}}"
+        "appendUnderHeader": "## {{themePath}}"
       },
       {
         "id": "ovr_mewte5hhuod5g",
@@ -4396,7 +4358,7 @@
               }
             ],
             "semanticType": "ratingPair",
-            "auxKey": "pintu"
+            "auxKey": "image"
           },
           {
             "id": "field_mewk7o3j",
@@ -4411,9 +4373,9 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分.label}}\npintu::{{评分.value}}\n内容:: {{内容}}\n<!-- end -->\n\n",
+        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{themePath}}\n评分:: {{评分.label}}\n图片:: {{评分.value}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/打卡.md",
-        "appendUnderHeader": "## {{theme}}"
+        "appendUnderHeader": "## {{themePath}}"
       },
       {
         "id": "ovr_mewtfg1txm8nf",
@@ -4449,7 +4411,7 @@
               }
             ],
             "semanticType": "ratingPair",
-            "auxKey": "pintu"
+            "auxKey": "image"
           },
           {
             "id": "field_mewk7o3j",
@@ -4464,9 +4426,9 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分.label}}\npintu::{{评分.value}}\n内容:: {{内容}}\n<!-- end -->\n\n",
+        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{themePath}}\n评分:: {{评分.label}}\n图片:: {{评分.value}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/打卡.md",
-        "appendUnderHeader": "## {{theme}}"
+        "appendUnderHeader": "## {{themePath}}"
       },
       {
         "id": "ovr_mewzk79xrolwo",
@@ -4514,7 +4476,7 @@
               }
             ],
             "semanticType": "ratingPair",
-            "auxKey": "pintu"
+            "auxKey": "image"
           },
           {
             "id": "field_mewk7o3j",
@@ -4529,9 +4491,9 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分.label}}\npintu::{{评分.value}}\n内容:: {{内容}}\n<!-- end -->\n\n",
+        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{themePath}}\n评分:: {{评分.label}}\n图片:: {{评分.value}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/打卡.md",
-        "appendUnderHeader": "## {{theme}}"
+        "appendUnderHeader": "## {{themePath}}"
       },
       {
         "id": "ovr_mewzwad0lzntf",
@@ -4559,7 +4521,7 @@
               }
             ],
             "semanticType": "ratingPair",
-            "auxKey": "pintu"
+            "auxKey": "image"
           },
           {
             "id": "field_mewk7o3j",
@@ -4574,9 +4536,9 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分.label}}\npintu::{{评分.value}}\n内容:: {{内容}}\n<!-- end -->\n\n",
+        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{themePath}}\n评分:: {{评分.label}}\n图片:: {{评分.value}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/打卡.md",
-        "appendUnderHeader": "## {{theme}}"
+        "appendUnderHeader": "## {{themePath}}"
       },
       {
         "id": "ovr_mewzy0p1xa2ji",
@@ -4588,7 +4550,7 @@
             "id": "field_mer92so5",
             "key": "周期",
             "label": "周期",
-            "type": "radio",
+            "type": "singleSelect",
             "options": [
               {
                 "value": "周",
@@ -4621,9 +4583,9 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 计划\n分类:: {{周期}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n\n",
+        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 计划\n周期:: {{周期}}\n日期:: {{日期}}\n主题:: {{themePath}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n\n",
         "targetFile": "01/计划.md",
-        "appendUnderHeader": "## {{theme}}",
+        "appendUnderHeader": "## {{themePath}}",
         "disabled": true
       },
       {
@@ -4636,7 +4598,7 @@
             "id": "field_mer92so5",
             "key": "周期",
             "label": "周期",
-            "type": "radio",
+            "type": "singleSelect",
             "options": [
               {
                 "value": "周",
@@ -4669,9 +4631,9 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 计划\n分类:: {{周期}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n\n",
+        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 计划\n周期:: {{周期}}\n日期:: {{日期}}\n主题:: {{themePath}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n\n",
         "targetFile": "01/计划.md",
-        "appendUnderHeader": "## {{theme}}",
+        "appendUnderHeader": "## {{themePath}}",
         "disabled": true
       },
       {
@@ -4684,7 +4646,7 @@
             "id": "field_mer92so5",
             "key": "周期",
             "label": "周期",
-            "type": "radio",
+            "type": "singleSelect",
             "options": [
               {
                 "value": "周",
@@ -4717,9 +4679,9 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 计划\n分类:: {{周期}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n\n",
+        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 计划\n周期:: {{周期}}\n日期:: {{日期}}\n主题:: {{themePath}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n\n",
         "targetFile": "01/计划.md",
-        "appendUnderHeader": "## {{theme}}",
+        "appendUnderHeader": "## {{themePath}}",
         "disabled": true
       },
       {
@@ -4732,7 +4694,7 @@
             "id": "field_mekrw2ui",
             "key": "周期",
             "label": "周期",
-            "type": "radio",
+            "type": "singleSelect",
             "options": [
               {
                 "value": "周",
@@ -4769,9 +4731,9 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 总结\n分类:: {{周期}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n",
+        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 总结\n周期:: {{周期}}\n日期:: {{日期}}\n主题:: {{themePath}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/总结.md",
-        "appendUnderHeader": "## {{theme}}",
+        "appendUnderHeader": "## {{themePath}}",
         "disabled": true
       },
       {
@@ -4784,7 +4746,7 @@
             "id": "field_mekrw2ui",
             "key": "周期",
             "label": "周期",
-            "type": "radio",
+            "type": "singleSelect",
             "options": [
               {
                 "value": "周",
@@ -4821,9 +4783,9 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 总结\n分类:: {{周期}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n",
+        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 总结\n周期:: {{周期}}\n日期:: {{日期}}\n主题:: {{themePath}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/总结.md",
-        "appendUnderHeader": "## {{theme}}",
+        "appendUnderHeader": "## {{themePath}}",
         "disabled": true
       },
       {
@@ -4836,7 +4798,7 @@
             "id": "field_mekrw2ui",
             "key": "周期",
             "label": "周期",
-            "type": "radio",
+            "type": "singleSelect",
             "options": [
               {
                 "value": "周",
@@ -4873,9 +4835,9 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 总结\n分类:: {{周期}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n",
+        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 总结\n周期:: {{周期}}\n日期:: {{日期}}\n主题:: {{themePath}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/总结.md",
-        "appendUnderHeader": "## {{theme}}",
+        "appendUnderHeader": "## {{themePath}}",
         "disabled": true
       },
       {
@@ -4886,9 +4848,9 @@
         "fields": [
           {
             "id": "field_mewjlt4j",
-            "key": "思考分类",
-            "label": "思考分类",
-            "type": "radio",
+            "key": "分类",
+            "label": "分类",
+            "type": "singleSelect",
             "options": [
               {
                 "value": "闪念/事件",
@@ -4902,15 +4864,13 @@
                 "value": "闪念/思考",
                 "label": "思考"
               }
-            ],
-            "semanticType": "path",
-            "storeMode": "value"
+            ]
           },
           {
             "id": "field_mewkyug9",
             "key": "日期",
             "label": "日期",
-            "type": "text"
+            "type": "date"
           },
           {
             "id": "field_mewjlypl",
@@ -4919,9 +4879,9 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: {{思考分类.value}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n",
+        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: {{分类.value}}\n日期:: {{日期}}\n主题:: {{themePath}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/闪念.md",
-        "appendUnderHeader": "## {{theme}}",
+        "appendUnderHeader": "## {{themePath}}",
         "disabled": true
       },
       {
@@ -4932,9 +4892,9 @@
         "fields": [
           {
             "id": "field_mewjlt4j",
-            "key": "思考分类",
-            "label": "思考分类",
-            "type": "radio",
+            "key": "分类",
+            "label": "分类",
+            "type": "singleSelect",
             "options": [
               {
                 "value": "闪念/事件",
@@ -4948,15 +4908,13 @@
                 "value": "闪念/思考",
                 "label": "思考"
               }
-            ],
-            "semanticType": "path",
-            "storeMode": "value"
+            ]
           },
           {
             "id": "field_mewkyug9",
             "key": "日期",
             "label": "日期",
-            "type": "text"
+            "type": "date"
           },
           {
             "id": "field_mewjlypl",
@@ -4965,9 +4923,9 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: {{思考分类.value}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n",
+        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: {{分类.value}}\n日期:: {{日期}}\n主题:: {{themePath}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/闪念.md",
-        "appendUnderHeader": "## {{theme}}",
+        "appendUnderHeader": "## {{themePath}}",
         "disabled": true
       },
       {
@@ -4978,9 +4936,9 @@
         "fields": [
           {
             "id": "field_mewjlt4j",
-            "key": "思考分类",
-            "label": "思考分类",
-            "type": "radio",
+            "key": "分类",
+            "label": "分类",
+            "type": "singleSelect",
             "options": [
               {
                 "value": "闪念/事件",
@@ -4994,15 +4952,13 @@
                 "value": "闪念/思考",
                 "label": "思考"
               }
-            ],
-            "semanticType": "path",
-            "storeMode": "value"
+            ]
           },
           {
             "id": "field_mewkyug9",
             "key": "日期",
             "label": "日期",
-            "type": "text"
+            "type": "date"
           },
           {
             "id": "field_mewjlypl",
@@ -5011,9 +4967,9 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: {{思考分类.value}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n",
+        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: {{分类.value}}\n日期:: {{日期}}\n主题:: {{themePath}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/闪念.md",
-        "appendUnderHeader": "## {{theme}}",
+        "appendUnderHeader": "## {{themePath}}",
         "disabled": true
       },
       {
@@ -5026,7 +4982,7 @@
             "id": "field_mekr8gby",
             "key": "状态",
             "label": "状态",
-            "type": "radio",
+            "type": "singleSelect",
             "options": [
               {
                 "value": "- [x]",
@@ -5071,7 +5027,7 @@
             "id": "field_mekyn4c3",
             "key": "重复",
             "label": "重复",
-            "type": "radio",
+            "type": "singleSelect",
             "options": [
               {
                 "value": " ",
@@ -5092,9 +5048,9 @@
             ]
           }
         ],
-        "outputTemplate": "\n{{状态.value}} {{icon}} {{任务内容}} (主题::{{theme}}) (时间::{{时间}}) (时长::{{时长}}) {{重复.value}} {{状态}} (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{日期}}\n\n",
+        "outputTemplate": "\n{{状态.value}} {{icon}} {{任务内容}} (主题::{{themePath}}) (时间::{{时间}}) (时长::{{时长}}) {{重复.value}} {{状态}} (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{日期}}\n\n",
         "targetFile": "03/01.md",
-        "appendUnderHeader": "## {{theme}}",
+        "appendUnderHeader": "## {{themePath}}",
         "disabled": true
       },
       {
@@ -5107,7 +5063,7 @@
             "id": "field_mekr8gby",
             "key": "状态",
             "label": "状态",
-            "type": "radio",
+            "type": "singleSelect",
             "options": [
               {
                 "value": "- [x]",
@@ -5152,7 +5108,7 @@
             "id": "field_mekyn4c3",
             "key": "重复",
             "label": "重复",
-            "type": "radio",
+            "type": "singleSelect",
             "options": [
               {
                 "value": " ",
@@ -5173,9 +5129,9 @@
             ]
           }
         ],
-        "outputTemplate": "\n{{状态.value}} {{icon}} {{任务内容}} (主题::{{theme}}) (时间::{{时间}}) (时长::{{时长}}) {{重复.value}} {{状态}} (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{日期}}\n\n",
+        "outputTemplate": "\n{{状态.value}} {{icon}} {{任务内容}} (主题::{{themePath}}) (时间::{{时间}}) (时长::{{时长}}) {{重复.value}} {{状态}} (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{日期}}\n\n",
         "targetFile": "03/01.md",
-        "appendUnderHeader": "## {{theme}}",
+        "appendUnderHeader": "## {{themePath}}",
         "disabled": true
       },
       {
@@ -5188,7 +5144,7 @@
             "id": "field_mekr8gby",
             "key": "状态",
             "label": "状态",
-            "type": "radio",
+            "type": "singleSelect",
             "options": [
               {
                 "value": "- [x]",
@@ -5233,7 +5189,7 @@
             "id": "field_mekyn4c3",
             "key": "重复",
             "label": "重复",
-            "type": "radio",
+            "type": "singleSelect",
             "options": [
               {
                 "value": " ",
@@ -5254,9 +5210,9 @@
             ]
           }
         ],
-        "outputTemplate": "\n{{状态.value}} {{icon}} {{任务内容}} (主题::{{theme}}) (时间::{{时间}}) (时长::{{时长}}) {{重复.value}} {{状态}} (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{日期}}\n\n",
+        "outputTemplate": "\n{{状态.value}} {{icon}} {{任务内容}} (主题::{{themePath}}) (时间::{{时间}}) (时长::{{时长}}) {{重复.value}} {{状态}} (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{日期}}\n\n",
         "targetFile": "03/01.md",
-        "appendUnderHeader": "## {{theme}}",
+        "appendUnderHeader": "## {{themePath}}",
         "disabled": true
       },
       {
@@ -5277,7 +5233,7 @@
               }
             ],
             "semanticType": "ratingPair",
-            "auxKey": "pintu"
+            "auxKey": "image"
           },
           {
             "id": "field_mewk7o3j",
@@ -5292,9 +5248,9 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分.label}}\npintu::{{评分.value}}\n内容:: {{内容}}\n<!-- end -->\n\n",
+        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{themePath}}\n评分:: {{评分.label}}\n图片:: {{评分.value}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/打卡.md",
-        "appendUnderHeader": "## {{theme}}"
+        "appendUnderHeader": "## {{themePath}}"
       },
       {
         "id": "ovr_mex01qcs1209t",
@@ -5318,7 +5274,7 @@
               }
             ],
             "semanticType": "ratingPair",
-            "auxKey": "pintu"
+            "auxKey": "image"
           },
           {
             "id": "field_mewk7o3j",
@@ -5333,9 +5289,9 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分.label}}\npintu::{{评分.value}}\n内容:: {{内容}}\n<!-- end -->\n\n",
+        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{themePath}}\n评分:: {{评分.label}}\n图片:: {{评分.value}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/打卡.md",
-        "appendUnderHeader": "## {{theme}}"
+        "appendUnderHeader": "## {{themePath}}"
       },
       {
         "id": "ovr_mex0206ywz716",
@@ -5355,7 +5311,7 @@
               }
             ],
             "semanticType": "ratingPair",
-            "auxKey": "pintu"
+            "auxKey": "image"
           },
           {
             "id": "field_mewk7o3j",
@@ -5370,9 +5326,9 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{theme}}\n评分:: {{评分.label}}\npintu::{{评分.value}}\n内容:: {{内容}}\n<!-- end -->\n\n",
+        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{themePath}}\n评分:: {{评分.label}}\n图片:: {{评分.value}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/打卡.md",
-        "appendUnderHeader": "## {{theme}}"
+        "appendUnderHeader": "## {{themePath}}"
       },
       {
         "id": "ovr_mfhzvma56b66q",
@@ -5384,7 +5340,7 @@
             "id": "field_mekr8gby",
             "key": "状态",
             "label": "状态",
-            "type": "radio",
+            "type": "singleSelect",
             "options": [
               {
                 "value": "- [x]",
@@ -5435,7 +5391,7 @@
             "id": "field_mekyn4c3",
             "key": "重复",
             "label": "重复",
-            "type": "radio",
+            "type": "singleSelect",
             "options": [
               {
                 "value": " ",
@@ -5456,9 +5412,9 @@
             ]
           }
         ],
-        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{theme}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态}} {{日期}}\n\n",
+        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{themePath}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态}} {{日期}}\n\n",
         "targetFile": "01/2-6工作.md",
-        "appendUnderHeader": "## {{theme}}"
+        "appendUnderHeader": "## {{themePath}}"
       },
       {
         "id": "ovr_mfhzvs9f409yg",
@@ -5470,7 +5426,7 @@
             "id": "field_mekr8gby",
             "key": "状态",
             "label": "状态",
-            "type": "radio",
+            "type": "singleSelect",
             "options": [
               {
                 "value": "- [x]",
@@ -5521,7 +5477,7 @@
             "id": "field_mekyn4c3",
             "key": "重复",
             "label": "重复",
-            "type": "radio",
+            "type": "singleSelect",
             "options": [
               {
                 "value": " ",
@@ -5542,9 +5498,9 @@
             ]
           }
         ],
-        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{theme}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态}} {{日期}}\n\n",
+        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{themePath}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态}} {{日期}}\n\n",
         "targetFile": "01/2-6工作.md",
-        "appendUnderHeader": "## {{theme}}"
+        "appendUnderHeader": "## {{themePath}}"
       },
       {
         "id": "ovr_mfhzvxrer2sya",
@@ -5556,7 +5512,7 @@
             "id": "field_mekr8gby",
             "key": "状态",
             "label": "状态",
-            "type": "radio",
+            "type": "singleSelect",
             "options": [
               {
                 "value": "- [x]",
@@ -5607,7 +5563,7 @@
             "id": "field_mekyn4c3",
             "key": "重复",
             "label": "重复",
-            "type": "radio",
+            "type": "singleSelect",
             "options": [
               {
                 "value": " ",
@@ -5628,9 +5584,9 @@
             ]
           }
         ],
-        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{theme}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态}} {{日期}}\n\n",
+        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{themePath}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态}} {{日期}}\n\n",
         "targetFile": "01/2-6工作.md",
-        "appendUnderHeader": "## {{theme}}"
+        "appendUnderHeader": "## {{themePath}}"
       },
       {
         "id": "ovr_mfhzw3yrvedoi",
@@ -5642,7 +5598,7 @@
             "id": "field_mekr8gby",
             "key": "状态",
             "label": "状态",
-            "type": "radio",
+            "type": "singleSelect",
             "options": [
               {
                 "value": "- [x]",
@@ -5693,7 +5649,7 @@
             "id": "field_mekyn4c3",
             "key": "重复",
             "label": "重复",
-            "type": "radio",
+            "type": "singleSelect",
             "options": [
               {
                 "value": " ",
@@ -5714,9 +5670,9 @@
             ]
           }
         ],
-        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{theme}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态}} {{日期}}\n\n",
+        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{themePath}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态}} {{日期}}\n\n",
         "targetFile": "01/2-6工作.md",
-        "appendUnderHeader": "## {{theme}}"
+        "appendUnderHeader": "## {{themePath}}"
       },
       {
         "blockId": "blk_meic1my6m62iu",
@@ -5727,7 +5683,7 @@
             "id": "field_mekr8gby",
             "key": "状态",
             "label": "状态",
-            "type": "radio",
+            "type": "singleSelect",
             "options": [
               {
                 "value": "- [x]",
@@ -5779,7 +5735,7 @@
             "id": "field_mekyn4c3",
             "key": "重复",
             "label": "重复",
-            "type": "radio",
+            "type": "singleSelect",
             "options": [
               {
                 "value": " ",
@@ -5800,9 +5756,9 @@
             ]
           }
         ],
-        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{theme}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态}} {{日期}}\n\n",
+        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{themePath}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态}} {{日期}}\n\n",
         "targetFile": "01/2-6工作.md",
-        "appendUnderHeader": "## {{theme}}",
+        "appendUnderHeader": "## {{themePath}}",
         "id": "ovr_mfhzw9d975by6"
       },
       {
@@ -5815,7 +5771,7 @@
             "id": "field_mekr8gby",
             "key": "状态",
             "label": "状态",
-            "type": "radio",
+            "type": "singleSelect",
             "options": [
               {
                 "value": "- [x]",
@@ -5866,7 +5822,7 @@
             "id": "field_mekyn4c3",
             "key": "重复",
             "label": "重复",
-            "type": "radio",
+            "type": "singleSelect",
             "options": [
               {
                 "value": " ",
@@ -5887,9 +5843,9 @@
             ]
           }
         ],
-        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{theme}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态}} {{日期}}\n\n",
+        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{themePath}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态}} {{日期}}\n\n",
         "targetFile": "01/2-6工作.md",
-        "appendUnderHeader": "## {{theme}}"
+        "appendUnderHeader": "## {{themePath}}"
       },
       {
         "blockId": "blk_meic1my6m62iu",
@@ -5900,7 +5856,7 @@
             "id": "field_mekr8gby",
             "key": "状态",
             "label": "状态",
-            "type": "radio",
+            "type": "singleSelect",
             "options": [
               {
                 "value": "- [x]",
@@ -5952,7 +5908,7 @@
             "id": "field_mekyn4c3",
             "key": "重复",
             "label": "重复",
-            "type": "radio",
+            "type": "singleSelect",
             "options": [
               {
                 "value": " ",
@@ -5973,9 +5929,9 @@
             ]
           }
         ],
-        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{theme}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态}} {{日期}}\n\n",
+        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{themePath}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态}} {{日期}}\n\n",
         "targetFile": "01/2-4思考.md",
-        "appendUnderHeader": "## {{theme}}",
+        "appendUnderHeader": "## {{themePath}}",
         "id": "ovr_mfhzwkwivqho3"
       },
       {
@@ -5987,7 +5943,7 @@
             "id": "field_mekr8gby",
             "key": "状态",
             "label": "状态",
-            "type": "radio",
+            "type": "singleSelect",
             "options": [
               {
                 "value": "- [x]",
@@ -6039,7 +5995,7 @@
             "id": "field_mekyn4c3",
             "key": "重复",
             "label": "重复",
-            "type": "radio",
+            "type": "singleSelect",
             "options": [
               {
                 "value": " ",
@@ -6060,9 +6016,9 @@
             ]
           }
         ],
-        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{theme}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态}} {{日期}}\n\n",
+        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{themePath}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态}} {{日期}}\n\n",
         "targetFile": "01/2-4思考.md",
-        "appendUnderHeader": "## {{theme}}",
+        "appendUnderHeader": "## {{themePath}}",
         "id": "ovr_mfhzwoqz4223c"
       },
       {
@@ -6074,7 +6030,7 @@
             "id": "field_mekr8gby",
             "key": "状态",
             "label": "状态",
-            "type": "radio",
+            "type": "singleSelect",
             "options": [
               {
                 "value": "- [x]",
@@ -6125,7 +6081,7 @@
             "id": "field_mekyn4c3",
             "key": "重复",
             "label": "重复",
-            "type": "radio",
+            "type": "singleSelect",
             "options": [
               {
                 "value": " ",
@@ -6146,9 +6102,9 @@
             ]
           }
         ],
-        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{theme}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态}} {{日期}}\n\n",
+        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{themePath}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态}} {{日期}}\n\n",
         "targetFile": "01/2-5电脑.md",
-        "appendUnderHeader": "## {{theme}}",
+        "appendUnderHeader": "## {{themePath}}",
         "id": "ovr_mfhzwx24q1kpc"
       },
       {
@@ -6160,7 +6116,7 @@
             "id": "field_mekr8gby",
             "key": "状态",
             "label": "状态",
-            "type": "radio",
+            "type": "singleSelect",
             "options": [
               {
                 "value": "- [x]",
@@ -6212,7 +6168,7 @@
             "id": "field_mekyn4c3",
             "key": "重复",
             "label": "重复",
-            "type": "radio",
+            "type": "singleSelect",
             "options": [
               {
                 "value": " ",
@@ -6233,9 +6189,9 @@
             ]
           }
         ],
-        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{theme}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态}} {{日期}}\n\n",
+        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{themePath}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态}} {{日期}}\n\n",
         "targetFile": "01/2-5电脑.md",
-        "appendUnderHeader": "## {{theme}}",
+        "appendUnderHeader": "## {{themePath}}",
         "id": "ovr_mfhzx4hvl9s27",
         "disabled": true
       },
@@ -6248,7 +6204,7 @@
             "id": "field_mekr8gby",
             "key": "状态",
             "label": "状态",
-            "type": "radio",
+            "type": "singleSelect",
             "options": [
               {
                 "value": "- [x]",
@@ -6300,7 +6256,7 @@
             "id": "field_mekyn4c3",
             "key": "重复",
             "label": "重复",
-            "type": "radio",
+            "type": "singleSelect",
             "options": [
               {
                 "value": " ",
@@ -6321,9 +6277,9 @@
             ]
           }
         ],
-        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{theme}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态}} {{日期}}\n\n",
+        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{themePath}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态}} {{日期}}\n\n",
         "targetFile": "01/2-5电脑.md",
-        "appendUnderHeader": "## {{theme}}",
+        "appendUnderHeader": "## {{themePath}}",
         "id": "ovr_mfhzxac3hz906"
       },
       {
@@ -6335,7 +6291,7 @@
             "id": "field_mekr8gby",
             "key": "状态",
             "label": "状态",
-            "type": "radio",
+            "type": "singleSelect",
             "options": [
               {
                 "value": "- [x]",
@@ -6387,7 +6343,7 @@
             "id": "field_mekyn4c3",
             "key": "重复",
             "label": "重复",
-            "type": "radio",
+            "type": "singleSelect",
             "options": [
               {
                 "value": " ",
@@ -6408,9 +6364,9 @@
             ]
           }
         ],
-        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{theme}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态}} {{日期}}\n\n",
+        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{themePath}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态}} {{日期}}\n\n",
         "targetFile": "01/2-5电脑.md",
-        "appendUnderHeader": "## {{theme}}",
+        "appendUnderHeader": "## {{themePath}}",
         "id": "ovr_mfhzxf5uox0gu",
         "disabled": false
       },
@@ -6424,7 +6380,7 @@
             "id": "field_mekr8gby",
             "key": "状态",
             "label": "状态",
-            "type": "radio",
+            "type": "singleSelect",
             "options": [
               {
                 "value": "- [x]",
@@ -6475,7 +6431,7 @@
             "id": "field_mekyn4c3",
             "key": "重复",
             "label": "重复",
-            "type": "radio",
+            "type": "singleSelect",
             "options": [
               {
                 "value": " ",
@@ -6496,9 +6452,9 @@
             ]
           }
         ],
-        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{theme}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态}} {{日期}}\n\n",
+        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{themePath}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态}} {{日期}}\n\n",
         "targetFile": "01/2-5电脑.md",
-        "appendUnderHeader": "## {{theme}}",
+        "appendUnderHeader": "## {{themePath}}",
         "disabled": true
       },
       {
@@ -6510,7 +6466,7 @@
             "id": "field_mekr8gby",
             "key": "状态",
             "label": "状态",
-            "type": "radio",
+            "type": "singleSelect",
             "options": [
               {
                 "value": "- [x]",
@@ -6562,7 +6518,7 @@
             "id": "field_mekyn4c3",
             "key": "重复",
             "label": "重复",
-            "type": "radio",
+            "type": "singleSelect",
             "options": [
               {
                 "value": " ",
@@ -6583,9 +6539,9 @@
             ]
           }
         ],
-        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{theme}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态}} {{日期}}\n\n",
+        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{themePath}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态}} {{日期}}\n\n",
         "targetFile": "01/2-4思考.md",
-        "appendUnderHeader": "## {{theme}}",
+        "appendUnderHeader": "## {{themePath}}",
         "id": "ovr_mfhzxpuhe0flz"
       },
       {
@@ -6597,7 +6553,7 @@
             "id": "field_mekr8gby",
             "key": "状态",
             "label": "状态",
-            "type": "radio",
+            "type": "singleSelect",
             "options": [
               {
                 "value": "- [x]",
@@ -6648,7 +6604,7 @@
             "id": "field_mekyn4c3",
             "key": "重复",
             "label": "重复",
-            "type": "radio",
+            "type": "singleSelect",
             "options": [
               {
                 "value": " ",
@@ -6669,9 +6625,9 @@
             ]
           }
         ],
-        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{theme}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态}} {{日期}}\n\n",
+        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{themePath}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态}} {{日期}}\n\n",
         "targetFile": "01/2-3生活.md",
-        "appendUnderHeader": "## {{theme}}",
+        "appendUnderHeader": "## {{themePath}}",
         "id": "ovr_mfhzy0ykf8a08"
       },
       {
@@ -6683,7 +6639,7 @@
             "id": "field_mekr8gby",
             "key": "状态",
             "label": "状态",
-            "type": "radio",
+            "type": "singleSelect",
             "options": [
               {
                 "value": "- [x]",
@@ -6734,7 +6690,7 @@
             "id": "field_mekyn4c3",
             "key": "重复",
             "label": "重复",
-            "type": "radio",
+            "type": "singleSelect",
             "options": [
               {
                 "value": " ",
@@ -6755,9 +6711,9 @@
             ]
           }
         ],
-        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{theme}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态}} {{日期}}\n\n",
+        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{themePath}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态}} {{日期}}\n\n",
         "targetFile": "01/2-4思考.md",
-        "appendUnderHeader": "## {{theme}}",
+        "appendUnderHeader": "## {{themePath}}",
         "id": "ovr_mfhzy8wjn37t5"
       },
       {
@@ -6769,7 +6725,7 @@
             "id": "field_mekr8gby",
             "key": "状态",
             "label": "状态",
-            "type": "radio",
+            "type": "singleSelect",
             "options": [
               {
                 "value": "- [x]",
@@ -6821,7 +6777,7 @@
             "id": "field_mekyn4c3",
             "key": "重复",
             "label": "重复",
-            "type": "radio",
+            "type": "singleSelect",
             "options": [
               {
                 "value": " ",
@@ -6842,9 +6798,9 @@
             ]
           }
         ],
-        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{theme}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态}} {{日期}}\n\n",
+        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{themePath}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态}} {{日期}}\n\n",
         "targetFile": "01/2-3生活.md",
-        "appendUnderHeader": "## {{theme}}",
+        "appendUnderHeader": "## {{themePath}}",
         "id": "ovr_mfhzz4r56gn7k"
       },
       {
@@ -6856,7 +6812,7 @@
             "id": "field_mekr8gby",
             "key": "状态",
             "label": "状态",
-            "type": "radio",
+            "type": "singleSelect",
             "options": [
               {
                 "value": "- [x]",
@@ -6908,7 +6864,7 @@
             "id": "field_mekyn4c3",
             "key": "重复",
             "label": "重复",
-            "type": "radio",
+            "type": "singleSelect",
             "options": [
               {
                 "value": " ",
@@ -6929,9 +6885,9 @@
             ]
           }
         ],
-        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{theme}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态}} {{日期}}\n\n",
+        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{themePath}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态}} {{日期}}\n\n",
         "targetFile": "01/2-3生活.md",
-        "appendUnderHeader": "## {{theme}}",
+        "appendUnderHeader": "## {{themePath}}",
         "id": "ovr_mfhzzaeanezaa"
       },
       {
@@ -6943,7 +6899,7 @@
             "id": "field_mekr8gby",
             "key": "状态",
             "label": "状态",
-            "type": "radio",
+            "type": "singleSelect",
             "options": [
               {
                 "value": "- [x]",
@@ -6995,7 +6951,7 @@
             "id": "field_mekyn4c3",
             "key": "重复",
             "label": "重复",
-            "type": "radio",
+            "type": "singleSelect",
             "options": [
               {
                 "value": " ",
@@ -7016,9 +6972,9 @@
             ]
           }
         ],
-        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{theme}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态}} {{日期}}\n\n",
+        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{themePath}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态}} {{日期}}\n\n",
         "targetFile": "01/2-3生活.md",
-        "appendUnderHeader": "## {{theme}}",
+        "appendUnderHeader": "## {{themePath}}",
         "id": "ovr_mfhzzedvyx5e3"
       },
       {
@@ -7030,7 +6986,7 @@
             "id": "field_mekr8gby",
             "key": "状态",
             "label": "状态",
-            "type": "radio",
+            "type": "singleSelect",
             "options": [
               {
                 "value": "- [x]",
@@ -7082,7 +7038,7 @@
             "id": "field_mekyn4c3",
             "key": "重复",
             "label": "重复",
-            "type": "radio",
+            "type": "singleSelect",
             "options": [
               {
                 "value": " ",
@@ -7103,9 +7059,9 @@
             ]
           }
         ],
-        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{theme}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态}} {{日期}}\n\n",
+        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{themePath}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态}} {{日期}}\n\n",
         "targetFile": "01/2-3生活.md",
-        "appendUnderHeader": "## {{theme}}",
+        "appendUnderHeader": "## {{themePath}}",
         "id": "ovr_mfhzzih02q1gy"
       },
       {
@@ -7117,7 +7073,7 @@
             "id": "field_mekr8gby",
             "key": "状态",
             "label": "状态",
-            "type": "radio",
+            "type": "singleSelect",
             "options": [
               {
                 "value": "- [x]",
@@ -7169,7 +7125,7 @@
             "id": "field_mekyn4c3",
             "key": "重复",
             "label": "重复",
-            "type": "radio",
+            "type": "singleSelect",
             "options": [
               {
                 "value": " ",
@@ -7190,9 +7146,9 @@
             ]
           }
         ],
-        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{theme}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态}} {{日期}}\n\n",
+        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{themePath}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态}} {{日期}}\n\n",
         "targetFile": "01/2-3生活.md",
-        "appendUnderHeader": "## {{theme}}",
+        "appendUnderHeader": "## {{themePath}}",
         "id": "ovr_mfhzzn3vwjnxg"
       },
       {
@@ -7205,7 +7161,7 @@
             "id": "field_mekr8gby",
             "key": "状态",
             "label": "状态",
-            "type": "radio",
+            "type": "singleSelect",
             "options": [
               {
                 "value": "- [x]",
@@ -7256,7 +7212,7 @@
             "id": "field_mekyn4c3",
             "key": "重复",
             "label": "重复",
-            "type": "radio",
+            "type": "singleSelect",
             "options": [
               {
                 "value": " ",
@@ -7277,9 +7233,9 @@
             ]
           }
         ],
-        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{theme}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态}} {{日期}}\n\n",
+        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{themePath}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态}} {{日期}}\n\n",
         "targetFile": "01/2-1健康.md",
-        "appendUnderHeader": "## {{theme}}"
+        "appendUnderHeader": "## {{themePath}}"
       },
       {
         "blockId": "blk_meic1my6m62iu",
@@ -7290,7 +7246,7 @@
             "id": "field_mekr8gby",
             "key": "状态",
             "label": "状态",
-            "type": "radio",
+            "type": "singleSelect",
             "options": [
               {
                 "value": "- [x]",
@@ -7342,7 +7298,7 @@
             "id": "field_mekyn4c3",
             "key": "重复",
             "label": "重复",
-            "type": "radio",
+            "type": "singleSelect",
             "options": [
               {
                 "value": " ",
@@ -7363,9 +7319,9 @@
             ]
           }
         ],
-        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{theme}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态}} {{日期}}\n\n",
+        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{themePath}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态}} {{日期}}\n\n",
         "targetFile": "01/2-1健康.md",
-        "appendUnderHeader": "## {{theme}}",
+        "appendUnderHeader": "## {{themePath}}",
         "id": "ovr_mfi00peyoa7fx"
       },
       {
@@ -7377,7 +7333,7 @@
             "id": "field_mekr8gby",
             "key": "状态",
             "label": "状态",
-            "type": "radio",
+            "type": "singleSelect",
             "options": [
               {
                 "value": "- [x]",
@@ -7429,7 +7385,7 @@
             "id": "field_mekyn4c3",
             "key": "重复",
             "label": "重复",
-            "type": "radio",
+            "type": "singleSelect",
             "options": [
               {
                 "value": " ",
@@ -7450,9 +7406,9 @@
             ]
           }
         ],
-        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{theme}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态}} {{日期}}\n\n",
+        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{themePath}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态}} {{日期}}\n\n",
         "targetFile": "01/2-1健康.md",
-        "appendUnderHeader": "## {{theme}}",
+        "appendUnderHeader": "## {{themePath}}",
         "id": "ovr_mfi00txo5ux1g"
       },
       {
@@ -7465,7 +7421,7 @@
             "id": "field_mekr8gby",
             "key": "状态",
             "label": "状态",
-            "type": "radio",
+            "type": "singleSelect",
             "options": [
               {
                 "value": "- [x]",
@@ -7516,7 +7472,7 @@
             "id": "field_mekyn4c3",
             "key": "重复",
             "label": "重复",
-            "type": "radio",
+            "type": "singleSelect",
             "options": [
               {
                 "value": " ",
@@ -7537,9 +7493,9 @@
             ]
           }
         ],
-        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{theme}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态}} {{日期}}\n\n",
+        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{themePath}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态}} {{日期}}\n\n",
         "targetFile": "01/2-1健康.md",
-        "appendUnderHeader": "## {{theme}}"
+        "appendUnderHeader": "## {{themePath}}"
       },
       {
         "blockId": "blk_meic1my6m62iu",
@@ -7556,7 +7512,7 @@
             "id": "field_mekr8gby",
             "key": "状态",
             "label": "状态",
-            "type": "radio",
+            "type": "singleSelect",
             "options": [
               {
                 "value": "- [x]",
@@ -7608,7 +7564,7 @@
             "id": "field_mekyn4c3",
             "key": "重复",
             "label": "重复",
-            "type": "radio",
+            "type": "singleSelect",
             "options": [
               {
                 "value": " ",
@@ -7629,9 +7585,9 @@
             ]
           }
         ],
-        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{theme}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态}} {{日期}}\n\n",
+        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{themePath}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态}} {{日期}}\n\n",
         "targetFile": "01/2-1健康.md",
-        "appendUnderHeader": "## {{theme}}",
+        "appendUnderHeader": "## {{themePath}}",
         "id": "ovr_mfi015kb2hw7a"
       },
       {
@@ -7643,7 +7599,7 @@
             "id": "field_mekr8gby",
             "key": "状态",
             "label": "状态",
-            "type": "radio",
+            "type": "singleSelect",
             "options": [
               {
                 "value": "- [x]",
@@ -7695,7 +7651,7 @@
             "id": "field_mekyn4c3",
             "key": "重复",
             "label": "重复",
-            "type": "radio",
+            "type": "singleSelect",
             "options": [
               {
                 "value": " ",
@@ -7716,9 +7672,9 @@
             ]
           }
         ],
-        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{theme}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态}} {{日期}}\n\n",
+        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{themePath}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态}} {{日期}}\n\n",
         "targetFile": "01/2-1健康.md",
-        "appendUnderHeader": "## {{theme}}",
+        "appendUnderHeader": "## {{themePath}}",
         "id": "ovr_mfi019n9qc5c0"
       },
       {
@@ -7730,7 +7686,7 @@
             "id": "field_mekr8gby",
             "key": "状态",
             "label": "状态",
-            "type": "radio",
+            "type": "singleSelect",
             "options": [
               {
                 "value": "- [x]",
@@ -7782,7 +7738,7 @@
             "id": "field_mekyn4c3",
             "key": "重复",
             "label": "重复",
-            "type": "radio",
+            "type": "singleSelect",
             "options": [
               {
                 "value": " ",
@@ -7803,9 +7759,9 @@
             ]
           }
         ],
-        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{theme}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态}} {{日期}}\n\n",
+        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{themePath}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态}} {{日期}}\n\n",
         "targetFile": "01/2-2三餐.md",
-        "appendUnderHeader": "## {{theme}}",
+        "appendUnderHeader": "## {{themePath}}",
         "id": "ovr_mfi01w2yaf99z"
       },
       {
@@ -7817,7 +7773,7 @@
             "id": "field_mekr8gby",
             "key": "状态",
             "label": "状态",
-            "type": "radio",
+            "type": "singleSelect",
             "options": [
               {
                 "value": "- [x]",
@@ -7869,7 +7825,7 @@
             "id": "field_mekyn4c3",
             "key": "重复",
             "label": "重复",
-            "type": "radio",
+            "type": "singleSelect",
             "options": [
               {
                 "value": " ",
@@ -7890,9 +7846,9 @@
             ]
           }
         ],
-        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{theme}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态}} {{日期}}\n\n",
+        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{themePath}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态}} {{日期}}\n\n",
         "targetFile": "01/2-2三餐.md",
-        "appendUnderHeader": "## {{theme}}",
+        "appendUnderHeader": "## {{themePath}}",
         "id": "ovr_mfi020mjezkyy"
       },
       {
@@ -7904,7 +7860,7 @@
             "id": "field_mekr8gby",
             "key": "状态",
             "label": "状态",
-            "type": "radio",
+            "type": "singleSelect",
             "options": [
               {
                 "value": "- [x]",
@@ -7956,7 +7912,7 @@
             "id": "field_mekyn4c3",
             "key": "重复",
             "label": "重复",
-            "type": "radio",
+            "type": "singleSelect",
             "options": [
               {
                 "value": " ",
@@ -7977,9 +7933,9 @@
             ]
           }
         ],
-        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{theme}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态}} {{日期}}\n\n",
+        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{themePath}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态}} {{日期}}\n\n",
         "targetFile": "01/2-2三餐.md",
-        "appendUnderHeader": "## {{theme}}",
+        "appendUnderHeader": "## {{themePath}}",
         "id": "ovr_mfi025rhepqgs"
       },
       {
@@ -7991,7 +7947,7 @@
             "id": "field_mekr8gby",
             "key": "状态",
             "label": "状态",
-            "type": "radio",
+            "type": "singleSelect",
             "options": [
               {
                 "value": "- [x]",
@@ -8044,7 +8000,7 @@
             "id": "field_mekyn4c3",
             "key": "重复",
             "label": "重复",
-            "type": "radio",
+            "type": "singleSelect",
             "options": [
               {
                 "value": " ",
@@ -8065,9 +8021,9 @@
             ]
           }
         ],
-        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{theme}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态}} {{日期}}\n\n",
+        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{themePath}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态}} {{日期}}\n\n",
         "targetFile": "01/2-6工作.md",
-        "appendUnderHeader": "## {{theme}}",
+        "appendUnderHeader": "## {{themePath}}",
         "id": "ovr_mfj18fupymfx4"
       },
       {
@@ -8087,7 +8043,7 @@
             "id": "field_mekr8gby",
             "key": "状态",
             "label": "状态",
-            "type": "radio",
+            "type": "singleSelect",
             "options": [
               {
                 "value": "- [x]",
@@ -8138,7 +8094,7 @@
             "id": "field_mekyn4c3",
             "key": "重复",
             "label": "重复",
-            "type": "radio",
+            "type": "singleSelect",
             "options": [
               {
                 "value": " ",
@@ -8159,9 +8115,9 @@
             ]
           }
         ],
-        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{theme}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态}} {{日期}}\n\n",
+        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{themePath}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态}} {{日期}}\n\n",
         "targetFile": "01/2-4思考.md",
-        "appendUnderHeader": "## {{theme}}"
+        "appendUnderHeader": "## {{themePath}}"
       },
       {
         "id": "ovr_mg1mdk3jubw7t",
@@ -8187,7 +8143,7 @@
             "id": "field_mekr8gby",
             "key": "状态",
             "label": "状态",
-            "type": "radio",
+            "type": "singleSelect",
             "options": [
               {
                 "value": "- [x]",
@@ -8238,7 +8194,7 @@
             "id": "field_mekyn4c3",
             "key": "重复",
             "label": "重复",
-            "type": "radio",
+            "type": "singleSelect",
             "options": [
               {
                 "value": " ",
@@ -8259,9 +8215,9 @@
             ]
           }
         ],
-        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{theme}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态}} {{日期}}\n\n",
+        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{themePath}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态}} {{日期}}\n\n",
         "targetFile": "01/2-3生活.md",
-        "appendUnderHeader": "## {{theme}}"
+        "appendUnderHeader": "## {{themePath}}"
       },
       {
         "blockId": "blk_mejsg76atopau",
@@ -8386,7 +8342,7 @@
             "id": "field_mekr8gby",
             "key": "状态",
             "label": "状态",
-            "type": "radio",
+            "type": "singleSelect",
             "options": [
               {
                 "value": "- [x]",
@@ -8438,7 +8394,7 @@
             "id": "field_mekyn4c3",
             "key": "重复",
             "label": "重复",
-            "type": "radio",
+            "type": "singleSelect",
             "options": [
               {
                 "value": " ",
@@ -8459,9 +8415,9 @@
             ]
           }
         ],
-        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{theme}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{状态}} {{重复.value}} {{日期}}\n\n",
+        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{themePath}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{状态}} {{重复.value}} {{日期}}\n\n",
         "targetFile": "01/2-3生活.md",
-        "appendUnderHeader": "## {{theme}}",
+        "appendUnderHeader": "## {{themePath}}",
         "id": "ovr_mo29s584mizcdy5"
       },
       {
@@ -8471,9 +8427,9 @@
         "fields": [
           {
             "id": "field_mewjlt4j",
-            "key": "思考分类",
-            "label": "思考分类",
-            "type": "radio",
+            "key": "分类",
+            "label": "分类",
+            "type": "singleSelect",
             "options": [
               {
                 "value": "闪念/事件",
@@ -8487,9 +8443,7 @@
                 "value": "闪念/思考",
                 "label": "思考"
               }
-            ],
-            "semanticType": "path",
-            "storeMode": "value"
+            ]
           },
           {
             "id": "field_mewkyug9",
@@ -8501,7 +8455,7 @@
             "id": "field_mn5ui00x",
             "key": "标签",
             "label": "标签",
-            "type": "text"
+            "type": "multiTag"
           },
           {
             "id": "field_mewjlypl",
@@ -8510,9 +8464,9 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: {{思考分类.value}}\n日期:: {{日期}}\n主题:: {{theme}}\n图标:: {{icon}}\n标签:: {{标签}}\n内容:: {{内容}}\n<!-- end -->\n\n",
+        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: {{分类.value}}\n日期:: {{日期}}\n主题:: {{themePath}}\n图标:: {{icon}}\n标签:: {{标签}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/闪念.md",
-        "appendUnderHeader": "## {{theme}}",
+        "appendUnderHeader": "## {{themePath}}",
         "id": "ovr_mp2eoc93h8cjdmi"
       }
     ]
@@ -8632,6 +8586,7 @@
     "打卡": "#b888e7",
     "闪念": "#e47272",
     "事件": "#a5c8ee",
+    "周": "#e09185",
     "生活": "#8cd4ee"
   }
 }

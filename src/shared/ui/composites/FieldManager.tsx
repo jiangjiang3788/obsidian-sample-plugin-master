@@ -16,6 +16,7 @@ export interface FieldManagerProps {
   maxFields?: number;
   className?: string;
   getFieldLabel?: (field: string) => string;
+  getFieldGroupLabel?: (field: string) => string;
 }
 
 export function FieldManager({
@@ -26,15 +27,20 @@ export function FieldManager({
   disabled = false,
   maxFields,
   className = "",
-  getFieldLabel = (field: string) => field
+  getFieldLabel = (field: string) => field,
+  getFieldGroupLabel,
 }: FieldManagerProps) {
 
   // 过滤可用字段（排除已选字段）
   const availableOptions = useMemo(() => {
     return availableFields
       .filter(field => !fields.includes(field))
-      .map(field => ({ value: field, label: getFieldLabel(field) }));
-  }, [availableFields, fields, getFieldLabel]);
+      .map(field => ({
+        value: field,
+        label: getFieldLabel(field),
+        group: getFieldGroupLabel?.(field),
+      }));
+  }, [availableFields, fields, getFieldLabel, getFieldGroupLabel]);
 
   const handleAddField = (field: string) => {
     if (maxFields !== undefined && fields.length >= maxFields) {

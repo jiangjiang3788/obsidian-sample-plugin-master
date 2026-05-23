@@ -1,25 +1,24 @@
 import type { NormalizeRecordInputParams, NormalizeRecordInputResult } from '@/core/types/recordInput';
-import { buildPathOption, getLeafPath, normalizePath } from '@/core/utils/pathSemantic';
+import {
+  getTemplateFieldSemantic,
+  isTemplateTagField,
+  normalizeTemplateFieldValue,
+  templateFieldMatches,
+} from '@/core/fields/TemplateFieldAdapter';
 import { recordDebugLog } from '@/core/utils/recordDebug';
-import { parseTagsInput } from '@/core/utils/tagUtils';
 import { applyTaskTimePolicy } from '@/core/utils/taskTime';
 import type { TaskTimeDirection } from '@/core/utils/taskTime';
 
-
-function normalizeToken(value: unknown): string {
-  return String(value || '').trim().toLowerCase();
-}
-
 function fieldMatches(field: any, aliases: string[]): boolean {
-  const tokens = [field?.key, field?.label, field?.semanticType, field?.role]
-    .map(normalizeToken)
-    .filter(Boolean);
-  const normalizedAliases = aliases.map(normalizeToken);
-  return tokens.some((token) => normalizedAliases.includes(token));
+  return templateFieldMatches(field, aliases);
 }
 
-function findFieldKey(fields: any[], aliases: string[], fallbackKey: string): string {
-  const matched = fields.find((field) => fieldMatches(field, aliases));
+function fieldSemanticMatches(field: any, semantic: string): boolean {
+  return getTemplateFieldSemantic(field) === semantic;
+}
+
+function findFieldKey(fields: any[], aliases: string[], fallbackKey: string, semantic?: string): string {
+  const matched = fields.find((field) => (semantic ? fieldSemanticMatches(field, semantic) : false) || fieldMatches(field, aliases));
   return String(matched?.key || fallbackKey);
 }
 
@@ -34,9 +33,9 @@ function finalizeTimeFieldsByTemplate(
   fields: any[],
   direction: TaskTimeDirection,
 ): Record<string, unknown> {
-  const startKey = findFieldKey(fields, ['时间', '开始', '开始时间', 'time', 'start', 'starttime', 'startTime'], '时间');
-  const endKey = findFieldKey(fields, ['结束', '结束时间', 'end', 'endtime', 'endTime'], '结束');
-  const durationKey = findFieldKey(fields, ['时长', 'duration', 'minutes', '持续时间'], '时长');
+  const startKey = findFieldKey(fields, ['时间', '开始', '开始时间', 'time', 'start', 'starttime', 'startTime'], '时间', 'startTime');
+  const endKey = findFieldKey(fields, ['结束', '结束时间', 'end', 'endtime', 'endTime'], '结束', 'endTime');
+  const durationKey = findFieldKey(fields, ['时长', 'duration', 'minutes', '持续时间'], '时长', 'duration');
 
   const startTime = formData[startKey] ?? formData['时间'];
   const endTime = formData[endKey] ?? formData['结束'];
@@ -65,89 +64,19 @@ function finalizeTimeFieldsByTemplate(
   }
 
   recordDebugLog('时间计算', 'normalizeRecordInput 保存前时间字段归一化', {
-    templateFields: fields.map((field) => ({ key: field?.key, label: field?.label, semanticType: field?.semanticType })),
+    templateFields: fields.map((field) => ({
+      key: field?.key,
+      label: field?.label,
+      semantic: field?.semantic,
+      semanticType: field?.semanticType,
+      type: field?.type,
+    })),
     recognizedKeys: { startKey, endKey, durationKey, direction },
     before: { startTime, endTime, duration, formData },
     after: { normalizedTriple, finalized },
   });
 
   return finalized;
-}
-
-function isOptionObject(value: unknown): value is { label?: unknown; value?: unknown } {
-  return !!value && typeof value === 'object' && ('value' in value || 'label' in value);
-}
-
-function isPathLikeField(field: any): boolean {
-  if (!field) return false;
-  if (field.semanticType === 'path') return true;
-  const key = normalizeToken(field.key || field.label || '');
-  if (['主题', 'theme', 'themepath', '完整主题', '完整路径主题', '主题路径', 'roottheme', '根主题', 'leaftheme', '叶主题'].includes(key)) {
-    return true;
-  }
-  if (Array.isArray(field.options) && field.options.some((opt: any) => String(opt?.value || '').includes('/'))) return true;
-  return false;
-}
-
-function isCategoryLikeField(field: any): boolean {
-  if (!field) return false;
-  const key = String(field.key || field.label || '');
-  return key.includes('分类') || /category/i.test(key);
-}
-
-function isTagsField(field: any): boolean {
-  return fieldMatches(field, ['标签', 'tag', 'tags']);
-}
-
-function normalizeOptionValue(field: any, rawValue: unknown): unknown {
-  if (rawValue === undefined || rawValue === null || rawValue === '') return rawValue;
-
-  if (isOptionObject(rawValue)) {
-    if (isPathLikeField(field) || isCategoryLikeField(field)) {
-      const normalized = normalizePath(String(rawValue.value ?? rawValue.label ?? ''));
-      return { value: normalized, label: String((rawValue.label ?? getLeafPath(normalized)) || normalized) };
-    }
-    return {
-      value: rawValue.value,
-      label: rawValue.label ?? rawValue.value,
-    };
-  }
-
-  if (!['select', 'radio', 'rating'].includes(field.type)) {
-    return rawValue;
-  }
-
-  const rawString = String(rawValue);
-  const options = field.options || [];
-
-  if (isPathLikeField(field) || isCategoryLikeField(field)) {
-    const normalizedPath = normalizePath(rawString);
-    const matched = options.find((opt: any) => normalizePath(String(opt.value || '')) === normalizedPath || String(opt.label || '') === rawString);
-    if (matched) {
-      return {
-        value: normalizePath(String(matched.value || '')),
-        label: matched.label || getLeafPath(String(matched.value || '')) || matched.value,
-      };
-    }
-    return buildPathOption(normalizedPath) ?? rawValue;
-  }
-
-  const matched = options.find((opt: any) => String(opt.value) === rawString || String(opt.label) === rawString || String(opt.label ?? opt.value) === rawString);
-  if (matched) {
-    return {
-      value: matched.value,
-      label: matched.label || matched.value,
-    };
-  }
-
-  if (field.type === 'rating' || field.semanticType === 'ratingPair') {
-    return {
-      value: rawString,
-      label: rawString,
-    };
-  }
-
-  return rawValue;
 }
 
 export function normalizeRecordInput(input: NormalizeRecordInputParams): NormalizeRecordInputResult {
@@ -158,15 +87,13 @@ export function normalizeRecordInput(input: NormalizeRecordInputParams): Normali
 
   for (const field of input.template.fields || []) {
     if (!Object.prototype.hasOwnProperty.call(normalizedFormData, field.key)) continue;
-    if (isTagsField(field)) {
-      normalizedFormData[field.key] = parseTagsInput(normalizedFormData[field.key]);
+    if (isTemplateTagField(field)) {
+      normalizedFormData[field.key] = normalizeTemplateFieldValue(field, normalizedFormData[field.key]);
       continue;
     }
-    normalizedFormData[field.key] = normalizeOptionValue(field as any, normalizedFormData[field.key]);
+    normalizedFormData[field.key] = normalizeTemplateFieldValue(field, normalizedFormData[field.key]);
   }
 
-  // SNAPSHOT-MIGRATION: 保存前时间计算不能只认中文固定 key。
-  // 有些模板字段可能叫 start/startTime/endTime/duration；这里按模板字段别名识别后统一 finalize。
   const finalized = finalizeTimeFieldsByTemplate(
     normalizedFormData,
     input.template.fields || [],

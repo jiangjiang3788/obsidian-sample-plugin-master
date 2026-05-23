@@ -2,7 +2,7 @@
 import { h } from 'preact';
 import type { Item, ThemeDefinition } from '@core/public';
 import { readField } from '@core/public';
-import { getFieldLabel } from '@core/public';
+import { getFieldDefinition, getFieldLabel, isImageFieldDefinition, normalizeImageValue } from '@core/public';
 import { getCategoryColor } from '@core/public';
 import { TagsRenderer } from '@shared/ui/composites/TagsRenderer';
 import { getBaseCategory, getLeafPath } from '@core/public';
@@ -32,8 +32,8 @@ export function FieldPill({ item, fieldKey, app, allThemes }: FieldPillProps) {
         return <TagsRenderer tags={value} allThemes={allThemes} />;
     }
 
-    // Theme 字段特殊处理（术语对齐：theme=主题，独立于 tags）
-    if (fieldKey === 'theme' && typeof value === 'string') {
+    // Theme 字段特殊处理：默认展示 themePath，旧 theme 仍兼容。
+    if ((fieldKey === 'themePath' || fieldKey === 'theme' || fieldKey === 'rootTheme' || fieldKey === 'leafTheme') && typeof value === 'string') {
         const fullPath = value;
         const labelText = getLeafPath(fullPath) || fullPath;
         return (
@@ -53,11 +53,15 @@ export function FieldPill({ item, fieldKey, app, allThemes }: FieldPillProps) {
         );
     }
     
-    // 图片字段特殊处理
-    if (fieldKey === 'pintu' && typeof value === 'string') {
+    // 图片字段特殊处理：不再只认 pintu；任何 type/semantic 为 image 的字段都可渲染。
+    const fieldDef = getFieldDefinition(fieldKey);
+    if (isImageFieldDefinition(fieldDef)) {
+        const image = normalizeImageValue(value);
+        if (!image) return null;
+        const src = image.kind === 'url' ? image.src : app.vault.adapter.getResourcePath(image.src);
         return (
-            <span class="tag-pill" title={`${label}: ${value}`}>
-                <img src={app.vault.adapter.getResourcePath(value)} alt={label} />
+            <span class="tag-pill" title={`${label}: ${image.src}`}>
+                <img src={src} alt={image.alt || label} />
             </span>
         );
     }

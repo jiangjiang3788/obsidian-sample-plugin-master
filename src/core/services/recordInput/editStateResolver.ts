@@ -7,6 +7,7 @@ import { recordDebugLog } from '@/core/utils/recordDebug';
 import { buildPathOption, getLeafPath, normalizePath } from '@/core/utils/pathSemantic';
 import { formatTagsForField } from '@/core/utils/tagUtils';
 import { findThemeIdByPath, resolveRecordDependencies } from './dependencyResolver';
+import { buildInitialEditFormData } from './EditBackfillMapper';
 
 export interface BuildEditStateInput {
   settings: InputSettings;
@@ -329,54 +330,11 @@ function readSnapshotSemanticValue(field: any, item: Item, snapshot: ParsedRecor
 }
 
 function buildInitialFormData(template: any, item: Item, snapshot: ParsedRecordSnapshot = buildParsedRecordSnapshot(item)): Record<string, unknown> {
-  const result: Record<string, unknown> = {};
-  if (!template?.fields?.length) return result;
-
-  const extraEntries = Object.entries(item.extra || {});
-  const readExtraByAlias = (alias: string) => {
-    if (!alias) return undefined;
-    if (item.extra && Object.prototype.hasOwnProperty.call(item.extra, alias)) return item.extra[alias as keyof typeof item.extra];
-    const lower = normalizeToken(alias);
-    const match = extraEntries.find(([key]) => normalizeToken(key) === lower);
-    return match?.[1];
-  };
-
-  const readValue = (field: any) => {
-    const key = String(field.key || '').toLowerCase();
-    const label = String(field.label || '').toLowerCase();
-
-    if (field.type === 'rating' || field.semanticType === 'ratingPair' || ['评分', 'rating'].includes(key) || ['评分', 'rating'].includes(label)) {
-      return buildRatingOption(field, item);
-    }
-
-    const semanticValue = readSnapshotSemanticValue(field, item, snapshot);
-    if (semanticValue !== undefined && semanticValue !== null && semanticValue !== '') return semanticValue;
-
-    const aliases = [field.key, field.label, String(field.key || '').toLowerCase(), String(field.label || '').toLowerCase()];
-    for (const alias of aliases) {
-      const value = readExtraByAlias(alias);
-      if (value !== undefined) return value;
-    }
-
-    if (isCategoryLikeField(field)) {
-      return snapshot.semantic.categoryKey || item.categoryKey || undefined;
-    }
-
-    if (isPathLikeField(field)) {
-      // 主题/path-like 字段只回填显式主题路径。
-      // categoryKey 属于分类语义，不能再作为主题或通用 path 字段 fallback。
-      return snapshot.semantic.themePath || item.theme || undefined;
-    }
-
-    return (item as any)[field.key] ?? (item as any)[field.label];
-  };
-
-  for (const field of template.fields) {
-    const raw = readValue(field);
-    const mapped = mapFieldValue(field, raw);
-    if (mapped !== undefined) result[field.key] = mapped;
-  }
-  return result;
+  // P3 编辑回填重构 MVP：
+  // 初始表单值统一交给 EditBackfillMapper。
+  // 该 mapper 按 semantic -> registered field -> explicit extra 的顺序读取，
+  // 并复用 FieldValueCodec / TemplateFieldAdapter 归一化 path、tag、image、multi 值。
+  return buildInitialEditFormData({ template, item, snapshot });
 }
 
 export function buildEditRecordState(input: BuildEditStateInput): PreparedEditRecord {

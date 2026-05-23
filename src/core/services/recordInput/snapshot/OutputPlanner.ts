@@ -2,6 +2,7 @@ import type { BlockTemplate, ThemeDefinition } from '@/core/types/schema';
 import type { RecordOutputPlan, RecordPersistencePlan } from '@/core/types/recordSnapshot';
 import { splitThemePath } from '@/core/types/recordSnapshot';
 import { renderTemplate } from '@/core/utils/templateUtils';
+import { normalizeTemplateRenderData } from '@/core/fields/TemplateFieldAdapter';
 
 function normalizePath(value: string | null | undefined): string | null {
   const trimmed = String(value || '').trim();
@@ -14,30 +15,28 @@ function buildRenderData(
   theme?: ThemeDefinition | null,
   templateMeta?: { templateId?: string | null; templateSourceType?: 'block' | 'override' | null },
 ): Record<string, unknown> {
-  const normalizedData: Record<string, unknown> = { ...formData };
-  const themeParts = splitThemePath(theme?.path ?? null);
-
-  for (const field of template.fields || []) {
-    const raw = normalizedData[field.key] as any;
-    if (!raw || typeof raw !== 'object') continue;
-
-    const hasLabel = Object.prototype.hasOwnProperty.call(raw, 'label');
-    const hasValue = Object.prototype.hasOwnProperty.call(raw, 'value');
-    if (!hasLabel && !hasValue) continue;
-
-    if (field.semanticType === 'ratingPair') {
-      normalizedData[field.key] = { label: raw.label, value: raw.value };
-      const auxKey = field.auxKey || '评图';
-      if (raw.value !== undefined) normalizedData[auxKey] = raw.value;
-    } else if (field.semanticType === 'path' || ['select', 'radio'].includes(field.type)) {
-      normalizedData[field.key] = { label: raw.label, value: raw.value };
-    }
-  }
+  const normalizedData = normalizeTemplateRenderData(template, formData);
+  const normalizedTheme = normalizedData.theme && typeof normalizedData.theme === 'object' ? normalizedData.theme as Record<string, unknown> : null;
+  const explicitThemePath = String(normalizedData.themePath ?? normalizedTheme?.path ?? '').trim();
+  const themeParts = splitThemePath(explicitThemePath || theme?.path || null);
+  const categoryPath = String(normalizedData.categoryKey ?? normalizedData.categoryPath ?? template.categoryKey ?? '').trim();
+  const categoryParts = categoryPath.split('/').map((part) => part.trim()).filter(Boolean);
 
   return {
     ...normalizedData,
-    block: { name: template.name, id: template.id, categoryKey: template.categoryKey },
-    theme: theme ? { path: themeParts.themePath, root: themeParts.rootTheme, leaf: themeParts.leafTheme, icon: theme.icon || '' } : { path: null, root: null, leaf: null },
+    block: { name: template.name, id: template.id, categoryKey: categoryPath || template.categoryKey },
+    categoryKey: categoryPath,
+    categoryPath,
+    baseCategory: categoryParts[0] || '',
+    rootCategory: categoryParts[0] || '',
+    leafCategory: categoryParts.length ? categoryParts[categoryParts.length - 1] : '',
+    theme: {
+      ...(normalizedTheme || {}),
+      path: themeParts.themePath,
+      root: themeParts.rootTheme,
+      leaf: themeParts.leafTheme,
+      icon: theme?.icon || String(normalizedTheme?.icon ?? ''),
+    },
     themePath: themeParts.themePath,
     rootTheme: themeParts.rootTheme,
     leafTheme: themeParts.leafTheme,

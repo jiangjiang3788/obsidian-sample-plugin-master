@@ -51,6 +51,79 @@ export type {
 //
 export * from './utils';
 export { buildRecordSubmitFeedbackPresentation } from './utils/recordSubmitFeedback';
+export {
+    FIELD_CATEGORY_LABELS,
+    FIELD_REGISTRY,
+    getAvailableFields,
+    getAvailableFieldsByCategory,
+    getCanonicalFieldKey,
+    getBuiltInFieldGuideGroups,
+    getCoreInputFieldPresets,
+    getCoreInputFieldTarget,
+    getCustomFieldNameWarning,
+    getFieldCategory,
+    getFieldCategoryLabel,
+    getFieldDefinition,
+    getFieldLabel,
+    getFieldPickerOptions,
+    getReservedCustomFieldNames,
+    isCoreInputFieldName,
+    isReservedCustomFieldName,
+    makeSafeCustomFieldName,
+    getFieldOptionLabel,
+    getTemplateFieldInputType,
+    getTemplateFieldSemantic,
+    isImageFieldDefinition,
+    isTemplateImageField,
+    isTemplateMultiValueField,
+    isTemplatePathField,
+    isTemplateTagField,
+    normalizeFieldKey,
+    normalizeImageValue,
+    normalizeTemplateFieldValue,
+    normalizeTemplateRenderData,
+    createCustomTemplateField,
+    getUserTemplateFieldTypeOptions,
+    isMultiValueTemplateFieldType,
+    normalizeTemplateFieldType,
+    sanitizeTemplateField,
+    sanitizeTemplateFields,
+    templateFieldTypeSupportsDefaultValue,
+    templateFieldTypeUsesOptions,
+    parseTagList,
+    scanFieldMigrations,
+    previewFieldMigrations,
+    hasFieldMigrationIssues,
+    filterActionableFieldMigrationIssues,
+    runFieldSystemHealthChecks,
+    assertFieldSystemHealthy,
+    readFieldValue,
+    resolveFieldValue,
+    splitHierarchyPath,
+} from './fields';
+export type {
+    BuiltInFieldGuideGroup,
+    BuiltInFieldGuideItem,
+    CoreInputFieldPreset,
+    FieldCategory,
+    FieldDefinition,
+    FieldInputType,
+    FieldPickerOption,
+    FieldSemantic,
+    FieldValueResolution,
+    FieldValueSource,
+    FieldMigrationAction,
+    FieldMigrationIssue,
+    FieldMigrationIssueKind,
+    FieldMigrationPreview,
+    FieldMigrationScanInput,
+    FieldMigrationScanOptions,
+    FieldMigrationSeverity,
+    FieldSystemCheckResult,
+    FieldSystemCheckStatus,
+    FieldSystemHealthReport,
+    ImageFieldValue,
+} from './fields';
 
 //
 // -------------------- AI Module（模块级 public） --------------------
@@ -99,6 +172,15 @@ export type {
 export { parsePath, getRelativePath } from './theme-matrix/themePathParser';
 
 //
+
+// -------------------- Records（记录标准化/Codec） --------------------
+export { normalizeRecordItem, normalizeRecordItems } from './records';
+export type {
+    RecordEntity,
+    RecordFileContext,
+    RecordLocationContext,
+    RecordNormalizeContext,
+} from './records';
 
 // -------------------- Progression（目标/成长反馈纯计算） --------------------
 export { computeProgression } from './progression/computeProgression';

@@ -10,6 +10,7 @@ import {
   resolveTaskLineIndexForMutation,
 } from '@core/services/recordInput/mutationLocator';
 import { createRecordConflictError } from '@core/services/recordInput/mutationErrors';
+import { normalizeTemplateRenderData } from '@/core/fields/TemplateFieldAdapter';
 
 export interface RecordWriteOptions {
   signal?: AbortSignal;
@@ -250,29 +251,33 @@ export class InputService {
     theme?: ThemeDefinition,
     templateMeta?: { templateId?: string | null; templateSourceType?: 'block' | 'override' | null },
   ) {
-    const normalizedData: Record<string, any> = { ...formData };
+    const normalizedData = normalizeTemplateRenderData(template, formData);
+    const normalizedTheme = normalizedData.theme && typeof normalizedData.theme === 'object' ? normalizedData.theme as Record<string, unknown> : null;
+    const explicitThemePath = String(normalizedData.themePath ?? normalizedTheme?.path ?? '').trim();
+    const themePath = explicitThemePath || theme?.path || '';
+    const themeParts = themePath.split('/').map((part) => part.trim()).filter(Boolean);
 
-    for (const field of template.fields || []) {
-      const raw = normalizedData[field.key];
-      if (!raw || typeof raw !== 'object') continue;
-
-      const hasLabel = Object.prototype.hasOwnProperty.call(raw, 'label');
-      const hasValue = Object.prototype.hasOwnProperty.call(raw, 'value');
-      if (!hasLabel && !hasValue) continue;
-
-      if (field.semanticType === 'ratingPair') {
-        normalizedData[field.key] = { label: raw.label, value: raw.value };
-        const auxKey = field.auxKey || '评图';
-        if (raw.value !== undefined) normalizedData[auxKey] = raw.value;
-      } else if (field.semanticType === 'path' || ['select', 'radio'].includes(field.type)) {
-        normalizedData[field.key] = { label: raw.label, value: raw.value };
-      }
-    }
+    const categoryPath = String(normalizedData.categoryKey ?? normalizedData.categoryPath ?? template.categoryKey ?? '').trim();
+    const categoryParts = categoryPath.split('/').map((part) => part.trim()).filter(Boolean);
 
     return {
       ...normalizedData,
-      block: { name: template.name, id: template.id, categoryKey: template.categoryKey },
-      theme: theme ? { path: theme.path, icon: theme.icon || '' } : {},
+      block: { name: template.name, id: template.id, categoryKey: categoryPath || template.categoryKey },
+      categoryKey: categoryPath,
+      categoryPath,
+      baseCategory: categoryParts[0] || '',
+      rootCategory: categoryParts[0] || '',
+      leafCategory: categoryParts.length ? categoryParts[categoryParts.length - 1] : '',
+      theme: {
+        ...(normalizedTheme || {}),
+        path: themePath,
+        root: themeParts[0] || '',
+        leaf: themeParts.length ? themeParts[themeParts.length - 1] : '',
+        icon: theme?.icon || String(normalizedTheme?.icon ?? ''),
+      },
+      themePath,
+      rootTheme: themeParts[0] || '',
+      leafTheme: themeParts.length ? themeParts[themeParts.length - 1] : '',
       templateId: templateMeta?.templateId || template.id,
       templateSourceType: templateMeta?.templateSourceType || 'block',
     };

@@ -27,13 +27,33 @@ export function TemplateVariableCopier({ block }: Props) {
 
         (block?.fields || []).forEach(field => {
             const fieldKey = field.key || 'untitled';
-
-            // 基础变量，所有字段都提供
+            const fieldType = field.type || 'text';
+            // 基础变量，所有字段都提供。
             options.push({ value: `{{${fieldKey}}}`, label: `${fieldKey}` });
-            
-            // [修改] 仅为复杂字段提供 .value 选项
-            if (field.type === 'select' || field.type === 'radio') {
+
+            // 选项、路径、标签、评分字段常返回 { value, label }，给模板作者明确入口。
+            if ([
+                'select',
+                'radio',
+                'singleSelect',
+                'multiSelect',
+                'path',
+                'multiPath',
+                'tag',
+                'multiTag',
+                'rating',
+            ].includes(fieldType)) {
                 options.push({ value: `{{${fieldKey}.value}}`, label: `${fieldKey}.value` });
+                options.push({ value: `{{${fieldKey}.label}}`, label: `${fieldKey}.label` });
+            }
+
+            if (fieldType === 'image' || fieldType === 'multiImage') {
+                options.push({ value: `{{${fieldKey}.src}}`, label: `${fieldKey}.src` });
+            }
+
+            const markdownKey = field.key;
+            if (markdownKey) {
+                options.push({ value: `${markdownKey}:: {{${fieldKey}}}`, label: `${markdownKey}:: {{${fieldKey}}}` });
             }
         });
 
