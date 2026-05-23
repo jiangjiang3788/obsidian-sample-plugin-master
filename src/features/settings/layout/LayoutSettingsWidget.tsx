@@ -1,4 +1,4 @@
-// src/features/settings/LayoutSettingsWidget.tsx
+// src/features/settings/layout/LayoutSettingsWidget.tsx
 /** @jsxImportSource preact */
 /**
  * LayoutSettingsWidget

@@ -7,13 +7,12 @@ import {
     Box,
     Button,
     Chip,
-    IconButton,
     TextField,
     Tooltip,
     Typography,
 } from '@mui/material';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
-import { SimpleSelect } from '@shared/public';
+import { IconAction, SimpleSelect } from '@shared/public';
 import { DataStore } from '@core/public';
 import { getAllFields, readField, getFieldLabel, FilterRule, SortRule } from '@core/public';
 import { FieldPickerAutocomplete } from './FieldPickerAutocomplete';
@@ -360,11 +359,12 @@ export function RuleBuilder({ title, mode, rows, fieldOptions, onChange, dataSto
                                 </Typography>
                             )}
 
-                            <Tooltip title="删除规则">
-                                <IconButton size="small" onClick={() => remove(index)}>
-                                    <DeleteOutlineIcon fontSize="small" />
-                                </IconButton>
-                            </Tooltip>
+                            <IconAction
+                                label="删除规则"
+                                icon={<DeleteOutlineIcon fontSize="small" />}
+                                onClick={() => remove(index)}
+                                size="small"
+                            />
                         </Box>
                     </Box>
                 );

@@ -1,4 +1,4 @@
-// src/features/settings/fieldsEditor/OptionRow.tsx
+// src/features/settings/input/fieldsEditor/OptionRow.tsx
 /** @jsxImportSource preact */
 import { useEffect, useRef, useState } from "preact/hooks";
 import { Box, Stack } from "@mui/material";

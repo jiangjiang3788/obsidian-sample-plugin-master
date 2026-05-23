@@ -1,4 +1,4 @@
-// src/features/settings/ui/components/FieldsEditor.tsx
+// src/features/settings/input/FieldsEditor.tsx
 /** @jsxImportSource preact */
 import { useEffect, useRef, useState } from "preact/hooks";
 import { Box, Button, Divider, Stack, Typography } from "@mui/material";

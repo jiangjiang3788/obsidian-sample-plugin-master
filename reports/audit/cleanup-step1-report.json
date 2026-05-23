@@ -1,0 +1,182 @@
+{
+  "src_pairs_removed": {
+    "src/features/settings/AiSettings.tsx": "src/features/settings/tabs/AiSettings.tsx",
+    "src/features/settings/BlockManager.tsx": "src/features/settings/input/BlockManager.tsx",
+    "src/features/settings/BlockViewEditor.tsx": "src/features/settings/viewEditors/BlockViewEditor.tsx",
+    "src/features/settings/ContextualToolbar.tsx": "src/features/settings/theme/ContextualToolbar.tsx",
+    "src/features/settings/EventTimelineViewEditor.tsx": "src/features/settings/viewEditors/EventTimelineViewEditor.tsx",
+    "src/features/settings/ExcelViewEditor.tsx": "src/features/settings/viewEditors/ExcelViewEditor.tsx",
+    "src/features/settings/GeneralSettings.tsx": "src/features/settings/tabs/GeneralSettings.tsx",
+    "src/features/settings/HeatmapViewEditor.tsx": "src/features/settings/viewEditors/HeatmapViewEditor.tsx",
+    "src/features/settings/importTypes.ts": "src/features/settings/theme/importTypes.ts",
+    "src/features/settings/InlineEditor.tsx": "src/features/settings/theme/InlineEditor.tsx",
+    "src/features/settings/ProgressViewEditor.tsx": "src/features/settings/viewEditors/ProgressViewEditor.tsx",
+    "src/features/settings/registry.tsx": "src/features/settings/viewEditors/registry.tsx",
+    "src/features/settings/StatisticsViewEditor.tsx": "src/features/settings/viewEditors/StatisticsViewEditor.tsx",
+    "src/features/settings/TaskExecutionViewEditor.tsx": "src/features/settings/viewEditors/TaskExecutionViewEditor.tsx",
+    "src/features/settings/TemplateEditorModal.tsx": "src/features/settings/input/TemplateEditorModal.tsx",
+    "src/features/settings/TemplateVariableCopier.tsx": "src/features/settings/input/TemplateVariableCopier.tsx",
+    "src/features/settings/ThemeImportButton.tsx": "src/features/settings/theme/ThemeImportButton.tsx",
+    "src/features/settings/ThemeManager.ts": "src/features/settings/theme/ThemeManager.ts",
+    "src/features/settings/ThemeMatrix.tsx": "src/features/settings/theme/ThemeMatrix.tsx",
+    "src/features/settings/ThemeScanDialog.tsx": "src/features/settings/theme/ThemeScanDialog.tsx",
+    "src/features/settings/ThemeTable.tsx": "src/features/settings/theme/ThemeTable.tsx",
+    "src/features/settings/ThemeToolbar.tsx": "src/features/settings/theme/ThemeToolbar.tsx",
+    "src/features/settings/ThemeTreeNodeRow.tsx": "src/features/settings/theme/ThemeTreeNodeRow.tsx",
+    "src/features/settings/TimelineViewEditor.tsx": "src/features/settings/viewEditors/TimelineViewEditor.tsx",
+    "src/features/settings/useBatchOperations.ts": "src/features/settings/theme/useBatchOperations.ts",
+    "src/features/settings/useThemeMatrixEditor.ts": "src/features/settings/theme/useThemeMatrixEditor.ts"
+  },
+  "script_pairs_removed": {
+    "scripts/audit-shared-ui-imports.mjs": "scripts/audit/audit-shared-ui-imports.mjs",
+    "scripts/core-obsidian-gate.allowlist.json": "scripts/gates/core-obsidian-gate.allowlist.json",
+    "scripts/feature-gate.allowlist.json": "scripts/gates/feature-gate.allowlist.json",
+    "scripts/di-resolve-gate.mjs": "scripts/gates/di-resolve-gate.mjs",
+    "scripts/events-boundary-gate.mjs": "scripts/gates/events-boundary-gate.mjs",
+    "scripts/fix-sourcemap.mjs": "scripts/build/fix-sourcemap.mjs",
+    "scripts/gate-formatter.mjs": "scripts/lib/gate-formatter.mjs",
+    "scripts/iconaction-gate.mjs": "scripts/gates/iconaction-gate.mjs",
+    "scripts/modal-promise-gate.mjs": "scripts/gates/modal-promise-gate.mjs",
+    "scripts/obsidian-leak-gate.allowlist.json": "scripts/gates/obsidian-leak-gate.allowlist.json",
+    "scripts/refactor-metrics.mjs": "scripts/audit/refactor-metrics.mjs",
+    "scripts/selector-giant-subscription-gate.mjs": "scripts/gates/selector-giant-subscription-gate.mjs",
+    "scripts/selectors-coverage-report.mjs": "scripts/audit/selectors-coverage-report.mjs",
+    "scripts/theme-matrix-legacy-import-gate.mjs": "scripts/gates/theme-matrix-legacy-import-gate.mjs",
+    "scripts/theme-tree-recursion-gate.mjs": "scripts/gates/theme-tree-recursion-gate.mjs"
+  },
+  "files_rewritten": [
+    "scripts/arch-gate.mjs",
+    "scripts/capability-gate.mjs",
+    "scripts/core-obsidian-gate.mjs",
+    "scripts/core-public-gate.mjs",
+    "scripts/di-gate.mjs",
+    "scripts/dual-system-gate.mjs",
+    "scripts/feature-gate.mjs",
+    "scripts/obsidian-leak-gate.mjs",
+    "scripts/public-api-gate.mjs",
+    "scripts/settings-persistence-gate.mjs",
+    "scripts/shared-public-gate.mjs",
+    "src/features/settings/BlockManager.tsx",
+    "src/features/settings/ContextualToolbar.tsx",
+    "src/features/settings/HeatmapViewEditor.tsx",
+    "src/features/settings/InputSettings.tsx",
+    "src/features/settings/ProgressViewEditor.tsx",
+    "src/features/settings/registry.tsx",
+    "src/features/settings/StatisticsViewEditor.tsx",
+    "src/features/settings/TableViewEditor.tsx",
+    "src/features/settings/TaskExecutionViewEditor.tsx",
+    "src/features/settings/TemplateEditorModal.tsx",
+    "src/features/settings/ThemeImportButton.tsx",
+    "src/features/settings/ThemeMatrixView.tsx",
+    "src/features/settings/ThemeScanDialog.tsx",
+    "src/features/settings/ThemeTable.tsx",
+    "src/features/settings/ThemeTreeNodeRow.tsx",
+    "src/features/settings/TimelineViewEditor.tsx"
+  ],
+  "removed": [
+    "scripts/audit-shared-ui-imports.mjs",
+    "scripts/core-obsidian-gate.allowlist.json",
+    "scripts/di-resolve-gate.mjs",
+    "scripts/events-boundary-gate.mjs",
+    "scripts/feature-gate.allowlist.json",
+    "scripts/fix-sourcemap.mjs",
+    "scripts/gate-formatter.mjs",
+    "scripts/iconaction-gate.mjs",
+    "scripts/modal-promise-gate.mjs",
+    "scripts/obsidian-leak-gate.allowlist.json",
+    "scripts/refactor-metrics.mjs",
+    "scripts/selector-giant-subscription-gate.mjs",
+    "scripts/selectors-coverage-report.mjs",
+    "scripts/theme-matrix-legacy-import-gate.mjs",
+    "scripts/theme-tree-recursion-gate.mjs",
+    "src/features/settings/AiSettings.tsx",
+    "src/features/settings/BlockManager.tsx",
+    "src/features/settings/BlockViewEditor.tsx",
+    "src/features/settings/ContextualToolbar.tsx",
+    "src/features/settings/EventTimelineViewEditor.tsx",
+    "src/features/settings/ExcelViewEditor.tsx",
+    "src/features/settings/GeneralSettings.tsx",
+    "src/features/settings/HeatmapViewEditor.tsx",
+    "src/features/settings/InlineEditor.tsx",
+    "src/features/settings/ProgressViewEditor.tsx",
+    "src/features/settings/StatisticsViewEditor.tsx",
+    "src/features/settings/TaskExecutionViewEditor.tsx",
+    "src/features/settings/TemplateEditorModal.tsx",
+    "src/features/settings/TemplateVariableCopier.tsx",
+    "src/features/settings/ThemeImportButton.tsx",
+    "src/features/settings/ThemeManager.ts",
+    "src/features/settings/ThemeMatrix.tsx",
+    "src/features/settings/ThemeScanDialog.tsx",
+    "src/features/settings/ThemeTable.tsx",
+    "src/features/settings/ThemeToolbar.tsx",
+    "src/features/settings/ThemeTreeNodeRow.tsx",
+    "src/features/settings/TimelineViewEditor.tsx",
+    "src/features/settings/importTypes.ts",
+    "src/features/settings/registry.tsx",
+    "src/features/settings/useBatchOperations.ts",
+    "src/features/settings/useThemeMatrixEditor.ts"
+  ],
+  "legacy_top_level_scripts_removed": [
+    {
+      "removed": "scripts/arch-audit.mjs",
+      "kept": "scripts/audit/arch-audit.mjs"
+    },
+    {
+      "removed": "scripts/arch-gate.mjs",
+      "kept": "scripts/gates/arch-gate.mjs"
+    },
+    {
+      "removed": "scripts/capability-gate.mjs",
+      "kept": "scripts/gates/capability-gate.mjs"
+    },
+    {
+      "removed": "scripts/check-boundaries.ts",
+      "kept": "scripts/audit/check-boundaries.ts"
+    },
+    {
+      "removed": "scripts/core-obsidian-gate.mjs",
+      "kept": "scripts/gates/core-obsidian-gate.mjs"
+    },
+    {
+      "removed": "scripts/core-public-gate.mjs",
+      "kept": "scripts/gates/core-public-gate.mjs"
+    },
+    {
+      "removed": "scripts/di-gate.mjs",
+      "kept": "scripts/gates/di-gate.mjs"
+    },
+    {
+      "removed": "scripts/dual-system-gate.mjs",
+      "kept": "scripts/gates/dual-system-gate.mjs"
+    },
+    {
+      "removed": "scripts/feature-gate.mjs",
+      "kept": "scripts/gates/feature-gate.mjs"
+    },
+    {
+      "removed": "scripts/generate-doc-index.mjs",
+      "kept": "scripts/docs/generate-doc-index.mjs"
+    },
+    {
+      "removed": "scripts/obsidian-leak-gate.mjs",
+      "kept": "scripts/gates/obsidian-leak-gate.mjs"
+    },
+    {
+      "removed": "scripts/public-api-gate.mjs",
+      "kept": "scripts/gates/public-api-gate.mjs"
+    },
+    {
+      "removed": "scripts/settings-persistence-gate.mjs",
+      "kept": "scripts/gates/settings-persistence-gate.mjs"
+    },
+    {
+      "removed": "scripts/shared-public-gate.mjs",
+      "kept": "scripts/gates/shared-public-gate.mjs"
+    }
+  ],
+  "security_cleanup": {
+    "removed_data_json": true,
+    "kept_data_example_json": true,
+    "reason": "data.json contained API-key-like secret and should not be shipped"
+  }
+}

@@ -64177,7 +64177,15 @@ function RuleBuilder({ title, mode, rows, fieldOptions, onChange, dataStore, var
               sx: { minWidth: 80 }
             }
           ) : /* @__PURE__ */ u2(Typography$1, { variant: "body2", color: "text.secondary", sx: { textAlign: "center" }, children: isFilterMode ? "末尾" : "" }),
-          /* @__PURE__ */ u2(Tooltip$1, { title: "删除规则", children: /* @__PURE__ */ u2(IconButton$1, { size: "small", onClick: () => remove2(index), children: /* @__PURE__ */ u2(DeleteOutlineIcon, { fontSize: "small" }) }) })
+          /* @__PURE__ */ u2(
+            IconAction,
+            {
+              label: "删除规则",
+              icon: /* @__PURE__ */ u2(DeleteOutlineIcon, { fontSize: "small" }),
+              onClick: () => remove2(index),
+              size: "small"
+            }
+          )
         ]
       }
     ) }, index);

@@ -1,4 +1,4 @@
-// src/features/settings/fieldsEditor/nativeControls.tsx
+// src/features/settings/input/fieldsEditor/nativeControls.tsx
 /** @jsxImportSource preact */
 import type { JSX } from "preact";
 import { logInputEvent } from "@shared/public";
