@@ -1,11 +1,21 @@
 // src/app/usecases/viewinstance.usecase.ts
 import type { ViewInstance, ViewName } from '@core/public';
 import type { AppStoreApi } from './index';
-import {generateId, devError} from '@core/public';
+import {
+    addDisplayField,
+    devError,
+    generateId,
+    moveDisplayField,
+    normalizeDisplayFields,
+    removeDisplayField,
+} from '@core/public';
 
 /**
- * ViewInstanceUseCase - 视图实例 CRUD
- * 负责在 settings 中创建/更新/删除 viewInstances
+ * ViewInstanceUseCase - 视图实例 CRUD + 视图配置字段操作
+ * 负责在 settings 中创建/更新/删除 viewInstances。
+ *
+ * 字段显示顺序的唯一真源是 ViewInstance.fields。
+ * 设置弹窗和 Excel 视图内字段栏都应该走这里，不要为 Excel 单独维护一份字段顺序。
  */
 export class ViewInstanceUseCase {
     private store: AppStoreApi;
@@ -62,6 +72,106 @@ export class ViewInstanceUseCase {
             });
         } catch (error) {
             devError('[ViewInstanceUseCase] updateView 失败:', error);
+            throw error;
+        }
+    }
+
+    async setDisplayFields(id: string, fields: string[], availableFields?: string[]): Promise<void> {
+        await this.updateDisplayFields(id, currentFields => normalizeDisplayFields(fields, {
+            availableFields,
+            includeUnknown: true,
+            fallbackFields: currentFields,
+        }));
+    }
+
+    async addDisplayField(id: string, field: string, availableFields?: string[]): Promise<void> {
+        await this.updateDisplayFields(id, currentFields => addDisplayField(currentFields, field, {
+            availableFields,
+            includeUnknown: true,
+        }));
+    }
+
+    async removeDisplayField(id: string, field: string, availableFields?: string[]): Promise<void> {
+        await this.updateDisplayFields(id, currentFields => removeDisplayField(currentFields, field, {
+            availableFields,
+            includeUnknown: true,
+        }));
+    }
+
+    async moveDisplayField(id: string, fromIndex: number, toIndex: number, availableFields?: string[]): Promise<void> {
+        await this.updateDisplayFields(id, currentFields => moveDisplayField(currentFields, fromIndex, toIndex, {
+            availableFields,
+            includeUnknown: true,
+        }));
+    }
+
+    async updateViewConfig(id: string, patch: Record<string, any>): Promise<void> {
+        try {
+            const state = this.store.getState();
+            if (!state.isInitialized) {
+                devError('[ViewInstanceUseCase] Store 未初始化');
+                return;
+            }
+
+            await state.updateSettings(draft => {
+                if (!draft.viewInstances) return;
+                const vi = draft.viewInstances.find(v => v.id === id);
+                if (!vi) return;
+                vi.viewConfig = {
+                    ...(vi.viewConfig || {}),
+                    ...patch,
+                };
+            });
+        } catch (error) {
+            devError('[ViewInstanceUseCase] updateViewConfig 失败:', error);
+            throw error;
+        }
+    }
+
+    async updateExcelViewConfig(id: string, excelPatch: Record<string, any>): Promise<void> {
+        try {
+            const state = this.store.getState();
+            if (!state.isInitialized) {
+                devError('[ViewInstanceUseCase] Store 未初始化');
+                return;
+            }
+
+            await state.updateSettings(draft => {
+                if (!draft.viewInstances) return;
+                const vi = draft.viewInstances.find(v => v.id === id);
+                if (!vi) return;
+                const currentConfig = vi.viewConfig || {};
+                const currentExcelConfig = currentConfig.excel || {};
+                vi.viewConfig = {
+                    ...currentConfig,
+                    excel: {
+                        ...currentExcelConfig,
+                        ...excelPatch,
+                    },
+                };
+            });
+        } catch (error) {
+            devError('[ViewInstanceUseCase] updateExcelViewConfig 失败:', error);
+            throw error;
+        }
+    }
+
+    private async updateDisplayFields(id: string, updater: (currentFields: string[]) => string[]): Promise<void> {
+        try {
+            const state = this.store.getState();
+            if (!state.isInitialized) {
+                devError('[ViewInstanceUseCase] Store 未初始化');
+                return;
+            }
+
+            await state.updateSettings(draft => {
+                if (!draft.viewInstances) return;
+                const vi = draft.viewInstances.find(v => v.id === id);
+                if (!vi) return;
+                vi.fields = updater(vi.fields || []);
+            });
+        } catch (error) {
+            devError('[ViewInstanceUseCase] updateDisplayFields 失败:', error);
             throw error;
         }
     }

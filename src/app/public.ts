@@ -76,6 +76,7 @@ export {
   openEditFromItem,
   completeFromView,
   updateTimeFromView,
+  commitExcelCellFromView,
 } from './actions/recordUiActions';
 export type {
   StatisticsCellIdentifier,
@@ -87,6 +88,8 @@ export type {
   EditFromItemParams,
   CompleteFromViewParams,
   UpdateTimeFromViewParams,
+  CommitExcelCellFromViewParams,
+  CommitExcelCellFromViewResult,
 } from './actions/recordUiActions';
 
 // ============== Runtime UI (moved from shared/ui to app/ui) ==============

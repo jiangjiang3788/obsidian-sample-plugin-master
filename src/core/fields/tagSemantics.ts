@@ -1,5 +1,5 @@
 // src/core/fields/tagSemantics.ts
-import { normalizeHierarchyPath, splitHierarchyPath } from './pathSemantics';
+import { splitHierarchyPath } from './pathSemantics';
 
 export interface TagPathParts {
   tag: string;
@@ -8,9 +8,18 @@ export interface TagPathParts {
   parts: string[];
 }
 
+function normalizeTagPath(value: unknown): string | undefined {
+  const raw = String(value ?? '').trim();
+  if (!raw) return undefined;
+  const parts = raw
+    .split('/')
+    .map(part => part.trim())
+    .filter(Boolean);
+  return parts.length ? parts.join('/') : undefined;
+}
+
 export function normalizeTag(value: unknown): string | undefined {
-  const normalized = normalizeHierarchyPath(String(value ?? '').replace(/^#/, ''));
-  return normalized || undefined;
+  return normalizeTagPath(value);
 }
 
 export function parseTagList(value: unknown): string[] {
@@ -24,6 +33,6 @@ export function parseTagList(value: unknown): string[] {
 export function splitTagPath(value: unknown): TagPathParts | undefined {
   const tag = normalizeTag(value);
   if (!tag) return undefined;
-  const parts = splitHierarchyPath(tag);
+  const parts = splitHierarchyPath(tag.startsWith('#') ? tag.slice(1) : tag);
   return { tag, parts: parts.parts, root: parts.root, leaf: parts.leaf };
 }

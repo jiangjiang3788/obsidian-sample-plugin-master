@@ -1451,9 +1451,14 @@ function splitHierarchyPath(value) {
     leaf: parts.length ? parts[parts.length - 1] : void 0
   };
 }
+function normalizeTagPath(value) {
+  const raw = String(value ?? "").trim();
+  if (!raw) return void 0;
+  const parts = raw.split("/").map((part) => part.trim()).filter(Boolean);
+  return parts.length ? parts.join("/") : void 0;
+}
 function normalizeTag(value) {
-  const normalized = normalizeHierarchyPath(String(value ?? "").replace(/^#/, ""));
-  return normalized || void 0;
+  return normalizeTagPath(value);
 }
 function parseTagList(value) {
   const rawValues = Array.isArray(value) ? value : String(value ?? "").split(/[,，]/);
@@ -4890,7 +4895,7 @@ function unique$2(values2) {
 }
 function decodeTaskMetadata(lineText) {
   const source = String(lineText || "");
-  const tags2 = (source.match(TAG_RE) || []).map((tag) => tag.replace(/^#/, ""));
+  const tags2 = (source.match(TAG_RE) || []).map((tag) => tag.trim()).filter(Boolean);
   const extra = {};
   const result = { tags: tags2, extra };
   KV_IN_PAREN.lastIndex = 0;
@@ -6090,6 +6095,224 @@ function applyViewQueryPipeline(input) {
     );
   }
   return sortItems(result, sort);
+}
+const FIELD_ALIASES = {
+  status: "categoryKey",
+  category: "categoryKey",
+  categoryPath: "categoryKey"
+};
+const NEVER_INLINE_EDITABLE = /* @__PURE__ */ new Set([
+  "id",
+  "type",
+  "created",
+  "modified",
+  "rawSource",
+  "createdDate",
+  "scheduledDate",
+  "doneDate",
+  "cancelledDate",
+  "startISO",
+  "endISO",
+  "periodCount",
+  "file.path",
+  "file.basename",
+  "file.name",
+  "file.folder",
+  "folder",
+  "header",
+  "filename",
+  "fileName"
+]);
+const DERIVED_FIELDS = /* @__PURE__ */ new Set([
+  "themePath",
+  "rootTheme",
+  "leafTheme",
+  "baseCategory",
+  "leafCategory",
+  "startISO",
+  "endISO",
+  "periodCount"
+]);
+const MEDIUM_RISK_FIELDS = /* @__PURE__ */ new Set([
+  "date",
+  "startTime",
+  "endTime",
+  "duration",
+  "categoryKey",
+  "theme",
+  "tags"
+]);
+const HIGH_RISK_FIELDS = /* @__PURE__ */ new Set([
+  "file.path",
+  "file.basename",
+  "file.name",
+  "file.folder",
+  "folder",
+  "header"
+]);
+function normalizeEditableFieldKey(field) {
+  const raw = String(field || "").trim();
+  return FIELD_ALIASES[raw] || normalizeFieldKey(raw);
+}
+function getFieldEditorKind(definition, sampleValue) {
+  const inputType = definition?.inputType;
+  if (inputType === "textarea") return "textarea";
+  if (inputType === "number") return "number";
+  if (inputType === "boolean") return "boolean";
+  if (inputType === "date") return "date";
+  if (inputType === "time") return "time";
+  if (inputType === "datetime") return "datetime";
+  if (inputType === "select" || inputType === "radio" || inputType === "singleSelect" || inputType === "multiSelect") return "select";
+  if (inputType === "path" || inputType === "multiPath") return "path";
+  if (inputType === "tag" || inputType === "multiTag") return "tags";
+  if (inputType === "image" || inputType === "multiImage") return "image";
+  if (inputType === "rating") return "rating";
+  switch (definition?.type) {
+    case "number":
+      return "number";
+    case "boolean":
+      return "boolean";
+    case "date":
+      return "date";
+    case "time":
+      return "time";
+    case "datetime":
+      return "datetime";
+    case "tags":
+      return "tags";
+    case "path":
+      return "path";
+    case "image":
+      return "image";
+    case "file":
+      return "readonly";
+    default:
+      if (Array.isArray(sampleValue)) return "tags";
+      if (typeof sampleValue === "number") return "number";
+      if (typeof sampleValue === "boolean") return "boolean";
+      return "text";
+  }
+}
+function inferExtraDefinition(field, sampleValue) {
+  if (!field.startsWith("extra.")) return void 0;
+  const label = field.slice("extra.".length) || field;
+  const isNumber = typeof sampleValue === "number";
+  const isBoolean = typeof sampleValue === "boolean";
+  const isMulti = Array.isArray(sampleValue);
+  return {
+    key: field,
+    label,
+    type: isNumber ? "number" : isBoolean ? "boolean" : isMulti ? "tags" : "string",
+    inputType: isNumber ? "number" : isBoolean ? "boolean" : isMulti ? "multiTag" : "text",
+    category: "custom",
+    source: "extra",
+    cardinality: isMulti ? "multi" : "single",
+    description: "从 Markdown 中显式未知 KV 解析出的自定义字段"
+  };
+}
+function getDangerLevel(canonicalField) {
+  if (HIGH_RISK_FIELDS.has(canonicalField)) return "high";
+  if (MEDIUM_RISK_FIELDS.has(canonicalField)) return "medium";
+  return "safe";
+}
+function readonlyPolicy(field, canonicalField, definition, reason) {
+  return {
+    field,
+    canonicalField,
+    editable: false,
+    editorKind: "readonly",
+    commitMode: "readonly",
+    dangerLevel: getDangerLevel(canonicalField),
+    valueSource: definition?.source || "unknown",
+    inputType: definition?.inputType,
+    definition,
+    reason
+  };
+}
+function getFieldEditPolicy(field, sampleValue) {
+  const canonicalField = normalizeEditableFieldKey(field);
+  const definition = getFieldDefinition(canonicalField) || inferExtraDefinition(canonicalField, sampleValue);
+  if (NEVER_INLINE_EDITABLE.has(canonicalField)) {
+    return readonlyPolicy(field, canonicalField, definition, "系统字段或文件定位字段不允许在表格内直接编辑");
+  }
+  if (DERIVED_FIELDS.has(canonicalField) || definition?.source === "derived") {
+    return readonlyPolicy(field, canonicalField, definition, "派生字段由其它真源字段计算，不能直接编辑");
+  }
+  if (definition?.source === "file") {
+    return readonlyPolicy(field, canonicalField, definition, "文件元信息字段不应通过 Excel 单元格直接编辑");
+  }
+  if (!definition && !canonicalField.startsWith("extra.")) {
+    return readonlyPolicy(field, canonicalField, definition, "未知字段暂不开放内联编辑");
+  }
+  const editorKind = getFieldEditorKind(definition, sampleValue);
+  if (editorKind === "path" || definition?.type === "path" || definition?.inputType === "path" || definition?.inputType === "multiPath") {
+    return readonlyPolicy(field, canonicalField, definition, "路径类字段涉及文件定位、分类或主题结构，不能在 Excel 单元格内直接修改");
+  }
+  if (editorKind === "readonly" || definition?.type === "file" || definition?.inputType === "file") {
+    return readonlyPolicy(field, canonicalField, definition, "该字段类型暂不支持内联编辑");
+  }
+  return {
+    field,
+    canonicalField,
+    editable: true,
+    editorKind,
+    commitMode: editorKind === "image" ? "record-modal" : "inline",
+    dangerLevel: getDangerLevel(canonicalField),
+    valueSource: definition?.source || (canonicalField.startsWith("extra.") ? "extra" : "unknown"),
+    inputType: definition?.inputType,
+    definition,
+    reason: void 0
+  };
+}
+function normalizeDisplayFieldKey(field) {
+  return normalizeEditableFieldKey(field);
+}
+function toNormalizedSet(fields) {
+  if (!fields) return null;
+  return new Set(fields.map(normalizeDisplayFieldKey).filter(Boolean));
+}
+function normalizeDisplayFields(fields, options = {}) {
+  const includeUnknown = options.includeUnknown !== false;
+  const availableSet = toNormalizedSet(options.availableFields);
+  const seen = /* @__PURE__ */ new Set();
+  const result = [];
+  for (const field of fields || []) {
+    const key = normalizeDisplayFieldKey(field);
+    if (!key || seen.has(key)) continue;
+    if (availableSet && !availableSet.has(key) && !includeUnknown) continue;
+    seen.add(key);
+    result.push(key);
+  }
+  if (!result.length && options.fallbackFields?.length) {
+    return normalizeDisplayFields(options.fallbackFields, {
+      availableFields: options.availableFields,
+      includeUnknown: false
+    });
+  }
+  return result;
+}
+function addDisplayField(fields, field, options = {}) {
+  const current2 = normalizeDisplayFields(fields, options);
+  const key = normalizeDisplayFieldKey(field);
+  if (!key) return current2;
+  const availableSet = toNormalizedSet(options.availableFields);
+  if (availableSet && !availableSet.has(key)) return current2;
+  if (current2.includes(key)) return current2;
+  return [...current2, key];
+}
+function removeDisplayField(fields, field, options = {}) {
+  const key = normalizeDisplayFieldKey(field);
+  return normalizeDisplayFields(fields, options).filter((item) => item !== key);
+}
+function moveDisplayField(fields, fromIndex, toIndex, options = {}) {
+  const current2 = normalizeDisplayFields(fields, options);
+  if (fromIndex === toIndex) return current2;
+  if (fromIndex < 0 || fromIndex >= current2.length) return current2;
+  if (toIndex < 0 || toIndex >= current2.length) return current2;
+  const next2 = [...current2];
+  const [moved] = next2.splice(fromIndex, 1);
+  next2.splice(toIndex, 0, moved);
+  return next2;
 }
 function buildAiConfigSnapshot(input, ai) {
   const enabledSet = ai.enabledBlockIds?.length ? new Set(ai.enabledBlockIds) : null;
@@ -14335,7 +14558,7 @@ let DataStore = class {
           const headingEntry = headingsList[nextHeadingIndex];
           const headingText = headingEntry.heading;
           const headingTags = headingText.match(/#([\p{L}\p{N}_\/-]+)/gu) || [];
-          currentSectionTags = headingTags.map((t3) => t3.replace("#", "")).filter(Boolean);
+          currentSectionTags = headingTags.map((t3) => t3.trim()).filter(Boolean);
           let cleanText = headingText;
           for (const tag of headingTags) cleanText = cleanText.replace(tag, "").trim();
           currentHeader = cleanText || "";
@@ -16149,7 +16372,7 @@ ItemService = __decorateClass$9([
   __decorateParam$8(1, inject(VAULT_PORT_TOKEN))
 ], ItemService);
 function normalizeTagToken(value) {
-  return String(value ?? "").trim().replace(/^#+/, "");
+  return String(value ?? "").trim();
 }
 function parseTagsInput(value) {
   const result = [];
@@ -16177,7 +16400,7 @@ function parseTagsInput(value) {
 }
 function formatTagsForField(value) {
   const tags2 = parseTagsInput(value);
-  return tags2.length ? tags2.map((tag) => `#${tag}`).join(", ") : void 0;
+  return tags2.length ? tags2.map((tag) => tag.startsWith("#") ? tag : `#${tag}`).join(", ") : void 0;
 }
 const UI_PORT_TOKEN = "UiPort";
 var __getOwnPropDesc$8 = Object.getOwnPropertyDescriptor;
@@ -49620,6 +49843,96 @@ class ViewInstanceUseCase {
       throw error;
     }
   }
+  async setDisplayFields(id, fields, availableFields) {
+    await this.updateDisplayFields(id, (currentFields) => normalizeDisplayFields(fields, {
+      availableFields,
+      includeUnknown: true,
+      fallbackFields: currentFields
+    }));
+  }
+  async addDisplayField(id, field, availableFields) {
+    await this.updateDisplayFields(id, (currentFields) => addDisplayField(currentFields, field, {
+      availableFields,
+      includeUnknown: true
+    }));
+  }
+  async removeDisplayField(id, field, availableFields) {
+    await this.updateDisplayFields(id, (currentFields) => removeDisplayField(currentFields, field, {
+      availableFields,
+      includeUnknown: true
+    }));
+  }
+  async moveDisplayField(id, fromIndex, toIndex, availableFields) {
+    await this.updateDisplayFields(id, (currentFields) => moveDisplayField(currentFields, fromIndex, toIndex, {
+      availableFields,
+      includeUnknown: true
+    }));
+  }
+  async updateViewConfig(id, patch) {
+    try {
+      const state = this.store.getState();
+      if (!state.isInitialized) {
+        devError("[ViewInstanceUseCase] Store 未初始化");
+        return;
+      }
+      await state.updateSettings((draft) => {
+        if (!draft.viewInstances) return;
+        const vi = draft.viewInstances.find((v2) => v2.id === id);
+        if (!vi) return;
+        vi.viewConfig = {
+          ...vi.viewConfig || {},
+          ...patch
+        };
+      });
+    } catch (error) {
+      devError("[ViewInstanceUseCase] updateViewConfig 失败:", error);
+      throw error;
+    }
+  }
+  async updateExcelViewConfig(id, excelPatch) {
+    try {
+      const state = this.store.getState();
+      if (!state.isInitialized) {
+        devError("[ViewInstanceUseCase] Store 未初始化");
+        return;
+      }
+      await state.updateSettings((draft) => {
+        if (!draft.viewInstances) return;
+        const vi = draft.viewInstances.find((v2) => v2.id === id);
+        if (!vi) return;
+        const currentConfig = vi.viewConfig || {};
+        const currentExcelConfig = currentConfig.excel || {};
+        vi.viewConfig = {
+          ...currentConfig,
+          excel: {
+            ...currentExcelConfig,
+            ...excelPatch
+          }
+        };
+      });
+    } catch (error) {
+      devError("[ViewInstanceUseCase] updateExcelViewConfig 失败:", error);
+      throw error;
+    }
+  }
+  async updateDisplayFields(id, updater) {
+    try {
+      const state = this.store.getState();
+      if (!state.isInitialized) {
+        devError("[ViewInstanceUseCase] Store 未初始化");
+        return;
+      }
+      await state.updateSettings((draft) => {
+        if (!draft.viewInstances) return;
+        const vi = draft.viewInstances.find((v2) => v2.id === id);
+        if (!vi) return;
+        vi.fields = updater(vi.fields || []);
+      });
+    } catch (error) {
+      devError("[ViewInstanceUseCase] updateDisplayFields 失败:", error);
+      throw error;
+    }
+  }
   async deleteView(id) {
     try {
       const state = this.store.getState();
@@ -50377,6 +50690,103 @@ function unmountPreact(containerEl) {
   }
 }
 const MODULE_HEADER_CREATE_ALLOWLIST = ["TimelineView", "HeatmapView", "StatisticsView"];
+const EXCEL_SAFE_INLINE_FIELDS = /* @__PURE__ */ new Set([
+  "content",
+  "editableText",
+  "title",
+  "date",
+  "startTime",
+  "endTime",
+  "duration",
+  "rating",
+  "tags"
+]);
+function isExcelInlineCommitSupported(canonicalField) {
+  return EXCEL_SAFE_INLINE_FIELDS.has(canonicalField) || canonicalField.startsWith("extra.");
+}
+function fieldToken(value) {
+  return String(value ?? "").trim().toLowerCase();
+}
+function stripExtraPrefix(field) {
+  return field.startsWith("extra.") ? field.slice("extra.".length) : field;
+}
+function templateFieldTokens(field) {
+  return [field.key, field.label, field.semantic, field.semanticType].map(fieldToken).filter(Boolean);
+}
+function semanticForExcelField(canonicalField) {
+  if (canonicalField === "title") return "title";
+  if (canonicalField === "content" || canonicalField === "editableText") return "body";
+  if (canonicalField === "date") return "date";
+  if (canonicalField === "startTime") return "startTime";
+  if (canonicalField === "endTime") return "endTime";
+  if (canonicalField === "duration") return "duration";
+  if (canonicalField === "rating") return "rating";
+  if (canonicalField === "tags") return "tags";
+  return null;
+}
+function resolveTemplateFieldForExcelCommit(fields, canonicalField) {
+  const list = fields || [];
+  const canonical = normalizeEditableFieldKey(canonicalField);
+  const targetSemantic = semanticForExcelField(canonical);
+  if (targetSemantic) {
+    const semanticMatch = list.find((field) => getTemplateFieldSemantic(field) === targetSemantic);
+    if (semanticMatch) return semanticMatch;
+  }
+  const customName = stripExtraPrefix(canonical);
+  const aliasesByCanonical = {
+    title: ["title", "标题", "名称", "name"],
+    content: ["content", "body", "text", "内容", "正文", "任务内容", "记录内容"],
+    editableText: ["editabletext", "editableText", "content", "body", "text", "内容", "正文", "任务内容", "记录内容"],
+    date: ["date", "日期"],
+    startTime: ["starttime", "start", "time", "开始", "开始时间", "时间"],
+    endTime: ["endtime", "end", "结束", "结束时间"],
+    duration: ["duration", "minutes", "时长", "持续时间"],
+    rating: ["rating", "评分"],
+    tags: ["tags", "tag", "标签"]
+  };
+  const aliases2 = (aliasesByCanonical[canonical] || [canonical, customName]).map(fieldToken);
+  return list.find((field) => templateFieldTokens(field).some((token2) => aliases2.includes(token2))) || null;
+}
+function normalizeExcelCommitValue(field, canonicalField, value) {
+  if (field) return normalizeTemplateFieldValue(field, value);
+  if (value === void 0 || value === null) return "";
+  if (canonicalField === "duration" || canonicalField === "rating") {
+    const numeric = Number(value);
+    return Number.isFinite(numeric) ? numeric : value;
+  }
+  if (canonicalField === "tags") {
+    if (Array.isArray(value)) return value.map((item) => String(item).trim()).filter(Boolean);
+    return String(value).split(/[,，\n]/).map((part) => part.trim()).filter(Boolean);
+  }
+  return value;
+}
+function writeAliasIfMeaningful(data, key, value) {
+  if (!key) return;
+  data[key] = value;
+}
+function writeExcelCommitValueToFormData(formData, field, canonicalField, value) {
+  const next2 = { ...formData };
+  const normalizedValue = normalizeExcelCommitValue(field, canonicalField, value);
+  const key = field?.key || canonicalField;
+  writeAliasIfMeaningful(next2, key, normalizedValue);
+  if (field?.label && field.label !== key) writeAliasIfMeaningful(next2, field.label, normalizedValue);
+  if (canonicalField === "title") {
+    next2.title = normalizedValue;
+    if (!field) next2["标题"] = normalizedValue;
+  }
+  if (canonicalField === "content" || canonicalField === "editableText") {
+    next2.content = normalizedValue;
+    next2.editableText = normalizedValue;
+    if (!field) next2["内容"] = normalizedValue;
+  }
+  if (canonicalField === "date") next2.date = normalizedValue;
+  if (canonicalField === "startTime") next2.startTime = normalizedValue;
+  if (canonicalField === "endTime") next2.endTime = normalizedValue;
+  if (canonicalField === "duration") next2.duration = normalizedValue;
+  if (canonicalField === "rating") next2.rating = normalizedValue;
+  if (canonicalField === "tags") next2.tags = normalizedValue;
+  return next2;
+}
 function supportsTaskTimeEditing(item) {
   return item.type === "task" || !!(item.startTime || item.endTime || item.duration != null);
 }
@@ -50624,6 +51034,65 @@ function openEditFromItem(params) {
     editItem: params.item
   }).open();
   return true;
+}
+async function commitExcelCellFromView(params) {
+  const canonicalField = normalizeEditableFieldKey(params.canonicalField || params.field);
+  const policy = getFieldEditPolicy(canonicalField, params.oldValue);
+  if (!isExcelInlineCommitSupported(canonicalField)) {
+    const message2 = "当前 Excel MVP 只开放安全字段：content/title/date/time/duration/rating/tags 与自定义 extra 字段；路径、文件、派生字段保持只读。";
+    params.uiPort.notice(message2);
+    return { ok: false, message: message2 };
+  }
+  if (policy.editorKind === "path") {
+    const message2 = "路径类字段不能在 Excel 视图中修改，请通过完整编辑或配置入口处理。";
+    params.uiPort.notice(message2);
+    return { ok: false, message: message2 };
+  }
+  if (!policy.editable || policy.commitMode !== "inline") {
+    const message2 = policy.reason || "该字段不可内联编辑";
+    params.uiPort.notice(message2);
+    return { ok: false, message: message2 };
+  }
+  const prepared = params.useCases.recordInput.prepareEditRecord({
+    item: params.item,
+    blockId: params.item.templateId || params.item.categoryKey || "",
+    themeId: null,
+    source: "quickinput"
+  });
+  if (!prepared.blockId) {
+    const message2 = "无法定位该记录的编辑模板，已取消单元格保存。";
+    params.uiPort.notice(message2);
+    return { ok: false, message: message2 };
+  }
+  const templateField = resolveTemplateFieldForExcelCommit(prepared.template?.fields, canonicalField);
+  if (templateField && getTemplateFieldInputType(templateField).toLowerCase().includes("path")) {
+    const message2 = "路径类模板字段不能在 Excel 视图中修改。";
+    params.uiPort.notice(message2);
+    return { ok: false, message: message2 };
+  }
+  const formData = writeExcelCommitValueToFormData(
+    prepared.initialFormData || {},
+    templateField,
+    canonicalField,
+    params.nextValue
+  );
+  const result = await params.useCases.recordInput.submitUpdateRecord({
+    item: params.item,
+    blockId: prepared.blockId,
+    themeId: prepared.themeId,
+    formData,
+    source: "quickinput"
+  });
+  const message = readResultMessage$1(result, "保存单元格失败");
+  if (isRecordSubmitSuccess(result, { treatCancelledAsSuccess: true })) {
+    return {
+      ok: true,
+      message,
+      normalizedValue: normalizeExcelCommitValue(templateField, canonicalField, params.nextValue)
+    };
+  }
+  params.uiPort.notice(message);
+  return { ok: false, message };
 }
 async function completeFromView(params) {
   const result = await params.useCases.recordInput.submitCompleteRecord({
@@ -55614,46 +56083,1041 @@ function TableView({ items, rowField, colField, onMarkDone, app, timerService, t
     ] }, r2)) })
   ] });
 }
-function toText(v2) {
-  if (Array.isArray(v2)) return v2.join(", ");
-  return v2 == null ? "" : String(v2);
+function moveItem(fields, fromIndex, toIndex) {
+  if (fromIndex === toIndex) return fields;
+  if (fromIndex < 0 || fromIndex >= fields.length) return fields;
+  if (toIndex < 0 || toIndex >= fields.length) return fields;
+  const next2 = [...fields];
+  const [moved] = next2.splice(fromIndex, 1);
+  next2.splice(toIndex, 0, moved);
+  return next2;
 }
-function ExcelView({ items, fields, app }) {
-  const rawCols = fields && fields.length ? fields : getAllFields(items);
-  const cols = Array.from(new Set(rawCols.map(
-    (c2) => c2 === "status" || c2 === "category" ? "categoryKey" : c2
-  )));
-  const renderCellContent = (item, field) => {
-    const value = readField(item, field);
-    if (field === "content" && typeof value === "string") {
-      if (!value) {
-        return "";
-      }
-      const displayText = value.length > 20 ? value.substring(0, 20) + "..." : value;
-      const gesture = createRecordGestureHandlers({
-        item,
-        app,
-        onPrimary: () => openEditFromItem({ app, item })
-      });
-      return /* @__PURE__ */ u2(
-        "span",
-        {
-          title: value,
-          class: "excel-view-content-link",
-          onClick: gesture.onClick,
-          onDblClick: gesture.onDblClick,
-          onTouchEnd: gesture.onTouchEnd,
-          style: { cursor: "pointer" },
-          children: displayText
-        }
-      );
-    }
-    return toText(value);
+function ExcelColumnToolbar({
+  fields,
+  availableFields,
+  disabled = false,
+  saving = false,
+  error,
+  getFieldLabel: getFieldLabel2 = (field) => field,
+  getFieldGroupLabel,
+  onFieldsChange
+}) {
+  const [draggedField, setDraggedField] = d(null);
+  const [menu, setMenu] = d(null);
+  const canEdit = !!onFieldsChange && !disabled;
+  const busy = saving || disabled;
+  const availableOptions = T$1(() => {
+    const selected = new Set(fields);
+    return availableFields.filter((field) => !selected.has(field)).map((field) => ({
+      value: field,
+      label: getFieldLabel2(field),
+      group: getFieldGroupLabel?.(field)
+    }));
+  }, [availableFields, fields, getFieldGroupLabel, getFieldLabel2]);
+  const emit2 = (nextFields) => {
+    if (!canEdit || busy) return;
+    onFieldsChange?.(nextFields);
   };
-  return /* @__PURE__ */ u2("div", { children: /* @__PURE__ */ u2("table", { class: "think-table excel-view-table", children: [
-    /* @__PURE__ */ u2("thead", { children: /* @__PURE__ */ u2("tr", { children: cols.map((c2) => /* @__PURE__ */ u2("th", { children: c2 }, c2)) }) }),
-    /* @__PURE__ */ u2("tbody", { children: items.map((it) => /* @__PURE__ */ u2("tr", { children: cols.map((c2) => /* @__PURE__ */ u2("td", { children: renderCellContent(it, c2) }, c2)) }, it.id)) })
-  ] }) });
+  const closeMenu = () => setMenu(null);
+  const addField = (field) => {
+    if (!field || fields.includes(field)) return;
+    emit2([...fields, field]);
+  };
+  const removeField = (field) => {
+    if (fields.length <= 1) return;
+    emit2(fields.filter((item) => item !== field));
+    closeMenu();
+  };
+  const moveFieldToStart = (field) => {
+    const index = fields.indexOf(field);
+    if (index <= 0) return closeMenu();
+    emit2(moveItem(fields, index, 0));
+    closeMenu();
+  };
+  const moveFieldToEnd = (field) => {
+    const index = fields.indexOf(field);
+    if (index < 0 || index === fields.length - 1) return closeMenu();
+    emit2(moveItem(fields, index, fields.length - 1));
+    closeMenu();
+  };
+  const dropField = (targetField) => {
+    const sourceField = draggedField;
+    setDraggedField(null);
+    if (!sourceField || sourceField === targetField) return;
+    emit2(moveItem(fields, fields.indexOf(sourceField), fields.indexOf(targetField)));
+  };
+  const openMenu = (event, field) => {
+    event.preventDefault();
+    event.stopPropagation();
+    setMenu({ field, x: event.clientX, y: event.clientY });
+  };
+  const menuField = menu?.field;
+  const menuLabel = menuField ? getFieldLabel2(menuField) : "";
+  const menuGroup = menuField ? getFieldGroupLabel?.(menuField) : void 0;
+  const canRemoveMenuField = !!menuField && canEdit && !busy && fields.length > 1;
+  return /* @__PURE__ */ u2(
+    "div",
+    {
+      class: "excel-column-toolbar",
+      "data-editable": canEdit ? "true" : "false",
+      "aria-label": "Excel 显示字段编辑",
+      onClick: () => menu ? closeMenu() : void 0,
+      children: [
+        /* @__PURE__ */ u2("span", { class: "excel-column-toolbar-title", children: "显示字段" }),
+        /* @__PURE__ */ u2("div", { class: "excel-column-chip-list", role: "list", "aria-label": "当前显示字段顺序", children: fields.map((field) => {
+          const label = getFieldLabel2(field);
+          const canRemove = canEdit && !busy && fields.length > 1;
+          return /* @__PURE__ */ u2(
+            "span",
+            {
+              class: `excel-column-chip ${draggedField === field ? "is-dragging" : ""}`,
+              role: "listitem",
+              draggable: canEdit && !busy,
+              title: canEdit ? canRemove ? "拖动调整列顺序；双击隐藏该列；右键更多操作" : "至少保留一个显示字段" : "当前字段配置不可直接编辑",
+              onContextMenu: (event) => openMenu(event, field),
+              onDblClick: (event) => {
+                event.preventDefault();
+                event.stopPropagation();
+                if (canRemove) removeField(field);
+              },
+              onDragStart: (event) => {
+                if (!canEdit || busy) return;
+                setDraggedField(field);
+                event.dataTransfer?.setData("text/plain", field);
+                if (event.dataTransfer) event.dataTransfer.effectAllowed = "move";
+              },
+              onDragEnd: () => setDraggedField(null),
+              onDragOver: (event) => {
+                if (!canEdit || busy || !draggedField) return;
+                event.preventDefault();
+                if (event.dataTransfer) event.dataTransfer.dropEffect = "move";
+              },
+              onDrop: (event) => {
+                event.preventDefault();
+                if (!canEdit || busy) return;
+                dropField(field);
+              },
+              children: [
+                /* @__PURE__ */ u2("span", { class: "excel-column-chip-handle", "aria-hidden": "true", children: "⋮⋮" }),
+                /* @__PURE__ */ u2("span", { class: "excel-column-chip-label", children: label })
+              ]
+            },
+            field
+          );
+        }) }),
+        canEdit ? /* @__PURE__ */ u2("div", { class: "excel-column-add-field", children: /* @__PURE__ */ u2(
+          SimpleSelect,
+          {
+            value: "",
+            options: availableOptions,
+            placeholder: availableOptions.length ? "+ 添加字段" : "所有字段已显示",
+            disabled: busy || !availableOptions.length,
+            onChange: addField,
+            sx: { minWidth: "150px" }
+          }
+        ) }) : /* @__PURE__ */ u2("span", { class: "excel-column-toolbar-readonly", children: "字段配置只读" }),
+        saving ? /* @__PURE__ */ u2("span", { class: "excel-column-toolbar-status", children: "保存字段设置中…" }) : null,
+        error ? /* @__PURE__ */ u2("span", { class: "excel-column-toolbar-error", title: error, children: error }) : null,
+        menu && menuField ? /* @__PURE__ */ u2(
+          "div",
+          {
+            class: "excel-column-context-menu",
+            style: { left: `${menu.x}px`, top: `${menu.y}px` },
+            role: "menu",
+            onMouseDown: (event) => event.stopPropagation(),
+            onClick: (event) => event.stopPropagation(),
+            children: [
+              /* @__PURE__ */ u2("div", { class: "excel-column-context-menu-title", children: menuLabel }),
+              /* @__PURE__ */ u2("button", { type: "button", role: "menuitem", disabled: !canRemoveMenuField, onClick: () => removeField(menuField), children: "隐藏此列" }),
+              /* @__PURE__ */ u2("button", { type: "button", role: "menuitem", disabled: !canEdit || busy || fields.indexOf(menuField) <= 0, onClick: () => moveFieldToStart(menuField), children: "移到最前" }),
+              /* @__PURE__ */ u2("button", { type: "button", role: "menuitem", disabled: !canEdit || busy || fields.indexOf(menuField) === fields.length - 1, onClick: () => moveFieldToEnd(menuField), children: "移到最后" }),
+              /* @__PURE__ */ u2("button", { type: "button", role: "menuitem", onClick: () => setMenu((prev2) => prev2 ? { ...prev2, showInfo: !prev2.showInfo } : prev2), children: "查看字段说明" }),
+              menu.showInfo ? /* @__PURE__ */ u2("div", { class: "excel-column-context-info", children: [
+                /* @__PURE__ */ u2("div", { children: [
+                  /* @__PURE__ */ u2("span", { children: "名称" }),
+                  /* @__PURE__ */ u2("strong", { children: menuLabel })
+                ] }),
+                menuGroup ? /* @__PURE__ */ u2("div", { children: [
+                  /* @__PURE__ */ u2("span", { children: "分组" }),
+                  /* @__PURE__ */ u2("strong", { children: menuGroup })
+                ] }) : null,
+                /* @__PURE__ */ u2("div", { children: [
+                  /* @__PURE__ */ u2("span", { children: "字段键" }),
+                  /* @__PURE__ */ u2("code", { children: menuField })
+                ] })
+              ] }) : null
+            ]
+          }
+        ) : null
+      ]
+    }
+  );
+}
+function isOptionLikeValue(value) {
+  return !!value && typeof value === "object" && ("value" in value || "label" in value);
+}
+function formatExcelCellValue(value) {
+  if (Array.isArray(value)) return value.map(formatExcelCellValue).filter(Boolean).join(", ");
+  if (isOptionLikeValue(value)) return String(value.label ?? value.value ?? "");
+  if (value === true) return "true";
+  if (value === false) return "false";
+  return value == null ? "" : String(value);
+}
+function toDateInputValue(value) {
+  const text2 = formatExcelCellValue(value).trim();
+  const match5 = text2.match(/^(\d{4}-\d{2}-\d{2})/);
+  return match5 ? match5[1] : text2;
+}
+function toTimeInputValue(value) {
+  const text2 = formatExcelCellValue(value).trim();
+  const match5 = text2.match(/^(\d{1,2}:\d{2})/);
+  return match5 ? match5[1].padStart(5, "0") : text2;
+}
+function toDateTimeInputValue(value) {
+  const text2 = formatExcelCellValue(value).trim();
+  const match5 = text2.match(/^(\d{4}-\d{2}-\d{2})[T\s](\d{2}:\d{2})/);
+  return match5 ? `${match5[1]}T${match5[2]}` : text2;
+}
+function isValidDateInput(value) {
+  return !value || /^\d{4}-\d{2}-\d{2}$/.test(value);
+}
+function isValidTimeInput(value) {
+  return !value || /^\d{1,2}:\d{2}$/.test(value);
+}
+function isValidDateTimeInput(value) {
+  return !value || /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(value);
+}
+function truncateExcelCellText(text2, maxLength = 20) {
+  if (text2.length <= maxLength) return text2;
+  return text2.substring(0, maxLength) + "...";
+}
+function normalizeExcelColumnKey(field) {
+  return normalizeEditableFieldKey(field);
+}
+function buildExcelColumns(fields) {
+  const seen = /* @__PURE__ */ new Set();
+  const columns = [];
+  for (const field of fields) {
+    const key = normalizeExcelColumnKey(field);
+    if (!key || seen.has(key)) continue;
+    seen.add(key);
+    const policy = getFieldEditPolicy(key);
+    columns.push({
+      key,
+      canonicalField: policy.canonicalField,
+      label: getFieldLabel(key) || key,
+      editable: policy.editable && policy.commitMode === "inline",
+      editorKind: policy.editorKind,
+      commitMode: policy.commitMode,
+      dangerLevel: policy.dangerLevel,
+      readonlyReason: policy.editable ? void 0 : policy.reason
+    });
+  }
+  return columns;
+}
+function buildExcelCellModel(item, field, valueOverride) {
+  const sourceValue = readField(item, field);
+  const hasOverride = valueOverride !== void 0;
+  const value = hasOverride ? valueOverride : sourceValue;
+  const policy = getFieldEditPolicy(field, value);
+  return {
+    item,
+    itemId: item.id,
+    field,
+    canonicalField: policy.canonicalField,
+    value,
+    displayValue: formatExcelCellValue(value),
+    editorValue: formatExcelEditorValue(value, policy.editorKind),
+    policy
+  };
+}
+function formatExcelEditorValue(value, editorKind) {
+  if (editorKind === "date") return toDateInputValue(value);
+  if (editorKind === "time") return toTimeInputValue(value);
+  if (editorKind === "datetime") return toDateTimeInputValue(value);
+  return formatExcelCellValue(value);
+}
+function validateExcelEditorValue(cell, editorValue) {
+  const trimmed = editorValue.trim();
+  switch (cell.policy.editorKind) {
+    case "number":
+    case "rating":
+      return trimmed && !Number.isFinite(Number(trimmed)) ? "请输入有效数字" : null;
+    case "date":
+      return isValidDateInput(trimmed) ? null : "日期格式应为 YYYY-MM-DD";
+    case "time":
+      return isValidTimeInput(trimmed) ? null : "时间格式应为 HH:mm";
+    case "datetime":
+      return isValidDateTimeInput(trimmed) ? null : "日期时间格式应为 YYYY-MM-DDTHH:mm";
+    default:
+      return null;
+  }
+}
+function parseExcelEditorValue(cell, editorValue) {
+  const raw = editorValue;
+  const trimmed = raw.trim();
+  switch (cell.policy.editorKind) {
+    case "number":
+    case "rating": {
+      if (!trimmed) return null;
+      const numeric = Number(trimmed);
+      return Number.isFinite(numeric) ? numeric : raw;
+    }
+    case "boolean": {
+      const lower = trimmed.toLowerCase();
+      if (["true", "1", "yes", "y", "是"].includes(lower)) return true;
+      if (["false", "0", "no", "n", "否"].includes(lower)) return false;
+      return raw;
+    }
+    case "date":
+    case "time":
+    case "datetime":
+      return trimmed;
+    case "tags":
+      return trimmed.split(/[,，\n]/).map((part) => part.trim()).filter(Boolean);
+    default:
+      return raw;
+  }
+}
+function areExcelCellValuesEqual(left2, right2) {
+  return formatExcelCellValue(left2) === formatExcelCellValue(right2);
+}
+function getExcelCellKey(itemId, field) {
+  return `${itemId}::${field}`;
+}
+function canInlineEditExcelCell(cell, canCommit = true) {
+  return !!canCommit && cell.policy.editable && cell.policy.commitMode === "inline";
+}
+function getExcelEditorDescriptor(kind) {
+  if (kind === "textarea") return { tag: "textarea", hint: "Enter 保存 · Shift+Enter 换行 · Esc 取消" };
+  if (kind === "number" || kind === "rating") return { tag: "input", type: "number", hint: "输入数字，Enter 保存 · Esc 取消" };
+  if (kind === "date") return { tag: "input", type: "date", hint: "选择日期，Enter 保存 · Esc 取消" };
+  if (kind === "time") return { tag: "input", type: "time", hint: "输入 HH:mm，Enter 保存 · Esc 取消" };
+  if (kind === "datetime") return { tag: "input", type: "datetime-local", hint: "选择日期时间，Enter 保存 · Esc 取消" };
+  if (kind === "boolean") return { tag: "input", type: "text", hint: "true/false 或 是/否，Enter 保存 · Esc 取消" };
+  if (kind === "tags") return { tag: "input", type: "text", hint: "多个标签用逗号分隔，# 会保留" };
+  return { tag: "input", type: "text", hint: "Enter 保存 · Esc 取消" };
+}
+function readKeyboardValue(event) {
+  const target = event.currentTarget;
+  return target.value;
+}
+function getReadonlyTitle(policyReason) {
+  return policyReason || "该字段不可在 Excel 单元格中直接编辑";
+}
+function ExcelCell({
+  cell,
+  selected = false,
+  editing = false,
+  pending = false,
+  saved = false,
+  error,
+  canCommit = false,
+  style: style2,
+  fillDragging = false,
+  fillSource = false,
+  fillTarget = false,
+  onSelect,
+  onStartEdit,
+  onCancelEdit,
+  onCommitEdit,
+  onStartFillDrag,
+  onMoveFillDrag,
+  onFinishFillDrag,
+  onCancelFillDrag,
+  onOpenRecord
+}) {
+  const { item, field, value, displayValue, editorValue, policy } = cell;
+  const [draft, setDraft] = d(editorValue);
+  const inputRef = A$1(null);
+  const editable = canInlineEditExcelCell(cell, canCommit);
+  const readonly2 = !editable;
+  const descriptor = getExcelEditorDescriptor(policy.editorKind);
+  y(() => {
+    if (editing) setDraft(editorValue);
+  }, [editing, editorValue]);
+  y(() => {
+    if (!editing) return;
+    const input = inputRef.current;
+    if (!input) return;
+    input.focus();
+    input.select?.();
+  }, [editing]);
+  const commit = (nextValue = draft) => {
+    if (!editing || pending) return;
+    onCommitEdit?.(cell, nextValue);
+  };
+  const handleCellClick = (event) => {
+    if (fillDragging) return;
+    if (event.metaKey || event.ctrlKey) {
+      onOpenRecord?.(item);
+      return;
+    }
+    onSelect?.(cell);
+  };
+  const handleDoubleClick = (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    if (editable) onStartEdit?.(cell);
+    else onSelect?.(cell);
+  };
+  const handleFillMouseDown = (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    if (!editable || pending || editing) return;
+    onStartFillDrag?.(cell);
+  };
+  const handleMouseEnter = () => {
+    if (fillDragging) onMoveFillDrag?.(cell);
+  };
+  const handleMouseUp = () => {
+    if (fillDragging) onFinishFillDrag?.(cell);
+  };
+  const handleKeyDown = (event) => {
+    if (event.key === "Escape") {
+      event.preventDefault();
+      onCancelEdit?.();
+      return;
+    }
+    if (event.key === "Enter" && !(descriptor.tag === "textarea" && event.shiftKey)) {
+      event.preventDefault();
+      commit(readKeyboardValue(event));
+    }
+  };
+  const title = error || (editable ? "双击编辑；拖动右下角小方块可向同列覆盖；Ctrl/⌘ 点击打开完整编辑" : `${getReadonlyTitle(policy.reason)}；Ctrl/⌘ 点击可打开完整编辑`);
+  const className = [
+    "excel-view-cell",
+    editable ? "is-inline-editable" : "is-readonly",
+    policy.editable ? "is-policy-editable" : "is-policy-readonly",
+    policy.dangerLevel === "medium" ? "is-medium-risk" : "",
+    policy.dangerLevel === "high" ? "is-high-risk" : "",
+    selected ? "is-selected" : "",
+    editing ? "is-editing" : "",
+    pending ? "is-pending" : "",
+    saved && !pending && !error ? "is-saved" : "",
+    error ? "has-error" : "",
+    fillSource ? "is-fill-source" : "",
+    fillTarget ? "is-fill-target" : ""
+  ].filter(Boolean).join(" ");
+  return /* @__PURE__ */ u2(
+    "td",
+    {
+      "data-field": field,
+      "data-canonical-field": policy.canonicalField,
+      "data-editable": editable ? "true" : "false",
+      "data-policy-editable": policy.editable ? "true" : "false",
+      "data-editor-kind": policy.editorKind,
+      "data-danger-level": policy.dangerLevel,
+      "data-save-state": pending ? "pending" : error ? "error" : saved ? "saved" : "idle",
+      class: className,
+      style: style2,
+      title,
+      tabIndex: 0,
+      "aria-readonly": readonly2 ? "true" : "false",
+      "aria-invalid": error ? "true" : "false",
+      onClick: handleCellClick,
+      onDblClick: handleDoubleClick,
+      onMouseEnter: handleMouseEnter,
+      onMouseUp: handleMouseUp,
+      onKeyDown: (event) => {
+        if (event.key === "Escape" && fillDragging) {
+          event.preventDefault();
+          onCancelFillDrag?.();
+          return;
+        }
+        if (event.key === "Enter" && !editing && editable) {
+          event.preventDefault();
+          onStartEdit?.(cell);
+        }
+      },
+      children: [
+        editing ? /* @__PURE__ */ u2("span", { class: "excel-view-cell-edit-wrap", children: [
+          descriptor.tag === "textarea" ? /* @__PURE__ */ u2(
+            "textarea",
+            {
+              ref: inputRef,
+              class: "excel-view-cell-editor excel-view-cell-editor-textarea",
+              value: draft,
+              disabled: pending,
+              onInput: (event) => setDraft(event.currentTarget.value),
+              onKeyDown: handleKeyDown,
+              onBlur: () => commit()
+            }
+          ) : /* @__PURE__ */ u2(
+            "input",
+            {
+              ref: inputRef,
+              class: "excel-view-cell-editor",
+              type: descriptor.type || "text",
+              value: draft,
+              disabled: pending,
+              onInput: (event) => setDraft(event.currentTarget.value),
+              onKeyDown: handleKeyDown,
+              onBlur: () => commit()
+            }
+          ),
+          /* @__PURE__ */ u2("span", { class: "excel-view-cell-edit-hint", children: descriptor.hint })
+        ] }) : field === "content" && typeof value === "string" && value ? /* @__PURE__ */ u2("span", { class: "excel-view-content-link", children: truncateExcelCellText(value) }) : /* @__PURE__ */ u2("span", { class: "excel-view-cell-value", children: displayValue }),
+        !editing && selected ? /* @__PURE__ */ u2("span", { class: "excel-view-cell-affordance", "aria-hidden": "true", children: editable ? "✎" : "🔒" }) : null,
+        selected && editable && !editing && !pending ? /* @__PURE__ */ u2(
+          "span",
+          {
+            class: "excel-view-fill-handle",
+            "aria-label": "拖动覆盖同列",
+            title: "拖动覆盖同列单元格",
+            onMouseDown: handleFillMouseDown
+          }
+        ) : null,
+        pending ? /* @__PURE__ */ u2("span", { class: "excel-view-cell-status", "aria-label": "保存中", children: "…" }) : null,
+        saved && !pending && !error ? /* @__PURE__ */ u2("span", { class: "excel-view-cell-status is-saved", "aria-label": "已保存", children: "✓" }) : null,
+        error ? /* @__PURE__ */ u2("span", { class: "excel-view-cell-error", "aria-label": error, children: "!" }) : null
+      ]
+    }
+  );
+}
+function getCellKey(cell) {
+  return getExcelCellKey(cell.itemId, cell.canonicalField);
+}
+function getColumnBadge(column2, canCommitCells) {
+  if (!column2.editable || !canCommitCells) return "只读";
+  if (column2.dangerLevel === "medium") return "谨慎";
+  return "可编辑";
+}
+function getColumnTitle(column2, canCommitCells) {
+  if (!canCommitCells) return "当前视图未配置保存处理器，所有字段暂不可编辑";
+  if (!column2.editable) return column2.readonlyReason || "该字段不可在 Excel 单元格内直接编辑";
+  if (column2.dangerLevel === "medium") return "可编辑字段，但会影响时间、标签等结构化内容，请谨慎修改";
+  return "可编辑字段：双击单元格可编辑；拖动表头右侧边缘可调整列宽";
+}
+function getColumnWidth(column2, width2) {
+  if (Number.isFinite(width2) && width2) return Math.max(80, Math.min(640, Math.round(width2)));
+  if (column2.canonicalField === "content") return 240;
+  if (column2.canonicalField === "title") return 180;
+  if (column2.editorKind === "date" || column2.editorKind === "time") return 128;
+  if (column2.editorKind === "number" || column2.editorKind === "rating") return 104;
+  return 150;
+}
+function ExcelGrid({
+  items,
+  columns,
+  app,
+  selectedCellKey,
+  editingCellKey,
+  pendingCellKeys,
+  savedCellKeys,
+  cellErrors,
+  valueOverrides,
+  canCommitCells = false,
+  columnWidths,
+  fillDragSourceCell,
+  fillDragTargetCellKey,
+  onSelectCell,
+  onStartEdit,
+  onCancelEdit,
+  onCommitEdit,
+  onStartFillDrag,
+  onMoveFillDrag,
+  onFinishFillDrag,
+  onCancelFillDrag,
+  onColumnWidthDraftChange,
+  onColumnWidthCommit,
+  onOpenRecord
+}) {
+  const makeCell = (item, columnKey) => {
+    const optimisticKey = getExcelCellKey(item.id, columnKey);
+    const cell = buildExcelCellModel(item, columnKey, valueOverrides?.[optimisticKey]);
+    const canonicalKey = getExcelCellKey(cell.itemId, cell.canonicalField);
+    if (valueOverrides?.[canonicalKey] !== void 0 && canonicalKey !== optimisticKey) {
+      return buildExcelCellModel(item, columnKey, valueOverrides[canonicalKey]);
+    }
+    return cell;
+  };
+  const buildFillRange = (target) => {
+    const source = fillDragSourceCell;
+    if (!source) return [];
+    if (source.canonicalField !== target.canonicalField) return [];
+    if (!canInlineEditExcelCell(source) || !canInlineEditExcelCell(target)) return [];
+    const sourceIndex = items.findIndex((item) => item.id === source.itemId);
+    const targetIndex = items.findIndex((item) => item.id === target.itemId);
+    if (sourceIndex < 0 || targetIndex < 0) return [];
+    const from2 = Math.min(sourceIndex, targetIndex);
+    const to = Math.max(sourceIndex, targetIndex);
+    const columnKey = source.field;
+    return items.slice(from2, to + 1).map((item) => makeCell(item, columnKey));
+  };
+  const finishFillDrag = (target) => {
+    onFinishFillDrag?.(buildFillRange(target));
+  };
+  const startColumnResize = (event, column2) => {
+    event.preventDefault();
+    event.stopPropagation();
+    const th = event.currentTarget.closest("th");
+    const startX = event.clientX;
+    const startWidth = getColumnWidth(column2, columnWidths?.[column2.key]) || th?.offsetWidth || 150;
+    const move = (moveEvent) => {
+      const nextWidth = startWidth + (moveEvent.clientX - startX);
+      onColumnWidthDraftChange?.(column2.key, nextWidth);
+    };
+    const up = (upEvent) => {
+      const nextWidth = startWidth + (upEvent.clientX - startX);
+      window.removeEventListener("mousemove", move, true);
+      window.removeEventListener("mouseup", up, true);
+      document.body.classList.remove("excel-view-is-resizing-column");
+      onColumnWidthCommit?.(column2.key, nextWidth);
+    };
+    document.body.classList.add("excel-view-is-resizing-column");
+    window.addEventListener("mousemove", move, true);
+    window.addEventListener("mouseup", up, true);
+  };
+  return /* @__PURE__ */ u2("table", { class: "think-table excel-view-table", children: [
+    /* @__PURE__ */ u2("colgroup", { children: columns.map((column2) => {
+      const width2 = getColumnWidth(column2, columnWidths?.[column2.key]);
+      return /* @__PURE__ */ u2("col", { "data-field": column2.key, style: { width: `${width2}px` } }, column2.key);
+    }) }),
+    /* @__PURE__ */ u2("thead", { children: /* @__PURE__ */ u2("tr", { children: columns.map((column2) => {
+      const columnEditable = column2.editable && canCommitCells;
+      const width2 = getColumnWidth(column2, columnWidths?.[column2.key]);
+      return /* @__PURE__ */ u2(
+        "th",
+        {
+          "data-field": column2.key,
+          "data-canonical-field": column2.canonicalField,
+          "data-editable": columnEditable ? "true" : "false",
+          "data-editor-kind": column2.editorKind,
+          "data-danger-level": column2.dangerLevel,
+          title: getColumnTitle(column2, canCommitCells),
+          style: { width: `${width2}px`, minWidth: `${width2}px`, maxWidth: `${width2}px` },
+          children: [
+            /* @__PURE__ */ u2("span", { class: "excel-view-header-stack", children: [
+              /* @__PURE__ */ u2("span", { class: "excel-view-header-label", children: column2.label }),
+              /* @__PURE__ */ u2("span", { class: "excel-view-header-badge", children: getColumnBadge(column2, canCommitCells) })
+            ] }),
+            /* @__PURE__ */ u2(
+              "span",
+              {
+                class: "excel-view-column-resize-handle",
+                role: "separator",
+                "aria-orientation": "vertical",
+                title: "拖动调整列宽",
+                onMouseDown: (event) => startColumnResize(event, column2)
+              }
+            )
+          ]
+        },
+        column2.key
+      );
+    }) }) }),
+    /* @__PURE__ */ u2("tbody", { children: items.map((item) => /* @__PURE__ */ u2("tr", { "data-item-id": item.id, children: columns.map((column2) => {
+      const cell = makeCell(item, column2.key);
+      const canonicalCellKey = getCellKey(cell);
+      const fillDragging = !!fillDragSourceCell;
+      const width2 = getColumnWidth(column2, columnWidths?.[column2.key]);
+      return /* @__PURE__ */ u2(
+        ExcelCell,
+        {
+          cell,
+          app,
+          selected: selectedCellKey === canonicalCellKey,
+          editing: editingCellKey === canonicalCellKey,
+          pending: pendingCellKeys?.has(canonicalCellKey),
+          saved: savedCellKeys?.has(canonicalCellKey),
+          error: cellErrors?.[canonicalCellKey],
+          canCommit: canCommitCells,
+          fillDragging,
+          fillSource: fillDragSourceCell ? getCellKey(fillDragSourceCell) === canonicalCellKey : false,
+          fillTarget: fillDragTargetCellKey === canonicalCellKey && fillDragSourceCell?.canonicalField === cell.canonicalField,
+          onSelect: onSelectCell,
+          onStartEdit,
+          onCancelEdit,
+          onCommitEdit,
+          onStartFillDrag,
+          onMoveFillDrag,
+          onFinishFillDrag: finishFillDrag,
+          onCancelFillDrag,
+          onOpenRecord,
+          style: { width: `${width2}px`, minWidth: `${width2}px`, maxWidth: `${width2}px` }
+        },
+        column2.key
+      );
+    }) }, item.id)) })
+  ] });
+}
+function addPendingKey(source, key) {
+  const next2 = new Set(source);
+  next2.add(key);
+  return next2;
+}
+function addPendingKeys(source, keys) {
+  const next2 = new Set(source);
+  for (const key of keys) next2.add(key);
+  return next2;
+}
+function removePendingKey(source, key) {
+  const next2 = new Set(source);
+  next2.delete(key);
+  return next2;
+}
+function removePendingKeys(source, keys) {
+  const next2 = new Set(source);
+  for (const key of keys) next2.delete(key);
+  return next2;
+}
+function addSavedKey(source, key) {
+  const next2 = new Set(source);
+  next2.add(key);
+  return next2;
+}
+function removeSavedKey(source, key) {
+  const next2 = new Set(source);
+  next2.delete(key);
+  return next2;
+}
+function useExcelCellEditing(options) {
+  const { onCellCommit } = options;
+  const [selectedCellKey, setSelectedCellKey] = d(null);
+  const [editingCellKey, setEditingCellKey] = d(null);
+  const [pendingCellKeys, setPendingCellKeys] = d(() => /* @__PURE__ */ new Set());
+  const [cellErrors, setCellErrors] = d({});
+  const [valueOverrides, setValueOverrides] = d({});
+  const [savedCellKeys, setSavedCellKeys] = d(() => /* @__PURE__ */ new Set());
+  const saveFlashTimers = A$1({});
+  const [fillDragSourceCell, setFillDragSourceCell] = d(null);
+  const [fillDragTargetCellKey, setFillDragTargetCellKey] = d(null);
+  y(() => () => {
+    for (const timer of Object.values(saveFlashTimers.current)) clearTimeout(timer);
+    saveFlashTimers.current = {};
+  }, []);
+  const flashSavedKey = q$1((key) => {
+    const existing = saveFlashTimers.current[key];
+    if (existing) clearTimeout(existing);
+    setSavedCellKeys((prev2) => addSavedKey(prev2, key));
+    saveFlashTimers.current[key] = setTimeout(() => {
+      setSavedCellKeys((prev2) => removeSavedKey(prev2, key));
+      delete saveFlashTimers.current[key];
+    }, 1200);
+  }, []);
+  const selectCell = q$1((cell) => {
+    setSelectedCellKey(getExcelCellKey(cell.itemId, cell.canonicalField));
+  }, []);
+  const startEdit = q$1((cell) => {
+    const key = getExcelCellKey(cell.itemId, cell.canonicalField);
+    setSelectedCellKey(key);
+    if (!onCellCommit) {
+      setCellErrors((prev2) => ({ ...prev2, [key]: "当前视图没有配置保存处理器" }));
+      return;
+    }
+    if (!canInlineEditExcelCell(cell)) {
+      setCellErrors((prev2) => ({ ...prev2, [key]: cell.policy.reason || "该字段不可内联编辑" }));
+      return;
+    }
+    setEditingCellKey(key);
+    setCellErrors((prev2) => ({ ...prev2, [key]: void 0 }));
+  }, [onCellCommit]);
+  const cancelEdit = q$1(() => {
+    setEditingCellKey(null);
+  }, []);
+  const commitCellValue = q$1(async (cell, nextValue, reason) => {
+    const key = getExcelCellKey(cell.itemId, cell.canonicalField);
+    if (!onCellCommit) {
+      setCellErrors((prev2) => ({ ...prev2, [key]: "当前视图没有配置保存处理器" }));
+      return false;
+    }
+    if (!canInlineEditExcelCell(cell)) {
+      setCellErrors((prev2) => ({ ...prev2, [key]: cell.policy.reason || "该字段不可内联编辑" }));
+      return false;
+    }
+    if (areExcelCellValuesEqual(cell.value, nextValue)) return true;
+    try {
+      const result = await onCellCommit({
+        item: cell.item,
+        itemId: cell.itemId,
+        field: cell.field,
+        canonicalField: cell.canonicalField,
+        oldValue: cell.value,
+        nextValue,
+        reason
+      });
+      if (!result?.ok) {
+        setCellErrors((prev2) => ({ ...prev2, [key]: result?.message || "保存失败" }));
+        return false;
+      }
+      const normalizedValue = result.normalizedValue !== void 0 ? result.normalizedValue : nextValue;
+      setValueOverrides((prev2) => ({ ...prev2, [key]: normalizedValue }));
+      setCellErrors((prev2) => ({ ...prev2, [key]: void 0 }));
+      flashSavedKey(key);
+      return true;
+    } catch (error) {
+      setCellErrors((prev2) => ({ ...prev2, [key]: error instanceof Error ? error.message : "保存失败" }));
+      return false;
+    }
+  }, [flashSavedKey, onCellCommit]);
+  const commitEdit = q$1(async (cell, nextEditorValue) => {
+    const key = getExcelCellKey(cell.itemId, cell.canonicalField);
+    const validationMessage = validateExcelEditorValue(cell, nextEditorValue);
+    if (validationMessage) {
+      setSelectedCellKey(key);
+      setCellErrors((prev2) => ({ ...prev2, [key]: validationMessage }));
+      return;
+    }
+    const nextValue = parseExcelEditorValue(cell, nextEditorValue);
+    setSelectedCellKey(key);
+    setEditingCellKey(null);
+    setCellErrors((prev2) => ({ ...prev2, [key]: void 0 }));
+    setPendingCellKeys((prev2) => addPendingKey(prev2, key));
+    try {
+      await commitCellValue(cell, nextValue, "inline-edit");
+    } finally {
+      setPendingCellKeys((prev2) => removePendingKey(prev2, key));
+    }
+  }, [commitCellValue]);
+  const startFillDrag = q$1((cell) => {
+    if (!onCellCommit || !canInlineEditExcelCell(cell)) return;
+    const key = getExcelCellKey(cell.itemId, cell.canonicalField);
+    setSelectedCellKey(key);
+    setFillDragSourceCell(cell);
+    setFillDragTargetCellKey(key);
+    setCellErrors((prev2) => ({ ...prev2, [key]: void 0 }));
+  }, [onCellCommit]);
+  const moveFillDrag = q$1((cell) => {
+    setFillDragTargetCellKey(getExcelCellKey(cell.itemId, cell.canonicalField));
+  }, []);
+  const cancelFillDrag = q$1(() => {
+    setFillDragSourceCell(null);
+    setFillDragTargetCellKey(null);
+  }, []);
+  const finishFillDrag = q$1(async (cells) => {
+    const source = fillDragSourceCell;
+    setFillDragSourceCell(null);
+    setFillDragTargetCellKey(null);
+    if (!source || !cells.length) return;
+    const targetCells = cells.filter((cell) => cell.itemId !== source.itemId && cell.canonicalField === source.canonicalField && canInlineEditExcelCell(cell));
+    if (!targetCells.length) return;
+    const keys = targetCells.map((cell) => getExcelCellKey(cell.itemId, cell.canonicalField));
+    setPendingCellKeys((prev2) => addPendingKeys(prev2, keys));
+    try {
+      for (const cell of targetCells) {
+        await commitCellValue(cell, source.value, "fill-drag");
+      }
+    } finally {
+      setPendingCellKeys((prev2) => removePendingKeys(prev2, keys));
+    }
+  }, [commitCellValue, fillDragSourceCell]);
+  const resetTransientState = q$1(() => {
+    setSelectedCellKey(null);
+    setEditingCellKey(null);
+    setPendingCellKeys(/* @__PURE__ */ new Set());
+    setCellErrors({});
+    setValueOverrides({});
+    for (const timer of Object.values(saveFlashTimers.current)) clearTimeout(timer);
+    saveFlashTimers.current = {};
+    setSavedCellKeys(/* @__PURE__ */ new Set());
+    setFillDragSourceCell(null);
+    setFillDragTargetCellKey(null);
+  }, []);
+  return {
+    selectedCellKey,
+    editingCellKey,
+    pendingCellKeys,
+    cellErrors,
+    valueOverrides,
+    savedCellKeys,
+    fillDragSourceCell,
+    fillDragTargetCellKey,
+    selectCell,
+    startEdit,
+    cancelEdit,
+    commitEdit,
+    startFillDrag,
+    moveFillDrag,
+    finishFillDrag,
+    cancelFillDrag,
+    resetTransientState
+  };
+}
+function isNativeInteractiveTarget(target) {
+  return target instanceof HTMLElement && !!target.closest('input, textarea, select, button, a, [contenteditable="true"]');
+}
+function stopObsidianPreviewEvent(event) {
+  event.stopPropagation();
+}
+function stopObsidianPreviewDoubleClick(event) {
+  event.stopPropagation();
+  if (!isNativeInteractiveTarget(event.target)) {
+    event.preventDefault();
+  }
+}
+function getObsidianEventBoundaryProps() {
+  return {
+    onPointerDown: stopObsidianPreviewEvent,
+    onMouseDown: stopObsidianPreviewEvent,
+    onMouseUp: stopObsidianPreviewEvent,
+    onClick: stopObsidianPreviewEvent,
+    onDblClick: stopObsidianPreviewDoubleClick
+  };
+}
+function normalizeColumnWidth(width2) {
+  if (!Number.isFinite(width2)) return 160;
+  return Math.max(80, Math.min(640, Math.round(width2)));
+}
+function normalizeColumnWidths(widths) {
+  if (!widths) return {};
+  const next2 = {};
+  for (const [field, width2] of Object.entries(widths)) {
+    if (!field) continue;
+    next2[field] = normalizeColumnWidth(Number(width2));
+  }
+  return next2;
+}
+function ExcelView({
+  items,
+  fields,
+  app,
+  availableFields,
+  excelConfig,
+  onFieldsChange,
+  onExcelConfigChange,
+  onCellCommit,
+  onOpenRecord
+}) {
+  const discoveredFields = T$1(() => getAllFields(items), [items]);
+  const normalizedAvailableFields = T$1(() => normalizeDisplayFields(
+    availableFields?.length ? availableFields : discoveredFields,
+    { includeUnknown: false }
+  ), [availableFields, discoveredFields]);
+  const displayFields = T$1(() => normalizeDisplayFields(
+    fields && fields.length ? fields : normalizedAvailableFields,
+    {
+      availableFields: normalizedAvailableFields,
+      includeUnknown: true,
+      fallbackFields: normalizedAvailableFields
+    }
+  ), [fields, normalizedAvailableFields]);
+  const columns = T$1(() => buildExcelColumns(displayFields), [displayFields]);
+  const itemSignature = T$1(() => items.map((item) => `${item.id}:${item.modified ?? ""}`).join("|"), [items]);
+  const persistedColumnWidths = T$1(() => normalizeColumnWidths(excelConfig?.columnWidths), [excelConfig?.columnWidths]);
+  const editing = useExcelCellEditing({ onCellCommit });
+  const resetTransientState = editing.resetTransientState;
+  const editableColumnCount = columns.filter((column2) => column2.editable).length;
+  const readonlyColumnCount = Math.max(0, columns.length - editableColumnCount);
+  const [fieldConfigSaving, setFieldConfigSaving] = d(false);
+  const [fieldConfigError, setFieldConfigError] = d(null);
+  const [excelConfigSaving, setExcelConfigSaving] = d(false);
+  const [localColumnWidths, setLocalColumnWidths] = d(persistedColumnWidths);
+  y(() => {
+    resetTransientState();
+  }, [itemSignature, resetTransientState]);
+  y(() => {
+    setLocalColumnWidths(persistedColumnWidths);
+  }, [persistedColumnWidths]);
+  const handleFieldsChange = q$1(async (nextFields) => {
+    if (!onFieldsChange || fieldConfigSaving) return;
+    const normalizedNextFields = normalizeDisplayFields(nextFields, {
+      availableFields: normalizedAvailableFields,
+      includeUnknown: true,
+      fallbackFields: displayFields
+    });
+    setFieldConfigSaving(true);
+    setFieldConfigError(null);
+    try {
+      await onFieldsChange(normalizedNextFields);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "字段设置保存失败";
+      setFieldConfigError(message);
+    } finally {
+      setFieldConfigSaving(false);
+    }
+  }, [displayFields, fieldConfigSaving, normalizedAvailableFields, onFieldsChange]);
+  const handleColumnWidthDraftChange = q$1((field, width2) => {
+    const nextWidth = normalizeColumnWidth(width2);
+    setLocalColumnWidths((prev2) => ({ ...prev2, [field]: nextWidth }));
+  }, []);
+  const handleColumnWidthCommit = q$1(async (field, width2) => {
+    const nextWidth = normalizeColumnWidth(width2);
+    const nextColumnWidths = {
+      ...localColumnWidths,
+      [field]: nextWidth
+    };
+    setLocalColumnWidths(nextColumnWidths);
+    if (!onExcelConfigChange) return;
+    const nextConfig = {
+      ...excelConfig || {},
+      columnWidths: nextColumnWidths
+    };
+    setExcelConfigSaving(true);
+    try {
+      await onExcelConfigChange(nextConfig);
+    } catch (error) {
+      console.error("[ExcelView] 保存列宽失败", error);
+      setLocalColumnWidths(persistedColumnWidths);
+    } finally {
+      setExcelConfigSaving(false);
+    }
+  }, [excelConfig, localColumnWidths, onExcelConfigChange, persistedColumnWidths]);
+  return /* @__PURE__ */ u2(
+    "div",
+    {
+      class: "excel-view-shell",
+      "data-inline-edit": onCellCommit ? "enabled" : "disabled",
+      "data-column-config": onFieldsChange ? "enabled" : "disabled",
+      "data-excel-config-saving": excelConfigSaving ? "true" : "false",
+      ...getObsidianEventBoundaryProps(),
+      children: [
+        /* @__PURE__ */ u2("div", { class: "excel-view-toolbar", "aria-label": "Excel 视图编辑说明", children: [
+          /* @__PURE__ */ u2("span", { class: "excel-view-legend-chip is-editable", children: [
+            "可编辑 ",
+            editableColumnCount
+          ] }),
+          /* @__PURE__ */ u2("span", { class: "excel-view-legend-chip is-readonly", children: [
+            "只读 ",
+            readonlyColumnCount
+          ] }),
+          /* @__PURE__ */ u2("span", { class: "excel-view-legend-note", children: "双击可编辑单元格；路径、文件、派生字段保持只读。" })
+        ] }),
+        /* @__PURE__ */ u2(
+          ExcelColumnToolbar,
+          {
+            fields: displayFields,
+            availableFields: normalizedAvailableFields,
+            saving: fieldConfigSaving,
+            error: fieldConfigError,
+            disabled: !onFieldsChange,
+            getFieldLabel,
+            getFieldGroupLabel: getFieldCategoryLabel,
+            onFieldsChange: handleFieldsChange
+          }
+        ),
+        /* @__PURE__ */ u2(
+          ExcelGrid,
+          {
+            items,
+            columns,
+            app,
+            selectedCellKey: editing.selectedCellKey,
+            editingCellKey: editing.editingCellKey,
+            pendingCellKeys: editing.pendingCellKeys,
+            savedCellKeys: editing.savedCellKeys,
+            cellErrors: editing.cellErrors,
+            valueOverrides: editing.valueOverrides,
+            canCommitCells: !!onCellCommit,
+            columnWidths: localColumnWidths,
+            fillDragSourceCell: editing.fillDragSourceCell,
+            fillDragTargetCellKey: editing.fillDragTargetCellKey,
+            onSelectCell: editing.selectCell,
+            onStartEdit: editing.startEdit,
+            onCancelEdit: editing.cancelEdit,
+            onCommitEdit: editing.commitEdit,
+            onStartFillDrag: editing.startFillDrag,
+            onMoveFillDrag: editing.moveFillDrag,
+            onFinishFillDrag: editing.finishFillDrag,
+            onCancelFillDrag: editing.cancelFillDrag,
+            onColumnWidthDraftChange: handleColumnWidthDraftChange,
+            onColumnWidthCommit: handleColumnWidthCommit,
+            onOpenRecord
+          }
+        )
+      ]
+    }
+  );
 }
 const ClearIcon = createSvgIcon(/* @__PURE__ */ u2("path", {
   d: "M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"
@@ -56250,7 +57714,7 @@ function ViewToolbar({
   if (hideToolbar) {
     return null;
   }
-  return /* @__PURE__ */ u2("div", { class: "tp-toolbar", children: [
+  return /* @__PURE__ */ u2("div", { class: "tp-toolbar", ...getObsidianEventBoundaryProps(), children: [
     viewOptions.map((v2) => /* @__PURE__ */ u2(
       "button",
       {
@@ -56261,10 +57725,12 @@ function ViewToolbar({
       v2
     )),
     /* @__PURE__ */ u2(
-      "button",
+      "span",
       {
-        disabled: true,
         class: "tp-toolbar-date-display",
+        role: "status",
+        "aria-live": "polite",
+        title: "当前时间范围",
         children: formatDateForView(currentDate, currentView)
       }
     ),
@@ -66789,6 +68255,7 @@ const ViewContent = ({
     layoutFilters
   });
   const selectedLayoutCategories = T$1(() => getCategoryValuesFromFilters(layoutFilters), [layoutFilters]);
+  const excelAvailableFields = T$1(() => getAllFields(allItems), [allItems]);
   y(() => {
     if (onDataLoaded) {
       onDataLoaded(viewItems);
@@ -66866,6 +68333,26 @@ const ViewContent = ({
       payload
     });
   }, [actionService, app, dateRange, layoutView, ui, viewInstance]);
+  const onOpenExcelRecord = q$1((item) => {
+    openEditFromItem({ app, item });
+  }, [app]);
+  const onExcelCellCommit = q$1(async (request) => {
+    return await commitExcelCellFromView({
+      uiPort: ui,
+      useCases,
+      item: request.item,
+      field: request.field,
+      canonicalField: request.canonicalField,
+      oldValue: request.oldValue,
+      nextValue: request.nextValue
+    });
+  }, [ui, useCases]);
+  const onExcelFieldsChange = q$1(async (nextFields) => {
+    await useCases.viewInstance.setDisplayFields(viewInstance.id, nextFields, excelAvailableFields);
+  }, [excelAvailableFields, useCases, viewInstance.id]);
+  const onExcelConfigChange = q$1(async (nextExcelConfig) => {
+    await useCases.viewInstance.updateExcelViewConfig(viewInstance.id, nextExcelConfig);
+  }, [useCases, viewInstance.id]);
   const viewProps = {
     app,
     items: viewItems,
@@ -66877,12 +68364,18 @@ const ViewContent = ({
     groupField: viewInstance.group,
     groupFields: viewInstance.groupFields,
     fields: viewInstance.fields,
+    availableFields: viewInstance.viewType === "ExcelView" ? excelAvailableFields : void 0,
+    excelConfig: viewInstance.viewType === "ExcelView" ? viewInstance.viewConfig?.excel : void 0,
+    onFieldsChange: viewInstance.viewType === "ExcelView" ? onExcelFieldsChange : void 0,
+    onExcelConfigChange: viewInstance.viewType === "ExcelView" ? onExcelConfigChange : void 0,
     onMarkDone,
     // 不向 shared/ui 透传 actionService：需要的能力一律用 handlers 注入
     // itemService 不再向 shared/ui 透传（避免把 service 依赖扩散到 UI）
     // 仅部分 View 需要（如 TimelineView 的“对齐/精确编辑”）
     onUpdateTaskTime,
     onQuickCreate: viewInstance.viewType === "StatisticsView" ? onQuickCreate : void 0,
+    onOpenRecord: viewInstance.viewType === "ExcelView" ? onOpenExcelRecord : void 0,
+    onCellCommit: viewInstance.viewType === "ExcelView" ? onExcelCellCommit : void 0,
     timerService,
     timers,
     // [新增]

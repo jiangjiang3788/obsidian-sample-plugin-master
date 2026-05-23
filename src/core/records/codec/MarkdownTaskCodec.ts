@@ -51,7 +51,7 @@ function unique(values: string[]): string[] {
  */
 export function decodeTaskMetadata(lineText: string): ParsedTaskMetadata {
   const source = String(lineText || '');
-  const tags = (source.match(TAG_RE) || []).map(tag => tag.replace(/^#/, ''));
+  const tags = (source.match(TAG_RE) || []).map(tag => tag.trim()).filter(Boolean);
   const extra: ParsedTaskMetadata['extra'] = {};
   const result: ParsedTaskMetadata = { tags, extra };
 

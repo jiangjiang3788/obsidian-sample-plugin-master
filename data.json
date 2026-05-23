@@ -464,6 +464,76 @@
       ],
       "sort": [],
       "collapsed": true
+    },
+    {
+      "id": "vi_mpi3dydfsejfio8",
+      "parentId": null,
+      "title": "excle",
+      "viewType": "ExcelView",
+      "viewConfig": {
+        "categories": [
+          {
+            "name": "打卡",
+            "color": "#b888e7"
+          },
+          {
+            "name": "计划",
+            "color": "#9eeabe"
+          },
+          {
+            "name": "闪念",
+            "color": "#e47272"
+          },
+          {
+            "name": "完成任务",
+            "color": "#88c1dd"
+          },
+          {
+            "name": "未完成任务",
+            "color": "#ebebeb"
+          },
+          {
+            "name": "总结",
+            "color": "#e5bf8a"
+          }
+        ]
+      },
+      "fields": [
+        "title",
+        "levelCount",
+        "tags",
+        "leafCategory",
+        "categoryKey",
+        "rootTheme",
+        "type",
+        "endISO",
+        "startISO",
+        "startTime",
+        "endTime",
+        "content",
+        "baseCategory",
+        "rating",
+        "date",
+        "duration",
+        "manuallyEdited",
+        "header",
+        "icon",
+        "image",
+        "file.basename",
+        "displayCount",
+        "leafTheme",
+        "recurrence",
+        "themePath"
+      ],
+      "groupFields": [],
+      "filters": [],
+      "sort": [
+        {
+          "field": "rootTheme",
+          "dir": "asc"
+        }
+      ],
+      "collapsed": false
     }
   ],
   "layouts": [
@@ -489,6 +559,17 @@
       "useFieldGranularity": false,
       "selectedThemes": [],
       "selectedCategories": []
+    },
+    {
+      "id": "layout_mpi3dfhyn14bsio",
+      "name": "全局布局 2",
+      "viewInstanceIds": [
+        "vi_mpi3dydfsejfio8"
+      ],
+      "displayMode": "list",
+      "initialView": "周",
+      "initialDateFollowsNow": true,
+      "parentId": null
     }
   ],
   "inputSettings": {

@@ -1,7 +1,5 @@
 export function normalizeTagToken(value: unknown): string {
-  return String(value ?? '')
-    .trim()
-    .replace(/^#+/, '');
+  return String(value ?? '').trim();
 }
 
 export function parseTagsInput(value: unknown): string[] {
@@ -41,5 +39,5 @@ export function parseTagsInput(value: unknown): string[] {
 
 export function formatTagsForField(value: unknown): string | undefined {
   const tags = parseTagsInput(value);
-  return tags.length ? tags.map((tag) => `#${tag}`).join(', ') : undefined;
+  return tags.length ? tags.map((tag) => tag.startsWith('#') ? tag : `#${tag}`).join(', ') : undefined;
 }

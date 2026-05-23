@@ -3,7 +3,7 @@
 import { h, Fragment } from 'preact';
 import { useState, useMemo, useEffect, useCallback, useRef } from 'preact/hooks'; // [修改] 导入 useRef
 import { DataStore } from '@core/public';
-import { Layout, ViewInstance, Item, FilterRule } from '@core/public'; // [修改] 导入 Item 类型
+import { Layout, ViewInstance, Item, FilterRule, getAllFields } from '@core/public'; // [修改] 导入 Item 类型
 import { ModulePanel } from './ModulePanel';
 import { DashboardViewComponents as ViewComponents } from '@features/settings';
 
@@ -36,6 +36,8 @@ import {
     openCreateFromStatistics,
     openCreateFromViewHeader,
     updateTimeFromView,
+    openEditFromItem,
+    commitExcelCellFromView,
 } from '@/app/public';
 import { openModuleSettingsWidget } from './ModuleSettingsModal';
 import { DataFilterPanel } from './DataFilterPanel';
@@ -112,6 +114,7 @@ const ViewContent = ({
     });
 
     const selectedLayoutCategories = useMemo(() => getCategoryValuesFromFilters(layoutFilters), [layoutFilters]);
+    const excelAvailableFields = useMemo(() => getAllFields(allItems), [allItems]);
 
     // [新增] 使用 useEffect 将数据传递给父组件
     useEffect(() => {
@@ -220,6 +223,35 @@ const ViewContent = ({
         });
     }, [actionService, app, dateRange, layoutView, ui, viewInstance]);
 
+    // ExcelView 只负责表格交互；打开记录编辑器和单元格保存能力由 feature/app 层注入。
+    const onOpenExcelRecord = useCallback((item: Item) => {
+        openEditFromItem({ app, item });
+    }, [app]);
+
+    const onExcelCellCommit = useCallback(async (request: any) => {
+        return await commitExcelCellFromView({
+            uiPort: ui,
+            useCases,
+            item: request.item,
+            field: request.field,
+            canonicalField: request.canonicalField,
+            oldValue: request.oldValue,
+            nextValue: request.nextValue,
+            showSuccessNotice: false,
+        });
+    }, [ui, useCases]);
+
+    // Excel 视图内字段栏只编辑统一真源 ViewInstance.fields；
+    // shared/ui 只发出 nextFields，保存逻辑仍集中在 app/usecase。
+    const onExcelFieldsChange = useCallback(async (nextFields: string[]) => {
+        await useCases.viewInstance.setDisplayFields(viewInstance.id, nextFields, excelAvailableFields);
+    }, [excelAvailableFields, useCases, viewInstance.id]);
+
+    // Excel 表现配置只写入 viewConfig.excel，不改变 ViewInstance.fields 真源。
+    const onExcelConfigChange = useCallback(async (nextExcelConfig: Record<string, any>) => {
+        await useCases.viewInstance.updateExcelViewConfig(viewInstance.id, nextExcelConfig);
+    }, [useCases, viewInstance.id]);
+
     const viewProps: any = {
         app,
         items: viewItems,
@@ -231,12 +263,18 @@ const ViewContent = ({
         groupField: viewInstance.group,
         groupFields: viewInstance.groupFields,
         fields: viewInstance.fields,
+        availableFields: viewInstance.viewType === 'ExcelView' ? excelAvailableFields : undefined,
+        excelConfig: viewInstance.viewType === 'ExcelView' ? viewInstance.viewConfig?.excel : undefined,
+        onFieldsChange: viewInstance.viewType === 'ExcelView' ? onExcelFieldsChange : undefined,
+        onExcelConfigChange: viewInstance.viewType === 'ExcelView' ? onExcelConfigChange : undefined,
         onMarkDone: onMarkDone,
         // 不向 shared/ui 透传 actionService：需要的能力一律用 handlers 注入
         // itemService 不再向 shared/ui 透传（避免把 service 依赖扩散到 UI）
         // 仅部分 View 需要（如 TimelineView 的“对齐/精确编辑”）
         onUpdateTaskTime: onUpdateTaskTime,
         onQuickCreate: viewInstance.viewType === 'StatisticsView' ? onQuickCreate : undefined,
+        onOpenRecord: viewInstance.viewType === 'ExcelView' ? onOpenExcelRecord : undefined,
+        onCellCommit: viewInstance.viewType === 'ExcelView' ? onExcelCellCommit : undefined,
         timerService: timerService,
         timers: timers, // [新增]
         allThemes: allThemes, // [新增]

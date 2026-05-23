@@ -109,10 +109,22 @@ body.theme-dark .module-action-plus:hover {
 }
 
 .tp-toolbar-date-display {
-    font-weight: bold;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 28px;
+    padding: 4px 10px;
     margin: 0 4px;
-    background: #fff;
+    border: 1px solid transparent;
+    border-radius: var(--button-radius, 4px);
+    background: var(--background-primary);
+    color: var(--text-normal);
+    font-size: 0.875rem;
+    font-weight: bold;
+    line-height: 1.2;
     text-align: center;
+    white-space: nowrap;
+    user-select: none;
 }
 
 /* 主题和分类筛选器样式 */

@@ -5,6 +5,7 @@ import { useMemo } from 'preact/hooks';
 import { dayjs, formatDateForView } from '@core/public';
 import { ThemeFilter } from './ThemeFilter';
 import { CategoryFilter } from './CategoryFilter';
+import { getObsidianEventBoundaryProps } from '../events/obsidianEventBoundary';
 import type { ViewInstance } from '@core/public';
 import type { ThemeDefinition } from '@core/public';
 
@@ -65,7 +66,7 @@ export function ViewToolbar({
     }
 
     return (
-        <div class="tp-toolbar">
+        <div class="tp-toolbar" {...getObsidianEventBoundaryProps()}>
             {/* 视图切换按钮 */}
             {viewOptions.map(v => (
                 <button 
@@ -78,12 +79,14 @@ export function ViewToolbar({
             ))}
             
             {/* 当前日期显示 */}
-            <button 
-                disabled 
+            <span
                 class="tp-toolbar-date-display"
+                role="status"
+                aria-live="polite"
+                title="当前时间范围"
             >
                 {formatDateForView(currentDate, currentView)}
-            </button>
+            </span>
             
             {/* 日期导航按钮 */}
             <button 

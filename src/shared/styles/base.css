@@ -279,6 +279,16 @@
     text-align: left;
 }
 
+.think-table th,
+.think-table td {
+    white-space: nowrap;
+}
+
+.think-table td > .table-view-cell-item,
+.think-table td > .table-view-cell-item * {
+    white-space: nowrap;
+}
+
 
 .task-row button {
     box-shadow: none !important;
@@ -308,4 +318,567 @@
 .task-row .task-row-timer-action .MuiIconButton-root:active {
     background: transparent !important;
     box-shadow: none !important;
+}
+
+/* ExcelView inline editing UX */
+.excel-view-shell {
+    overflow-x: auto;
+}
+
+.excel-view-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+    margin: 0 0 8px;
+    color: var(--text-muted);
+    font-size: 12px;
+    user-select: none;
+}
+
+.excel-view-legend-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    border: 1px solid var(--background-modifier-border);
+    border-radius: 999px;
+    padding: 2px 8px;
+    background: var(--background-secondary-alt);
+    line-height: 1.5;
+}
+
+.excel-view-legend-chip.is-editable {
+    color: var(--text-accent);
+    border-color: var(--interactive-accent);
+}
+
+.excel-view-legend-chip.is-readonly {
+    color: var(--text-faint);
+    background: var(--background-secondary);
+}
+
+.excel-view-legend-note {
+    color: var(--text-muted);
+}
+
+.excel-view-table th {
+    position: relative;
+    white-space: nowrap;
+    vertical-align: middle;
+}
+
+.excel-view-table th[data-editable="true"] {
+    background: color-mix(in srgb, var(--interactive-accent) 8%, var(--background-secondary));
+}
+
+.excel-view-table th[data-editable="false"] {
+    color: var(--text-muted);
+    background: var(--background-secondary);
+}
+
+.excel-view-table th[data-danger-level="medium"][data-editable="true"] {
+    background: color-mix(in srgb, var(--text-warning, #e0a800) 12%, var(--background-secondary));
+}
+
+.excel-view-header-label {
+    margin-right: 6px;
+}
+
+.excel-view-header-badge {
+    display: inline-flex;
+    align-items: center;
+    border: 1px solid var(--background-modifier-border);
+    border-radius: 999px;
+    padding: 0 6px;
+    color: var(--text-muted);
+    background: var(--background-primary);
+    font-size: 10px;
+    font-weight: 500;
+    line-height: 1.5;
+}
+
+.excel-view-table th[data-editable="true"] .excel-view-header-badge {
+    color: var(--text-accent);
+    border-color: var(--interactive-accent);
+}
+
+.excel-view-table th[data-danger-level="medium"][data-editable="true"] .excel-view-header-badge {
+    color: var(--text-warning, #e0a800);
+    border-color: var(--text-warning, #e0a800);
+}
+
+.excel-view-table .excel-view-cell {
+    position: relative;
+    min-width: 96px;
+    max-width: 320px;
+    white-space: nowrap;
+    cursor: cell;
+    vertical-align: middle;
+    transition: background-color 120ms ease, box-shadow 120ms ease, color 120ms ease;
+}
+
+.excel-view-table .excel-view-cell-value,
+.excel-view-table .excel-view-content-link {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.excel-view-table .excel-view-cell.is-inline-editable {
+    cursor: text;
+    background: color-mix(in srgb, var(--interactive-accent) 4%, transparent);
+}
+
+.excel-view-table .excel-view-cell.is-inline-editable:hover {
+    background: color-mix(in srgb, var(--interactive-accent) 9%, transparent);
+}
+
+.excel-view-table .excel-view-cell.is-readonly {
+    cursor: default;
+    color: var(--text-muted);
+    background: color-mix(in srgb, var(--background-secondary) 72%, transparent);
+}
+
+.excel-view-table .excel-view-cell.is-policy-readonly .excel-view-cell-value,
+.excel-view-table .excel-view-cell.is-policy-readonly .excel-view-content-link {
+    opacity: 0.72;
+}
+
+.excel-view-table .excel-view-cell.is-medium-risk.is-inline-editable {
+    background: color-mix(in srgb, var(--text-warning, #e0a800) 6%, transparent);
+}
+
+.excel-view-table .excel-view-cell.is-medium-risk.is-inline-editable:hover {
+    background: color-mix(in srgb, var(--text-warning, #e0a800) 12%, transparent);
+}
+
+.excel-view-table .excel-view-cell.is-high-risk,
+.excel-view-table .excel-view-cell[data-editor-kind="path"] {
+    color: var(--text-faint);
+    background: repeating-linear-gradient(
+        -45deg,
+        color-mix(in srgb, var(--background-secondary) 90%, transparent),
+        color-mix(in srgb, var(--background-secondary) 90%, transparent) 6px,
+        color-mix(in srgb, var(--background-modifier-border) 35%, transparent) 6px,
+        color-mix(in srgb, var(--background-modifier-border) 35%, transparent) 12px
+    );
+}
+
+.excel-view-table .excel-view-cell.is-selected {
+    outline: 2px solid var(--interactive-accent);
+    outline-offset: -2px;
+}
+
+.excel-view-table .excel-view-cell.is-selected.is-readonly {
+    outline-color: var(--text-faint);
+}
+
+.excel-view-table .excel-view-cell.is-pending {
+    opacity: 0.72;
+}
+
+.excel-view-table .excel-view-cell.has-error {
+    outline: 2px solid var(--text-error, #e03131);
+    outline-offset: -2px;
+}
+
+.excel-view-cell-edit-wrap {
+    display: block;
+}
+
+.excel-view-table .excel-view-cell-editor {
+    box-sizing: border-box;
+    width: 100%;
+    min-width: 96px;
+    margin: 0;
+    border: 1px solid var(--interactive-accent);
+    border-radius: 4px;
+    background: var(--background-primary);
+    color: var(--text-normal);
+    font: inherit;
+    line-height: 1.4;
+    padding: 4px 6px;
+}
+
+.excel-view-table .excel-view-cell-editor:focus {
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--interactive-accent) 24%, transparent);
+    outline: none;
+}
+
+.excel-view-table .excel-view-cell-editor-textarea {
+    min-height: 64px;
+    resize: vertical;
+}
+
+.excel-view-cell-edit-hint {
+    display: block;
+    margin-top: 2px;
+    color: var(--text-faint);
+    font-size: 10px;
+    line-height: 1.2;
+}
+
+.excel-view-table .excel-view-content-link {
+    color: var(--text-accent);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+
+.excel-view-table .excel-view-cell-status,
+.excel-view-table .excel-view-cell-error,
+.excel-view-table .excel-view-cell-affordance {
+    position: absolute;
+    top: 2px;
+    right: 4px;
+    font-size: 11px;
+    line-height: 1;
+    pointer-events: none;
+}
+
+.excel-view-table .excel-view-cell-affordance {
+    color: var(--text-faint);
+    opacity: 0.86;
+}
+
+.excel-view-table .excel-view-cell.is-inline-editable .excel-view-cell-affordance {
+    color: var(--text-accent);
+}
+
+.excel-view-table .excel-view-cell-error {
+    color: var(--text-error, #e03131);
+    font-weight: 700;
+}
+
+.excel-view-table .excel-view-cell.is-fill-source {
+    outline: 2px dashed var(--interactive-accent);
+    outline-offset: -3px;
+}
+
+.excel-view-table .excel-view-cell.is-fill-target {
+    box-shadow: inset 0 0 0 2px var(--interactive-accent-hover, var(--interactive-accent));
+}
+
+.excel-view-table .excel-view-fill-handle {
+    position: absolute;
+    right: 1px;
+    bottom: 1px;
+    width: 7px;
+    height: 7px;
+    border: 1px solid var(--background-primary);
+    background: var(--interactive-accent);
+    cursor: crosshair;
+    z-index: 1;
+}
+
+.excel-view-table .excel-view-cell[data-editor-kind="path"] .excel-view-fill-handle,
+.excel-view-table .excel-view-cell[data-editable="false"] .excel-view-fill-handle {
+    display: none;
+}
+
+/* ExcelView column configuration toolbar */
+.excel-column-toolbar {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 0 0 10px;
+    padding: 8px;
+    border: 1px solid var(--background-modifier-border);
+    border-radius: 10px;
+    background: color-mix(in srgb, var(--background-secondary) 72%, transparent);
+    user-select: none;
+}
+
+.excel-column-toolbar-title {
+    flex: 0 0 auto;
+    color: var(--text-muted);
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.excel-column-chip-list {
+    display: inline-flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 6px;
+    min-width: 0;
+    flex: 1 1 auto;
+}
+
+.excel-column-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    max-width: 260px;
+    border: 1px solid var(--background-modifier-border);
+    border-radius: 999px;
+    padding: 2px 10px 2px 8px;
+    background: var(--background-primary);
+    color: var(--text-normal);
+    font-size: 12px;
+    line-height: 1.6;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.excel-column-toolbar[data-editable="true"] .excel-column-chip {
+    cursor: grab;
+}
+
+.excel-column-toolbar[data-editable="true"] .excel-column-chip:hover {
+    border-color: var(--interactive-accent);
+    background: color-mix(in srgb, var(--interactive-accent) 8%, var(--background-primary));
+}
+
+.excel-column-chip.is-dragging {
+    opacity: 0.56;
+    outline: 2px dashed var(--interactive-accent);
+    outline-offset: 2px;
+}
+
+.excel-column-chip-handle {
+    color: var(--text-faint);
+    font-size: 10px;
+    letter-spacing: -3px;
+    margin-right: 2px;
+}
+
+.excel-column-chip-label {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 180px;
+    font-weight: 600;
+}
+
+.excel-column-add-field {
+    flex: 0 0 auto;
+    min-width: 150px;
+}
+
+.excel-column-toolbar-readonly,
+.excel-column-toolbar-status,
+.excel-column-toolbar-error {
+    color: var(--text-muted);
+    font-size: 12px;
+}
+
+.excel-column-toolbar-status {
+    color: var(--text-accent);
+}
+
+.excel-column-toolbar-error {
+    color: var(--text-error, #e03131);
+}
+
+/* ExcelView step8: sticky grid, column resize, context menu, save flash */
+.excel-view-table {
+    table-layout: fixed;
+    width: max-content;
+    min-width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+.excel-view-table th {
+    position: sticky;
+    top: 0;
+    z-index: 6;
+    height: 42px;
+    line-height: 1.2;
+    vertical-align: middle;
+    overflow: visible;
+    user-select: none;
+}
+
+.excel-view-table th:first-child {
+    left: 0;
+    z-index: 8;
+}
+
+.excel-view-table td:first-child {
+    position: sticky;
+    left: 0;
+    z-index: 4;
+    background-clip: padding-box;
+}
+
+.excel-view-table tr:hover td:first-child {
+    z-index: 5;
+}
+
+.excel-view-header-stack {
+    display: grid;
+    grid-template-rows: 1fr 1fr;
+    align-items: center;
+    gap: 2px;
+    min-width: 0;
+    padding-right: 8px;
+}
+
+.excel-view-header-label {
+    display: block;
+    margin-right: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-weight: 700;
+}
+
+.excel-view-header-badge {
+    justify-self: start;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.excel-view-column-resize-handle {
+    position: absolute;
+    top: 0;
+    right: -3px;
+    width: 7px;
+    height: 100%;
+    cursor: col-resize;
+    z-index: 12;
+}
+
+.excel-view-column-resize-handle:hover,
+.excel-view-column-resize-handle:active {
+    background: color-mix(in srgb, var(--interactive-accent) 28%, transparent);
+}
+
+body.excel-view-is-resizing-column,
+body.excel-view-is-resizing-column * {
+    cursor: col-resize !important;
+    user-select: none !important;
+}
+
+.excel-view-table .excel-view-cell.is-saved {
+    animation: excel-cell-saved-flash 1200ms ease-out;
+}
+
+.excel-view-table .excel-view-cell-status.is-saved {
+    color: var(--text-success, var(--text-accent));
+    font-weight: 800;
+}
+
+@keyframes excel-cell-saved-flash {
+    0% {
+        background: color-mix(in srgb, var(--text-success, var(--interactive-accent)) 24%, transparent);
+        box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--text-success, var(--interactive-accent)) 60%, transparent);
+    }
+    100% {
+        background: inherit;
+        box-shadow: inset 0 0 0 0 transparent;
+    }
+}
+
+.excel-column-context-menu {
+    position: fixed;
+    z-index: 9999;
+    min-width: 168px;
+    max-width: 260px;
+    padding: 6px;
+    border: 1px solid var(--background-modifier-border);
+    border-radius: 10px;
+    background: var(--background-primary);
+    color: var(--text-normal);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+}
+
+.excel-column-context-menu-title {
+    padding: 4px 8px 6px;
+    color: var(--text-muted);
+    font-size: 12px;
+    font-weight: 700;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.excel-column-context-menu button {
+    display: block;
+    width: 100%;
+    margin: 0;
+    padding: 6px 8px;
+    border: none;
+    border-radius: 6px;
+    background: transparent;
+    color: var(--text-normal);
+    font: inherit;
+    font-size: 12px;
+    text-align: left;
+    cursor: pointer;
+}
+
+.excel-column-context-menu button:hover:not(:disabled),
+.excel-column-context-menu button:focus:not(:disabled) {
+    background: var(--background-modifier-hover);
+}
+
+.excel-column-context-menu button:disabled {
+    color: var(--text-faint);
+    cursor: not-allowed;
+}
+
+.excel-column-context-info {
+    margin-top: 4px;
+    padding: 6px 8px;
+    border-top: 1px solid var(--background-modifier-border);
+    color: var(--text-muted);
+    font-size: 11px;
+}
+
+.excel-column-context-info div {
+    display: grid;
+    grid-template-columns: 44px minmax(0, 1fr);
+    gap: 6px;
+    align-items: center;
+    margin: 3px 0;
+}
+
+.excel-column-context-info strong,
+.excel-column-context-info code {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: var(--text-normal);
+}
+
+/* ExcelView step9: keyboard navigation, paste feedback, field-specific editors */
+.excel-view-table .excel-view-cell:focus {
+    outline: 2px solid var(--interactive-accent);
+    outline-offset: -2px;
+}
+
+.excel-view-table .excel-view-cell.is-selected:focus {
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--interactive-accent) 70%, transparent);
+}
+
+.excel-view-table .excel-view-cell-editor-select {
+    appearance: auto;
+    cursor: pointer;
+}
+
+.excel-view-table .excel-view-cell[data-editor-kind="boolean"] .excel-view-cell-editor,
+.excel-view-table .excel-view-cell[data-editor-kind="select"] .excel-view-cell-editor {
+    min-width: 100%;
+}
+
+.excel-view-table .excel-view-cell[data-save-state="pending"]::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--interactive-accent), transparent);
+    animation: excel-cell-pending-bar 900ms linear infinite;
+}
+
+@keyframes excel-cell-pending-bar {
+    0% { transform: translateX(-70%); }
+    100% { transform: translateX(70%); }
 }

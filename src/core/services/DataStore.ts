@@ -261,7 +261,7 @@ export class DataStore {
           const headingEntry = headingsList[nextHeadingIndex];
           const headingText = headingEntry.heading;
           const headingTags = headingText.match(/#([\p{L}\p{N}_\/-]+)/gu) || [];
-          currentSectionTags = headingTags.map(t => t.replace('#', '')).filter(Boolean);
+          currentSectionTags = headingTags.map(t => t.trim()).filter(Boolean);
           let cleanText = headingText;
           for (const tag of headingTags) cleanText = cleanText.replace(tag, '').trim();
           currentHeader = cleanText || '';

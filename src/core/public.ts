@@ -52,6 +52,14 @@ export type {
 export * from './utils';
 export { buildRecordSubmitFeedbackPresentation } from './utils/recordSubmitFeedback';
 export {
+    addDisplayField,
+    moveDisplayField,
+    normalizeDisplayFields,
+    removeDisplayField,
+    replaceDisplayField,
+} from './view-config/displayFields';
+export type { NormalizeDisplayFieldsOptions } from './view-config/displayFields';
+export {
     FIELD_CATEGORY_LABELS,
     FIELD_REGISTRY,
     getAvailableFields,
@@ -100,6 +108,10 @@ export {
     readFieldValue,
     resolveFieldValue,
     splitHierarchyPath,
+    canInlineEditField,
+    getFieldEditPolicy,
+    getFieldEditorKind,
+    normalizeEditableFieldKey,
 } from './fields';
 export type {
     BuiltInFieldGuideGroup,
@@ -123,6 +135,11 @@ export type {
     FieldSystemCheckStatus,
     FieldSystemHealthReport,
     ImageFieldValue,
+    FieldCommitMode,
+    FieldEditDangerLevel,
+    FieldEditPolicy,
+    FieldEditValueSource,
+    FieldEditorKind,
 } from './fields';
 
 //
