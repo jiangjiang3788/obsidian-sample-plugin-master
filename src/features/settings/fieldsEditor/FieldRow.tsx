@@ -3,8 +3,6 @@
 import { useEffect, useRef, useState } from "preact/hooks";
 import { Box, Button, Collapse, Divider, Stack, Typography } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
-import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
-import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
 import DeleteIcon from "@mui/icons-material/Delete";
 import DragIndicatorIcon from "@mui/icons-material/DragIndicator";
 import ExpandLessIcon from "@mui/icons-material/ExpandLess";
@@ -18,6 +16,9 @@ import { OptionRow } from "./OptionRow";
 
 const fieldTypeOptions = getUserTemplateFieldTypeOptions();
 
+const fieldRowGridTemplateColumns = "24px minmax(0, 1.2fr) minmax(112px, 150px) minmax(0, 1fr) 72px 40px";
+const emptyControlMinHeight = 40;
+
 function defaultInputType(uiType: string) {
   if (uiType === "number") return "number";
   if (uiType === "date") return "date";
@@ -28,22 +29,16 @@ function defaultInputType(uiType: string) {
 
 export function FieldRow({
   field,
-  index,
-  fieldCount,
   disabled = false,
   isDragging = false,
   onUpdate,
   onRemove,
-  onMove,
 }: {
   field: TemplateField;
-  index: number;
-  fieldCount: number;
   disabled?: boolean;
   isDragging?: boolean;
   onUpdate: (updates: Partial<TemplateField>) => void;
   onRemove: () => void;
-  onMove: (direction: "up" | "down") => void;
 }) {
   const [localName, setLocalName] = useState(field.label || field.key);
   const [localDefaultValue, setLocalDefaultValue] = useState(field.defaultValue || "");
@@ -123,26 +118,33 @@ export function FieldRow({
         bgcolor: isDragging ? "action.hover" : "transparent",
       }}
     >
-      <Stack direction="row" spacing={1} alignItems="center">
+      <Box
+        sx={{
+          display: "grid",
+          gridTemplateColumns: fieldRowGridTemplateColumns,
+          columnGap: 0.75,
+          alignItems: "center",
+        }}
+      >
         <Box
           title="拖动排序"
           sx={{
             width: 28,
+            minHeight: emptyControlMinHeight,
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
             color: "text.secondary",
             cursor: disabled ? "default" : "grab",
-            flexShrink: 0,
           }}
         >
           <DragIndicatorIcon sx={{ fontSize: "1.25rem" }} />
         </Box>
 
-        <Box sx={{ flex: "1 1 240px", minWidth: 180 }}>
+        <Box sx={{ minWidth: 0 }}>
           <NativeTextInput
-            label="字段名称"
-            placeholder="例如：地点、项目、备注"
+            label=""
+            placeholder="字段名称"
             value={localName}
             onInput={(value) => setLocalName(value)}
             onBlur={handleNameBlur}
@@ -153,20 +155,20 @@ export function FieldRow({
           />
         </Box>
 
-        <Box sx={{ width: 150, flexShrink: 0 }}>
+        <Box sx={{ minWidth: 0 }}>
           <SimpleSelect
             value={uiType}
             options={fieldTypeOptions}
             onChange={(val) => onUpdate({ type: normalizeTemplateFieldType(val) })}
             disabled={disabled}
-            sx={{ width: 150 }}
+            sx={{ width: "100%" }}
           />
         </Box>
 
-        {showInlineDefaultValue && (
-          <Box sx={{ flex: "1 1 200px", minWidth: 160 }}>
+        <Box sx={{ minWidth: 0 }}>
+          {showInlineDefaultValue ? (
             <NativeTextInput
-              label="默认值"
+              label=""
               value={localDefaultValue}
               type={defaultInputType(uiType)}
               onInput={(value) => {
@@ -178,35 +180,29 @@ export function FieldRow({
               placeholder="可留空"
               style={{ width: "100%" }}
             />
-          </Box>
-        )}
+          ) : (
+            <Box sx={{ minHeight: emptyControlMinHeight }} />
+          )}
+        </Box>
 
-        {showDetails && (
-          <Button
-            size="small"
-            variant="text"
-            disabled={disabled && !showOptionsEditor}
-            onClick={() => setDetailsOpen((open) => !open)}
-            endIcon={detailsOpen ? <ExpandLessIcon /> : <ExpandMoreIcon />}
-            sx={{ flexShrink: 0, whiteSpace: "nowrap" }}
-          >
-            {detailsOpen ? "收起" : "详情"}
-          </Button>
-        )}
+        <Box sx={{ minWidth: 0, display: "flex", justifyContent: "center" }}>
+          {showDetails ? (
+            <Button
+              size="small"
+              variant="text"
+              disabled={disabled && !showOptionsEditor}
+              onClick={() => setDetailsOpen((open) => !open)}
+              endIcon={detailsOpen ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+              sx={{ width: "100%", minWidth: 0, px: 0.75, whiteSpace: "nowrap", "& .MuiButton-endIcon": { ml: 0.25, mr: 0 } }}
+            >
+              {detailsOpen ? "收起" : "详情"}
+            </Button>
+          ) : (
+            <Box sx={{ minHeight: emptyControlMinHeight }} />
+          )}
+        </Box>
 
-        <Stack direction="row" sx={{ flexShrink: 0 }}>
-          <IconAction
-            label="上移"
-            disabled={disabled || index === 0}
-            onClick={() => onMove("up")}
-            icon={<ArrowUpwardIcon sx={{ fontSize: "1rem" }} />}
-          />
-          <IconAction
-            label="下移"
-            disabled={disabled || index === fieldCount - 1}
-            onClick={() => onMove("down")}
-            icon={<ArrowDownwardIcon sx={{ fontSize: "1rem" }} />}
-          />
+        <Box sx={{ display: "flex", justifyContent: "center" }}>
           <IconAction
             label="删除此字段"
             disabled={disabled}
@@ -214,17 +210,17 @@ export function FieldRow({
             color="error"
             icon={<DeleteIcon />}
           />
-        </Stack>
-      </Stack>
+        </Box>
+      </Box>
 
       {customFieldNameWarning && (
-        <Typography variant="caption" sx={{ color: "warning.main", display: "block", mt: 0.5, ml: 4 }}>
+        <Typography variant="caption" sx={{ color: "warning.main", display: "block", mt: 0.5, ml: 4.5 }}>
           {customFieldNameWarning}
         </Typography>
       )}
 
       <Collapse in={detailsOpen} unmountOnExit>
-        <Box sx={{ mt: 1.25, ml: 4, p: 1.25, borderRadius: 1, bgcolor: "background.default" }}>
+        <Box sx={{ mt: 1.25, ml: 4.5, p: 1.25, borderRadius: 1, bgcolor: "background.default" }}>
           {uiType === "textarea" && showDefaultValueEditor && (
             <NativeTextarea
               label="默认值"

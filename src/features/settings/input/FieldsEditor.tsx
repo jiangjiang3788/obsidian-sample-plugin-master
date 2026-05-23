@@ -1,12 +1,14 @@
 // src/features/settings/ui/components/FieldsEditor.tsx
 /** @jsxImportSource preact */
 import { useEffect, useRef, useState } from "preact/hooks";
-import { Box, Button, Divider, Stack } from "@mui/material";
+import { Box, Button, Divider, Stack, Typography } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import type { TemplateField } from "@core/public";
 import { createCustomTemplateField, sanitizeTemplateField, sanitizeTemplateFields } from "@core/public";
 import { logRenderDiagnostic } from "@shared/public";
 import { FieldRow } from "./fieldsEditor/FieldRow";
+
+const fieldRowGridTemplateColumns = "24px minmax(0, 1.2fr) minmax(112px, 150px) minmax(0, 1fr) 72px 40px";
 
 function createEmptyField(index: number): TemplateField {
   return createCustomTemplateField(index);
@@ -64,11 +66,6 @@ export function FieldsEditor({
     emitFields((fields || []).filter((_, i) => i !== index));
   };
 
-  const moveField = (index: number, direction: "up" | "down") => {
-    const targetIndex = direction === "up" ? index - 1 : index + 1;
-    emitFields(reorderFields(fields || [], index, targetIndex));
-  };
-
   const handleDropOn = (targetIndex: number) => {
     if (draggingIndex === null || disabled) return;
     emitFields(reorderFields(fields || [], draggingIndex, targetIndex));
@@ -76,11 +73,22 @@ export function FieldsEditor({
   };
 
   return (
-    <Stack spacing={1.25}>
-      <Box>
-        <Button onClick={addField} disabled={disabled} startIcon={<AddIcon />} variant="contained" size="small">
-          添加字段
-        </Button>
+    <Stack spacing={1.25} sx={{ width: "100%", maxWidth: 1040, boxSizing: "border-box", overflowX: "hidden" }}>
+      <Box
+        sx={{
+          px: 0.5,
+          display: "grid",
+          gridTemplateColumns: fieldRowGridTemplateColumns,
+          columnGap: 0.75,
+          alignItems: "center",
+        }}
+      >
+        <Box />
+        <Typography variant="caption" sx={{ color: "text.secondary" }}>字段名称</Typography>
+        <Typography variant="caption" sx={{ color: "text.secondary" }}>字段类型</Typography>
+        <Typography variant="caption" sx={{ color: "text.secondary" }}>默认值</Typography>
+        <Box />
+        <Box />
       </Box>
 
       <Stack spacing={0} divider={<Divider sx={{ my: 0.75 }} />}>
@@ -111,17 +119,20 @@ export function FieldsEditor({
           >
             <FieldRow
               field={field}
-              index={index}
-              fieldCount={fields.length}
               disabled={disabled}
               isDragging={draggingIndex === index}
               onUpdate={(updates) => handleUpdate(index, updates)}
               onRemove={() => removeField(index)}
-              onMove={(dir) => moveField(index, dir)}
             />
           </Box>
         ))}
       </Stack>
+
+      <Box>
+        <Button onClick={addField} disabled={disabled} startIcon={<AddIcon />} variant="contained" size="small">
+          添加字段
+        </Button>
+      </Box>
     </Stack>
   );
 }

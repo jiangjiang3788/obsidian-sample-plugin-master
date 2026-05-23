@@ -57062,12 +57062,6 @@ function ModulePanel({ title, collapsed, children, onActionClick, onToggle, onEx
 const AddIcon = createSvgIcon(/* @__PURE__ */ u2("path", {
   d: "M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6z"
 }));
-const ArrowDownwardIcon = createSvgIcon(/* @__PURE__ */ u2("path", {
-  d: "m20 12-1.41-1.41L13 16.17V4h-2v12.17l-5.58-5.59L4 12l8 8z"
-}));
-const ArrowUpwardIcon = createSvgIcon(/* @__PURE__ */ u2("path", {
-  d: "m4 12 1.41 1.41L11 7.83V20h2V7.83l5.58 5.59L20 12l-8-8z"
-}));
 const ExpandLessIcon = createSvgIcon(/* @__PURE__ */ u2("path", {
   d: "m12 8-6 6 1.41 1.41L12 10.83l4.59 4.58L18 14z"
 }));
@@ -57364,6 +57358,8 @@ function OptionRow({
   ] });
 }
 const fieldTypeOptions = getUserTemplateFieldTypeOptions();
+const fieldRowGridTemplateColumns$1 = "24px minmax(0, 1.2fr) minmax(112px, 150px) minmax(0, 1fr) 72px 40px";
+const emptyControlMinHeight = 40;
 function defaultInputType(uiType) {
   if (uiType === "number") return "number";
   if (uiType === "date") return "date";
@@ -57373,13 +57369,10 @@ function defaultInputType(uiType) {
 }
 function FieldRow({
   field,
-  index,
-  fieldCount,
   disabled = false,
   isDragging = false,
   onUpdate,
-  onRemove,
-  onMove
+  onRemove
 }) {
   const [localName, setLocalName] = d(field.label || field.key);
   const [localDefaultValue, setLocalDefaultValue] = d(field.defaultValue || "");
@@ -57450,108 +57443,99 @@ function FieldRow({
         bgcolor: isDragging ? "action.hover" : "transparent"
       },
       children: [
-        /* @__PURE__ */ u2(Stack$1, { direction: "row", spacing: 1, alignItems: "center", children: [
-          /* @__PURE__ */ u2(
-            Box$1,
-            {
-              title: "拖动排序",
-              sx: {
-                width: 28,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                color: "text.secondary",
-                cursor: disabled ? "default" : "grab",
-                flexShrink: 0
-              },
-              children: /* @__PURE__ */ u2(DragIndicatorIcon, { sx: { fontSize: "1.25rem" } })
-            }
-          ),
-          /* @__PURE__ */ u2(Box$1, { sx: { flex: "1 1 240px", minWidth: 180 }, children: /* @__PURE__ */ u2(
-            NativeTextInput$1,
-            {
-              label: "字段名称",
-              placeholder: "例如：地点、项目、备注",
-              value: localName,
-              onInput: (value) => setLocalName(value),
-              onBlur: handleNameBlur,
-              onFocus: () => setIsEditing(true),
-              disabled,
-              style: { width: "100%" },
-              title: "该名称会显示在输入表单中，也可在模板中用 {{字段名称}} 引用"
-            }
-          ) }),
-          /* @__PURE__ */ u2(Box$1, { sx: { width: 150, flexShrink: 0 }, children: /* @__PURE__ */ u2(
-            SimpleSelect,
-            {
-              value: uiType,
-              options: fieldTypeOptions,
-              onChange: (val) => onUpdate({ type: normalizeTemplateFieldType(val) }),
-              disabled,
-              sx: { width: 150 }
-            }
-          ) }),
-          showInlineDefaultValue && /* @__PURE__ */ u2(Box$1, { sx: { flex: "1 1 200px", minWidth: 160 }, children: /* @__PURE__ */ u2(
-            NativeTextInput$1,
-            {
-              label: "默认值",
-              value: localDefaultValue,
-              type: defaultInputType(uiType),
-              onInput: (value) => {
-                setLocalDefaultValue(value);
-                onUpdate({ defaultValue: value });
-              },
-              onBlur: () => onUpdate({ defaultValue: localDefaultValue }),
-              disabled,
-              placeholder: "可留空",
-              style: { width: "100%" }
-            }
-          ) }),
-          showDetails && /* @__PURE__ */ u2(
-            Button$1,
-            {
-              size: "small",
-              variant: "text",
-              disabled: disabled && !showOptionsEditor,
-              onClick: () => setDetailsOpen((open) => !open),
-              endIcon: detailsOpen ? /* @__PURE__ */ u2(ExpandLessIcon, {}) : /* @__PURE__ */ u2(ExpandMoreIcon, {}),
-              sx: { flexShrink: 0, whiteSpace: "nowrap" },
-              children: detailsOpen ? "收起" : "详情"
-            }
-          ),
-          /* @__PURE__ */ u2(Stack$1, { direction: "row", sx: { flexShrink: 0 }, children: [
-            /* @__PURE__ */ u2(
-              IconAction,
-              {
-                label: "上移",
-                disabled: disabled || index === 0,
-                onClick: () => onMove("up"),
-                icon: /* @__PURE__ */ u2(ArrowUpwardIcon, { sx: { fontSize: "1rem" } })
-              }
-            ),
-            /* @__PURE__ */ u2(
-              IconAction,
-              {
-                label: "下移",
-                disabled: disabled || index === fieldCount - 1,
-                onClick: () => onMove("down"),
-                icon: /* @__PURE__ */ u2(ArrowDownwardIcon, { sx: { fontSize: "1rem" } })
-              }
-            ),
-            /* @__PURE__ */ u2(
-              IconAction,
-              {
-                label: "删除此字段",
-                disabled,
-                onClick: onRemove,
-                color: "error",
-                icon: /* @__PURE__ */ u2(DeleteIcon, {})
-              }
-            )
-          ] })
-        ] }),
-        customFieldNameWarning && /* @__PURE__ */ u2(Typography$1, { variant: "caption", sx: { color: "warning.main", display: "block", mt: 0.5, ml: 4 }, children: customFieldNameWarning }),
-        /* @__PURE__ */ u2(Collapse, { in: detailsOpen, unmountOnExit: true, children: /* @__PURE__ */ u2(Box$1, { sx: { mt: 1.25, ml: 4, p: 1.25, borderRadius: 1, bgcolor: "background.default" }, children: [
+        /* @__PURE__ */ u2(
+          Box$1,
+          {
+            sx: {
+              display: "grid",
+              gridTemplateColumns: fieldRowGridTemplateColumns$1,
+              columnGap: 0.75,
+              alignItems: "center"
+            },
+            children: [
+              /* @__PURE__ */ u2(
+                Box$1,
+                {
+                  title: "拖动排序",
+                  sx: {
+                    width: 28,
+                    minHeight: emptyControlMinHeight,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    color: "text.secondary",
+                    cursor: disabled ? "default" : "grab"
+                  },
+                  children: /* @__PURE__ */ u2(DragIndicatorIcon, { sx: { fontSize: "1.25rem" } })
+                }
+              ),
+              /* @__PURE__ */ u2(Box$1, { sx: { minWidth: 0 }, children: /* @__PURE__ */ u2(
+                NativeTextInput$1,
+                {
+                  label: "",
+                  placeholder: "字段名称",
+                  value: localName,
+                  onInput: (value) => setLocalName(value),
+                  onBlur: handleNameBlur,
+                  onFocus: () => setIsEditing(true),
+                  disabled,
+                  style: { width: "100%" },
+                  title: "该名称会显示在输入表单中，也可在模板中用 {{字段名称}} 引用"
+                }
+              ) }),
+              /* @__PURE__ */ u2(Box$1, { sx: { minWidth: 0 }, children: /* @__PURE__ */ u2(
+                SimpleSelect,
+                {
+                  value: uiType,
+                  options: fieldTypeOptions,
+                  onChange: (val) => onUpdate({ type: normalizeTemplateFieldType(val) }),
+                  disabled,
+                  sx: { width: "100%" }
+                }
+              ) }),
+              /* @__PURE__ */ u2(Box$1, { sx: { minWidth: 0 }, children: showInlineDefaultValue ? /* @__PURE__ */ u2(
+                NativeTextInput$1,
+                {
+                  label: "",
+                  value: localDefaultValue,
+                  type: defaultInputType(uiType),
+                  onInput: (value) => {
+                    setLocalDefaultValue(value);
+                    onUpdate({ defaultValue: value });
+                  },
+                  onBlur: () => onUpdate({ defaultValue: localDefaultValue }),
+                  disabled,
+                  placeholder: "可留空",
+                  style: { width: "100%" }
+                }
+              ) : /* @__PURE__ */ u2(Box$1, { sx: { minHeight: emptyControlMinHeight } }) }),
+              /* @__PURE__ */ u2(Box$1, { sx: { minWidth: 0, display: "flex", justifyContent: "center" }, children: showDetails ? /* @__PURE__ */ u2(
+                Button$1,
+                {
+                  size: "small",
+                  variant: "text",
+                  disabled: disabled && !showOptionsEditor,
+                  onClick: () => setDetailsOpen((open) => !open),
+                  endIcon: detailsOpen ? /* @__PURE__ */ u2(ExpandLessIcon, {}) : /* @__PURE__ */ u2(ExpandMoreIcon, {}),
+                  sx: { width: "100%", minWidth: 0, px: 0.75, whiteSpace: "nowrap", "& .MuiButton-endIcon": { ml: 0.25, mr: 0 } },
+                  children: detailsOpen ? "收起" : "详情"
+                }
+              ) : /* @__PURE__ */ u2(Box$1, { sx: { minHeight: emptyControlMinHeight } }) }),
+              /* @__PURE__ */ u2(Box$1, { sx: { display: "flex", justifyContent: "center" }, children: /* @__PURE__ */ u2(
+                IconAction,
+                {
+                  label: "删除此字段",
+                  disabled,
+                  onClick: onRemove,
+                  color: "error",
+                  icon: /* @__PURE__ */ u2(DeleteIcon, {})
+                }
+              ) })
+            ]
+          }
+        ),
+        customFieldNameWarning && /* @__PURE__ */ u2(Typography$1, { variant: "caption", sx: { color: "warning.main", display: "block", mt: 0.5, ml: 4.5 }, children: customFieldNameWarning }),
+        /* @__PURE__ */ u2(Collapse, { in: detailsOpen, unmountOnExit: true, children: /* @__PURE__ */ u2(Box$1, { sx: { mt: 1.25, ml: 4.5, p: 1.25, borderRadius: 1, bgcolor: "background.default" }, children: [
           uiType === "textarea" && showDefaultValueEditor && /* @__PURE__ */ u2(
             NativeTextarea$1,
             {
@@ -57621,6 +57605,7 @@ function FieldRow({
     }
   );
 }
+const fieldRowGridTemplateColumns = "24px minmax(0, 1.2fr) minmax(112px, 150px) minmax(0, 1fr) 72px 40px";
 function createEmptyField(index) {
   return createCustomTemplateField(index);
 }
@@ -57664,17 +57649,32 @@ function FieldsEditor({
   const removeField = (index) => {
     emitFields((fields || []).filter((_2, i2) => i2 !== index));
   };
-  const moveField = (index, direction) => {
-    const targetIndex = direction === "up" ? index - 1 : index + 1;
-    emitFields(reorderFields(fields || [], index, targetIndex));
-  };
   const handleDropOn = (targetIndex) => {
     if (draggingIndex === null || disabled) return;
     emitFields(reorderFields(fields || [], draggingIndex, targetIndex));
     setDraggingIndex(null);
   };
-  return /* @__PURE__ */ u2(Stack$1, { spacing: 1.25, children: [
-    /* @__PURE__ */ u2(Box$1, { children: /* @__PURE__ */ u2(Button$1, { onClick: addField, disabled, startIcon: /* @__PURE__ */ u2(AddIcon, {}), variant: "contained", size: "small", children: "添加字段" }) }),
+  return /* @__PURE__ */ u2(Stack$1, { spacing: 1.25, sx: { width: "100%", maxWidth: 1040, boxSizing: "border-box", overflowX: "hidden" }, children: [
+    /* @__PURE__ */ u2(
+      Box$1,
+      {
+        sx: {
+          px: 0.5,
+          display: "grid",
+          gridTemplateColumns: fieldRowGridTemplateColumns,
+          columnGap: 0.75,
+          alignItems: "center"
+        },
+        children: [
+          /* @__PURE__ */ u2(Box$1, {}),
+          /* @__PURE__ */ u2(Typography$1, { variant: "caption", sx: { color: "text.secondary" }, children: "字段名称" }),
+          /* @__PURE__ */ u2(Typography$1, { variant: "caption", sx: { color: "text.secondary" }, children: "字段类型" }),
+          /* @__PURE__ */ u2(Typography$1, { variant: "caption", sx: { color: "text.secondary" }, children: "默认值" }),
+          /* @__PURE__ */ u2(Box$1, {}),
+          /* @__PURE__ */ u2(Box$1, {})
+        ]
+      }
+    ),
     /* @__PURE__ */ u2(Stack$1, { spacing: 0, divider: /* @__PURE__ */ u2(Divider$1, { sx: { my: 0.75 } }), children: (fields || []).map((field, index) => /* @__PURE__ */ u2(
       Box$1,
       {
@@ -57703,18 +57703,16 @@ function FieldsEditor({
           FieldRow,
           {
             field,
-            index,
-            fieldCount: fields.length,
             disabled,
             isDragging: draggingIndex === index,
             onUpdate: (updates) => handleUpdate(index, updates),
-            onRemove: () => removeField(index),
-            onMove: (dir) => moveField(index, dir)
+            onRemove: () => removeField(index)
           }
         )
       },
       field.id
-    )) })
+    )) }),
+    /* @__PURE__ */ u2(Box$1, { children: /* @__PURE__ */ u2(Button$1, { onClick: addField, disabled, startIcon: /* @__PURE__ */ u2(AddIcon, {}), variant: "contained", size: "small", children: "添加字段" }) })
   ] });
 }
 function TemplateVariableCopier({ block }) {
