@@ -1,4 +1,6 @@
 import { Item, readField } from '@/core/types/schema';
+import { getFieldDefinition } from '@/core/fields/FieldRegistry';
+import { normalizeFieldKey } from '@/core/fields/FieldValueResolver';
 import { EMOJI } from '@/core/types/constants';
 import { getTaskStatus } from '@/core/utils/taskStatus';
 import { 
@@ -154,12 +156,14 @@ function formatBlockItem(item: Item, index: number, config: ExportViewConfig): s
 
     // 2. 构建字段列表（顺序由 detailFields 决定）
     config.detailFields.forEach(field => {
-        const rawValue = readField(item, field);
+        const canonicalField = normalizeFieldKey(field);
+        const rawValue = readField(item, canonicalField);
         // 跳过空值，但允许 0
         if (rawValue === undefined || rawValue === null || rawValue === '') return;
 
-        const label = config.fieldLabels[field] || field;
-        const renderCfg = config.fieldRender?.[field];
+        const definition = getFieldDefinition(canonicalField);
+        const label = config.fieldLabels[canonicalField] || config.fieldLabels[field] || definition?.label || field;
+        const renderCfg = config.fieldRender?.[canonicalField] || config.fieldRender?.[field];
         let displayValue = String(rawValue);
 
         // 根据字段渲染配置决定展示方式

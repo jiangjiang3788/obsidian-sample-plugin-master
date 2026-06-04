@@ -112,6 +112,8 @@ export {
     getFieldEditPolicy,
     getFieldEditorKind,
     normalizeEditableFieldKey,
+    CONTENT_FIELD_KEY,
+    FULL_DATA_FIELD_KEY,
 } from './fields';
 export type {
     BuiltInFieldGuideGroup,

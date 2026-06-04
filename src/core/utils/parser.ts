@@ -29,7 +29,8 @@ export function parseTaskLine(
     const item: Item = {
         id: `${filePath}#${lineNo}`,
         title: '', // 稍后填充
-        content: lineText.trim(),
+        // 任务 content 统一为清洗后的正文；完整原始任务行保存在 rawSource / 完整数据字段中。
+        content: '',
         rawSource: lineText.trim(),
         type: 'task',
         tags: [], // 稍后填充
@@ -89,6 +90,8 @@ export function parseTaskLine(
     const editableText = editableExtraction.editableText;
     item.title = editableText || cleanTaskText(titleSrc) || '';
     item.editableText = editableText || item.title || '';
+    // 字段语义统一：任务与 Block 的 content 都代表用户正文，而不是原始 Markdown 行。
+    item.content = item.editableText;
     // 不再把正文 alias 写入 extra。正文是核心字段，extra 只保留用户显式未知 KV，
     // 避免字段选择器被 `extra.正文/extra.内容/...` 污染。
     if (typeof window !== 'undefined' && (window as any).__THINK_RECORD_DEBUG__) {
@@ -101,7 +104,9 @@ export function parseTaskLine(
         console.log('正文长度/是否包含连续空格:', { length: editableText.length, hasDoubleSpace: /\s{2,}/.test(editableText) });
         console.log('清洗过程:', explainTaskEditableTextExtraction(lineText));
         console.log('写入 item.title:', item.title);
-        console.log('不再写入 item.extra[正文]；正文通过 item.editableText / snapshot.semantic.editableText 暴露。');
+        console.log('写入 item.content / item.editableText:', item.content);
+        console.log('完整原始任务行仍保存在 item.rawSource / 完整数据字段。');
+        console.log('不再写入 item.extra[正文]；正文通过 item.content / item.editableText / snapshot.semantic.editableText 暴露。');
         console.groupEnd();
     }
     item.priority = pickPriority(lineText);

@@ -42,7 +42,8 @@ function resolveNearestIndex(indexes: number[], expectedIndex: number): number {
     })[0];
 }
 
-function findTaskCandidates(lines: string[], item: Pick<Item, 'content' | 'title'> | null): Array<{ index: number; score: number }> {
+function findTaskCandidates(lines: string[], item: Pick<Item, 'content' | 'title' | 'rawSource'> | null): Array<{ index: number; score: number }> {
+  const expectedRawSource = normalizeTaskLine(item?.rawSource);
   const expectedLine = normalizeTaskLine(item?.content);
   const expectedTitle = normalizeText(item?.title);
   const candidates: Array<{ index: number; score: number }> = [];
@@ -53,7 +54,10 @@ function findTaskCandidates(lines: string[], item: Pick<Item, 'content' | 'title
 
     let score = 0;
     const normalizedLine = normalizeTaskLine(line);
+    if (expectedRawSource && normalizedLine === expectedRawSource) score += 180;
+    else if (expectedRawSource && normalizedLine.includes(expectedRawSource)) score += 120;
     if (expectedLine && normalizedLine === expectedLine) score += 120;
+    else if (expectedLine && normalizedLine.includes(expectedLine)) score += 45;
     if (expectedTitle && normalizedLine.includes(expectedTitle)) score += 20;
     if (score > 0) candidates.push({ index, score });
   }
@@ -63,7 +67,7 @@ function findTaskCandidates(lines: string[], item: Pick<Item, 'content' | 'title
 
 export function resolveTaskLineIndexForMutation(
   lines: string[],
-  item: Pick<Item, 'content' | 'title'> | null,
+  item: Pick<Item, 'content' | 'title' | 'rawSource'> | null,
   expectedIndex: number,
 ): number {
   const directLine = lines[expectedIndex];

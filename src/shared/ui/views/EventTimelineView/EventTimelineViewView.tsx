@@ -1,7 +1,7 @@
 /** @jsxImportSource preact */
 // src/shared/ui/views/timeline/EventTimelineViewView.tsx
 import { h } from 'preact';
-import type { Item } from '@core/public';
+import type { Item, MessageRenderPort } from '@core/public';
 import type { GroupNode } from '@core/public';
 import { readField } from '@core/public';
 import type { TimerController } from '@/app/public';
@@ -25,6 +25,10 @@ interface EventTimelineViewViewProps {
 
   /** key / 标题展示优先字段 */
   titleField: string;
+  /** 任务显示正文优先字段，默认 content；可切到完整数据做调试但视觉结构不变。 */
+  contentField: string;
+  maxContentLength: number;
+  messageRenderPort?: MessageRenderPort;
 
   onMarkDone?: MarkDoneHandler;
   timerService: TimerController;
@@ -40,11 +44,29 @@ export function EventTimelineViewView(props: EventTimelineViewViewProps) {
     displayFields,
     getItemTime,
     titleField,
+    contentField,
+    maxContentLength,
+    messageRenderPort,
     onMarkDone,
     timerService,
     timers,
     allThemes,
   } = props;
+
+
+  const cleanDisplayText = (value: unknown): string => {
+    const text = String(value ?? '').replace(/\r\n/g, '\n').replace(/\r/g, '\n').trim();
+    if (!text) return '';
+    const compact = text.replace(/\s+/g, ' ').trim();
+    if (!Number.isFinite(maxContentLength) || maxContentLength <= 0) return compact;
+    return compact.length > maxContentLength ? `${compact.slice(0, maxContentLength)}...` : compact;
+  };
+
+  const getTaskDisplayTitle = (item: Item): string => {
+    const fromContent = cleanDisplayText(readField(item, contentField));
+    if (fromContent) return fromContent;
+    return cleanDisplayText(readField(item, 'content')) || cleanDisplayText(readField(item, titleField)) || item.title || '';
+  };
 
   if (filteredItems.length === 0) {
     return <div class="event-timeline-empty">当前时间范围内没有事件记录。</div>;
@@ -65,6 +87,7 @@ export function EventTimelineViewView(props: EventTimelineViewViewProps) {
 
       const titleForKey =
         (readField(item, titleField) as string) || (readField(item, 'title') as string) || '';
+      const taskDisplayTitle = item.type === 'task' ? getTaskDisplayTitle(item) : '';
 
       return (
         <div class="et-event" key={`${dateLabel}-${timeLabel}-${titleForKey}-${index}`}>
@@ -90,10 +113,11 @@ export function EventTimelineViewView(props: EventTimelineViewViewProps) {
                 timerService={timerService}
                 timer={timers.find((t) => t.taskId === item.id)}
                 allThemes={allThemes}
+                displayTitle={taskDisplayTitle}
                 showFields={[]} // TaskRow 不显示额外字段
               />
             ) : (
-              <BlockItem item={item} fields={displayFields} isNarrow={false} app={app} allThemes={allThemes} />
+              <BlockItem item={item} fields={displayFields} isNarrow={false} app={app} messageRenderPort={messageRenderPort} allThemes={allThemes} />
             )}
           </div>
         </div>

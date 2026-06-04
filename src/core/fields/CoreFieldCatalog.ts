@@ -171,6 +171,11 @@ const RESERVED_NON_INPUT_FIELD_NAMES = [
   '叶分类',
   'periodCount',
   '粒度序号',
+  'rawSource',
+  '原始源文本',
+  'fullData',
+  '完整数据',
+  '原始数据',
 ];
 
 function normalizeFieldNameForCompare(value: unknown): string {

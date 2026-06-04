@@ -96,7 +96,6 @@ export function ExcelColumnToolbar({
   const menuLabel = menuField ? getFieldLabel(menuField) : '';
   const menuGroup = menuField ? getFieldGroupLabel?.(menuField) : undefined;
   const canRemoveMenuField = !!menuField && canEdit && !busy && fields.length > 1;
-
   return (
     <div
       class="excel-column-toolbar"

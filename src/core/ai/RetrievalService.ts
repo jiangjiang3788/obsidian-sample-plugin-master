@@ -54,6 +54,7 @@ interface SearchIndexDocument {
     title: string;
     content: string;
     editableText: string;
+    fullData: string;
     tags: string;
     themePath: string;
     rootTheme: string;
@@ -81,6 +82,7 @@ const SEARCH_FIELDS: Array<keyof SearchIndexDocument> = [
     'title',
     'content',
     'editableText',
+    'fullData',
     'tags',
     'themePath',
     'rootTheme',
@@ -99,6 +101,7 @@ const STORE_FIELDS: Array<keyof SearchIndexDocument> = [
     'title',
     'content',
     'editableText',
+    'fullData',
     'tags',
     'themePath',
     'rootTheme',
@@ -174,6 +177,7 @@ export class RetrievalService {
                 boost: {
                     title: 2,
                     editableText: 1.8,
+                    fullData: 0.6,
                     themePath: 1.5,
                     tags: 1.3,
                     categoryKey: 1.2,
@@ -215,6 +219,7 @@ export class RetrievalService {
             title: normalizeText(readFieldValue(item, 'title')),
             content: normalizeText(readFieldValue(item, 'content')),
             editableText: normalizeText(readFieldValue(item, 'editableText') ?? item.editableText),
+            fullData: normalizeText(readFieldValue(item, 'fullData') ?? item.fullData),
             tags: normalizeText(readFieldValue(item, 'tags')),
             themePath: normalizeText(readFieldValue(item, 'themePath')),
             rootTheme: normalizeText(readFieldValue(item, 'rootTheme')),
@@ -427,6 +432,8 @@ export class RetrievalService {
             title: (sr as any).title ?? '',
             content: (sr as any).content ?? '',
             editableText: (sr as any).editableText ?? '',
+            fullData: (sr as any).fullData ?? '',
+            rawSource: (sr as any).fullData || undefined,
             type: (sr as any).type ?? 'task',
             themePath: (sr as any).themePath || undefined,
             rootTheme: (sr as any).rootTheme || undefined,

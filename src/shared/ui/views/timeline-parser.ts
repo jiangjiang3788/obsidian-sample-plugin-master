@@ -58,12 +58,24 @@ function parseAllTimes(item: Item): { startMinute: number | null; duration: numb
 function extractPureText(rawText: string): string {
     return rawText
         .replace(/<!--[\s\S]*?-->/g, '') // [核心修复] 恢复此行，移除 HTML 注释
+        .replace(/^\s*[-*+]\s*\[[ xX-]\]\s*/, '') // 兼容旧缓存：移除任务 checkbox 前缀
+        .replace(/^\s*(?:\p{Extended_Pictographic}\uFE0F?\s*)+/u, '') // 兼容旧缓存：移除正文开头图标
         .replace(/[\(\[]\s*(时间|结束|时长)::.*?[\)\]]/g, '') // 移除所有时间相关标签
+        .replace(/[\(\[][^\(\)\[\]]*?::.*?[\)\]]/g, '') // 兼容旧缓存：移除其它 inline KV
         .replace(/#[\p{L}\d\-_/]+/gu, '') // 移除 tags
-        .replace(/✅?\s*\d{4}-\d{2}-\d{2}/g, '') // 移除完成日期
+        .replace(/[📅⏳🛫➕✅❌]?\s*\d{4}-\d{2}-\d{2}/g, '') // 移除任务日期
+        .replace(/\s*🔁\s*every\s+.*?(?=$|\s*[#\(\[])/gi, '') // 移除重复任务
         .replace(/[\(\[]\s*🔁\s*.*?\s*[\)\]]/gi, '') // 移除重复任务
         .replace(/\s+/g, ' ')
         .trim();
+}
+
+function resolveTimelineDisplayText(item: Item): string {
+    const cleanContent = extractPureText(item.content || item.editableText || item.title || '');
+    if (cleanContent) return cleanContent;
+    const fromRaw = extractPureText(item.rawSource || '');
+    if (fromRaw) return fromRaw;
+    return item.title || '';
 }
 
 /**
@@ -95,7 +107,8 @@ export function processItemsToTimelineTasks(items: Item[]): TimelineTask[] {
                 startMinute,
                 duration,
                 endMinute,
-                pureText: extractPureText(item.content),
+                // Timeline 视觉保持不变；显示文本来自统一后的 content 字段，旧缓存则降级从 rawSource 清洗。
+                pureText: resolveTimelineDisplayText(item),
                 fileName: fileName,
                 actualStartDate: actualStartDate,
             });

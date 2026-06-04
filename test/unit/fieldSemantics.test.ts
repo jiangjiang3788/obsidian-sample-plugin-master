@@ -1,5 +1,7 @@
 import { parseTaskLine, parseBlockContent } from '@/core/utils/parser';
 import { getAllFields, readField, type Item } from '@/core/types/schema';
+import { filterByKeyword, filterByRules } from '@/core/utils/itemFilter';
+import { normalizeRecordItem } from '@/core/records/RecordNormalizer';
 import { getAvailableFieldsByCategory, getFieldLabel } from '@/core/types/fields';
 
 function makeBaseItem(overrides: Partial<Item>): Item {
@@ -38,6 +40,51 @@ describe('field semantics', () => {
     expect(getAllFields([polluted])).not.toContain('extra.正文');
     expect(getAllFields([explicit])).not.toContain('extra.正文');
     expect(readField(explicit, 'extra.正文')).toBe('用户显式字段');
+  });
+
+
+
+  it('fullData aliases resolve to original raw source while content stays clean', () => {
+    const item = parseTaskLine('daily.md', '- [ ] 🧠 写插件计划 #dev (时间::09:00)', 8, 'root')!;
+
+    expect(item.content).toBe('写插件计划');
+    expect(readField(item, '内容')).toBe('写插件计划');
+    expect(readField(item, '完整数据')).toBe('- [ ] 🧠 写插件计划 #dev (时间::09:00)');
+    expect(readField(item, 'rawSource')).toBe('- [ ] 🧠 写插件计划 #dev (时间::09:00)');
+  });
+
+  it('record normalizer repairs old task content that still contains a raw task line', () => {
+    const item = normalizeRecordItem(makeBaseItem({
+      content: '- [ ] 🧠 兼容旧缓存 #dev (时间::09:00) 🔁 every week',
+      rawSource: '- [ ] 🧠 兼容旧缓存 #dev (时间::09:00) 🔁 every week',
+      title: '- [ ] 🧠 兼容旧缓存 #dev (时间::09:00) 🔁 every week',
+    }), {
+      created: 1,
+      modified: 2,
+      filePath: 'daily.md',
+      fileName: 'daily.md',
+      parentFolder: 'root',
+    } as any);
+
+    expect(item.content).toBe('兼容旧缓存');
+    expect(item.editableText).toBe('兼容旧缓存');
+    expect(item.title).toBe('兼容旧缓存');
+    expect(item.fullData).toBe('- [ ] 🧠 兼容旧缓存 #dev (时间::09:00) 🔁 every week');
+  });
+
+  it('filters can target 完整数据 without confusing it with clean content', () => {
+    const item = parseTaskLine('daily.md', '- [ ] 写代码 #dev (时间::09:00)', 9, 'root')!;
+    const normalized = normalizeRecordItem(item, {
+      created: 1,
+      modified: 2,
+      filePath: 'daily.md',
+      fileName: 'daily.md',
+      parentFolder: 'root',
+    } as any);
+
+    expect(filterByRules([normalized], [{ field: 'content', op: 'includes', value: '09:00' }])).toHaveLength(0);
+    expect(filterByRules([normalized], [{ field: '完整数据', op: 'includes', value: '09:00' }])).toHaveLength(1);
+    expect(filterByKeyword([normalized], '09:00')).toHaveLength(1);
   });
 
   it('common field picker exposes themePath instead of legacy theme', () => {

@@ -214,6 +214,8 @@ export interface Item {
     editableText?: string;
     /** 原始源文本（单行 task 或完整 block 内容），用于后续快照/调试。 */
     rawSource?: string;
+    /** 只读展示字段：完整原始 Markdown 数据；通常由 rawSource 派生，不要求持久化存储。 */
+    fullData?: string;
     type: 'task' | 'block';
     tags: string[];
     theme?: string;     // [新增] 主题字段，用于统一的主题管理

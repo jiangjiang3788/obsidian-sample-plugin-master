@@ -8,7 +8,7 @@
  * 说明：这里仍然只做“位置迁移”，不改变视图行为。
  */
 
-import { dayjs, readField, groupItemsByFields } from '@core/public';
+import { dayjs, readField, groupItemsByFields, normalizeDisplayFields } from '@core/public';
 import type { Item, ViewInstance, GroupNode } from '@core/public';
 
 export interface EventTimelineViewModel {
@@ -29,8 +29,8 @@ export function buildEventTimelineViewModel(params: {
 }): EventTimelineViewModel {
   const { items, module, dateRange } = params;
 
-  const displayFields = module.fields || ['title', 'date'];
-  const groupFields: string[] = module.groupFields || [];
+  const displayFields = normalizeDisplayFields(module.fields || ['title', 'date'], { fallbackFields: ['title', 'date'] });
+  const groupFields: string[] = normalizeDisplayFields(module.groupFields || []);
 
   const viewConfig = (module.viewConfig as any) || {};
   const timeField = viewConfig.timeField || 'date';

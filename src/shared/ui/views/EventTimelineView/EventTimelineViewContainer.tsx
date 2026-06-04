@@ -2,8 +2,8 @@
 // src/features/views/EventTimelineView.tsx
 import { h } from 'preact';
 import { useMemo } from 'preact/hooks';
-import type { Item, ViewInstance } from '@core/public';
-import { readField } from '@core/public';
+import type { Item, ViewInstance, MessageRenderPort } from '@core/public';
+import { normalizeDisplayFields, readField } from '@core/public';
 import { dayjs } from '@core/public';
 import type { TimerController } from '@/app/public';
 import { groupItemsByFields, type GroupNode } from '@core/public';
@@ -32,6 +32,7 @@ interface EventTimelineViewProps {
   timerService: TimerController;
   timers: any[];
   allThemes: any[];
+  messageRenderPort?: MessageRenderPort;
 }
 
 /**
@@ -52,16 +53,19 @@ export function EventTimelineView(props: EventTimelineViewProps) {
     timerService,
     timers,
     allThemes,
+    messageRenderPort,
   } = props;
 
   // 使用统一配置：优先使用模块级配置
-  const displayFields = module.fields || ['title', 'date'];
-  const groupFields: string[] = module.groupFields || [];
+  const displayFields = normalizeDisplayFields(module.fields || ['title', 'date'], { fallbackFields: ['title', 'date'] });
+  const groupFields: string[] = normalizeDisplayFields(module.groupFields || []);
 
   // 视图特有配置，fallback 到默认值
   const viewConfig = (module.viewConfig as any) || {};
   const timeField = viewConfig.timeField || 'date';
   const titleField = viewConfig.titleField || 'title';
+  const contentField = viewConfig.contentField || 'content';
+  const maxContentLength = Number.isFinite(Number(viewConfig.maxContentLength)) ? Number(viewConfig.maxContentLength) : 160;
 
   const start = useMemo(() => dayjs(dateRange[0]), [dateRange]);
   const end = useMemo(() => dayjs(dateRange[1]), [dateRange]);
@@ -112,6 +116,9 @@ export function EventTimelineView(props: EventTimelineViewProps) {
       displayFields={displayFields}
       getItemTime={getItemTime}
       titleField={titleField}
+      contentField={contentField}
+      maxContentLength={maxContentLength}
+      messageRenderPort={messageRenderPort}
       onMarkDone={onMarkDone}
       timerService={timerService}
       timers={timers}

@@ -1268,9 +1268,10 @@ const FIELD_REGISTRY = {
   id: text({ key: "id", label: "记录ID", category: "core", source: "item", semantic: "id", description: "内部记录标识" }),
   type: text({ key: "type", label: "记录类型", category: "core", source: "item", semantic: "recordType", description: "任务或块等记录类型" }),
   title: text({ key: "title", label: "标题", category: "core", source: "item", semantic: "title", inputType: "text", description: "记录标题或主要摘要" }),
-  content: text({ key: "content", label: "内容", category: "core", source: "item", semantic: "body", inputType: "textarea", description: "记录正文或原始内容" }),
+  content: text({ key: "content", label: "内容", category: "core", source: "item", semantic: "body", inputType: "textarea", description: "记录正文；任务与 Block 统一为用户正文，不包含任务勾选框、标签、时间等原始 Markdown 噪音" }),
   editableText: text({ key: "editableText", label: "可编辑正文", category: "core", source: "item", semantic: "body", inputType: "textarea", hiddenByDefault: true, description: "编辑态正文真源" }),
   rawSource: text({ key: "rawSource", label: "原始源文本", category: "core", source: "item", semantic: "body", hiddenByDefault: true }),
+  fullData: text({ key: "fullData", label: "完整数据", category: "core", source: "derived", semantic: "body", inputType: "textarea", aliases: ["完整数据", "原始数据", "源数据", "完整源文本", "原始源文本", "rawsource", "rawData", "sourceText", "fullData", "originalData"], description: "原始完整 Markdown 数据；任务为完整任务行，Block 为完整块内容，用于区分干净内容字段" }),
   // --- 内置核心业务字段 ---
   categoryKey: text({ key: "categoryKey", label: "分类路径", type: "path", inputType: "path", category: "core", source: "item", semantic: "categoryPath", hierarchical: true, aliases: ["categoryPath", "分类", "类别", "分类路径"], description: "完整分类路径，例如 闪念/感受" }),
   tags: { key: "tags", label: "标签", type: "tags", inputType: "multiTag", category: "core", source: "item", semantic: "tags", cardinality: "multi", hierarchical: true, aliases: ["标签", "tag", "tags"], description: "多值层级标签，例如 项目/插件、地点/家", formatter: (v2) => Array.isArray(v2) ? v2.join(", ") : String(v2 ?? "") },
@@ -1519,6 +1520,9 @@ function readCanonicalField(item, canonicalField) {
   if (canonicalField === "tags") {
     return parseTagList(item.tags || []);
   }
+  if (canonicalField === "fullData") {
+    return item.rawSource || item.fullData || item.content || "";
+  }
   if (canonicalField === "image") {
     return readImageField(item);
   }
@@ -1720,7 +1724,12 @@ const RESERVED_NON_INPUT_FIELD_NAMES = [
   "leafCategory",
   "叶分类",
   "periodCount",
-  "粒度序号"
+  "粒度序号",
+  "rawSource",
+  "原始源文本",
+  "fullData",
+  "完整数据",
+  "原始数据"
 ];
 function normalizeFieldNameForCompare(value) {
   return String(value ?? "").trim().replace(/\s+/g, "").toLocaleLowerCase();
@@ -2471,11 +2480,13 @@ const BLOCK_EXPORT_DEFAULT_CONFIG = {
     date: "日期",
     rating: "评分",
     pintu: "评图",
-    content: "内容"
+    content: "内容",
+    fullData: "完整数据"
   },
   fieldRender: {
     pintu: { type: "emojiOrLink" },
-    content: { type: "content" }
+    content: { type: "content" },
+    fullData: { type: "content" }
   }
 };
 const EVENT_TIMELINE_EXPORT_CONFIG = {
@@ -2490,10 +2501,12 @@ const EVENT_TIMELINE_EXPORT_CONFIG = {
     title: "标题",
     date: "日期",
     categoryKey: "分类",
-    content: "内容"
+    content: "内容",
+    fullData: "完整数据"
   },
   fieldRender: {
-    content: { type: "content" }
+    content: { type: "content" },
+    fullData: { type: "content" }
   }
 };
 const EXCEL_EXPORT_CONFIG = {
@@ -2508,10 +2521,12 @@ const EXCEL_EXPORT_CONFIG = {
     title: "标题",
     date: "日期",
     categoryKey: "分类",
-    content: "内容"
+    content: "内容",
+    fullData: "完整数据"
   },
   fieldRender: {
-    content: { type: "content" }
+    content: { type: "content" },
+    fullData: { type: "content" }
   }
 };
 const STATISTICS_EXPORT_CONFIG = {
@@ -2527,10 +2542,12 @@ const STATISTICS_EXPORT_CONFIG = {
     date: "日期",
     categoryKey: "分类",
     period: "周期",
-    content: "内容"
+    content: "内容",
+    fullData: "完整数据"
   },
   fieldRender: {
-    content: { type: "content" }
+    content: { type: "content" },
+    fullData: { type: "content" }
   }
 };
 const HEATMAP_EXPORT_CONFIG = {
@@ -2545,10 +2562,12 @@ const HEATMAP_EXPORT_CONFIG = {
     date: "日期",
     categoryKey: "分类",
     rating: "评分",
-    content: "内容"
+    content: "内容",
+    fullData: "完整数据"
   },
   fieldRender: {
-    content: { type: "content" }
+    content: { type: "content" },
+    fullData: { type: "content" }
   }
 };
 const TIMELINE_EXPORT_CONFIG = {
@@ -2565,10 +2584,12 @@ const TIMELINE_EXPORT_CONFIG = {
     endTime: "结束时间",
     duration: "时长",
     categoryKey: "分类",
-    content: "内容"
+    content: "内容",
+    fullData: "完整数据"
   },
   fieldRender: {
-    content: { type: "content" }
+    content: { type: "content" },
+    fullData: { type: "content" }
   }
 };
 const TABLE_EXPORT_CONFIG = {
@@ -2583,10 +2604,12 @@ const TABLE_EXPORT_CONFIG = {
     title: "标题",
     date: "日期",
     categoryKey: "分类",
-    content: "内容"
+    content: "内容",
+    fullData: "完整数据"
   },
   fieldRender: {
-    content: { type: "content" }
+    content: { type: "content" },
+    fullData: { type: "content" }
   }
 };
 const AppToken = "App";
@@ -4025,10 +4048,12 @@ function formatBlockItem(item, index, config2) {
   });
   lines.push(`- **${idLine}**`);
   config2.detailFields.forEach((field) => {
-    const rawValue = readField(item, field);
+    const canonicalField = normalizeFieldKey(field);
+    const rawValue = readField(item, canonicalField);
     if (rawValue === void 0 || rawValue === null || rawValue === "") return;
-    const label = config2.fieldLabels[field] || field;
-    const renderCfg = config2.fieldRender?.[field];
+    const definition = getFieldDefinition(canonicalField);
+    const label = config2.fieldLabels[canonicalField] || config2.fieldLabels[field] || definition?.label || field;
+    const renderCfg = config2.fieldRender?.[canonicalField] || config2.fieldRender?.[field];
     let displayValue = String(rawValue);
     if (renderCfg?.type === "emojiOrLink") {
       const isEmojiOnly = /^[\p{Emoji}\p{Emoji_Presentation}\p{Extended_Pictographic}\s]*$/u.test(displayValue) && displayValue.trim().length <= 8 && !displayValue.includes(".");
@@ -4140,20 +4165,24 @@ function normalizeBetweenValue(value) {
   return [parts[0], parts[1]];
 }
 function matchRule(item, rule) {
-  let v1 = readField(item, rule.field);
+  const canonicalField = normalizeFieldKey(rule.field);
+  let v1 = readField(item, canonicalField);
   let v2 = rule.value;
   if (rule.op === "empty") return isEmptyValue(v1);
   if (rule.op === "notEmpty") return !isEmptyValue(v1);
-  if (rule.field === "title") {
+  if (canonicalField === "title") {
     v1 = item.titleLower ?? String(v1 ?? "").toLowerCase();
     v2 = String(v2 ?? "").toLowerCase();
-  } else if (rule.field === "content") {
+  } else if (canonicalField === "content") {
     v1 = item.contentLower ?? String(v1 ?? "").toLowerCase();
     v2 = String(v2 ?? "").toLowerCase();
-  } else if (["theme", "themePath", "rootTheme", "leafTheme", "主题路径", "完整主题", "根主题", "叶主题"].includes(rule.field)) {
+  } else if (["themePath", "rootTheme", "leafTheme"].includes(canonicalField)) {
     v1 = String(v1 ?? "").toLowerCase();
     v2 = String(v2 ?? "").toLowerCase();
-  } else if (rule.field === "tags") {
+  } else if (canonicalField === "fullData") {
+    v1 = item.fullDataLower ?? String(v1 ?? "").toLowerCase();
+    v2 = String(v2 ?? "").toLowerCase();
+  } else if (canonicalField === "tags") {
     const tagsLower = item.tagsLower ?? (Array.isArray(v1) ? v1.map((x2) => String(x2).toLowerCase()) : []);
     const needle = String(v2 ?? "").toLowerCase();
     if (rule.op === "includes" || rule.op === "=") {
@@ -4209,8 +4238,9 @@ function sortItems(items, rules = []) {
   if (!rules.length) return items;
   return [...items].sort((a2, b2) => {
     for (const r2 of rules) {
-      const av = readField(a2, r2.field);
-      const bv = readField(b2, r2.field);
+      const canonicalField = normalizeFieldKey(r2.field);
+      const av = readField(a2, canonicalField);
+      const bv = readField(b2, canonicalField);
       if (av == null && bv == null) continue;
       if (av == null) return r2.dir === "asc" ? 1 : -1;
       if (bv == null) return r2.dir === "asc" ? -1 : 1;
@@ -4252,7 +4282,8 @@ function filterByKeyword(items, kw) {
   return items.filter((it) => {
     const titleLower = it.titleLower ?? (it.title || "").toLowerCase();
     const contentLower = it.contentLower ?? (it.content || "").toLowerCase();
-    return (titleLower + " " + contentLower).includes(s2);
+    const fullDataLower = it.fullDataLower ?? String(readField(it, "fullData") || "").toLowerCase();
+    return (titleLower + " " + contentLower + " " + fullDataLower).includes(s2);
   });
 }
 function filterByPeriod(items, period) {
@@ -5059,7 +5090,8 @@ function parseTaskLine(filePath, rawLine, lineNo, parentFolder, currentHeader) {
     id: `${filePath}#${lineNo}`,
     title: "",
     // 稍后填充
-    content: lineText.trim(),
+    // 任务 content 统一为清洗后的正文；完整原始任务行保存在 rawSource / 完整数据字段中。
+    content: "",
     rawSource: lineText.trim(),
     type: "task",
     tags: [],
@@ -5107,6 +5139,7 @@ function parseTaskLine(filePath, rawLine, lineNo, parentFolder, currentHeader) {
   const editableText = editableExtraction.editableText;
   item.title = editableText || cleanTaskText(titleSrc) || "";
   item.editableText = editableText || item.title || "";
+  item.content = item.editableText;
   if (typeof window !== "undefined" && window.__THINK_RECORD_DEBUG__) {
     console.groupCollapsed("[记录调试][任务读取] parser.parseTaskLine 正文提取");
     console.log("原始任务行:", lineText);
@@ -5116,7 +5149,9 @@ function parseTaskLine(filePath, rawLine, lineNo, parentFolder, currentHeader) {
     console.log("正文长度/是否包含连续空格:", { length: editableText.length, hasDoubleSpace: /\s{2,}/.test(editableText) });
     console.log("清洗过程:", explainTaskEditableTextExtraction(lineText));
     console.log("写入 item.title:", item.title);
-    console.log("不再写入 item.extra[正文]；正文通过 item.editableText / snapshot.semantic.editableText 暴露。");
+    console.log("写入 item.content / item.editableText:", item.content);
+    console.log("完整原始任务行仍保存在 item.rawSource / 完整数据字段。");
+    console.log("不再写入 item.extra[正文]；正文通过 item.content / item.editableText / snapshot.semantic.editableText 暴露。");
     console.groupEnd();
   }
   item.priority = pickPriority(lineText);
@@ -6107,6 +6142,7 @@ const NEVER_INLINE_EDITABLE = /* @__PURE__ */ new Set([
   "created",
   "modified",
   "rawSource",
+  "fullData",
   "createdDate",
   "scheduledDate",
   "doneDate",
@@ -6129,6 +6165,7 @@ const DERIVED_FIELDS = /* @__PURE__ */ new Set([
   "leafTheme",
   "baseCategory",
   "leafCategory",
+  "fullData",
   "startISO",
   "endISO",
   "periodCount"
@@ -6314,6 +6351,8 @@ function moveDisplayField(fields, fromIndex, toIndex, options = {}) {
   next2.splice(toIndex, 0, moved);
   return next2;
 }
+const CONTENT_FIELD_KEY = "content";
+const FULL_DATA_FIELD_KEY = "fullData";
 function buildAiConfigSnapshot(input, ai) {
   const enabledSet = ai.enabledBlockIds?.length ? new Set(ai.enabledBlockIds) : null;
   const blocks = (input?.blocks ?? []).filter((b2) => !enabledSet || enabledSet.has(b2.id)).map((b2) => {
@@ -14293,10 +14332,24 @@ function normalizeRecordItem(item, context) {
   if (!item.categoryKey) item.categoryKey = item.type === "task" ? "未完成任务" : context.parentFolder;
   normalizeItemDates(item);
   if (item.type === "task") {
-    item.recurrenceInfo = parseRecurrence(item.content) || void 0;
+    const taskRawSource = item.rawSource || item.content || "";
+    const extractedEditableText = extractTaskEditableText(taskRawSource).editableText;
+    const contentLooksRawTaskLine = /^\s*[-*+]\s*\[[ xX-]\]/.test(String(item.content || ""));
+    if (extractedEditableText && (!item.content || contentLooksRawTaskLine || item.content === taskRawSource)) {
+      item.content = extractedEditableText;
+    }
+    if (!item.editableText && extractedEditableText) {
+      item.editableText = extractedEditableText;
+    }
+    if ((!item.title || item.title === taskRawSource) && (item.editableText || item.content)) {
+      item.title = item.editableText || item.content;
+    }
+    item.recurrenceInfo = parseRecurrence(taskRawSource) || void 0;
   }
+  item.fullData = item.rawSource || item.fullData || item.content || "";
   item.titleLower = normalizeSearchText(item.title);
   item.contentLower = normalizeSearchText(item.content);
+  item.fullDataLower = normalizeSearchText(item.fullData);
   item.tagsLower = (item.tags || []).map((tag) => normalizeSearchText(tag));
   return item;
 }
@@ -14719,6 +14772,7 @@ const SEARCH_FIELDS = [
   "title",
   "content",
   "editableText",
+  "fullData",
   "tags",
   "themePath",
   "rootTheme",
@@ -14736,6 +14790,7 @@ const STORE_FIELDS = [
   "title",
   "content",
   "editableText",
+  "fullData",
   "tags",
   "themePath",
   "rootTheme",
@@ -14795,6 +14850,7 @@ let RetrievalService = class {
         boost: {
           title: 2,
           editableText: 1.8,
+          fullData: 0.6,
           themePath: 1.5,
           tags: 1.3,
           categoryKey: 1.2,
@@ -14830,6 +14886,7 @@ let RetrievalService = class {
       title: normalizeText$1(readFieldValue(item, "title")),
       content: normalizeText$1(readFieldValue(item, "content")),
       editableText: normalizeText$1(readFieldValue(item, "editableText") ?? item.editableText),
+      fullData: normalizeText$1(readFieldValue(item, "fullData") ?? item.fullData),
       tags: normalizeText$1(readFieldValue(item, "tags")),
       themePath: normalizeText$1(readFieldValue(item, "themePath")),
       rootTheme: normalizeText$1(readFieldValue(item, "rootTheme")),
@@ -14993,6 +15050,8 @@ let RetrievalService = class {
       title: sr.title ?? "",
       content: sr.content ?? "",
       editableText: sr.editableText ?? "",
+      fullData: sr.fullData ?? "",
+      rawSource: sr.fullData || void 0,
       type: sr.type ?? "task",
       themePath: sr.themePath || void 0,
       rootTheme: sr.rootTheme || void 0,
@@ -15849,6 +15908,7 @@ function resolveNearestIndex(indexes, expectedIndex) {
   })[0];
 }
 function findTaskCandidates(lines, item) {
+  const expectedRawSource = normalizeTaskLine(item?.rawSource);
   const expectedLine = normalizeTaskLine(item?.content);
   const expectedTitle = normalizeText(item?.title);
   const candidates = [];
@@ -15857,7 +15917,10 @@ function findTaskCandidates(lines, item) {
     if (!TASK_PREFIX_RE.test(line2)) continue;
     let score = 0;
     const normalizedLine = normalizeTaskLine(line2);
+    if (expectedRawSource && normalizedLine === expectedRawSource) score += 180;
+    else if (expectedRawSource && normalizedLine.includes(expectedRawSource)) score += 120;
     if (expectedLine && normalizedLine === expectedLine) score += 120;
+    else if (expectedLine && normalizedLine.includes(expectedLine)) score += 45;
     if (expectedTitle && normalizedLine.includes(expectedTitle)) score += 20;
     if (score > 0) candidates.push({ index, score });
   }
@@ -53812,9 +53875,11 @@ function TaskRow({
   timer,
   allThemes,
   showFields = [],
-  compact = false
+  compact = false,
+  displayTitle
 }) {
   const done = isDone(item.categoryKey);
+  const visibleTitle = String(displayTitle ?? item.content ?? item.title ?? "").trim() || item.title;
   const openEdit = (evt) => {
     openEditFromItem({ app, item });
   };
@@ -53825,7 +53890,7 @@ function TaskRow({
       /* @__PURE__ */ u2("div", { class: "task-row-main", children: [
         /* @__PURE__ */ u2("button", { type: "button", onClick: gesture.onClick, onDblClick: gesture.onDblClick, onTouchEnd: gesture.onTouchEnd, class: `task-row-title ${done ? "task-done" : ""}`, style: { background: "none", border: "none", padding: 0, textAlign: "left", cursor: "pointer" }, children: [
           item.icon && /* @__PURE__ */ u2("span", { class: "icon mr-1", children: item.icon }),
-          item.title
+          visibleTitle
         ] }),
         !done && /* @__PURE__ */ u2("div", { class: "task-row-timer-action", onClick: (e2) => e2.stopPropagation(), children: /* @__PURE__ */ u2(
           TaskSendToTimerButton,
@@ -54229,7 +54294,14 @@ function parseAllTimes(item) {
   return { startMinute: null, duration: null, endMinute: null };
 }
 function extractPureText(rawText) {
-  return rawText.replace(/<!--[\s\S]*?-->/g, "").replace(/[\(\[]\s*(时间|结束|时长)::.*?[\)\]]/g, "").replace(/#[\p{L}\d\-_/]+/gu, "").replace(/✅?\s*\d{4}-\d{2}-\d{2}/g, "").replace(/[\(\[]\s*🔁\s*.*?\s*[\)\]]/gi, "").replace(/\s+/g, " ").trim();
+  return rawText.replace(/<!--[\s\S]*?-->/g, "").replace(/^\s*[-*+]\s*\[[ xX-]\]\s*/, "").replace(new RegExp("^\\s*(?:\\p{Extended_Pictographic}\\uFE0F?\\s*)+", "u"), "").replace(/[\(\[]\s*(时间|结束|时长)::.*?[\)\]]/g, "").replace(/[\(\[][^\(\)\[\]]*?::.*?[\)\]]/g, "").replace(/#[\p{L}\d\-_/]+/gu, "").replace(/[📅⏳🛫➕✅❌]?\s*\d{4}-\d{2}-\d{2}/g, "").replace(/\s*🔁\s*every\s+.*?(?=$|\s*[#\(\[])/gi, "").replace(/[\(\[]\s*🔁\s*.*?\s*[\)\]]/gi, "").replace(/\s+/g, " ").trim();
+}
+function resolveTimelineDisplayText(item) {
+  const cleanContent = extractPureText(item.content || item.editableText || item.title || "");
+  if (cleanContent) return cleanContent;
+  const fromRaw = extractPureText(item.rawSource || "");
+  if (fromRaw) return fromRaw;
+  return item.title || "";
 }
 function processItemsToTimelineTasks(items) {
   const timelineTasks = [];
@@ -54248,7 +54320,8 @@ function processItemsToTimelineTasks(items) {
         startMinute,
         duration: duration2,
         endMinute,
-        pureText: extractPureText(item.content),
+        // Timeline 视觉保持不变；显示文本来自统一后的 content 字段，旧缓存则降级从 rawSource 清洗。
+        pureText: resolveTimelineDisplayText(item),
         fileName,
         actualStartDate
       });
@@ -54514,11 +54587,26 @@ function EventTimelineViewView(props) {
     displayFields,
     getItemTime,
     titleField,
+    contentField,
+    maxContentLength,
+    messageRenderPort,
     onMarkDone,
     timerService,
     timers,
     allThemes
   } = props;
+  const cleanDisplayText = (value) => {
+    const text2 = String(value ?? "").replace(/\r\n/g, "\n").replace(/\r/g, "\n").trim();
+    if (!text2) return "";
+    const compact = text2.replace(/\s+/g, " ").trim();
+    if (!Number.isFinite(maxContentLength) || maxContentLength <= 0) return compact;
+    return compact.length > maxContentLength ? `${compact.slice(0, maxContentLength)}...` : compact;
+  };
+  const getTaskDisplayTitle = (item) => {
+    const fromContent = cleanDisplayText(readField(item, contentField));
+    if (fromContent) return fromContent;
+    return cleanDisplayText(readField(item, "content")) || cleanDisplayText(readField(item, titleField)) || item.title || "";
+  };
   if (filteredItems.length === 0) {
     return /* @__PURE__ */ u2("div", { class: "event-timeline-empty", children: "当前时间范围内没有事件记录。" });
   }
@@ -54531,6 +54619,7 @@ function EventTimelineViewView(props) {
       const showDate = dateLabel !== lastDate;
       if (showDate) lastDate = dateLabel;
       const titleForKey = readField(item, titleField) || readField(item, "title") || "";
+      const taskDisplayTitle = item.type === "task" ? getTaskDisplayTitle(item) : "";
       return /* @__PURE__ */ u2("div", { class: "et-event", children: [
         /* @__PURE__ */ u2("div", { class: "et-event-date", children: [
           showDate && t3 && /* @__PURE__ */ u2("div", { class: "et-date-label", children: dateLabel }),
@@ -54546,9 +54635,10 @@ function EventTimelineViewView(props) {
             timerService,
             timer: timers.find((t22) => t22.taskId === item.id),
             allThemes,
+            displayTitle: taskDisplayTitle,
             showFields: []
           }
-        ) : /* @__PURE__ */ u2(BlockItem, { item, fields: displayFields, isNarrow: false, app, allThemes }) })
+        ) : /* @__PURE__ */ u2(BlockItem, { item, fields: displayFields, isNarrow: false, app, messageRenderPort, allThemes }) })
       ] }, `${dateLabel}-${timeLabel}-${titleForKey}-${index}`);
     });
   };
@@ -54582,13 +54672,16 @@ function EventTimelineView(props) {
     onMarkDone,
     timerService,
     timers,
-    allThemes
+    allThemes,
+    messageRenderPort
   } = props;
-  const displayFields = module2.fields || ["title", "date"];
-  const groupFields = module2.groupFields || [];
+  const displayFields = normalizeDisplayFields(module2.fields || ["title", "date"], { fallbackFields: ["title", "date"] });
+  const groupFields = normalizeDisplayFields(module2.groupFields || []);
   const viewConfig = module2.viewConfig || {};
   const timeField = viewConfig.timeField || "date";
   const titleField = viewConfig.titleField || "title";
+  const contentField = viewConfig.contentField || "content";
+  const maxContentLength = Number.isFinite(Number(viewConfig.maxContentLength)) ? Number(viewConfig.maxContentLength) : 160;
   const start2 = T$1(() => dayjs(dateRange[0]), [dateRange]);
   const end2 = T$1(() => dayjs(dateRange[1]), [dateRange]);
   function getItemTime(item) {
@@ -54629,6 +54722,9 @@ function EventTimelineView(props) {
       displayFields,
       getItemTime,
       titleField,
+      contentField,
+      maxContentLength,
+      messageRenderPort,
       onMarkDone,
       timerService,
       timers,
@@ -65385,36 +65481,132 @@ function TimelineViewEditor({ value, onChange, dataStore }) {
     )
   ] });
 }
-function EventTimelineViewEditor() {
-  return /* @__PURE__ */ u2("div", { class: "event-timeline-editor-description", children: [
-    /* @__PURE__ */ u2("div", { class: "statistics-section-title", children: "事件时间线视图" }),
-    /* @__PURE__ */ u2("div", { class: "statistics-section-description", children: [
-      "事件时间线视图按时间顺序纵向展示事件，采用三栏布局：",
-      /* @__PURE__ */ u2("br", {}),
-      /* @__PURE__ */ u2("strong", { children: "[左侧日期] - [中间时间线] - [右侧内容卡片]" }),
-      /* @__PURE__ */ u2("br", {}),
-      /* @__PURE__ */ u2("br", {}),
-      "主要特性：",
-      /* @__PURE__ */ u2("br", {}),
-      "• ",
-      /* @__PURE__ */ u2("strong", { children: "分组显示" }),
-      "：支持多级字段分组，按上方的",
-      /* @__PURE__ */ u2("strong", { children: "分组字段" }),
-      "配置",
-      /* @__PURE__ */ u2("br", {}),
-      "• ",
-      /* @__PURE__ */ u2("strong", { children: "卡片渲染" }),
-      "：任务类型使用 TaskRow 组件，其他类型使用 BlockItem 组件",
-      /* @__PURE__ */ u2("br", {}),
-      "• ",
-      /* @__PURE__ */ u2("strong", { children: "字段控制" }),
-      "：显示内容由上方的",
-      /* @__PURE__ */ u2("strong", { children: "显示字段" }),
-      "配置控制",
-      /* @__PURE__ */ u2("br", {}),
-      "• ",
-      /* @__PURE__ */ u2("strong", { children: "时间排序" }),
-      "：同组内事件按时间升序自动排列"
+function uniqueFields(fields) {
+  const seen = /* @__PURE__ */ new Set();
+  const result = [];
+  for (const field of fields) {
+    if (!field || seen.has(field)) continue;
+    seen.add(field);
+    result.push(field);
+  }
+  return result;
+}
+function EventTimelineViewEditor({ value = {}, onChange, fieldOptions = [] }) {
+  const config2 = {
+    ...EVENT_TIMELINE_VIEW_DEFAULT_CONFIG,
+    ...value || {}
+  };
+  const selectableFields = T$1(() => uniqueFields([
+    CONTENT_FIELD_KEY,
+    FULL_DATA_FIELD_KEY,
+    "title",
+    "date",
+    "startTime",
+    ...fieldOptions
+  ]), [fieldOptions]);
+  const fieldSelectOptions = T$1(() => selectableFields.map((field) => ({
+    value: field,
+    label: getFieldLabel(field),
+    group: getFieldCategoryLabel(field)
+  })), [selectableFields]);
+  const patch = (partial2) => onChange(partial2);
+  return /* @__PURE__ */ u2(Box, { class: "event-timeline-editor-description", sx: { display: "flex", flexDirection: "column", gap: 2 }, children: [
+    /* @__PURE__ */ u2("div", { children: [
+      /* @__PURE__ */ u2("div", { class: "statistics-section-title", children: "事件时间线视图" }),
+      /* @__PURE__ */ u2("div", { class: "statistics-section-description", children: [
+        "事件时间线视图按时间顺序纵向展示事件，采用三栏布局：",
+        /* @__PURE__ */ u2("br", {}),
+        /* @__PURE__ */ u2("strong", { children: "[左侧日期] - [中间时间线] - [右侧内容卡片]" }),
+        /* @__PURE__ */ u2("br", {}),
+        /* @__PURE__ */ u2("br", {}),
+        "• ",
+        /* @__PURE__ */ u2("strong", { children: "任务内容语义" }),
+        "：推荐使用 ",
+        /* @__PURE__ */ u2("strong", { children: "内容" }),
+        " 字段显示干净正文；需要排查原始 Markdown 时再切换到 ",
+        /* @__PURE__ */ u2("strong", { children: "完整数据" }),
+        "。",
+        /* @__PURE__ */ u2("br", {}),
+        "• ",
+        /* @__PURE__ */ u2("strong", { children: "视觉保持" }),
+        "：任务仍以 TaskRow 展示，Block 仍使用 BlockItem / Markdown 渲染。"
+      ] })
+    ] }),
+    /* @__PURE__ */ u2(Box, { sx: { p: 1.5, border: "1px solid var(--background-modifier-border)", borderRadius: "10px" }, children: [
+      /* @__PURE__ */ u2(Typography2, { variant: "subtitle2", sx: { fontWeight: 700, mb: 1 }, children: "字段映射" }),
+      /* @__PURE__ */ u2(Stack, { spacing: 1.25, children: [
+        /* @__PURE__ */ u2(Stack, { direction: "row", spacing: 1.5, alignItems: "center", children: [
+          /* @__PURE__ */ u2(Typography2, { sx: { width: 92, flexShrink: 0, fontWeight: 600 }, children: "时间字段" }),
+          /* @__PURE__ */ u2(
+            SimpleSelect,
+            {
+              value: config2.timeField || "date",
+              options: fieldSelectOptions,
+              onChange: (field) => patch({ timeField: field }),
+              sx: { minWidth: "220px" }
+            }
+          )
+        ] }),
+        /* @__PURE__ */ u2(Stack, { direction: "row", spacing: 1.5, alignItems: "center", children: [
+          /* @__PURE__ */ u2(Typography2, { sx: { width: 92, flexShrink: 0, fontWeight: 600 }, children: "标题字段" }),
+          /* @__PURE__ */ u2(
+            SimpleSelect,
+            {
+              value: config2.titleField || "title",
+              options: fieldSelectOptions,
+              onChange: (field) => patch({ titleField: field }),
+              sx: { minWidth: "220px" }
+            }
+          )
+        ] }),
+        /* @__PURE__ */ u2(Stack, { direction: "row", spacing: 1.5, alignItems: "center", children: [
+          /* @__PURE__ */ u2(Typography2, { sx: { width: 92, flexShrink: 0, fontWeight: 600 }, children: "内容字段" }),
+          /* @__PURE__ */ u2(
+            SimpleSelect,
+            {
+              value: config2.contentField || CONTENT_FIELD_KEY,
+              options: fieldSelectOptions,
+              onChange: (field) => patch({ contentField: field }),
+              sx: { minWidth: "220px" }
+            }
+          )
+        ] }),
+        /* @__PURE__ */ u2(Stack, { direction: "row", spacing: 1.5, alignItems: "center", children: [
+          /* @__PURE__ */ u2(Typography2, { sx: { width: 92, flexShrink: 0, fontWeight: 600 }, children: "最大长度" }),
+          /* @__PURE__ */ u2(
+            TextField2,
+            {
+              type: "number",
+              size: "small",
+              value: config2.maxContentLength ?? 160,
+              onChange: (event) => patch({ maxContentLength: Number(event.target.value) || 0 }),
+              inputProps: { min: 0, max: 2e3 },
+              sx: { width: "140px" }
+            }
+          ),
+          /* @__PURE__ */ u2(Typography2, { variant: "caption", color: "text.secondary", children: "0 表示不截断" })
+        ] })
+      ] }),
+      /* @__PURE__ */ u2(Stack, { direction: "row", spacing: 1, sx: { mt: 1.5, flexWrap: "wrap", gap: 1 }, children: [
+        /* @__PURE__ */ u2(
+          Button2,
+          {
+            size: "small",
+            variant: "outlined",
+            onClick: () => patch({ contentField: CONTENT_FIELD_KEY, titleField: "title", timeField: "date", maxContentLength: 160 }),
+            children: "使用推荐字段"
+          }
+        ),
+        /* @__PURE__ */ u2(
+          Button2,
+          {
+            size: "small",
+            variant: "outlined",
+            onClick: () => patch({ contentField: FULL_DATA_FIELD_KEY }),
+            children: "内容改为完整数据调试"
+          }
+        )
+      ] })
     ] })
   ] });
 }
@@ -68227,8 +68419,8 @@ function buildBlockViewModel(params) {
 }
 function buildEventTimelineViewModel(params) {
   const { items, module: module2, dateRange } = params;
-  const displayFields = module2.fields || ["title", "date"];
-  const groupFields = module2.groupFields || [];
+  const displayFields = normalizeDisplayFields(module2.fields || ["title", "date"], { fallbackFields: ["title", "date"] });
+  const groupFields = normalizeDisplayFields(module2.groupFields || []);
   const viewConfig = module2.viewConfig || {};
   const timeField = viewConfig.timeField || "date";
   const titleField = viewConfig.titleField || "title";

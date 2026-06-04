@@ -18,6 +18,8 @@ interface TaskRowProps {
     allThemes: ThemeDefinition[];
     showFields?: string[];
     compact?: boolean;
+    /** 可选展示标题。用于 EventTimelineView 等视图按配置字段展示任务正文，而不改变 item.title 真值。 */
+    displayTitle?: string;
 }
 
 export function TaskRow({ 
@@ -28,9 +30,11 @@ export function TaskRow({
     timer, 
     allThemes,
     showFields = [],
-    compact = false
+    compact = false,
+    displayTitle
 }: TaskRowProps) {
     const done = isDone(item.categoryKey);
+    const visibleTitle = String(displayTitle ?? item.content ?? item.title ?? '').trim() || item.title;
 
     const openEdit = (evt?: Event) => {
         evt?.preventDefault?.();
@@ -50,7 +54,7 @@ export function TaskRow({
                 <div class="task-row-main">
                     <button type="button" onClick={gesture.onClick as any} onDblClick={gesture.onDblClick as any} onTouchEnd={gesture.onTouchEnd as any} class={`task-row-title ${done ? 'task-done' : ''}`} style={{ background: 'none', border: 'none', padding: 0, textAlign: 'left', cursor: 'pointer' }}>
                         {item.icon && <span class="icon mr-1">{item.icon}</span>}
-                        {item.title}
+                        {visibleTitle}
                     </button>
                     {!done && (
                         <div class="task-row-timer-action" onClick={(e) => e.stopPropagation()}>

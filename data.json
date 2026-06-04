@@ -339,6 +339,10 @@
           {
             "name": "健康",
             "color": "#e0e0e0"
+          },
+          {
+            "name": "01",
+            "color": "#a8e184"
           }
         ]
       },
@@ -469,59 +473,80 @@
       "id": "vi_mpi3dydfsejfio8",
       "parentId": null,
       "title": "excle",
-      "viewType": "TimelineView",
+      "viewType": "ExcelView",
       "viewConfig": {
-        "categories": [
-          {
-            "name": "打卡",
-            "color": "#b888e7"
+        "categories": {
+          "0": {
+            "name": "0",
+            "color": "#b888e7",
+            "files": [
+              "2-1健康"
+            ]
           },
-          {
-            "name": "计划",
-            "color": "#9eeabe"
+          "1": {
+            "name": "1",
+            "color": "#9eeabe",
+            "files": [
+              "2-4思考"
+            ]
           },
-          {
+          "2": {
             "name": "闪念",
             "color": "#e47272"
           },
-          {
+          "3": {
             "name": "完成任务",
             "color": "#88c1dd"
           },
-          {
+          "4": {
             "name": "未完成任务",
             "color": "#ebebeb"
           },
-          {
+          "5": {
             "name": "总结",
             "color": "#e5bf8a"
-          },
-          {
-            "name": "01",
-            "color": "#a8e184"
           }
-        ],
+        },
         "excel": {
           "columnWidths": {
-            "title": 597
+            "title": 597,
+            "content": 307,
+            "themePath": 80,
+            "icon": 80
           },
-          "contentDisplayMode": "fullMarkdown"
-        }
+          "contentDisplayMode": "previewText"
+        },
+        "progressOrder": [
+          "0",
+          "1",
+          "2",
+          "3",
+          "4",
+          "5"
+        ]
       },
       "fields": [
         "categoryKey",
         "themePath",
+        "icon",
         "content",
         "extra.目标",
         "date",
-        "manuallyEdited",
-        "icon"
+        "fullData"
       ],
       "groupFields": [],
       "filters": [],
       "sort": [
         {
-          "field": "rootTheme",
+          "field": "baseCategory",
+          "dir": "asc"
+        },
+        {
+          "field": "themePath",
+          "dir": "asc"
+        },
+        {
+          "field": "date",
           "dir": "asc"
         }
       ],

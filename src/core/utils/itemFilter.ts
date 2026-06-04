@@ -3,6 +3,7 @@
 // —— 删除 status/category 依赖，改用 categoryKey 推断是否“已关闭”
 // —— 修正数字/日期的比较与排序（避免把数值/日期按字符串字典序比较）
 import { Item, FilterRule, SortRule, readField } from '@/core/types/schema';
+import { normalizeFieldKey } from '@/core/fields/FieldValueResolver';
 
 /* ---------- 通用比较：数字/日期优先，其次回退字符串 ---------- */
 function coerceForCompare(v: any): number | string | null {
@@ -95,24 +96,28 @@ function normalizeBetweenValue(value: any): [any, any] | null {
 }
 
 function matchRule(item: Item, rule: FilterRule): boolean {
-  let v1: any = readField(item, rule.field);
+  const canonicalField = normalizeFieldKey(rule.field);
+  let v1: any = readField(item, canonicalField);
   let v2: any = rule.value;
 
   if (rule.op === 'empty') return isEmptyValue(v1);
   if (rule.op === 'notEmpty') return !isEmptyValue(v1);
 
   // 优先使用预处理字段进行大小写无关的比较
-  if (rule.field === 'title') {
+  if (canonicalField === 'title') {
     v1 = (item as any).titleLower ?? String(v1 ?? '').toLowerCase();
     v2 = String(v2 ?? '').toLowerCase();
-  } else if (rule.field === 'content') {
+  } else if (canonicalField === 'content') {
     v1 = (item as any).contentLower ?? String(v1 ?? '').toLowerCase();
     v2 = String(v2 ?? '').toLowerCase();
-  } else if (['theme', 'themePath', 'rootTheme', 'leafTheme', '主题路径', '完整主题', '根主题', '叶主题'].includes(rule.field)) {
+  } else if (['themePath', 'rootTheme', 'leafTheme'].includes(canonicalField)) {
     // 视图设置使用主题三分法时，统一走 readField，保持大小写无关比较。
     v1 = String(v1 ?? '').toLowerCase();
     v2 = String(v2 ?? '').toLowerCase();
-  } else if (rule.field === 'tags') {
+  } else if (canonicalField === 'fullData') {
+    v1 = (item as any).fullDataLower ?? String(v1 ?? '').toLowerCase();
+    v2 = String(v2 ?? '').toLowerCase();
+  } else if (canonicalField === 'tags') {
     const tagsLower: string[] = (item as any).tagsLower
       ?? (Array.isArray(v1) ? v1.map(x => String(x).toLowerCase()) : []);
     const needle = String(v2 ?? '').toLowerCase();
@@ -167,8 +172,9 @@ export function sortItems(items: Item[], rules: SortRule[] = []) {
 
   return [...items].sort((a, b) => {
     for (const r of rules) {
-      const av = readField(a, r.field);
-      const bv = readField(b, r.field);
+      const canonicalField = normalizeFieldKey(r.field);
+      const av = readField(a, canonicalField);
+      const bv = readField(b, canonicalField);
 
       // 统一将空值放到最后（升序），放到最前（降序）
       if (av == null && bv == null) continue;
@@ -226,7 +232,8 @@ export function filterByKeyword(items: Item[], kw: string) {
   return items.filter(it => {
     const titleLower = (it as any).titleLower ?? (it.title || '').toLowerCase();
     const contentLower = (it as any).contentLower ?? (it.content || '').toLowerCase();
-    return (titleLower + ' ' + contentLower).includes(s);
+    const fullDataLower = (it as any).fullDataLower ?? String(readField(it, 'fullData') || '').toLowerCase();
+    return (titleLower + ' ' + contentLower + ' ' + fullDataLower).includes(s);
   });
 }
 
