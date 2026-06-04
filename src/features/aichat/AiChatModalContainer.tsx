@@ -8,7 +8,7 @@ import { devError, devLog } from '@core/public';
 import type { ChatResponse } from '@core/public';
 import { AiChatModalView } from './AiChatModalView';
 import type { AiServices } from './types';
-import { createTakeLatest, CancelledError, useIsMounted } from '@shared/public';
+import { CancelledError, createTakeLatest, useIsMounted } from '@shared/public';
 
 export interface AiChatModalContainerProps {
     closeModal: () => void;

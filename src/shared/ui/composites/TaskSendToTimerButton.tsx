@@ -2,8 +2,7 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
 import { IconAction } from '@shared/public';
-import PlayArrowIcon from '@mui/icons-material/PlayArrow';
-import HourglassTopIcon from '@mui/icons-material/HourglassTop';
+import { HourglassTopIcon, PlayArrowIcon } from '@shared/ui/icons';
 
 interface TaskSendToTimerButtonProps {
     taskId: string;

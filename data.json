@@ -335,14 +335,6 @@
           {
             "name": "计划",
             "color": "#9eeabe"
-          },
-          {
-            "name": "健康",
-            "color": "#e0e0e0"
-          },
-          {
-            "name": "01",
-            "color": "#a8e184"
           }
         ]
       },
@@ -475,64 +467,47 @@
       "title": "excle",
       "viewType": "ExcelView",
       "viewConfig": {
-        "categories": {
-          "0": {
-            "name": "0",
-            "color": "#b888e7",
-            "files": [
-              "2-1健康"
-            ]
+        "categories": [
+          {
+            "name": "打卡",
+            "color": "#b888e7"
           },
-          "1": {
-            "name": "1",
-            "color": "#9eeabe",
-            "files": [
-              "2-4思考"
-            ]
+          {
+            "name": "计划",
+            "color": "#9eeabe"
           },
-          "2": {
+          {
             "name": "闪念",
             "color": "#e47272"
           },
-          "3": {
+          {
             "name": "完成任务",
             "color": "#88c1dd"
           },
-          "4": {
+          {
             "name": "未完成任务",
             "color": "#ebebeb"
           },
-          "5": {
+          {
             "name": "总结",
             "color": "#e5bf8a"
           }
-        },
+        ],
         "excel": {
           "columnWidths": {
             "title": 597,
             "content": 307,
-            "themePath": 80,
-            "icon": 80
-          },
-          "contentDisplayMode": "previewText"
-        },
-        "progressOrder": [
-          "0",
-          "1",
-          "2",
-          "3",
-          "4",
-          "5"
-        ]
+            "themePath": 80
+          }
+        }
       },
       "fields": [
         "categoryKey",
         "themePath",
-        "icon",
         "content",
         "extra.目标",
         "date",
-        "fullData"
+        "icon"
       ],
       "groupFields": [],
       "filters": [],
@@ -575,7 +550,8 @@
       "initialDate": "2025-02-26",
       "useFieldGranularity": false,
       "selectedThemes": [],
-      "selectedCategories": []
+      "selectedCategories": [],
+      "globalFilters": []
     },
     {
       "id": "layout_mpi3dfhyn14bsio",
@@ -587,7 +563,21 @@
       "initialView": "周",
       "initialDateFollowsNow": true,
       "parentId": null,
-      "globalFilters": [],
+      "globalFilters": [
+        {
+          "field": "rootTheme",
+          "op": "=",
+          "value": "健康",
+          "logic": "and"
+        },
+        {
+          "field": "type",
+          "op": "in",
+          "value": [
+            "block"
+          ]
+        }
+      ],
       "selectedThemes": [],
       "selectedCategories": []
     }
@@ -617,6 +607,12 @@
                 "label": "📅"
               }
             ]
+          },
+          {
+            "id": "field_mppazdci_8",
+            "key": "目标",
+            "label": "目标",
+            "type": "multiTag"
           },
           {
             "id": "field_mekt6ks3",
@@ -671,15 +667,9 @@
                 "label": "每月"
               }
             ]
-          },
-          {
-            "id": "field_mppazdci_8",
-            "key": "新字段8",
-            "label": "新字段8",
-            "type": "multiTag"
           }
         ],
-        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{themePath}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态.label}} {{日期}}\n\n",
+        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{themePath}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (目标::{{目标}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态.label}} {{日期}}\n\n",
         "targetFile": "01/2-5电脑.md",
         "appendUnderHeader": "## {{themePath}}",
         "categoryKey": "任务"
@@ -1180,6 +1170,12 @@
             ]
           },
           {
+            "id": "field_mppazdci_8",
+            "key": "目标",
+            "label": "目标",
+            "type": "multiTag"
+          },
+          {
             "id": "field_mekt6ks3",
             "key": "任务内容",
             "label": "任务内容",
@@ -1222,7 +1218,7 @@
             ]
           }
         ],
-        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{themePath}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态.label}} {{日期}}\n\n",
+        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{themePath}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (目标::{{目标}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态.label}} {{日期}}\n\n",
         "targetFile": "02/01.md",
         "appendUnderHeader": "## {{themePath}}",
         "disabled": true
@@ -4420,6 +4416,12 @@
             ]
           },
           {
+            "id": "field_mppazdci_8",
+            "key": "目标",
+            "label": "目标",
+            "type": "multiTag"
+          },
+          {
             "id": "field_mekt6ks3",
             "key": "任务内容",
             "label": "任务内容",
@@ -4468,7 +4470,7 @@
             ]
           }
         ],
-        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{themePath}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态.label}} {{日期}}\n\n",
+        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{themePath}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (目标::{{目标}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态.label}} {{日期}}\n\n",
         "targetFile": "03/01.md",
         "appendUnderHeader": "## {{themePath}}",
         "disabled": true
@@ -4501,6 +4503,12 @@
             ]
           },
           {
+            "id": "field_mppazdci_8",
+            "key": "目标",
+            "label": "目标",
+            "type": "multiTag"
+          },
+          {
             "id": "field_mekt6ks3",
             "key": "任务内容",
             "label": "任务内容",
@@ -4549,7 +4557,7 @@
             ]
           }
         ],
-        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{themePath}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态.label}} {{日期}}\n\n",
+        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{themePath}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (目标::{{目标}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态.label}} {{日期}}\n\n",
         "targetFile": "03/01.md",
         "appendUnderHeader": "## {{themePath}}",
         "disabled": true
@@ -4582,6 +4590,12 @@
             ]
           },
           {
+            "id": "field_mppazdci_8",
+            "key": "目标",
+            "label": "目标",
+            "type": "multiTag"
+          },
+          {
             "id": "field_mekt6ks3",
             "key": "任务内容",
             "label": "任务内容",
@@ -4630,7 +4644,7 @@
             ]
           }
         ],
-        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{themePath}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态.label}} {{日期}}\n\n",
+        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{themePath}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (目标::{{目标}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态.label}} {{日期}}\n\n",
         "targetFile": "03/01.md",
         "appendUnderHeader": "## {{themePath}}",
         "disabled": true
@@ -4778,6 +4792,12 @@
             ]
           },
           {
+            "id": "field_mppazdci_8",
+            "key": "目标",
+            "label": "目标",
+            "type": "multiTag"
+          },
+          {
             "id": "field_mekt6ks3",
             "key": "任务内容",
             "label": "任务内容",
@@ -4832,7 +4852,7 @@
             ]
           }
         ],
-        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{themePath}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态.label}} {{日期}}\n\n",
+        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{themePath}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (目标::{{目标}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态.label}} {{日期}}\n\n",
         "targetFile": "01/2-6工作.md",
         "appendUnderHeader": "## {{themePath}}"
       },
@@ -4864,6 +4884,12 @@
             ]
           },
           {
+            "id": "field_mppazdci_8",
+            "key": "目标",
+            "label": "目标",
+            "type": "multiTag"
+          },
+          {
             "id": "field_mekt6ks3",
             "key": "任务内容",
             "label": "任务内容",
@@ -4918,7 +4944,7 @@
             ]
           }
         ],
-        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{themePath}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态.label}} {{日期}}\n\n",
+        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{themePath}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (目标::{{目标}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态.label}} {{日期}}\n\n",
         "targetFile": "01/2-6工作.md",
         "appendUnderHeader": "## {{themePath}}"
       },
@@ -4950,6 +4976,12 @@
             ]
           },
           {
+            "id": "field_mppazdci_8",
+            "key": "目标",
+            "label": "目标",
+            "type": "multiTag"
+          },
+          {
             "id": "field_mekt6ks3",
             "key": "任务内容",
             "label": "任务内容",
@@ -5004,7 +5036,7 @@
             ]
           }
         ],
-        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{themePath}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态.label}} {{日期}}\n\n",
+        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{themePath}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (目标::{{目标}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态.label}} {{日期}}\n\n",
         "targetFile": "01/2-6工作.md",
         "appendUnderHeader": "## {{themePath}}"
       },
@@ -5036,6 +5068,12 @@
             ]
           },
           {
+            "id": "field_mppazdci_8",
+            "key": "目标",
+            "label": "目标",
+            "type": "multiTag"
+          },
+          {
             "id": "field_mekt6ks3",
             "key": "任务内容",
             "label": "任务内容",
@@ -5090,7 +5128,7 @@
             ]
           }
         ],
-        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{themePath}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态.label}} {{日期}}\n\n",
+        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{themePath}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (目标::{{目标}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态.label}} {{日期}}\n\n",
         "targetFile": "01/2-6工作.md",
         "appendUnderHeader": "## {{themePath}}"
       },
@@ -5119,6 +5157,12 @@
                 "label": "📅"
               }
             ]
+          },
+          {
+            "id": "field_mppazdci_8",
+            "key": "目标",
+            "label": "目标",
+            "type": "multiTag"
           },
           {
             "id": "field_mekt6ks3",
@@ -5176,7 +5220,7 @@
             ]
           }
         ],
-        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{themePath}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态.label}} {{日期}}\n\n",
+        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{themePath}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (目标::{{目标}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态.label}} {{日期}}\n\n",
         "targetFile": "01/2-6工作.md",
         "appendUnderHeader": "## {{themePath}}",
         "id": "ovr_mfhzw9d975by6"
@@ -5207,6 +5251,12 @@
                 "label": "📅"
               }
             ]
+          },
+          {
+            "id": "field_mppazdci_8",
+            "key": "目标",
+            "label": "目标",
+            "type": "multiTag"
           },
           {
             "id": "field_mekt6ks3",
@@ -5263,7 +5313,7 @@
             ]
           }
         ],
-        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{themePath}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态.label}} {{日期}}\n\n",
+        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{themePath}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (目标::{{目标}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态.label}} {{日期}}\n\n",
         "targetFile": "01/2-6工作.md",
         "appendUnderHeader": "## {{themePath}}"
       },
@@ -5292,6 +5342,12 @@
                 "label": "📅"
               }
             ]
+          },
+          {
+            "id": "field_mppazdci_8",
+            "key": "目标",
+            "label": "目标",
+            "type": "multiTag"
           },
           {
             "id": "field_mekt6ks3",
@@ -5349,7 +5405,7 @@
             ]
           }
         ],
-        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{themePath}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态.label}} {{日期}}\n\n",
+        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{themePath}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (目标::{{目标}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态.label}} {{日期}}\n\n",
         "targetFile": "01/2-4思考.md",
         "appendUnderHeader": "## {{themePath}}",
         "id": "ovr_mfhzwkwivqho3"
@@ -5379,6 +5435,12 @@
                 "label": "📅"
               }
             ]
+          },
+          {
+            "id": "field_mppazdci_8",
+            "key": "目标",
+            "label": "目标",
+            "type": "multiTag"
           },
           {
             "id": "field_mekt6ks3",
@@ -5436,7 +5498,7 @@
             ]
           }
         ],
-        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{themePath}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态.label}} {{日期}}\n\n",
+        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{themePath}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (目标::{{目标}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态.label}} {{日期}}\n\n",
         "targetFile": "01/2-4思考.md",
         "appendUnderHeader": "## {{themePath}}",
         "id": "ovr_mfhzwoqz4223c"
@@ -5466,6 +5528,12 @@
                 "label": "📅"
               }
             ]
+          },
+          {
+            "id": "field_mppazdci_8",
+            "key": "目标",
+            "label": "目标",
+            "type": "multiTag"
           },
           {
             "id": "field_mekt6ks3",
@@ -5522,7 +5590,7 @@
             ]
           }
         ],
-        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{themePath}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态.label}} {{日期}}\n\n",
+        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{themePath}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (目标::{{目标}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态.label}} {{日期}}\n\n",
         "targetFile": "01/2-5电脑.md",
         "appendUnderHeader": "## {{themePath}}",
         "id": "ovr_mfhzwx24q1kpc"
@@ -5552,6 +5620,12 @@
                 "label": "📅"
               }
             ]
+          },
+          {
+            "id": "field_mppazdci_8",
+            "key": "目标",
+            "label": "目标",
+            "type": "multiTag"
           },
           {
             "id": "field_mekt6ks3",
@@ -5609,7 +5683,7 @@
             ]
           }
         ],
-        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{themePath}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态.label}} {{日期}}\n\n",
+        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{themePath}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (目标::{{目标}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态.label}} {{日期}}\n\n",
         "targetFile": "01/2-5电脑.md",
         "appendUnderHeader": "## {{themePath}}",
         "id": "ovr_mfhzx4hvl9s27",
@@ -5640,6 +5714,12 @@
                 "label": "📅"
               }
             ]
+          },
+          {
+            "id": "field_mppazdci_8",
+            "key": "目标",
+            "label": "目标",
+            "type": "multiTag"
           },
           {
             "id": "field_mekt6ks3",
@@ -5697,7 +5777,7 @@
             ]
           }
         ],
-        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{themePath}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态.label}} {{日期}}\n\n",
+        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{themePath}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (目标::{{目标}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态.label}} {{日期}}\n\n",
         "targetFile": "01/2-5电脑.md",
         "appendUnderHeader": "## {{themePath}}",
         "id": "ovr_mfhzxac3hz906"
@@ -5727,6 +5807,12 @@
                 "label": "📅"
               }
             ]
+          },
+          {
+            "id": "field_mppazdci_8",
+            "key": "目标",
+            "label": "目标",
+            "type": "multiTag"
           },
           {
             "id": "field_mekt6ks3",
@@ -5784,7 +5870,7 @@
             ]
           }
         ],
-        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{themePath}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态.label}} {{日期}}\n\n",
+        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{themePath}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (目标::{{目标}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态.label}} {{日期}}\n\n",
         "targetFile": "01/2-5电脑.md",
         "appendUnderHeader": "## {{themePath}}",
         "id": "ovr_mfhzxf5uox0gu",
@@ -5816,6 +5902,12 @@
                 "label": "📅"
               }
             ]
+          },
+          {
+            "id": "field_mppazdci_8",
+            "key": "目标",
+            "label": "目标",
+            "type": "multiTag"
           },
           {
             "id": "field_mekt6ks3",
@@ -5872,7 +5964,7 @@
             ]
           }
         ],
-        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{themePath}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态.label}} {{日期}}\n\n",
+        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{themePath}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (目标::{{目标}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态.label}} {{日期}}\n\n",
         "targetFile": "01/2-5电脑.md",
         "appendUnderHeader": "## {{themePath}}",
         "disabled": false
@@ -5902,6 +5994,12 @@
                 "label": "📅"
               }
             ]
+          },
+          {
+            "id": "field_mppazdci_8",
+            "key": "目标",
+            "label": "目标",
+            "type": "multiTag"
           },
           {
             "id": "field_mekt6ks3",
@@ -5959,7 +6057,7 @@
             ]
           }
         ],
-        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{themePath}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态.label}} {{日期}}\n\n",
+        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{themePath}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (目标::{{目标}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态.label}} {{日期}}\n\n",
         "targetFile": "01/2-4思考.md",
         "appendUnderHeader": "## {{themePath}}",
         "id": "ovr_mfhzxpuhe0flz"
@@ -5989,6 +6087,12 @@
                 "label": "📅"
               }
             ]
+          },
+          {
+            "id": "field_mppazdci_8",
+            "key": "目标",
+            "label": "目标",
+            "type": "multiTag"
           },
           {
             "id": "field_mekt6ks3",
@@ -6045,7 +6149,7 @@
             ]
           }
         ],
-        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{themePath}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态.label}} {{日期}}\n\n",
+        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{themePath}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (目标::{{目标}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态.label}} {{日期}}\n\n",
         "targetFile": "01/2-3生活.md",
         "appendUnderHeader": "## {{themePath}}",
         "id": "ovr_mfhzy0ykf8a08"
@@ -6075,6 +6179,12 @@
                 "label": "📅"
               }
             ]
+          },
+          {
+            "id": "field_mppazdci_8",
+            "key": "目标",
+            "label": "目标",
+            "type": "multiTag"
           },
           {
             "id": "field_mekt6ks3",
@@ -6132,7 +6242,7 @@
             ]
           }
         ],
-        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{themePath}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态.label}} {{日期}}\n\n",
+        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{themePath}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (目标::{{目标}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态.label}} {{日期}}\n\n",
         "targetFile": "01/2-3生活.md",
         "appendUnderHeader": "## {{themePath}}",
         "id": "ovr_mfhzz4r56gn7k"
@@ -6162,6 +6272,12 @@
                 "label": "📅"
               }
             ]
+          },
+          {
+            "id": "field_mppazdci_8",
+            "key": "目标",
+            "label": "目标",
+            "type": "multiTag"
           },
           {
             "id": "field_mekt6ks3",
@@ -6219,7 +6335,7 @@
             ]
           }
         ],
-        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{themePath}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态.label}} {{日期}}\n\n",
+        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{themePath}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (目标::{{目标}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态.label}} {{日期}}\n\n",
         "targetFile": "01/2-3生活.md",
         "appendUnderHeader": "## {{themePath}}",
         "id": "ovr_mfhzzaeanezaa"
@@ -6249,6 +6365,12 @@
                 "label": "📅"
               }
             ]
+          },
+          {
+            "id": "field_mppazdci_8",
+            "key": "目标",
+            "label": "目标",
+            "type": "multiTag"
           },
           {
             "id": "field_mekt6ks3",
@@ -6306,7 +6428,7 @@
             ]
           }
         ],
-        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{themePath}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态.label}} {{日期}}\n\n",
+        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{themePath}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (目标::{{目标}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态.label}} {{日期}}\n\n",
         "targetFile": "01/2-3生活.md",
         "appendUnderHeader": "## {{themePath}}",
         "id": "ovr_mfhzzedvyx5e3"
@@ -6336,6 +6458,12 @@
                 "label": "📅"
               }
             ]
+          },
+          {
+            "id": "field_mppazdci_8",
+            "key": "目标",
+            "label": "目标",
+            "type": "multiTag"
           },
           {
             "id": "field_mekt6ks3",
@@ -6393,7 +6521,7 @@
             ]
           }
         ],
-        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{themePath}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态.label}} {{日期}}\n\n",
+        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{themePath}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (目标::{{目标}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态.label}} {{日期}}\n\n",
         "targetFile": "01/2-3生活.md",
         "appendUnderHeader": "## {{themePath}}",
         "id": "ovr_mfhzzih02q1gy"
@@ -6423,6 +6551,12 @@
                 "label": "📅"
               }
             ]
+          },
+          {
+            "id": "field_mppazdci_8",
+            "key": "目标",
+            "label": "目标",
+            "type": "multiTag"
           },
           {
             "id": "field_mekt6ks3",
@@ -6480,7 +6614,7 @@
             ]
           }
         ],
-        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{themePath}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态.label}} {{日期}}\n\n",
+        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{themePath}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (目标::{{目标}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态.label}} {{日期}}\n\n",
         "targetFile": "01/2-3生活.md",
         "appendUnderHeader": "## {{themePath}}",
         "id": "ovr_mfhzzn3vwjnxg"
@@ -6511,6 +6645,12 @@
                 "label": "📅"
               }
             ]
+          },
+          {
+            "id": "field_mppazdci_8",
+            "key": "目标",
+            "label": "目标",
+            "type": "multiTag"
           },
           {
             "id": "field_mekt6ks3",
@@ -6567,7 +6707,7 @@
             ]
           }
         ],
-        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{themePath}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态.label}} {{日期}}\n\n",
+        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{themePath}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (目标::{{目标}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态.label}} {{日期}}\n\n",
         "targetFile": "01/2-1健康.md",
         "appendUnderHeader": "## {{themePath}}"
       },
@@ -6596,6 +6736,12 @@
                 "label": "📅"
               }
             ]
+          },
+          {
+            "id": "field_mppazdci_8",
+            "key": "目标",
+            "label": "目标",
+            "type": "multiTag"
           },
           {
             "id": "field_mekt6ks3",
@@ -6653,7 +6799,7 @@
             ]
           }
         ],
-        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{themePath}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态.label}} {{日期}}\n\n",
+        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{themePath}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (目标::{{目标}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态.label}} {{日期}}\n\n",
         "targetFile": "01/2-1健康.md",
         "appendUnderHeader": "## {{themePath}}",
         "id": "ovr_mfi00peyoa7fx"
@@ -6683,6 +6829,12 @@
                 "label": "📅"
               }
             ]
+          },
+          {
+            "id": "field_mppazdci_8",
+            "key": "目标",
+            "label": "目标",
+            "type": "multiTag"
           },
           {
             "id": "field_mekt6ks3",
@@ -6740,7 +6892,7 @@
             ]
           }
         ],
-        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{themePath}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态.label}} {{日期}}\n\n",
+        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{themePath}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (目标::{{目标}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态.label}} {{日期}}\n\n",
         "targetFile": "01/2-1健康.md",
         "appendUnderHeader": "## {{themePath}}",
         "id": "ovr_mfi00txo5ux1g"
@@ -6771,6 +6923,12 @@
                 "label": "📅"
               }
             ]
+          },
+          {
+            "id": "field_mppazdci_8",
+            "key": "目标",
+            "label": "目标",
+            "type": "multiTag"
           },
           {
             "id": "field_mekt6ks3",
@@ -6827,7 +6985,7 @@
             ]
           }
         ],
-        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{themePath}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态.label}} {{日期}}\n\n",
+        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{themePath}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (目标::{{目标}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态.label}} {{日期}}\n\n",
         "targetFile": "01/2-1健康.md",
         "appendUnderHeader": "## {{themePath}}"
       },
@@ -6836,7 +6994,7 @@
         "themeId": "thm_mejsosvgm4lcp",
         "status": "disabled",
         "id": "ovr_mfi011sly54z0",
-        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{themePath}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态.label}} {{日期}}\n\n"
+        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{themePath}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (目标::{{目标}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态.label}} {{日期}}\n\n"
       },
       {
         "blockId": "blk_meic1my6m62iu",
@@ -6863,6 +7021,12 @@
                 "label": "📅"
               }
             ]
+          },
+          {
+            "id": "field_mppazdci_8",
+            "key": "目标",
+            "label": "目标",
+            "type": "multiTag"
           },
           {
             "id": "field_mekt6ks3",
@@ -6920,7 +7084,7 @@
             ]
           }
         ],
-        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{themePath}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态.label}} {{日期}}\n\n",
+        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{themePath}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (目标::{{目标}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态.label}} {{日期}}\n\n",
         "targetFile": "01/2-1健康.md",
         "appendUnderHeader": "## {{themePath}}",
         "id": "ovr_mfi015kb2hw7a"
@@ -6950,6 +7114,12 @@
                 "label": "📅"
               }
             ]
+          },
+          {
+            "id": "field_mppazdci_8",
+            "key": "目标",
+            "label": "目标",
+            "type": "multiTag"
           },
           {
             "id": "field_mekt6ks3",
@@ -7007,7 +7177,7 @@
             ]
           }
         ],
-        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{themePath}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态.label}} {{日期}}\n\n",
+        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{themePath}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (目标::{{目标}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态.label}} {{日期}}\n\n",
         "targetFile": "01/2-1健康.md",
         "appendUnderHeader": "## {{themePath}}",
         "id": "ovr_mfi019n9qc5c0"
@@ -7037,6 +7207,12 @@
                 "label": "📅"
               }
             ]
+          },
+          {
+            "id": "field_mppazdci_8",
+            "key": "目标",
+            "label": "目标",
+            "type": "multiTag"
           },
           {
             "id": "field_mekt6ks3",
@@ -7094,7 +7270,7 @@
             ]
           }
         ],
-        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{themePath}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态.label}} {{日期}}\n\n",
+        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{themePath}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (目标::{{目标}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态.label}} {{日期}}\n\n",
         "targetFile": "01/2-2三餐.md",
         "appendUnderHeader": "## {{themePath}}",
         "id": "ovr_mfi01w2yaf99z"
@@ -7124,6 +7300,12 @@
                 "label": "📅"
               }
             ]
+          },
+          {
+            "id": "field_mppazdci_8",
+            "key": "目标",
+            "label": "目标",
+            "type": "multiTag"
           },
           {
             "id": "field_mekt6ks3",
@@ -7181,7 +7363,7 @@
             ]
           }
         ],
-        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{themePath}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态.label}} {{日期}}\n\n",
+        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{themePath}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (目标::{{目标}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态.label}} {{日期}}\n\n",
         "targetFile": "01/2-2三餐.md",
         "appendUnderHeader": "## {{themePath}}",
         "id": "ovr_mfi020mjezkyy"
@@ -7211,6 +7393,12 @@
                 "label": "📅"
               }
             ]
+          },
+          {
+            "id": "field_mppazdci_8",
+            "key": "目标",
+            "label": "目标",
+            "type": "multiTag"
           },
           {
             "id": "field_mekt6ks3",
@@ -7268,7 +7456,7 @@
             ]
           }
         ],
-        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{themePath}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态.label}} {{日期}}\n\n",
+        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{themePath}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (目标::{{目标}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态.label}} {{日期}}\n\n",
         "targetFile": "01/2-2三餐.md",
         "appendUnderHeader": "## {{themePath}}",
         "id": "ovr_mfi025rhepqgs"
@@ -7298,6 +7486,12 @@
                 "label": "📅"
               }
             ]
+          },
+          {
+            "id": "field_mppazdci_8",
+            "key": "目标",
+            "label": "目标",
+            "type": "multiTag"
           },
           {
             "id": "field_mekt6ks3",
@@ -7356,7 +7550,7 @@
             ]
           }
         ],
-        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{themePath}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态.label}} {{日期}}\n\n",
+        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{themePath}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (目标::{{目标}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态.label}} {{日期}}\n\n",
         "targetFile": "01/2-6工作.md",
         "appendUnderHeader": "## {{themePath}}",
         "id": "ovr_mfj18fupymfx4"
@@ -7394,6 +7588,12 @@
                 "label": "📅"
               }
             ]
+          },
+          {
+            "id": "field_mppazdci_8",
+            "key": "目标",
+            "label": "目标",
+            "type": "multiTag"
           },
           {
             "id": "field_mekt6ks3",
@@ -7450,7 +7650,7 @@
             ]
           }
         ],
-        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{themePath}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态.label}} {{日期}}\n\n",
+        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{themePath}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (目标::{{目标}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态.label}} {{日期}}\n\n",
         "targetFile": "01/2-4思考.md",
         "appendUnderHeader": "## {{themePath}}"
       },
@@ -7496,6 +7696,12 @@
             ]
           },
           {
+            "id": "field_mppazdci_8",
+            "key": "目标",
+            "label": "目标",
+            "type": "multiTag"
+          },
+          {
             "id": "field_mekt6ks3",
             "key": "任务内容",
             "label": "任务内容",
@@ -7550,7 +7756,7 @@
             ]
           }
         ],
-        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{themePath}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态.label}} {{日期}}\n\n",
+        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{themePath}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (目标::{{目标}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态.label}} {{日期}}\n\n",
         "targetFile": "01/2-3生活.md",
         "appendUnderHeader": "## {{themePath}}"
       },
@@ -7695,6 +7901,12 @@
             ]
           },
           {
+            "id": "field_mppazdci_8",
+            "key": "目标",
+            "label": "目标",
+            "type": "multiTag"
+          },
+          {
             "id": "field_mekt6ks3",
             "key": "任务内容",
             "label": "任务内容",
@@ -7750,7 +7962,7 @@
             ]
           }
         ],
-        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{themePath}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态.label}} {{日期}}\n\n",
+        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{themePath}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (目标::{{目标}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态.label}} {{日期}}\n\n",
         "targetFile": "01/2-3生活.md",
         "appendUnderHeader": "## {{themePath}}",
         "id": "ovr_mo29s584mizcdy5"
@@ -7782,6 +7994,12 @@
             ]
           },
           {
+            "id": "field_mppazdci_8",
+            "key": "目标",
+            "label": "目标",
+            "type": "multiTag"
+          },
+          {
             "id": "field_mekt6ks3",
             "key": "任务内容",
             "label": "任务内容",
@@ -7836,7 +8054,7 @@
             ]
           }
         ],
-        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{themePath}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态.label}} {{日期}}\n\n",
+        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{themePath}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (目标::{{目标}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态.label}} {{日期}}\n\n",
         "targetFile": "01/2-4思考.md",
         "appendUnderHeader": "## {{themePath}}",
         "id": "ovr_mpi1p8y880upyzs"
@@ -7868,6 +8086,12 @@
             ]
           },
           {
+            "id": "field_mppazdci_8",
+            "key": "目标",
+            "label": "目标",
+            "type": "multiTag"
+          },
+          {
             "id": "field_mekt6ks3",
             "key": "任务内容",
             "label": "任务内容",
@@ -7922,7 +8146,7 @@
             ]
           }
         ],
-        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{themePath}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态.label}} {{日期}}\n\n",
+        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{themePath}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (目标::{{目标}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态.label}} {{日期}}\n\n",
         "targetFile": "01/2-4思考.md",
         "appendUnderHeader": "## {{themePath}}",
         "id": "ovr_mpi1qg5dax8vgj9"
@@ -7954,6 +8178,12 @@
             ]
           },
           {
+            "id": "field_mppazdci_8",
+            "key": "目标",
+            "label": "目标",
+            "type": "multiTag"
+          },
+          {
             "id": "field_mekt6ks3",
             "key": "任务内容",
             "label": "任务内容",
@@ -8008,7 +8238,7 @@
             ]
           }
         ],
-        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{themePath}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态.label}} {{日期}}\n\n",
+        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{themePath}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (目标::{{目标}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态.label}} {{日期}}\n\n",
         "targetFile": "01/2-4思考.md",
         "appendUnderHeader": "## {{themePath}}",
         "id": "ovr_mpi1qzthoyilcaq"
@@ -8040,6 +8270,12 @@
             ]
           },
           {
+            "id": "field_mppazdci_8",
+            "key": "目标",
+            "label": "目标",
+            "type": "multiTag"
+          },
+          {
             "id": "field_mekt6ks3",
             "key": "任务内容",
             "label": "任务内容",
@@ -8094,7 +8330,7 @@
             ]
           }
         ],
-        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{themePath}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态.label}} {{日期}}\n\n",
+        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{themePath}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (目标::{{目标}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态.label}} {{日期}}\n\n",
         "targetFile": "01/2-4思考.md",
         "appendUnderHeader": "## {{themePath}}",
         "id": "ovr_mpi1r6wyuxyk4ru"
@@ -8126,6 +8362,12 @@
             ]
           },
           {
+            "id": "field_mppazdci_8",
+            "key": "目标",
+            "label": "目标",
+            "type": "multiTag"
+          },
+          {
             "id": "field_mekt6ks3",
             "key": "任务内容",
             "label": "任务内容",
@@ -8180,7 +8422,7 @@
             ]
           }
         ],
-        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{themePath}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态.label}} {{日期}}\n\n",
+        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{themePath}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (目标::{{目标}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态.label}} {{日期}}\n\n",
         "targetFile": "01/2-4思考.md",
         "appendUnderHeader": "## {{themePath}}",
         "id": "ovr_mpi1rexihv2fek1"
@@ -8212,6 +8454,12 @@
             ]
           },
           {
+            "id": "field_mppazdci_8",
+            "key": "目标",
+            "label": "目标",
+            "type": "multiTag"
+          },
+          {
             "id": "field_mekt6ks3",
             "key": "任务内容",
             "label": "任务内容",
@@ -8266,7 +8514,7 @@
             ]
           }
         ],
-        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{themePath}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态.label}} {{日期}}\n\n",
+        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{themePath}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (目标::{{目标}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态.label}} {{日期}}\n\n",
         "targetFile": "01/2-4思考.md",
         "appendUnderHeader": "## {{themePath}}",
         "id": "ovr_mpi1roqcobkk9cn"
@@ -8298,6 +8546,12 @@
             ]
           },
           {
+            "id": "field_mppazdci_8",
+            "key": "目标",
+            "label": "目标",
+            "type": "multiTag"
+          },
+          {
             "id": "field_mekt6ks3",
             "key": "任务内容",
             "label": "任务内容",
@@ -8352,7 +8606,7 @@
             ]
           }
         ],
-        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{themePath}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态.label}} {{日期}}\n\n",
+        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{themePath}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (目标::{{目标}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态.label}} {{日期}}\n\n",
         "targetFile": "01/2-4思考.md",
         "appendUnderHeader": "## {{themePath}}",
         "id": "ovr_mpi1s3y4xu6a9nb"
@@ -8384,6 +8638,12 @@
             ]
           },
           {
+            "id": "field_mppazdci_8",
+            "key": "目标",
+            "label": "目标",
+            "type": "multiTag"
+          },
+          {
             "id": "field_mekt6ks3",
             "key": "任务内容",
             "label": "任务内容",
@@ -8438,7 +8698,7 @@
             ]
           }
         ],
-        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{themePath}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态.label}} {{日期}}\n\n",
+        "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{themePath}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (目标::{{目标}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态.label}} {{日期}}\n\n",
         "targetFile": "01/2-4思考.md",
         "appendUnderHeader": "## {{themePath}}",
         "id": "ovr_mpi1scgk94czsop"
@@ -8560,8 +8820,6 @@
     "打卡": "#b888e7",
     "闪念": "#e47272",
     "事件": "#a5c8ee",
-    "周": "#e09185",
-    "生活": "#8cd4ee",
-    "01": "#a8e184"
+    "生活": "#8cd4ee"
   }
 }

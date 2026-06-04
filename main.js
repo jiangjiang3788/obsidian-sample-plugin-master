@@ -1557,20 +1557,20 @@ function readFieldValue(item, field) {
 const DEFAULT_AI_SETTINGS = {
   enabled: false,
   provider: "openai_compat",
-  apiEndpoint: "https://api.ricardochat.cn/v1",
-  // 安全：默认不提供任何 key，避免被意外持久化/同步
+  // 安全默认值：不预置任何第三方 endpoint / model / key，避免误请求或泄露。
+  apiEndpoint: "",
   apiKey: "",
-  // 需求：允许像其他设置一样落盘保存（用户可在设置页关闭）
-  persistApiKey: true,
-  model: "[渠道2]gemini-2.5-pro",
+  // 默认不把密钥写入插件数据；用户明确打开后才保存。
+  persistApiKey: false,
+  model: "",
   temperature: 0.7,
   maxTokens: 4096,
   requestTimeoutMs: 3e4,
   enabledBlockIds: [],
   defaultThemeId: void 0,
-  allowMultipleResults: true,
-  maxResults: 5,
-  confirmMode: "single",
+  allowMultipleResults: false,
+  maxResults: 10,
+  confirmMode: "batch",
   preloadConfigOnStartup: false,
   configCacheTTLSeconds: 300,
   customPrompt: ""
@@ -2615,6 +2615,118 @@ const TABLE_EXPORT_CONFIG = {
 const AppToken = "App";
 const SETTINGS_TOKEN = "ThinkSettings";
 const SettingsProviderToken = "SettingsProvider";
+function stripTaskPrefix(text2) {
+  return String(text2 || "").replace(/^\s*[-*+]\s*\[[ xX-]\]\s*/, "").trimStart();
+}
+function stripLeadingTaskIcons(text2) {
+  return String(text2 || "").replace(new RegExp("^\\s*(?:\\p{Extended_Pictographic}\\uFE0F?\\s*)+", "u"), "").trimStart();
+}
+function stripTaskMetadata(text2) {
+  let result = String(text2 || "");
+  result = result.replace(
+    /\s*🔁\s*every\s+(?:\d+\s+)?(?:day|week|month|year)s?(?:\s+when\s+done)?(?=$|\s*(?:[\(\[][^^\(\[\])]*::|📅|⏳|🛫|➕|✅|❌|#))/gi,
+    " "
+  );
+  result = result.replace(/\s*[\(\[][\s\S]*?::[\s\S]*?[\)\]]/g, " ");
+  result = result.replace(/\s*📅\s*\d{4}[-/]\d{2}[-/]\d{2}/g, " ").replace(/\s*⏳\s*\d{4}[-/]\d{2}[-/]\d{2}/g, " ").replace(/\s*🛫\s*\d{4}[-/]\d{2}[-/]\d{2}/g, " ").replace(/\s*➕\s*\d{4}[-/]\d{2}[-/]\d{2}/g, " ").replace(/\s*✅\s*\d{4}[-/]\d{2}[-/]\d{2}/g, " ").replace(/\s*❌\s*\d{4}[-/]\d{2}[-/]\d{2}/g, " ");
+  result = result.replace(/\s*#[\p{L}\p{N}_/-]+/gu, " ");
+  return result;
+}
+function normalizeLineBreaksOnly(text2) {
+  return String(text2 || "").replace(/[\t\r\n]+/g, " ").trim();
+}
+function extractTaskEditableText(text2) {
+  const rawInput = String(text2 || "");
+  const withoutPrefix = stripTaskPrefix(rawInput);
+  const withoutLeadingIcon = stripLeadingTaskIcons(withoutPrefix);
+  const withoutMetadata = stripTaskMetadata(withoutLeadingIcon);
+  const editableText = normalizeLineBreaksOnly(withoutMetadata);
+  const notes = [];
+  if (/\s{2,}/.test(editableText)) {
+    notes.push("正文内部存在连续空格；当前统一提取入口会保留这些空格，不会按空格截断。");
+  }
+  if (/^[^\s]+$/.test(editableText) && /\s{2,}/.test(withoutMetadata.trim())) {
+    notes.push("警告：中间结果存在连续空格，但最终结果只剩单 token；请检查后续是否又读取 item.title。");
+  }
+  if (!editableText && rawInput) {
+    notes.push("警告：原始任务行非空，但最终正文为空；可能是元数据正则过度删除。");
+  }
+  if (editableText && editableText === rawInput.trim()) {
+    notes.push("提示：提取结果与原始输入几乎一致，说明输入可能不是完整任务行，或者没有任务语法/元数据可剥离。");
+  }
+  return { rawInput, withoutPrefix, withoutLeadingIcon, withoutMetadata, editableText, notes };
+}
+function cleanTaskText(text2) {
+  return extractTaskEditableText(text2).editableText;
+}
+function explainTaskEditableTextExtraction(text2) {
+  const result = extractTaskEditableText(text2);
+  return {
+    rawInput: result.rawInput,
+    withoutPrefix: result.withoutPrefix,
+    withoutLeadingIcon: result.withoutLeadingIcon,
+    withoutMetadata: result.withoutMetadata,
+    finalEditableText: result.editableText,
+    notes: result.notes
+  };
+}
+function splitThemePath(themePath) {
+  return splitThemePath$1(themePath);
+}
+function pickEditableText(item) {
+  if (item.type === "task") {
+    const fromRaw = extractTaskEditableText(item.rawSource || item.content || "").editableText;
+    if (fromRaw) return fromRaw;
+    const extraBody2 = item.extra?.["正文"];
+    if (typeof extraBody2 === "string" && extraBody2.trim()) return extraBody2.trim();
+    if (item.editableText) return item.editableText;
+    return item.title || null;
+  }
+  if (item.editableText) return item.editableText;
+  const extraBody = item.extra?.["正文"];
+  if (typeof extraBody === "string" && extraBody.trim()) return extraBody.trim();
+  return item.content || item.title || null;
+}
+function buildParsedRecordSnapshot(item) {
+  const path = item.file?.path ?? (() => {
+    const hashIndex = item.id.lastIndexOf("#");
+    return hashIndex >= 0 ? item.id.slice(0, hashIndex) : null;
+  })();
+  const line2 = typeof item.file?.line === "number" ? item.file.line : (() => {
+    const hashIndex = item.id.lastIndexOf("#");
+    if (hashIndex < 0) return null;
+    const parsed = Number.parseInt(item.id.slice(hashIndex + 1), 10);
+    return Number.isFinite(parsed) ? parsed : null;
+  })();
+  const editableText = pickEditableText(item);
+  const themeParts = readExplicitThemeParts(item);
+  return {
+    itemId: item.id,
+    entryKind: item.type,
+    locator: { path, line: line2 },
+    raw: { sourceText: item.rawSource || item.content || "" },
+    semantic: {
+      title: item.title || null,
+      editableText,
+      content: item.content || null,
+      date: item.date || item.createdDate || null,
+      period: item.period || null,
+      tags: [...item.tags || []],
+      startTime: item.startTime || null,
+      endTime: item.endTime || null,
+      duration: item.duration ?? null,
+      themePath: themeParts.themePath,
+      rootTheme: themeParts.rootTheme,
+      leafTheme: themeParts.leafTheme,
+      categoryKey: item.categoryKey || null
+    },
+    templateHint: {
+      templateId: item.templateId || null,
+      templateSourceType: item.templateSourceType || null
+    },
+    extra: { ...item.extra || {} }
+  };
+}
 function generateId(prefix2 = "id") {
   return `${prefix2}_${Date.now().toString(36)}${Math.random().toString(36).slice(2, 9)}`;
 }
@@ -4744,61 +4856,6 @@ function makeObsUri(ref, vaultName) {
   const qp = `vault=${vault}&filepath=${encodeURIComponent(filePath)}`;
   return `obsidian://advanced-uri?${qp}${line2 ? "&line=" + line2 : ""}`;
 }
-function stripTaskPrefix(text2) {
-  return String(text2 || "").replace(/^\s*[-*+]\s*\[[ xX-]\]\s*/, "").trimStart();
-}
-function stripLeadingTaskIcons(text2) {
-  return String(text2 || "").replace(new RegExp("^\\s*(?:\\p{Extended_Pictographic}\\uFE0F?\\s*)+", "u"), "").trimStart();
-}
-function stripTaskMetadata(text2) {
-  let result = String(text2 || "");
-  result = result.replace(
-    /\s*🔁\s*every\s+(?:\d+\s+)?(?:day|week|month|year)s?(?:\s+when\s+done)?(?=$|\s*(?:[\(\[][^^\(\[\])]*::|📅|⏳|🛫|➕|✅|❌|#))/gi,
-    " "
-  );
-  result = result.replace(/\s*[\(\[][\s\S]*?::[\s\S]*?[\)\]]/g, " ");
-  result = result.replace(/\s*📅\s*\d{4}[-/]\d{2}[-/]\d{2}/g, " ").replace(/\s*⏳\s*\d{4}[-/]\d{2}[-/]\d{2}/g, " ").replace(/\s*🛫\s*\d{4}[-/]\d{2}[-/]\d{2}/g, " ").replace(/\s*➕\s*\d{4}[-/]\d{2}[-/]\d{2}/g, " ").replace(/\s*✅\s*\d{4}[-/]\d{2}[-/]\d{2}/g, " ").replace(/\s*❌\s*\d{4}[-/]\d{2}[-/]\d{2}/g, " ");
-  result = result.replace(/\s*#[\p{L}\p{N}_/-]+/gu, " ");
-  return result;
-}
-function normalizeLineBreaksOnly(text2) {
-  return String(text2 || "").replace(/[\t\r\n]+/g, " ").trim();
-}
-function extractTaskEditableText(text2) {
-  const rawInput = String(text2 || "");
-  const withoutPrefix = stripTaskPrefix(rawInput);
-  const withoutLeadingIcon = stripLeadingTaskIcons(withoutPrefix);
-  const withoutMetadata = stripTaskMetadata(withoutLeadingIcon);
-  const editableText = normalizeLineBreaksOnly(withoutMetadata);
-  const notes = [];
-  if (/\s{2,}/.test(editableText)) {
-    notes.push("正文内部存在连续空格；当前统一提取入口会保留这些空格，不会按空格截断。");
-  }
-  if (/^[^\s]+$/.test(editableText) && /\s{2,}/.test(withoutMetadata.trim())) {
-    notes.push("警告：中间结果存在连续空格，但最终结果只剩单 token；请检查后续是否又读取 item.title。");
-  }
-  if (!editableText && rawInput) {
-    notes.push("警告：原始任务行非空，但最终正文为空；可能是元数据正则过度删除。");
-  }
-  if (editableText && editableText === rawInput.trim()) {
-    notes.push("提示：提取结果与原始输入几乎一致，说明输入可能不是完整任务行，或者没有任务语法/元数据可剥离。");
-  }
-  return { rawInput, withoutPrefix, withoutLeadingIcon, withoutMetadata, editableText, notes };
-}
-function cleanTaskText(text2) {
-  return extractTaskEditableText(text2).editableText;
-}
-function explainTaskEditableTextExtraction(text2) {
-  const result = extractTaskEditableText(text2);
-  return {
-    rawInput: result.rawInput,
-    withoutPrefix: result.withoutPrefix,
-    withoutLeadingIcon: result.withoutLeadingIcon,
-    withoutMetadata: result.withoutMetadata,
-    finalEditableText: result.editableText,
-    notes: result.notes
-  };
-}
 const DEFAULT_MULTI_SEPARATOR = ", ";
 function normalizeToken$2(value) {
   return String(value ?? "").trim().toLowerCase();
@@ -4993,7 +5050,7 @@ function normalizeMetaKey(key) {
 function unique$1(values2) {
   return Array.from(new Set(values2.map((value) => value.trim()).filter(Boolean)));
 }
-function buildTitle(content, tags2) {
+function buildTitle$1(content, tags2) {
   let title = "";
   const trimmed = content.trim();
   if (trimmed) title = trimmed.split(/\r?\n/)[0];
@@ -5062,7 +5119,7 @@ function decodeBlockContentLines(contentLines, parentFolder) {
   }
   const finalTags = unique$1(tags2);
   return {
-    title: buildTitle(content, finalTags),
+    title: buildTitle$1(content, finalTags),
     content: content.trim(),
     categoryKey: categoryKey || parentFolder || "",
     date: date2,
@@ -5213,10 +5270,32 @@ function isRecordSubmitSuccess(result, options = {}) {
   if (options.treatCancelledAsSuccess && result.status === "cancelled") return true;
   return false;
 }
+function firstErrorCode(result) {
+  return String(result.errors?.[0]?.code || "");
+}
+function getRecordConflictRecoveryAdvice(code) {
+  switch (code) {
+    case "record_path_missing":
+      return "原文件可能已被移动或删除。请先重新扫描 Vault，再从最新视图重新打开这条记录。";
+    case "record_line_stale":
+      return "原记录所在行已变化。请重新扫描或打开原文确认位置，然后从最新记录重新编辑。";
+    case "record_block_boundary_invalid":
+      return "块记录的 start/end 边界已损坏。请打开原文修复边界标记后再保存。";
+    case "record_item_missing":
+      return "这条记录可能已被删除或内容变化过大。请重新扫描后确认是否仍然存在。";
+    case "record_locator_invalid":
+      return "记录定位信息无效。请从列表、时间线或搜索结果中的最新记录重新打开编辑。";
+    case "record_conflict":
+    default:
+      return "请重新扫描 Vault，并从最新视图重新打开这条记录后再操作。";
+  }
+}
 function readRecordSubmitMessage(result, fallback) {
   const message = result.errors?.[0]?.message || result.feedback?.notice || fallback;
   if (result.status === "conflict") {
-    return `记录冲突：${message}`;
+    const advice = getRecordConflictRecoveryAdvice(firstErrorCode(result));
+    return `记录冲突：${message}
+${advice}`;
   }
   return message;
 }
@@ -6131,6 +6210,57 @@ function applyViewQueryPipeline(input) {
   }
   return sortItems(result, sort);
 }
+function uniqueNonEmpty(values2) {
+  return Array.from(new Set(values2.map((value) => String(value || "").trim()).filter(Boolean)));
+}
+function operationLabel(operation) {
+  switch (operation) {
+    case "delete":
+      return "删除";
+    case "complete":
+      return "完成";
+    case "time_update":
+      return "更新时间";
+    case "create":
+      return "创建";
+    case "update":
+    default:
+      return "保存";
+  }
+}
+function getRecordRecoveryPaths(result, fallbackPath) {
+  return uniqueNonEmpty([
+    ...result.refresh?.scanPaths || [],
+    result.affectedPath,
+    fallbackPath
+  ]);
+}
+function buildRecordSubmitRecoveryPresentation(result, options = {}) {
+  if (!result || result.status !== "conflict") {
+    return {
+      shouldShow: false,
+      title: "",
+      message: "",
+      advice: "",
+      paths: [],
+      canOpenOriginal: false,
+      canRescan: false,
+      canRetry: false
+    };
+  }
+  const firstError = result.errors?.[0];
+  const paths = getRecordRecoveryPaths(result, options.fallbackPath);
+  return {
+    shouldShow: true,
+    title: `${operationLabel(result.operation)}遇到记录冲突`,
+    message: firstError?.message || result.feedback?.notice || "原记录位置可能已经变化，当前操作没有写入。",
+    advice: getRecordConflictRecoveryAdvice(firstError?.code || "record_conflict"),
+    paths,
+    canOpenOriginal: Boolean(options.canOpenOriginal),
+    canRescan: paths.length > 0,
+    canRetry: result.operation === "update" || result.operation === "delete" || result.operation === "time_update" || result.operation === "complete"
+  };
+}
 const FIELD_ALIASES = {
   status: "categoryKey",
   category: "categoryKey",
@@ -6482,6 +6612,18 @@ class AiConfigCache {
     return valid;
   }
 }
+class FetchAiHttpTransport {
+  request(url, init) {
+    return fetch(url, init);
+  }
+}
+let defaultTransportFactory = () => new FetchAiHttpTransport();
+function setDefaultAiHttpTransportFactory(factory) {
+  defaultTransportFactory = factory;
+}
+function resetDefaultAiHttpTransportFactory() {
+  defaultTransportFactory = () => new FetchAiHttpTransport();
+}
 function nowMs$2() {
   try {
     return performance.now();
@@ -6508,6 +6650,10 @@ function getBodySize(body2) {
   }
 }
 class AiHttpClient {
+  constructor(transport = defaultTransportFactory()) {
+    this.transport = transport;
+  }
+  transport;
   /**
    * 发送聊天完成请求
    * 
@@ -6561,7 +6707,7 @@ class AiHttpClient {
         endpoint: summarizeUrl(req.baseURL),
         path: "/chat/completions"
       });
-      const response = await fetch(url, {
+      const response = await this.transport.request(url, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -6615,7 +6761,7 @@ class AiHttpClient {
       });
       return content;
     } catch (error) {
-      if (error.name === "AbortError") {
+      if (error instanceof Error && error.name === "AbortError") {
         devWarn(`[AiInput][${traceId}][HTTP] 请求被取消/超时，总耗时 ${elapsedMs$1(totalStart)}`, {
           timeoutMs: req.timeoutMs,
           externalAborted: !!req.signal?.aborted,
@@ -6624,8 +6770,8 @@ class AiHttpClient {
         throw error;
       }
       devWarn(`[AiInput][${traceId}][HTTP] 请求失败，总耗时 ${elapsedMs$1(totalStart)}`, {
-        message: error?.message ?? String(error),
-        name: error?.name
+        message: error instanceof Error ? error.message : String(error),
+        name: error instanceof Error ? error.name : void 0
       });
       throw error;
     } finally {
@@ -16708,63 +16854,6 @@ TimerStateService = __decorateClass$7([
   singleton(),
   __decorateParam$6(0, inject(VAULT_PORT_TOKEN))
 ], TimerStateService);
-function splitThemePath(themePath) {
-  return splitThemePath$1(themePath);
-}
-function pickEditableText(item) {
-  if (item.type === "task") {
-    const fromRaw = extractTaskEditableText(item.rawSource || item.content || "").editableText;
-    if (fromRaw) return fromRaw;
-    const extraBody2 = item.extra?.["正文"];
-    if (typeof extraBody2 === "string" && extraBody2.trim()) return extraBody2.trim();
-    if (item.editableText) return item.editableText;
-    return item.title || null;
-  }
-  if (item.editableText) return item.editableText;
-  const extraBody = item.extra?.["正文"];
-  if (typeof extraBody === "string" && extraBody.trim()) return extraBody.trim();
-  return item.content || item.title || null;
-}
-function buildParsedRecordSnapshot(item) {
-  const path = item.file?.path ?? (() => {
-    const hashIndex = item.id.lastIndexOf("#");
-    return hashIndex >= 0 ? item.id.slice(0, hashIndex) : null;
-  })();
-  const line2 = typeof item.file?.line === "number" ? item.file.line : (() => {
-    const hashIndex = item.id.lastIndexOf("#");
-    if (hashIndex < 0) return null;
-    const parsed = Number.parseInt(item.id.slice(hashIndex + 1), 10);
-    return Number.isFinite(parsed) ? parsed : null;
-  })();
-  const editableText = pickEditableText(item);
-  const themeParts = readExplicitThemeParts(item);
-  return {
-    itemId: item.id,
-    entryKind: item.type,
-    locator: { path, line: line2 },
-    raw: { sourceText: item.rawSource || item.content || "" },
-    semantic: {
-      title: item.title || null,
-      editableText,
-      content: item.content || null,
-      date: item.date || item.createdDate || null,
-      period: item.period || null,
-      tags: [...item.tags || []],
-      startTime: item.startTime || null,
-      endTime: item.endTime || null,
-      duration: item.duration ?? null,
-      themePath: themeParts.themePath,
-      rootTheme: themeParts.rootTheme,
-      leafTheme: themeParts.leafTheme,
-      categoryKey: item.categoryKey || null
-    },
-    templateHint: {
-      templateId: item.templateId || null,
-      templateSourceType: item.templateSourceType || null
-    },
-    extra: { ...item.extra || {} }
-  };
-}
 function normalizePath(value) {
   const trimmed = String(value || "").trim();
   return trimmed || null;
@@ -47027,9 +47116,131 @@ function createRecordGestureHandlers(params) {
     }
   };
 }
-const FilterListIcon = createSvgIcon(/* @__PURE__ */ u2("path", {
-  d: "M10 18h4v-2h-4zM3 6v2h18V6zm3 7h12v-2H6z"
-}));
+const colorTokenMap = {
+  inherit: "inherit",
+  primary: "var(--interactive-accent)",
+  secondary: "var(--text-muted)",
+  success: "var(--color-green)",
+  error: "var(--color-red)",
+  warning: "var(--color-orange)",
+  info: "var(--color-blue)",
+  disabled: "var(--text-faint)",
+  action: "var(--text-muted)",
+  "text.disabled": "var(--text-faint)",
+  "text.secondary": "var(--text-muted)",
+  "text.primary": "var(--text-normal)",
+  "error.main": "var(--color-red)",
+  "success.main": "var(--color-green)",
+  "warning.main": "var(--color-orange)",
+  "info.main": "var(--color-blue)"
+};
+const fontSizeMap = {
+  inherit: "inherit",
+  small: "1rem",
+  medium: "1.25rem",
+  large: "2rem"
+};
+function toCssSize$1(value) {
+  if (typeof value === "number") return `${value}px`;
+  if (typeof value === "string") return fontSizeMap[value] ?? value;
+  return void 0;
+}
+function toCssColor(value) {
+  if (typeof value !== "string") return void 0;
+  return colorTokenMap[value] ?? value;
+}
+function sxToStyle(sx) {
+  if (!sx) return {};
+  const style2 = {};
+  const color2 = toCssColor(sx.color);
+  const fontSize = toCssSize$1(sx.fontSize);
+  if (color2) style2.color = color2;
+  if (fontSize) style2.fontSize = fontSize;
+  if (typeof sx.transform === "string") style2.transform = sx.transform;
+  if (typeof sx.transition === "string") style2.transition = sx.transition;
+  if (typeof sx.opacity === "number" || typeof sx.opacity === "string") style2.opacity = sx.opacity;
+  return style2;
+}
+function makeIcon(glyph, defaultLabel) {
+  return function ThinkOsIcon({
+    className,
+    color: color2 = "inherit",
+    fontSize = "medium",
+    style: style2,
+    sx,
+    title,
+    titleAccess,
+    ...rest
+  }) {
+    const mergedStyle = {
+      display: "inline-flex",
+      alignItems: "center",
+      justifyContent: "center",
+      width: "1em",
+      height: "1em",
+      lineHeight: 1,
+      flexShrink: 0,
+      verticalAlign: "-0.125em",
+      fontSize: toCssSize$1(fontSize),
+      color: toCssColor(color2),
+      ...sxToStyle(sx),
+      ...style2
+    };
+    const label = titleAccess || title || defaultLabel;
+    return /* @__PURE__ */ u2(
+      "span",
+      {
+        ...rest,
+        "aria-hidden": titleAccess ? void 0 : true,
+        "aria-label": titleAccess ? label : void 0,
+        className: ["think-os-icon", className].filter(Boolean).join(" "),
+        role: titleAccess ? "img" : void 0,
+        style: mergedStyle,
+        title: title || titleAccess,
+        children: glyph
+      }
+    );
+  };
+}
+const AddCircleOutlineIcon = makeIcon("+", "add");
+const AddIcon = makeIcon("+", "add");
+const ArrowBackIosNewIcon = makeIcon("‹", "back");
+const ArrowDropDownIcon = makeIcon("⌄", "open");
+const ArrowForwardIosIcon = makeIcon("›", "forward");
+const CancelIcon = makeIcon("×", "cancel");
+const ChatIcon = makeIcon("💬", "chat");
+const CheckCircleIcon = makeIcon("✓", "checked");
+const CheckIcon = makeIcon("✓", "checked");
+const ChevronRightIcon = makeIcon("›", "expand");
+const ClearIcon = makeIcon("×", "clear");
+const CloseIcon = makeIcon("×", "close");
+const ContentCopyIcon = makeIcon("⧉", "copy");
+const DeleteForeverIcon = makeIcon("🗑", "delete");
+const DeleteForeverOutlinedIcon = makeIcon("🗑", "delete");
+const DeleteIcon = makeIcon("−", "delete");
+const DeleteOutlineIcon = makeIcon("🗑", "delete");
+const DownloadIcon = makeIcon("⇩", "download");
+const DragIndicatorIcon = makeIcon("⋮⋮", "drag");
+const EditIcon = makeIcon("✎", "edit");
+const ExpandLessIcon = makeIcon("⌃", "collapse");
+const ExpandMoreIcon = makeIcon("⌄", "expand");
+const FilterListIcon = makeIcon("≡", "filter");
+const HourglassTopIcon = makeIcon("⏳", "timer");
+const IosShareIcon = makeIcon("⇧", "share");
+const PauseIcon = makeIcon("Ⅱ", "pause");
+const PlayArrowIcon = makeIcon("▶", "play");
+const RadioButtonUncheckedIcon = makeIcon("○", "unchecked");
+const RefreshIcon = makeIcon("↻", "refresh");
+const RemoveCircleOutlineIcon = makeIcon("−", "remove");
+const RestartAltIcon = makeIcon("↺", "reset");
+const ScannerIcon = makeIcon("▣", "scan");
+const SearchIcon = makeIcon("⌕", "search");
+const SendIcon = makeIcon("➤", "send");
+const SettingsIcon = makeIcon("⚙", "settings");
+const SmartToyIcon = makeIcon("🤖", "ai");
+const StopIcon = makeIcon("■", "stop");
+const TaskAltIcon = makeIcon("✓", "done");
+const VisibilityIcon = makeIcon("◉", "preview");
 function FilterPopover({
   label,
   popoverTitle,
@@ -47135,9 +47346,6 @@ function IconAction({
   );
   return /* @__PURE__ */ u2(Tooltip$1, { title: label, placement: tooltipPlacement, children: disabled ? /* @__PURE__ */ u2("span", { children: button }) : button });
 }
-const CloseIcon = createSvgIcon(/* @__PURE__ */ u2("path", {
-  d: "M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"
-}));
 function ModalHeader({
   left: left2,
   onClose,
@@ -47163,12 +47371,6 @@ function ModalHeader({
     }
   );
 }
-const ExpandMoreIcon = createSvgIcon(/* @__PURE__ */ u2("path", {
-  d: "M16.59 8.59 12 13.17 7.41 8.59 6 10l6 6 6-6z"
-}));
-const ChevronRightIcon = createSvgIcon(/* @__PURE__ */ u2("path", {
-  d: "M10 6 8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"
-}));
 const AnyBox$1 = Box$1;
 const AnyIconButton$2 = IconButton$1;
 function ThemeTreeNodeLabel({
@@ -47209,9 +47411,6 @@ function ThemeTreeNodeLabel({
     }
   );
 }
-const ArrowDropDownIcon = createSvgIcon(/* @__PURE__ */ u2("path", {
-  d: "m7 10 5 5 5-5z"
-}));
 function SimpleSelect({ value, options, onChange, placeholder, fullWidth, sx, disabled = false }) {
   const [isOpen, setIsOpen] = d(false);
   const wrapperRef = A$1(null);
@@ -47501,12 +47700,6 @@ function TaskCheckbox({ done, onMarkDone }) {
     }
   );
 }
-const PlayArrowIcon = createSvgIcon(/* @__PURE__ */ u2("path", {
-  d: "M8 5v14l11-7z"
-}));
-const HourglassTopIcon = createSvgIcon(/* @__PURE__ */ u2("path", {
-  d: "m6 2 .01 6L10 12l-3.99 4.01L6 22h12v-6l-4-4 4-3.99V2zm10 14.5V20H8v-3.5l4-4z"
-}));
 function TaskSendToTimerButton({ taskId, timerStatus, onStart }) {
   if (timerStatus) {
     return /* @__PURE__ */ u2(
@@ -47615,12 +47808,6 @@ class NamePromptModal extends obsidian.Modal {
     pn(this.contentEl);
   }
 }
-const AddCircleOutlineIcon = createSvgIcon(/* @__PURE__ */ u2("path", {
-  d: "M13 7h-2v4H7v2h4v4h2v-4h4v-2h-4zm-1-5C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2m0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8"
-}));
-const DeleteIcon$1 = createSvgIcon(/* @__PURE__ */ u2("path", {
-  d: "M7 11v2h10v-2zm5-9C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2m0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8"
-}));
 function addAtEnd(list, item) {
   return [...list, item];
 }
@@ -47668,9 +47855,9 @@ function ListEditor({ value, onChange, placeholder = "新项目", type = "text" 
           } : {}
         }
       ),
-      /* @__PURE__ */ u2(IconButton$1, { onClick: () => removeItem(index), size: "small", color: "error", title: "删除此项", children: /* @__PURE__ */ u2(DeleteIcon$1, { fontSize: "small" }) })
+      /* @__PURE__ */ u2(IconButton$1, { onClick: () => removeItem(index), size: "small", color: "error", title: "删除此项", children: /* @__PURE__ */ u2(DeleteIcon, { fontSize: "small" }) })
     ] }, index)),
-    /* @__PURE__ */ u2(Stack$1, { direction: "row", justifyContent: "flex-start", children: /* @__PURE__ */ u2(IconButton$1, { onClick: addItem, size: "small", color: "primary", title: "添加新项", children: /* @__PURE__ */ u2(AddCircleOutlineIcon, {}) }) })
+    /* @__PURE__ */ u2(Stack$1, { direction: "row", justifyContent: "flex-start", children: /* @__PURE__ */ u2(IconButton$1, { onClick: addItem, size: "small", color: "primary", title: "添加新项", children: /* @__PURE__ */ u2(AddIcon, {}) }) })
   ] });
 }
 function generateCellTooltip(date2, items, displayCount = 0, levelCount = 0, wasEdited = false) {
@@ -50066,21 +50253,41 @@ function issue(code, message, field) {
 function toArray(value) {
   return Array.isArray(value) ? value : [];
 }
-function mapSubmitError(operation, error, warnings = []) {
+function applyRecoveryRefresh(result, options = {}) {
+  const scanPaths = toArray(options.refreshPaths).filter((path) => Boolean(String(path || "").trim()));
+  if (result.status !== "conflict" || scanPaths.length === 0) return result;
+  return {
+    ...result,
+    refresh: {
+      scanPaths: Array.from(new Set(scanPaths)),
+      notify: true
+    }
+  };
+}
+function mapSubmitError(operation, error, warnings = [], options = {}) {
   const name = error?.name;
   const message = error instanceof Error ? error.message : String(error);
   if (name === "AbortError" || name === "CancelledError") {
     return buildCancelledResult(operation, toArray(warnings));
   }
   if (isRecordConflictError(error)) {
-    return buildConflictResult(operation, error.message, toArray(warnings), error.conflictCode);
+    return applyRecoveryRefresh(
+      buildConflictResult(operation, error.message, toArray(warnings), error.conflictCode),
+      options
+    );
   }
   const errorCode = typeof error?.conflictCode === "string" ? error.conflictCode : typeof error?.code === "string" ? error.code : void 0;
   if (errorCode && /^record_/.test(errorCode)) {
-    return buildConflictResult(operation, message, toArray(warnings), errorCode);
+    return applyRecoveryRefresh(
+      buildConflictResult(operation, message, toArray(warnings), errorCode),
+      options
+    );
   }
   if (/Unable to locate|无法定位原始记录|找不到文件|找不到条目文件|无效的条目ID格式|无效的条目行号|原始任务位置已变化|原始块位置已变化|原始块边界已损坏|条目已不存在/.test(message)) {
-    return buildConflictResult(operation, message, toArray(warnings));
+    return applyRecoveryRefresh(
+      buildConflictResult(operation, message, toArray(warnings)),
+      options
+    );
   }
   return buildErrorResult(operation, message || "Unknown record submit error.", toArray(warnings));
 }
@@ -50567,7 +50774,9 @@ class RecordInputUseCase {
         warnings
       }));
     } catch (error) {
-      return mapSubmitError("update", error, warnings);
+      return finalizeRecordSubmitResult(this.deps.dataStore, mapSubmitError("update", error, warnings, {
+        refreshPaths: [getItemFilePath(params.item)]
+      }));
     }
   }
   async submitDeleteRecord(params) {
@@ -50589,7 +50798,9 @@ class RecordInputUseCase {
         }
       }));
     } catch (error) {
-      return mapSubmitError("delete", error);
+      return finalizeRecordSubmitResult(this.deps.dataStore, mapSubmitError("delete", error, [], {
+        refreshPaths: [getItemFilePath(params.item)]
+      }));
     }
   }
   async submitCompleteRecord(params) {
@@ -50610,7 +50821,9 @@ class RecordInputUseCase {
         }
       }));
     } catch (error) {
-      return mapSubmitError("complete", error);
+      return finalizeRecordSubmitResult(this.deps.dataStore, mapSubmitError("complete", error, [], {
+        refreshPaths: [this.tryParseItemPath(params.itemId)]
+      }));
     }
   }
   async submitUpdateRecordTime(params) {
@@ -50634,7 +50847,16 @@ class RecordInputUseCase {
         }
       }));
     } catch (error) {
-      return mapSubmitError("time_update", error);
+      return finalizeRecordSubmitResult(this.deps.dataStore, mapSubmitError("time_update", error, [], {
+        refreshPaths: [this.tryParseItemPath(params.itemId)]
+      }));
+    }
+  }
+  tryParseItemPath(itemId) {
+    try {
+      return parseItemLocator(itemId).path;
+    } catch {
+      return null;
     }
   }
   getKernel() {
@@ -50753,120 +50975,6 @@ function unmountPreact(containerEl) {
   }
 }
 const MODULE_HEADER_CREATE_ALLOWLIST = ["TimelineView", "HeatmapView", "StatisticsView"];
-const EXCEL_SAFE_INLINE_FIELDS = /* @__PURE__ */ new Set([
-  "content",
-  "editableText",
-  "title",
-  "date",
-  "startTime",
-  "endTime",
-  "duration",
-  "rating",
-  "tags"
-]);
-function isExcelInlineCommitSupported(canonicalField) {
-  return EXCEL_SAFE_INLINE_FIELDS.has(canonicalField) || canonicalField.startsWith("extra.");
-}
-function fieldToken(value) {
-  return String(value ?? "").trim().toLowerCase();
-}
-function stripExtraPrefix(field) {
-  return field.startsWith("extra.") ? field.slice("extra.".length) : field;
-}
-function templateFieldTokens(field) {
-  return [field.key, field.label, field.semantic, field.semanticType].map(fieldToken).filter(Boolean);
-}
-function semanticForExcelField(canonicalField) {
-  if (canonicalField === "title") return "title";
-  if (canonicalField === "content" || canonicalField === "editableText") return "body";
-  if (canonicalField === "date") return "date";
-  if (canonicalField === "startTime") return "startTime";
-  if (canonicalField === "endTime") return "endTime";
-  if (canonicalField === "duration") return "duration";
-  if (canonicalField === "rating") return "rating";
-  if (canonicalField === "tags") return "tags";
-  return null;
-}
-function resolveTemplateFieldForExcelCommit(fields, canonicalField) {
-  const list = fields || [];
-  const canonical = normalizeEditableFieldKey(canonicalField);
-  const targetSemantic = semanticForExcelField(canonical);
-  if (targetSemantic) {
-    const semanticMatch = list.find((field) => getTemplateFieldSemantic(field) === targetSemantic);
-    if (semanticMatch) return semanticMatch;
-  }
-  const customName = stripExtraPrefix(canonical);
-  const aliasesByCanonical = {
-    title: ["title", "标题", "名称", "name"],
-    content: ["content", "body", "text", "内容", "正文", "任务内容", "记录内容"],
-    editableText: ["editabletext", "editableText", "content", "body", "text", "内容", "正文", "任务内容", "记录内容"],
-    date: ["date", "日期"],
-    startTime: ["starttime", "start", "time", "开始", "开始时间", "时间"],
-    endTime: ["endtime", "end", "结束", "结束时间"],
-    duration: ["duration", "minutes", "时长", "持续时间"],
-    rating: ["rating", "评分"],
-    tags: ["tags", "tag", "标签"]
-  };
-  const aliases2 = (aliasesByCanonical[canonical] || [canonical, customName]).map(fieldToken);
-  return list.find((field) => templateFieldTokens(field).some((token2) => aliases2.includes(token2))) || null;
-}
-function normalizeExcelCommitValue(field, canonicalField, value) {
-  if (field) return normalizeTemplateFieldValue(field, value);
-  if (value === void 0 || value === null) return "";
-  if (canonicalField === "duration" || canonicalField === "rating") {
-    const numeric = Number(value);
-    return Number.isFinite(numeric) ? numeric : value;
-  }
-  if (canonicalField === "tags") {
-    if (Array.isArray(value)) return value.map((item) => String(item).trim()).filter(Boolean);
-    return String(value).split(/[,，\n]/).map((part) => part.trim()).filter(Boolean);
-  }
-  return value;
-}
-function writeAliasIfMeaningful(data, key, value) {
-  if (!key) return;
-  data[key] = value;
-}
-function writeExcelCommitValueToFormData(formData, field, canonicalField, value) {
-  const next2 = { ...formData };
-  const normalizedValue = normalizeExcelCommitValue(field, canonicalField, value);
-  const key = field?.key || canonicalField;
-  writeAliasIfMeaningful(next2, key, normalizedValue);
-  if (field?.label && field.label !== key) writeAliasIfMeaningful(next2, field.label, normalizedValue);
-  if (canonicalField === "title") {
-    next2.title = normalizedValue;
-    if (!field) next2["标题"] = normalizedValue;
-  }
-  if (canonicalField === "content" || canonicalField === "editableText") {
-    next2.content = normalizedValue;
-    next2.editableText = normalizedValue;
-    if (!field) next2["内容"] = normalizedValue;
-  }
-  if (canonicalField === "date") next2.date = normalizedValue;
-  if (canonicalField === "startTime") next2.startTime = normalizedValue;
-  if (canonicalField === "endTime") next2.endTime = normalizedValue;
-  if (canonicalField === "duration") next2.duration = normalizedValue;
-  if (canonicalField === "rating") next2.rating = normalizedValue;
-  if (canonicalField === "tags") next2.tags = normalizedValue;
-  return next2;
-}
-function supportsTaskTimeEditing(item) {
-  return item.type === "task" || !!(item.startTime || item.endTime || item.duration != null);
-}
-function deriveEntryContext(item, openedFrom = "unknown") {
-  const sourcePath = item.path || item.file?.path || null;
-  const sourceLine = typeof item.line === "number" ? item.line : typeof item.lineNumber === "number" ? item.lineNumber : null;
-  return {
-    entryKind: item.type === "task" ? "task" : "block",
-    entryId: item.id,
-    sourcePath,
-    sourceLine,
-    templateId: item.templateId || null,
-    categoryKey: item.categoryKey || null,
-    openedFrom: openedFrom || "unknown",
-    supportsTaskTimeEditing: supportsTaskTimeEditing(item)
-  };
-}
 function openCreateModal(app, config2, source = "view_quick_create") {
   if (!config2?.blockId) return false;
   new QuickInputModal(app, config2.blockId, config2.context, config2.themeId, void 0, false, {
@@ -50874,9 +50982,6 @@ function openCreateModal(app, config2, source = "view_quick_create") {
     source
   }).open();
   return true;
-}
-function readResultMessage$1(result, fallback) {
-  return readRecordSubmitMessage(result, fallback);
 }
 function findTaskBlock(inputBlocks) {
   if (!Array.isArray(inputBlocks) || inputBlocks.length === 0) return null;
@@ -51085,6 +51190,23 @@ function openCreateFromStatistics(params) {
   }
   return openCreateModal(params.app, config2, "view_quick_create");
 }
+function supportsTaskTimeEditing(item) {
+  return item.type === "task" || !!(item.startTime || item.endTime || item.duration != null);
+}
+function deriveEntryContext(item, openedFrom = "unknown") {
+  const sourcePath = item.path || item.file?.path || null;
+  const sourceLine = typeof item.line === "number" ? item.line : typeof item.lineNumber === "number" ? item.lineNumber : null;
+  return {
+    entryKind: item.type === "task" ? "task" : "block",
+    entryId: item.id,
+    sourcePath,
+    sourceLine,
+    templateId: item.templateId || null,
+    categoryKey: item.categoryKey || null,
+    openedFrom: openedFrom || "unknown",
+    supportsTaskTimeEditing: supportsTaskTimeEditing(item)
+  };
+}
 function openEditFromItem(params) {
   const editContext = {
     __recordUiContext: {
@@ -51097,6 +51219,135 @@ function openEditFromItem(params) {
     editItem: params.item
   }).open();
   return true;
+}
+function readResultMessage$2(result, fallback) {
+  return readRecordSubmitMessage(result, fallback);
+}
+async function completeFromView(params) {
+  const result = await params.useCases.recordInput.submitCompleteRecord({
+    itemId: params.itemId,
+    options: params.options,
+    source: params.source ?? "layout_renderer"
+  });
+  if (isRecordSubmitSuccess(result, { treatCancelledAsSuccess: true })) {
+    if (params.showSuccessNotice && result.feedback?.notice) params.uiPort.notice(result.feedback.notice);
+    return true;
+  }
+  params.uiPort.notice(readResultMessage$2(result, "更新任务完成状态失败"));
+  return false;
+}
+async function updateTimeFromView(params) {
+  const result = await params.useCases.recordInput.submitUpdateRecordTime({
+    itemId: params.itemId,
+    updates: params.updates,
+    source: params.source ?? "layout_renderer"
+  });
+  if (isRecordSubmitSuccess(result, { treatCancelledAsSuccess: true })) {
+    if (params.showSuccessNotice && result.feedback?.notice) params.uiPort.notice(result.feedback.notice);
+    return true;
+  }
+  params.uiPort.notice(readResultMessage$2(result, "更新任务时间失败"));
+  return false;
+}
+const EXCEL_SAFE_INLINE_FIELDS = /* @__PURE__ */ new Set([
+  "content",
+  "editableText",
+  "title",
+  "date",
+  "startTime",
+  "endTime",
+  "duration",
+  "rating",
+  "tags"
+]);
+function isExcelInlineCommitSupported(canonicalField) {
+  return EXCEL_SAFE_INLINE_FIELDS.has(canonicalField) || canonicalField.startsWith("extra.");
+}
+function fieldToken(value) {
+  return String(value ?? "").trim().toLowerCase();
+}
+function stripExtraPrefix(field) {
+  return field.startsWith("extra.") ? field.slice("extra.".length) : field;
+}
+function templateFieldTokens(field) {
+  return [field.key, field.label, field.semantic, field.semanticType].map(fieldToken).filter(Boolean);
+}
+function semanticForExcelField(canonicalField) {
+  if (canonicalField === "title") return "title";
+  if (canonicalField === "content" || canonicalField === "editableText") return "body";
+  if (canonicalField === "date") return "date";
+  if (canonicalField === "startTime") return "startTime";
+  if (canonicalField === "endTime") return "endTime";
+  if (canonicalField === "duration") return "duration";
+  if (canonicalField === "rating") return "rating";
+  if (canonicalField === "tags") return "tags";
+  return null;
+}
+function resolveTemplateFieldForExcelCommit(fields, canonicalField) {
+  const list = fields || [];
+  const canonical = normalizeEditableFieldKey(canonicalField);
+  const targetSemantic = semanticForExcelField(canonical);
+  if (targetSemantic) {
+    const semanticMatch = list.find((field) => getTemplateFieldSemantic(field) === targetSemantic);
+    if (semanticMatch) return semanticMatch;
+  }
+  const customName = stripExtraPrefix(canonical);
+  const aliasesByCanonical = {
+    title: ["title", "标题", "名称", "name"],
+    content: ["content", "body", "text", "内容", "正文", "任务内容", "记录内容"],
+    editableText: ["editabletext", "editableText", "content", "body", "text", "内容", "正文", "任务内容", "记录内容"],
+    date: ["date", "日期"],
+    startTime: ["starttime", "start", "time", "开始", "开始时间", "时间"],
+    endTime: ["endtime", "end", "结束", "结束时间"],
+    duration: ["duration", "minutes", "时长", "持续时间"],
+    rating: ["rating", "评分"],
+    tags: ["tags", "tag", "标签"]
+  };
+  const aliases2 = (aliasesByCanonical[canonical] || [canonical, customName]).map(fieldToken);
+  return list.find((field) => templateFieldTokens(field).some((token2) => aliases2.includes(token2))) || null;
+}
+function normalizeExcelCommitValue(field, canonicalField, value) {
+  if (field) return normalizeTemplateFieldValue(field, value);
+  if (value === void 0 || value === null) return "";
+  if (canonicalField === "duration" || canonicalField === "rating") {
+    const numeric = Number(value);
+    return Number.isFinite(numeric) ? numeric : value;
+  }
+  if (canonicalField === "tags") {
+    if (Array.isArray(value)) return value.map((item) => String(item).trim()).filter(Boolean);
+    return String(value).split(/[,，\n]/).map((part) => part.trim()).filter(Boolean);
+  }
+  return value;
+}
+function writeAliasIfMeaningful(data, key, value) {
+  if (!key) return;
+  data[key] = value;
+}
+function writeExcelCommitValueToFormData(formData, field, canonicalField, value) {
+  const next2 = { ...formData };
+  const normalizedValue = normalizeExcelCommitValue(field, canonicalField, value);
+  const key = field?.key || canonicalField;
+  writeAliasIfMeaningful(next2, key, normalizedValue);
+  if (field?.label && field.label !== key) writeAliasIfMeaningful(next2, field.label, normalizedValue);
+  if (canonicalField === "title") {
+    next2.title = normalizedValue;
+    if (!field) next2["标题"] = normalizedValue;
+  }
+  if (canonicalField === "content" || canonicalField === "editableText") {
+    next2.content = normalizedValue;
+    next2.editableText = normalizedValue;
+    if (!field) next2["内容"] = normalizedValue;
+  }
+  if (canonicalField === "date") next2.date = normalizedValue;
+  if (canonicalField === "startTime") next2.startTime = normalizedValue;
+  if (canonicalField === "endTime") next2.endTime = normalizedValue;
+  if (canonicalField === "duration") next2.duration = normalizedValue;
+  if (canonicalField === "rating") next2.rating = normalizedValue;
+  if (canonicalField === "tags") next2.tags = normalizedValue;
+  return next2;
+}
+function readResultMessage$1(result, fallback) {
+  return readRecordSubmitMessage(result, fallback);
 }
 async function commitExcelCellFromView(params) {
   const canonicalField = normalizeEditableFieldKey(params.canonicalField || params.field);
@@ -51157,32 +51408,6 @@ async function commitExcelCellFromView(params) {
   params.uiPort.notice(message);
   return { ok: false, message };
 }
-async function completeFromView(params) {
-  const result = await params.useCases.recordInput.submitCompleteRecord({
-    itemId: params.itemId,
-    options: params.options,
-    source: params.source ?? "layout_renderer"
-  });
-  if (isRecordSubmitSuccess(result, { treatCancelledAsSuccess: true })) {
-    if (params.showSuccessNotice && result.feedback?.notice) params.uiPort.notice(result.feedback.notice);
-    return true;
-  }
-  params.uiPort.notice(readResultMessage$1(result, "更新任务完成状态失败"));
-  return false;
-}
-async function updateTimeFromView(params) {
-  const result = await params.useCases.recordInput.submitUpdateRecordTime({
-    itemId: params.itemId,
-    updates: params.updates,
-    source: params.source ?? "layout_renderer"
-  });
-  if (isRecordSubmitSuccess(result, { treatCancelledAsSuccess: true })) {
-    if (params.showSuccessNotice && result.feedback?.notice) params.uiPort.notice(result.feedback.notice);
-    return true;
-  }
-  params.uiPort.notice(readResultMessage$1(result, "更新任务时间失败"));
-  return false;
-}
 function SelectablePill({
   selected = false,
   onClick,
@@ -51220,6 +51445,93 @@ function SelectablePill({
         opacity: disabled ? 0.6 : 1
       },
       children
+    }
+  );
+}
+function readObjectField(value, key) {
+  if (!value || typeof value !== "object") return void 0;
+  return value[key];
+}
+function normalizeQuickInputChoices(options) {
+  if (!Array.isArray(options)) return [];
+  return options.map((option) => {
+    const objectValue = readObjectField(option, "value");
+    const objectLabel = readObjectField(option, "label");
+    const rawValue = objectValue ?? objectLabel ?? option;
+    const rawLabel = objectLabel ?? objectValue ?? option;
+    const value = String(rawValue ?? "").trim();
+    const label = String(rawLabel ?? "").trim();
+    if (!value && !label) return null;
+    return {
+      value: value || label,
+      label: label || value
+    };
+  }).filter((choice) => !!choice);
+}
+function getQuickInputSelectedValue(value) {
+  const objectValue = readObjectField(value, "value");
+  const objectLabel = readObjectField(value, "label");
+  return String(objectValue ?? objectLabel ?? value ?? "").trim();
+}
+function isQuickInputChoiceSelected(value, choice) {
+  const selectedValue = getQuickInputSelectedValue(value);
+  if (!selectedValue) return false;
+  return selectedValue === choice.value || selectedValue === choice.label;
+}
+function toQuickInputOptionObject(choice) {
+  return { value: choice.value, label: choice.label };
+}
+function QuickInputOptionPillGroup({
+  label,
+  choices,
+  value,
+  onSelect,
+  compact = false
+}) {
+  if (choices.length === 0) return null;
+  const selectedChoice = choices.find((choice) => isQuickInputChoiceSelected(value, choice));
+  return /* @__PURE__ */ u2(
+    Box$1,
+    {
+      role: "group",
+      "aria-label": label,
+      sx: {
+        display: "flex",
+        flexDirection: "column",
+        gap: compact ? 0.65 : 0.75,
+        minWidth: 0
+      },
+      children: [
+        /* @__PURE__ */ u2(Box$1, { sx: { display: "flex", flexWrap: "wrap", gap: "8px" }, children: choices.map((choice) => {
+          const selected = isQuickInputChoiceSelected(value, choice);
+          return /* @__PURE__ */ u2(
+            SelectablePill,
+            {
+              selected,
+              onClick: () => onSelect(toQuickInputOptionObject(choice)),
+              title: choice.label,
+              className: "qi-selectable-pill--single",
+              children: choice.label
+            },
+            `${choice.value}-${choice.label}`
+          );
+        }) }),
+        selectedChoice && /* @__PURE__ */ u2(
+          Typography$1,
+          {
+            variant: "caption",
+            sx: {
+              color: "text.secondary",
+              lineHeight: 1.35,
+              pl: 0.1
+            },
+            children: [
+              "当前：",
+              selectedChoice.label
+            ]
+          }
+        )
+      ]
     }
   );
 }
@@ -51296,41 +51608,42 @@ function QuickInputEditorFields({ getResourcePath, template, formData, dense = f
       ]
     }
   );
-  const renderOptionPills = (field) => {
-    const selectedOptionObject = formData[field.key];
-    return /* @__PURE__ */ u2(Box$1, { sx: { display: "flex", flexWrap: "wrap", gap: "8px" }, children: (field.options || []).map((opt, index) => {
-      const selected = selectedOptionObject?.value === opt.value && selectedOptionObject?.label === (opt.label || opt.value);
-      return /* @__PURE__ */ u2(
-        SelectablePill,
-        {
-          selected,
-          onClick: () => handleUpdate(field.key, { value: opt.value, label: opt.label || opt.value }, true),
-          title: opt.label || opt.value,
-          children: opt.label || opt.value
-        },
-        index
-      );
-    }) });
+  const renderOptionPills = (field, label = field.label || field.key) => {
+    const choices = normalizeQuickInputChoices(field.options);
+    return /* @__PURE__ */ u2(
+      QuickInputOptionPillGroup,
+      {
+        label,
+        choices,
+        value: formData[field.key],
+        compact: dense,
+        onSelect: (choice) => handleUpdate(field.key, choice, true)
+      }
+    );
   };
   const renderMultiOptionPills = (field) => {
     const selected = new Set(toArrayValue(formData[field.key]));
-    return /* @__PURE__ */ u2(Box$1, { sx: { display: "flex", flexWrap: "wrap", gap: "8px" }, children: (field.options || []).map((opt, index) => {
-      const optValue = String(opt.value ?? opt.label ?? "");
-      const isSelected = selected.has(optValue);
+    const choices = normalizeQuickInputChoices(field.options);
+    return /* @__PURE__ */ u2(Box$1, { sx: { display: "flex", flexWrap: "wrap", gap: "8px" }, children: choices.map((choice) => {
+      const isSelected = selected.has(choice.value) || selected.has(choice.label);
       return /* @__PURE__ */ u2(
         SelectablePill,
         {
           selected: isSelected,
           onClick: () => {
             const next2 = new Set(selected);
-            if (isSelected) next2.delete(optValue);
-            else next2.add(optValue);
+            if (isSelected) {
+              next2.delete(choice.value);
+              next2.delete(choice.label);
+            } else {
+              next2.add(choice.value);
+            }
             handleUpdate(field.key, Array.from(next2));
           },
-          title: opt.label || opt.value,
-          children: opt.label || opt.value
+          title: choice.label,
+          children: choice.label
         },
-        index
+        `${choice.value}-${choice.label}`
       );
     }) });
   };
@@ -51454,23 +51767,8 @@ function QuickInputEditorFields({ getResourcePath, template, formData, dense = f
       case "select":
       case "singleSelect":
       case "path": {
-        const selectOptions = (field.options || []).map((opt) => ({ value: opt.value, label: opt.label || opt.value }));
-        const selectControl = selectOptions.length ? /* @__PURE__ */ u2(FormControl, { fullWidth: true, children: /* @__PURE__ */ u2(
-          SimpleSelect,
-          {
-            value: value || "",
-            options: selectOptions,
-            placeholder: `-- 选择 ${label} --`,
-            onChange: (selectedValue) => {
-              const selectedOption = field.options?.find((opt) => opt.value === selectedValue);
-              if (selectedOption) {
-                handleUpdate(field.key, { value: selectedOption.value, label: selectedOption.label || selectedOption.value }, true);
-              } else {
-                handleUpdate(field.key, selectedValue);
-              }
-            }
-          }
-        ) }) : /* @__PURE__ */ u2(
+        const choices = normalizeQuickInputChoices(field.options);
+        const singleSelectControl = choices.length ? renderOptionPills(field, label) : /* @__PURE__ */ u2(
           "input",
           {
             className: "think-native-input",
@@ -51479,7 +51777,7 @@ function QuickInputEditorFields({ getResourcePath, template, formData, dense = f
             placeholder: isTemplatePathField(field) ? "例如：生活/健康" : void 0
           }
         );
-        return isInlineRowField(field) ? renderInlineRow(label, selectControl) : renderStandardField(label, selectControl);
+        return isInlineRowField(field) ? renderInlineRow(label, singleSelectControl) : renderStandardField(label, singleSelectControl);
       }
       default: {
         const commonInputProps = {
@@ -52123,6 +52421,605 @@ function QuickInputEditor({
     }
   );
 }
+function setCssPx(el, name, height2) {
+  el.style.setProperty(name, `${Math.max(0, Math.round(height2))}px`);
+}
+function isKeyboardInput(el) {
+  if (!(el instanceof HTMLElement)) return false;
+  if (el.tagName === "INPUT" || el.tagName === "TEXTAREA") return true;
+  return el.isContentEditable;
+}
+function setupQuickInputKeyboardDetection(host) {
+  const { contentEl, modalEl } = host;
+  let baselineViewportHeight = window.visualViewport?.height || window.innerHeight;
+  const keyboardActivationThreshold = 150;
+  const suspectedBottomInset = 156;
+  const detectedBottomInsetExtra = 120;
+  const setKeyboardHeight = (height2) => {
+    setCssPx(modalEl, "--keyboard-height", height2);
+    setCssPx(document.documentElement, "--keyboard-height", height2);
+  };
+  const setAccessoryInset = (height2) => {
+    setCssPx(modalEl, "--keyboard-accessory-inset", height2);
+  };
+  const hasActiveKeyboardInput = () => {
+    const activeElement2 = document.activeElement;
+    return !!activeElement2 && contentEl.contains(activeElement2) && isKeyboardInput(activeElement2);
+  };
+  const getBodyContainer = () => contentEl.querySelector(".think-modal__body");
+  const ensureTargetVisible = (target) => {
+    const activeTarget = target && contentEl.contains(target) ? target : document.activeElement;
+    if (!activeTarget || !isKeyboardInput(activeTarget) || !contentEl.contains(activeTarget)) return;
+    const container = getBodyContainer();
+    if (!container) return;
+    const anchor = activeTarget.closest(".think-form-row, .think-inline-field-row, .think-textarea-row");
+    const node2 = anchor || activeTarget;
+    const nodeRect = node2.getBoundingClientRect();
+    const containerRect = container.getBoundingClientRect();
+    const accessoryInset = Number.parseInt(modalEl.style.getPropertyValue("--keyboard-accessory-inset") || "0", 10) || suspectedBottomInset;
+    const safeTop = containerRect.top + 12;
+    const safeBottom = containerRect.bottom - Math.max(72, accessoryInset);
+    if (nodeRect.bottom > safeBottom) {
+      container.scrollTop += nodeRect.bottom - safeBottom + 28;
+    } else if (nodeRect.top < safeTop) {
+      container.scrollTop -= safeTop - nodeRect.top + 12;
+    }
+    if (activeTarget instanceof HTMLTextAreaElement) {
+      const lineReserve = 44;
+      const caretBottom = activeTarget.scrollHeight - activeTarget.scrollTop;
+      const visibleHeight = activeTarget.clientHeight - lineReserve;
+      if (caretBottom > visibleHeight) {
+        activeTarget.scrollTop = Math.max(0, activeTarget.scrollHeight - visibleHeight);
+      }
+    }
+  };
+  const updateKeyboardState = (target) => {
+    const viewportHeight = window.visualViewport?.height || window.innerHeight;
+    const heightDiff = Math.max(0, Math.round(baselineViewportHeight - viewportHeight));
+    const hasFocusedInput = hasActiveKeyboardInput();
+    const detected = heightDiff > keyboardActivationThreshold && hasFocusedInput;
+    const suspected = hasFocusedInput;
+    modalEl.classList.toggle("keyboard-detected", detected);
+    modalEl.classList.toggle("keyboard-suspected", suspected);
+    if (detected) {
+      setKeyboardHeight(heightDiff);
+      setAccessoryInset(heightDiff + detectedBottomInsetExtra);
+      const offsetTop = window.visualViewport?.offsetTop || 0;
+      modalEl.style.setProperty("--keyboard-offset", `${offsetTop}px`);
+    } else if (suspected) {
+      setKeyboardHeight(0);
+      setAccessoryInset(suspectedBottomInset);
+      modalEl.style.removeProperty("--keyboard-offset");
+    } else {
+      setKeyboardHeight(0);
+      setAccessoryInset(0);
+      modalEl.style.removeProperty("--keyboard-offset");
+    }
+    if (heightDiff <= 0 && !hasFocusedInput) {
+      baselineViewportHeight = viewportHeight;
+    }
+    if (suspected) {
+      ensureTargetVisible(target);
+    }
+  };
+  const scheduleVisibilityPasses = (target) => {
+    const run = () => updateKeyboardState(target);
+    requestAnimationFrame(run);
+    window.setTimeout(run, 120);
+    window.setTimeout(run, 260);
+    window.setTimeout(run, 420);
+  };
+  const handleFocusIn = (event) => {
+    const target = event.target;
+    if (!isKeyboardInput(target)) return;
+    scheduleVisibilityPasses(target);
+  };
+  const handleFocusOut = (event) => {
+    if (!(event.target instanceof HTMLElement)) {
+      window.setTimeout(() => updateKeyboardState(document.activeElement), 60);
+      return;
+    }
+    if (!contentEl.contains(event.target)) {
+      window.setTimeout(() => updateKeyboardState(document.activeElement), 60);
+      return;
+    }
+    window.setTimeout(() => updateKeyboardState(document.activeElement), 60);
+  };
+  const handleViewportResize = () => {
+    updateKeyboardState(document.activeElement);
+  };
+  const handleViewportScroll = () => {
+    updateKeyboardState(document.activeElement);
+  };
+  const handleOrientationChange = () => {
+    setTimeout(() => {
+      baselineViewportHeight = window.visualViewport?.height || window.innerHeight;
+      updateKeyboardState(document.activeElement);
+    }, 500);
+  };
+  contentEl.addEventListener("focusin", handleFocusIn);
+  contentEl.addEventListener("focusout", handleFocusOut);
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener("resize", handleViewportResize);
+    window.visualViewport.addEventListener("scroll", handleViewportScroll, { passive: true });
+  } else {
+    window.addEventListener("resize", handleViewportResize);
+  }
+  window.addEventListener("orientationchange", handleOrientationChange);
+  setKeyboardHeight(0);
+  setAccessoryInset(0);
+  updateKeyboardState(document.activeElement);
+  return () => {
+    contentEl.removeEventListener("focusin", handleFocusIn);
+    contentEl.removeEventListener("focusout", handleFocusOut);
+    if (window.visualViewport) {
+      window.visualViewport.removeEventListener("resize", handleViewportResize);
+      window.visualViewport.removeEventListener("scroll", handleViewportScroll);
+    } else {
+      window.removeEventListener("resize", handleViewportResize);
+    }
+    window.removeEventListener("orientationchange", handleOrientationChange);
+    document.documentElement.style.removeProperty("--keyboard-height");
+    modalEl.style.removeProperty("--keyboard-height");
+    modalEl.style.removeProperty("--keyboard-accessory-inset");
+    modalEl.style.removeProperty("--keyboard-offset");
+    modalEl.classList.remove("keyboard-detected");
+    modalEl.classList.remove("keyboard-suspected");
+  };
+}
+function isMobileLikeEnvironment() {
+  if (typeof window === "undefined") return false;
+  return /Android|iPhone|iPad|iPod|Mobile/i.test(window.navigator.userAgent) || (window.matchMedia?.("(pointer: coarse)").matches ?? false) || window.innerWidth <= 820;
+}
+function useQuickInputOriginalNavigation({
+  mode,
+  editItem,
+  vaultName
+}) {
+  const originalTouchRef = A$1(null);
+  const originalUri = T$1(
+    () => mode === "edit" && editItem ? makeObsUri(editItem, vaultName) : "",
+    [mode, editItem, vaultName]
+  );
+  const originalGestureHint = originalUri && !originalUri.startsWith("#error") ? "桌面端按住 Ctrl/⌘ 点击标题或说明；手机端双击标题或说明，可打开原文" : void 0;
+  const openOriginal = q$1(() => {
+    if (!originalUri || originalUri.startsWith("#error")) {
+      new obsidian.Notice("❌ 找不到原文位置");
+      return;
+    }
+    window.open(originalUri, "_blank");
+  }, [originalUri]);
+  const handleOriginalPointerClick = q$1((event) => {
+    if (!originalGestureHint) return;
+    if (!event.ctrlKey && !event.metaKey) return;
+    event.preventDefault();
+    event.stopPropagation();
+    openOriginal();
+  }, [openOriginal, originalGestureHint]);
+  const handleOriginalTouchEnd = q$1((event) => {
+    if (!originalGestureHint) return;
+    const now = Date.now();
+    const previous = originalTouchRef.current;
+    originalTouchRef.current = now;
+    if (previous && now - previous <= 350) {
+      originalTouchRef.current = null;
+      event.preventDefault();
+      event.stopPropagation();
+      openOriginal();
+    }
+  }, [openOriginal, originalGestureHint]);
+  return {
+    originalUri,
+    originalGestureHint,
+    openOriginal,
+    handleOriginalPointerClick,
+    handleOriginalTouchEnd
+  };
+}
+function submitButtonLabel(mode, pendingAction) {
+  if (pendingAction === "submit") return mode === "edit" ? "保存中..." : "创建中...";
+  return mode === "edit" ? "保存修改" : "创建";
+}
+function QuickInputModalFooter({
+  mode,
+  isBusy,
+  isMobileLike,
+  pendingAction,
+  onCancel,
+  onDelete,
+  onSubmitClick,
+  onSubmitPointerDown,
+  onPreserveDesktopInputFocus
+}) {
+  return /* @__PURE__ */ u2(
+    "div",
+    {
+      class: "think-modal__footer think-modal__footer--quick-input",
+      style: {
+        display: "flex",
+        justifyContent: "space-between",
+        alignItems: "center",
+        marginTop: "0.9rem",
+        gap: "8px",
+        position: isMobileLike ? "sticky" : "static",
+        bottom: 0,
+        background: "var(--background-primary)",
+        paddingBottom: isMobileLike ? "calc(env(safe-area-inset-bottom, 0px) + 8px)" : void 0,
+        zIndex: isMobileLike ? 3 : void 0
+      },
+      children: /* @__PURE__ */ u2("div", { style: { display: "flex", gap: "8px", flexWrap: "wrap", justifyContent: "space-between", width: "100%" }, children: [
+        /* @__PURE__ */ u2("div", { children: mode === "edit" ? /* @__PURE__ */ u2(
+          Button$1,
+          {
+            color: "error",
+            onMouseDown: onPreserveDesktopInputFocus,
+            onPointerDown: onPreserveDesktopInputFocus,
+            onClick: onDelete,
+            disabled: isBusy,
+            children: pendingAction === "delete" ? "删除中..." : "删除"
+          }
+        ) : null }),
+        /* @__PURE__ */ u2("div", { style: { display: "flex", gap: "8px", flexWrap: "wrap", justifyContent: "flex-end" }, children: [
+          /* @__PURE__ */ u2(Button$1, { onMouseDown: onPreserveDesktopInputFocus, onPointerDown: onPreserveDesktopInputFocus, onClick: onCancel, disabled: isBusy, children: "取消" }),
+          /* @__PURE__ */ u2(
+            Button$1,
+            {
+              "data-submit": "true",
+              onMouseDown: onSubmitPointerDown,
+              onPointerDown: onSubmitPointerDown,
+              onClick: isMobileLike ? onSubmitClick : void 0,
+              variant: "contained",
+              disabled: isBusy,
+              children: submitButtonLabel(mode, pendingAction)
+            }
+          )
+        ] })
+      ] })
+    }
+  );
+}
+function buildTitle(mode, currentBlockName, isTimerCreate) {
+  if (mode === "edit") return `编辑记录 · ${currentBlockName}`;
+  return isTimerCreate ? `开始新任务 · ${currentBlockName}` : `快速录入 · ${currentBlockName}`;
+}
+function QuickInputModalHeader({
+  mode,
+  currentBlockName,
+  isTimerCreate,
+  originalGestureHint,
+  outputPlanHint,
+  pathChangeHint,
+  onClose,
+  onOriginalPointerClick,
+  onOriginalTouchEnd
+}) {
+  return /* @__PURE__ */ u2(Box$1, { sx: { mb: "0.75rem" }, children: [
+    /* @__PURE__ */ u2(
+      ModalHeader,
+      {
+        left: /* @__PURE__ */ u2(
+          "h3",
+          {
+            style: { margin: 0 },
+            title: originalGestureHint,
+            onClick: mode === "edit" ? onOriginalPointerClick : void 0,
+            onTouchEnd: mode === "edit" ? onOriginalTouchEnd : void 0,
+            children: buildTitle(mode, currentBlockName, isTimerCreate)
+          }
+        ),
+        onClose,
+        padding: 0,
+        borderBottom: false
+      }
+    ),
+    pathChangeHint || outputPlanHint ? /* @__PURE__ */ u2(
+      "div",
+      {
+        style: {
+          marginTop: "0.35rem",
+          fontSize: "12px",
+          color: pathChangeHint ? "var(--text-warning)" : "var(--text-muted)",
+          lineHeight: 1.5,
+          padding: pathChangeHint ? "0.45rem 0.55rem" : "0.25rem 0",
+          border: pathChangeHint ? "1px solid var(--background-modifier-border)" : void 0,
+          borderRadius: pathChangeHint ? "8px" : void 0,
+          background: pathChangeHint ? "var(--background-secondary)" : void 0
+        },
+        children: [
+          /* @__PURE__ */ u2("div", { style: { fontWeight: pathChangeHint ? 600 : 400, marginBottom: pathChangeHint ? "0.15rem" : 0 }, children: pathChangeHint ? "保存位置预览：将迁移保存" : "保存位置预览" }),
+          /* @__PURE__ */ u2("div", { children: pathChangeHint || outputPlanHint })
+        ]
+      }
+    ) : null
+  ] });
+}
+function useQuickInputOutputPlanPreview({
+  currentState,
+  preparedRecord,
+  editItem,
+  mode
+}) {
+  const liveOutputPlan = T$1(() => {
+    if (!currentState.template) return preparedRecord.outputPlan ?? null;
+    try {
+      return buildRecordOutputPlan({
+        template: currentState.template,
+        formData: currentState.formData || {},
+        theme: currentState.theme,
+        templateMeta: {
+          templateId: currentState.templateId ?? void 0,
+          templateSourceType: currentState.templateSourceType ?? void 0
+        }
+      });
+    } catch (error) {
+      console.warn("[记录调试][保存位置预览] 计算实时 OutputPlan 失败，回退到初始计划", error);
+      return preparedRecord.outputPlan ?? null;
+    }
+  }, [currentState.template, currentState.theme, currentState.formData, currentState.templateId, currentState.templateSourceType, preparedRecord.outputPlan]);
+  const livePersistencePlan = T$1(() => {
+    if (!liveOutputPlan) return preparedRecord.persistencePlan ?? null;
+    return buildRecordPersistencePlan({
+      mode,
+      originalPath: preparedRecord.persistencePlan?.originalPath ?? editItem?.file?.path ?? null,
+      outputPlan: liveOutputPlan
+    });
+  }, [liveOutputPlan, preparedRecord.persistencePlan, editItem, mode]);
+  const outputPlanHint = liveOutputPlan?.targetFilePath ? `目标位置：${liveOutputPlan.targetFilePath}${liveOutputPlan?.targetHeader ? ` → ${liveOutputPlan.targetHeader}` : ""}` : "";
+  const pathChangeHint = livePersistencePlan?.pathChanged ? `保存位置将变化：${livePersistencePlan.originalPath || "未知"} → ${liveOutputPlan?.targetFilePath || "未知"}${liveOutputPlan?.targetHeader ? ` → ${liveOutputPlan.targetHeader}` : ""}。保存时会执行迁移保存：先写入新位置，再删除旧记录；如果删除旧记录失败，会保留旧记录并提示手动清理。` : "";
+  return {
+    liveOutputPlan,
+    livePersistencePlan,
+    outputPlanHint,
+    pathChangeHint
+  };
+}
+function showQuickInputNotice(message, tone = "error") {
+  const prefix2 = tone === "success" ? "" : tone === "warning" ? "⚠️ " : "❌ ";
+  const duration2 = tone === "success" ? 4e3 : tone === "warning" ? 12e3 : 1e4;
+  new obsidian.Notice(`${prefix2}${message}`, duration2);
+}
+function useQuickInputSubmitController({
+  mode,
+  editItem,
+  context,
+  source,
+  onSave,
+  onSubmitSuccess,
+  closeModal,
+  useCases,
+  getCurrentState,
+  liveOutputPlan,
+  livePersistencePlan,
+  isMobileLike
+}) {
+  const [pendingAction, setPendingAction] = d(null);
+  const [lastConflictResult, setLastConflictResult] = d(null);
+  const pendingActionRef = A$1(null);
+  const submitTriggeredRef = A$1(false);
+  const submitLatestRef = A$1(createTakeLatest("quick-input-submit"));
+  y(() => {
+    pendingActionRef.current = pendingAction;
+  }, [pendingAction]);
+  y(() => () => submitLatestRef.current.dispose(), []);
+  const buildCreateDraft = q$1(() => {
+    const currentState = getCurrentState();
+    return {
+      blockId: currentState.blockId,
+      themeId: currentState.themeId ?? null,
+      formData: currentState.formData,
+      context,
+      meta: currentState.meta,
+      source: source ?? (onSave ? "timer" : "quickinput")
+    };
+  }, [context, getCurrentState, onSave, source]);
+  const clearRecovery = q$1(() => {
+    setLastConflictResult(null);
+  }, []);
+  const rememberConflict = q$1((result) => {
+    if (result.status === "conflict") {
+      setLastConflictResult(result);
+    } else if (result.status === "success" || result.status === "partial_success") {
+      setLastConflictResult(null);
+    }
+  }, []);
+  const resetSubmitGateSoon = q$1(() => {
+    window.setTimeout(() => {
+      submitTriggeredRef.current = false;
+    }, 80);
+  }, []);
+  const handleSubmit = q$1(async () => {
+    if (submitTriggeredRef.current || pendingActionRef.current) return;
+    submitTriggeredRef.current = true;
+    if (onSave && mode === "create") {
+      try {
+        onSave(buildCreateDraft());
+        closeModal();
+      } finally {
+        resetSubmitGateSoon();
+      }
+      return;
+    }
+    setLastConflictResult(null);
+    pendingActionRef.current = "submit";
+    setPendingAction("submit");
+    try {
+      const result = await submitLatestRef.current.run(async (signal) => {
+        const latestState = getCurrentState();
+        if (mode === "edit" && editItem) {
+          return await useCases.recordInput.submitUpdateRecord({
+            item: editItem,
+            blockId: latestState.blockId,
+            themeId: latestState.themeId,
+            formData: latestState.formData,
+            meta: latestState.meta,
+            expectedOutputPlan: liveOutputPlan,
+            expectedPersistencePlan: livePersistencePlan,
+            signal,
+            source: "quickinput"
+          });
+        }
+        return await useCases.recordInput.submitCreateRecord({
+          blockId: latestState.blockId,
+          themeId: latestState.themeId,
+          formData: latestState.formData,
+          context,
+          meta: latestState.meta,
+          signal,
+          source: source ?? "quickinput"
+        });
+      });
+      rememberConflict(result);
+      const presentation = buildRecordSubmitFeedbackPresentation(
+        result,
+        mode === "edit" ? "保存修改失败" : "创建失败"
+      );
+      if (result.status === "cancelled") {
+        return;
+      }
+      if (presentation.message) {
+        const shouldShowOwnSuccessNotice = !(mode === "create" && source === "timer" && onSubmitSuccess);
+        if (presentation.tone !== "success" || shouldShowOwnSuccessNotice) {
+          showQuickInputNotice(presentation.message, presentation.tone);
+        }
+      }
+      if (result.status === "success" && mode === "create" && onSubmitSuccess) {
+        try {
+          await onSubmitSuccess(result, buildCreateDraft());
+        } catch (followUpError) {
+          showQuickInputNotice(followUpError instanceof Error ? followUpError.message : "记录已创建，但后续操作失败");
+        }
+      }
+      if (presentation.shouldCloseModal) {
+        closeModal();
+      }
+    } catch (error) {
+      if (!(error instanceof CancelledError)) {
+        showQuickInputNotice(error?.message || (mode === "edit" ? "保存修改失败" : "创建失败"));
+      }
+    } finally {
+      pendingActionRef.current = null;
+      setPendingAction(null);
+      resetSubmitGateSoon();
+    }
+  }, [
+    buildCreateDraft,
+    closeModal,
+    context,
+    editItem,
+    getCurrentState,
+    liveOutputPlan,
+    livePersistencePlan,
+    mode,
+    onSave,
+    onSubmitSuccess,
+    rememberConflict,
+    resetSubmitGateSoon,
+    source,
+    useCases
+  ]);
+  const handleDelete = q$1(async () => {
+    if (pendingActionRef.current) return;
+    if (mode !== "edit" || !editItem) return;
+    if (!window.confirm("确认删除这条记录吗？")) return;
+    setLastConflictResult(null);
+    pendingActionRef.current = "delete";
+    setPendingAction("delete");
+    try {
+      const result = await submitLatestRef.current.run((signal) => useCases.recordInput.submitDeleteRecord({
+        item: editItem,
+        signal,
+        source: "quickinput"
+      }));
+      rememberConflict(result);
+      const presentation = buildRecordSubmitFeedbackPresentation(result, "删除失败");
+      if (result.status === "cancelled") {
+        return;
+      }
+      if (presentation.message) {
+        showQuickInputNotice(presentation.message, presentation.tone);
+      }
+      if (presentation.shouldCloseModal) {
+        closeModal();
+      }
+    } catch (error) {
+      if (!(error instanceof CancelledError)) {
+        showQuickInputNotice(error?.message || "删除失败");
+      }
+    } finally {
+      pendingActionRef.current = null;
+      setPendingAction(null);
+    }
+  }, [closeModal, editItem, mode, rememberConflict, useCases]);
+  const preserveDesktopInputFocus = q$1((event) => {
+    if (isMobileLike) return;
+    event.preventDefault();
+  }, [isMobileLike]);
+  const handleSubmitPointerDown = q$1((event) => {
+    if (isMobileLike) return;
+    event.preventDefault();
+    event.stopPropagation();
+    void handleSubmit();
+  }, [handleSubmit, isMobileLike]);
+  const recovery = buildRecordSubmitRecoveryPresentation(lastConflictResult, {
+    fallbackPath: editItem?.file?.path ?? null,
+    canOpenOriginal: mode === "edit" && Boolean(editItem)
+  });
+  return {
+    pendingAction,
+    isBusy: pendingAction !== null,
+    handleSubmit,
+    handleDelete,
+    handleSubmitPointerDown,
+    preserveDesktopInputFocus,
+    recovery,
+    clearRecovery
+  };
+}
+function QuickInputConflictRecoveryPanel({
+  recovery,
+  isBusy,
+  isRescanning,
+  onOpenOriginal,
+  onRescan,
+  onRetry,
+  onDismiss
+}) {
+  if (!recovery.shouldShow) return null;
+  return /* @__PURE__ */ u2(
+    "div",
+    {
+      class: "think-quick-input-recovery",
+      role: "alert",
+      style: {
+        border: "1px solid var(--background-modifier-error)",
+        borderRadius: "10px",
+        padding: "10px 12px",
+        margin: "8px 0 10px 0",
+        background: "var(--background-modifier-error-hover)",
+        color: "var(--text-normal)"
+      },
+      children: [
+        /* @__PURE__ */ u2("div", { style: { display: "flex", justifyContent: "space-between", gap: "8px", alignItems: "flex-start" }, children: [
+          /* @__PURE__ */ u2("div", { children: [
+            /* @__PURE__ */ u2("div", { style: { fontWeight: 700, marginBottom: "4px" }, children: recovery.title }),
+            /* @__PURE__ */ u2("div", { style: { fontSize: "0.9em", lineHeight: 1.45, whiteSpace: "pre-wrap" }, children: recovery.message }),
+            /* @__PURE__ */ u2("div", { style: { fontSize: "0.86em", lineHeight: 1.45, marginTop: "6px", color: "var(--text-muted)" }, children: recovery.advice }),
+            recovery.paths.length > 0 ? /* @__PURE__ */ u2("div", { style: { fontSize: "0.82em", lineHeight: 1.4, marginTop: "6px", color: "var(--text-faint)", wordBreak: "break-all" }, children: [
+              "将重新扫描：",
+              recovery.paths.join("、")
+            ] }) : null
+          ] }),
+          /* @__PURE__ */ u2(Button$1, { size: "small", onClick: onDismiss, disabled: isBusy || isRescanning, children: "隐藏" })
+        ] }),
+        /* @__PURE__ */ u2("div", { style: { display: "flex", gap: "8px", flexWrap: "wrap", marginTop: "10px" }, children: [
+          recovery.canOpenOriginal ? /* @__PURE__ */ u2(Button$1, { size: "small", variant: "outlined", onClick: onOpenOriginal, disabled: isBusy || isRescanning, children: "打开原文" }) : null,
+          recovery.canRescan ? /* @__PURE__ */ u2(Button$1, { size: "small", variant: "outlined", onClick: onRescan, disabled: isBusy || isRescanning, children: isRescanning ? "扫描中..." : "重新扫描" }) : null,
+          recovery.canRetry ? /* @__PURE__ */ u2(Button$1, { size: "small", variant: "contained", onClick: onRetry, disabled: isBusy || isRescanning, children: "重试保存" }) : null
+        ] })
+      ]
+    }
+  );
+}
 class QuickInputModal extends obsidian.Modal {
   constructor(app, blockId, context, themeId, onSave, allowBlockSwitch = false, options) {
     super(app);
@@ -52158,7 +53055,7 @@ class QuickInputModal extends obsidian.Modal {
     QuickInputModal.activeModal = this;
     this.contentEl.empty();
     this.modalEl.addClass("think-quick-input-modal");
-    const mobileLike = this.isMobileLikeEnvironment();
+    const mobileLike = isMobileLikeEnvironment();
     this.modalEl.toggleClass("think-quick-input-modal--mobile", mobileLike);
     this.modalEl.toggleClass("think-quick-input-modal--desktop", !mobileLike);
     if (mobileLike) {
@@ -52197,151 +53094,11 @@ class QuickInputModal extends obsidian.Modal {
       }
     }, 0);
   }
-  isMobileLikeEnvironment() {
-    if (typeof window === "undefined") return false;
-    return /Android|iPhone|iPad|iPod|Mobile/i.test(window.navigator.userAgent) || (window.matchMedia?.("(pointer: coarse)").matches ?? false) || window.innerWidth <= 820;
-  }
   setupKeyboardDetection() {
-    let baselineViewportHeight = window.visualViewport?.height || window.innerHeight;
-    const keyboardActivationThreshold = 150;
-    const suspectedBottomInset = 156;
-    const detectedBottomInsetExtra = 120;
-    const setKeyboardHeight = (height2) => {
-      this.modalEl.style.setProperty("--keyboard-height", `${Math.max(0, Math.round(height2))}px`);
-      document.documentElement.style.setProperty("--keyboard-height", `${Math.max(0, Math.round(height2))}px`);
-    };
-    const setAccessoryInset = (height2) => {
-      this.modalEl.style.setProperty("--keyboard-accessory-inset", `${Math.max(0, Math.round(height2))}px`);
-    };
-    const isKeyboardInput = (el) => {
-      if (!(el instanceof HTMLElement)) return false;
-      if (el.tagName === "INPUT" || el.tagName === "TEXTAREA") return true;
-      return el.isContentEditable;
-    };
-    const hasActiveKeyboardInput = () => {
-      const activeElement2 = document.activeElement;
-      return !!activeElement2 && this.contentEl.contains(activeElement2) && isKeyboardInput(activeElement2);
-    };
-    const getBodyContainer = () => this.contentEl.querySelector(".think-modal__body");
-    const ensureTargetVisible = (target) => {
-      const activeTarget = target && this.contentEl.contains(target) ? target : document.activeElement;
-      if (!activeTarget || !isKeyboardInput(activeTarget) || !this.contentEl.contains(activeTarget)) return;
-      const container = getBodyContainer();
-      if (!container) return;
-      const anchor = activeTarget.closest(".think-form-row, .think-inline-field-row, .think-textarea-row");
-      const node2 = anchor || activeTarget;
-      const nodeRect = node2.getBoundingClientRect();
-      const containerRect = container.getBoundingClientRect();
-      const accessoryInset = Number.parseInt(this.modalEl.style.getPropertyValue("--keyboard-accessory-inset") || "0", 10) || suspectedBottomInset;
-      const safeTop = containerRect.top + 12;
-      const safeBottom = containerRect.bottom - Math.max(72, accessoryInset);
-      if (nodeRect.bottom > safeBottom) {
-        container.scrollTop += nodeRect.bottom - safeBottom + 28;
-      } else if (nodeRect.top < safeTop) {
-        container.scrollTop -= safeTop - nodeRect.top + 12;
-      }
-      if (activeTarget instanceof HTMLTextAreaElement) {
-        const lineReserve = 44;
-        const caretBottom = activeTarget.scrollHeight - activeTarget.scrollTop;
-        const visibleHeight = activeTarget.clientHeight - lineReserve;
-        if (caretBottom > visibleHeight) {
-          activeTarget.scrollTop = Math.max(0, activeTarget.scrollHeight - visibleHeight);
-        }
-      }
-    };
-    const updateKeyboardState = (target) => {
-      const viewportHeight = window.visualViewport?.height || window.innerHeight;
-      const heightDiff = Math.max(0, Math.round(baselineViewportHeight - viewportHeight));
-      const hasFocusedInput = hasActiveKeyboardInput();
-      const detected = heightDiff > keyboardActivationThreshold && hasFocusedInput;
-      const suspected = hasFocusedInput;
-      this.modalEl.toggleClass("keyboard-detected", detected);
-      this.modalEl.toggleClass("keyboard-suspected", suspected);
-      if (detected) {
-        setKeyboardHeight(heightDiff);
-        setAccessoryInset(heightDiff + detectedBottomInsetExtra);
-        const offsetTop = window.visualViewport?.offsetTop || 0;
-        this.modalEl.style.setProperty("--keyboard-offset", `${offsetTop}px`);
-      } else if (suspected) {
-        setKeyboardHeight(0);
-        setAccessoryInset(suspectedBottomInset);
-        this.modalEl.style.removeProperty("--keyboard-offset");
-      } else {
-        setKeyboardHeight(0);
-        setAccessoryInset(0);
-        this.modalEl.style.removeProperty("--keyboard-offset");
-      }
-      if (heightDiff <= 0 && !hasFocusedInput) {
-        baselineViewportHeight = viewportHeight;
-      }
-      if (suspected) {
-        ensureTargetVisible(target);
-      }
-    };
-    const scheduleVisibilityPasses = (target) => {
-      const run = () => updateKeyboardState(target);
-      requestAnimationFrame(run);
-      window.setTimeout(run, 120);
-      window.setTimeout(run, 260);
-      window.setTimeout(run, 420);
-    };
-    const handleFocusIn = (event) => {
-      const target = event.target;
-      if (!isKeyboardInput(target)) return;
-      scheduleVisibilityPasses(target);
-    };
-    const handleFocusOut = (event) => {
-      if (!(event.target instanceof HTMLElement)) {
-        window.setTimeout(() => updateKeyboardState(document.activeElement), 60);
-        return;
-      }
-      if (!this.contentEl.contains(event.target)) {
-        window.setTimeout(() => updateKeyboardState(document.activeElement), 60);
-        return;
-      }
-      window.setTimeout(() => updateKeyboardState(document.activeElement), 60);
-    };
-    const handleViewportResize = () => {
-      updateKeyboardState(document.activeElement);
-    };
-    const handleViewportScroll = () => {
-      updateKeyboardState(document.activeElement);
-    };
-    const handleOrientationChange = () => {
-      setTimeout(() => {
-        baselineViewportHeight = window.visualViewport?.height || window.innerHeight;
-        updateKeyboardState(document.activeElement);
-      }, 500);
-    };
-    this.contentEl.addEventListener("focusin", handleFocusIn);
-    this.contentEl.addEventListener("focusout", handleFocusOut);
-    if (window.visualViewport) {
-      window.visualViewport.addEventListener("resize", handleViewportResize);
-      window.visualViewport.addEventListener("scroll", handleViewportScroll, { passive: true });
-    } else {
-      window.addEventListener("resize", handleViewportResize);
-    }
-    window.addEventListener("orientationchange", handleOrientationChange);
-    setKeyboardHeight(0);
-    setAccessoryInset(0);
-    updateKeyboardState(document.activeElement);
-    this.cleanupKeyboardDetection = () => {
-      this.contentEl.removeEventListener("focusin", handleFocusIn);
-      this.contentEl.removeEventListener("focusout", handleFocusOut);
-      if (window.visualViewport) {
-        window.visualViewport.removeEventListener("resize", handleViewportResize);
-        window.visualViewport.removeEventListener("scroll", handleViewportScroll);
-      } else {
-        window.removeEventListener("resize", handleViewportResize);
-      }
-      window.removeEventListener("orientationchange", handleOrientationChange);
-      document.documentElement.style.removeProperty("--keyboard-height");
-      this.modalEl.style.removeProperty("--keyboard-height");
-      this.modalEl.style.removeProperty("--keyboard-accessory-inset");
-      this.modalEl.style.removeProperty("--keyboard-offset");
-      this.modalEl.removeClass("keyboard-detected");
-      this.modalEl.removeClass("keyboard-suspected");
-    };
+    this.cleanupKeyboardDetection = setupQuickInputKeyboardDetection({
+      contentEl: this.contentEl,
+      modalEl: this.modalEl
+    });
   }
   onClose() {
     try {
@@ -52373,9 +53130,7 @@ function QuickInputModalContent({
 }) {
   const settings = useSelector(selectInputSettings);
   const useCases = useUseCases();
-  const submitLatestRef = A$1(createTakeLatest("quick-input-submit"));
-  const originalTouchRef = A$1(null);
-  y(() => () => submitLatestRef.current.dispose(), []);
+  const dataStore = useDataStore();
   const preparedRecord = T$1(() => {
     if (mode === "edit" && editItem) {
       return useCases.recordInput.prepareEditRecord({
@@ -52391,7 +53146,8 @@ function QuickInputModalContent({
       context,
       source: onSave ? "timer" : source ?? "quickinput"
     });
-  }, [useCases, settings, initialBlockId, initialThemeId, context, mode, editItem, onSave, source]);
+  }, [useCases, initialBlockId, initialThemeId, context, mode, editItem, onSave, source]);
+  const [isRescanningRecoveryPaths, setIsRescanningRecoveryPaths] = d(false);
   const [editorState, setEditorState] = d({
     blockId: preparedRecord.blockId || initialBlockId,
     themeId: preparedRecord.themeId,
@@ -52402,240 +53158,91 @@ function QuickInputModalContent({
     templateId: null,
     templateSourceType: null
   });
-  const [pendingAction, setPendingAction] = d(null);
   const editorStateRef = A$1(null);
-  const isMobileLike = T$1(() => {
-    if (typeof window === "undefined") return false;
-    return /Android|iPhone|iPad|iPod|Mobile/i.test(window.navigator.userAgent) || (window.matchMedia?.("(pointer: coarse)").matches ?? false) || window.innerWidth <= 820;
-  }, []);
+  const isMobileLike = T$1(() => isMobileLikeEnvironment(), []);
   const currentState = editorStateRef.current || editorState;
   const currentBlock = (settings.blocks || []).find((block) => block.id === currentState.blockId);
-  const currentBlockName = currentBlock?.name || editorState.template?.name || editorState.blockId;
-  const originalUri = mode === "edit" && editItem ? makeObsUri(editItem, vaultName) : "";
-  const isBusy = pendingAction !== null;
+  const currentBlockName = currentBlock?.name || currentState.template?.name || currentState.blockId;
   const isTimerCreate = mode === "create" && (source === "timer" || !!onSave);
-  const originalGestureHint = originalUri && !originalUri.startsWith("#error") ? "桌面端按住 Ctrl/⌘ 点击标题或说明；手机端双击标题或说明，可打开原文" : void 0;
-  const liveOutputPlan = T$1(() => {
-    if (!currentState.template) return preparedRecord.outputPlan ?? null;
-    try {
-      return buildRecordOutputPlan({
-        template: currentState.template,
-        formData: currentState.formData || {},
-        theme: currentState.theme,
-        templateMeta: {
-          templateId: currentState.templateId ?? void 0,
-          templateSourceType: currentState.templateSourceType ?? void 0
-        }
-      });
-    } catch (error) {
-      console.warn("[记录调试][保存位置预览] 计算实时 OutputPlan 失败，回退到初始计划", error);
-      return preparedRecord.outputPlan ?? null;
-    }
-  }, [currentState.template, currentState.theme, currentState.formData, currentState.templateId, currentState.templateSourceType, preparedRecord.outputPlan]);
-  const livePersistencePlan = T$1(() => {
-    if (!liveOutputPlan) return preparedRecord.persistencePlan ?? null;
-    return buildRecordPersistencePlan({
-      mode,
-      originalPath: preparedRecord.persistencePlan?.originalPath ?? editItem?.file?.path ?? null,
-      outputPlan: liveOutputPlan
-    });
-  }, [liveOutputPlan, preparedRecord.persistencePlan, editItem, mode]);
-  const outputPlanHint = liveOutputPlan?.targetFilePath ? `目标位置：${liveOutputPlan.targetFilePath}${liveOutputPlan?.targetHeader ? ` → ${liveOutputPlan.targetHeader}` : ""}` : "";
-  const pathChangeHint = livePersistencePlan?.pathChanged ? `保存位置将变化：${livePersistencePlan.originalPath || "未知"} → ${liveOutputPlan?.targetFilePath || "未知"}${liveOutputPlan?.targetHeader ? ` → ${liveOutputPlan.targetHeader}` : ""}。保存时会执行迁移保存：先写入新位置，再删除旧记录；如果删除旧记录失败，会保留旧记录并提示手动清理。` : "";
-  const openOriginal = () => {
-    if (!originalUri || originalUri.startsWith("#error")) {
-      new obsidian.Notice("❌ 找不到原文位置");
-      return;
-    }
-    window.open(originalUri, "_blank");
-  };
-  const handleOriginalPointerClick = (event) => {
-    if (!originalGestureHint) return;
-    if (!event.ctrlKey && !event.metaKey) return;
-    event.preventDefault();
-    event.stopPropagation();
-    openOriginal();
-  };
-  const handleOriginalTouchEnd = (event) => {
-    if (!originalGestureHint) return;
-    const now = Date.now();
-    const previous = originalTouchRef.current;
-    originalTouchRef.current = now;
-    if (previous && now - previous <= 350) {
-      originalTouchRef.current = null;
-      event.preventDefault();
-      event.stopPropagation();
-      openOriginal();
-    }
-  };
-  const showResult = (message, type = "error") => {
-    const prefix2 = type === "success" ? "" : type === "warning" ? "⚠️ " : "❌ ";
-    const duration2 = type === "success" ? 4e3 : type === "warning" ? 12e3 : 1e4;
-    new obsidian.Notice(`${prefix2}${message}`, duration2);
-  };
-  const buildCreateDraft = () => ({
-    blockId: currentState.blockId,
-    themeId: currentState.themeId ?? null,
-    formData: currentState.formData,
+  const {
+    liveOutputPlan,
+    livePersistencePlan,
+    outputPlanHint,
+    pathChangeHint
+  } = useQuickInputOutputPlanPreview({ currentState, preparedRecord, editItem, mode });
+  const {
+    originalGestureHint,
+    openOriginal,
+    handleOriginalPointerClick,
+    handleOriginalTouchEnd
+  } = useQuickInputOriginalNavigation({ mode, editItem, vaultName });
+  const getCurrentState = q$1(() => editorStateRef.current || editorState, [editorState]);
+  const {
+    pendingAction,
+    isBusy,
+    handleSubmit,
+    handleDelete,
+    handleSubmitPointerDown,
+    preserveDesktopInputFocus,
+    recovery,
+    clearRecovery
+  } = useQuickInputSubmitController({
+    mode,
+    editItem,
     context,
-    meta: currentState.meta,
-    source: source ?? (onSave ? "timer" : "quickinput")
+    source,
+    onSave,
+    onSubmitSuccess,
+    closeModal,
+    useCases,
+    getCurrentState,
+    liveOutputPlan,
+    livePersistencePlan,
+    isMobileLike
   });
   const handleEditorStateChange = q$1((state) => {
     editorStateRef.current = state;
     setEditorState(state);
   }, []);
-  const handleSubmit = async () => {
-    if (onSave && mode === "create") {
-      onSave(buildCreateDraft());
-      closeModal();
-      return;
-    }
-    setPendingAction("submit");
+  const handleRecoveryRescan = q$1(async () => {
+    if (!recovery.paths.length || isRescanningRecoveryPaths) return;
+    setIsRescanningRecoveryPaths(true);
     try {
-      const result = await submitLatestRef.current.run(async (signal) => {
-        const latestState = editorStateRef.current || editorState;
-        if (mode === "edit" && editItem) {
-          return await useCases.recordInput.submitUpdateRecord({
-            item: editItem,
-            blockId: latestState.blockId,
-            themeId: latestState.themeId,
-            formData: latestState.formData,
-            meta: latestState.meta,
-            expectedOutputPlan: liveOutputPlan,
-            expectedPersistencePlan: livePersistencePlan,
-            signal,
-            source: "quickinput"
-          });
-        }
-        return await useCases.recordInput.submitCreateRecord({
-          blockId: latestState.blockId,
-          themeId: latestState.themeId,
-          formData: latestState.formData,
-          context,
-          meta: latestState.meta,
-          signal,
-          source: source ?? "quickinput"
-        });
-      });
-      const presentation = buildRecordSubmitFeedbackPresentation(
-        result,
-        mode === "edit" ? "保存修改失败" : "创建失败"
-      );
-      if (result.status === "cancelled") {
-        return;
-      }
-      if (presentation.message) {
-        const shouldShowOwnSuccessNotice = !(mode === "create" && source === "timer" && onSubmitSuccess);
-        if (presentation.tone !== "success" || shouldShowOwnSuccessNotice) {
-          showResult(presentation.message, presentation.tone);
-        }
-      }
-      if (result.status === "success" && mode === "create" && onSubmitSuccess) {
-        try {
-          await onSubmitSuccess(result, buildCreateDraft());
-        } catch (followUpError) {
-          showResult(followUpError?.message || "记录已创建，但后续操作失败");
-        }
-      }
-      if (presentation.shouldCloseModal) {
-        closeModal();
-      }
+      await Promise.all(recovery.paths.map((path) => dataStore.scanFileByPath(path)));
+      showQuickInputNotice(`已重新扫描 ${recovery.paths.length} 个文件，请重试保存。`, "success");
     } catch (error) {
-      if (!(error instanceof CancelledError)) {
-        showResult(error?.message || (mode === "edit" ? "保存修改失败" : "创建失败"));
-      }
+      showQuickInputNotice(error instanceof Error ? error.message : "重新扫描失败");
     } finally {
-      setPendingAction(null);
-      submitTriggeredRef.current = false;
+      setIsRescanningRecoveryPaths(false);
     }
-  };
-  const preserveDesktopInputFocus = (event) => {
-    if (isMobileLike) return;
-    event.preventDefault();
-  };
-  const submitTriggeredRef = A$1(false);
-  const handleSubmitPointerDown = (event) => {
-    if (isMobileLike) return;
-    event.preventDefault();
-    event.stopPropagation();
-    if (submitTriggeredRef.current || isBusy) return;
-    submitTriggeredRef.current = true;
-    void handleSubmit().finally(() => {
-      window.setTimeout(() => {
-        submitTriggeredRef.current = false;
-      }, 80);
-    });
-  };
-  const handleDelete = async () => {
-    if (mode !== "edit" || !editItem) return;
-    if (!window.confirm("确认删除这条记录吗？")) return;
-    setPendingAction("delete");
-    try {
-      const result = await submitLatestRef.current.run((signal) => useCases.recordInput.submitDeleteRecord({
-        item: editItem,
-        signal,
-        source: "quickinput"
-      }));
-      if (result.status === "success") {
-        if (result.feedback?.notice) {
-          showResult(result.feedback.notice, "success");
-        }
-        closeModal();
-        return;
-      }
-      if (result.status === "cancelled") {
-        return;
-      }
-      showResult(result.errors?.[0]?.message || result.feedback?.notice || "删除失败");
-    } catch (error) {
-      if (!(error instanceof CancelledError)) {
-        showResult(error?.message || "删除失败");
-      }
-    } finally {
-      setPendingAction(null);
-    }
-  };
+  }, [dataStore, isRescanningRecoveryPaths, recovery.paths]);
   return /* @__PURE__ */ u2("div", { class: "think-modal think-modal--quick-input", style: { padding: "0 0.9rem 0.9rem 0.9rem", display: "flex", flexDirection: "column", minHeight: 0, maxHeight: "calc(100dvh - 24px)", gap: "0.25rem" }, children: [
-    /* @__PURE__ */ u2(Box$1, { sx: { mb: "0.75rem" }, children: [
-      /* @__PURE__ */ u2(
-        ModalHeader,
-        {
-          left: /* @__PURE__ */ u2(
-            "h3",
-            {
-              style: { margin: 0 },
-              title: originalGestureHint,
-              onClick: mode === "edit" ? handleOriginalPointerClick : void 0,
-              onTouchEnd: mode === "edit" ? handleOriginalTouchEnd : void 0,
-              children: mode === "edit" ? `编辑记录 · ${currentBlockName}` : isTimerCreate ? `开始新任务 · ${currentBlockName}` : `快速录入 · ${currentBlockName}`
-            }
-          ),
-          onClose: closeModal,
-          padding: 0,
-          borderBottom: false
-        }
-      ),
-      pathChangeHint || outputPlanHint ? /* @__PURE__ */ u2(
-        "div",
-        {
-          style: {
-            marginTop: "0.35rem",
-            fontSize: "12px",
-            color: pathChangeHint ? "var(--text-warning)" : "var(--text-muted)",
-            lineHeight: 1.5,
-            padding: pathChangeHint ? "0.45rem 0.55rem" : "0.25rem 0",
-            border: pathChangeHint ? "1px solid var(--background-modifier-border)" : void 0,
-            borderRadius: pathChangeHint ? "8px" : void 0,
-            background: pathChangeHint ? "var(--background-secondary)" : void 0
-          },
-          children: [
-            /* @__PURE__ */ u2("div", { style: { fontWeight: pathChangeHint ? 600 : 400, marginBottom: pathChangeHint ? "0.15rem" : 0 }, children: pathChangeHint ? "保存位置预览：将迁移保存" : "保存位置预览" }),
-            /* @__PURE__ */ u2("div", { children: pathChangeHint || outputPlanHint })
-          ]
-        }
-      ) : null
-    ] }),
+    /* @__PURE__ */ u2(
+      QuickInputModalHeader,
+      {
+        mode,
+        currentBlockName,
+        isTimerCreate,
+        originalGestureHint,
+        outputPlanHint,
+        pathChangeHint,
+        onClose: closeModal,
+        onOriginalPointerClick: handleOriginalPointerClick,
+        onOriginalTouchEnd: handleOriginalTouchEnd
+      }
+    ),
+    /* @__PURE__ */ u2(
+      QuickInputConflictRecoveryPanel,
+      {
+        recovery,
+        isBusy,
+        isRescanning: isRescanningRecoveryPaths,
+        onOpenOriginal: openOriginal,
+        onRescan: handleRecoveryRescan,
+        onRetry: handleSubmit,
+        onDismiss: clearRecovery
+      }
+    ),
     /* @__PURE__ */ u2("div", { class: "think-modal__body", style: { paddingBottom: isMobileLike ? "96px" : void 0 }, children: /* @__PURE__ */ u2(
       QuickInputEditor,
       {
@@ -52650,18 +53257,22 @@ function QuickInputModalContent({
         isMobileLike
       }
     ) }),
-    /* @__PURE__ */ u2("div", { class: "think-modal__footer think-modal__footer--quick-input", style: { display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "0.9rem", gap: "8px", position: isMobileLike ? "sticky" : "static", bottom: 0, background: "var(--background-primary)", paddingBottom: isMobileLike ? "calc(env(safe-area-inset-bottom, 0px) + 8px)" : void 0, zIndex: isMobileLike ? 3 : void 0 }, children: /* @__PURE__ */ u2("div", { style: { display: "flex", gap: "8px", flexWrap: "wrap", justifyContent: "space-between", width: "100%" }, children: [
-      /* @__PURE__ */ u2("div", { children: mode === "edit" ? /* @__PURE__ */ u2(Button$1, { color: "error", onMouseDown: preserveDesktopInputFocus, onPointerDown: preserveDesktopInputFocus, onClick: handleDelete, disabled: isBusy, children: pendingAction === "delete" ? "删除中..." : "删除" }) : null }),
-      /* @__PURE__ */ u2("div", { style: { display: "flex", gap: "8px", flexWrap: "wrap", justifyContent: "flex-end" }, children: [
-        /* @__PURE__ */ u2(Button$1, { onMouseDown: preserveDesktopInputFocus, onPointerDown: preserveDesktopInputFocus, onClick: closeModal, disabled: isBusy, children: "取消" }),
-        /* @__PURE__ */ u2(Button$1, { "data-submit": "true", onMouseDown: handleSubmitPointerDown, onPointerDown: handleSubmitPointerDown, onClick: isMobileLike ? handleSubmit : void 0, variant: "contained", disabled: isBusy, children: pendingAction === "submit" ? mode === "edit" ? "保存中..." : "创建中..." : mode === "edit" ? "保存修改" : "创建" })
-      ] })
-    ] }) })
+    /* @__PURE__ */ u2(
+      QuickInputModalFooter,
+      {
+        mode,
+        isBusy,
+        isMobileLike,
+        pendingAction,
+        onCancel: closeModal,
+        onDelete: handleDelete,
+        onSubmitClick: handleSubmit,
+        onSubmitPointerDown: handleSubmitPointerDown,
+        onPreserveDesktopInputFocus: preserveDesktopInputFocus
+      }
+    )
   ] });
 }
-const SmartToyIcon = createSvgIcon(/* @__PURE__ */ u2("path", {
-  d: "M20 9V7c0-1.1-.9-2-2-2h-3c0-1.66-1.34-3-3-3S9 3.34 9 5H6c-1.1 0-2 .9-2 2v2c-1.66 0-3 1.34-3 3s1.34 3 3 3v4c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2v-4c1.66 0 3-1.34 3-3s-1.34-3-3-3M7.5 11.5c0-.83.67-1.5 1.5-1.5s1.5.67 1.5 1.5S9.83 13 9 13s-1.5-.67-1.5-1.5M16 17H8v-2h8zm-1-4c-.83 0-1.5-.67-1.5-1.5S14.17 10 15 10s1.5.67 1.5 1.5S15.83 13 15 13"
-}));
 function AiTextPromptForm({ onSubmit, onCancel, isLoading }) {
   const [text2, setText] = d("");
   const handleSubmit = () => {
@@ -52810,15 +53421,6 @@ class AiTextPromptModal extends obsidian.Modal {
     pn(this.contentEl);
   }
 }
-const CheckCircleIcon = createSvgIcon(/* @__PURE__ */ u2("path", {
-  d: "M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2m-2 15-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8z"
-}));
-const RadioButtonUncheckedIcon = createSvgIcon(/* @__PURE__ */ u2("path", {
-  d: "M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2m0 18c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8"
-}));
-const DeleteIcon = createSvgIcon(/* @__PURE__ */ u2("path", {
-  d: "M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6zM19 4h-3.5l-1-1h-5l-1 1H5v2h14z"
-}));
 function normalizeAiFieldValue(field, value) {
   if (value === void 0 || value === null || value === "") return value;
   const isSelectable = ["select", "radio", "rating"].includes(field.type);
@@ -53195,9 +53797,6 @@ function AiBatchConfirmForm({
     ] })
   ] });
 }
-const DragIndicatorIcon = createSvgIcon(/* @__PURE__ */ u2("path", {
-  d: "M11 18c0 1.1-.9 2-2 2s-2-.9-2-2 .9-2 2-2 2 .9 2 2m-2-8c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2m0-6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2m6 4c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2m0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2m0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2"
-}));
 const getEventCoords = (e2) => {
   if (e2 instanceof MouseEvent) return { x: e2.clientX, y: e2.clientY };
   if (e2.touches && e2.touches.length > 0) {
@@ -55117,9 +55716,6 @@ function HeatmapView({
   };
   return /* @__PURE__ */ u2("div", { class: "heatmap-container", children: renderContent() });
 }
-const IosShareIcon = createSvgIcon(/* @__PURE__ */ u2("path", {
-  d: "m16 5-1.42 1.42-1.59-1.59V16h-1.98V4.83L9.42 6.42 8 5l4-4zm4 5v11c0 1.1-.9 2-2 2H6c-1.11 0-2-.9-2-2V10c0-1.11.89-2 2-2h3v2H6v11h12V10h-3V8h3c1.1 0 2 .89 2 2"
-}));
 function PopoverContent({
   blocks,
   app,
@@ -57494,9 +58090,6 @@ function ExcelView({
     }
   );
 }
-const ClearIcon = createSvgIcon(/* @__PURE__ */ u2("path", {
-  d: "M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"
-}));
 function ThemeTreeSelectTrigger({
   open,
   onToggleOpen,
@@ -57549,9 +58142,6 @@ function ThemeTreeSelectTrigger({
     }
   );
 }
-const SearchIcon = createSvgIcon(/* @__PURE__ */ u2("path", {
-  d: "M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"
-}));
 function SearchBox({ value, onChange }) {
   return /* @__PURE__ */ u2(Box$1, { sx: { p: 1, borderBottom: "1px solid var(--background-modifier-border)" }, children: /* @__PURE__ */ u2(
     TextField$1,
@@ -58528,10 +59118,10 @@ function registerSettingsPersistence(plugin) {
     const parsed = persistedSettingsGuard.safeParse(cloned);
     const out = parsed.success ? parsed.data : cloned;
     if (out?.aiSettings && typeof out.aiSettings === "object") {
-      const persist = out.aiSettings.persistApiKey !== false;
+      const persist = out.aiSettings.persistApiKey === true;
       if (!persist) {
         if (out.aiSettings.apiKey) {
-          devWarn("[SettingsPersistence] persistApiKey=false，apiKey 将被剥离后保存");
+          devWarn("[SettingsPersistence] persistApiKey 未显式开启，apiKey 将被剥离后保存");
         }
         out.aiSettings.apiKey = "";
       }
@@ -58554,18 +59144,6 @@ function registerSettingsPersistence(plugin) {
   instance.registerSingleton(ThemeManager);
   instance.register(THEME_MATCHER_TOKEN, { useToken: ThemeManager });
 }
-const StopIcon = createSvgIcon(/* @__PURE__ */ u2("path", {
-  d: "M6 6h12v12H6z"
-}));
-const PauseIcon = createSvgIcon(/* @__PURE__ */ u2("path", {
-  d: "M6 19h4V5H6zm8-14v14h4V5z"
-}));
-const EditIcon = createSvgIcon(/* @__PURE__ */ u2("path", {
-  d: "M3 17.25V21h3.75L17.81 9.94l-3.75-3.75zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34a.996.996 0 0 0-1.41 0l-1.83 1.83 3.75 3.75z"
-}));
-const DeleteForeverIcon = createSvgIcon(/* @__PURE__ */ u2("path", {
-  d: "M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6zm2.46-7.12 1.41-1.41L12 12.59l2.12-2.12 1.41 1.41L13.41 14l2.12 2.12-1.41 1.41L12 15.41l-2.12 2.12-1.41-1.41L10.59 14zM15.5 4l-1-1h-5l-1 1H5v2h14V4z"
-}));
 function TimerRow({ timer, timerService, dataStore, app }) {
   const [displayTime, setDisplayTime] = d("00:00:00");
   const taskItem = dataStore.queryItems().find((i2) => i2.id === timer.taskId);
@@ -58808,30 +59386,34 @@ async function loadDataServices(opts) {
   const duration2 = stopMeasure();
   devLog(`[ThinkPlugin] 数据服务加载完成 (${duration2.toFixed(2)}ms)`);
 }
+function scheduleBackgroundScan(task) {
+  const g2 = globalThis;
+  if (typeof g2.requestIdleCallback === "function") {
+    g2.requestIdleCallback(task, { timeout: 1200 });
+    return;
+  }
+  setTimeout(task, 0);
+}
 function scanDataInBackground(opts) {
   const { services, getScanDataPromise, setScanDataPromise } = opts;
   const existing = getScanDataPromise();
   if (existing) return existing;
   const promise = new Promise((resolve) => {
-    devTime("[ThinkPlugin] 数据扫描");
-    services.dataStore.initialScan().then(() => {
-      devTimeEnd("[ThinkPlugin] 数据扫描");
-      services.dataStore.notifyChange();
-      resolve();
-    }).catch((error) => {
-      devError("[ThinkPlugin] 数据扫描失败:", error);
-      resolve();
+    scheduleBackgroundScan(() => {
+      devTime("[ThinkPlugin] 数据扫描");
+      services.dataStore.initialScan().then(() => {
+        devTimeEnd("[ThinkPlugin] 数据扫描");
+        services.dataStore.notifyChange();
+        resolve();
+      }).catch((error) => {
+        devError("[ThinkPlugin] 数据扫描失败:", error);
+        resolve();
+      });
     });
   });
   setScanDataPromise(promise);
   return promise;
 }
-const SettingsIcon = createSvgIcon(/* @__PURE__ */ u2("path", {
-  d: "M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6"
-}));
-const DeleteOutlineIcon = createSvgIcon(/* @__PURE__ */ u2("path", {
-  d: "M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6zM8 9h8v10H8zm7.5-5-1-1h-5l-1 1H5v2h14V4z"
-}));
 const AnyIconButton = IconButton$1;
 function ModulePanel({ title, collapsed, children, onActionClick, onToggle, onExport, onSettingsClick, onRemove }) {
   const onHeaderClick = (e2) => {
@@ -58900,12 +59482,6 @@ function ModulePanel({ title, collapsed, children, onActionClick, onToggle, onEx
     !collapsed && /* @__PURE__ */ u2("div", { class: "module-content", children })
   ] });
 }
-const AddIcon = createSvgIcon(/* @__PURE__ */ u2("path", {
-  d: "M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6z"
-}));
-const ExpandLessIcon = createSvgIcon(/* @__PURE__ */ u2("path", {
-  d: "m12 8-6 6 1.41 1.41L12 10.83l4.59 4.58L18 14z"
-}));
 function readInputValue$1(event) {
   return (event.target || event.currentTarget).value;
 }
@@ -59193,7 +59769,7 @@ function OptionRow({
         label: "删除此选项",
         disabled,
         onClick: onRemove,
-        icon: /* @__PURE__ */ u2(DeleteIcon$1, { fontSize: "small" })
+        icon: /* @__PURE__ */ u2(RemoveCircleOutlineIcon, { fontSize: "small" })
       }
     ) })
   ] });
@@ -59925,9 +60501,6 @@ function TemplateEditorModal({ isOpen, onClose, block, theme: theme2, existingOv
     }
   );
 }
-const VisibilityIcon = createSvgIcon(/* @__PURE__ */ u2("path", {
-  d: "M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5M12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5m0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3"
-}));
 function ThemeToolbar({
   mode,
   onToggleEditMode
@@ -60012,12 +60585,6 @@ function ContextualToolbar({ editorState, onAction, onClearSelection }) {
     }
   );
 }
-const TaskAltIcon = createSvgIcon(/* @__PURE__ */ u2("path", {
-  d: "M22 5.18 10.59 16.6l-4.24-4.24 1.41-1.41 2.83 2.83 10-10zm-2.21 5.04c.13.57.21 1.17.21 1.78 0 4.42-3.58 8-8 8s-8-3.58-8-8 3.58-8 8-8c1.58 0 3.04.46 4.28 1.25l1.44-1.44C16.1 2.67 14.13 2 12 2 6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10c0-1.19-.22-2.33-.6-3.39z"
-}));
-const CancelIcon = createSvgIcon(/* @__PURE__ */ u2("path", {
-  d: "M12 2C6.47 2 2 6.47 2 12s4.47 10 10 10 10-4.47 10-10S17.53 2 12 2m5 13.59L15.59 17 12 13.41 8.41 17 7 15.59 10.59 12 7 8.41 8.41 7 12 10.59 15.59 7 17 8.41 13.41 12z"
-}));
 function InlineEditor({ value, onSave }) {
   const [current2, setCurrent] = d(value);
   const handleBlur = () => {
@@ -60594,15 +61161,6 @@ function ThemeTable({
     }
   );
 }
-const ScannerIcon = createSvgIcon(/* @__PURE__ */ u2("path", {
-  d: "M19.8 10.7 4.2 5l-.7 1.9L17.6 12H5c-1.1 0-2 .9-2 2v4c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2v-5.5c0-.8-.5-1.6-1.2-1.8M7 17H5v-2h2zm12 0H9v-2h10z"
-}));
-const RefreshIcon = createSvgIcon(/* @__PURE__ */ u2("path", {
-  d: "M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4z"
-}));
-const DownloadIcon = createSvgIcon(/* @__PURE__ */ u2("path", {
-  d: "M5 20h14v-2H5zM19 9h-4V3H9v6H5l7 7z"
-}));
 function ThemeScanDialog({
   open,
   onClose,
@@ -61350,9 +61908,6 @@ function ThemeMatrix() {
     }
   );
 }
-const ContentCopyIcon = createSvgIcon(/* @__PURE__ */ u2("path", {
-  d: "M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2m0 16H8V7h11z"
-}));
 function useCombinedRefs() {
   for (var _len = arguments.length, refs = new Array(_len), _key = 0; _key < _len; _key++) {
     refs[_key] = arguments[_key];
@@ -65436,7 +65991,7 @@ function CategoriesEditor(props) {
                 size: "small",
                 title: "删除此分类",
                 sx: { gridColumn: "5 / 6" },
-                children: /* @__PURE__ */ u2(DeleteIcon$1, { fontSize: "small" })
+                children: /* @__PURE__ */ u2(DeleteIcon, { fontSize: "small" })
               }
             )
           ]
@@ -65447,7 +66002,7 @@ function CategoriesEditor(props) {
     /* @__PURE__ */ u2(
       Button2,
       {
-        startIcon: /* @__PURE__ */ u2(AddCircleOutlineIcon, {}),
+        startIcon: /* @__PURE__ */ u2(AddIcon, {}),
         onClick: addCategory,
         size: "small",
         sx: { justifyContent: "flex-start", mt: 1 },
@@ -66230,9 +66785,6 @@ function RuleBuilder({ title, mode, rows, fieldOptions, onChange, dataStore, var
     ] })
   ] });
 }
-const RestartAltIcon = createSvgIcon(/* @__PURE__ */ u2("path", {
-  d: "M12 5V2L8 6l4 4V7c3.31 0 6 2.69 6 6 0 2.97-2.17 5.43-5 5.91v2.02c3.95-.49 7-3.85 7-7.93 0-4.42-3.58-8-8-8m-6 8c0-1.65.67-3.15 1.76-4.24L6.34 7.34C4.9 8.79 4 10.79 4 13c0 4.08 3.05 7.44 7 7.93v-2.02c-2.83-.48-5-2.94-5-5.91"
-}));
 const DEFAULT_QUICK_FILTER_FIELDS = [
   { field: "themePath", label: "主题路径", help: "使用完整 themePath 筛选，例如 生活/健康；不再用根主题或章节标题兜底。", placeholder: "选择主题路径" },
   { field: "baseCategory", label: "分类", help: "不同字段之间默认表示“且”：主题匹配后还要分类匹配。", placeholder: "选择分类" },
@@ -66955,9 +67507,6 @@ function LayoutSettings({ app }) {
     layouts.length === 0 && /* @__PURE__ */ u2(Typography$1, { color: "text.secondary", sx: { textAlign: "center", py: 4 }, children: '暂无布局，点击"添加布局"创建第一个' })
   ] });
 }
-const DeleteForeverOutlinedIcon = createSvgIcon(/* @__PURE__ */ u2("path", {
-  d: "M14.12 10.47 12 12.59l-2.13-2.12-1.41 1.41L10.59 14l-2.12 2.12 1.41 1.41L12 15.41l2.12 2.12 1.41-1.41L13.41 14l2.12-2.12zM15.5 4l-1-1h-5l-1 1H5v2h14V4zM6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6zM8 9h8v10H8z"
-}));
 function SortableBlockItem({ block, openId, setOpenId, handleDelete, handleDuplicate, useCases }) {
   const { attributes, listeners, setNodeRef, transform: transform2, transition } = useSortable({ id: block.id });
   const style2 = { transform: CSS$1.Transform.toString(transform2), transition };
@@ -67234,14 +67783,354 @@ function GeneralSettings() {
     ] })
   ] }) });
 }
+function AiAdvancedSettingsSection({ settings, onUpdate }) {
+  return /* @__PURE__ */ u2(S, { children: [
+    /* @__PURE__ */ u2(Accordion, { children: [
+      /* @__PURE__ */ u2(AccordionSummary, { expandIcon: /* @__PURE__ */ u2(ExpandMoreIcon, {}), children: /* @__PURE__ */ u2(Typography$1, { variant: "subtitle1", children: "多结果设置" }) }),
+      /* @__PURE__ */ u2(AccordionDetails, { children: /* @__PURE__ */ u2(Stack$1, { spacing: 2, children: [
+        /* @__PURE__ */ u2(
+          FormControlLabel,
+          {
+            control: /* @__PURE__ */ u2(
+              Switch,
+              {
+                checked: settings.allowMultipleResults,
+                onChange: (e2) => onUpdate({ allowMultipleResults: e2.target.checked })
+              }
+            ),
+            label: "允许多条结果"
+          }
+        ),
+        /* @__PURE__ */ u2(
+          TextField$1,
+          {
+            fullWidth: true,
+            label: "最大结果数量",
+            type: "number",
+            value: settings.maxResults,
+            onChange: (e2) => onUpdate({ maxResults: parseInt(e2.target.value, 10) || 5 }),
+            disabled: !settings.allowMultipleResults
+          }
+        ),
+        /* @__PURE__ */ u2(FormControl, { fullWidth: true, children: [
+          /* @__PURE__ */ u2(InputLabel, { children: "确认模式" }),
+          /* @__PURE__ */ u2(
+            Select,
+            {
+              value: settings.confirmMode,
+              label: "确认模式",
+              onChange: (e2) => onUpdate({ confirmMode: e2.target.value }),
+              children: [
+                /* @__PURE__ */ u2(MenuItem, { value: "single", children: "单条确认" }),
+                /* @__PURE__ */ u2(MenuItem, { value: "batch", children: "批量确认" })
+              ]
+            }
+          )
+        ] })
+      ] }) })
+    ] }),
+    /* @__PURE__ */ u2(Accordion, { children: [
+      /* @__PURE__ */ u2(AccordionSummary, { expandIcon: /* @__PURE__ */ u2(ExpandMoreIcon, {}), children: /* @__PURE__ */ u2(Typography$1, { variant: "subtitle1", children: "性能设置" }) }),
+      /* @__PURE__ */ u2(AccordionDetails, { children: /* @__PURE__ */ u2(Stack$1, { spacing: 2, children: [
+        /* @__PURE__ */ u2(
+          FormControlLabel,
+          {
+            control: /* @__PURE__ */ u2(
+              Switch,
+              {
+                checked: settings.preloadConfigOnStartup,
+                onChange: (e2) => onUpdate({ preloadConfigOnStartup: e2.target.checked })
+              }
+            ),
+            label: "启动时预加载配置"
+          }
+        ),
+        /* @__PURE__ */ u2(
+          TextField$1,
+          {
+            fullWidth: true,
+            label: "配置缓存 TTL (秒)",
+            type: "number",
+            value: settings.configCacheTTLSeconds,
+            onChange: (e2) => onUpdate({ configCacheTTLSeconds: parseInt(e2.target.value, 10) || 300 }),
+            helperText: "配置快照的缓存时间，避免每次调用都重新构建"
+          }
+        )
+      ] }) })
+    ] })
+  ] });
+}
+function AiApiConfigSection({
+  settings,
+  onUpdate,
+  readiness,
+  apiKeyPersistenceMessage,
+  testStatus,
+  testMessage,
+  onTestConnection
+}) {
+  return /* @__PURE__ */ u2(Accordion, { defaultExpanded: true, children: [
+    /* @__PURE__ */ u2(AccordionSummary, { expandIcon: /* @__PURE__ */ u2(ExpandMoreIcon, {}), children: /* @__PURE__ */ u2(Typography$1, { variant: "subtitle1", children: "API 配置" }) }),
+    /* @__PURE__ */ u2(AccordionDetails, { children: /* @__PURE__ */ u2(Stack$1, { spacing: 2, children: [
+      /* @__PURE__ */ u2(
+        TextField$1,
+        {
+          fullWidth: true,
+          label: "API 端点 (baseURL)",
+          placeholder: "https://api.openai.com/v1",
+          value: settings.apiEndpoint,
+          onChange: (e2) => onUpdate({ apiEndpoint: e2.target.value }),
+          helperText: "OpenAI 兼容的 API 端点，例如 https://api.openai.com/v1"
+        }
+      ),
+      /* @__PURE__ */ u2(
+        TextField$1,
+        {
+          fullWidth: true,
+          label: "API 密钥",
+          type: "password",
+          value: settings.apiKey,
+          onChange: (e2) => onUpdate({ apiKey: e2.target.value }),
+          helperText: "您的 API 密钥。默认只保存在当前内存中；开启下方开关后才会写入插件数据。"
+        }
+      ),
+      /* @__PURE__ */ u2(
+        FormControlLabel,
+        {
+          control: /* @__PURE__ */ u2(
+            Switch,
+            {
+              checked: settings.persistApiKey === true,
+              onChange: (e2) => onUpdate({ persistApiKey: e2.target.checked })
+            }
+          ),
+          label: "保存 API 密钥到设置（不推荐：明文存储，可能被同步）"
+        }
+      ),
+      /* @__PURE__ */ u2(Alert, { severity: settings.persistApiKey ? "warning" : "info", children: apiKeyPersistenceMessage }),
+      /* @__PURE__ */ u2(
+        TextField$1,
+        {
+          fullWidth: true,
+          label: "模型名称",
+          placeholder: "gpt-4",
+          value: settings.model,
+          onChange: (e2) => onUpdate({ model: e2.target.value }),
+          helperText: "要使用的模型，例如 gpt-4, gpt-3.5-turbo"
+        }
+      ),
+      /* @__PURE__ */ u2(Box$1, { children: [
+        /* @__PURE__ */ u2(Typography$1, { gutterBottom: true, children: [
+          "温度 (Temperature): ",
+          settings.temperature
+        ] }),
+        /* @__PURE__ */ u2(
+          Slider,
+          {
+            value: settings.temperature,
+            onChange: (_2, value) => onUpdate({ temperature: value }),
+            min: 0,
+            max: 2,
+            step: 0.1,
+            marks: [
+              { value: 0, label: "0" },
+              { value: 1, label: "1" },
+              { value: 2, label: "2" }
+            ]
+          }
+        )
+      ] }),
+      /* @__PURE__ */ u2(
+        TextField$1,
+        {
+          fullWidth: true,
+          label: "最大 Token 数",
+          type: "number",
+          value: settings.maxTokens,
+          onChange: (e2) => onUpdate({ maxTokens: parseInt(e2.target.value, 10) || 4096 })
+        }
+      ),
+      /* @__PURE__ */ u2(
+        TextField$1,
+        {
+          fullWidth: true,
+          label: "请求超时 (毫秒)",
+          type: "number",
+          value: settings.requestTimeoutMs,
+          onChange: (e2) => onUpdate({ requestTimeoutMs: parseInt(e2.target.value, 10) || 3e4 })
+        }
+      ),
+      /* @__PURE__ */ u2(Box$1, { children: [
+        /* @__PURE__ */ u2(
+          Button$1,
+          {
+            variant: "outlined",
+            onClick: onTestConnection,
+            disabled: testStatus === "testing" || !readiness.ready,
+            children: testStatus === "testing" ? "测试中..." : "测试连接"
+          }
+        ),
+        !readiness.ready && /* @__PURE__ */ u2(Alert, { severity: "info", sx: { mt: 1 }, children: readiness.message }),
+        testStatus !== "idle" && /* @__PURE__ */ u2(
+          Alert,
+          {
+            severity: testStatus === "success" ? "success" : testStatus === "error" ? "error" : "info",
+            sx: { mt: 1 },
+            children: testMessage
+          }
+        )
+      ] })
+    ] }) })
+  ] });
+}
+function AiPromptRulesSection({ settings, onUpdate, onInsertExample }) {
+  return /* @__PURE__ */ u2(Accordion, { defaultExpanded: true, children: [
+    /* @__PURE__ */ u2(AccordionSummary, { expandIcon: /* @__PURE__ */ u2(ExpandMoreIcon, {}), children: /* @__PURE__ */ u2(Typography$1, { variant: "subtitle1", children: "个性化规则（自定义提示词）" }) }),
+    /* @__PURE__ */ u2(AccordionDetails, { children: /* @__PURE__ */ u2(Stack$1, { spacing: 2, children: [
+      /* @__PURE__ */ u2(Alert, { severity: "info", children: '在这里定义您的个性化映射规则，告诉 AI 如何理解您的输入习惯。 例如：当您说"心情好"时应该用哪个 Block，"写文章"应该归类到哪个主题等。' }),
+      /* @__PURE__ */ u2(
+        TextField$1,
+        {
+          fullWidth: true,
+          multiline: true,
+          rows: 8,
+          label: "自定义提示词/规则",
+          placeholder: CUSTOM_PROMPT_EXAMPLES,
+          value: settings.customPrompt ?? "",
+          onChange: (e2) => onUpdate({ customPrompt: e2.target.value }),
+          helperText: "定义您的个性化规则，AI 会根据这些规则来理解您的输入"
+        }
+      ),
+      /* @__PURE__ */ u2(Box$1, { children: /* @__PURE__ */ u2(Button$1, { variant: "outlined", size: "small", onClick: onInsertExample, children: "插入示例规则" }) }),
+      /* @__PURE__ */ u2(Alert, { severity: "warning", children: [
+        "提示：规则越具体，AI 识别越准确。建议包含：",
+        /* @__PURE__ */ u2("ul", { style: { margin: "8px 0", paddingLeft: "20px" }, children: [
+          /* @__PURE__ */ u2("li", { children: "关键词与 Block 类型的对应关系" }),
+          /* @__PURE__ */ u2("li", { children: "特定词汇与主题的对应关系" }),
+          /* @__PURE__ */ u2("li", { children: "字段填写的默认规则" }),
+          /* @__PURE__ */ u2("li", { children: "不确定时的默认行为" })
+        ] })
+      ] })
+    ] }) })
+  ] });
+}
+function AiScopeSection({
+  settings,
+  blocks,
+  themes,
+  onUpdate,
+  onInitAllBlocks,
+  onToggleBlock
+}) {
+  return /* @__PURE__ */ u2(S, { children: [
+    /* @__PURE__ */ u2(Accordion, { children: [
+      /* @__PURE__ */ u2(AccordionSummary, { expandIcon: /* @__PURE__ */ u2(ExpandMoreIcon, {}), children: /* @__PURE__ */ u2(Typography$1, { variant: "subtitle1", children: "Block 参与范围" }) }),
+      /* @__PURE__ */ u2(AccordionDetails, { children: [
+        /* @__PURE__ */ u2(Typography$1, { variant: "body2", color: "text.secondary", sx: { mb: 2 }, children: "选择哪些 Block 模板参与 AI 识别。留空表示全部参与。" }),
+        /* @__PURE__ */ u2(Button$1, { variant: "outlined", size: "small", onClick: onInitAllBlocks, sx: { mb: 2 }, children: "初始化为全部 Block" }),
+        /* @__PURE__ */ u2(FormGroup, { children: blocks.map((block) => /* @__PURE__ */ u2(
+          FormControlLabel,
+          {
+            control: /* @__PURE__ */ u2(
+              Checkbox,
+              {
+                checked: (settings.enabledBlockIds ?? []).includes(block.id),
+                onChange: () => onToggleBlock(block.id)
+              }
+            ),
+            label: block.name
+          },
+          block.id
+        )) }),
+        blocks.length === 0 && /* @__PURE__ */ u2(Typography$1, { variant: "body2", color: "text.secondary", children: '暂无 Block 模板，请先在"快速输入"设置中创建。' })
+      ] })
+    ] }),
+    /* @__PURE__ */ u2(Accordion, { children: [
+      /* @__PURE__ */ u2(AccordionSummary, { expandIcon: /* @__PURE__ */ u2(ExpandMoreIcon, {}), children: /* @__PURE__ */ u2(Typography$1, { variant: "subtitle1", children: "默认主题设置" }) }),
+      /* @__PURE__ */ u2(AccordionDetails, { children: /* @__PURE__ */ u2(Stack$1, { spacing: 2, children: [
+        /* @__PURE__ */ u2(Typography$1, { variant: "body2", color: "text.secondary", children: "当 AI 无法从用户输入中识别出主题时，将使用此默认主题。建议设置一个常用的主题作为默认值。" }),
+        /* @__PURE__ */ u2(FormControl, { fullWidth: true, children: [
+          /* @__PURE__ */ u2(InputLabel, { children: "默认主题" }),
+          /* @__PURE__ */ u2(
+            Select,
+            {
+              value: settings.defaultThemeId ?? "",
+              label: "默认主题",
+              onChange: (e2) => onUpdate({ defaultThemeId: e2.target.value || void 0 }),
+              children: [
+                /* @__PURE__ */ u2(MenuItem, { value: "", children: /* @__PURE__ */ u2("em", { children: "不设置默认主题" }) }),
+                themes.map((theme2) => /* @__PURE__ */ u2(MenuItem, { value: theme2.path, children: theme2.path }, theme2.id))
+              ]
+            }
+          )
+        ] }),
+        themes.length === 0 && /* @__PURE__ */ u2(Alert, { severity: "info", children: '暂无主题，请先在"快速输入"设置中创建主题。' }),
+        /* @__PURE__ */ u2(Alert, { severity: "info", children: '提示：AI 会尝试从您的输入中识别主题关键词（如"英语"、"工作"等），并匹配到相应的主题路径。如果无法识别，则使用此默认主题。' })
+      ] }) })
+    ] })
+  ] });
+}
+function AiSettingsFooter({
+  hasChanges,
+  isSaving,
+  saveStatusMessage,
+  saveStatusSeverity,
+  onSave
+}) {
+  return /* @__PURE__ */ u2(Box$1, { sx: { display: "flex", flexDirection: "column", gap: 1, alignItems: "flex-end" }, children: [
+    saveStatusMessage && /* @__PURE__ */ u2(Alert, { severity: saveStatusSeverity, sx: { width: "100%" }, children: saveStatusMessage }),
+    /* @__PURE__ */ u2(Box$1, { sx: { display: "flex", gap: 2, justifyContent: "flex-end", alignItems: "center" }, children: [
+      hasChanges && /* @__PURE__ */ u2(Chip, { label: "有未保存的更改", color: "warning", size: "small" }),
+      /* @__PURE__ */ u2(Button$1, { variant: "contained", onClick: onSave, disabled: !hasChanges || isSaving, children: isSaving ? "保存中..." : "保存设置" })
+    ] })
+  ] });
+}
+function getAiSettingsReadiness(settings) {
+  const missingFields = [];
+  if (!settings.apiEndpoint?.trim()) missingFields.push("API 端点");
+  if (!settings.apiKey?.trim()) missingFields.push("API 密钥");
+  if (!settings.model?.trim()) missingFields.push("模型名称");
+  if (missingFields.length === 0) {
+    return {
+      ready: true,
+      missingFields,
+      message: "AI 配置已具备最小可用条件，可以测试连接。"
+    };
+  }
+  return {
+    ready: false,
+    missingFields,
+    message: `AI 还不能使用：请先填写 ${missingFields.join("、")}。`
+  };
+}
+function getApiKeyPersistenceMessage(settings) {
+  if (settings.persistApiKey) {
+    return "API 密钥会随插件设置明文保存；如果开启 Obsidian Sync 或第三方同步，也可能被同步。";
+  }
+  return "API 密钥只保留在当前设置页内存中；保存设置时不会写入插件数据。关闭或重载 Obsidian 后需要重新输入。";
+}
+function getErrorMessage(error) {
+  if (error instanceof Error) return error.message;
+  return String(error);
+}
+function getTestConnectionErrorMessage(error) {
+  if (error instanceof Error && error.name === "AbortError") {
+    return "请求已取消或超时，请检查网络、端点和超时设置。";
+  }
+  return getErrorMessage(error);
+}
 function AiSettings(_props) {
   const useCases = useUseCases();
   const aiSettings = useSelector(selectAiSettings) ?? DEFAULT_AI_SETTINGS;
-  const blocks = useSelector(selectInputSettings)?.blocks ?? [];
-  const themes = useSelector(selectInputSettings)?.themes ?? [];
+  const inputSettings = useSelector(selectInputSettings);
+  const blocks = inputSettings?.blocks ?? [];
+  const themes = inputSettings?.themes ?? [];
   const [localSettings, setLocalSettings] = d(aiSettings);
   const [testStatus, setTestStatus] = d("idle");
   const [testMessage, setTestMessage] = d("");
+  const [isSaving, setIsSaving] = d(false);
+  const [saveStatusMessage, setSaveStatusMessage] = d("");
+  const [saveStatusSeverity, setSaveStatusSeverity] = d("info");
   const isMountedRef = useIsMounted();
   const takeLatestRef = A$1(createTakeLatest());
   y(() => {
@@ -67254,15 +68143,36 @@ function AiSettings(_props) {
     httpClientRef.current = new AiHttpClient();
   }
   const updateLocal = (updates) => {
+    setSaveStatusMessage("");
     setLocalSettings((prev2) => ({ ...prev2, ...updates }));
   };
   const handleSave = async () => {
-    await useCases.settings.updateAiSettings(localSettings);
+    setIsSaving(true);
+    setSaveStatusMessage("正在保存 AI 设置...");
+    setSaveStatusSeverity("info");
+    try {
+      await useCases.settings.updateAiSettings(localSettings);
+      if (isMountedRef.current) {
+        setSaveStatusSeverity("success");
+        setSaveStatusMessage("AI 设置已保存。");
+      }
+    } catch (error) {
+      if (isMountedRef.current) {
+        setSaveStatusSeverity("error");
+        setSaveStatusMessage(`保存失败：${getErrorMessage(error)}`);
+      }
+    } finally {
+      if (isMountedRef.current) {
+        setIsSaving(false);
+      }
+    }
   };
+  const readiness = T$1(() => getAiSettingsReadiness(localSettings), [localSettings]);
+  const apiKeyPersistenceMessage = T$1(() => getApiKeyPersistenceMessage(localSettings), [localSettings]);
   const handleTestConnection = async () => {
-    if (!localSettings.apiEndpoint || !localSettings.apiKey || !localSettings.model) {
+    if (!readiness.ready) {
       setTestStatus("error");
-      setTestMessage("请先填写 API 端点、密钥和模型名称");
+      setTestMessage(readiness.message);
       return;
     }
     if (isMountedRef.current) {
@@ -67289,11 +68199,11 @@ function AiSettings(_props) {
         setTestStatus("success");
         setTestMessage("连接成功！API 配置正确。");
       }
-    } catch (e2) {
-      if (e2 instanceof CancelledError) return;
+    } catch (error) {
+      if (error instanceof CancelledError) return;
       if (isMountedRef.current) {
         setTestStatus("error");
-        setTestMessage(`连接失败: ${e2.message || e2}`);
+        setTestMessage(`连接失败: ${getTestConnectionErrorMessage(error)}`);
       }
     }
   };
@@ -67302,11 +68212,9 @@ function AiSettings(_props) {
   };
   const toggleBlock = (blockId) => {
     const current2 = localSettings.enabledBlockIds ?? [];
-    if (current2.includes(blockId)) {
-      updateLocal({ enabledBlockIds: current2.filter((id) => id !== blockId) });
-    } else {
-      updateLocal({ enabledBlockIds: [...current2, blockId] });
-    }
+    updateLocal({
+      enabledBlockIds: current2.includes(blockId) ? current2.filter((id) => id !== blockId) : [...current2, blockId]
+    });
   };
   const handleInsertExample = () => {
     updateLocal({ customPrompt: CUSTOM_PROMPT_EXAMPLES });
@@ -67328,295 +68236,54 @@ function AiSettings(_props) {
         label: "启用 AI 快速记录"
       }
     ),
-    /* @__PURE__ */ u2(Divider$1, { sx: { my: 3 } }),
-    /* @__PURE__ */ u2(Accordion, { defaultExpanded: true, children: [
-      /* @__PURE__ */ u2(AccordionSummary, { expandIcon: /* @__PURE__ */ u2(ExpandMoreIcon, {}), children: /* @__PURE__ */ u2(Typography$1, { variant: "subtitle1", children: "API 配置" }) }),
-      /* @__PURE__ */ u2(AccordionDetails, { children: /* @__PURE__ */ u2(Stack$1, { spacing: 2, children: [
-        /* @__PURE__ */ u2(
-          TextField$1,
-          {
-            fullWidth: true,
-            label: "API 端点 (baseURL)",
-            placeholder: "https://api.openai.com/v1",
-            value: localSettings.apiEndpoint,
-            onChange: (e2) => updateLocal({ apiEndpoint: e2.target.value }),
-            helperText: "OpenAI 兼容的 API 端点，例如 https://api.openai.com/v1"
-          }
-        ),
-        /* @__PURE__ */ u2(
-          TextField$1,
-          {
-            fullWidth: true,
-            label: "API 密钥",
-            type: "password",
-            value: localSettings.apiKey,
-            onChange: (e2) => updateLocal({ apiKey: e2.target.value }),
-            helperText: "您的 API 密钥（若选择保存到设置，将以明文存储在插件数据中）"
-          }
-        ),
-        /* @__PURE__ */ u2(
-          FormControlLabel,
-          {
-            control: /* @__PURE__ */ u2(
-              Switch,
-              {
-                checked: localSettings.persistApiKey !== false,
-                onChange: (e2) => updateLocal({ persistApiKey: e2.target.checked })
-              }
-            ),
-            label: "保存 API 密钥到设置（不推荐：明文存储）"
-          }
-        ),
-        /* @__PURE__ */ u2(
-          TextField$1,
-          {
-            fullWidth: true,
-            label: "模型名称",
-            placeholder: "gpt-4",
-            value: localSettings.model,
-            onChange: (e2) => updateLocal({ model: e2.target.value }),
-            helperText: "要使用的模型，例如 gpt-4, gpt-3.5-turbo"
-          }
-        ),
-        /* @__PURE__ */ u2(Box$1, { children: [
-          /* @__PURE__ */ u2(Typography$1, { gutterBottom: true, children: [
-            "温度 (Temperature): ",
-            localSettings.temperature
-          ] }),
-          /* @__PURE__ */ u2(
-            Slider,
-            {
-              value: localSettings.temperature,
-              onChange: (_2, value) => updateLocal({ temperature: value }),
-              min: 0,
-              max: 2,
-              step: 0.1,
-              marks: [
-                { value: 0, label: "0" },
-                { value: 1, label: "1" },
-                { value: 2, label: "2" }
-              ]
-            }
-          )
-        ] }),
-        /* @__PURE__ */ u2(
-          TextField$1,
-          {
-            fullWidth: true,
-            label: "最大 Token 数",
-            type: "number",
-            value: localSettings.maxTokens,
-            onChange: (e2) => updateLocal({ maxTokens: parseInt(e2.target.value) || 4096 })
-          }
-        ),
-        /* @__PURE__ */ u2(
-          TextField$1,
-          {
-            fullWidth: true,
-            label: "请求超时 (毫秒)",
-            type: "number",
-            value: localSettings.requestTimeoutMs,
-            onChange: (e2) => updateLocal({ requestTimeoutMs: parseInt(e2.target.value) || 3e4 })
-          }
-        ),
-        /* @__PURE__ */ u2(Box$1, { children: [
-          /* @__PURE__ */ u2(
-            Button$1,
-            {
-              variant: "outlined",
-              onClick: handleTestConnection,
-              disabled: testStatus === "testing",
-              children: testStatus === "testing" ? "测试中..." : "测试连接"
-            }
-          ),
-          testStatus !== "idle" && /* @__PURE__ */ u2(
-            Alert,
-            {
-              severity: testStatus === "success" ? "success" : testStatus === "error" ? "error" : "info",
-              sx: { mt: 1 },
-              children: testMessage
-            }
-          )
-        ] })
-      ] }) })
-    ] }),
-    /* @__PURE__ */ u2(Accordion, { defaultExpanded: true, children: [
-      /* @__PURE__ */ u2(AccordionSummary, { expandIcon: /* @__PURE__ */ u2(ExpandMoreIcon, {}), children: /* @__PURE__ */ u2(Typography$1, { variant: "subtitle1", children: "个性化规则（自定义提示词）" }) }),
-      /* @__PURE__ */ u2(AccordionDetails, { children: /* @__PURE__ */ u2(Stack$1, { spacing: 2, children: [
-        /* @__PURE__ */ u2(Alert, { severity: "info", children: '在这里定义您的个性化映射规则，告诉 AI 如何理解您的输入习惯。 例如：当您说"心情好"时应该用哪个 Block，"写文章"应该归类到哪个主题等。' }),
-        /* @__PURE__ */ u2(
-          TextField$1,
-          {
-            fullWidth: true,
-            multiline: true,
-            rows: 8,
-            label: "自定义提示词/规则",
-            placeholder: CUSTOM_PROMPT_EXAMPLES,
-            value: localSettings.customPrompt ?? "",
-            onChange: (e2) => updateLocal({ customPrompt: e2.target.value }),
-            helperText: "定义您的个性化规则，AI 会根据这些规则来理解您的输入"
-          }
-        ),
-        /* @__PURE__ */ u2(Box$1, { children: /* @__PURE__ */ u2(
-          Button$1,
-          {
-            variant: "outlined",
-            size: "small",
-            onClick: handleInsertExample,
-            children: "插入示例规则"
-          }
-        ) }),
-        /* @__PURE__ */ u2(Alert, { severity: "warning", children: [
-          "提示：规则越具体，AI 识别越准确。建议包含：",
-          /* @__PURE__ */ u2("ul", { style: { margin: "8px 0", paddingLeft: "20px" }, children: [
-            /* @__PURE__ */ u2("li", { children: "关键词与 Block 类型的对应关系" }),
-            /* @__PURE__ */ u2("li", { children: "特定词汇与主题的对应关系" }),
-            /* @__PURE__ */ u2("li", { children: "字段填写的默认规则" }),
-            /* @__PURE__ */ u2("li", { children: "不确定时的默认行为" })
-          ] })
-        ] })
-      ] }) })
-    ] }),
-    /* @__PURE__ */ u2(Accordion, { children: [
-      /* @__PURE__ */ u2(AccordionSummary, { expandIcon: /* @__PURE__ */ u2(ExpandMoreIcon, {}), children: /* @__PURE__ */ u2(Typography$1, { variant: "subtitle1", children: "Block 参与范围" }) }),
-      /* @__PURE__ */ u2(AccordionDetails, { children: [
-        /* @__PURE__ */ u2(Typography$1, { variant: "body2", color: "text.secondary", sx: { mb: 2 }, children: "选择哪些 Block 模板参与 AI 识别。留空表示全部参与。" }),
-        /* @__PURE__ */ u2(
-          Button$1,
-          {
-            variant: "outlined",
-            size: "small",
-            onClick: handleInitAllBlocks,
-            sx: { mb: 2 },
-            children: "初始化为全部 Block"
-          }
-        ),
-        /* @__PURE__ */ u2(FormGroup, { children: blocks.map((block) => /* @__PURE__ */ u2(
-          FormControlLabel,
-          {
-            control: /* @__PURE__ */ u2(
-              Checkbox,
-              {
-                checked: (localSettings.enabledBlockIds ?? []).includes(block.id),
-                onChange: () => toggleBlock(block.id)
-              }
-            ),
-            label: block.name
-          },
-          block.id
-        )) }),
-        blocks.length === 0 && /* @__PURE__ */ u2(Typography$1, { variant: "body2", color: "text.secondary", children: '暂无 Block 模板，请先在"快速输入"设置中创建。' })
-      ] })
-    ] }),
-    /* @__PURE__ */ u2(Accordion, { children: [
-      /* @__PURE__ */ u2(AccordionSummary, { expandIcon: /* @__PURE__ */ u2(ExpandMoreIcon, {}), children: /* @__PURE__ */ u2(Typography$1, { variant: "subtitle1", children: "默认主题设置" }) }),
-      /* @__PURE__ */ u2(AccordionDetails, { children: /* @__PURE__ */ u2(Stack$1, { spacing: 2, children: [
-        /* @__PURE__ */ u2(Typography$1, { variant: "body2", color: "text.secondary", children: "当 AI 无法从用户输入中识别出主题时，将使用此默认主题。 建议设置一个常用的主题作为默认值。" }),
-        /* @__PURE__ */ u2(FormControl, { fullWidth: true, children: [
-          /* @__PURE__ */ u2(InputLabel, { children: "默认主题" }),
-          /* @__PURE__ */ u2(
-            Select,
-            {
-              value: localSettings.defaultThemeId ?? "",
-              label: "默认主题",
-              onChange: (e2) => updateLocal({ defaultThemeId: e2.target.value || void 0 }),
-              children: [
-                /* @__PURE__ */ u2(MenuItem, { value: "", children: /* @__PURE__ */ u2("em", { children: "不设置默认主题" }) }),
-                themes.map((theme2) => /* @__PURE__ */ u2(MenuItem, { value: theme2.path, children: theme2.path }, theme2.id))
-              ]
-            }
-          )
-        ] }),
-        themes.length === 0 && /* @__PURE__ */ u2(Alert, { severity: "info", children: '暂无主题，请先在"快速输入"设置中创建主题。' }),
-        /* @__PURE__ */ u2(Alert, { severity: "info", children: '提示：AI 会尝试从您的输入中识别主题关键词（如"英语"、"工作"等）， 并匹配到相应的主题路径。如果无法识别，则使用此默认主题。' })
-      ] }) })
-    ] }),
-    /* @__PURE__ */ u2(Accordion, { children: [
-      /* @__PURE__ */ u2(AccordionSummary, { expandIcon: /* @__PURE__ */ u2(ExpandMoreIcon, {}), children: /* @__PURE__ */ u2(Typography$1, { variant: "subtitle1", children: "多结果设置" }) }),
-      /* @__PURE__ */ u2(AccordionDetails, { children: /* @__PURE__ */ u2(Stack$1, { spacing: 2, children: [
-        /* @__PURE__ */ u2(
-          FormControlLabel,
-          {
-            control: /* @__PURE__ */ u2(
-              Switch,
-              {
-                checked: localSettings.allowMultipleResults,
-                onChange: (e2) => updateLocal({ allowMultipleResults: e2.target.checked })
-              }
-            ),
-            label: "允许多条结果"
-          }
-        ),
-        /* @__PURE__ */ u2(
-          TextField$1,
-          {
-            fullWidth: true,
-            label: "最大结果数量",
-            type: "number",
-            value: localSettings.maxResults,
-            onChange: (e2) => updateLocal({ maxResults: parseInt(e2.target.value) || 5 }),
-            disabled: !localSettings.allowMultipleResults
-          }
-        ),
-        /* @__PURE__ */ u2(FormControl, { fullWidth: true, children: [
-          /* @__PURE__ */ u2(InputLabel, { children: "确认模式" }),
-          /* @__PURE__ */ u2(
-            Select,
-            {
-              value: localSettings.confirmMode,
-              label: "确认模式",
-              onChange: (e2) => updateLocal({ confirmMode: e2.target.value }),
-              children: [
-                /* @__PURE__ */ u2(MenuItem, { value: "single", children: "单条确认" }),
-                /* @__PURE__ */ u2(MenuItem, { value: "batch", children: "批量确认" })
-              ]
-            }
-          )
-        ] })
-      ] }) })
-    ] }),
-    /* @__PURE__ */ u2(Accordion, { children: [
-      /* @__PURE__ */ u2(AccordionSummary, { expandIcon: /* @__PURE__ */ u2(ExpandMoreIcon, {}), children: /* @__PURE__ */ u2(Typography$1, { variant: "subtitle1", children: "性能设置" }) }),
-      /* @__PURE__ */ u2(AccordionDetails, { children: /* @__PURE__ */ u2(Stack$1, { spacing: 2, children: [
-        /* @__PURE__ */ u2(
-          FormControlLabel,
-          {
-            control: /* @__PURE__ */ u2(
-              Switch,
-              {
-                checked: localSettings.preloadConfigOnStartup,
-                onChange: (e2) => updateLocal({ preloadConfigOnStartup: e2.target.checked })
-              }
-            ),
-            label: "启动时预加载配置"
-          }
-        ),
-        /* @__PURE__ */ u2(
-          TextField$1,
-          {
-            fullWidth: true,
-            label: "配置缓存 TTL (秒)",
-            type: "number",
-            value: localSettings.configCacheTTLSeconds,
-            onChange: (e2) => updateLocal({ configCacheTTLSeconds: parseInt(e2.target.value) || 300 }),
-            helperText: "配置快照的缓存时间，避免每次调用都重新构建"
-          }
-        )
-      ] }) })
+    localSettings.enabled && !readiness.ready && /* @__PURE__ */ u2(Alert, { severity: "warning", sx: { mt: 1 }, children: [
+      readiness.message,
+      " 开启开关不会立即发起请求，但实际使用前需要补齐配置。"
     ] }),
     /* @__PURE__ */ u2(Divider$1, { sx: { my: 3 } }),
-    /* @__PURE__ */ u2(Box$1, { sx: { display: "flex", gap: 2, justifyContent: "flex-end" }, children: [
-      hasChanges && /* @__PURE__ */ u2(Chip, { label: "有未保存的更改", color: "warning", size: "small" }),
-      /* @__PURE__ */ u2(
-        Button$1,
-        {
-          variant: "contained",
-          onClick: handleSave,
-          disabled: !hasChanges,
-          children: "保存设置"
-        }
-      )
-    ] })
+    /* @__PURE__ */ u2(
+      AiApiConfigSection,
+      {
+        settings: localSettings,
+        onUpdate: updateLocal,
+        readiness,
+        apiKeyPersistenceMessage,
+        testStatus,
+        testMessage,
+        onTestConnection: handleTestConnection
+      }
+    ),
+    /* @__PURE__ */ u2(
+      AiPromptRulesSection,
+      {
+        settings: localSettings,
+        onUpdate: updateLocal,
+        onInsertExample: handleInsertExample
+      }
+    ),
+    /* @__PURE__ */ u2(
+      AiScopeSection,
+      {
+        settings: localSettings,
+        onUpdate: updateLocal,
+        blocks,
+        themes,
+        onInitAllBlocks: handleInitAllBlocks,
+        onToggleBlock: toggleBlock
+      }
+    ),
+    /* @__PURE__ */ u2(AiAdvancedSettingsSection, { settings: localSettings, onUpdate: updateLocal }),
+    /* @__PURE__ */ u2(Divider$1, { sx: { my: 3 } }),
+    /* @__PURE__ */ u2(
+      AiSettingsFooter,
+      {
+        hasChanges,
+        isSaving,
+        saveStatusMessage,
+        saveStatusSeverity,
+        onSave: handleSave
+      }
+    )
   ] });
 }
 function a11yProps(index) {
@@ -67669,6 +68336,9 @@ class VaultWatcher {
   dataStore;
   events;
   unsubscribers = [];
+  pendingScanTimers = /* @__PURE__ */ new Map();
+  disposed = false;
+  scanDebounceMs = 250;
   constructor(events2, dataStore) {
     this.events = events2;
     this.dataStore = dataStore;
@@ -67677,24 +68347,53 @@ class VaultWatcher {
   registerEvents() {
     this.unsubscribers.push(
       this.events.onMarkdownCreateOrModify((path) => {
-        this.dataStore.scanFileByPath(path).then(() => this.dataStore.notifyChange());
+        this.enqueueScan(path, "create-or-modify");
       })
     );
     this.unsubscribers.push(
       this.events.onMarkdownDelete((path) => {
+        this.cancelPendingScan(path);
         this.dataStore.removeFileItems(path);
         this.dataStore.notifyChange();
       })
     );
     this.unsubscribers.push(
       this.events.onMarkdownRename((newPath, oldPath) => {
+        this.cancelPendingScan(oldPath);
         this.dataStore.removeFileItems(oldPath);
-        this.dataStore.scanFileByPath(newPath).then(() => this.dataStore.notifyChange());
+        this.enqueueScan(newPath, "rename");
       })
     );
   }
+  enqueueScan(path, reason) {
+    if (this.disposed) return;
+    this.cancelPendingScan(path);
+    const timer = setTimeout(() => {
+      this.pendingScanTimers.delete(path);
+      if (this.disposed) return;
+      this.dataStore.scanFileByPath(path).then(() => {
+        if (!this.disposed) {
+          this.dataStore.notifyChange();
+        }
+      }).catch((error) => {
+        devWarn("[VaultWatcher] Markdown 变更扫描失败", { path, reason, error });
+      });
+    }, this.scanDebounceMs);
+    this.pendingScanTimers.set(path, timer);
+  }
+  cancelPendingScan(path) {
+    const timer = this.pendingScanTimers.get(path);
+    if (!timer) return;
+    clearTimeout(timer);
+    this.pendingScanTimers.delete(path);
+  }
   /** 可选：手动释放（目前 ObsidianEventsPort 也会在 unload 自动解绑） */
   dispose() {
+    this.disposed = true;
+    for (const timer of this.pendingScanTimers.values()) {
+      clearTimeout(timer);
+    }
+    this.pendingScanTimers.clear();
     const subs = this.unsubscribers;
     this.unsubscribers = [];
     for (const unsub of subs) {
@@ -67846,12 +68545,6 @@ function useViewData({
   }, [allItems, layoutFilters, filters, sort, dateRange, keyword, layoutView, isOverviewMode, useFieldGranularity, sourceName, viewInstance]);
   return processedItems;
 }
-const ArrowBackIosNewIcon = createSvgIcon(/* @__PURE__ */ u2("path", {
-  d: "M17.77 3.77 16 2 6 12l10 10 1.77-1.77L9.54 12z"
-}));
-const ArrowForwardIosIcon = createSvgIcon(/* @__PURE__ */ u2("path", {
-  d: "M6.23 20.23 8 22l10-10L8 2 6.23 3.77 14.46 12z"
-}));
 const PERIOD_OPTIONS = ["年", "季", "月", "周", "天"].map((v2) => ({ value: v2, label: v2 }));
 const DISPLAY_MODE_OPTIONS = [
   { value: "list", label: "列表" },
@@ -70478,9 +71171,6 @@ let ObsidianUiPort = class {
 ObsidianUiPort = __decorateClass$3([
   singleton()
 ], ObsidianUiPort);
-const ChatIcon = createSvgIcon(/* @__PURE__ */ u2("path", {
-  d: "M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2M6 9h12v2H6zm8 5H6v-2h8zm4-6H6V6h12z"
-}));
 function FiltersBar({
   enableRetrieval,
   setEnableRetrieval,
@@ -70623,9 +71313,6 @@ function SessionList({
     }
   );
 }
-const CheckIcon = createSvgIcon(/* @__PURE__ */ u2("path", {
-  d: "M9 16.17 4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"
-}));
 function MessageBubble({ message }) {
   const isUser = message.role === "user";
   const isSystem = message.role === "system";
@@ -70791,9 +71478,6 @@ function ChatMessages({
     /* @__PURE__ */ u2("div", { ref: messagesEndRef })
   ] });
 }
-const SendIcon = createSvgIcon(/* @__PURE__ */ u2("path", {
-  d: "M2.01 21 23 12 2.01 3 2 10l15 2-15 2z"
-}));
 function ChatComposer({
   inputText,
   setInputText,
@@ -71495,6 +72179,126 @@ ObsidianFileStatPort = __decorateClass([
   singleton(),
   __decorateParam(0, inject(AppToken))
 ], ObsidianFileStatPort);
+function createAbortError() {
+  try {
+    return new DOMException("The operation was aborted.", "AbortError");
+  } catch {
+    const error = new Error("The operation was aborted.");
+    error.name = "AbortError";
+    return error;
+  }
+}
+function throwIfAborted(signal) {
+  if (signal?.aborted) throw createAbortError();
+}
+function raceWithAbort(promise, signal) {
+  if (!signal) return promise;
+  throwIfAborted(signal);
+  return new Promise((resolve, reject) => {
+    let settled = false;
+    const cleanup2 = () => {
+      try {
+        signal.removeEventListener("abort", onAbort);
+      } catch {
+      }
+    };
+    const onAbort = () => {
+      if (settled) return;
+      settled = true;
+      cleanup2();
+      reject(createAbortError());
+    };
+    try {
+      signal.addEventListener("abort", onAbort, { once: true });
+    } catch {
+    }
+    promise.then(
+      (value) => {
+        if (settled) return;
+        settled = true;
+        cleanup2();
+        resolve(value);
+      },
+      (error) => {
+        if (settled) return;
+        settled = true;
+        cleanup2();
+        reject(error);
+      }
+    );
+  });
+}
+function normalizeRequestHeaders(headers) {
+  if (!headers) return {};
+  const result = {};
+  if (typeof Headers !== "undefined" && headers instanceof Headers) {
+    headers.forEach((value, key) => {
+      result[key] = value;
+    });
+    return result;
+  }
+  if (Array.isArray(headers)) {
+    for (const [key, value] of headers) result[key] = value;
+    return result;
+  }
+  for (const [key, value] of Object.entries(headers)) {
+    result[key] = String(value);
+  }
+  return result;
+}
+function normalizeRequestBody(body2) {
+  if (body2 == null) return void 0;
+  if (typeof body2 === "string") return body2;
+  if (typeof ArrayBuffer !== "undefined" && body2 instanceof ArrayBuffer) return body2;
+  if (typeof URLSearchParams !== "undefined" && body2 instanceof URLSearchParams) return body2.toString();
+  return String(body2);
+}
+function makeHeadersLike(headers) {
+  const lookup2 = /* @__PURE__ */ new Map();
+  for (const [key, value] of Object.entries(headers ?? {})) {
+    lookup2.set(key.toLowerCase(), String(value));
+  }
+  return {
+    get(name) {
+      return lookup2.get(name.toLowerCase()) ?? null;
+    }
+  };
+}
+function asAbortSignal(signal) {
+  if (signal && typeof signal.aborted === "boolean") return signal;
+  return void 0;
+}
+class ObsidianAiHttpTransport {
+  async request(url, init) {
+    const signal = asAbortSignal(init.signal);
+    throwIfAborted(signal);
+    const response = await raceWithAbort(
+      obsidian.requestUrl({
+        url,
+        method: String(init.method ?? "GET"),
+        headers: normalizeRequestHeaders(init.headers),
+        body: normalizeRequestBody(init.body)
+      }),
+      signal
+    );
+    const status = response.status ?? 200;
+    const text2 = typeof response.text === "string" ? response.text : "";
+    const headers = makeHeadersLike(response.headers);
+    const statusText = typeof response.statusText === "string" ? response.statusText : "";
+    return {
+      ok: status >= 200 && status < 300,
+      status,
+      statusText,
+      headers,
+      text: async () => text2,
+      json: async () => {
+        if (response.json != null) return response.json;
+        if (!text2) return null;
+        return JSON.parse(text2);
+      }
+    };
+  }
+}
 ensureReflectMetadata();
 devLog(`[ThinkPlugin] main.ts 已加载，版本时间: ${(/* @__PURE__ */ new Date()).toLocaleTimeString()}`);
 class ThinkPlugin extends obsidian.Plugin {
@@ -71512,6 +72316,7 @@ class ThinkPlugin extends obsidian.Plugin {
     const stopMeasure = startMeasure("ThinkPlugin.onload");
     await safeAsync(
       async () => {
+        setDefaultAiHttpTransportFactory(() => new ObsidianAiHttpTransport());
         devLog("[ThinkPlugin][BOOT] before loadSettings");
         const settings = await this.loadSettings();
         devLog("[ThinkPlugin][BOOT] after loadSettings", settings);
@@ -71600,6 +72405,7 @@ class ThinkPlugin extends obsidian.Plugin {
   }
   onunload() {
     this.serviceManager?.cleanup();
+    resetDefaultAiHttpTransportFactory();
     instance.clearInstances();
   }
   async loadSettings() {

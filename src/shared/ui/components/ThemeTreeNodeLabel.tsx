@@ -11,8 +11,7 @@
  */
 import { h, type ComponentChildren } from 'preact';
 import { Box, IconButton } from '@mui/material';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import ChevronRightIcon from '@mui/icons-material/ChevronRight';
+import { ChevronRightIcon, ExpandMoreIcon } from '@shared/ui/icons';
 
 // HACK: Cast MUI components to `any` to avoid Preact/React type conflicts.
 const AnyBox = Box as any;

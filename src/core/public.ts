@@ -52,6 +52,14 @@ export type {
 export * from './utils';
 export { buildRecordSubmitFeedbackPresentation } from './utils/recordSubmitFeedback';
 export {
+    buildRecordSubmitRecoveryPresentation,
+    getRecordRecoveryPaths,
+} from './utils/recordSubmitRecovery';
+export type {
+    BuildRecordSubmitRecoveryPresentationOptions,
+    RecordSubmitRecoveryPresentation,
+} from './utils/recordSubmitRecovery';
+export {
     addDisplayField,
     moveDisplayField,
     normalizeDisplayFields,

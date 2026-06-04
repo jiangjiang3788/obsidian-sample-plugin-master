@@ -1,9 +1,10 @@
 #!/usr/bin/env node
-import { existsSync, readdirSync, statSync } from 'node:fs';
+import { existsSync, readdirSync, statSync, readFileSync } from 'node:fs';
 import { join, relative } from 'node:path';
 
 const root = process.cwd();
-const packageDir = join(root, 'release', 'obsidian-sample-plugin');
+const manifest = JSON.parse(readFileSync(join(root, 'manifest.json'), 'utf8'));
+const packageDir = join(root, 'release', manifest.id);
 const allowedFiles = new Set(['manifest.json', 'main.js', 'styles.css']);
 const forbiddenTopLevel = new Set([
   'src', 'doc', 'docs', 'test', 'tests', 'scripts', 'reports', 'dist', 'node_modules', '.git', 'coverage'
@@ -29,7 +30,7 @@ function fail(message) {
 }
 
 if (!existsSync(packageDir)) {
-  fail('release/obsidian-sample-plugin does not exist. Run npm run package:release first.');
+  fail('release/<manifest.id> does not exist. Run npm run package:release first.');
 }
 
 const files = walk(packageDir).sort();

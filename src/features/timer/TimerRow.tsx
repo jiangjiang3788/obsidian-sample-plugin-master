@@ -2,18 +2,12 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
 import { useState, useEffect } from 'preact/hooks';
-import { Box, IconAction, Typography, Tooltip } from '@shared/public';
-import PlayArrowIcon from '@mui/icons-material/PlayArrow';
-import StopIcon from '@mui/icons-material/Stop';
-import PauseIcon from '@mui/icons-material/Pause';
-import EditIcon from '@mui/icons-material/Edit';
-import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
+import { Box, DeleteForeverIcon, EditIcon, IconAction, PauseIcon, PlayArrowIcon, StopIcon, Tooltip, Typography, createRecordGestureHandlers } from '@shared/public';
 import { DataStore } from '@core/public';
 import { TimerService } from '@features/timer/TimerService';
 import type { TimerState } from '@/app/public';
 import { formatSecondsToHHMMSS } from '@core/public';
 import { openEditFromItem } from '@/app/public';
-import { createRecordGestureHandlers } from '@shared/public';
 
 interface TimerRowProps {
     timer: TimerState;

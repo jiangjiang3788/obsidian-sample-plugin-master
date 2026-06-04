@@ -41,6 +41,35 @@ export interface ChatCompletionRequest {
     signal?: AbortSignal;
 }
 
+
+/**
+ * 可替换 HTTP 传输层。
+ * 默认实现仍使用 fetch；测试、Obsidian 移动端适配或自定义代理可以注入自己的 transport。
+ */
+export type AiHttpResponse = Pick<Response, 'ok' | 'status' | 'statusText' | 'headers' | 'text' | 'json'>;
+
+export interface AiHttpTransport {
+    request(url: string, init: RequestInit): Promise<AiHttpResponse>;
+}
+
+export type AiHttpTransportFactory = () => AiHttpTransport;
+
+class FetchAiHttpTransport implements AiHttpTransport {
+    request(url: string, init: RequestInit) {
+        return fetch(url, init);
+    }
+}
+
+let defaultTransportFactory: AiHttpTransportFactory = () => new FetchAiHttpTransport();
+
+export function setDefaultAiHttpTransportFactory(factory: AiHttpTransportFactory): void {
+    defaultTransportFactory = factory;
+}
+
+export function resetDefaultAiHttpTransportFactory(): void {
+    defaultTransportFactory = () => new FetchAiHttpTransport();
+}
+
 function nowMs(): number {
     try {
         return performance.now();
@@ -75,6 +104,8 @@ function getBodySize(body: string): number {
  * 实现 OpenAI-Compatible API 调用
  */
 export class AiHttpClient {
+    constructor(private readonly transport: AiHttpTransport = defaultTransportFactory()) {}
+
     /**
      * 发送聊天完成请求
      * 
@@ -137,7 +168,7 @@ export class AiHttpClient {
                 endpoint: summarizeUrl(req.baseURL),
                 path: '/chat/completions',
             });
-            const response = await fetch(url, {
+            const response = await this.transport.request(url, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -195,8 +226,8 @@ export class AiHttpClient {
                 contentChars: content.length,
             });
             return content;
-        } catch (error: any) {
-            if (error.name === 'AbortError') {
+        } catch (error: unknown) {
+            if (error instanceof Error && error.name === 'AbortError') {
                 devWarn(`[AiInput][${traceId}][HTTP] 请求被取消/超时，总耗时 ${elapsedMs(totalStart)}`, {
                     timeoutMs: req.timeoutMs,
                     externalAborted: !!req.signal?.aborted,
@@ -207,8 +238,8 @@ export class AiHttpClient {
                 throw error;
             }
             devWarn(`[AiInput][${traceId}][HTTP] 请求失败，总耗时 ${elapsedMs(totalStart)}`, {
-                message: error?.message ?? String(error),
-                name: error?.name,
+                message: error instanceof Error ? error.message : String(error),
+                name: error instanceof Error ? error.name : undefined,
             });
             throw error;
         } finally {

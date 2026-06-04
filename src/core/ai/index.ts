@@ -2,7 +2,7 @@
 // AI 模块导出
 
 export { AiConfigCache } from './AiConfigCache';
-export { AiHttpClient } from './AiHttpClient';
+export { AiHttpClient, setDefaultAiHttpTransportFactory, resetDefaultAiHttpTransportFactory } from './AiHttpClient';
 export { AiNaturalLanguageRecordParser } from './AiNaturalLanguageRecordParser';
 export { buildAiConfigSnapshot } from './AiConfigSnapshot';
 
@@ -13,7 +13,7 @@ export { AiChatService } from './AiChatService';
 
 export type { AiConfigSnapshot, AiBlockConfig, AiThemeConfig, AiBlockConfigField } from './AiConfigSnapshot';
 export type { INaturalLanguageRecordParser, ParseInput } from './INaturalLanguageRecordParser';
-export type { OpenAIChatMessage, ChatCompletionRequest } from './AiHttpClient';
+export type { OpenAIChatMessage, ChatCompletionRequest, AiHttpTransport, AiHttpResponse, AiHttpTransportFactory } from './AiHttpClient';
 
 // [新增] AI Chat 类型导出
 export type { ChatSession, ChatMessage, SessionFilters } from './ChatSessionStore';

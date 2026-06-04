@@ -4,8 +4,7 @@ import {
     Box,
     Button,
 } from '@shared/public';
-import EditIcon from '@mui/icons-material/Edit';
-import VisibilityIcon from '@mui/icons-material/Visibility';
+import { EditIcon, VisibilityIcon } from '@shared/public';
 
 interface ThemeToolbarProps {
   mode: 'view' | 'edit';

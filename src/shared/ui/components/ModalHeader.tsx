@@ -4,7 +4,7 @@ import { h } from 'preact';
 import type { ComponentChildren } from 'preact';
 
 import { Box } from '@mui/material';
-import CloseIcon from '@mui/icons-material/Close';
+import { CloseIcon } from '@shared/ui/icons';
 
 import { IconAction } from '@shared/public';
 

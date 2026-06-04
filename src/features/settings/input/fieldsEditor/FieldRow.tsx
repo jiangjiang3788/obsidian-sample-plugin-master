@@ -2,15 +2,9 @@
 /** @jsxImportSource preact */
 import { useEffect, useRef, useState } from "preact/hooks";
 import { Box, Button, Collapse, Divider, Stack, Typography } from "@mui/material";
-import AddIcon from "@mui/icons-material/Add";
-import DeleteIcon from "@mui/icons-material/Delete";
-import DragIndicatorIcon from "@mui/icons-material/DragIndicator";
-import ExpandLessIcon from "@mui/icons-material/ExpandLess";
-import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import { AddIcon, DeleteIcon, DragIndicatorIcon, ExpandLessIcon, ExpandMoreIcon, IconAction, SimpleSelect, logRenderDiagnostic } from '@shared/public';
 import type { TemplateField, TemplateFieldOption } from "@core/public";
 import { getCustomFieldNameWarning, getUserTemplateFieldTypeOptions, normalizeTemplateFieldType, templateFieldTypeSupportsDefaultValue, templateFieldTypeUsesOptions } from "@core/public";
-import { IconAction, SimpleSelect } from "@shared/public";
-import { logRenderDiagnostic } from "@shared/public";
 import { NativeTextarea, NativeTextInput } from "./nativeControls";
 import { OptionRow } from "./OptionRow";
 

@@ -3,9 +3,7 @@
 import { h } from 'preact';
 // [新增] 导入 IconButton, Tooltip 和图标
 import { IconButton, Tooltip } from '@mui/material';
-import IosShareIcon from '@mui/icons-material/IosShare';
-import SettingsIcon from '@mui/icons-material/Settings';
-import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
+import { DeleteOutlineIcon, IosShareIcon, SettingsIcon } from '@shared/public';
 
 // 解决 Preact 和 Material-UI 的类型兼容性问题
 const AnyIconButton = IconButton as any;

@@ -30,3 +30,4 @@ export * from './services';
 export * from './quickInput';
 // export * from './cache'; // 如未来有对外需求再打开
 export * from './recordInput';
+export * from './recordSnapshot';

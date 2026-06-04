@@ -4,8 +4,7 @@
  * Round3: 容器/视图分离；容器负责 selectors/useCases/dataStore 注入。
  */
 import { h } from 'preact';
-import { Box, Typography, TextField, Button, Stack } from '@shared/public';
-import AddIcon from '@mui/icons-material/Add';
+import { AddIcon, Box, Button, Stack, TextField, Typography } from '@shared/public';
 import { useState, useMemo } from 'preact/hooks';
 import { TemplateEditorModal } from '@features/settings/input/TemplateEditorModal';
 import type { BlockTemplate, ThemeDefinition, ThemeOverride } from '@core/public';

@@ -1,7 +1,7 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
 import { useState, useEffect, useMemo, useRef } from 'preact/hooks';
-import { useIsMounted, createTakeLatest, CancelledError } from '@shared/public';
+import { CancelledError, CheckCircleIcon, CloseIcon, DownloadIcon, ErrorIcon, ExpandMoreIcon, InfoIcon, RefreshIcon, WarningIcon, createTakeLatest, useIsMounted } from '@shared/public';
 import {
     Dialog,
     DialogTitle,
@@ -28,14 +28,6 @@ import {
     Card,
     CardContent
 } from '@mui/material';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import ErrorIcon from '@mui/icons-material/Error';
-import WarningIcon from '@mui/icons-material/Warning';
-import InfoIcon from '@mui/icons-material/Info';
-import RefreshIcon from '@mui/icons-material/Refresh';
-import DownloadIcon from '@mui/icons-material/Download';
-import CloseIcon from '@mui/icons-material/Close';
 import type { ScanResult, ScanConfig, ScanStats } from '@core/public';
 import type { ImportResult } from './importTypes';
 

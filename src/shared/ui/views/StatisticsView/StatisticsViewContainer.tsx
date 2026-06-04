@@ -22,8 +22,7 @@ import {
   getBasePath,
 } from '@core/public';
 import { IconButton, Tooltip } from '@mui/material';
-import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
-import IosShareIcon from '@mui/icons-material/IosShare';
+import { AddCircleOutlineIcon, IosShareIcon } from '@shared/ui/icons';
 import { FloatingPanel, openFloatingWidget, closeFloatingWidget, useUiPort, useSelector, selectCategoryColors, useUseCases } from '@/app/public';
 import { canCreateFromStatisticsCell } from '@/app/public';
 import type { TimerController } from '@/app/public';

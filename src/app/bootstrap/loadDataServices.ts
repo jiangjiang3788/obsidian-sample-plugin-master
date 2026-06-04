@@ -32,6 +32,21 @@ export async function loadDataServices(opts: {
     devLog(`[ThinkPlugin] 数据服务加载完成 (${duration.toFixed(2)}ms)`);
 }
 
+function scheduleBackgroundScan(task: () => void): void {
+    const g = globalThis as typeof globalThis & {
+        requestIdleCallback?: (callback: () => void, options?: { timeout?: number }) => number;
+    };
+
+    if (typeof g.requestIdleCallback === 'function') {
+        g.requestIdleCallback(task, { timeout: 1200 });
+        return;
+    }
+
+    // Obsidian desktop/mobile may not expose requestIdleCallback consistently.
+    // setTimeout keeps ServiceManager bootstrap from doing vault IO on the same turn.
+    setTimeout(task, 0);
+}
+
 function scanDataInBackground(opts: {
     services: ServiceManagerServices;
     getScanDataPromise: () => Promise<void> | null;
@@ -43,18 +58,20 @@ function scanDataInBackground(opts: {
     if (existing) return existing;
 
     const promise = new Promise<void>((resolve) => {
-        devTime('[ThinkPlugin] 数据扫描');
-        services
-            .dataStore!.initialScan()
-            .then(() => {
-                devTimeEnd('[ThinkPlugin] 数据扫描');
-                services.dataStore!.notifyChange();
-                resolve();
-            })
-            .catch((error) => {
-                devError('[ThinkPlugin] 数据扫描失败:', error);
-                resolve();
-            });
+        scheduleBackgroundScan(() => {
+            devTime('[ThinkPlugin] 数据扫描');
+            services
+                .dataStore!.initialScan()
+                .then(() => {
+                    devTimeEnd('[ThinkPlugin] 数据扫描');
+                    services.dataStore!.notifyChange();
+                    resolve();
+                })
+                .catch((error) => {
+                    devError('[ThinkPlugin] 数据扫描失败:', error);
+                    resolve();
+                });
+        });
     });
 
     setScanDataPromise(promise);

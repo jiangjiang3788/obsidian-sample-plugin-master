@@ -11,10 +11,7 @@
 import { h } from 'preact';
 import { useSelector, selectInputBlocks, useUseCases } from '@/app/public';
 import { Accordion, AccordionSummary, AccordionDetails, Box, Stack, Typography, Tooltip, Divider, TextField } from '@mui/material';
-import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
-import DeleteForeverOutlinedIcon from '@mui/icons-material/DeleteForeverOutlined';
-import ContentCopyIcon from '@mui/icons-material/ContentCopy';
-import DragIndicatorIcon from '@mui/icons-material/DragIndicator';
+import { AddCircleOutlineIcon, ContentCopyIcon, DeleteForeverOutlinedIcon, DragIndicatorIcon, IconAction } from '@shared/public';
 import { useState, useEffect } from 'preact/hooks';
 import { FieldsEditor } from './FieldsEditor';
 import type { BlockTemplate } from '@core/public';
@@ -23,7 +20,6 @@ import { DndContext, closestCenter } from '@dnd-kit/core';
 import { arrayMove, SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import type { UseCases } from '@/app/public';
-import { IconAction } from '@shared/public';
 
 // P1: 组件 props 接收 useCases
 function SortableBlockItem({ block, openId, setOpenId, handleDelete, handleDuplicate, useCases }: {

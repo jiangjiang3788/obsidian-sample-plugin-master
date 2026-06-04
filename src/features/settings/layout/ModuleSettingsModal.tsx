@@ -12,17 +12,12 @@ import { VIEW_OPTIONS, ViewName, getAllFields, getFieldLabel, getFieldCategoryLa
 import type { FilterRule, ViewInstance } from '@core/public';
 import { VIEW_EDITORS } from '@features/settings/viewEditors/registry';
 import { useSelector, makeSelectViewInstanceById, useDataStore, useUseCases } from '@/app/public';
-import { SimpleSelect } from '@shared/public';
+import { ExpandMoreIcon, FieldManager, FormField, Modal, SimpleSelect, useSaveHandler } from '@shared/public';
 import { RuleBuilder } from '@features/settings/viewEditors/RuleBuilder';
 import { CommonFilterPanel } from '@features/settings/viewEditors/CommonFilterPanel';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import { Modal } from '@shared/public';
 import { FloatingPanel } from '@/app/public';
 import { closeFloatingWidget, openFloatingWidget } from '@/app/public';
 
-import { FormField } from '@shared/public';
-import { FieldManager } from '@shared/public';
-import { useSaveHandler } from '@shared/public';
 
 
 

@@ -16,8 +16,7 @@ import {
   Divider,
   Typography,
 } from '@mui/material';
-import FilterListIcon from '@mui/icons-material/FilterList';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import { ExpandMoreIcon, FilterListIcon } from '@shared/public';
 import { DataStore, getAllFields, getFieldLabel } from '@core/public';
 import type { FilterRule, Item } from '@core/public';
 import { RuleBuilder } from '@features/settings/viewEditors/RuleBuilder';

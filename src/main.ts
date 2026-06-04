@@ -11,7 +11,7 @@ import { DataStore } from '@core/public';
 import { InputService } from '@core/public';
 import { ThinkSettings, DEFAULT_SETTINGS } from '@core/public';
 import type { UseCases } from '@/app/public';
-import { setupCoreContainer } from '@core/public';
+import { setupCoreContainer, setDefaultAiHttpTransportFactory, resetDefaultAiHttpTransportFactory } from '@core/public';
 import { VAULT_PORT_TOKEN, UI_PORT_TOKEN, METADATA_PORT_TOKEN, FILESTAT_PORT_TOKEN, MODAL_PORT_TOKEN, EVENTS_PORT_TOKEN, MESSAGE_RENDER_PORT_TOKEN } from '@core/public';
 import './styles/main.css';
 import { safeAsync } from '@shared/public';
@@ -35,6 +35,7 @@ import { ObsidianEventsPort } from '@/platform/ObsidianEventsPort';
 import { ObsidianMessageRenderPort } from '@/platform/ObsidianMessageRenderPort';
 import { ObsidianMetadataPort } from '@/platform/ObsidianMetadataPort';
 import { ObsidianFileStatPort } from '@/platform/ObsidianFileStatPort';
+import { ObsidianAiHttpTransport } from '@/platform/ObsidianAiHttpTransport';
 
 devLog(`[ThinkPlugin] main.ts 已加载，版本时间: ${new Date().toLocaleTimeString()}`);
 
@@ -56,6 +57,7 @@ export default class ThinkPlugin extends Plugin {
         await safeAsync(
             async () => {
                 // 1. 加载设置
+                setDefaultAiHttpTransportFactory(() => new ObsidianAiHttpTransport());
                 devLog('[ThinkPlugin][BOOT] before loadSettings');
                 const settings = await this.loadSettings();
 
@@ -172,6 +174,7 @@ export default class ThinkPlugin extends Plugin {
 
     onunload(): void {
         this.serviceManager?.cleanup();
+        resetDefaultAiHttpTransportFactory();
         container.clearInstances();
     }
 

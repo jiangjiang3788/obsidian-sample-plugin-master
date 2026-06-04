@@ -15,10 +15,9 @@
 import type { ComponentChildren, JSX } from 'preact';
 import { useEffect, useRef, useState, useCallback, useMemo } from 'preact/hooks';
 import { Paper } from '@mui/material';
-import DragIndicatorIcon from '@mui/icons-material/DragIndicator';
+import { DragIndicatorIcon, useLocalStorage } from '@shared/public';
 import { createPortal } from 'preact/compat';
 
-import { useLocalStorage } from '@shared/public';
 import {
     makeSelectFloatingWindowZIndex,
     selectFloatingWindowsActiveId,

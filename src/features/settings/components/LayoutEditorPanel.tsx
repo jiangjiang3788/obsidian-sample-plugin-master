@@ -9,7 +9,7 @@
 import { h } from 'preact';
 import { useMemo, useCallback, useState, useRef } from 'preact/hooks';
 import { useUseCases, useSelector } from '@/app/public';
-import { IconAction } from '@shared/public';
+import { ArrowBackIosNewIcon, ArrowForwardIosIcon, IconAction } from '@shared/public';
 import type { UseCases } from '@/app/public';
 import type { Layout, ViewInstance } from '@core/public';
 
@@ -26,8 +26,6 @@ import {
   Autocomplete,
   Box,
 } from '@mui/material';
-import ArrowBackIosNewIcon from '@mui/icons-material/ArrowBackIosNew';
-import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
 
 import { openModuleSettingsWidget } from '@features/settings/layout/ModuleSettingsModal';
 

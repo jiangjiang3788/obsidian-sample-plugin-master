@@ -2,7 +2,7 @@
 import { h } from 'preact';
 import { useState } from 'preact/hooks';
 import { Button, Tooltip } from '@mui/material';
-import ScannerIcon from '@mui/icons-material/Scanner';
+import { ScannerIcon } from '@shared/public';
 import { ThemeScanDialog } from './ThemeScanDialog';
 import type { ScanResult, ScanConfig } from '@core/public';
 import type { ImportResult } from './importTypes';

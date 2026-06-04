@@ -24,12 +24,9 @@ import {
   ListItemText,
   Typography,
 } from '@mui/material';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import RadioButtonUncheckedIcon from '@mui/icons-material/RadioButtonUnchecked';
-import DeleteIcon from '@mui/icons-material/Delete';
+import { CheckCircleIcon, DeleteIcon, ModalHeader, RadioButtonUncheckedIcon } from '@shared/public';
 
 import { QuickInputEditor } from '@/app/public';
-import { ModalHeader } from '@shared/public';
 
 
 function normalizeAiFieldValue(field: TemplateField, value: any): any {

@@ -12,11 +12,11 @@ import {
   normalizeImageValue,
 } from '@core/public';
 
-import { Box, Button, FormControl, Stack, Typography } from '@mui/material';
+import { Box, Button, Stack, Typography } from '@mui/material';
 
-import { SimpleSelect } from '@shared/public';
-
+import { QuickInputOptionPillGroup } from './QuickInputOptionPillGroup';
 import { SelectablePill } from './SelectablePill';
+import { normalizeQuickInputChoices } from './quickInputOptionSelection';
 
 export interface QuickInputEditorFieldsProps {
   getResourcePath: (path: string) => string;
@@ -112,46 +112,43 @@ export function QuickInputEditorFields({ getResourcePath, template, formData, de
     </Box>
   );
 
-  const renderOptionPills = (field: TemplateField) => {
-    const selectedOptionObject = formData[field.key];
+  const renderOptionPills = (field: TemplateField, label = field.label || field.key) => {
+    const choices = normalizeQuickInputChoices(field.options);
     return (
-      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-        {(field.options || []).map((opt: any, index: number) => {
-          const selected = selectedOptionObject?.value === opt.value && selectedOptionObject?.label === (opt.label || opt.value);
-          return (
-            <SelectablePill
-              key={index}
-              selected={selected}
-              onClick={() => handleUpdate(field.key, { value: opt.value, label: opt.label || opt.value }, true)}
-              title={opt.label || opt.value}
-            >
-              {opt.label || opt.value}
-            </SelectablePill>
-          );
-        })}
-      </Box>
+      <QuickInputOptionPillGroup
+        label={label}
+        choices={choices}
+        value={formData[field.key]}
+        compact={dense}
+        onSelect={(choice) => handleUpdate(field.key, choice, true)}
+      />
     );
   };
 
   const renderMultiOptionPills = (field: TemplateField) => {
     const selected = new Set(toArrayValue(formData[field.key]));
+    const choices = normalizeQuickInputChoices(field.options);
     return (
       <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-        {(field.options || []).map((opt: any, index: number) => {
-          const optValue = String(opt.value ?? opt.label ?? '');
-          const isSelected = selected.has(optValue);
+        {choices.map((choice) => {
+          const isSelected = selected.has(choice.value) || selected.has(choice.label);
           return (
             <SelectablePill
-              key={index}
+              key={`${choice.value}-${choice.label}`}
               selected={isSelected}
               onClick={() => {
                 const next = new Set(selected);
-                if (isSelected) next.delete(optValue); else next.add(optValue);
+                if (isSelected) {
+                  next.delete(choice.value);
+                  next.delete(choice.label);
+                } else {
+                  next.add(choice.value);
+                }
                 handleUpdate(field.key, Array.from(next));
               }}
-              title={opt.label || opt.value}
+              title={choice.label}
             >
-              {opt.label || opt.value}
+              {choice.label}
             </SelectablePill>
           );
         })}
@@ -291,23 +288,9 @@ export function QuickInputEditorFields({ getResourcePath, template, formData, de
       case 'select':
       case 'singleSelect':
       case 'path': {
-        const selectOptions = (field.options || []).map((opt: any) => ({ value: opt.value, label: opt.label || opt.value }));
-        const selectControl = selectOptions.length ? (
-          <FormControl fullWidth>
-            <SimpleSelect
-              value={value || ''}
-              options={selectOptions}
-              placeholder={`-- 选择 ${label} --`}
-              onChange={(selectedValue: string) => {
-                const selectedOption = field.options?.find((opt: any) => opt.value === selectedValue);
-                if (selectedOption) {
-                  handleUpdate(field.key, { value: selectedOption.value, label: selectedOption.label || selectedOption.value }, true);
-                } else {
-                  handleUpdate(field.key, selectedValue);
-                }
-              }}
-            />
-          </FormControl>
+        const choices = normalizeQuickInputChoices(field.options);
+        const singleSelectControl = choices.length ? (
+          renderOptionPills(field, label)
         ) : (
           <input
             className="think-native-input"
@@ -318,8 +301,8 @@ export function QuickInputEditorFields({ getResourcePath, template, formData, de
         );
 
         return isInlineRowField(field)
-          ? renderInlineRow(label, selectControl)
-          : renderStandardField(label, selectControl);
+          ? renderInlineRow(label, singleSelectControl)
+          : renderStandardField(label, singleSelectControl);
       }
 
       default: {

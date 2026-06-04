@@ -3,7 +3,7 @@
 import { h } from 'preact';
 import { useState, useRef, useEffect } from 'preact/hooks';
 import { Box, Typography } from '@mui/material';
-import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
+import { ArrowDropDownIcon } from '@shared/ui/icons';
 
 // 定义组件接收的props类型
 export type SimpleSelectOption = { value: string; label: string; group?: string; disabled?: boolean };

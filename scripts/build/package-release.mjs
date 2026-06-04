@@ -1,12 +1,13 @@
 #!/usr/bin/env node
-import { existsSync, mkdirSync, rmSync, copyFileSync, readdirSync, statSync } from 'node:fs';
+import { existsSync, mkdirSync, rmSync, copyFileSync, readdirSync, statSync, readFileSync } from 'node:fs';
 import { join, resolve, relative } from 'node:path';
 import { spawnSync } from 'node:child_process';
 
 const root = process.cwd();
 const releaseRoot = join(root, 'release');
-const packageDir = join(releaseRoot, 'obsidian-sample-plugin');
-const zipPath = join(releaseRoot, 'obsidian-sample-plugin-release.zip');
+const manifest = JSON.parse(readFileSync(join(root, 'manifest.json'), 'utf8'));
+const packageDir = join(releaseRoot, manifest.id);
+const zipPath = join(releaseRoot, `${manifest.id}-release.zip`);
 const allowedFiles = ['manifest.json', 'main.js', 'styles.css'];
 const forbiddenNames = new Set([
   'data.json',
@@ -83,7 +84,7 @@ for (const file of packagedFiles) {
   }
 }
 
-const zip = spawnSync('zip', ['-r', '-X', zipPath, 'obsidian-sample-plugin'], {
+const zip = spawnSync('zip', ['-r', '-X', zipPath, manifest.id], {
   cwd: releaseRoot,
   stdio: 'pipe',
   encoding: 'utf8',

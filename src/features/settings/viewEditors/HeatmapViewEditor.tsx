@@ -3,8 +3,7 @@
 import { h } from 'preact';
 import { Stack, Typography, Box, Button, FormControlLabel, Checkbox } from '@mui/material';
 import type { ViewEditorProps } from './registry';
-import { SimpleSelect } from '@shared/public';
-import { ListEditor } from '@shared/public';
+import { ListEditor, SimpleSelect } from '@shared/public';
 import { useSelector, selectInputBlocks, useUiPort } from '@/app/public';
 import { useMemo } from 'preact/hooks';
 import {

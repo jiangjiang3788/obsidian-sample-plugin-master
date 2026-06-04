@@ -60,20 +60,20 @@ export interface AiSettings {
 export const DEFAULT_AI_SETTINGS: AiSettings = {
   enabled: false,
   provider: 'openai_compat',
-  apiEndpoint: 'https://api.ricardochat.cn/v1',
-  // 安全：默认不提供任何 key，避免被意外持久化/同步
+  // 安全默认值：不预置任何第三方 endpoint / model / key，避免误请求或泄露。
+  apiEndpoint: '',
   apiKey: '',
-  // 需求：允许像其他设置一样落盘保存（用户可在设置页关闭）
-  persistApiKey: true,
-  model: '[渠道2]gemini-2.5-pro',
+  // 默认不把密钥写入插件数据；用户明确打开后才保存。
+  persistApiKey: false,
+  model: '',
   temperature: 0.7,
   maxTokens: 4096,
   requestTimeoutMs: 30000,
   enabledBlockIds: [],
   defaultThemeId: undefined,
-  allowMultipleResults: true,
-  maxResults: 5,
-  confirmMode: 'single',
+  allowMultipleResults: false,
+  maxResults: 10,
+  confirmMode: 'batch',
   preloadConfigOnStartup: false,
   configCacheTTLSeconds: 300,
   customPrompt: '',

@@ -2,8 +2,7 @@
 import { h } from 'preact';
 import type { RefObject } from 'preact';
 import { Box, Typography } from '@mui/material';
-import ChatIcon from '@mui/icons-material/Chat';
-import { ModalHeader } from '@shared/public';
+import { ChatIcon, ModalHeader } from '@shared/public';
 import type { ChatMessage, ChatSession, ThemeDefinition } from '@core/public';
 import { FiltersBar, type BlockDefinition } from './components/FiltersBar';
 import { SessionList } from './components/SessionList';

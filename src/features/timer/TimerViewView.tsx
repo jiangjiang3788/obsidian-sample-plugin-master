@@ -3,7 +3,7 @@
 
 import { FloatingPanel, QuickInputModal } from '@/app/public';
 import { Button, Stack, Tooltip } from '@mui/material';
-import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
+import { AddCircleOutlineIcon } from '@shared/public';
 import { TimerRow } from './TimerRow';
 import type { ActionService, DataStore } from '@core/public';
 import type { TimerService } from '@features/timer/TimerService';

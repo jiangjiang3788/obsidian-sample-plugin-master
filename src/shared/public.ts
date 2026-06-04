@@ -25,6 +25,7 @@ export * from './ui/muiCompat';
 export * from './ui/primitives';
 export * from './ui/utils/recordOrigin';
 export * from './ui/components';
+export * from './ui/icons';
 export * from './ui/composites/SimpleSelect';
 export * from './ui/composites/FormField';
 export * from './ui/composites/FieldManager';

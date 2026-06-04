@@ -1,9 +1,7 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
 import { Box, IconButton, Typography } from '@mui/material';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import ChevronRightIcon from '@mui/icons-material/ChevronRight';
-import ClearIcon from '@mui/icons-material/Clear';
+import { ChevronRightIcon, ClearIcon, ExpandMoreIcon } from '@shared/ui/icons';
 
 export interface ThemeTreeSelectTriggerProps {
     open: boolean;

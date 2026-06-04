@@ -2,8 +2,7 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
 import { useMemo } from 'preact/hooks';
-import { Box, Button, Stack, TextField, Typography } from '@shared/public';
-import { SimpleSelect } from '@shared/public';
+import { Box, Button, SimpleSelect, Stack, TextField, Typography } from '@shared/public';
 import {
     EVENT_TIMELINE_VIEW_DEFAULT_CONFIG,
     FULL_DATA_FIELD_KEY,

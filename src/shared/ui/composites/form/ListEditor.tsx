@@ -2,8 +2,7 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
 import { Stack, TextField, IconButton } from '@mui/material';
-import AddIcon from '@mui/icons-material/AddCircleOutline';
-import DeleteIcon from '@mui/icons-material/RemoveCircleOutline';
+import { AddIcon, DeleteIcon } from '@shared/ui/icons';
 import { replaceAt, removeAt, addAtEnd } from '@/shared/utils/immutableListOps';
 
 interface Props {

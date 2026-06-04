@@ -21,8 +21,8 @@ import { isDisposed } from '@/app/runtime/lifecycleState';
  */
 export function registerSettingsPersistence(plugin: ThinkPlugin): void {
     // 持久化前对设置做可选脱敏（AI apiKey）。
-    // - 默认允许落盘（用户需求：重启后无需重新填写）
-    // - 仍提供开关：aiSettings.persistApiKey=false 时强制剥离
+    // - 默认不允许落盘：apiKey 通常会进入插件 data/settings，同步服务也可能同步它。
+    // - 只有 aiSettings.persistApiKey=true 时才保留密钥。
     const persistedSettingsGuard = z
         .object({
             aiSettings: z
@@ -42,10 +42,10 @@ export function registerSettingsPersistence(plugin: ThinkPlugin): void {
         const out: any = parsed.success ? parsed.data : cloned;
 
         if (out?.aiSettings && typeof out.aiSettings === 'object') {
-            const persist = out.aiSettings.persistApiKey !== false;
+            const persist = out.aiSettings.persistApiKey === true;
             if (!persist) {
                 if (out.aiSettings.apiKey) {
-                    devWarn('[SettingsPersistence] persistApiKey=false，apiKey 将被剥离后保存');
+                    devWarn('[SettingsPersistence] persistApiKey 未显式开启，apiKey 将被剥离后保存');
                 }
                 out.aiSettings.apiKey = '';
             }

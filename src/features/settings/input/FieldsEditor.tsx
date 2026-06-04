@@ -2,10 +2,9 @@
 /** @jsxImportSource preact */
 import { useEffect, useRef, useState } from "preact/hooks";
 import { Box, Button, Divider, Stack, Typography } from "@mui/material";
-import AddIcon from "@mui/icons-material/Add";
+import { AddIcon, logRenderDiagnostic } from '@shared/public';
 import type { TemplateField } from "@core/public";
 import { createCustomTemplateField, sanitizeTemplateField, sanitizeTemplateFields } from "@core/public";
-import { logRenderDiagnostic } from "@shared/public";
 import { FieldRow } from "./fieldsEditor/FieldRow";
 
 const fieldRowGridTemplateColumns = "24px minmax(0, 1.2fr) minmax(112px, 150px) minmax(0, 1fr) 72px 40px";

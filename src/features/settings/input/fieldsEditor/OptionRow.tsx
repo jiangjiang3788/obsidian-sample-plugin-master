@@ -2,10 +2,8 @@
 /** @jsxImportSource preact */
 import { useEffect, useRef, useState } from "preact/hooks";
 import { Box, Stack } from "@mui/material";
-import RemoveCircleOutlineIcon from "@mui/icons-material/RemoveCircleOutline";
+import { IconAction, RemoveCircleOutlineIcon, logRenderDiagnostic } from '@shared/public';
 import type { TemplateField, TemplateFieldOption } from "@core/public";
-import { IconAction } from "@shared/public";
-import { logRenderDiagnostic } from "@shared/public";
 import { NativeTextInput } from "./nativeControls";
 
 export function OptionRow({

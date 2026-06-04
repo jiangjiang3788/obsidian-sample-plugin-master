@@ -5,8 +5,7 @@ import { useState } from 'preact/hooks';
 import { App, Modal } from 'obsidian';
 import { render, unmountComponentAtNode } from 'preact/compat';
 import { Button, TextField, Box, Typography, Stack, CircularProgress } from '@mui/material';
-import SmartToyIcon from '@mui/icons-material/SmartToy';
-import { ModalHeader } from '@shared/public';
+import { ModalHeader, SmartToyIcon } from '@shared/public';
 
 interface AiTextPromptFormProps {
     onSubmit: (text: string) => void;

@@ -1,10 +1,10 @@
 {
-  "name": "obsidian-sample-plugin-master",
-  "version": "1.0.0",
+  "name": "think-os",
+  "version": "1.0.9",
   "scripts": {
     "dev": "vite",
     "check": "npm run lint && npm run typecheck && npm run gate",
-    "gate": "npm run secret:gate && npm run arch:public && npm run arch:capabilities && npm run arch:gate && npm run feature:gate && npm run di:gate && npm run dual-system:gate && npm run obsidian-leak:gate && npm run events-boundary:gate && npm run core-obsidian:gate && npm run core-public:gate && npm run shared-public:gate && npm run gate:settings-persistence && npm run di-resolve:gate && npm run modal-promise:gate && npm run selector-giant-subscription:gate && npm run theme-tree-recursion:gate && npm run theme-matrix-legacy-import:gate && npm run iconaction:gate",
+    "gate": "npm run secret:gate && npm run version:gate && npm run manifest:gate && npm run mvp:gate && npm run no-mui-icons:gate && npm run arch:public && npm run arch:capabilities && npm run arch:gate && npm run feature:gate && npm run di:gate && npm run dual-system:gate && npm run obsidian-leak:gate && npm run events-boundary:gate && npm run core-obsidian:gate && npm run core-public:gate && npm run shared-public:gate && npm run gate:settings-persistence && npm run di-resolve:gate && npm run modal-promise:gate && npm run selector-giant-subscription:gate && npm run theme-tree-recursion:gate && npm run theme-matrix-legacy-import:gate && npm run iconaction:gate",
     "build": "vite build && node scripts/build/fix-sourcemap.mjs && node -e \"const fs=require('fs');fs.copyFileSync('dist/main.js','main.js');fs.copyFileSync('dist/main.js.map','main.js.map');fs.copyFileSync('dist/styles.css','styles.css');\"",
     "test": "jest --config test/configs/jest.config.js",
     "test:watch": "jest --config test/configs/jest.config.js --watch",
@@ -55,15 +55,20 @@
     "acceptance:fields:strict": "node scripts/validation/field-system-acceptance.mjs --strict",
     "verify:field-system": "npm run acceptance:fields && npm run test:unit -- --runTestsByPath test/unit/fieldSystemHealth.test.ts test/unit/templateCoreFields.test.ts test/unit/fieldValueCodec.test.ts test/unit/recordNormalizer.test.ts",
     "package:release": "node scripts/build/package-release.mjs",
-    "release:check": "node scripts/gates/release-boundary-gate.mjs",
-    "build:release": "vite build --mode production && node scripts/build/fix-sourcemap.mjs && node -e \"const fs=require('fs');fs.copyFileSync('dist/main.js','main.js');fs.copyFileSync('dist/styles.css','styles.css');\" && npm run package:release && npm run release:check",
-    "secret:gate": "node scripts/gates/secret-gate.mjs"
+    "release:check": "npm run version:gate && node scripts/gates/release-boundary-gate.mjs && npm run bundle:gate && npm run bundle:report",
+    "build:release": "vite build --mode release && node scripts/build/fix-sourcemap.mjs && node -e \"const fs=require('fs');fs.copyFileSync('dist/main.js','main.js');fs.copyFileSync('dist/styles.css','styles.css');\" && npm run package:release && npm run release:check",
+    "secret:gate": "node scripts/gates/secret-gate.mjs",
+    "version:gate": "node scripts/gates/version-sync-gate.mjs",
+    "manifest:gate": "node scripts/gates/manifest-gate.mjs",
+    "mvp:gate": "node scripts/gates/mvp-acceptance-gate.mjs",
+    "bundle:gate": "node scripts/gates/bundle-budget-gate.mjs",
+    "bundle:report": "node scripts/audit/bundle-size-report.mjs",
+    "no-mui-icons:gate": "node scripts/gates/no-mui-icons-gate.mjs"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
     "@dnd-kit/sortable": "^10.0.0",
     "@dnd-kit/utilities": "^3.2.2",
-    "@mui/icons-material": "^7.3.1",
     "@mui/material": "^7.2.0",
     "dayjs": "^1.11.13",
     "immer": "^10.1.1",

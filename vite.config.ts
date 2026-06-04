@@ -4,7 +4,7 @@ import preact from '@preact/preset-vite';
 import replace from '@rollup/plugin-replace';
 import tsconfigPaths from 'vite-tsconfig-paths';
 
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
     plugins: [
         preact(),
         tsconfigPaths(),
@@ -42,8 +42,8 @@ export default defineConfig({
             formats: ['cjs'],
             fileName: () => 'main.js',
         },
-        sourcemap: true,
-        minify: false, // 更易于 DevTools sourcemap 映射与调试
+        sourcemap: mode !== 'release',
+        minify: mode === 'release' ? 'esbuild' : false, // release 压缩；普通 build/debug 保持易调试 sourcemap
 
         rollupOptions: {
             external: ['obsidian'],
@@ -90,4 +90,4 @@ export default defineConfig({
         jsxFragment: 'Fragment',
         jsxInject: `import { h } from 'preact'`,
     },
-});
+}));

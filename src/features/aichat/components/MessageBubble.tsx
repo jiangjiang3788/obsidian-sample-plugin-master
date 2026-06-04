@@ -2,10 +2,8 @@
 import { h } from 'preact';
 import { useEffect, useRef, useState } from 'preact/hooks';
 import { Box, Chip, Paper, Tooltip, Typography } from '@mui/material';
-import ContentCopyIcon from '@mui/icons-material/ContentCopy';
-import CheckIcon from '@mui/icons-material/Check';
+import { CheckIcon, ContentCopyIcon, IconAction } from '@shared/public';
 
-import { IconAction } from '@shared/public';
 import type { ChatMessage, MessageContentType } from '@core/public';
 import { devError, dayjs } from '@core/public';
 import { useMessageRenderPort } from '@/app/public';

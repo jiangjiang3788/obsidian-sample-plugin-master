@@ -317,7 +317,9 @@ export class RecordInputUseCase {
         warnings,
       }));
     } catch (error) {
-      return mapSubmitError('update', error, warnings);
+      return finalizeRecordSubmitResult(this.deps.dataStore, mapSubmitError('update', error, warnings, {
+        refreshPaths: [getItemFilePath(params.item)],
+      }));
     }
   }
 
@@ -340,7 +342,9 @@ export class RecordInputUseCase {
         },
       }));
     } catch (error) {
-      return mapSubmitError('delete', error);
+      return finalizeRecordSubmitResult(this.deps.dataStore, mapSubmitError('delete', error, [], {
+        refreshPaths: [getItemFilePath(params.item)],
+      }));
     }
   }
 
@@ -364,7 +368,9 @@ export class RecordInputUseCase {
         },
       }));
     } catch (error) {
-      return mapSubmitError('complete', error);
+      return finalizeRecordSubmitResult(this.deps.dataStore, mapSubmitError('complete', error, [], {
+        refreshPaths: [this.tryParseItemPath(params.itemId)],
+      }));
     }
   }
 
@@ -392,7 +398,17 @@ export class RecordInputUseCase {
         },
       }));
     } catch (error) {
-      return mapSubmitError('time_update', error);
+      return finalizeRecordSubmitResult(this.deps.dataStore, mapSubmitError('time_update', error, [], {
+        refreshPaths: [this.tryParseItemPath(params.itemId)],
+      }));
+    }
+  }
+
+  private tryParseItemPath(itemId: string): string | null {
+    try {
+      return parseItemLocator(itemId).path;
+    } catch {
+      return null;
     }
   }
 

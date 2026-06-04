@@ -1,8 +1,7 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
 import { Box, Button, Divider, IconButton, List, ListItemButton, ListItemText, Typography } from '@mui/material';
-import AddIcon from '@mui/icons-material/Add';
-import DeleteIcon from '@mui/icons-material/Delete';
+import { AddIcon, DeleteIcon } from '@shared/public';
 import type { ChatSession } from '@core/public';
 import { dayjs } from '@core/public';
 

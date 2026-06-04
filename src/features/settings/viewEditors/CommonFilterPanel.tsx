@@ -9,7 +9,7 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
-import RestartAltIcon from '@mui/icons-material/RestartAlt';
+import { RestartAltIcon } from '@shared/public';
 import type { DataStore, FilterRule, Item } from '@core/public';
 import { getAllFields, getFieldLabel, readField } from '@core/public';
 

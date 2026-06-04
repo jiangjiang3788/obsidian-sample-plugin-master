@@ -1,7 +1,7 @@
 // src/features/settings/input/fieldsEditor/nativeControls.tsx
 /** @jsxImportSource preact */
 import type { JSX } from "preact";
-import { logInputEvent } from "@shared/public";
+import { logInputEvent } from '@shared/public';
 
 type NativeInputEvent = Event & {
   currentTarget: HTMLInputElement | HTMLTextAreaElement;
