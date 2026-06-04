@@ -115,7 +115,7 @@
           "dir": "asc"
         }
       ],
-      "collapsed": false
+      "collapsed": true
     },
     {
       "id": "vi_mmeolydjaga6z6u",
@@ -469,7 +469,7 @@
       "id": "vi_mpi3dydfsejfio8",
       "parentId": null,
       "title": "excle",
-      "viewType": "ExcelView",
+      "viewType": "TimelineView",
       "viewConfig": {
         "categories": [
           {
@@ -495,35 +495,27 @@
           {
             "name": "总结",
             "color": "#e5bf8a"
+          },
+          {
+            "name": "01",
+            "color": "#a8e184"
           }
-        ]
+        ],
+        "excel": {
+          "columnWidths": {
+            "title": 597
+          },
+          "contentDisplayMode": "fullMarkdown"
+        }
       },
       "fields": [
-        "title",
-        "levelCount",
-        "tags",
-        "leafCategory",
         "categoryKey",
-        "rootTheme",
-        "type",
-        "endISO",
-        "startISO",
-        "startTime",
-        "endTime",
+        "themePath",
         "content",
-        "baseCategory",
-        "rating",
+        "extra.目标",
         "date",
-        "duration",
         "manuallyEdited",
-        "header",
-        "icon",
-        "image",
-        "file.basename",
-        "displayCount",
-        "leafTheme",
-        "recurrence",
-        "themePath"
+        "icon"
       ],
       "groupFields": [],
       "filters": [],
@@ -569,7 +561,10 @@
       "displayMode": "list",
       "initialView": "周",
       "initialDateFollowsNow": true,
-      "parentId": null
+      "parentId": null,
+      "globalFilters": [],
+      "selectedThemes": [],
+      "selectedCategories": []
     }
   ],
   "inputSettings": {
@@ -586,8 +581,7 @@
             "options": [
               {
                 "value": "- [x]",
-                "label": "✅",
-                "extraValues": {}
+                "label": "✅"
               },
               {
                 "value": "- [ ]",
@@ -636,7 +630,7 @@
             "type": "singleSelect",
             "options": [
               {
-                "value": " ",
+                "value": "不重复",
                 "label": "不重复"
               },
               {
@@ -652,10 +646,16 @@
                 "label": "每月"
               }
             ]
+          },
+          {
+            "id": "field_mppazdci_8",
+            "key": "新字段8",
+            "label": "新字段8",
+            "type": "multiTag"
           }
         ],
         "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{themePath}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态.label}} {{日期}}\n\n",
-        "targetFile": "01/2-4思考.md",
+        "targetFile": "01/2-5电脑.md",
         "appendUnderHeader": "## {{themePath}}",
         "categoryKey": "任务"
       },
@@ -691,8 +691,8 @@
           },
           {
             "id": "field_mn5ui00x",
-            "key": "标签",
-            "label": "标签",
+            "key": "目标",
+            "label": "目标",
             "type": "multiTag"
           },
           {
@@ -702,7 +702,7 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: {{分类.value}}\n日期:: {{日期}}\n主题:: {{themePath}}\n图标:: {{icon}}\n标签:: {{标签}}\n内容:: {{内容}}\n<!-- end -->\n\n",
+        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: {{分类.value}}\n日期:: {{日期}}\n主题:: {{themePath}}\n图标:: {{icon}}\n目标:: {{目标}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/闪念.md",
         "appendUnderHeader": "## {{themePath}}",
         "categoryKey": "闪念"
@@ -742,13 +742,19 @@
             "type": "date"
           },
           {
+            "id": "field_mppaqett_4",
+            "key": "目标",
+            "label": "目标",
+            "type": "multiTag"
+          },
+          {
             "id": "field_mer95h6l",
             "key": "内容",
             "label": "内容",
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 计划\n周期:: {{周期}}\n日期:: {{日期}}\n主题:: {{themePath}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n\n",
+        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 计划\n周期:: {{周期}}\n日期:: {{日期}}\n主题:: {{themePath}}\n图标:: {{icon}}\n目标:: {{目标}}\n内容:: {{内容}}\n<!-- end -->\n\n\n",
         "targetFile": "01/计划.md",
         "appendUnderHeader": "## {{themePath}}",
         "categoryKey": "计划"
@@ -765,11 +771,7 @@
             "options": [
               {
                 "value": "周",
-                "label": "周",
-                "extraValues": {
-                  "1.2": "1.2",
-                  "1.1": "1.1"
-                }
+                "label": "周"
               },
               {
                 "value": "月",
@@ -792,13 +794,19 @@
             "type": "date"
           },
           {
+            "id": "field_mppaussl_4",
+            "key": "目标",
+            "label": "目标",
+            "type": "multiTag"
+          },
+          {
             "id": "field_mer989rn",
             "key": "内容",
             "label": "内容",
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 总结\n周期:: {{周期}}\n日期:: {{日期}}\n主题:: {{themePath}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n",
+        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 总结\n周期:: {{周期}}\n日期:: {{日期}}\n主题:: {{themePath}}\n图标:: {{icon}}\n目标:: {{目标}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/总结.md",
         "appendUnderHeader": "## {{themePath}}",
         "categoryKey": "总结"
@@ -3107,300 +3115,6 @@
         "targetFile": "01/计划.md",
         "appendUnderHeader": "## {{themePath}}",
         "disabled": true
-      },
-      {
-        "id": "ovr_mewkqb62tjo6w",
-        "blockId": "blk_mejsdvflptluo",
-        "themeId": "thm_mejswaiozga40",
-        "status": "disabled",
-        "fields": [
-          {
-            "id": "field_mer92so5",
-            "key": "周期",
-            "label": "周期",
-            "type": "singleSelect",
-            "options": [
-              {
-                "value": "周",
-                "label": "周"
-              },
-              {
-                "value": "月",
-                "label": "月"
-              },
-              {
-                "value": "季",
-                "label": "季"
-              },
-              {
-                "value": "🆕",
-                "label": "年"
-              }
-            ]
-          },
-          {
-            "id": "field_mer94wbx",
-            "key": "日期",
-            "label": "日期",
-            "type": "date"
-          },
-          {
-            "id": "field_mer95h6l",
-            "key": "内容",
-            "label": "内容",
-            "type": "textarea"
-          }
-        ],
-        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 计划\n周期:: {{周期}}\n日期:: {{日期}}\n主题:: {{themePath}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n\n",
-        "targetFile": "01/计划.md",
-        "appendUnderHeader": "## {{themePath}}"
-      },
-      {
-        "id": "ovr_mewkqeu4gbnsv",
-        "blockId": "blk_mejsdvflptluo",
-        "themeId": "thm_mejswh9v0jpsi",
-        "status": "disabled",
-        "fields": [
-          {
-            "id": "field_mer92so5",
-            "key": "周期",
-            "label": "周期",
-            "type": "singleSelect",
-            "options": [
-              {
-                "value": "周",
-                "label": "周"
-              },
-              {
-                "value": "月",
-                "label": "月"
-              },
-              {
-                "value": "季",
-                "label": "季"
-              },
-              {
-                "value": "🆕",
-                "label": "年"
-              }
-            ]
-          },
-          {
-            "id": "field_mer94wbx",
-            "key": "日期",
-            "label": "日期",
-            "type": "date"
-          },
-          {
-            "id": "field_mer95h6l",
-            "key": "内容",
-            "label": "内容",
-            "type": "textarea"
-          }
-        ],
-        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 计划\n周期:: {{周期}}\n日期:: {{日期}}\n主题:: {{themePath}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n\n",
-        "targetFile": "01/计划.md",
-        "appendUnderHeader": "## {{themePath}}"
-      },
-      {
-        "id": "ovr_mewkqh4dz6vk3",
-        "blockId": "blk_mejsdvflptluo",
-        "themeId": "thm_mejswmjkpyrzg",
-        "status": "disabled",
-        "fields": [
-          {
-            "id": "field_mer92so5",
-            "key": "周期",
-            "label": "周期",
-            "type": "singleSelect",
-            "options": [
-              {
-                "value": "周",
-                "label": "周"
-              },
-              {
-                "value": "月",
-                "label": "月"
-              },
-              {
-                "value": "季",
-                "label": "季"
-              },
-              {
-                "value": "🆕",
-                "label": "年"
-              }
-            ]
-          },
-          {
-            "id": "field_mer94wbx",
-            "key": "日期",
-            "label": "日期",
-            "type": "date"
-          },
-          {
-            "id": "field_mer95h6l",
-            "key": "内容",
-            "label": "内容",
-            "type": "textarea"
-          }
-        ],
-        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 计划\n周期:: {{周期}}\n日期:: {{日期}}\n主题:: {{themePath}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n\n",
-        "targetFile": "01/计划.md",
-        "appendUnderHeader": "## {{themePath}}"
-      },
-      {
-        "id": "ovr_mewkqmk0ntarr",
-        "blockId": "blk_mejsfuehqj4s0",
-        "themeId": "thm_mejswmjkpyrzg",
-        "status": "disabled",
-        "fields": [
-          {
-            "id": "field_mekrw2ui",
-            "key": "周期",
-            "label": "周期",
-            "type": "singleSelect",
-            "options": [
-              {
-                "value": "周",
-                "label": "周",
-                "extraValues": {
-                  "1.2": "1.2",
-                  "1.1": "1.1"
-                }
-              },
-              {
-                "value": "月",
-                "label": "月"
-              },
-              {
-                "value": "季",
-                "label": "季"
-              },
-              {
-                "value": "年",
-                "label": "年"
-              }
-            ]
-          },
-          {
-            "id": "field_mer983il",
-            "key": "日期",
-            "label": "日期",
-            "type": "date"
-          },
-          {
-            "id": "field_mer989rn",
-            "key": "内容",
-            "label": "内容",
-            "type": "textarea"
-          }
-        ],
-        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 总结\n周期:: {{周期}}\n日期:: {{日期}}\n主题:: {{themePath}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n",
-        "targetFile": "01/总结.md",
-        "appendUnderHeader": "## {{themePath}}"
-      },
-      {
-        "id": "ovr_mewkqp2ih6b21",
-        "blockId": "blk_mejsfuehqj4s0",
-        "themeId": "thm_mejswh9v0jpsi",
-        "status": "disabled",
-        "fields": [
-          {
-            "id": "field_mekrw2ui",
-            "key": "周期",
-            "label": "周期",
-            "type": "singleSelect",
-            "options": [
-              {
-                "value": "周",
-                "label": "周",
-                "extraValues": {
-                  "1.2": "1.2",
-                  "1.1": "1.1"
-                }
-              },
-              {
-                "value": "月",
-                "label": "月"
-              },
-              {
-                "value": "季",
-                "label": "季"
-              },
-              {
-                "value": "年",
-                "label": "年"
-              }
-            ]
-          },
-          {
-            "id": "field_mer983il",
-            "key": "日期",
-            "label": "日期",
-            "type": "date"
-          },
-          {
-            "id": "field_mer989rn",
-            "key": "内容",
-            "label": "内容",
-            "type": "textarea"
-          }
-        ],
-        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 总结\n周期:: {{周期}}\n日期:: {{日期}}\n主题:: {{themePath}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n",
-        "targetFile": "01/总结.md",
-        "appendUnderHeader": "## {{themePath}}"
-      },
-      {
-        "id": "ovr_mewkqrynyhkt2",
-        "blockId": "blk_mejsfuehqj4s0",
-        "themeId": "thm_mejswaiozga40",
-        "status": "disabled",
-        "fields": [
-          {
-            "id": "field_mekrw2ui",
-            "key": "周期",
-            "label": "周期",
-            "type": "singleSelect",
-            "options": [
-              {
-                "value": "周",
-                "label": "周",
-                "extraValues": {
-                  "1.2": "1.2",
-                  "1.1": "1.1"
-                }
-              },
-              {
-                "value": "月",
-                "label": "月"
-              },
-              {
-                "value": "季",
-                "label": "季"
-              },
-              {
-                "value": "年",
-                "label": "年"
-              }
-            ]
-          },
-          {
-            "id": "field_mer983il",
-            "key": "日期",
-            "label": "日期",
-            "type": "date"
-          },
-          {
-            "id": "field_mer989rn",
-            "key": "内容",
-            "label": "内容",
-            "type": "textarea"
-          }
-        ],
-        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 总结\n周期:: {{周期}}\n日期:: {{日期}}\n主题:: {{themePath}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->\n\n",
-        "targetFile": "01/总结.md",
-        "appendUnderHeader": "## {{themePath}}"
       },
       {
         "id": "ovr_mewkquimfqr7m",
@@ -5874,7 +5588,7 @@
         "targetFile": "01/2-5电脑.md",
         "appendUnderHeader": "## {{themePath}}",
         "id": "ovr_mfhzx4hvl9s27",
-        "disabled": true
+        "disabled": false
       },
       {
         "blockId": "blk_meic1my6m62iu",
@@ -6136,7 +5850,7 @@
         "outputTemplate": "{{状态.value}} {{icon}} {{任务内容}} (主题::{{themePath}}) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{重复.value}} {{状态.label}} {{日期}}\n\n",
         "targetFile": "01/2-5电脑.md",
         "appendUnderHeader": "## {{themePath}}",
-        "disabled": true
+        "disabled": false
       },
       {
         "blockId": "blk_meic1my6m62iu",
@@ -8017,55 +7731,6 @@
         "id": "ovr_mo29s584mizcdy5"
       },
       {
-        "blockId": "blk_mejsg1dc46fj9",
-        "themeId": "thm_mejsim4o4c2mw",
-        "disabled": false,
-        "fields": [
-          {
-            "id": "field_mewjlt4j",
-            "key": "分类",
-            "label": "分类",
-            "type": "singleSelect",
-            "options": [
-              {
-                "value": "闪念/事件",
-                "label": "事件"
-              },
-              {
-                "value": "闪念/感受",
-                "label": "感受"
-              },
-              {
-                "value": "闪念/思考",
-                "label": "思考"
-              }
-            ]
-          },
-          {
-            "id": "field_mewkyug9",
-            "key": "日期",
-            "label": "日期",
-            "type": "date"
-          },
-          {
-            "id": "field_mn5ui00x",
-            "key": "标签",
-            "label": "标签",
-            "type": "multiTag"
-          },
-          {
-            "id": "field_mewjlypl",
-            "key": "内容",
-            "label": "内容",
-            "type": "textarea"
-          }
-        ],
-        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: {{分类.value}}\n日期:: {{日期}}\n主题:: {{themePath}}\n图标:: {{icon}}\n标签:: {{标签}}\n内容:: {{内容}}\n<!-- end -->\n\n",
-        "targetFile": "01/闪念.md",
-        "appendUnderHeader": "## {{themePath}}",
-        "id": "ovr_mp2eoc93h8cjdmi"
-      },
-      {
         "blockId": "blk_meic1my6m62iu",
         "themeId": "thm_mejsj5pzfonlh",
         "disabled": false,
@@ -8871,6 +8536,7 @@
     "闪念": "#e47272",
     "事件": "#a5c8ee",
     "周": "#e09185",
-    "生活": "#8cd4ee"
+    "生活": "#8cd4ee",
+    "01": "#a8e184"
   }
 }

@@ -1,8 +1,9 @@
-import type { Item, FieldCommitMode, FieldEditDangerLevel, FieldEditPolicy, FieldEditorKind } from '@core/public';
+import type { Item, FieldCommitMode, FieldEditDangerLevel, FieldEditPolicy, FieldEditorKind, MessageRenderPort } from '@core/public';
 
 export type ExcelCellCommitReason = 'inline-edit' | 'fill-drag' | 'paste';
 export type ExcelCellSaveState = 'idle' | 'pending' | 'saved' | 'error';
 export type ExcelNavigationDirection = 'up' | 'down' | 'left' | 'right' | 'next' | 'previous';
+export type ExcelContentDisplayMode = 'previewText' | 'fullMarkdown';
 
 export interface ExcelCellAddress {
   itemId: string;
@@ -37,6 +38,8 @@ export type ExcelColumnWidthMap = Record<string, number>;
 
 export interface ExcelViewDisplayConfig {
   columnWidths?: ExcelColumnWidthMap;
+  /** content 字段在 Excel 表格中的展示方式：默认短文本预览，用户可切换为全文 Markdown。 */
+  contentDisplayMode?: ExcelContentDisplayMode;
 }
 
 export type ExcelDisplayConfigChangeHandler = (config: ExcelViewDisplayConfig) => Promise<void> | void;
@@ -73,6 +76,7 @@ export interface ExcelViewProps {
   onExcelConfigChange?: ExcelDisplayConfigChangeHandler;
   onCellCommit?: ExcelCellCommitHandler;
   onOpenRecord?: ExcelOpenRecordHandler;
+  messageRenderPort?: MessageRenderPort;
 }
 
 export interface ExcelGridProps {
@@ -87,6 +91,8 @@ export interface ExcelGridProps {
   savedCellKeys?: ReadonlySet<string>;
   canCommitCells?: boolean;
   columnWidths?: Readonly<ExcelColumnWidthMap>;
+  contentDisplayMode?: ExcelContentDisplayMode;
+  messageRenderPort?: MessageRenderPort;
   fillDragSourceCell?: ExcelCellModel | null;
   fillDragTargetCellKey?: string | null;
   onSelectCell?: (cell: ExcelCellModel) => void;
@@ -116,6 +122,8 @@ export interface ExcelCellProps {
   fillDragging?: boolean;
   fillSource?: boolean;
   fillTarget?: boolean;
+  contentDisplayMode?: ExcelContentDisplayMode;
+  messageRenderPort?: MessageRenderPort;
   onSelect?: (cell: ExcelCellModel) => void;
   onStartEdit?: (cell: ExcelCellModel) => void;
   onCancelEdit?: () => void;

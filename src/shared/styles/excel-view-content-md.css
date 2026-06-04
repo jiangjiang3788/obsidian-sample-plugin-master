@@ -1,0 +1,123 @@
+/* ExcelView content 字段全文 / Markdown 展示增强 */
+.excel-view-content-mode-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    border: 1px solid var(--background-modifier-border);
+    border-radius: 999px;
+    padding: 2px 10px;
+    background: var(--background-secondary-alt);
+    color: var(--text-muted);
+    font: inherit;
+    font-size: 12px;
+    line-height: 1.5;
+    cursor: pointer;
+    transition: border-color 120ms ease, color 120ms ease, background 120ms ease, opacity 120ms ease;
+}
+
+.excel-view-content-mode-button:hover,
+.excel-view-content-mode-button:focus {
+    border-color: var(--interactive-accent);
+    color: var(--text-accent);
+    background: color-mix(in srgb, var(--interactive-accent) 9%, var(--background-secondary-alt));
+    outline: none;
+}
+
+.excel-view-content-mode-button.is-active {
+    border-color: var(--interactive-accent);
+    color: var(--text-accent);
+    background: color-mix(in srgb, var(--interactive-accent) 13%, var(--background-secondary-alt));
+}
+
+.excel-view-content-mode-button.is-saving,
+.excel-view-content-mode-button:disabled {
+    opacity: 0.62;
+    cursor: not-allowed;
+}
+
+.excel-view-content-mode-button:disabled:hover,
+.excel-view-content-mode-button:disabled:focus {
+    border-color: var(--background-modifier-border);
+    color: var(--text-muted);
+    background: var(--background-secondary-alt);
+}
+
+.excel-view-table .excel-view-cell.is-content-expanded {
+    vertical-align: top;
+    white-space: normal;
+}
+
+.excel-view-table .excel-view-cell.is-content-expanded.is-policy-readonly {
+    color: var(--text-normal);
+}
+
+.excel-view-table .excel-view-cell.is-content-expanded .excel-view-cell-md {
+    display: block;
+    max-height: 360px;
+    overflow: auto;
+    padding: 2px 14px 2px 0;
+    color: var(--text-normal);
+    font-size: 12px;
+    line-height: 1.5;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    overscroll-behavior: contain;
+}
+
+.excel-view-table .excel-view-cell.is-content-expanded .excel-view-cell-md > :first-child {
+    margin-top: 0;
+}
+
+.excel-view-table .excel-view-cell.is-content-expanded .excel-view-cell-md > :last-child {
+    margin-bottom: 0;
+}
+
+.excel-view-table .excel-view-cell.is-content-expanded .excel-view-cell-md p,
+.excel-view-table .excel-view-cell.is-content-expanded .excel-view-cell-md ul,
+.excel-view-table .excel-view-cell.is-content-expanded .excel-view-cell-md ol,
+.excel-view-table .excel-view-cell.is-content-expanded .excel-view-cell-md blockquote,
+.excel-view-table .excel-view-cell.is-content-expanded .excel-view-cell-md pre,
+.excel-view-table .excel-view-cell.is-content-expanded .excel-view-cell-md table {
+    margin-top: 0.35em;
+    margin-bottom: 0.35em;
+}
+
+.excel-view-table .excel-view-cell.is-content-expanded .excel-view-cell-md ul,
+.excel-view-table .excel-view-cell.is-content-expanded .excel-view-cell-md ol {
+    padding-left: 1.35em;
+}
+
+.excel-view-table .excel-view-cell.is-content-expanded .excel-view-cell-md blockquote {
+    margin-left: 0;
+    padding-left: 0.85em;
+    border-left: 2px solid var(--background-modifier-border);
+    color: var(--text-muted);
+}
+
+.excel-view-table .excel-view-cell.is-content-expanded .excel-view-cell-md pre {
+    max-width: 100%;
+    overflow: auto;
+    padding: 6px 8px;
+    border-radius: 6px;
+    background: var(--background-secondary);
+}
+
+.excel-view-table .excel-view-cell.is-content-expanded .excel-view-cell-md code {
+    white-space: pre-wrap;
+}
+
+.excel-view-table .excel-view-cell.is-content-expanded .excel-view-cell-md table {
+    max-width: 100%;
+    overflow: auto;
+    display: block;
+}
+
+.excel-view-table .excel-view-cell.is-content-expanded .excel-view-cell-md img {
+    max-width: 100%;
+    height: auto;
+}
+
+.excel-view-table .excel-view-cell.is-content-expanded .excel-view-cell-md a {
+    color: var(--text-accent);
+    cursor: pointer;
+}

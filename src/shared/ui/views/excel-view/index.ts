@@ -10,6 +10,7 @@ export type {
   ExcelDisplayConfigChangeHandler,
   ExcelColumnWidthMap,
   ExcelCellCommitReason,
+  ExcelContentDisplayMode,
   ExcelCellCommitRequest,
   ExcelCellCommitResult,
   ExcelCellModel,

@@ -64,6 +64,8 @@ export function ExcelGrid({
   valueOverrides,
   canCommitCells = false,
   columnWidths,
+  contentDisplayMode = 'previewText',
+  messageRenderPort,
   fillDragSourceCell,
   fillDragTargetCellKey,
   onSelectCell,
@@ -254,6 +256,8 @@ export function ExcelGrid({
                   fillDragging={fillDragging}
                   fillSource={fillDragSourceCell ? getCellKey(fillDragSourceCell) === canonicalCellKey : false}
                   fillTarget={fillDragTargetCellKey === canonicalCellKey && fillDragSourceCell?.canonicalField === cell.canonicalField}
+                  contentDisplayMode={contentDisplayMode}
+                  messageRenderPort={messageRenderPort}
                   onSelect={onSelectCell}
                   onStartEdit={onStartEdit}
                   onCancelEdit={onCancelEdit}

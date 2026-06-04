@@ -17,12 +17,18 @@ export interface MarkdownContentProps {
   onTouchEnd?: (evt: TouchEvent) => void;
 }
 
+function renderPlainFallback(containerEl: HTMLElement, content: string): void {
+  containerEl.innerHTML = '';
+  containerEl.style.whiteSpace = 'pre-wrap';
+  containerEl.textContent = content;
+}
+
 /**
  * 通用 Markdown/Plain 渲染器。
  *
  * ⚠️ shared 层不依赖 Obsidian（遵守 obsidian-leak gate）。
- * - 有 renderPort：使用同一套渲染逻辑（与 AI chat 一致）
- * - 无 renderPort：退化为 plain text（保留换行）
+ * - 有 renderPort：使用同一套渲染逻辑（与 AI chat / BlockView 一致）
+ * - renderPort 不存在或渲染失败：退化为 plain text（保留换行），避免单元格空白
  */
 export function MarkdownContent({
   renderPort,
@@ -37,33 +43,36 @@ export function MarkdownContent({
   const elRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (!elRef.current) return;
+    const containerEl = elRef.current;
+    if (!containerEl) return;
 
-    // clear
-    elRef.current.innerHTML = '';
+    let disposed = false;
+    containerEl.innerHTML = '';
+    containerEl.style.whiteSpace = '';
 
-    if (renderPort) {
-      // 不传 cls：避免内部使用 Obsidian addClass 时传入带空格 token。
-      renderPort
-        .renderMessage({
-          containerEl: elRef.current,
-          content,
-          contentType: contentType === 'plain' ? 'plain' : 'markdown',
-          sourcePath,
-        })
-        .catch(() => {
-          // renderPort 自己兜底，这里不额外 console
-        });
-    } else {
-      // last resort: plain text (preserve line breaks)
-      elRef.current.style.whiteSpace = 'pre-wrap';
-      elRef.current.textContent = content;
+    if (!renderPort) {
+      renderPlainFallback(containerEl, content);
+      return undefined;
     }
 
+    renderPort
+      .renderMessage({
+        containerEl,
+        content,
+        contentType: contentType === 'plain' ? 'plain' : 'markdown',
+        sourcePath,
+      })
+      .catch(() => {
+        if (!disposed && elRef.current === containerEl) {
+          renderPlainFallback(containerEl, content);
+        }
+      });
+
     return () => {
-      if (elRef.current && renderPort) renderPort.clear(elRef.current);
+      disposed = true;
+      if (elRef.current === containerEl) renderPort.clear(containerEl);
     };
-  }, [renderPort, content, contentType, sourcePath, className]);
+  }, [renderPort, content, contentType, sourcePath]);
 
   return <div ref={elRef} className={`md-content ${className}`.trim()} onClick={onClick as any} onDblClick={onDblClick as any} onTouchEnd={onTouchEnd as any} />;
 }

@@ -1,6 +1,7 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
 import { useEffect, useRef, useState } from 'preact/hooks';
+import { MarkdownContent } from '../../markdown/MarkdownContent';
 import { getExcelEditorOptions, truncateExcelCellText } from './value';
 import { canInlineEditExcelCell, getExcelEditorDescriptor, getExcelCellKey } from './types';
 import type { ExcelCellProps, ExcelNavigationDirection } from './types';
@@ -20,6 +21,10 @@ function getTypedInputProps(kind: string): Record<string, string | number> {
   return {};
 }
 
+function isMarkdownInteractiveTarget(target: EventTarget | null): boolean {
+  if (!(target instanceof HTMLElement)) return false;
+  return !!target.closest('a, button, input, textarea, select, .internal-link, .external-link, .tag');
+}
 
 export function ExcelCell({
   cell,
@@ -33,6 +38,8 @@ export function ExcelCell({
   fillDragging = false,
   fillSource = false,
   fillTarget = false,
+  contentDisplayMode = 'previewText',
+  messageRenderPort,
   onSelect,
   onStartEdit,
   onCancelEdit,
@@ -53,6 +60,9 @@ export function ExcelCell({
   const descriptor = getExcelEditorDescriptor(policy.editorKind);
   const editorOptions = getExcelEditorOptions(cell);
   const cellKey = getExcelCellKey(cell.itemId, cell.canonicalField);
+  const isContentCell = cell.canonicalField === 'content';
+  const contentText = typeof value === 'string' ? value : '';
+  const showFullMarkdownContent = isContentCell && contentDisplayMode === 'fullMarkdown' && !!contentText.trim();
 
   useEffect(() => {
     if (editing) setDraft(editorValue);
@@ -85,6 +95,14 @@ export function ExcelCell({
     event.stopPropagation();
     if (editable) onStartEdit?.(cell);
     else onSelect?.(cell);
+  };
+
+  const handleMarkdownClick = (event: MouseEvent) => {
+    if (isMarkdownInteractiveTarget(event.target)) event.stopPropagation();
+  };
+
+  const handleMarkdownDoubleClick = (event: MouseEvent) => {
+    if (isMarkdownInteractiveTarget(event.target)) event.stopPropagation();
   };
 
   const handleFillMouseDown = (event: MouseEvent) => {
@@ -162,6 +180,8 @@ export function ExcelCell({
     policy.editable ? 'is-policy-editable' : 'is-policy-readonly',
     policy.dangerLevel === 'medium' ? 'is-medium-risk' : '',
     policy.dangerLevel === 'high' ? 'is-high-risk' : '',
+    isContentCell ? 'is-content-cell' : '',
+    showFullMarkdownContent ? 'is-content-expanded' : '',
     selected ? 'is-selected' : '',
     editing ? 'is-editing' : '',
     pending ? 'is-pending' : '',
@@ -180,6 +200,7 @@ export function ExcelCell({
       data-policy-editable={policy.editable ? 'true' : 'false'}
       data-editor-kind={policy.editorKind}
       data-danger-level={policy.dangerLevel}
+      data-content-display-mode={isContentCell ? contentDisplayMode : undefined}
       data-save-state={pending ? 'pending' : error ? 'error' : saved ? 'saved' : 'idle'}
       class={className}
       style={style}
@@ -235,9 +256,19 @@ export function ExcelCell({
           )}
           <span class="excel-view-cell-edit-hint">{descriptor.hint}</span>
         </span>
-      ) : field === 'content' && typeof value === 'string' && value ? (
+      ) : showFullMarkdownContent ? (
+        <MarkdownContent
+          renderPort={messageRenderPort}
+          content={contentText}
+          contentType="markdown"
+          sourcePath={item.file?.path || ''}
+          className="excel-view-cell-md"
+          onClick={handleMarkdownClick}
+          onDblClick={handleMarkdownDoubleClick}
+        />
+      ) : isContentCell && contentText ? (
         <span class="excel-view-content-link">
-          {truncateExcelCellText(value)}
+          {truncateExcelCellText(contentText)}
         </span>
       ) : (
         <span class="excel-view-cell-value">{displayValue}</span>

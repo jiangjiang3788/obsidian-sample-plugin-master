@@ -53704,6 +53704,11 @@ function ItemLink({ item, app, className = "", showIcon = true }) {
     }
   );
 }
+function renderPlainFallback(containerEl, content) {
+  containerEl.innerHTML = "";
+  containerEl.style.whiteSpace = "pre-wrap";
+  containerEl.textContent = content;
+}
 function MarkdownContent({
   renderPort,
   content,
@@ -53716,24 +53721,30 @@ function MarkdownContent({
 }) {
   const elRef = A$1(null);
   y(() => {
-    if (!elRef.current) return;
-    elRef.current.innerHTML = "";
-    if (renderPort) {
-      renderPort.renderMessage({
-        containerEl: elRef.current,
-        content,
-        contentType: contentType === "plain" ? "plain" : "markdown",
-        sourcePath
-      }).catch(() => {
-      });
-    } else {
-      elRef.current.style.whiteSpace = "pre-wrap";
-      elRef.current.textContent = content;
+    const containerEl = elRef.current;
+    if (!containerEl) return;
+    let disposed2 = false;
+    containerEl.innerHTML = "";
+    containerEl.style.whiteSpace = "";
+    if (!renderPort) {
+      renderPlainFallback(containerEl, content);
+      return void 0;
     }
+    renderPort.renderMessage({
+      containerEl,
+      content,
+      contentType: contentType === "plain" ? "plain" : "markdown",
+      sourcePath
+    }).catch(() => {
+      if (!disposed2 && elRef.current === containerEl) {
+        renderPlainFallback(containerEl, content);
+      }
+    });
     return () => {
-      if (elRef.current && renderPort) renderPort.clear(elRef.current);
+      disposed2 = true;
+      if (elRef.current === containerEl) renderPort.clear(containerEl);
     };
-  }, [renderPort, content, contentType, sourcePath, className]);
+  }, [renderPort, content, contentType, sourcePath]);
   return /* @__PURE__ */ u2("div", { ref: elRef, className: `md-content ${className}`.trim(), onClick, onDblClick, onTouchEnd });
 }
 const BlockItem = ({ item, fields, isNarrow, app, messageRenderPort, allThemes }) => {
@@ -56335,7 +56346,30 @@ function formatExcelEditorValue(value, editorKind) {
   if (editorKind === "date") return toDateInputValue(value);
   if (editorKind === "time") return toTimeInputValue(value);
   if (editorKind === "datetime") return toDateTimeInputValue(value);
+  if (editorKind === "boolean") return value === true ? "true" : value === false ? "false" : formatExcelCellValue(value);
+  if (editorKind === "select" && isOptionLikeValue(value)) return String(value.value ?? value.label ?? "");
   return formatExcelCellValue(value);
+}
+function getExcelEditorOptions(cell) {
+  if (cell.policy.editorKind === "boolean") {
+    return [
+      { value: "", label: "空" },
+      { value: "true", label: "是" },
+      { value: "false", label: "否" }
+    ];
+  }
+  const options = cell.policy.definition?.options;
+  if (!Array.isArray(options) || !options.length) {
+    return cell.editorValue ? [{ value: cell.editorValue, label: cell.displayValue || cell.editorValue }] : [{ value: "", label: "空" }];
+  }
+  const normalized = options.map((option) => ({
+    value: String(option?.value ?? ""),
+    label: String(option?.label ?? option?.value ?? "")
+  })).filter((option) => option.value || option.label);
+  if (cell.editorValue && !normalized.some((option) => option.value === cell.editorValue)) {
+    return [{ value: cell.editorValue, label: cell.displayValue || cell.editorValue }, ...normalized];
+  }
+  return normalized;
 }
 function validateExcelEditorValue(cell, editorValue) {
   const trimmed = editorValue.trim();
@@ -56349,6 +56383,10 @@ function validateExcelEditorValue(cell, editorValue) {
       return isValidTimeInput(trimmed) ? null : "时间格式应为 HH:mm";
     case "datetime":
       return isValidDateTimeInput(trimmed) ? null : "日期时间格式应为 YYYY-MM-DDTHH:mm";
+    case "select": {
+      const options = getExcelEditorOptions(cell);
+      return options.length && trimmed && !options.some((option) => option.value === trimmed) ? "请选择有效选项" : null;
+    }
     default:
       return null;
   }
@@ -56367,11 +56405,12 @@ function parseExcelEditorValue(cell, editorValue) {
       const lower = trimmed.toLowerCase();
       if (["true", "1", "yes", "y", "是"].includes(lower)) return true;
       if (["false", "0", "no", "n", "否"].includes(lower)) return false;
-      return raw;
+      return null;
     }
     case "date":
     case "time":
     case "datetime":
+    case "select":
       return trimmed;
     case "tags":
       return trimmed.split(/[,，\n]/).map((part) => part.trim()).filter(Boolean);
@@ -56390,12 +56429,14 @@ function canInlineEditExcelCell(cell, canCommit = true) {
 }
 function getExcelEditorDescriptor(kind) {
   if (kind === "textarea") return { tag: "textarea", hint: "Enter 保存 · Shift+Enter 换行 · Esc 取消" };
-  if (kind === "number" || kind === "rating") return { tag: "input", type: "number", hint: "输入数字，Enter 保存 · Esc 取消" };
-  if (kind === "date") return { tag: "input", type: "date", hint: "选择日期，Enter 保存 · Esc 取消" };
-  if (kind === "time") return { tag: "input", type: "time", hint: "输入 HH:mm，Enter 保存 · Esc 取消" };
-  if (kind === "datetime") return { tag: "input", type: "datetime-local", hint: "选择日期时间，Enter 保存 · Esc 取消" };
-  if (kind === "boolean") return { tag: "input", type: "text", hint: "true/false 或 是/否，Enter 保存 · Esc 取消" };
-  if (kind === "tags") return { tag: "input", type: "text", hint: "多个标签用逗号分隔，# 会保留" };
+  if (kind === "number") return { tag: "input", type: "number", hint: "数字编辑器：Enter 保存 · Esc 取消" };
+  if (kind === "rating") return { tag: "input", type: "number", hint: "评分编辑器：输入数字，Enter 保存 · Esc 取消" };
+  if (kind === "date") return { tag: "input", type: "date", hint: "日期编辑器：Enter 保存 · Esc 取消" };
+  if (kind === "time") return { tag: "input", type: "time", hint: "时间编辑器：Enter 保存 · Esc 取消" };
+  if (kind === "datetime") return { tag: "input", type: "datetime-local", hint: "日期时间编辑器：Enter 保存 · Esc 取消" };
+  if (kind === "boolean") return { tag: "select", hint: "布尔编辑器：选择 是 / 否，Enter 保存 · Esc 取消" };
+  if (kind === "select") return { tag: "select", hint: "选项编辑器：选择后 Enter 保存 · Esc 取消" };
+  if (kind === "tags") return { tag: "input", type: "text", hint: "标签编辑器：逗号/换行分隔，# 会保留" };
   return { tag: "input", type: "text", hint: "Enter 保存 · Esc 取消" };
 }
 function readKeyboardValue(event) {
@@ -56404,6 +56445,15 @@ function readKeyboardValue(event) {
 }
 function getReadonlyTitle(policyReason) {
   return policyReason || "该字段不可在 Excel 单元格中直接编辑";
+}
+function getTypedInputProps(kind) {
+  if (kind === "number") return { step: "any" };
+  if (kind === "rating") return { step: 1, min: 0, max: 5 };
+  return {};
+}
+function isMarkdownInteractiveTarget(target) {
+  if (!(target instanceof HTMLElement)) return false;
+  return !!target.closest("a, button, input, textarea, select, .internal-link, .external-link, .tag");
 }
 function ExcelCell({
   cell,
@@ -56417,10 +56467,14 @@ function ExcelCell({
   fillDragging = false,
   fillSource = false,
   fillTarget = false,
+  contentDisplayMode = "previewText",
+  messageRenderPort,
   onSelect,
   onStartEdit,
   onCancelEdit,
   onCommitEdit,
+  onNavigate,
+  onPasteText,
   onStartFillDrag,
   onMoveFillDrag,
   onFinishFillDrag,
@@ -56433,6 +56487,11 @@ function ExcelCell({
   const editable = canInlineEditExcelCell(cell, canCommit);
   const readonly2 = !editable;
   const descriptor = getExcelEditorDescriptor(policy.editorKind);
+  const editorOptions = getExcelEditorOptions(cell);
+  const cellKey = getExcelCellKey(cell.itemId, cell.canonicalField);
+  const isContentCell = cell.canonicalField === "content";
+  const contentText = typeof value === "string" ? value : "";
+  const showFullMarkdownContent = isContentCell && contentDisplayMode === "fullMarkdown" && !!contentText.trim();
   y(() => {
     if (editing) setDraft(editorValue);
   }, [editing, editorValue]);
@@ -56461,6 +56520,12 @@ function ExcelCell({
     if (editable) onStartEdit?.(cell);
     else onSelect?.(cell);
   };
+  const handleMarkdownClick = (event) => {
+    if (isMarkdownInteractiveTarget(event.target)) event.stopPropagation();
+  };
+  const handleMarkdownDoubleClick = (event) => {
+    if (isMarkdownInteractiveTarget(event.target)) event.stopPropagation();
+  };
   const handleFillMouseDown = (event) => {
     event.preventDefault();
     event.stopPropagation();
@@ -56473,7 +56538,12 @@ function ExcelCell({
   const handleMouseUp = () => {
     if (fillDragging) onFinishFillDrag?.(cell);
   };
-  const handleKeyDown = (event) => {
+  const navigate = (event, direction) => {
+    event.preventDefault();
+    event.stopPropagation();
+    onNavigate?.(cell, direction);
+  };
+  const handleEditorKeyDown = (event) => {
     if (event.key === "Escape") {
       event.preventDefault();
       onCancelEdit?.();
@@ -56484,13 +56554,41 @@ function ExcelCell({
       commit(readKeyboardValue(event));
     }
   };
-  const title = error || (editable ? "双击编辑；拖动右下角小方块可向同列覆盖；Ctrl/⌘ 点击打开完整编辑" : `${getReadonlyTitle(policy.reason)}；Ctrl/⌘ 点击可打开完整编辑`);
+  const handleCellKeyDown = (event) => {
+    if (event.key === "Escape" && fillDragging) {
+      event.preventDefault();
+      onCancelFillDrag?.();
+      return;
+    }
+    if (editing) return;
+    if (event.key === "ArrowUp") return navigate(event, "up");
+    if (event.key === "ArrowDown") return navigate(event, "down");
+    if (event.key === "ArrowLeft") return navigate(event, "left");
+    if (event.key === "ArrowRight") return navigate(event, "right");
+    if (event.key === "Tab") return navigate(event, event.shiftKey ? "previous" : "next");
+    if ((event.key === "Enter" || event.key === "F2") && editable) {
+      event.preventDefault();
+      onStartEdit?.(cell);
+      return;
+    }
+  };
+  const handlePaste = (event) => {
+    if (editing) return;
+    const text2 = event.clipboardData?.getData("text/plain") || "";
+    if (!text2) return;
+    event.preventDefault();
+    event.stopPropagation();
+    onPasteText?.(cell, text2);
+  };
+  const title = error || (editable ? "双击/F2/Enter 编辑；方向键/Tab 移动；可粘贴多行多列；拖动右下角小方块可向同列覆盖；Ctrl/⌘ 点击打开完整编辑" : `${getReadonlyTitle(policy.reason)}；Ctrl/⌘ 点击可打开完整编辑`);
   const className = [
     "excel-view-cell",
     editable ? "is-inline-editable" : "is-readonly",
     policy.editable ? "is-policy-editable" : "is-policy-readonly",
     policy.dangerLevel === "medium" ? "is-medium-risk" : "",
     policy.dangerLevel === "high" ? "is-high-risk" : "",
+    isContentCell ? "is-content-cell" : "",
+    showFullMarkdownContent ? "is-content-expanded" : "",
     selected ? "is-selected" : "",
     editing ? "is-editing" : "",
     pending ? "is-pending" : "",
@@ -56502,12 +56600,14 @@ function ExcelCell({
   return /* @__PURE__ */ u2(
     "td",
     {
+      "data-excel-cell-key": cellKey,
       "data-field": field,
       "data-canonical-field": policy.canonicalField,
       "data-editable": editable ? "true" : "false",
       "data-policy-editable": policy.editable ? "true" : "false",
       "data-editor-kind": policy.editorKind,
       "data-danger-level": policy.dangerLevel,
+      "data-content-display-mode": isContentCell ? contentDisplayMode : void 0,
       "data-save-state": pending ? "pending" : error ? "error" : saved ? "saved" : "idle",
       class: className,
       style: style2,
@@ -56519,17 +56619,8 @@ function ExcelCell({
       onDblClick: handleDoubleClick,
       onMouseEnter: handleMouseEnter,
       onMouseUp: handleMouseUp,
-      onKeyDown: (event) => {
-        if (event.key === "Escape" && fillDragging) {
-          event.preventDefault();
-          onCancelFillDrag?.();
-          return;
-        }
-        if (event.key === "Enter" && !editing && editable) {
-          event.preventDefault();
-          onStartEdit?.(cell);
-        }
-      },
+      onKeyDown: handleCellKeyDown,
+      onPaste: handlePaste,
       children: [
         editing ? /* @__PURE__ */ u2("span", { class: "excel-view-cell-edit-wrap", children: [
           descriptor.tag === "textarea" ? /* @__PURE__ */ u2(
@@ -56540,8 +56631,20 @@ function ExcelCell({
               value: draft,
               disabled: pending,
               onInput: (event) => setDraft(event.currentTarget.value),
-              onKeyDown: handleKeyDown,
+              onKeyDown: handleEditorKeyDown,
               onBlur: () => commit()
+            }
+          ) : descriptor.tag === "select" ? /* @__PURE__ */ u2(
+            "select",
+            {
+              ref: inputRef,
+              class: "excel-view-cell-editor excel-view-cell-editor-select",
+              value: draft,
+              disabled: pending,
+              onChange: (event) => setDraft(event.currentTarget.value),
+              onKeyDown: handleEditorKeyDown,
+              onBlur: () => commit(),
+              children: editorOptions.map((option) => /* @__PURE__ */ u2("option", { value: option.value, children: option.label }, option.value))
             }
           ) : /* @__PURE__ */ u2(
             "input",
@@ -56551,13 +56654,25 @@ function ExcelCell({
               type: descriptor.type || "text",
               value: draft,
               disabled: pending,
+              ...getTypedInputProps(policy.editorKind),
               onInput: (event) => setDraft(event.currentTarget.value),
-              onKeyDown: handleKeyDown,
+              onKeyDown: handleEditorKeyDown,
               onBlur: () => commit()
             }
           ),
           /* @__PURE__ */ u2("span", { class: "excel-view-cell-edit-hint", children: descriptor.hint })
-        ] }) : field === "content" && typeof value === "string" && value ? /* @__PURE__ */ u2("span", { class: "excel-view-content-link", children: truncateExcelCellText(value) }) : /* @__PURE__ */ u2("span", { class: "excel-view-cell-value", children: displayValue }),
+        ] }) : showFullMarkdownContent ? /* @__PURE__ */ u2(
+          MarkdownContent,
+          {
+            renderPort: messageRenderPort,
+            content: contentText,
+            contentType: "markdown",
+            sourcePath: item.file?.path || "",
+            className: "excel-view-cell-md",
+            onClick: handleMarkdownClick,
+            onDblClick: handleMarkdownDoubleClick
+          }
+        ) : isContentCell && contentText ? /* @__PURE__ */ u2("span", { class: "excel-view-content-link", children: truncateExcelCellText(contentText) }) : /* @__PURE__ */ u2("span", { class: "excel-view-cell-value", children: displayValue }),
         !editing && selected ? /* @__PURE__ */ u2("span", { class: "excel-view-cell-affordance", "aria-hidden": "true", children: editable ? "✎" : "🔒" }) : null,
         selected && editable && !editing && !pending ? /* @__PURE__ */ u2(
           "span",
@@ -56597,6 +56712,23 @@ function getColumnWidth(column2, width2) {
   if (column2.editorKind === "number" || column2.editorKind === "rating") return 104;
   return 150;
 }
+function normalizeClipboardText(text2) {
+  return String(text2 || "").replace(/\r\n/g, "\n").replace(/\r/g, "\n");
+}
+function parseClipboardMatrix(text2) {
+  const normalized = normalizeClipboardText(text2);
+  const withoutFinalNewline = normalized.endsWith("\n") ? normalized.slice(0, -1) : normalized;
+  if (!withoutFinalNewline) return [[""]];
+  return withoutFinalNewline.split("\n").map((row) => row.split("	"));
+}
+function focusCellElement(table, cellKey) {
+  if (!table || !cellKey) return;
+  const escaped = cellKey.replace(/\\/g, "\\\\").replace(/"/g, '\\"');
+  window.requestAnimationFrame(() => {
+    const element = table.querySelector(`[data-excel-cell-key="${escaped}"]`);
+    element?.focus?.();
+  });
+}
 function ExcelGrid({
   items,
   columns,
@@ -56609,12 +56741,15 @@ function ExcelGrid({
   valueOverrides,
   canCommitCells = false,
   columnWidths,
+  contentDisplayMode = "previewText",
+  messageRenderPort,
   fillDragSourceCell,
   fillDragTargetCellKey,
   onSelectCell,
   onStartEdit,
   onCancelEdit,
   onCommitEdit,
+  onCommitBatchEdits,
   onStartFillDrag,
   onMoveFillDrag,
   onFinishFillDrag,
@@ -56623,6 +56758,7 @@ function ExcelGrid({
   onColumnWidthCommit,
   onOpenRecord
 }) {
+  const tableRef = A$1(null);
   const makeCell = (item, columnKey) => {
     const optimisticKey = getExcelCellKey(item.id, columnKey);
     const cell = buildExcelCellModel(item, columnKey, valueOverrides?.[optimisticKey]);
@@ -56648,6 +56784,53 @@ function ExcelGrid({
   const finishFillDrag = (target) => {
     onFinishFillDrag?.(buildFillRange(target));
   };
+  const findCellPosition = (cell) => ({
+    rowIndex: items.findIndex((item) => item.id === cell.itemId),
+    colIndex: columns.findIndex((column2) => column2.canonicalField === cell.canonicalField)
+  });
+  const selectByPosition = (rowIndex, colIndex) => {
+    if (!items.length || !columns.length) return;
+    const boundedRow = Math.max(0, Math.min(items.length - 1, rowIndex));
+    const boundedCol = Math.max(0, Math.min(columns.length - 1, colIndex));
+    const nextCell = makeCell(items[boundedRow], columns[boundedCol].key);
+    onSelectCell?.(nextCell);
+    focusCellElement(tableRef.current, getCellKey(nextCell));
+  };
+  const navigateCell = (cell, direction) => {
+    const { rowIndex, colIndex } = findCellPosition(cell);
+    if (rowIndex < 0 || colIndex < 0) return;
+    if (direction === "up") return selectByPosition(rowIndex - 1, colIndex);
+    if (direction === "down") return selectByPosition(rowIndex + 1, colIndex);
+    if (direction === "left") return selectByPosition(rowIndex, colIndex - 1);
+    if (direction === "right") return selectByPosition(rowIndex, colIndex + 1);
+    const linearIndex = rowIndex * columns.length + colIndex + (direction === "previous" ? -1 : 1);
+    const bounded = Math.max(0, Math.min(items.length * columns.length - 1, linearIndex));
+    selectByPosition(Math.floor(bounded / columns.length), bounded % columns.length);
+  };
+  const pasteFromCell = (startCell, text2) => {
+    if (!onCommitBatchEdits || !canCommitCells) return;
+    const { rowIndex, colIndex } = findCellPosition(startCell);
+    if (rowIndex < 0 || colIndex < 0) return;
+    const matrix = parseClipboardMatrix(text2);
+    const edits = [];
+    let lastCell = null;
+    for (let rowOffset = 0; rowOffset < matrix.length; rowOffset += 1) {
+      for (let colOffset = 0; colOffset < matrix[rowOffset].length; colOffset += 1) {
+        const targetRow = rowIndex + rowOffset;
+        const targetCol = colIndex + colOffset;
+        if (targetRow >= items.length || targetCol >= columns.length) continue;
+        const targetCell = makeCell(items[targetRow], columns[targetCol].key);
+        lastCell = targetCell;
+        if (!canInlineEditExcelCell(targetCell, canCommitCells)) continue;
+        edits.push({ cell: targetCell, editorValue: matrix[rowOffset][colOffset] });
+      }
+    }
+    if (lastCell) {
+      onSelectCell?.(lastCell);
+      focusCellElement(tableRef.current, getCellKey(lastCell));
+    }
+    if (edits.length) onCommitBatchEdits(edits, "paste");
+  };
   const startColumnResize = (event, column2) => {
     event.preventDefault();
     event.stopPropagation();
@@ -56669,7 +56852,7 @@ function ExcelGrid({
     window.addEventListener("mousemove", move, true);
     window.addEventListener("mouseup", up, true);
   };
-  return /* @__PURE__ */ u2("table", { class: "think-table excel-view-table", children: [
+  return /* @__PURE__ */ u2("table", { ref: tableRef, class: "think-table excel-view-table", children: [
     /* @__PURE__ */ u2("colgroup", { children: columns.map((column2) => {
       const width2 = getColumnWidth(column2, columnWidths?.[column2.key]);
       return /* @__PURE__ */ u2("col", { "data-field": column2.key, style: { width: `${width2}px` } }, column2.key);
@@ -56726,10 +56909,14 @@ function ExcelGrid({
           fillDragging,
           fillSource: fillDragSourceCell ? getCellKey(fillDragSourceCell) === canonicalCellKey : false,
           fillTarget: fillDragTargetCellKey === canonicalCellKey && fillDragSourceCell?.canonicalField === cell.canonicalField,
+          contentDisplayMode,
+          messageRenderPort,
           onSelect: onSelectCell,
           onStartEdit,
           onCancelEdit,
           onCommitEdit,
+          onNavigate: navigateCell,
+          onPasteText: pasteFromCell,
           onStartFillDrag,
           onMoveFillDrag,
           onFinishFillDrag: finishFillDrag,
@@ -56772,6 +56959,9 @@ function removeSavedKey(source, key) {
   next2.delete(key);
   return next2;
 }
+function uniqueKeys(keys) {
+  return Array.from(new Set(keys));
+}
 function useExcelCellEditing(options) {
   const { onCellCommit } = options;
   const [selectedCellKey, setSelectedCellKey] = d(null);
@@ -56781,11 +56971,17 @@ function useExcelCellEditing(options) {
   const [valueOverrides, setValueOverrides] = d({});
   const [savedCellKeys, setSavedCellKeys] = d(() => /* @__PURE__ */ new Set());
   const saveFlashTimers = A$1({});
+  const commitQueueRef = A$1(Promise.resolve());
   const [fillDragSourceCell, setFillDragSourceCell] = d(null);
   const [fillDragTargetCellKey, setFillDragTargetCellKey] = d(null);
   y(() => () => {
     for (const timer of Object.values(saveFlashTimers.current)) clearTimeout(timer);
     saveFlashTimers.current = {};
+  }, []);
+  const enqueueCommitTask = q$1(async (task) => {
+    const run = commitQueueRef.current.then(task, task);
+    commitQueueRef.current = run.catch(() => void 0);
+    await run;
   }, []);
   const flashSavedKey = q$1((key) => {
     const existing = saveFlashTimers.current[key];
@@ -56851,6 +57047,43 @@ function useExcelCellEditing(options) {
       return false;
     }
   }, [flashSavedKey, onCellCommit]);
+  const commitBatchEdits = q$1(async (edits, reason) => {
+    if (!edits.length) return;
+    const prepared = edits.map((edit) => {
+      const key = getExcelCellKey(edit.cell.itemId, edit.cell.canonicalField);
+      const validationMessage = validateExcelEditorValue(edit.cell, edit.editorValue);
+      const nextValue = validationMessage ? void 0 : parseExcelEditorValue(edit.cell, edit.editorValue);
+      return { ...edit, key, validationMessage, nextValue };
+    });
+    const invalid = prepared.filter((edit) => edit.validationMessage);
+    if (invalid.length) {
+      setCellErrors((prev2) => {
+        const next2 = { ...prev2 };
+        for (const edit of invalid) next2[edit.key] = edit.validationMessage || "字段值无效";
+        return next2;
+      });
+    }
+    const valid = prepared.filter((edit) => !edit.validationMessage && canInlineEditExcelCell(edit.cell));
+    if (!valid.length) return;
+    const keys = uniqueKeys(valid.map((edit) => edit.key));
+    setEditingCellKey(null);
+    setSelectedCellKey(valid[valid.length - 1].key);
+    setPendingCellKeys((prev2) => addPendingKeys(prev2, keys));
+    setCellErrors((prev2) => {
+      const next2 = { ...prev2 };
+      for (const key of keys) next2[key] = void 0;
+      return next2;
+    });
+    try {
+      await enqueueCommitTask(async () => {
+        for (const edit of valid) {
+          await commitCellValue(edit.cell, edit.nextValue, reason);
+        }
+      });
+    } finally {
+      setPendingCellKeys((prev2) => removePendingKeys(prev2, keys));
+    }
+  }, [commitCellValue, enqueueCommitTask]);
   const commitEdit = q$1(async (cell, nextEditorValue) => {
     const key = getExcelCellKey(cell.itemId, cell.canonicalField);
     const validationMessage = validateExcelEditorValue(cell, nextEditorValue);
@@ -56865,11 +57098,13 @@ function useExcelCellEditing(options) {
     setCellErrors((prev2) => ({ ...prev2, [key]: void 0 }));
     setPendingCellKeys((prev2) => addPendingKey(prev2, key));
     try {
-      await commitCellValue(cell, nextValue, "inline-edit");
+      await enqueueCommitTask(async () => {
+        await commitCellValue(cell, nextValue, "inline-edit");
+      });
     } finally {
       setPendingCellKeys((prev2) => removePendingKey(prev2, key));
     }
-  }, [commitCellValue]);
+  }, [commitCellValue, enqueueCommitTask]);
   const startFillDrag = q$1((cell) => {
     if (!onCellCommit || !canInlineEditExcelCell(cell)) return;
     const key = getExcelCellKey(cell.itemId, cell.canonicalField);
@@ -56892,16 +57127,8 @@ function useExcelCellEditing(options) {
     if (!source || !cells.length) return;
     const targetCells = cells.filter((cell) => cell.itemId !== source.itemId && cell.canonicalField === source.canonicalField && canInlineEditExcelCell(cell));
     if (!targetCells.length) return;
-    const keys = targetCells.map((cell) => getExcelCellKey(cell.itemId, cell.canonicalField));
-    setPendingCellKeys((prev2) => addPendingKeys(prev2, keys));
-    try {
-      for (const cell of targetCells) {
-        await commitCellValue(cell, source.value, "fill-drag");
-      }
-    } finally {
-      setPendingCellKeys((prev2) => removePendingKeys(prev2, keys));
-    }
-  }, [commitCellValue, fillDragSourceCell]);
+    await commitBatchEdits(targetCells.map((cell) => ({ cell, editorValue: source.editorValue })), "fill-drag");
+  }, [commitBatchEdits, fillDragSourceCell]);
   const resetTransientState = q$1(() => {
     setSelectedCellKey(null);
     setEditingCellKey(null);
@@ -56927,6 +57154,7 @@ function useExcelCellEditing(options) {
     startEdit,
     cancelEdit,
     commitEdit,
+    commitBatchEdits,
     startFillDrag,
     moveFillDrag,
     finishFillDrag,
@@ -56968,6 +57196,12 @@ function normalizeColumnWidths(widths) {
   }
   return next2;
 }
+function normalizeContentDisplayMode(mode) {
+  return mode === "fullMarkdown" ? "fullMarkdown" : "previewText";
+}
+function getNextContentDisplayMode(mode) {
+  return mode === "fullMarkdown" ? "previewText" : "fullMarkdown";
+}
 function ExcelView({
   items,
   fields,
@@ -56977,7 +57211,8 @@ function ExcelView({
   onFieldsChange,
   onExcelConfigChange,
   onCellCommit,
-  onOpenRecord
+  onOpenRecord,
+  messageRenderPort
 }) {
   const discoveredFields = T$1(() => getAllFields(items), [items]);
   const normalizedAvailableFields = T$1(() => normalizeDisplayFields(
@@ -56995,6 +57230,10 @@ function ExcelView({
   const columns = T$1(() => buildExcelColumns(displayFields), [displayFields]);
   const itemSignature = T$1(() => items.map((item) => `${item.id}:${item.modified ?? ""}`).join("|"), [items]);
   const persistedColumnWidths = T$1(() => normalizeColumnWidths(excelConfig?.columnWidths), [excelConfig?.columnWidths]);
+  const persistedContentDisplayMode = T$1(
+    () => normalizeContentDisplayMode(excelConfig?.contentDisplayMode),
+    [excelConfig?.contentDisplayMode]
+  );
   const editing = useExcelCellEditing({ onCellCommit });
   const resetTransientState = editing.resetTransientState;
   const editableColumnCount = columns.filter((column2) => column2.editable).length;
@@ -57003,12 +57242,19 @@ function ExcelView({
   const [fieldConfigError, setFieldConfigError] = d(null);
   const [excelConfigSaving, setExcelConfigSaving] = d(false);
   const [localColumnWidths, setLocalColumnWidths] = d(persistedColumnWidths);
+  const [localContentDisplayMode, setLocalContentDisplayMode] = d(persistedContentDisplayMode);
+  const isFullMarkdownContent = localContentDisplayMode === "fullMarkdown";
+  const hasContentColumn = T$1(() => columns.some((column2) => column2.canonicalField === "content"), [columns]);
+  const contentModeButtonTitle = !hasContentColumn ? "当前表格未显示内容字段，请先在字段栏添加 content/内容字段" : excelConfigSaving ? "正在保存 Excel 视图配置" : isFullMarkdownContent ? "当前：内容字段显示完整 Markdown；点击切回短文本预览" : "当前：内容字段短文本预览；点击显示完整 Markdown";
   y(() => {
     resetTransientState();
   }, [itemSignature, resetTransientState]);
   y(() => {
     setLocalColumnWidths(persistedColumnWidths);
   }, [persistedColumnWidths]);
+  y(() => {
+    setLocalContentDisplayMode(persistedContentDisplayMode);
+  }, [persistedContentDisplayMode]);
   const handleFieldsChange = q$1(async (nextFields) => {
     if (!onFieldsChange || fieldConfigSaving) return;
     const normalizedNextFields = normalizeDisplayFields(nextFields, {
@@ -57027,6 +57273,18 @@ function ExcelView({
       setFieldConfigSaving(false);
     }
   }, [displayFields, fieldConfigSaving, normalizedAvailableFields, onFieldsChange]);
+  const persistExcelConfig = q$1(async (nextConfig, rollback) => {
+    if (!onExcelConfigChange) return;
+    setExcelConfigSaving(true);
+    try {
+      await onExcelConfigChange(nextConfig);
+    } catch (error) {
+      console.error("[ExcelView] 保存 Excel 视图配置失败", error);
+      rollback?.();
+    } finally {
+      setExcelConfigSaving(false);
+    }
+  }, [onExcelConfigChange]);
   const handleColumnWidthDraftChange = q$1((field, width2) => {
     const nextWidth = normalizeColumnWidth(width2);
     setLocalColumnWidths((prev2) => ({ ...prev2, [field]: nextWidth }));
@@ -57038,21 +57296,23 @@ function ExcelView({
       [field]: nextWidth
     };
     setLocalColumnWidths(nextColumnWidths);
-    if (!onExcelConfigChange) return;
-    const nextConfig = {
+    await persistExcelConfig({
       ...excelConfig || {},
-      columnWidths: nextColumnWidths
-    };
-    setExcelConfigSaving(true);
-    try {
-      await onExcelConfigChange(nextConfig);
-    } catch (error) {
-      console.error("[ExcelView] 保存列宽失败", error);
-      setLocalColumnWidths(persistedColumnWidths);
-    } finally {
-      setExcelConfigSaving(false);
-    }
-  }, [excelConfig, localColumnWidths, onExcelConfigChange, persistedColumnWidths]);
+      columnWidths: nextColumnWidths,
+      contentDisplayMode: localContentDisplayMode
+    }, () => setLocalColumnWidths(persistedColumnWidths));
+  }, [excelConfig, localColumnWidths, localContentDisplayMode, persistedColumnWidths, persistExcelConfig]);
+  const handleContentDisplayToggle = q$1(async () => {
+    if (!hasContentColumn || excelConfigSaving) return;
+    const nextMode = getNextContentDisplayMode(localContentDisplayMode);
+    const previousMode = localContentDisplayMode;
+    setLocalContentDisplayMode(nextMode);
+    await persistExcelConfig({
+      ...excelConfig || {},
+      columnWidths: localColumnWidths,
+      contentDisplayMode: nextMode
+    }, () => setLocalContentDisplayMode(previousMode));
+  }, [excelConfig, excelConfigSaving, hasContentColumn, localColumnWidths, localContentDisplayMode, persistExcelConfig]);
   return /* @__PURE__ */ u2(
     "div",
     {
@@ -57060,6 +57320,7 @@ function ExcelView({
       "data-inline-edit": onCellCommit ? "enabled" : "disabled",
       "data-column-config": onFieldsChange ? "enabled" : "disabled",
       "data-excel-config-saving": excelConfigSaving ? "true" : "false",
+      "data-content-display-mode": localContentDisplayMode,
       ...getObsidianEventBoundaryProps(),
       children: [
         /* @__PURE__ */ u2("div", { class: "excel-view-toolbar", "aria-label": "Excel 视图编辑说明", children: [
@@ -57071,7 +57332,22 @@ function ExcelView({
             "只读 ",
             readonlyColumnCount
           ] }),
-          /* @__PURE__ */ u2("span", { class: "excel-view-legend-note", children: "双击可编辑单元格；路径、文件、派生字段保持只读。" })
+          /* @__PURE__ */ u2(
+            "button",
+            {
+              type: "button",
+              class: `excel-view-content-mode-button ${isFullMarkdownContent ? "is-active" : ""} ${excelConfigSaving ? "is-saving" : ""}`,
+              "aria-pressed": isFullMarkdownContent ? "true" : "false",
+              title: contentModeButtonTitle,
+              disabled: !hasContentColumn || excelConfigSaving,
+              onClick: handleContentDisplayToggle,
+              children: [
+                "内容：",
+                excelConfigSaving ? "保存中…" : isFullMarkdownContent ? "全文 Markdown" : "预览"
+              ]
+            }
+          ),
+          /* @__PURE__ */ u2("span", { class: "excel-view-legend-note", children: "双击/Enter/F2 编辑；方向键/Tab 导航；支持多行多列粘贴；内容字段可切换预览或全文 Markdown。" })
         ] }),
         /* @__PURE__ */ u2(
           ExcelColumnToolbar,
@@ -57100,12 +57376,15 @@ function ExcelView({
             valueOverrides: editing.valueOverrides,
             canCommitCells: !!onCellCommit,
             columnWidths: localColumnWidths,
+            contentDisplayMode: localContentDisplayMode,
+            messageRenderPort,
             fillDragSourceCell: editing.fillDragSourceCell,
             fillDragTargetCellKey: editing.fillDragTargetCellKey,
             onSelectCell: editing.selectCell,
             onStartEdit: editing.startEdit,
             onCancelEdit: editing.cancelEdit,
             onCommitEdit: editing.commitEdit,
+            onCommitBatchEdits: editing.commitBatchEdits,
             onStartFillDrag: editing.startFillDrag,
             onMoveFillDrag: editing.moveFillDrag,
             onFinishFillDrag: editing.finishFillDrag,
