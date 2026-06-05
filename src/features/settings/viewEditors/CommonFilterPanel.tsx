@@ -8,7 +8,7 @@ import {
   Chip,
   TextField,
   Typography,
-} from '@mui/material';
+} from '@shared/public';
 import { RestartAltIcon } from '@shared/public';
 import type { DataStore, FilterRule, Item } from '@core/public';
 import { getAllFields, getFieldLabel, readField } from '@core/public';

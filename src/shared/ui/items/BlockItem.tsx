@@ -1,23 +1,25 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
 import { Item, ThemeDefinition } from '@core/public';
-import { FieldPill } from '@shared/ui/items/FieldPill';
-import { ItemLink } from '@shared/ui/items/ItemLink';
+import { FieldPill } from './FieldPill';
+import { ItemLink } from './ItemLink';
 import type { MessageRenderPort } from '@core/public';
-import { MarkdownContent } from '@shared/ui/markdown/MarkdownContent';
-import { openEditFromItem } from '@/app/public';
-import { createRecordGestureHandlers } from '@/shared/ui/utils/recordOrigin';
+import { MarkdownContent } from '../markdown/MarkdownContent';
+import type { OpenRecordHandler, OpenRecordOriginHandler, ResolveResourcePathHandler } from '../../types/actions';
+import { createRecordGestureHandlers } from '../utils/recordOrigin';
 
 interface BlockItemProps {
     item: Item;
     fields: string[];
     isNarrow: boolean;
-    app: any;
+    resolveResourcePath?: ResolveResourcePathHandler;
+    onOpenRecordOrigin?: OpenRecordOriginHandler;
     messageRenderPort?: MessageRenderPort;
     allThemes: ThemeDefinition[];
+    onOpenRecord?: OpenRecordHandler;
 }
 
-export const BlockItem = ({ item, fields, isNarrow, app, messageRenderPort, allThemes }: BlockItemProps) => {
+export const BlockItem = ({ item, fields, isNarrow, resolveResourcePath, onOpenRecordOrigin, messageRenderPort, allThemes, onOpenRecord }: BlockItemProps) => {
     const metadataFields = fields.filter(f => f !== 'title' && f !== 'content');
     const showTitle = fields.includes('title') && item.title;
     const effectiveContent = (item.content && item.content.trim().length > 0) ? item.content : item.title;
@@ -27,10 +29,10 @@ export const BlockItem = ({ item, fields, isNarrow, app, messageRenderPort, allT
 
     const gesture = createRecordGestureHandlers({
         item,
-        app,
+        onOpenOrigin: onOpenRecordOrigin,
         onPrimary: () => {
             try {
-                openEditFromItem({ app, item });
+                void onOpenRecord?.(item);
             } catch {
                 // no-op: editing should never crash rendering
             }
@@ -46,7 +48,7 @@ export const BlockItem = ({ item, fields, isNarrow, app, messageRenderPort, allT
                             key={fieldKey} 
                             item={item} 
                             fieldKey={fieldKey} 
-                            app={app} 
+                            resolveResourcePath={resolveResourcePath} 
                             allThemes={allThemes} 
                         />
                     ))}
@@ -55,7 +57,7 @@ export const BlockItem = ({ item, fields, isNarrow, app, messageRenderPort, allT
             <div class="bv-block-main">
                 {showTitle && (
                     <div class="bv-block-title">
-                        <ItemLink item={item} app={app} />
+                        <ItemLink item={item} onOpenRecord={onOpenRecord} onOpenRecordOrigin={onOpenRecordOrigin} />
                     </div>
                 )}
                 {showContent && (

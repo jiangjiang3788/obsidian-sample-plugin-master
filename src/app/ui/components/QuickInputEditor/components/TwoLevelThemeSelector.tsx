@@ -3,7 +3,7 @@ import { h } from 'preact';
 
 import type { ThemeDefinition } from '@core/public';
 
-import { Box, Button, FormControl, Typography } from '@mui/material';
+import { Box, Button, FormControl, Typography } from '@shared/public';
 
 export interface TwoLevelThemeSelectorProps {
   themes: ThemeDefinition[];

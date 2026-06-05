@@ -11,7 +11,7 @@ import { h, render } from 'preact';
 import {Layout, devLog, devError} from '@core/public';
 import { DataStore } from '@core/public';
 import { ServicesProvider, type Services, validateServices as validateServicesImpl } from '@/app/public';
-import type { TimerController } from '@/app/public';
+import type { TimerController } from '@shared/public';
 import { LayoutRenderer } from '@features/settings/layout/LayoutRenderer';
 import { ActionService } from '@core/public';
 import { ItemService } from '@core/public';

@@ -11,7 +11,7 @@
  */
 import { h, type ComponentChildren } from 'preact';
 import { useCallback, useEffect, useMemo, useState } from 'preact/hooks';
-import { Box, List, Typography } from '@mui/material';
+import { Box, List, Typography } from '../../ui/muiCompat';
 
 import type { ThemeDefinition } from '@core/public';
 import {

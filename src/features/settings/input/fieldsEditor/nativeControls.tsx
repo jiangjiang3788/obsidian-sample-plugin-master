@@ -1,25 +1,7 @@
 // src/features/settings/input/fieldsEditor/nativeControls.tsx
 /** @jsxImportSource preact */
 import type { JSX } from "preact";
-import { logInputEvent } from '@shared/public';
-
-type NativeInputEvent = Event & {
-  currentTarget: HTMLInputElement | HTMLTextAreaElement;
-};
-
-function readInputValue(event: Event): string {
-  return (
-    (event.target || event.currentTarget) as
-      | HTMLInputElement
-      | HTMLTextAreaElement
-  ).value;
-}
-
-function stopEditorEvent(event: Event) {
-  // Obsidian 的工作区、悬浮窗和快捷键系统会监听冒泡阶段的鼠标/键盘事件。
-  // 输入控件必须截断这些事件，否则会出现“能 focus，但无法选中文字/无法稳定输入”的现象。
-  event.stopPropagation();
-}
+import { useObsidianInputGuard } from './useObsidianInputGuard';
 
 const nativeControlBaseStyle: JSX.CSSProperties = {
   width: "100%",
@@ -67,6 +49,14 @@ export function NativeTextInput({
   title?: string;
   style?: JSX.CSSProperties;
 }) {
+  const inputGuard = useObsidianInputGuard({
+    scope: `FieldsEditor/${label}`,
+    controlName: 'control',
+    onInput,
+    onBlur,
+    onFocus,
+  });
+
   return (
     <label style={{ display: "block", minWidth: 0, ...style }} title={title}>
       <span style={nativeLabelStyle}>{label}</span>
@@ -76,70 +66,7 @@ export function NativeTextInput({
         disabled={disabled}
         placeholder={placeholder}
         data-think-diag-control={label}
-        onPointerDown={(event) =>
-          logInputEvent(`FieldsEditor/${label}`, event as any, {
-            handler: "control onPointerDown",
-          })
-        }
-        onMouseDown={(event) => {
-          logInputEvent(`FieldsEditor/${label}`, event as any, {
-            handler: "control onMouseDown before stopPropagation",
-          });
-          stopEditorEvent(event as any);
-        }}
-        onClick={(event) => {
-          logInputEvent(`FieldsEditor/${label}`, event as any, {
-            handler: "control onClick before stopPropagation",
-          });
-          stopEditorEvent(event as any);
-        }}
-        onDblClick={(event) => {
-          logInputEvent(`FieldsEditor/${label}`, event as any, {
-            handler: "control onDblClick before stopPropagation",
-          });
-          stopEditorEvent(event as any);
-        }}
-        onKeyDown={(event) => {
-          logInputEvent(`FieldsEditor/${label}`, event as any, {
-            handler: "control onKeyDown before stopPropagation",
-          });
-          stopEditorEvent(event as any);
-        }}
-        onKeyUp={(event) => {
-          logInputEvent(`FieldsEditor/${label}`, event as any, {
-            handler: "control onKeyUp before stopPropagation",
-          });
-          stopEditorEvent(event as any);
-        }}
-        onBeforeInput={(event) =>
-          logInputEvent(`FieldsEditor/${label}`, event as any, {
-            handler: "control onBeforeInput",
-          })
-        }
-        onInput={(event: NativeInputEvent) => {
-          logInputEvent(`FieldsEditor/${label}`, event as any, {
-            handler: "control onInput before local update",
-            nextValue: readInputValue(event),
-          });
-          onInput(readInputValue(event));
-        }}
-        onChange={(event) =>
-          logInputEvent(`FieldsEditor/${label}`, event as any, {
-            handler: "control onChange",
-          })
-        }
-        onBlur={(event) => {
-          logInputEvent(`FieldsEditor/${label}`, event as any, {
-            handler: "control onBlur before commit",
-          });
-          onBlur?.();
-        }}
-        onFocus={(event) => {
-          logInputEvent(`FieldsEditor/${label}`, event as any, {
-            handler: "control onFocus",
-          });
-          onFocus?.();
-        }}
+        {...inputGuard}
         style={{
           ...nativeControlBaseStyle,
           opacity: disabled ? 0.6 : 1,
@@ -169,6 +96,13 @@ export function NativeTextarea({
   rows?: number;
   style?: JSX.CSSProperties;
 }) {
+  const textareaGuard = useObsidianInputGuard({
+    scope: `FieldsEditor/${label}`,
+    controlName: 'textarea',
+    onInput,
+    onBlur,
+  });
+
   return (
     <label style={{ display: "block", minWidth: 0, ...style }}>
       <span style={nativeLabelStyle}>{label}</span>
@@ -178,64 +112,7 @@ export function NativeTextarea({
         rows={rows}
         placeholder={placeholder}
         data-think-diag-control={label}
-        onPointerDown={(event) =>
-          logInputEvent(`FieldsEditor/${label}`, event as any, {
-            handler: "textarea onPointerDown",
-          })
-        }
-        onMouseDown={(event) => {
-          logInputEvent(`FieldsEditor/${label}`, event as any, {
-            handler: "textarea onMouseDown before stopPropagation",
-          });
-          stopEditorEvent(event as any);
-        }}
-        onClick={(event) => {
-          logInputEvent(`FieldsEditor/${label}`, event as any, {
-            handler: "textarea onClick before stopPropagation",
-          });
-          stopEditorEvent(event as any);
-        }}
-        onDblClick={(event) => {
-          logInputEvent(`FieldsEditor/${label}`, event as any, {
-            handler: "textarea onDblClick before stopPropagation",
-          });
-          stopEditorEvent(event as any);
-        }}
-        onKeyDown={(event) => {
-          logInputEvent(`FieldsEditor/${label}`, event as any, {
-            handler: "textarea onKeyDown before stopPropagation",
-          });
-          stopEditorEvent(event as any);
-        }}
-        onKeyUp={(event) => {
-          logInputEvent(`FieldsEditor/${label}`, event as any, {
-            handler: "textarea onKeyUp before stopPropagation",
-          });
-          stopEditorEvent(event as any);
-        }}
-        onBeforeInput={(event) =>
-          logInputEvent(`FieldsEditor/${label}`, event as any, {
-            handler: "textarea onBeforeInput",
-          })
-        }
-        onInput={(event: NativeInputEvent) => {
-          logInputEvent(`FieldsEditor/${label}`, event as any, {
-            handler: "textarea onInput before local update",
-            nextValue: readInputValue(event),
-          });
-          onInput(readInputValue(event));
-        }}
-        onChange={(event) =>
-          logInputEvent(`FieldsEditor/${label}`, event as any, {
-            handler: "textarea onChange",
-          })
-        }
-        onBlur={(event) => {
-          logInputEvent(`FieldsEditor/${label}`, event as any, {
-            handler: "textarea onBlur before commit",
-          });
-          onBlur?.();
-        }}
+        {...textareaGuard}
         style={{
           ...nativeControlBaseStyle,
           resize: "vertical",

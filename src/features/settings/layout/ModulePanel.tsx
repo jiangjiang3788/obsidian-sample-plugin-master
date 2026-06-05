@@ -2,7 +2,7 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
 // [新增] 导入 IconButton, Tooltip 和图标
-import { IconButton, Tooltip } from '@mui/material';
+import { IconButton, Tooltip } from '@shared/public';
 import { DeleteOutlineIcon, IosShareIcon, SettingsIcon } from '@shared/public';
 
 // 解决 Preact 和 Material-UI 的类型兼容性问题

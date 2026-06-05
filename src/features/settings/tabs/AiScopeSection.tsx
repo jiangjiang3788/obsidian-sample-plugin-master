@@ -15,7 +15,7 @@ import {
   Select,
   Stack,
   Typography,
-} from '@mui/material';
+} from '@shared/public';
 import { ExpandMoreIcon } from '@shared/public';
 import type { AiScopeSectionProps } from './aiSettingsUiTypes';
 

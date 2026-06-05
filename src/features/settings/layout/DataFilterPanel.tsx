@@ -15,7 +15,7 @@ import {
   DialogTitle,
   Divider,
   Typography,
-} from '@mui/material';
+} from '@shared/public';
 import { ExpandMoreIcon, FilterListIcon } from '@shared/public';
 import { DataStore, getAllFields, getFieldLabel } from '@core/public';
 import type { FilterRule, Item } from '@core/public';

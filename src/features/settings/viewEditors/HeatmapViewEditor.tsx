@@ -1,7 +1,7 @@
 // src/features/settings/ui/components/view-editors/HeatmapViewEditor.tsx
 /** @jsxImportSource preact */
 import { h } from 'preact';
-import { Stack, Typography, Box, Button, FormControlLabel, Checkbox } from '@mui/material';
+import { Stack, Typography, Box, Button, FormControlLabel, Checkbox } from '@shared/public';
 import type { ViewEditorProps } from './registry';
 import { ListEditor, SimpleSelect } from '@shared/public';
 import { useSelector, selectInputBlocks, useUiPort } from '@/app/public';

@@ -1,6 +1,6 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
-import { Box, Chip, FormControl, FormControlLabel, InputLabel, MenuItem, Select, Switch, Typography } from '@mui/material';
+import { Box, Chip, FormControl, FormControlLabel, InputLabel, MenuItem, Select, Switch, Typography } from '@shared/public';
 import { SearchIcon, ThemeTreeSelect } from '@shared/public';
 import type { ThemeDefinition } from '@core/public';
 

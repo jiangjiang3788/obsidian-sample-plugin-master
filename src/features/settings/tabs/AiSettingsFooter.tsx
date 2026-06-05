@@ -1,6 +1,6 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
-import { Alert, Box, Button, Chip } from '@mui/material';
+import { Alert, Box, Button, Chip } from '@shared/public';
 import type { AiSettingsFooterProps } from './aiSettingsUiTypes';
 
 export function AiSettingsFooter({

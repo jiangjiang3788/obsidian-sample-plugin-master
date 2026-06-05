@@ -9,7 +9,7 @@ import {
     FormControlLabel,
     Switch,
     Typography,
-} from '@mui/material';
+} from '@shared/public';
 import { useUseCases, selectAiSettings, selectInputSettings, useSelector } from '@/app/public';
 import type { AiSettings as AiSettingsType } from '@core/public';
 import { DEFAULT_AI_SETTINGS, CUSTOM_PROMPT_EXAMPLES, AiHttpClient } from '@core/public';

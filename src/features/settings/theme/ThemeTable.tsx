@@ -7,7 +7,7 @@ import {
     TableCell,
     TableBody,
     Typography,
-} from '@mui/material';
+} from '@shared/public';
 import { useRef, useState } from 'preact/hooks';
 import { ThemeTreeNodeRow } from './ThemeTreeNodeRow';
 import type { EditorState } from './useThemeMatrixEditor';

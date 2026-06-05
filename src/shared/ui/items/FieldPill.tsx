@@ -4,20 +4,21 @@ import type { Item, ThemeDefinition } from '@core/public';
 import { readField } from '@core/public';
 import { getFieldDefinition, getFieldLabel, isImageFieldDefinition, normalizeImageValue } from '@core/public';
 import { getCategoryColor } from '@core/public';
-import { TagsRenderer } from '@shared/ui/composites/TagsRenderer';
+import { TagsRenderer } from '../composites/TagsRenderer';
 import { getBaseCategory, getLeafPath } from '@core/public';
+import type { ResolveResourcePathHandler } from '../../types/actions';
 
 interface FieldPillProps {
     item: Item;
     fieldKey: string;
-    app: any;
+    resolveResourcePath?: ResolveResourcePathHandler;
     allThemes: ThemeDefinition[];
 }
 
 /**
  * 通用字段渲染组件 - 可在多个视图间复用
  */
-export function FieldPill({ item, fieldKey, app, allThemes }: FieldPillProps) {
+export function FieldPill({ item, fieldKey, resolveResourcePath, allThemes }: FieldPillProps) {
     const value = readField(item, fieldKey);
     
     // 检查字段值是否为空
@@ -58,7 +59,7 @@ export function FieldPill({ item, fieldKey, app, allThemes }: FieldPillProps) {
     if (isImageFieldDefinition(fieldDef)) {
         const image = normalizeImageValue(value);
         if (!image) return null;
-        const src = image.kind === 'url' ? image.src : app.vault.adapter.getResourcePath(image.src);
+        const src = image.kind === 'url' ? image.src : (resolveResourcePath?.(image.src) || image.src);
         return (
             <span class="tag-pill" title={`${label}: ${image.src}`}>
                 <img src={src} alt={image.alt || label} />

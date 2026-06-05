@@ -10,7 +10,7 @@ import {
     TextField,
     Tooltip,
     Typography,
-} from '@mui/material';
+} from '@shared/public';
 import { DeleteOutlineIcon, IconAction, SimpleSelect } from '@shared/public';
 import { DataStore } from '@core/public';
 import { getAllFields, readField, getFieldLabel, FilterRule, SortRule } from '@core/public';

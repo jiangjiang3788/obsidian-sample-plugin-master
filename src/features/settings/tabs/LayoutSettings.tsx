@@ -16,7 +16,7 @@
 import { h } from 'preact';
 import { useSelector, selectViewInstances, selectLayouts, useUseCases } from '@/app/public';
 import type { UseCases } from '@/app/public';
-import { Box, Stack, Typography, TextField, Checkbox, FormControlLabel, Tooltip, Chip, Radio, RadioGroup as MuiRadioGroup, Autocomplete, Button, Menu, MenuItem, IconButton } from '@mui/material';
+import { Box, Stack, Typography, TextField, Checkbox, FormControlLabel, Tooltip, Chip, Radio, RadioGroup as MuiRadioGroup, Autocomplete, Button, Menu, MenuItem, IconButton } from '@shared/public';
 import { AddCircleOutlineIcon, ContentCopyIcon, DeleteOutlineIcon, DragIndicatorIcon, ExpandLessIcon, ExpandMoreIcon, IconAction, NamePromptModal } from '@shared/public';
 import type { Layout, ViewInstance } from '@core/public';
 import { useMemo, useCallback, useState } from 'preact/hooks';

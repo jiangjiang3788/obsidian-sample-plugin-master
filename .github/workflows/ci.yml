@@ -2,20 +2,24 @@ name: CI
 
 on:
   push:
-    branches: [main, master]
+    branches:
+      - main
+      - master
   pull_request:
+    branches:
+      - main
+      - master
+  workflow_dispatch:
 
 jobs:
   verify:
-    name: Typecheck / Gate / Test / Build
+    name: Verify and build release
     runs-on: ubuntu-latest
-    timeout-minutes: 20
-
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Node
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20
@@ -24,5 +28,8 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Verify
+      - name: Run CI verification
         run: npm run verify:ci
+
+      - name: Build release package
+        run: npm run build:release

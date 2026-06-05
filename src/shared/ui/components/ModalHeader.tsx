@@ -3,10 +3,10 @@
 import { h } from 'preact';
 import type { ComponentChildren } from 'preact';
 
-import { Box } from '@mui/material';
-import { CloseIcon } from '@shared/ui/icons';
+import { Box } from '../muiCompat';
+import { CloseIcon } from '../icons';
 
-import { IconAction } from '@shared/public';
+import { IconAction } from './IconAction';
 
 /**
  * ModalHeader

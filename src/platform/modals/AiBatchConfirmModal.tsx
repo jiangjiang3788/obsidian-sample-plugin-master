@@ -10,21 +10,25 @@ import type { App } from 'obsidian';
 import { Modal, Notice } from 'obsidian';
 import { useState } from 'preact/hooks';
 
-import { type Services, createServices, mountWithServices, unmountPreact, useUseCases, useSelector } from '@/app/public';
+import { type Services, createServices, mountWithServices, unmountPreact, useUseCases, useSelector, resolveVaultResourcePath } from '@/app/public';
 import type { NaturalRecordCommand, RecordSubmitResult, TemplateField } from '@core/public';
 import { getEffectiveTemplate, readRecordSubmitMessage } from '@core/public';
 
 import {
   Box,
   Button,
+  CheckCircleIcon,
   Chip,
+  DeleteIcon,
   List,
   ListItemButton,
   ListItemIcon,
   ListItemText,
+  ModalHeader,
+  RadioButtonUncheckedIcon,
   Typography,
-} from '@mui/material';
-import { CheckCircleIcon, DeleteIcon, ModalHeader, RadioButtonUncheckedIcon } from '@shared/public';
+} from '@shared/public';
+import { installBackdropCloseGuard } from './modalBackdropGuard';
 
 import { QuickInputEditor } from '@/app/public';
 
@@ -104,7 +108,7 @@ export class AiBatchConfirmModal extends Modal {
   onOpen() {
     this.contentEl.empty();
     this.modalEl.addClass('think-ai-batch-confirm-modal');
-    this.setupBackdropCloseGuard();
+    this.cleanupBackdropCloseGuard = installBackdropCloseGuard(this);
     this.modalEl.style.width = '90vw';
     this.modalEl.style.maxWidth = '900px';
     this.modalEl.style.height = '80vh';
@@ -112,7 +116,7 @@ export class AiBatchConfirmModal extends Modal {
     mountWithServices(
       this.contentEl,
       <AiBatchConfirmForm
-        app={this.app}
+        resolveResourcePath={(path) => resolveVaultResourcePath(this.app, path)}
         title={this.args.title}
         confirmText={this.args.confirmText}
         cancelText={this.args.cancelText}
@@ -130,29 +134,6 @@ export class AiBatchConfirmModal extends Modal {
     );
   }
 
-  private setupBackdropCloseGuard() {
-    const bgEl = (this as any).bgEl as HTMLElement | null | undefined;
-    if (!bgEl) return;
-
-    const stopBackdropClose = (event: Event) => {
-      event.preventDefault();
-      event.stopPropagation();
-    };
-
-    bgEl.addEventListener('pointerdown', stopBackdropClose, true);
-    bgEl.addEventListener('mousedown', stopBackdropClose, true);
-    bgEl.addEventListener('click', stopBackdropClose, true);
-    bgEl.addEventListener('touchstart', stopBackdropClose, true);
-    bgEl.addEventListener('touchend', stopBackdropClose, true);
-
-    this.cleanupBackdropCloseGuard = () => {
-      bgEl.removeEventListener('pointerdown', stopBackdropClose, true);
-      bgEl.removeEventListener('mousedown', stopBackdropClose, true);
-      bgEl.removeEventListener('click', stopBackdropClose, true);
-      bgEl.removeEventListener('touchstart', stopBackdropClose, true);
-      bgEl.removeEventListener('touchend', stopBackdropClose, true);
-    };
-  }
 
   onClose() {
     this.cleanupBackdropCloseGuard?.();
@@ -166,7 +147,7 @@ export class AiBatchConfirmModal extends Modal {
   }
 }
 function AiBatchConfirmForm({
-  app,
+  resolveResourcePath,
   title,
   confirmText,
   cancelText,
@@ -174,7 +155,7 @@ function AiBatchConfirmForm({
   closeModal,
   onComplete,
 }: {
-  app: App;
+  resolveResourcePath: (path: string) => string;
   title: string;
   confirmText?: string;
   cancelText?: string;
@@ -449,7 +430,7 @@ function AiBatchConfirmForm({
         <Box sx={{ flex: 1, overflow: 'auto', p: 2 }}>
           <QuickInputEditor
             key={currentRecord.id}
-            getResourcePath={(path) => app.vault.adapter.getResourcePath(path)}
+            getResourcePath={resolveResourcePath}
             initialBlockId={currentRecord.blockId}
             initialThemeId={currentRecord.themeId || null}
             initialFormData={currentRecord.formData}

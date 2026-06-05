@@ -1,7 +1,7 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
 import type { RefObject } from 'preact';
-import { Box, CircularProgress, Stack, Typography } from '@mui/material';
+import { Box, CircularProgress, Stack, Typography } from '@shared/public';
 import { ChatIcon } from '@shared/public';
 import type { ChatMessage } from '@core/public';
 import { MessageBubble } from './MessageBubble';

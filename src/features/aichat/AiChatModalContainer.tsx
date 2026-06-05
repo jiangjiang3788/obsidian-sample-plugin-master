@@ -1,7 +1,7 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
 import { useCallback, useEffect, useRef, useState } from 'preact/hooks';
-import { Box, Button, Typography } from '@mui/material';
+import { Box, Button, Typography } from '@shared/public';
 import { selectAiSettings, selectInputSettings, useSelector } from '@/app/public';
 import type { OpenAIChatMessage, ChatMessage, ChatSession, SessionFilters } from '@core/public';
 import { devError, devLog } from '@core/public';

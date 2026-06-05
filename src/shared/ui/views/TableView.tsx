@@ -3,23 +3,25 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
 import { Item } from '@core/public';
-import type { TimerController } from '@/app/public';
+import type { OpenRecordHandler, OpenRecordOriginHandler, ResolveResourcePathHandler, TimerController } from '../../types/actions';
 import { buildTableMatrix } from '@core/public';
-import { TaskRow } from '@shared/ui/items/TaskRow';
-import { ItemLink } from '@shared/ui/items/ItemLink';
+import { TaskRow } from '../items/TaskRow';
+import { ItemLink } from '../items/ItemLink';
 
 interface TableViewProps {
     items: Item[];
     rowField: string;
     colField: string;
     onMarkDone: (id: string) => void;
-    app: any;
+    resolveResourcePath?: ResolveResourcePathHandler;
+    onOpenRecordOrigin?: OpenRecordOriginHandler;
     timerService: TimerController;
     timers: any[];
     allThemes?: any[]; // 为了兼容 TaskRow 组件
+    onOpenRecord?: OpenRecordHandler;
 }
 
-export function TableView({ items, rowField, colField, onMarkDone, app, timerService, timers, allThemes = [] }: TableViewProps) {
+export function TableView({ items, rowField, colField, onMarkDone, resolveResourcePath, onOpenRecordOrigin, timerService, timers, allThemes = [], onOpenRecord }: TableViewProps) {
     if (!rowField || !colField) {
         return <div>（表格视图需要配置"行字段"和"列字段"）</div>;
     }
@@ -33,16 +35,18 @@ export function TableView({ items, rowField, colField, onMarkDone, app, timerSer
                 <TaskRow 
                     item={item} 
                     onMarkDone={onMarkDone} 
-                    app={app} 
+                    resolveResourcePath={resolveResourcePath}
+                    onOpenRecordOrigin={onOpenRecordOrigin}
                     timerService={timerService} 
                     timer={timer}
                     allThemes={allThemes}
                     compact={true} // 表格视图使用紧凑模式
+                    onOpenRecord={onOpenRecord}
                 />
             );
         }
         
-        return <ItemLink item={item} app={app} />;
+        return <ItemLink item={item} onOpenRecord={onOpenRecord} onOpenRecordOrigin={onOpenRecordOrigin} />;
     }
 
     return (

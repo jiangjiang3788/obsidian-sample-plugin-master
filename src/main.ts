@@ -6,13 +6,14 @@ import { ensureReflectMetadata } from '@core/public';
 ensureReflectMetadata();
 
 import { container } from 'tsyringe';
-import { Plugin, Notice, Modal, Setting } from 'obsidian';
+import { Plugin, Notice } from 'obsidian';
 import { DataStore } from '@core/public';
 import { InputService } from '@core/public';
 import { ThinkSettings, DEFAULT_SETTINGS } from '@core/public';
 import type { UseCases } from '@/app/public';
 import { setupCoreContainer, setDefaultAiHttpTransportFactory, resetDefaultAiHttpTransportFactory } from '@core/public';
 import { VAULT_PORT_TOKEN, UI_PORT_TOKEN, METADATA_PORT_TOKEN, FILESTAT_PORT_TOKEN, MODAL_PORT_TOKEN, EVENTS_PORT_TOKEN, MESSAGE_RENDER_PORT_TOKEN } from '@core/public';
+import type { ModalPort } from '@core/public';
 import './styles/main.css';
 import { safeAsync } from '@shared/public';
 import { startMeasure } from '@shared/public';
@@ -42,6 +43,7 @@ devLog(`[ThinkPlugin] main.ts 已加载，版本时间: ${new Date().toLocaleTim
 export default class ThinkPlugin extends Plugin {
     private serviceManager!: ServiceManager;
     private capabilities!: Capabilities;
+    private modalPort?: ModalPort;
 
     /**
      * [主流程] 插件启动入口
@@ -91,6 +93,7 @@ export default class ThinkPlugin extends Plugin {
                 devLog('[ThinkPlugin][BOOT] after ServiceManager.bootstrap');
                 const capabilityRegistry = createDefaultCapabilityRegistry();
                 const runtime = buildRuntime(container);
+                this.modalPort = runtime.modalPort;
                 this.capabilities = createCapabilities(this.app, settings, {
                     modalPort: runtime.modalPort,
                     timerService: this.serviceManager.timerService,
@@ -147,7 +150,7 @@ export default class ThinkPlugin extends Plugin {
             id: 'think-timer-start-by-task-id',
             name: 'Timer: 开始/继续计时（输入任务 ID）',
             callback: async () => {
-                const taskId = await TextPromptModal.open(this.app, {
+                const taskId = await this.modalPort?.openNamePrompt({
                     title: '开始/继续计时',
                     placeholder: '请输入任务 Item ID（例如：来自 Dashboard 的 item.id）',
                     ctaText: '开始',
@@ -175,7 +178,8 @@ export default class ThinkPlugin extends Plugin {
     onunload(): void {
         this.serviceManager?.cleanup();
         resetDefaultAiHttpTransportFactory();
-        container.clearInstances();
+        // ServiceManager owns normal DI cleanup. Keep a fallback for failed partial bootstrap.
+        if (!this.serviceManager) container.clearInstances();
     }
 
     private async loadSettings(): Promise<ThinkSettings> {
@@ -222,87 +226,5 @@ export default class ThinkPlugin extends Plugin {
 
     get useCases(): UseCases {
         return this.serviceManager.useCases;
-    }
-}
-
-// ----------------------------------------------------------------------------------
-// Tiny input modal helper (kept local to avoid introducing a new shared UI dependency).
-// ----------------------------------------------------------------------------------
-class TextPromptModal extends Modal {
-    private value: string = '';
-    private resolve!: (value: string | null) => void;
-    private resolved = false;
-    private titleText: string;
-    private placeholder: string;
-    private ctaText: string;
-    private keydownHandler: ((e: KeyboardEvent) => void) | null = null;
-
-    static open(app: any, opts: { title: string; placeholder?: string; ctaText?: string }): Promise<string | null> {
-        return new Promise((resolve) => {
-            const modal = new TextPromptModal(app, resolve, opts);
-            modal.open();
-        });
-    }
-
-    constructor(app: any, resolve: (value: string | null) => void, opts: { title: string; placeholder?: string; ctaText?: string }) {
-        super(app);
-        this.resolve = resolve;
-        this.titleText = opts.title;
-        this.placeholder = opts.placeholder ?? '';
-        this.ctaText = opts.ctaText ?? '确定';
-    }
-
-    private resolveOnce(value: string | null) {
-        if (this.resolved) return;
-        this.resolved = true;
-        try {
-            this.resolve(value);
-        } catch {
-            // ignore
-        }
-    }
-
-    onOpen(): void {
-        const { contentEl } = this;
-        contentEl.empty();
-        contentEl.createEl('h2', { text: this.titleText });
-
-        new Setting(contentEl)
-            .addText((text) => {
-                text.setPlaceholder(this.placeholder);
-                text.onChange((v) => (this.value = v));
-            })
-            .addButton((btn) => {
-                btn.setButtonText(this.ctaText);
-                btn.setCta();
-                btn.onClick(() => {
-                    this.close();
-                    this.resolveOnce(this.value || null);
-                });
-            });
-
-        // Cancel on close
-        // NOTE: 需要在 onClose 移除监听，避免多次 open/close 后累积监听导致重复触发。
-        this.keydownHandler = (e: KeyboardEvent) => {
-            if (e.key === 'Escape') {
-                this.close();
-                this.resolveOnce(null);
-            }
-            if (e.key === 'Enter') {
-                this.close();
-                this.resolveOnce(this.value || null);
-            }
-        };
-        this.modalEl.addEventListener('keydown', this.keydownHandler);
-    }
-
-    onClose(): void {
-        // If user closes the modal by clicking outside / X / etc., resolve to null.
-        this.resolveOnce(null);
-        if (this.keydownHandler) {
-            this.modalEl.removeEventListener('keydown', this.keydownHandler);
-            this.keydownHandler = null;
-        }
-        this.contentEl.empty();
     }
 }

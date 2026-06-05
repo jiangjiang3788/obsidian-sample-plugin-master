@@ -14,6 +14,8 @@ import {
   type QuickInputEditorState,
   useUseCases,
   useDataStore,
+  getVaultName,
+  resolveVaultResourcePath,
 } from '@/app/public';
 import { type Item, type QuickInputSaveData, type RecordInputSource, type RecordSubmitResult } from '@core/public';
 import { setupQuickInputKeyboardDetection } from './quickInputKeyboard';
@@ -78,7 +80,7 @@ export class QuickInputModal extends Modal {
     mountWithServices(
       this.contentEl,
       <QuickInputModalContent
-        getResourcePath={(path) => this.app.vault.adapter.getResourcePath(path)}
+        getResourcePath={(path) => resolveVaultResourcePath(this.app, path)}
         initialBlockId={this.blockId}
         context={this.context}
         initialThemeId={this.themeId}
@@ -88,7 +90,7 @@ export class QuickInputModal extends Modal {
         mode={this.options?.mode || 'create'}
         editItem={this.options?.editItem}
         source={this.options?.source}
-        vaultName={this.app.vault.getName()}
+        vaultName={getVaultName(this.app)}
         onSubmitSuccess={this.options?.onSubmitSuccess}
       />,
       this.services,

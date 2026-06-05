@@ -1,6 +1,6 @@
 {
   "aiSettings": {
-    "apiKey": "sk-IL88ucMIHsvIYkcKLcTbB6ZEeeHWpay42QZAX9drXu4453ER",
+    "apiKey": "",
     "enabled": true,
     "provider": "openai_compat",
     "apiEndpoint": "https://api.ricardochat.cn/v1",
@@ -335,6 +335,10 @@
           {
             "name": "计划",
             "color": "#9eeabe"
+          },
+          {
+            "name": "生活",
+            "color": "#e0e0e0"
           }
         ]
       },
@@ -498,7 +502,8 @@
             "title": 597,
             "content": 307,
             "themePath": 80
-          }
+          },
+          "contentDisplayMode": "fullMarkdown"
         }
       },
       "fields": [
@@ -1139,6 +1144,12 @@
         "path": "生活/小手机",
         "icon": "🍓",
         "order": 2
+      },
+      {
+        "id": "thm_mq08aj3nn2c7qw8",
+        "path": "252",
+        "icon": "📁",
+        "order": 5
       }
     ],
     "overrides": [
@@ -8702,6 +8713,47 @@
         "targetFile": "01/2-4思考.md",
         "appendUnderHeader": "## {{themePath}}",
         "id": "ovr_mpi1scgk94czsop"
+      },
+      {
+        "blockId": "blk_mejsg76atopau",
+        "themeId": "thm_mq08aj3nn2c7qw8",
+        "disabled": false,
+        "fields": [
+          {
+            "id": "field_mewjpsd5",
+            "key": "评分",
+            "label": "评分",
+            "type": "rating",
+            "options": [
+              {
+                "value": "✅",
+                "label": "1"
+              }
+            ]
+          },
+          {
+            "id": "field_mewk7o3j",
+            "key": "日期",
+            "label": "日期",
+            "type": "date"
+          },
+          {
+            "id": "field_mewjqtxg",
+            "key": "内容",
+            "label": "内容",
+            "type": "textarea"
+          },
+          {
+            "id": "field_mq08kcja_4",
+            "key": "新字段4",
+            "label": "新字段4",
+            "type": "file"
+          }
+        ],
+        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{themePath}}\n评分:: {{评分.label}}\n图片:: {{评分.value}}\n内容:: {{内容}}\n<!-- end -->\n\n",
+        "targetFile": "01/打卡.md",
+        "appendUnderHeader": "## {{themePath}}",
+        "id": "ovr_mq08ki5naf4k08k"
       }
     ]
   },
@@ -8752,7 +8804,8 @@
     "工作/老板任务",
     "工作/通勤",
     "思考/专注",
-    "生活/小手机"
+    "生活/小手机",
+    "252"
   ],
   "devConsoleStackEnabled": false,
   "dataSources": [
@@ -8819,7 +8872,6 @@
     "未完成任务": "#ebebeb",
     "打卡": "#b888e7",
     "闪念": "#e47272",
-    "事件": "#a5c8ee",
-    "生活": "#8cd4ee"
+    "事件": "#a5c8ee"
   }
 }

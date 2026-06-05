@@ -1,7 +1,7 @@
 /** @jsxImportSource preact */
 import { h, type ComponentChildren } from 'preact';
-import { Checkbox, Collapse, IconButton, ListItemButton, Typography } from '@mui/material';
-import { ExpandMoreIcon } from '@shared/ui/icons';
+import { Checkbox, Collapse, IconButton, ListItemButton, Typography } from '../../ui/muiCompat';
+import { ExpandMoreIcon } from '../../ui/icons';
 import type { ThemePathTreeNode as ThemeTreeNode } from '@core/public';
 
 import { ThemeTreeNodeLabel } from '../../ui/components/ThemeTreeNodeLabel';

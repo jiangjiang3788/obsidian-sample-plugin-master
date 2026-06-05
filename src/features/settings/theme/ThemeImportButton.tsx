@@ -1,7 +1,7 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
 import { useState } from 'preact/hooks';
-import { Button, Tooltip } from '@mui/material';
+import { Button, Tooltip } from '@shared/public';
 import { ScannerIcon } from '@shared/public';
 import { ThemeScanDialog } from './ThemeScanDialog';
 import type { ScanResult, ScanConfig } from '@core/public';

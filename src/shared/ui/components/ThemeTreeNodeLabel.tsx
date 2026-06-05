@@ -10,12 +10,8 @@
  * - 纯 UI（props 驱动），不读 store、不触 ports
  */
 import { h, type ComponentChildren } from 'preact';
-import { Box, IconButton } from '@mui/material';
-import { ChevronRightIcon, ExpandMoreIcon } from '@shared/ui/icons';
-
-// HACK: Cast MUI components to `any` to avoid Preact/React type conflicts.
-const AnyBox = Box as any;
-const AnyIconButton = IconButton as any;
+import { Box, IconButton } from '../muiCompat';
+import { ChevronRightIcon, ExpandMoreIcon } from '../icons';
 
 export interface ThemeTreeNodeLabelProps {
   /** 节点深度（从 0 开始） */
@@ -58,7 +54,7 @@ export function ThemeTreeNodeLabel({
   sx = {},
 }: ThemeTreeNodeLabelProps) {
   return (
-    <AnyBox
+    <Box
       sx={{
         display: 'flex',
         alignItems: 'center',
@@ -67,7 +63,7 @@ export function ThemeTreeNodeLabel({
       }}
     >
       {hasChildren ? (
-        <AnyIconButton
+        <IconButton
           size="small"
           onClick={(e: any) => {
             // 避免触发父级 click（例如 ListItemButton 或 TableRow）
@@ -77,14 +73,14 @@ export function ThemeTreeNodeLabel({
           sx={{ mr: 0.5, p: 0.25 }}
         >
           {expanded ? <ExpandMoreIcon fontSize="small" /> : <ChevronRightIcon fontSize="small" />}
-        </AnyIconButton>
+        </IconButton>
       ) : (
-        <AnyBox sx={{ width: placeholderWidthPx, mr: 0.5 }} />
+        <Box sx={{ width: placeholderWidthPx, mr: 0.5 }} />
       )}
 
-      <AnyBox sx={{ flex: 1, display: 'flex', alignItems: 'center', gap: 1 }}>
+      <Box sx={{ flex: 1, display: 'flex', alignItems: 'center', gap: 1 }}>
         {children}
-      </AnyBox>
-    </AnyBox>
+      </Box>
+    </Box>
   );
 }

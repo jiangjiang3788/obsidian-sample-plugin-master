@@ -1,6 +1,7 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
 import { useCallback, useEffect, useMemo, useState } from 'preact/hooks';
+import { diagnosticError } from '../../../utils/diagnosticConsole';
 import { getAllFields, getFieldCategoryLabel, getFieldLabel, normalizeDisplayFields } from '@core/public';
 import { ExcelColumnToolbar } from './ExcelColumnToolbar';
 import { ExcelGrid } from './ExcelGrid';
@@ -35,7 +36,6 @@ function getNextContentDisplayMode(mode: ExcelContentDisplayMode): ExcelContentD
 export function ExcelView({
   items,
   fields,
-  app,
   availableFields,
   excelConfig,
   onFieldsChange,
@@ -124,7 +124,7 @@ export function ExcelView({
     try {
       await onExcelConfigChange(nextConfig);
     } catch (error) {
-      console.error('[ExcelView] 保存 Excel 视图配置失败', error);
+      diagnosticError('[ExcelView] 保存 Excel 视图配置失败', error);
       rollback?.();
     } finally {
       setExcelConfigSaving(false);
@@ -201,7 +201,6 @@ export function ExcelView({
       <ExcelGrid
         items={items}
         columns={columns}
-        app={app}
         selectedCellKey={editing.selectedCellKey}
         editingCellKey={editing.editingCellKey}
         pendingCellKeys={editing.pendingCellKeys}

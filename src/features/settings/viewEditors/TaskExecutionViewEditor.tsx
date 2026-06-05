@@ -1,6 +1,6 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
-import { Stack, Typography } from '@mui/material';
+import { Stack, Typography } from '@shared/public';
 import type { ViewEditorProps } from './registry';
 import { TASK_EXECUTION_VIEW_DEFAULT_CONFIG } from '@core/public';
 

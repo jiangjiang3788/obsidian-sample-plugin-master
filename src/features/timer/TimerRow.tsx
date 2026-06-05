@@ -3,20 +3,20 @@
 import { h } from 'preact';
 import { useState, useEffect } from 'preact/hooks';
 import { Box, DeleteForeverIcon, EditIcon, IconAction, PauseIcon, PlayArrowIcon, StopIcon, Tooltip, Typography, createRecordGestureHandlers } from '@shared/public';
-import { DataStore } from '@core/public';
+import type { DataStore, Item } from '@core/public';
 import { TimerService } from '@features/timer/TimerService';
 import type { TimerState } from '@/app/public';
 import { formatSecondsToHHMMSS } from '@core/public';
-import { openEditFromItem } from '@/app/public';
 
 interface TimerRowProps {
     timer: TimerState;
     timerService: TimerService;
     dataStore: DataStore;
-    app: any;
+    onOpenRecord: (item: Item) => void;
+    onOpenRecordOrigin: (item: Item) => void;
 }
 
-export function TimerRow({ timer, timerService, dataStore, app }: TimerRowProps) {
+export function TimerRow({ timer, timerService, dataStore, onOpenRecord, onOpenRecordOrigin }: TimerRowProps) {
     const [displayTime, setDisplayTime] = useState('00:00:00');
     const taskItem = dataStore.queryItems().find(i => i.id === timer.taskId);
 
@@ -46,11 +46,15 @@ export function TimerRow({ timer, timerService, dataStore, app }: TimerRowProps)
 
     const handleEdit = () => {
         if (taskItem) {
-            openEditFromItem({ app, item: taskItem });
+            onOpenRecord(taskItem);
         }
     };
 
-    const titleGesture = taskItem ? createRecordGestureHandlers({ item: taskItem, app, onPrimary: handleEdit }) : null;
+    const titleGesture = taskItem ? createRecordGestureHandlers({
+        item: taskItem,
+        onOpenOrigin: onOpenRecordOrigin,
+        onPrimary: handleEdit,
+    }) : null;
 
     return (
         <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px', width: '100%' }}>

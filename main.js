@@ -3484,12 +3484,12 @@ var parseFormattedInput = function parseFormattedInput2(input, format, utc, dayj
     if (["x", "X"].indexOf(format) > -1) return new Date((format === "X" ? 1e3 : 1) * input);
     var parser = makeParser(format);
     var _parser2 = parser(input), year = _parser2.year, month = _parser2.month, day = _parser2.day, hours = _parser2.hours, minutes = _parser2.minutes, seconds = _parser2.seconds, milliseconds = _parser2.milliseconds, zone = _parser2.zone, week = _parser2.week;
-    var now = /* @__PURE__ */ new Date();
-    var d2 = day || (!year && !month ? now.getDate() : 1);
-    var y2 = year || now.getFullYear();
+    var now2 = /* @__PURE__ */ new Date();
+    var d2 = day || (!year && !month ? now2.getDate() : 1);
+    var y2 = year || now2.getFullYear();
     var M2 = 0;
     if (!(year && !month)) {
-      M2 = month > 0 ? month - 1 : now.getMonth();
+      M2 = month > 0 ? month - 1 : now2.getMonth();
     }
     var h2 = hours || 0;
     var m2 = minutes || 0;
@@ -3931,7 +3931,7 @@ function pushEntry(entry) {
   } catch {
   }
 }
-function emit(level, args, source = "devLogger") {
+function emit$1(level, args, source = "devLogger") {
   if (!shouldLog()) return;
   const entry = makeEntry(level, source, args);
   pushEntry(entry);
@@ -3946,13 +3946,13 @@ function emit(level, args, source = "devLogger") {
   }
 }
 function devLog(...args) {
-  emit("log", args);
+  emit$1("log", args);
 }
 function devWarn(...args) {
-  emit("warn", args);
+  emit$1("warn", args);
 }
 function devError(...args) {
-  emit("error", args);
+  emit$1("error", args);
 }
 function devTime(label) {
   if (!shouldLog()) return;
@@ -4034,12 +4034,12 @@ function logSettingsWrite(meta, before, after) {
   const m2 = normalizeMeta(meta);
   const diff = shallowDiff(before, after);
   const diffInfo = diff.length ? diff.join(", ") : "(no shallow diff)";
-  emit("log", [`[SETTINGS_WRITE] action=${m2.action} source=${m2.source} diff=${diffInfo}`], "settings");
+  emit$1("log", [`[SETTINGS_WRITE] action=${m2.action} source=${m2.source} diff=${diffInfo}`], "settings");
   if (m2.debugStack) {
-    emit("trace", ["[SETTINGS_WRITE stack]"], "settings");
+    emit$1("trace", ["[SETTINGS_WRITE stack]"], "settings");
   }
-  emit("log", ["before:", safeStringify(before)], "settings");
-  emit("log", ["after :", safeStringify(after)], "settings");
+  emit$1("log", ["before:", safeStringify(before)], "settings");
+  emit$1("log", ["after :", safeStringify(after)], "settings");
 }
 function normalizeCategoryKey(categoryKey) {
   return String(categoryKey || "").trim().toLowerCase();
@@ -5135,6 +5135,18 @@ function decodeBlockContentLines(contentLines, parentFolder) {
     templateSourceType
   };
 }
+function isRecordDebugEnabled() {
+  return typeof window !== "undefined" && Boolean(window.__THINK_RECORD_DEBUG__);
+}
+function recordDebugLog(scope, message, payload) {
+  if (!isRecordDebugEnabled()) return;
+  const prefix2 = `[记录调试][${scope}] ${message}`;
+  if (payload === void 0) {
+    console.info(prefix2);
+    return;
+  }
+  console.info(prefix2, payload);
+}
 function pick$1(line2, emoji2) {
   return extractDate(line2, emoji2);
 }
@@ -5197,20 +5209,18 @@ function parseTaskLine(filePath, rawLine, lineNo, parentFolder, currentHeader) {
   item.title = editableText || cleanTaskText(titleSrc) || "";
   item.editableText = editableText || item.title || "";
   item.content = item.editableText;
-  if (typeof window !== "undefined" && window.__THINK_RECORD_DEBUG__) {
-    console.groupCollapsed("[记录调试][任务读取] parser.parseTaskLine 正文提取");
-    console.log("原始任务行:", lineText);
-    console.log("去掉 checkbox 和开头图标后的候选正文 titleSrc:", titleSrc);
-    console.log("统一提取入口 extractTaskEditableText(lineText):", editableExtraction);
-    console.log("最终 editableText:", editableText);
-    console.log("正文长度/是否包含连续空格:", { length: editableText.length, hasDoubleSpace: /\s{2,}/.test(editableText) });
-    console.log("清洗过程:", explainTaskEditableTextExtraction(lineText));
-    console.log("写入 item.title:", item.title);
-    console.log("写入 item.content / item.editableText:", item.content);
-    console.log("完整原始任务行仍保存在 item.rawSource / 完整数据字段。");
-    console.log("不再写入 item.extra[正文]；正文通过 item.content / item.editableText / snapshot.semantic.editableText 暴露。");
-    console.groupEnd();
-  }
+  recordDebugLog("任务读取/parser.parseTaskLine", "正文提取", {
+    原始任务行: lineText,
+    去掉Checkbox和开头图标后的候选正文: titleSrc,
+    统一提取入口: editableExtraction,
+    最终EditableText: editableText,
+    正文长度: editableText.length,
+    是否包含连续空格: /\s{2,}/.test(editableText),
+    清洗过程: explainTaskEditableTextExtraction(lineText),
+    itemTitle: item.title,
+    itemContent: item.content,
+    说明: "完整原始任务行仍保存在 item.rawSource / 完整数据字段；不再写入 item.extra[正文]。"
+  });
   item.priority = pickPriority(lineText);
   if (createdDate) item.createdDate = createdDate;
   if (scheduledDate) item.scheduledDate = scheduledDate;
@@ -5571,354 +5581,6 @@ function renderTemplate(templateString, data) {
     }
   });
 }
-class ThemeTreeBuilder {
-  /**
-   * 构建主题树
-   * 
-   * @param themes - 主题定义列表
-   * @param options - 构建选项
-   * @returns 树节点数组（根节点列表）
-   * 
-   * @example
-   * ```typescript
-   * const themes = [
-   *   { id: '1', path: 'work/project', ... },
-   *   { id: '2', path: 'work/meeting', ... },
-   *   { id: '3', path: 'personal', ... }
-   * ];
-   * const tree = ThemeTreeBuilder.buildTree(themes);
-   * // 结果：
-   * // [
-   * //   { id: 'work', label: 'work', children: [
-   * //     { id: 'work/project', label: 'project', themeId: '1', ... },
-   * //     { id: 'work/meeting', label: 'meeting', themeId: '2', ... }
-   * //   ]},
-   * //   { id: 'personal', label: 'personal', themeId: '3', ... }
-   * // ]
-   * ```
-   */
-  static buildTree(themes, options = {}) {
-    const { sortBy = "path", createVirtualNodes = true } = options;
-    if (!themes || themes.length === 0) {
-      return [];
-    }
-    const getOrder = (node2) => {
-      const raw = node2.theme?.order;
-      return typeof raw === "number" && Number.isFinite(raw) ? raw : null;
-    };
-    const compareNodes = (a2, b2) => {
-      if (sortBy === "label") {
-        return a2.label.localeCompare(b2.label);
-      }
-      if (sortBy === "order") {
-        const ao = getOrder(a2);
-        const bo = getOrder(b2);
-        if (ao !== null && bo !== null && ao !== bo) return ao - bo;
-        if (ao !== null && bo === null) return -1;
-        if (ao === null && bo !== null) return 1;
-      }
-      return a2.path.localeCompare(b2.path);
-    };
-    if (createVirtualNodes) {
-      const roots2 = [];
-      const nodeMap = /* @__PURE__ */ new Map();
-      const sortedThemes = [...themes].sort((a2, b2) => a2.path.localeCompare(b2.path));
-      for (const theme2 of sortedThemes) {
-        const parts = theme2.path.split("/");
-        let currentPath = "";
-        let parentNode = null;
-        for (let i2 = 0; i2 < parts.length; i2++) {
-          const part = parts[i2];
-          const isLeaf = i2 === parts.length - 1;
-          currentPath = currentPath ? `${currentPath}/${part}` : part;
-          let node2 = nodeMap.get(currentPath);
-          if (!node2) {
-            const newNode = {
-              id: currentPath,
-              label: part,
-              path: currentPath,
-              depth: i2,
-              themeId: isLeaf ? theme2.id : null,
-              theme: isLeaf ? theme2 : null,
-              parentId: parentNode?.id ?? null,
-              children: []
-            };
-            node2 = newNode;
-            nodeMap.set(currentPath, newNode);
-            if (parentNode) {
-              if (!parentNode.children.some((c2) => c2.id === newNode.id)) {
-                parentNode.children.push(newNode);
-              }
-            } else {
-              if (!roots2.some((r2) => r2.id === newNode.id)) {
-                roots2.push(newNode);
-              }
-            }
-          } else if (isLeaf) {
-            node2.themeId = theme2.id;
-            node2.theme = theme2;
-          }
-          parentNode = node2;
-        }
-      }
-      const sortNodes2 = (nodes) => {
-        nodes.sort(compareNodes);
-        nodes.forEach((node2) => sortNodes2(node2.children));
-      };
-      sortNodes2(roots2);
-      return roots2;
-    }
-    const themeByPath = /* @__PURE__ */ new Map();
-    for (const t3 of themes) {
-      themeByPath.set(t3.path, t3);
-    }
-    const nodeByPath = /* @__PURE__ */ new Map();
-    for (const theme2 of themes) {
-      const parts = theme2.path.split("/");
-      const label = parts[parts.length - 1] ?? theme2.path;
-      nodeByPath.set(theme2.path, {
-        id: theme2.path,
-        label,
-        path: theme2.path,
-        depth: 0,
-        // will be filled after linking
-        themeId: theme2.id,
-        theme: theme2,
-        parentId: null,
-        children: []
-      });
-    }
-    const roots = [];
-    const rootIds = /* @__PURE__ */ new Set();
-    for (const theme2 of themes) {
-      const node2 = nodeByPath.get(theme2.path);
-      if (!node2) continue;
-      const parts = theme2.path.split("/");
-      let parentPath = null;
-      if (parts.length > 1) {
-        for (let i2 = parts.length - 1; i2 >= 1; i2--) {
-          const candidate = parts.slice(0, i2).join("/");
-          if (themeByPath.has(candidate)) {
-            parentPath = candidate;
-            break;
-          }
-        }
-      }
-      if (parentPath) {
-        const parentNode = nodeByPath.get(parentPath);
-        if (parentNode) {
-          node2.parentId = parentNode.id;
-          if (!parentNode.children.some((c2) => c2.id === node2.id)) {
-            parentNode.children.push(node2);
-          }
-          continue;
-        }
-      }
-      if (!rootIds.has(node2.id)) {
-        roots.push(node2);
-        rootIds.add(node2.id);
-      }
-    }
-    const setDepth = (nodes, depth) => {
-      for (const n2 of nodes) {
-        n2.depth = depth;
-        if (n2.children.length > 0) {
-          setDepth(n2.children, depth + 1);
-        }
-      }
-    };
-    setDepth(roots, 0);
-    const sortNodes = (nodes) => {
-      nodes.sort(compareNodes);
-      nodes.forEach((node2) => sortNodes(node2.children));
-    };
-    sortNodes(roots);
-    return roots;
-  }
-  /**
-   * 扁平化主题树
-   * 
-   * @param nodes - 树节点数组
-   * @param expandedIds - 展开的节点 ID 集合（可选）
-   * @returns 扁平化的节点数组
-   */
-  static flattenTree(nodes, expandedIds) {
-    const result = [];
-    const traverse = (nodeList, visible = true) => {
-      for (const node2 of nodeList) {
-        const expanded = expandedIds?.has(node2.id) ?? true;
-        result.push({
-          ...node2,
-          expanded,
-          visible
-        });
-        if (node2.children.length > 0) {
-          traverse(node2.children, visible && expanded);
-        }
-      }
-    };
-    traverse(nodes);
-    return result;
-  }
-  /**
-   * 根据主题 ID 获取完整路径
-   * 
-   * @param nodes - 树节点数组
-   * @param themeId - 主题 ID
-   * @returns 路径字符串，未找到返回 null
-   */
-  static getThemePath(nodes, themeId) {
-    const search = (nodeList) => {
-      for (const node2 of nodeList) {
-        if (node2.themeId === themeId) {
-          return node2.path;
-        }
-        const found = search(node2.children);
-        if (found) return found;
-      }
-      return null;
-    };
-    return search(nodes);
-  }
-  /**
-   * 根据路径获取节点
-   * 
-   * @param nodes - 树节点数组
-   * @param path - 节点路径
-   * @returns 找到的节点或 null
-   */
-  static findNodeByPath(nodes, path) {
-    const parts = path.split("/");
-    let current2;
-    let searchList = nodes;
-    for (const part of parts) {
-      const expectedPath = current2 ? `${current2.path}/${part}` : part;
-      current2 = searchList.find((n2) => n2.path === expectedPath);
-      if (!current2) return null;
-      searchList = current2.children;
-    }
-    return current2 ?? null;
-  }
-  /**
-   * 根据主题 ID 获取节点
-   * 
-   * @param nodes - 树节点数组
-   * @param themeId - 主题 ID
-   * @returns 找到的节点或 null
-   */
-  static findNodeByThemeId(nodes, themeId) {
-    const search = (nodeList) => {
-      for (const node2 of nodeList) {
-        if (node2.themeId === themeId) {
-          return node2;
-        }
-        const found = search(node2.children);
-        if (found) return found;
-      }
-      return null;
-    };
-    return search(nodes);
-  }
-  /**
-   * 过滤树节点
-   * 
-   * @param nodes - 树节点数组
-   * @param predicate - 过滤谓词函数
-   * @returns 过滤后的树（保留匹配节点及其祖先路径）
-   */
-  static filterTree(nodes, predicate) {
-    const filterNodes = (nodeList) => {
-      return nodeList.map((node2) => {
-        const filteredChildren = filterNodes(node2.children);
-        if (predicate(node2) || filteredChildren.length > 0) {
-          return {
-            ...node2,
-            children: filteredChildren
-          };
-        }
-        return null;
-      }).filter((n2) => n2 !== null);
-    };
-    return filterNodes(nodes);
-  }
-  /**
-   * 搜索过滤（按路径或标签匹配）
-   * 
-   * @param nodes - 树节点数组
-   * @param searchTerm - 搜索词
-   * @returns 匹配的树节点
-   */
-  static searchTree(nodes, searchTerm) {
-    if (!searchTerm.trim()) {
-      return nodes;
-    }
-    const term = searchTerm.toLowerCase();
-    return ThemeTreeBuilder.filterTree(nodes, (node2) => {
-      return node2.label.toLowerCase().includes(term) || node2.path.toLowerCase().includes(term);
-    });
-  }
-  /**
-   * 获取节点的所有祖先路径
-   * 
-   * @param path - 节点路径
-   * @returns 祖先路径数组（不包括自身）
-   */
-  static getAncestorPaths(path) {
-    const parts = path.split("/");
-    const ancestors = [];
-    let currentPath = "";
-    for (let i2 = 0; i2 < parts.length - 1; i2++) {
-      currentPath = currentPath ? `${currentPath}/${parts[i2]}` : parts[i2];
-      ancestors.push(currentPath);
-    }
-    return ancestors;
-  }
-  /**
-   * 获取节点的所有后代路径
-   * 
-   * @param node - 树节点
-   * @returns 后代路径数组（不包括自身）
-   */
-  static getDescendantPaths(node2) {
-    const descendants = [];
-    const collect = (n2) => {
-      for (const child of n2.children) {
-        descendants.push(child.path);
-        collect(child);
-      }
-    };
-    collect(node2);
-    return descendants;
-  }
-  /**
-   * 获取所有叶子节点（有真实主题关联的节点）
-   * 
-   * @param nodes - 树节点数组
-   * @returns 叶子节点数组
-   */
-  static getLeafNodes(nodes) {
-    const leaves = [];
-    const collect = (nodeList) => {
-      for (const node2 of nodeList) {
-        if (node2.themeId !== null) {
-          leaves.push(node2);
-        }
-        collect(node2.children);
-      }
-    };
-    collect(nodes);
-    return leaves;
-  }
-}
-function buildThemeTree$1(themes, options) {
-  return ThemeTreeBuilder.buildTree(themes, options);
-}
-function flattenThemeTree(nodes, expandedIds) {
-  return ThemeTreeBuilder.flattenTree(nodes, expandedIds);
-}
-function searchThemeTree(nodes, searchTerm) {
-  return ThemeTreeBuilder.searchTree(nodes, searchTerm);
-}
 function collectFileNames(items) {
   const fileNames = /* @__PURE__ */ new Set();
   items.forEach((item) => {
@@ -6100,16 +5762,16 @@ function buildDailyViewData(timelineTasks, dateRange) {
 function throttle(fn3, wait2 = 250) {
   let last2 = 0, timer = null;
   return function(...args) {
-    const now = Date.now();
-    if (now - last2 >= wait2) {
-      last2 = now;
+    const now2 = Date.now();
+    if (now2 - last2 >= wait2) {
+      last2 = now2;
       fn3.apply(this, args);
     } else {
       clearTimeout(timer);
       timer = setTimeout(() => {
         last2 = Date.now();
         fn3.apply(this, args);
-      }, wait2 - (now - last2));
+      }, wait2 - (now2 - last2));
     }
   };
 }
@@ -6544,8 +6206,8 @@ class AiConfigCache {
       throw new Error("AI settings missing");
     }
     const ttlMs = (ai.configCacheTTLSeconds ?? 300) * 1e3;
-    const now = Date.now();
-    const cacheAgeMs = this.snapshot ? now - this.lastUpdated : null;
+    const now2 = Date.now();
+    const cacheAgeMs = this.snapshot ? now2 - this.lastUpdated : null;
     const cacheHit = !!this.snapshot && cacheAgeMs !== null && cacheAgeMs <= ttlMs;
     devLog(`${prefix2} 缓存状态检查完成 (${elapsedMs$2(totalStart)})`, {
       cacheHit,
@@ -6556,7 +6218,7 @@ class AiConfigCache {
       const rebuildStart = nowMs$3();
       const nextSnapshot = buildAiConfigSnapshot(settings.inputSettings, ai);
       this.snapshot = nextSnapshot;
-      this.lastUpdated = now;
+      this.lastUpdated = now2;
       devLog(`${prefix2} buildAiConfigSnapshot 完成 (${elapsedMs$2(rebuildStart)})`, {
         blocksCount: nextSnapshot.blocks?.length ?? 0,
         themesCount: nextSnapshot.themes?.length ?? 0
@@ -12556,12 +12218,12 @@ let ChatSessionStore = class {
   }
   /** 创建新会话 */
   async createSession(title, filters) {
-    const now = Date.now();
+    const now2 = Date.now();
     const session = {
       id: generateId(),
       title: title || `对话 ${(/* @__PURE__ */ new Date()).toLocaleString("zh-CN")}`,
-      created: now,
-      modified: now,
+      created: now2,
+      modified: now2,
       filters,
       messages: []
     };
@@ -14442,6 +14104,147 @@ const objectToNumericMapAsync = async (object2) => {
 };
 const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 const SPACE_OR_PUNCTUATION = /[\n\r\p{Z}\p{P}]+/u;
+const METADATA_PORT_TOKEN = "MetadataPort";
+const FILESTAT_PORT_TOKEN = "FileStatPort";
+const CURRENT_CACHE_SCHEMA_VERSION = 5;
+function toCachedItem(it) {
+  return {
+    id: it.id,
+    filePath: it.file?.path || "",
+    filename: it.filename ?? it.fileName,
+    titleLower: it.title?.toLowerCase(),
+    contentLower: it.content?.toLowerCase(),
+    tagsLower: (it.tags || []).map((t3) => t3.toLowerCase()),
+    themePathNormalized: it.themePath,
+    rootTheme: it.rootTheme,
+    leafTheme: it.leafTheme,
+    dateMs: it.dateMs ?? it.startMs ?? it.endMs,
+    categoryKey: it.categoryKey,
+    created: it.created,
+    modified: it.modified,
+    extra: it.extra || {}
+  };
+}
+function fromCachedItem(c2) {
+  const it = {
+    id: c2.id,
+    title: "",
+    // 恢复后可按需懒加载原文
+    content: "",
+    type: "task",
+    // 具体类型需在解析时写入，这里保守给默认值；下游通常不会依赖该字段筛选
+    tags: c2.tagsLower || [],
+    theme: c2.themePathNormalized,
+    themePath: c2.themePathNormalized,
+    rootTheme: c2.rootTheme,
+    leafTheme: c2.leafTheme,
+    categoryKey: c2.categoryKey,
+    recurrence: "none",
+    created: c2.created,
+    modified: c2.modified,
+    dateMs: c2.dateMs,
+    filename: c2.filename,
+    file: { path: c2.filePath, folder: c2.filePath.split("/").slice(0, -1).pop() || "" },
+    extra: c2.extra || {}
+  };
+  it.titleLower = c2.titleLower ?? "";
+  it.contentLower = c2.contentLower ?? "";
+  it.tagsLower = c2.tagsLower ?? [];
+  it.themePathNormalized = c2.themePathNormalized;
+  it.themePath = c2.themePathNormalized;
+  it.rootTheme = c2.rootTheme;
+  it.leafTheme = c2.leafTheme;
+  return it;
+}
+const DATASTORE_CACHE_PATH = "Think/cache.json";
+class DataStoreCache {
+  constructor(storage, isActive) {
+    this.storage = storage;
+    this.isActive = isActive;
+  }
+  storage;
+  isActive;
+  cache = null;
+  saveTimer = null;
+  dispose() {
+    this.clearSaveTimer();
+    this.cache = null;
+  }
+  get current() {
+    return this.cache;
+  }
+  clearMemory() {
+    this.clearSaveTimer();
+    this.cache = null;
+  }
+  async removePersisted() {
+    await this.storage.remove(DATASTORE_CACHE_PATH);
+  }
+  async load() {
+    let cache = await this.storage.readJSON(DATASTORE_CACHE_PATH);
+    if (!cache || cache.schemaVersion !== CURRENT_CACHE_SCHEMA_VERSION) {
+      cache = this.createEmptyCache();
+    }
+    this.cache = cache;
+    return cache;
+  }
+  ensure() {
+    if (!this.cache) {
+      this.cache = this.createEmptyCache();
+    }
+    return this.cache;
+  }
+  restoreItems(entry) {
+    return entry.items.map(fromCachedItem);
+  }
+  upsertFile(filePath, stat, items) {
+    const cache = this.ensure();
+    cache.files[filePath] = {
+      mtime: stat.mtime,
+      size: stat.size,
+      items: items.map(toCachedItem)
+    };
+  }
+  removeFile(filePath) {
+    if (!this.cache || !this.cache.files[filePath]) return false;
+    delete this.cache.files[filePath];
+    return true;
+  }
+  removeMissingFiles(seen) {
+    if (!this.cache) return 0;
+    let removed = 0;
+    for (const cachedPath of Object.keys(this.cache.files)) {
+      if (!seen.has(cachedPath)) {
+        delete this.cache.files[cachedPath];
+        removed++;
+      }
+    }
+    return removed;
+  }
+  scheduleSave(delay = 1500) {
+    if (!this.isActive()) return;
+    this.clearSaveTimer();
+    this.saveTimer = setTimeout(async () => {
+      if (!this.isActive()) return;
+      try {
+        if (this.cache) {
+          await this.storage.writeJSON(DATASTORE_CACHE_PATH, this.cache);
+        }
+      } catch (e2) {
+        devWarn("ThinkPlugin: 写入缓存失败", e2);
+      }
+    }, delay);
+  }
+  clearSaveTimer() {
+    if (this.saveTimer) {
+      clearTimeout(this.saveTimer);
+    }
+    this.saveTimer = null;
+  }
+  createEmptyCache() {
+    return { schemaVersion: CURRENT_CACHE_SCHEMA_VERSION, files: {} };
+  }
+}
 function unique(values2) {
   return Array.from(new Set(values2.map((value) => String(value ?? "").trim()).filter(Boolean)));
 }
@@ -14499,57 +14302,182 @@ function normalizeRecordItem(item, context) {
   item.tagsLower = (item.tags || []).map((tag) => normalizeSearchText(tag));
   return item;
 }
-const METADATA_PORT_TOKEN = "MetadataPort";
-const FILESTAT_PORT_TOKEN = "FileStatPort";
-const CURRENT_CACHE_SCHEMA_VERSION = 5;
-function toCachedItem(it) {
-  return {
-    id: it.id,
-    filePath: it.file?.path || "",
-    filename: it.filename ?? it.fileName,
-    titleLower: it.title?.toLowerCase(),
-    contentLower: it.content?.toLowerCase(),
-    tagsLower: (it.tags || []).map((t3) => t3.toLowerCase()),
-    themePathNormalized: it.themePath,
-    rootTheme: it.rootTheme,
-    leafTheme: it.leafTheme,
-    dateMs: it.dateMs ?? it.startMs ?? it.endMs,
-    categoryKey: it.categoryKey,
-    created: it.created,
-    modified: it.modified,
-    extra: it.extra || {}
-  };
+function normalizeFilePathInput(input) {
+  return typeof input === "string" ? input : input && typeof input.path === "string" ? input.path : "";
 }
-function fromCachedItem(c2) {
-  const it = {
-    id: c2.id,
-    title: "",
-    // 恢复后可按需懒加载原文
-    content: "",
-    type: "task",
-    // 具体类型需在解析时写入，这里保守给默认值；下游通常不会依赖该字段筛选
-    tags: c2.tagsLower || [],
-    theme: c2.themePathNormalized,
-    themePath: c2.themePathNormalized,
-    rootTheme: c2.rootTheme,
-    leafTheme: c2.leafTheme,
-    categoryKey: c2.categoryKey,
-    recurrence: "none",
-    created: c2.created,
-    modified: c2.modified,
-    dateMs: c2.dateMs,
-    filename: c2.filename,
-    file: { path: c2.filePath, folder: c2.filePath.split("/").slice(0, -1).pop() || "" },
-    extra: c2.extra || {}
-  };
-  it.titleLower = c2.titleLower ?? "";
-  it.contentLower = c2.contentLower ?? "";
-  it.tagsLower = c2.tagsLower ?? [];
-  it.themePathNormalized = c2.themePathNormalized;
-  it.themePath = c2.themePathNormalized;
-  it.rootTheme = c2.rootTheme;
-  it.leafTheme = c2.leafTheme;
-  return it;
+function pathBasename(path) {
+  return path.split("/").pop() || path;
+}
+function pathParentName(path) {
+  const parts = path.split("/");
+  if (parts.length <= 1) return "";
+  return parts[parts.length - 2] || "";
+}
+function basenameNoExt(filename) {
+  return filename.toLowerCase().endsWith(".md") ? filename.slice(0, -3) : filename;
+}
+function itemBelongsToFileId(itemId, filePath) {
+  return Boolean(itemId && itemId.startsWith(filePath + "#"));
+}
+class DataStoreFileScanner {
+  constructor(vault, metadata, fileStat, themeMatcher) {
+    this.vault = vault;
+    this.metadata = metadata;
+    this.fileStat = fileStat;
+    this.themeMatcher = themeMatcher;
+  }
+  vault;
+  metadata;
+  fileStat;
+  themeMatcher;
+  async scan(filePathOrFile) {
+    const filePath = normalizeFilePathInput(filePathOrFile);
+    if (!filePath) {
+      devWarn("ThinkPlugin: scanFile 入参非法（缺少 path）", filePathOrFile);
+      return null;
+    }
+    const content = await this.vault.readFile(filePath);
+    if (content == null) {
+      devWarn("ThinkPlugin: scanFile 文件不存在或不可读", filePath);
+      return null;
+    }
+    const headingsList = await this.metadata.getHeadings(filePath);
+    const stat = await this.fileStat.stat(filePath);
+    if (!stat) {
+      devWarn("ThinkPlugin: scanFile 获取 stat 失败", filePath);
+      return null;
+    }
+    const lines = content.split(/\r?\n/);
+    const parentFolder = pathParentName(filePath);
+    const fileName = basenameNoExt(pathBasename(filePath));
+    const items = [];
+    let nextHeadingIndex = 0;
+    let currentSectionTags = [];
+    let currentHeader = "";
+    for (let i2 = 0; i2 < lines.length; i2++) {
+      const line2 = lines[i2];
+      if (nextHeadingIndex < headingsList.length && headingsList[nextHeadingIndex].line === i2) {
+        const headingEntry = headingsList[nextHeadingIndex];
+        const headingText = headingEntry.heading;
+        const headingTags = headingText.match(/#([\p{L}\p{N}_\/-]+)/gu) || [];
+        currentSectionTags = headingTags.map((t3) => t3.trim()).filter(Boolean);
+        let cleanText = headingText;
+        for (const tag of headingTags) cleanText = cleanText.replace(tag, "").trim();
+        currentHeader = cleanText || "";
+        nextHeadingIndex++;
+        continue;
+      }
+      if (line2.trim() === "<!-- start -->") {
+        const endIdx = lines.indexOf("<!-- end -->", i2 + 1);
+        if (endIdx !== -1) {
+          const blockItem = parseBlockContent(filePath, lines, i2, endIdx, parentFolder);
+          if (blockItem) {
+            this.normalizeScannedItem(blockItem, filePath, fileName, parentFolder, stat, i2 + 1, currentHeader, currentSectionTags);
+            items.push(blockItem);
+          }
+          i2 = endIdx;
+          continue;
+        }
+      }
+      const taskItem = parseTaskLine(filePath, line2, i2 + 1, parentFolder);
+      if (taskItem) {
+        this.normalizeScannedItem(taskItem, filePath, fileName, parentFolder, stat, i2 + 1, currentHeader, currentSectionTags);
+        items.push(taskItem);
+      }
+    }
+    return { filePath, items, stat };
+  }
+  normalizeScannedItem(item, filePath, fileName, parentFolder, stat, line2, currentHeader, currentSectionTags) {
+    normalizeRecordItem(item, {
+      filePath,
+      fileName,
+      parentFolder,
+      created: stat.ctime,
+      modified: stat.mtime,
+      line: line2,
+      header: currentHeader || void 0,
+      sectionTags: currentSectionTags,
+      themeMatcher: this.themeMatcher
+    });
+  }
+}
+class DataStoreIndex {
+  items = [];
+  fileIndex = /* @__PURE__ */ new Map();
+  queryCache = /* @__PURE__ */ new Map();
+  dataVersion = 0;
+  dispose() {
+    this.queryCache.clear();
+    this.fileIndex.clear();
+    this.items = [];
+  }
+  clear() {
+    this.items = [];
+    this.fileIndex.clear();
+    this.queryCache.clear();
+  }
+  clearQueryCache() {
+    this.queryCache.clear();
+  }
+  hydrateFileItems(filePath, items) {
+    this.fileIndex.set(filePath, items);
+    this.items.push(...items);
+  }
+  replaceFileItems(filePath, items, opts = {}) {
+    if (this.fileIndex.has(filePath)) {
+      this.items = this.items.filter((it) => !itemBelongsToFileId(it.id, filePath));
+    }
+    this.fileIndex.set(filePath, items);
+    this.items.push(...items);
+    if (opts.bumpVersion !== false) {
+      this.bumpVersion();
+    }
+  }
+  removeFileItems(filePath, opts = {}) {
+    const hadItems = this.fileIndex.delete(filePath);
+    if (hadItems) {
+      this.items = this.items.filter((it) => !itemBelongsToFileId(it.id, filePath));
+    }
+    if (opts.bumpVersion !== false) {
+      this.bumpVersion();
+    }
+    return hadItems;
+  }
+  queryItems(filters = [], sortRules = []) {
+    const key = this.makeQueryKey(filters, sortRules);
+    const cached2 = this.queryCache.get(key);
+    if (cached2) return cached2;
+    const filtered = filterByRules(this.items, filters);
+    const result = sortItems(filtered, sortRules);
+    this.queryCache.set(key, result);
+    return result;
+  }
+  bumpVersion() {
+    this.dataVersion++;
+    this.queryCache.clear();
+  }
+  makeQueryKey(filters = [], sortRules = []) {
+    return JSON.stringify({ f: filters, s: sortRules, v: this.dataVersion });
+  }
+}
+async function buildWarmStartPlan(paths, cache, fileStat) {
+  const seen = /* @__PURE__ */ new Set();
+  const unchangedEntries = [];
+  const changedFiles = [];
+  for (const path of paths) {
+    seen.add(path);
+    const st = await fileStat.stat(path);
+    if (!st) {
+      continue;
+    }
+    const cached2 = cache.files[path];
+    if (cached2 && cached2.mtime === st.mtime && cached2.size === st.size) {
+      unchangedEntries.push({ path, cached: cached2 });
+    } else {
+      changedFiles.push(path);
+    }
+  }
+  return { seen, unchangedEntries, changedFiles };
 }
 var __getOwnPropDesc$d = Object.getOwnPropertyDescriptor;
 var __decorateClass$d = (decorators, target, key, kind) => {
@@ -14567,32 +14495,18 @@ let DataStore = class {
     this.fileStat = fileStat;
     this.themeMatcher = themeMatcher;
     this.storage = storage;
+    this.cacheStore = new DataStoreCache(this.storage, () => this._assertNotDisposed());
+    this.fileScanner = new DataStoreFileScanner(this.vault, this.metadata, this.fileStat, this.themeMatcher);
   }
   vault;
   metadata;
   fileStat;
   themeMatcher;
   storage;
-  _pathBasename(path) {
-    return path.split("/").pop() || path;
-  }
-  _pathParentName(path) {
-    const parts = path.split("/");
-    if (parts.length <= 1) return "";
-    return parts[parts.length - 2] || "";
-  }
-  _basenameNoExt(filename) {
-    return filename.toLowerCase().endsWith(".md") ? filename.slice(0, -3) : filename;
-  }
-  // 内存数据
-  items = [];
-  fileIndex = /* @__PURE__ */ new Map();
+  index = new DataStoreIndex();
+  cacheStore;
+  fileScanner;
   changeListeners = /* @__PURE__ */ new Set();
-  queryCache = /* @__PURE__ */ new Map();
-  // 缓存/性能
-  cache = null;
-  dataVersion = 0;
-  _cacheSaveTimer = null;
   _perf = { start: 0, end: 0, scannedFiles: 0, scannedItems: 0 };
   _disposed = false;
   /**
@@ -14600,13 +14514,9 @@ let DataStore = class {
    */
   dispose() {
     this._disposed = true;
-    try {
-      clearTimeout(this._cacheSaveTimer);
-    } catch {
-    }
-    this._cacheSaveTimer = null;
+    this.cacheStore.dispose();
+    this.index.dispose();
     this.changeListeners.clear();
-    this.queryCache.clear();
   }
   _assertNotDisposed() {
     return !this._disposed;
@@ -14615,16 +14525,15 @@ let DataStore = class {
   // 兼容保留（可能被其他位置直接调用）
   async scanAll() {
     if (!this._assertNotDisposed()) return;
-    this.items = [];
-    this.fileIndex.clear();
+    this.index.clear();
     const paths = this.vault.listMarkdownFilePaths();
     for (const path of paths) {
       if (!this._assertNotDisposed()) break;
-      const scanned = await this.scanFile(path);
+      const scanned = await this.scanFile(path, { bumpVersion: false });
       this._perf.scannedFiles += 1;
       this._perf.scannedItems += scanned.length;
     }
-    this.bumpVersion();
+    this.index.bumpVersion();
   }
   // [主流程] 初始扫描（代理到暖启动）
   async initialScan() {
@@ -14641,12 +14550,10 @@ let DataStore = class {
    * 说明：不会触碰用户笔记内容，只重建 Think/cache.json。
    */
   async clearCacheAndRescan(mode = "warm") {
-    this.items = [];
-    this.fileIndex.clear();
-    this.queryCache.clear();
-    this.cache = null;
+    this.index.clear();
+    this.cacheStore.clearMemory();
     try {
-      await this.storage.remove("Think/cache.json");
+      await this.cacheStore.removePersisted();
     } catch (e2) {
       devWarn("ThinkPlugin: 删除缓存文件失败（可忽略）", e2);
     }
@@ -14661,48 +14568,22 @@ let DataStore = class {
   async warmStart() {
     if (!this._assertNotDisposed()) return;
     this._perf = { start: Date.now(), end: 0, scannedFiles: 0, scannedItems: 0 };
-    let cache = await this.storage.readJSON("Think/cache.json");
-    if (!cache || cache.schemaVersion !== CURRENT_CACHE_SCHEMA_VERSION) {
-      cache = { schemaVersion: CURRENT_CACHE_SCHEMA_VERSION, files: {} };
-    }
-    this.cache = cache;
+    const cache = await this.cacheStore.load();
     const paths = this.vault.listMarkdownFilePaths();
-    const seen = /* @__PURE__ */ new Set();
-    const unchangedEntries = [];
-    const changedFiles = [];
-    for (const path of paths) {
-      seen.add(path);
-      const st = await this.fileStat.stat(path);
-      if (!st) {
-        continue;
-      }
-      const cached2 = cache.files[path];
-      if (cached2 && cached2.mtime === st.mtime && cached2.size === st.size) {
-        unchangedEntries.push({ path, cached: cached2 });
-      } else {
-        changedFiles.push(path);
-      }
+    const plan = await buildWarmStartPlan(paths, cache, this.fileStat);
+    this.index.clear();
+    for (const { path, cached: cached2 } of plan.unchangedEntries) {
+      this.index.hydrateFileItems(path, this.cacheStore.restoreItems(cached2));
     }
-    this.items = [];
-    this.fileIndex.clear();
-    for (const { path, cached: cached2 } of unchangedEntries) {
-      const restored = cached2.items.map(fromCachedItem);
-      this.fileIndex.set(path, restored);
-      this.items.push(...restored);
-    }
-    for (const pth of changedFiles) {
+    for (const pth of plan.changedFiles) {
       const scanned = await this.scanFile(pth, { bumpVersion: false });
       this._perf.scannedFiles += 1;
       this._perf.scannedItems += scanned.length;
     }
-    for (const cachedPath of Object.keys(cache.files)) {
-      if (!seen.has(cachedPath)) {
-        delete cache.files[cachedPath];
-      }
-    }
-    this.bumpVersion();
+    this.cacheStore.removeMissingFiles(plan.seen);
+    this.index.bumpVersion();
     this._perf.end = Date.now();
-    this._scheduleCacheSave();
+    this.cacheStore.scheduleSave();
     this.notifyChange();
   }
   /* ---------------- 单文件扫描 ---------------- */
@@ -14726,101 +14607,15 @@ let DataStore = class {
    */
   async scanFile(filePathOrFile, opts = {}) {
     if (!this._assertNotDisposed()) return [];
-    let filePath = "";
     try {
-      filePath = typeof filePathOrFile === "string" ? filePathOrFile : filePathOrFile && typeof filePathOrFile.path === "string" ? filePathOrFile.path : "";
-      if (!filePath) {
-        devWarn("ThinkPlugin: scanFile 入参非法（缺少 path）", filePathOrFile);
-        return [];
-      }
-      const content = await this.vault.readFile(filePath);
-      if (content == null) {
-        devWarn("ThinkPlugin: scanFile 文件不存在或不可读", filePath);
-        return [];
-      }
-      const lines = content.split(/\r?\n/);
-      const parentFolder = this._pathParentName(filePath);
-      const fileItems = [];
-      const headingsList = await this.metadata.getHeadings(filePath);
-      const stat = await this.fileStat.stat(filePath);
-      if (!stat) {
-        devWarn("ThinkPlugin: scanFile 获取 stat 失败", filePath);
-        return [];
-      }
-      let nextHeadingIndex = 0;
-      let currentSectionTags = [];
-      let currentHeader = "";
-      const fileName = this._basenameNoExt(this._pathBasename(filePath));
-      for (let i2 = 0; i2 < lines.length; i2++) {
-        const line2 = lines[i2];
-        if (nextHeadingIndex < headingsList.length && headingsList[nextHeadingIndex].line === i2) {
-          const headingEntry = headingsList[nextHeadingIndex];
-          const headingText = headingEntry.heading;
-          const headingTags = headingText.match(/#([\p{L}\p{N}_\/-]+)/gu) || [];
-          currentSectionTags = headingTags.map((t3) => t3.trim()).filter(Boolean);
-          let cleanText = headingText;
-          for (const tag of headingTags) cleanText = cleanText.replace(tag, "").trim();
-          currentHeader = cleanText || "";
-          nextHeadingIndex++;
-          continue;
-        }
-        if (line2.trim() === "<!-- start -->") {
-          const endIdx = lines.indexOf("<!-- end -->", i2 + 1);
-          if (endIdx !== -1) {
-            const blockItem = parseBlockContent(filePath, lines, i2, endIdx, parentFolder);
-            if (blockItem) {
-              normalizeRecordItem(blockItem, {
-                filePath,
-                fileName,
-                parentFolder,
-                created: stat.ctime,
-                modified: stat.mtime,
-                line: i2 + 1,
-                header: currentHeader || void 0,
-                sectionTags: currentSectionTags,
-                themeMatcher: this.themeMatcher
-              });
-              fileItems.push(blockItem);
-            }
-            i2 = endIdx;
-            continue;
-          }
-        }
-        const taskItem = parseTaskLine(filePath, line2, i2 + 1, parentFolder);
-        if (taskItem) {
-          normalizeRecordItem(taskItem, {
-            filePath,
-            fileName,
-            parentFolder,
-            created: stat.ctime,
-            modified: stat.mtime,
-            line: i2 + 1,
-            header: currentHeader || void 0,
-            sectionTags: currentSectionTags,
-            themeMatcher: this.themeMatcher
-          });
-          fileItems.push(taskItem);
-        }
-      }
-      if (this.fileIndex.has(filePath)) {
-        this.items = this.items.filter((it) => it.id && !it.id.startsWith(filePath + "#"));
-      }
-      this.fileIndex.set(filePath, fileItems);
-      this.items.push(...fileItems);
-      if (!this.cache) {
-        this.cache = { schemaVersion: CURRENT_CACHE_SCHEMA_VERSION, files: {} };
-      }
-      this.cache.files[filePath] = {
-        mtime: stat.mtime,
-        size: stat.size,
-        items: fileItems.map(toCachedItem)
-      };
-      this._scheduleCacheSave();
-      if (opts.bumpVersion !== false) {
-        this.bumpVersion();
-      }
-      return fileItems;
+      const scanned = await this.fileScanner.scan(filePathOrFile);
+      if (!scanned) return [];
+      this.index.replaceFileItems(scanned.filePath, scanned.items, { bumpVersion: opts.bumpVersion });
+      this.cacheStore.upsertFile(scanned.filePath, scanned.stat, scanned.items);
+      this.cacheStore.scheduleSave();
+      return scanned.items;
     } catch (err) {
+      const filePath = typeof filePathOrFile === "string" ? filePathOrFile : filePathOrFile?.path || "";
       devError("ThinkPlugin: 扫描文件失败", filePath, err);
       return [];
     }
@@ -14832,32 +14627,14 @@ let DataStore = class {
     return scanFieldMigrations(this.queryItems([], []));
   }
   removeFileItems(filePath) {
-    if (this.fileIndex.has(filePath)) {
-      this.fileIndex.delete(filePath);
-      this.items = this.items.filter((it) => it.id && !it.id.startsWith(filePath + "#"));
+    this.index.removeFileItems(filePath);
+    if (this.cacheStore.removeFile(filePath)) {
+      this.cacheStore.scheduleSave();
     }
-    if (this.cache && this.cache.files[filePath]) {
-      delete this.cache.files[filePath];
-      this._scheduleCacheSave();
-    }
-    this.bumpVersion();
   }
   /* ---------------- 查询 ---------------- */
   queryItems(filters = [], sortRules = []) {
-    const key = this._makeQueryKey(filters, sortRules);
-    const cached2 = this.queryCache.get(key);
-    if (cached2) return cached2;
-    const filtered = filterByRules(this.items, filters);
-    const result = sortItems(filtered, sortRules);
-    this.queryCache.set(key, result);
-    return result;
-  }
-  _makeQueryKey(filters = [], sortRules = []) {
-    return JSON.stringify({ f: filters, s: sortRules, v: this.dataVersion });
-  }
-  bumpVersion() {
-    this.dataVersion++;
-    this.queryCache.clear();
+    return this.index.queryItems(filters, sortRules);
   }
   /* ---------------- 变更通知 ---------------- */
   _emitChange() {
@@ -14878,21 +14655,6 @@ let DataStore = class {
   }
   notifyChange() {
     if (this._assertNotDisposed()) this._emitThrottled();
-  }
-  /* ---------------- 辅助：缓存保存 ---------------- */
-  _scheduleCacheSave(delay = 1500) {
-    if (!this._assertNotDisposed()) return;
-    clearTimeout(this._cacheSaveTimer);
-    this._cacheSaveTimer = setTimeout(async () => {
-      if (!this._assertNotDisposed()) return;
-      try {
-        if (this.cache) {
-          await this.storage.writeJSON("Think/cache.json", this.cache);
-        }
-      } catch (e2) {
-        devWarn("ThinkPlugin: 写入缓存失败", e2);
-      }
-    }, delay);
   }
 };
 DataStore = __decorateClass$d([
@@ -15474,6 +15236,354 @@ function validatePathCharacters(path) {
     }
   }
   return { valid: true };
+}
+class ThemeTreeBuilder {
+  /**
+   * 构建主题树
+   * 
+   * @param themes - 主题定义列表
+   * @param options - 构建选项
+   * @returns 树节点数组（根节点列表）
+   * 
+   * @example
+   * ```typescript
+   * const themes = [
+   *   { id: '1', path: 'work/project', ... },
+   *   { id: '2', path: 'work/meeting', ... },
+   *   { id: '3', path: 'personal', ... }
+   * ];
+   * const tree = ThemeTreeBuilder.buildTree(themes);
+   * // 结果：
+   * // [
+   * //   { id: 'work', label: 'work', children: [
+   * //     { id: 'work/project', label: 'project', themeId: '1', ... },
+   * //     { id: 'work/meeting', label: 'meeting', themeId: '2', ... }
+   * //   ]},
+   * //   { id: 'personal', label: 'personal', themeId: '3', ... }
+   * // ]
+   * ```
+   */
+  static buildTree(themes, options = {}) {
+    const { sortBy = "path", createVirtualNodes = true } = options;
+    if (!themes || themes.length === 0) {
+      return [];
+    }
+    const getOrder = (node2) => {
+      const raw = node2.theme?.order;
+      return typeof raw === "number" && Number.isFinite(raw) ? raw : null;
+    };
+    const compareNodes = (a2, b2) => {
+      if (sortBy === "label") {
+        return a2.label.localeCompare(b2.label);
+      }
+      if (sortBy === "order") {
+        const ao = getOrder(a2);
+        const bo = getOrder(b2);
+        if (ao !== null && bo !== null && ao !== bo) return ao - bo;
+        if (ao !== null && bo === null) return -1;
+        if (ao === null && bo !== null) return 1;
+      }
+      return a2.path.localeCompare(b2.path);
+    };
+    if (createVirtualNodes) {
+      const roots2 = [];
+      const nodeMap = /* @__PURE__ */ new Map();
+      const sortedThemes = [...themes].sort((a2, b2) => a2.path.localeCompare(b2.path));
+      for (const theme2 of sortedThemes) {
+        const parts = theme2.path.split("/");
+        let currentPath = "";
+        let parentNode = null;
+        for (let i2 = 0; i2 < parts.length; i2++) {
+          const part = parts[i2];
+          const isLeaf = i2 === parts.length - 1;
+          currentPath = currentPath ? `${currentPath}/${part}` : part;
+          let node2 = nodeMap.get(currentPath);
+          if (!node2) {
+            const newNode = {
+              id: currentPath,
+              label: part,
+              path: currentPath,
+              depth: i2,
+              themeId: isLeaf ? theme2.id : null,
+              theme: isLeaf ? theme2 : null,
+              parentId: parentNode?.id ?? null,
+              children: []
+            };
+            node2 = newNode;
+            nodeMap.set(currentPath, newNode);
+            if (parentNode) {
+              if (!parentNode.children.some((c2) => c2.id === newNode.id)) {
+                parentNode.children.push(newNode);
+              }
+            } else {
+              if (!roots2.some((r2) => r2.id === newNode.id)) {
+                roots2.push(newNode);
+              }
+            }
+          } else if (isLeaf) {
+            node2.themeId = theme2.id;
+            node2.theme = theme2;
+          }
+          parentNode = node2;
+        }
+      }
+      const sortNodes2 = (nodes) => {
+        nodes.sort(compareNodes);
+        nodes.forEach((node2) => sortNodes2(node2.children));
+      };
+      sortNodes2(roots2);
+      return roots2;
+    }
+    const themeByPath = /* @__PURE__ */ new Map();
+    for (const t3 of themes) {
+      themeByPath.set(t3.path, t3);
+    }
+    const nodeByPath = /* @__PURE__ */ new Map();
+    for (const theme2 of themes) {
+      const parts = theme2.path.split("/");
+      const label = parts[parts.length - 1] ?? theme2.path;
+      nodeByPath.set(theme2.path, {
+        id: theme2.path,
+        label,
+        path: theme2.path,
+        depth: 0,
+        // will be filled after linking
+        themeId: theme2.id,
+        theme: theme2,
+        parentId: null,
+        children: []
+      });
+    }
+    const roots = [];
+    const rootIds = /* @__PURE__ */ new Set();
+    for (const theme2 of themes) {
+      const node2 = nodeByPath.get(theme2.path);
+      if (!node2) continue;
+      const parts = theme2.path.split("/");
+      let parentPath = null;
+      if (parts.length > 1) {
+        for (let i2 = parts.length - 1; i2 >= 1; i2--) {
+          const candidate = parts.slice(0, i2).join("/");
+          if (themeByPath.has(candidate)) {
+            parentPath = candidate;
+            break;
+          }
+        }
+      }
+      if (parentPath) {
+        const parentNode = nodeByPath.get(parentPath);
+        if (parentNode) {
+          node2.parentId = parentNode.id;
+          if (!parentNode.children.some((c2) => c2.id === node2.id)) {
+            parentNode.children.push(node2);
+          }
+          continue;
+        }
+      }
+      if (!rootIds.has(node2.id)) {
+        roots.push(node2);
+        rootIds.add(node2.id);
+      }
+    }
+    const setDepth = (nodes, depth) => {
+      for (const n2 of nodes) {
+        n2.depth = depth;
+        if (n2.children.length > 0) {
+          setDepth(n2.children, depth + 1);
+        }
+      }
+    };
+    setDepth(roots, 0);
+    const sortNodes = (nodes) => {
+      nodes.sort(compareNodes);
+      nodes.forEach((node2) => sortNodes(node2.children));
+    };
+    sortNodes(roots);
+    return roots;
+  }
+  /**
+   * 扁平化主题树
+   * 
+   * @param nodes - 树节点数组
+   * @param expandedIds - 展开的节点 ID 集合（可选）
+   * @returns 扁平化的节点数组
+   */
+  static flattenTree(nodes, expandedIds) {
+    const result = [];
+    const traverse = (nodeList, visible = true) => {
+      for (const node2 of nodeList) {
+        const expanded = expandedIds?.has(node2.id) ?? true;
+        result.push({
+          ...node2,
+          expanded,
+          visible
+        });
+        if (node2.children.length > 0) {
+          traverse(node2.children, visible && expanded);
+        }
+      }
+    };
+    traverse(nodes);
+    return result;
+  }
+  /**
+   * 根据主题 ID 获取完整路径
+   * 
+   * @param nodes - 树节点数组
+   * @param themeId - 主题 ID
+   * @returns 路径字符串，未找到返回 null
+   */
+  static getThemePath(nodes, themeId) {
+    const search = (nodeList) => {
+      for (const node2 of nodeList) {
+        if (node2.themeId === themeId) {
+          return node2.path;
+        }
+        const found = search(node2.children);
+        if (found) return found;
+      }
+      return null;
+    };
+    return search(nodes);
+  }
+  /**
+   * 根据路径获取节点
+   * 
+   * @param nodes - 树节点数组
+   * @param path - 节点路径
+   * @returns 找到的节点或 null
+   */
+  static findNodeByPath(nodes, path) {
+    const parts = path.split("/");
+    let current2;
+    let searchList = nodes;
+    for (const part of parts) {
+      const expectedPath = current2 ? `${current2.path}/${part}` : part;
+      current2 = searchList.find((n2) => n2.path === expectedPath);
+      if (!current2) return null;
+      searchList = current2.children;
+    }
+    return current2 ?? null;
+  }
+  /**
+   * 根据主题 ID 获取节点
+   * 
+   * @param nodes - 树节点数组
+   * @param themeId - 主题 ID
+   * @returns 找到的节点或 null
+   */
+  static findNodeByThemeId(nodes, themeId) {
+    const search = (nodeList) => {
+      for (const node2 of nodeList) {
+        if (node2.themeId === themeId) {
+          return node2;
+        }
+        const found = search(node2.children);
+        if (found) return found;
+      }
+      return null;
+    };
+    return search(nodes);
+  }
+  /**
+   * 过滤树节点
+   * 
+   * @param nodes - 树节点数组
+   * @param predicate - 过滤谓词函数
+   * @returns 过滤后的树（保留匹配节点及其祖先路径）
+   */
+  static filterTree(nodes, predicate) {
+    const filterNodes = (nodeList) => {
+      return nodeList.map((node2) => {
+        const filteredChildren = filterNodes(node2.children);
+        if (predicate(node2) || filteredChildren.length > 0) {
+          return {
+            ...node2,
+            children: filteredChildren
+          };
+        }
+        return null;
+      }).filter((n2) => n2 !== null);
+    };
+    return filterNodes(nodes);
+  }
+  /**
+   * 搜索过滤（按路径或标签匹配）
+   * 
+   * @param nodes - 树节点数组
+   * @param searchTerm - 搜索词
+   * @returns 匹配的树节点
+   */
+  static searchTree(nodes, searchTerm) {
+    if (!searchTerm.trim()) {
+      return nodes;
+    }
+    const term = searchTerm.toLowerCase();
+    return ThemeTreeBuilder.filterTree(nodes, (node2) => {
+      return node2.label.toLowerCase().includes(term) || node2.path.toLowerCase().includes(term);
+    });
+  }
+  /**
+   * 获取节点的所有祖先路径
+   * 
+   * @param path - 节点路径
+   * @returns 祖先路径数组（不包括自身）
+   */
+  static getAncestorPaths(path) {
+    const parts = path.split("/");
+    const ancestors = [];
+    let currentPath = "";
+    for (let i2 = 0; i2 < parts.length - 1; i2++) {
+      currentPath = currentPath ? `${currentPath}/${parts[i2]}` : parts[i2];
+      ancestors.push(currentPath);
+    }
+    return ancestors;
+  }
+  /**
+   * 获取节点的所有后代路径
+   * 
+   * @param node - 树节点
+   * @returns 后代路径数组（不包括自身）
+   */
+  static getDescendantPaths(node2) {
+    const descendants = [];
+    const collect = (n2) => {
+      for (const child of n2.children) {
+        descendants.push(child.path);
+        collect(child);
+      }
+    };
+    collect(node2);
+    return descendants;
+  }
+  /**
+   * 获取所有叶子节点（有真实主题关联的节点）
+   * 
+   * @param nodes - 树节点数组
+   * @returns 叶子节点数组
+   */
+  static getLeafNodes(nodes) {
+    const leaves = [];
+    const collect = (nodeList) => {
+      for (const node2 of nodeList) {
+        if (node2.themeId !== null) {
+          leaves.push(node2);
+        }
+        collect(node2.children);
+      }
+    };
+    collect(nodes);
+    return leaves;
+  }
+}
+function buildThemeTree$1(themes, options) {
+  return ThemeTreeBuilder.buildTree(themes, options);
+}
+function flattenThemeTree(nodes, expandedIds) {
+  return ThemeTreeBuilder.flattenTree(nodes, expandedIds);
+}
+function searchThemeTree(nodes, searchTerm) {
+  return ThemeTreeBuilder.searchTree(nodes, searchTerm);
 }
 function buildThemeTree(themes) {
   const unifiedTree = ThemeTreeBuilder.buildTree(themes, { createVirtualNodes: false });
@@ -16949,18 +17059,6 @@ function buildEditableRecordSnapshot(input) {
     persistencePlan,
     themeParts: outputPlan.themeParts
   };
-}
-function isRecordDebugEnabled() {
-  return typeof window !== "undefined" && Boolean(window.__THINK_RECORD_DEBUG__);
-}
-function recordDebugLog(scope, message, payload) {
-  if (!isRecordDebugEnabled()) return;
-  const prefix2 = `[记录调试][${scope}] ${message}`;
-  if (payload === void 0) {
-    console.info(prefix2);
-    return;
-  }
-  console.info(prefix2, payload);
 }
 function issue$2(code, message, field) {
   return { code, message, field };
@@ -19002,6 +19100,35 @@ function useTimelineZoom(options) {
     }
   };
 }
+let enabled = false;
+function setDevConsoleStackEnabled(v2) {
+  enabled = !!v2;
+}
+function isDevConsoleStackEnabled() {
+  return enabled;
+}
+function emit(level, args) {
+  if (!isDevConsoleStackEnabled()) return;
+  try {
+    const method = console[level];
+    if (typeof method === "function") {
+      method.apply(console, args);
+    }
+  } catch {
+  }
+}
+function diagnosticLog(...args) {
+  emit("log", args);
+}
+function diagnosticWarn(...args) {
+  emit("warn", args);
+}
+function diagnosticError(...args) {
+  emit("error", args);
+}
+function diagnosticTrace(...args) {
+  emit("trace", args);
+}
 class BaseError extends Error {
   type;
   timestamp;
@@ -19091,7 +19218,7 @@ class ErrorHandler {
     };
     this.addLogEntry(logEntry);
     try {
-      console.error("[Think][ErrorHandler][RAW]", {
+      diagnosticError("[Think][ErrorHandler][RAW]", {
         context: fullContext,
         type: errorType,
         message: errorObj.message,
@@ -19272,275 +19399,163 @@ const errorHandler = ErrorHandler.getInstance();
 async function safeAsync(fn3, context, options) {
   return errorHandler.safeAsync(fn3, context, options);
 }
-let enabled = false;
-function setDevConsoleStackEnabled(v2) {
-  enabled = !!v2;
+const DEFAULT_CONFIG = {
+  maxSamples: 100,
+  warningThreshold: 1e3,
+  errorThreshold: 5e3
+};
+const now = () => typeof performance !== "undefined" && typeof performance.now === "function" ? performance.now() : Date.now();
+function percentile(sorted, pct) {
+  if (!sorted.length) return 0;
+  const index = Math.max(0, Math.ceil(pct / 100 * sorted.length) - 1);
+  return sorted[index] ?? 0;
 }
-function isDevConsoleStackEnabled() {
-  return enabled;
+function createMetric(name) {
+  return {
+    name,
+    samples: [],
+    count: 0,
+    min: Infinity,
+    max: -Infinity,
+    avg: 0,
+    median: 0,
+    p95: 0,
+    p99: 0,
+    totalTime: 0,
+    lastUpdated: Date.now()
+  };
+}
+function summarize(metrics) {
+  let totalOperations = 0;
+  let totalTime = 0;
+  let slowestOperation = "";
+  let fastestOperation = "";
+  let slowestAvg = -Infinity;
+  let fastestAvg = Infinity;
+  for (const metric of metrics) {
+    totalOperations += metric.count;
+    totalTime += metric.totalTime;
+    if (metric.avg > slowestAvg) {
+      slowestAvg = metric.avg;
+      slowestOperation = metric.name;
+    }
+    if (metric.avg < fastestAvg) {
+      fastestAvg = metric.avg;
+      fastestOperation = metric.name;
+    }
+  }
+  return {
+    totalOperations,
+    totalTime,
+    averageTime: totalOperations > 0 ? totalTime / totalOperations : 0,
+    slowestOperation,
+    fastestOperation
+  };
 }
 class PerformanceMonitor {
   static instance;
   metrics = /* @__PURE__ */ new Map();
   config;
-  reportTimer = null;
   constructor(config2 = {}) {
-    this.config = {
-      maxSamples: config2.maxSamples ?? 100,
-      warningThreshold: config2.warningThreshold ?? 1e3,
-      errorThreshold: config2.errorThreshold ?? 5e3,
-      autoReport: false,
-      reportInterval: config2.reportInterval ?? 6e4
-      // 1分钟
-    };
+    this.config = { ...DEFAULT_CONFIG, ...config2 };
   }
-  /**
-   * 获取性能监控器实例
-   */
   static getInstance(config2) {
     if (!PerformanceMonitor.instance) {
       PerformanceMonitor.instance = new PerformanceMonitor(config2);
+    } else if (config2) {
+      PerformanceMonitor.instance.updateConfig(config2);
     }
     return PerformanceMonitor.instance;
   }
-  /**
-   * 开始测量性能
-   * 
-   * @param name - 操作名称
-   * @returns 停止测量的函数
-   * 
-   * @example
-   * const stopMeasure = performanceMonitor.startMeasure('fetchData');
-   * await fetchData();
-   * const duration = stopMeasure();
-   */
   startMeasure(name) {
-    const startTime = performance.now();
-    const startMark = `${name}-start-${Date.now()}`;
-    if (typeof performance.mark === "function") {
-      try {
-        performance.mark(startMark);
-      } catch (e2) {
-      }
-    }
+    const startTime = now();
     return () => {
-      const endTime = performance.now();
-      const duration2 = endTime - startTime;
+      const duration2 = now() - startTime;
       this.recordMetric(name, duration2);
       this.checkThreshold(name, duration2);
-      if (typeof performance.measure === "function") {
-        try {
-          const endMark = `${name}-end-${Date.now()}`;
-          performance.mark(endMark);
-          performance.measure(name, startMark, endMark);
-        } catch (e2) {
-        }
-      }
       return duration2;
     };
   }
-  /**
-   * 测量异步函数性能
-   * 
-   * @param name - 操作名称
-   * @param fn - 异步函数
-   * @returns 函数结果
-   * 
-   * @example
-   * const data = await performanceMonitor.measureAsync('fetchData', async () => {
-   *     return await fetch('/api/data');
-   * });
-   */
   async measureAsync(name, fn3) {
     const stop = this.startMeasure(name);
     try {
-      const result = await fn3();
+      return await fn3();
+    } finally {
       stop();
-      return result;
-    } catch (error) {
-      stop();
-      throw error;
     }
   }
-  /**
-   * 测量同步函数性能
-   * 
-   * @param name - 操作名称
-   * @param fn - 同步函数
-   * @returns 函数结果
-   */
   measure(name, fn3) {
     const stop = this.startMeasure(name);
     try {
-      const result = fn3();
+      return fn3();
+    } finally {
       stop();
-      return result;
-    } catch (error) {
-      stop();
-      throw error;
     }
   }
-  /**
-   * 记录性能指标
-   */
-  recordMetric(name, duration2) {
-    let metric = this.metrics.get(name);
-    if (!metric) {
-      metric = {
-        name,
-        samples: [],
-        count: 0,
-        min: Infinity,
-        max: -Infinity,
-        avg: 0,
-        median: 0,
-        p95: 0,
-        p99: 0,
-        totalTime: 0,
-        lastUpdated: Date.now()
-      };
-      this.metrics.set(name, metric);
-    }
-    metric.samples.push(duration2);
-    metric.count++;
-    metric.totalTime += duration2;
-    metric.lastUpdated = Date.now();
-    if (metric.samples.length > this.config.maxSamples) {
-      metric.samples.shift();
-    }
-    this.updateMetricStats(metric);
-  }
-  /**
-   * 更新指标统计数据
-   */
-  updateMetricStats(metric) {
-    const sorted = [...metric.samples].sort((a2, b2) => a2 - b2);
-    metric.min = Math.min(...sorted);
-    metric.max = Math.max(...sorted);
-    metric.avg = metric.totalTime / metric.count;
-    metric.median = this.calculatePercentile(sorted, 50);
-    metric.p95 = this.calculatePercentile(sorted, 95);
-    metric.p99 = this.calculatePercentile(sorted, 99);
-  }
-  /**
-   * 计算百分位数
-   */
-  calculatePercentile(sorted, percentile) {
-    if (sorted.length === 0) return 0;
-    const index = Math.ceil(percentile / 100 * sorted.length) - 1;
-    return sorted[Math.max(0, index)];
-  }
-  /**
-   * 检查性能阈值
-   */
-  checkThreshold(name, duration2) {
-    if (duration2 >= this.config.errorThreshold) {
-      devError(
-        `[Performance] SLOW: ${name} took ${duration2.toFixed(2)}ms (threshold: ${this.config.errorThreshold}ms)`
-      );
-    } else if (duration2 >= this.config.warningThreshold) {
-      devWarn(
-        `[Performance] Warning: ${name} took ${duration2.toFixed(2)}ms (threshold: ${this.config.warningThreshold}ms)`
-      );
-    }
-  }
-  /**
-   * 获取单个指标
-   */
   getMetric(name) {
     return this.metrics.get(name);
   }
-  /**
-   * 获取所有指标
-   */
   getAllMetrics() {
     return Array.from(this.metrics.values());
   }
-  /**
-   * 生成性能报告
-   */
   generateReport() {
     const metrics = this.getAllMetrics();
-    let totalOperations = 0;
-    let totalTime = 0;
-    let slowestOperation = "";
-    let fastestOperation = "";
-    let slowestTime = -Infinity;
-    let fastestTime = Infinity;
-    metrics.forEach((metric) => {
-      totalOperations += metric.count;
-      totalTime += metric.totalTime;
-      if (metric.avg > slowestTime) {
-        slowestTime = metric.avg;
-        slowestOperation = metric.name;
-      }
-      if (metric.avg < fastestTime) {
-        fastestTime = metric.avg;
-        fastestOperation = metric.name;
-      }
-    });
     return {
       timestamp: Date.now(),
       metrics,
-      summary: {
-        totalOperations,
-        totalTime,
-        averageTime: totalOperations > 0 ? totalTime / totalOperations : 0,
-        slowestOperation,
-        fastestOperation
-      }
+      summary: summarize(metrics)
     };
   }
-  /**
-   * 清除所有指标
-   */
   clearMetrics() {
     this.metrics.clear();
   }
-  /**
-   * 清除特定指标
-   */
   clearMetric(name) {
     this.metrics.delete(name);
   }
-  /**
-   * 停止自动报告
-   */
   stopAutoReport() {
-    if (this.reportTimer !== null) {
-      clearInterval(this.reportTimer);
-      this.reportTimer = null;
-    }
   }
-  /**
-   * 更新配置
-   */
   updateConfig(config2) {
     this.config = { ...this.config, ...config2 };
-    if (config2.autoReport !== void 0) {
-      this.config.autoReport = false;
-      this.stopAutoReport();
-    }
   }
-  /**
-   * 获取慢操作（超过阈值）
-   */
   getSlowOperations(threshold) {
     const limit = threshold ?? this.config.warningThreshold;
-    return this.getAllMetrics().filter((m2) => m2.avg >= limit);
+    return this.getAllMetrics().filter((metric) => metric.avg >= limit);
   }
-  /**
-   * 获取 Top N 慢操作
-   */
   getTopSlowOperations(n2 = 10) {
     return this.getAllMetrics().sort((a2, b2) => b2.avg - a2.avg).slice(0, n2);
   }
-  /**
-   * 重置统计数据
-   */
   reset() {
     this.clearMetrics();
-    this.stopAutoReport();
+  }
+  recordMetric(name, duration2) {
+    const metric = this.metrics.get(name) ?? createMetric(name);
+    metric.samples.push(duration2);
+    metric.count += 1;
+    metric.totalTime += duration2;
+    metric.lastUpdated = Date.now();
+    if (metric.samples.length > this.config.maxSamples) {
+      metric.samples.splice(0, metric.samples.length - this.config.maxSamples);
+    }
+    this.updateMetricStats(metric);
+    this.metrics.set(name, metric);
+  }
+  updateMetricStats(metric) {
+    const sorted = [...metric.samples].sort((a2, b2) => a2 - b2);
+    metric.min = sorted[0] ?? 0;
+    metric.max = sorted[sorted.length - 1] ?? 0;
+    metric.avg = metric.totalTime / metric.count;
+    metric.median = percentile(sorted, 50);
+    metric.p95 = percentile(sorted, 95);
+    metric.p99 = percentile(sorted, 99);
+  }
+  checkThreshold(name, duration2) {
+    if (duration2 >= this.config.errorThreshold) {
+      devError(`[Performance] SLOW: ${name} took ${duration2.toFixed(2)}ms (threshold: ${this.config.errorThreshold}ms)`);
+      return;
+    }
+    if (duration2 >= this.config.warningThreshold) {
+      devWarn(`[Performance] Warning: ${name} took ${duration2.toFixed(2)}ms (threshold: ${this.config.warningThreshold}ms)`);
+    }
   }
 }
 const performanceMonitor = PerformanceMonitor.getInstance();
@@ -23521,7 +23536,7 @@ function mergeOuterLocalTheme(outerTheme, localTheme) {
     ...localTheme
   };
 }
-function ThemeProvider$2(props) {
+function ThemeProvider$3(props) {
   const {
     children,
     theme: localTheme
@@ -23682,7 +23697,7 @@ function useThemeScoping(themeId, upperTheme, localTheme, isPrivate = false) {
     };
   }, [themeId, upperTheme, localTheme, isPrivate]);
 }
-function ThemeProvider$1(props) {
+function ThemeProvider$2(props) {
   const {
     children,
     theme: localTheme,
@@ -23694,7 +23709,7 @@ function ThemeProvider$1(props) {
   const privateTheme = useThemeScoping(themeId, upperPrivateTheme, localTheme, true);
   const rtlValue = (themeId ? engineTheme[themeId] : engineTheme).direction === "rtl";
   const layerOrder = useLayerOrder(engineTheme);
-  return /* @__PURE__ */ u2(ThemeProvider$2, {
+  return /* @__PURE__ */ u2(ThemeProvider$3, {
     theme: privateTheme,
     children: /* @__PURE__ */ u2(ThemeContext$1.Provider, {
       value: engineTheme,
@@ -24257,7 +24272,7 @@ function createCssVarsProvider(options) {
       shouldGenerateStyleSheet = false;
     }
     const element = /* @__PURE__ */ u2(S, {
-      children: [/* @__PURE__ */ u2(ThemeProvider$1, {
+      children: [/* @__PURE__ */ u2(ThemeProvider$2, {
         themeId: scopedTheme ? themeId : void 0,
         theme: memoTheme2,
         children
@@ -26351,7 +26366,7 @@ function ThemeProviderNoVars({
   ...props
 }) {
   const scopedTheme = THEME_ID in themeInput ? themeInput[THEME_ID] : void 0;
-  return /* @__PURE__ */ u2(ThemeProvider$1, {
+  return /* @__PURE__ */ u2(ThemeProvider$2, {
     ...props,
     themeId: scopedTheme ? THEME_ID : void 0,
     theme: scopedTheme || themeInput
@@ -26392,7 +26407,7 @@ const {
   }
 });
 const CssVarsProvider = InternalCssVarsProvider;
-function ThemeProvider({
+function ThemeProvider$1({
   theme: theme2,
   ...props
 }) {
@@ -26544,7 +26559,7 @@ function logInputEvent(scope, event, extra = {}) {
   const target = event.target;
   const currentTarget = event.currentTarget;
   const native = event;
-  console.log(`[输入诊断][${scope}] ${event.type}`, {
+  diagnosticLog(`[输入诊断][${scope}] ${event.type}`, {
     type: event.type,
     eventPhase: event.eventPhase,
     bubbles: event.bubbles,
@@ -26565,7 +26580,7 @@ function logInputEvent(scope, event, extra = {}) {
   });
 }
 function logRenderDiagnostic(scope, payload) {
-  console.log(`[输入诊断][${scope}][render]`, {
+  diagnosticLog(`[输入诊断][${scope}][render]`, {
     activeElement: describeElement(document.activeElement),
     ...payload
   });
@@ -27864,7 +27879,7 @@ const CollapseWrapperInner = styled("div", {
     }
   }]
 });
-const Collapse = /* @__PURE__ */ D(function Collapse2(inProps, ref) {
+const Collapse$1 = /* @__PURE__ */ D(function Collapse(inProps, ref) {
   const props = useDefaultProps({
     props: inProps,
     name: "MuiCollapse"
@@ -28063,8 +28078,8 @@ const Collapse = /* @__PURE__ */ D(function Collapse2(inProps, ref) {
     }
   });
 });
-if (Collapse) {
-  Collapse.muiSupportAuto = true;
+if (Collapse$1) {
+  Collapse$1.muiSupportAuto = true;
 }
 function getPaperUtilityClass(slot) {
   return generateUtilityClass("MuiPaper", slot);
@@ -28121,7 +28136,7 @@ const PaperRoot = styled("div", {
     }
   }]
 })));
-const Paper = /* @__PURE__ */ D(function Paper2(inProps, ref) {
+const Paper$2 = /* @__PURE__ */ D(function Paper2(inProps, ref) {
   const props = useDefaultProps({
     props: inProps,
     name: "MuiPaper"
@@ -28183,7 +28198,7 @@ const useUtilityClasses$X = (ownerState) => {
   };
   return composeClasses(slots, getAccordionUtilityClass, classes);
 };
-const AccordionRoot = styled(Paper, {
+const AccordionRoot = styled(Paper$2, {
   name: "MuiAccordion",
   slot: "Root",
   overridesResolver: (props, styles2) => {
@@ -28281,7 +28296,7 @@ const AccordionRegion = styled("div", {
   name: "MuiAccordion",
   slot: "Region"
 })({});
-const Accordion = /* @__PURE__ */ D(function Accordion2(inProps, ref) {
+const Accordion$1 = /* @__PURE__ */ D(function Accordion(inProps, ref) {
   const props = useDefaultProps({
     props: inProps,
     name: "MuiAccordion"
@@ -28356,7 +28371,7 @@ const Accordion = /* @__PURE__ */ D(function Accordion2(inProps, ref) {
     ownerState
   });
   const [TransitionSlot, transitionProps] = useSlot("transition", {
-    elementType: Collapse,
+    elementType: Collapse$1,
     externalForwardedProps,
     ownerState
   });
@@ -28411,7 +28426,7 @@ const AccordionDetailsRoot = styled("div", {
 }) => ({
   padding: theme2.spacing(1, 2, 2)
 })));
-const AccordionDetails = /* @__PURE__ */ D(function AccordionDetails2(inProps, ref) {
+const AccordionDetails$1 = /* @__PURE__ */ D(function AccordionDetails(inProps, ref) {
   const props = useDefaultProps({
     props: inProps,
     name: "MuiAccordionDetails"
@@ -29172,7 +29187,7 @@ const AccordionSummaryExpandIconWrapper = styled("span", {
     transform: "rotate(180deg)"
   }
 })));
-const AccordionSummary = /* @__PURE__ */ D(function AccordionSummary2(inProps, ref) {
+const AccordionSummary$1 = /* @__PURE__ */ D(function AccordionSummary(inProps, ref) {
   const props = useDefaultProps({
     props: inProps,
     name: "MuiAccordionSummary"
@@ -29424,7 +29439,7 @@ const CircularProgressTrack = styled("circle", {
   stroke: "currentColor",
   opacity: (theme2.vars || theme2).palette.action.activatedOpacity
 })));
-const CircularProgress = /* @__PURE__ */ D(function CircularProgress2(inProps, ref) {
+const CircularProgress$1 = /* @__PURE__ */ D(function CircularProgress(inProps, ref) {
   const props = useDefaultProps({
     props: inProps,
     name: "MuiCircularProgress"
@@ -29675,7 +29690,7 @@ const IconButton$1 = /* @__PURE__ */ D(function IconButton(inProps, ref) {
     ...other
   } = props;
   const loadingId = useId(idProp);
-  const loadingIndicator = loadingIndicatorProp ?? /* @__PURE__ */ u2(CircularProgress, {
+  const loadingIndicator = loadingIndicatorProp ?? /* @__PURE__ */ u2(CircularProgress$1, {
     "aria-labelledby": loadingId,
     color: "inherit",
     size: 16
@@ -29744,7 +29759,7 @@ const useUtilityClasses$R = (ownerState) => {
   };
   return composeClasses(slots, getAlertUtilityClass, classes);
 };
-const AlertRoot = styled(Paper, {
+const AlertRoot = styled(Paper$2, {
   name: "MuiAlert",
   slot: "Root",
   overridesResolver: (props, styles2) => {
@@ -29851,7 +29866,7 @@ const defaultIconMapping = {
     fontSize: "inherit"
   })
 };
-const Alert = /* @__PURE__ */ D(function Alert2(inProps, ref) {
+const Alert$1 = /* @__PURE__ */ D(function Alert(inProps, ref) {
   const props = useDefaultProps({
     props: inProps,
     name: "MuiAlert"
@@ -32796,7 +32811,7 @@ const PopperTooltip = /* @__PURE__ */ D(function PopperTooltip2(props, forwarded
     children: typeof children === "function" ? children(childProps) : children
   });
 });
-const Popper$1 = /* @__PURE__ */ D(function Popper(props, forwardedRef) {
+const Popper$2 = /* @__PURE__ */ D(function Popper(props, forwardedRef) {
   const {
     anchorEl,
     children,
@@ -32868,11 +32883,11 @@ const Popper$1 = /* @__PURE__ */ D(function Popper(props, forwardedRef) {
     })
   });
 });
-const PopperRoot = styled(Popper$1, {
+const PopperRoot = styled(Popper$2, {
   name: "MuiPopper",
   slot: "Root"
 })({});
-const Popper2 = /* @__PURE__ */ D(function Popper3(inProps, ref) {
+const Popper$1 = /* @__PURE__ */ D(function Popper2(inProps, ref) {
   const isRtl = useRtl();
   const props = useDefaultProps({
     props: inProps,
@@ -33366,7 +33381,7 @@ const ChipLabel = styled("span", {
 function isDeleteKeyboardEvent(keyboardEvent) {
   return keyboardEvent.key === "Backspace" || keyboardEvent.key === "Delete";
 }
-const Chip = /* @__PURE__ */ D(function Chip2(inProps, ref) {
+const Chip$1 = /* @__PURE__ */ D(function Chip(inProps, ref) {
   const props = useDefaultProps({
     props: inProps,
     name: "MuiChip"
@@ -34486,7 +34501,7 @@ const AutocompletePopupIndicator = styled(IconButton$1, {
     }
   }]
 });
-const AutocompletePopper = styled(Popper2, {
+const AutocompletePopper = styled(Popper$1, {
   name: "MuiAutocomplete",
   slot: "Popper",
   overridesResolver: (props, styles2) => {
@@ -34510,7 +34525,7 @@ const AutocompletePopper = styled(Popper2, {
     }
   }]
 })));
-const AutocompletePaper = styled(Paper, {
+const AutocompletePaper = styled(Paper$2, {
   name: "MuiAutocomplete",
   slot: "Paper"
 })(memoTheme(({
@@ -34613,7 +34628,7 @@ const AutocompleteGroupUl = styled("ul", {
     paddingLeft: 24
   }
 });
-const Autocomplete = /* @__PURE__ */ D(function Autocomplete2(inProps, ref) {
+const Autocomplete$1 = /* @__PURE__ */ D(function Autocomplete(inProps, ref) {
   const props = useDefaultProps({
     props: inProps,
     name: "MuiAutocomplete"
@@ -34799,13 +34814,13 @@ const Autocomplete = /* @__PURE__ */ D(function Autocomplete2(inProps, ref) {
     ref: listboxRef
   });
   const [PaperSlot, paperProps] = useSlot("paper", {
-    elementType: Paper,
+    elementType: Paper$2,
     externalForwardedProps,
     ownerState,
     className: classes.paper
   });
   const [PopperSlot, popperProps] = useSlot("popper", {
-    elementType: Popper2,
+    elementType: Popper$1,
     externalForwardedProps,
     ownerState,
     className: classes.popper,
@@ -34869,7 +34884,7 @@ const Autocomplete = /* @__PURE__ */ D(function Autocomplete2(inProps, ref) {
           } = getCustomizedItemProps({
             index
           });
-          return /* @__PURE__ */ u2(Chip, {
+          return /* @__PURE__ */ u2(Chip$1, {
             label: getOptionLabel(option),
             size,
             ...customItemProps,
@@ -35723,7 +35738,7 @@ const Button$1 = /* @__PURE__ */ D(function Button(inProps, ref) {
     ...other
   } = props;
   const loadingId = useId(idProp);
-  const loadingIndicator = loadingIndicatorProp ?? /* @__PURE__ */ u2(CircularProgress, {
+  const loadingIndicator = loadingIndicatorProp ?? /* @__PURE__ */ u2(CircularProgress$1, {
     "aria-labelledby": loadingId,
     color: "inherit",
     size: 16
@@ -35807,13 +35822,13 @@ const useUtilityClasses$I = (ownerState) => {
   };
   return composeClasses(slots, getCardUtilityClass, classes);
 };
-const CardRoot = styled(Paper, {
+const CardRoot = styled(Paper$2, {
   name: "MuiCard",
   slot: "Root"
 })({
   overflow: "hidden"
 });
-const Card = /* @__PURE__ */ D(function Card2(inProps, ref) {
+const Card$1 = /* @__PURE__ */ D(function Card(inProps, ref) {
   const props = useDefaultProps({
     props: inProps,
     name: "MuiCard"
@@ -35858,7 +35873,7 @@ const CardContentRoot = styled("div", {
     paddingBottom: 24
   }
 });
-const CardContent = /* @__PURE__ */ D(function CardContent2(inProps, ref) {
+const CardContent$1 = /* @__PURE__ */ D(function CardContent(inProps, ref) {
   const props = useDefaultProps({
     props: inProps,
     name: "MuiCardContent"
@@ -36192,7 +36207,7 @@ const CheckboxRoot = styled(SwitchBase, {
 const defaultCheckedIcon$1 = /* @__PURE__ */ u2(CheckBoxIcon, {});
 const defaultIcon$1 = /* @__PURE__ */ u2(CheckBoxOutlineBlankIcon, {});
 const defaultIndeterminateIcon = /* @__PURE__ */ u2(IndeterminateCheckBoxIcon, {});
-const Checkbox = /* @__PURE__ */ D(function Checkbox2(inProps, ref) {
+const Checkbox$1 = /* @__PURE__ */ D(function Checkbox(inProps, ref) {
   const props = useDefaultProps({
     props: inProps,
     name: "MuiCheckbox"
@@ -36262,7 +36277,7 @@ function mapEventPropToEvent(eventProp) {
 function clickedRootScrollbar(event, doc) {
   return doc.documentElement.clientWidth < event.clientX || doc.documentElement.clientHeight < event.clientY;
 }
-function ClickAwayListener(props) {
+function ClickAwayListener$1(props) {
   const {
     children,
     disableReactTree = false,
@@ -36453,7 +36468,7 @@ const GlobalStyles = globalCss(isDynamicSupport ? ({
 }) => styles$2(theme2, enableColorScheme) : ({
   theme: theme2
 }) => staticStyles(theme2));
-function CssBaseline(inProps) {
+function CssBaseline$1(inProps) {
   const props = useDefaultProps({
     props: inProps,
     name: "MuiCssBaseline"
@@ -37310,7 +37325,7 @@ const DialogContainer = styled("div", {
     }
   }]
 });
-const DialogPaper = styled(Paper, {
+const DialogPaper = styled(Paper$2, {
   name: "MuiDialog",
   slot: "Paper",
   overridesResolver: (props, styles2) => {
@@ -37403,7 +37418,7 @@ const DialogPaper = styled(Paper, {
     }
   }]
 })));
-const Dialog = /* @__PURE__ */ D(function Dialog2(inProps, ref) {
+const Dialog$1 = /* @__PURE__ */ D(function Dialog(inProps, ref) {
   const props = useDefaultProps({
     props: inProps,
     name: "MuiDialog"
@@ -37428,7 +37443,7 @@ const Dialog = /* @__PURE__ */ D(function Dialog2(inProps, ref) {
     onClick,
     onClose,
     open,
-    PaperComponent = Paper,
+    PaperComponent = Paper$2,
     PaperProps = {},
     role = "dialog",
     scroll = "paper",
@@ -37607,7 +37622,7 @@ const DialogActionsRoot = styled("div", {
     }
   }]
 });
-const DialogActions = /* @__PURE__ */ D(function DialogActions2(inProps, ref) {
+const DialogActions$1 = /* @__PURE__ */ D(function DialogActions(inProps, ref) {
   const props = useDefaultProps({
     props: inProps,
     name: "MuiDialogActions"
@@ -37684,7 +37699,7 @@ const DialogContentRoot = styled("div", {
     }
   }]
 })));
-const DialogContent = /* @__PURE__ */ D(function DialogContent2(inProps, ref) {
+const DialogContent$1 = /* @__PURE__ */ D(function DialogContent(inProps, ref) {
   const props = useDefaultProps({
     props: inProps,
     name: "MuiDialogContent"
@@ -37722,7 +37737,7 @@ const DialogTitleRoot = styled(Typography$1, {
   padding: "16px 24px",
   flex: "0 0 auto"
 });
-const DialogTitle = /* @__PURE__ */ D(function DialogTitle2(inProps, ref) {
+const DialogTitle$1 = /* @__PURE__ */ D(function DialogTitle(inProps, ref) {
   const props = useDefaultProps({
     props: inProps,
     name: "MuiDialogTitle"
@@ -38351,7 +38366,7 @@ const FormControlRoot = styled("div", {
     }
   }]
 });
-const FormControl = /* @__PURE__ */ D(function FormControl2(inProps, ref) {
+const FormControl$1 = /* @__PURE__ */ D(function FormControl(inProps, ref) {
   const props = useDefaultProps({
     props: inProps,
     name: "MuiFormControl"
@@ -38557,7 +38572,7 @@ const AsteriskComponent$1 = styled("span", {
     color: (theme2.vars || theme2).palette.error.main
   }
 })));
-const FormControlLabel = /* @__PURE__ */ D(function FormControlLabel2(inProps, ref) {
+const FormControlLabel$1 = /* @__PURE__ */ D(function FormControlLabel(inProps, ref) {
   const props = useDefaultProps({
     props: inProps,
     name: "MuiFormControlLabel"
@@ -38678,7 +38693,7 @@ const FormGroupRoot = styled("div", {
     }
   }]
 });
-const FormGroup = /* @__PURE__ */ D(function FormGroup2(inProps, ref) {
+const FormGroup$1 = /* @__PURE__ */ D(function FormGroup(inProps, ref) {
   const props = useDefaultProps({
     props: inProps,
     name: "MuiFormGroup"
@@ -38892,7 +38907,7 @@ const AsteriskComponent = styled("span", {
     color: (theme2.vars || theme2).palette.error.main
   }
 })));
-const FormLabel = /* @__PURE__ */ D(function FormLabel2(inProps, ref) {
+const FormLabel$1 = /* @__PURE__ */ D(function FormLabel(inProps, ref) {
   const props = useDefaultProps({
     props: inProps,
     name: "MuiFormLabel"
@@ -38940,7 +38955,7 @@ const FormLabel = /* @__PURE__ */ D(function FormLabel2(inProps, ref) {
     })]
   });
 });
-const Grid = createGrid({
+const Grid$1 = createGrid({
   createStyledComponent: styled("div", {
     name: "MuiGrid",
     slot: "Root",
@@ -39347,7 +39362,7 @@ const InputAdornmentRoot = styled("div", {
     }
   }]
 })));
-const InputAdornment = /* @__PURE__ */ D(function InputAdornment2(inProps, ref) {
+const InputAdornment$1 = /* @__PURE__ */ D(function InputAdornment(inProps, ref) {
   const props = useDefaultProps({
     props: inProps,
     name: "MuiInputAdornment"
@@ -39426,7 +39441,7 @@ const useUtilityClasses$q = (ownerState) => {
     ...composedClasses
   };
 };
-const InputLabelRoot = styled(FormLabel, {
+const InputLabelRoot = styled(FormLabel$1, {
   shouldForwardProp: (prop) => rootShouldForwardProp(prop) || prop === "classes",
   name: "MuiInputLabel",
   slot: "Root",
@@ -39561,7 +39576,7 @@ const InputLabelRoot = styled(FormLabel, {
     }
   }]
 })));
-const InputLabel = /* @__PURE__ */ D(function InputLabel2(inProps, ref) {
+const InputLabel$1 = /* @__PURE__ */ D(function InputLabel(inProps, ref) {
   const props = useDefaultProps({
     name: "MuiInputLabel",
     props: inProps
@@ -39923,7 +39938,7 @@ const LinearProgressBar2 = styled("span", {
     }
   }]
 })));
-const LinearProgress = /* @__PURE__ */ D(function LinearProgress2(inProps, ref) {
+const LinearProgress$1 = /* @__PURE__ */ D(function LinearProgress(inProps, ref) {
   const props = useDefaultProps({
     props: inProps,
     name: "MuiLinearProgress"
@@ -40038,7 +40053,7 @@ const ListRoot = styled("ul", {
     }
   }]
 });
-const List$1 = /* @__PURE__ */ D(function List(inProps, ref) {
+const List$2 = /* @__PURE__ */ D(function List(inProps, ref) {
   const props = useDefaultProps({
     props: inProps,
     name: "MuiList"
@@ -40185,7 +40200,7 @@ const ListItemButtonRoot = styled(ButtonBase, {
     }
   }]
 })));
-const ListItemButton = /* @__PURE__ */ D(function ListItemButton2(inProps, ref) {
+const ListItemButton$1 = /* @__PURE__ */ D(function ListItemButton(inProps, ref) {
   const props = useDefaultProps({
     props: inProps,
     name: "MuiListItemButton"
@@ -40285,7 +40300,7 @@ const ListItemIconRoot = styled("div", {
     }
   }]
 })));
-const ListItemIcon = /* @__PURE__ */ D(function ListItemIcon2(inProps, ref) {
+const ListItemIcon$1 = /* @__PURE__ */ D(function ListItemIcon(inProps, ref) {
   const props = useDefaultProps({
     props: inProps,
     name: "MuiListItemIcon"
@@ -40368,7 +40383,7 @@ const ListItemTextRoot = styled("div", {
     }
   }]
 });
-const ListItemText = /* @__PURE__ */ D(function ListItemText2(inProps, ref) {
+const ListItemText$1 = /* @__PURE__ */ D(function ListItemText(inProps, ref) {
   const props = useDefaultProps({
     props: inProps,
     name: "MuiListItemText"
@@ -40634,7 +40649,7 @@ const MenuList = /* @__PURE__ */ D(function MenuList2(props, ref) {
     }
     return child;
   });
-  return /* @__PURE__ */ u2(List$1, {
+  return /* @__PURE__ */ u2(List$2, {
     role: "menu",
     ref: handleRef,
     className,
@@ -40690,7 +40705,7 @@ const PopoverRoot = styled(Modal, {
   name: "MuiPopover",
   slot: "Root"
 })({});
-const PopoverPaper = styled(Paper, {
+const PopoverPaper = styled(Paper$2, {
   name: "MuiPopover",
   slot: "Paper"
 })({
@@ -40706,7 +40721,7 @@ const PopoverPaper = styled(Paper, {
   // We disable the focus ring for mouse, touch and keyboard users.
   outline: 0
 });
-const Popover = /* @__PURE__ */ D(function Popover2(inProps, ref) {
+const Popover$1 = /* @__PURE__ */ D(function Popover(inProps, ref) {
   const props = useDefaultProps({
     props: inProps,
     name: "MuiPopover"
@@ -40987,7 +41002,7 @@ const useUtilityClasses$j = (ownerState) => {
   };
   return composeClasses(slots, getMenuUtilityClass, classes);
 };
-const MenuRoot = styled(Popover, {
+const MenuRoot = styled(Popover$1, {
   shouldForwardProp: (prop) => rootShouldForwardProp(prop) || prop === "classes",
   name: "MuiMenu",
   slot: "Root"
@@ -41010,7 +41025,7 @@ const MenuMenuList = styled(MenuList, {
   // We disable the focus ring for mouse, touch and keyboard users.
   outline: 0
 });
-const Menu = /* @__PURE__ */ D(function Menu2(inProps, ref) {
+const Menu$1 = /* @__PURE__ */ D(function Menu(inProps, ref) {
   const props = useDefaultProps({
     props: inProps,
     name: "MuiMenu"
@@ -41823,7 +41838,7 @@ const SelectInput = /* @__PURE__ */ D(function SelectInput2(props, ref) {
       ownerState
     }), /* @__PURE__ */ u2(SelectFocusSourceProvider, {
       value: openInteractionType,
-      children: /* @__PURE__ */ u2(Menu, {
+      children: /* @__PURE__ */ u2(Menu$1, {
         id: `menu-${name || ""}`,
         anchorEl: anchorElement,
         open,
@@ -42239,7 +42254,7 @@ const styledRootConfig = {
 const StyledInput = styled(Input, styledRootConfig)("");
 const StyledOutlinedInput = styled(OutlinedInput, styledRootConfig)("");
 const StyledFilledInput = styled(FilledInput, styledRootConfig)("");
-const Select = /* @__PURE__ */ D(function Select2(inProps, ref) {
+const Select$1 = /* @__PURE__ */ D(function Select(inProps, ref) {
   const props = useDefaultProps({
     name: "MuiSelect",
     props: inProps
@@ -42346,7 +42361,7 @@ const Select = /* @__PURE__ */ D(function Select2(inProps, ref) {
     })
   });
 });
-Select.muiName = "Select";
+Select$1.muiName = "Select";
 function focusWithVisible(element, focusSource) {
   if (focusSource == null) {
     element.focus();
@@ -42488,7 +42503,7 @@ const MenuItemRoot = styled(ButtonBase, {
     }
   }]
 })));
-const MenuItem = /* @__PURE__ */ D(function MenuItem2(inProps, ref) {
+const MenuItem$1 = /* @__PURE__ */ D(function MenuItem(inProps, ref) {
   const props = useDefaultProps({
     props: inProps,
     name: "MuiMenuItem"
@@ -42714,7 +42729,7 @@ const defaultCheckedIcon = /* @__PURE__ */ u2(RadioButtonIcon, {
   checked: true
 });
 const defaultIcon = /* @__PURE__ */ u2(RadioButtonIcon, {});
-const Radio = /* @__PURE__ */ D(function Radio2(inProps, ref) {
+const Radio$1 = /* @__PURE__ */ D(function Radio(inProps, ref) {
   const props = useDefaultProps({
     props: inProps,
     name: "MuiRadio"
@@ -42820,7 +42835,7 @@ const useUtilityClasses$c = (props) => {
   };
   return composeClasses(slots, getRadioGroupUtilityClass, classes);
 };
-const RadioGroup = /* @__PURE__ */ D(function RadioGroup2(props, ref) {
+const RadioGroup$1 = /* @__PURE__ */ D(function RadioGroup(props, ref) {
   const {
     // private
     // eslint-disable-next-line react/prop-types
@@ -42865,7 +42880,7 @@ const RadioGroup = /* @__PURE__ */ D(function RadioGroup2(props, ref) {
   }), [name, onChange, setValueState, value]);
   return /* @__PURE__ */ u2(RadioGroupContext.Provider, {
     value: contextValue,
-    children: /* @__PURE__ */ u2(FormGroup, {
+    children: /* @__PURE__ */ u2(FormGroup$1, {
       role: "radiogroup",
       ref: handleRef,
       className: clsx(classes.root, className),
@@ -44071,7 +44086,7 @@ const useUtilityClasses$b = (ownerState) => {
 const Forward = ({
   children
 }) => children;
-const Slider = /* @__PURE__ */ D(function Slider2(inputProps, ref) {
+const Slider$1 = /* @__PURE__ */ D(function Slider(inputProps, ref) {
   const props = useDefaultProps({
     props: inputProps,
     name: "MuiSlider"
@@ -44349,7 +44364,7 @@ const useUtilityClasses$a = (ownerState) => {
   };
   return composeClasses(slots, getTooltipUtilityClass, classes);
 };
-const TooltipPopper = styled(Popper2, {
+const TooltipPopper = styled(Popper$1, {
   name: "MuiTooltip",
   slot: "Popper",
   overridesResolver: (props, styles2) => {
@@ -44933,7 +44948,7 @@ const Tooltip$1 = /* @__PURE__ */ D(function Tooltip(inProps, ref) {
   });
   return /* @__PURE__ */ u2(S, {
     children: [/* @__PURE__ */ mn(children, childrenProps), /* @__PURE__ */ u2(PopperSlot, {
-      as: PopperComponentProp ?? Popper2,
+      as: PopperComponentProp ?? Popper$1,
       placement,
       anchorEl: followCursor ? {
         getBoundingClientRect: () => ({
@@ -45169,7 +45184,7 @@ const SwitchThumb = styled("span", {
   height: 20,
   borderRadius: "50%"
 })));
-const Switch = /* @__PURE__ */ D(function Switch2(inProps, ref) {
+const Switch$1 = /* @__PURE__ */ D(function Switch(inProps, ref) {
   const props = useDefaultProps({
     props: inProps,
     name: "MuiSwitch"
@@ -45425,7 +45440,7 @@ const TabRoot = styled(ButtonBase, {
     }
   }]
 })));
-const Tab = /* @__PURE__ */ D(function Tab2(inProps, ref) {
+const Tab$1 = /* @__PURE__ */ D(function Tab(inProps, ref) {
   const props = useDefaultProps({
     props: inProps,
     name: "MuiTab"
@@ -45553,7 +45568,7 @@ const TableRoot = styled("table", {
   }]
 })));
 const defaultComponent$3 = "table";
-const Table = /* @__PURE__ */ D(function Table2(inProps, ref) {
+const Table$1 = /* @__PURE__ */ D(function Table(inProps, ref) {
   const props = useDefaultProps({
     props: inProps,
     name: "MuiTable"
@@ -45615,7 +45630,7 @@ const tablelvl2$1 = {
   variant: "body"
 };
 const defaultComponent$2 = "tbody";
-const TableBody = /* @__PURE__ */ D(function TableBody2(inProps, ref) {
+const TableBody$1 = /* @__PURE__ */ D(function TableBody(inProps, ref) {
   const props = useDefaultProps({
     props: inProps,
     name: "MuiTableBody"
@@ -45778,7 +45793,7 @@ const TableCellRoot = styled("td", {
     }
   }]
 })));
-const TableCell = /* @__PURE__ */ D(function TableCell2(inProps, ref) {
+const TableCell$1 = /* @__PURE__ */ D(function TableCell(inProps, ref) {
   const props = useDefaultProps({
     props: inProps,
     name: "MuiTableCell"
@@ -45858,7 +45873,7 @@ const tablelvl2 = {
   variant: "head"
 };
 const defaultComponent$1 = "thead";
-const TableHead = /* @__PURE__ */ D(function TableHead2(inProps, ref) {
+const TableHead$1 = /* @__PURE__ */ D(function TableHead(inProps, ref) {
   const props = useDefaultProps({
     props: inProps,
     name: "MuiTableHead"
@@ -45936,7 +45951,7 @@ const TableRowRoot = styled("tr", {
   }
 })));
 const defaultComponent = "tr";
-const TableRow = /* @__PURE__ */ D(function TableRow2(inProps, ref) {
+const TableRow$1 = /* @__PURE__ */ D(function TableRow(inProps, ref) {
   const props = useDefaultProps({
     props: inProps,
     name: "MuiTableRow"
@@ -46310,7 +46325,7 @@ const TabsScroller = styled("div", {
     }
   }]
 });
-const List2 = styled("div", {
+const List$1 = styled("div", {
   name: "MuiTabs",
   slot: "List",
   overridesResolver: (props, styles2) => {
@@ -46385,7 +46400,7 @@ const TabsScrollbarSize = styled(ScrollbarSize)({
   }
 });
 const defaultIndicatorStyle = {};
-const Tabs = /* @__PURE__ */ D(function Tabs2(inProps, ref) {
+const Tabs$1 = /* @__PURE__ */ D(function Tabs(inProps, ref) {
   const props = useDefaultProps({
     props: inProps,
     name: "MuiTabs"
@@ -46839,7 +46854,7 @@ const Tabs = /* @__PURE__ */ D(function Tabs2(inProps, ref) {
   const [ListSlot, listSlotProps] = useSlot("list", {
     ref: tabListRef,
     className: clsx(classes.list, classes.flexContainer),
-    elementType: List2,
+    elementType: List$1,
     externalForwardedProps,
     ownerState,
     getSlotProps: (handlers) => ({
@@ -46883,7 +46898,7 @@ const useUtilityClasses = (ownerState) => {
   };
   return composeClasses(slots, getTextFieldUtilityClass, classes);
 };
-const TextFieldRoot = styled(FormControl, {
+const TextFieldRoot = styled(FormControl$1, {
   name: "MuiTextField",
   slot: "Root"
 })({});
@@ -46997,7 +47012,7 @@ const TextField$1 = /* @__PURE__ */ D(function TextField(inProps, ref) {
     ownerState
   });
   const [InputLabelSlot, inputLabelProps] = useSlot("inputLabel", {
-    elementType: InputLabel,
+    elementType: InputLabel$1,
     externalForwardedProps,
     ownerState
   });
@@ -47012,7 +47027,7 @@ const TextField$1 = /* @__PURE__ */ D(function TextField(inProps, ref) {
     ownerState
   });
   const [SelectSlot, selectProps] = useSlot("select", {
-    elementType: Select,
+    elementType: Select$1,
     externalForwardedProps,
     ownerState
   });
@@ -47071,14 +47086,59 @@ const Button2 = Button$1;
 const IconButton2 = IconButton$1;
 const Tooltip2 = Tooltip$1;
 const Divider2 = Divider$1;
-function openRecordOrigin(item, app) {
-  const uri = makeObsUri(item, app?.vault?.getName?.() || "");
-  window.open(uri, "_blank");
-}
+const Checkbox2 = Checkbox$1;
+const FormControlLabel2 = FormControlLabel$1;
+const FormGroup2 = FormGroup$1;
+const Chip2 = Chip$1;
+const Popover2 = Popover$1;
+const Paper$1 = Paper$2;
+const List2 = List$2;
+const ListItemButton2 = ListItemButton$1;
+const Collapse2 = Collapse$1;
+const InputAdornment2 = InputAdornment$1;
+const Popper3 = Popper$1;
+const ClickAwayListener = ClickAwayListener$1;
+const Dialog2 = Dialog$1;
+const DialogTitle2 = DialogTitle$1;
+const DialogContent2 = DialogContent$1;
+const DialogActions2 = DialogActions$1;
+const CircularProgress2 = CircularProgress$1;
+const ListItemIcon2 = ListItemIcon$1;
+const ListItemText2 = ListItemText$1;
+const ThemeProvider = ThemeProvider$1;
+const CssBaseline = CssBaseline$1;
+const Tabs2 = Tabs$1;
+const Tab2 = Tab$1;
+const FormControl2 = FormControl$1;
+const InputLabel2 = InputLabel$1;
+const MenuItem2 = MenuItem$1;
+const Select2 = Select$1;
+const Switch2 = Switch$1;
+const Accordion2 = Accordion$1;
+const AccordionSummary2 = AccordionSummary$1;
+const AccordionDetails2 = AccordionDetails$1;
+const Alert2 = Alert$1;
+const Radio2 = Radio$1;
+const RadioGroup2 = RadioGroup$1;
+const FormLabel2 = FormLabel$1;
+const Autocomplete2 = Autocomplete$1;
+const Menu2 = Menu$1;
+const TableRow2 = TableRow$1;
+const TableCell2 = TableCell$1;
+const Slider2 = Slider$1;
+const LinearProgress2 = LinearProgress$1;
+const Grid = Grid$1;
+const Card2 = Card$1;
+const CardContent2 = CardContent$1;
+const TableHead2 = TableHead$1;
+const TableBody2 = TableBody$1;
+const Table2 = Table$1;
 function createRecordGestureHandlers(params) {
   let lastTouchAt = 0;
   let suppressClickUntil = 0;
-  const openOrigin = () => openRecordOrigin(params.item, params.app);
+  const openOrigin = () => {
+    void params.onOpenOrigin?.(params.item);
+  };
   return {
     onClick: (event) => {
       if (Date.now() < suppressClickUntil) {
@@ -47103,16 +47163,16 @@ function createRecordGestureHandlers(params) {
       openOrigin();
     },
     onTouchEnd: (event) => {
-      const now = Date.now();
-      if (lastTouchAt && now - lastTouchAt <= 350) {
+      const now2 = Date.now();
+      if (lastTouchAt && now2 - lastTouchAt <= 350) {
         lastTouchAt = 0;
-        suppressClickUntil = now + 400;
+        suppressClickUntil = now2 + 400;
         event?.preventDefault?.();
         event?.stopPropagation?.();
         openOrigin();
         return;
       }
-      lastTouchAt = now;
+      lastTouchAt = now2;
     }
   };
 }
@@ -47263,7 +47323,7 @@ function FilterPopover({
   const showPartial = selectedCount > 0 && selectedCount < totalCount;
   return /* @__PURE__ */ u2("div", { className: "filter-popover-container", children: [
     /* @__PURE__ */ u2(
-      Button$1,
+      Button2,
       {
         size: "small",
         variant: showPartial ? "contained" : "outlined",
@@ -47279,7 +47339,7 @@ function FilterPopover({
     ),
     showPartial && /* @__PURE__ */ u2("div", { className: "filter-popover-selected-chips", children: [
       selectedKeys.slice(0, chipLimit).map((key) => /* @__PURE__ */ u2(
-        Chip,
+        Chip2,
         {
           label: getChipLabel(key),
           size: "small",
@@ -47288,23 +47348,23 @@ function FilterPopover({
         },
         key
       )),
-      selectedKeys.length > chipLimit && /* @__PURE__ */ u2(Chip, { label: `+${selectedKeys.length - chipLimit}`, size: "small", sx: { height: "20px", fontSize: "0.75rem" } })
+      selectedKeys.length > chipLimit && /* @__PURE__ */ u2(Chip2, { label: `+${selectedKeys.length - chipLimit}`, size: "small", sx: { height: "20px", fontSize: "0.75rem" } })
     ] }),
     /* @__PURE__ */ u2(
-      Popover,
+      Popover2,
       {
         open,
         anchorEl,
         onClose: handleClose,
         anchorOrigin: { vertical: "bottom", horizontal: "left" },
         transformOrigin: { vertical: "top", horizontal: "left" },
-        children: /* @__PURE__ */ u2(Box$1, { sx: { p: 2, minWidth: "250px", maxWidth: "400px", maxHeight: "500px", overflowY: "auto" }, children: [
-          /* @__PURE__ */ u2(Typography$1, { variant: "subtitle2", gutterBottom: true, children: popoverTitle }),
-          /* @__PURE__ */ u2(Box$1, { sx: { mb: 1, display: "flex", gap: 1 }, children: [
-            /* @__PURE__ */ u2(Button$1, { size: "small", onClick: onSelectAll, children: "全选" }),
-            /* @__PURE__ */ u2(Button$1, { size: "small", onClick: onClearAll, children: "清空" })
+        children: /* @__PURE__ */ u2(Box, { sx: { p: 2, minWidth: "250px", maxWidth: "400px", maxHeight: "500px", overflowY: "auto" }, children: [
+          /* @__PURE__ */ u2(Typography2, { variant: "subtitle2", gutterBottom: true, children: popoverTitle }),
+          /* @__PURE__ */ u2(Box, { sx: { mb: 1, display: "flex", gap: 1 }, children: [
+            /* @__PURE__ */ u2(Button2, { size: "small", onClick: onSelectAll, children: "全选" }),
+            /* @__PURE__ */ u2(Button2, { size: "small", onClick: onClearAll, children: "清空" })
           ] }),
-          isEmpty2 ? /* @__PURE__ */ u2(Typography$1, { variant: "body2", color: "text.secondary", sx: { py: 2 }, children: emptyText }) : children
+          isEmpty2 ? /* @__PURE__ */ u2(Typography2, { variant: "body2", color: "text.secondary", sx: { py: 2 }, children: emptyText }) : children
         ] })
       }
     )
@@ -47332,7 +47392,7 @@ function IconAction({
     onClick?.(e2);
   };
   const button = /* @__PURE__ */ u2(
-    IconButton$1,
+    IconButton2,
     {
       "aria-label": label,
       onClick: onClick ? handleClick : void 0,
@@ -47344,7 +47404,7 @@ function IconAction({
       children: icon
     }
   );
-  return /* @__PURE__ */ u2(Tooltip$1, { title: label, placement: tooltipPlacement, children: disabled ? /* @__PURE__ */ u2("span", { children: button }) : button });
+  return /* @__PURE__ */ u2(Tooltip2, { title: label, placement: tooltipPlacement, children: disabled ? /* @__PURE__ */ u2("span", { children: button }) : button });
 }
 function ModalHeader({
   left: left2,
@@ -47354,7 +47414,7 @@ function ModalHeader({
   borderBottom: borderBottom2 = true
 }) {
   return /* @__PURE__ */ u2(
-    Box$1,
+    Box,
     {
       sx: {
         p: padding2,
@@ -47365,14 +47425,12 @@ function ModalHeader({
         gap: 1
       },
       children: [
-        /* @__PURE__ */ u2(Box$1, { sx: { minWidth: 0, flex: 1 }, children: left2 }),
+        /* @__PURE__ */ u2(Box, { sx: { minWidth: 0, flex: 1 }, children: left2 }),
         right2 ?? (onClose ? /* @__PURE__ */ u2(IconAction, { label: "关闭", onClick: onClose, icon: /* @__PURE__ */ u2(CloseIcon, {}) }) : null)
       ]
     }
   );
 }
-const AnyBox$1 = Box$1;
-const AnyIconButton$2 = IconButton$1;
 function ThemeTreeNodeLabel({
   depth,
   hasChildren,
@@ -47385,7 +47443,7 @@ function ThemeTreeNodeLabel({
   sx = {}
 }) {
   return /* @__PURE__ */ u2(
-    AnyBox$1,
+    Box,
     {
       sx: {
         display: "flex",
@@ -47395,7 +47453,7 @@ function ThemeTreeNodeLabel({
       },
       children: [
         hasChildren ? /* @__PURE__ */ u2(
-          AnyIconButton$2,
+          IconButton2,
           {
             size: "small",
             onClick: (e2) => {
@@ -47405,8 +47463,8 @@ function ThemeTreeNodeLabel({
             sx: { mr: 0.5, p: 0.25 },
             children: expanded ? /* @__PURE__ */ u2(ExpandMoreIcon, { fontSize: "small" }) : /* @__PURE__ */ u2(ChevronRightIcon, { fontSize: "small" })
           }
-        ) : /* @__PURE__ */ u2(AnyBox$1, { sx: { width: placeholderWidthPx, mr: 0.5 } }),
-        /* @__PURE__ */ u2(AnyBox$1, { sx: { flex: 1, display: "flex", alignItems: "center", gap: 1 }, children })
+        ) : /* @__PURE__ */ u2(Box, { sx: { width: placeholderWidthPx, mr: 0.5 } }),
+        /* @__PURE__ */ u2(Box, { sx: { flex: 1, display: "flex", alignItems: "center", gap: 1 }, children })
       ]
     }
   );
@@ -47432,7 +47490,7 @@ function SimpleSelect({ value, options, onChange, placeholder, fullWidth, sx, di
     setIsOpen(false);
   };
   return /* @__PURE__ */ u2(
-    Box$1,
+    Box,
     {
       ref: wrapperRef,
       sx: {
@@ -47442,7 +47500,7 @@ function SimpleSelect({ value, options, onChange, placeholder, fullWidth, sx, di
       },
       children: [
         /* @__PURE__ */ u2(
-          Box$1,
+          Box,
           {
             onClick: () => {
               if (!disabled) setIsOpen(!isOpen);
@@ -47463,13 +47521,13 @@ function SimpleSelect({ value, options, onChange, placeholder, fullWidth, sx, di
               }
             },
             children: [
-              /* @__PURE__ */ u2(Typography$1, { sx: { fontSize: 13, color: value ? "text.primary" : "text.secondary" }, children: value ? selectedLabel : /* @__PURE__ */ u2("em", { children: placeholder }) }),
+              /* @__PURE__ */ u2(Typography2, { sx: { fontSize: 13, color: value ? "text.primary" : "text.secondary" }, children: value ? selectedLabel : /* @__PURE__ */ u2("em", { children: placeholder }) }),
               /* @__PURE__ */ u2(ArrowDropDownIcon, { sx: { color: "text.secondary", transform: isOpen ? "rotate(180deg)" : "rotate(0deg)", transition: "transform 0.2s" } })
             ]
           }
         ),
         isOpen && /* @__PURE__ */ u2(
-          Box$1,
+          Box,
           {
             sx: {
               position: "absolute",
@@ -47490,7 +47548,7 @@ function SimpleSelect({ value, options, onChange, placeholder, fullWidth, sx, di
               const showGroupHeader = option.group && option.group !== options[index - 1]?.group;
               return /* @__PURE__ */ u2("div", { children: [
                 showGroupHeader && /* @__PURE__ */ u2(
-                  Box$1,
+                  Box,
                   {
                     sx: {
                       px: 1.5,
@@ -47505,7 +47563,7 @@ function SimpleSelect({ value, options, onChange, placeholder, fullWidth, sx, di
                   }
                 ),
                 /* @__PURE__ */ u2(
-                  Box$1,
+                  Box,
                   {
                     onClick: () => handleOptionClick(option),
                     sx: {
@@ -47714,6 +47772,15 @@ function TaskSendToTimerButton({ taskId, timerStatus, onStart }) {
   }
   return /* @__PURE__ */ u2(IconAction, { label: "添加并开始计时", onClick: onStart, icon: /* @__PURE__ */ u2(PlayArrowIcon, { fontSize: "small" }) });
 }
+function renderModalContent(containerEl, children) {
+  nn(children, containerEl);
+}
+function unmountModalContent(containerEl) {
+  try {
+    pn(containerEl);
+  } catch (error) {
+  }
+}
 function PromptComponent({
   title,
   placeholder,
@@ -47739,7 +47806,7 @@ function PromptComponent({
   return /* @__PURE__ */ u2("div", { class: "think-modal", children: [
     /* @__PURE__ */ u2("h3", { children: title }),
     /* @__PURE__ */ u2(
-      TextField$1,
+      TextField2,
       {
         autoFocus: true,
         fullWidth: true,
@@ -47752,8 +47819,8 @@ function PromptComponent({
       }
     ),
     /* @__PURE__ */ u2("div", { style: { display: "flex", justifyContent: "flex-end", marginTop: "1.5rem", gap: "8px" }, children: [
-      /* @__PURE__ */ u2(Button$1, { onClick: handleConfirm, variant: "contained", children: ctaText || "确认" }),
-      /* @__PURE__ */ u2(Button$1, { onClick: onCancel, children: "取消" })
+      /* @__PURE__ */ u2(Button2, { onClick: handleConfirm, variant: "contained", children: ctaText || "确认" }),
+      /* @__PURE__ */ u2(Button2, { onClick: onCancel, children: "取消" })
     ] })
   ] });
 }
@@ -47772,7 +47839,8 @@ class NamePromptModal extends obsidian.Modal {
   }
   onOpen() {
     this.contentEl.empty();
-    nn(
+    renderModalContent(
+      this.contentEl,
       /* @__PURE__ */ u2(
         PromptComponent,
         {
@@ -47796,8 +47864,7 @@ class NamePromptModal extends obsidian.Modal {
             this.close();
           }
         }
-      ),
-      this.contentEl
+      )
     );
   }
   onClose() {
@@ -47805,7 +47872,7 @@ class NamePromptModal extends obsidian.Modal {
       this.resolvePromise(null);
       this.resolvePromise = null;
     }
-    pn(this.contentEl);
+    unmountModalContent(this.contentEl);
   }
 }
 function addAtEnd(list, item) {
@@ -47836,10 +47903,10 @@ function ListEditor({ value, onChange, placeholder = "新项目", type = "text" 
   const removeItem = (index) => {
     onChange(removeAt(list, index));
   };
-  return /* @__PURE__ */ u2(Stack$1, { spacing: 0.5, children: [
-    list.map((item, index) => /* @__PURE__ */ u2(Stack$1, { direction: "row", spacing: 0.5, alignItems: "center", children: [
+  return /* @__PURE__ */ u2(Stack, { spacing: 0.5, children: [
+    list.map((item, index) => /* @__PURE__ */ u2(Stack, { direction: "row", spacing: 0.5, alignItems: "center", children: [
       /* @__PURE__ */ u2(
-        TextField$1,
+        TextField2,
         {
           value: item,
           onInput: (e2) => handleChange(index, e2.target.value),
@@ -47855,9 +47922,9 @@ function ListEditor({ value, onChange, placeholder = "新项目", type = "text" 
           } : {}
         }
       ),
-      /* @__PURE__ */ u2(IconButton$1, { onClick: () => removeItem(index), size: "small", color: "error", title: "删除此项", children: /* @__PURE__ */ u2(DeleteIcon, { fontSize: "small" }) })
+      /* @__PURE__ */ u2(IconButton2, { onClick: () => removeItem(index), size: "small", color: "error", title: "删除此项", children: /* @__PURE__ */ u2(DeleteIcon, { fontSize: "small" }) })
     ] }, index)),
-    /* @__PURE__ */ u2(Stack$1, { direction: "row", justifyContent: "flex-start", children: /* @__PURE__ */ u2(IconButton$1, { onClick: addItem, size: "small", color: "primary", title: "添加新项", children: /* @__PURE__ */ u2(AddIcon, {}) }) })
+    /* @__PURE__ */ u2(Stack, { direction: "row", justifyContent: "flex-start", children: /* @__PURE__ */ u2(IconButton2, { onClick: addItem, size: "small", color: "primary", title: "添加新项", children: /* @__PURE__ */ u2(AddIcon, {}) }) })
   ] });
 }
 function generateCellTooltip(date2, items, displayCount = 0, levelCount = 0, wasEdited = false) {
@@ -47894,7 +47961,7 @@ function HeatmapCell({
   items,
   config: config2,
   ratingMapping,
-  app,
+  resolveResourcePath,
   onCellClick,
   highlightToday = true,
   emptyLabel
@@ -47912,7 +47979,7 @@ function HeatmapCell({
     if (isHexColor(visualValue)) {
       cellStyle.backgroundColor = visualValue;
     } else if (isImagePath$1(visualValue)) {
-      const imageUrl = app.vault.adapter.getResourcePath(visualValue);
+      const imageUrl = resolveResourcePath?.(visualValue) || visualValue;
       cellContent = /* @__PURE__ */ u2("div", { class: "cell-with-image", children: /* @__PURE__ */ u2("img", { src: imageUrl, alt: "", class: "w-full h-full object-cover" }) });
     } else {
       cellContent = /* @__PURE__ */ u2("div", { class: "cell-with-text", children: /* @__PURE__ */ u2("span", { class: "visual-content", children: visualValue }) });
@@ -47943,7 +48010,7 @@ function HeatmapCell({
     }
   );
 }
-function FieldPill({ item, fieldKey, app, allThemes }) {
+function FieldPill({ item, fieldKey, resolveResourcePath, allThemes }) {
   const value = readField(item, fieldKey);
   if (value === null || value === void 0 || value === "" || Array.isArray(value) && value.length === 0) {
     return null;
@@ -47965,11 +48032,4470 @@ function FieldPill({ item, fieldKey, app, allThemes }) {
   if (isImageFieldDefinition(fieldDef)) {
     const image = normalizeImageValue(value);
     if (!image) return null;
-    const src = image.kind === "url" ? image.src : app.vault.adapter.getResourcePath(image.src);
+    const src = image.kind === "url" ? image.src : resolveResourcePath?.(image.src) || image.src;
     return /* @__PURE__ */ u2("span", { class: "tag-pill", title: `${label}: ${image.src}`, children: /* @__PURE__ */ u2("img", { src, alt: image.alt || label }) });
   }
   const displayValue = Array.isArray(value) ? value.join(", ") : String(value);
   return /* @__PURE__ */ u2("span", { class: "tag-pill", title: `${label}: ${displayValue}`, children: displayValue });
+}
+function ItemLink({ item, className = "", showIcon = true, onOpenRecord, onOpenRecordOrigin }) {
+  const gesture = createRecordGestureHandlers({
+    item,
+    onOpenOrigin: onOpenRecordOrigin,
+    onPrimary: () => {
+      void onOpenRecord?.(item);
+    }
+  });
+  return /* @__PURE__ */ u2(
+    "span",
+    {
+      class: `item-link ${className}`,
+      onClick: gesture.onClick,
+      onDblClick: gesture.onDblClick,
+      onTouchEnd: gesture.onTouchEnd,
+      style: { cursor: "pointer" },
+      children: [
+        showIcon && item.icon && /* @__PURE__ */ u2("span", { class: "icon mr-1", children: item.icon }),
+        item.title
+      ]
+    }
+  );
+}
+function renderPlainFallback(containerEl, content) {
+  containerEl.innerHTML = "";
+  containerEl.style.whiteSpace = "pre-wrap";
+  containerEl.textContent = content;
+}
+function MarkdownContent({
+  renderPort,
+  content,
+  contentType = "markdown",
+  sourcePath = "",
+  className = "",
+  onClick,
+  onDblClick,
+  onTouchEnd
+}) {
+  const elRef = A$1(null);
+  y(() => {
+    const containerEl = elRef.current;
+    if (!containerEl) return;
+    let disposed2 = false;
+    containerEl.innerHTML = "";
+    containerEl.style.whiteSpace = "";
+    if (!renderPort) {
+      renderPlainFallback(containerEl, content);
+      return void 0;
+    }
+    renderPort.renderMessage({
+      containerEl,
+      content,
+      contentType: contentType === "plain" ? "plain" : "markdown",
+      sourcePath
+    }).catch(() => {
+      if (!disposed2 && elRef.current === containerEl) {
+        renderPlainFallback(containerEl, content);
+      }
+    });
+    return () => {
+      disposed2 = true;
+      if (elRef.current === containerEl) renderPort.clear(containerEl);
+    };
+  }, [renderPort, content, contentType, sourcePath]);
+  return /* @__PURE__ */ u2("div", { ref: elRef, className: `md-content ${className}`.trim(), onClick, onDblClick, onTouchEnd });
+}
+const BlockItem = ({ item, fields, isNarrow, resolveResourcePath, onOpenRecordOrigin, messageRenderPort, allThemes, onOpenRecord }) => {
+  const metadataFields = fields.filter((f2) => f2 !== "title" && f2 !== "content");
+  const showTitle = fields.includes("title") && item.title;
+  const effectiveContent = item.content && item.content.trim().length > 0 ? item.content : item.title;
+  const showContent = fields.includes("content") && effectiveContent;
+  const narrowClass = isNarrow ? "is-narrow" : "";
+  const gesture = createRecordGestureHandlers({
+    item,
+    onOpenOrigin: onOpenRecordOrigin,
+    onPrimary: () => {
+      try {
+        void onOpenRecord?.(item);
+      } catch {
+      }
+    }
+  });
+  return /* @__PURE__ */ u2("div", { class: `bv-item bv-item--block ${narrowClass}`, children: [
+    /* @__PURE__ */ u2("div", { class: "bv-block-metadata", children: /* @__PURE__ */ u2("div", { class: "bv-fields-list-wrapper", children: metadataFields.map((fieldKey) => /* @__PURE__ */ u2(
+      FieldPill,
+      {
+        item,
+        fieldKey,
+        resolveResourcePath,
+        allThemes
+      },
+      fieldKey
+    )) }) }),
+    /* @__PURE__ */ u2("div", { class: "bv-block-main", children: [
+      showTitle && /* @__PURE__ */ u2("div", { class: "bv-block-title", children: /* @__PURE__ */ u2(ItemLink, { item, onOpenRecord, onOpenRecordOrigin }) }),
+      showContent && /* @__PURE__ */ u2("div", { class: "bv-block-content", children: /* @__PURE__ */ u2(
+        MarkdownContent,
+        {
+          renderPort: messageRenderPort,
+          content: effectiveContent || "",
+          contentType: "markdown",
+          sourcePath: item.file?.path || "",
+          className: "bv-block-md",
+          onClick: (evt) => {
+            const target = evt?.target;
+            if (target?.closest("a")) return;
+            gesture.onClick(evt);
+          },
+          onDblClick: (evt) => {
+            const target = evt?.target;
+            if (target?.closest("a")) return;
+            gesture.onDblClick(evt);
+          },
+          onTouchEnd: (evt) => {
+            const target = evt?.target;
+            if (target?.closest("a")) return;
+            gesture.onTouchEnd(evt);
+          }
+        }
+      ) })
+    ] })
+  ] });
+};
+function TaskRow({
+  item,
+  onMarkDone,
+  resolveResourcePath,
+  onOpenRecordOrigin,
+  timerService,
+  timer,
+  allThemes,
+  showFields = [],
+  compact = false,
+  displayTitle,
+  onOpenRecord
+}) {
+  const done = isDone(item.categoryKey);
+  const visibleTitle = String(displayTitle ?? item.content ?? item.title ?? "").trim() || item.title;
+  const openEdit = (evt) => {
+    void onOpenRecord?.(item);
+  };
+  const gesture = createRecordGestureHandlers({ item, onOpenOrigin: onOpenRecordOrigin, onPrimary: () => openEdit() });
+  return /* @__PURE__ */ u2("div", { class: `task-row ${compact ? "task-row--compact" : ""} ${done ? "task-row--done" : ""}`, children: [
+    /* @__PURE__ */ u2("div", { class: "task-row-checkbox-wrapper", onClick: (e2) => e2.stopPropagation(), children: /* @__PURE__ */ u2(TaskCheckbox, { done, onMarkDone: () => onMarkDone(item.id) }) }),
+    /* @__PURE__ */ u2("div", { class: "task-row-content", onClick: gesture.onClick, onDblClick: gesture.onDblClick, onTouchEnd: gesture.onTouchEnd, children: [
+      /* @__PURE__ */ u2("div", { class: "task-row-main", children: [
+        /* @__PURE__ */ u2("button", { type: "button", onClick: gesture.onClick, onDblClick: gesture.onDblClick, onTouchEnd: gesture.onTouchEnd, class: `task-row-title ${done ? "task-done" : ""}`, style: { background: "none", border: "none", padding: 0, textAlign: "left", cursor: "pointer" }, children: [
+          item.icon && /* @__PURE__ */ u2("span", { class: "icon mr-1", children: item.icon }),
+          visibleTitle
+        ] }),
+        !done && /* @__PURE__ */ u2("div", { class: "task-row-timer-action", onClick: (e2) => e2.stopPropagation(), children: /* @__PURE__ */ u2(
+          TaskSendToTimerButton,
+          {
+            taskId: item.id,
+            timerStatus: timer?.status,
+            onStart: () => timerService?.startOrResume(item.id)
+          }
+        ) })
+      ] }),
+      !compact && showFields.length > 0 && /* @__PURE__ */ u2("div", { class: "task-row-fields", onClick: (e2) => e2.stopPropagation(), children: showFields.map((fieldKey) => /* @__PURE__ */ u2(
+        FieldPill,
+        {
+          item,
+          fieldKey,
+          resolveResourcePath,
+          allThemes
+        },
+        fieldKey
+      )) })
+    ] })
+  ] });
+}
+function ProgressBlock({
+  categoryHours,
+  order: order2,
+  totalHours,
+  colorMap,
+  untrackedLabel
+}) {
+  const sortedCategories = T$1(() => {
+    const orderToUse = Array.isArray(order2) ? order2 : [];
+    const presentCategories = /* @__PURE__ */ new Set();
+    orderToUse.forEach((cat) => {
+      if ((categoryHours[cat] || 0) > 0.01) {
+        presentCategories.add(cat);
+      }
+    });
+    Object.keys(categoryHours).forEach((cat) => {
+      if ((categoryHours[cat] || 0) > 0.01) {
+        presentCategories.add(cat);
+      }
+    });
+    return Array.from(presentCategories);
+  }, [categoryHours, order2, untrackedLabel]);
+  if (sortedCategories.length === 0) return null;
+  return /* @__PURE__ */ u2("div", { class: "progress-block-container", children: sortedCategories.map((category) => {
+    const hours = categoryHours[category];
+    const percent = totalHours > 0 ? hours / totalHours * 100 : 0;
+    if (percent < 0.1 && hours < 0.01) return null;
+    const color2 = colorMap[category] || "#cccccc";
+    const displayPercent = Math.max(percent, 0.5);
+    return /* @__PURE__ */ u2(
+      "div",
+      {
+        title: `${category}: ${hours.toFixed(1)}h (${Math.round(percent)}%)`,
+        class: "progress-block-item",
+        children: [
+          /* @__PURE__ */ u2(
+            "div",
+            {
+              class: "progress-block-bar",
+              style: { background: color2, width: `${displayPercent}%` }
+            }
+          ),
+          /* @__PURE__ */ u2(
+            "span",
+            {
+              class: `progress-block-text ${displayPercent > 50 ? "progress-block-text-light" : "progress-block-text-dark"}`,
+              children: `${category} ${hours.toFixed(1)}h`
+            }
+          )
+        ]
+      },
+      category
+    );
+  }) });
+}
+function DayColumnHeader({
+  day,
+  blocks,
+  categoriesConfig,
+  colorMap,
+  untrackedLabel,
+  progressOrder
+}) {
+  const { categoryHours, totalDayHours } = T$1(() => {
+    return buildDailyCategoryHours(blocks, categoriesConfig, untrackedLabel);
+  }, [blocks, categoriesConfig, untrackedLabel]);
+  return /* @__PURE__ */ u2("div", { class: "day-column-header", children: [
+    /* @__PURE__ */ u2("div", { class: "day-header-title", children: dayjs(day).format("MM-DD ddd") }),
+    /* @__PURE__ */ u2("div", { class: "daily-progress-bar", children: /* @__PURE__ */ u2(
+      ProgressBlock,
+      {
+        categoryHours,
+        order: progressOrder,
+        totalHours: totalDayHours,
+        colorMap,
+        untrackedLabel
+      }
+    ) })
+  ] });
+}
+const hexToRgba = (hex, alpha2 = 0.35) => {
+  const h2 = hex.replace("#", "");
+  const bigint = parseInt(h2, 16);
+  return `rgba(${bigint >> 16 & 255},${bigint >> 8 & 255},${bigint & 255},${alpha2})`;
+};
+const formatTimeMinute = (minute) => {
+  const h2 = Math.floor(minute / 60);
+  const m2 = minute % 60;
+  return `${String(h2).padStart(2, "0")}:${String(m2).padStart(2, "0")}`;
+};
+const generateTaskBlockTitle = (block) => {
+  const isCrossNight = block.startMinute % 1440 + block.duration > 1440;
+  if (isCrossNight) {
+    const startDateTime = dayjs(block.actualStartDate).add(block.startMinute, "minute");
+    const endDateTime = startDateTime.add(block.duration, "minute");
+    const startFormat = startDateTime.format("HH:mm");
+    const endFormat = endDateTime.format("HH:mm");
+    return `任务: ${block.pureText}
+时间: ${startFormat} - ${endFormat}`;
+  } else {
+    const startTime = formatTimeMinute(block.startMinute);
+    const endTime = formatTimeMinute(block.endMinute);
+    return `任务: ${block.pureText}
+时间: ${startTime} - ${endTime}`;
+  }
+};
+function DayColumnBody({
+  day,
+  blocks,
+  hourHeight,
+  categoriesConfig,
+  colorMap,
+  maxHours,
+  onColumnClick,
+  onUpdateTaskTime,
+  onOpenRecord,
+  onOpenRecordOrigin,
+  onNotice,
+  onEditTask,
+  onAlignPrev,
+  onAlignNext
+}) {
+  const lastTouchRef = A$1(null);
+  const suppressClickUntilRef = A$1(0);
+  const tryUpdateTaskTime = async (taskId, updates) => {
+    if (!onUpdateTaskTime) {
+      onNotice?.("未提供保存处理器，无法更新任务时间");
+      return;
+    }
+    try {
+      await onUpdateTaskTime(taskId, updates);
+    } catch (e2) {
+      onNotice?.("更新任务时间失败");
+    }
+  };
+  const handleEdit = (block) => {
+    if (onEditTask) {
+      onEditTask(block);
+      return;
+    }
+    void onOpenRecord?.(block);
+  };
+  const handleAlignToPrev = (block, prevBlock) => {
+    if (onAlignPrev) {
+      onAlignPrev(block, prevBlock);
+    } else {
+      if (!prevBlock) return;
+      const deltaMinutes = prevBlock.blockEndMinute - block.blockStartMinute;
+      const newAbsoluteStartMinute = block.startMinute + deltaMinutes;
+      const newStartTimeString = formatTimeMinute(newAbsoluteStartMinute);
+      void tryUpdateTaskTime(block.id, { time: newStartTimeString });
+    }
+  };
+  const handleAlignToNext = (block, nextBlock) => {
+    if (onAlignNext) {
+      onAlignNext(block, nextBlock);
+    } else {
+      if (!nextBlock) return;
+      const deltaDuration = nextBlock.blockStartMinute - block.blockEndMinute;
+      const newDuration = block.duration + deltaDuration;
+      if (newDuration <= 0) {
+        onNotice?.("无法对齐：任务时长将变为负数或零");
+        return;
+      }
+      void tryUpdateTaskTime(block.id, { duration: newDuration });
+    }
+  };
+  const handleBodyClick = (event) => {
+    if (Date.now() < suppressClickUntilRef.current) return;
+    onColumnClick(day, event);
+  };
+  const handleBodyTouchEnd = (event) => {
+    const touch = event.changedTouches?.[0];
+    if (!touch) return;
+    const now2 = Date.now();
+    const previous = lastTouchRef.current;
+    const isDoubleTap = !!previous && now2 - previous.time <= 350 && Math.abs(previous.x - touch.clientX) <= 24 && Math.abs(previous.y - touch.clientY) <= 24;
+    lastTouchRef.current = {
+      time: now2,
+      x: touch.clientX,
+      y: touch.clientY
+    };
+    suppressClickUntilRef.current = now2 + 450;
+    if (!isDoubleTap) return;
+    event.preventDefault();
+    onColumnClick(day, event);
+    lastTouchRef.current = null;
+  };
+  return /* @__PURE__ */ u2(
+    "div",
+    {
+      class: "day-column-body",
+      style: { height: `${maxHours * hourHeight}px` },
+      onClick: (e2) => handleBodyClick(e2),
+      onTouchEnd: (e2) => handleBodyTouchEnd(e2),
+      children: blocks.map((block, index) => {
+        const top2 = block.blockStartMinute / 60 * hourHeight;
+        const height2 = (block.blockEndMinute - block.blockStartMinute) / 60 * hourHeight;
+        const category = mapTaskToCategory(block.fileName || "", categoriesConfig);
+        const color2 = colorMap[category] || "#ccc";
+        const prevBlock = index > 0 ? blocks[index - 1] : null;
+        const nextBlock = index < blocks.length - 1 ? blocks[index + 1] : null;
+        const canAlignToNext = nextBlock && nextBlock.blockStartMinute > block.blockStartMinute;
+        const blockGesture = createRecordGestureHandlers({ item: block, onOpenOrigin: onOpenRecordOrigin, onPrimary: () => handleEdit(block) });
+        return /* @__PURE__ */ u2(
+          "div",
+          {
+            class: "timeline-task-block",
+            title: generateTaskBlockTitle(block),
+            style: { top: `${top2}px`, height: `${Math.max(height2, 2)}px` },
+            onClick: (e2) => e2.stopPropagation(),
+            onTouchStart: (e2) => e2.stopPropagation(),
+            onTouchEnd: (e2) => e2.stopPropagation(),
+            children: [
+              /* @__PURE__ */ u2(
+                "a",
+                {
+                  class: "timeline-task-link",
+                  onClick: blockGesture.onClick,
+                  onDblClick: blockGesture.onDblClick,
+                  onTouchEnd: blockGesture.onTouchEnd,
+                  children: [
+                    /* @__PURE__ */ u2("div", { class: "timeline-task-indicator", style: { background: color2 } }),
+                    /* @__PURE__ */ u2("div", { class: "timeline-task-content", style: { background: hexToRgba(color2) }, children: [
+                      block.icon ? /* @__PURE__ */ u2("span", { class: "timeline-task-icon", children: block.icon }) : null,
+                      /* @__PURE__ */ u2("span", { class: "timeline-task-title", children: block.title || block.pureText })
+                    ] })
+                  ]
+                }
+              ),
+              /* @__PURE__ */ u2("div", { class: "task-buttons", children: [
+                /* @__PURE__ */ u2(
+                  "button",
+                  {
+                    class: "task-button",
+                    title: "向前对齐",
+                    disabled: !prevBlock,
+                    onClick: () => handleAlignToPrev(block, prevBlock),
+                    children: "⇡"
+                  }
+                ),
+                /* @__PURE__ */ u2(
+                  "button",
+                  {
+                    class: "task-button",
+                    title: "向后对齐",
+                    disabled: !canAlignToNext,
+                    onClick: () => handleAlignToNext(block, nextBlock),
+                    children: "⇣"
+                  }
+                ),
+                /* @__PURE__ */ u2(
+                  "button",
+                  {
+                    class: "task-button",
+                    title: "精确编辑",
+                    onClick: () => handleEdit(block),
+                    children: "✎"
+                  }
+                )
+              ] })
+            ]
+          },
+          block.id + block.day
+        );
+      })
+    }
+  );
+}
+function BlockView(props) {
+  const {
+    items,
+    groupField,
+    groupFields,
+    groupTree: injectedGroupTree,
+    effectiveGroupFields: injectedGroupFields,
+    fields = [],
+    resolveResourcePath,
+    onOpenRecordOrigin,
+    messageRenderPort,
+    onMarkDone,
+    timerService,
+    timers,
+    allThemes,
+    onOpenRecord
+  } = props;
+  const containerRef = A$1(null);
+  const [isNarrow, setIsNarrow] = d(false);
+  y(() => {
+    const observer = new ResizeObserver((entries) => {
+      for (const entry of entries) setIsNarrow(entry.contentRect.width < 450);
+    });
+    if (containerRef.current) observer.observe(containerRef.current);
+    return () => observer.disconnect();
+  }, []);
+  const renderItem = (item) => {
+    if (item.type === "task") {
+      const timer = timers.find((t3) => t3.taskId === item.id);
+      return /* @__PURE__ */ u2(
+        TaskRow,
+        {
+          item,
+          onMarkDone,
+          resolveResourcePath,
+          onOpenRecordOrigin,
+          timerService,
+          timer,
+          allThemes,
+          onOpenRecord,
+          showFields: []
+        },
+        item.id
+      );
+    } else {
+      return /* @__PURE__ */ u2(
+        BlockItem,
+        {
+          item,
+          fields,
+          isNarrow,
+          resolveResourcePath,
+          onOpenRecordOrigin,
+          messageRenderPort,
+          allThemes,
+          onOpenRecord
+        },
+        item.id
+      );
+    }
+  };
+  const effectiveGroupFields = injectedGroupFields ?? (() => {
+    if (groupFields && groupFields.length > 0) return groupFields;
+    if (groupField) return [groupField];
+    return [];
+  })();
+  if (!effectiveGroupFields.length) {
+    return /* @__PURE__ */ u2("div", { class: "bv-container", ref: containerRef, children: items.map(renderItem) });
+  }
+  devLog("[BlockView] 接收到的 Props:", props);
+  devLog(`[BlockView] 生效的分组字段 (effectiveGroupFields):`, effectiveGroupFields);
+  const groupTree = injectedGroupTree ?? groupItemsByFields(items, effectiveGroupFields);
+  devLog("[BlockView] 生成的分组树 (groupTree):", JSON.parse(JSON.stringify(groupTree)));
+  return /* @__PURE__ */ u2("div", { class: "bv-container", ref: containerRef, children: /* @__PURE__ */ u2(
+    GroupedContainer,
+    {
+      nodes: groupTree,
+      classNames: {
+        root: "",
+        group: "bv-group bv-group--level-0",
+        // level 细分由缩进控制，这里保留原有 bv-group class
+        title: "bv-group-title",
+        content: "bv-group-content",
+        toggleIcon: "bv-group-toggle-icon",
+        label: "bv-group-label"
+      },
+      renderLeaf: (leafItems) => leafItems.map(renderItem)
+    }
+  ) });
+}
+const DATE_FORMAT = "YYYY-MM-DD";
+function parseAllTimes(item) {
+  const startMinute = item.startTime ? timeToMinutes(item.startTime) : null;
+  const explicitEndMinute = item.endTime ? timeToMinutes(item.endTime) : null;
+  const duration2 = item.duration ?? null;
+  if (startMinute !== null && item.startTime && item.endTime) {
+    const normalizedDuration = deriveDurationFromRange(item.startTime, item.endTime);
+    if (normalizedDuration !== null) {
+      return {
+        startMinute,
+        duration: normalizedDuration,
+        endMinute: startMinute + normalizedDuration
+      };
+    }
+  }
+  if (startMinute !== null && duration2 !== null && duration2 >= 0) {
+    return { startMinute, duration: duration2, endMinute: startMinute + duration2 };
+  }
+  if (explicitEndMinute !== null && duration2 !== null && duration2 >= 0 && item.endTime) {
+    const derivedStart = deriveStartFromEndAndDuration(item.endTime, duration2);
+    const derivedStartMinute = derivedStart ? timeToMinutes(derivedStart) : null;
+    if (derivedStartMinute !== null) {
+      return { startMinute: derivedStartMinute, duration: duration2, endMinute: derivedStartMinute + duration2 };
+    }
+  }
+  return { startMinute: null, duration: null, endMinute: null };
+}
+function extractPureText(rawText) {
+  return rawText.replace(/<!--[\s\S]*?-->/g, "").replace(/^\s*[-*+]\s*\[[ xX-]\]\s*/, "").replace(new RegExp("^\\s*(?:\\p{Extended_Pictographic}\\uFE0F?\\s*)+", "u"), "").replace(/[\(\[]\s*(时间|结束|时长)::.*?[\)\]]/g, "").replace(/[\(\[][^\(\)\[\]]*?::.*?[\)\]]/g, "").replace(/#[\p{L}\d\-_/]+/gu, "").replace(/[📅⏳🛫➕✅❌]?\s*\d{4}-\d{2}-\d{2}/g, "").replace(/\s*🔁\s*every\s+.*?(?=$|\s*[#\(\[])/gi, "").replace(/[\(\[]\s*🔁\s*.*?\s*[\)\]]/gi, "").replace(/\s+/g, " ").trim();
+}
+function resolveTimelineDisplayText(item) {
+  const cleanContent = extractPureText(item.content || item.editableText || item.title || "");
+  if (cleanContent) return cleanContent;
+  const fromRaw = extractPureText(item.rawSource || "");
+  if (fromRaw) return fromRaw;
+  return item.title || "";
+}
+function processItemsToTimelineTasks(items) {
+  const timelineTasks = [];
+  for (const item of items) {
+    const fileName = item.file?.basename || item.filename || "";
+    if (!fileName) continue;
+    const isCompletedTask = item.categoryKey?.endsWith("/done") || item.categoryKey?.endsWith("/cancelled") || item.categoryKey === "完成任务";
+    if (item.type !== "task" || !isCompletedTask) continue;
+    const { startMinute, duration: duration2, endMinute } = parseAllTimes(item);
+    if (startMinute !== null && duration2 !== null && endMinute !== null && item.doneDate) {
+      const anchorDate = item.doneDate || item.date;
+      if (!anchorDate) continue;
+      const actualStartDate = dayjs(anchorDate).format(DATE_FORMAT);
+      timelineTasks.push({
+        ...item,
+        startMinute,
+        duration: duration2,
+        endMinute,
+        // Timeline 视觉保持不变；显示文本来自统一后的 content 字段，旧缓存则降级从 rawSource 清洗。
+        pureText: resolveTimelineDisplayText(item),
+        fileName,
+        actualStartDate
+      });
+    }
+  }
+  return timelineTasks;
+}
+function TimelineSummaryTable({
+  summaryData,
+  colorMap,
+  progressOrder,
+  untrackedLabel
+}) {
+  if (!summaryData || summaryData.length === 0) {
+    return /* @__PURE__ */ u2("div", { class: "timeline-empty-state", children: "此时间范围内无数据可供总结。" });
+  }
+  return /* @__PURE__ */ u2("table", { class: "timeline-summary-table", children: [
+    /* @__PURE__ */ u2("thead", { children: /* @__PURE__ */ u2("tr", { children: [
+      /* @__PURE__ */ u2("th", { children: "月份" }),
+      /* @__PURE__ */ u2("th", { children: "月度总结" }),
+      /* @__PURE__ */ u2("th", { children: "W1" }),
+      /* @__PURE__ */ u2("th", { children: "W2" }),
+      /* @__PURE__ */ u2("th", { children: "W3" }),
+      /* @__PURE__ */ u2("th", { children: "W4" }),
+      /* @__PURE__ */ u2("th", { children: "W5" })
+    ] }) }),
+    /* @__PURE__ */ u2("tbody", { children: summaryData.map((monthData) => /* @__PURE__ */ u2("tr", { children: [
+      /* @__PURE__ */ u2("td", { children: /* @__PURE__ */ u2("strong", { children: monthData.month }) }),
+      /* @__PURE__ */ u2("td", { children: /* @__PURE__ */ u2(
+        ProgressBlock,
+        {
+          categoryHours: monthData.monthlySummary,
+          order: progressOrder,
+          totalHours: monthData.totalMonthHours,
+          colorMap,
+          untrackedLabel
+        }
+      ) }),
+      monthData.weeklySummaries.map((weekData, index) => /* @__PURE__ */ u2("td", { children: weekData ? /* @__PURE__ */ u2(
+        ProgressBlock,
+        {
+          categoryHours: weekData.summary,
+          order: progressOrder,
+          totalHours: weekData.totalHours,
+          colorMap,
+          untrackedLabel
+        }
+      ) : null }, index))
+    ] }, monthData.month)) })
+  ] });
+}
+function TimelineViewView(props) {
+  const {
+    timelineTasksCount,
+    isSummaryView,
+    summaryData,
+    colorMap,
+    progressOrder,
+    untrackedLabel,
+    zoomHandlers,
+    timeAxisWidth,
+    summaryCategoryHours,
+    totalSummaryHours,
+    dailyViewData,
+    categoriesConfig,
+    hourHeight,
+    maxHours,
+    onOpenRecordOrigin,
+    onUpdateTaskTime,
+    onOpenRecord,
+    onNotice,
+    onColumnClick
+  } = props;
+  if (timelineTasksCount === 0) {
+    return /* @__PURE__ */ u2("div", { class: "timeline-empty-state", children: "当前范围内没有数据。" });
+  }
+  if (isSummaryView) {
+    return /* @__PURE__ */ u2(
+      TimelineSummaryTable,
+      {
+        summaryData,
+        colorMap,
+        progressOrder,
+        untrackedLabel
+      }
+    );
+  }
+  if (!dailyViewData) {
+    return /* @__PURE__ */ u2("div", { class: "timeline-empty-state", children: "当前范围内没有数据。" });
+  }
+  return /* @__PURE__ */ u2("div", { class: "timeline-view-wrapper", ...zoomHandlers, children: [
+    /* @__PURE__ */ u2("div", { class: "timeline-sticky-header", children: [
+      /* @__PURE__ */ u2("div", { class: "summary-progress-container", style: { flex: `0 0 ${timeAxisWidth}px` }, children: [
+        /* @__PURE__ */ u2("div", { class: "summary-title", children: "总结" }),
+        /* @__PURE__ */ u2("div", { class: "summary-content", children: totalSummaryHours > 0 && /* @__PURE__ */ u2(
+          ProgressBlock,
+          {
+            categoryHours: summaryCategoryHours,
+            order: progressOrder,
+            totalHours: totalSummaryHours,
+            colorMap,
+            untrackedLabel
+          }
+        ) })
+      ] }),
+      dailyViewData.dateRangeDays.map((day) => {
+        const dayStr = day.format("YYYY-MM-DD");
+        const blocks = dailyViewData.blocksByDay[dayStr] || [];
+        return /* @__PURE__ */ u2(
+          DayColumnHeader,
+          {
+            day: dayStr,
+            blocks,
+            categoriesConfig,
+            colorMap,
+            untrackedLabel,
+            progressOrder
+          },
+          dayStr
+        );
+      })
+    ] }),
+    /* @__PURE__ */ u2("div", { class: "timeline-scrollable-body", children: [
+      /* @__PURE__ */ u2("div", { class: "time-axis", style: { flex: `0 0 ${timeAxisWidth}px` }, children: Array.from({ length: maxHours + 1 }, (_2, i2) => /* @__PURE__ */ u2("div", { class: "time-axis-hour", style: { height: `${hourHeight}px` }, children: i2 > 0 && i2 % 2 === 0 ? `${i2}:00` : "" }, i2)) }),
+      dailyViewData.dateRangeDays.map((day) => {
+        const dayStr = day.format("YYYY-MM-DD");
+        const blocks = dailyViewData.blocksByDay[dayStr] || [];
+        return /* @__PURE__ */ u2(
+          DayColumnBody,
+          {
+            onOpenRecordOrigin,
+            day: dayStr,
+            blocks,
+            hourHeight,
+            categoriesConfig,
+            colorMap,
+            maxHours,
+            onUpdateTaskTime,
+            onOpenRecord,
+            onNotice,
+            onColumnClick
+          },
+          dayStr
+        );
+      })
+    ] })
+  ] });
+}
+dayjs.extend(weekOfYear);
+dayjs.extend(isoWeek);
+dayjs.extend(isBetween);
+function TimelineView({
+  items,
+  dateRange,
+  module: module2,
+  currentView,
+  onOpenRecordOrigin,
+  onUpdateTaskTime,
+  onCreateFromTimeline,
+  onOpenRecord,
+  onNotice,
+  inputSettings,
+  timelineModel
+}) {
+  const inputBlocks = inputSettings?.blocks || [];
+  const config2 = T$1(() => {
+    if (timelineModel?.config) return timelineModel.config;
+    const defaults = JSON.parse(JSON.stringify(TIMELINE_VIEW_DEFAULT_CONFIG));
+    const userConfig = module2.viewConfig || {};
+    return {
+      ...defaults,
+      ...userConfig,
+      categories: userConfig.categories || defaults.categories
+    };
+  }, [timelineModel, module2.viewConfig]);
+  const { hourHeight, zoomHandlers } = useTimelineZoom({
+    defaultHeight: config2.defaultHourHeight
+  });
+  const timelineTasks = T$1(() => {
+    if (timelineModel?.timelineTasks) return timelineModel.timelineTasks;
+    const filteredItems = module2.filters ? filterByRules(items, module2.filters) : items;
+    return processItemsToTimelineTasks(filteredItems);
+  }, [timelineModel, items, module2.filters]);
+  const colorMap = T$1(() => {
+    if (timelineModel?.colorMap) return timelineModel.colorMap;
+    const finalColorMap = {};
+    const categoriesConfig = config2.categories || {};
+    for (const categoryName in categoriesConfig) {
+      finalColorMap[categoryName] = categoriesConfig[categoryName].color;
+    }
+    finalColorMap[config2.UNTRACKED_LABEL] = "#9ca3af";
+    return finalColorMap;
+  }, [timelineModel, config2.categories, config2.UNTRACKED_LABEL]);
+  const isSummaryView = timelineModel?.isSummaryView ?? (currentView === "年" || currentView === "季");
+  const summaryData = T$1(() => {
+    if (timelineModel?.summaryData) return timelineModel.summaryData;
+    if (!isSummaryView) return [];
+    const viewStart = dayjs(dateRange[0]);
+    const viewEnd = dayjs(dateRange[1]);
+    const tasksInRange = timelineTasks.filter((task) => {
+      const taskDate = dayjs(task.doneDate);
+      return taskDate.isBetween(viewStart, viewEnd, "day", "[]");
+    });
+    return buildMonthlyAndWeeklySummary(tasksInRange, config2);
+  }, [timelineModel, isSummaryView, timelineTasks, dateRange, config2]);
+  const summaryCategoryHours = T$1(() => {
+    if (timelineModel?.summaryCategoryHours) return timelineModel.summaryCategoryHours;
+    if (isSummaryView) return {};
+    return buildSummaryCategoryHours(timelineTasks, dateRange, config2);
+  }, [timelineModel, isSummaryView, timelineTasks, dateRange, config2]);
+  const dailyViewData = T$1(() => {
+    if (timelineModel?.dailyViewData) return timelineModel.dailyViewData;
+    if (isSummaryView) return null;
+    return buildDailyViewData(timelineTasks, dateRange);
+  }, [timelineModel, isSummaryView, timelineTasks, dateRange]);
+  const handleColumnClick = q$1(
+    (day, e2) => {
+      onCreateFromTimeline?.({
+        day,
+        event: e2,
+        inputBlocks,
+        hourHeight,
+        dayBlocks: dailyViewData?.blocksByDay[day] || []
+      });
+    },
+    [onCreateFromTimeline, inputBlocks, hourHeight, dailyViewData]
+  );
+  const totalSummaryHours = timelineModel?.totalSummaryHours ?? Object.values(summaryCategoryHours || {}).reduce((s2, h2) => s2 + h2, 0);
+  const TIME_AXIS_WIDTH = 90;
+  return /* @__PURE__ */ u2(
+    TimelineViewView,
+    {
+      timelineTasksCount: timelineTasks.length,
+      isSummaryView,
+      summaryData,
+      colorMap,
+      progressOrder: config2.progressOrder,
+      untrackedLabel: config2.UNTRACKED_LABEL,
+      zoomHandlers,
+      timeAxisWidth: TIME_AXIS_WIDTH,
+      summaryCategoryHours,
+      totalSummaryHours,
+      dailyViewData,
+      categoriesConfig: config2.categories,
+      hourHeight,
+      maxHours: config2.MAX_HOURS_PER_DAY,
+      onOpenRecordOrigin,
+      onUpdateTaskTime,
+      onOpenRecord,
+      onNotice,
+      onColumnClick: handleColumnClick
+    }
+  );
+}
+function EventTimelineViewView(props) {
+  const {
+    filteredItems,
+    groupedTree,
+    resolveResourcePath,
+    onOpenRecordOrigin,
+    displayFields,
+    getItemTime,
+    titleField,
+    contentField,
+    maxContentLength,
+    messageRenderPort,
+    onMarkDone,
+    timerService,
+    timers,
+    allThemes,
+    onOpenRecord
+  } = props;
+  const cleanDisplayText = (value) => {
+    const text2 = String(value ?? "").replace(/\r\n/g, "\n").replace(/\r/g, "\n").trim();
+    if (!text2) return "";
+    const compact = text2.replace(/\s+/g, " ").trim();
+    if (!Number.isFinite(maxContentLength) || maxContentLength <= 0) return compact;
+    return compact.length > maxContentLength ? `${compact.slice(0, maxContentLength)}...` : compact;
+  };
+  const getTaskDisplayTitle = (item) => {
+    const fromContent = cleanDisplayText(readField(item, contentField));
+    if (fromContent) return fromContent;
+    return cleanDisplayText(readField(item, "content")) || cleanDisplayText(readField(item, titleField)) || item.title || "";
+  };
+  if (filteredItems.length === 0) {
+    return /* @__PURE__ */ u2("div", { class: "event-timeline-empty", children: "当前时间范围内没有事件记录。" });
+  }
+  const renderEventList = (items) => {
+    let lastDate = "";
+    return items.map((item, index) => {
+      const t3 = getItemTime(item);
+      const dateLabel = t3 ? t3.format("YYYY-MM-DD") : "";
+      const timeLabel = t3 ? t3.format("HH:mm") : "";
+      const showDate = dateLabel !== lastDate;
+      if (showDate) lastDate = dateLabel;
+      const titleForKey = readField(item, titleField) || readField(item, "title") || "";
+      const taskDisplayTitle = item.type === "task" ? getTaskDisplayTitle(item) : "";
+      return /* @__PURE__ */ u2("div", { class: "et-event", children: [
+        /* @__PURE__ */ u2("div", { class: "et-event-date", children: [
+          showDate && t3 && /* @__PURE__ */ u2("div", { class: "et-date-label", children: dateLabel }),
+          item.type === "task" && /* @__PURE__ */ u2("div", { class: "et-time-label", children: timeLabel })
+        ] }),
+        /* @__PURE__ */ u2("div", { class: "et-line", children: /* @__PURE__ */ u2("div", { class: "et-dot" }) }),
+        /* @__PURE__ */ u2("div", { class: "et-event-card", children: item.type === "task" ? /* @__PURE__ */ u2(
+          TaskRow,
+          {
+            item,
+            onMarkDone: (id) => onMarkDone?.(id),
+            resolveResourcePath,
+            onOpenRecordOrigin,
+            timerService,
+            timer: timers.find((t22) => t22.taskId === item.id),
+            allThemes,
+            displayTitle: taskDisplayTitle,
+            showFields: [],
+            onOpenRecord
+          }
+        ) : /* @__PURE__ */ u2(BlockItem, { item, fields: displayFields, isNarrow: false, resolveResourcePath, onOpenRecordOrigin, messageRenderPort, allThemes, onOpenRecord }) })
+      ] }, `${dateLabel}-${timeLabel}-${titleForKey}-${index}`);
+    });
+  };
+  if (!groupedTree) {
+    return /* @__PURE__ */ u2("div", { class: "event-timeline-view", children: /* @__PURE__ */ u2("div", { class: "et-ungrouped", children: renderEventList(filteredItems) }) });
+  }
+  return /* @__PURE__ */ u2(
+    GroupedContainer,
+    {
+      nodes: groupedTree,
+      classNames: {
+        root: "event-timeline-view",
+        group: "et-group",
+        title: "et-group-title",
+        content: "et-group-content",
+        toggleIcon: "et-group-toggle-icon",
+        label: "et-group-label"
+      },
+      renderLeaf: (leafItems) => renderEventList(leafItems)
+    }
+  );
+}
+function EventTimelineView(props) {
+  const {
+    items,
+    filteredItems: injectedFilteredItems,
+    groupedTree: injectedGroupedTree,
+    resolveResourcePath,
+    onOpenRecordOrigin,
+    dateRange,
+    module: module2,
+    onMarkDone,
+    timerService,
+    timers,
+    allThemes,
+    messageRenderPort,
+    onOpenRecord
+  } = props;
+  const displayFields = normalizeDisplayFields(module2.fields || ["title", "date"], { fallbackFields: ["title", "date"] });
+  const groupFields = normalizeDisplayFields(module2.groupFields || []);
+  const viewConfig = module2.viewConfig || {};
+  const timeField = viewConfig.timeField || "date";
+  const titleField = viewConfig.titleField || "title";
+  const contentField = viewConfig.contentField || "content";
+  const maxContentLength = Number.isFinite(Number(viewConfig.maxContentLength)) ? Number(viewConfig.maxContentLength) : 160;
+  const start2 = T$1(() => dayjs(dateRange[0]), [dateRange]);
+  const end2 = T$1(() => dayjs(dateRange[1]), [dateRange]);
+  function getItemTime(item) {
+    const raw = readField(item, timeField);
+    if (!raw) return null;
+    try {
+      return dayjs(raw);
+    } catch {
+      return null;
+    }
+  }
+  const filteredItems = T$1(() => {
+    if (injectedFilteredItems !== void 0) return injectedFilteredItems;
+    const result = [];
+    for (const item of items) {
+      const t3 = getItemTime(item);
+      if (!t3) continue;
+      if (!t3.isBetween(start2, end2, "minute", "[]")) continue;
+      result.push(item);
+    }
+    return result.sort((a2, b2) => {
+      const ta = getItemTime(a2);
+      const tb = getItemTime(b2);
+      return ta.valueOf() - tb.valueOf();
+    });
+  }, [items, start2, end2, timeField, injectedFilteredItems]);
+  const groupedTree = T$1(() => {
+    if (injectedGroupedTree !== void 0) return injectedGroupedTree;
+    if (!groupFields || groupFields.length === 0) return null;
+    return groupItemsByFields(filteredItems, groupFields);
+  }, [filteredItems, groupFields, injectedGroupedTree]);
+  return /* @__PURE__ */ u2(
+    EventTimelineViewView,
+    {
+      filteredItems,
+      groupedTree,
+      resolveResourcePath,
+      onOpenRecordOrigin,
+      displayFields,
+      getItemTime,
+      titleField,
+      contentField,
+      maxContentLength,
+      messageRenderPort,
+      onMarkDone,
+      timerService,
+      timers,
+      allThemes,
+      onOpenRecord
+    }
+  );
+}
+function getThemeLeafLabel(themePath) {
+  if (!themePath || themePath === "__default__") return "未分类";
+  const segments = parsePath(themePath);
+  const leaf = segments[segments.length - 1];
+  return leaf?.name || themePath;
+}
+function getThemeGroupTitle(themePath) {
+  if (!themePath || themePath === "__default__") return "未分类";
+  const segments = parsePath(themePath);
+  return segments[0]?.name || themePath;
+}
+function HeatmapView({
+  items,
+  resolveResourcePath,
+  dateRange,
+  module: module2,
+  currentView,
+  inputSettings,
+  injectedThemesByPath,
+  injectedThemesToTrack,
+  injectedDataByThemeAndDate,
+  onOpenHeatmapCreate,
+  onOpenCheckinManager,
+  onNotice
+}) {
+  const config2 = T$1(
+    () => ({ ...HEATMAP_VIEW_DEFAULT_CONFIG, ...module2.viewConfig }),
+    [module2.viewConfig]
+  );
+  const themesByPath = T$1(() => {
+    return injectedThemesByPath ?? buildThemesByPathMap(inputSettings.themes);
+  }, [injectedThemesByPath, inputSettings.themes]);
+  const ratingMappingsCache = A$1(new RatingMappingCache()).current;
+  y(() => {
+    ratingMappingsCache.clear();
+  }, [inputSettings.themes, inputSettings.blocks, inputSettings.overrides]);
+  y(() => {
+    devLog(`🔄 [数据更新] 检测到items数据变化，项目数量: ${items.length}`);
+    ratingMappingsCache.clear();
+  }, [items]);
+  const inferredThemePaths = T$1(() => {
+    if (injectedThemesToTrack) return [];
+    const set2 = /* @__PURE__ */ new Set();
+    for (const it of items) {
+      if (it?.theme && typeof it.theme === "string" && it.theme.trim().length > 0) {
+        set2.add(it.theme);
+      }
+    }
+    return Array.from(set2);
+  }, [items, injectedThemesToTrack]);
+  const themesToTrack = T$1(() => {
+    return injectedThemesToTrack ?? (config2.themePaths && config2.themePaths.length > 0 ? config2.themePaths : inferredThemePaths);
+  }, [injectedThemesToTrack, config2.themePaths, inferredThemePaths]);
+  const dataByThemeAndDate = T$1(() => {
+    return injectedDataByThemeAndDate ?? buildThemeDataMap(items, themesToTrack);
+  }, [injectedDataByThemeAndDate, items, themesToTrack]);
+  const inferredBlockIdByTheme = T$1(() => {
+    const result = /* @__PURE__ */ new Map();
+    const counts = /* @__PURE__ */ new Map();
+    for (const it of items) {
+      const themeKey = typeof it?.theme === "string" && it.theme.trim().length > 0 ? it.theme : "__default__";
+      const blockId = typeof it?.templateId === "string" && it.templateId.trim().length > 0 ? it.templateId : typeof it?.categoryKey === "string" && it.categoryKey.trim().length > 0 ? it.categoryKey : "";
+      if (!blockId) continue;
+      if (!counts.has(themeKey)) counts.set(themeKey, /* @__PURE__ */ new Map());
+      const themeCounts = counts.get(themeKey);
+      themeCounts.set(blockId, (themeCounts.get(blockId) || 0) + 1);
+    }
+    counts.forEach((themeCounts, themeKey) => {
+      let bestBlockId = "";
+      let bestCount = -1;
+      themeCounts.forEach((count, blockId) => {
+        if (count > bestCount) {
+          bestCount = count;
+          bestBlockId = blockId;
+        }
+      });
+      if (bestBlockId) result.set(themeKey, bestBlockId);
+    });
+    return result;
+  }, [items]);
+  const resolveCreateBlockId = (themePath, item) => {
+    return config2.sourceBlockId || (item?.templateId || item?.categoryKey) || (themePath ? inferredBlockIdByTheme.get(themePath) : void 0) || inferredBlockIdByTheme.get("__default__") || "";
+  };
+  const openQuickCreate = (date2, item, themePath) => {
+    if (!onOpenHeatmapCreate) {
+      onNotice?.("未提供创建处理器，无法创建记录");
+      return;
+    }
+    onOpenHeatmapCreate({
+      sourceBlockId: resolveCreateBlockId(themePath, item),
+      date: date2,
+      item,
+      themePath,
+      themesByPath
+    });
+  };
+  const handleCellClick = (date2, dayItems, themePath) => {
+    const itemsForDay = dayItems || [];
+    if (itemsForDay.length === 0) {
+      openQuickCreate(date2, void 0, themePath);
+      return;
+    }
+    if (itemsForDay.length === 1) {
+      openQuickCreate(date2, itemsForDay[0], themePath);
+      return;
+    }
+    if (!onOpenCheckinManager) {
+      onNotice?.("未提供记录管理处理器，无法打开记录列表");
+      return;
+    }
+    onOpenCheckinManager({
+      date: date2,
+      items: itemsForDay,
+      onAddRecord: () => openQuickCreate(date2, itemsForDay[itemsForDay.length - 1], themePath)
+    });
+  };
+  const renderMonthGrid = (monthDate, dataForMonth, themePath) => {
+    const startOfMonth = monthDate.startOf("month");
+    const endOfMonth = monthDate.endOf("month");
+    const firstWeekday = startOfMonth.isoWeekday();
+    const themeRatingMapping = ratingMappingsCache.get(
+      inputSettings,
+      config2.sourceBlockId || "",
+      themePath,
+      themesByPath
+    );
+    const days = [];
+    for (let i2 = 1; i2 < firstWeekday; i2++) {
+      days.push(/* @__PURE__ */ u2("div", { class: "heatmap-cell grid-spacer" }, `spacer-${i2}`));
+    }
+    for (let i2 = 1; i2 <= endOfMonth.date(); i2++) {
+      const dateStr = startOfMonth.clone().date(i2).format("YYYY-MM-DD");
+      const dayItems = dataForMonth.get(dateStr);
+      days.push(
+        /* @__PURE__ */ u2(
+          HeatmapCell,
+          {
+            date: dateStr,
+            items: dayItems,
+            config: config2,
+            ratingMapping: themeRatingMapping,
+            resolveResourcePath,
+            onCellClick: (clickedDate, clickedItems) => handleCellClick(clickedDate, clickedItems, themePath)
+          },
+          dateStr
+        )
+      );
+    }
+    return /* @__PURE__ */ u2("div", { class: "month-section", children: [
+      /* @__PURE__ */ u2("div", { class: "month-label", children: monthDate.format("M月") }),
+      /* @__PURE__ */ u2("div", { class: "heatmap-row calendar", children: days })
+    ] }, monthDate.format("YYYY-MM"));
+  };
+  const renderHeaderCells = (currentView2, themePath, dataForTheme) => {
+    const start2 = dayjs(dateRange[0]);
+    const end2 = dayjs(dateRange[1]);
+    const themeRatingMapping = ratingMappingsCache.get(
+      inputSettings,
+      config2.sourceBlockId || "",
+      themePath,
+      themesByPath
+    );
+    switch (currentView2) {
+      case "天": {
+        const dateStr = start2.format("YYYY-MM-DD");
+        const dayItems = dataForTheme.get(dateStr);
+        return [
+          /* @__PURE__ */ u2(
+            HeatmapCell,
+            {
+              date: dateStr,
+              items: dayItems,
+              config: config2,
+              ratingMapping: themeRatingMapping,
+              resolveResourcePath,
+              onCellClick: (clickedDate, clickedItems) => handleCellClick(clickedDate, clickedItems, themePath)
+            },
+            dateStr
+          )
+        ];
+      }
+      case "周": {
+        const cells = [];
+        let currentDate = start2.startOf("isoWeek");
+        const endDate = start2.endOf("isoWeek");
+        while (currentDate.isSameOrBefore(endDate, "day")) {
+          const dateStr = currentDate.format("YYYY-MM-DD");
+          const dayItems = dataForTheme.get(dateStr);
+          cells.push(
+            /* @__PURE__ */ u2(
+              HeatmapCell,
+              {
+                date: dateStr,
+                items: dayItems,
+                config: config2,
+                ratingMapping: themeRatingMapping,
+                resolveResourcePath,
+                onCellClick: (clickedDate, clickedItems) => handleCellClick(clickedDate, clickedItems, themePath)
+              },
+              `${themePath}-${dateStr}`
+            )
+          );
+          currentDate = currentDate.add(1, "day");
+        }
+        return cells;
+      }
+      case "月": {
+        const cells = [];
+        let currentDate = start2.startOf("month");
+        const endDate = start2.endOf("month");
+        while (currentDate.isSameOrBefore(endDate, "day")) {
+          const dateStr = currentDate.format("YYYY-MM-DD");
+          const dayItems = dataForTheme.get(dateStr);
+          cells.push(
+            /* @__PURE__ */ u2(
+              HeatmapCell,
+              {
+                date: dateStr,
+                items: dayItems,
+                config: config2,
+                ratingMapping: themeRatingMapping,
+                resolveResourcePath,
+                onCellClick: (clickedDate, clickedItems) => handleCellClick(clickedDate, clickedItems, themePath)
+              },
+              dateStr
+            )
+          );
+          currentDate = currentDate.add(1, "day");
+        }
+        return cells;
+      }
+      case "年":
+      case "季": {
+        const months = [];
+        let currentMonth = start2.clone().startOf("month");
+        while (currentMonth.isSameOrBefore(end2, "month")) {
+          months.push(renderMonthGrid(currentMonth, dataForTheme, themePath));
+          currentMonth = currentMonth.add(1, "month");
+        }
+        return months;
+      }
+      default:
+        return [];
+    }
+  };
+  const [verticalLayouts, setVerticalLayouts] = d(/* @__PURE__ */ new Set());
+  const [collapsedThemes, setCollapsedThemes] = d(/* @__PURE__ */ new Set());
+  const headerRefs = A$1(/* @__PURE__ */ new Map());
+  const toggleThemeCollapsed = (theme2) => {
+    setCollapsedThemes((prev2) => {
+      const next2 = new Set(prev2);
+      if (next2.has(theme2)) next2.delete(theme2);
+      else next2.add(theme2);
+      return next2;
+    });
+  };
+  const checkLayout = (theme2, headerElement) => {
+    if (!headerElement || theme2 === "__default__") return;
+    const isGridLayout = ["年", "季"].includes(currentView);
+    if (isGridLayout || currentView === "周") return;
+    const containerWidth = headerElement.clientWidth;
+    const threshold = currentView === "天" ? 320 : 600;
+    const needsVertical = containerWidth < threshold;
+    setVerticalLayouts((prev2) => {
+      const newSet = new Set(prev2);
+      if (needsVertical) {
+        newSet.add(theme2);
+      } else {
+        newSet.delete(theme2);
+      }
+      return newSet;
+    });
+  };
+  y(() => {
+    const resizeObserver = new ResizeObserver((entries) => {
+      entries.forEach((entry) => {
+        const element = entry.target;
+        const theme2 = element.dataset.theme;
+        if (theme2) {
+          checkLayout(theme2, element);
+        }
+      });
+    });
+    headerRefs.current.forEach((element, theme2) => {
+      resizeObserver.observe(element);
+      checkLayout(theme2, element);
+    });
+    return () => {
+      resizeObserver.disconnect();
+    };
+  }, [themesToTrack, currentView]);
+  const buildDayThemeGroups = () => {
+    const themesToDisplay = themesToTrack.length > 0 ? themesToTrack : ["__default__"];
+    const groups = [];
+    const groupMap = /* @__PURE__ */ new Map();
+    themesToDisplay.forEach((themePath) => {
+      const title = getThemeGroupTitle(themePath);
+      const label = getThemeLeafLabel(themePath);
+      const entry = {
+        themePath,
+        label,
+        dataForTheme: dataByThemeAndDate.get(themePath) || /* @__PURE__ */ new Map()
+      };
+      const existingGroup = groupMap.get(title);
+      if (existingGroup) {
+        existingGroup.entries.push(entry);
+        return;
+      }
+      const newGroup = {
+        title,
+        entries: [entry]
+      };
+      groupMap.set(title, newGroup);
+      groups.push(newGroup);
+    });
+    return groups;
+  };
+  const renderDayContent = () => {
+    const dayDateStr = dayjs(dateRange[0]).format("YYYY-MM-DD");
+    const dayGroups = buildDayThemeGroups();
+    return /* @__PURE__ */ u2("div", { class: "heatmap-day-view", children: dayGroups.map((group) => /* @__PURE__ */ u2("section", { class: "heatmap-day-section", children: [
+      /* @__PURE__ */ u2("h3", { class: "heatmap-day-section-title", children: group.title }),
+      /* @__PURE__ */ u2("div", { class: "heatmap-day-section-grid", children: group.entries.map((entry) => {
+        const themeRatingMapping = ratingMappingsCache.get(
+          inputSettings,
+          config2.sourceBlockId || "",
+          entry.themePath,
+          themesByPath
+        );
+        const dayItems = entry.dataForTheme.get(dayDateStr);
+        return /* @__PURE__ */ u2("div", { class: "heatmap-day-item", children: /* @__PURE__ */ u2(
+          HeatmapCell,
+          {
+            date: dayDateStr,
+            items: dayItems,
+            config: config2,
+            ratingMapping: themeRatingMapping,
+            resolveResourcePath,
+            highlightToday: false,
+            emptyLabel: !dayItems || dayItems.length === 0 ? entry.label : void 0,
+            onCellClick: (clickedDate, clickedItems) => handleCellClick(clickedDate, clickedItems, entry.themePath)
+          }
+        ) }, entry.themePath);
+      }) })
+    ] }, group.title)) });
+  };
+  const renderContent = () => {
+    if (currentView === "天") {
+      return renderDayContent();
+    }
+    const themesToDisplay = themesToTrack.length > 0 ? themesToTrack : ["__default__"];
+    const isRowLayout = ["周", "月"].includes(currentView);
+    const wrapperClass = isRowLayout ? "layout-row" : "layout-grid";
+    return /* @__PURE__ */ u2("div", { class: `heatmap-view-wrapper ${wrapperClass}`, children: themesToDisplay.map((theme2) => {
+      const dataForTheme = dataByThemeAndDate.get(theme2) || /* @__PURE__ */ new Map();
+      const isVertical = currentView === "周" ? false : verticalLayouts.has(theme2);
+      const isCollapsed = currentView === "年" && collapsedThemes.has(theme2);
+      const leafLabel = getThemeLeafLabel(theme2);
+      return /* @__PURE__ */ u2("div", { class: `heatmap-theme-group ${currentView === "年" ? "is-collapsible" : ""}`, children: /* @__PURE__ */ u2(
+        "div",
+        {
+          class: `heatmap-theme-header ${currentView === "周" ? "week-inline-layout" : ""} ${isVertical ? "vertical-layout" : ""} ${isCollapsed ? "is-collapsed" : ""}`,
+          "data-theme": theme2,
+          ref: (el) => {
+            if (el && theme2 !== "__default__") {
+              headerRefs.current.set(theme2, el);
+            }
+          },
+          children: [
+            theme2 !== "__default__" && /* @__PURE__ */ u2(
+              "div",
+              {
+                class: `heatmap-header-info ${currentView === "年" ? "is-clickable" : ""}`,
+                onClick: () => {
+                  if (currentView === "年") toggleThemeCollapsed(theme2);
+                },
+                children: /* @__PURE__ */ u2("div", { class: "heatmap-header-info-left", children: [
+                  currentView === "年" && /* @__PURE__ */ u2("span", { class: `heatmap-collapse-arrow ${isCollapsed ? "is-collapsed" : ""}`, children: "▾" }),
+                  /* @__PURE__ */ u2("span", { class: "theme-name", children: leafLabel })
+                ] })
+              }
+            ),
+            !isCollapsed && /* @__PURE__ */ u2("div", { class: `heatmap-header-cells ${isRowLayout ? "" : "grid-view"}`, children: renderHeaderCells(currentView, theme2, dataForTheme) })
+          ]
+        }
+      ) }, theme2);
+    }) });
+  };
+  return /* @__PURE__ */ u2("div", { class: "heatmap-container", children: renderContent() });
+}
+function calculateSmartHeight(count, allCounts, _displayMode, minVisibleHeight) {
+  if (count === 0) return 0;
+  const nonZeroCounts = allCounts.filter((c2) => c2 > 0);
+  if (nonZeroCounts.length === 0) return 0;
+  const maxCount = Math.max(...nonZeroCounts);
+  let height2 = count / maxCount * 100;
+  if (height2 > 0 && height2 < minVisibleHeight) {
+    height2 = minVisibleHeight;
+  }
+  return Math.min(height2, 100);
+}
+function ChartBlock({
+  data,
+  label,
+  onCellClick,
+  categories,
+  cellIdentifier,
+  isCompact = false,
+  isNarrow = false,
+  displayMode = "smart",
+  minVisibleHeight = 15
+}) {
+  const counts = data.counts;
+  const total = Object.values(counts).reduce((sum, count) => sum + count, 0);
+  const allCounts = categories.map((cat) => counts[cat.name] || 0);
+  const categoryHeights = T$1(() => {
+    return categories.map((cat) => {
+      const count = counts[cat.name] || 0;
+      return calculateSmartHeight(count, allCounts, displayMode, minVisibleHeight);
+    });
+  }, [counts, categories, displayMode, minVisibleHeight, allCounts]);
+  const containerClasses = [
+    "sv-chart-block",
+    isCompact ? "is-compact" : "",
+    isNarrow ? "is-narrow" : "",
+    total === 0 ? "is-empty" : ""
+  ].filter(Boolean).join(" ");
+  return /* @__PURE__ */ u2(
+    "div",
+    {
+      class: containerClasses,
+      onClick: (e2) => onCellClick(cellIdentifier("全部"), e2.currentTarget, data.blocks, `${label} · 全部`),
+      children: [
+        /* @__PURE__ */ u2("div", { class: "sv-chart-label", children: label }),
+        /* @__PURE__ */ u2("div", { class: "sv-chart-content", children: [
+          /* @__PURE__ */ u2("div", { class: "sv-chart-numbers", children: categories.map(({ name }) => {
+            const count = counts[name] || 0;
+            return /* @__PURE__ */ u2("div", { class: "sv-chart-number", children: count > 0 ? count : "" }, `num-${name}`);
+          }) }),
+          /* @__PURE__ */ u2("div", { class: "sv-chart-bars-container", children: categories.map(({ name, color: color2, alias }, index) => {
+            const count = counts[name] || 0;
+            const height2 = categoryHeights[index];
+            const displayName = alias || name;
+            return /* @__PURE__ */ u2(
+              "div",
+              {
+                class: "sv-vbar-wrapper",
+                title: `${name}: ${count}`,
+                onClick: (e2) => {
+                  e2.stopPropagation();
+                  onCellClick(
+                    cellIdentifier(name),
+                    e2.currentTarget,
+                    data.blocks.filter((b2) => getBasePath(b2.categoryKey) === name),
+                    `${label} · ${displayName}`
+                  );
+                },
+                children: /* @__PURE__ */ u2(
+                  "div",
+                  {
+                    class: "sv-vbar-bar",
+                    style: {
+                      height: `${height2}%`,
+                      backgroundColor: color2 || "#ccc"
+                    }
+                  }
+                )
+              },
+              name
+            );
+          }) }),
+          /* @__PURE__ */ u2("div", { class: "sv-chart-categories", children: categories.map(({ name, alias }) => {
+            const displayName = alias || name;
+            return /* @__PURE__ */ u2(
+              "div",
+              {
+                class: "sv-chart-category",
+                title: `${name}${alias ? ` (${name})` : ""}`,
+                children: displayName
+              },
+              `cat-${name}`
+            );
+          }) })
+        ] })
+      ]
+    }
+  );
+}
+function DayStatisticsView({
+  items,
+  categories,
+  selectedDate,
+  onCellClick,
+  displayMode,
+  minVisibleHeight
+}) {
+  const data = aggregateByDay(items, categories, selectedDate);
+  return /* @__PURE__ */ u2("div", { class: "statistics-view", children: /* @__PURE__ */ u2("div", { class: "sv-timeline", children: /* @__PURE__ */ u2("div", { class: "sv-row", children: /* @__PURE__ */ u2(
+    ChartBlock,
+    {
+      data,
+      label: selectedDate.format("YYYY年MM月DD日 dddd"),
+      categories,
+      onCellClick,
+      cellIdentifier: (cat) => ({ type: "day", date: selectedDate.format("YYYY-MM-DD"), category: cat }),
+      displayMode,
+      minVisibleHeight
+    }
+  ) }) }) });
+}
+function WeekStatisticsView({
+  items,
+  categories,
+  weekDate,
+  onCellClick,
+  displayMode,
+  minVisibleHeight
+}) {
+  const weekStart = weekDate.startOf("isoWeek");
+  const weekEnd = weekDate.endOf("isoWeek");
+  const data = aggregateByWeek(items, categories, weekStart);
+  return /* @__PURE__ */ u2("div", { class: "statistics-view", children: /* @__PURE__ */ u2("div", { class: "sv-timeline", children: /* @__PURE__ */ u2("div", { class: "sv-row", children: /* @__PURE__ */ u2(
+    ChartBlock,
+    {
+      data,
+      label: `${weekStart.format("YYYY年MM月DD日")} ~ ${weekEnd.format("MM月DD日")} (第${weekStart.isoWeek()}周)`,
+      categories,
+      onCellClick,
+      cellIdentifier: (cat) => ({
+        type: "week",
+        week: weekStart.isoWeek(),
+        year: weekStart.isoWeekYear(),
+        category: cat
+      }),
+      displayMode,
+      minVisibleHeight
+    }
+  ) }) }) });
+}
+function TopControls({
+  currentView,
+  usePeriod,
+  onToggleUsePeriod
+}) {
+  if (!(currentView === "年" || currentView === "季" || currentView === "月")) {
+    return null;
+  }
+  return /* @__PURE__ */ u2("div", { class: "sv-top-controls", children: /* @__PURE__ */ u2(
+    "label",
+    {
+      class: "sv-period-toggle",
+      title: "勾选后：年/季/月只统计对应周期字段；周统计包含 period=周 和未设置 period 的条目",
+      children: [
+        /* @__PURE__ */ u2(
+          "input",
+          {
+            type: "checkbox",
+            checked: usePeriod,
+            onChange: (e2) => onToggleUsePeriod(e2.target.checked)
+          }
+        ),
+        /* @__PURE__ */ u2("span", { children: "使用周期字段" })
+      ]
+    }
+  ) });
+}
+function MonthStatisticsView({
+  items,
+  categories,
+  monthDate,
+  usePeriod,
+  onToggleUsePeriod,
+  onCellClick,
+  displayMode,
+  minVisibleHeight
+}) {
+  const monthData = aggregateByMonth(items, categories, monthDate, usePeriod);
+  const monthWeeksData = getMonthWeeksData(items, categories, monthDate, usePeriod);
+  const monthStart = monthDate.startOf("month");
+  const monthEnd = monthDate.endOf("month");
+  const weeksMeta = [];
+  let weekCursor = monthStart.startOf("isoWeek");
+  while (weekCursor.isBefore(monthEnd) || isSameIsoWeek(weekCursor, monthEnd)) {
+    const weekStart = weekCursor;
+    const weekEnd = weekStart.endOf("isoWeek");
+    weeksMeta.push({
+      weekStart,
+      label: `${weekStart.format("MM-DD")} ~ ${weekEnd.format("MM-DD")}`
+    });
+    weekCursor = weekCursor.add(1, "week");
+  }
+  const weekCount = monthWeeksData.length;
+  return /* @__PURE__ */ u2("div", { class: "statistics-view", children: [
+    /* @__PURE__ */ u2(TopControls, { currentView: "月", usePeriod, onToggleUsePeriod }),
+    /* @__PURE__ */ u2(
+      "div",
+      {
+        class: "sv-month-grid",
+        style: { gridTemplateColumns: `repeat(${weekCount}, 1fr)` },
+        children: [
+          /* @__PURE__ */ u2("div", { class: "sv-month-grid-summary", children: /* @__PURE__ */ u2(
+            ChartBlock,
+            {
+              data: monthData,
+              label: monthDate.format("YYYY年MM月"),
+              categories,
+              onCellClick,
+              cellIdentifier: (cat) => ({
+                type: "month",
+                month: monthDate.month() + 1,
+                year: monthDate.year(),
+                category: cat
+              }),
+              displayMode,
+              minVisibleHeight
+            }
+          ) }),
+          monthWeeksData.map((data, index) => {
+            const meta = weeksMeta[index];
+            if (!meta) return null;
+            const { weekStart } = meta;
+            return /* @__PURE__ */ u2(
+              "div",
+              {
+                class: "sv-month-grid-week",
+                style: { gridColumn: `${index + 1}` },
+                children: /* @__PURE__ */ u2(
+                  ChartBlock,
+                  {
+                    data,
+                    label: `W${weekStart.isoWeek()}`,
+                    categories,
+                    onCellClick,
+                    cellIdentifier: (cat) => ({
+                      type: "week",
+                      week: weekStart.isoWeek(),
+                      year: weekStart.isoWeekYear(),
+                      category: cat
+                    }),
+                    isCompact: true,
+                    displayMode,
+                    minVisibleHeight
+                  }
+                )
+              },
+              weekStart.format("YYYY-MM-DD")
+            );
+          })
+        ]
+      }
+    )
+  ] });
+}
+function QuarterStatisticsView({
+  items,
+  categories,
+  quarterDate,
+  usePeriod,
+  onToggleUsePeriod,
+  onCellClick,
+  displayMode,
+  minVisibleHeight
+}) {
+  const quarterStart = quarterDate.startOf("quarter");
+  const quarterData = aggregateByQuarter(items, categories, quarterDate, usePeriod);
+  const monthsInfo = Array.from({ length: 3 }, (_2, i2) => {
+    const month = quarterStart.add(i2, "month");
+    const monthData = aggregateByMonth(items, categories, month, usePeriod);
+    const weeksData = getMonthWeeksData(items, categories, month, usePeriod);
+    const monthStart = month.startOf("month");
+    const monthEnd = month.endOf("month");
+    const weeksMeta = [];
+    let weekCursor = monthStart.startOf("isoWeek");
+    while (weekCursor.isBefore(monthEnd) || isSameIsoWeek(weekCursor, monthEnd)) {
+      weeksMeta.push({ weekStart: weekCursor });
+      weekCursor = weekCursor.add(1, "week");
+    }
+    return { month, data: monthData, weeksData, weeksMeta };
+  });
+  const maxWeeks = Math.max(...monthsInfo.map((m2) => m2.weeksData.length), 1);
+  return /* @__PURE__ */ u2("div", { class: "statistics-view", children: [
+    /* @__PURE__ */ u2(TopControls, { currentView: "季", usePeriod, onToggleUsePeriod }),
+    /* @__PURE__ */ u2("div", { class: "sv-quarter-grid", children: [
+      /* @__PURE__ */ u2("div", { class: "sv-quarter-grid-summary", children: /* @__PURE__ */ u2(
+        ChartBlock,
+        {
+          data: quarterData,
+          label: `${quarterDate.format("YYYY年")} 第${quarterDate.quarter()}季度`,
+          categories,
+          onCellClick,
+          cellIdentifier: (cat) => ({
+            type: "quarter",
+            quarter: quarterDate.quarter(),
+            year: quarterDate.year(),
+            category: cat
+          }),
+          displayMode,
+          minVisibleHeight
+        }
+      ) }),
+      monthsInfo.map(({ month, data }, i2) => /* @__PURE__ */ u2(
+        "div",
+        {
+          class: "sv-quarter-grid-month",
+          style: { gridColumn: `${i2 + 1}` },
+          children: /* @__PURE__ */ u2(
+            ChartBlock,
+            {
+              data,
+              label: month.format("MM月"),
+              categories,
+              onCellClick,
+              cellIdentifier: (cat) => ({
+                type: "month",
+                month: month.month() + 1,
+                year: month.year(),
+                category: cat
+              }),
+              displayMode,
+              minVisibleHeight
+            }
+          )
+        },
+        month.format("YYYY-MM")
+      )),
+      monthsInfo.map(({ month, weeksData, weeksMeta }, i2) => /* @__PURE__ */ u2(
+        "div",
+        {
+          class: "sv-quarter-grid-week-col",
+          style: { gridColumn: `${i2 + 1}` },
+          children: [
+            weeksData.map((data, index) => {
+              const meta = weeksMeta[index];
+              if (!meta) return null;
+              const { weekStart } = meta;
+              return /* @__PURE__ */ u2(
+                ChartBlock,
+                {
+                  data,
+                  label: `W${weekStart.isoWeek()}`,
+                  categories,
+                  onCellClick,
+                  cellIdentifier: (cat) => ({
+                    type: "week",
+                    week: weekStart.isoWeek(),
+                    year: weekStart.isoWeekYear(),
+                    category: cat
+                  }),
+                  isCompact: true,
+                  displayMode,
+                  minVisibleHeight
+                },
+                weekStart.format("YYYY-MM-DD")
+              );
+            }),
+            Array.from({ length: maxWeeks - weeksData.length }, (_2, j2) => /* @__PURE__ */ u2("div", { class: "sv-week-placeholder" }, `pad-${j2}`))
+          ]
+        },
+        `w-col-${month.format("YYYY-MM")}`
+      ))
+    ] })
+  ] });
+}
+function YearStatisticsView({
+  year,
+  categories,
+  processedData,
+  yearlyWeekStructure,
+  usePeriod,
+  onToggleUsePeriod,
+  onCellClick,
+  displayMode,
+  minVisibleHeight
+}) {
+  const maxWeeksInMonth = Math.max(
+    ...yearlyWeekStructure.map(({ weeks }) => weeks.length),
+    1
+  );
+  return /* @__PURE__ */ u2("div", { class: "statistics-view", children: [
+    /* @__PURE__ */ u2(TopControls, { currentView: "年", usePeriod, onToggleUsePeriod }),
+    /* @__PURE__ */ u2("div", { class: "sv-year-grid", children: [
+      /* @__PURE__ */ u2("div", { class: "sv-year-grid-year", children: /* @__PURE__ */ u2(
+        ChartBlock,
+        {
+          data: processedData.yearData,
+          label: `${year}年`,
+          categories,
+          onCellClick,
+          cellIdentifier: (cat) => ({ type: "year", year, category: cat }),
+          displayMode,
+          minVisibleHeight
+        }
+      ) }),
+      processedData.quartersData.map((data, i2) => /* @__PURE__ */ u2(
+        "div",
+        {
+          class: "sv-year-grid-quarter",
+          style: { gridColumn: `${i2 * 3 + 1} / ${i2 * 3 + 4}` },
+          children: /* @__PURE__ */ u2(
+            ChartBlock,
+            {
+              data,
+              label: `Q${i2 + 1}`,
+              categories,
+              onCellClick,
+              cellIdentifier: (cat) => ({ type: "quarter", year, quarter: i2 + 1, category: cat }),
+              displayMode,
+              minVisibleHeight
+            }
+          )
+        },
+        `q${i2}`
+      )),
+      processedData.monthsData.map((data, i2) => /* @__PURE__ */ u2(
+        "div",
+        {
+          class: `sv-year-grid-month${i2 % 3 === 2 && i2 < 11 ? " sv-quarter-end" : ""}`,
+          style: { gridColumn: `${i2 + 1}` },
+          children: /* @__PURE__ */ u2(
+            ChartBlock,
+            {
+              data,
+              label: `${i2 + 1}月`,
+              categories,
+              onCellClick,
+              cellIdentifier: (cat) => ({ type: "month", year, month: i2 + 1, category: cat }),
+              displayMode,
+              minVisibleHeight
+            }
+          )
+        },
+        `m${i2}`
+      )),
+      yearlyWeekStructure.map(({ month, weeks }) => {
+        const gridCol = month;
+        const isQuarterEnd = month % 3 === 0 && month < 12;
+        return /* @__PURE__ */ u2(
+          "div",
+          {
+            class: `sv-year-grid-week-col${isQuarterEnd ? " sv-quarter-end" : ""}`,
+            style: { gridColumn: `${gridCol}` },
+            children: [
+              weeks.map((week) => {
+                const weekIndex = week - 1;
+                const weekData = processedData.weeksData[weekIndex] || createPeriodData(categories);
+                return /* @__PURE__ */ u2(
+                  ChartBlock,
+                  {
+                    data: weekData,
+                    label: `${week}W`,
+                    categories,
+                    onCellClick,
+                    cellIdentifier: (cat) => ({ type: "week", year, week, category: cat }),
+                    isCompact: true,
+                    displayMode,
+                    minVisibleHeight
+                  },
+                  week
+                );
+              }),
+              Array.from({ length: maxWeeksInMonth - weeks.length }, (_2, i2) => /* @__PURE__ */ u2("div", { class: "sv-week-placeholder" }, `pad-${i2}`))
+            ]
+          },
+          `w-col-${month}`
+        );
+      })
+    ] })
+  ] });
+}
+function StatisticsViewView({
+  items,
+  currentView,
+  categories,
+  startDate,
+  usePeriod,
+  onToggleUsePeriod,
+  onCellClick,
+  displayMode,
+  minVisibleHeight,
+  year,
+  yearlyWeekStructure,
+  processedData
+}) {
+  if (!categories || categories.length === 0) {
+    return /* @__PURE__ */ u2("div", { class: "statistics-view-placeholder", children: "请先在视图设置中配置您想统计的分类。" });
+  }
+  switch (currentView) {
+    case "天":
+      return /* @__PURE__ */ u2(
+        DayStatisticsView,
+        {
+          items,
+          categories,
+          selectedDate: startDate,
+          onCellClick,
+          displayMode,
+          minVisibleHeight
+        }
+      );
+    case "周":
+      return /* @__PURE__ */ u2(
+        WeekStatisticsView,
+        {
+          items,
+          categories,
+          weekDate: startDate,
+          onCellClick,
+          displayMode,
+          minVisibleHeight
+        }
+      );
+    case "月":
+      return /* @__PURE__ */ u2(
+        MonthStatisticsView,
+        {
+          items,
+          categories,
+          monthDate: startDate,
+          usePeriod,
+          onToggleUsePeriod,
+          onCellClick,
+          displayMode,
+          minVisibleHeight
+        }
+      );
+    case "季":
+      return /* @__PURE__ */ u2(
+        QuarterStatisticsView,
+        {
+          items,
+          categories,
+          quarterDate: startDate,
+          usePeriod,
+          onToggleUsePeriod,
+          onCellClick,
+          displayMode,
+          minVisibleHeight
+        }
+      );
+    case "年":
+    default:
+      return /* @__PURE__ */ u2(
+        YearStatisticsView,
+        {
+          year,
+          categories,
+          processedData,
+          yearlyWeekStructure,
+          usePeriod,
+          onToggleUsePeriod,
+          onCellClick,
+          displayMode,
+          minVisibleHeight
+        }
+      );
+  }
+}
+function useStatisticsCategoryConfigs({
+  items,
+  configuredCategories,
+  selectedCategories,
+  categoryColors,
+  onCategoryColorsChange,
+  injectedFilteredCategories
+}) {
+  y(() => {
+    const discovered = discoverBaseCategories(items);
+    const newColors = {};
+    let hasNew = false;
+    for (const name of discovered) {
+      if (!categoryColors[name]) {
+        newColors[name] = generateCategoryColor(name);
+        hasNew = true;
+      }
+    }
+    if (hasNew) {
+      void onCategoryColorsChange?.({ ...categoryColors, ...newColors });
+    }
+  }, [items, categoryColors, onCategoryColorsChange]);
+  const categoryConfigs = T$1(() => {
+    const discovered = discoverBaseCategories(items);
+    if (configuredCategories.length > 0) {
+      const result = [];
+      const seen = /* @__PURE__ */ new Set();
+      for (const cat of configuredCategories) {
+        const baseName = getBasePath(cat.name) || cat.name || "";
+        if (!baseName || seen.has(baseName)) continue;
+        seen.add(baseName);
+        result.push({
+          ...cat,
+          name: baseName,
+          alias: cat.alias && cat.alias !== baseName ? cat.alias : void 0,
+          color: categoryColors[baseName] || getCategoryColor(baseName)
+        });
+      }
+      for (const name of discovered) {
+        const baseName = getBasePath(name) || name;
+        if (!baseName || seen.has(baseName)) continue;
+        seen.add(baseName);
+        result.push({
+          name: baseName,
+          color: categoryColors[baseName] || getCategoryColor(baseName),
+          files: []
+        });
+      }
+      return result;
+    }
+    return discovered.map((name) => ({
+      name,
+      color: categoryColors[name] || getCategoryColor(name),
+      files: []
+    }));
+  }, [configuredCategories, items, categoryColors]);
+  return T$1(() => {
+    if (injectedFilteredCategories) return injectedFilteredCategories;
+    if (!selectedCategories || selectedCategories.length === 0) return categoryConfigs;
+    return categoryConfigs.filter((category) => selectedCategories.includes(category.name));
+  }, [categoryConfigs, injectedFilteredCategories, selectedCategories]);
+}
+function StatisticsView({
+  items,
+  resolveResourcePath,
+  dateRange,
+  module: module2,
+  currentView,
+  onQuickCreate,
+  onNotice,
+  onOpenStatisticsPopover,
+  onCloseStatisticsPopover,
+  categoryColors = {},
+  onCategoryColorsChange,
+  selectedCategories,
+  timerService,
+  timers,
+  allThemes,
+  statisticsModel,
+  messageRenderPort,
+  onOpenRecord,
+  onOpenRecordOrigin
+}) {
+  const viewConfig = statisticsModel?.viewConfig ?? { ...STATISTICS_VIEW_DEFAULT_CONFIG, ...module2.viewConfig };
+  const { categories = [], displayMode = "smart", minVisibleHeight = 15, usePeriodField = false } = viewConfig;
+  const filteredCategories = useStatisticsCategoryConfigs({
+    items,
+    configuredCategories: categories,
+    selectedCategories,
+    categoryColors,
+    onCategoryColorsChange,
+    injectedFilteredCategories: statisticsModel?.filteredCategories
+  });
+  const [selectedCell, setSelectedCell] = d(null);
+  const [popover, setPopover] = d(null);
+  const openLockRef = A$1(false);
+  const [usePeriod, setUsePeriod] = d(Boolean(usePeriodField));
+  const startDate = T$1(() => statisticsModel?.startDate ?? dayjs(dateRange[0]), [statisticsModel, dateRange]);
+  const isYearView = statisticsModel?.isYearView ?? currentView === "年";
+  const year = statisticsModel?.year ?? startDate.year();
+  const yearlyWeekStructure = T$1(() => {
+    if (statisticsModel?.yearlyWeekStructure) return statisticsModel.yearlyWeekStructure;
+    if (!isYearView) return [];
+    const months = Array.from({ length: 12 }, (_2, i2) => ({ month: i2 + 1, weeks: [] }));
+    const totalWeeks = getWeeksInYear(year);
+    for (let week = 1; week <= totalWeeks; week++) {
+      const thursdayOfWeek = dayjs().year(year).isoWeek(week).day(4);
+      months[thursdayOfWeek.month()]?.weeks.push(week);
+    }
+    return months;
+  }, [statisticsModel, isYearView, year]);
+  const processedData = T$1(() => {
+    if (!isYearView) return { yearData: createPeriodData(filteredCategories), quartersData: [], monthsData: [], weeksData: [] };
+    const totalWeeks = getWeeksInYear(year);
+    const targetDate = dayjs().year(year);
+    const yearData = aggregateByYear(items, filteredCategories, targetDate, usePeriod);
+    const quartersData = [];
+    for (let q2 = 1; q2 <= 4; q2++) quartersData.push(aggregateByQuarter(items, filteredCategories, targetDate.quarter(q2), usePeriod));
+    const monthsData = [];
+    for (let m2 = 0; m2 < 12; m2++) monthsData.push(aggregateByMonth(items, filteredCategories, targetDate.month(m2), usePeriod));
+    const weeksData = [];
+    for (let w2 = 1; w2 <= totalWeeks; w2++) weeksData.push(aggregateByWeek(items, filteredCategories, targetDate.isoWeek(w2), usePeriod));
+    return { yearData, quartersData, monthsData, weeksData };
+  }, [isYearView, items, year, filteredCategories, usePeriod]);
+  const handleCellClick = (cellIdentifier, _target, blocks, title) => {
+    devLog("点击单元格:", { cellIdentifier, title, blocksCount: blocks.length, blocks });
+    if (openLockRef.current) return;
+    const widgetId = `stats-popover-${module2.id}`;
+    const currentKey = JSON.stringify(cellIdentifier);
+    if (popover && JSON.stringify(selectedCell) === currentKey) {
+      onCloseStatisticsPopover?.(widgetId);
+      setPopover(null);
+      setSelectedCell(null);
+      return;
+    }
+    onCloseStatisticsPopover?.(widgetId);
+    setSelectedCell(cellIdentifier);
+    setPopover({ blocks, title });
+    const handleClose = () => {
+      onCloseStatisticsPopover?.(widgetId);
+      setPopover(null);
+      setSelectedCell(null);
+    };
+    const handleExport = () => {
+      if (blocks.length === 0) {
+        onNotice?.("没有内容可导出");
+        return;
+      }
+      const exportConfig = getExportConfigByViewType("StatisticsView");
+      const markdownContent = exportItemsToMarkdown(blocks, exportConfig);
+      navigator.clipboard.writeText(markdownContent);
+      onNotice?.(`"${title}" 的内容已复制到剪贴板！`);
+    };
+    const handleQuickCreate = () => {
+      onQuickCreate?.({
+        cellIdentifier,
+        blocks,
+        title
+      });
+    };
+    const canQuickCreate = !!cellIdentifier?.category && cellIdentifier.category !== "全部";
+    onOpenStatisticsPopover?.({
+      widgetId,
+      title,
+      blocks,
+      module: module2,
+      timerService,
+      timers,
+      allThemes,
+      messageRenderPort,
+      onOpenRecord,
+      onOpenRecordOrigin,
+      resolveResourcePath,
+      onClose: handleClose,
+      onExport: handleExport,
+      onQuickCreate: onQuickCreate ? handleQuickCreate : void 0,
+      canQuickCreate
+    });
+    openLockRef.current = true;
+    setTimeout(() => {
+      openLockRef.current = false;
+    }, 300);
+  };
+  return /* @__PURE__ */ u2(
+    StatisticsViewView,
+    {
+      items,
+      currentView,
+      categories: filteredCategories,
+      startDate,
+      usePeriod,
+      onToggleUsePeriod: (next2) => setUsePeriod(next2),
+      onCellClick: handleCellClick,
+      displayMode,
+      minVisibleHeight,
+      year,
+      yearlyWeekStructure,
+      processedData
+    }
+  );
+}
+function PopoverContent({
+  blocks,
+  module: module2,
+  timerService,
+  timers,
+  allThemes,
+  messageRenderPort,
+  onOpenRecord,
+  onOpenRecordOrigin,
+  resolveResourcePath
+}) {
+  return /* @__PURE__ */ u2("div", { className: "sv-popover-content", children: blocks.length === 0 ? /* @__PURE__ */ u2("div", { class: "sv-popover-empty", children: "无内容" }) : /* @__PURE__ */ u2(
+    BlockView,
+    {
+      items: blocks,
+      resolveResourcePath,
+      onOpenRecordOrigin,
+      fields: module2.fields || ["title", "content", "categoryKey", "tags", "date", "period"],
+      groupFields: module2.groupFields,
+      onMarkDone: () => {
+      },
+      timerService,
+      timers,
+      allThemes,
+      messageRenderPort,
+      onOpenRecord
+    }
+  ) });
+}
+function ProgressBar({ ratio, color: color2 = "var(--interactive-accent)", height: height2 = "10px" }) {
+  const width2 = `${Math.max(0, Math.min(100, Math.round((ratio || 0) * 100)))}%`;
+  return /* @__PURE__ */ u2("div", { style: { height: height2, borderRadius: "999px", background: "var(--background-modifier-border)", overflow: "hidden" }, children: /* @__PURE__ */ u2("div", { style: { width: width2, height: "100%", borderRadius: "999px", background: color2, transition: "width 0.25s ease" } }) });
+}
+function BreakdownList({ title, rows }) {
+  return /* @__PURE__ */ u2("div", { style: { minWidth: 0 }, children: [
+    /* @__PURE__ */ u2("div", { style: { fontWeight: 600, marginBottom: "8px" }, children: title }),
+    rows.length === 0 ? /* @__PURE__ */ u2("div", { style: { color: "var(--text-muted)", fontSize: "12px" }, children: "暂无数据" }) : rows.map((row) => /* @__PURE__ */ u2("div", { style: { display: "flex", justifyContent: "space-between", gap: "12px", padding: "6px 0", borderBottom: "1px solid var(--background-modifier-border-hover)" }, children: [
+      /* @__PURE__ */ u2("span", { style: { minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }, children: row.key }),
+      /* @__PURE__ */ u2("span", { style: { color: "var(--text-muted)", flexShrink: 0 }, children: [
+        row.points,
+        " 分 · ",
+        row.count,
+        " 条"
+      ] })
+    ] }, row.key))
+  ] });
+}
+function ThemeGrowthSection({ items, config: config2 }) {
+  const rows = T$1(() => {
+    const allowed = new Set((config2?.includedCategories || []).filter(Boolean));
+    const themeMap = /* @__PURE__ */ new Map();
+    for (const item of items || []) {
+      const category = (item.categoryKey || "").split("/")[0] || item.categoryKey || "未分类";
+      if (allowed.size > 0 && !allowed.has(category)) continue;
+      const theme2 = item.theme || "未设置主题";
+      const bucket = themeMap.get(theme2) || [];
+      bucket.push(item);
+      themeMap.set(theme2, bucket);
+    }
+    return Array.from(themeMap.entries()).map(([theme2, themeItems]) => ({
+      theme: theme2,
+      itemCount: themeItems.length,
+      levelData: getThemeLevelData(themeItems)
+    })).sort((a2, b2) => {
+      const checkDiff = b2.levelData.totalChecks - a2.levelData.totalChecks;
+      if (checkDiff !== 0) return checkDiff;
+      const itemDiff = b2.itemCount - a2.itemCount;
+      if (itemDiff !== 0) return itemDiff;
+      return a2.theme.localeCompare(b2.theme, "zh-CN");
+    }).slice(0, Math.max(1, config2?.topN || 5));
+  }, [items, config2]);
+  if (rows.length === 0) return null;
+  return /* @__PURE__ */ u2("div", { style: { display: "grid", gap: "10px" }, children: [
+    /* @__PURE__ */ u2("div", { style: { fontWeight: 600 }, children: "主题经验" }),
+    /* @__PURE__ */ u2("div", { style: { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "12px" }, children: rows.map(({ theme: theme2, itemCount, levelData }) => {
+      const remain = levelData.nextRequirement ? Math.max(0, levelData.nextRequirement - levelData.totalChecks) : 0;
+      return /* @__PURE__ */ u2("div", { class: "think-card", style: { padding: "14px", border: "1px solid var(--background-modifier-border)", borderRadius: "12px", display: "grid", gap: "10px" }, children: [
+        /* @__PURE__ */ u2("div", { style: { display: "flex", justifyContent: "space-between", gap: "12px", alignItems: "flex-start" }, children: [
+          /* @__PURE__ */ u2("div", { style: { minWidth: 0 }, children: [
+            /* @__PURE__ */ u2("div", { style: { display: "flex", alignItems: "center", gap: "8px", minWidth: 0 }, children: [
+              /* @__PURE__ */ u2("span", { style: { fontSize: "18px", lineHeight: 1 }, children: levelData.config.icon }),
+              /* @__PURE__ */ u2("span", { style: { fontWeight: 600, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }, children: theme2 })
+            ] }),
+            /* @__PURE__ */ u2("div", { style: { color: "var(--text-muted)", fontSize: "12px", marginTop: "4px" }, children: [
+              "Lv.",
+              levelData.level,
+              " · ",
+              levelData.config.title
+            ] })
+          ] }),
+          /* @__PURE__ */ u2("div", { style: { color: "var(--text-muted)", fontSize: "12px", flexShrink: 0, textAlign: "right" }, children: [
+            levelData.totalChecks,
+            " 经验"
+          ] })
+        ] }),
+        /* @__PURE__ */ u2(ProgressBar, { ratio: levelData.progress, color: levelData.config.color, height: "8px" }),
+        /* @__PURE__ */ u2("div", { style: { display: "flex", justifyContent: "space-between", gap: "12px", color: "var(--text-muted)", fontSize: "12px" }, children: [
+          /* @__PURE__ */ u2("span", { children: [
+            itemCount,
+            " 条记录"
+          ] }),
+          /* @__PURE__ */ u2("span", { children: levelData.nextConfig ? `再 ${remain} 次到 ${levelData.nextConfig.icon} ${levelData.nextConfig.title}` : "已满级" })
+        ] })
+      ] }, theme2);
+    }) })
+  ] });
+}
+function ProgressView({ items = [], progressModel }) {
+  const result = progressModel?.result;
+  const config2 = progressModel?.config;
+  if (!result || !config2) return /* @__PURE__ */ u2("div", { children: "暂无积分数据" });
+  return /* @__PURE__ */ u2("div", { style: { display: "grid", gap: "16px" }, children: [
+    /* @__PURE__ */ u2("div", { style: { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: "12px" }, children: [
+      /* @__PURE__ */ u2("div", { class: "think-card", style: { padding: "14px", border: "1px solid var(--background-modifier-border)", borderRadius: "12px" }, children: [
+        /* @__PURE__ */ u2("div", { style: { color: "var(--text-muted)", fontSize: "12px" }, children: "总积分" }),
+        /* @__PURE__ */ u2("div", { style: { fontSize: "28px", fontWeight: 700, marginTop: "4px" }, children: result.totalPoints })
+      ] }),
+      /* @__PURE__ */ u2("div", { class: "think-card", style: { padding: "14px", border: "1px solid var(--background-modifier-border)", borderRadius: "12px" }, children: [
+        /* @__PURE__ */ u2("div", { style: { color: "var(--text-muted)", fontSize: "12px" }, children: "当前等级" }),
+        /* @__PURE__ */ u2("div", { style: { fontSize: "28px", fontWeight: 700, marginTop: "4px" }, children: [
+          "Lv.",
+          result.level
+        ] })
+      ] }),
+      /* @__PURE__ */ u2("div", { class: "think-card", style: { padding: "14px", border: "1px solid var(--background-modifier-border)", borderRadius: "12px" }, children: [
+        /* @__PURE__ */ u2("div", { style: { color: "var(--text-muted)", fontSize: "12px" }, children: "计分记录" }),
+        /* @__PURE__ */ u2("div", { style: { fontSize: "28px", fontWeight: 700, marginTop: "4px" }, children: result.matchedCount })
+      ] })
+    ] }),
+    /* @__PURE__ */ u2("div", { class: "think-card", style: { padding: "14px", border: "1px solid var(--background-modifier-border)", borderRadius: "12px" }, children: [
+      /* @__PURE__ */ u2("div", { style: { display: "flex", justifyContent: "space-between", gap: "12px", marginBottom: "8px" }, children: [
+        /* @__PURE__ */ u2("div", { style: { fontWeight: 600 }, children: "升级进度" }),
+        /* @__PURE__ */ u2("div", { style: { color: "var(--text-muted)", fontSize: "12px" }, children: [
+          result.currentLevelPoints,
+          "/",
+          Math.max(1, config2.levelStep),
+          " · 下一级 ",
+          result.nextLevelPoints,
+          " 分"
+        ] })
+      ] }),
+      /* @__PURE__ */ u2(ProgressBar, { ratio: result.progressRatio })
+    ] }),
+    config2.showThemeBreakdown !== false && /* @__PURE__ */ u2(ThemeGrowthSection, { items, config: config2 }),
+    /* @__PURE__ */ u2("div", { style: { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: "16px" }, children: [
+      config2.showCategoryBreakdown !== false && /* @__PURE__ */ u2(BreakdownList, { title: "分类积分", rows: result.categoryBreakdown }),
+      config2.showThemeBreakdown !== false && /* @__PURE__ */ u2(BreakdownList, { title: "主题积分", rows: result.themeBreakdown })
+    ] })
+  ] });
+}
+function getChipToneClass(recurrenceLabel) {
+  const recurrence = String(recurrenceLabel || "").trim().toLowerCase();
+  if (!recurrence) return "task-execution-chip--tone-0";
+  if (recurrence.includes("day")) return "task-execution-chip--tone-1";
+  if (recurrence.includes("week")) return "task-execution-chip--tone-2";
+  if (recurrence.includes("month")) return "task-execution-chip--tone-3";
+  if (recurrence.includes("year")) return "task-execution-chip--tone-4";
+  return "task-execution-chip--tone-0";
+}
+function TaskExecutionView({ currentView, taskExecutionModel, onMarkDone, onOpenRecord, onOpenRecordOrigin }) {
+  const [menu, setMenu] = d(null);
+  const menuRef = A$1(null);
+  const taskMap = T$1(() => {
+    const map = /* @__PURE__ */ new Map();
+    for (const section of taskExecutionModel?.sections || []) {
+      for (const group of section.groups || []) {
+        for (const task of group.tasks || []) map.set(task.key, task);
+      }
+    }
+    return map;
+  }, [taskExecutionModel]);
+  y(() => {
+    const onDown = (event) => {
+      if (!menuRef.current) return;
+      if (menuRef.current.contains(event.target)) return;
+      setMenu(null);
+    };
+    const onEsc = (event) => {
+      if (event.key === "Escape") setMenu(null);
+    };
+    window.addEventListener("mousedown", onDown);
+    window.addEventListener("keydown", onEsc);
+    return () => {
+      window.removeEventListener("mousedown", onDown);
+      window.removeEventListener("keydown", onEsc);
+    };
+  }, []);
+  const openMenu = (event, taskKey) => {
+    event.preventDefault();
+    setMenu({ x: event.clientX, y: event.clientY, taskKey });
+  };
+  const selectedTask = menu ? taskMap.get(menu.taskKey) : null;
+  return /* @__PURE__ */ u2("div", { class: "task-execution-view", children: [
+    (taskExecutionModel?.sections || []).map((section) => /* @__PURE__ */ u2("section", { class: "task-execution-section", children: [
+      /* @__PURE__ */ u2("div", { class: "task-execution-section-header", children: /* @__PURE__ */ u2("h2", { class: "task-execution-section-title", children: section.title }) }),
+      /* @__PURE__ */ u2("div", { class: "task-execution-section-body", children: (section.groups || []).map((group) => /* @__PURE__ */ u2("div", { class: "task-execution-subsection", children: /* @__PURE__ */ u2("div", { class: "task-execution-subsection-body", children: [
+        /* @__PURE__ */ u2("div", { class: "task-execution-subsection-title", children: group.title }),
+        /* @__PURE__ */ u2("div", { class: "task-execution-chip-grid", children: (group.tasks || []).map((task) => /* @__PURE__ */ u2(
+          "button",
+          {
+            type: "button",
+            class: `task-execution-chip ${getChipToneClass(task.recurrenceLabel)}`,
+            title: task.recurrenceLabel || task.title,
+            onClick: () => onMarkDone?.(task.itemId),
+            onContextMenu: (event) => openMenu(event, task.key),
+            children: [
+              /* @__PURE__ */ u2("span", { class: "task-execution-chip-label", children: task.title }),
+              task.count > 0 && /* @__PURE__ */ u2("span", { class: "task-execution-chip-count", children: [
+                "·",
+                task.count
+              ] })
+            ]
+          },
+          task.key
+        )) })
+      ] }) }, group.key)) })
+    ] }, section.key)),
+    menu && selectedTask && /* @__PURE__ */ u2("div", { class: "task-execution-context-menu", ref: menuRef, style: { left: `${menu.x}px`, top: `${menu.y}px` }, children: [
+      /* @__PURE__ */ u2("div", { class: "task-execution-context-title", children: selectedTask.title }),
+      /* @__PURE__ */ u2("div", { class: "task-execution-context-meta", children: [
+        currentView,
+        "内完成 ",
+        selectedTask.count,
+        " 次"
+      ] }),
+      /* @__PURE__ */ u2("div", { class: "task-execution-context-rule", children: selectedTask.recurrenceLabel }),
+      /* @__PURE__ */ u2("div", { class: "task-execution-context-list", children: selectedTask.records.length > 0 ? selectedTask.records.map((record) => {
+        const gesture = createRecordGestureHandlers({
+          item: record.item,
+          onOpenOrigin: onOpenRecordOrigin,
+          onPrimary: () => {
+            void onOpenRecord?.(record.item);
+            setMenu(null);
+          }
+        });
+        return /* @__PURE__ */ u2(
+          "a",
+          {
+            class: "task-execution-context-link",
+            href: "#",
+            onClick: (e2) => {
+              gesture.onClick(e2);
+              setMenu(null);
+            },
+            onDblClick: (e2) => {
+              gesture.onDblClick(e2);
+              setMenu(null);
+            },
+            onTouchEnd: (e2) => {
+              gesture.onTouchEnd(e2);
+            },
+            children: record.timeLabel || record.doneDate || "查看记录"
+          },
+          record.id
+        );
+      }) : /* @__PURE__ */ u2("div", { class: "task-execution-context-empty", children: "暂无记录" }) })
+    ] })
+  ] });
+}
+function TableView({ items, rowField, colField, onMarkDone, resolveResourcePath, onOpenRecordOrigin, timerService, timers, allThemes = [], onOpenRecord }) {
+  if (!rowField || !colField) {
+    return /* @__PURE__ */ u2("div", { children: '（表格视图需要配置"行字段"和"列字段"）' });
+  }
+  const { matrix, sortedRows, sortedCols } = buildTableMatrix(items, rowField, colField);
+  function renderCellItem(item) {
+    if (item.type === "task") {
+      const timer = timers.find((t3) => t3.taskId === item.id);
+      return /* @__PURE__ */ u2(
+        TaskRow,
+        {
+          item,
+          onMarkDone,
+          resolveResourcePath,
+          onOpenRecordOrigin,
+          timerService,
+          timer,
+          allThemes,
+          compact: true,
+          onOpenRecord
+        }
+      );
+    }
+    return /* @__PURE__ */ u2(ItemLink, { item, onOpenRecord, onOpenRecordOrigin });
+  }
+  return /* @__PURE__ */ u2("table", { class: "think-table", children: [
+    /* @__PURE__ */ u2("thead", { children: /* @__PURE__ */ u2("tr", { children: [
+      /* @__PURE__ */ u2("th", { children: rowField }),
+      sortedCols.map((c2) => /* @__PURE__ */ u2("th", { children: c2 }, c2))
+    ] }) }),
+    /* @__PURE__ */ u2("tbody", { children: sortedRows.map((r2) => /* @__PURE__ */ u2("tr", { children: [
+      /* @__PURE__ */ u2("td", { children: /* @__PURE__ */ u2("strong", { children: r2 }) }),
+      sortedCols.map((c2) => {
+        const cellItems = matrix[r2]?.[c2] || [];
+        return !cellItems.length ? /* @__PURE__ */ u2("td", { class: "empty" }, c2) : /* @__PURE__ */ u2("td", { children: cellItems.map((it) => /* @__PURE__ */ u2("div", { class: "table-view-cell-item", children: renderCellItem(it) }, it.id)) }, c2);
+      })
+    ] }, r2)) })
+  ] });
+}
+function moveItem(fields, fromIndex, toIndex) {
+  if (fromIndex === toIndex) return fields;
+  if (fromIndex < 0 || fromIndex >= fields.length) return fields;
+  if (toIndex < 0 || toIndex >= fields.length) return fields;
+  const next2 = [...fields];
+  const [moved] = next2.splice(fromIndex, 1);
+  next2.splice(toIndex, 0, moved);
+  return next2;
+}
+function ExcelColumnToolbar({
+  fields,
+  availableFields,
+  disabled = false,
+  saving = false,
+  error,
+  getFieldLabel: getFieldLabel2 = (field) => field,
+  getFieldGroupLabel,
+  onFieldsChange
+}) {
+  const [draggedField, setDraggedField] = d(null);
+  const [menu, setMenu] = d(null);
+  const canEdit = !!onFieldsChange && !disabled;
+  const busy = saving || disabled;
+  const availableOptions = T$1(() => {
+    const selected = new Set(fields);
+    return availableFields.filter((field) => !selected.has(field)).map((field) => ({
+      value: field,
+      label: getFieldLabel2(field),
+      group: getFieldGroupLabel?.(field)
+    }));
+  }, [availableFields, fields, getFieldGroupLabel, getFieldLabel2]);
+  const emit2 = (nextFields) => {
+    if (!canEdit || busy) return;
+    onFieldsChange?.(nextFields);
+  };
+  const closeMenu = () => setMenu(null);
+  const addField = (field) => {
+    if (!field || fields.includes(field)) return;
+    emit2([...fields, field]);
+  };
+  const removeField = (field) => {
+    if (fields.length <= 1) return;
+    emit2(fields.filter((item) => item !== field));
+    closeMenu();
+  };
+  const moveFieldToStart = (field) => {
+    const index = fields.indexOf(field);
+    if (index <= 0) return closeMenu();
+    emit2(moveItem(fields, index, 0));
+    closeMenu();
+  };
+  const moveFieldToEnd = (field) => {
+    const index = fields.indexOf(field);
+    if (index < 0 || index === fields.length - 1) return closeMenu();
+    emit2(moveItem(fields, index, fields.length - 1));
+    closeMenu();
+  };
+  const dropField = (targetField) => {
+    const sourceField = draggedField;
+    setDraggedField(null);
+    if (!sourceField || sourceField === targetField) return;
+    emit2(moveItem(fields, fields.indexOf(sourceField), fields.indexOf(targetField)));
+  };
+  const openMenu = (event, field) => {
+    event.preventDefault();
+    event.stopPropagation();
+    setMenu({ field, x: event.clientX, y: event.clientY });
+  };
+  const menuField = menu?.field;
+  const menuLabel = menuField ? getFieldLabel2(menuField) : "";
+  const menuGroup = menuField ? getFieldGroupLabel?.(menuField) : void 0;
+  const canRemoveMenuField = !!menuField && canEdit && !busy && fields.length > 1;
+  return /* @__PURE__ */ u2(
+    "div",
+    {
+      class: "excel-column-toolbar",
+      "data-editable": canEdit ? "true" : "false",
+      "aria-label": "Excel 显示字段编辑",
+      onClick: () => menu ? closeMenu() : void 0,
+      children: [
+        /* @__PURE__ */ u2("span", { class: "excel-column-toolbar-title", children: "显示字段" }),
+        /* @__PURE__ */ u2("div", { class: "excel-column-chip-list", role: "list", "aria-label": "当前显示字段顺序", children: fields.map((field) => {
+          const label = getFieldLabel2(field);
+          const canRemove = canEdit && !busy && fields.length > 1;
+          return /* @__PURE__ */ u2(
+            "span",
+            {
+              class: `excel-column-chip ${draggedField === field ? "is-dragging" : ""}`,
+              role: "listitem",
+              draggable: canEdit && !busy,
+              title: canEdit ? canRemove ? "拖动调整列顺序；双击隐藏该列；右键更多操作" : "至少保留一个显示字段" : "当前字段配置不可直接编辑",
+              onContextMenu: (event) => openMenu(event, field),
+              onDblClick: (event) => {
+                event.preventDefault();
+                event.stopPropagation();
+                if (canRemove) removeField(field);
+              },
+              onDragStart: (event) => {
+                if (!canEdit || busy) return;
+                setDraggedField(field);
+                event.dataTransfer?.setData("text/plain", field);
+                if (event.dataTransfer) event.dataTransfer.effectAllowed = "move";
+              },
+              onDragEnd: () => setDraggedField(null),
+              onDragOver: (event) => {
+                if (!canEdit || busy || !draggedField) return;
+                event.preventDefault();
+                if (event.dataTransfer) event.dataTransfer.dropEffect = "move";
+              },
+              onDrop: (event) => {
+                event.preventDefault();
+                if (!canEdit || busy) return;
+                dropField(field);
+              },
+              children: [
+                /* @__PURE__ */ u2("span", { class: "excel-column-chip-handle", "aria-hidden": "true", children: "⋮⋮" }),
+                /* @__PURE__ */ u2("span", { class: "excel-column-chip-label", children: label })
+              ]
+            },
+            field
+          );
+        }) }),
+        canEdit ? /* @__PURE__ */ u2("div", { class: "excel-column-add-field", children: /* @__PURE__ */ u2(
+          SimpleSelect,
+          {
+            value: "",
+            options: availableOptions,
+            placeholder: availableOptions.length ? "+ 添加字段" : "所有字段已显示",
+            disabled: busy || !availableOptions.length,
+            onChange: addField,
+            sx: { minWidth: "150px" }
+          }
+        ) }) : /* @__PURE__ */ u2("span", { class: "excel-column-toolbar-readonly", children: "字段配置只读" }),
+        saving ? /* @__PURE__ */ u2("span", { class: "excel-column-toolbar-status", children: "保存字段设置中…" }) : null,
+        error ? /* @__PURE__ */ u2("span", { class: "excel-column-toolbar-error", title: error, children: error }) : null,
+        menu && menuField ? /* @__PURE__ */ u2(
+          "div",
+          {
+            class: "excel-column-context-menu",
+            style: { left: `${menu.x}px`, top: `${menu.y}px` },
+            role: "menu",
+            onMouseDown: (event) => event.stopPropagation(),
+            onClick: (event) => event.stopPropagation(),
+            children: [
+              /* @__PURE__ */ u2("div", { class: "excel-column-context-menu-title", children: menuLabel }),
+              /* @__PURE__ */ u2("button", { type: "button", role: "menuitem", disabled: !canRemoveMenuField, onClick: () => removeField(menuField), children: "隐藏此列" }),
+              /* @__PURE__ */ u2("button", { type: "button", role: "menuitem", disabled: !canEdit || busy || fields.indexOf(menuField) <= 0, onClick: () => moveFieldToStart(menuField), children: "移到最前" }),
+              /* @__PURE__ */ u2("button", { type: "button", role: "menuitem", disabled: !canEdit || busy || fields.indexOf(menuField) === fields.length - 1, onClick: () => moveFieldToEnd(menuField), children: "移到最后" }),
+              /* @__PURE__ */ u2("button", { type: "button", role: "menuitem", onClick: () => setMenu((prev2) => prev2 ? { ...prev2, showInfo: !prev2.showInfo } : prev2), children: "查看字段说明" }),
+              menu.showInfo ? /* @__PURE__ */ u2("div", { class: "excel-column-context-info", children: [
+                /* @__PURE__ */ u2("div", { children: [
+                  /* @__PURE__ */ u2("span", { children: "名称" }),
+                  /* @__PURE__ */ u2("strong", { children: menuLabel })
+                ] }),
+                menuGroup ? /* @__PURE__ */ u2("div", { children: [
+                  /* @__PURE__ */ u2("span", { children: "分组" }),
+                  /* @__PURE__ */ u2("strong", { children: menuGroup })
+                ] }) : null,
+                /* @__PURE__ */ u2("div", { children: [
+                  /* @__PURE__ */ u2("span", { children: "字段键" }),
+                  /* @__PURE__ */ u2("code", { children: menuField })
+                ] })
+              ] }) : null
+            ]
+          }
+        ) : null
+      ]
+    }
+  );
+}
+function isOptionLikeValue(value) {
+  return !!value && typeof value === "object" && ("value" in value || "label" in value);
+}
+function formatExcelCellValue(value) {
+  if (Array.isArray(value)) return value.map(formatExcelCellValue).filter(Boolean).join(", ");
+  if (isOptionLikeValue(value)) return String(value.label ?? value.value ?? "");
+  if (value === true) return "true";
+  if (value === false) return "false";
+  return value == null ? "" : String(value);
+}
+function toDateInputValue(value) {
+  const text2 = formatExcelCellValue(value).trim();
+  const match5 = text2.match(/^(\d{4}-\d{2}-\d{2})/);
+  return match5 ? match5[1] : text2;
+}
+function toTimeInputValue(value) {
+  const text2 = formatExcelCellValue(value).trim();
+  const match5 = text2.match(/^(\d{1,2}:\d{2})/);
+  return match5 ? match5[1].padStart(5, "0") : text2;
+}
+function toDateTimeInputValue(value) {
+  const text2 = formatExcelCellValue(value).trim();
+  const match5 = text2.match(/^(\d{4}-\d{2}-\d{2})[T\s](\d{2}:\d{2})/);
+  return match5 ? `${match5[1]}T${match5[2]}` : text2;
+}
+function isValidDateInput(value) {
+  return !value || /^\d{4}-\d{2}-\d{2}$/.test(value);
+}
+function isValidTimeInput(value) {
+  return !value || /^\d{1,2}:\d{2}$/.test(value);
+}
+function isValidDateTimeInput(value) {
+  return !value || /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(value);
+}
+function truncateExcelCellText(text2, maxLength = 20) {
+  if (text2.length <= maxLength) return text2;
+  return text2.substring(0, maxLength) + "...";
+}
+function normalizeExcelColumnKey(field) {
+  return normalizeEditableFieldKey(field);
+}
+function buildExcelColumns(fields) {
+  const seen = /* @__PURE__ */ new Set();
+  const columns = [];
+  for (const field of fields) {
+    const key = normalizeExcelColumnKey(field);
+    if (!key || seen.has(key)) continue;
+    seen.add(key);
+    const policy = getFieldEditPolicy(key);
+    columns.push({
+      key,
+      canonicalField: policy.canonicalField,
+      label: getFieldLabel(key) || key,
+      editable: policy.editable && policy.commitMode === "inline",
+      editorKind: policy.editorKind,
+      commitMode: policy.commitMode,
+      dangerLevel: policy.dangerLevel,
+      readonlyReason: policy.editable ? void 0 : policy.reason
+    });
+  }
+  return columns;
+}
+function buildExcelCellModel(item, field, valueOverride) {
+  const sourceValue = readField(item, field);
+  const hasOverride = valueOverride !== void 0;
+  const value = hasOverride ? valueOverride : sourceValue;
+  const policy = getFieldEditPolicy(field, value);
+  return {
+    item,
+    itemId: item.id,
+    field,
+    canonicalField: policy.canonicalField,
+    value,
+    displayValue: formatExcelCellValue(value),
+    editorValue: formatExcelEditorValue(value, policy.editorKind),
+    policy
+  };
+}
+function formatExcelEditorValue(value, editorKind) {
+  if (editorKind === "date") return toDateInputValue(value);
+  if (editorKind === "time") return toTimeInputValue(value);
+  if (editorKind === "datetime") return toDateTimeInputValue(value);
+  if (editorKind === "boolean") return value === true ? "true" : value === false ? "false" : formatExcelCellValue(value);
+  if (editorKind === "select" && isOptionLikeValue(value)) return String(value.value ?? value.label ?? "");
+  return formatExcelCellValue(value);
+}
+function getExcelEditorOptions(cell) {
+  if (cell.policy.editorKind === "boolean") {
+    return [
+      { value: "", label: "空" },
+      { value: "true", label: "是" },
+      { value: "false", label: "否" }
+    ];
+  }
+  const options = cell.policy.definition?.options;
+  if (!Array.isArray(options) || !options.length) {
+    return cell.editorValue ? [{ value: cell.editorValue, label: cell.displayValue || cell.editorValue }] : [{ value: "", label: "空" }];
+  }
+  const normalized = options.map((option) => ({
+    value: String(option?.value ?? ""),
+    label: String(option?.label ?? option?.value ?? "")
+  })).filter((option) => option.value || option.label);
+  if (cell.editorValue && !normalized.some((option) => option.value === cell.editorValue)) {
+    return [{ value: cell.editorValue, label: cell.displayValue || cell.editorValue }, ...normalized];
+  }
+  return normalized;
+}
+function validateExcelEditorValue(cell, editorValue) {
+  const trimmed = editorValue.trim();
+  switch (cell.policy.editorKind) {
+    case "number":
+    case "rating":
+      return trimmed && !Number.isFinite(Number(trimmed)) ? "请输入有效数字" : null;
+    case "date":
+      return isValidDateInput(trimmed) ? null : "日期格式应为 YYYY-MM-DD";
+    case "time":
+      return isValidTimeInput(trimmed) ? null : "时间格式应为 HH:mm";
+    case "datetime":
+      return isValidDateTimeInput(trimmed) ? null : "日期时间格式应为 YYYY-MM-DDTHH:mm";
+    case "select": {
+      const options = getExcelEditorOptions(cell);
+      return options.length && trimmed && !options.some((option) => option.value === trimmed) ? "请选择有效选项" : null;
+    }
+    default:
+      return null;
+  }
+}
+function parseExcelEditorValue(cell, editorValue) {
+  const raw = editorValue;
+  const trimmed = raw.trim();
+  switch (cell.policy.editorKind) {
+    case "number":
+    case "rating": {
+      if (!trimmed) return null;
+      const numeric = Number(trimmed);
+      return Number.isFinite(numeric) ? numeric : raw;
+    }
+    case "boolean": {
+      const lower = trimmed.toLowerCase();
+      if (["true", "1", "yes", "y", "是"].includes(lower)) return true;
+      if (["false", "0", "no", "n", "否"].includes(lower)) return false;
+      return null;
+    }
+    case "date":
+    case "time":
+    case "datetime":
+    case "select":
+      return trimmed;
+    case "tags":
+      return trimmed.split(/[,，\n]/).map((part) => part.trim()).filter(Boolean);
+    default:
+      return raw;
+  }
+}
+function areExcelCellValuesEqual(left2, right2) {
+  return formatExcelCellValue(left2) === formatExcelCellValue(right2);
+}
+function getExcelCellKey(itemId, field) {
+  return `${itemId}::${field}`;
+}
+function canInlineEditExcelCell(cell, canCommit = true) {
+  return !!canCommit && cell.policy.editable && cell.policy.commitMode === "inline";
+}
+function getExcelEditorDescriptor(kind) {
+  if (kind === "textarea") return { tag: "textarea", hint: "Enter 保存 · Shift+Enter 换行 · Esc 取消" };
+  if (kind === "number") return { tag: "input", type: "number", hint: "数字编辑器：Enter 保存 · Esc 取消" };
+  if (kind === "rating") return { tag: "input", type: "number", hint: "评分编辑器：输入数字，Enter 保存 · Esc 取消" };
+  if (kind === "date") return { tag: "input", type: "date", hint: "日期编辑器：Enter 保存 · Esc 取消" };
+  if (kind === "time") return { tag: "input", type: "time", hint: "时间编辑器：Enter 保存 · Esc 取消" };
+  if (kind === "datetime") return { tag: "input", type: "datetime-local", hint: "日期时间编辑器：Enter 保存 · Esc 取消" };
+  if (kind === "boolean") return { tag: "select", hint: "布尔编辑器：选择 是 / 否，Enter 保存 · Esc 取消" };
+  if (kind === "select") return { tag: "select", hint: "选项编辑器：选择后 Enter 保存 · Esc 取消" };
+  if (kind === "tags") return { tag: "input", type: "text", hint: "标签编辑器：逗号/换行分隔，# 会保留" };
+  return { tag: "input", type: "text", hint: "Enter 保存 · Esc 取消" };
+}
+function readKeyboardValue(event) {
+  const target = event.currentTarget;
+  return target.value;
+}
+function getReadonlyTitle(policyReason) {
+  return policyReason || "该字段不可在 Excel 单元格中直接编辑";
+}
+function getTypedInputProps(kind) {
+  if (kind === "number") return { step: "any" };
+  if (kind === "rating") return { step: 1, min: 0, max: 5 };
+  return {};
+}
+function isMarkdownInteractiveTarget(target) {
+  if (!(target instanceof HTMLElement)) return false;
+  return !!target.closest("a, button, input, textarea, select, .internal-link, .external-link, .tag");
+}
+function ExcelCell({
+  cell,
+  selected = false,
+  editing = false,
+  pending = false,
+  saved = false,
+  error,
+  canCommit = false,
+  style: style2,
+  fillDragging = false,
+  fillSource = false,
+  fillTarget = false,
+  contentDisplayMode = "previewText",
+  messageRenderPort,
+  onSelect,
+  onStartEdit,
+  onCancelEdit,
+  onCommitEdit,
+  onNavigate,
+  onPasteText,
+  onStartFillDrag,
+  onMoveFillDrag,
+  onFinishFillDrag,
+  onCancelFillDrag,
+  onOpenRecord
+}) {
+  const { item, field, value, displayValue, editorValue, policy } = cell;
+  const [draft, setDraft] = d(editorValue);
+  const inputRef = A$1(null);
+  const editable = canInlineEditExcelCell(cell, canCommit);
+  const readonly2 = !editable;
+  const descriptor = getExcelEditorDescriptor(policy.editorKind);
+  const editorOptions = getExcelEditorOptions(cell);
+  const cellKey = getExcelCellKey(cell.itemId, cell.canonicalField);
+  const isContentCell = cell.canonicalField === "content";
+  const contentText = typeof value === "string" ? value : "";
+  const showFullMarkdownContent = isContentCell && contentDisplayMode === "fullMarkdown" && !!contentText.trim();
+  y(() => {
+    if (editing) setDraft(editorValue);
+  }, [editing, editorValue]);
+  y(() => {
+    if (!editing) return;
+    const input = inputRef.current;
+    if (!input) return;
+    input.focus();
+    input.select?.();
+  }, [editing]);
+  const commit = (nextValue = draft) => {
+    if (!editing || pending) return;
+    onCommitEdit?.(cell, nextValue);
+  };
+  const handleCellClick = (event) => {
+    if (fillDragging) return;
+    if (event.metaKey || event.ctrlKey) {
+      onOpenRecord?.(item);
+      return;
+    }
+    onSelect?.(cell);
+  };
+  const handleDoubleClick = (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    if (editable) onStartEdit?.(cell);
+    else onSelect?.(cell);
+  };
+  const handleMarkdownClick = (event) => {
+    if (isMarkdownInteractiveTarget(event.target)) event.stopPropagation();
+  };
+  const handleMarkdownDoubleClick = (event) => {
+    if (isMarkdownInteractiveTarget(event.target)) event.stopPropagation();
+  };
+  const handleFillMouseDown = (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    if (!editable || pending || editing) return;
+    onStartFillDrag?.(cell);
+  };
+  const handleMouseEnter = () => {
+    if (fillDragging) onMoveFillDrag?.(cell);
+  };
+  const handleMouseUp = () => {
+    if (fillDragging) onFinishFillDrag?.(cell);
+  };
+  const navigate = (event, direction) => {
+    event.preventDefault();
+    event.stopPropagation();
+    onNavigate?.(cell, direction);
+  };
+  const handleEditorKeyDown = (event) => {
+    if (event.key === "Escape") {
+      event.preventDefault();
+      onCancelEdit?.();
+      return;
+    }
+    if (event.key === "Enter" && !(descriptor.tag === "textarea" && event.shiftKey)) {
+      event.preventDefault();
+      commit(readKeyboardValue(event));
+    }
+  };
+  const handleCellKeyDown = (event) => {
+    if (event.key === "Escape" && fillDragging) {
+      event.preventDefault();
+      onCancelFillDrag?.();
+      return;
+    }
+    if (editing) return;
+    if (event.key === "ArrowUp") return navigate(event, "up");
+    if (event.key === "ArrowDown") return navigate(event, "down");
+    if (event.key === "ArrowLeft") return navigate(event, "left");
+    if (event.key === "ArrowRight") return navigate(event, "right");
+    if (event.key === "Tab") return navigate(event, event.shiftKey ? "previous" : "next");
+    if ((event.key === "Enter" || event.key === "F2") && editable) {
+      event.preventDefault();
+      onStartEdit?.(cell);
+      return;
+    }
+  };
+  const handlePaste = (event) => {
+    if (editing) return;
+    const text2 = event.clipboardData?.getData("text/plain") || "";
+    if (!text2) return;
+    event.preventDefault();
+    event.stopPropagation();
+    onPasteText?.(cell, text2);
+  };
+  const title = error || (editable ? "双击/F2/Enter 编辑；方向键/Tab 移动；可粘贴多行多列；拖动右下角小方块可向同列覆盖；Ctrl/⌘ 点击打开完整编辑" : `${getReadonlyTitle(policy.reason)}；Ctrl/⌘ 点击可打开完整编辑`);
+  const className = [
+    "excel-view-cell",
+    editable ? "is-inline-editable" : "is-readonly",
+    policy.editable ? "is-policy-editable" : "is-policy-readonly",
+    policy.dangerLevel === "medium" ? "is-medium-risk" : "",
+    policy.dangerLevel === "high" ? "is-high-risk" : "",
+    isContentCell ? "is-content-cell" : "",
+    showFullMarkdownContent ? "is-content-expanded" : "",
+    selected ? "is-selected" : "",
+    editing ? "is-editing" : "",
+    pending ? "is-pending" : "",
+    saved && !pending && !error ? "is-saved" : "",
+    error ? "has-error" : "",
+    fillSource ? "is-fill-source" : "",
+    fillTarget ? "is-fill-target" : ""
+  ].filter(Boolean).join(" ");
+  return /* @__PURE__ */ u2(
+    "td",
+    {
+      "data-excel-cell-key": cellKey,
+      "data-field": field,
+      "data-canonical-field": policy.canonicalField,
+      "data-editable": editable ? "true" : "false",
+      "data-policy-editable": policy.editable ? "true" : "false",
+      "data-editor-kind": policy.editorKind,
+      "data-danger-level": policy.dangerLevel,
+      "data-content-display-mode": isContentCell ? contentDisplayMode : void 0,
+      "data-save-state": pending ? "pending" : error ? "error" : saved ? "saved" : "idle",
+      class: className,
+      style: style2,
+      title,
+      tabIndex: 0,
+      "aria-readonly": readonly2 ? "true" : "false",
+      "aria-invalid": error ? "true" : "false",
+      onClick: handleCellClick,
+      onDblClick: handleDoubleClick,
+      onMouseEnter: handleMouseEnter,
+      onMouseUp: handleMouseUp,
+      onKeyDown: handleCellKeyDown,
+      onPaste: handlePaste,
+      children: [
+        editing ? /* @__PURE__ */ u2("span", { class: "excel-view-cell-edit-wrap", children: [
+          descriptor.tag === "textarea" ? /* @__PURE__ */ u2(
+            "textarea",
+            {
+              ref: inputRef,
+              class: "excel-view-cell-editor excel-view-cell-editor-textarea",
+              value: draft,
+              disabled: pending,
+              onInput: (event) => setDraft(event.currentTarget.value),
+              onKeyDown: handleEditorKeyDown,
+              onBlur: () => commit()
+            }
+          ) : descriptor.tag === "select" ? /* @__PURE__ */ u2(
+            "select",
+            {
+              ref: inputRef,
+              class: "excel-view-cell-editor excel-view-cell-editor-select",
+              value: draft,
+              disabled: pending,
+              onChange: (event) => setDraft(event.currentTarget.value),
+              onKeyDown: handleEditorKeyDown,
+              onBlur: () => commit(),
+              children: editorOptions.map((option) => /* @__PURE__ */ u2("option", { value: option.value, children: option.label }, option.value))
+            }
+          ) : /* @__PURE__ */ u2(
+            "input",
+            {
+              ref: inputRef,
+              class: "excel-view-cell-editor",
+              type: descriptor.type || "text",
+              value: draft,
+              disabled: pending,
+              ...getTypedInputProps(policy.editorKind),
+              onInput: (event) => setDraft(event.currentTarget.value),
+              onKeyDown: handleEditorKeyDown,
+              onBlur: () => commit()
+            }
+          ),
+          /* @__PURE__ */ u2("span", { class: "excel-view-cell-edit-hint", children: descriptor.hint })
+        ] }) : showFullMarkdownContent ? /* @__PURE__ */ u2(
+          MarkdownContent,
+          {
+            renderPort: messageRenderPort,
+            content: contentText,
+            contentType: "markdown",
+            sourcePath: item.file?.path || "",
+            className: "excel-view-cell-md",
+            onClick: handleMarkdownClick,
+            onDblClick: handleMarkdownDoubleClick
+          }
+        ) : isContentCell && contentText ? /* @__PURE__ */ u2("span", { class: "excel-view-content-link", children: truncateExcelCellText(contentText) }) : /* @__PURE__ */ u2("span", { class: "excel-view-cell-value", children: displayValue }),
+        !editing && selected ? /* @__PURE__ */ u2("span", { class: "excel-view-cell-affordance", "aria-hidden": "true", children: editable ? "✎" : "🔒" }) : null,
+        selected && editable && !editing && !pending ? /* @__PURE__ */ u2(
+          "span",
+          {
+            class: "excel-view-fill-handle",
+            "aria-label": "拖动覆盖同列",
+            title: "拖动覆盖同列单元格",
+            onMouseDown: handleFillMouseDown
+          }
+        ) : null,
+        pending ? /* @__PURE__ */ u2("span", { class: "excel-view-cell-status", "aria-label": "保存中", children: "…" }) : null,
+        saved && !pending && !error ? /* @__PURE__ */ u2("span", { class: "excel-view-cell-status is-saved", "aria-label": "已保存", children: "✓" }) : null,
+        error ? /* @__PURE__ */ u2("span", { class: "excel-view-cell-error", "aria-label": error, children: "!" }) : null
+      ]
+    }
+  );
+}
+function getCellKey(cell) {
+  return getExcelCellKey(cell.itemId, cell.canonicalField);
+}
+function getColumnBadge(column2, canCommitCells) {
+  if (!column2.editable || !canCommitCells) return "只读";
+  if (column2.dangerLevel === "medium") return "谨慎";
+  return "可编辑";
+}
+function getColumnTitle(column2, canCommitCells) {
+  if (!canCommitCells) return "当前视图未配置保存处理器，所有字段暂不可编辑";
+  if (!column2.editable) return column2.readonlyReason || "该字段不可在 Excel 单元格内直接编辑";
+  if (column2.dangerLevel === "medium") return "可编辑字段，但会影响时间、标签等结构化内容，请谨慎修改";
+  return "可编辑字段：双击单元格可编辑；拖动表头右侧边缘可调整列宽";
+}
+function getColumnWidth(column2, width2) {
+  if (Number.isFinite(width2) && width2) return Math.max(80, Math.min(640, Math.round(width2)));
+  if (column2.canonicalField === "content") return 240;
+  if (column2.canonicalField === "title") return 180;
+  if (column2.editorKind === "date" || column2.editorKind === "time") return 128;
+  if (column2.editorKind === "number" || column2.editorKind === "rating") return 104;
+  return 150;
+}
+function normalizeClipboardText(text2) {
+  return String(text2 || "").replace(/\r\n/g, "\n").replace(/\r/g, "\n");
+}
+function parseClipboardMatrix(text2) {
+  const normalized = normalizeClipboardText(text2);
+  const withoutFinalNewline = normalized.endsWith("\n") ? normalized.slice(0, -1) : normalized;
+  if (!withoutFinalNewline) return [[""]];
+  return withoutFinalNewline.split("\n").map((row) => row.split("	"));
+}
+function focusCellElement(table, cellKey) {
+  if (!table || !cellKey) return;
+  const escaped = cellKey.replace(/\\/g, "\\\\").replace(/"/g, '\\"');
+  window.requestAnimationFrame(() => {
+    const element = table.querySelector(`[data-excel-cell-key="${escaped}"]`);
+    element?.focus?.();
+  });
+}
+function ExcelGrid({
+  items,
+  columns,
+  selectedCellKey,
+  editingCellKey,
+  pendingCellKeys,
+  savedCellKeys,
+  cellErrors,
+  valueOverrides,
+  canCommitCells = false,
+  columnWidths,
+  contentDisplayMode = "previewText",
+  messageRenderPort,
+  fillDragSourceCell,
+  fillDragTargetCellKey,
+  onSelectCell,
+  onStartEdit,
+  onCancelEdit,
+  onCommitEdit,
+  onCommitBatchEdits,
+  onStartFillDrag,
+  onMoveFillDrag,
+  onFinishFillDrag,
+  onCancelFillDrag,
+  onColumnWidthDraftChange,
+  onColumnWidthCommit,
+  onOpenRecord
+}) {
+  const tableRef = A$1(null);
+  const makeCell = (item, columnKey) => {
+    const optimisticKey = getExcelCellKey(item.id, columnKey);
+    const cell = buildExcelCellModel(item, columnKey, valueOverrides?.[optimisticKey]);
+    const canonicalKey = getExcelCellKey(cell.itemId, cell.canonicalField);
+    if (valueOverrides?.[canonicalKey] !== void 0 && canonicalKey !== optimisticKey) {
+      return buildExcelCellModel(item, columnKey, valueOverrides[canonicalKey]);
+    }
+    return cell;
+  };
+  const buildFillRange = (target) => {
+    const source = fillDragSourceCell;
+    if (!source) return [];
+    if (source.canonicalField !== target.canonicalField) return [];
+    if (!canInlineEditExcelCell(source) || !canInlineEditExcelCell(target)) return [];
+    const sourceIndex = items.findIndex((item) => item.id === source.itemId);
+    const targetIndex = items.findIndex((item) => item.id === target.itemId);
+    if (sourceIndex < 0 || targetIndex < 0) return [];
+    const from2 = Math.min(sourceIndex, targetIndex);
+    const to = Math.max(sourceIndex, targetIndex);
+    const columnKey = source.field;
+    return items.slice(from2, to + 1).map((item) => makeCell(item, columnKey));
+  };
+  const finishFillDrag = (target) => {
+    onFinishFillDrag?.(buildFillRange(target));
+  };
+  const findCellPosition = (cell) => ({
+    rowIndex: items.findIndex((item) => item.id === cell.itemId),
+    colIndex: columns.findIndex((column2) => column2.canonicalField === cell.canonicalField)
+  });
+  const selectByPosition = (rowIndex, colIndex) => {
+    if (!items.length || !columns.length) return;
+    const boundedRow = Math.max(0, Math.min(items.length - 1, rowIndex));
+    const boundedCol = Math.max(0, Math.min(columns.length - 1, colIndex));
+    const nextCell = makeCell(items[boundedRow], columns[boundedCol].key);
+    onSelectCell?.(nextCell);
+    focusCellElement(tableRef.current, getCellKey(nextCell));
+  };
+  const navigateCell = (cell, direction) => {
+    const { rowIndex, colIndex } = findCellPosition(cell);
+    if (rowIndex < 0 || colIndex < 0) return;
+    if (direction === "up") return selectByPosition(rowIndex - 1, colIndex);
+    if (direction === "down") return selectByPosition(rowIndex + 1, colIndex);
+    if (direction === "left") return selectByPosition(rowIndex, colIndex - 1);
+    if (direction === "right") return selectByPosition(rowIndex, colIndex + 1);
+    const linearIndex = rowIndex * columns.length + colIndex + (direction === "previous" ? -1 : 1);
+    const bounded = Math.max(0, Math.min(items.length * columns.length - 1, linearIndex));
+    selectByPosition(Math.floor(bounded / columns.length), bounded % columns.length);
+  };
+  const pasteFromCell = (startCell, text2) => {
+    if (!onCommitBatchEdits || !canCommitCells) return;
+    const { rowIndex, colIndex } = findCellPosition(startCell);
+    if (rowIndex < 0 || colIndex < 0) return;
+    const matrix = parseClipboardMatrix(text2);
+    const edits = [];
+    let lastCell = null;
+    for (let rowOffset = 0; rowOffset < matrix.length; rowOffset += 1) {
+      for (let colOffset = 0; colOffset < matrix[rowOffset].length; colOffset += 1) {
+        const targetRow = rowIndex + rowOffset;
+        const targetCol = colIndex + colOffset;
+        if (targetRow >= items.length || targetCol >= columns.length) continue;
+        const targetCell = makeCell(items[targetRow], columns[targetCol].key);
+        lastCell = targetCell;
+        if (!canInlineEditExcelCell(targetCell, canCommitCells)) continue;
+        edits.push({ cell: targetCell, editorValue: matrix[rowOffset][colOffset] });
+      }
+    }
+    if (lastCell) {
+      onSelectCell?.(lastCell);
+      focusCellElement(tableRef.current, getCellKey(lastCell));
+    }
+    if (edits.length) onCommitBatchEdits(edits, "paste");
+  };
+  const startColumnResize = (event, column2) => {
+    event.preventDefault();
+    event.stopPropagation();
+    const th = event.currentTarget.closest("th");
+    const startX = event.clientX;
+    const startWidth = getColumnWidth(column2, columnWidths?.[column2.key]) || th?.offsetWidth || 150;
+    const move = (moveEvent) => {
+      const nextWidth = startWidth + (moveEvent.clientX - startX);
+      onColumnWidthDraftChange?.(column2.key, nextWidth);
+    };
+    const up = (upEvent) => {
+      const nextWidth = startWidth + (upEvent.clientX - startX);
+      window.removeEventListener("mousemove", move, true);
+      window.removeEventListener("mouseup", up, true);
+      document.body.classList.remove("excel-view-is-resizing-column");
+      onColumnWidthCommit?.(column2.key, nextWidth);
+    };
+    document.body.classList.add("excel-view-is-resizing-column");
+    window.addEventListener("mousemove", move, true);
+    window.addEventListener("mouseup", up, true);
+  };
+  return /* @__PURE__ */ u2("table", { ref: tableRef, class: "think-table excel-view-table", children: [
+    /* @__PURE__ */ u2("colgroup", { children: columns.map((column2) => {
+      const width2 = getColumnWidth(column2, columnWidths?.[column2.key]);
+      return /* @__PURE__ */ u2("col", { "data-field": column2.key, style: { width: `${width2}px` } }, column2.key);
+    }) }),
+    /* @__PURE__ */ u2("thead", { children: /* @__PURE__ */ u2("tr", { children: columns.map((column2) => {
+      const columnEditable = column2.editable && canCommitCells;
+      const width2 = getColumnWidth(column2, columnWidths?.[column2.key]);
+      return /* @__PURE__ */ u2(
+        "th",
+        {
+          "data-field": column2.key,
+          "data-canonical-field": column2.canonicalField,
+          "data-editable": columnEditable ? "true" : "false",
+          "data-editor-kind": column2.editorKind,
+          "data-danger-level": column2.dangerLevel,
+          title: getColumnTitle(column2, canCommitCells),
+          style: { width: `${width2}px`, minWidth: `${width2}px`, maxWidth: `${width2}px` },
+          children: [
+            /* @__PURE__ */ u2("span", { class: "excel-view-header-stack", children: [
+              /* @__PURE__ */ u2("span", { class: "excel-view-header-label", children: column2.label }),
+              /* @__PURE__ */ u2("span", { class: "excel-view-header-badge", children: getColumnBadge(column2, canCommitCells) })
+            ] }),
+            /* @__PURE__ */ u2(
+              "span",
+              {
+                class: "excel-view-column-resize-handle",
+                role: "separator",
+                "aria-orientation": "vertical",
+                title: "拖动调整列宽",
+                onMouseDown: (event) => startColumnResize(event, column2)
+              }
+            )
+          ]
+        },
+        column2.key
+      );
+    }) }) }),
+    /* @__PURE__ */ u2("tbody", { children: items.map((item) => /* @__PURE__ */ u2("tr", { "data-item-id": item.id, children: columns.map((column2) => {
+      const cell = makeCell(item, column2.key);
+      const canonicalCellKey = getCellKey(cell);
+      const fillDragging = !!fillDragSourceCell;
+      const width2 = getColumnWidth(column2, columnWidths?.[column2.key]);
+      return /* @__PURE__ */ u2(
+        ExcelCell,
+        {
+          cell,
+          selected: selectedCellKey === canonicalCellKey,
+          editing: editingCellKey === canonicalCellKey,
+          pending: pendingCellKeys?.has(canonicalCellKey),
+          saved: savedCellKeys?.has(canonicalCellKey),
+          error: cellErrors?.[canonicalCellKey],
+          canCommit: canCommitCells,
+          fillDragging,
+          fillSource: fillDragSourceCell ? getCellKey(fillDragSourceCell) === canonicalCellKey : false,
+          fillTarget: fillDragTargetCellKey === canonicalCellKey && fillDragSourceCell?.canonicalField === cell.canonicalField,
+          contentDisplayMode,
+          messageRenderPort,
+          onSelect: onSelectCell,
+          onStartEdit,
+          onCancelEdit,
+          onCommitEdit,
+          onNavigate: navigateCell,
+          onPasteText: pasteFromCell,
+          onStartFillDrag,
+          onMoveFillDrag,
+          onFinishFillDrag: finishFillDrag,
+          onCancelFillDrag,
+          onOpenRecord,
+          style: { width: `${width2}px`, minWidth: `${width2}px`, maxWidth: `${width2}px` }
+        },
+        column2.key
+      );
+    }) }, item.id)) })
+  ] });
+}
+function addPendingKey(source, key) {
+  const next2 = new Set(source);
+  next2.add(key);
+  return next2;
+}
+function addPendingKeys(source, keys) {
+  const next2 = new Set(source);
+  for (const key of keys) next2.add(key);
+  return next2;
+}
+function removePendingKey(source, key) {
+  const next2 = new Set(source);
+  next2.delete(key);
+  return next2;
+}
+function removePendingKeys(source, keys) {
+  const next2 = new Set(source);
+  for (const key of keys) next2.delete(key);
+  return next2;
+}
+function addSavedKey(source, key) {
+  const next2 = new Set(source);
+  next2.add(key);
+  return next2;
+}
+function removeSavedKey(source, key) {
+  const next2 = new Set(source);
+  next2.delete(key);
+  return next2;
+}
+function uniqueKeys(keys) {
+  return Array.from(new Set(keys));
+}
+function useExcelCellEditing(options) {
+  const { onCellCommit } = options;
+  const [selectedCellKey, setSelectedCellKey] = d(null);
+  const [editingCellKey, setEditingCellKey] = d(null);
+  const [pendingCellKeys, setPendingCellKeys] = d(() => /* @__PURE__ */ new Set());
+  const [cellErrors, setCellErrors] = d({});
+  const [valueOverrides, setValueOverrides] = d({});
+  const [savedCellKeys, setSavedCellKeys] = d(() => /* @__PURE__ */ new Set());
+  const saveFlashTimers = A$1({});
+  const commitQueueRef = A$1(Promise.resolve());
+  const [fillDragSourceCell, setFillDragSourceCell] = d(null);
+  const [fillDragTargetCellKey, setFillDragTargetCellKey] = d(null);
+  y(() => () => {
+    for (const timer of Object.values(saveFlashTimers.current)) clearTimeout(timer);
+    saveFlashTimers.current = {};
+  }, []);
+  const enqueueCommitTask = q$1(async (task) => {
+    const run = commitQueueRef.current.then(task, task);
+    commitQueueRef.current = run.catch(() => void 0);
+    await run;
+  }, []);
+  const flashSavedKey = q$1((key) => {
+    const existing = saveFlashTimers.current[key];
+    if (existing) clearTimeout(existing);
+    setSavedCellKeys((prev2) => addSavedKey(prev2, key));
+    saveFlashTimers.current[key] = setTimeout(() => {
+      setSavedCellKeys((prev2) => removeSavedKey(prev2, key));
+      delete saveFlashTimers.current[key];
+    }, 1200);
+  }, []);
+  const selectCell = q$1((cell) => {
+    setSelectedCellKey(getExcelCellKey(cell.itemId, cell.canonicalField));
+  }, []);
+  const startEdit = q$1((cell) => {
+    const key = getExcelCellKey(cell.itemId, cell.canonicalField);
+    setSelectedCellKey(key);
+    if (!onCellCommit) {
+      setCellErrors((prev2) => ({ ...prev2, [key]: "当前视图没有配置保存处理器" }));
+      return;
+    }
+    if (!canInlineEditExcelCell(cell)) {
+      setCellErrors((prev2) => ({ ...prev2, [key]: cell.policy.reason || "该字段不可内联编辑" }));
+      return;
+    }
+    setEditingCellKey(key);
+    setCellErrors((prev2) => ({ ...prev2, [key]: void 0 }));
+  }, [onCellCommit]);
+  const cancelEdit = q$1(() => {
+    setEditingCellKey(null);
+  }, []);
+  const commitCellValue = q$1(async (cell, nextValue, reason) => {
+    const key = getExcelCellKey(cell.itemId, cell.canonicalField);
+    if (!onCellCommit) {
+      setCellErrors((prev2) => ({ ...prev2, [key]: "当前视图没有配置保存处理器" }));
+      return false;
+    }
+    if (!canInlineEditExcelCell(cell)) {
+      setCellErrors((prev2) => ({ ...prev2, [key]: cell.policy.reason || "该字段不可内联编辑" }));
+      return false;
+    }
+    if (areExcelCellValuesEqual(cell.value, nextValue)) return true;
+    try {
+      const result = await onCellCommit({
+        item: cell.item,
+        itemId: cell.itemId,
+        field: cell.field,
+        canonicalField: cell.canonicalField,
+        oldValue: cell.value,
+        nextValue,
+        reason
+      });
+      if (!result?.ok) {
+        setCellErrors((prev2) => ({ ...prev2, [key]: result?.message || "保存失败" }));
+        return false;
+      }
+      const normalizedValue = result.normalizedValue !== void 0 ? result.normalizedValue : nextValue;
+      setValueOverrides((prev2) => ({ ...prev2, [key]: normalizedValue }));
+      setCellErrors((prev2) => ({ ...prev2, [key]: void 0 }));
+      flashSavedKey(key);
+      return true;
+    } catch (error) {
+      setCellErrors((prev2) => ({ ...prev2, [key]: error instanceof Error ? error.message : "保存失败" }));
+      return false;
+    }
+  }, [flashSavedKey, onCellCommit]);
+  const commitBatchEdits = q$1(async (edits, reason) => {
+    if (!edits.length) return;
+    const prepared = edits.map((edit) => {
+      const key = getExcelCellKey(edit.cell.itemId, edit.cell.canonicalField);
+      const validationMessage = validateExcelEditorValue(edit.cell, edit.editorValue);
+      const nextValue = validationMessage ? void 0 : parseExcelEditorValue(edit.cell, edit.editorValue);
+      return { ...edit, key, validationMessage, nextValue };
+    });
+    const invalid = prepared.filter((edit) => edit.validationMessage);
+    if (invalid.length) {
+      setCellErrors((prev2) => {
+        const next2 = { ...prev2 };
+        for (const edit of invalid) next2[edit.key] = edit.validationMessage || "字段值无效";
+        return next2;
+      });
+    }
+    const valid = prepared.filter((edit) => !edit.validationMessage && canInlineEditExcelCell(edit.cell));
+    if (!valid.length) return;
+    const keys = uniqueKeys(valid.map((edit) => edit.key));
+    setEditingCellKey(null);
+    setSelectedCellKey(valid[valid.length - 1].key);
+    setPendingCellKeys((prev2) => addPendingKeys(prev2, keys));
+    setCellErrors((prev2) => {
+      const next2 = { ...prev2 };
+      for (const key of keys) next2[key] = void 0;
+      return next2;
+    });
+    try {
+      await enqueueCommitTask(async () => {
+        for (const edit of valid) {
+          await commitCellValue(edit.cell, edit.nextValue, reason);
+        }
+      });
+    } finally {
+      setPendingCellKeys((prev2) => removePendingKeys(prev2, keys));
+    }
+  }, [commitCellValue, enqueueCommitTask]);
+  const commitEdit = q$1(async (cell, nextEditorValue) => {
+    const key = getExcelCellKey(cell.itemId, cell.canonicalField);
+    const validationMessage = validateExcelEditorValue(cell, nextEditorValue);
+    if (validationMessage) {
+      setSelectedCellKey(key);
+      setCellErrors((prev2) => ({ ...prev2, [key]: validationMessage }));
+      return;
+    }
+    const nextValue = parseExcelEditorValue(cell, nextEditorValue);
+    setSelectedCellKey(key);
+    setEditingCellKey(null);
+    setCellErrors((prev2) => ({ ...prev2, [key]: void 0 }));
+    setPendingCellKeys((prev2) => addPendingKey(prev2, key));
+    try {
+      await enqueueCommitTask(async () => {
+        await commitCellValue(cell, nextValue, "inline-edit");
+      });
+    } finally {
+      setPendingCellKeys((prev2) => removePendingKey(prev2, key));
+    }
+  }, [commitCellValue, enqueueCommitTask]);
+  const startFillDrag = q$1((cell) => {
+    if (!onCellCommit || !canInlineEditExcelCell(cell)) return;
+    const key = getExcelCellKey(cell.itemId, cell.canonicalField);
+    setSelectedCellKey(key);
+    setFillDragSourceCell(cell);
+    setFillDragTargetCellKey(key);
+    setCellErrors((prev2) => ({ ...prev2, [key]: void 0 }));
+  }, [onCellCommit]);
+  const moveFillDrag = q$1((cell) => {
+    setFillDragTargetCellKey(getExcelCellKey(cell.itemId, cell.canonicalField));
+  }, []);
+  const cancelFillDrag = q$1(() => {
+    setFillDragSourceCell(null);
+    setFillDragTargetCellKey(null);
+  }, []);
+  const finishFillDrag = q$1(async (cells) => {
+    const source = fillDragSourceCell;
+    setFillDragSourceCell(null);
+    setFillDragTargetCellKey(null);
+    if (!source || !cells.length) return;
+    const targetCells = cells.filter((cell) => cell.itemId !== source.itemId && cell.canonicalField === source.canonicalField && canInlineEditExcelCell(cell));
+    if (!targetCells.length) return;
+    await commitBatchEdits(targetCells.map((cell) => ({ cell, editorValue: source.editorValue })), "fill-drag");
+  }, [commitBatchEdits, fillDragSourceCell]);
+  const resetTransientState = q$1(() => {
+    setSelectedCellKey(null);
+    setEditingCellKey(null);
+    setPendingCellKeys(/* @__PURE__ */ new Set());
+    setCellErrors({});
+    setValueOverrides({});
+    for (const timer of Object.values(saveFlashTimers.current)) clearTimeout(timer);
+    saveFlashTimers.current = {};
+    setSavedCellKeys(/* @__PURE__ */ new Set());
+    setFillDragSourceCell(null);
+    setFillDragTargetCellKey(null);
+  }, []);
+  return {
+    selectedCellKey,
+    editingCellKey,
+    pendingCellKeys,
+    cellErrors,
+    valueOverrides,
+    savedCellKeys,
+    fillDragSourceCell,
+    fillDragTargetCellKey,
+    selectCell,
+    startEdit,
+    cancelEdit,
+    commitEdit,
+    commitBatchEdits,
+    startFillDrag,
+    moveFillDrag,
+    finishFillDrag,
+    cancelFillDrag,
+    resetTransientState
+  };
+}
+function isNativeInteractiveTarget(target) {
+  return target instanceof HTMLElement && !!target.closest('input, textarea, select, button, a, [contenteditable="true"]');
+}
+function stopObsidianPreviewEvent(event) {
+  event.stopPropagation();
+}
+function stopObsidianPreviewDoubleClick(event) {
+  event.stopPropagation();
+  if (!isNativeInteractiveTarget(event.target)) {
+    event.preventDefault();
+  }
+}
+function getObsidianEventBoundaryProps() {
+  return {
+    onPointerDown: stopObsidianPreviewEvent,
+    onMouseDown: stopObsidianPreviewEvent,
+    onMouseUp: stopObsidianPreviewEvent,
+    onClick: stopObsidianPreviewEvent,
+    onDblClick: stopObsidianPreviewDoubleClick
+  };
+}
+function normalizeColumnWidth(width2) {
+  if (!Number.isFinite(width2)) return 160;
+  return Math.max(80, Math.min(640, Math.round(width2)));
+}
+function normalizeColumnWidths(widths) {
+  if (!widths) return {};
+  const next2 = {};
+  for (const [field, width2] of Object.entries(widths)) {
+    if (!field) continue;
+    next2[field] = normalizeColumnWidth(Number(width2));
+  }
+  return next2;
+}
+function normalizeContentDisplayMode(mode) {
+  return mode === "fullMarkdown" ? "fullMarkdown" : "previewText";
+}
+function getNextContentDisplayMode(mode) {
+  return mode === "fullMarkdown" ? "previewText" : "fullMarkdown";
+}
+function ExcelView({
+  items,
+  fields,
+  availableFields,
+  excelConfig,
+  onFieldsChange,
+  onExcelConfigChange,
+  onCellCommit,
+  onOpenRecord,
+  messageRenderPort
+}) {
+  const discoveredFields = T$1(() => getAllFields(items), [items]);
+  const normalizedAvailableFields = T$1(() => normalizeDisplayFields(
+    availableFields?.length ? availableFields : discoveredFields,
+    { includeUnknown: false }
+  ), [availableFields, discoveredFields]);
+  const displayFields = T$1(() => normalizeDisplayFields(
+    fields && fields.length ? fields : normalizedAvailableFields,
+    {
+      availableFields: normalizedAvailableFields,
+      includeUnknown: true,
+      fallbackFields: normalizedAvailableFields
+    }
+  ), [fields, normalizedAvailableFields]);
+  const columns = T$1(() => buildExcelColumns(displayFields), [displayFields]);
+  const itemSignature = T$1(() => items.map((item) => `${item.id}:${item.modified ?? ""}`).join("|"), [items]);
+  const persistedColumnWidths = T$1(() => normalizeColumnWidths(excelConfig?.columnWidths), [excelConfig?.columnWidths]);
+  const persistedContentDisplayMode = T$1(
+    () => normalizeContentDisplayMode(excelConfig?.contentDisplayMode),
+    [excelConfig?.contentDisplayMode]
+  );
+  const editing = useExcelCellEditing({ onCellCommit });
+  const resetTransientState = editing.resetTransientState;
+  const editableColumnCount = columns.filter((column2) => column2.editable).length;
+  const readonlyColumnCount = Math.max(0, columns.length - editableColumnCount);
+  const [fieldConfigSaving, setFieldConfigSaving] = d(false);
+  const [fieldConfigError, setFieldConfigError] = d(null);
+  const [excelConfigSaving, setExcelConfigSaving] = d(false);
+  const [localColumnWidths, setLocalColumnWidths] = d(persistedColumnWidths);
+  const [localContentDisplayMode, setLocalContentDisplayMode] = d(persistedContentDisplayMode);
+  const isFullMarkdownContent = localContentDisplayMode === "fullMarkdown";
+  const hasContentColumn = T$1(() => columns.some((column2) => column2.canonicalField === "content"), [columns]);
+  const contentModeButtonTitle = !hasContentColumn ? "当前表格未显示内容字段，请先在字段栏添加 content/内容字段" : excelConfigSaving ? "正在保存 Excel 视图配置" : isFullMarkdownContent ? "当前：内容字段显示完整 Markdown；点击切回短文本预览" : "当前：内容字段短文本预览；点击显示完整 Markdown";
+  y(() => {
+    resetTransientState();
+  }, [itemSignature, resetTransientState]);
+  y(() => {
+    setLocalColumnWidths(persistedColumnWidths);
+  }, [persistedColumnWidths]);
+  y(() => {
+    setLocalContentDisplayMode(persistedContentDisplayMode);
+  }, [persistedContentDisplayMode]);
+  const handleFieldsChange = q$1(async (nextFields) => {
+    if (!onFieldsChange || fieldConfigSaving) return;
+    const normalizedNextFields = normalizeDisplayFields(nextFields, {
+      availableFields: normalizedAvailableFields,
+      includeUnknown: true,
+      fallbackFields: displayFields
+    });
+    setFieldConfigSaving(true);
+    setFieldConfigError(null);
+    try {
+      await onFieldsChange(normalizedNextFields);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "字段设置保存失败";
+      setFieldConfigError(message);
+    } finally {
+      setFieldConfigSaving(false);
+    }
+  }, [displayFields, fieldConfigSaving, normalizedAvailableFields, onFieldsChange]);
+  const persistExcelConfig = q$1(async (nextConfig, rollback) => {
+    if (!onExcelConfigChange) return;
+    setExcelConfigSaving(true);
+    try {
+      await onExcelConfigChange(nextConfig);
+    } catch (error) {
+      diagnosticError("[ExcelView] 保存 Excel 视图配置失败", error);
+      rollback?.();
+    } finally {
+      setExcelConfigSaving(false);
+    }
+  }, [onExcelConfigChange]);
+  const handleColumnWidthDraftChange = q$1((field, width2) => {
+    const nextWidth = normalizeColumnWidth(width2);
+    setLocalColumnWidths((prev2) => ({ ...prev2, [field]: nextWidth }));
+  }, []);
+  const handleColumnWidthCommit = q$1(async (field, width2) => {
+    const nextWidth = normalizeColumnWidth(width2);
+    const nextColumnWidths = {
+      ...localColumnWidths,
+      [field]: nextWidth
+    };
+    setLocalColumnWidths(nextColumnWidths);
+    await persistExcelConfig({
+      ...excelConfig || {},
+      columnWidths: nextColumnWidths,
+      contentDisplayMode: localContentDisplayMode
+    }, () => setLocalColumnWidths(persistedColumnWidths));
+  }, [excelConfig, localColumnWidths, localContentDisplayMode, persistedColumnWidths, persistExcelConfig]);
+  const handleContentDisplayToggle = q$1(async () => {
+    if (!hasContentColumn || excelConfigSaving) return;
+    const nextMode = getNextContentDisplayMode(localContentDisplayMode);
+    const previousMode = localContentDisplayMode;
+    setLocalContentDisplayMode(nextMode);
+    await persistExcelConfig({
+      ...excelConfig || {},
+      columnWidths: localColumnWidths,
+      contentDisplayMode: nextMode
+    }, () => setLocalContentDisplayMode(previousMode));
+  }, [excelConfig, excelConfigSaving, hasContentColumn, localColumnWidths, localContentDisplayMode, persistExcelConfig]);
+  return /* @__PURE__ */ u2(
+    "div",
+    {
+      class: "excel-view-shell",
+      "data-inline-edit": onCellCommit ? "enabled" : "disabled",
+      "data-column-config": onFieldsChange ? "enabled" : "disabled",
+      "data-excel-config-saving": excelConfigSaving ? "true" : "false",
+      "data-content-display-mode": localContentDisplayMode,
+      ...getObsidianEventBoundaryProps(),
+      children: [
+        /* @__PURE__ */ u2("div", { class: "excel-view-toolbar", "aria-label": "Excel 视图编辑说明", children: [
+          /* @__PURE__ */ u2("span", { class: "excel-view-legend-chip is-editable", children: [
+            "可编辑 ",
+            editableColumnCount
+          ] }),
+          /* @__PURE__ */ u2("span", { class: "excel-view-legend-chip is-readonly", children: [
+            "只读 ",
+            readonlyColumnCount
+          ] }),
+          /* @__PURE__ */ u2(
+            "button",
+            {
+              type: "button",
+              class: `excel-view-content-mode-button ${isFullMarkdownContent ? "is-active" : ""} ${excelConfigSaving ? "is-saving" : ""}`,
+              "aria-pressed": isFullMarkdownContent ? "true" : "false",
+              title: contentModeButtonTitle,
+              disabled: !hasContentColumn || excelConfigSaving,
+              onClick: handleContentDisplayToggle,
+              children: [
+                "内容：",
+                excelConfigSaving ? "保存中…" : isFullMarkdownContent ? "全文 Markdown" : "预览"
+              ]
+            }
+          ),
+          /* @__PURE__ */ u2("span", { class: "excel-view-legend-note", children: "双击/Enter/F2 编辑；方向键/Tab 导航；支持多行多列粘贴；内容字段可切换预览或全文 Markdown。" })
+        ] }),
+        /* @__PURE__ */ u2(
+          ExcelColumnToolbar,
+          {
+            fields: displayFields,
+            availableFields: normalizedAvailableFields,
+            saving: fieldConfigSaving,
+            error: fieldConfigError,
+            disabled: !onFieldsChange,
+            getFieldLabel,
+            getFieldGroupLabel: getFieldCategoryLabel,
+            onFieldsChange: handleFieldsChange
+          }
+        ),
+        /* @__PURE__ */ u2(
+          ExcelGrid,
+          {
+            items,
+            columns,
+            selectedCellKey: editing.selectedCellKey,
+            editingCellKey: editing.editingCellKey,
+            pendingCellKeys: editing.pendingCellKeys,
+            savedCellKeys: editing.savedCellKeys,
+            cellErrors: editing.cellErrors,
+            valueOverrides: editing.valueOverrides,
+            canCommitCells: !!onCellCommit,
+            columnWidths: localColumnWidths,
+            contentDisplayMode: localContentDisplayMode,
+            messageRenderPort,
+            fillDragSourceCell: editing.fillDragSourceCell,
+            fillDragTargetCellKey: editing.fillDragTargetCellKey,
+            onSelectCell: editing.selectCell,
+            onStartEdit: editing.startEdit,
+            onCancelEdit: editing.cancelEdit,
+            onCommitEdit: editing.commitEdit,
+            onCommitBatchEdits: editing.commitBatchEdits,
+            onStartFillDrag: editing.startFillDrag,
+            onMoveFillDrag: editing.moveFillDrag,
+            onFinishFillDrag: editing.finishFillDrag,
+            onCancelFillDrag: editing.cancelFillDrag,
+            onColumnWidthDraftChange: handleColumnWidthDraftChange,
+            onColumnWidthCommit: handleColumnWidthCommit,
+            onOpenRecord
+          }
+        )
+      ]
+    }
+  );
+}
+function ThemeTreeSelectTrigger({
+  open,
+  onToggleOpen,
+  displayText,
+  hasSelection,
+  allowClear,
+  disabled,
+  size,
+  onClear,
+  anchorRef
+}) {
+  return /* @__PURE__ */ u2(
+    Box,
+    {
+      ref: anchorRef,
+      onClick: () => !disabled && onToggleOpen(),
+      sx: {
+        display: "flex",
+        alignItems: "center",
+        gap: 0.5,
+        px: 1.5,
+        py: size === "small" ? 0.5 : 1,
+        border: "1px solid var(--background-modifier-border)",
+        borderRadius: 1,
+        cursor: disabled ? "not-allowed" : "pointer",
+        opacity: disabled ? 0.5 : 1,
+        bgcolor: "background.paper",
+        "&:hover": disabled ? {} : {
+          borderColor: "primary.main"
+        }
+      },
+      children: [
+        /* @__PURE__ */ u2(
+          Typography2,
+          {
+            variant: "body2",
+            sx: {
+              flex: 1,
+              color: hasSelection ? "text.primary" : "text.secondary",
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              whiteSpace: "nowrap"
+            },
+            children: displayText
+          }
+        ),
+        allowClear && hasSelection && !disabled && /* @__PURE__ */ u2(IconButton2, { size: "small", onClick: onClear, sx: { p: 0.25 }, children: /* @__PURE__ */ u2(ClearIcon, { fontSize: "small" }) }),
+        /* @__PURE__ */ u2(IconButton2, { size: "small", sx: { p: 0.25 }, children: open ? /* @__PURE__ */ u2(ExpandMoreIcon, { fontSize: "small" }) : /* @__PURE__ */ u2(ChevronRightIcon, { fontSize: "small" }) })
+      ]
+    }
+  );
+}
+function SearchBox({ value, onChange }) {
+  return /* @__PURE__ */ u2(Box, { sx: { p: 1, borderBottom: "1px solid var(--background-modifier-border)" }, children: /* @__PURE__ */ u2(
+    TextField2,
+    {
+      fullWidth: true,
+      size: "small",
+      placeholder: "搜索主题...",
+      value,
+      onChange: (e2) => onChange(e2.target.value),
+      InputProps: {
+        startAdornment: /* @__PURE__ */ u2(InputAdornment2, { position: "start", children: /* @__PURE__ */ u2(SearchIcon, { fontSize: "small" }) }),
+        endAdornment: value && /* @__PURE__ */ u2(InputAdornment2, { position: "end", children: /* @__PURE__ */ u2(IconButton2, { size: "small", onClick: () => onChange(""), children: /* @__PURE__ */ u2(ClearIcon, { fontSize: "small" }) }) })
+      },
+      onKeyDown: (e2) => e2.stopPropagation()
+    }
+  ) });
+}
+function MultiSelectToolbar({ themeTree, onSelectMultiple }) {
+  return /* @__PURE__ */ u2(
+    Box,
+    {
+      sx: {
+        display: "flex",
+        gap: 1,
+        p: 1,
+        borderBottom: "1px solid var(--background-modifier-border)"
+      },
+      children: [
+        /* @__PURE__ */ u2(
+          Button2,
+          {
+            size: "small",
+            onClick: () => {
+              const allPaths = ThemeTreeBuilder.getLeafNodes(themeTree).map((n2) => n2.path);
+              onSelectMultiple?.(allPaths);
+            },
+            children: "全选"
+          }
+        ),
+        /* @__PURE__ */ u2(Button2, { size: "small", onClick: () => onSelectMultiple?.([]), children: "清空" })
+      ]
+    }
+  );
+}
+function SelectedPathsChips({
+  selectedPaths,
+  onRemovePath,
+  maxVisible = 3
+}) {
+  if (selectedPaths.length === 0) return null;
+  const visible = selectedPaths.slice(0, maxVisible);
+  const restCount = selectedPaths.length - visible.length;
+  return /* @__PURE__ */ u2(Box, { sx: { display: "flex", gap: 0.5, flexWrap: "wrap", mt: 0.5 }, children: [
+    visible.map((path) => /* @__PURE__ */ u2(
+      Chip2,
+      {
+        size: "small",
+        label: path.split("/").pop(),
+        onDelete: onRemovePath ? () => {
+          onRemovePath(path);
+        } : void 0,
+        sx: { height: 22 }
+      },
+      path
+    )),
+    restCount > 0 && /* @__PURE__ */ u2(Chip2, { size: "small", label: `+${restCount}`, sx: { height: 22 } })
+  ] });
+}
+function ThemeTreeNodeItem({
+  node: node2,
+  expandedIds,
+  selectedPaths,
+  selectedThemeId,
+  multiSelect,
+  onToggleExpand,
+  onSingleSelect,
+  onMultiSelect,
+  onSelectWithChildren,
+  renderLabel
+}) {
+  const hasChildren = node2.children.length > 0;
+  const isExpanded = expandedIds.has(node2.id);
+  const isSelected = multiSelect ? selectedPaths.includes(node2.path) : node2.themeId === selectedThemeId;
+  const handleClick = () => {
+    if (multiSelect) {
+      onMultiSelect(node2);
+    } else {
+      if (node2.themeId) {
+        onSingleSelect(node2);
+      } else if (hasChildren) {
+        onToggleExpand(node2.id);
+      }
+    }
+  };
+  return /* @__PURE__ */ u2(S, { children: [
+    /* @__PURE__ */ u2(
+      ListItemButton2,
+      {
+        onClick: handleClick,
+        selected: isSelected,
+        sx: {
+          // 缩进逻辑统一下沉到 ThemeTreeNodeLabel
+          pl: 0,
+          py: 0.5,
+          minHeight: 32
+        },
+        children: /* @__PURE__ */ u2(
+          ThemeTreeNodeLabel,
+          {
+            depth: node2.depth,
+            hasChildren,
+            expanded: isExpanded,
+            onToggleExpand: (e2) => onToggleExpand(node2.id, e2),
+            placeholderWidthPx: 24,
+            basePadding: 1,
+            indentUnit: 2,
+            sx: { width: "100%" },
+            children: [
+              multiSelect && /* @__PURE__ */ u2(
+                Checkbox2,
+                {
+                  size: "small",
+                  checked: isSelected,
+                  onClick: (e2) => e2.stopPropagation(),
+                  onChange: () => onMultiSelect(node2),
+                  sx: { p: 0.25, mr: 0.5 }
+                }
+              ),
+              /* @__PURE__ */ u2(
+                Typography2,
+                {
+                  variant: "body2",
+                  sx: {
+                    flex: 1,
+                    fontWeight: node2.themeId ? 400 : 500,
+                    // 虚节点加粗
+                    color: node2.themeId ? "text.primary" : "text.secondary"
+                  },
+                  children: renderLabel ? renderLabel(node2) : node2.label
+                }
+              ),
+              multiSelect && hasChildren && /* @__PURE__ */ u2(
+                IconButton2,
+                {
+                  size: "small",
+                  onClick: (e2) => {
+                    e2.stopPropagation();
+                    onSelectWithChildren(node2);
+                  },
+                  sx: { p: 0.25, opacity: 0.6, "&:hover": { opacity: 1 } },
+                  title: "包含子主题",
+                  children: /* @__PURE__ */ u2(ExpandMoreIcon, { fontSize: "small" })
+                }
+              )
+            ]
+          }
+        )
+      }
+    ),
+    hasChildren && /* @__PURE__ */ u2(Collapse2, { in: isExpanded, children: node2.children.map((child) => /* @__PURE__ */ u2(
+      ThemeTreeNodeItem,
+      {
+        node: child,
+        expandedIds,
+        selectedPaths,
+        selectedThemeId,
+        multiSelect,
+        onToggleExpand,
+        onSingleSelect,
+        onMultiSelect,
+        onSelectWithChildren,
+        renderLabel
+      },
+      child.id
+    )) })
+  ] });
+}
+function ThemeTreeSelectPanel({
+  themes,
+  selectedThemeId,
+  selectedPaths = [],
+  onSelect,
+  onSelectMultiple,
+  multiSelect = false,
+  searchable = true,
+  showToolbar = true,
+  showSelectedChips = true,
+  defaultExpandedIds = [],
+  defaultExpandAll = false,
+  expandToSelected = true,
+  renderLabel,
+  maxHeight: maxHeight2 = 300,
+  sx = {},
+  selectChildrenOnCollapsedParent = false,
+  onRequestClose,
+  disabled = false
+}) {
+  const [searchTerm, setSearchTerm] = d("");
+  const [expandedIds, setExpandedIds] = d(() => new Set(defaultExpandedIds));
+  const themeTree = T$1(() => buildThemeTree$1(themes), [themes]);
+  y(() => {
+    if (!expandToSelected) return;
+    const pathsToExpand = [];
+    if (multiSelect && selectedPaths.length > 0) {
+      selectedPaths.forEach((p2) => pathsToExpand.push(...ThemeTreeBuilder.getAncestorPaths(p2)));
+    } else if (selectedThemeId) {
+      const theme2 = themes.find((t3) => t3.id === selectedThemeId);
+      if (theme2?.path) {
+        pathsToExpand.push(...ThemeTreeBuilder.getAncestorPaths(theme2.path));
+      }
+    }
+    if (pathsToExpand.length > 0) {
+      setExpandedIds((prev2) => {
+        const next2 = new Set(prev2);
+        pathsToExpand.forEach((p2) => next2.add(p2));
+        return next2;
+      });
+    }
+  }, [expandToSelected, multiSelect, selectedPaths, selectedThemeId, themes]);
+  y(() => {
+    if (!defaultExpandAll || themeTree.length === 0) return;
+    const allIds = [];
+    const collect = (nodes) => {
+      nodes.forEach((n2) => {
+        allIds.push(n2.id);
+        collect(n2.children);
+      });
+    };
+    collect(themeTree);
+    setExpandedIds(new Set(allIds));
+  }, [defaultExpandAll, themeTree]);
+  const filteredTree = T$1(() => {
+    if (!searchTerm.trim()) return themeTree;
+    return searchThemeTree(themeTree, searchTerm);
+  }, [themeTree, searchTerm]);
+  const toggleExpand = q$1((nodeId, e2) => {
+    e2?.stopPropagation();
+    setExpandedIds((prev2) => {
+      const next2 = new Set(prev2);
+      if (next2.has(nodeId)) next2.delete(nodeId);
+      else next2.add(nodeId);
+      return next2;
+    });
+  }, []);
+  const handleSingleSelect = q$1(
+    (node2) => {
+      if (disabled) return;
+      if (onSelect) onSelect(node2.themeId, node2.path);
+      onRequestClose?.();
+    },
+    [disabled, onSelect, onRequestClose]
+  );
+  const handleSelectWithChildren = q$1(
+    (node2) => {
+      if (disabled) return;
+      if (!onSelectMultiple) return;
+      const descendantPaths = ThemeTreeBuilder.getDescendantPaths(node2);
+      const allPaths = [node2.path, ...descendantPaths];
+      const hasAll = allPaths.every((p2) => selectedPaths.includes(p2));
+      if (hasAll) {
+        const toRemove = new Set(allPaths);
+        onSelectMultiple(selectedPaths.filter((p2) => !toRemove.has(p2)));
+      } else {
+        onSelectMultiple([.../* @__PURE__ */ new Set([...selectedPaths, ...allPaths])]);
+      }
+    },
+    [disabled, onSelectMultiple, selectedPaths]
+  );
+  const handleMultiSelect = q$1(
+    (node2) => {
+      if (disabled) return;
+      if (!onSelectMultiple) return;
+      const hasChildren = node2.children.length > 0;
+      const isCollapsed = hasChildren && !expandedIds.has(node2.id);
+      if (selectChildrenOnCollapsedParent && isCollapsed) {
+        handleSelectWithChildren(node2);
+        return;
+      }
+      const path = node2.path;
+      const isSelected = selectedPaths.includes(path);
+      if (isSelected) {
+        const descendantPaths = ThemeTreeBuilder.getDescendantPaths(node2);
+        const toRemove = /* @__PURE__ */ new Set([path, ...descendantPaths]);
+        onSelectMultiple(selectedPaths.filter((p2) => !toRemove.has(p2)));
+      } else {
+        onSelectMultiple([...selectedPaths, path]);
+      }
+    },
+    [
+      disabled,
+      expandedIds,
+      handleSelectWithChildren,
+      onSelectMultiple,
+      selectedPaths,
+      selectChildrenOnCollapsedParent
+    ]
+  );
+  return /* @__PURE__ */ u2(Box, { sx: { ...sx }, children: [
+    searchable && /* @__PURE__ */ u2(SearchBox, { value: searchTerm, onChange: setSearchTerm }),
+    multiSelect && showToolbar && /* @__PURE__ */ u2(MultiSelectToolbar, { themeTree, onSelectMultiple }),
+    /* @__PURE__ */ u2(Box, { sx: { maxHeight: maxHeight2, overflow: "auto" }, children: filteredTree.length === 0 ? /* @__PURE__ */ u2(Box, { sx: { p: 2, textAlign: "center" }, children: /* @__PURE__ */ u2(Typography2, { variant: "body2", color: "text.secondary", children: themes.length === 0 ? "暂无主题" : "无匹配结果" }) }) : /* @__PURE__ */ u2(List2, { dense: true, disablePadding: true, children: filteredTree.map((node2) => /* @__PURE__ */ u2(
+      ThemeTreeNodeItem,
+      {
+        node: node2,
+        expandedIds,
+        selectedPaths: multiSelect ? selectedPaths : [],
+        selectedThemeId: multiSelect ? null : selectedThemeId,
+        multiSelect,
+        onToggleExpand: toggleExpand,
+        onSingleSelect: handleSingleSelect,
+        onMultiSelect: handleMultiSelect,
+        onSelectWithChildren: handleSelectWithChildren,
+        renderLabel
+      },
+      node2.id
+    )) }) }),
+    multiSelect && showSelectedChips && /* @__PURE__ */ u2(
+      SelectedPathsChips,
+      {
+        selectedPaths,
+        onRemovePath: (path) => onSelectMultiple?.(selectedPaths.filter((p2) => p2 !== path))
+      }
+    )
+  ] });
+}
+function ThemeTreeSelect({
+  themes,
+  selectedThemeId,
+  selectedPaths = [],
+  onSelect,
+  onSelectMultiple,
+  multiSelect = false,
+  allowClear = true,
+  searchable = true,
+  showToolbar = true,
+  showSelectedChips = true,
+  defaultExpandedIds = [],
+  defaultExpandAll = false,
+  expandToSelected = true,
+  renderLabel,
+  placeholder = "选择主题",
+  disabled = false,
+  size = "small",
+  sx = {},
+  maxDropdownHeight = 300,
+  selectChildrenOnCollapsedParent = false
+}) {
+  const [open, setOpen] = d(false);
+  const anchorRef = A$1(null);
+  const hasSelection = multiSelect ? selectedPaths.length > 0 : !!selectedThemeId;
+  const displayText = T$1(() => {
+    if (multiSelect) {
+      if (selectedPaths.length === 0) return placeholder;
+      if (selectedPaths.length === 1) {
+        const p2 = selectedPaths[0];
+        return p2.split("/").pop() || p2;
+      }
+      return `${selectedPaths.length} 个主题`;
+    }
+    if (!selectedThemeId) return placeholder;
+    const theme2 = themes.find((t3) => t3.id === selectedThemeId);
+    if (!theme2) return placeholder;
+    const name = theme2.path.split("/").pop() || theme2.path;
+    return theme2.icon ? `${theme2.icon} ${name}` : name;
+  }, [multiSelect, placeholder, selectedPaths, selectedThemeId, themes]);
+  const handleClear = q$1(
+    (e2) => {
+      e2.stopPropagation();
+      if (disabled) return;
+      if (multiSelect) {
+        onSelectMultiple?.([]);
+      } else {
+        onSelect?.(null, null);
+      }
+    },
+    [disabled, multiSelect, onSelect, onSelectMultiple]
+  );
+  const handleClose = q$1(() => setOpen(false), []);
+  const panelProps = {
+    themes,
+    selectedThemeId,
+    selectedPaths,
+    onSelect,
+    onSelectMultiple,
+    multiSelect,
+    searchable,
+    showToolbar,
+    showSelectedChips,
+    defaultExpandedIds,
+    defaultExpandAll,
+    expandToSelected,
+    renderLabel,
+    maxHeight: maxDropdownHeight,
+    selectChildrenOnCollapsedParent,
+    disabled,
+    // 单选时：选中即关闭（多选保持打开）
+    onRequestClose: multiSelect ? void 0 : handleClose
+  };
+  return /* @__PURE__ */ u2(Box, { sx: { position: "relative", ...sx }, children: [
+    /* @__PURE__ */ u2(
+      ThemeTreeSelectTrigger,
+      {
+        anchorRef,
+        open,
+        onToggleOpen: () => !disabled && setOpen(!open),
+        displayText,
+        hasSelection,
+        allowClear,
+        disabled,
+        size,
+        onClear: handleClear
+      }
+    ),
+    /* @__PURE__ */ u2(
+      Popper3,
+      {
+        open,
+        anchorEl: anchorRef.current,
+        placement: "bottom-start",
+        sx: { zIndex: 1300, minWidth: anchorRef.current?.offsetWidth },
+        children: /* @__PURE__ */ u2(ClickAwayListener, { onClickAway: handleClose, children: /* @__PURE__ */ u2(
+          Paper$1,
+          {
+            sx: {
+              mt: 0.5,
+              border: "1px solid var(--background-modifier-border)",
+              boxShadow: 2
+            },
+            children: /* @__PURE__ */ u2(ThemeTreeSelectPanel, { ...panelProps })
+          }
+        ) })
+      }
+    )
+  ] });
+}
+function ThemeFilter({ selectedThemes, onSelectionChange, themes }) {
+  const allThemePaths = T$1(() => themes.map((t3) => t3.path), [themes]);
+  return /* @__PURE__ */ u2(
+    FilterPopover,
+    {
+      label: "主题筛选",
+      popoverTitle: "选择要显示的主题",
+      selectedKeys: selectedThemes,
+      totalCount: allThemePaths.length,
+      getChipLabel: (themePath) => {
+        const theme2 = themes.find((t3) => t3.path === themePath);
+        return theme2 ? getLeafPath(theme2.path) || theme2.path : themePath;
+      },
+      onDeleteKey: (themePath) => {
+        onSelectionChange(selectedThemes.filter((t3) => t3 !== themePath));
+      },
+      onSelectAll: () => onSelectionChange(allThemePaths),
+      onClearAll: () => onSelectionChange([]),
+      isEmpty: themes.length === 0,
+      emptyText: "暂无主题",
+      children: /* @__PURE__ */ u2(
+        ThemeTreeSelectPanel,
+        {
+          themes,
+          selectedPaths: selectedThemes,
+          onSelectMultiple: onSelectionChange,
+          multiSelect: true,
+          searchable: true,
+          showToolbar: false,
+          showSelectedChips: false,
+          maxHeight: 360,
+          selectChildrenOnCollapsedParent: true,
+          sx: { minWidth: 320 }
+        }
+      )
+    }
+  );
+}
+function CategoryFilter({
+  selectedCategories,
+  onSelectionChange,
+  viewInstances,
+  predefinedCategories = []
+}) {
+  const allCategories = T$1(() => {
+    return collectCategoriesFromViews(viewInstances, predefinedCategories);
+  }, [viewInstances, predefinedCategories]);
+  const handleToggleCategory = (categoryName) => {
+    const newSelection = selectedCategories.includes(categoryName) ? selectedCategories.filter((c2) => c2 !== categoryName) : [...selectedCategories, categoryName];
+    onSelectionChange(newSelection);
+  };
+  return /* @__PURE__ */ u2(
+    FilterPopover,
+    {
+      label: "分类筛选",
+      popoverTitle: "选择要显示的分类",
+      selectedKeys: selectedCategories,
+      totalCount: allCategories.length,
+      getChipLabel: (k2) => k2,
+      onDeleteKey: handleToggleCategory,
+      onSelectAll: () => onSelectionChange(allCategories),
+      onClearAll: () => onSelectionChange([]),
+      isEmpty: allCategories.length === 0,
+      emptyText: "暂无分类",
+      children: /* @__PURE__ */ u2(FormGroup2, { children: allCategories.map((cat) => /* @__PURE__ */ u2(
+        FormControlLabel2,
+        {
+          control: /* @__PURE__ */ u2(Checkbox2, { size: "small", checked: selectedCategories.includes(cat), onChange: () => handleToggleCategory(cat) }),
+          label: /* @__PURE__ */ u2("span", { class: "text-md", children: cat })
+        },
+        cat
+      )) })
+    }
+  );
+}
+function ViewToolbar({
+  currentView,
+  currentDate,
+  onViewChange,
+  onDateChange,
+  filterSlot,
+  selectedThemes = [],
+  selectedCategories = [],
+  onThemeSelectionChange,
+  onCategorySelectionChange,
+  viewInstances,
+  themes,
+  predefinedCategories,
+  hideToolbar = false,
+  onLayoutSettingsClick
+}) {
+  const unit = T$1(() => (v2) => ({
+    "年": "year",
+    "季": "quarter",
+    "月": "month",
+    "周": "week",
+    "天": "day"
+  })[v2] || "day", []);
+  const viewOptions = ["年", "季", "月", "周", "天"];
+  if (hideToolbar) {
+    return null;
+  }
+  return /* @__PURE__ */ u2("div", { class: "tp-toolbar", ...getObsidianEventBoundaryProps(), children: [
+    viewOptions.map((v2) => /* @__PURE__ */ u2(
+      "button",
+      {
+        onClick: () => onViewChange(v2),
+        class: v2 === currentView ? "active" : "",
+        children: v2
+      },
+      v2
+    )),
+    /* @__PURE__ */ u2(
+      "span",
+      {
+        class: "tp-toolbar-date-display",
+        role: "status",
+        "aria-live": "polite",
+        title: "当前时间范围",
+        children: formatDateForView(currentDate, currentView)
+      }
+    ),
+    /* @__PURE__ */ u2(
+      "button",
+      {
+        onClick: () => onDateChange(currentDate.clone().subtract(1, unit(currentView))),
+        children: "←"
+      }
+    ),
+    /* @__PURE__ */ u2(
+      "button",
+      {
+        onClick: () => onDateChange(currentDate.clone().add(1, unit(currentView))),
+        children: "→"
+      }
+    ),
+    /* @__PURE__ */ u2(
+      "button",
+      {
+        onClick: () => onDateChange(dayjs()),
+        children: "＝"
+      }
+    ),
+    filterSlot || /* @__PURE__ */ u2(S, { children: [
+      onThemeSelectionChange && /* @__PURE__ */ u2(
+        ThemeFilter,
+        {
+          selectedThemes,
+          onSelectionChange: onThemeSelectionChange,
+          themes
+        }
+      ),
+      onCategorySelectionChange && /* @__PURE__ */ u2(
+        CategoryFilter,
+        {
+          selectedCategories,
+          onSelectionChange: onCategorySelectionChange,
+          viewInstances,
+          predefinedCategories
+        }
+      )
+    ] }),
+    onLayoutSettingsClick && /* @__PURE__ */ u2(
+      "button",
+      {
+        class: "tp-toolbar-layout-settings",
+        title: "布局设置",
+        onClick: () => onLayoutSettingsClick(),
+        children: "⚙"
+      }
+    )
+  ] });
+}
+class Disposables {
+  tasks = [];
+  add(nameOrDispose, disposeMaybe) {
+    if (typeof nameOrDispose === "function") {
+      const autoName = `anonymous#${this.tasks.length + 1}`;
+      this.tasks.push({ name: autoName, dispose: nameOrDispose });
+      return;
+    }
+    if (typeof disposeMaybe !== "function") {
+      throw new Error("[Disposables] add(name, dispose) requires a dispose function");
+    }
+    this.tasks.push({ name: nameOrDispose, dispose: disposeMaybe });
+  }
+  /**
+   * 清理全部资源。
+   * 默认按注册逆序执行（LIFO）。
+   */
+  disposeAll() {
+    const tasks = this.tasks;
+    this.tasks = [];
+    for (let i2 = tasks.length - 1; i2 >= 0; i2--) {
+      const task = tasks[i2];
+      try {
+        task.dispose();
+      } catch (error) {
+        devError(`[Disposables] dispose failed: ${task.name}`, error);
+      }
+    }
+  }
+  /** Backward/ergonomic alias used by older callers/tests. */
+  dispose() {
+    this.disposeAll();
+  }
+}
+let disposed = false;
+function markDisposed() {
+  disposed = true;
+}
+function isDisposed() {
+  return disposed;
 }
 const createStoreImpl = (createState) => {
   let state;
@@ -50456,6 +54982,117 @@ function buildPlanConsistencyIssues(params) {
   }
   return issues;
 }
+function uniqueNonEmptyPaths(paths) {
+  return Array.from(new Set(paths.map((path) => String(path || "").trim()).filter(Boolean)));
+}
+function buildRefreshPlan(paths, notify = true) {
+  return {
+    scanPaths: uniqueNonEmptyPaths(paths),
+    notify
+  };
+}
+function getBeforeMaxLine(items) {
+  return items.reduce((max2, item) => Math.max(max2, getItemLineNumber(item)), 0);
+}
+function getFileItemsByPath(dataStore, path) {
+  return dataStore.queryItems().filter((item) => {
+    if (item.file?.path) return item.file.path === path;
+    try {
+      return parseItemLocator(item.id).path === path;
+    } catch {
+      return false;
+    }
+  });
+}
+function tryParseItemPath(itemId) {
+  try {
+    return parseItemLocator(itemId).path;
+  } catch {
+    return null;
+  }
+}
+function throwIfAborted$1(signal) {
+  if (signal?.aborted) {
+    const error = new Error("AbortError");
+    error.name = "AbortError";
+    throw error;
+  }
+}
+async function submitFinalizedRecordMutation(params) {
+  try {
+    throwIfAborted$1(params.signal);
+    return finalizeRecordSubmitResult(params.dataStore, await params.run());
+  } catch (error) {
+    const refreshPaths = typeof params.refreshPathsOnError === "function" ? params.refreshPathsOnError() : params.refreshPathsOnError;
+    return finalizeRecordSubmitResult(params.dataStore, mapSubmitError(params.operation, error, params.warnings ?? [], {
+      refreshPaths
+    }));
+  }
+}
+function prepareTemplateSubmit(params) {
+  const resolved = params.kernel.resolveMissingDependencies({
+    blockId: params.blockId,
+    themeId: params.themeId ?? null,
+    item: params.item
+  });
+  if (resolved.errors.length > 0 || !resolved.template || !resolved.blockId) {
+    return {
+      ok: false,
+      result: buildValidationErrorResult(params.operation, [
+        ...resolved.errors,
+        ...!resolved.template ? [{ code: "record_template_missing", message: "No effective template is available for this record." }] : []
+      ], resolved.warnings)
+    };
+  }
+  const strictResolved = resolved;
+  const normalized = params.kernel.normalizeRecordInput({
+    template: strictResolved.template,
+    formData: params.formData,
+    context: params.context,
+    mode: params.normalizeMode
+  });
+  const validation = params.kernel.validateRecordInput({
+    template: strictResolved.template,
+    formData: normalized.normalizedFormData,
+    mode: params.validateMode,
+    item: params.item
+  });
+  const warnings = [...strictResolved.warnings, ...normalized.warnings, ...validation.warnings];
+  if (!validation.ok) {
+    return {
+      ok: false,
+      result: buildValidationErrorResult(params.operation, validation.errors, warnings)
+    };
+  }
+  return {
+    ok: true,
+    submit: {
+      resolved: strictResolved,
+      normalized,
+      warnings
+    }
+  };
+}
+function getTemplateExecutionMeta(resolved, template) {
+  return {
+    templateId: resolved.meta.templateId ?? template.id,
+    templateSourceType: resolved.meta.templateSourceType ?? "block"
+  };
+}
+function buildCreatedRecordLocatorContext(params) {
+  return {
+    outputContent: params.outputContent,
+    normalizedFormData: params.normalizedFormData,
+    templateId: params.meta.templateId,
+    templateSourceType: params.meta.templateSourceType,
+    themePath: params.theme?.path ?? null,
+    blockCategoryKey: params.template.categoryKey ?? null,
+    itemTypeHint: inferCreatedItemType(params.template.outputTemplate),
+    appendMode: params.appendMode,
+    targetHeader: params.targetHeader ?? null,
+    beforeMaxLine: getBeforeMaxLine(params.beforeItems)
+  };
+}
 function normalizeCompletionOptions(options) {
   if (!options) return void 0;
   const normalized = {
@@ -50531,74 +55168,50 @@ class RecordInputUseCase {
     return this.getKernel().prepareEdit(params);
   }
   async submitCreateRecord(params) {
-    const kernel = this.getKernel();
-    const resolved = kernel.resolveMissingDependencies({
+    const prepared = prepareTemplateSubmit({
+      kernel: this.getKernel(),
+      operation: "create",
       blockId: params.blockId,
-      themeId: params.themeId ?? null
-    });
-    if (resolved.errors.length > 0 || !resolved.template || !resolved.blockId) {
-      return buildValidationErrorResult("create", [
-        ...resolved.errors,
-        ...!resolved.template ? [{ code: "record_template_missing", message: "No effective template is available for this record." }] : []
-      ], resolved.warnings);
-    }
-    const normalized = kernel.normalizeRecordInput({
-      template: resolved.template,
+      themeId: params.themeId ?? null,
       formData: params.formData,
       context: params.context,
-      mode: params.source === "ai_batch" ? "ai_batch" : "create"
+      normalizeMode: params.source === "ai_batch" ? "ai_batch" : "create",
+      validateMode: "create"
     });
-    const validation = kernel.validateRecordInput({
-      template: resolved.template,
-      formData: normalized.normalizedFormData,
-      mode: "create"
-    });
-    const warnings = [...resolved.warnings, ...normalized.warnings, ...validation.warnings];
-    if (!validation.ok) {
-      return buildValidationErrorResult("create", validation.errors, warnings);
-    }
+    if (!prepared.ok) return prepared.result;
+    const { resolved, normalized, warnings } = prepared.submit;
     try {
-      this.throwIfAborted(params.signal);
+      throwIfAborted$1(params.signal);
+      const templateMeta = getTemplateExecutionMeta(resolved, resolved.template);
       const preview = this.deps.inputService.previewTemplateExecution(
         resolved.template,
         normalized.normalizedFormData,
         resolved.theme ?? void 0,
-        {
-          templateId: resolved.meta.templateId ?? resolved.template.id,
-          templateSourceType: resolved.meta.templateSourceType ?? "block"
-        }
+        templateMeta
       );
-      const beforeItems = this.getFileItemsByPath(preview.targetFilePath);
+      const beforeItems = getFileItemsByPath(this.deps.dataStore, preview.targetFilePath);
       const path = await this.deps.inputService.executeTemplate(
         resolved.template,
         normalized.normalizedFormData,
         resolved.theme ?? void 0,
-        {
-          templateId: resolved.meta.templateId ?? resolved.template.id,
-          templateSourceType: resolved.meta.templateSourceType ?? "block"
-        },
+        templateMeta,
         {
           signal: params.signal
         }
       );
-      const refreshPlan = {
-        scanPaths: [path],
-        notify: true
-      };
+      const refreshPlan = buildRefreshPlan([path]);
       const scannedByPath = await applyRecordRefreshPlan(this.deps.dataStore, refreshPlan);
-      const scannedItems = scannedByPath.get(path) ?? this.getFileItemsByPath(path);
-      const createdRecord = locateCreatedRecord(beforeItems, scannedItems, {
+      const scannedItems = scannedByPath.get(path) ?? getFileItemsByPath(this.deps.dataStore, path);
+      const createdRecord = locateCreatedRecord(beforeItems, scannedItems, buildCreatedRecordLocatorContext({
+        template: resolved.template,
+        theme: resolved.theme,
+        meta: templateMeta,
         outputContent: preview.outputContent,
         normalizedFormData: normalized.normalizedFormData,
-        templateId: resolved.meta.templateId ?? resolved.template.id,
-        templateSourceType: resolved.meta.templateSourceType ?? "block",
-        themePath: resolved.theme?.path ?? null,
-        blockCategoryKey: resolved.template.categoryKey ?? null,
-        itemTypeHint: inferCreatedItemType(resolved.template.outputTemplate),
         appendMode: preview.header ? "header" : "append",
         targetHeader: preview.header ?? null,
-        beforeMaxLine: beforeItems.reduce((max2, item) => Math.max(max2, getItemLineNumber(item)), 0)
-      });
+        beforeItems
+      }));
       return buildSuccessResult("create", {
         affectedPath: path,
         affectedRecordId: createdRecord?.id,
@@ -50614,41 +55227,24 @@ class RecordInputUseCase {
     }
   }
   async submitUpdateRecord(params) {
-    const kernel = this.getKernel();
-    const resolved = kernel.resolveMissingDependencies({
+    const prepared = prepareTemplateSubmit({
+      kernel: this.getKernel(),
+      operation: "update",
       blockId: params.blockId,
       themeId: params.themeId ?? null,
-      item: params.item
-    });
-    if (resolved.errors.length > 0 || !resolved.template || !resolved.blockId) {
-      return buildValidationErrorResult("update", [
-        ...resolved.errors,
-        ...!resolved.template ? [{ code: "record_template_missing", message: "No effective template is available for this record." }] : []
-      ], resolved.warnings);
-    }
-    const normalized = kernel.normalizeRecordInput({
-      template: resolved.template,
+      item: params.item,
       formData: params.formData,
-      mode: "edit"
+      normalizeMode: "edit",
+      validateMode: "edit"
     });
-    const validation = kernel.validateRecordInput({
-      template: resolved.template,
-      formData: normalized.normalizedFormData,
-      mode: "edit",
-      item: params.item
-    });
-    const warnings = [...resolved.warnings, ...normalized.warnings, ...validation.warnings];
-    if (!validation.ok) {
-      return buildValidationErrorResult("update", validation.errors, warnings);
-    }
+    if (!prepared.ok) return prepared.result;
+    const { resolved, normalized, warnings } = prepared.submit;
+    const templateMeta = getTemplateExecutionMeta(resolved, resolved.template);
     const outputPlan = buildRecordOutputPlan({
       template: resolved.template,
       formData: normalized.normalizedFormData,
       theme: resolved.theme ?? void 0,
-      templateMeta: {
-        templateId: resolved.meta.templateId ?? resolved.template.id,
-        templateSourceType: resolved.meta.templateSourceType ?? "block"
-      }
+      templateMeta
     });
     const persistencePlan = buildRecordPersistencePlan({
       mode: "edit",
@@ -50667,37 +55263,29 @@ class RecordInputUseCase {
     try {
       if (persistencePlan.pathChanged && persistencePlan.writeMode === "move_and_replace") {
         const targetPath = outputPlan.targetFilePath || "";
-        const beforeTargetItems = this.getFileItemsByPath(targetPath);
+        const beforeTargetItems = getFileItemsByPath(this.deps.dataStore, targetPath);
         const createdPath = await this.deps.inputService.createRecordAtPlannedLocation(
           resolved.template,
           normalized.normalizedFormData,
           resolved.theme ?? void 0,
-          {
-            templateId: resolved.meta.templateId ?? resolved.template.id,
-            templateSourceType: resolved.meta.templateSourceType ?? "block"
-          },
+          templateMeta,
           {
             signal: params.signal,
             autoRefresh: false
           }
         );
-        const scannedNewPath = await applyRecordRefreshPlan(this.deps.dataStore, {
-          scanPaths: [createdPath],
-          notify: false
-        });
-        const afterTargetItems = scannedNewPath.get(createdPath) ?? this.getFileItemsByPath(createdPath);
-        const createdRecord = locateCreatedRecord(beforeTargetItems, afterTargetItems, {
+        const scannedNewPath = await applyRecordRefreshPlan(this.deps.dataStore, buildRefreshPlan([createdPath], false));
+        const afterTargetItems = scannedNewPath.get(createdPath) ?? getFileItemsByPath(this.deps.dataStore, createdPath);
+        const createdRecord = locateCreatedRecord(beforeTargetItems, afterTargetItems, buildCreatedRecordLocatorContext({
+          template: resolved.template,
+          theme: resolved.theme,
+          meta: templateMeta,
           outputContent: outputPlan.outputContent,
           normalizedFormData: normalized.normalizedFormData,
-          templateId: resolved.meta.templateId ?? resolved.template.id,
-          templateSourceType: resolved.meta.templateSourceType ?? "block",
-          themePath: resolved.theme?.path ?? null,
-          blockCategoryKey: resolved.template.categoryKey ?? null,
-          itemTypeHint: inferCreatedItemType(resolved.template.outputTemplate),
           appendMode: outputPlan.targetHeader ? "header" : "append",
           targetHeader: outputPlan.targetHeader ?? null,
-          beforeMaxLine: beforeTargetItems.reduce((max2, item) => Math.max(max2, getItemLineNumber(item)), 0)
-        });
+          beforeItems: beforeTargetItems
+        }));
         try {
           const deletedPath = await this.deps.inputService.deleteExistingRecord(params.item, {
             signal: params.signal,
@@ -50706,10 +55294,7 @@ class RecordInputUseCase {
           return finalizeRecordSubmitResult(this.deps.dataStore, buildSuccessResult("update", {
             affectedPath: createdPath,
             affectedRecordId: createdRecord?.id ?? params.item.id,
-            refresh: {
-              scanPaths: [createdPath, deletedPath],
-              notify: true
-            },
+            refresh: buildRefreshPlan([createdPath, deletedPath]),
             feedback: {
               notice: `✅ 已迁移保存：${persistencePlan.originalPath || "原位置"} → ${createdPath}`
             },
@@ -50729,10 +55314,7 @@ class RecordInputUseCase {
             operation: "update",
             affectedPath: createdPath,
             affectedRecordId: createdRecord?.id ?? params.item.id,
-            refresh: {
-              scanPaths: [createdPath, persistencePlan.originalPath || ""],
-              notify: true
-            },
+            refresh: buildRefreshPlan([createdPath, persistencePlan.originalPath]),
             feedback: {
               notice: `已写入新位置 ${createdPath}，但旧记录删除失败；请检查并手动清理 ${persistencePlan.originalPath || "原位置"}。`
             },
@@ -50752,10 +55334,7 @@ class RecordInputUseCase {
         resolved.template,
         normalized.normalizedFormData,
         resolved.theme ?? void 0,
-        {
-          templateId: resolved.meta.templateId ?? resolved.template.id,
-          templateSourceType: resolved.meta.templateSourceType ?? "block"
-        },
+        templateMeta,
         {
           signal: params.signal,
           autoRefresh: false
@@ -50764,10 +55343,7 @@ class RecordInputUseCase {
       return finalizeRecordSubmitResult(this.deps.dataStore, buildSuccessResult("update", {
         affectedPath: path,
         affectedRecordId: params.item.id,
-        refresh: {
-          scanPaths: [path],
-          notify: true
-        },
+        refresh: buildRefreshPlan([path]),
         feedback: {
           notice: "✅ 已保存修改"
         },
@@ -50780,104 +55356,74 @@ class RecordInputUseCase {
     }
   }
   async submitDeleteRecord(params) {
-    try {
-      this.throwIfAborted(params.signal);
-      const path = await this.deps.inputService.deleteExistingRecord(params.item, {
-        signal: params.signal,
-        autoRefresh: false
-      });
-      return finalizeRecordSubmitResult(this.deps.dataStore, buildSuccessResult("delete", {
-        affectedPath: path,
-        affectedRecordId: params.item.id,
-        refresh: {
-          scanPaths: [path],
-          notify: true
-        },
-        feedback: {
-          notice: "✅ 已删除记录"
-        }
-      }));
-    } catch (error) {
-      return finalizeRecordSubmitResult(this.deps.dataStore, mapSubmitError("delete", error, [], {
-        refreshPaths: [getItemFilePath(params.item)]
-      }));
-    }
+    return submitFinalizedRecordMutation({
+      dataStore: this.deps.dataStore,
+      operation: "delete",
+      signal: params.signal,
+      refreshPathsOnError: [getItemFilePath(params.item)],
+      run: async () => {
+        const path = await this.deps.inputService.deleteExistingRecord(params.item, {
+          signal: params.signal,
+          autoRefresh: false
+        });
+        return buildSuccessResult("delete", {
+          affectedPath: path,
+          affectedRecordId: params.item.id,
+          refresh: buildRefreshPlan([path]),
+          feedback: {
+            notice: "✅ 已删除记录"
+          }
+        });
+      }
+    });
   }
   async submitCompleteRecord(params) {
-    try {
-      this.throwIfAborted(params.signal);
-      const path = parseItemLocator(params.itemId).path;
-      const options = normalizeCompletionOptions(params.options);
-      await this.deps.itemService.completeItem(params.itemId, options, { autoRefresh: false });
-      return finalizeRecordSubmitResult(this.deps.dataStore, buildSuccessResult("complete", {
-        affectedPath: path,
-        affectedRecordId: params.itemId,
-        refresh: {
-          scanPaths: [path],
-          notify: true
-        },
-        feedback: {
-          notice: options?.duration != null ? `任务已完成，时长 ${options.duration} 分钟已记录。` : "任务已完成。"
-        }
-      }));
-    } catch (error) {
-      return finalizeRecordSubmitResult(this.deps.dataStore, mapSubmitError("complete", error, [], {
-        refreshPaths: [this.tryParseItemPath(params.itemId)]
-      }));
-    }
+    return submitFinalizedRecordMutation({
+      dataStore: this.deps.dataStore,
+      operation: "complete",
+      signal: params.signal,
+      refreshPathsOnError: () => [tryParseItemPath(params.itemId)],
+      run: async () => {
+        const path = parseItemLocator(params.itemId).path;
+        const options = normalizeCompletionOptions(params.options);
+        await this.deps.itemService.completeItem(params.itemId, options, { autoRefresh: false });
+        return buildSuccessResult("complete", {
+          affectedPath: path,
+          affectedRecordId: params.itemId,
+          refresh: buildRefreshPlan([path]),
+          feedback: {
+            notice: options?.duration != null ? `任务已完成，时长 ${options.duration} 分钟已记录。` : "任务已完成。"
+          }
+        });
+      }
+    });
   }
   async submitUpdateRecordTime(params) {
     const normalizedUpdates = normalizeTimeUpdates(params.updates);
     if ("error" in normalizedUpdates) {
       return buildValidationErrorResult("time_update", [normalizedUpdates.error]);
     }
-    try {
-      this.throwIfAborted(params.signal);
-      const path = parseItemLocator(params.itemId).path;
-      await this.deps.itemService.updateItemTime(params.itemId, normalizedUpdates, { autoRefresh: false });
-      return finalizeRecordSubmitResult(this.deps.dataStore, buildSuccessResult("time_update", {
-        affectedPath: path,
-        affectedRecordId: params.itemId,
-        refresh: {
-          scanPaths: [path],
-          notify: true
-        },
-        feedback: {
-          notice: normalizedUpdates.duration != null ? `任务时长已更新为 ${normalizedUpdates.duration} 分钟。` : "任务时间已更新。"
-        }
-      }));
-    } catch (error) {
-      return finalizeRecordSubmitResult(this.deps.dataStore, mapSubmitError("time_update", error, [], {
-        refreshPaths: [this.tryParseItemPath(params.itemId)]
-      }));
-    }
-  }
-  tryParseItemPath(itemId) {
-    try {
-      return parseItemLocator(itemId).path;
-    } catch {
-      return null;
-    }
-  }
-  getKernel() {
-    return new RecordInputKernel(this.store.getState().settings.inputSettings);
-  }
-  getFileItemsByPath(path) {
-    return this.deps.dataStore.queryItems().filter((item) => {
-      if (item.file?.path) return item.file.path === path;
-      try {
-        return parseItemLocator(item.id).path === path;
-      } catch {
-        return false;
+    return submitFinalizedRecordMutation({
+      dataStore: this.deps.dataStore,
+      operation: "time_update",
+      signal: params.signal,
+      refreshPathsOnError: () => [tryParseItemPath(params.itemId)],
+      run: async () => {
+        const path = parseItemLocator(params.itemId).path;
+        await this.deps.itemService.updateItemTime(params.itemId, normalizedUpdates, { autoRefresh: false });
+        return buildSuccessResult("time_update", {
+          affectedPath: path,
+          affectedRecordId: params.itemId,
+          refresh: buildRefreshPlan([path]),
+          feedback: {
+            notice: normalizedUpdates.duration != null ? `任务时长已更新为 ${normalizedUpdates.duration} 分钟。` : "任务时间已更新。"
+          }
+        });
       }
     });
   }
-  throwIfAborted(signal) {
-    if (signal?.aborted) {
-      const error = new Error("AbortError");
-      error.name = "AbortError";
-      throw error;
-    }
+  getKernel() {
+    return new RecordInputKernel(this.store.getState().settings.inputSettings);
   }
 }
 function createRecordInputUseCase(store, deps) {
@@ -51158,10 +55704,6 @@ function buildStatisticsCreateConfig(params) {
 function isModuleHeaderCreateAllowed(viewType) {
   return MODULE_HEADER_CREATE_ALLOWLIST.includes(viewType);
 }
-function canCreateFromStatisticsCell(payload) {
-  const category = payload?.cellIdentifier?.category;
-  return !!category && category !== "全部";
-}
 function openCreateFromViewHeader(params) {
   if (!isModuleHeaderCreateAllowed(params.viewInstance.viewType)) return false;
   const config2 = params.actionService.getQuickInputConfigForView(
@@ -51408,6 +55950,24 @@ async function commitExcelCellFromView(params) {
   params.uiPort.notice(message);
   return { ok: false, message };
 }
+function getVaultName(app) {
+  try {
+    return app?.vault?.getName?.() || "";
+  } catch {
+    return "";
+  }
+}
+function openRecordOrigin({ app, item, target = "_blank" }) {
+  const uri = makeObsUri(item, getVaultName(app));
+  window.open(uri, target);
+}
+function resolveVaultResourcePath(app, path) {
+  try {
+    return app?.vault?.adapter?.getResourcePath?.(path) || path;
+  } catch {
+    return path;
+  }
+}
 function SelectablePill({
   selected = false,
   onClick,
@@ -51491,7 +56051,7 @@ function QuickInputOptionPillGroup({
   if (choices.length === 0) return null;
   const selectedChoice = choices.find((choice) => isQuickInputChoiceSelected(value, choice));
   return /* @__PURE__ */ u2(
-    Box$1,
+    Box,
     {
       role: "group",
       "aria-label": label,
@@ -51502,7 +56062,7 @@ function QuickInputOptionPillGroup({
         minWidth: 0
       },
       children: [
-        /* @__PURE__ */ u2(Box$1, { sx: { display: "flex", flexWrap: "wrap", gap: "8px" }, children: choices.map((choice) => {
+        /* @__PURE__ */ u2(Box, { sx: { display: "flex", flexWrap: "wrap", gap: "8px" }, children: choices.map((choice) => {
           const selected = isQuickInputChoiceSelected(value, choice);
           return /* @__PURE__ */ u2(
             SelectablePill,
@@ -51517,7 +56077,7 @@ function QuickInputOptionPillGroup({
           );
         }) }),
         selectedChoice && /* @__PURE__ */ u2(
-          Typography$1,
+          Typography2,
           {
             variant: "caption",
             sx: {
@@ -51563,7 +56123,7 @@ function QuickInputEditorFields({ getResourcePath, template, formData, dense = f
     return semantic === "startTime" || semantic === "endTime" || semantic === "duration" || ["时间", "结束", "时长"].includes(field.label || field.key);
   };
   const renderFieldLabel = (label) => /* @__PURE__ */ u2(
-    Typography$1,
+    Typography2,
     {
       variant: "body2",
       sx: {
@@ -51575,7 +56135,7 @@ function QuickInputEditorFields({ getResourcePath, template, formData, dense = f
     }
   );
   const renderInlineRow = (label, control) => /* @__PURE__ */ u2(
-    Box$1,
+    Box,
     {
       className: "think-form-row think-form-row--inline",
       sx: {
@@ -51587,13 +56147,13 @@ function QuickInputEditorFields({ getResourcePath, template, formData, dense = f
         width: "100%"
       },
       children: [
-        /* @__PURE__ */ u2(Box$1, { sx: { pt: { xs: 0, sm: 0.55 } }, children: renderFieldLabel(label) }),
-        /* @__PURE__ */ u2(Box$1, { sx: { minWidth: 0 }, children: control })
+        /* @__PURE__ */ u2(Box, { sx: { pt: { xs: 0, sm: 0.55 } }, children: renderFieldLabel(label) }),
+        /* @__PURE__ */ u2(Box, { sx: { minWidth: 0 }, children: control })
       ]
     }
   );
   const renderStandardField = (label, control, textarea = false) => /* @__PURE__ */ u2(
-    Box$1,
+    Box,
     {
       className: textarea ? "think-form-row think-textarea-row" : "think-form-row",
       sx: {
@@ -51624,7 +56184,7 @@ function QuickInputEditorFields({ getResourcePath, template, formData, dense = f
   const renderMultiOptionPills = (field) => {
     const selected = new Set(toArrayValue(formData[field.key]));
     const choices = normalizeQuickInputChoices(field.options);
-    return /* @__PURE__ */ u2(Box$1, { sx: { display: "flex", flexWrap: "wrap", gap: "8px" }, children: choices.map((choice) => {
+    return /* @__PURE__ */ u2(Box, { sx: { display: "flex", flexWrap: "wrap", gap: "8px" }, children: choices.map((choice) => {
       const isSelected = selected.has(choice.value) || selected.has(choice.label);
       return /* @__PURE__ */ u2(
         SelectablePill,
@@ -51651,7 +56211,7 @@ function QuickInputEditorFields({ getResourcePath, template, formData, dense = f
     const image = normalizeImageValue(rawValue);
     if (!image) return null;
     const src = /^https?:\/\//i.test(image.src) ? image.src : getResourcePath(image.src);
-    return /* @__PURE__ */ u2(Box$1, { sx: { mt: 0.8, display: "flex", alignItems: "center", gap: 1 }, children: [
+    return /* @__PURE__ */ u2(Box, { sx: { mt: 0.8, display: "flex", alignItems: "center", gap: 1 }, children: [
       /* @__PURE__ */ u2(
         "img",
         {
@@ -51660,7 +56220,7 @@ function QuickInputEditorFields({ getResourcePath, template, formData, dense = f
           style: { width: "56px", height: "56px", objectFit: "cover", borderRadius: "8px", border: "1px solid var(--background-modifier-border)" }
         }
       ),
-      /* @__PURE__ */ u2(Typography$1, { variant: "caption", sx: { color: "text.secondary", overflowWrap: "anywhere" }, children: image.src })
+      /* @__PURE__ */ u2(Typography2, { variant: "caption", sx: { color: "text.secondary", overflowWrap: "anywhere" }, children: image.src })
     ] });
   };
   const renderTextAreaValueField = (field, label, value) => {
@@ -51703,7 +56263,7 @@ function QuickInputEditorFields({ getResourcePath, template, formData, dense = f
       return renderTextAreaValueField(field, label, value);
     }
     if (isTemplateImageField(field)) {
-      const control = /* @__PURE__ */ u2(Box$1, { children: [
+      const control = /* @__PURE__ */ u2(Box, { children: [
         /* @__PURE__ */ u2(
           "input",
           {
@@ -51728,7 +56288,7 @@ function QuickInputEditorFields({ getResourcePath, template, formData, dense = f
       case "rating":
         return renderStandardField(
           label,
-          /* @__PURE__ */ u2(Stack$1, { direction: "row", spacing: 0.9, sx: { mt: 0.1, flexWrap: "wrap" }, children: (field.options || []).map((opt) => {
+          /* @__PURE__ */ u2(Stack, { direction: "row", spacing: 0.9, sx: { mt: 0.1, flexWrap: "wrap" }, children: (field.options || []).map((opt) => {
             const isSelected = isComplex && formData[field.key]?.label === opt.label && formData[field.key]?.value === opt.value;
             const imageValue = isImagePath(opt.value) ? normalizeImageValue(opt.value) : void 0;
             const displayContent = imageValue ? /* @__PURE__ */ u2(
@@ -51740,7 +56300,7 @@ function QuickInputEditorFields({ getResourcePath, template, formData, dense = f
               }
             ) : /* @__PURE__ */ u2("span", { style: { fontSize: "18px", lineHeight: 1 }, children: opt.value });
             return /* @__PURE__ */ u2(
-              Button$1,
+              Button2,
               {
                 variant: "text",
                 onClick: () => handleUpdate(field.key, { value: opt.value, label: opt.label }, true),
@@ -51854,9 +56414,9 @@ function QuickInputEditorFields({ getResourcePath, template, formData, dense = f
       const order2 = { startTime: 0, endTime: 1, duration: 2 };
       const sortedTimeFields = [...timeFields].sort((a2, b2) => (order2[getTemplateFieldSemantic(a2)] ?? 99) - (order2[getTemplateFieldSemantic(b2)] ?? 99));
       fieldsToRender.push(
-        /* @__PURE__ */ u2(Box$1, { sx: { display: "flex", flexDirection: "column", gap: 1 }, children: [
+        /* @__PURE__ */ u2(Box, { sx: { display: "flex", flexDirection: "column", gap: 1 }, children: [
           /* @__PURE__ */ u2(
-            Box$1,
+            Box,
             {
               className: "think-form-row",
               sx: {
@@ -51869,7 +56429,7 @@ function QuickInputEditorFields({ getResourcePath, template, formData, dense = f
             },
             "time-fields"
           ),
-          showTimeDirectionControl && /* @__PURE__ */ u2(Box$1, { sx: { display: "flex", alignItems: "center", justifyContent: "flex-end", minHeight: 28 }, children: /* @__PURE__ */ u2("label", { style: { display: "inline-flex", alignItems: "center", gap: "8px", cursor: "pointer", fontSize: "12px", color: "var(--text-muted)" }, children: [
+          showTimeDirectionControl && /* @__PURE__ */ u2(Box, { sx: { display: "flex", alignItems: "center", justifyContent: "flex-end", minHeight: 28 }, children: /* @__PURE__ */ u2("label", { style: { display: "inline-flex", alignItems: "center", gap: "8px", cursor: "pointer", fontSize: "12px", color: "var(--text-muted)" }, children: [
             /* @__PURE__ */ u2(
               "input",
               {
@@ -51885,7 +56445,7 @@ function QuickInputEditorFields({ getResourcePath, template, formData, dense = f
     }
     return fieldsToRender;
   };
-  return /* @__PURE__ */ u2(Stack$1, { spacing: dense ? 1.7 : 1.9, children: renderFields() });
+  return /* @__PURE__ */ u2(Stack, { spacing: dense ? 1.7 : 1.9, children: renderFields() });
 }
 function getThemeLabel(theme2) {
   const raw = theme2.path?.split("/").filter(Boolean).pop() || "";
@@ -51933,9 +56493,9 @@ function QuickInputEditorThemeSelector({
   const activeParentPath = selectedPath ? selectedPath.includes("/") ? selectedPath.slice(0, selectedPath.lastIndexOf("/")) : selectedPath : null;
   const activeParent = activeParentPath ? themes.find((t3) => t3.path === activeParentPath) || null : null;
   const childThemes = activeParentPath ? childrenByParent.get(activeParentPath) || [] : [];
-  return /* @__PURE__ */ u2(FormControl, { component: "fieldset", sx: { width: "100%" }, children: /* @__PURE__ */ u2(Box$1, { sx: { display: "flex", flexDirection: "column", gap: dense ? 1 : 1.2 }, children: [
-    /* @__PURE__ */ u2(Box$1, { children: [
-      /* @__PURE__ */ u2(Typography$1, { variant: "caption", sx: { color: "text.secondary", display: "block", mb: 0.75, fontWeight: 600 }, children: "父主题" }),
+  return /* @__PURE__ */ u2(FormControl2, { component: "fieldset", sx: { width: "100%" }, children: /* @__PURE__ */ u2(Box, { sx: { display: "flex", flexDirection: "column", gap: dense ? 1 : 1.2 }, children: [
+    /* @__PURE__ */ u2(Box, { children: [
+      /* @__PURE__ */ u2(Typography2, { variant: "caption", sx: { color: "text.secondary", display: "block", mb: 0.75, fontWeight: 600 }, children: "父主题" }),
       /* @__PURE__ */ u2("div", { style: { display: "flex", flexWrap: "wrap", gap: "8px" }, children: parents.map((parent) => {
         const isSelected = selectedThemeId === parent.id;
         const isActiveParent = activeParentPath === parent.path;
@@ -51954,8 +56514,8 @@ function QuickInputEditorThemeSelector({
         );
       }) })
     ] }),
-    /* @__PURE__ */ u2(Box$1, { children: [
-      /* @__PURE__ */ u2(Typography$1, { variant: "caption", sx: { color: "text.secondary", display: "block", mb: 0.75, fontWeight: 600 }, children: activeParent ? `${getThemeLabel(activeParent)} · 子主题` : "子主题" }),
+    /* @__PURE__ */ u2(Box, { children: [
+      /* @__PURE__ */ u2(Typography2, { variant: "caption", sx: { color: "text.secondary", display: "block", mb: 0.75, fontWeight: 600 }, children: activeParent ? `${getThemeLabel(activeParent)} · 子主题` : "子主题" }),
       childThemes.length > 0 ? /* @__PURE__ */ u2("div", { style: { display: "flex", flexWrap: "wrap", gap: "8px" }, children: childThemes.map((child) => /* @__PURE__ */ u2(
         SelectablePill,
         {
@@ -51968,13 +56528,13 @@ function QuickInputEditorThemeSelector({
           ]
         },
         child.id
-      )) }) : /* @__PURE__ */ u2(Typography$1, { variant: "body2", sx: { color: "text.secondary", fontSize: "0.9rem" }, children: activeParent ? "这个父主题下还没有子主题。" : "先选择一个父主题。" })
+      )) }) : /* @__PURE__ */ u2(Typography2, { variant: "body2", sx: { color: "text.secondary", fontSize: "0.9rem" }, children: activeParent ? "这个父主题下还没有子主题。" : "先选择一个父主题。" })
     ] })
   ] }) });
 }
 function MetaChip({ label, value }) {
   return /* @__PURE__ */ u2(
-    Box$1,
+    Box,
     {
       sx: {
         display: "inline-flex",
@@ -52012,7 +56572,7 @@ function SnapshotSummary({
   }
   if (!chips.length) return null;
   return /* @__PURE__ */ u2(
-    Box$1,
+    Box,
     {
       sx: {
         display: "flex",
@@ -52029,7 +56589,7 @@ function SnapshotSummary({
 }
 function SectionTitle({ title, compact = false }) {
   return /* @__PURE__ */ u2(
-    Typography$1,
+    Typography2,
     {
       variant: "body2",
       sx: {
@@ -52068,10 +56628,10 @@ function QuickInputEditorView({
   if (!template) {
     return /* @__PURE__ */ u2("div", { children: "错误：找不到当前 Block 的模板配置。" });
   }
-  return /* @__PURE__ */ u2(Box$1, { sx: { display: "flex", flexDirection: "column", gap: dense ? 1.75 : 2 }, children: [
-    allowBlockSwitch && blocks.length > 1 && /* @__PURE__ */ u2(Box$1, { children: [
+  return /* @__PURE__ */ u2(Box, { sx: { display: "flex", flexDirection: "column", gap: dense ? 1.75 : 2 }, children: [
+    allowBlockSwitch && blocks.length > 1 && /* @__PURE__ */ u2(Box, { children: [
       /* @__PURE__ */ u2(SectionTitle, { title: "记录类型", compact: true }),
-      /* @__PURE__ */ u2(FormControl, { fullWidth: true, children: /* @__PURE__ */ u2("div", { style: { display: "flex", flexWrap: "wrap", gap: "8px" }, children: blocks.map((block) => /* @__PURE__ */ u2(
+      /* @__PURE__ */ u2(FormControl2, { fullWidth: true, children: /* @__PURE__ */ u2("div", { style: { display: "flex", flexWrap: "wrap", gap: "8px" }, children: blocks.map((block) => /* @__PURE__ */ u2(
         SelectablePill,
         {
           selected: currentBlockId === block.id,
@@ -52082,7 +56642,7 @@ function QuickInputEditorView({
         block.id
       )) }) })
     ] }),
-    /* @__PURE__ */ u2(Box$1, { children: [
+    /* @__PURE__ */ u2(Box, { children: [
       /* @__PURE__ */ u2(SectionTitle, { title: "主题分类", compact: true }),
       /* @__PURE__ */ u2(
         QuickInputEditorThemeSelector,
@@ -52094,7 +56654,7 @@ function QuickInputEditorView({
         }
       )
     ] }),
-    showDivider && /* @__PURE__ */ u2(Divider$1, { sx: { my: dense ? 0.1 : 0.2, opacity: 0.55 } }),
+    showDivider && /* @__PURE__ */ u2(Divider2, { sx: { my: dense ? 0.1 : 0.2, opacity: 0.55 } }),
     /* @__PURE__ */ u2(
       SnapshotSummary,
       {
@@ -52103,7 +56663,7 @@ function QuickInputEditorView({
         fieldSourceSummary
       }
     ),
-    /* @__PURE__ */ u2(Box$1, { children: /* @__PURE__ */ u2(
+    /* @__PURE__ */ u2(Box, { children: /* @__PURE__ */ u2(
       QuickInputEditorFields,
       {
         getResourcePath,
@@ -52598,10 +57158,10 @@ function useQuickInputOriginalNavigation({
   }, [openOriginal, originalGestureHint]);
   const handleOriginalTouchEnd = q$1((event) => {
     if (!originalGestureHint) return;
-    const now = Date.now();
+    const now2 = Date.now();
     const previous = originalTouchRef.current;
-    originalTouchRef.current = now;
-    if (previous && now - previous <= 350) {
+    originalTouchRef.current = now2;
+    if (previous && now2 - previous <= 350) {
       originalTouchRef.current = null;
       event.preventDefault();
       event.stopPropagation();
@@ -52649,7 +57209,7 @@ function QuickInputModalFooter({
       },
       children: /* @__PURE__ */ u2("div", { style: { display: "flex", gap: "8px", flexWrap: "wrap", justifyContent: "space-between", width: "100%" }, children: [
         /* @__PURE__ */ u2("div", { children: mode === "edit" ? /* @__PURE__ */ u2(
-          Button$1,
+          Button2,
           {
             color: "error",
             onMouseDown: onPreserveDesktopInputFocus,
@@ -52660,9 +57220,9 @@ function QuickInputModalFooter({
           }
         ) : null }),
         /* @__PURE__ */ u2("div", { style: { display: "flex", gap: "8px", flexWrap: "wrap", justifyContent: "flex-end" }, children: [
-          /* @__PURE__ */ u2(Button$1, { onMouseDown: onPreserveDesktopInputFocus, onPointerDown: onPreserveDesktopInputFocus, onClick: onCancel, disabled: isBusy, children: "取消" }),
+          /* @__PURE__ */ u2(Button2, { onMouseDown: onPreserveDesktopInputFocus, onPointerDown: onPreserveDesktopInputFocus, onClick: onCancel, disabled: isBusy, children: "取消" }),
           /* @__PURE__ */ u2(
-            Button$1,
+            Button2,
             {
               "data-submit": "true",
               onMouseDown: onSubmitPointerDown,
@@ -52693,7 +57253,7 @@ function QuickInputModalHeader({
   onOriginalPointerClick,
   onOriginalTouchEnd
 }) {
-  return /* @__PURE__ */ u2(Box$1, { sx: { mb: "0.75rem" }, children: [
+  return /* @__PURE__ */ u2(Box, { sx: { mb: "0.75rem" }, children: [
     /* @__PURE__ */ u2(
       ModalHeader,
       {
@@ -52752,7 +57312,7 @@ function useQuickInputOutputPlanPreview({
         }
       });
     } catch (error) {
-      console.warn("[记录调试][保存位置预览] 计算实时 OutputPlan 失败，回退到初始计划", error);
+      diagnosticWarn("[记录调试][保存位置预览] 计算实时 OutputPlan 失败，回退到初始计划", error);
       return preparedRecord.outputPlan ?? null;
     }
   }, [currentState.template, currentState.theme, currentState.formData, currentState.templateId, currentState.templateSourceType, preparedRecord.outputPlan]);
@@ -53009,12 +57569,12 @@ function QuickInputConflictRecoveryPanel({
               recovery.paths.join("、")
             ] }) : null
           ] }),
-          /* @__PURE__ */ u2(Button$1, { size: "small", onClick: onDismiss, disabled: isBusy || isRescanning, children: "隐藏" })
+          /* @__PURE__ */ u2(Button2, { size: "small", onClick: onDismiss, disabled: isBusy || isRescanning, children: "隐藏" })
         ] }),
         /* @__PURE__ */ u2("div", { style: { display: "flex", gap: "8px", flexWrap: "wrap", marginTop: "10px" }, children: [
-          recovery.canOpenOriginal ? /* @__PURE__ */ u2(Button$1, { size: "small", variant: "outlined", onClick: onOpenOriginal, disabled: isBusy || isRescanning, children: "打开原文" }) : null,
-          recovery.canRescan ? /* @__PURE__ */ u2(Button$1, { size: "small", variant: "outlined", onClick: onRescan, disabled: isBusy || isRescanning, children: isRescanning ? "扫描中..." : "重新扫描" }) : null,
-          recovery.canRetry ? /* @__PURE__ */ u2(Button$1, { size: "small", variant: "contained", onClick: onRetry, disabled: isBusy || isRescanning, children: "重试保存" }) : null
+          recovery.canOpenOriginal ? /* @__PURE__ */ u2(Button2, { size: "small", variant: "outlined", onClick: onOpenOriginal, disabled: isBusy || isRescanning, children: "打开原文" }) : null,
+          recovery.canRescan ? /* @__PURE__ */ u2(Button2, { size: "small", variant: "outlined", onClick: onRescan, disabled: isBusy || isRescanning, children: isRescanning ? "扫描中..." : "重新扫描" }) : null,
+          recovery.canRetry ? /* @__PURE__ */ u2(Button2, { size: "small", variant: "contained", onClick: onRetry, disabled: isBusy || isRescanning, children: "重试保存" }) : null
         ] })
       ]
     }
@@ -53066,7 +57626,7 @@ class QuickInputModal extends obsidian.Modal {
       /* @__PURE__ */ u2(
         QuickInputModalContent,
         {
-          getResourcePath: (path) => this.app.vault.adapter.getResourcePath(path),
+          getResourcePath: (path) => resolveVaultResourcePath(this.app, path),
           initialBlockId: this.blockId,
           context: this.context,
           initialThemeId: this.themeId,
@@ -53076,7 +57636,7 @@ class QuickInputModal extends obsidian.Modal {
           mode: this.options?.mode || "create",
           editItem: this.options?.editItem,
           source: this.options?.source,
-          vaultName: this.app.vault.getName(),
+          vaultName: getVaultName(this.app),
           onSubmitSuccess: this.options?.onSubmitSuccess
         }
       ),
@@ -53273,6 +57833,32 @@ function QuickInputModalContent({
     )
   ] });
 }
+const BACKDROP_CLOSE_EVENTS = [
+  "pointerdown",
+  "mousedown",
+  "click",
+  "touchstart",
+  "touchend"
+];
+function installBackdropCloseGuard(modal) {
+  const bgEl = modal.bgEl;
+  if (!bgEl) return () => void 0;
+  const stopBackdropClose = (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+  };
+  BACKDROP_CLOSE_EVENTS.forEach((eventName) => {
+    bgEl.addEventListener(eventName, stopBackdropClose, true);
+  });
+  let disposed2 = false;
+  return () => {
+    if (disposed2) return;
+    disposed2 = true;
+    BACKDROP_CLOSE_EVENTS.forEach((eventName) => {
+      bgEl.removeEventListener(eventName, stopBackdropClose, true);
+    });
+  };
+}
 function AiTextPromptForm({ onSubmit, onCancel, isLoading }) {
   const [text2, setText] = d("");
   const handleSubmit = () => {
@@ -53290,23 +57876,23 @@ function AiTextPromptForm({ onSubmit, onCancel, isLoading }) {
       onCancel();
     }
   };
-  return /* @__PURE__ */ u2(Box$1, { sx: { p: 2, minWidth: 400 }, children: [
+  return /* @__PURE__ */ u2(Box, { sx: { p: 2, minWidth: 400 }, children: [
     /* @__PURE__ */ u2(
       ModalHeader,
       {
         padding: 0,
         borderBottom: false,
-        left: /* @__PURE__ */ u2(Stack$1, { direction: "row", spacing: 1, alignItems: "center", children: [
+        left: /* @__PURE__ */ u2(Stack, { direction: "row", spacing: 1, alignItems: "center", children: [
           /* @__PURE__ */ u2(SmartToyIcon, { color: "primary" }),
-          /* @__PURE__ */ u2(Typography$1, { variant: "h6", children: "AI 自然语言快速记录" })
+          /* @__PURE__ */ u2(Typography2, { variant: "h6", children: "AI 自然语言快速记录" })
         ] }),
         onClose: onCancel
       }
     ),
-    /* @__PURE__ */ u2(Box$1, { sx: { mb: 2 } }),
-    /* @__PURE__ */ u2(Typography$1, { variant: "body2", color: "text.secondary", sx: { mb: 2 }, children: "用自然语言描述你想记录的内容，AI 会自动识别并填充相应字段。" }),
+    /* @__PURE__ */ u2(Box, { sx: { mb: 2 } }),
+    /* @__PURE__ */ u2(Typography2, { variant: "body2", color: "text.secondary", sx: { mb: 2 }, children: "用自然语言描述你想记录的内容，AI 会自动识别并填充相应字段。" }),
     /* @__PURE__ */ u2(
-      TextField$1,
+      TextField2,
       {
         fullWidth: true,
         multiline: true,
@@ -53320,16 +57906,16 @@ function AiTextPromptForm({ onSubmit, onCancel, isLoading }) {
         sx: { mb: 2 }
       }
     ),
-    /* @__PURE__ */ u2(Typography$1, { variant: "caption", color: "text.secondary", sx: { display: "block", mb: 2 }, children: "提示：按 Ctrl+Enter 快速提交" }),
-    /* @__PURE__ */ u2(Stack$1, { direction: "row", spacing: 1, justifyContent: "flex-end", children: [
-      /* @__PURE__ */ u2(Button$1, { onClick: onCancel, disabled: isLoading, children: "取消" }),
+    /* @__PURE__ */ u2(Typography2, { variant: "caption", color: "text.secondary", sx: { display: "block", mb: 2 }, children: "提示：按 Ctrl+Enter 快速提交" }),
+    /* @__PURE__ */ u2(Stack, { direction: "row", spacing: 1, justifyContent: "flex-end", children: [
+      /* @__PURE__ */ u2(Button2, { onClick: onCancel, disabled: isLoading, children: "取消" }),
       /* @__PURE__ */ u2(
-        Button$1,
+        Button2,
         {
           variant: "contained",
           onClick: handleSubmit,
           disabled: !text2.trim() || isLoading,
-          startIcon: isLoading ? /* @__PURE__ */ u2(CircularProgress, { size: 16 }) : void 0,
+          startIcon: isLoading ? /* @__PURE__ */ u2(CircularProgress2, { size: 16 }) : void 0,
           children: isLoading ? "解析中..." : "解析"
         }
       )
@@ -53362,32 +57948,13 @@ class AiTextPromptModal extends obsidian.Modal {
   onOpen() {
     this.contentEl.empty();
     this.modalEl.addClass("think-ai-prompt-modal");
-    this.setupBackdropCloseGuard();
+    this.cleanupBackdropCloseGuard = installBackdropCloseGuard(this);
     this.renderContent();
-  }
-  setupBackdropCloseGuard() {
-    const bgEl = this.bgEl;
-    if (!bgEl) return;
-    const stopBackdropClose = (event) => {
-      event.preventDefault();
-      event.stopPropagation();
-    };
-    bgEl.addEventListener("pointerdown", stopBackdropClose, true);
-    bgEl.addEventListener("mousedown", stopBackdropClose, true);
-    bgEl.addEventListener("click", stopBackdropClose, true);
-    bgEl.addEventListener("touchstart", stopBackdropClose, true);
-    bgEl.addEventListener("touchend", stopBackdropClose, true);
-    this.cleanupBackdropCloseGuard = () => {
-      bgEl.removeEventListener("pointerdown", stopBackdropClose, true);
-      bgEl.removeEventListener("mousedown", stopBackdropClose, true);
-      bgEl.removeEventListener("click", stopBackdropClose, true);
-      bgEl.removeEventListener("touchstart", stopBackdropClose, true);
-      bgEl.removeEventListener("touchend", stopBackdropClose, true);
-    };
   }
   renderContent() {
     this.contentEl.empty();
-    nn(
+    renderModalContent(
+      this.contentEl,
       /* @__PURE__ */ u2(
         AiTextPromptForm,
         {
@@ -53407,8 +57974,7 @@ class AiTextPromptModal extends obsidian.Modal {
           },
           isLoading: this.isLoading
         }
-      ),
-      this.contentEl
+      )
     );
   }
   onClose() {
@@ -53418,7 +57984,7 @@ class AiTextPromptModal extends obsidian.Modal {
       this.resolvePromise(null);
       this.resolvePromise = null;
     }
-    pn(this.contentEl);
+    unmountModalContent(this.contentEl);
   }
 }
 function normalizeAiFieldValue(field, value) {
@@ -53468,7 +58034,7 @@ class AiBatchConfirmModal extends obsidian.Modal {
   onOpen() {
     this.contentEl.empty();
     this.modalEl.addClass("think-ai-batch-confirm-modal");
-    this.setupBackdropCloseGuard();
+    this.cleanupBackdropCloseGuard = installBackdropCloseGuard(this);
     this.modalEl.style.width = "90vw";
     this.modalEl.style.maxWidth = "900px";
     this.modalEl.style.height = "80vh";
@@ -53477,7 +58043,7 @@ class AiBatchConfirmModal extends obsidian.Modal {
       /* @__PURE__ */ u2(
         AiBatchConfirmForm,
         {
-          app: this.app,
+          resolveResourcePath: (path) => resolveVaultResourcePath(this.app, path),
           title: this.args.title,
           confirmText: this.args.confirmText,
           cancelText: this.args.cancelText,
@@ -53495,26 +58061,6 @@ class AiBatchConfirmModal extends obsidian.Modal {
       this.services
     );
   }
-  setupBackdropCloseGuard() {
-    const bgEl = this.bgEl;
-    if (!bgEl) return;
-    const stopBackdropClose = (event) => {
-      event.preventDefault();
-      event.stopPropagation();
-    };
-    bgEl.addEventListener("pointerdown", stopBackdropClose, true);
-    bgEl.addEventListener("mousedown", stopBackdropClose, true);
-    bgEl.addEventListener("click", stopBackdropClose, true);
-    bgEl.addEventListener("touchstart", stopBackdropClose, true);
-    bgEl.addEventListener("touchend", stopBackdropClose, true);
-    this.cleanupBackdropCloseGuard = () => {
-      bgEl.removeEventListener("pointerdown", stopBackdropClose, true);
-      bgEl.removeEventListener("mousedown", stopBackdropClose, true);
-      bgEl.removeEventListener("click", stopBackdropClose, true);
-      bgEl.removeEventListener("touchstart", stopBackdropClose, true);
-      bgEl.removeEventListener("touchend", stopBackdropClose, true);
-    };
-  }
   onClose() {
     this.cleanupBackdropCloseGuard?.();
     this.cleanupBackdropCloseGuard = null;
@@ -53526,7 +58072,7 @@ class AiBatchConfirmModal extends obsidian.Modal {
   }
 }
 function AiBatchConfirmForm({
-  app,
+  resolveResourcePath,
   title,
   confirmText,
   cancelText,
@@ -53687,9 +58233,9 @@ function AiBatchConfirmForm({
   if (!currentRecord) {
     return /* @__PURE__ */ u2("div", { children: "没有可处理的记录" });
   }
-  return /* @__PURE__ */ u2(Box$1, { sx: { display: "flex", height: "100%", overflow: "hidden" }, children: [
+  return /* @__PURE__ */ u2(Box, { sx: { display: "flex", height: "100%", overflow: "hidden" }, children: [
     /* @__PURE__ */ u2(
-      Box$1,
+      Box,
       {
         sx: {
           width: "200px",
@@ -53699,31 +58245,31 @@ function AiBatchConfirmForm({
           flexShrink: 0
         },
         children: [
-          /* @__PURE__ */ u2(Box$1, { sx: { p: 1.5, borderBottom: "1px solid var(--background-modifier-border)" }, children: [
-            /* @__PURE__ */ u2(Typography$1, { variant: "subtitle2", sx: { fontWeight: 600 }, children: "AI 识别结果" }),
-            /* @__PURE__ */ u2(Typography$1, { variant: "caption", color: "text.secondary", children: [
+          /* @__PURE__ */ u2(Box, { sx: { p: 1.5, borderBottom: "1px solid var(--background-modifier-border)" }, children: [
+            /* @__PURE__ */ u2(Typography2, { variant: "subtitle2", sx: { fontWeight: 600 }, children: "AI 识别结果" }),
+            /* @__PURE__ */ u2(Typography2, { variant: "caption", color: "text.secondary", children: [
               "共 ",
               records.length,
               " 条 · 已保存 ",
               savedCount
             ] })
           ] }),
-          /* @__PURE__ */ u2(List$1, { sx: { flex: 1, overflow: "auto", py: 0 }, children: records.map((record, index) => {
+          /* @__PURE__ */ u2(List2, { sx: { flex: 1, overflow: "auto", py: 0 }, children: records.map((record, index) => {
             const block = blocks.find((b2) => b2.id === record.blockId);
             const isActive = index === currentIndex;
             return /* @__PURE__ */ u2(
-              ListItemButton,
+              ListItemButton2,
               {
                 selected: isActive,
                 onClick: () => setCurrentIndex(index),
                 sx: { py: 1, opacity: record.skipped ? 0.5 : 1, bgcolor: isActive ? "action.selected" : "transparent" },
                 children: [
-                  /* @__PURE__ */ u2(ListItemIcon, { sx: { minWidth: 32 }, children: record.saved ? /* @__PURE__ */ u2(CheckCircleIcon, { color: "success", fontSize: "small" }) : record.skipped ? /* @__PURE__ */ u2(DeleteIcon, { color: "disabled", fontSize: "small" }) : /* @__PURE__ */ u2(RadioButtonUncheckedIcon, { color: "action", fontSize: "small" }) }),
+                  /* @__PURE__ */ u2(ListItemIcon2, { sx: { minWidth: 32 }, children: record.saved ? /* @__PURE__ */ u2(CheckCircleIcon, { color: "success", fontSize: "small" }) : record.skipped ? /* @__PURE__ */ u2(DeleteIcon, { color: "disabled", fontSize: "small" }) : /* @__PURE__ */ u2(RadioButtonUncheckedIcon, { color: "action", fontSize: "small" }) }),
                   /* @__PURE__ */ u2(
-                    ListItemText,
+                    ListItemText2,
                     {
-                      primary: /* @__PURE__ */ u2(Typography$1, { variant: "body2", noWrap: true, sx: { fontWeight: isActive ? 600 : 400 }, children: block?.name || "未知类型" }),
-                      secondary: /* @__PURE__ */ u2(Typography$1, { variant: "caption", noWrap: true, color: "text.secondary", children: record.cmd.fieldValues?.内容?.slice(0, 20) || record.cmd.rawText?.slice(0, 20) || `记录 ${index + 1}` })
+                      primary: /* @__PURE__ */ u2(Typography2, { variant: "body2", noWrap: true, sx: { fontWeight: isActive ? 600 : 400 }, children: block?.name || "未知类型" }),
+                      secondary: /* @__PURE__ */ u2(Typography2, { variant: "caption", noWrap: true, color: "text.secondary", children: record.cmd.fieldValues?.内容?.slice(0, 20) || record.cmd.rawText?.slice(0, 20) || `记录 ${index + 1}` })
                     }
                   )
                 ]
@@ -53731,7 +58277,7 @@ function AiBatchConfirmForm({
               record.id
             );
           }) }),
-          /* @__PURE__ */ u2(Box$1, { sx: { p: 1.5, borderTop: "1px solid var(--background-modifier-border)" }, children: /* @__PURE__ */ u2(Button$1, { fullWidth: true, variant: "outlined", size: "small", onClick: handleSaveAll, disabled: pendingCount === 0, children: [
+          /* @__PURE__ */ u2(Box, { sx: { p: 1.5, borderTop: "1px solid var(--background-modifier-border)" }, children: /* @__PURE__ */ u2(Button2, { fullWidth: true, variant: "outlined", size: "small", onClick: handleSaveAll, disabled: pendingCount === 0, children: [
             "保存全部 (",
             pendingCount,
             ")"
@@ -53739,28 +58285,28 @@ function AiBatchConfirmForm({
         ]
       }
     ),
-    /* @__PURE__ */ u2(Box$1, { sx: { flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }, children: [
+    /* @__PURE__ */ u2(Box, { sx: { flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }, children: [
       /* @__PURE__ */ u2(
         ModalHeader,
         {
           padding: 2,
-          left: /* @__PURE__ */ u2(Box$1, { children: [
-            /* @__PURE__ */ u2(Typography$1, { variant: "h6", sx: { fontWeight: 600 }, children: [
+          left: /* @__PURE__ */ u2(Box, { children: [
+            /* @__PURE__ */ u2(Typography2, { variant: "h6", sx: { fontWeight: 600 }, children: [
               title,
               " · 编辑第 ",
               currentIndex + 1,
               " 条记录"
             ] }),
-            currentRecord.saved && /* @__PURE__ */ u2(Chip, { label: "已保存", color: "success", size: "small", sx: { ml: 1 } }),
-            currentRecord.skipped && /* @__PURE__ */ u2(Chip, { label: "已跳过", color: "default", size: "small", sx: { ml: 1 } })
+            currentRecord.saved && /* @__PURE__ */ u2(Chip2, { label: "已保存", color: "success", size: "small", sx: { ml: 1 } }),
+            currentRecord.skipped && /* @__PURE__ */ u2(Chip2, { label: "已跳过", color: "default", size: "small", sx: { ml: 1 } })
           ] }),
           onClose: closeModal
         }
       ),
-      /* @__PURE__ */ u2(Box$1, { sx: { flex: 1, overflow: "auto", p: 2 }, children: /* @__PURE__ */ u2(
+      /* @__PURE__ */ u2(Box, { sx: { flex: 1, overflow: "auto", p: 2 }, children: /* @__PURE__ */ u2(
         QuickInputEditor,
         {
-          getResourcePath: (path) => app.vault.adapter.getResourcePath(path),
+          getResourcePath: resolveResourcePath,
           initialBlockId: currentRecord.blockId,
           initialThemeId: currentRecord.themeId || null,
           initialFormData: currentRecord.formData,
@@ -53776,7 +58322,7 @@ function AiBatchConfirmForm({
         currentRecord.id
       ) }),
       /* @__PURE__ */ u2(
-        Box$1,
+        Box,
         {
           sx: {
             p: 2,
@@ -53786,10 +58332,10 @@ function AiBatchConfirmForm({
             alignItems: "center"
           },
           children: [
-            /* @__PURE__ */ u2(Button$1, { variant: "text", color: "inherit", onClick: handleSkipCurrent, disabled: currentRecord.saved || currentRecord.skipped, children: "跳过此条" }),
-            /* @__PURE__ */ u2(Box$1, { sx: { display: "flex", gap: 1 }, children: [
-              /* @__PURE__ */ u2(Button$1, { variant: "contained", onClick: handleSaveCurrent, disabled: currentRecord.saved, children: currentRecord.saved ? "已保存" : "保存此条" }),
-              /* @__PURE__ */ u2(Button$1, { variant: "outlined", onClick: handleComplete, children: "完成" })
+            /* @__PURE__ */ u2(Button2, { variant: "text", color: "inherit", onClick: handleSkipCurrent, disabled: currentRecord.saved || currentRecord.skipped, children: "跳过此条" }),
+            /* @__PURE__ */ u2(Box, { sx: { display: "flex", gap: 1 }, children: [
+              /* @__PURE__ */ u2(Button2, { variant: "contained", onClick: handleSaveCurrent, disabled: currentRecord.saved, children: currentRecord.saved ? "已保存" : "保存此条" }),
+              /* @__PURE__ */ u2(Button2, { variant: "outlined", onClick: handleComplete, children: "完成" })
             ] })
           ]
         }
@@ -54047,9 +58593,7 @@ function FloatingPanel({
     focus(id);
   }, [id, focus]);
   if (!visible) return null;
-  if (typeof console !== "undefined") {
-    console.log("[FloatingPanel][portal-mode]", { id, portal, placement, portalTarget: portal ? portalContainer ? "custom" : "document.body" : "inline" });
-  }
+  diagnosticLog("[FloatingPanel][portal-mode]", { id, portal, placement, portalTarget: portal ? portalContainer ? "custom" : "document.body" : "inline" });
   const paperStyle = inline ? {
     position: "relative",
     left: void 0,
@@ -54343,4454 +58887,6 @@ const selectFloatingWindowsFocus = (s2) => s2.floatingWindows.focus;
 const makeSelectFloatingWindowZIndex = (id) => (s2) => s2.floatingWindows.windows[id]?.zIndex;
 const selectIsTimerWidgetVisible = (s2) => s2.ui.isTimerWidgetVisible;
 const selectSetTimerWidgetVisible = (s2) => s2.ui.setTimerWidgetVisible;
-function ItemLink({ item, app, className = "", showIcon = true }) {
-  const gesture = createRecordGestureHandlers({
-    item,
-    app,
-    onPrimary: () => {
-      openEditFromItem({ app, item });
-    }
-  });
-  return /* @__PURE__ */ u2(
-    "span",
-    {
-      class: `item-link ${className}`,
-      onClick: gesture.onClick,
-      onDblClick: gesture.onDblClick,
-      onTouchEnd: gesture.onTouchEnd,
-      style: { cursor: "pointer" },
-      children: [
-        showIcon && item.icon && /* @__PURE__ */ u2("span", { class: "icon mr-1", children: item.icon }),
-        item.title
-      ]
-    }
-  );
-}
-function renderPlainFallback(containerEl, content) {
-  containerEl.innerHTML = "";
-  containerEl.style.whiteSpace = "pre-wrap";
-  containerEl.textContent = content;
-}
-function MarkdownContent({
-  renderPort,
-  content,
-  contentType = "markdown",
-  sourcePath = "",
-  className = "",
-  onClick,
-  onDblClick,
-  onTouchEnd
-}) {
-  const elRef = A$1(null);
-  y(() => {
-    const containerEl = elRef.current;
-    if (!containerEl) return;
-    let disposed2 = false;
-    containerEl.innerHTML = "";
-    containerEl.style.whiteSpace = "";
-    if (!renderPort) {
-      renderPlainFallback(containerEl, content);
-      return void 0;
-    }
-    renderPort.renderMessage({
-      containerEl,
-      content,
-      contentType: contentType === "plain" ? "plain" : "markdown",
-      sourcePath
-    }).catch(() => {
-      if (!disposed2 && elRef.current === containerEl) {
-        renderPlainFallback(containerEl, content);
-      }
-    });
-    return () => {
-      disposed2 = true;
-      if (elRef.current === containerEl) renderPort.clear(containerEl);
-    };
-  }, [renderPort, content, contentType, sourcePath]);
-  return /* @__PURE__ */ u2("div", { ref: elRef, className: `md-content ${className}`.trim(), onClick, onDblClick, onTouchEnd });
-}
-const BlockItem = ({ item, fields, isNarrow, app, messageRenderPort, allThemes }) => {
-  const metadataFields = fields.filter((f2) => f2 !== "title" && f2 !== "content");
-  const showTitle = fields.includes("title") && item.title;
-  const effectiveContent = item.content && item.content.trim().length > 0 ? item.content : item.title;
-  const showContent = fields.includes("content") && effectiveContent;
-  const narrowClass = isNarrow ? "is-narrow" : "";
-  const gesture = createRecordGestureHandlers({
-    item,
-    app,
-    onPrimary: () => {
-      try {
-        openEditFromItem({ app, item });
-      } catch {
-      }
-    }
-  });
-  return /* @__PURE__ */ u2("div", { class: `bv-item bv-item--block ${narrowClass}`, children: [
-    /* @__PURE__ */ u2("div", { class: "bv-block-metadata", children: /* @__PURE__ */ u2("div", { class: "bv-fields-list-wrapper", children: metadataFields.map((fieldKey) => /* @__PURE__ */ u2(
-      FieldPill,
-      {
-        item,
-        fieldKey,
-        app,
-        allThemes
-      },
-      fieldKey
-    )) }) }),
-    /* @__PURE__ */ u2("div", { class: "bv-block-main", children: [
-      showTitle && /* @__PURE__ */ u2("div", { class: "bv-block-title", children: /* @__PURE__ */ u2(ItemLink, { item, app }) }),
-      showContent && /* @__PURE__ */ u2("div", { class: "bv-block-content", children: /* @__PURE__ */ u2(
-        MarkdownContent,
-        {
-          renderPort: messageRenderPort,
-          content: effectiveContent || "",
-          contentType: "markdown",
-          sourcePath: item.file?.path || "",
-          className: "bv-block-md",
-          onClick: (evt) => {
-            const target = evt?.target;
-            if (target?.closest("a")) return;
-            gesture.onClick(evt);
-          },
-          onDblClick: (evt) => {
-            const target = evt?.target;
-            if (target?.closest("a")) return;
-            gesture.onDblClick(evt);
-          },
-          onTouchEnd: (evt) => {
-            const target = evt?.target;
-            if (target?.closest("a")) return;
-            gesture.onTouchEnd(evt);
-          }
-        }
-      ) })
-    ] })
-  ] });
-};
-function TaskRow({
-  item,
-  onMarkDone,
-  app,
-  timerService,
-  timer,
-  allThemes,
-  showFields = [],
-  compact = false,
-  displayTitle
-}) {
-  const done = isDone(item.categoryKey);
-  const visibleTitle = String(displayTitle ?? item.content ?? item.title ?? "").trim() || item.title;
-  const openEdit = (evt) => {
-    openEditFromItem({ app, item });
-  };
-  const gesture = createRecordGestureHandlers({ item, app, onPrimary: () => openEdit() });
-  return /* @__PURE__ */ u2("div", { class: `task-row ${compact ? "task-row--compact" : ""} ${done ? "task-row--done" : ""}`, children: [
-    /* @__PURE__ */ u2("div", { class: "task-row-checkbox-wrapper", onClick: (e2) => e2.stopPropagation(), children: /* @__PURE__ */ u2(TaskCheckbox, { done, onMarkDone: () => onMarkDone(item.id) }) }),
-    /* @__PURE__ */ u2("div", { class: "task-row-content", onClick: gesture.onClick, onDblClick: gesture.onDblClick, onTouchEnd: gesture.onTouchEnd, children: [
-      /* @__PURE__ */ u2("div", { class: "task-row-main", children: [
-        /* @__PURE__ */ u2("button", { type: "button", onClick: gesture.onClick, onDblClick: gesture.onDblClick, onTouchEnd: gesture.onTouchEnd, class: `task-row-title ${done ? "task-done" : ""}`, style: { background: "none", border: "none", padding: 0, textAlign: "left", cursor: "pointer" }, children: [
-          item.icon && /* @__PURE__ */ u2("span", { class: "icon mr-1", children: item.icon }),
-          visibleTitle
-        ] }),
-        !done && /* @__PURE__ */ u2("div", { class: "task-row-timer-action", onClick: (e2) => e2.stopPropagation(), children: /* @__PURE__ */ u2(
-          TaskSendToTimerButton,
-          {
-            taskId: item.id,
-            timerStatus: timer?.status,
-            onStart: () => timerService?.startOrResume(item.id)
-          }
-        ) })
-      ] }),
-      !compact && showFields.length > 0 && /* @__PURE__ */ u2("div", { class: "task-row-fields", onClick: (e2) => e2.stopPropagation(), children: showFields.map((fieldKey) => /* @__PURE__ */ u2(
-        FieldPill,
-        {
-          item,
-          fieldKey,
-          app,
-          allThemes
-        },
-        fieldKey
-      )) })
-    ] })
-  ] });
-}
-function ProgressBlock({
-  categoryHours,
-  order: order2,
-  totalHours,
-  colorMap,
-  untrackedLabel
-}) {
-  const sortedCategories = T$1(() => {
-    const orderToUse = Array.isArray(order2) ? order2 : [];
-    const presentCategories = /* @__PURE__ */ new Set();
-    orderToUse.forEach((cat) => {
-      if ((categoryHours[cat] || 0) > 0.01) {
-        presentCategories.add(cat);
-      }
-    });
-    Object.keys(categoryHours).forEach((cat) => {
-      if ((categoryHours[cat] || 0) > 0.01) {
-        presentCategories.add(cat);
-      }
-    });
-    return Array.from(presentCategories);
-  }, [categoryHours, order2, untrackedLabel]);
-  if (sortedCategories.length === 0) return null;
-  return /* @__PURE__ */ u2("div", { class: "progress-block-container", children: sortedCategories.map((category) => {
-    const hours = categoryHours[category];
-    const percent = totalHours > 0 ? hours / totalHours * 100 : 0;
-    if (percent < 0.1 && hours < 0.01) return null;
-    const color2 = colorMap[category] || "#cccccc";
-    const displayPercent = Math.max(percent, 0.5);
-    return /* @__PURE__ */ u2(
-      "div",
-      {
-        title: `${category}: ${hours.toFixed(1)}h (${Math.round(percent)}%)`,
-        class: "progress-block-item",
-        children: [
-          /* @__PURE__ */ u2(
-            "div",
-            {
-              class: "progress-block-bar",
-              style: { background: color2, width: `${displayPercent}%` }
-            }
-          ),
-          /* @__PURE__ */ u2(
-            "span",
-            {
-              class: `progress-block-text ${displayPercent > 50 ? "progress-block-text-light" : "progress-block-text-dark"}`,
-              children: `${category} ${hours.toFixed(1)}h`
-            }
-          )
-        ]
-      },
-      category
-    );
-  }) });
-}
-function DayColumnHeader({
-  day,
-  blocks,
-  categoriesConfig,
-  colorMap,
-  untrackedLabel,
-  progressOrder
-}) {
-  const { categoryHours, totalDayHours } = T$1(() => {
-    return buildDailyCategoryHours(blocks, categoriesConfig, untrackedLabel);
-  }, [blocks, categoriesConfig, untrackedLabel]);
-  return /* @__PURE__ */ u2("div", { class: "day-column-header", children: [
-    /* @__PURE__ */ u2("div", { class: "day-header-title", children: dayjs(day).format("MM-DD ddd") }),
-    /* @__PURE__ */ u2("div", { class: "daily-progress-bar", children: /* @__PURE__ */ u2(
-      ProgressBlock,
-      {
-        categoryHours,
-        order: progressOrder,
-        totalHours: totalDayHours,
-        colorMap,
-        untrackedLabel
-      }
-    ) })
-  ] });
-}
-const hexToRgba = (hex, alpha2 = 0.35) => {
-  const h2 = hex.replace("#", "");
-  const bigint = parseInt(h2, 16);
-  return `rgba(${bigint >> 16 & 255},${bigint >> 8 & 255},${bigint & 255},${alpha2})`;
-};
-const formatTimeMinute = (minute) => {
-  const h2 = Math.floor(minute / 60);
-  const m2 = minute % 60;
-  return `${String(h2).padStart(2, "0")}:${String(m2).padStart(2, "0")}`;
-};
-const generateTaskBlockTitle = (block) => {
-  const isCrossNight = block.startMinute % 1440 + block.duration > 1440;
-  if (isCrossNight) {
-    const startDateTime = dayjs(block.actualStartDate).add(block.startMinute, "minute");
-    const endDateTime = startDateTime.add(block.duration, "minute");
-    const startFormat = startDateTime.format("HH:mm");
-    const endFormat = endDateTime.format("HH:mm");
-    return `任务: ${block.pureText}
-时间: ${startFormat} - ${endFormat}`;
-  } else {
-    const startTime = formatTimeMinute(block.startMinute);
-    const endTime = formatTimeMinute(block.endMinute);
-    return `任务: ${block.pureText}
-时间: ${startTime} - ${endTime}`;
-  }
-};
-function DayColumnBody({
-  app,
-  day,
-  blocks,
-  hourHeight,
-  categoriesConfig,
-  colorMap,
-  maxHours,
-  onColumnClick,
-  onUpdateTaskTime,
-  onEditTask,
-  onAlignPrev,
-  onAlignNext
-}) {
-  const ui = useUiPort();
-  const lastTouchRef = A$1(null);
-  const suppressClickUntilRef = A$1(0);
-  const tryUpdateTaskTime = async (taskId, updates) => {
-    if (!onUpdateTaskTime) {
-      ui.notice("未提供保存处理器，无法更新任务时间");
-      return;
-    }
-    try {
-      await onUpdateTaskTime(taskId, updates);
-    } catch (e2) {
-      ui.notice("更新任务时间失败");
-    }
-  };
-  const handleEdit = (block) => {
-    if (onEditTask) {
-      onEditTask(block);
-      return;
-    }
-    openEditFromItem({ app, item: block, openedFrom: "timeline" });
-  };
-  const handleAlignToPrev = (block, prevBlock) => {
-    if (onAlignPrev) {
-      onAlignPrev(block, prevBlock);
-    } else {
-      if (!prevBlock) return;
-      const deltaMinutes = prevBlock.blockEndMinute - block.blockStartMinute;
-      const newAbsoluteStartMinute = block.startMinute + deltaMinutes;
-      const newStartTimeString = formatTimeMinute(newAbsoluteStartMinute);
-      void tryUpdateTaskTime(block.id, { time: newStartTimeString });
-    }
-  };
-  const handleAlignToNext = (block, nextBlock) => {
-    if (onAlignNext) {
-      onAlignNext(block, nextBlock);
-    } else {
-      if (!nextBlock) return;
-      const deltaDuration = nextBlock.blockStartMinute - block.blockEndMinute;
-      const newDuration = block.duration + deltaDuration;
-      if (newDuration <= 0) {
-        ui.notice("无法对齐：任务时长将变为负数或零");
-        return;
-      }
-      void tryUpdateTaskTime(block.id, { duration: newDuration });
-    }
-  };
-  const handleBodyClick = (event) => {
-    if (Date.now() < suppressClickUntilRef.current) return;
-    onColumnClick(day, event);
-  };
-  const handleBodyTouchEnd = (event) => {
-    const touch = event.changedTouches?.[0];
-    if (!touch) return;
-    const now = Date.now();
-    const previous = lastTouchRef.current;
-    const isDoubleTap = !!previous && now - previous.time <= 350 && Math.abs(previous.x - touch.clientX) <= 24 && Math.abs(previous.y - touch.clientY) <= 24;
-    lastTouchRef.current = {
-      time: now,
-      x: touch.clientX,
-      y: touch.clientY
-    };
-    suppressClickUntilRef.current = now + 450;
-    if (!isDoubleTap) return;
-    event.preventDefault();
-    onColumnClick(day, event);
-    lastTouchRef.current = null;
-  };
-  return /* @__PURE__ */ u2(
-    "div",
-    {
-      class: "day-column-body",
-      style: { height: `${maxHours * hourHeight}px` },
-      onClick: (e2) => handleBodyClick(e2),
-      onTouchEnd: (e2) => handleBodyTouchEnd(e2),
-      children: blocks.map((block, index) => {
-        const top2 = block.blockStartMinute / 60 * hourHeight;
-        const height2 = (block.blockEndMinute - block.blockStartMinute) / 60 * hourHeight;
-        const category = mapTaskToCategory(block.fileName || "", categoriesConfig);
-        const color2 = colorMap[category] || "#ccc";
-        const prevBlock = index > 0 ? blocks[index - 1] : null;
-        const nextBlock = index < blocks.length - 1 ? blocks[index + 1] : null;
-        const canAlignToNext = nextBlock && nextBlock.blockStartMinute > block.blockStartMinute;
-        const blockGesture = createRecordGestureHandlers({ item: block, app, onPrimary: () => handleEdit(block) });
-        return /* @__PURE__ */ u2(
-          "div",
-          {
-            class: "timeline-task-block",
-            title: generateTaskBlockTitle(block),
-            style: { top: `${top2}px`, height: `${Math.max(height2, 2)}px` },
-            onClick: (e2) => e2.stopPropagation(),
-            onTouchStart: (e2) => e2.stopPropagation(),
-            onTouchEnd: (e2) => e2.stopPropagation(),
-            children: [
-              /* @__PURE__ */ u2(
-                "a",
-                {
-                  class: "timeline-task-link",
-                  onClick: blockGesture.onClick,
-                  onDblClick: blockGesture.onDblClick,
-                  onTouchEnd: blockGesture.onTouchEnd,
-                  children: [
-                    /* @__PURE__ */ u2("div", { class: "timeline-task-indicator", style: { background: color2 } }),
-                    /* @__PURE__ */ u2("div", { class: "timeline-task-content", style: { background: hexToRgba(color2) }, children: [
-                      block.icon ? /* @__PURE__ */ u2("span", { class: "timeline-task-icon", children: block.icon }) : null,
-                      /* @__PURE__ */ u2("span", { class: "timeline-task-title", children: block.title || block.pureText })
-                    ] })
-                  ]
-                }
-              ),
-              /* @__PURE__ */ u2("div", { class: "task-buttons", children: [
-                /* @__PURE__ */ u2(
-                  "button",
-                  {
-                    class: "task-button",
-                    title: "向前对齐",
-                    disabled: !prevBlock,
-                    onClick: () => handleAlignToPrev(block, prevBlock),
-                    children: "⇡"
-                  }
-                ),
-                /* @__PURE__ */ u2(
-                  "button",
-                  {
-                    class: "task-button",
-                    title: "向后对齐",
-                    disabled: !canAlignToNext,
-                    onClick: () => handleAlignToNext(block, nextBlock),
-                    children: "⇣"
-                  }
-                ),
-                /* @__PURE__ */ u2(
-                  "button",
-                  {
-                    class: "task-button",
-                    title: "精确编辑",
-                    onClick: () => handleEdit(block),
-                    children: "✎"
-                  }
-                )
-              ] })
-            ]
-          },
-          block.id + block.day
-        );
-      })
-    }
-  );
-}
-function BlockView(props) {
-  const {
-    items,
-    groupField,
-    groupFields,
-    groupTree: injectedGroupTree,
-    effectiveGroupFields: injectedGroupFields,
-    fields = [],
-    app,
-    messageRenderPort,
-    onMarkDone,
-    timerService,
-    timers,
-    allThemes
-  } = props;
-  const containerRef = A$1(null);
-  const [isNarrow, setIsNarrow] = d(false);
-  y(() => {
-    const observer = new ResizeObserver((entries) => {
-      for (const entry of entries) setIsNarrow(entry.contentRect.width < 450);
-    });
-    if (containerRef.current) observer.observe(containerRef.current);
-    return () => observer.disconnect();
-  }, []);
-  const renderItem = (item) => {
-    if (item.type === "task") {
-      const timer = timers.find((t3) => t3.taskId === item.id);
-      return /* @__PURE__ */ u2(
-        TaskRow,
-        {
-          item,
-          onMarkDone,
-          app,
-          timerService,
-          timer,
-          allThemes,
-          showFields: []
-        },
-        item.id
-      );
-    } else {
-      return /* @__PURE__ */ u2(
-        BlockItem,
-        {
-          item,
-          fields,
-          isNarrow,
-          app,
-          messageRenderPort,
-          allThemes
-        },
-        item.id
-      );
-    }
-  };
-  const effectiveGroupFields = injectedGroupFields ?? (() => {
-    if (groupFields && groupFields.length > 0) return groupFields;
-    if (groupField) return [groupField];
-    return [];
-  })();
-  if (!effectiveGroupFields.length) {
-    return /* @__PURE__ */ u2("div", { class: "bv-container", ref: containerRef, children: items.map(renderItem) });
-  }
-  devLog("[BlockView] 接收到的 Props:", props);
-  devLog(`[BlockView] 生效的分组字段 (effectiveGroupFields):`, effectiveGroupFields);
-  const groupTree = injectedGroupTree ?? groupItemsByFields(items, effectiveGroupFields);
-  devLog("[BlockView] 生成的分组树 (groupTree):", JSON.parse(JSON.stringify(groupTree)));
-  return /* @__PURE__ */ u2("div", { class: "bv-container", ref: containerRef, children: /* @__PURE__ */ u2(
-    GroupedContainer,
-    {
-      nodes: groupTree,
-      classNames: {
-        root: "",
-        group: "bv-group bv-group--level-0",
-        // level 细分由缩进控制，这里保留原有 bv-group class
-        title: "bv-group-title",
-        content: "bv-group-content",
-        toggleIcon: "bv-group-toggle-icon",
-        label: "bv-group-label"
-      },
-      renderLeaf: (leafItems) => leafItems.map(renderItem)
-    }
-  ) });
-}
-const DATE_FORMAT = "YYYY-MM-DD";
-function parseAllTimes(item) {
-  const startMinute = item.startTime ? timeToMinutes(item.startTime) : null;
-  const explicitEndMinute = item.endTime ? timeToMinutes(item.endTime) : null;
-  const duration2 = item.duration ?? null;
-  if (startMinute !== null && item.startTime && item.endTime) {
-    const normalizedDuration = deriveDurationFromRange(item.startTime, item.endTime);
-    if (normalizedDuration !== null) {
-      return {
-        startMinute,
-        duration: normalizedDuration,
-        endMinute: startMinute + normalizedDuration
-      };
-    }
-  }
-  if (startMinute !== null && duration2 !== null && duration2 >= 0) {
-    return { startMinute, duration: duration2, endMinute: startMinute + duration2 };
-  }
-  if (explicitEndMinute !== null && duration2 !== null && duration2 >= 0 && item.endTime) {
-    const derivedStart = deriveStartFromEndAndDuration(item.endTime, duration2);
-    const derivedStartMinute = derivedStart ? timeToMinutes(derivedStart) : null;
-    if (derivedStartMinute !== null) {
-      return { startMinute: derivedStartMinute, duration: duration2, endMinute: derivedStartMinute + duration2 };
-    }
-  }
-  return { startMinute: null, duration: null, endMinute: null };
-}
-function extractPureText(rawText) {
-  return rawText.replace(/<!--[\s\S]*?-->/g, "").replace(/^\s*[-*+]\s*\[[ xX-]\]\s*/, "").replace(new RegExp("^\\s*(?:\\p{Extended_Pictographic}\\uFE0F?\\s*)+", "u"), "").replace(/[\(\[]\s*(时间|结束|时长)::.*?[\)\]]/g, "").replace(/[\(\[][^\(\)\[\]]*?::.*?[\)\]]/g, "").replace(/#[\p{L}\d\-_/]+/gu, "").replace(/[📅⏳🛫➕✅❌]?\s*\d{4}-\d{2}-\d{2}/g, "").replace(/\s*🔁\s*every\s+.*?(?=$|\s*[#\(\[])/gi, "").replace(/[\(\[]\s*🔁\s*.*?\s*[\)\]]/gi, "").replace(/\s+/g, " ").trim();
-}
-function resolveTimelineDisplayText(item) {
-  const cleanContent = extractPureText(item.content || item.editableText || item.title || "");
-  if (cleanContent) return cleanContent;
-  const fromRaw = extractPureText(item.rawSource || "");
-  if (fromRaw) return fromRaw;
-  return item.title || "";
-}
-function processItemsToTimelineTasks(items) {
-  const timelineTasks = [];
-  for (const item of items) {
-    const fileName = item.file?.basename || item.filename || "";
-    if (!fileName) continue;
-    const isCompletedTask = item.categoryKey?.endsWith("/done") || item.categoryKey?.endsWith("/cancelled") || item.categoryKey === "完成任务";
-    if (item.type !== "task" || !isCompletedTask) continue;
-    const { startMinute, duration: duration2, endMinute } = parseAllTimes(item);
-    if (startMinute !== null && duration2 !== null && endMinute !== null && item.doneDate) {
-      const anchorDate = item.doneDate || item.date;
-      if (!anchorDate) continue;
-      const actualStartDate = dayjs(anchorDate).format(DATE_FORMAT);
-      timelineTasks.push({
-        ...item,
-        startMinute,
-        duration: duration2,
-        endMinute,
-        // Timeline 视觉保持不变；显示文本来自统一后的 content 字段，旧缓存则降级从 rawSource 清洗。
-        pureText: resolveTimelineDisplayText(item),
-        fileName,
-        actualStartDate
-      });
-    }
-  }
-  return timelineTasks;
-}
-function handleTimelineTaskCreation(day, e2, options) {
-  openCreateFromTimeline({
-    app: options.app,
-    uiPort: options.uiPort,
-    inputBlocks: options.inputBlocks,
-    hourHeight: options.hourHeight,
-    dayBlocks: options.dayBlocks,
-    day,
-    event: e2
-  });
-}
-function TimelineSummaryTable({
-  summaryData,
-  colorMap,
-  progressOrder,
-  untrackedLabel
-}) {
-  if (!summaryData || summaryData.length === 0) {
-    return /* @__PURE__ */ u2("div", { class: "timeline-empty-state", children: "此时间范围内无数据可供总结。" });
-  }
-  return /* @__PURE__ */ u2("table", { class: "timeline-summary-table", children: [
-    /* @__PURE__ */ u2("thead", { children: /* @__PURE__ */ u2("tr", { children: [
-      /* @__PURE__ */ u2("th", { children: "月份" }),
-      /* @__PURE__ */ u2("th", { children: "月度总结" }),
-      /* @__PURE__ */ u2("th", { children: "W1" }),
-      /* @__PURE__ */ u2("th", { children: "W2" }),
-      /* @__PURE__ */ u2("th", { children: "W3" }),
-      /* @__PURE__ */ u2("th", { children: "W4" }),
-      /* @__PURE__ */ u2("th", { children: "W5" })
-    ] }) }),
-    /* @__PURE__ */ u2("tbody", { children: summaryData.map((monthData) => /* @__PURE__ */ u2("tr", { children: [
-      /* @__PURE__ */ u2("td", { children: /* @__PURE__ */ u2("strong", { children: monthData.month }) }),
-      /* @__PURE__ */ u2("td", { children: /* @__PURE__ */ u2(
-        ProgressBlock,
-        {
-          categoryHours: monthData.monthlySummary,
-          order: progressOrder,
-          totalHours: monthData.totalMonthHours,
-          colorMap,
-          untrackedLabel
-        }
-      ) }),
-      monthData.weeklySummaries.map((weekData, index) => /* @__PURE__ */ u2("td", { children: weekData ? /* @__PURE__ */ u2(
-        ProgressBlock,
-        {
-          categoryHours: weekData.summary,
-          order: progressOrder,
-          totalHours: weekData.totalHours,
-          colorMap,
-          untrackedLabel
-        }
-      ) : null }, index))
-    ] }, monthData.month)) })
-  ] });
-}
-function TimelineViewView(props) {
-  const {
-    timelineTasksCount,
-    isSummaryView,
-    summaryData,
-    colorMap,
-    progressOrder,
-    untrackedLabel,
-    zoomHandlers,
-    timeAxisWidth,
-    summaryCategoryHours,
-    totalSummaryHours,
-    dailyViewData,
-    categoriesConfig,
-    hourHeight,
-    maxHours,
-    app,
-    onUpdateTaskTime,
-    onColumnClick
-  } = props;
-  if (timelineTasksCount === 0) {
-    return /* @__PURE__ */ u2("div", { class: "timeline-empty-state", children: "当前范围内没有数据。" });
-  }
-  if (isSummaryView) {
-    return /* @__PURE__ */ u2(
-      TimelineSummaryTable,
-      {
-        summaryData,
-        colorMap,
-        progressOrder,
-        untrackedLabel
-      }
-    );
-  }
-  if (!dailyViewData) {
-    return /* @__PURE__ */ u2("div", { class: "timeline-empty-state", children: "当前范围内没有数据。" });
-  }
-  return /* @__PURE__ */ u2("div", { class: "timeline-view-wrapper", ...zoomHandlers, children: [
-    /* @__PURE__ */ u2("div", { class: "timeline-sticky-header", children: [
-      /* @__PURE__ */ u2("div", { class: "summary-progress-container", style: { flex: `0 0 ${timeAxisWidth}px` }, children: [
-        /* @__PURE__ */ u2("div", { class: "summary-title", children: "总结" }),
-        /* @__PURE__ */ u2("div", { class: "summary-content", children: totalSummaryHours > 0 && /* @__PURE__ */ u2(
-          ProgressBlock,
-          {
-            categoryHours: summaryCategoryHours,
-            order: progressOrder,
-            totalHours: totalSummaryHours,
-            colorMap,
-            untrackedLabel
-          }
-        ) })
-      ] }),
-      dailyViewData.dateRangeDays.map((day) => {
-        const dayStr = day.format("YYYY-MM-DD");
-        const blocks = dailyViewData.blocksByDay[dayStr] || [];
-        return /* @__PURE__ */ u2(
-          DayColumnHeader,
-          {
-            day: dayStr,
-            blocks,
-            categoriesConfig,
-            colorMap,
-            untrackedLabel,
-            progressOrder
-          },
-          dayStr
-        );
-      })
-    ] }),
-    /* @__PURE__ */ u2("div", { class: "timeline-scrollable-body", children: [
-      /* @__PURE__ */ u2("div", { class: "time-axis", style: { flex: `0 0 ${timeAxisWidth}px` }, children: Array.from({ length: maxHours + 1 }, (_2, i2) => /* @__PURE__ */ u2("div", { class: "time-axis-hour", style: { height: `${hourHeight}px` }, children: i2 > 0 && i2 % 2 === 0 ? `${i2}:00` : "" }, i2)) }),
-      dailyViewData.dateRangeDays.map((day) => {
-        const dayStr = day.format("YYYY-MM-DD");
-        const blocks = dailyViewData.blocksByDay[dayStr] || [];
-        return /* @__PURE__ */ u2(
-          DayColumnBody,
-          {
-            app,
-            day: dayStr,
-            blocks,
-            hourHeight,
-            categoriesConfig,
-            colorMap,
-            maxHours,
-            onUpdateTaskTime,
-            onColumnClick
-          },
-          dayStr
-        );
-      })
-    ] })
-  ] });
-}
-dayjs.extend(weekOfYear);
-dayjs.extend(isoWeek);
-dayjs.extend(isBetween);
-function TimelineView({
-  items,
-  dateRange,
-  module: module2,
-  currentView,
-  app,
-  onUpdateTaskTime,
-  inputSettings,
-  timelineModel
-}) {
-  const uiPort = useUiPort();
-  const inputBlocks = inputSettings?.blocks || [];
-  const config2 = T$1(() => {
-    if (timelineModel?.config) return timelineModel.config;
-    const defaults = JSON.parse(JSON.stringify(TIMELINE_VIEW_DEFAULT_CONFIG));
-    const userConfig = module2.viewConfig || {};
-    return {
-      ...defaults,
-      ...userConfig,
-      categories: userConfig.categories || defaults.categories
-    };
-  }, [timelineModel, module2.viewConfig]);
-  const { hourHeight, zoomHandlers } = useTimelineZoom({
-    defaultHeight: config2.defaultHourHeight
-  });
-  const timelineTasks = T$1(() => {
-    if (timelineModel?.timelineTasks) return timelineModel.timelineTasks;
-    const filteredItems = module2.filters ? filterByRules(items, module2.filters) : items;
-    return processItemsToTimelineTasks(filteredItems);
-  }, [timelineModel, items, module2.filters]);
-  const colorMap = T$1(() => {
-    if (timelineModel?.colorMap) return timelineModel.colorMap;
-    const finalColorMap = {};
-    const categoriesConfig = config2.categories || {};
-    for (const categoryName in categoriesConfig) {
-      finalColorMap[categoryName] = categoriesConfig[categoryName].color;
-    }
-    finalColorMap[config2.UNTRACKED_LABEL] = "#9ca3af";
-    return finalColorMap;
-  }, [timelineModel, config2.categories, config2.UNTRACKED_LABEL]);
-  const isSummaryView = timelineModel?.isSummaryView ?? (currentView === "年" || currentView === "季");
-  const summaryData = T$1(() => {
-    if (timelineModel?.summaryData) return timelineModel.summaryData;
-    if (!isSummaryView) return [];
-    const viewStart = dayjs(dateRange[0]);
-    const viewEnd = dayjs(dateRange[1]);
-    const tasksInRange = timelineTasks.filter((task) => {
-      const taskDate = dayjs(task.doneDate);
-      return taskDate.isBetween(viewStart, viewEnd, "day", "[]");
-    });
-    return buildMonthlyAndWeeklySummary(tasksInRange, config2);
-  }, [timelineModel, isSummaryView, timelineTasks, dateRange, config2]);
-  const summaryCategoryHours = T$1(() => {
-    if (timelineModel?.summaryCategoryHours) return timelineModel.summaryCategoryHours;
-    if (isSummaryView) return {};
-    return buildSummaryCategoryHours(timelineTasks, dateRange, config2);
-  }, [timelineModel, isSummaryView, timelineTasks, dateRange, config2]);
-  const dailyViewData = T$1(() => {
-    if (timelineModel?.dailyViewData) return timelineModel.dailyViewData;
-    if (isSummaryView) return null;
-    return buildDailyViewData(timelineTasks, dateRange);
-  }, [timelineModel, isSummaryView, timelineTasks, dateRange]);
-  const handleColumnClick = q$1(
-    (day, e2) => {
-      handleTimelineTaskCreation(day, e2, {
-        app,
-        uiPort,
-        inputBlocks,
-        hourHeight,
-        dayBlocks: dailyViewData?.blocksByDay[day] || []
-      });
-    },
-    [app, uiPort, inputBlocks, hourHeight, dailyViewData]
-  );
-  const totalSummaryHours = timelineModel?.totalSummaryHours ?? Object.values(summaryCategoryHours || {}).reduce((s2, h2) => s2 + h2, 0);
-  const TIME_AXIS_WIDTH = 90;
-  return /* @__PURE__ */ u2(
-    TimelineViewView,
-    {
-      timelineTasksCount: timelineTasks.length,
-      isSummaryView,
-      summaryData,
-      colorMap,
-      progressOrder: config2.progressOrder,
-      untrackedLabel: config2.UNTRACKED_LABEL,
-      zoomHandlers,
-      timeAxisWidth: TIME_AXIS_WIDTH,
-      summaryCategoryHours,
-      totalSummaryHours,
-      dailyViewData,
-      categoriesConfig: config2.categories,
-      hourHeight,
-      maxHours: config2.MAX_HOURS_PER_DAY,
-      app,
-      onUpdateTaskTime,
-      onColumnClick: handleColumnClick
-    }
-  );
-}
-function EventTimelineViewView(props) {
-  const {
-    filteredItems,
-    groupedTree,
-    app,
-    displayFields,
-    getItemTime,
-    titleField,
-    contentField,
-    maxContentLength,
-    messageRenderPort,
-    onMarkDone,
-    timerService,
-    timers,
-    allThemes
-  } = props;
-  const cleanDisplayText = (value) => {
-    const text2 = String(value ?? "").replace(/\r\n/g, "\n").replace(/\r/g, "\n").trim();
-    if (!text2) return "";
-    const compact = text2.replace(/\s+/g, " ").trim();
-    if (!Number.isFinite(maxContentLength) || maxContentLength <= 0) return compact;
-    return compact.length > maxContentLength ? `${compact.slice(0, maxContentLength)}...` : compact;
-  };
-  const getTaskDisplayTitle = (item) => {
-    const fromContent = cleanDisplayText(readField(item, contentField));
-    if (fromContent) return fromContent;
-    return cleanDisplayText(readField(item, "content")) || cleanDisplayText(readField(item, titleField)) || item.title || "";
-  };
-  if (filteredItems.length === 0) {
-    return /* @__PURE__ */ u2("div", { class: "event-timeline-empty", children: "当前时间范围内没有事件记录。" });
-  }
-  const renderEventList = (items) => {
-    let lastDate = "";
-    return items.map((item, index) => {
-      const t3 = getItemTime(item);
-      const dateLabel = t3 ? t3.format("YYYY-MM-DD") : "";
-      const timeLabel = t3 ? t3.format("HH:mm") : "";
-      const showDate = dateLabel !== lastDate;
-      if (showDate) lastDate = dateLabel;
-      const titleForKey = readField(item, titleField) || readField(item, "title") || "";
-      const taskDisplayTitle = item.type === "task" ? getTaskDisplayTitle(item) : "";
-      return /* @__PURE__ */ u2("div", { class: "et-event", children: [
-        /* @__PURE__ */ u2("div", { class: "et-event-date", children: [
-          showDate && t3 && /* @__PURE__ */ u2("div", { class: "et-date-label", children: dateLabel }),
-          item.type === "task" && /* @__PURE__ */ u2("div", { class: "et-time-label", children: timeLabel })
-        ] }),
-        /* @__PURE__ */ u2("div", { class: "et-line", children: /* @__PURE__ */ u2("div", { class: "et-dot" }) }),
-        /* @__PURE__ */ u2("div", { class: "et-event-card", children: item.type === "task" ? /* @__PURE__ */ u2(
-          TaskRow,
-          {
-            item,
-            onMarkDone: (id) => onMarkDone?.(id),
-            app,
-            timerService,
-            timer: timers.find((t22) => t22.taskId === item.id),
-            allThemes,
-            displayTitle: taskDisplayTitle,
-            showFields: []
-          }
-        ) : /* @__PURE__ */ u2(BlockItem, { item, fields: displayFields, isNarrow: false, app, messageRenderPort, allThemes }) })
-      ] }, `${dateLabel}-${timeLabel}-${titleForKey}-${index}`);
-    });
-  };
-  if (!groupedTree) {
-    return /* @__PURE__ */ u2("div", { class: "event-timeline-view", children: /* @__PURE__ */ u2("div", { class: "et-ungrouped", children: renderEventList(filteredItems) }) });
-  }
-  return /* @__PURE__ */ u2(
-    GroupedContainer,
-    {
-      nodes: groupedTree,
-      classNames: {
-        root: "event-timeline-view",
-        group: "et-group",
-        title: "et-group-title",
-        content: "et-group-content",
-        toggleIcon: "et-group-toggle-icon",
-        label: "et-group-label"
-      },
-      renderLeaf: (leafItems) => renderEventList(leafItems)
-    }
-  );
-}
-function EventTimelineView(props) {
-  const {
-    items,
-    filteredItems: injectedFilteredItems,
-    groupedTree: injectedGroupedTree,
-    app,
-    dateRange,
-    module: module2,
-    onMarkDone,
-    timerService,
-    timers,
-    allThemes,
-    messageRenderPort
-  } = props;
-  const displayFields = normalizeDisplayFields(module2.fields || ["title", "date"], { fallbackFields: ["title", "date"] });
-  const groupFields = normalizeDisplayFields(module2.groupFields || []);
-  const viewConfig = module2.viewConfig || {};
-  const timeField = viewConfig.timeField || "date";
-  const titleField = viewConfig.titleField || "title";
-  const contentField = viewConfig.contentField || "content";
-  const maxContentLength = Number.isFinite(Number(viewConfig.maxContentLength)) ? Number(viewConfig.maxContentLength) : 160;
-  const start2 = T$1(() => dayjs(dateRange[0]), [dateRange]);
-  const end2 = T$1(() => dayjs(dateRange[1]), [dateRange]);
-  function getItemTime(item) {
-    const raw = readField(item, timeField);
-    if (!raw) return null;
-    try {
-      return dayjs(raw);
-    } catch {
-      return null;
-    }
-  }
-  const filteredItems = T$1(() => {
-    if (injectedFilteredItems !== void 0) return injectedFilteredItems;
-    const result = [];
-    for (const item of items) {
-      const t3 = getItemTime(item);
-      if (!t3) continue;
-      if (!t3.isBetween(start2, end2, "minute", "[]")) continue;
-      result.push(item);
-    }
-    return result.sort((a2, b2) => {
-      const ta = getItemTime(a2);
-      const tb = getItemTime(b2);
-      return ta.valueOf() - tb.valueOf();
-    });
-  }, [items, start2, end2, timeField, injectedFilteredItems]);
-  const groupedTree = T$1(() => {
-    if (injectedGroupedTree !== void 0) return injectedGroupedTree;
-    if (!groupFields || groupFields.length === 0) return null;
-    return groupItemsByFields(filteredItems, groupFields);
-  }, [filteredItems, groupFields, injectedGroupedTree]);
-  return /* @__PURE__ */ u2(
-    EventTimelineViewView,
-    {
-      filteredItems,
-      groupedTree,
-      app,
-      displayFields,
-      getItemTime,
-      titleField,
-      contentField,
-      maxContentLength,
-      messageRenderPort,
-      onMarkDone,
-      timerService,
-      timers,
-      allThemes
-    }
-  );
-}
-function getThemeLeafLabel(themePath) {
-  if (!themePath || themePath === "__default__") return "未分类";
-  const segments = parsePath(themePath);
-  const leaf = segments[segments.length - 1];
-  return leaf?.name || themePath;
-}
-function getThemeGroupTitle(themePath) {
-  if (!themePath || themePath === "__default__") return "未分类";
-  const segments = parsePath(themePath);
-  return segments[0]?.name || themePath;
-}
-function HeatmapView({
-  items,
-  app,
-  dateRange,
-  module: module2,
-  currentView,
-  inputSettings,
-  injectedThemesByPath,
-  injectedThemesToTrack,
-  injectedDataByThemeAndDate
-}) {
-  const ui = useUiPort();
-  const modal = useModalPort();
-  const config2 = T$1(
-    () => ({ ...HEATMAP_VIEW_DEFAULT_CONFIG, ...module2.viewConfig }),
-    [module2.viewConfig]
-  );
-  const themesByPath = T$1(() => {
-    return injectedThemesByPath ?? buildThemesByPathMap(inputSettings.themes);
-  }, [injectedThemesByPath, inputSettings.themes]);
-  const ratingMappingsCache = A$1(new RatingMappingCache()).current;
-  y(() => {
-    ratingMappingsCache.clear();
-  }, [inputSettings.themes, inputSettings.blocks, inputSettings.overrides]);
-  y(() => {
-    devLog(`🔄 [数据更新] 检测到items数据变化，项目数量: ${items.length}`);
-    ratingMappingsCache.clear();
-  }, [items]);
-  const inferredThemePaths = T$1(() => {
-    if (injectedThemesToTrack) return [];
-    const set2 = /* @__PURE__ */ new Set();
-    for (const it of items) {
-      if (it?.theme && typeof it.theme === "string" && it.theme.trim().length > 0) {
-        set2.add(it.theme);
-      }
-    }
-    return Array.from(set2);
-  }, [items, injectedThemesToTrack]);
-  const themesToTrack = T$1(() => {
-    return injectedThemesToTrack ?? (config2.themePaths && config2.themePaths.length > 0 ? config2.themePaths : inferredThemePaths);
-  }, [injectedThemesToTrack, config2.themePaths, inferredThemePaths]);
-  const dataByThemeAndDate = T$1(() => {
-    return injectedDataByThemeAndDate ?? buildThemeDataMap(items, themesToTrack);
-  }, [injectedDataByThemeAndDate, items, themesToTrack]);
-  const inferredBlockIdByTheme = T$1(() => {
-    const result = /* @__PURE__ */ new Map();
-    const counts = /* @__PURE__ */ new Map();
-    for (const it of items) {
-      const themeKey = typeof it?.theme === "string" && it.theme.trim().length > 0 ? it.theme : "__default__";
-      const blockId = typeof it?.templateId === "string" && it.templateId.trim().length > 0 ? it.templateId : typeof it?.categoryKey === "string" && it.categoryKey.trim().length > 0 ? it.categoryKey : "";
-      if (!blockId) continue;
-      if (!counts.has(themeKey)) counts.set(themeKey, /* @__PURE__ */ new Map());
-      const themeCounts = counts.get(themeKey);
-      themeCounts.set(blockId, (themeCounts.get(blockId) || 0) + 1);
-    }
-    counts.forEach((themeCounts, themeKey) => {
-      let bestBlockId = "";
-      let bestCount = -1;
-      themeCounts.forEach((count, blockId) => {
-        if (count > bestCount) {
-          bestCount = count;
-          bestBlockId = blockId;
-        }
-      });
-      if (bestBlockId) result.set(themeKey, bestBlockId);
-    });
-    return result;
-  }, [items]);
-  const resolveCreateBlockId = (themePath, item) => {
-    return config2.sourceBlockId || (item?.templateId || item?.categoryKey) || (themePath ? inferredBlockIdByTheme.get(themePath) : void 0) || inferredBlockIdByTheme.get("__default__") || "";
-  };
-  const openQuickCreate = (date2, item, themePath) => {
-    openCreateFromHeatmap({
-      app,
-      sourceBlockId: resolveCreateBlockId(themePath, item),
-      date: date2,
-      item,
-      themePath,
-      themesByPath,
-      notice: (message) => {
-        ui.notice(message);
-      }
-    });
-  };
-  const handleCellClick = (date2, dayItems, themePath) => {
-    const itemsForDay = dayItems || [];
-    if (itemsForDay.length === 0) {
-      openQuickCreate(date2, void 0, themePath);
-      return;
-    }
-    if (itemsForDay.length === 1) {
-      openQuickCreate(date2, itemsForDay[0], themePath);
-      return;
-    }
-    modal.openCheckinManager({
-      date: date2,
-      items: itemsForDay,
-      onAddRecord: () => openQuickCreate(date2, itemsForDay[itemsForDay.length - 1], themePath)
-    });
-  };
-  const renderMonthGrid = (monthDate, dataForMonth, themePath) => {
-    const startOfMonth = monthDate.startOf("month");
-    const endOfMonth = monthDate.endOf("month");
-    const firstWeekday = startOfMonth.isoWeekday();
-    const themeRatingMapping = ratingMappingsCache.get(
-      inputSettings,
-      config2.sourceBlockId || "",
-      themePath,
-      themesByPath
-    );
-    const days = [];
-    for (let i2 = 1; i2 < firstWeekday; i2++) {
-      days.push(/* @__PURE__ */ u2("div", { class: "heatmap-cell grid-spacer" }, `spacer-${i2}`));
-    }
-    for (let i2 = 1; i2 <= endOfMonth.date(); i2++) {
-      const dateStr = startOfMonth.clone().date(i2).format("YYYY-MM-DD");
-      const dayItems = dataForMonth.get(dateStr);
-      days.push(
-        /* @__PURE__ */ u2(
-          HeatmapCell,
-          {
-            date: dateStr,
-            items: dayItems,
-            config: config2,
-            ratingMapping: themeRatingMapping,
-            app,
-            onCellClick: (clickedDate, clickedItems) => handleCellClick(clickedDate, clickedItems, themePath)
-          },
-          dateStr
-        )
-      );
-    }
-    return /* @__PURE__ */ u2("div", { class: "month-section", children: [
-      /* @__PURE__ */ u2("div", { class: "month-label", children: monthDate.format("M月") }),
-      /* @__PURE__ */ u2("div", { class: "heatmap-row calendar", children: days })
-    ] }, monthDate.format("YYYY-MM"));
-  };
-  const renderHeaderCells = (currentView2, themePath, dataForTheme) => {
-    const start2 = dayjs(dateRange[0]);
-    const end2 = dayjs(dateRange[1]);
-    const themeRatingMapping = ratingMappingsCache.get(
-      inputSettings,
-      config2.sourceBlockId || "",
-      themePath,
-      themesByPath
-    );
-    switch (currentView2) {
-      case "天": {
-        const dateStr = start2.format("YYYY-MM-DD");
-        const dayItems = dataForTheme.get(dateStr);
-        return [
-          /* @__PURE__ */ u2(
-            HeatmapCell,
-            {
-              date: dateStr,
-              items: dayItems,
-              config: config2,
-              ratingMapping: themeRatingMapping,
-              app,
-              onCellClick: (clickedDate, clickedItems) => handleCellClick(clickedDate, clickedItems, themePath)
-            },
-            dateStr
-          )
-        ];
-      }
-      case "周": {
-        const cells = [];
-        let currentDate = start2.startOf("isoWeek");
-        const endDate = start2.endOf("isoWeek");
-        while (currentDate.isSameOrBefore(endDate, "day")) {
-          const dateStr = currentDate.format("YYYY-MM-DD");
-          const dayItems = dataForTheme.get(dateStr);
-          cells.push(
-            /* @__PURE__ */ u2(
-              HeatmapCell,
-              {
-                date: dateStr,
-                items: dayItems,
-                config: config2,
-                ratingMapping: themeRatingMapping,
-                app,
-                onCellClick: (clickedDate, clickedItems) => handleCellClick(clickedDate, clickedItems, themePath)
-              },
-              `${themePath}-${dateStr}`
-            )
-          );
-          currentDate = currentDate.add(1, "day");
-        }
-        return cells;
-      }
-      case "月": {
-        const cells = [];
-        let currentDate = start2.startOf("month");
-        const endDate = start2.endOf("month");
-        while (currentDate.isSameOrBefore(endDate, "day")) {
-          const dateStr = currentDate.format("YYYY-MM-DD");
-          const dayItems = dataForTheme.get(dateStr);
-          cells.push(
-            /* @__PURE__ */ u2(
-              HeatmapCell,
-              {
-                date: dateStr,
-                items: dayItems,
-                config: config2,
-                ratingMapping: themeRatingMapping,
-                app,
-                onCellClick: (clickedDate, clickedItems) => handleCellClick(clickedDate, clickedItems, themePath)
-              },
-              dateStr
-            )
-          );
-          currentDate = currentDate.add(1, "day");
-        }
-        return cells;
-      }
-      case "年":
-      case "季": {
-        const months = [];
-        let currentMonth = start2.clone().startOf("month");
-        while (currentMonth.isSameOrBefore(end2, "month")) {
-          months.push(renderMonthGrid(currentMonth, dataForTheme, themePath));
-          currentMonth = currentMonth.add(1, "month");
-        }
-        return months;
-      }
-      default:
-        return [];
-    }
-  };
-  const [verticalLayouts, setVerticalLayouts] = d(/* @__PURE__ */ new Set());
-  const [collapsedThemes, setCollapsedThemes] = d(/* @__PURE__ */ new Set());
-  const headerRefs = A$1(/* @__PURE__ */ new Map());
-  const toggleThemeCollapsed = (theme2) => {
-    setCollapsedThemes((prev2) => {
-      const next2 = new Set(prev2);
-      if (next2.has(theme2)) next2.delete(theme2);
-      else next2.add(theme2);
-      return next2;
-    });
-  };
-  const checkLayout = (theme2, headerElement) => {
-    if (!headerElement || theme2 === "__default__") return;
-    const isGridLayout = ["年", "季"].includes(currentView);
-    if (isGridLayout || currentView === "周") return;
-    const containerWidth = headerElement.clientWidth;
-    const threshold = currentView === "天" ? 320 : 600;
-    const needsVertical = containerWidth < threshold;
-    setVerticalLayouts((prev2) => {
-      const newSet = new Set(prev2);
-      if (needsVertical) {
-        newSet.add(theme2);
-      } else {
-        newSet.delete(theme2);
-      }
-      return newSet;
-    });
-  };
-  y(() => {
-    const resizeObserver = new ResizeObserver((entries) => {
-      entries.forEach((entry) => {
-        const element = entry.target;
-        const theme2 = element.dataset.theme;
-        if (theme2) {
-          checkLayout(theme2, element);
-        }
-      });
-    });
-    headerRefs.current.forEach((element, theme2) => {
-      resizeObserver.observe(element);
-      checkLayout(theme2, element);
-    });
-    return () => {
-      resizeObserver.disconnect();
-    };
-  }, [themesToTrack, currentView]);
-  const buildDayThemeGroups = () => {
-    const themesToDisplay = themesToTrack.length > 0 ? themesToTrack : ["__default__"];
-    const groups = [];
-    const groupMap = /* @__PURE__ */ new Map();
-    themesToDisplay.forEach((themePath) => {
-      const title = getThemeGroupTitle(themePath);
-      const label = getThemeLeafLabel(themePath);
-      const entry = {
-        themePath,
-        label,
-        dataForTheme: dataByThemeAndDate.get(themePath) || /* @__PURE__ */ new Map()
-      };
-      const existingGroup = groupMap.get(title);
-      if (existingGroup) {
-        existingGroup.entries.push(entry);
-        return;
-      }
-      const newGroup = {
-        title,
-        entries: [entry]
-      };
-      groupMap.set(title, newGroup);
-      groups.push(newGroup);
-    });
-    return groups;
-  };
-  const renderDayContent = () => {
-    const dayDateStr = dayjs(dateRange[0]).format("YYYY-MM-DD");
-    const dayGroups = buildDayThemeGroups();
-    return /* @__PURE__ */ u2("div", { class: "heatmap-day-view", children: dayGroups.map((group) => /* @__PURE__ */ u2("section", { class: "heatmap-day-section", children: [
-      /* @__PURE__ */ u2("h3", { class: "heatmap-day-section-title", children: group.title }),
-      /* @__PURE__ */ u2("div", { class: "heatmap-day-section-grid", children: group.entries.map((entry) => {
-        const themeRatingMapping = ratingMappingsCache.get(
-          inputSettings,
-          config2.sourceBlockId || "",
-          entry.themePath,
-          themesByPath
-        );
-        const dayItems = entry.dataForTheme.get(dayDateStr);
-        return /* @__PURE__ */ u2("div", { class: "heatmap-day-item", children: /* @__PURE__ */ u2(
-          HeatmapCell,
-          {
-            date: dayDateStr,
-            items: dayItems,
-            config: config2,
-            ratingMapping: themeRatingMapping,
-            app,
-            highlightToday: false,
-            emptyLabel: !dayItems || dayItems.length === 0 ? entry.label : void 0,
-            onCellClick: (clickedDate, clickedItems) => handleCellClick(clickedDate, clickedItems, entry.themePath)
-          }
-        ) }, entry.themePath);
-      }) })
-    ] }, group.title)) });
-  };
-  const renderContent = () => {
-    if (currentView === "天") {
-      return renderDayContent();
-    }
-    const themesToDisplay = themesToTrack.length > 0 ? themesToTrack : ["__default__"];
-    const isRowLayout = ["周", "月"].includes(currentView);
-    const wrapperClass = isRowLayout ? "layout-row" : "layout-grid";
-    return /* @__PURE__ */ u2("div", { class: `heatmap-view-wrapper ${wrapperClass}`, children: themesToDisplay.map((theme2) => {
-      const dataForTheme = dataByThemeAndDate.get(theme2) || /* @__PURE__ */ new Map();
-      const isVertical = currentView === "周" ? false : verticalLayouts.has(theme2);
-      const isCollapsed = currentView === "年" && collapsedThemes.has(theme2);
-      const leafLabel = getThemeLeafLabel(theme2);
-      return /* @__PURE__ */ u2("div", { class: `heatmap-theme-group ${currentView === "年" ? "is-collapsible" : ""}`, children: /* @__PURE__ */ u2(
-        "div",
-        {
-          class: `heatmap-theme-header ${currentView === "周" ? "week-inline-layout" : ""} ${isVertical ? "vertical-layout" : ""} ${isCollapsed ? "is-collapsed" : ""}`,
-          "data-theme": theme2,
-          ref: (el) => {
-            if (el && theme2 !== "__default__") {
-              headerRefs.current.set(theme2, el);
-            }
-          },
-          children: [
-            theme2 !== "__default__" && /* @__PURE__ */ u2(
-              "div",
-              {
-                class: `heatmap-header-info ${currentView === "年" ? "is-clickable" : ""}`,
-                onClick: () => {
-                  if (currentView === "年") toggleThemeCollapsed(theme2);
-                },
-                children: /* @__PURE__ */ u2("div", { class: "heatmap-header-info-left", children: [
-                  currentView === "年" && /* @__PURE__ */ u2("span", { class: `heatmap-collapse-arrow ${isCollapsed ? "is-collapsed" : ""}`, children: "▾" }),
-                  /* @__PURE__ */ u2("span", { class: "theme-name", children: leafLabel })
-                ] })
-              }
-            ),
-            !isCollapsed && /* @__PURE__ */ u2("div", { class: `heatmap-header-cells ${isRowLayout ? "" : "grid-view"}`, children: renderHeaderCells(currentView, theme2, dataForTheme) })
-          ]
-        }
-      ) }, theme2);
-    }) });
-  };
-  return /* @__PURE__ */ u2("div", { class: "heatmap-container", children: renderContent() });
-}
-function PopoverContent({
-  blocks,
-  app,
-  module: module2,
-  timerService,
-  timers,
-  allThemes,
-  messageRenderPort
-}) {
-  return /* @__PURE__ */ u2("div", { className: "sv-popover-content", children: blocks.length === 0 ? /* @__PURE__ */ u2("div", { class: "sv-popover-empty", children: "无内容" }) : /* @__PURE__ */ u2(
-    BlockView,
-    {
-      items: blocks,
-      app,
-      fields: module2.fields || ["title", "content", "categoryKey", "tags", "date", "period"],
-      groupFields: module2.groupFields,
-      onMarkDone: () => {
-      },
-      timerService,
-      timers,
-      allThemes,
-      messageRenderPort
-    }
-  ) });
-}
-function calculateSmartHeight(count, allCounts, _displayMode, minVisibleHeight) {
-  if (count === 0) return 0;
-  const nonZeroCounts = allCounts.filter((c2) => c2 > 0);
-  if (nonZeroCounts.length === 0) return 0;
-  const maxCount = Math.max(...nonZeroCounts);
-  let height2 = count / maxCount * 100;
-  if (height2 > 0 && height2 < minVisibleHeight) {
-    height2 = minVisibleHeight;
-  }
-  return Math.min(height2, 100);
-}
-function ChartBlock({
-  data,
-  label,
-  onCellClick,
-  categories,
-  cellIdentifier,
-  isCompact = false,
-  isNarrow = false,
-  displayMode = "smart",
-  minVisibleHeight = 15
-}) {
-  const counts = data.counts;
-  const total = Object.values(counts).reduce((sum, count) => sum + count, 0);
-  const allCounts = categories.map((cat) => counts[cat.name] || 0);
-  const categoryHeights = T$1(() => {
-    return categories.map((cat) => {
-      const count = counts[cat.name] || 0;
-      return calculateSmartHeight(count, allCounts, displayMode, minVisibleHeight);
-    });
-  }, [counts, categories, displayMode, minVisibleHeight, allCounts]);
-  const containerClasses = [
-    "sv-chart-block",
-    isCompact ? "is-compact" : "",
-    isNarrow ? "is-narrow" : "",
-    total === 0 ? "is-empty" : ""
-  ].filter(Boolean).join(" ");
-  return /* @__PURE__ */ u2(
-    "div",
-    {
-      class: containerClasses,
-      onClick: (e2) => onCellClick(cellIdentifier("全部"), e2.currentTarget, data.blocks, `${label} · 全部`),
-      children: [
-        /* @__PURE__ */ u2("div", { class: "sv-chart-label", children: label }),
-        /* @__PURE__ */ u2("div", { class: "sv-chart-content", children: [
-          /* @__PURE__ */ u2("div", { class: "sv-chart-numbers", children: categories.map(({ name }) => {
-            const count = counts[name] || 0;
-            return /* @__PURE__ */ u2("div", { class: "sv-chart-number", children: count > 0 ? count : "" }, `num-${name}`);
-          }) }),
-          /* @__PURE__ */ u2("div", { class: "sv-chart-bars-container", children: categories.map(({ name, color: color2, alias }, index) => {
-            const count = counts[name] || 0;
-            const height2 = categoryHeights[index];
-            const displayName = alias || name;
-            return /* @__PURE__ */ u2(
-              "div",
-              {
-                class: "sv-vbar-wrapper",
-                title: `${name}: ${count}`,
-                onClick: (e2) => {
-                  e2.stopPropagation();
-                  onCellClick(
-                    cellIdentifier(name),
-                    e2.currentTarget,
-                    data.blocks.filter((b2) => getBasePath(b2.categoryKey) === name),
-                    `${label} · ${displayName}`
-                  );
-                },
-                children: /* @__PURE__ */ u2(
-                  "div",
-                  {
-                    class: "sv-vbar-bar",
-                    style: {
-                      height: `${height2}%`,
-                      backgroundColor: color2 || "#ccc"
-                    }
-                  }
-                )
-              },
-              name
-            );
-          }) }),
-          /* @__PURE__ */ u2("div", { class: "sv-chart-categories", children: categories.map(({ name, alias }) => {
-            const displayName = alias || name;
-            return /* @__PURE__ */ u2(
-              "div",
-              {
-                class: "sv-chart-category",
-                title: `${name}${alias ? ` (${name})` : ""}`,
-                children: displayName
-              },
-              `cat-${name}`
-            );
-          }) })
-        ] })
-      ]
-    }
-  );
-}
-function DayStatisticsView({
-  items,
-  categories,
-  selectedDate,
-  onCellClick,
-  displayMode,
-  minVisibleHeight
-}) {
-  const data = aggregateByDay(items, categories, selectedDate);
-  return /* @__PURE__ */ u2("div", { class: "statistics-view", children: /* @__PURE__ */ u2("div", { class: "sv-timeline", children: /* @__PURE__ */ u2("div", { class: "sv-row", children: /* @__PURE__ */ u2(
-    ChartBlock,
-    {
-      data,
-      label: selectedDate.format("YYYY年MM月DD日 dddd"),
-      categories,
-      onCellClick,
-      cellIdentifier: (cat) => ({ type: "day", date: selectedDate.format("YYYY-MM-DD"), category: cat }),
-      displayMode,
-      minVisibleHeight
-    }
-  ) }) }) });
-}
-function WeekStatisticsView({
-  items,
-  categories,
-  weekDate,
-  onCellClick,
-  displayMode,
-  minVisibleHeight
-}) {
-  const weekStart = weekDate.startOf("isoWeek");
-  const weekEnd = weekDate.endOf("isoWeek");
-  const data = aggregateByWeek(items, categories, weekStart);
-  return /* @__PURE__ */ u2("div", { class: "statistics-view", children: /* @__PURE__ */ u2("div", { class: "sv-timeline", children: /* @__PURE__ */ u2("div", { class: "sv-row", children: /* @__PURE__ */ u2(
-    ChartBlock,
-    {
-      data,
-      label: `${weekStart.format("YYYY年MM月DD日")} ~ ${weekEnd.format("MM月DD日")} (第${weekStart.isoWeek()}周)`,
-      categories,
-      onCellClick,
-      cellIdentifier: (cat) => ({
-        type: "week",
-        week: weekStart.isoWeek(),
-        year: weekStart.isoWeekYear(),
-        category: cat
-      }),
-      displayMode,
-      minVisibleHeight
-    }
-  ) }) }) });
-}
-function TopControls({
-  currentView,
-  usePeriod,
-  onToggleUsePeriod
-}) {
-  if (!(currentView === "年" || currentView === "季" || currentView === "月")) {
-    return null;
-  }
-  return /* @__PURE__ */ u2("div", { class: "sv-top-controls", children: /* @__PURE__ */ u2(
-    "label",
-    {
-      class: "sv-period-toggle",
-      title: "勾选后：年/季/月只统计对应周期字段；周统计包含 period=周 和未设置 period 的条目",
-      children: [
-        /* @__PURE__ */ u2(
-          "input",
-          {
-            type: "checkbox",
-            checked: usePeriod,
-            onChange: (e2) => onToggleUsePeriod(e2.target.checked)
-          }
-        ),
-        /* @__PURE__ */ u2("span", { children: "使用周期字段" })
-      ]
-    }
-  ) });
-}
-function MonthStatisticsView({
-  items,
-  categories,
-  monthDate,
-  usePeriod,
-  onToggleUsePeriod,
-  onCellClick,
-  displayMode,
-  minVisibleHeight
-}) {
-  const monthData = aggregateByMonth(items, categories, monthDate, usePeriod);
-  const monthWeeksData = getMonthWeeksData(items, categories, monthDate, usePeriod);
-  const monthStart = monthDate.startOf("month");
-  const monthEnd = monthDate.endOf("month");
-  const weeksMeta = [];
-  let weekCursor = monthStart.startOf("isoWeek");
-  while (weekCursor.isBefore(monthEnd) || isSameIsoWeek(weekCursor, monthEnd)) {
-    const weekStart = weekCursor;
-    const weekEnd = weekStart.endOf("isoWeek");
-    weeksMeta.push({
-      weekStart,
-      label: `${weekStart.format("MM-DD")} ~ ${weekEnd.format("MM-DD")}`
-    });
-    weekCursor = weekCursor.add(1, "week");
-  }
-  const weekCount = monthWeeksData.length;
-  return /* @__PURE__ */ u2("div", { class: "statistics-view", children: [
-    /* @__PURE__ */ u2(TopControls, { currentView: "月", usePeriod, onToggleUsePeriod }),
-    /* @__PURE__ */ u2(
-      "div",
-      {
-        class: "sv-month-grid",
-        style: { gridTemplateColumns: `repeat(${weekCount}, 1fr)` },
-        children: [
-          /* @__PURE__ */ u2("div", { class: "sv-month-grid-summary", children: /* @__PURE__ */ u2(
-            ChartBlock,
-            {
-              data: monthData,
-              label: monthDate.format("YYYY年MM月"),
-              categories,
-              onCellClick,
-              cellIdentifier: (cat) => ({
-                type: "month",
-                month: monthDate.month() + 1,
-                year: monthDate.year(),
-                category: cat
-              }),
-              displayMode,
-              minVisibleHeight
-            }
-          ) }),
-          monthWeeksData.map((data, index) => {
-            const meta = weeksMeta[index];
-            if (!meta) return null;
-            const { weekStart } = meta;
-            return /* @__PURE__ */ u2(
-              "div",
-              {
-                class: "sv-month-grid-week",
-                style: { gridColumn: `${index + 1}` },
-                children: /* @__PURE__ */ u2(
-                  ChartBlock,
-                  {
-                    data,
-                    label: `W${weekStart.isoWeek()}`,
-                    categories,
-                    onCellClick,
-                    cellIdentifier: (cat) => ({
-                      type: "week",
-                      week: weekStart.isoWeek(),
-                      year: weekStart.isoWeekYear(),
-                      category: cat
-                    }),
-                    isCompact: true,
-                    displayMode,
-                    minVisibleHeight
-                  }
-                )
-              },
-              weekStart.format("YYYY-MM-DD")
-            );
-          })
-        ]
-      }
-    )
-  ] });
-}
-function QuarterStatisticsView({
-  items,
-  categories,
-  quarterDate,
-  usePeriod,
-  onToggleUsePeriod,
-  onCellClick,
-  displayMode,
-  minVisibleHeight
-}) {
-  const quarterStart = quarterDate.startOf("quarter");
-  const quarterData = aggregateByQuarter(items, categories, quarterDate, usePeriod);
-  const monthsInfo = Array.from({ length: 3 }, (_2, i2) => {
-    const month = quarterStart.add(i2, "month");
-    const monthData = aggregateByMonth(items, categories, month, usePeriod);
-    const weeksData = getMonthWeeksData(items, categories, month, usePeriod);
-    const monthStart = month.startOf("month");
-    const monthEnd = month.endOf("month");
-    const weeksMeta = [];
-    let weekCursor = monthStart.startOf("isoWeek");
-    while (weekCursor.isBefore(monthEnd) || isSameIsoWeek(weekCursor, monthEnd)) {
-      weeksMeta.push({ weekStart: weekCursor });
-      weekCursor = weekCursor.add(1, "week");
-    }
-    return { month, data: monthData, weeksData, weeksMeta };
-  });
-  const maxWeeks = Math.max(...monthsInfo.map((m2) => m2.weeksData.length), 1);
-  return /* @__PURE__ */ u2("div", { class: "statistics-view", children: [
-    /* @__PURE__ */ u2(TopControls, { currentView: "季", usePeriod, onToggleUsePeriod }),
-    /* @__PURE__ */ u2("div", { class: "sv-quarter-grid", children: [
-      /* @__PURE__ */ u2("div", { class: "sv-quarter-grid-summary", children: /* @__PURE__ */ u2(
-        ChartBlock,
-        {
-          data: quarterData,
-          label: `${quarterDate.format("YYYY年")} 第${quarterDate.quarter()}季度`,
-          categories,
-          onCellClick,
-          cellIdentifier: (cat) => ({
-            type: "quarter",
-            quarter: quarterDate.quarter(),
-            year: quarterDate.year(),
-            category: cat
-          }),
-          displayMode,
-          minVisibleHeight
-        }
-      ) }),
-      monthsInfo.map(({ month, data }, i2) => /* @__PURE__ */ u2(
-        "div",
-        {
-          class: "sv-quarter-grid-month",
-          style: { gridColumn: `${i2 + 1}` },
-          children: /* @__PURE__ */ u2(
-            ChartBlock,
-            {
-              data,
-              label: month.format("MM月"),
-              categories,
-              onCellClick,
-              cellIdentifier: (cat) => ({
-                type: "month",
-                month: month.month() + 1,
-                year: month.year(),
-                category: cat
-              }),
-              displayMode,
-              minVisibleHeight
-            }
-          )
-        },
-        month.format("YYYY-MM")
-      )),
-      monthsInfo.map(({ month, weeksData, weeksMeta }, i2) => /* @__PURE__ */ u2(
-        "div",
-        {
-          class: "sv-quarter-grid-week-col",
-          style: { gridColumn: `${i2 + 1}` },
-          children: [
-            weeksData.map((data, index) => {
-              const meta = weeksMeta[index];
-              if (!meta) return null;
-              const { weekStart } = meta;
-              return /* @__PURE__ */ u2(
-                ChartBlock,
-                {
-                  data,
-                  label: `W${weekStart.isoWeek()}`,
-                  categories,
-                  onCellClick,
-                  cellIdentifier: (cat) => ({
-                    type: "week",
-                    week: weekStart.isoWeek(),
-                    year: weekStart.isoWeekYear(),
-                    category: cat
-                  }),
-                  isCompact: true,
-                  displayMode,
-                  minVisibleHeight
-                },
-                weekStart.format("YYYY-MM-DD")
-              );
-            }),
-            Array.from({ length: maxWeeks - weeksData.length }, (_2, j2) => /* @__PURE__ */ u2("div", { class: "sv-week-placeholder" }, `pad-${j2}`))
-          ]
-        },
-        `w-col-${month.format("YYYY-MM")}`
-      ))
-    ] })
-  ] });
-}
-function YearStatisticsView({
-  year,
-  categories,
-  processedData,
-  yearlyWeekStructure,
-  usePeriod,
-  onToggleUsePeriod,
-  onCellClick,
-  displayMode,
-  minVisibleHeight
-}) {
-  const maxWeeksInMonth = Math.max(
-    ...yearlyWeekStructure.map(({ weeks }) => weeks.length),
-    1
-  );
-  return /* @__PURE__ */ u2("div", { class: "statistics-view", children: [
-    /* @__PURE__ */ u2(TopControls, { currentView: "年", usePeriod, onToggleUsePeriod }),
-    /* @__PURE__ */ u2("div", { class: "sv-year-grid", children: [
-      /* @__PURE__ */ u2("div", { class: "sv-year-grid-year", children: /* @__PURE__ */ u2(
-        ChartBlock,
-        {
-          data: processedData.yearData,
-          label: `${year}年`,
-          categories,
-          onCellClick,
-          cellIdentifier: (cat) => ({ type: "year", year, category: cat }),
-          displayMode,
-          minVisibleHeight
-        }
-      ) }),
-      processedData.quartersData.map((data, i2) => /* @__PURE__ */ u2(
-        "div",
-        {
-          class: "sv-year-grid-quarter",
-          style: { gridColumn: `${i2 * 3 + 1} / ${i2 * 3 + 4}` },
-          children: /* @__PURE__ */ u2(
-            ChartBlock,
-            {
-              data,
-              label: `Q${i2 + 1}`,
-              categories,
-              onCellClick,
-              cellIdentifier: (cat) => ({ type: "quarter", year, quarter: i2 + 1, category: cat }),
-              displayMode,
-              minVisibleHeight
-            }
-          )
-        },
-        `q${i2}`
-      )),
-      processedData.monthsData.map((data, i2) => /* @__PURE__ */ u2(
-        "div",
-        {
-          class: `sv-year-grid-month${i2 % 3 === 2 && i2 < 11 ? " sv-quarter-end" : ""}`,
-          style: { gridColumn: `${i2 + 1}` },
-          children: /* @__PURE__ */ u2(
-            ChartBlock,
-            {
-              data,
-              label: `${i2 + 1}月`,
-              categories,
-              onCellClick,
-              cellIdentifier: (cat) => ({ type: "month", year, month: i2 + 1, category: cat }),
-              displayMode,
-              minVisibleHeight
-            }
-          )
-        },
-        `m${i2}`
-      )),
-      yearlyWeekStructure.map(({ month, weeks }) => {
-        const gridCol = month;
-        const isQuarterEnd = month % 3 === 0 && month < 12;
-        return /* @__PURE__ */ u2(
-          "div",
-          {
-            class: `sv-year-grid-week-col${isQuarterEnd ? " sv-quarter-end" : ""}`,
-            style: { gridColumn: `${gridCol}` },
-            children: [
-              weeks.map((week) => {
-                const weekIndex = week - 1;
-                const weekData = processedData.weeksData[weekIndex] || createPeriodData(categories);
-                return /* @__PURE__ */ u2(
-                  ChartBlock,
-                  {
-                    data: weekData,
-                    label: `${week}W`,
-                    categories,
-                    onCellClick,
-                    cellIdentifier: (cat) => ({ type: "week", year, week, category: cat }),
-                    isCompact: true,
-                    displayMode,
-                    minVisibleHeight
-                  },
-                  week
-                );
-              }),
-              Array.from({ length: maxWeeksInMonth - weeks.length }, (_2, i2) => /* @__PURE__ */ u2("div", { class: "sv-week-placeholder" }, `pad-${i2}`))
-            ]
-          },
-          `w-col-${month}`
-        );
-      })
-    ] })
-  ] });
-}
-function StatisticsViewView({
-  items,
-  currentView,
-  categories,
-  startDate,
-  usePeriod,
-  onToggleUsePeriod,
-  onCellClick,
-  displayMode,
-  minVisibleHeight,
-  year,
-  yearlyWeekStructure,
-  processedData
-}) {
-  if (!categories || categories.length === 0) {
-    return /* @__PURE__ */ u2("div", { class: "statistics-view-placeholder", children: "请先在视图设置中配置您想统计的分类。" });
-  }
-  switch (currentView) {
-    case "天":
-      return /* @__PURE__ */ u2(
-        DayStatisticsView,
-        {
-          items,
-          categories,
-          selectedDate: startDate,
-          onCellClick,
-          displayMode,
-          minVisibleHeight
-        }
-      );
-    case "周":
-      return /* @__PURE__ */ u2(
-        WeekStatisticsView,
-        {
-          items,
-          categories,
-          weekDate: startDate,
-          onCellClick,
-          displayMode,
-          minVisibleHeight
-        }
-      );
-    case "月":
-      return /* @__PURE__ */ u2(
-        MonthStatisticsView,
-        {
-          items,
-          categories,
-          monthDate: startDate,
-          usePeriod,
-          onToggleUsePeriod,
-          onCellClick,
-          displayMode,
-          minVisibleHeight
-        }
-      );
-    case "季":
-      return /* @__PURE__ */ u2(
-        QuarterStatisticsView,
-        {
-          items,
-          categories,
-          quarterDate: startDate,
-          usePeriod,
-          onToggleUsePeriod,
-          onCellClick,
-          displayMode,
-          minVisibleHeight
-        }
-      );
-    case "年":
-    default:
-      return /* @__PURE__ */ u2(
-        YearStatisticsView,
-        {
-          year,
-          categories,
-          processedData,
-          yearlyWeekStructure,
-          usePeriod,
-          onToggleUsePeriod,
-          onCellClick,
-          displayMode,
-          minVisibleHeight
-        }
-      );
-  }
-}
-const AnyIconButton$1 = IconButton$1;
-function StatisticsView({
-  items,
-  app,
-  dateRange,
-  module: module2,
-  currentView,
-  onQuickCreate,
-  selectedCategories,
-  timerService,
-  timers,
-  allThemes,
-  statisticsModel,
-  messageRenderPort
-}) {
-  const ui = useUiPort();
-  const globalCategoryColors = useSelector(selectCategoryColors);
-  const useCases = useUseCases();
-  y(() => {
-    const discovered = discoverBaseCategories(items);
-    const newColors = {};
-    let hasNew = false;
-    for (const name of discovered) {
-      if (!globalCategoryColors[name]) {
-        newColors[name] = generateCategoryColor(name);
-        hasNew = true;
-      }
-    }
-    if (hasNew) {
-      useCases.settings.updateCategoryColors({ ...globalCategoryColors, ...newColors });
-    }
-  }, [items, globalCategoryColors]);
-  const viewConfig = statisticsModel?.viewConfig ?? { ...STATISTICS_VIEW_DEFAULT_CONFIG, ...module2.viewConfig };
-  const { categories = [], displayMode = "smart", minVisibleHeight = 15, usePeriodField = false } = viewConfig;
-  const categoryConfigs = T$1(() => {
-    const discovered = discoverBaseCategories(items);
-    if (categories.length > 0) {
-      const result = [];
-      const seen = /* @__PURE__ */ new Set();
-      for (const cat of categories) {
-        const baseName = getBasePath(cat.name) || cat.name || "";
-        if (!baseName || seen.has(baseName)) continue;
-        seen.add(baseName);
-        result.push({
-          ...cat,
-          name: baseName,
-          alias: cat.alias && cat.alias !== baseName ? cat.alias : void 0,
-          color: getCategoryColor(baseName)
-        });
-      }
-      for (const name of discovered) {
-        const baseName = getBasePath(name) || name;
-        if (!baseName || seen.has(baseName)) continue;
-        seen.add(baseName);
-        result.push({
-          name: baseName,
-          color: getCategoryColor(baseName),
-          files: []
-        });
-      }
-      return result;
-    }
-    return discovered.map((name) => ({
-      name,
-      color: getCategoryColor(name),
-      files: []
-    }));
-  }, [categories, items, globalCategoryColors]);
-  const [selectedCell, setSelectedCell] = d(null);
-  const [popover, setPopover] = d(null);
-  const openLockRef = A$1(false);
-  const [usePeriod, setUsePeriod] = d(Boolean(usePeriodField));
-  const startDate = T$1(() => statisticsModel?.startDate ?? dayjs(dateRange[0]), [statisticsModel, dateRange]);
-  const filteredCategories = T$1(() => {
-    if (statisticsModel?.filteredCategories) return statisticsModel.filteredCategories;
-    if (!selectedCategories || selectedCategories.length === 0) return categoryConfigs;
-    return categoryConfigs.filter((c2) => selectedCategories.includes(c2.name));
-  }, [statisticsModel, categoryConfigs, selectedCategories]);
-  const isYearView = statisticsModel?.isYearView ?? currentView === "年";
-  const year = statisticsModel?.year ?? startDate.year();
-  const yearlyWeekStructure = T$1(() => {
-    if (statisticsModel?.yearlyWeekStructure) return statisticsModel.yearlyWeekStructure;
-    if (!isYearView) return [];
-    const months = Array.from({ length: 12 }, (_2, i2) => ({ month: i2 + 1, weeks: [] }));
-    const totalWeeks = getWeeksInYear(year);
-    for (let week = 1; week <= totalWeeks; week++) {
-      const thursdayOfWeek = dayjs().year(year).isoWeek(week).day(4);
-      months[thursdayOfWeek.month()]?.weeks.push(week);
-    }
-    return months;
-  }, [statisticsModel, isYearView, year]);
-  const processedData = T$1(() => {
-    if (!isYearView) return { yearData: createPeriodData(filteredCategories), quartersData: [], monthsData: [], weeksData: [] };
-    const totalWeeks = getWeeksInYear(year);
-    const targetDate = dayjs().year(year);
-    const yearData = aggregateByYear(items, filteredCategories, targetDate, usePeriod);
-    const quartersData = [];
-    for (let q2 = 1; q2 <= 4; q2++) quartersData.push(aggregateByQuarter(items, filteredCategories, targetDate.quarter(q2), usePeriod));
-    const monthsData = [];
-    for (let m2 = 0; m2 < 12; m2++) monthsData.push(aggregateByMonth(items, filteredCategories, targetDate.month(m2), usePeriod));
-    const weeksData = [];
-    for (let w2 = 1; w2 <= totalWeeks; w2++) weeksData.push(aggregateByWeek(items, filteredCategories, targetDate.isoWeek(w2), usePeriod));
-    return { yearData, quartersData, monthsData, weeksData };
-  }, [isYearView, items, year, filteredCategories, usePeriod]);
-  const handleCellClick = (cellIdentifier, _target, blocks, title) => {
-    devLog("点击单元格:", { cellIdentifier, title, blocksCount: blocks.length, blocks });
-    if (openLockRef.current) return;
-    const widgetId = `stats-popover-${module2.id}`;
-    const currentKey = JSON.stringify(cellIdentifier);
-    if (popover && JSON.stringify(selectedCell) === currentKey) {
-      closeFloatingWidget(widgetId);
-      setPopover(null);
-      setSelectedCell(null);
-      return;
-    }
-    closeFloatingWidget(widgetId);
-    setSelectedCell(cellIdentifier);
-    setPopover({ blocks, title });
-    const handleClose = () => {
-      closeFloatingWidget(widgetId);
-      setPopover(null);
-      setSelectedCell(null);
-    };
-    const handleExport = () => {
-      if (blocks.length === 0) {
-        ui.notice("没有内容可导出");
-        return;
-      }
-      const exportConfig = getExportConfigByViewType("StatisticsView");
-      const markdownContent = exportItemsToMarkdown(blocks, exportConfig);
-      navigator.clipboard.writeText(markdownContent);
-      ui.notice(`"${title}" 的内容已复制到剪贴板！`);
-    };
-    const handleQuickCreate = () => {
-      onQuickCreate?.({
-        cellIdentifier,
-        blocks,
-        title
-      });
-    };
-    const canQuickCreate = canCreateFromStatisticsCell({
-      cellIdentifier
-    });
-    openFloatingWidget(widgetId, () => /* @__PURE__ */ u2(
-      FloatingPanel,
-      {
-        id: widgetId,
-        title,
-        defaultPosition: { x: window.innerWidth / 2 - 320, y: window.innerHeight / 2 - 240 },
-        minWidth: 520,
-        maxWidth: "90vw",
-        maxHeight: "85vh",
-        width: 760,
-        height: 640,
-        resizable: true,
-        bodyPadding: 0,
-        bodyStyle: { display: "flex", flexDirection: "column", minHeight: 0 },
-        onClose: handleClose,
-        headerActions: /* @__PURE__ */ u2("div", { class: "flex items-center gap-1", children: [
-          /* @__PURE__ */ u2(Tooltip$1, { title: "导出为 Markdown", PopperProps: { disablePortal: true }, children: /* @__PURE__ */ u2(
-            AnyIconButton$1,
-            {
-              size: "small",
-              onClick: (e2) => {
-                e2.stopPropagation();
-                handleExport();
-              },
-              sx: { padding: "4px" },
-              children: /* @__PURE__ */ u2(IosShareIcon, { sx: { fontSize: "1rem" } })
-            }
-          ) }),
-          canQuickCreate && onQuickCreate ? /* @__PURE__ */ u2(Tooltip$1, { title: "按当前分类创建", PopperProps: { disablePortal: true }, children: /* @__PURE__ */ u2(
-            AnyIconButton$1,
-            {
-              size: "small",
-              onClick: (e2) => {
-                e2.stopPropagation();
-                handleQuickCreate();
-              },
-              sx: { padding: "4px" },
-              children: /* @__PURE__ */ u2(AddCircleOutlineIcon, { sx: { fontSize: "1rem" } })
-            }
-          ) }) : null
-        ] }),
-        children: /* @__PURE__ */ u2(PopoverContent, { blocks, app, module: module2, timerService, timers, allThemes, messageRenderPort })
-      }
-    ));
-    openLockRef.current = true;
-    setTimeout(() => {
-      openLockRef.current = false;
-    }, 300);
-  };
-  return /* @__PURE__ */ u2(
-    StatisticsViewView,
-    {
-      items,
-      currentView,
-      categories: filteredCategories,
-      startDate,
-      usePeriod,
-      onToggleUsePeriod: (next2) => setUsePeriod(next2),
-      onCellClick: handleCellClick,
-      displayMode,
-      minVisibleHeight,
-      year,
-      yearlyWeekStructure,
-      processedData
-    }
-  );
-}
-function ProgressBar({ ratio, color: color2 = "var(--interactive-accent)", height: height2 = "10px" }) {
-  const width2 = `${Math.max(0, Math.min(100, Math.round((ratio || 0) * 100)))}%`;
-  return /* @__PURE__ */ u2("div", { style: { height: height2, borderRadius: "999px", background: "var(--background-modifier-border)", overflow: "hidden" }, children: /* @__PURE__ */ u2("div", { style: { width: width2, height: "100%", borderRadius: "999px", background: color2, transition: "width 0.25s ease" } }) });
-}
-function BreakdownList({ title, rows }) {
-  return /* @__PURE__ */ u2("div", { style: { minWidth: 0 }, children: [
-    /* @__PURE__ */ u2("div", { style: { fontWeight: 600, marginBottom: "8px" }, children: title }),
-    rows.length === 0 ? /* @__PURE__ */ u2("div", { style: { color: "var(--text-muted)", fontSize: "12px" }, children: "暂无数据" }) : rows.map((row) => /* @__PURE__ */ u2("div", { style: { display: "flex", justifyContent: "space-between", gap: "12px", padding: "6px 0", borderBottom: "1px solid var(--background-modifier-border-hover)" }, children: [
-      /* @__PURE__ */ u2("span", { style: { minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }, children: row.key }),
-      /* @__PURE__ */ u2("span", { style: { color: "var(--text-muted)", flexShrink: 0 }, children: [
-        row.points,
-        " 分 · ",
-        row.count,
-        " 条"
-      ] })
-    ] }, row.key))
-  ] });
-}
-function ThemeGrowthSection({ items, config: config2 }) {
-  const rows = T$1(() => {
-    const allowed = new Set((config2?.includedCategories || []).filter(Boolean));
-    const themeMap = /* @__PURE__ */ new Map();
-    for (const item of items || []) {
-      const category = (item.categoryKey || "").split("/")[0] || item.categoryKey || "未分类";
-      if (allowed.size > 0 && !allowed.has(category)) continue;
-      const theme2 = item.theme || "未设置主题";
-      const bucket = themeMap.get(theme2) || [];
-      bucket.push(item);
-      themeMap.set(theme2, bucket);
-    }
-    return Array.from(themeMap.entries()).map(([theme2, themeItems]) => ({
-      theme: theme2,
-      itemCount: themeItems.length,
-      levelData: getThemeLevelData(themeItems)
-    })).sort((a2, b2) => {
-      const checkDiff = b2.levelData.totalChecks - a2.levelData.totalChecks;
-      if (checkDiff !== 0) return checkDiff;
-      const itemDiff = b2.itemCount - a2.itemCount;
-      if (itemDiff !== 0) return itemDiff;
-      return a2.theme.localeCompare(b2.theme, "zh-CN");
-    }).slice(0, Math.max(1, config2?.topN || 5));
-  }, [items, config2]);
-  if (rows.length === 0) return null;
-  return /* @__PURE__ */ u2("div", { style: { display: "grid", gap: "10px" }, children: [
-    /* @__PURE__ */ u2("div", { style: { fontWeight: 600 }, children: "主题经验" }),
-    /* @__PURE__ */ u2("div", { style: { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "12px" }, children: rows.map(({ theme: theme2, itemCount, levelData }) => {
-      const remain = levelData.nextRequirement ? Math.max(0, levelData.nextRequirement - levelData.totalChecks) : 0;
-      return /* @__PURE__ */ u2("div", { class: "think-card", style: { padding: "14px", border: "1px solid var(--background-modifier-border)", borderRadius: "12px", display: "grid", gap: "10px" }, children: [
-        /* @__PURE__ */ u2("div", { style: { display: "flex", justifyContent: "space-between", gap: "12px", alignItems: "flex-start" }, children: [
-          /* @__PURE__ */ u2("div", { style: { minWidth: 0 }, children: [
-            /* @__PURE__ */ u2("div", { style: { display: "flex", alignItems: "center", gap: "8px", minWidth: 0 }, children: [
-              /* @__PURE__ */ u2("span", { style: { fontSize: "18px", lineHeight: 1 }, children: levelData.config.icon }),
-              /* @__PURE__ */ u2("span", { style: { fontWeight: 600, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }, children: theme2 })
-            ] }),
-            /* @__PURE__ */ u2("div", { style: { color: "var(--text-muted)", fontSize: "12px", marginTop: "4px" }, children: [
-              "Lv.",
-              levelData.level,
-              " · ",
-              levelData.config.title
-            ] })
-          ] }),
-          /* @__PURE__ */ u2("div", { style: { color: "var(--text-muted)", fontSize: "12px", flexShrink: 0, textAlign: "right" }, children: [
-            levelData.totalChecks,
-            " 经验"
-          ] })
-        ] }),
-        /* @__PURE__ */ u2(ProgressBar, { ratio: levelData.progress, color: levelData.config.color, height: "8px" }),
-        /* @__PURE__ */ u2("div", { style: { display: "flex", justifyContent: "space-between", gap: "12px", color: "var(--text-muted)", fontSize: "12px" }, children: [
-          /* @__PURE__ */ u2("span", { children: [
-            itemCount,
-            " 条记录"
-          ] }),
-          /* @__PURE__ */ u2("span", { children: levelData.nextConfig ? `再 ${remain} 次到 ${levelData.nextConfig.icon} ${levelData.nextConfig.title}` : "已满级" })
-        ] })
-      ] }, theme2);
-    }) })
-  ] });
-}
-function ProgressView({ items = [], progressModel }) {
-  const result = progressModel?.result;
-  const config2 = progressModel?.config;
-  if (!result || !config2) return /* @__PURE__ */ u2("div", { children: "暂无积分数据" });
-  return /* @__PURE__ */ u2("div", { style: { display: "grid", gap: "16px" }, children: [
-    /* @__PURE__ */ u2("div", { style: { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: "12px" }, children: [
-      /* @__PURE__ */ u2("div", { class: "think-card", style: { padding: "14px", border: "1px solid var(--background-modifier-border)", borderRadius: "12px" }, children: [
-        /* @__PURE__ */ u2("div", { style: { color: "var(--text-muted)", fontSize: "12px" }, children: "总积分" }),
-        /* @__PURE__ */ u2("div", { style: { fontSize: "28px", fontWeight: 700, marginTop: "4px" }, children: result.totalPoints })
-      ] }),
-      /* @__PURE__ */ u2("div", { class: "think-card", style: { padding: "14px", border: "1px solid var(--background-modifier-border)", borderRadius: "12px" }, children: [
-        /* @__PURE__ */ u2("div", { style: { color: "var(--text-muted)", fontSize: "12px" }, children: "当前等级" }),
-        /* @__PURE__ */ u2("div", { style: { fontSize: "28px", fontWeight: 700, marginTop: "4px" }, children: [
-          "Lv.",
-          result.level
-        ] })
-      ] }),
-      /* @__PURE__ */ u2("div", { class: "think-card", style: { padding: "14px", border: "1px solid var(--background-modifier-border)", borderRadius: "12px" }, children: [
-        /* @__PURE__ */ u2("div", { style: { color: "var(--text-muted)", fontSize: "12px" }, children: "计分记录" }),
-        /* @__PURE__ */ u2("div", { style: { fontSize: "28px", fontWeight: 700, marginTop: "4px" }, children: result.matchedCount })
-      ] })
-    ] }),
-    /* @__PURE__ */ u2("div", { class: "think-card", style: { padding: "14px", border: "1px solid var(--background-modifier-border)", borderRadius: "12px" }, children: [
-      /* @__PURE__ */ u2("div", { style: { display: "flex", justifyContent: "space-between", gap: "12px", marginBottom: "8px" }, children: [
-        /* @__PURE__ */ u2("div", { style: { fontWeight: 600 }, children: "升级进度" }),
-        /* @__PURE__ */ u2("div", { style: { color: "var(--text-muted)", fontSize: "12px" }, children: [
-          result.currentLevelPoints,
-          "/",
-          Math.max(1, config2.levelStep),
-          " · 下一级 ",
-          result.nextLevelPoints,
-          " 分"
-        ] })
-      ] }),
-      /* @__PURE__ */ u2(ProgressBar, { ratio: result.progressRatio })
-    ] }),
-    config2.showThemeBreakdown !== false && /* @__PURE__ */ u2(ThemeGrowthSection, { items, config: config2 }),
-    /* @__PURE__ */ u2("div", { style: { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: "16px" }, children: [
-      config2.showCategoryBreakdown !== false && /* @__PURE__ */ u2(BreakdownList, { title: "分类积分", rows: result.categoryBreakdown }),
-      config2.showThemeBreakdown !== false && /* @__PURE__ */ u2(BreakdownList, { title: "主题积分", rows: result.themeBreakdown })
-    ] })
-  ] });
-}
-function getChipToneClass(recurrenceLabel) {
-  const recurrence = String(recurrenceLabel || "").trim().toLowerCase();
-  if (!recurrence) return "task-execution-chip--tone-0";
-  if (recurrence.includes("day")) return "task-execution-chip--tone-1";
-  if (recurrence.includes("week")) return "task-execution-chip--tone-2";
-  if (recurrence.includes("month")) return "task-execution-chip--tone-3";
-  if (recurrence.includes("year")) return "task-execution-chip--tone-4";
-  return "task-execution-chip--tone-0";
-}
-function TaskExecutionView({ app, currentView, taskExecutionModel, onMarkDone }) {
-  const [menu, setMenu] = d(null);
-  const menuRef = A$1(null);
-  app?.vault?.getName?.() || "";
-  const taskMap = T$1(() => {
-    const map = /* @__PURE__ */ new Map();
-    for (const section of taskExecutionModel?.sections || []) {
-      for (const group of section.groups || []) {
-        for (const task of group.tasks || []) map.set(task.key, task);
-      }
-    }
-    return map;
-  }, [taskExecutionModel]);
-  y(() => {
-    const onDown = (event) => {
-      if (!menuRef.current) return;
-      if (menuRef.current.contains(event.target)) return;
-      setMenu(null);
-    };
-    const onEsc = (event) => {
-      if (event.key === "Escape") setMenu(null);
-    };
-    window.addEventListener("mousedown", onDown);
-    window.addEventListener("keydown", onEsc);
-    return () => {
-      window.removeEventListener("mousedown", onDown);
-      window.removeEventListener("keydown", onEsc);
-    };
-  }, []);
-  const openMenu = (event, taskKey) => {
-    event.preventDefault();
-    setMenu({ x: event.clientX, y: event.clientY, taskKey });
-  };
-  const selectedTask = menu ? taskMap.get(menu.taskKey) : null;
-  return /* @__PURE__ */ u2("div", { class: "task-execution-view", children: [
-    (taskExecutionModel?.sections || []).map((section) => /* @__PURE__ */ u2("section", { class: "task-execution-section", children: [
-      /* @__PURE__ */ u2("div", { class: "task-execution-section-header", children: /* @__PURE__ */ u2("h2", { class: "task-execution-section-title", children: section.title }) }),
-      /* @__PURE__ */ u2("div", { class: "task-execution-section-body", children: (section.groups || []).map((group) => /* @__PURE__ */ u2("div", { class: "task-execution-subsection", children: /* @__PURE__ */ u2("div", { class: "task-execution-subsection-body", children: [
-        /* @__PURE__ */ u2("div", { class: "task-execution-subsection-title", children: group.title }),
-        /* @__PURE__ */ u2("div", { class: "task-execution-chip-grid", children: (group.tasks || []).map((task) => /* @__PURE__ */ u2(
-          "button",
-          {
-            type: "button",
-            class: `task-execution-chip ${getChipToneClass(task.recurrenceLabel)}`,
-            title: task.recurrenceLabel || task.title,
-            onClick: () => onMarkDone?.(task.itemId),
-            onContextMenu: (event) => openMenu(event, task.key),
-            children: [
-              /* @__PURE__ */ u2("span", { class: "task-execution-chip-label", children: task.title }),
-              task.count > 0 && /* @__PURE__ */ u2("span", { class: "task-execution-chip-count", children: [
-                "·",
-                task.count
-              ] })
-            ]
-          },
-          task.key
-        )) })
-      ] }) }, group.key)) })
-    ] }, section.key)),
-    menu && selectedTask && /* @__PURE__ */ u2("div", { class: "task-execution-context-menu", ref: menuRef, style: { left: `${menu.x}px`, top: `${menu.y}px` }, children: [
-      /* @__PURE__ */ u2("div", { class: "task-execution-context-title", children: selectedTask.title }),
-      /* @__PURE__ */ u2("div", { class: "task-execution-context-meta", children: [
-        currentView,
-        "内完成 ",
-        selectedTask.count,
-        " 次"
-      ] }),
-      /* @__PURE__ */ u2("div", { class: "task-execution-context-rule", children: selectedTask.recurrenceLabel }),
-      /* @__PURE__ */ u2("div", { class: "task-execution-context-list", children: selectedTask.records.length > 0 ? selectedTask.records.map((record) => {
-        const gesture = createRecordGestureHandlers({
-          item: record.item,
-          app,
-          onPrimary: () => {
-            openEditFromItem({ app, item: record.item });
-            setMenu(null);
-          }
-        });
-        return /* @__PURE__ */ u2(
-          "a",
-          {
-            class: "task-execution-context-link",
-            href: "#",
-            onClick: (e2) => {
-              gesture.onClick(e2);
-              setMenu(null);
-            },
-            onDblClick: (e2) => {
-              gesture.onDblClick(e2);
-              setMenu(null);
-            },
-            onTouchEnd: (e2) => {
-              gesture.onTouchEnd(e2);
-            },
-            children: record.timeLabel || record.doneDate || "查看记录"
-          },
-          record.id
-        );
-      }) : /* @__PURE__ */ u2("div", { class: "task-execution-context-empty", children: "暂无记录" }) })
-    ] })
-  ] });
-}
-function TableView({ items, rowField, colField, onMarkDone, app, timerService, timers, allThemes = [] }) {
-  if (!rowField || !colField) {
-    return /* @__PURE__ */ u2("div", { children: '（表格视图需要配置"行字段"和"列字段"）' });
-  }
-  const { matrix, sortedRows, sortedCols } = buildTableMatrix(items, rowField, colField);
-  function renderCellItem(item) {
-    if (item.type === "task") {
-      const timer = timers.find((t3) => t3.taskId === item.id);
-      return /* @__PURE__ */ u2(
-        TaskRow,
-        {
-          item,
-          onMarkDone,
-          app,
-          timerService,
-          timer,
-          allThemes,
-          compact: true
-        }
-      );
-    }
-    return /* @__PURE__ */ u2(ItemLink, { item, app });
-  }
-  return /* @__PURE__ */ u2("table", { class: "think-table", children: [
-    /* @__PURE__ */ u2("thead", { children: /* @__PURE__ */ u2("tr", { children: [
-      /* @__PURE__ */ u2("th", { children: rowField }),
-      sortedCols.map((c2) => /* @__PURE__ */ u2("th", { children: c2 }, c2))
-    ] }) }),
-    /* @__PURE__ */ u2("tbody", { children: sortedRows.map((r2) => /* @__PURE__ */ u2("tr", { children: [
-      /* @__PURE__ */ u2("td", { children: /* @__PURE__ */ u2("strong", { children: r2 }) }),
-      sortedCols.map((c2) => {
-        const cellItems = matrix[r2]?.[c2] || [];
-        return !cellItems.length ? /* @__PURE__ */ u2("td", { class: "empty" }, c2) : /* @__PURE__ */ u2("td", { children: cellItems.map((it) => /* @__PURE__ */ u2("div", { class: "table-view-cell-item", children: renderCellItem(it) }, it.id)) }, c2);
-      })
-    ] }, r2)) })
-  ] });
-}
-function moveItem(fields, fromIndex, toIndex) {
-  if (fromIndex === toIndex) return fields;
-  if (fromIndex < 0 || fromIndex >= fields.length) return fields;
-  if (toIndex < 0 || toIndex >= fields.length) return fields;
-  const next2 = [...fields];
-  const [moved] = next2.splice(fromIndex, 1);
-  next2.splice(toIndex, 0, moved);
-  return next2;
-}
-function ExcelColumnToolbar({
-  fields,
-  availableFields,
-  disabled = false,
-  saving = false,
-  error,
-  getFieldLabel: getFieldLabel2 = (field) => field,
-  getFieldGroupLabel,
-  onFieldsChange
-}) {
-  const [draggedField, setDraggedField] = d(null);
-  const [menu, setMenu] = d(null);
-  const canEdit = !!onFieldsChange && !disabled;
-  const busy = saving || disabled;
-  const availableOptions = T$1(() => {
-    const selected = new Set(fields);
-    return availableFields.filter((field) => !selected.has(field)).map((field) => ({
-      value: field,
-      label: getFieldLabel2(field),
-      group: getFieldGroupLabel?.(field)
-    }));
-  }, [availableFields, fields, getFieldGroupLabel, getFieldLabel2]);
-  const emit2 = (nextFields) => {
-    if (!canEdit || busy) return;
-    onFieldsChange?.(nextFields);
-  };
-  const closeMenu = () => setMenu(null);
-  const addField = (field) => {
-    if (!field || fields.includes(field)) return;
-    emit2([...fields, field]);
-  };
-  const removeField = (field) => {
-    if (fields.length <= 1) return;
-    emit2(fields.filter((item) => item !== field));
-    closeMenu();
-  };
-  const moveFieldToStart = (field) => {
-    const index = fields.indexOf(field);
-    if (index <= 0) return closeMenu();
-    emit2(moveItem(fields, index, 0));
-    closeMenu();
-  };
-  const moveFieldToEnd = (field) => {
-    const index = fields.indexOf(field);
-    if (index < 0 || index === fields.length - 1) return closeMenu();
-    emit2(moveItem(fields, index, fields.length - 1));
-    closeMenu();
-  };
-  const dropField = (targetField) => {
-    const sourceField = draggedField;
-    setDraggedField(null);
-    if (!sourceField || sourceField === targetField) return;
-    emit2(moveItem(fields, fields.indexOf(sourceField), fields.indexOf(targetField)));
-  };
-  const openMenu = (event, field) => {
-    event.preventDefault();
-    event.stopPropagation();
-    setMenu({ field, x: event.clientX, y: event.clientY });
-  };
-  const menuField = menu?.field;
-  const menuLabel = menuField ? getFieldLabel2(menuField) : "";
-  const menuGroup = menuField ? getFieldGroupLabel?.(menuField) : void 0;
-  const canRemoveMenuField = !!menuField && canEdit && !busy && fields.length > 1;
-  return /* @__PURE__ */ u2(
-    "div",
-    {
-      class: "excel-column-toolbar",
-      "data-editable": canEdit ? "true" : "false",
-      "aria-label": "Excel 显示字段编辑",
-      onClick: () => menu ? closeMenu() : void 0,
-      children: [
-        /* @__PURE__ */ u2("span", { class: "excel-column-toolbar-title", children: "显示字段" }),
-        /* @__PURE__ */ u2("div", { class: "excel-column-chip-list", role: "list", "aria-label": "当前显示字段顺序", children: fields.map((field) => {
-          const label = getFieldLabel2(field);
-          const canRemove = canEdit && !busy && fields.length > 1;
-          return /* @__PURE__ */ u2(
-            "span",
-            {
-              class: `excel-column-chip ${draggedField === field ? "is-dragging" : ""}`,
-              role: "listitem",
-              draggable: canEdit && !busy,
-              title: canEdit ? canRemove ? "拖动调整列顺序；双击隐藏该列；右键更多操作" : "至少保留一个显示字段" : "当前字段配置不可直接编辑",
-              onContextMenu: (event) => openMenu(event, field),
-              onDblClick: (event) => {
-                event.preventDefault();
-                event.stopPropagation();
-                if (canRemove) removeField(field);
-              },
-              onDragStart: (event) => {
-                if (!canEdit || busy) return;
-                setDraggedField(field);
-                event.dataTransfer?.setData("text/plain", field);
-                if (event.dataTransfer) event.dataTransfer.effectAllowed = "move";
-              },
-              onDragEnd: () => setDraggedField(null),
-              onDragOver: (event) => {
-                if (!canEdit || busy || !draggedField) return;
-                event.preventDefault();
-                if (event.dataTransfer) event.dataTransfer.dropEffect = "move";
-              },
-              onDrop: (event) => {
-                event.preventDefault();
-                if (!canEdit || busy) return;
-                dropField(field);
-              },
-              children: [
-                /* @__PURE__ */ u2("span", { class: "excel-column-chip-handle", "aria-hidden": "true", children: "⋮⋮" }),
-                /* @__PURE__ */ u2("span", { class: "excel-column-chip-label", children: label })
-              ]
-            },
-            field
-          );
-        }) }),
-        canEdit ? /* @__PURE__ */ u2("div", { class: "excel-column-add-field", children: /* @__PURE__ */ u2(
-          SimpleSelect,
-          {
-            value: "",
-            options: availableOptions,
-            placeholder: availableOptions.length ? "+ 添加字段" : "所有字段已显示",
-            disabled: busy || !availableOptions.length,
-            onChange: addField,
-            sx: { minWidth: "150px" }
-          }
-        ) }) : /* @__PURE__ */ u2("span", { class: "excel-column-toolbar-readonly", children: "字段配置只读" }),
-        saving ? /* @__PURE__ */ u2("span", { class: "excel-column-toolbar-status", children: "保存字段设置中…" }) : null,
-        error ? /* @__PURE__ */ u2("span", { class: "excel-column-toolbar-error", title: error, children: error }) : null,
-        menu && menuField ? /* @__PURE__ */ u2(
-          "div",
-          {
-            class: "excel-column-context-menu",
-            style: { left: `${menu.x}px`, top: `${menu.y}px` },
-            role: "menu",
-            onMouseDown: (event) => event.stopPropagation(),
-            onClick: (event) => event.stopPropagation(),
-            children: [
-              /* @__PURE__ */ u2("div", { class: "excel-column-context-menu-title", children: menuLabel }),
-              /* @__PURE__ */ u2("button", { type: "button", role: "menuitem", disabled: !canRemoveMenuField, onClick: () => removeField(menuField), children: "隐藏此列" }),
-              /* @__PURE__ */ u2("button", { type: "button", role: "menuitem", disabled: !canEdit || busy || fields.indexOf(menuField) <= 0, onClick: () => moveFieldToStart(menuField), children: "移到最前" }),
-              /* @__PURE__ */ u2("button", { type: "button", role: "menuitem", disabled: !canEdit || busy || fields.indexOf(menuField) === fields.length - 1, onClick: () => moveFieldToEnd(menuField), children: "移到最后" }),
-              /* @__PURE__ */ u2("button", { type: "button", role: "menuitem", onClick: () => setMenu((prev2) => prev2 ? { ...prev2, showInfo: !prev2.showInfo } : prev2), children: "查看字段说明" }),
-              menu.showInfo ? /* @__PURE__ */ u2("div", { class: "excel-column-context-info", children: [
-                /* @__PURE__ */ u2("div", { children: [
-                  /* @__PURE__ */ u2("span", { children: "名称" }),
-                  /* @__PURE__ */ u2("strong", { children: menuLabel })
-                ] }),
-                menuGroup ? /* @__PURE__ */ u2("div", { children: [
-                  /* @__PURE__ */ u2("span", { children: "分组" }),
-                  /* @__PURE__ */ u2("strong", { children: menuGroup })
-                ] }) : null,
-                /* @__PURE__ */ u2("div", { children: [
-                  /* @__PURE__ */ u2("span", { children: "字段键" }),
-                  /* @__PURE__ */ u2("code", { children: menuField })
-                ] })
-              ] }) : null
-            ]
-          }
-        ) : null
-      ]
-    }
-  );
-}
-function isOptionLikeValue(value) {
-  return !!value && typeof value === "object" && ("value" in value || "label" in value);
-}
-function formatExcelCellValue(value) {
-  if (Array.isArray(value)) return value.map(formatExcelCellValue).filter(Boolean).join(", ");
-  if (isOptionLikeValue(value)) return String(value.label ?? value.value ?? "");
-  if (value === true) return "true";
-  if (value === false) return "false";
-  return value == null ? "" : String(value);
-}
-function toDateInputValue(value) {
-  const text2 = formatExcelCellValue(value).trim();
-  const match5 = text2.match(/^(\d{4}-\d{2}-\d{2})/);
-  return match5 ? match5[1] : text2;
-}
-function toTimeInputValue(value) {
-  const text2 = formatExcelCellValue(value).trim();
-  const match5 = text2.match(/^(\d{1,2}:\d{2})/);
-  return match5 ? match5[1].padStart(5, "0") : text2;
-}
-function toDateTimeInputValue(value) {
-  const text2 = formatExcelCellValue(value).trim();
-  const match5 = text2.match(/^(\d{4}-\d{2}-\d{2})[T\s](\d{2}:\d{2})/);
-  return match5 ? `${match5[1]}T${match5[2]}` : text2;
-}
-function isValidDateInput(value) {
-  return !value || /^\d{4}-\d{2}-\d{2}$/.test(value);
-}
-function isValidTimeInput(value) {
-  return !value || /^\d{1,2}:\d{2}$/.test(value);
-}
-function isValidDateTimeInput(value) {
-  return !value || /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(value);
-}
-function truncateExcelCellText(text2, maxLength = 20) {
-  if (text2.length <= maxLength) return text2;
-  return text2.substring(0, maxLength) + "...";
-}
-function normalizeExcelColumnKey(field) {
-  return normalizeEditableFieldKey(field);
-}
-function buildExcelColumns(fields) {
-  const seen = /* @__PURE__ */ new Set();
-  const columns = [];
-  for (const field of fields) {
-    const key = normalizeExcelColumnKey(field);
-    if (!key || seen.has(key)) continue;
-    seen.add(key);
-    const policy = getFieldEditPolicy(key);
-    columns.push({
-      key,
-      canonicalField: policy.canonicalField,
-      label: getFieldLabel(key) || key,
-      editable: policy.editable && policy.commitMode === "inline",
-      editorKind: policy.editorKind,
-      commitMode: policy.commitMode,
-      dangerLevel: policy.dangerLevel,
-      readonlyReason: policy.editable ? void 0 : policy.reason
-    });
-  }
-  return columns;
-}
-function buildExcelCellModel(item, field, valueOverride) {
-  const sourceValue = readField(item, field);
-  const hasOverride = valueOverride !== void 0;
-  const value = hasOverride ? valueOverride : sourceValue;
-  const policy = getFieldEditPolicy(field, value);
-  return {
-    item,
-    itemId: item.id,
-    field,
-    canonicalField: policy.canonicalField,
-    value,
-    displayValue: formatExcelCellValue(value),
-    editorValue: formatExcelEditorValue(value, policy.editorKind),
-    policy
-  };
-}
-function formatExcelEditorValue(value, editorKind) {
-  if (editorKind === "date") return toDateInputValue(value);
-  if (editorKind === "time") return toTimeInputValue(value);
-  if (editorKind === "datetime") return toDateTimeInputValue(value);
-  if (editorKind === "boolean") return value === true ? "true" : value === false ? "false" : formatExcelCellValue(value);
-  if (editorKind === "select" && isOptionLikeValue(value)) return String(value.value ?? value.label ?? "");
-  return formatExcelCellValue(value);
-}
-function getExcelEditorOptions(cell) {
-  if (cell.policy.editorKind === "boolean") {
-    return [
-      { value: "", label: "空" },
-      { value: "true", label: "是" },
-      { value: "false", label: "否" }
-    ];
-  }
-  const options = cell.policy.definition?.options;
-  if (!Array.isArray(options) || !options.length) {
-    return cell.editorValue ? [{ value: cell.editorValue, label: cell.displayValue || cell.editorValue }] : [{ value: "", label: "空" }];
-  }
-  const normalized = options.map((option) => ({
-    value: String(option?.value ?? ""),
-    label: String(option?.label ?? option?.value ?? "")
-  })).filter((option) => option.value || option.label);
-  if (cell.editorValue && !normalized.some((option) => option.value === cell.editorValue)) {
-    return [{ value: cell.editorValue, label: cell.displayValue || cell.editorValue }, ...normalized];
-  }
-  return normalized;
-}
-function validateExcelEditorValue(cell, editorValue) {
-  const trimmed = editorValue.trim();
-  switch (cell.policy.editorKind) {
-    case "number":
-    case "rating":
-      return trimmed && !Number.isFinite(Number(trimmed)) ? "请输入有效数字" : null;
-    case "date":
-      return isValidDateInput(trimmed) ? null : "日期格式应为 YYYY-MM-DD";
-    case "time":
-      return isValidTimeInput(trimmed) ? null : "时间格式应为 HH:mm";
-    case "datetime":
-      return isValidDateTimeInput(trimmed) ? null : "日期时间格式应为 YYYY-MM-DDTHH:mm";
-    case "select": {
-      const options = getExcelEditorOptions(cell);
-      return options.length && trimmed && !options.some((option) => option.value === trimmed) ? "请选择有效选项" : null;
-    }
-    default:
-      return null;
-  }
-}
-function parseExcelEditorValue(cell, editorValue) {
-  const raw = editorValue;
-  const trimmed = raw.trim();
-  switch (cell.policy.editorKind) {
-    case "number":
-    case "rating": {
-      if (!trimmed) return null;
-      const numeric = Number(trimmed);
-      return Number.isFinite(numeric) ? numeric : raw;
-    }
-    case "boolean": {
-      const lower = trimmed.toLowerCase();
-      if (["true", "1", "yes", "y", "是"].includes(lower)) return true;
-      if (["false", "0", "no", "n", "否"].includes(lower)) return false;
-      return null;
-    }
-    case "date":
-    case "time":
-    case "datetime":
-    case "select":
-      return trimmed;
-    case "tags":
-      return trimmed.split(/[,，\n]/).map((part) => part.trim()).filter(Boolean);
-    default:
-      return raw;
-  }
-}
-function areExcelCellValuesEqual(left2, right2) {
-  return formatExcelCellValue(left2) === formatExcelCellValue(right2);
-}
-function getExcelCellKey(itemId, field) {
-  return `${itemId}::${field}`;
-}
-function canInlineEditExcelCell(cell, canCommit = true) {
-  return !!canCommit && cell.policy.editable && cell.policy.commitMode === "inline";
-}
-function getExcelEditorDescriptor(kind) {
-  if (kind === "textarea") return { tag: "textarea", hint: "Enter 保存 · Shift+Enter 换行 · Esc 取消" };
-  if (kind === "number") return { tag: "input", type: "number", hint: "数字编辑器：Enter 保存 · Esc 取消" };
-  if (kind === "rating") return { tag: "input", type: "number", hint: "评分编辑器：输入数字，Enter 保存 · Esc 取消" };
-  if (kind === "date") return { tag: "input", type: "date", hint: "日期编辑器：Enter 保存 · Esc 取消" };
-  if (kind === "time") return { tag: "input", type: "time", hint: "时间编辑器：Enter 保存 · Esc 取消" };
-  if (kind === "datetime") return { tag: "input", type: "datetime-local", hint: "日期时间编辑器：Enter 保存 · Esc 取消" };
-  if (kind === "boolean") return { tag: "select", hint: "布尔编辑器：选择 是 / 否，Enter 保存 · Esc 取消" };
-  if (kind === "select") return { tag: "select", hint: "选项编辑器：选择后 Enter 保存 · Esc 取消" };
-  if (kind === "tags") return { tag: "input", type: "text", hint: "标签编辑器：逗号/换行分隔，# 会保留" };
-  return { tag: "input", type: "text", hint: "Enter 保存 · Esc 取消" };
-}
-function readKeyboardValue(event) {
-  const target = event.currentTarget;
-  return target.value;
-}
-function getReadonlyTitle(policyReason) {
-  return policyReason || "该字段不可在 Excel 单元格中直接编辑";
-}
-function getTypedInputProps(kind) {
-  if (kind === "number") return { step: "any" };
-  if (kind === "rating") return { step: 1, min: 0, max: 5 };
-  return {};
-}
-function isMarkdownInteractiveTarget(target) {
-  if (!(target instanceof HTMLElement)) return false;
-  return !!target.closest("a, button, input, textarea, select, .internal-link, .external-link, .tag");
-}
-function ExcelCell({
-  cell,
-  selected = false,
-  editing = false,
-  pending = false,
-  saved = false,
-  error,
-  canCommit = false,
-  style: style2,
-  fillDragging = false,
-  fillSource = false,
-  fillTarget = false,
-  contentDisplayMode = "previewText",
-  messageRenderPort,
-  onSelect,
-  onStartEdit,
-  onCancelEdit,
-  onCommitEdit,
-  onNavigate,
-  onPasteText,
-  onStartFillDrag,
-  onMoveFillDrag,
-  onFinishFillDrag,
-  onCancelFillDrag,
-  onOpenRecord
-}) {
-  const { item, field, value, displayValue, editorValue, policy } = cell;
-  const [draft, setDraft] = d(editorValue);
-  const inputRef = A$1(null);
-  const editable = canInlineEditExcelCell(cell, canCommit);
-  const readonly2 = !editable;
-  const descriptor = getExcelEditorDescriptor(policy.editorKind);
-  const editorOptions = getExcelEditorOptions(cell);
-  const cellKey = getExcelCellKey(cell.itemId, cell.canonicalField);
-  const isContentCell = cell.canonicalField === "content";
-  const contentText = typeof value === "string" ? value : "";
-  const showFullMarkdownContent = isContentCell && contentDisplayMode === "fullMarkdown" && !!contentText.trim();
-  y(() => {
-    if (editing) setDraft(editorValue);
-  }, [editing, editorValue]);
-  y(() => {
-    if (!editing) return;
-    const input = inputRef.current;
-    if (!input) return;
-    input.focus();
-    input.select?.();
-  }, [editing]);
-  const commit = (nextValue = draft) => {
-    if (!editing || pending) return;
-    onCommitEdit?.(cell, nextValue);
-  };
-  const handleCellClick = (event) => {
-    if (fillDragging) return;
-    if (event.metaKey || event.ctrlKey) {
-      onOpenRecord?.(item);
-      return;
-    }
-    onSelect?.(cell);
-  };
-  const handleDoubleClick = (event) => {
-    event.preventDefault();
-    event.stopPropagation();
-    if (editable) onStartEdit?.(cell);
-    else onSelect?.(cell);
-  };
-  const handleMarkdownClick = (event) => {
-    if (isMarkdownInteractiveTarget(event.target)) event.stopPropagation();
-  };
-  const handleMarkdownDoubleClick = (event) => {
-    if (isMarkdownInteractiveTarget(event.target)) event.stopPropagation();
-  };
-  const handleFillMouseDown = (event) => {
-    event.preventDefault();
-    event.stopPropagation();
-    if (!editable || pending || editing) return;
-    onStartFillDrag?.(cell);
-  };
-  const handleMouseEnter = () => {
-    if (fillDragging) onMoveFillDrag?.(cell);
-  };
-  const handleMouseUp = () => {
-    if (fillDragging) onFinishFillDrag?.(cell);
-  };
-  const navigate = (event, direction) => {
-    event.preventDefault();
-    event.stopPropagation();
-    onNavigate?.(cell, direction);
-  };
-  const handleEditorKeyDown = (event) => {
-    if (event.key === "Escape") {
-      event.preventDefault();
-      onCancelEdit?.();
-      return;
-    }
-    if (event.key === "Enter" && !(descriptor.tag === "textarea" && event.shiftKey)) {
-      event.preventDefault();
-      commit(readKeyboardValue(event));
-    }
-  };
-  const handleCellKeyDown = (event) => {
-    if (event.key === "Escape" && fillDragging) {
-      event.preventDefault();
-      onCancelFillDrag?.();
-      return;
-    }
-    if (editing) return;
-    if (event.key === "ArrowUp") return navigate(event, "up");
-    if (event.key === "ArrowDown") return navigate(event, "down");
-    if (event.key === "ArrowLeft") return navigate(event, "left");
-    if (event.key === "ArrowRight") return navigate(event, "right");
-    if (event.key === "Tab") return navigate(event, event.shiftKey ? "previous" : "next");
-    if ((event.key === "Enter" || event.key === "F2") && editable) {
-      event.preventDefault();
-      onStartEdit?.(cell);
-      return;
-    }
-  };
-  const handlePaste = (event) => {
-    if (editing) return;
-    const text2 = event.clipboardData?.getData("text/plain") || "";
-    if (!text2) return;
-    event.preventDefault();
-    event.stopPropagation();
-    onPasteText?.(cell, text2);
-  };
-  const title = error || (editable ? "双击/F2/Enter 编辑；方向键/Tab 移动；可粘贴多行多列；拖动右下角小方块可向同列覆盖；Ctrl/⌘ 点击打开完整编辑" : `${getReadonlyTitle(policy.reason)}；Ctrl/⌘ 点击可打开完整编辑`);
-  const className = [
-    "excel-view-cell",
-    editable ? "is-inline-editable" : "is-readonly",
-    policy.editable ? "is-policy-editable" : "is-policy-readonly",
-    policy.dangerLevel === "medium" ? "is-medium-risk" : "",
-    policy.dangerLevel === "high" ? "is-high-risk" : "",
-    isContentCell ? "is-content-cell" : "",
-    showFullMarkdownContent ? "is-content-expanded" : "",
-    selected ? "is-selected" : "",
-    editing ? "is-editing" : "",
-    pending ? "is-pending" : "",
-    saved && !pending && !error ? "is-saved" : "",
-    error ? "has-error" : "",
-    fillSource ? "is-fill-source" : "",
-    fillTarget ? "is-fill-target" : ""
-  ].filter(Boolean).join(" ");
-  return /* @__PURE__ */ u2(
-    "td",
-    {
-      "data-excel-cell-key": cellKey,
-      "data-field": field,
-      "data-canonical-field": policy.canonicalField,
-      "data-editable": editable ? "true" : "false",
-      "data-policy-editable": policy.editable ? "true" : "false",
-      "data-editor-kind": policy.editorKind,
-      "data-danger-level": policy.dangerLevel,
-      "data-content-display-mode": isContentCell ? contentDisplayMode : void 0,
-      "data-save-state": pending ? "pending" : error ? "error" : saved ? "saved" : "idle",
-      class: className,
-      style: style2,
-      title,
-      tabIndex: 0,
-      "aria-readonly": readonly2 ? "true" : "false",
-      "aria-invalid": error ? "true" : "false",
-      onClick: handleCellClick,
-      onDblClick: handleDoubleClick,
-      onMouseEnter: handleMouseEnter,
-      onMouseUp: handleMouseUp,
-      onKeyDown: handleCellKeyDown,
-      onPaste: handlePaste,
-      children: [
-        editing ? /* @__PURE__ */ u2("span", { class: "excel-view-cell-edit-wrap", children: [
-          descriptor.tag === "textarea" ? /* @__PURE__ */ u2(
-            "textarea",
-            {
-              ref: inputRef,
-              class: "excel-view-cell-editor excel-view-cell-editor-textarea",
-              value: draft,
-              disabled: pending,
-              onInput: (event) => setDraft(event.currentTarget.value),
-              onKeyDown: handleEditorKeyDown,
-              onBlur: () => commit()
-            }
-          ) : descriptor.tag === "select" ? /* @__PURE__ */ u2(
-            "select",
-            {
-              ref: inputRef,
-              class: "excel-view-cell-editor excel-view-cell-editor-select",
-              value: draft,
-              disabled: pending,
-              onChange: (event) => setDraft(event.currentTarget.value),
-              onKeyDown: handleEditorKeyDown,
-              onBlur: () => commit(),
-              children: editorOptions.map((option) => /* @__PURE__ */ u2("option", { value: option.value, children: option.label }, option.value))
-            }
-          ) : /* @__PURE__ */ u2(
-            "input",
-            {
-              ref: inputRef,
-              class: "excel-view-cell-editor",
-              type: descriptor.type || "text",
-              value: draft,
-              disabled: pending,
-              ...getTypedInputProps(policy.editorKind),
-              onInput: (event) => setDraft(event.currentTarget.value),
-              onKeyDown: handleEditorKeyDown,
-              onBlur: () => commit()
-            }
-          ),
-          /* @__PURE__ */ u2("span", { class: "excel-view-cell-edit-hint", children: descriptor.hint })
-        ] }) : showFullMarkdownContent ? /* @__PURE__ */ u2(
-          MarkdownContent,
-          {
-            renderPort: messageRenderPort,
-            content: contentText,
-            contentType: "markdown",
-            sourcePath: item.file?.path || "",
-            className: "excel-view-cell-md",
-            onClick: handleMarkdownClick,
-            onDblClick: handleMarkdownDoubleClick
-          }
-        ) : isContentCell && contentText ? /* @__PURE__ */ u2("span", { class: "excel-view-content-link", children: truncateExcelCellText(contentText) }) : /* @__PURE__ */ u2("span", { class: "excel-view-cell-value", children: displayValue }),
-        !editing && selected ? /* @__PURE__ */ u2("span", { class: "excel-view-cell-affordance", "aria-hidden": "true", children: editable ? "✎" : "🔒" }) : null,
-        selected && editable && !editing && !pending ? /* @__PURE__ */ u2(
-          "span",
-          {
-            class: "excel-view-fill-handle",
-            "aria-label": "拖动覆盖同列",
-            title: "拖动覆盖同列单元格",
-            onMouseDown: handleFillMouseDown
-          }
-        ) : null,
-        pending ? /* @__PURE__ */ u2("span", { class: "excel-view-cell-status", "aria-label": "保存中", children: "…" }) : null,
-        saved && !pending && !error ? /* @__PURE__ */ u2("span", { class: "excel-view-cell-status is-saved", "aria-label": "已保存", children: "✓" }) : null,
-        error ? /* @__PURE__ */ u2("span", { class: "excel-view-cell-error", "aria-label": error, children: "!" }) : null
-      ]
-    }
-  );
-}
-function getCellKey(cell) {
-  return getExcelCellKey(cell.itemId, cell.canonicalField);
-}
-function getColumnBadge(column2, canCommitCells) {
-  if (!column2.editable || !canCommitCells) return "只读";
-  if (column2.dangerLevel === "medium") return "谨慎";
-  return "可编辑";
-}
-function getColumnTitle(column2, canCommitCells) {
-  if (!canCommitCells) return "当前视图未配置保存处理器，所有字段暂不可编辑";
-  if (!column2.editable) return column2.readonlyReason || "该字段不可在 Excel 单元格内直接编辑";
-  if (column2.dangerLevel === "medium") return "可编辑字段，但会影响时间、标签等结构化内容，请谨慎修改";
-  return "可编辑字段：双击单元格可编辑；拖动表头右侧边缘可调整列宽";
-}
-function getColumnWidth(column2, width2) {
-  if (Number.isFinite(width2) && width2) return Math.max(80, Math.min(640, Math.round(width2)));
-  if (column2.canonicalField === "content") return 240;
-  if (column2.canonicalField === "title") return 180;
-  if (column2.editorKind === "date" || column2.editorKind === "time") return 128;
-  if (column2.editorKind === "number" || column2.editorKind === "rating") return 104;
-  return 150;
-}
-function normalizeClipboardText(text2) {
-  return String(text2 || "").replace(/\r\n/g, "\n").replace(/\r/g, "\n");
-}
-function parseClipboardMatrix(text2) {
-  const normalized = normalizeClipboardText(text2);
-  const withoutFinalNewline = normalized.endsWith("\n") ? normalized.slice(0, -1) : normalized;
-  if (!withoutFinalNewline) return [[""]];
-  return withoutFinalNewline.split("\n").map((row) => row.split("	"));
-}
-function focusCellElement(table, cellKey) {
-  if (!table || !cellKey) return;
-  const escaped = cellKey.replace(/\\/g, "\\\\").replace(/"/g, '\\"');
-  window.requestAnimationFrame(() => {
-    const element = table.querySelector(`[data-excel-cell-key="${escaped}"]`);
-    element?.focus?.();
-  });
-}
-function ExcelGrid({
-  items,
-  columns,
-  app,
-  selectedCellKey,
-  editingCellKey,
-  pendingCellKeys,
-  savedCellKeys,
-  cellErrors,
-  valueOverrides,
-  canCommitCells = false,
-  columnWidths,
-  contentDisplayMode = "previewText",
-  messageRenderPort,
-  fillDragSourceCell,
-  fillDragTargetCellKey,
-  onSelectCell,
-  onStartEdit,
-  onCancelEdit,
-  onCommitEdit,
-  onCommitBatchEdits,
-  onStartFillDrag,
-  onMoveFillDrag,
-  onFinishFillDrag,
-  onCancelFillDrag,
-  onColumnWidthDraftChange,
-  onColumnWidthCommit,
-  onOpenRecord
-}) {
-  const tableRef = A$1(null);
-  const makeCell = (item, columnKey) => {
-    const optimisticKey = getExcelCellKey(item.id, columnKey);
-    const cell = buildExcelCellModel(item, columnKey, valueOverrides?.[optimisticKey]);
-    const canonicalKey = getExcelCellKey(cell.itemId, cell.canonicalField);
-    if (valueOverrides?.[canonicalKey] !== void 0 && canonicalKey !== optimisticKey) {
-      return buildExcelCellModel(item, columnKey, valueOverrides[canonicalKey]);
-    }
-    return cell;
-  };
-  const buildFillRange = (target) => {
-    const source = fillDragSourceCell;
-    if (!source) return [];
-    if (source.canonicalField !== target.canonicalField) return [];
-    if (!canInlineEditExcelCell(source) || !canInlineEditExcelCell(target)) return [];
-    const sourceIndex = items.findIndex((item) => item.id === source.itemId);
-    const targetIndex = items.findIndex((item) => item.id === target.itemId);
-    if (sourceIndex < 0 || targetIndex < 0) return [];
-    const from2 = Math.min(sourceIndex, targetIndex);
-    const to = Math.max(sourceIndex, targetIndex);
-    const columnKey = source.field;
-    return items.slice(from2, to + 1).map((item) => makeCell(item, columnKey));
-  };
-  const finishFillDrag = (target) => {
-    onFinishFillDrag?.(buildFillRange(target));
-  };
-  const findCellPosition = (cell) => ({
-    rowIndex: items.findIndex((item) => item.id === cell.itemId),
-    colIndex: columns.findIndex((column2) => column2.canonicalField === cell.canonicalField)
-  });
-  const selectByPosition = (rowIndex, colIndex) => {
-    if (!items.length || !columns.length) return;
-    const boundedRow = Math.max(0, Math.min(items.length - 1, rowIndex));
-    const boundedCol = Math.max(0, Math.min(columns.length - 1, colIndex));
-    const nextCell = makeCell(items[boundedRow], columns[boundedCol].key);
-    onSelectCell?.(nextCell);
-    focusCellElement(tableRef.current, getCellKey(nextCell));
-  };
-  const navigateCell = (cell, direction) => {
-    const { rowIndex, colIndex } = findCellPosition(cell);
-    if (rowIndex < 0 || colIndex < 0) return;
-    if (direction === "up") return selectByPosition(rowIndex - 1, colIndex);
-    if (direction === "down") return selectByPosition(rowIndex + 1, colIndex);
-    if (direction === "left") return selectByPosition(rowIndex, colIndex - 1);
-    if (direction === "right") return selectByPosition(rowIndex, colIndex + 1);
-    const linearIndex = rowIndex * columns.length + colIndex + (direction === "previous" ? -1 : 1);
-    const bounded = Math.max(0, Math.min(items.length * columns.length - 1, linearIndex));
-    selectByPosition(Math.floor(bounded / columns.length), bounded % columns.length);
-  };
-  const pasteFromCell = (startCell, text2) => {
-    if (!onCommitBatchEdits || !canCommitCells) return;
-    const { rowIndex, colIndex } = findCellPosition(startCell);
-    if (rowIndex < 0 || colIndex < 0) return;
-    const matrix = parseClipboardMatrix(text2);
-    const edits = [];
-    let lastCell = null;
-    for (let rowOffset = 0; rowOffset < matrix.length; rowOffset += 1) {
-      for (let colOffset = 0; colOffset < matrix[rowOffset].length; colOffset += 1) {
-        const targetRow = rowIndex + rowOffset;
-        const targetCol = colIndex + colOffset;
-        if (targetRow >= items.length || targetCol >= columns.length) continue;
-        const targetCell = makeCell(items[targetRow], columns[targetCol].key);
-        lastCell = targetCell;
-        if (!canInlineEditExcelCell(targetCell, canCommitCells)) continue;
-        edits.push({ cell: targetCell, editorValue: matrix[rowOffset][colOffset] });
-      }
-    }
-    if (lastCell) {
-      onSelectCell?.(lastCell);
-      focusCellElement(tableRef.current, getCellKey(lastCell));
-    }
-    if (edits.length) onCommitBatchEdits(edits, "paste");
-  };
-  const startColumnResize = (event, column2) => {
-    event.preventDefault();
-    event.stopPropagation();
-    const th = event.currentTarget.closest("th");
-    const startX = event.clientX;
-    const startWidth = getColumnWidth(column2, columnWidths?.[column2.key]) || th?.offsetWidth || 150;
-    const move = (moveEvent) => {
-      const nextWidth = startWidth + (moveEvent.clientX - startX);
-      onColumnWidthDraftChange?.(column2.key, nextWidth);
-    };
-    const up = (upEvent) => {
-      const nextWidth = startWidth + (upEvent.clientX - startX);
-      window.removeEventListener("mousemove", move, true);
-      window.removeEventListener("mouseup", up, true);
-      document.body.classList.remove("excel-view-is-resizing-column");
-      onColumnWidthCommit?.(column2.key, nextWidth);
-    };
-    document.body.classList.add("excel-view-is-resizing-column");
-    window.addEventListener("mousemove", move, true);
-    window.addEventListener("mouseup", up, true);
-  };
-  return /* @__PURE__ */ u2("table", { ref: tableRef, class: "think-table excel-view-table", children: [
-    /* @__PURE__ */ u2("colgroup", { children: columns.map((column2) => {
-      const width2 = getColumnWidth(column2, columnWidths?.[column2.key]);
-      return /* @__PURE__ */ u2("col", { "data-field": column2.key, style: { width: `${width2}px` } }, column2.key);
-    }) }),
-    /* @__PURE__ */ u2("thead", { children: /* @__PURE__ */ u2("tr", { children: columns.map((column2) => {
-      const columnEditable = column2.editable && canCommitCells;
-      const width2 = getColumnWidth(column2, columnWidths?.[column2.key]);
-      return /* @__PURE__ */ u2(
-        "th",
-        {
-          "data-field": column2.key,
-          "data-canonical-field": column2.canonicalField,
-          "data-editable": columnEditable ? "true" : "false",
-          "data-editor-kind": column2.editorKind,
-          "data-danger-level": column2.dangerLevel,
-          title: getColumnTitle(column2, canCommitCells),
-          style: { width: `${width2}px`, minWidth: `${width2}px`, maxWidth: `${width2}px` },
-          children: [
-            /* @__PURE__ */ u2("span", { class: "excel-view-header-stack", children: [
-              /* @__PURE__ */ u2("span", { class: "excel-view-header-label", children: column2.label }),
-              /* @__PURE__ */ u2("span", { class: "excel-view-header-badge", children: getColumnBadge(column2, canCommitCells) })
-            ] }),
-            /* @__PURE__ */ u2(
-              "span",
-              {
-                class: "excel-view-column-resize-handle",
-                role: "separator",
-                "aria-orientation": "vertical",
-                title: "拖动调整列宽",
-                onMouseDown: (event) => startColumnResize(event, column2)
-              }
-            )
-          ]
-        },
-        column2.key
-      );
-    }) }) }),
-    /* @__PURE__ */ u2("tbody", { children: items.map((item) => /* @__PURE__ */ u2("tr", { "data-item-id": item.id, children: columns.map((column2) => {
-      const cell = makeCell(item, column2.key);
-      const canonicalCellKey = getCellKey(cell);
-      const fillDragging = !!fillDragSourceCell;
-      const width2 = getColumnWidth(column2, columnWidths?.[column2.key]);
-      return /* @__PURE__ */ u2(
-        ExcelCell,
-        {
-          cell,
-          app,
-          selected: selectedCellKey === canonicalCellKey,
-          editing: editingCellKey === canonicalCellKey,
-          pending: pendingCellKeys?.has(canonicalCellKey),
-          saved: savedCellKeys?.has(canonicalCellKey),
-          error: cellErrors?.[canonicalCellKey],
-          canCommit: canCommitCells,
-          fillDragging,
-          fillSource: fillDragSourceCell ? getCellKey(fillDragSourceCell) === canonicalCellKey : false,
-          fillTarget: fillDragTargetCellKey === canonicalCellKey && fillDragSourceCell?.canonicalField === cell.canonicalField,
-          contentDisplayMode,
-          messageRenderPort,
-          onSelect: onSelectCell,
-          onStartEdit,
-          onCancelEdit,
-          onCommitEdit,
-          onNavigate: navigateCell,
-          onPasteText: pasteFromCell,
-          onStartFillDrag,
-          onMoveFillDrag,
-          onFinishFillDrag: finishFillDrag,
-          onCancelFillDrag,
-          onOpenRecord,
-          style: { width: `${width2}px`, minWidth: `${width2}px`, maxWidth: `${width2}px` }
-        },
-        column2.key
-      );
-    }) }, item.id)) })
-  ] });
-}
-function addPendingKey(source, key) {
-  const next2 = new Set(source);
-  next2.add(key);
-  return next2;
-}
-function addPendingKeys(source, keys) {
-  const next2 = new Set(source);
-  for (const key of keys) next2.add(key);
-  return next2;
-}
-function removePendingKey(source, key) {
-  const next2 = new Set(source);
-  next2.delete(key);
-  return next2;
-}
-function removePendingKeys(source, keys) {
-  const next2 = new Set(source);
-  for (const key of keys) next2.delete(key);
-  return next2;
-}
-function addSavedKey(source, key) {
-  const next2 = new Set(source);
-  next2.add(key);
-  return next2;
-}
-function removeSavedKey(source, key) {
-  const next2 = new Set(source);
-  next2.delete(key);
-  return next2;
-}
-function uniqueKeys(keys) {
-  return Array.from(new Set(keys));
-}
-function useExcelCellEditing(options) {
-  const { onCellCommit } = options;
-  const [selectedCellKey, setSelectedCellKey] = d(null);
-  const [editingCellKey, setEditingCellKey] = d(null);
-  const [pendingCellKeys, setPendingCellKeys] = d(() => /* @__PURE__ */ new Set());
-  const [cellErrors, setCellErrors] = d({});
-  const [valueOverrides, setValueOverrides] = d({});
-  const [savedCellKeys, setSavedCellKeys] = d(() => /* @__PURE__ */ new Set());
-  const saveFlashTimers = A$1({});
-  const commitQueueRef = A$1(Promise.resolve());
-  const [fillDragSourceCell, setFillDragSourceCell] = d(null);
-  const [fillDragTargetCellKey, setFillDragTargetCellKey] = d(null);
-  y(() => () => {
-    for (const timer of Object.values(saveFlashTimers.current)) clearTimeout(timer);
-    saveFlashTimers.current = {};
-  }, []);
-  const enqueueCommitTask = q$1(async (task) => {
-    const run = commitQueueRef.current.then(task, task);
-    commitQueueRef.current = run.catch(() => void 0);
-    await run;
-  }, []);
-  const flashSavedKey = q$1((key) => {
-    const existing = saveFlashTimers.current[key];
-    if (existing) clearTimeout(existing);
-    setSavedCellKeys((prev2) => addSavedKey(prev2, key));
-    saveFlashTimers.current[key] = setTimeout(() => {
-      setSavedCellKeys((prev2) => removeSavedKey(prev2, key));
-      delete saveFlashTimers.current[key];
-    }, 1200);
-  }, []);
-  const selectCell = q$1((cell) => {
-    setSelectedCellKey(getExcelCellKey(cell.itemId, cell.canonicalField));
-  }, []);
-  const startEdit = q$1((cell) => {
-    const key = getExcelCellKey(cell.itemId, cell.canonicalField);
-    setSelectedCellKey(key);
-    if (!onCellCommit) {
-      setCellErrors((prev2) => ({ ...prev2, [key]: "当前视图没有配置保存处理器" }));
-      return;
-    }
-    if (!canInlineEditExcelCell(cell)) {
-      setCellErrors((prev2) => ({ ...prev2, [key]: cell.policy.reason || "该字段不可内联编辑" }));
-      return;
-    }
-    setEditingCellKey(key);
-    setCellErrors((prev2) => ({ ...prev2, [key]: void 0 }));
-  }, [onCellCommit]);
-  const cancelEdit = q$1(() => {
-    setEditingCellKey(null);
-  }, []);
-  const commitCellValue = q$1(async (cell, nextValue, reason) => {
-    const key = getExcelCellKey(cell.itemId, cell.canonicalField);
-    if (!onCellCommit) {
-      setCellErrors((prev2) => ({ ...prev2, [key]: "当前视图没有配置保存处理器" }));
-      return false;
-    }
-    if (!canInlineEditExcelCell(cell)) {
-      setCellErrors((prev2) => ({ ...prev2, [key]: cell.policy.reason || "该字段不可内联编辑" }));
-      return false;
-    }
-    if (areExcelCellValuesEqual(cell.value, nextValue)) return true;
-    try {
-      const result = await onCellCommit({
-        item: cell.item,
-        itemId: cell.itemId,
-        field: cell.field,
-        canonicalField: cell.canonicalField,
-        oldValue: cell.value,
-        nextValue,
-        reason
-      });
-      if (!result?.ok) {
-        setCellErrors((prev2) => ({ ...prev2, [key]: result?.message || "保存失败" }));
-        return false;
-      }
-      const normalizedValue = result.normalizedValue !== void 0 ? result.normalizedValue : nextValue;
-      setValueOverrides((prev2) => ({ ...prev2, [key]: normalizedValue }));
-      setCellErrors((prev2) => ({ ...prev2, [key]: void 0 }));
-      flashSavedKey(key);
-      return true;
-    } catch (error) {
-      setCellErrors((prev2) => ({ ...prev2, [key]: error instanceof Error ? error.message : "保存失败" }));
-      return false;
-    }
-  }, [flashSavedKey, onCellCommit]);
-  const commitBatchEdits = q$1(async (edits, reason) => {
-    if (!edits.length) return;
-    const prepared = edits.map((edit) => {
-      const key = getExcelCellKey(edit.cell.itemId, edit.cell.canonicalField);
-      const validationMessage = validateExcelEditorValue(edit.cell, edit.editorValue);
-      const nextValue = validationMessage ? void 0 : parseExcelEditorValue(edit.cell, edit.editorValue);
-      return { ...edit, key, validationMessage, nextValue };
-    });
-    const invalid = prepared.filter((edit) => edit.validationMessage);
-    if (invalid.length) {
-      setCellErrors((prev2) => {
-        const next2 = { ...prev2 };
-        for (const edit of invalid) next2[edit.key] = edit.validationMessage || "字段值无效";
-        return next2;
-      });
-    }
-    const valid = prepared.filter((edit) => !edit.validationMessage && canInlineEditExcelCell(edit.cell));
-    if (!valid.length) return;
-    const keys = uniqueKeys(valid.map((edit) => edit.key));
-    setEditingCellKey(null);
-    setSelectedCellKey(valid[valid.length - 1].key);
-    setPendingCellKeys((prev2) => addPendingKeys(prev2, keys));
-    setCellErrors((prev2) => {
-      const next2 = { ...prev2 };
-      for (const key of keys) next2[key] = void 0;
-      return next2;
-    });
-    try {
-      await enqueueCommitTask(async () => {
-        for (const edit of valid) {
-          await commitCellValue(edit.cell, edit.nextValue, reason);
-        }
-      });
-    } finally {
-      setPendingCellKeys((prev2) => removePendingKeys(prev2, keys));
-    }
-  }, [commitCellValue, enqueueCommitTask]);
-  const commitEdit = q$1(async (cell, nextEditorValue) => {
-    const key = getExcelCellKey(cell.itemId, cell.canonicalField);
-    const validationMessage = validateExcelEditorValue(cell, nextEditorValue);
-    if (validationMessage) {
-      setSelectedCellKey(key);
-      setCellErrors((prev2) => ({ ...prev2, [key]: validationMessage }));
-      return;
-    }
-    const nextValue = parseExcelEditorValue(cell, nextEditorValue);
-    setSelectedCellKey(key);
-    setEditingCellKey(null);
-    setCellErrors((prev2) => ({ ...prev2, [key]: void 0 }));
-    setPendingCellKeys((prev2) => addPendingKey(prev2, key));
-    try {
-      await enqueueCommitTask(async () => {
-        await commitCellValue(cell, nextValue, "inline-edit");
-      });
-    } finally {
-      setPendingCellKeys((prev2) => removePendingKey(prev2, key));
-    }
-  }, [commitCellValue, enqueueCommitTask]);
-  const startFillDrag = q$1((cell) => {
-    if (!onCellCommit || !canInlineEditExcelCell(cell)) return;
-    const key = getExcelCellKey(cell.itemId, cell.canonicalField);
-    setSelectedCellKey(key);
-    setFillDragSourceCell(cell);
-    setFillDragTargetCellKey(key);
-    setCellErrors((prev2) => ({ ...prev2, [key]: void 0 }));
-  }, [onCellCommit]);
-  const moveFillDrag = q$1((cell) => {
-    setFillDragTargetCellKey(getExcelCellKey(cell.itemId, cell.canonicalField));
-  }, []);
-  const cancelFillDrag = q$1(() => {
-    setFillDragSourceCell(null);
-    setFillDragTargetCellKey(null);
-  }, []);
-  const finishFillDrag = q$1(async (cells) => {
-    const source = fillDragSourceCell;
-    setFillDragSourceCell(null);
-    setFillDragTargetCellKey(null);
-    if (!source || !cells.length) return;
-    const targetCells = cells.filter((cell) => cell.itemId !== source.itemId && cell.canonicalField === source.canonicalField && canInlineEditExcelCell(cell));
-    if (!targetCells.length) return;
-    await commitBatchEdits(targetCells.map((cell) => ({ cell, editorValue: source.editorValue })), "fill-drag");
-  }, [commitBatchEdits, fillDragSourceCell]);
-  const resetTransientState = q$1(() => {
-    setSelectedCellKey(null);
-    setEditingCellKey(null);
-    setPendingCellKeys(/* @__PURE__ */ new Set());
-    setCellErrors({});
-    setValueOverrides({});
-    for (const timer of Object.values(saveFlashTimers.current)) clearTimeout(timer);
-    saveFlashTimers.current = {};
-    setSavedCellKeys(/* @__PURE__ */ new Set());
-    setFillDragSourceCell(null);
-    setFillDragTargetCellKey(null);
-  }, []);
-  return {
-    selectedCellKey,
-    editingCellKey,
-    pendingCellKeys,
-    cellErrors,
-    valueOverrides,
-    savedCellKeys,
-    fillDragSourceCell,
-    fillDragTargetCellKey,
-    selectCell,
-    startEdit,
-    cancelEdit,
-    commitEdit,
-    commitBatchEdits,
-    startFillDrag,
-    moveFillDrag,
-    finishFillDrag,
-    cancelFillDrag,
-    resetTransientState
-  };
-}
-function isNativeInteractiveTarget(target) {
-  return target instanceof HTMLElement && !!target.closest('input, textarea, select, button, a, [contenteditable="true"]');
-}
-function stopObsidianPreviewEvent(event) {
-  event.stopPropagation();
-}
-function stopObsidianPreviewDoubleClick(event) {
-  event.stopPropagation();
-  if (!isNativeInteractiveTarget(event.target)) {
-    event.preventDefault();
-  }
-}
-function getObsidianEventBoundaryProps() {
-  return {
-    onPointerDown: stopObsidianPreviewEvent,
-    onMouseDown: stopObsidianPreviewEvent,
-    onMouseUp: stopObsidianPreviewEvent,
-    onClick: stopObsidianPreviewEvent,
-    onDblClick: stopObsidianPreviewDoubleClick
-  };
-}
-function normalizeColumnWidth(width2) {
-  if (!Number.isFinite(width2)) return 160;
-  return Math.max(80, Math.min(640, Math.round(width2)));
-}
-function normalizeColumnWidths(widths) {
-  if (!widths) return {};
-  const next2 = {};
-  for (const [field, width2] of Object.entries(widths)) {
-    if (!field) continue;
-    next2[field] = normalizeColumnWidth(Number(width2));
-  }
-  return next2;
-}
-function normalizeContentDisplayMode(mode) {
-  return mode === "fullMarkdown" ? "fullMarkdown" : "previewText";
-}
-function getNextContentDisplayMode(mode) {
-  return mode === "fullMarkdown" ? "previewText" : "fullMarkdown";
-}
-function ExcelView({
-  items,
-  fields,
-  app,
-  availableFields,
-  excelConfig,
-  onFieldsChange,
-  onExcelConfigChange,
-  onCellCommit,
-  onOpenRecord,
-  messageRenderPort
-}) {
-  const discoveredFields = T$1(() => getAllFields(items), [items]);
-  const normalizedAvailableFields = T$1(() => normalizeDisplayFields(
-    availableFields?.length ? availableFields : discoveredFields,
-    { includeUnknown: false }
-  ), [availableFields, discoveredFields]);
-  const displayFields = T$1(() => normalizeDisplayFields(
-    fields && fields.length ? fields : normalizedAvailableFields,
-    {
-      availableFields: normalizedAvailableFields,
-      includeUnknown: true,
-      fallbackFields: normalizedAvailableFields
-    }
-  ), [fields, normalizedAvailableFields]);
-  const columns = T$1(() => buildExcelColumns(displayFields), [displayFields]);
-  const itemSignature = T$1(() => items.map((item) => `${item.id}:${item.modified ?? ""}`).join("|"), [items]);
-  const persistedColumnWidths = T$1(() => normalizeColumnWidths(excelConfig?.columnWidths), [excelConfig?.columnWidths]);
-  const persistedContentDisplayMode = T$1(
-    () => normalizeContentDisplayMode(excelConfig?.contentDisplayMode),
-    [excelConfig?.contentDisplayMode]
-  );
-  const editing = useExcelCellEditing({ onCellCommit });
-  const resetTransientState = editing.resetTransientState;
-  const editableColumnCount = columns.filter((column2) => column2.editable).length;
-  const readonlyColumnCount = Math.max(0, columns.length - editableColumnCount);
-  const [fieldConfigSaving, setFieldConfigSaving] = d(false);
-  const [fieldConfigError, setFieldConfigError] = d(null);
-  const [excelConfigSaving, setExcelConfigSaving] = d(false);
-  const [localColumnWidths, setLocalColumnWidths] = d(persistedColumnWidths);
-  const [localContentDisplayMode, setLocalContentDisplayMode] = d(persistedContentDisplayMode);
-  const isFullMarkdownContent = localContentDisplayMode === "fullMarkdown";
-  const hasContentColumn = T$1(() => columns.some((column2) => column2.canonicalField === "content"), [columns]);
-  const contentModeButtonTitle = !hasContentColumn ? "当前表格未显示内容字段，请先在字段栏添加 content/内容字段" : excelConfigSaving ? "正在保存 Excel 视图配置" : isFullMarkdownContent ? "当前：内容字段显示完整 Markdown；点击切回短文本预览" : "当前：内容字段短文本预览；点击显示完整 Markdown";
-  y(() => {
-    resetTransientState();
-  }, [itemSignature, resetTransientState]);
-  y(() => {
-    setLocalColumnWidths(persistedColumnWidths);
-  }, [persistedColumnWidths]);
-  y(() => {
-    setLocalContentDisplayMode(persistedContentDisplayMode);
-  }, [persistedContentDisplayMode]);
-  const handleFieldsChange = q$1(async (nextFields) => {
-    if (!onFieldsChange || fieldConfigSaving) return;
-    const normalizedNextFields = normalizeDisplayFields(nextFields, {
-      availableFields: normalizedAvailableFields,
-      includeUnknown: true,
-      fallbackFields: displayFields
-    });
-    setFieldConfigSaving(true);
-    setFieldConfigError(null);
-    try {
-      await onFieldsChange(normalizedNextFields);
-    } catch (error) {
-      const message = error instanceof Error ? error.message : "字段设置保存失败";
-      setFieldConfigError(message);
-    } finally {
-      setFieldConfigSaving(false);
-    }
-  }, [displayFields, fieldConfigSaving, normalizedAvailableFields, onFieldsChange]);
-  const persistExcelConfig = q$1(async (nextConfig, rollback) => {
-    if (!onExcelConfigChange) return;
-    setExcelConfigSaving(true);
-    try {
-      await onExcelConfigChange(nextConfig);
-    } catch (error) {
-      console.error("[ExcelView] 保存 Excel 视图配置失败", error);
-      rollback?.();
-    } finally {
-      setExcelConfigSaving(false);
-    }
-  }, [onExcelConfigChange]);
-  const handleColumnWidthDraftChange = q$1((field, width2) => {
-    const nextWidth = normalizeColumnWidth(width2);
-    setLocalColumnWidths((prev2) => ({ ...prev2, [field]: nextWidth }));
-  }, []);
-  const handleColumnWidthCommit = q$1(async (field, width2) => {
-    const nextWidth = normalizeColumnWidth(width2);
-    const nextColumnWidths = {
-      ...localColumnWidths,
-      [field]: nextWidth
-    };
-    setLocalColumnWidths(nextColumnWidths);
-    await persistExcelConfig({
-      ...excelConfig || {},
-      columnWidths: nextColumnWidths,
-      contentDisplayMode: localContentDisplayMode
-    }, () => setLocalColumnWidths(persistedColumnWidths));
-  }, [excelConfig, localColumnWidths, localContentDisplayMode, persistedColumnWidths, persistExcelConfig]);
-  const handleContentDisplayToggle = q$1(async () => {
-    if (!hasContentColumn || excelConfigSaving) return;
-    const nextMode = getNextContentDisplayMode(localContentDisplayMode);
-    const previousMode = localContentDisplayMode;
-    setLocalContentDisplayMode(nextMode);
-    await persistExcelConfig({
-      ...excelConfig || {},
-      columnWidths: localColumnWidths,
-      contentDisplayMode: nextMode
-    }, () => setLocalContentDisplayMode(previousMode));
-  }, [excelConfig, excelConfigSaving, hasContentColumn, localColumnWidths, localContentDisplayMode, persistExcelConfig]);
-  return /* @__PURE__ */ u2(
-    "div",
-    {
-      class: "excel-view-shell",
-      "data-inline-edit": onCellCommit ? "enabled" : "disabled",
-      "data-column-config": onFieldsChange ? "enabled" : "disabled",
-      "data-excel-config-saving": excelConfigSaving ? "true" : "false",
-      "data-content-display-mode": localContentDisplayMode,
-      ...getObsidianEventBoundaryProps(),
-      children: [
-        /* @__PURE__ */ u2("div", { class: "excel-view-toolbar", "aria-label": "Excel 视图编辑说明", children: [
-          /* @__PURE__ */ u2("span", { class: "excel-view-legend-chip is-editable", children: [
-            "可编辑 ",
-            editableColumnCount
-          ] }),
-          /* @__PURE__ */ u2("span", { class: "excel-view-legend-chip is-readonly", children: [
-            "只读 ",
-            readonlyColumnCount
-          ] }),
-          /* @__PURE__ */ u2(
-            "button",
-            {
-              type: "button",
-              class: `excel-view-content-mode-button ${isFullMarkdownContent ? "is-active" : ""} ${excelConfigSaving ? "is-saving" : ""}`,
-              "aria-pressed": isFullMarkdownContent ? "true" : "false",
-              title: contentModeButtonTitle,
-              disabled: !hasContentColumn || excelConfigSaving,
-              onClick: handleContentDisplayToggle,
-              children: [
-                "内容：",
-                excelConfigSaving ? "保存中…" : isFullMarkdownContent ? "全文 Markdown" : "预览"
-              ]
-            }
-          ),
-          /* @__PURE__ */ u2("span", { class: "excel-view-legend-note", children: "双击/Enter/F2 编辑；方向键/Tab 导航；支持多行多列粘贴；内容字段可切换预览或全文 Markdown。" })
-        ] }),
-        /* @__PURE__ */ u2(
-          ExcelColumnToolbar,
-          {
-            fields: displayFields,
-            availableFields: normalizedAvailableFields,
-            saving: fieldConfigSaving,
-            error: fieldConfigError,
-            disabled: !onFieldsChange,
-            getFieldLabel,
-            getFieldGroupLabel: getFieldCategoryLabel,
-            onFieldsChange: handleFieldsChange
-          }
-        ),
-        /* @__PURE__ */ u2(
-          ExcelGrid,
-          {
-            items,
-            columns,
-            app,
-            selectedCellKey: editing.selectedCellKey,
-            editingCellKey: editing.editingCellKey,
-            pendingCellKeys: editing.pendingCellKeys,
-            savedCellKeys: editing.savedCellKeys,
-            cellErrors: editing.cellErrors,
-            valueOverrides: editing.valueOverrides,
-            canCommitCells: !!onCellCommit,
-            columnWidths: localColumnWidths,
-            contentDisplayMode: localContentDisplayMode,
-            messageRenderPort,
-            fillDragSourceCell: editing.fillDragSourceCell,
-            fillDragTargetCellKey: editing.fillDragTargetCellKey,
-            onSelectCell: editing.selectCell,
-            onStartEdit: editing.startEdit,
-            onCancelEdit: editing.cancelEdit,
-            onCommitEdit: editing.commitEdit,
-            onCommitBatchEdits: editing.commitBatchEdits,
-            onStartFillDrag: editing.startFillDrag,
-            onMoveFillDrag: editing.moveFillDrag,
-            onFinishFillDrag: editing.finishFillDrag,
-            onCancelFillDrag: editing.cancelFillDrag,
-            onColumnWidthDraftChange: handleColumnWidthDraftChange,
-            onColumnWidthCommit: handleColumnWidthCommit,
-            onOpenRecord
-          }
-        )
-      ]
-    }
-  );
-}
-function ThemeTreeSelectTrigger({
-  open,
-  onToggleOpen,
-  displayText,
-  hasSelection,
-  allowClear,
-  disabled,
-  size,
-  onClear,
-  anchorRef
-}) {
-  return /* @__PURE__ */ u2(
-    Box$1,
-    {
-      ref: anchorRef,
-      onClick: () => !disabled && onToggleOpen(),
-      sx: {
-        display: "flex",
-        alignItems: "center",
-        gap: 0.5,
-        px: 1.5,
-        py: size === "small" ? 0.5 : 1,
-        border: "1px solid var(--background-modifier-border)",
-        borderRadius: 1,
-        cursor: disabled ? "not-allowed" : "pointer",
-        opacity: disabled ? 0.5 : 1,
-        bgcolor: "background.paper",
-        "&:hover": disabled ? {} : {
-          borderColor: "primary.main"
-        }
-      },
-      children: [
-        /* @__PURE__ */ u2(
-          Typography$1,
-          {
-            variant: "body2",
-            sx: {
-              flex: 1,
-              color: hasSelection ? "text.primary" : "text.secondary",
-              overflow: "hidden",
-              textOverflow: "ellipsis",
-              whiteSpace: "nowrap"
-            },
-            children: displayText
-          }
-        ),
-        allowClear && hasSelection && !disabled && /* @__PURE__ */ u2(IconButton$1, { size: "small", onClick: onClear, sx: { p: 0.25 }, children: /* @__PURE__ */ u2(ClearIcon, { fontSize: "small" }) }),
-        /* @__PURE__ */ u2(IconButton$1, { size: "small", sx: { p: 0.25 }, children: open ? /* @__PURE__ */ u2(ExpandMoreIcon, { fontSize: "small" }) : /* @__PURE__ */ u2(ChevronRightIcon, { fontSize: "small" }) })
-      ]
-    }
-  );
-}
-function SearchBox({ value, onChange }) {
-  return /* @__PURE__ */ u2(Box$1, { sx: { p: 1, borderBottom: "1px solid var(--background-modifier-border)" }, children: /* @__PURE__ */ u2(
-    TextField$1,
-    {
-      fullWidth: true,
-      size: "small",
-      placeholder: "搜索主题...",
-      value,
-      onChange: (e2) => onChange(e2.target.value),
-      InputProps: {
-        startAdornment: /* @__PURE__ */ u2(InputAdornment, { position: "start", children: /* @__PURE__ */ u2(SearchIcon, { fontSize: "small" }) }),
-        endAdornment: value && /* @__PURE__ */ u2(InputAdornment, { position: "end", children: /* @__PURE__ */ u2(IconButton$1, { size: "small", onClick: () => onChange(""), children: /* @__PURE__ */ u2(ClearIcon, { fontSize: "small" }) }) })
-      },
-      onKeyDown: (e2) => e2.stopPropagation()
-    }
-  ) });
-}
-function MultiSelectToolbar({ themeTree, onSelectMultiple }) {
-  return /* @__PURE__ */ u2(
-    Box$1,
-    {
-      sx: {
-        display: "flex",
-        gap: 1,
-        p: 1,
-        borderBottom: "1px solid var(--background-modifier-border)"
-      },
-      children: [
-        /* @__PURE__ */ u2(
-          Button$1,
-          {
-            size: "small",
-            onClick: () => {
-              const allPaths = ThemeTreeBuilder.getLeafNodes(themeTree).map((n2) => n2.path);
-              onSelectMultiple?.(allPaths);
-            },
-            children: "全选"
-          }
-        ),
-        /* @__PURE__ */ u2(Button$1, { size: "small", onClick: () => onSelectMultiple?.([]), children: "清空" })
-      ]
-    }
-  );
-}
-function SelectedPathsChips({
-  selectedPaths,
-  onRemovePath,
-  maxVisible = 3
-}) {
-  if (selectedPaths.length === 0) return null;
-  const visible = selectedPaths.slice(0, maxVisible);
-  const restCount = selectedPaths.length - visible.length;
-  return /* @__PURE__ */ u2(Box$1, { sx: { display: "flex", gap: 0.5, flexWrap: "wrap", mt: 0.5 }, children: [
-    visible.map((path) => /* @__PURE__ */ u2(
-      Chip,
-      {
-        size: "small",
-        label: path.split("/").pop(),
-        onDelete: onRemovePath ? () => {
-          onRemovePath(path);
-        } : void 0,
-        sx: { height: 22 }
-      },
-      path
-    )),
-    restCount > 0 && /* @__PURE__ */ u2(Chip, { size: "small", label: `+${restCount}`, sx: { height: 22 } })
-  ] });
-}
-function ThemeTreeNodeItem({
-  node: node2,
-  expandedIds,
-  selectedPaths,
-  selectedThemeId,
-  multiSelect,
-  onToggleExpand,
-  onSingleSelect,
-  onMultiSelect,
-  onSelectWithChildren,
-  renderLabel
-}) {
-  const hasChildren = node2.children.length > 0;
-  const isExpanded = expandedIds.has(node2.id);
-  const isSelected = multiSelect ? selectedPaths.includes(node2.path) : node2.themeId === selectedThemeId;
-  const handleClick = () => {
-    if (multiSelect) {
-      onMultiSelect(node2);
-    } else {
-      if (node2.themeId) {
-        onSingleSelect(node2);
-      } else if (hasChildren) {
-        onToggleExpand(node2.id);
-      }
-    }
-  };
-  return /* @__PURE__ */ u2(S, { children: [
-    /* @__PURE__ */ u2(
-      ListItemButton,
-      {
-        onClick: handleClick,
-        selected: isSelected,
-        sx: {
-          // 缩进逻辑统一下沉到 ThemeTreeNodeLabel
-          pl: 0,
-          py: 0.5,
-          minHeight: 32
-        },
-        children: /* @__PURE__ */ u2(
-          ThemeTreeNodeLabel,
-          {
-            depth: node2.depth,
-            hasChildren,
-            expanded: isExpanded,
-            onToggleExpand: (e2) => onToggleExpand(node2.id, e2),
-            placeholderWidthPx: 24,
-            basePadding: 1,
-            indentUnit: 2,
-            sx: { width: "100%" },
-            children: [
-              multiSelect && /* @__PURE__ */ u2(
-                Checkbox,
-                {
-                  size: "small",
-                  checked: isSelected,
-                  onClick: (e2) => e2.stopPropagation(),
-                  onChange: () => onMultiSelect(node2),
-                  sx: { p: 0.25, mr: 0.5 }
-                }
-              ),
-              /* @__PURE__ */ u2(
-                Typography$1,
-                {
-                  variant: "body2",
-                  sx: {
-                    flex: 1,
-                    fontWeight: node2.themeId ? 400 : 500,
-                    // 虚节点加粗
-                    color: node2.themeId ? "text.primary" : "text.secondary"
-                  },
-                  children: renderLabel ? renderLabel(node2) : node2.label
-                }
-              ),
-              multiSelect && hasChildren && /* @__PURE__ */ u2(
-                IconButton$1,
-                {
-                  size: "small",
-                  onClick: (e2) => {
-                    e2.stopPropagation();
-                    onSelectWithChildren(node2);
-                  },
-                  sx: { p: 0.25, opacity: 0.6, "&:hover": { opacity: 1 } },
-                  title: "包含子主题",
-                  children: /* @__PURE__ */ u2(ExpandMoreIcon, { fontSize: "small" })
-                }
-              )
-            ]
-          }
-        )
-      }
-    ),
-    hasChildren && /* @__PURE__ */ u2(Collapse, { in: isExpanded, children: node2.children.map((child) => /* @__PURE__ */ u2(
-      ThemeTreeNodeItem,
-      {
-        node: child,
-        expandedIds,
-        selectedPaths,
-        selectedThemeId,
-        multiSelect,
-        onToggleExpand,
-        onSingleSelect,
-        onMultiSelect,
-        onSelectWithChildren,
-        renderLabel
-      },
-      child.id
-    )) })
-  ] });
-}
-function ThemeTreeSelectPanel({
-  themes,
-  selectedThemeId,
-  selectedPaths = [],
-  onSelect,
-  onSelectMultiple,
-  multiSelect = false,
-  searchable = true,
-  showToolbar = true,
-  showSelectedChips = true,
-  defaultExpandedIds = [],
-  defaultExpandAll = false,
-  expandToSelected = true,
-  renderLabel,
-  maxHeight: maxHeight2 = 300,
-  sx = {},
-  selectChildrenOnCollapsedParent = false,
-  onRequestClose,
-  disabled = false
-}) {
-  const [searchTerm, setSearchTerm] = d("");
-  const [expandedIds, setExpandedIds] = d(() => new Set(defaultExpandedIds));
-  const themeTree = T$1(() => buildThemeTree$1(themes), [themes]);
-  y(() => {
-    if (!expandToSelected) return;
-    const pathsToExpand = [];
-    if (multiSelect && selectedPaths.length > 0) {
-      selectedPaths.forEach((p2) => pathsToExpand.push(...ThemeTreeBuilder.getAncestorPaths(p2)));
-    } else if (selectedThemeId) {
-      const theme2 = themes.find((t3) => t3.id === selectedThemeId);
-      if (theme2?.path) {
-        pathsToExpand.push(...ThemeTreeBuilder.getAncestorPaths(theme2.path));
-      }
-    }
-    if (pathsToExpand.length > 0) {
-      setExpandedIds((prev2) => {
-        const next2 = new Set(prev2);
-        pathsToExpand.forEach((p2) => next2.add(p2));
-        return next2;
-      });
-    }
-  }, [expandToSelected, multiSelect, selectedPaths, selectedThemeId, themes]);
-  y(() => {
-    if (!defaultExpandAll || themeTree.length === 0) return;
-    const allIds = [];
-    const collect = (nodes) => {
-      nodes.forEach((n2) => {
-        allIds.push(n2.id);
-        collect(n2.children);
-      });
-    };
-    collect(themeTree);
-    setExpandedIds(new Set(allIds));
-  }, [defaultExpandAll, themeTree]);
-  const filteredTree = T$1(() => {
-    if (!searchTerm.trim()) return themeTree;
-    return searchThemeTree(themeTree, searchTerm);
-  }, [themeTree, searchTerm]);
-  const toggleExpand = q$1((nodeId, e2) => {
-    e2?.stopPropagation();
-    setExpandedIds((prev2) => {
-      const next2 = new Set(prev2);
-      if (next2.has(nodeId)) next2.delete(nodeId);
-      else next2.add(nodeId);
-      return next2;
-    });
-  }, []);
-  const handleSingleSelect = q$1(
-    (node2) => {
-      if (disabled) return;
-      if (onSelect) onSelect(node2.themeId, node2.path);
-      onRequestClose?.();
-    },
-    [disabled, onSelect, onRequestClose]
-  );
-  const handleSelectWithChildren = q$1(
-    (node2) => {
-      if (disabled) return;
-      if (!onSelectMultiple) return;
-      const descendantPaths = ThemeTreeBuilder.getDescendantPaths(node2);
-      const allPaths = [node2.path, ...descendantPaths];
-      const hasAll = allPaths.every((p2) => selectedPaths.includes(p2));
-      if (hasAll) {
-        const toRemove = new Set(allPaths);
-        onSelectMultiple(selectedPaths.filter((p2) => !toRemove.has(p2)));
-      } else {
-        onSelectMultiple([.../* @__PURE__ */ new Set([...selectedPaths, ...allPaths])]);
-      }
-    },
-    [disabled, onSelectMultiple, selectedPaths]
-  );
-  const handleMultiSelect = q$1(
-    (node2) => {
-      if (disabled) return;
-      if (!onSelectMultiple) return;
-      const hasChildren = node2.children.length > 0;
-      const isCollapsed = hasChildren && !expandedIds.has(node2.id);
-      if (selectChildrenOnCollapsedParent && isCollapsed) {
-        handleSelectWithChildren(node2);
-        return;
-      }
-      const path = node2.path;
-      const isSelected = selectedPaths.includes(path);
-      if (isSelected) {
-        const descendantPaths = ThemeTreeBuilder.getDescendantPaths(node2);
-        const toRemove = /* @__PURE__ */ new Set([path, ...descendantPaths]);
-        onSelectMultiple(selectedPaths.filter((p2) => !toRemove.has(p2)));
-      } else {
-        onSelectMultiple([...selectedPaths, path]);
-      }
-    },
-    [
-      disabled,
-      expandedIds,
-      handleSelectWithChildren,
-      onSelectMultiple,
-      selectedPaths,
-      selectChildrenOnCollapsedParent
-    ]
-  );
-  return /* @__PURE__ */ u2(Box$1, { sx: { ...sx }, children: [
-    searchable && /* @__PURE__ */ u2(SearchBox, { value: searchTerm, onChange: setSearchTerm }),
-    multiSelect && showToolbar && /* @__PURE__ */ u2(MultiSelectToolbar, { themeTree, onSelectMultiple }),
-    /* @__PURE__ */ u2(Box$1, { sx: { maxHeight: maxHeight2, overflow: "auto" }, children: filteredTree.length === 0 ? /* @__PURE__ */ u2(Box$1, { sx: { p: 2, textAlign: "center" }, children: /* @__PURE__ */ u2(Typography$1, { variant: "body2", color: "text.secondary", children: themes.length === 0 ? "暂无主题" : "无匹配结果" }) }) : /* @__PURE__ */ u2(List$1, { dense: true, disablePadding: true, children: filteredTree.map((node2) => /* @__PURE__ */ u2(
-      ThemeTreeNodeItem,
-      {
-        node: node2,
-        expandedIds,
-        selectedPaths: multiSelect ? selectedPaths : [],
-        selectedThemeId: multiSelect ? null : selectedThemeId,
-        multiSelect,
-        onToggleExpand: toggleExpand,
-        onSingleSelect: handleSingleSelect,
-        onMultiSelect: handleMultiSelect,
-        onSelectWithChildren: handleSelectWithChildren,
-        renderLabel
-      },
-      node2.id
-    )) }) }),
-    multiSelect && showSelectedChips && /* @__PURE__ */ u2(
-      SelectedPathsChips,
-      {
-        selectedPaths,
-        onRemovePath: (path) => onSelectMultiple?.(selectedPaths.filter((p2) => p2 !== path))
-      }
-    )
-  ] });
-}
-function ThemeTreeSelect({
-  themes,
-  selectedThemeId,
-  selectedPaths = [],
-  onSelect,
-  onSelectMultiple,
-  multiSelect = false,
-  allowClear = true,
-  searchable = true,
-  showToolbar = true,
-  showSelectedChips = true,
-  defaultExpandedIds = [],
-  defaultExpandAll = false,
-  expandToSelected = true,
-  renderLabel,
-  placeholder = "选择主题",
-  disabled = false,
-  size = "small",
-  sx = {},
-  maxDropdownHeight = 300,
-  selectChildrenOnCollapsedParent = false
-}) {
-  const [open, setOpen] = d(false);
-  const anchorRef = A$1(null);
-  const hasSelection = multiSelect ? selectedPaths.length > 0 : !!selectedThemeId;
-  const displayText = T$1(() => {
-    if (multiSelect) {
-      if (selectedPaths.length === 0) return placeholder;
-      if (selectedPaths.length === 1) {
-        const p2 = selectedPaths[0];
-        return p2.split("/").pop() || p2;
-      }
-      return `${selectedPaths.length} 个主题`;
-    }
-    if (!selectedThemeId) return placeholder;
-    const theme2 = themes.find((t3) => t3.id === selectedThemeId);
-    if (!theme2) return placeholder;
-    const name = theme2.path.split("/").pop() || theme2.path;
-    return theme2.icon ? `${theme2.icon} ${name}` : name;
-  }, [multiSelect, placeholder, selectedPaths, selectedThemeId, themes]);
-  const handleClear = q$1(
-    (e2) => {
-      e2.stopPropagation();
-      if (disabled) return;
-      if (multiSelect) {
-        onSelectMultiple?.([]);
-      } else {
-        onSelect?.(null, null);
-      }
-    },
-    [disabled, multiSelect, onSelect, onSelectMultiple]
-  );
-  const handleClose = q$1(() => setOpen(false), []);
-  const panelProps = {
-    themes,
-    selectedThemeId,
-    selectedPaths,
-    onSelect,
-    onSelectMultiple,
-    multiSelect,
-    searchable,
-    showToolbar,
-    showSelectedChips,
-    defaultExpandedIds,
-    defaultExpandAll,
-    expandToSelected,
-    renderLabel,
-    maxHeight: maxDropdownHeight,
-    selectChildrenOnCollapsedParent,
-    disabled,
-    // 单选时：选中即关闭（多选保持打开）
-    onRequestClose: multiSelect ? void 0 : handleClose
-  };
-  return /* @__PURE__ */ u2(Box$1, { sx: { position: "relative", ...sx }, children: [
-    /* @__PURE__ */ u2(
-      ThemeTreeSelectTrigger,
-      {
-        anchorRef,
-        open,
-        onToggleOpen: () => !disabled && setOpen(!open),
-        displayText,
-        hasSelection,
-        allowClear,
-        disabled,
-        size,
-        onClear: handleClear
-      }
-    ),
-    /* @__PURE__ */ u2(
-      Popper2,
-      {
-        open,
-        anchorEl: anchorRef.current,
-        placement: "bottom-start",
-        sx: { zIndex: 1300, minWidth: anchorRef.current?.offsetWidth },
-        children: /* @__PURE__ */ u2(ClickAwayListener, { onClickAway: handleClose, children: /* @__PURE__ */ u2(
-          Paper,
-          {
-            sx: {
-              mt: 0.5,
-              border: "1px solid var(--background-modifier-border)",
-              boxShadow: 2
-            },
-            children: /* @__PURE__ */ u2(ThemeTreeSelectPanel, { ...panelProps })
-          }
-        ) })
-      }
-    )
-  ] });
-}
-function ThemeFilter({ selectedThemes, onSelectionChange, themes }) {
-  const allThemePaths = T$1(() => themes.map((t3) => t3.path), [themes]);
-  return /* @__PURE__ */ u2(
-    FilterPopover,
-    {
-      label: "主题筛选",
-      popoverTitle: "选择要显示的主题",
-      selectedKeys: selectedThemes,
-      totalCount: allThemePaths.length,
-      getChipLabel: (themePath) => {
-        const theme2 = themes.find((t3) => t3.path === themePath);
-        return theme2 ? getLeafPath(theme2.path) || theme2.path : themePath;
-      },
-      onDeleteKey: (themePath) => {
-        onSelectionChange(selectedThemes.filter((t3) => t3 !== themePath));
-      },
-      onSelectAll: () => onSelectionChange(allThemePaths),
-      onClearAll: () => onSelectionChange([]),
-      isEmpty: themes.length === 0,
-      emptyText: "暂无主题",
-      children: /* @__PURE__ */ u2(
-        ThemeTreeSelectPanel,
-        {
-          themes,
-          selectedPaths: selectedThemes,
-          onSelectMultiple: onSelectionChange,
-          multiSelect: true,
-          searchable: true,
-          showToolbar: false,
-          showSelectedChips: false,
-          maxHeight: 360,
-          selectChildrenOnCollapsedParent: true,
-          sx: { minWidth: 320 }
-        }
-      )
-    }
-  );
-}
-function CategoryFilter({
-  selectedCategories,
-  onSelectionChange,
-  viewInstances,
-  predefinedCategories = []
-}) {
-  const allCategories = T$1(() => {
-    return collectCategoriesFromViews(viewInstances, predefinedCategories);
-  }, [viewInstances, predefinedCategories]);
-  const handleToggleCategory = (categoryName) => {
-    const newSelection = selectedCategories.includes(categoryName) ? selectedCategories.filter((c2) => c2 !== categoryName) : [...selectedCategories, categoryName];
-    onSelectionChange(newSelection);
-  };
-  return /* @__PURE__ */ u2(
-    FilterPopover,
-    {
-      label: "分类筛选",
-      popoverTitle: "选择要显示的分类",
-      selectedKeys: selectedCategories,
-      totalCount: allCategories.length,
-      getChipLabel: (k2) => k2,
-      onDeleteKey: handleToggleCategory,
-      onSelectAll: () => onSelectionChange(allCategories),
-      onClearAll: () => onSelectionChange([]),
-      isEmpty: allCategories.length === 0,
-      emptyText: "暂无分类",
-      children: /* @__PURE__ */ u2(FormGroup, { children: allCategories.map((cat) => /* @__PURE__ */ u2(
-        FormControlLabel,
-        {
-          control: /* @__PURE__ */ u2(Checkbox, { size: "small", checked: selectedCategories.includes(cat), onChange: () => handleToggleCategory(cat) }),
-          label: /* @__PURE__ */ u2("span", { class: "text-md", children: cat })
-        },
-        cat
-      )) })
-    }
-  );
-}
-function ViewToolbar({
-  currentView,
-  currentDate,
-  onViewChange,
-  onDateChange,
-  filterSlot,
-  selectedThemes = [],
-  selectedCategories = [],
-  onThemeSelectionChange,
-  onCategorySelectionChange,
-  viewInstances,
-  themes,
-  predefinedCategories,
-  hideToolbar = false,
-  onLayoutSettingsClick
-}) {
-  const unit = T$1(() => (v2) => ({
-    "年": "year",
-    "季": "quarter",
-    "月": "month",
-    "周": "week",
-    "天": "day"
-  })[v2] || "day", []);
-  const viewOptions = ["年", "季", "月", "周", "天"];
-  if (hideToolbar) {
-    return null;
-  }
-  return /* @__PURE__ */ u2("div", { class: "tp-toolbar", ...getObsidianEventBoundaryProps(), children: [
-    viewOptions.map((v2) => /* @__PURE__ */ u2(
-      "button",
-      {
-        onClick: () => onViewChange(v2),
-        class: v2 === currentView ? "active" : "",
-        children: v2
-      },
-      v2
-    )),
-    /* @__PURE__ */ u2(
-      "span",
-      {
-        class: "tp-toolbar-date-display",
-        role: "status",
-        "aria-live": "polite",
-        title: "当前时间范围",
-        children: formatDateForView(currentDate, currentView)
-      }
-    ),
-    /* @__PURE__ */ u2(
-      "button",
-      {
-        onClick: () => onDateChange(currentDate.clone().subtract(1, unit(currentView))),
-        children: "←"
-      }
-    ),
-    /* @__PURE__ */ u2(
-      "button",
-      {
-        onClick: () => onDateChange(currentDate.clone().add(1, unit(currentView))),
-        children: "→"
-      }
-    ),
-    /* @__PURE__ */ u2(
-      "button",
-      {
-        onClick: () => onDateChange(dayjs()),
-        children: "＝"
-      }
-    ),
-    filterSlot || /* @__PURE__ */ u2(S, { children: [
-      onThemeSelectionChange && /* @__PURE__ */ u2(
-        ThemeFilter,
-        {
-          selectedThemes,
-          onSelectionChange: onThemeSelectionChange,
-          themes
-        }
-      ),
-      onCategorySelectionChange && /* @__PURE__ */ u2(
-        CategoryFilter,
-        {
-          selectedCategories,
-          onSelectionChange: onCategorySelectionChange,
-          viewInstances,
-          predefinedCategories
-        }
-      )
-    ] }),
-    onLayoutSettingsClick && /* @__PURE__ */ u2(
-      "button",
-      {
-        class: "tp-toolbar-layout-settings",
-        title: "布局设置",
-        onClick: () => onLayoutSettingsClick(),
-        children: "⚙"
-      }
-    )
-  ] });
-}
-class Disposables {
-  tasks = [];
-  add(nameOrDispose, disposeMaybe) {
-    if (typeof nameOrDispose === "function") {
-      const autoName = `anonymous#${this.tasks.length + 1}`;
-      this.tasks.push({ name: autoName, dispose: nameOrDispose });
-      return;
-    }
-    if (typeof disposeMaybe !== "function") {
-      throw new Error("[Disposables] add(name, dispose) requires a dispose function");
-    }
-    this.tasks.push({ name: nameOrDispose, dispose: disposeMaybe });
-  }
-  /**
-   * 清理全部资源。
-   * 默认按注册逆序执行（LIFO）。
-   */
-  disposeAll() {
-    const tasks = this.tasks;
-    this.tasks = [];
-    for (let i2 = tasks.length - 1; i2 >= 0; i2--) {
-      const task = tasks[i2];
-      try {
-        task.dispose();
-      } catch (error) {
-        devError(`[Disposables] dispose failed: ${task.name}`, error);
-      }
-    }
-  }
-  /** Backward/ergonomic alias used by older callers/tests. */
-  dispose() {
-    this.disposeAll();
-  }
-}
-let disposed = false;
-function markDisposed() {
-  disposed = true;
-}
-function isDisposed() {
-  return disposed;
-}
 const __vite_import_meta_env__ = { "BASE_URL": "/", "DEV": false, "MODE": "production", "PROD": true, "SSR": false };
 function isDevBuild() {
   try {
@@ -59144,14 +59240,14 @@ function registerSettingsPersistence(plugin) {
   instance.registerSingleton(ThemeManager);
   instance.register(THEME_MATCHER_TOKEN, { useToken: ThemeManager });
 }
-function TimerRow({ timer, timerService, dataStore, app }) {
+function TimerRow({ timer, timerService, dataStore, onOpenRecord, onOpenRecordOrigin }) {
   const [displayTime, setDisplayTime] = d("00:00:00");
   const taskItem = dataStore.queryItems().find((i2) => i2.id === timer.taskId);
   y(() => {
     let interval = null;
     const update = () => {
-      const now = Date.now();
-      const currentSessionSeconds = (now - timer.startTime) / 1e3;
+      const now2 = Date.now();
+      const currentSessionSeconds = (now2 - timer.startTime) / 1e3;
       const totalSeconds = timer.elapsedSeconds + currentSessionSeconds;
       setDisplayTime(formatSecondsToHHMMSS(totalSeconds));
     };
@@ -59169,10 +59265,14 @@ function TimerRow({ timer, timerService, dataStore, app }) {
   }, [timer]);
   const handleEdit = () => {
     if (taskItem) {
-      openEditFromItem({ app, item: taskItem });
+      onOpenRecord(taskItem);
     }
   };
-  const titleGesture = taskItem ? createRecordGestureHandlers({ item: taskItem, app, onPrimary: handleEdit }) : null;
+  const titleGesture = taskItem ? createRecordGestureHandlers({
+    item: taskItem,
+    onOpenOrigin: onOpenRecordOrigin,
+    onPrimary: handleEdit
+  }) : null;
   return /* @__PURE__ */ u2(Box, { sx: { display: "flex", alignItems: "center", gap: "8px", width: "100%" }, children: [
     /* @__PURE__ */ u2(Tooltip2, { title: taskItem ? `点击编辑；Ctrl/⌘+点击或双击打开原文：${taskItem?.title}` : "任务已不存在", children: /* @__PURE__ */ u2(
       "div",
@@ -59200,18 +59300,16 @@ function TimerRow({ timer, timerService, dataStore, app }) {
     /* @__PURE__ */ u2(IconAction, { label: "取消任务", onClick: () => timerService.cancel(timer.id), color: "error", icon: /* @__PURE__ */ u2(DeleteForeverIcon, { fontSize: "inherit" }) })
   ] });
 }
-function TimerViewView({ app, actionService, timerService, dataStore, timers, isVisible, setVisible }) {
-  const handleNewTask = () => {
-    const config2 = actionService.getQuickInputConfigForNewTimer();
-    if (!config2) return;
-    new QuickInputModal(app, config2.blockId, config2.context, config2.themeId, void 0, false, {
-      mode: "create",
-      source: "timer",
-      onSubmitSuccess: async (result) => {
-        await timerService.startCreatedTaskIfPossible(result);
-      }
-    }).open();
-  };
+function TimerViewView({
+  timerService,
+  dataStore,
+  timers,
+  isVisible,
+  setVisible,
+  onOpenRecord,
+  onOpenRecordOrigin,
+  onCreateNewTask
+}) {
   return /* @__PURE__ */ u2(
     FloatingPanel,
     {
@@ -59224,14 +59322,15 @@ function TimerViewView({ app, actionService, timerService, dataStore, timers, is
       visible: isVisible,
       closeOnOutsideClick: false,
       onClose: () => setVisible(false),
-      headerActions: /* @__PURE__ */ u2(Tooltip$1, { title: "开始新任务", children: /* @__PURE__ */ u2(Button$1, { size: "small", startIcon: /* @__PURE__ */ u2(AddCircleOutlineIcon, {}), onClick: handleNewTask, children: "新任务" }) }),
-      children: /* @__PURE__ */ u2(Stack$1, { spacing: 1, sx: { p: "8px", maxHeight: "400px", overflowY: "auto" }, children: timers.length > 0 ? timers.map((timer) => /* @__PURE__ */ u2(
+      headerActions: /* @__PURE__ */ u2(Tooltip2, { title: "开始新任务", children: /* @__PURE__ */ u2(Button2, { size: "small", startIcon: /* @__PURE__ */ u2(AddCircleOutlineIcon, {}), onClick: onCreateNewTask, children: "新任务" }) }),
+      children: /* @__PURE__ */ u2(Stack, { spacing: 1, sx: { p: "8px", maxHeight: "400px", overflowY: "auto" }, children: timers.length > 0 ? timers.map((timer) => /* @__PURE__ */ u2(
         TimerRow,
         {
           timer,
           timerService,
           dataStore,
-          app
+          onOpenRecord,
+          onOpenRecordOrigin
         },
         timer.id
       )) : /* @__PURE__ */ u2("div", { class: "empty-state", children: "暂无计时任务" }) })
@@ -59242,16 +59341,34 @@ function TimerView({ app, actionService, timerService, dataStore }) {
   const timers = useSelector(selectTimers);
   const isVisible = useSelector(selectIsTimerWidgetVisible);
   const setTimerWidgetVisible = useSelector(selectSetTimerWidgetVisible);
+  const handleOpenRecord = (item) => {
+    openEditFromItem({ app, item, openedFrom: "timer" });
+  };
+  const handleOpenRecordOrigin = (item) => {
+    openRecordOrigin({ app, item });
+  };
+  const handleCreateNewTask = () => {
+    const config2 = actionService.getQuickInputConfigForNewTimer();
+    if (!config2) return;
+    new QuickInputModal(app, config2.blockId, config2.context, config2.themeId, void 0, false, {
+      mode: "create",
+      source: "timer",
+      onSubmitSuccess: async (result) => {
+        await timerService.startCreatedTaskIfPossible(result);
+      }
+    }).open();
+  };
   return /* @__PURE__ */ u2(
     TimerViewView,
     {
-      app,
-      actionService,
       timerService,
       dataStore,
       timers,
       isVisible,
-      setVisible: setTimerWidgetVisible
+      setVisible: setTimerWidgetVisible,
+      onOpenRecord: handleOpenRecord,
+      onOpenRecordOrigin: handleOpenRecordOrigin,
+      onCreateNewTask: handleCreateNewTask
     }
   );
 }
@@ -59414,7 +59531,7 @@ function scanDataInBackground(opts) {
   setScanDataPromise(promise);
   return promise;
 }
-const AnyIconButton = IconButton$1;
+const AnyIconButton$1 = IconButton2;
 function ModulePanel({ title, collapsed, children, onActionClick, onToggle, onExport, onSettingsClick, onRemove }) {
   const onHeaderClick = (e2) => {
     if (e2.target.closest(".module-header-actions")) {
@@ -59427,8 +59544,8 @@ function ModulePanel({ title, collapsed, children, onActionClick, onToggle, onEx
       /* @__PURE__ */ u2("span", { class: "module-title", children: title }),
       /* @__PURE__ */ u2("div", { class: "module-header-controls", children: [
         /* @__PURE__ */ u2("div", { class: "module-header-actions", children: [
-          onRemove && /* @__PURE__ */ u2(Tooltip$1, { title: "删除视图（从配置与所有布局中移除）", children: /* @__PURE__ */ u2(
-            AnyIconButton,
+          onRemove && /* @__PURE__ */ u2(Tooltip2, { title: "删除视图（从配置与所有布局中移除）", children: /* @__PURE__ */ u2(
+            AnyIconButton$1,
             {
               size: "small",
               onClick: (e2) => {
@@ -59439,8 +59556,8 @@ function ModulePanel({ title, collapsed, children, onActionClick, onToggle, onEx
               children: /* @__PURE__ */ u2(DeleteOutlineIcon, { sx: { fontSize: "1rem" } })
             }
           ) }),
-          onSettingsClick && /* @__PURE__ */ u2(Tooltip$1, { title: "模块设置", children: /* @__PURE__ */ u2(
-            AnyIconButton,
+          onSettingsClick && /* @__PURE__ */ u2(Tooltip2, { title: "模块设置", children: /* @__PURE__ */ u2(
+            AnyIconButton$1,
             {
               size: "small",
               onClick: (e2) => {
@@ -59451,8 +59568,8 @@ function ModulePanel({ title, collapsed, children, onActionClick, onToggle, onEx
               children: /* @__PURE__ */ u2(SettingsIcon, { sx: { fontSize: "1rem" } })
             }
           ) }),
-          onExport && /* @__PURE__ */ u2(Tooltip$1, { title: "导出为 Markdown", children: /* @__PURE__ */ u2(
-            AnyIconButton,
+          onExport && /* @__PURE__ */ u2(Tooltip2, { title: "导出为 Markdown", children: /* @__PURE__ */ u2(
+            AnyIconButton$1,
             {
               size: "small",
               onClick: (e2) => {
@@ -59482,11 +59599,2265 @@ function ModulePanel({ title, collapsed, children, onActionClick, onToggle, onEx
     !collapsed && /* @__PURE__ */ u2("div", { class: "module-content", children })
   ] });
 }
-function readInputValue$1(event) {
+function getPickerOptionValue(option) {
+  if (!option) return "";
+  return typeof option === "string" ? option : option.value;
+}
+function getPickerOptionLabel(option) {
+  if (typeof option === "string") return getFieldLabel(option);
+  return option.label || getFieldLabel(option.value);
+}
+function getPickerOptionGroup(option) {
+  return typeof option === "string" ? "其他字段" : option.group || "其他字段";
+}
+function normalizePickerValue(value) {
+  return String(value ?? "").trim();
+}
+function FieldPickerAutocomplete({
+  value = "",
+  options,
+  onChange,
+  label,
+  placeholder = "搜索 / 选择字段",
+  helperText,
+  fullWidth = true,
+  size = "small",
+  disableClearable = true,
+  allowCustom = true,
+  sx
+}) {
+  const pickerOptions = T$1(() => getFieldPickerOptions(options), [options]);
+  const selectedValue = T$1(() => pickerOptions.find((option) => option.value === value) || value || "", [pickerOptions, value]);
+  return /* @__PURE__ */ u2(
+    Autocomplete2,
+    {
+      freeSolo: allowCustom,
+      disablePortal: true,
+      fullWidth,
+      size,
+      disableClearable,
+      options: pickerOptions,
+      groupBy: getPickerOptionGroup,
+      getOptionLabel: getPickerOptionLabel,
+      isOptionEqualToValue: (option, current2) => getPickerOptionValue(option) === getPickerOptionValue(current2),
+      value: selectedValue,
+      onChange: (_2, nextValue) => onChange(normalizePickerValue(getPickerOptionValue(nextValue))),
+      onInputChange: (_2, nextInput, reason) => {
+        if (!allowCustom) return;
+        if (reason !== "input" && reason !== "clear") return;
+        onChange(normalizePickerValue(nextInput));
+      },
+      sx,
+      renderInput: (params) => /* @__PURE__ */ u2(
+        TextField2,
+        {
+          ...params,
+          label,
+          placeholder,
+          helperText,
+          variant: "outlined"
+        }
+      )
+    }
+  );
+}
+function TableViewEditor({ value, onChange, fieldOptions }) {
+  return /* @__PURE__ */ u2(Stack, { spacing: 2, children: [
+    /* @__PURE__ */ u2(Typography2, { variant: "body1", color: "text.secondary", sx: { mb: 1 }, children: "交叉表（TableView）根据两个字段来创建二维表格。" }),
+    /* @__PURE__ */ u2(Stack, { direction: "row", spacing: 2, alignItems: "center", children: [
+      /* @__PURE__ */ u2(
+        FieldPickerAutocomplete,
+        {
+          label: "行字段",
+          options: fieldOptions,
+          value: value.rowField ?? "",
+          onChange: (v2) => onChange({ rowField: v2 ?? "" })
+        }
+      ),
+      /* @__PURE__ */ u2(
+        FieldPickerAutocomplete,
+        {
+          label: "列字段",
+          options: fieldOptions,
+          value: value.colField ?? "",
+          onChange: (v2) => onChange({ colField: v2 ?? "" })
+        }
+      )
+    ] })
+  ] });
+}
+function BlockViewEditor() {
+  return /* @__PURE__ */ u2(Typography2, { variant: "body1", color: "text.secondary", children: "块视图（BlockView）没有专属配置项。它的行为主要由上方的 **显示字段** 和 **分组字段** 控制。" });
+}
+function ExcelViewEditor() {
+  return /* @__PURE__ */ u2(Typography2, { variant: "body1", color: "text.secondary", children: "数据表格（ExcelView）没有专属配置项。它会自动展示所有 **显示字段** 中指定的列。" });
+}
+function normalizeProgressOrder(categories, progressOrder) {
+  const existing = progressOrder.filter((name) => Boolean(categories[name]));
+  const seen = /* @__PURE__ */ new Set();
+  const unique2 = existing.filter((name) => {
+    if (seen.has(name)) return false;
+    seen.add(name);
+    return true;
+  });
+  for (const key of Object.keys(categories)) {
+    if (!seen.has(key)) unique2.push(key);
+  }
+  return unique2;
+}
+function stripInlineName(config2) {
+  const { name: _inlineName, ...rest } = config2;
+  return { name: config2.name, ...rest };
+}
+function nextCategoriesForRename(categories, progressOrder, oldName, newName, newConfig) {
+  const normalizedOrder = normalizeProgressOrder(categories, progressOrder);
+  const finalName = (newName || oldName).trim();
+  const willCollide = finalName !== oldName && Boolean(categories[finalName]);
+  const targetName = willCollide ? oldName : finalName;
+  const merged = {
+    ...categories[oldName] || { name: oldName, color: "#cccccc", files: [] },
+    ...newConfig,
+    name: targetName
+  };
+  const nextCats = {};
+  for (const key of normalizedOrder) {
+    if (key === oldName) {
+      nextCats[targetName] = stripInlineName(merged);
+    } else if (categories[key]) {
+      nextCats[key] = categories[key];
+    }
+  }
+  if (!nextCats[targetName]) {
+    nextCats[targetName] = stripInlineName(merged);
+  }
+  const nextOrder = normalizedOrder.map((k2) => k2 === oldName ? targetName : k2);
+  return { categories: nextCats, progressOrder: normalizeProgressOrder(nextCats, nextOrder) };
+}
+function HourHeightSetting(props) {
+  const { hourHeight, onPatch } = props;
+  return /* @__PURE__ */ u2(Stack, { direction: "row", alignItems: "center", spacing: 2, children: [
+    /* @__PURE__ */ u2(Typography2, { sx: { width: "80px", flexShrink: 0, fontWeight: 500 }, children: "小时高度" }),
+    /* @__PURE__ */ u2(
+      TextField2,
+      {
+        type: "number",
+        size: "small",
+        variant: "outlined",
+        value: hourHeight,
+        onChange: (e2) => onPatch({ defaultHourHeight: Number(e2.target.value) }),
+        inputProps: { min: 20, max: 200 },
+        sx: { width: "120px" }
+      }
+    )
+  ] });
+}
+function CategoriesEditor(props) {
+  const { categories, progressOrder, fileOptions, onPatch } = props;
+  const handleCategoryChange = (oldName, newConfig) => {
+    const newName = (newConfig.name || oldName).trim();
+    const next2 = nextCategoriesForRename(categories, progressOrder, oldName, newName, newConfig);
+    onPatch(next2);
+  };
+  const addCategory = () => {
+    let newName = `新分类`;
+    let i2 = 1;
+    while (categories[newName]) {
+      newName = `新分类${i2++}`;
+    }
+    onPatch({
+      categories: { ...categories, [newName]: { name: newName, color: "#60a5fa", files: [] } },
+      progressOrder: [...progressOrder, newName]
+    });
+  };
+  const removeCategory = (nameToRemove) => {
+    const { [nameToRemove]: _removed, ...rest } = categories;
+    const newProgressOrder = progressOrder.filter((cat) => cat !== nameToRemove);
+    onPatch({ categories: rest, progressOrder: normalizeProgressOrder(rest, newProgressOrder) });
+  };
+  const moveCategory = (index, direction) => {
+    const newOrder = [...progressOrder];
+    const targetIndex = direction === "up" ? index - 1 : index + 1;
+    if (targetIndex < 0 || targetIndex >= newOrder.length) return;
+    [newOrder[index], newOrder[targetIndex]] = [newOrder[targetIndex], newOrder[index]];
+    onPatch({ progressOrder: normalizeProgressOrder(categories, newOrder) });
+  };
+  return /* @__PURE__ */ u2(Stack, { spacing: 1, children: [
+    /* @__PURE__ */ u2(Typography2, { variant: "subtitle2", sx: { fontWeight: 600 }, children: "分类配置 (可排序)" }),
+    /* @__PURE__ */ u2(Typography2, { variant: "body2", color: "text.secondary", sx: { mb: 1 }, children: "通过 `▲▼` 调整分类在进度条中的显示顺序。" }),
+    progressOrder.map((name, index) => {
+      const catConfig = categories[name];
+      if (!catConfig) return null;
+      const availableFileOptions = fileOptions.filter((f2) => !(catConfig.files || []).includes(f2)).map((f2) => ({ value: f2, label: f2 }));
+      return /* @__PURE__ */ u2(
+        Box,
+        {
+          sx: {
+            display: "grid",
+            gridTemplateColumns: "auto auto 140px 1fr auto",
+            gap: "12px",
+            alignItems: "center",
+            mb: 1
+          },
+          children: [
+            /* @__PURE__ */ u2(Stack, { direction: "row", sx: { gridColumn: "1 / 2" }, children: [
+              /* @__PURE__ */ u2(
+                IconAction,
+                {
+                  label: "上移",
+                  disabled: index === 0,
+                  onClick: () => moveCategory(index, "up"),
+                  sx: { p: "4px", fontSize: "0.9rem" },
+                  icon: /* @__PURE__ */ u2("span", { children: "▲" })
+                }
+              ),
+              /* @__PURE__ */ u2(
+                IconAction,
+                {
+                  label: "下移",
+                  disabled: index === progressOrder.length - 1,
+                  onClick: () => moveCategory(index, "down"),
+                  sx: { p: "4px", fontSize: "0.9rem" },
+                  icon: /* @__PURE__ */ u2("span", { children: "▼" })
+                }
+              )
+            ] }),
+            /* @__PURE__ */ u2(
+              TextField2,
+              {
+                type: "color",
+                size: "small",
+                value: catConfig.color || "#cccccc",
+                onChange: (e2) => handleCategoryChange(name, {
+                  color: e2.target.value
+                }),
+                sx: { p: "2px", gridColumn: "2 / 3" }
+              }
+            ),
+            /* @__PURE__ */ u2(
+              TextField2,
+              {
+                variant: "outlined",
+                size: "small",
+                defaultValue: name,
+                onBlur: (e2) => handleCategoryChange(name, {
+                  name: e2.target.value.trim()
+                }),
+                sx: { gridColumn: "3 / 4" }
+              }
+            ),
+            /* @__PURE__ */ u2(Box, { sx: { minWidth: 0, gridColumn: "4 / 5" }, children: /* @__PURE__ */ u2(
+              Stack,
+              {
+                direction: "row",
+                flexWrap: "wrap",
+                useFlexGap: true,
+                spacing: 0.5,
+                alignItems: "center",
+                children: [
+                  (catConfig.files || []).map((file) => /* @__PURE__ */ u2(Tooltip2, { title: `点击移除关键词: ${file}`, children: /* @__PURE__ */ u2(
+                    Box,
+                    {
+                      onClick: () => handleCategoryChange(name, {
+                        files: (catConfig.files || []).filter(
+                          (f2) => f2 !== file
+                        )
+                      }),
+                      sx: {
+                        bgcolor: "action.hover",
+                        color: "text.primary",
+                        p: "3px 8px",
+                        borderRadius: "16px",
+                        fontSize: "0.8125rem",
+                        cursor: "pointer",
+                        "&:hover": {
+                          bgcolor: "action.disabledBackground",
+                          textDecoration: "line-through"
+                        }
+                      },
+                      children: file
+                    }
+                  ) }, file)),
+                  /* @__PURE__ */ u2(
+                    SimpleSelect,
+                    {
+                      value: "",
+                      options: availableFileOptions,
+                      placeholder: "+ 关键词...",
+                      onChange: (val) => handleCategoryChange(name, {
+                        files: [...catConfig.files || [], val]
+                      }),
+                      sx: { minWidth: 120 }
+                    }
+                  )
+                ]
+              }
+            ) }),
+            /* @__PURE__ */ u2(
+              IconButton2,
+              {
+                onClick: () => removeCategory(name),
+                size: "small",
+                title: "删除此分类",
+                sx: { gridColumn: "5 / 6" },
+                children: /* @__PURE__ */ u2(DeleteIcon, { fontSize: "small" })
+              }
+            )
+          ]
+        },
+        name
+      );
+    }),
+    /* @__PURE__ */ u2(
+      Button2,
+      {
+        startIcon: /* @__PURE__ */ u2(AddIcon, {}),
+        onClick: addCategory,
+        size: "small",
+        sx: { justifyContent: "flex-start", mt: 1 },
+        children: "添加新分类"
+      }
+    )
+  ] });
+}
+function TimelineViewEditor({ value, onChange, dataStore }) {
+  const viewConfig = { ...TIMELINE_VIEW_DEFAULT_CONFIG, ...value };
+  const categories = viewConfig.categories || {};
+  const progressOrder = normalizeProgressOrder(categories, viewConfig.progressOrder || []);
+  const fileOptions = T$1(() => {
+    if (!dataStore) return [];
+    const items = dataStore.queryItems();
+    return collectFileNames(items);
+  }, [dataStore]);
+  const handlePatch = (patch) => {
+    onChange(patch);
+  };
+  return /* @__PURE__ */ u2(Stack, { spacing: 2.5, children: [
+    /* @__PURE__ */ u2(HourHeightSetting, { hourHeight: viewConfig.defaultHourHeight, onPatch: handlePatch }),
+    /* @__PURE__ */ u2(
+      CategoriesEditor,
+      {
+        categories,
+        progressOrder,
+        fileOptions,
+        onPatch: handlePatch
+      }
+    )
+  ] });
+}
+function uniqueFields(fields) {
+  const seen = /* @__PURE__ */ new Set();
+  const result = [];
+  for (const field of fields) {
+    if (!field || seen.has(field)) continue;
+    seen.add(field);
+    result.push(field);
+  }
+  return result;
+}
+function EventTimelineViewEditor({ value = {}, onChange, fieldOptions = [] }) {
+  const config2 = {
+    ...EVENT_TIMELINE_VIEW_DEFAULT_CONFIG,
+    ...value || {}
+  };
+  const selectableFields = T$1(() => uniqueFields([
+    CONTENT_FIELD_KEY,
+    FULL_DATA_FIELD_KEY,
+    "title",
+    "date",
+    "startTime",
+    ...fieldOptions
+  ]), [fieldOptions]);
+  const fieldSelectOptions = T$1(() => selectableFields.map((field) => ({
+    value: field,
+    label: getFieldLabel(field),
+    group: getFieldCategoryLabel(field)
+  })), [selectableFields]);
+  const patch = (partial2) => onChange(partial2);
+  return /* @__PURE__ */ u2(Box, { class: "event-timeline-editor-description", sx: { display: "flex", flexDirection: "column", gap: 2 }, children: [
+    /* @__PURE__ */ u2("div", { children: [
+      /* @__PURE__ */ u2("div", { class: "statistics-section-title", children: "事件时间线视图" }),
+      /* @__PURE__ */ u2("div", { class: "statistics-section-description", children: [
+        "事件时间线视图按时间顺序纵向展示事件，采用三栏布局：",
+        /* @__PURE__ */ u2("br", {}),
+        /* @__PURE__ */ u2("strong", { children: "[左侧日期] - [中间时间线] - [右侧内容卡片]" }),
+        /* @__PURE__ */ u2("br", {}),
+        /* @__PURE__ */ u2("br", {}),
+        "• ",
+        /* @__PURE__ */ u2("strong", { children: "任务内容语义" }),
+        "：推荐使用 ",
+        /* @__PURE__ */ u2("strong", { children: "内容" }),
+        " 字段显示干净正文；需要排查原始 Markdown 时再切换到 ",
+        /* @__PURE__ */ u2("strong", { children: "完整数据" }),
+        "。",
+        /* @__PURE__ */ u2("br", {}),
+        "• ",
+        /* @__PURE__ */ u2("strong", { children: "视觉保持" }),
+        "：任务仍以 TaskRow 展示，Block 仍使用 BlockItem / Markdown 渲染。"
+      ] })
+    ] }),
+    /* @__PURE__ */ u2(Box, { sx: { p: 1.5, border: "1px solid var(--background-modifier-border)", borderRadius: "10px" }, children: [
+      /* @__PURE__ */ u2(Typography2, { variant: "subtitle2", sx: { fontWeight: 700, mb: 1 }, children: "字段映射" }),
+      /* @__PURE__ */ u2(Stack, { spacing: 1.25, children: [
+        /* @__PURE__ */ u2(Stack, { direction: "row", spacing: 1.5, alignItems: "center", children: [
+          /* @__PURE__ */ u2(Typography2, { sx: { width: 92, flexShrink: 0, fontWeight: 600 }, children: "时间字段" }),
+          /* @__PURE__ */ u2(
+            SimpleSelect,
+            {
+              value: config2.timeField || "date",
+              options: fieldSelectOptions,
+              onChange: (field) => patch({ timeField: field }),
+              sx: { minWidth: "220px" }
+            }
+          )
+        ] }),
+        /* @__PURE__ */ u2(Stack, { direction: "row", spacing: 1.5, alignItems: "center", children: [
+          /* @__PURE__ */ u2(Typography2, { sx: { width: 92, flexShrink: 0, fontWeight: 600 }, children: "标题字段" }),
+          /* @__PURE__ */ u2(
+            SimpleSelect,
+            {
+              value: config2.titleField || "title",
+              options: fieldSelectOptions,
+              onChange: (field) => patch({ titleField: field }),
+              sx: { minWidth: "220px" }
+            }
+          )
+        ] }),
+        /* @__PURE__ */ u2(Stack, { direction: "row", spacing: 1.5, alignItems: "center", children: [
+          /* @__PURE__ */ u2(Typography2, { sx: { width: 92, flexShrink: 0, fontWeight: 600 }, children: "内容字段" }),
+          /* @__PURE__ */ u2(
+            SimpleSelect,
+            {
+              value: config2.contentField || CONTENT_FIELD_KEY,
+              options: fieldSelectOptions,
+              onChange: (field) => patch({ contentField: field }),
+              sx: { minWidth: "220px" }
+            }
+          )
+        ] }),
+        /* @__PURE__ */ u2(Stack, { direction: "row", spacing: 1.5, alignItems: "center", children: [
+          /* @__PURE__ */ u2(Typography2, { sx: { width: 92, flexShrink: 0, fontWeight: 600 }, children: "最大长度" }),
+          /* @__PURE__ */ u2(
+            TextField2,
+            {
+              type: "number",
+              size: "small",
+              value: config2.maxContentLength ?? 160,
+              onChange: (event) => patch({ maxContentLength: Number(event.target.value) || 0 }),
+              inputProps: { min: 0, max: 2e3 },
+              sx: { width: "140px" }
+            }
+          ),
+          /* @__PURE__ */ u2(Typography2, { variant: "caption", color: "text.secondary", children: "0 表示不截断" })
+        ] })
+      ] }),
+      /* @__PURE__ */ u2(Stack, { direction: "row", spacing: 1, sx: { mt: 1.5, flexWrap: "wrap", gap: 1 }, children: [
+        /* @__PURE__ */ u2(
+          Button2,
+          {
+            size: "small",
+            variant: "outlined",
+            onClick: () => patch({ contentField: CONTENT_FIELD_KEY, titleField: "title", timeField: "date", maxContentLength: 160 }),
+            children: "使用推荐字段"
+          }
+        ),
+        /* @__PURE__ */ u2(
+          Button2,
+          {
+            size: "small",
+            variant: "outlined",
+            onClick: () => patch({ contentField: FULL_DATA_FIELD_KEY }),
+            children: "内容改为完整数据调试"
+          }
+        )
+      ] })
+    ] })
+  ] });
+}
+function StatisticsViewEditor({ value, onChange, dataStore }) {
+  const config2 = { ...STATISTICS_VIEW_DEFAULT_CONFIG, ...value };
+  const [localCategories, setLocalCategories] = d(config2.categories);
+  const discoveredCategories = T$1(() => {
+    if (!dataStore) return [];
+    const allItems = dataStore.queryItems();
+    return discoverBaseCategories(allItems);
+  }, [dataStore]);
+  y(() => {
+    const existingNames = new Set(config2.categories.map((c2) => c2.name));
+    const newCategories = [...config2.categories];
+    let changed = false;
+    discoveredCategories.forEach((name) => {
+      if (!existingNames.has(name)) {
+        newCategories.push({ name, color: getCategoryColor(name) });
+        changed = true;
+      }
+    });
+    if (changed) {
+      setLocalCategories(newCategories);
+      onChange({ categories: newCategories });
+    } else {
+      setLocalCategories(config2.categories);
+    }
+  }, [discoveredCategories, config2.categories]);
+  const handleMove = (index, direction) => {
+    const newCategories = [...localCategories];
+    const targetIndex = direction === "up" ? index - 1 : index + 1;
+    if (targetIndex < 0 || targetIndex >= newCategories.length) return;
+    [newCategories[index], newCategories[targetIndex]] = [newCategories[targetIndex], newCategories[index]];
+    setLocalCategories(newCategories);
+    onChange({ categories: newCategories });
+  };
+  const handleAliasChange = (index, alias) => {
+    const newCategories = [...localCategories];
+    newCategories[index].alias = alias;
+    setLocalCategories(newCategories);
+    onChange({ categories: newCategories });
+  };
+  return /* @__PURE__ */ u2("div", { class: "statistics-editor-container", children: [
+    /* @__PURE__ */ u2("div", { class: "statistics-section", children: [
+      /* @__PURE__ */ u2("div", { class: "categories-section-title", children: "分类配置" }),
+      /* @__PURE__ */ u2("div", { class: "categories-description", children: "调整分类的显示顺序和别名。颜色由「通用设置 → 分类颜色」统一管理。" })
+    ] }),
+    /* @__PURE__ */ u2("div", { children: localCategories.map((cat, index) => /* @__PURE__ */ u2("div", { class: "category-item", children: [
+      /* @__PURE__ */ u2("div", { class: "move-buttons-container", children: [
+        /* @__PURE__ */ u2(
+          "button",
+          {
+            class: "move-button",
+            title: "上移",
+            disabled: index === 0,
+            onClick: () => handleMove(index, "up"),
+            children: "↑"
+          }
+        ),
+        /* @__PURE__ */ u2(
+          "button",
+          {
+            class: "move-button",
+            title: "下移",
+            disabled: index === localCategories.length - 1,
+            onClick: () => handleMove(index, "down"),
+            children: "↓"
+          }
+        )
+      ] }),
+      /* @__PURE__ */ u2(
+        "div",
+        {
+          class: "color-preview",
+          style: {
+            width: 24,
+            height: 24,
+            borderRadius: 4,
+            backgroundColor: getCategoryColor(cat.name),
+            border: "1px solid var(--text-muted)",
+            flexShrink: 0
+          },
+          title: `颜色来自通用设置: ${getCategoryColor(cat.name)}`
+        }
+      ),
+      /* @__PURE__ */ u2("div", { class: "category-name", children: cat.name }),
+      /* @__PURE__ */ u2(
+        "input",
+        {
+          class: "alias-input",
+          type: "text",
+          placeholder: "别名",
+          value: cat.alias || "",
+          onChange: (e2) => handleAliasChange(index, e2.target.value)
+        }
+      )
+    ] }, cat.name)) })
+  ] });
+}
+function normalizeHeatmapConfig(value) {
+  const base = HEATMAP_VIEW_DEFAULT_CONFIG;
+  const v2 = value ?? {};
+  return {
+    displayMode: v2.displayMode === "habit" || v2.displayMode === "count" ? v2.displayMode : base.displayMode,
+    sourceBlockId: typeof v2.sourceBlockId === "string" ? v2.sourceBlockId : base.sourceBlockId,
+    themePaths: Array.isArray(v2.themePaths) ? v2.themePaths.filter((x2) => typeof x2 === "string") : base.themePaths,
+    maxDailyChecks: typeof v2.maxDailyChecks === "number" ? v2.maxDailyChecks : base.maxDailyChecks,
+    allowManualEdit: typeof v2.allowManualEdit === "boolean" ? v2.allowManualEdit : base.allowManualEdit
+  };
+}
+function HeatmapViewEditor({ value, onChange, module: module2, dataStore }) {
+  const ui = useUiPort();
+  const config2 = normalizeHeatmapConfig(value);
+  const allBlocks = useSelector(selectInputBlocks);
+  const blockOptions = T$1(
+    () => allBlocks.map((b2) => ({ value: b2.id, label: b2.name })),
+    [allBlocks]
+  );
+  const handleScanThemes = () => {
+    if (!config2.sourceBlockId) {
+      ui.notice("请先选择源 Block 模板。");
+      return;
+    }
+    if (!module2) {
+      ui.notice("无法扫描：缺少视图上下文（module）。");
+      return;
+    }
+    const dataSource = module2;
+    const sourceBlock = allBlocks.find((b2) => b2.id === config2.sourceBlockId);
+    if (!sourceBlock) {
+      ui.notice("找不到所选的 Block 模板。");
+      return;
+    }
+    const items = dataStore.queryItems();
+    const sortedThemes = collectThemePathsForHeatmap({
+      items,
+      dataSource,
+      sourceBlock
+    });
+    onChange({ themePaths: sortedThemes });
+    ui.notice(`扫描完成！已自动添加 ${sortedThemes.length} 个主题路径（来自分类 "${sourceBlock.name}"）。`);
+  };
+  return /* @__PURE__ */ u2(Stack, { spacing: 2.5, children: [
+    /* @__PURE__ */ u2(Typography2, { variant: "body2", color: "text.secondary", children: "打卡视图只负责主题 + 日期格子的记录入口：空白日期可新增，有记录日期查看当天记录并继续新增。经验/等级请使用独立的 ProgressView。" }),
+    /* @__PURE__ */ u2("div", { children: [
+      /* @__PURE__ */ u2(Stack, { direction: "row", alignItems: "center", spacing: 2, sx: { mb: 2 }, children: [
+        /* @__PURE__ */ u2(Typography2, { sx: { width: "80px", flexShrink: 0, fontWeight: 500 }, children: "源 Block" }),
+        /* @__PURE__ */ u2(Box, { sx: { flexGrow: 1 }, children: [
+          /* @__PURE__ */ u2(
+            SimpleSelect,
+            {
+              value: config2.sourceBlockId,
+              options: blockOptions,
+              onChange: (val) => onChange({ sourceBlockId: val }),
+              placeholder: "-- 请选择用于打卡的 Block 模板 --"
+            }
+          ),
+          /* @__PURE__ */ u2(Typography2, { variant: "caption", color: "text.secondary", sx: { display: "block", mt: 0.5 }, children: '视图将从此 Block 模板的"评分"字段中读取 Emoji/图片/颜色映射。' })
+        ] })
+      ] }),
+      /* @__PURE__ */ u2(Stack, { direction: "row", alignItems: "flex-start", spacing: 2, children: [
+        /* @__PURE__ */ u2(Typography2, { sx: { width: "80px", flexShrink: 0, fontWeight: 500, pt: "8px" }, children: "主题路径" }),
+        /* @__PURE__ */ u2(Box, { sx: { flexGrow: 1 }, children: [
+          /* @__PURE__ */ u2(
+            ListEditor,
+            {
+              value: config2.themePaths,
+              onChange: (val) => onChange({ themePaths: val }),
+              placeholder: "例如: 生活/健康, 工作/项目"
+            }
+          ),
+          /* @__PURE__ */ u2(Typography2, { variant: "caption", color: "text.secondary", sx: { display: "block", mt: 0.5 }, children: "在此处添加的每个主题路径，在周/月视图下都会成为独立的一行。留空则显示所有打卡。" }),
+          /* @__PURE__ */ u2(Button2, { onClick: handleScanThemes, size: "small", sx: { mt: 1 }, children: "从数据源扫描并添加主题" })
+        ] })
+      ] })
+    ] }),
+    /* @__PURE__ */ u2(FormControlLabel2, { control: /* @__PURE__ */ u2(Checkbox2, { checked: !!config2.allowManualEdit, onChange: (e2) => onChange({ allowManualEdit: e2.target.checked }) }), label: "允许查看当天记录并新增" })
+  ] });
+}
+function ProgressViewEditor({ value, onChange }) {
+  const config2 = { ...PROGRESS_VIEW_DEFAULT_CONFIG, ...value };
+  return /* @__PURE__ */ u2(Stack, { spacing: 2, children: [
+    /* @__PURE__ */ u2(Typography2, { variant: "body2", color: "text.secondary", children: "ProgressView 是独立的积分/成长视图：只读取记录，不改写打卡数据。" }),
+    /* @__PURE__ */ u2(Stack, { direction: "row", spacing: 2, children: [
+      /* @__PURE__ */ u2(TextField2, { size: "small", type: "number", label: "基础积分", value: config2.basePoints, onChange: (e2) => onChange({ basePoints: Number(e2.target.value) || 1 }) }),
+      /* @__PURE__ */ u2(TextField2, { size: "small", type: "number", label: "每级积分", value: config2.levelStep, onChange: (e2) => onChange({ levelStep: Number(e2.target.value) || 20 }) })
+    ] }),
+    /* @__PURE__ */ u2(Stack, { direction: "row", spacing: 2, children: [
+      /* @__PURE__ */ u2(TextField2, { size: "small", type: "number", label: "评分加分阈值", value: config2.ratingBonusThreshold, onChange: (e2) => onChange({ ratingBonusThreshold: Number(e2.target.value) || 4 }) }),
+      /* @__PURE__ */ u2(TextField2, { size: "small", type: "number", label: "评分额外积分", value: config2.ratingBonusPoints, onChange: (e2) => onChange({ ratingBonusPoints: Number(e2.target.value) || 0 }) })
+    ] }),
+    /* @__PURE__ */ u2("div", { children: [
+      /* @__PURE__ */ u2(Typography2, { variant: "body2", sx: { mb: 1 }, children: "参与积分的基础分类（留空 = 全部）" }),
+      /* @__PURE__ */ u2(ListEditor, { value: config2.includedCategories || [], onChange: (val) => onChange({ includedCategories: val }), placeholder: "例如：闪念、任务、打卡" })
+    ] }),
+    /* @__PURE__ */ u2(Stack, { direction: "row", spacing: 2, children: [
+      /* @__PURE__ */ u2(FormControlLabel2, { control: /* @__PURE__ */ u2(Checkbox2, { checked: config2.showCategoryBreakdown !== false, onChange: (e2) => onChange({ showCategoryBreakdown: e2.target.checked }) }), label: "显示分类积分" }),
+      /* @__PURE__ */ u2(FormControlLabel2, { control: /* @__PURE__ */ u2(Checkbox2, { checked: config2.showThemeBreakdown !== false, onChange: (e2) => onChange({ showThemeBreakdown: e2.target.checked }) }), label: "显示主题积分" })
+    ] }),
+    /* @__PURE__ */ u2(TextField2, { size: "small", type: "number", label: "榜单数量", value: config2.topN, onChange: (e2) => onChange({ topN: Number(e2.target.value) || 5 }) })
+  ] });
+}
+function TaskExecutionViewEditor(_props) {
+  return /* @__PURE__ */ u2(Stack, { spacing: 1, children: [
+    /* @__PURE__ */ u2(Typography2, { variant: "body2", color: "text.secondary", children: "任务执行视图：按主题两级分组展示带 🔁 的未完成任务。" }),
+    /* @__PURE__ */ u2(Typography2, { variant: "body2", color: "text.secondary", children: "左键记录一次，右键查看当前时间范围内的完成记录，并可跳转到原位置。" })
+  ] });
+}
+const VIEW_INFO_REGISTRY = {
+  TableView: { component: TableViewEditor, defaultConfig: TABLE_VIEW_DEFAULT_CONFIG },
+  BlockView: { component: BlockViewEditor, defaultConfig: BLOCK_VIEW_DEFAULT_CONFIG },
+  ExcelView: { component: ExcelViewEditor, defaultConfig: EXCEL_VIEW_DEFAULT_CONFIG },
+  TimelineView: { component: TimelineViewEditor, defaultConfig: TIMELINE_VIEW_DEFAULT_CONFIG },
+  EventTimelineView: { component: EventTimelineViewEditor, defaultConfig: EVENT_TIMELINE_VIEW_DEFAULT_CONFIG },
+  StatisticsView: { component: StatisticsViewEditor, defaultConfig: STATISTICS_VIEW_DEFAULT_CONFIG },
+  HeatmapView: { component: HeatmapViewEditor, defaultConfig: HEATMAP_VIEW_DEFAULT_CONFIG },
+  ProgressView: { component: ProgressViewEditor, defaultConfig: PROGRESS_VIEW_DEFAULT_CONFIG },
+  TaskExecutionView: { component: TaskExecutionViewEditor, defaultConfig: TASK_EXECUTION_VIEW_DEFAULT_CONFIG }
+};
+const VIEW_EDITORS = Object.fromEntries(
+  Object.entries(VIEW_INFO_REGISTRY).map(([k2, v2]) => [k2, v2.component])
+);
+Object.fromEntries(
+  Object.entries(VIEW_INFO_REGISTRY).map(([k2, v2]) => [k2, v2.defaultConfig])
+);
+function useUniqueFieldValues(dataStore) {
+  return T$1(() => {
+    if (!dataStore) return {};
+    const items = dataStore.queryItems();
+    const allKnownFields = new Set(getAllFields(items));
+    const valueMap = {};
+    allKnownFields.forEach((field) => valueMap[field] = /* @__PURE__ */ new Set());
+    for (const item of items) {
+      for (const field of allKnownFields) {
+        const value = readField(item, field);
+        if (value === null || value === void 0 || String(value).trim() === "") continue;
+        const values2 = Array.isArray(value) ? value : [value];
+        values2.forEach((v2) => {
+          const strV = String(v2).trim();
+          if (strV) valueMap[field].add(strV);
+        });
+      }
+    }
+    const result = {};
+    for (const field in valueMap) {
+      if (valueMap[field].size > 0) {
+        result[field] = Array.from(valueMap[field]).sort((a2, b2) => a2.localeCompare(b2, "zh-CN"));
+      }
+    }
+    return result;
+  }, [dataStore]);
+}
+const defaultFilterRule = { field: "", op: "=", value: "" };
+const defaultSortRule = { field: "", dir: "asc" };
+function cloneRule(rule) {
+  return { ...rule };
+}
+function operatorNeedsValue(op) {
+  return !["empty", "notEmpty"].includes(op);
+}
+function isMultiValueOperator(op) {
+  return op === "in" || op === "notIn";
+}
+function getValuePlaceholder(op) {
+  if (op === "between") return "输入区间，如 1~5 或 2026-01-01~2026-01-31";
+  if (isMultiValueOperator(op)) return "选择或输入多个值，回车确认";
+  return "输入值";
+}
+function normalizeMultiValue$1(value) {
+  const rawValues = Array.isArray(value) ? value : [value];
+  const normalized = rawValues.flatMap((v2) => String(v2 ?? "").split(/[,，\n]/)).map((part) => part.trim()).filter(Boolean);
+  return Array.from(new Set(normalized));
+}
+function formatRuleValue(rule) {
+  if (!operatorNeedsValue(rule.op)) return "";
+  if (isMultiValueOperator(rule.op)) {
+    const values2 = normalizeMultiValue$1(rule.value);
+    return values2.length > 0 ? values2.join("、") : "未选择";
+  }
+  if (rule.op === "between" && Array.isArray(rule.value)) {
+    return rule.value.map((v2) => String(v2)).join(" ~ ");
+  }
+  return String(rule.value ?? "");
+}
+function normalizeFilterPatch(patch, current2) {
+  const nextOp = patch.op ?? current2?.op;
+  const normalized = { ...patch };
+  if (nextOp && !operatorNeedsValue(nextOp)) {
+    return { ...normalized, value: "" };
+  }
+  if (patch.field !== void 0 && patch.field !== current2?.field) {
+    normalized.value = nextOp && isMultiValueOperator(nextOp) ? [] : "";
+  }
+  if (nextOp && isMultiValueOperator(nextOp)) {
+    if ("value" in normalized || patch.op !== void 0) {
+      normalized.value = normalizeMultiValue$1(normalized.value ?? current2?.value);
+    }
+  } else if (current2 && isMultiValueOperator(current2.op) && patch.op !== void 0) {
+    normalized.value = normalizeMultiValue$1(current2.value).join(",");
+  }
+  return normalized;
+}
+function RuleBuilder({ title, mode, rows, fieldOptions, onChange, dataStore, variant = "compact" }) {
+  const isFilterMode = mode === "filter";
+  const [newRule, setNewRule] = d(
+    isFilterMode ? { ...defaultFilterRule } : { ...defaultSortRule }
+  );
+  const uniqueFieldValues = useUniqueFieldValues(dataStore);
+  const currentFilterRule = newRule;
+  const shouldShowValueInput = !isFilterMode || operatorNeedsValue(currentFilterRule.op);
+  const remove2 = (i2) => onChange(rows.filter((_2, j2) => j2 !== i2).map(cloneRule));
+  const updateNewRule = (patch) => {
+    setNewRule((current2) => {
+      const nextPatch = isFilterMode ? normalizeFilterPatch(patch, current2) : patch;
+      return { ...current2, ...nextPatch };
+    });
+  };
+  const updateRow = (index, patch) => {
+    const updatedRows = rows.map((row, rowIndex) => {
+      if (rowIndex !== index) return cloneRule(row);
+      const nextPatch = isFilterMode ? normalizeFilterPatch(patch, row) : patch;
+      return { ...row, ...nextPatch };
+    });
+    onChange(updatedRows);
+  };
+  const updateLogic = (index, logic) => {
+    const updatedRows = rows.map((row, rowIndex) => {
+      if (rowIndex !== index || !isFilterMode) return cloneRule(row);
+      return { ...row, logic };
+    });
+    onChange(updatedRows);
+  };
+  const handleAddRule = () => {
+    if (!newRule.field) {
+      alert("请选择一个字段");
+      return;
+    }
+    const updatedRows = rows.map(cloneRule);
+    const ruleToAdd = cloneRule(newRule);
+    if (isFilterMode && updatedRows.length > 0) {
+      const lastIndex = updatedRows.length - 1;
+      const lastRule = updatedRows[lastIndex];
+      if (!lastRule.logic) {
+        updatedRows[lastIndex] = {
+          ...lastRule,
+          logic: "and"
+        };
+      }
+    }
+    updatedRows.push(ruleToAdd);
+    onChange(updatedRows);
+    setNewRule(isFilterMode ? { ...defaultFilterRule } : { ...defaultSortRule });
+  };
+  const formatRule = (rule) => {
+    if (isFilterMode) {
+      const filterRule = rule;
+      if (filterRule.op === "empty") return `${getFieldLabel(filterRule.field)} 为空`;
+      if (filterRule.op === "notEmpty") return `${getFieldLabel(filterRule.field)} 非空`;
+      const valueText = formatRuleValue(filterRule);
+      const opText = filterRule.op === "in" ? "属于任一" : filterRule.op === "notIn" ? "不属于任一" : filterRule.op;
+      return `${getFieldLabel(filterRule.field)} ${opText} "${valueText}"`;
+    }
+    const sortRule = rule;
+    return `${getFieldLabel(sortRule.field)} ${sortRule.dir === "asc" ? "升序" : "降序"}`;
+  };
+  const operatorOptions = [
+    { value: "=", label: "=" },
+    { value: "!=", label: "!=" },
+    { value: "includes", label: "包含" },
+    { value: "regex", label: "正则" },
+    { value: ">", label: ">" },
+    { value: "<", label: "<" },
+    { value: "in", label: "属于任一" },
+    { value: "notIn", label: "不属于任一" },
+    { value: "between", label: "区间" },
+    { value: "empty", label: "为空" },
+    { value: "notEmpty", label: "非空" }
+  ];
+  const directionOptions = [{ value: "asc", label: "升序" }, { value: "desc", label: "降序" }];
+  const logicOptions = [
+    { value: "and", label: "且" },
+    { value: "or", label: "或" }
+  ];
+  const renderFieldInput = (field, onFieldChange, placeholder = "搜索 / 选择字段") => /* @__PURE__ */ u2(
+    FieldPickerAutocomplete,
+    {
+      value: field,
+      options: fieldOptions,
+      onChange: onFieldChange,
+      placeholder,
+      helperText: variant === "panel" ? "字段按核心字段 / 文件字段 / 自定义字段分组。" : void 0
+    }
+  );
+  const renderValueInput = (rule, onValueChange) => {
+    if (!operatorNeedsValue(rule.op)) return null;
+    if (isMultiValueOperator(rule.op)) {
+      return /* @__PURE__ */ u2(
+        Autocomplete2,
+        {
+          multiple: true,
+          freeSolo: true,
+          fullWidth: true,
+          size: "small",
+          disablePortal: true,
+          options: uniqueFieldValues[rule.field] || [],
+          value: normalizeMultiValue$1(rule.value),
+          onChange: (_2, newValue) => onValueChange(normalizeMultiValue$1(newValue)),
+          renderInput: (params) => /* @__PURE__ */ u2(
+            TextField2,
+            {
+              ...params,
+              variant: "outlined",
+              placeholder: getValuePlaceholder(rule.op),
+              helperText: variant === "panel" ? "同一字段内多选表示“或”：匹配其中任一值即可。" : void 0
+            }
+          )
+        }
+      );
+    }
+    return /* @__PURE__ */ u2(
+      Autocomplete2,
+      {
+        freeSolo: true,
+        fullWidth: true,
+        size: "small",
+        disableClearable: true,
+        disablePortal: true,
+        options: uniqueFieldValues[rule.field] || [],
+        value: String(rule.value ?? ""),
+        inputValue: String(rule.value ?? ""),
+        onInputChange: (_2, newValue) => onValueChange(newValue || ""),
+        renderInput: (params) => /* @__PURE__ */ u2(TextField2, { ...params, variant: "outlined", placeholder: getValuePlaceholder(rule.op) })
+      }
+    );
+  };
+  const existingRules = /* @__PURE__ */ u2("div", { style: { display: "flex", flexDirection: "row", flexWrap: "wrap", gap: "4px", alignItems: "center" }, children: rows.map((rule, i2) => {
+    const isLast = i2 === rows.length - 1;
+    const filterRule = rule;
+    return /* @__PURE__ */ u2("div", { style: { display: "flex", alignItems: "center", gap: "4px" }, children: [
+      /* @__PURE__ */ u2(Tooltip2, { title: `点击删除规则: ${formatRule(rule)}`, children: /* @__PURE__ */ u2(
+        Chip2,
+        {
+          label: formatRule(rule),
+          onClick: () => remove2(i2),
+          size: "small"
+        }
+      ) }),
+      isFilterMode && !isLast && /* @__PURE__ */ u2(
+        SimpleSelect,
+        {
+          value: filterRule.logic || "and",
+          options: logicOptions,
+          onChange: (val) => updateLogic(i2, val),
+          sx: { minWidth: 50 }
+        }
+      )
+    ] }, i2);
+  }) });
+  const panelRuleRows = /* @__PURE__ */ u2(Box, { sx: { display: "flex", flexDirection: "column", gap: 1 }, children: rows.map((rule, index) => {
+    const filterRule = rule;
+    const sortRule = rule;
+    const isLast = index === rows.length - 1;
+    const gridTemplateColumns2 = isFilterMode && operatorNeedsValue(filterRule.op) ? "minmax(240px, 1.2fr) minmax(150px, 0.6fr) minmax(260px, 1.2fr) minmax(96px, 0.35fr) 40px" : "minmax(240px, 1.2fr) minmax(150px, 0.6fr) minmax(96px, 0.35fr) 40px";
+    return /* @__PURE__ */ u2(Box, { sx: { display: "flex", flexDirection: "column", gap: 0.75 }, children: /* @__PURE__ */ u2(
+      Box,
+      {
+        sx: {
+          display: "grid",
+          gridTemplateColumns: gridTemplateColumns2,
+          gap: 1,
+          alignItems: "center",
+          p: 1,
+          border: "1px solid var(--background-modifier-border)",
+          borderRadius: "8px",
+          background: "var(--background-primary)"
+        },
+        children: [
+          renderFieldInput(rule.field, (field) => updateRow(index, { field })),
+          isFilterMode ? /* @__PURE__ */ u2(S, { children: [
+            /* @__PURE__ */ u2(
+              SimpleSelect,
+              {
+                value: filterRule.op,
+                options: operatorOptions,
+                onChange: (val) => updateRow(index, { op: val }),
+                sx: { minWidth: 140 }
+              }
+            ),
+            renderValueInput(filterRule, (value) => updateRow(index, { value }))
+          ] }) : /* @__PURE__ */ u2(
+            SimpleSelect,
+            {
+              value: sortRule.dir,
+              options: directionOptions,
+              onChange: (val) => updateRow(index, { dir: val }),
+              sx: { minWidth: 120 }
+            }
+          ),
+          isFilterMode && !isLast ? /* @__PURE__ */ u2(
+            SimpleSelect,
+            {
+              value: filterRule.logic || "and",
+              options: logicOptions,
+              onChange: (val) => updateLogic(index, val),
+              sx: { minWidth: 80 }
+            }
+          ) : /* @__PURE__ */ u2(Typography2, { variant: "body2", color: "text.secondary", sx: { textAlign: "center" }, children: isFilterMode ? "末尾" : "" }),
+          /* @__PURE__ */ u2(
+            IconAction,
+            {
+              label: "删除规则",
+              icon: /* @__PURE__ */ u2(DeleteOutlineIcon, { fontSize: "small" }),
+              onClick: () => remove2(index),
+              size: "small"
+            }
+          )
+        ]
+      }
+    ) }, index);
+  }) });
+  if (variant === "panel") {
+    return /* @__PURE__ */ u2(Box, { sx: { display: "flex", flexDirection: "column", gap: 2 }, children: [
+      /* @__PURE__ */ u2(Box, { sx: { display: "flex", alignItems: "center", justifyContent: "space-between", gap: 2 }, children: /* @__PURE__ */ u2("div", { children: [
+        /* @__PURE__ */ u2(Typography2, { sx: { fontWeight: 600 }, children: [
+          title,
+          "规则"
+        ] }),
+        /* @__PURE__ */ u2(Typography2, { variant: "body2", color: "text.secondary", children: "字段支持搜索；已有规则可直接编辑。“属于任一 / 不属于任一”支持多选 chip，也可输入后回车添加；区间用“开始~结束”。" })
+      ] }) }),
+      rows.length > 0 ? /* @__PURE__ */ u2(Box, { sx: { display: "flex", flexDirection: "column", gap: 1 }, children: [
+        /* @__PURE__ */ u2(
+          Box,
+          {
+            sx: {
+              display: "grid",
+              gridTemplateColumns: isFilterMode ? "minmax(240px, 1.2fr) minmax(150px, 0.6fr) minmax(260px, 1.2fr) minmax(96px, 0.35fr) 40px" : "minmax(240px, 1.2fr) minmax(150px, 0.6fr) minmax(96px, 0.35fr) 40px",
+              gap: 1,
+              px: 1,
+              color: "text.secondary"
+            },
+            children: [
+              /* @__PURE__ */ u2(Typography2, { variant: "caption", children: "字段" }),
+              /* @__PURE__ */ u2(Typography2, { variant: "caption", children: isFilterMode ? "条件" : "排序" }),
+              isFilterMode && /* @__PURE__ */ u2(Typography2, { variant: "caption", children: "值" }),
+              /* @__PURE__ */ u2(Typography2, { variant: "caption", children: "连接" }),
+              /* @__PURE__ */ u2(Typography2, { variant: "caption", children: "操作" })
+            ]
+          }
+        ),
+        panelRuleRows
+      ] }) : /* @__PURE__ */ u2(Box, { sx: { p: 2, border: "1px dashed var(--background-modifier-border)", borderRadius: "8px" }, children: /* @__PURE__ */ u2(Typography2, { variant: "body2", color: "text.secondary", children: "还没有规则。先在下方选择字段、条件和值，然后添加规则。" }) }),
+      /* @__PURE__ */ u2(
+        Box,
+        {
+          sx: {
+            display: "grid",
+            gridTemplateColumns: isFilterMode && shouldShowValueInput ? "minmax(260px, 1.4fr) minmax(150px, 0.6fr) minmax(260px, 1.3fr) auto" : "minmax(260px, 1.4fr) minmax(150px, 0.6fr) auto",
+            gap: 1,
+            alignItems: "center",
+            p: 1.5,
+            border: "1px solid var(--background-modifier-border)",
+            borderRadius: "8px",
+            background: "var(--background-secondary)"
+          },
+          children: [
+            renderFieldInput(newRule.field, (field) => updateNewRule({ field })),
+            isFilterMode ? /* @__PURE__ */ u2(S, { children: [
+              /* @__PURE__ */ u2(
+                SimpleSelect,
+                {
+                  value: newRule.op,
+                  options: operatorOptions,
+                  onChange: (val) => updateNewRule({ op: val }),
+                  sx: { minWidth: 140 }
+                }
+              ),
+              shouldShowValueInput && renderValueInput(newRule, (value) => updateNewRule({ value }))
+            ] }) : /* @__PURE__ */ u2(
+              SimpleSelect,
+              {
+                value: newRule.dir,
+                options: directionOptions,
+                onChange: (val) => updateNewRule({ dir: val }),
+                sx: { minWidth: 120 }
+              }
+            ),
+            /* @__PURE__ */ u2(Button2, { variant: "contained", size: "small", onClick: handleAddRule, sx: { whiteSpace: "nowrap" }, children: "添加规则" })
+          ]
+        }
+      )
+    ] });
+  }
+  return /* @__PURE__ */ u2("div", { style: { display: "flex", flexDirection: "row", gap: "8px" }, children: [
+    /* @__PURE__ */ u2(Typography2, { sx: { width: "80px", flexShrink: 0, fontWeight: 500, pt: "8px" }, children: title }),
+    /* @__PURE__ */ u2("div", { style: { flexGrow: 1, display: "flex", flexDirection: "column", gap: "12px" }, children: [
+      existingRules,
+      /* @__PURE__ */ u2("div", { style: { display: "flex", flexDirection: "row", gap: "4px", alignItems: "center" }, children: [
+        renderFieldInput(newRule.field, (field) => updateNewRule({ field })),
+        isFilterMode ? /* @__PURE__ */ u2(S, { children: [
+          /* @__PURE__ */ u2(
+            SimpleSelect,
+            {
+              value: newRule.op,
+              options: operatorOptions,
+              onChange: (val) => updateNewRule({ op: val }),
+              sx: { minWidth: 120 }
+            }
+          ),
+          shouldShowValueInput && renderValueInput(newRule, (value) => updateNewRule({ value }))
+        ] }) : /* @__PURE__ */ u2(
+          SimpleSelect,
+          {
+            value: newRule.dir,
+            options: directionOptions,
+            onChange: (val) => updateNewRule({ dir: val }),
+            sx: { minWidth: 100 }
+          }
+        ),
+        /* @__PURE__ */ u2(Button2, { variant: "contained", size: "small", onClick: handleAddRule, children: "添加" })
+      ] })
+    ] })
+  ] });
+}
+const DEFAULT_QUICK_FILTER_FIELDS = [
+  { field: "themePath", label: "主题路径", help: "使用完整 themePath 筛选，例如 生活/健康；不再用根主题或章节标题兜底。", placeholder: "选择主题路径" },
+  { field: "baseCategory", label: "分类", help: "不同字段之间默认表示“且”：主题匹配后还要分类匹配。", placeholder: "选择分类" },
+  { field: "tags", label: "标签", placeholder: "选择标签" },
+  { field: "type", label: "类型", placeholder: "选择记录类型" },
+  { field: "priority", label: "优先级", placeholder: "选择优先级" },
+  { field: "period", label: "时间粒度", placeholder: "选择粒度" }
+];
+function normalizeMultiValue(value) {
+  const rawValues = Array.isArray(value) ? value : [value];
+  const normalized = rawValues.flatMap((v2) => String(v2 ?? "").split(/[,，\n]/)).map((part) => part.trim()).filter(Boolean);
+  return Array.from(new Set(normalized));
+}
+function collectFieldValues(items, fields) {
+  const valueMap = {};
+  fields.forEach((field) => valueMap[field] = /* @__PURE__ */ new Set());
+  for (const item of items) {
+    for (const field of fields) {
+      const value = readField(item, field);
+      if (value === null || value === void 0 || String(value).trim() === "") continue;
+      const values2 = Array.isArray(value) ? value : [value];
+      values2.forEach((v2) => {
+        const strV = String(v2).trim();
+        if (strV) valueMap[field].add(strV);
+      });
+    }
+  }
+  const result = {};
+  fields.forEach((field) => {
+    result[field] = Array.from(valueMap[field] || []).sort((a2, b2) => a2.localeCompare(b2, "zh-CN"));
+  });
+  return result;
+}
+function cleanupRuleLinks(rules) {
+  return rules.map((rule, index) => {
+    const nextRule = { ...rule };
+    if (index === rules.length - 1) {
+      delete nextRule.logic;
+    } else if (!nextRule.logic) {
+      nextRule.logic = "and";
+    }
+    return nextRule;
+  });
+}
+function getQuickRule(filters, field) {
+  return filters.find((rule) => rule.field === field && rule.op === "in");
+}
+function upsertQuickRule(filters, field, values2) {
+  const cleanValues = normalizeMultiValue(values2);
+  const existingIndex = filters.findIndex((rule) => rule.field === field && rule.op === "in");
+  if (cleanValues.length === 0) {
+    if (existingIndex < 0) return cleanupRuleLinks(filters);
+    return cleanupRuleLinks(filters.filter((_2, index) => index !== existingIndex));
+  }
+  if (existingIndex >= 0) {
+    return cleanupRuleLinks(filters.map((rule, index) => index === existingIndex ? { ...rule, value: cleanValues } : { ...rule }));
+  }
+  return cleanupRuleLinks([
+    ...filters.map((rule) => ({ ...rule })),
+    { field, op: "in", value: cleanValues }
+  ]);
+}
+function hasAnyQuickFilter(filters, fields) {
+  const fieldSet = new Set(fields.map((f2) => f2.field));
+  return filters.some((rule) => fieldSet.has(rule.field) && rule.op === "in" && normalizeMultiValue(rule.value).length > 0);
+}
+function clearQuickFilters(filters, fields) {
+  const fieldSet = new Set(fields.map((f2) => f2.field));
+  return cleanupRuleLinks(filters.filter((rule) => !(fieldSet.has(rule.field) && rule.op === "in")));
+}
+function describeQuickSummary(filters, fields) {
+  const parts = fields.map((config2) => {
+    const rule = getQuickRule(filters, config2.field);
+    const values2 = normalizeMultiValue(rule?.value);
+    if (values2.length === 0) return "";
+    const label = config2.label || getFieldLabel(config2.field);
+    return `${label}为${values2.join("或")}`;
+  }).filter(Boolean);
+  return parts.length > 0 ? `当前显示：${parts.join("，并且")}。` : "未设置常用筛选。";
+}
+function CommonFilterPanel({
+  dataStore,
+  filters,
+  onChange,
+  items,
+  fieldOptions,
+  title = "常用筛选",
+  description = "适合主题路径、分类、标签这类高频筛选；同一字段内是“或”，不同字段之间是“且”。",
+  fields = DEFAULT_QUICK_FILTER_FIELDS,
+  compact = false
+}) {
+  const sourceItems = T$1(() => items ?? dataStore.queryItems(), [items, dataStore]);
+  const availableFields = T$1(() => new Set(fieldOptions ?? getAllFields(sourceItems)), [fieldOptions, sourceItems]);
+  const quickFields = T$1(
+    () => fields.filter((config2) => availableFields.has(config2.field)),
+    [fields, availableFields]
+  );
+  const valueOptions = T$1(
+    () => collectFieldValues(sourceItems, quickFields.map((config2) => config2.field)),
+    [sourceItems, quickFields]
+  );
+  const hasQuickFilters = hasAnyQuickFilter(filters, quickFields);
+  const summary = describeQuickSummary(filters, quickFields);
+  if (quickFields.length === 0) return null;
+  return /* @__PURE__ */ u2(
+    Box,
+    {
+      sx: {
+        display: "flex",
+        flexDirection: "column",
+        gap: compact ? 1 : 1.5,
+        p: compact ? 1.25 : 1.5,
+        border: "1px solid var(--background-modifier-border)",
+        borderRadius: "10px",
+        background: "var(--background-secondary)"
+      },
+      children: [
+        /* @__PURE__ */ u2(Box, { sx: { display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 2 }, children: [
+          /* @__PURE__ */ u2("div", { children: [
+            /* @__PURE__ */ u2(Typography2, { sx: { fontWeight: 700 }, children: title }),
+            /* @__PURE__ */ u2(Typography2, { variant: "body2", color: "text.secondary", children: description })
+          ] }),
+          /* @__PURE__ */ u2(
+            Button2,
+            {
+              size: "small",
+              startIcon: /* @__PURE__ */ u2(RestartAltIcon, {}),
+              onClick: () => onChange(clearQuickFilters(filters, quickFields)),
+              disabled: !hasQuickFilters,
+              sx: { whiteSpace: "nowrap" },
+              children: "清空常用"
+            }
+          )
+        ] }),
+        /* @__PURE__ */ u2(
+          Box,
+          {
+            sx: {
+              display: "grid",
+              gridTemplateColumns: compact ? "1fr" : "repeat(auto-fit, minmax(240px, 1fr))",
+              gap: 1.25
+            },
+            children: quickFields.map((config2) => {
+              const label = config2.label || getFieldLabel(config2.field);
+              const rule = getQuickRule(filters, config2.field);
+              const values2 = normalizeMultiValue(rule?.value);
+              return /* @__PURE__ */ u2(Box, { sx: { display: "flex", flexDirection: "column", gap: 0.5 }, children: [
+                /* @__PURE__ */ u2(Typography2, { variant: "caption", color: "text.secondary", sx: { fontWeight: 600 }, children: label }),
+                /* @__PURE__ */ u2(
+                  Autocomplete2,
+                  {
+                    multiple: true,
+                    freeSolo: true,
+                    fullWidth: true,
+                    size: "small",
+                    disablePortal: true,
+                    options: valueOptions[config2.field] || [],
+                    value: values2,
+                    onChange: (_2, newValue) => onChange(upsertQuickRule(filters, config2.field, newValue)),
+                    renderTags: (tagValue, getTagProps) => tagValue.map((option, index) => /* @__PURE__ */ k$2(Chip2, { ...getTagProps({ index }), key: `${config2.field}-${option}`, label: option, size: "small" })),
+                    renderInput: (params) => /* @__PURE__ */ u2(
+                      TextField2,
+                      {
+                        ...params,
+                        variant: "outlined",
+                        placeholder: values2.length > 0 ? "" : config2.placeholder || `选择${label}`,
+                        helperText: compact ? void 0 : config2.help
+                      }
+                    )
+                  }
+                )
+              ] }, config2.field);
+            })
+          }
+        ),
+        /* @__PURE__ */ u2(Typography2, { variant: "body2", color: "text.secondary", children: summary })
+      ]
+    }
+  );
+}
+function ViewInstanceEditor({ vi }) {
+  const dataStore = useDataStore();
+  const useCases = useUseCases();
+  const currentVi = useSelector(makeSelectViewInstanceById(vi.id)) || vi;
+  const fieldOptions = T$1(() => getAllFields(dataStore?.queryItems() || []), [dataStore]);
+  const EditorComponent = VIEW_EDITORS[currentVi.viewType];
+  const correctedViewConfig = T$1(() => {
+    if (currentVi.viewConfig && typeof currentVi.viewConfig.categories === "object") return currentVi.viewConfig;
+    if (currentVi.viewConfig && currentVi.viewConfig.viewConfig) return currentVi.viewConfig.viewConfig;
+    return currentVi.viewConfig || {};
+  }, [currentVi.viewConfig]);
+  const handleUpdate = (updates) => {
+    useCases.viewInstance.updateView(currentVi.id, updates);
+  };
+  const viewTypeOptions = T$1(
+    () => VIEW_OPTIONS.map((v2) => ({ value: v2, label: v2.replace("View", "") })),
+    []
+  );
+  const commonFilterFields = T$1(() => ["themePath", "baseCategory", "tags", "type", "priority", "period"], []);
+  const hasAdvancedFilters = T$1(() => (currentVi.filters || []).some((rule) => rule.op !== "in" || !commonFilterFields.includes(rule.field)), [currentVi.filters, commonFilterFields]);
+  const handleFieldsChange = (fields) => {
+    handleUpdate({ fields });
+  };
+  const handleGroupFieldsChange = (groupFields) => {
+    handleUpdate({ groupFields });
+  };
+  return /* @__PURE__ */ u2("div", { children: [
+    /* @__PURE__ */ u2("div", { style: { marginBottom: "2rem" }, children: [
+      /* @__PURE__ */ u2("h4", { style: {
+        marginBottom: "1rem",
+        color: "var(--text-muted)",
+        fontSize: "1rem",
+        fontWeight: "600"
+      }, children: "基础设置" }),
+      /* @__PURE__ */ u2(FormField, { label: "视图类型", children: /* @__PURE__ */ u2("div", { style: { display: "flex", alignItems: "center", gap: "1rem" }, children: [
+        /* @__PURE__ */ u2(
+          SimpleSelect,
+          {
+            value: currentVi.viewType,
+            options: viewTypeOptions,
+            onChange: (val) => handleUpdate({ viewType: val }),
+            sx: { flex: 1, minWidth: "150px" }
+          }
+        ),
+        /* @__PURE__ */ u2(
+          FormControlLabel2,
+          {
+            control: /* @__PURE__ */ u2(
+              Checkbox2,
+              {
+                size: "small",
+                checked: !!currentVi.collapsed,
+                onChange: (e2) => handleUpdate({ collapsed: e2.target.checked })
+              }
+            ),
+            label: "默认折叠"
+          }
+        )
+      ] }) }),
+      /* @__PURE__ */ u2(
+        FormField,
+        {
+          label: "显示字段",
+          help: "选择要在视图中显示的字段",
+          children: /* @__PURE__ */ u2(
+            FieldManager,
+            {
+              fields: currentVi.fields || [],
+              availableFields: fieldOptions,
+              onFieldsChange: handleFieldsChange,
+              placeholder: "+ 添加字段...",
+              getFieldLabel,
+              getFieldGroupLabel: getFieldCategoryLabel
+            }
+          )
+        }
+      ),
+      /* @__PURE__ */ u2(
+        FormField,
+        {
+          label: "分组字段",
+          help: "选择用于分组的字段，顺序即为多级分组层级（A→B→C）",
+          children: /* @__PURE__ */ u2(
+            FieldManager,
+            {
+              fields: currentVi.groupFields || [],
+              availableFields: fieldOptions,
+              onFieldsChange: handleGroupFieldsChange,
+              placeholder: "+ 选择分组字段...",
+              getFieldLabel,
+              getFieldGroupLabel: getFieldCategoryLabel
+            }
+          )
+        }
+      )
+    ] }),
+    /* @__PURE__ */ u2("div", { style: {
+      borderTop: "1px solid var(--background-modifier-border)",
+      paddingTop: "1.5rem",
+      marginBottom: "1.5rem"
+    }, children: [
+      /* @__PURE__ */ u2("h4", { style: {
+        marginBottom: "1rem",
+        color: "var(--text-muted)",
+        fontSize: "1rem",
+        fontWeight: "600"
+      }, children: "数据筛选与排序" }),
+      /* @__PURE__ */ u2(
+        FormField,
+        {
+          label: "视图筛选",
+          help: "常用筛选适合主题路径、分类、标签多选；高级筛选保留原来的字段/条件/值规则。",
+          children: /* @__PURE__ */ u2(Box, { sx: { display: "flex", flexDirection: "column", gap: 1.25 }, children: [
+            /* @__PURE__ */ u2(
+              CommonFilterPanel,
+              {
+                title: "常用筛选",
+                description: "同一字段内多选表示“或”，不同字段之间默认表示“且”。",
+                dataStore,
+                filters: currentVi.filters || [],
+                fieldOptions,
+                onChange: (rows) => handleUpdate({ filters: rows }),
+                compact: true
+              }
+            ),
+            /* @__PURE__ */ u2(
+              Accordion2,
+              {
+                defaultExpanded: hasAdvancedFilters,
+                disableGutters: true,
+                sx: {
+                  border: "1px solid var(--background-modifier-border)",
+                  borderRadius: "10px",
+                  "&:before": { display: "none" }
+                },
+                children: [
+                  /* @__PURE__ */ u2(AccordionSummary2, { expandIcon: /* @__PURE__ */ u2(ExpandMoreIcon, {}), children: /* @__PURE__ */ u2(Box, { sx: { display: "flex", alignItems: "center", gap: 1, flexWrap: "wrap" }, children: [
+                    /* @__PURE__ */ u2(Typography2, { sx: { fontWeight: 700 }, children: "高级筛选规则" }),
+                    /* @__PURE__ */ u2(Chip2, { label: `${(currentVi.filters || []).length} 条`, size: "small", variant: "outlined" }),
+                    /* @__PURE__ */ u2(Typography2, { variant: "body2", color: "text.secondary", children: "正则、区间、排除、复杂且/或关系" })
+                  ] }) }),
+                  /* @__PURE__ */ u2(AccordionDetails2, { sx: { pt: 0 }, children: /* @__PURE__ */ u2(
+                    RuleBuilder,
+                    {
+                      title: "筛选",
+                      mode: "filter",
+                      rows: currentVi.filters || [],
+                      fieldOptions,
+                      onChange: (rows) => handleUpdate({ filters: rows }),
+                      dataStore,
+                      variant: "panel"
+                    }
+                  ) })
+                ]
+              }
+            )
+          ] })
+        }
+      ),
+      /* @__PURE__ */ u2(
+        FormField,
+        {
+          label: "排序规则",
+          help: "定义数据排序方式",
+          children: /* @__PURE__ */ u2(
+            RuleBuilder,
+            {
+              title: "排序规则",
+              mode: "sort",
+              rows: currentVi.sort || [],
+              fieldOptions,
+              onChange: (rows) => handleUpdate({ sort: rows }),
+              dataStore
+            }
+          )
+        }
+      )
+    ] }),
+    EditorComponent && /* @__PURE__ */ u2("div", { style: {
+      borderTop: "1px solid var(--background-modifier-border)",
+      paddingTop: "1.5rem"
+    }, children: [
+      /* @__PURE__ */ u2("h4", { style: {
+        marginBottom: "1rem",
+        color: "var(--text-muted)",
+        fontSize: "1rem",
+        fontWeight: "600"
+      }, children: [
+        currentVi.viewType.replace("View", ""),
+        " 专属配置"
+      ] }),
+      /* @__PURE__ */ u2(
+        EditorComponent,
+        {
+          module: currentVi,
+          value: correctedViewConfig,
+          onChange: (patch) => handleUpdate({ viewConfig: { ...correctedViewConfig, ...patch } }),
+          fieldOptions,
+          dataStore
+        }
+      )
+    ] })
+  ] });
+}
+function ModuleSettingsPanel({ module: module2, onClose }) {
+  const currentModule = useSelector(makeSelectViewInstanceById(module2.id)) || module2;
+  const handleSave = useSaveHandler(async () => {
+    await new Promise((resolve) => setTimeout(resolve, 100));
+    onClose();
+  }, {
+    successMessage: `已保存视图 "${module2.title}" 的设置`,
+    errorMessage: "保存设置失败"
+  });
+  return /* @__PURE__ */ u2("div", { style: { display: "flex", flexDirection: "column", flex: 1, minHeight: 0, width: "100%" }, children: [
+    /* @__PURE__ */ u2("div", { style: { flex: 1, minHeight: 0, overflowY: "auto", padding: 12, boxSizing: "border-box" }, children: /* @__PURE__ */ u2(ViewInstanceEditor, { vi: currentModule }) }),
+    /* @__PURE__ */ u2(
+      "div",
+      {
+        style: {
+          display: "flex",
+          justifyContent: "flex-end",
+          gap: 8,
+          padding: "12px 12px 0 12px",
+          marginTop: 0,
+          borderTop: "1px solid var(--background-modifier-border)"
+        },
+        children: [
+          /* @__PURE__ */ u2(Button2, { onClick: handleSave, variant: "contained", children: "保存设置" }),
+          /* @__PURE__ */ u2(Button2, { onClick: onClose, variant: "outlined", children: "关闭" })
+        ]
+      }
+    )
+  ] });
+}
+function openModuleSettingsWidget(module2) {
+  const widgetId = `module-settings-${module2.id}`;
+  return openFloatingWidget(widgetId, () => /* @__PURE__ */ u2(
+    FloatingPanel,
+    {
+      id: widgetId,
+      title: `视图设置: ${module2.title}`,
+      defaultPosition: { x: window.innerWidth / 2 - 340, y: window.innerHeight / 2 - 260 },
+      minWidth: 520,
+      maxWidth: "90vw",
+      maxHeight: "85vh",
+      width: 720,
+      height: 640,
+      resizable: true,
+      bodyPadding: 0,
+      bodyStyle: { display: "flex", flexDirection: "column", minHeight: 0 },
+      onClose: () => closeFloatingWidget(widgetId),
+      children: /* @__PURE__ */ u2(ModuleSettingsPanel, { module: module2, onClose: () => closeFloatingWidget(widgetId) })
+    }
+  ));
+}
+const PERIOD_OPTIONS$1 = ["年", "季", "月", "周", "天"].map((v2) => ({ value: v2, label: v2 }));
+const DISPLAY_MODE_OPTIONS$1 = [
+  { value: "list", label: "列表" },
+  { value: "grid", label: "网格" }
+];
+const LABEL_WIDTH$1 = "80px";
+const AlignedRadioGroup$1 = ({ label, options, selectedValue, onChange }) => /* @__PURE__ */ u2(Stack, { direction: "row", alignItems: "center", spacing: 2, children: [
+  /* @__PURE__ */ u2(Typography2, { sx: { width: LABEL_WIDTH$1, flexShrink: 0, fontWeight: 500 }, children: label }),
+  /* @__PURE__ */ u2(RadioGroup2, { row: true, value: selectedValue, onChange: (e2) => onChange(e2.target.value), children: options.map((opt) => /* @__PURE__ */ u2(FormControlLabel2, { value: opt.value, control: /* @__PURE__ */ u2(Radio2, { size: "small" }), label: opt.label }, opt.value)) })
+] });
+function LayoutEditorPanel({ layoutId, useCases }) {
+  const _useCases = useCases ?? useUseCases();
+  const layout = useSelector((s2) => (s2.settings.layouts || []).find((l2) => l2.id === layoutId));
+  const allViews = useSelector((s2) => s2.settings.viewInstances);
+  const [inputValue, setInputValue] = d("");
+  const [autocompleteOpen, setAutocompleteOpen] = d(false);
+  const inputRef = A$1(null);
+  const [contextMenu, setContextMenu] = d(null);
+  const handleUpdate = q$1(
+    (updates) => {
+      if (!layout) return;
+      _useCases.layout.updateLayout(layout.id, updates);
+    },
+    [layout, _useCases]
+  );
+  const selectedViews = T$1(
+    () => (layout?.viewInstanceIds || []).map((id) => allViews.find((v2) => v2.id === id)).filter(Boolean),
+    [layout?.viewInstanceIds, allViews]
+  );
+  const availableViews = T$1(
+    () => allViews.filter((v2) => !(layout?.viewInstanceIds || []).includes(v2.id)),
+    [layout?.viewInstanceIds, allViews]
+  );
+  const addView = q$1((viewId) => {
+    if (!layout || !viewId) return;
+    if (layout.viewInstanceIds.includes(viewId)) return;
+    handleUpdate({ viewInstanceIds: [...layout.viewInstanceIds, viewId] });
+  }, [layout, handleUpdate]);
+  const removeViewFromLayout = q$1((viewId) => {
+    if (!layout) return;
+    handleUpdate({ viewInstanceIds: layout.viewInstanceIds.filter((id) => id !== viewId) });
+  }, [layout, handleUpdate]);
+  const moveView = q$1((viewId, direction) => {
+    if (!layout) return;
+    const currentIds = [...layout.viewInstanceIds];
+    const index = currentIds.indexOf(viewId);
+    if (index < 0) return;
+    const targetIndex = index + direction;
+    if (targetIndex < 0 || targetIndex >= currentIds.length) return;
+    const [moved] = currentIds.splice(index, 1);
+    currentIds.splice(targetIndex, 0, moved);
+    handleUpdate({ viewInstanceIds: currentIds });
+  }, [layout, handleUpdate]);
+  const autocompleteOptions = T$1(() => {
+    const opts = availableViews.map((v2) => ({ value: v2.id, label: v2.title, type: "existing" }));
+    if (inputValue.trim() && !availableViews.some((v2) => v2.title.toLowerCase().includes(inputValue.trim().toLowerCase()))) {
+      opts.push({
+        value: "create",
+        label: `+ 创建新视图："${inputValue.trim()}"`,
+        type: "create",
+        newName: inputValue.trim()
+      });
+    }
+    return opts;
+  }, [availableViews, inputValue]);
+  const reopenAutocomplete = q$1(() => {
+    window.requestAnimationFrame(() => {
+      setAutocompleteOpen(true);
+      inputRef.current?.focus();
+    });
+  }, []);
+  const handleCreateNewView = q$1(
+    async (viewTitle) => {
+      const newView = await _useCases.viewInstance.createView(viewTitle);
+      if (!newView) return;
+      addView(newView.id);
+      reopenAutocomplete();
+    },
+    [_useCases, addView, reopenAutocomplete]
+  );
+  const handleAutocompleteChange = q$1(
+    async (_event, newValue) => {
+      if (!newValue) return;
+      if (newValue.type === "existing") {
+        addView(newValue.value);
+        setInputValue("");
+        reopenAutocomplete();
+        return;
+      }
+      if (newValue.type === "create") {
+        setInputValue("");
+        await handleCreateNewView(newValue.newName);
+      }
+    },
+    [addView, handleCreateNewView, reopenAutocomplete]
+  );
+  const handleChipRightClick = q$1((event, view) => {
+    event.preventDefault();
+    setContextMenu({
+      mouseX: event.clientX - 2,
+      mouseY: event.clientY - 4,
+      viewId: view.id,
+      viewTitle: view.title
+    });
+  }, []);
+  const handleContextMenuClose = q$1(() => setContextMenu(null), []);
+  const handleViewSettings = q$1(() => {
+    if (!contextMenu) return;
+    const view = allViews.find((v2) => v2.id === contextMenu.viewId);
+    if (view) openModuleSettingsWidget(view);
+    handleContextMenuClose();
+  }, [contextMenu, allViews, handleContextMenuClose]);
+  const handleViewRename = q$1(() => {
+    if (!contextMenu) return;
+    const newName = prompt("请输入新的视图名称", contextMenu.viewTitle);
+    if (newName && newName.trim()) {
+      _useCases.viewInstance.updateView(contextMenu.viewId, { title: newName.trim() });
+    }
+    handleContextMenuClose();
+  }, [contextMenu, _useCases, handleContextMenuClose]);
+  const handleViewRemove = q$1(() => {
+    if (!contextMenu) return;
+    removeViewFromLayout(contextMenu.viewId);
+    handleContextMenuClose();
+  }, [contextMenu, removeViewFromLayout, handleContextMenuClose]);
+  const handleMoveLeftFromMenu = q$1(() => {
+    if (!contextMenu) return;
+    moveView(contextMenu.viewId, -1);
+    handleContextMenuClose();
+  }, [contextMenu, moveView, handleContextMenuClose]);
+  const handleMoveRightFromMenu = q$1(() => {
+    if (!contextMenu) return;
+    moveView(contextMenu.viewId, 1);
+    handleContextMenuClose();
+  }, [contextMenu, moveView, handleContextMenuClose]);
+  if (!layout) {
+    return /* @__PURE__ */ u2("div", { style: { padding: 12 }, children: "未找到布局（可能已被删除）。" });
+  }
+  return /* @__PURE__ */ u2(Stack, { spacing: 2, sx: { p: "8px 16px 16px 16px", width: "100%", minWidth: 0, boxSizing: "border-box" }, children: [
+    /* @__PURE__ */ u2(
+      TextField2,
+      {
+        label: "布局名称",
+        value: layout.name || "",
+        onChange: (e2) => handleUpdate({ name: e2.target.value }),
+        size: "small",
+        fullWidth: true
+      }
+    ),
+    /* @__PURE__ */ u2(Stack, { direction: "row", alignItems: "center", spacing: 2, children: [
+      /* @__PURE__ */ u2(Typography2, { sx: { width: LABEL_WIDTH$1, flexShrink: 0, fontWeight: 500 }, children: "工具栏" }),
+      /* @__PURE__ */ u2(
+        FormControlLabel2,
+        {
+          control: /* @__PURE__ */ u2(
+            Checkbox2,
+            {
+              size: "small",
+              checked: !layout.hideToolbar,
+              onChange: (e2) => handleUpdate({ hideToolbar: !e2.target.checked })
+            }
+          ),
+          label: /* @__PURE__ */ u2(Typography2, { noWrap: true, children: "显示工具栏/导航器" }),
+          sx: { flexShrink: 0, mr: 0 }
+        }
+      )
+    ] }),
+    /* @__PURE__ */ u2(Stack, { direction: "row", alignItems: "center", spacing: 2, children: [
+      /* @__PURE__ */ u2(Typography2, { sx: { width: LABEL_WIDTH$1, flexShrink: 0, fontWeight: 500 }, children: "初始日期" }),
+      /* @__PURE__ */ u2(
+        TextField2,
+        {
+          type: "date",
+          size: "small",
+          variant: "outlined",
+          disabled: !!layout.initialDateFollowsNow,
+          value: layout.initialDate || "",
+          onChange: (e2) => handleUpdate({ initialDate: e2.target.value }),
+          sx: { width: "170px" }
+        }
+      ),
+      /* @__PURE__ */ u2(
+        FormControlLabel2,
+        {
+          control: /* @__PURE__ */ u2(
+            Checkbox2,
+            {
+              size: "small",
+              checked: !!layout.initialDateFollowsNow,
+              onChange: (e2) => handleUpdate({ initialDateFollowsNow: e2.target.checked })
+            }
+          ),
+          label: /* @__PURE__ */ u2(Typography2, { noWrap: true, children: "跟随今日" })
+        }
+      )
+    ] }),
+    /* @__PURE__ */ u2(
+      AlignedRadioGroup$1,
+      {
+        label: "初始视图（时间窗）",
+        options: PERIOD_OPTIONS$1,
+        selectedValue: layout.initialView || "月",
+        onChange: (value) => handleUpdate({ initialView: value })
+      }
+    ),
+    /* @__PURE__ */ u2(
+      AlignedRadioGroup$1,
+      {
+        label: "排列方式",
+        options: DISPLAY_MODE_OPTIONS$1,
+        selectedValue: layout.displayMode || "list",
+        onChange: (value) => handleUpdate({ displayMode: value })
+      }
+    ),
+    layout.displayMode === "grid" && /* @__PURE__ */ u2(Stack, { direction: "row", alignItems: "center", spacing: 2, sx: { pl: `calc(${LABEL_WIDTH$1} + 16px)` }, children: /* @__PURE__ */ u2(
+      TextField2,
+      {
+        label: "列数",
+        type: "number",
+        size: "small",
+        variant: "outlined",
+        value: layout.gridConfig?.columns || 2,
+        onChange: (e2) => handleUpdate({ gridConfig: { columns: parseInt(e2.target.value, 10) || 2 } }),
+        sx: { width: "100px" }
+      }
+    ) }),
+    /* @__PURE__ */ u2(Stack, { direction: "row", alignItems: "flex-start", spacing: 2, sx: { minWidth: 0 }, children: [
+      /* @__PURE__ */ u2(Typography2, { sx: { width: LABEL_WIDTH$1, flexShrink: 0, fontWeight: 500, pt: "6px" }, children: "包含视图" }),
+      /* @__PURE__ */ u2(Stack, { spacing: 1, sx: { flex: 1, minWidth: 0 }, children: [
+        /* @__PURE__ */ u2(Box, { sx: { display: "flex", flexWrap: "wrap", gap: 1, alignItems: "center", minHeight: 32 }, children: selectedViews.map(
+          (view, index) => view ? /* @__PURE__ */ u2(
+            Box,
+            {
+              sx: {
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 0.25,
+                px: 0.25,
+                py: 0.25,
+                borderRadius: 1,
+                background: "var(--background-secondary)",
+                maxWidth: "100%"
+              },
+              children: [
+                /* @__PURE__ */ u2(
+                  IconAction,
+                  {
+                    label: "前移",
+                    icon: /* @__PURE__ */ u2(ArrowBackIosNewIcon, { sx: { fontSize: "0.85rem" } }),
+                    size: "small",
+                    disabled: index === 0,
+                    onClick: () => moveView(view.id, -1),
+                    sx: { p: "2px" },
+                    stopPropagation: false
+                  }
+                ),
+                /* @__PURE__ */ u2(Tooltip2, { title: "左键移除，右键更多选项", children: /* @__PURE__ */ u2(
+                  Chip2,
+                  {
+                    label: view.title,
+                    onClick: () => removeViewFromLayout(view.id),
+                    onContextMenu: (e2) => handleChipRightClick(e2, view),
+                    size: "small",
+                    sx: { cursor: "pointer", maxWidth: 240 }
+                  }
+                ) }),
+                /* @__PURE__ */ u2(
+                  IconAction,
+                  {
+                    label: "后移",
+                    icon: /* @__PURE__ */ u2(ArrowForwardIosIcon, { sx: { fontSize: "0.85rem" } }),
+                    size: "small",
+                    disabled: index === selectedViews.length - 1,
+                    onClick: () => moveView(view.id, 1),
+                    sx: { p: "2px" },
+                    stopPropagation: false
+                  }
+                )
+              ]
+            },
+            view.id
+          ) : null
+        ) }),
+        /* @__PURE__ */ u2(
+          Autocomplete2,
+          {
+            open: autocompleteOpen,
+            value: null,
+            inputValue,
+            onOpen: () => setAutocompleteOpen(true),
+            onClose: (_2, reason) => {
+              if (reason === "selectOption") return;
+              setAutocompleteOpen(false);
+            },
+            onInputChange: (_2, newInputValue) => {
+              setInputValue(newInputValue);
+              setAutocompleteOpen(true);
+            },
+            options: autocompleteOptions,
+            getOptionLabel: (option) => option ? option.label : "",
+            onChange: handleAutocompleteChange,
+            disableCloseOnSelect: true,
+            blurOnSelect: false,
+            clearOnBlur: false,
+            selectOnFocus: true,
+            renderInput: (params) => /* @__PURE__ */ u2(
+              TextField2,
+              {
+                ...params,
+                variant: "outlined",
+                placeholder: "+ 搜索添加或创建视图...",
+                inputRef: (node2) => {
+                  inputRef.current = node2;
+                  const paramsRef = params.inputProps?.ref;
+                  if (typeof paramsRef === "function") paramsRef(node2);
+                }
+              }
+            ),
+            sx: { minWidth: 240, maxWidth: 520 },
+            size: "small",
+            disablePortal: true,
+            slotProps: { popper: { style: { zIndex: 2e4 } } }
+          }
+        )
+      ] })
+    ] }),
+    contextMenu && /* @__PURE__ */ u2(
+      "div",
+      {
+        style: {
+          position: "fixed",
+          top: contextMenu.mouseY,
+          left: contextMenu.mouseX,
+          background: "var(--background-primary)",
+          border: "1px solid var(--background-modifier-border)",
+          borderRadius: 8,
+          padding: 8,
+          zIndex: 99999,
+          boxShadow: "0 8px 24px rgba(0,0,0,0.25)"
+        },
+        onMouseLeave: handleContextMenuClose,
+        children: /* @__PURE__ */ u2("div", { style: { display: "flex", flexDirection: "column", gap: 6, minWidth: 160 }, children: [
+          /* @__PURE__ */ u2("button", { className: "mod-cta", onClick: handleViewSettings, children: "设置…" }),
+          /* @__PURE__ */ u2("button", { onClick: handleMoveLeftFromMenu, children: "向前移动" }),
+          /* @__PURE__ */ u2("button", { onClick: handleMoveRightFromMenu, children: "向后移动" }),
+          /* @__PURE__ */ u2("button", { onClick: handleViewRename, children: "重命名…" }),
+          /* @__PURE__ */ u2("button", { onClick: handleViewRemove, children: "从布局移除" })
+        ] })
+      }
+    )
+  ] });
+}
+function LayoutSettingsWidgetInner({ layoutId, widgetId }) {
+  const layout = useSelector((s2) => (s2.settings.layouts || []).find((l2) => l2.id === layoutId));
+  return /* @__PURE__ */ u2(
+    FloatingPanel,
+    {
+      id: widgetId,
+      title: `布局设置: ${layout?.name ?? layoutId}`,
+      defaultPosition: { x: window.innerWidth / 2 - 420, y: window.innerHeight / 2 - 300 },
+      minWidth: 620,
+      maxWidth: "92vw",
+      maxHeight: "88vh",
+      width: 760,
+      height: 620,
+      resizable: true,
+      bodyPadding: 0,
+      bodyStyle: { display: "flex", flexDirection: "column", minHeight: 0 },
+      onClose: () => closeFloatingWidget(widgetId),
+      children: /* @__PURE__ */ u2(LayoutEditorPanel, { layoutId })
+    }
+  );
+}
+function openLayoutSettingsWidget(layoutId) {
+  const widgetId = `layout-settings-${layoutId}`;
+  return openFloatingWidget(widgetId, () => /* @__PURE__ */ u2(LayoutSettingsWidgetInner, { layoutId, widgetId }));
+}
+function asDisplayList(value) {
+  if (Array.isArray(value)) return value.map((v2) => String(v2).trim()).filter(Boolean);
+  if (value === null || value === void 0) return [];
+  return String(value).split(/[,，\n]/).map((v2) => v2.trim()).filter(Boolean);
+}
+function describeRule(rule) {
+  if (rule.op === "empty") return `${getFieldLabel(rule.field)} 为空`;
+  if (rule.op === "notEmpty") return `${getFieldLabel(rule.field)} 非空`;
+  if (rule.op === "in" || rule.op === "notIn") {
+    const values2 = asDisplayList(rule.value);
+    const opText = rule.op === "in" ? "属于任一" : "不属于任一";
+    return `${getFieldLabel(rule.field)} ${opText} ${values2.join("、") || "未选择"}`;
+  }
+  if (rule.op === "between") {
+    const values2 = asDisplayList(rule.value);
+    return `${getFieldLabel(rule.field)} 区间 ${values2.join(" ~ ") || String(rule.value ?? "")}`;
+  }
+  return `${getFieldLabel(rule.field)} ${rule.op} ${String(rule.value ?? "")}`;
+}
+function DataFilterPanel({
+  dataStore,
+  filters,
+  items,
+  onChange,
+  legacyMode = false,
+  legacySummary,
+  onMigrateLegacyFilters
+}) {
+  const [open, setOpen] = d(false);
+  const [advancedOpen, setAdvancedOpen] = d(false);
+  const activeCount = filters.length;
+  const sourceItems = items ?? dataStore.queryItems();
+  const fieldOptions = T$1(() => getAllFields(sourceItems), [sourceItems]);
+  const commonFilterFields = T$1(() => ["themePath", "baseCategory", "tags", "type", "priority", "period"], []);
+  const hasAdvancedFilters = T$1(() => filters.some((rule) => rule.op !== "in" || !commonFilterFields.includes(rule.field)), [filters, commonFilterFields]);
+  const handleOpen = () => {
+    setAdvancedOpen(hasAdvancedFilters);
+    setOpen(true);
+  };
+  const handleClose = () => setOpen(false);
+  const handleClear = () => onChange([]);
+  const handleMigrateLegacyFilters = () => {
+    if (onMigrateLegacyFilters) onMigrateLegacyFilters();
+  };
+  const handleDeleteRule = (index) => {
+    onChange(filters.filter((_2, currentIndex) => currentIndex !== index));
+  };
+  return /* @__PURE__ */ u2("div", { class: "tp-toolbar-data-filter", children: [
+    /* @__PURE__ */ u2(
+      Button2,
+      {
+        size: "small",
+        variant: activeCount > 0 ? "contained" : "outlined",
+        startIcon: /* @__PURE__ */ u2(FilterListIcon, {}),
+        onClick: handleOpen,
+        sx: { textTransform: "none" },
+        children: [
+          "数据筛选",
+          activeCount > 0 ? ` (${activeCount})` : "",
+          legacyMode ? " · 旧版" : ""
+        ]
+      }
+    ),
+    activeCount > 0 && /* @__PURE__ */ u2("div", { class: "filter-popover-selected-chips", children: [
+      filters.slice(0, 3).map((rule, index) => /* @__PURE__ */ u2(
+        Chip2,
+        {
+          label: describeRule(rule),
+          size: "small",
+          onDelete: () => handleDeleteRule(index),
+          sx: { height: "20px", fontSize: "0.75rem" }
+        },
+        `${rule.field}-${rule.op}-${index}`
+      )),
+      filters.length > 3 && /* @__PURE__ */ u2(Chip2, { label: `+${filters.length - 3}`, size: "small", sx: { height: "20px", fontSize: "0.75rem" } })
+    ] }),
+    /* @__PURE__ */ u2(
+      Dialog2,
+      {
+        open,
+        onClose: handleClose,
+        fullWidth: true,
+        maxWidth: "lg",
+        PaperProps: {
+          sx: {
+            width: "min(1180px, calc(100vw - 32px))",
+            maxWidth: "calc(100vw - 32px)",
+            height: "min(760px, calc(100vh - 48px))"
+          }
+        },
+        children: [
+          /* @__PURE__ */ u2(DialogTitle2, { sx: { pb: 1 }, children: /* @__PURE__ */ u2(Box, { sx: { display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 2 }, children: [
+            /* @__PURE__ */ u2("div", { children: [
+              /* @__PURE__ */ u2(Typography2, { variant: "h6", component: "div", children: "全局数据筛选" }),
+              /* @__PURE__ */ u2(Typography2, { variant: "body2", color: "text.secondary", children: "这里的规则会作用于当前布局下的所有视图；单个视图自己的筛选仍在模块设置中维护。" })
+            ] }),
+            /* @__PURE__ */ u2(Box, { sx: { display: "flex", alignItems: "center", gap: 1, flexShrink: 0 }, children: [
+              /* @__PURE__ */ u2(Chip2, { label: `${fieldOptions.length} 个可筛选字段`, size: "small", variant: "outlined" }),
+              /* @__PURE__ */ u2(Chip2, { label: `${activeCount} 条规则`, size: "small", color: activeCount > 0 ? "primary" : "default" })
+            ] })
+          ] }) }),
+          /* @__PURE__ */ u2(Divider2, {}),
+          /* @__PURE__ */ u2(DialogContent2, { sx: { p: 2.5, overflow: "auto" }, children: [
+            legacyMode && /* @__PURE__ */ u2(
+              Alert2,
+              {
+                severity: "info",
+                sx: { mb: 2 },
+                action: onMigrateLegacyFilters ? /* @__PURE__ */ u2(Button2, { color: "inherit", size: "small", onClick: handleMigrateLegacyFilters, children: "转为新版规则" }) : void 0,
+                children: [
+                  "当前规则来自旧版 toolbar 主题/分类筛选",
+                  legacySummary ? `（${legacySummary}）` : "",
+                  "。 继续编辑或清空时会自动保存为新版全局筛选规则，并清空旧字段，避免新旧筛选双写。"
+                ]
+              }
+            ),
+            /* @__PURE__ */ u2(Box, { sx: { display: "flex", flexDirection: "column", gap: 2 }, children: [
+              /* @__PURE__ */ u2(
+                CommonFilterPanel,
+                {
+                  title: "常用筛选",
+                  description: "先用主题路径、分类、标签等常用字段筛选：同一字段内多选表示“或”，不同字段之间默认表示“且”。",
+                  dataStore,
+                  filters,
+                  items: sourceItems,
+                  fieldOptions,
+                  onChange
+                }
+              ),
+              /* @__PURE__ */ u2(
+                Accordion2,
+                {
+                  expanded: advancedOpen,
+                  onChange: (_2, expanded) => setAdvancedOpen(expanded),
+                  disableGutters: true,
+                  sx: {
+                    border: "1px solid var(--background-modifier-border)",
+                    borderRadius: "10px",
+                    "&:before": { display: "none" }
+                  },
+                  children: [
+                    /* @__PURE__ */ u2(AccordionSummary2, { expandIcon: /* @__PURE__ */ u2(ExpandMoreIcon, {}), children: /* @__PURE__ */ u2(Box, { sx: { display: "flex", alignItems: "center", gap: 1 }, children: [
+                      /* @__PURE__ */ u2(Typography2, { sx: { fontWeight: 700 }, children: "高级筛选规则" }),
+                      /* @__PURE__ */ u2(Chip2, { label: `${activeCount} 条`, size: "small", variant: "outlined" }),
+                      /* @__PURE__ */ u2(Typography2, { variant: "body2", color: "text.secondary", children: "需要正则、区间、排除或复杂且/或关系时再展开" })
+                    ] }) }),
+                    /* @__PURE__ */ u2(AccordionDetails2, { sx: { pt: 0 }, children: /* @__PURE__ */ u2(
+                      RuleBuilder,
+                      {
+                        title: "筛选",
+                        mode: "filter",
+                        rows: filters,
+                        fieldOptions,
+                        onChange: (rows) => onChange(rows),
+                        dataStore,
+                        variant: "panel"
+                      }
+                    ) })
+                  ]
+                }
+              )
+            ] })
+          ] }),
+          /* @__PURE__ */ u2(Divider2, {}),
+          /* @__PURE__ */ u2(DialogActions2, { sx: { px: 2.5, py: 1.5, justifyContent: "space-between" }, children: [
+            /* @__PURE__ */ u2(Button2, { size: "small", onClick: handleClear, disabled: activeCount === 0, children: "清空全部规则" }),
+            /* @__PURE__ */ u2(Button2, { size: "small", variant: "contained", onClick: handleClose, children: "完成" })
+          ] })
+        ]
+      }
+    )
+  ] });
+}
+function useLayoutItems({ dataStore, layout }) {
+  const [allItems, setAllItems] = d(() => dataStore.queryItems());
+  y(() => {
+    const readAllItems = () => {
+      const startedAt = performance.now();
+      const nextItems = dataStore.queryItems();
+      const durationMs2 = Math.round((performance.now() - startedAt) * 100) / 100;
+      devLog("[ThinkPlugin] layout shared query", {
+        layoutId: layout.id,
+        viewCount: layout.viewInstanceIds.length,
+        itemCount: nextItems.length,
+        durationMs: durationMs2
+      });
+      setAllItems(nextItems);
+    };
+    const listener = () => readAllItems();
+    dataStore.subscribe(listener);
+    readAllItems();
+    return () => dataStore.unsubscribe(listener);
+  }, [dataStore, layout.id, layout.viewInstanceIds.length]);
+  return allItems;
+}
+const INITIAL_RENDERED_EXPANDED_VIEWS = 3;
+const EXPANDED_VIEW_RENDER_BATCH_SIZE = 2;
+const EXPANDED_VIEW_RENDER_DELAY_MS = 80;
+function useExpandedViewRendering({
+  layout,
+  allViews
+}) {
+  const [expandedState, setExpandedState] = d({});
+  const [isStateInitialized, setIsStateInitialized] = d(false);
+  y(() => {
+    const initialState = {};
+    layout.viewInstanceIds.forEach((viewId) => {
+      const view = allViews.find((v2) => v2.id === viewId);
+      if (view) {
+        initialState[viewId] = !view.collapsed;
+      }
+    });
+    setExpandedState(initialState);
+    setIsStateInitialized(true);
+  }, [layout.id]);
+  y(() => {
+    if (!isStateInitialized) return;
+    setExpandedState((prevState) => {
+      const newState = { ...prevState };
+      layout.viewInstanceIds.forEach((viewId) => {
+        const view = allViews.find((v2) => v2.id === viewId);
+        if (view && !(viewId in prevState)) {
+          newState[viewId] = !view.collapsed;
+        }
+      });
+      return newState;
+    });
+  }, [allViews, isStateInitialized, layout.viewInstanceIds]);
+  const expandedViewIds = T$1(() => {
+    if (!isStateInitialized) return [];
+    return layout.viewInstanceIds.filter((viewId) => !!expandedState[viewId]);
+  }, [expandedState, isStateInitialized, layout.viewInstanceIds]);
+  const expandedViewSignature = expandedViewIds.join("|");
+  const [renderedExpandedCount, setRenderedExpandedCount] = d(INITIAL_RENDERED_EXPANDED_VIEWS);
+  const renderedBatchLayoutIdRef = A$1(null);
+  y(() => {
+    setRenderedExpandedCount((current2) => {
+      const firstBatchSize = Math.min(expandedViewIds.length, INITIAL_RENDERED_EXPANDED_VIEWS);
+      if (renderedBatchLayoutIdRef.current !== layout.id) {
+        renderedBatchLayoutIdRef.current = layout.id;
+        return firstBatchSize;
+      }
+      return Math.min(expandedViewIds.length, Math.max(current2, INITIAL_RENDERED_EXPANDED_VIEWS));
+    });
+  }, [expandedViewSignature, expandedViewIds.length, layout.id]);
+  y(() => {
+    if (renderedExpandedCount >= expandedViewIds.length) return;
+    const requestIdle = window.requestIdleCallback;
+    const cancelIdle = window.cancelIdleCallback;
+    let timeoutId = null;
+    let idleHandle = null;
+    const renderNextBatch = () => {
+      setRenderedExpandedCount((current2) => Math.min(
+        expandedViewIds.length,
+        current2 + EXPANDED_VIEW_RENDER_BATCH_SIZE
+      ));
+    };
+    if (requestIdle) {
+      idleHandle = requestIdle(renderNextBatch, { timeout: EXPANDED_VIEW_RENDER_DELAY_MS * 2 });
+    } else {
+      timeoutId = setTimeout(renderNextBatch, EXPANDED_VIEW_RENDER_DELAY_MS);
+    }
+    return () => {
+      if (idleHandle !== null && cancelIdle) cancelIdle(idleHandle);
+      if (timeoutId !== null) clearTimeout(timeoutId);
+    };
+  }, [expandedViewIds.length, expandedViewSignature, renderedExpandedCount]);
+  const handleToggle = q$1((viewId, event) => {
+    const isToggleAll = event?.metaKey || event?.ctrlKey;
+    if (isToggleAll) {
+      setExpandedState((currentState) => {
+        const shouldExpandAll = !currentState[viewId];
+        const newState = {};
+        for (const id in currentState) {
+          newState[id] = shouldExpandAll;
+        }
+        return newState;
+      });
+    } else {
+      setExpandedState((prev2) => ({ ...prev2, [viewId]: !prev2[viewId] }));
+    }
+  }, []);
+  return {
+    expandedState,
+    expandedViewIds,
+    renderedExpandedCount,
+    isStateInitialized,
+    handleToggle
+  };
+}
+function readNativeControlValue(event) {
   return (event.target || event.currentTarget).value;
 }
 function stopEditorEvent$1(event) {
   event.stopPropagation();
+}
+function useObsidianInputGuard({
+  scope,
+  controlName,
+  onInput,
+  onBlur,
+  onFocus
+}) {
+  const log = q$1((event, payload) => {
+    logInputEvent(scope, event, payload);
+  }, [scope]);
+  return {
+    onPointerDown: q$1((event) => {
+      log(event, { handler: `${controlName} onPointerDown` });
+    }, [controlName, log]),
+    onMouseDown: q$1((event) => {
+      log(event, { handler: `${controlName} onMouseDown before stopPropagation` });
+      stopEditorEvent$1(event);
+    }, [controlName, log]),
+    onClick: q$1((event) => {
+      log(event, { handler: `${controlName} onClick before stopPropagation` });
+      stopEditorEvent$1(event);
+    }, [controlName, log]),
+    onDblClick: q$1((event) => {
+      log(event, { handler: `${controlName} onDblClick before stopPropagation` });
+      stopEditorEvent$1(event);
+    }, [controlName, log]),
+    onKeyDown: q$1((event) => {
+      log(event, { handler: `${controlName} onKeyDown before stopPropagation` });
+      stopEditorEvent$1(event);
+    }, [controlName, log]),
+    onKeyUp: q$1((event) => {
+      log(event, { handler: `${controlName} onKeyUp before stopPropagation` });
+      stopEditorEvent$1(event);
+    }, [controlName, log]),
+    onBeforeInput: q$1((event) => {
+      log(event, { handler: `${controlName} onBeforeInput` });
+    }, [controlName, log]),
+    onInput: q$1((event) => {
+      const nextValue = readNativeControlValue(event);
+      log(event, {
+        handler: `${controlName} onInput before local update`,
+        nextValue
+      });
+      onInput(nextValue);
+    }, [controlName, log, onInput]),
+    onChange: q$1((event) => {
+      log(event, { handler: `${controlName} onChange` });
+    }, [controlName, log]),
+    onBlur: q$1((event) => {
+      log(event, { handler: `${controlName} onBlur before commit` });
+      onBlur?.();
+    }, [controlName, log, onBlur]),
+    onFocus: q$1((event) => {
+      log(event, { handler: `${controlName} onFocus` });
+      onFocus?.();
+    }, [controlName, log, onFocus])
+  };
 }
 const nativeControlBaseStyle$1 = {
   width: "100%",
@@ -59521,6 +61892,13 @@ function NativeTextInput$1({
   title,
   style: style2
 }) {
+  const inputGuard = useObsidianInputGuard({
+    scope: `FieldsEditor/${label}`,
+    controlName: "control",
+    onInput,
+    onBlur,
+    onFocus
+  });
   return /* @__PURE__ */ u2("label", { style: { display: "block", minWidth: 0, ...style2 }, title, children: [
     /* @__PURE__ */ u2("span", { style: nativeLabelStyle$1, children: label }),
     /* @__PURE__ */ u2(
@@ -59531,64 +61909,7 @@ function NativeTextInput$1({
         disabled,
         placeholder,
         "data-think-diag-control": label,
-        onPointerDown: (event) => logInputEvent(`FieldsEditor/${label}`, event, {
-          handler: "control onPointerDown"
-        }),
-        onMouseDown: (event) => {
-          logInputEvent(`FieldsEditor/${label}`, event, {
-            handler: "control onMouseDown before stopPropagation"
-          });
-          stopEditorEvent$1(event);
-        },
-        onClick: (event) => {
-          logInputEvent(`FieldsEditor/${label}`, event, {
-            handler: "control onClick before stopPropagation"
-          });
-          stopEditorEvent$1(event);
-        },
-        onDblClick: (event) => {
-          logInputEvent(`FieldsEditor/${label}`, event, {
-            handler: "control onDblClick before stopPropagation"
-          });
-          stopEditorEvent$1(event);
-        },
-        onKeyDown: (event) => {
-          logInputEvent(`FieldsEditor/${label}`, event, {
-            handler: "control onKeyDown before stopPropagation"
-          });
-          stopEditorEvent$1(event);
-        },
-        onKeyUp: (event) => {
-          logInputEvent(`FieldsEditor/${label}`, event, {
-            handler: "control onKeyUp before stopPropagation"
-          });
-          stopEditorEvent$1(event);
-        },
-        onBeforeInput: (event) => logInputEvent(`FieldsEditor/${label}`, event, {
-          handler: "control onBeforeInput"
-        }),
-        onInput: (event) => {
-          logInputEvent(`FieldsEditor/${label}`, event, {
-            handler: "control onInput before local update",
-            nextValue: readInputValue$1(event)
-          });
-          onInput(readInputValue$1(event));
-        },
-        onChange: (event) => logInputEvent(`FieldsEditor/${label}`, event, {
-          handler: "control onChange"
-        }),
-        onBlur: (event) => {
-          logInputEvent(`FieldsEditor/${label}`, event, {
-            handler: "control onBlur before commit"
-          });
-          onBlur?.();
-        },
-        onFocus: (event) => {
-          logInputEvent(`FieldsEditor/${label}`, event, {
-            handler: "control onFocus"
-          });
-          onFocus?.();
-        },
+        ...inputGuard,
         style: {
           ...nativeControlBaseStyle$1,
           opacity: disabled ? 0.6 : 1,
@@ -59608,6 +61929,12 @@ function NativeTextarea$1({
   rows = 3,
   style: style2
 }) {
+  const textareaGuard = useObsidianInputGuard({
+    scope: `FieldsEditor/${label}`,
+    controlName: "textarea",
+    onInput,
+    onBlur
+  });
   return /* @__PURE__ */ u2("label", { style: { display: "block", minWidth: 0, ...style2 }, children: [
     /* @__PURE__ */ u2("span", { style: nativeLabelStyle$1, children: label }),
     /* @__PURE__ */ u2(
@@ -59618,58 +61945,7 @@ function NativeTextarea$1({
         rows,
         placeholder,
         "data-think-diag-control": label,
-        onPointerDown: (event) => logInputEvent(`FieldsEditor/${label}`, event, {
-          handler: "textarea onPointerDown"
-        }),
-        onMouseDown: (event) => {
-          logInputEvent(`FieldsEditor/${label}`, event, {
-            handler: "textarea onMouseDown before stopPropagation"
-          });
-          stopEditorEvent$1(event);
-        },
-        onClick: (event) => {
-          logInputEvent(`FieldsEditor/${label}`, event, {
-            handler: "textarea onClick before stopPropagation"
-          });
-          stopEditorEvent$1(event);
-        },
-        onDblClick: (event) => {
-          logInputEvent(`FieldsEditor/${label}`, event, {
-            handler: "textarea onDblClick before stopPropagation"
-          });
-          stopEditorEvent$1(event);
-        },
-        onKeyDown: (event) => {
-          logInputEvent(`FieldsEditor/${label}`, event, {
-            handler: "textarea onKeyDown before stopPropagation"
-          });
-          stopEditorEvent$1(event);
-        },
-        onKeyUp: (event) => {
-          logInputEvent(`FieldsEditor/${label}`, event, {
-            handler: "textarea onKeyUp before stopPropagation"
-          });
-          stopEditorEvent$1(event);
-        },
-        onBeforeInput: (event) => logInputEvent(`FieldsEditor/${label}`, event, {
-          handler: "textarea onBeforeInput"
-        }),
-        onInput: (event) => {
-          logInputEvent(`FieldsEditor/${label}`, event, {
-            handler: "textarea onInput before local update",
-            nextValue: readInputValue$1(event)
-          });
-          onInput(readInputValue$1(event));
-        },
-        onChange: (event) => logInputEvent(`FieldsEditor/${label}`, event, {
-          handler: "textarea onChange"
-        }),
-        onBlur: (event) => {
-          logInputEvent(`FieldsEditor/${label}`, event, {
-            handler: "textarea onBlur before commit"
-          });
-          onBlur?.();
-        },
+        ...textareaGuard,
         style: {
           ...nativeControlBaseStyle$1,
           resize: "vertical",
@@ -59708,20 +61984,20 @@ function OptionRow({
   const commitOption = (nextOption, reason) => {
     if ((nextOption.label || "") === (option.label || "") && nextOption.value === option.value)
       return;
-    console.log("[字段编辑器][选项编辑]", {
-      原因: reason,
-      字段类型: fieldType,
-      选项: nextOption
+    logRenderDiagnostic("FieldsEditor/OptionRow/commit", {
+      reason,
+      fieldType,
+      option: nextOption
     });
     onChange(nextOption);
   };
   const updateLocalOption = (updates, reason) => {
     setLocalOption((previous) => {
       const next2 = { ...previous, ...updates };
-      console.log("[字段编辑器][选项输入]", {
-        原因: reason,
-        更新内容: updates,
-        更新后选项: next2
+      logRenderDiagnostic("FieldsEditor/OptionRow/input", {
+        reason,
+        updates,
+        nextOption: next2
       });
       return next2;
     });
@@ -59732,7 +62008,7 @@ function OptionRow({
   const isRating = fieldType === "rating";
   const labelLabel = isRating ? "评分数值" : "选项标签";
   const valueLabel = isRating ? "显示内容 (Emoji/图片路径)" : "选项值";
-  return /* @__PURE__ */ u2(Stack$1, { direction: "row", alignItems: "flex-start", spacing: 1.5, children: [
+  return /* @__PURE__ */ u2(Stack, { direction: "row", alignItems: "flex-start", spacing: 1.5, children: [
     /* @__PURE__ */ u2(
       NativeTextInput$1,
       {
@@ -59763,7 +62039,7 @@ function OptionRow({
         style: { flex: 1 }
       }
     ),
-    /* @__PURE__ */ u2(Box$1, { sx: { pt: 2.5 }, children: /* @__PURE__ */ u2(
+    /* @__PURE__ */ u2(Box, { sx: { pt: 2.5 }, children: /* @__PURE__ */ u2(
       IconAction,
       {
         label: "删除此选项",
@@ -59851,7 +62127,7 @@ function FieldRow({
   const showInlineDefaultValue = showDefaultValueEditor && uiType !== "textarea";
   const showDetails = showOptionsEditor || uiType === "textarea" || uiType === "number";
   return /* @__PURE__ */ u2(
-    Box$1,
+    Box,
     {
       sx: {
         py: 0.75,
@@ -59861,7 +62137,7 @@ function FieldRow({
       },
       children: [
         /* @__PURE__ */ u2(
-          Box$1,
+          Box,
           {
             sx: {
               display: "grid",
@@ -59871,7 +62147,7 @@ function FieldRow({
             },
             children: [
               /* @__PURE__ */ u2(
-                Box$1,
+                Box,
                 {
                   title: "拖动排序",
                   sx: {
@@ -59886,7 +62162,7 @@ function FieldRow({
                   children: /* @__PURE__ */ u2(DragIndicatorIcon, { sx: { fontSize: "1.25rem" } })
                 }
               ),
-              /* @__PURE__ */ u2(Box$1, { sx: { minWidth: 0 }, children: /* @__PURE__ */ u2(
+              /* @__PURE__ */ u2(Box, { sx: { minWidth: 0 }, children: /* @__PURE__ */ u2(
                 NativeTextInput$1,
                 {
                   label: "",
@@ -59900,7 +62176,7 @@ function FieldRow({
                   title: "该名称会显示在输入表单中，也可在模板中用 {{字段名称}} 引用"
                 }
               ) }),
-              /* @__PURE__ */ u2(Box$1, { sx: { minWidth: 0 }, children: /* @__PURE__ */ u2(
+              /* @__PURE__ */ u2(Box, { sx: { minWidth: 0 }, children: /* @__PURE__ */ u2(
                 SimpleSelect,
                 {
                   value: uiType,
@@ -59910,7 +62186,7 @@ function FieldRow({
                   sx: { width: "100%" }
                 }
               ) }),
-              /* @__PURE__ */ u2(Box$1, { sx: { minWidth: 0 }, children: showInlineDefaultValue ? /* @__PURE__ */ u2(
+              /* @__PURE__ */ u2(Box, { sx: { minWidth: 0 }, children: showInlineDefaultValue ? /* @__PURE__ */ u2(
                 NativeTextInput$1,
                 {
                   label: "",
@@ -59925,9 +62201,9 @@ function FieldRow({
                   placeholder: "可留空",
                   style: { width: "100%" }
                 }
-              ) : /* @__PURE__ */ u2(Box$1, { sx: { minHeight: emptyControlMinHeight } }) }),
-              /* @__PURE__ */ u2(Box$1, { sx: { minWidth: 0, display: "flex", justifyContent: "center" }, children: showDetails ? /* @__PURE__ */ u2(
-                Button$1,
+              ) : /* @__PURE__ */ u2(Box, { sx: { minHeight: emptyControlMinHeight } }) }),
+              /* @__PURE__ */ u2(Box, { sx: { minWidth: 0, display: "flex", justifyContent: "center" }, children: showDetails ? /* @__PURE__ */ u2(
+                Button2,
                 {
                   size: "small",
                   variant: "text",
@@ -59937,8 +62213,8 @@ function FieldRow({
                   sx: { width: "100%", minWidth: 0, px: 0.75, whiteSpace: "nowrap", "& .MuiButton-endIcon": { ml: 0.25, mr: 0 } },
                   children: detailsOpen ? "收起" : "详情"
                 }
-              ) : /* @__PURE__ */ u2(Box$1, { sx: { minHeight: emptyControlMinHeight } }) }),
-              /* @__PURE__ */ u2(Box$1, { sx: { display: "flex", justifyContent: "center" }, children: /* @__PURE__ */ u2(
+              ) : /* @__PURE__ */ u2(Box, { sx: { minHeight: emptyControlMinHeight } }) }),
+              /* @__PURE__ */ u2(Box, { sx: { display: "flex", justifyContent: "center" }, children: /* @__PURE__ */ u2(
                 IconAction,
                 {
                   label: "删除此字段",
@@ -59951,8 +62227,8 @@ function FieldRow({
             ]
           }
         ),
-        customFieldNameWarning && /* @__PURE__ */ u2(Typography$1, { variant: "caption", sx: { color: "warning.main", display: "block", mt: 0.5, ml: 4.5 }, children: customFieldNameWarning }),
-        /* @__PURE__ */ u2(Collapse, { in: detailsOpen, unmountOnExit: true, children: /* @__PURE__ */ u2(Box$1, { sx: { mt: 1.25, ml: 4.5, p: 1.25, borderRadius: 1, bgcolor: "background.default" }, children: [
+        customFieldNameWarning && /* @__PURE__ */ u2(Typography2, { variant: "caption", sx: { color: "warning.main", display: "block", mt: 0.5, ml: 4.5 }, children: customFieldNameWarning }),
+        /* @__PURE__ */ u2(Collapse2, { in: detailsOpen, unmountOnExit: true, children: /* @__PURE__ */ u2(Box, { sx: { mt: 1.25, ml: 4.5, p: 1.25, borderRadius: 1, bgcolor: "background.default" }, children: [
           uiType === "textarea" && showDefaultValueEditor && /* @__PURE__ */ u2(
             NativeTextarea$1,
             {
@@ -59969,7 +62245,7 @@ function FieldRow({
               style: { width: "100%" }
             }
           ),
-          uiType === "number" && /* @__PURE__ */ u2(Stack$1, { direction: "row", spacing: 1, sx: { mb: showOptionsEditor ? 1.5 : 0 }, children: [
+          uiType === "number" && /* @__PURE__ */ u2(Stack, { direction: "row", spacing: 1, sx: { mb: showOptionsEditor ? 1.5 : 0 }, children: [
             /* @__PURE__ */ u2(
               NativeTextInput$1,
               {
@@ -59993,8 +62269,8 @@ function FieldRow({
               }
             )
           ] }),
-          showOptionsEditor && /* @__PURE__ */ u2(Box$1, { children: [
-            /* @__PURE__ */ u2(Stack$1, { spacing: 1.25, divider: /* @__PURE__ */ u2(Divider$1, { flexItem: true, sx: { borderStyle: "dashed" } }), children: (field.options || []).map((option, optIndex) => /* @__PURE__ */ u2(
+          showOptionsEditor && /* @__PURE__ */ u2(Box, { children: [
+            /* @__PURE__ */ u2(Stack, { spacing: 1.25, divider: /* @__PURE__ */ u2(Divider2, { flexItem: true, sx: { borderStyle: "dashed" } }), children: (field.options || []).map((option, optIndex) => /* @__PURE__ */ u2(
               OptionRow,
               {
                 option,
@@ -60006,7 +62282,7 @@ function FieldRow({
               optIndex
             )) }),
             /* @__PURE__ */ u2(
-              Button$1,
+              Button2,
               {
                 onClick: addOption,
                 disabled,
@@ -60071,9 +62347,9 @@ function FieldsEditor({
     emitFields(reorderFields(fields || [], draggingIndex, targetIndex));
     setDraggingIndex(null);
   };
-  return /* @__PURE__ */ u2(Stack$1, { spacing: 1.25, sx: { width: "100%", maxWidth: 1040, boxSizing: "border-box", overflowX: "hidden" }, children: [
+  return /* @__PURE__ */ u2(Stack, { spacing: 1.25, sx: { width: "100%", maxWidth: 1040, boxSizing: "border-box", overflowX: "hidden" }, children: [
     /* @__PURE__ */ u2(
-      Box$1,
+      Box,
       {
         sx: {
           px: 0.5,
@@ -60083,17 +62359,17 @@ function FieldsEditor({
           alignItems: "center"
         },
         children: [
-          /* @__PURE__ */ u2(Box$1, {}),
-          /* @__PURE__ */ u2(Typography$1, { variant: "caption", sx: { color: "text.secondary" }, children: "字段名称" }),
-          /* @__PURE__ */ u2(Typography$1, { variant: "caption", sx: { color: "text.secondary" }, children: "字段类型" }),
-          /* @__PURE__ */ u2(Typography$1, { variant: "caption", sx: { color: "text.secondary" }, children: "默认值" }),
-          /* @__PURE__ */ u2(Box$1, {}),
-          /* @__PURE__ */ u2(Box$1, {})
+          /* @__PURE__ */ u2(Box, {}),
+          /* @__PURE__ */ u2(Typography2, { variant: "caption", sx: { color: "text.secondary" }, children: "字段名称" }),
+          /* @__PURE__ */ u2(Typography2, { variant: "caption", sx: { color: "text.secondary" }, children: "字段类型" }),
+          /* @__PURE__ */ u2(Typography2, { variant: "caption", sx: { color: "text.secondary" }, children: "默认值" }),
+          /* @__PURE__ */ u2(Box, {}),
+          /* @__PURE__ */ u2(Box, {})
         ]
       }
     ),
-    /* @__PURE__ */ u2(Stack$1, { spacing: 0, divider: /* @__PURE__ */ u2(Divider$1, { sx: { my: 0.75 } }), children: (fields || []).map((field, index) => /* @__PURE__ */ u2(
-      Box$1,
+    /* @__PURE__ */ u2(Stack, { spacing: 0, divider: /* @__PURE__ */ u2(Divider2, { sx: { my: 0.75 } }), children: (fields || []).map((field, index) => /* @__PURE__ */ u2(
+      Box,
       {
         draggable: !disabled,
         onDragStart: (event) => {
@@ -60129,7 +62405,7 @@ function FieldsEditor({
       },
       field.id
     )) }),
-    /* @__PURE__ */ u2(Box$1, { children: /* @__PURE__ */ u2(Button$1, { onClick: addField, disabled, startIcon: /* @__PURE__ */ u2(AddIcon, {}), variant: "contained", size: "small", children: "添加字段" }) })
+    /* @__PURE__ */ u2(Box, { children: /* @__PURE__ */ u2(Button2, { onClick: addField, disabled, startIcon: /* @__PURE__ */ u2(AddIcon, {}), variant: "contained", size: "small", children: "添加字段" }) })
   ] });
 }
 function TemplateVariableCopier({ block }) {
@@ -60178,7 +62454,7 @@ function TemplateVariableCopier({ block }) {
     navigator.clipboard.writeText(variable);
     ui.notice(`已复制: ${variable}`);
   };
-  return /* @__PURE__ */ u2(Box$1, { sx: { maxWidth: 220 }, children: /* @__PURE__ */ u2(
+  return /* @__PURE__ */ u2(Box, { sx: { maxWidth: 220 }, children: /* @__PURE__ */ u2(
     SimpleSelect,
     {
       value: "",
@@ -60218,6 +62494,9 @@ const nativeLabelStyle = {
   fontSize: "0.75rem",
   color: "var(--text-muted)"
 };
+function logTemplateEditor(scope, payload) {
+  logRenderDiagnostic(`主题模板编辑器/${scope}`, payload);
+}
 function NativeTextInput({
   label,
   value,
@@ -60294,15 +62573,18 @@ function TemplateEditorModal({ isOpen, onClose, block, theme: theme2, existingOv
   const localOverrideRef = A$1({});
   y(() => {
     if (!isOpen) return;
-    console.groupCollapsed("[主题模板编辑器][初始化] 打开模板配置模态框");
-    console.log("主题:", { themeId: theme2.id, themePath: theme2.path });
-    console.log("Block:", { blockId: block.id, blockName: block.name });
-    console.log("传入的现有覆写 existingOverride:", existingOverride);
     if (existingOverride) {
       const nextMode = existingOverride.disabled ? "disabled" : "override";
       const clonedOverride = cloneValue(existingOverride);
-      console.log("检测结果: 已存在覆写，模式应切到:", nextMode);
-      console.log("表单初始值来自 existingOverride:", clonedOverride);
+      logTemplateEditor("初始化", {
+        themeId: theme2.id,
+        themePath: theme2.path,
+        blockId: block.id,
+        blockName: block.name,
+        hasExistingOverride: true,
+        nextMode,
+        initialOverride: clonedOverride
+      });
       setMode(nextMode);
       localOverrideRef.current = clonedOverride;
       setLocalOverride(clonedOverride);
@@ -60313,12 +62595,19 @@ function TemplateEditorModal({ isOpen, onClose, block, theme: theme2, existingOv
         targetFile: block.targetFile,
         appendUnderHeader: block.appendUnderHeader
       };
-      console.log("检测结果: 没有现有覆写，默认继承；表单初始值来自基础 Block:", initialOverride);
+      logTemplateEditor("初始化", {
+        themeId: theme2.id,
+        themePath: theme2.path,
+        blockId: block.id,
+        blockName: block.name,
+        hasExistingOverride: false,
+        nextMode: "inherit",
+        initialOverride
+      });
       setMode("inherit");
       localOverrideRef.current = initialOverride;
       setLocalOverride(initialOverride);
     }
-    console.groupEnd();
   }, [isOpen, existingOverride, block, theme2.id, theme2.path]);
   const effectiveBlockForCopier = T$1(() => {
     return {
@@ -60330,7 +62619,7 @@ function TemplateEditorModal({ isOpen, onClose, block, theme: theme2, existingOv
   const isFormDisabled = mode !== "override";
   y(() => {
     if (!isOpen) return;
-    console.log("[主题模板编辑器][渲染状态]", {
+    logTemplateEditor("渲染状态", {
       当前模式: mode,
       表单是否禁用: isFormDisabled,
       说明: isFormDisabled ? "当前不是 override 模式，表单禁用是预期行为。" : "当前是 override 模式，表单必须可以点击、聚焦、输入。",
@@ -60339,7 +62628,7 @@ function TemplateEditorModal({ isOpen, onClose, block, theme: theme2, existingOv
   }, [isOpen, mode, isFormDisabled, localOverride]);
   const handleModeChange = (_event, value) => {
     const nextMode = value;
-    console.log("[主题模板编辑器][模式切换] 用户切换配置模式", {
+    logTemplateEditor("模式切换", {
       旧模式: mode,
       新模式: nextMode,
       切换后表单是否应禁用: nextMode !== "override"
@@ -60350,7 +62639,7 @@ function TemplateEditorModal({ isOpen, onClose, block, theme: theme2, existingOv
     setLocalOverride((previous) => {
       const next2 = { ...previous, ...updates };
       localOverrideRef.current = next2;
-      console.log("[主题模板编辑器][草稿更新]", {
+      logTemplateEditor("草稿更新", {
         原因: reason,
         更新内容: updates,
         更新后草稿: next2
@@ -60363,17 +62652,18 @@ function TemplateEditorModal({ isOpen, onClose, block, theme: theme2, existingOv
     if (activeElement2 && typeof activeElement2.blur === "function") activeElement2.blur();
     await new Promise((resolve) => window.setTimeout(resolve, 0));
     const draft = localOverrideRef.current;
-    console.groupCollapsed("[主题模板编辑器][保存] 用户点击保存配置");
-    console.log("当前模式:", mode);
-    console.log("保存前草稿 localOverride:", draft);
-    console.log("现有覆写 existingOverride:", existingOverride);
+    logTemplateEditor("保存/开始", {
+      mode,
+      draft,
+      hasExistingOverride: Boolean(existingOverride)
+    });
     try {
       if (mode === "inherit") {
         if (existingOverride) {
-          console.log("即将删除覆写，恢复继承:", { blockId: block.id, themeId: theme2.id });
+          logTemplateEditor("保存/删除覆写", { blockId: block.id, themeId: theme2.id });
           await useCases.theme.deleteOverride(block.id, theme2.id);
         } else {
-          console.log("当前本来就是继承，没有需要删除的覆写。");
+          logTemplateEditor("保存/继承无需变更", { blockId: block.id, themeId: theme2.id });
         }
         ui.notice(`已设为继承 "${block.name}" 的基础配置`);
       } else {
@@ -60386,9 +62676,9 @@ function TemplateEditorModal({ isOpen, onClose, block, theme: theme2, existingOv
           targetFile: mode === "override" ? draft.targetFile : void 0,
           appendUnderHeader: mode === "override" ? draft.appendUnderHeader : void 0
         };
-        console.log("即将写入覆写配置:", dataToSave);
+        logTemplateEditor("保存/写入覆写", { dataToSave });
         const result = await useCases.theme.upsertOverride(dataToSave);
-        console.log("覆写配置保存完成，useCases.theme.upsertOverride 返回:", result);
+        logTemplateEditor("保存/写入完成", { result });
         if (!result) {
           throw new Error("useCases.theme.upsertOverride 返回 null，通常表示设置仓库尚未初始化或保存层拒绝写入。");
         }
@@ -60396,10 +62686,8 @@ function TemplateEditorModal({ isOpen, onClose, block, theme: theme2, existingOv
       }
       onClose();
     } catch (error) {
-      console.error("[主题模板编辑器][保存] 保存失败:", error);
+      diagnosticError("[主题模板编辑器][保存] 保存失败:", error);
       ui.notice("保存主题模板配置失败，请查看控制台日志");
-    } finally {
-      console.groupEnd();
     }
   };
   if (!isOpen) return null;
@@ -60407,7 +62695,7 @@ function TemplateEditorModal({ isOpen, onClose, block, theme: theme2, existingOv
     FloatingPanel,
     {
       id: `theme-template-editor-${theme2.id}-${block.id}`,
-      title: /* @__PURE__ */ u2(Typography$1, { children: [
+      title: /* @__PURE__ */ u2(Typography2, { children: [
         "配置: ",
         /* @__PURE__ */ u2("strong", { children: theme2.path }),
         " / ",
@@ -60426,20 +62714,20 @@ function TemplateEditorModal({ isOpen, onClose, block, theme: theme2, existingOv
       resizable: false,
       bodyPadding: 0,
       bodyStyle: { display: "flex", flexDirection: "column", minHeight: 0 },
-      children: /* @__PURE__ */ u2(Box$1, { sx: { p: 2, flex: 1, minHeight: 0, overflowY: "auto", boxSizing: "border-box" }, children: /* @__PURE__ */ u2(Stack$1, { spacing: 3, children: [
-        /* @__PURE__ */ u2(FormControl, { component: "fieldset", children: [
-          /* @__PURE__ */ u2(FormLabel, { component: "legend", children: "配置模式" }),
-          /* @__PURE__ */ u2(RadioGroup, { row: true, value: mode, onChange: handleModeChange, children: [
-            /* @__PURE__ */ u2(FormControlLabel, { value: "inherit", control: /* @__PURE__ */ u2(Radio, {}), label: "继承" }),
-            /* @__PURE__ */ u2(FormControlLabel, { value: "override", control: /* @__PURE__ */ u2(Radio, {}), label: "覆写" }),
-            /* @__PURE__ */ u2(FormControlLabel, { value: "disabled", control: /* @__PURE__ */ u2(Radio, {}), label: "禁用" })
+      children: /* @__PURE__ */ u2(Box, { sx: { p: 2, flex: 1, minHeight: 0, overflowY: "auto", boxSizing: "border-box" }, children: /* @__PURE__ */ u2(Stack, { spacing: 3, children: [
+        /* @__PURE__ */ u2(FormControl2, { component: "fieldset", children: [
+          /* @__PURE__ */ u2(FormLabel2, { component: "legend", children: "配置模式" }),
+          /* @__PURE__ */ u2(RadioGroup2, { row: true, value: mode, onChange: handleModeChange, children: [
+            /* @__PURE__ */ u2(FormControlLabel2, { value: "inherit", control: /* @__PURE__ */ u2(Radio2, {}), label: "继承" }),
+            /* @__PURE__ */ u2(FormControlLabel2, { value: "override", control: /* @__PURE__ */ u2(Radio2, {}), label: "覆写" }),
+            /* @__PURE__ */ u2(FormControlLabel2, { value: "disabled", control: /* @__PURE__ */ u2(Radio2, {}), label: "禁用" })
           ] })
         ] }),
-        /* @__PURE__ */ u2(Box$1, { sx: { opacity: isFormDisabled ? 0.6 : 1 }, children: /* @__PURE__ */ u2(Stack$1, { spacing: 3, children: [
-          /* @__PURE__ */ u2(Divider$1, {}),
-          /* @__PURE__ */ u2(Box$1, { children: [
-            /* @__PURE__ */ u2(Typography$1, { variant: "h6", sx: { fontSize: "1rem", fontWeight: 600, mb: 1 }, children: "输出目标" }),
-            /* @__PURE__ */ u2(Stack$1, { spacing: 2, children: [
+        /* @__PURE__ */ u2(Box, { sx: { opacity: isFormDisabled ? 0.6 : 1 }, children: /* @__PURE__ */ u2(Stack, { spacing: 3, children: [
+          /* @__PURE__ */ u2(Divider2, {}),
+          /* @__PURE__ */ u2(Box, { children: [
+            /* @__PURE__ */ u2(Typography2, { variant: "h6", sx: { fontSize: "1rem", fontWeight: 600, mb: 1 }, children: "输出目标" }),
+            /* @__PURE__ */ u2(Stack, { spacing: 2, children: [
               /* @__PURE__ */ u2(
                 NativeTextInput,
                 {
@@ -60447,8 +62735,8 @@ function TemplateEditorModal({ isOpen, onClose, block, theme: theme2, existingOv
                   value: localOverride.targetFile || "",
                   onInput: (value) => updateLocalOverride({ targetFile: value }, "输入目标文件路径 native onInput"),
                   disabled: isFormDisabled,
-                  onMouseDownLog: () => console.log("[主题模板编辑器][输出目标] 目标文件路径鼠标按下"),
-                  onFocusLog: () => console.log("[主题模板编辑器][输出目标] 目标文件路径获得焦点")
+                  onMouseDownLog: () => logTemplateEditor("输出目标/鼠标按下", { field: "targetFile" }),
+                  onFocusLog: () => logTemplateEditor("输出目标/获得焦点", { field: "targetFile" })
                 }
               ),
               /* @__PURE__ */ u2(
@@ -60458,15 +62746,15 @@ function TemplateEditorModal({ isOpen, onClose, block, theme: theme2, existingOv
                   value: localOverride.appendUnderHeader || "",
                   onInput: (value) => updateLocalOverride({ appendUnderHeader: value }, "输入追加标题 native onInput"),
                   disabled: isFormDisabled,
-                  onMouseDownLog: () => console.log("[主题模板编辑器][输出目标] 追加标题鼠标按下"),
-                  onFocusLog: () => console.log("[主题模板编辑器][输出目标] 追加标题获得焦点")
+                  onMouseDownLog: () => logTemplateEditor("输出目标/鼠标按下", { field: "appendUnderHeader" }),
+                  onFocusLog: () => logTemplateEditor("输出目标/获得焦点", { field: "appendUnderHeader" })
                 }
               )
             ] })
           ] }),
-          /* @__PURE__ */ u2(Divider$1, {}),
-          /* @__PURE__ */ u2(Box$1, { children: [
-            /* @__PURE__ */ u2(Typography$1, { variant: "h6", sx: { fontSize: "1rem", fontWeight: 600, mb: 1.5 }, children: "表单字段" }),
+          /* @__PURE__ */ u2(Divider2, {}),
+          /* @__PURE__ */ u2(Box, { children: [
+            /* @__PURE__ */ u2(Typography2, { variant: "h6", sx: { fontSize: "1rem", fontWeight: 600, mb: 1.5 }, children: "表单字段" }),
             /* @__PURE__ */ u2(
               FieldsEditor,
               {
@@ -60476,10 +62764,10 @@ function TemplateEditorModal({ isOpen, onClose, block, theme: theme2, existingOv
               }
             )
           ] }),
-          /* @__PURE__ */ u2(Divider$1, {}),
-          /* @__PURE__ */ u2(Box$1, { children: [
-            /* @__PURE__ */ u2(Stack$1, { direction: "row", justifyContent: "space-between", alignItems: "center", sx: { mb: 1 }, children: [
-              /* @__PURE__ */ u2(Typography$1, { variant: "h6", sx: { fontSize: "1rem", fontWeight: 600 }, children: "输出模板" }),
+          /* @__PURE__ */ u2(Divider2, {}),
+          /* @__PURE__ */ u2(Box, { children: [
+            /* @__PURE__ */ u2(Stack, { direction: "row", justifyContent: "space-between", alignItems: "center", sx: { mb: 1 }, children: [
+              /* @__PURE__ */ u2(Typography2, { variant: "h6", sx: { fontSize: "1rem", fontWeight: 600 }, children: "输出模板" }),
               /* @__PURE__ */ u2(TemplateVariableCopier, { block: effectiveBlockForCopier })
             ] }),
             /* @__PURE__ */ u2(
@@ -60493,9 +62781,9 @@ function TemplateEditorModal({ isOpen, onClose, block, theme: theme2, existingOv
             )
           ] })
         ] }) }),
-        /* @__PURE__ */ u2(Stack$1, { direction: "row", justifyContent: "flex-end", spacing: 1, children: [
-          /* @__PURE__ */ u2(Button$1, { onClick: onClose, children: "取消" }),
-          /* @__PURE__ */ u2(Button$1, { onClick: handleSave, variant: "contained", children: "保存配置" })
+        /* @__PURE__ */ u2(Stack, { direction: "row", justifyContent: "flex-end", spacing: 1, children: [
+          /* @__PURE__ */ u2(Button2, { onClick: onClose, children: "取消" }),
+          /* @__PURE__ */ u2(Button2, { onClick: handleSave, variant: "contained", children: "保存配置" })
         ] })
       ] }) })
     }
@@ -60602,7 +62890,7 @@ function InlineEditor({ value, onSave }) {
     }
   };
   return /* @__PURE__ */ u2(
-    TextField$1,
+    TextField2,
     {
       autoFocus: true,
       fullWidth: true,
@@ -60615,12 +62903,12 @@ function InlineEditor({ value, onSave }) {
     }
   );
 }
-const AnyTableRow$1 = TableRow;
-const AnyTableCell$1 = TableCell;
-const AnyTooltip = Tooltip$1;
-const AnyTypography$1 = Typography$1;
-const AnyChip = Chip;
-const AnyBox = Box$1;
+const AnyTableRow$1 = TableRow2;
+const AnyTableCell$1 = TableCell2;
+const AnyTooltip = Tooltip2;
+const AnyTypography$1 = Typography2;
+const AnyChip = Chip2;
+const AnyBox = Box;
 const PATH_COL_WIDTH$1 = 250;
 const STATUS_COL_WIDTH$1 = 78;
 const BLOCK_COL_WIDTH$1 = 58;
@@ -60886,12 +63174,12 @@ function ThemeTreeNodeRow({
     }
   );
 }
-const AnyTable = Table;
-const AnyTableHead = TableHead;
-const AnyTableRow = TableRow;
-const AnyTableCell = TableCell;
-const AnyTableBody = TableBody;
-const AnyTypography = Typography$1;
+const AnyTable = Table2;
+const AnyTableHead = TableHead2;
+const AnyTableRow = TableRow2;
+const AnyTableCell = TableCell2;
+const AnyTableBody = TableBody2;
+const AnyTypography = Typography2;
 const PATH_COL_WIDTH = 250;
 const STATUS_COL_WIDTH = 78;
 const BLOCK_COL_WIDTH = 58;
@@ -61276,10 +63564,10 @@ function ThemeScanDialog({
       total: scanResult.deduplicationResult.newThemes.length
     };
   }, [selectedThemes, scanResult]);
-  const renderConfigStep = () => /* @__PURE__ */ u2(Box$1, { children: [
-    /* @__PURE__ */ u2(Typography$1, { variant: "h6", gutterBottom: true, children: "扫描配置" }),
-    /* @__PURE__ */ u2(Typography$1, { variant: "body2", color: "text.secondary", sx: { mb: 2 }, children: "配置扫描参数，决定从哪些数据源提取主题信息。" }),
-    /* @__PURE__ */ u2(FormGroup, { sx: { mb: 2 }, children: [
+  const renderConfigStep = () => /* @__PURE__ */ u2(Box, { children: [
+    /* @__PURE__ */ u2(Typography2, { variant: "h6", gutterBottom: true, children: "扫描配置" }),
+    /* @__PURE__ */ u2(Typography2, { variant: "body2", color: "text.secondary", sx: { mb: 2 }, children: "配置扫描参数，决定从哪些数据源提取主题信息。" }),
+    /* @__PURE__ */ u2(FormGroup2, { sx: { mb: 2 }, children: [
       /* @__PURE__ */ u2("label", { style: { display: "flex", alignItems: "center", marginBottom: "8px" }, children: [
         /* @__PURE__ */ u2(
           "input",
@@ -61311,8 +63599,8 @@ function ThemeScanDialog({
         "包含Block主题"
       ] })
     ] }),
-    /* @__PURE__ */ u2(Box$1, { sx: { mb: 2 }, children: [
-      /* @__PURE__ */ u2(Typography$1, { variant: "body2", gutterBottom: true, children: [
+    /* @__PURE__ */ u2(Box, { sx: { mb: 2 }, children: [
+      /* @__PURE__ */ u2(Typography2, { variant: "body2", gutterBottom: true, children: [
         "最小使用次数: ",
         scanConfig.minUsageCount
       ] }),
@@ -61330,37 +63618,37 @@ function ThemeScanDialog({
           style: { width: "100%" }
         }
       ),
-      /* @__PURE__ */ u2(Typography$1, { variant: "caption", color: "text.secondary", children: "只扫描使用次数不少于此值的主题" })
+      /* @__PURE__ */ u2(Typography2, { variant: "caption", color: "text.secondary", children: "只扫描使用次数不少于此值的主题" })
     ] }),
-    !scanConfig.includeTasks && !scanConfig.includeBlocks && /* @__PURE__ */ u2(Alert, { severity: "warning", sx: { mt: 2 }, children: "必须至少选择一种数据源类型" })
+    !scanConfig.includeTasks && !scanConfig.includeBlocks && /* @__PURE__ */ u2(Alert2, { severity: "warning", sx: { mt: 2 }, children: "必须至少选择一种数据源类型" })
   ] });
   const renderScanStats = (stats) => {
     const AnyGrid = Grid;
-    const AnyCard = Card;
-    const AnyCardContent = CardContent;
+    const AnyCard = Card2;
+    const AnyCardContent = CardContent2;
     return /* @__PURE__ */ u2(AnyGrid, { container: true, spacing: 2, sx: { mb: 2 }, children: [
       /* @__PURE__ */ u2(AnyGrid, { item: true, xs: 6, sm: 3, children: /* @__PURE__ */ u2(AnyCard, { variant: "outlined", children: /* @__PURE__ */ u2(AnyCardContent, { sx: { textAlign: "center", py: 1 }, children: [
-        /* @__PURE__ */ u2(Typography$1, { variant: "h6", color: "primary", children: stats.totalItems }),
-        /* @__PURE__ */ u2(Typography$1, { variant: "caption", children: "总数据项" })
+        /* @__PURE__ */ u2(Typography2, { variant: "h6", color: "primary", children: stats.totalItems }),
+        /* @__PURE__ */ u2(Typography2, { variant: "caption", children: "总数据项" })
       ] }) }) }),
       /* @__PURE__ */ u2(AnyGrid, { item: true, xs: 6, sm: 3, children: /* @__PURE__ */ u2(AnyCard, { variant: "outlined", children: /* @__PURE__ */ u2(AnyCardContent, { sx: { textAlign: "center", py: 1 }, children: [
-        /* @__PURE__ */ u2(Typography$1, { variant: "h6", color: "primary", children: stats.uniqueThemes }),
-        /* @__PURE__ */ u2(Typography$1, { variant: "caption", children: "发现主题" })
+        /* @__PURE__ */ u2(Typography2, { variant: "h6", color: "primary", children: stats.uniqueThemes }),
+        /* @__PURE__ */ u2(Typography2, { variant: "caption", children: "发现主题" })
       ] }) }) }),
       /* @__PURE__ */ u2(AnyGrid, { item: true, xs: 6, sm: 3, children: /* @__PURE__ */ u2(AnyCard, { variant: "outlined", children: /* @__PURE__ */ u2(AnyCardContent, { sx: { textAlign: "center", py: 1 }, children: [
-        /* @__PURE__ */ u2(Typography$1, { variant: "h6", color: "success.main", children: stats.newThemes }),
-        /* @__PURE__ */ u2(Typography$1, { variant: "caption", children: "新主题" })
+        /* @__PURE__ */ u2(Typography2, { variant: "h6", color: "success.main", children: stats.newThemes }),
+        /* @__PURE__ */ u2(Typography2, { variant: "caption", children: "新主题" })
       ] }) }) })
     ] });
   };
   const renderResultsStep = () => {
     if (!scanResult) return null;
-    return /* @__PURE__ */ u2(Box$1, { children: [
-      /* @__PURE__ */ u2(Typography$1, { variant: "h6", gutterBottom: true, children: "扫描结果" }),
+    return /* @__PURE__ */ u2(Box, { children: [
+      /* @__PURE__ */ u2(Typography2, { variant: "h6", gutterBottom: true, children: "扫描结果" }),
       renderScanStats(scanResult.stats),
-      scanResult.deduplicationResult.newThemes.length > 0 && /* @__PURE__ */ u2(Box$1, { sx: { mb: 2 }, children: [
-        /* @__PURE__ */ u2(Box$1, { sx: { display: "flex", justifyContent: "space-between", alignItems: "center", mb: 1 }, children: [
-          /* @__PURE__ */ u2(Typography$1, { variant: "subtitle1", children: [
+      scanResult.deduplicationResult.newThemes.length > 0 && /* @__PURE__ */ u2(Box, { sx: { mb: 2 }, children: [
+        /* @__PURE__ */ u2(Box, { sx: { display: "flex", justifyContent: "space-between", alignItems: "center", mb: 1 }, children: [
+          /* @__PURE__ */ u2(Typography2, { variant: "subtitle1", children: [
             "新发现的主题 (",
             selectionStats.selected,
             "/",
@@ -61398,32 +63686,32 @@ function ThemeScanDialog({
           /* @__PURE__ */ u2("span", { style: { fontSize: "14px" }, children: theme2 })
         ] }, theme2)) })
       ] }),
-      scanResult.deduplicationResult.newThemes.length === 0 && /* @__PURE__ */ u2(Alert, { severity: "info", children: "没有发现新的主题。所有扫描到的主题都已存在于系统中。" })
+      scanResult.deduplicationResult.newThemes.length === 0 && /* @__PURE__ */ u2(Alert2, { severity: "info", children: "没有发现新的主题。所有扫描到的主题都已存在于系统中。" })
     ] });
   };
   const renderCompletedStep = () => {
     if (!importResult) return null;
-    return /* @__PURE__ */ u2(Box$1, { children: [
-      /* @__PURE__ */ u2(Typography$1, { variant: "h6", gutterBottom: true, children: "导入完成" }),
-      /* @__PURE__ */ u2(Box$1, { sx: { display: "flex", gap: 2, mb: 2 }, children: [
-        /* @__PURE__ */ u2(Box$1, { sx: { flex: 1, textAlign: "center", border: "1px solid", borderColor: "divider", borderRadius: 1, p: 1 }, children: [
-          /* @__PURE__ */ u2(Typography$1, { variant: "h6", color: "success.main", children: importResult.imported }),
-          /* @__PURE__ */ u2(Typography$1, { variant: "caption", children: "成功导入" })
+    return /* @__PURE__ */ u2(Box, { children: [
+      /* @__PURE__ */ u2(Typography2, { variant: "h6", gutterBottom: true, children: "导入完成" }),
+      /* @__PURE__ */ u2(Box, { sx: { display: "flex", gap: 2, mb: 2 }, children: [
+        /* @__PURE__ */ u2(Box, { sx: { flex: 1, textAlign: "center", border: "1px solid", borderColor: "divider", borderRadius: 1, p: 1 }, children: [
+          /* @__PURE__ */ u2(Typography2, { variant: "h6", color: "success.main", children: importResult.imported }),
+          /* @__PURE__ */ u2(Typography2, { variant: "caption", children: "成功导入" })
         ] }),
-        /* @__PURE__ */ u2(Box$1, { sx: { flex: 1, textAlign: "center", border: "1px solid", borderColor: "divider", borderRadius: 1, p: 1 }, children: [
-          /* @__PURE__ */ u2(Typography$1, { variant: "h6", color: "warning.main", children: importResult.skipped }),
-          /* @__PURE__ */ u2(Typography$1, { variant: "caption", children: "跳过" })
+        /* @__PURE__ */ u2(Box, { sx: { flex: 1, textAlign: "center", border: "1px solid", borderColor: "divider", borderRadius: 1, p: 1 }, children: [
+          /* @__PURE__ */ u2(Typography2, { variant: "h6", color: "warning.main", children: importResult.skipped }),
+          /* @__PURE__ */ u2(Typography2, { variant: "caption", children: "跳过" })
         ] }),
-        /* @__PURE__ */ u2(Box$1, { sx: { flex: 1, textAlign: "center", border: "1px solid", borderColor: "divider", borderRadius: 1, p: 1 }, children: [
-          /* @__PURE__ */ u2(Typography$1, { variant: "h6", color: "error.main", children: importResult.failed }),
-          /* @__PURE__ */ u2(Typography$1, { variant: "caption", children: "失败" })
+        /* @__PURE__ */ u2(Box, { sx: { flex: 1, textAlign: "center", border: "1px solid", borderColor: "divider", borderRadius: 1, p: 1 }, children: [
+          /* @__PURE__ */ u2(Typography2, { variant: "h6", color: "error.main", children: importResult.failed }),
+          /* @__PURE__ */ u2(Typography2, { variant: "caption", children: "失败" })
         ] })
       ] }),
-      importResult.errors.length > 0 && /* @__PURE__ */ u2(Alert, { severity: "error", sx: { mb: 2 }, children: [
-        /* @__PURE__ */ u2(Typography$1, { variant: "subtitle2", gutterBottom: true, children: "导入错误:" }),
+      importResult.errors.length > 0 && /* @__PURE__ */ u2(Alert2, { severity: "error", sx: { mb: 2 }, children: [
+        /* @__PURE__ */ u2(Typography2, { variant: "subtitle2", gutterBottom: true, children: "导入错误:" }),
         /* @__PURE__ */ u2("ul", { style: { margin: 0, paddingLeft: "20px" }, children: importResult.errors.map((error2, index) => /* @__PURE__ */ u2("li", { children: error2 }, index)) })
       ] }),
-      importResult.imported > 0 && /* @__PURE__ */ u2(Alert, { severity: "success", children: [
+      importResult.imported > 0 && /* @__PURE__ */ u2(Alert2, { severity: "success", children: [
         "成功导入 ",
         importResult.imported,
         " 个新主题！它们现在可以在主题配置矩阵中使用。"
@@ -61434,9 +63722,9 @@ function ThemeScanDialog({
     switch (state) {
       case "config":
         return /* @__PURE__ */ u2(S, { children: [
-          /* @__PURE__ */ u2(Button$1, { onClick: onClose, startIcon: /* @__PURE__ */ u2(CloseIcon, {}), children: "取消" }),
+          /* @__PURE__ */ u2(Button2, { onClick: onClose, startIcon: /* @__PURE__ */ u2(CloseIcon, {}), children: "取消" }),
           /* @__PURE__ */ u2(
-            Button$1,
+            Button2,
             {
               onClick: handleScan,
               variant: "contained",
@@ -61447,13 +63735,13 @@ function ThemeScanDialog({
           )
         ] });
       case "scanning":
-        return /* @__PURE__ */ u2(Button$1, { disabled: true, children: "扫描中..." });
+        return /* @__PURE__ */ u2(Button2, { disabled: true, children: "扫描中..." });
       case "results":
         return /* @__PURE__ */ u2(S, { children: [
-          /* @__PURE__ */ u2(Button$1, { onClick: () => setState("config"), startIcon: /* @__PURE__ */ u2(RefreshIcon, {}), children: "重新扫描" }),
-          /* @__PURE__ */ u2(Button$1, { onClick: onClose, children: "取消" }),
+          /* @__PURE__ */ u2(Button2, { onClick: () => setState("config"), startIcon: /* @__PURE__ */ u2(RefreshIcon, {}), children: "重新扫描" }),
+          /* @__PURE__ */ u2(Button2, { onClick: onClose, children: "取消" }),
           /* @__PURE__ */ u2(
-            Button$1,
+            Button2,
             {
               onClick: handleImport,
               variant: "contained",
@@ -61468,18 +63756,18 @@ function ThemeScanDialog({
           )
         ] });
       case "importing":
-        return /* @__PURE__ */ u2(Button$1, { disabled: true, children: "导入中..." });
+        return /* @__PURE__ */ u2(Button2, { disabled: true, children: "导入中..." });
       case "completed":
         return /* @__PURE__ */ u2(S, { children: [
-          /* @__PURE__ */ u2(Button$1, { onClick: () => setState("config"), startIcon: /* @__PURE__ */ u2(RefreshIcon, {}), children: "再次扫描" }),
-          /* @__PURE__ */ u2(Button$1, { onClick: onClose, variant: "contained", startIcon: /* @__PURE__ */ u2(CheckCircleIcon, {}), children: "完成" })
+          /* @__PURE__ */ u2(Button2, { onClick: () => setState("config"), startIcon: /* @__PURE__ */ u2(RefreshIcon, {}), children: "再次扫描" }),
+          /* @__PURE__ */ u2(Button2, { onClick: onClose, variant: "contained", startIcon: /* @__PURE__ */ u2(CheckCircleIcon, {}), children: "完成" })
         ] });
       default:
         return null;
     }
   };
   return /* @__PURE__ */ u2(
-    Dialog,
+    Dialog2,
     {
       open,
       onClose,
@@ -61489,20 +63777,20 @@ function ThemeScanDialog({
         sx: { minHeight: "400px" }
       },
       children: [
-        /* @__PURE__ */ u2(DialogTitle, { children: [
+        /* @__PURE__ */ u2(DialogTitle2, { children: [
           "扫描数据主题",
-          state === "scanning" && /* @__PURE__ */ u2(LinearProgress, { sx: { mt: 1 } }),
-          state === "importing" && /* @__PURE__ */ u2(LinearProgress, { sx: { mt: 1 } })
+          state === "scanning" && /* @__PURE__ */ u2(LinearProgress2, { sx: { mt: 1 } }),
+          state === "importing" && /* @__PURE__ */ u2(LinearProgress2, { sx: { mt: 1 } })
         ] }),
-        /* @__PURE__ */ u2(DialogContent, { children: [
-          error && /* @__PURE__ */ u2(Alert, { severity: "error", sx: { mb: 2 }, children: error }),
+        /* @__PURE__ */ u2(DialogContent2, { children: [
+          error && /* @__PURE__ */ u2(Alert2, { severity: "error", sx: { mb: 2 }, children: error }),
           state === "config" && renderConfigStep(),
-          state === "scanning" && /* @__PURE__ */ u2(Box$1, { sx: { textAlign: "center", py: 4 }, children: /* @__PURE__ */ u2(Typography$1, { children: "正在扫描数据中的主题..." }) }),
+          state === "scanning" && /* @__PURE__ */ u2(Box, { sx: { textAlign: "center", py: 4 }, children: /* @__PURE__ */ u2(Typography2, { children: "正在扫描数据中的主题..." }) }),
           state === "results" && renderResultsStep(),
-          state === "importing" && /* @__PURE__ */ u2(Box$1, { sx: { textAlign: "center", py: 4 }, children: /* @__PURE__ */ u2(Typography$1, { children: "正在导入选中的主题..." }) }),
+          state === "importing" && /* @__PURE__ */ u2(Box, { sx: { textAlign: "center", py: 4 }, children: /* @__PURE__ */ u2(Typography2, { children: "正在导入选中的主题..." }) }),
           state === "completed" && renderCompletedStep()
         ] }),
-        /* @__PURE__ */ u2(DialogActions, { children: renderActions() })
+        /* @__PURE__ */ u2(DialogActions2, { children: renderActions() })
       ]
     }
   );
@@ -61522,8 +63810,8 @@ function ThemeImportButton({
     setDialogOpen(false);
   };
   return /* @__PURE__ */ u2(S, { children: [
-    /* @__PURE__ */ u2(Tooltip$1, { title: tooltip, children: /* @__PURE__ */ u2(
-      Button$1,
+    /* @__PURE__ */ u2(Tooltip2, { title: tooltip, children: /* @__PURE__ */ u2(
+      Button2,
       {
         onClick: handleClick,
         disabled,
@@ -65691,1541 +67979,12 @@ function normalizeLocalDisabled(localDisabled, globalDisabled) {
   };
 }
 [KeyboardCode.Down, KeyboardCode.Right, KeyboardCode.Up, KeyboardCode.Left];
-function getPickerOptionValue(option) {
-  if (!option) return "";
-  return typeof option === "string" ? option : option.value;
-}
-function getPickerOptionLabel(option) {
-  if (typeof option === "string") return getFieldLabel(option);
-  return option.label || getFieldLabel(option.value);
-}
-function getPickerOptionGroup(option) {
-  return typeof option === "string" ? "其他字段" : option.group || "其他字段";
-}
-function normalizePickerValue(value) {
-  return String(value ?? "").trim();
-}
-function FieldPickerAutocomplete({
-  value = "",
-  options,
-  onChange,
-  label,
-  placeholder = "搜索 / 选择字段",
-  helperText,
-  fullWidth = true,
-  size = "small",
-  disableClearable = true,
-  allowCustom = true,
-  sx
-}) {
-  const pickerOptions = T$1(() => getFieldPickerOptions(options), [options]);
-  const selectedValue = T$1(() => pickerOptions.find((option) => option.value === value) || value || "", [pickerOptions, value]);
-  return /* @__PURE__ */ u2(
-    Autocomplete,
-    {
-      freeSolo: allowCustom,
-      disablePortal: true,
-      fullWidth,
-      size,
-      disableClearable,
-      options: pickerOptions,
-      groupBy: getPickerOptionGroup,
-      getOptionLabel: getPickerOptionLabel,
-      isOptionEqualToValue: (option, current2) => getPickerOptionValue(option) === getPickerOptionValue(current2),
-      value: selectedValue,
-      onChange: (_2, nextValue) => onChange(normalizePickerValue(getPickerOptionValue(nextValue))),
-      onInputChange: (_2, nextInput, reason) => {
-        if (!allowCustom) return;
-        if (reason !== "input" && reason !== "clear") return;
-        onChange(normalizePickerValue(nextInput));
-      },
-      sx,
-      renderInput: (params) => /* @__PURE__ */ u2(
-        TextField$1,
-        {
-          ...params,
-          label,
-          placeholder,
-          helperText,
-          variant: "outlined"
-        }
-      )
-    }
-  );
-}
-function TableViewEditor({ value, onChange, fieldOptions }) {
-  return /* @__PURE__ */ u2(Stack$1, { spacing: 2, children: [
-    /* @__PURE__ */ u2(Typography$1, { variant: "body1", color: "text.secondary", sx: { mb: 1 }, children: "交叉表（TableView）根据两个字段来创建二维表格。" }),
-    /* @__PURE__ */ u2(Stack$1, { direction: "row", spacing: 2, alignItems: "center", children: [
-      /* @__PURE__ */ u2(
-        FieldPickerAutocomplete,
-        {
-          label: "行字段",
-          options: fieldOptions,
-          value: value.rowField ?? "",
-          onChange: (v2) => onChange({ rowField: v2 ?? "" })
-        }
-      ),
-      /* @__PURE__ */ u2(
-        FieldPickerAutocomplete,
-        {
-          label: "列字段",
-          options: fieldOptions,
-          value: value.colField ?? "",
-          onChange: (v2) => onChange({ colField: v2 ?? "" })
-        }
-      )
-    ] })
-  ] });
-}
-function BlockViewEditor() {
-  return /* @__PURE__ */ u2(Typography$1, { variant: "body1", color: "text.secondary", children: "块视图（BlockView）没有专属配置项。它的行为主要由上方的 **显示字段** 和 **分组字段** 控制。" });
-}
-function ExcelViewEditor() {
-  return /* @__PURE__ */ u2(Typography$1, { variant: "body1", color: "text.secondary", children: "数据表格（ExcelView）没有专属配置项。它会自动展示所有 **显示字段** 中指定的列。" });
-}
-function normalizeProgressOrder(categories, progressOrder) {
-  const existing = progressOrder.filter((name) => Boolean(categories[name]));
-  const seen = /* @__PURE__ */ new Set();
-  const unique2 = existing.filter((name) => {
-    if (seen.has(name)) return false;
-    seen.add(name);
-    return true;
-  });
-  for (const key of Object.keys(categories)) {
-    if (!seen.has(key)) unique2.push(key);
-  }
-  return unique2;
-}
-function stripInlineName(config2) {
-  const { name: _inlineName, ...rest } = config2;
-  return { name: config2.name, ...rest };
-}
-function nextCategoriesForRename(categories, progressOrder, oldName, newName, newConfig) {
-  const normalizedOrder = normalizeProgressOrder(categories, progressOrder);
-  const finalName = (newName || oldName).trim();
-  const willCollide = finalName !== oldName && Boolean(categories[finalName]);
-  const targetName = willCollide ? oldName : finalName;
-  const merged = {
-    ...categories[oldName] || { name: oldName, color: "#cccccc", files: [] },
-    ...newConfig,
-    name: targetName
-  };
-  const nextCats = {};
-  for (const key of normalizedOrder) {
-    if (key === oldName) {
-      nextCats[targetName] = stripInlineName(merged);
-    } else if (categories[key]) {
-      nextCats[key] = categories[key];
-    }
-  }
-  if (!nextCats[targetName]) {
-    nextCats[targetName] = stripInlineName(merged);
-  }
-  const nextOrder = normalizedOrder.map((k2) => k2 === oldName ? targetName : k2);
-  return { categories: nextCats, progressOrder: normalizeProgressOrder(nextCats, nextOrder) };
-}
-function HourHeightSetting(props) {
-  const { hourHeight, onPatch } = props;
-  return /* @__PURE__ */ u2(Stack, { direction: "row", alignItems: "center", spacing: 2, children: [
-    /* @__PURE__ */ u2(Typography2, { sx: { width: "80px", flexShrink: 0, fontWeight: 500 }, children: "小时高度" }),
-    /* @__PURE__ */ u2(
-      TextField2,
-      {
-        type: "number",
-        size: "small",
-        variant: "outlined",
-        value: hourHeight,
-        onChange: (e2) => onPatch({ defaultHourHeight: Number(e2.target.value) }),
-        inputProps: { min: 20, max: 200 },
-        sx: { width: "120px" }
-      }
-    )
-  ] });
-}
-function CategoriesEditor(props) {
-  const { categories, progressOrder, fileOptions, onPatch } = props;
-  const handleCategoryChange = (oldName, newConfig) => {
-    const newName = (newConfig.name || oldName).trim();
-    const next2 = nextCategoriesForRename(categories, progressOrder, oldName, newName, newConfig);
-    onPatch(next2);
-  };
-  const addCategory = () => {
-    let newName = `新分类`;
-    let i2 = 1;
-    while (categories[newName]) {
-      newName = `新分类${i2++}`;
-    }
-    onPatch({
-      categories: { ...categories, [newName]: { name: newName, color: "#60a5fa", files: [] } },
-      progressOrder: [...progressOrder, newName]
-    });
-  };
-  const removeCategory = (nameToRemove) => {
-    const { [nameToRemove]: _removed, ...rest } = categories;
-    const newProgressOrder = progressOrder.filter((cat) => cat !== nameToRemove);
-    onPatch({ categories: rest, progressOrder: normalizeProgressOrder(rest, newProgressOrder) });
-  };
-  const moveCategory = (index, direction) => {
-    const newOrder = [...progressOrder];
-    const targetIndex = direction === "up" ? index - 1 : index + 1;
-    if (targetIndex < 0 || targetIndex >= newOrder.length) return;
-    [newOrder[index], newOrder[targetIndex]] = [newOrder[targetIndex], newOrder[index]];
-    onPatch({ progressOrder: normalizeProgressOrder(categories, newOrder) });
-  };
-  return /* @__PURE__ */ u2(Stack, { spacing: 1, children: [
-    /* @__PURE__ */ u2(Typography2, { variant: "subtitle2", sx: { fontWeight: 600 }, children: "分类配置 (可排序)" }),
-    /* @__PURE__ */ u2(Typography2, { variant: "body2", color: "text.secondary", sx: { mb: 1 }, children: "通过 `▲▼` 调整分类在进度条中的显示顺序。" }),
-    progressOrder.map((name, index) => {
-      const catConfig = categories[name];
-      if (!catConfig) return null;
-      const availableFileOptions = fileOptions.filter((f2) => !(catConfig.files || []).includes(f2)).map((f2) => ({ value: f2, label: f2 }));
-      return /* @__PURE__ */ u2(
-        Box,
-        {
-          sx: {
-            display: "grid",
-            gridTemplateColumns: "auto auto 140px 1fr auto",
-            gap: "12px",
-            alignItems: "center",
-            mb: 1
-          },
-          children: [
-            /* @__PURE__ */ u2(Stack, { direction: "row", sx: { gridColumn: "1 / 2" }, children: [
-              /* @__PURE__ */ u2(
-                IconAction,
-                {
-                  label: "上移",
-                  disabled: index === 0,
-                  onClick: () => moveCategory(index, "up"),
-                  sx: { p: "4px", fontSize: "0.9rem" },
-                  icon: /* @__PURE__ */ u2("span", { children: "▲" })
-                }
-              ),
-              /* @__PURE__ */ u2(
-                IconAction,
-                {
-                  label: "下移",
-                  disabled: index === progressOrder.length - 1,
-                  onClick: () => moveCategory(index, "down"),
-                  sx: { p: "4px", fontSize: "0.9rem" },
-                  icon: /* @__PURE__ */ u2("span", { children: "▼" })
-                }
-              )
-            ] }),
-            /* @__PURE__ */ u2(
-              TextField2,
-              {
-                type: "color",
-                size: "small",
-                value: catConfig.color || "#cccccc",
-                onChange: (e2) => handleCategoryChange(name, {
-                  color: e2.target.value
-                }),
-                sx: { p: "2px", gridColumn: "2 / 3" }
-              }
-            ),
-            /* @__PURE__ */ u2(
-              TextField2,
-              {
-                variant: "outlined",
-                size: "small",
-                defaultValue: name,
-                onBlur: (e2) => handleCategoryChange(name, {
-                  name: e2.target.value.trim()
-                }),
-                sx: { gridColumn: "3 / 4" }
-              }
-            ),
-            /* @__PURE__ */ u2(Box, { sx: { minWidth: 0, gridColumn: "4 / 5" }, children: /* @__PURE__ */ u2(
-              Stack,
-              {
-                direction: "row",
-                flexWrap: "wrap",
-                useFlexGap: true,
-                spacing: 0.5,
-                alignItems: "center",
-                children: [
-                  (catConfig.files || []).map((file) => /* @__PURE__ */ u2(Tooltip2, { title: `点击移除关键词: ${file}`, children: /* @__PURE__ */ u2(
-                    Box,
-                    {
-                      onClick: () => handleCategoryChange(name, {
-                        files: (catConfig.files || []).filter(
-                          (f2) => f2 !== file
-                        )
-                      }),
-                      sx: {
-                        bgcolor: "action.hover",
-                        color: "text.primary",
-                        p: "3px 8px",
-                        borderRadius: "16px",
-                        fontSize: "0.8125rem",
-                        cursor: "pointer",
-                        "&:hover": {
-                          bgcolor: "action.disabledBackground",
-                          textDecoration: "line-through"
-                        }
-                      },
-                      children: file
-                    }
-                  ) }, file)),
-                  /* @__PURE__ */ u2(
-                    SimpleSelect,
-                    {
-                      value: "",
-                      options: availableFileOptions,
-                      placeholder: "+ 关键词...",
-                      onChange: (val) => handleCategoryChange(name, {
-                        files: [...catConfig.files || [], val]
-                      }),
-                      sx: { minWidth: 120 }
-                    }
-                  )
-                ]
-              }
-            ) }),
-            /* @__PURE__ */ u2(
-              IconButton2,
-              {
-                onClick: () => removeCategory(name),
-                size: "small",
-                title: "删除此分类",
-                sx: { gridColumn: "5 / 6" },
-                children: /* @__PURE__ */ u2(DeleteIcon, { fontSize: "small" })
-              }
-            )
-          ]
-        },
-        name
-      );
-    }),
-    /* @__PURE__ */ u2(
-      Button2,
-      {
-        startIcon: /* @__PURE__ */ u2(AddIcon, {}),
-        onClick: addCategory,
-        size: "small",
-        sx: { justifyContent: "flex-start", mt: 1 },
-        children: "添加新分类"
-      }
-    )
-  ] });
-}
-function TimelineViewEditor({ value, onChange, dataStore }) {
-  const viewConfig = { ...TIMELINE_VIEW_DEFAULT_CONFIG, ...value };
-  const categories = viewConfig.categories || {};
-  const progressOrder = normalizeProgressOrder(categories, viewConfig.progressOrder || []);
-  const fileOptions = T$1(() => {
-    if (!dataStore) return [];
-    const items = dataStore.queryItems();
-    return collectFileNames(items);
-  }, [dataStore]);
-  const handlePatch = (patch) => {
-    onChange(patch);
-  };
-  return /* @__PURE__ */ u2(Stack, { spacing: 2.5, children: [
-    /* @__PURE__ */ u2(HourHeightSetting, { hourHeight: viewConfig.defaultHourHeight, onPatch: handlePatch }),
-    /* @__PURE__ */ u2(
-      CategoriesEditor,
-      {
-        categories,
-        progressOrder,
-        fileOptions,
-        onPatch: handlePatch
-      }
-    )
-  ] });
-}
-function uniqueFields(fields) {
-  const seen = /* @__PURE__ */ new Set();
-  const result = [];
-  for (const field of fields) {
-    if (!field || seen.has(field)) continue;
-    seen.add(field);
-    result.push(field);
-  }
-  return result;
-}
-function EventTimelineViewEditor({ value = {}, onChange, fieldOptions = [] }) {
-  const config2 = {
-    ...EVENT_TIMELINE_VIEW_DEFAULT_CONFIG,
-    ...value || {}
-  };
-  const selectableFields = T$1(() => uniqueFields([
-    CONTENT_FIELD_KEY,
-    FULL_DATA_FIELD_KEY,
-    "title",
-    "date",
-    "startTime",
-    ...fieldOptions
-  ]), [fieldOptions]);
-  const fieldSelectOptions = T$1(() => selectableFields.map((field) => ({
-    value: field,
-    label: getFieldLabel(field),
-    group: getFieldCategoryLabel(field)
-  })), [selectableFields]);
-  const patch = (partial2) => onChange(partial2);
-  return /* @__PURE__ */ u2(Box, { class: "event-timeline-editor-description", sx: { display: "flex", flexDirection: "column", gap: 2 }, children: [
-    /* @__PURE__ */ u2("div", { children: [
-      /* @__PURE__ */ u2("div", { class: "statistics-section-title", children: "事件时间线视图" }),
-      /* @__PURE__ */ u2("div", { class: "statistics-section-description", children: [
-        "事件时间线视图按时间顺序纵向展示事件，采用三栏布局：",
-        /* @__PURE__ */ u2("br", {}),
-        /* @__PURE__ */ u2("strong", { children: "[左侧日期] - [中间时间线] - [右侧内容卡片]" }),
-        /* @__PURE__ */ u2("br", {}),
-        /* @__PURE__ */ u2("br", {}),
-        "• ",
-        /* @__PURE__ */ u2("strong", { children: "任务内容语义" }),
-        "：推荐使用 ",
-        /* @__PURE__ */ u2("strong", { children: "内容" }),
-        " 字段显示干净正文；需要排查原始 Markdown 时再切换到 ",
-        /* @__PURE__ */ u2("strong", { children: "完整数据" }),
-        "。",
-        /* @__PURE__ */ u2("br", {}),
-        "• ",
-        /* @__PURE__ */ u2("strong", { children: "视觉保持" }),
-        "：任务仍以 TaskRow 展示，Block 仍使用 BlockItem / Markdown 渲染。"
-      ] })
-    ] }),
-    /* @__PURE__ */ u2(Box, { sx: { p: 1.5, border: "1px solid var(--background-modifier-border)", borderRadius: "10px" }, children: [
-      /* @__PURE__ */ u2(Typography2, { variant: "subtitle2", sx: { fontWeight: 700, mb: 1 }, children: "字段映射" }),
-      /* @__PURE__ */ u2(Stack, { spacing: 1.25, children: [
-        /* @__PURE__ */ u2(Stack, { direction: "row", spacing: 1.5, alignItems: "center", children: [
-          /* @__PURE__ */ u2(Typography2, { sx: { width: 92, flexShrink: 0, fontWeight: 600 }, children: "时间字段" }),
-          /* @__PURE__ */ u2(
-            SimpleSelect,
-            {
-              value: config2.timeField || "date",
-              options: fieldSelectOptions,
-              onChange: (field) => patch({ timeField: field }),
-              sx: { minWidth: "220px" }
-            }
-          )
-        ] }),
-        /* @__PURE__ */ u2(Stack, { direction: "row", spacing: 1.5, alignItems: "center", children: [
-          /* @__PURE__ */ u2(Typography2, { sx: { width: 92, flexShrink: 0, fontWeight: 600 }, children: "标题字段" }),
-          /* @__PURE__ */ u2(
-            SimpleSelect,
-            {
-              value: config2.titleField || "title",
-              options: fieldSelectOptions,
-              onChange: (field) => patch({ titleField: field }),
-              sx: { minWidth: "220px" }
-            }
-          )
-        ] }),
-        /* @__PURE__ */ u2(Stack, { direction: "row", spacing: 1.5, alignItems: "center", children: [
-          /* @__PURE__ */ u2(Typography2, { sx: { width: 92, flexShrink: 0, fontWeight: 600 }, children: "内容字段" }),
-          /* @__PURE__ */ u2(
-            SimpleSelect,
-            {
-              value: config2.contentField || CONTENT_FIELD_KEY,
-              options: fieldSelectOptions,
-              onChange: (field) => patch({ contentField: field }),
-              sx: { minWidth: "220px" }
-            }
-          )
-        ] }),
-        /* @__PURE__ */ u2(Stack, { direction: "row", spacing: 1.5, alignItems: "center", children: [
-          /* @__PURE__ */ u2(Typography2, { sx: { width: 92, flexShrink: 0, fontWeight: 600 }, children: "最大长度" }),
-          /* @__PURE__ */ u2(
-            TextField2,
-            {
-              type: "number",
-              size: "small",
-              value: config2.maxContentLength ?? 160,
-              onChange: (event) => patch({ maxContentLength: Number(event.target.value) || 0 }),
-              inputProps: { min: 0, max: 2e3 },
-              sx: { width: "140px" }
-            }
-          ),
-          /* @__PURE__ */ u2(Typography2, { variant: "caption", color: "text.secondary", children: "0 表示不截断" })
-        ] })
-      ] }),
-      /* @__PURE__ */ u2(Stack, { direction: "row", spacing: 1, sx: { mt: 1.5, flexWrap: "wrap", gap: 1 }, children: [
-        /* @__PURE__ */ u2(
-          Button2,
-          {
-            size: "small",
-            variant: "outlined",
-            onClick: () => patch({ contentField: CONTENT_FIELD_KEY, titleField: "title", timeField: "date", maxContentLength: 160 }),
-            children: "使用推荐字段"
-          }
-        ),
-        /* @__PURE__ */ u2(
-          Button2,
-          {
-            size: "small",
-            variant: "outlined",
-            onClick: () => patch({ contentField: FULL_DATA_FIELD_KEY }),
-            children: "内容改为完整数据调试"
-          }
-        )
-      ] })
-    ] })
-  ] });
-}
-function StatisticsViewEditor({ value, onChange, dataStore }) {
-  const config2 = { ...STATISTICS_VIEW_DEFAULT_CONFIG, ...value };
-  const [localCategories, setLocalCategories] = d(config2.categories);
-  const discoveredCategories = T$1(() => {
-    if (!dataStore) return [];
-    const allItems = dataStore.queryItems();
-    return discoverBaseCategories(allItems);
-  }, [dataStore]);
-  y(() => {
-    const existingNames = new Set(config2.categories.map((c2) => c2.name));
-    const newCategories = [...config2.categories];
-    let changed = false;
-    discoveredCategories.forEach((name) => {
-      if (!existingNames.has(name)) {
-        newCategories.push({ name, color: getCategoryColor(name) });
-        changed = true;
-      }
-    });
-    if (changed) {
-      setLocalCategories(newCategories);
-      onChange({ categories: newCategories });
-    } else {
-      setLocalCategories(config2.categories);
-    }
-  }, [discoveredCategories, config2.categories]);
-  const handleMove = (index, direction) => {
-    const newCategories = [...localCategories];
-    const targetIndex = direction === "up" ? index - 1 : index + 1;
-    if (targetIndex < 0 || targetIndex >= newCategories.length) return;
-    [newCategories[index], newCategories[targetIndex]] = [newCategories[targetIndex], newCategories[index]];
-    setLocalCategories(newCategories);
-    onChange({ categories: newCategories });
-  };
-  const handleAliasChange = (index, alias) => {
-    const newCategories = [...localCategories];
-    newCategories[index].alias = alias;
-    setLocalCategories(newCategories);
-    onChange({ categories: newCategories });
-  };
-  return /* @__PURE__ */ u2("div", { class: "statistics-editor-container", children: [
-    /* @__PURE__ */ u2("div", { class: "statistics-section", children: [
-      /* @__PURE__ */ u2("div", { class: "categories-section-title", children: "分类配置" }),
-      /* @__PURE__ */ u2("div", { class: "categories-description", children: "调整分类的显示顺序和别名。颜色由「通用设置 → 分类颜色」统一管理。" })
-    ] }),
-    /* @__PURE__ */ u2("div", { children: localCategories.map((cat, index) => /* @__PURE__ */ u2("div", { class: "category-item", children: [
-      /* @__PURE__ */ u2("div", { class: "move-buttons-container", children: [
-        /* @__PURE__ */ u2(
-          "button",
-          {
-            class: "move-button",
-            title: "上移",
-            disabled: index === 0,
-            onClick: () => handleMove(index, "up"),
-            children: "↑"
-          }
-        ),
-        /* @__PURE__ */ u2(
-          "button",
-          {
-            class: "move-button",
-            title: "下移",
-            disabled: index === localCategories.length - 1,
-            onClick: () => handleMove(index, "down"),
-            children: "↓"
-          }
-        )
-      ] }),
-      /* @__PURE__ */ u2(
-        "div",
-        {
-          class: "color-preview",
-          style: {
-            width: 24,
-            height: 24,
-            borderRadius: 4,
-            backgroundColor: getCategoryColor(cat.name),
-            border: "1px solid var(--text-muted)",
-            flexShrink: 0
-          },
-          title: `颜色来自通用设置: ${getCategoryColor(cat.name)}`
-        }
-      ),
-      /* @__PURE__ */ u2("div", { class: "category-name", children: cat.name }),
-      /* @__PURE__ */ u2(
-        "input",
-        {
-          class: "alias-input",
-          type: "text",
-          placeholder: "别名",
-          value: cat.alias || "",
-          onChange: (e2) => handleAliasChange(index, e2.target.value)
-        }
-      )
-    ] }, cat.name)) })
-  ] });
-}
-function normalizeHeatmapConfig(value) {
-  const base = HEATMAP_VIEW_DEFAULT_CONFIG;
-  const v2 = value ?? {};
-  return {
-    displayMode: v2.displayMode === "habit" || v2.displayMode === "count" ? v2.displayMode : base.displayMode,
-    sourceBlockId: typeof v2.sourceBlockId === "string" ? v2.sourceBlockId : base.sourceBlockId,
-    themePaths: Array.isArray(v2.themePaths) ? v2.themePaths.filter((x2) => typeof x2 === "string") : base.themePaths,
-    maxDailyChecks: typeof v2.maxDailyChecks === "number" ? v2.maxDailyChecks : base.maxDailyChecks,
-    allowManualEdit: typeof v2.allowManualEdit === "boolean" ? v2.allowManualEdit : base.allowManualEdit
-  };
-}
-function HeatmapViewEditor({ value, onChange, module: module2, dataStore }) {
-  const ui = useUiPort();
-  const config2 = normalizeHeatmapConfig(value);
-  const allBlocks = useSelector(selectInputBlocks);
-  const blockOptions = T$1(
-    () => allBlocks.map((b2) => ({ value: b2.id, label: b2.name })),
-    [allBlocks]
-  );
-  const handleScanThemes = () => {
-    if (!config2.sourceBlockId) {
-      ui.notice("请先选择源 Block 模板。");
-      return;
-    }
-    if (!module2) {
-      ui.notice("无法扫描：缺少视图上下文（module）。");
-      return;
-    }
-    const dataSource = module2;
-    const sourceBlock = allBlocks.find((b2) => b2.id === config2.sourceBlockId);
-    if (!sourceBlock) {
-      ui.notice("找不到所选的 Block 模板。");
-      return;
-    }
-    const items = dataStore.queryItems();
-    const sortedThemes = collectThemePathsForHeatmap({
-      items,
-      dataSource,
-      sourceBlock
-    });
-    onChange({ themePaths: sortedThemes });
-    ui.notice(`扫描完成！已自动添加 ${sortedThemes.length} 个主题路径（来自分类 "${sourceBlock.name}"）。`);
-  };
-  return /* @__PURE__ */ u2(Stack$1, { spacing: 2.5, children: [
-    /* @__PURE__ */ u2(Typography$1, { variant: "body2", color: "text.secondary", children: "打卡视图只负责主题 + 日期格子的记录入口：空白日期可新增，有记录日期查看当天记录并继续新增。经验/等级请使用独立的 ProgressView。" }),
-    /* @__PURE__ */ u2("div", { children: [
-      /* @__PURE__ */ u2(Stack$1, { direction: "row", alignItems: "center", spacing: 2, sx: { mb: 2 }, children: [
-        /* @__PURE__ */ u2(Typography$1, { sx: { width: "80px", flexShrink: 0, fontWeight: 500 }, children: "源 Block" }),
-        /* @__PURE__ */ u2(Box$1, { sx: { flexGrow: 1 }, children: [
-          /* @__PURE__ */ u2(
-            SimpleSelect,
-            {
-              value: config2.sourceBlockId,
-              options: blockOptions,
-              onChange: (val) => onChange({ sourceBlockId: val }),
-              placeholder: "-- 请选择用于打卡的 Block 模板 --"
-            }
-          ),
-          /* @__PURE__ */ u2(Typography$1, { variant: "caption", color: "text.secondary", sx: { display: "block", mt: 0.5 }, children: '视图将从此 Block 模板的"评分"字段中读取 Emoji/图片/颜色映射。' })
-        ] })
-      ] }),
-      /* @__PURE__ */ u2(Stack$1, { direction: "row", alignItems: "flex-start", spacing: 2, children: [
-        /* @__PURE__ */ u2(Typography$1, { sx: { width: "80px", flexShrink: 0, fontWeight: 500, pt: "8px" }, children: "主题路径" }),
-        /* @__PURE__ */ u2(Box$1, { sx: { flexGrow: 1 }, children: [
-          /* @__PURE__ */ u2(
-            ListEditor,
-            {
-              value: config2.themePaths,
-              onChange: (val) => onChange({ themePaths: val }),
-              placeholder: "例如: 生活/健康, 工作/项目"
-            }
-          ),
-          /* @__PURE__ */ u2(Typography$1, { variant: "caption", color: "text.secondary", sx: { display: "block", mt: 0.5 }, children: "在此处添加的每个主题路径，在周/月视图下都会成为独立的一行。留空则显示所有打卡。" }),
-          /* @__PURE__ */ u2(Button$1, { onClick: handleScanThemes, size: "small", sx: { mt: 1 }, children: "从数据源扫描并添加主题" })
-        ] })
-      ] })
-    ] }),
-    /* @__PURE__ */ u2(FormControlLabel, { control: /* @__PURE__ */ u2(Checkbox, { checked: !!config2.allowManualEdit, onChange: (e2) => onChange({ allowManualEdit: e2.target.checked }) }), label: "允许查看当天记录并新增" })
-  ] });
-}
-function ProgressViewEditor({ value, onChange }) {
-  const config2 = { ...PROGRESS_VIEW_DEFAULT_CONFIG, ...value };
-  return /* @__PURE__ */ u2(Stack$1, { spacing: 2, children: [
-    /* @__PURE__ */ u2(Typography$1, { variant: "body2", color: "text.secondary", children: "ProgressView 是独立的积分/成长视图：只读取记录，不改写打卡数据。" }),
-    /* @__PURE__ */ u2(Stack$1, { direction: "row", spacing: 2, children: [
-      /* @__PURE__ */ u2(TextField$1, { size: "small", type: "number", label: "基础积分", value: config2.basePoints, onChange: (e2) => onChange({ basePoints: Number(e2.target.value) || 1 }) }),
-      /* @__PURE__ */ u2(TextField$1, { size: "small", type: "number", label: "每级积分", value: config2.levelStep, onChange: (e2) => onChange({ levelStep: Number(e2.target.value) || 20 }) })
-    ] }),
-    /* @__PURE__ */ u2(Stack$1, { direction: "row", spacing: 2, children: [
-      /* @__PURE__ */ u2(TextField$1, { size: "small", type: "number", label: "评分加分阈值", value: config2.ratingBonusThreshold, onChange: (e2) => onChange({ ratingBonusThreshold: Number(e2.target.value) || 4 }) }),
-      /* @__PURE__ */ u2(TextField$1, { size: "small", type: "number", label: "评分额外积分", value: config2.ratingBonusPoints, onChange: (e2) => onChange({ ratingBonusPoints: Number(e2.target.value) || 0 }) })
-    ] }),
-    /* @__PURE__ */ u2("div", { children: [
-      /* @__PURE__ */ u2(Typography$1, { variant: "body2", sx: { mb: 1 }, children: "参与积分的基础分类（留空 = 全部）" }),
-      /* @__PURE__ */ u2(ListEditor, { value: config2.includedCategories || [], onChange: (val) => onChange({ includedCategories: val }), placeholder: "例如：闪念、任务、打卡" })
-    ] }),
-    /* @__PURE__ */ u2(Stack$1, { direction: "row", spacing: 2, children: [
-      /* @__PURE__ */ u2(FormControlLabel, { control: /* @__PURE__ */ u2(Checkbox, { checked: config2.showCategoryBreakdown !== false, onChange: (e2) => onChange({ showCategoryBreakdown: e2.target.checked }) }), label: "显示分类积分" }),
-      /* @__PURE__ */ u2(FormControlLabel, { control: /* @__PURE__ */ u2(Checkbox, { checked: config2.showThemeBreakdown !== false, onChange: (e2) => onChange({ showThemeBreakdown: e2.target.checked }) }), label: "显示主题积分" })
-    ] }),
-    /* @__PURE__ */ u2(TextField$1, { size: "small", type: "number", label: "榜单数量", value: config2.topN, onChange: (e2) => onChange({ topN: Number(e2.target.value) || 5 }) })
-  ] });
-}
-function TaskExecutionViewEditor(_props) {
-  return /* @__PURE__ */ u2(Stack$1, { spacing: 1, children: [
-    /* @__PURE__ */ u2(Typography$1, { variant: "body2", color: "text.secondary", children: "任务执行视图：按主题两级分组展示带 🔁 的未完成任务。" }),
-    /* @__PURE__ */ u2(Typography$1, { variant: "body2", color: "text.secondary", children: "左键记录一次，右键查看当前时间范围内的完成记录，并可跳转到原位置。" })
-  ] });
-}
-const VIEW_INFO_REGISTRY = {
-  TableView: { component: TableViewEditor, defaultConfig: TABLE_VIEW_DEFAULT_CONFIG },
-  BlockView: { component: BlockViewEditor, defaultConfig: BLOCK_VIEW_DEFAULT_CONFIG },
-  ExcelView: { component: ExcelViewEditor, defaultConfig: EXCEL_VIEW_DEFAULT_CONFIG },
-  TimelineView: { component: TimelineViewEditor, defaultConfig: TIMELINE_VIEW_DEFAULT_CONFIG },
-  EventTimelineView: { component: EventTimelineViewEditor, defaultConfig: EVENT_TIMELINE_VIEW_DEFAULT_CONFIG },
-  StatisticsView: { component: StatisticsViewEditor, defaultConfig: STATISTICS_VIEW_DEFAULT_CONFIG },
-  HeatmapView: { component: HeatmapViewEditor, defaultConfig: HEATMAP_VIEW_DEFAULT_CONFIG },
-  ProgressView: { component: ProgressViewEditor, defaultConfig: PROGRESS_VIEW_DEFAULT_CONFIG },
-  TaskExecutionView: { component: TaskExecutionViewEditor, defaultConfig: TASK_EXECUTION_VIEW_DEFAULT_CONFIG }
-};
-const VIEW_EDITORS = Object.fromEntries(
-  Object.entries(VIEW_INFO_REGISTRY).map(([k2, v2]) => [k2, v2.component])
-);
-Object.fromEntries(
-  Object.entries(VIEW_INFO_REGISTRY).map(([k2, v2]) => [k2, v2.defaultConfig])
-);
-function useUniqueFieldValues(dataStore) {
-  return T$1(() => {
-    if (!dataStore) return {};
-    const items = dataStore.queryItems();
-    const allKnownFields = new Set(getAllFields(items));
-    const valueMap = {};
-    allKnownFields.forEach((field) => valueMap[field] = /* @__PURE__ */ new Set());
-    for (const item of items) {
-      for (const field of allKnownFields) {
-        const value = readField(item, field);
-        if (value === null || value === void 0 || String(value).trim() === "") continue;
-        const values2 = Array.isArray(value) ? value : [value];
-        values2.forEach((v2) => {
-          const strV = String(v2).trim();
-          if (strV) valueMap[field].add(strV);
-        });
-      }
-    }
-    const result = {};
-    for (const field in valueMap) {
-      if (valueMap[field].size > 0) {
-        result[field] = Array.from(valueMap[field]).sort((a2, b2) => a2.localeCompare(b2, "zh-CN"));
-      }
-    }
-    return result;
-  }, [dataStore]);
-}
-const defaultFilterRule = { field: "", op: "=", value: "" };
-const defaultSortRule = { field: "", dir: "asc" };
-function cloneRule(rule) {
-  return { ...rule };
-}
-function operatorNeedsValue(op) {
-  return !["empty", "notEmpty"].includes(op);
-}
-function isMultiValueOperator(op) {
-  return op === "in" || op === "notIn";
-}
-function getValuePlaceholder(op) {
-  if (op === "between") return "输入区间，如 1~5 或 2026-01-01~2026-01-31";
-  if (isMultiValueOperator(op)) return "选择或输入多个值，回车确认";
-  return "输入值";
-}
-function normalizeMultiValue$1(value) {
-  const rawValues = Array.isArray(value) ? value : [value];
-  const normalized = rawValues.flatMap((v2) => String(v2 ?? "").split(/[,，\n]/)).map((part) => part.trim()).filter(Boolean);
-  return Array.from(new Set(normalized));
-}
-function formatRuleValue(rule) {
-  if (!operatorNeedsValue(rule.op)) return "";
-  if (isMultiValueOperator(rule.op)) {
-    const values2 = normalizeMultiValue$1(rule.value);
-    return values2.length > 0 ? values2.join("、") : "未选择";
-  }
-  if (rule.op === "between" && Array.isArray(rule.value)) {
-    return rule.value.map((v2) => String(v2)).join(" ~ ");
-  }
-  return String(rule.value ?? "");
-}
-function normalizeFilterPatch(patch, current2) {
-  const nextOp = patch.op ?? current2?.op;
-  const normalized = { ...patch };
-  if (nextOp && !operatorNeedsValue(nextOp)) {
-    return { ...normalized, value: "" };
-  }
-  if (patch.field !== void 0 && patch.field !== current2?.field) {
-    normalized.value = nextOp && isMultiValueOperator(nextOp) ? [] : "";
-  }
-  if (nextOp && isMultiValueOperator(nextOp)) {
-    if ("value" in normalized || patch.op !== void 0) {
-      normalized.value = normalizeMultiValue$1(normalized.value ?? current2?.value);
-    }
-  } else if (current2 && isMultiValueOperator(current2.op) && patch.op !== void 0) {
-    normalized.value = normalizeMultiValue$1(current2.value).join(",");
-  }
-  return normalized;
-}
-function RuleBuilder({ title, mode, rows, fieldOptions, onChange, dataStore, variant = "compact" }) {
-  const isFilterMode = mode === "filter";
-  const [newRule, setNewRule] = d(
-    isFilterMode ? { ...defaultFilterRule } : { ...defaultSortRule }
-  );
-  const uniqueFieldValues = useUniqueFieldValues(dataStore);
-  const currentFilterRule = newRule;
-  const shouldShowValueInput = !isFilterMode || operatorNeedsValue(currentFilterRule.op);
-  const remove2 = (i2) => onChange(rows.filter((_2, j2) => j2 !== i2).map(cloneRule));
-  const updateNewRule = (patch) => {
-    setNewRule((current2) => {
-      const nextPatch = isFilterMode ? normalizeFilterPatch(patch, current2) : patch;
-      return { ...current2, ...nextPatch };
-    });
-  };
-  const updateRow = (index, patch) => {
-    const updatedRows = rows.map((row, rowIndex) => {
-      if (rowIndex !== index) return cloneRule(row);
-      const nextPatch = isFilterMode ? normalizeFilterPatch(patch, row) : patch;
-      return { ...row, ...nextPatch };
-    });
-    onChange(updatedRows);
-  };
-  const updateLogic = (index, logic) => {
-    const updatedRows = rows.map((row, rowIndex) => {
-      if (rowIndex !== index || !isFilterMode) return cloneRule(row);
-      return { ...row, logic };
-    });
-    onChange(updatedRows);
-  };
-  const handleAddRule = () => {
-    if (!newRule.field) {
-      alert("请选择一个字段");
-      return;
-    }
-    const updatedRows = rows.map(cloneRule);
-    const ruleToAdd = cloneRule(newRule);
-    if (isFilterMode && updatedRows.length > 0) {
-      const lastIndex = updatedRows.length - 1;
-      const lastRule = updatedRows[lastIndex];
-      if (!lastRule.logic) {
-        updatedRows[lastIndex] = {
-          ...lastRule,
-          logic: "and"
-        };
-      }
-    }
-    updatedRows.push(ruleToAdd);
-    onChange(updatedRows);
-    setNewRule(isFilterMode ? { ...defaultFilterRule } : { ...defaultSortRule });
-  };
-  const formatRule = (rule) => {
-    if (isFilterMode) {
-      const filterRule = rule;
-      if (filterRule.op === "empty") return `${getFieldLabel(filterRule.field)} 为空`;
-      if (filterRule.op === "notEmpty") return `${getFieldLabel(filterRule.field)} 非空`;
-      const valueText = formatRuleValue(filterRule);
-      const opText = filterRule.op === "in" ? "属于任一" : filterRule.op === "notIn" ? "不属于任一" : filterRule.op;
-      return `${getFieldLabel(filterRule.field)} ${opText} "${valueText}"`;
-    }
-    const sortRule = rule;
-    return `${getFieldLabel(sortRule.field)} ${sortRule.dir === "asc" ? "升序" : "降序"}`;
-  };
-  const operatorOptions = [
-    { value: "=", label: "=" },
-    { value: "!=", label: "!=" },
-    { value: "includes", label: "包含" },
-    { value: "regex", label: "正则" },
-    { value: ">", label: ">" },
-    { value: "<", label: "<" },
-    { value: "in", label: "属于任一" },
-    { value: "notIn", label: "不属于任一" },
-    { value: "between", label: "区间" },
-    { value: "empty", label: "为空" },
-    { value: "notEmpty", label: "非空" }
-  ];
-  const directionOptions = [{ value: "asc", label: "升序" }, { value: "desc", label: "降序" }];
-  const logicOptions = [
-    { value: "and", label: "且" },
-    { value: "or", label: "或" }
-  ];
-  const renderFieldInput = (field, onFieldChange, placeholder = "搜索 / 选择字段") => /* @__PURE__ */ u2(
-    FieldPickerAutocomplete,
-    {
-      value: field,
-      options: fieldOptions,
-      onChange: onFieldChange,
-      placeholder,
-      helperText: variant === "panel" ? "字段按核心字段 / 文件字段 / 自定义字段分组。" : void 0
-    }
-  );
-  const renderValueInput = (rule, onValueChange) => {
-    if (!operatorNeedsValue(rule.op)) return null;
-    if (isMultiValueOperator(rule.op)) {
-      return /* @__PURE__ */ u2(
-        Autocomplete,
-        {
-          multiple: true,
-          freeSolo: true,
-          fullWidth: true,
-          size: "small",
-          disablePortal: true,
-          options: uniqueFieldValues[rule.field] || [],
-          value: normalizeMultiValue$1(rule.value),
-          onChange: (_2, newValue) => onValueChange(normalizeMultiValue$1(newValue)),
-          renderInput: (params) => /* @__PURE__ */ u2(
-            TextField$1,
-            {
-              ...params,
-              variant: "outlined",
-              placeholder: getValuePlaceholder(rule.op),
-              helperText: variant === "panel" ? "同一字段内多选表示“或”：匹配其中任一值即可。" : void 0
-            }
-          )
-        }
-      );
-    }
-    return /* @__PURE__ */ u2(
-      Autocomplete,
-      {
-        freeSolo: true,
-        fullWidth: true,
-        size: "small",
-        disableClearable: true,
-        disablePortal: true,
-        options: uniqueFieldValues[rule.field] || [],
-        value: String(rule.value ?? ""),
-        inputValue: String(rule.value ?? ""),
-        onInputChange: (_2, newValue) => onValueChange(newValue || ""),
-        renderInput: (params) => /* @__PURE__ */ u2(TextField$1, { ...params, variant: "outlined", placeholder: getValuePlaceholder(rule.op) })
-      }
-    );
-  };
-  const existingRules = /* @__PURE__ */ u2("div", { style: { display: "flex", flexDirection: "row", flexWrap: "wrap", gap: "4px", alignItems: "center" }, children: rows.map((rule, i2) => {
-    const isLast = i2 === rows.length - 1;
-    const filterRule = rule;
-    return /* @__PURE__ */ u2("div", { style: { display: "flex", alignItems: "center", gap: "4px" }, children: [
-      /* @__PURE__ */ u2(Tooltip$1, { title: `点击删除规则: ${formatRule(rule)}`, children: /* @__PURE__ */ u2(
-        Chip,
-        {
-          label: formatRule(rule),
-          onClick: () => remove2(i2),
-          size: "small"
-        }
-      ) }),
-      isFilterMode && !isLast && /* @__PURE__ */ u2(
-        SimpleSelect,
-        {
-          value: filterRule.logic || "and",
-          options: logicOptions,
-          onChange: (val) => updateLogic(i2, val),
-          sx: { minWidth: 50 }
-        }
-      )
-    ] }, i2);
-  }) });
-  const panelRuleRows = /* @__PURE__ */ u2(Box$1, { sx: { display: "flex", flexDirection: "column", gap: 1 }, children: rows.map((rule, index) => {
-    const filterRule = rule;
-    const sortRule = rule;
-    const isLast = index === rows.length - 1;
-    const gridTemplateColumns2 = isFilterMode && operatorNeedsValue(filterRule.op) ? "minmax(240px, 1.2fr) minmax(150px, 0.6fr) minmax(260px, 1.2fr) minmax(96px, 0.35fr) 40px" : "minmax(240px, 1.2fr) minmax(150px, 0.6fr) minmax(96px, 0.35fr) 40px";
-    return /* @__PURE__ */ u2(Box$1, { sx: { display: "flex", flexDirection: "column", gap: 0.75 }, children: /* @__PURE__ */ u2(
-      Box$1,
-      {
-        sx: {
-          display: "grid",
-          gridTemplateColumns: gridTemplateColumns2,
-          gap: 1,
-          alignItems: "center",
-          p: 1,
-          border: "1px solid var(--background-modifier-border)",
-          borderRadius: "8px",
-          background: "var(--background-primary)"
-        },
-        children: [
-          renderFieldInput(rule.field, (field) => updateRow(index, { field })),
-          isFilterMode ? /* @__PURE__ */ u2(S, { children: [
-            /* @__PURE__ */ u2(
-              SimpleSelect,
-              {
-                value: filterRule.op,
-                options: operatorOptions,
-                onChange: (val) => updateRow(index, { op: val }),
-                sx: { minWidth: 140 }
-              }
-            ),
-            renderValueInput(filterRule, (value) => updateRow(index, { value }))
-          ] }) : /* @__PURE__ */ u2(
-            SimpleSelect,
-            {
-              value: sortRule.dir,
-              options: directionOptions,
-              onChange: (val) => updateRow(index, { dir: val }),
-              sx: { minWidth: 120 }
-            }
-          ),
-          isFilterMode && !isLast ? /* @__PURE__ */ u2(
-            SimpleSelect,
-            {
-              value: filterRule.logic || "and",
-              options: logicOptions,
-              onChange: (val) => updateLogic(index, val),
-              sx: { minWidth: 80 }
-            }
-          ) : /* @__PURE__ */ u2(Typography$1, { variant: "body2", color: "text.secondary", sx: { textAlign: "center" }, children: isFilterMode ? "末尾" : "" }),
-          /* @__PURE__ */ u2(
-            IconAction,
-            {
-              label: "删除规则",
-              icon: /* @__PURE__ */ u2(DeleteOutlineIcon, { fontSize: "small" }),
-              onClick: () => remove2(index),
-              size: "small"
-            }
-          )
-        ]
-      }
-    ) }, index);
-  }) });
-  if (variant === "panel") {
-    return /* @__PURE__ */ u2(Box$1, { sx: { display: "flex", flexDirection: "column", gap: 2 }, children: [
-      /* @__PURE__ */ u2(Box$1, { sx: { display: "flex", alignItems: "center", justifyContent: "space-between", gap: 2 }, children: /* @__PURE__ */ u2("div", { children: [
-        /* @__PURE__ */ u2(Typography$1, { sx: { fontWeight: 600 }, children: [
-          title,
-          "规则"
-        ] }),
-        /* @__PURE__ */ u2(Typography$1, { variant: "body2", color: "text.secondary", children: "字段支持搜索；已有规则可直接编辑。“属于任一 / 不属于任一”支持多选 chip，也可输入后回车添加；区间用“开始~结束”。" })
-      ] }) }),
-      rows.length > 0 ? /* @__PURE__ */ u2(Box$1, { sx: { display: "flex", flexDirection: "column", gap: 1 }, children: [
-        /* @__PURE__ */ u2(
-          Box$1,
-          {
-            sx: {
-              display: "grid",
-              gridTemplateColumns: isFilterMode ? "minmax(240px, 1.2fr) minmax(150px, 0.6fr) minmax(260px, 1.2fr) minmax(96px, 0.35fr) 40px" : "minmax(240px, 1.2fr) minmax(150px, 0.6fr) minmax(96px, 0.35fr) 40px",
-              gap: 1,
-              px: 1,
-              color: "text.secondary"
-            },
-            children: [
-              /* @__PURE__ */ u2(Typography$1, { variant: "caption", children: "字段" }),
-              /* @__PURE__ */ u2(Typography$1, { variant: "caption", children: isFilterMode ? "条件" : "排序" }),
-              isFilterMode && /* @__PURE__ */ u2(Typography$1, { variant: "caption", children: "值" }),
-              /* @__PURE__ */ u2(Typography$1, { variant: "caption", children: "连接" }),
-              /* @__PURE__ */ u2(Typography$1, { variant: "caption", children: "操作" })
-            ]
-          }
-        ),
-        panelRuleRows
-      ] }) : /* @__PURE__ */ u2(Box$1, { sx: { p: 2, border: "1px dashed var(--background-modifier-border)", borderRadius: "8px" }, children: /* @__PURE__ */ u2(Typography$1, { variant: "body2", color: "text.secondary", children: "还没有规则。先在下方选择字段、条件和值，然后添加规则。" }) }),
-      /* @__PURE__ */ u2(
-        Box$1,
-        {
-          sx: {
-            display: "grid",
-            gridTemplateColumns: isFilterMode && shouldShowValueInput ? "minmax(260px, 1.4fr) minmax(150px, 0.6fr) minmax(260px, 1.3fr) auto" : "minmax(260px, 1.4fr) minmax(150px, 0.6fr) auto",
-            gap: 1,
-            alignItems: "center",
-            p: 1.5,
-            border: "1px solid var(--background-modifier-border)",
-            borderRadius: "8px",
-            background: "var(--background-secondary)"
-          },
-          children: [
-            renderFieldInput(newRule.field, (field) => updateNewRule({ field })),
-            isFilterMode ? /* @__PURE__ */ u2(S, { children: [
-              /* @__PURE__ */ u2(
-                SimpleSelect,
-                {
-                  value: newRule.op,
-                  options: operatorOptions,
-                  onChange: (val) => updateNewRule({ op: val }),
-                  sx: { minWidth: 140 }
-                }
-              ),
-              shouldShowValueInput && renderValueInput(newRule, (value) => updateNewRule({ value }))
-            ] }) : /* @__PURE__ */ u2(
-              SimpleSelect,
-              {
-                value: newRule.dir,
-                options: directionOptions,
-                onChange: (val) => updateNewRule({ dir: val }),
-                sx: { minWidth: 120 }
-              }
-            ),
-            /* @__PURE__ */ u2(Button$1, { variant: "contained", size: "small", onClick: handleAddRule, sx: { whiteSpace: "nowrap" }, children: "添加规则" })
-          ]
-        }
-      )
-    ] });
-  }
-  return /* @__PURE__ */ u2("div", { style: { display: "flex", flexDirection: "row", gap: "8px" }, children: [
-    /* @__PURE__ */ u2(Typography$1, { sx: { width: "80px", flexShrink: 0, fontWeight: 500, pt: "8px" }, children: title }),
-    /* @__PURE__ */ u2("div", { style: { flexGrow: 1, display: "flex", flexDirection: "column", gap: "12px" }, children: [
-      existingRules,
-      /* @__PURE__ */ u2("div", { style: { display: "flex", flexDirection: "row", gap: "4px", alignItems: "center" }, children: [
-        renderFieldInput(newRule.field, (field) => updateNewRule({ field })),
-        isFilterMode ? /* @__PURE__ */ u2(S, { children: [
-          /* @__PURE__ */ u2(
-            SimpleSelect,
-            {
-              value: newRule.op,
-              options: operatorOptions,
-              onChange: (val) => updateNewRule({ op: val }),
-              sx: { minWidth: 120 }
-            }
-          ),
-          shouldShowValueInput && renderValueInput(newRule, (value) => updateNewRule({ value }))
-        ] }) : /* @__PURE__ */ u2(
-          SimpleSelect,
-          {
-            value: newRule.dir,
-            options: directionOptions,
-            onChange: (val) => updateNewRule({ dir: val }),
-            sx: { minWidth: 100 }
-          }
-        ),
-        /* @__PURE__ */ u2(Button$1, { variant: "contained", size: "small", onClick: handleAddRule, children: "添加" })
-      ] })
-    ] })
-  ] });
-}
-const DEFAULT_QUICK_FILTER_FIELDS = [
-  { field: "themePath", label: "主题路径", help: "使用完整 themePath 筛选，例如 生活/健康；不再用根主题或章节标题兜底。", placeholder: "选择主题路径" },
-  { field: "baseCategory", label: "分类", help: "不同字段之间默认表示“且”：主题匹配后还要分类匹配。", placeholder: "选择分类" },
-  { field: "tags", label: "标签", placeholder: "选择标签" },
-  { field: "type", label: "类型", placeholder: "选择记录类型" },
-  { field: "priority", label: "优先级", placeholder: "选择优先级" },
-  { field: "period", label: "时间粒度", placeholder: "选择粒度" }
-];
-function normalizeMultiValue(value) {
-  const rawValues = Array.isArray(value) ? value : [value];
-  const normalized = rawValues.flatMap((v2) => String(v2 ?? "").split(/[,，\n]/)).map((part) => part.trim()).filter(Boolean);
-  return Array.from(new Set(normalized));
-}
-function collectFieldValues(items, fields) {
-  const valueMap = {};
-  fields.forEach((field) => valueMap[field] = /* @__PURE__ */ new Set());
-  for (const item of items) {
-    for (const field of fields) {
-      const value = readField(item, field);
-      if (value === null || value === void 0 || String(value).trim() === "") continue;
-      const values2 = Array.isArray(value) ? value : [value];
-      values2.forEach((v2) => {
-        const strV = String(v2).trim();
-        if (strV) valueMap[field].add(strV);
-      });
-    }
-  }
-  const result = {};
-  fields.forEach((field) => {
-    result[field] = Array.from(valueMap[field] || []).sort((a2, b2) => a2.localeCompare(b2, "zh-CN"));
-  });
-  return result;
-}
-function cleanupRuleLinks(rules) {
-  return rules.map((rule, index) => {
-    const nextRule = { ...rule };
-    if (index === rules.length - 1) {
-      delete nextRule.logic;
-    } else if (!nextRule.logic) {
-      nextRule.logic = "and";
-    }
-    return nextRule;
-  });
-}
-function getQuickRule(filters, field) {
-  return filters.find((rule) => rule.field === field && rule.op === "in");
-}
-function upsertQuickRule(filters, field, values2) {
-  const cleanValues = normalizeMultiValue(values2);
-  const existingIndex = filters.findIndex((rule) => rule.field === field && rule.op === "in");
-  if (cleanValues.length === 0) {
-    if (existingIndex < 0) return cleanupRuleLinks(filters);
-    return cleanupRuleLinks(filters.filter((_2, index) => index !== existingIndex));
-  }
-  if (existingIndex >= 0) {
-    return cleanupRuleLinks(filters.map((rule, index) => index === existingIndex ? { ...rule, value: cleanValues } : { ...rule }));
-  }
-  return cleanupRuleLinks([
-    ...filters.map((rule) => ({ ...rule })),
-    { field, op: "in", value: cleanValues }
-  ]);
-}
-function hasAnyQuickFilter(filters, fields) {
-  const fieldSet = new Set(fields.map((f2) => f2.field));
-  return filters.some((rule) => fieldSet.has(rule.field) && rule.op === "in" && normalizeMultiValue(rule.value).length > 0);
-}
-function clearQuickFilters(filters, fields) {
-  const fieldSet = new Set(fields.map((f2) => f2.field));
-  return cleanupRuleLinks(filters.filter((rule) => !(fieldSet.has(rule.field) && rule.op === "in")));
-}
-function describeQuickSummary(filters, fields) {
-  const parts = fields.map((config2) => {
-    const rule = getQuickRule(filters, config2.field);
-    const values2 = normalizeMultiValue(rule?.value);
-    if (values2.length === 0) return "";
-    const label = config2.label || getFieldLabel(config2.field);
-    return `${label}为${values2.join("或")}`;
-  }).filter(Boolean);
-  return parts.length > 0 ? `当前显示：${parts.join("，并且")}。` : "未设置常用筛选。";
-}
-function CommonFilterPanel({
-  dataStore,
-  filters,
-  onChange,
-  items,
-  fieldOptions,
-  title = "常用筛选",
-  description = "适合主题路径、分类、标签这类高频筛选；同一字段内是“或”，不同字段之间是“且”。",
-  fields = DEFAULT_QUICK_FILTER_FIELDS,
-  compact = false
-}) {
-  const sourceItems = T$1(() => items ?? dataStore.queryItems(), [items, dataStore]);
-  const availableFields = T$1(() => new Set(fieldOptions ?? getAllFields(sourceItems)), [fieldOptions, sourceItems]);
-  const quickFields = T$1(
-    () => fields.filter((config2) => availableFields.has(config2.field)),
-    [fields, availableFields]
-  );
-  const valueOptions = T$1(
-    () => collectFieldValues(sourceItems, quickFields.map((config2) => config2.field)),
-    [sourceItems, quickFields]
-  );
-  const hasQuickFilters = hasAnyQuickFilter(filters, quickFields);
-  const summary = describeQuickSummary(filters, quickFields);
-  if (quickFields.length === 0) return null;
-  return /* @__PURE__ */ u2(
-    Box$1,
-    {
-      sx: {
-        display: "flex",
-        flexDirection: "column",
-        gap: compact ? 1 : 1.5,
-        p: compact ? 1.25 : 1.5,
-        border: "1px solid var(--background-modifier-border)",
-        borderRadius: "10px",
-        background: "var(--background-secondary)"
-      },
-      children: [
-        /* @__PURE__ */ u2(Box$1, { sx: { display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 2 }, children: [
-          /* @__PURE__ */ u2("div", { children: [
-            /* @__PURE__ */ u2(Typography$1, { sx: { fontWeight: 700 }, children: title }),
-            /* @__PURE__ */ u2(Typography$1, { variant: "body2", color: "text.secondary", children: description })
-          ] }),
-          /* @__PURE__ */ u2(
-            Button$1,
-            {
-              size: "small",
-              startIcon: /* @__PURE__ */ u2(RestartAltIcon, {}),
-              onClick: () => onChange(clearQuickFilters(filters, quickFields)),
-              disabled: !hasQuickFilters,
-              sx: { whiteSpace: "nowrap" },
-              children: "清空常用"
-            }
-          )
-        ] }),
-        /* @__PURE__ */ u2(
-          Box$1,
-          {
-            sx: {
-              display: "grid",
-              gridTemplateColumns: compact ? "1fr" : "repeat(auto-fit, minmax(240px, 1fr))",
-              gap: 1.25
-            },
-            children: quickFields.map((config2) => {
-              const label = config2.label || getFieldLabel(config2.field);
-              const rule = getQuickRule(filters, config2.field);
-              const values2 = normalizeMultiValue(rule?.value);
-              return /* @__PURE__ */ u2(Box$1, { sx: { display: "flex", flexDirection: "column", gap: 0.5 }, children: [
-                /* @__PURE__ */ u2(Typography$1, { variant: "caption", color: "text.secondary", sx: { fontWeight: 600 }, children: label }),
-                /* @__PURE__ */ u2(
-                  Autocomplete,
-                  {
-                    multiple: true,
-                    freeSolo: true,
-                    fullWidth: true,
-                    size: "small",
-                    disablePortal: true,
-                    options: valueOptions[config2.field] || [],
-                    value: values2,
-                    onChange: (_2, newValue) => onChange(upsertQuickRule(filters, config2.field, newValue)),
-                    renderTags: (tagValue, getTagProps) => tagValue.map((option, index) => /* @__PURE__ */ k$2(Chip, { ...getTagProps({ index }), key: `${config2.field}-${option}`, label: option, size: "small" })),
-                    renderInput: (params) => /* @__PURE__ */ u2(
-                      TextField$1,
-                      {
-                        ...params,
-                        variant: "outlined",
-                        placeholder: values2.length > 0 ? "" : config2.placeholder || `选择${label}`,
-                        helperText: compact ? void 0 : config2.help
-                      }
-                    )
-                  }
-                )
-              ] }, config2.field);
-            })
-          }
-        ),
-        /* @__PURE__ */ u2(Typography$1, { variant: "body2", color: "text.secondary", children: summary })
-      ]
-    }
-  );
-}
-function ViewInstanceEditor({ vi }) {
-  const dataStore = useDataStore();
-  const useCases = useUseCases();
-  const currentVi = useSelector(makeSelectViewInstanceById(vi.id)) || vi;
-  const fieldOptions = T$1(() => getAllFields(dataStore?.queryItems() || []), [dataStore]);
-  const EditorComponent = VIEW_EDITORS[currentVi.viewType];
-  const correctedViewConfig = T$1(() => {
-    if (currentVi.viewConfig && typeof currentVi.viewConfig.categories === "object") return currentVi.viewConfig;
-    if (currentVi.viewConfig && currentVi.viewConfig.viewConfig) return currentVi.viewConfig.viewConfig;
-    return currentVi.viewConfig || {};
-  }, [currentVi.viewConfig]);
-  const handleUpdate = (updates) => {
-    useCases.viewInstance.updateView(currentVi.id, updates);
-  };
-  const viewTypeOptions = T$1(
-    () => VIEW_OPTIONS.map((v2) => ({ value: v2, label: v2.replace("View", "") })),
-    []
-  );
-  const commonFilterFields = T$1(() => ["themePath", "baseCategory", "tags", "type", "priority", "period"], []);
-  const hasAdvancedFilters = T$1(() => (currentVi.filters || []).some((rule) => rule.op !== "in" || !commonFilterFields.includes(rule.field)), [currentVi.filters, commonFilterFields]);
-  const handleFieldsChange = (fields) => {
-    handleUpdate({ fields });
-  };
-  const handleGroupFieldsChange = (groupFields) => {
-    handleUpdate({ groupFields });
-  };
-  return /* @__PURE__ */ u2("div", { children: [
-    /* @__PURE__ */ u2("div", { style: { marginBottom: "2rem" }, children: [
-      /* @__PURE__ */ u2("h4", { style: {
-        marginBottom: "1rem",
-        color: "var(--text-muted)",
-        fontSize: "1rem",
-        fontWeight: "600"
-      }, children: "基础设置" }),
-      /* @__PURE__ */ u2(FormField, { label: "视图类型", children: /* @__PURE__ */ u2("div", { style: { display: "flex", alignItems: "center", gap: "1rem" }, children: [
-        /* @__PURE__ */ u2(
-          SimpleSelect,
-          {
-            value: currentVi.viewType,
-            options: viewTypeOptions,
-            onChange: (val) => handleUpdate({ viewType: val }),
-            sx: { flex: 1, minWidth: "150px" }
-          }
-        ),
-        /* @__PURE__ */ u2(
-          FormControlLabel,
-          {
-            control: /* @__PURE__ */ u2(
-              Checkbox,
-              {
-                size: "small",
-                checked: !!currentVi.collapsed,
-                onChange: (e2) => handleUpdate({ collapsed: e2.target.checked })
-              }
-            ),
-            label: "默认折叠"
-          }
-        )
-      ] }) }),
-      /* @__PURE__ */ u2(
-        FormField,
-        {
-          label: "显示字段",
-          help: "选择要在视图中显示的字段",
-          children: /* @__PURE__ */ u2(
-            FieldManager,
-            {
-              fields: currentVi.fields || [],
-              availableFields: fieldOptions,
-              onFieldsChange: handleFieldsChange,
-              placeholder: "+ 添加字段...",
-              getFieldLabel,
-              getFieldGroupLabel: getFieldCategoryLabel
-            }
-          )
-        }
-      ),
-      /* @__PURE__ */ u2(
-        FormField,
-        {
-          label: "分组字段",
-          help: "选择用于分组的字段，顺序即为多级分组层级（A→B→C）",
-          children: /* @__PURE__ */ u2(
-            FieldManager,
-            {
-              fields: currentVi.groupFields || [],
-              availableFields: fieldOptions,
-              onFieldsChange: handleGroupFieldsChange,
-              placeholder: "+ 选择分组字段...",
-              getFieldLabel,
-              getFieldGroupLabel: getFieldCategoryLabel
-            }
-          )
-        }
-      )
-    ] }),
-    /* @__PURE__ */ u2("div", { style: {
-      borderTop: "1px solid var(--background-modifier-border)",
-      paddingTop: "1.5rem",
-      marginBottom: "1.5rem"
-    }, children: [
-      /* @__PURE__ */ u2("h4", { style: {
-        marginBottom: "1rem",
-        color: "var(--text-muted)",
-        fontSize: "1rem",
-        fontWeight: "600"
-      }, children: "数据筛选与排序" }),
-      /* @__PURE__ */ u2(
-        FormField,
-        {
-          label: "视图筛选",
-          help: "常用筛选适合主题路径、分类、标签多选；高级筛选保留原来的字段/条件/值规则。",
-          children: /* @__PURE__ */ u2(Box$1, { sx: { display: "flex", flexDirection: "column", gap: 1.25 }, children: [
-            /* @__PURE__ */ u2(
-              CommonFilterPanel,
-              {
-                title: "常用筛选",
-                description: "同一字段内多选表示“或”，不同字段之间默认表示“且”。",
-                dataStore,
-                filters: currentVi.filters || [],
-                fieldOptions,
-                onChange: (rows) => handleUpdate({ filters: rows }),
-                compact: true
-              }
-            ),
-            /* @__PURE__ */ u2(
-              Accordion,
-              {
-                defaultExpanded: hasAdvancedFilters,
-                disableGutters: true,
-                sx: {
-                  border: "1px solid var(--background-modifier-border)",
-                  borderRadius: "10px",
-                  "&:before": { display: "none" }
-                },
-                children: [
-                  /* @__PURE__ */ u2(AccordionSummary, { expandIcon: /* @__PURE__ */ u2(ExpandMoreIcon, {}), children: /* @__PURE__ */ u2(Box$1, { sx: { display: "flex", alignItems: "center", gap: 1, flexWrap: "wrap" }, children: [
-                    /* @__PURE__ */ u2(Typography$1, { sx: { fontWeight: 700 }, children: "高级筛选规则" }),
-                    /* @__PURE__ */ u2(Chip, { label: `${(currentVi.filters || []).length} 条`, size: "small", variant: "outlined" }),
-                    /* @__PURE__ */ u2(Typography$1, { variant: "body2", color: "text.secondary", children: "正则、区间、排除、复杂且/或关系" })
-                  ] }) }),
-                  /* @__PURE__ */ u2(AccordionDetails, { sx: { pt: 0 }, children: /* @__PURE__ */ u2(
-                    RuleBuilder,
-                    {
-                      title: "筛选",
-                      mode: "filter",
-                      rows: currentVi.filters || [],
-                      fieldOptions,
-                      onChange: (rows) => handleUpdate({ filters: rows }),
-                      dataStore,
-                      variant: "panel"
-                    }
-                  ) })
-                ]
-              }
-            )
-          ] })
-        }
-      ),
-      /* @__PURE__ */ u2(
-        FormField,
-        {
-          label: "排序规则",
-          help: "定义数据排序方式",
-          children: /* @__PURE__ */ u2(
-            RuleBuilder,
-            {
-              title: "排序规则",
-              mode: "sort",
-              rows: currentVi.sort || [],
-              fieldOptions,
-              onChange: (rows) => handleUpdate({ sort: rows }),
-              dataStore
-            }
-          )
-        }
-      )
-    ] }),
-    EditorComponent && /* @__PURE__ */ u2("div", { style: {
-      borderTop: "1px solid var(--background-modifier-border)",
-      paddingTop: "1.5rem"
-    }, children: [
-      /* @__PURE__ */ u2("h4", { style: {
-        marginBottom: "1rem",
-        color: "var(--text-muted)",
-        fontSize: "1rem",
-        fontWeight: "600"
-      }, children: [
-        currentVi.viewType.replace("View", ""),
-        " 专属配置"
-      ] }),
-      /* @__PURE__ */ u2(
-        EditorComponent,
-        {
-          module: currentVi,
-          value: correctedViewConfig,
-          onChange: (patch) => handleUpdate({ viewConfig: { ...correctedViewConfig, ...patch } }),
-          fieldOptions,
-          dataStore
-        }
-      )
-    ] })
-  ] });
-}
-function ModuleSettingsPanel({ module: module2, onClose }) {
-  const currentModule = useSelector(makeSelectViewInstanceById(module2.id)) || module2;
-  const handleSave = useSaveHandler(async () => {
-    await new Promise((resolve) => setTimeout(resolve, 100));
-    onClose();
-  }, {
-    successMessage: `已保存视图 "${module2.title}" 的设置`,
-    errorMessage: "保存设置失败"
-  });
-  return /* @__PURE__ */ u2("div", { style: { display: "flex", flexDirection: "column", flex: 1, minHeight: 0, width: "100%" }, children: [
-    /* @__PURE__ */ u2("div", { style: { flex: 1, minHeight: 0, overflowY: "auto", padding: 12, boxSizing: "border-box" }, children: /* @__PURE__ */ u2(ViewInstanceEditor, { vi: currentModule }) }),
-    /* @__PURE__ */ u2(
-      "div",
-      {
-        style: {
-          display: "flex",
-          justifyContent: "flex-end",
-          gap: 8,
-          padding: "12px 12px 0 12px",
-          marginTop: 0,
-          borderTop: "1px solid var(--background-modifier-border)"
-        },
-        children: [
-          /* @__PURE__ */ u2(Button$1, { onClick: handleSave, variant: "contained", children: "保存设置" }),
-          /* @__PURE__ */ u2(Button$1, { onClick: onClose, variant: "outlined", children: "关闭" })
-        ]
-      }
-    )
-  ] });
-}
-function openModuleSettingsWidget(module2) {
-  const widgetId = `module-settings-${module2.id}`;
-  return openFloatingWidget(widgetId, () => /* @__PURE__ */ u2(
-    FloatingPanel,
-    {
-      id: widgetId,
-      title: `视图设置: ${module2.title}`,
-      defaultPosition: { x: window.innerWidth / 2 - 340, y: window.innerHeight / 2 - 260 },
-      minWidth: 520,
-      maxWidth: "90vw",
-      maxHeight: "85vh",
-      width: 720,
-      height: 640,
-      resizable: true,
-      bodyPadding: 0,
-      bodyStyle: { display: "flex", flexDirection: "column", minHeight: 0 },
-      onClose: () => closeFloatingWidget(widgetId),
-      children: /* @__PURE__ */ u2(ModuleSettingsPanel, { module: module2, onClose: () => closeFloatingWidget(widgetId) })
-    }
-  ));
-}
-const PERIOD_OPTIONS$1 = ["年", "季", "月", "周", "天"].map((v2) => ({ value: v2, label: v2 }));
-const DISPLAY_MODE_OPTIONS$1 = [{ value: "list", label: "列表" }, { value: "grid", label: "网格" }];
-const LABEL_WIDTH$1 = "80px";
-const AlignedRadioGroup$1 = ({ label, options, selectedValue, onChange }) => /* @__PURE__ */ u2(Stack$1, { direction: "row", alignItems: "center", spacing: 2, children: [
-  /* @__PURE__ */ u2(Typography$1, { sx: { width: LABEL_WIDTH$1, flexShrink: 0, fontWeight: 500 }, children: label }),
-  /* @__PURE__ */ u2(RadioGroup, { row: true, value: selectedValue, onChange: (e2) => onChange(e2.target.value), children: options.map((opt) => /* @__PURE__ */ u2(FormControlLabel, { value: opt.value, control: /* @__PURE__ */ u2(Radio, { size: "small" }), label: opt.label }, opt.value)) })
+const PERIOD_OPTIONS = ["年", "季", "月", "周", "天"].map((v2) => ({ value: v2, label: v2 }));
+const DISPLAY_MODE_OPTIONS = [{ value: "list", label: "列表" }, { value: "grid", label: "网格" }];
+const LABEL_WIDTH = "80px";
+const AlignedRadioGroup = ({ label, options, selectedValue, onChange }) => /* @__PURE__ */ u2(Stack, { direction: "row", alignItems: "center", spacing: 2, children: [
+  /* @__PURE__ */ u2(Typography2, { sx: { width: LABEL_WIDTH, flexShrink: 0, fontWeight: 500 }, children: label }),
+  /* @__PURE__ */ u2(RadioGroup2, { row: true, value: selectedValue, onChange: (e2) => onChange(e2.target.value), children: options.map((opt) => /* @__PURE__ */ u2(FormControlLabel2, { value: opt.value, control: /* @__PURE__ */ u2(Radio2, { size: "small" }), label: opt.label }, opt.value)) })
 ] });
 function LayoutEditor({ layout, useCases }) {
   const allViews = useSelector(selectViewInstances);
@@ -67327,23 +68086,23 @@ function LayoutEditor({ layout, useCases }) {
     setSettingsModalOpen(false);
     setSelectedViewForSettings(null);
   }, []);
-  return /* @__PURE__ */ u2(Stack$1, { spacing: 2, sx: { p: "8px 16px 16px 50px" }, children: [
-    /* @__PURE__ */ u2(Stack$1, { direction: "row", alignItems: "center", spacing: 2, children: [
-      /* @__PURE__ */ u2(Typography$1, { sx: { width: LABEL_WIDTH$1, flexShrink: 0, fontWeight: 500 }, children: "工具栏" }),
-      /* @__PURE__ */ u2(FormControlLabel, { control: /* @__PURE__ */ u2(Checkbox, { size: "small", checked: !layout.hideToolbar, onChange: (e2) => handleUpdate({ hideToolbar: !e2.target.checked }) }), label: /* @__PURE__ */ u2(Typography$1, { noWrap: true, children: "显示工具栏/导航器" }), sx: { flexShrink: 0, mr: 0 } })
+  return /* @__PURE__ */ u2(Stack, { spacing: 2, sx: { p: "8px 16px 16px 50px" }, children: [
+    /* @__PURE__ */ u2(Stack, { direction: "row", alignItems: "center", spacing: 2, children: [
+      /* @__PURE__ */ u2(Typography2, { sx: { width: LABEL_WIDTH, flexShrink: 0, fontWeight: 500 }, children: "工具栏" }),
+      /* @__PURE__ */ u2(FormControlLabel2, { control: /* @__PURE__ */ u2(Checkbox2, { size: "small", checked: !layout.hideToolbar, onChange: (e2) => handleUpdate({ hideToolbar: !e2.target.checked }) }), label: /* @__PURE__ */ u2(Typography2, { noWrap: true, children: "显示工具栏/导航器" }), sx: { flexShrink: 0, mr: 0 } })
     ] }),
-    /* @__PURE__ */ u2(Stack$1, { direction: "row", alignItems: "center", spacing: 2, children: [
-      /* @__PURE__ */ u2(Typography$1, { sx: { width: LABEL_WIDTH$1, flexShrink: 0, fontWeight: 500 }, children: "初始日期" }),
-      /* @__PURE__ */ u2(TextField$1, { type: "date", size: "small", variant: "outlined", disabled: !!layout.initialDateFollowsNow, value: layout.initialDate || "", onChange: (e2) => handleUpdate({ initialDate: e2.target.value }), sx: { width: "170px" } }),
-      /* @__PURE__ */ u2(FormControlLabel, { control: /* @__PURE__ */ u2(Checkbox, { size: "small", checked: !!layout.initialDateFollowsNow, onChange: (e2) => handleUpdate({ initialDateFollowsNow: e2.target.checked }) }), label: /* @__PURE__ */ u2(Typography$1, { noWrap: true, children: "跟随今日" }) })
+    /* @__PURE__ */ u2(Stack, { direction: "row", alignItems: "center", spacing: 2, children: [
+      /* @__PURE__ */ u2(Typography2, { sx: { width: LABEL_WIDTH, flexShrink: 0, fontWeight: 500 }, children: "初始日期" }),
+      /* @__PURE__ */ u2(TextField2, { type: "date", size: "small", variant: "outlined", disabled: !!layout.initialDateFollowsNow, value: layout.initialDate || "", onChange: (e2) => handleUpdate({ initialDate: e2.target.value }), sx: { width: "170px" } }),
+      /* @__PURE__ */ u2(FormControlLabel2, { control: /* @__PURE__ */ u2(Checkbox2, { size: "small", checked: !!layout.initialDateFollowsNow, onChange: (e2) => handleUpdate({ initialDateFollowsNow: e2.target.checked }) }), label: /* @__PURE__ */ u2(Typography2, { noWrap: true, children: "跟随今日" }) })
     ] }),
-    /* @__PURE__ */ u2(AlignedRadioGroup$1, { label: "初始视图（时间窗）", options: PERIOD_OPTIONS$1, selectedValue: layout.initialView || "月", onChange: (value) => handleUpdate({ initialView: value }) }),
-    /* @__PURE__ */ u2(AlignedRadioGroup$1, { label: "排列方式", options: DISPLAY_MODE_OPTIONS$1, selectedValue: layout.displayMode || "list", onChange: (value) => handleUpdate({ displayMode: value }) }),
-    layout.displayMode === "grid" && /* @__PURE__ */ u2(Stack$1, { direction: "row", alignItems: "center", spacing: 2, sx: { pl: `calc(${LABEL_WIDTH$1} + 16px)` }, children: /* @__PURE__ */ u2(TextField$1, { label: "列数", type: "number", size: "small", variant: "outlined", value: layout.gridConfig?.columns || 2, onChange: (e2) => handleUpdate({ gridConfig: { columns: parseInt(e2.target.value, 10) || 2 } }), sx: { width: "100px" } }) }),
-    /* @__PURE__ */ u2(Stack$1, { direction: "row", flexWrap: "wrap", spacing: 1, useFlexGap: true, alignItems: "center", children: [
-      /* @__PURE__ */ u2(Typography$1, { sx: { width: LABEL_WIDTH$1, flexShrink: 0, fontWeight: 500 }, children: "包含视图" }),
-      selectedViews.map((view) => view && /* @__PURE__ */ u2(Tooltip$1, { title: `左键移除，右键更多选项`, children: /* @__PURE__ */ u2(
-        Chip,
+    /* @__PURE__ */ u2(AlignedRadioGroup, { label: "初始视图（时间窗）", options: PERIOD_OPTIONS, selectedValue: layout.initialView || "月", onChange: (value) => handleUpdate({ initialView: value }) }),
+    /* @__PURE__ */ u2(AlignedRadioGroup, { label: "排列方式", options: DISPLAY_MODE_OPTIONS, selectedValue: layout.displayMode || "list", onChange: (value) => handleUpdate({ displayMode: value }) }),
+    layout.displayMode === "grid" && /* @__PURE__ */ u2(Stack, { direction: "row", alignItems: "center", spacing: 2, sx: { pl: `calc(${LABEL_WIDTH} + 16px)` }, children: /* @__PURE__ */ u2(TextField2, { label: "列数", type: "number", size: "small", variant: "outlined", value: layout.gridConfig?.columns || 2, onChange: (e2) => handleUpdate({ gridConfig: { columns: parseInt(e2.target.value, 10) || 2 } }), sx: { width: "100px" } }) }),
+    /* @__PURE__ */ u2(Stack, { direction: "row", flexWrap: "wrap", spacing: 1, useFlexGap: true, alignItems: "center", children: [
+      /* @__PURE__ */ u2(Typography2, { sx: { width: LABEL_WIDTH, flexShrink: 0, fontWeight: 500 }, children: "包含视图" }),
+      selectedViews.map((view) => view && /* @__PURE__ */ u2(Tooltip2, { title: `左键移除，右键更多选项`, children: /* @__PURE__ */ u2(
+        Chip2,
         {
           label: view.title,
           onClick: () => removeView(view.id),
@@ -67353,7 +68112,7 @@ function LayoutEditor({ layout, useCases }) {
         }
       ) }, view.id)),
       /* @__PURE__ */ u2(
-        Autocomplete,
+        Autocomplete2,
         {
           value: null,
           inputValue,
@@ -67363,14 +68122,14 @@ function LayoutEditor({ layout, useCases }) {
           onChange: handleAutocompleteChange,
           disablePortal: true,
           slotProps: { popper: { style: { zIndex: 2e4 } } },
-          renderInput: (params) => /* @__PURE__ */ u2(TextField$1, { ...params, variant: "outlined", placeholder: "+ 搜索添加或创建视图..." }),
+          renderInput: (params) => /* @__PURE__ */ u2(TextField2, { ...params, variant: "outlined", placeholder: "+ 搜索添加或创建视图..." }),
           sx: { minWidth: 200 },
           size: "small"
         }
       )
     ] }),
     /* @__PURE__ */ u2(
-      Menu,
+      Menu2,
       {
         open: contextMenu !== null,
         onClose: handleContextMenuClose,
@@ -67378,9 +68137,9 @@ function LayoutEditor({ layout, useCases }) {
         anchorReference: "anchorPosition",
         anchorPosition: contextMenu !== null ? { top: contextMenu.mouseY, left: contextMenu.mouseX } : void 0,
         children: [
-          /* @__PURE__ */ u2(MenuItem, { onClick: handleViewSettings, children: "设置视图" }),
-          /* @__PURE__ */ u2(MenuItem, { onClick: handleViewRename, children: "重命名" }),
-          /* @__PURE__ */ u2(MenuItem, { onClick: handleViewRemove, children: "移除" })
+          /* @__PURE__ */ u2(MenuItem2, { onClick: handleViewSettings, children: "设置视图" }),
+          /* @__PURE__ */ u2(MenuItem2, { onClick: handleViewRename, children: "重命名" }),
+          /* @__PURE__ */ u2(MenuItem2, { onClick: handleViewRemove, children: "移除" })
         ]
       }
     )
@@ -67408,8 +68167,8 @@ function SortableLayoutItem({ layout, useCases, isExpanded, onToggle }) {
     }
   }, [layout, useCases]);
   const dragHandleProps = { ...attributes, ...listeners };
-  return /* @__PURE__ */ u2(Box$1, { ref: setNodeRef, style: style2, sx: { borderBottom: "1px solid rgba(0,0,0,0.08)" }, children: [
-    /* @__PURE__ */ u2(Stack$1, { direction: "row", alignItems: "center", sx: { p: 1 }, children: [
+  return /* @__PURE__ */ u2(Box, { ref: setNodeRef, style: style2, sx: { borderBottom: "1px solid rgba(0,0,0,0.08)" }, children: [
+    /* @__PURE__ */ u2(Stack, { direction: "row", alignItems: "center", sx: { p: 1 }, children: [
       /* @__PURE__ */ u2(
         "div",
         {
@@ -67425,9 +68184,9 @@ function SortableLayoutItem({ layout, useCases, isExpanded, onToggle }) {
           children: /* @__PURE__ */ u2(DragIndicatorIcon, { fontSize: "small" })
         }
       ),
-      /* @__PURE__ */ u2(IconButton$1, { size: "small", onClick: onToggle, sx: { mr: 1 }, children: isExpanded ? /* @__PURE__ */ u2(ExpandLessIcon, { fontSize: "small" }) : /* @__PURE__ */ u2(ExpandMoreIcon, { fontSize: "small" }) }),
+      /* @__PURE__ */ u2(IconButton2, { size: "small", onClick: onToggle, sx: { mr: 1 }, children: isExpanded ? /* @__PURE__ */ u2(ExpandLessIcon, { fontSize: "small" }) : /* @__PURE__ */ u2(ExpandMoreIcon, { fontSize: "small" }) }),
       /* @__PURE__ */ u2(
-        Typography$1,
+        Typography2,
         {
           sx: { flex: 1, cursor: "pointer" },
           onClick: handleRename,
@@ -67480,11 +68239,11 @@ function LayoutSettings({ app }) {
     }
   }, [layouts, useCases]);
   const layoutIds = T$1(() => layouts.map((l2) => l2.id), [layouts]);
-  return /* @__PURE__ */ u2(Box$1, { sx: { maxWidth: "900px", mx: "auto" }, children: [
-    /* @__PURE__ */ u2(Stack$1, { direction: "row", alignItems: "center", justifyContent: "space-between", sx: { mb: 2 }, children: [
-      /* @__PURE__ */ u2(Typography$1, { variant: "h6", children: "管理布局" }),
+  return /* @__PURE__ */ u2(Box, { sx: { maxWidth: "900px", mx: "auto" }, children: [
+    /* @__PURE__ */ u2(Stack, { direction: "row", alignItems: "center", justifyContent: "space-between", sx: { mb: 2 }, children: [
+      /* @__PURE__ */ u2(Typography2, { variant: "h6", children: "管理布局" }),
       /* @__PURE__ */ u2(
-        Button$1,
+        Button2,
         {
           onClick: onAddLayout,
           startIcon: /* @__PURE__ */ u2(AddCircleOutlineIcon, {}),
@@ -67504,24 +68263,24 @@ function LayoutSettings({ app }) {
       },
       layout.id
     )) }) }),
-    layouts.length === 0 && /* @__PURE__ */ u2(Typography$1, { color: "text.secondary", sx: { textAlign: "center", py: 4 }, children: '暂无布局，点击"添加布局"创建第一个' })
+    layouts.length === 0 && /* @__PURE__ */ u2(Typography2, { color: "text.secondary", sx: { textAlign: "center", py: 4 }, children: '暂无布局，点击"添加布局"创建第一个' })
   ] });
 }
 function SortableBlockItem({ block, openId, setOpenId, handleDelete, handleDuplicate, useCases }) {
   const { attributes, listeners, setNodeRef, transform: transform2, transition } = useSortable({ id: block.id });
   const style2 = { transform: CSS$1.Transform.toString(transform2), transition };
-  return /* @__PURE__ */ u2("div", { ref: setNodeRef, style: style2, children: /* @__PURE__ */ u2(Accordion, { expanded: openId === block.id, onChange: () => setOpenId(openId === block.id ? null : block.id), disableGutters: true, elevation: 1, sx: { "&:before": { display: "none" } }, children: [
-    /* @__PURE__ */ u2(AccordionSummary, { children: /* @__PURE__ */ u2(Box$1, { sx: { display: "flex", justifyContent: "space-between", alignItems: "center", width: "100%" }, children: [
-      /* @__PURE__ */ u2(Stack$1, { direction: "row", alignItems: "center", spacing: 0.5, children: [
-        /* @__PURE__ */ u2(Tooltip$1, { title: "拖动排序", children: /* @__PURE__ */ u2(Box$1, { component: "span", ...attributes, ...listeners, sx: { cursor: "grab", display: "flex", alignItems: "center" }, children: /* @__PURE__ */ u2(DragIndicatorIcon, { sx: { color: "text.disabled" } }) }) }),
-        /* @__PURE__ */ u2(Typography$1, { fontWeight: 500, children: block.name })
+  return /* @__PURE__ */ u2("div", { ref: setNodeRef, style: style2, children: /* @__PURE__ */ u2(Accordion2, { expanded: openId === block.id, onChange: () => setOpenId(openId === block.id ? null : block.id), disableGutters: true, elevation: 1, sx: { "&:before": { display: "none" } }, children: [
+    /* @__PURE__ */ u2(AccordionSummary2, { children: /* @__PURE__ */ u2(Box, { sx: { display: "flex", justifyContent: "space-between", alignItems: "center", width: "100%" }, children: [
+      /* @__PURE__ */ u2(Stack, { direction: "row", alignItems: "center", spacing: 0.5, children: [
+        /* @__PURE__ */ u2(Tooltip2, { title: "拖动排序", children: /* @__PURE__ */ u2(Box, { component: "span", ...attributes, ...listeners, sx: { cursor: "grab", display: "flex", alignItems: "center" }, children: /* @__PURE__ */ u2(DragIndicatorIcon, { sx: { color: "text.disabled" } }) }) }),
+        /* @__PURE__ */ u2(Typography2, { fontWeight: 500, children: block.name })
       ] }),
-      /* @__PURE__ */ u2(Stack$1, { direction: "row", alignItems: "center", spacing: 0.5, children: [
+      /* @__PURE__ */ u2(Stack, { direction: "row", alignItems: "center", spacing: 0.5, children: [
         /* @__PURE__ */ u2(IconAction, { label: "复制", icon: /* @__PURE__ */ u2(ContentCopyIcon, { fontSize: "small" }), onClick: () => handleDuplicate(block.id) }),
         /* @__PURE__ */ u2(IconAction, { label: "删除", icon: /* @__PURE__ */ u2(DeleteForeverOutlinedIcon, {}), onClick: () => handleDelete(block.id, block.name), sx: { color: "text.secondary", "&:hover": { color: "error.main" } } })
       ] })
     ] }) }),
-    /* @__PURE__ */ u2(AccordionDetails, { sx: { bgcolor: "action.hover", borderTop: "1px solid rgba(0,0,0,0.08)" }, children: /* @__PURE__ */ u2(BlockEditor, { block, useCases }) })
+    /* @__PURE__ */ u2(AccordionDetails2, { sx: { bgcolor: "action.hover", borderTop: "1px solid rgba(0,0,0,0.08)" }, children: /* @__PURE__ */ u2(BlockEditor, { block, useCases }) })
   ] }) });
 }
 function BlockEditor({ block, useCases }) {
@@ -67535,14 +68294,14 @@ function BlockEditor({ block, useCases }) {
   const handleBlur = (key) => {
     if (localBlock[key] !== block[key]) handleUpdate({ [key]: localBlock[key] });
   };
-  return /* @__PURE__ */ u2(Stack$1, { spacing: 3, children: [
-    /* @__PURE__ */ u2(TextField$1, { label: "Block 名称", value: localBlock.name, onChange: (e2) => setLocalBlock((b2) => ({ ...b2, name: e2.target.value })), onBlur: () => handleBlur("name"), variant: "outlined", size: "small", sx: { maxWidth: 400 } }),
-    /* @__PURE__ */ u2(Divider$1, {}),
-    /* @__PURE__ */ u2(Box$1, { children: [
-      /* @__PURE__ */ u2(Typography$1, { variant: "h6", sx: { fontSize: "1rem", fontWeight: 600, mb: 1 }, children: "核心元数据" }),
-      /* @__PURE__ */ u2(Box$1, { sx: { p: 1.5, mb: 1.5, border: "1px solid rgba(0,0,0,0.12)", borderRadius: 1, bgcolor: "background.default" }, children: [
-        /* @__PURE__ */ u2(Typography$1, { variant: "body2", color: "text.secondary", children: "Block 是一类记录模板；分类、主题、标签是插件核心字段。分类由当前 Block 或表单字段写入，主题来自快速输入选择的主题，标签可作为表单字段输入。它们不会再作为普通 extra 字段处理。" }),
-        /* @__PURE__ */ u2(Typography$1, { variant: "caption", color: "text.secondary", sx: { display: "block", mt: 0.75, fontFamily: "monospace" }, children: [
+  return /* @__PURE__ */ u2(Stack, { spacing: 3, children: [
+    /* @__PURE__ */ u2(TextField2, { label: "Block 名称", value: localBlock.name, onChange: (e2) => setLocalBlock((b2) => ({ ...b2, name: e2.target.value })), onBlur: () => handleBlur("name"), variant: "outlined", size: "small", sx: { maxWidth: 400 } }),
+    /* @__PURE__ */ u2(Divider2, {}),
+    /* @__PURE__ */ u2(Box, { children: [
+      /* @__PURE__ */ u2(Typography2, { variant: "h6", sx: { fontSize: "1rem", fontWeight: 600, mb: 1 }, children: "核心元数据" }),
+      /* @__PURE__ */ u2(Box, { sx: { p: 1.5, mb: 1.5, border: "1px solid rgba(0,0,0,0.12)", borderRadius: 1, bgcolor: "background.default" }, children: [
+        /* @__PURE__ */ u2(Typography2, { variant: "body2", color: "text.secondary", children: "Block 是一类记录模板；分类、主题、标签是插件核心字段。分类由当前 Block 或表单字段写入，主题来自快速输入选择的主题，标签可作为表单字段输入。它们不会再作为普通 extra 字段处理。" }),
+        /* @__PURE__ */ u2(Typography2, { variant: "caption", color: "text.secondary", sx: { display: "block", mt: 0.75, fontFamily: "monospace" }, children: [
           "推荐模板行：分类:: ",
           "{{categoryKey}}",
           " ｜ 主题:: ",
@@ -67552,7 +68311,7 @@ function BlockEditor({ block, useCases }) {
         ] })
       ] }),
       /* @__PURE__ */ u2(
-        TextField$1,
+        TextField2,
         {
           label: "默认分类",
           value: localBlock.categoryKey || "",
@@ -67566,26 +68325,26 @@ function BlockEditor({ block, useCases }) {
         }
       )
     ] }),
-    /* @__PURE__ */ u2(Divider$1, {}),
-    /* @__PURE__ */ u2(Box$1, { children: [
-      /* @__PURE__ */ u2(Typography$1, { variant: "h6", sx: { fontSize: "1rem", fontWeight: 600, mb: 1 }, children: "输出目标" }),
-      /* @__PURE__ */ u2(Stack$1, { spacing: 2, children: [
-        /* @__PURE__ */ u2(TextField$1, { label: "目标文件路径", value: localBlock.targetFile, onChange: (e2) => setLocalBlock((b2) => ({ ...b2, targetFile: e2.target.value })), onBlur: () => handleBlur("targetFile"), placeholder: "e.g., {{themePath}}/{{标题.value}}.md", variant: "outlined", size: "small" }),
-        /* @__PURE__ */ u2(TextField$1, { label: "追加到标题下 (可选)", value: localBlock.appendUnderHeader || "", onChange: (e2) => setLocalBlock((b2) => ({ ...b2, appendUnderHeader: e2.target.value })), onBlur: () => handleBlur("appendUnderHeader"), placeholder: "e.g., ## {{themePath}}", variant: "outlined", size: "small" })
+    /* @__PURE__ */ u2(Divider2, {}),
+    /* @__PURE__ */ u2(Box, { children: [
+      /* @__PURE__ */ u2(Typography2, { variant: "h6", sx: { fontSize: "1rem", fontWeight: 600, mb: 1 }, children: "输出目标" }),
+      /* @__PURE__ */ u2(Stack, { spacing: 2, children: [
+        /* @__PURE__ */ u2(TextField2, { label: "目标文件路径", value: localBlock.targetFile, onChange: (e2) => setLocalBlock((b2) => ({ ...b2, targetFile: e2.target.value })), onBlur: () => handleBlur("targetFile"), placeholder: "e.g., {{themePath}}/{{标题.value}}.md", variant: "outlined", size: "small" }),
+        /* @__PURE__ */ u2(TextField2, { label: "追加到标题下 (可选)", value: localBlock.appendUnderHeader || "", onChange: (e2) => setLocalBlock((b2) => ({ ...b2, appendUnderHeader: e2.target.value })), onBlur: () => handleBlur("appendUnderHeader"), placeholder: "e.g., ## {{themePath}}", variant: "outlined", size: "small" })
       ] })
     ] }),
-    /* @__PURE__ */ u2(Divider$1, {}),
-    /* @__PURE__ */ u2(Box$1, { children: [
-      /* @__PURE__ */ u2(Typography$1, { variant: "h6", sx: { fontSize: "1rem", fontWeight: 600, mb: 1.5 }, children: "表单字段" }),
+    /* @__PURE__ */ u2(Divider2, {}),
+    /* @__PURE__ */ u2(Box, { children: [
+      /* @__PURE__ */ u2(Typography2, { variant: "h6", sx: { fontSize: "1rem", fontWeight: 600, mb: 1.5 }, children: "表单字段" }),
       /* @__PURE__ */ u2(FieldsEditor, { fields: localBlock.fields, onChange: (newFields) => handleUpdate({ fields: newFields }) })
     ] }),
-    /* @__PURE__ */ u2(Divider$1, {}),
-    /* @__PURE__ */ u2(Box$1, { children: [
-      /* @__PURE__ */ u2(Stack$1, { direction: "row", justifyContent: "space-between", alignItems: "center", sx: { mb: 1 }, children: [
-        /* @__PURE__ */ u2(Typography$1, { variant: "h6", sx: { fontSize: "1rem", fontWeight: 600 }, children: "输出模板" }),
+    /* @__PURE__ */ u2(Divider2, {}),
+    /* @__PURE__ */ u2(Box, { children: [
+      /* @__PURE__ */ u2(Stack, { direction: "row", justifyContent: "space-between", alignItems: "center", sx: { mb: 1 }, children: [
+        /* @__PURE__ */ u2(Typography2, { variant: "h6", sx: { fontSize: "1rem", fontWeight: 600 }, children: "输出模板" }),
         /* @__PURE__ */ u2(TemplateVariableCopier, { block: localBlock })
       ] }),
-      /* @__PURE__ */ u2(TextField$1, { label: "Output Template", multiline: true, rows: 8, value: localBlock.outputTemplate, onChange: (e2) => setLocalBlock((b2) => ({ ...b2, outputTemplate: e2.target.value })), onBlur: () => handleBlur("outputTemplate"), placeholder: "使用 {{key}} 引用上面定义的字段", variant: "outlined", sx: { fontFamily: "monospace", "& textarea": { fontSize: "13px" } } })
+      /* @__PURE__ */ u2(TextField2, { label: "Output Template", multiline: true, rows: 8, value: localBlock.outputTemplate, onChange: (e2) => setLocalBlock((b2) => ({ ...b2, outputTemplate: e2.target.value })), onBlur: () => handleBlur("outputTemplate"), placeholder: "使用 {{key}} 引用上面定义的字段", variant: "outlined", sx: { fontFamily: "monospace", "& textarea": { fontSize: "13px" } } })
     ] })
   ] });
 }
@@ -67615,13 +68374,13 @@ function BlockManager() {
       useCases.blocks.reorderBlocks(active.id, over.id);
     }
   };
-  return /* @__PURE__ */ u2(Box$1, { sx: { maxWidth: "900px", mx: "auto" }, children: [
-    /* @__PURE__ */ u2(Stack$1, { direction: "row", alignItems: "center", spacing: 1, sx: { mb: 2 }, children: [
-      /* @__PURE__ */ u2(Typography$1, { variant: "h6", children: "1. 管理 Block" }),
+  return /* @__PURE__ */ u2(Box, { sx: { maxWidth: "900px", mx: "auto" }, children: [
+    /* @__PURE__ */ u2(Stack, { direction: "row", alignItems: "center", spacing: 1, sx: { mb: 2 }, children: [
+      /* @__PURE__ */ u2(Typography2, { variant: "h6", children: "1. 管理 Block" }),
       /* @__PURE__ */ u2(IconAction, { label: "新增Block类型", onClick: handleAdd, color: "success", icon: /* @__PURE__ */ u2(AddCircleOutlineIcon, {}) })
     ] }),
-    /* @__PURE__ */ u2(Typography$1, { variant: "body2", color: "text.secondary", sx: { mb: 1.5 }, children: "在这里定义所有快速输入的基础模板，例如任务、打卡、总结等。可拖动排序。" }),
-    /* @__PURE__ */ u2(DndContext, { collisionDetection: closestCenter, onDragEnd: handleDragEnd, children: /* @__PURE__ */ u2(SortableContext, { items: blocks.map((b2) => b2.id), strategy: verticalListSortingStrategy, children: /* @__PURE__ */ u2(Stack$1, { spacing: 1, children: blocks.map((block) => /* @__PURE__ */ u2(
+    /* @__PURE__ */ u2(Typography2, { variant: "body2", color: "text.secondary", sx: { mb: 1.5 }, children: "在这里定义所有快速输入的基础模板，例如任务、打卡、总结等。可拖动排序。" }),
+    /* @__PURE__ */ u2(DndContext, { collisionDetection: closestCenter, onDragEnd: handleDragEnd, children: /* @__PURE__ */ u2(SortableContext, { items: blocks.map((b2) => b2.id), strategy: verticalListSortingStrategy, children: /* @__PURE__ */ u2(Stack, { spacing: 1, children: blocks.map((block) => /* @__PURE__ */ u2(
       SortableBlockItem,
       {
         block,
@@ -67636,9 +68395,9 @@ function BlockManager() {
   ] });
 }
 function InputSettings() {
-  return /* @__PURE__ */ u2(Box$1, { children: [
+  return /* @__PURE__ */ u2(Box, { children: [
     /* @__PURE__ */ u2(BlockManager, {}),
-    /* @__PURE__ */ u2(Divider$1, { sx: { my: 4, mx: "auto", maxWidth: 900 } }),
+    /* @__PURE__ */ u2(Divider2, { sx: { my: 4, mx: "auto", maxWidth: 900 } }),
     /* @__PURE__ */ u2(ThemeMatrix, {})
   ] });
 }
@@ -67670,13 +68429,13 @@ function GeneralSettings() {
     delete updated[name];
     useCases.settings.updateCategoryColors(updated);
   };
-  return /* @__PURE__ */ u2(Box$1, { sx: { maxWidth: "900px", mx: "auto" }, children: /* @__PURE__ */ u2(Stack$1, { spacing: 2, children: [
-    /* @__PURE__ */ u2(Typography$1, { variant: "h6", children: "模块开关" }),
+  return /* @__PURE__ */ u2(Box, { sx: { maxWidth: "900px", mx: "auto" }, children: /* @__PURE__ */ u2(Stack, { spacing: 2, children: [
+    /* @__PURE__ */ u2(Typography2, { variant: "h6", children: "模块开关" }),
     /* @__PURE__ */ u2(
-      FormControlLabel,
+      FormControlLabel2,
       {
         control: /* @__PURE__ */ u2(
-          Checkbox,
+          Checkbox2,
           {
             checked: floatingTimerEnabled,
             onChange: (e2) => useCases.settings.setFloatingTimerEnabled(e2.target.checked)
@@ -67685,12 +68444,12 @@ function GeneralSettings() {
         label: "启用悬浮计时器"
       }
     ),
-    /* @__PURE__ */ u2(Typography$1, { variant: "body2", color: "text.secondary", sx: { pl: 4, mt: -1.5 }, children: "关闭后，下次启动Obsidian将不再加载悬浮计时器。你也可以通过命令面板临时切换它的可见性。" }),
+    /* @__PURE__ */ u2(Typography2, { variant: "body2", color: "text.secondary", sx: { pl: 4, mt: -1.5 }, children: "关闭后，下次启动Obsidian将不再加载悬浮计时器。你也可以通过命令面板临时切换它的可见性。" }),
     /* @__PURE__ */ u2(
-      FormControlLabel,
+      FormControlLabel2,
       {
         control: /* @__PURE__ */ u2(
-          Checkbox,
+          Checkbox2,
           {
             checked: devConsoleStackEnabled,
             onChange: (e2) => useCases.settings.setDevConsoleStackEnabled(e2.target.checked)
@@ -67699,12 +68458,12 @@ function GeneralSettings() {
         label: "开发模式：错误 toast 同时输出控制台堆栈"
       }
     ),
-    /* @__PURE__ */ u2(Typography$1, { variant: "body2", color: "text.secondary", sx: { pl: 4, mt: -1.5 }, children: "开启后：toast 仍显示，同时 console.error 打出完整 stack（便于定位）。关闭后：只 toast，不污染控制台。" }),
-    /* @__PURE__ */ u2(Typography$1, { variant: "h6", sx: { mt: 3 }, children: "分类颜色" }),
-    /* @__PURE__ */ u2(Typography$1, { variant: "body2", color: "text.secondary", children: "全局 CategoryKey 基础类别颜色配置。修改后所有视图（标签、统计等）统一生效。" }),
-    /* @__PURE__ */ u2(Box$1, { sx: { display: "flex", flexDirection: "column", gap: 1 }, children: allCategoryNames.map((name) => {
+    /* @__PURE__ */ u2(Typography2, { variant: "body2", color: "text.secondary", sx: { pl: 4, mt: -1.5 }, children: "开启后：toast 仍显示，同时 console.error 打出完整 stack（便于定位）。关闭后：只 toast，不污染控制台。" }),
+    /* @__PURE__ */ u2(Typography2, { variant: "h6", sx: { mt: 3 }, children: "分类颜色" }),
+    /* @__PURE__ */ u2(Typography2, { variant: "body2", color: "text.secondary", children: "全局 CategoryKey 基础类别颜色配置。修改后所有视图（标签、统计等）统一生效。" }),
+    /* @__PURE__ */ u2(Box, { sx: { display: "flex", flexDirection: "column", gap: 1 }, children: allCategoryNames.map((name) => {
       const color2 = activeColors[name] || "#e0e0e0";
-      return /* @__PURE__ */ u2(Box$1, { sx: { display: "flex", alignItems: "center", gap: 1.5 }, children: [
+      return /* @__PURE__ */ u2(Box, { sx: { display: "flex", alignItems: "center", gap: 1.5 }, children: [
         /* @__PURE__ */ u2(
           "input",
           {
@@ -67714,8 +68473,8 @@ function GeneralSettings() {
             style: { width: 32, height: 32, border: "none", cursor: "pointer", padding: 0, background: "none" }
           }
         ),
-        /* @__PURE__ */ u2(Typography$1, { variant: "body1", sx: { minWidth: 60 }, children: name }),
-        /* @__PURE__ */ u2(Typography$1, { variant: "caption", color: "text.secondary", children: color2 }),
+        /* @__PURE__ */ u2(Typography2, { variant: "body1", sx: { minWidth: 60 }, children: name }),
+        /* @__PURE__ */ u2(Typography2, { variant: "caption", color: "text.secondary", children: color2 }),
         /* @__PURE__ */ u2(
           "button",
           {
@@ -67735,7 +68494,7 @@ function GeneralSettings() {
         )
       ] }, name);
     }) }),
-    /* @__PURE__ */ u2(Box$1, { sx: { display: "flex", alignItems: "center", gap: 1.5, mt: 1 }, children: [
+    /* @__PURE__ */ u2(Box, { sx: { display: "flex", alignItems: "center", gap: 1.5, mt: 1 }, children: [
       /* @__PURE__ */ u2(
         "input",
         {
@@ -67785,14 +68544,14 @@ function GeneralSettings() {
 }
 function AiAdvancedSettingsSection({ settings, onUpdate }) {
   return /* @__PURE__ */ u2(S, { children: [
-    /* @__PURE__ */ u2(Accordion, { children: [
-      /* @__PURE__ */ u2(AccordionSummary, { expandIcon: /* @__PURE__ */ u2(ExpandMoreIcon, {}), children: /* @__PURE__ */ u2(Typography$1, { variant: "subtitle1", children: "多结果设置" }) }),
-      /* @__PURE__ */ u2(AccordionDetails, { children: /* @__PURE__ */ u2(Stack$1, { spacing: 2, children: [
+    /* @__PURE__ */ u2(Accordion2, { children: [
+      /* @__PURE__ */ u2(AccordionSummary2, { expandIcon: /* @__PURE__ */ u2(ExpandMoreIcon, {}), children: /* @__PURE__ */ u2(Typography2, { variant: "subtitle1", children: "多结果设置" }) }),
+      /* @__PURE__ */ u2(AccordionDetails2, { children: /* @__PURE__ */ u2(Stack, { spacing: 2, children: [
         /* @__PURE__ */ u2(
-          FormControlLabel,
+          FormControlLabel2,
           {
             control: /* @__PURE__ */ u2(
-              Switch,
+              Switch2,
               {
                 checked: settings.allowMultipleResults,
                 onChange: (e2) => onUpdate({ allowMultipleResults: e2.target.checked })
@@ -67802,7 +68561,7 @@ function AiAdvancedSettingsSection({ settings, onUpdate }) {
           }
         ),
         /* @__PURE__ */ u2(
-          TextField$1,
+          TextField2,
           {
             fullWidth: true,
             label: "最大结果数量",
@@ -67812,31 +68571,31 @@ function AiAdvancedSettingsSection({ settings, onUpdate }) {
             disabled: !settings.allowMultipleResults
           }
         ),
-        /* @__PURE__ */ u2(FormControl, { fullWidth: true, children: [
-          /* @__PURE__ */ u2(InputLabel, { children: "确认模式" }),
+        /* @__PURE__ */ u2(FormControl2, { fullWidth: true, children: [
+          /* @__PURE__ */ u2(InputLabel2, { children: "确认模式" }),
           /* @__PURE__ */ u2(
-            Select,
+            Select2,
             {
               value: settings.confirmMode,
               label: "确认模式",
               onChange: (e2) => onUpdate({ confirmMode: e2.target.value }),
               children: [
-                /* @__PURE__ */ u2(MenuItem, { value: "single", children: "单条确认" }),
-                /* @__PURE__ */ u2(MenuItem, { value: "batch", children: "批量确认" })
+                /* @__PURE__ */ u2(MenuItem2, { value: "single", children: "单条确认" }),
+                /* @__PURE__ */ u2(MenuItem2, { value: "batch", children: "批量确认" })
               ]
             }
           )
         ] })
       ] }) })
     ] }),
-    /* @__PURE__ */ u2(Accordion, { children: [
-      /* @__PURE__ */ u2(AccordionSummary, { expandIcon: /* @__PURE__ */ u2(ExpandMoreIcon, {}), children: /* @__PURE__ */ u2(Typography$1, { variant: "subtitle1", children: "性能设置" }) }),
-      /* @__PURE__ */ u2(AccordionDetails, { children: /* @__PURE__ */ u2(Stack$1, { spacing: 2, children: [
+    /* @__PURE__ */ u2(Accordion2, { children: [
+      /* @__PURE__ */ u2(AccordionSummary2, { expandIcon: /* @__PURE__ */ u2(ExpandMoreIcon, {}), children: /* @__PURE__ */ u2(Typography2, { variant: "subtitle1", children: "性能设置" }) }),
+      /* @__PURE__ */ u2(AccordionDetails2, { children: /* @__PURE__ */ u2(Stack, { spacing: 2, children: [
         /* @__PURE__ */ u2(
-          FormControlLabel,
+          FormControlLabel2,
           {
             control: /* @__PURE__ */ u2(
-              Switch,
+              Switch2,
               {
                 checked: settings.preloadConfigOnStartup,
                 onChange: (e2) => onUpdate({ preloadConfigOnStartup: e2.target.checked })
@@ -67846,7 +68605,7 @@ function AiAdvancedSettingsSection({ settings, onUpdate }) {
           }
         ),
         /* @__PURE__ */ u2(
-          TextField$1,
+          TextField2,
           {
             fullWidth: true,
             label: "配置缓存 TTL (秒)",
@@ -67869,11 +68628,11 @@ function AiApiConfigSection({
   testMessage,
   onTestConnection
 }) {
-  return /* @__PURE__ */ u2(Accordion, { defaultExpanded: true, children: [
-    /* @__PURE__ */ u2(AccordionSummary, { expandIcon: /* @__PURE__ */ u2(ExpandMoreIcon, {}), children: /* @__PURE__ */ u2(Typography$1, { variant: "subtitle1", children: "API 配置" }) }),
-    /* @__PURE__ */ u2(AccordionDetails, { children: /* @__PURE__ */ u2(Stack$1, { spacing: 2, children: [
+  return /* @__PURE__ */ u2(Accordion2, { defaultExpanded: true, children: [
+    /* @__PURE__ */ u2(AccordionSummary2, { expandIcon: /* @__PURE__ */ u2(ExpandMoreIcon, {}), children: /* @__PURE__ */ u2(Typography2, { variant: "subtitle1", children: "API 配置" }) }),
+    /* @__PURE__ */ u2(AccordionDetails2, { children: /* @__PURE__ */ u2(Stack, { spacing: 2, children: [
       /* @__PURE__ */ u2(
-        TextField$1,
+        TextField2,
         {
           fullWidth: true,
           label: "API 端点 (baseURL)",
@@ -67884,7 +68643,7 @@ function AiApiConfigSection({
         }
       ),
       /* @__PURE__ */ u2(
-        TextField$1,
+        TextField2,
         {
           fullWidth: true,
           label: "API 密钥",
@@ -67895,10 +68654,10 @@ function AiApiConfigSection({
         }
       ),
       /* @__PURE__ */ u2(
-        FormControlLabel,
+        FormControlLabel2,
         {
           control: /* @__PURE__ */ u2(
-            Switch,
+            Switch2,
             {
               checked: settings.persistApiKey === true,
               onChange: (e2) => onUpdate({ persistApiKey: e2.target.checked })
@@ -67907,9 +68666,9 @@ function AiApiConfigSection({
           label: "保存 API 密钥到设置（不推荐：明文存储，可能被同步）"
         }
       ),
-      /* @__PURE__ */ u2(Alert, { severity: settings.persistApiKey ? "warning" : "info", children: apiKeyPersistenceMessage }),
+      /* @__PURE__ */ u2(Alert2, { severity: settings.persistApiKey ? "warning" : "info", children: apiKeyPersistenceMessage }),
       /* @__PURE__ */ u2(
-        TextField$1,
+        TextField2,
         {
           fullWidth: true,
           label: "模型名称",
@@ -67919,13 +68678,13 @@ function AiApiConfigSection({
           helperText: "要使用的模型，例如 gpt-4, gpt-3.5-turbo"
         }
       ),
-      /* @__PURE__ */ u2(Box$1, { children: [
-        /* @__PURE__ */ u2(Typography$1, { gutterBottom: true, children: [
+      /* @__PURE__ */ u2(Box, { children: [
+        /* @__PURE__ */ u2(Typography2, { gutterBottom: true, children: [
           "温度 (Temperature): ",
           settings.temperature
         ] }),
         /* @__PURE__ */ u2(
-          Slider,
+          Slider2,
           {
             value: settings.temperature,
             onChange: (_2, value) => onUpdate({ temperature: value }),
@@ -67941,7 +68700,7 @@ function AiApiConfigSection({
         )
       ] }),
       /* @__PURE__ */ u2(
-        TextField$1,
+        TextField2,
         {
           fullWidth: true,
           label: "最大 Token 数",
@@ -67951,7 +68710,7 @@ function AiApiConfigSection({
         }
       ),
       /* @__PURE__ */ u2(
-        TextField$1,
+        TextField2,
         {
           fullWidth: true,
           label: "请求超时 (毫秒)",
@@ -67960,9 +68719,9 @@ function AiApiConfigSection({
           onChange: (e2) => onUpdate({ requestTimeoutMs: parseInt(e2.target.value, 10) || 3e4 })
         }
       ),
-      /* @__PURE__ */ u2(Box$1, { children: [
+      /* @__PURE__ */ u2(Box, { children: [
         /* @__PURE__ */ u2(
-          Button$1,
+          Button2,
           {
             variant: "outlined",
             onClick: onTestConnection,
@@ -67970,9 +68729,9 @@ function AiApiConfigSection({
             children: testStatus === "testing" ? "测试中..." : "测试连接"
           }
         ),
-        !readiness.ready && /* @__PURE__ */ u2(Alert, { severity: "info", sx: { mt: 1 }, children: readiness.message }),
+        !readiness.ready && /* @__PURE__ */ u2(Alert2, { severity: "info", sx: { mt: 1 }, children: readiness.message }),
         testStatus !== "idle" && /* @__PURE__ */ u2(
-          Alert,
+          Alert2,
           {
             severity: testStatus === "success" ? "success" : testStatus === "error" ? "error" : "info",
             sx: { mt: 1 },
@@ -67984,12 +68743,12 @@ function AiApiConfigSection({
   ] });
 }
 function AiPromptRulesSection({ settings, onUpdate, onInsertExample }) {
-  return /* @__PURE__ */ u2(Accordion, { defaultExpanded: true, children: [
-    /* @__PURE__ */ u2(AccordionSummary, { expandIcon: /* @__PURE__ */ u2(ExpandMoreIcon, {}), children: /* @__PURE__ */ u2(Typography$1, { variant: "subtitle1", children: "个性化规则（自定义提示词）" }) }),
-    /* @__PURE__ */ u2(AccordionDetails, { children: /* @__PURE__ */ u2(Stack$1, { spacing: 2, children: [
-      /* @__PURE__ */ u2(Alert, { severity: "info", children: '在这里定义您的个性化映射规则，告诉 AI 如何理解您的输入习惯。 例如：当您说"心情好"时应该用哪个 Block，"写文章"应该归类到哪个主题等。' }),
+  return /* @__PURE__ */ u2(Accordion2, { defaultExpanded: true, children: [
+    /* @__PURE__ */ u2(AccordionSummary2, { expandIcon: /* @__PURE__ */ u2(ExpandMoreIcon, {}), children: /* @__PURE__ */ u2(Typography2, { variant: "subtitle1", children: "个性化规则（自定义提示词）" }) }),
+    /* @__PURE__ */ u2(AccordionDetails2, { children: /* @__PURE__ */ u2(Stack, { spacing: 2, children: [
+      /* @__PURE__ */ u2(Alert2, { severity: "info", children: '在这里定义您的个性化映射规则，告诉 AI 如何理解您的输入习惯。 例如：当您说"心情好"时应该用哪个 Block，"写文章"应该归类到哪个主题等。' }),
       /* @__PURE__ */ u2(
-        TextField$1,
+        TextField2,
         {
           fullWidth: true,
           multiline: true,
@@ -68001,8 +68760,8 @@ function AiPromptRulesSection({ settings, onUpdate, onInsertExample }) {
           helperText: "定义您的个性化规则，AI 会根据这些规则来理解您的输入"
         }
       ),
-      /* @__PURE__ */ u2(Box$1, { children: /* @__PURE__ */ u2(Button$1, { variant: "outlined", size: "small", onClick: onInsertExample, children: "插入示例规则" }) }),
-      /* @__PURE__ */ u2(Alert, { severity: "warning", children: [
+      /* @__PURE__ */ u2(Box, { children: /* @__PURE__ */ u2(Button2, { variant: "outlined", size: "small", onClick: onInsertExample, children: "插入示例规则" }) }),
+      /* @__PURE__ */ u2(Alert2, { severity: "warning", children: [
         "提示：规则越具体，AI 识别越准确。建议包含：",
         /* @__PURE__ */ u2("ul", { style: { margin: "8px 0", paddingLeft: "20px" }, children: [
           /* @__PURE__ */ u2("li", { children: "关键词与 Block 类型的对应关系" }),
@@ -68023,16 +68782,16 @@ function AiScopeSection({
   onToggleBlock
 }) {
   return /* @__PURE__ */ u2(S, { children: [
-    /* @__PURE__ */ u2(Accordion, { children: [
-      /* @__PURE__ */ u2(AccordionSummary, { expandIcon: /* @__PURE__ */ u2(ExpandMoreIcon, {}), children: /* @__PURE__ */ u2(Typography$1, { variant: "subtitle1", children: "Block 参与范围" }) }),
-      /* @__PURE__ */ u2(AccordionDetails, { children: [
-        /* @__PURE__ */ u2(Typography$1, { variant: "body2", color: "text.secondary", sx: { mb: 2 }, children: "选择哪些 Block 模板参与 AI 识别。留空表示全部参与。" }),
-        /* @__PURE__ */ u2(Button$1, { variant: "outlined", size: "small", onClick: onInitAllBlocks, sx: { mb: 2 }, children: "初始化为全部 Block" }),
-        /* @__PURE__ */ u2(FormGroup, { children: blocks.map((block) => /* @__PURE__ */ u2(
-          FormControlLabel,
+    /* @__PURE__ */ u2(Accordion2, { children: [
+      /* @__PURE__ */ u2(AccordionSummary2, { expandIcon: /* @__PURE__ */ u2(ExpandMoreIcon, {}), children: /* @__PURE__ */ u2(Typography2, { variant: "subtitle1", children: "Block 参与范围" }) }),
+      /* @__PURE__ */ u2(AccordionDetails2, { children: [
+        /* @__PURE__ */ u2(Typography2, { variant: "body2", color: "text.secondary", sx: { mb: 2 }, children: "选择哪些 Block 模板参与 AI 识别。留空表示全部参与。" }),
+        /* @__PURE__ */ u2(Button2, { variant: "outlined", size: "small", onClick: onInitAllBlocks, sx: { mb: 2 }, children: "初始化为全部 Block" }),
+        /* @__PURE__ */ u2(FormGroup2, { children: blocks.map((block) => /* @__PURE__ */ u2(
+          FormControlLabel2,
           {
             control: /* @__PURE__ */ u2(
-              Checkbox,
+              Checkbox2,
               {
                 checked: (settings.enabledBlockIds ?? []).includes(block.id),
                 onChange: () => onToggleBlock(block.id)
@@ -68042,30 +68801,30 @@ function AiScopeSection({
           },
           block.id
         )) }),
-        blocks.length === 0 && /* @__PURE__ */ u2(Typography$1, { variant: "body2", color: "text.secondary", children: '暂无 Block 模板，请先在"快速输入"设置中创建。' })
+        blocks.length === 0 && /* @__PURE__ */ u2(Typography2, { variant: "body2", color: "text.secondary", children: '暂无 Block 模板，请先在"快速输入"设置中创建。' })
       ] })
     ] }),
-    /* @__PURE__ */ u2(Accordion, { children: [
-      /* @__PURE__ */ u2(AccordionSummary, { expandIcon: /* @__PURE__ */ u2(ExpandMoreIcon, {}), children: /* @__PURE__ */ u2(Typography$1, { variant: "subtitle1", children: "默认主题设置" }) }),
-      /* @__PURE__ */ u2(AccordionDetails, { children: /* @__PURE__ */ u2(Stack$1, { spacing: 2, children: [
-        /* @__PURE__ */ u2(Typography$1, { variant: "body2", color: "text.secondary", children: "当 AI 无法从用户输入中识别出主题时，将使用此默认主题。建议设置一个常用的主题作为默认值。" }),
-        /* @__PURE__ */ u2(FormControl, { fullWidth: true, children: [
-          /* @__PURE__ */ u2(InputLabel, { children: "默认主题" }),
+    /* @__PURE__ */ u2(Accordion2, { children: [
+      /* @__PURE__ */ u2(AccordionSummary2, { expandIcon: /* @__PURE__ */ u2(ExpandMoreIcon, {}), children: /* @__PURE__ */ u2(Typography2, { variant: "subtitle1", children: "默认主题设置" }) }),
+      /* @__PURE__ */ u2(AccordionDetails2, { children: /* @__PURE__ */ u2(Stack, { spacing: 2, children: [
+        /* @__PURE__ */ u2(Typography2, { variant: "body2", color: "text.secondary", children: "当 AI 无法从用户输入中识别出主题时，将使用此默认主题。建议设置一个常用的主题作为默认值。" }),
+        /* @__PURE__ */ u2(FormControl2, { fullWidth: true, children: [
+          /* @__PURE__ */ u2(InputLabel2, { children: "默认主题" }),
           /* @__PURE__ */ u2(
-            Select,
+            Select2,
             {
               value: settings.defaultThemeId ?? "",
               label: "默认主题",
               onChange: (e2) => onUpdate({ defaultThemeId: e2.target.value || void 0 }),
               children: [
-                /* @__PURE__ */ u2(MenuItem, { value: "", children: /* @__PURE__ */ u2("em", { children: "不设置默认主题" }) }),
-                themes.map((theme2) => /* @__PURE__ */ u2(MenuItem, { value: theme2.path, children: theme2.path }, theme2.id))
+                /* @__PURE__ */ u2(MenuItem2, { value: "", children: /* @__PURE__ */ u2("em", { children: "不设置默认主题" }) }),
+                themes.map((theme2) => /* @__PURE__ */ u2(MenuItem2, { value: theme2.path, children: theme2.path }, theme2.id))
               ]
             }
           )
         ] }),
-        themes.length === 0 && /* @__PURE__ */ u2(Alert, { severity: "info", children: '暂无主题，请先在"快速输入"设置中创建主题。' }),
-        /* @__PURE__ */ u2(Alert, { severity: "info", children: '提示：AI 会尝试从您的输入中识别主题关键词（如"英语"、"工作"等），并匹配到相应的主题路径。如果无法识别，则使用此默认主题。' })
+        themes.length === 0 && /* @__PURE__ */ u2(Alert2, { severity: "info", children: '暂无主题，请先在"快速输入"设置中创建主题。' }),
+        /* @__PURE__ */ u2(Alert2, { severity: "info", children: '提示：AI 会尝试从您的输入中识别主题关键词（如"英语"、"工作"等），并匹配到相应的主题路径。如果无法识别，则使用此默认主题。' })
       ] }) })
     ] })
   ] });
@@ -68077,11 +68836,11 @@ function AiSettingsFooter({
   saveStatusSeverity,
   onSave
 }) {
-  return /* @__PURE__ */ u2(Box$1, { sx: { display: "flex", flexDirection: "column", gap: 1, alignItems: "flex-end" }, children: [
-    saveStatusMessage && /* @__PURE__ */ u2(Alert, { severity: saveStatusSeverity, sx: { width: "100%" }, children: saveStatusMessage }),
-    /* @__PURE__ */ u2(Box$1, { sx: { display: "flex", gap: 2, justifyContent: "flex-end", alignItems: "center" }, children: [
-      hasChanges && /* @__PURE__ */ u2(Chip, { label: "有未保存的更改", color: "warning", size: "small" }),
-      /* @__PURE__ */ u2(Button$1, { variant: "contained", onClick: onSave, disabled: !hasChanges || isSaving, children: isSaving ? "保存中..." : "保存设置" })
+  return /* @__PURE__ */ u2(Box, { sx: { display: "flex", flexDirection: "column", gap: 1, alignItems: "flex-end" }, children: [
+    saveStatusMessage && /* @__PURE__ */ u2(Alert2, { severity: saveStatusSeverity, sx: { width: "100%" }, children: saveStatusMessage }),
+    /* @__PURE__ */ u2(Box, { sx: { display: "flex", gap: 2, justifyContent: "flex-end", alignItems: "center" }, children: [
+      hasChanges && /* @__PURE__ */ u2(Chip2, { label: "有未保存的更改", color: "warning", size: "small" }),
+      /* @__PURE__ */ u2(Button2, { variant: "contained", onClick: onSave, disabled: !hasChanges || isSaving, children: isSaving ? "保存中..." : "保存设置" })
     ] })
   ] });
 }
@@ -68220,14 +68979,14 @@ function AiSettings(_props) {
     updateLocal({ customPrompt: CUSTOM_PROMPT_EXAMPLES });
   };
   const hasChanges = JSON.stringify(localSettings) !== JSON.stringify(aiSettings);
-  return /* @__PURE__ */ u2(Box$1, { sx: { maxWidth: 800 }, children: [
-    /* @__PURE__ */ u2(Typography$1, { variant: "h6", gutterBottom: true, children: "AI 自然语言快速记录" }),
-    /* @__PURE__ */ u2(Typography$1, { variant: "body2", color: "text.secondary", sx: { mb: 3 }, children: "启用后，可以通过自然语言描述快速创建记录，AI 会自动识别并填充相应字段。" }),
+  return /* @__PURE__ */ u2(Box, { sx: { maxWidth: 800 }, children: [
+    /* @__PURE__ */ u2(Typography2, { variant: "h6", gutterBottom: true, children: "AI 自然语言快速记录" }),
+    /* @__PURE__ */ u2(Typography2, { variant: "body2", color: "text.secondary", sx: { mb: 3 }, children: "启用后，可以通过自然语言描述快速创建记录，AI 会自动识别并填充相应字段。" }),
     /* @__PURE__ */ u2(
-      FormControlLabel,
+      FormControlLabel2,
       {
         control: /* @__PURE__ */ u2(
-          Switch,
+          Switch2,
           {
             checked: localSettings.enabled,
             onChange: (e2) => updateLocal({ enabled: e2.target.checked })
@@ -68236,11 +68995,11 @@ function AiSettings(_props) {
         label: "启用 AI 快速记录"
       }
     ),
-    localSettings.enabled && !readiness.ready && /* @__PURE__ */ u2(Alert, { severity: "warning", sx: { mt: 1 }, children: [
+    localSettings.enabled && !readiness.ready && /* @__PURE__ */ u2(Alert2, { severity: "warning", sx: { mt: 1 }, children: [
       readiness.message,
       " 开启开关不会立即发起请求，但实际使用前需要补齐配置。"
     ] }),
-    /* @__PURE__ */ u2(Divider$1, { sx: { my: 3 } }),
+    /* @__PURE__ */ u2(Divider2, { sx: { my: 3 } }),
     /* @__PURE__ */ u2(
       AiApiConfigSection,
       {
@@ -68273,7 +69032,7 @@ function AiSettings(_props) {
       }
     ),
     /* @__PURE__ */ u2(AiAdvancedSettingsSection, { settings: localSettings, onUpdate: updateLocal }),
-    /* @__PURE__ */ u2(Divider$1, { sx: { my: 3 } }),
+    /* @__PURE__ */ u2(Divider2, { sx: { my: 3 } }),
     /* @__PURE__ */ u2(
       AiSettingsFooter,
       {
@@ -68291,18 +69050,18 @@ function a11yProps(index) {
 }
 function TabPanel(props) {
   const { children, value, index, ...other } = props;
-  return /* @__PURE__ */ u2("div", { role: "tabpanel", hidden: value !== index, id: `settings-tabpanel-${index}`, ...other, children: value === index && /* @__PURE__ */ u2(Box$1, { sx: { p: 2, pt: 3 }, children }) });
+  return /* @__PURE__ */ u2("div", { role: "tabpanel", hidden: value !== index, id: `settings-tabpanel-${index}`, ...other, children: value === index && /* @__PURE__ */ u2(Box, { sx: { p: 2, pt: 3 }, children }) });
 }
 function SettingsRoot({ app }) {
   const [tabIndex, setTabIndex] = useLocalStorage(LOCAL_STORAGE_KEYS.SETTINGS_TABS, 0);
   return /* @__PURE__ */ u2(ThemeProvider, { theme, children: [
     /* @__PURE__ */ u2(CssBaseline, {}),
-    /* @__PURE__ */ u2(Box$1, { sx: { width: "100%" }, class: "think-setting-root", children: [
-      /* @__PURE__ */ u2(Box$1, { sx: { borderBottom: 1, borderColor: "divider" }, children: /* @__PURE__ */ u2(Tabs, { value: tabIndex, onChange: (_2, newValue) => setTabIndex(newValue), "aria-label": "settings tabs", children: [
-        /* @__PURE__ */ u2(Tab, { label: "快速输入", ...a11yProps(0) }),
-        /* @__PURE__ */ u2(Tab, { label: "布局", ...a11yProps(1) }),
-        /* @__PURE__ */ u2(Tab, { label: "通用", ...a11yProps(2) }),
-        /* @__PURE__ */ u2(Tab, { label: "AI", ...a11yProps(3) })
+    /* @__PURE__ */ u2(Box, { sx: { width: "100%" }, class: "think-setting-root", children: [
+      /* @__PURE__ */ u2(Box, { sx: { borderBottom: 1, borderColor: "divider" }, children: /* @__PURE__ */ u2(Tabs2, { value: tabIndex, onChange: (_2, newValue) => setTabIndex(newValue), "aria-label": "settings tabs", children: [
+        /* @__PURE__ */ u2(Tab2, { label: "快速输入", ...a11yProps(0) }),
+        /* @__PURE__ */ u2(Tab2, { label: "布局", ...a11yProps(1) }),
+        /* @__PURE__ */ u2(Tab2, { label: "通用", ...a11yProps(2) }),
+        /* @__PURE__ */ u2(Tab2, { label: "AI", ...a11yProps(3) })
       ] }) }),
       /* @__PURE__ */ u2(TabPanel, { value: tabIndex, index: 0, children: /* @__PURE__ */ u2(InputSettings, {}) }),
       /* @__PURE__ */ u2(TabPanel, { value: tabIndex, index: 1, children: /* @__PURE__ */ u2(LayoutSettings, { app }) }),
@@ -68544,556 +69303,6 @@ function useViewData({
     return finalResult;
   }, [allItems, layoutFilters, filters, sort, dateRange, keyword, layoutView, isOverviewMode, useFieldGranularity, sourceName, viewInstance]);
   return processedItems;
-}
-const PERIOD_OPTIONS = ["年", "季", "月", "周", "天"].map((v2) => ({ value: v2, label: v2 }));
-const DISPLAY_MODE_OPTIONS = [
-  { value: "list", label: "列表" },
-  { value: "grid", label: "网格" }
-];
-const LABEL_WIDTH = "80px";
-const AlignedRadioGroup = ({ label, options, selectedValue, onChange }) => /* @__PURE__ */ u2(Stack$1, { direction: "row", alignItems: "center", spacing: 2, children: [
-  /* @__PURE__ */ u2(Typography$1, { sx: { width: LABEL_WIDTH, flexShrink: 0, fontWeight: 500 }, children: label }),
-  /* @__PURE__ */ u2(RadioGroup, { row: true, value: selectedValue, onChange: (e2) => onChange(e2.target.value), children: options.map((opt) => /* @__PURE__ */ u2(FormControlLabel, { value: opt.value, control: /* @__PURE__ */ u2(Radio, { size: "small" }), label: opt.label }, opt.value)) })
-] });
-function LayoutEditorPanel({ layoutId, useCases }) {
-  const _useCases = useCases ?? useUseCases();
-  const layout = useSelector((s2) => (s2.settings.layouts || []).find((l2) => l2.id === layoutId));
-  const allViews = useSelector((s2) => s2.settings.viewInstances);
-  const [inputValue, setInputValue] = d("");
-  const [autocompleteOpen, setAutocompleteOpen] = d(false);
-  const inputRef = A$1(null);
-  const [contextMenu, setContextMenu] = d(null);
-  const handleUpdate = q$1(
-    (updates) => {
-      if (!layout) return;
-      _useCases.layout.updateLayout(layout.id, updates);
-    },
-    [layout, _useCases]
-  );
-  const selectedViews = T$1(
-    () => (layout?.viewInstanceIds || []).map((id) => allViews.find((v2) => v2.id === id)).filter(Boolean),
-    [layout?.viewInstanceIds, allViews]
-  );
-  const availableViews = T$1(
-    () => allViews.filter((v2) => !(layout?.viewInstanceIds || []).includes(v2.id)),
-    [layout?.viewInstanceIds, allViews]
-  );
-  const addView = q$1((viewId) => {
-    if (!layout || !viewId) return;
-    if (layout.viewInstanceIds.includes(viewId)) return;
-    handleUpdate({ viewInstanceIds: [...layout.viewInstanceIds, viewId] });
-  }, [layout, handleUpdate]);
-  const removeViewFromLayout = q$1((viewId) => {
-    if (!layout) return;
-    handleUpdate({ viewInstanceIds: layout.viewInstanceIds.filter((id) => id !== viewId) });
-  }, [layout, handleUpdate]);
-  const moveView = q$1((viewId, direction) => {
-    if (!layout) return;
-    const currentIds = [...layout.viewInstanceIds];
-    const index = currentIds.indexOf(viewId);
-    if (index < 0) return;
-    const targetIndex = index + direction;
-    if (targetIndex < 0 || targetIndex >= currentIds.length) return;
-    const [moved] = currentIds.splice(index, 1);
-    currentIds.splice(targetIndex, 0, moved);
-    handleUpdate({ viewInstanceIds: currentIds });
-  }, [layout, handleUpdate]);
-  const autocompleteOptions = T$1(() => {
-    const opts = availableViews.map((v2) => ({ value: v2.id, label: v2.title, type: "existing" }));
-    if (inputValue.trim() && !availableViews.some((v2) => v2.title.toLowerCase().includes(inputValue.trim().toLowerCase()))) {
-      opts.push({
-        value: "create",
-        label: `+ 创建新视图："${inputValue.trim()}"`,
-        type: "create",
-        newName: inputValue.trim()
-      });
-    }
-    return opts;
-  }, [availableViews, inputValue]);
-  const reopenAutocomplete = q$1(() => {
-    window.requestAnimationFrame(() => {
-      setAutocompleteOpen(true);
-      inputRef.current?.focus();
-    });
-  }, []);
-  const handleCreateNewView = q$1(
-    async (viewTitle) => {
-      const newView = await _useCases.viewInstance.createView(viewTitle);
-      if (!newView) return;
-      addView(newView.id);
-      reopenAutocomplete();
-    },
-    [_useCases, addView, reopenAutocomplete]
-  );
-  const handleAutocompleteChange = q$1(
-    async (_event, newValue) => {
-      if (!newValue) return;
-      if (newValue.type === "existing") {
-        addView(newValue.value);
-        setInputValue("");
-        reopenAutocomplete();
-        return;
-      }
-      if (newValue.type === "create") {
-        setInputValue("");
-        await handleCreateNewView(newValue.newName);
-      }
-    },
-    [addView, handleCreateNewView, reopenAutocomplete]
-  );
-  const handleChipRightClick = q$1((event, view) => {
-    event.preventDefault();
-    setContextMenu({
-      mouseX: event.clientX - 2,
-      mouseY: event.clientY - 4,
-      viewId: view.id,
-      viewTitle: view.title
-    });
-  }, []);
-  const handleContextMenuClose = q$1(() => setContextMenu(null), []);
-  const handleViewSettings = q$1(() => {
-    if (!contextMenu) return;
-    const view = allViews.find((v2) => v2.id === contextMenu.viewId);
-    if (view) openModuleSettingsWidget(view);
-    handleContextMenuClose();
-  }, [contextMenu, allViews, handleContextMenuClose]);
-  const handleViewRename = q$1(() => {
-    if (!contextMenu) return;
-    const newName = prompt("请输入新的视图名称", contextMenu.viewTitle);
-    if (newName && newName.trim()) {
-      _useCases.viewInstance.updateView(contextMenu.viewId, { title: newName.trim() });
-    }
-    handleContextMenuClose();
-  }, [contextMenu, _useCases, handleContextMenuClose]);
-  const handleViewRemove = q$1(() => {
-    if (!contextMenu) return;
-    removeViewFromLayout(contextMenu.viewId);
-    handleContextMenuClose();
-  }, [contextMenu, removeViewFromLayout, handleContextMenuClose]);
-  const handleMoveLeftFromMenu = q$1(() => {
-    if (!contextMenu) return;
-    moveView(contextMenu.viewId, -1);
-    handleContextMenuClose();
-  }, [contextMenu, moveView, handleContextMenuClose]);
-  const handleMoveRightFromMenu = q$1(() => {
-    if (!contextMenu) return;
-    moveView(contextMenu.viewId, 1);
-    handleContextMenuClose();
-  }, [contextMenu, moveView, handleContextMenuClose]);
-  if (!layout) {
-    return /* @__PURE__ */ u2("div", { style: { padding: 12 }, children: "未找到布局（可能已被删除）。" });
-  }
-  return /* @__PURE__ */ u2(Stack$1, { spacing: 2, sx: { p: "8px 16px 16px 16px", width: "100%", minWidth: 0, boxSizing: "border-box" }, children: [
-    /* @__PURE__ */ u2(
-      TextField$1,
-      {
-        label: "布局名称",
-        value: layout.name || "",
-        onChange: (e2) => handleUpdate({ name: e2.target.value }),
-        size: "small",
-        fullWidth: true
-      }
-    ),
-    /* @__PURE__ */ u2(Stack$1, { direction: "row", alignItems: "center", spacing: 2, children: [
-      /* @__PURE__ */ u2(Typography$1, { sx: { width: LABEL_WIDTH, flexShrink: 0, fontWeight: 500 }, children: "工具栏" }),
-      /* @__PURE__ */ u2(
-        FormControlLabel,
-        {
-          control: /* @__PURE__ */ u2(
-            Checkbox,
-            {
-              size: "small",
-              checked: !layout.hideToolbar,
-              onChange: (e2) => handleUpdate({ hideToolbar: !e2.target.checked })
-            }
-          ),
-          label: /* @__PURE__ */ u2(Typography$1, { noWrap: true, children: "显示工具栏/导航器" }),
-          sx: { flexShrink: 0, mr: 0 }
-        }
-      )
-    ] }),
-    /* @__PURE__ */ u2(Stack$1, { direction: "row", alignItems: "center", spacing: 2, children: [
-      /* @__PURE__ */ u2(Typography$1, { sx: { width: LABEL_WIDTH, flexShrink: 0, fontWeight: 500 }, children: "初始日期" }),
-      /* @__PURE__ */ u2(
-        TextField$1,
-        {
-          type: "date",
-          size: "small",
-          variant: "outlined",
-          disabled: !!layout.initialDateFollowsNow,
-          value: layout.initialDate || "",
-          onChange: (e2) => handleUpdate({ initialDate: e2.target.value }),
-          sx: { width: "170px" }
-        }
-      ),
-      /* @__PURE__ */ u2(
-        FormControlLabel,
-        {
-          control: /* @__PURE__ */ u2(
-            Checkbox,
-            {
-              size: "small",
-              checked: !!layout.initialDateFollowsNow,
-              onChange: (e2) => handleUpdate({ initialDateFollowsNow: e2.target.checked })
-            }
-          ),
-          label: /* @__PURE__ */ u2(Typography$1, { noWrap: true, children: "跟随今日" })
-        }
-      )
-    ] }),
-    /* @__PURE__ */ u2(
-      AlignedRadioGroup,
-      {
-        label: "初始视图（时间窗）",
-        options: PERIOD_OPTIONS,
-        selectedValue: layout.initialView || "月",
-        onChange: (value) => handleUpdate({ initialView: value })
-      }
-    ),
-    /* @__PURE__ */ u2(
-      AlignedRadioGroup,
-      {
-        label: "排列方式",
-        options: DISPLAY_MODE_OPTIONS,
-        selectedValue: layout.displayMode || "list",
-        onChange: (value) => handleUpdate({ displayMode: value })
-      }
-    ),
-    layout.displayMode === "grid" && /* @__PURE__ */ u2(Stack$1, { direction: "row", alignItems: "center", spacing: 2, sx: { pl: `calc(${LABEL_WIDTH} + 16px)` }, children: /* @__PURE__ */ u2(
-      TextField$1,
-      {
-        label: "列数",
-        type: "number",
-        size: "small",
-        variant: "outlined",
-        value: layout.gridConfig?.columns || 2,
-        onChange: (e2) => handleUpdate({ gridConfig: { columns: parseInt(e2.target.value, 10) || 2 } }),
-        sx: { width: "100px" }
-      }
-    ) }),
-    /* @__PURE__ */ u2(Stack$1, { direction: "row", alignItems: "flex-start", spacing: 2, sx: { minWidth: 0 }, children: [
-      /* @__PURE__ */ u2(Typography$1, { sx: { width: LABEL_WIDTH, flexShrink: 0, fontWeight: 500, pt: "6px" }, children: "包含视图" }),
-      /* @__PURE__ */ u2(Stack$1, { spacing: 1, sx: { flex: 1, minWidth: 0 }, children: [
-        /* @__PURE__ */ u2(Box$1, { sx: { display: "flex", flexWrap: "wrap", gap: 1, alignItems: "center", minHeight: 32 }, children: selectedViews.map(
-          (view, index) => view ? /* @__PURE__ */ u2(
-            Box$1,
-            {
-              sx: {
-                display: "inline-flex",
-                alignItems: "center",
-                gap: 0.25,
-                px: 0.25,
-                py: 0.25,
-                borderRadius: 1,
-                background: "var(--background-secondary)",
-                maxWidth: "100%"
-              },
-              children: [
-                /* @__PURE__ */ u2(
-                  IconAction,
-                  {
-                    label: "前移",
-                    icon: /* @__PURE__ */ u2(ArrowBackIosNewIcon, { sx: { fontSize: "0.85rem" } }),
-                    size: "small",
-                    disabled: index === 0,
-                    onClick: () => moveView(view.id, -1),
-                    sx: { p: "2px" },
-                    stopPropagation: false
-                  }
-                ),
-                /* @__PURE__ */ u2(Tooltip$1, { title: "左键移除，右键更多选项", children: /* @__PURE__ */ u2(
-                  Chip,
-                  {
-                    label: view.title,
-                    onClick: () => removeViewFromLayout(view.id),
-                    onContextMenu: (e2) => handleChipRightClick(e2, view),
-                    size: "small",
-                    sx: { cursor: "pointer", maxWidth: 240 }
-                  }
-                ) }),
-                /* @__PURE__ */ u2(
-                  IconAction,
-                  {
-                    label: "后移",
-                    icon: /* @__PURE__ */ u2(ArrowForwardIosIcon, { sx: { fontSize: "0.85rem" } }),
-                    size: "small",
-                    disabled: index === selectedViews.length - 1,
-                    onClick: () => moveView(view.id, 1),
-                    sx: { p: "2px" },
-                    stopPropagation: false
-                  }
-                )
-              ]
-            },
-            view.id
-          ) : null
-        ) }),
-        /* @__PURE__ */ u2(
-          Autocomplete,
-          {
-            open: autocompleteOpen,
-            value: null,
-            inputValue,
-            onOpen: () => setAutocompleteOpen(true),
-            onClose: (_2, reason) => {
-              if (reason === "selectOption") return;
-              setAutocompleteOpen(false);
-            },
-            onInputChange: (_2, newInputValue) => {
-              setInputValue(newInputValue);
-              setAutocompleteOpen(true);
-            },
-            options: autocompleteOptions,
-            getOptionLabel: (option) => option ? option.label : "",
-            onChange: handleAutocompleteChange,
-            disableCloseOnSelect: true,
-            blurOnSelect: false,
-            clearOnBlur: false,
-            selectOnFocus: true,
-            renderInput: (params) => /* @__PURE__ */ u2(
-              TextField$1,
-              {
-                ...params,
-                variant: "outlined",
-                placeholder: "+ 搜索添加或创建视图...",
-                inputRef: (node2) => {
-                  inputRef.current = node2;
-                  const paramsRef = params.inputProps?.ref;
-                  if (typeof paramsRef === "function") paramsRef(node2);
-                }
-              }
-            ),
-            sx: { minWidth: 240, maxWidth: 520 },
-            size: "small",
-            disablePortal: true,
-            slotProps: { popper: { style: { zIndex: 2e4 } } }
-          }
-        )
-      ] })
-    ] }),
-    contextMenu && /* @__PURE__ */ u2(
-      "div",
-      {
-        style: {
-          position: "fixed",
-          top: contextMenu.mouseY,
-          left: contextMenu.mouseX,
-          background: "var(--background-primary)",
-          border: "1px solid var(--background-modifier-border)",
-          borderRadius: 8,
-          padding: 8,
-          zIndex: 99999,
-          boxShadow: "0 8px 24px rgba(0,0,0,0.25)"
-        },
-        onMouseLeave: handleContextMenuClose,
-        children: /* @__PURE__ */ u2("div", { style: { display: "flex", flexDirection: "column", gap: 6, minWidth: 160 }, children: [
-          /* @__PURE__ */ u2("button", { className: "mod-cta", onClick: handleViewSettings, children: "设置…" }),
-          /* @__PURE__ */ u2("button", { onClick: handleMoveLeftFromMenu, children: "向前移动" }),
-          /* @__PURE__ */ u2("button", { onClick: handleMoveRightFromMenu, children: "向后移动" }),
-          /* @__PURE__ */ u2("button", { onClick: handleViewRename, children: "重命名…" }),
-          /* @__PURE__ */ u2("button", { onClick: handleViewRemove, children: "从布局移除" })
-        ] })
-      }
-    )
-  ] });
-}
-function LayoutSettingsWidgetInner({ layoutId, widgetId }) {
-  const layout = useSelector((s2) => (s2.settings.layouts || []).find((l2) => l2.id === layoutId));
-  return /* @__PURE__ */ u2(
-    FloatingPanel,
-    {
-      id: widgetId,
-      title: `布局设置: ${layout?.name ?? layoutId}`,
-      defaultPosition: { x: window.innerWidth / 2 - 420, y: window.innerHeight / 2 - 300 },
-      minWidth: 620,
-      maxWidth: "92vw",
-      maxHeight: "88vh",
-      width: 760,
-      height: 620,
-      resizable: true,
-      bodyPadding: 0,
-      bodyStyle: { display: "flex", flexDirection: "column", minHeight: 0 },
-      onClose: () => closeFloatingWidget(widgetId),
-      children: /* @__PURE__ */ u2(LayoutEditorPanel, { layoutId })
-    }
-  );
-}
-function openLayoutSettingsWidget(layoutId) {
-  const widgetId = `layout-settings-${layoutId}`;
-  return openFloatingWidget(widgetId, () => /* @__PURE__ */ u2(LayoutSettingsWidgetInner, { layoutId, widgetId }));
-}
-function asDisplayList(value) {
-  if (Array.isArray(value)) return value.map((v2) => String(v2).trim()).filter(Boolean);
-  if (value === null || value === void 0) return [];
-  return String(value).split(/[,，\n]/).map((v2) => v2.trim()).filter(Boolean);
-}
-function describeRule(rule) {
-  if (rule.op === "empty") return `${getFieldLabel(rule.field)} 为空`;
-  if (rule.op === "notEmpty") return `${getFieldLabel(rule.field)} 非空`;
-  if (rule.op === "in" || rule.op === "notIn") {
-    const values2 = asDisplayList(rule.value);
-    const opText = rule.op === "in" ? "属于任一" : "不属于任一";
-    return `${getFieldLabel(rule.field)} ${opText} ${values2.join("、") || "未选择"}`;
-  }
-  if (rule.op === "between") {
-    const values2 = asDisplayList(rule.value);
-    return `${getFieldLabel(rule.field)} 区间 ${values2.join(" ~ ") || String(rule.value ?? "")}`;
-  }
-  return `${getFieldLabel(rule.field)} ${rule.op} ${String(rule.value ?? "")}`;
-}
-function DataFilterPanel({
-  dataStore,
-  filters,
-  items,
-  onChange,
-  legacyMode = false,
-  legacySummary,
-  onMigrateLegacyFilters
-}) {
-  const [open, setOpen] = d(false);
-  const [advancedOpen, setAdvancedOpen] = d(false);
-  const activeCount = filters.length;
-  const sourceItems = items ?? dataStore.queryItems();
-  const fieldOptions = T$1(() => getAllFields(sourceItems), [sourceItems]);
-  const commonFilterFields = T$1(() => ["themePath", "baseCategory", "tags", "type", "priority", "period"], []);
-  const hasAdvancedFilters = T$1(() => filters.some((rule) => rule.op !== "in" || !commonFilterFields.includes(rule.field)), [filters, commonFilterFields]);
-  const handleOpen = () => {
-    setAdvancedOpen(hasAdvancedFilters);
-    setOpen(true);
-  };
-  const handleClose = () => setOpen(false);
-  const handleClear = () => onChange([]);
-  const handleMigrateLegacyFilters = () => {
-    if (onMigrateLegacyFilters) onMigrateLegacyFilters();
-  };
-  const handleDeleteRule = (index) => {
-    onChange(filters.filter((_2, currentIndex) => currentIndex !== index));
-  };
-  return /* @__PURE__ */ u2("div", { class: "tp-toolbar-data-filter", children: [
-    /* @__PURE__ */ u2(
-      Button$1,
-      {
-        size: "small",
-        variant: activeCount > 0 ? "contained" : "outlined",
-        startIcon: /* @__PURE__ */ u2(FilterListIcon, {}),
-        onClick: handleOpen,
-        sx: { textTransform: "none" },
-        children: [
-          "数据筛选",
-          activeCount > 0 ? ` (${activeCount})` : "",
-          legacyMode ? " · 旧版" : ""
-        ]
-      }
-    ),
-    activeCount > 0 && /* @__PURE__ */ u2("div", { class: "filter-popover-selected-chips", children: [
-      filters.slice(0, 3).map((rule, index) => /* @__PURE__ */ u2(
-        Chip,
-        {
-          label: describeRule(rule),
-          size: "small",
-          onDelete: () => handleDeleteRule(index),
-          sx: { height: "20px", fontSize: "0.75rem" }
-        },
-        `${rule.field}-${rule.op}-${index}`
-      )),
-      filters.length > 3 && /* @__PURE__ */ u2(Chip, { label: `+${filters.length - 3}`, size: "small", sx: { height: "20px", fontSize: "0.75rem" } })
-    ] }),
-    /* @__PURE__ */ u2(
-      Dialog,
-      {
-        open,
-        onClose: handleClose,
-        fullWidth: true,
-        maxWidth: "lg",
-        PaperProps: {
-          sx: {
-            width: "min(1180px, calc(100vw - 32px))",
-            maxWidth: "calc(100vw - 32px)",
-            height: "min(760px, calc(100vh - 48px))"
-          }
-        },
-        children: [
-          /* @__PURE__ */ u2(DialogTitle, { sx: { pb: 1 }, children: /* @__PURE__ */ u2(Box$1, { sx: { display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 2 }, children: [
-            /* @__PURE__ */ u2("div", { children: [
-              /* @__PURE__ */ u2(Typography$1, { variant: "h6", component: "div", children: "全局数据筛选" }),
-              /* @__PURE__ */ u2(Typography$1, { variant: "body2", color: "text.secondary", children: "这里的规则会作用于当前布局下的所有视图；单个视图自己的筛选仍在模块设置中维护。" })
-            ] }),
-            /* @__PURE__ */ u2(Box$1, { sx: { display: "flex", alignItems: "center", gap: 1, flexShrink: 0 }, children: [
-              /* @__PURE__ */ u2(Chip, { label: `${fieldOptions.length} 个可筛选字段`, size: "small", variant: "outlined" }),
-              /* @__PURE__ */ u2(Chip, { label: `${activeCount} 条规则`, size: "small", color: activeCount > 0 ? "primary" : "default" })
-            ] })
-          ] }) }),
-          /* @__PURE__ */ u2(Divider$1, {}),
-          /* @__PURE__ */ u2(DialogContent, { sx: { p: 2.5, overflow: "auto" }, children: [
-            legacyMode && /* @__PURE__ */ u2(
-              Alert,
-              {
-                severity: "info",
-                sx: { mb: 2 },
-                action: onMigrateLegacyFilters ? /* @__PURE__ */ u2(Button$1, { color: "inherit", size: "small", onClick: handleMigrateLegacyFilters, children: "转为新版规则" }) : void 0,
-                children: [
-                  "当前规则来自旧版 toolbar 主题/分类筛选",
-                  legacySummary ? `（${legacySummary}）` : "",
-                  "。 继续编辑或清空时会自动保存为新版全局筛选规则，并清空旧字段，避免新旧筛选双写。"
-                ]
-              }
-            ),
-            /* @__PURE__ */ u2(Box$1, { sx: { display: "flex", flexDirection: "column", gap: 2 }, children: [
-              /* @__PURE__ */ u2(
-                CommonFilterPanel,
-                {
-                  title: "常用筛选",
-                  description: "先用主题路径、分类、标签等常用字段筛选：同一字段内多选表示“或”，不同字段之间默认表示“且”。",
-                  dataStore,
-                  filters,
-                  items: sourceItems,
-                  fieldOptions,
-                  onChange
-                }
-              ),
-              /* @__PURE__ */ u2(
-                Accordion,
-                {
-                  expanded: advancedOpen,
-                  onChange: (_2, expanded) => setAdvancedOpen(expanded),
-                  disableGutters: true,
-                  sx: {
-                    border: "1px solid var(--background-modifier-border)",
-                    borderRadius: "10px",
-                    "&:before": { display: "none" }
-                  },
-                  children: [
-                    /* @__PURE__ */ u2(AccordionSummary, { expandIcon: /* @__PURE__ */ u2(ExpandMoreIcon, {}), children: /* @__PURE__ */ u2(Box$1, { sx: { display: "flex", alignItems: "center", gap: 1 }, children: [
-                      /* @__PURE__ */ u2(Typography$1, { sx: { fontWeight: 700 }, children: "高级筛选规则" }),
-                      /* @__PURE__ */ u2(Chip, { label: `${activeCount} 条`, size: "small", variant: "outlined" }),
-                      /* @__PURE__ */ u2(Typography$1, { variant: "body2", color: "text.secondary", children: "需要正则、区间、排除或复杂且/或关系时再展开" })
-                    ] }) }),
-                    /* @__PURE__ */ u2(AccordionDetails, { sx: { pt: 0 }, children: /* @__PURE__ */ u2(
-                      RuleBuilder,
-                      {
-                        title: "筛选",
-                        mode: "filter",
-                        rows: filters,
-                        fieldOptions,
-                        onChange: (rows) => onChange(rows),
-                        dataStore,
-                        variant: "panel"
-                      }
-                    ) })
-                  ]
-                }
-              )
-            ] })
-          ] }),
-          /* @__PURE__ */ u2(Divider$1, {}),
-          /* @__PURE__ */ u2(DialogActions, { sx: { px: 2.5, py: 1.5, justifyContent: "space-between" }, children: [
-            /* @__PURE__ */ u2(Button$1, { size: "small", onClick: handleClear, disabled: activeCount === 0, children: "清空全部规则" }),
-            /* @__PURE__ */ u2(Button$1, { size: "small", variant: "contained", onClick: handleClose, children: "完成" })
-          ] })
-        ]
-      }
-    )
-  ] });
 }
 function resolveGroupFields(groupField, groupFields) {
   if (groupFields && groupFields.length > 0) return groupFields;
@@ -69378,97 +69587,152 @@ function buildTaskExecutionViewModel(params) {
   })).sort((a2, b2) => a2.title.localeCompare(b2.title, "zh-CN"));
   return { sections };
 }
-const INITIAL_RENDERED_EXPANDED_VIEWS = 3;
-const EXPANDED_VIEW_RENDER_BATCH_SIZE = 2;
-const EXPANDED_VIEW_RENDER_DELAY_MS = 80;
-const ViewContent = ({
-  viewInstance,
-  dataStore,
-  dateRange,
-  keyword,
-  layoutView,
-  isOverviewMode,
-  useFieldGranularity,
-  layoutFilters,
+const viewModelBuilders = {
+  BlockView: ({ items, viewInstance }) => {
+    const model = buildBlockViewModel({
+      items,
+      groupField: viewInstance.group,
+      groupFields: viewInstance.groupFields
+    });
+    return {
+      effectiveGroupFields: model.effectiveGroupFields,
+      groupTree: model.groupTree
+    };
+  },
+  EventTimelineView: ({ items, viewInstance, dateRange }) => {
+    const model = buildEventTimelineViewModel({
+      items,
+      module: viewInstance,
+      dateRange
+    });
+    return {
+      filteredItems: model.filteredItems,
+      groupedTree: model.groupedTree
+    };
+  },
+  HeatmapView: ({ items, viewInstance, inputSettings }) => {
+    const model = buildHeatmapViewModel({
+      items,
+      module: viewInstance,
+      inputSettings
+    });
+    return {
+      injectedThemesByPath: model.themesByPath,
+      injectedThemesToTrack: model.themesToTrack,
+      injectedDataByThemeAndDate: model.dataByThemeAndDate
+    };
+  },
+  TimelineView: ({ items, viewInstance, dateRange, currentView }) => ({
+    timelineModel: buildTimelineViewModel({
+      items,
+      module: viewInstance,
+      dateRange,
+      currentView
+    })
+  }),
+  StatisticsView: ({ items, viewInstance, dateRange, currentView, selectedCategories }) => ({
+    statisticsModel: buildStatisticsViewModel({
+      items,
+      dateRange,
+      module: viewInstance,
+      currentView,
+      selectedCategories
+    })
+  }),
+  ProgressView: ({ items, viewInstance }) => ({
+    progressModel: buildProgressViewModel({
+      items,
+      module: viewInstance
+    })
+  }),
+  TaskExecutionView: ({ allItems, viewInstance, dateRange, currentView, layoutFilters }) => ({
+    taskExecutionModel: buildTaskExecutionViewModel({
+      items: allItems,
+      dateRange,
+      viewInstance,
+      keyword: "",
+      layoutFilters
+    })
+  })
+};
+function buildViewRenderModels(context) {
+  const builder = viewModelBuilders[context.viewInstance.viewType];
+  return builder ? builder(context) : {};
+}
+const AnyIconButton = IconButton2;
+const closeStatisticsPopover = (widgetId) => {
+  closeFloatingWidget(widgetId);
+};
+const openStatisticsPopover = (request) => {
+  openFloatingWidget(request.widgetId, () => /* @__PURE__ */ u2(
+    FloatingPanel,
+    {
+      id: request.widgetId,
+      title: request.title,
+      defaultPosition: { x: window.innerWidth / 2 - 320, y: window.innerHeight / 2 - 240 },
+      minWidth: 520,
+      maxWidth: "90vw",
+      maxHeight: "85vh",
+      width: 760,
+      height: 640,
+      resizable: true,
+      bodyPadding: 0,
+      bodyStyle: { display: "flex", flexDirection: "column", minHeight: 0 },
+      onClose: request.onClose,
+      headerActions: /* @__PURE__ */ u2("div", { class: "flex items-center gap-1", children: [
+        /* @__PURE__ */ u2(Tooltip2, { title: "导出为 Markdown", PopperProps: { disablePortal: true }, children: /* @__PURE__ */ u2(
+          AnyIconButton,
+          {
+            size: "small",
+            onClick: (e2) => {
+              e2.stopPropagation();
+              request.onExport();
+            },
+            sx: { padding: "4px" },
+            children: /* @__PURE__ */ u2(IosShareIcon, { sx: { fontSize: "1rem" } })
+          }
+        ) }),
+        request.canQuickCreate && request.onQuickCreate ? /* @__PURE__ */ u2(Tooltip2, { title: "按当前分类创建", PopperProps: { disablePortal: true }, children: /* @__PURE__ */ u2(
+          AnyIconButton,
+          {
+            size: "small",
+            onClick: (e2) => {
+              e2.stopPropagation();
+              request.onQuickCreate?.();
+            },
+            sx: { padding: "4px" },
+            children: /* @__PURE__ */ u2(AddCircleOutlineIcon, { sx: { fontSize: "1rem" } })
+          }
+        ) }) : null
+      ] }),
+      children: /* @__PURE__ */ u2(
+        PopoverContent,
+        {
+          blocks: request.blocks,
+          module: request.module,
+          timerService: request.timerService,
+          timers: request.timers,
+          allThemes: request.allThemes,
+          messageRenderPort: request.messageRenderPort,
+          onOpenRecord: request.onOpenRecord,
+          onOpenRecordOrigin: request.onOpenRecordOrigin,
+          resolveResourcePath: request.resolveResourcePath
+        }
+      )
+    }
+  ));
+};
+function useViewRuntimeHandlers({
   app,
-  onMarkDone,
   actionService,
-  timerService,
-  timers,
-  // [新增]
-  allThemes,
-  // [新增]
-  allItems,
-  inputSettings,
-  // [新增]
-  onDataLoaded
-  // [新增]
-}) => {
-  const messageRenderPort = useMessageRenderPort();
+  viewInstance,
+  dateRange,
+  layoutView,
+  excelAvailableFields
+}) {
   const useCases = useUseCases();
   const ui = useUiPort();
-  const viewItems = useViewData({
-    dataStore,
-    sourceItems: allItems,
-    viewInstance,
-    dateRange,
-    keyword,
-    layoutView,
-    isOverviewMode: !!isOverviewMode,
-    useFieldGranularity,
-    layoutFilters
-  });
-  const selectedLayoutCategories = T$1(() => getCategoryValuesFromFilters(layoutFilters), [layoutFilters]);
-  const excelAvailableFields = T$1(() => getAllFields(allItems), [allItems]);
-  y(() => {
-    if (onDataLoaded) {
-      onDataLoaded(viewItems);
-    }
-  }, [viewItems, onDataLoaded]);
-  const ViewComponent = DashboardViewComponents[viewInstance.viewType];
-  if (!ViewComponent) return /* @__PURE__ */ u2("div", { children: [
-    "未知视图: ",
-    viewInstance.viewType
-  ] });
-  const blockViewModel = viewInstance.viewType === "BlockView" ? buildBlockViewModel({
-    items: viewItems,
-    groupField: viewInstance.group,
-    groupFields: viewInstance.groupFields
-  }) : null;
-  const eventTimelineViewModel = viewInstance.viewType === "EventTimelineView" ? buildEventTimelineViewModel({
-    items: viewItems,
-    module: viewInstance,
-    dateRange
-  }) : null;
-  const heatmapViewModel = viewInstance.viewType === "HeatmapView" ? buildHeatmapViewModel({
-    items: viewItems,
-    module: viewInstance,
-    inputSettings
-  }) : null;
-  const timelineViewModel = viewInstance.viewType === "TimelineView" ? buildTimelineViewModel({
-    items: viewItems,
-    module: viewInstance,
-    dateRange,
-    currentView: layoutView
-  }) : null;
-  const statisticsViewModel = viewInstance.viewType === "StatisticsView" ? buildStatisticsViewModel({
-    items: viewItems,
-    dateRange,
-    module: viewInstance,
-    currentView: layoutView,
-    selectedCategories: selectedLayoutCategories
-  }) : null;
-  const progressViewModel = viewInstance.viewType === "ProgressView" ? buildProgressViewModel({
-    items: viewItems,
-    module: viewInstance
-  }) : null;
-  const taskExecutionViewModel = viewInstance.viewType === "TaskExecutionView" ? buildTaskExecutionViewModel({
-    items: allItems,
-    dateRange,
-    viewInstance,
-    keyword,
-    layoutFilters
-  }) : null;
+  const modal = useModalPort();
   const onUpdateTaskTime = q$1(
     async (taskId, updates) => {
       const ok = await updateTimeFromView({
@@ -69497,9 +69761,47 @@ const ViewContent = ({
       payload
     });
   }, [actionService, app, dateRange, layoutView, ui, viewInstance]);
-  const onOpenExcelRecord = q$1((item) => {
+  const onCategoryColorsChange = q$1((nextColors) => {
+    void useCases.settings.updateCategoryColors(nextColors);
+  }, [useCases.settings]);
+  const onOpenRecord = q$1((item) => {
     openEditFromItem({ app, item });
   }, [app]);
+  const onOpenRecordOrigin = q$1((item) => {
+    openRecordOrigin({ app, item });
+  }, [app]);
+  const resolveResourcePath = q$1((path) => {
+    return resolveVaultResourcePath(app, path);
+  }, [app]);
+  const onCreateFromTimeline = q$1((payload) => {
+    openCreateFromTimeline({
+      app,
+      uiPort: ui,
+      inputBlocks: payload.inputBlocks,
+      hourHeight: payload.hourHeight,
+      dayBlocks: payload.dayBlocks,
+      day: payload.day,
+      event: payload.event
+    });
+  }, [app, ui]);
+  const onOpenHeatmapCreate = q$1((request) => {
+    openCreateFromHeatmap({
+      app,
+      sourceBlockId: request.sourceBlockId,
+      date: request.date,
+      item: request.item,
+      themePath: request.themePath,
+      themesByPath: request.themesByPath,
+      notice: (message) => ui.notice(message)
+    });
+  }, [app, ui]);
+  const onOpenCheckinManager = q$1((request) => {
+    modal.openCheckinManager({
+      date: request.date,
+      items: request.items,
+      onAddRecord: request.onAddRecord
+    });
+  }, [modal]);
   const onExcelCellCommit = q$1(async (request) => {
     return await commitExcelCellFromView({
       uiPort: ui,
@@ -69517,8 +69819,44 @@ const ViewContent = ({
   const onExcelConfigChange = q$1(async (nextExcelConfig) => {
     await useCases.viewInstance.updateExcelViewConfig(viewInstance.id, nextExcelConfig);
   }, [useCases, viewInstance.id]);
-  const viewProps = {
-    app,
+  return {
+    onUpdateTaskTime,
+    onQuickCreate,
+    onCategoryColorsChange,
+    onOpenRecord,
+    onOpenRecordOrigin,
+    resolveResourcePath,
+    onCreateFromTimeline,
+    onOpenHeatmapCreate,
+    onOpenCheckinManager,
+    onExcelCellCommit,
+    onExcelFieldsChange,
+    onExcelConfigChange,
+    onNotice: ui.notice
+  };
+}
+function buildViewProps({
+  viewInstance,
+  viewItems,
+  dateRange,
+  layoutView,
+  useFieldGranularity,
+  excelAvailableFields,
+  onMarkDone,
+  handlers,
+  onOpenStatisticsPopover,
+  onCloseStatisticsPopover,
+  timerService,
+  timers,
+  allThemes,
+  inputSettings,
+  selectedLayoutCategories,
+  categoryColors,
+  messageRenderPort,
+  renderModels
+}) {
+  const viewType = viewInstance.viewType;
+  return {
     items: viewItems,
     dateRange,
     module: viewInstance,
@@ -69528,162 +69866,129 @@ const ViewContent = ({
     groupField: viewInstance.group,
     groupFields: viewInstance.groupFields,
     fields: viewInstance.fields,
-    availableFields: viewInstance.viewType === "ExcelView" ? excelAvailableFields : void 0,
-    excelConfig: viewInstance.viewType === "ExcelView" ? viewInstance.viewConfig?.excel : void 0,
-    onFieldsChange: viewInstance.viewType === "ExcelView" ? onExcelFieldsChange : void 0,
-    onExcelConfigChange: viewInstance.viewType === "ExcelView" ? onExcelConfigChange : void 0,
+    availableFields: viewType === "ExcelView" ? excelAvailableFields : void 0,
+    excelConfig: viewType === "ExcelView" ? viewInstance.viewConfig?.excel : void 0,
+    onFieldsChange: viewType === "ExcelView" ? handlers.onExcelFieldsChange : void 0,
+    onExcelConfigChange: viewType === "ExcelView" ? handlers.onExcelConfigChange : void 0,
     onMarkDone,
-    // 不向 shared/ui 透传 actionService：需要的能力一律用 handlers 注入
-    // itemService 不再向 shared/ui 透传（避免把 service 依赖扩散到 UI）
-    // 仅部分 View 需要（如 TimelineView 的“对齐/精确编辑”）
-    onUpdateTaskTime,
-    onQuickCreate: viewInstance.viewType === "StatisticsView" ? onQuickCreate : void 0,
-    onOpenRecord: viewInstance.viewType === "ExcelView" ? onOpenExcelRecord : void 0,
-    onCellCommit: viewInstance.viewType === "ExcelView" ? onExcelCellCommit : void 0,
+    onUpdateTaskTime: handlers.onUpdateTaskTime,
+    onQuickCreate: viewType === "StatisticsView" ? handlers.onQuickCreate : void 0,
+    onOpenStatisticsPopover: viewType === "StatisticsView" ? onOpenStatisticsPopover : void 0,
+    onCloseStatisticsPopover: viewType === "StatisticsView" ? onCloseStatisticsPopover : void 0,
+    categoryColors: viewType === "StatisticsView" ? categoryColors : void 0,
+    onCategoryColorsChange: viewType === "StatisticsView" ? handlers.onCategoryColorsChange : void 0,
+    onOpenRecord: handlers.onOpenRecord,
+    onOpenRecordOrigin: handlers.onOpenRecordOrigin,
+    resolveResourcePath: handlers.resolveResourcePath,
+    onNotice: handlers.onNotice,
+    onCreateFromTimeline: viewType === "TimelineView" ? handlers.onCreateFromTimeline : void 0,
+    onOpenHeatmapCreate: viewType === "HeatmapView" ? handlers.onOpenHeatmapCreate : void 0,
+    onOpenCheckinManager: viewType === "HeatmapView" ? handlers.onOpenCheckinManager : void 0,
+    onCellCommit: viewType === "ExcelView" ? handlers.onExcelCellCommit : void 0,
     timerService,
     timers,
-    // [新增]
     allThemes,
-    // [新增]
     inputSettings,
-    // [新增]
     selectedCategories: selectedLayoutCategories,
-    // 通用：Markdown 渲染能力（BlockView/卡片内容等复用）
     messageRenderPort,
-    // 仅 BlockView 需要（其它 View 忽略即可）
-    effectiveGroupFields: blockViewModel?.effectiveGroupFields,
-    groupTree: blockViewModel?.groupTree,
-    // 仅 EventTimelineView 需要（其它 View 忽略即可）
-    filteredItems: eventTimelineViewModel?.filteredItems,
-    groupedTree: eventTimelineViewModel?.groupedTree,
-    // Phase2: TimelineView / StatisticsView renderModel 注入（shared/ui 只渲染）
-    timelineModel: timelineViewModel,
-    statisticsModel: statisticsViewModel,
-    progressModel: progressViewModel,
-    taskExecutionModel: taskExecutionViewModel,
-    // 仅 HeatmapView 需要（其它 View 忽略即可）
-    injectedThemesByPath: heatmapViewModel?.themesByPath,
-    injectedThemesToTrack: heatmapViewModel?.themesToTrack,
-    injectedDataByThemeAndDate: heatmapViewModel?.dataByThemeAndDate
+    ...renderModels
   };
+}
+function ViewContent({
+  viewInstance,
+  dataStore,
+  dateRange,
+  keyword,
+  layoutView,
+  isOverviewMode,
+  useFieldGranularity,
+  layoutFilters,
+  app,
+  onMarkDone,
+  actionService,
+  timerService,
+  timers,
+  allThemes,
+  allItems,
+  inputSettings,
+  onDataLoaded
+}) {
+  const messageRenderPort = useMessageRenderPort();
+  const categoryColors = useSelector(selectCategoryColors);
+  const viewItems = useViewData({
+    dataStore,
+    sourceItems: allItems,
+    viewInstance,
+    dateRange,
+    keyword,
+    layoutView,
+    isOverviewMode: !!isOverviewMode,
+    useFieldGranularity,
+    layoutFilters
+  });
+  const selectedLayoutCategories = T$1(() => getCategoryValuesFromFilters(layoutFilters), [layoutFilters]);
+  const excelAvailableFields = T$1(() => getAllFields(allItems), [allItems]);
+  y(() => {
+    onDataLoaded(viewItems);
+  }, [viewItems, onDataLoaded]);
+  const ViewComponent = DashboardViewComponents[viewInstance.viewType];
+  if (!ViewComponent) return /* @__PURE__ */ u2("div", { children: [
+    "未知视图: ",
+    viewInstance.viewType
+  ] });
+  const renderModels = T$1(() => buildViewRenderModels({
+    viewInstance,
+    items: viewItems,
+    allItems,
+    dateRange,
+    currentView: layoutView,
+    inputSettings,
+    layoutFilters,
+    selectedCategories: selectedLayoutCategories
+  }), [allItems, dateRange, inputSettings, layoutFilters, layoutView, selectedLayoutCategories, viewInstance, viewItems]);
+  const handlers = useViewRuntimeHandlers({
+    app,
+    actionService,
+    viewInstance,
+    dateRange,
+    layoutView,
+    excelAvailableFields
+  });
+  const viewProps = buildViewProps({
+    viewInstance,
+    viewItems,
+    dateRange,
+    layoutView,
+    useFieldGranularity,
+    excelAvailableFields,
+    onMarkDone,
+    handlers,
+    onOpenStatisticsPopover: openStatisticsPopover,
+    onCloseStatisticsPopover: closeStatisticsPopover,
+    timerService,
+    timers,
+    allThemes,
+    inputSettings,
+    selectedLayoutCategories,
+    categoryColors,
+    messageRenderPort,
+    renderModels
+  });
   return /* @__PURE__ */ u2(ViewComponent, { ...viewProps });
-};
-function LayoutRenderer({ layout, dataStore, app, actionService, timerService }) {
-  const useCases = useUseCases();
-  const ui = useUiPort();
-  const allViews = useSelector(selectViewInstances);
-  const inputSettings = useSelector(selectInputSettings);
-  const timers = useSelector(selectTimers);
-  const allThemes = inputSettings.themes;
-  const [allItems, setAllItems] = d(() => dataStore.queryItems());
-  y(() => {
-    const readAllItems = () => {
-      const startedAt = performance.now();
-      const nextItems = dataStore.queryItems();
-      const durationMs2 = Math.round((performance.now() - startedAt) * 100) / 100;
-      devLog("[ThinkPlugin] layout shared query", {
-        layoutId: layout.id,
-        viewCount: layout.viewInstanceIds.length,
-        itemCount: nextItems.length,
-        durationMs: durationMs2
-      });
-      setAllItems(nextItems);
-    };
-    const listener = () => readAllItems();
-    dataStore.subscribe(listener);
-    readAllItems();
-    return () => dataStore.unsubscribe(listener);
-  }, [dataStore, layout.id, layout.viewInstanceIds.length]);
-  const [expandedState, setExpandedState] = d({});
-  const [isStateInitialized, setIsStateInitialized] = d(false);
-  const modulesDataCache = A$1({});
-  y(() => {
-    const initialState = {};
-    layout.viewInstanceIds.forEach((viewId) => {
-      const view = allViews.find((v2) => v2.id === viewId);
-      if (view) {
-        initialState[viewId] = !view.collapsed;
-      }
-    });
-    setExpandedState(initialState);
-    setIsStateInitialized(true);
-  }, [layout.id]);
-  y(() => {
-    if (!isStateInitialized) return;
-    setExpandedState((prevState) => {
-      const newState = { ...prevState };
-      layout.viewInstanceIds.forEach((viewId) => {
-        const view = allViews.find((v2) => v2.id === viewId);
-        if (view && !(viewId in prevState)) {
-          newState[viewId] = !view.collapsed;
-        }
-      });
-      return newState;
-    });
-  }, [allViews, isStateInitialized, layout.viewInstanceIds]);
-  const expandedViewIds = T$1(() => {
-    if (!isStateInitialized) return [];
-    return layout.viewInstanceIds.filter((viewId) => !!expandedState[viewId]);
-  }, [expandedState, isStateInitialized, layout.viewInstanceIds]);
-  const expandedViewSignature = expandedViewIds.join("|");
-  const [renderedExpandedCount, setRenderedExpandedCount] = d(INITIAL_RENDERED_EXPANDED_VIEWS);
-  const renderedBatchLayoutIdRef = A$1(null);
-  y(() => {
-    setRenderedExpandedCount((current2) => {
-      const firstBatchSize = Math.min(expandedViewIds.length, INITIAL_RENDERED_EXPANDED_VIEWS);
-      if (renderedBatchLayoutIdRef.current !== layout.id) {
-        renderedBatchLayoutIdRef.current = layout.id;
-        return firstBatchSize;
-      }
-      const target = Math.min(expandedViewIds.length, Math.max(current2, INITIAL_RENDERED_EXPANDED_VIEWS));
-      return target;
-    });
-  }, [expandedViewSignature, expandedViewIds.length, layout.id]);
-  y(() => {
-    if (renderedExpandedCount >= expandedViewIds.length) return;
-    const requestIdle = window.requestIdleCallback;
-    const cancelIdle = window.cancelIdleCallback;
-    let timeoutId = null;
-    let idleHandle = null;
-    const renderNextBatch = () => {
-      setRenderedExpandedCount((current2) => Math.min(
-        expandedViewIds.length,
-        current2 + EXPANDED_VIEW_RENDER_BATCH_SIZE
-      ));
-    };
-    if (requestIdle) {
-      idleHandle = requestIdle(renderNextBatch, { timeout: EXPANDED_VIEW_RENDER_DELAY_MS * 2 });
-    } else {
-      timeoutId = setTimeout(renderNextBatch, EXPANDED_VIEW_RENDER_DELAY_MS);
-    }
-    return () => {
-      if (idleHandle !== null && cancelIdle) cancelIdle(idleHandle);
-      if (timeoutId !== null) clearTimeout(timeoutId);
-    };
-  }, [expandedViewIds.length, expandedViewSignature, renderedExpandedCount]);
-  const getInitialDate = () => {
-    return layout.initialDateFollowsNow ? dayjs() : layout.initialDate ? dayjs(layout.initialDate) : dayjs();
-  };
-  const [layoutView, setLayoutView] = d(layout.initialView || "月");
-  const [layoutDate, setLayoutDate] = d(getInitialDate());
-  const legacyFilterState = T$1(() => {
-    return getLegacyLayoutFilterState(layout);
-  }, [layout.globalFilters, layout.selectedThemes, layout.selectedCategories]);
-  const globalFilters = legacyFilterState.effectiveFilters;
-  const isUsingLegacyLayoutFilters = legacyFilterState.isLegacyMode && legacyFilterState.hasLegacyValues;
-  const legacyLayoutFilterSummary = T$1(() => {
-    return describeLegacyLayoutFilters(layout);
-  }, [layout.selectedThemes, layout.selectedCategories]);
-  const dateRangeForView = T$1(() => {
-    const range = calculateTimelineRange(layoutDate, normalizeTimelineView(layoutView));
-    return [range.start.toDate(), range.end.toDate()];
-  }, [layoutDate, layoutView]);
-  y(() => {
-    setLayoutDate(getInitialDate());
-    setLayoutView(layout.initialView || "月");
-  }, [layout.id, layout.initialDate, layout.initialDateFollowsNow, layout.initialView]);
+}
+function useLayoutModuleActions({
+  app,
+  actionService,
+  layout,
+  layoutDate,
+  layoutView,
+  allViews,
+  modulesDataCache,
+  ui,
+  useCases
+}) {
   const handleExport = q$1((viewId, viewTitle) => {
-    const items = modulesDataCache.current[viewId];
+    const items = modulesDataCache.current?.[viewId];
     if (!items || items.length === 0) {
       ui.notice("没有内容可导出");
       return;
@@ -69700,9 +70005,9 @@ function LayoutRenderer({ layout, dataStore, app, actionService, timerService })
       }
     }
     const markdownContent = exportItemsToMarkdown(items, exportConfig);
-    navigator.clipboard.writeText(markdownContent);
+    void navigator.clipboard.writeText(markdownContent);
     ui.notice(`"${viewTitle}" 的内容已复制到剪贴板！`);
-  }, [allViews]);
+  }, [allViews, modulesDataCache, ui]);
   const handleQuickInputAction = q$1((viewInstance) => {
     openCreateFromViewHeader({
       app,
@@ -69722,27 +70027,12 @@ function LayoutRenderer({ layout, dataStore, app, actionService, timerService })
       });
     })();
   }, [ui, useCases]);
-  const handleToggle = q$1((viewId, event) => {
-    const isToggleAll = event?.metaKey || event?.ctrlKey;
-    if (isToggleAll) {
-      setExpandedState((currentState) => {
-        const shouldExpandAll = !currentState[viewId];
-        const newState = {};
-        for (const id in currentState) {
-          newState[id] = shouldExpandAll;
-        }
-        return newState;
-      });
-    } else {
-      setExpandedState((prev2) => ({ ...prev2, [viewId]: !prev2[viewId] }));
-    }
-  }, []);
   const handleSettingsClick = q$1((viewInstance) => {
     openModuleSettingsWidget(viewInstance);
   }, []);
   const handleDeleteViewInstance = q$1((viewInstanceId) => {
-    useCases.viewInstance.deleteView(viewInstanceId);
-  }, [layout.id, useCases.layout]);
+    void useCases.viewInstance.deleteView(viewInstanceId);
+  }, [useCases.viewInstance]);
   const handleGlobalFiltersChange = q$1((filters) => {
     void useCases.layout.updateLayout(layout.id, {
       globalFilters: filters,
@@ -69753,6 +70043,72 @@ function LayoutRenderer({ layout, dataStore, app, actionService, timerService })
   const handleMigrateLegacyLayoutFilters = q$1(() => {
     void useCases.layout.updateLayout(layout.id, migrateLegacyLayoutFilters(layout));
   }, [layout, useCases.layout]);
+  return {
+    handleExport,
+    handleQuickInputAction,
+    handleMarkItemDone,
+    handleSettingsClick,
+    handleDeleteViewInstance,
+    handleGlobalFiltersChange,
+    handleMigrateLegacyLayoutFilters
+  };
+}
+function getLayoutInitialDate(layout) {
+  return layout.initialDateFollowsNow ? dayjs() : layout.initialDate ? dayjs(layout.initialDate) : dayjs();
+}
+function LayoutRenderer({ layout, dataStore, app, actionService, timerService }) {
+  const useCases = useUseCases();
+  const ui = useUiPort();
+  const allViews = useSelector(selectViewInstances);
+  const inputSettings = useSelector(selectInputSettings);
+  const timers = useSelector(selectTimers);
+  const allThemes = inputSettings.themes;
+  const allItems = useLayoutItems({ dataStore, layout });
+  const {
+    expandedState,
+    expandedViewIds,
+    renderedExpandedCount,
+    isStateInitialized,
+    handleToggle
+  } = useExpandedViewRendering({ layout, allViews });
+  const modulesDataCache = A$1({});
+  const [layoutView, setLayoutView] = d(layout.initialView || "月");
+  const [layoutDate, setLayoutDate] = d(getLayoutInitialDate(layout));
+  const legacyFilterState = T$1(() => {
+    return getLegacyLayoutFilterState(layout);
+  }, [layout.globalFilters, layout.selectedThemes, layout.selectedCategories]);
+  const globalFilters = legacyFilterState.effectiveFilters;
+  const isUsingLegacyLayoutFilters = legacyFilterState.isLegacyMode && legacyFilterState.hasLegacyValues;
+  const legacyLayoutFilterSummary = T$1(() => {
+    return describeLegacyLayoutFilters(layout);
+  }, [layout.selectedThemes, layout.selectedCategories]);
+  const dateRangeForView = T$1(() => {
+    const range = calculateTimelineRange(layoutDate, normalizeTimelineView(layoutView));
+    return [range.start.toDate(), range.end.toDate()];
+  }, [layoutDate, layoutView]);
+  y(() => {
+    setLayoutDate(getLayoutInitialDate(layout));
+    setLayoutView(layout.initialView || "月");
+  }, [layout.id, layout.initialDate, layout.initialDateFollowsNow, layout.initialView]);
+  const {
+    handleExport,
+    handleQuickInputAction,
+    handleMarkItemDone,
+    handleSettingsClick,
+    handleDeleteViewInstance,
+    handleGlobalFiltersChange,
+    handleMigrateLegacyLayoutFilters
+  } = useLayoutModuleActions({
+    app,
+    actionService,
+    layout,
+    layoutDate,
+    layoutView,
+    allViews,
+    modulesDataCache,
+    ui,
+    useCases
+  });
   const renderViewInstance = (viewId) => {
     const viewInstance = allViews.find((v2) => v2.id === viewId);
     if (!viewInstance) return /* @__PURE__ */ u2("div", { class: "think-module", children: [
@@ -70371,6 +70727,46 @@ function summarizeEndpointHost(endpoint) {
     return "(invalid-url)";
   }
 }
+function readAiRuntimeConfig(store, traceId) {
+  const readSettingsStart = nowMs();
+  const settings = getZustandState(store, (s2) => s2.settings);
+  const ai = settings.aiSettings;
+  const blocks = settings.inputSettings?.blocks ?? [];
+  logAiInputStep(traceId, "读取 settings 完成", readSettingsStart, {
+    aiEnabled: !!ai?.enabled,
+    hasEndpoint: !!ai?.apiEndpoint,
+    endpointHost: summarizeEndpointHost(ai?.apiEndpoint),
+    hasApiKey: !!ai?.apiKey,
+    model: ai?.model ?? "(missing)",
+    blocksCount: blocks.length,
+    allowMultipleResults: !!ai?.allowMultipleResults,
+    maxResults: ai?.maxResults,
+    timeoutMs: ai?.requestTimeoutMs ?? 3e4
+  });
+  return { settings, ai, blocks };
+}
+function validateAiRuntimeConfig(ui, traceId, ai, blocks) {
+  if (!ai?.enabled) {
+    devWarn(`[AiInput][${traceId}] 中止: AI 未启用`);
+    ui.notice("AI 快速记录未启用，请在设置中开启", 4e3);
+    return false;
+  }
+  if (!ai.apiEndpoint || !ai.apiKey || !ai.model) {
+    devWarn(`[AiInput][${traceId}] 中止: AI 配置不完整`, {
+      hasEndpoint: !!ai.apiEndpoint,
+      hasApiKey: !!ai.apiKey,
+      hasModel: !!ai.model
+    });
+    ui.notice("AI 配置不完整，请在设置中配置 API 端点、密钥和模型", 5e3);
+    return false;
+  }
+  if (blocks.length === 0) {
+    devWarn(`[AiInput][${traceId}] 中止: 没有可用 Block`);
+    ui.notice('没有可用的 Block 模板，请先在"快速输入"设置中创建', 5e3);
+    return false;
+  }
+  return true;
+}
 function buildAiWaitingMessage(options) {
   const prefix2 = options.mode === "speed-test" ? "AI 接口测速中" : options.fastMode ? "AI 快速解析中" : "AI 正在解析";
   const estimate = options.mode === "speed-test" ? "通常 3-12 秒；超过 10 秒说明接口首包偏慢" : options.fastMode ? "预计 10-25 秒；接口慢时会更久" : "预计 15-50 秒；当前主要等待接口首包";
@@ -70437,57 +70833,14 @@ function startAiProgressNotice(ui, options) {
     }
   };
 }
-function readAiRuntimeConfig(store, traceId) {
-  const readSettingsStart = nowMs();
-  const settings = getZustandState(store, (s2) => s2.settings);
-  const ai = settings.aiSettings;
-  const blocks = settings.inputSettings?.blocks ?? [];
-  logAiInputStep(traceId, "读取 settings 完成", readSettingsStart, {
-    aiEnabled: !!ai?.enabled,
-    hasEndpoint: !!ai?.apiEndpoint,
-    endpointHost: summarizeEndpointHost(ai?.apiEndpoint),
-    hasApiKey: !!ai?.apiKey,
-    model: ai?.model ?? "(missing)",
-    blocksCount: blocks.length,
-    allowMultipleResults: !!ai?.allowMultipleResults,
-    maxResults: ai?.maxResults,
-    timeoutMs: ai?.requestTimeoutMs ?? 3e4
-  });
-  return { settings, ai, blocks };
-}
-function validateAiRuntimeConfig(ui, traceId, ai, blocks) {
-  if (!ai?.enabled) {
-    devWarn(`[AiInput][${traceId}] 中止: AI 未启用`);
-    ui.notice("AI 快速记录未启用，请在设置中开启", 4e3);
-    return false;
-  }
-  if (!ai.apiEndpoint || !ai.apiKey || !ai.model) {
-    devWarn(`[AiInput][${traceId}] 中止: AI 配置不完整`, {
-      hasEndpoint: !!ai.apiEndpoint,
-      hasApiKey: !!ai.apiKey,
-      hasModel: !!ai.model
-    });
-    ui.notice("AI 配置不完整，请在设置中配置 API 端点、密钥和模型", 5e3);
-    return false;
-  }
-  if (blocks.length === 0) {
-    devWarn(`[AiInput][${traceId}] 中止: 没有可用 Block`);
-    ui.notice('没有可用的 Block 模板，请先在"快速输入"设置中创建', 5e3);
-    return false;
-  }
-  return true;
-}
-function registerAiInputCommands(plugin) {
-  const { zustandStore: store, uiPort: ui } = createServices();
-  const settingsProvider = createZustandSettingsProvider(store);
-  const cache = new AiConfigCache(settingsProvider);
-  const http = new AiHttpClient();
-  const parser = new AiNaturalLanguageRecordParser(settingsProvider, cache, http);
-  const takeLatest = createTakeLatest("ai-natural-input");
-  const speedTestTakeLatest = createTakeLatest("ai-speed-test");
-  plugin.register(() => takeLatest.dispose());
-  plugin.register(() => speedTestTakeLatest.dispose());
-  async function runNaturalInputCommand(fastMode) {
+function createNaturalInputCommandRunner({
+  plugin,
+  store,
+  ui,
+  parser,
+  takeLatest
+}) {
+  return async function runNaturalInputCommand(fastMode) {
     const traceId = createAiInputTraceId(fastMode ? "aiinput-fast" : "aiinput");
     const totalStart = nowMs();
     devLog(`[AiInput][${traceId}] 命令触发`, { fastMode });
@@ -70568,7 +70921,93 @@ function registerAiInputCommands(plugin) {
       devError(`[AiInput][${traceId}] AI 解析失败，总耗时 ${elapsedMs(totalStart)}`, e2);
       ui.notice(`AI 解析失败：${e2?.message ?? e2}`, 6e3);
     }
-  }
+  };
+}
+function createAiSpeedTestCommand({
+  store,
+  ui,
+  http,
+  takeLatest
+}) {
+  return async function runAiSpeedTestCommand() {
+    const traceId = createAiInputTraceId("ai-speed");
+    const totalStart = nowMs();
+    devLog(`[AiInput][${traceId}][SpeedTest] 命令触发`);
+    const { ai, blocks } = readAiRuntimeConfig(store, traceId);
+    if (!validateAiRuntimeConfig(ui, traceId, ai, blocks)) {
+      devWarn(`[AiInput][${traceId}][SpeedTest] 配置校验未通过，总耗时 ${elapsedMs(totalStart)}`);
+      return;
+    }
+    const notice = startAiProgressNotice(ui, {
+      traceId,
+      mode: "speed-test",
+      model: ai.model,
+      endpointHost: summarizeEndpointHost(ai.apiEndpoint)
+    });
+    try {
+      const testStart = nowMs();
+      const content = await takeLatest.run((signal) => http.chatCompletion({
+        baseURL: ai.apiEndpoint,
+        apiKey: ai.apiKey,
+        model: ai.model,
+        temperature: 0,
+        max_tokens: 64,
+        timeoutMs: Math.min(ai.requestTimeoutMs ?? 3e4, 3e4),
+        signal,
+        traceId,
+        messages: [
+          { role: "system", content: "You are a latency test endpoint. Return JSON only." },
+          { role: "user", content: 'Return exactly: {"ok":true}' }
+        ]
+      }));
+      const duration2 = nowMs() - testStart;
+      notice.hide();
+      devLog(`[AiInput][${traceId}][SpeedTest] 测速完成 (${duration2.toFixed(2)}ms)`, {
+        contentPreview: content.slice(0, 120),
+        endpointHost: summarizeEndpointHost(ai.apiEndpoint),
+        model: ai.model
+      });
+      if (duration2 >= 3e3) {
+        devWarn(`[AiInput][${traceId}][SpeedTest] 接口首包偏慢 (${duration2.toFixed(2)}ms)`, {
+          endpointHost: summarizeEndpointHost(ai.apiEndpoint),
+          model: ai.model
+        });
+      }
+      ui.notice(`AI 接口测速完成：${duration2.toFixed(0)}ms。${duration2 >= 1e4 ? "接口首包偏慢，建议换模型/接口或使用快速模式。" : "接口状态还可以。"}`, 6e3);
+    } catch (e2) {
+      notice.hide();
+      if (e2 instanceof CancelledError) {
+        devWarn(`[AiInput][${traceId}][SpeedTest] 测速被取消，总耗时 ${elapsedMs(totalStart)}`);
+        return;
+      }
+      devError(`[AiInput][${traceId}][SpeedTest] 测速失败，总耗时 ${elapsedMs(totalStart)}`, e2);
+      ui.notice(`AI 接口测速失败：${e2?.message ?? e2}`, 6e3);
+    }
+  };
+}
+function registerAiInputCommands(plugin) {
+  const { zustandStore: store, uiPort: ui } = createServices();
+  const settingsProvider = createZustandSettingsProvider(store);
+  const cache = new AiConfigCache(settingsProvider);
+  const http = new AiHttpClient();
+  const parser = new AiNaturalLanguageRecordParser(settingsProvider, cache, http);
+  const naturalInputTakeLatest = createTakeLatest("ai-natural-input");
+  const speedTestTakeLatest = createTakeLatest("ai-speed-test");
+  plugin.register(() => naturalInputTakeLatest.dispose());
+  plugin.register(() => speedTestTakeLatest.dispose());
+  const runNaturalInputCommand = createNaturalInputCommandRunner({
+    plugin,
+    store,
+    ui,
+    parser,
+    takeLatest: naturalInputTakeLatest
+  });
+  const runSpeedTestCommand = createAiSpeedTestCommand({
+    store,
+    ui,
+    http,
+    takeLatest: speedTestTakeLatest
+  });
   plugin.addCommand({
     id: "think-ai-natural-input",
     name: "AI: 自然语言快速记录",
@@ -70582,61 +71021,7 @@ function registerAiInputCommands(plugin) {
   plugin.addCommand({
     id: "think-ai-speed-test",
     name: "AI: 接口测速",
-    callback: async () => {
-      const traceId = createAiInputTraceId("ai-speed");
-      const totalStart = nowMs();
-      devLog(`[AiInput][${traceId}][SpeedTest] 命令触发`);
-      const { ai, blocks } = readAiRuntimeConfig(store, traceId);
-      if (!validateAiRuntimeConfig(ui, traceId, ai, blocks)) {
-        devWarn(`[AiInput][${traceId}][SpeedTest] 配置校验未通过，总耗时 ${elapsedMs(totalStart)}`);
-        return;
-      }
-      const notice = startAiProgressNotice(ui, {
-        traceId,
-        mode: "speed-test",
-        model: ai.model,
-        endpointHost: summarizeEndpointHost(ai.apiEndpoint)
-      });
-      try {
-        const testStart = nowMs();
-        const content = await speedTestTakeLatest.run((signal) => http.chatCompletion({
-          baseURL: ai.apiEndpoint,
-          apiKey: ai.apiKey,
-          model: ai.model,
-          temperature: 0,
-          max_tokens: 64,
-          timeoutMs: Math.min(ai.requestTimeoutMs ?? 3e4, 3e4),
-          signal,
-          traceId,
-          messages: [
-            { role: "system", content: "You are a latency test endpoint. Return JSON only." },
-            { role: "user", content: 'Return exactly: {"ok":true}' }
-          ]
-        }));
-        const duration2 = nowMs() - testStart;
-        notice.hide();
-        devLog(`[AiInput][${traceId}][SpeedTest] 测速完成 (${duration2.toFixed(2)}ms)`, {
-          contentPreview: content.slice(0, 120),
-          endpointHost: summarizeEndpointHost(ai.apiEndpoint),
-          model: ai.model
-        });
-        if (duration2 >= 3e3) {
-          devWarn(`[AiInput][${traceId}][SpeedTest] 接口首包偏慢 (${duration2.toFixed(2)}ms)`, {
-            endpointHost: summarizeEndpointHost(ai.apiEndpoint),
-            model: ai.model
-          });
-        }
-        ui.notice(`AI 接口测速完成：${duration2.toFixed(0)}ms。${duration2 >= 1e4 ? "接口首包偏慢，建议换模型/接口或使用快速模式。" : "接口状态还可以。"}`, 6e3);
-      } catch (e2) {
-        notice.hide();
-        if (e2 instanceof CancelledError) {
-          devWarn(`[AiInput][${traceId}][SpeedTest] 测速被取消，总耗时 ${elapsedMs(totalStart)}`);
-          return;
-        }
-        devError(`[AiInput][${traceId}][SpeedTest] 测速失败，总耗时 ${elapsedMs(totalStart)}`, e2);
-        ui.notice(`AI 接口测速失败：${e2?.message ?? e2}`, 6e3);
-      }
-    }
+    callback: runSpeedTestCommand
   });
 }
 function setup(deps) {
@@ -70742,12 +71127,6 @@ class ServiceManager {
   disposables = new Disposables();
   constructor(plugin) {
     this.plugin = plugin;
-    this.disposables.add("closeAllFloatingWidgets()", () => {
-      try {
-        closeAllFloatingWidgets();
-      } catch {
-      }
-    });
     this.disposables.add("resetRuntimeCache()", () => {
       resetRuntimeCache();
     });
@@ -70774,7 +71153,10 @@ class ServiceManager {
       this.services.timerWidget = void 0;
     });
     this.disposables.add("closeAllFloatingWidgets()", () => {
-      closeAllFloatingWidgets();
+      try {
+        closeAllFloatingWidgets();
+      } catch {
+      }
     });
     this.disposables.add("performanceMonitor.reset()", () => {
       try {
@@ -71145,7 +71527,7 @@ let ObsidianUiPort = class {
   notice(message, timeoutMs) {
     if (isDevConsoleStackEnabled()) {
       try {
-        console.trace("[Think][Notice]", message);
+        diagnosticTrace("[Think][Notice]", message);
       } catch {
       }
     }
@@ -71185,7 +71567,7 @@ function FiltersBar({
   indexItemCount
 }) {
   return /* @__PURE__ */ u2(
-    Box$1,
+    Box,
     {
       sx: {
         p: 1.5,
@@ -71197,19 +71579,19 @@ function FiltersBar({
       },
       children: [
         /* @__PURE__ */ u2(
-          FormControlLabel,
+          FormControlLabel2,
           {
             control: /* @__PURE__ */ u2(
-              Switch,
+              Switch2,
               {
                 checked: enableRetrieval,
                 onChange: (e2) => setEnableRetrieval(e2.target.checked),
                 size: "small"
               }
             ),
-            label: /* @__PURE__ */ u2(Box$1, { sx: { display: "flex", alignItems: "center", gap: 0.5 }, children: [
+            label: /* @__PURE__ */ u2(Box, { sx: { display: "flex", alignItems: "center", gap: 0.5 }, children: [
               /* @__PURE__ */ u2(SearchIcon, { fontSize: "small" }),
-              /* @__PURE__ */ u2(Typography$1, { variant: "body2", children: "引用上下文" })
+              /* @__PURE__ */ u2(Typography2, { variant: "body2", children: "引用上下文" })
             ] })
           }
         ),
@@ -71226,30 +71608,30 @@ function FiltersBar({
             sx: { minWidth: 150 }
           }
         ),
-        enableRetrieval && /* @__PURE__ */ u2(FormControl, { size: "small", sx: { minWidth: 100 }, children: [
-          /* @__PURE__ */ u2(InputLabel, { children: "类型" }),
-          /* @__PURE__ */ u2(Select, { value: selectedType, label: "类型", onChange: (e2) => setSelectedType(e2.target.value), children: [
-            /* @__PURE__ */ u2(MenuItem, { value: "", children: "全部" }),
-            /* @__PURE__ */ u2(MenuItem, { value: "task", children: "任务" }),
-            /* @__PURE__ */ u2(MenuItem, { value: "block", children: "记录" })
+        enableRetrieval && /* @__PURE__ */ u2(FormControl2, { size: "small", sx: { minWidth: 100 }, children: [
+          /* @__PURE__ */ u2(InputLabel2, { children: "类型" }),
+          /* @__PURE__ */ u2(Select2, { value: selectedType, label: "类型", onChange: (e2) => setSelectedType(e2.target.value), children: [
+            /* @__PURE__ */ u2(MenuItem2, { value: "", children: "全部" }),
+            /* @__PURE__ */ u2(MenuItem2, { value: "task", children: "任务" }),
+            /* @__PURE__ */ u2(MenuItem2, { value: "block", children: "记录" })
           ] })
         ] }),
-        enableRetrieval && selectedType === "block" && blocks.length > 0 && /* @__PURE__ */ u2(FormControl, { size: "small", sx: { minWidth: 120 }, children: [
-          /* @__PURE__ */ u2(InputLabel, { children: "记录类型" }),
+        enableRetrieval && selectedType === "block" && blocks.length > 0 && /* @__PURE__ */ u2(FormControl2, { size: "small", sx: { minWidth: 120 }, children: [
+          /* @__PURE__ */ u2(InputLabel2, { children: "记录类型" }),
           /* @__PURE__ */ u2(
-            Select,
+            Select2,
             {
               value: selectedBlockId,
               label: "记录类型",
               onChange: (e2) => setSelectedBlockId(e2.target.value),
               children: [
-                /* @__PURE__ */ u2(MenuItem, { value: "", children: "全部记录" }),
-                blocks.map((b2) => /* @__PURE__ */ u2(MenuItem, { value: b2.id, children: b2.name }, b2.id))
+                /* @__PURE__ */ u2(MenuItem2, { value: "", children: "全部记录" }),
+                blocks.map((b2) => /* @__PURE__ */ u2(MenuItem2, { value: b2.id, children: b2.name }, b2.id))
               ]
             }
           )
         ] }),
-        enableRetrieval && /* @__PURE__ */ u2(Chip, { size: "small", label: `索引: ${indexItemCount} 条`, variant: "outlined" })
+        enableRetrieval && /* @__PURE__ */ u2(Chip2, { size: "small", label: `索引: ${indexItemCount} 条`, variant: "outlined" })
       ]
     }
   );
@@ -71262,7 +71644,7 @@ function SessionList({
   onDeleteSession
 }) {
   return /* @__PURE__ */ u2(
-    Box$1,
+    Box,
     {
       sx: {
         width: "240px",
@@ -71272,20 +71654,20 @@ function SessionList({
         flexShrink: 0
       },
       children: [
-        /* @__PURE__ */ u2(Box$1, { sx: { p: 1.5 }, children: /* @__PURE__ */ u2(Button$1, { fullWidth: true, variant: "contained", startIcon: /* @__PURE__ */ u2(AddIcon, {}), onClick: onNewSession, size: "small", children: "新建对话" }) }),
-        /* @__PURE__ */ u2(Divider$1, {}),
-        /* @__PURE__ */ u2(List$1, { sx: { flex: 1, overflow: "auto", py: 0 }, children: sessions.length === 0 ? /* @__PURE__ */ u2(Box$1, { sx: { p: 2, textAlign: "center" }, children: /* @__PURE__ */ u2(Typography$1, { variant: "body2", color: "text.secondary", children: "暂无对话记录" }) }) : sessions.map((session) => /* @__PURE__ */ u2(
-          ListItemButton,
+        /* @__PURE__ */ u2(Box, { sx: { p: 1.5 }, children: /* @__PURE__ */ u2(Button2, { fullWidth: true, variant: "contained", startIcon: /* @__PURE__ */ u2(AddIcon, {}), onClick: onNewSession, size: "small", children: "新建对话" }) }),
+        /* @__PURE__ */ u2(Divider2, {}),
+        /* @__PURE__ */ u2(List2, { sx: { flex: 1, overflow: "auto", py: 0 }, children: sessions.length === 0 ? /* @__PURE__ */ u2(Box, { sx: { p: 2, textAlign: "center" }, children: /* @__PURE__ */ u2(Typography2, { variant: "body2", color: "text.secondary", children: "暂无对话记录" }) }) : sessions.map((session) => /* @__PURE__ */ u2(
+          ListItemButton2,
           {
             selected: currentSessionId === session.id,
             onClick: () => onSelectSession(session.id),
             sx: { py: 1, pr: 1 },
             children: [
               /* @__PURE__ */ u2(
-                ListItemText,
+                ListItemText2,
                 {
                   primary: /* @__PURE__ */ u2(
-                    Typography$1,
+                    Typography2,
                     {
                       variant: "body2",
                       noWrap: true,
@@ -71293,11 +71675,11 @@ function SessionList({
                       children: session.title
                     }
                   ),
-                  secondary: /* @__PURE__ */ u2(Typography$1, { variant: "caption", color: "text.secondary", children: dayjs(session.modified).format("MM-DD HH:mm") })
+                  secondary: /* @__PURE__ */ u2(Typography2, { variant: "caption", color: "text.secondary", children: dayjs(session.modified).format("MM-DD HH:mm") })
                 }
               ),
               /* @__PURE__ */ u2(
-                IconButton$1,
+                IconButton2,
                 {
                   size: "small",
                   onClick: (e2) => onDeleteSession(session.id, e2),
@@ -71346,8 +71728,8 @@ function MessageBubble({ message }) {
       }
     };
   }, [message.content, message.id, contentType, renderPort]);
-  return /* @__PURE__ */ u2(Box$1, { sx: { display: "flex", justifyContent: isUser ? "flex-end" : "flex-start" }, children: /* @__PURE__ */ u2(
-    Paper,
+  return /* @__PURE__ */ u2(Box, { sx: { display: "flex", justifyContent: isUser ? "flex-end" : "flex-start" }, children: /* @__PURE__ */ u2(
+    Paper$1,
     {
       elevation: 0,
       sx: {
@@ -71418,7 +71800,7 @@ function MessageBubble({ message }) {
           }
         ),
         /* @__PURE__ */ u2(
-          Box$1,
+          Box,
           {
             ref: contentRef,
             sx: {
@@ -71430,7 +71812,7 @@ function MessageBubble({ message }) {
           }
         ),
         /* @__PURE__ */ u2(
-          Box$1,
+          Box,
           {
             sx: {
               mt: 0.5,
@@ -71440,9 +71822,9 @@ function MessageBubble({ message }) {
               opacity: 0.7
             },
             children: [
-              /* @__PURE__ */ u2(Typography$1, { variant: "caption", children: dayjs(message.created).format("HH:mm") }),
-              message.meta?.retrievalCount !== void 0 && message.meta.retrievalCount > 0 && /* @__PURE__ */ u2(Tooltip$1, { title: `基于 ${message.meta.retrievalCount} 条记录回答`, children: /* @__PURE__ */ u2(
-                Chip,
+              /* @__PURE__ */ u2(Typography2, { variant: "caption", children: dayjs(message.created).format("HH:mm") }),
+              message.meta?.retrievalCount !== void 0 && message.meta.retrievalCount > 0 && /* @__PURE__ */ u2(Tooltip2, { title: `基于 ${message.meta.retrievalCount} 条记录回答`, children: /* @__PURE__ */ u2(
+                Chip2,
                 {
                   size: "small",
                   label: `📚 ${message.meta.retrievalCount}`,
@@ -71463,16 +71845,16 @@ function ChatMessages({
   enableRetrieval,
   messagesEndRef
 }) {
-  return /* @__PURE__ */ u2(Box$1, { sx: { flex: 1, overflow: "auto", p: 2 }, children: [
-    messages.length === 0 ? /* @__PURE__ */ u2(Box$1, { sx: { textAlign: "center", py: 4 }, children: [
+  return /* @__PURE__ */ u2(Box, { sx: { flex: 1, overflow: "auto", p: 2 }, children: [
+    messages.length === 0 ? /* @__PURE__ */ u2(Box, { sx: { textAlign: "center", py: 4 }, children: [
       /* @__PURE__ */ u2(ChatIcon, { sx: { fontSize: 48, color: "text.disabled", mb: 2 } }),
-      /* @__PURE__ */ u2(Typography$1, { color: "text.secondary", children: emptyHint.title }),
-      enableRetrieval && emptyHint.retrievalHint && /* @__PURE__ */ u2(Typography$1, { variant: "body2", color: "text.secondary", sx: { mt: 1 }, children: emptyHint.retrievalHint })
-    ] }) : /* @__PURE__ */ u2(Stack$1, { spacing: 2, children: [
+      /* @__PURE__ */ u2(Typography2, { color: "text.secondary", children: emptyHint.title }),
+      enableRetrieval && emptyHint.retrievalHint && /* @__PURE__ */ u2(Typography2, { variant: "body2", color: "text.secondary", sx: { mt: 1 }, children: emptyHint.retrievalHint })
+    ] }) : /* @__PURE__ */ u2(Stack, { spacing: 2, children: [
       messages.map((msg) => /* @__PURE__ */ u2(MessageBubble, { message: msg }, msg.id)),
-      isLoading && /* @__PURE__ */ u2(Box$1, { sx: { display: "flex", alignItems: "center", gap: 1 }, children: [
-        /* @__PURE__ */ u2(CircularProgress, { size: 16 }),
-        /* @__PURE__ */ u2(Typography$1, { variant: "body2", color: "text.secondary", children: "AI 正在思考..." })
+      isLoading && /* @__PURE__ */ u2(Box, { sx: { display: "flex", alignItems: "center", gap: 1 }, children: [
+        /* @__PURE__ */ u2(CircularProgress2, { size: 16 }),
+        /* @__PURE__ */ u2(Typography2, { variant: "body2", color: "text.secondary", children: "AI 正在思考..." })
       ] })
     ] }),
     /* @__PURE__ */ u2("div", { ref: messagesEndRef })
@@ -71488,7 +71870,7 @@ function ChatComposer({
   placeholder
 }) {
   return /* @__PURE__ */ u2(
-    Box$1,
+    Box,
     {
       sx: {
         p: 2,
@@ -71498,7 +71880,7 @@ function ChatComposer({
       },
       children: [
         /* @__PURE__ */ u2(
-          TextField$1,
+          TextField2,
           {
             fullWidth: true,
             multiline: true,
@@ -71512,7 +71894,7 @@ function ChatComposer({
           }
         ),
         /* @__PURE__ */ u2(
-          Button$1,
+          Button2,
           {
             variant: "contained",
             onClick: onSend,
@@ -71557,7 +71939,7 @@ function AiChatModalView(props) {
     composerPlaceholder,
     emptyHint
   } = props;
-  return /* @__PURE__ */ u2(Box$1, { sx: { display: "flex", height: "100%", overflow: "hidden" }, children: [
+  return /* @__PURE__ */ u2(Box, { sx: { display: "flex", height: "100%", overflow: "hidden" }, children: [
     /* @__PURE__ */ u2(
       SessionList,
       {
@@ -71568,14 +71950,14 @@ function AiChatModalView(props) {
         onDeleteSession
       }
     ),
-    /* @__PURE__ */ u2(Box$1, { sx: { flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }, children: [
+    /* @__PURE__ */ u2(Box, { sx: { flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }, children: [
       /* @__PURE__ */ u2(
         ModalHeader,
         {
           padding: 1.5,
-          left: /* @__PURE__ */ u2(Box$1, { sx: { display: "flex", alignItems: "center", gap: 1 }, children: [
+          left: /* @__PURE__ */ u2(Box, { sx: { display: "flex", alignItems: "center", gap: 1 }, children: [
             /* @__PURE__ */ u2(ChatIcon, { color: "primary" }),
-            /* @__PURE__ */ u2(Typography$1, { variant: "subtitle1", sx: { fontWeight: 600 }, children: currentSessionTitle ?? "AI 助手" })
+            /* @__PURE__ */ u2(Typography2, { variant: "subtitle1", sx: { fontWeight: 600 }, children: currentSessionTitle ?? "AI 助手" })
           ] }),
           onClose: closeModal
         }
@@ -71606,7 +71988,7 @@ function AiChatModalView(props) {
           messagesEndRef
         }
       ),
-      error && /* @__PURE__ */ u2(Box$1, { sx: { px: 2, pb: 1 }, children: /* @__PURE__ */ u2(Typography$1, { color: "error", variant: "body2", children: error }) }),
+      error && /* @__PURE__ */ u2(Box, { sx: { px: 2, pb: 1 }, children: /* @__PURE__ */ u2(Typography2, { color: "error", variant: "body2", children: error }) }),
       /* @__PURE__ */ u2(
         ChatComposer,
         {
@@ -71764,10 +72146,10 @@ function AiChatModalContainer({ closeModal, services }) {
   const currentSession = currentSessionId ? sessionStore.getSession(currentSessionId) : null;
   const currentSessionTitle = currentSession?.title ?? null;
   if (!aiSettings?.enabled) {
-    return /* @__PURE__ */ u2(Box$1, { sx: { p: 4, textAlign: "center" }, children: [
-      /* @__PURE__ */ u2(Typography$1, { variant: "h6", gutterBottom: true, children: "AI 功能未启用" }),
-      /* @__PURE__ */ u2(Typography$1, { color: "text.secondary", children: "请在设置中启用 AI 功能并配置 API 密钥" }),
-      /* @__PURE__ */ u2(Button$1, { variant: "outlined", onClick: closeModal, sx: { mt: 2 }, children: "关闭" })
+    return /* @__PURE__ */ u2(Box, { sx: { p: 4, textAlign: "center" }, children: [
+      /* @__PURE__ */ u2(Typography2, { variant: "h6", gutterBottom: true, children: "AI 功能未启用" }),
+      /* @__PURE__ */ u2(Typography2, { color: "text.secondary", children: "请在设置中启用 AI 功能并配置 API 密钥" }),
+      /* @__PURE__ */ u2(Button2, { variant: "outlined", onClick: closeModal, sx: { mt: 2 }, children: "关闭" })
     ] });
   }
   const emptyHint = {
@@ -71874,7 +72256,7 @@ function CheckinManagerForm({ app, date: date2, items, onClose, onAddRecord }) {
     /* @__PURE__ */ u2("div", { class: "modal-content", children: sortedItems.length === 0 ? /* @__PURE__ */ u2("div", { style: { textAlign: "center", color: "var(--text-muted)", padding: "20px 0" }, children: "点击右上角“新增记录”开始打卡。" }) : /* @__PURE__ */ u2("div", { class: "checkin-details-list", children: sortedItems.map((item) => {
       const gesture = createRecordGestureHandlers({
         item,
-        app,
+        onOpenOrigin: (originItem) => openRecordOrigin({ app, item: originItem }),
         onPrimary: () => handleOpenRecord(item)
       });
       return /* @__PURE__ */ u2(
@@ -71910,7 +72292,8 @@ class CheckinManagerModal extends obsidian.Modal {
   onOpen() {
     this.contentEl.empty();
     this.modalEl.addClass("checkin-manager-modal-container");
-    nn(
+    renderModalContent(
+      this.contentEl,
       /* @__PURE__ */ u2(
         CheckinManagerForm,
         {
@@ -71921,8 +72304,7 @@ class CheckinManagerModal extends obsidian.Modal {
           onClose: () => this.close(),
           onAddRecord: this.onAddRecord
         }
-      ),
-      this.contentEl
+      )
     );
     this.contentEl.createEl("style").textContent = `
             .checkin-manager-modal-container .modal-content { padding: 0; }
@@ -71938,7 +72320,7 @@ class CheckinManagerModal extends obsidian.Modal {
         `;
   }
   onClose() {
-    pn(this.contentEl);
+    unmountModalContent(this.contentEl);
   }
 }
 var __getOwnPropDesc$2 = Object.getOwnPropertyDescriptor;
@@ -72304,6 +72686,7 @@ devLog(`[ThinkPlugin] main.ts 已加载，版本时间: ${(/* @__PURE__ */ new D
 class ThinkPlugin extends obsidian.Plugin {
   serviceManager;
   capabilities;
+  modalPort;
   /**
    * [主流程] 插件启动入口
    * 1. 加载设置
@@ -72337,6 +72720,7 @@ class ThinkPlugin extends obsidian.Plugin {
         devLog("[ThinkPlugin][BOOT] after ServiceManager.bootstrap");
         const capabilityRegistry = createDefaultCapabilityRegistry();
         const runtime = buildRuntime(instance);
+        this.modalPort = runtime.modalPort;
         this.capabilities = createCapabilities(this.app, settings, {
           modalPort: runtime.modalPort,
           timerService: this.serviceManager.timerService
@@ -72380,7 +72764,7 @@ class ThinkPlugin extends obsidian.Plugin {
       id: "think-timer-start-by-task-id",
       name: "Timer: 开始/继续计时（输入任务 ID）",
       callback: async () => {
-        const taskId = await TextPromptModal.open(this.app, {
+        const taskId = await this.modalPort?.openNamePrompt({
           title: "开始/继续计时",
           placeholder: "请输入任务 Item ID（例如：来自 Dashboard 的 item.id）",
           ctaText: "开始"
@@ -72406,7 +72790,7 @@ class ThinkPlugin extends obsidian.Plugin {
   onunload() {
     this.serviceManager?.cleanup();
     resetDefaultAiHttpTransportFactory();
-    instance.clearInstances();
+    if (!this.serviceManager) instance.clearInstances();
   }
   async loadSettings() {
     const stored = await this.loadData();
@@ -72443,71 +72827,6 @@ class ThinkPlugin extends obsidian.Plugin {
   }
   get useCases() {
     return this.serviceManager.useCases;
-  }
-}
-class TextPromptModal extends obsidian.Modal {
-  value = "";
-  resolve;
-  resolved = false;
-  titleText;
-  placeholder;
-  ctaText;
-  keydownHandler = null;
-  static open(app, opts) {
-    return new Promise((resolve) => {
-      const modal = new TextPromptModal(app, resolve, opts);
-      modal.open();
-    });
-  }
-  constructor(app, resolve, opts) {
-    super(app);
-    this.resolve = resolve;
-    this.titleText = opts.title;
-    this.placeholder = opts.placeholder ?? "";
-    this.ctaText = opts.ctaText ?? "确定";
-  }
-  resolveOnce(value) {
-    if (this.resolved) return;
-    this.resolved = true;
-    try {
-      this.resolve(value);
-    } catch {
-    }
-  }
-  onOpen() {
-    const { contentEl } = this;
-    contentEl.empty();
-    contentEl.createEl("h2", { text: this.titleText });
-    new obsidian.Setting(contentEl).addText((text2) => {
-      text2.setPlaceholder(this.placeholder);
-      text2.onChange((v2) => this.value = v2);
-    }).addButton((btn) => {
-      btn.setButtonText(this.ctaText);
-      btn.setCta();
-      btn.onClick(() => {
-        this.close();
-        this.resolveOnce(this.value || null);
-      });
-    });
-    this.keydownHandler = (e2) => {
-      if (e2.key === "Escape") {
-        this.close();
-        this.resolveOnce(null);
-      }
-      if (e2.key === "Enter") {
-        this.close();
-        this.resolveOnce(this.value || null);
-      }
-    };
-    this.modalEl.addEventListener("keydown", this.keydownHandler);
-  }
-  onClose() {
-    this.resolveOnce(null);
-    if (this.keydownHandler) {
-      this.modalEl.removeEventListener("keydown", this.keydownHandler);
-      this.keydownHandler = null;
-    }
-    this.contentEl.empty();
   }
 }
 exports.default = ThinkPlugin;

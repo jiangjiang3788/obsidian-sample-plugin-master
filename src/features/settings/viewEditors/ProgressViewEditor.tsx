@@ -1,6 +1,6 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
-import { Stack, TextField, Typography, FormControlLabel, Checkbox } from '@mui/material';
+import { Stack, TextField, Typography, FormControlLabel, Checkbox } from '@shared/public';
 import type { ViewEditorProps } from './registry';
 import { PROGRESS_VIEW_DEFAULT_CONFIG } from '@core/public';
 import { ListEditor } from '@shared/public';

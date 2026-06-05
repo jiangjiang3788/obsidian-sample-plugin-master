@@ -1,25 +1,29 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
 import type { Item, ViewInstance, MessageRenderPort } from '@core/public';
-import type { TimerController } from '@/app/public';
+import type { OpenRecordHandler, OpenRecordOriginHandler, ResolveResourcePathHandler, TimerController } from '../../../../types/actions';
 import { BlockView } from '../../BlockView';
 
 export function PopoverContent({
   blocks,
-  app,
   module,
   timerService,
   timers,
   allThemes,
   messageRenderPort,
+  onOpenRecord,
+  onOpenRecordOrigin,
+  resolveResourcePath,
 }: {
   blocks: Item[];
-  app: any;
   module: ViewInstance;
   timerService: TimerController;
   timers: any[];
   allThemes: any[];
   messageRenderPort?: MessageRenderPort;
+  onOpenRecord?: OpenRecordHandler;
+  onOpenRecordOrigin?: OpenRecordOriginHandler;
+  resolveResourcePath?: ResolveResourcePathHandler;
 }) {
   return (
     <div className="sv-popover-content">
@@ -28,7 +32,8 @@ export function PopoverContent({
       ) : (
         <BlockView
           items={blocks}
-          app={app}
+          resolveResourcePath={resolveResourcePath}
+          onOpenRecordOrigin={onOpenRecordOrigin}
           fields={module.fields || ['title', 'content', 'categoryKey', 'tags', 'date', 'period']}
           groupFields={module.groupFields}
           onMarkDone={() => {}}
@@ -36,6 +41,7 @@ export function PopoverContent({
           timers={timers}
           allThemes={allThemes}
           messageRenderPort={messageRenderPort}
+          onOpenRecord={onOpenRecord}
         />
       )}
     </div>

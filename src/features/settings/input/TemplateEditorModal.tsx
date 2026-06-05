@@ -2,12 +2,13 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
 import { useState, useEffect, useMemo, useRef } from 'preact/hooks';
-import { Button, Stack, Typography, Box, RadioGroup, FormControlLabel, Radio, FormControl, FormLabel, Divider } from '@mui/material';
+import { Button, Stack, Typography, Box, RadioGroup, FormControlLabel, Radio, FormControl, FormLabel, Divider } from '@shared/public';
 import type { JSX } from 'preact';
 import { FieldsEditor } from './FieldsEditor';
 import type { BlockTemplate, ThemeDefinition, ThemeOverride, TemplateField } from '@core/public';
 import { FloatingPanel, useUiPort, type UseCases } from '@/app/public';
 import { TemplateVariableCopier } from './TemplateVariableCopier';
+import { diagnosticError, logRenderDiagnostic } from '@shared/public';
 
 type EditMode = 'inherit' | 'override' | 'disabled';
 
@@ -54,6 +55,11 @@ const nativeLabelStyle: JSX.CSSProperties = {
     fontSize: '0.75rem',
     color: 'var(--text-muted)',
 };
+
+
+function logTemplateEditor(scope: string, payload: Record<string, unknown>): void {
+    logRenderDiagnostic(`主题模板编辑器/${scope}`, payload);
+}
 
 function NativeTextInput({
     label,
@@ -147,16 +153,18 @@ export function TemplateEditorModal({ isOpen, onClose, block, theme, existingOve
     useEffect(() => {
         if (!isOpen) return;
 
-        console.groupCollapsed('[主题模板编辑器][初始化] 打开模板配置模态框');
-        console.log('主题:', { themeId: theme.id, themePath: theme.path });
-        console.log('Block:', { blockId: block.id, blockName: block.name });
-        console.log('传入的现有覆写 existingOverride:', existingOverride);
-
         if (existingOverride) {
             const nextMode = existingOverride.disabled ? 'disabled' : 'override';
             const clonedOverride = cloneValue(existingOverride);
-            console.log('检测结果: 已存在覆写，模式应切到:', nextMode);
-            console.log('表单初始值来自 existingOverride:', clonedOverride);
+            logTemplateEditor('初始化', {
+                themeId: theme.id,
+                themePath: theme.path,
+                blockId: block.id,
+                blockName: block.name,
+                hasExistingOverride: true,
+                nextMode,
+                initialOverride: clonedOverride,
+            });
             setMode(nextMode);
             localOverrideRef.current = clonedOverride;
             setLocalOverride(clonedOverride);
@@ -167,12 +175,19 @@ export function TemplateEditorModal({ isOpen, onClose, block, theme, existingOve
                 targetFile: block.targetFile,
                 appendUnderHeader: block.appendUnderHeader
             };
-            console.log('检测结果: 没有现有覆写，默认继承；表单初始值来自基础 Block:', initialOverride);
+            logTemplateEditor('初始化', {
+                themeId: theme.id,
+                themePath: theme.path,
+                blockId: block.id,
+                blockName: block.name,
+                hasExistingOverride: false,
+                nextMode: 'inherit',
+                initialOverride,
+            });
             setMode('inherit');
             localOverrideRef.current = initialOverride;
             setLocalOverride(initialOverride);
         }
-        console.groupEnd();
     }, [isOpen, existingOverride, block, theme.id, theme.path]);
 
     const effectiveBlockForCopier = useMemo<BlockTemplate>(() => {
@@ -187,7 +202,7 @@ export function TemplateEditorModal({ isOpen, onClose, block, theme, existingOve
 
     useEffect(() => {
         if (!isOpen) return;
-        console.log('[主题模板编辑器][渲染状态]', {
+        logTemplateEditor('渲染状态', {
             当前模式: mode,
             表单是否禁用: isFormDisabled,
             说明: isFormDisabled
@@ -199,7 +214,7 @@ export function TemplateEditorModal({ isOpen, onClose, block, theme, existingOve
 
     const handleModeChange = (_event: unknown, value: string) => {
         const nextMode = value as EditMode;
-        console.log('[主题模板编辑器][模式切换] 用户切换配置模式', {
+        logTemplateEditor('模式切换', {
             旧模式: mode,
             新模式: nextMode,
             切换后表单是否应禁用: nextMode !== 'override'
@@ -211,7 +226,7 @@ export function TemplateEditorModal({ isOpen, onClose, block, theme, existingOve
         setLocalOverride(previous => {
             const next = { ...previous, ...updates };
             localOverrideRef.current = next;
-            console.log('[主题模板编辑器][草稿更新]', {
+            logTemplateEditor('草稿更新', {
                 原因: reason,
                 更新内容: updates,
                 更新后草稿: next
@@ -226,18 +241,19 @@ export function TemplateEditorModal({ isOpen, onClose, block, theme, existingOve
         await new Promise(resolve => window.setTimeout(resolve, 0));
         const draft = localOverrideRef.current;
 
-        console.groupCollapsed('[主题模板编辑器][保存] 用户点击保存配置');
-        console.log('当前模式:', mode);
-        console.log('保存前草稿 localOverride:', draft);
-        console.log('现有覆写 existingOverride:', existingOverride);
+        logTemplateEditor('保存/开始', {
+            mode,
+            draft,
+            hasExistingOverride: Boolean(existingOverride),
+        });
 
         try {
             if (mode === 'inherit') {
                 if (existingOverride) {
-                    console.log('即将删除覆写，恢复继承:', { blockId: block.id, themeId: theme.id });
+                    logTemplateEditor('保存/删除覆写', { blockId: block.id, themeId: theme.id });
                     await useCases.theme.deleteOverride(block.id, theme.id);
                 } else {
-                    console.log('当前本来就是继承，没有需要删除的覆写。');
+                    logTemplateEditor('保存/继承无需变更', { blockId: block.id, themeId: theme.id });
                 }
                 ui.notice(`已设为继承 "${block.name}" 的基础配置`);
             } else {
@@ -250,9 +266,9 @@ export function TemplateEditorModal({ isOpen, onClose, block, theme, existingOve
                     targetFile: mode === 'override' ? draft.targetFile : undefined,
                     appendUnderHeader: mode === 'override' ? draft.appendUnderHeader : undefined,
                 };
-                console.log('即将写入覆写配置:', dataToSave);
+                logTemplateEditor('保存/写入覆写', { dataToSave });
                 const result = await useCases.theme.upsertOverride(dataToSave);
-                console.log('覆写配置保存完成，useCases.theme.upsertOverride 返回:', result);
+                logTemplateEditor('保存/写入完成', { result });
                 if (!result) {
                     throw new Error('useCases.theme.upsertOverride 返回 null，通常表示设置仓库尚未初始化或保存层拒绝写入。');
                 }
@@ -260,10 +276,8 @@ export function TemplateEditorModal({ isOpen, onClose, block, theme, existingOve
             }
             onClose();
         } catch (error) {
-            console.error('[主题模板编辑器][保存] 保存失败:', error);
+            diagnosticError('[主题模板编辑器][保存] 保存失败:', error);
             ui.notice('保存主题模板配置失败，请查看控制台日志');
-        } finally {
-            console.groupEnd();
         }
     };
     
@@ -317,16 +331,16 @@ export function TemplateEditorModal({ isOpen, onClose, block, theme, existingOve
                                         value={localOverride.targetFile || ''}
                                         onInput={value => updateLocalOverride({ targetFile: value }, '输入目标文件路径 native onInput')}
                                         disabled={isFormDisabled}
-                                        onMouseDownLog={() => console.log('[主题模板编辑器][输出目标] 目标文件路径鼠标按下')}
-                                        onFocusLog={() => console.log('[主题模板编辑器][输出目标] 目标文件路径获得焦点')}
+                                        onMouseDownLog={() => logTemplateEditor('输出目标/鼠标按下', { field: 'targetFile' })}
+                                        onFocusLog={() => logTemplateEditor('输出目标/获得焦点', { field: 'targetFile' })}
                                     />
                                     <NativeTextInput
                                         label="追加到标题下 (可选)"
                                         value={localOverride.appendUnderHeader || ''}
                                         onInput={value => updateLocalOverride({ appendUnderHeader: value }, '输入追加标题 native onInput')}
                                         disabled={isFormDisabled}
-                                        onMouseDownLog={() => console.log('[主题模板编辑器][输出目标] 追加标题鼠标按下')}
-                                        onFocusLog={() => console.log('[主题模板编辑器][输出目标] 追加标题获得焦点')}
+                                        onMouseDownLog={() => logTemplateEditor('输出目标/鼠标按下', { field: 'appendUnderHeader' })}
+                                        onFocusLog={() => logTemplateEditor('输出目标/获得焦点', { field: 'appendUnderHeader' })}
                                     />
                                 </Stack>
                             </Box>

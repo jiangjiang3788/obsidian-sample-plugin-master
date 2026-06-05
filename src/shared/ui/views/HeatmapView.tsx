@@ -4,16 +4,16 @@
 import { useMemo, useState, useRef, useEffect } from 'preact/hooks';
 import { Item, ViewInstance, InputSettings, ThemeDefinition, devLog, parsePath } from '@core/public';
 import { dayjs } from '@core/public';
-import { openCreateFromHeatmap, useModalPort, useUiPort } from '@/app/public';
+import type { OpenCheckinManagerHandler, OpenHeatmapCreateHandler, ResolveResourcePathHandler } from '../../types/actions';
 import { HEATMAP_VIEW_DEFAULT_CONFIG } from '@core/public';
-import { HeatmapCell } from '@shared/ui/heatmap/HeatmapCell';
+import { HeatmapCell } from '../heatmap/HeatmapCell';
 import { buildThemeDataMap, buildThemesByPathMap } from '@core/public';
 import { RatingMappingCache } from '@core/public';
 
 // ========== Types ==========
 interface HeatmapViewProps {
     items: Item[];
-    app: any;
+    resolveResourcePath?: ResolveResourcePathHandler;
     dateRange: [Date, Date];
     module: ViewInstance;
     currentView: '年' | '季' | '月' | '周' | '天';
@@ -23,6 +23,9 @@ interface HeatmapViewProps {
     injectedThemesByPath?: Map<string, ThemeDefinition>;
     injectedThemesToTrack?: string[];
     injectedDataByThemeAndDate?: Map<string, Map<string, Item[]>>;
+    onOpenHeatmapCreate?: OpenHeatmapCreateHandler;
+    onOpenCheckinManager?: OpenCheckinManagerHandler;
+    onNotice?: (message: string) => void;
 }
 
 interface DayThemeEntry {
@@ -52,7 +55,7 @@ function getThemeGroupTitle(themePath: string) {
 // ========== Main View Component ==========
 export function HeatmapView({
     items,
-    app,
+    resolveResourcePath,
     dateRange,
     module,
     currentView,
@@ -60,9 +63,10 @@ export function HeatmapView({
     injectedThemesByPath,
     injectedThemesToTrack,
     injectedDataByThemeAndDate,
+    onOpenHeatmapCreate,
+    onOpenCheckinManager,
+    onNotice,
 }: HeatmapViewProps) {
-    const ui = useUiPort();
-    const modal = useModalPort();
 
     const config = useMemo(
         () => ({ ...HEATMAP_VIEW_DEFAULT_CONFIG, ...module.viewConfig }),
@@ -148,14 +152,17 @@ export function HeatmapView({
     };
 
     const openQuickCreate = (date: string, item?: Item, themePath?: string) => {
-        openCreateFromHeatmap({
-            app,
+        if (!onOpenHeatmapCreate) {
+            onNotice?.('未提供创建处理器，无法创建记录');
+            return;
+        }
+
+        onOpenHeatmapCreate({
             sourceBlockId: resolveCreateBlockId(themePath, item),
             date,
             item,
             themePath,
             themesByPath,
-            notice: (message) => { ui.notice(message); },
         });
     };
 
@@ -176,7 +183,12 @@ export function HeatmapView({
             return;
         }
 
-        modal.openCheckinManager({
+        if (!onOpenCheckinManager) {
+            onNotice?.('未提供记录管理处理器，无法打开记录列表');
+            return;
+        }
+
+        onOpenCheckinManager({
             date,
             items: itemsForDay,
             onAddRecord: () => openQuickCreate(date, itemsForDay[itemsForDay.length - 1], themePath),
@@ -214,7 +226,7 @@ export function HeatmapView({
                     items={dayItems}
                     config={config}
                     ratingMapping={themeRatingMapping}
-                    app={app}
+                    resolveResourcePath={resolveResourcePath}
                     onCellClick={(clickedDate, clickedItems) => handleCellClick(clickedDate, clickedItems, themePath)}
                 />
             );
@@ -254,7 +266,7 @@ export function HeatmapView({
                         items={dayItems}
                         config={config}
                         ratingMapping={themeRatingMapping}
-                        app={app}
+                        resolveResourcePath={resolveResourcePath}
                         onCellClick={(clickedDate, clickedItems) => handleCellClick(clickedDate, clickedItems, themePath)}
                     />,
                 ];
@@ -276,7 +288,7 @@ export function HeatmapView({
                             items={dayItems}
                             config={config}
                             ratingMapping={themeRatingMapping}
-                            app={app}
+                            resolveResourcePath={resolveResourcePath}
                             onCellClick={(clickedDate, clickedItems) => handleCellClick(clickedDate, clickedItems, themePath)}
                         />
                     );
@@ -303,7 +315,7 @@ export function HeatmapView({
                             items={dayItems}
                             config={config}
                             ratingMapping={themeRatingMapping}
-                            app={app}
+                            resolveResourcePath={resolveResourcePath}
                             onCellClick={(clickedDate, clickedItems) => handleCellClick(clickedDate, clickedItems, themePath)}
                         />
                     );
@@ -450,7 +462,7 @@ export function HeatmapView({
                                             items={dayItems}
                                             config={config}
                                             ratingMapping={themeRatingMapping}
-                                            app={app}
+                                            resolveResourcePath={resolveResourcePath}
                                             highlightToday={false}
                                             emptyLabel={!dayItems || dayItems.length === 0 ? entry.label : undefined}
                                             onCellClick={(clickedDate, clickedItems) => handleCellClick(clickedDate, clickedItems, entry.themePath)}

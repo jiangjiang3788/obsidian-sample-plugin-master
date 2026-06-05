@@ -1,7 +1,7 @@
 // src/features/settings/input/FieldsEditor.tsx
 /** @jsxImportSource preact */
 import { useEffect, useRef, useState } from "preact/hooks";
-import { Box, Button, Divider, Stack, Typography } from "@mui/material";
+import { Box, Button, Divider, Stack, Typography } from '@shared/public';
 import { AddIcon, logRenderDiagnostic } from '@shared/public';
 import type { TemplateField } from "@core/public";
 import { createCustomTemplateField, sanitizeTemplateField, sanitizeTemplateFields } from "@core/public";

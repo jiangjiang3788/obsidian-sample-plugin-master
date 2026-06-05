@@ -1,11 +1,11 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
 import { useMemo } from 'preact/hooks';
-import { Checkbox, FormControlLabel, FormGroup } from '@mui/material';
+import { Checkbox, FormControlLabel, FormGroup } from '../muiCompat';
 
 import type { ViewInstance } from '@core/public';
 import { collectCategoriesFromViews } from '@core/public';
-import { FilterPopover } from '@shared/ui/components/FilterPopover';
+import { FilterPopover } from '../components/FilterPopover';
 
 interface CategoryFilterProps {
   selectedCategories: string[];

@@ -39,7 +39,6 @@ export * from './taskTime';
 export * from './taskUtils';
 export * from './templateUtils';
 export * from './text';
-export * from './themeUtils';
 export * from './timeNavigator';
 export * from './timeline';
 export * from './timelineAggregation';

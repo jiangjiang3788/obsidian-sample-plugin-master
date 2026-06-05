@@ -11,6 +11,7 @@ import { EMOJI } from '@/core/types/constants';
 import { cleanTaskText, extractTaskEditableText, explainTaskEditableTextExtraction } from './text';
 import { extractRecurrenceText } from './mark';
 import { applyTaskMetadata, decodeTaskMetadata, decodeBlockContentLines } from '@/core/records/codec';
+import { recordDebugLog } from './recordDebug';
 
 /* ---------- 工具 ---------- */
 function pick(line: string, emoji: string) { return extractDate(line, emoji); }
@@ -94,21 +95,18 @@ export function parseTaskLine(
     item.content = item.editableText;
     // 不再把正文 alias 写入 extra。正文是核心字段，extra 只保留用户显式未知 KV，
     // 避免字段选择器被 `extra.正文/extra.内容/...` 污染。
-    if (typeof window !== 'undefined' && (window as any).__THINK_RECORD_DEBUG__) {
-        // 中文调试：任务正文解析阶段。不会影响数据，只输出到控制台。
-        console.groupCollapsed('[记录调试][任务读取] parser.parseTaskLine 正文提取');
-        console.log('原始任务行:', lineText);
-        console.log('去掉 checkbox 和开头图标后的候选正文 titleSrc:', titleSrc);
-        console.log('统一提取入口 extractTaskEditableText(lineText):', editableExtraction);
-        console.log('最终 editableText:', editableText);
-        console.log('正文长度/是否包含连续空格:', { length: editableText.length, hasDoubleSpace: /\s{2,}/.test(editableText) });
-        console.log('清洗过程:', explainTaskEditableTextExtraction(lineText));
-        console.log('写入 item.title:', item.title);
-        console.log('写入 item.content / item.editableText:', item.content);
-        console.log('完整原始任务行仍保存在 item.rawSource / 完整数据字段。');
-        console.log('不再写入 item.extra[正文]；正文通过 item.content / item.editableText / snapshot.semantic.editableText 暴露。');
-        console.groupEnd();
-    }
+    recordDebugLog('任务读取/parser.parseTaskLine', '正文提取', {
+        原始任务行: lineText,
+        去掉Checkbox和开头图标后的候选正文: titleSrc,
+        统一提取入口: editableExtraction,
+        最终EditableText: editableText,
+        正文长度: editableText.length,
+        是否包含连续空格: /\s{2,}/.test(editableText),
+        清洗过程: explainTaskEditableTextExtraction(lineText),
+        itemTitle: item.title,
+        itemContent: item.content,
+        说明: '完整原始任务行仍保存在 item.rawSource / 完整数据字段；不再写入 item.extra[正文]。',
+    });
     item.priority = pickPriority(lineText);
     
     // 主题只来自显式元数据 (主题::xxx)/(theme::xxx)。

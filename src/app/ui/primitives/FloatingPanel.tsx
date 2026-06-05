@@ -14,8 +14,8 @@
 
 import type { ComponentChildren, JSX } from 'preact';
 import { useEffect, useRef, useState, useCallback, useMemo } from 'preact/hooks';
-import { Paper } from '@mui/material';
-import { DragIndicatorIcon, useLocalStorage } from '@shared/public';
+
+import { DragIndicatorIcon, diagnosticLog, useLocalStorage } from '@shared/public';
 import { createPortal } from 'preact/compat';
 
 import {
@@ -383,9 +383,7 @@ export function FloatingPanel({
 
     if (!visible) return null;
 
-    if (typeof console !== 'undefined') {
-        console.log('[FloatingPanel][portal-mode]', { id, portal, placement, portalTarget: portal ? (portalContainer ? 'custom' : 'document.body') : 'inline' });
-    }
+    diagnosticLog('[FloatingPanel][portal-mode]', { id, portal, placement, portalTarget: portal ? (portalContainer ? 'custom' : 'document.body') : 'inline' });
 
     const paperStyle: JSX.CSSProperties = inline ? {
         position: 'relative',

@@ -1,632 +1,175 @@
 // src/features/dashboard/ui/LayoutRenderer.tsx
 /** @jsxImportSource preact */
-import { h, Fragment } from 'preact';
-import { useState, useMemo, useEffect, useCallback, useRef } from 'preact/hooks'; // [修改] 导入 useRef
-import { DataStore } from '@core/public';
-import { Layout, ViewInstance, Item, FilterRule, getAllFields } from '@core/public'; // [修改] 导入 Item 类型
-import { ModulePanel } from './ModulePanel';
-import { DashboardViewComponents as ViewComponents } from '@features/settings';
-
+import { h } from 'preact';
+import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
+import type { Item, ViewInstance } from '@core/public';
 import {
-    calculateTimelineRange,
-    normalizeTimelineView,
-    dayjs,
-    devLog,
-    getLegacyLayoutFilterState,
-    describeLegacyLayoutFilters,
-    migrateLegacyLayoutFilters,
-    getCategoryValuesFromFilters,
+  calculateTimelineRange,
+  dayjs,
+  describeLegacyLayoutFilters,
+  getLegacyLayoutFilterState,
+  normalizeTimelineView,
 } from '@core/public';
-import { useUseCases, useUiPort, useSelector, useMessageRenderPort } from '@/app/public';
-import type { TimerController } from '@/app/public';
-import type { ActionService } from '@core/public';
+import { ModulePanel } from './ModulePanel';
+import { useSelector, useUiPort, useUseCases } from '@/app/public';
 import {
-  selectViewInstances,
+  isModuleHeaderCreateAllowed,
   selectInputSettings,
   selectTimers,
+  selectViewInstances,
 } from '@/app/public';
-
- 
-import { useViewData } from '@/features/settings/useViewData';
 import { openLayoutSettingsWidget } from '@features/settings/layout/LayoutSettingsWidget';
-
-import {
-    completeFromView,
-    isModuleHeaderCreateAllowed,
-    openCreateFromStatistics,
-    openCreateFromViewHeader,
-    updateTimeFromView,
-    openEditFromItem,
-    commitExcelCellFromView,
-} from '@/app/public';
-import { openModuleSettingsWidget } from './ModuleSettingsModal';
 import { DataFilterPanel } from './DataFilterPanel';
-import { exportItemsToMarkdown, getExportConfigByViewType } from '@core/public'; // [新增] 导入导出函数
-import { ViewToolbar } from '@shared/public'; // [新增] 导入统一工具栏组件
-import type { UpdateTaskTimeHandler } from '@shared/public';
-import type { OpenQuickCreateHandler } from '@shared/public';
+import { ViewToolbar } from '@shared/public';
+import { useLayoutItems } from './useLayoutItems';
+import { useExpandedViewRendering } from './useExpandedViewRendering';
+import { ViewContent } from './ViewContent';
+import { useLayoutModuleActions } from './useLayoutModuleActions';
 
-// Phase2: shared/ui 纯化试点（先从 BlockView 的分组树计算搬出）
-import { buildBlockViewModel } from '@/features/settings/viewModels/blockViewModel';
-import { buildEventTimelineViewModel } from '@/features/settings/viewModels/eventTimelineViewModel';
-import { buildHeatmapViewModel } from '@/features/settings/viewModels/heatmapViewModel';
-import { buildTimelineViewModel } from '@/features/settings/viewModels/timelineViewModel';
-import { buildStatisticsViewModel } from '@/features/settings/viewModels/statisticsViewModel';
-import { buildProgressViewModel } from '@/features/settings/viewModels/progressViewModel';
-import { buildTaskExecutionViewModel } from '@/features/settings/viewModels/taskExecutionViewModel';
-
-const INITIAL_RENDERED_EXPANDED_VIEWS = 3;
-const EXPANDED_VIEW_RENDER_BATCH_SIZE = 2;
-const EXPANDED_VIEW_RENDER_DELAY_MS = 80;
-
-// ViewContent 负责把统一筛选后的数据和特殊视图 renderModel 组装给 shared/ui。
-const ViewContent = ({
-    viewInstance,
-    dataStore,
-    dateRange,
-    keyword,
-    layoutView,
-    isOverviewMode,
-    useFieldGranularity,
-    layoutFilters,
-    app,
-    onMarkDone,
-    actionService,
-    timerService,
-    timers, // [新增]
-    allThemes, // [新增]
-    allItems,
-    inputSettings, // [新增]
-    onDataLoaded, // [新增]
-}: {
-    viewInstance: ViewInstance;
-    dataStore: DataStore;
-    dateRange: [Date, Date];
-    keyword: string;
-    layoutView: string;
-    isOverviewMode: boolean;
-    useFieldGranularity: boolean;
-    layoutFilters: FilterRule[];
-    app: any;
-    onMarkDone: (id: string) => void;
-    actionService: ActionService;
-    timerService: TimerController;
-    timers: any[]; // [新增]
-    allThemes: any[]; // [新增]
-    allItems: Item[];
-    inputSettings: any; // [新增]
-    onDataLoaded: (items: Item[]) => void; // [新增]
-}) => {
-    const messageRenderPort = useMessageRenderPort();
-    const useCases = useUseCases();
-    const ui = useUiPort();
-
-    const viewItems = useViewData({
-        dataStore,
-        sourceItems: allItems,
-        viewInstance,
-        dateRange,
-        keyword,
-        layoutView,
-        isOverviewMode: !!isOverviewMode,
-        useFieldGranularity,
-        layoutFilters,
-    });
-
-    const selectedLayoutCategories = useMemo(() => getCategoryValuesFromFilters(layoutFilters), [layoutFilters]);
-    const excelAvailableFields = useMemo(() => getAllFields(allItems), [allItems]);
-
-    // [新增] 使用 useEffect 将数据传递给父组件
-    useEffect(() => {
-        if (onDataLoaded) {
-            onDataLoaded(viewItems);
-        }
-    }, [viewItems, onDataLoaded]);
-
-    const ViewComponent = (ViewComponents as any)[viewInstance.viewType];
-    if (!ViewComponent) return <div>未知视图: {viewInstance.viewType}</div>;
-
-    // Phase2: shared/ui 纯化试点
-    // 先把 BlockView 的“分组树计算”从 shared/ui 挪到 feature 层。
-    const blockViewModel = viewInstance.viewType === 'BlockView'
-        ? buildBlockViewModel({
-            items: viewItems,
-            groupField: viewInstance.group,
-            groupFields: viewInstance.groupFields,
-        })
-        : null;
-
-    const eventTimelineViewModel = viewInstance.viewType === 'EventTimelineView'
-        ? buildEventTimelineViewModel({
-            items: viewItems,
-            module: viewInstance,
-            dateRange,
-        })
-        : null;
-
-    const heatmapViewModel = viewInstance.viewType === 'HeatmapView'
-        ? buildHeatmapViewModel({
-            items: viewItems,
-            module: viewInstance,
-            inputSettings,
-        })
-        : null;
-
-    const timelineViewModel = viewInstance.viewType === 'TimelineView'
-        ? buildTimelineViewModel({
-            items: viewItems,
-            module: viewInstance,
-            dateRange,
-            currentView: layoutView as any,
-        })
-        : null;
-
-    const statisticsViewModel = viewInstance.viewType === 'StatisticsView'
-        ? buildStatisticsViewModel({
-            items: viewItems,
-            dateRange,
-            module: viewInstance,
-            currentView: layoutView as any,
-            selectedCategories: selectedLayoutCategories,
-        })
-        : null;
-
-    const progressViewModel = viewInstance.viewType === 'ProgressView'
-        ? buildProgressViewModel({
-            items: viewItems,
-            module: viewInstance,
-        })
-        : null;
-
-    const taskExecutionViewModel = viewInstance.viewType === 'TaskExecutionView'
-        ? buildTaskExecutionViewModel({
-            items: allItems,
-            dateRange,
-            viewInstance,
-            keyword,
-            layoutFilters,
-        })
-        : null;
-
-    // Phase2: shared/ui 不直接依赖 core service（如 ItemService）
-    // 由 feature 层注入保存处理器，shared/ui 只触发回调。
-    const onUpdateTaskTime = useCallback<UpdateTaskTimeHandler>(
-        async (taskId, updates) => {
-            const ok = await updateTimeFromView({
-                uiPort: ui,
-                useCases,
-                itemId: taskId,
-                updates: {
-                    time: updates.time,
-                    endTime: updates.endTime,
-                    duration: updates.duration,
-                },
-                source: 'layout_renderer',
-            });
-
-            if (!ok) throw new Error('更新任务时间失败');
-        },
-        [ui, useCases]
-    );
-
-    // Phase2: shared/ui 纯化（StatisticsView）
-    // shared/ui 不直接依赖 ActionService，只接收一个“打开快捷创建”的回调。
-    const onQuickCreate = useCallback<OpenQuickCreateHandler>((payload) => {
-        openCreateFromStatistics({
-            app,
-            actionService,
-            uiPort: ui,
-            viewInstance,
-            currentView: layoutView as any,
-            fallbackDate: dayjs(dateRange[0]),
-            payload,
-        });
-    }, [actionService, app, dateRange, layoutView, ui, viewInstance]);
-
-    // ExcelView 只负责表格交互；打开记录编辑器和单元格保存能力由 feature/app 层注入。
-    const onOpenExcelRecord = useCallback((item: Item) => {
-        openEditFromItem({ app, item });
-    }, [app]);
-
-    const onExcelCellCommit = useCallback(async (request: any) => {
-        return await commitExcelCellFromView({
-            uiPort: ui,
-            useCases,
-            item: request.item,
-            field: request.field,
-            canonicalField: request.canonicalField,
-            oldValue: request.oldValue,
-            nextValue: request.nextValue,
-            showSuccessNotice: false,
-        });
-    }, [ui, useCases]);
-
-    // Excel 视图内字段栏只编辑统一真源 ViewInstance.fields；
-    // shared/ui 只发出 nextFields，保存逻辑仍集中在 app/usecase。
-    const onExcelFieldsChange = useCallback(async (nextFields: string[]) => {
-        await useCases.viewInstance.setDisplayFields(viewInstance.id, nextFields, excelAvailableFields);
-    }, [excelAvailableFields, useCases, viewInstance.id]);
-
-    // Excel 表现配置只写入 viewConfig.excel，不改变 ViewInstance.fields 真源。
-    const onExcelConfigChange = useCallback(async (nextExcelConfig: Record<string, any>) => {
-        await useCases.viewInstance.updateExcelViewConfig(viewInstance.id, nextExcelConfig);
-    }, [useCases, viewInstance.id]);
-
-    const viewProps: any = {
-        app,
-        items: viewItems,
-        dateRange,
-        module: viewInstance,
-        currentView: layoutView,
-        useFieldGranularity,
-        ...viewInstance.viewConfig,
-        groupField: viewInstance.group,
-        groupFields: viewInstance.groupFields,
-        fields: viewInstance.fields,
-        availableFields: viewInstance.viewType === 'ExcelView' ? excelAvailableFields : undefined,
-        excelConfig: viewInstance.viewType === 'ExcelView' ? viewInstance.viewConfig?.excel : undefined,
-        onFieldsChange: viewInstance.viewType === 'ExcelView' ? onExcelFieldsChange : undefined,
-        onExcelConfigChange: viewInstance.viewType === 'ExcelView' ? onExcelConfigChange : undefined,
-        onMarkDone: onMarkDone,
-        // 不向 shared/ui 透传 actionService：需要的能力一律用 handlers 注入
-        // itemService 不再向 shared/ui 透传（避免把 service 依赖扩散到 UI）
-        // 仅部分 View 需要（如 TimelineView 的“对齐/精确编辑”）
-        onUpdateTaskTime: onUpdateTaskTime,
-        onQuickCreate: viewInstance.viewType === 'StatisticsView' ? onQuickCreate : undefined,
-        onOpenRecord: viewInstance.viewType === 'ExcelView' ? onOpenExcelRecord : undefined,
-        onCellCommit: viewInstance.viewType === 'ExcelView' ? onExcelCellCommit : undefined,
-        timerService: timerService,
-        timers: timers, // [新增]
-        allThemes: allThemes, // [新增]
-        inputSettings: inputSettings, // [新增]
-        selectedCategories: selectedLayoutCategories,
-
-        // 通用：Markdown 渲染能力（BlockView/卡片内容等复用）
-        messageRenderPort,
-
-        // 仅 BlockView 需要（其它 View 忽略即可）
-        effectiveGroupFields: blockViewModel?.effectiveGroupFields,
-        groupTree: blockViewModel?.groupTree,
-
-        // 仅 EventTimelineView 需要（其它 View 忽略即可）
-        filteredItems: eventTimelineViewModel?.filteredItems,
-        groupedTree: eventTimelineViewModel?.groupedTree,
-
-        // Phase2: TimelineView / StatisticsView renderModel 注入（shared/ui 只渲染）
-        timelineModel: timelineViewModel,
-        statisticsModel: statisticsViewModel,
-        progressModel: progressViewModel,
-        taskExecutionModel: taskExecutionViewModel,
-
-        // 仅 HeatmapView 需要（其它 View 忽略即可）
-        injectedThemesByPath: heatmapViewModel?.themesByPath,
-        injectedThemesToTrack: heatmapViewModel?.themesToTrack,
-        injectedDataByThemeAndDate: heatmapViewModel?.dataByThemeAndDate,
-    };
-
-    return <ViewComponent {...viewProps} />;
-};
+function getLayoutInitialDate(layout: any) {
+  return layout.initialDateFollowsNow ? dayjs() : (layout.initialDate ? dayjs(layout.initialDate) : dayjs());
+}
 
 export function LayoutRenderer({ layout, dataStore, app, actionService, timerService }: any) {
-    // [P1] 通过 Context 获取 UseCases（已移除 useAppStore，统一用 Zustand）
-    const useCases = useUseCases();
-    const ui = useUiPort();
-    
-    // 使用 Zustand store 获取 settings 相关状态
-    const allViews = useSelector(selectViewInstances);
-    const inputSettings = useSelector(selectInputSettings); // [修改] 获取完整 inputSettings
-    // [修改] 使用 Zustand store 获取 timers
-    const timers = useSelector(selectTimers);
-    const allThemes = inputSettings.themes; // [兼容] 保持 allThemes 变量
+  const useCases = useUseCases();
+  const ui = useUiPort();
 
-    const [allItems, setAllItems] = useState<Item[]>(() => dataStore.queryItems());
-    useEffect(() => {
-        const readAllItems = () => {
-            const startedAt = performance.now();
-            const nextItems = dataStore.queryItems();
-            const durationMs = Math.round((performance.now() - startedAt) * 100) / 100;
-            devLog('[ThinkPlugin] layout shared query', {
-                layoutId: layout.id,
-                viewCount: layout.viewInstanceIds.length,
-                itemCount: nextItems.length,
-                durationMs,
-            });
-            setAllItems(nextItems);
-        };
+  const allViews = useSelector(selectViewInstances);
+  const inputSettings = useSelector(selectInputSettings);
+  const timers = useSelector(selectTimers);
+  const allThemes = inputSettings.themes;
 
-        const listener = () => readAllItems();
-        dataStore.subscribe(listener);
-        readAllItems();
-        return () => dataStore.unsubscribe(listener);
-    }, [dataStore, layout.id, layout.viewInstanceIds.length]);
-    
-    const [expandedState, setExpandedState] = useState<Record<string, boolean>>({});
-    const [isStateInitialized, setIsStateInitialized] = useState(false);
-    
-    // [新增] 创建一个 ref 来缓存每个模块的数据
-    const modulesDataCache = useRef<Record<string, Item[]>>({});
+  const allItems = useLayoutItems({ dataStore, layout });
+  const {
+    expandedState,
+    expandedViewIds,
+    renderedExpandedCount,
+    isStateInitialized,
+    handleToggle,
+  } = useExpandedViewRendering({ layout, allViews });
 
-    useEffect(() => {
-        const initialState: Record<string, boolean> = {};
-        layout.viewInstanceIds.forEach((viewId: string) => {
-            const view = allViews.find((v: any) => v.id === viewId);
-            if (view) {
-                initialState[viewId] = !view.collapsed;
-            }
-        });
-        setExpandedState(initialState);
-        setIsStateInitialized(true);
-    }, [layout.id]); // 移除 allViews 依赖，只在 layout.id 变化时重置折叠状态
+  const modulesDataCache = useRef<Record<string, Item[]>>({});
 
-    // 单独处理视图实例变化时的折叠状态更新
-    useEffect(() => {
-        if (!isStateInitialized) return;
-        
-        setExpandedState(prevState => {
-            const newState = { ...prevState };
-            layout.viewInstanceIds.forEach((viewId: string) => {
-                const view = allViews.find((v: any) => v.id === viewId);
-                if (view && !(viewId in prevState)) {
-                    // 只为新增的视图实例设置初始状态，保持现有的折叠状态
-                    newState[viewId] = !view.collapsed;
-                }
-            });
-            return newState;
-        });
-    }, [allViews, isStateInitialized, layout.viewInstanceIds]);
+  const [layoutView, setLayoutView] = useState(layout.initialView || '月');
+  const [layoutDate, setLayoutDate] = useState(getLayoutInitialDate(layout));
 
-    const expandedViewIds = useMemo(() => {
-        if (!isStateInitialized) return [];
-        return layout.viewInstanceIds.filter((viewId: string) => !!expandedState[viewId]);
-    }, [expandedState, isStateInitialized, layout.viewInstanceIds]);
+  const legacyFilterState = useMemo(() => {
+    return getLegacyLayoutFilterState(layout);
+  }, [layout.globalFilters, layout.selectedThemes, layout.selectedCategories]);
+  const globalFilters = legacyFilterState.effectiveFilters;
+  const isUsingLegacyLayoutFilters = legacyFilterState.isLegacyMode && legacyFilterState.hasLegacyValues;
+  const legacyLayoutFilterSummary = useMemo(() => {
+    return describeLegacyLayoutFilters(layout);
+  }, [layout.selectedThemes, layout.selectedCategories]);
 
-    const expandedViewSignature = expandedViewIds.join('|');
-    const [renderedExpandedCount, setRenderedExpandedCount] = useState(INITIAL_RENDERED_EXPANDED_VIEWS);
-    const renderedBatchLayoutIdRef = useRef<string | null>(null);
+  const dateRangeForView = useMemo(() => {
+    const range = calculateTimelineRange(layoutDate, normalizeTimelineView(layoutView));
+    return [range.start.toDate(), range.end.toDate()] as [Date, Date];
+  }, [layoutDate, layoutView]);
 
-    useEffect(() => {
-        setRenderedExpandedCount(current => {
-            const firstBatchSize = Math.min(expandedViewIds.length, INITIAL_RENDERED_EXPANDED_VIEWS);
-            if (renderedBatchLayoutIdRef.current !== layout.id) {
-                renderedBatchLayoutIdRef.current = layout.id;
-                return firstBatchSize;
-            }
+  useEffect(() => {
+    setLayoutDate(getLayoutInitialDate(layout));
+    setLayoutView(layout.initialView || '月');
+  }, [layout.id, layout.initialDate, layout.initialDateFollowsNow, layout.initialView]);
 
-            const target = Math.min(expandedViewIds.length, Math.max(current, INITIAL_RENDERED_EXPANDED_VIEWS));
-            return target;
-        });
-    }, [expandedViewSignature, expandedViewIds.length, layout.id]);
+  const {
+    handleExport,
+    handleQuickInputAction,
+    handleMarkItemDone,
+    handleSettingsClick,
+    handleDeleteViewInstance,
+    handleGlobalFiltersChange,
+    handleMigrateLegacyLayoutFilters,
+  } = useLayoutModuleActions({
+    app,
+    actionService,
+    layout,
+    layoutDate,
+    layoutView,
+    allViews,
+    modulesDataCache,
+    ui,
+    useCases,
+  });
 
-    useEffect(() => {
-        if (renderedExpandedCount >= expandedViewIds.length) return;
+  const renderViewInstance = (viewId: string) => {
+    const viewInstance = allViews.find((v: ViewInstance) => v.id === viewId);
+    if (!viewInstance) return <div class="think-module">视图 (ID: {viewId}) 未找到</div>;
 
-        const requestIdle = (window as any).requestIdleCallback as undefined | ((callback: () => void, options?: any) => number);
-        const cancelIdle = (window as any).cancelIdleCallback as undefined | ((handle: number) => void);
-        let timeoutId: ReturnType<typeof setTimeout> | null = null;
-        let idleHandle: number | null = null;
-
-        const renderNextBatch = () => {
-            setRenderedExpandedCount(current => Math.min(
-                expandedViewIds.length,
-                current + EXPANDED_VIEW_RENDER_BATCH_SIZE
-            ));
-        };
-
-        if (requestIdle) {
-            idleHandle = requestIdle(renderNextBatch, { timeout: EXPANDED_VIEW_RENDER_DELAY_MS * 2 });
-        } else {
-            timeoutId = setTimeout(renderNextBatch, EXPANDED_VIEW_RENDER_DELAY_MS);
-        }
-
-        return () => {
-            if (idleHandle !== null && cancelIdle) cancelIdle(idleHandle);
-            if (timeoutId !== null) clearTimeout(timeoutId);
-        };
-    }, [expandedViewIds.length, expandedViewSignature, renderedExpandedCount]);
-
-    const getInitialDate = () => {
-        return layout.initialDateFollowsNow ? dayjs() : (layout.initialDate ? dayjs(layout.initialDate) : dayjs());
-    };
-
-    const [layoutView, setLayoutView] = useState(layout.initialView || '月');
-    const [layoutDate, setLayoutDate] = useState(getInitialDate());
-    const legacyFilterState = useMemo(() => {
-        return getLegacyLayoutFilterState(layout);
-    }, [layout.globalFilters, layout.selectedThemes, layout.selectedCategories]);
-    const globalFilters = legacyFilterState.effectiveFilters;
-    const isUsingLegacyLayoutFilters = legacyFilterState.isLegacyMode && legacyFilterState.hasLegacyValues;
-    const legacyLayoutFilterSummary = useMemo(() => {
-        return describeLegacyLayoutFilters(layout);
-    }, [layout.selectedThemes, layout.selectedCategories]);
-
-    // [修复] 统一在组件顶层计算 dateRange，避免在循环/条件中调用 Hook（切换 年/季/月/周/天 时容易导致数据显示错乱）
-    const dateRangeForView = useMemo(() => {
-        const range = calculateTimelineRange(layoutDate, normalizeTimelineView(layoutView));
-        return [range.start.toDate(), range.end.toDate()] as [Date, Date];
-    }, [layoutDate, layoutView]);
-
-    
-
-    // [修复] 分离布局重置和主题筛选的effect，避免主题筛选时跳转视图
-    useEffect(() => {
-        setLayoutDate(getInitialDate());
-        setLayoutView(layout.initialView || '月');
-    }, [layout.id, layout.initialDate, layout.initialDateFollowsNow, layout.initialView]);
-
-
-    // [新增] 处理导出的函数
-    const handleExport = useCallback((viewId: string, viewTitle: string) => {
-        const items = modulesDataCache.current[viewId];
-        if (!items || items.length === 0) {
-            ui.notice('没有内容可导出');
-            return;
-        }
-        
-        // 根据视图类型获取对应的导出配置
-        const viewInstance = allViews.find(v => v.id === viewId);
-        let exportConfig = viewInstance ? getExportConfigByViewType(viewInstance.viewType) : undefined;
-
-        // [修复] 将视图实例中的动态分组配置合并到导出配置中
-        if (viewInstance && exportConfig) {
-            // 优先使用 viewInstance.groupFields (多级分组)
-            // 其次兼容 viewInstance.group (单级分组)
-            // 最后回退到默认配置
-            const dynamicGroupFields = viewInstance.groupFields && viewInstance.groupFields.length > 0
-                ? viewInstance.groupFields
-                : (viewInstance.group ? [viewInstance.group] : undefined);
-
-            if (dynamicGroupFields) {
-                exportConfig = {
-                    ...exportConfig,
-                    groupFields: dynamicGroupFields
-                };
-            }
-        }
-        
-        const markdownContent = exportItemsToMarkdown(items, exportConfig);
-        navigator.clipboard.writeText(markdownContent);
-        ui.notice(`"${viewTitle}" 的内容已复制到剪贴板！`);
-    }, [allViews]); // 依赖 allViews 来获取视图类型
-
-    const handleQuickInputAction = useCallback((viewInstance: ViewInstance) => {
-        openCreateFromViewHeader({
-            app,
-            actionService,
-            viewInstance,
-            dateContext: layoutDate,
-            periodContext: layoutView,
-        });
-    }, [actionService, app, layoutDate, layoutView]);
-    
-    const handleMarkItemDone = useCallback((itemId: string) => {
-        void (async () => {
-            await completeFromView({
-                uiPort: ui,
-                useCases,
-                itemId,
-                source: 'layout_renderer',
-            });
-        })();
-    }, [ui, useCases]);
-
-    const handleToggle = useCallback((viewId: string, event?: MouseEvent) => {
-        const isToggleAll = event?.metaKey || event?.ctrlKey;
-
-        if (isToggleAll) {
-            setExpandedState(currentState => {
-                const shouldExpandAll = !currentState[viewId];
-                const newState: Record<string, boolean> = {};
-                for (const id in currentState) {
-                    newState[id] = shouldExpandAll;
-                }
-                return newState;
-            });
-        } else {
-            setExpandedState(prev => ({ ...prev, [viewId]: !prev[viewId] }));
-        }
-    }, []);
-
-
-    // 设置按钮：打开“视图设置”浮窗（统一 FloatingPanel 能力：可拖动 / 点击外部关闭）
-    const handleSettingsClick = useCallback((viewInstance: ViewInstance) => {
-        openModuleSettingsWidget(viewInstance);
-    }, []);
-
-    // 从当前布局移除模块
-    const handleDeleteViewInstance = useCallback((viewInstanceId: string) => {
-        useCases.viewInstance.deleteView(viewInstanceId);
-    }, [layout.id, useCases.layout]);
-
-    const handleGlobalFiltersChange = useCallback((filters: FilterRule[]) => {
-        void useCases.layout.updateLayout(layout.id, {
-            globalFilters: filters,
-            selectedThemes: [],
-            selectedCategories: [],
-        });
-    }, [layout.id, useCases.layout]);
-
-    const handleMigrateLegacyLayoutFilters = useCallback(() => {
-        void useCases.layout.updateLayout(layout.id, migrateLegacyLayoutFilters(layout));
-    }, [layout, useCases.layout]);
-
-    const renderViewInstance = (viewId: string) => {
-        const viewInstance = allViews.find(v => v.id === viewId);
-        if (!viewInstance) return <div class="think-module">视图 (ID: {viewId}) 未找到</div>;
-
-        const isExpanded = !!expandedState[viewId];
-        const expandedIndex = isExpanded ? expandedViewIds.indexOf(viewId) : -1;
-        const shouldRenderContent = isExpanded && expandedIndex >= 0 && expandedIndex < renderedExpandedCount;
-
-        return (
-            <ModulePanel 
-                key={viewId}
-                title={viewInstance.title} 
-                collapsed={!isExpanded}
-                onToggle={(e: MouseEvent) => handleToggle(viewId, e)}
-                onActionClick={isModuleHeaderCreateAllowed(viewInstance.viewType)
-                    ? () => handleQuickInputAction(viewInstance)
-                    : undefined}
-                onExport={() => handleExport(viewInstance.id, viewInstance.title)} // [修改] 传递 onExport
-                onSettingsClick={() => handleSettingsClick(viewInstance)} // [新增] 传递设置回调
-                onRemove={() => handleDeleteViewInstance(viewInstance.id)}
-            >
-                {shouldRenderContent ? (
-                    <ViewContent
-                        viewInstance={viewInstance}
-                        dataStore={dataStore}
-                        dateRange={dateRangeForView}
-                        keyword=""
-                        layoutView={layoutView}
-                        isOverviewMode={false}
-                        useFieldGranularity={false}
-                        layoutFilters={globalFilters}
-                        app={app}
-                        onMarkDone={handleMarkItemDone}
-                        actionService={actionService}
-                        timerService={timerService}
-                        timers={timers} // [新增]
-                        allThemes={allThemes} // [新增]
-                        allItems={allItems}
-                        inputSettings={inputSettings} // [新增]
-                        onDataLoaded={(items) => { modulesDataCache.current[viewInstance.id] = items; }} // [修改] 传递 onDataLoaded
-                    />
-                ) : isExpanded ? (
-                    <div class="module-deferred-placeholder">正在加载视图...</div>
-                ) : null}
-            </ModulePanel>
-        );
-    };
-
-    const gridStyle = layout.displayMode === 'grid' ? { display: 'grid', gridTemplateColumns: `repeat(${layout.gridConfig?.columns || 2}, 1fr)`, gap: '8px' } : {};
+    const isExpanded = !!expandedState[viewId];
+    const expandedIndex = isExpanded ? expandedViewIds.indexOf(viewId) : -1;
+    const shouldRenderContent = isExpanded && expandedIndex >= 0 && expandedIndex < renderedExpandedCount;
 
     return (
-        <div>
-            <ViewToolbar
-                currentView={layoutView}
-                currentDate={layoutDate}
-                onViewChange={setLayoutView}
-                onDateChange={setLayoutDate}
-                filterSlot={(
-                    <DataFilterPanel
-                        dataStore={dataStore}
-                        items={allItems}
-                        filters={globalFilters}
-                        onChange={handleGlobalFiltersChange}
-                        legacyMode={isUsingLegacyLayoutFilters}
-                        legacySummary={legacyLayoutFilterSummary}
-                        onMigrateLegacyFilters={handleMigrateLegacyLayoutFilters}
-                    />
-                )}
-                viewInstances={layout.viewInstanceIds.map((id: string) => allViews.find((v: any) => v.id === id)).filter(Boolean)}
-                hideToolbar={layout.hideToolbar}
-                onLayoutSettingsClick={() => openLayoutSettingsWidget(layout.id)}
-                themes={allThemes} // [新增] 传递主题列表
-            />
-            <div style={gridStyle}>
-                {isStateInitialized && layout.viewInstanceIds.map(renderViewInstance)}
-            </div>
-            
-            {/* 模块设置已迁移为 FloatingWidget（openModuleSettingsWidget），不再在此处直接渲染 Modal */}
-        </div>
+      <ModulePanel
+        key={viewId}
+        title={viewInstance.title}
+        collapsed={!isExpanded}
+        onToggle={(e: MouseEvent) => handleToggle(viewId, e)}
+        onActionClick={isModuleHeaderCreateAllowed(viewInstance.viewType)
+          ? () => handleQuickInputAction(viewInstance)
+          : undefined}
+        onExport={() => handleExport(viewInstance.id, viewInstance.title)}
+        onSettingsClick={() => handleSettingsClick(viewInstance)}
+        onRemove={() => handleDeleteViewInstance(viewInstance.id)}
+      >
+        {shouldRenderContent ? (
+          <ViewContent
+            viewInstance={viewInstance}
+            dataStore={dataStore}
+            dateRange={dateRangeForView}
+            keyword=""
+            layoutView={layoutView}
+            isOverviewMode={false}
+            useFieldGranularity={false}
+            layoutFilters={globalFilters}
+            app={app}
+            onMarkDone={handleMarkItemDone}
+            actionService={actionService}
+            timerService={timerService}
+            timers={timers}
+            allThemes={allThemes}
+            allItems={allItems}
+            inputSettings={inputSettings}
+            onDataLoaded={(items) => { modulesDataCache.current[viewInstance.id] = items; }}
+          />
+        ) : isExpanded ? (
+          <div class="module-deferred-placeholder">正在加载视图...</div>
+        ) : null}
+      </ModulePanel>
     );
+  };
+
+  const gridStyle = layout.displayMode === 'grid'
+    ? { display: 'grid', gridTemplateColumns: `repeat(${layout.gridConfig?.columns || 2}, 1fr)`, gap: '8px' }
+    : {};
+
+  return (
+    <div>
+      <ViewToolbar
+        currentView={layoutView}
+        currentDate={layoutDate}
+        onViewChange={setLayoutView}
+        onDateChange={setLayoutDate}
+        filterSlot={(
+          <DataFilterPanel
+            dataStore={dataStore}
+            items={allItems}
+            filters={globalFilters}
+            onChange={handleGlobalFiltersChange}
+            legacyMode={isUsingLegacyLayoutFilters}
+            legacySummary={legacyLayoutFilterSummary}
+            onMigrateLegacyFilters={handleMigrateLegacyLayoutFilters}
+          />
+        )}
+        viewInstances={layout.viewInstanceIds.map((id: string) => allViews.find((v: ViewInstance) => v.id === id)).filter(Boolean)}
+        hideToolbar={layout.hideToolbar}
+        onLayoutSettingsClick={() => openLayoutSettingsWidget(layout.id)}
+        themes={allThemes}
+      />
+      <div style={gridStyle}>
+        {isStateInitialized && layout.viewInstanceIds.map(renderViewInstance)}
+      </div>
+    </div>
+  );
 }

@@ -1,7 +1,7 @@
 // src/features/settings/ui/InputSettings.tsx
 /** @jsxImportSource preact */
 import { h } from 'preact';
-import { Box, Divider } from '@mui/material';
+import { Box, Divider } from '@shared/public';
 import { BlockManager } from '@features/settings/input/BlockManager';
 import { ThemeMatrix } from '@features/settings/theme/ThemeMatrix';
 

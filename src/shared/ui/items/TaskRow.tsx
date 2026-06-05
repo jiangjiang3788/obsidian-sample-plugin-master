@@ -1,19 +1,20 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
 import type { Item, ThemeDefinition } from '@core/public';
-import { TaskCheckbox } from '@shared/ui/composites/TaskCheckbox';
-import { TaskSendToTimerButton } from '@shared/ui/composites/TaskSendToTimerButton';
+import { TaskCheckbox } from '../composites/TaskCheckbox';
+import { TaskSendToTimerButton } from '../composites/TaskSendToTimerButton';
 import { isDone } from '@core/public';
 import { FieldPill } from './FieldPill';
-import type { TimerController } from '@/app/public';
-import { openEditFromItem } from '@/app/public';
-import { createRecordGestureHandlers } from '@/shared/ui/utils/recordOrigin';
+import type { OpenRecordHandler, OpenRecordOriginHandler, ResolveResourcePathHandler, TimerController } from '../../types/actions';
+import { createRecordGestureHandlers } from '../utils/recordOrigin';
 
 interface TaskRowProps {
     item: Item;
     onMarkDone: (id: string) => void;
-    app: any;
+    resolveResourcePath?: ResolveResourcePathHandler;
+    onOpenRecordOrigin?: OpenRecordOriginHandler;
     timerService: TimerController;
+    onOpenRecord?: OpenRecordHandler;
     timer?: any;
     allThemes: ThemeDefinition[];
     showFields?: string[];
@@ -22,16 +23,19 @@ interface TaskRowProps {
     displayTitle?: string;
 }
 
+
 export function TaskRow({ 
     item, 
     onMarkDone, 
-    app, 
+    resolveResourcePath,
+    onOpenRecordOrigin,
     timerService, 
     timer, 
     allThemes,
     showFields = [],
     compact = false,
-    displayTitle
+    displayTitle,
+    onOpenRecord
 }: TaskRowProps) {
     const done = isDone(item.categoryKey);
     const visibleTitle = String(displayTitle ?? item.content ?? item.title ?? '').trim() || item.title;
@@ -39,10 +43,10 @@ export function TaskRow({
     const openEdit = (evt?: Event) => {
         evt?.preventDefault?.();
         evt?.stopPropagation?.();
-        openEditFromItem({ app, item });
+        void onOpenRecord?.(item);
     };
 
-    const gesture = createRecordGestureHandlers({ item, app, onPrimary: () => openEdit() });
+    const gesture = createRecordGestureHandlers({ item, onOpenOrigin: onOpenRecordOrigin, onPrimary: () => openEdit() });
     
     return (
         <div class={`task-row ${compact ? 'task-row--compact' : ''} ${done ? 'task-row--done' : ''}`}>
@@ -74,7 +78,7 @@ export function TaskRow({
                                 key={fieldKey} 
                                 item={item} 
                                 fieldKey={fieldKey} 
-                                app={app} 
+                                resolveResourcePath={resolveResourcePath} 
                                 allThemes={allThemes} 
                             />
                         ))}

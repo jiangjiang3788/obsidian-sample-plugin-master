@@ -7,7 +7,7 @@
  */
 
 import { useMemo } from 'preact/hooks';
-import { FormControlLabel, Checkbox, Button, Box, Accordion, AccordionSummary, AccordionDetails, Typography, Chip } from '@mui/material';
+import { FormControlLabel, Checkbox, Button, Box, Accordion, AccordionSummary, AccordionDetails, Typography, Chip } from '@shared/public';
 import { VIEW_OPTIONS, ViewName, getAllFields, getFieldLabel, getFieldCategoryLabel } from '@core/public';
 import type { FilterRule, ViewInstance } from '@core/public';
 import { VIEW_EDITORS } from '@features/settings/viewEditors/registry';

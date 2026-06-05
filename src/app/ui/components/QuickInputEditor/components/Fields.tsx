@@ -12,7 +12,7 @@ import {
   normalizeImageValue,
 } from '@core/public';
 
-import { Box, Button, Stack, Typography } from '@mui/material';
+import { Box, Button, Stack, Typography } from '@shared/public';
 
 import { QuickInputOptionPillGroup } from './QuickInputOptionPillGroup';
 import { SelectablePill } from './SelectablePill';

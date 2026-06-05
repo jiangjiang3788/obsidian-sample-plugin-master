@@ -1,8 +1,8 @@
 // src/shared/components/TaskSendToTimerButton.tsx
 /** @jsxImportSource preact */
 import { h } from 'preact';
-import { IconAction } from '@shared/public';
-import { HourglassTopIcon, PlayArrowIcon } from '@shared/ui/icons';
+import { IconAction } from '../components/IconAction';
+import { HourglassTopIcon, PlayArrowIcon } from '../icons';
 
 interface TaskSendToTimerButtonProps {
     taskId: string;

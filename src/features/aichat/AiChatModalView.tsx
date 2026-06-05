@@ -1,7 +1,7 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
 import type { RefObject } from 'preact';
-import { Box, Typography } from '@mui/material';
+import { Box, Typography } from '@shared/public';
 import { ChatIcon, ModalHeader } from '@shared/public';
 import type { ChatMessage, ChatSession, ThemeDefinition } from '@core/public';
 import { FiltersBar, type BlockDefinition } from './components/FiltersBar';

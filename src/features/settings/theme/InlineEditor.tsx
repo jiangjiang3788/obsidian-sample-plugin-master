@@ -1,7 +1,7 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
 import { useState } from 'preact/hooks';
-import { TextField } from '@mui/material';
+import { TextField } from '@shared/public';
 
 export interface InlineEditorProps {
   value: string;

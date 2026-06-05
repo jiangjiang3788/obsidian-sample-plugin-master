@@ -1,7 +1,7 @@
 // src/features/settings/input/fieldsEditor/OptionRow.tsx
 /** @jsxImportSource preact */
 import { useEffect, useRef, useState } from "preact/hooks";
-import { Box, Stack } from "@mui/material";
+import { Box, Stack } from '@shared/public';
 import { IconAction, RemoveCircleOutlineIcon, logRenderDiagnostic } from '@shared/public';
 import type { TemplateField, TemplateFieldOption } from "@core/public";
 import { NativeTextInput } from "./nativeControls";
@@ -48,10 +48,10 @@ export function OptionRow({
       nextOption.value === option.value
     )
       return;
-    console.log("[字段编辑器][选项编辑]", {
-      原因: reason,
-      字段类型: fieldType,
-      选项: nextOption,
+    logRenderDiagnostic("FieldsEditor/OptionRow/commit", {
+      reason,
+      fieldType,
+      option: nextOption,
     });
     onChange(nextOption);
   };
@@ -62,10 +62,10 @@ export function OptionRow({
   ) => {
     setLocalOption((previous) => {
       const next = { ...previous, ...updates };
-      console.log("[字段编辑器][选项输入]", {
-        原因: reason,
-        更新内容: updates,
-        更新后选项: next,
+      logRenderDiagnostic("FieldsEditor/OptionRow/input", {
+        reason,
+        updates,
+        nextOption: next,
       });
       return next;
     });

@@ -2,10 +2,10 @@
 import { h } from 'preact';
 import { useMemo } from 'preact/hooks';
 import { App, Modal, Notice } from 'obsidian';
-import { render, unmountComponentAtNode } from 'preact/compat';
 import { Item, dayjs } from '@core/public';
-import { openEditFromItem } from '@/app/public';
+import { openEditFromItem, openRecordOrigin } from '@/app/public';
 import { createRecordGestureHandlers } from '@shared/public';
+import { renderModalContent, unmountModalContent } from './modalPreact';
 
 export interface CheckinManagerData {
     displayCount: number;
@@ -59,7 +59,7 @@ function CheckinManagerForm({ app, date, items, onClose, onAddRecord }: CheckinM
                         {sortedItems.map(item => {
                             const gesture = createRecordGestureHandlers({
                                 item,
-                                app,
+                                onOpenOrigin: (originItem) => openRecordOrigin({ app, item: originItem }),
                                 onPrimary: () => handleOpenRecord(item),
                             });
                             return (
@@ -102,7 +102,8 @@ export class CheckinManagerModal extends Modal {
         this.contentEl.empty();
         this.modalEl.addClass('checkin-manager-modal-container');
 
-        render(
+        renderModalContent(
+            this.contentEl,
             <CheckinManagerForm
                 app={this.app}
                 date={this.date}
@@ -110,8 +111,7 @@ export class CheckinManagerModal extends Modal {
                 onSave={this.onSave}
                 onClose={() => this.close()}
                 onAddRecord={this.onAddRecord}
-            />,
-            this.contentEl
+            />
         );
 
         this.contentEl.createEl('style').textContent = `
@@ -129,6 +129,6 @@ export class CheckinManagerModal extends Modal {
     }
 
     onClose() {
-        unmountComponentAtNode(this.contentEl);
+        unmountModalContent(this.contentEl);
     }
 }

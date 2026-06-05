@@ -3,8 +3,8 @@ import { h } from 'preact';
 import type { ComponentChildren } from 'preact';
 import { useState } from 'preact/hooks';
 
-import { Box, Button, Chip, Popover, Typography } from '@mui/material';
-import { FilterListIcon } from '@shared/ui/icons';
+import { Box, Button, Chip, Popover, Typography } from '../muiCompat';
+import { FilterListIcon } from '../icons';
 
 export interface FilterPopoverProps {
   label: string; // 按钮文案前缀：如“分类筛选”

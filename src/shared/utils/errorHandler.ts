@@ -4,6 +4,7 @@
  */
 
 import { devError, devLog, type UiPort } from '@core/public';
+import { diagnosticError } from './diagnosticConsole';
 
 /**
  * 错误类型枚举
@@ -186,7 +187,7 @@ export class ErrorHandler {
 
         // Runtime diagnostics: always print the full error object and stack when the unified handler is reached.
         try {
-            console.error('[Think][ErrorHandler][RAW]', {
+            diagnosticError('[Think][ErrorHandler][RAW]', {
                 context: fullContext,
                 type: errorType,
                 message: errorObj.message,

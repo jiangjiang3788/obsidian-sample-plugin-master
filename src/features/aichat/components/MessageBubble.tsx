@@ -1,7 +1,7 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
 import { useEffect, useRef, useState } from 'preact/hooks';
-import { Box, Chip, Paper, Tooltip, Typography } from '@mui/material';
+import { Box, Chip, Paper, Tooltip, Typography } from '@shared/public';
 import { CheckIcon, ContentCopyIcon, IconAction } from '@shared/public';
 
 import type { ChatMessage, MessageContentType } from '@core/public';

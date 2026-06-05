@@ -2,8 +2,7 @@
 import { h } from 'preact';
 
 import type { VNode } from 'preact';
-import type { IconButtonProps, TooltipProps } from '@mui/material';
-import { IconButton, Tooltip } from '@mui/material';
+import { IconButton, Tooltip } from '../muiCompat';
 
 export type IconActionProps = {
   /** 用于 Tooltip 与 aria-label */
@@ -14,8 +13,12 @@ export type IconActionProps = {
   disabled?: boolean;
   /** 默认 true：用于行内按钮不触发行点击 */
   stopPropagation?: boolean;
-  tooltipPlacement?: TooltipProps['placement'];
-} & Pick<IconButtonProps, 'sx' | 'size' | 'edge' | 'color'>;
+  tooltipPlacement?: 'bottom-end' | 'bottom-start' | 'bottom' | 'left-end' | 'left-start' | 'left' | 'right-end' | 'right-start' | 'right' | 'top-end' | 'top-start' | 'top';
+  sx?: any;
+  size?: 'small' | 'medium' | 'large';
+  edge?: false | 'start' | 'end';
+  color?: 'inherit' | 'default' | 'primary' | 'secondary' | 'error' | 'info' | 'success' | 'warning';
+};
 
 /**
  * IconAction

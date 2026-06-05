@@ -69,7 +69,6 @@ export interface ExcelCellModel {
 export interface ExcelViewProps {
   items: Item[];
   fields?: string[];
-  app?: any;
   availableFields?: string[];
   onFieldsChange?: ExcelDisplayFieldsChangeHandler;
   excelConfig?: ExcelViewDisplayConfig;
@@ -82,7 +81,6 @@ export interface ExcelViewProps {
 export interface ExcelGridProps {
   items: Item[];
   columns: ExcelColumnModel[];
-  app?: any;
   selectedCellKey?: string | null;
   editingCellKey?: string | null;
   pendingCellKeys?: ReadonlySet<string>;
@@ -111,7 +109,6 @@ export interface ExcelGridProps {
 
 export interface ExcelCellProps {
   cell: ExcelCellModel;
-  app?: any;
   selected?: boolean;
   editing?: boolean;
   pending?: boolean;

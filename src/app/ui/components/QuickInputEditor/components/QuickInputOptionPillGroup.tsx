@@ -1,7 +1,7 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
 
-import { Box, Typography } from '@mui/material';
+import { Box, Typography } from '@shared/public';
 
 import { SelectablePill } from './SelectablePill';
 import type { QuickInputChoice } from './quickInputOptionSelection';

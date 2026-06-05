@@ -3,10 +3,10 @@
 import { h } from 'preact';
 import { useRef, useState, useEffect } from 'preact/hooks';
 import { Item, ThemeDefinition, groupItemsByFields, type GroupNode, devLog } from '@core/public';
-import { TaskRow } from '@shared/ui/items/TaskRow';
-import { BlockItem } from '@shared/ui/items/BlockItem';
-import type { TimerController } from '@/app/public';
-import { GroupedContainer } from '@shared/ui/GroupedContainer';
+import { TaskRow } from '../items/TaskRow';
+import { BlockItem } from '../items/BlockItem';
+import type { OpenRecordHandler, OpenRecordOriginHandler, ResolveResourcePathHandler, TimerController } from '../../types/actions';
+import { GroupedContainer } from '../GroupedContainer';
 import type { MessageRenderPort } from '@core/public';
 
 
@@ -23,12 +23,14 @@ interface BlockViewProps {
     /** 上层已经归一化后的分组字段（优先级：groupFields > groupField） */
     effectiveGroupFields?: string[];
     fields?: string[];
-    app: any;
+    resolveResourcePath?: ResolveResourcePathHandler;
+    onOpenRecordOrigin?: OpenRecordOriginHandler;
     messageRenderPort?: MessageRenderPort;
     onMarkDone: (id: string) => void;
     timerService: TimerController;
     timers: any[];
     allThemes: ThemeDefinition[];
+    onOpenRecord?: OpenRecordHandler;
 }
 
 export function BlockView(props: BlockViewProps) {
@@ -39,12 +41,14 @@ export function BlockView(props: BlockViewProps) {
         groupTree: injectedGroupTree,
         effectiveGroupFields: injectedGroupFields,
         fields = [],
-        app,
+        resolveResourcePath,
+        onOpenRecordOrigin,
         messageRenderPort,
         onMarkDone,
         timerService,
         timers,
         allThemes,
+        onOpenRecord,
     } = props;
     const containerRef = useRef<HTMLDivElement>(null);
     const [isNarrow, setIsNarrow] = useState(false);
@@ -65,10 +69,12 @@ export function BlockView(props: BlockViewProps) {
                     key={item.id} 
                     item={item} 
                     onMarkDone={onMarkDone} 
-                    app={app} 
+                    resolveResourcePath={resolveResourcePath}
+                    onOpenRecordOrigin={onOpenRecordOrigin}
                     timerService={timerService} 
                     timer={timer}
                     allThemes={allThemes}
+                    onOpenRecord={onOpenRecord}
                     showFields={[]} // TaskRow 中任务类型不显示其他字段
                 />
             );
@@ -79,9 +85,11 @@ export function BlockView(props: BlockViewProps) {
                     item={item} 
                     fields={fields} 
                     isNarrow={isNarrow} 
-                    app={app} 
+                    resolveResourcePath={resolveResourcePath}
+                    onOpenRecordOrigin={onOpenRecordOrigin}
                     messageRenderPort={messageRenderPort}
                     allThemes={allThemes} 
+                    onOpenRecord={onOpenRecord}
                 />
             );
         }

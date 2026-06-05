@@ -9,7 +9,7 @@
 import { h } from 'preact';
 import type { ComponentChildren } from 'preact';
 import { useMemo, useRef, useState, useCallback } from 'preact/hooks';
-import { Box, Paper, Popper, ClickAwayListener } from '@mui/material';
+import { Box, Paper, Popper, ClickAwayListener } from '../../ui/muiCompat';
 
 import type { ThemeDefinition } from '@core/public';
 import type { ThemePathTreeNode as ThemeTreeNode } from '@core/public';

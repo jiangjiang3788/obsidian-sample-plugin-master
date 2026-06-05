@@ -2,16 +2,14 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
 import { useRef } from 'preact/hooks';
-import { useUiPort } from '@/app/public';
-import { openEditFromItem } from '@/app/public';
 import type { TaskBlock } from '@core/public';
-import { createRecordGestureHandlers } from '@/shared/ui/utils/recordOrigin';
+import { createRecordGestureHandlers } from '../utils/recordOrigin';
 import { mapTaskToCategory } from '@core/public';
 import { dayjs } from '@core/public';
-import type { UpdateTaskTimeHandler } from '@shared/types/taskTime';
+import type { OpenRecordHandler, OpenRecordOriginHandler } from '../../types/actions';
+import type { UpdateTaskTimeHandler } from '../../types/taskTime';
 
 interface DayColumnBodyProps {
-    app: any;
     day: string;
     blocks: TaskBlock[];
     hourHeight: number;
@@ -21,6 +19,9 @@ interface DayColumnBodyProps {
     onColumnClick: (day: string, e: MouseEvent | TouchEvent) => void;
     /** 由 feature 层注入的保存处理器：用于“对齐/精确编辑”等需要写回的操作 */
     onUpdateTaskTime?: UpdateTaskTimeHandler;
+    onOpenRecord?: OpenRecordHandler;
+    onOpenRecordOrigin?: OpenRecordOriginHandler;
+    onNotice?: (message: string) => void;
     onEditTask?: (block: TaskBlock) => void;
     onAlignPrev?: (block: TaskBlock, prevBlock: TaskBlock | null) => void;
     onAlignNext?: (block: TaskBlock, nextBlock: TaskBlock | null) => void;
@@ -56,7 +57,6 @@ const generateTaskBlockTitle = (block: TaskBlock): string => {
 };
 
 export function DayColumnBody({
-    app,
     day,
     blocks,
     hourHeight,
@@ -65,23 +65,25 @@ export function DayColumnBody({
     maxHours,
     onColumnClick,
     onUpdateTaskTime,
+    onOpenRecord,
+    onOpenRecordOrigin,
+    onNotice,
     onEditTask,
     onAlignPrev,
     onAlignNext
 }: DayColumnBodyProps) {
-    const ui = useUiPort();
     const lastTouchRef = useRef<{ time: number; x: number; y: number } | null>(null);
     const suppressClickUntilRef = useRef(0);
 
     const tryUpdateTaskTime = async (taskId: string, updates: Parameters<UpdateTaskTimeHandler>[1]) => {
         if (!onUpdateTaskTime) {
-            ui.notice('未提供保存处理器，无法更新任务时间');
+            onNotice?.('未提供保存处理器，无法更新任务时间');
             return;
         }
         try {
             await onUpdateTaskTime(taskId, updates);
         } catch (e) {
-            ui.notice('更新任务时间失败');
+            onNotice?.('更新任务时间失败');
         }
     };
 
@@ -91,7 +93,7 @@ export function DayColumnBody({
             return;
         }
 
-        openEditFromItem({ app, item: block, openedFrom: 'timeline' });
+        void onOpenRecord?.(block as any);
     };
 
 
@@ -117,7 +119,7 @@ export function DayColumnBody({
             const deltaDuration = nextBlock.blockStartMinute - block.blockEndMinute;
             const newDuration = block.duration + deltaDuration;
             if (newDuration <= 0) {
-                ui.notice('无法对齐：任务时长将变为负数或零');
+                onNotice?.('无法对齐：任务时长将变为负数或零');
                 return;
             }
             void tryUpdateTaskTime(block.id, { duration: newDuration });
@@ -171,7 +173,7 @@ export function DayColumnBody({
                 const nextBlock = index < blocks.length - 1 ? blocks[index + 1] : null;
                 const canAlignToNext = nextBlock && (nextBlock.blockStartMinute > block.blockStartMinute);
 
-                const blockGesture = createRecordGestureHandlers({ item: block as any, app, onPrimary: () => handleEdit(block) });
+                const blockGesture = createRecordGestureHandlers({ item: block as any, onOpenOrigin: onOpenRecordOrigin, onPrimary: () => handleEdit(block) });
 
                 return (
                     <div 

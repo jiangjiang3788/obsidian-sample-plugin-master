@@ -1,7 +1,7 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
 
-import { Button } from '@mui/material';
+import { Button } from '@shared/public';
 
 export type QuickInputPendingAction = 'submit' | 'delete' | null;
 

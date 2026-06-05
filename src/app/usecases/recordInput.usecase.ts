@@ -12,7 +12,6 @@ import {
   finalizeRecordSubmitResult,
 } from '@core/public';
 import type {
-  Item,
   PrepareCreateRecordParams,
   PrepareEditRecordParams,
   PreparedCreateRecord,
@@ -28,12 +27,13 @@ import { mapSubmitError } from './recordInput/error';
 import { issue, toArray } from './recordInput/issues';
 import {
   getItemFilePath,
-  getItemLineNumber,
-  inferCreatedItemType,
   locateCreatedRecord,
   parseItemLocator,
 } from './recordInput/locator';
 import { buildPlanConsistencyIssues } from './recordInput/planGuard';
+import { buildRefreshPlan, getFileItemsByPath, tryParseItemPath } from './recordInput/paths';
+import { submitFinalizedRecordMutation, throwIfAborted } from './recordInput/submitPipeline';
+import { buildCreatedRecordLocatorContext, getTemplateExecutionMeta, prepareTemplateSubmit } from './recordInput/templateSubmit';
 import { normalizeCompletionOptions, normalizeTimeUpdates } from './recordInput/time';
 
 export interface RecordInputUseCaseDeps {
@@ -57,79 +57,53 @@ export class RecordInputUseCase {
   }
 
   async submitCreateRecord(params: SubmitCreateRecordParams): Promise<RecordSubmitResult> {
-    const kernel = this.getKernel();
-    const resolved = kernel.resolveMissingDependencies({
+    const prepared = prepareTemplateSubmit({
+      kernel: this.getKernel(),
+      operation: 'create',
       blockId: params.blockId,
       themeId: params.themeId ?? null,
-    });
-
-    if (resolved.errors.length > 0 || !resolved.template || !resolved.blockId) {
-      return buildValidationErrorResult('create', [
-        ...resolved.errors,
-        ...(!resolved.template ? [{ code: 'record_template_missing', message: 'No effective template is available for this record.' }] : []),
-      ], resolved.warnings);
-    }
-
-    const normalized = kernel.normalizeRecordInput({
-      template: resolved.template,
       formData: params.formData,
       context: params.context,
-      mode: params.source === 'ai_batch' ? 'ai_batch' : 'create',
+      normalizeMode: params.source === 'ai_batch' ? 'ai_batch' : 'create',
+      validateMode: 'create',
     });
-    const validation = kernel.validateRecordInput({
-      template: resolved.template,
-      formData: normalized.normalizedFormData,
-      mode: 'create',
-    });
-    const warnings = [...resolved.warnings, ...normalized.warnings, ...validation.warnings];
-    if (!validation.ok) {
-      return buildValidationErrorResult('create', validation.errors, warnings);
-    }
+    if (!prepared.ok) return prepared.result;
+
+    const { resolved, normalized, warnings } = prepared.submit;
 
     try {
-      this.throwIfAborted(params.signal);
+      throwIfAborted(params.signal);
+      const templateMeta = getTemplateExecutionMeta(resolved, resolved.template);
       const preview = this.deps.inputService.previewTemplateExecution(
         resolved.template,
         normalized.normalizedFormData,
         resolved.theme ?? undefined,
-        {
-          templateId: resolved.meta.templateId ?? resolved.template.id,
-          templateSourceType: resolved.meta.templateSourceType ?? 'block',
-        },
+        templateMeta,
       );
-      const beforeItems = this.getFileItemsByPath(preview.targetFilePath);
+      const beforeItems = getFileItemsByPath(this.deps.dataStore, preview.targetFilePath);
       const path = await this.deps.inputService.executeTemplate(
         resolved.template,
         normalized.normalizedFormData,
         resolved.theme ?? undefined,
-        {
-          templateId: resolved.meta.templateId ?? resolved.template.id,
-          templateSourceType: resolved.meta.templateSourceType ?? 'block',
-        },
+        templateMeta,
         {
           signal: params.signal,
         },
       );
 
-      const refreshPlan = {
-        scanPaths: [path],
-        notify: true,
-      };
+      const refreshPlan = buildRefreshPlan([path]);
       const scannedByPath = await applyRecordRefreshPlan(this.deps.dataStore, refreshPlan);
-      const scannedItems = scannedByPath.get(path) ?? this.getFileItemsByPath(path);
-
-      const createdRecord = locateCreatedRecord(beforeItems, scannedItems, {
+      const scannedItems = scannedByPath.get(path) ?? getFileItemsByPath(this.deps.dataStore, path);
+      const createdRecord = locateCreatedRecord(beforeItems, scannedItems, buildCreatedRecordLocatorContext({
+        template: resolved.template,
+        theme: resolved.theme,
+        meta: templateMeta,
         outputContent: preview.outputContent,
         normalizedFormData: normalized.normalizedFormData,
-        templateId: resolved.meta.templateId ?? resolved.template.id,
-        templateSourceType: resolved.meta.templateSourceType ?? 'block',
-        themePath: resolved.theme?.path ?? null,
-        blockCategoryKey: resolved.template.categoryKey ?? null,
-        itemTypeHint: inferCreatedItemType(resolved.template.outputTemplate),
         appendMode: preview.header ? 'header' : 'append',
         targetHeader: preview.header ?? null,
-        beforeMaxLine: beforeItems.reduce((max, item) => Math.max(max, getItemLineNumber(item)), 0),
-      });
+        beforeItems,
+      }));
 
       return buildSuccessResult('create', {
         affectedPath: path,
@@ -149,44 +123,25 @@ export class RecordInputUseCase {
   }
 
   async submitUpdateRecord(params: SubmitUpdateRecordParams): Promise<RecordSubmitResult> {
-    const kernel = this.getKernel();
-    const resolved = kernel.resolveMissingDependencies({
+    const prepared = prepareTemplateSubmit({
+      kernel: this.getKernel(),
+      operation: 'update',
       blockId: params.blockId,
       themeId: params.themeId ?? null,
       item: params.item,
-    });
-
-    if (resolved.errors.length > 0 || !resolved.template || !resolved.blockId) {
-      return buildValidationErrorResult('update', [
-        ...resolved.errors,
-        ...(!resolved.template ? [{ code: 'record_template_missing', message: 'No effective template is available for this record.' }] : []),
-      ], resolved.warnings);
-    }
-
-    const normalized = kernel.normalizeRecordInput({
-      template: resolved.template,
       formData: params.formData,
-      mode: 'edit',
+      normalizeMode: 'edit',
+      validateMode: 'edit',
     });
-    const validation = kernel.validateRecordInput({
-      template: resolved.template,
-      formData: normalized.normalizedFormData,
-      mode: 'edit',
-      item: params.item,
-    });
-    const warnings = [...resolved.warnings, ...normalized.warnings, ...validation.warnings];
-    if (!validation.ok) {
-      return buildValidationErrorResult('update', validation.errors, warnings);
-    }
+    if (!prepared.ok) return prepared.result;
 
+    const { resolved, normalized, warnings } = prepared.submit;
+    const templateMeta = getTemplateExecutionMeta(resolved, resolved.template);
     const outputPlan = buildRecordOutputPlan({
       template: resolved.template,
       formData: normalized.normalizedFormData,
       theme: resolved.theme ?? undefined,
-      templateMeta: {
-        templateId: resolved.meta.templateId ?? resolved.template.id,
-        templateSourceType: resolved.meta.templateSourceType ?? 'block',
-      },
+      templateMeta,
     });
     const persistencePlan = buildRecordPersistencePlan({
       mode: 'edit',
@@ -207,38 +162,30 @@ export class RecordInputUseCase {
     try {
       if (persistencePlan.pathChanged && persistencePlan.writeMode === 'move_and_replace') {
         const targetPath = outputPlan.targetFilePath || '';
-        const beforeTargetItems = this.getFileItemsByPath(targetPath);
+        const beforeTargetItems = getFileItemsByPath(this.deps.dataStore, targetPath);
         const createdPath = await this.deps.inputService.createRecordAtPlannedLocation(
           resolved.template,
           normalized.normalizedFormData,
           resolved.theme ?? undefined,
-          {
-            templateId: resolved.meta.templateId ?? resolved.template.id,
-            templateSourceType: resolved.meta.templateSourceType ?? 'block',
-          },
+          templateMeta,
           {
             signal: params.signal,
             autoRefresh: false,
           },
         );
 
-        const scannedNewPath = await applyRecordRefreshPlan(this.deps.dataStore, {
-          scanPaths: [createdPath],
-          notify: false,
-        });
-        const afterTargetItems = scannedNewPath.get(createdPath) ?? this.getFileItemsByPath(createdPath);
-        const createdRecord = locateCreatedRecord(beforeTargetItems, afterTargetItems, {
+        const scannedNewPath = await applyRecordRefreshPlan(this.deps.dataStore, buildRefreshPlan([createdPath], false));
+        const afterTargetItems = scannedNewPath.get(createdPath) ?? getFileItemsByPath(this.deps.dataStore, createdPath);
+        const createdRecord = locateCreatedRecord(beforeTargetItems, afterTargetItems, buildCreatedRecordLocatorContext({
+          template: resolved.template,
+          theme: resolved.theme,
+          meta: templateMeta,
           outputContent: outputPlan.outputContent,
           normalizedFormData: normalized.normalizedFormData,
-          templateId: resolved.meta.templateId ?? resolved.template.id,
-          templateSourceType: resolved.meta.templateSourceType ?? 'block',
-          themePath: resolved.theme?.path ?? null,
-          blockCategoryKey: resolved.template.categoryKey ?? null,
-          itemTypeHint: inferCreatedItemType(resolved.template.outputTemplate),
           appendMode: outputPlan.targetHeader ? 'header' : 'append',
           targetHeader: outputPlan.targetHeader ?? null,
-          beforeMaxLine: beforeTargetItems.reduce((max, item) => Math.max(max, getItemLineNumber(item)), 0),
-        });
+          beforeItems: beforeTargetItems,
+        }));
 
         try {
           const deletedPath = await this.deps.inputService.deleteExistingRecord(params.item, {
@@ -248,10 +195,7 @@ export class RecordInputUseCase {
           return finalizeRecordSubmitResult(this.deps.dataStore, buildSuccessResult('update', {
             affectedPath: createdPath,
             affectedRecordId: createdRecord?.id ?? params.item.id,
-            refresh: {
-              scanPaths: [createdPath, deletedPath],
-              notify: true,
-            },
+            refresh: buildRefreshPlan([createdPath, deletedPath]),
             feedback: {
               notice: `✅ 已迁移保存：${persistencePlan.originalPath || '原位置'} → ${createdPath}`,
             },
@@ -271,10 +215,7 @@ export class RecordInputUseCase {
             operation: 'update',
             affectedPath: createdPath,
             affectedRecordId: createdRecord?.id ?? params.item.id,
-            refresh: {
-              scanPaths: [createdPath, persistencePlan.originalPath || ''],
-              notify: true,
-            },
+            refresh: buildRefreshPlan([createdPath, persistencePlan.originalPath]),
             feedback: {
               notice: `已写入新位置 ${createdPath}，但旧记录删除失败；请检查并手动清理 ${persistencePlan.originalPath || '原位置'}。`,
             },
@@ -295,10 +236,7 @@ export class RecordInputUseCase {
         resolved.template,
         normalized.normalizedFormData,
         resolved.theme ?? undefined,
-        {
-          templateId: resolved.meta.templateId ?? resolved.template.id,
-          templateSourceType: resolved.meta.templateSourceType ?? 'block',
-        },
+        templateMeta,
         {
           signal: params.signal,
           autoRefresh: false,
@@ -307,10 +245,7 @@ export class RecordInputUseCase {
       return finalizeRecordSubmitResult(this.deps.dataStore, buildSuccessResult('update', {
         affectedPath: path,
         affectedRecordId: params.item.id,
-        refresh: {
-          scanPaths: [path],
-          notify: true,
-        },
+        refresh: buildRefreshPlan([path]),
         feedback: {
           notice: '✅ 已保存修改',
         },
@@ -324,54 +259,50 @@ export class RecordInputUseCase {
   }
 
   async submitDeleteRecord(params: SubmitDeleteRecordParams): Promise<RecordSubmitResult> {
-    try {
-      this.throwIfAborted(params.signal);
-      const path = await this.deps.inputService.deleteExistingRecord(params.item, {
-        signal: params.signal,
-        autoRefresh: false,
-      });
-      return finalizeRecordSubmitResult(this.deps.dataStore, buildSuccessResult('delete', {
-        affectedPath: path,
-        affectedRecordId: params.item.id,
-        refresh: {
-          scanPaths: [path],
-          notify: true,
-        },
-        feedback: {
-          notice: '✅ 已删除记录',
-        },
-      }));
-    } catch (error) {
-      return finalizeRecordSubmitResult(this.deps.dataStore, mapSubmitError('delete', error, [], {
-        refreshPaths: [getItemFilePath(params.item)],
-      }));
-    }
+    return submitFinalizedRecordMutation({
+      dataStore: this.deps.dataStore,
+      operation: 'delete',
+      signal: params.signal,
+      refreshPathsOnError: [getItemFilePath(params.item)],
+      run: async () => {
+        const path = await this.deps.inputService.deleteExistingRecord(params.item, {
+          signal: params.signal,
+          autoRefresh: false,
+        });
+        return buildSuccessResult('delete', {
+          affectedPath: path,
+          affectedRecordId: params.item.id,
+          refresh: buildRefreshPlan([path]),
+          feedback: {
+            notice: '✅ 已删除记录',
+          },
+        });
+      },
+    });
   }
 
   async submitCompleteRecord(params: SubmitCompleteRecordParams): Promise<RecordSubmitResult> {
-    try {
-      this.throwIfAborted(params.signal);
-      const path = parseItemLocator(params.itemId).path;
-      const options = normalizeCompletionOptions(params.options);
-      await this.deps.itemService.completeItem(params.itemId, options, { autoRefresh: false });
-      return finalizeRecordSubmitResult(this.deps.dataStore, buildSuccessResult('complete', {
-        affectedPath: path,
-        affectedRecordId: params.itemId,
-        refresh: {
-          scanPaths: [path],
-          notify: true,
-        },
-        feedback: {
-          notice: options?.duration != null
-            ? `任务已完成，时长 ${options.duration} 分钟已记录。`
-            : '任务已完成。',
-        },
-      }));
-    } catch (error) {
-      return finalizeRecordSubmitResult(this.deps.dataStore, mapSubmitError('complete', error, [], {
-        refreshPaths: [this.tryParseItemPath(params.itemId)],
-      }));
-    }
+    return submitFinalizedRecordMutation({
+      dataStore: this.deps.dataStore,
+      operation: 'complete',
+      signal: params.signal,
+      refreshPathsOnError: () => [tryParseItemPath(params.itemId)],
+      run: async () => {
+        const path = parseItemLocator(params.itemId).path;
+        const options = normalizeCompletionOptions(params.options);
+        await this.deps.itemService.completeItem(params.itemId, options, { autoRefresh: false });
+        return buildSuccessResult('complete', {
+          affectedPath: path,
+          affectedRecordId: params.itemId,
+          refresh: buildRefreshPlan([path]),
+          feedback: {
+            notice: options?.duration != null
+              ? `任务已完成，时长 ${options.duration} 分钟已记录。`
+              : '任务已完成。',
+          },
+        });
+      },
+    });
   }
 
   async submitUpdateRecordTime(params: SubmitUpdateRecordTimeParams): Promise<RecordSubmitResult> {
@@ -380,59 +311,30 @@ export class RecordInputUseCase {
       return buildValidationErrorResult('time_update', [normalizedUpdates.error]);
     }
 
-    try {
-      this.throwIfAborted(params.signal);
-      const path = parseItemLocator(params.itemId).path;
-      await this.deps.itemService.updateItemTime(params.itemId, normalizedUpdates, { autoRefresh: false });
-      return finalizeRecordSubmitResult(this.deps.dataStore, buildSuccessResult('time_update', {
-        affectedPath: path,
-        affectedRecordId: params.itemId,
-        refresh: {
-          scanPaths: [path],
-          notify: true,
-        },
-        feedback: {
-          notice: normalizedUpdates.duration != null
-            ? `任务时长已更新为 ${normalizedUpdates.duration} 分钟。`
-            : '任务时间已更新。',
-        },
-      }));
-    } catch (error) {
-      return finalizeRecordSubmitResult(this.deps.dataStore, mapSubmitError('time_update', error, [], {
-        refreshPaths: [this.tryParseItemPath(params.itemId)],
-      }));
-    }
-  }
-
-  private tryParseItemPath(itemId: string): string | null {
-    try {
-      return parseItemLocator(itemId).path;
-    } catch {
-      return null;
-    }
+    return submitFinalizedRecordMutation({
+      dataStore: this.deps.dataStore,
+      operation: 'time_update',
+      signal: params.signal,
+      refreshPathsOnError: () => [tryParseItemPath(params.itemId)],
+      run: async () => {
+        const path = parseItemLocator(params.itemId).path;
+        await this.deps.itemService.updateItemTime(params.itemId, normalizedUpdates, { autoRefresh: false });
+        return buildSuccessResult('time_update', {
+          affectedPath: path,
+          affectedRecordId: params.itemId,
+          refresh: buildRefreshPlan([path]),
+          feedback: {
+            notice: normalizedUpdates.duration != null
+              ? `任务时长已更新为 ${normalizedUpdates.duration} 分钟。`
+              : '任务时间已更新。',
+          },
+        });
+      },
+    });
   }
 
   private getKernel(): RecordInputKernel {
     return new RecordInputKernel(this.store.getState().settings.inputSettings);
-  }
-
-  private getFileItemsByPath(path: string): Item[] {
-    return this.deps.dataStore.queryItems().filter((item) => {
-      if (item.file?.path) return item.file.path === path;
-      try {
-        return parseItemLocator(item.id).path === path;
-      } catch {
-        return false;
-      }
-    });
-  }
-
-  private throwIfAborted(signal?: AbortSignal): void {
-    if (signal?.aborted) {
-      const error = new Error('AbortError');
-      (error as any).name = 'AbortError';
-      throw error;
-    }
   }
 }
 

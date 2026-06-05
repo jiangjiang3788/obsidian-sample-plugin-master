@@ -4,18 +4,18 @@ import { h } from 'preact';
 import type { Item, MessageRenderPort } from '@core/public';
 import type { GroupNode } from '@core/public';
 import { readField } from '@core/public';
-import type { TimerController } from '@/app/public';
-import type { MarkDoneHandler } from '@shared/types/actions';
+import type { MarkDoneHandler, OpenRecordHandler, OpenRecordOriginHandler, ResolveResourcePathHandler, TimerController } from '../../../types/actions';
 
-import { TaskRow } from '@shared/ui/items/TaskRow';
-import { BlockItem } from '@shared/ui/items/BlockItem';
-import { GroupedContainer } from '@shared/ui/GroupedContainer';
+import { TaskRow } from '../../items/TaskRow';
+import { BlockItem } from '../../items/BlockItem';
+import { GroupedContainer } from '../../GroupedContainer';
 
 interface EventTimelineViewViewProps {
   filteredItems: Item[];
   groupedTree: GroupNode[] | null;
 
-  app: any;
+  resolveResourcePath?: ResolveResourcePathHandler;
+  onOpenRecordOrigin?: OpenRecordOriginHandler;
 
   /** BlockItem 需要展示的字段 */
   displayFields: string[];
@@ -34,13 +34,15 @@ interface EventTimelineViewViewProps {
   timerService: TimerController;
   timers: any[];
   allThemes: any[];
+  onOpenRecord?: OpenRecordHandler;
 }
 
 export function EventTimelineViewView(props: EventTimelineViewViewProps) {
   const {
     filteredItems,
     groupedTree,
-    app,
+    resolveResourcePath,
+    onOpenRecordOrigin,
     displayFields,
     getItemTime,
     titleField,
@@ -51,6 +53,7 @@ export function EventTimelineViewView(props: EventTimelineViewViewProps) {
     timerService,
     timers,
     allThemes,
+    onOpenRecord,
   } = props;
 
 
@@ -109,15 +112,17 @@ export function EventTimelineViewView(props: EventTimelineViewViewProps) {
               <TaskRow
                 item={item}
                 onMarkDone={(id: string) => onMarkDone?.(id)}
-                app={app}
+                resolveResourcePath={resolveResourcePath}
+                onOpenRecordOrigin={onOpenRecordOrigin}
                 timerService={timerService}
                 timer={timers.find((t) => t.taskId === item.id)}
                 allThemes={allThemes}
                 displayTitle={taskDisplayTitle}
                 showFields={[]} // TaskRow 不显示额外字段
+                onOpenRecord={onOpenRecord}
               />
             ) : (
-              <BlockItem item={item} fields={displayFields} isNarrow={false} app={app} messageRenderPort={messageRenderPort} allThemes={allThemes} />
+              <BlockItem item={item} fields={displayFields} isNarrow={false} resolveResourcePath={resolveResourcePath} onOpenRecordOrigin={onOpenRecordOrigin} messageRenderPort={messageRenderPort} allThemes={allThemes} onOpenRecord={onOpenRecord} />
             )}
           </div>
         </div>

@@ -25,7 +25,7 @@ import {
   RadioGroup as MuiRadioGroup,
   Autocomplete,
   Box,
-} from '@mui/material';
+} from '@shared/public';
 
 import { openModuleSettingsWidget } from '@features/settings/layout/ModuleSettingsModal';
 

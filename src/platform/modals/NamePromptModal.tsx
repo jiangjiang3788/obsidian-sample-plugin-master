@@ -1,12 +1,12 @@
 // src/platform/modals/NamePromptModal.tsx
 /** @jsxImportSource preact */
 import { h } from 'preact';
-import { render, unmountComponentAtNode } from 'preact/compat';
 import { useState } from 'preact/hooks';
 import type { App } from 'obsidian';
 import { Modal } from 'obsidian';
-import { TextField, Button } from '@mui/material';
+import { TextField, Button } from '@shared/public';
 import type { NamePromptOptions } from '@core/public';
+import { renderModalContent, unmountModalContent } from './modalPreact';
 
 function PromptComponent({
   title,
@@ -84,7 +84,8 @@ export class NamePromptModal extends Modal {
 
   onOpen() {
     this.contentEl.empty();
-    render(
+    renderModalContent(
+      this.contentEl,
       <PromptComponent
         title={this.options.title}
         placeholder={this.options.placeholder}
@@ -106,8 +107,7 @@ export class NamePromptModal extends Modal {
           }
           this.close();
         }}
-      />,
-      this.contentEl
+      />
     );
   }
 
@@ -117,6 +117,6 @@ export class NamePromptModal extends Modal {
       this.resolvePromise(null);
       this.resolvePromise = null;
     }
-    unmountComponentAtNode(this.contentEl);
+    unmountModalContent(this.contentEl);
   }
 }

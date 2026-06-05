@@ -1,6 +1,6 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
-import { Box, TableRow, TableCell, Tooltip, Typography, Chip } from '@mui/material';
+import { Box, TableRow, TableCell, Tooltip, Typography, Chip } from '@shared/public';
 import { CancelIcon, EditIcon, TaskAltIcon, ThemeTreeNodeLabel } from '@shared/public';
 import { InlineEditor } from './InlineEditor';
 import type { EditorState } from './useThemeMatrixEditor';

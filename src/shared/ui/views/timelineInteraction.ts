@@ -1,19 +1,14 @@
 // src/features/views/timelineInteraction.ts
 //
 // Timeline 视图的“UI 交互”逻辑：
-// - 依赖 obsidian UI（Notice / App）
-// - 依赖 app/actions 的 record UI actions
-//
-// 这部分逻辑不属于 core：
-// core 只负责可推演的纯计算；交互/弹窗属于 features 层。
+// - 不直接依赖 app/actions
+// - 只把 Timeline 点击转换为 feature/app 层注入的创建回调
 
 import type { TaskBlock } from '@core/public';
-import type { UiPort } from '@core/public';
-import { openCreateFromTimeline } from '@/app/public';
+import type { OpenTimelineCreateHandler } from '../../types/actions';
 
 interface CreateTaskOptions {
-  app: any;
-  uiPort: UiPort;
+  onCreateFromTimeline: OpenTimelineCreateHandler;
   inputBlocks: any[];
   hourHeight: number;
   dayBlocks: TaskBlock[];
@@ -27,9 +22,7 @@ export function handleTimelineTaskCreation(
   e: MouseEvent | TouchEvent,
   options: CreateTaskOptions
 ) {
-  openCreateFromTimeline({
-    app: options.app,
-    uiPort: options.uiPort,
+  options.onCreateFromTimeline({
     inputBlocks: options.inputBlocks,
     hourHeight: options.hourHeight,
     dayBlocks: options.dayBlocks,

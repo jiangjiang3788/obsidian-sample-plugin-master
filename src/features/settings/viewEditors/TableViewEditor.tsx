@@ -1,7 +1,7 @@
 // src/features/dashboard/settings/ModuleEditors/TableViewEditor.tsx
 /** @jsxImportSource preact */
 import { h } from 'preact';
-import { Stack, Typography } from '@mui/material';
+import { Stack, Typography } from '@shared/public';
 import type { ViewEditorProps } from './registry';
 import { TABLE_VIEW_DEFAULT_CONFIG } from '@core/public';
 import { FieldPickerAutocomplete } from './FieldPickerAutocomplete';

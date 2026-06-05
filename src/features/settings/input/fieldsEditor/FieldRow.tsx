@@ -1,7 +1,7 @@
 // src/features/settings/input/fieldsEditor/FieldRow.tsx
 /** @jsxImportSource preact */
 import { useEffect, useRef, useState } from "preact/hooks";
-import { Box, Button, Collapse, Divider, Stack, Typography } from "@mui/material";
+import { Box, Button, Collapse, Divider, Stack, Typography } from '@shared/public';
 import { AddIcon, DeleteIcon, DragIndicatorIcon, ExpandLessIcon, ExpandMoreIcon, IconAction, SimpleSelect, logRenderDiagnostic } from '@shared/public';
 import type { TemplateField, TemplateFieldOption } from "@core/public";
 import { getCustomFieldNameWarning, getUserTemplateFieldTypeOptions, normalizeTemplateFieldType, templateFieldTypeSupportsDefaultValue, templateFieldTypeUsesOptions } from "@core/public";

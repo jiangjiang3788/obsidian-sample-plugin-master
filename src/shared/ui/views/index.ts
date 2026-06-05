@@ -3,10 +3,10 @@
 
 // 视图组件
 export { BlockView } from './BlockView';
-export { TimelineView } from './TimelineView';
-export { EventTimelineView } from './EventTimelineView';
+export { TimelineView } from './TimelineView/index';
+export { EventTimelineView } from './EventTimelineView/index';
 export { HeatmapView } from './HeatmapView';
-export { StatisticsView } from './StatisticsView';
+export { StatisticsView, PopoverContent } from './StatisticsView/index';
 export { ProgressView } from './ProgressView';
 export { TaskExecutionView } from './TaskExecutionView';
 export { TableView } from './TableView';

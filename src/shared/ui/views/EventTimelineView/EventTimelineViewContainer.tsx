@@ -5,9 +5,9 @@ import { useMemo } from 'preact/hooks';
 import type { Item, ViewInstance, MessageRenderPort } from '@core/public';
 import { normalizeDisplayFields, readField } from '@core/public';
 import { dayjs } from '@core/public';
-import type { TimerController } from '@/app/public';
+import type { OpenRecordHandler, OpenRecordOriginHandler, ResolveResourcePathHandler, TimerController } from '../../../types/actions';
 import { groupItemsByFields, type GroupNode } from '@core/public';
-import type { MarkDoneHandler } from '@shared/types/actions';
+import type { MarkDoneHandler } from '../../../types/actions';
 
 import { EventTimelineViewView } from './EventTimelineViewView';
 
@@ -24,7 +24,8 @@ interface EventTimelineViewProps {
    * - null: 明确表示不分组
    */
   groupedTree?: GroupNode[] | null;
-  app: any;
+  resolveResourcePath?: ResolveResourcePathHandler;
+  onOpenRecordOrigin?: OpenRecordOriginHandler;
   dateRange: [Date, Date];
   module: ViewInstance;
   currentView: '年' | '季' | '月' | '周' | '天';
@@ -33,6 +34,7 @@ interface EventTimelineViewProps {
   timers: any[];
   allThemes: any[];
   messageRenderPort?: MessageRenderPort;
+  onOpenRecord?: OpenRecordHandler;
 }
 
 /**
@@ -46,7 +48,8 @@ export function EventTimelineView(props: EventTimelineViewProps) {
     items,
     filteredItems: injectedFilteredItems,
     groupedTree: injectedGroupedTree,
-    app,
+    resolveResourcePath,
+    onOpenRecordOrigin,
     dateRange,
     module,
     onMarkDone,
@@ -54,6 +57,7 @@ export function EventTimelineView(props: EventTimelineViewProps) {
     timers,
     allThemes,
     messageRenderPort,
+    onOpenRecord,
   } = props;
 
   // 使用统一配置：优先使用模块级配置
@@ -112,7 +116,8 @@ export function EventTimelineView(props: EventTimelineViewProps) {
     <EventTimelineViewView
       filteredItems={filteredItems}
       groupedTree={groupedTree}
-      app={app}
+      resolveResourcePath={resolveResourcePath}
+      onOpenRecordOrigin={onOpenRecordOrigin}
       displayFields={displayFields}
       getItemTime={getItemTime}
       titleField={titleField}
@@ -123,6 +128,7 @@ export function EventTimelineView(props: EventTimelineViewProps) {
       timerService={timerService}
       timers={timers}
       allThemes={allThemes}
+      onOpenRecord={onOpenRecord}
     />
   );
 }

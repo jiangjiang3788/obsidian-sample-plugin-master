@@ -5,7 +5,7 @@
 
 import { h } from 'preact';
 import { useMemo } from 'preact/hooks';
-import { SimpleSelect } from '@shared/ui/composites/SimpleSelect';
+import { SimpleSelect } from './SimpleSelect';
 
 export interface FieldManagerProps {
   fields: string[];

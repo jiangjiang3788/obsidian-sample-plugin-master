@@ -10,7 +10,7 @@
 import { h } from 'preact';
 import { useState, useMemo } from 'preact/hooks';
 import { useUseCases, useSelector } from '@/app/public';
-import { Box, Typography, Stack, FormControlLabel, Checkbox } from '@mui/material';
+import { Box, Typography, Stack, FormControlLabel, Checkbox } from '@shared/public';
 import { selectFloatingTimerEnabled, selectDevConsoleStackEnabled, selectCategoryColors } from '@/app/public';
 import { generateCategoryColor, getActiveCategoryColors } from '@core/public';
 

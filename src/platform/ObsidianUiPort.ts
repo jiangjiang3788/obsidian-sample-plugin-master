@@ -6,7 +6,7 @@
 
 import { singleton } from 'tsyringe';
 import { Notice } from 'obsidian';
-import { isDevConsoleStackEnabled } from '@shared/public';
+import { diagnosticTrace, isDevConsoleStackEnabled } from '@shared/public';
 import type { UiNoticeHandle, UiPort } from '@core/ports/UiPort';
 
 @singleton()
@@ -15,7 +15,7 @@ export class ObsidianUiPort implements UiPort {
     // 开发模式：即使调用方只传 message，也在控制台打印调用栈，方便定位来源
     if (isDevConsoleStackEnabled()) {
       try {
-        console.trace('[Think][Notice]', message);
+        diagnosticTrace('[Think][Notice]', message);
       } catch {
         // no-op
       }

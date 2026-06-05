@@ -3,7 +3,7 @@ import { h } from 'preact';
 import type { Item } from '@core/public';
 import type { CategoryConfig } from '@core/public';
 import { aggregateByQuarter, aggregateByMonth, getMonthWeeksData, isSameIsoWeek, createPeriodData } from '@core/public';
-import { ChartBlock } from '@shared/ui/statistics/ChartBlock';
+import { ChartBlock } from '../../../statistics/ChartBlock';
 import type { StatisticsCellClickHandler } from '../types';
 import { TopControls } from '../components/TopControls';
 

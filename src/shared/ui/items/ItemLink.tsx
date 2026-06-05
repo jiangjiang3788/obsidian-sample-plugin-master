@@ -1,25 +1,26 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
 import type { Item } from '@core/public';
-import { createRecordGestureHandlers } from '@/shared/ui/utils/recordOrigin';
-import { openEditFromItem } from '@/app/public';
+import { createRecordGestureHandlers } from '../utils/recordOrigin';
+import type { OpenRecordHandler, OpenRecordOriginHandler } from '../../types/actions';
 
 interface ItemLinkProps {
     item: Item;
-    app: any;
     className?: string;
     showIcon?: boolean;
+    onOpenRecord?: OpenRecordHandler;
+    onOpenRecordOrigin?: OpenRecordOriginHandler;
 }
 
 /**
  * 通用项目链接组件 - 可在多个视图间复用
  */
-export function ItemLink({ item, app, className = '', showIcon = true }: ItemLinkProps) {
+export function ItemLink({ item, className = '', showIcon = true, onOpenRecord, onOpenRecordOrigin }: ItemLinkProps) {
     const gesture = createRecordGestureHandlers({
         item,
-        app,
+        onOpenOrigin: onOpenRecordOrigin,
         onPrimary: () => {
-            openEditFromItem({ app, item });
+            void onOpenRecord?.(item);
         },
     });
 

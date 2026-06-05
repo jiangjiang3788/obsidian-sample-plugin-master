@@ -5,11 +5,11 @@ import { h } from 'preact';
 import { useEffect } from 'preact/hooks';
 import type { TaskBlock } from '@core/public';
 import { timeToMinutes, minutesToTime, normalizeTaskTimeTriple } from '@core/public';
-import { Dialog, DialogTitle, DialogContent, DialogActions, Button, TextField } from '@mui/material';
-import { useTimeFormState } from '@shared/hooks/useFormState';
-import { useSaveHandler } from '@shared/patterns/ModalSavePattern';
-import { computeLinkedTimeChanges } from '@shared/utils/linkedTimeFields';
-import type { UpdateTaskTimeHandler } from '@shared/types/taskTime';
+import { Dialog, DialogTitle, DialogContent, DialogActions, Button, TextField } from '../muiCompat';
+import { useTimeFormState } from '../../hooks/useFormState';
+import { useSaveHandler } from '../../patterns/ModalSavePattern';
+import { computeLinkedTimeChanges } from '../../utils/linkedTimeFields';
+import type { UpdateTaskTimeHandler } from '../../types/taskTime';
 
 export interface EditTaskModalProps {
   isOpen: boolean;

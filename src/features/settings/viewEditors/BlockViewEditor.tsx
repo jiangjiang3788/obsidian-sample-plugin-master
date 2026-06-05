@@ -1,7 +1,7 @@
 // src/features/dashboard/settings/ModuleEditors/BlockViewEditor.tsx
 /** @jsxImportSource preact */
 import { h } from 'preact';
-import { Typography } from '@mui/material';
+import { Typography } from '@shared/public';
 import { BLOCK_VIEW_DEFAULT_CONFIG } from '@core/public';
 
 // 重新导出以保持兼容性

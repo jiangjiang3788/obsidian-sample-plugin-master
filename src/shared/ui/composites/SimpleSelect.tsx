@@ -2,8 +2,8 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
 import { useState, useRef, useEffect } from 'preact/hooks';
-import { Box, Typography } from '@mui/material';
-import { ArrowDropDownIcon } from '@shared/ui/icons';
+import { Box, Typography } from '../muiCompat';
+import { ArrowDropDownIcon } from '../icons';
 
 // 定义组件接收的props类型
 export type SimpleSelectOption = { value: string; label: string; group?: string; disabled?: boolean };

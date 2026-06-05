@@ -3,7 +3,7 @@ import { h } from 'preact';
 
 import type { ThemeDefinition } from '@core/public';
 
-import { Box, Divider, FormControl, Typography } from '@mui/material';
+import { Box, Divider, FormControl, Typography } from '@shared/public';
 
 import { QuickInputEditorFields } from './components/Fields';
 import { SelectablePill } from './components/SelectablePill';

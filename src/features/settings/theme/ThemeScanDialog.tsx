@@ -27,7 +27,7 @@ import {
     Grid,
     Card,
     CardContent
-} from '@mui/material';
+} from '@shared/public';
 import type { ScanResult, ScanConfig, ScanStats } from '@core/public';
 import type { ImportResult } from './importTypes';
 

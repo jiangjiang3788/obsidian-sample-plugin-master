@@ -1,6 +1,6 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
-import { Button } from '@mui/material';
+import { Button } from '@shared/public';
 
 import type { RecordSubmitRecoveryPresentation } from '@core/public';
 

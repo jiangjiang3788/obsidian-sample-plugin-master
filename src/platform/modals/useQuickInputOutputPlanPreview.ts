@@ -1,4 +1,5 @@
 import { useMemo } from 'preact/hooks';
+import { diagnosticWarn } from '@shared/public';
 
 import type { QuickInputEditorState } from '@/app/public';
 import { buildRecordOutputPlan, buildRecordPersistencePlan, type Item, type PreparedCreateRecord, type PreparedEditRecord, type RecordOutputPlan, type RecordPersistencePlan } from '@core/public';
@@ -34,7 +35,7 @@ export function useQuickInputOutputPlanPreview({
         },
       });
     } catch (error) {
-      console.warn('[记录调试][保存位置预览] 计算实时 OutputPlan 失败，回退到初始计划', error);
+      diagnosticWarn('[记录调试][保存位置预览] 计算实时 OutputPlan 失败，回退到初始计划', error);
       return preparedRecord.outputPlan ?? null;
     }
   }, [currentState.template, currentState.theme, currentState.formData, currentState.templateId, currentState.templateSourceType, preparedRecord.outputPlan]);

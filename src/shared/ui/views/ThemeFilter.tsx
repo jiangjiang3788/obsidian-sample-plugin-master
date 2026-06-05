@@ -5,8 +5,8 @@ import { useMemo } from 'preact/hooks';
 
 import type { ThemeDefinition } from '@core/public';
 import { getLeafPath } from '@core/public';
-import { FilterPopover } from '@shared/ui/components/FilterPopover';
-import { ThemeTreeSelectPanel } from '@/shared/components/ThemeTreeSelect';
+import { FilterPopover } from '../components/FilterPopover';
+import { ThemeTreeSelectPanel } from '../../components/ThemeTreeSelect';
 
 interface ThemeFilterProps {
   /** 选中的主题 path 列表 */

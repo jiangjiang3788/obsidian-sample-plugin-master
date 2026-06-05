@@ -1,9 +1,8 @@
 // src/shared/ui/views/StatisticsView.tsx
 /** @jsxImportSource preact */
-import { h } from 'preact';
-import { useState, useMemo, useRef, useEffect } from 'preact/hooks';
+import { useState, useMemo, useRef } from 'preact/hooks';
 import type { Item, ViewInstance, MessageRenderPort } from '@core/public';
-import type { CategoryConfig, PeriodData } from '@core/public';
+import type { PeriodData } from '@core/public';
 import {
   dayjs,
   getWeeksInYear,
@@ -16,32 +15,25 @@ import {
   aggregateByYear,
   createPeriodData,
   devLog,
-  discoverBaseCategories,
-  getCategoryColor,
-  generateCategoryColor,
-  getBasePath,
 } from '@core/public';
-import { IconButton, Tooltip } from '@mui/material';
-import { AddCircleOutlineIcon, IosShareIcon } from '@shared/ui/icons';
-import { FloatingPanel, openFloatingWidget, closeFloatingWidget, useUiPort, useSelector, selectCategoryColors, useUseCases } from '@/app/public';
-import { canCreateFromStatisticsCell } from '@/app/public';
-import type { TimerController } from '@/app/public';
-import type { OpenQuickCreateHandler, StatisticsQuickCreatePayload } from '@shared/types/actions';
-import { PopoverContent } from './components/PopoverContent';
+import type { CategoryColorMap, CloseStatisticsPopoverHandler, NoticeHandler, OpenQuickCreateHandler, OpenRecordHandler, OpenRecordOriginHandler, OpenStatisticsPopoverHandler, ResolveResourcePathHandler, StatisticsQuickCreatePayload, TimerController, UpdateCategoryColorsHandler } from '../../../types/actions';
 import { StatisticsViewView } from './StatisticsViewView';
-
-// 解决 Preact 和 Material-UI 的类型兼容性问题
-const AnyIconButton = IconButton as any;
+import { useStatisticsCategoryConfigs } from './useStatisticsCategoryConfigs';
 
 // =============== 类型定义 ===============
 interface StatisticsViewProps {
   items: Item[];
-  app: any;
+  resolveResourcePath?: ResolveResourcePathHandler;
   dateRange: [Date, Date];
   module: ViewInstance;
   currentView: '年' | '季' | '月' | '周' | '天';
   useFieldGranularity?: boolean;
   onQuickCreate?: OpenQuickCreateHandler;
+  onNotice?: NoticeHandler;
+  onOpenStatisticsPopover?: OpenStatisticsPopoverHandler;
+  onCloseStatisticsPopover?: CloseStatisticsPopoverHandler;
+  categoryColors?: CategoryColorMap;
+  onCategoryColorsChange?: UpdateCategoryColorsHandler;
   selectedCategories?: string[];
   timerService: TimerController;
   timers: any[];
@@ -49,6 +41,8 @@ interface StatisticsViewProps {
   /** Phase2: feature 层注入的 renderModel（shared/ui 只渲染） */
   statisticsModel?: any;
   messageRenderPort?: MessageRenderPort;
+  onOpenRecord?: OpenRecordHandler;
+  onOpenRecordOrigin?: OpenRecordOriginHandler;
 }
 
 interface PopoverState {
@@ -59,83 +53,36 @@ interface PopoverState {
 // =============== 主视图组件（Container） ===============
 export function StatisticsView({
   items,
-  app,
+  resolveResourcePath,
   dateRange,
   module,
   currentView,
   onQuickCreate,
+  onNotice,
+  onOpenStatisticsPopover,
+  onCloseStatisticsPopover,
+  categoryColors = {},
+  onCategoryColorsChange,
   selectedCategories,
   timerService,
   timers,
   allThemes,
   statisticsModel,
   messageRenderPort,
+  onOpenRecord,
+  onOpenRecordOrigin,
 }: StatisticsViewProps) {
-  const ui = useUiPort();
-
-  // 订阅全局分类颜色，确保颜色变更时触发重渲染
-  const globalCategoryColors = useSelector(selectCategoryColors);
-  const useCases = useUseCases();
-
-  // 自动发现 items 中的新分类，为其生成颜色并持久化到 store
-  useEffect(() => {
-    const discovered = discoverBaseCategories(items);
-    const newColors: Record<string, string> = {};
-    let hasNew = false;
-    for (const name of discovered) {
-      if (!globalCategoryColors[name]) {
-        newColors[name] = generateCategoryColor(name);
-        hasNew = true;
-      }
-    }
-    if (hasNew) {
-      useCases.settings.updateCategoryColors({ ...globalCategoryColors, ...newColors });
-    }
-  }, [items, globalCategoryColors]);
-
   const viewConfig = statisticsModel?.viewConfig ?? ({ ...DEFAULT_CONFIG, ...module.viewConfig } as any);
   const { categories = [], displayMode = 'smart', minVisibleHeight = 15, usePeriodField = false } = viewConfig;
 
-  // 从真实 items 数据动态提取分类，颜色始终来自全局颜色系统
-  const categoryConfigs: CategoryConfig[] = useMemo(() => {
-    const discovered = discoverBaseCategories(items);
-
-    if (categories.length > 0) {
-      const result: CategoryConfig[] = [];
-      const seen = new Set<string>();
-
-      for (const cat of categories as CategoryConfig[]) {
-        const baseName = getBasePath(cat.name) || cat.name || '';
-        if (!baseName || seen.has(baseName)) continue;
-        seen.add(baseName);
-        result.push({
-          ...cat,
-          name: baseName,
-          alias: cat.alias && cat.alias !== baseName ? cat.alias : undefined,
-          color: getCategoryColor(baseName),
-        });
-      }
-
-      for (const name of discovered) {
-        const baseName = getBasePath(name) || name;
-        if (!baseName || seen.has(baseName)) continue;
-        seen.add(baseName);
-        result.push({
-          name: baseName,
-          color: getCategoryColor(baseName),
-          files: [],
-        });
-      }
-
-      return result;
-    }
-
-    return discovered.map(name => ({
-      name,
-      color: getCategoryColor(name),
-      files: [],
-    }));
-  }, [categories, items, globalCategoryColors]);
+  const filteredCategories = useStatisticsCategoryConfigs({
+    items,
+    configuredCategories: categories,
+    selectedCategories,
+    categoryColors,
+    onCategoryColorsChange,
+    injectedFilteredCategories: statisticsModel?.filteredCategories,
+  });
 
   const [selectedCell, setSelectedCell] = useState<any>(null);
   const [popover, setPopover] = useState<PopoverState | null>(null);
@@ -145,13 +92,6 @@ export function StatisticsView({
   const [usePeriod, setUsePeriod] = useState(Boolean(usePeriodField));
 
   const startDate = useMemo(() => statisticsModel?.startDate ?? dayjs(dateRange[0]), [statisticsModel, dateRange]);
-
-  // 过滤后的分类列表
-  const filteredCategories = useMemo(() => {
-    if (statisticsModel?.filteredCategories) return statisticsModel.filteredCategories;
-    if (!selectedCategories || selectedCategories.length === 0) return categoryConfigs;
-    return categoryConfigs.filter((c: CategoryConfig) => selectedCategories.includes(c.name));
-  }, [statisticsModel, categoryConfigs, selectedCategories]);
 
   // 年视图相关：必须在组件顶层计算，避免 Hook 顺序变化
   const isYearView = statisticsModel?.isYearView ?? currentView === '年';
@@ -204,33 +144,33 @@ export function StatisticsView({
     // 切换：如果相同则关闭当前浮窗，否则打开新的浮窗
     const currentKey = JSON.stringify(cellIdentifier);
     if (popover && JSON.stringify(selectedCell) === currentKey) {
-      closeFloatingWidget(widgetId);
+      onCloseStatisticsPopover?.(widgetId);
       setPopover(null);
       setSelectedCell(null);
       return;
     }
 
     // 打开新的浮窗 widget（先关闭旧实例，避免残留）
-    closeFloatingWidget(widgetId);
+    onCloseStatisticsPopover?.(widgetId);
 
     setSelectedCell(cellIdentifier);
     setPopover({ blocks, title });
 
     const handleClose = () => {
-      closeFloatingWidget(widgetId);
+      onCloseStatisticsPopover?.(widgetId);
       setPopover(null);
       setSelectedCell(null);
     };
 
     const handleExport = () => {
       if (blocks.length === 0) {
-        ui.notice('没有内容可导出');
+        onNotice?.('没有内容可导出');
         return;
       }
       const exportConfig = getExportConfigByViewType('StatisticsView');
       const markdownContent = exportItemsToMarkdown(blocks, exportConfig);
       navigator.clipboard.writeText(markdownContent);
-      ui.notice(`"${title}" 的内容已复制到剪贴板！`);
+      onNotice?.(`"${title}" 的内容已复制到剪贴板！`);
     };
 
     const handleQuickCreate = () => {
@@ -241,60 +181,25 @@ export function StatisticsView({
       } as StatisticsQuickCreatePayload);
     };
 
-    const canQuickCreate = canCreateFromStatisticsCell({
-      cellIdentifier,
-      blocks,
-      title,
-    });
+    const canQuickCreate = !!cellIdentifier?.category && cellIdentifier.category !== '全部';
 
-    openFloatingWidget(widgetId, () => (
-      <FloatingPanel
-        id={widgetId}
-        title={title}
-        defaultPosition={{ x: window.innerWidth / 2 - 320, y: window.innerHeight / 2 - 240 }}
-        minWidth={520}
-        maxWidth="90vw"
-        maxHeight="85vh"
-        width={760}
-        height={640}
-        resizable
-        bodyPadding={0}
-        bodyStyle={{ display: 'flex', flexDirection: 'column', minHeight: 0 }}
-        onClose={handleClose}
-        headerActions={
-          <div class="flex items-center gap-1">
-            <Tooltip title="导出为 Markdown" PopperProps={{ disablePortal: true }}>
-              <AnyIconButton
-                size="small"
-                onClick={(e: any) => {
-                  e.stopPropagation();
-                  handleExport();
-                }}
-                sx={{ padding: '4px' }}
-              >
-                <IosShareIcon sx={{ fontSize: '1rem' }} />
-              </AnyIconButton>
-            </Tooltip>
-            {canQuickCreate && onQuickCreate ? (
-              <Tooltip title="按当前分类创建" PopperProps={{ disablePortal: true }}>
-                <AnyIconButton
-                  size="small"
-                  onClick={(e: any) => {
-                    e.stopPropagation();
-                    handleQuickCreate();
-                  }}
-                  sx={{ padding: '4px' }}
-                >
-                  <AddCircleOutlineIcon sx={{ fontSize: '1rem' }} />
-                </AnyIconButton>
-              </Tooltip>
-            ) : null}
-          </div>
-        }
-      >
-        <PopoverContent blocks={blocks} app={app} module={module} timerService={timerService} timers={timers} allThemes={allThemes} messageRenderPort={messageRenderPort} />
-      </FloatingPanel>
-    ));
+    onOpenStatisticsPopover?.({
+      widgetId,
+      title,
+      blocks,
+      module,
+      timerService,
+      timers,
+      allThemes,
+      messageRenderPort,
+      onOpenRecord,
+      onOpenRecordOrigin,
+      resolveResourcePath,
+      onClose: handleClose,
+      onExport: handleExport,
+      onQuickCreate: onQuickCreate ? handleQuickCreate : undefined,
+      canQuickCreate,
+    });
 
     // 设置短期锁，避免连续触发
     openLockRef.current = true;

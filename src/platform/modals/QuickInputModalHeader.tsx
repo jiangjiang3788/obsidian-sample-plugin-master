@@ -1,9 +1,8 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
 
-import { Box } from '@mui/material';
+import { Box, ModalHeader } from '@shared/public';
 
-import { ModalHeader } from '@shared/public';
 
 export interface QuickInputModalHeaderProps {
   mode: 'create' | 'edit';

@@ -1,21 +1,19 @@
-import { makeObsUri, type Item } from '@core/public';
+import type { Item } from '@core/public';
+import type { OpenRecordOriginHandler } from '../../types/actions';
 
 interface RecordGestureParams {
   item: Item;
-  app: any;
   onPrimary?: () => void;
-}
-
-export function openRecordOrigin(item: Item, app: any): void {
-  const uri = makeObsUri(item, app?.vault?.getName?.() || '');
-  window.open(uri, '_blank');
+  onOpenOrigin?: OpenRecordOriginHandler;
 }
 
 export function createRecordGestureHandlers(params: RecordGestureParams) {
   let lastTouchAt = 0;
   let suppressClickUntil = 0;
 
-  const openOrigin = () => openRecordOrigin(params.item, params.app);
+  const openOrigin = () => {
+    void params.onOpenOrigin?.(params.item);
+  };
 
   return {
     onClick: (event: any) => {

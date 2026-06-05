@@ -1,9 +1,9 @@
 // src/shared/components/form/ListEditor.tsx
 /** @jsxImportSource preact */
 import { h } from 'preact';
-import { Stack, TextField, IconButton } from '@mui/material';
-import { AddIcon, DeleteIcon } from '@shared/ui/icons';
-import { replaceAt, removeAt, addAtEnd } from '@/shared/utils/immutableListOps';
+import { Stack, TextField, IconButton } from '../../muiCompat';
+import { AddIcon, DeleteIcon } from '../../icons';
+import { replaceAt, removeAt, addAtEnd } from '../../../utils/immutableListOps';
 
 interface Props {
   value: string[];

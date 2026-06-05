@@ -55,7 +55,6 @@ function focusCellElement(table: HTMLTableElement | null, cellKey: string): void
 export function ExcelGrid({
   items,
   columns,
-  app,
   selectedCellKey,
   editingCellKey,
   pendingCellKeys,
@@ -246,7 +245,6 @@ export function ExcelGrid({
                 <ExcelCell
                   key={column.key}
                   cell={cell}
-                  app={app}
                   selected={selectedCellKey === canonicalCellKey}
                   editing={editingCellKey === canonicalCellKey}
                   pending={pendingCellKeys?.has(canonicalCellKey)}

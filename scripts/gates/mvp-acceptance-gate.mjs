@@ -9,6 +9,10 @@ function read(path) {
   return readFileSync(join(root, path), 'utf8');
 }
 
+function canRead(path) {
+  return existsSync(join(root, path));
+}
+
 function readJson(path) {
   return JSON.parse(read(path));
 }
@@ -18,10 +22,18 @@ function expectFile(path, reason) {
 }
 
 function expectContains(path, needle, reason) {
+  if (!canRead(path)) {
+    failures.push(`${path} missing: ${reason}`);
+    return;
+  }
   if (!read(path).includes(needle)) failures.push(`${path} must contain ${needle}: ${reason}`);
 }
 
 function expectMaxLines(path, max, reason) {
+  if (!canRead(path)) {
+    failures.push(`${path} missing: ${reason}`);
+    return;
+  }
   const lines = read(path).split(/\r?\n/).length;
   if (lines > max) failures.push(`${path} has ${lines} lines, expected <= ${max}: ${reason}`);
 }

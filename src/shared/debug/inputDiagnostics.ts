@@ -1,3 +1,5 @@
+import { diagnosticLog } from '../utils/diagnosticConsole';
+
 export function describeElement(element: unknown): string {
   if (!element || !(element instanceof Element)) return String(element);
 
@@ -74,7 +76,7 @@ export function logInputEvent(
   const target = event.target;
   const currentTarget = event.currentTarget;
   const native = event as InputEvent & KeyboardEvent & MouseEvent;
-  console.log(`[输入诊断][${scope}] ${event.type}`, {
+  diagnosticLog(`[输入诊断][${scope}] ${event.type}`, {
     type: event.type,
     eventPhase: event.eventPhase,
     bubbles: event.bubbles,
@@ -99,7 +101,7 @@ export function logRenderDiagnostic(
   scope: string,
   payload: Record<string, unknown>,
 ) {
-  console.log(`[输入诊断][${scope}][render]`, {
+  diagnosticLog(`[输入诊断][${scope}][render]`, {
     activeElement: describeElement(document.activeElement),
     ...payload,
   });
@@ -157,7 +159,7 @@ export function installTemplateEditorInputDiagnostics(
       !active.closest('[data-think-template-editor-root="true"]')
     )
       return;
-    console.log(`[输入诊断][${label}/selectionchange]`, {
+    diagnosticLog(`[输入诊断][${label}/selectionchange]`, {
       activeElement: describeElement(active),
       activeSnapshot: readControlSnapshot(active),
       selection: window.getSelection()?.toString(),
@@ -165,7 +167,7 @@ export function installTemplateEditorInputDiagnostics(
   };
   document.addEventListener("selectionchange", selectionHandler, true);
 
-  console.log(`[输入诊断][${label}] 全局捕获日志已安装`);
+  diagnosticLog(`[输入诊断][${label}] 全局捕获日志已安装`);
 
   return () => {
     for (const type of eventTypes) {
@@ -173,6 +175,6 @@ export function installTemplateEditorInputDiagnostics(
       window.removeEventListener(type, handler, true);
     }
     document.removeEventListener("selectionchange", selectionHandler, true);
-    console.log(`[输入诊断][${label}] 全局捕获日志已卸载`);
+    diagnosticLog(`[输入诊断][${label}] 全局捕获日志已卸载`);
   };
 }

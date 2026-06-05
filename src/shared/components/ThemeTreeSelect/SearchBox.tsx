@@ -1,7 +1,7 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
-import { Box, IconButton, InputAdornment, TextField } from '@mui/material';
-import { ClearIcon, SearchIcon } from '@shared/ui/icons';
+import { Box, IconButton, InputAdornment, TextField } from '../../ui/muiCompat';
+import { ClearIcon, SearchIcon } from '../../ui/icons';
 
 export interface SearchBoxProps {
     value: string;

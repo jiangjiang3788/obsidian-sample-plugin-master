@@ -1,38 +1,34 @@
 // src/features/timer/ui/TimerViewView.tsx
 /** @jsxImportSource preact */
 
-import { FloatingPanel, QuickInputModal } from '@/app/public';
-import { Button, Stack, Tooltip } from '@mui/material';
-import { AddCircleOutlineIcon } from '@shared/public';
+import { FloatingPanel } from '@/app/public';
+import { AddCircleOutlineIcon, Button, Stack, Tooltip } from '@shared/public';
 import { TimerRow } from './TimerRow';
-import type { ActionService, DataStore } from '@core/public';
+import type { DataStore, Item } from '@core/public';
 import type { TimerService } from '@features/timer/TimerService';
 import type { TimerState } from '@/app/public';
 
 interface TimerViewViewProps {
-    app: any;
-    actionService: ActionService;
     timerService: TimerService;
     dataStore: DataStore;
     timers: TimerState[];
     isVisible: boolean;
     setVisible: (v: boolean) => void;
+    onOpenRecord: (item: Item) => void;
+    onOpenRecordOrigin: (item: Item) => void;
+    onCreateNewTask: () => void;
 }
 
-export function TimerViewView({ app, actionService, timerService, dataStore, timers, isVisible, setVisible }: TimerViewViewProps) {
-    const handleNewTask = () => {
-        const config = actionService.getQuickInputConfigForNewTimer();
-        if (!config) return;
-
-        new QuickInputModal(app, config.blockId, config.context, config.themeId, undefined, false, {
-            mode: 'create',
-            source: 'timer',
-            onSubmitSuccess: async (result) => {
-                await timerService.startCreatedTaskIfPossible(result);
-            },
-        }).open();
-    };
-
+export function TimerViewView({
+    timerService,
+    dataStore,
+    timers,
+    isVisible,
+    setVisible,
+    onOpenRecord,
+    onOpenRecordOrigin,
+    onCreateNewTask,
+}: TimerViewViewProps) {
     return (
         <FloatingPanel
             id="floating-timer"
@@ -46,7 +42,7 @@ export function TimerViewView({ app, actionService, timerService, dataStore, tim
             onClose={() => setVisible(false)}
             headerActions={
                 <Tooltip title="开始新任务">
-                    <Button size="small" startIcon={<AddCircleOutlineIcon />} onClick={handleNewTask}>
+                    <Button size="small" startIcon={<AddCircleOutlineIcon />} onClick={onCreateNewTask}>
                         新任务
                     </Button>
                 </Tooltip>
@@ -60,7 +56,8 @@ export function TimerViewView({ app, actionService, timerService, dataStore, tim
                             timer={timer}
                             timerService={timerService}
                             dataStore={dataStore}
-                            app={app}
+                            onOpenRecord={onOpenRecord}
+                            onOpenRecordOrigin={onOpenRecordOrigin}
                         />
                     ))
                 ) : (

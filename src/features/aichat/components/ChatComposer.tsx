@@ -1,6 +1,6 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
-import { Box, Button, TextField } from '@mui/material';
+import { Box, Button, TextField } from '@shared/public';
 import { SendIcon } from '@shared/public';
 
 export interface ChatComposerProps {

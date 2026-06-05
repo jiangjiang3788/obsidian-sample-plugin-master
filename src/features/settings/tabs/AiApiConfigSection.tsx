@@ -13,7 +13,7 @@ import {
   Switch,
   TextField,
   Typography,
-} from '@mui/material';
+} from '@shared/public';
 import { ExpandMoreIcon } from '@shared/public';
 import type { AiApiConfigSectionProps } from './aiSettingsUiTypes';
 

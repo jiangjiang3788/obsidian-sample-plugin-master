@@ -2,13 +2,14 @@
 // src/shared/ui/views/timeline/TimelineViewView.tsx
 import { h } from 'preact';
 import type { TaskBlock } from '@core/public';
-import type { UpdateTaskTimeHandler } from '@shared/types/taskTime';
+import type { OpenRecordHandler, OpenRecordOriginHandler } from '../../../types/actions';
+import type { UpdateTaskTimeHandler } from '../../../types/taskTime';
 
 import {
   ProgressBlock,
   DayColumnHeader,
   DayColumnBody,
-} from '@shared/ui/timeline';
+} from '../../timeline';
 
 import { TimelineSummaryTable } from '../timeline/components/TimelineSummaryTable';
 
@@ -49,8 +50,10 @@ interface TimelineViewViewProps {
   hourHeight: number;
   maxHours: number;
 
-  app: any;
+  onOpenRecordOrigin?: OpenRecordOriginHandler;
   onUpdateTaskTime?: UpdateTaskTimeHandler;
+  onOpenRecord?: OpenRecordHandler;
+  onNotice?: (message: string) => void;
   onColumnClick: (day: string, e: MouseEvent | TouchEvent) => void;
 }
 
@@ -72,8 +75,10 @@ export function TimelineViewView(props: TimelineViewViewProps) {
     categoriesConfig,
     hourHeight,
     maxHours,
-    app,
+    onOpenRecordOrigin,
     onUpdateTaskTime,
+    onOpenRecord,
+    onNotice,
     onColumnClick,
   } = props;
 
@@ -149,7 +154,7 @@ export function TimelineViewView(props: TimelineViewViewProps) {
           return (
             <DayColumnBody
               key={dayStr}
-              app={app}
+              onOpenRecordOrigin={onOpenRecordOrigin}
               day={dayStr}
               blocks={blocks}
               hourHeight={hourHeight}
@@ -157,6 +162,8 @@ export function TimelineViewView(props: TimelineViewViewProps) {
               colorMap={colorMap}
               maxHours={maxHours}
               onUpdateTaskTime={onUpdateTaskTime}
+              onOpenRecord={onOpenRecord}
+              onNotice={onNotice}
               onColumnClick={onColumnClick}
             />
           );

@@ -3,9 +3,8 @@
 
 import { createServices, type Services, mountWithServices, unmountPreact } from '@/app/public';
 import { PluginSettingTab, App } from 'obsidian';
-import { ThemeProvider, CssBaseline, Box, Tabs, Tab } from '@mui/material';
 import type ThinkPlugin from '@main';
-import { theme as baseTheme, useLocalStorage } from '@shared/public';
+import { Box, CssBaseline, Tab, Tabs, ThemeProvider, theme as baseTheme, useLocalStorage } from '@shared/public';
 import { LOCAL_STORAGE_KEYS } from '@core/public';
 
 import { LayoutSettings } from '@features/settings/tabs/LayoutSettings';

@@ -1,7 +1,7 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
 
-import { Box, FormControl, Typography } from '@mui/material';
+import { Box, FormControl, Typography } from '@shared/public';
 
 import type { ThemeDefinition } from '@core/public';
 

@@ -3,9 +3,9 @@
 import { h } from 'preact';
 import { useState } from 'preact/hooks';
 import { App, Modal } from 'obsidian';
-import { render, unmountComponentAtNode } from 'preact/compat';
-import { Button, TextField, Box, Typography, Stack, CircularProgress } from '@mui/material';
-import { ModalHeader, SmartToyIcon } from '@shared/public';
+import { Button, TextField, Box, Typography, Stack, CircularProgress, ModalHeader, SmartToyIcon } from '@shared/public';
+import { installBackdropCloseGuard } from './modalBackdropGuard';
+import { renderModalContent, unmountModalContent } from './modalPreact';
 
 interface AiTextPromptFormProps {
     onSubmit: (text: string) => void;
@@ -122,37 +122,14 @@ export class AiTextPromptModal extends Modal {
     onOpen() {
         this.contentEl.empty();
         this.modalEl.addClass('think-ai-prompt-modal');
-        this.setupBackdropCloseGuard();
+        this.cleanupBackdropCloseGuard = installBackdropCloseGuard(this);
         this.renderContent();
-    }
-
-    private setupBackdropCloseGuard() {
-        const bgEl = (this as any).bgEl as HTMLElement | null | undefined;
-        if (!bgEl) return;
-
-        const stopBackdropClose = (event: Event) => {
-            event.preventDefault();
-            event.stopPropagation();
-        };
-
-        bgEl.addEventListener('pointerdown', stopBackdropClose, true);
-        bgEl.addEventListener('mousedown', stopBackdropClose, true);
-        bgEl.addEventListener('click', stopBackdropClose, true);
-        bgEl.addEventListener('touchstart', stopBackdropClose, true);
-        bgEl.addEventListener('touchend', stopBackdropClose, true);
-
-        this.cleanupBackdropCloseGuard = () => {
-            bgEl.removeEventListener('pointerdown', stopBackdropClose, true);
-            bgEl.removeEventListener('mousedown', stopBackdropClose, true);
-            bgEl.removeEventListener('click', stopBackdropClose, true);
-            bgEl.removeEventListener('touchstart', stopBackdropClose, true);
-            bgEl.removeEventListener('touchend', stopBackdropClose, true);
-        };
     }
 
     private renderContent() {
         this.contentEl.empty();
-        render(
+        renderModalContent(
+            this.contentEl,
             <AiTextPromptForm
                 onSubmit={(text) => {
                     if (this.resolvePromise) {
@@ -169,8 +146,7 @@ export class AiTextPromptModal extends Modal {
                     this.close();
                 }}
                 isLoading={this.isLoading}
-            />,
-            this.contentEl
+            />
         );
     }
 
@@ -182,6 +158,6 @@ export class AiTextPromptModal extends Modal {
             this.resolvePromise(null);
             this.resolvePromise = null;
         }
-        unmountComponentAtNode(this.contentEl);
+        unmountModalContent(this.contentEl);
     }
 }

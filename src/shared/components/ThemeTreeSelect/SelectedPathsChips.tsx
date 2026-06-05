@@ -1,6 +1,6 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
-import { Box, Chip } from '@mui/material';
+import { Box, Chip } from '../../ui/muiCompat';
 
 export interface SelectedPathsChipsProps {
     selectedPaths: string[];

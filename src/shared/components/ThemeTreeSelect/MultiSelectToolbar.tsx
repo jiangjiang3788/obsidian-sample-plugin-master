@@ -1,6 +1,6 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
-import { Box, Button } from '@mui/material';
+import { Box, Button } from '../../ui/muiCompat';
 import type { ThemePathTreeNode as ThemeTreeNode } from '@core/public';
 import { ThemePathTreeBuilder as ThemeTreeBuilder } from '@core/public';
 

@@ -17,8 +17,8 @@
  * - ❌ 禁止把 “export-star from 某个深层实现文件” 当捷径（除非它本身就是模块级 public barrel）
  *
  * 命名约定：
- * - ThemeMatrix 模块的 buildThemeTree / ThemeTreeNode 与 legacy themeUtils 冲突，
- *   对外统一前缀：buildThemeMatrixTree / ThemeMatrixTreeNode。
+ * - ThemeMatrix 模块的 buildThemeTree / ThemeTreeNode 对外统一前缀：
+ *   buildThemeMatrixTree / ThemeMatrixTreeNode，避免与主题路径树 API 冲突。
  */
 
 //
@@ -183,8 +183,7 @@ export type { ThemeTreeNode as ThemeMatrixTreeNode, ExtendedTheme, ThemeOverride
 
 // -------------------- Theme Tree (Unified) --------------------
 // 说明：这是“主题路径树/选择器”用的统一实现（core/theme）。
-// 为避免与 legacy utils/themeUtils / ThemeMatrix 的同名符号冲突，
-// 对外统一使用 ThemePathTree* 前缀。
+// 为避免与 ThemeMatrix 的同名符号冲突，对外统一使用 ThemePathTree* 前缀。
 export {
     ThemeTreeBuilder as ThemePathTreeBuilder,
     buildThemeTree as buildThemePathTree,

@@ -1,6 +1,7 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
 import type { Item } from '@core/public';
+import type { ResolveResourcePathHandler } from '../../types/actions';
 import { dayjs } from '@core/public';
 import { getEffectiveDisplayCount, getEffectiveLevelCount } from '@core/public';
 import { isImagePath, isHexColor } from '@core/public';
@@ -9,7 +10,7 @@ interface HeatmapCellProps {
     date: string;
     items?: Item[];
     config: any;
-    app: any;
+    resolveResourcePath?: ResolveResourcePathHandler;
     onCellClick: (date: string, items?: Item[]) => void;
     ratingMapping: Map<string, string>;
     highlightToday?: boolean;
@@ -64,7 +65,7 @@ export function HeatmapCell({
     items, 
     config, 
     ratingMapping, 
-    app, 
+    resolveResourcePath,
     onCellClick,
     highlightToday = true,
     emptyLabel
@@ -88,7 +89,7 @@ export function HeatmapCell({
         if (isHexColor(visualValue)) {
             cellStyle.backgroundColor = visualValue;
         } else if (isImagePath(visualValue)) {
-            const imageUrl = app.vault.adapter.getResourcePath(visualValue);
+            const imageUrl = resolveResourcePath?.(visualValue) || visualValue;
             cellContent = (
                 <div class="cell-with-image">
                     <img src={imageUrl} alt="" class="w-full h-full object-cover" />

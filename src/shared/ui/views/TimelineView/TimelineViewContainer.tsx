@@ -2,7 +2,6 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
 import { useMemo, useCallback } from 'preact/hooks';
-import { useUiPort } from '@/app/public';
 import { Item } from '@core/public';
 import { processItemsToTimelineTasks } from '../timeline-parser';
 import { dayjs } from '@core/public';
@@ -11,11 +10,11 @@ import isoWeek from 'dayjs/plugin/isoWeek';
 import isBetween from 'dayjs/plugin/isBetween';
 import { TIMELINE_VIEW_DEFAULT_CONFIG } from '@core/public';
 import { filterByRules } from '@core/public';
-import type { UpdateTaskTimeHandler } from '@shared/types/taskTime';
+import type { OpenRecordHandler, OpenRecordOriginHandler, OpenTimelineCreateHandler } from '../../../types/actions';
+import type { UpdateTaskTimeHandler } from '../../../types/taskTime';
 
 import { buildMonthlyAndWeeklySummary, buildSummaryCategoryHours } from '@core/public';
 import { buildDailyViewData } from '@core/public';
-import { handleTimelineTaskCreation } from '../timelineInteraction';
 import { useTimelineZoom } from '@core/public';
 
 import { TimelineViewView, type DailyViewData } from './TimelineViewView';
@@ -30,9 +29,13 @@ interface TimelineViewProps {
   dateRange: [Date, Date];
   module: any;
   currentView: '年' | '季' | '月' | '周' | '天';
-  app: any;
+  onOpenRecordOrigin?: OpenRecordOriginHandler;
   /** 由 feature 层注入：用于“对齐/精确编辑”等需要写回的操作 */
   onUpdateTaskTime?: UpdateTaskTimeHandler;
+  /** 由 feature/app 层注入：Timeline 点击创建记录。 */
+  onCreateFromTimeline?: OpenTimelineCreateHandler;
+  onOpenRecord?: OpenRecordHandler;
+  onNotice?: (message: string) => void;
   inputSettings: any;
   /** Phase2: feature 层注入的 renderModel（shared/ui 只渲染） */
   timelineModel?: any;
@@ -43,12 +46,14 @@ export function TimelineView({
   dateRange,
   module,
   currentView,
-  app,
+  onOpenRecordOrigin,
   onUpdateTaskTime,
+  onCreateFromTimeline,
+  onOpenRecord,
+  onNotice,
   inputSettings,
   timelineModel,
 }: TimelineViewProps) {
-  const uiPort = useUiPort();
   const inputBlocks = inputSettings?.blocks || [];
 
   // 配置管理
@@ -121,15 +126,15 @@ export function TimelineView({
   // 点击创建任务处理（交互逻辑在 container，View 纯渲染）
   const handleColumnClick = useCallback(
     (day: string, e: MouseEvent | TouchEvent) => {
-      handleTimelineTaskCreation(day, e, {
-        app,
-        uiPort,
+      onCreateFromTimeline?.({
+        day,
+        event: e,
         inputBlocks,
         hourHeight,
         dayBlocks: dailyViewData?.blocksByDay[day] || [],
       });
     },
-    [app, uiPort, inputBlocks, hourHeight, dailyViewData]
+    [onCreateFromTimeline, inputBlocks, hourHeight, dailyViewData]
   );
 
   const totalSummaryHours =
@@ -154,8 +159,10 @@ export function TimelineView({
       categoriesConfig={config.categories}
       hourHeight={hourHeight}
       maxHours={config.MAX_HOURS_PER_DAY}
-      app={app}
+      onOpenRecordOrigin={onOpenRecordOrigin}
       onUpdateTaskTime={onUpdateTaskTime}
+      onOpenRecord={onOpenRecord}
+      onNotice={onNotice}
       onColumnClick={handleColumnClick}
     />
   );

@@ -2,8 +2,8 @@
 import { h } from 'preact';
 import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
 import type { Item } from '@core/public';
-import { openEditFromItem } from '@/app/public';
-import { createRecordGestureHandlers } from '@/shared/ui/utils/recordOrigin';
+import type { OpenRecordHandler, OpenRecordOriginHandler } from '../../types/actions';
+import { createRecordGestureHandlers } from '../utils/recordOrigin';
 
 interface TaskExecutionRecordVM {
   id: string;
@@ -35,10 +35,11 @@ interface TaskExecutionSectionVM {
 }
 
 interface TaskExecutionViewProps {
-  app: any;
   currentView: string;
   taskExecutionModel?: { sections: TaskExecutionSectionVM[] } | null;
   onMarkDone?: (itemId: string) => void | Promise<void>;
+  onOpenRecord?: OpenRecordHandler;
+  onOpenRecordOrigin?: OpenRecordOriginHandler;
 }
 
 interface MenuState {
@@ -59,10 +60,9 @@ function getChipToneClass(recurrenceLabel: string): string {
   return 'task-execution-chip--tone-0';
 }
 
-export function TaskExecutionView({ app, currentView, taskExecutionModel, onMarkDone }: TaskExecutionViewProps) {
+export function TaskExecutionView({ currentView, taskExecutionModel, onMarkDone, onOpenRecord, onOpenRecordOrigin }: TaskExecutionViewProps) {
   const [menu, setMenu] = useState<MenuState | null>(null);
   const menuRef = useRef<HTMLDivElement | null>(null);
-  const vaultName = app?.vault?.getName?.() || '';
 
   const taskMap = useMemo(() => {
     const map = new Map<string, TaskExecutionTaskVM>();
@@ -142,9 +142,9 @@ export function TaskExecutionView({ app, currentView, taskExecutionModel, onMark
             {selectedTask.records.length > 0 ? selectedTask.records.map((record) => {
               const gesture = createRecordGestureHandlers({
                 item: record.item,
-                app,
+                onOpenOrigin: onOpenRecordOrigin,
                 onPrimary: () => {
-                  openEditFromItem({ app, item: record.item });
+                  void onOpenRecord?.(record.item);
                   setMenu(null);
                 },
               });

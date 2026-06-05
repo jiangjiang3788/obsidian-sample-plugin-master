@@ -10,7 +10,7 @@ import {
   Stack,
   TextField,
   Typography,
-} from '@mui/material';
+} from '@shared/public';
 import { ExpandMoreIcon } from '@shared/public';
 import { CUSTOM_PROMPT_EXAMPLES } from '@core/public';
 import type { AiPromptRulesSectionProps } from './aiSettingsUiTypes';
