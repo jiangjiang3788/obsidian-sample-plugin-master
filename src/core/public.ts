@@ -47,8 +47,8 @@ export type {
     GoalBlockBinding,
     GoalSettings,
 } from './goal';
-export { DEFAULT_GOAL_SETTINGS, normalizeGoalPath, splitGoalPath } from './goal';
-export type { GoalPathParts } from './goal';
+export { DEFAULT_GOAL_SETTINGS, normalizeGoalPath, splitGoalPath, inferGoalCandidatesFromItems, buildGoalRelationsFromItems, buildGoalOverviewModel, buildGoalMarkdownBackfillPreview, buildGoalMarkdownBackfillDiffPreview, makeStableGoalIdFromPath } from './goal';
+export type { GoalPathParts, GoalMigrationCandidate, GoalOverviewModel, GoalOverviewRow, GoalOverviewMetricProgress, GoalOverviewCycleSummary, GoalMarkdownBackfillPreview, GoalMarkdownBackfillPreviewItem, GoalMarkdownBackfillDiffPreview, GoalMarkdownBackfillDiffItem } from './goal';
 
 //
 // -------------------- Utils（可复用纯能力） --------------------

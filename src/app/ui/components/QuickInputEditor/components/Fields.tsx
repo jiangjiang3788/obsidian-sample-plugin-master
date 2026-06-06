@@ -72,7 +72,7 @@ export function QuickInputEditorFields({ getResourcePath, template, formData, fi
     return semantic === 'startTime' || semantic === 'endTime' || semantic === 'duration' || ['时间', '结束', '时长'].includes(field.label || field.key);
   };
 
-  const renderFieldLabel = (label: string) => (
+  const renderFieldLabel = (label: string, required = false) => (
     <Typography
       variant="body2"
       sx={{
@@ -81,11 +81,11 @@ export function QuickInputEditorFields({ getResourcePath, template, formData, fi
         lineHeight: 1.35,
       }}
     >
-      {label}
+      {label}{required ? <span style={{ color: 'var(--text-error)', marginLeft: '4px' }}>*</span> : null}
     </Typography>
   );
 
-  const renderInlineRow = (label: string, control: any) => (
+  const renderInlineRow = (label: string, control: any, required = false) => (
     <Box
       className="think-form-row think-form-row--inline"
       sx={{
@@ -97,12 +97,12 @@ export function QuickInputEditorFields({ getResourcePath, template, formData, fi
         width: '100%',
       }}
     >
-      <Box sx={{ pt: { xs: 0, sm: 0.55 } }}>{renderFieldLabel(label)}</Box>
+      <Box sx={{ pt: { xs: 0, sm: 0.55 } }}>{renderFieldLabel(label, required)}</Box>
       <Box sx={{ minWidth: 0 }}>{control}</Box>
     </Box>
   );
 
-  const renderStandardField = (label: string, control: any, textarea = false) => (
+  const renderStandardField = (label: string, control: any, textarea = false, required = false) => (
     <Box
       className={textarea ? 'think-form-row think-textarea-row' : 'think-form-row'}
       sx={{
@@ -112,7 +112,7 @@ export function QuickInputEditorFields({ getResourcePath, template, formData, fi
         width: '100%',
       }}
     >
-      {renderFieldLabel(label)}
+      {renderFieldLabel(label, required)}
       {control}
     </Box>
   );
@@ -344,17 +344,18 @@ export function QuickInputEditorFields({ getResourcePath, template, formData, fi
     const isComplex = typeof formData[field.key] === 'object' && formData[field.key] !== null && !Array.isArray(formData[field.key]);
     const value = isComplex ? formData[field.key]?.value : formData[field.key];
     const label = field.label || field.key;
+    const displayLabel = field.required ? `${label} *` : label;
 
     if (inputType === 'multiSelect') {
-      return renderStandardField(label, renderMultiOptionPills(field));
+      return renderStandardField(displayLabel, renderMultiOptionPills(field));
     }
 
     if (isTemplateTagField(field)) {
-      return renderMultiTagField(field, label, value);
+      return renderMultiTagField(field, displayLabel, value);
     }
 
     if (inputType === 'multiPath' || inputType === 'multiImage') {
-      return renderTextAreaValueField(field, label, value);
+      return renderTextAreaValueField(field, displayLabel, value);
     }
 
     if (isTemplateImageField(field)) {
@@ -376,7 +377,7 @@ export function QuickInputEditorFields({ getResourcePath, template, formData, fi
           {renderImagePreview(value)}
         </Box>
       );
-      return renderStandardField(label, control);
+      return renderStandardField(displayLabel, control);
     }
 
     switch (inputType) {
@@ -425,18 +426,18 @@ export function QuickInputEditorFields({ getResourcePath, template, formData, fi
 
       case 'radio':
         return isInlineRowField(field)
-          ? renderInlineRow(label, renderOptionPills(field))
-          : renderStandardField(label, renderOptionPills(field));
+          ? renderInlineRow(displayLabel, renderOptionPills(field, displayLabel))
+          : renderStandardField(displayLabel, renderOptionPills(field, displayLabel));
 
       case 'hierarchicalSingleSelect':
-        return renderHierarchySingleSelect(field, label, value);
+        return renderHierarchySingleSelect(field, displayLabel, value);
 
       case 'select':
       case 'singleSelect':
       case 'path': {
         const choices = getFieldChoices(field);
         const singleSelectControl = choices.length ? (
-          renderOptionPills(field, label)
+          renderOptionPills(field, displayLabel)
         ) : (
           <input
             className="think-native-input"
@@ -447,8 +448,8 @@ export function QuickInputEditorFields({ getResourcePath, template, formData, fi
         );
 
         return isInlineRowField(field)
-          ? renderInlineRow(label, singleSelectControl)
-          : renderStandardField(label, singleSelectControl);
+          ? renderInlineRow(displayLabel, singleSelectControl)
+          : renderStandardField(displayLabel, singleSelectControl);
       }
 
       default: {
@@ -499,10 +500,10 @@ export function QuickInputEditorFields({ getResourcePath, template, formData, fi
         );
 
         if (isInlineRowField(field)) {
-          return renderInlineRow(label, control);
+          return renderInlineRow(displayLabel, control);
         }
 
-        return renderStandardField(label, control, inputType === 'textarea');
+        return renderStandardField(displayLabel, control, inputType === 'textarea');
       }
     }
   };

@@ -31,7 +31,9 @@ export function ThemeTreeNodeItem({
     onSelectWithChildren,
     renderLabel,
 }: ThemeTreeNodeItemProps) {
-    const hasChildren = node.children.length > 0;
+    if (!node) return null;
+    const children = node.children || [];
+    const hasChildren = children.length > 0;
     const isExpanded = expandedIds.has(node.id);
     const isSelected = multiSelect ? selectedPaths.includes(node.path) : node.themeId === selectedThemeId;
 
@@ -114,7 +116,7 @@ export function ThemeTreeNodeItem({
             {/* 子节点 */}
             {hasChildren && (
                 <Collapse in={isExpanded}>
-                    {node.children.map(child => (
+                    {children.filter(Boolean).map(child => (
                         <ThemeTreeNodeItem
                             key={child.id}
                             node={child}

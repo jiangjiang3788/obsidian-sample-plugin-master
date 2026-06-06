@@ -26,6 +26,7 @@ import { HeatmapViewEditor } from './viewEditors/HeatmapViewEditor';
 import { StatisticsViewEditor } from './viewEditors/StatisticsViewEditor';
 import { ProgressViewEditor } from './viewEditors/ProgressViewEditor';
 import { TaskExecutionViewEditor } from './viewEditors/TaskExecutionViewEditor';
+import { GoalOverviewViewEditor } from './viewEditors/GoalOverviewViewEditor';
 import { TableViewEditor } from './viewEditors/TableViewEditor';
 import { TimelineViewEditor } from './viewEditors/TimelineViewEditor';
 
@@ -46,6 +47,7 @@ export const SettingsViewComponents = {
   Statistics: StatisticsViewEditor,
   Progress: ProgressViewEditor,
   TaskExecution: TaskExecutionViewEditor,
+  GoalOverview: GoalOverviewViewEditor,
   Table: TableViewEditor,
   Timeline: TimelineViewEditor,
 };
@@ -127,6 +129,8 @@ import {
   HeatmapView,
   ProgressView,
   TaskExecutionView,
+  GoalOverviewView,
+  GoalDetailView,
 } from '@shared/public';
 import type { ComponentType } from 'preact';
 
@@ -147,6 +151,8 @@ export const VIEW_REGISTRY: Record<ViewName, ComponentType<any>> = {
   HeatmapView,
   ProgressView,
   TaskExecutionView,
+  GoalOverviewView,
+  GoalDetailView,
 } as const;
 
 /**

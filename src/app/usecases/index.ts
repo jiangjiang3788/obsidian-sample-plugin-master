@@ -29,6 +29,7 @@ import { LayoutUseCase, createLayoutUseCase } from './layout.usecase';
 import { ViewInstanceUseCase, createViewInstanceUseCase } from './viewinstance.usecase';
 import { TimerUseCase, createTimerUseCase } from './timer.usecase';
 import { RecordInputUseCase, createRecordInputUseCase } from './recordInput.usecase';
+import { GoalUseCase, createGoalUseCase } from './goal.usecase';
 import type { DataStore, InputService, ItemService, TimerStateService } from '@core/public';
 
 /**
@@ -47,6 +48,7 @@ export interface UseCases {
     viewInstance: ViewInstanceUseCase;
     timer: TimerUseCase;
     recordInput: RecordInputUseCase;
+    goal: GoalUseCase;
 }
 
 /**
@@ -91,6 +93,7 @@ export function createUseCases(store: AppStoreApi, deps: UseCaseDeps): UseCases 
             itemService: deps.itemService,
             dataStore: deps.dataStore,
         }),
+        goal: createGoalUseCase(store, { dataStore: deps.dataStore, itemService: deps.itemService }),
     };
 }
 
@@ -102,5 +105,6 @@ export { LayoutUseCase } from './layout.usecase';
 export { ViewInstanceUseCase } from './viewinstance.usecase';
 export { TimerUseCase } from './timer.usecase';
 export { RecordInputUseCase } from './recordInput.usecase';
+export { GoalUseCase } from './goal.usecase';
 
 // UI 层请从 '@/app/public' 获取 useUseCases（冻结阶段唯一出口）

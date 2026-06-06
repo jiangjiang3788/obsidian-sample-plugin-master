@@ -151,6 +151,34 @@ export class ItemService {
         await this.writeLines(path, lines, mutationOptions);
     }
 
+
+
+    /**
+     * 目标中心 Markdown 回填：在定位到的记录行上补齐内联元数据。
+     * MVP6 策略：只做保守 upsert，不重排用户原文；适合任务行，也能为块记录的定位行补元数据。
+     */
+    public async upsertItemInlineFields(
+        itemId: string,
+        fields: Record<string, string>,
+        mutationOptions: ItemMutationOptions = {},
+    ): Promise<{ path: string; beforeLine: string; afterLine: string }> {
+        const context = await this.loadMutableTaskContext(itemId);
+        const { path, index, rawLine } = context;
+        const lines = [...context.lines];
+        let line = rawLine;
+
+        for (const [key, value] of Object.entries(fields)) {
+            const normalizedKey = String(key || '').trim();
+            const normalizedValue = String(value ?? '').trim();
+            if (!normalizedKey || !normalizedValue) continue;
+            line = this.upsertKvTag(line, normalizedKey, normalizedValue);
+        }
+
+        lines[index] = line;
+        await this.writeLines(path, lines, mutationOptions);
+        return { path, beforeLine: rawLine, afterLine: line };
+    }
+
     private async loadMutableTaskContext(itemId: string): Promise<{
         path: string;
         index: number;

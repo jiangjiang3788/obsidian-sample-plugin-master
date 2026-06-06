@@ -10,6 +10,8 @@ import { StatisticsViewEditor, DEFAULT_CONFIG as StatisticsViewDefault } from '.
 import { HeatmapViewEditor, DEFAULT_CONFIG as HeatmapViewDefault } from './HeatmapViewEditor';
 import { ProgressViewEditor, DEFAULT_CONFIG as ProgressViewDefault } from './ProgressViewEditor';
 import { TaskExecutionViewEditor, DEFAULT_CONFIG as TaskExecutionViewDefault } from './TaskExecutionViewEditor';
+import { GoalOverviewViewEditor, DEFAULT_CONFIG as GoalOverviewViewDefault } from './GoalOverviewViewEditor';
+import { GoalDetailViewEditor, DEFAULT_CONFIG as GoalDetailViewDefault } from './GoalDetailViewEditor';
 import type { ViewName, ViewInstance } from '@core/public';
 import type { DataStore } from '@core/public';
 
@@ -36,6 +38,8 @@ export const VIEW_INFO_REGISTRY = {
   HeatmapView: { component: HeatmapViewEditor, defaultConfig: HeatmapViewDefault },
   ProgressView: { component: ProgressViewEditor, defaultConfig: ProgressViewDefault },
   TaskExecutionView: { component: TaskExecutionViewEditor, defaultConfig: TaskExecutionViewDefault },
+  GoalOverviewView: { component: GoalOverviewViewEditor, defaultConfig: GoalOverviewViewDefault },
+  GoalDetailView: { component: GoalDetailViewEditor, defaultConfig: GoalDetailViewDefault },
 } as const;
 
 

@@ -44,6 +44,69 @@
   ],
   "viewInstances": [
     {
+      "id": "vi_goal_overview_mvp2",
+      "title": "目标总览",
+      "viewType": "GoalOverviewView",
+      "parentId": null,
+      "collapsed": false,
+      "fields": [
+        "goalPath",
+        "themePath",
+        "coreBlock",
+        "date",
+        "content"
+      ],
+      "group": "goalPath",
+      "groupFields": [
+        "goalPath",
+        "coreBlock"
+      ],
+      "viewConfig": {
+        "goalOverview": {
+          "goalPath": "",
+          "limit": 20
+        }
+      },
+      "filters": [],
+      "sort": [
+        {
+          "field": "date",
+          "dir": "desc"
+        }
+      ]
+    },
+    {
+      "id": "vi_goal_detail_mvp6",
+      "title": "目标详情",
+      "viewType": "GoalDetailView",
+      "parentId": null,
+      "collapsed": false,
+      "fields": [
+        "goalPath",
+        "themePath",
+        "coreBlock",
+        "cycleId",
+        "date",
+        "content"
+      ],
+      "group": "coreBlock",
+      "groupFields": [
+        "coreBlock"
+      ],
+      "viewConfig": {
+        "goalDetail": {
+          "goalPath": ""
+        }
+      },
+      "filters": [],
+      "sort": [
+        {
+          "field": "date",
+          "dir": "desc"
+        }
+      ]
+    },
+    {
       "id": "vi_mm9z0oe1cvlr53c",
       "parentId": null,
       "title": "时间轴",
@@ -542,6 +605,8 @@
       "id": "layout_memcg9jjoq6j4",
       "name": "全局布局",
       "viewInstanceIds": [
+        "vi_goal_overview_mvp2",
+        "vi_goal_detail_mvp6",
         "vi_mn9o962553qwhzp",
         "vi_mmeolydjaga6z6u",
         "vi_mmijitbq47u10wu",
@@ -13832,5 +13897,6 @@
       "blk_mejsg76atopau": "core.habit",
       "blk_mejsg1dc46fj9": "core.thought"
     }
-  }
+  },
+  "goalCoreMvpVersion": 6
 }

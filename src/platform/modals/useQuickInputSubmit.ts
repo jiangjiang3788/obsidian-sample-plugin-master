@@ -17,6 +17,26 @@ import { CancelledError, createTakeLatest } from '@shared/public';
 import { showQuickInputNotice } from './quickInputNotice';
 import type { QuickInputPendingAction } from './QuickInputModalFooter';
 
+
+function hasRequiredValue(value: unknown): boolean {
+  if (value === null || value === undefined) return false;
+  if (Array.isArray(value)) return value.length > 0;
+  if (typeof value === 'object') {
+    const raw = (value as any).value ?? (value as any).label;
+    return raw !== undefined && raw !== null && String(raw).trim() !== '';
+  }
+  return String(value).trim() !== '';
+}
+
+function findMissingRequiredFields(state: QuickInputEditorState): string[] {
+  const fields = state.template?.fields || [];
+  return fields
+    .filter((field: any) => field?.required)
+    .filter((field: any) => !hasRequiredValue(state.formData?.[field.key] ?? state.formData?.[field.label]))
+    .map((field: any) => field.label || field.key)
+    .filter(Boolean);
+}
+
 export interface QuickInputSubmitControllerParams {
   mode: 'create' | 'edit';
   editItem?: Item;
@@ -119,6 +139,10 @@ export function useQuickInputSubmitController({
     try {
       const result = await submitLatestRef.current.run(async (signal) => {
         const latestState = getCurrentState();
+        const missingRequired = findMissingRequiredFields(latestState);
+        if (missingRequired.length > 0) {
+          throw new Error(`请补充必填字段：${missingRequired.join('、')}`);
+        }
         if (mode === 'edit' && editItem) {
           return await useCases.recordInput.submitUpdateRecord({
             item: editItem,

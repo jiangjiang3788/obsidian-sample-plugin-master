@@ -5,7 +5,7 @@ import { useEffect, useMemo } from 'preact/hooks';
 import type { ActionService, DataStore, FilterRule, InputSettings, Item, ViewInstance } from '@core/public';
 import { getAllFields, getCategoryValuesFromFilters } from '@core/public';
 import { DashboardViewComponents as ViewComponents } from '@features/settings';
-import { selectCategoryColors, useMessageRenderPort, useSelector } from '@/app/public';
+import { selectCategoryColors, selectSettings, useMessageRenderPort, useSelector } from '@/app/public';
 import type { TimerController } from '@shared/public';
 import { useViewData } from '@/features/settings/useViewData';
 import { buildViewRenderModels } from '@/features/settings/viewModels/viewModelRegistry';
@@ -55,6 +55,7 @@ export function ViewContent({
 }: ViewContentProps) {
   const messageRenderPort = useMessageRenderPort();
   const categoryColors = useSelector(selectCategoryColors);
+  const settings = useSelector(selectSettings);
 
   const viewItems = useViewData({
     dataStore,
@@ -87,7 +88,9 @@ export function ViewContent({
     inputSettings,
     layoutFilters,
     selectedCategories: selectedLayoutCategories,
-  }), [allItems, dateRange, inputSettings, layoutFilters, layoutView, selectedLayoutCategories, viewInstance, viewItems]);
+    goals: settings.goalSettings?.goals || [],
+    cycles: settings.goalSettings?.cycles || [],
+  }), [allItems, dateRange, inputSettings, layoutFilters, layoutView, selectedLayoutCategories, settings.goalSettings?.goals, settings.goalSettings?.cycles, viewInstance, viewItems]);
 
   const handlers = useViewRuntimeHandlers({
     app,

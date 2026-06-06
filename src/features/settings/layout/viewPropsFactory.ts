@@ -62,7 +62,7 @@ export function buildViewProps({
     onExcelConfigChange: viewType === 'ExcelView' ? handlers.onExcelConfigChange : undefined,
     onMarkDone,
     onUpdateTaskTime: handlers.onUpdateTaskTime,
-    onQuickCreate: viewType === 'StatisticsView' ? handlers.onQuickCreate : undefined,
+    onQuickCreate: (viewType === 'StatisticsView' || viewType === 'GoalOverviewView' || viewType === 'GoalDetailView') ? handlers.onQuickCreate : undefined,
     onOpenStatisticsPopover: viewType === 'StatisticsView' ? onOpenStatisticsPopover : undefined,
     onCloseStatisticsPopover: viewType === 'StatisticsView' ? onCloseStatisticsPopover : undefined,
     categoryColors: viewType === 'StatisticsView' ? categoryColors : undefined,

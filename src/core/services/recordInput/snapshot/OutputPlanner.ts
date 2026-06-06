@@ -26,6 +26,8 @@ function buildRenderData(
   const goalParts = goalPath.split('/').map((part) => part.trim()).filter(Boolean);
   const goalId = String(normalizedData.goalId ?? normalizedData['目标ID'] ?? '').trim();
   const coreBlock = String(normalizedData.coreBlock ?? normalizedData['核心Block'] ?? (template as any).coreBlockId ?? template.id ?? '').trim();
+  const cycleId = String(normalizedData.cycleId ?? normalizedData['周期ID'] ?? '').trim();
+  const cycleTitle = String(normalizedData.period ?? normalizedData['周期'] ?? '').trim();
 
   return {
     ...normalizedData,
@@ -59,6 +61,9 @@ function buildRenderData(
     rootGoal: goalParts[0] || '',
     leafGoal: goalParts.length ? goalParts[goalParts.length - 1] : '',
     coreBlock,
+    cycle: { id: cycleId, title: cycleTitle },
+    cycleId,
+    cycleTitle,
     templateId: templateMeta?.templateId || template.id,
     templateSourceType: templateMeta?.templateSourceType || 'block',
   };

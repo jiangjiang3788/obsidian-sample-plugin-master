@@ -112,7 +112,7 @@ export function ThemeTreeSelectPanel({
   const [expandedIds, setExpandedIds] = useState<Set<string>>(() => new Set(defaultExpandedIds));
 
   // 构建主题树
-  const themeTree = useMemo(() => buildThemeTree(themes), [themes]);
+  const themeTree = useMemo(() => (buildThemeTree(themes || []) || []).filter(Boolean), [themes]);
 
   // 初始化展开状态：展开到已选节点
   useEffect(() => {
@@ -145,8 +145,9 @@ export function ThemeTreeSelectPanel({
     const allIds: string[] = [];
     const collect = (nodes: ThemeTreeNode[]) => {
       nodes.forEach((n) => {
+        if (!n) return;
         allIds.push(n.id);
-        collect(n.children);
+        collect(n.children || []);
       });
     };
     collect(themeTree);
@@ -156,7 +157,7 @@ export function ThemeTreeSelectPanel({
   // 过滤后的树
   const filteredTree = useMemo(() => {
     if (!searchTerm.trim()) return themeTree;
-    return searchThemeTree(themeTree, searchTerm);
+    return (searchThemeTree(themeTree, searchTerm) || []).filter(Boolean);
   }, [themeTree, searchTerm]);
 
   // 切换展开
@@ -187,7 +188,7 @@ export function ThemeTreeSelectPanel({
       if (!onSelectMultiple) return;
 
       const descendantPaths = ThemeTreeBuilder.getDescendantPaths(node);
-      const allPaths = [node.path, ...descendantPaths];
+      const allPaths = [node.path, ...descendantPaths].filter(Boolean);
       const hasAll = allPaths.every((p) => selectedPaths.includes(p));
 
       if (hasAll) {
@@ -209,7 +210,7 @@ export function ThemeTreeSelectPanel({
       if (!onSelectMultiple) return;
 
       // ThemeFilter 旧交互：折叠父节点时，点击按“整棵子树”处理
-      const hasChildren = node.children.length > 0;
+      const hasChildren = (node.children || []).length > 0;
       const isCollapsed = hasChildren && !expandedIds.has(node.id);
 
       if (selectChildrenOnCollapsedParent && isCollapsed) {

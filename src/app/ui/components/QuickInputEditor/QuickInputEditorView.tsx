@@ -1,7 +1,7 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
 
-import type { ThemeDefinition } from '@core/public';
+import type { CycleDefinition, ThemeDefinition } from '@core/public';
 
 import { Box, Divider, FormControl, Typography } from '@shared/public';
 
@@ -24,6 +24,10 @@ export interface QuickInputEditorViewProps {
   selectedGoalPath: string | null;
   selectedGoalTitle?: string | null;
   onSelectGoal: (goal: GoalSelectorOption | null) => void;
+  onCreateGoal?: (goalPath: string) => Promise<void> | void;
+  cycles?: CycleDefinition[];
+  selectedCycleId?: string | null;
+  onSelectCycle?: (cycleId: string | null) => void;
 
   template: any;
   formData: Record<string, any>;
@@ -147,6 +151,10 @@ export function QuickInputEditorView({
   selectedGoalPath,
   selectedGoalTitle,
   onSelectGoal,
+  onCreateGoal,
+  cycles = [],
+  selectedCycleId = null,
+  onSelectCycle,
   template,
   formData,
   fieldValueOptionsByKey,
@@ -174,6 +182,7 @@ export function QuickInputEditorView({
           goals={goals}
           selectedGoalPath={selectedGoalPath}
           onSelect={onSelectGoal}
+          onCreateGoal={onCreateGoal}
           dense={dense}
         />
         {selectedGoalTitle && selectedGoalTitle !== selectedGoalPath && (
@@ -182,6 +191,22 @@ export function QuickInputEditorView({
           </Typography>
         )}
       </Box>
+
+      {cycles.length > 0 && (
+        <Box>
+          <SectionTitle title="周期" compact />
+          <select
+            className="think-native-input"
+            value={selectedCycleId || ''}
+            onChange={(event: any) => onSelectCycle?.(event.currentTarget.value || null)}
+          >
+            <option value="">不绑定周期</option>
+            {cycles.map((cycle) => (
+              <option key={cycle.id} value={cycle.id}>{cycle.title} · {cycle.startDate} → {cycle.endDate}</option>
+            ))}
+          </select>
+        </Box>
+      )}
 
       {allowBlockSwitch && blocks.length > 1 && (
         <Box>

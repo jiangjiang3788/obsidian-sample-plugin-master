@@ -46,10 +46,62 @@ function findTheme(settings: ThinkSettings, themeId?: string | null, themePath?:
   return themes.find((theme) => theme.path === normalizedPath) || null;
 }
 
-function mergeTemplate(base: BlockTemplate, patch: Partial<BlockTemplate>): BlockTemplate {
+
+function themePathCandidates(path?: string | null): string[] {
+  const parts = String(path || '').split('/').map((part) => part.trim()).filter(Boolean);
+  const result: string[] = [];
+  for (let i = parts.length; i >= 1; i -= 1) result.push(parts.slice(0, i).join('/'));
+  return result;
+}
+
+function resolveThemeFallback(settings: ThinkSettings, blockId: string, themeId?: string | null, themePath?: string | null) {
+  const tried = new Set<string>();
+  const candidateThemeIds: string[] = [];
+  const pushThemeId = (id?: string | null) => {
+    if (!id || tried.has(id)) return;
+    tried.add(id);
+    candidateThemeIds.push(id);
+  };
+  pushThemeId(themeId);
+  const themesByPath = new Map((settings.inputSettings?.themes || []).map((theme) => [theme.path, theme.id]));
+  for (const path of themePathCandidates(themePath)) pushThemeId(themesByPath.get(path));
+
+  for (const id of candidateThemeIds) {
+    const resolved = TemplateResolver.resolve(settings.inputSettings, blockId, id);
+    if (resolved.templateSourceType === 'override') return resolved;
+  }
+  return TemplateResolver.resolve(settings.inputSettings, blockId, candidateThemeIds[0] || undefined);
+}
+
+
+function goalBindingCandidateIds(goalSettings: GoalSettings | undefined, goal: GoalDefinition | null): string[] {
+  if (!goal) return [];
+  const goals = goalSettings?.goals || [];
+  const ids: string[] = [goal.id];
+  const path = splitGoalPath(goal.goalPath || goal.title).goalPath;
+  const byPath = new Map(goals.map((item) => [splitGoalPath(item.goalPath || item.title).goalPath, item]));
+  for (const parentPath of themePathCandidates(path).slice(1)) {
+    const parentGoal = byPath.get(parentPath);
+    if (parentGoal && !ids.includes(parentGoal.id)) ids.push(parentGoal.id);
+  }
+  return ids;
+}
+
+function mergeTemplate(base: BlockTemplate, patch: Partial<BlockTemplate> & { defaultValues?: Record<string, unknown>; requiredFields?: string[] }): BlockTemplate {
+  const required = new Set(patch.requiredFields || []);
+  const defaultValues = patch.defaultValues || {};
+  const fields = (patch.fields ?? base.fields).map((field) => {
+    const key = field.key || field.label;
+    const defaultValue = defaultValues[key] ?? defaultValues[field.label || ''];
+    return {
+      ...field,
+      ...(defaultValue !== undefined ? { defaultValue: String(defaultValue) } : null),
+      ...(required.has(key) || required.has(field.label || '') ? { required: true } : null),
+    } as any;
+  });
   return {
     ...base,
-    fields: patch.fields ?? base.fields,
+    fields,
     outputTemplate: patch.outputTemplate ?? base.outputTemplate,
     targetFile: patch.targetFile ?? base.targetFile,
     appendUnderHeader: patch.appendUnderHeader ?? base.appendUnderHeader,
@@ -69,7 +121,7 @@ export class GoalTemplateResolver {
     const legacyBase = settings.inputSettings?.blocks?.find((block) => block.id === blockId || block.id === effectiveBlockId) || null;
 
     // Keep existing theme override chain as fallback, including disabled override behavior.
-    const legacyResolved = TemplateResolver.resolve(settings.inputSettings, legacyBase?.id || blockId, theme?.id || input.themeId || undefined);
+    const legacyResolved = resolveThemeFallback(settings, legacyBase?.id || effectiveBlockId || blockId, theme?.id || input.themeId || undefined, effectiveThemePath);
     const baseTemplate = coreBlock || legacyResolved.template || legacyBase;
     if (!baseTemplate) {
       return { template: null, theme, goal, templateId: null, templateSourceType: null, effectiveBlockId: null };
@@ -80,8 +132,9 @@ export class GoalTemplateResolver {
       : baseTemplate;
 
     if (goal) {
+      const bindingGoalIds = goalBindingCandidateIds(settings.goalSettings, goal);
       const binding = (settings.goalSettings?.goalBlockBindings || []).find(
-        (item) => item.enabled !== false && item.goalId === goal.id && item.coreBlockId === effectiveBlockId
+        (item) => item.enabled !== false && bindingGoalIds.includes(item.goalId) && item.coreBlockId === effectiveBlockId
       );
       if (binding) {
         return {

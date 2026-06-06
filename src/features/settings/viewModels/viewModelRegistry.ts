@@ -6,6 +6,8 @@ import { buildTimelineViewModel } from './timelineViewModel';
 import { buildStatisticsViewModel } from './statisticsViewModel';
 import { buildProgressViewModel } from './progressViewModel';
 import { buildTaskExecutionViewModel } from './taskExecutionViewModel';
+import { buildGoalOverviewViewModel } from './goalOverviewViewModel';
+import { buildGoalDetailViewModel } from './goalDetailViewModel';
 
 export type LayoutViewGranularity = '年' | '季' | '月' | '周' | '天' | string;
 
@@ -18,6 +20,8 @@ export interface ViewRenderModelContext {
   inputSettings: InputSettings;
   layoutFilters: FilterRule[];
   selectedCategories: string[];
+  goals?: import('@core/public').GoalDefinition[];
+  cycles?: import('@core/public').CycleDefinition[];
 }
 
 export interface ViewRenderModels {
@@ -29,6 +33,8 @@ export interface ViewRenderModels {
   statisticsModel?: unknown;
   progressModel?: unknown;
   taskExecutionModel?: unknown;
+  goalOverviewModel?: unknown;
+  goalDetailModel?: unknown;
   injectedThemesByPath?: unknown;
   injectedThemesToTrack?: string[];
   injectedDataByThemeAndDate?: unknown;
@@ -112,6 +118,26 @@ const viewModelBuilders: Record<string, ViewModelBuilder> = {
       layoutFilters,
     }),
   }),
+
+  GoalOverviewView: ({ items, viewInstance, goals, cycles }) => ({
+    goalOverviewModel: buildGoalOverviewViewModel({
+      items,
+      module: viewInstance,
+      goals: goals || [],
+      cycles: cycles || [],
+    }),
+  }),
+
+
+  GoalDetailView: ({ items, viewInstance, goals, cycles }) => ({
+    goalDetailModel: buildGoalDetailViewModel({
+      items,
+      module: viewInstance,
+      goals: goals || [],
+      cycles: cycles || [],
+    }),
+  }),
+
 };
 
 export function buildViewRenderModels(context: ViewRenderModelContext): ViewRenderModels {

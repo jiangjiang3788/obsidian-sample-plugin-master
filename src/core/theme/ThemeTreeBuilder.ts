@@ -433,8 +433,9 @@ export class ThemeTreeBuilder {
     static getDescendantPaths(node: ThemeTreeNode): string[] {
         const descendants: string[] = [];
 
-        const collect = (n: ThemeTreeNode): void => {
-            for (const child of n.children) {
+        const collect = (n: ThemeTreeNode | null | undefined): void => {
+            if (!n) return;
+            for (const child of n.children || []) {
                 descendants.push(child.path);
                 collect(child);
             }

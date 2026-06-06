@@ -81,6 +81,10 @@ export interface TimerController {
 }
 
 export interface StatisticsQuickCreatePayload {
+  /** 目标总览等非统计视图可透传到 QuickInput 的初始上下文。 */
+  context?: Record<string, unknown>;
+  /** 可选建议 Block，后续 actionService 可用于精确选择核心 block。 */
+  preferredBlockId?: string;
   cellIdentifier?: {
     type?: string;
     category?: string;

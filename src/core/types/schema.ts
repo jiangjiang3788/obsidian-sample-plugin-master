@@ -97,6 +97,8 @@ export interface TemplateField {
     aliases?: string[];
     auxKey?: string;
     defaultValue?: string;
+    /** 目标专属绑定可将字段标记为必填。 */
+    required?: boolean;
     options?: TemplateFieldOption[];
     min?: number;
     max?: number;
@@ -141,7 +143,7 @@ export interface InputSettings {
 // ----- 视图与布局定义 (保持不变) ----- //
 
 // [MODIFIED] 添加 HeatmapView 和 EventTimelineView
-export const VIEW_OPTIONS = ['BlockView', 'TableView', 'ExcelView', 'TimelineView', 'StatisticsView', 'HeatmapView', 'EventTimelineView', 'ProgressView', 'TaskExecutionView'] as const;
+export const VIEW_OPTIONS = ['BlockView', 'TableView', 'ExcelView', 'TimelineView', 'StatisticsView', 'HeatmapView', 'EventTimelineView', 'ProgressView', 'TaskExecutionView', 'GoalOverviewView', 'GoalDetailView'] as const;
 export type ViewName = typeof VIEW_OPTIONS[number];
 
 // [修改] 实现 Groupable 接口，整合数据源功能
@@ -302,7 +304,7 @@ export interface Item {
 // DEFAULT_FIELD_OPTIONS via getAllFields(), not by assuming every Item property is
 // a user-facing field.
 export const CORE_FIELDS = [
-    'id', 'type', 'title', 'content', 'categoryKey', 'tags', 'goalPaths',
+    'id', 'type', 'title', 'content', 'categoryKey', 'tags', 'goalId', 'goalIds', 'goalPath', 'goalPaths', 'coreBlock', 'cycleId',
     'recurrence', 'icon', 'priority', 'date', 'startTime', 'endTime', 'duration',
     'period', 'rating', 'image', 'folder', 'periodCount'
 ] as const;
@@ -311,7 +313,7 @@ export const SEMANTIC_FIELDS = [
     'baseCategory', 'leafCategory',
     // 主题筛选/分组的唯一默认字段：完整主题路径。
     // theme 是旧兼容字段，不再出现在默认字段选择器中。
-    'themePath', 'rootTheme', 'leafTheme',
+    'rootGoal', 'leafGoal', 'themePath', 'rootTheme', 'leafTheme',
 ] as const;
 
 export const FILE_FIELDS = [

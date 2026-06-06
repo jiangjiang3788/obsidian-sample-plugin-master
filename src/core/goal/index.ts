@@ -24,3 +24,6 @@ export type {
 export { DEFAULT_GOAL_SETTINGS } from './types';
 export { normalizeGoalPath, splitGoalPath } from './path';
 export type { GoalPathParts } from './path';
+
+export { inferGoalCandidatesFromItems, buildGoalRelationsFromItems, buildGoalOverviewModel, buildGoalMarkdownBackfillPreview, buildGoalMarkdownBackfillDiffPreview, makeStableGoalIdFromPath } from './overview';
+export type { GoalMigrationCandidate, GoalOverviewModel, GoalOverviewRow, GoalOverviewMetricProgress, GoalOverviewCycleSummary, GoalMarkdownBackfillPreview, GoalMarkdownBackfillPreviewItem, GoalMarkdownBackfillDiffPreview, GoalMarkdownBackfillDiffItem } from './overview';

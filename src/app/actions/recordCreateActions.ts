@@ -19,6 +19,10 @@ export interface StatisticsCellIdentifier {
 }
 
 export interface StatisticsCreatePayload {
+  /** 目标总览等入口透传给 QuickInput 的上下文字段。 */
+  context?: Record<string, unknown>;
+  /** 建议使用的核心 block，兼容后续更精确的 actionService 选择。 */
+  preferredBlockId?: string;
   cellIdentifier?: StatisticsCellIdentifier | null;
   blocks?: Item[];
   title?: string;
@@ -230,12 +234,14 @@ function buildStatisticsExplicitContext(
       themeContext: {
         themeId: themeId ?? null,
       },
+      goalContext: (payload?.context as any)?.__goalContext || null,
       filterContext: {
         title: payload?.title,
         blocksCount: payload?.blocks?.length ?? 0,
         filters: filters || [],
       },
     },
+    ...(payload?.context || {}),
   };
 }
 
@@ -248,6 +254,14 @@ function buildStatisticsCreateConfig(params: StatisticsCreateParams): QuickInput
 
   const anchorDate = resolveStatisticsAnchorDate(cell, params.fallbackDate);
   const periodContext = mapStatisticsCellTypeToPeriod(cell?.type, params.currentView);
+
+  if (params.payload?.preferredBlockId) {
+    return {
+      blockId: params.payload.preferredBlockId,
+      context: buildStatisticsExplicitContext(params.payload, anchorDate, periodContext, params.viewInstance.filters, undefined),
+    };
+  }
+
   const base = params.actionService.getQuickInputConfigForStatisticsView(
     params.viewInstance,
     anchorDate,
