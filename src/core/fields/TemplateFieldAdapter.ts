@@ -20,6 +20,7 @@ const KNOWN_SEMANTICS = new Set<FieldSemantic>([
   'categoryPath',
   'themePath',
   'tags',
+  'goals',
   'status',
   'date',
   'startTime',
@@ -88,6 +89,7 @@ export function getTemplateFieldSemantic(field: Partial<TemplateField> | null | 
   if (templateFieldMatches(field, ['主题', 'theme', 'themePath', '完整主题', '主题路径'])) return 'themePath';
   if (templateFieldMatches(field, ['分类', '类别', 'category', 'categoryPath', '分类路径'])) return 'categoryPath';
   if (templateFieldMatches(field, ['标签', 'tag', 'tags'])) return 'tags';
+  if (templateFieldMatches(field, ['目标'])) return 'goals';
   if (templateFieldMatches(field, ['状态', 'status'])) return 'status';
   if (templateFieldMatches(field, ['日期', 'date'])) return 'date';
   if (templateFieldMatches(field, ['时间', '开始', '开始时间', 'time', 'start', 'startTime'])) return 'startTime';
@@ -107,7 +109,7 @@ export function getTemplateFieldInputType(field: Partial<TemplateField> | null |
   const semantic = getTemplateFieldSemantic(field);
   if (semantic === 'body') return 'textarea';
   if (semantic === 'themePath' || semantic === 'categoryPath') return 'path';
-  if (semantic === 'tags') return 'multiTag';
+  if (semantic === 'tags' || semantic === 'goals') return 'multiTag';
   if (semantic === 'image') return 'image';
   if (semantic === 'rating') return 'rating';
   if (semantic === 'date') return 'date';
@@ -137,7 +139,8 @@ export function isTemplatePathField(field: Partial<TemplateField> | null | undef
 
 export function isTemplateTagField(field: Partial<TemplateField> | null | undefined): boolean {
   const inputType = getTemplateFieldInputType(field);
-  return inputType === 'tag' || inputType === 'multiTag' || getTemplateFieldSemantic(field) === 'tags';
+  const semantic = getTemplateFieldSemantic(field);
+  return inputType === 'tag' || inputType === 'multiTag' || semantic === 'tags' || semantic === 'goals';
 }
 
 export function isTemplateImageField(field: Partial<TemplateField> | null | undefined): boolean {
@@ -268,6 +271,12 @@ function applyCoreTemplateAliases(data: Record<string, unknown>, field: Partial<
   if (semantic === 'tags') {
     const tags = parseTagList(value);
     if (tags.length) data.tags = tags;
+    return;
+  }
+
+  if (semantic === 'goals') {
+    const goals = parseTagList(value);
+    if (goals.length) data.goalPaths = goals;
     return;
   }
 

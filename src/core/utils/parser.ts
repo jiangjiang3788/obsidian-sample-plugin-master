@@ -147,6 +147,7 @@ export function parseBlockContent(
         editableText: parsed.content,
         type: 'block',
         tags: parsed.tags,
+        goalPaths: parsed.goalPaths,
         recurrence: 'none',
         created: 0,
         modified: 0,

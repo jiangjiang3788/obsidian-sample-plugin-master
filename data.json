@@ -4,7 +4,7 @@
     "enabled": true,
     "provider": "openai_compat",
     "apiEndpoint": "https://api.ricardochat.cn/v1",
-    "model": "[D]gemini-3.1-pro-high",
+    "model": "[B]gemini-3-flash-preview",
     "temperature": 0.7,
     "maxTokens": 4096,
     "requestTimeoutMs": 3000000,
@@ -47,7 +47,7 @@
       "id": "vi_mm9z0oe1cvlr53c",
       "parentId": null,
       "title": "时间轴",
-      "viewType": "TaskExecutionView",
+      "viewType": "ProgressView",
       "viewConfig": {
         "categories": {
           "0": {
@@ -174,7 +174,7 @@
         }
       ],
       "sort": [],
-      "collapsed": true
+      "collapsed": false
     },
     {
       "id": "vi_mmijitbq47u10wu",
@@ -238,7 +238,7 @@
           "dir": "asc"
         }
       ],
-      "collapsed": false
+      "collapsed": true
     },
     {
       "id": "vi_mmikcsvy3rwcetd",
@@ -337,8 +337,12 @@
             "color": "#9eeabe"
           },
           {
+            "name": "01",
+            "color": "#a8e184"
+          },
+          {
             "name": "生活",
-            "color": "#e0e0e0"
+            "color": "#8cd4ee"
           }
         ]
       },
@@ -503,7 +507,7 @@
             "content": 307,
             "themePath": 80
           },
-          "contentDisplayMode": "fullMarkdown"
+          "contentDisplayMode": "previewText"
         }
       },
       "fields": [
@@ -539,8 +543,8 @@
       "name": "全局布局",
       "viewInstanceIds": [
         "vi_mn9o962553qwhzp",
-        "vi_mmijitbq47u10wu",
         "vi_mmeolydjaga6z6u",
+        "vi_mmijitbq47u10wu",
         "vi_mnztlf3wxrrqd8i",
         "vi_mm9z0oe1cvlr53c",
         "vi_mmikcsvy3rwcetd",
@@ -565,24 +569,10 @@
         "vi_mpi3dydfsejfio8"
       ],
       "displayMode": "list",
-      "initialView": "周",
+      "initialView": "季",
       "initialDateFollowsNow": true,
       "parentId": null,
-      "globalFilters": [
-        {
-          "field": "rootTheme",
-          "op": "=",
-          "value": "健康",
-          "logic": "and"
-        },
-        {
-          "field": "type",
-          "op": "in",
-          "value": [
-            "block"
-          ]
-        }
-      ],
+      "globalFilters": [],
       "selectedThemes": [],
       "selectedCategories": []
     }
@@ -845,15 +835,19 @@
                 "value": "✅",
                 "label": "1"
               }
-            ],
-            "semanticType": "ratingPair",
-            "auxKey": "image"
+            ]
           },
           {
             "id": "field_mewk7o3j",
             "key": "日期",
             "label": "日期",
             "type": "date"
+          },
+          {
+            "id": "field_mq1rd7gp_4",
+            "key": "目标",
+            "label": "目标",
+            "type": "multiTag"
           },
           {
             "id": "field_mewjqtxg",
@@ -1144,12 +1138,6 @@
         "path": "生活/小手机",
         "icon": "🍓",
         "order": 2
-      },
-      {
-        "id": "thm_mq08aj3nn2c7qw8",
-        "path": "252",
-        "icon": "📁",
-        "order": 5
       }
     ],
     "overrides": [
@@ -3718,9 +3706,7 @@
                 "value": "DJ\\RELITU\\BB3.png",
                 "label": "3"
               }
-            ],
-            "semanticType": "ratingPair",
-            "auxKey": "image"
+            ]
           },
           {
             "id": "field_mewk7o3j",
@@ -3729,15 +3715,28 @@
             "type": "date"
           },
           {
+            "id": "field_mq1rjwos_4",
+            "key": "目标",
+            "label": "目标",
+            "type": "multiTag",
+            "options": [
+              {
+                "value": "#身体健康",
+                "label": "#身体健康"
+              }
+            ]
+          },
+          {
             "id": "field_mewjqtxg",
             "key": "内容",
             "label": "内容",
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{themePath}}\n评分:: {{评分.label}}\n图片:: {{评分.value}}\n内容:: {{内容}}\n<!-- end -->\n\n",
+        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{themePath}}\n评分:: {{评分.label}}\n图片:: {{评分.value}}\n目标:: #身体健康\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/打卡.md",
-        "appendUnderHeader": "## {{themePath}}"
+        "appendUnderHeader": "## {{themePath}}",
+        "disabled": false
       },
       {
         "id": "ovr_mewte5hhuod5g",
@@ -3918,9 +3917,10 @@
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{themePath}}\n评分:: {{评分.label}}\n图片:: {{评分.value}}\n内容:: {{内容}}\n<!-- end -->\n\n",
+        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{themePath}}\n评分:: {{评分.label}}\n图片:: {{评分.value}}\n目标:: #照顾好自己\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/打卡.md",
-        "appendUnderHeader": "## {{themePath}}"
+        "appendUnderHeader": "## {{themePath}}",
+        "disabled": false
       },
       {
         "id": "ovr_mewzwad0lzntf",
@@ -3946,9 +3946,7 @@
                 "value": "💪",
                 "label": "3"
               }
-            ],
-            "semanticType": "ratingPair",
-            "auxKey": "image"
+            ]
           },
           {
             "id": "field_mewk7o3j",
@@ -3957,15 +3955,22 @@
             "type": "date"
           },
           {
+            "id": "field_mq1ryfud_4",
+            "key": "目标",
+            "label": "目标",
+            "type": "multiTag"
+          },
+          {
             "id": "field_mewjqtxg",
             "key": "内容",
             "label": "内容",
             "type": "textarea"
           }
         ],
-        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{themePath}}\n评分:: {{评分.label}}\n图片:: {{评分.value}}\n内容:: {{内容}}\n<!-- end -->\n\n",
+        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{themePath}}\n目标:: #强健身体\n评分:: {{评分.label}}\n图片:: {{评分.value}}\n内容:: {{内容}}\n<!-- end -->\n\n",
         "targetFile": "01/打卡.md",
-        "appendUnderHeader": "## {{themePath}}"
+        "appendUnderHeader": "## {{themePath}}",
+        "disabled": false
       },
       {
         "id": "ovr_mewzy0p1xa2ji",
@@ -8713,47 +8718,6 @@
         "targetFile": "01/2-4思考.md",
         "appendUnderHeader": "## {{themePath}}",
         "id": "ovr_mpi1scgk94czsop"
-      },
-      {
-        "blockId": "blk_mejsg76atopau",
-        "themeId": "thm_mq08aj3nn2c7qw8",
-        "disabled": false,
-        "fields": [
-          {
-            "id": "field_mewjpsd5",
-            "key": "评分",
-            "label": "评分",
-            "type": "rating",
-            "options": [
-              {
-                "value": "✅",
-                "label": "1"
-              }
-            ]
-          },
-          {
-            "id": "field_mewk7o3j",
-            "key": "日期",
-            "label": "日期",
-            "type": "date"
-          },
-          {
-            "id": "field_mewjqtxg",
-            "key": "内容",
-            "label": "内容",
-            "type": "textarea"
-          },
-          {
-            "id": "field_mq08kcja_4",
-            "key": "新字段4",
-            "label": "新字段4",
-            "type": "file"
-          }
-        ],
-        "outputTemplate": "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{themePath}}\n评分:: {{评分.label}}\n图片:: {{评分.value}}\n内容:: {{内容}}\n<!-- end -->\n\n",
-        "targetFile": "01/打卡.md",
-        "appendUnderHeader": "## {{themePath}}",
-        "id": "ovr_mq08ki5naf4k08k"
       }
     ]
   },
@@ -8805,7 +8769,7 @@
     "工作/通勤",
     "思考/专注",
     "生活/小手机",
-    "252"
+    "1"
   ],
   "devConsoleStackEnabled": false,
   "dataSources": [
@@ -8872,6 +8836,8 @@
     "未完成任务": "#ebebeb",
     "打卡": "#b888e7",
     "闪念": "#e47272",
-    "事件": "#a5c8ee"
+    "事件": "#a5c8ee",
+    "生活": "#8cd4ee",
+    "01": "#a8e184"
   }
 }

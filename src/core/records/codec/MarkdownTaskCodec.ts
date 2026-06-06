@@ -11,6 +11,7 @@ import {
 
 export interface ParsedTaskMetadata {
   tags: string[];
+  goalPaths: string[];
   extra: Record<string, string | number | boolean>;
   theme?: string;
   categoryKey?: string;
@@ -53,7 +54,7 @@ export function decodeTaskMetadata(lineText: string): ParsedTaskMetadata {
   const source = String(lineText || '');
   const tags = (source.match(TAG_RE) || []).map(tag => tag.trim()).filter(Boolean);
   const extra: ParsedTaskMetadata['extra'] = {};
-  const result: ParsedTaskMetadata = { tags, extra };
+  const result: ParsedTaskMetadata = { tags, goalPaths: [], extra };
 
   KV_IN_PAREN.lastIndex = 0;
   let match: RegExpExecArray | null;
@@ -78,6 +79,8 @@ export function decodeTaskMetadata(lineText: string): ParsedTaskMetadata {
       if (value === 'block' || value === 'override') result.templateSourceType = value;
     } else if (['标签', 'tag', 'tags'].includes(key)) {
       result.tags.push(...(decodeMarkdownFieldValue(value, FIELD_CODEC_PRESETS.tags) as string[]));
+    } else if (key === '目标') {
+      result.goalPaths.push(...(decodeMarkdownFieldValue(value, FIELD_CODEC_PRESETS.goalPaths) as string[]));
     } else if (['时间', 'time', 'start'].includes(key)) {
       result.startTime = value;
     } else if (['结束', 'end'].includes(key)) {
@@ -90,11 +93,13 @@ export function decodeTaskMetadata(lineText: string): ParsedTaskMetadata {
   }
 
   result.tags = unique(result.tags);
+  result.goalPaths = unique(result.goalPaths);
   return result;
 }
 
 export function applyTaskMetadata(item: Item, metadata: ParsedTaskMetadata): Item {
   item.tags = metadata.tags;
+  item.goalPaths = metadata.goalPaths;
   item.extra = metadata.extra;
   if (metadata.theme) item.theme = metadata.theme;
   if (metadata.categoryKey) item.categoryKey = metadata.categoryKey;

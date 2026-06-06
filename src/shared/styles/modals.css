@@ -154,3 +154,77 @@
     border-color: var(--interactive-accent);
     box-shadow: 0 0 0 1px var(--interactive-accent);
 }
+
+
+.think-quick-input-modal .think-ob-tag-editor {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.think-quick-input-modal .think-ob-tag-editor__row {
+    width: 100%;
+    min-height: 42px;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 6px;
+    padding: 6px 8px;
+    border: 1px solid var(--background-modifier-border);
+    border-radius: 10px;
+    background: var(--background-primary);
+    box-sizing: border-box;
+}
+
+.think-quick-input-modal .think-ob-tag-editor__row:focus-within {
+    border-color: var(--interactive-accent);
+    box-shadow: 0 0 0 1px var(--interactive-accent);
+}
+
+.think-quick-input-modal .think-ob-tag-input {
+    flex: 1 1 120px;
+    min-width: 90px;
+    border: 0;
+    outline: 0;
+    padding: 4px 2px;
+    background: transparent;
+    color: var(--text-normal);
+    font: inherit;
+}
+
+.think-quick-input-modal .think-ob-tag-pill {
+    appearance: none;
+    border: 1px solid var(--tag-border-color, var(--background-modifier-border));
+    border-radius: var(--tag-radius, 999px);
+    background: var(--tag-background, var(--background-secondary));
+    color: var(--tag-color, var(--text-accent));
+    padding: 3px 9px;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 12px;
+    line-height: 1.35;
+    cursor: pointer;
+    max-width: 100%;
+}
+
+.think-quick-input-modal .think-ob-tag-pill:hover {
+    background: var(--tag-background-hover, var(--background-modifier-hover));
+}
+
+.think-quick-input-modal .think-ob-tag-pill.is-selected {
+    background: var(--tag-background, var(--background-secondary-alt));
+    color: var(--tag-color, var(--text-normal));
+}
+
+.think-quick-input-modal .think-ob-tag-pill__remove {
+    color: var(--text-muted);
+    font-weight: 700;
+}
+
+.think-quick-input-modal .think-ob-tag-suggestions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    padding-left: 2px;
+}

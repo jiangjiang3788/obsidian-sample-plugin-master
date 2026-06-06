@@ -34,7 +34,7 @@ export function PopoverContent({
           items={blocks}
           resolveResourcePath={resolveResourcePath}
           onOpenRecordOrigin={onOpenRecordOrigin}
-          fields={module.fields || ['title', 'content', 'categoryKey', 'tags', 'date', 'period']}
+          fields={module.fields || ['title', 'content', 'categoryKey', 'goalPaths', 'date', 'period']}
           groupFields={module.groupFields}
           onMarkDone={() => {}}
           timerService={timerService}

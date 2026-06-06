@@ -92,6 +92,10 @@ function readCanonicalField(item: Item, canonicalField: string): unknown {
     return parseTagList(item.tags || []);
   }
 
+  if (canonicalField === 'goalPaths') {
+    return parseTagList((item as any).goalPaths || []);
+  }
+
   if (canonicalField === 'fullData') {
     return item.rawSource || item.fullData || item.content || '';
   }

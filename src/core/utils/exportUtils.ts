@@ -48,6 +48,15 @@ export function exportItemsToMarkdown(items: Item[], config: ExportViewConfig = 
      * 递归按多级 groupFields 分组
      * 支持：无分组 / 单字段分组 / 多字段层级分组
      */
+    const normalizeExportGroupKeys = (value: unknown): string[] => {
+        if (Array.isArray(value)) {
+            const keys = value.map(v => String(v ?? '').trim()).filter(Boolean);
+            return keys.length ? Array.from(new Set(keys)) : [UNGROUPED_KEY];
+        }
+        const text = String(value ?? '').trim();
+        return text ? [text] : [UNGROUPED_KEY];
+    };
+
     const groupRecursively = (itemsToGroup: Item[], groupFields: string[] | undefined, level: number): { key: string; items: Item[]; children?: any[] }[] => {
         if (!groupFields || level >= groupFields.length) {
             return [{
@@ -60,17 +69,13 @@ export function exportItemsToMarkdown(items: Item[], config: ExportViewConfig = 
         const map = new Map<string, Item[]>();
 
         itemsToGroup.forEach(item => {
-            let key = UNGROUPED_KEY;
-            if (field) {
-                const val = readField(item, field);
-                if (val !== undefined && val !== null && val !== '') {
-                    key = String(val);
+            const keys = field ? normalizeExportGroupKeys(readField(item, field)) : [UNGROUPED_KEY];
+            keys.forEach(key => {
+                if (!map.has(key)) {
+                    map.set(key, []);
                 }
-            }
-            if (!map.has(key)) {
-                map.set(key, []);
-            }
-            map.get(key)!.push(item);
+                map.get(key)!.push(item);
+            });
         });
 
         const results: { key: string; items: Item[]; children?: any[] }[] = [];

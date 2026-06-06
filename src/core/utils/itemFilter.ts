@@ -117,23 +117,24 @@ function matchRule(item: Item, rule: FilterRule): boolean {
   } else if (canonicalField === 'fullData') {
     v1 = (item as any).fullDataLower ?? String(v1 ?? '').toLowerCase();
     v2 = String(v2 ?? '').toLowerCase();
-  } else if (canonicalField === 'tags') {
-    const tagsLower: string[] = (item as any).tagsLower
-      ?? (Array.isArray(v1) ? v1.map(x => String(x).toLowerCase()) : []);
+  } else if (canonicalField === 'tags' || canonicalField === 'goalPaths') {
+    const listLower: string[] = canonicalField === 'tags'
+      ? ((item as any).tagsLower ?? (Array.isArray(v1) ? v1.map(x => String(x).toLowerCase()) : []))
+      : ((item as any).goalPathsLower ?? (Array.isArray(v1) ? v1.map(x => String(x).toLowerCase()) : []));
     const needle = String(v2 ?? '').toLowerCase();
     if (rule.op === 'includes' || rule.op === '=') {
-      return tagsLower.includes(needle);
+      return listLower.includes(needle);
     }
     if (rule.op === '!=') {
-      return !tagsLower.includes(needle);
+      return !listLower.includes(needle);
     }
     if (rule.op === 'in' || rule.op === 'notIn') {
       const needles = normalizeListValue(v2).map(x => String(x).toLowerCase());
-      const matched = needles.some(needleValue => tagsLower.includes(needleValue));
+      const matched = needles.some(needleValue => listLower.includes(needleValue));
       return rule.op === 'in' ? matched : !matched;
     }
     // 其他操作回退为字符串比较
-    v1 = tagsLower.join(',');
+    v1 = listLower.join(',');
     v2 = needle;
   }
 

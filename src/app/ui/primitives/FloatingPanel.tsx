@@ -15,7 +15,7 @@
 import type { ComponentChildren, JSX } from 'preact';
 import { useEffect, useRef, useState, useCallback, useMemo } from 'preact/hooks';
 
-import { DragIndicatorIcon, diagnosticLog, useLocalStorage } from '@shared/public';
+import { DragIndicatorIcon, Paper, diagnosticLog, useLocalStorage } from '@shared/public';
 import { createPortal } from 'preact/compat';
 
 import {

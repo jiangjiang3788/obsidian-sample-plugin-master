@@ -44,7 +44,8 @@ export function isFieldCodecTag(def?: FieldCodecDefinition | null): boolean {
   return def?.type === 'tags'
     || def?.inputType === 'tag'
     || def?.inputType === 'multiTag'
-    || def?.semantic === 'tags';
+    || def?.semantic === 'tags'
+    || def?.semantic === 'goals';
 }
 
 export function isFieldCodecImage(def?: FieldCodecDefinition | null): boolean {
@@ -175,6 +176,7 @@ export const FIELD_CODEC_PRESETS = {
   themePath: { type: 'path', inputType: 'path', semantic: 'themePath', hierarchical: true } satisfies FieldCodecDefinition,
   categoryPath: { type: 'path', inputType: 'path', semantic: 'categoryPath', hierarchical: true } satisfies FieldCodecDefinition,
   tags: { type: 'tags', inputType: 'multiTag', semantic: 'tags', cardinality: 'multi', hierarchical: true } satisfies FieldCodecDefinition,
+  goalPaths: { type: 'tags', inputType: 'multiTag', semantic: 'goals', cardinality: 'multi', hierarchical: true } satisfies FieldCodecDefinition,
   image: { type: 'image', inputType: 'image', semantic: 'image' } satisfies FieldCodecDefinition,
   number: { type: 'number', inputType: 'number' } satisfies FieldCodecDefinition,
   boolean: { type: 'boolean', inputType: 'boolean' } satisfies FieldCodecDefinition,

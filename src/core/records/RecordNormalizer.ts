@@ -46,6 +46,7 @@ export function normalizeRecordItem(item: Item, context: RecordNormalizeContext)
   }
 
   item.tags = unique([...(context.sectionTags || []), ...(item.tags || [])]);
+  item.goalPaths = unique([...(item.goalPaths || [])]);
 
   // 主题只允许来自显式元数据。normalizeExplicitTheme 只做清洗/匹配，不会读取 header。
   item.theme = normalizeExplicitTheme((item as any).theme, context.themeMatcher);
@@ -84,6 +85,7 @@ export function normalizeRecordItem(item: Item, context: RecordNormalizeContext)
   (item as any).contentLower = normalizeSearchText(item.content);
   (item as any).fullDataLower = normalizeSearchText(item.fullData);
   (item as any).tagsLower = (item.tags || []).map(tag => normalizeSearchText(tag));
+  (item as any).goalPathsLower = (item.goalPaths || []).map(goal => normalizeSearchText(goal));
 
   return item;
 }

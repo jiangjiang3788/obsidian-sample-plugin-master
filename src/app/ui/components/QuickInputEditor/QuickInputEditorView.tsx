@@ -23,6 +23,7 @@ export interface QuickInputEditorViewProps {
 
   template: any;
   formData: Record<string, any>;
+  fieldValueOptionsByKey?: Record<string, Array<{ value: string; label?: string }>>;
   timeDirection?: 'forward' | 'backward';
   dense?: boolean;
   showDivider?: boolean;
@@ -131,6 +132,7 @@ export function QuickInputEditorView({
   onSelectTheme,
   template,
   formData,
+  fieldValueOptionsByKey,
   timeDirection = 'forward',
   dense = false,
   showDivider = true,
@@ -192,6 +194,7 @@ export function QuickInputEditorView({
           getResourcePath={getResourcePath}
           template={template}
           formData={formData}
+          fieldValueOptionsByKey={fieldValueOptionsByKey}
           dense={dense}
           onUpdateField={onUpdateField}
           timeDirection={timeDirection}

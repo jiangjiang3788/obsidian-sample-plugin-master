@@ -58,6 +58,7 @@ export interface ParsedRecordSnapshot {
     date: string | null;
     period: string | null;
     tags: string[];
+    goalPaths: string[];
     startTime: string | null;
     endTime: string | null;
     duration: number | null;
@@ -136,6 +137,7 @@ export function buildParsedRecordSnapshot(item: Item): ParsedRecordSnapshot {
       date: item.date || item.createdDate || null,
       period: item.period || null,
       tags: [...(item.tags || [])],
+      goalPaths: [...((item as any).goalPaths || [])],
       startTime: item.startTime || null,
       endTime: item.endTime || null,
       duration: item.duration ?? null,

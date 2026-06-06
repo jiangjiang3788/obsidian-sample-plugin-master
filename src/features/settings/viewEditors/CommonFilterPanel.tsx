@@ -35,7 +35,7 @@ interface CommonFilterPanelProps {
 const DEFAULT_QUICK_FILTER_FIELDS: QuickFilterField[] = [
   { field: 'themePath', label: '主题路径', help: '使用完整 themePath 筛选，例如 生活/健康；不再用根主题或章节标题兜底。', placeholder: '选择主题路径' },
   { field: 'baseCategory', label: '分类', help: '不同字段之间默认表示“且”：主题匹配后还要分类匹配。', placeholder: '选择分类' },
-  { field: 'tags', label: '标签', placeholder: '选择标签' },
+  { field: 'goalPaths', label: '目标', placeholder: '选择目标' },
   { field: 'type', label: '类型', placeholder: '选择记录类型' },
   { field: 'priority', label: '优先级', placeholder: '选择优先级' },
   { field: 'period', label: '时间粒度', placeholder: '选择粒度' },
@@ -141,7 +141,7 @@ export function CommonFilterPanel({
   items,
   fieldOptions,
   title = '常用筛选',
-  description = '适合主题路径、分类、标签这类高频筛选；同一字段内是“或”，不同字段之间是“且”。',
+  description = '适合主题路径、分类、目标这类高频筛选；同一字段内是“或”，不同字段之间是“且”。',
   fields = DEFAULT_QUICK_FILTER_FIELDS,
   compact = false,
 }: CommonFilterPanelProps) {

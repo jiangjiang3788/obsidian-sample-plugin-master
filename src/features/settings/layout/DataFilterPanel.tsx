@@ -70,7 +70,7 @@ export function DataFilterPanel({
   const activeCount = filters.length;
   const sourceItems = items ?? dataStore.queryItems();
   const fieldOptions = useMemo(() => getAllFields(sourceItems), [sourceItems]);
-  const commonFilterFields = useMemo(() => ['themePath', 'baseCategory', 'tags', 'type', 'priority', 'period'], []);
+  const commonFilterFields = useMemo(() => ['themePath', 'baseCategory', 'goalPaths', 'type', 'priority', 'period'], []);
   const hasAdvancedFilters = useMemo(() => filters.some(rule => (
     rule.op !== 'in' || !commonFilterFields.includes(rule.field)
   )), [filters, commonFilterFields]);
@@ -164,7 +164,7 @@ export function DataFilterPanel({
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
             <CommonFilterPanel
               title="常用筛选"
-              description="先用主题路径、分类、标签等常用字段筛选：同一字段内多选表示“或”，不同字段之间默认表示“且”。"
+              description="先用主题路径、分类、目标等常用字段筛选：同一字段内多选表示“或”，不同字段之间默认表示“且”。"
               dataStore={dataStore}
               filters={filters}
               items={sourceItems}

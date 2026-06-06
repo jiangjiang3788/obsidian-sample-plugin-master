@@ -63,6 +63,7 @@ export type FieldSemantic =
   | 'categoryPath'
   | 'themePath'
   | 'tags'
+  | 'goals'
   | 'status'
   | 'date'
   | 'startTime'

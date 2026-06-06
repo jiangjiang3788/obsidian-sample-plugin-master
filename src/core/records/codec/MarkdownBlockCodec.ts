@@ -14,6 +14,7 @@ export interface ParsedBlockMetadata {
   categoryKey: string;
   date?: string;
   tags: string[];
+  goalPaths: string[];
   extra: Record<string, string | number | boolean>;
   icon?: string;
   period?: string;
@@ -62,6 +63,7 @@ export function decodeBlockContentLines(contentLines: string[], parentFolder: st
   let categoryKey: string | null = null;
   let date: string | undefined;
   const tags: string[] = [];
+  const goalPaths: string[] = [];
   const extra: ParsedBlockMetadata['extra'] = {};
   let content = '';
   let contentStarted = false;
@@ -95,6 +97,8 @@ export function decodeBlockContentLines(contentLines: string[], parentFolder: st
           theme = decodeMarkdownString(value, FIELD_CODEC_PRESETS.themePath);
         } else if (['标签', 'tag', 'tags'].includes(key)) {
           tags.push(...(decodeMarkdownFieldValue(value, FIELD_CODEC_PRESETS.tags) as string[]));
+        } else if (key === '目标') {
+          goalPaths.push(...(decodeMarkdownFieldValue(value, FIELD_CODEC_PRESETS.goalPaths) as string[]));
         } else if (['日期', 'date'].includes(key)) {
           date = normalizeDateStr(value.trim());
         } else if (['周期', 'period'].includes(key)) {
@@ -122,12 +126,14 @@ export function decodeBlockContentLines(contentLines: string[], parentFolder: st
   }
 
   const finalTags = unique(tags);
+  const finalGoalPaths = unique(goalPaths);
   return {
     title: buildTitle(content, finalTags),
     content: content.trim(),
     categoryKey: categoryKey || parentFolder || '',
     date,
     tags: finalTags,
+    goalPaths: finalGoalPaths,
     extra,
     icon,
     period,

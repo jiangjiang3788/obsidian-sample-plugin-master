@@ -36,7 +36,7 @@ export interface FieldSystemHealthReport {
 type CheckFactory = () => FieldSystemCheckResult;
 
 const USER_VISIBLE_CATEGORIES: FieldCategory[] = ['core', 'file', 'custom'];
-const REQUIRED_CORE_FIELDS = ['title', 'content', 'categoryKey', 'tags', 'themePath', 'image', 'date'];
+const REQUIRED_CORE_FIELDS = ['title', 'content', 'categoryKey', 'tags', 'goalPaths', 'themePath', 'image', 'date'];
 const REQUIRED_FILE_FIELDS = ['file.path', 'file.basename', 'file.folder', 'header'];
 const LEGACY_ALIAS_EXPECTATIONS: Array<[string, string]> = [
   ['theme', 'themePath'],
@@ -79,8 +79,8 @@ function hasRequiredRegistryFields(): FieldSystemCheckResult {
 }
 
 function hasCorrectCoreCategories(): FieldSystemCheckResult {
-  const label = '分类、主题、标签、图片属于插件核心字段';
-  const wrong = ['categoryKey', 'tags', 'themePath', 'image'].filter(key => FIELD_REGISTRY[key]?.category !== 'core');
+  const label = '分类、主题、标签、目标、图片属于插件核心字段';
+  const wrong = ['categoryKey', 'tags', 'goalPaths', 'themePath', 'image'].filter(key => FIELD_REGISTRY[key]?.category !== 'core');
   if (wrong.length) {
     return fail('field.registry.core-business', label, `这些字段未归入核心字段：${wrong.join(', ')}`);
   }
@@ -226,7 +226,7 @@ function builtInFieldGuideIsAvailable(): FieldSystemCheckResult {
     return fail('field.guide.groups', label, '缺少核心字段或文件字段说明分组');
   }
   const coreLabels = new Set(core.fields.map(field => field.label));
-  const requiredLabels = ['标题', '内容', '分类路径', '主题路径', '标签', '日期', '图片'];
+  const requiredLabels = ['标题', '内容', '分类路径', '主题路径', '标签', '目标', '日期', '图片'];
   const missing = requiredLabels.filter(name => !coreLabels.has(name));
   if (missing.length) {
     return fail('field.guide.groups', label, `核心字段说明缺少：${missing.join(', ')}`);
@@ -236,10 +236,10 @@ function builtInFieldGuideIsAvailable(): FieldSystemCheckResult {
 
 
 function coreInputPresetsAreAvailable(): FieldSystemCheckResult {
-  const label = '分类、主题、标签可作为表单核心输入字段创建';
+  const label = '分类、主题、标签、目标可作为表单核心输入字段创建';
   const presets = getCoreInputFieldPresets();
   const labels = new Set(presets.map(preset => preset.label));
-  const required = ['分类', '主题', '标签'];
+  const required = ['分类', '主题', '标签', '目标'];
   const missing = required.filter(name => !labels.has(name));
   if (missing.length) {
     return fail('field.core-input.presets', label, `缺少核心输入字段预设：${missing.join(', ')}`);
@@ -248,6 +248,7 @@ function coreInputPresetsAreAvailable(): FieldSystemCheckResult {
     if (preset.label === '分类') return preset.type !== 'path' || preset.target !== 'categoryKey';
     if (preset.label === '主题') return preset.type !== 'path' || preset.target !== 'themePath';
     if (preset.label === '标签') return preset.type !== 'multiTag' || preset.target !== 'tags';
+    if (preset.label === '目标') return preset.type !== 'multiTag' || preset.target !== 'goalPaths';
     return false;
   });
   if (wrong.length) {
@@ -258,7 +259,7 @@ function coreInputPresetsAreAvailable(): FieldSystemCheckResult {
 
 function customFieldsCannotReuseBuiltInNames(): FieldSystemCheckResult {
   const label = '核心输入字段允许作为表单字段，文件/派生字段仍防撞名';
-  const coreInput = ['主题', '标签', '分类', '图片', '内容'].filter(name => !isCoreInputFieldName(name));
+  const coreInput = ['主题', '标签', '目标', '分类', '图片', '内容'].filter(name => !isCoreInputFieldName(name));
   if (coreInput.length) {
     return fail('field.custom.reserved-names', label, `这些核心输入字段未被允许：${coreInput.join(', ')}`);
   }

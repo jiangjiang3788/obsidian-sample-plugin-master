@@ -218,6 +218,8 @@ export interface Item {
     fullData?: string;
     type: 'task' | 'block';
     tags: string[];
+    /** 目标路径，作为核心业务字段使用；Markdown 中只识别 `目标::`。 */
+    goalPaths?: string[];
     theme?: string;     // [新增] 主题字段，用于统一的主题管理
     /** 主题完整路径，供视图筛选/分组使用，例如：学习/英语/听力。 */
     themePath?: string;
@@ -279,7 +281,7 @@ export interface Item {
 // DEFAULT_FIELD_OPTIONS via getAllFields(), not by assuming every Item property is
 // a user-facing field.
 export const CORE_FIELDS = [
-    'id', 'type', 'title', 'content', 'categoryKey', 'tags',
+    'id', 'type', 'title', 'content', 'categoryKey', 'tags', 'goalPaths',
     'recurrence', 'icon', 'priority', 'date', 'startTime', 'endTime', 'duration',
     'period', 'rating', 'image', 'folder', 'periodCount'
 ] as const;

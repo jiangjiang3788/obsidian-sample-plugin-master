@@ -50,7 +50,7 @@ function ViewInstanceEditor({ vi }: { vi: ViewInstance }) {
         []
     );
 
-    const commonFilterFields = useMemo(() => ['themePath', 'baseCategory', 'tags', 'type', 'priority', 'period'], []);
+    const commonFilterFields = useMemo(() => ['themePath', 'baseCategory', 'goalPaths', 'type', 'priority', 'period'], []);
     const hasAdvancedFilters = useMemo(() => (currentVi.filters || []).some((rule: any) => (
         rule.op !== 'in' || !commonFilterFields.includes(rule.field)
     )), [currentVi.filters, commonFilterFields]);

@@ -2,9 +2,9 @@
 import { h } from 'preact';
 import { useEffect, useMemo, useState } from 'preact/hooks';
 
-import { selectInputSettings, useSelector } from '@/app/public';
+import { selectInputSettings, useDataStore, useSelector } from '@/app/public';
 import type { RecordInputMeta, ThemeDefinition } from '@core/public';
-import { dayjs, getEffectiveTemplate, renderTemplate, getLeafPath } from '@core/public';
+import { dayjs, getEffectiveTemplate, getLeafPath, getTemplateFieldSemantic, readField, renderTemplate } from '@core/public';
 import { computeLinkedTimeChanges, finalizeLinkedTimeFields } from '@shared/public';
 
 import { QuickInputEditorView } from './QuickInputEditorView';
@@ -118,6 +118,32 @@ const buildFieldSourceSummary = (sources: QuickInputFieldSourceMap): Record<Quic
   system_auto: Object.values(sources).filter((v) => v === 'system_auto').length,
 });
 
+function normalizeOptionValue(value: unknown): string | null {
+  if (value === undefined || value === null) return null;
+  if (typeof value === 'object') {
+    const obj = value as any;
+    const raw = obj.value ?? obj.label;
+    const normalized = String(raw ?? '').trim();
+    return normalized || null;
+  }
+  const normalized = String(value).trim();
+  return normalized || null;
+}
+
+function mergeGoalOptions(manualOptions: unknown[] | undefined, generatedOptions: Array<{ value: string; label: string }>): Array<{ value: string; label: string }> {
+  const seen = new Set<string>();
+  const result: Array<{ value: string; label: string }> = [];
+  const add = (value: unknown, label?: unknown) => {
+    const normalized = normalizeOptionValue(value);
+    if (!normalized || seen.has(normalized)) return;
+    seen.add(normalized);
+    result.push({ value: normalized, label: String(label ?? normalized).trim() || normalized });
+  };
+  (manualOptions || []).forEach((option: any) => add(option?.value ?? option, option?.label));
+  generatedOptions.forEach(option => add(option.value, option.label));
+  return result;
+}
+
 /**
  * QuickInputEditor（Container）
  * - 状态/订阅/副作用在这里
@@ -137,6 +163,7 @@ export function QuickInputEditor({
   isMobileLike = false,
 }: QuickInputEditorProps) {
   const settings = useSelector(selectInputSettings);
+  const dataStore = useDataStore();
 
   const [currentBlockId, setCurrentBlockId] = useState(initialBlockId);
   const [selectedThemeId, setSelectedThemeId] = useState<string | null>(initialThemeId);
@@ -170,11 +197,38 @@ export function QuickInputEditor({
     };
   }, [settings, themes, currentBlockId]);
 
-  const { template, theme, templateId, templateSourceType } = useMemo(() => getEffectiveTemplate(settings, currentBlockId, selectedThemeId || undefined), [
+  const { template: rawTemplate, theme, templateId, templateSourceType } = useMemo(() => getEffectiveTemplate(settings, currentBlockId, selectedThemeId || undefined), [
     settings,
     currentBlockId,
     selectedThemeId,
   ]);
+
+  const generatedGoalOptions = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const item of dataStore.queryItems()) {
+      const rawGoals = readField(item, 'goalPaths');
+      const values = Array.isArray(rawGoals) ? rawGoals : String(rawGoals ?? '').split(/[,，\n]/);
+      values
+        .map(value => String(value).trim())
+        .filter(Boolean)
+        .forEach(value => counts.set(value, (counts.get(value) || 0) + 1));
+    }
+    return Array.from(counts.entries())
+      .sort((left, right) => right[1] - left[1] || left[0].localeCompare(right[0], 'zh-CN'))
+      .slice(0, 30)
+      .map(([value]) => ({ value, label: value }));
+  }, [dataStore]);
+
+  const template = useMemo(() => {
+    if (!rawTemplate?.fields?.length || generatedGoalOptions.length === 0) return rawTemplate;
+    return {
+      ...rawTemplate,
+      fields: rawTemplate.fields.map((field: any) => {
+        if (getTemplateFieldSemantic(field) !== 'goals') return field;
+        return { ...field, options: mergeGoalOptions(field.options, generatedGoalOptions) };
+      }),
+    };
+  }, [rawTemplate, generatedGoalOptions]);
 
   const showTimeDirectionControl = useMemo(() => {
     if (!template?.fields) return false;

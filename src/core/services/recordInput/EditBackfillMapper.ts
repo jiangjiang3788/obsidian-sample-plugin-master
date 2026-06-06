@@ -29,7 +29,7 @@ function fieldCodecDefinition(field: TemplateField): FieldCodecDefinition {
   const inputType = getTemplateFieldInputType(field);
   const semantic = getTemplateFieldSemantic(field);
   return {
-    type: semantic === 'tags'
+    type: semantic === 'tags' || semantic === 'goals'
       ? 'tags'
       : semantic === 'themePath' || semantic === 'categoryPath' || inputType === 'path' || inputType === 'multiPath'
         ? 'path'
@@ -41,7 +41,7 @@ function fieldCodecDefinition(field: TemplateField): FieldCodecDefinition {
     inputType,
     semantic,
     cardinality: field.cardinality || (['multiSelect', 'multiPath', 'multiTag', 'multiImage'].includes(inputType) ? 'multi' : 'single'),
-    hierarchical: field.hierarchical || semantic === 'themePath' || semantic === 'categoryPath' || semantic === 'tags',
+    hierarchical: field.hierarchical || semantic === 'themePath' || semantic === 'categoryPath' || semantic === 'tags' || semantic === 'goals',
   };
 }
 
@@ -106,6 +106,8 @@ function readSemanticFieldValue(field: TemplateField, item: Item, snapshot: Pars
       return snapshot.semantic.period || readPeriodFromLegacyCategory(field, item, snapshot);
     case 'tags':
       return parseTagList(snapshot.semantic.tags);
+    case 'goals':
+      return parseTagList(snapshot.semantic.goalPaths);
     case 'startTime':
       return snapshot.semantic.startTime;
     case 'endTime':

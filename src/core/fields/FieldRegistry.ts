@@ -44,6 +44,7 @@ export const FIELD_REGISTRY: Record<string, FieldDefinition> = {
   // --- 内置核心业务字段 ---
   categoryKey: text({ key: 'categoryKey', label: '分类路径', type: 'path', inputType: 'path', category: 'core', source: 'item', semantic: 'categoryPath', hierarchical: true, aliases: ['categoryPath', '分类', '类别', '分类路径'], description: '完整分类路径，例如 闪念/感受' }),
   tags: { key: 'tags', label: '标签', type: 'tags', inputType: 'multiTag', category: 'core', source: 'item', semantic: 'tags', cardinality: 'multi', hierarchical: true, aliases: ['标签', 'tag', 'tags'], description: '多值层级标签，例如 项目/插件、地点/家', formatter: (v) => Array.isArray(v) ? v.join(', ') : String(v ?? '') },
+  goalPaths: { key: 'goalPaths', label: '目标', type: 'tags', inputType: 'multiTag', category: 'core', source: 'item', semantic: 'goals', cardinality: 'multi', hierarchical: true, description: '目标路径字段，例如 产品化/QuickInput、个人成长/写作', formatter: (v) => Array.isArray(v) ? v.join(', ') : String(v ?? '') },
   date: { key: 'date', label: '日期', type: 'date', inputType: 'date', category: 'core', source: 'item', semantic: 'date', aliases: ['日期', 'date'], description: '记录的主要日期' },
   priority: text({ key: 'priority', label: '优先级', category: 'core', source: 'item', semantic: 'priority' }),
   icon: { key: 'icon', label: '图标', type: 'icon', inputType: 'text', category: 'core', source: 'item', semantic: 'icon' },

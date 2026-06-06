@@ -245,7 +245,7 @@ export function scanFieldMigrations(
     const label = field.label || field.key;
     const target = getLegacyAliasTargetField(key) || getLegacyAliasTargetField(label) || getCanonicalFieldKey(key) || getCanonicalFieldKey(label);
     const ownKey = String(key || '').trim();
-    const looksLikeCore = !!target && target !== ownKey && ['themePath', 'image', 'categoryKey', 'tags'].includes(target);
+    const looksLikeCore = !!target && target !== ownKey && ['themePath', 'image', 'categoryKey', 'tags', 'goalPaths'].includes(target);
 
     if (looksLikeCore) {
       affectedTemplateFields.add(templateId);

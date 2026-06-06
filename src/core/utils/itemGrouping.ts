@@ -7,13 +7,24 @@ import { getBasePath } from './pathSemantic';
 /**
  * 按单个字段对 items 进行分组
  */
+function normalizeGroupKeys(value: unknown, defaultLabel: string): string[] {
+    if (Array.isArray(value)) {
+        const keys = value.map(v => String(v ?? '').trim()).filter(Boolean);
+        return keys.length ? Array.from(new Set(keys)) : [defaultLabel];
+    }
+    const text = String(value ?? '').trim();
+    return text ? [text] : [defaultLabel];
+}
+
 export function groupItemsByField(items: Item[], groupField: string, defaultLabel: string = '(未分类)'): Record<string, Item[]> {
     const grouped: Record<string, Item[]> = {};
     
     for (const item of items) {
-        const key = String(readField(item, groupField) ?? defaultLabel);
-        if (!grouped[key]) grouped[key] = [];
-        grouped[key].push(item);
+        const keys = normalizeGroupKeys(readField(item, groupField), defaultLabel);
+        for (const key of keys) {
+            if (!grouped[key]) grouped[key] = [];
+            grouped[key].push(item);
+        }
     }
     
     return grouped;
@@ -96,13 +107,17 @@ export function buildTableMatrix(items: Item[], rowField: string, colField: stri
     const matrix: Record<string, Record<string, Item[]>> = {};
 
     items.forEach(item => {
-        const r = String(readField(item, rowField) ?? EMPTY_LABEL);
-        const c = String(readField(item, colField) ?? EMPTY_LABEL);
-        rowVals.add(r);
-        colVals.add(c);
-        if (!matrix[r]) matrix[r] = {};
-        if (!matrix[r][c]) matrix[r][c] = [];
-        matrix[r][c].push(item);
+        const rows = normalizeGroupKeys(readField(item, rowField), EMPTY_LABEL);
+        const cols = normalizeGroupKeys(readField(item, colField), EMPTY_LABEL);
+        rows.forEach(r => {
+            cols.forEach(c => {
+                rowVals.add(r);
+                colVals.add(c);
+                if (!matrix[r]) matrix[r] = {};
+                if (!matrix[r][c]) matrix[r][c] = [];
+                matrix[r][c].push(item);
+            });
+        });
     });
 
     const sortedRows = Array.from(rowVals).sort((a, b) => a.localeCompare(b, 'zh-CN'));

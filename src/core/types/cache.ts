@@ -15,6 +15,8 @@ export interface CachedItem {
   titleLower?: string;
   contentLower?: string;
   tagsLower?: string[];
+  goalPaths?: string[];
+  goalPathsLower?: string[];
   themePathNormalized?: string;
   rootTheme?: string;
   leafTheme?: string;
@@ -50,8 +52,8 @@ export interface CacheV1 {
   };
 }
 
-// v5: 取消字段来源缓存，字段类型/语义收敛。旧 cache 可能保留历史 theme 派生缓存，必须强制重扫。
-export const CURRENT_CACHE_SCHEMA_VERSION = 5;
+// v6: 新增目标核心字段 goalPaths，旧缓存不含目标，需要强制重扫。
+export const CURRENT_CACHE_SCHEMA_VERSION = 6;
 
 // 将运行时 Item 映射为 CachedItem（仅保存热字段）
 export function toCachedItem(it: Item): CachedItem {
@@ -62,6 +64,8 @@ export function toCachedItem(it: Item): CachedItem {
     titleLower: it.title?.toLowerCase(),
     contentLower: it.content?.toLowerCase(),
     tagsLower: (it.tags || []).map(t => t.toLowerCase()),
+    goalPaths: (it.goalPaths || []),
+    goalPathsLower: (it.goalPaths || []).map(t => t.toLowerCase()),
     themePathNormalized: it.themePath,
     rootTheme: it.rootTheme,
     leafTheme: it.leafTheme,
@@ -81,6 +85,7 @@ export function fromCachedItem(c: CachedItem): Item {
     content: '',
     type: 'task', // 具体类型需在解析时写入，这里保守给默认值；下游通常不会依赖该字段筛选
     tags: c.tagsLower || [],
+    goalPaths: c.goalPaths || [],
     theme: c.themePathNormalized,
     themePath: c.themePathNormalized,
     rootTheme: c.rootTheme,
@@ -99,6 +104,7 @@ export function fromCachedItem(c: CachedItem): Item {
   it.titleLower = c.titleLower ?? '';
   it.contentLower = c.contentLower ?? '';
   it.tagsLower = c.tagsLower ?? [];
+  it.goalPathsLower = c.goalPathsLower ?? (c.goalPaths || []).map(t => t.toLowerCase());
   it.themePathNormalized = c.themePathNormalized;
   it.themePath = c.themePathNormalized;
   it.rootTheme = c.rootTheme;
