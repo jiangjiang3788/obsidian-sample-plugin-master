@@ -1,5 +1,6 @@
 import type { InputSettings, Item } from '@/core/types/schema';
 import { TemplateResolver } from '@/core/services/TemplateResolver';
+import { DEFAULT_CORE_BLOCKS, buildLegacyCoreBlockMap } from '@/core/blocks';
 import type { RecordSubmitIssue, ResolveDependenciesResult } from '@/core/types/recordInput';
 
 export interface DependencyResolverInput {
@@ -24,7 +25,17 @@ export function resolveRecordDependencies(input: DependencyResolverInput): Resol
   const errors: RecordSubmitIssue[] = [];
 
   const requestedBlockId = input.blockId ?? null;
-  const inferredThemeId = input.themeId ?? findThemeIdByPath(settings, item?.theme);
+  const legacyBlockMap = buildLegacyCoreBlockMap(settings.blocks || []);
+  const effectiveBlockId = requestedBlockId ? (String(requestedBlockId).startsWith('core.') ? requestedBlockId : legacyBlockMap[requestedBlockId] || requestedBlockId) : null;
+  const effectiveSettings: InputSettings = {
+    ...settings,
+    blocks: [
+      ...(settings.blocks || []),
+      ...DEFAULT_CORE_BLOCKS.filter((coreBlock) => !(settings.blocks || []).some((block) => block.id === coreBlock.id)),
+    ],
+    overrides: (settings.overrides || []).map((override) => ({ ...override, blockId: legacyBlockMap[override.blockId] || override.blockId })),
+  };
+  const inferredThemeId = input.themeId ?? findThemeIdByPath(effectiveSettings, item?.theme);
   let resolvedThemeId = inferredThemeId ?? null;
 
   if (!requestedBlockId) {
@@ -45,11 +56,11 @@ export function resolveRecordDependencies(input: DependencyResolverInput): Resol
     };
   }
 
-  const block = settings.blocks.find((candidate) => candidate.id === requestedBlockId) ?? null;
+  const block = effectiveBlockId ? effectiveSettings.blocks.find((candidate) => candidate.id === effectiveBlockId) ?? null : null;
   if (!block) {
     errors.push(issue('record_block_not_found', 'Selected block no longer exists.', 'blockId'));
     return {
-      blockId: requestedBlockId,
+      blockId: effectiveBlockId || requestedBlockId,
       themeId: resolvedThemeId,
       template: null,
       theme: null,
@@ -66,7 +77,7 @@ export function resolveRecordDependencies(input: DependencyResolverInput): Resol
 
   let usedFallbackTheme = false;
   if (resolvedThemeId) {
-    const themeExists = settings.themes.some((theme) => theme.id === resolvedThemeId);
+    const themeExists = effectiveSettings.themes.some((theme) => theme.id === resolvedThemeId);
     if (!themeExists) {
       warnings.push(issue('record_theme_not_found', 'Selected theme no longer exists. Falling back to base block template.', 'themeId'));
       resolvedThemeId = null;
@@ -75,16 +86,16 @@ export function resolveRecordDependencies(input: DependencyResolverInput): Resol
   }
 
   const override = resolvedThemeId
-    ? settings.overrides.find((candidate) => candidate.blockId === requestedBlockId && candidate.themeId === resolvedThemeId)
+    ? effectiveSettings.overrides.find((candidate) => candidate.blockId === effectiveBlockId && candidate.themeId === resolvedThemeId)
     : null;
   if (override?.disabled) {
     warnings.push(issue('record_override_disabled', 'Theme override is disabled. Using the base block template instead.', 'themeId'));
   }
 
-  const resolved = TemplateResolver.resolve(settings, requestedBlockId, resolvedThemeId ?? undefined);
+  const resolved = TemplateResolver.resolve(effectiveSettings, effectiveBlockId || requestedBlockId, resolvedThemeId ?? undefined);
 
   return {
-    blockId: requestedBlockId,
+    blockId: effectiveBlockId || requestedBlockId,
     themeId: resolved.theme ? resolved.theme.id : null,
     template: resolved.template,
     theme: resolved.theme,
@@ -92,7 +103,7 @@ export function resolveRecordDependencies(input: DependencyResolverInput): Resol
     errors,
     meta: {
       templateId: resolved.templateId,
-      templateSourceType: resolved.templateSourceType,
+      templateSourceType: resolved.templateSourceType === 'block' && String(effectiveBlockId || '').startsWith('core.') ? 'core-block' : resolved.templateSourceType,
       usedFallbackBlock: false,
       usedFallbackTheme,
     },

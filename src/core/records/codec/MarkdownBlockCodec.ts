@@ -15,6 +15,9 @@ export interface ParsedBlockMetadata {
   date?: string;
   tags: string[];
   goalPaths: string[];
+  goalId?: string;
+  cycleId?: string;
+  coreBlock?: string;
   extra: Record<string, string | number | boolean>;
   icon?: string;
   period?: string;
@@ -23,7 +26,7 @@ export interface ParsedBlockMetadata {
   pintu?: string;
   theme?: string;
   templateId?: string;
-  templateSourceType?: 'block' | 'override';
+  templateSourceType?: 'block' | 'override' | 'core-block' | 'theme-fallback' | 'goal-binding' | 'legacy-block';
 }
 
 function decodeMarkdownString(value: unknown, preset: FieldCodecDefinition = FIELD_CODEC_PRESETS.text): string | undefined {
@@ -74,7 +77,10 @@ export function decodeBlockContentLines(contentLines: string[], parentFolder: st
   let pintu: string | undefined;
   let theme: string | undefined;
   let templateId: string | undefined;
-  let templateSourceType: 'block' | 'override' | undefined;
+  let goalId: string | undefined;
+  let cycleId: string | undefined;
+  let coreBlock: string | undefined;
+  let templateSourceType: 'block' | 'override' | 'core-block' | 'theme-fallback' | 'goal-binding' | 'legacy-block' | undefined;
 
   for (const rawLine of contentLines) {
     const line = rawLine.trim();
@@ -92,11 +98,17 @@ export function decodeBlockContentLines(contentLines: string[], parentFolder: st
           templateId = value.trim();
         } else if (['模板来源', 'templatesource', 'templatesourcetype'].includes(key)) {
           const source = value.trim();
-          if (source === 'block' || source === 'override') templateSourceType = source;
+          if (['block', 'override', 'core-block', 'theme-fallback', 'goal-binding', 'legacy-block'].includes(source)) templateSourceType = source as any;
         } else if (['主题', 'theme', '主题路径', 'themepath'].includes(key)) {
           theme = decodeMarkdownString(value, FIELD_CODEC_PRESETS.themePath);
         } else if (['标签', 'tag', 'tags'].includes(key)) {
           tags.push(...(decodeMarkdownFieldValue(value, FIELD_CODEC_PRESETS.tags) as string[]));
+        } else if (['目标id', 'goalid'].includes(key)) {
+          goalId = value.trim();
+        } else if (['周期id', 'cycleid'].includes(key)) {
+          cycleId = value.trim();
+        } else if (['核心block', 'coreblock'].includes(key)) {
+          coreBlock = value.trim();
         } else if (key === '目标') {
           goalPaths.push(...(decodeMarkdownFieldValue(value, FIELD_CODEC_PRESETS.goalPaths) as string[]));
         } else if (['日期', 'date'].includes(key)) {
@@ -134,6 +146,9 @@ export function decodeBlockContentLines(contentLines: string[], parentFolder: st
     date,
     tags: finalTags,
     goalPaths: finalGoalPaths,
+    goalId,
+    cycleId,
+    coreBlock,
     extra,
     icon,
     period,

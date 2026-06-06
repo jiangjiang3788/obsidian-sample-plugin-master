@@ -38,6 +38,8 @@ export interface GoalDefinition {
   id: GoalId;
   title: string;
   description?: string;
+  /** 稳定的目标层级路径，例如：产品化/插件/目标中心。 */
+  goalPath?: string;
   status: GoalStatus;
   /** 可选父目标，用于后续支持目标树；MVP 阶段允许为空。 */
   parentGoalId?: GoalId | null;
@@ -60,7 +62,7 @@ export interface CycleDefinition {
   updatedAt: string;
 }
 
-export type GoalRecordRelationType = 'evidence' | 'progress' | 'review' | 'feedback' | 'blocker';
+export type GoalRecordRelationType = 'evidence' | 'progress' | 'review' | 'feedback' | 'blocker' | 'milestone' | 'task' | 'plan' | 'habit' | 'thought';
 
 export interface GoalRecordRelation {
   id: string;
@@ -108,3 +110,33 @@ export interface GoalRelationHint {
   content?: string | null;
   sourceBlockId?: string | null;
 }
+
+export interface GoalBlockBinding {
+  id: string;
+  goalId: GoalId;
+  coreBlockId: string;
+  enabled: boolean;
+  /** 目标专属字段覆盖。为空时继承核心 block / 主题模板。 */
+  fields?: import('@/core/types/schema').TemplateField[];
+  outputTemplate?: string;
+  targetFile?: string;
+  appendUnderHeader?: string;
+  defaultValues?: Record<string, unknown>;
+  requiredFields?: string[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface GoalSettings {
+  goals: GoalDefinition[];
+  cycles: CycleDefinition[];
+  goalBlockBindings: GoalBlockBinding[];
+  goalRecordRelations: GoalRecordRelation[];
+}
+
+export const DEFAULT_GOAL_SETTINGS: GoalSettings = {
+  goals: [],
+  cycles: [],
+  goalBlockBindings: [],
+  goalRecordRelations: [],
+};

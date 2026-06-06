@@ -44,7 +44,14 @@ export const FIELD_REGISTRY: Record<string, FieldDefinition> = {
   // --- 内置核心业务字段 ---
   categoryKey: text({ key: 'categoryKey', label: '分类路径', type: 'path', inputType: 'path', category: 'core', source: 'item', semantic: 'categoryPath', hierarchical: true, aliases: ['categoryPath', '分类', '类别', '分类路径'], description: '完整分类路径，例如 闪念/感受' }),
   tags: { key: 'tags', label: '标签', type: 'tags', inputType: 'multiTag', category: 'core', source: 'item', semantic: 'tags', cardinality: 'multi', hierarchical: true, aliases: ['标签', 'tag', 'tags'], description: '多值层级标签，例如 项目/插件、地点/家', formatter: (v) => Array.isArray(v) ? v.join(', ') : String(v ?? '') },
+  goalId: text({ key: 'goalId', label: '目标ID', category: 'core', source: 'item', semantic: 'goalId', inputType: 'text', aliases: ['目标ID', 'goalId'] }),
+  goalIds: { key: 'goalIds', label: '目标ID列表', type: 'tags', inputType: 'multiTag', category: 'core', source: 'item', semantic: 'goalId', cardinality: 'multi', hierarchical: false, hiddenByDefault: true },
+  goalPath: text({ key: 'goalPath', label: '目标路径', type: 'path', inputType: 'hierarchicalSingleSelect', category: 'core', source: 'item', semantic: 'goalPath', hierarchical: true, aliases: ['目标路径', 'goalPath'] }),
   goalPaths: { key: 'goalPaths', label: '目标', type: 'tags', inputType: 'multiTag', category: 'core', source: 'item', semantic: 'goals', cardinality: 'multi', hierarchical: true, description: '目标路径字段，例如 产品化/QuickInput、个人成长/写作', formatter: (v) => Array.isArray(v) ? v.join(', ') : String(v ?? '') },
+  rootGoal: text({ key: 'rootGoal', label: '根目标', type: 'path', category: 'core', source: 'derived', semantic: 'goalPath', hierarchical: true, aliases: ['根目标'] }),
+  leafGoal: text({ key: 'leafGoal', label: '叶目标', type: 'path', category: 'core', source: 'derived', semantic: 'goalPath', hierarchical: true, aliases: ['叶目标'] }),
+  cycleId: text({ key: 'cycleId', label: '周期ID', category: 'core', source: 'item', semantic: 'cycleId', inputType: 'text', aliases: ['周期ID', 'cycleId'] }),
+  coreBlock: text({ key: 'coreBlock', label: '核心Block', category: 'core', source: 'item', semantic: 'coreBlock', inputType: 'text', aliases: ['核心Block', 'coreBlock'] }),
   date: { key: 'date', label: '日期', type: 'date', inputType: 'date', category: 'core', source: 'item', semantic: 'date', aliases: ['日期', 'date'], description: '记录的主要日期' },
   priority: text({ key: 'priority', label: '优先级', category: 'core', source: 'item', semantic: 'priority' }),
   icon: { key: 'icon', label: '图标', type: 'icon', inputType: 'text', category: 'core', source: 'item', semantic: 'icon' },
@@ -57,7 +64,7 @@ export const FIELD_REGISTRY: Record<string, FieldDefinition> = {
   image: { key: 'image', label: '图片', type: 'image', inputType: 'image', category: 'core', source: 'item', semantic: 'image', aliases: ['图片', 'image', '评图', 'pintu'], description: '通用图片字段；当前兼容读取旧 pintu/评图 数据' },
 
   // --- 主题语义：只从显式 theme 派生，header 永不参与 ---
-  themePath: text({ key: 'themePath', label: '主题路径', type: 'path', inputType: 'path', category: 'core', source: 'derived', semantic: 'themePath', hierarchical: true, aliases: ['主题', '主题路径', '完整主题', 'themePath'], description: '完整主题路径；筛选/分组默认使用此字段' }),
+  themePath: text({ key: 'themePath', label: '主题', type: 'path', inputType: 'hierarchicalSingleSelect', category: 'core', source: 'item', semantic: 'themePath', hierarchical: true, aliases: ['主题', '主题路径', '完整主题', 'themePath'], description: '主题已降级为用户可配置层级单选字段；筛选/分组仍默认使用此字段' }),
   rootTheme: text({ key: 'rootTheme', label: '根主题', type: 'path', category: 'core', source: 'derived', semantic: 'themePath', hierarchical: true, aliases: ['根主题', 'themeRoot'] }),
   leafTheme: text({ key: 'leafTheme', label: '叶主题', type: 'path', category: 'core', source: 'derived', semantic: 'themePath', hierarchical: true, aliases: ['叶主题', 'themeLeaf'] }),
 

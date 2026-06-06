@@ -102,7 +102,7 @@ export class InputService {
     template: BlockTemplate,
     formData: Record<string, any>,
     theme?: ThemeDefinition,
-    templateMeta?: { templateId?: string | null; templateSourceType?: 'block' | 'override' | null },
+    templateMeta?: { templateId?: string | null; templateSourceType?: 'block' | 'override' | 'core-block' | 'theme-fallback' | 'goal-binding' | 'legacy-block' | null },
   ): { renderData: Record<string, any>; outputContent: string; targetFilePath: string; header: string | null } {
     if (!template) throw new Error('传入了无效的模板对象。');
 
@@ -123,7 +123,7 @@ export class InputService {
     template: BlockTemplate,
     formData: Record<string, any>,
     theme?: ThemeDefinition,
-    templateMeta?: { templateId?: string | null; templateSourceType?: 'block' | 'override' | null },
+    templateMeta?: { templateId?: string | null; templateSourceType?: 'block' | 'override' | 'core-block' | 'theme-fallback' | 'goal-binding' | 'legacy-block' | null },
     options: RecordWriteOptions = {},
   ): Promise<string> {
     const signal = options.signal;
@@ -156,7 +156,7 @@ export class InputService {
     template: BlockTemplate,
     formData: Record<string, any>,
     theme?: ThemeDefinition,
-    templateMeta?: { templateId?: string | null; templateSourceType?: 'block' | 'override' | null },
+    templateMeta?: { templateId?: string | null; templateSourceType?: 'block' | 'override' | 'core-block' | 'theme-fallback' | 'goal-binding' | 'legacy-block' | null },
     options: RecordWriteOptions = {},
   ): Promise<string> {
     return this.executeTemplate(template, formData, theme, templateMeta, options);
@@ -167,7 +167,7 @@ export class InputService {
     template: BlockTemplate,
     formData: Record<string, any>,
     theme?: ThemeDefinition,
-    templateMeta?: { templateId?: string | null; templateSourceType?: 'block' | 'override' | null },
+    templateMeta?: { templateId?: string | null; templateSourceType?: 'block' | 'override' | 'core-block' | 'theme-fallback' | 'goal-binding' | 'legacy-block' | null },
     options: RecordWriteOptions = {},
   ): Promise<string> {
     const signal = options.signal;
@@ -249,7 +249,7 @@ export class InputService {
     template: BlockTemplate,
     formData: Record<string, any>,
     theme?: ThemeDefinition,
-    templateMeta?: { templateId?: string | null; templateSourceType?: 'block' | 'override' | null },
+    templateMeta?: { templateId?: string | null; templateSourceType?: 'block' | 'override' | 'core-block' | 'theme-fallback' | 'goal-binding' | 'legacy-block' | null },
   ) {
     const normalizedData = normalizeTemplateRenderData(template, formData);
     const normalizedTheme = normalizedData.theme && typeof normalizedData.theme === 'object' ? normalizedData.theme as Record<string, unknown> : null;
@@ -259,6 +259,11 @@ export class InputService {
 
     const categoryPath = String(normalizedData.categoryKey ?? normalizedData.categoryPath ?? template.categoryKey ?? '').trim();
     const categoryParts = categoryPath.split('/').map((part) => part.trim()).filter(Boolean);
+    const explicitGoalPath = Array.isArray(normalizedData.goalPaths) ? String(normalizedData.goalPaths[0] ?? '').trim() : String(normalizedData.goalPath ?? normalizedData['目标'] ?? '').trim();
+    const goalPath = explicitGoalPath;
+    const goalParts = goalPath.split('/').map((part) => part.trim()).filter(Boolean);
+    const goalId = String(normalizedData.goalId ?? normalizedData['目标ID'] ?? '').trim();
+    const coreBlock = String(normalizedData.coreBlock ?? normalizedData['核心Block'] ?? (template as any).coreBlockId ?? template.id ?? '').trim();
 
     return {
       ...normalizedData,
@@ -278,6 +283,20 @@ export class InputService {
       themePath,
       rootTheme: themeParts[0] || '',
       leafTheme: themeParts.length ? themeParts[themeParts.length - 1] : '',
+      goal: {
+        id: goalId,
+        title: goalParts.length ? goalParts[goalParts.length - 1] : goalPath,
+        path: goalPath,
+        root: goalParts[0] || '',
+        leaf: goalParts.length ? goalParts[goalParts.length - 1] : '',
+        themePath,
+      },
+      goalId,
+      goalPath,
+      goalPaths: goalPath ? [goalPath] : (normalizedData.goalPaths || []),
+      rootGoal: goalParts[0] || '',
+      leafGoal: goalParts.length ? goalParts[goalParts.length - 1] : '',
+      coreBlock,
       templateId: templateMeta?.templateId || template.id,
       templateSourceType: templateMeta?.templateSourceType || 'block',
     };

@@ -13,7 +13,7 @@ function buildRenderData(
   template: BlockTemplate,
   formData: Record<string, unknown>,
   theme?: ThemeDefinition | null,
-  templateMeta?: { templateId?: string | null; templateSourceType?: 'block' | 'override' | null },
+  templateMeta?: { templateId?: string | null; templateSourceType?: 'block' | 'override' | 'core-block' | 'theme-fallback' | 'goal-binding' | 'legacy-block' | null },
 ): Record<string, unknown> {
   const normalizedData = normalizeTemplateRenderData(template, formData);
   const normalizedTheme = normalizedData.theme && typeof normalizedData.theme === 'object' ? normalizedData.theme as Record<string, unknown> : null;
@@ -21,6 +21,11 @@ function buildRenderData(
   const themeParts = splitThemePath(explicitThemePath || theme?.path || null);
   const categoryPath = String(normalizedData.categoryKey ?? normalizedData.categoryPath ?? template.categoryKey ?? '').trim();
   const categoryParts = categoryPath.split('/').map((part) => part.trim()).filter(Boolean);
+  const explicitGoalPath = Array.isArray(normalizedData.goalPaths) ? String(normalizedData.goalPaths[0] ?? '').trim() : String(normalizedData.goalPath ?? normalizedData['目标'] ?? '').trim();
+  const goalPath = explicitGoalPath;
+  const goalParts = goalPath.split('/').map((part) => part.trim()).filter(Boolean);
+  const goalId = String(normalizedData.goalId ?? normalizedData['目标ID'] ?? '').trim();
+  const coreBlock = String(normalizedData.coreBlock ?? normalizedData['核心Block'] ?? (template as any).coreBlockId ?? template.id ?? '').trim();
 
   return {
     ...normalizedData,
@@ -40,6 +45,20 @@ function buildRenderData(
     themePath: themeParts.themePath,
     rootTheme: themeParts.rootTheme,
     leafTheme: themeParts.leafTheme,
+    goal: {
+      id: goalId,
+      title: goalParts.length ? goalParts[goalParts.length - 1] : goalPath,
+      path: goalPath,
+      root: goalParts[0] || '',
+      leaf: goalParts.length ? goalParts[goalParts.length - 1] : '',
+      themePath: themeParts.themePath,
+    },
+    goalId,
+    goalPath,
+    goalPaths: goalPath ? [goalPath] : (normalizedData.goalPaths || []),
+    rootGoal: goalParts[0] || '',
+    leafGoal: goalParts.length ? goalParts[goalParts.length - 1] : '',
+    coreBlock,
     templateId: templateMeta?.templateId || template.id,
     templateSourceType: templateMeta?.templateSourceType || 'block',
   };
@@ -57,7 +76,7 @@ export function buildRecordOutputPlan(input: {
   template: BlockTemplate | null;
   formData: Record<string, unknown>;
   theme?: ThemeDefinition | null;
-  templateMeta?: { templateId?: string | null; templateSourceType?: 'block' | 'override' | null };
+  templateMeta?: { templateId?: string | null; templateSourceType?: 'block' | 'override' | 'core-block' | 'theme-fallback' | 'goal-binding' | 'legacy-block' | null };
 }): RecordOutputPlan {
   if (!input.template) {
     return {

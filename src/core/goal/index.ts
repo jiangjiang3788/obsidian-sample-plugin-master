@@ -18,4 +18,9 @@ export type {
   PlanTaskRelation,
   GoalReviewSnapshot,
   GoalRelationHint,
+  GoalBlockBinding,
+  GoalSettings,
 } from './types';
+export { DEFAULT_GOAL_SETTINGS } from './types';
+export { normalizeGoalPath, splitGoalPath } from './path';
+export type { GoalPathParts } from './path';

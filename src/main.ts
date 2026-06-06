@@ -9,7 +9,7 @@ import { container } from 'tsyringe';
 import { Plugin, Notice } from 'obsidian';
 import { DataStore } from '@core/public';
 import { InputService } from '@core/public';
-import { ThinkSettings, DEFAULT_SETTINGS } from '@core/public';
+import { ThinkSettings, DEFAULT_SETTINGS, DEFAULT_GOAL_SETTINGS, normalizeCoreBlockSettings } from '@core/public';
 import type { UseCases } from '@/app/public';
 import { setupCoreContainer, setDefaultAiHttpTransportFactory, resetDefaultAiHttpTransportFactory } from '@core/public';
 import { VAULT_PORT_TOKEN, UI_PORT_TOKEN, METADATA_PORT_TOKEN, FILESTAT_PORT_TOKEN, MODAL_PORT_TOKEN, EVENTS_PORT_TOKEN, MESSAGE_RENDER_PORT_TOKEN } from '@core/public';
@@ -192,6 +192,8 @@ export default class ThinkPlugin extends Plugin {
             ...block,
             categoryKey: block?.categoryKey || block?.name || '',
         }));
+        merged.goalSettings = { ...DEFAULT_GOAL_SETTINGS, ...(merged.goalSettings || {}) };
+        merged.coreBlockSettings = normalizeCoreBlockSettings(merged.coreBlockSettings, merged.inputSettings.blocks);
         merged.groups = merged.groups || [];
         return merged as ThinkSettings;
     }

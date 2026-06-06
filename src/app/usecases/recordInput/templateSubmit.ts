@@ -17,7 +17,7 @@ import { getBeforeMaxLine } from './paths';
 
 export interface TemplateExecutionMeta {
   templateId: string;
-  templateSourceType: 'block' | 'override';
+  templateSourceType: 'block' | 'override' | 'core-block' | 'theme-fallback' | 'goal-binding' | 'legacy-block';
 }
 
 export type ResolvedTemplateDependencies = ResolveDependenciesResult & {

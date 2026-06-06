@@ -103,7 +103,7 @@ export interface PreparedEditRecord {
   inferred: {
     usedFallbackBlock: boolean;
     usedFallbackTheme: boolean;
-    templateSourceType?: 'block' | 'override' | null;
+    templateSourceType?: 'block' | 'override' | 'core-block' | 'theme-fallback' | 'goal-binding' | 'legacy-block' | null;
     resolvedBy?: 'exact' | 'inferred' | 'fallback';
   };
   warnings: RecordSubmitIssue[];
@@ -181,7 +181,7 @@ export interface ResolveDependenciesResult {
   errors: RecordSubmitIssue[];
   meta: {
     templateId?: string | null;
-    templateSourceType?: 'block' | 'override' | null;
+    templateSourceType?: 'block' | 'override' | 'core-block' | 'theme-fallback' | 'goal-binding' | 'legacy-block' | null;
     usedFallbackBlock: boolean;
     usedFallbackTheme: boolean;
   };

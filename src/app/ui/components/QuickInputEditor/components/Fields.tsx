@@ -18,11 +18,13 @@ import { Box, Button, Stack, Typography } from '@shared/public';
 import { QuickInputOptionPillGroup } from './QuickInputOptionPillGroup';
 import { SelectablePill } from './SelectablePill';
 import { normalizeQuickInputChoices } from './quickInputOptionSelection';
+import { HierarchySingleSelect, type HierarchySingleSelectOption } from './HierarchySingleSelect';
 
 export interface QuickInputEditorFieldsProps {
   getResourcePath: (path: string) => string;
   template: any;
   formData: Record<string, any>;
+  fieldValueOptionsByKey?: Record<string, Array<{ value: string; label?: string; icon?: string }>>;
   dense?: boolean;
   onUpdateField: (key: string, value: any, isOptionObject?: boolean) => void;
   timeDirection?: 'forward' | 'backward';
@@ -45,7 +47,7 @@ function isImagePath(value: unknown): boolean {
   return !!normalizeImageValue(value);
 }
 
-export function QuickInputEditorFields({ getResourcePath, template, formData, dense = false, onUpdateField, timeDirection = 'forward', onTimeDirectionChange, onRequestSubmit, isMobileLike = false, showTimeDirectionControl = false }: QuickInputEditorFieldsProps) {
+export function QuickInputEditorFields({ getResourcePath, template, formData, fieldValueOptionsByKey, dense = false, onUpdateField, timeDirection = 'forward', onTimeDirectionChange, onRequestSubmit, isMobileLike = false, showTimeDirectionControl = false }: QuickInputEditorFieldsProps) {
   const [tagDrafts, setTagDrafts] = useState<Record<string, string>>({});
 
   const handleUpdate = (key: string, value: any, isOptionObject = false) => {
@@ -126,6 +128,52 @@ export function QuickInputEditorFields({ getResourcePath, template, formData, de
         onSelect={(choice) => handleUpdate(field.key, choice, true)}
       />
     );
+  };
+
+
+  const getFieldChoices = (field: TemplateField) => {
+    const direct = normalizeQuickInputChoices(field.options);
+    const injected = fieldValueOptionsByKey?.[field.key] || fieldValueOptionsByKey?.[field.label || ''] || [];
+    if (!injected.length) return direct;
+    const seen = new Set<string>();
+    const merged = [...direct, ...injected.map((option) => ({ value: option.value, label: option.label || option.value, icon: option.icon }))]
+      .filter((option) => {
+        if (!option.value || seen.has(option.value)) return false;
+        seen.add(option.value);
+        return true;
+      });
+    return merged;
+  };
+
+  const renderHierarchySingleSelect = (field: TemplateField, label: string, value: unknown) => {
+    const choices = getFieldChoices(field);
+    const selectedValue = typeof value === 'object' && value !== null ? String((value as any).value ?? (value as any).label ?? '') : String(value ?? '');
+    const options: HierarchySingleSelectOption[] = choices.map((choice) => ({
+      id: String(choice.value),
+      value: String(choice.value),
+      label: choice.label || String(choice.value).split('/').pop() || String(choice.value),
+      icon: (choice as any).icon,
+    }));
+    const control = options.length ? (
+      <HierarchySingleSelect
+        options={options}
+        selectedValue={selectedValue}
+        onSelect={(option) => handleUpdate(field.key, option?.value || '')}
+        parentLabel={getTemplateFieldSemantic(field) === 'themePath' ? '父主题' : '父级'}
+        childLabel={getTemplateFieldSemantic(field) === 'themePath' ? '子主题' : '子级'}
+        dense={dense}
+        allowClear
+        searchable
+      />
+    ) : (
+      <input
+        className="think-native-input"
+        value={selectedValue}
+        onInput={(e: any) => handleUpdate(field.key, e.target.value)}
+        placeholder="例如：生活/健康"
+      />
+    );
+    return renderStandardField(label, control);
   };
 
   const renderMultiOptionPills = (field: TemplateField) => {
@@ -380,10 +428,13 @@ export function QuickInputEditorFields({ getResourcePath, template, formData, de
           ? renderInlineRow(label, renderOptionPills(field))
           : renderStandardField(label, renderOptionPills(field));
 
+      case 'hierarchicalSingleSelect':
+        return renderHierarchySingleSelect(field, label, value);
+
       case 'select':
       case 'singleSelect':
       case 'path': {
-        const choices = normalizeQuickInputChoices(field.options);
+        const choices = getFieldChoices(field);
         const singleSelectControl = choices.length ? (
           renderOptionPills(field, label)
         ) : (

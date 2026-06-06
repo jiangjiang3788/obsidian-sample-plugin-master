@@ -1275,7 +1275,14 @@ const FIELD_REGISTRY = {
   // --- 内置核心业务字段 ---
   categoryKey: text({ key: "categoryKey", label: "分类路径", type: "path", inputType: "path", category: "core", source: "item", semantic: "categoryPath", hierarchical: true, aliases: ["categoryPath", "分类", "类别", "分类路径"], description: "完整分类路径，例如 闪念/感受" }),
   tags: { key: "tags", label: "标签", type: "tags", inputType: "multiTag", category: "core", source: "item", semantic: "tags", cardinality: "multi", hierarchical: true, aliases: ["标签", "tag", "tags"], description: "多值层级标签，例如 项目/插件、地点/家", formatter: (v2) => Array.isArray(v2) ? v2.join(", ") : String(v2 ?? "") },
+  goalId: text({ key: "goalId", label: "目标ID", category: "core", source: "item", semantic: "goalId", inputType: "text", aliases: ["目标ID", "goalId"] }),
+  goalIds: { key: "goalIds", label: "目标ID列表", type: "tags", inputType: "multiTag", category: "core", source: "item", semantic: "goalId", cardinality: "multi", hierarchical: false, hiddenByDefault: true },
+  goalPath: text({ key: "goalPath", label: "目标路径", type: "path", inputType: "hierarchicalSingleSelect", category: "core", source: "item", semantic: "goalPath", hierarchical: true, aliases: ["目标路径", "goalPath"] }),
   goalPaths: { key: "goalPaths", label: "目标", type: "tags", inputType: "multiTag", category: "core", source: "item", semantic: "goals", cardinality: "multi", hierarchical: true, description: "目标路径字段，例如 产品化/QuickInput、个人成长/写作", formatter: (v2) => Array.isArray(v2) ? v2.join(", ") : String(v2 ?? "") },
+  rootGoal: text({ key: "rootGoal", label: "根目标", type: "path", category: "core", source: "derived", semantic: "goalPath", hierarchical: true, aliases: ["根目标"] }),
+  leafGoal: text({ key: "leafGoal", label: "叶目标", type: "path", category: "core", source: "derived", semantic: "goalPath", hierarchical: true, aliases: ["叶目标"] }),
+  cycleId: text({ key: "cycleId", label: "周期ID", category: "core", source: "item", semantic: "cycleId", inputType: "text", aliases: ["周期ID", "cycleId"] }),
+  coreBlock: text({ key: "coreBlock", label: "核心Block", category: "core", source: "item", semantic: "coreBlock", inputType: "text", aliases: ["核心Block", "coreBlock"] }),
   date: { key: "date", label: "日期", type: "date", inputType: "date", category: "core", source: "item", semantic: "date", aliases: ["日期", "date"], description: "记录的主要日期" },
   priority: text({ key: "priority", label: "优先级", category: "core", source: "item", semantic: "priority" }),
   icon: { key: "icon", label: "图标", type: "icon", inputType: "text", category: "core", source: "item", semantic: "icon" },
@@ -1287,7 +1294,7 @@ const FIELD_REGISTRY = {
   rating: { key: "rating", label: "评分", type: "number", inputType: "rating", category: "core", source: "item", semantic: "rating", aliases: ["评分", "rating"] },
   image: { key: "image", label: "图片", type: "image", inputType: "image", category: "core", source: "item", semantic: "image", aliases: ["图片", "image", "评图", "pintu"], description: "通用图片字段；当前兼容读取旧 pintu/评图 数据" },
   // --- 主题语义：只从显式 theme 派生，header 永不参与 ---
-  themePath: text({ key: "themePath", label: "主题路径", type: "path", inputType: "path", category: "core", source: "derived", semantic: "themePath", hierarchical: true, aliases: ["主题", "主题路径", "完整主题", "themePath"], description: "完整主题路径；筛选/分组默认使用此字段" }),
+  themePath: text({ key: "themePath", label: "主题", type: "path", inputType: "hierarchicalSingleSelect", category: "core", source: "item", semantic: "themePath", hierarchical: true, aliases: ["主题", "主题路径", "完整主题", "themePath"], description: "主题已降级为用户可配置层级单选字段；筛选/分组仍默认使用此字段" }),
   rootTheme: text({ key: "rootTheme", label: "根主题", type: "path", category: "core", source: "derived", semantic: "themePath", hierarchical: true, aliases: ["根主题", "themeRoot"] }),
   leafTheme: text({ key: "leafTheme", label: "叶主题", type: "path", category: "core", source: "derived", semantic: "themePath", hierarchical: true, aliases: ["叶主题", "themeLeaf"] }),
   // --- 分类派生 ---
@@ -1584,11 +1591,160 @@ const CUSTOM_PROMPT_EXAMPLES = `【示例规则】
 2. 当我说"写文章"、"写作"时，使用"任务"Block，主题选择"电脑/写作"
 3. 当我说"学习了xxx"时，使用"学习记录"Block
 4. 默认情况下，如果不确定，使用"闪念"Block`;
+const DEFAULT_GOAL_SETTINGS = {
+  goals: [],
+  cycles: [],
+  goalBlockBindings: [],
+  goalRecordRelations: []
+};
+function normalizeGoalPath(path) {
+  const parts = String(path || "").split("/").map((part) => part.trim()).filter(Boolean);
+  return parts.length ? parts.join("/") : null;
+}
+function splitGoalPath(path) {
+  const normalized = normalizeGoalPath(path);
+  if (!normalized) return { goalPath: null, rootGoal: null, leafGoal: null };
+  const parts = normalized.split("/").filter(Boolean);
+  return {
+    goalPath: normalized,
+    rootGoal: parts[0] || null,
+    leafGoal: parts.length ? parts[parts.length - 1] : null
+  };
+}
+const CORE_BLOCK_IDS = {
+  TASK: "core.task",
+  PLAN: "core.plan",
+  REVIEW: "core.review",
+  THOUGHT: "core.thought",
+  HABIT: "core.habit",
+  EVIDENCE: "core.evidence",
+  BLOCKER: "core.blocker",
+  MILESTONE: "core.milestone"
+};
+const themeField = {
+  id: "core.field.themePath",
+  key: "themePath",
+  label: "主题",
+  type: "hierarchicalSingleSelect",
+  semantic: "themePath",
+  semanticType: "path",
+  hierarchical: true,
+  defaultValue: "{{goal.themePath}}"
+};
+const dateField = { id: "core.field.date", key: "日期", label: "日期", type: "date", semantic: "date" };
+const iconField = { id: "core.field.icon", key: "icon", label: "图标", type: "text", semantic: "icon" };
+const contentField = { id: "core.field.content", key: "内容", label: "内容", type: "textarea", semantic: "body" };
+const periodField = { id: "core.field.period", key: "周期", label: "周期", type: "text", semantic: "period" };
+function block(overrides) {
+  return { ...overrides, system: true, version: 1 };
+}
+const DEFAULT_CORE_BLOCKS = [
+  block({
+    id: CORE_BLOCK_IDS.TASK,
+    key: "task",
+    name: "任务",
+    description: "目标下的可执行任务。",
+    categoryKey: "任务",
+    fields: [
+      { id: "core.task.content", key: "任务内容", label: "任务内容", type: "textarea", semantic: "body" },
+      themeField,
+      dateField,
+      { id: "core.task.start", key: "时间", label: "时间", type: "time", semantic: "startTime" },
+      { id: "core.task.end", key: "结束", label: "结束", type: "time", semantic: "endTime" },
+      { id: "core.task.duration", key: "时长", label: "时长", type: "number", semantic: "duration" },
+      { id: "core.task.status", key: "状态", label: "状态", type: "radio", semantic: "status", options: [{ value: "- [ ]", label: "待办" }, { value: "- [x]", label: "完成" }] }
+    ],
+    outputTemplate: "{{状态.value}} {{任务内容}} (目标ID::{{goalId}}) (目标::{{goalPath}}) (主题::{{themePath}}) (核心Block::task) (时间::{{时间}}) (结束::{{结束}}) (时长::{{时长}}) (模板ID::{{templateId}}) (模板来源::{{templateSourceType}}) {{日期}}",
+    targetFile: "01/目标.md",
+    appendUnderHeader: "## {{goalPath}}"
+  }),
+  block({ id: CORE_BLOCK_IDS.PLAN, key: "plan", name: "计划", description: "目标周期计划。", categoryKey: "计划", fields: [contentField, themeField, periodField, dateField, iconField], outputTemplate: "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n核心Block:: plan\n目标ID:: {{goalId}}\n目标:: {{goalPath}}\n分类:: 计划\n周期:: {{周期}}\n日期:: {{日期}}\n主题:: {{themePath}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->", targetFile: "01/目标计划.md", appendUnderHeader: "## {{goalPath}}" }),
+  block({ id: CORE_BLOCK_IDS.REVIEW, key: "review", name: "总结", description: "目标复盘总结。", categoryKey: "总结", fields: [contentField, themeField, periodField, dateField, iconField], outputTemplate: "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n核心Block:: review\n目标ID:: {{goalId}}\n目标:: {{goalPath}}\n分类:: 总结\n周期:: {{周期}}\n日期:: {{日期}}\n主题:: {{themePath}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->", targetFile: "01/目标总结.md", appendUnderHeader: "## {{goalPath}}" }),
+  block({ id: CORE_BLOCK_IDS.THOUGHT, key: "thought", name: "闪念/思考", description: "目标相关思考。", categoryKey: "闪念/思考", fields: [contentField, themeField, dateField, iconField], outputTemplate: "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n核心Block:: thought\n目标ID:: {{goalId}}\n目标:: {{goalPath}}\n分类:: 闪念/思考\n日期:: {{日期}}\n主题:: {{themePath}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->", targetFile: "01/目标闪念.md", appendUnderHeader: "## {{goalPath}}" }),
+  block({ id: CORE_BLOCK_IDS.HABIT, key: "habit", name: "打卡", description: "目标习惯或进度打卡。", categoryKey: "打卡", fields: [contentField, themeField, dateField, { id: "core.habit.rating", key: "评分", label: "评分", type: "rating", semantic: "rating" }, iconField], outputTemplate: "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n核心Block:: habit\n目标ID:: {{goalId}}\n目标:: {{goalPath}}\n分类:: 打卡\n日期:: {{日期}}\n主题:: {{themePath}}\n评分:: {{评分.label}}\n评图:: {{评分.value}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->", targetFile: "01/目标打卡.md", appendUnderHeader: "## {{goalPath}}" }),
+  block({ id: CORE_BLOCK_IDS.EVIDENCE, key: "evidence", name: "闪念/事件", description: "目标相关事件、证据和外部反馈。", categoryKey: "闪念/事件", fields: [contentField, themeField, dateField, iconField], outputTemplate: "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n核心Block:: evidence\n目标ID:: {{goalId}}\n目标:: {{goalPath}}\n分类:: 闪念/事件\n日期:: {{日期}}\n主题:: {{themePath}}\n图标:: {{icon}}\n内容:: {{内容}}\n<!-- end -->", targetFile: "01/目标事件.md", appendUnderHeader: "## {{goalPath}}" }),
+  block({ id: CORE_BLOCK_IDS.BLOCKER, key: "blocker", name: "阻碍项", description: "目标推进过程中的阻碍和风险。", categoryKey: "阻碍项", fields: [contentField, themeField, dateField, iconField], outputTemplate: "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n核心Block:: blocker\n目标ID:: {{goalId}}\n目标:: {{goalPath}}\n分类:: 阻碍项\n日期:: {{日期}}\n主题:: {{themePath}}\n图标:: {{icon}}\n阻碍:: {{内容}}\n<!-- end -->", targetFile: "01/目标阻碍.md", appendUnderHeader: "## {{goalPath}}" }),
+  block({ id: CORE_BLOCK_IDS.MILESTONE, key: "milestone", name: "里程碑", description: "目标阶段成果和重要节点。", categoryKey: "里程碑", fields: [contentField, themeField, dateField, iconField], outputTemplate: "<!-- start -->\n模板ID:: {{templateId}}\n模板来源:: {{templateSourceType}}\n核心Block:: milestone\n目标ID:: {{goalId}}\n目标:: {{goalPath}}\n分类:: 里程碑\n日期:: {{日期}}\n主题:: {{themePath}}\n图标:: {{icon}}\n里程碑:: {{内容}}\n<!-- end -->", targetFile: "01/目标里程碑.md", appendUnderHeader: "## {{goalPath}}" })
+];
+const DEFAULT_CORE_BLOCK_SETTINGS = {
+  enabledCoreBlockIds: DEFAULT_CORE_BLOCKS.map((block2) => block2.id),
+  patches: [],
+  legacyBlockMap: {}
+};
+const NAME_TO_CORE_BLOCK_ID = {
+  任务: CORE_BLOCK_IDS.TASK,
+  Task: CORE_BLOCK_IDS.TASK,
+  task: CORE_BLOCK_IDS.TASK,
+  计划: CORE_BLOCK_IDS.PLAN,
+  Plan: CORE_BLOCK_IDS.PLAN,
+  plan: CORE_BLOCK_IDS.PLAN,
+  总结: CORE_BLOCK_IDS.REVIEW,
+  Review: CORE_BLOCK_IDS.REVIEW,
+  review: CORE_BLOCK_IDS.REVIEW,
+  打卡: CORE_BLOCK_IDS.HABIT,
+  Habit: CORE_BLOCK_IDS.HABIT,
+  habit: CORE_BLOCK_IDS.HABIT,
+  闪念: CORE_BLOCK_IDS.THOUGHT,
+  思考: CORE_BLOCK_IDS.THOUGHT,
+  "闪念/思考": CORE_BLOCK_IDS.THOUGHT,
+  evidence: CORE_BLOCK_IDS.EVIDENCE,
+  事件: CORE_BLOCK_IDS.EVIDENCE,
+  "闪念/事件": CORE_BLOCK_IDS.EVIDENCE,
+  阻碍项: CORE_BLOCK_IDS.BLOCKER,
+  blocker: CORE_BLOCK_IDS.BLOCKER,
+  里程碑: CORE_BLOCK_IDS.MILESTONE,
+  milestone: CORE_BLOCK_IDS.MILESTONE
+};
+function inferCoreBlockIdFromLegacyBlock(block2) {
+  if (String(block2.id || "").startsWith("core.")) return block2.id;
+  return NAME_TO_CORE_BLOCK_ID[block2.name] || NAME_TO_CORE_BLOCK_ID[block2.categoryKey] || null;
+}
+function buildLegacyCoreBlockMap(blocks) {
+  const map = {};
+  for (const block2 of blocks || []) {
+    const coreId = inferCoreBlockIdFromLegacyBlock(block2);
+    if (coreId) map[block2.id] = coreId;
+  }
+  return map;
+}
+function applyPatch(block2, patch) {
+  if (!patch) return block2;
+  return {
+    ...block2,
+    name: patch.displayName || block2.name,
+    categoryKey: patch.categoryKey || block2.categoryKey,
+    fields: patch.fields || block2.fields,
+    outputTemplate: patch.outputTemplate || block2.outputTemplate,
+    targetFile: patch.targetFile || block2.targetFile,
+    appendUnderHeader: patch.appendUnderHeader ?? block2.appendUnderHeader
+  };
+}
+function normalizeCoreBlockSettings(settings, legacyBlocks = []) {
+  const legacyBlockMap = { ...buildLegacyCoreBlockMap(legacyBlocks), ...settings?.legacyBlockMap || {} };
+  return {
+    enabledCoreBlockIds: settings?.enabledCoreBlockIds?.length ? settings.enabledCoreBlockIds : DEFAULT_CORE_BLOCK_SETTINGS.enabledCoreBlockIds,
+    patches: settings?.patches || [],
+    legacyBlockMap
+  };
+}
+function getEffectiveCoreBlocks(settings) {
+  const coreSettings = normalizeCoreBlockSettings(settings.coreBlockSettings, settings.inputSettings?.blocks || []);
+  const patchesById = new Map(coreSettings.patches.map((patch) => [patch.blockId, patch]));
+  const enabled2 = new Set(coreSettings.enabledCoreBlockIds);
+  return DEFAULT_CORE_BLOCKS.filter((block2) => enabled2.has(block2.id) && !patchesById.get(block2.id)?.hidden).map((block2) => applyPatch(block2, patchesById.get(block2.id)));
+}
+function getCoreBlockById(settings, blockId) {
+  const coreSettings = normalizeCoreBlockSettings(settings.coreBlockSettings, settings.inputSettings?.blocks || []);
+  const resolvedId = String(blockId || "").startsWith("core.") ? blockId : coreSettings.legacyBlockMap?.[blockId] || blockId;
+  return getEffectiveCoreBlocks(settings).find((block2) => block2.id === resolvedId) || null;
+}
 const DEFAULT_SETTINGS = {
   groups: [],
   viewInstances: [],
   layouts: [],
   inputSettings: { blocks: [], themes: [], overrides: [] },
+  goalSettings: DEFAULT_GOAL_SETTINGS,
+  coreBlockSettings: DEFAULT_CORE_BLOCK_SETTINGS,
   // [新增] 悬浮计时器默认启用
   floatingTimerEnabled: true,
   // [新增]
@@ -1779,6 +1935,7 @@ const USER_TEMPLATE_FIELD_TYPES = [
   "singleSelect",
   "multiSelect",
   "path",
+  "hierarchicalSingleSelect",
   "multiPath",
   "tag",
   "multiTag",
@@ -1804,6 +1961,7 @@ const TYPE_LABELS = {
   singleSelect: "单选",
   multiSelect: "多选",
   path: "层级路径",
+  hierarchicalSingleSelect: "层级单选",
   multiPath: "多层级路径",
   tag: "标签",
   multiTag: "多标签",
@@ -1816,6 +1974,7 @@ const OPTION_FIELD_TYPES = /* @__PURE__ */ new Set([
   "singleSelect",
   "multiSelect",
   "path",
+  "hierarchicalSingleSelect",
   "multiPath",
   "tag",
   "multiTag",
@@ -1941,6 +2100,10 @@ const KNOWN_SEMANTICS = /* @__PURE__ */ new Set([
   "themePath",
   "tags",
   "goals",
+  "goalId",
+  "goalPath",
+  "cycleId",
+  "coreBlock",
   "status",
   "date",
   "startTime",
@@ -1996,6 +2159,10 @@ function getTemplateFieldSemantic(field) {
   if (templateFieldMatches(field, ["主题", "theme", "themePath", "完整主题", "主题路径"])) return "themePath";
   if (templateFieldMatches(field, ["分类", "类别", "category", "categoryPath", "分类路径"])) return "categoryPath";
   if (templateFieldMatches(field, ["标签", "tag", "tags"])) return "tags";
+  if (templateFieldMatches(field, ["目标ID", "goalId"])) return "goalId";
+  if (templateFieldMatches(field, ["目标路径", "goalPath"])) return "goalPath";
+  if (templateFieldMatches(field, ["周期ID", "cycleId"])) return "cycleId";
+  if (templateFieldMatches(field, ["核心Block", "coreBlock"])) return "coreBlock";
   if (templateFieldMatches(field, ["目标"])) return "goals";
   if (templateFieldMatches(field, ["状态", "status"])) return "status";
   if (templateFieldMatches(field, ["日期", "date"])) return "date";
@@ -2014,7 +2181,7 @@ function getTemplateFieldInputType(field) {
   if (type) return type;
   const semantic = getTemplateFieldSemantic(field);
   if (semantic === "body") return "textarea";
-  if (semantic === "themePath" || semantic === "categoryPath") return "path";
+  if (semantic === "themePath" || semantic === "categoryPath" || semantic === "goalPath") return "hierarchicalSingleSelect";
   if (semantic === "tags" || semantic === "goals") return "multiTag";
   if (semantic === "image") return "image";
   if (semantic === "rating") return "rating";
@@ -2031,12 +2198,12 @@ function isTemplateRatingPairField(field) {
 }
 function isTemplateOptionField(field) {
   const inputType = getTemplateFieldInputType(field);
-  return ["select", "radio", "singleSelect", "multiSelect", "path", "multiPath", "tag", "multiTag", "rating"].includes(inputType);
+  return ["select", "radio", "singleSelect", "multiSelect", "path", "hierarchicalSingleSelect", "multiPath", "tag", "multiTag", "rating"].includes(inputType);
 }
 function isTemplatePathField(field) {
   const inputType = getTemplateFieldInputType(field);
   const semantic = getTemplateFieldSemantic(field);
-  return inputType === "path" || inputType === "multiPath" || semantic === "themePath" || semantic === "categoryPath" || normalizeToken$3(field?.semanticType) === "path";
+  return inputType === "path" || inputType === "hierarchicalSingleSelect" || inputType === "multiPath" || semantic === "themePath" || semantic === "categoryPath" || semantic === "goalPath" || normalizeToken$3(field?.semanticType) === "path";
 }
 function isTemplateTagField(field) {
   const inputType = getTemplateFieldInputType(field);
@@ -2148,9 +2315,43 @@ function applyCoreTemplateAliases(data, field, value) {
     if (tags2.length) data.tags = tags2;
     return;
   }
+  if (semantic === "goalId") {
+    const goalId = singleTemplateValueToString(value);
+    if (goalId) {
+      data.goalId = goalId;
+      data.goalIds = [goalId];
+    }
+    return;
+  }
+  if (semantic === "goalPath") {
+    const path = normalizeHierarchyPath(singleTemplateValueToString(value));
+    if (!path) return;
+    const parts = splitHierarchyPath(path);
+    data.goalPath = path;
+    data.goalPaths = [path];
+    data.rootGoal = parts.root || "";
+    data.leafGoal = parts.leaf || "";
+    return;
+  }
+  if (semantic === "cycleId") {
+    const cycleId = singleTemplateValueToString(value);
+    if (cycleId) data.cycleId = cycleId;
+    return;
+  }
+  if (semantic === "coreBlock") {
+    const coreBlock = singleTemplateValueToString(value);
+    if (coreBlock) data.coreBlock = coreBlock;
+    return;
+  }
   if (semantic === "goals") {
     const goals = parseTagList(value);
-    if (goals.length) data.goalPaths = goals;
+    if (goals.length) {
+      data.goalPaths = goals;
+      data.goalPath = goals[0];
+      const parts = splitHierarchyPath(goals[0]);
+      data.rootGoal = parts.root || "";
+      data.leafGoal = parts.leaf || "";
+    }
     return;
   }
   if (semantic === "image") {
@@ -3846,15 +4047,15 @@ function getEffectiveLevelCount(item) {
 function getEffectiveDisplayCount(item) {
   return item.displayCount || 1;
 }
-function normalizePath$2(path) {
+function normalizePath$3(path) {
   return String(path || "").split("/").map((s2) => s2.trim()).filter(Boolean).join("/");
 }
 function splitPath(path) {
-  const normalized = normalizePath$2(path);
+  const normalized = normalizePath$3(path);
   return normalized ? normalized.split("/") : [];
 }
 function getFullPath(path) {
-  return normalizePath$2(path);
+  return normalizePath$3(path);
 }
 function getBasePath(path) {
   return splitPath(path)[0] || "";
@@ -5040,9 +5241,15 @@ function decodeTaskMetadata(lineText) {
     } else if (["模板id", "templateid"].includes(key)) {
       result.templateId = value;
     } else if (["模板来源", "templatesource", "templatesourcetype"].includes(key)) {
-      if (value === "block" || value === "override") result.templateSourceType = value;
+      if (["block", "override", "core-block", "theme-fallback", "goal-binding", "legacy-block"].includes(value)) result.templateSourceType = value;
     } else if (["标签", "tag", "tags"].includes(key)) {
       result.tags.push(...decodeMarkdownFieldValue(value, FIELD_CODEC_PRESETS.tags));
+    } else if (["目标id", "goalid"].includes(key)) {
+      result.goalId = value.trim();
+    } else if (["周期id", "cycleid"].includes(key)) {
+      result.cycleId = value.trim();
+    } else if (["核心block", "coreblock"].includes(key)) {
+      result.coreBlock = value.trim();
     } else if (key === "目标") {
       result.goalPaths.push(...decodeMarkdownFieldValue(value, FIELD_CODEC_PRESETS.goalPaths));
     } else if (["时间", "time", "start"].includes(key)) {
@@ -5062,6 +5269,12 @@ function decodeTaskMetadata(lineText) {
 function applyTaskMetadata(item, metadata) {
   item.tags = metadata.tags;
   item.goalPaths = metadata.goalPaths;
+  if (metadata.goalId) {
+    item.goalId = metadata.goalId;
+    item.goalIds = [metadata.goalId];
+  }
+  if (metadata.cycleId) item.cycleId = metadata.cycleId;
+  if (metadata.coreBlock) item.coreBlock = metadata.coreBlock;
   item.extra = metadata.extra;
   if (metadata.theme) item.theme = metadata.theme;
   if (metadata.categoryKey) item.categoryKey = metadata.categoryKey;
@@ -5111,6 +5324,9 @@ function decodeBlockContentLines(contentLines, parentFolder) {
   let pintu;
   let theme2;
   let templateId;
+  let goalId;
+  let cycleId;
+  let coreBlock;
   let templateSourceType;
   for (const rawLine of contentLines) {
     const line2 = rawLine.trim();
@@ -5127,11 +5343,17 @@ function decodeBlockContentLines(contentLines, parentFolder) {
           templateId = value.trim();
         } else if (["模板来源", "templatesource", "templatesourcetype"].includes(key)) {
           const source = value.trim();
-          if (source === "block" || source === "override") templateSourceType = source;
+          if (["block", "override", "core-block", "theme-fallback", "goal-binding", "legacy-block"].includes(source)) templateSourceType = source;
         } else if (["主题", "theme", "主题路径", "themepath"].includes(key)) {
           theme2 = decodeMarkdownString(value, FIELD_CODEC_PRESETS.themePath);
         } else if (["标签", "tag", "tags"].includes(key)) {
           tags2.push(...decodeMarkdownFieldValue(value, FIELD_CODEC_PRESETS.tags));
+        } else if (["目标id", "goalid"].includes(key)) {
+          goalId = value.trim();
+        } else if (["周期id", "cycleid"].includes(key)) {
+          cycleId = value.trim();
+        } else if (["核心block", "coreblock"].includes(key)) {
+          coreBlock = value.trim();
         } else if (key === "目标") {
           goalPaths.push(...decodeMarkdownFieldValue(value, FIELD_CODEC_PRESETS.goalPaths));
         } else if (["日期", "date"].includes(key)) {
@@ -5168,6 +5390,9 @@ function decodeBlockContentLines(contentLines, parentFolder) {
     date: date2,
     tags: finalTags,
     goalPaths: finalGoalPaths,
+    goalId,
+    cycleId,
+    coreBlock,
     extra,
     icon,
     period,
@@ -5302,6 +5527,12 @@ function parseBlockContent(filePath, lines, startIdx, endIdx, parentFolder) {
     folder: parentFolder,
     theme: parsed.theme
   };
+  if (parsed.goalId) {
+    item.goalId = parsed.goalId;
+    item.goalIds = [parsed.goalId];
+  }
+  if (parsed.cycleId) item.cycleId = parsed.cycleId;
+  if (parsed.coreBlock) item.coreBlock = parsed.coreBlock;
   if (parsed.templateId) item.templateId = parsed.templateId;
   if (parsed.templateSourceType) item.templateSourceType = parsed.templateSourceType;
   if (parsed.icon) item.icon = parsed.icon;
@@ -5735,9 +5966,9 @@ function buildSummaryCategoryHours(timelineTasks, dateRange, config2) {
 function buildDailyCategoryHours(blocks, categoriesConfig, untrackedLabel) {
   const hours = {};
   let trackedHours = 0;
-  blocks.forEach((block) => {
-    const category = mapTaskToCategory(block.fileName || "", categoriesConfig);
-    const duration2 = (block.blockEndMinute - block.blockStartMinute) / 60;
+  blocks.forEach((block2) => {
+    const category = mapTaskToCategory(block2.fileName || "", categoriesConfig);
+    const duration2 = (block2.blockEndMinute - block2.blockStartMinute) / 60;
     hours[category] = (hours[category] || 0) + duration2;
     trackedHours += duration2;
   });
@@ -5795,8 +6026,8 @@ function buildDailyViewData(timelineTasks, dateRange) {
   });
   for (const task of timelineTasks) {
     const blocks = splitTaskIntoDayBlocks(task, range);
-    for (const block of blocks) {
-      if (map[block.day]) map[block.day].push(block);
+    for (const block2 of blocks) {
+      if (map[block2.day]) map[block2.day].push(block2);
     }
   }
   Object.values(map).forEach((dayBlocks) => {
@@ -6520,11 +6751,11 @@ function warnSlowParserStep(traceId, step, startedAt, thresholdMs, extra) {
 }
 function compactSnapshotForFastMode(snapshot) {
   return {
-    blocks: (snapshot.blocks ?? []).map((block) => ({
-      id: block.id,
-      name: block.name,
-      categoryKey: block.categoryKey,
-      fields: (block.fields ?? []).map((field) => ({
+    blocks: (snapshot.blocks ?? []).map((block2) => ({
+      id: block2.id,
+      name: block2.name,
+      categoryKey: block2.categoryKey,
+      fields: (block2.fields ?? []).map((field) => ({
         key: field.key,
         label: field.label,
         type: field.type
@@ -6849,11 +7080,11 @@ class AiNaturalLanguageRecordParser {
    */
   buildFastUserPrompt(text2, nowIso, maxResults, snapshot) {
     const themePaths = (snapshot.themes ?? []).map((theme2) => theme2.path).filter(Boolean);
-    const compactBlocks = (snapshot.blocks ?? []).map((block) => ({
-      id: block.id,
-      name: block.name,
-      categoryKey: block.categoryKey,
-      fields: (block.fields ?? []).map((field) => field.key || field.label).filter(Boolean)
+    const compactBlocks = (snapshot.blocks ?? []).map((block2) => ({
+      id: block2.id,
+      name: block2.name,
+      categoryKey: block2.categoryKey,
+      fields: (block2.fields ?? []).map((field) => field.key || field.label).filter(Boolean)
     }));
     return [
       `Current time: ${nowIso}`,
@@ -13847,7 +14078,13 @@ function normalizeRecordItem(item, context) {
     item.header = context.header;
   }
   item.tags = unique([...context.sectionTags || [], ...item.tags || []]);
-  item.goalPaths = unique([...item.goalPaths || []]);
+  item.goalIds = unique([item.goalId, ...item.goalIds || []]);
+  item.goalPaths = unique([item.goalPath, ...item.goalPaths || []]);
+  item.goalPath = item.goalPaths[0] || item.goalPath;
+  const goalParts = splitGoalPath(item.goalPath || null);
+  item.goalPath = goalParts.goalPath || item.goalPath;
+  item.rootGoal = goalParts.rootGoal || item.rootGoal;
+  item.leafGoal = goalParts.leafGoal || item.leafGoal;
   item.theme = normalizeExplicitTheme(item.theme, context.themeMatcher);
   applyExplicitThemeViewFields(item);
   if (!item.extra) item.extra = {};
@@ -13875,6 +14112,10 @@ function normalizeRecordItem(item, context) {
   item.fullDataLower = normalizeSearchText(item.fullData);
   item.tagsLower = (item.tags || []).map((tag) => normalizeSearchText(tag));
   item.goalPathsLower = (item.goalPaths || []).map((goal) => normalizeSearchText(goal));
+  item.goalIdsLower = (item.goalIds || []).map((goalId) => normalizeSearchText(goalId));
+  item.goalPathLower = normalizeSearchText(item.goalPath);
+  item.rootGoalLower = normalizeSearchText(item.rootGoal);
+  item.leafGoalLower = normalizeSearchText(item.leafGoal);
   return item;
 }
 function normalizeFilePathInput(input) {
@@ -14663,9 +14904,9 @@ let AiChatService = class {
         const blocks = this.getBlocks();
         const blockTemplateNames = [];
         for (const id of filters.blockTemplateIds) {
-          const block = blocks.find((b2) => b2.id === id);
-          if (block && block.name) {
-            blockTemplateNames.push(block.name);
+          const block2 = blocks.find((b2) => b2.id === id);
+          if (block2 && block2.name) {
+            blockTemplateNames.push(block2.name);
           }
         }
         if (blockTemplateNames.length > 0) {
@@ -14775,7 +15016,7 @@ function parsePath(path) {
   });
   return result;
 }
-function normalizePath$1(path) {
+function normalizePath$2(path) {
   if (!path) {
     return "";
   }
@@ -14831,7 +15072,7 @@ class ThemeTreeBuilder {
     if (!themes || themes.length === 0) {
       return [];
     }
-    const getOrder = (node2) => {
+    const getOrder2 = (node2) => {
       const raw = node2.theme?.order;
       return typeof raw === "number" && Number.isFinite(raw) ? raw : null;
     };
@@ -14840,8 +15081,8 @@ class ThemeTreeBuilder {
         return a2.label.localeCompare(b2.label);
       }
       if (sortBy === "order") {
-        const ao = getOrder(a2);
-        const bo = getOrder(b2);
+        const ao = getOrder2(a2);
+        const bo = getOrder2(b2);
         if (ao !== null && bo !== null && ao !== bo) return ao - bo;
         if (ao !== null && bo === null) return -1;
         if (ao === null && bo !== null) return 1;
@@ -15218,7 +15459,7 @@ class ThemeMatrixService {
    * @returns 验证结果（包含规范化后的路径）
    */
   validateAddTheme(path) {
-    const normalizedPath = normalizePath$1(path);
+    const normalizedPath = normalizePath$2(path);
     const validation = validatePathCharacters(normalizedPath);
     if (!validation.valid) {
       return { valid: false, message: validation.message };
@@ -15238,7 +15479,7 @@ class ThemeMatrixService {
   validateUpdateTheme(themeId, updates) {
     const normalizedUpdates = { ...updates };
     if (updates.path) {
-      const normalizedPath = normalizePath$1(updates.path);
+      const normalizedPath = normalizePath$2(updates.path);
       const validation = validatePathCharacters(normalizedPath);
       if (!validation.valid) {
         return { valid: false, message: validation.message };
@@ -15281,7 +15522,7 @@ class ThemeMatrixService {
    * @returns 验证结果
    */
   validatePath(path) {
-    return validatePathCharacters(normalizePath$1(path));
+    return validatePathCharacters(normalizePath$2(path));
   }
   /**
    * 获取主题统计信息
@@ -16009,6 +16250,11 @@ ${outputContent}` : outputContent;
     const themeParts = themePath.split("/").map((part) => part.trim()).filter(Boolean);
     const categoryPath = String(normalizedData.categoryKey ?? normalizedData.categoryPath ?? template.categoryKey ?? "").trim();
     const categoryParts = categoryPath.split("/").map((part) => part.trim()).filter(Boolean);
+    const explicitGoalPath = Array.isArray(normalizedData.goalPaths) ? String(normalizedData.goalPaths[0] ?? "").trim() : String(normalizedData.goalPath ?? normalizedData["目标"] ?? "").trim();
+    const goalPath = explicitGoalPath;
+    const goalParts = goalPath.split("/").map((part) => part.trim()).filter(Boolean);
+    const goalId = String(normalizedData.goalId ?? normalizedData["目标ID"] ?? "").trim();
+    const coreBlock = String(normalizedData.coreBlock ?? normalizedData["核心Block"] ?? template.coreBlockId ?? template.id ?? "").trim();
     return {
       ...normalizedData,
       block: { name: template.name, id: template.id, categoryKey: categoryPath || template.categoryKey },
@@ -16027,6 +16273,20 @@ ${outputContent}` : outputContent;
       themePath,
       rootTheme: themeParts[0] || "",
       leafTheme: themeParts.length ? themeParts[themeParts.length - 1] : "",
+      goal: {
+        id: goalId,
+        title: goalParts.length ? goalParts[goalParts.length - 1] : goalPath,
+        path: goalPath,
+        root: goalParts[0] || "",
+        leaf: goalParts.length ? goalParts[goalParts.length - 1] : "",
+        themePath
+      },
+      goalId,
+      goalPath,
+      goalPaths: goalPath ? [goalPath] : normalizedData.goalPaths || [],
+      rootGoal: goalParts[0] || "",
+      leafGoal: goalParts.length ? goalParts[goalParts.length - 1] : "",
+      coreBlock,
       templateId: templateMeta?.templateId || template.id,
       templateSourceType: templateMeta?.templateSourceType || "block"
     };
@@ -16517,7 +16777,76 @@ TimerStateService = __decorateClass$7([
   singleton(),
   __decorateParam$6(0, inject(VAULT_PORT_TOKEN))
 ], TimerStateService);
-function normalizePath(value) {
+function findGoal(goalSettings, goalId, goalPath) {
+  const goals = goalSettings?.goals || [];
+  if (goalId) {
+    const byId = goals.find((goal) => goal.id === goalId);
+    if (byId) return byId;
+  }
+  const normalizedPath = splitGoalPath(goalPath || null).goalPath;
+  if (!normalizedPath) return null;
+  return goals.find((goal) => splitGoalPath(goal.goalPath || goal.title).goalPath === normalizedPath) || null;
+}
+function findTheme(settings, themeId, themePath) {
+  const themes = settings.inputSettings?.themes || [];
+  if (themeId) {
+    const byId = themes.find((theme2) => theme2.id === themeId);
+    if (byId) return byId;
+  }
+  const normalizedPath = String(themePath || "").trim();
+  if (!normalizedPath) return null;
+  return themes.find((theme2) => theme2.path === normalizedPath) || null;
+}
+function mergeTemplate(base, patch) {
+  return {
+    ...base,
+    fields: patch.fields ?? base.fields,
+    outputTemplate: patch.outputTemplate ?? base.outputTemplate,
+    targetFile: patch.targetFile ?? base.targetFile,
+    appendUnderHeader: patch.appendUnderHeader ?? base.appendUnderHeader
+  };
+}
+class GoalTemplateResolver {
+  static resolve(input) {
+    const { settings, blockId } = input;
+    const coreSettings = normalizeCoreBlockSettings(settings.coreBlockSettings, settings.inputSettings?.blocks || []);
+    const effectiveBlockId = String(blockId || "").startsWith("core.") ? blockId : coreSettings.legacyBlockMap?.[blockId] || blockId;
+    const goal = findGoal(settings.goalSettings, input.goalId, input.goalPath);
+    const effectiveThemePath = input.themePath || goal?.themePath || null;
+    const theme2 = findTheme(settings, input.themeId, effectiveThemePath);
+    const coreBlock = getCoreBlockById(settings, effectiveBlockId);
+    const legacyBase = settings.inputSettings?.blocks?.find((block2) => block2.id === blockId || block2.id === effectiveBlockId) || null;
+    const legacyResolved = TemplateResolver.resolve(settings.inputSettings, legacyBase?.id || blockId, theme2?.id || input.themeId || void 0);
+    const baseTemplate = coreBlock || legacyResolved.template || legacyBase;
+    if (!baseTemplate) {
+      return { template: null, theme: theme2, goal, templateId: null, templateSourceType: null, effectiveBlockId: null };
+    }
+    const themeTemplate = legacyResolved.template && legacyResolved.template !== legacyBase ? mergeTemplate(baseTemplate, legacyResolved.template) : baseTemplate;
+    if (goal) {
+      const binding = (settings.goalSettings?.goalBlockBindings || []).find(
+        (item) => item.enabled !== false && item.goalId === goal.id && item.coreBlockId === effectiveBlockId
+      );
+      if (binding) {
+        return {
+          template: mergeTemplate(themeTemplate, binding),
+          theme: theme2,
+          goal,
+          templateId: binding.id,
+          templateSourceType: "goal-binding",
+          effectiveBlockId
+        };
+      }
+    }
+    if (legacyResolved.templateSourceType === "override") {
+      return { template: themeTemplate, theme: theme2, goal, templateId: legacyResolved.templateId, templateSourceType: "theme-fallback", effectiveBlockId };
+    }
+    if (coreBlock) {
+      return { template: themeTemplate, theme: theme2, goal, templateId: coreBlock.id, templateSourceType: "core-block", effectiveBlockId };
+    }
+    return { template: themeTemplate, theme: theme2, goal, templateId: legacyResolved.templateId || legacyBase?.id || null, templateSourceType: legacyResolved.templateSourceType || "legacy-block", effectiveBlockId };
+  }
+}
+function normalizePath$1(value) {
   const trimmed = String(value || "").trim();
   return trimmed || null;
 }
@@ -16528,6 +16857,11 @@ function buildRenderData(template, formData, theme2, templateMeta) {
   const themeParts = splitThemePath(explicitThemePath || theme2?.path || null);
   const categoryPath = String(normalizedData.categoryKey ?? normalizedData.categoryPath ?? template.categoryKey ?? "").trim();
   const categoryParts = categoryPath.split("/").map((part) => part.trim()).filter(Boolean);
+  const explicitGoalPath = Array.isArray(normalizedData.goalPaths) ? String(normalizedData.goalPaths[0] ?? "").trim() : String(normalizedData.goalPath ?? normalizedData["目标"] ?? "").trim();
+  const goalPath = explicitGoalPath;
+  const goalParts = goalPath.split("/").map((part) => part.trim()).filter(Boolean);
+  const goalId = String(normalizedData.goalId ?? normalizedData["目标ID"] ?? "").trim();
+  const coreBlock = String(normalizedData.coreBlock ?? normalizedData["核心Block"] ?? template.coreBlockId ?? template.id ?? "").trim();
   return {
     ...normalizedData,
     block: { name: template.name, id: template.id, categoryKey: categoryPath || template.categoryKey },
@@ -16546,6 +16880,20 @@ function buildRenderData(template, formData, theme2, templateMeta) {
     themePath: themeParts.themePath,
     rootTheme: themeParts.rootTheme,
     leafTheme: themeParts.leafTheme,
+    goal: {
+      id: goalId,
+      title: goalParts.length ? goalParts[goalParts.length - 1] : goalPath,
+      path: goalPath,
+      root: goalParts[0] || "",
+      leaf: goalParts.length ? goalParts[goalParts.length - 1] : "",
+      themePath: themeParts.themePath
+    },
+    goalId,
+    goalPath,
+    goalPaths: goalPath ? [goalPath] : normalizedData.goalPaths || [],
+    rootGoal: goalParts[0] || "",
+    leafGoal: goalParts.length ? goalParts[goalParts.length - 1] : "",
+    coreBlock,
     templateId: templateMeta?.templateId || template.id,
     templateSourceType: templateMeta?.templateSourceType || "block"
   };
@@ -16562,8 +16910,8 @@ function buildRecordOutputPlan(input) {
   }
   const renderData = buildRenderData(input.template, input.formData, input.theme, input.templateMeta);
   const outputContent = renderTemplate(input.template.outputTemplate, renderData).trim();
-  const targetFilePath = normalizePath(renderTemplate(input.template.targetFile, renderData));
-  const targetHeader = input.template.appendUnderHeader ? normalizePath(renderTemplate(input.template.appendUnderHeader, renderData)) : null;
+  const targetFilePath = normalizePath$1(renderTemplate(input.template.targetFile, renderData));
+  const targetHeader = input.template.appendUnderHeader ? normalizePath$1(renderTemplate(input.template.appendUnderHeader, renderData)) : null;
   return {
     targetFilePath,
     targetHeader,
@@ -16573,8 +16921,8 @@ function buildRecordOutputPlan(input) {
   };
 }
 function buildRecordPersistencePlan(input) {
-  const originalPath = normalizePath(input.originalPath);
-  const targetPath = normalizePath(input.outputPlan.targetFilePath);
+  const originalPath = normalizePath$1(input.originalPath);
+  const targetPath = normalizePath$1(input.outputPlan.targetFilePath);
   if (input.mode === "create") {
     return {
       originalPath: null,
@@ -16625,7 +16973,17 @@ function resolveRecordDependencies(input) {
   const warnings = [];
   const errors = [];
   const requestedBlockId = input.blockId ?? null;
-  const inferredThemeId = input.themeId ?? findThemeIdByPath(settings, item?.theme);
+  const legacyBlockMap = buildLegacyCoreBlockMap(settings.blocks || []);
+  const effectiveBlockId = requestedBlockId ? String(requestedBlockId).startsWith("core.") ? requestedBlockId : legacyBlockMap[requestedBlockId] || requestedBlockId : null;
+  const effectiveSettings = {
+    ...settings,
+    blocks: [
+      ...settings.blocks || [],
+      ...DEFAULT_CORE_BLOCKS.filter((coreBlock) => !(settings.blocks || []).some((block22) => block22.id === coreBlock.id))
+    ],
+    overrides: (settings.overrides || []).map((override2) => ({ ...override2, blockId: legacyBlockMap[override2.blockId] || override2.blockId }))
+  };
+  const inferredThemeId = input.themeId ?? findThemeIdByPath(effectiveSettings, item?.theme);
   let resolvedThemeId = inferredThemeId ?? null;
   if (!requestedBlockId) {
     errors.push(issue$2("record_block_missing", "Missing blockId for record submission.", "blockId"));
@@ -16644,11 +17002,11 @@ function resolveRecordDependencies(input) {
       }
     };
   }
-  const block = settings.blocks.find((candidate) => candidate.id === requestedBlockId) ?? null;
-  if (!block) {
+  const block2 = effectiveBlockId ? effectiveSettings.blocks.find((candidate) => candidate.id === effectiveBlockId) ?? null : null;
+  if (!block2) {
     errors.push(issue$2("record_block_not_found", "Selected block no longer exists.", "blockId"));
     return {
-      blockId: requestedBlockId,
+      blockId: effectiveBlockId || requestedBlockId,
       themeId: resolvedThemeId,
       template: null,
       theme: null,
@@ -16664,20 +17022,20 @@ function resolveRecordDependencies(input) {
   }
   let usedFallbackTheme = false;
   if (resolvedThemeId) {
-    const themeExists = settings.themes.some((theme2) => theme2.id === resolvedThemeId);
+    const themeExists = effectiveSettings.themes.some((theme2) => theme2.id === resolvedThemeId);
     if (!themeExists) {
       warnings.push(issue$2("record_theme_not_found", "Selected theme no longer exists. Falling back to base block template.", "themeId"));
       resolvedThemeId = null;
       usedFallbackTheme = true;
     }
   }
-  const override = resolvedThemeId ? settings.overrides.find((candidate) => candidate.blockId === requestedBlockId && candidate.themeId === resolvedThemeId) : null;
+  const override = resolvedThemeId ? effectiveSettings.overrides.find((candidate) => candidate.blockId === effectiveBlockId && candidate.themeId === resolvedThemeId) : null;
   if (override?.disabled) {
     warnings.push(issue$2("record_override_disabled", "Theme override is disabled. Using the base block template instead.", "themeId"));
   }
-  const resolved = TemplateResolver.resolve(settings, requestedBlockId, resolvedThemeId ?? void 0);
+  const resolved = TemplateResolver.resolve(effectiveSettings, effectiveBlockId || requestedBlockId, resolvedThemeId ?? void 0);
   return {
-    blockId: requestedBlockId,
+    blockId: effectiveBlockId || requestedBlockId,
     themeId: resolved.theme ? resolved.theme.id : null,
     template: resolved.template,
     theme: resolved.theme,
@@ -16685,7 +17043,7 @@ function resolveRecordDependencies(input) {
     errors,
     meta: {
       templateId: resolved.templateId,
-      templateSourceType: resolved.templateSourceType,
+      templateSourceType: resolved.templateSourceType === "block" && String(effectiveBlockId || "").startsWith("core.") ? "core-block" : resolved.templateSourceType,
       usedFallbackBlock: false,
       usedFallbackTheme
     }
@@ -16871,14 +17229,14 @@ function getItemSemanticTokens(item) {
   if (item.rating !== void 0) push("rating");
   return tokens;
 }
-function scoreTemplateForItem(block, item) {
+function scoreTemplateForItem(block2, item) {
   let score = 0;
-  const outputTemplate = String(block?.outputTemplate || "");
+  const outputTemplate = String(block2?.outputTemplate || "");
   const semanticTokens = getItemSemanticTokens(item);
   const categoryKey = normalizeToken(item.categoryKey);
-  const blockId = normalizeToken(block?.id);
-  const blockName = normalizeToken(block?.name);
-  const blockCategory = normalizeToken(block?.categoryKey);
+  const blockId = normalizeToken(block2?.id);
+  const blockName = normalizeToken(block2?.name);
+  const blockCategory = normalizeToken(block2?.categoryKey);
   if (item.templateId && normalizeToken(item.templateId) === blockId) score += 100;
   if (categoryKey && categoryKey === blockCategory) score += 30;
   if (categoryKey && categoryKey === blockName) score += 20;
@@ -16888,7 +17246,7 @@ function scoreTemplateForItem(block, item) {
   } else if (/<!--\s*start\s*-->/i.test(outputTemplate) || /内容\s*[:：]/.test(outputTemplate)) {
     score += 20;
   }
-  const fields = Array.isArray(block?.fields) ? block.fields : [];
+  const fields = Array.isArray(block2?.fields) ? block2.fields : [];
   for (const field of fields) {
     const key = normalizeToken(field?.key);
     const label = normalizeToken(field?.label);
@@ -16899,11 +17257,11 @@ function scoreTemplateForItem(block, item) {
   }
   return score;
 }
-function looksLikeTaskTemplate(block) {
-  return /^\s*-\s*\[[ xX]?\]/m.test(String(block?.outputTemplate || ""));
+function looksLikeTaskTemplate(block2) {
+  return /^\s*-\s*\[[ xX]?\]/m.test(String(block2?.outputTemplate || ""));
 }
-function looksLikeBlockTemplate(block) {
-  return /<!--\s*start\s*-->/i.test(String(block?.outputTemplate || "")) || /内容\s*[:：]/.test(String(block?.outputTemplate || ""));
+function looksLikeBlockTemplate(block2) {
+  return /<!--\s*start\s*-->/i.test(String(block2?.outputTemplate || "")) || /内容\s*[:：]/.test(String(block2?.outputTemplate || ""));
 }
 function findOverrideById(settings, overrideId) {
   if (!overrideId) return null;
@@ -16923,20 +17281,20 @@ function resolveBlockForEdit(settings, item, preferredBlockId) {
   if (item.templateId && item.templateSourceType === "override") {
     const override = findOverrideById(settings, item.templateId);
     if (override?.blockId) {
-      const block = blocks.find((candidate) => candidate.id === override.blockId);
-      if (block) {
+      const block2 = blocks.find((candidate) => candidate.id === override.blockId);
+      if (block2) {
         return {
-          blockId: block.id,
+          blockId: block2.id,
           themeIdFromTemplateHint: override.themeId ?? null,
           resolvedBy: "exact",
           usedFallbackBlock: false,
-          debugReason: `根据 override 模板ID ${item.templateId} 精确还原 block=${block.id} theme=${override.themeId || ""}`
+          debugReason: `根据 override 模板ID ${item.templateId} 精确还原 block=${block2.id} theme=${override.themeId || ""}`
         };
       }
     }
   }
   if (item.templateId && item.templateSourceType !== "override") {
-    const exact = blocks.find((block) => block.id === item.templateId);
+    const exact = blocks.find((block2) => block2.id === item.templateId);
     if (exact) {
       return {
         blockId: exact.id,
@@ -16947,7 +17305,7 @@ function resolveBlockForEdit(settings, item, preferredBlockId) {
       };
     }
   }
-  const preferred = preferredBlockId ? blocks.find((block) => block.id === preferredBlockId) : null;
+  const preferred = preferredBlockId ? blocks.find((block2) => block2.id === preferredBlockId) : null;
   if (preferred) {
     const typeMatches = item.type === "task" ? looksLikeTaskTemplate(preferred) : !looksLikeTaskTemplate(preferred);
     if (typeMatches) {
@@ -16960,9 +17318,9 @@ function resolveBlockForEdit(settings, item, preferredBlockId) {
       };
     }
   }
-  const typedCandidates = item.type === "task" ? blocks.filter(looksLikeTaskTemplate) : blocks.filter((block) => !looksLikeTaskTemplate(block));
+  const typedCandidates = item.type === "task" ? blocks.filter(looksLikeTaskTemplate) : blocks.filter((block2) => !looksLikeTaskTemplate(block2));
   const candidatePool = typedCandidates.length > 0 ? typedCandidates : blocks;
-  const withScores = candidatePool.map((block) => ({ block, score: scoreTemplateForItem(block, item) })).sort((left2, right2) => right2.score - left2.score);
+  const withScores = candidatePool.map((block2) => ({ block: block2, score: scoreTemplateForItem(block2, item) })).sort((left2, right2) => right2.score - left2.score);
   const top2 = withScores[0];
   if (top2 && top2.score > 0) {
     return {
@@ -47471,19 +47829,19 @@ const formatTimeMinute = (minute) => {
   const m2 = minute % 60;
   return `${String(h2).padStart(2, "0")}:${String(m2).padStart(2, "0")}`;
 };
-const generateTaskBlockTitle = (block) => {
-  const isCrossNight = block.startMinute % 1440 + block.duration > 1440;
+const generateTaskBlockTitle = (block2) => {
+  const isCrossNight = block2.startMinute % 1440 + block2.duration > 1440;
   if (isCrossNight) {
-    const startDateTime = dayjs(block.actualStartDate).add(block.startMinute, "minute");
-    const endDateTime = startDateTime.add(block.duration, "minute");
+    const startDateTime = dayjs(block2.actualStartDate).add(block2.startMinute, "minute");
+    const endDateTime = startDateTime.add(block2.duration, "minute");
     const startFormat = startDateTime.format("HH:mm");
     const endFormat = endDateTime.format("HH:mm");
-    return `任务: ${block.pureText}
+    return `任务: ${block2.pureText}
 时间: ${startFormat} - ${endFormat}`;
   } else {
-    const startTime = formatTimeMinute(block.startMinute);
-    const endTime = formatTimeMinute(block.endMinute);
-    return `任务: ${block.pureText}
+    const startTime = formatTimeMinute(block2.startMinute);
+    const endTime = formatTimeMinute(block2.endMinute);
+    return `任务: ${block2.pureText}
 时间: ${startTime} - ${endTime}`;
   }
 };
@@ -47516,36 +47874,36 @@ function DayColumnBody({
       onNotice?.("更新任务时间失败");
     }
   };
-  const handleEdit = (block) => {
+  const handleEdit = (block2) => {
     if (onEditTask) {
-      onEditTask(block);
+      onEditTask(block2);
       return;
     }
-    void onOpenRecord?.(block);
+    void onOpenRecord?.(block2);
   };
-  const handleAlignToPrev = (block, prevBlock) => {
+  const handleAlignToPrev = (block2, prevBlock) => {
     if (onAlignPrev) {
-      onAlignPrev(block, prevBlock);
+      onAlignPrev(block2, prevBlock);
     } else {
       if (!prevBlock) return;
-      const deltaMinutes = prevBlock.blockEndMinute - block.blockStartMinute;
-      const newAbsoluteStartMinute = block.startMinute + deltaMinutes;
+      const deltaMinutes = prevBlock.blockEndMinute - block2.blockStartMinute;
+      const newAbsoluteStartMinute = block2.startMinute + deltaMinutes;
       const newStartTimeString = formatTimeMinute(newAbsoluteStartMinute);
-      void tryUpdateTaskTime(block.id, { time: newStartTimeString });
+      void tryUpdateTaskTime(block2.id, { time: newStartTimeString });
     }
   };
-  const handleAlignToNext = (block, nextBlock) => {
+  const handleAlignToNext = (block2, nextBlock) => {
     if (onAlignNext) {
-      onAlignNext(block, nextBlock);
+      onAlignNext(block2, nextBlock);
     } else {
       if (!nextBlock) return;
-      const deltaDuration = nextBlock.blockStartMinute - block.blockEndMinute;
-      const newDuration = block.duration + deltaDuration;
+      const deltaDuration = nextBlock.blockStartMinute - block2.blockEndMinute;
+      const newDuration = block2.duration + deltaDuration;
       if (newDuration <= 0) {
         onNotice?.("无法对齐：任务时长将变为负数或零");
         return;
       }
-      void tryUpdateTaskTime(block.id, { duration: newDuration });
+      void tryUpdateTaskTime(block2.id, { duration: newDuration });
     }
   };
   const handleBodyClick = (event) => {
@@ -47576,20 +47934,20 @@ function DayColumnBody({
       style: { height: `${maxHours * hourHeight}px` },
       onClick: (e2) => handleBodyClick(e2),
       onTouchEnd: (e2) => handleBodyTouchEnd(e2),
-      children: blocks.map((block, index) => {
-        const top2 = block.blockStartMinute / 60 * hourHeight;
-        const height2 = (block.blockEndMinute - block.blockStartMinute) / 60 * hourHeight;
-        const category = mapTaskToCategory(block.fileName || "", categoriesConfig);
+      children: blocks.map((block2, index) => {
+        const top2 = block2.blockStartMinute / 60 * hourHeight;
+        const height2 = (block2.blockEndMinute - block2.blockStartMinute) / 60 * hourHeight;
+        const category = mapTaskToCategory(block2.fileName || "", categoriesConfig);
         const color2 = colorMap[category] || "#ccc";
         const prevBlock = index > 0 ? blocks[index - 1] : null;
         const nextBlock = index < blocks.length - 1 ? blocks[index + 1] : null;
-        const canAlignToNext = nextBlock && nextBlock.blockStartMinute > block.blockStartMinute;
-        const blockGesture = createRecordGestureHandlers({ item: block, onOpenOrigin: onOpenRecordOrigin, onPrimary: () => handleEdit(block) });
+        const canAlignToNext = nextBlock && nextBlock.blockStartMinute > block2.blockStartMinute;
+        const blockGesture = createRecordGestureHandlers({ item: block2, onOpenOrigin: onOpenRecordOrigin, onPrimary: () => handleEdit(block2) });
         return /* @__PURE__ */ u2(
           "div",
           {
             class: "timeline-task-block",
-            title: generateTaskBlockTitle(block),
+            title: generateTaskBlockTitle(block2),
             style: { top: `${top2}px`, height: `${Math.max(height2, 2)}px` },
             onClick: (e2) => e2.stopPropagation(),
             onTouchStart: (e2) => e2.stopPropagation(),
@@ -47605,8 +47963,8 @@ function DayColumnBody({
                   children: [
                     /* @__PURE__ */ u2("div", { class: "timeline-task-indicator", style: { background: color2 } }),
                     /* @__PURE__ */ u2("div", { class: "timeline-task-content", style: { background: hexToRgba(color2) }, children: [
-                      block.icon ? /* @__PURE__ */ u2("span", { class: "timeline-task-icon", children: block.icon }) : null,
-                      /* @__PURE__ */ u2("span", { class: "timeline-task-title", children: block.title || block.pureText })
+                      block2.icon ? /* @__PURE__ */ u2("span", { class: "timeline-task-icon", children: block2.icon }) : null,
+                      /* @__PURE__ */ u2("span", { class: "timeline-task-title", children: block2.title || block2.pureText })
                     ] })
                   ]
                 }
@@ -47618,7 +47976,7 @@ function DayColumnBody({
                     class: "task-button",
                     title: "向前对齐",
                     disabled: !prevBlock,
-                    onClick: () => handleAlignToPrev(block, prevBlock),
+                    onClick: () => handleAlignToPrev(block2, prevBlock),
                     children: "⇡"
                   }
                 ),
@@ -47628,7 +47986,7 @@ function DayColumnBody({
                     class: "task-button",
                     title: "向后对齐",
                     disabled: !canAlignToNext,
-                    onClick: () => handleAlignToNext(block, nextBlock),
+                    onClick: () => handleAlignToNext(block2, nextBlock),
                     children: "⇣"
                   }
                 ),
@@ -47637,14 +47995,14 @@ function DayColumnBody({
                   {
                     class: "task-button",
                     title: "精确编辑",
-                    onClick: () => handleEdit(block),
+                    onClick: () => handleEdit(block2),
                     children: "✎"
                   }
                 )
               ] })
             ]
           },
-          block.id + block.day
+          block2.id + block2.day
         );
       })
     }
@@ -48059,7 +48417,7 @@ function EventTimelineViewView(props) {
     displayFields,
     getItemTime,
     titleField,
-    contentField,
+    contentField: contentField2,
     maxContentLength,
     messageRenderPort,
     onMarkDone,
@@ -48076,7 +48434,7 @@ function EventTimelineViewView(props) {
     return compact.length > maxContentLength ? `${compact.slice(0, maxContentLength)}...` : compact;
   };
   const getTaskDisplayTitle = (item) => {
-    const fromContent = cleanDisplayText(readField(item, contentField));
+    const fromContent = cleanDisplayText(readField(item, contentField2));
     if (fromContent) return fromContent;
     return cleanDisplayText(readField(item, "content")) || cleanDisplayText(readField(item, titleField)) || item.title || "";
   };
@@ -48157,7 +48515,7 @@ function EventTimelineView(props) {
   const viewConfig = module2.viewConfig || {};
   const timeField = viewConfig.timeField || "date";
   const titleField = viewConfig.titleField || "title";
-  const contentField = viewConfig.contentField || "content";
+  const contentField2 = viewConfig.contentField || "content";
   const maxContentLength = Number.isFinite(Number(viewConfig.maxContentLength)) ? Number(viewConfig.maxContentLength) : 160;
   const start2 = T$1(() => dayjs(dateRange[0]), [dateRange]);
   const end2 = T$1(() => dayjs(dateRange[1]), [dateRange]);
@@ -48200,7 +48558,7 @@ function EventTimelineView(props) {
       displayFields,
       getItemTime,
       titleField,
-      contentField,
+      contentField: contentField2,
       maxContentLength,
       messageRenderPort,
       onMarkDone,
@@ -48568,7 +48926,7 @@ function HeatmapView({
       const dataForTheme = dataByThemeAndDate.get(theme2) || /* @__PURE__ */ new Map();
       const isVertical = currentView === "周" ? false : verticalLayouts.has(theme2);
       const isCollapsed = currentView === "年" && collapsedThemes.has(theme2);
-      const leafLabel = getThemeLeafLabel(theme2);
+      const leafLabel2 = getThemeLeafLabel(theme2);
       return /* @__PURE__ */ u2("div", { class: `heatmap-theme-group ${currentView === "年" ? "is-collapsible" : ""}`, children: /* @__PURE__ */ u2(
         "div",
         {
@@ -48589,7 +48947,7 @@ function HeatmapView({
                 },
                 children: /* @__PURE__ */ u2("div", { class: "heatmap-header-info-left", children: [
                   currentView === "年" && /* @__PURE__ */ u2("span", { class: `heatmap-collapse-arrow ${isCollapsed ? "is-collapsed" : ""}`, children: "▾" }),
-                  /* @__PURE__ */ u2("span", { class: "theme-name", children: leafLabel })
+                  /* @__PURE__ */ u2("span", { class: "theme-name", children: leafLabel2 })
                 ] })
               }
             ),
@@ -55262,6 +55620,119 @@ function QuickInputOptionPillGroup({
     }
   );
 }
+function normalizePath(value) {
+  return String(value || "").split("/").map((part) => part.trim()).filter(Boolean).join("/");
+}
+function leafLabel(path) {
+  const parts = normalizePath(path).split("/").filter(Boolean);
+  return parts[parts.length - 1] || path;
+}
+function getOrder(option) {
+  return typeof option.order === "number" && Number.isFinite(option.order) ? option.order : Number.MAX_SAFE_INTEGER;
+}
+function compareOption(a2, b2) {
+  const byOrder = getOrder(a2) - getOrder(b2);
+  if (byOrder !== 0) return byOrder;
+  return (a2.label || leafLabel(a2.value)).localeCompare(b2.label || leafLabel(b2.value), "zh-Hans-CN");
+}
+function buildTree(options) {
+  const byValue = /* @__PURE__ */ new Map();
+  const childrenByParent = /* @__PURE__ */ new Map();
+  for (const raw of options || []) {
+    const value = normalizePath(raw.value);
+    if (!value) continue;
+    byValue.set(value, { ...raw, value, label: raw.label || leafLabel(value) });
+  }
+  for (const value of Array.from(byValue.keys())) {
+    const parts = value.split("/").filter(Boolean);
+    for (let i2 = 1; i2 < parts.length; i2 += 1) {
+      const parentPath = parts.slice(0, i2).join("/");
+      if (!byValue.has(parentPath)) {
+        byValue.set(parentPath, {
+          id: `synthetic:${parentPath}`,
+          value: parentPath,
+          label: leafLabel(parentPath),
+          synthetic: true
+        });
+      }
+    }
+  }
+  const all = Array.from(byValue.values());
+  const roots = all.filter((option) => !option.value.includes("/")).sort(compareOption);
+  for (const option of all) {
+    const parts = option.value.split("/").filter(Boolean);
+    if (parts.length < 2) continue;
+    const parent = parts.slice(0, -1).join("/");
+    const list = childrenByParent.get(parent) || [];
+    list.push(option);
+    childrenByParent.set(parent, list);
+  }
+  childrenByParent.forEach((list, key) => childrenByParent.set(key, list.sort(compareOption)));
+  return { roots, childrenByParent, byValue };
+}
+function HierarchySingleSelect({
+  options,
+  selectedValue,
+  onSelect,
+  parentLabel = "父级",
+  childLabel = "子级",
+  emptyLabel = "暂无可选项",
+  dense = false,
+  allowClear = true,
+  searchable = true
+}) {
+  const [search, setSearch] = d("");
+  const normalizedSelected = normalizePath(selectedValue);
+  const { roots, childrenByParent, byValue } = T$1(() => buildTree(options), [options]);
+  const selected = normalizedSelected ? byValue.get(normalizedSelected) || null : null;
+  const activeParentPath = normalizedSelected ? normalizedSelected.includes("/") ? normalizedSelected.slice(0, normalizedSelected.lastIndexOf("/")) : normalizedSelected : roots[0]?.value || null;
+  const activeParent = activeParentPath ? byValue.get(activeParentPath) || null : null;
+  const children = activeParentPath ? childrenByParent.get(activeParentPath) || [] : [];
+  const filtered = search.trim() ? Array.from(byValue.values()).filter((option) => !option.synthetic).filter((option) => `${option.value} ${option.label || ""}`.toLowerCase().includes(search.trim().toLowerCase())).sort(compareOption).slice(0, 20) : [];
+  if (!options || options.length === 0) {
+    return /* @__PURE__ */ u2(Typography2, { variant: "body2", sx: { color: "text.secondary" }, children: emptyLabel });
+  }
+  const renderPill = (option, active) => /* @__PURE__ */ u2(
+    SelectablePill,
+    {
+      selected: active,
+      title: option.value,
+      onClick: () => onSelect(option),
+      children: [
+        option.icon ? `${option.icon} ` : "",
+        option.label || leafLabel(option.value)
+      ]
+    },
+    option.id || option.value
+  );
+  return /* @__PURE__ */ u2(Box, { sx: { display: "flex", flexDirection: "column", gap: dense ? 1 : 1.2 }, children: [
+    searchable && /* @__PURE__ */ u2(
+      "input",
+      {
+        className: "think-native-input",
+        value: search,
+        onInput: (event) => setSearch(event.target.value),
+        placeholder: "搜索目标/主题路径"
+      }
+    ),
+    filtered.length > 0 ? /* @__PURE__ */ u2(Box, { children: [
+      /* @__PURE__ */ u2(Typography2, { variant: "caption", sx: { color: "text.secondary", display: "block", mb: 0.75, fontWeight: 600 }, children: "搜索结果" }),
+      /* @__PURE__ */ u2("div", { style: { display: "flex", flexWrap: "wrap", gap: "8px" }, children: filtered.map((option) => renderPill(option, normalizedSelected === option.value)) })
+    ] }) : /* @__PURE__ */ u2(k$2, { children: [
+      /* @__PURE__ */ u2(Box, { children: [
+        /* @__PURE__ */ u2(Typography2, { variant: "caption", sx: { color: "text.secondary", display: "block", mb: 0.75, fontWeight: 600 }, children: parentLabel }),
+        /* @__PURE__ */ u2("div", { style: { display: "flex", flexWrap: "wrap", gap: "8px" }, children: [
+          roots.map((option) => renderPill(option, activeParentPath === option.value || normalizedSelected === option.value)),
+          allowClear && selected && renderPill({ id: "__clear__", value: "", label: "清空" }, false)
+        ] })
+      ] }),
+      /* @__PURE__ */ u2(Box, { children: [
+        /* @__PURE__ */ u2(Typography2, { variant: "caption", sx: { color: "text.secondary", display: "block", mb: 0.75, fontWeight: 600 }, children: activeParent ? `${activeParent.label || leafLabel(activeParent.value)} · ${childLabel}` : childLabel }),
+        children.length > 0 ? /* @__PURE__ */ u2("div", { style: { display: "flex", flexWrap: "wrap", gap: "8px" }, children: children.map((option) => renderPill(option, normalizedSelected === option.value)) }) : /* @__PURE__ */ u2(Typography2, { variant: "body2", sx: { color: "text.secondary", fontSize: "0.9rem" }, children: activeParent ? "这个父级下还没有子项。" : "先选择一个父级。" })
+      ] })
+    ] })
+  ] });
+}
 function toArrayValue(value) {
   if (Array.isArray(value)) return value.map((v2) => String(typeof v2 === "object" && v2 !== null ? v2.value ?? v2.label ?? "" : v2)).filter(Boolean);
   if (value && typeof value === "object") return [String(value.value ?? value.label ?? "")].filter(Boolean);
@@ -55270,7 +55741,7 @@ function toArrayValue(value) {
 function isImagePath(value) {
   return !!normalizeImageValue(value);
 }
-function QuickInputEditorFields({ getResourcePath, template, formData, dense = false, onUpdateField, timeDirection = "forward", onTimeDirectionChange, onRequestSubmit, isMobileLike = false, showTimeDirectionControl = false }) {
+function QuickInputEditorFields({ getResourcePath, template, formData, fieldValueOptionsByKey, dense = false, onUpdateField, timeDirection = "forward", onTimeDirectionChange, onRequestSubmit, isMobileLike = false, showTimeDirectionControl = false }) {
   const [tagDrafts, setTagDrafts] = d({});
   const handleUpdate = (key, value, isOptionObject2 = false) => {
     onUpdateField(key, value, isOptionObject2);
@@ -55348,6 +55819,50 @@ function QuickInputEditorFields({ getResourcePath, template, formData, dense = f
         onSelect: (choice) => handleUpdate(field.key, choice, true)
       }
     );
+  };
+  const getFieldChoices = (field) => {
+    const direct = normalizeQuickInputChoices(field.options);
+    const injected = fieldValueOptionsByKey?.[field.key] || fieldValueOptionsByKey?.[field.label || ""] || [];
+    if (!injected.length) return direct;
+    const seen = /* @__PURE__ */ new Set();
+    const merged = [...direct, ...injected.map((option) => ({ value: option.value, label: option.label || option.value, icon: option.icon }))].filter((option) => {
+      if (!option.value || seen.has(option.value)) return false;
+      seen.add(option.value);
+      return true;
+    });
+    return merged;
+  };
+  const renderHierarchySingleSelect = (field, label, value) => {
+    const choices = getFieldChoices(field);
+    const selectedValue = typeof value === "object" && value !== null ? String(value.value ?? value.label ?? "") : String(value ?? "");
+    const options = choices.map((choice) => ({
+      id: String(choice.value),
+      value: String(choice.value),
+      label: choice.label || String(choice.value).split("/").pop() || String(choice.value),
+      icon: choice.icon
+    }));
+    const control = options.length ? /* @__PURE__ */ u2(
+      HierarchySingleSelect,
+      {
+        options,
+        selectedValue,
+        onSelect: (option) => handleUpdate(field.key, option?.value || ""),
+        parentLabel: getTemplateFieldSemantic(field) === "themePath" ? "父主题" : "父级",
+        childLabel: getTemplateFieldSemantic(field) === "themePath" ? "子主题" : "子级",
+        dense,
+        allowClear: true,
+        searchable: true
+      }
+    ) : /* @__PURE__ */ u2(
+      "input",
+      {
+        className: "think-native-input",
+        value: selectedValue,
+        onInput: (e2) => handleUpdate(field.key, e2.target.value),
+        placeholder: "例如：生活/健康"
+      }
+    );
+    return renderStandardField(label, control);
   };
   const renderMultiOptionPills = (field) => {
     const selected = new Set(toArrayValue(formData[field.key]));
@@ -55574,10 +56089,12 @@ function QuickInputEditorFields({ getResourcePath, template, formData, dense = f
         );
       case "radio":
         return isInlineRowField(field) ? renderInlineRow(label, renderOptionPills(field)) : renderStandardField(label, renderOptionPills(field));
+      case "hierarchicalSingleSelect":
+        return renderHierarchySingleSelect(field, label, value);
       case "select":
       case "singleSelect":
       case "path": {
-        const choices = normalizeQuickInputChoices(field.options);
+        const choices = getFieldChoices(field);
         const singleSelectControl = choices.length ? renderOptionPills(field, label) : /* @__PURE__ */ u2(
           "input",
           {
@@ -55697,90 +56214,21 @@ function QuickInputEditorFields({ getResourcePath, template, formData, dense = f
   };
   return /* @__PURE__ */ u2(Stack, { spacing: dense ? 1.7 : 1.9, children: renderFields() });
 }
-function getThemeLabel(theme2) {
-  const raw = theme2.path?.split("/").filter(Boolean).pop() || "";
-  return raw || theme2.path || "";
-}
-function getThemeOrder(t3) {
-  return typeof t3.order === "number" && Number.isFinite(t3.order) ? t3.order : Number.MAX_SAFE_INTEGER;
-}
-function compareTheme(a2, b2) {
-  const ao = getThemeOrder(a2);
-  const bo = getThemeOrder(b2);
-  if (ao !== bo) return ao - bo;
-  return getThemeLabel(a2).localeCompare(getThemeLabel(b2), "zh-Hans-CN");
-}
-function buildThemeGroups(themes) {
-  const topLevel = themes.filter((t3) => !t3.path.includes("/"));
-  const childrenByParent = /* @__PURE__ */ new Map();
-  themes.forEach((theme2) => {
-    const parts = theme2.path.split("/").filter(Boolean);
-    if (parts.length < 2) return;
-    const parentPath = parts.slice(0, parts.length - 1).join("/");
-    const list = childrenByParent.get(parentPath) || [];
-    list.push(theme2);
-    childrenByParent.set(parentPath, list);
-  });
-  for (const [key, list] of childrenByParent.entries()) {
-    list.sort(compareTheme);
-    childrenByParent.set(key, list);
-  }
-  return {
-    parents: topLevel.sort(compareTheme),
-    childrenByParent
-  };
-}
-function QuickInputEditorThemeSelector({
-  themes,
-  selectedThemeId,
-  onSelect,
-  dense = false
-}) {
-  if (!themes || themes.length === 0) return null;
-  const { parents, childrenByParent } = buildThemeGroups(themes);
-  const selectedTheme = themes.find((t3) => t3.id === selectedThemeId) || null;
-  const selectedPath = selectedTheme?.path || null;
-  const activeParentPath = selectedPath ? selectedPath.includes("/") ? selectedPath.slice(0, selectedPath.lastIndexOf("/")) : selectedPath : null;
-  const activeParent = activeParentPath ? themes.find((t3) => t3.path === activeParentPath) || null : null;
-  const childThemes = activeParentPath ? childrenByParent.get(activeParentPath) || [] : [];
-  return /* @__PURE__ */ u2(FormControl2, { component: "fieldset", sx: { width: "100%" }, children: /* @__PURE__ */ u2(Box, { sx: { display: "flex", flexDirection: "column", gap: dense ? 1 : 1.2 }, children: [
-    /* @__PURE__ */ u2(Box, { children: [
-      /* @__PURE__ */ u2(Typography2, { variant: "caption", sx: { color: "text.secondary", display: "block", mb: 0.75, fontWeight: 600 }, children: "父主题" }),
-      /* @__PURE__ */ u2("div", { style: { display: "flex", flexWrap: "wrap", gap: "8px" }, children: parents.map((parent) => {
-        const isSelected = selectedThemeId === parent.id;
-        const isActiveParent = activeParentPath === parent.path;
-        return /* @__PURE__ */ u2(
-          SelectablePill,
-          {
-            selected: isSelected || isActiveParent,
-            title: parent.path,
-            onClick: () => onSelect(parent.id, parent.path),
-            children: [
-              parent.icon ? `${parent.icon} ` : "",
-              getThemeLabel(parent)
-            ]
-          },
-          parent.id
-        );
-      }) })
-    ] }),
-    /* @__PURE__ */ u2(Box, { children: [
-      /* @__PURE__ */ u2(Typography2, { variant: "caption", sx: { color: "text.secondary", display: "block", mb: 0.75, fontWeight: 600 }, children: activeParent ? `${getThemeLabel(activeParent)} · 子主题` : "子主题" }),
-      childThemes.length > 0 ? /* @__PURE__ */ u2("div", { style: { display: "flex", flexWrap: "wrap", gap: "8px" }, children: childThemes.map((child) => /* @__PURE__ */ u2(
-        SelectablePill,
-        {
-          selected: selectedThemeId === child.id,
-          title: child.path,
-          onClick: () => onSelect(child.id, child.path),
-          children: [
-            child.icon ? `${child.icon} ` : "",
-            getThemeLabel(child)
-          ]
-        },
-        child.id
-      )) }) : /* @__PURE__ */ u2(Typography2, { variant: "body2", sx: { color: "text.secondary", fontSize: "0.9rem" }, children: activeParent ? "这个父主题下还没有子主题。" : "先选择一个父主题。" })
-    ] })
-  ] }) });
+function GoalSelector({ goals, selectedGoalPath, onSelect, dense = false }) {
+  return /* @__PURE__ */ u2(
+    HierarchySingleSelect,
+    {
+      options: goals,
+      selectedValue: selectedGoalPath || null,
+      onSelect: (option) => onSelect(option),
+      parentLabel: "父目标",
+      childLabel: "子目标",
+      emptyLabel: "还没有目标。可以先从已有记录的目标字段自动生成候选。",
+      dense,
+      allowClear: true,
+      searchable: true
+    }
+  );
 }
 function MetaChip({ label, value }) {
   return /* @__PURE__ */ u2(
@@ -55808,12 +56256,24 @@ function MetaChip({ label, value }) {
 }
 function SnapshotSummary({
   currentThemePath,
+  currentGoalPath,
   templateSourceType,
   fieldSourceSummary
 }) {
   const chips = [];
+  if (currentGoalPath) chips.push({ label: "目标", value: currentGoalPath });
   if (currentThemePath) chips.push({ label: "主题", value: currentThemePath });
-  if (templateSourceType) chips.push({ label: "模板来源", value: templateSourceType === "override" ? "主题覆盖" : "Block 默认" });
+  if (templateSourceType) {
+    const sourceLabelMap = {
+      override: "主题覆盖",
+      block: "Block 默认",
+      "core-block": "核心Block",
+      "theme-fallback": "主题回退",
+      "goal-binding": "目标绑定",
+      "legacy-block": "旧Block"
+    };
+    chips.push({ label: "模板来源", value: sourceLabelMap[templateSourceType] || templateSourceType });
+  }
   if (fieldSourceSummary) {
     if (fieldSourceSummary.user > 0) chips.push({ label: "手填", value: String(fieldSourceSummary.user) });
     if (fieldSourceSummary.context > 0) chips.push({ label: "回填", value: String(fieldSourceSummary.context) });
@@ -55861,6 +56321,10 @@ function QuickInputEditorView({
   themes,
   selectedThemeId,
   onSelectTheme,
+  goals,
+  selectedGoalPath,
+  selectedGoalTitle,
+  onSelectGoal,
   template,
   formData,
   fieldValueOptionsByKey,
@@ -55880,36 +56344,41 @@ function QuickInputEditorView({
     return /* @__PURE__ */ u2("div", { children: "错误：找不到当前 Block 的模板配置。" });
   }
   return /* @__PURE__ */ u2(Box, { sx: { display: "flex", flexDirection: "column", gap: dense ? 1.75 : 2 }, children: [
-    allowBlockSwitch && blocks.length > 1 && /* @__PURE__ */ u2(Box, { children: [
-      /* @__PURE__ */ u2(SectionTitle, { title: "记录类型", compact: true }),
-      /* @__PURE__ */ u2(FormControl2, { fullWidth: true, children: /* @__PURE__ */ u2("div", { style: { display: "flex", flexWrap: "wrap", gap: "8px" }, children: blocks.map((block) => /* @__PURE__ */ u2(
-        SelectablePill,
-        {
-          selected: currentBlockId === block.id,
-          onClick: () => onBlockChange(block.id),
-          title: block.name,
-          children: block.name
-        },
-        block.id
-      )) }) })
-    ] }),
     /* @__PURE__ */ u2(Box, { children: [
-      /* @__PURE__ */ u2(SectionTitle, { title: "主题分类", compact: true }),
+      /* @__PURE__ */ u2(SectionTitle, { title: "目标", compact: true }),
       /* @__PURE__ */ u2(
-        QuickInputEditorThemeSelector,
+        GoalSelector,
         {
-          themes,
-          selectedThemeId,
-          onSelect: onSelectTheme,
+          goals,
+          selectedGoalPath,
+          onSelect: onSelectGoal,
           dense
         }
-      )
+      ),
+      selectedGoalTitle && selectedGoalTitle !== selectedGoalPath && /* @__PURE__ */ u2(Typography2, { variant: "caption", sx: { color: "text.secondary", display: "block", mt: 0.7 }, children: [
+        "当前目标：",
+        selectedGoalTitle
+      ] })
+    ] }),
+    allowBlockSwitch && blocks.length > 1 && /* @__PURE__ */ u2(Box, { children: [
+      /* @__PURE__ */ u2(SectionTitle, { title: "记录类型", compact: true }),
+      /* @__PURE__ */ u2(FormControl2, { fullWidth: true, children: /* @__PURE__ */ u2("div", { style: { display: "flex", flexWrap: "wrap", gap: "8px" }, children: blocks.map((block2) => /* @__PURE__ */ u2(
+        SelectablePill,
+        {
+          selected: currentBlockId === block2.id,
+          onClick: () => onBlockChange(block2.id),
+          title: block2.name,
+          children: block2.name
+        },
+        block2.id
+      )) }) })
     ] }),
     showDivider && /* @__PURE__ */ u2(Divider2, { sx: { my: dense ? 0.1 : 0.2, opacity: 0.55 } }),
     /* @__PURE__ */ u2(
       SnapshotSummary,
       {
         currentThemePath,
+        currentGoalPath: selectedGoalPath,
         templateSourceType,
         fieldSourceSummary
       }
@@ -55945,7 +56414,7 @@ const isSameValue = (a2, b2) => {
   }
   return a2 === b2;
 };
-const isRefreshableSource = (source) => source === void 0 || source === "template_default" || source === "system_auto";
+const isRefreshableSource = (source) => source === void 0 || source === "template_default" || source === "system_auto" || source === "goal_context" || source === "theme_context";
 const buildInitialFieldSources = (initialData) => {
   const next2 = {};
   if (!initialData) return next2;
@@ -55964,9 +56433,27 @@ const splitThemePathParts = (path) => {
     leafTheme: parts.length ? parts[parts.length - 1] : null
   };
 };
+const splitPathParts = (path) => {
+  const parts = String(path || "").split("/").map((part) => part.trim()).filter(Boolean);
+  return { path: parts.length ? parts.join("/") : null, root: parts[0] || null, leaf: parts.length ? parts[parts.length - 1] : null };
+};
+function getGoalPath(goal) {
+  if (!goal) return null;
+  return splitGoalPath(goal.goalPath || goal.title).goalPath;
+}
+function makeGoalIdFromPath(path) {
+  return `goal:${path}`;
+}
+function themeOptions(themes) {
+  return (themes || []).map((theme2) => ({ value: theme2.path, label: theme2.path.split("/").filter(Boolean).pop() || theme2.path, icon: theme2.icon }));
+}
 const buildFieldSourceSummary = (sources) => ({
   user: Object.values(sources).filter((v2) => v2 === "user").length,
   context: Object.values(sources).filter((v2) => v2 === "context").length,
+  edit_backfill: Object.values(sources).filter((v2) => v2 === "edit_backfill").length,
+  invocation_context: Object.values(sources).filter((v2) => v2 === "invocation_context").length,
+  goal_context: Object.values(sources).filter((v2) => v2 === "goal_context").length,
+  theme_context: Object.values(sources).filter((v2) => v2 === "theme_context").length,
   template_default: Object.values(sources).filter((v2) => v2 === "template_default").length,
   system_auto: Object.values(sources).filter((v2) => v2 === "system_auto").length
 });
@@ -56007,10 +56494,13 @@ function QuickInputEditor({
   onRequestSubmit,
   isMobileLike = false
 }) {
-  const settings = useSelector(selectInputSettings);
+  const fullSettings = useSelector(selectSettings);
+  const settings = fullSettings.inputSettings;
   const dataStore = useDataStore();
   const [currentBlockId, setCurrentBlockId] = d(initialBlockId);
   const [selectedThemeId, setSelectedThemeId] = d(initialThemeId);
+  const [selectedGoalId, setSelectedGoalId] = d(() => String(initialFormData?.goalId ?? initialFormData?.["目标ID"] ?? "").trim() || null);
+  const [selectedGoalPath, setSelectedGoalPath] = d(() => splitGoalPath(String(initialFormData?.goalPath ?? initialFormData?.["目标"] ?? "")).goalPath);
   const [formData, setFormData] = d(() => initialFormData ?? EMPTY_FORM_DATA);
   const [fieldSources, setFieldSources] = d(() => buildInitialFieldSources(initialFormData));
   const [timeDirection, setTimeDirection] = d(() => initialFormData?.__timeDirection === "backward" ? "backward" : "forward");
@@ -56020,8 +56510,13 @@ function QuickInputEditor({
     setFormData(initialFormData ?? EMPTY_FORM_DATA);
     setFieldSources(buildInitialFieldSources(initialFormData));
     setTimeDirection(initialFormData?.__timeDirection === "backward" ? "backward" : "forward");
+    setSelectedGoalId(String(initialFormData?.goalId ?? initialFormData?.["目标ID"] ?? "").trim() || null);
+    setSelectedGoalPath(splitGoalPath(String(initialFormData?.goalPath ?? initialFormData?.["目标"] ?? "")).goalPath);
   }, [initialBlockId, initialThemeId]);
-  const blocks = T$1(() => settings.blocks || [], [settings.blocks]);
+  const blocks = T$1(() => {
+    const coreBlocks = getEffectiveCoreBlocks(fullSettings);
+    return coreBlocks.length ? coreBlocks : settings.blocks || [];
+  }, [fullSettings, settings.blocks]);
   const themes = T$1(() => settings.themes || [], [settings.themes]);
   const { availableThemes, themeIdMap, pathToIdMap } = T$1(() => {
     const disabledThemeIds = /* @__PURE__ */ new Set();
@@ -56035,9 +56530,22 @@ function QuickInputEditor({
       pathToIdMap: new Map((themes || []).map((t3) => [t3.path, t3.id]))
     };
   }, [settings, themes, currentBlockId]);
-  const { template: rawTemplate, theme: theme2, templateId, templateSourceType } = T$1(() => getEffectiveTemplate(settings, currentBlockId, selectedThemeId || void 0), [
-    settings,
+  const selectedGoal = T$1(() => {
+    const goals = fullSettings.goalSettings?.goals || [];
+    return (selectedGoalId ? goals.find((goal) => goal.id === selectedGoalId) : null) || (selectedGoalPath ? goals.find((goal) => getGoalPath(goal) === selectedGoalPath) : null) || null;
+  }, [fullSettings.goalSettings?.goals, selectedGoalId, selectedGoalPath]);
+  const { template: rawTemplate, theme: theme2, goal: resolvedGoal, templateId, templateSourceType, effectiveBlockId } = T$1(() => GoalTemplateResolver.resolve({
+    settings: fullSettings,
+    blockId: currentBlockId,
+    goalId: selectedGoal?.id || selectedGoalId,
+    goalPath: selectedGoalPath,
+    themeId: selectedThemeId || void 0
+  }), [
+    fullSettings,
     currentBlockId,
+    selectedGoal?.id,
+    selectedGoalId,
+    selectedGoalPath,
     selectedThemeId
   ]);
   const generatedGoalOptions = T$1(() => {
@@ -56049,16 +56557,42 @@ function QuickInputEditor({
     }
     return Array.from(counts.entries()).sort((left2, right2) => right2[1] - left2[1] || left2[0].localeCompare(right2[0], "zh-CN")).slice(0, 30).map(([value]) => ({ value, label: value }));
   }, [dataStore]);
+  const goalOptions = T$1(() => {
+    const seen = /* @__PURE__ */ new Set();
+    const result = [];
+    const add2 = (path, label, goal, themePath, id) => {
+      const normalized = splitGoalPath(path || "").goalPath;
+      if (!normalized || seen.has(normalized)) return;
+      seen.add(normalized);
+      result.push({
+        id: id || goal?.id || makeGoalIdFromPath(normalized),
+        value: normalized,
+        label: label || normalized.split("/").filter(Boolean).pop() || normalized,
+        goal: goal || null,
+        themePath: themePath ?? goal?.themePath ?? null
+      });
+    };
+    (fullSettings.goalSettings?.goals || []).filter((goal) => goal.status !== "archived").forEach((goal) => add2(goal.goalPath || goal.title, goal.title, goal, goal.themePath, goal.id));
+    generatedGoalOptions.forEach((option) => add2(option.value, option.label, null, null));
+    return result;
+  }, [fullSettings.goalSettings?.goals, generatedGoalOptions]);
+  const currentGoalPath = selectedGoalPath || getGoalPath(selectedGoal || resolvedGoal) || null;
+  const currentGoalTitle = selectedGoal?.title || resolvedGoal?.title || (currentGoalPath ? currentGoalPath.split("/").filter(Boolean).pop() || currentGoalPath : null);
+  const currentGoalParts = splitPathParts(currentGoalPath);
   const template = T$1(() => {
-    if (!rawTemplate?.fields?.length || generatedGoalOptions.length === 0) return rawTemplate;
+    if (!rawTemplate?.fields?.length) return rawTemplate;
+    const themeFieldOptions = themeOptions(availableThemes);
     return {
       ...rawTemplate,
+      coreBlockId: effectiveBlockId || rawTemplate.coreBlockId,
       fields: rawTemplate.fields.map((field) => {
-        if (getTemplateFieldSemantic(field) !== "goals") return field;
-        return { ...field, options: mergeGoalOptions(field.options, generatedGoalOptions) };
+        const semantic = getTemplateFieldSemantic(field);
+        if (semantic === "goals") return { ...field, options: mergeGoalOptions(field.options, generatedGoalOptions) };
+        if (semantic === "themePath") return { ...field, type: field.type === "path" ? "hierarchicalSingleSelect" : field.type, options: themeFieldOptions };
+        return field;
       })
     };
-  }, [rawTemplate, generatedGoalOptions]);
+  }, [rawTemplate, availableThemes, effectiveBlockId, generatedGoalOptions]);
   const showTimeDirectionControl = T$1(() => {
     if (!template?.fields) return false;
     const keys = new Set((template.fields || []).map((f2) => f2.key || f2.label));
@@ -56080,7 +56614,13 @@ function QuickInputEditor({
   };
   y(() => {
     if (!template) return;
-    const dataForParsing = { ...context, theme: theme2 ? { path: theme2.path, icon: theme2.icon || "" } : {} };
+    const dataForParsing = {
+      ...context,
+      goal: { id: selectedGoal?.id || selectedGoalId || "", title: currentGoalTitle || "", path: currentGoalPath || "", themePath: selectedGoal?.themePath || theme2?.path || "" },
+      goalId: selectedGoal?.id || selectedGoalId || "",
+      goalPath: currentGoalPath || "",
+      theme: theme2 ? { path: theme2.path, icon: theme2.icon || "" } : { path: selectedGoal?.themePath || "", icon: "" }
+    };
     setFormData((current2) => {
       let changed = false;
       const next2 = { ...current2 };
@@ -56154,12 +56694,19 @@ function QuickInputEditor({
       setFieldSources(nextSources);
       return next2;
     });
-  }, [template, theme2, context, timeDirection]);
+  }, [template, theme2, context, timeDirection, selectedGoal?.id, selectedGoal?.themePath, selectedGoalId, currentGoalPath, currentGoalTitle]);
   y(() => {
-    const currentTheme = selectedThemeId ? themeIdMap.get(selectedThemeId) ?? null : null;
-    const themeParts = splitThemePathParts(currentTheme?.path ?? null);
+    const currentTheme = selectedThemeId ? themeIdMap.get(selectedThemeId) ?? theme2 ?? null : theme2 ?? null;
+    const effectiveThemePath = String(formData.themePath ?? formData["主题"] ?? currentTheme?.path ?? selectedGoal?.themePath ?? "").trim();
+    const themeParts = splitThemePathParts(effectiveThemePath || null);
     onStateChange?.({
       blockId: currentBlockId,
+      coreBlockId: effectiveBlockId,
+      goalId: selectedGoal?.id || selectedGoalId,
+      goalPath: currentGoalPath,
+      goalTitle: currentGoalTitle,
+      rootGoal: currentGoalParts.root,
+      leafGoal: currentGoalParts.leaf,
       themeId: selectedThemeId,
       formData: { ...formData, __timeDirection: timeDirection },
       meta: { timeDirection },
@@ -56171,12 +56718,19 @@ function QuickInputEditor({
       ...themeParts,
       fieldSourceSummary: buildFieldSourceSummary(fieldSources)
     });
-  }, [currentBlockId, selectedThemeId, formData, timeDirection, template, templateId, templateSourceType, fieldSources]);
+  }, [currentBlockId, effectiveBlockId, selectedGoal?.id, selectedGoalId, currentGoalPath, currentGoalTitle, currentGoalParts.root, currentGoalParts.leaf, selectedThemeId, formData, timeDirection, template, templateId, templateSourceType, fieldSources, theme2]);
   const emitDraftState = (draftFormData, directionOverride = timeDirection, sourceOverride = fieldSources) => {
-    const currentTheme = selectedThemeId ? themeIdMap.get(selectedThemeId) ?? null : null;
-    const themeParts = splitThemePathParts(currentTheme?.path ?? null);
+    const currentTheme = selectedThemeId ? themeIdMap.get(selectedThemeId) ?? theme2 ?? null : theme2 ?? null;
+    const effectiveThemePath = String(draftFormData.themePath ?? draftFormData["主题"] ?? currentTheme?.path ?? selectedGoal?.themePath ?? "").trim();
+    const themeParts = splitThemePathParts(effectiveThemePath || null);
     onStateChange?.({
       blockId: currentBlockId,
+      coreBlockId: effectiveBlockId,
+      goalId: selectedGoal?.id || selectedGoalId,
+      goalPath: currentGoalPath,
+      goalTitle: currentGoalTitle,
+      rootGoal: currentGoalParts.root,
+      leafGoal: currentGoalParts.leaf,
       themeId: selectedThemeId,
       formData: { ...draftFormData, __timeDirection: directionOverride },
       meta: { timeDirection: directionOverride },
@@ -56190,6 +56744,16 @@ function QuickInputEditor({
     });
   };
   const handleUpdateField = (key, value, isOptionObject2 = false) => {
+    const rawValue = isOptionObject2 ? value?.value : value;
+    if (key === "themePath" || key === "主题") {
+      const nextPath = String(rawValue ?? "").trim();
+      setSelectedThemeId(nextPath ? pathToIdMap.get(nextPath) ?? null : null);
+    }
+    if (key === "goalPath" || key === "目标" || key === "目标路径") {
+      const nextGoalPath = splitGoalPath(String(rawValue ?? "")).goalPath;
+      setSelectedGoalPath(nextGoalPath);
+      setSelectedGoalId(nextGoalPath ? makeGoalIdFromPath(nextGoalPath) : null);
+    }
     setFormData((cur) => {
       const draft = { ...cur, [key]: isOptionObject2 ? { value: value.value, label: value.label } : value, lastChanged: key };
       const linked = applyLinkedDraftChanges(draft, timeDirection);
@@ -56228,7 +56792,7 @@ function QuickInputEditor({
     if (newBlockId === currentBlockId) return;
     const preserved = {};
     const preservedSources = {};
-    ["内容", "content", "日期", "date", "时间", "time", "备注", "note", "description"].forEach((k2) => {
+    ["内容", "content", "日期", "date", "时间", "time", "备注", "note", "description", "目标", "目标ID", "goalId", "goalPath", "themePath", "主题"].forEach((k2) => {
       if (formData[k2] !== void 0) preserved[k2] = formData[k2];
       if (fieldSources[k2]) preservedSources[k2] = fieldSources[k2];
     });
@@ -56250,6 +56814,45 @@ function QuickInputEditor({
     }
     setSelectedThemeId(themeId);
   };
+  const handleSelectGoal = (option) => {
+    if (!option || !option.value) {
+      setSelectedGoalId(null);
+      setSelectedGoalPath(null);
+      return;
+    }
+    const goal = option.goal || null;
+    const goalPath = splitGoalPath(goal?.goalPath || option.value).goalPath;
+    const goalId = goal?.id || (option.id && !String(option.id).startsWith("goal:") ? option.id : makeGoalIdFromPath(goalPath || option.value));
+    const themePath = goal?.themePath || option.themePath || null;
+    setSelectedGoalId(goalId);
+    setSelectedGoalPath(goalPath || option.value);
+    if (themePath) setSelectedThemeId(pathToIdMap.get(themePath) ?? null);
+    setFormData((cur) => {
+      const next2 = { ...cur };
+      const nextSources = { ...fieldSources };
+      const assign2 = (key, value, source = "goal_context") => {
+        if (value === void 0 || value === null || value === "") return;
+        const currentSource = nextSources[key];
+        const hasUserValue = currentSource === "user" && isMeaningfulValue(next2[key]);
+        if (hasUserValue) return;
+        next2[key] = value;
+        nextSources[key] = source;
+      };
+      assign2("goalId", goalId);
+      assign2("目标ID", goalId);
+      assign2("goalPath", goalPath || option.value);
+      assign2("目标", goalPath || option.value);
+      const parts = splitGoalPath(goalPath || option.value);
+      assign2("rootGoal", parts.rootGoal || "", "goal_context");
+      assign2("leafGoal", parts.leafGoal || "", "goal_context");
+      if (themePath) {
+        assign2("themePath", themePath, "goal_context");
+        assign2("主题", themePath, "goal_context");
+      }
+      setFieldSources(nextSources);
+      return next2;
+    });
+  };
   return /* @__PURE__ */ u2(
     QuickInputEditorView,
     {
@@ -56261,8 +56864,13 @@ function QuickInputEditor({
       themes: availableThemes,
       selectedThemeId,
       onSelectTheme: handleSelectTheme,
+      goals: goalOptions,
+      selectedGoalPath: currentGoalPath,
+      selectedGoalTitle: currentGoalTitle,
+      onSelectGoal: handleSelectGoal,
       template,
       formData,
+      fieldValueOptionsByKey: { themePath: themeOptions(availableThemes), "主题": themeOptions(availableThemes) },
       timeDirection,
       dense,
       showDivider,
@@ -56271,7 +56879,7 @@ function QuickInputEditor({
       onRequestSubmit,
       isMobileLike,
       showTimeDirectionControl,
-      currentThemePath: theme2?.path ?? null,
+      currentThemePath: String(formData.themePath ?? formData["主题"] ?? theme2?.path ?? selectedGoal?.themePath ?? "") || null,
       templateSourceType,
       fieldSourceSummary: buildFieldSourceSummary(fieldSources)
     }
@@ -57011,7 +57619,7 @@ function QuickInputModalContent({
   const editorStateRef = A$1(null);
   const isMobileLike = T$1(() => isMobileLikeEnvironment(), []);
   const currentState = editorStateRef.current || editorState;
-  const currentBlock = (settings.blocks || []).find((block) => block.id === currentState.blockId);
+  const currentBlock = (settings.blocks || []).find((block2) => block2.id === currentState.blockId);
   const currentBlockName = currentBlock?.name || currentState.template?.name || currentState.blockId;
   const isTimerCreate = mode === "create" && (source === "timer" || !!onSave);
   const {
@@ -57375,22 +57983,22 @@ function AiBatchConfirmForm({
   const themes = settings.themes || [];
   const [records, setRecords] = d(
     () => initialItems.map((cmd, index) => {
-      let block = cmd.target.blockId ? blocks.find((b2) => b2.id === cmd.target.blockId) : void 0;
-      if (!block && cmd.target.categoryKey) {
-        block = blocks.find((b2) => b2.categoryKey === cmd.target.categoryKey);
+      let block2 = cmd.target.blockId ? blocks.find((b2) => b2.id === cmd.target.blockId) : void 0;
+      if (!block2 && cmd.target.categoryKey) {
+        block2 = blocks.find((b2) => b2.categoryKey === cmd.target.categoryKey);
       }
-      if (!block && blocks.length > 0) block = blocks[0];
+      if (!block2 && blocks.length > 0) block2 = blocks[0];
       let themeId;
       if (cmd.target.themeId) {
         const theme2 = themes.find((t3) => t3.id === cmd.target.themeId || t3.path === cmd.target.themeId);
         if (theme2) themeId = theme2.id;
       }
       if (!themeId && themes.length > 0) themeId = themes[0].id;
-      const initialTemplate = block ? getEffectiveTemplate(settings, block.id, themeId).template : void 0;
+      const initialTemplate = block2 ? getEffectiveTemplate(settings, block2.id, themeId).template : void 0;
       return {
         id: `record-${index}`,
         cmd,
-        blockId: block?.id || "",
+        blockId: block2?.id || "",
         themeId,
         formData: normalizeAiFormData(initialTemplate ?? void 0, { ...cmd.fieldValues || {} }),
         saved: false,
@@ -57544,7 +58152,7 @@ function AiBatchConfirmForm({
             ] })
           ] }),
           /* @__PURE__ */ u2(List2, { sx: { flex: 1, overflow: "auto", py: 0 }, children: records.map((record, index) => {
-            const block = blocks.find((b2) => b2.id === record.blockId);
+            const block2 = blocks.find((b2) => b2.id === record.blockId);
             const isActive = index === currentIndex;
             return /* @__PURE__ */ u2(
               ListItemButton2,
@@ -57557,7 +58165,7 @@ function AiBatchConfirmForm({
                   /* @__PURE__ */ u2(
                     ListItemText2,
                     {
-                      primary: /* @__PURE__ */ u2(Typography2, { variant: "body2", noWrap: true, sx: { fontWeight: isActive ? 600 : 400 }, children: block?.name || "未知类型" }),
+                      primary: /* @__PURE__ */ u2(Typography2, { variant: "body2", noWrap: true, sx: { fontWeight: isActive ? 600 : 400 }, children: block2?.name || "未知类型" }),
                       secondary: /* @__PURE__ */ u2(Typography2, { variant: "caption", noWrap: true, color: "text.secondary", children: record.cmd.fieldValues?.内容?.slice(0, 20) || record.cmd.rawText?.slice(0, 20) || `记录 ${index + 1}` })
                     }
                   )
@@ -59983,9 +60591,12 @@ function RuleBuilder({ title, mode, rows, fieldOptions, onChange, dataStore, var
   ] });
 }
 const DEFAULT_QUICK_FILTER_FIELDS = [
-  { field: "themePath", label: "主题路径", help: "使用完整 themePath 筛选，例如 生活/健康；不再用根主题或章节标题兜底。", placeholder: "选择主题路径" },
-  { field: "baseCategory", label: "分类", help: "不同字段之间默认表示“且”：主题匹配后还要分类匹配。", placeholder: "选择分类" },
-  { field: "goalPaths", label: "目标", placeholder: "选择目标" },
+  { field: "goalPath", label: "目标", help: "目标中心主筛选字段，优先用目标路径聚合任务/计划/总结/打卡。", placeholder: "选择目标" },
+  { field: "goalPaths", label: "目标列表", placeholder: "选择目标" },
+  { field: "goalId", label: "目标ID", help: "稳定目标 ID，适合目标实体化后的精确筛选。", placeholder: "输入目标ID" },
+  { field: "coreBlock", label: "核心Block", help: "按 task/plan/review/thought/habit/evidence/blocker/milestone 分组筛选。", placeholder: "选择核心Block" },
+  { field: "themePath", label: "主题", help: "主题已降级为表单层级单选字段，但仍可用于上下文筛选。", placeholder: "选择主题" },
+  { field: "baseCategory", label: "分类", help: "不同字段之间默认表示“且”：目标匹配后还要分类匹配。", placeholder: "选择分类" },
   { field: "type", label: "类型", placeholder: "选择记录类型" },
   { field: "priority", label: "优先级", placeholder: "选择优先级" },
   { field: "period", label: "时间粒度", placeholder: "选择粒度" }
@@ -60180,7 +60791,7 @@ function ViewInstanceEditor({ vi }) {
     () => VIEW_OPTIONS.map((v2) => ({ value: v2, label: v2.replace("View", "") })),
     []
   );
-  const commonFilterFields = T$1(() => ["themePath", "baseCategory", "goalPaths", "type", "priority", "period"], []);
+  const commonFilterFields = T$1(() => ["goalPath", "goalPaths", "goalId", "coreBlock", "themePath", "baseCategory", "type", "priority", "period"], []);
   const hasAdvancedFilters = T$1(() => (currentVi.filters || []).some((rule) => rule.op !== "in" || !commonFilterFields.includes(rule.field)), [currentVi.filters, commonFilterFields]);
   const handleFieldsChange = (fields) => {
     handleUpdate({ fields });
@@ -60827,7 +61438,7 @@ function DataFilterPanel({
   const activeCount = filters.length;
   const sourceItems = items ?? dataStore.queryItems();
   const fieldOptions = T$1(() => getAllFields(sourceItems), [sourceItems]);
-  const commonFilterFields = T$1(() => ["themePath", "baseCategory", "goalPaths", "type", "priority", "period"], []);
+  const commonFilterFields = T$1(() => ["goalPath", "goalPaths", "goalId", "coreBlock", "themePath", "baseCategory", "type", "priority", "period"], []);
   const hasAdvancedFilters = T$1(() => filters.some((rule) => rule.op !== "in" || !commonFilterFields.includes(rule.field)), [filters, commonFilterFields]);
   const handleOpen = () => {
     setAdvancedOpen(hasAdvancedFilters);
@@ -60915,7 +61526,7 @@ function DataFilterPanel({
                 CommonFilterPanel,
                 {
                   title: "常用筛选",
-                  description: "先用主题路径、分类、目标等常用字段筛选：同一字段内多选表示“或”，不同字段之间默认表示“且”。",
+                  description: "先用目标、核心Block、主题等常用字段筛选：同一字段内多选表示“或”，不同字段之间默认表示“且”。",
                   dataStore,
                   filters,
                   items: sourceItems,
@@ -61697,7 +62308,7 @@ function FieldsEditor({
     /* @__PURE__ */ u2(Box, { children: /* @__PURE__ */ u2(Button2, { onClick: addField, disabled, startIcon: /* @__PURE__ */ u2(AddIcon, {}), variant: "contained", size: "small", children: "添加字段" }) })
   ] });
 }
-function TemplateVariableCopier({ block }) {
+function TemplateVariableCopier({ block: block2 }) {
   const ui = useUiPort();
   const variableOptions = T$1(() => {
     const options = [
@@ -61710,7 +62321,7 @@ function TemplateVariableCopier({ block }) {
       { value: "模板ID:: {{templateId}}", label: "模板ID:: {{templateId}}" },
       { value: "模板来源:: {{templateSourceType}}", label: "模板来源:: {{templateSourceType}}" }
     ];
-    (block?.fields || []).forEach((field) => {
+    (block2?.fields || []).forEach((field) => {
       const fieldKey = field.key || "untitled";
       const fieldType = field.type || "text";
       options.push({ value: `{{${fieldKey}}}`, label: `${fieldKey}` });
@@ -61737,7 +62348,7 @@ function TemplateVariableCopier({ block }) {
       }
     });
     return options;
-  }, [block]);
+  }, [block2]);
   const handleCopy = (variable) => {
     if (!variable) return;
     navigator.clipboard.writeText(variable);
@@ -61855,7 +62466,7 @@ function NativeTextarea({
     )
   ] });
 }
-function TemplateEditorModal({ isOpen, onClose, block, theme: theme2, existingOverride, useCases }) {
+function TemplateEditorModal({ isOpen, onClose, block: block2, theme: theme2, existingOverride, useCases }) {
   const ui = useUiPort();
   const [mode, setMode] = d("inherit");
   const [localOverride, setLocalOverride] = d({});
@@ -61868,8 +62479,8 @@ function TemplateEditorModal({ isOpen, onClose, block, theme: theme2, existingOv
       logTemplateEditor("初始化", {
         themeId: theme2.id,
         themePath: theme2.path,
-        blockId: block.id,
-        blockName: block.name,
+        blockId: block2.id,
+        blockName: block2.name,
         hasExistingOverride: true,
         nextMode,
         initialOverride: clonedOverride
@@ -61879,16 +62490,16 @@ function TemplateEditorModal({ isOpen, onClose, block, theme: theme2, existingOv
       setLocalOverride(clonedOverride);
     } else {
       const initialOverride = {
-        fields: cloneValue(block.fields),
-        outputTemplate: block.outputTemplate,
-        targetFile: block.targetFile,
-        appendUnderHeader: block.appendUnderHeader
+        fields: cloneValue(block2.fields),
+        outputTemplate: block2.outputTemplate,
+        targetFile: block2.targetFile,
+        appendUnderHeader: block2.appendUnderHeader
       };
       logTemplateEditor("初始化", {
         themeId: theme2.id,
         themePath: theme2.path,
-        blockId: block.id,
-        blockName: block.name,
+        blockId: block2.id,
+        blockName: block2.name,
         hasExistingOverride: false,
         nextMode: "inherit",
         initialOverride
@@ -61897,14 +62508,14 @@ function TemplateEditorModal({ isOpen, onClose, block, theme: theme2, existingOv
       localOverrideRef.current = initialOverride;
       setLocalOverride(initialOverride);
     }
-  }, [isOpen, existingOverride, block, theme2.id, theme2.path]);
+  }, [isOpen, existingOverride, block2, theme2.id, theme2.path]);
   const effectiveBlockForCopier = T$1(() => {
     return {
-      ...block,
+      ...block2,
       ...localOverride,
-      fields: localOverride.fields || block.fields
+      fields: localOverride.fields || block2.fields
     };
-  }, [block, localOverride]);
+  }, [block2, localOverride]);
   const isFormDisabled = mode !== "override";
   y(() => {
     if (!isOpen) return;
@@ -61949,15 +62560,15 @@ function TemplateEditorModal({ isOpen, onClose, block, theme: theme2, existingOv
     try {
       if (mode === "inherit") {
         if (existingOverride) {
-          logTemplateEditor("保存/删除覆写", { blockId: block.id, themeId: theme2.id });
-          await useCases.theme.deleteOverride(block.id, theme2.id);
+          logTemplateEditor("保存/删除覆写", { blockId: block2.id, themeId: theme2.id });
+          await useCases.theme.deleteOverride(block2.id, theme2.id);
         } else {
-          logTemplateEditor("保存/继承无需变更", { blockId: block.id, themeId: theme2.id });
+          logTemplateEditor("保存/继承无需变更", { blockId: block2.id, themeId: theme2.id });
         }
-        ui.notice(`已设为继承 "${block.name}" 的基础配置`);
+        ui.notice(`已设为继承 "${block2.name}" 的基础配置`);
       } else {
         const dataToSave = {
-          blockId: block.id,
+          blockId: block2.id,
           themeId: theme2.id,
           disabled: mode === "disabled",
           fields: mode === "override" ? draft.fields : void 0,
@@ -61971,7 +62582,7 @@ function TemplateEditorModal({ isOpen, onClose, block, theme: theme2, existingOv
         if (!result) {
           throw new Error("useCases.theme.upsertOverride 返回 null，通常表示设置仓库尚未初始化或保存层拒绝写入。");
         }
-        ui.notice(`已保存 "${theme2.path}" 对 "${block.name}" 的配置`);
+        ui.notice(`已保存 "${theme2.path}" 对 "${block2.name}" 的配置`);
       }
       onClose();
     } catch (error) {
@@ -61983,12 +62594,12 @@ function TemplateEditorModal({ isOpen, onClose, block, theme: theme2, existingOv
   return /* @__PURE__ */ u2(
     FloatingPanel,
     {
-      id: `theme-template-editor-${theme2.id}-${block.id}`,
+      id: `theme-template-editor-${theme2.id}-${block2.id}`,
       title: /* @__PURE__ */ u2(Typography2, { children: [
         "配置: ",
         /* @__PURE__ */ u2("strong", { children: theme2.path }),
         " / ",
-        /* @__PURE__ */ u2("span", { style: { color: "var(--color-accent)" }, children: block.name })
+        /* @__PURE__ */ u2("span", { style: { color: "var(--color-accent)" }, children: block2.name })
       ] }),
       onClose,
       portal: false,
@@ -62423,12 +63034,12 @@ function ThemeTreeNodeRow({
             }
           )
         ) }),
-        blocks.map((block) => {
-          const cellId = `${theme2.id}:${block.id}`;
+        blocks.map((block2) => {
+          const cellId = `${theme2.id}:${block2.id}`;
           const isCellSelected = editorState.selectedCells.has(cellId);
-          const kind = getBlockKind(theme2.id, block.id, overridesMap);
-          const prevKind = prevNode?.theme ? getBlockKind(prevNode.theme.id, block.id, overridesMap) : null;
-          const nextKind = nextNode?.theme ? getBlockKind(nextNode.theme.id, block.id, overridesMap) : null;
+          const kind = getBlockKind(theme2.id, block2.id, overridesMap);
+          const prevKind = prevNode?.theme ? getBlockKind(prevNode.theme.id, block2.id, overridesMap) : null;
+          const nextKind = nextNode?.theme ? getBlockKind(nextNode.theme.id, block2.id, overridesMap) : null;
           if (isEditMode) {
             return /* @__PURE__ */ u2(AnyTableCell$1, { align: "center", sx: { p: 0, width: BLOCK_COL_WIDTH$1 }, children: /* @__PURE__ */ u2(
               "input",
@@ -62438,7 +63049,7 @@ function ThemeTreeNodeRow({
                 onChange: (e2) => onSelectionChange("block", cellId, e2.target.checked),
                 style: { margin: 0, cursor: "pointer", transform: "scale(1.1)" }
               }
-            ) }, block.id);
+            ) }, block2.id);
           }
           let cellIcon;
           let cellTitle = "继承";
@@ -62456,8 +63067,8 @@ function ThemeTreeNodeRow({
             prevKind === kind,
             nextKind === kind,
             /* @__PURE__ */ u2("span", { style: { display: "flex", alignItems: "center", justifyContent: "center" }, children: cellIcon }),
-            () => onCellClick(block, theme2)
-          ) }) }, block.id);
+            () => onCellClick(block2, theme2)
+          ) }) }, block2.id);
         })
       ]
     }
@@ -63348,15 +63959,15 @@ function ThemeMatrixView({ blocks, themes, overrides, settings, useCases, dataSt
       setNewThemePath("");
     }
   };
-  const handleCellClick = (block, theme2) => {
+  const handleCellClick = (block2, theme2) => {
     if (editorState.mode === "edit") {
-      const cellId = `${theme2.id}:${block.id}`;
+      const cellId = `${theme2.id}:${block2.id}`;
       const isSelected = editorState.selectedCells.has(cellId);
       handleSelectionChange("block", cellId, !isSelected);
       return;
     }
-    const override = overridesMap.get(`${theme2.id}:${block.id}`) || null;
-    setModalData({ block, theme: theme2, override });
+    const override = overridesMap.get(`${theme2.id}:${block2.id}`) || null;
+    setModalData({ block: block2, theme: theme2, override });
     setModalOpen(true);
   };
   const handleReorderThemeSiblings = async (orderedThemeIds, parentKey) => {
@@ -67555,33 +68166,33 @@ function LayoutSettings({ app }) {
     layouts.length === 0 && /* @__PURE__ */ u2(Typography2, { color: "text.secondary", sx: { textAlign: "center", py: 4 }, children: '暂无布局，点击"添加布局"创建第一个' })
   ] });
 }
-function SortableBlockItem({ block, openId, setOpenId, handleDelete, handleDuplicate, useCases }) {
-  const { attributes, listeners, setNodeRef, transform: transform2, transition } = useSortable({ id: block.id });
+function SortableBlockItem({ block: block2, openId, setOpenId, handleDelete, handleDuplicate, useCases }) {
+  const { attributes, listeners, setNodeRef, transform: transform2, transition } = useSortable({ id: block2.id });
   const style2 = { transform: CSS$1.Transform.toString(transform2), transition };
-  return /* @__PURE__ */ u2("div", { ref: setNodeRef, style: style2, children: /* @__PURE__ */ u2(Accordion2, { expanded: openId === block.id, onChange: () => setOpenId(openId === block.id ? null : block.id), disableGutters: true, elevation: 1, sx: { "&:before": { display: "none" } }, children: [
+  return /* @__PURE__ */ u2("div", { ref: setNodeRef, style: style2, children: /* @__PURE__ */ u2(Accordion2, { expanded: openId === block2.id, onChange: () => setOpenId(openId === block2.id ? null : block2.id), disableGutters: true, elevation: 1, sx: { "&:before": { display: "none" } }, children: [
     /* @__PURE__ */ u2(AccordionSummary2, { children: /* @__PURE__ */ u2(Box, { sx: { display: "flex", justifyContent: "space-between", alignItems: "center", width: "100%" }, children: [
       /* @__PURE__ */ u2(Stack, { direction: "row", alignItems: "center", spacing: 0.5, children: [
         /* @__PURE__ */ u2(Tooltip2, { title: "拖动排序", children: /* @__PURE__ */ u2(Box, { component: "span", ...attributes, ...listeners, sx: { cursor: "grab", display: "flex", alignItems: "center" }, children: /* @__PURE__ */ u2(DragIndicatorIcon, { sx: { color: "text.disabled" } }) }) }),
-        /* @__PURE__ */ u2(Typography2, { fontWeight: 500, children: block.name })
+        /* @__PURE__ */ u2(Typography2, { fontWeight: 500, children: block2.name })
       ] }),
       /* @__PURE__ */ u2(Stack, { direction: "row", alignItems: "center", spacing: 0.5, children: [
-        /* @__PURE__ */ u2(IconAction, { label: "复制", icon: /* @__PURE__ */ u2(ContentCopyIcon, { fontSize: "small" }), onClick: () => handleDuplicate(block.id) }),
-        /* @__PURE__ */ u2(IconAction, { label: "删除", icon: /* @__PURE__ */ u2(DeleteForeverOutlinedIcon, {}), onClick: () => handleDelete(block.id, block.name), sx: { color: "text.secondary", "&:hover": { color: "error.main" } } })
+        /* @__PURE__ */ u2(IconAction, { label: "复制", icon: /* @__PURE__ */ u2(ContentCopyIcon, { fontSize: "small" }), onClick: () => handleDuplicate(block2.id) }),
+        /* @__PURE__ */ u2(IconAction, { label: "删除", icon: /* @__PURE__ */ u2(DeleteForeverOutlinedIcon, {}), onClick: () => handleDelete(block2.id, block2.name), sx: { color: "text.secondary", "&:hover": { color: "error.main" } } })
       ] })
     ] }) }),
-    /* @__PURE__ */ u2(AccordionDetails2, { sx: { bgcolor: "action.hover", borderTop: "1px solid rgba(0,0,0,0.08)" }, children: /* @__PURE__ */ u2(BlockEditor, { block, useCases }) })
+    /* @__PURE__ */ u2(AccordionDetails2, { sx: { bgcolor: "action.hover", borderTop: "1px solid rgba(0,0,0,0.08)" }, children: /* @__PURE__ */ u2(BlockEditor, { block: block2, useCases }) })
   ] }) });
 }
-function BlockEditor({ block, useCases }) {
-  const [localBlock, setLocalBlock] = d(block);
+function BlockEditor({ block: block2, useCases }) {
+  const [localBlock, setLocalBlock] = d(block2);
   y(() => {
-    setLocalBlock(block);
-  }, [block]);
+    setLocalBlock(block2);
+  }, [block2]);
   const handleUpdate = (updates) => {
-    useCases.blocks.updateBlock(block.id, updates);
+    useCases.blocks.updateBlock(block2.id, updates);
   };
   const handleBlur = (key) => {
-    if (localBlock[key] !== block[key]) handleUpdate({ [key]: localBlock[key] });
+    if (localBlock[key] !== block2[key]) handleUpdate({ [key]: localBlock[key] });
   };
   return /* @__PURE__ */ u2(Stack, { spacing: 3, children: [
     /* @__PURE__ */ u2(TextField2, { label: "Block 名称", value: localBlock.name, onChange: (e2) => setLocalBlock((b2) => ({ ...b2, name: e2.target.value })), onBlur: () => handleBlur("name"), variant: "outlined", size: "small", sx: { maxWidth: 400 } }),
@@ -67669,17 +68280,17 @@ function BlockManager() {
       /* @__PURE__ */ u2(IconAction, { label: "新增Block类型", onClick: handleAdd, color: "success", icon: /* @__PURE__ */ u2(AddCircleOutlineIcon, {}) })
     ] }),
     /* @__PURE__ */ u2(Typography2, { variant: "body2", color: "text.secondary", sx: { mb: 1.5 }, children: "在这里定义所有快速输入的基础模板，例如任务、打卡、总结等。可拖动排序。" }),
-    /* @__PURE__ */ u2(DndContext, { collisionDetection: closestCenter, onDragEnd: handleDragEnd, children: /* @__PURE__ */ u2(SortableContext, { items: blocks.map((b2) => b2.id), strategy: verticalListSortingStrategy, children: /* @__PURE__ */ u2(Stack, { spacing: 1, children: blocks.map((block) => /* @__PURE__ */ u2(
+    /* @__PURE__ */ u2(DndContext, { collisionDetection: closestCenter, onDragEnd: handleDragEnd, children: /* @__PURE__ */ u2(SortableContext, { items: blocks.map((b2) => b2.id), strategy: verticalListSortingStrategy, children: /* @__PURE__ */ u2(Stack, { spacing: 1, children: blocks.map((block2) => /* @__PURE__ */ u2(
       SortableBlockItem,
       {
-        block,
+        block: block2,
         openId,
         setOpenId,
         handleDelete,
         handleDuplicate,
         useCases
       },
-      block.id
+      block2.id
     )) }) }) })
   ] });
 }
@@ -68076,19 +68687,19 @@ function AiScopeSection({
       /* @__PURE__ */ u2(AccordionDetails2, { children: [
         /* @__PURE__ */ u2(Typography2, { variant: "body2", color: "text.secondary", sx: { mb: 2 }, children: "选择哪些 Block 模板参与 AI 识别。留空表示全部参与。" }),
         /* @__PURE__ */ u2(Button2, { variant: "outlined", size: "small", onClick: onInitAllBlocks, sx: { mb: 2 }, children: "初始化为全部 Block" }),
-        /* @__PURE__ */ u2(FormGroup2, { children: blocks.map((block) => /* @__PURE__ */ u2(
+        /* @__PURE__ */ u2(FormGroup2, { children: blocks.map((block2) => /* @__PURE__ */ u2(
           FormControlLabel2,
           {
             control: /* @__PURE__ */ u2(
               Checkbox2,
               {
-                checked: (settings.enabledBlockIds ?? []).includes(block.id),
-                onChange: () => onToggleBlock(block.id)
+                checked: (settings.enabledBlockIds ?? []).includes(block2.id),
+                onChange: () => onToggleBlock(block2.id)
               }
             ),
-            label: block.name
+            label: block2.name
           },
-          block.id
+          block2.id
         )) }),
         blocks.length === 0 && /* @__PURE__ */ u2(Typography2, { variant: "body2", color: "text.secondary", children: '暂无 Block 模板，请先在"快速输入"设置中创建。' })
       ] })
@@ -68609,7 +69220,7 @@ function buildEventTimelineViewModel(params) {
   const viewConfig = module2.viewConfig || {};
   const timeField = viewConfig.timeField || "date";
   const titleField = viewConfig.titleField || "title";
-  const contentField = viewConfig.contentField || "content";
+  const contentField2 = viewConfig.contentField || "content";
   const maxContentLength = viewConfig.maxContentLength ?? 160;
   const start2 = dayjs(dateRange[0]);
   const end2 = dayjs(dateRange[1]);
@@ -68642,7 +69253,7 @@ function buildEventTimelineViewModel(params) {
     groupFields,
     timeField,
     titleField,
-    contentField,
+    contentField: contentField2,
     maxContentLength,
     filteredItems,
     groupedTree
@@ -69939,12 +70550,12 @@ function registerQuickInputCommands(plugin) {
     return;
   }
   const { blocks } = settings;
-  blocks.forEach((block) => {
+  blocks.forEach((block2) => {
     plugin.addCommand({
-      id: `think-quick-input-unified-${block.id}`,
-      name: `快速录入 - ${block.name}`,
+      id: `think-quick-input-unified-${block2.id}`,
+      name: `快速录入 - ${block2.name}`,
       callback: () => {
-        new QuickInputModal(plugin.app, block.id).open();
+        new QuickInputModal(plugin.app, block2.id).open();
       }
     });
   });
@@ -72056,10 +72667,12 @@ class ThinkPlugin extends obsidian.Plugin {
     merged.viewInstances = merged.viewInstances || [];
     merged.layouts = merged.layouts || [];
     merged.inputSettings = merged.inputSettings || { blocks: [], themes: [], overrides: [] };
-    merged.inputSettings.blocks = (merged.inputSettings.blocks || []).map((block) => ({
-      ...block,
-      categoryKey: block?.categoryKey || block?.name || ""
+    merged.inputSettings.blocks = (merged.inputSettings.blocks || []).map((block2) => ({
+      ...block2,
+      categoryKey: block2?.categoryKey || block2?.name || ""
     }));
+    merged.goalSettings = { ...DEFAULT_GOAL_SETTINGS, ...merged.goalSettings || {} };
+    merged.coreBlockSettings = normalizeCoreBlockSettings(merged.coreBlockSettings, merged.inputSettings.blocks);
     merged.groups = merged.groups || [];
     return merged;
   }

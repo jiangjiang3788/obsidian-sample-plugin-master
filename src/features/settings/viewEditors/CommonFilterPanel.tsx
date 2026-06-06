@@ -33,9 +33,12 @@ interface CommonFilterPanelProps {
 }
 
 const DEFAULT_QUICK_FILTER_FIELDS: QuickFilterField[] = [
-  { field: 'themePath', label: '主题路径', help: '使用完整 themePath 筛选，例如 生活/健康；不再用根主题或章节标题兜底。', placeholder: '选择主题路径' },
-  { field: 'baseCategory', label: '分类', help: '不同字段之间默认表示“且”：主题匹配后还要分类匹配。', placeholder: '选择分类' },
-  { field: 'goalPaths', label: '目标', placeholder: '选择目标' },
+  { field: 'goalPath', label: '目标', help: '目标中心主筛选字段，优先用目标路径聚合任务/计划/总结/打卡。', placeholder: '选择目标' },
+  { field: 'goalPaths', label: '目标列表', placeholder: '选择目标' },
+  { field: 'goalId', label: '目标ID', help: '稳定目标 ID，适合目标实体化后的精确筛选。', placeholder: '输入目标ID' },
+  { field: 'coreBlock', label: '核心Block', help: '按 task/plan/review/thought/habit/evidence/blocker/milestone 分组筛选。', placeholder: '选择核心Block' },
+  { field: 'themePath', label: '主题', help: '主题已降级为表单层级单选字段，但仍可用于上下文筛选。', placeholder: '选择主题' },
+  { field: 'baseCategory', label: '分类', help: '不同字段之间默认表示“且”：目标匹配后还要分类匹配。', placeholder: '选择分类' },
   { field: 'type', label: '类型', placeholder: '选择记录类型' },
   { field: 'priority', label: '优先级', placeholder: '选择优先级' },
   { field: 'period', label: '时间粒度', placeholder: '选择粒度' },

@@ -157,6 +157,12 @@ export function parseBlockContent(
         theme: parsed.theme,
     };
 
+    if (parsed.goalId) {
+        item.goalId = parsed.goalId;
+        item.goalIds = [parsed.goalId];
+    }
+    if (parsed.cycleId) item.cycleId = parsed.cycleId;
+    if (parsed.coreBlock) item.coreBlock = parsed.coreBlock;
     if (parsed.templateId) item.templateId = parsed.templateId;
     if (parsed.templateSourceType) item.templateSourceType = parsed.templateSourceType;
     if (parsed.icon) item.icon = parsed.icon;

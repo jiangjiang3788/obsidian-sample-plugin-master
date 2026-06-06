@@ -6,6 +6,10 @@ import { getAvailableFields } from '@/core/fields/FieldRegistry';
 import type { AiSettings } from './ai-schema';
 import type { FieldInputType, FieldOption, FieldSemantic, FieldStoragePolicy } from '@/core/fields/FieldTypes';
 import { DEFAULT_AI_SETTINGS } from './ai-schema';
+import type { GoalSettings } from '@/core/goal';
+import { DEFAULT_GOAL_SETTINGS } from '@/core/goal';
+import type { CoreBlockSettings } from '@/core/blocks';
+import { DEFAULT_CORE_BLOCK_SETTINGS } from '@/core/blocks';
 
 // [新增] 定义可分组项的通用接口
 export interface Groupable {
@@ -29,6 +33,10 @@ export interface ThinkSettings {
     viewInstances: ViewInstance[];
     layouts: Layout[];
     inputSettings: InputSettings;
+    /** 目标中心配置：目标实体、周期、目标-核心Block绑定和记录关系。 */
+    goalSettings?: GoalSettings;
+    /** 插件核心 Block 配置：内置 block 的启用、patch 和旧 block 映射。 */
+    coreBlockSettings?: CoreBlockSettings;
     // [新增] 悬浮计时器设置
     floatingTimerEnabled: boolean;
     // [新增] 激活的主题路径
@@ -46,6 +54,8 @@ export const DEFAULT_SETTINGS: ThinkSettings = {
     viewInstances: [],
     layouts: [],
     inputSettings: { blocks: [], themes: [], overrides: [] },
+    goalSettings: DEFAULT_GOAL_SETTINGS,
+    coreBlockSettings: DEFAULT_CORE_BLOCK_SETTINGS,
     // [新增] 悬浮计时器默认启用
     floatingTimerEnabled: true,
     // [新增]
@@ -98,6 +108,8 @@ export interface BlockTemplate {
     fields: TemplateField[];
     outputTemplate: string;
     targetFile: string;
+    /** 目标中心迁移：旧 block 可映射到稳定核心 block，例如 core.task。 */
+    coreBlockId?: string;
     appendUnderHeader?: string;
 }
 export interface ThemeDefinition {
@@ -207,7 +219,7 @@ export interface SortRule {
 export interface Item {
     id: string;
     templateId?: string;
-    templateSourceType?: 'block' | 'override';
+    templateSourceType?: 'block' | 'override' | 'core-block' | 'theme-fallback' | 'goal-binding' | 'legacy-block';
     title: string;
     content: string;
     /** 编辑态使用的正文真源：尽量保留用户原始表达，但去掉任务前缀/内联元数据噪音。 */
@@ -218,8 +230,17 @@ export interface Item {
     fullData?: string;
     type: 'task' | 'block';
     tags: string[];
-    /** 目标路径，作为核心业务字段使用；Markdown 中只识别 `目标::`。 */
+    /** 稳定目标 ID，目标实体化后作为主关联键。 */
+    goalId?: string;
+    /** 多目标稳定 ID，兼容一个记录关联多个目标。 */
+    goalIds?: string[];
+    /** 目标路径，作为核心业务字段使用；Markdown 中识别 `目标::`。 */
     goalPaths?: string[];
+    goalPath?: string;
+    rootGoal?: string;
+    leafGoal?: string;
+    cycleId?: string;
+    coreBlock?: string;
     theme?: string;     // [新增] 主题字段，用于统一的主题管理
     /** 主题完整路径，供视图筛选/分组使用，例如：学习/英语/听力。 */
     themePath?: string;

@@ -5,6 +5,7 @@ import { normalizeItemDates } from '@/core/utils/normalize';
 import { parseRecurrence } from '@/core/utils/mark';
 import { extractTaskEditableText } from '@/core/utils/text';
 import type { RecordNormalizeContext } from './RecordEntity';
+import { splitGoalPath } from '@/core/goal';
 
 function unique(values: Array<string | undefined | null>): string[] {
   return Array.from(new Set(values.map(value => String(value ?? '').trim()).filter(Boolean)));
@@ -46,7 +47,13 @@ export function normalizeRecordItem(item: Item, context: RecordNormalizeContext)
   }
 
   item.tags = unique([...(context.sectionTags || []), ...(item.tags || [])]);
-  item.goalPaths = unique([...(item.goalPaths || [])]);
+  item.goalIds = unique([item.goalId, ...(item.goalIds || [])]);
+  item.goalPaths = unique([item.goalPath, ...(item.goalPaths || [])]);
+  item.goalPath = item.goalPaths[0] || item.goalPath;
+  const goalParts = splitGoalPath(item.goalPath || null);
+  item.goalPath = goalParts.goalPath || item.goalPath;
+  item.rootGoal = goalParts.rootGoal || item.rootGoal;
+  item.leafGoal = goalParts.leafGoal || item.leafGoal;
 
   // 主题只允许来自显式元数据。normalizeExplicitTheme 只做清洗/匹配，不会读取 header。
   item.theme = normalizeExplicitTheme((item as any).theme, context.themeMatcher);
@@ -86,6 +93,10 @@ export function normalizeRecordItem(item: Item, context: RecordNormalizeContext)
   (item as any).fullDataLower = normalizeSearchText(item.fullData);
   (item as any).tagsLower = (item.tags || []).map(tag => normalizeSearchText(tag));
   (item as any).goalPathsLower = (item.goalPaths || []).map(goal => normalizeSearchText(goal));
+  (item as any).goalIdsLower = (item.goalIds || []).map(goalId => normalizeSearchText(goalId));
+  (item as any).goalPathLower = normalizeSearchText(item.goalPath);
+  (item as any).rootGoalLower = normalizeSearchText(item.rootGoal);
+  (item as any).leafGoalLower = normalizeSearchText(item.leafGoal);
 
   return item;
 }

@@ -44,7 +44,11 @@ export type {
     PlanTaskRelation,
     GoalReviewSnapshot,
     GoalRelationHint,
+    GoalBlockBinding,
+    GoalSettings,
 } from './goal';
+export { DEFAULT_GOAL_SETTINGS, normalizeGoalPath, splitGoalPath } from './goal';
+export type { GoalPathParts } from './goal';
 
 //
 // -------------------- Utils（可复用纯能力） --------------------
@@ -213,6 +217,25 @@ export { computeProgression } from './progression/computeProgression';
 export type { ProgressComputationOptions } from './progression/computeProgression';
 export type { ProgressBreakdownRow, ProgressResult } from './progression/types';
 
+// -------------------- Core Blocks（目标中心内置 Block） --------------------
+export {
+    CORE_BLOCK_IDS,
+    DEFAULT_CORE_BLOCKS,
+    DEFAULT_CORE_BLOCK_SETTINGS,
+    buildLegacyCoreBlockMap,
+    inferCoreBlockIdFromLegacyBlock,
+    getCoreBlockById,
+    getEffectiveCoreBlocks,
+    normalizeCoreBlockSettings,
+} from './blocks';
+export type {
+    CoreBlockKey,
+    CoreBlockDefinition,
+    CoreBlockPatch,
+    CoreBlockSettings,
+} from './blocks';
+
+
 // -------------------- Core Services（DI 需要的 token / class） --------------------
 // 说明：这些 export 是为了组合根（main/app）和 usecases 能 resolve。
 //
@@ -229,6 +252,8 @@ export type { IPluginStorage } from './services/StorageService';
 // -------------------- Record Input internals promoted for app usecase boundary --------------------
 // 说明：app/usecases/recordInput.usecase.ts 只能通过 core/public.ts 访问 core。
 // 这里导出的是 usecase 编排所需的稳定核心构件，不允许 features/shared 直接依赖内部路径。
+export { GoalTemplateResolver } from './services/GoalTemplateResolver';
+export type { GoalTemplateResolveInput, GoalTemplateResolveResult, GoalTemplateSourceType } from './services/GoalTemplateResolver';
 export { RecordInputKernel } from './services/recordInput/RecordInputKernel';
 export { buildRecordOutputPlan, buildRecordPersistencePlan } from './services/recordInput/snapshot/OutputPlanner';
 export {

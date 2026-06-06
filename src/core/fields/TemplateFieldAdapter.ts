@@ -21,6 +21,10 @@ const KNOWN_SEMANTICS = new Set<FieldSemantic>([
   'themePath',
   'tags',
   'goals',
+  'goalId',
+  'goalPath',
+  'cycleId',
+  'coreBlock',
   'status',
   'date',
   'startTime',
@@ -89,6 +93,10 @@ export function getTemplateFieldSemantic(field: Partial<TemplateField> | null | 
   if (templateFieldMatches(field, ['主题', 'theme', 'themePath', '完整主题', '主题路径'])) return 'themePath';
   if (templateFieldMatches(field, ['分类', '类别', 'category', 'categoryPath', '分类路径'])) return 'categoryPath';
   if (templateFieldMatches(field, ['标签', 'tag', 'tags'])) return 'tags';
+  if (templateFieldMatches(field, ['目标ID', 'goalId'])) return 'goalId';
+  if (templateFieldMatches(field, ['目标路径', 'goalPath'])) return 'goalPath';
+  if (templateFieldMatches(field, ['周期ID', 'cycleId'])) return 'cycleId';
+  if (templateFieldMatches(field, ['核心Block', 'coreBlock'])) return 'coreBlock';
   if (templateFieldMatches(field, ['目标'])) return 'goals';
   if (templateFieldMatches(field, ['状态', 'status'])) return 'status';
   if (templateFieldMatches(field, ['日期', 'date'])) return 'date';
@@ -108,7 +116,7 @@ export function getTemplateFieldInputType(field: Partial<TemplateField> | null |
   if (type) return type;
   const semantic = getTemplateFieldSemantic(field);
   if (semantic === 'body') return 'textarea';
-  if (semantic === 'themePath' || semantic === 'categoryPath') return 'path';
+  if (semantic === 'themePath' || semantic === 'categoryPath' || semantic === 'goalPath') return 'hierarchicalSingleSelect';
   if (semantic === 'tags' || semantic === 'goals') return 'multiTag';
   if (semantic === 'image') return 'image';
   if (semantic === 'rating') return 'rating';
@@ -128,13 +136,13 @@ export function isTemplateRatingPairField(field: Partial<TemplateField> | null |
 
 export function isTemplateOptionField(field: Partial<TemplateField> | null | undefined): boolean {
   const inputType = getTemplateFieldInputType(field);
-  return ['select', 'radio', 'singleSelect', 'multiSelect', 'path', 'multiPath', 'tag', 'multiTag', 'rating'].includes(inputType);
+  return ['select', 'radio', 'singleSelect', 'multiSelect', 'path', 'hierarchicalSingleSelect', 'multiPath', 'tag', 'multiTag', 'rating'].includes(inputType);
 }
 
 export function isTemplatePathField(field: Partial<TemplateField> | null | undefined): boolean {
   const inputType = getTemplateFieldInputType(field);
   const semantic = getTemplateFieldSemantic(field);
-  return inputType === 'path' || inputType === 'multiPath' || semantic === 'themePath' || semantic === 'categoryPath' || normalizeToken(field?.semanticType) === 'path';
+  return inputType === 'path' || inputType === 'hierarchicalSingleSelect' || inputType === 'multiPath' || semantic === 'themePath' || semantic === 'categoryPath' || semantic === 'goalPath' || normalizeToken(field?.semanticType) === 'path';
 }
 
 export function isTemplateTagField(field: Partial<TemplateField> | null | undefined): boolean {
@@ -274,9 +282,47 @@ function applyCoreTemplateAliases(data: Record<string, unknown>, field: Partial<
     return;
   }
 
+  if (semantic === 'goalId') {
+    const goalId = singleTemplateValueToString(value);
+    if (goalId) {
+      data.goalId = goalId;
+      data.goalIds = [goalId];
+    }
+    return;
+  }
+
+  if (semantic === 'goalPath') {
+    const path = normalizeHierarchyPath(singleTemplateValueToString(value));
+    if (!path) return;
+    const parts = splitHierarchyPath(path);
+    data.goalPath = path;
+    data.goalPaths = [path];
+    data.rootGoal = parts.root || '';
+    data.leafGoal = parts.leaf || '';
+    return;
+  }
+
+  if (semantic === 'cycleId') {
+    const cycleId = singleTemplateValueToString(value);
+    if (cycleId) data.cycleId = cycleId;
+    return;
+  }
+
+  if (semantic === 'coreBlock') {
+    const coreBlock = singleTemplateValueToString(value);
+    if (coreBlock) data.coreBlock = coreBlock;
+    return;
+  }
+
   if (semantic === 'goals') {
     const goals = parseTagList(value);
-    if (goals.length) data.goalPaths = goals;
+    if (goals.length) {
+      data.goalPaths = goals;
+      data.goalPath = goals[0];
+      const parts = splitHierarchyPath(goals[0]);
+      data.rootGoal = parts.root || '';
+      data.leafGoal = parts.leaf || '';
+    }
     return;
   }
 
